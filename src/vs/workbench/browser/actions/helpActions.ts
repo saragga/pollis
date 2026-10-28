@@ -524,17 +524,29 @@ function registerHelpLink(link: IHelpLink): void {
 			});
 		}
 
+		// In the integrated browser, as every link of Pollis
 		run(accessor: ServicesAccessor): void {
-			accessor.get(IOpenerService).open(URI.parse(link.url));
+			accessor.get(ICommandService).executeCommand(BrowserViewCommandId.Open, link.url);
 		}
 	});
 }
+
+/** The documents of Help > Documentation, by their PDFs in ~/.pollis/documents, with their titles; Ask Pollis reads them too. */
+export const POLLIS_DOCUMENTS: Readonly<Record<string, string>> = {
+	'pollis-tour.pdf': localize('openTourOfPollis', "A Tour of Pollis"),
+	'pollis-guide.pdf': localize('openPollisGuide', "The Pollis Guide"),
+	'pollis-ai-brochure.pdf': localize('openPollisAIPlus', "Pollis AI+"),
+	'pollis-ai-tour.pdf': localize('openTourOfPollisAIPlus', "A Tour of Pollis AI+"),
+	'pollis-drilldown-data-packages.pdf': localize('openDrillDownDataPackages', "Drill-down: Data Packages"),
+	'pollis-drilldown-literature-radar.pdf': localize('openDrillDownLiteratureRadar', "Drill-down: Literature Radar"),
+	'pollis-drilldown-ask-pollis.pdf': localize('openDrillDownAskPollis', "Drill-down: Ask Pollis"),
+};
 
 /**
  * Opens a document of Help > Documentation, `file` in ~/.pollis/documents. Pollis compiles the documents there from
  * their LaTeX sources, its docs/ folder, when the Julia REPL starts (compile_documents.jl of the Julia extension).
  */
-async function openDocument(accessor: ServicesAccessor, file: string, title: string): Promise<void> {
+async function openDocument(accessor: ServicesAccessor, file: string): Promise<void> {
 	const commandService = accessor.get(ICommandService);
 	const fileService = accessor.get(IFileService);
 	const notificationService = accessor.get(INotificationService);
@@ -542,7 +554,7 @@ async function openDocument(accessor: ServicesAccessor, file: string, title: str
 	if (await fileService.exists(uri)) {
 		commandService.executeCommand(BrowserViewCommandId.Open, uri.toString(true));
 	} else {
-		notificationService.info(localize('documentNotCompiled', "{0} is not compiled yet. Pollis compiles its documentation from the LaTeX sources when Julia starts, and the status bar shows how far it has come.", title));
+		notificationService.info(localize('documentNotCompiled', "{0} is not compiled yet. Pollis compiles its documentation from the LaTeX sources when Julia starts, and the status bar shows how far it has come.", POLLIS_DOCUMENTS[file]));
 	}
 }
 
@@ -561,7 +573,7 @@ registerAction2(class extends Action2 {
 	}
 
 	run(accessor: ServicesAccessor): Promise<void> {
-		return openDocument(accessor, 'pollis-tour.pdf', localize('openTourOfPollis', "A Tour of Pollis"));
+		return openDocument(accessor, 'pollis-tour.pdf');
 	}
 });
 
@@ -580,7 +592,7 @@ registerAction2(class extends Action2 {
 	}
 
 	run(accessor: ServicesAccessor): Promise<void> {
-		return openDocument(accessor, 'pollis-guide.pdf', localize('openPollisGuide', "The Pollis Guide"));
+		return openDocument(accessor, 'pollis-guide.pdf');
 	}
 });
 
@@ -599,7 +611,7 @@ registerAction2(class extends Action2 {
 	}
 
 	run(accessor: ServicesAccessor): Promise<void> {
-		return openDocument(accessor, 'pollis-ai-brochure.pdf', localize('openPollisAIPlus', "Pollis AI+"));
+		return openDocument(accessor, 'pollis-ai-brochure.pdf');
 	}
 });
 
@@ -618,7 +630,7 @@ registerAction2(class extends Action2 {
 	}
 
 	run(accessor: ServicesAccessor): Promise<void> {
-		return openDocument(accessor, 'pollis-ai-tour.pdf', localize('openTourOfPollisAIPlus', "A Tour of Pollis AI+"));
+		return openDocument(accessor, 'pollis-ai-tour.pdf');
 	}
 });
 
@@ -637,7 +649,7 @@ registerAction2(class extends Action2 {
 	}
 
 	run(accessor: ServicesAccessor): Promise<void> {
-		return openDocument(accessor, 'pollis-drilldown-data-packages.pdf', localize('openDrillDownDataPackages', "Drill-down: Data Packages"));
+		return openDocument(accessor, 'pollis-drilldown-data-packages.pdf');
 	}
 });
 
@@ -656,7 +668,7 @@ registerAction2(class extends Action2 {
 	}
 
 	run(accessor: ServicesAccessor): Promise<void> {
-		return openDocument(accessor, 'pollis-drilldown-literature-radar.pdf', localize('openDrillDownLiteratureRadar', "Drill-down: Literature Radar"));
+		return openDocument(accessor, 'pollis-drilldown-literature-radar.pdf');
 	}
 });
 
@@ -675,7 +687,7 @@ registerAction2(class extends Action2 {
 	}
 
 	run(accessor: ServicesAccessor): Promise<void> {
-		return openDocument(accessor, 'pollis-drilldown-ask-pollis.pdf', localize('openDrillDownAskPollis', "Drill-down: Ask Pollis"));
+		return openDocument(accessor, 'pollis-drilldown-ask-pollis.pdf');
 	}
 });
 

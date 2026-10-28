@@ -154,6 +154,13 @@ export interface WebviewParts {
 	readonly extraJs?: string;
 }
 
+/** The spinner of every page of Pollis: the two curved arrows of the sync icon, turning; its CSS is `spinnerCss`. */
+export const spinnerSvg = '<svg class="spin" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.5 6.5A5.5 5.5 0 0 0 3.2 5"/><path d="M3 2.5v2.7h2.7"/><path d="M2.5 9.5A5.5 5.5 0 0 0 12.8 11"/><path d="M13 13.5v-2.7h-2.7"/></svg>';
+
+export const spinnerCss = `.spin { display: inline-block; width: 12px; height: 12px; margin-right: 6px; vertical-align: -1px; animation: spin 1.2s linear infinite; }
+		@keyframes spin { to { transform: rotate(360deg); } }
+		@media (prefers-reduced-motion: reduce) { .spin { animation: none; } }`;
+
 /** CSS of a page's title row and of the microphone and speaker buttons beside its title, shared with the pages built outside the scaffold. */
 export const voiceButtonsCss = `.title-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .voice-group { display: inline-flex; align-items: center; gap: 8px; }

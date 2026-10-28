@@ -79,7 +79,7 @@ Three rules, and everything else follows from them.
   \item \textbf{What a package brings is a copy that an update may replace.} Pollis never asks you to look after it.
   \item \textbf{What you do is written to files of yours that no update writes.} They are JSON Lines, appended to and
     never rewritten: a change is a new line, and for each key \emph{the last line wins}.
-  \item \textbf{The four built-in databases are builds over both}, read-only, rebuilt when what they come from
+  \item \textbf{The five built-in databases are builds over both}, read-only, rebuilt when what they come from
     changes. Deleting one loses nothing: it is made again at the next start of the Julia REPL.
 \end{enumerate}
 
@@ -144,8 +144,10 @@ being added to it. It has four jobs.
     updates them when GitHub has newer commits. That environment is on the load path, so \file{using DuckDB} or
     \file{using PollisDatasets} works in any of your projects without touching its \file{Project.toml}.
   \item \textbf{Build the four databases} (\file{build()}, \file{build_journals()}, \file{build_references()},
-    \file{build_rss()}), and copy the data files that Pollis's pages read (\file{copy_package_data()}).
-  \item \textbf{Connect} (\file{connect()}, \file{sql()}, the \file{sql>} mode): a DuckDB connection with the four
+    \file{build_rss()}), and copy the data files that Pollis's pages read (\file{copy_package_data()}). The fifth,
+    PollisDocuments, the passages Ask Pollis searches, is made by the Julia extension's \file{ask_index.jl} once the
+    documents are compiled.
+  \item \textbf{Connect} (\file{connect()}, \file{sql()}, the \file{sql>} mode): a DuckDB connection with the five
     built-in databases attached read-only, and DuckDB's full-text search extension, fts, loaded.
   \item \textbf{Feed the Databases view} (\file{show()}, \file{register()}): each connection handed to it is
     described, schemas, tables and columns, in a JSON file in \file{~/.pollis/databases/sessions}, which the view
@@ -439,7 +441,7 @@ tables go in a database of your own, which can sit beside them.
   \item \textbf{Fill it.} \menupath{Explore\gt Access Files and Databases\gt SQL Databases} imports a CSV, Parquet
     or JSON file and saves a query's result as a table, always into your database. From Julia, any \texttt{\small CREATE TABLE}
     on your connection.
-  \item \textbf{Use it with Pollis's.} \file{PollisDB.connect("sales.duckdb")} opens your file \emph{and attaches the four
+  \item \textbf{Use it with Pollis's.} \file{PollisDB.connect("sales.duckdb")} opens your file \emph{and attaches the five
     built-in databases, read-only, under their names}. The \file{duckdb>} terminal and the \file{sql>} mode do the same.
     One query can then join your table to Pollis's:
 \begin{lstlisting}

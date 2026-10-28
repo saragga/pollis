@@ -113,6 +113,9 @@ const CLOUD_MODELS: readonly ICloudModel[] = [
 	{ name: 'GPT-5.4', agents: { 'Codex': '-m gpt-5.4', 'OpenCode': '--model openai/gpt-5.4' } },
 	{ name: 'GPT-5.4 mini', agents: { 'Codex': '-m gpt-5.4-mini', 'OpenCode': '--model openai/gpt-5.4-mini' } },
 	{ name: 'GPT-5.3 Codex', agents: { 'Codex': '-m gpt-5.3-codex', 'OpenCode': '--model openai/gpt-5.3-codex' } },
+	{ name: 'Gemini 4 Argon', agents: { 'OpenCode': '--model google/gemini-4-argon' } },
+	{ name: 'Gemini 3.8 Flash', agents: { 'OpenCode': '--model google/gemini-3.8-flash' } },
+	{ name: 'Gemini 3.5 Flash-Lite', agents: { 'OpenCode': '--model google/gemini-3.5-flash-lite' } },
 ];
 
 /** The cells of the three tiers while the setting is unset: Claude Code on its three models. */

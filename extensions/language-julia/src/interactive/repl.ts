@@ -30,7 +30,7 @@ import { Frame, openFile } from './results'
 import { notifyTypeProgress, Progress, ProgressBars } from './progress'
 import { TaskRunnerTerminal } from '../taskRunnerTerminal'
 import { whenDuckDBReady } from '../pollisDuckDB'
-import { compileDocumentsInBackground } from '../pollisDocuments'
+import { compileDocumentsInBackground, pollisDBInstalled } from '../pollisDocuments'
 import { precompileInBackground } from '../pollisPrecompile'
 import { answerLlamaServerRequests } from '../pollisLlamaServer'
 import { promise as fastq } from 'fastq'
@@ -1645,6 +1645,8 @@ async function installPollisDB(juliaExecutable: JuliaExecutable) {
 
     onEvent(task.onDidExitProcess, (exitCode) => {
         g_installingPollisDB = false
+        // The index of Ask Pollis may be waiting for DuckDB.jl
+        pollisDBInstalled(g_context, juliaExecutable, exitCode === 0)
         if (exitCode === 0) {
             task.dispose()
             // The install has compiled its own packages; the other environments of the REPL may still be stale.

@@ -106,6 +106,7 @@ const desktopEntryPoints = [
 	'vs/workbench/api/node/extensionHostProcess',
 	'vs/workbench/contrib/databases/node/duckdbShellMain', // Pollis: the duckdb> terminal
 	'vs/workbench/contrib/compose/node/snowballDatabaseMain', // Pollis: the database of the Snowball Search Map
+	'vs/workbench/contrib/compose/node/askPollisMain', // Pollis: the search of Ask Pollis
 ];
 
 const codeEntryPoints = [

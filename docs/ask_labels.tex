@@ -1,0 +1,16 @@
+% Pollis: the page of each heading, for Ask Pollis. A document that inputs this file, at the end of its preamble, writes
+% <jobname>.labels beside its PDF, a line page|level|heading for each heading, the page counted from the first, the
+% cover, as 1. compile_documents.jl copies it to ~/.pollis/documents, and ask_index.jl cuts the document into passages
+% under its headings with it. \asklabel{1}{Title} marks a topic or a page, \asklabel{2}{Title} a heading inside it; the
+% sections and subsections of a document that has them are marked as they go into its contents.
+\makeatletter
+\newwrite\pollis@labels
+\immediate\openout\pollis@labels=\jobname.labels
+\newcommand{\asklabel}[2]{\write\pollis@labels{\the\ReadonlyShipoutCounter|#1|\unexpanded{#2}}}
+\def\pollis@toc{toc}
+\newcommand{\pollis@contentsline}[3]{%
+  \def\pollis@file{#1}%
+  \ifx\pollis@file\pollis@toc\asklabel{#2}{#3}\fi
+  \pollis@addcontentsline{#1}{#2}{#3}}
+\AtBeginDocument{\let\pollis@addcontentsline\addcontentsline\let\addcontentsline\pollis@contentsline}
+\makeatother

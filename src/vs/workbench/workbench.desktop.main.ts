@@ -196,6 +196,7 @@ import './contrib/databases/electron-browser/duckdbShell.contribution.js';
 
 // Pollis: the database of the Snowball Search Map
 import './contrib/compose/electron-browser/snowballDatabaseService.js';
+import './contrib/compose/electron-browser/askPollisService.js';
 
 // Policy Export
 import './contrib/policyExport/electron-browser/policyExport.contribution.js';

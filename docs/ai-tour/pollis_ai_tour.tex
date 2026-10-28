@@ -71,12 +71,13 @@
   \clearpage
   \ifodd\value{page}\hbox{}\thispagestyle{empty}\clearpage\fi
   \renewcommand{\topicname}{#1}%
+  \asklabel{1}{#1}%
   {\color{navy}\fontsize{20}{24}\selectfont\bfseries #1}\par\vspace{2pt}
   {\color{deepamber}\small\bfseries #2}\par\vspace{3pt}
   {\color{soft}#3}\par\vspace{5pt}
   {\color{amber}\rule{\linewidth}{0.6pt}}\par\vspace{3pt}}
 
-\newcommand{\subhead}[1]{\par\vspace{5pt}{\color{navy}\large\bfseries #1}\par\vspace{1pt}}
+\newcommand{\subhead}[1]{\par\vspace{5pt}\asklabel{2}{#1}{\color{navy}\large\bfseries #1}\par\vspace{1pt}}
 % A menu path or a button, as Pollis shows it
 \newcommand{\ui}[1]{\textbf{#1}}
 % A setting's id
@@ -113,6 +114,8 @@
   both/.style={{Stealth[length=5pt]}-{Stealth[length=5pt]}, line width=0.7pt, color=deepamber},
   tag/.style={font=\scriptsize\itshape, color=soft, align=center},
 }
+
+\input{../ask_labels}
 
 \begin{document}
 
@@ -647,7 +650,7 @@ Not every task needs the strongest model. \ui{Compose > Orchestration > Model Ta
 \end{itemize}
 A tier is a cell of a table. Its columns are the \ui{Code Agents}: Claude Code, Codex, OpenCode and the
 agents of your own of \ui{Compose > Coding Agents}. Its rows are the \ui{Models}: \ui{Cloud}, such as
-Claude Haiku, Sonnet and Opus or GPT-5.5, and \ui{Local}, the chat models on your computer. Type a tier's
+Claude Haiku, Sonnet and Opus, GPT-5.5 or Gemini 4 Argon, and \ui{Local}, the chat models on your computer. Type a tier's
 name in a cell, and the tier is that agent on that model; a name that is no tier yet makes a new one. A
 tier is in one cell only. A dash marks a model the agent cannot run. For example:
 \begin{center}\small\renewcommand{\arraystretch}{1.3}
@@ -732,7 +735,8 @@ Pollis says so.
 \subhead{RAG on Pollis' own documents}
 Ask Pollis is the retrieval-augmented generation of page 6. The documents are cut once into passages of about 250
 words, between one and two thousand of them, and kept in a DuckDB file with two indexes: their words, and their
-embeddings. Each question is searched both ways, and the two lists are merged:
+embeddings. Each question is found by
+hybrid search: BM25 keyword search and embedding-based semantic search, merged by Reciprocal Rank Fusion into the top 8 passages, all on PollisDocuments.duckdb:
 \begin{center}
 \begin{tikzpicture}[node distance=4mm and 7mm]
   \node[box=19mm] (q) {\textbf{Question}};

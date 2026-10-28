@@ -41,16 +41,17 @@
 \begin{nbox}
 {\color{amber}\bfseries Drill-down.}\enspace
 A look under the surface of \menupath{Help\gt Ask Pollis}. It is for anyone who wants to know why an answer says what
-it says, and where it comes from, and for whoever maintains Pollis (\S\ref{sec:where} and \S\ref{sec:open} are for
-them).
+it says, and where it comes from, and for whoever maintains Pollis (\S\ref{sec:where}, \S\ref{sec:panels} and
+\S\ref{sec:open} are for them).
 \end{nbox}
 
 \tableofcontents
 
 \section{Ask Pollis in one table}
 
-Ask Pollis answers questions about Pollis: how to do something, where a menu item is, what a setting does, what a
-panel computes. It answers only from Pollis's own documents, and every answer names the passages it rests on, so that
+Ask Pollis answers questions about Pollis and about Julia: how to do something, where a menu item is, what a setting
+does, what a panel computes, how a Julia function or construct works. It answers only from Pollis's own documents and
+from the Julia Manual that comes with the Julia Pollis runs, and every answer names the passages it rests on, so that
 you can open them and check.
 
 \begin{center}\small
@@ -58,12 +59,13 @@ you can open them and check.
 \begin{tabularx}{\linewidth}{@{}p{0.27\linewidth}L@{}}
 \toprule
 Reads & The documents of \menupath{Help\gt Documentation}: the Tour, the Guide, A Tour of Pollis AI+, Pollis AI+,
-  the drill-downs, the panel wikis, the package vignettes and the documents of the installed toolboxes\\
-Finds passages by & their words (BM25, DuckDB's fts extension) and their meaning (embeddings, compared by cosine
-  distance in DuckDB), the two lists merged\\
+  the drill-downs, the panel wikis, the package vignettes and the documents of the installed toolboxes; and the
+  Julia Manual, with Base and the standard library, of the Julia that Pollis runs (\S\ref{sec:manual})\\
+Finds passages by & hybrid search: BM25 keyword search (DuckDB's fts extension) and embedding-based semantic search
+  (cosine distance in DuckDB), merged by Reciprocal Rank Fusion into the top 8 passages, all on PollisDocuments.duckdb\\
 Answers with & a chat model on this computer, through the llama.cpp that comes with Pollis; or, if you choose, a
   cloud model with your own key\\
-Keeps & one DuckDB file, \file{~/.pollis/ask/PollisAsk.duckdb}, a few megabytes\\
+Keeps & one DuckDB file, \file{~/.pollis/documents/PollisDocuments.duckdb}, a few megabytes\\
 Sends out & nothing with a local model; with a cloud model, the question, the conversation so far and the passages
   found, never your files\\
 Compares & chat models of your choice, local and cloud, on the same questions and the same passages, scored by a
@@ -80,9 +82,9 @@ Needs Julia & to build the index, in the background, and to compare models; aski
   box/.style={draw=navy, fill=pale, rounded corners=2pt, align=center, inner sep=4pt, text width=27mm},
   user/.style={box, draw=deepamber, fill=logocream},
   arr/.style={-{Stealth[length=2mm]}, navy, thick}]
-  \node[box] (docs) at (0, 1.5) {\textbf{The documents}\\PDFs, wikis};
+  \node[box] (docs) at (0, 1.5) {\textbf{The documents}\\PDFs, wikis,\\the Julia Manual};
   \node[box] (passages) at (0, -0.3) {\textbf{Passages}\\about 250 words each};
-  \node[box] (index) at (0, -2.1) {\textbf{PollisAsk.duckdb}\\words (fts)\\meanings (768 numbers)};
+  \node[box] (index) at (0, -2.1) {\textbf{PollisDocuments.duckdb}\\words (fts)\\meanings (768 numbers)};
   \node[user] (question) at (4.6, 1.5) {\textbf{Your question}};
   \node[box] (found) at (4.6, -0.3) {\textbf{Passages found}\\by words, by meaning,\\merged: the best 8};
   \node[box] (model) at (9.2, -0.3) {\textbf{The chat model}\\on this computer,\\or in the cloud};
@@ -106,7 +108,15 @@ at each question, in a few seconds to some tens of seconds, depending on the mod
 \menupath{Help\gt Ask Pollis} opens a page with a box for the question and \textbf{Ask}. The answer is written as it
 comes, in a few paragraphs, with a number in brackets after each statement: \textbf{[1]}, \textbf{[2]}. Under it,
 \textbf{Sources} lists the passages those numbers stand for, each with its document, its page or its wiki and heading,
-and \textbf{Open}, which opens the document at that page or the panel's wiki at that heading.
+and \textbf{Open}, which opens the document at that page, the panel's wiki at that heading, or the Julia Manual at
+that section, in the internal browser.
+
+\subsection{Search In}
+A question is searched where it belongs: one on Pollis in Pollis's documents, one on Julia in the Julia Manual, one
+on both in both (\S\ref{sec:routing}). Under the answer, \emph{Searched: Pollis, Julia Manual.} says where.
+\textbf{Search In}, beside the box, changes that for the next question: \textbf{Automatic}, the default;
+\textbf{Pollis} or \textbf{Julia Manual} alone; or \textbf{All Sources}. It is shown only when the Julia Manual is
+searched too (\S\ref{sec:settings}).
 
 \subsection{Following up}
 Ask another question below the answer, and it is read with the conversation so far: \emph{and on Windows?} after a
@@ -118,14 +128,16 @@ nothing remembered. The conversation is kept only while the page is open.
 \begin{itemize}
   \item \textbf{This Computer}, the default: the chat model of \file{pollis.ask.chatModel}, run by llama.cpp. Its name
     is shown, with the model picker of every local model input, and its first answer downloads it, once.
-  \item \textbf{A cloud model}: Claude Haiku, Claude Sonnet, GPT-5.4 mini or GPT-5.5, with your own Anthropic or OpenAI
-    key, kept in Pollis's secret storage. The key indicator beside the choice says whether a key is set.
+  \item \textbf{A cloud model}: Claude Haiku, Claude Sonnet, GPT-5.4 mini, GPT-5.5, Gemini 3.8 Flash or Gemini 4 Argon,
+    with your own Anthropic, OpenAI or Google key, kept in Pollis's secret storage. The key indicator beside the choice says whether a key is set.
 \end{itemize}
 The passages are always found on this computer, whichever model answers.
 
 \begin{pbox}{What the questions are good for}
 Ask Pollis knows what the documents say, and nothing else. It is good at \emph{how do I}, \emph{where is},
-\emph{what does this setting do} and \emph{which panel computes}; it does not run code, look at your files or know
+\emph{what does this setting do} and \emph{which panel computes}, and, from the Julia Manual, at \emph{what does
+\texttt{@views} do}, \emph{how do I write an outer constructor} and \emph{what is the difference between
+\texttt{map} and \texttt{broadcast}}; it does not run code, look at your files or know
 what Pollis did on your computer. When the documents do not answer a question, it says so, and lists the passages that
 came closest.
 \end{pbox}
@@ -145,12 +157,27 @@ The panel wikis & the wiki files that come with Pollis, those written only & the
 The package vignettes & their PDFs, once compiled (opened once in Help\gt Documentation\gt Packages) & the package, the
   page, the section\\
 The installed toolboxes & their documents and their panels' wikis & as above, with the toolbox's name\\
+The Julia Manual & the search index of the documentation that comes with the Julia that Pollis runs: the Manual, Base
+  and the standard library & its page, and the section or the function the passage is in\\
 \bottomrule
 \end{tabularx}
 \end{center}
 
 A wiki still \emph{Not written yet.} is left out: it would match questions about its panel with nothing to say. A
 toolbox's passages come in when it is installed and go when it is removed.
+
+\subsection{The Julia Manual}\label{sec:manual}
+Every Julia comes with its documentation, as the HTML of docs.julialang.org, in \file{share/doc/julia/html/en} beside
+the Julia itself, with the search index its search box uses, \file{search\_index.js}: each section of the Manual and
+each docstring of Base and the standard library, with its page, its title, its text and its anchor in the page. Ask
+Pollis reads that index, with the Julia that the REPL runs, so the Manual is always that of the Julia you use: a Julia
+updated brings its own, with nothing to download. The developer documentation, on Julia's own internals, is left out,
+as is the table of Unicode Input, the list of the \texttt{\textbackslash}-names of the Unicode characters, which has
+nothing to say to a question.
+
+The Julia Manual is a source of its own, beside Pollis's, and is searched too unless \file{pollis.ask.juliaManual} is
+off (\S\ref{sec:settings}). A Julia installed without its documentation, as some Linux distributions do, gives no
+Julia Manual, and Ask Pollis searches Pollis's documents alone.
 
 \section{Cutting into passages}\label{sec:passages}
 
@@ -169,23 +196,34 @@ A wiki is Markdown: it is cut at its headings, and a section longer than about 2
 way. A code block stays whole, and stays with the paragraph that introduces it. Tables are kept as rows of text, a
 column's heading before each value, so that \emph{Default: 20} can be found under the right row.
 
+\subsection{The Julia Manual}
+Each entry of the search index, a section or a docstring, is cut at its paragraphs, the same way, and labelled with its
+page and its title: \emph{Constructors \textgreater{} Outer Constructor Methods}. Short entries, such as the docstrings
+of one line, are joined with those that follow them on the same page, so that a passage still says something whole.
+Each passage keeps the anchor of its entry, \file{manual/constructors.html\#man-outer-constructor-methods}, where
+\textbf{Open} shows it.
+
 \subsection{How many}
-The documents of Pollis make between one and two thousand passages: the written panel wikis most of them, the Guide
-about two hundred. The figure grows with the wikis written and the toolboxes installed.
+The documents of Pollis make about a thousand passages: the written panel wikis most of them, the Guide about two
+hundred. The figure grows with the wikis written and the toolboxes installed. The Julia Manual of Julia 1.13 makes
+2,446: 899 of the Manual, 839 of Base, 703 of the standard library and 5 of its first page.
 
 \section{The index}\label{sec:index}
 
 \subsection{One DuckDB file}
-The passages are kept in \file{~/.pollis/ask/PollisAsk.duckdb}, on the DuckDB engine that comes with Pollis:
+The passages are kept in \file{~/.pollis/documents/PollisDocuments.duckdb}, on the DuckDB engine that comes with Pollis:
 
 \begin{lstlisting}[language=SQL]
-documents(id, kind, title, source, menu, toolbox, version)   -- one row per document read
-passages(id, document, page, heading, text, embedding FLOAT[768])
+documents(id, kind, title, source, menu, toolbox, version, collection)   -- one row per document read
+passages(id, document, page, heading, text, anchor, embedding FLOAT[768])
+collections(name, passages)   -- one row per source: Pollis, Julia Manual
 built(name, value)          -- the embedding model, its prefixes, the Pollis version
 \end{lstlisting}
 
 \file{version} is the size and date of the file a document was read from, so that only the documents that changed are
-read again (\S\ref{sec:fresh}).
+read again (\S\ref{sec:fresh}); for the Julia Manual, the Julia version too. \file{collection} is the source a
+document belongs to (\S\ref{sec:routing}), and \file{anchor} the place of a passage of the Julia Manual in its HTML
+page.
 
 \subsection{Words: the fts index}
 DuckDB's full-text search extension, \emph{fts}, which comes with Pollis, indexes the heading and the text of each
@@ -214,7 +252,8 @@ about a million passages (\S\ref{sec:open}).
 \section{Finding the passages}\label{sec:finding}
 
 \subsection{Two searches}
-Each question is searched twice:
+Ask Pollis uses hybrid search: BM25 keyword search and embedding-based semantic search, merged by Reciprocal
+Rank Fusion into the top 8 passages, all on PollisDocuments.duckdb. Each question is searched twice:
 \begin{itemize}
   \item \textbf{By words}: BM25, through the fts index, scores the passages that contain the question's words, the
     rarer a word in the documents, the more it counts. It is what finds an exact name:
@@ -247,13 +286,41 @@ GROUP BY id ORDER BY score DESC LIMIT 8;
 The best eight passages go to the model, about three thousand words in all. In a conversation, the question is searched
 together with the one before it, so that \emph{and on Windows?} still finds the passages on installing an agent.
 
+\subsection{Pollis or Julia: routing}\label{sec:routing}
+A question about Pollis would find passages of the Julia Manual too, and the other way round, since both speak of
+packages, environments and the REPL. So each question is first routed: its embedding is compared with every passage's,
+as in the search by meaning, and each source is as near as its nearest passage. The question is searched in the
+nearest source, and in any other almost as near, within a cosine distance of 0.075: \emph{how do I install a coding
+agent?} goes to Pollis, \emph{how do I write an outer constructor?} to the Julia Manual, \emph{how do I add a package
+to my environment?} to both. When two are searched, the nearest gives five of the eight passages and the other three,
+each source's passages found by words and by meaning as above.
+
+\begin{center}\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{@{}p{0.34\linewidth}LL@{}}
+\toprule
+\textbf{38 questions} & \textbf{Nearest by the nearest passage} & \textbf{Nearest by the average of the passages}\\
+\midrule
+15 on Pollis & Pollis for 15, by 0.045 to 0.246; 1 searched in both & Pollis for 15, by 0.037 to 0.117\\
+15 on Julia & the Julia Manual for 15, by 0.000 to 0.161; 4 searched in both & the Julia Manual for 6\\
+8 on both & 7 searched in both & Pollis for 6\\
+\bottomrule
+\end{tabularx}
+\end{center}
+The average of each source's passages, which would be quicker, was tried first, and set aside: Pollis's documents speak
+of Julia so often that their average is nearer than the Julia Manual's to most questions on Julia. The margin of
+0.075 lies between the gaps of the questions on one source: with 0.05, only 4 of the 8 on both are searched in both;
+from 0.087, questions on Pollis begin to be. Before
+the embeddings are ready, every source is searched by words. \textbf{Search In} (\S\ref{sec:asking}) sets the sources
+by hand.
+
 \section{Writing the answer}\label{sec:answer}
 
 \subsection{What the model is given}
 The model is given an instruction, the conversation so far, and the passages, each numbered and labelled:
 
 \begin{lstlisting}
-You answer questions about Pollis from the passages below, taken from its documentation.
+You answer questions about Pollis and Julia from the passages below, taken from their documentation.
 Use only what the passages say. Name menus, buttons and settings exactly as the passages write them.
 After each statement, cite the passages it rests on, as [1] or [1, 3].
 If the passages do not answer the question, say so in one sentence, and name the passages that come closest.
@@ -304,7 +371,16 @@ comparable, and can change their length. Changing the chat model changes nothing
 
 Which model should answer: a small one that is quick, a larger one that is slower, or a cloud model? \textbf{Compare
 Models...}, on the Ask Pollis page, answers that with figures, for the models you choose: any chat models on this
-computer, of any size, and any cloud models with a key, such as Qwen3.5 0.8B, 4B and 9B against Claude Sonnet.
+computer, of any size, and any cloud models with a key, such as Qwen3.5 0.8B, 2B, 4B and 9B, Llama 3.2 1B and 3B and
+Llama 3.1 8B against Claude Sonnet. The local models are those of \menupath{Compose\gt Local Models}, downloaded there.
+How fast and how well each model does other work, statistics, Julia code, DuckDB SQL and summaries, is the benchmark
+of \menupath{Compose\gt Local Models}, a page of its own.
+
+Compare Models is a page with four tabs, \textbf{One Question}, \textbf{Test Set}, \textbf{Embedding Models} and
+\textbf{Runs}, opened from \menupath{Compose\gt Local Models\gt Compare Models...}, beside the models it compares, and
+from the button on the Ask Pollis page. Each tab is a part of
+its own, with a command that opens the page at that tab, so that each can later have a menu item, or a window, of its
+own.
 
 \subsection{Fair by construction}
 Every model is given the same questions, the same passages and the same instruction (\S\ref{sec:answer}), so what is
@@ -313,20 +389,33 @@ question, on this computer, whichever models are compared. The local models run 
 memory, so that none is slowed by another.
 
 \subsection{One question, side by side}
-\textbf{One Question} takes a question and shows each model's answer in a column of its own, with its sources and the
-seconds it took. \textbf{Score These} then has the judge (\S\ref{sec:judge}) score each answer. It is the quick look:
-how the answers differ, on a question that matters to you.
+\textbf{One Question} takes a question and shows each model's answer in a column of its own, with its sources, the
+time to its first word and the seconds it took. The question may be about Pollis or about Julia: \textbf{Search In},
+as on the Ask Pollis page (\S\ref{sec:routing}), searches Pollis' own documents, the Julia Manual or all; Automatic,
+the default, searches those the question is about. \textbf{Score These} then has the judge (\S\ref{sec:judge}) score
+each answer. It is the quick look: how the answers differ, on a question that matters to you.
 
 \subsection{A test set, scored}
 \textbf{Test Set} runs many questions, and gives each model its figures. The questions come two ways:
 \begin{itemize}
-  \item \textbf{Made from the documents}: \textbf{Make Questions} takes 40 passages spread over the documents and has a
-    model, Claude Sonnet by default, write for each a question that only that passage answers, and the answer. This is
+  \item \textbf{Made from the documents}: \textbf{Make Questions} takes 40 passages spread over the documents and has
+    the model of the \textbf{Questions By} field, Claude Sonnet by default, write for each a question that only that
+    passage answers, and the answer. This is
     RAGTools.jl's \file{build\_qa\_evals}. It is done once, and kept.
   \item \textbf{Your own}: under an answer of Ask Pollis, \textbf{Add to the Test Set} keeps the question, with the
     answer you write and the source that holds it, chosen among its Sources.
 \end{itemize}
-\textbf{Run} then asks every question of every model chosen, and has each answer scored. A run of 40 questions on
+The test set is a file of RAGTools.jl, \file{evals.json}: a JSON array of its \file{QAEvalItem}, each with four
+fields, \file{source} (the document and the place in it), \file{context} (the passage itself), \file{question} and
+\file{answer}, as \file{JSON3.write} saves them and \file{JSON3.read(file, Vector\{QAEvalItem\})} reads them back. So a
+test set made elsewhere with RAGTools.jl can be run in Pollis, and one of Pollis read by anyone who uses RAGTools.jl:
+\textbf{Import} and \textbf{Export} take and give such a file. Pollis comes with one, made with \textbf{Make
+Questions} and reviewed question by question, so that every computer starts from the same questions and its figures
+can be set beside another's. Since each question keeps its passage, a question whose
+passage is no longer in the documents is shown as such.
+
+\textbf{Run} then asks every question of every model chosen, \textbf{Repeats} times, once by default, and has each
+answer scored. A run of 40 questions on
 three local models and a cloud one takes some minutes with a graphics chip or Apple silicon, and up to an hour on a
 laptop without one. It runs in the background, with its progress shown, and \textbf{Stop} ends it with the questions
 done kept.
@@ -342,7 +431,12 @@ Model, Where, Size & the model, on this computer or in the cloud, and its downlo
 Score & the mean of the judge's ratings, from 1 (worst) to 5 (best)\\
 Relevance, Completeness, Clarity, Consistency, Helpfulness & the five parts of the rating, each from 1 to 5\\
 Not Scored & the answers the judge could not rate, or the model did not give\\
+First Word & per answer, the mean time from the question sent to the first word, in milliseconds\\
 Seconds & per answer, the mean, from the question sent to the last word\\
+Reading, Writing & for a local model, how fast it reads the passages and writes the answer, in tokens per second,
+  as llama-server measures them\\
+Spread & with \textbf{Repeats} above 1, how much the score and the seconds vary from one asking of the same
+  question to the next\\
 Tokens & per answer, read and written, for a cloud model what is paid for\\
 \bottomrule
 \end{tabularx}
@@ -354,8 +448,8 @@ the same models after a new Pollis, or a new model against the old.
 The judge is a model that reads the question, the passages and an answer, and rates the answer: how relevant,
 complete, clear and helpful it is, and how consistent with the passages, the five parts of RAGTools.jl's
 \file{run\_qa\_evals}. It rates against the passages, not against the answer written with the question: an answer that
-says what the passages say, in other words, scores as well. The judge is Claude Sonnet by default, and any chat model,
-local or cloud, can be chosen; a small local model judges poorly. A judge may favour models of its own family, Claude
+says what the passages say, in other words, scores as well. The judge is the model of the \textbf{Judge} field, Claude Sonnet
+by default: any chat model, on this computer or in the cloud, Claude Opus among them; a small local model judges poorly. A judge may favour models of its own family, Claude
 those of Claude, so a run can be scored by two judges, say Claude Sonnet and GPT-5.5, each in a column of its own.
 
 \subsection{The passages found, and the embedding models}
@@ -389,8 +483,10 @@ it. Most questions about a named menu item are answered as well; a question in o
 less well.
 
 \subsection{What changes it}
-A new Pollis, a wiki written, a vignette compiled, a toolbox installed or removed, or another embedding model. Nothing
-else: your questions are not kept in the index, nor anywhere after the page is closed.
+A new Pollis, a wiki written, a vignette compiled, a toolbox installed or removed, or another embedding model. For the
+Julia Manual, a Julia REPL started with another Julia version, which reads that Julia's Manual, or
+\file{pollis.ask.juliaManual} turned on or off. The embeddings are kept by their text, so after a Julia update only the
+passages whose text changed are embedded again, in seconds. Nothing else: your questions are not kept in the index, nor anywhere after the page is closed.
 
 \section{When something goes wrong}
 
@@ -406,9 +502,13 @@ else: your questions are not kept in the index, nor anywhere after the page is c
   meaning too.\\
 \emph{The model could not be started} & Open \menupath{Compose\gt Local Models\gt Models Installed}, check that the
   model is there and that it fits in memory, or choose a smaller one, or a cloud model.\\
-\emph{No key for Anthropic} (or OpenAI) & Set the key with the key indicator beside \textbf{Answer With}.\\
+\emph{No key for Anthropic} (or OpenAI, or Google) & Set the key with the key indicator beside \textbf{Answer With}.\\
 An answer that cites nothing & The passages did not answer the question; try the words the documents use, such as the
   name of the menu item.\\
+\emph{Searched: Pollis.} for a question on Julia (or the other way round) & Choose the source in \textbf{Search In}
+  and ask again.\\
+No Julia Manual in \textbf{Search In} & Your Julia came without its documentation (\S\ref{sec:manual}), or
+  \file{pollis.ask.juliaManual} is off.\\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -427,6 +527,7 @@ An answer that cites nothing & The passages did not answer the question; try the
 \file{pollis.ask.queryPrefix} & What a question is given to the embedding model as: \texttt{\small task: question answering \textbar{} query: \{text\}}\\
 \file{pollis.ask.passagePrefix} & What a passage is given to it as: \texttt{\small title: \{title\} \textbar{} text: \{text\}}\\
 \file{pollis.ask.passages} & How many passages go to the model: 8\\
+\file{pollis.ask.juliaManual} & Whether the Julia Manual is searched too: on\\
 \file{pollis.ask.compare.judges} & The judges of Compare Models: Claude Sonnet\\
 \file{pollis.ask.compare.questionsBy} & The model that makes the questions of a test set: Claude Sonnet\\
 \bottomrule
@@ -443,22 +544,85 @@ An answer that cites nothing & The passages did not answer the question; try the
 \midrule
 \file{.../compose/browser/compose.contribution.ts} & Help\gt Ask Pollis\\
 \file{.../compose/browser/askPollisPage.ts} & The page: the question, Answer With, the answer as it comes, Sources\\
-\file{.../compose/node/askPollisMain.ts} & The DuckDB process that searches \file{PollisAsk.duckdb} (\S\ref{sec:finding})\\
+\file{.../compose/node/askPollisMain.ts} & The DuckDB process that searches \file{PollisDocuments.duckdb} (\S\ref{sec:finding})\\
 \file{extensions/language-julia/src/pollisDocuments.ts} & Starts the indexing after the documents are compiled\\
-\file{.../terminalserver/ask\_index.jl} & Reads, cuts and indexes the documents, and computes the embeddings\\
+\file{.../terminalserver/ask\_index.jl} & Reads, cuts and indexes the documents and the Julia Manual, and computes the
+  embeddings\\
 \file{extensions/language-julia/src/pollisLlamaServer.ts} & Runs the embedding and the chat model with llama-server\\
-\file{.../compose/browser/media/askPollisPrompt.md} & The instruction of \S\ref{sec:answer}, the same for Ask Pollis
-  and Compare Models\\
-\file{.../compose/browser/compareModelsPage.ts} & Compare Models: One Question, Test Set, the runs\\
+\file{.../compose/common/askPollis.ts} & The instruction of \S\ref{sec:answer} (\texttt{ASK\_INSTRUCTION}), the same for
+  Ask Pollis and Compare Models, and the cloud models\\
+\file{.../compose/browser/askPollisWebview.ts} & What Ask Pollis and Compare Models show of an answer alike: its
+  citations, its Sources, and the passage opened in its document\\
+\file{.../compose/browser/compareModelsPage.ts} & Compare Models: the page, its tabs, the models chosen, and the
+  commands; each tab in a file of its own beside it\\
+\file{.../compose/browser/compareModelsTabs.ts} & What a tab of Compare Models is, and what the page gives it\\
+\file{.../compose/browser/compareOneQuestion.ts} & The One Question tab\\
 \file{extensions/language-julia/src/pollisCompareModels.ts} & Runs a comparison in a Julia process of its own, each
   local model in turn\\
 \file{.../terminalserver/ask\_compare.jl} & Makes the questions, asks them, and has them judged, with RAGTools.jl\\
-\file{~/.pollis/ask/PollisAsk.duckdb} & The index\\
-\file{~/.pollis/ask/Comparisons.duckdb} & The test sets, the runs, their answers and scores, and the passages'
+\file{~/.pollis/documents/PollisDocuments.duckdb} & The index\\
+\file{~/.pollis/ask/evals.json} & The test set, a file of RAGTools.jl\\
+\file{~/.pollis/ask/Comparisons.duckdb} & The runs, their answers and scores, and the passages'
   embeddings of the embedding models compared\\
 \bottomrule
 \end{tabularx}
 \end{center}
+
+\section{Next: Ask Pollis in every panel}\label{sec:panels}
+
+A model in the cloud knows only the context it is given, and a long conversation with it is soon cut short. A panel
+of Pollis already holds the context of its question: what it computes, its wikis, the packages that power it, the
+methods it is about and the articles it cites. Asked in a panel, Ask Pollis brings all of it along by itself, without a
+word written about it, and searches what is written for that panel's topic rather than everything.
+
+\subsection{Four sources}
+\begin{center}\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{@{}p{0.2\linewidth}LL@{}}
+\toprule
+\textbf{Source} & \textbf{What it holds} & \textbf{Of a panel}\\
+\midrule
+Pollis & the documents of \S\ref{sec:reads} & its wikis, and what the documents say of it\\
+Packages & the manual of each Julia package, and the Julia Manual & the packages of its \textbf{Powered by}\\
+Books & open books on Statistics, Machine Learning, AI, Simulation and Optimisation & what they say of its topic,
+  found by its name and its Overview\\
+Articles & the works the panels cite, from PollisReferences & the works it cites\\
+\bottomrule
+\end{tabularx}
+\end{center}
+Each source is a collection of PollisDocuments, beside Pollis's own, and \menupath{Help\gt Ask Pollis} searches them
+too, by routing or as \textbf{Search In} chooses. The instruction of \S\ref{sec:answer} then speaks of Pollis and the
+methods of its panels, not of Pollis alone, and \textbf{Sources} names the source of each passage.
+
+\subsection{The steps}
+After the seven of Ask Pollis itself, four more, each usable when done:
+\begin{enumerate}[start=8, leftmargin=*]
+  \item \textbf{Packages}: the manual of an installed package is Markdown in its \file{docs/src}, under
+    \file{~/.julia/packages}, of the very version installed, with nothing to download. It is cut as a wiki is, its
+    \texttt{@docs} blocks filled with the docstrings they name; a package without \file{docs} gives the docstrings of
+    what it exports. The Julia Manual of step 6 is the first collection of this kind.
+  \item \textbf{Ask Pollis in a panel}: a box below \textbf{Key Points}, the same in every panel, from the scaffold of
+    the panels. The question is asked with the panel's name, its menu and the first lines of its Overview, \emph{The
+    question is asked in the panel \ldots}; it is searched in that panel's share of each source, with no routing, and
+    the eight passages are shared among the sources, as the 5 and 3 of routing are. First with Pollis and Packages.
+  \item \textbf{Books}: a catalogue of open books, each switched on by the user and then downloaded from its author's
+    page on this computer, never shipped with Pollis unless its licence allows. A book's topic is found by search, not
+    by a map of chapters to panels, which would not keep up with two hundred panels. A book of 600 pages is about a
+    thousand passages, some 40 seconds of embeddings on an M4 with Metal, much longer on a computer without a graphics
+    chip; so books are embedded in the background, one at a time. The candidates, each to be checked for its licence
+    and its link, as a classic paper is: OpenIntro Statistics; An Introduction to Statistical Learning; The Elements
+    of Statistical Learning; Dive into Deep Learning; Probabilistic Machine Learning; Convex Optimization; Algorithms
+    for Optimization; Algorithms for Decision Making. Simulation is still without one.
+  \item \textbf{Articles}: the works a panel cites, from PollisReferences: their abstracts at once, their full text
+    where it is open, on arXiv or PubMed Central.
+\end{enumerate}
+
+\subsection{Still open}
+\begin{itemize}
+  \item What is chosen in the panel, its model, its data, its settings, could be sent with the question too.
+  \item Unpaywall would find more open articles, but asks for an email address with each request: Pollis would send
+    one only if you gave it.
+\end{itemize}
 
 \section{Open points}\label{sec:open}
 \begin{itemize}
@@ -479,6 +643,8 @@ An answer that cites nothing & The passages did not answer the question; try the
     cost of some seconds. RAGTools.jl could come into Ask Pollis later, for reranking.
   \item \textbf{Test sets in English}: the questions made from the documents are in English, as the documents are; a
     test set in another language would show how well each model answers in it.
+  \item \textbf{The routing margin}: 0.075 (\S\ref{sec:routing}) was checked on 38 questions. A test set of Compare
+    Models (\S\ref{sec:compare}), with the source of each question known, would check it on many more.
   \item \textbf{One stemmer}: the search by words stems English only; a question in another language is found by its
     meaning.
   \item \textbf{No reranker}: the eight passages are those of the merged ranks. A model that reads the question with

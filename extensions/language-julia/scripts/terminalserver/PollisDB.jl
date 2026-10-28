@@ -134,6 +134,8 @@ const REFERENCES_PACKAGE = joinpath(REFERENCES_HOME, "package.json")
 const REFERENCES_DB = joinpath(homedir(), ".pollis", "databases", "PollisReferences.duckdb")
 """The SQL that `REFERENCES_DB` was made with, and the size and time of the `pollis.json` and `REFERENCES_PACKAGE` it was made from."""
 const REFERENCES_STAMP = REFERENCES_DB * ".stamp"
+"""The PollisDocuments database: the passages of Pollis' documents that Ask Pollis searches, made by ask_index.jl when the REPL starts."""
+const DOCUMENTS_DB = joinpath(homedir(), ".pollis", "documents", "PollisDocuments.duckdb")
 
 """The folder of the snapshots, one `<id>.<window>.json` per connection, watched by the Databases view."""
 const SESSIONS = joinpath(homedir(), ".pollis", "databases", "sessions")
@@ -371,14 +373,14 @@ end
 const DUCKDB_CONFIG = ["autoinstall_known_extensions" => "false", "autoload_known_extensions" => "false"]
 
 """The built-in databases that `connect` attaches, read-only, under their own names."""
-builtins() = filter(isfile, [DATASETS_DB, RSS_DB, JOURNALS_DB, REFERENCES_DB])
+builtins() = filter(isfile, [DATASETS_DB, RSS_DB, JOURNALS_DB, REFERENCES_DB, DOCUMENTS_DB])
 
 """
     connect(path = ":memory:"; name = "DuckDB", builtins = true, fts = true, show = true)
 
 Open the DuckDB database `path` with the engine of Pollis and return it, ready for
 `DBInterface.execute`. The built-in databases are attached read-only as `PollisDatasets`,
-`PollisRSS`, `PollisJournals` and `PollisReferences`, and the fts extension, full-text search, is loaded. The connection is shown in the Databases
+`PollisRSS`, `PollisJournals`, `PollisReferences` and `PollisDocuments`, and the fts extension, full-text search, is loaded. The connection is shown in the Databases
 view as `name`. DuckDB never downloads extensions here: those that Pollis brings are all there is.
 
 ```julia

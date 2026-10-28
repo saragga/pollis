@@ -5,6 +5,7 @@
 *.log
 *.out
 *.toc
+*.labels
 *.synctex.gz
 /tour/pollis_tour.pdf
 /guide/pollis_guide.pdf

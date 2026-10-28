@@ -6,7 +6,9 @@
 // text, or {error} with the last lines it printed. A projector (mmproj) in the model's folder is loaded with it, so that
 // the model reads the images or audio it was made for (pollisModels.ts, projectorOf). Julia asks the same
 // with the request `pollis/llamaServer` (Pollis.llama_server in Pollis.jl), from the REPL or a notebook. There is one server
-// per model file and way of running it; each stops when Pollis quits, or with `language-julia.pollisStopLlamaServers`.
+// per model file and way of running it; each stops when Pollis quits, or with `language-julia.pollisStopLlamaServers`;
+// `language-julia.pollisStopLlamaServer`, with the request that started it, stops one, and answers once it has ended,
+// its memory free: Compare Models runs each local model alone.
 // What the servers print goes to the llama.cpp Output channel. Thinking is off unless asked for, whatever the model:
 // on the short tasks of the panels it only costs time, and can use up the reply before any answer; a model that does
 // not think ignores it.
@@ -78,12 +80,17 @@ async function whenHealthy(url: string, running: () => boolean): Promise<boolean
     return false
 }
 
-function startServer(request: ServerRequest): Promise<ServerAnswer> {
+/** The server of a model file and way of running it, in g_servers. */
+function serverKey(request: ServerRequest): string {
+    return JSON.stringify([request.model.trim(), !!request.embeddings, !!request.thinking, request.context])
+}
+
+export function startServer(request: ServerRequest): Promise<ServerAnswer> {
     const executable = serverPath()
     if (!executable) {
         return Promise.resolve({ error: 'llama-server is not part of this build of Pollis.' })
     }
-    const key = JSON.stringify([request.model.trim(), !!request.embeddings, !!request.thinking, request.context])
+    const key = serverKey(request)
     const running = g_servers.get(key)
     if (running) {
         return running.ready
@@ -109,6 +116,8 @@ function startServer(request: ServerRequest): Promise<ServerAnswer> {
             '--port', String(port),
             '--alias', name,
             '--ctx-size', String(request.context ?? (request.embeddings ? 0 : DEFAULT_CONTEXT)),
+            // An embedding model reads each text in one batch: with a context, a text as long as it fits
+            ...(request.embeddings && request.context ? ['--batch-size', String(request.context), '--ubatch-size', String(request.context)] : []),
             ...(request.embeddings ? ['--embeddings'] : ['--reasoning', request.thinking ? 'on' : 'off']),
         ]
         output.appendLine(`[${name}] ${executable} ${args.join(' ')}`)
@@ -167,6 +176,21 @@ export function answerLlamaServerRequests(connection: MessageConnection) {
     connection.onRequest(requestTypeLlamaServer, (request) => startServer(request))
 }
 
+/** Stops the server that `request` started, if it runs, and resolves once its process has ended. */
+function stopServer(request: ServerRequest): Promise<void> {
+    const key = serverKey(request)
+    const server = g_servers.get(key)
+    g_servers.delete(key)
+    const child = server?.process
+    if (!child || child.exitCode !== null || child.signalCode !== null) {
+        return Promise.resolve()
+    }
+    return new Promise((resolve) => {
+        child.once('exit', () => resolve())
+        child.kill()
+    })
+}
+
 function stopServers() {
     for (const server of g_servers.values()) {
         server.process?.kill()
@@ -177,6 +201,7 @@ function stopServers() {
 export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.commands.registerCommand('language-julia.pollisLlamaServer', (request: ServerRequest) => startServer(request)),
+        vscode.commands.registerCommand('language-julia.pollisStopLlamaServer', (request: ServerRequest) => stopServer(request)),
         vscode.commands.registerCommand('language-julia.pollisStopLlamaServers', () => stopServers()),
         { dispose: () => stopServers() },
         { dispose: () => g_output?.dispose() }

@@ -5,6 +5,7 @@
 
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
 import { joinPath } from '../../../../base/common/resources.js';
+import { URI } from '../../../../base/common/uri.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, MenuId, registerAction2 } from '../../../../platform/actions/common/actions.js';
 import { Categories } from '../../../../platform/action/common/actionCommonCategories.js';
@@ -49,6 +50,11 @@ type ToolboxDocumentsMessage =
 
 function documentKey(toolbox: IToolboxInfo, document: IToolboxDocumentInfo): string {
 	return `${toolbox.extensionId}/${toolbox.id}/${document.name}`;
+}
+
+/** Where a toolbox document's PDF is compiled to, under the user's home: ~/.pollis/documents/toolboxes/EXTENSION-VERSION/NAME.pdf. */
+export function toolboxDocumentPdf(userHome: URI, toolbox: IToolboxInfo, document: IToolboxDocumentInfo): URI {
+	return joinPath(userHome, '.pollis', 'documents', 'toolboxes', `${toolbox.extensionId}-${toolbox.version}`, `${document.name}.pdf`);
 }
 
 /** The open page, so a second request shows it again. */
@@ -106,7 +112,7 @@ async function openToolboxDocumentsPage(accessor: ServicesAccessor): Promise<voi
 
 	// A document's PDF: compiled from its sources the first time, then the copy compiled
 	const openDocument = async (toolbox: IToolboxInfo, document: IToolboxDocumentInfo) => {
-		const pdf = joinPath(pathService.userHome({ preferLocal: true }), '.pollis', 'documents', 'toolboxes', `${toolbox.extensionId}-${toolbox.version}`, `${document.name}.pdf`);
+		const pdf = toolboxDocumentPdf(pathService.userHome({ preferLocal: true }), toolbox, document);
 		if (!await fileService.exists(pdf)) {
 			let answer: { pdf?: string; error?: string } | undefined;
 			await progressService.withProgress({ location: ProgressLocation.Window, title: localize('toolboxDocuments.compiling', "Compiling {0}", document.title) }, async () => {

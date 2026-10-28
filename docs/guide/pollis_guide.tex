@@ -71,6 +71,7 @@
   \clearpage
   \ifodd\value{page}\hbox{}\thispagestyle{empty}\clearpage\fi
   \renewcommand{\topicname}{#1}%
+  \asklabel{1}{#1}%
   {\color{navy}\fontsize{20}{24}\selectfont\bfseries #1}\par\vspace{2pt}
   {\color{deepamber}\small\bfseries #2}\par\vspace{3pt}
   {\color{soft}#3}\par\vspace{5pt}
@@ -82,12 +83,13 @@
   \clearpage
   \ifodd\value{page}\else\hbox{}\thispagestyle{empty}\clearpage\fi
   \renewcommand{\topicname}{#1}%
+  \asklabel{1}{#1}%
   {\color{navy}\fontsize{20}{24}\selectfont\bfseries #1}\par\vspace{2pt}
   {\color{deepamber}\small\bfseries #2}\par\vspace{3pt}
   {\color{soft}#3}\par\vspace{5pt}
   {\color{amber}\rule{\linewidth}{0.6pt}}\par\vspace{3pt}}
 
-\newcommand{\subhead}[1]{\par\vspace{5pt}{\color{navy}\large\bfseries #1}\par\vspace{1pt}}
+\newcommand{\subhead}[1]{\par\vspace{5pt}\asklabel{2}{#1}{\color{navy}\large\bfseries #1}\par\vspace{1pt}}
 % A menu path or a button, as Pollis shows it
 \newcommand{\ui}[1]{\textbf{#1}}
 % A setting's id
@@ -112,6 +114,8 @@
 
 % A topic not written yet
 \newcommand{\pending}[1]{\begin{note}{To be written}#1\end{note}}
+
+\input{../ask_labels}
 
 \begin{document}
 
@@ -170,7 +174,8 @@ Questions and problems: \ui{Help > Report Issue}, or \contactemail.
 {\color{deepamber}\bfseries 38} & Snowball Search Map\\
 {\color{deepamber}\bfseries 40} & Built-in Databases\\
 {\color{deepamber}\bfseries 42} & Ask Pollis\\
-{\color{deepamber}\bfseries 44} & Appendix: Reference Keys
+{\color{deepamber}\bfseries 44} & Appendix: Reference Keys\\
+{\color{deepamber}\bfseries 48} & Appendix: Packages and Pull Requests
 \end{tabular}
 \end{tcolorbox}
 \end{minipage}
@@ -228,7 +233,7 @@ give the path of the Julia program in the setting \setting{julia.executablePath}
 \newpage
 \subhead{The first start of the Julia REPL}
 When Pollis opens, the Julia REPL starts in the panel at the bottom. The first time, it installs
-DuckDB and PollisDatasets, makes the four built-in databases, PollisDatasets, PollisRSS (empty until
+DuckDB and PollisDatasets, makes the built-in databases PollisDatasets, PollisRSS (empty until
 feeds are read), PollisJournals and PollisReferences (Built-in Databases, page 40), and says \emph{This happens only once}. They go into an environment of Pollis's own,
 \texttt{\textasciitilde/.pollis/julia}, which comes after yours: your own versions of these packages are used
 first. At later starts, PollisDatasets, PollisJournals, PollisReferences and PollisRSS are updated from
@@ -411,7 +416,7 @@ Then query it in the Julia REPL with SQL:
 
 \subhead{Three ways to use SQL}
 SQL should be at hand wherever you are working, without a second database program: all three use the
-same DuckDB engine, with its full-text search extension, \emph{fts}, and attach the four built-in databases, read-only.
+same DuckDB engine, with its full-text search extension, \emph{fts}, and attach the five built-in databases, read-only.
 \begin{itemize}
   \item \textbf{The \texttt{duckdb>} terminal}, for SQL alone, without starting Julia: \ui{New DuckDB
     Terminal}, at the top of the Databases view (or \ui{Databases: New DuckDB Terminal} in the Command
@@ -872,7 +877,7 @@ HARE & Heteroskedasticity and autocorrelation estimators &
   \ui{Model > Linear Models}: \ui{Linear Models with Heteroskedasticity}, \ui{with Autocorrelation} and
   \ui{with Heteroskedasticity + AR(1)} \\
 RangeVol & Range-based volatility estimators &
-  The Range-Based Volatility Estimation panel, not in the menus at present \\
+  \ui{Extend > Financial Econometrics > Measuring Volatility}, with the Financial Econometrics Toolbox \\
 \end{tabularx}}
 
 \subhead{Install one}
@@ -1619,7 +1624,7 @@ Not every task needs the strongest model. \ui{Compose > Orchestration > Model Ta
   \item \ui{Strong}: hard tasks, where a mistake costs most.
 \end{itemize}
 A tier is a cell of a table, whose columns are the \ui{Code Agents}, Claude Code, Codex, OpenCode and your
-own, and whose rows are the \ui{Models}: \ui{Cloud}, such as Claude Haiku, Sonnet and Opus or GPT-5.5, and
+own, and whose rows are the \ui{Models}: \ui{Cloud}, such as Claude Haiku, Sonnet and Opus, GPT-5.5 or Gemini 4 Argon, and
 \ui{Local}, the chat models on this computer. Type a tier's name in a cell, and the tier is that agent on
 that model; a new name makes a new tier. A tier is in one cell only, and a dash marks a model the agent
 cannot run. Unless you change them, Light, Standard and Strong are Claude Code on Haiku, Sonnet and Opus.
@@ -1854,13 +1859,13 @@ found. \ui{Open...} brings a saved map back; \ui{New Search} starts again.
 % =====================================================================
 % PAGES 40–41 — BUILT-IN DATABASES
 % =====================================================================
-\topic{Built-in Databases}{Databases view > PollisDatasets, PollisRSS, PollisJournals, PollisReferences}{The four databases that come with Pollis: what each holds, and how to add journal metrics.}
+\topic{Built-in Databases}{Databases view > PollisDatasets, PollisRSS, PollisJournals, PollisReferences, PollisDocuments}{The five databases that come with Pollis: what each holds, and how to add journal metrics.}
 
-Pollis makes four DuckDB databases the first time the Julia REPL starts (Getting Started, page 2), and keeps
-them in \texttt{\textasciitilde/.pollis/databases}. All four are read-only: Pollis rebuilds them when what
+Pollis makes five DuckDB databases the first time the Julia REPL starts (Getting Started, page 2): four in
+\texttt{\textasciitilde/.pollis/databases}, and PollisDocuments in \texttt{\textasciitilde/.pollis/documents}, once the documents are compiled. All five are read-only: Pollis rebuilds them when what
 they come from changes, and your own tables go in a database of your own. In the Databases view each is
 marked \ui{built-in}; clicking it connects it in the Julia REPL. The \texttt{duckdb>} terminal, the
-\texttt{sql>} mode and \texttt{PollisDB.connect()} attach all four (Data and Databases, page 6).
+\texttt{sql>} mode and \texttt{PollisDB.connect()} attach all five (Data and Databases, page 6).
 
 \begin{center}\small
 \renewcommand{\arraystretch}{1.25}
@@ -1870,6 +1875,7 @@ PollisDatasets & \texttt{pollis} & The 57 datasets of PollisDatasets, a table ea
 PollisRSS & \texttt{rss} & Every item of the feeds you follow, kept by month; empty until feeds are read (RSS Feeds, page 22).\\
 PollisJournals & \texttt{journals} & About 250,000 journals, conferences and book series, from OpenAlex; the Norwegian register's levels; and the journal metrics you import.\\
 PollisReferences & \texttt{references} & Every work Pollis cites, and those you save from Literature Radar (page 36) or add to a panel's \ui{Explore References}, with abstracts, keywords and dated citation counts.\\
+PollisDocuments & \texttt{documents} & The passages of Pollis's documents, the panel wikis, the vignettes and the toolboxes' documents, with their embeddings, that Ask Pollis searches (page 42).\\
 \end{tabularx}
 \end{center}
 
@@ -1996,13 +2002,14 @@ The Tour, this Guide, A Tour of Pollis AI+, Pollis AI+, the drill-downs, the pan
 installed. So a question about a toolbox's panels is answered from that toolbox's own documents, with the
 toolbox's name beside each of its sources. A toolbox's passages come when it is installed, and go when it is
 removed; a new Pollis, a wiki written or a vignette compiled brings their passages up to date, in the
-background.
+background. The passages are found by
+hybrid search: BM25 keyword search and embedding-based semantic search, merged by Reciprocal Rank Fusion into the top 8 passages, all on PollisDocuments.duckdb.
 
 \subhead{Answer With}
 \ui{Answer With} chooses the model that writes the answer: \ui{This Computer}, Qwen3.5 4B unless you choose
 another local chat model with the model picker beside it, or a cloud model, Claude Haiku or Sonnet, GPT-5.4 mini or
-GPT-5.5, with your own key. The passages are always found on your computer; a cloud model is sent the
-question, the conversation and the eight passages, which are Pollis' documents, and nothing else.
+GPT-5.5, Gemini 3.8 Flash or Gemini 4 Argon, with your own key. The passages are always found on your
+computer; a cloud model is sent the question, the conversation and the eight passages, which are Pollis' documents, and nothing else.
 
 \newpage
 \subhead{Compare Models}
@@ -2133,5 +2140,61 @@ entered by hand.
 \end{trouble}
 
 \seealso{Reports, page 20.\quad Built-in Databases, page 40.}
+
+% =====================================================================
+% PAGE 48 — APPENDIX: PACKAGES AND PULL REQUESTS
+% =====================================================================
+\topic{Appendix: Packages and Pull Requests}{github.com/Trumpingtons}{The Julia packages created for Pollis, and the fixes to other authors' packages that they accepted.}
+
+The work on Pollis also goes back to Julia's open-source packages. What Pollis needed and no package did was
+written as a package of its own, public and with the MIT licence, which anyone can use without Pollis
+(Pollis Packages, page 18). Bugs found in other authors' packages were fixed and the fixes sent to them as
+pull requests; until a fix is merged and released, Pollis installs a fork of the package with the fix.
+The lists are as of 28 October 2026.
+
+\subhead{Packages created}
+Eighteen packages, each with the date its repository was created on GitHub. The methods and
+PollisEventStudies are in the Pollis registry, created on 13 October 2026; the others are installed from GitHub.
+
+\smallskip
+{\small\renewcommand{\arraystretch}{1.2}%
+\begin{tabularx}{\linewidth}{@{}>{\bfseries}l>{\raggedright\arraybackslash}p{0.15\linewidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{0.1\linewidth}@{}}
+\textcolor{navy}{\bfseries Package} & \textcolor{navy}{\bfseries Created} & \textcolor{navy}{\bfseries What it does} & \textcolor{navy}{\bfseries Registry} \\
+HARE & 14 May 2026 & Heteroskedasticity and autocorrelation estimators & --- \\
+RangeVol & 20 May 2026 & Range-based volatility estimators & --- \\
+EDGAR & 14 Jun 2026 & Fetches SEC EDGAR filings and financial data & --- \\
+PollisDatasets & 2 Oct 2026 & Small, well-known datasets for examples and teaching, as Tables.jl column tables & --- \\
+PollisTeX & 10 Oct 2026 & Typesets LaTeX from Julia with Tectonic, downloaded on first use & --- \\
+ArcFS & 15 Oct 2026 & Breiman's arc-fs: adaptive resampling with pruned trees & Pollis \\
+BreslowCox & 15 Oct 2026 & The Cox model with Breslow's ties, and its predicted survival & Pollis \\
+ErrorComponents & 15 Oct 2026 & Random-effects panel regressions: Wallace-Hussain, Amemiya, Swamy-Arora and nested error components & Pollis \\
+ForestOOB & 15 Oct 2026 & Out-of-bag error and variable importance for random forests & Pollis \\
+GLMExtras & 15 Oct 2026 & Parametric bootstrap and delta-beta influence for binomial GLMs & Pollis \\
+LSTNet & 15 Oct 2026 & LSTNet-Skip, for multivariate time series forecasting & Pollis \\
+PeriodicGARCH & 15 Oct 2026 & Periodic GARCH: volatility with a calendar dummy & Pollis \\
+PropensityMatching & 15 Oct 2026 & Propensity score matching: Dehejia and Wahba, and its replications & Pollis \\
+ThresholdAR & 15 Oct 2026 & Threshold autoregression: SETAR models and limit cycles & Pollis \\
+PollisJournals & 20 Oct 2026 & The journals of OpenAlex, for the PollisJournals database & --- \\
+PollisEventStudies & 21 Oct 2026 & Intraday event studies of SEC filings & Pollis \\
+PollisRSS & 25 Oct 2026 & The feeds of \ui{Explore > RSS > RSS Feeds}, by topic & --- \\
+PollisReferences & 25 Oct 2026 & The works Pollis cites, with their citation counts & --- \\
+\end{tabularx}}
+
+\subhead{Pull requests accepted}
+Each with the date it was opened, approved by a maintainer of the package and merged.
+
+\smallskip
+{\small\renewcommand{\arraystretch}{1.2}%
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.2\linewidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{0.11\linewidth}>{\raggedright\arraybackslash}p{0.11\linewidth}>{\raggedright\arraybackslash}p{0.11\linewidth}@{}}
+\textcolor{navy}{\bfseries Package} & \textcolor{navy}{\bfseries Pull request} & \textcolor{navy}{\bfseries Opened} & \textcolor{navy}{\bfseries Approved} & \textcolor{navy}{\bfseries Merged} \\
+\textbf{LimitOrderBook.jl}\newline p-casgrain & \#9: fix sell-side crossing, cancel of missing orders, and the AVLTrees 0.4 install failure & 1 Oct 2026 & --- & 17 Oct 2026 \\
+\textbf{LLMTextAnalysis.jl}\newline svilupp & \#25: allow PromptingTools up to 0.95 & 27 Oct 2026 & 27 Oct 2026 & not yet \\
+\textbf{PromptingTools.jl}\newline svilupp & \#335: fix \texttt{aiembed} returning a one-column matrix for a single embedding on Julia 1.13 & 27 Oct 2026 & 27 Oct 2026 & not yet \\
+\end{tabularx}}
+
+\smallskip
+LimitOrderBook.jl's was merged without a separate approval.
+
+\seealso{Pollis Packages, page 18.\quad Methods, page 16.}
 
 \end{document}

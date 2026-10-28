@@ -9,7 +9,8 @@
 # the Tour and the Guide; then the others. The TeX packages a document uses are downloaded the first time, which on a
 # new computer takes a few minutes; after that each document takes seconds. It writes a line of JSON on stdout as it
 # goes: {"status": "installing"} while it installs PollisTeX, {"total"} when it starts compiling, {"done", "total",
-# "document"} as each document is ready, {"failed"} for one that is not, its log beside where the PDF would be.
+# "document"} as each document is ready, {"failed"} for one that is not, its log beside where the PDF would be. Beside
+# each PDF goes its .labels, the page of each of its headings, which ask_index.jl cuts the document by.
 import Pkg
 
 const SOURCES = abspath(ARGS[1])
@@ -80,6 +81,9 @@ function compile(source, name)
 		partial = joinpath(OUTPUT, name * ".partial")
 		cp(joinpath(folder, splitext(file)[1] * ".pdf"), partial; force = true)
 		mv(partial, joinpath(OUTPUT, name); force = true)
+		# The page of each heading (docs/ask_labels.tex), for ask_index.jl
+		labels = joinpath(folder, splitext(file)[1] * ".labels")
+		isfile(labels) && cp(labels, joinpath(OUTPUT, splitext(name)[1] * ".labels"); force = true)
 		say("{\"done\":$(Threads.atomic_add!(done, 1) + 1),\"total\":$(length(DOCUMENTS)),\"document\":\"$name\"}")
 	else
 		Threads.atomic_add!(failed, 1)

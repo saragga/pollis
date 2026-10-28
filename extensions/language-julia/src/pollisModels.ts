@@ -308,7 +308,7 @@ async function localModels(kind: ModelKind): Promise<LocalModel[]> {
 }
 
 /** The file a model field's value is on this computer: an `hf:` file in ~/.pollis/models, or the path itself. */
-function valueFile(value: string): string {
+export function valueFile(value: string): string {
     return hubFile(value)?.local ?? value.trim().replace(/^~(?=$|[\\/])/, os.homedir())
 }
 

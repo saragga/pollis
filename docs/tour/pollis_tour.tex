@@ -68,11 +68,12 @@
 
 % Page heading: kicker, title, one-line promise
 \newcommand{\pageheading}[3]{%
+  \asklabel{1}{#2}%
   {\color{deepamber}\small\bfseries\MakeUppercase{#1}}\par\vspace{1pt}
   {\color{navy}\fontsize{22}{26}\selectfont\bfseries #2}\par\vspace{3pt}
   {\color{soft}\large #3}\par\vspace{6pt}}
 
-\newcommand{\subhead}[1]{{\color{navy}\large\bfseries #1}\par\vspace{2pt}}
+\newcommand{\subhead}[1]{\asklabel{2}{#1}{\color{navy}\large\bfseries #1}\par\vspace{2pt}}
 
 % Text boxes
 \newtcolorbox{pbox}[2][]{enhanced, colback=pale, colframe=amber, boxrule=0pt,
@@ -101,6 +102,8 @@
 % Numbered markers for the annotated panel
 \newcommand{\mk}[1]{\tikz[baseline=(c.base)]\node[circle, fill=amber, text=navy,
   font=\footnotesize\bfseries, inner sep=1.2pt, minimum size=4.2mm](c){#1};}
+
+\input{../ask_labels}
 
 \begin{document}
 
@@ -892,7 +895,8 @@ How do I put a cheap model on the small jobs? Where are the journal metrics? Wha
 \textbf{Help › Ask Pollis}, type the question in your own words, in English or in another language, and Pollis
 answers from its own documents: the Tour, the Guide, the AI+ documents, the drill-downs, the panel wikis, the
 package vignettes, and the documents and wikis of the toolboxes you installed. After each statement, a number points
-to the passage it comes from, and \textbf{Open} shows that passage in its place.
+to the passage it comes from, and \textbf{Open} shows that passage in its place. Behind it is
+hybrid search: BM25 keyword search and embedding-based semantic search, merged by Reciprocal Rank Fusion into the top 8 passages, all on PollisDocuments.duckdb.
 \end{pbox}
 
 \vspace{3mm}

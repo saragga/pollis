@@ -20,7 +20,7 @@ import { Command } from '../../../../editor/common/languages.js';
 import { StandardKeyboardEvent } from '../../../../base/browser/keyboardEvent.js';
 import { KeyCode } from '../../../../base/common/keyCodes.js';
 import { renderIcon, renderLabelWithIcons } from '../../../../base/browser/ui/iconLabel/iconLabels.js';
-import { spinningLoading, syncing } from '../../../../platform/theme/common/iconRegistry.js';
+import { syncing } from '../../../../platform/theme/common/iconRegistry.js';
 import { isMarkdownString, markdownStringEqual } from '../../../../base/common/htmlContent.js';
 import { IHoverDelegate } from '../../../../base/browser/ui/hover/hoverDelegate.js';
 import { Gesture, EventType as TouchEventType } from '../../../../base/browser/touch.js';
@@ -300,7 +300,8 @@ class StatusBarCodiconLabel extends SimpleIconLabel {
 	set showProgress(showProgress: boolean | 'loading' | 'syncing') {
 		if (this.currentShowProgress !== showProgress) {
 			this.currentShowProgress = showProgress;
-			this.progressCodicon = renderIcon(showProgress === 'syncing' ? syncing : spinningLoading);
+			// Pollis: every progress turns the two curved arrows of sync, never the circle of loading
+			this.progressCodicon = renderIcon(syncing);
 			this.text = this.currentText;
 		}
 	}

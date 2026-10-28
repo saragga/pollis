@@ -12,6 +12,9 @@ import { registerIcon } from '../../../../platform/theme/common/iconRegistry.js'
 import { AGENT_MENU_ICON_ID } from '../../../../platform/menubar/common/menubar.js';
 import './toolboxExtensions.js';
 import './toolboxPanelsPage.js';
+import './askPollisPage.js';
+import { COMPARE_MODELS_COMMAND_ID } from './compareModelsPage.js';
+import './askPollisSources.js';
 import { BROWSE_SKILLS_COMMAND_ID, CHOOSE_AGENT_COMMAND_ID, CREATE_PANEL_COMMAND_ID, CREATE_PANELS_FROM_REQUEST_COMMAND_ID, PACKAGE_TOOLBOX_COMMAND_ID } from './pollisAgents.js';
 import { BROWSE_METHODS_COMMAND_ID, CREATE_METHOD_COMMAND_ID } from './newMethods.js';
 import './codingAgentPage.js';
@@ -268,6 +271,13 @@ MenuRegistry.appendMenuItem(LocalModelsMenu, {
 	group: '1_models',
 	command: { id: MODELS_INSTALLED_COMMAND_ID, title: localize('modelsInstalled.menu', "Models Installed") },
 	order: 3,
+});
+
+// The chat models installed and the cloud models, compared on the questions of Ask Pollis (compareModelsPage.ts)
+MenuRegistry.appendMenuItem(LocalModelsMenu, {
+	group: '2_compare',
+	command: { id: COMPARE_MODELS_COMMAND_ID, title: localize('compareModels.menu', "Compare Models...") },
+	order: 1,
 });
 
 

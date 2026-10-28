@@ -18,7 +18,7 @@ const POLLIS_HOME = join(os.homedir(), '.pollis');
 /** The fts extension, which the Julia extension of Pollis unpacks here at install. */
 const FTS = join(POLLIS_HOME, 'duckdb', 'fts.duckdb_extension');
 /** The built-in databases, attached read-only under their own names. */
-const BUILTINS = [join(POLLIS_HOME, 'databases', 'PollisDatasets.duckdb'), join(POLLIS_HOME, 'databases', 'PollisRSS.duckdb'), join(POLLIS_HOME, 'databases', 'PollisJournals.duckdb'), join(POLLIS_HOME, 'databases', 'PollisReferences.duckdb')];
+const BUILTINS = [join(POLLIS_HOME, 'databases', 'PollisDatasets.duckdb'), join(POLLIS_HOME, 'databases', 'PollisRSS.duckdb'), join(POLLIS_HOME, 'databases', 'PollisJournals.duckdb'), join(POLLIS_HOME, 'databases', 'PollisReferences.duckdb'), join(POLLIS_HOME, 'documents', 'PollisDocuments.duckdb')];
 const HISTORY = join(POLLIS_HOME, 'duckdb', 'shell_history');
 const HISTORY_SIZE = 1000;
 
@@ -115,7 +115,8 @@ const HELP = `.databases          The attached databases
 .timer on|off       Show how long each query took (on)
 
 A query ends with ";"; until then, Enter starts a new line. Ctrl+C stops a running query.
-The built-in databases are attached read-only as PollisDatasets, PollisRSS, PollisJournals and PollisReferences.`;
+The built-in databases are attached read-only as PollisDatasets, PollisRSS, PollisJournals, PollisReferences and
+PollisDocuments.`;
 
 class Shell {
 

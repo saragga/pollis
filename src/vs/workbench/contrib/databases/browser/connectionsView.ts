@@ -30,7 +30,7 @@ import { IViewPaneOptions, ViewPane } from '../../../browser/parts/views/viewPan
 import { IViewDescriptorService } from '../../../common/views.js';
 import { IDatabaseColumn, IDatabaseConnectionsService, IDatabaseSchema, IDatabaseSession, IDatabaseTable } from '../common/databaseConnections.js';
 import './media/connectionsView.css';
-import { describeConnection, getDatabaseDriver, IDatabaseConnectionProfile, isInMemoryConnection, JOURNALS_DATABASE_ID, REFERENCES_DATABASE_ID, RSS_DATABASE_ID } from '../common/databaseDrivers.js';
+import { describeConnection, DOCUMENTS_DATABASE_ID, getDatabaseDriver, IDatabaseConnectionProfile, isInMemoryConnection, JOURNALS_DATABASE_ID, REFERENCES_DATABASE_ID, RSS_DATABASE_ID } from '../common/databaseDrivers.js';
 
 /** The context menu of an item in the Connections view. Its commands receive an {@link IDatabaseItemArg}. */
 export const DatabaseConnectionContextMenu = new MenuId('DatabaseConnectionContext');
@@ -182,6 +182,10 @@ class ItemRenderer implements ITreeRenderer<DatabaseItem, void, IItemTemplate> {
 					hover = session
 						? localize('connection.references.hover.connected', "{0} (DuckDB)\nBuilt into Pollis: the references of Pollis and those you added, read-only, in {1}.\nConnected in the Julia REPL as {2}. Click to browse its tables.", name, describeConnection(profile), profile.variable)
 						: localize('connection.references.hover', "{0} (DuckDB)\nBuilt into Pollis: the references of Pollis and those you added, read-only, in {1}.\nNot connected. Click to connect in the Julia REPL as {2}.", name, describeConnection(profile), profile.variable);
+				} else if (profile?.builtin && profile.id === DOCUMENTS_DATABASE_ID) {
+					hover = session
+						? localize('connection.documents.hover.connected', "{0} (DuckDB)\nBuilt into Pollis: the passages of its documents that Ask Pollis searches, read-only, in {1}.\nConnected in the Julia REPL as {2}. Click to browse its tables.", name, describeConnection(profile), profile.variable)
+						: localize('connection.documents.hover', "{0} (DuckDB)\nBuilt into Pollis: the passages of its documents that Ask Pollis searches, read-only, in {1}.\nNot connected. Click to connect in the Julia REPL as {2}.", name, describeConnection(profile), profile.variable);
 				} else if (profile?.builtin) {
 					hover = session
 						? localize('connection.builtin.hover.connected', "{0} (DuckDB)\nThe database built into Pollis: the PollisDatasets, read-only, in {1}.\nConnected in the Julia REPL as {2}. Click to browse its tables.", name, describeConnection(profile), profile.variable)

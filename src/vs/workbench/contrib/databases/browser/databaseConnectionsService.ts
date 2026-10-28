@@ -14,7 +14,7 @@ import { ILogService } from '../../../../platform/log/common/log.js';
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { IDatabaseConnectionsService, IDatabaseSession } from '../common/databaseConnections.js';
-import { BUILTIN_DATABASE_ID, DatabaseConnectionTarget, IDatabaseConnectionProfile, JOURNALS_DATABASE_ID, REFERENCES_DATABASE_ID, RSS_DATABASE_ID } from '../common/databaseDrivers.js';
+import { BUILTIN_DATABASE_ID, DatabaseConnectionTarget, DOCUMENTS_DATABASE_ID, IDatabaseConnectionProfile, JOURNALS_DATABASE_ID, REFERENCES_DATABASE_ID, RSS_DATABASE_ID } from '../common/databaseDrivers.js';
 
 const STORAGE_KEY = 'pollis.databases.connections';
 // Set by the Julia extension: the id of this window's REPL, which PollisDB writes into its snapshots.
@@ -62,6 +62,8 @@ export class DatabaseConnectionsService extends Disposable implements IDatabaseC
 		// over the journal metrics imported, which Pollis adds to.
 		// And PollisReferences: the references of Pollis, which PollisDB.build_references copies, and views over those the
 		// user added, which Pollis adds to.
+		// And PollisDocuments: the passages of Pollis' documents, which ask_index.jl of the Julia extension makes in
+		// ~/.pollis/documents when the REPL starts, and Ask Pollis searches.
 		this.builtins = [{
 			id: BUILTIN_DATABASE_ID,
 			name: 'PollisDatasets',
@@ -93,6 +95,14 @@ export class DatabaseConnectionsService extends Disposable implements IDatabaseC
 			target: 'global',
 			variable: 'references',
 			options: { path: joinPath(pollisFolder, 'databases', 'PollisReferences.duckdb').fsPath, readonly: true },
+			builtin: true,
+		}, {
+			id: DOCUMENTS_DATABASE_ID,
+			name: 'PollisDocuments',
+			driver: 'duckdb',
+			target: 'global',
+			variable: 'documents',
+			options: { path: joinPath(pollisFolder, 'documents', 'PollisDocuments.duckdb').fsPath, readonly: true },
 			builtin: true,
 		}];
 		void this.watchSessions();

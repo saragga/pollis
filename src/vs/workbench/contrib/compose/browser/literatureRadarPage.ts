@@ -29,7 +29,7 @@ import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWork
 import { API_PROVIDERS, ProviderRequests } from '../../model/browser/common/apiProviders.js';
 import { readReferences, ReferenceFormat } from '../../model/browser/common/referenceImport.js';
 import { findReference, ICitationCount, IReference, IReferenceVersion, nameAsReference, ReferenceLibrary, referenceBibTeX } from '../../model/browser/common/referenceLibrary.js';
-import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
+import { spinnerCss, spinnerSvg, voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
 import { FEWEST_ROWS, rowsChoiceCss, rowsChoiceScript, sortHeadingsCss, sortHeadingsScript, sortHint, stickyHeadCss, storedRows, storeRows } from '../../model/browser/webviews/webviewPager.js';
 import { describeJournal, IJournalScoresService } from '../../monitor/browser/journalScores.js';
 import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
@@ -2176,9 +2176,7 @@ function pageHtml(mode: PageMode, rows: number): string {
 		.status.error { color: var(--vscode-errorForeground); }
 		.status .problem { color: var(--vscode-editorWarning-foreground); }
 		/* Turning while an index is still asked for counts */
-		.spin { display: inline-block; width: 12px; height: 12px; margin-right: 6px; vertical-align: -1px; animation: spin 1.2s linear infinite; }
-		@keyframes spin { to { transform: rotate(360deg); } }
-		@media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+		${spinnerCss}
 		table { width: 100%; border-collapse: collapse; font-size: 12px; }
 		th { text-align: left; font-weight: normal; color: var(--vscode-descriptionForeground); padding: 4px 8px; border-bottom: 1px solid var(--vscode-widget-border); white-space: nowrap; }
 		th.group { text-align: center; color: var(--vscode-foreground); }
@@ -2322,7 +2320,7 @@ ${mode === 'import' ? importForm : searchForm}
 	// Whether Semantic Scholar's search is asked again, in the background
 	let searchPending = false;
 	// Two curved arrows, as VS Code's sync icon
-	const SPINNER = '<svg class="spin" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.5 6.5A5.5 5.5 0 0 0 3.2 5"/><path d="M3 2.5v2.7h2.7"/><path d="M2.5 9.5A5.5 5.5 0 0 0 12.8 11"/><path d="M13 13.5v-2.7h-2.7"/></svg>';
+	const SPINNER = '${spinnerSvg}';
 	const COLUMNS = [
 		{ id: 'pick', label: TEXT.pick },
 		{ id: 'year', label: TEXT.year, sortable: true },
