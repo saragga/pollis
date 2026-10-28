@@ -255,11 +255,12 @@ function pageHtml(): string {
 		/* The models' column as wide as its names, each agent's column as wide as its cells */
 		#matrix { width: auto; }
 		#matrix th.agentHead, #matrix td.cell { width: 170px; min-width: 170px; }
+		#matrix th.agentHead { text-align: center; }
 		/* Code Agents over the agents' columns, with a line under it from the first to the last */
 		#matrix th.agentsGroup { text-align: center; padding-bottom: 4px; }
 		#matrix th.groupBlank { border-bottom: none; }
 		#matrix td.modelName { padding-left: 24px; padding-right: 40px; white-space: nowrap; }
-		#matrix td.cell input { width: 100%; border-color: var(--vscode-focusBorder); }
+		#matrix td.cell input { width: 100%; border-color: var(--vscode-focusBorder); text-align: center; }
 		#matrix td.cell input.placed { font-weight: 600; }
 		/* The suggestions of the tiers' names open as one types, with no arrow in the field */
 		#matrix td.cell input::-webkit-calendar-picker-indicator { display: none !important; }

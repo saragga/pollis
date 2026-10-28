@@ -141,7 +141,7 @@ Each topic takes two facing pages; read them in order the first time, since each
 before. Page 16 puts them all in one picture, with the words to know.
 
 \smallskip
-Menu paths are written \ui{Compose > Coding Agents}, and buttons as they appear, such as \ui{Use}.
+Menu paths are written \ui{Compose > Coding Agents}, and buttons as they appear, such as \ui{Install Skills}.
 What you could ask an agent is written
 \ask{like this.}
 This tour describes Pollis as it is on \tourdate. What is planned but not available yet is said to be
@@ -253,7 +253,7 @@ Best for & hard tasks, where a mistake costs most & small tasks, private data, n
 \begin{note}{In Pollis}
 Some tasks are small: \ui{Polish with Agent} tidies the wording of a report. Others are hard:
 \ui{Write a Method} must reproduce an article's tables to the digits printed. A small, fast or local
-model suits the first; the second is where a strong model pays for itself. \ui{Model Routing} (page 14)
+model suits the first; the second is where a strong model pays for itself. \ui{Model Tasks and Routing} (page 14)
 lets you make that choice once for each task.
 \end{note}
 
@@ -309,11 +309,10 @@ computer's memory, with room to spare for the conversation.
 
 \subhead{Example: a coding agent on a local model}
 \begin{enumerate}[label=\arabic*.]
-  \item Install Ollama: \ui{Install Runner}, on the Local Model Runners page.
-  \item In \ui{Compose > Coding Agents}, under \ui{Local and Cloud Models}, use your agent's local
-    command, such as \cmd{ollama launch claude -{}- \{prompt\}} for Claude Code, or
-    \cmd{codex -{}-oss \{prompt\}} for Codex.
-  \item Start a task, such as \ui{Compose > New Panels and Toolboxes > Create a Panel...}. The agent
+  \item Get a chat model: \ui{Compose > Local Models > Get Models from Hugging Face}.
+  \item In \ui{Compose > Orchestration > Model Tasks and Routing}, type \ui{Light} in the cell of
+    Claude Code, Codex or OpenCode on that model's row.
+  \item Start a Light task, such as \ui{Polish with Agent} on a report. The agent
     works exactly as before; only the model that answers it is now on your computer.
 \end{enumerate}
 
@@ -461,18 +460,19 @@ in a terminal, that turns the model's text into actions.
 
 \newpage
 \subhead{The agents Pollis knows}
-\ui{Compose > Coding Agents} lists three agents, each with the command that starts it, and
-another that starts it on a local model. Same harness, different model.
+\ui{Compose > Coding Agents} lists three agents, each with the command that starts it and whether it
+is on this computer.
 \begin{center}\small\renewcommand{\arraystretch}{1.3}
-\begin{tabularx}{\linewidth}{@{}>{\bfseries}lXX@{}}
-\textbf{Agent} & \textbf{Command} & \textbf{On a local model}\\\hline
-Claude Code & \cmd{claude \{prompt\}} & \cmd{ollama launch claude -{}- \{prompt\}}\\
-Codex & \cmd{codex \{prompt\}} & \cmd{codex -{}-oss \{prompt\}}\\
-OpenCode & \cmd{opencode -{}-prompt \{prompt\}} & \cmd{ollama launch opencode -{}- -{}-prompt \{prompt\}}\\
+\begin{tabularx}{\linewidth}{@{}>{\bfseries}lX@{}}
+\textbf{Agent} & \textbf{Command}\\\hline
+Claude Code & \cmd{claude \{prompt\}}\\
+Codex & \cmd{codex \{prompt\}}\\
+OpenCode & \cmd{opencode -{}-prompt \{prompt\}}\\
 \end{tabularx}
 \end{center}
-\cmd{\{prompt\}} is where Pollis puts the first message. Click \ui{Use} beside yours; for any other agent,
-type its command line under \ui{Other Agent}.
+\cmd{\{prompt\}} is where Pollis puts the first message. For any other agent, give it a name and its
+command line under \ui{Other Agents}; add as many as you like. Which agent runs a task, and on which model,
+cloud or local, is chosen in \ui{Model Tasks and Routing} (page 14): same harness, different model.
 
 \subhead{Example: Create a Panel, step by step}
 \begin{enumerate}[label=\arabic*.]
@@ -641,36 +641,54 @@ So far, one agent has done one task. \emph{Orchestration} arranges several: a ch
 tasks and a strong one for the hard, or two agents that check each other. As a conductor does not play,
 but decides who plays when, orchestration writes no code; it decides which model or agent does what.
 
-\subhead{The simplest kind: Model Routing}
-Not every task needs the strongest model. \ui{Compose > Orchestration > Model Routing} has three
-\emph{tiers}:
+\subhead{The simplest kind: Model Tasks and Routing}
+Not every task needs the strongest model. \ui{Compose > Orchestration > Model Tasks and Routing} has three
+\emph{tiers}, and any of your own, such as \ui{Max}:
 \begin{itemize}
   \item \ui{Light}: small tasks, on a fast, cheap or local model.
   \item \ui{Standard}: everyday tasks.
   \item \ui{Strong}: hard tasks, where a mistake costs most.
 \end{itemize}
-Each tier is the command line of an agent, with \cmd{\{prompt\}}. For example:
+A tier is a cell of a table. Its columns are the \ui{Code Agents}: Claude Code, Codex, OpenCode and the
+agents of your own of \ui{Compose > Coding Agents}. Its rows are the \ui{Models}: \ui{Cloud}, such as
+Claude Haiku, Sonnet and Opus or GPT-5.5, and \ui{Local}, the chat models on your computer. Type a tier's
+name in a cell, and the tier is that agent on that model; a name that is no tier yet makes a new one. A
+tier is in one cell only. A dash marks a model the agent cannot run. For example:
 \begin{center}\small\renewcommand{\arraystretch}{1.3}
-\begin{tabular}{@{}>{\bfseries}ll@{}}
-Light & \cmd{ollama launch claude -{}- \{prompt\}}, on a local model, free\\
-Standard & \cmd{claude -{}-model sonnet \{prompt\}}\\
-Strong & \cmd{claude -{}-model opus \{prompt\}}\\
+\begin{tabular}{@{}lccc@{}}
+ & \multicolumn{3}{c}{\textbf{Code Agents}}\\\cline{2-4}
+\textbf{Models} & \textbf{Claude Code} & \textbf{Codex} & \textbf{OpenCode}\\\hline
+\textit{Cloud} & & & \\
+\quad Claude Sonnet & Standard & --- & \\
+\quad Claude Opus & Strong & --- & \\
+\quad GPT-5.5 & --- & Max & \\
+\textit{Local} & & & \\
+\quad Qwen3 8B & Light & & \\
 \end{tabular}
 \end{center}
-An empty tier runs your main agent, the one chosen in \ui{Compose > Coding Agents}, and so does a tier
-whose program is not installed. Each task has a tier by default; in \ui{Tasks}, choose another.
+Unless you change them, Light, Standard and Strong are Claude Code on Haiku, Sonnet and Opus. There is no
+main agent: every task runs on the cell of its tier.
 
 \newpage
+\subhead{The tasks and their skills}
+Below the table, \ui{Tasks} lists the agent tasks of the Compose menu. \ui{Runs On} chooses a tier for each,
+and its default is marked; \ui{Skills} names the skills the task reads (page 10).
 \begin{center}\small\renewcommand{\arraystretch}{1.3}
-\begin{tabularx}{\linewidth}{@{}Xll@{}}
-\textbf{Task} & \textbf{Menu} & \textbf{Tier}\\\hline
-Polish with Agent & Reports & Light\\
-Write a Vignette, Prepare for Registration & Methods & Standard\\
-Package a Toolbox & New Panels and Toolboxes & Standard\\
-Tables from the Article, Write a Method & Methods & Strong\\
-Create a Panel, Create Panels from a Request & New Panels and Toolboxes & Strong\\
+\begin{tabularx}{\linewidth}{@{}Xlll@{}}
+\textbf{Task} & \textbf{Menu} & \textbf{Runs On} & \textbf{Skills}\\\hline
+Polish with Agent & Reports & Light & \cmd{polish-report}\\
+Write a Vignette & Methods & Standard & \cmd{write-vignette}\\
+Prepare for Registration & Methods & Standard & \cmd{prepare-method}\\
+Package a Toolbox & New Panels and Toolboxes & Standard & \cmd{package-toolbox}\\
+Tables from the Article & Methods & Strong & \cmd{tables-from-article}\\
+Write a Method & Methods & Strong & \cmd{write-method}\\
+Create a Panel & New Panels and Toolboxes & Strong & \cmd{create-panel}\\
+Create Panels from a Request & New Panels and Toolboxes & Strong & \cmd{create-panel}\\
 \end{tabularx}
 \end{center}
+A task may read several skills, and a skill may serve several tasks: both ways of creating panels read
+\cmd{create-panel}. A skill started on its own, from \ui{Compose > Agent Skills}, runs on Standard. A task
+whose tier is in no cell cannot run, and the table says so.
 
 \subhead{Why route?}
 \begin{itemize}
@@ -709,7 +727,7 @@ the panel validator.
 \begin{center}
 \begin{tikzpicture}[node distance=6mm and 7mm]
   \node[box=30mm] (you) {\textbf{You}\\{\scriptsize choose a Compose task}};
-  \node[hot=34mm, below=of you] (route) {\textbf{Orchestration}\\{\scriptsize Model Routing picks a tier}};
+  \node[hot=34mm, below=of you] (route) {\textbf{Orchestration}\\{\scriptsize Model Tasks and Routing picks a tier}};
   \node[hot=40mm, below=of route] (agent) {\textbf{Coding agent}\\{\scriptsize its harness, in a terminal}};
   \node[box=26mm, left=12mm of agent] (skills) {\textbf{Agent skills}\\{\scriptsize know-how}};
   \node[box=26mm, right=12mm of agent] (mcp) {\textbf{MCP servers}\\{\scriptsize reach: data, services}};
@@ -727,8 +745,8 @@ the panel validator.
 
 \subhead{One task, from start to finish}
 You choose \ui{Compose > Under Construction...} and click \ui{Write Method} beside your method.
-Model Routing sends the task to the \ui{Strong} tier. Pollis opens a terminal and starts that tier's
-agent, with a first message naming the write-method skill and the method's test command. The agent
+Model Tasks and Routing sends the task to the \ui{Strong} tier. Pollis opens a terminal and starts the
+agent of that tier's cell, on its model, with a first message naming the write-method skill and the method's test command. The agent
 reads the skill; if the article is on arXiv, the arXiv server can fetch it; its model writes the code; its harness runs the tests
 against the published values; and the loop goes on until every test passes. You read the numbers,
 beside the published ones.
@@ -755,7 +773,7 @@ Harness & The program around the model: loop, tools, permissions, context, memor
 Agent skill & Written know-how for one task, which the agent reads when it needs it; page 10.\\
 MCP server & A server of tools an agent can use, through the Model Context Protocol; page 12.\\
 Orchestration & Arranging several models or agents, each on the part it does best; page 14.\\
-Tier & In Model Routing, Light, Standard or Strong: the agent a kind of task runs on.\\
+Tier & In Model Tasks and Routing, Light, Standard, Strong or one of your own: a cell of its table, an agent on a model, that a kind of task runs on.\\
 \end{pairs}
 
 \end{document}
