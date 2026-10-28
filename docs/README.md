@@ -10,6 +10,7 @@ The LaTeX sources of the documents in Help > Documentation. Pollis ships these s
 | `ai-brochure/pollis_ai_brochure.tex` | `pollis-ai-brochure.pdf` (Pollis AI+) |
 | `workflows/workflow_data_packages.tex` | `pollis-drilldown-data-packages.pdf` (Drill-down: Data Packages) |
 | `workflows/workflow_literature_radar.tex` | `pollis-drilldown-literature-radar.pdf` (Drill-down: Literature Radar) |
+| `workflows/workflow_ask_pollis.tex` | `pollis-drilldown-ask-pollis.pdf` (Drill-down: Ask Pollis) |
 
 `workflows/replication_flowchart.pdf`, a figure of the Tour and the Guide, is not kept here either: it is built from `replication_flowchart.tex` before them.
 

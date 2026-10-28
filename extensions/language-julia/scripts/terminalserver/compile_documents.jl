@@ -27,6 +27,7 @@ const GROUPS = [
 		("ai-brochure/pollis_ai_brochure.tex", "pollis-ai-brochure.pdf"),
 		("workflows/workflow_data_packages.tex", "pollis-drilldown-data-packages.pdf"),
 		("workflows/workflow_literature_radar.tex", "pollis-drilldown-literature-radar.pdf"),
+		("workflows/workflow_ask_pollis.tex", "pollis-drilldown-ask-pollis.pdf"),
 	],
 ]
 const DOCUMENTS = [name for group in GROUPS for (_, name) in group if !isempty(name)]

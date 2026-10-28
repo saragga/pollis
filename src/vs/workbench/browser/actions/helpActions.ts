@@ -660,6 +660,25 @@ registerAction2(class extends Action2 {
 	}
 });
 
+registerAction2(class extends Action2 {
+	constructor() {
+		super({
+			id: 'pollis.action.openDrillDownAskPollis',
+			title: {
+				...localize2('openDrillDownAskPollis', "Drill-down: Ask Pollis"),
+				mnemonicTitle: localize({ key: 'miDrillDownAskPollis', comment: ['&& denotes a mnemonic'] }, "Drill-down: Ask &&Pollis"),
+			},
+			category: Categories.Help,
+			f1: true,
+			menu: { id: MenubarHelpDocumentationMenu, group: '0_pollis', order: 7 }
+		});
+	}
+
+	run(accessor: ServicesAccessor): Promise<void> {
+		return openDocument(accessor, 'pollis-drilldown-ask-pollis.pdf', localize('openDrillDownAskPollis', "Drill-down: Ask Pollis"));
+	}
+});
+
 /**
  * Compiles the documents of Help > Documentation now, rather than when the Julia REPL next starts, or waits for the
  * compile already running (the Julia extension's command language-julia.pollisCompileDocuments).
