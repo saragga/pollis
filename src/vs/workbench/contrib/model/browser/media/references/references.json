@@ -25880,22 +25880,6 @@
 			]
 		},
 		{
-			"id": "rvol",
-			"title": "Range-Based Volatility Estimation",
-			"description": "Close-to-Close · Parkinson · Garman-Klass · Rogers-Satchell · GK-Yang-Zhang · Yang-Zhang · Alizadeh-Brandt-Diebold",
-			"keys": [
-				"BEKS2017a",
-				"Hul2022a",
-				"Sin2013a",
-				"Mer1980a",
-				"Par1980a",
-				"GK1980a",
-				"RS1991a",
-				"YZ2000a",
-				"ABD2002a"
-			]
-		},
-		{
 			"id": "rxinfer",
 			"title": "Fast Variational Bayesian Inference",
 			"description": "Gaussian · Linear Regression · Streaming",

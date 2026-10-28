@@ -50,6 +50,7 @@
 			"menubarGFOSubmenu",
 			"menubarGOSubmenu",
 			"menubarLMSubmenu",
+			"menubarLiteratureMenu",
 			"menubarMOOSubmenu",
 			"menubarMPCCPSubmenu",
 			"menubarMPCVPSubmenu",
@@ -278,7 +279,6 @@
 		},
 		{
 			"id": "alpv",
-			"title": "Alpha Vantage",
 			"source": "pollis",
 			"commands": [
 				{
@@ -408,7 +408,6 @@
 			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
 			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
 			"wikis": [
-				"dyn-attr/assumptions.md",
 				"dyn-attr/attractors.md",
 				"dyn-attr/basins.md",
 				"dyn-attr/bifurcation.md",
@@ -416,7 +415,9 @@
 				"dyn-attr/diagnostics.md",
 				"dyn-attr/factsheet.md",
 				"dyn-attr/interpretation.md",
-				"dyn-attr/overview.md"
+				"dyn-attr/lorenz.md",
+				"dyn-attr/overview.md",
+				"dyn-attr/settings.md"
 			],
 			"notebooks": [
 				"dyn-attr/tutorial-01-attractors.ipynb",
@@ -424,7 +425,8 @@
 				"dyn-attr/tutorial-03-bifurcation.ipynb"
 			],
 			"packages": [
-				"Attractors.jl"
+				"Attractors.jl",
+				"BifurcationKit.jl"
 			]
 		},
 		{
@@ -457,7 +459,8 @@
 			],
 			"packages": [
 				"Flux.jl",
-				"AutoEncoderToolkit.jl"
+				"AutoEncoderToolkit.jl",
+				"PollisDatasets.jl"
 			]
 		},
 		{
@@ -904,7 +907,8 @@
 				"cca/tutorial-01-cca.ipynb"
 			],
 			"packages": [
-				"MultivariateStats.jl"
+				"MultivariateStats.jl",
+				"PollisDatasets.jl"
 			]
 		},
 		{
@@ -1201,7 +1205,8 @@
 				"model-workflow/tutorial-04-reliability-diagrams.ipynb"
 			],
 			"packages": [
-				"MLJ.jl"
+				"MLJ.jl",
+				"PollisDatasets.jl"
 			]
 		},
 		{
@@ -1239,7 +1244,8 @@
 			],
 			"packages": [
 				"Clustering.jl",
-				"Distances.jl"
+				"Distances.jl",
+				"PollisDatasets.jl"
 			]
 		},
 		{
@@ -1285,7 +1291,8 @@
 			],
 			"packages": [
 				"Clustering.jl",
-				"BetaML.jl"
+				"BetaML.jl",
+				"PollisDatasets.jl"
 			]
 		},
 		{
@@ -1567,7 +1574,8 @@
 				"cov-shrinkage/tutorial-04-biweight.ipynb"
 			],
 			"packages": [
-				"CovarianceEstimation.jl"
+				"CovarianceEstimation.jl",
+				"PollisDatasets.jl"
 			]
 		},
 		{
@@ -1729,7 +1737,8 @@
 				"ctm/tutorial-02-fctm.ipynb"
 			],
 			"packages": [
-				"TopicModelsVB.jl"
+				"TopicModelsVB.jl",
+				"PollisDatasets.jl"
 			]
 		},
 		{
@@ -1801,7 +1810,8 @@
 				"ctpf/tutorial-01-ctpf.ipynb"
 			],
 			"packages": [
-				"TopicModelsVB.jl"
+				"TopicModelsVB.jl",
+				"PollisDatasets.jl"
 			]
 		},
 		{
@@ -2497,7 +2507,8 @@
 			],
 			"packages": [
 				"DecisionTree.jl",
-				"ModalDecisionTrees.jl"
+				"ModalDecisionTrees.jl",
+				"PollisDatasets.jl"
 			]
 		},
 		{
@@ -2532,7 +2543,8 @@
 				"dtm/tutorial-01-dtm-tfidf.ipynb"
 			],
 			"packages": [
-				"TextAnalysis.jl"
+				"TextAnalysis.jl",
+				"PollisDatasets.jl"
 			]
 		},
 		{
@@ -2613,7 +2625,6 @@
 		},
 		{
 			"id": "ecb",
-			"title": "ECB Data Portal",
 			"source": "pollis",
 			"commands": [
 				{
@@ -2628,7 +2639,6 @@
 		},
 		{
 			"id": "edgar",
-			"title": "US SEC EDGAR",
 			"source": "pollis",
 			"commands": [
 				{
@@ -2671,7 +2681,8 @@
 			],
 			"packages": [
 				"TSne.jl",
-				"UMAP.jl"
+				"UMAP.jl",
+				"PollisDatasets.jl"
 			]
 		},
 		{
@@ -2718,7 +2729,8 @@
 				"EvoTrees.jl",
 				"XGBoost.jl",
 				"NeuroTreeModels.jl",
-				"SIRUS.jl"
+				"SIRUS.jl",
+				"PollisDatasets.jl"
 			]
 		},
 		{
@@ -3087,7 +3099,6 @@
 		},
 		{
 			"id": "fred",
-			"title": "Federal Reserve Economic Data",
 			"source": "pollis",
 			"commands": [
 				{
@@ -3268,7 +3279,8 @@
 				"glmm/tutorial-04-glmm-model-comparison.ipynb"
 			],
 			"packages": [
-				"MixedModels.jl"
+				"MixedModels.jl",
+				"PollisDatasets.jl"
 			]
 		},
 		{
@@ -3594,7 +3606,7 @@
 				{
 					"id": "chiara.explore.hfm",
 					"menuTitles": [
-						"Hugging Face Models"
+						"Get Models from Hugging Face"
 					]
 				}
 			],
@@ -3738,7 +3750,8 @@
 			],
 			"packages": [
 				"MLJ.jl",
-				"TreeParzen.jl"
+				"TreeParzen.jl",
+				"PollisDatasets.jl"
 			]
 		},
 		{
@@ -3970,7 +3983,7 @@
 				{
 					"id": "chiara.explore.kgm",
 					"menuTitles": [
-						"Kaggle Models"
+						"Get Models from Kaggle"
 					]
 				}
 			],
@@ -4057,7 +4070,8 @@
 				"lasso/tutorial-05-plsr.ipynb"
 			],
 			"packages": [
-				"Lasso.jl"
+				"Lasso.jl",
+				"PollisDatasets.jl"
 			]
 		},
 		{
@@ -4091,7 +4105,8 @@
 				"dim-reduction-lca/tutorial-03-fa.ipynb"
 			],
 			"packages": [
-				"MultivariateStats.jl"
+				"MultivariateStats.jl",
+				"PollisDatasets.jl"
 			]
 		},
 		{
@@ -4269,7 +4284,9 @@
 			"packages": [
 				"LLMTextAnalysis.jl",
 				"PromptingTools.jl",
-				"StatisticalMeasures.jl"
+				"RAGTools.jl",
+				"StatisticalMeasures.jl",
+				"PollisDatasets.jl"
 			]
 		},
 		{
@@ -4434,7 +4451,8 @@
 			],
 			"packages": [
 				"MixedModels.jl",
-				"FixedEffectModels.jl"
+				"FixedEffectModels.jl",
+				"PollisDatasets.jl"
 			]
 		},
 		{
@@ -4591,7 +4609,8 @@
 			],
 			"packages": [
 				"TextAnalysis.jl",
-				"LinearAlgebra.jl"
+				"LinearAlgebra.jl",
+				"PollisDatasets.jl"
 			]
 		},
 		{
@@ -4664,7 +4683,8 @@
 				"dim-reduction-manifold/tutorial-03-diffusion-maps.ipynb"
 			],
 			"packages": [
-				"ManifoldLearning.jl"
+				"ManifoldLearning.jl",
+				"PollisDatasets.jl"
 			]
 		},
 		{
@@ -4803,7 +4823,49 @@
 			],
 			"packages": [
 				"GLM.jl",
-				"CalibrationErrors.jl"
+				"CalibrationErrors.jl",
+				"PollisDatasets.jl"
+			]
+		},
+		{
+			"id": "mcat",
+			"title": "MeshCat — 3D Visualisation",
+			"source": "toolbox:pollis-toolbox-robotics",
+			"commands": [
+				{
+					"id": "chiara.explore.rt.3_mcat",
+					"menuTitles": [
+						"MeshCat 3D Visualisation"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "scene",
+			"decisionFirstColumn": "Model",
+			"toml": "toolboxes/pollis-toolbox-robotics/panels/mcat.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-robotics/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-robotics/notebooks",
+			"wikis": [
+				"mcat/anim.md",
+				"mcat/assumptions.md",
+				"mcat/decision-guide.md",
+				"mcat/diagnostics.md",
+				"mcat/factsheet.md",
+				"mcat/frame.md",
+				"mcat/interpretation.md",
+				"mcat/overview.md",
+				"mcat/scene.md",
+				"mcat/urdf.md"
+			],
+			"notebooks": [
+				"mcat/tutorial-01-scene.ipynb",
+				"mcat/tutorial-02-anim.ipynb",
+				"mcat/tutorial-03-frame.ipynb",
+				"mcat/tutorial-04-urdf.ipynb"
+			],
+			"packages": [
+				"MeshCat.jl",
+				"CoordinateTransformations.jl"
 			]
 		},
 		{
@@ -5484,7 +5546,8 @@
 			],
 			"packages": [
 				"Flux.jl",
-				"Bijectors.jl"
+				"Bijectors.jl",
+				"PollisDatasets.jl"
 			]
 		},
 		{
@@ -5641,6 +5704,7 @@
 			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
 			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
 			"wikis": [
+				"nnls/algorithms.md",
 				"nnls/assumptions.md",
 				"nnls/decision-guide.md",
 				"nnls/diagnostics.md",
@@ -5734,7 +5798,8 @@
 			],
 			"packages": [
 				"OutlierDetection.jl",
-				"OutlierDetectionNeighbors.jl"
+				"OutlierDetectionNeighbors.jl",
+				"PollisDatasets.jl"
 			]
 		},
 		{
@@ -5809,7 +5874,8 @@
 			],
 			"packages": [
 				"LIBSVM.jl",
-				"OnlineStats.jl"
+				"OnlineStats.jl",
+				"PollisDatasets.jl"
 			]
 		},
 		{
@@ -5832,11 +5898,15 @@
 			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
 			"wikis": [
 				"nscr/assumptions.md",
+				"nscr/crude-mortality.md",
 				"nscr/decision-guide.md",
 				"nscr/diagnostics.md",
+				"nscr/estimators.md",
 				"nscr/factsheet.md",
+				"nscr/graffeo-test.md",
 				"nscr/interpretation.md",
-				"nscr/overview.md"
+				"nscr/overview.md",
+				"nscr/rate-tables.md"
 			],
 			"notebooks": [
 				"nscr/tutorial-01-cif.ipynb",
@@ -6603,6 +6673,89 @@
 			]
 		},
 		{
+			"id": "rctl",
+			"title": "Robot Control",
+			"source": "toolbox:pollis-toolbox-robotics",
+			"commands": [
+				{
+					"id": "chiara.explore.rt.2_rctl",
+					"menuTitles": [
+						"Robot Control"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "ik",
+			"decisionFirstColumn": "Model",
+			"toml": "toolboxes/pollis-toolbox-robotics/panels/rctl.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-robotics/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-robotics/notebooks",
+			"wikis": [
+				"rctl/assumptions.md",
+				"rctl/ct.md",
+				"rctl/decision-guide.md",
+				"rctl/diagnostics.md",
+				"rctl/factsheet.md",
+				"rctl/ik.md",
+				"rctl/imp.md",
+				"rctl/interpretation.md",
+				"rctl/overview.md",
+				"rctl/pd.md"
+			],
+			"notebooks": [
+				"rctl/tutorial-01-ik.ipynb",
+				"rctl/tutorial-02-pd.ipynb",
+				"rctl/tutorial-03-ct.ipynb",
+				"rctl/tutorial-04-imp.ipynb"
+			],
+			"packages": [
+				"RobotDynamics.jl",
+				"RigidBodyDynamics.jl"
+			]
+		},
+		{
+			"id": "rdyn",
+			"title": "Robot Dynamics",
+			"source": "toolbox:pollis-toolbox-robotics",
+			"commands": [
+				{
+					"id": "chiara.explore.rt.1_rdyn",
+					"menuTitles": [
+						"Robot Dynamics"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "rot",
+			"decisionFirstColumn": "Model",
+			"toml": "toolboxes/pollis-toolbox-robotics/panels/rdyn.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-robotics/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-robotics/notebooks",
+			"wikis": [
+				"rdyn/assumptions.md",
+				"rdyn/decision-guide.md",
+				"rdyn/diagnostics.md",
+				"rdyn/factsheet.md",
+				"rdyn/fd.md",
+				"rdyn/fk.md",
+				"rdyn/id.md",
+				"rdyn/interpretation.md",
+				"rdyn/overview.md",
+				"rdyn/rotations.md"
+			],
+			"notebooks": [
+				"rdyn/tutorial-01-rotations.ipynb",
+				"rdyn/tutorial-02-fk.ipynb",
+				"rdyn/tutorial-03-fd.ipynb",
+				"rdyn/tutorial-04-id.ipynb"
+			],
+			"packages": [
+				"Rotations.jl",
+				"RobotDynamics.jl",
+				"RigidBodyDynamics.jl"
+			]
+		},
+		{
 			"id": "rl",
 			"title": "Recurrent Layers",
 			"source": "pollis",
@@ -6796,7 +6949,8 @@
 				"TextAnalysis.jl",
 				"HypothesisTests.jl",
 				"Bootstrap.jl",
-				"Plots.jl"
+				"Plots.jl",
+				"PollisDatasets.jl"
 			]
 		},
 		{
@@ -6852,7 +7006,8 @@
 			],
 			"packages": [
 				"Statistics.jl",
-				"StatsBase.jl"
+				"StatsBase.jl",
+				"PollisDatasets.jl"
 			]
 		},
 		{
@@ -6991,19 +7146,21 @@
 		{
 			"id": "rvol",
 			"title": "Range-Based Volatility Estimation",
-			"source": "pollis",
+			"source": "toolbox:pollis-toolbox-econometrics",
 			"commands": [
 				{
 					"id": "chiara.statistics.rbv",
-					"menuTitles": []
+					"menuTitles": [
+						"Measuring Volatility"
+					]
 				}
 			],
 			"portable": true,
 			"defaultModel": "yz",
 			"decisionFirstColumn": "Estimator",
-			"toml": "src/vs/workbench/contrib/model/browser/webviews/rvol.toml",
-			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
-			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"toml": "toolboxes/pollis-toolbox-econometrics/panels/rvol.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-econometrics/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-econometrics/notebooks",
 			"wikis": [
 				"range-vol/alizadeh-brandt-diebold.md",
 				"range-vol/assumptions.md",
@@ -7107,6 +7264,47 @@
 			],
 			"packages": [
 				"RxInfer.jl"
+			]
+		},
+		{
+			"id": "rzoo",
+			"title": "RobotZoo — Robot Model Library",
+			"source": "toolbox:pollis-toolbox-robotics",
+			"commands": [
+				{
+					"id": "chiara.explore.rt.4_rzoo",
+					"menuTitles": [
+						"Robot Model Library"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "pend",
+			"decisionFirstColumn": "Model",
+			"toml": "toolboxes/pollis-toolbox-robotics/panels/rzoo.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-robotics/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-robotics/notebooks",
+			"wikis": [
+				"rzoo/assumptions.md",
+				"rzoo/bicycle.md",
+				"rzoo/cartpole.md",
+				"rzoo/decision-guide.md",
+				"rzoo/diagnostics.md",
+				"rzoo/factsheet.md",
+				"rzoo/interpretation.md",
+				"rzoo/overview.md",
+				"rzoo/pendulum.md",
+				"rzoo/quadrotor.md"
+			],
+			"notebooks": [
+				"rzoo/tutorial-01-pendulum.ipynb",
+				"rzoo/tutorial-02-cartpole.ipynb",
+				"rzoo/tutorial-03-bicycle.ipynb",
+				"rzoo/tutorial-04-quadrotor.ipynb"
+			],
+			"packages": [
+				"RobotZoo.jl",
+				"RobotDynamics.jl"
 			]
 		},
 		{
@@ -7416,7 +7614,8 @@
 			],
 			"packages": [
 				"TextAnalysis.jl",
-				"Languages.jl"
+				"Languages.jl",
+				"PollisDatasets.jl"
 			]
 		},
 		{
@@ -7641,7 +7840,10 @@
 				"ssm/diagnostics.md",
 				"ssm/factsheet.md",
 				"ssm/interpretation.md",
-				"ssm/overview.md"
+				"ssm/kalman-filter.md",
+				"ssm/nonlinear-kalman.md",
+				"ssm/overview.md",
+				"ssm/particle-filters.md"
 			],
 			"notebooks": [
 				"ssm/tutorial-01-kalman.ipynb",
@@ -7654,7 +7856,8 @@
 				"ssm/tutorial-08-rbf.ipynb"
 			],
 			"packages": [
-				"LowLevelParticleFilters.jl"
+				"LowLevelParticleFilters.jl",
+				"PollisDatasets.jl"
 			]
 		},
 		{
@@ -8221,7 +8424,6 @@
 		},
 		{
 			"id": "xlsx",
-			"title": "Excel Workbook",
 			"source": "pollis",
 			"commands": [
 				{
@@ -8236,7 +8438,6 @@
 		},
 		{
 			"id": "yfin",
-			"title": "Yahoo Finance",
 			"source": "pollis",
 			"commands": [
 				{

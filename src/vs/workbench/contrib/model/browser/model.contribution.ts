@@ -78,7 +78,6 @@ import { GP_PANEL } from './commands/gp.command.js';
 import { EVTRISK_PANEL } from './commands/evtRisk.command.js';
 import { EVTDIAG_PANEL } from './commands/evtDiag.command.js';
 import { HARE_PANEL } from './commands/hare.command.js';
-// Finance panels, deferred for a future Finance Toolbox: import { RVOL_PANEL } from './commands/rvol.command.js';
 import { LMAR_PANEL } from './commands/lmar.command.js';
 import { LMHAR_PANEL } from './commands/lmhar.command.js';
 // Finance panels, deferred for a future Finance Toolbox: import { PO_PANEL } from './commands/po.command.js';
@@ -191,7 +190,6 @@ CommandsRegistry.registerCommand('chiara.statistics.lm', accessor => openScaffol
 CommandsRegistry.registerCommand('chiara.statistics.lm.ols', accessor => openScaffoldWebview(accessor, LM_PANEL, 'ols'));
 CommandsRegistry.registerCommand('chiara.statistics.lm.hac', accessor => openScaffoldWebview(accessor, LM_PANEL, 'ols'));
 CommandsRegistry.registerCommand('chiara.statistics.lm.wls', accessor => openScaffoldWebview(accessor, LM_PANEL, 'wls'));
-// Finance panel, deferred: CommandsRegistry.registerCommand('chiara.statistics.rbv', accessor => openScaffoldWebview(accessor, RVOL_PANEL));
 CommandsRegistry.registerCommand('chiara.statistics.lm.hetero', accessor => openScaffoldWebview(accessor, HARE_PANEL));
 CommandsRegistry.registerCommand('chiara.statistics.lm.ar1', accessor => openScaffoldWebview(accessor, LMAR_PANEL));
 // Finance panel, deferred: CommandsRegistry.registerCommand('chiara.statistics.eco.po', accessor => openScaffoldWebview(accessor, PO_PANEL));
