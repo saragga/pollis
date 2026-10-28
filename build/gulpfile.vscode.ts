@@ -32,7 +32,7 @@ import { compileBuildWithoutManglingTask, compileBuildWithManglingTask } from '.
 import { compileNonNativeExtensionsBuildTask, compileNativeExtensionsBuildTask, compileAllExtensionsBuildTask, compileExtensionMediaBuildTask, cleanExtensionsBuildTask } from './gulpfile.extensions.ts';
 import { copyCodiconsTask } from './lib/compilation.ts';
 import { getCopilotExcludeFilter, copyCopilotNativeDeps } from './lib/copilot.ts';
-import { lanceStream, thinDuckDB } from './pollis/duckdb.ts';
+import { ftsStream, thinDuckDB } from './pollis/duckdb.ts';
 import { llamaCppStream } from './pollis/llamacpp.ts';
 import type { EmbeddedProductInfo } from './lib/embeddedType.ts';
 import { useEsbuildTranspile } from './buildConfig.ts';
@@ -503,7 +503,7 @@ function packageTask(platform: string, arch: string, sourceFolderName: string, d
 			documents,
 			sources,
 			deps,
-			lanceStream(platform, arch),
+			ftsStream(platform, arch),
 			llamaCppStream(platform, arch)
 		];
 		if (packageSubJsonStream) {
@@ -873,8 +873,8 @@ gulp.task('vscode-translations-import', function () {
 
 // #endregion
 
-// Pollis: the Lance extension of DuckDB for a development build, in .build/duckdb/ (build/pollis/duckdb.ts)
-gulp.task(task.define('fetch-duckdb-lance', () => lanceStream(process.platform, process.arch).pipe(vfs.dest('.build'))));
+// Pollis: the fts extension of DuckDB for a development build, in .build/duckdb/ (build/pollis/duckdb.ts)
+gulp.task(task.define('fetch-duckdb-fts', () => ftsStream(process.platform, process.arch).pipe(vfs.dest('.build'))));
 
 // Pollis: llama-server for a development build, in .build/llama.cpp/ (build/pollis/llamacpp.ts)
 gulp.task(task.define('fetch-llama-cpp', () => llamaCppStream(process.platform, process.arch).pipe(vfs.dest('.build'))));

@@ -4,12 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 // DuckDB in the packaged app. The engine, libduckdb, comes with @duckdb/node-api, next to its
-// duckdb.node in node_modules.asar.unpacked/@duckdb/node-bindings-<platform>-<arch>/; the Lance
-// extension is downloaded from DuckDB's extension repository and shipped compressed as
-// duckdb/lance.duckdb_extension.gz. At install, the Julia extension of Pollis copies the engine and
-// unpacks Lance into ~/.pollis/duckdb/ (extensions/language-julia/src/pollisDuckDB.ts).
+// duckdb.node in node_modules.asar.unpacked/@duckdb/node-bindings-<platform>-<arch>/; the fts
+// extension, full-text search, is downloaded from DuckDB's extension repository and shipped compressed as
+// duckdb/fts.duckdb_extension.gz. At install, the Julia extension of Pollis copies the engine and
+// unpacks fts into ~/.pollis/duckdb/ (extensions/language-julia/src/pollisDuckDB.ts).
 //
-// In a development build, `npm run gulp fetch-duckdb-lance` puts Lance in .build/duckdb/.
+// In a development build, `npm run gulp fetch-duckdb-fts` puts fts in .build/duckdb/.
 
 import * as cp from 'child_process';
 import * as fs from 'fs';
@@ -23,28 +23,27 @@ import { fetchUrls } from '../lib/fetch.ts';
 /** The DuckDB release of @duckdb/node-api, whose extensions must match it. */
 const DUCKDB_VERSION = 'v1.5.6';
 
-/**
- * Lance for each platform Pollis can be built for, with the checksum of its .gz. DuckDB builds no
- * Lance for Intel Macs or Windows on Arm; Pollis there works without it.
- */
-const LANCE: Record<string, { readonly platform: string; readonly sha256: string }> = {
-	'darwin-arm64': { platform: 'osx_arm64', sha256: 'a6cd07feef91e48bae6ea00bccb4b5197a5afa10d712c7d20bda14c37ff6bfe5' },
-	'linux-x64': { platform: 'linux_amd64', sha256: 'b6e9ef4a87e4cc970fcb87adf3463a5614b7b9678b59720c2f1aad75f9579808' },
-	'linux-arm64': { platform: 'linux_arm64', sha256: '86b6d6f16c577f4755b7e86600c0628c98b0b5e09a0a8737ea714a6f0b0e308c' },
-	'win32-x64': { platform: 'windows_amd64', sha256: 'cd0c7171b04a001247a245b237759cf9769b329cc3cefd65a37e2acd87fd0d5a' },
+/** fts for each platform Pollis can be built for, with the checksum of its .gz. */
+const FTS: Record<string, { readonly platform: string; readonly sha256: string }> = {
+	'darwin-arm64': { platform: 'osx_arm64', sha256: 'b65dbb5f976a0a345bafc72417280942837ed93231640aaf74167a894b65f8c2' },
+	'darwin-x64': { platform: 'osx_amd64', sha256: 'b31b8995e82427ba9f6e2449e0c15efad415be03e4cf847cab6b75c86339cec0' },
+	'linux-x64': { platform: 'linux_amd64', sha256: '9a1804e36281efe7e4eed976668e2bf30422fad5f02ec58e2604c3a72bf3e8cf' },
+	'linux-arm64': { platform: 'linux_arm64', sha256: '85cb92507e4b2a385a2e0228be301f45253ac1888ea454863b8e7eb0e6369410' },
+	'win32-x64': { platform: 'windows_amd64', sha256: '02162f1acb5e6da4c6b154bb11e8161d9f535bab29a584a95101d6c77922611a' },
+	'win32-arm64': { platform: 'windows_arm64', sha256: 'dac88a671803897978762dc3835ab5df94015ed982b067a0851b32d57cfd8df7' },
 };
 
 /**
- * The Lance extension for the platform, compressed, as duckdb/lance.duckdb_extension.gz; nothing
- * where DuckDB has no Lance.
+ * The fts extension for the platform, compressed, as duckdb/fts.duckdb_extension.gz; nothing for a
+ * platform not in `FTS`.
  */
-export function lanceStream(platform: string, arch: string): NodeJS.ReadWriteStream {
-	const lance = LANCE[`${platform}-${arch}`];
-	if (!lance) {
+export function ftsStream(platform: string, arch: string): NodeJS.ReadWriteStream {
+	const fts = FTS[`${platform}-${arch}`];
+	if (!fts) {
 		return es.readArray([]);
 	}
-	return fetchUrls(`/${DUCKDB_VERSION}/${lance.platform}/lance.duckdb_extension.gz`, { base: 'https://extensions.duckdb.org', checksumSha256: lance.sha256 })
-		.pipe(rename('duckdb/lance.duckdb_extension.gz'));
+	return fetchUrls(`/${DUCKDB_VERSION}/${fts.platform}/fts.duckdb_extension.gz`, { base: 'https://extensions.duckdb.org', checksumSha256: fts.sha256 })
+		.pipe(rename('duckdb/fts.duckdb_extension.gz'));
 }
 
 /**

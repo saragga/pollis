@@ -387,8 +387,7 @@ added, a notification says so.
 The same datasets are also a DuckDB database, \emph{PollisDatasets}, one table per dataset, named after it,
 with a description of the table and of each column. It is read-only, and is rebuilt only when
 PollisDatasets changes. The Welcome page's \ui{Status} says when it is ready. Like the other built-in databases (page 40), it is a
-DuckDB file, not in the Lance format: Pollis also brings DuckDB's Lance extension, for Lance datasets such
-as tables of embeddings, but the built-in databases do not need it.
+DuckDB file.
 \begin{enumerate}[label=\arabic*.]
   \item Open the \ui{Databases} view, in the secondary side bar on the right (or choose
     \ui{Open Databases View} in the notification of new datasets).
@@ -411,7 +410,7 @@ Then query it in the Julia REPL with SQL:
 
 \subhead{Three ways to use SQL}
 SQL should be at hand wherever you are working, without a second database program: all three use the
-same DuckDB engine, with the Lance extension, and attach the four built-in databases, read-only.
+same DuckDB engine, with its full-text search extension, \emph{fts}, and attach the four built-in databases, read-only.
 \begin{itemize}
   \item \textbf{The \texttt{duckdb>} terminal}, for SQL alone, without starting Julia: \ui{New DuckDB
     Terminal}, at the top of the Databases view (or \ui{Databases: New DuckDB Terminal} in the Command
@@ -422,7 +421,6 @@ same DuckDB engine, with the Lance extension, and attach the four built-in datab
     \texttt{ans}, ready for Julia; Backspace on an empty line goes back to \texttt{julia>}.
   \item \textbf{\texttt{db = PollisDB.connect()}}, for Julia code and scripts: a DuckDB connection in
     memory, shown in the Databases view; \texttt{PollisDB.connect("sales.duckdb")} opens a file instead.
-    Lance is loaded in the background, so the connection is ready at once.
 \end{itemize}
 
 \newpage
@@ -952,7 +950,7 @@ the folder has none. To start the draft again, delete the \texttt{.tex} first.
     numbers already computed. It does not run the notebook again, and it compiles the document as it
     goes: the PDF beside you reloads each time.
 \end{enumerate}
-Polish runs on the Light tier of Model Routing (Orchestration, page 34).
+Polish runs on the Light tier of Model Tasks and Routing (Orchestration, page 34).
 
 \begin{caution}{Polish costs tokens}
 The menu item with the sparkle runs your coding agent, on your account. Read the result: an agent can
@@ -1591,55 +1589,63 @@ Pollis works with any agent: you choose which, and which model each task runs on
   \item Choose \ui{Compose > Coding Agents}. The page lists Claude Code, Codex and OpenCode,
     each with its command and whether it is \ui{On This Computer}: \ui{Agent Installed}, or
     \ui{Install Agent}, which opens its install page.
-  \item Click \ui{Use} beside yours; it then shows \ui{In Use}.
-  \item Click \ui{Install Skills}, so that the agent knows the Pollis skills in any folder, even outside
+  \item Click \ui{Install Skills}, so that the agents know the Pollis skills in any folder, even outside
     Pollis. Later, \ui{Update} installs their latest version.
 \end{enumerate}
-Each agent also has a \emph{local} command, under \ui{Local and Cloud Models}, that runs it on a model on
-this computer through Ollama or LM Studio: free and private. For any \ui{Other Agent}, type its command
-line with \texttt{\{prompt\}} where the first message goes; without it, Pollis copies the message to the
-clipboard, to paste into the agent. The choice is kept in \setting{pollis.agents.command}.
+Under \ui{Other Agents}, \ui{Add an Agent} adds an agent of your own: a name, such as \ui{MyAgent}, and its
+command line, with \texttt{\{prompt\}} where the first message goes; without it, Pollis copies the message
+to the clipboard, to paste into the agent. Which agent runs a task is chosen in Model Tasks and Routing.
 
 \subhead{What happens when a task starts}
-Pollis opens a terminal, starts the agent there and gives it a first message that points it to the skill
-for the task. From then on you talk to the agent in that terminal.
+Pollis opens a terminal, starts the agent of the task's tier there, on the tier's model, and gives it a
+first message that points it to the skill for the task. From then on you talk to the agent in that
+terminal.
 
 \subhead{Agent Skills}
 A \emph{skill} is the know-how an agent reads to do a task. \ui{Compose > Agent Skills} lists them,
-downloaded in their latest version when the page opens: create-panel, package-toolbox, prepare-method,
-references, write-method and write-vignette, each with its \ui{Tasks} and \ui{Example Requests}.
-\ui{View Skill} opens it; \ui{Run with My Agent} starts your agent on it.
+downloaded in their latest version when the page opens: create-panel, package-toolbox, polish-report,
+prepare-method, references, tables-from-article, write-method and write-vignette, each with its
+\ui{Tasks} and \ui{Example Requests}. \ui{View Skill} opens it; \ui{Run with My Agent} starts it on the
+Standard tier.
 
 \newpage
-\subhead{Model Routing}
-Not every task needs the strongest model. \ui{Compose > Orchestration > Model Routing} has three
-\emph{tiers}:
+\subhead{Model Tasks and Routing}
+Not every task needs the strongest model. \ui{Compose > Orchestration > Model Tasks and Routing} has three
+\emph{tiers}, and any of your own, such as \ui{Max}:
 \begin{itemize}
   \item \ui{Light}: small tasks, on a fast, cheap or local model.
   \item \ui{Standard}: everyday tasks.
   \item \ui{Strong}: hard tasks, where a mistake costs most.
 \end{itemize}
-Give each tier the command line of an agent, with \texttt{\{prompt\}}, such as
-\texttt{claude --model haiku \{prompt\}} for Light. An empty tier runs your main agent, and so does a tier
-whose program is not installed. Each task runs on a tier by default:
+A tier is a cell of a table, whose columns are the \ui{Code Agents}, Claude Code, Codex, OpenCode and your
+own, and whose rows are the \ui{Models}: \ui{Cloud}, such as Claude Haiku, Sonnet and Opus or GPT-5.5, and
+\ui{Local}, the chat models on this computer. Type a tier's name in a cell, and the tier is that agent on
+that model; a new name makes a new tier. A tier is in one cell only, and a dash marks a model the agent
+cannot run. Unless you change them, Light, Standard and Strong are Claude Code on Haiku, Sonnet and Opus.
+
+Below it, \ui{Tasks} gives each task its tier, under \ui{Runs On}, and the skills it reads, under
+\ui{Skills}:
 \begin{center}\small
-\begin{tabular}{@{}lll@{}}
-\textbf{Task} & \textbf{Menu} & \textbf{Tier}\\
-Polish with Agent & Reports & Light\\
-Write a Vignette, Prepare for Registration & Methods & Standard\\
-Package a Toolbox & New Panels and Toolboxes & Standard\\
-Tables from the Article, Write a Method & Methods & Strong\\
-Create a Panel, Create Panels from a Request & New Panels and Toolboxes & Strong\\
+\begin{tabular}{@{}llll@{}}
+\textbf{Task} & \textbf{Menu} & \textbf{Runs On} & \textbf{Skills}\\
+Polish with Agent & Reports & Light & polish-report\\
+Write a Vignette & Methods & Standard & write-vignette\\
+Prepare for Registration & Methods & Standard & prepare-method\\
+Package a Toolbox & New Panels and Toolboxes & Standard & package-toolbox\\
+Tables from the Article & Methods & Strong & tables-from-article\\
+Write a Method & Methods & Strong & write-method\\
+Create a Panel, from a Request & New Panels and Toolboxes & Strong & create-panel\\
 \end{tabular}
 \end{center}
-In \ui{Tasks}, choose another tier for a task, or \ui{Main Agent}. The settings are
-\setting{pollis.agents.tiers} and \setting{pollis.agents.taskTiers}.
+There is no main agent: every task runs on the cell of its tier. The settings are
+\setting{pollis.agents.tierCells} and \setting{pollis.agents.taskTiers}.
 
 \subhead{Local Models}
-\ui{Compose > Local Models} has \ui{Hugging Face Models} and \ui{Kaggle Models}, to find models,
-and \ui{Local Model Runners}. A local model runs only through a \emph{runner}, a program that loads it and
-serves it on this computer: Ollama, LM Studio, llama.cpp or Apple MLX. The page shows which are
-installed, and how each agent reaches each one.
+\ui{Compose > Local Models} has \ui{Get Models from Hugging Face} and \ui{Get Models from Kaggle}, to find
+and download models, and \ui{Models Installed}: the local models on this computer, those Pollis downloaded
+and those in the Hugging Face cache, with their \ui{Kind} (Chat or Embedding), what each \ui{Reads}, whether
+it can call \ui{Tools}, and the tiers that use it. Pollis runs them with llama.cpp, which comes with it,
+free and private: a task on a local tier starts the model first.
 
 \begin{caution}{An agent works on your files}
 A coding agent reads and writes files, and runs commands, in its terminal. Read what it proposes, and check
@@ -1647,9 +1653,8 @@ its results, as you would a colleague's.
 \end{caution}
 
 \begin{trouble}
-\textbf{\emph{Choose the coding agent Pollis starts}} & Choose one in \ui{Compose > Coding Agents}, then the task again. \\
-\textbf{\emph{The coding agent \ldots\ was not found}} & Install it (\ui{Open Install Page}), or choose another one. \\
-\textbf{\emph{\ldots\ tier: \ldots\ isn't installed}} & The task ran on the main agent: install the tier's program, or change its command. \\
+\textbf{\emph{\ldots\ runs on the \ldots\ tier, which is in no cell}} & Type the tier's name in a cell of \ui{Model Tasks and Routing}, or choose another tier for the task. \\
+\textbf{\emph{The \ldots\ tier runs the coding agent \ldots, which was not found}} & Install it (\ui{Open Install Page}), or put the tier in another agent's column. \\
 \end{trouble}
 
 \begin{note}{Not available yet}

@@ -1,5 +1,5 @@
-// POLLIS: the DuckDB engine of Pollis, for Julia as well. Pollis ships libduckdb (with @duckdb/node-api) and the Lance
-// extension, compressed (build/pollis/duckdb.ts); at install, they are copied and unpacked into ~/.pollis/duckdb/, a
+// POLLIS: the DuckDB engine of Pollis, for Julia as well. Pollis ships libduckdb (with @duckdb/node-api) and the fts
+// extension, full-text search, compressed (build/pollis/duckdb.ts); at install, they are copied and unpacked into ~/.pollis/duckdb/, a
 // path that stays the same across updates. Julia's DuckDB.jl is Pollis' fork without DuckDB_jll
 // (Trumpingtons/DuckDB.jl), which loads the library named by JULIA_DUCKDB_LIBRARY; the path is fixed when DuckDB.jl is
 // precompiled, so it must not change.
@@ -18,14 +18,14 @@ const LIBRARY_NAME = process.platform === 'win32' ? 'duckdb.dll' : process.platf
 /** The libduckdb that Julia loads, through JULIA_DUCKDB_LIBRARY. */
 export const DUCKDB_LIBRARY = path.join(DUCKDB_HOME, LIBRARY_NAME)
 
-/** What was copied, so that it is copied again only when Pollis brings a new DuckDB or Lance. */
+/** What was copied, so that it is copied again only when Pollis brings a new DuckDB or fts. */
 const STAMP = path.join(DUCKDB_HOME, 'pollis.stamp')
 
 let g_ready: Promise<void> = Promise.resolve()
 
 /**
  * Sets JULIA_DUCKDB_LIBRARY for every Julia that Pollis starts (the REPL and terminals, notebooks, the install task),
- * and copies the engine and Lance into ~/.pollis/duckdb/ when they are missing or older than Pollis'.
+ * and copies the engine and fts into ~/.pollis/duckdb/ when they are missing or older than Pollis'.
  */
 export function activate(context: vscode.ExtensionContext) {
     process.env.JULIA_DUCKDB_LIBRARY = DUCKDB_LIBRARY
@@ -40,7 +40,7 @@ export function activate(context: vscode.ExtensionContext) {
     g_ready = Promise.all([engine, references]).then(() => undefined)
 }
 
-/** Resolves once ~/.pollis/duckdb/ holds Pollis' engine and Lance, and ~/.pollis/references/ its references (or a copy failed). */
+/** Resolves once ~/.pollis/duckdb/ holds Pollis' engine and fts, and ~/.pollis/references/ its references (or a copy failed). */
 export function whenDuckDBReady(): Promise<void> {
     return g_ready
 }
@@ -59,13 +59,13 @@ async function install(appRoot: string) {
     if (!folder) {
         return
     }
-    // Lance exists for some platforms only; in a development build, `npm run gulp fetch-duckdb-lance` fetches it.
-    const lance = firstExisting([
-        path.join(appRoot, 'duckdb', 'lance.duckdb_extension.gz'),
-        path.join(appRoot, '.build', 'duckdb', 'lance.duckdb_extension.gz'),
+    // In a development build, `npm run gulp fetch-duckdb-fts` fetches fts.
+    const fts = firstExisting([
+        path.join(appRoot, 'duckdb', 'fts.duckdb_extension.gz'),
+        path.join(appRoot, '.build', 'duckdb', 'fts.duckdb_extension.gz'),
     ])
     const version = JSON.parse(await fs.promises.readFile(path.join(folder, 'package.json'), 'utf8')).version
-    const stamp = `${version}\n${lance ? (await fs.promises.stat(lance)).size : 'no lance'}\n`
+    const stamp = `${version}\n${fts ? (await fs.promises.stat(fts)).size : 'no fts'}\n`
     const installed = await fs.promises.readFile(STAMP, 'utf8').catch(() => '')
     if (installed === stamp && fs.existsSync(DUCKDB_LIBRARY)) {
         return
@@ -75,11 +75,16 @@ async function install(appRoot: string) {
     const library = `${DUCKDB_LIBRARY}.${process.pid}.tmp`
     await fs.promises.copyFile(path.join(folder, LIBRARY_NAME), library)
     await fs.promises.rename(library, DUCKDB_LIBRARY)
-    if (lance) {
-        const target = path.join(DUCKDB_HOME, 'lance.duckdb_extension')
+    if (fts) {
+        const target = path.join(DUCKDB_HOME, 'fts.duckdb_extension')
         const unpacked = `${target}.${process.pid}.tmp`
-        await pipeline(fs.createReadStream(lance), zlib.createGunzip(), fs.createWriteStream(unpacked))
+        await pipeline(fs.createReadStream(fts), zlib.createGunzip(), fs.createWriteStream(unpacked))
         await fs.promises.rename(unpacked, target)
+    }
+    // The Lance extension that Pollis brought up to 0.2.10, 234 MB, which it no longer uses; on Windows, a Julia that
+    // has it loaded keeps it until the next install.
+    for (const name of ['lance.duckdb_extension', 'lance.duckdb_extension.loaded']) {
+        await fs.promises.rm(path.join(DUCKDB_HOME, name), { force: true }).catch(() => undefined)
     }
     await fs.promises.writeFile(STAMP, stamp)
 }

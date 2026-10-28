@@ -16,7 +16,7 @@ next REPL starts.
 
 The module looks up DBInterface.jl and Tables.jl among the packages the connection code has
 already loaded; only `build`, `connect` and `sql` load DuckDB themselves. `connect` opens a DuckDB with the
-built-in databases attached and Lance loading in the background; `sql` runs a query on such a
+built-in databases attached and full-text search (fts) loaded; `sql` runs a query on such a
 connection, and is what the `sql>` mode of the REPL (`>` at the start of a line) runs. DuckDB is built into Pollis: `install()` adds it,
 once, to a Julia environment of Pollis' own (`ENVIRONMENT`), which PollisDB puts on the load path
 so that `using DuckDB` works in any project without touching its Project.toml. That DuckDB is Pollis'
@@ -45,12 +45,10 @@ const PACKAGES = ["DuckDB", "DBInterface", "Tables"]
 """Pollis' fork of DuckDB.jl, without DuckDB_jll: the engine is the one in `DUCKDB_HOME`."""
 const DUCKDB_URL = "https://github.com/Trumpingtons/DuckDB.jl"
 
-"""Where the Julia extension puts the DuckDB engine and the Lance extension that come with Pollis."""
+"""Where the Julia extension puts the DuckDB engine and the fts extension that come with Pollis."""
 const DUCKDB_HOME = joinpath(homedir(), ".pollis", "duckdb")
-"""The Lance extension, on the platforms DuckDB builds it for."""
-const LANCE = joinpath(DUCKDB_HOME, "lance.duckdb_extension")
-"""The modification time of the `LANCE` that `warm_lance` last loaded."""
-const LANCE_STAMP = LANCE * ".loaded"
+"""The fts extension of DuckDB, full-text search with BM25."""
+const FTS = joinpath(DUCKDB_HOME, "fts.duckdb_extension")
 
 
 """The id of the built-in database's saved profile in the Databases view."""
@@ -375,16 +373,12 @@ const DUCKDB_CONFIG = ["autoinstall_known_extensions" => "false", "autoload_know
 """The built-in databases that `connect` attaches, read-only, under their own names."""
 builtins() = filter(isfile, [DATASETS_DB, RSS_DB, JOURNALS_DB, REFERENCES_DB])
 
-"""The task loading Lance into each database `connect` opened, by database."""
-const LANCE_TASKS = IdDict{Any,Task}()
-
 """
-    connect(path = ":memory:"; name = "DuckDB", builtins = true, lance = true, show = true)
+    connect(path = ":memory:"; name = "DuckDB", builtins = true, fts = true, show = true)
 
 Open the DuckDB database `path` with the engine of Pollis and return it, ready for
 `DBInterface.execute`. The built-in databases are attached read-only as `PollisDatasets`,
-`PollisRSS`, `PollisJournals` and `PollisReferences`; the Lance extension is loaded in the background, on a thread of its own, so the
-connection is ready at once (`wait_lance(con)` waits for it). The connection is shown in the Databases
+`PollisRSS`, `PollisJournals` and `PollisReferences`, and the fts extension, full-text search, is loaded. The connection is shown in the Databases
 view as `name`. DuckDB never downloads extensions here: those that Pollis brings are all there is.
 
 ```julia
@@ -392,7 +386,7 @@ con = PollisDB.connect()
 DBInterface.execute(con, "SELECT * FROM PollisDatasets.main.mroz LIMIT 5")
 ```
 """
-function connect(path::AbstractString = ":memory:"; name::AbstractString = "DuckDB", builtins::Bool = true, lance::Bool = true, show::Bool = true)
+function connect(path::AbstractString = ":memory:"; name::AbstractString = "DuckDB", builtins::Bool = true, fts::Bool = true, show::Bool = true)
     DuckDB = get(() -> Base.require(DUCKDB), Base.loaded_modules, DUCKDB)
     DBInterface = get(() -> Base.require(DBINTERFACE), Base.loaded_modules, DBINTERFACE)
     return Base.invokelatest() do
@@ -402,38 +396,15 @@ function connect(path::AbstractString = ":memory:"; name::AbstractString = "Duck
                 DBInterface.execute(db, "ATTACH IF NOT EXISTS '$(replace(file, "'" => "''"))' (READ_ONLY)")
             end
         end
-        lance && isfile(LANCE) && (LANCE_TASKS[db] = Threads.@spawn :default load_lance(DBInterface, db))
+        if fts && isfile(FTS)
+            try
+                DBInterface.execute(db, "LOAD '$(replace(FTS, "'" => "''"))'")
+            catch err
+                @warn "Pollis: could not load the fts extension of DuckDB" exception = err
+            end
+        end
         show && PollisDB.show(db; name)
         db
-    end
-end
-
-"""Load Lance into `db` through a connection of its own, so that the user's queries are not held up."""
-function load_lance(DBInterface::Module, db)
-    con = DBInterface.connect(db)
-    try
-        DBInterface.execute(con, "LOAD '$(replace(LANCE, "'" => "''"))'")
-    finally
-        DBInterface.close!(con)
-    end
-    return nothing
-end
-
-"""
-    wait_lance(con)
-
-Wait until the Lance extension is loaded into `con`, a database opened by `connect`; return whether it is.
-"""
-function wait_lance(con)
-    task = get(LANCE_TASKS, con, nothing)
-    task === nothing && return false
-    try
-        wait(task)
-        return true
-    catch err
-        @warn "Pollis: could not load the Lance extension of DuckDB" exception = err
-        delete!(LANCE_TASKS, con)
-        return false
     end
 end
 
@@ -453,8 +424,6 @@ function sql(query::AbstractString; con = nothing)
         SQL_CONNECTION[] === nothing && (SQL_CONNECTION[] = connect(; name = "sql> Mode"))
         con = SQL_CONNECTION[]
     end
-    # A query about Lance must wait for it; any other runs at once.
-    occursin(r"lance"i, query) && wait_lance(con)
     DBInterface, Tables = loaded(DBINTERFACE), loaded(TABLES)
     tables_interface(Tables)
     started = time()
@@ -1187,12 +1156,6 @@ function from_registry(manifest::AbstractString)
     return any(e -> get(e, "uuid", "") == string(DUCKDB.uuid) && get(e, "repo-url", "") != DUCKDB_URL, entries)
 end
 
-"""Whether the `LANCE` that Pollis brought has not been loaded once yet (see `warm_lance`)."""
-function lance_unloaded()
-    isfile(LANCE) || return false
-    return !isfile(LANCE_STAMP) || read(LANCE_STAMP, String) != string(mtime(LANCE))
-end
-
 """
     needs_install()
 
@@ -1203,7 +1166,7 @@ its own, as it installs Revise, so the REPL never waits for Pkg.
 function needs_install()
     todo = pending()
     return !isempty(todo.missing_packages) || any(d -> d.missing || d.outdated, todo.data) || todo.registry_duckdb ||
-        !isfile(DATASETS_DB) || !isfile(RSS_DB) || !isfile(JOURNALS_DB) || journals_outdated() || package_data_uncopied() || references_outdated() || lance_unloaded()
+        !isfile(DATASETS_DB) || !isfile(RSS_DB) || !isfile(JOURNALS_DB) || journals_outdated() || package_data_uncopied() || references_outdated()
 end
 
 """
@@ -1259,33 +1222,6 @@ function install()
         end
     finally
         Base.ACTIVE_PROJECT[] = active
-    end
-    return nothing
-end
-
-"""
-    warm_lance()
-
-Load the Lance extension once, at install, so that DuckDB checks its signature and macOS scans it (some
-seconds) here rather than the first time a connection of the user needs it. Nothing to do where DuckDB
-has no Lance, or once this `LANCE` has been loaded.
-"""
-function warm_lance()
-    lance_unloaded() || return nothing
-    DuckDB = get(() -> Base.require(DUCKDB), Base.loaded_modules, DUCKDB)
-    get(() -> Base.require(DBINTERFACE), Base.loaded_modules, DBINTERFACE)
-    try
-        Base.invokelatest() do
-            con = loaded(DBINTERFACE).connect(DuckDB.DB)
-            try
-                loaded(DBINTERFACE).execute(con, "LOAD '$(replace(LANCE, "'" => "''"))'")
-            finally
-                loaded(DBINTERFACE).close!(con)
-            end
-        end
-        write(LANCE_STAMP, string(mtime(LANCE)))
-    catch err
-        @warn "Pollis: could not load the Lance extension of DuckDB" exception = err
     end
     return nothing
 end

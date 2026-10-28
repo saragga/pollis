@@ -1622,7 +1622,7 @@ async function installPollisDB(juliaExecutable: JuliaExecutable) {
         return
     }
     g_installingPollisDB = true
-    // The install loads the DuckDB engine and Lance from ~/.pollis/duckdb/.
+    // The install loads the DuckDB engine and fts from ~/.pollis/duckdb/.
     await whenDuckDBReady()
     const script = path.join(g_context.extensionPath, 'scripts', 'terminalserver', 'install_pollisdb.jl')
     const task = new TaskRunnerTerminal('Install DuckDB and the PollisDatasets', juliaExecutable.command, [

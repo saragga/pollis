@@ -6,7 +6,7 @@
 // The duckdb> terminal: a DuckDB shell on the engine of Pollis (@duckdb/node-api), run by Electron as
 // Node in a terminal (see ../electron-browser/duckdbShell.contribution.ts). It opens an in-memory
 // database, or the file it is given, with the built-in databases attached read-only, and loads the
-// Lance extension in the background. Extensions are never downloaded: those Pollis brings are all.
+// fts extension, full-text search. Extensions are never downloaded: those Pollis brings are all.
 
 import { DuckDBConnection, DuckDBInstance, DuckDBValue, StatementType } from '@duckdb/node-api';
 import * as fs from 'fs';
@@ -15,8 +15,8 @@ import * as readline from 'readline';
 import { join } from '../../../../base/common/path.js';
 
 const POLLIS_HOME = join(os.homedir(), '.pollis');
-/** The Lance extension, which the Julia extension of Pollis unpacks here at install. */
-const LANCE = join(POLLIS_HOME, 'duckdb', 'lance.duckdb_extension');
+/** The fts extension, which the Julia extension of Pollis unpacks here at install. */
+const FTS = join(POLLIS_HOME, 'duckdb', 'fts.duckdb_extension');
 /** The built-in databases, attached read-only under their own names. */
 const BUILTINS = [join(POLLIS_HOME, 'databases', 'PollisDatasets.duckdb'), join(POLLIS_HOME, 'databases', 'PollisRSS.duckdb'), join(POLLIS_HOME, 'databases', 'PollisJournals.duckdb'), join(POLLIS_HOME, 'databases', 'PollisReferences.duckdb')];
 const HISTORY = join(POLLIS_HOME, 'duckdb', 'shell_history');
@@ -121,11 +121,10 @@ class Shell {
 
 	private timer = true;
 	private running = false;
-	private lance: Promise<boolean> = Promise.resolve(false);
 
-	constructor(private readonly instance: DuckDBInstance, private readonly connection: DuckDBConnection) { }
+	constructor(private readonly connection: DuckDBConnection) { }
 
-	/** Attach the built-in databases and start loading Lance; returns what to tell the user about them. */
+	/** Attach the built-in databases and load fts; returns what to tell the user about them. */
 	async prepare(): Promise<string[]> {
 		const notes: string[] = [];
 		const attached: string[] = [];
@@ -142,19 +141,12 @@ class Shell {
 		if (attached.length) {
 			notes.push(dim(`Attached read-only: ${attached.join(', ')}.`));
 		}
-		if (fs.existsSync(LANCE)) {
-			// Through a connection of its own, so that queries can run while it loads.
-			this.lance = this.instance.connect().then(async connection => {
-				try {
-					await connection.run(`LOAD ${sqlString(LANCE)}`);
-					return true;
-				} finally {
-					connection.closeSync();
-				}
-			}).catch(err => {
-				process.stdout.write(red(`\nLance could not be loaded: ${(err as Error).message}\n`));
-				return false;
-			});
+		if (fs.existsSync(FTS)) {
+			try {
+				await this.connection.run(`LOAD ${sqlString(FTS)}`);
+			} catch (err) {
+				notes.push(red(`fts could not be loaded: ${(err as Error).message}`));
+			}
 		}
 		return notes;
 	}
@@ -196,10 +188,6 @@ class Shell {
 
 	/** Run every statement of `sql`, showing the result of each. */
 	async run(sql: string): Promise<void> {
-		// A query about Lance waits for it; any other runs at once.
-		if (/lance/i.test(sql)) {
-			await this.lance;
-		}
 		this.running = true;
 		try {
 			const statements = await this.connection.extractStatements(sql);
@@ -292,7 +280,7 @@ async function main(): Promise<void> {
 	const file = process.argv[2] || ':memory:';
 	const instance = await DuckDBInstance.create(file, { autoinstall_known_extensions: 'false', autoload_known_extensions: 'false' });
 	const connection = await instance.connect();
-	const shell = new Shell(instance, connection);
+	const shell = new Shell(connection);
 	const version = (await connection.runAndReadAll('SELECT library_version FROM pragma_version()')).getRows()[0][0];
 	console.log(`DuckDB ${version} in Pollis${file === ':memory:' ? ', an in-memory database' : `, ${file}`}. Type .help for help.`);
 	for (const note of await shell.prepare()) {

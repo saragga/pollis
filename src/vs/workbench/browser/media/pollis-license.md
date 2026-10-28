@@ -55,7 +55,7 @@ available under the MIT License.
 | DuckDB | MIT | https://github.com/duckdb/duckdb |
 | DuckDB Node API | MIT | https://github.com/duckdb/duckdb-node-neo |
 | DuckDB.jl (Pollis fork) | MIT | https://github.com/Trumpingtons/DuckDB.jl |
-| Lance extension for DuckDB | Apache-2.0 | https://github.com/lance-format/lance-duckdb |
+| fts extension for DuckDB | MIT | https://github.com/duckdb/duckdb-fts |
 
 A complete list of third-party notices, including the applicable copyright notices and license
 texts, is available in the [Third-Party Notices](pollis-notice.md) file distributed with the

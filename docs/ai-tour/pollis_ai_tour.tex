@@ -1,7 +1,7 @@
 % A Tour of Pollis AI+ — draft 1 (17 October 2026)
 % The layout of The Pollis Guide: one topic per two-page spread, starting on an even (left-hand) page.
 % Part one, The AI Ecosystem, explains the ideas behind Pollis AI+ to readers who have never met them
-% at a technical level: language models in the cloud and on your computer, local model runners, coding
+% at a technical level: language models in the cloud and on your computer, the local model runner, coding
 % agents and their harnesses, agent skills, MCP servers and orchestration, with examples from Pollis.
 % Every statement about Pollis is checked against what it does today; what is not built yet is said to be
 % not available.
@@ -159,7 +159,7 @@ Questions and problems: \ui{Help > Report Issue}, or \contactemail.
 \renewcommand{\arraystretch}{1.25}
 \begin{tabular}{@{}r@{\enspace}l@{}}
 {\color{deepamber}\bfseries 2} & Language Models\\
-{\color{deepamber}\bfseries 4} & Local Model Runners\\
+{\color{deepamber}\bfseries 4} & Local Models\\
 {\color{deepamber}\bfseries 6} & Embedding and Chat Models\\
 {\color{deepamber}\bfseries 8} & Coding Agents and Harnesses\\
 {\color{deepamber}\bfseries 10} & Agent Skills\\
@@ -257,12 +257,12 @@ model suits the first; the second is where a strong model pays for itself. \ui{M
 lets you make that choice once for each task.
 \end{note}
 
-\seealso{Local Model Runners, page 4.\quad Embedding and Chat Models, page 6.\quad Orchestration, page 14.}
+\seealso{Local Models, page 4.\quad Embedding and Chat Models, page 6.\quad Orchestration, page 14.}
 
 % =====================================================================
-% PAGES 4–5 — LOCAL MODEL RUNNERS
+% PAGES 4–5 — LOCAL MODELS
 % =====================================================================
-\topic{Local Model Runners}{Compose > Local Models > Local Model Runners}{The programs that run a language model on your own computer.}
+\topic{Local Models}{Compose > Local Models > Models Installed}{Language models that run on your own computer, and the runner that runs them.}
 
 \subhead{Why a runner is needed}
 A downloaded model is a large file of numbers; on its own, it does nothing. A \emph{runner} is a program
@@ -272,34 +272,29 @@ get the model's answer back, as they would from a cloud model. The model file is
 runner is the player.
 
 \subhead{Addresses and APIs}
-A runner serves its model at an address such as \cmd{http://localhost:11434}. \cmd{localhost} means
-\emph{this computer}; \cmd{11434} is the \emph{port}, a door number, so that several programs can serve
+A runner serves its model at an address such as \cmd{http://localhost:8080}. \cmd{localhost} means
+\emph{this computer}; \cmd{8080} is the \emph{port}, a door number, so that several programs can serve
 at once. Programs talk to it through an \emph{API}, an agreed way of asking and answering. The APIs of
 OpenAI and Anthropic have become common languages, and runners speak them. So a coding agent written for
 a cloud model can be pointed at a local one by changing one address.
 
-\subhead{The four runners Pollis knows}
-\begin{center}\small\renewcommand{\arraystretch}{1.3}
-\begin{tabularx}{\linewidth}{@{}>{\bfseries}lXl@{}}
-\textbf{Runner} & \textbf{What it is} & \textbf{Port}\\\hline
-Ollama & A program that downloads and runs models with one command; OpenAI and Anthropic APIs & 11434\\
-LM Studio & A desktop app with a model browser; OpenAI and Anthropic APIs; runs MLX models on Apple silicon & 1234\\
-llama.cpp & Its \cmd{llama-server}; OpenAI and Anthropic APIs & 8080\\
-Apple MLX & Apple's framework for Macs with Apple silicon; its \cmd{mlx\_lm.server} speaks the OpenAI API & 8080\\
-\end{tabularx}
-\end{center}
-\ui{Compose > Local Models > Local Model Runners} shows which runners are installed, with
-\ui{Install Runner} for the others, and how each coding agent reaches each runner. Apple MLX is listed
-only on a Mac.
+\subhead{The runner that comes with Pollis}
+Pollis brings its runner: \cmd{llama-server}, from llama.cpp, free and open source, on Windows, Linux and
+macOS, with a graphics chip or without one. There is nothing else to install. Pollis starts it, on a free port, when a panel
+or a task needs a local model, and stops it when Pollis quits.
 
 \newpage
 \subhead{Getting a model}
-\ui{Hugging Face Models} and \ui{Kaggle Models}, the other entries of \ui{Compose > Local Models}, find
-models to download. A runner can also fetch them itself. With Ollama, for example:
+\ui{Compose > Local Models} has \ui{Get Models from Hugging Face} and \ui{Get Models from Kaggle}, to find
+models and download them, and \ui{Models Installed}, the local models on this computer: those Pollis
+downloaded and those in the Hugging Face cache. For each, it shows:
 \begin{itemize}
-  \item \cmd{ollama pull gemma3} downloads Google's Gemma 3;
-  \item \cmd{ollama run gemma3} starts a chat with it in the terminal.
+  \item its \ui{Kind}: \ui{Chat}, a model that writes text, or \ui{Embedding} (page 6);
+  \item what it \ui{Reads}: text, images or audio;
+  \item whether it can call \ui{Tools}, which the agent of a tier needs;
+  \item its \ui{Size}, \ui{Where} it is, and the tiers of \ui{Model Tasks and Routing} that use it.
 \end{itemize}
+A model is also downloaded the first time a panel or a tier uses it.
 
 \subhead{Which size?}
 A model's size is its number of weights, written in billions: a ``7B'' model has about seven billion.
@@ -416,7 +411,7 @@ to tag or classify, and in Q\&A the passages found. With llama.cpp for both, not
 once the models are downloaded.
 \end{caution}
 
-\seealso{Language Models, page 2.\quad Local Model Runners, page 4.}
+\seealso{Language Models, page 2.\quad Local Models, page 4.}
 
 % =====================================================================
 % PAGES 8–9 — CODING AGENTS AND HARNESSES

@@ -146,13 +146,13 @@ being added to it. It has four jobs.
   \item \textbf{Build the four databases} (\file{build()}, \file{build_journals()}, \file{build_references()},
     \file{build_rss()}), and copy the data files that Pollis's pages read (\file{copy_package_data()}).
   \item \textbf{Connect} (\file{connect()}, \file{sql()}, the \file{sql>} mode): a DuckDB connection with the four
-    built-in databases attached read-only, and Lance loading in the background.
+    built-in databases attached read-only, and DuckDB's full-text search extension, fts, loaded.
   \item \textbf{Feed the Databases view} (\file{show()}, \file{register()}): each connection handed to it is
     described, schemas, tables and columns, in a JSON file in \file{~/.pollis/databases/sessions}, which the view
     watches.
 \end{enumerate}
 Its DuckDB is Pollis's fork of DuckDB.jl, \file{github.com/Trumpingtons/DuckDB.jl}, which brings no engine of its own:
-it loads the one Pollis ships, copied to \file{~/.pollis/duckdb} with the Lance extension, so every DuckDB in Pollis,
+it loads the one Pollis ships, copied to \file{~/.pollis/duckdb} with the fts extension, so every DuckDB in Pollis,
 the \file{duckdb>} terminal included, is the same engine.
 
 \section{The four packages}
@@ -310,7 +310,6 @@ PollisDB.install()            # add what is missing, update what GitHub has newe
 PollisDB.catalogue()          # PollisDatasets.json, for the Welcome page
 PollisDB.copy_package_data()  # package.json and catalogue.json
 PollisDB.build(); PollisDB.build_rss(); PollisDB.build_journals(); PollisDB.build_references()
-PollisDB.warm_lance()         # DuckDB's Lance extension, loaded once
 \end{lstlisting}
 
 \subsection{Installing and updating}
@@ -455,7 +454,7 @@ DBInterface.execute(db, """
     does not affect it. Re-run the query to bring it up to date.
 \end{itemize}
 DuckDB never downloads an extension behind your back in these connections (\file{autoinstall_known_extensions} and
-\file{autoload_known_extensions} are off): the engine and the Lance extension come with Pollis, in
+\file{autoload_known_extensions} are off): the engine and the fts extension come with Pollis, in
 \file{~/.pollis/duckdb}.
 
 \subsection{Journal metrics you import}\label{sec:your-metrics}
