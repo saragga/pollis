@@ -425,13 +425,16 @@ function sql(query::AbstractString; con = nothing)
         con = SQL_CONNECTION[]
     end
     DBInterface, Tables = loaded(DBINTERFACE), loaded(TABLES)
+    DuckDB = get(() -> Base.require(DUCKDB), Base.loaded_modules, DUCKDB)
     tables_interface(Tables)
     started = time()
     columns = Base.invokelatest() do
         result = nothing
-        # DBInterface.execute runs one statement at a time.
+        # DBInterface.execute runs one statement at a time; a PRAGMA such as create_fts_index runs several, which
+        # only DuckDB.query can.
         for statement in statements(query)
-            result = DBInterface.execute(con, statement)
+            pragma = occursin(r"^\s*pragma\b"i, statement) && (con isa DuckDB.DB || con isa DuckDB.Connection)
+            result = pragma ? DuckDB.query(con, statement) : DBInterface.execute(con, statement)
         end
         result === nothing ? NamedTuple() : Tables.columntable(result)
     end

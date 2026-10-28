@@ -115,7 +115,7 @@ const HELP = `.databases          The attached databases
 .timer on|off       Show how long each query took (on)
 
 A query ends with ";"; until then, Enter starts a new line. Ctrl+C stops a running query.
-The built-in databases are attached read-only as PollisDatasets, PollisRSS and PollisJournals.`;
+The built-in databases are attached read-only as PollisDatasets, PollisRSS, PollisJournals and PollisReferences.`;
 
 class Shell {
 
