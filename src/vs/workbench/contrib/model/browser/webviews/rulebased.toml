@@ -67,6 +67,10 @@ file = "rulebased/decision-guide.md"
 bundled = true
 
 [[wikis]]
+separator = true
+label = "Methods"
+
+[[wikis]]
 name = "Apriori"
 file = "rulebased/apriori.md"
 bundled = true
@@ -194,7 +198,7 @@ default = "0.01"
 [[inputs]]
 id = "confidence"
 label = "min_confidence"
-tooltip = "Minimum conditional probability P(consequent | antecedent) for a rule to be kept (0-1). RuleMiner grows longer rules only from shorter rules that pass this threshold, so a high value can lose strong long rules: on the Groceries example, 0.5 finds none, while the default, 0.2, finds all 15 rules with confidence 0.5 or more."
+tooltip = "Minimum conditional probability P(consequent | antecedent) for a rule to be kept (0-1). RuleMiner's apriori prunes by confidence while it grows rules, which can lose strong long rules, so the panel mines every rule of the frequent itemsets and keeps those at or above this threshold."
 default = "0.2"
 models = ["rules"]
 
@@ -274,7 +278,9 @@ col = Dict(k => j for (j, k) in enumerate(colkeys))
 matrix = sparse(UInt32[row[i] for i in ids], UInt32[col[x] for x in items], fill(true, length(ids)), length(linekeys), length(colkeys), |)
 txns = Txns(matrix, colkeys, linekeys)  # sparse transactions x items incidence matrix
 
-rules = apriori(txns, {{support}}, {{confidence}})  # Apriori rule mining: min_support, min_confidence
+all_rules = Tables.columntable(apriori(txns, {{support}}, 0.0))  # every rule of the frequent itemsets: RuleMiner prunes by confidence while it grows rules, so min_confidence is applied after
+keep = all_rules.Confidence .>= {{confidence}}
+rules = map(c -> c[keep], all_rules)  # rules with confidence >= min_confidence
 # one row per rule: columns LHS (antecedent), RHS (consequent), Support, Confidence, Coverage, Lift, N, Length
 '''
 
@@ -301,10 +307,11 @@ bar(names[top], t.Support[top], xrotation=45, ylabel="support", legend=false)
 id = "rule-scatter"
 label = "Support vs Confidence"
 desc = "Every rule as a point, coloured by lift, to spot strong and surprising rules"
+models = ["rules"]
 code = '''
 using Tables, Plots
 
-r = Tables.columntable(apriori(txns, {{support}}, {{confidence}}))
+r = rules  # the mined rules, as columns
 scatter(r.Support, r.Confidence, zcolor=r.Lift, xlabel="support", ylabel="confidence", colorbar_title="lift", legend=false)
 '''
 
@@ -328,10 +335,11 @@ plot(thresholds, counts, xflip=true, yscale=:log10, marker=:circle, xlabel="min_
 id = "lift-check"
 label = "Uninformative Rules"
 desc = "Share of rules with lift <= 1, which are no better than independence"
+models = ["rules"]
 code = '''
 using Tables
 
-r = Tables.columntable(apriori(txns, {{support}}, {{confidence}}))
+r = rules  # the mined rules, as columns
 count(<=(1), r.Lift) / length(r.Lift)
 '''
 
@@ -343,10 +351,11 @@ label = "Predict"
 id = "recommend"
 label = "Recommend Items"
 desc = "Items suggested for a basket by the matching rules, ranked by confidence"
+models = ["rules"]
 code = '''
 using Tables
 
-r = Tables.columntable(apriori(txns, {{support}}, {{confidence}}))
+r = rules  # the mined rules, as columns
 basket = ["other vegetables", "yogurt"]  # items already in the basket, from the Groceries example: use items of your own data
 hits = [i for i in eachindex(r.LHS) if issubset(r.LHS[i], basket) && !(r.RHS[i] in basket)]
 unique(r.RHS[hits[sortperm(r.Confidence[hits], rev=true)]])
@@ -388,10 +397,11 @@ label = "Interpret"
 id = "top-lift"
 label = "Strongest Rules"
 desc = "The ten rules with the highest lift, read as if-then statements, with their support, count and a one-sided Fisher exact p-value: a high lift on a handful of baskets is often chance"
+models = ["rules"]
 code = '''
 using Tables, HypothesisTests
 
-r = Tables.columntable(apriori(txns, {{support}}, {{confidence}}))
+r = rules  # the mined rules, as columns
 n = txns.n_transactions
 for i in sortperm(r.Lift, rev=true)[1:min(10, end)]
 	a = r.N[i]  # baskets with LHS and RHS

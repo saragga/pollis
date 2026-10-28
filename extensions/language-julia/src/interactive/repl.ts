@@ -32,6 +32,7 @@ import { TaskRunnerTerminal } from '../taskRunnerTerminal'
 import { whenDuckDBReady } from '../pollisDuckDB'
 import { compileDocumentsInBackground } from '../pollisDocuments'
 import { precompileInBackground } from '../pollisPrecompile'
+import { answerLlamaServerRequests } from '../pollisLlamaServer'
 import { promise as fastq } from 'fastq'
 import { randomUUID } from 'crypto'
 import { promisify } from 'node:util'
@@ -1367,6 +1368,7 @@ export function activate(
                     openFile(path, line, undefined, preserveFocus)
                 )
                 connection.onNotification(notifyTypeProgress, (progress: Progress) => g_progress.update(progress))
+                answerLlamaServerRequests(connection)
                 setContext('julia.isEvaluating', false)
                 // POLLIS: the welcome page names the version in its "Julia is ready" announcement.
                 setContext('julia.replVersion', juliaExecutable?.version ?? '')

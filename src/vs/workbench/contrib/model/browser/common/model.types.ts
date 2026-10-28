@@ -204,6 +204,11 @@ export interface IModelInput {
 	readonly alertMe?: 'quote' | 'filings' | 'fred' | 'ecb' | 'imf' | 'worldBank';
 	/** What Alert Me... opens Add Alert with when it is more than the input's value, with `{{id}}` placeholders: `{{country}}/{{indicator}}`. */
 	readonly alertValue?: string;
+	/**
+	 * A text input for a local model file, with Choose... beside it, which opens the Julia extension's picker of the chat
+	 * or embedding models on this computer and on Hugging Face. Its value is a path or `hf:owner/repo/file.gguf`.
+	 */
+	readonly modelFile?: 'chat' | 'embedding';
 }
 
 /** The declarative content of a panel built on the shared scaffold (generated from its TOML). */

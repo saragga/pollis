@@ -18,6 +18,8 @@ import * as packagepath from './packagepath'
 import * as pollisDuckDB from './pollisDuckDB'
 import * as pollisDocuments from './pollisDocuments'
 import * as pollisHiddenJulia from './pollisHiddenJulia'
+import * as pollisLlamaServer from './pollisLlamaServer'
+import * as pollisModels from './pollisModels'
 import * as smallcommands from './smallcommands'
 import * as telemetry from './telemetry'
 import { setContext } from './utils'
@@ -54,6 +56,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
         // POLLIS: before any Julia starts, so that each one finds Pollis' DuckDB engine.
         pollisDuckDB.activate(context)
+        pollisLlamaServer.activate(context)
+        pollisModels.activate(context)
 
         t = performance.now()
         const executableFeature = new ExecutableFeature(context)

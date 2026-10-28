@@ -135,7 +135,7 @@
             {
                 "command": "language-julia.executeActiveFile",
                 "title": "Julia: Execute active File in REPL",
-                "icon": "$(play)"
+                "icon": "$(debug-start)"
             },
             {
                 "command": "language-julia.interrupt",
@@ -504,16 +504,6 @@
                     "command": "language-julia.executeActiveFile",
                     "when": "resourceLangId in julia.supportedLanguageIds",
                     "group": "Julia@10"
-                },
-                {
-                    "command": "language-julia.runEditorContents",
-                    "when": "resourceLangId == julia",
-                    "group": "Julia@20"
-                },
-                {
-                    "command": "language-julia.debugEditorContents",
-                    "when": "resourceLangId == julia",
-                    "group": "Julia@30"
                 }
             ],
             "view/item/context": [
@@ -651,6 +641,14 @@
                 }
             ],
             "commandPalette": [
+                {
+                    "command": "language-julia.runEditorContents",
+                    "when": "false"
+                },
+                {
+                    "command": "language-julia.debugEditorContents",
+                    "when": "false"
+                },
                 {
                     "command": "language-julia.shareTable",
                     "when": "activeWebviewPanelId == 'jlgrid' && pollisCollaborationInSession"
@@ -838,6 +836,26 @@
             "type": "object",
             "title": "Julia",
             "properties": {
+                "pollis.localModels.publishers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": [
+                        "ggml-org",
+                        "unsloth",
+                        "bartowski",
+                        "lmstudio-community",
+                        "Qwen",
+                        "google",
+                        "nomic-ai",
+                        "mistralai",
+                        "microsoft",
+                        "ibm-granite"
+                    ],
+                    "markdownDescription": "The Hugging Face publishers whose GGUF models the Choose... button beside a local model field offers: small models of the last year, the most downloaded in the last month first.",
+                    "scope": "application"
+                },
                 "julia.executablePath": {
                     "type": "string",
                     "default": "",

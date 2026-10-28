@@ -24,7 +24,7 @@
 \usepackage[hidelinks]{hyperref}
 
 % ---------------------------------------------------------------- placeholders
-\newcommand{\tourdate}{17 October 2026}
+\newcommand{\tourdate}{27 October 2026}
 \newcommand{\downloadlink}{\href{https://github.com/saragga/pollis/releases/latest}{github.com/saragga/pollis/releases/latest}}
 \newcommand{\contactemail}{\href{mailto:contact@pollis.org}{contact@pollis.org}}
 
@@ -138,7 +138,7 @@ Talk about AI comes with many new words: language models, runners, agents, harne
 servers, orchestration. This part explains them for readers who have never met them at a technical
 level: what each one is, how they fit together, and where each one is in Pollis, with examples.
 Each topic takes two facing pages; read them in order the first time, since each builds on the one
-before. Page 14 puts them all in one picture, with the words to know.
+before. Page 16 puts them all in one picture, with the words to know.
 
 \smallskip
 Menu paths are written \ui{Compose > Coding Agents}, and buttons as they appear, such as \ui{Use}.
@@ -160,11 +160,12 @@ Questions and problems: \ui{Help > Report Issue}, or \contactemail.
 \begin{tabular}{@{}r@{\enspace}l@{}}
 {\color{deepamber}\bfseries 2} & Language Models\\
 {\color{deepamber}\bfseries 4} & Local Model Runners\\
-{\color{deepamber}\bfseries 6} & Coding Agents and Harnesses\\
-{\color{deepamber}\bfseries 8} & Agent Skills\\
-{\color{deepamber}\bfseries 10} & MCP Servers\\
-{\color{deepamber}\bfseries 12} & Orchestration\\
-{\color{deepamber}\bfseries 14} & The Whole Picture
+{\color{deepamber}\bfseries 6} & Embedding and Chat Models\\
+{\color{deepamber}\bfseries 8} & Coding Agents and Harnesses\\
+{\color{deepamber}\bfseries 10} & Agent Skills\\
+{\color{deepamber}\bfseries 12} & MCP Servers\\
+{\color{deepamber}\bfseries 14} & Orchestration\\
+{\color{deepamber}\bfseries 16} & The Whole Picture
 \end{tabular}
 \end{tcolorbox}
 \end{minipage}
@@ -199,7 +200,7 @@ works: it has written the most likely continuation of your request.
     the article publishes, and a new panel must pass Pollis' validator.
   \item \textbf{It knows the world up to a date}, its \emph{knowledge cutoff}. A package released after
     it, or a function renamed since, it does not know, unless it is told. Telling it is the job of
-    skills (page 8) and MCP servers (page 10).
+    skills (page 10) and MCP servers (page 12).
   \item \textbf{It reads a limited amount at once}, its \emph{context window}: your request, the files
     it was shown, the conversation so far. What is not in the window, it does not see. When the window
     fills up, the program around the model has to drop or summarise the earlier parts.
@@ -210,7 +211,7 @@ works: it has written the most likely continuation of your request.
 
 \subhead{A model alone cannot act}
 A model only writes text. It cannot open your files, run Julia or look anything up. Everything beyond
-writing text is done by a program around it: for a coding agent, its \emph{harness} (page 6).
+writing text is done by a program around it: for a coding agent, its \emph{harness} (page 8).
 
 \newpage
 \subhead{Cloud models}
@@ -252,11 +253,11 @@ Best for & hard tasks, where a mistake costs most & small tasks, private data, n
 \begin{note}{In Pollis}
 Some tasks are small: \ui{Polish with Agent} tidies the wording of a report. Others are hard:
 \ui{Write a Method} must reproduce an article's tables to the digits printed. A small, fast or local
-model suits the first; the second is where a strong model pays for itself. \ui{Model Routing} (page 12)
+model suits the first; the second is where a strong model pays for itself. \ui{Model Routing} (page 14)
 lets you make that choice once for each task.
 \end{note}
 
-\seealso{Local Model Runners, page 4.\quad Orchestration, page 12.}
+\seealso{Local Model Runners, page 4.\quad Embedding and Chat Models, page 6.\quad Orchestration, page 14.}
 
 % =====================================================================
 % PAGES 4–5 — LOCAL MODEL RUNNERS
@@ -326,10 +327,100 @@ A local model follows long instructions less reliably than a strong cloud model.
 tasks, and check what it produces, as you would any agent's work.
 \end{caution}
 
-\seealso{Language Models, page 2.\quad Coding Agents and Harnesses, page 6.}
+\seealso{Embedding and Chat Models, page 6.\quad Coding Agents and Harnesses, page 8.}
 
 % =====================================================================
-% PAGES 6–7 — CODING AGENTS AND HARNESSES
+% PAGES 6–7 — EMBEDDING AND CHAT MODELS
+% =====================================================================
+\topic{Embedding and Chat Models}{Model > Natural Language Processing > LLM Text Analysis}{Two kinds of language model: one that writes text, and one that turns text into numbers.}
+
+\subhead{Two kinds of model}
+A \emph{chat model} is the language model of page 2: given some text, it writes more, such as an answer,
+a label or a summary. An \emph{embedding model} writes nothing. It reads a text and returns its
+\emph{embedding}: a list of numbers, a few hundred to a few thousand of them, which places the text as a
+point in a space where texts that mean similar things lie close together.
+
+\begin{note}{Example}
+\emph{``The Fed raised rates by a quarter point''} and \emph{``Monetary policy was tightened''} share no
+word, yet their embeddings lie close together. \emph{``A quarter of the class raised their hands''}
+shares three words with the first, and lies far from both.
+\end{note}
+
+\subhead{What embeddings are for}
+\begin{itemize}
+  \item \textbf{Similarity}: how close two texts are in meaning, as the cosine of the angle between
+    their embeddings.
+  \item \textbf{Search}: the passages of a corpus closest to a question, even when they use other words.
+  \item \textbf{Clustering}: documents grouped by meaning, which gives topics.
+  \item \textbf{Features}: numbers to put into a regression or a classifier, as any other variable.
+\end{itemize}
+An embedding model is small, fast and steady: the same text gives the same numbers every time, with the
+same model. EmbeddingGemma 2, for example, has 271 million weights, where a chat model has billions.
+
+\subhead{Working together: retrieval-augmented generation}
+A chat model knows nothing of your documents, and reads only what fits in its context window (page 2).
+\emph{Retrieval-augmented generation}, or \emph{RAG}, gives it the right pieces: the embedding model
+finds the passages closest to your question, and the chat model answers from them.
+\begin{center}
+\begin{tikzpicture}[node distance=5mm and 7mm]
+  \node[box=19mm] (q) {\textbf{Question}};
+  \node[hot=28mm, right=of q] (embed) {\textbf{Embedding model}\\{\scriptsize finds the closest\\passages}};
+  \node[hot=24mm, right=14mm of embed] (chat) {\textbf{Chat model}\\{\scriptsize reads them, answers}};
+  \node[box=19mm, right=of chat] (a) {\textbf{Answer}\\{\scriptsize from your documents}};
+  \node[box=30mm, below=of embed] (docs) {\textbf{Your documents}\\{\scriptsize embedded once, in passages}};
+  \draw[flow] (q) -- (embed);
+  \draw[flow] (embed) -- node[tag, above] {passages} (chat);
+  \draw[flow] (chat) -- (a);
+  \draw[flow] (docs) -- (embed);
+\end{tikzpicture}
+\end{center}
+
+\newpage
+\subhead{In Pollis: LLM Text Analysis}
+\ui{Model > Natural Language Processing > LLM Text Analysis} has four modes. Two of them need only a chat
+model; the other two need both kinds:
+\begin{center}\small\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\linewidth}{@{}>{\bfseries}lXX@{}}
+\textbf{Mode} & \textbf{Embedding model} & \textbf{Chat model}\\\hline
+Tag & -- & gives each document the tags from your list that fit\\
+Classify & -- & puts each document in exactly one of your categories\\
+Topics & clusters the documents & names and summarises each cluster\\
+Q\&A & finds the passages closest to the question & answers from them (RAG)\\
+\end{tabularx}
+\end{center}
+
+\subhead{Choosing the models}
+\ui{Chat Provider} and \ui{Embedding Provider} are chosen separately, each with its model:
+\begin{pairs}[0.26]
+llama.cpp (local) & Chat and embeddings, on your computer, with no key. Pollis comes with llama.cpp and
+  starts its \cmd{llama-server} for each model itself: there is no runner to install. A model is a GGUF
+  file, downloaded from Hugging Face the first time. The defaults are Qwen3.5 0.8B for chat and
+  EmbeddingGemma 2 for embeddings; \ui{Choose...} lists the models on your computer and the most
+  downloaded small ones on Hugging Face.\\
+Google, OpenAI, Mistral & Chat and embeddings, in the cloud, with an API key.\\
+Anthropic & Chat only: Anthropic has no embedding models, so Claude is paired with another embedding
+  provider.\\
+\end{pairs}
+An API key is read from the environment when Julia starts, such as \cmd{ANTHROPIC\_API\_KEY} or
+\cmd{GOOGLE\_API\_KEY}: set it before you start Julia. \ui{Second Chat Provider} sets a second chat
+model for \ui{Compare Models}, which measures how often the two agree, for example a local Gemma
+against Claude.
+
+\begin{note}{Embeddings without a runner}
+\ui{Model > Natural Language Processing > BERT Embeddings} computes embeddings in Julia itself, with
+Transformers.jl: nothing to install beyond the Julia packages, and no runner.
+\end{note}
+
+\begin{caution}{What leaves your computer}
+With a cloud embedding provider, every document is sent to it; with a cloud chat provider, every document
+to tag or classify, and in Q\&A the passages found. With llama.cpp for both, nothing leaves your computer
+once the models are downloaded.
+\end{caution}
+
+\seealso{Language Models, page 2.\quad Local Model Runners, page 4.}
+
+% =====================================================================
+% PAGES 8–9 — CODING AGENTS AND HARNESSES
 % =====================================================================
 \topic{Coding Agents and Harnesses}{Compose > Coding Agents}{A model that can act: what a coding agent is, and the harness that makes it one.}
 
@@ -388,7 +479,7 @@ type its command line under \ui{Other Agent}.
   \item Choose \ui{Compose > New Panels and Toolboxes > Create a Panel...}. Pollis opens a terminal and
     starts your agent with a first message: \emph{``Read the skill \ldots\ and follow its instructions
     to create a new Pollis panel with me.''}
-  \item The agent reads the skill (page 8) and asks you, in one message, what the panel is for, the
+  \item The agent reads the skill (page 10) and asks you, in one message, what the panel is for, the
     methods it covers and the Julia packages to use. It proposes a plan and waits for your yes.
   \item It writes the panel's TOML file, its wiki pages and its notebook tutorials.
   \item It runs Pollis' validator on them, reads the errors, fixes them, and runs it again until it
@@ -403,10 +494,10 @@ It reads and writes files, and runs commands. Read what it proposes before you s
 results, as you would a colleague's.
 \end{caution}
 
-\seealso{Agent Skills, page 8.\quad Orchestration, page 12.}
+\seealso{Agent Skills, page 10.\quad Orchestration, page 14.}
 
 % =====================================================================
-% PAGES 8–9 — AGENT SKILLS
+% PAGES 10–11 — AGENT SKILLS
 % =====================================================================
 \topic{Agent Skills}{Compose > Agent Skills}{Know-how written down, so that an agent can do a task it was never trained for.}
 
@@ -470,10 +561,10 @@ A skill gives an agent \emph{know-how}: how to do a task. An MCP server, on the 
 \emph{reach}: data and services it could not get to before.
 \end{note}
 
-\seealso{Coding Agents and Harnesses, page 6.\quad MCP Servers, page 10.}
+\seealso{Coding Agents and Harnesses, page 8.\quad MCP Servers, page 12.}
 
 % =====================================================================
-% PAGES 10–11 — MCP SERVERS
+% PAGES 12–13 — MCP SERVERS
 % =====================================================================
 \topic{MCP Servers}{Compose > MCP Servers · Extensions pane > MCP Servers - Recommended}{New tools for an agent: data and services it can reach, in a form every agent understands.}
 
@@ -538,10 +629,10 @@ text an agent fetches, a web page or a paper, may contain instructions written t
 well-known servers, and read what the agent proposes to do with what it fetched.
 \end{caution}
 
-\seealso{Agent Skills, page 8.\quad Orchestration, page 12.}
+\seealso{Agent Skills, page 10.\quad Orchestration, page 14.}
 
 % =====================================================================
-% PAGES 12–13 — ORCHESTRATION
+% PAGES 14–15 — ORCHESTRATION
 % =====================================================================
 \topic{Orchestration}{Compose > Orchestration}{Several models, or several agents, each doing the part it does best.}
 
@@ -608,10 +699,10 @@ Race... & several agents do the same task, and you compare what they produce.\\
 the panel validator.
 \end{note}
 
-\seealso{Language Models, page 2.\quad Coding Agents and Harnesses, page 6.}
+\seealso{Language Models, page 2.\quad Coding Agents and Harnesses, page 8.}
 
 % =====================================================================
-% PAGES 14–15 — THE WHOLE PICTURE
+% PAGES 16–17 — THE WHOLE PICTURE
 % =====================================================================
 \topic{The Whole Picture}{Compose}{How the pieces fit together, and the words to know.}
 
@@ -646,6 +737,9 @@ beside the published ones.
 \subhead{Words to know}
 \begin{pairs}[0.24]
 Language model (LLM) & A program that continues text, one token at a time; page 2.\\
+Chat model & A language model that writes text: answers, labels, summaries; page 6.\\
+Embedding model & A model that turns a text into a list of numbers, close for texts of similar meaning; page 6.\\
+RAG & Retrieval-augmented generation: the closest passages, found by embeddings, given to a chat model to answer from.\\
 Token & A word or part of a word: what models read and write, and what cloud models charge for.\\
 Context window & What a model can read at once: the request, files, the conversation so far.\\
 Knowledge cutoff & The date after which a model knows nothing, unless it is told.\\
@@ -656,11 +750,11 @@ Weights & The trained numbers of a model; their count, in billions, is its size.
 Quantised & Kept with fewer bits per weight: a smaller file, slightly less accurate.\\
 Runner & A program that loads a model and serves it on your computer; page 4.\\
 API & The agreed way programs ask and answer; runners speak the APIs of OpenAI and Anthropic.\\
-Coding agent & A model that can act: it reads and writes files and runs commands; page 6.\\
+Coding agent & A model that can act: it reads and writes files and runs commands; page 8.\\
 Harness & The program around the model: loop, tools, permissions, context, memory.\\
-Agent skill & Written know-how for one task, which the agent reads when it needs it; page 8.\\
-MCP server & A server of tools an agent can use, through the Model Context Protocol; page 10.\\
-Orchestration & Arranging several models or agents, each on the part it does best; page 12.\\
+Agent skill & Written know-how for one task, which the agent reads when it needs it; page 10.\\
+MCP server & A server of tools an agent can use, through the Model Context Protocol; page 12.\\
+Orchestration & Arranging several models or agents, each on the part it does best; page 14.\\
 Tier & In Model Routing, Light, Standard or Strong: the agent a kind of task runs on.\\
 \end{pairs}
 

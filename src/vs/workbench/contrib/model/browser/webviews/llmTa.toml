@@ -10,11 +10,21 @@ defaultModel = "tag"
 
 [[packages]]
 name = "LLMTextAnalysis.jl"
-github = "https://github.com/svilupp/LLMTextAnalysis.jl"
+# Fork of svilupp/LLMTextAnalysis.jl allowing PromptingTools 0.95, so that it installs alongside RAGTools.jl (upstream pull request 25); back to upstream once a fixed version is registered
+github = "https://github.com/Trumpingtons/LLMTextAnalysis.jl"
+fork = true
 
 [[packages]]
 name = "PromptingTools.jl"
-github = "https://github.com/svilupp/PromptingTools.jl"
+# Fork of svilupp/PromptingTools.jl in which aiembed returns a vector, not a one-column matrix, for a single embedding on Julia 1.13 (upstream pull request 335); back to upstream once a fixed version is registered
+github = "https://github.com/Trumpingtons/PromptingTools.jl"
+fork = true
+
+[[packages]]
+name = "RAGTools.jl"
+# Fork of JuliaGenAI/RAGTools.jl in which find_closest works with a single query on Julia 1.13, which Q&A needs, and PromptingTools 0.95 is allowed (upstream pull request 32); back to upstream once a fixed version is registered
+github = "https://github.com/Trumpingtons/RAGTools.jl"
+fork = true
 
 [[packages]]
 name = "StatisticalMeasures.jl"
@@ -25,7 +35,7 @@ name = "PollisDatasets.jl"
 github = "https://github.com/Trumpingtons/PollisDatasets.jl"
 
 [requires]
-packages = ["LLMTextAnalysis.jl", "PromptingTools.jl", "StatisticalMeasures.jl", "Plots.jl"]
+packages = ["LLMTextAnalysis.jl", "PromptingTools.jl", "RAGTools.jl", "StatisticalMeasures.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -34,7 +44,7 @@ label = ""
 name = "Document Tagging"
 file = "llm-ta/tutorial-01-tagging.ipynb"
 bundled = true
-description = "Tag a corpus with predefined labels: one LLM call per document, local (Ollama) or hosted"
+description = "Tag a corpus with predefined labels: one LLM call per document, local (llama.cpp) or hosted"
 
 [[notebookSections.notebooks]]
 name = "Document Classification"
@@ -181,7 +191,7 @@ detail = "retrieval-augmented generation: the most similar chunks are passed to 
 
 [[bullets]]
 text = "Providers"
-detail = "chat from Ollama (local open models such as Gemma, no key), Anthropic, Google, OpenAI or Mistral; embeddings from Ollama, Google, OpenAI or Mistral"
+detail = "chat from llama.cpp (open models such as Qwen or Gemma, run on this computer with no key), Anthropic, Google or OpenAI; embeddings from llama.cpp, Google or OpenAI"
 
 [[bullets]]
 text = "Evaluation"
@@ -196,36 +206,33 @@ default = "texts"
 [[inputs]]
 id = "chat-provider"
 label = "Chat Provider"
-tooltip = "Who runs the chat model that tags, classifies, names topics and answers. Ollama runs open models such as Gemma, Llama or Qwen on this machine with no key (install Ollama and pull the model). The others need an API key: ANTHROPIC_API_KEY, GOOGLE_API_KEY, OPENAI_API_KEY or MISTRAL_API_KEY. The key is read from the environment when PromptingTools loads, so set it before starting Julia."
+tooltip = "Who runs the chat model that tags, classifies, names topics and answers. llama.cpp, which comes with Pollis, runs open models such as Qwen, Gemma or Llama on this computer with no key. The others need an API key: ANTHROPIC_API_KEY, GOOGLE_API_KEY or OPENAI_API_KEY. The key is read from the environment when PromptingTools loads, so set it before starting Julia."
 kind = "select"
-default = "ollama"
+default = "llamacpp"
 
 [[inputs.options]]
-value = "ollama"
-label = "Ollama (local)"
+value = "llamacpp"
+label = "Local"
 
 [[inputs.options]]
 value = "anthropic"
-label = "Anthropic (Claude)"
+label = "Anthropic"
 
 [[inputs.options]]
 value = "google"
-label = "Google (Gemini)"
+label = "Google"
 
 [[inputs.options]]
 value = "openai"
 label = "OpenAI"
 
-[[inputs.options]]
-value = "mistral"
-label = "Mistral"
-
 [[inputs]]
-id = "chat-ollama"
+id = "chat-llamacpp"
 label = "Chat Model"
-tooltip = "Any model pulled into Ollama, as listed by ollama list. Examples: gemma3:4b, gemma4:12b, llama3.1, qwen2.5:7b. Larger models label more reliably but run slower."
-default = ""
-when = "chat-provider=ollama"
+tooltip = "A GGUF model file, which Pollis runs on this computer with llama.cpp: its path, or hf:owner/repo/file.gguf for a file on Hugging Face, downloaded into ~/.pollis/models the first time. Choose... lists the models on this computer and the most downloaded small ones on Hugging Face. The default, Qwen3.5 0.8B (0.5 GB), is fast; larger models label more reliably but run slower."
+default = "hf:unsloth/Qwen3.5-0.8B-GGUF/Qwen3.5-0.8B-Q4_K_M.gguf"
+modelFile = "chat"
+when = "chat-provider=llamacpp"
 
 [[inputs]]
 id = "chat-anthropic"
@@ -237,7 +244,7 @@ when = "chat-provider=anthropic"
 [[inputs]]
 id = "chat-google"
 label = "Chat Model"
-tooltip = "Any Gemini model name. Example: gemini-2.5-flash. To run Gemma, choose Ollama."
+tooltip = "Any Gemini model name. Example: gemini-2.5-flash. To run Gemma on this computer, choose llama.cpp."
 default = ""
 when = "chat-provider=google"
 
@@ -249,41 +256,31 @@ default = ""
 when = "chat-provider=openai"
 
 [[inputs]]
-id = "chat-mistral"
-label = "Chat Model"
-tooltip = "Any Mistral chat model name. Example: mistral-small-latest."
-default = ""
-when = "chat-provider=mistral"
-
-[[inputs]]
 id = "embed-provider"
 label = "Embedding Provider"
 tooltip = "Who embeds the documents for Topics, Q&A, the document map and the embedding classifier. Anthropic has no embedding models, so Claude users pair it with another provider here. The key is read from the environment when PromptingTools loads, so set it before starting Julia."
 kind = "select"
-default = "ollama"
+default = "llamacpp"
 
 [[inputs.options]]
-value = "ollama"
-label = "Ollama (local)"
+value = "llamacpp"
+label = "Local"
 
 [[inputs.options]]
 value = "google"
-label = "Google (Gemini)"
+label = "Google"
 
 [[inputs.options]]
 value = "openai"
 label = "OpenAI"
 
-[[inputs.options]]
-value = "mistral"
-label = "Mistral"
-
 [[inputs]]
-id = "embed-ollama"
+id = "embed-llamacpp"
 label = "Embedding Model"
-tooltip = "Any embedding model pulled into Ollama. The default, embeddinggemma-2:270m, is small and fast (ollama pull embeddinggemma-2:270m); nomic-embed-text is a good alternative. Others: mxbai-embed-large."
-default = "embeddinggemma-2:270m"
-when = "embed-provider=ollama"
+tooltip = "A GGUF model file, which Pollis runs on this computer with llama.cpp: its path, or hf:owner/repo/file.gguf for a file on Hugging Face, downloaded into ~/.pollis/models the first time. Choose... lists the models on this computer and the most downloaded small ones on Hugging Face. The default, EmbeddingGemma 2 (271M parameters, 0.3 GB), is small and fast; nomic-embed-text is a good alternative."
+default = "hf:ggml-org/embeddinggemma-2-GGUF/embeddinggemma-2-Q8_0.gguf"
+modelFile = "embedding"
+when = "embed-provider=llamacpp"
 
 [[inputs]]
 id = "embed-google"
@@ -300,45 +297,35 @@ default = ""
 when = "embed-provider=openai"
 
 [[inputs]]
-id = "embed-mistral"
-label = "Embedding Model"
-tooltip = "A Mistral embedding model. Example: mistral-embed."
-default = ""
-when = "embed-provider=mistral"
-
-[[inputs]]
 id = "chat-provider2"
 label = "Second Chat Provider"
 tooltip = "Provider of the second model, used only by Compare Models. It may differ from the first, e.g. a local Gemma against Claude."
 kind = "select"
-default = "ollama"
+default = "llamacpp"
 
 [[inputs.options]]
-value = "ollama"
-label = "Ollama (local)"
+value = "llamacpp"
+label = "Local"
 
 [[inputs.options]]
 value = "anthropic"
-label = "Anthropic (Claude)"
+label = "Anthropic"
 
 [[inputs.options]]
 value = "google"
-label = "Google (Gemini)"
+label = "Google"
 
 [[inputs.options]]
 value = "openai"
 label = "OpenAI"
 
-[[inputs.options]]
-value = "mistral"
-label = "Mistral"
-
 [[inputs]]
-id = "chat2-ollama"
+id = "chat2-llamacpp"
 label = "Second Chat Model"
-tooltip = "Model compared with the first one by Compare Models: any model in ollama list, e.g. gemma4:12b or qwen2.5:14b."
+tooltip = "Model compared with the first one by Compare Models. A GGUF model file, which Pollis runs on this computer with llama.cpp: its path, or hf:owner/repo/file.gguf for a file on Hugging Face, downloaded into ~/.pollis/models the first time. Choose... lists the models on this computer and the most downloaded small ones on Hugging Face."
 default = ""
-when = "chat-provider2=ollama"
+modelFile = "chat"
+when = "chat-provider2=llamacpp"
 
 [[inputs]]
 id = "chat2-anthropic"
@@ -360,13 +347,6 @@ label = "Second Chat Model"
 tooltip = "Model compared with the first one by Compare Models: a non-reasoning model, e.g. gpt-4o."
 default = ""
 when = "chat-provider2=openai"
-
-[[inputs]]
-id = "chat2-mistral"
-label = "Second Chat Model"
-tooltip = "Model compared with the first one by Compare Models: e.g. mistral-large-latest."
-default = ""
-when = "chat-provider2=mistral"
 
 [[inputs]]
 id = "tags"
@@ -432,20 +412,28 @@ PT = PromptingTools
 
 # Register each model name with its provider, so any current model works (the built-in model list of PromptingTools is older)
 use_model(name, schema) = (haskey(PT.MODEL_REGISTRY, name) && PT.MODEL_REGISTRY[name].schema isa typeof(schema)) || PT.register_model!(; name, schema)
-# Temperature 0 for repeatable answers; Ollama takes it inside options
-fixed_temperature(model) = PT.MODEL_REGISTRY[model].schema isa PT.AbstractOllamaSchema ? (; options = (; temperature = 0)) : (; temperature = 0)
+# A model file run on this computer by the llama-server Pollis starts for it, registered under the file's name
+local_servers = Dict{String, String}()  # model name => address of its server
+function local_model(file; embeddings = false)
+    isempty(file) && return file  # the check below asks for a model
+    name = splitext(basename(file))[1]
+    local_servers[name] = Pollis.llama_server(file; embeddings)
+    use_model(name, PT.CustomOpenAISchema())
+    name
+end
+# A local model's server, with a placeholder key since it needs none, and the other API settings
+model_kwargs(model, api_kwargs = (;)) = haskey(local_servers, model) ? (; api_key = "llama.cpp", api_kwargs = (; url = local_servers[model], api_kwargs...)) : (; api_kwargs)
+chat_kwargs(model) = (; model, model_kwargs(model, (; temperature = 0))...)  # temperature 0 for repeatable answers
 
-{{?chat-provider=ollama}} llm = "{{chat-ollama}}"; use_model(llm, PT.OllamaSchema())  # local, no key; the model must be pulled first (ollama pull)
+{{?chat-provider=llamacpp}} llm = local_model("{{chat-llamacpp}}")  # on this computer, no key
 {{?chat-provider=anthropic}} llm = "{{chat-anthropic}}"; use_model(llm, PT.AnthropicSchema())  # needs ANTHROPIC_API_KEY
 {{?chat-provider=google}} llm = "{{chat-google}}"; use_model(llm, PT.GoogleOpenAISchema())  # needs GOOGLE_API_KEY
 {{?chat-provider=openai}} llm = "{{chat-openai}}"; use_model(llm, PT.OpenAISchema())  # needs OPENAI_API_KEY
-{{?chat-provider=mistral}} llm = "{{chat-mistral}}"; use_model(llm, PT.MistralOpenAISchema())  # needs MISTRAL_API_KEY
-{{?embed-provider=ollama}} emb_model = "{{embed-ollama}}"; use_model(emb_model, PT.OllamaSchema())  # local, no key; the model must be pulled first (ollama pull)
+{{?embed-provider=llamacpp}} emb_model = local_model("{{embed-llamacpp}}"; embeddings = true)  # on this computer, no key
 {{?embed-provider=google}} emb_model = "{{embed-google}}"; use_model(emb_model, PT.GoogleOpenAISchema())  # needs GOOGLE_API_KEY
 {{?embed-provider=openai}} emb_model = "{{embed-openai}}"; use_model(emb_model, PT.OpenAISchema())  # needs OPENAI_API_KEY
-{{?embed-provider=mistral}} emb_model = "{{embed-mistral}}"; use_model(emb_model, PT.MistralOpenAISchema())  # needs MISTRAL_API_KEY
 isempty(llm) && error("Enter a chat model in the panel.")
-emb = (; model = emb_model)  # passed to every embedding call
+emb = (; model = emb_model, model_kwargs(emb_model)...)  # passed to every embedding call
 tokens(msgs) = sum(m -> sum(m.tokens), msgs)  # prompt + reply tokens, comparable across providers
 
 using StatisticalMeasures  # confusion matrices, accuracy, Cohen kappa
@@ -464,7 +452,7 @@ function parse_tags(reply)  # (Bool per tag, reply items that match no tag)
     items = filter(!isempty, clean.(split(reply, r"[;,\n]")))
     ([clean(t) in items for t in tag_list], filter(i -> i != "none" && !(i in clean.(tag_list)), items))
 end
-tag_reply(d; model = llm) = aigenerate(tag_prompt(d); model, api_kwargs = fixed_temperature(model), verbose = false)
+tag_reply(d; model = llm) = aigenerate(tag_prompt(d); chat_kwargs(model)..., verbose = false)
 run_tags(model) = asyncmap(d -> tag_reply(d; model), docs; ntasks = 10)
 tag_matrix(msgs) = permutedims(reduce(hcat, [parse_tags(m.content)[1] for m in msgs]))  # N x T Bool
 
@@ -487,20 +475,28 @@ PT = PromptingTools
 
 # Register each model name with its provider, so any current model works (the built-in model list of PromptingTools is older)
 use_model(name, schema) = (haskey(PT.MODEL_REGISTRY, name) && PT.MODEL_REGISTRY[name].schema isa typeof(schema)) || PT.register_model!(; name, schema)
-# Temperature 0 for repeatable answers; Ollama takes it inside options
-fixed_temperature(model) = PT.MODEL_REGISTRY[model].schema isa PT.AbstractOllamaSchema ? (; options = (; temperature = 0)) : (; temperature = 0)
+# A model file run on this computer by the llama-server Pollis starts for it, registered under the file's name
+local_servers = Dict{String, String}()  # model name => address of its server
+function local_model(file; embeddings = false)
+    isempty(file) && return file  # the check below asks for a model
+    name = splitext(basename(file))[1]
+    local_servers[name] = Pollis.llama_server(file; embeddings)
+    use_model(name, PT.CustomOpenAISchema())
+    name
+end
+# A local model's server, with a placeholder key since it needs none, and the other API settings
+model_kwargs(model, api_kwargs = (;)) = haskey(local_servers, model) ? (; api_key = "llama.cpp", api_kwargs = (; url = local_servers[model], api_kwargs...)) : (; api_kwargs)
+chat_kwargs(model) = (; model, model_kwargs(model, (; temperature = 0))...)  # temperature 0 for repeatable answers
 
-{{?chat-provider=ollama}} llm = "{{chat-ollama}}"; use_model(llm, PT.OllamaSchema())  # local, no key; the model must be pulled first (ollama pull)
+{{?chat-provider=llamacpp}} llm = local_model("{{chat-llamacpp}}")  # on this computer, no key
 {{?chat-provider=anthropic}} llm = "{{chat-anthropic}}"; use_model(llm, PT.AnthropicSchema())  # needs ANTHROPIC_API_KEY
 {{?chat-provider=google}} llm = "{{chat-google}}"; use_model(llm, PT.GoogleOpenAISchema())  # needs GOOGLE_API_KEY
 {{?chat-provider=openai}} llm = "{{chat-openai}}"; use_model(llm, PT.OpenAISchema())  # needs OPENAI_API_KEY
-{{?chat-provider=mistral}} llm = "{{chat-mistral}}"; use_model(llm, PT.MistralOpenAISchema())  # needs MISTRAL_API_KEY
-{{?embed-provider=ollama}} emb_model = "{{embed-ollama}}"; use_model(emb_model, PT.OllamaSchema())  # local, no key; the model must be pulled first (ollama pull)
+{{?embed-provider=llamacpp}} emb_model = local_model("{{embed-llamacpp}}"; embeddings = true)  # on this computer, no key
 {{?embed-provider=google}} emb_model = "{{embed-google}}"; use_model(emb_model, PT.GoogleOpenAISchema())  # needs GOOGLE_API_KEY
 {{?embed-provider=openai}} emb_model = "{{embed-openai}}"; use_model(emb_model, PT.OpenAISchema())  # needs OPENAI_API_KEY
-{{?embed-provider=mistral}} emb_model = "{{embed-mistral}}"; use_model(emb_model, PT.MistralOpenAISchema())  # needs MISTRAL_API_KEY
 isempty(llm) && error("Enter a chat model in the panel.")
-emb = (; model = emb_model)  # passed to every embedding call
+emb = (; model = emb_model, model_kwargs(emb_model)...)  # passed to every embedding call
 tokens(msgs) = sum(m -> sum(m.tokens), msgs)  # prompt + reply tokens, comparable across providers
 
 using StatisticalMeasures  # confusion matrices, accuracy, Cohen kappa
@@ -516,7 +512,7 @@ cat_prompt(d) = "Categories: " * join(cats, "; ") * "\n\nDocument: " * d *
     "\n\nReply with the one category that fits the document best, exactly as written above. Reply with nothing else."
 clean(s) = lowercase(strip(s, collect(" .\"*`\n")))  # drop spaces, quotes and markdown around the reply
 match_cat(reply) = (i = findfirst(c -> clean(c) == clean(reply), cats); isnothing(i) ? "unclassified" : cats[i])
-classify(d; model = llm) = aigenerate(cat_prompt(d); model, api_kwargs = fixed_temperature(model), verbose = false)
+classify(d; model = llm) = aigenerate(cat_prompt(d); chat_kwargs(model)..., verbose = false)
 run_labels(model) = asyncmap(d -> classify(d; model), docs; ntasks = 10)
 
 msgs   = run_labels(llm)
@@ -539,21 +535,29 @@ PT = PromptingTools
 
 # Register each model name with its provider, so any current model works (the built-in model list of PromptingTools is older)
 use_model(name, schema) = (haskey(PT.MODEL_REGISTRY, name) && PT.MODEL_REGISTRY[name].schema isa typeof(schema)) || PT.register_model!(; name, schema)
-# Temperature 0 for repeatable answers; Ollama takes it inside options
-fixed_temperature(model) = PT.MODEL_REGISTRY[model].schema isa PT.AbstractOllamaSchema ? (; options = (; temperature = 0)) : (; temperature = 0)
+# A model file run on this computer by the llama-server Pollis starts for it, registered under the file's name
+local_servers = Dict{String, String}()  # model name => address of its server
+function local_model(file; embeddings = false)
+    isempty(file) && return file  # the check below asks for a model
+    name = splitext(basename(file))[1]
+    local_servers[name] = Pollis.llama_server(file; embeddings)
+    use_model(name, PT.CustomOpenAISchema())
+    name
+end
+# A local model's server, with a placeholder key since it needs none, and the other API settings
+model_kwargs(model, api_kwargs = (;)) = haskey(local_servers, model) ? (; api_key = "llama.cpp", api_kwargs = (; url = local_servers[model], api_kwargs...)) : (; api_kwargs)
+chat_kwargs(model) = (; model, model_kwargs(model, (; temperature = 0))...)  # temperature 0 for repeatable answers
 
-{{?chat-provider=ollama}} llm = "{{chat-ollama}}"; use_model(llm, PT.OllamaSchema())  # local, no key; the model must be pulled first (ollama pull)
+{{?chat-provider=llamacpp}} llm = local_model("{{chat-llamacpp}}")  # on this computer, no key
 {{?chat-provider=anthropic}} llm = "{{chat-anthropic}}"; use_model(llm, PT.AnthropicSchema())  # needs ANTHROPIC_API_KEY
 {{?chat-provider=google}} llm = "{{chat-google}}"; use_model(llm, PT.GoogleOpenAISchema())  # needs GOOGLE_API_KEY
 {{?chat-provider=openai}} llm = "{{chat-openai}}"; use_model(llm, PT.OpenAISchema())  # needs OPENAI_API_KEY
-{{?chat-provider=mistral}} llm = "{{chat-mistral}}"; use_model(llm, PT.MistralOpenAISchema())  # needs MISTRAL_API_KEY
-{{?embed-provider=ollama}} emb_model = "{{embed-ollama}}"; use_model(emb_model, PT.OllamaSchema())  # local, no key; the model must be pulled first (ollama pull)
+{{?embed-provider=llamacpp}} emb_model = local_model("{{embed-llamacpp}}"; embeddings = true)  # on this computer, no key
 {{?embed-provider=google}} emb_model = "{{embed-google}}"; use_model(emb_model, PT.GoogleOpenAISchema())  # needs GOOGLE_API_KEY
 {{?embed-provider=openai}} emb_model = "{{embed-openai}}"; use_model(emb_model, PT.OpenAISchema())  # needs OPENAI_API_KEY
-{{?embed-provider=mistral}} emb_model = "{{embed-mistral}}"; use_model(emb_model, PT.MistralOpenAISchema())  # needs MISTRAL_API_KEY
 isempty(llm) && error("Enter a chat model in the panel.")
 isempty(emb_model) && error("Enter an embedding model in the panel.")
-emb = (; model = emb_model)  # passed to every embedding call
+emb = (; model = emb_model, model_kwargs(emb_model)...)  # passed to every embedding call
 tokens(msgs) = sum(m -> sum(m.tokens), msgs)  # prompt + reply tokens, comparable across providers
 
 using LLMTextAnalysis  # build_index, build_clusters!
@@ -565,7 +569,7 @@ k    = {{k}}  # number of topics
 
 index = build_index(docs; aiembed_kwargs = emb)  # embeddings, cosine distances and keywords of every document
 # complete-linkage clustering cut at k; the chat model names and summarises each cluster
-build_clusters!(index; k, add_label = true, add_summary = true, labeler_kwargs = (; model = llm, api_kwargs = fixed_temperature(llm)))
+build_clusters!(index; k, add_label = true, add_summary = true, labeler_kwargs = chat_kwargs(llm))
 topics = index.topic_levels[k]
 assign = zeros(Int, length(docs))  # topic of each document
 for t in topics
@@ -587,25 +591,32 @@ PT = PromptingTools
 
 # Register each model name with its provider, so any current model works (the built-in model list of PromptingTools is older)
 use_model(name, schema) = (haskey(PT.MODEL_REGISTRY, name) && PT.MODEL_REGISTRY[name].schema isa typeof(schema)) || PT.register_model!(; name, schema)
-# Temperature 0 for repeatable answers; Ollama takes it inside options
-fixed_temperature(model) = PT.MODEL_REGISTRY[model].schema isa PT.AbstractOllamaSchema ? (; options = (; temperature = 0)) : (; temperature = 0)
+# A model file run on this computer by the llama-server Pollis starts for it, registered under the file's name
+local_servers = Dict{String, String}()  # model name => address of its server
+function local_model(file; embeddings = false)
+    isempty(file) && return file  # the check below asks for a model
+    name = splitext(basename(file))[1]
+    local_servers[name] = Pollis.llama_server(file; embeddings)
+    use_model(name, PT.CustomOpenAISchema())
+    name
+end
+# A local model's server, with a placeholder key since it needs none, and the other API settings
+model_kwargs(model, api_kwargs = (;)) = haskey(local_servers, model) ? (; api_key = "llama.cpp", api_kwargs = (; url = local_servers[model], api_kwargs...)) : (; api_kwargs)
+chat_kwargs(model) = (; model, model_kwargs(model, (; temperature = 0))...)  # temperature 0 for repeatable answers
 
-{{?chat-provider=ollama}} llm = "{{chat-ollama}}"; use_model(llm, PT.OllamaSchema())  # local, no key; the model must be pulled first (ollama pull)
+{{?chat-provider=llamacpp}} llm = local_model("{{chat-llamacpp}}")  # on this computer, no key
 {{?chat-provider=anthropic}} llm = "{{chat-anthropic}}"; use_model(llm, PT.AnthropicSchema())  # needs ANTHROPIC_API_KEY
 {{?chat-provider=google}} llm = "{{chat-google}}"; use_model(llm, PT.GoogleOpenAISchema())  # needs GOOGLE_API_KEY
 {{?chat-provider=openai}} llm = "{{chat-openai}}"; use_model(llm, PT.OpenAISchema())  # needs OPENAI_API_KEY
-{{?chat-provider=mistral}} llm = "{{chat-mistral}}"; use_model(llm, PT.MistralOpenAISchema())  # needs MISTRAL_API_KEY
-{{?embed-provider=ollama}} emb_model = "{{embed-ollama}}"; use_model(emb_model, PT.OllamaSchema())  # local, no key; the model must be pulled first (ollama pull)
+{{?embed-provider=llamacpp}} emb_model = local_model("{{embed-llamacpp}}"; embeddings = true)  # on this computer, no key
 {{?embed-provider=google}} emb_model = "{{embed-google}}"; use_model(emb_model, PT.GoogleOpenAISchema())  # needs GOOGLE_API_KEY
 {{?embed-provider=openai}} emb_model = "{{embed-openai}}"; use_model(emb_model, PT.OpenAISchema())  # needs OPENAI_API_KEY
-{{?embed-provider=mistral}} emb_model = "{{embed-mistral}}"; use_model(emb_model, PT.MistralOpenAISchema())  # needs MISTRAL_API_KEY
 isempty(llm) && error("Enter a chat model in the panel.")
 isempty(emb_model) && error("Enter an embedding model in the panel.")
-emb = (; model = emb_model)  # passed to every embedding call
+emb = (; model = emb_model, model_kwargs(emb_model)...)  # passed to every embedding call
 tokens(msgs) = sum(m -> sum(m.tokens), msgs)  # prompt + reply tokens, comparable across providers
 
-using LinearAlgebra, SparseArrays, Unicode  # these load RAGTools
-RT = PromptingTools.Experimental.RAGTools
+import RAGTools  # build_index and airag, named in full since LLMTextAnalysis has a build_index too
 
 {{?texts=texts}} texts = dataset("pollis_guide").text;  # The Pollis Guide, one document per section; datasetinfo("pollis_guide") describes it. Replace it with your own vector of strings.
 {{?question=question}} question = "How do I get alerts when a company files with the SEC?";
@@ -613,11 +624,11 @@ RT = PromptingTools.Experimental.RAGTools
 docs  = {{texts}}  # one string per document
 top_n = {{top-n}}  # chunks passed to the LLM as context
 
-rag_index = RT.build_index(docs; chunker_kwargs = (; sources = ["document $i" for i in eachindex(docs)]), embedder_kwargs = emb)  # chunk and embed
+rag_index = RAGTools.build_index(docs; chunker_kwargs = (; sources = ["document $i" for i in eachindex(docs)]), embedder_kwargs = emb)  # chunk and embed
 function ask(q; model = llm)
-    r = RT.airag(rag_index; question = q, return_all = true, verbose = false,
+    r = RAGTools.airag(rag_index; question = q, return_all = true, verbose = false,
                  retriever_kwargs = (; top_n, embedder_kwargs = emb),
-                 generator_kwargs = (; answerer_kwargs = (; model, api_kwargs = fixed_temperature(model))))
+                 generator_kwargs = (; answerer_kwargs = chat_kwargs(model)))
     (r, sum(r.conversations[:answer][end].tokens))
 end
 
@@ -735,12 +746,12 @@ using LLMTextAnalysis  # build_index, train_classifier, train_concept, score
 {{?model=tag|classify}} index = build_index(docs; aiembed_kwargs = emb)  # embeddings of every document
 {{?model=classify}} ids, gold = {{gold-ids}}, {{gold-labels}}
 {{?model=classify}} # trained on your hand labels when given (every category needed), else on LLM-written examples of each category
-{{?model=classify}} cls = isempty(ids) ? train_classifier(index, cats; num_samples = 5, aigenerate_kwargs = (; model = llm), aiembed_kwargs = emb) :
+{{?model=classify}} cls = isempty(ids) ? train_classifier(index, cats; num_samples = 5, aigenerate_kwargs = (; model = llm, model_kwargs(llm)...), aiembed_kwargs = emb) :
 {{?model=classify}}       train_classifier(index, cats; docs_ids = ids, docs_labels = [findfirst(==(g), cats) for g in gold], aiembed_kwargs = emb)
 {{?model=classify}} emb_labels = score(index, cls; return_labels = true)  # one category per document, no further LLM calls
 {{?model=classify}} println("Agreement with the chat model: Cohen kappa ", round(kappa(confusion(emb_labels, labels)); digits = 2))
 {{?model=tag}} # one concept per tag: the LLM rewrites sample documents through the tag and a logistic model learns that direction
-{{?model=tag}} S = reduce(hcat, [score(index, train_concept(index, t; num_samples = min(20, length(docs)), aigenerate_kwargs = (; model = llm), aiembed_kwargs = emb)) for t in tag_list])
+{{?model=tag}} S = reduce(hcat, [score(index, train_concept(index, t; num_samples = min(20, length(docs)), aigenerate_kwargs = (; model = llm, model_kwargs(llm)...), aiembed_kwargs = emb)) for t in tag_list])
 {{?model=tag}} for (j, t) in enumerate(tag_list)
 {{?model=tag}}     println(rpad(t, 20), "agreement with the chat model: Cohen kappa ", round(kappa(confusion(S[:, j] .> 0.5, tagmat[:, j])); digits = 2))
 {{?model=tag}} end
@@ -756,11 +767,10 @@ id = "compare-models"
 label = "Compare Models"
 desc = "Run the same analysis with the second model, from any provider, and measure agreement (Cohen kappa)"
 code = '''
-{{?chat-provider2=ollama}} llm2 = "{{chat2-ollama}}"; use_model(llm2, PT.OllamaSchema())  # local, no key; the model must be pulled first (ollama pull)
+{{?chat-provider2=llamacpp}} llm2 = local_model("{{chat2-llamacpp}}")  # on this computer, no key
 {{?chat-provider2=anthropic}} llm2 = "{{chat2-anthropic}}"; use_model(llm2, PT.AnthropicSchema())  # needs ANTHROPIC_API_KEY
 {{?chat-provider2=google}} llm2 = "{{chat2-google}}"; use_model(llm2, PT.GoogleOpenAISchema())  # needs GOOGLE_API_KEY
 {{?chat-provider2=openai}} llm2 = "{{chat2-openai}}"; use_model(llm2, PT.OpenAISchema())  # needs OPENAI_API_KEY
-{{?chat-provider2=mistral}} llm2 = "{{chat2-mistral}}"; use_model(llm2, PT.MistralOpenAISchema())  # needs MISTRAL_API_KEY
 isempty(llm2) && error("Enter a second chat model in the panel.")
 {{?model=tag}} msgs2   = run_tags(llm2)
 {{?model=tag}} tagmat2 = tag_matrix(msgs2)
@@ -774,7 +784,7 @@ isempty(llm2) && error("Enter a second chat model in the panel.")
 {{?model=classify}} println("Cohen kappa between $llm and $llm2: ", round(kappa(c); digits = 2), "   LLM tokens: ", tokens(msgs), " vs ", tokens(msgs2))
 {{?model=classify}} c
 {{?model=topics}} saved = index.topic_levels[k]  # same clusters, relabelled by the second model
-{{?model=topics}} build_clusters!(index; k, add_label = true, add_summary = false, labeler_kwargs = (; model = llm2, api_kwargs = fixed_temperature(llm2)))
+{{?model=topics}} build_clusters!(index; k, add_label = true, add_summary = false, labeler_kwargs = chat_kwargs(llm2))
 {{?model=topics}} for (a, b) in zip(saved, index.topic_levels[k])
 {{?model=topics}}     println(a.topic_idx, ". ", a.label, "   |   ", b.label)
 {{?model=topics}} end

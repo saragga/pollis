@@ -660,6 +660,47 @@ registerAction2(class extends Action2 {
 	}
 });
 
+/**
+ * Compiles the documents of Help > Documentation now, rather than when the Julia REPL next starts, or waits for the
+ * compile already running (the Julia extension's command language-julia.pollisCompileDocuments).
+ */
+registerAction2(class extends Action2 {
+	constructor() {
+		super({
+			id: 'pollis.action.compileDocuments',
+			title: {
+				...localize2('compileDocuments', "Compile the Documents Now"),
+				mnemonicTitle: localize({ key: 'miCompileDocuments', comment: ['&& denotes a mnemonic'] }, "&&Compile the Documents Now"),
+			},
+			category: Categories.Help,
+			f1: true,
+			menu: { id: MenubarHelpDocumentationMenu, group: '2_compile', order: 1 }
+		});
+	}
+
+	async run(accessor: ServicesAccessor): Promise<void> {
+		const commandService = accessor.get(ICommandService);
+		const notificationService = accessor.get(INotificationService);
+		let answer: { total?: number; failed?: number; error?: string } | undefined;
+		try {
+			answer = await commandService.executeCommand('language-julia.pollisCompileDocuments');
+		} catch {
+			answer = { error: 'failed' };
+		}
+		if (answer?.error === 'noJulia') {
+			notificationService.info(localize('compileDocumentsNoJulia', "The documents are compiled with Julia, which Pollis cannot find. Install Julia, then try again."));
+		} else if (!answer || answer.error) {
+			notificationService.error(localize('compileDocumentsFailed', "The documents could not be compiled."));
+		} else if (answer.failed) {
+			notificationService.warn(localize('compileDocumentsSomeFailed', "{0} of the {1} documents could not be compiled. Their logs are in ~/.pollis/documents.", answer.failed, answer.total ?? answer.failed));
+		} else if (answer.total === undefined) {
+			notificationService.info(localize('compileDocumentsUpToDate', "Every document is compiled and up to date."));
+		} else {
+			notificationService.info(localize('compileDocumentsDone', "The documents are compiled."));
+		}
+	}
+});
+
 registerHelpLink({
 	id: 'pollis.action.openCodeOssDocumentation',
 	title: localize2('openCodeOssDocumentation', "Code - OSS Documentation"),

@@ -49,16 +49,17 @@
     \fill[logocream] (203,422) -- (339,89) -- (476,422) -- cycle;
   \end{tikzpicture}}
 
-% Top of the page: logo, name, domain; then the question and a one-line promise
-\newcommand{\workflowhead}[3]{%
+% Top of the page: logo, name, kind of document (Workflow unless given, e.g. [Drill-Down]) and its subject;
+% then the question and a one-line promise
+\newcommand{\workflowhead}[4][Workflow]{%
   \thispagestyle{fancy}%
   \begin{minipage}[c]{13mm}\pollislogo{11mm}\end{minipage}%
   \begin{minipage}[c]{\dimexpr\linewidth-13mm\relax}
-    {\color{navy}\Large\bfseries Pollis}\enspace{\color{soft}Workflow}\hfill
-    {\color{deepamber}\small\bfseries\MakeUppercase{#1}}
+    {\color{navy}\Large\bfseries Pollis}\enspace{\color{soft}#1}\hfill
+    {\color{deepamber}\small\bfseries\MakeUppercase{#2}}
   \end{minipage}\par\vspace{7mm}
-  {\color{navy}\fontsize{22}{26}\selectfont\bfseries #2}\par\vspace{4pt}
-  {\color{soft}\large #3}\par\vspace{5mm}}
+  {\color{navy}\fontsize{22}{26}\selectfont\bfseries #3}\par\vspace{4pt}
+  {\color{soft}\large #4}\par\vspace{5mm}}
 
 % A menu path: \menu{Explore}{Access Data Libraries}... is written as \path{Explore \gt Access Data Libraries}
 \newcommand{\gt}{\,{\color{deepamber}\bfseries ›}\,}

@@ -124,8 +124,14 @@ function buildInputHtml(input: IModelInput): string {
 		? 'Open Add Alert with this symbol: Pollis looks up its quote while it is open, and warns when it crosses a level you set'
 		: 'Open Add Alert with this series: Pollis looks it up every hour while it is open, and tells you when a new value is published';
 	const alertValue = input.alertValue ? ` data-value="${htmlEsc(input.alertValue)}"` : '';
+	// A local model input with Choose... beside it, which opens the picker of models
+	const modelTitle = input.modelFile === 'embedding'
+		? 'Choose an embedding model on this computer or from Hugging Face, or a GGUF file'
+		: 'Choose a chat model on this computer or from Hugging Face, or a GGUF file';
 	const fieldWithAction = input.alertMe && !input.kind
 		? `<div class="input-with-action">${field}<button class="input-action-btn alert-me-btn" data-input="${input.id}" data-alert="${input.alertMe}"${alertValue} title="${alertTitle}">Alert Me...</button></div>`
+		: input.modelFile && !input.kind
+		? `<div class="input-with-action">${field}<button class="input-action-btn choose-model-btn" data-input="${input.id}" data-model-kind="${input.modelFile}" title="${modelTitle}">Choose...</button></div>`
 		: field;
 	return `\t\t\t<div class="form-group scaffold-input"${modelsAttr(input.models, input.when)}>
 				<label class="form-label form-label-with-tooltip" for="in-${input.id}">${htmlEsc(input.label)}${tooltip}

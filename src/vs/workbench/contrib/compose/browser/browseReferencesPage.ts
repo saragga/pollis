@@ -16,7 +16,7 @@ import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { ICitationCount, ReferenceLibrary, referenceVenue } from '../../model/browser/common/referenceLibrary.js';
 import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
-import { FEWEST_ROWS, rowsChoiceCss, rowsChoiceScript, stickyHeadCss, stickyHeadScript, storedRows, storeRows } from '../../model/browser/webviews/webviewPager.js';
+import { FEWEST_ROWS, rowsChoiceCss, rowsChoiceScript, sortHeadingsCss, sortHeadingsScript, sortHint, stickyHeadCss, stickyHeadScript, storedRows, storeRows } from '../../model/browser/webviews/webviewPager.js';
 
 // Compose > Browse References: every work in PollisReferences (all_references), those of Pollis, those the user saved
 // from Discover Literature or added to a panel, and the user's corrections, with their versions, latest citation counts and
@@ -283,7 +283,7 @@ function pageHtml(rows: number): string {
 		undoMergeHint: localize('browseReferences.undoMergeHint', "Make {0} a work of its own again, as it was before the merge"),
 		undoMergeAsk: localize('browseReferences.undoMergeAsk', "Make {0} a work of its own again?"),
 		none: localize('browseReferences.none', "No work matches."),
-		sortHint: localize('browseReferences.sortHint', "Sort by this column; click again to reverse"),
+		sortHint: sortHint(),
 		countsSortHint: localize('browseReferences.countsSortHint', "Sort by the largest count of the work's sources; click again to reverse"),
 		count: localize('browseReferences.count', "{0} of {1} works"),
 		previous: localize('browseReferences.previous', "Previous"),
@@ -299,6 +299,7 @@ function pageHtml(rows: number): string {
 	<style>
 		${rowsChoiceCss}
 		${stickyHeadCss}
+		${sortHeadingsCss}
 		* { box-sizing: border-box; }
 		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
 		.container { max-width: 1200px; margin: 0 auto; padding: 24px; }
@@ -332,12 +333,9 @@ function pageHtml(rows: number): string {
 		/* The pair as one work, before the merge is confirmed */
 		tr.preview td { background: var(--vscode-diffEditor-insertedLineBackground, var(--vscode-editor-findMatchHighlightBackground)); }
 		table { table-layout: fixed; }
-		th.sortable { cursor: pointer; user-select: none; }
 		/* The space between two pairs of possible duplicates */
 		tr.pairGap td { height: 16px; padding: 0; border-bottom: 1px solid var(--vscode-widget-border); }
 		.duplicatesClose { padding: 12px 8px; font-size: 12px; text-align: right; }
-		th.sortable:hover { color: var(--vscode-foreground); }
-		th.sorted { color: var(--vscode-foreground); }
 		col.year { width: 48px; }
 		col.key { width: 96px; }
 		col.counts { width: 150px; }
@@ -385,6 +383,7 @@ function pageHtml(rows: number): string {
 	let rows = ${rows};
 	${rowsChoiceScript()}
 	${stickyHeadScript()}
+	${sortHeadingsScript()}
 	// Yours first, then corrections, then those of Pollis
 	const ORIGIN_ORDER = { user: 0, corrected: 1, pollis: 2 };
 	let works = [];
@@ -473,9 +472,8 @@ function pageHtml(rows: number): string {
 		sortColumn = column;
 		page = 0;
 		for (const header of document.querySelectorAll('th.sortable')) {
-			const label = header.textContent.replace(/ [\\u2191\\u2193]$/, '');
-			header.classList.toggle('sorted', header.dataset.sort === column);
-			header.textContent = header.dataset.sort === column ? label + (sortDescending ? ' \\u2193' : ' \\u2191') : label;
+			header.dataset.label ??= header.textContent;
+			setSortArrow(header, header.dataset.label, header.dataset.sort === column, sortDescending);
 		}
 		render();
 	}

@@ -455,8 +455,12 @@ grid = (range(-30, 30; length={{N}}), range(-30, 30; length={{N}}), range(0, 60;
 basins, _ = basins_of_attraction(BasinMapRecurrences(ds, grid; consecutive_recurrences = 1000, attractor_locate_steps = 1000), grid)  # classify
 
 Sb, Sbb = basin_entropy(basins)  # basin entropy and boundary basin entropy (Daza et al. 2016)
-println("Basin entropy Sb: ", Sb, "  boundary basin entropy Sbb: ", Sbb)  # Sb = 0: a single basin
-println(Sbb > log(2) ? "Sbb > log 2: the basin boundaries are fractal" : "Sbb <= log 2: inconclusive, the boundaries may or may not be fractal")
+if isnan(Sbb)  # no box straddles two basins
+    println("Basin entropy Sb: ", Sb, "  only one basin: no boundaries, so no boundary basin entropy")
+else
+    println("Basin entropy Sb: ", Sb, "  boundary basin entropy Sbb: ", Sbb)
+    println(Sbb > log(2) ? "Sbb > log 2: the basin boundaries are fractal" : "Sbb <= log 2: inconclusive, the boundaries may or may not be fractal")
+end
 '''
 
 [[actionGroups.actions]]

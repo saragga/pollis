@@ -632,6 +632,11 @@ export function createActionViewItem(instaService: IInstantiationService, action
 		if (action.item.isSelection) {
 			return instaService.createInstance(SubmenuEntrySelectActionViewItem, action);
 		} else if (action.item.isSplitButton) {
+			// POLLIS: a split button with a single action is that action's button, with no dropdown to choose from
+			const choices = action.actions.filter(a => !(a instanceof Separator));
+			if (choices.length === 1 && choices[0] instanceof MenuItemAction) {
+				return instaService.createInstance(MenuEntryActionViewItem, choices[0], options);
+			}
 			return instaService.createInstance(DropdownWithDefaultActionViewItem, action, {
 				...options,
 				togglePrimaryAction: typeof action.item.isSplitButton !== 'boolean' ? action.item.isSplitButton.togglePrimaryAction : false,

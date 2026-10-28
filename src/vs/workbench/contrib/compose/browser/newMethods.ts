@@ -653,14 +653,11 @@ async function addEmptyInput(fileService: IFileService, editorService: IEditorSe
 	await editorService.openEditor({ resource: joinPath(method.folder, 'inputs', `${name}.csv`) });
 }
 
-/** What Add from Article asks the coding agent: to type the article's tables in as input or target tables. */
-function articlePrompt(method: IMethod, kind: 'inputs' | 'targets', tables: string): string {
-	const read = localize('newMethods.fromArticle.read', "Read the article of the Pollis method in {0}: its link is article in method.toml, else the page of its doi. Do not save a copy of it.", method.folder.fsPath);
-	const task = kind === 'targets'
-		? localize('newMethods.fromArticle.targets', "Type in its tables {0} as target tables: for each, targets/NAME.csv (NAME like table3_2) with the row labels in the first column and every value exactly as printed (the same digits and signs, never rounded or recomputed, an empty cell where the table has none), and in method.toml a [targets.NAME] table with source = \"Table 3.2, page 41 (typed in by a coding agent)\", call = \"\" and tolerance = 0.", tables)
-		: localize('newMethods.fromArticle.inputs', "Type in its tables {0} as input data: for each, inputs/NAME.csv (NAME like table3_2) with a header line of column names and every value exactly as printed, and in method.toml an [inputs.NAME] table with file = \"inputs/NAME.csv\" and source = \"Table 3.2, page 41 (typed in by a coding agent)\".", tables);
-	const check = localize('newMethods.fromArticle.check', "Change nothing else. Then list each table you typed in, with its size, and every value you could not read for certain, so that I can check them against the article.");
-	return `${read} ${task} ${check}`;
+/** What Add from Article asks the coding agent: to follow the tables-from-article skill, given the tables and what they are. */
+function articlePrompt(skill: string, method: IMethod, kind: 'inputs' | 'targets', tables: string): string {
+	return kind === 'targets'
+		? localize('newMethods.fromArticle.targets', "Read the skill {0} and follow its instructions to type in the tables {1} of the article of the Pollis method in {2} as target tables.", skill, tables, method.folder.fsPath)
+		: localize('newMethods.fromArticle.inputs', "Read the skill {0} and follow its instructions to type in the tables {1} of the article of the Pollis method in {2} as input data.", skill, tables, method.folder.fsPath);
 }
 
 /** The agent tasks of a method, by the command the pages send. */
@@ -967,7 +964,10 @@ async function openMethodPage(accessor: ServicesAccessor, existing?: URI, step?:
 				if (!current.article && !current.articleLocal) {
 					throw new Error(localize('newMethods.fromArticle.noArticle', "Set the article's link first."));
 				}
-				await instantiationService.invokeFunction(startAgent, localize('newMethods.fromArticle.terminal', "Tables of {0}", current.name), articlePrompt(current, message.kind, tables), folder, 'tablesFromArticle');
+				const skill = await instantiationService.invokeFunction(skillFile, 'tables-from-article');
+				if (skill) {
+					await instantiationService.invokeFunction(startAgent, localize('newMethods.fromArticle.terminal', "Tables of {0}", current.name), articlePrompt(skill.fsPath, current, message.kind, tables), folder, 'tablesFromArticle');
+				}
 			});
 		} else if (message.command === 'addTargetFiles') {
 			run(() => addTargetFiles(fileService, fileDialogService, editorService, folder));

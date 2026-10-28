@@ -14,7 +14,6 @@ import { localize, localize2 } from '../../../../nls.js';
 import { Action2, MenuId, MenuRegistry, registerAction2 } from '../../../../platform/actions/common/actions.js';
 import { BrowserViewCommandId } from '../../../../platform/browserView/common/browserView.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { ConfigurationScope, Extensions as ConfigurationExtensions, IConfigurationRegistry } from '../../../../platform/configuration/common/configurationRegistry.js';
 import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
 import { IFileDialogService } from '../../../../platform/dialogs/common/dialogs.js';
@@ -25,7 +24,6 @@ import { Registry } from '../../../../platform/registry/common/platform.js';
 import { registerIcon } from '../../../../platform/theme/common/iconRegistry.js';
 import { registerThemingParticipant } from '../../../../platform/theme/common/themeService.js';
 import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
-import { IWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase } from '../../../common/contributions.js';
 import { ResourceContextKey } from '../../../common/contextkeys.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
@@ -34,8 +32,7 @@ import { debugIconStartForeground } from '../../debug/browser/debugColors.js';
 import { CUSTOM_COPY_KINDS, resolveCustomCopy } from '../../model/browser/common/customCopyFileSystem.js';
 import { sendToJuliaRepl } from '../../model/browser/handlers/model.handler.js';
 import { findPollisWorkspace, NEW_POLLIS_WORKSPACE_COMMAND_ID } from '../../pollisWorkspace/browser/pollisWorkspace.contribution.js';
-import { AGENT_TIERS_SETTING, tierCommand } from './modelRouting.js';
-import { startAgent } from './pollisAgents.js';
+import { skillFile, startAgent } from './pollisAgents.js';
 
 // Compose > Reports: a notebook (a workflow, a notebook tutorial or the user's own) as a LaTeX report or
 // as beamer slides, in reports/NAME of the open Pollis Workspace, written by Pollis in its Julia REPL with
@@ -46,9 +43,9 @@ import { startAgent } from './pollisAgents.js';
 // again refreshes the numbers and keeps the user's edits. PollisTeX.jl (Tectonic) compiles it; the .tex
 // opens in a tab and the PDF beside it in the integrated browser. Each .tex tab has a Compile LaTeX
 // button, which saves and compiles it again in the Julia REPL. Polish with Agent... hands the .tex to a
-// coding agent (its tier in Model Routing, Light by default, else the chosen agent) that follows
-// polish-report.md with notebook.md, the notebook as short Markdown, so it neither reads the notebook's
-// JSON nor runs it.
+// coding agent (its tier in Model Tasks and Routing, Light by default) that follows the polish-report
+// skill of the Pollis Agents plugin with notebook.md, the notebook as short Markdown, so it neither reads
+// the notebook's JSON nor runs it.
 
 export const EXPORT_NOTEBOOK_LATEX_COMMAND_ID = 'pollis.reports.notebookLatex';
 export const MAKE_NOTEBOOK_SLIDES_COMMAND_ID = 'pollis.reports.notebookSlides';
@@ -57,7 +54,6 @@ export const POLISH_REPORT_COMMAND_ID = 'pollis.reports.polish';
 export const REPORTS_AGENT_COMMAND_SETTING = 'pollis.reports.agentCommand';
 
 const SCRIPT = 'vs/workbench/contrib/compose/browser/media/reports/reports.jl';
-const INSTRUCTIONS = 'vs/workbench/contrib/compose/browser/media/reports/polish-report.md';
 // The folder of pollis.bib, every reference in Pollis, which Tectonic searches for \bibliography{pollis}
 const LIBRARY = 'vs/workbench/contrib/model/browser/media/references';
 const WORKFLOWS = 'vs/workbench/contrib/compose/browser/media/workflows';
@@ -85,8 +81,8 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).regis
 			type: 'string',
 			default: '',
 			scope: ConfigurationScope.APPLICATION,
-			markdownDescription: localize('reports.agentCommand', "The command that started the coding agent of **Compose > Reports > Polish with Agent...**. Pollis moves it to the Light tier of `#pollis.agents.tiers#`."),
-			markdownDeprecationMessage: localize('reports.agentCommandDeprecated', "Polish with Agent now runs on a tier of **Compose > Orchestration > Model Routing**, Light by default."),
+			markdownDescription: localize('reports.agentCommand', "The command that started the coding agent of **Compose > Reports > Polish with Agent...**. Pollis moves it to the Light tier of `#pollis.agents.tierCells#`."),
+			markdownDeprecationMessage: localize('reports.agentCommandDeprecated', "Polish with Agent now runs on a tier of **Compose > Orchestration > Model Tasks and Routing**, Light by default."),
 		},
 	},
 });
@@ -233,8 +229,11 @@ async function polishReport(accessor: ServicesAccessor, resource?: URI): Promise
 	}
 	await textFileService.save(tex);
 	const folder = dirname(tex);
-	const instructions = FileAccess.asFileUri(INSTRUCTIONS).fsPath;
-	const prompt = localize('reports.polishPrompt', "Read {0} and follow it to polish {1}, in this folder.", instructions, basename(tex));
+	const skill = await instantiationService.invokeFunction(skillFile, 'polish-report');
+	if (!skill) {
+		return;
+	}
+	const prompt = localize('reports.polishPrompt', "Read the skill {0} and follow its instructions to polish {1}, in this folder. The folder of pollis.bib, the Pollis library of references, is {2}.", skill.fsPath, basename(tex), FileAccess.asFileUri(LIBRARY).fsPath);
 	const title = localize('reports.polishTitle', "Polish {0}", basename(tex));
 	const terminal = await instantiationService.invokeFunction(startAgent, title, prompt, folder, 'polish');
 	if (!terminal) {
@@ -348,27 +347,3 @@ registerAction2(class extends Action2 {
 		return compileLatex(accessor, URI.isUri(resource) ? resource : undefined);
 	}
 });
-
-/**
- * Moves the agent of Polish with Agent, which Reports had its own setting for, to the Light tier of Model
- * Routing, Polish's default tier, when Light has no command line yet; then clears the old setting.
- */
-class ReportsAgentMigration implements IWorkbenchContribution {
-	static readonly ID = 'workbench.contrib.pollisReportsAgentMigration';
-
-	constructor(@IConfigurationService configurationService: IConfigurationService) {
-		const command = configurationService.getValue<string>(REPORTS_AGENT_COMMAND_SETTING)?.trim();
-		if (!command) {
-			return;
-		}
-		(async () => {
-			if (!tierCommand(configurationService, 'light')) {
-				const tiers = configurationService.getValue<Record<string, string>>(AGENT_TIERS_SETTING) ?? {};
-				await configurationService.updateValue(AGENT_TIERS_SETTING, { ...tiers, light: command });
-			}
-			await configurationService.updateValue(REPORTS_AGENT_COMMAND_SETTING, undefined);
-		})();
-	}
-}
-
-registerWorkbenchContribution2(ReportsAgentMigration.ID, ReportsAgentMigration, WorkbenchPhase.Eventually);

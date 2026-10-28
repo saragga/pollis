@@ -21,7 +21,7 @@ import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { API_PROVIDERS, ProviderRequests } from '../../model/browser/common/apiProviders.js';
 import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
-import { FEWEST_ROWS, isRowsChoice, rowsChoiceCss, rowsChoiceScript, stickyHeadCss, stickyHeadScript, storedRows, storeRows } from '../../model/browser/webviews/webviewPager.js';
+import { FEWEST_ROWS, isRowsChoice, rowsChoiceCss, rowsChoiceScript, sortHeadingsCss, sortHeadingsScript, sortHint, stickyHeadCss, stickyHeadScript, storedRows, storeRows } from '../../model/browser/webviews/webviewPager.js';
 import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
 import { ISnowballArticle, ISnowballDatabaseService, ISnowballSeeds, SNOWBALL_SEARCH_COMMAND_ID, SnowballRow } from '../common/snowballSearch.js';
 import { IOpenAlexWork, OPENALEX_TYPES, openAlexIdOf, sameWork, titleWords } from './literatureRadarPage.js';
@@ -1316,7 +1316,7 @@ function pageHtml(askContexts: boolean, portrait: boolean, saturate: ISaturateSe
 		risenMarkHint: localize('snowball.risenMarkHint', "Not in the top {0} before the last round", TOP),
 		links: localize('snowball.links', "Links"),
 		linksHint: localize('snowball.linksHint', "How many seeds the work is tied to: a filled dot for a citation Semantic Scholar finds influential, a hollow one for the others. \u2248 marks a seed it is only related to, which Links does not count. Click the dots to see how it cites each seed, or is cited by it; click the heading to sort by Links, then by the filled dots"),
-		sortHint: localize('snowball.sortHint', "Click to sort by it"),
+		sortHint: sortHint(),
 		background: localize('snowball.background', "Background"),
 		method: localize('snowball.method', "Method"),
 		result: localize('snowball.result', "Result"),
@@ -1329,7 +1329,7 @@ function pageHtml(askContexts: boolean, portrait: boolean, saturate: ISaturateSe
 		work: localize('snowball.work', "Work"),
 		year: localize('snowball.year', "Year"),
 		cited: localize('snowball.cited', "Cited"),
-		citedHint: localize('snowball.citedHint', "Times cited, as OpenAlex counts them: click to sort by it"),
+		citedHint: localize('snowball.citedHint', "Times cited, as OpenAlex counts them. {0}", sortHint()),
 		from: localize('snowball.from', "From"),
 		fromHint: localize('snowball.fromHint', "The lists the work is in"),
 		cites: localize('snowball.cites', "cites {0}"),
@@ -1365,6 +1365,7 @@ function pageHtml(askContexts: boolean, portrait: boolean, saturate: ISaturateSe
 		${voiceButtonsCss}
 		${rowsChoiceCss}
 		${stickyHeadCss}
+		${sortHeadingsCss}
 		* { box-sizing: border-box; }
 		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
 		.container { max-width: 1200px; margin: 0 auto; padding: 24px; }
@@ -1446,8 +1447,6 @@ function pageHtml(askContexts: boolean, portrait: boolean, saturate: ISaturateSe
 		table { width: 100%; border-collapse: collapse; font-size: 12px; }
 		th { text-align: left; font-weight: normal; color: var(--vscode-descriptionForeground); padding: 4px 8px; border-bottom: 1px solid var(--vscode-widget-border); white-space: nowrap; }
 		th.number, td.number { text-align: right; }
-		th.sortable { cursor: pointer; }
-		th.sortable:hover { color: var(--vscode-foreground); }
 		td { padding: 6px 8px; border-bottom: 1px solid var(--vscode-widget-border); vertical-align: top; }
 		td.number { white-space: nowrap; font-variant-numeric: tabular-nums; }
 		td.dots { white-space: nowrap; color: var(--vscode-textLink-foreground); letter-spacing: 1px; cursor: pointer; }
@@ -1547,6 +1546,7 @@ function pageHtml(askContexts: boolean, portrait: boolean, saturate: ISaturateSe
 	const TEXT = ${JSON.stringify(text)};
 	${rowsChoiceScript()}
 	${stickyHeadScript()}
+	${sortHeadingsScript()}
 	const TOP = ${TOP};
 	let state = { steps: [], seeds: [], rows: [], lists: [], summary: {}, view: { show: 'all', page: 0, rows: ${FEWEST_ROWS}, sort: 'links', descending: true } };
 	stickBand(document.getElementById('showRow'), document.getElementById('poolTable'));
@@ -1781,7 +1781,7 @@ function pageHtml(askContexts: boolean, portrait: boolean, saturate: ISaturateSe
 		for (const th of document.querySelectorAll('#poolTable th.sortable')) {
 			th.dataset.label ??= th.textContent;
 			const sorted = th.dataset.sort === state.view.sort;
-			th.textContent = th.dataset.label + (sorted ? (state.view.descending ? ' \u2193' : ' \u2191') : '');
+			setSortArrow(th, th.dataset.label, sorted, state.view.descending);
 		}
 	}
 

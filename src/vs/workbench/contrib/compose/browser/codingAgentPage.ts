@@ -15,24 +15,21 @@ import { IPathService } from '../../../services/path/common/pathService.js';
 import { ITerminalInstanceService } from '../../terminal/browser/terminal.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
-import { AGENT_COMMAND_SETTING, CHOOSE_AGENT_COMMAND_ID, CODING_AGENTS, commandWords, findProgram, installSkills, PROMPT_PLACEHOLDER, skillsInstalled, terminalEnvironment } from './pollisAgents.js';
-import { MODEL_ROUTING_COMMAND_ID } from './modelRouting.js';
-import { LOCAL_MODEL_RUNNERS_COMMAND_ID } from './localModelRunnersPage.js';
+import { CHOOSE_AGENT_COMMAND_ID, CODING_AGENTS, commandWords, findProgram, installSkills, OTHER_AGENTS_SETTING, otherAgentEntries, PROMPT_PLACEHOLDER, skillsInstalled, terminalEnvironment } from './pollisAgents.js';
 import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
 import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
 
 // Compose > Coding Agents: a page of the coding agents Pollis knows, all of which run on local and
 // cloud models, in alphabetical order, each marked installed on this computer or with a link to its
-// install page, whether it has the Pollis skills, with a link to install them, and a button to use it; a field for any other agent's command; a link to Model Routing,
-// which sends some tasks to other models; and a link to Local Model Runners, the programs that serve the
-// local models. The choice is saved in the settings at once; the page follows changes made in the settings
-// while it is open.
+// install page, and whether it has the Pollis skills, with a link to install them; and agents of your own,
+// each a name and a command line, saved once both are filled, which Model Tasks and Routing then offers by
+// name; + adds one. Which agent and model a task runs on is chosen in Model Tasks and Routing. The agents of
+// your own are saved in the settings at once; the page follows changes made in the settings while it is open.
 
 type AgentMessage =
 	| { readonly command: 'ready' }
-	| { readonly command: 'use'; readonly line: string }
-	| { readonly command: 'routing' }
-	| { readonly command: 'runners' }
+	| { readonly command: 'saveOther'; readonly index: number; readonly name: string; readonly line: string }
+	| { readonly command: 'removeOther'; readonly index: number }
 	| { readonly command: 'installSkills'; readonly agent: string }
 	| { readonly command: 'link'; readonly url: string };
 
@@ -77,22 +74,19 @@ async function openCodingAgentPage(accessor: ServicesAccessor): Promise<void> {
 	}));
 
 	// Which agents are installed is looked up each time the page loads, is shown again or Pollis gets the
-	// focus back, after an install, and so are the skills of the installed ones. A local command can be used when
-	// its own program is there too (Ollama).
+	// focus back, after an install, and so are the skills of the installed ones.
 	const sendState = async () => {
 		const environment = await terminalEnvironment(terminalInstanceService);
 		const found = (command: string) => findProgram(commandWords(command)[0], environment, fileService);
 		const agents = await Promise.all(CODING_AGENTS.map(async agent => {
 			const installed = !!await found(agent.command);
-			const localProgram = agent.localCommand ? commandWords(agent.localCommand)[0] : undefined;
-			const localMissing = localProgram && localProgram !== commandWords(agent.command)[0] && !await found(agent.localCommand!) ? localProgram : undefined;
 			const skills = installed && await skillsInstalled(agent, fileService, pathService);
-			return { ...agent, installed, localMissing, skills };
+			return { ...agent, installed, skills };
 		}));
 		webviewInput.webview.postMessage({
 			command: 'state',
 			agents,
-			current: configurationService.getValue<string>(AGENT_COMMAND_SETTING)?.trim() ?? '',
+			others: otherAgentEntries(configurationService),
 		});
 	};
 	disposables.add(webviewInput.webview.onDidFocus(() => sendState()));
@@ -102,7 +96,7 @@ async function openCodingAgentPage(accessor: ServicesAccessor): Promise<void> {
 		}
 	}));
 	disposables.add(configurationService.onDidChangeConfiguration(e => {
-		if (e.affectsConfiguration(AGENT_COMMAND_SETTING)) {
+		if (e.affectsConfiguration(OTHER_AGENTS_SETTING)) {
 			sendState();
 		}
 	}));
@@ -110,10 +104,17 @@ async function openCodingAgentPage(accessor: ServicesAccessor): Promise<void> {
 		const message = e.message;
 		if (message.command === 'ready') {
 			sendState();
-		} else if (message.command === 'use' && message.line.trim()) {
-			configurationService.updateValue(AGENT_COMMAND_SETTING, message.line.trim());
-		} else if (message.command === 'routing') {
-			commandService.executeCommand(MODEL_ROUTING_COMMAND_ID);
+		} else if (message.command === 'saveOther' && message.name.trim() && message.line.trim()) {
+			// The row at that index replaced, or a new one added at the end
+			const others = otherAgentEntries(configurationService);
+			others.splice(Math.min(Math.max(message.index, 0), others.length), 1, { name: message.name.trim(), command: message.line.trim() });
+			await configurationService.updateValue(OTHER_AGENTS_SETTING, others);
+		} else if (message.command === 'removeOther') {
+			const others = otherAgentEntries(configurationService);
+			if (message.index >= 0 && message.index < others.length) {
+				others.splice(message.index, 1);
+				await configurationService.updateValue(OTHER_AGENTS_SETTING, others);
+			}
 		} else if (message.command === 'installSkills') {
 			// Claude Code installs its plugin in a terminal: the page shows it when it gets the focus back
 			const agent = CODING_AGENTS.find(agent => agent.label === message.agent);
@@ -121,8 +122,6 @@ async function openCodingAgentPage(accessor: ServicesAccessor): Promise<void> {
 				await instantiationService.invokeFunction(installSkills, agent);
 				sendState();
 			}
-		} else if (message.command === 'runners') {
-			commandService.executeCommand(LOCAL_MODEL_RUNNERS_COMMAND_ID);
 		} else if (message.command === 'link' && CODING_AGENTS.some(item => item.url === message.url)) {
 			commandService.executeCommand(OPEN_LINK_COMMAND_ID, message.url);
 		}
@@ -133,34 +132,23 @@ async function openCodingAgentPage(accessor: ServicesAccessor): Promise<void> {
 function pageHtml(): string {
 	const text = {
 		title: localize('codingAgent.title', "Coding Agents"),
-		intro: localize('codingAgent.intro', "The coding agent Pollis starts in a terminal for every agent task of the Compose menu: New Panels and Toolboxes, Methods, Orchestration and Reports. Pollis gives it a first message that points it at the task's instructions, so any agent that reads files and runs commands will do, on a cloud model or on a local one."),
+		intro: localize('codingAgent.intro', "The agent tasks of the Compose menu, such as Create a Panel or Write a Method, run in a coding agent: Pollis opens a terminal, starts the agent and gives it the task."),
 		agent: localize('codingAgent.agent', "Agent"),
 		command: localize('codingAgent.command', "Command"),
 		status: localize('codingAgent.status', "On This Computer"),
 		installed: localize('codingAgent.installed', "Agent Installed"),
 		installAgent: localize('codingAgent.installAgent', "Install Agent"),
-		localSection: localize('codingAgent.localSection', "Local and Cloud Models"),
-		localSectionNote: localize('codingAgent.localSectionNote', "Ollama, LM Studio: free, private, on this computer"),
-		local: localize('codingAgent.local', "Local:"),
-		use: localize('codingAgent.use', "Use"),
-		inUse: localize('codingAgent.inUse', "In Use"),
 		skillsInstalled: localize('codingAgent.skillsInstalled', "Skills Installed"),
 		installSkills: localize('codingAgent.installSkills', "Install Skills"),
 		updateSkills: localize('codingAgent.updateSkills', "Update"),
 		skillsHint: localize('codingAgent.skillsHint', "The Pollis skills, so that the agent uses them in any folder, even outside Pollis"),
-		installFirst: localize('codingAgent.installFirst', "Install the agent first"),
-		installProgramFirst: localize('codingAgent.installProgramFirst', "Install {0} first"),
-		notInstalled: localize('codingAgent.notInstalled', "{0} isn't installed on this computer"),
-		none: localize('codingAgent.none', "No coding agent is chosen yet: pick one below."),
-		currentIs: localize('codingAgent.currentIs', "In use:"),
-		otherTitle: localize('codingAgent.otherTitle', "Other Agent"),
-		otherIntro: localize('codingAgent.otherIntro', "Any other agent's command line, with {0} where the first message goes, for example: aider --message {0}. Without {0}, the message is copied to the clipboard to paste into the agent.", PROMPT_PLACEHOLDER),
-		routingTitle: localize('codingAgent.routingTitle', "Other Models for Some Tasks"),
-		routingIntro: localize('codingAgent.routingIntro', "Small tasks, like Polish with Agent, can run on a cheaper, faster or local model, and hard ones on a stronger one:"),
-		routingLink: localize('codingAgent.routingLink', "Compose > Orchestration > Model Routing"),
-		runnersTitle: localize('codingAgent.runnersTitle', "Local Model Runners"),
-		runnersIntro: localize('codingAgent.runnersIntro', "A local command needs a runner, such as Ollama or LM Studio, which serves the local models. Which runners are installed, and how each agent reaches each one:"),
-		runnersLink: localize('codingAgent.runnersLink', "Compose > Local Models > Local Model Runners"),
+		otherTitle: localize('codingAgent.otherTitle', "Other Agents"),
+		otherIntro: localize('codingAgent.otherIntro', "Agents of your own: each a name, which Model Tasks and Routing shows, and a command line, with {0} where the first message goes, for example {1}. Without {0}, the message is copied to the clipboard to paste into the agent. The + button adds another.", `<code>${PROMPT_PLACEHOLDER}</code>`, `<code>aider --message ${PROMPT_PLACEHOLDER}</code>`),
+		otherName: localize('codingAgent.otherName', "Name, for example MyAgent"),
+		otherCommand: localize('codingAgent.otherCommand', "Command line"),
+		addOther: localize('codingAgent.addOther', "Add an Agent"),
+		removeOther: localize('codingAgent.removeOther', "Remove"),
+		nameTaken: localize('codingAgent.nameTaken', "There is an agent of that name already"),
 	};
 	return `<!DOCTYPE html>
 <html lang="en">
@@ -177,15 +165,16 @@ function pageHtml(): string {
 		h2 { font-size: 16px; font-weight: 600; margin: 28px 0 4px 0; }
 		.subtitle { font-size: 14px; color: var(--vscode-descriptionForeground); margin: 0 0 16px 0; line-height: 1.4; max-width: 900px; }
 		.hint { color: var(--vscode-descriptionForeground); margin: 0 0 8px 0; line-height: 1.4; max-width: 900px; }
-		.current { margin: 0 0 16px 0; }
 		table { width: 100%; border-collapse: collapse; }
 		th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--vscode-descriptionForeground); text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--vscode-widget-border); }
 		td { vertical-align: top; padding: 10px 8px; border-bottom: 1px solid var(--vscode-widget-border); line-height: 1.4; }
 		tr:hover td { background: var(--vscode-list-hoverBackground); }
-		tr.chosen td { background: var(--vscode-list-inactiveSelectionBackground); }
 		.name { font-size: 14px; font-weight: 600; }
 		.small { font-size: 12px; color: var(--vscode-descriptionForeground); }
 		code, input { font-family: var(--vscode-editor-font-family); font-size: 12px; }
+		/* The commands, in the yellow of the menu paths */
+		code { color: #e8a33d; }
+		body.vscode-light code { color: #a8650d; }
 		.installed { color: var(--vscode-testing-iconPassed); }
 		.warning { color: var(--vscode-editorWarning-foreground); margin-left: 10px; }
 		.link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; }
@@ -196,19 +185,15 @@ function pageHtml(): string {
 		.row { display: flex; gap: 8px; max-width: 700px; }
 		input { flex: 1; padding: 4px 6px; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; }
 		input:focus { outline: 1px solid var(--vscode-focusBorder); }
-		.right { text-align: right; white-space: nowrap; }
-		.uses { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
-		th.agent { width: 30%; } th.command { width: 34%; } th.status { width: 20%; }
-		.section { display: flex; align-items: center; gap: 8px; margin: 24px 0 4px 0; }
-		.section-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
-		.section.local { color: var(--vscode-textLink-foreground); }
-		.section-note { font-size: 12px; color: var(--vscode-descriptionForeground); }
-		.section svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linecap: round; }
-		.rule { flex: 1; height: 1px; background: linear-gradient(to right, var(--vscode-textLink-foreground), transparent); }
+		th.agent { width: 30%; } th.command { width: 40%; }
+		input.otherName { flex: 0 0 200px; }
+		.others { display: flex; flex-direction: column; gap: 8px; }
+		.others .row { align-items: center; }
+		.others .warning { margin-left: 0; font-size: 12px; }
+		button.action.add { font-size: 14px; line-height: 16px; padding: 2px 10px; margin-top: 8px; }
 		table.local td:first-child { box-shadow: inset 3px 0 0 var(--vscode-textLink-foreground); padding-left: 12px; }
-		table.local tr:not(:hover):not(.chosen) td { background: color-mix(in srgb, var(--vscode-textLink-foreground) 5%, transparent); }
+		table.local tr:not(:hover) td { background: color-mix(in srgb, var(--vscode-textLink-foreground) 5%, transparent); }
 		.skills { margin-top: 6px; }
-		.variant { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
 	</style>
 </head>
 <body>
@@ -218,29 +203,22 @@ function pageHtml(): string {
 		${voiceButtonsHtml}
 	</div>
 	<p class="subtitle">${text.intro}</p>
-	<p class="current" id="current"></p>
-	<div class="section local">
-		<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="4" y="4" width="8" height="8" rx="1"/><path d="M6 1v3M10 1v3M6 12v3M10 12v3M1 6h3M1 10h3M12 6h3M12 10h3"/></svg>
-		<span class="section-title">${text.localSection}</span><span class="section-note">${text.localSectionNote}</span><span class="rule"></span>
-	</div>
 	<table class="local">
-		<thead><tr><th class="agent">${text.agent}</th><th class="command">${text.command}</th><th class="status">${text.status}</th><th></th></tr></thead>
+		<thead><tr><th class="agent">${text.agent}</th><th class="command">${text.command}</th><th>${text.status}</th></tr></thead>
 		<tbody id="local"></tbody>
 	</table>
 	<h2>${text.otherTitle}</h2>
 	<p class="hint">${text.otherIntro}</p>
-	<div class="row"><input id="other" spellcheck="false"><button class="action" id="useOther">${text.use}</button></div>
-	<h2>${text.routingTitle}</h2>
-	<p class="hint">${text.routingIntro} <button class="link" id="routing">${text.routingLink}</button></p>
-	<h2>${text.runnersTitle}</h2>
-	<p class="hint">${text.runnersIntro} <button class="link" id="runners">${text.runnersLink}</button></p>
+	<div class="others" id="others"></div>
+	<button class="action add" id="addOther" title="${text.addOther}" aria-label="${text.addOther}">+</button>
 </div>
 <script>
 	const vscode = acquireVsCodeApi();
 	${voiceButtonsScript}
 	const TEXT = ${JSON.stringify(text)};
 	const local = document.getElementById('local');
-	const other = document.getElementById('other');
+	const others = document.getElementById('others');
+	let STATE;
 
 	function element(tag, className, content) {
 		const node = document.createElement(tag);
@@ -250,38 +228,16 @@ function pageHtml(): string {
 	}
 
 	function render(state) {
-		const current = document.getElementById('current');
-		current.textContent = '';
-		if (state.current) {
-			current.appendChild(document.createTextNode(TEXT.currentIs + ' '));
-			current.appendChild(element('code', '', state.current));
-			// The agent in use, when it is one of these, may not be on this computer (yet)
-			for (const agent of state.agents) {
-				const missing = !agent.installed ? agent.label : agent.localCommand === state.current ? agent.localMissing : undefined;
-				if ((agent.command === state.current || agent.localCommand === state.current) && missing) {
-					current.appendChild(element('span', 'warning', TEXT.notInstalled.replace('{0}', missing)));
-				}
-			}
-		} else {
-			current.textContent = TEXT.none;
-		}
+		STATE = state;
 		local.textContent = '';
 		const agents = state.agents.slice().sort((a, b) => a.label.localeCompare(b.label));
 		for (const agent of agents) {
-			const chosen = agent.command === state.current || agent.localCommand === state.current;
-			const row = element('tr', chosen ? 'chosen' : '');
+			const row = element('tr');
 			const name = element('td');
 			name.appendChild(element('div', 'name', agent.label));
 			row.appendChild(name);
 			const command = element('td');
 			command.appendChild(element('code', '', agent.command));
-			if (agent.localCommand) {
-				// The local variant: its own command, chosen with its own Use button below the other
-				const variant = element('div', 'variant small');
-				variant.appendChild(document.createTextNode(TEXT.local + ' '));
-				variant.appendChild(element('code', '', agent.localCommand));
-				command.appendChild(variant);
-			}
 			row.appendChild(command);
 			const status = element('td');
 			// Installed, or a link to install it
@@ -309,37 +265,77 @@ function pageHtml(): string {
 				status.appendChild(skills);
 			}
 			row.appendChild(status);
-			const action = element('td', 'right');
-			const uses = element('div', 'uses');
-			for (const line of agent.localCommand ? [agent.command, agent.localCommand] : [agent.command]) {
-				// An agent, or a local program, not on this computer cannot be chosen
-				const unavailable = !agent.installed ? TEXT.installFirst : line === agent.localCommand && agent.localMissing ? TEXT.installProgramFirst.replace('{0}', agent.localMissing) : '';
-				const use = element('button', 'action', line === state.current ? TEXT.inUse : TEXT.use);
-				use.disabled = line === state.current || !!unavailable;
-				if (unavailable && line !== state.current) {
-					use.title = unavailable;
-				}
-				use.addEventListener('click', () => vscode.postMessage({ command: 'use', line }));
-				uses.appendChild(use);
-			}
-			action.appendChild(uses);
-			row.appendChild(action);
 			local.appendChild(row);
 		}
-		// The field shows the command in use when it is none of the listed agents
-		if (document.activeElement !== other) {
-			other.value = state.agents.some(agent => agent.command === state.current || agent.localCommand === state.current) ? '' : state.current;
+		// The agents of your own; rows being edited, or added and not saved yet, are kept as they are
+		if (!others.querySelector('[data-edited]') && !others.contains(document.activeElement)) {
+			others.textContent = '';
+			state.others.forEach((other, index) => otherRow(index, other.name, other.command));
+			// With none yet, an empty row to fill in
+			if (!others.children.length) {
+				otherRow(0, '', '');
+			}
 		}
 	}
 
-	document.getElementById('useOther').addEventListener('click', () => {
-		if (other.value.trim()) {
-			vscode.postMessage({ command: 'use', line: other.value });
+	/** A row of an agent of your own: its name, its command line and Remove. */
+	function otherRow(index, nameValue, commandValue, added) {
+		const block = element('div');
+		const row = element('div', 'row');
+		const name = element('input', 'otherName');
+		name.spellcheck = false;
+		name.placeholder = TEXT.otherName;
+		name.value = nameValue;
+		const command = element('input');
+		command.spellcheck = false;
+		command.placeholder = TEXT.otherCommand;
+		command.value = commandValue;
+		const remove = element('button', 'link small', TEXT.removeOther);
+		const taken = element('div', 'warning', TEXT.nameTaken);
+		taken.hidden = true;
+		if (added) { block.dataset.edited = 'true'; }
+		row.appendChild(name);
+		row.appendChild(command);
+		row.appendChild(remove);
+		block.appendChild(row);
+		block.appendChild(taken);
+		others.appendChild(block);
+
+		// A name is needed, and one no other agent has
+		const nameTaken = () => {
+			const label = name.value.trim().toLowerCase();
+			return STATE.agents.some(agent => agent.label.toLowerCase() === label)
+				|| STATE.others.some((other, otherIndex) => otherIndex !== index && other.name.toLowerCase() === label);
+		};
+		const update = () => {
+			const ready = !!name.value.trim() && !!command.value.trim() && !nameTaken();
+			taken.hidden = !name.value.trim() || !nameTaken();
+			return ready;
+		};
+		for (const field of [name, command]) {
+			field.addEventListener('input', () => { block.dataset.edited = 'true'; update(); });
+			// Saved once both are filled, when the field is left or Enter pressed
+			field.addEventListener('change', () => {
+				if (update()) {
+					delete block.dataset.edited;
+					vscode.postMessage({ command: 'saveOther', index, name: name.value, line: command.value });
+				}
+			});
+			field.addEventListener('keydown', e => { if (e.key === 'Enter') { field.blur(); } });
 		}
+		remove.addEventListener('click', () => {
+			block.remove();
+			if (index < STATE.others.length) {
+				vscode.postMessage({ command: 'removeOther', index });
+			}
+		});
+		update();
+		return name;
+	}
+
+	document.getElementById('addOther').addEventListener('click', () => {
+		otherRow(others.querySelectorAll('.otherName').length, '', '', true).focus();
 	});
-	other.addEventListener('keydown', e => { if (e.key === 'Enter') { document.getElementById('useOther').click(); } });
-	document.getElementById('routing').addEventListener('click', () => vscode.postMessage({ command: 'routing' }));
-	document.getElementById('runners').addEventListener('click', () => vscode.postMessage({ command: 'runners' }));
 
 	window.addEventListener('message', event => {
 		if (event.data.command === 'state') {

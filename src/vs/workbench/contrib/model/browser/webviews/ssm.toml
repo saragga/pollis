@@ -88,6 +88,25 @@ name = "Decision Guide"
 file = "ssm/decision-guide.md"
 bundled = true
 
+[[wikis]]
+separator = true
+label = "Filters"
+
+[[wikis]]
+name = "Kalman Filter"
+file = "ssm/kalman-filter.md"
+bundled = true
+
+[[wikis]]
+name = "Extended and Unscented"
+file = "ssm/nonlinear-kalman.md"
+bundled = true
+
+[[wikis]]
+name = "Particle Filters"
+file = "ssm/particle-filters.md"
+bundled = true
+
 [[references]]
 separator = true
 label = "Textbooks"
@@ -506,14 +525,14 @@ using LowLevelParticleFilters, Plots  # filter + plotting
 
 sol_f = forward_trajectory({{model}}, {{data}}.u, {{data}}.y)  # forward filtered estimates
 {{?model!=pf|rbf}} xf = reduce(hcat, sol_f.xt)  # filtered x(t|t), nx x T
-{{?model!=pf|rbf}} xs = reduce(hcat, smooth(sol_f, {{model}}).xT)  # RTS smoother x(t|T), nx x T
+{{?model!=pf|rbf}} xsm = reduce(hcat, smooth(sol_f, {{model}}).xT)  # RTS smoother x(t|T), nx x T
 {{?model=pf|rbf}} xf = transpose(mean_trajectory(sol_f))  # filtered particle means, nx x T
 {{?model=pf}} xb, _ = smooth({{model}}, 100, {{data}}.u, {{data}}.y)  # forward-filter backward-simulation, 100 trajectories
-{{?model=pf}} xs = LowLevelParticleFilters.smoothed_mean(xb)  # smoothed means, nx x T
+{{?model=pf}} xsm = LowLevelParticleFilters.smoothed_mean(xb)  # smoothed means, nx x T
 {{?model=rbf}} # The package has no RBPF smoother: its particle smoother scores whole-state transitions, which the marginalised xl does not have
 
 plot(transpose(xf), label="Filtered", color=1)  # filtered
-{{?model!=rbf}} plot!(transpose(xs), label="Smoothed", color=2, ls=:dash)  # smoothed: uses future data, so less noisy (offline only)
+{{?model!=rbf}} plot!(transpose(xsm), label="Smoothed", color=2, ls=:dash)  # smoothed: uses future data, so less noisy (offline only)
 '''
 
 [[actionGroups]]
@@ -523,6 +542,7 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "innovations"
 label = "Innovation Sequence"
+models = ["kf", "ekf", "ukf"]
 desc = "Check innovations for whiteness: they should be uncorrelated if the model is correct"
 code = '''
 using LowLevelParticleFilters, LinearAlgebra, Plots, StatsBase  # filter + cholesky + plotting + autocor
@@ -542,7 +562,8 @@ desc = "Compute the log-likelihood of the observations under the model"
 code = '''
 using LowLevelParticleFilters  # filter
 
-ll = loglik({{model}}, {{data}}.u, {{data}}.y)  # log p(y | theta), higher is better
+{{?model!=rbf}} ll = loglik({{model}}, {{data}}.u, {{data}}.y)  # log p(y | theta), higher is better
+{{?model=rbf}} ll = forward_trajectory({{model}}, {{data}}.u, {{data}}.y).ll  # log p(y | theta), higher is better (loglik does not accept an RBPF)
 println("Log-likelihood: ", ll)
 '''
 
@@ -581,24 +602,33 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "compare-filters"
 label = "Compare Filters"
-desc = "Run KF, EKF, and UKF on the same data and compare estimates"
+models = ["kf", "ekf", "ukf", "pf"]
+desc = "Run several filters on the same model and data and compare their estimates: on a linear model the Kalman, extended and unscented filters agree; on a nonlinear one they part ways"
 code = '''
-using LowLevelParticleFilters, Plots  # filter + plotting
+using LowLevelParticleFilters, Distributions, Plots, Statistics  # filters + MvNormal + plotting + mean
 
-# needs kf, ekf and ukf built from the same Q, R and x0 (run those panels' code first)
-sol_kf  = forward_trajectory(kf,  {{data}}.u, {{data}}.y)  # Kalman filter
-sol_ekf = forward_trajectory(ekf, {{data}}.u, {{data}}.y)  # Extended Kalman filter
-sol_ukf = forward_trajectory(ukf, {{data}}.u, {{data}}.y)  # Unscented Kalman filter
+{{?model=kf}} lin_dyn(x, u, p, t) = F * x + B * u  # the Kalman filter's linear model, as functions for the nonlinear filters
+{{?model=kf}} lin_meas(x, u, p, t) = H * x
+{{?model=kf}} filters = (KF = kf, EKF = ExtendedKalmanFilter(lin_dyn, lin_meas, Q, R, x0; nu), UKF = UnscentedKalmanFilter(lin_dyn, lin_meas, Q, R, x0; nu, ny))  # on a linear model all three are exact
+{{?model=pf}} Q, R = cov(noise_dist), cov(meas_dist)  # the particle filter's noise covariances
+{{?model!=kf}} filters = (EKF = ExtendedKalmanFilter(dynamics, measurement, Q, R, x0; nu), UKF = UnscentedKalmanFilter(dynamics, measurement, Q, R, x0; nu, ny),
+{{?model!=kf}}            PF = ParticleFilter(1000, dynamics, measurement, MvNormal(zeros(nx), Q), MvNormal(zeros(ny), R), x0))  # the same model, three filters
+sols = map(f -> forward_trajectory(f, {{data}}.u, {{data}}.y), filters)
+x1(s) = hasproperty(s, :xt) ? [x[1] for x in s.xt] : mean_trajectory(s)[:, 1]  # filtered estimate of the first state
 
-plot(transpose(reduce(hcat, sol_kf.xt)), label="KF", color=1)  # filtered estimates x(t|t)
-plot!(transpose(reduce(hcat, sol_ekf.xt)), label="EKF", color=2)
-plot!(transpose(reduce(hcat, sol_ukf.xt)), label="UKF", color=3)
-(kf = sol_kf.ll, ekf = sol_ekf.ll, ukf = sol_ukf.ll)  # log-likelihoods
+plt = plot(xlabel="t", ylabel="x1", title="Filtered estimates")
+{{?model!=kf}} {{?data=obs}} plot!(plt, first.(xs), label="True state", color=:black, lw=2)  # known here, since the data were simulated
+foreach(((name, s),) -> plot!(plt, x1(s), label=string(name)), pairs(sols))
+display(plt)
+{{?model=kf}} (log_likelihood = map(s -> round(s.ll, digits=3), sols),)  # the same for all three
+{{?model!=kf}} {{?data!=obs}} (log_likelihood = map(s -> round(s.ll, digits=2), sols),)  # higher is better (the particle filter's is a random estimate)
+{{?model!=kf}} {{?data=obs}} (log_likelihood = map(s -> round(s.ll, digits=2), sols), rmse_x1 = map(s -> round(sqrt(mean(abs2, x1(s) .- first.(xs))), digits=2), sols))  # error against the true state
 '''
 
 [[actionGroups.actions]]
 id = "particle-count"
 label = "Particle Count"
+models = ["pf", "rbf"]
 desc = "Vary number of particles and compare accuracy vs. computation time"
 code = '''
 using LowLevelParticleFilters, BenchmarkTools, Statistics  # filter + benchmarks + mean/std
@@ -606,8 +636,10 @@ using LowLevelParticleFilters, BenchmarkTools, Statistics  # filter + benchmarks
 for N in [100, 500, 1000, 5000]  # sweep particle counts
 {{?model!=rbf}}     pf_n = ParticleFilter(N, dynamics, measurement, noise_dist, meas_dist, x0)  # build filter
 {{?model=rbf}}     pf_n = RBPF(N, kf_l, fn, mm, R1n, d0n; An, nu, names = signals)  # build filter
-    lls = [loglik(pf_n, {{data}}.u, {{data}}.y) for _ in 1:5]  # the estimate is random: its spread shrinks with N
-    t  = @belapsed loglik($pf_n, $({{data}}.u), $({{data}}.y))  # timing
+{{?model!=rbf}}     lls = [loglik(pf_n, {{data}}.u, {{data}}.y) for _ in 1:5]  # the estimate is random: its spread shrinks with N
+{{?model!=rbf}}     t  = @belapsed loglik($pf_n, $({{data}}.u), $({{data}}.y))  # timing
+{{?model=rbf}}     lls = [forward_trajectory(pf_n, {{data}}.u, {{data}}.y).ll for _ in 1:5]  # the estimate is random: its spread shrinks with N (loglik does not accept an RBPF)
+{{?model=rbf}}     t  = @belapsed forward_trajectory($pf_n, $({{data}}.u), $({{data}}.y))  # timing
     println("N=$N: ll=$(round(mean(lls), digits=2)) +/- $(round(std(lls), digits=2)), t=$(round(t*1000, digits=1))ms")
 end
 '''
@@ -637,12 +669,13 @@ plot(transpose(vars), label=reshape(["Var x$i" for i in 1:size(vars, 1)], 1, :),
 [[actionGroups.actions]]
 id = "smoothed-states"
 label = "Smoothed States"
-desc = "Kalman smoother provides lower-variance estimates using future data"
+models = ["kf", "ekf", "ukf"]
+desc = "The Rauch-Tung-Striebel smoother provides lower-variance estimates using future data"
 code = '''
 using LowLevelParticleFilters, LinearAlgebra, Plots  # filter + diag + plotting
 
-sol_f = forward_trajectory(kf, {{data}}.u, {{data}}.y)  # forward pass (linear Kalman filter)
-sol_s = smooth(sol_f, kf)  # Rauch-Tung-Striebel backward pass
+sol_f = forward_trajectory({{model}}, {{data}}.u, {{data}}.y)  # forward pass
+sol_s = smooth(sol_f, {{model}})  # Rauch-Tung-Striebel backward pass
 
 var_f = reduce(hcat, diag.(sol_f.Rt))  # filtered variances
 var_s = reduce(hcat, diag.(sol_s.RT))  # smoothed variances: never larger than the filtered ones

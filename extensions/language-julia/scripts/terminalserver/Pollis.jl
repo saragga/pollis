@@ -48,6 +48,28 @@ function add(Pkg::Module, to_add, forks)
 	Pkg.add([!(name in forks) && (isempty(link) || registered(name)) ? Pkg.PackageSpec(name = name) : Pkg.PackageSpec(url = link) for (name, link) in to_add])
 end
 
+"""
+    Pollis.llama_server(model; embeddings = false, thinking = false)
+
+The address of the OpenAI-compatible API (`http://127.0.0.1:<port>/v1`) of the llama-server of
+llama.cpp, which Pollis ships, running `model` on this computer: started for it if needed, and
+answered once the model is loaded. `model` is the path of a GGUF file or `hf:owner/repo/file.gguf`,
+a file on Hugging Face, downloaded into `~/.pollis/models` the first time. `embeddings = true` runs
+an embedding model; thinking is off unless `thinking = true`, whatever the model.
+
+```julia
+url = Pollis.llama_server("hf:unsloth/Qwen3.5-0.8B-GGUF/Qwen3.5-0.8B-Q4_K_M.gguf")
+```
+"""
+function llama_server(model::AbstractString; embeddings::Bool = false, thinking::Bool = false)
+	# The connection to Pollis of this REPL or notebook, through which Pollis starts the server.
+	server = isdefined(Main, :VSCodeServer) ? Main.VSCodeServer : nothing
+	(server === nothing || server.conn_endpoint[] === nothing) && error("Pollis.llama_server runs only in the Julia REPL or a notebook of Pollis.")
+	answer = server.JSONRPC.send_request(server.conn_endpoint[], "pollis/llamaServer", Dict("model" => model, "embeddings" => embeddings, "thinking" => thinking))
+	haskey(answer, "error") && error(answer["error"])
+	return answer["url"]::String
+end
+
 const REPL_ID = Base.PkgId(Base.UUID("3fa0cd96-eef1-5676-8a61-b3b8758bbffb"), "REPL")
 
 """

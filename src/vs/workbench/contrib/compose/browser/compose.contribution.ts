@@ -21,7 +21,7 @@ import './pollisUpdate.js';
 import './vignettesPage.js';
 import './toolboxDocumentsPage.js';
 import './panelWikisPage.js';
-import { LOCAL_MODEL_RUNNERS_COMMAND_ID } from './localModelRunnersPage.js';
+import { MODELS_INSTALLED_COMMAND_ID } from './modelsInstalledPage.js';
 import './mcpServersPage.js';
 import { MCP_SERVERS_COMMAND_ID } from '../common/mcpServers.js';
 import { MODEL_ROUTING_COMMAND_ID } from './modelRouting.js';
@@ -249,24 +249,24 @@ MenuRegistry.appendMenuItem(NewPanelsMenu, {
 
 // ==============================================================
 // SUBMENU: Local Models, the models to download (the panels of explore.contribution.ts) and the
-// runners that serve them on this computer (localModelRunnersPage.ts)
+// models on this computer (modelsInstalledPage.ts)
 // ==============================================================
 
 MenuRegistry.appendMenuItem(LocalModelsMenu, {
 	group: '1_models',
-	command: { id: 'chiara.explore.hfm', title: localize('ds.hf', "Hugging Face Models") },
+	command: { id: 'chiara.explore.hfm', title: localize('ds.hf', "Get Models from Hugging Face") },
 	order: 1,
 }); // HuggingFaceHub.jl, https://huggingface.co/models
 
 MenuRegistry.appendMenuItem(LocalModelsMenu, {
 	group: '1_models',
-	command: { id: 'chiara.explore.kgm', title: localize('ds.km', "Kaggle Models") },
+	command: { id: 'chiara.explore.kgm', title: localize('ds.km', "Get Models from Kaggle") },
 	order: 2,
 }); // https://www.kaggle.com/models
 
 MenuRegistry.appendMenuItem(LocalModelsMenu, {
 	group: '1_models',
-	command: { id: LOCAL_MODEL_RUNNERS_COMMAND_ID, title: localize('localRunners.menu', "Local Model Runners") },
+	command: { id: MODELS_INSTALLED_COMMAND_ID, title: localize('modelsInstalled.menu', "Models Installed") },
 	order: 3,
 });
 
@@ -372,10 +372,10 @@ MenuRegistry.appendMenuItem(CorrectnessMenu, {
 
 // ==============================================================
 
-// Model Routing: the tier, and so the model, each agent task runs on, see modelRouting.ts
+// Model Tasks and Routing: the tier, and so the model, each agent task runs on, see modelRouting.ts
 MenuRegistry.appendMenuItem(OrchestrationMenu, {
 	group: '0_routing',
-	command: { id: MODEL_ROUTING_COMMAND_ID, title: localize('orchestration.modelRouting', "Model Routing"), icon: agentIcon },
+	command: { id: MODEL_ROUTING_COMMAND_ID, title: localize('orchestration.modelRouting', "Model Tasks and Routing") },
 	order: 1,
 });
 
@@ -387,9 +387,9 @@ MenuRegistry.appendMenuItem(OrchestrationMenu, {
 // Correctness Tests: Julia, R and Python check one another.
 // Horse Races > Add a Language... is Bring Your Own Language: Fortran, C and Rust use the same adapters.
 const composeItems = [
-	{ menu: OrchestrationMenu, id: 'pollis.orchestration.writerChecker', title: localize('orchestration.writerChecker', "Writer and Checker..."), group: '1_patterns', order: 1, agent: true },
-	{ menu: OrchestrationMenu, id: 'pollis.orchestration.twoTranscriptions', title: localize('orchestration.twoTranscriptions', "Two Independent Transcriptions..."), group: '1_patterns', order: 2, agent: true },
-	{ menu: OrchestrationMenu, id: 'pollis.orchestration.race', title: localize('orchestration.race', "Race..."), group: '1_patterns', order: 3, agent: true },
+	{ menu: OrchestrationMenu, id: 'pollis.orchestration.writerChecker', title: localize('orchestration.writerChecker', "Writer and Checker..."), group: '1_patterns', order: 1 },
+	{ menu: OrchestrationMenu, id: 'pollis.orchestration.twoTranscriptions', title: localize('orchestration.twoTranscriptions', "Two Independent Transcriptions..."), group: '1_patterns', order: 2 },
+	{ menu: OrchestrationMenu, id: 'pollis.orchestration.race', title: localize('orchestration.race', "Race..."), group: '1_patterns', order: 3 },
 	{ menu: CorrectnessMenu, id: 'chiara.statistics.comp_co', title: localize('comp.co', "Check Results Across Languages..."), group: '1_check', order: 1 },
 	{ menu: CorrectnessMenu, id: 'chiara.statistics.comp_fx', title: localize('comp.fx', "Settle a Disagreement..."), group: '1_check', order: 2 },
 	{ menu: ComparisonsMenu, id: 'chiara.statistics.comp_pr', title: localize('comp.pr', "Run a Speed Race..."), group: '1_race', order: 1 },
@@ -429,7 +429,7 @@ for (const item of composeItems) {
 	registerNotYetImplemented(item.id, item.title);
 	MenuRegistry.appendMenuItem(item.menu, {
 		group: item.group,
-		command: { id: item.id, title: item.title, icon: item.agent ? agentIcon : undefined },
+		command: { id: item.id, title: item.title },
 		order: item.order,
 	});
 }

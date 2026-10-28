@@ -415,12 +415,12 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "parameters"
 label = "Parameter Estimates"
-desc = "Copula parameters with standard errors, and the fitted marginal distributions"
+desc = "Copula and marginal parameters with bootstrap standard errors (margins and copula refitted on every resample), and the fitted marginal distributions"
 code = '''
-using StatsBase
+using Copulas, StatsBase
 {{?family=EmpiricalCopula|BetaCopula|BernsteinCopula|CheckerboardCopula|EmpiricalEVCopula}} error("Empirical copulas have no parameters: choose a parametric family")
-se = try stderror(D) catch; fill(NaN, dof(D)) end
-foreach((n, b, s) -> println(rpad(n, 16), round(b, digits=4), "   (se ", round(s, digits=4), ")"), coefnames(D), coef(D), se)
+I = infer(D)  # for a Sklar distribution, Copulas bootstraps the whole fit: margins and copula refitted on each resample
+foreach((n, b, s) -> println(rpad(n, 16), round(b, digits=4), "   (se ", round(s, digits=4), ")"), coefnames(D), coef(D), stderror(I))
 foreach((i, m) -> println("Marginal $i: ", m), 1:length(marginals), marginals)
 '''
 

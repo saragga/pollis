@@ -2,6 +2,9 @@
 // Help > Documentation from their LaTeX sources, the app's docs/ folder, into ~/.pollis/documents, where Help opens
 // them (scripts/terminalserver/compile_documents.jl). While it compiles, the status bar says so, with how many
 // documents are ready; when nothing has changed since the last compile, it quits after a second or two, unseen.
+// The command `language-julia.pollisCompileDocuments`, for Help > Documentation > Compile the Documents Now, runs the
+// same compile at once, or waits for the one running; it answers {total, failed}, without `total` when every document
+// was up to date, or {error}.
 // The command `language-julia.pollisCompileVignette`, with {source, name, pdf}, compiles a package's vignette for
 // Help > Documentation > Packages (scripts/terminalserver/compile_vignette.jl): from the vignette/ folder of an
 // installed package, or from its repository on GitHub, into the file `pdf`; it answers {pdf}, or {error}. It compiles the
@@ -16,6 +19,9 @@ import { ExecutableFeature, JuliaExecutable, JuliaNotFoundError } from './execut
 import { getPackageEnvironment } from './interactive/repl'
 
 let g_started = false
+let g_compiling: Promise<DocumentsAnswer> | undefined
+
+type DocumentsAnswer = { total?: number; failed?: number; error?: string }
 
 export function compileDocumentsInBackground(
     context: vscode.ExtensionContext,
@@ -26,51 +32,73 @@ export function compileDocumentsInBackground(
         return
     }
     g_started = true
-    const script = path.join(context.extensionPath, 'scripts', 'terminalserver', 'compile_documents.jl')
-    const julia = child_process.spawn(
-        juliaExecutable.command,
-        [...juliaExecutable.args, '--startup-file=no', '--history-file=no', script, path.join(vscode.env.appRoot, 'docs')],
-        { env: { ...process.env, ...env }, stdio: ['ignore', 'pipe', 'ignore'], windowsHide: true }
-    )
-    try {
-        // Inherited by Tectonic, which the script runs for each document
-        if (julia.pid !== undefined) {
-            os.setPriority(julia.pid, os.constants.priority.PRIORITY_BELOW_NORMAL)
-        }
-    } catch {
-        // The process has quit already, or the system does not allow it.
-    }
-    let report: ((message: string) => void) | undefined
-    let finish: (() => void) | undefined
-    // The status bar's item, from the first line the script writes until it quits
-    const show = () => {
-        if (!report) {
-            report = () => {}
-            vscode.window.withProgress({ location: vscode.ProgressLocation.Window, title: 'Compiling the documentation' }, (progress) => {
-                report = (message) => progress.report({ message })
-                return new Promise<void>((resolve) => (finish = resolve))
-            })
-        }
-    }
-    readline.createInterface({ input: julia.stdout }).on('line', (line) => {
-        let message: { [key: string]: unknown }
+    compileDocuments(context, juliaExecutable, env)
+}
+
+/** Runs compile_documents.jl, or answers with the run already going: how many documents it compiled and how many failed. */
+function compileDocuments(
+    context: vscode.ExtensionContext,
+    juliaExecutable: JuliaExecutable,
+    env: { [key: string]: string }
+): Promise<DocumentsAnswer> {
+    g_compiling ??= new Promise<DocumentsAnswer>((resolve) => {
+        const script = path.join(context.extensionPath, 'scripts', 'terminalserver', 'compile_documents.jl')
+        const julia = child_process.spawn(
+            juliaExecutable.command,
+            [...juliaExecutable.args, '--startup-file=no', '--history-file=no', script, path.join(vscode.env.appRoot, 'docs')],
+            { env: { ...process.env, ...env }, stdio: ['ignore', 'pipe', 'ignore'], windowsHide: true }
+        )
         try {
-            message = JSON.parse(line)
+            // Inherited by Tectonic, which the script runs for each document
+            if (julia.pid !== undefined) {
+                os.setPriority(julia.pid, os.constants.priority.PRIORITY_BELOW_NORMAL)
+            }
         } catch {
-            return
+            // The process has quit already, or the system does not allow it.
         }
-        show()
-        if (message.status === 'installing') {
-            report?.('installing PollisTeX')
-        } else if (typeof message.total === 'number') {
-            report?.(`${typeof message.done === 'number' ? message.done : 0} of ${message.total}`)
-        } else if (typeof message.failed === 'string') {
-            console.error(`[pollis] could not compile ${message.failed}; its log is in ~/.pollis/documents`)
+        const answer: DocumentsAnswer = {}
+        let report: ((message: string) => void) | undefined
+        let finish: (() => void) | undefined
+        // The status bar's item, from the first line the script writes until it quits
+        const show = () => {
+            if (!report) {
+                report = () => {}
+                vscode.window.withProgress({ location: vscode.ProgressLocation.Window, title: 'Compiling the documentation' }, (progress) => {
+                    report = (message) => progress.report({ message })
+                    return new Promise<void>((resolve) => (finish = resolve))
+                })
+            }
         }
+        readline.createInterface({ input: julia.stdout }).on('line', (line) => {
+            let message: { [key: string]: unknown }
+            try {
+                message = JSON.parse(line)
+            } catch {
+                return
+            }
+            show()
+            if (message.status === 'installing') {
+                report?.('installing PollisTeX')
+            } else if (typeof message.total === 'number') {
+                answer.total = message.total
+                report?.(`${typeof message.done === 'number' ? message.done : 0} of ${message.total}`)
+            } else if (typeof message.failed === 'string') {
+                answer.failed = (answer.failed ?? 0) + 1
+                console.error(`[pollis] could not compile ${message.failed}; its log is in ~/.pollis/documents`)
+            }
+        })
+        julia.on('error', (err) => {
+            console.error('[pollis] could not compile the documentation', err)
+            answer.error = 'failed'
+        })
+        julia.on('close', () => {
+            finish?.()
+            g_compiling = undefined
+            resolve(answer)
+        })
+        context.subscriptions.push({ dispose: () => julia.kill() })
     })
-    julia.on('error', (err) => console.error('[pollis] could not compile the documentation', err))
-    julia.on('exit', () => finish?.())
-    context.subscriptions.push({ dispose: () => julia.kill() })
+    return g_compiling
 }
 
 type VignetteRequest = { source: string; name: string; pdf: string }
@@ -139,6 +167,17 @@ function compileVignette(
 export function activate(context: vscode.ExtensionContext, executableFeature: ExecutableFeature) {
     const compiling = new Map<string, Promise<VignetteAnswer>>()
     context.subscriptions.push(
+        vscode.commands.registerCommand('language-julia.pollisCompileDocuments', async (): Promise<DocumentsAnswer> => {
+            let juliaExecutable: JuliaExecutable
+            try {
+                juliaExecutable = await executableFeature.getExecutable()
+            } catch (err) {
+                return { error: err instanceof JuliaNotFoundError ? 'noJulia' : 'failed' }
+            }
+            // Compiled now, so not again when the REPL starts
+            g_started = true
+            return compileDocuments(context, juliaExecutable, getPackageEnvironment())
+        }),
         vscode.commands.registerCommand('language-julia.pollisCompileVignette', (request: VignetteRequest) =>
             compileVignette(context, executableFeature, compiling, request)
         )

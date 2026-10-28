@@ -21,6 +21,7 @@ import { generatePipeName, getCustomEnvironmentVariables, inferJuliaNumThreads }
 import { JuliaNotebookFeature } from './notebookFeature'
 import { notifyTypeProgress, ProgressBars } from '../interactive/progress'
 import { DebugConfigTreeProvider } from '../debugger/debugConfig'
+import { answerLlamaServerRequests } from '../pollisLlamaServer'
 
 const notifyTypeDisplay = new NotificationType<{
     items: { mimetype: string; data: string }[]
@@ -315,6 +316,7 @@ export class JuliaKernel {
                     }
                 })
 
+                answerLlamaServerRequests(this._msgConnection)
                 this._msgConnection.listen()
 
                 this._onConnected.fire(null)

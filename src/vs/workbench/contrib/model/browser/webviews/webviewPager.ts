@@ -106,3 +106,33 @@ export function stickyHeadScript(): string {
 		place();
 	}`;
 }
+
+/** The tooltip of a heading that sorts a table's rows, the same on every page unless the column needs its own. */
+export function sortHint(): string {
+	return localize('webviewPager.sortHint', "Sort by this column; click again to reverse");
+}
+
+/**
+ * CSS of the headings that sort a table's rows when clicked, the same on every page: the heading sorted by, and the one
+ * under the mouse, in the foreground colour, its arrow after its label. The arrows' look is changed here for all.
+ */
+export const sortHeadingsCss = `th.sortable { cursor: pointer; user-select: none; }
+th.sortable:hover, th.sorted { color: var(--vscode-foreground); }
+th .sortArrow { white-space: nowrap; }`;
+
+/**
+ * The script of the headings that sort a table: `setSortArrow(heading, label, sorted, descending)` writes the label of
+ * a heading, with the arrow of its order when the rows are sorted by it: up from the smallest, down from the largest.
+ */
+export function sortHeadingsScript(): string {
+	return `function setSortArrow(heading, label, sorted, descending) {
+		heading.classList.toggle('sorted', sorted);
+		heading.textContent = label;
+		if (sorted) {
+			const arrow = document.createElement('span');
+			arrow.className = 'sortArrow';
+			arrow.textContent = '\\u00a0' + (descending ? '\\u2193' : '\\u2191');
+			heading.appendChild(arrow);
+		}
+	}`;
+}

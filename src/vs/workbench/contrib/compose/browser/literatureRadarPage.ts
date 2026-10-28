@@ -30,7 +30,7 @@ import { API_PROVIDERS, ProviderRequests } from '../../model/browser/common/apiP
 import { readReferences, ReferenceFormat } from '../../model/browser/common/referenceImport.js';
 import { findReference, ICitationCount, IReference, IReferenceVersion, nameAsReference, ReferenceLibrary, referenceBibTeX } from '../../model/browser/common/referenceLibrary.js';
 import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
-import { FEWEST_ROWS, rowsChoiceCss, rowsChoiceScript, stickyHeadCss, storedRows, storeRows } from '../../model/browser/webviews/webviewPager.js';
+import { FEWEST_ROWS, rowsChoiceCss, rowsChoiceScript, sortHeadingsCss, sortHeadingsScript, sortHint, stickyHeadCss, storedRows, storeRows } from '../../model/browser/webviews/webviewPager.js';
 import { describeJournal, IJournalScoresService } from '../../monitor/browser/journalScores.js';
 import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
 import { ISnowballArticle, SNOWBALL_SEARCH_COMMAND_ID } from '../common/snowballSearch.js';
@@ -1897,6 +1897,7 @@ function pageHtml(mode: PageMode, rows: number): string {
 		noResults: localize('discover.noResults', "Nothing found."),
 		pick: localize('discover.pick', "Select"),
 		year: localize('discover.year', "Year"),
+		sortHint: sortHint(),
 		article: localize('discover.article', "Article"),
 		journal: localize('discover.journal', "Journal"),
 		openAlex: localize('discover.openAlexColumns', "OpenAlex"),
@@ -2109,6 +2110,7 @@ function pageHtml(mode: PageMode, rows: number): string {
 		${voiceButtonsCss}
 		${rowsChoiceCss}
 		${stickyHeadCss}
+		${sortHeadingsCss}
 		* { box-sizing: border-box; }
 		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
 		.container { max-width: 1200px; margin: 0 auto; padding: 24px; }
@@ -2179,9 +2181,7 @@ function pageHtml(mode: PageMode, rows: number): string {
 		@media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
 		table { width: 100%; border-collapse: collapse; font-size: 12px; }
 		th { text-align: left; font-weight: normal; color: var(--vscode-descriptionForeground); padding: 4px 8px; border-bottom: 1px solid var(--vscode-widget-border); white-space: nowrap; }
-		th.sortable { cursor: pointer; }
 		th.group { text-align: center; color: var(--vscode-foreground); }
-		th.sortable:hover { color: var(--vscode-foreground); }
 		th.number, td.number { text-align: right; }
 		/* The counts' headings in two lines when the page is narrow, rather than the articles' titles in many */
 		#resultsTable th.number { white-space: normal; }
@@ -2294,6 +2294,7 @@ ${mode === 'import' ? importForm : searchForm}
 	let rows = ${rows};
 	let page = 0;
 	${rowsChoiceScript()}
+	${sortHeadingsScript()}
 	// The abstracts asked for, by article id: a list, or undefined while asking; those opened; the topic searched
 	const abstracts = new Map();
 	const opened = new Set();
@@ -2635,9 +2636,11 @@ ${mode === 'import' ? importForm : searchForm}
 			}
 			th.className = (column.sortable ? 'sortable' : '') + (column.number ? ' number' : '') + (unavailable.includes(column.index) ? ' unavailable' : '');
 			const sorted = sort.column === column.id || sort.column === 'cited' && (column.id === 'citedOpenAlex' || column.id === 'citedSemanticScholar');
-			th.textContent = format(column.label, recentYears) + (sorted ? (sort.descending ? '\\u00a0\\u2193' : '\\u00a0\\u2191') : '');
+			setSortArrow(th, format(column.label, recentYears), sorted, sort.descending);
 			if (column.hint) {
 				th.title = format(column.hint, recentYears);
+			} else if (column.sortable) {
+				th.title = TEXT.sortHint;
 			}
 			if (column.sortable) {
 				th.addEventListener('click', () => {

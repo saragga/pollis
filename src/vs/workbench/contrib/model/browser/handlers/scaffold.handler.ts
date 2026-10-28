@@ -29,6 +29,7 @@ import { CellEditType, CellKind } from '../../../notebook/common/notebookCommon.
 import { openWikiByFile, openNotebookByFile, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createCustomCopyWiring, createReferenceWiring, createVideoWiring, createApiKeyWiring, IApiKeyProvider, sendToJuliaRepl, withExampleFirst } from './model.handler.js';
 import { hasKey } from '../../../../../base/common/types.js';
 import { ADD_ALERT_COMMAND_ID } from '../../../monitor/browser/alertsPage.js';
+import { localize } from '../../../../../nls.js';
 
 /** Messages a scaffold panel sends that are not handled by the shared wirings of model.handler.ts. */
 type ScaffoldWebviewMessage =
@@ -39,6 +40,7 @@ type ScaffoldWebviewMessage =
 	| { command: 'colorize'; code: string; target?: string }
 	| { command: 'installPackages' }
 	| { command: 'addAlert'; symbol: string; kind: 'quote' | 'filings' | 'fred' | 'ecb' | 'imf' | 'worldBank' }
+	| { command: 'chooseModelFile'; input: string; kind: 'chat' | 'embedding'; value: string }
 	| { command: 'setApiKey' }
 	| { command: 'clearApiKey' };
 
@@ -176,6 +178,19 @@ export function registerScaffoldWebviewHandlers(
 			case 'addAlert':
 				await commandService.executeCommand(ADD_ALERT_COMMAND_ID, msg.symbol, msg.kind === 'quote' ? undefined : msg.kind);
 				break;
+			case 'chooseModelFile': {
+				// The picker of the Julia extension (pollisModels.ts): a path, an hf: file, or nothing when dismissed
+				let value: string | undefined;
+				try {
+					value = await commandService.executeCommand<string>('language-julia.pollisChooseModel', { kind: msg.kind, value: msg.value });
+				} catch {
+					notificationService.error(localize('scaffold.chooseModelFailed', "The models cannot be listed: the Julia extension of Pollis is not running."));
+				}
+				if (value) {
+					webviewInput.webview.postMessage({ command: 'setInputValue', input: msg.input, value });
+				}
+				break;
+			}
 			case 'setApiKey':
 				await apiKey?.handleSet();
 				break;

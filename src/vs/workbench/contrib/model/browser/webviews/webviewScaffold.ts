@@ -327,7 +327,8 @@ export function buildWebviewHtml(parts: WebviewParts): string {
 		.scaffold-inputs { background: var(--vscode-textCodeBlock-background); border: 1px solid var(--vscode-widget-border); border-radius: 0 6px 6px 6px; padding: 16px 20px 4px; margin-bottom: 12px; }
 		.scaffold-inputs:not(:has(.form-row:not([hidden]))) { display: none; }
 		.scaffold-inputs .form-row { gap: 24px; margin-bottom: 14px; }
-		.scaffold-inputs .form-label { margin-bottom: 8px; }
+		/* A label takes the spare height of its row, its text at the bottom, so that the fields of a row line up when one label wraps */
+		.scaffold-inputs .form-label { margin-bottom: 8px; flex: 1; align-items: flex-end; }
 		/* The dropdown arrow sits as far from the right edge as the text from the left */
 		.scaffold-inputs select.form-input { appearance: none; padding-right: 34px; }
 		.scaffold-inputs .scaffold-input:has(select) { position: relative; }
@@ -1030,6 +1031,12 @@ ${parts.setModelExtraJs ?? ''}			document.querySelectorAll('#model-group .toggle
 					? button.dataset.value.replace(/[{][{]([\\w-]+)[}][}]/g, function(_, id) { return inputRaw(id); })
 					: inputRaw(button.dataset.input);
 				vscode.postMessage({ command: 'addAlert', symbol: symbol, kind: button.dataset.alert });
+			});
+		});
+		// Choose... beside a local model input: the picker answers with setInputValue
+		document.querySelectorAll('.choose-model-btn').forEach(function(button) {
+			button.addEventListener('click', function() {
+				vscode.postMessage({ command: 'chooseModelFile', input: button.dataset.input, kind: button.dataset.modelKind, value: inputRaw(button.dataset.input) });
 			});
 		});
 		document.querySelectorAll('.scaffold-inputs select.form-input').forEach(function(select) {
@@ -2073,6 +2080,10 @@ ${parts.nextStepsWiringJs ?? `		document.getElementById('btn-viz').addEventListe
 				}
 			}
 			if (msg.command === 'setModel') { setModel(msg.model); }
+			if (msg.command === 'setInputValue') {
+				var field = document.getElementById('in-' + msg.input);
+				if (field) { field.value = msg.value; onInputsChanged(); }
+			}
 		});
 
 		setModel('${parts.defaultModel}');
