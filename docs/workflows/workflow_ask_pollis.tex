@@ -114,23 +114,24 @@ that section, in the internal browser.
 \subsection{Search In}
 A question is searched where it belongs: one on Pollis in Pollis's documents, one on Julia in the Julia Manual, one
 on both in both (\S\ref{sec:routing}). Under the answer, \emph{Searched: Pollis, Julia Manual.} says where.
-\textbf{Search In}, beside the box, changes that for the next question: \textbf{Automatic}, the default;
+\textbf{Search In}, below the box on the left, changes that for the next question: \textbf{Automatic}, the default;
 \textbf{Pollis} or \textbf{Julia Manual} alone; or \textbf{All Sources}. It is shown only when the Julia Manual is
 searched too (\S\ref{sec:settings}).
 
 \subsection{Following up}
 Ask another question below the answer, and it is read with the conversation so far: \emph{and on Windows?} after a
-question on installing a coding agent asks about installing it on Windows. \textbf{New Conversation} starts again with
+question on installing a coding agent asks about installing it on Windows. \textbf{New Chat}, beside the title, starts again with
 nothing remembered. The conversation is kept only while the page is open.
 
-\subsection{Answer With}
-\textbf{Answer With}, beside the box, chooses the model that writes the answer:
+\subsection{The model}
+The model's menu, below the box on the right, chooses the model that writes the answer:
 \begin{itemize}
-  \item \textbf{This Computer}, the default: the chat model of \file{pollis.ask.chatModel}, run by llama.cpp. Its name
-    is shown, with the model picker of every local model input, and its first answer downloads it, once.
-  \item \textbf{A cloud model}: Claude Haiku, Claude Sonnet, GPT-5.4 mini, GPT-5.5, Gemini 3.8 Flash or Gemini 4 Argon,
-    with your own Anthropic, OpenAI or Google key, kept in Pollis's secret storage. The key indicator beside the choice says whether a key is set.
+  \item \textbf{On this computer}: the chat models installed on this computer, run by llama.cpp; the one chosen is kept
+    in \file{pollis.ask.chatModel}, for the next time.
+  \item \textbf{Cloud, with your own key}: Claude Haiku, Claude Sonnet, GPT-5.4 mini, GPT-5.5, Gemini 3.8 Flash or Gemini 4 Argon,
+    with your own Anthropic, OpenAI or Google key, kept in Pollis's secret storage. The key indicator beside the menu says whether a key is set.
 \end{itemize}
+\textbf{Evaluate Models...}, the last item of the menu, opens Evaluate Models (\S\ref{sec:compare}).
 The passages are always found on this computer, whichever model answers.
 
 \begin{pbox}{What the questions are good for}
@@ -237,7 +238,7 @@ The English stemmer cuts words to their stems, so that \emph{filters} finds \emp
 \subsection{Meaning: the embeddings}
 An \emph{embedding model} turns a text into a list of numbers, a point in a space where texts that mean the same are
 close together, whatever their words. Each passage is given its point, 768 numbers, in the column \file{embedding}.
-With EmbeddingGemma 2, the default (\S\ref{sec:models}), that space is the same for more than a hundred languages: a
+With the default embedding model (\S\ref{sec:models}), that space is the same for more than a hundred languages: a
 question in Portuguese lands near the English passage that answers it.
 
 The model is told what each text is, as it was trained to be. A passage is given to it as
@@ -351,10 +352,10 @@ and your question.
 \toprule
 & \textbf{Default} & \textbf{Download} & \textbf{Why}\\
 \midrule
-Embedding & EmbeddingGemma 2, Q8\_0 (Google) & 0.31 GB & 768 numbers per text; more than 100 languages; reads 8,192
+Embedding & the default embedding model & under 1 GB & 768 numbers per text; more than 100 languages; reads 8,192
   tokens; text, images, audio and video in one space\\
-Chat & Qwen3.5 4B, Q4\_K\_M (Qwen) & 2.74 GB & follows long instructions, cites as asked, writes in many languages, on
-  a laptop without a graphics chip\\
+Chat & the default chat model & a few GB & answers at once, without thinking aloud first; follows long
+  instructions, cites as asked, writes in many languages, on a laptop without a graphics chip\\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -376,11 +377,11 @@ Llama 3.1 8B against Claude Sonnet. The local models are those of \menupath{Comp
 How fast and how well each model does other work, statistics, Julia code, DuckDB SQL and summaries, is the benchmark
 of \menupath{Compose\gt Local Models}, a page of its own.
 
-Compare Models is a page with four tabs, \textbf{One Question}, \textbf{Test Set}, \textbf{Embedding Models} and
-\textbf{Runs}, opened from \menupath{Compose\gt Local Models\gt Compare Models...}, beside the models it compares, and
-from the button on the Ask Pollis page. Each tab is a part of
-its own, with a command that opens the page at that tab, so that each can later have a menu item, or a window, of its
-own.
+Evaluate Models is one page, opened from \menupath{Compose\gt Local Models\gt Evaluate Models...}, beside the models
+it compares, and from the last item of the model's menu on the Ask Pollis page. It goes in four steps, from the top
+down: 1, the models to compare; 2, the questions, of the test set chosen, those ticked being the ones asked; 3, the
+judge, a second judge if you want one, \textbf{Repeats} and \textbf{Run}; 4, the results of a run, the figures of
+each model and then its answers. The page remembers what you chose for the next time.
 
 \subsection{Fair by construction}
 Every model is given the same questions, the same passages and the same instruction (\S\ref{sec:answer}), so what is
@@ -388,44 +389,48 @@ compared is the model alone, and its answers are those Ask Pollis would give wit
 question, on this computer, whichever models are compared. The local models run one after the other, each alone in
 memory, so that none is slowed by another.
 
-\subsection{One question, side by side}
-\textbf{One Question} takes a question and shows each model's answer in a column of its own, with its sources, the
-time to its first word and the seconds it took. The question may be about Pollis or about Julia: \textbf{Search In},
-as on the Ask Pollis page (\S\ref{sec:routing}), searches Pollis' own documents, the Julia Manual or all; Automatic,
-the default, searches those the question is about. \textbf{Score These} then has the judge (\S\ref{sec:judge}) score
-each answer. It is the quick look: how the answers differ, on a question that matters to you.
-
 \subsection{A test set, scored}
-\textbf{Test Set} runs many questions, and gives each model its figures. The questions come two ways:
+The \textbf{Test Set} field chooses the test set. \textbf{Standard} is the one Pollis comes with (below), which a newer
+Pollis may update and which cannot be changed. The others are yours: \textbf{Save As...} copies the test set shown
+under a name you give, and \textbf{New Set...} starts an empty one, each a file of \file{~/.pollis/ask/sets}, which
+a newer Pollis does not change; each change you make is saved as you make it, the ticks too. Its questions are listed in a table, sorted by any column: tick the ones to ask, or none to
+ask them all. In a test set of yours, \textbf{Change This Set}, below the table, puts them in three ways:
 \begin{itemize}
-  \item \textbf{Made from the documents}: \textbf{Make Questions} takes 40 passages spread over the documents and has
-    the model of the \textbf{Questions By} field, Claude Sonnet by default, write for each a question that only that
-    passage answers, and the answer. This is
-    RAGTools.jl's \file{build\_qa\_evals}. It is done once, and kept.
-  \item \textbf{Your own}: under an answer of Ask Pollis, \textbf{Add to the Test Set} keeps the question, with the
-    answer you write and the source that holds it, chosen among its Sources.
+  \item \textbf{Made from the documents}: \textbf{Make Questions...} takes 40 passages spread over the documents and
+    has the model of the \textbf{By} field beside it, the default model unless you choose another, write for each a
+    question that only that passage answers, and the answer. This is RAGTools.jl's \file{build\_qa\_evals}. The
+    questions are added to the test set, and kept.
+  \item \textbf{Your own}: \textbf{Add} takes a question, its right answer and the passage that holds it, chosen among
+    those found for the question. Under an answer of Ask Pollis, \textbf{Add to the Test Set...} opens Add with the
+    question and the answer, for you to correct, and the answer's Sources to choose from.
+  \item \textbf{Imported}: from a file of RAGTools.jl (below).
 \end{itemize}
-The test set is a file of RAGTools.jl, \file{evals.json}: a JSON array of its \file{QAEvalItem}, each with four
+\textbf{Delete Ticked} removes the questions ticked.
+A test set is a file of RAGTools.jl: a JSON array of its \file{QAEvalItem}, each with four
 fields, \file{source} (the document and the place in it), \file{context} (the passage itself), \file{question} and
-\file{answer}, as \file{JSON3.write} saves them and \file{JSON3.read(file, Vector\{QAEvalItem\})} reads them back. So a
+\file{answer}, as \file{JSON3.write} saves them and \file{JSON3.read(file, Vector{QAEvalItem})} reads them back. So a
 test set made elsewhere with RAGTools.jl can be run in Pollis, and one of Pollis read by anyone who uses RAGTools.jl:
-\textbf{Import} and \textbf{Export} take and give such a file. Pollis comes with one, made with \textbf{Make
-Questions} and reviewed question by question, so that every computer starts from the same questions and its figures
-can be set beside another's. Since each question keeps its passage, a question whose
+\textbf{Import} and \textbf{Export} take and give such a file. Pollis comes with one, Standard, of 100 questions
+written from the passages and reviewed question by question: 50 on Pollis's documents, 40 on the panel wikis and 10
+on the Julia Manual. It is read from Pollis each time, never copied, so that every computer with the same Pollis has
+the same questions and its figures can be set beside another's. Since each question keeps its passage, a question whose
 passage is no longer in the documents is shown as such.
 
-\textbf{Run} then asks every question of every model chosen, \textbf{Repeats} times, once by default, and has each
-answer scored. A run of 40 questions on
+\textbf{Run} then asks the questions ticked, or all of them, of every model chosen, \textbf{Repeats} times, once by
+default, and has each answer scored; its label says how many questions, with how many models. A run of 40 questions on
 three local models and a cloud one takes some minutes with a graphics chip or Apple silicon, and up to an hour on a
-laptop without one. It runs in the background, with its progress shown, and \textbf{Stop} ends it with the questions
-done kept.
+laptop without one. It runs in the background, with its progress shown and how much of it is done, and \textbf{Stop} ends it with the
+questions done kept. Above \textbf{Run}, a warning names the local models chosen, and the judges on this computer,
+that need more memory than is free now, their file and about 1.5 GB more: such a model answers slowly and slows down
+the whole computer, so close other apps first, or choose a smaller one.
 
 \subsection{The figures}
+The figures have a column for each model, the best first, and a row for each figure.
 \begin{center}\small
 \renewcommand{\arraystretch}{1.25}
 \begin{tabularx}{\linewidth}{@{}p{0.3\linewidth}L@{}}
 \toprule
-\textbf{Column} & \textbf{What it says}\\
+\textbf{Figure} & \textbf{What it says}\\
 \midrule
 Model, Where, Size & the model, on this computer or in the cloud, and its download\\
 Score & the mean of the judge's ratings, from 1 (worst) to 5 (best)\\
@@ -442,15 +447,24 @@ Tokens & per answer, read and written, for a cloud model what is paid for\\
 \end{tabularx}
 \end{center}
 Every run is kept, with its models, its judge and the Pollis it ran on, so that a run can be set beside an earlier one:
-the same models after a new Pollis, or a new model against the old.
+the same models after a new Pollis, or a new model against the old. The latest is shown; the \textbf{Run} field,
+above the figures, shows an earlier one, and \textbf{Delete Run} removes it.
+
+\subsection{Each answer, side by side}
+Below the figures, \textbf{Answers} lists the questions of the run, with each model's rating and the seconds it took. A click on a question
+shows its right answer and the passage it was made from, and below them each model's answer in a
+column of its own, with its sources, the time to its first word, the seconds it took and each judge's rating, its
+five parts and, on hover, the judge's reasons, or why a judge did not rate it; with \textbf{Repeats} above 1, each asking under the one before. It is
+the close look: how the answers differ, on a question that matters to you.
 
 \subsection{The judge}\label{sec:judge}
 The judge is a model that reads the question, the passages and an answer, and rates the answer: how relevant,
 complete, clear and helpful it is, and how consistent with the passages, the five parts of RAGTools.jl's
 \file{run\_qa\_evals}. It rates against the passages, not against the answer written with the question: an answer that
-says what the passages say, in other words, scores as well. The judge is the model of the \textbf{Judge} field, Claude Sonnet
-by default: any chat model, on this computer or in the cloud, Claude Opus among them; a small local model judges poorly. A judge may favour models of its own family, Claude
-those of Claude, so a run can be scored by two judges, say Claude Sonnet and GPT-5.5, each in a column of its own.
+says what the passages say, in other words, scores as well. The judge is the model of the \textbf{Judge} field, the default model
+unless you choose another: any chat model, on this computer or in the cloud, Claude Opus among them; a small local
+model judges poorly. A judge may favour models of its own family, Claude those of Claude, so a run can be scored by two
+judges, the second chosen in \textbf{Second Judge}, say Claude Sonnet and GPT-5.5, each in a column of its own.
 
 \subsection{The passages found, and the embedding models}
 For a question made from a passage, the run also checks whether that passage was among the eight found, and at what
@@ -502,7 +516,7 @@ passages whose text changed are embedded again, in seconds. Nothing else: your q
   meaning too.\\
 \emph{The model could not be started} & Open \menupath{Compose\gt Local Models\gt Models Installed}, check that the
   model is there and that it fits in memory, or choose a smaller one, or a cloud model.\\
-\emph{No key for Anthropic} (or OpenAI, or Google) & Set the key with the key indicator beside \textbf{Answer With}.\\
+\emph{No key for Anthropic} (or OpenAI, or Google) & Set the key with the key indicator beside the model's menu.\\
 An answer that cites nothing & The passages did not answer the question; try the words the documents use, such as the
   name of the menu item.\\
 \emph{Searched: Pollis.} for a question on Julia (or the other way round) & Choose the source in \textbf{Search In}
@@ -521,15 +535,13 @@ No Julia Manual in \textbf{Search In} & Your Julia came without its documentatio
 \toprule
 \textbf{Setting} & \textbf{What it holds}\\
 \midrule
-\file{pollis.ask.answerWith} & This Computer, or the cloud model chosen in \textbf{Answer With}\\
-\file{pollis.ask.chatModel} & The local chat model: \file{hf:unsloth/Qwen3.5-4B-GGUF/Qwen3.5-4B-Q4_K_M.gguf}\\
-\file{pollis.ask.embeddingModel} & The embedding model: \file{hf:ggml-org/embeddinggemma-2-GGUF/embeddinggemma-2-Q8_0.gguf}\\
+\file{pollis.ask.answerWith} & This Computer, or the cloud model chosen in the model's menu\\
+\file{pollis.ask.chatModel} & The local chat model, the one last chosen in the model's menu\\
+\file{pollis.ask.embeddingModel} & The embedding model: the default embedding model unless you change it\\
 \file{pollis.ask.queryPrefix} & What a question is given to the embedding model as: \texttt{\small task: question answering \textbar{} query: \{text\}}\\
 \file{pollis.ask.passagePrefix} & What a passage is given to it as: \texttt{\small title: \{title\} \textbar{} text: \{text\}}\\
 \file{pollis.ask.passages} & How many passages go to the model: 8\\
 \file{pollis.ask.juliaManual} & Whether the Julia Manual is searched too: on\\
-\file{pollis.ask.compare.judges} & The judges of Compare Models: Claude Sonnet\\
-\file{pollis.ask.compare.questionsBy} & The model that makes the questions of a test set: Claude Sonnet\\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -543,25 +555,26 @@ No Julia Manual in \textbf{Search In} & Your Julia came without its documentatio
 \textbf{File} & \textbf{Role}\\
 \midrule
 \file{.../compose/browser/compose.contribution.ts} & Help\gt Ask Pollis\\
-\file{.../compose/browser/askPollisPage.ts} & The page: the question, Answer With, the answer as it comes, Sources\\
+\file{.../compose/browser/askPollisPage.ts} & The page: the question, the model's menu, the answer as it comes, Sources\\
 \file{.../compose/node/askPollisMain.ts} & The DuckDB process that searches \file{PollisDocuments.duckdb} (\S\ref{sec:finding})\\
 \file{extensions/language-julia/src/pollisDocuments.ts} & Starts the indexing after the documents are compiled\\
 \file{.../terminalserver/ask\_index.jl} & Reads, cuts and indexes the documents and the Julia Manual, and computes the
   embeddings\\
 \file{extensions/language-julia/src/pollisLlamaServer.ts} & Runs the embedding and the chat model with llama-server\\
 \file{.../compose/common/askPollis.ts} & The instruction of \S\ref{sec:answer} (\texttt{ASK\_INSTRUCTION}), the same for
-  Ask Pollis and Compare Models, and the cloud models\\
-\file{.../compose/browser/askPollisWebview.ts} & What Ask Pollis and Compare Models show of an answer alike: its
+  Ask Pollis and Evaluate Models, and the cloud models\\
+\file{.../compose/browser/askPollisWebview.ts} & What Ask Pollis and Evaluate Models show of an answer alike: its
   citations, its Sources, and the passage opened in its document\\
-\file{.../compose/browser/compareModelsPage.ts} & Compare Models: the page, its tabs, the models chosen, and the
-  commands; each tab in a file of its own beside it\\
-\file{.../compose/browser/compareModelsTabs.ts} & What a tab of Compare Models is, and what the page gives it\\
-\file{.../compose/browser/compareOneQuestion.ts} & The One Question tab\\
-\file{extensions/language-julia/src/pollisCompareModels.ts} & Runs a comparison in a Julia process of its own, each
-  local model in turn\\
-\file{.../terminalserver/ask\_compare.jl} & Makes the questions, asks them, and has them judged, with RAGTools.jl\\
+\file{.../compose/browser/compareModelsPage.ts} & Evaluate Models: the page, the choices it remembers, and the
+  commands\\
+\file{.../compose/browser/compareModelsRun.ts} & A run: the answers, through Ask Pollis, each local model in turn, then
+  the judging; and the questions made; the test set read and written\\
+\file{extensions/language-julia/src/pollisCompareModels.ts} & Runs the Julia process of the evaluation, with the keys
+  and the local models' servers\\
+\file{.../terminalserver/ask\_compare.jl} & Makes the questions and has the answers judged, with RAGTools.jl\\
 \file{~/.pollis/documents/PollisDocuments.duckdb} & The index\\
-\file{~/.pollis/ask/evals.json} & The test set, a file of RAGTools.jl\\
+\file{.../compose/browser/media/ask/evals.json} & The Standard test set, a file of RAGTools.jl\\
+\file{~/.pollis/ask/sets} & Your test sets, one file of RAGTools.jl each\\
 \file{~/.pollis/ask/Comparisons.duckdb} & The runs, their answers and scores, and the passages'
   embeddings of the embedding models compared\\
 \bottomrule
@@ -628,13 +641,13 @@ After the seven of Ask Pollis itself, four more, each usable when done:
 \begin{itemize}
   \item \textbf{Your own library}: your articles and books, as PDFs, and the works of PollisReferences, are the next
     corpus. They would be a second index beside Pollis's, with a choice of what to ask.
-  \item \textbf{Voice, images and video}: EmbeddingGemma 2 already places images, audio and video in the same space as
+  \item \textbf{Voice, images and video}: the default embedding model already places images, audio and video in the same space as
     text, so they can join the index without another model. Beyond about a million passages, comparing every one
     becomes slow, and a vector index pays: DuckDB's VSS extension, whose index on disk is still experimental, or the
     Lance format.
-  \item \textbf{RAGTools.jl and PromptingTools.jl in Compare Models only}: asking does not use them. DuckDB does the
+  \item \textbf{RAGTools.jl and PromptingTools.jl in Evaluate Models only}: asking does not use them. DuckDB does the
     storing and both searches, and llama-server the models, so a framework would add little; the answer is asked for
-    by Pollis itself, and the index needs only llama-server's embeddings, one request each. Compare Models uses
+    by Pollis itself, and the index needs only llama-server's embeddings, one request each. Evaluate Models uses
     RAGTools.jl for its \emph{evaluation}, a set of test questions whose right passages and answers are known, to
     measure whether the right passages are found and the answers keep to them, and so to compare models and settings
     by their scores (\S\ref{sec:compare}); and PromptingTools.jl, which RAGTools.jl calls the models with. Both are

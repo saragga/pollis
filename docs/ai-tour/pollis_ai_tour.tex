@@ -392,8 +392,8 @@ Q\&A & finds the passages closest to the question & answers from them (RAG)\\
 \begin{pairs}[0.26]
 llama.cpp (local) & Chat and embeddings, on your computer, with no key. Pollis comes with llama.cpp and
   starts its \cmd{llama-server} for each model itself: there is no runner to install. A model is a GGUF
-  file, downloaded from Hugging Face the first time. The defaults are Qwen3.5 0.8B for chat and
-  EmbeddingGemma 2 for embeddings; \ui{Choose...} lists the models on your computer and the most
+  file, downloaded from Hugging Face the first time. The defaults are the default chat model and
+  the default embedding model; \ui{Choose...} lists the models on your computer and the most
   downloaded small ones on Hugging Face.\\
 Google, OpenAI, Mistral & Chat and embeddings, in the cloud, with an API key.\\
 Anthropic & Chat only: Anthropic has no embedding models, so Claude is paired with another embedding
@@ -401,7 +401,7 @@ Anthropic & Chat only: Anthropic has no embedding models, so Claude is paired wi
 \end{pairs}
 An API key is read from the environment when Julia starts, such as \cmd{ANTHROPIC\_API\_KEY} or
 \cmd{GOOGLE\_API\_KEY}: set it before you start Julia. \ui{Second Chat Provider} sets a second chat
-model for \ui{Compare Models}, which measures how often the two agree, for example a local Gemma
+model for \ui{Evaluate Models}, which measures how often the two agree, for example a local Gemma
 against Claude.
 
 \begin{note}{Embeddings without a runner}
@@ -759,8 +759,8 @@ a question in Portuguese.
 \begin{center}\small\renewcommand{\arraystretch}{1.3}
 \begin{tabularx}{\linewidth}{@{}>{\bfseries}llX@{}}
 \textbf{Model} & \textbf{Default} & \textbf{Does}\\\hline
-Embedding & EmbeddingGemma 2, 0.31 GB & turns each passage, and each question, into 768 numbers\\
-Chat & Qwen3.5 4B, 2.74 GB & reads the question and the 8 passages, and writes the answer\\
+Embedding & the default embedding model & turns each passage, and each question, into 768 numbers\\
+Chat & the default chat model & reads the question and the 8 passages, and writes the answer\\
 \end{tabularx}
 \end{center}
 Both run with the llama.cpp that comes with Pollis, downloaded the first time, and any other local model can take
@@ -768,23 +768,26 @@ their place. The embedding model is the one of LLM Text Analysis, so it is downl
 Claude or GPT, can write the answers instead, with your own key; the passages are still found on your computer.
 
 \newpage
-\subhead{Compare Models}
+\subhead{Evaluate Models}
 Which chat model should answer? A small one is quicker, a larger one better, a cloud one better still, at a price.
-\ui{Compare Models}, on the Ask Pollis page, answers with figures, for the models you choose: Qwen3.5 0.8B, 4B and 9B
+\ui{Evaluate Models}, on the Ask Pollis page, answers with figures, for the models you choose: Qwen3.5 0.8B, 4B and 9B
 on your computer, say, against Claude Sonnet. Every model is given the same questions, the same passages and the same
 instruction, so that only the model differs, and the local models run one at a time.
 \begin{pairs}[0.24]
-One Question & each model's answer side by side, with its sources and the seconds it took.\\
-Test Set & many questions: made from the documents by a model, Claude Sonnet by default, one for each of 40
-  passages, with the answer; or your own, kept from Ask Pollis with \ui{Add to the Test Set}.\\
+The questions & a test set. The Standard one comes with Pollis, 100 questions reviewed one by one: 50 on its
+  documents, 40 on the panel wikis, 10 on the Julia Manual; a newer Pollis may update it. Or one of yours, a copy of
+  another with \ui{Save As...} or a new one with \ui{New Set...}, to which a model adds questions made from the
+  documents, the default model unless you choose another, one for each of 40 passages, with the answer; or you add
+  your own, on the page or from Ask Pollis with \ui{Add to the Test Set...}.\\
 The figures & for each model, the mean score, its five parts, the answers not scored, the seconds and the tokens per
   answer. Every run is kept, to set beside a later one.\\
+The answers & a click on a question of the run shows each model's answer side by side, with its sources, seconds and ratings.\\
 \end{pairs}
 
 \subhead{The judge}
 A \emph{judge} is a model that reads a question, the passages and an answer, and rates the answer from 1 to 5: how
 relevant, complete, clear and helpful it is, and how consistent with the passages. Pollis judges with RAGTools.jl,
-the same package as the Q\&A of LLM Text Analysis. The judge is Claude Sonnet by default, and can be any chat model;
+the same package as the Q\&A of LLM Text Analysis. The judge is the default model unless you choose another, and can be any chat model;
 a small local model judges poorly.
 \begin{note}{A judge has a family}
 A judge may favour the answers of its own family: Claude those of Claude. A run can be scored by two judges, such as
@@ -801,7 +804,7 @@ instruction, the question and the passages, which are Pollis' documents; and, to
 \end{caution}
 
 \begin{note}{Not available yet}
-Ask Pollis and Compare Models are not in Pollis yet; they come in a coming release.
+Ask Pollis and Evaluate Models are not in Pollis yet; they come in a coming release.
 \end{note}
 
 \seealso{Local Models, page 4.\quad Embedding and Chat Models, page 6.}

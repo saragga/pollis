@@ -23,6 +23,11 @@
 	color: var(--vscode-charts-red);
 }
 
+/* The databases built into Pollis are always there, waiting to be connected: the blue of a link, not the red of a fault. */
+.database-item.builtin.disconnected .icon {
+	color: var(--vscode-textLink-foreground);
+}
+
 /* Disconnect is red here too, as the debugger colours it in title bars. */
 .database-item .actions .codicon-debug-disconnect {
 	color: var(--vscode-debugIcon-disconnectForeground);

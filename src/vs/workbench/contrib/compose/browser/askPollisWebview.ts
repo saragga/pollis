@@ -10,7 +10,7 @@ import { BrowserViewCommandId } from '../../../../platform/browserView/common/br
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { IAskPollisPassage, IAskPollisSearchResult } from '../common/askPollis.js';
 
-// What Ask Pollis and Compare Models show of an answer alike: its Markdown with the citations as buttons, the Sources
+// What Ask Pollis and Evaluate Models show of an answer alike: its Markdown with the citations as buttons, the Sources
 // under it with Open, and the passage opened in its document.
 
 /** The name of a model, as its server is given it: its file's name without `.gguf`. */

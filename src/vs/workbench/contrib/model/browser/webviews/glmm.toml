@@ -86,7 +86,7 @@ detail = "Bernoulli, Binomial, Poisson, NegativeBinomial, Gamma, InverseGaussian
 
 [[bullets]]
 text = "Likelihood-based inference"
-detail = "ML and REML estimation with likelihood ratio tests"
+detail = "Maximum likelihood by the Laplace approximation or adaptive Gauss-Hermite quadrature, with likelihood ratio tests"
 
 [[inputs]]
 id = "formula"

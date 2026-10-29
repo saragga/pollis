@@ -6,6 +6,8 @@
 import { FileAccess } from '../../../../../base/common/network.js';
 import { localize } from '../../../../../nls.js';
 import { asWebviewUri, webviewGenericCspSource } from '../../../webview/common/webview.js';
+import { composerAddSvg, composerSendSvg } from '../../../model/browser/webviews/webviewScaffold.js';
+import { composerVoiceCss, composerVoiceHtml, composerVoiceScript } from '../composerVoice.js';
 import { IWirePacket } from './collaborationTransport.js';
 import { MAX_FILE_BYTES, MAX_IMAGE_BYTES, MAX_RECEIVE_BYTES, PROGRESS_THRESHOLD_BYTES, SignallingStrategy } from './collaborationProtocol.js';
 
@@ -102,10 +104,11 @@ export type ChatWorkbenchMessage =
 	| { readonly command: 'pickDataset' }
 	| { readonly command: 'pickDatabase' }
 	| { readonly command: 'sendFile'; readonly fileName: string; readonly content: string }
-	| { readonly command: 'file'; readonly id: string; readonly action: 'save' | 'attach' };
+	| { readonly command: 'file'; readonly id: string; readonly action: 'save' | 'attach' }
+	| { readonly command: 'voiceLanguage'; readonly value: string };
 
-/** The chat page: its texts come from here, the session from the workbench's messages. */
-export function chatPageHtml(): string {
+/** The chat page: its texts come from here, the session from the workbench's messages; `language` is that of dictation. */
+export function chatPageHtml(language: string): string {
 	const text = {
 		title: localize('collaborationChat.title', "Collaboration Chat"),
 		participants: localize('collaborationChat.participants', "Participants:"),
@@ -118,6 +121,8 @@ export function chatPageHtml(): string {
 		placeholder: localize('collaborationChat.placeholder', "Write a message; paste an image, or drag in an image or a file. Enter sends, Shift+Enter starts a new line."),
 		send: localize('collaborationChat.send', "Send"),
 		add: localize('collaborationChat.add', "Add an Image, a File, a Dataset or a Database"),
+		dictate: localize('collaborationChat.dictate', "Dictate the Message (not available yet)"),
+		voiceMode: localize('collaborationChat.voiceMode', "Voice Mode: speak with the others and hear them, all written down too (not available yet)"),
 		addImage: localize('collaborationChat.addImage', "Image"),
 		addFile: localize('collaborationChat.addFile', "File"),
 		addDataset: localize('collaborationChat.addDataset', "Dataset"),
@@ -173,12 +178,13 @@ export function chatPageHtml(): string {
 		.bar { margin: 4px 0; font-size: 11px; color: var(--vscode-descriptionForeground); }
 		.bar progress { width: 100%; height: 6px; }
 		footer { border-top: 1px solid var(--vscode-widget-border); padding: 8px 12px; }
-		/* The composer: one rounded box with the attached image, the text, and below it the + (Image, File, Dataset, Database) on the left and the send arrow on the right */
+		/* The composer: one rounded box with the attached image, the text and the microphone, and below them the + (Image, File, Dataset, Database) on the left and the send arrow on the right */
 		.composer { padding: 8px 10px 6px 10px; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 14px; }
 		.composer:focus-within { border-color: var(--vscode-focusBorder); }
 		#attachment { display: none; align-items: center; gap: 8px; margin-bottom: 6px; }
 		#attachment img { max-height: 64px; border: 1px solid var(--vscode-widget-border); border-radius: 6px; }
-		textarea { display: block; width: 100%; resize: none; min-height: 24px; max-height: 160px; font: inherit; padding: 2px 2px; color: inherit; background: transparent; border: none; outline: none; }
+		.composer .top { display: flex; align-items: flex-start; gap: 6px; }
+		textarea { display: block; flex: 1; min-width: 0; width: 100%; resize: none; min-height: 24px; max-height: 160px; font: inherit; padding: 2px 2px; color: inherit; background: transparent; border: none; outline: none; }
 		.tools { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
 		button.icon { display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; padding: 0; border-radius: 50%; color: var(--vscode-foreground); background: transparent; }
 		button.icon:hover { background: var(--vscode-toolbar-hoverBackground); }
@@ -211,6 +217,7 @@ export function chatPageHtml(): string {
 		#addMenu button:hover, #addMenu button:focus { color: var(--vscode-menu-selectionForeground); background: var(--vscode-menu-selectionBackground); outline: none; }
 		.link { color: var(--vscode-textLink-foreground); background: none; padding: 0; }
 		.link:hover { background: none; text-decoration: underline; }
+		${composerVoiceCss}
 	</style>
 </head>
 <body>
@@ -226,7 +233,10 @@ export function chatPageHtml(): string {
 	<footer>
 		<div class="composer">
 			<div id="attachment"><img id="attachmentImage" alt=""><button class="link" id="removeImage">${text.removeImage}</button></div>
-			<textarea id="input" rows="1" placeholder="${text.placeholder}"></textarea>
+			<div class="top">
+				<textarea id="input" rows="1" placeholder="${text.placeholder}"></textarea>
+				${composerVoiceHtml({ dictate: text.dictate, voiceMode: text.voiceMode }, language)}
+			</div>
 			<div class="tools">
 				<div class="add">
 					<div id="addMenu" role="menu">
@@ -235,9 +245,9 @@ export function chatPageHtml(): string {
 						<button id="addDataset" role="menuitem">${text.addDataset}</button>
 						<button id="addDatabase" role="menuitem">${text.addDatabase}</button>
 					</div>
-					<button class="icon" id="add" title="${text.add}" aria-label="${text.add}" aria-haspopup="menu"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M8 2.5v11M2.5 8h11"/></svg></button>
+					<button class="icon" id="add" title="${text.add}" aria-label="${text.add}" aria-haspopup="menu">${composerAddSvg}</button>
 				</div>
-				<button class="icon primary idle" id="send" title="${text.send}" aria-label="${text.send}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13V3M3.5 7.5 8 3l4.5 4.5"/></svg></button>
+				<button class="icon primary idle" id="send" title="${text.send}" aria-label="${text.send}">${composerSendSvg}</button>
 			</div>
 			<input type="file" id="file" accept="image/png,image/jpeg,image/gif,image/webp" hidden>
 			<input type="file" id="anyFile" hidden>
@@ -567,6 +577,7 @@ export function chatPageHtml(): string {
 	}
 
 	input.addEventListener('input', resize);
+	${composerVoiceScript('input')}
 	input.addEventListener('keydown', e => {
 		if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
 			e.preventDefault();

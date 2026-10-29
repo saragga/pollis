@@ -379,7 +379,7 @@ DuckDB, SQLite and PostgreSQL databases. All the work with data is done in Julia
 what is there and writes the code to reach it.
 
 \subhead{PollisDatasets}
-57 real datasets, such as \texttt{mroz}, \texttt{airpassengers}, \texttt{iris},
+65 real and 2 simulated datasets, such as \texttt{mroz}, \texttt{airpassengers}, \texttt{iris},
 and \texttt{challenger}, each with its source and licence. In Julia:
 \begin{itemize}
   \item \texttt{datasets()} lists them;
@@ -535,6 +535,7 @@ Your own things are files in \texttt{\textasciitilde/.pollis}, kept when Pollis 
 \texttt{methods}, \texttt{packages} & your new methods and their packages (page 16)\\
 \texttt{practice} & the exercises you write (the Learning and Practice toolbox)\\
 \texttt{rss} & the items of your RSS feeds (page 22)\\
+\texttt{ask/sets} & your test sets of Evaluate Models (page 47)\\
 \end{tabular}
 \end{center}
 
@@ -805,8 +806,8 @@ organization, and the GitHub CLI, \texttt{gh}, signed in; Pollis asks first: \em
 \ui{Compose > Methods > Browse Methods} lists yours, \ui{In Progress} and \ui{Published by You},
 then the \ui{Library} of nine methods by Pollis, from arc-fs to threshold autoregression: click one to open
 your own copy. \ui{Delete} and \ui{Delete Empty Methods} move folders to the Trash. \ui{Help >
-Documentation > Packages} lists the vignettes of installed packages (they open offline) and, with the
-Internet, those \ui{In the Registry}.
+Documentation > Package Vignettes} lists, in one table, the vignettes of the packages in the registry and of
+those on your computer, marked \ui{Installed} (they open offline); click a heading to sort by it.
 
 \begin{caution}{The agent steps cost tokens}
 Add from Article, Write Method, Write Vignette and Prepare for Registration run your coding agent, on your
@@ -859,14 +860,15 @@ Add the Pollis registry once, then add packages by name, in the Julia REPL's pac
 \texttt{pkg> add ThresholdAR}}
 
 \smallskip
-\ui{Help > Documentation > Packages} opens the vignettes of the packages you installed.
+\ui{Help > Documentation > Package Vignettes} opens the vignettes of the packages in the registry, those you
+installed marked \ui{Installed}.
 
 \newpage
 \subhead{Packages behind panels and features}
 {\small\renewcommand{\arraystretch}{1.25}%
 \begin{tabularx}{\linewidth}{@{}>{\bfseries}l>{\raggedright\arraybackslash}p{0.36\linewidth}>{\raggedright\arraybackslash}X@{}}
 \textcolor{navy}{\bfseries Package} & \textcolor{navy}{\bfseries What it does} & \textcolor{navy}{\bfseries Where Pollis uses it} \\
-PollisDatasets & 57 small, well-known datasets for examples and teaching, as Tables.jl column tables &
+PollisDatasets & 67 small, well-known datasets for examples and teaching, as Tables.jl column tables &
   The built-in database (Data and Databases, page 6), \ui{Add from PollisDatasets} in Methods, and the
   examples of panels and replications \\
 PollisTeX & Typesets LaTeX from Julia with Tectonic, downloaded on first use &
@@ -1871,7 +1873,7 @@ marked \ui{built-in}; clicking it connects it in the Julia REPL. The \texttt{duc
 \renewcommand{\arraystretch}{1.25}
 \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.2\linewidth}>{\raggedright\arraybackslash}p{0.14\linewidth}X@{}}
 \textbf{Database} & \textbf{In Julia} & \textbf{What it holds}\\
-PollisDatasets & \texttt{pollis} & The 57 datasets of PollisDatasets, a table each, with their descriptions.\\
+PollisDatasets & \texttt{pollis} & The 67 datasets of PollisDatasets, a table each, with their descriptions.\\
 PollisRSS & \texttt{rss} & Every item of the feeds you follow, kept by month; empty until feeds are read (RSS Feeds, page 22).\\
 PollisJournals & \texttt{journals} & About 250,000 journals, conferences and book series, from OpenAlex; the Norwegian register's levels; and the journal metrics you import.\\
 PollisReferences & \texttt{references} & Every work Pollis cites, and those you save from Literature Radar (page 36) or add to a panel's \ui{Explore References}, with abstracts, keywords and dated citation counts.\\
@@ -1992,7 +1994,7 @@ comes from a passage of a document, and you can open that passage.
   \item After each statement, a number such as \ui{[1]} names its source. Under \ui{Sources}, each source has
     its document and section, and \ui{Open} shows the passage in its document, in the internal browser.
   \item Ask a follow-up, such as \emph{and for Codex?}: it is read with the conversation so far.
-    \ui{New Conversation} starts again.
+    \ui{New Chat}, beside the title, starts again.
 \end{enumerate}
 When the documents do not answer, Ask Pollis says so, and lists the passages that came closest.
 
@@ -2005,25 +2007,36 @@ removed; a new Pollis, a wiki written or a vignette compiled brings their passag
 background. The passages are found by
 hybrid search: BM25 keyword search and embedding-based semantic search, merged by Reciprocal Rank Fusion into the top 8 passages, all on PollisDocuments.duckdb.
 
-\subhead{Answer With}
-\ui{Answer With} chooses the model that writes the answer: \ui{This Computer}, Qwen3.5 4B unless you choose
-another local chat model with the model picker beside it, or a cloud model, Claude Haiku or Sonnet, GPT-5.4 mini or
-GPT-5.5, Gemini 3.8 Flash or Gemini 4 Argon, with your own key. The passages are always found on your
+\subhead{The model}
+The model's menu, below the box on the right, chooses the model that writes the answer: under \ui{On this computer},
+the chat models installed on your computer, the default one unless you choose another, and the one you choose is
+kept for the next time; under \ui{Cloud, with your own
+key}, Claude Haiku or Sonnet, GPT-5.4 mini or GPT-5.5, Gemini 3.8 Flash or Gemini 4 Argon. \ui{Evaluate Models...}
+is the last item. The passages are always found on your
 computer; a cloud model is sent the question, the conversation and the eight passages, which are Pollis' documents, and nothing else.
 
 \newpage
-\subhead{Compare Models}
-\ui{Compare Models}, on the Ask Pollis page, sets the models you choose against each other on the same
+\subhead{Evaluate Models}
+\ui{Evaluate Models}, the last item of the model's menu, sets the models you choose against each other on the same
 questions, the same passages and the same instruction: local models of different sizes, say, against Claude
-Sonnet.
+Sonnet. The page goes in four steps: the models, the questions, \ui{Run} and the results.
 \begin{itemize}
-  \item \ui{One Question}: the answers side by side, each with its sources and seconds; \ui{Score These} has
-    them scored.
-  \item \ui{Test Set}: \ui{Make Questions} writes 40 questions, each from a passage, with Claude Sonnet unless
-    you choose another model; \ui{Add to the Test Set}, under an answer of Ask Pollis, keeps a question of
-    your own. \ui{Run} answers them all with each model, one local model at a time.
+  \item The questions, a test set chosen in \ui{Test Set}; those ticked are asked, or all when none is. \ui{Standard} comes with Pollis: 100 questions, reviewed
+    one by one, 50 on its documents, 40 on the panel wikis and 10 on the Julia Manual, each with its answer and the
+    passage that holds it; a newer Pollis may update it, and it cannot be changed. \ui{Save As...} copies a test set
+    under a name of yours and \ui{New Set...} starts an empty one, in \texttt{\textasciitilde/.pollis/ask/sets},
+    which a newer Pollis does not change; each change is saved as you make it, the ticks too. In yours, under \ui{Change This Set}, \ui{Make Questions...} writes 40 more, each from a passage, with the
+    default model unless you choose another; \ui{Add} takes one of your own, as does \ui{Add to the Test Set...}
+    under an answer of Ask Pollis; \ui{Import...} reads them from a file of RAGTools.jl; \ui{Delete Ticked} removes the ticked ones.
+    \ui{Export...} writes any test set as a file of RAGTools.jl.
+  \item \ui{Run} answers them with each model, one local model at a time; its label says how many questions,
+    with how many models, and its progress how much is done. Above it, a warning names the local models chosen, and the
+    judges on this computer, that need more memory than is free now, which would answer slowly and slow down the computer.
+  \item In the results, under the figures of each model, \ui{Answers} lists the questions of the run, with each model's rating and seconds: a click on
+    one shows the right answer and the answers side by side, each with its sources, seconds and ratings, or why
+    a judge did not rate it.
 \end{itemize}
-A \emph{judge}, Claude Sonnet unless you choose another, rates each answer from 1 to 5 on relevance,
+A \emph{judge}, the default model unless you choose another, rates each answer from 1 to 5 on relevance,
 completeness, clarity, consistency with the passages and helpfulness. Choose two judges, such as Claude Sonnet
 and GPT-5.5, since a judge may favour its own family. For each model you see the mean score and its five
 parts, the answers not scored, and the seconds and tokens per answer; for each embedding model, how often the
@@ -2032,11 +2045,9 @@ passage a question came from was found. Every run is kept, to set beside a later
 \subhead{Settings}
 \begin{center}\small
 \begin{tabularx}{\linewidth}{@{}lX@{}}
-\setting{pollis.ask.answerWith} & \ui{This Computer}, or the cloud model chosen in \ui{Answer With}.\\
-\setting{pollis.ask.chatModel} & The chat model on this computer; Qwen3.5 4B unless you change it.\\
-\setting{pollis.ask.embeddingModel} & The model that finds passages by meaning; EmbeddingGemma 2 unless you change it.\\
-\setting{pollis.ask.compare.judges} & The judges of Compare Models, one or two.\\
-\setting{pollis.ask.compare.questionsBy} & The model that writes the questions of a test set.\\
+\setting{pollis.ask.answerWith} & \ui{This Computer}, or the cloud model chosen in the model's menu.\\
+\setting{pollis.ask.chatModel} & The chat model on this computer: the default one, or the one last chosen in the model's menu.\\
+\setting{pollis.ask.embeddingModel} & The model that finds passages by meaning; the default embedding model unless you change it.\\
 \end{tabularx}
 \end{center}
 
@@ -2048,7 +2059,7 @@ passage a question came from was found. Every run is kept, to set beside a later
 \end{trouble}
 
 \begin{note}{Not available yet}
-Ask Pollis and Compare Models are not in Pollis yet; they come in a coming release.
+Ask Pollis and Evaluate Models are not in Pollis yet; they come in a coming release.
 \end{note}
 
 \seealso{Toolboxes, page 10.\quad Orchestration, page 34.}

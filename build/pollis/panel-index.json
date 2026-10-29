@@ -2249,6 +2249,12 @@
 			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
 			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
 			"wikis": [
+				"dist-sampling/assumptions.md",
+				"dist-sampling/decision-guide.md",
+				"dist-sampling/diagnostics.md",
+				"dist-sampling/factsheet.md",
+				"dist-sampling/interpretation.md",
+				"dist-sampling/overview.md",
 				"dist/assumptions.md",
 				"dist/decision-guide.md",
 				"dist/diagnostics.md",

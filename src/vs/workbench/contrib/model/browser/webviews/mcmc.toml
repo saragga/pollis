@@ -148,7 +148,7 @@ detail = "Hamiltonian dynamics with leapfrog integrator; controlled by step size
 
 [[bullets]]
 text = "Metropolis-Hastings"
-detail = "random-walk proposals; no gradients required; accepts/rejects via M-H ratio"
+detail = "proposals drawn from the priors; no gradients required; accepts/rejects via M-H ratio"
 
 [[inputs]]
 id = "body"
@@ -258,7 +258,7 @@ using Turing, MCMCChains
     {{body-mh}}  # model body: priors and likelihood
 end
 
-chain = sample(model(data), MH(), {{n-samples-mh}}; chain_type=MCMCChains.Chains)  # random-walk Metropolis-Hastings
+chain = sample(model(data), MH(), {{n-samples-mh}}; chain_type=MCMCChains.Chains)  # Metropolis-Hastings, proposing each parameter from its prior
 println(chain)  # summary: mean, std, ESS, R-hat
 '''
 

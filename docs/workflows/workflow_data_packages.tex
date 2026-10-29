@@ -57,7 +57,7 @@ without a new Pollis.
 \toprule
 & \textbf{PollisDatasets.jl} & \textbf{PollisJournals.jl} & \textbf{PollisReferences.jl} & \textbf{PollisRSS.jl}\\
 \midrule
-Holds & 57 real datasets, each with its source, licence and columns & 251,461 journals, conferences and series; the Norwegian register & 650 works Pollis cites, 797 dated citation counts & 519 feeds under 35 topics\\
+Holds & 65 real datasets and 2 simulated, each with its source, licence and columns & 251,461 journals, conferences and series; the Norwegian register & 650 works Pollis cites, 797 dated citation counts & 519 feeds under 35 topics\\
 Form & CSV files and \file{datasets.toml} & Parquet files in a Julia artifact & one JSON file & one JSON file\\
 Changes & when a dataset is added & monthly, by a workflow & when a work is corrected or cited & when a feed is added or corrected\\
 Database & PollisDatasets & PollisJournals & PollisReferences & PollisRSS\\
@@ -160,7 +160,7 @@ the \file{duckdb>} terminal included, is the same engine.
 \section{The four packages}
 
 \subsection{PollisDatasets.jl: the datasets of the examples}
-\textbf{What it holds.} 57 small, real datasets, from \file{mtcars} and \file{iris} to \file{mroz} and
+\textbf{What it holds.} 65 small, real datasets and 2 simulated ones, from \file{mtcars} and \file{iris} to \file{mroz} and
 \file{challenger}, grouped by domain (Regression, Time Series, \ldots), that the Code Examples of Pollis load. Each is
 \file{data/<id>.csv} with an entry in \file{datasets.toml}:
 \begin{lstlisting}
@@ -178,11 +178,12 @@ columns = [ { name = "model", description = "Car make and model" }, { name = "mp
 \end{lstlisting}
 
 \textbf{Licences.} Every dataset passed a licence check before it came in, and \file{status} records the outcome:
-\file{open} (an explicit open licence such as CC0 or CC BY, or permission given; 20 datasets), \file{public-domain} (a
+\file{open} (an explicit open licence such as CC0 or CC BY, or permission given; 23 datasets), \file{public-domain} (a
 US-government work, or published before 1930; 5) or \file{redistributed} (no explicit licence, but a small factual
-table redistributed for decades in CRAN and textbook packages; 32). Datasets that failed are listed, with the reason,
-at the top of \file{datasets.toml}: the Fama-French factors and the S\&P 500 (no redistribution allowed: fetch them
-live from \menupath{Explore\gt Access Data Libraries}), the SILSO sunspots (CC BY-NC, incompatible with AGPL-3.0)
+table redistributed for decades in CRAN and textbook packages; 37); the 2 simulated tables are \file{simulated}, made by the Julia code in their entries. Datasets that failed are listed, with the reason,
+at the top of \file{datasets.toml}: the Fama-French factors and the S\&P 500 from S\&P Dow Jones Indices or Yahoo Finance (no redistribution
+allowed: fetch them live from \menupath{Explore\gt Access Data Libraries}; \file{sp500} and \file{gamestop} are the
+copies of Yahoo! Finance data published on Kaggle under CC0), the SILSO sunspots (CC BY-NC, incompatible with AGPL-3.0)
 and Boston Housing (an ethically problematic variable).
 
 \textbf{In Julia.} \file{dataset("mroz")} loads a dataset as a Tables.jl column table (never a DataFrame);
@@ -363,7 +364,7 @@ None is rebuilt because of something you did: your data reaches them through vie
 Only two of the four packages take this road, because only their data is read by Pollis's own pages, which must work
 without Julia: the References pages (Browse References, Explore References, Discover Literature) and the RSS pages.
 PollisDatasets and PollisJournals are read only through Julia and DuckDB, so a Pollis without Julia has no use for them,
-and baking 57 datasets or 250,000 journals into every Pollis would only make it bigger. (The RSS pages' journal tags
+and baking 67 datasets or 250,000 journals into every Pollis would only make it bigger. (The RSS pages' journal tags
 come from \file{scores.csv}, which the install road writes.)
 
 \subsection{Pinning}

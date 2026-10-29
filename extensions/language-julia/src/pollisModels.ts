@@ -9,8 +9,10 @@
 // last month. Larger models come from Compose > Local Models. The command `language-julia.pollisInstalledModels`
 // answers the models on this computer, for Compose > Local Models > Models Installed; `language-julia.pollisModelVersions`,
 // with a model's file, the other files of its repository, and `language-julia.pollisDownloadModel`, with an `hf:` value,
-// downloads one, for its Other Versions.
+// downloads one, for its Other Versions; `language-julia.pollisAvailableMemory`, the memory a model can have now, for
+// the warning of Evaluate Models.
 
+import { execFile } from 'child_process'
 import * as fs from 'fs'
 import * as os from 'os'
 import * as path from 'path'
@@ -548,11 +550,34 @@ async function chooseModel(kind: ModelKind, value: string): Promise<string | und
     return chosen?.value
 }
 
+/**
+ * The memory a model can have now, in bytes: the free memory and the memory holding files, which the system gives back,
+ * as each system counts it: on macOS what vm_stat does not count as used (app memory, wired and compressed), as Activity
+ * Monitor does, os.freemem() counting only the free pages there; on Linux MemAvailable of /proc/meminfo; on Windows
+ * os.freemem(), the available physical memory, standby pages included, as Task Manager shows it.
+ */
+async function availableMemory(): Promise<number> {
+    if (process.platform === 'darwin') {
+        const stats = await new Promise<string>((resolve) => execFile('vm_stat', (err, stdout) => resolve(err ? '' : stdout)))
+        const pageSize = Number(/page size of (?<bytes>\d+) bytes/.exec(stats)?.groups?.bytes)
+        const pages = (name: string) => Number(new RegExp(`${name}:\\s+(?<pages>\\d+)`).exec(stats)?.groups?.pages)
+        const used = pages('Anonymous pages') - pages('Pages purgeable') + pages('Pages wired down') + pages('Pages occupied by compressor')
+        return Number.isFinite(used) && pageSize ? Math.max(0, os.totalmem() - used * pageSize) : os.freemem()
+    }
+    if (process.platform === 'linux') {
+        const meminfo = await fs.promises.readFile('/proc/meminfo', 'utf8').catch(() => '')
+        const kilobytes = Number(/^MemAvailable:\s+(?<kilobytes>\d+) kB/m.exec(meminfo)?.groups?.kilobytes)
+        return Number.isFinite(kilobytes) ? kilobytes * 1024 : os.freemem()
+    }
+    return os.freemem()
+}
+
 export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.commands.registerCommand('language-julia.pollisChooseModel', (request: { kind: ModelKind; value?: string }) => chooseModel(request.kind, request.value ?? '')),
         vscode.commands.registerCommand('language-julia.pollisInstalledModels', () => installedModels()),
         vscode.commands.registerCommand('language-julia.pollisModelVersions', (file: string) => modelVersions(file)),
-        vscode.commands.registerCommand('language-julia.pollisDownloadModel', (value: string) => downloadVersion(value))
+        vscode.commands.registerCommand('language-julia.pollisDownloadModel', (value: string) => downloadVersion(value)),
+        vscode.commands.registerCommand('language-julia.pollisAvailableMemory', () => availableMemory())
     )
 }

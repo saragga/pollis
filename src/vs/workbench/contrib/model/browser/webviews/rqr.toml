@@ -111,7 +111,7 @@ default = "y ~ x1 + x2"
 [[inputs]]
 id = "data"
 label = "Data variable"
-tooltip = "DataFrame containing all variables referenced in the formula. Column names must match formula symbols exactly."
+tooltip = "Name of a Tables.jl table (for example a NamedTuple of column vectors or a CSV.File) containing all variables referenced in the formula. Column names must match formula symbols exactly."
 default = "df"
 
 [[inputs]]

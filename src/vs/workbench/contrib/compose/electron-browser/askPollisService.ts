@@ -12,7 +12,7 @@ import { IConfigurationService } from '../../../../platform/configuration/common
 import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
 import { ISecretStorageService } from '../../../../platform/secrets/common/secrets.js';
 import { IUtilityProcessWorkerWorkbenchService } from '../../../services/utilityProcess/electron-browser/utilityProcessWorkerWorkbenchService.js';
-import { ASK_CHAT_MODEL, ASK_CLOUD_PROVIDERS, ASK_EMBEDDING_MODEL, ASK_LOCAL_PREFIX, ASK_PASSAGES, ASK_QUERY_PREFIX, askCloudModel, askPollisMessages, IAskPollisAnswer, IAskPollisChatRequest, IAskPollisIndex, IAskPollisPassage, IAskPollisSearchRequest, IAskPollisSearchResult, IAskPollisService, IAskPollisTurn } from '../common/askPollis.js';
+import { ASK_CHAT_MODEL, ASK_CLOUD_PROVIDERS, ASK_EMBEDDING_MODEL, ASK_LOCAL_PREFIX, ASK_PASSAGES, ASK_QUERY_PREFIX, askCloudModel, askPollisMessages, IAskPollisAnswer, IAskPollisChatRequest, IAskPollisIndex, IAskPollisPassage, IAskPollisSearchRequest, IAskPollisSearchResult, IAskPollisService, IAskPollisTurn, ICompareRun, ICompareRunSummary } from '../common/askPollis.js';
 
 /**
  * The context of the embedding server, in tokens: the same as the Julia extension's when it indexes
@@ -138,6 +138,36 @@ class AskPollisService extends Disposable implements IAskPollisService {
 		} finally {
 			store.dispose();
 		}
+	}
+
+	async spread(count: number): Promise<readonly IAskPollisPassage[]> {
+		const { proxy } = await this.get();
+		return proxy.spread(count);
+	}
+
+	async present(texts: readonly string[]): Promise<readonly boolean[]> {
+		const { proxy } = await this.get();
+		return proxy.present(texts);
+	}
+
+	async saveRun(run: ICompareRun): Promise<void> {
+		const { proxy } = await this.get();
+		return proxy.saveRun(run);
+	}
+
+	async runs(): Promise<readonly ICompareRunSummary[]> {
+		const { proxy } = await this.get();
+		return proxy.runs();
+	}
+
+	async loadRun(id: string): Promise<ICompareRun | undefined> {
+		const { proxy } = await this.get();
+		return proxy.loadRun(id);
+	}
+
+	async deleteRun(id: string): Promise<void> {
+		const { proxy } = await this.get();
+		return proxy.deleteRun(id);
 	}
 }
 

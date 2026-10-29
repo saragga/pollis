@@ -10,7 +10,8 @@
 // it names them; each is searched by words (BM25) and by meaning (cosine distance), the two lists merged by
 // reciprocal rank fusion; with two or more, the nearest gives most of the passages. The answer is written here too, by
 // the chat model's server or a cloud model's API, its text sent as it comes: the renderer may not reach a server of
-// this computer.
+// this computer. The runs of Evaluate Models are kept here too, in Comparisons.duckdb, attached the same way, so that
+// two windows can each keep theirs.
 
 import { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
 import * as fs from 'fs';
@@ -23,9 +24,11 @@ import { ProxyChannel } from '../../../../base/parts/ipc/common/ipc.js';
 import { Server as ChildProcessServer } from '../../../../base/parts/ipc/node/ipc.cp.js';
 import { Server as UtilityProcessServer } from '../../../../base/parts/ipc/node/ipc.mp.js';
 import { isUtilityProcess } from '../../../../base/parts/sandbox/node/electronTypes.js';
-import { ASK_PASSAGES, IAskPollisChatEnd, IAskPollisChatRequest, IAskPollisChatText, IAskPollisIndex, IAskPollisIndexRequest, IAskPollisIndexStatus, IAskPollisPassage, IAskPollisSearchResult, IAskPollisTimings } from '../common/askPollis.js';
+import { ASK_PASSAGES, IAskPollisChatEnd, ICompareRun, ICompareRunSummary, IAskPollisChatRequest, IAskPollisChatText, IAskPollisIndex, IAskPollisIndexRequest, IAskPollisIndexStatus, IAskPollisPassage, IAskPollisSearchResult, IAskPollisTimings } from '../common/askPollis.js';
 
 const DATABASE = join(os.homedir(), '.pollis', 'documents', 'PollisDocuments.duckdb');
+/** The runs of Evaluate Models, their questions, answers and scores. */
+const COMPARISONS = join(os.homedir(), '.pollis', 'ask', 'Comparisons.duckdb');
 /** The fts extension, which the Julia extension of Pollis unpacks here at install. */
 const FTS = join(os.homedir(), '.pollis', 'duckdb', 'fts.duckdb_extension');
 
@@ -50,12 +53,24 @@ const MAX_TOKENS = 16000;
 /** The version of Anthropic's API that the requests are written for. */
 const ANTHROPIC_VERSION = '2026-10-21';
 
+/** The tokens of a chat, as Anthropic's Messages count them, and OpenAI's Chat Completions. */
+interface IChatUsage {
+	readonly input_tokens?: number;
+	readonly output_tokens?: number;
+	readonly prompt_tokens?: number;
+	readonly completion_tokens?: number;
+}
+
 /** An event of a chat's stream: of OpenAI's Chat Completions (and Gemini's and llama-server's), or of Anthropic's Messages. */
 interface IChatEvent {
 	readonly type?: string;
 	readonly choices?: readonly { readonly delta?: { readonly content?: string } }[];
 	readonly delta?: { readonly type?: string; readonly text?: string; readonly stop_reason?: string };
 	readonly error?: { readonly message?: string };
+	/** Anthropic's tokens read, in message_start. */
+	readonly message?: { readonly usage?: IChatUsage };
+	/** Anthropic's tokens written, in message_delta; OpenAI's both, in the last event, when the request asks for them. */
+	readonly usage?: IChatUsage | null;
 	/** llama-server's own measure of the answer, in the last event, when the request asks for its usage. */
 	readonly timings?: { readonly prompt_per_second?: number; readonly predicted_per_second?: number };
 }
@@ -93,7 +108,8 @@ function chatFetch(request: IAskPollisChatRequest, signal: AbortSignal): [string
 		return [`${request.url}/chat/completions`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${request.key ?? ''}` },
-			body: JSON.stringify({ model: request.model, messages: request.messages, stream: true, reasoning_effort: 'low' }),
+			// OpenAI gives the tokens at the end only when asked; Gemini gives them as it pleases
+			body: JSON.stringify({ model: request.model, messages: request.messages, stream: true, reasoning_effort: 'low', ...(request.provider === 'openai' ? { stream_options: { include_usage: true } } : {}) }),
 			signal,
 		}];
 	}
@@ -147,10 +163,49 @@ function searchSql(dimensions: number, count: number): string {
 		? `fused AS (SELECT id, sum(1.0 / (${K} + r)) AS score FROM (SELECT id, r FROM words UNION ALL SELECT id, r FROM meaning) GROUP BY id)`
 		: `fused AS (SELECT id, score FROM words)`;
 	return `WITH ${words}, ${dimensions ? `${meaning}, ` : ''}${fused}
-		SELECT f.id, d.collection, d.kind, d.title, d.source AS file, d.menu, d.toolbox, p.page, p.heading, p.text, p.anchor, f.score
+		SELECT f.id, ${PASSAGE_COLUMNS}, f.score
 		FROM fused f JOIN passages p ON p.id = f.id JOIN documents d ON d.id = p.document
 		ORDER BY f.score DESC LIMIT ${count}`;
 }
+
+/** The columns of a passage that the searches select, with its document's. */
+const PASSAGE_COLUMNS = 'd.collection, d.kind, d.title, d.source AS file, d.menu, d.toolbox, p.page, p.heading, p.text, p.anchor';
+
+type Row = Record<string, unknown>;
+
+function passageOf(row: Row): IAskPollisPassage {
+	return {
+		id: Number(row.id),
+		collection: String(row.collection),
+		kind: String(row.kind),
+		title: String(row.title),
+		file: String(row.file),
+		menu: String(row.menu ?? ''),
+		toolbox: String(row.toolbox ?? ''),
+		page: row.page === null ? null : Number(row.page),
+		heading: String(row.heading ?? ''),
+		text: String(row.text),
+		anchor: row.anchor === null ? null : String(row.anchor),
+		score: Number(row.score),
+	};
+}
+
+/** A number of a row, or nothing for NULL. */
+function optionalNumber(value: unknown): number | undefined {
+	return value === null || value === undefined ? undefined : Number(value);
+}
+
+/** The shortest passage Make Questions asks about, in characters: a shorter one is mostly a heading or a line of a table. */
+const SHORTEST_QUESTION_PASSAGE = 400;
+
+/** The tables of Comparisons.duckdb: a run, the passages found for each of its questions, the answers, the judges' scores and why a judge did not rate an answer. */
+const COMPARISONS_TABLES = [
+	'CREATE TABLE IF NOT EXISTS Comparisons.runs(id VARCHAR PRIMARY KEY, started BIGINT, pollis VARCHAR, models VARCHAR, judges VARCHAR, repeats INTEGER, questions INTEGER)',
+	'CREATE TABLE IF NOT EXISTS Comparisons.questions(run VARCHAR, question INTEGER, source VARCHAR, context VARCHAR, text VARCHAR, answer VARCHAR, passages VARCHAR, rank INTEGER)',
+	'CREATE TABLE IF NOT EXISTS Comparisons.answers(run VARCHAR, id VARCHAR, question INTEGER, model VARCHAR, repeat INTEGER, answer VARCHAR, error VARCHAR, first_word DOUBLE, seconds DOUBLE, reading DOUBLE, writing DOUBLE, tokens_read INTEGER, tokens_written INTEGER)',
+	'CREATE TABLE IF NOT EXISTS Comparisons.scores(run VARCHAR, answer VARCHAR, judge VARCHAR, relevance INTEGER, completeness INTEGER, clarity INTEGER, consistency INTEGER, helpfulness INTEGER, final DOUBLE, rationale VARCHAR)',
+	'CREATE TABLE IF NOT EXISTS Comparisons.unrated(run VARCHAR, answer VARCHAR, judge VARCHAR, error VARCHAR)',
+];
 
 /** The embedding of `input`, as DuckDB reads a list, from the llama.cpp server at `url` (its OpenAI /embeddings). */
 async function embed(url: string, input: string): Promise<string> {
@@ -256,20 +311,7 @@ class AskPollisIndex implements IAskPollisIndex {
 			const passages: IAskPollisPassage[] = [];
 			for (let i = 0; i < searched.length; i++) {
 				const rows = (await connection.runAndReadAll(searchSql(dimensions, counts[i]), { question: request.question, collection: searched[i], ...(vector ? { vector } : {}) })).getRowObjectsJson();
-				passages.push(...rows.map(row => ({
-					id: Number(row.id),
-					collection: String(row.collection),
-					kind: String(row.kind),
-					title: String(row.title),
-					file: String(row.file),
-					menu: String(row.menu ?? ''),
-					toolbox: String(row.toolbox ?? ''),
-					page: row.page === null ? null : Number(row.page),
-					heading: String(row.heading ?? ''),
-					text: String(row.text),
-					anchor: row.anchor === null ? null : String(row.anchor),
-					score: Number(row.score),
-				})));
+				passages.push(...rows.map(passageOf));
 			}
 			const result: IAskPollisSearchResult = {
 				passages,
@@ -292,7 +334,9 @@ class AskPollisIndex implements IAskPollisIndex {
 		let firstWord: number | undefined;
 		let reading: number | undefined;
 		let writing: number | undefined;
-		const timings = (): IAskPollisTimings => ({ firstWord, seconds: (Date.now() - sent) / 1000, reading, writing });
+		let tokensRead: number | undefined;
+		let tokensWritten: number | undefined;
+		const timings = (): IAskPollisTimings => ({ firstWord, seconds: (Date.now() - sent) / 1000, reading, writing, tokensRead, tokensWritten });
 		try {
 			const response = await fetch(...chatFetch(request, controller.signal));
 			if (!response.ok || !response.body) {
@@ -327,6 +371,11 @@ class AskPollisIndex implements IAskPollisIndex {
 					if (event.type === 'message_delta' && event.delta?.stop_reason === 'refusal') {
 						refused = true;
 					}
+					const usage = event.message?.usage ?? event.usage;
+					if (usage) {
+						tokensRead = usage.input_tokens ?? usage.prompt_tokens ?? tokensRead;
+						tokensWritten = usage.output_tokens ?? usage.completion_tokens ?? tokensWritten;
+					}
 					if (event.timings) {
 						reading = event.timings.prompt_per_second;
 						writing = event.timings.predicted_per_second;
@@ -351,6 +400,162 @@ class AskPollisIndex implements IAskPollisIndex {
 
 	async stop(id: string): Promise<void> {
 		this.chats.get(id)?.abort();
+	}
+
+	async spread(count: number): Promise<readonly IAskPollisPassage[]> {
+		// Each kind of document in turn (the PDFs, the wikis, the Julia Manual), and within a kind each document in turn,
+		// a passage of each chosen by its hash, so that the same index gives the same passages
+		const rows = await this.withIndex(async connection => (await connection.runAndReadAll(`
+			WITH long AS (
+				SELECT p.id, p.document, row_number() OVER (PARTITION BY p.document ORDER BY hash(p.id)) AS k
+				FROM passages p WHERE length(p.text) >= ${SHORTEST_QUESTION_PASSAGE}),
+			turns AS (
+				SELECT l.id, d.kind, row_number() OVER (PARTITION BY d.kind ORDER BY l.k, hash(l.document)) AS turn
+				FROM long l JOIN documents d ON d.id = l.document)
+			SELECT p.id, ${PASSAGE_COLUMNS}, 0 AS score
+			FROM turns t JOIN passages p ON p.id = t.id JOIN documents d ON d.id = p.document
+			ORDER BY t.turn, t.kind LIMIT ${Math.max(0, Math.floor(count))}`)).getRowObjectsJson());
+		return (rows ?? []).map(passageOf);
+	}
+
+	async present(texts: readonly string[]): Promise<readonly boolean[]> {
+		if (!texts.length) {
+			return [];
+		}
+		const found = await this.withIndex(async connection => new Set((await connection.runAndReadAll(
+			`SELECT DISTINCT text FROM passages WHERE text IN (${texts.map(sqlString).join(', ')})`)).getRowObjectsJson().map(row => String(row.text))));
+		return texts.map(text => !found || found.has(text));
+	}
+
+	/** Runs `task` with Comparisons.duckdb attached, its tables made the first time. */
+	private withComparisons<T>(task: (connection: DuckDBConnection) => Promise<T>): Promise<T> {
+		return this.sequencer.queue(async () => {
+			fs.mkdirSync(join(os.homedir(), '.pollis', 'ask'), { recursive: true });
+			const connection = await this.connect();
+			await connection.run(`ATTACH ${sqlString(COMPARISONS)} AS Comparisons`);
+			try {
+				for (const table of COMPARISONS_TABLES) {
+					await connection.run(table);
+				}
+				return await task(connection);
+			} finally {
+				await connection.run('DETACH Comparisons');
+			}
+		});
+	}
+
+	/** Takes away the run `run` from each table. */
+	private async removeRun(connection: DuckDBConnection, run: string): Promise<void> {
+		for (const table of ['runs', 'questions', 'answers', 'scores', 'unrated']) {
+			await connection.run(`DELETE FROM Comparisons.${table} WHERE ${table === 'runs' ? 'id' : 'run'} = $run`, { run });
+		}
+	}
+
+	async saveRun(run: ICompareRun): Promise<void> {
+		await this.withComparisons(async connection => {
+			const { summary } = run;
+			await connection.run('BEGIN TRANSACTION');
+			try {
+				await this.removeRun(connection, summary.id);
+				await connection.run('INSERT INTO Comparisons.runs VALUES ($id, $started, $pollis, $models, $judges, $repeats, $questions)', {
+					id: summary.id, started: summary.started, pollis: summary.pollis, models: JSON.stringify(summary.models), judges: JSON.stringify(summary.judges), repeats: summary.repeats, questions: summary.questions,
+				});
+				for (const question of run.questions) {
+					await connection.run('INSERT INTO Comparisons.questions VALUES ($run, $question, $source, $context, $text, $answer, $passages, $rank::INTEGER)', {
+						run: summary.id, question: question.index, source: question.item.source, context: question.item.context, text: question.item.question, answer: question.item.answer, passages: JSON.stringify(question.passages), rank: question.rank ?? null,
+					});
+				}
+				for (const answer of run.answers) {
+					const timings = answer.timings;
+					await connection.run('INSERT INTO Comparisons.answers VALUES ($run, $id, $question, $model, $repeat, $answer, $error::VARCHAR, $firstWord::DOUBLE, $seconds::DOUBLE, $reading::DOUBLE, $writing::DOUBLE, $tokensRead::INTEGER, $tokensWritten::INTEGER)', {
+						run: summary.id, id: answer.id, question: answer.question, model: answer.model, repeat: answer.repeat, answer: answer.answer, error: answer.error ?? null,
+						firstWord: timings?.firstWord ?? null, seconds: timings?.seconds ?? null, reading: timings?.reading ?? null, writing: timings?.writing ?? null, tokensRead: timings?.tokensRead ?? null, tokensWritten: timings?.tokensWritten ?? null,
+					});
+				}
+				for (const score of run.scores) {
+					await connection.run('INSERT INTO Comparisons.scores VALUES ($run, $answer, $judge, $relevance, $completeness, $clarity, $consistency, $helpfulness, $final, $rationale)', { run: summary.id, ...score });
+				}
+				for (const unrated of run.unrated) {
+					await connection.run('INSERT INTO Comparisons.unrated VALUES ($run, $answer, $judge, $error)', { run: summary.id, ...unrated });
+				}
+				await connection.run('COMMIT');
+			} catch (err) {
+				await connection.run('ROLLBACK');
+				throw err;
+			}
+		});
+	}
+
+	private summaryOf(row: Row): ICompareRunSummary {
+		return {
+			id: String(row.id),
+			started: Number(row.started),
+			pollis: String(row.pollis ?? ''),
+			models: JSON.parse(String(row.models ?? '[]')),
+			judges: JSON.parse(String(row.judges ?? '[]')),
+			repeats: Number(row.repeats),
+			questions: Number(row.questions),
+		};
+	}
+
+	async runs(): Promise<readonly ICompareRunSummary[]> {
+		return this.withComparisons(async connection =>
+			(await connection.runAndReadAll('SELECT * FROM Comparisons.runs ORDER BY started DESC')).getRowObjectsJson().map(row => this.summaryOf(row)));
+	}
+
+	async loadRun(id: string): Promise<ICompareRun | undefined> {
+		return this.withComparisons(async connection => {
+			const read = async (sql: string) => (await connection.runAndReadAll(sql, { run: id })).getRowObjectsJson();
+			const [run] = await read('SELECT * FROM Comparisons.runs WHERE id = $run');
+			if (!run) {
+				return undefined;
+			}
+			const questions = await read('SELECT * FROM Comparisons.questions WHERE run = $run ORDER BY question');
+			const answers = await read('SELECT * FROM Comparisons.answers WHERE run = $run ORDER BY question, model, repeat');
+			const scores = await read('SELECT * FROM Comparisons.scores WHERE run = $run');
+			const unrated = await read('SELECT * FROM Comparisons.unrated WHERE run = $run');
+			return {
+				summary: this.summaryOf(run),
+				questions: questions.map(row => ({
+					index: Number(row.question),
+					item: { source: String(row.source ?? ''), context: String(row.context ?? ''), question: String(row.text ?? ''), answer: String(row.answer ?? '') },
+					passages: JSON.parse(String(row.passages ?? '[]')),
+					rank: optionalNumber(row.rank),
+				})),
+				answers: answers.map(row => ({
+					id: String(row.id),
+					question: Number(row.question),
+					model: String(row.model),
+					repeat: Number(row.repeat),
+					answer: String(row.answer ?? ''),
+					error: row.error === null ? undefined : String(row.error),
+					timings: row.seconds === null ? undefined : {
+						firstWord: optionalNumber(row.first_word),
+						seconds: Number(row.seconds),
+						reading: optionalNumber(row.reading),
+						writing: optionalNumber(row.writing),
+						tokensRead: optionalNumber(row.tokens_read),
+						tokensWritten: optionalNumber(row.tokens_written),
+					},
+				})),
+				scores: scores.map(row => ({
+					answer: String(row.answer),
+					judge: String(row.judge),
+					relevance: Number(row.relevance),
+					completeness: Number(row.completeness),
+					clarity: Number(row.clarity),
+					consistency: Number(row.consistency),
+					helpfulness: Number(row.helpfulness),
+					final: Number(row.final),
+					rationale: String(row.rationale ?? ''),
+				})),
+				unrated: unrated.map(row => ({ answer: String(row.answer), judge: String(row.judge), error: String(row.error ?? '') })),
+			};
+		});
+	}
+
+	async deleteRun(id: string): Promise<void> {
+		await this.withComparisons(connection => this.removeRun(connection, id));
 	}
 }
 

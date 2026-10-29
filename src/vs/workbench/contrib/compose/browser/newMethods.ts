@@ -88,7 +88,7 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).regis
 			type: 'string',
 			default: DEFAULT_REGISTRY,
 			scope: ConfigurationScope.APPLICATION,
-			markdownDescription: localize('newMethods.registry', "The Julia package registry that **Package and Publish** (Compose > Methods) registers method packages in, when they meet the Pollis registry rules. Their vignettes are listed in its `Vignettes.toml`, which Help > Documentation > Packages shows."),
+			markdownDescription: localize('newMethods.registry', "The Julia package registry that **Package and Publish** (Compose > Methods) registers method packages in, when they meet the Pollis registry rules. Their vignettes are listed in its `Vignettes.toml`, which Help > Documentation > Package Vignettes shows."),
 		},
 	},
 });

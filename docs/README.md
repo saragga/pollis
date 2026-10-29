@@ -16,6 +16,6 @@ The LaTeX sources of the documents in Help > Documentation. Pollis ships these s
 
 ## Package vignettes
 
-`vignettes/` holds the LaTeX sources of the package vignettes in Help > Documentation > Packages, all set in `newmethods_style.tex`. Copy `<Package>.tex` (and any images, in a `resources/` folder) to `src/vs/workbench/contrib/compose/browser/media/methods/<Package>/vignette/`, from which Package and Publish copies them into the published package. Packages carry no PDF: Help > Documentation > Packages compiles a vignette with PollisTeX (XeTeX, as for every Pollis document) the first time it is opened. To check one here, build it with `tectonic <Package>.tex`; the PDF is git-ignored. LSTNet's also needs `divergence.tex` and `fluxarchitectures.tex`, which it inputs.
+`vignettes/` holds the LaTeX sources of the package vignettes in Help > Documentation > Package Vignettes, all set in `newmethods_style.tex`. Copy `<Package>.tex` (and any images, in a `resources/` folder) to `src/vs/workbench/contrib/compose/browser/media/methods/<Package>/vignette/`, from which Package and Publish copies them into the published package. Packages carry no PDF: Help > Documentation > Package Vignettes compiles a vignette with PollisTeX (XeTeX, as for every Pollis document) the first time it is opened. To check one here, build it with `tectonic <Package>.tex`; the PDF is git-ignored. LSTNet's also needs `divergence.tex` and `fluxarchitectures.tex`, which it inputs.
 
 `dp_event_studies.tex` is the draft vignette of PollisEventStudies.jl (Domain Packages), not shipped yet.

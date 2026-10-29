@@ -158,6 +158,7 @@ class ItemRenderer implements ITreeRenderer<DatabaseItem, void, IItemTemplate> {
 		let hover: string | undefined;
 		template.row.classList.toggle('connected', item.kind === 'connection' && !!item.session);
 		template.row.classList.toggle('disconnected', item.kind === 'connection' && !item.session);
+		template.row.classList.toggle('builtin', item.kind === 'connection' && !!item.profile?.builtin);
 		template.row.classList.toggle('message', item.kind === 'message');
 		switch (item.kind) {
 			case 'connection': {

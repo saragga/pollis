@@ -50,32 +50,32 @@ description = "Mixture models, product distributions, and convolutions"
 
 [[wikis]]
 name = "Overview"
-file = "dist/overview.md"
+file = "dist-sampling/overview.md"
 bundled = true
 
 [[wikis]]
 name = "Factsheet"
-file = "dist/factsheet.md"
+file = "dist-sampling/factsheet.md"
 bundled = true
 
 [[wikis]]
 name = "Assumptions"
-file = "dist/assumptions.md"
+file = "dist-sampling/assumptions.md"
 bundled = true
 
 [[wikis]]
 name = "Diagnostics"
-file = "dist/diagnostics.md"
+file = "dist-sampling/diagnostics.md"
 bundled = true
 
 [[wikis]]
 name = "Interpretation"
-file = "dist/interpretation.md"
+file = "dist-sampling/interpretation.md"
 bundled = true
 
 [[wikis]]
 name = "Decision Guide"
-file = "dist/decision-guide.md"
+file = "dist-sampling/decision-guide.md"
 bundled = true
 
 [[wikis]]

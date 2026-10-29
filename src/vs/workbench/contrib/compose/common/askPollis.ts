@@ -10,7 +10,7 @@ import { createDecorator } from '../../../../platform/instantiation/common/insta
 /** The embedding model of Ask Pollis when the setting pollis.ask.embeddingModel gives none; the Julia extension indexes with the same. */
 export const ASK_EMBEDDING_MODEL = 'hf:ggml-org/embeddinggemma-2-GGUF/embeddinggemma-2-Q8_0.gguf';
 /** The chat model that writes the answers on this computer, when the setting pollis.ask.chatModel gives none. */
-export const ASK_CHAT_MODEL = 'hf:unsloth/Qwen3.5-4B-GGUF/Qwen3.5-4B-Q4_K_M.gguf';
+export const ASK_CHAT_MODEL = 'hf:unsloth/gemma-4-E4B-it-GGUF/gemma-4-E4B-it-Q4_K_M.gguf';
 /** What a question is given to the embedding model as, when pollis.ask.queryPrefix gives nothing: EmbeddingGemma's form for a query. */
 export const ASK_QUERY_PREFIX = 'task: question answering | query: {text}';
 /** What a passage is given to the embedding model as, when pollis.ask.passagePrefix gives nothing: EmbeddingGemma's form for a document; the Julia extension has the same. */
@@ -109,8 +109,8 @@ const ASK_INSTRUCTION = [
 /** How many of the questions before are given to the model with their answers, so that the passages still fit its context. */
 const ASK_TURNS = 4;
 
-/** What a passage is labelled with for the model: its document, its page and its heading. */
-function passageLabel(passage: IAskPollisPassage): string {
+/** What a passage is labelled with for the model, and as the source of a question of Evaluate Models: its document, its page and its heading. */
+export function askPassageLabel(passage: IAskPollisPassage): string {
 	return [passage.title, passage.page === null ? '' : `page ${passage.page}`, passage.heading].filter(part => part).join(', ');
 }
 
@@ -119,7 +119,7 @@ function passageLabel(passage: IAskPollisPassage): string {
  * so far. Its answers are given without their citations, which were to other passages.
  */
 export function askPollisMessages(turns: readonly IAskPollisTurn[], question: string, passages: readonly IAskPollisPassage[]): IAskPollisMessage[] {
-	const numbered = passages.map((passage, i) => `[${i + 1}] ${passageLabel(passage)}\n${passage.text}`);
+	const numbered = passages.map((passage, i) => `[${i + 1}] ${askPassageLabel(passage)}\n${passage.text}`);
 	return [
 		{ role: 'system', content: `${ASK_INSTRUCTION}\n\n${numbered.join('\n\n')}` },
 		...turns.slice(-ASK_TURNS).flatMap(turn => [
@@ -156,8 +156,9 @@ export interface IAskPollisCloudModel {
 }
 
 export const ASK_CLOUD_MODELS: readonly IAskPollisCloudModel[] = [
-	{ id: 'claude-haiku-5-5', label: 'Claude Haiku', provider: 'anthropic' },
-	{ id: 'claude-sonnet-5-5', label: 'Claude Sonnet', provider: 'anthropic' },
+	{ id: 'claude-haiku-5-5', label: 'Claude Haiku 5.5', provider: 'anthropic' },
+	{ id: 'claude-sonnet-5-5', label: 'Claude Sonnet 5.5', provider: 'anthropic' },
+	{ id: 'claude-opus-5-5', label: 'Claude Opus 5.5', provider: 'anthropic' },
 	{ id: 'gpt-5.4-mini', label: 'GPT-5.4 mini', provider: 'openai' },
 	{ id: 'gpt-5.5', label: 'GPT-5.5', provider: 'openai' },
 	{ id: 'gemini-3.8-flash', label: 'Gemini 3.8 Flash', provider: 'google' },
@@ -167,7 +168,7 @@ export const ASK_CLOUD_MODELS: readonly IAskPollisCloudModel[] = [
 /** The value of pollis.ask.answerWith that answers on this computer, with the model of pollis.ask.chatModel. */
 export const ASK_THIS_COMPUTER = 'local';
 
-/** What an answer of Compare Models is asked with, besides a cloud model's id: a local model's file after `local:`. */
+/** What an answer of Evaluate Models is asked with, besides a cloud model's id: a local model's file after `local:`. */
 export const ASK_LOCAL_PREFIX = 'local:';
 
 /** The cloud model of a value of pollis.ask.answerWith, or nothing for This Computer. */
@@ -197,6 +198,10 @@ export interface IAskPollisTimings {
 	readonly reading?: number;
 	/** How fast a local model wrote the answer, in tokens per second. */
 	readonly writing?: number;
+	/** The tokens the model read, the instruction, the passages and the question, as its API counts them. */
+	readonly tokensRead?: number;
+	/** The tokens of the answer, as its API counts them. */
+	readonly tokensWritten?: number;
 }
 
 /** How a chat ended: done, stopped, refused by the model, or what went wrong; and how fast it went. */
@@ -212,6 +217,93 @@ export interface IAskPollisChatText {
 	readonly text: string;
 }
 
+/**
+ * A question of the test set of Evaluate Models: a QAEvalItem of RAGTools.jl, as `evals.json` holds it. `source` names
+ * the document and the place in it, `context` is the passage that answers the question, and `answer` the right answer.
+ */
+export interface IAskPollisEvalItem {
+	readonly source: string;
+	readonly context: string;
+	readonly question: string;
+	readonly answer: string;
+}
+
+/** A model of a run of Evaluate Models. */
+export interface ICompareRunModel {
+	/** What IAskPollisService.answer is asked with: a cloud model's id, or `local:` and a local model's file. */
+	readonly value: string;
+	readonly label: string;
+	readonly local: boolean;
+	/** A local model's download, as Compose > Local Models shows it. */
+	readonly size?: string;
+}
+
+/** A run of Evaluate Models, as the list of the earlier runs shows it. */
+export interface ICompareRunSummary {
+	readonly id: string;
+	/** When it started, in milliseconds since 1970. */
+	readonly started: number;
+	/** The version of Pollis it ran on. */
+	readonly pollis: string;
+	readonly models: readonly ICompareRunModel[];
+	/** The judges, by their labels. */
+	readonly judges: readonly string[];
+	readonly repeats: number;
+	readonly questions: number;
+}
+
+/** A question of a run, with the passages found for it, the same for every model. */
+export interface ICompareRunQuestion {
+	/** Its place in the run, from 0. */
+	readonly index: number;
+	readonly item: IAskPollisEvalItem;
+	readonly passages: readonly IAskPollisPassage[];
+	/** The place of the question's own passage among those found, from 1; 0 when it was not among them, nothing when it has none. */
+	readonly rank?: number;
+}
+
+/** A model's answer to a question of a run. */
+export interface ICompareRunAnswer {
+	readonly id: string;
+	readonly question: number;
+	readonly model: string;
+	/** Which asking of the question it is, from 0, when Repeats is above 1. */
+	readonly repeat: number;
+	readonly answer: string;
+	/** Why the model gave no answer. */
+	readonly error?: string;
+	readonly timings?: IAskPollisTimings;
+}
+
+/** A judge's rating of an answer, the five parts of RAGTools.JudgeAllScores, each from 1 to 5, and the mean of them. */
+export interface ICompareRunScore {
+	readonly answer: string;
+	readonly judge: string;
+	readonly relevance: number;
+	readonly completeness: number;
+	readonly clarity: number;
+	readonly consistency: number;
+	readonly helpfulness: number;
+	readonly final: number;
+	readonly rationale: string;
+}
+
+/** Why a judge did not rate an answer. */
+export interface ICompareRunUnrated {
+	readonly answer: string;
+	readonly judge: string;
+	readonly error: string;
+}
+
+/** A run of Evaluate Models, kept in `~/.pollis/ask/Comparisons.duckdb`. */
+export interface ICompareRun {
+	readonly summary: ICompareRunSummary;
+	readonly questions: readonly ICompareRunQuestion[];
+	readonly answers: readonly ICompareRunAnswer[];
+	readonly scores: readonly ICompareRunScore[];
+	readonly unrated: readonly ICompareRunUnrated[];
+}
+
 /** The search of PollisDocuments, and the chat model's answer, in a process of their own (../node/askPollisMain.ts). */
 export interface IAskPollisIndex {
 	readonly onDidChat: Event<IAskPollisChatText>;
@@ -221,6 +313,16 @@ export interface IAskPollisIndex {
 	/** Writes the answer, the text sent as it comes by `onDidChat`. */
 	chat(request: IAskPollisChatRequest): Promise<IAskPollisChatEnd>;
 	stop(id: string): Promise<void>;
+	/** `count` passages spread over the documents, for Make Questions: one of each document in turn, long enough to ask about. */
+	spread(count: number): Promise<readonly IAskPollisPassage[]>;
+	/** Whether each of `texts` is still the text of a passage of the documents. */
+	present(texts: readonly string[]): Promise<readonly boolean[]>;
+	/** Keeps a run, in place of the one of the same id. */
+	saveRun(run: ICompareRun): Promise<void>;
+	/** The runs kept, the latest first. */
+	runs(): Promise<readonly ICompareRunSummary[]>;
+	loadRun(id: string): Promise<ICompareRun | undefined>;
+	deleteRun(id: string): Promise<void>;
 }
 
 /** How an answer ended, and the model that wrote it. */
@@ -244,8 +346,17 @@ export interface IAskPollisService {
 	/**
 	 * Has the model of pollis.ask.answerWith answer `question` from `passages`, after `turns`: on this computer the
 	 * chat model of pollis.ask.chatModel, started through the Julia extension, downloaded the first time; or a cloud
-	 * model, with the key of its provider. `onText` is given the answer so far as it comes. Compare Models gives
+	 * model, with the key of its provider. `onText` is given the answer so far as it comes. Evaluate Models gives
 	 * `answerWith`, a cloud model's id or `local:` and a local model's file, in place of the setting.
 	 */
 	answer(turns: readonly IAskPollisTurn[], question: string, passages: readonly IAskPollisPassage[], onText: (text: string) => void, token: CancellationToken, answerWith?: string): Promise<IAskPollisAnswer>;
+	/** `count` passages spread over the documents, for the questions of a test set. */
+	spread(count: number): Promise<readonly IAskPollisPassage[]>;
+	/** Whether each of `texts` is still the text of a passage of the documents; all are when there is no index. */
+	present(texts: readonly string[]): Promise<readonly boolean[]>;
+	/** The runs of Evaluate Models, in `~/.pollis/ask/Comparisons.duckdb`. */
+	saveRun(run: ICompareRun): Promise<void>;
+	runs(): Promise<readonly ICompareRunSummary[]>;
+	loadRun(id: string): Promise<ICompareRun | undefined>;
+	deleteRun(id: string): Promise<void>;
 }

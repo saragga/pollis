@@ -8,7 +8,7 @@
 // with the request `pollis/llamaServer` (Pollis.llama_server in Pollis.jl), from the REPL or a notebook. There is one server
 // per model file and way of running it; each stops when Pollis quits, or with `language-julia.pollisStopLlamaServers`;
 // `language-julia.pollisStopLlamaServer`, with the request that started it, stops one, and answers once it has ended,
-// its memory free: Compare Models runs each local model alone.
+// its memory free: Evaluate Models runs each local model alone.
 // What the servers print goes to the llama.cpp Output channel. Thinking is off unless asked for, whatever the model:
 // on the short tasks of the panels it only costs time, and can use up the reply before any answer; a model that does
 // not think ignores it.
@@ -177,7 +177,7 @@ export function answerLlamaServerRequests(connection: MessageConnection) {
 }
 
 /** Stops the server that `request` started, if it runs, and resolves once its process has ended. */
-function stopServer(request: ServerRequest): Promise<void> {
+export function stopServer(request: ServerRequest): Promise<void> {
     const key = serverKey(request)
     const server = g_servers.get(key)
     g_servers.delete(key)

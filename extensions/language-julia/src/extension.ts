@@ -15,6 +15,7 @@ import { LanguageClientFeature } from './languageClient'
 import { JuliaNotebookFeature } from './notebook/notebookFeature'
 import * as openpackagedirectory from './openpackagedirectory'
 import * as packagepath from './packagepath'
+import * as pollisCompareModels from './pollisCompareModels'
 import * as pollisDuckDB from './pollisDuckDB'
 import * as pollisDocuments from './pollisDocuments'
 import * as pollisHiddenJulia from './pollisHiddenJulia'
@@ -112,6 +113,8 @@ export async function activate(context: vscode.ExtensionContext) {
         pollisHiddenJulia.activate(context, executableFeature)
         // POLLIS: the package vignettes, compiled with PollisTeX when Help > Documentation > Packages opens one.
         pollisDocuments.activate(context, executableFeature)
+        // POLLIS: the evaluation of Evaluate Models, with RAGTools.jl.
+        pollisCompareModels.activate(context, executableFeature)
 
         t = performance.now()
         openpackagedirectory.activate(context)

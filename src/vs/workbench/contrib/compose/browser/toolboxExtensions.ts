@@ -138,6 +138,8 @@ interface ILoadedToolbox {
 interface IStoredPlacement {
 	readonly menu?: string | IToolboxPlace;
 	readonly panels: Readonly<Record<string, string | IToolboxPlace>>;
+	/** The panels the toolbox had when it was published, so that a panel an update adds goes to its default place. Entries stored before it have none. */
+	readonly known?: readonly string[];
 }
 
 /** Where the user published each toolbox, by `<extension id>/<toolbox id>`. */
@@ -231,7 +233,9 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 
 	publish(extensionId: string, toolboxId: string, placement: IToolboxPlacement): void {
 		const published = this.getPublished();
-		published[`${extensionId.toLowerCase()}/${toolboxId}`] = { menu: placement.menu, panels: { ...placement.panels } };
+		const key = `${extensionId.toLowerCase()}/${toolboxId}`;
+		const known = this.loaded.find(loaded => publishedKey(loaded) === key)?.panels.map(({ contribution }) => contribution.id);
+		published[key] = { menu: placement.menu, panels: { ...placement.panels }, known };
 		this.storageService.store(PUBLISHED_STORAGE_KEY, JSON.stringify(published), StorageScope.PROFILE, StorageTarget.USER);
 		this.register();
 	}
@@ -432,7 +436,10 @@ function defaultPlacement(loaded: ILoadedToolbox): IToolboxPlacement {
 	};
 }
 
-/** A published entry, in any format: in the default menu, a place is the default one (group and order from the manifest); in another menu it keeps its stored place, or goes at the end of a menu named as a string. */
+/**
+ * A published entry, in any format: in the default menu, a place is the default one (group and order from the manifest); in another menu it keeps its stored place, or goes at the end of a menu named as a string.
+ * A panel the toolbox did not have when it was published, which an update added, is in its default place; in an entry stored before the known panels were, every panel left out counts as new.
+ */
 function placementOf(loaded: ILoadedToolbox, entry: IStoredPlacement | Record<string, string>): IToolboxPlacement {
 	const defaults = defaultPlacement(loaded);
 	const stored: IStoredPlacement = isStoredPlacement(entry) ? entry : { menu: defaults.menu, panels: entry };
@@ -452,6 +459,8 @@ function placementOf(loaded: ILoadedToolbox, entry: IStoredPlacement | Record<st
 		const value = stored.panels[contribution.id];
 		if (value !== undefined) {
 			panels[contribution.id] = placeOf(value, defaults.panels[contribution.id], index + 1);
+		} else if (!stored.known?.includes(contribution.id)) {
+			panels[contribution.id] = defaults.panels[contribution.id];
 		}
 	});
 	return { menu: stored.menu === undefined ? undefined : placeOf(stored.menu, defaults.menu, loaded.toolbox.order ?? 0), panels };

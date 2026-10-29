@@ -276,7 +276,7 @@ MenuRegistry.appendMenuItem(LocalModelsMenu, {
 // The chat models installed and the cloud models, compared on the questions of Ask Pollis (compareModelsPage.ts)
 MenuRegistry.appendMenuItem(LocalModelsMenu, {
 	group: '2_compare',
-	command: { id: COMPARE_MODELS_COMMAND_ID, title: localize('compareModels.menu', "Compare Models...") },
+	command: { id: COMPARE_MODELS_COMMAND_ID, title: localize('compareModels.menu', "Evaluate Models...") },
 	order: 1,
 });
 
