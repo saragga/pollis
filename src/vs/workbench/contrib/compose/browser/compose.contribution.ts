@@ -7,12 +7,10 @@ import { localize } from '../../../../../vs/nls.js';
 import { MenuRegistry, MenuId } from '../../../../platform/actions/common/actions.js';
 import { CommandsRegistry } from '../../../../platform/commands/common/commands.js';
 import { INotificationService } from '../../../../platform/notification/common/notification.js';
-import { Codicon } from '../../../../base/common/codicons.js';
-import { registerIcon } from '../../../../platform/theme/common/iconRegistry.js';
-import { AGENT_MENU_ICON_ID } from '../../../../platform/menubar/common/menubar.js';
 import './toolboxExtensions.js';
 import './toolboxPanelsPage.js';
 import './askPollisPage.js';
+import { COMPARE_EMBEDDINGS_COMMAND_ID } from './compareEmbeddingsPage.js';
 import { COMPARE_MODELS_COMMAND_ID } from './compareModelsPage.js';
 import './askPollisSources.js';
 import { BROWSE_SKILLS_COMMAND_ID, CHOOSE_AGENT_COMMAND_ID, CREATE_PANEL_COMMAND_ID, CREATE_PANELS_FROM_REQUEST_COMMAND_ID, PACKAGE_TOOLBOX_COMMAND_ID } from './pollisAgents.js';
@@ -223,29 +221,25 @@ MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	order: 1,
 });
 
-// The mark of the items a coding agent does, since they cost tokens: the menus draw it as a two-star sparkle
-// (menu.ts for the custom menu, electron-main/menubar.ts for the macOS one)
-const agentIcon = registerIcon(AGENT_MENU_ICON_ID, Codicon.sparkle, localize('compose.agentIcon', "Icon of the menu items a coding agent does."));
-
 // ==============================================================
 // SUBMENU: New Panels and Toolboxes, the tasks a coding agent does on panels and toolboxes (pollisAgents.ts)
 // ==============================================================
 
 MenuRegistry.appendMenuItem(NewPanelsMenu, {
 	group: '1_panels',
-	command: { id: CREATE_PANEL_COMMAND_ID, title: localize('pollisAgents.createPanel', "Create a Panel..."), icon: agentIcon },
+	command: { id: CREATE_PANEL_COMMAND_ID, title: localize('pollisAgents.createPanel', "Create a Panel...") },
 	order: 1,
 });
 
 MenuRegistry.appendMenuItem(NewPanelsMenu, {
 	group: '1_panels',
-	command: { id: CREATE_PANELS_FROM_REQUEST_COMMAND_ID, title: localize('pollisAgents.createPanelsFromRequest', "Create Panels from a Request..."), icon: agentIcon },
+	command: { id: CREATE_PANELS_FROM_REQUEST_COMMAND_ID, title: localize('pollisAgents.createPanelsFromRequest', "Create Panels from a Request...") },
 	order: 2,
 });
 
 MenuRegistry.appendMenuItem(NewPanelsMenu, {
 	group: '2_toolboxes',
-	command: { id: PACKAGE_TOOLBOX_COMMAND_ID, title: localize('pollisAgents.packageToolbox', "Package a Toolbox..."), icon: agentIcon },
+	command: { id: PACKAGE_TOOLBOX_COMMAND_ID, title: localize('pollisAgents.packageToolbox', "Package a Toolbox...") },
 	order: 1,
 });
 
@@ -276,8 +270,15 @@ MenuRegistry.appendMenuItem(LocalModelsMenu, {
 // The chat models installed and the cloud models, compared on the questions of Ask Pollis (compareModelsPage.ts)
 MenuRegistry.appendMenuItem(LocalModelsMenu, {
 	group: '2_compare',
-	command: { id: COMPARE_MODELS_COMMAND_ID, title: localize('compareModels.menu', "Evaluate Models...") },
+	command: { id: COMPARE_MODELS_COMMAND_ID, title: localize('compareModels.menu', "Evaluate Answering Models...") },
 	order: 1,
+});
+
+// The embedding models installed, compared on the same questions (compareEmbeddingsPage.ts)
+MenuRegistry.appendMenuItem(LocalModelsMenu, {
+	group: '2_compare',
+	command: { id: COMPARE_EMBEDDINGS_COMMAND_ID, title: localize('compareEmbeddings.menu', "Evaluate Embedding Models...") },
+	order: 2,
 });
 
 
@@ -424,7 +425,7 @@ MenuRegistry.appendMenuItem(ReportsMenu, {
 });
 MenuRegistry.appendMenuItem(ReportsMenu, {
 	group: '2_agent',
-	command: { id: POLISH_REPORT_COMMAND_ID, title: localize('reports.polish', "Polish with Agent..."), icon: agentIcon },
+	command: { id: POLISH_REPORT_COMMAND_ID, title: localize('reports.polish', "Polish with Agent...") },
 	order: 1,
 });
 

@@ -113,7 +113,7 @@ export async function activate(context: vscode.ExtensionContext) {
         pollisHiddenJulia.activate(context, executableFeature)
         // POLLIS: the package vignettes, compiled with PollisTeX when Help > Documentation > Packages opens one.
         pollisDocuments.activate(context, executableFeature)
-        // POLLIS: the evaluation of Evaluate Models, with RAGTools.jl.
+        // POLLIS: the evaluation of Evaluate Answering Models, with RAGTools.jl.
         pollisCompareModels.activate(context, executableFeature)
 
         t = performance.now()

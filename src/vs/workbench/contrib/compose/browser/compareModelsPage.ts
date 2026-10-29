@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { VSBuffer } from '../../../../base/common/buffer.js';
+import { timeout } from '../../../../base/common/async.js';
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
 import { hasKey } from '../../../../base/common/types.js';
 import { localize, localize2 } from '../../../../nls.js';
@@ -18,14 +19,16 @@ import { IStorageService, StorageScope, StorageTarget } from '../../../../platfo
 import { IHostService } from '../../../services/host/browser/host.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
-import { FEWEST_ROWS, rowsChoiceCss, rowsChoiceScript, sortHeadingsCss, sortHeadingsScript, sortHint, storedRows, storeRows } from '../../model/browser/webviews/webviewPager.js';
-import { spinnerCss, spinnerSvg } from '../../model/browser/webviews/webviewScaffold.js';
-import { ASK_CLOUD_MODELS, ASK_CLOUD_PROVIDERS, ASK_LOCAL_PREFIX, askCloudModel, askPassageLabel, IAskPollisEvalItem, IAskPollisPassage, IAskPollisService, ICompareRun, ICompareRunModel } from '../common/askPollis.js';
+import { FEWEST_ROWS, rowsChoiceScript, sortHeadingsScript, storedRows, storeRows } from '../../model/browser/webviews/webviewPager.js';
+import { spinnerSvg, voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
+import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
+import { ASK_CLOUD_MODELS, ASK_CLOUD_PROVIDERS, ASK_LOCAL_PREFIX, askCloudModel, askPassageLabel, AskTopic, IAskPollisEvalItem, IAskPollisPassage, IAskPollisService, IAskTopicCounts, ICompareRun, ICompareRunModel } from '../common/askPollis.js';
 import { askAnswerCss, askAnswerScript, askOpenPassage, askPassageView } from './askPollisWebview.js';
-import { CompareModelsRunner, compareFigures, ICompareEnd, ICompareProgress, evalItemsText, mergeEvalItems, parseEvalItems, QUESTIONS_TO_MAKE, retrievalLine, STANDARD_TEST_SET } from './compareModelsRun.js';
+import { CompareModelsRunner, compareFigures, ICompareEnd, ICompareProgress, QUESTION_COUNTS, retrievalLine } from './compareModelsRun.js';
+import { compareChartsHtml, compareChartsScript, compareCommonScript, compareCss, compareLocalCard, compareSharedText, compareTestSetHtml, compareTestSetScript, CompareTestSetChoice, evalItemsText, mergeEvalItems, parseEvalItems, STANDARD_TEST_SET, topicLabel } from './compareShared.js';
 import { IInstalledModel } from './modelsInstalledPage.js';
 
-// Evaluate Models, from Ask Pollis and Compose > Local Models > Evaluate Models... (compose.contribution.ts): the chat
+// Evaluate Answering Models, from Ask Pollis and Compose > Local Models > Evaluate Answering Models... (compose.contribution.ts): the chat
 // models of this computer and the cloud models of Ask Pollis, compared on the questions of a test set, the same
 // passages and the same instruction for every model, the answers rated by one or two judges with RAGTools.jl
 // (compareModelsRun.ts). One page, in four steps: 1, the models to compare; 2, the questions, of the test set chosen,
@@ -38,7 +41,7 @@ import { IInstalledModel } from './modelsInstalledPage.js';
 // next time.
 
 export const COMPARE_MODELS_COMMAND_ID = 'pollis.compareModels';
-/** Opens Evaluate Models at Add, with a question, its answer and the passages to choose from: {question, answer, passages}. */
+/** Opens Evaluate Answering Models at Add, with a question, its answer and the passages to choose from: {question, answer, passages}. */
 export const COMPARE_MODELS_ADD_COMMAND_ID = 'pollis.compareModels.add';
 
 /** The models chosen, by their values, kept for the next time the page opens. */
@@ -47,6 +50,17 @@ const CHOSEN_KEY = 'pollis.compareModels.chosen';
 const JUDGES_KEY = 'pollis.compareModels.judges';
 const QUESTIONS_BY_KEY = 'pollis.compareModels.questionsBy';
 const REPEATS_KEY = 'pollis.compareModels.repeats';
+/** How many questions of each topic Make Questions writes. */
+const COUNTS_KEY = 'pollis.compareModels.questionCounts';
+/** The most questions of a topic that Make Questions writes at a time. */
+const MOST_QUESTIONS = 200;
+/** The topics of the questions, in the order of their counts beside Make Questions... */
+const TOPICS: readonly AskTopic[] = ['pollis', 'julia', 'panels'];
+/** The packages of the evaluation, on the Powered by line. */
+const POWERED_BY = [
+	{ name: 'RAGTools.jl', url: 'https://github.com/Trumpingtons/RAGTools.jl' },
+	{ name: 'PromptingTools.jl', url: 'https://github.com/Trumpingtons/PromptingTools.jl' },
+];
 /** The test set chosen, by its name, the Standard one being ''. */
 const TEST_SET_KEY = 'pollis.compareModels.testSet';
 /** The questions ticked in each test set, by their text, under the set's name. */
@@ -67,7 +81,7 @@ export interface ICompareModelsAdd {
 type CompareModelsMessage =
 	| { readonly command: 'ready' }
 	| { readonly command: 'choose'; readonly chosen: readonly string[] }
-	| { readonly command: 'settings'; readonly judges: readonly string[]; readonly questionsBy: string; readonly repeats: number }
+	| { readonly command: 'settings'; readonly judges: readonly string[]; readonly questionsBy: string; readonly repeats: number; readonly counts: IAskTopicCounts }
 	| { readonly command: 'rows'; readonly rows: number }
 	| { readonly command: 'makeQuestions' }
 	| { readonly command: 'run'; readonly questions: readonly string[] }
@@ -83,7 +97,8 @@ type CompareModelsMessage =
 	| { readonly command: 'export' }
 	| { readonly command: 'showRun'; readonly id: string }
 	| { readonly command: 'deleteRun'; readonly id: string }
-	| { readonly command: 'open'; readonly question: number; readonly passage: number };
+	| { readonly command: 'open'; readonly question: number; readonly passage: number }
+	| { readonly command: 'openUrl'; readonly url: string };
 
 /** The runner of the window, made the first time the page opens, so that a run goes on when the page is closed. */
 let runner: CompareModelsRunner | undefined;
@@ -100,18 +115,18 @@ function storedList(storageService: IStorageService, key: string, fallback: read
 	}
 }
 
-function storedTicks(storageService: IStorageService): Record<string, string[]> {
+/** A count of questions for each topic, each a whole number from 0 to MOST_QUESTIONS; QUESTION_COUNTS for what is not one. */
+function questionCounts(value: unknown): IAskTopicCounts {
+	const given = value && typeof value === 'object' ? value as Record<string, unknown> : {};
+	const count = (topic: AskTopic) => typeof given[topic] === 'number' && Number.isFinite(given[topic]) ? Math.min(MOST_QUESTIONS, Math.max(0, Math.round(given[topic] as number))) : QUESTION_COUNTS[topic];
+	return { pollis: count('pollis'), julia: count('julia'), panels: count('panels') };
+}
+
+function storedCounts(storageService: IStorageService): IAskTopicCounts {
 	try {
-		const stored = JSON.parse(storageService.get(TICKED_KEY, StorageScope.APPLICATION, '{}'));
-		const ticks: Record<string, string[]> = {};
-		for (const [name, questions] of Object.entries(stored && typeof stored === 'object' ? stored : {})) {
-			if (Array.isArray(questions)) {
-				ticks[name] = questions.filter((question): question is string => typeof question === 'string');
-			}
-		}
-		return ticks;
+		return questionCounts(JSON.parse(storageService.get(COUNTS_KEY, StorageScope.APPLICATION, '{}')));
 	} catch {
-		return {};
+		return QUESTION_COUNTS;
 	}
 }
 
@@ -139,7 +154,7 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 		}
 		return;
 	}
-	const title = localize('compareModels.title', "Evaluate Models");
+	const title = localize('compareModels.title', "Evaluate Answering Models");
 	const webviewInput = webviewWorkbenchService.openWebview(
 		{
 			title,
@@ -162,17 +177,8 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 	let judges = storedList(storageService, JUDGES_KEY, [DEFAULT_JUDGE]);
 	let questionsBy = storageService.get(QUESTIONS_BY_KEY, StorageScope.APPLICATION, DEFAULT_JUDGE);
 	let repeats = storageService.getNumber(REPEATS_KEY, StorageScope.APPLICATION, 1);
-	let testSet = storageService.get(TEST_SET_KEY, StorageScope.APPLICATION, STANDARD_TEST_SET);
-	const ticks = storedTicks(storageService);
-	const storeTicks = (name: string, questions: readonly string[]) => {
-		if (questions.length) {
-			ticks[name] = [...questions];
-		} else {
-			delete ticks[name];
-		}
-		storageService.store(TICKED_KEY, JSON.stringify(ticks), StorageScope.APPLICATION, StorageTarget.USER);
-	};
-	let items: IAskPollisEvalItem[] = [];
+	let counts = storedCounts(storageService);
+	const testSet = new CompareTestSetChoice(storageService, askPollisService, run.sets, { testSet: TEST_SET_KEY, ticked: TICKED_KEY }, post);
 	let shown: ICompareRun | undefined;
 	// The passages Add chooses from: those an answer of Ask Pollis was written from, or those found for the question
 	let addPassages: readonly IAskPollisPassage[] = [];
@@ -181,11 +187,6 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 	const model = (value: string) => listed.find(candidate => candidate.value === value);
 
 	const status = (text: string, error = false) => post({ command: 'status', text, error });
-
-	const postItems = async () => {
-		const present = await askPollisService.present(items.map(item => item.context));
-		post({ command: 'items', items: items.map((item, index) => ({ question: item.question, answer: item.answer, source: item.source, context: item.context, present: present[index] !== false })) });
-	};
 
 	const postRun = (latest?: string) => {
 		const where = (candidate: ICompareRunModel) => candidate.local
@@ -225,33 +226,23 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 	};
 
 	const writeItems = async (next: IAskPollisEvalItem[]) => {
-		items = next;
-		await run.writeTestSet(testSet, items);
-		await postItems();
+		testSet.items = next;
+		await run.sets.write(testSet.name, testSet.items);
+		await testSet.postItems();
 	};
 
 	/** Whether the test set chosen can be changed, which the Standard one cannot: if not, says so. */
 	const changeable = () => {
-		if (testSet === STANDARD_TEST_SET) {
+		if (testSet.name === STANDARD_TEST_SET) {
 			status(localize('compareModels.standardFixed', "The Standard test set cannot be changed: Save As... makes a copy of it that you can change, and New Set... an empty one."), true);
 			return false;
 		}
 		return true;
 	};
 
-	/** Shows the test set `name`, a name among the user's sets or the Standard one, and remembers it for the next time. */
-	const chooseSet = async (name: string) => {
-		const sets = await run.testSets();
-		testSet = sets.includes(name) ? name : STANDARD_TEST_SET;
-		storageService.store(TEST_SET_KEY, testSet, StorageScope.APPLICATION, StorageTarget.USER);
-		post({ command: 'sets', sets, chosen: testSet, ticked: ticks[testSet] ?? [] });
-		items = await run.readTestSet(testSet);
-		await postItems();
-	};
-
 	/** A name for a new test set of the user's, which no other set has, or nothing when they cancel. */
 	const askSetName = async (prompt: string) => {
-		const taken = new Set([localize('compareModels.standard', "Standard"), ...await run.testSets()].map(name => name.toLowerCase()));
+		const taken = new Set([localize('compareModels.standard', "Standard"), ...await run.sets.names()].map(name => name.toLowerCase()));
 		const name = await quickInputService.input({
 			prompt,
 			validateInput: async value => {
@@ -276,12 +267,12 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 		if (!name) {
 			return;
 		}
-		await run.writeTestSet(name, copy ? items : []);
+		await run.sets.write(name, copy ? testSet.items : []);
 		if (copy) {
-			storeTicks(name, ticks[testSet] ?? []);
+			testSet.storeTicks(name, testSet.ticked());
 		}
-		await chooseSet(name);
-		status(localize('compareModels.setSaved', "The test set {0}, with {1} questions, is in ~/.pollis/ask/sets/{0}.json.", name, items.length));
+		await testSet.choose(name);
+		status(localize('compareModels.setSaved', "The test set {0}, with {1} questions, is in ~/.pollis/ask/sets/{0}.json.", name, testSet.items.length));
 	};
 
 	// The models on this computer are looked up when the page is ready, shown again or Pollis gets the focus back, so that one downloaded since is listed;
@@ -297,7 +288,7 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 			...installed.map(installedModel => ({ value: ASK_LOCAL_PREFIX + installedModel.file, label: installedModel.name, local: true, size: installedModel.sizeLabel, bytes: installedModel.bytes })),
 			...ASK_CLOUD_MODELS.map(cloud => ({ value: cloud.id, label: cloud.label, local: false, provider: ASK_CLOUD_PROVIDERS[cloud.provider].label })),
 		];
-		post({ command: 'models', models: listed.map(({ value, label, local, size, bytes, provider }) => ({ value, label, local, size, bytes, provider })), chosen, judges, questionsBy, repeats });
+		post({ command: 'models', models: listed.map(({ value, label, local, size, bytes, provider }) => ({ value, label, local, size, bytes, provider })), chosen, judges, questionsBy, repeats, counts });
 		await postMemory();
 	};
 
@@ -317,8 +308,7 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 
 	const ended = async (end: ICompareEnd) => {
 		if (end.items) {
-			items = await run.readTestSet(testSet);
-			await postItems();
+			await testSet.reload();
 			status(end.stopped
 				? localize('compareModels.madeStopped', "Stopped: {0} questions made, added to the test set.", end.items.length)
 				: localize('compareModels.made', "{0} questions made, added to the test set. Read them before a run: a question that its passage does not answer is better deleted.", end.items.length));
@@ -331,9 +321,15 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 			status(end.error ?? '', !!end.error);
 		}
 		post({ command: 'running', running: false });
+		// The warning measured again once the models of the run have left memory, which the system takes a moment to free
+		await timeout(2000);
+		if (!disposables.isDisposed) {
+			await postMemory();
+		}
 	};
 
 	disposables.add(run.onDidProgress((progress: ICompareProgress | undefined) => post({ command: 'progress', progress })));
+	disposables.add(run.onDidSample(sample => post({ command: 'sample', sample, memory: run.samples.memory, first: run.samples.samples.length === 1 })));
 	disposables.add(run.onDidEnd(end => ended(end)));
 	openPage = {
 		input: webviewInput,
@@ -351,18 +347,23 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 			status(localize('compareModels.noQuestionsBy', "Choose the model that makes the questions, beside Make Questions..."), true);
 			return;
 		}
+		const total = TOPICS.reduce((sum, topic) => sum + counts[topic], 0);
+		if (!total) {
+			status(localize('compareModels.noCounts', "Give how many questions to make, beside Make Questions..."), true);
+			return;
+		}
 		const { confirmed } = await dialogService.confirm({
-			message: localize('compareModels.makeConfirm', "Make {0} questions from the documents with {1}?", QUESTIONS_TO_MAKE, by.label),
+			message: localize('compareModels.makeConfirm', "Make {0} questions from the documents with {1}?", total, by.label),
 			detail: by.local
 				? localize('compareModels.makeLocal', "Each question is written from a passage of Pollis' documents, on this computer. It takes some minutes.")
-				: localize('compareModels.makeCloud', "Each of {0} passages of Pollis' documents is sent to {1}, with your own key, which writes a question that the passage answers, and its answer.", QUESTIONS_TO_MAKE, by.label),
+				: localize('compareModels.makeCloud', "Each of {0} passages of Pollis' documents is sent to {1}, with your own key, which writes a question that the passage answers, and its answer.", total, by.label),
 			primaryButton: localize({ key: 'compareModels.makeButton', comment: ['&& denotes a mnemonic'] }, "&&Make Questions"),
 		});
 		if (!confirmed) {
 			return;
 		}
 		post({ command: 'running', running: true });
-		run.makeQuestions(questionsBy, testSet);
+		run.makeQuestions(questionsBy, testSet.name, counts);
 	};
 
 	/** Runs the questions ticked, by their text, or all of them when none is. */
@@ -374,7 +375,7 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 		}
 		const ticked = new Set(questions);
 		post({ command: 'running', running: true });
-		run.run(chosenModels(), runJudges, repeats, ticked.size ? items.filter(item => ticked.has(item.question)) : items).then(end => {
+		run.run(chosenModels(), runJudges, repeats, ticked.size ? testSet.items.filter(item => ticked.has(item.question)) : testSet.items).then(end => {
 			// The checks before any work, which end nothing
 			if (!end.run && end.error && !run.running) {
 				status(end.error, true);
@@ -396,8 +397,8 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 			status(localize('compareModels.importNone', "That file holds no questions: a test set is a JSON array of questions, each with its source, context, question and answer, as RAGTools.jl writes it."), true);
 			return;
 		}
-		const next = mergeEvalItems(items, imported);
-		const added = next.length - items.length;
+		const next = mergeEvalItems(testSet.items, imported);
+		const added = next.length - testSet.items.length;
 		await writeItems(next);
 		status(localize('compareModels.imported', "{0} questions added; {1} were already in the test set.", added, imported.length - added));
 	};
@@ -405,8 +406,8 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 	const exportItems = async () => {
 		const target = await fileDialogService.showSaveDialog({ title: localize('compareModels.exportTitle', "Export Questions"), filters: [{ name: 'JSON', extensions: ['json'] }] });
 		if (target) {
-			await fileService.writeFile(target, VSBuffer.fromString(evalItemsText(items)));
-			status(localize('compareModels.exported', "{0} questions exported.", items.length));
+			await fileService.writeFile(target, VSBuffer.fromString(evalItemsText(testSet.items)));
+			status(localize('compareModels.exported', "{0} questions exported.", testSet.items.length));
 		}
 	};
 
@@ -424,11 +425,12 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 		const message = e.message;
 		if (message.command === 'ready') {
 			await postModels();
-			await chooseSet(testSet);
+			await testSet.choose(testSet.name);
 			const latest = (await askPollisService.runs())[0];
 			await showRun(shown?.summary.id ?? latest?.id);
 			post({ command: 'running', running: run.running });
 			post({ command: 'progress', progress: run.progress });
+			post({ command: 'samples', samples: run.samples });
 			if (pendingAdd) {
 				openPage?.add(pendingAdd);
 				pendingAdd = undefined;
@@ -441,6 +443,8 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 			judges = message.judges.filter(value => value).slice(0, 2);
 			questionsBy = message.questionsBy;
 			repeats = REPEATS.includes(message.repeats) ? message.repeats : 1;
+			counts = questionCounts(message.counts);
+			storageService.store(COUNTS_KEY, JSON.stringify(counts), StorageScope.APPLICATION, StorageTarget.USER);
 			storageService.store(JUDGES_KEY, JSON.stringify(judges), StorageScope.APPLICATION, StorageTarget.USER);
 			storageService.store(QUESTIONS_BY_KEY, questionsBy, StorageScope.APPLICATION, StorageTarget.USER);
 			storageService.store(REPEATS_KEY, repeats, StorageScope.APPLICATION, StorageTarget.USER);
@@ -460,8 +464,8 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 			if (!passage || !message.question.trim() || !message.answer.trim() || !changeable()) {
 				return;
 			}
-			const next = mergeEvalItems(items, [{ source: askPassageLabel(passage), context: passage.text, question: message.question.trim(), answer: message.answer.trim() }]);
-			if (next.length === items.length) {
+			const next = mergeEvalItems(testSet.items, [{ source: askPassageLabel(passage), context: passage.text, question: message.question.trim(), answer: message.answer.trim() }]);
+			if (next.length === testSet.items.length) {
 				status(localize('compareModels.addKnown', "That question is already in the test set."), true);
 				return;
 			}
@@ -471,13 +475,13 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 			status(localize('compareModels.addDone', "The question is added to the test set."));
 		} else if (message.command === 'delete' && hasKey(message, { questions: true }) && changeable()) {
 			const deleted = new Set(message.questions);
-			await writeItems(items.filter(item => !deleted.has(item.question)));
+			await writeItems(testSet.items.filter(item => !deleted.has(item.question)));
 		} else if (message.command === 'import') {
 			await importItems();
 		} else if (message.command === 'chooseSet' && hasKey(message, { name: true })) {
-			await chooseSet(message.name);
+			await testSet.choose(message.name);
 		} else if (message.command === 'tick' && hasKey(message, { questions: true })) {
-			storeTicks(testSet, message.questions);
+			testSet.storeTicks(testSet.name, message.questions);
 		} else if (message.command === 'saveAs') {
 			await saveSet(true);
 		} else if (message.command === 'newSet') {
@@ -494,6 +498,8 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 			if (passage) {
 				askOpenPassage(commandService, passage);
 			}
+		} else if (message.command === 'openUrl' && hasKey(message, { url: true }) && POWERED_BY.some(pkg => pkg.url === message.url)) {
+			await commandService.executeCommand(OPEN_LINK_COMMAND_ID, message.url);
 		}
 	}));
 }
@@ -501,21 +507,13 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 /** The page: its texts come from here; the models, the questions and the runs from the messages. */
 function pageHtml(rows: number): string {
 	const text = {
-		title: localize('compareModels.title', "Evaluate Models"),
+		...compareSharedText(),
+		title: localize('compareModels.title', "Evaluate Answering Models"),
 		intro: localize('compareModels.intro', "Which model should answer Ask Pollis? Each model chosen answers every question of the test set from the same passages, with the same instruction, so that what differs is the model alone; a judge then rates each answer, with {0}. The local models run one after the other, each alone in memory.", '<span class="yellow">RAGTools.jl</span>'),
 		models: localize('compareModels.models', "Models"),
-		thisComputer: localize('compareModels.onThisComputer', "On This Computer"),
 		cloud: localize('compareModels.inTheCloud', "In the Cloud, With Your Own Key"),
 		cloudShort: localize('compareModels.cloud', "In the Cloud"),
-		parameters: localize('compareModels.parameters', "Parameters"),
-		quantisation: localize('compareModels.quantisation', "Quantisation"),
-		download: localize('compareModels.download', "Download"),
-		gigabytes: localize('compareModels.gigabytes', "{0} GB"),
 		provider: localize('compareModels.provider', "Provider"),
-		chooseAll: localize('compareModels.chooseAll', "Choose all or none"),
-		chosenNone: localize('compareModels.chosenNone', "No model chosen"),
-		chosenOne: localize('compareModels.chosenOne', "1 model chosen"),
-		chosenMany: localize('compareModels.chosenMany', "{0} models chosen"),
 		noLocal: localize('compareModels.noLocal', "No chat model on this computer yet: Compose > Local Models downloads them."),
 		judge: localize('compareModels.judge', "Judge"),
 		secondJudge: localize('compareModels.secondJudge', "Second Judge"),
@@ -531,20 +529,20 @@ function pageHtml(rows: number): string {
 		runOneOne: localize('compareModels.runOneOne', "Run 1 Question With 1 Model"),
 		runNeeds: localize('compareModels.runNeeds', "Choose at least one model, and a test set with questions."),
 		stop: localize('compareModels.stop', "Stop"),
-		questions: localize('compareModels.questions', "Questions"),
 		questionsIntro: localize('compareModels.questionsIntro', "The test set, as {0} writes it: each question with the passage it was made from and its right answer. Tick the questions to ask, a click anywhere on a row ticks it; with none ticked, Run asks them all.", '<span class="yellow">RAGTools.jl</span>'),
-		testSet: localize('compareModels.testSet', "Test Set"),
-		standard: localize('compareModels.standard', "Standard"),
 		standardHint: localize('compareModels.standardHint', "Standard comes with Pollis: a newer Pollis may update it, and it cannot be changed. Save As... makes a copy of it that you can change, and New Set... an empty one."),
-		yoursHint: localize('compareModels.yoursHint', "Yours, in {0}: every change is saved as you make it, the ticks too.", '{0}'),
 		saveAs: localize('compareModels.saveAs', "Save As..."),
 		newSet: localize('compareModels.newSet', "New Set..."),
-		countTicked: localize('compareModels.countTicked', "{0} of {1} ticked", '{0}', '{1}'),
-		untick: localize('compareModels.untick', "Untick All"),
-		tickPage: localize('compareModels.tickPage', "Tick all or none of this page"),
 		changeSet: localize('compareModels.changeSet', "Change This Set"),
 		standardChange: localize('compareModels.standardChange', "The Standard test set cannot be changed: Save As... makes a copy of it that you can change."),
-		changeIntro: localize('compareModels.changeIntro', "Make Questions... writes {0} new questions from the documents with the model chosen in By; Add takes one of your own; Import... reads those of a file; Delete Ticked removes the ticked ones.", QUESTIONS_TO_MAKE),
+		changeIntro: localize('compareModels.changeIntroCounts', "Make Questions... writes new questions from the documents with the model chosen in By, as many of each topic as given below it: Pollis, from Pollis' own documents; Julia Language, from the Julia Manual; Topic Panels, from the wikis of the panels and the documents of the toolboxes. Add takes one of your own; Import... reads those of a file; Delete Ticked removes the ticked ones."),
+		questionCounts: localize('compareModels.questionCounts', "Questions to make:"),
+		topics: TOPICS.map(topic => ({ topic, label: topicLabel(topic) })),
+		tokensChart: localize('compareModels.tokensChart', "Tokens"),
+		tokensRead: localize('compareModels.tokensRead', "{0} read"),
+		tokensWritten: localize('compareModels.tokensWritten', "{0} written"),
+		chartsHint: localize('compareModels.chartsHint', "Every 2 seconds of the run. The tokens of the answers, then of the judges, as each model's API counts them."),
+		phases: { search: localize('compareModels.phaseSearch', "Search"), answer: localize('compareModels.phaseAnswer', "Answers"), judge: localize('compareModels.phaseJudge', "Ratings") },
 		makeQuestions: localize('compareModels.makeQuestions', "Make Questions..."),
 		questionsBy: localize('compareModels.questionsBy', "By"),
 		add: localize('compareModels.add', "Add"),
@@ -552,9 +550,6 @@ function pageHtml(rows: number): string {
 		export: localize('compareModels.export', "Export..."),
 		delete: localize('compareModels.deleteTicked', "Delete Ticked"),
 		noItems: localize('compareModels.noItemsNow', "No questions yet: Make Questions..., Add and Import..., in Change This Set below, put them in."),
-		question: localize('compareModels.question', "Question"),
-		source: localize('compareModels.source', "Source"),
-		gone: localize('compareModels.gone', "No longer in the documents"),
 		rightAnswer: localize('compareModels.rightAnswer', "The right answer"),
 		passage: localize('compareModels.passage', "The passage it was made from"),
 		answers: localize('compareModels.answers', "Answers"),
@@ -572,7 +567,6 @@ function pageHtml(rows: number): string {
 		runLineRepeats: localize('compareModels.runLineRepeats', "{0}, Pollis {1}: {2} questions, each asked {4} times, judged by {3}.", '{0}', '{1}', '{2}', '{3}', '{4}'),
 		runOption: localize('compareModels.runOption', "{0}: {1}, {2} questions", '{0}', '{1}', '{2}'),
 		and: localize('compareModels.and', "{0} and {1}", '{0}', '{1}'),
-		model: localize('compareModels.model', "Model"),
 		where: localize('compareModels.where', "Where"),
 		score: localize('compareModels.score', "Score"),
 		scoreBy: localize('compareModels.scoreBy', "Score by {0}", '{0}'),
@@ -605,11 +599,6 @@ function pageHtml(rows: number): string {
 		notRatedBy: localize('compareModels.notRatedBy', "Not rated by {0}: {1}", '{0}', '{1}'),
 		repeat: localize('compareModels.repeat', "Asking {0}", '{0}'),
 		noAnswer: localize('compareModels.noAnswer', "No answer."),
-		previous: localize('compareModels.previous', "Previous"),
-		next: localize('compareModels.next', "Next"),
-		page: localize('compareModels.page', "Page {0} of {1}"),
-		count: localize('compareModels.count', "{0} questions"),
-		sortHint: sortHint(),
 	};
 	return `<!DOCTYPE html>
 <html lang="en">
@@ -618,112 +607,19 @@ function pageHtml(rows: number): string {
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
 	<style>
-		* { box-sizing: border-box; }
-		[hidden] { display: none !important; }
-		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
-		.container { max-width: 1400px; margin: 0 auto; padding: 24px; }
-		h1 { font-size: 32px; font-weight: 300; margin: 0 0 4px 0; line-height: 1.2; }
-		h2.section { font-size: 18px; font-weight: 400; margin: 28px 0 6px 0; }
-		/* The four steps: the models, the questions, Run and the results */
-		.step { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; margin-right: 10px; font-size: 12px; font-weight: 600; color: var(--vscode-badge-foreground); background: var(--vscode-badge-background); vertical-align: 2px; }
-		.head { display: flex; align-items: baseline; gap: 16px; }
-		.head h2.section { flex: 1; }
-		.head .link { font-size: 12px; }
-		h3.part { font-size: 14px; font-weight: 600; margin: 24px 0 4px 0; }
-		.setHint { margin: 6px 0 0 0; }
-		.illus-section { margin: 0 0 20px 0; }
-		.illus-toggle { display: flex; align-items: center; gap: 6px; background: transparent; border: none; color: var(--vscode-textLink-foreground); font-size: 13px; font-family: var(--vscode-font-family); cursor: pointer; padding: 0 0 6px 0; user-select: none; }
-		.illus-toggle:hover { text-decoration: underline; }
-		.illus-chevron { display: inline-flex; align-items: center; transition: transform 0.15s; flex-shrink: 0; }
-		.illus-section.collapsed .illus-chevron { transform: rotate(-90deg); }
-		.illus-section.collapsed .illus-body { display: none; }
-		.illus-body { background: var(--vscode-textCodeBlock-background); border: 1px solid var(--vscode-widget-border); border-radius: 6px; padding: 16px 20px; overflow-x: auto; }
-		.illus-section.change { margin-top: 12px; }
-		.subtitle { font-size: 14px; color: var(--vscode-descriptionForeground); margin: 0 0 16px 0; line-height: 1.4; max-width: 900px; }
-		.hint { color: var(--vscode-descriptionForeground); margin: 0 0 8px 0; line-height: 1.4; max-width: 900px; }
-		.small { font-size: 12px; color: var(--vscode-descriptionForeground); line-height: 1.4; }
-		textarea { font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; padding: 6px 8px; width: 100%; resize: vertical; min-height: 40px; line-height: 1.4; }
-		select { font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; padding: 4px 6px; }
-		textarea:focus, select:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
-		.row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-		.row .grow { flex: 1; }
-		.bar { display: flex; gap: 8px; align-items: center; }
-		button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; border-radius: 2px; padding: 4px 12px; cursor: pointer; }
-		.bar > button.action.current { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
-		button:disabled { opacity: 0.5; cursor: default; }
-		.link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; }
-		.link:hover { text-decoration: underline; }
-		.models { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 16px; align-items: start; }
-		@media (max-width: 900px) { .models { grid-template-columns: minmax(0, 1fr); } }
-		.card { border: 1px solid var(--vscode-widget-border); border-radius: 4px; padding: 10px 12px 6px 12px; min-width: 0; }
-		.card h3 { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--vscode-descriptionForeground); margin: 0 0 6px 0; }
-		.models td, .models th { padding: 4px 8px; vertical-align: middle; }
-		.models tbody tr:last-child td { border-bottom: none; }
-		tr.model { cursor: pointer; }
-		tr.model:hover td { background: var(--vscode-list-hoverBackground); }
-		tr.model.chosen td.name { font-weight: 600; }
-		.settings { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 20px; margin-top: 16px; }
-		.field { display: flex; flex-direction: column; gap: 4px; }
-		.field select { width: 260px; }
-		.field select#repeats { width: 72px; }
-		select#questionsBy { width: 260px; }
-		.status { margin: 8px 0; display: flex; align-items: center; gap: 6px; }
-		.warning { margin: 8px 0; color: var(--vscode-editorWarning-foreground); }
-		.error { color: var(--vscode-errorForeground); }
-		/* The packages and the files, in the yellow of the menu paths */
-		.yellow { color: #e8a33d; }
-		body.vscode-light .yellow { color: #a8650d; }
-		table { border-collapse: collapse; width: 100%; }
-		th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--vscode-widget-border); vertical-align: top; }
-		th { font-weight: 600; color: var(--vscode-descriptionForeground); font-size: 12px; }
-		td.number, th.number { text-align: right; white-space: nowrap; }
-		tr.item { cursor: pointer; }
-		tr.item:hover td { background: var(--vscode-list-hoverBackground); }
-		tr.item.open td { background: var(--vscode-list-inactiveSelectionBackground); }
-		td.check, th.check { width: 24px; }
-		/* A column for each model: as wide as its figures, not the whole page */
-		table#results { width: auto; }
-		#results td.small { text-align: right; }
-		td.origin { width: 24%; }
-		tr.detail > td { padding: 12px 8px 16px 8px; }
-		.right { margin: 0 0 12px 0; max-width: 900px; }
-		.columns { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
-		.column { border: 1px solid var(--vscode-widget-border); border-radius: 4px; padding: 12px; min-width: 0; }
-		.column h4 { font-size: 14px; font-weight: 600; margin: 0 0 2px 0; }
-		.column .figures { margin: 4px 0 8px 0; }
-		.column .asking + .asking { margin-top: 12px; padding-top: 8px; border-top: 1px dashed var(--vscode-widget-border); }
-		.addForm { border: 1px solid var(--vscode-widget-border); border-radius: 4px; padding: 12px; margin: 8px 0; max-width: 900px; }
-		.addForm label.choice { display: flex; gap: 8px; align-items: baseline; padding: 4px 0; cursor: pointer; }
-		.pager { display: flex; justify-content: center; align-items: center; gap: 16px; padding: 8px; font-size: 12px; color: var(--vscode-descriptionForeground); }
-		.pager .link { font-size: 12px; }
-		.pager .link:disabled { color: var(--vscode-disabledForeground); cursor: default; text-decoration: none; }
-		${rowsChoiceCss}
-		${sortHeadingsCss}
-		${spinnerCss}
-		.percent { font-weight: 600; font-variant-numeric: tabular-nums; margin-right: 8px; }
+		${compareCss}
 		${askAnswerCss}
+		${voiceButtonsCss}
 	</style>
 </head>
 <body>
 <div class="container">
-	<h1>${text.title}</h1>
+	<div class="title-row"><h1>${text.title}</h1>${voiceButtonsHtml}</div>
+	<div class="powered-by">${text.poweredBy}&nbsp;<span id="package-links"></span></div>
 	<p class="subtitle">${text.intro}</p>
 	<div class="head"><h2 class="section"><span class="step">1</span>${text.models}</h2><span class="small" id="chosenCount"></span></div>
 	<div class="models">
-		<div class="card">
-			<h3>${text.thisComputer}</h3>
-			<table id="localTable" hidden>
-				<thead><tr>
-					<th class="check"><input type="checkbox" class="all" title="${text.chooseAll}"></th>
-					<th class="sortable" data-sort="name" data-label="${text.model}" title="${text.sortHint}"></th>
-					<th class="sortable number" data-sort="parameters" data-label="${text.parameters}" title="${text.sortHint}"></th>
-					<th>${text.quantisation}</th>
-					<th class="sortable number" data-sort="bytes" data-label="${text.download}" title="${text.sortHint}"></th>
-				</tr></thead>
-				<tbody id="localBody"></tbody>
-			</table>
-			<p class="small" id="noLocal" hidden>${text.noLocal}</p>
-		</div>
+		${compareLocalCard(text)}
 		<div class="card">
 			<h3>${text.cloud}</h3>
 			<table id="cloudTable">
@@ -737,21 +633,7 @@ function pageHtml(rows: number): string {
 		</div>
 	</div>
 
-	<div class="head"><h2 class="section"><span class="step">2</span>${text.questions}</h2><span class="small" id="count"></span><button class="link" id="untick" hidden>${text.untick}</button></div>
-	<p class="hint">${text.questionsIntro}</p>
-	<div class="settings">
-		<label class="field"><span class="small">${text.testSet}</span><select id="testSet"></select></label>
-		<span class="bar"><button class="action current" id="saveAs">${text.saveAs}</button><button class="action" id="newSet">${text.newSet}</button><button class="action" id="export">${text.export}</button></span>
-	</div>
-	<p class="small setHint" id="setHint"></p>
-	<div class="small status" id="setStatus"></div>
-	<p class="hint" id="noItems" hidden>${text.noItems}</p>
-	<div class="pager" id="pagerTop" hidden></div>
-	<table id="items" hidden>
-		<thead><tr id="itemsHead"></tr></thead>
-		<tbody id="itemsBody"></tbody>
-	</table>
-	<div class="pager" id="pager" hidden></div>
+	${compareTestSetHtml(text, text.questionsIntro, `<span class="bar"><button class="action current" id="saveAs">${text.saveAs}</button><button class="action" id="newSet">${text.newSet}</button><button class="action" id="export">${text.export}</button></span>`)}
 	<div class="illus-section collapsed change" id="changeSection">
 		<button class="illus-toggle" id="changeToggle">
 			<span class="illus-chevron"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M7.976 10.072l-4.054-4.014-.92.92 4.49 4.45.978.01 4.525-4.46-.918-.92-4.101 4.014z"/></svg></span>
@@ -769,6 +651,10 @@ function pageHtml(rows: number): string {
 						<button class="action" id="import">${text.import}</button>
 						<button class="action" id="delete" disabled>${text.delete}</button>
 					</span>
+				</div>
+				<div class="row counts" id="counts">
+					<span class="small">${text.questionCounts}</span>
+					${text.topics.map(({ topic, label }) => `<label><span class="small">${label}</span><input type="number" class="count" id="count-${topic}" min="0" max="${MOST_QUESTIONS}" step="1"></label>`).join('')}
 				</div>
 				<div class="addForm" id="addForm" hidden>
 					<textarea id="addQuestion" rows="2" placeholder="${text.questionPlaceholder}"></textarea>
@@ -791,6 +677,7 @@ function pageHtml(rows: number): string {
 		<span class="bar"><button class="action current" id="run" disabled>${text.run}</button></span>
 	</div>
 	<div class="small status" id="runStatus"></div>
+	${compareChartsHtml(text, `<div class="card chart" id="tokensChart"><h3>${text.tokensChart}</h3><div class="now" id="tokensNow"></div><svg role="img" aria-label="${text.tokensChart}"></svg><div class="tip" hidden></div></div>`)}
 
 	<h2 class="section"><span class="step">4</span>${text.results}</h2>
 	<div class="row">
@@ -817,6 +704,7 @@ function pageHtml(rows: number): string {
 <script>
 	const vscode = acquireVsCodeApi();
 	const TEXT = ${JSON.stringify(text)};
+	const POWERED_BY = ${JSON.stringify(POWERED_BY)};
 	const SPINNER = '${spinnerSvg}';
 	${askAnswerScript()}
 	${rowsChoiceScript()}
@@ -831,7 +719,7 @@ function pageHtml(rows: number): string {
 	let standard = true;
 	// The questions of the test set: the page shown, their order, and those ticked, which Run asks, by their text
 	let page = 0;
-	const itemSort = { column: 'question', descending: false };
+	const itemSort = { column: 'number', descending: false };
 	const ticked = new Set();
 	// The answers of the run shown: the page shown, their order, and the question open, by its place in the run
 	let answersPage = 0;
@@ -840,37 +728,12 @@ function pageHtml(rows: number): string {
 	// The messages show under the test set or under Run, for what was clicked last
 	let statusId = 'runStatus';
 
-	function format(template, ...values) {
-		return template.replace(/\\{(\\d+)\\}/g, (match, index) => String(values[Number(index)]));
-	}
-	function fixed(value, digits) {
-		return value === undefined || value === null ? '-' : value.toFixed(digits);
-	}
+	${compareCommonScript}
 	function settings() {
-		vscode.postMessage({ command: 'settings', judges: [document.getElementById('judge').value, document.getElementById('secondJudge').value], questionsBy: document.getElementById('questionsBy').value, repeats: Number(document.getElementById('repeats').value) });
+		const counts = Object.fromEntries(TEXT.topics.map(({ topic }) => [topic, Number(document.getElementById('count-' + topic).value) || 0]));
+		vscode.postMessage({ command: 'settings', judges: [document.getElementById('judge').value, document.getElementById('secondJudge').value], questionsBy: document.getElementById('questionsBy').value, repeats: Number(document.getElementById('repeats').value), counts });
 	}
 
-	// One blue button in each bar: the last one the pointer was on
-	for (const bar of document.querySelectorAll('.bar')) {
-		bar.addEventListener('mouseover', event => {
-			const button = event.target.closest('button.action');
-			if (button && !button.disabled && !button.classList.contains('current')) {
-				bar.querySelector('button.current')?.classList.remove('current');
-				button.classList.add('current');
-			}
-		});
-	}
-
-	/** A local model's name without its quantisation, which its file name ends with, and the quantisation. */
-	function splitName(label) {
-		const match = /[-._](?<quant>(?:UD-)?(?:I?Q\\d\\w*|MXFP4\\w*|B?F16|F32))$/i.exec(label);
-		return match ? { name: label.slice(0, match.index), quant: match.groups.quant } : { name: label, quant: '' };
-	}
-	/** The parameters of a size such as 8B or 32x2.4B, for sorting. */
-	function parameterCount(size) {
-		const match = /^(?:(?<experts>\\d+)x)?(?<count>[\\d.]+)(?<unit>[KMBT])/i.exec(size || '');
-		return match ? (Number(match.groups.experts) || 1) * Number(match.groups.count) * { K: 1e3, M: 1e6, B: 1e9, T: 1e12 }[match.groups.unit.toUpperCase()] : 0;
-	}
 	function fillSelect(select, chosen, none) {
 		select.textContent = '';
 		if (none) { select.appendChild(new Option(TEXT.none, '')); }
@@ -888,73 +751,7 @@ function pageHtml(rows: number): string {
 		select.value = models.some(model => model.value === chosen) ? chosen : none ? '' : (models.find(model => !model.local) || models[0] || {}).value || '';
 	}
 
-	let modelSort = { column: 'name', descending: false };
-	/** A model's row: a click anywhere on it ticks it. */
-	function modelRow(model, cells, chosen) {
-		const row = element('tr', 'model');
-		const check = element('td', 'check');
-		const box = element('input');
-		box.type = 'checkbox';
-		box.value = model.value;
-		box.checked = chosen.includes(model.value);
-		check.appendChild(box);
-		row.appendChild(check);
-		for (const [text, className] of cells) { row.appendChild(element('td', className, text)); }
-		row.addEventListener('click', event => {
-			if (event.target !== box) {
-				box.checked = !box.checked;
-				box.dispatchEvent(new Event('change', { bubbles: true }));
-			}
-		});
-		return row;
-	}
-	function chosenValues() {
-		return [...document.querySelectorAll('.models tbody input:checked')].map(box => box.value);
-	}
-	/** The boxes that choose all the models of a table, the count beside Models, and Run. */
-	function updateChosen() {
-		for (const table of document.querySelectorAll('.models table')) {
-			const boxes = [...table.querySelectorAll('tbody input')];
-			const count = boxes.filter(box => box.checked).length;
-			const all = table.querySelector('input.all');
-			all.checked = boxes.length > 0 && count === boxes.length;
-			all.indeterminate = count > 0 && count < boxes.length;
-			for (const box of boxes) { box.closest('tr').classList.toggle('chosen', box.checked); }
-		}
-		const count = chosenValues().length;
-		document.getElementById('chosenCount').textContent = count === 0 ? TEXT.chosenNone : count === 1 ? TEXT.chosenOne : format(TEXT.chosenMany, count);
-		updateRun();
-	}
-	function renderLocal(chosen) {
-		const local = models.filter(model => model.local).map(model => ({ ...model, ...splitName(model.label) }));
-		document.getElementById('localTable').hidden = !local.length;
-		document.getElementById('noLocal').hidden = local.length > 0;
-		const key = { name: model => model.name.toLowerCase(), parameters: model => parameterCount(model.size), bytes: model => model.bytes || 0 }[modelSort.column];
-		local.sort((a, b) => {
-			const x = key(a);
-			const y = key(b);
-			return (x < y ? -1 : x > y ? 1 : a.name.localeCompare(b.name)) * (modelSort.descending ? -1 : 1);
-		});
-		const body = document.getElementById('localBody');
-		body.textContent = '';
-		for (const model of local) {
-			const row = modelRow(model, [[model.name, 'name'], [model.size || '-', 'number'], [model.quant || '-', ''], [model.bytes ? format(TEXT.gigabytes, (model.bytes / 1e9).toFixed(1)) : '-', 'number']], chosen);
-			row.title = model.label;
-			body.appendChild(row);
-		}
-		for (const header of document.querySelectorAll('#localTable th.sortable')) {
-			setSortArrow(header, header.dataset.label, header.dataset.sort === modelSort.column, modelSort.descending);
-		}
-		updateChosen();
-	}
-	for (const header of document.querySelectorAll('#localTable th.sortable')) {
-		header.addEventListener('click', () => {
-			modelSort = { column: header.dataset.sort, descending: modelSort.column === header.dataset.sort && !modelSort.descending };
-			renderLocal(chosenValues());
-		});
-	}
-
-	function renderModels(chosen, judges, questionsBy, repeats) {
+	function renderModels(chosen, judges, questionsBy, repeats, counts) {
 		renderLocal(chosen);
 		const cloud = document.getElementById('cloudBody');
 		cloud.textContent = '';
@@ -966,6 +763,7 @@ function pageHtml(rows: number): string {
 		fillSelect(document.getElementById('secondJudge'), judges[1], true);
 		fillSelect(document.getElementById('questionsBy'), questionsBy, false);
 		document.getElementById('repeats').value = String(repeats);
+		for (const { topic } of TEXT.topics) { document.getElementById('count-' + topic).value = String(counts[topic]); }
 	}
 	document.querySelector('.models').addEventListener('change', event => {
 		if (event.target.classList.contains('all')) {
@@ -974,7 +772,7 @@ function pageHtml(rows: number): string {
 		updateChosen();
 		vscode.postMessage({ command: 'choose', chosen: chosenValues() });
 	});
-	for (const id of ['judge', 'secondJudge', 'questionsBy', 'repeats']) {
+	for (const id of ['judge', 'secondJudge', 'questionsBy', 'repeats', ...TEXT.topics.map(({ topic }) => 'count-' + topic)]) {
 		document.getElementById(id).addEventListener('change', settings);
 	}
 
@@ -1004,21 +802,14 @@ function pageHtml(rows: number): string {
 			bar.querySelector('button.action:not(:disabled)')?.classList.add('current');
 		}
 	}
-	/** A message with its packages and files in the yellow. */
-	function yellow(text) {
-		return esc(text).replace(/(?<name>[A-Za-z0-9]+\\.jl\\b|~\\/\\.pollis\\/[\\w.\\/-]*\\w)/g, '<span class="yellow">$<name></span>');
+	${compareTestSetScript}
+	function testSetChanged() {
+		setChangeable();
+		updateRun();
 	}
-	function setStatus(text, error, spinning, percent) {
-		for (const id of ['setStatus', 'runStatus']) {
-			const status = document.getElementById(id);
-			status.innerHTML = id === statusId ? yellow(text || '') : '';
-			status.classList.toggle('error', id === statusId && !!error);
-		}
-		if (spinning && text) { document.getElementById(statusId).insertAdjacentHTML('afterbegin', SPINNER + (percent === undefined ? '' : '<span class="percent">' + percent + '%</span>')); }
-	}
-	/** Keeps the ticks of the test set for the next time. */
-	function ticksChanged() {
-		vscode.postMessage({ command: 'tick', questions: [...ticked] });
+	function renderTables() {
+		render();
+		renderAnswers();
 	}
 	/** Sends a message about the test set, whose answer shows under it. */
 	function setMessage(message) {
@@ -1118,140 +909,7 @@ function pageHtml(rows: number): string {
 		return seconds.length ? seconds.reduce((sum, value) => sum + value, 0) / seconds.length : undefined;
 	}
 
-	/** The questions in the order chosen, by a column of text or by a model's rating, those without a value last. */
-	function sortedBy(list, sort, value) {
-		const empty = cell => cell === undefined || cell === '';
-		return [...list].sort((a, b) => {
-			const x = value(a, sort.column), y = value(b, sort.column);
-			if (empty(x) || empty(y)) {
-				return empty(x) && empty(y) ? a.question.localeCompare(b.question) : empty(x) ? 1 : -1;
-			}
-			const order = typeof x === 'number' ? x - y : x.localeCompare(y);
-			return (sort.descending ? -order : order) || a.question.localeCompare(b.question);
-		});
-	}
-	function pageOf(list, current) {
-		const size = rowsPerPage(rows, list.length);
-		return list.slice(current * size, (current + 1) * size);
-	}
-	/** A heading that sorts its table by its column, the other way round at a second click; by a model, the best first. */
-	function sortHeading(head, label, column, className, sort, resort) {
-		const th = element('th', 'sortable' + (className ? ' ' + className : ''));
-		th.title = TEXT.sortHint;
-		setSortArrow(th, label, sort.column === column, sort.descending);
-		th.addEventListener('click', () => {
-			sort.descending = sort.column === column ? !sort.descending : column.startsWith('model:');
-			sort.column = column;
-			resort();
-		});
-		head.appendChild(th);
-	}
-	/** The pagers above and below a table, at the page \`current\` of \`pages\`: \`turn\` sets the page to show. */
-	function fillPagers(ids, shown, pages, current, turn) {
-		for (const pager of ids.map(id => document.getElementById(id))) {
-			pager.textContent = '';
-			pager.hidden = shown <= ${FEWEST_ROWS};
-			if (pages > 1) {
-				const link = (label, to) => {
-					const button = element('button', 'link', label);
-					button.disabled = to < 0 || to >= pages;
-					button.addEventListener('click', () => {
-						turn(to);
-						render();
-						renderAnswers();
-					});
-					return button;
-				};
-				pager.append(link(TEXT.previous, current - 1), element('span', '', format(TEXT.page, current + 1, pages)), link(TEXT.next, current + 1));
-			}
-			pager.append(rowsChoice(rows, chosen => {
-				turn(firstPageAfter(current, rows, chosen));
-				rows = chosen;
-				vscode.postMessage({ command: 'rows', rows });
-				render();
-				renderAnswers();
-			}));
-		}
-	}
 
-	function shownItems() {
-		return pageOf(sortedBy(items, itemSort, (item, column) => item[column] || ''), page);
-	}
-	/** The questions of the test set, to tick those that Run asks: a click anywhere on a row ticks it. */
-	function render() {
-		const head = document.getElementById('itemsHead');
-		head.textContent = '';
-		const all = element('th', 'check');
-		const allBox = element('input');
-		allBox.type = 'checkbox';
-		allBox.id = 'tickPage';
-		allBox.title = TEXT.tickPage;
-		allBox.addEventListener('change', () => {
-			for (const item of shownItems()) { if (allBox.checked) { ticked.add(item.question); } else { ticked.delete(item.question); } }
-			ticksChanged();
-			render();
-		});
-		all.appendChild(allBox);
-		head.appendChild(all);
-		const resort = () => {
-			page = 0;
-			render();
-		};
-		sortHeading(head, TEXT.question, 'question', '', itemSort, resort);
-		sortHeading(head, TEXT.source, 'source', 'origin', itemSort, resort);
-		const size = rowsPerPage(rows, items.length);
-		const pages = Math.max(1, Math.ceil(items.length / size));
-		page = Math.min(page, pages - 1);
-		const body = document.getElementById('itemsBody');
-		body.textContent = '';
-		for (const item of shownItems()) {
-			const row = element('tr', 'item');
-			const check = element('td', 'check');
-			const box = element('input');
-			box.type = 'checkbox';
-			box.checked = ticked.has(item.question);
-			const tick = () => {
-				if (box.checked) { ticked.add(item.question); } else { ticked.delete(item.question); }
-				ticksChanged();
-				updateTicked();
-			};
-			box.addEventListener('change', tick);
-			check.appendChild(box);
-			row.appendChild(check);
-			const question = element('td', '', item.question);
-			question.title = item.answer;
-			row.appendChild(question);
-			const source = element('td', 'origin small', item.source);
-			source.title = item.context;
-			if (!item.present) { source.appendChild(element('div', 'error', TEXT.gone)); }
-			row.appendChild(source);
-			row.addEventListener('click', event => {
-				if (event.target !== box) {
-					box.checked = !box.checked;
-					tick();
-				}
-			});
-			body.appendChild(row);
-		}
-		fillPagers(['pagerTop', 'pager'], items.length, pages, page, to => { page = to; });
-		document.getElementById('items').hidden = !items.length;
-		document.getElementById('noItems').hidden = !!items.length;
-		updateTicked();
-	}
-	/** The count of the questions and of those ticked, the box that ticks the page, Delete Ticked and Run. */
-	function updateTicked() {
-		const shown = shownItems();
-		const onPage = shown.filter(item => ticked.has(item.question)).length;
-		const allBox = document.getElementById('tickPage');
-		if (allBox) {
-			allBox.checked = shown.length > 0 && onPage === shown.length;
-			allBox.indeterminate = onPage > 0 && onPage < shown.length;
-		}
-		document.getElementById('count').textContent = !items.length ? '' : ticked.size ? format(TEXT.countTicked, ticked.size, items.length) : format(TEXT.count, items.length);
-		document.getElementById('untick').hidden = !ticked.size;
-		setChangeable();
-		updateRun();
-	}
 
 	/** The figures of an answer: the time to its first word, its seconds and, for a local model, how fast it read and wrote. */
 	function answerFigures(timings) {
@@ -1330,7 +988,7 @@ function pageHtml(rows: number): string {
 		const value = (question, column) => column.startsWith('model:') ? questionScore(question.index, column.slice(6)) : column.startsWith('seconds:') ? questionSeconds(question.index, column.slice(8)) : question[column] || '';
 		for (const question of pageOf(sortedBy(asked, answerSort, value), answersPage)) {
 			const row = element('tr', 'item' + (opened === question.index ? ' open' : ''));
-			const cell = element('td', '', question.question);
+			const cell = element('td', 'asked', question.question);
 			cell.title = question.answer;
 			row.appendChild(cell);
 			for (const figures of run.figures) { row.appendChild(element('td', 'number', fixed(questionScore(question.index, figures.value), 2))); }
@@ -1381,6 +1039,8 @@ function pageHtml(rows: number): string {
 		if (run.repeats > 1) { line(TEXT.spread, TEXT.spreadHint, figures => format(TEXT.spreadValue, fixed(figures.spreadScore, 2), fixed(figures.spreadSeconds, 1))); }
 	}
 
+	${compareChartsScript}
+
 	const runsSelect = document.getElementById('runs');
 	runsSelect.addEventListener('change', () => vscode.postMessage({ command: 'showRun', id: runsSelect.value }));
 	document.getElementById('deleteRun').addEventListener('click', () => { if (run) { vscode.postMessage({ command: 'deleteRun', id: run.id }); } });
@@ -1389,28 +1049,12 @@ function pageHtml(rows: number): string {
 		const message = event.data;
 		if (message.command === 'models') {
 			models = message.models;
-			renderModels(message.chosen, message.judges, message.questionsBy, message.repeats);
+			renderModels(message.chosen, message.judges, message.questionsBy, message.repeats, message.counts);
 		} else if (message.command === 'sets') {
-			const select = document.getElementById('testSet');
-			select.textContent = '';
-			select.appendChild(new Option(TEXT.standard, ''));
-			for (const name of message.sets) { select.appendChild(new Option(name, name)); }
-			select.value = message.chosen;
-			standard = !message.chosen;
-			ticked.clear();
-			for (const question of message.ticked) { ticked.add(question); }
-			document.getElementById('setHint').innerHTML = standard
-				? esc(TEXT.standardHint)
-				: esc(TEXT.yoursHint).replace('{0}', '<span class="yellow">' + esc('~/.pollis/ask/sets/' + message.chosen + '.json') + '</span>');
-			setChangeable();
+			showSets(message);
 		} else if (message.command === 'items') {
-			items = message.items;
-			const present = new Set(items.map(item => item.question));
-			const before = ticked.size;
-			for (const question of [...ticked]) { if (!present.has(question)) { ticked.delete(question); } }
-			if (ticked.size !== before) { ticksChanged(); }
-			if (!standard && !items.length) { changeSection.classList.remove('collapsed'); }
-			render();
+			if (!standard && !message.items.length) { changeSection.classList.remove('collapsed'); }
+			showItems(message);
 		} else if (message.command === 'run') {
 			if (message.run?.id !== run?.id) {
 				opened = undefined;
@@ -1432,6 +1076,13 @@ function pageHtml(rows: number): string {
 			memory.hidden = !message.text;
 		} else if (message.command === 'running') {
 			setRunning(message.running);
+		} else if (message.command === 'samples') {
+			samples = { memory: message.samples.memory, samples: [...message.samples.samples] };
+			renderCharts();
+		} else if (message.command === 'sample') {
+			if (message.first) { samples = { memory: message.memory, samples: [] }; }
+			samples.samples.push(message.sample);
+			renderCharts();
 		} else if (message.command === 'progress') {
 			if (message.progress) { setStatus(message.progress.text, false, true, message.progress.total ? Math.floor(100 * message.progress.done / message.progress.total) : undefined); }
 		} else if (message.command === 'status') {
@@ -1444,6 +1095,7 @@ function pageHtml(rows: number): string {
 		}
 	});
 	vscode.postMessage({ command: 'ready' });
+	${voiceButtonsScript}
 </script>
 </body>
 </html>`;
@@ -1453,7 +1105,7 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: COMPARE_MODELS_COMMAND_ID,
-			title: localize2('compareModels.action', "Evaluate Models..."),
+			title: localize2('compareModels.action', "Evaluate Answering Models..."),
 			category: Categories.Help,
 			f1: true,
 		});

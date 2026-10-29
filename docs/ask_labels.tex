@@ -2,7 +2,9 @@
 % <jobname>.labels beside its PDF, a line page|level|heading for each heading, the page counted from the first, the
 % cover, as 1. compile_documents.jl copies it to ~/.pollis/documents, and ask_index.jl cuts the document into passages
 % under its headings with it. \asklabel{1}{Title} marks a topic or a page, \asklabel{2}{Title} a heading inside it; the
-% sections and subsections of a document that has them are marked as they go into its contents.
+% sections and subsections of a document that has them are marked as they go into its contents. A package vignette
+% inputs it before its \documentclass (compile_vignette.jl), so the contents are taken over when the document begins,
+% after the packages have taken them over.
 \makeatletter
 \newwrite\pollis@labels
 \immediate\openout\pollis@labels=\jobname.labels
@@ -12,5 +14,11 @@
   \def\pollis@file{#1}%
   \ifx\pollis@file\pollis@toc\asklabel{#2}{#3}\fi
   \pollis@addcontentsline{#1}{#2}{#3}}
-\AtBeginDocument{\let\pollis@addcontentsline\addcontentsline\let\addcontentsline\pollis@contentsline}
+% The headings of the New Methods style of the vignettes, \nmsection and \nmsub, which go into no contents
+\def\pollis@asksection#1{\pollis@nmsection{#1}\asklabel{1}{#1}}
+\def\pollis@asksub#1{\pollis@nmsub{#1}\asklabel{2}{#1}}
+\AddToHook{begindocument/end}{%
+  \let\pollis@addcontentsline\addcontentsline\let\addcontentsline\pollis@contentsline
+  \ifdefined\nmsection\let\pollis@nmsection\nmsection\let\nmsection\pollis@asksection\fi
+  \ifdefined\nmsub\let\pollis@nmsub\nmsub\let\nmsub\pollis@asksub\fi}
 \makeatother

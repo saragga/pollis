@@ -768,16 +768,16 @@ their place. The embedding model is the one of LLM Text Analysis, so it is downl
 Claude or GPT, can write the answers instead, with your own key; the passages are still found on your computer.
 
 \newpage
-\subhead{Evaluate Models}
+\subhead{Evaluate Answering Models}
 Which chat model should answer? A small one is quicker, a larger one better, a cloud one better still, at a price.
-\ui{Evaluate Models}, on the Ask Pollis page, answers with figures, for the models you choose: Qwen3.5 0.8B, 4B and 9B
+\ui{Evaluate Answering Models}, on the Ask Pollis page and in \ui{Compose > Local Models}, answers with figures, for the models you choose: Qwen3.5 0.8B, 4B and 9B
 on your computer, say, against Claude Sonnet. Every model is given the same questions, the same passages and the same
 instruction, so that only the model differs, and the local models run one at a time.
 \begin{pairs}[0.24]
-The questions & a test set. The Standard one comes with Pollis, 100 questions reviewed one by one: 50 on its
-  documents, 40 on the panel wikis, 10 on the Julia Manual; a newer Pollis may update it. Or one of yours, a copy of
+The questions & a test set. The Standard one comes with Pollis, 100 questions reviewed one by one: 40 on its
+  documents, 40 on the panel wikis, 20 on the Julia Manual; a newer Pollis may update it. Or one of yours, a copy of
   another with \ui{Save As...} or a new one with \ui{New Set...}, to which a model adds questions made from the
-  documents, the default model unless you choose another, one for each of 40 passages, with the answer; or you add
+  documents, the default model unless you choose another, one for each passage, as many of each topic (Pollis, Julia Language, Topic Panels) as you give, with the answer; or you add
   your own, on the page or from Ask Pollis with \ui{Add to the Test Set...}.\\
 The figures & for each model, the mean score, its five parts, the answers not scored, the seconds and the tokens per
   answer. Every run is kept, to set beside a later one.\\
@@ -796,15 +796,17 @@ Claude Sonnet and GPT-5.5, side by side; where they agree, the figures can be tr
 
 \subhead{The search, measured too}
 For a question made from a passage, the run checks whether that passage was among the eight found. That depends on
-the embedding model, not on the chat model, so it compares embedding models: choose several, and each gets its line.
+the embedding model, not on the chat model: \ui{Evaluate Embedding Models}, in \ui{Compose > Local Models}, compares
+the embedding models on your computer on the same test sets, how often and where each finds the passage, how fast,
+and in how much memory; \ui{Use for Ask Pollis} makes the one you choose the one Ask Pollis uses.
 
 \begin{caution}{What leaves your computer}
 With local models only, and a local judge, nothing. With a cloud model or judge, what it answers or judges from: the
-instruction, the question and the passages, which are Pollis' documents; and, to make a test set, its 40 passages.
+instruction, the question and the passages, which are Pollis' documents; and, to make questions, the passages they are made from.
 \end{caution}
 
 \begin{note}{Not available yet}
-Ask Pollis and Evaluate Models are not in Pollis yet; they come in a coming release.
+Ask Pollis and its two Evaluate pages are not in Pollis yet; they come in a coming release.
 \end{note}
 
 \seealso{Local Models, page 4.\quad Embedding and Chat Models, page 6.}

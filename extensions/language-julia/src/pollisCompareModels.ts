@@ -1,4 +1,4 @@
-// POLLIS: the evaluation of Evaluate Models (Help > Ask Pollis > Evaluate Models...), with RAGTools.jl, in a hidden Julia
+// POLLIS: the evaluation of Evaluate Answering Models (Help > Ask Pollis > Evaluate Answering Models...), with RAGTools.jl, in a hidden Julia
 // process of its own (scripts/terminalserver/ask_compare.jl): the questions of a test set made from the documents, and
 // the answers judged. The command `language-julia.pollisCompareModels`, with {task, keys, local}, runs the task of the
 // JSON file `task`; `keys`, the keys of the cloud providers from Secret Storage, by the variable PromptingTools reads
@@ -6,8 +6,9 @@
 // are left out of it, so that only those of Pollis count. The llama-server of each model file of `local` is started
 // first, its address given to the script the same way, and stopped at the end, so that its memory is free again.
 // It answers once the script has ended: {lines}, every line it wrote but its progress, or {error}. One task at a time:
-// `language-julia.pollisCompareProgress` answers how far it has come, {status, done, total}, nothing when none runs,
-// and `language-julia.pollisCompareStop` ends it, the lines written until then kept.
+// `language-julia.pollisCompareProgress` answers how far it has come, {status, done, total, tokens}, `tokens` the tokens
+// read and written by the judges until then, nothing when none runs, and `language-julia.pollisCompareStop` ends it,
+// the lines written until then kept.
 
 import * as child_process from 'child_process'
 import * as path from 'path'
@@ -19,7 +20,7 @@ import { startServer, stopServer } from './pollisLlamaServer'
 
 type CompareRequest = { task: string; keys: { [variable: string]: string }; local: string[] }
 type CompareAnswer = { lines?: object[]; error?: string }
-type CompareProgress = { status: 'starting' | 'installing' | 'running'; done: number; total: number }
+type CompareProgress = { status: 'starting' | 'installing' | 'running'; done: number; total: number; tokens?: [number, number] }
 
 /** The variables of the cloud keys, which come from Pollis' Secret Storage only. */
 const KEY_VARIABLES = ['ANTHROPIC_API_KEY', 'GOOGLE_API_KEY', 'OPENAI_API_KEY']
@@ -45,7 +46,7 @@ async function runTask(context: vscode.ExtensionContext, executableFeature: Exec
             if (server.url) {
                 servers[file] = server.url
             } else {
-                console.error(`[pollis] could not start ${file} for Evaluate Models: ${server.error}`)
+                console.error(`[pollis] could not start ${file} for Evaluate Answering Models: ${server.error}`)
             }
             if (g_running !== running) {
                 return { lines: [] }
@@ -80,7 +81,8 @@ async function runTask(context: vscode.ExtensionContext, executableFeature: Exec
             if (message.status === 'installing') {
                 running.progress = { status: 'installing', done: 0, total: 0 }
             } else if (typeof message.done === 'number' && typeof message.total === 'number') {
-                running.progress = { status: 'running', done: message.done, total: message.total }
+                const tokens = Array.isArray(message.tokens) && message.tokens.length === 2 && message.tokens.every((count) => typeof count === 'number') ? message.tokens as [number, number] : undefined
+                running.progress = { status: 'running', done: message.done, total: message.total, tokens }
             } else if (typeof message.error === 'string' && message.failed === undefined) {
                 error = message.error
             } else {
@@ -89,7 +91,7 @@ async function runTask(context: vscode.ExtensionContext, executableFeature: Exec
         })
         await new Promise<void>((resolve) => {
             julia.on('error', (err) => {
-                console.error('[pollis] could not run the evaluation of Evaluate Models', err)
+                console.error('[pollis] could not run the evaluation of Evaluate Answering Models', err)
                 error ??= 'failed'
                 resolve()
             })

@@ -31,6 +31,8 @@ export const MODELS_INSTALLED_COMMAND_ID = 'pollis.localModels.installed';
 /** A model on this computer, as language-julia.pollisInstalledModels answers it. */
 export interface IInstalledModel {
 	readonly file: string;
+	/** The model's value in the settings: `hf:` for a file in ~/.pollis/models, else its path. */
+	readonly value?: string;
 	readonly name: string;
 	readonly sizeLabel?: string;
 	readonly kind?: 'chat' | 'embedding';

@@ -14,6 +14,9 @@
 // The command `language-julia.pollisIndexDocuments` brings PollisDocuments up to date again, for the workbench when the
 // toolboxes change; and so does each vignette or toolbox document compiled, which Ask Pollis then reads. Both only once
 // the documents were compiled in this session: otherwise the REPL's start indexes them.
+// The package vignettes the list gives with what to compile them from, not compiled yet or changed since, are compiled
+// after the index is made, one at a time, and the index is then made again with them; one that cannot be compiled is
+// not tried again in this session.
 // The Julia Manual is that of the Julia the index is made with, the REPL's: when the REPL starts again with another
 // version of Julia, the index is made again, with that version's Manual; and when pollis.ask.juliaManual changes.
 // At Pollis' first start the REPL installs DuckDB.jl while the index is made, which then cannot be: it is made again
@@ -23,7 +26,8 @@
 // The command `language-julia.pollisCompileVignette`, with {source, name, pdf}, compiles a package's vignette for
 // Help > Documentation > Packages (scripts/terminalserver/compile_vignette.jl): from the vignette/ folder of an
 // installed package, or from its repository on GitHub, into the file `pdf`; it answers {pdf}, or {error}. It compiles the
-// documents of the installed toolboxes too, for Help > Documentation > Toolboxes, from their folders.
+// documents of the installed toolboxes too, for Help > Documentation > Toolboxes, from their folders. Beside each PDF
+// goes its .labels, the page of each heading (docs/ask_labels.tex), which ask_index.jl cuts it by.
 
 import * as child_process from 'child_process'
 import * as fs from 'fs'
@@ -49,6 +53,10 @@ let g_waitingForDuckDB = false
 let g_duckDBInstalled = false
 /** The version of the Julia the documents were indexed with this session: the Julia Manual is that version's. */
 let g_juliaVersion: string | undefined
+/** The vignettes compiling, by their PDF, so that a second request for one gets the first's answer. */
+const g_vignettes = new Map<string, Promise<VignetteAnswer>>()
+/** The vignettes the index could not compile in this session, by their PDF: not tried again until the next. */
+const g_vignettesFailed = new Set<string>()
 
 type IndexProgress = { stage: 'compiling' | 'installing' | 'reading' | 'embedding'; done: number; total: number }
 
@@ -60,6 +68,8 @@ const PASSAGE_PREFIX = 'title: {title} | text: {text}'
 const EMBEDDING_CONTEXT = 2048
 
 type DocumentsAnswer = { total?: number; failed?: number; error?: string }
+/** A document of the list of `pollis.askPollis.sources`: a vignette not compiled has what to compile it from. */
+type AskSource = { file: string; compile?: { source: string; name: string } }
 
 export function compileDocumentsInBackground(
     context: vscode.ExtensionContext,
@@ -184,12 +194,15 @@ function indexDocuments(
     g_progress = { stage: 'reading', done: 0, total: 0 }
     g_juliaVersion = juliaExecutable.version
     let noDuckDB = false
+    let compiled = false
     g_indexing = (async () => {
         const sources = path.join(os.homedir(), '.pollis', 'documents', 'sources.json')
+        let vignettes: AskSource[] = []
         try {
-            const list = await vscode.commands.executeCommand('pollis.askPollis.sources')
+            const list = await vscode.commands.executeCommand<AskSource[]>('pollis.askPollis.sources')
+            vignettes = list.filter((source) => source.compile && !g_vignettesFailed.has(source.file))
             await fs.promises.mkdir(path.dirname(sources), { recursive: true })
-            await fs.promises.writeFile(sources, JSON.stringify(list))
+            await fs.promises.writeFile(sources, JSON.stringify(list.map((source) => ({ ...source, compile: undefined }))))
         } catch (err) {
             console.error('[pollis] could not list the documents for Ask Pollis', err)
             return
@@ -268,9 +281,14 @@ function indexDocuments(
         if (index >= 0) {
             context.subscriptions.splice(index, 1)
         }
+        compiled = await compileVignettes(context, juliaExecutable, vignettes)
     })().finally(() => {
         g_indexing = undefined
         g_progress = undefined
+        if (compiled && !noDuckDB) {
+            // The vignettes compiled after the index, read in the next
+            g_indexAgain = true
+        }
         if (noDuckDB && g_duckDBInstalled) {
             // Installed while the index was being made
             g_indexAgain = true
@@ -288,28 +306,65 @@ function indexDocuments(
 type VignetteRequest = { source: string; name: string; pdf: string }
 type VignetteAnswer = { pdf?: string; error?: string }
 
-/** Compiles a vignette in a hidden process of low priority; a second request for the same PDF gets the first's answer. */
-function compileVignette(
+/** Compiles the vignettes of `sources` for Ask Pollis, one at a time, with the status bar counting them; whether any was. */
+async function compileVignettes(
+    context: vscode.ExtensionContext,
+    juliaExecutable: JuliaExecutable,
+    sources: AskSource[]
+): Promise<boolean> {
+    let compiled = false
+    const progress = windowProgress('Compiling the package vignettes for Ask Pollis')
+    for (const [done, source] of sources.entries()) {
+        g_progress = { stage: 'compiling', done, total: sources.length }
+        progress.report(`${done} of ${sources.length}`)
+        const answer = await runVignette(context, juliaExecutable, { ...source.compile!, pdf: source.file })
+        if (answer.pdf) {
+            compiled = true
+        } else {
+            g_vignettesFailed.add(source.file)
+            console.error(`[pollis] could not compile the vignette ${source.file}: ${answer.error}`)
+        }
+    }
+    progress.finish()
+    return compiled
+}
+
+/** Compiles a vignette, for Help > Documentation, and then has Ask Pollis read it. */
+async function compileVignette(
     context: vscode.ExtensionContext,
     executableFeature: ExecutableFeature,
-    compiling: Map<string, Promise<VignetteAnswer>>,
     request: VignetteRequest
 ): Promise<VignetteAnswer> {
-    const running = compiling.get(request.pdf)
+    let juliaExecutable: JuliaExecutable
+    try {
+        juliaExecutable = await executableFeature.getExecutable()
+    } catch (err) {
+        return { error: err instanceof JuliaNotFoundError ? 'noJulia' : 'failed' }
+    }
+    const answer = await runVignette(context, juliaExecutable, request)
+    if (answer.pdf) {
+        // A vignette or a toolbox document more for Ask Pollis
+        reindexDocuments(context, executableFeature)
+    }
+    return answer
+}
+
+/** Compiles a vignette in a hidden process of low priority; a second request for the same PDF gets the first's answer. */
+function runVignette(
+    context: vscode.ExtensionContext,
+    juliaExecutable: JuliaExecutable,
+    request: VignetteRequest
+): Promise<VignetteAnswer> {
+    const running = g_vignettes.get(request.pdf)
     if (running) {
         return running
     }
     const answer = (async (): Promise<VignetteAnswer> => {
-        let juliaExecutable: JuliaExecutable
-        try {
-            juliaExecutable = await executableFeature.getExecutable()
-        } catch (err) {
-            return { error: err instanceof JuliaNotFoundError ? 'noJulia' : 'failed' }
-        }
         const script = path.join(context.extensionPath, 'scripts', 'terminalserver', 'compile_vignette.jl')
+        const labels = path.join(vscode.env.appRoot, 'docs', 'ask_labels.tex')
         const julia = child_process.spawn(
             juliaExecutable.command,
-            [...juliaExecutable.args, '--startup-file=no', '--history-file=no', script, request.source, request.name, request.pdf],
+            [...juliaExecutable.args, '--startup-file=no', '--history-file=no', script, request.source, request.name, request.pdf, labels],
             { env: { ...process.env, ...getPackageEnvironment() }, stdio: ['ignore', 'pipe', 'ignore'], windowsHide: true }
         )
         try {
@@ -339,16 +394,12 @@ function compileVignette(
                 if (index >= 0) {
                     context.subscriptions.splice(index, 1)
                 }
-                if (result.pdf) {
-                    // A vignette or a toolbox document more for Ask Pollis
-                    reindexDocuments(context, executableFeature)
-                }
                 resolve(result)
             })
         })
     })()
-    compiling.set(request.pdf, answer)
-    answer.finally(() => compiling.delete(request.pdf))
+    g_vignettes.set(request.pdf, answer)
+    answer.finally(() => g_vignettes.delete(request.pdf))
     return answer
 }
 
@@ -367,7 +418,6 @@ export function pollisDBInstalled(context: vscode.ExtensionContext, juliaExecuta
 }
 
 export function activate(context: vscode.ExtensionContext, executableFeature: ExecutableFeature) {
-    const compiling = new Map<string, Promise<VignetteAnswer>>()
     context.subscriptions.push(
         vscode.commands.registerCommand('language-julia.pollisCompileDocuments', async (): Promise<DocumentsAnswer> => {
             let juliaExecutable: JuliaExecutable
@@ -383,7 +433,7 @@ export function activate(context: vscode.ExtensionContext, executableFeature: Ex
         vscode.commands.registerCommand('language-julia.pollisIndexDocuments', () => reindexDocuments(context, executableFeature)),
         vscode.commands.registerCommand('language-julia.pollisAskIndexProgress', (): IndexProgress | undefined => g_progress),
         vscode.commands.registerCommand('language-julia.pollisCompileVignette', (request: VignetteRequest) =>
-            compileVignette(context, executableFeature, compiling, request)
+            compileVignette(context, executableFeature, request)
         ),
         vscode.workspace.onDidChangeConfiguration((e) => {
             if (e.affectsConfiguration('pollis.ask.juliaManual')) {

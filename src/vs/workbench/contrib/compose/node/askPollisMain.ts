@@ -10,8 +10,10 @@
 // it names them; each is searched by words (BM25) and by meaning (cosine distance), the two lists merged by
 // reciprocal rank fusion; with two or more, the nearest gives most of the passages. The answer is written here too, by
 // the chat model's server or a cloud model's API, its text sent as it comes: the renderer may not reach a server of
-// this computer. The runs of Evaluate Models are kept here too, in Comparisons.duckdb, attached the same way, so that
-// two windows can each keep theirs.
+// this computer. The runs of Evaluate Answering Models are kept here too, in Comparisons.duckdb, attached the same way, so that
+// two windows can each keep theirs, and the passages found for each question with a search stamp, which a run with the same stamp reuses.
+// Evaluate Embedding Models embeds the passages here, into the cache of embeddings ask_index.jl takes them from, and
+// searches the questions of a test set with each model's embeddings as Ask Pollis would; its runs are kept in Comparisons.duckdb too.
 
 import { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
 import * as fs from 'fs';
@@ -24,10 +26,14 @@ import { ProxyChannel } from '../../../../base/parts/ipc/common/ipc.js';
 import { Server as ChildProcessServer } from '../../../../base/parts/ipc/node/ipc.cp.js';
 import { Server as UtilityProcessServer } from '../../../../base/parts/ipc/node/ipc.mp.js';
 import { isUtilityProcess } from '../../../../base/parts/sandbox/node/electronTypes.js';
-import { ASK_PASSAGES, IAskPollisChatEnd, ICompareRun, ICompareRunSummary, IAskPollisChatRequest, IAskPollisChatText, IAskPollisIndex, IAskPollisIndexRequest, IAskPollisIndexStatus, IAskPollisPassage, IAskPollisSearchResult, IAskPollisTimings } from '../common/askPollis.js';
+import { AskTopic, ASK_PASSAGES, IAskPollisChatEnd, ICompareRun, ICompareRunSummary, IAskPollisChatRequest, IAskPollisChatText, IAskPollisFound, IAskPollisIndex, IAskPollisIndexRequest, IAskPollisIndexStatus, IAskPollisPassage, IAskPollisSearchResult, IAskPollisTimings, IAskTopicCounts, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingFound, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary } from '../common/askPollis.js';
 
 const DATABASE = join(os.homedir(), '.pollis', 'documents', 'PollisDocuments.duckdb');
-/** The runs of Evaluate Models, their questions, answers and scores. */
+/** The embeddings made, by the model and the text it was given, as ask_index.jl keeps them. */
+const EMBEDDINGS = join(os.homedir(), '.pollis', 'documents', 'embeddings.duckdb');
+/** The passages embedded a request, as ask_index.jl does. */
+const BATCH = 32;
+/** The runs of Evaluate Answering Models, their questions, answers and scores. */
 const COMPARISONS = join(os.homedir(), '.pollis', 'ask', 'Comparisons.duckdb');
 /** The fts extension, which the Julia extension of Pollis unpacks here at install. */
 const FTS = join(os.homedir(), '.pollis', 'duckdb', 'fts.duckdb_extension');
@@ -149,16 +155,20 @@ function shares(count: number, collections: number): number[] {
 	return [first, ...Array.from({ length: collections - 1 }, (_, i) => Math.floor(rest / (collections - 1)) + (i < rest % (collections - 1) ? 1 : 0))];
 }
 
-/** The passages of the collection $collection that best answer $question: by its words only, or with its embedding $vector too. */
-function searchSql(dimensions: number, count: number): string {
+/**
+ * The passages of the collection $collection that best answer $question: by its words only, or with its embedding
+ * $vector too, against the index's embeddings or those of the table `vectors` (id, embedding).
+ */
+function searchSql(dimensions: number, count: number, vectors?: string): string {
+	const embedding = vectors ? 'v.embedding' : 'p.embedding';
 	const words = `words AS (
 		SELECT id, score, row_number() OVER (ORDER BY score DESC) AS r
 		FROM (SELECT p.id, fts_main_passages.match_bm25(p.id, $question) AS score FROM passages p JOIN documents d ON d.id = p.document WHERE d.collection = $collection)
 		WHERE score IS NOT NULL ORDER BY r LIMIT ${EACH})`;
 	const meaning = `meaning AS (
-		SELECT p.id, row_number() OVER (ORDER BY array_cosine_distance(p.embedding, $vector::FLOAT[${dimensions}])) AS r
-		FROM passages p JOIN documents d ON d.id = p.document
-		WHERE d.collection = $collection AND p.embedding IS NOT NULL ORDER BY r LIMIT ${EACH})`;
+		SELECT p.id, row_number() OVER (ORDER BY array_cosine_distance(${embedding}, $vector::FLOAT[${dimensions}])) AS r
+		FROM passages p JOIN documents d ON d.id = p.document${vectors ? ` JOIN ${vectors} v ON v.id = p.id` : ''}
+		WHERE d.collection = $collection AND ${embedding} IS NOT NULL ORDER BY r LIMIT ${EACH})`;
 	const fused = dimensions
 		? `fused AS (SELECT id, sum(1.0 / (${K} + r)) AS score FROM (SELECT id, r FROM words UNION ALL SELECT id, r FROM meaning) GROUP BY id)`
 		: `fused AS (SELECT id, score FROM words)`;
@@ -166,6 +176,26 @@ function searchSql(dimensions: number, count: number): string {
 		SELECT f.id, ${PASSAGE_COLUMNS}, f.score
 		FROM fused f JOIN passages p ON p.id = f.id JOIN documents d ON d.id = p.document
 		ORDER BY f.score DESC LIMIT ${count}`;
+}
+
+/**
+ * The key in embeddings.duckdb of each passage and what it is given to the model $model as, with the passage prefix
+ * $prefix, as ask_index.jl makes them: a wiki's headings start with its panel and its name, a PDF's do not have its title.
+ */
+const INPUTS_SQL = `SELECT id, sha256($model || chr(10) || input) AS key, input FROM (
+	SELECT p.id, left(replace(replace($prefix, '{title}', CASE WHEN d.kind = 'wiki' THEN p.heading ELSE concat_ws(' ' || chr(8250) || ' ', d.title, nullif(p.heading, '')) END), '{text}', p.text), 4000) AS input
+	FROM passages p JOIN documents d ON p.document = d.id)`;
+
+/** A search of the index: `count` passages for `question`, from the collections nearest it, or those of `collections`. */
+interface IPassageQuery {
+	readonly question: string;
+	/** Its embedding, as DuckDB reads a list; by words only without it. */
+	readonly vector?: string;
+	readonly dimensions: number;
+	readonly count: number;
+	readonly collections?: readonly string[];
+	/** A table of the embeddings to search with, in place of the index's. */
+	readonly vectors?: string;
 }
 
 /** The columns of a passage that the searches select, with its document's. */
@@ -198,13 +228,24 @@ function optionalNumber(value: unknown): number | undefined {
 /** The shortest passage Make Questions asks about, in characters: a shorter one is mostly a heading or a line of a table. */
 const SHORTEST_QUESTION_PASSAGE = 400;
 
-/** The tables of Comparisons.duckdb: a run, the passages found for each of its questions, the answers, the judges' scores and why a judge did not rate an answer. */
+/** The topic of a passage by its document `d`, as AskTopic: the Julia Manual, Pollis' own documents, and the rest (the wikis, the documents of the toolboxes). */
+const TOPIC = `CASE WHEN d.kind = 'julia' THEN 'julia' WHEN d.kind = 'document' AND coalesce(d.toolbox, '') = '' THEN 'pollis' ELSE 'panels' END`;
+
+/**
+ * The tables of Comparisons.duckdb: a run, the passages found for each of its questions, the answers, the judges'
+ * scores and why a judge did not rate an answer; the passages found for a question with a search stamp, those of
+ * the latest stamp only; and a run of Evaluate Embedding Models, its questions and what each model found for them.
+ */
 const COMPARISONS_TABLES = [
 	'CREATE TABLE IF NOT EXISTS Comparisons.runs(id VARCHAR PRIMARY KEY, started BIGINT, pollis VARCHAR, models VARCHAR, judges VARCHAR, repeats INTEGER, questions INTEGER)',
 	'CREATE TABLE IF NOT EXISTS Comparisons.questions(run VARCHAR, question INTEGER, source VARCHAR, context VARCHAR, text VARCHAR, answer VARCHAR, passages VARCHAR, rank INTEGER)',
 	'CREATE TABLE IF NOT EXISTS Comparisons.answers(run VARCHAR, id VARCHAR, question INTEGER, model VARCHAR, repeat INTEGER, answer VARCHAR, error VARCHAR, first_word DOUBLE, seconds DOUBLE, reading DOUBLE, writing DOUBLE, tokens_read INTEGER, tokens_written INTEGER)',
 	'CREATE TABLE IF NOT EXISTS Comparisons.scores(run VARCHAR, answer VARCHAR, judge VARCHAR, relevance INTEGER, completeness INTEGER, clarity INTEGER, consistency INTEGER, helpfulness INTEGER, final DOUBLE, rationale VARCHAR)',
 	'CREATE TABLE IF NOT EXISTS Comparisons.unrated(run VARCHAR, answer VARCHAR, judge VARCHAR, error VARCHAR)',
+	'CREATE TABLE IF NOT EXISTS Comparisons.found(stamp VARCHAR, question VARCHAR, passages VARCHAR, PRIMARY KEY(stamp, question))',
+	'CREATE TABLE IF NOT EXISTS Comparisons.embeddingRuns(id VARCHAR PRIMARY KEY, started BIGINT, pollis VARCHAR, models VARCHAR, questions INTEGER, passages INTEGER)',
+	'CREATE TABLE IF NOT EXISTS Comparisons.embeddingQuestions(run VARCHAR, question INTEGER, source VARCHAR, context VARCHAR, text VARCHAR, answer VARCHAR)',
+	'CREATE TABLE IF NOT EXISTS Comparisons.embeddingFound(run VARCHAR, question INTEGER, model VARCHAR, hybrid INTEGER, meaning INTEGER, query_ms DOUBLE, search_ms DOUBLE)',
 ];
 
 /** The embedding of `input`, as DuckDB reads a list, from the llama.cpp server at `url` (its OpenAI /embeddings). */
@@ -217,16 +258,30 @@ async function embed(url: string, input: string): Promise<string> {
 	return JSON.stringify(answer.data[0].embedding);
 }
 
+/** The embeddings of `inputs` from the server at `url`, its answer as it came, for DuckDB to read. */
+async function embedAll(url: string, inputs: readonly string[]): Promise<string> {
+	const response = await fetch(`${url}/embeddings`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ input: inputs }) });
+	if (!response.ok) {
+		throw new Error(`${response.status} ${await response.text()}`);
+	}
+	return response.text();
+}
+
 class AskPollisIndex implements IAskPollisIndex {
 
 	private readonly _onDidChat = new Emitter<IAskPollisChatText>();
 	readonly onDidChat = this._onDidChat.event;
+
+	private readonly _onDidEmbed = new Emitter<IEmbeddingProgress>();
+	readonly onDidEmbed = this._onDidEmbed.event;
 
 	private connection: Promise<DuckDBConnection> | undefined;
 	/** One search at a time: each attaches the index and makes it the default database. */
 	private readonly sequencer = new Sequencer();
 	/** The answers being written, to stop them. */
 	private readonly chats = new Map<string, AbortController>();
+	/** Whether stopEmbedding was asked for since the embedding or evaluation began. */
+	private embeddingStopped = false;
 
 	private connect(): Promise<DuckDBConnection> {
 		this.connection ??= (async () => {
@@ -269,6 +324,8 @@ class AskPollisIndex implements IAskPollisIndex {
 				embedded: Number(built.get('embedded') ?? 0),
 				dimensions: Number(built.get('dimensions') || 0),
 				embedder: built.get('embedder') ?? '',
+				passagePrefix: built.get('passagePrefix') ?? '',
+				builtAt: built.get('builtAt') ?? '',
 				collections,
 			};
 		} catch {
@@ -298,21 +355,9 @@ class AskPollisIndex implements IAskPollisIndex {
 					error = err instanceof Error ? err.message : String(err);
 				}
 			}
-			const dimensions = vector ? status.dimensions : 0;
-			// The collections nearest the question first; those named are searched, else the nearest and those almost as near
-			let searched = request.collections?.filter(name => status.collections.includes(name)) ?? status.collections;
-			if (vector) {
-				const distances = (await connection.runAndReadAll(`SELECT d.collection AS name, min(array_cosine_distance(p.embedding, $vector::FLOAT[${dimensions}])) AS distance FROM passages p JOIN documents d ON p.document = d.id WHERE p.embedding IS NOT NULL GROUP BY d.collection ORDER BY distance`, { vector })).getRowObjectsJson();
-				const nearest = distances.filter(row => searched.includes(String(row.name)));
-				const best = Number(nearest[0]?.distance ?? 0);
-				searched = nearest.map(row => String(row.name)).filter((name, i) => !!request.collections || Number(nearest[i].distance) - best <= ROUTE_MARGIN);
-			}
-			const counts = shares(Math.max(1, request.passages ?? ASK_PASSAGES), searched.length);
-			const passages: IAskPollisPassage[] = [];
-			for (let i = 0; i < searched.length; i++) {
-				const rows = (await connection.runAndReadAll(searchSql(dimensions, counts[i]), { question: request.question, collection: searched[i], ...(vector ? { vector } : {}) })).getRowObjectsJson();
-				passages.push(...rows.map(passageOf));
-			}
+			const { passages, searched } = await this.findPassages(connection, status.collections, {
+				question: request.question, vector, dimensions: vector ? status.dimensions : 0, count: Math.max(1, request.passages ?? ASK_PASSAGES), collections: request.collections,
+			});
 			const result: IAskPollisSearchResult = {
 				passages,
 				searched,
@@ -323,6 +368,138 @@ class AskPollisIndex implements IAskPollisIndex {
 			return result;
 		});
 		return found ?? { passages: [], searched: [], collections: [], wordsOnly: 'notIndexed' };
+	}
+
+	/** The passages for `query`, from the collections of `all`: those named are searched, else the nearest and those almost as near. */
+	private async findPassages(connection: DuckDBConnection, all: readonly string[], query: IPassageQuery): Promise<{ passages: IAskPollisPassage[]; searched: string[] }> {
+		const { vector, dimensions, vectors } = query;
+		let searched = query.collections?.filter(name => all.includes(name)) ?? [...all];
+		if (vector) {
+			const embedding = vectors ? 'v.embedding' : 'p.embedding';
+			const distances = (await connection.runAndReadAll(`SELECT d.collection AS name, min(array_cosine_distance(${embedding}, $vector::FLOAT[${dimensions}])) AS distance FROM passages p JOIN documents d ON p.document = d.id${vectors ? ` JOIN ${vectors} v ON v.id = p.id` : ''} WHERE ${embedding} IS NOT NULL GROUP BY d.collection ORDER BY distance`, { vector })).getRowObjectsJson();
+			const nearest = distances.filter(row => searched.includes(String(row.name)));
+			const best = Number(nearest[0]?.distance ?? 0);
+			searched = nearest.map(row => String(row.name)).filter((name, i) => !!query.collections || Number(nearest[i].distance) - best <= ROUTE_MARGIN);
+		}
+		const counts = shares(query.count, searched.length);
+		const passages: IAskPollisPassage[] = [];
+		for (let i = 0; i < searched.length; i++) {
+			const rows = (await connection.runAndReadAll(searchSql(vector ? dimensions : 0, counts[i], vectors), { question: query.question, collection: searched[i], ...(vector ? { vector } : {}) })).getRowObjectsJson();
+			passages.push(...rows.map(passageOf));
+		}
+		return { passages, searched };
+	}
+
+	/** Runs `task` with the index and embeddings.duckdb attached, the cache made the first time. */
+	private withCache<T>(task: (connection: DuckDBConnection) => Promise<T>): Promise<T | undefined> {
+		return this.withIndex(async connection => {
+			await connection.run(`ATTACH ${sqlString(EMBEDDINGS)} AS cache`);
+			try {
+				await connection.run('CREATE TABLE IF NOT EXISTS cache.embeddings(key VARCHAR PRIMARY KEY, embedding FLOAT[])');
+				return await task(connection);
+			} finally {
+				await connection.run('DETACH cache');
+			}
+		});
+	}
+
+	async embedPassages(request: IEmbeddingRequest): Promise<IEmbeddingDone> {
+		this.embeddingStopped = false;
+		const parameters = { model: request.model, prefix: request.passagePrefix };
+		let todo: { key: string; input: string }[];
+		try {
+			const rows = await this.withCache(async connection => (await connection.runAndReadAll(`SELECT key, any_value(input) AS input FROM (${INPUTS_SQL}) WHERE key NOT IN (SELECT key FROM cache.embeddings) GROUP BY key ORDER BY min(id)`, parameters)).getRowObjectsJson());
+			if (!rows) {
+				return { embedded: 0, seconds: 0, error: 'notIndexed' };
+			}
+			todo = rows.map(row => ({ key: String(row.key), input: String(row.input) }));
+		} catch (err) {
+			return { embedded: 0, seconds: 0, error: err instanceof Error ? err.message : String(err) };
+		}
+		const started = Date.now();
+		let embedded = 0;
+		let error: string | undefined;
+		// Each batch kept as it comes, one request at a time: a batch that fails is asked again a passage at a time
+		const keep = async (batch: readonly { key: string; input: string }[]) => {
+			const answer = await embedAll(request.url, batch.map(item => item.input));
+			await this.withCache(connection => connection.run(`INSERT OR REPLACE INTO cache.embeddings
+				SELECT from_json($keys, '["VARCHAR"]')[e."index" + 1], e.embedding
+				FROM (SELECT unnest(from_json($answer, '{"data": [{"index": "INTEGER", "embedding": "FLOAT[]"}]}').data, recursive := true)) e`, { keys: JSON.stringify(batch.map(item => item.key)), answer }));
+			embedded += batch.length;
+		};
+		for (let from = 0; from < todo.length && !this.embeddingStopped; from += BATCH) {
+			const batch = todo.slice(from, from + BATCH);
+			try {
+				await keep(batch);
+			} catch {
+				for (const item of batch) {
+					await keep([item]).catch(err => error ??= err instanceof Error ? err.message : String(err));
+				}
+			}
+			this._onDidEmbed.fire({ model: request.model, phase: 'embed', done: Math.min(from + BATCH, todo.length), total: todo.length });
+		}
+		return { embedded, seconds: (Date.now() - started) / 1000, ...(error ? { error } : {}) };
+	}
+
+	async evaluateEmbedding(request: IEmbeddingEvaluation): Promise<IEmbeddingEvaluated> {
+		this.embeddingStopped = false;
+		const failed = (error: string): IEmbeddingEvaluated => ({ dimensions: 0, passages: 0, found: [], error });
+		try {
+			// The model's embeddings of the passages, from the cache, in a table of their own for the searches
+			const made = await this.withCache(async connection => {
+				const status = await this.readStatus(connection);
+				const parameters = { model: request.model, prefix: request.passagePrefix };
+				const dimensions = Number((await connection.runAndReadAll(`SELECT max(len(c.embedding)) AS dimensions FROM (${INPUTS_SQL}) i JOIN cache.embeddings c ON c.key = i.key`, parameters)).getRowObjectsJson()[0]?.dimensions ?? 0);
+				if (dimensions) {
+					await connection.run(`CREATE OR REPLACE TABLE memory.candidate AS SELECT i.id, c.embedding::FLOAT[${dimensions}] AS embedding FROM (${INPUTS_SQL}) i JOIN cache.embeddings c ON c.key = i.key WHERE len(c.embedding) = ${dimensions}`, parameters);
+				}
+				return { dimensions, passages: status?.passages ?? 0, collections: status?.collections ?? [] };
+			});
+			if (!made) {
+				return failed('notIndexed');
+			}
+			if (!made.dimensions) {
+				return failed('notEmbedded');
+			}
+			const { dimensions, passages, collections } = made;
+			const found: IEmbeddingFound[] = [];
+			try {
+				for (const [i, item] of request.questions.entries()) {
+					if (this.embeddingStopped) {
+						break;
+					}
+					const embedding = Date.now();
+					const vector = await embed(request.url, request.queryPrefix.replace('{text}', item.question));
+					const queryMs = Date.now() - embedding;
+					const result = await this.withIndex(async connection => {
+						const search = Date.now();
+						const given = await this.findPassages(connection, collections, { question: item.question, vector, dimensions, count: ASK_PASSAGES, vectors: 'memory.candidate' });
+						const searchMs = Date.now() - search;
+						// The place of the question's passage among all passages by meaning: how many are nearer the question, and 1
+						const row = (await connection.runAndReadAll(`WITH target AS (
+							SELECT min(array_cosine_distance(v.embedding, $vector::FLOAT[${dimensions}])) AS distance FROM memory.candidate v JOIN passages p ON p.id = v.id WHERE p.text = $context)
+							SELECT CASE WHEN t.distance IS NULL THEN NULL ELSE 1 + (SELECT count(*) FROM memory.candidate v WHERE array_cosine_distance(v.embedding, $vector::FLOAT[${dimensions}]) < t.distance) END AS meaning FROM target t`, { vector, context: item.context })).getRowObjectsJson()[0];
+						const meaning = optionalNumber(row?.meaning);
+						const hybrid = meaning === undefined ? undefined : given.passages.findIndex(passage => passage.text === item.context) + 1;
+						return { hybrid, meaning, queryMs, searchMs };
+					});
+					if (!result) {
+						return failed('notIndexed');
+					}
+					found.push(result);
+					this._onDidEmbed.fire({ model: request.model, phase: 'search', done: i + 1, total: request.questions.length });
+				}
+			} finally {
+				await this.withIndex(connection => connection.run('DROP TABLE IF EXISTS memory.candidate'));
+			}
+			return { dimensions, passages, found };
+		} catch (err) {
+			return failed(err instanceof Error ? err.message : String(err));
+		}
+	}
+
+	async stopEmbedding(): Promise<void> {
+		this.embeddingStopped = true;
 	}
 
 	async chat(request: IAskPollisChatRequest): Promise<IAskPollisChatEnd> {
@@ -402,29 +579,34 @@ class AskPollisIndex implements IAskPollisIndex {
 		this.chats.get(id)?.abort();
 	}
 
-	async spread(count: number): Promise<readonly IAskPollisPassage[]> {
-		// Each kind of document in turn (the PDFs, the wikis, the Julia Manual), and within a kind each document in turn,
-		// a passage of each chosen by its hash, so that the same index gives the same passages
+	async spread(counts: IAskTopicCounts): Promise<readonly IAskPollisPassage[]> {
+		// Within a topic each kind of document in turn (the PDFs, the wikis, the Julia Manual), and within a kind each
+		// document in turn, a passage of each chosen by its hash, so that the same index gives the same passages
+		const count = (topic: AskTopic) => Math.max(0, Math.floor(counts[topic] || 0));
 		const rows = await this.withIndex(async connection => (await connection.runAndReadAll(`
 			WITH long AS (
 				SELECT p.id, p.document, row_number() OVER (PARTITION BY p.document ORDER BY hash(p.id)) AS k
 				FROM passages p WHERE length(p.text) >= ${SHORTEST_QUESTION_PASSAGE}),
 			turns AS (
-				SELECT l.id, d.kind, row_number() OVER (PARTITION BY d.kind ORDER BY l.k, hash(l.document)) AS turn
-				FROM long l JOIN documents d ON d.id = l.document)
+				SELECT l.id, d.kind, ${TOPIC} AS topic, row_number() OVER (PARTITION BY d.kind ORDER BY l.k, hash(l.document)) AS turn
+				FROM long l JOIN documents d ON d.id = l.document),
+			chosen AS (
+				SELECT * FROM turns
+				QUALIFY row_number() OVER (PARTITION BY topic ORDER BY turn, kind) <= CASE topic WHEN 'pollis' THEN ${count('pollis')} WHEN 'julia' THEN ${count('julia')} ELSE ${count('panels')} END)
 			SELECT p.id, ${PASSAGE_COLUMNS}, 0 AS score
-			FROM turns t JOIN passages p ON p.id = t.id JOIN documents d ON d.id = p.document
-			ORDER BY t.turn, t.kind LIMIT ${Math.max(0, Math.floor(count))}`)).getRowObjectsJson());
+			FROM chosen t JOIN passages p ON p.id = t.id JOIN documents d ON d.id = p.document
+			ORDER BY t.turn, t.kind`)).getRowObjectsJson());
 		return (rows ?? []).map(passageOf);
 	}
 
-	async present(texts: readonly string[]): Promise<readonly boolean[]> {
+	async topics(texts: readonly string[]): Promise<readonly (AskTopic | undefined)[] | undefined> {
 		if (!texts.length) {
 			return [];
 		}
-		const found = await this.withIndex(async connection => new Set((await connection.runAndReadAll(
-			`SELECT DISTINCT text FROM passages WHERE text IN (${texts.map(sqlString).join(', ')})`)).getRowObjectsJson().map(row => String(row.text))));
-		return texts.map(text => !found || found.has(text));
+		const found = await this.withIndex(async connection => new Map((await connection.runAndReadAll(
+			`SELECT p.text, any_value(${TOPIC}) AS topic FROM passages p JOIN documents d ON d.id = p.document WHERE p.text IN (${texts.map(sqlString).join(', ')}) GROUP BY p.text`))
+			.getRowObjectsJson().map(row => [String(row.text), String(row.topic) as AskTopic])));
+		return found && texts.map(text => found.get(text));
 	}
 
 	/** Runs `task` with Comparisons.duckdb attached, its tables made the first time. */
@@ -556,6 +738,101 @@ class AskPollisIndex implements IAskPollisIndex {
 
 	async deleteRun(id: string): Promise<void> {
 		await this.withComparisons(connection => this.removeRun(connection, id));
+	}
+
+	/** Takes away the run `run` of Evaluate Embedding Models from its tables. */
+	private async removeEmbeddingRun(connection: DuckDBConnection, run: string): Promise<void> {
+		for (const table of ['embeddingRuns', 'embeddingQuestions', 'embeddingFound']) {
+			await connection.run(`DELETE FROM Comparisons.${table} WHERE ${table === 'embeddingRuns' ? 'id' : 'run'} = $run`, { run });
+		}
+	}
+
+	async saveEmbeddingRun(run: IEmbeddingRun): Promise<void> {
+		await this.withComparisons(async connection => {
+			const { summary } = run;
+			await connection.run('BEGIN TRANSACTION');
+			try {
+				await this.removeEmbeddingRun(connection, summary.id);
+				await connection.run('INSERT INTO Comparisons.embeddingRuns VALUES ($id, $started, $pollis, $models, $questions, $passages)', {
+					id: summary.id, started: summary.started, pollis: summary.pollis, models: JSON.stringify(summary.models), questions: summary.questions, passages: summary.passages,
+				});
+				for (const [question, item] of run.questions.entries()) {
+					await connection.run('INSERT INTO Comparisons.embeddingQuestions VALUES ($run, $question, $source, $context, $text, $answer)', {
+						run: summary.id, question, source: item.source, context: item.context, text: item.question, answer: item.answer,
+					});
+				}
+				for (const found of run.found) {
+					await connection.run('INSERT INTO Comparisons.embeddingFound VALUES ($run, $question, $model, $hybrid::INTEGER, $meaning::INTEGER, $queryMs, $searchMs)', {
+						run: summary.id, question: found.question, model: found.model, hybrid: found.hybrid ?? null, meaning: found.meaning ?? null, queryMs: found.queryMs, searchMs: found.searchMs,
+					});
+				}
+				await connection.run('COMMIT');
+			} catch (err) {
+				await connection.run('ROLLBACK');
+				throw err;
+			}
+		});
+	}
+
+	private embeddingSummaryOf(row: Row): IEmbeddingRunSummary {
+		return {
+			id: String(row.id),
+			started: Number(row.started),
+			pollis: String(row.pollis ?? ''),
+			models: JSON.parse(String(row.models ?? '[]')),
+			questions: Number(row.questions),
+			passages: Number(row.passages),
+		};
+	}
+
+	async embeddingRuns(): Promise<readonly IEmbeddingRunSummary[]> {
+		return this.withComparisons(async connection =>
+			(await connection.runAndReadAll('SELECT * FROM Comparisons.embeddingRuns ORDER BY started DESC')).getRowObjectsJson().map(row => this.embeddingSummaryOf(row)));
+	}
+
+	async loadEmbeddingRun(id: string): Promise<IEmbeddingRun | undefined> {
+		return this.withComparisons(async connection => {
+			const row = (await connection.runAndReadAll('SELECT * FROM Comparisons.embeddingRuns WHERE id = $id', { id })).getRowObjectsJson()[0];
+			if (!row) {
+				return undefined;
+			}
+			const questions = (await connection.runAndReadAll('SELECT * FROM Comparisons.embeddingQuestions WHERE run = $id ORDER BY question', { id })).getRowObjectsJson()
+				.map(question => ({ source: String(question.source), context: String(question.context), question: String(question.text), answer: String(question.answer) }));
+			const found = (await connection.runAndReadAll('SELECT * FROM Comparisons.embeddingFound WHERE run = $id ORDER BY question', { id })).getRowObjectsJson()
+				.map(found => ({ question: Number(found.question), model: String(found.model), hybrid: optionalNumber(found.hybrid), meaning: optionalNumber(found.meaning), queryMs: Number(found.query_ms), searchMs: Number(found.search_ms) }));
+			return { summary: this.embeddingSummaryOf(row), questions, found };
+		});
+	}
+
+	async deleteEmbeddingRun(id: string): Promise<void> {
+		await this.withComparisons(connection => this.removeEmbeddingRun(connection, id));
+	}
+
+	async foundBefore(key: string, questions: readonly string[]): Promise<readonly (readonly IAskPollisPassage[] | undefined)[]> {
+		return this.withComparisons(async connection => {
+			const rows = (await connection.runAndReadAll('SELECT question, passages FROM Comparisons.found WHERE stamp = $key', { key })).getRowObjectsJson();
+			const found = new Map(rows.map(row => [String(row.question), String(row.passages ?? '[]')]));
+			return questions.map(question => {
+				const passages = found.get(question);
+				return passages === undefined ? undefined : JSON.parse(passages);
+			});
+		});
+	}
+
+	async keepFound(key: string, found: readonly IAskPollisFound[]): Promise<void> {
+		await this.withComparisons(async connection => {
+			await connection.run('BEGIN TRANSACTION');
+			try {
+				await connection.run('DELETE FROM Comparisons.found WHERE stamp <> $key', { key });
+				for (const { question, passages } of found) {
+					await connection.run('INSERT OR REPLACE INTO Comparisons.found VALUES ($key, $question, $passages)', { key, question, passages: JSON.stringify(passages) });
+				}
+				await connection.run('COMMIT');
+			} catch (err) {
+				await connection.run('ROLLBACK');
+				throw err;
+			}
+		});
 	}
 }
 

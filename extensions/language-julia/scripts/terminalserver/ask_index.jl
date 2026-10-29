@@ -4,9 +4,9 @@
 # toolbox, collection}, which the command pollis.askPollis.sources gives (askPollisSources.ts), a document of Pollis
 # when it has no collection; the embedding model, as the setting pollis.ask.embeddingModel names it; what a passage is
 # given to it as (pollis.ask.passagePrefix, with {title} and {text}); 1 when the model is on this computer, else 0; and
-# 1 when the Julia Manual is searched too (pollis.ask.juliaManual), else 0. The package vignettes compiled are found in
-# ~/.pollis/documents/vignettes. A PDF's text is read with pdftotext (Poppler_jll), a page at a time, and cut under its
-# headings with the .labels compile_documents.jl puts beside it; a wiki is cut at its headings. The Julia Manual is that
+# 1 when the Julia Manual is searched too (pollis.ask.juliaManual), else 0. The list has the package vignettes compiled,
+# in ~/.pollis/documents/vignettes. A PDF's text is read with pdftotext (Poppler_jll), a page at a time, and cut under
+# its headings with the .labels compile_documents.jl or compile_vignette.jl puts beside it; a wiki is cut at its headings. The Julia Manual is that
 # of the Julia that runs this, which comes with it, so that a Julia updated has its own: the Manual, Base and the
 # standard library, from the search index Documenter writes beside its HTML, a section or a docstring an entry, each
 # passage with the page and anchor it is at. Each is cut into passages of about 250 words, at paragraphs, each carrying
@@ -50,7 +50,6 @@ const UNICODE_TABLE = r"^(?:Code point\(s\)|U\+[0-9A-F]{4,})"
 const OUTPUT = joinpath(homedir(), ".pollis", "documents")
 const DATABASE = joinpath(OUTPUT, "PollisDocuments.duckdb")
 const PARTIAL = DATABASE * ".partial"
-const VIGNETTES = joinpath(OUTPUT, "vignettes")
 const ENVIRONMENT = joinpath(OUTPUT, "julia", "v$(VERSION.major).$(VERSION.minor)")
 """The environment of the packages built into Pollis, where DuckDB is."""
 const BUILTIN = joinpath(homedir(), ".pollis", "julia", "environments", "v$(VERSION.major).$(VERSION.minor)")
@@ -126,21 +125,12 @@ Passage(page, heading, text) = Passage(page, heading, text, "")
 
 version(file) = "$(filesize(file))-$(round(Int, mtime(file)))"
 
-"""The documents to read: those of the list that exist, and the latest compiled vignette of each package."""
+"""The documents to read: those of the list that exist."""
 function documents()
 	db = DuckDB.DB(":memory:"; config = CONFIG)
 	rows = Tables.rowtable(DBInterface.execute(db, "SELECT * FROM read_json(?, format = 'array', columns = {kind: 'VARCHAR', title: 'VARCHAR', file: 'VARCHAR', menu: 'VARCHAR', toolbox: 'VARCHAR', collection: 'VARCHAR'})", [SOURCES]))
 	DBInterface.close!(db)
 	found = [Document(row.kind, row.title, row.file, row.menu, row.toolbox, version(row.file), coalesce(row.collection, POLLIS)) for row in rows if isfile(row.file)]
-	if isdir(VIGNETTES)
-		latest = Dict{String, String}()
-		for file in readdir(VIGNETTES; join = true)
-			endswith(file, ".pdf") || continue
-			package = first(rsplit(splitext(basename(file))[1], '-'; limit = 2))
-			(!haskey(latest, package) || mtime(file) > mtime(latest[package])) && (latest[package] = file)
-		end
-		append!(found, [Document("vignette", "$package.jl", file, "", "", version(file), POLLIS) for (package, file) in sort!(collect(latest))])
-	end
 	JULIA_MANUAL && isfile(MANUAL_INDEX) && push!(found, Document("julia", MANUAL, MANUAL_INDEX, "", "", "$VERSION-$(version(MANUAL_INDEX))", MANUAL))
 	return found
 end
@@ -562,8 +552,9 @@ function build(found, previous; progress = true)
 
 	DuckDB.query(db, "PRAGMA create_fts_index('passages', 'id', 'heading', 'text', stemmer = 'english', overwrite = 1)")
 	counts = only(Tables.rowtable(DBInterface.execute(db, "SELECT count(*) AS passages, count(embedding) AS embedded FROM passages")))
-	DBInterface.execute(db, "INSERT INTO built VALUES ('script', ?), ('passages', ?), ('embedded', ?), ('dimensions', ?), ('embedder', ?), ('passagePrefix', ?)",
-		[SCRIPT, string(counts.passages), string(counts.embedded), dimensions > 0 ? string(dimensions) : "", EMBEDDER, PREFIX])
+	# builtAt, when it was built, in milliseconds: the passages Evaluate Answering Models found with the index before are reused until it is built again
+	DBInterface.execute(db, "INSERT INTO built VALUES ('script', ?), ('passages', ?), ('embedded', ?), ('dimensions', ?), ('embedder', ?), ('passagePrefix', ?), ('builtAt', ?)",
+		[SCRIPT, string(counts.passages), string(counts.embedded), dimensions > 0 ? string(dimensions) : "", EMBEDDER, PREFIX, string(round(Int, time() * 1000))])
 	DBInterface.execute(db, "CHECKPOINT")
 	DBInterface.close!(db)
 

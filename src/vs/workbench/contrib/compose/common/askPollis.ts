@@ -15,6 +15,11 @@ export const ASK_CHAT_MODEL = 'hf:unsloth/gemma-4-E4B-it-GGUF/gemma-4-E4B-it-Q4_
 export const ASK_QUERY_PREFIX = 'task: question answering | query: {text}';
 /** What a passage is given to the embedding model as, when pollis.ask.passagePrefix gives nothing: EmbeddingGemma's form for a document; the Julia extension has the same. */
 export const ASK_PASSAGE_PREFIX = 'title: {title} | text: {text}';
+/**
+ * The context of the embedding server, in tokens: the same as the Julia extension's when it indexes
+ * (pollisDocuments.ts), so that both use the one server.
+ */
+export const ASK_EMBEDDING_CONTEXT = 2048;
 /** How many passages go to the model, when pollis.ask.passages gives none. */
 export const ASK_PASSAGES = 8;
 
@@ -75,7 +80,25 @@ export interface IAskPollisIndexStatus {
 	readonly dimensions: number;
 	/** The embedding model the passages were embedded with. */
 	readonly embedder: string;
+	/** What each passage was given to the embedding model as, with {title} and {text}. */
+	readonly passagePrefix: string;
+	/** When the index was built, in milliseconds; empty for an index of an older Pollis. */
+	readonly builtAt: string;
 	readonly collections: readonly string[];
+}
+
+/** What the passages found for a question depend on, so that a search with the same stamp is not made again (IAskPollisService.searchStamp). */
+export interface IAskPollisSearchStamp {
+	/** The index, the embedding model and the settings of the search, as one text. */
+	readonly key: string;
+	/** The file of the embedding model. */
+	readonly embedder: string;
+}
+
+/** The passages found for a question, by its text. */
+export interface IAskPollisFound {
+	readonly question: string;
+	readonly passages: readonly IAskPollisPassage[];
 }
 
 /** What the process of the search is asked: the embedding model's server, when the question is searched by meaning too. */
@@ -109,7 +132,7 @@ const ASK_INSTRUCTION = [
 /** How many of the questions before are given to the model with their answers, so that the passages still fit its context. */
 const ASK_TURNS = 4;
 
-/** What a passage is labelled with for the model, and as the source of a question of Evaluate Models: its document, its page and its heading. */
+/** What a passage is labelled with for the model, and as the source of a question of Evaluate Answering Models: its document, its page and its heading. */
 export function askPassageLabel(passage: IAskPollisPassage): string {
 	return [passage.title, passage.page === null ? '' : `page ${passage.page}`, passage.heading].filter(part => part).join(', ');
 }
@@ -168,7 +191,7 @@ export const ASK_CLOUD_MODELS: readonly IAskPollisCloudModel[] = [
 /** The value of pollis.ask.answerWith that answers on this computer, with the model of pollis.ask.chatModel. */
 export const ASK_THIS_COMPUTER = 'local';
 
-/** What an answer of Evaluate Models is asked with, besides a cloud model's id: a local model's file after `local:`. */
+/** What an answer of Evaluate Answering Models is asked with, besides a cloud model's id: a local model's file after `local:`. */
 export const ASK_LOCAL_PREFIX = 'local:';
 
 /** The cloud model of a value of pollis.ask.answerWith, or nothing for This Computer. */
@@ -218,7 +241,7 @@ export interface IAskPollisChatText {
 }
 
 /**
- * A question of the test set of Evaluate Models: a QAEvalItem of RAGTools.jl, as `evals.json` holds it. `source` names
+ * A question of the test set of Evaluate Answering Models: a QAEvalItem of RAGTools.jl, as `evals.json` holds it. `source` names
  * the document and the place in it, `context` is the passage that answers the question, and `answer` the right answer.
  */
 export interface IAskPollisEvalItem {
@@ -228,7 +251,16 @@ export interface IAskPollisEvalItem {
 	readonly answer: string;
 }
 
-/** A model of a run of Evaluate Models. */
+/**
+ * The topic of a question of a test set, by the document of its passage: `pollis`, Pollis' own documents; `julia`, the
+ * Julia Manual; `panels`, the wikis of the panels, and the documents of the toolboxes.
+ */
+export type AskTopic = 'pollis' | 'julia' | 'panels';
+
+/** How many questions of each topic Make Questions writes. */
+export type IAskTopicCounts = Readonly<Record<AskTopic, number>>;
+
+/** A model of a run of Evaluate Answering Models. */
 export interface ICompareRunModel {
 	/** What IAskPollisService.answer is asked with: a cloud model's id, or `local:` and a local model's file. */
 	readonly value: string;
@@ -238,7 +270,7 @@ export interface ICompareRunModel {
 	readonly size?: string;
 }
 
-/** A run of Evaluate Models, as the list of the earlier runs shows it. */
+/** A run of Evaluate Answering Models, as the list of the earlier runs shows it. */
 export interface ICompareRunSummary {
 	readonly id: string;
 	/** When it started, in milliseconds since 1970. */
@@ -295,13 +327,130 @@ export interface ICompareRunUnrated {
 	readonly error: string;
 }
 
-/** A run of Evaluate Models, kept in `~/.pollis/ask/Comparisons.duckdb`. */
+/** A run of Evaluate Answering Models, kept in `~/.pollis/ask/Comparisons.duckdb`. */
 export interface ICompareRun {
 	readonly summary: ICompareRunSummary;
 	readonly questions: readonly ICompareRunQuestion[];
 	readonly answers: readonly ICompareRunAnswer[];
 	readonly scores: readonly ICompareRunScore[];
 	readonly unrated: readonly ICompareRunUnrated[];
+}
+
+/** What an embedding model is given before a passage, with {title} and {text}, and before a question, with {text}. */
+export interface IEmbeddingPrefixes {
+	readonly passage: string;
+	readonly query: string;
+}
+
+/** The prefixes an embedding model was trained with, by the name of its file; a title and the text, and the question alone, for one not known. */
+export function embeddingPrefixes(file: string): IEmbeddingPrefixes {
+	const name = file.toLowerCase().split(/[\\/]/).pop() ?? '';
+	const passage = '{title}\n{text}';
+	if (name.includes('embeddinggemma')) {
+		return { passage: ASK_PASSAGE_PREFIX, query: ASK_QUERY_PREFIX };
+	}
+	if (name.includes('nomic-embed')) {
+		return { passage: 'search_document: {title}\n{text}', query: 'search_query: {text}' };
+	}
+	if (/qwen3-embedding|gte-qwen2/.test(name)) {
+		return { passage, query: 'Instruct: Given a question, retrieve the passages that answer it\nQuery: {text}' };
+	}
+	if (/arctic-embed.*v2/.test(name)) {
+		return { passage, query: 'query: {text}' };
+	}
+	if (/(^|[^a-z])e5[-_]/.test(name)) {
+		return { passage: 'passage: {title}\n{text}', query: 'query: {text}' };
+	}
+	if (/bge-.*en-v1\.5|mxbai-embed|arctic-embed/.test(name)) {
+		return { passage, query: 'Represent this sentence for searching relevant passages: {text}' };
+	}
+	return { passage, query: '{text}' };
+}
+
+/** How far the embedding of the passages, or the search of the questions, of a model of Evaluate Embedding Models is. */
+export interface IEmbeddingProgress {
+	readonly model: string;
+	readonly phase: 'embed' | 'search';
+	readonly done: number;
+	readonly total: number;
+}
+
+/** The passages of the index to embed with the model `model` (its value in the settings), by its server at `url`. */
+export interface IEmbeddingRequest {
+	readonly model: string;
+	readonly url: string;
+	readonly passagePrefix: string;
+}
+
+/** How the embedding of the passages went: how many were embedded, those embeddings.duckdb did not have, and in how long. */
+export interface IEmbeddingDone {
+	readonly embedded: number;
+	readonly seconds: number;
+	readonly error?: string;
+}
+
+/** The questions to search with the embeddings of `model`, made with its prefixes. */
+export interface IEmbeddingEvaluation extends IEmbeddingRequest {
+	readonly queryPrefix: string;
+	readonly questions: readonly { readonly question: string; readonly context: string }[];
+}
+
+/**
+ * How a question was found with a model: the place of its passage among those Ask Pollis gives (by words and by
+ * meaning), from 1, and among all passages by meaning only; 0 when not among those given, nothing when the index has
+ * no such passage; and the milliseconds the question's embedding and the search took.
+ */
+export interface IEmbeddingFound {
+	readonly hybrid?: number;
+	readonly meaning?: number;
+	readonly queryMs: number;
+	readonly searchMs: number;
+}
+
+/** What evaluateEmbedding found for each question, and the size of the model's embeddings. */
+export interface IEmbeddingEvaluated {
+	readonly dimensions: number;
+	readonly passages: number;
+	readonly found: readonly IEmbeddingFound[];
+	readonly error?: string;
+}
+
+/** A model of a run of Evaluate Embedding Models, with what was measured of it. */
+export interface IEmbeddingRunModel extends IEmbeddingPrefixes {
+	readonly value: string;
+	readonly label: string;
+	/** Its download, as Compose > Local Models shows it. */
+	readonly size?: string;
+	readonly dimensions?: number;
+	/** The bytes of memory its server took. */
+	readonly memory?: number;
+	/** The passages it embedded a second, when it embedded any. */
+	readonly perSecond?: number;
+	readonly error?: string;
+}
+
+/** A run of Evaluate Embedding Models, as the list of the earlier runs shows it. */
+export interface IEmbeddingRunSummary {
+	readonly id: string;
+	readonly started: number;
+	readonly pollis: string;
+	readonly models: readonly IEmbeddingRunModel[];
+	readonly questions: number;
+	/** The passages of the index. */
+	readonly passages: number;
+}
+
+/** What a model found for a question of a run. */
+export interface IEmbeddingRunFound extends IEmbeddingFound {
+	readonly question: number;
+	readonly model: string;
+}
+
+/** A run of Evaluate Embedding Models, kept in `~/.pollis/ask/Comparisons.duckdb`. */
+export interface IEmbeddingRun {
+	readonly summary: IEmbeddingRunSummary;
+	readonly questions: readonly IAskPollisEvalItem[];
+	readonly found: readonly IEmbeddingRunFound[];
 }
 
 /** The search of PollisDocuments, and the chat model's answer, in a process of their own (../node/askPollisMain.ts). */
@@ -313,16 +462,32 @@ export interface IAskPollisIndex {
 	/** Writes the answer, the text sent as it comes by `onDidChat`. */
 	chat(request: IAskPollisChatRequest): Promise<IAskPollisChatEnd>;
 	stop(id: string): Promise<void>;
-	/** `count` passages spread over the documents, for Make Questions: one of each document in turn, long enough to ask about. */
-	spread(count: number): Promise<readonly IAskPollisPassage[]>;
-	/** Whether each of `texts` is still the text of a passage of the documents. */
-	present(texts: readonly string[]): Promise<readonly boolean[]>;
+	/** `counts` passages of each topic spread over the documents, for Make Questions: one of each document in turn, long enough to ask about. */
+	spread(counts: IAskTopicCounts): Promise<readonly IAskPollisPassage[]>;
+	/** The topic of the passage each of `texts` is the text of, nothing for a text no passage has any more; nothing at all when there is no index. */
+	topics(texts: readonly string[]): Promise<readonly (AskTopic | undefined)[] | undefined>;
+	/** The passages found before for each of `questions` with the search stamp `key`, nothing for a question not found with it. */
+	foundBefore(key: string, questions: readonly string[]): Promise<readonly (readonly IAskPollisPassage[] | undefined)[]>;
+	/** Keeps the passages `found` with the search stamp `key`, and forgets those found with any other. */
+	keepFound(key: string, found: readonly IAskPollisFound[]): Promise<void>;
 	/** Keeps a run, in place of the one of the same id. */
 	saveRun(run: ICompareRun): Promise<void>;
 	/** The runs kept, the latest first. */
 	runs(): Promise<readonly ICompareRunSummary[]>;
 	loadRun(id: string): Promise<ICompareRun | undefined>;
 	deleteRun(id: string): Promise<void>;
+	readonly onDidEmbed: Event<IEmbeddingProgress>;
+	/** Embeds the passages of the index that embeddings.duckdb does not have with `request.model`, keeping each batch as it comes. */
+	embedPassages(request: IEmbeddingRequest): Promise<IEmbeddingDone>;
+	/** Searches the questions with the embeddings of `request.model` in embeddings.duckdb, as Ask Pollis would with it. */
+	evaluateEmbedding(request: IEmbeddingEvaluation): Promise<IEmbeddingEvaluated>;
+	/** Stops embedPassages and evaluateEmbedding at their next batch or question. */
+	stopEmbedding(): Promise<void>;
+	saveEmbeddingRun(run: IEmbeddingRun): Promise<void>;
+	/** The runs of Evaluate Embedding Models, the latest first. */
+	embeddingRuns(): Promise<readonly IEmbeddingRunSummary[]>;
+	loadEmbeddingRun(id: string): Promise<IEmbeddingRun | undefined>;
+	deleteEmbeddingRun(id: string): Promise<void>;
 }
 
 /** How an answer ended, and the model that wrote it. */
@@ -343,20 +508,41 @@ export interface IAskPollisService {
 	/** Every collection of the index, for a Search In before any question; none before the first index. */
 	collections(): Promise<readonly string[]>;
 	search(request: IAskPollisSearchRequest): Promise<IAskPollisSearchResult>;
+	/** Stops the embedding model of the search, if it runs, so that its memory is free; the next search starts it again. Resolves once it has stopped. */
+	stopSearchModel(): Promise<void>;
+	/**
+	 * What a search by meaning and words depends on now: the index, its build time, the embedding model, its query
+	 * prefix, the number of passages and Pollis' version; nothing when a question would be searched by its words only.
+	 * Evaluate Answering Models reuses the passages found with the same stamp (foundBefore, keepFound), so that the embedding
+	 * model need not load and every run gets the same passages.
+	 */
+	searchStamp(): Promise<IAskPollisSearchStamp | undefined>;
+	/** The passages found before for each of `questions` with the search stamp `key`, in `~/.pollis/ask/Comparisons.duckdb`. */
+	foundBefore(key: string, questions: readonly string[]): Promise<readonly (readonly IAskPollisPassage[] | undefined)[]>;
+	keepFound(key: string, found: readonly IAskPollisFound[]): Promise<void>;
 	/**
 	 * Has the model of pollis.ask.answerWith answer `question` from `passages`, after `turns`: on this computer the
 	 * chat model of pollis.ask.chatModel, started through the Julia extension, downloaded the first time; or a cloud
-	 * model, with the key of its provider. `onText` is given the answer so far as it comes. Evaluate Models gives
+	 * model, with the key of its provider. `onText` is given the answer so far as it comes. Evaluate Answering Models gives
 	 * `answerWith`, a cloud model's id or `local:` and a local model's file, in place of the setting.
 	 */
 	answer(turns: readonly IAskPollisTurn[], question: string, passages: readonly IAskPollisPassage[], onText: (text: string) => void, token: CancellationToken, answerWith?: string): Promise<IAskPollisAnswer>;
-	/** `count` passages spread over the documents, for the questions of a test set. */
-	spread(count: number): Promise<readonly IAskPollisPassage[]>;
-	/** Whether each of `texts` is still the text of a passage of the documents; all are when there is no index. */
-	present(texts: readonly string[]): Promise<readonly boolean[]>;
-	/** The runs of Evaluate Models, in `~/.pollis/ask/Comparisons.duckdb`. */
+	/** `counts` passages of each topic spread over the documents, for the questions of a test set. */
+	spread(counts: IAskTopicCounts): Promise<readonly IAskPollisPassage[]>;
+	/** The topic of the passage each of `texts` is the text of, nothing for a text no passage has any more; nothing at all when there is no index. */
+	topics(texts: readonly string[]): Promise<readonly (AskTopic | undefined)[] | undefined>;
+	/** The runs of Evaluate Answering Models, in `~/.pollis/ask/Comparisons.duckdb`. */
 	saveRun(run: ICompareRun): Promise<void>;
 	runs(): Promise<readonly ICompareRunSummary[]>;
 	loadRun(id: string): Promise<ICompareRun | undefined>;
 	deleteRun(id: string): Promise<void>;
+	/** Evaluate Embedding Models: as IAskPollisIndex, the server of each model started by the caller. */
+	readonly onDidEmbed: Event<IEmbeddingProgress>;
+	embedPassages(request: IEmbeddingRequest): Promise<IEmbeddingDone>;
+	evaluateEmbedding(request: IEmbeddingEvaluation): Promise<IEmbeddingEvaluated>;
+	stopEmbedding(): Promise<void>;
+	saveEmbeddingRun(run: IEmbeddingRun): Promise<void>;
+	embeddingRuns(): Promise<readonly IEmbeddingRunSummary[]>;
+	loadEmbeddingRun(id: string): Promise<IEmbeddingRun | undefined>;
+	deleteEmbeddingRun(id: string): Promise<void>;
 }

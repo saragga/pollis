@@ -1,12 +1,14 @@
 # Pollis: compiles the vignette of a package, for Help > Documentation > Packages, with the XeTeX of Tectonic
 # that PollisTeX.jl installs. Run by the Julia extension in a hidden process of low priority (pollisDocuments.ts):
 #
-#   julia compile_vignette.jl SOURCE NAME PDF
+#   julia compile_vignette.jl SOURCE NAME PDF LABELS
 #
 # SOURCE is the vignette/ folder of an installed package, or the repository of a package on GitHub
 # (https://github.com/OWNER/NAME.jl), whose vignette/ folder is downloaded, or the folder of a document of an installed
 # toolbox, for Help > Documentation > Toolboxes (compose/browser/toolboxDocumentsPage.ts), made the same way; NAME the vignette's main file, NAME.tex;
-# PDF where the PDF goes. A vignette is its LaTeX sources (.tex, .bib) and its resources/ folder (images and the
+# PDF where the PDF goes; LABELS the app's docs/ask_labels.tex, which the main file is made to input before anything
+# else, so that NAME.labels, the page of each heading, goes beside the PDF for Ask Pollis (ask_index.jl), as with
+# Pollis' own documents. A vignette is its LaTeX sources (.tex, .bib) and its resources/ folder (images and the
 # like): packages carry no PDF. The sources are copied to a folder of their own first, LaTeX's working files beside
 # them. The environment is that of the documents of Help > Documentation, ~/.pollis/documents/julia/vX.Y, which gets
 # PollisTeX the first time; the user's environments are never touched. It writes a line of JSON on stdout as it goes:
@@ -16,6 +18,7 @@ import Pkg, Downloads
 const SOURCE = ARGS[1]
 const NAME = ARGS[2]
 const PDF = abspath(ARGS[3])
+const LABELS = get(ARGS, 4, "")
 const ENVIRONMENT = joinpath(homedir(), ".pollis", "documents", "julia", "v$(VERSION.major).$(VERSION.minor)")
 
 say(line) = (println(line); flush(stdout))
@@ -65,7 +68,13 @@ try
 	tectonic = Base.invokelatest(Base.require(Main, :PollisTeX).tectonic)
 	mktempdir() do build
 		startswith(SOURCE, "https://") ? download_repository(SOURCE, build) : copy_installed(SOURCE, build)
-		isfile(joinpath(build, "$NAME.tex")) || error("the vignette has no $NAME.tex")
+		main = joinpath(build, "$NAME.tex")
+		isfile(main) || error("the vignette has no $NAME.tex")
+		# The page of each heading, for Ask Pollis: a vignette compiles without it
+		if isfile(LABELS)
+			cp(LABELS, joinpath(build, "pollis_ask_labels.tex"); force = true)
+			write(main, "\\input{pollis_ask_labels}\n" * read(main, String))
+		end
 		log = joinpath(build, "$NAME.log")
 		if !success(pipeline(Cmd(`$tectonic --keep-logs $NAME.tex`; dir = build); stdout = devnull, stderr = devnull))
 			# LaTeX's own words on what went wrong, the last lines of its log that start with !
@@ -75,6 +84,8 @@ try
 		# Copied beside it, then moved, so that the page never opens half a PDF
 		mkpath(dirname(PDF))
 		cp(joinpath(build, "$NAME.pdf"), PDF * ".partial"; force = true)
+		labels = splitext(PDF)[1] * ".labels"
+		isfile(joinpath(build, "$NAME.labels")) ? cp(joinpath(build, "$NAME.labels"), labels; force = true) : rm(labels; force = true)
 		mv(PDF * ".partial", PDF; force = true)
 	end
 	say("{\"pdf\":$(json(PDF))}")

@@ -1,4 +1,4 @@
-# Pollis: the evaluation of Evaluate Models, with RAGTools.jl and PromptingTools.jl, which RAGTools.jl calls the models
+# Pollis: the evaluation of Evaluate Answering Models, with RAGTools.jl and PromptingTools.jl, which RAGTools.jl calls the models
 # with (Pollis' forks, which run on Julia 1.13, as in LLM Text Analysis). Run by the Julia extension in a hidden process
 # (pollisCompareModels.ts) with one argument, a JSON file of the task, and on stdin one line of JSON: the keys of the
 # cloud providers, from Secret Storage, by the variable PromptingTools reads them from (ANTHROPIC_API_KEY, ...), set in
@@ -13,8 +13,9 @@
 #     written as {"rank"}.
 # A model is {name, provider, file}: provider "local" for a model of this computer, else "anthropic", "google" or
 # "openai". Its own environment, ~/.pollis/ask/julia/vX.Y, gets the packages the first time, while {"status":
-# "installing"} is written. It writes a line of JSON on stdout as it goes: {"done", "total"} after each item, {"failed"}
-# with what went wrong for an item that gave nothing, {"error"} when the task cannot be done.
+# "installing"} is written. It writes a line of JSON on stdout as it goes: {"done", "total"} after each item, in "judge"
+# with "tokens", [read, written], the tokens the judges used until then; {"failed"} with what went wrong for an item
+# that gave nothing, {"error"} when the task cannot be done.
 import Pkg
 
 const TASK = abspath(ARGS[1])
@@ -98,7 +99,29 @@ end
 """The passages an answer was written from, numbered as the model was given them."""
 numbered(passages) = join(("[$(i)] $(text)" for (i, text) in enumerate(passages)), "\n\n")
 
-"""Each answer rated by each judge against its passages, with the five parts of RAGTools.JudgeAllScores; and the places of the passages found."""
+"""
+A judge's reply as RAGTools.JudgeAllScores, or why it cannot be. A reply that does not fit the type exactly (a part
+given as 4.5 or as "4") comes as a Dict: its parts are read as numbers, each part rounded to a whole one.
+"""
+function scores_of(content)
+	content isa RAGTools.JudgeAllScores && return content
+	content isa AbstractDict || return "the judge's reply could not be read"
+	reply = Dict(Symbol(key) => value for (key, value) in content)
+	number(value) = value isa Real ? Float64(value) : value isa AbstractString ? tryparse(Float64, strip(value)) : nothing
+	parts = (:relevance, :completeness, :clarity, :consistency, :helpfulness, :final_rating)
+	values = Dict(part => number(get(reply, part, nothing)) for part in parts)
+	absent = [String(part) for part in parts if isnothing(values[part]) || !isfinite(values[part])]
+	isempty(absent) || return "the judge's reply has no $(join(absent, ", "))"
+	rationale = get(reply, :rationale, nothing)
+	RAGTools.JudgeAllScores(; (part => (part == :final_rating ? values[part] : round(Int, values[part])) for part in parts)...,
+		rationale = rationale isa AbstractString ? String(rationale) : nothing)
+end
+
+"""
+Each answer rated by each judge against its passages, with the five parts of RAGTools.JudgeAllScores; and the places of
+the passages found. A judge on this computer replies in JSON mode, held by llama-server to the type's schema, as a
+small model does not always give the parts as whole numbers when it calls a tool.
+"""
 function judge()
 	for question in JOB.retrieval
 		candidates = String.(question.passages)
@@ -108,24 +131,26 @@ function judge()
 	judges = [(spec = judge, call = use_model(judge)) for judge in JOB.judges]
 	total = length(JOB.answers) * length(judges)
 	done = 0
+	tokens = [0, 0]
 	for (spec, call) in judges, answer in JOB.answers
 		try
 			msg = aiextract(:RAGJudgeAnswerFromContext; call.model, call.api_kwargs, verbose = false,
 				question = String(answer.question), context = numbered(answer.passages), answer = String(answer.answer),
-				return_type = RAGTools.JudgeAllScores)
-			scores = msg.content
+				return_type = RAGTools.JudgeAllScores, json_mode = spec.provider == "local" ? true : nothing)
+			tokens .+= msg.tokens
+			scores = scores_of(msg.content)
 			if scores isa RAGTools.JudgeAllScores
 				json((; score = (; answer.id, judge = spec.name, scores.relevance, scores.completeness, scores.clarity,
 					scores.consistency, scores.helpfulness, scores.final_rating, scores.rationale,
 					tokens = msg.tokens)))
 			else
-				json((; failed = answer.id, judge = spec.name, error = "the judge's reply could not be read"))
+				json((; failed = answer.id, judge = spec.name, error = scores))
 			end
 		catch err
 			json((; failed = answer.id, judge = spec.name, error = failure(err)))
 		end
 		done += 1
-		json((; done, total))
+		json((; done, total, tokens))
 	end
 end
 

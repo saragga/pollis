@@ -37,7 +37,7 @@ import { IInstalledModel } from './modelsInstalledPage.js';
 // passages, never a file. Under it, Sources lists the passages cited, or all of them when none is, each with Open,
 // which opens the PDF at its page, the panel's wiki at its heading, or the Julia Manual at its section
 // (askPollisWebview.ts). The conversation is kept only while the page is open; New Chat, beside the title, starts it again.
-// Evaluate Models..., the last item of the model's menu, opens Evaluate Models (compareModelsPage.ts).
+// Evaluate Answering Models..., the last item of the model's menu, opens Evaluate Answering Models (compareModelsPage.ts).
 
 export const ASK_POLLIS_COMMAND_ID = 'pollis.askPollis';
 
@@ -339,9 +339,9 @@ function pageHtml(language: string): string {
 		asking: localize('askPollis.asking', "Asking {0}...", '{0}'),
 		searched: localize('askPollis.searched', "Searched: {0}.", '{0}'),
 		stopped: localize('askPollis.stopped', "Stopped."),
-		compareModels: localize('askPollis.compareModels', "Evaluate Models..."),
+		compareModels: localize('askPollis.compareModels', "Evaluate Answering Models..."),
 		addToTestSet: localize('askPollis.addToTestSet', "Add to the Test Set..."),
-		addToTestSetHint: localize('askPollis.addToTestSetHint', "Adds this question to the test set of Evaluate Models, with this answer as its right answer once you have corrected it, and the passage that answers it"),
+		addToTestSetHint: localize('askPollis.addToTestSetHint', "Adds this question to the test set of Evaluate Answering Models, with this answer as its right answer once you have corrected it, and the passage that answers it"),
 	};
 	return `<!DOCTYPE html>
 <html lang="en">

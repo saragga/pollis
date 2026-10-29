@@ -7,10 +7,12 @@
 // GGUF files from the publishers of the setting pollis.localModels.publishers, updated in the last year (two for
 // embedding models, which change more slowly), small enough for a laptop without a GPU, and the most downloaded in the
 // last month. Larger models come from Compose > Local Models. The command `language-julia.pollisInstalledModels`
-// answers the models on this computer, for Compose > Local Models > Models Installed; `language-julia.pollisModelVersions`,
+// answers the models on this computer, each with its value in the settings, for Compose > Local Models > Models Installed and the
+// two Evaluate pages; `language-julia.pollisModelVersions`,
 // with a model's file, the other files of its repository, and `language-julia.pollisDownloadModel`, with an `hf:` value,
 // downloads one, for its Other Versions; `language-julia.pollisAvailableMemory`, the memory a model can have now, for
-// the warning of Evaluate Models.
+// the warning of Evaluate Answering Models and the charts of the memory free during a run of either Evaluate page; `language-julia.pollisTotalMemory`,
+// the computer's memory, the top of that chart.
 
 import { execFile } from 'child_process'
 import * as fs from 'fs'
@@ -319,12 +321,13 @@ export function valueFile(value: string): string {
  * whether Pollis downloaded it or it is in the Hugging Face cache, what it reads besides text, and the tiers of
  * Model Tasks and Routing that run on it.
  */
-async function installedModels(): Promise<(LocalModel & { bytes: number; pollis: boolean; repository?: string; media: ModelMedia[]; tools?: boolean; tiers: string[] })[]> {
+async function installedModels(): Promise<(LocalModel & { value: string; bytes: number; pollis: boolean; repository?: string; media: ModelMedia[]; tools?: boolean; tiers: string[] })[]> {
     const tierCells = vscode.workspace.getConfiguration('pollis.agents').get<Record<string, { model?: string }>>('tierCells', {})
     const tierFiles = Object.entries(tierCells).filter(([, cell]) => typeof cell?.model === 'string' && cell.model.startsWith('local:') && cell.model.length > 'local:'.length)
         .map(([tier, cell]) => ({ tier, file: path.resolve(valueFile(cell.model!.slice('local:'.length))) }))
     const models = await Promise.all((await computerModels()).map(async (model) => ({
         ...model,
+        value: localValue(model.file),
         bytes: (await fs.promises.stat(model.file).catch(() => undefined))?.size ?? 0,
         pollis: model.file.startsWith(MODELS_DIR + path.sep),
         repository: repositoryOf(model.file),
@@ -556,7 +559,7 @@ async function chooseModel(kind: ModelKind, value: string): Promise<string | und
  * Monitor does, os.freemem() counting only the free pages there; on Linux MemAvailable of /proc/meminfo; on Windows
  * os.freemem(), the available physical memory, standby pages included, as Task Manager shows it.
  */
-async function availableMemory(): Promise<number> {
+export async function availableMemory(): Promise<number> {
     if (process.platform === 'darwin') {
         const stats = await new Promise<string>((resolve) => execFile('vm_stat', (err, stdout) => resolve(err ? '' : stdout)))
         const pageSize = Number(/page size of (?<bytes>\d+) bytes/.exec(stats)?.groups?.bytes)
@@ -578,6 +581,7 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand('language-julia.pollisInstalledModels', () => installedModels()),
         vscode.commands.registerCommand('language-julia.pollisModelVersions', (file: string) => modelVersions(file)),
         vscode.commands.registerCommand('language-julia.pollisDownloadModel', (value: string) => downloadVersion(value)),
-        vscode.commands.registerCommand('language-julia.pollisAvailableMemory', () => availableMemory())
+        vscode.commands.registerCommand('language-julia.pollisAvailableMemory', () => availableMemory()),
+        vscode.commands.registerCommand('language-julia.pollisTotalMemory', () => os.totalmem())
     )
 }

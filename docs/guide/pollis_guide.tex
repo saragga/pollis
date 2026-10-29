@@ -535,7 +535,7 @@ Your own things are files in \texttt{\textasciitilde/.pollis}, kept when Pollis 
 \texttt{methods}, \texttt{packages} & your new methods and their packages (page 16)\\
 \texttt{practice} & the exercises you write (the Learning and Practice toolbox)\\
 \texttt{rss} & the items of your RSS feeds (page 22)\\
-\texttt{ask/sets} & your test sets of Evaluate Models (page 47)\\
+\texttt{ask/sets} & your test sets of Evaluate Answering Models (page 47)\\
 \end{tabular}
 \end{center}
 
@@ -1653,7 +1653,8 @@ There is no main agent: every task runs on the cell of its tier. The settings ar
 and download models, and \ui{Models Installed}: the local models on this computer, those Pollis downloaded
 and those in the Hugging Face cache, with their \ui{Kind} (Chat or Embedding), what each \ui{Reads}, whether
 it can call \ui{Tools}, and the tiers that use it. Pollis runs them with llama.cpp, which comes with it,
-free and private: a task on a local tier starts the model first.
+free and private: a task on a local tier starts the model first. \ui{Evaluate Answering Models...} and
+\ui{Evaluate Embedding Models...} compare them for Ask Pollis (page 47).
 
 \begin{caution}{An agent works on your files}
 A coding agent reads and writes files, and runs commands, in its terminal. Read what it proposes, and check
@@ -2011,21 +2012,21 @@ hybrid search: BM25 keyword search and embedding-based semantic search, merged b
 The model's menu, below the box on the right, chooses the model that writes the answer: under \ui{On this computer},
 the chat models installed on your computer, the default one unless you choose another, and the one you choose is
 kept for the next time; under \ui{Cloud, with your own
-key}, Claude Haiku or Sonnet, GPT-5.4 mini or GPT-5.5, Gemini 3.8 Flash or Gemini 4 Argon. \ui{Evaluate Models...}
+key}, Claude Haiku or Sonnet, GPT-5.4 mini or GPT-5.5, Gemini 3.8 Flash or Gemini 4 Argon. \ui{Evaluate Answering Models...}
 is the last item. The passages are always found on your
 computer; a cloud model is sent the question, the conversation and the eight passages, which are Pollis' documents, and nothing else.
 
 \newpage
-\subhead{Evaluate Models}
-\ui{Evaluate Models}, the last item of the model's menu, sets the models you choose against each other on the same
+\subhead{Evaluate Answering Models}
+\ui{Evaluate Answering Models}, the last item of the model's menu and in \ui{Compose > Local Models}, sets the models you choose against each other on the same
 questions, the same passages and the same instruction: local models of different sizes, say, against Claude
 Sonnet. The page goes in four steps: the models, the questions, \ui{Run} and the results.
 \begin{itemize}
   \item The questions, a test set chosen in \ui{Test Set}; those ticked are asked, or all when none is. \ui{Standard} comes with Pollis: 100 questions, reviewed
-    one by one, 50 on its documents, 40 on the panel wikis and 10 on the Julia Manual, each with its answer and the
+    one by one, 40 on its documents, 40 on the panel wikis and 20 on the Julia Manual, each with its answer and the
     passage that holds it; a newer Pollis may update it, and it cannot be changed. \ui{Save As...} copies a test set
     under a name of yours and \ui{New Set...} starts an empty one, in \texttt{\textasciitilde/.pollis/ask/sets},
-    which a newer Pollis does not change; each change is saved as you make it, the ticks too. In yours, under \ui{Change This Set}, \ui{Make Questions...} writes 40 more, each from a passage, with the
+    which a newer Pollis does not change; each change is saved as you make it, the ticks too. In yours, under \ui{Change This Set}, \ui{Make Questions...} writes as many more as you give beside it for each topic, \ui{Pollis}, \ui{Julia Language} and \ui{Topic Panels} (4, 2 and 4 at first), each from a passage, with the
     default model unless you choose another; \ui{Add} takes one of your own, as does \ui{Add to the Test Set...}
     under an answer of Ask Pollis; \ui{Import...} reads them from a file of RAGTools.jl; \ui{Delete Ticked} removes the ticked ones.
     \ui{Export...} writes any test set as a file of RAGTools.jl.
@@ -2039,8 +2040,16 @@ Sonnet. The page goes in four steps: the models, the questions, \ui{Run} and the
 A \emph{judge}, the default model unless you choose another, rates each answer from 1 to 5 on relevance,
 completeness, clarity, consistency with the passages and helpfulness. Choose two judges, such as Claude Sonnet
 and GPT-5.5, since a judge may favour its own family. For each model you see the mean score and its five
-parts, the answers not scored, and the seconds and tokens per answer; for each embedding model, how often the
-passage a question came from was found. Every run is kept, to set beside a later one.
+parts, the answers not scored, and the seconds and tokens per answer, and how often the passage a question came
+from was found. Every run is kept, to set beside a later one.
+
+\subhead{Evaluate Embedding Models}
+\ui{Compose > Local Models > Evaluate Embedding Models...} compares the embedding models on your computer on the
+same test sets, in the same four steps. Each model embeds the passages it has not embedded yet, once ever, then
+searches each question as Ask Pollis would: you see how often the passage it came from is among the eight found, and
+where, with words and meaning and by meaning alone, the milliseconds per question and per search, the passages a
+second, the memory, and the size of the index. \ui{Use for Ask Pollis}, under a model, makes it the one Ask Pollis
+uses. Nothing leaves your computer.
 
 \subhead{Settings}
 \begin{center}\small
@@ -2059,7 +2068,7 @@ passage a question came from was found. Every run is kept, to set beside a later
 \end{trouble}
 
 \begin{note}{Not available yet}
-Ask Pollis and Evaluate Models are not in Pollis yet; they come in a coming release.
+Ask Pollis and its two Evaluate pages are not in Pollis yet; they come in a coming release.
 \end{note}
 
 \seealso{Toolboxes, page 10.\quad Orchestration, page 34.}

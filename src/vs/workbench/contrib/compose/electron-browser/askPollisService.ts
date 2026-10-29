@@ -4,21 +4,17 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { CancellationToken } from '../../../../base/common/cancellation.js';
+import { Emitter } from '../../../../base/common/event.js';
 import { Disposable, DisposableStore } from '../../../../base/common/lifecycle.js';
 import { generateUuid } from '../../../../base/common/uuid.js';
 import { ProxyChannel } from '../../../../base/parts/ipc/common/ipc.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
+import { IProductService } from '../../../../platform/product/common/productService.js';
 import { ISecretStorageService } from '../../../../platform/secrets/common/secrets.js';
 import { IUtilityProcessWorkerWorkbenchService } from '../../../services/utilityProcess/electron-browser/utilityProcessWorkerWorkbenchService.js';
-import { ASK_CHAT_MODEL, ASK_CLOUD_PROVIDERS, ASK_EMBEDDING_MODEL, ASK_LOCAL_PREFIX, ASK_PASSAGES, ASK_QUERY_PREFIX, askCloudModel, askPollisMessages, IAskPollisAnswer, IAskPollisChatRequest, IAskPollisIndex, IAskPollisPassage, IAskPollisSearchRequest, IAskPollisSearchResult, IAskPollisService, IAskPollisTurn, ICompareRun, ICompareRunSummary } from '../common/askPollis.js';
-
-/**
- * The context of the embedding server, in tokens: the same as the Julia extension's when it indexes
- * (pollisDocuments.ts), so that both use the one server.
- */
-const EMBEDDING_CONTEXT = 2048;
+import { AskTopic, ASK_CHAT_MODEL, ASK_CLOUD_PROVIDERS, ASK_EMBEDDING_CONTEXT, ASK_EMBEDDING_MODEL, ASK_LOCAL_PREFIX, ASK_PASSAGES, ASK_QUERY_PREFIX, askCloudModel, askPollisMessages, IAskPollisAnswer, IAskPollisChatRequest, IAskPollisFound, IAskPollisIndex, IAskPollisPassage, IAskPollisSearchRequest, IAskPollisSearchResult, IAskPollisSearchStamp, IAskPollisService, IAskPollisTurn, IAskTopicCounts, ICompareRun, ICompareRunSummary, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary } from '../common/askPollis.js';
 
 /** What the command of the Julia extension that starts a llama.cpp server answers (pollisLlamaServer.ts). */
 interface ILlamaServerAnswer {
@@ -41,11 +37,15 @@ class AskPollisService extends Disposable implements IAskPollisService {
 	// The proxy kept in an object: awaited itself, its `then` would be taken for a method of the process, never answered
 	private index: Promise<{ readonly proxy: IAskPollisIndex }> | undefined;
 
+	private readonly _onDidEmbed = this._register(new Emitter<IEmbeddingProgress>());
+	readonly onDidEmbed = this._onDidEmbed.event;
+
 	constructor(
 		@IUtilityProcessWorkerWorkbenchService private readonly utilityProcessWorkerWorkbenchService: IUtilityProcessWorkerWorkbenchService,
 		@ICommandService private readonly commandService: ICommandService,
 		@IConfigurationService private readonly configurationService: IConfigurationService,
 		@ISecretStorageService private readonly secretStorageService: ISecretStorageService,
+		@IProductService private readonly productService: IProductService,
 	) {
 		super();
 	}
@@ -58,7 +58,9 @@ class AskPollisService extends Disposable implements IAskPollisService {
 				name: 'ask-pollis',
 			}));
 			worker.onDidTerminate.then(() => this.index = undefined);
-			return { proxy: ProxyChannel.toService<IAskPollisIndex>(worker.client.getChannel('askPollis')) };
+			const proxy = ProxyChannel.toService<IAskPollisIndex>(worker.client.getChannel('askPollis'));
+			this._register(proxy.onDidEmbed(e => this._onDidEmbed.fire(e)));
+			return { proxy };
 		})();
 		return this.index;
 	}
@@ -84,7 +86,7 @@ class AskPollisService extends Disposable implements IAskPollisService {
 		}
 		let server: ILlamaServerAnswer | undefined;
 		try {
-			server = await this.commandService.executeCommand<ILlamaServerAnswer>('language-julia.pollisLlamaServer', { model, embeddings: true, context: EMBEDDING_CONTEXT });
+			server = await this.commandService.executeCommand<ILlamaServerAnswer>('language-julia.pollisLlamaServer', { model, embeddings: true, context: ASK_EMBEDDING_CONTEXT });
 		} catch (err) {
 			server = { error: err instanceof Error ? err.message : String(err) };
 		}
@@ -93,6 +95,36 @@ class AskPollisService extends Disposable implements IAskPollisService {
 		}
 		const prefix = this.configurationService.getValue<string>('pollis.ask.queryPrefix')?.trim() || ASK_QUERY_PREFIX;
 		return proxy.search({ ...request, passages, embedding: { url: server.url, input: prefix.replace('{text}', request.question) } });
+	}
+
+	async searchStamp(): Promise<IAskPollisSearchStamp | undefined> {
+		const { proxy } = await this.get();
+		const status = await proxy.status();
+		const embedder = this.configurationService.getValue<string>('pollis.ask.embeddingModel')?.trim() || ASK_EMBEDDING_MODEL;
+		// Searched by its words only, or by an index whose build time is not known
+		if (!status?.embedded || status.embedder !== embedder || !status.builtAt) {
+			return undefined;
+		}
+		const passages = this.configurationService.getValue<number>('pollis.ask.passages') || ASK_PASSAGES;
+		const prefix = this.configurationService.getValue<string>('pollis.ask.queryPrefix')?.trim() || ASK_QUERY_PREFIX;
+		const pollis = `${this.productService.pollisVersion ?? this.productService.version} ${this.productService.commit ?? ''}`;
+		return { key: JSON.stringify([status.builtAt, status.passages, status.embedded, embedder, prefix, passages, pollis]), embedder };
+	}
+
+	async foundBefore(key: string, questions: readonly string[]): Promise<readonly (readonly IAskPollisPassage[] | undefined)[]> {
+		const { proxy } = await this.get();
+		return proxy.foundBefore(key, questions);
+	}
+
+	async keepFound(key: string, found: readonly IAskPollisFound[]): Promise<void> {
+		const { proxy } = await this.get();
+		await proxy.keepFound(key, found);
+	}
+
+	async stopSearchModel(): Promise<void> {
+		const model = this.configurationService.getValue<string>('pollis.ask.embeddingModel')?.trim() || ASK_EMBEDDING_MODEL;
+		// The request that started it, by which the Julia extension knows its server
+		await this.commandService.executeCommand('language-julia.pollisStopLlamaServer', { model, embeddings: true, context: ASK_EMBEDDING_CONTEXT }).catch(() => undefined);
 	}
 
 	async answer(turns: readonly IAskPollisTurn[], question: string, passages: readonly IAskPollisPassage[], onText: (text: string) => void, token: CancellationToken, answerWith?: string): Promise<IAskPollisAnswer> {
@@ -140,14 +172,14 @@ class AskPollisService extends Disposable implements IAskPollisService {
 		}
 	}
 
-	async spread(count: number): Promise<readonly IAskPollisPassage[]> {
+	async spread(counts: IAskTopicCounts): Promise<readonly IAskPollisPassage[]> {
 		const { proxy } = await this.get();
-		return proxy.spread(count);
+		return proxy.spread(counts);
 	}
 
-	async present(texts: readonly string[]): Promise<readonly boolean[]> {
+	async topics(texts: readonly string[]): Promise<readonly (AskTopic | undefined)[] | undefined> {
 		const { proxy } = await this.get();
-		return proxy.present(texts);
+		return proxy.topics(texts);
 	}
 
 	async saveRun(run: ICompareRun): Promise<void> {
@@ -168,6 +200,41 @@ class AskPollisService extends Disposable implements IAskPollisService {
 	async deleteRun(id: string): Promise<void> {
 		const { proxy } = await this.get();
 		return proxy.deleteRun(id);
+	}
+
+	async embedPassages(request: IEmbeddingRequest): Promise<IEmbeddingDone> {
+		const { proxy } = await this.get();
+		return proxy.embedPassages(request);
+	}
+
+	async evaluateEmbedding(request: IEmbeddingEvaluation): Promise<IEmbeddingEvaluated> {
+		const { proxy } = await this.get();
+		return proxy.evaluateEmbedding(request);
+	}
+
+	async stopEmbedding(): Promise<void> {
+		const { proxy } = await this.get();
+		return proxy.stopEmbedding();
+	}
+
+	async saveEmbeddingRun(run: IEmbeddingRun): Promise<void> {
+		const { proxy } = await this.get();
+		return proxy.saveEmbeddingRun(run);
+	}
+
+	async embeddingRuns(): Promise<readonly IEmbeddingRunSummary[]> {
+		const { proxy } = await this.get();
+		return proxy.embeddingRuns();
+	}
+
+	async loadEmbeddingRun(id: string): Promise<IEmbeddingRun | undefined> {
+		const { proxy } = await this.get();
+		return proxy.loadEmbeddingRun(id);
+	}
+
+	async deleteEmbeddingRun(id: string): Promise<void> {
+		const { proxy } = await this.get();
+		return proxy.deleteEmbeddingRun(id);
 	}
 }
 

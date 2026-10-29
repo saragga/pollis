@@ -6,10 +6,8 @@
 import { CancellationTokenSource } from '../../../../base/common/cancellation.js';
 import { mainWindow } from '../../../../base/browser/window.js';
 import { VSBuffer } from '../../../../base/common/buffer.js';
-import { Emitter } from '../../../../base/common/event.js';
-import { AppResourcePath, FileAccess } from '../../../../base/common/network.js';
+import { Emitter, Event } from '../../../../base/common/event.js';
 import { joinPath } from '../../../../base/common/resources.js';
-import { URI } from '../../../../base/common/uri.js';
 import { generateUuid } from '../../../../base/common/uuid.js';
 import { localize } from '../../../../nls.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
@@ -18,28 +16,25 @@ import { IFileService } from '../../../../platform/files/common/files.js';
 import { IProductService } from '../../../../platform/product/common/productService.js';
 import { ISecretStorageService } from '../../../../platform/secrets/common/secrets.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
-import { ASK_CHAT_MODEL, ASK_CLOUD_PROVIDERS, ASK_LOCAL_PREFIX, askCloudModel, askPassageLabel, IAskPollisAnswer, IAskPollisEvalItem, IAskPollisPassage, IAskPollisService, ICompareRun, ICompareRunAnswer, ICompareRunModel, ICompareRunQuestion, ICompareRunScore, ICompareRunUnrated } from '../common/askPollis.js';
+import { ASK_CHAT_MODEL, ASK_CLOUD_PROVIDERS, ASK_LOCAL_PREFIX, askCloudModel, askPassageLabel, IAskPollisAnswer, IAskPollisEvalItem, IAskPollisFound, IAskPollisPassage, IAskPollisService, IAskTopicCounts, ICompareRun, ICompareRunAnswer, ICompareRunModel, ICompareRunQuestion, ICompareRunScore, ICompareRunUnrated } from '../common/askPollis.js';
 import { askModelName } from './askPollisWebview.js';
+import { askFolder, CompareSampler, CompareTestSets, evalItem, ICompareSample, ICompareSamples, isEvalItem, mergeEvalItems } from './compareShared.js';
 
-// What Evaluate Models runs (compareModelsPage.ts): the test sets, each a JSON array of RAGTools.jl's QAEvalItem, the
+// What Evaluate Answering Models runs (compareModelsPage.ts): the test sets, each a JSON array of RAGTools.jl's QAEvalItem, the
 // Standard one that Pollis ships, read from Pollis each time, and the user's, in ~/.pollis/ask/sets, which Pollis
 // never changes but at the user's own request; Make Questions, which has RAGTools.jl write them from passages spread over the documents; and a run. A
-// run finds the passages of each question once, then has each model answer every question from them, as Ask Pollis
+// run finds the passages of each question once, or takes those an earlier run found with the same index and settings
+// (IAskPollisService.searchStamp), then has each model answer every question from them, as Ask Pollis
 // would (IAskPollisService.answer: the same instruction, the same passages), the cloud models together and the local
-// ones one after the other, each server stopped once it has answered, the chat model of Ask Pollis before them, so that
-// each runs alone in memory. The judges then rate each answer, and RAGTools.jl places each question's own passage among
+// ones one after the other, each server stopped once it has answered, the embedding model of the search and the chat
+// model of Ask Pollis before them, so that each runs alone in memory. The judges then rate each answer, and RAGTools.jl places each question's own passage among
 // those found, in a Julia process of the Julia extension (language-julia.pollisCompareModels, ask_compare.jl), given the
-// keys of the cloud providers it needs from Secret Storage. The run is kept in Comparisons.duckdb. There is one runner
+// keys of the cloud providers it needs from Secret Storage; two judges on this computer in one process each, one after
+// the other, so that each is alone in memory too. The run is kept in Comparisons.duckdb. There is one runner
 // per window, so that a run goes on when the page is closed, and the page opened again shows how far it has come.
 
-/** The Standard test set, which Pollis ships, reviewed by hand: a newer Pollis may update it, and it cannot be changed. */
-const SHIPPED_TEST_SET: AppResourcePath = 'vs/workbench/contrib/compose/browser/media/ask/evals.json';
-
-/** The name of the Standard test set among the test sets: the user's have names of their own. */
-export const STANDARD_TEST_SET = '';
-
-/** How many passages Make Questions asks about, as the plan of the test set has it. */
-export const QUESTIONS_TO_MAKE = 40;
+/** How many passages of each topic Make Questions asks about, at first: the user changes them beside Make Questions... */
+export const QUESTION_COUNTS: IAskTopicCounts = { pollis: 4, julia: 2, panels: 4 };
 
 /** What the Julia extension's command answers (pollisCompareModels.ts). */
 interface IJuliaAnswer {
@@ -64,6 +59,8 @@ interface IJuliaProgress {
 	readonly status: 'starting' | 'installing' | 'running';
 	readonly done: number;
 	readonly total: number;
+	/** The tokens read and written by the judges until then. */
+	readonly tokens?: readonly [number, number];
 }
 
 /** A model as the Julia script is given it. */
@@ -113,39 +110,6 @@ function juliaError(error: string): string {
 	}
 }
 
-/** Whether `value` is a question of a test set, as RAGTools.jl writes it. */
-function isEvalItem(value: unknown): value is IAskPollisEvalItem {
-	const item = value as IAskPollisEvalItem;
-	return !!item && typeof item === 'object' && typeof item.question === 'string' && typeof item.answer === 'string'
-		&& typeof item.context === 'string' && typeof item.source === 'string' && !!item.question.trim();
-}
-
-/** A question of a test set with only its four fields, in RAGTools.jl's order. */
-function evalItem(item: IAskPollisEvalItem): IAskPollisEvalItem {
-	return { source: item.source, context: item.context, question: item.question, answer: item.answer };
-}
-
-/** The questions of a file of RAGTools.jl, or nothing when it holds none. */
-export function parseEvalItems(text: string): IAskPollisEvalItem[] | undefined {
-	try {
-		const parsed = JSON.parse(text);
-		return Array.isArray(parsed) ? parsed.filter(isEvalItem).map(evalItem) : undefined;
-	} catch {
-		return undefined;
-	}
-}
-
-/** The text of a test set, as JSON3.read(file, Vector{QAEvalItem}) reads it back. */
-export function evalItemsText(items: readonly IAskPollisEvalItem[]): string {
-	return JSON.stringify(items.map(evalItem), undefined, 1);
-}
-
-/** `items` and those of `added` that are not among them, by their question. */
-export function mergeEvalItems(items: readonly IAskPollisEvalItem[], added: readonly IAskPollisEvalItem[]): IAskPollisEvalItem[] {
-	const known = new Set(items.map(item => item.question.trim()));
-	return [...items, ...added.filter(item => !known.has(item.question.trim()) && known.add(item.question.trim()))];
-}
-
 /** What a passage is given to the judge as: as the model that answered was given it. */
 function judgedPassage(passage: IAskPollisPassage): string {
 	return `${askPassageLabel(passage)}\n${passage.text}`;
@@ -162,6 +126,11 @@ export class CompareModelsRunner {
 
 	private source: CancellationTokenSource | undefined;
 	private _progress: ICompareProgress | undefined;
+	/** The samples of the run: the tokens read and written by the models answering, then by the judges. */
+	private readonly sampler: CompareSampler;
+	/** A new sample of the run; the first of a run starts its charts again. */
+	readonly onDidSample: Event<ICompareSample>;
+	readonly sets: CompareTestSets;
 
 	constructor(
 		@IAskPollisService private readonly askPollisService: IAskPollisService,
@@ -171,7 +140,11 @@ export class CompareModelsRunner {
 		@IFileService private readonly fileService: IFileService,
 		@IPathService private readonly pathService: IPathService,
 		@IProductService private readonly productService: IProductService,
-	) { }
+	) {
+		this.sampler = new CompareSampler(commandService);
+		this.onDidSample = this.sampler.onDidSample;
+		this.sets = new CompareTestSets(fileService, pathService);
+	}
 
 	/** How far the task running has come, or nothing when none runs. */
 	get progress(): ICompareProgress | undefined {
@@ -182,43 +155,11 @@ export class CompareModelsRunner {
 		return !!this.source;
 	}
 
-	private async folder(): Promise<URI> {
-		return joinPath(await this.pathService.userHome({ preferLocal: true }), '.pollis', 'ask');
+	/** The samples of the run running, or of the last one. */
+	get samples(): ICompareSamples {
+		return this.sampler.samples;
 	}
 
-	private async testSetsFolder(): Promise<URI> {
-		return joinPath(await this.folder(), 'sets');
-	}
-
-	/** The names of the user's test sets, each a file of ~/.pollis/ask/sets, in alphabetical order. */
-	async testSets(): Promise<string[]> {
-		try {
-			const folder = await this.fileService.resolve(await this.testSetsFolder());
-			return (folder.children ?? [])
-				.filter(child => !child.isDirectory && child.name.endsWith('.json'))
-				.map(child => child.name.slice(0, -'.json'.length))
-				.sort((a, b) => a.localeCompare(b));
-		} catch {
-			return [];
-		}
-	}
-
-	/** The questions of the test set `name`: the Standard one from Pollis, the user's from their file; empty when it cannot be read. */
-	async readTestSet(name: string): Promise<IAskPollisEvalItem[]> {
-		try {
-			const file = name === STANDARD_TEST_SET ? FileAccess.asFileUri(SHIPPED_TEST_SET) : joinPath(await this.testSetsFolder(), `${name}.json`);
-			return parseEvalItems((await this.fileService.readFile(file)).value.toString()) ?? [];
-		} catch {
-			return [];
-		}
-	}
-
-	/** Writes the user's test set `name`, made when it is new; the Standard one is never written. */
-	async writeTestSet(name: string, items: readonly IAskPollisEvalItem[]): Promise<void> {
-		if (name !== STANDARD_TEST_SET) {
-			await this.fileService.writeFile(joinPath(await this.testSetsFolder(), `${name}.json`), VSBuffer.fromString(evalItemsText(items)));
-		}
-	}
 
 	private report(text: string, done = 0, total = 0): void {
 		this._progress = { text, done, total };
@@ -226,6 +167,7 @@ export class CompareModelsRunner {
 	}
 
 	private end(end: ICompareEnd): ICompareEnd {
+		this.sampler.stop();
 		this.source?.dispose();
 		this.source = undefined;
 		this._progress = undefined;
@@ -262,6 +204,8 @@ export class CompareModelsRunner {
 	 * progress reported with `label` ({0} done of {1}).
 	 */
 	private async runJulia(job: object, models: readonly string[], label: string): Promise<IJuliaAnswer> {
+		// The judges' tokens, counted on from those of the answers
+		const before = { ...this.sampler.tokens };
 		const keys: { [variable: string]: string } = {};
 		for (const value of models) {
 			const cloud = askCloudModel(value);
@@ -277,8 +221,10 @@ export class CompareModelsRunner {
 		const local = models.filter(value => value.startsWith(ASK_LOCAL_PREFIX)).map(value => value.slice(ASK_LOCAL_PREFIX.length));
 		if (local.length) {
 			await this.stopAskModel();
+			// The memory of a model on this computer is taken as its server loads it, before Julia has asked anything
+			this.report(localize('compareModels.loadingModels', "Loading {0} into memory...", local.map(askModelName).join(', ')));
 		}
-		const task = joinPath(await this.folder(), `compare-${generateUuid()}.json`);
+		const task = joinPath(await askFolder(this.pathService), `compare-${generateUuid()}.json`);
 		await this.fileService.writeFile(task, VSBuffer.fromString(JSON.stringify(job)));
 		const poll = mainWindow.setInterval(async () => {
 			const progress = await this.commandService.executeCommand<IJuliaProgress>('language-julia.pollisCompareProgress').catch(() => undefined);
@@ -288,6 +234,9 @@ export class CompareModelsRunner {
 			if (progress.status === 'installing') {
 				this.report(localize('compareModels.installing', "Installing RAGTools.jl and PromptingTools.jl, the first time only: some minutes."));
 			} else if (progress.status === 'running' && progress.total) {
+				if (progress.tokens) {
+					this.sampler.tokens = { read: before.read + progress.tokens[0], written: before.written + progress.tokens[1] };
+				}
 				this.report(label.replace('{0}', String(progress.done)).replace('{1}', String(progress.total)), progress.done, progress.total);
 			}
 		}, 1000);
@@ -301,14 +250,14 @@ export class CompareModelsRunner {
 		}
 	}
 
-	/** Has the model `questionsBy` write a question and its answer for each of `count` passages spread over the documents, added to the user's test set `testSet`. */
-	async makeQuestions(questionsBy: string, testSet: string, count = QUESTIONS_TO_MAKE): Promise<ICompareEnd> {
+	/** Has the model `questionsBy` write a question and its answer for each of `counts` passages of each topic spread over the documents, added to the user's test set `testSet`. */
+	async makeQuestions(questionsBy: string, testSet: string, counts: IAskTopicCounts): Promise<ICompareEnd> {
 		if (this.source) {
 			return { error: localize('compareModels.busy', "Wait for the run to end, or stop it.") };
 		}
 		this.source = new CancellationTokenSource();
 		this.report(localize('compareModels.choosingPassages', "Choosing the passages to ask about..."));
-		const passages = await this.askPollisService.spread(count);
+		const passages = await this.askPollisService.spread(counts);
 		if (!passages.length) {
 			return this.end({ error: localize('compareModels.noIndex', "Pollis has not indexed its documents yet. It does when the Julia REPL starts.") });
 		}
@@ -329,7 +278,7 @@ export class CompareModelsRunner {
 			return this.end({ error: localize('compareModels.noQuestions', "No question was made. {0}", failed[0].error ?? ''), stopped });
 		}
 		// Added to the test set here, so that they are kept when the page was closed meanwhile
-		await this.writeTestSet(testSet, mergeEvalItems(await this.readTestSet(testSet), items));
+		await this.sets.write(testSet, mergeEvalItems(await this.sets.read(testSet), items));
 		return this.end({ items, stopped });
 	}
 
@@ -351,20 +300,44 @@ export class CompareModelsRunner {
 		const token = source.token;
 		const id = generateUuid();
 		const started = Date.now();
+		await this.sampler.start();
+		this.sampler.mark('search');
 
-		// The passages of each question, found once for every model
+		// The passages of each question, found once for every model: those found before with the same search stamp are
+		// taken again, so that the embedding model loads only for the others, and every run gets the same passages
+		const stamp = await this.askPollisService.searchStamp();
+		const before = stamp ? await this.askPollisService.foundBefore(stamp.key, items.map(item => item.question)).catch(() => []) : [];
+		const reused = before.filter(passages => passages !== undefined).length;
+		if (stamp && reused) {
+			this.sampler.note({ model: askModelName(stamp.embedder), event: 'reused', reused: [reused, items.length] });
+		}
 		const questions: ICompareRunQuestion[] = [];
+		const found: IAskPollisFound[] = [];
 		for (const [index, item] of items.entries()) {
 			if (token.isCancellationRequested) {
 				break;
 			}
+			const kept = before[index];
+			if (kept) {
+				questions.push({ index, item, passages: kept });
+				continue;
+			}
 			this.report(localize('compareModels.finding', "Finding the passages of question {0} of {1}...", index + 1, items.length), index, items.length);
 			const result = await this.askPollisService.search({ question: item.question });
 			questions.push({ index, item, passages: result.passages });
+			// Only a search by meaning and words is kept: one by words only, when the embedding model did not start, is not the same
+			if (stamp && !result.wordsOnly) {
+				found.push({ question: item.question, passages: result.passages });
+			}
+		}
+		if (stamp && found.length) {
+			await this.askPollisService.keepFound(stamp.key, found).catch(() => undefined);
 		}
 		if (questions.length && !questions.some(question => question.passages.length)) {
 			return this.end({ error: localize('compareModels.nothingFound', "No passages were found: Pollis may not have indexed its documents yet.") });
 		}
+		// The embedding model of the search is not needed again in the run: its memory goes to the models answering and judging
+		await this.askPollisService.stopSearchModel();
 
 		// The answers: the cloud models together, each question after the other; the local models one after the other
 		const answers: ICompareRunAnswer[] = [];
@@ -382,10 +355,12 @@ export class CompareModelsRunner {
 					}
 					const error = answerError(answer, text, false);
 					answers.push({ id: generateUuid(), question: question.index, model: model.value, repeat, answer: text, error, timings: error ? undefined : answer.timings });
+					this.sampler.tokens = { read: this.sampler.tokens.read + (answer.timings?.tokensRead ?? 0), written: this.sampler.tokens.written + (answer.timings?.tokensWritten ?? 0) };
 					this.report(localize('compareModels.answering', "Answering: {0} of {1} answers, the last by {2}.", answers.length, total, model.label), answers.length, total);
 				}
 			}
 		};
+		this.sampler.mark('answer');
 		this.report(localize('compareModels.answeringFirst', "Answering: the first answers..."), 0, total);
 		const local = models.filter(model => model.local);
 		if (local.length) {
@@ -408,17 +383,35 @@ export class CompareModelsRunner {
 		let error: string | undefined;
 		const rated = answers.filter(answer => !answer.error && answer.answer);
 		if (!token.isCancellationRequested && rated.length) {
+			this.sampler.mark('judge');
 			this.report(localize('compareModels.startingJulia', "Starting the Julia process of the evaluation..."));
 			const byQuestion = new Map(questions.map(question => [question.index, question]));
-			const judged = await this.runJulia({
-				task: 'judge',
-				judges: judges.map(judge => this.juliaModel(judge.value)),
-				answers: rated.map(answer => {
-					const question = byQuestion.get(answer.question)!;
-					return { id: answer.id, question: question.item.question, passages: question.passages.map(judgedPassage), answer: answer.answer };
-				}),
-				retrieval: questions.filter(question => question.item.context && question.passages.length).map(question => ({ id: question.index, context: question.item.context, passages: question.passages.map(passage => passage.text) })),
-			}, judges.map(judge => judge.value), localize('compareModels.judging', "Judging: {0} of {1} ratings.", '{0}', '{1}'));
+			const judgedAnswers = rated.map(answer => {
+				const question = byQuestion.get(answer.question)!;
+				return { id: answer.id, question: question.item.question, passages: question.passages.map(judgedPassage), answer: answer.answer };
+			});
+			const retrieval = questions.filter(question => question.item.context && question.passages.length).map(question => ({ id: question.index, context: question.item.context, passages: question.passages.map(passage => passage.text) }));
+			// Two judges on this computer judge one after the other, each in a Julia process of its own, so that each
+			// model is alone in memory, its server started only when the other's has stopped
+			const rounds = judges.filter(judge => judge.local).length > 1 ? judges.map(judge => [judge]) : [judges];
+			const lines: IJuliaLine[] = [];
+			let failure: string | undefined;
+			for (const [round, roundJudges] of rounds.entries()) {
+				if (token.isCancellationRequested) {
+					break;
+				}
+				const answer = await this.runJulia({
+					task: 'judge',
+					judges: roundJudges.map(judge => this.juliaModel(judge.value)),
+					answers: judgedAnswers,
+					retrieval: round === 0 ? retrieval : [],
+				}, roundJudges.map(judge => judge.value), rounds.length > 1
+					? localize('compareModels.judgingBy', "Judging by {0}: {1} of {2} ratings.", roundJudges[0].label, '{0}', '{1}')
+					: localize('compareModels.judging', "Judging: {0} of {1} ratings.", '{0}', '{1}'));
+				lines.push(...answer.lines ?? []);
+				failure ??= answer.error;
+			}
+			const judged: IJuliaAnswer = { lines, error: failure };
 			const labels = new Map(judges.map(judge => [this.juliaModel(judge.value).name, judge.label]));
 			for (const line of judged.lines ?? []) {
 				if (line.score) {
