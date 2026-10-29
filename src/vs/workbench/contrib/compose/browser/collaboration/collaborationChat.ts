@@ -6,7 +6,8 @@
 import { FileAccess } from '../../../../../base/common/network.js';
 import { localize } from '../../../../../nls.js';
 import { asWebviewUri, webviewGenericCspSource } from '../../../webview/common/webview.js';
-import { composerAddSvg, composerSendSvg } from '../../../model/browser/webviews/webviewScaffold.js';
+import { composerSendSvg } from '../../../model/browser/webviews/webviewScaffold.js';
+import { composerAddCss, composerAddHtml, composerAddScript } from '../composerAdd.js';
 import { composerVoiceCss, composerVoiceHtml, composerVoiceScript } from '../composerVoice.js';
 import { IWirePacket } from './collaborationTransport.js';
 import { MAX_FILE_BYTES, MAX_IMAGE_BYTES, MAX_RECEIVE_BYTES, PROGRESS_THRESHOLD_BYTES, SignallingStrategy } from './collaborationProtocol.js';
@@ -192,7 +193,6 @@ export function chatPageHtml(language: string): string {
 		button.icon.primary { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
 		button.icon.primary:hover { background: var(--vscode-button-hoverBackground); }
 		button.icon.primary.idle { opacity: 0.4; }
-		body.dragging .composer { outline: 2px dashed var(--vscode-focusBorder); outline-offset: 2px; }
 		button { font: inherit; padding: 4px 12px; border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; cursor: pointer; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); white-space: nowrap; font-size: 11px; opacity: 0.7; }
 		/* As the code buttons below a panel's Example Code: dimmed until pointed at, the blue one not */
 		button:not(:disabled):hover, button.current, button.primary { opacity: 1; }
@@ -210,11 +210,7 @@ export function chatPageHtml(language: string): string {
 		.dataset .actions { display: flex; flex-wrap: wrap; gap: 6px; }
 		.file .note { color: var(--vscode-descriptionForeground); margin: 4px 0; }
 		/* The + menu: Image, File, Dataset and Database, above the + */
-		.tools .add { position: relative; }
-		#addMenu { display: none; position: absolute; bottom: 36px; left: 0; z-index: 1; min-width: 140px; padding: 4px 0; color: var(--vscode-menu-foreground); background: var(--vscode-menu-background); border: 1px solid var(--vscode-menu-border, var(--vscode-widget-border)); border-radius: 6px; box-shadow: 0 2px 8px var(--vscode-widget-shadow); }
-		#addMenu.open { display: block; }
-		#addMenu button { display: block; width: 100%; text-align: left; padding: 4px 14px; border-radius: 0; color: inherit; background: none; }
-		#addMenu button:hover, #addMenu button:focus { color: var(--vscode-menu-selectionForeground); background: var(--vscode-menu-selectionBackground); outline: none; }
+		${composerAddCss}
 		.link { color: var(--vscode-textLink-foreground); background: none; padding: 0; }
 		.link:hover { background: none; text-decoration: underline; }
 		${composerVoiceCss}
@@ -238,25 +234,14 @@ export function chatPageHtml(language: string): string {
 				${composerVoiceHtml({ dictate: text.dictate, voiceMode: text.voiceMode }, language)}
 			</div>
 			<div class="tools">
-				<div class="add">
-					<div id="addMenu" role="menu">
-						<button id="addImage" role="menuitem">${text.addImage}</button>
-						<button id="addFile" role="menuitem">${text.addFile}</button>
-						<button id="addDataset" role="menuitem">${text.addDataset}</button>
-						<button id="addDatabase" role="menuitem">${text.addDatabase}</button>
-					</div>
-					<button class="icon" id="add" title="${text.add}" aria-label="${text.add}" aria-haspopup="menu">${composerAddSvg}</button>
-				</div>
+				${composerAddHtml({ add: text.add, image: text.addImage, file: text.addFile, dataset: text.addDataset, database: text.addDatabase })}
 				<button class="icon primary idle" id="send" title="${text.send}" aria-label="${text.send}">${composerSendSvg}</button>
 			</div>
-			<input type="file" id="file" accept="image/png,image/jpeg,image/gif,image/webp" hidden>
-			<input type="file" id="anyFile" hidden>
 		</div>
 	</footer>
 <script type="module">
 	const vscode = acquireVsCodeApi();
 	const TEXT = ${JSON.stringify(text)};
-	const MAX_IMAGE_BYTES = ${MAX_IMAGE_BYTES};
 	const MAX_FILE_BYTES = ${MAX_FILE_BYTES};
 	const MAX_RECEIVE_BYTES = ${MAX_RECEIVE_BYTES};
 	const PROGRESS_THRESHOLD_BYTES = ${PROGRESS_THRESHOLD_BYTES};
@@ -510,42 +495,16 @@ export function chatPageHtml(language: string): string {
 		$('send').classList.toggle('idle', !input.value.trim() && !image);
 	}
 
-	const imageBytes = dataUrl => Math.floor((dataUrl.length - dataUrl.indexOf(',') - 1) * 3 / 4);
-	const readAsDataUrl = file => new Promise((resolve, reject) => {
-		const reader = new FileReader();
-		reader.onload = () => resolve(reader.result);
-		reader.onerror = () => reject(reader.error);
-		reader.readAsDataURL(file);
-	});
+	${composerAddScript('input', MAX_IMAGE_BYTES)}
 
 	// Images over the cap, or very large, are reduced: longest side 1600 px as PNG, then as JPEG
 	async function prepareImage(file) {
-		if (!/^image\\/(png|jpeg|gif|webp)$/.test(file.type)) {
-			vscode.postMessage({ command: 'notice', text: TEXT.notAnImage });
-			return;
+		const image = await composerReduceImage(file);
+		if (image.dataUrl) {
+			attach(image.dataUrl);
+		} else {
+			vscode.postMessage({ command: 'notice', text: image.error === 'notAnImage' ? TEXT.notAnImage : TEXT.imageTooLarge });
 		}
-		const original = await readAsDataUrl(file);
-		const picture = new Image();
-		picture.src = original;
-		await picture.decode();
-		if (imageBytes(original) <= MAX_IMAGE_BYTES && Math.max(picture.width, picture.height) <= 2400) {
-			attach(original);
-			return;
-		}
-		const scale = Math.min(1, 1600 / Math.max(picture.width, picture.height));
-		const canvas = document.createElement('canvas');
-		canvas.width = Math.round(picture.width * scale);
-		canvas.height = Math.round(picture.height * scale);
-		canvas.getContext('2d').drawImage(picture, 0, 0, canvas.width, canvas.height);
-		let reduced = canvas.toDataURL('image/png');
-		if (imageBytes(reduced) > MAX_IMAGE_BYTES) {
-			reduced = canvas.toDataURL('image/jpeg', 0.9);
-		}
-		if (imageBytes(reduced) > MAX_IMAGE_BYTES) {
-			vscode.postMessage({ command: 'notice', text: TEXT.imageTooLarge });
-			return;
-		}
-		attach(reduced);
 	}
 
 	// Any other file is sent as it is, in base64, within the cap
@@ -554,7 +513,7 @@ export function chatPageHtml(language: string): string {
 			vscode.postMessage({ command: 'notice', text: TEXT.fileTooLarge.replace('{0}', file.name) });
 			return;
 		}
-		const dataUrl = await readAsDataUrl(file);
+		const dataUrl = await composerReadAsDataUrl(file);
 		vscode.postMessage({ command: 'sendFile', fileName: file.name, content: dataUrl.slice(dataUrl.indexOf(',') + 1) });
 	}
 
@@ -584,62 +543,8 @@ export function chatPageHtml(language: string): string {
 			sendChat();
 		}
 	});
-	input.addEventListener('paste', e => {
-		const file = [...(e.clipboardData?.files || [])].find(item => item.type.startsWith('image/'));
-		if (file) {
-			e.preventDefault();
-			prepareImage(file);
-		}
-	});
-	document.body.addEventListener('dragover', e => { e.preventDefault(); document.body.classList.add('dragging'); });
-	document.body.addEventListener('dragleave', () => document.body.classList.remove('dragging'));
-	document.body.addEventListener('drop', e => {
-		e.preventDefault();
-		document.body.classList.remove('dragging');
-		const file = e.dataTransfer?.files?.[0];
-		if (file && /^image\\/(png|jpeg|gif|webp)$/.test(file.type)) {
-			prepareImage(file);
-		} else if (file) {
-			shareFile(file);
-		}
-	});
 	$('send').addEventListener('click', sendChat);
-	const addMenu = $('addMenu');
-	function closeAddMenu() {
-		addMenu.classList.remove('open');
-	}
-	$('add').addEventListener('click', e => {
-		e.stopPropagation();
-		addMenu.classList.toggle('open');
-		if (addMenu.classList.contains('open')) {
-			$('addImage').focus();
-		}
-	});
-	document.addEventListener('click', closeAddMenu);
-	document.addEventListener('keydown', e => {
-		if (e.key === 'Escape' && addMenu.classList.contains('open')) {
-			closeAddMenu();
-			$('add').focus();
-		}
-	});
-	$('addImage').addEventListener('click', () => $('file').click());
-	$('addFile').addEventListener('click', () => $('anyFile').click());
-	$('addDataset').addEventListener('click', () => vscode.postMessage({ command: 'pickDataset' }));
-	$('addDatabase').addEventListener('click', () => vscode.postMessage({ command: 'pickDatabase' }));
-	$('file').addEventListener('change', () => {
-		const file = $('file').files[0];
-		$('file').value = '';
-		if (file) {
-			prepareImage(file);
-		}
-	});
-	$('anyFile').addEventListener('change', () => {
-		const file = $('anyFile').files[0];
-		$('anyFile').value = '';
-		if (file) {
-			shareFile(file);
-		}
-	});
+	composerAdd({ image: prepareImage, file: shareFile });
 	$('removeImage').addEventListener('click', () => attach(undefined));
 	$('copyInvitation').addEventListener('click', () => {
 		vscode.postMessage({ command: 'copyInvitation' });

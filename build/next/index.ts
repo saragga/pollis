@@ -308,6 +308,8 @@ const desktopResourcePatterns = [
 	'vs/workbench/contrib/compose/browser/media/correctness/**/*.{ipynb,jl,dat}',
 	'vs/workbench/contrib/compose/browser/media/reports/*.{md,jl}',
 	'vs/workbench/contrib/compose/browser/media/practice/**/*.{toml,jl}',
+	// Ask Pollis - the Standard test set of the Evaluate pages and the icon of its pane
+	'vs/workbench/contrib/compose/browser/media/ask/*.{json,svg}',
 
 	// Compose > Collaboration - the vendored Trystero bundles and their licences
 	'vs/workbench/contrib/compose/browser/media/collaboration/*.js',

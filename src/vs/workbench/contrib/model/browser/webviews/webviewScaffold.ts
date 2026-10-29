@@ -3,6 +3,9 @@
  *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { localize } from '../../../../../nls.js';
+import { composerVoiceCss, composerVoiceHtml, composerVoiceScript } from '../../../compose/browser/composerVoice.js';
+
 /** Codicon SVGs used by Next Steps groups, keyed by codicon name (16px, theme-coloured via currentColor). */
 const NEXT_STEP_CODICONS: Readonly<Record<string, string>> = {
 	'arrow-swap': '<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M11.3536 1.64645C11.1583 1.45118 10.8417 1.45118 10.6464 1.64645C10.4512 1.84171 10.4512 2.15829 10.6464 2.35355L12.2929 4H2.5C2.22386 4 2 4.22386 2 4.5C2 4.77614 2.22386 5 2.5 5H12.2929L10.6464 6.64645C10.4512 6.84171 10.4512 7.15829 10.6464 7.35355C10.8417 7.54882 11.1583 7.54882 11.3536 7.35355L13.8536 4.85355C14.0488 4.65829 14.0488 4.34171 13.8536 4.14645L11.3536 1.64645ZM5.35355 9.35355C5.54882 9.15829 5.54882 8.84171 5.35355 8.64645C5.15829 8.45118 4.84171 8.45118 4.64645 8.64645L2.14645 11.1464C1.95118 11.3417 1.95118 11.6583 2.14645 11.8536L4.64645 14.3536C4.84171 14.5488 5.15829 14.5488 5.35355 14.3536C5.54882 14.1583 5.54882 13.8417 5.35355 13.6464L3.70711 12H13.5C13.7761 12 14 11.7761 14 11.5C14 11.2239 13.7761 11 13.5 11H3.70711L5.35355 9.35355Z"/></svg>',
@@ -161,7 +164,7 @@ export const spinnerCss = `.spin { display: inline-block; width: 12px; height: 1
 		@keyframes spin { to { transform: rotate(360deg); } }
 		@media (prefers-reduced-motion: reduce) { .spin { animation: none; } }`;
 
-/** CSS of a page's title row and of the microphone and speaker buttons beside its title, shared with the pages built outside the scaffold. */
+/** CSS of a page's title row and of the microphone and speaker buttons beside its title, for the pages built outside the scaffold, whose panels have Ask Pollis there. */
 export const voiceButtonsCss = `.title-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .voice-group { display: inline-flex; align-items: center; gap: 8px; }
 .voice-stub { background: transparent; border: none; color: var(--vscode-textLink-foreground); cursor: pointer; padding: 3px; display: inline-flex; border-radius: 50%; transition: background 0.15s, color 0.15s; }
@@ -169,8 +172,14 @@ export const voiceButtonsCss = `.title-row { display: flex; align-items: center;
 .voice-stub.active { background: var(--vscode-textLink-foreground); color: var(--vscode-editor-background); }
 .voice-stub.active:hover { color: var(--vscode-editor-background); }`;
 
+/** The speaker drawn in the buttons that will read aloud. */
+const speakerPath = '<path d="M8.69398 2.03934C8.8792 2.11749 8.99961 2.29898 8.99961 2.50001V13.5C8.99961 13.7014 8.87875 13.8832 8.693 13.9611C8.50725 14.039 8.29289 13.9978 8.14921 13.8567L5.22278 10.9817H3.49963C2.67121 10.9817 1.99963 10.3101 1.99963 9.48172V6.49273C1.99963 5.66431 2.67121 4.99273 3.49963 4.99273H5.22402L8.15073 2.14185C8.29474 2.00157 8.50875 1.96119 8.69398 2.03934ZM7.99961 3.68507L5.77617 5.85089C5.68281 5.94184 5.55763 5.99273 5.42729 5.99273H3.49963C3.22349 5.99273 2.99963 6.21659 2.99963 6.49273V9.48172C2.99963 9.75786 3.22349 9.98172 3.49963 9.98172H5.42729C5.55836 9.98172 5.68419 10.0332 5.77769 10.125L7.99961 12.3079V3.68507ZM10.1109 5.18874C10.2828 4.97264 10.5973 4.93682 10.8135 5.10873L10.8143 5.1094L10.8152 5.11015L10.8174 5.11188L10.8228 5.11628L10.8377 5.12882C10.8495 5.13885 10.8648 5.15224 10.8831 5.16904C10.9197 5.20261 10.9685 5.2499 11.0254 5.31119C11.1389 5.43362 11.2853 5.61296 11.4303 5.85143C11.7218 6.33096 12.0039 7.04439 12.0039 7.99855C12.0039 8.95268 11.7218 9.66687 11.4305 10.1471C11.2857 10.3859 11.1393 10.5657 11.0259 10.6884C10.9692 10.7498 10.9204 10.7973 10.8839 10.8309C10.8642 10.849 10.8441 10.8666 10.8236 10.8838L10.8152 10.8907L10.8143 10.8914C10.8143 10.8914 10.368 11.1337 10.1116 10.8129C9.94006 10.5983 9.97396 10.2858 10.1868 10.1128L10.1883 10.1115L10.1876 10.1122L10.1892 10.1108L10.1883 10.1115C10.1912 10.109 10.1975 10.1036 10.2066 10.0952C10.2248 10.0784 10.2543 10.05 10.2914 10.0098C10.3659 9.92923 10.47 9.80248 10.5755 9.62847C10.7851 9.28301 11.0039 8.74609 11.0039 7.99855C11.0039 7.25106 10.7851 6.71522 10.5758 6.3709C10.4703 6.19744 10.3663 6.07121 10.292 5.99105C10.2549 5.95104 10.2255 5.92278 10.2073 5.90613C10.1982 5.89781 10.192 5.89242 10.1891 5.88995L10.1901 5.89071C9.97439 5.71873 9.93908 5.40472 10.1109 5.18874ZM11.8127 3.10886C11.5966 2.93686 11.2821 2.97255 11.1101 3.18858C10.9382 3.40451 10.9743 3.71932 11.19 3.89138L11.2011 3.9006C11.2119 3.90975 11.2295 3.92484 11.2528 3.94582C11.2994 3.98781 11.369 4.05318 11.4538 4.14133C11.6239 4.31792 11.8537 4.58411 12.0841 4.93509C12.5446 5.63643 13.0029 6.66847 13.0029 8.00405C13.0029 9.33953 12.5446 10.3694 12.0845 11.0685C11.8541 11.4184 11.6244 11.6835 11.4545 11.8593C11.3697 11.947 11.3002 12.0121 11.2536 12.0538C11.2303 12.0747 11.2128 12.0897 11.202 12.0988L11.1904 12.1083L11.1895 12.1091C10.9742 12.2808 10.9382 12.5945 11.1093 12.8105C11.2808 13.0269 11.596 13.0628 11.8125 12.8913L11.8455 12.8642C11.864 12.8487 11.8895 12.8268 11.9209 12.7986C11.9838 12.7423 12.0707 12.6607 12.1735 12.5543C12.3789 12.3418 12.6496 12.0286 12.9197 11.6183C13.4604 10.797 14.0029 9.57884 14.0029 8.00405C14.0029 6.42934 13.4605 5.20938 12.9201 4.38627C12.6501 3.97503 12.3795 3.66089 12.1742 3.4477C12.0714 3.34097 11.9846 3.25908 11.9217 3.20255C11.8903 3.17426 11.8649 3.15228 11.8464 3.13665L11.8239 3.11798L11.8169 3.11222L11.8144 3.11024L11.8127 3.10886ZM10.1891 5.88995L10.1877 5.88874L10.1891 5.88995Z"/>';
+
+/** The speaker of the buttons that will read aloud, sized by the page's CSS. */
+export const voiceSpeakerSvg = `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor">${speakerPath}</svg>`;
+
 /** The speaker button, which will read a page aloud: it only toggles, voice is not implemented yet. */
-export const voiceSpeakerHtml = `<button class="voice-stub" title="Receive voice (speaker) — not yet implemented"><svg width="26" height="26" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M8.69398 2.03934C8.8792 2.11749 8.99961 2.29898 8.99961 2.50001V13.5C8.99961 13.7014 8.87875 13.8832 8.693 13.9611C8.50725 14.039 8.29289 13.9978 8.14921 13.8567L5.22278 10.9817H3.49963C2.67121 10.9817 1.99963 10.3101 1.99963 9.48172V6.49273C1.99963 5.66431 2.67121 4.99273 3.49963 4.99273H5.22402L8.15073 2.14185C8.29474 2.00157 8.50875 1.96119 8.69398 2.03934ZM7.99961 3.68507L5.77617 5.85089C5.68281 5.94184 5.55763 5.99273 5.42729 5.99273H3.49963C3.22349 5.99273 2.99963 6.21659 2.99963 6.49273V9.48172C2.99963 9.75786 3.22349 9.98172 3.49963 9.98172H5.42729C5.55836 9.98172 5.68419 10.0332 5.77769 10.125L7.99961 12.3079V3.68507ZM10.1109 5.18874C10.2828 4.97264 10.5973 4.93682 10.8135 5.10873L10.8143 5.1094L10.8152 5.11015L10.8174 5.11188L10.8228 5.11628L10.8377 5.12882C10.8495 5.13885 10.8648 5.15224 10.8831 5.16904C10.9197 5.20261 10.9685 5.2499 11.0254 5.31119C11.1389 5.43362 11.2853 5.61296 11.4303 5.85143C11.7218 6.33096 12.0039 7.04439 12.0039 7.99855C12.0039 8.95268 11.7218 9.66687 11.4305 10.1471C11.2857 10.3859 11.1393 10.5657 11.0259 10.6884C10.9692 10.7498 10.9204 10.7973 10.8839 10.8309C10.8642 10.849 10.8441 10.8666 10.8236 10.8838L10.8152 10.8907L10.8143 10.8914C10.8143 10.8914 10.368 11.1337 10.1116 10.8129C9.94006 10.5983 9.97396 10.2858 10.1868 10.1128L10.1883 10.1115L10.1876 10.1122L10.1892 10.1108L10.1883 10.1115C10.1912 10.109 10.1975 10.1036 10.2066 10.0952C10.2248 10.0784 10.2543 10.05 10.2914 10.0098C10.3659 9.92923 10.47 9.80248 10.5755 9.62847C10.7851 9.28301 11.0039 8.74609 11.0039 7.99855C11.0039 7.25106 10.7851 6.71522 10.5758 6.3709C10.4703 6.19744 10.3663 6.07121 10.292 5.99105C10.2549 5.95104 10.2255 5.92278 10.2073 5.90613C10.1982 5.89781 10.192 5.89242 10.1891 5.88995L10.1901 5.89071C9.97439 5.71873 9.93908 5.40472 10.1109 5.18874ZM11.8127 3.10886C11.5966 2.93686 11.2821 2.97255 11.1101 3.18858C10.9382 3.40451 10.9743 3.71932 11.19 3.89138L11.2011 3.9006C11.2119 3.90975 11.2295 3.92484 11.2528 3.94582C11.2994 3.98781 11.369 4.05318 11.4538 4.14133C11.6239 4.31792 11.8537 4.58411 12.0841 4.93509C12.5446 5.63643 13.0029 6.66847 13.0029 8.00405C13.0029 9.33953 12.5446 10.3694 12.0845 11.0685C11.8541 11.4184 11.6244 11.6835 11.4545 11.8593C11.3697 11.947 11.3002 12.0121 11.2536 12.0538C11.2303 12.0747 11.2128 12.0897 11.202 12.0988L11.1904 12.1083L11.1895 12.1091C10.9742 12.2808 10.9382 12.5945 11.1093 12.8105C11.2808 13.0269 11.596 13.0628 11.8125 12.8913L11.8455 12.8642C11.864 12.8487 11.8895 12.8268 11.9209 12.7986C11.9838 12.7423 12.0707 12.6607 12.1735 12.5543C12.3789 12.3418 12.6496 12.0286 12.9197 11.6183C13.4604 10.797 14.0029 9.57884 14.0029 8.00405C14.0029 6.42934 13.4605 5.20938 12.9201 4.38627C12.6501 3.97503 12.3795 3.66089 12.1742 3.4477C12.0714 3.34097 11.9846 3.25908 11.9217 3.20255C11.8903 3.17426 11.8649 3.15228 11.8464 3.13665L11.8239 3.11798L11.8169 3.11222L11.8144 3.11024L11.8127 3.10886ZM10.1891 5.88995L10.1877 5.88874L10.1891 5.88995Z"/></svg></button>`;
+export const voiceSpeakerHtml = `<button class="voice-stub" title="Receive voice (speaker) — not yet implemented"><svg width="26" height="26" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor">${speakerPath}</svg></button>`;
 
 /** The microphone and speaker buttons beside a page's title: they only toggle, voice is not implemented yet. */
 export const voiceButtonsHtml = `<span class="voice-group">
@@ -178,14 +187,78 @@ export const voiceButtonsHtml = `<span class="voice-group">
 	${voiceSpeakerHtml}
 </span>`;
 
-/** The microphone of a chat's input box, at the end of its first line: voice is not implemented yet. */
-export const composerMicSvg = `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M8 1a2 2 0 0 0-2 2v5a2 2 0 1 0 4 0V3a2 2 0 0 0-2-2zM5 7H4v1a4 4 0 0 0 3.5 3.969V14H5v1h6v-1H8.5v-2.031A4 4 0 0 0 12 8V7h-1v1a3 3 0 0 1-6 0V7z"/></svg>`;
-
 /** The + of a chat's input box, at the start of its last line. */
 export const composerAddSvg = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M8 2.5v11M2.5 8h11"/></svg>`;
 
 /** The send arrow of a chat's input box, at the end of its last line. */
 export const composerSendSvg = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13V3M3.5 7.5 8 3l4.5 4.5"/></svg>`;
+
+/** The highest the question of a panel's Ask Pollis grows, about six lines, before it scrolls. */
+const PANEL_ASK_HEIGHT = 120;
+
+/**
+ * A panel's Ask Pollis, at the right of its title, in place of the microphone and speaker of the other pages: a
+ * narrow pill, the question and the voice tools of a chat's input box, then the arrow; the question wraps to the lines
+ * below as it is written. It is posted as `askPollis`, which Ask Pollis answers beside the panel.
+ */
+function panelAskHtml(): string {
+	const text = {
+		placeholder: localize('panelAsk.placeholder', "Ask Pollis about this panel"),
+		ask: localize('panelAsk.ask', "Ask: the answer comes in Ask Pollis, beside this panel"),
+		dictate: localize('panelAsk.dictate', "Dictate the Question (not available yet)"),
+		voiceMode: localize('panelAsk.voiceMode', "Voice Mode: ask aloud and hear the answer, both written down too (not available yet)"),
+	};
+	return `<div class="panel-ask">
+				<textarea id="panel-ask-question" rows="1" placeholder="${text.placeholder}" aria-label="${text.placeholder}"></textarea>
+				${composerVoiceHtml({ dictate: text.dictate, voiceMode: text.voiceMode }, 'auto')}
+				<button class="panel-ask-send" id="panel-ask-send" title="${text.ask}" aria-label="${text.ask}">${composerSendSvg}</button>
+			</div>`;
+}
+
+/** The title row of a panel and its Ask Pollis: the title keeps to the top as the question grows. */
+const panelAskCss = `.title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+		.title-row h1 { min-width: 0; }
+		.panel-ask { flex: 0 1 300px; min-width: 200px; display: flex; align-items: flex-start; gap: 2px; padding: 3px 5px 3px 12px; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-focusBorder); border-radius: 18px; }
+		.panel-ask:focus-within { box-shadow: 0 0 0 1px var(--vscode-focusBorder); }
+		.panel-ask textarea { flex: 1; min-width: 0; display: block; resize: none; height: 30px; max-height: ${PANEL_ASK_HEIGHT}px; overflow-y: hidden; font: inherit; line-height: 1.4; padding: 6px 2px; color: inherit; background: transparent; border: none; outline: none; }
+		.panel-ask textarea::placeholder { color: var(--vscode-input-placeholderForeground); }
+		.panel-ask button.panel-ask-send { display: flex; align-items: center; justify-content: center; flex: none; width: 26px; height: 26px; margin: 2px 0 2px 2px; padding: 0; border: none; border-radius: 50%; color: var(--vscode-button-foreground); background: var(--vscode-button-background); opacity: 0.4; cursor: pointer; }
+		.panel-ask button.panel-ask-send.ready { opacity: 1; }
+		.panel-ask button.panel-ask-send:hover { background: var(--vscode-button-hoverBackground); }
+		.panel-ask button.panel-ask-send svg { width: 14px; height: 14px; }
+		${composerVoiceCss}`;
+
+/** The question grows with its text, the arrow blue when there is one; Enter or the arrow asks it, Shift+Enter starts a line. */
+const panelAskScript = `${composerVoiceScript('panel-ask-question')}
+		(() => {
+			const question = document.getElementById('panel-ask-question');
+			const send = document.getElementById('panel-ask-send');
+			const resize = () => {
+				question.style.height = 'auto';
+				question.style.height = Math.min(question.scrollHeight, ${PANEL_ASK_HEIGHT}) + 'px';
+				question.style.overflowY = question.scrollHeight > ${PANEL_ASK_HEIGHT} ? 'auto' : 'hidden';
+				send.classList.toggle('ready', !!question.value.trim());
+			};
+			const ask = () => {
+				const text = question.value.trim();
+				if (!text) { return; }
+				vscode.postMessage({ command: 'askPollis', question: text });
+				question.value = '';
+				resize();
+			};
+			question.addEventListener('input', resize);
+			question.addEventListener('keydown', event => {
+				if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
+					event.preventDefault();
+					ask();
+				}
+			});
+			send.addEventListener('click', ask);
+			// A click anywhere in the pill but on its buttons writes in the question
+			document.querySelector('.panel-ask').addEventListener('click', event => {
+				if (!event.target.closest('button, textarea, .voice-menu')) { question.focus(); }
+			});
+		})();`;
 
 /** Makes each voice button toggle when clicked. */
 export const voiceButtonsScript = `document.querySelectorAll('.voice-stub').forEach(function(btn) {
@@ -212,7 +285,7 @@ export function buildWebviewHtml(parts: WebviewParts): string {
 		body { font-family: var(--vscode-font-family); font-size: 13px; padding: 0; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); overflow-x: hidden; }
 		.container { max-width: 900px; margin: 0 auto; padding: 24px; }
 		h1 { font-size: 32px; font-weight: 300; margin: 0 0 4px 0; line-height: 1.2; }
-		${voiceButtonsCss}
+		${panelAskCss}
 		.section { margin: 0 0 20px 0; }
 		.section-toggle { display: flex; align-items: center; gap: 6px; width: 100%; text-align: left; background: transparent; border: none; color: var(--vscode-foreground); font-size: 15px; font-weight: 500; font-family: var(--vscode-font-family); cursor: pointer; padding: 4px 0; user-select: none; }
 		.section-toggle:hover { text-decoration: underline; }
@@ -453,7 +526,7 @@ ${parts.extraCss ?? ''}	</style>
 
 		<div class="title-row">
 			<h1>${parts.title}</h1>
-			${voiceButtonsHtml}
+			${panelAskHtml()}
 		</div>
 		<div class="powered-by">Powered by:&nbsp;<span id="package-links"></span><span class="package-status" id="package-status"></span><span class="api-key-status" id="api-key-status"></span></div>
 		<div class="section" id="sec-points">
@@ -1857,7 +1930,7 @@ ${parts.nextStepsWiringJs ?? `		document.getElementById('btn-viz').addEventListe
 				section.classList.toggle('collapsed');
 			});
 		});
-		${voiceButtonsScript}
+		${panelAskScript}
 
 		document.querySelectorAll('.tooltip-icon').forEach(function(icon) {
 			icon.addEventListener('click', function(e) {

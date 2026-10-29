@@ -77,10 +77,10 @@ function looksLikeFormula(cell: string): boolean {
 
 /**
  * Reads a CSV text (RFC 4180: quoted fields may hold the delimiter, quotes doubled and line breaks): the header,
- * the number of rows and the first rows. Undefined when it is not a dataset: empty, a header without names, or
+ * the number of rows and the first `headRows` rows. Undefined when it is not a dataset: empty, a header without names, or
  * holding NUL characters, as binary files do.
  */
-export function summarizeCsv(content: string): IDatasetSummary | undefined {
+export function summarizeCsv(content: string, headRows = HEAD_ROWS): IDatasetSummary | undefined {
 	if (!content.trim() || content.includes('\u0000')) {
 		return undefined;
 	}
@@ -102,7 +102,7 @@ export function summarizeCsv(content: string): IDatasetSummary | undefined {
 				header = record;
 			} else {
 				rows++;
-				if (head.length < HEAD_ROWS) {
+				if (head.length < headRows) {
 					head.push(record);
 				}
 				formulas ||= record.some(looksLikeFormula);

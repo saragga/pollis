@@ -51,13 +51,21 @@ export function askOpenPassage(commandService: ICommandService, passage: IAskPol
 	}
 }
 
-/** What a Search In chooses: the collections nearest the question, one of them by its name, or all. */
+/** What a Search In chooses: the collections nearest the question, one of them by its name, all, or none. */
 const SEARCH_NEAREST = '';
 const SEARCH_ALL = '*';
+const SEARCH_NONE = '-';
+/** The collection of the Julia Manual, as ask_index.jl names it. */
+const JULIA_MANUAL = 'Julia Manual';
 
 /** The collections a Search In's choice searches, of `all` those of the index; nothing for the nearest. */
 export function askSearchIn(choice: string, all: readonly string[]): readonly string[] | undefined {
 	return choice === SEARCH_NEAREST ? undefined : choice === SEARCH_ALL ? all : [choice];
+}
+
+/** Whether a Search In's choice is None: the model answers without the documents, to see what they add. */
+export function askSearchesNothing(choice: string): boolean {
+	return choice === SEARCH_NONE;
 }
 
 /** Why the question was searched by its words only, for the page; nothing when it was searched by meaning too. */
@@ -109,9 +117,12 @@ export function askAnswerScript(): string {
 		closest: localize('askPollis.closest', "The passages that came closest"),
 		open: localize('askPollis.open', "Open"),
 		fromToolbox: localize('askPollis.fromToolbox', "{0} toolbox", '{0}'),
-		automatic: localize('askPollis.automatic', "Automatic"),
+		automatic: localize('askPollis.automatic', "Auto"),
 		automaticHint: localize('askPollis.automaticHint', "Pollis' own documents, the Julia Manual, or both, depending on what the question is about"),
 		all: localize('askPollis.all', "All Sources"),
+		none: localize('askPollis.none', "None"),
+		juliaManualHint: localize('askPollis.juliaManualHint', "The Julia Manual and the docstrings of Base and the standard library, of the Julia that the REPL runs"),
+		noneHint: localize('askPollis.noneHint', "Nothing is searched: the model answers from what it knows, without the documents, to see what they add"),
 	};
 	return `
 	const ANSWER_TEXT = ${JSON.stringify(text)};
@@ -217,21 +228,23 @@ export function askAnswerScript(): string {
 	}
 
 	/**
-	 * The choices of a Search In \`select\`: Automatic, each collection of \`names\`, and all; \`box\` shown when there
-	 * are two collections or more. The choice stays if it is still there; Automatic says on hover what it searches.
+	 * The choices of a Search In \`select\`: Automatic, each collection of \`names\`, all, and none; \`box\` shown
+	 * when there are two collections or more. The choice stays if it is still there; Automatic and None say on hover
+	 * what they search.
 	 */
 	function setSearchIn(box, select, names) {
 		box.hidden = names.length < 2;
-		const hint = () => { select.title = select.value === ${JSON.stringify(SEARCH_NEAREST)} ? ANSWER_TEXT.automaticHint : ''; };
+		const hints = { ${JSON.stringify(SEARCH_NEAREST)}: ANSWER_TEXT.automaticHint, ${JSON.stringify(JULIA_MANUAL)}: ANSWER_TEXT.juliaManualHint, ${JSON.stringify(SEARCH_NONE)}: ANSWER_TEXT.noneHint };
+		const hint = () => { select.title = hints[select.value] ?? ''; };
 		select.onchange = hint;
 		const chosen = select.value;
-		const options = [[${JSON.stringify(SEARCH_NEAREST)}, ANSWER_TEXT.automatic], ...names.map(name => [name, name]), [${JSON.stringify(SEARCH_ALL)}, ANSWER_TEXT.all]];
+		const options = [[${JSON.stringify(SEARCH_NEAREST)}, ANSWER_TEXT.automatic], ...names.map(name => [name, name]), [${JSON.stringify(SEARCH_ALL)}, ANSWER_TEXT.all], [${JSON.stringify(SEARCH_NONE)}, ANSWER_TEXT.none]];
 		if (select.options.length === options.length && options.every(([value], i) => select.options[i].value === value)) { return; }
 		select.textContent = '';
 		for (const [value, label] of options) {
 			const option = element('option', '', label);
 			option.value = value;
-			if (value === ${JSON.stringify(SEARCH_NEAREST)}) { option.title = ANSWER_TEXT.automaticHint; }
+			if (hints[value]) { option.title = hints[value]; }
 			select.appendChild(option);
 		}
 		select.value = options.some(([value]) => value === chosen) ? chosen : ${JSON.stringify(SEARCH_NEAREST)};

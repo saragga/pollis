@@ -3,7 +3,8 @@
  *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// The voice tools at the end of the first line of a chat's input box, in Ask Pollis and in the Collaboration chat: the
+// The voice tools at the end of the first line of a chat's input box, in Ask Pollis, in the Collaboration chat and in
+// the Ask Pollis of each panel (webviewScaffold.ts): the
 // microphone, which will dictate; its menu, with the microphone used and the language of dictation; and Voice Mode,
 // which will ask aloud and read the answer aloud, both written down too. Voice is not implemented yet: only the
 // language is kept, for Pollis' own speech to use when it comes (accessibility.voice.speechLanguage of VS Code is
@@ -11,10 +12,12 @@
 
 import { localize } from '../../../../nls.js';
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
-import { composerMicSvg } from '../../model/browser/webviews/webviewScaffold.js';
 import { SPEECH_LANGUAGES } from '../../speech/common/speechService.js';
 
 const VOICE_LANGUAGE_KEY = 'pollis.voice.language';
+
+/** The microphone of a chat's input box, at the end of its first line: voice is not implemented yet. */
+export const composerMicSvg = `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M8 1a2 2 0 0 0-2 2v5a2 2 0 1 0 4 0V3a2 2 0 0 0-2-2zM5 7H4v1a4 4 0 0 0 3.5 3.969V14H5v1h6v-1H8.5v-2.031A4 4 0 0 0 12 8V7h-1v1a3 3 0 0 1-6 0V7z"/></svg>`;
 const AUTO = 'auto';
 
 /** The language of dictation chosen in a chat's microphone menu, `auto` for the display language. */
@@ -72,7 +75,7 @@ export const composerVoiceCss = `.voice-tools { display: inline-flex; align-item
 		.voice-tools button.voice-more { width: 16px; border-radius: 6px; margin-left: -4px; }
 		.voice-tools button.voice-more svg { width: 10px; height: 10px; }
 		.voice-anchor { position: relative; display: inline-flex; }
-		.voice-menu { position: absolute; top: 32px; right: -34px; z-index: 3; min-width: 280px; max-height: 60vh; overflow-y: auto; padding: 4px; font-size: 12px; color: var(--vscode-menu-foreground); background: var(--vscode-menu-background); border: 1px solid var(--vscode-menu-border, var(--vscode-widget-border)); border-radius: 8px; box-shadow: 0 4px 16px var(--vscode-widget-shadow); }
+		.voice-menu { position: absolute; top: 32px; right: -34px; z-index: 3; min-width: min(280px, calc(100vw - 8px)); max-width: calc(100vw - 8px); max-height: 60vh; overflow-y: auto; padding: 4px; font-size: 12px; color: var(--vscode-menu-foreground); background: var(--vscode-menu-background); border: 1px solid var(--vscode-menu-border, var(--vscode-widget-border)); border-radius: 8px; box-shadow: 0 4px 16px var(--vscode-widget-shadow); }
 		.voice-menu.up { top: auto; bottom: 32px; }
 		.voice-menu .voice-level { display: flex; align-items: center; gap: 8px; padding: 6px 8px; color: var(--vscode-descriptionForeground); }
 		.voice-menu .voice-level svg { width: 14px; height: 14px; flex: none; }
@@ -81,7 +84,7 @@ export const composerVoiceCss = `.voice-tools { display: inline-flex; align-item
 		.voice-menu .voice-heading { font-size: 11px; color: var(--vscode-descriptionForeground); padding: 6px 8px 2px 8px; }
 		.voice-menu button.voice-item { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; font: inherit; font-size: 12px; opacity: 1; box-shadow: none; color: inherit; background: none; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; }
 		.voice-menu button.voice-item:hover, .voice-menu button.voice-item:focus { color: var(--vscode-menu-selectionForeground); background: var(--vscode-menu-selectionBackground); outline: none; }
-		.voice-menu .voice-label { flex: 1; white-space: nowrap; }
+		.voice-menu .voice-label { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 		.voice-menu .voice-detail { opacity: 0.7; white-space: nowrap; }
 		.voice-menu .voice-check { width: 12px; flex: none; }
 		.voice-menu button.voice-item svg { width: 10px; height: 10px; flex: none; }
@@ -89,8 +92,9 @@ export const composerVoiceCss = `.voice-tools { display: inline-flex; align-item
 
 /**
  * The script of the voice tools: the menu, below the chevron or above it when there is no room, shows the microphone
- * and Dictation Settings, and Language shows the languages; a language chosen is posted as `voiceLanguage`. The
- * microphone and Voice Mode only give the focus back to the input box `inputId`, until voice comes.
+ * and Dictation Settings, and Language shows the languages; a language chosen is posted as `voiceLanguage`, and one
+ * posted to the page as `voiceLanguage` is the one kept, for a page whose HTML is made without it. The microphone and
+ * Voice Mode only give the focus back to the input box `inputId`, until voice comes.
  */
 export function composerVoiceScript(inputId: string): string {
 	return `(() => {
@@ -122,6 +126,13 @@ export function composerVoiceScript(inputId: string): string {
 			box.appendChild(button);
 			return button;
 		};
+		// The menu moves sideways to stay within the window, a narrow pane's too
+		const fit = () => {
+			box.style.right = '';
+			const rect = box.getBoundingClientRect();
+			const shift = Math.max(4 - rect.left, Math.min(0, window.innerWidth - 4 - rect.right));
+			if (shift) { box.style.right = (parseFloat(getComputedStyle(box).right) - shift) + 'px'; }
+		};
 		const close = () => {
 			box.hidden = true;
 			more.setAttribute('aria-expanded', 'false');
@@ -137,6 +148,7 @@ export function composerVoiceScript(inputId: string): string {
 			box.appendChild(make('hr'));
 			box.appendChild(make('div', 'voice-heading', VOICE_TEXT.settings));
 			item(VOICE_TEXT.language, { detail: LANGUAGES.find(entry => entry.value === language)?.short, icon: 'right' }, showLanguages);
+			fit();
 		};
 		const showLanguages = () => {
 			box.textContent = '';
@@ -150,6 +162,7 @@ export function composerVoiceScript(inputId: string): string {
 				});
 				if (entry.value === language) { button.focus(); }
 			}
+			fit();
 		};
 		more.addEventListener('click', () => {
 			if (!box.hidden) { close(); return; }
@@ -163,6 +176,9 @@ export function composerVoiceScript(inputId: string): string {
 		}, true);
 		document.addEventListener('keydown', event => {
 			if (event.key === 'Escape' && !box.hidden) { close(); more.focus(); }
+		});
+		window.addEventListener('message', event => {
+			if (event.data?.command === 'voiceLanguage') { language = event.data.value; }
 		});
 		document.getElementById('voice').addEventListener('click', () => input.focus());
 		document.getElementById('voiceMode').addEventListener('click', () => input.focus());

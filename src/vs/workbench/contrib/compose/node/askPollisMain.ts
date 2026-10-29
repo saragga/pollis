@@ -26,7 +26,7 @@ import { ProxyChannel } from '../../../../base/parts/ipc/common/ipc.js';
 import { Server as ChildProcessServer } from '../../../../base/parts/ipc/node/ipc.cp.js';
 import { Server as UtilityProcessServer } from '../../../../base/parts/ipc/node/ipc.mp.js';
 import { isUtilityProcess } from '../../../../base/parts/sandbox/node/electronTypes.js';
-import { AskTopic, ASK_PASSAGES, IAskPollisChatEnd, ICompareRun, ICompareRunSummary, IAskPollisChatRequest, IAskPollisChatText, IAskPollisFound, IAskPollisIndex, IAskPollisIndexRequest, IAskPollisIndexStatus, IAskPollisPassage, IAskPollisSearchResult, IAskPollisTimings, IAskTopicCounts, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingFound, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary } from '../common/askPollis.js';
+import { AskTopic, ASK_PASSAGES, IAskPollisChatEnd, IAskPollisMessage, ICompareRun, ICompareRunSummary, IAskPollisChatRequest, IAskPollisChatText, IAskPollisFound, IAskPollisIndex, IAskPollisIndexRequest, IAskPollisIndexStatus, IAskPollisPanel, IAskPollisPassage, IAskPollisSearchResult, IAskPollisTimings, IAskTopicCounts, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingFound, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary } from '../common/askPollis.js';
 
 const DATABASE = join(os.homedir(), '.pollis', 'documents', 'PollisDocuments.duckdb');
 /** The embeddings made, by the model and the text it was given, as ask_index.jl keeps them. */
@@ -81,6 +81,17 @@ interface IChatEvent {
 	readonly timings?: { readonly prompt_per_second?: number; readonly predicted_per_second?: number };
 }
 
+/** A message's content as the Messages API of Anthropic takes it: an image in base64, with its media type, in place of a data URL. */
+function anthropicContent(content: IAskPollisMessage['content']) {
+	return typeof content === 'string' ? content : content.map(part => {
+		if (part.type === 'text') {
+			return part;
+		}
+		const image = /^data:(?<mediaType>image\/[a-z]+);base64,(?<data>.*)$/s.exec(part.image_url.url)?.groups;
+		return { type: 'image', source: { type: 'base64', media_type: image?.mediaType, data: image?.data } };
+	});
+}
+
 /**
  * The request of a chat. A cloud model is told to think little, since the passages hold the answer, and is not given a
  * temperature, which the newer models refuse; Claude Sonnet may fall back to another model when it is overloaded.
@@ -102,7 +113,7 @@ function chatFetch(request: IAskPollisChatRequest, signal: AbortSignal): [string
 				max_tokens: MAX_TOKENS,
 				stream: true,
 				system: system.content,
-				messages,
+				messages: messages.map(message => ({ role: message.role, content: anthropicContent(message.content) })),
 				output_config: { effort: 'low' },
 				...(sonnet ? { fallbacks: 'default' } : {}),
 			}),
@@ -156,19 +167,19 @@ function shares(count: number, collections: number): number[] {
 }
 
 /**
- * The passages of the collection $collection that best answer $question: by its words only, or with its embedding
- * $vector too, against the index's embeddings or those of the table `vectors` (id, embedding).
+ * The passages of the collection $collection, or those `where` selects, that best answer $question: by its words only,
+ * or with its embedding $vector too, against the index's embeddings or those of the table `vectors` (id, embedding).
  */
-function searchSql(dimensions: number, count: number, vectors?: string): string {
+function searchSql(dimensions: number, count: number, vectors?: string, where = 'd.collection = $collection'): string {
 	const embedding = vectors ? 'v.embedding' : 'p.embedding';
 	const words = `words AS (
 		SELECT id, score, row_number() OVER (ORDER BY score DESC) AS r
-		FROM (SELECT p.id, fts_main_passages.match_bm25(p.id, $question) AS score FROM passages p JOIN documents d ON d.id = p.document WHERE d.collection = $collection)
+		FROM (SELECT p.id, fts_main_passages.match_bm25(p.id, $question) AS score FROM passages p JOIN documents d ON d.id = p.document WHERE ${where})
 		WHERE score IS NOT NULL ORDER BY r LIMIT ${EACH})`;
 	const meaning = `meaning AS (
 		SELECT p.id, row_number() OVER (ORDER BY array_cosine_distance(${embedding}, $vector::FLOAT[${dimensions}])) AS r
 		FROM passages p JOIN documents d ON d.id = p.document${vectors ? ` JOIN ${vectors} v ON v.id = p.id` : ''}
-		WHERE d.collection = $collection AND ${embedding} IS NOT NULL ORDER BY r LIMIT ${EACH})`;
+		WHERE ${where} AND ${embedding} IS NOT NULL ORDER BY r LIMIT ${EACH})`;
 	const fused = dimensions
 		? `fused AS (SELECT id, sum(1.0 / (${K} + r)) AS score FROM (SELECT id, r FROM words UNION ALL SELECT id, r FROM meaning) GROUP BY id)`
 		: `fused AS (SELECT id, score FROM words)`;
@@ -196,6 +207,14 @@ interface IPassageQuery {
 	readonly collections?: readonly string[];
 	/** A table of the embeddings to search with, in place of the index's. */
 	readonly vectors?: string;
+	/** The panel asked in, whose passages are the first share. */
+	readonly panel?: IAskPollisPanel;
+}
+
+/** The passages of `panel`: its wikis, titled after it, and the vignettes of its packages, titled `GLM.jl`. */
+function panelSql(panel: IAskPollisPanel): string {
+	const wikis = `(d.kind = 'wiki' AND d.title = ${sqlString(panel.title)})`;
+	return panel.packages.length ? `(${wikis} OR (d.kind = 'vignette' AND d.title IN (${panel.packages.map(sqlString).join(', ')})))` : wikis;
 }
 
 /** The columns of a passage that the searches select, with its document's. */
@@ -356,7 +375,7 @@ class AskPollisIndex implements IAskPollisIndex {
 				}
 			}
 			const { passages, searched } = await this.findPassages(connection, status.collections, {
-				question: request.question, vector, dimensions: vector ? status.dimensions : 0, count: Math.max(1, request.passages ?? ASK_PASSAGES), collections: request.collections,
+				question: request.question, vector, dimensions: vector ? status.dimensions : 0, count: Math.max(1, request.passages ?? ASK_PASSAGES), collections: request.collections, panel: request.panel,
 			});
 			const result: IAskPollisSearchResult = {
 				passages,
@@ -381,10 +400,19 @@ class AskPollisIndex implements IAskPollisIndex {
 			const best = Number(nearest[0]?.distance ?? 0);
 			searched = nearest.map(row => String(row.name)).filter((name, i) => !!query.collections || Number(nearest[i].distance) - best <= ROUTE_MARGIN);
 		}
-		const counts = shares(query.count, searched.length);
+		const parameters = { question: query.question, ...(vector ? { vector } : {}) };
 		const passages: IAskPollisPassage[] = [];
+		// Asked in a panel: the nearest share from the panel's own passages, the rest from the collections without them
+		let where = 'd.collection = $collection';
+		if (query.panel) {
+			const panel = panelSql(query.panel);
+			const rows = (await connection.runAndReadAll(searchSql(vector ? dimensions : 0, shares(query.count, 2)[0], vectors, panel), parameters)).getRowObjectsJson();
+			passages.push(...rows.map(passageOf));
+			where = `${where} AND NOT ${panel}`;
+		}
+		const counts = shares(query.count - passages.length, searched.length);
 		for (let i = 0; i < searched.length; i++) {
-			const rows = (await connection.runAndReadAll(searchSql(vector ? dimensions : 0, counts[i], vectors), { question: query.question, collection: searched[i], ...(vector ? { vector } : {}) })).getRowObjectsJson();
+			const rows = (await connection.runAndReadAll(searchSql(vector ? dimensions : 0, counts[i], vectors, where), { ...parameters, collection: searched[i] })).getRowObjectsJson();
 			passages.push(...rows.map(passageOf));
 		}
 		return { passages, searched };
@@ -500,6 +528,22 @@ class AskPollisIndex implements IAskPollisIndex {
 
 	async stopEmbedding(): Promise<void> {
 		this.embeddingStopped = true;
+	}
+
+	async describeDatabase(path: string): Promise<string> {
+		return this.sequencer.queue(async () => {
+			const connection = await this.connect();
+			await connection.run(`ATTACH ${sqlString(path)} AS attached (READ_ONLY)`);
+			try {
+				// The catalog only: a view is listed with its columns, never run, since it may read files of this computer
+				const rows = (await connection.runAndReadAll(`SELECT c.schema_name AS schema, c.table_name AS name, t.estimated_size AS size, string_agg(c.column_name || ' ' || c.data_type, ', ' ORDER BY c.column_index) AS columns
+					FROM duckdb_columns() c LEFT JOIN duckdb_tables() t ON t.database_name = c.database_name AND t.schema_name = c.schema_name AND t.table_name = c.table_name
+					WHERE c.database_name = 'attached' AND NOT c.internal GROUP BY ALL ORDER BY t.table_name IS NULL, schema, name`)).getRowObjectsJson();
+				return rows.map(row => `${row.schema}.${row.name} (${row.size === null ? 'view' : `table, about ${row.size} rows`}): ${row.columns}`).join('\n');
+			} finally {
+				await connection.run('DETACH attached');
+			}
+		});
 	}
 
 	async chat(request: IAskPollisChatRequest): Promise<IAskPollisChatEnd> {

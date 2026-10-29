@@ -30,6 +30,9 @@ import { openWikiByFile, openNotebookByFile, openInBrowser, autoSelectJuliaKerne
 import { hasKey } from '../../../../../base/common/types.js';
 import { ADD_ALERT_COMMAND_ID } from '../../../monitor/browser/alertsPage.js';
 import { localize } from '../../../../../nls.js';
+import { IStorageService } from '../../../../../platform/storage/common/storage.js';
+import { ASK_POLLIS_COMMAND_ID, IAskPollisFromPanel } from '../../../compose/common/askPollis.js';
+import { getVoiceLanguage, setVoiceLanguage } from '../../../compose/browser/composerVoice.js';
 
 /** Messages a scaffold panel sends that are not handled by the shared wirings of model.handler.ts. */
 type ScaffoldWebviewMessage =
@@ -42,17 +45,20 @@ type ScaffoldWebviewMessage =
 	| { command: 'addAlert'; symbol: string; kind: 'quote' | 'filings' | 'fred' | 'ecb' | 'imf' | 'worldBank' }
 	| { command: 'chooseModelFile'; input: string; kind: 'chat' | 'embedding'; value: string }
 	| { command: 'setApiKey' }
-	| { command: 'clearApiKey' };
+	| { command: 'clearApiKey' }
+	| { command: 'askPollis'; question: string }
+	| { command: 'voiceLanguage'; value: string };
 
 /**
  * Handle the messages of a panel built on the shared scaffold (see scaffoldParts.ts): Learn More,
  * running code, theme colourising, package status, editable examples, wikis, notebooks, references
- * and videos. `panelId` names the panel's folder under ~/.pollis (saved examples, references, videos).
- * `apiKey`, when given, adds the Powered-by credentials indicator and sets them in the Julia REPL.
+ * and videos, and Ask Pollis beside the title. `panelId` names the panel's folder under ~/.pollis (saved examples,
+ * references, videos); a question asked there is answered from the wikis titled `panelTitle` first. `apiKey`, when given, adds the Powered-by credentials indicator and sets them in the Julia REPL.
  */
 export function registerScaffoldWebviewHandlers(
 	webviewInput: ReturnType<IWebviewWorkbenchService['openWebview']>,
 	panelId: string,
+	panelTitle: string,
 	data: IScaffoldPanelData,
 	initialModel: string | undefined,
 	openerService: IOpenerService,
@@ -69,6 +75,7 @@ export function registerScaffoldWebviewHandlers(
 	quickInputService: IQuickInputService,
 	secretStorageService: ISecretStorageService,
 	webviewService: IWebviewService,
+	storageService: IStorageService,
 	apiKeyProvider: IApiKeyProvider | undefined,
 ): DisposableStore {
 	const disposables = new DisposableStore();
@@ -115,6 +122,8 @@ export function registerScaffoldWebviewHandlers(
 		if (initialModel) {
 			webviewInput.webview.postMessage({ command: 'setModel', model: initialModel });
 		}
+		// The language of dictation of Ask Pollis beside the title, which the HTML is made without
+		webviewInput.webview.postMessage({ command: 'voiceLanguage', value: getVoiceLanguage(storageService) });
 		void pkgStatus.postStatus();
 		void apiKey?.postStatus();
 	}, 0);
@@ -196,6 +205,18 @@ export function registerScaffoldWebviewHandlers(
 				break;
 			case 'clearApiKey':
 				await apiKey?.handleClear();
+				break;
+			case 'askPollis':
+				// Answered in Ask Pollis beside the panel, from its wikis and its packages' vignettes first
+				if (msg.question.trim()) {
+					await commandService.executeCommand(ASK_POLLIS_COMMAND_ID, {
+						question: msg.question.trim(),
+						panel: { title: panelTitle, packages: data.packages.map(pkg => pkg.name) },
+					} satisfies IAskPollisFromPanel);
+				}
+				break;
+			case 'voiceLanguage':
+				setVoiceLanguage(storageService, msg.value);
 				break;
 		}
 	}));

@@ -23,6 +23,22 @@ export const ASK_EMBEDDING_CONTEXT = 2048;
 /** How many passages go to the model, when pollis.ask.passages gives none. */
 export const ASK_PASSAGES = 8;
 
+/** Help > Ask Pollis, which a panel runs with an `IAskPollisFromPanel`. */
+export const ASK_POLLIS_COMMAND_ID = 'pollis.askPollis';
+
+/** The panel a question is asked in: its wikis, titled after it, and the vignettes of its packages are searched first. */
+export interface IAskPollisPanel {
+	readonly title: string;
+	/** The packages of its Powered by, as `GLM.jl`, the titles of their vignettes. */
+	readonly packages: readonly string[];
+}
+
+/** A question asked in a panel, which Ask Pollis answers beside it. */
+export interface IAskPollisFromPanel {
+	readonly question: string;
+	readonly panel: IAskPollisPanel;
+}
+
 /**
  * A passage found, with the document it is from: `page` is missing in a wiki and in the Julia Manual, `file` the PDF,
  * the wiki's Markdown or the Manual's search index; `anchor`, in the Julia Manual only, the HTML page beside that index
@@ -57,6 +73,8 @@ export interface IAskPollisSearchRequest {
 	readonly collections?: readonly string[];
 	/** How many passages are found. */
 	readonly passages?: number;
+	/** The panel it is asked in, which gives most of the passages, the rest routed as without it. */
+	readonly panel?: IAskPollisPanel;
 }
 
 export interface IAskPollisSearchResult {
@@ -108,16 +126,40 @@ export interface IAskPollisIndexRequest extends IAskPollisSearchRequest {
 	readonly error?: string;
 }
 
+/** What is attached to a question with the + of Ask Pollis: an image, which only a cloud model is sent, or a file, a dataset or a database, given as text. */
+export interface IAskPollisAttachment {
+	readonly kind: 'image' | 'file' | 'dataset' | 'database';
+	readonly name: string;
+	/** An image's data URL; else what the model is given: a file's text, a dataset's size and first rows, a database's tables and their columns. */
+	readonly content: string;
+}
+
+/** The most of an attachment's text the model is given: about 8,000 tokens, which a model of this computer still has room for. */
+export const ASK_ATTACHED_CHARACTERS = 30000;
+
 /** A question asked and its answer, earlier in a conversation. */
 export interface IAskPollisTurn {
 	readonly question: string;
 	readonly answer: string;
+	readonly attachments?: readonly IAskPollisAttachment[];
 }
 
-/** A message of a chat, as the OpenAI-compatible API of llama-server takes it. */
+/** Text in a message with an image. */
+export interface IAskPollisTextPart {
+	readonly type: 'text';
+	readonly text: string;
+}
+
+/** An image in a message, as a data URL. */
+export interface IAskPollisImagePart {
+	readonly type: 'image_url';
+	readonly image_url: { readonly url: string };
+}
+
+/** A message of a chat, as the OpenAI-compatible API of llama-server takes it; with an image, its content is in parts. */
 export interface IAskPollisMessage {
 	readonly role: 'system' | 'user' | 'assistant';
-	readonly content: string;
+	readonly content: string | readonly (IAskPollisTextPart | IAskPollisImagePart)[];
 }
 
 /** What the model that answers is told, before the passages. */
@@ -129,6 +171,27 @@ const ASK_INSTRUCTION = [
 	'Answer in the language of the question.',
 ].join('\n');
 
+/** What the model is told when something is attached to the questions. */
+/** What the model is told when nothing is searched, with Search In: None, to see what the documents add to its answers. */
+const ASK_UNAIDED_INSTRUCTION = [
+	'You answer questions about Pollis and Julia from what you know: no documentation is given.',
+	'If you do not know, or are not sure, say so.',
+	'Answer in the language of the question.',
+].join('\n');
+
+const ASK_ATTACHED_INSTRUCTION = 'The user attached images, files, datasets or databases to the questions, in <file>, <dataset> and <database> tags: they are the user\'s own, not documentation. Answer about them from what they show.';
+
+/** A question with what is attached to it: the text of each attachment before it, in a tag, and the images first. */
+function askUserContent(question: string, attachments: readonly IAskPollisAttachment[] | undefined): IAskPollisMessage['content'] {
+	if (!attachments?.length) {
+		return question;
+	}
+	const attached = attachments.filter(attachment => attachment.kind !== 'image').map(attachment => `<${attachment.kind} name="${attachment.name.replace(/"/g, '&quot;')}">\n${attachment.content}\n</${attachment.kind}>`);
+	const text = [...attached, question].join('\n\n');
+	const images = attachments.filter(attachment => attachment.kind === 'image');
+	return images.length ? [...images.map(image => ({ type: 'image_url' as const, image_url: { url: image.content } })), { type: 'text' as const, text }] : text;
+}
+
 /** How many of the questions before are given to the model with their answers, so that the passages still fit its context. */
 const ASK_TURNS = 4;
 
@@ -138,18 +201,25 @@ export function askPassageLabel(passage: IAskPollisPassage): string {
 }
 
 /**
- * The messages that ask a model `question`: the instruction and the passages, numbered from 1, then the conversation
- * so far. Its answers are given without their citations, which were to other passages.
+ * The messages that ask a model `question`, with its `attachments`: the instruction, the panel it is asked in, if any,
+ * and the passages, numbered from 1, then the conversation so far, each question with what was attached to it. Its
+ * answers are given without their citations, which were to other passages.
  */
-export function askPollisMessages(turns: readonly IAskPollisTurn[], question: string, passages: readonly IAskPollisPassage[]): IAskPollisMessage[] {
+export function askPollisMessages(turns: readonly IAskPollisTurn[], question: string, passages: readonly IAskPollisPassage[], panel?: IAskPollisPanel, attachments?: readonly IAskPollisAttachment[]): IAskPollisMessage[] {
 	const numbered = passages.map((passage, i) => `[${i + 1}] ${askPassageLabel(passage)}\n${passage.text}`);
+	const menu = panel && passages.find(passage => passage.kind === 'wiki' && passage.title === panel.title)?.menu;
+	const asked = panel ? `\nThe question is asked in the panel ${panel.title} of Pollis${menu ? ` (${menu})` : ''}: "this panel", "here" or "this method" mean it.` : '';
+	const before = turns.slice(-ASK_TURNS);
+	const attached = !!attachments?.length || before.some(turn => turn.attachments?.length) ? `\n${ASK_ATTACHED_INSTRUCTION}${passages.length ? ' Cite the passages for what you say about Pollis and Julia.' : ''}` : '';
+	// Without passages, Search In: None, the model answers from what it knows
+	const system = passages.length ? `${ASK_INSTRUCTION}${asked}${attached}\n\n${numbered.join('\n\n')}` : `${ASK_UNAIDED_INSTRUCTION}${asked}${attached}`;
 	return [
-		{ role: 'system', content: `${ASK_INSTRUCTION}\n\n${numbered.join('\n\n')}` },
-		...turns.slice(-ASK_TURNS).flatMap(turn => [
-			{ role: 'user' as const, content: turn.question },
+		{ role: 'system', content: system },
+		...before.flatMap(turn => [
+			{ role: 'user' as const, content: askUserContent(turn.question, turn.attachments) },
 			{ role: 'assistant' as const, content: turn.answer.replace(/ ?\[\d+(?:,\s*\d+)*\]/g, '') },
 		]),
-		{ role: 'user', content: question },
+		{ role: 'user', content: askUserContent(question, attachments) },
 	];
 }
 
@@ -462,6 +532,8 @@ export interface IAskPollisIndex {
 	/** Writes the answer, the text sent as it comes by `onDidChat`. */
 	chat(request: IAskPollisChatRequest): Promise<IAskPollisChatEnd>;
 	stop(id: string): Promise<void>;
+	/** As IAskPollisService. */
+	describeDatabase(path: string): Promise<string>;
 	/** `counts` passages of each topic spread over the documents, for Make Questions: one of each document in turn, long enough to ask about. */
 	spread(counts: IAskTopicCounts): Promise<readonly IAskPollisPassage[]>;
 	/** The topic of the passage each of `texts` is the text of, nothing for a text no passage has any more; nothing at all when there is no index. */
@@ -524,9 +596,13 @@ export interface IAskPollisService {
 	 * Has the model of pollis.ask.answerWith answer `question` from `passages`, after `turns`: on this computer the
 	 * chat model of pollis.ask.chatModel, started through the Julia extension, downloaded the first time; or a cloud
 	 * model, with the key of its provider. `onText` is given the answer so far as it comes. Evaluate Answering Models gives
-	 * `answerWith`, a cloud model's id or `local:` and a local model's file, in place of the setting.
+	 * `answerWith`, a cloud model's id or `local:` and a local model's file, in place of the setting; a question asked in a
+	 * panel, the `panel`, which the model is told of; what is attached to it, the `attachments`, of which a model of this
+	 * computer is not sent the images.
 	 */
-	answer(turns: readonly IAskPollisTurn[], question: string, passages: readonly IAskPollisPassage[], onText: (text: string) => void, token: CancellationToken, answerWith?: string): Promise<IAskPollisAnswer>;
+	answer(turns: readonly IAskPollisTurn[], question: string, passages: readonly IAskPollisPassage[], onText: (text: string) => void, token: CancellationToken, answerWith?: string, panel?: IAskPollisPanel, attachments?: readonly IAskPollisAttachment[]): Promise<IAskPollisAnswer>;
+	/** The tables and views of the DuckDB database at `path`, with their columns, as an attachment gives them; it is opened read-only and no view is run. */
+	describeDatabase(path: string): Promise<string>;
 	/** `counts` passages of each topic spread over the documents, for the questions of a test set. */
 	spread(counts: IAskTopicCounts): Promise<readonly IAskPollisPassage[]>;
 	/** The topic of the passage each of `texts` is the text of, nothing for a text no passage has any more; nothing at all when there is no index. */

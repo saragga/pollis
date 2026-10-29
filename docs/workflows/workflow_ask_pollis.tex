@@ -104,32 +104,57 @@ at each question, in a few seconds to some tens of seconds, depending on the mod
 
 \section{Asking}\label{sec:asking}
 
-\subsection{The page}
-\menupath{Help\gt Ask Pollis} opens a page with a box for the question and \textbf{Ask}. The answer is written as it
-comes, in a few paragraphs, with a number in brackets after each statement: \textbf{[1]}, \textbf{[2]}. Under it,
-\textbf{Sources} lists the passages those numbers stand for, each with its document, its page or its wiki and heading,
-and \textbf{Open}, which opens the document at that page, the panel's wiki at that heading, or the Julia Manual at
-that section, in the internal browser.
+\subsection{The pane}
+Ask Pollis is a pane of the secondary side bar, after Databases and Views, with the bubble with a question mark as its
+icon; \menupath{Help\gt Ask Pollis} opens it. The question is written in the box at the bottom of the pane, and the
+arrow, or Enter, asks it. The answer is written as it comes, in a few paragraphs, with a number in brackets after each
+statement: \textbf{[1]}, \textbf{[2]}. Under it, \textbf{Sources} lists the passages those numbers stand for, each with
+its document, its page or its wiki and heading, and \textbf{Open}, which opens the document at that page, the panel's
+wiki at that heading, or the Julia Manual at that section, in the internal browser.
+
+Below each answer, beside \textbf{Add to the Test Set...}, a speaker, \textbf{Read Aloud}, is to read the answer
+without the citation numbers and the Sources; it is not available yet (\S\ref{sec:open}).
 
 \subsection{Search In}
 A question is searched where it belongs: one on Pollis in Pollis's documents, one on Julia in the Julia Manual, one
 on both in both (\S\ref{sec:routing}). Under the answer, \emph{Searched: Pollis, Julia Manual.} says where.
-\textbf{Search In}, below the box on the left, changes that for the next question: \textbf{Automatic}, the default;
-\textbf{Pollis} or \textbf{Julia Manual} alone; or \textbf{All Sources}. It is shown only when the Julia Manual is
-searched too (\S\ref{sec:settings}).
+\textbf{Search In}, the pill below the box on the left, changes that for the next question: \textbf{Search In:
+Auto}, the default; \textbf{Pollis} or \textbf{Julia Manual} alone, the Julia Manual being also the docstrings of
+Base and the standard library (\S\ref{sec:manual}); \textbf{All Sources}; or \textbf{None}, which searches nothing:
+the model answers from what it knows, and \emph{Answered without the documents} under its answer says so, to see what
+the documents add. Without the Julia Manual (\S\ref{sec:settings}), Pollis is the only source, and Auto searches it.
 
 \subsection{Following up}
 Ask another question below the answer, and it is read with the conversation so far: \emph{and on Windows?} after a
-question on installing a coding agent asks about installing it on Windows. \textbf{New Chat}, beside the title, starts again with
-nothing remembered. The conversation is kept only while the page is open.
+question on installing a coding agent asks about installing it on Windows. \textbf{New Chat}, in the pane's title bar, starts again with
+nothing remembered. The conversation is kept until Pollis closes.
+
+\subsection{Attaching}
+The circled \textbf{+}, at the bottom left of the box, attaches to the question what it is about, as the
+Collaboration chat does:
+\begin{itemize}
+  \item \textbf{Image}: a PNG, JPEG, GIF or WebP image, also pasted into the box or dragged onto the pane, reduced
+    when it is over 2 MB. Only a cloud model is given images: the models on this computer do not see them yet, so
+    \textbf{Image} is greyed out while one of them answers, and a question with an image is not sent to it.
+  \item \textbf{File}: a text file in UTF-8, up to 5 MB, also dragged onto the pane: a script, a log, a TOML file.
+  \item \textbf{Dataset}: a CSV file, up to 5 MB: its size, its header and its first 20 rows.
+  \item \textbf{Database}: a DuckDB file: its tables and views, with their columns and about how many rows each
+    table has, read from its catalogue with the file opened read-only, so that no view is run.
+\end{itemize}
+Each is shown above the question, an image by its thumbnail, the others by their kind and name, and the \texttimes{}
+removes it. A file or a description longer than 30,000 characters is cut, and a note says so. What is attached is not
+searched: it goes to the model with the passages, and stays with its question, so that the questions after it can
+speak of it too.
 
 \subsection{The model}
-The model's menu, below the box on the right, chooses the model that writes the answer:
+The model that writes the answer is shown at the right of the status bar, the same for Ask Pollis, the panels and
+Evaluate Answering Models; a click opens its menu:
 \begin{itemize}
   \item \textbf{On this computer}: the chat models installed on this computer, run by llama.cpp; the one chosen is kept
     in \file{pollis.ask.chatModel}, for the next time.
   \item \textbf{Cloud, with your own key}: Claude Haiku, Claude Sonnet, GPT-5.4 mini, GPT-5.5, Gemini 3.8 Flash or Gemini 4 Argon,
-    with your own Anthropic, OpenAI or Google key, kept in Pollis's secret storage. The key indicator beside the menu says whether a key is set.
+    with your own Anthropic, OpenAI or Google key, kept in Pollis's secret storage. While one of them answers, the key
+    indicator below the box, on the right, says whether its key is set, and sets it.
 \end{itemize}
 \textbf{Evaluate Answering Models...}, the last item of the menu, opens Evaluate Answering Models (\S\ref{sec:compare}).
 The passages are always found on this computer, whichever model answers.
@@ -331,6 +356,15 @@ Answer in the language of the question.
 Not every task needs the strongest model. Compose > Orchestration > Model Tasks and Routing has three tiers ...
 \end{lstlisting}
 
+With \textbf{Search In: None}, no passage is given, and the instruction is another: answer about Pollis and Julia
+from what you know, and say so when you do not know or are not sure. Such an answer cites nothing, and cannot be added
+to a test set, having no passages to be its right ones.
+
+When something is attached, the instruction says that what comes in the \texttt{<file>}, \texttt{<dataset>} and
+\texttt{<database>} tags is the user's own, not documentation, to be answered about from what it shows, with the
+passages, when there are any, still cited for what is said of Pollis and Julia. Each attachment goes before its question, in its tag, and
+an image as an image.
+
 \subsection{Why it can be trusted, and how far}
 The answer can say only what the passages say, and each statement points to the passage it comes from: \textbf{Open}
 shows it in its place. A small model can still join two passages wrongly, or miss the one that matters. When an answer
@@ -342,7 +376,7 @@ On this computer, the model reads the passages and writes the answer without any
 billion weights answers in a few seconds on Apple silicon or with a graphics chip, and in some tens of seconds on a
 laptop without one, most of it spent reading the passages. A cloud model answers in a few seconds anywhere, and is
 better at joining passages; it is sent the instruction, the conversation and the passages, which are Pollis's documents,
-and your question.
+your question, and what you attach with the \textbf{+}, never other files. The status bar's tooltip says so.
 
 \section{The models}\label{sec:models}
 
@@ -380,7 +414,7 @@ How fast and how well each model does other work, statistics, Julia code, DuckDB
 of \menupath{Compose\gt Local Models}, a page of its own.
 
 Evaluate Answering Models is one page, opened from \menupath{Compose\gt Local Models\gt Evaluate Answering Models...}, beside the models
-it compares, and from the last item of the model's menu on the Ask Pollis page. It goes in four steps, from the top
+it compares, and from the last item of the model's menu in the status bar. It goes in four steps, from the top
 down: 1, the models to compare; 2, the questions, of the test set chosen, those ticked being the ones asked; 3, the
 judge, a second judge if you want one, \textbf{Repeats} and \textbf{Run}; 4, the results of a run, the figures of
 each model and then its answers. The page remembers what you chose for the next time.
@@ -541,7 +575,7 @@ less well.
 A new Pollis, a wiki written, a vignette compiled, a toolbox installed or removed, or another embedding model. For the
 Julia Manual, a Julia REPL started with another Julia version, which reads that Julia's Manual, or
 \file{pollis.ask.juliaManual} turned on or off. The embeddings are kept by their text, so after a Julia update only the
-passages whose text changed are embedded again, in seconds. Nothing else: your questions are not kept in the index, nor anywhere after the page is closed.
+passages whose text changed are embedded again, in seconds. Nothing else: your questions are not kept in the index, nor anywhere after Pollis is closed.
 
 \section{When something goes wrong}
 
@@ -557,7 +591,11 @@ passages whose text changed are embedded again, in seconds. Nothing else: your q
   meaning too.\\
 \emph{The model could not be started} & Open \menupath{Compose\gt Local Models\gt Models Installed}, check that the
   model is there and that it fits in memory, or choose a smaller one, or a cloud model.\\
-\emph{No key for Anthropic} (or OpenAI, or Google) & Set the key with the key indicator beside the model's menu.\\
+\emph{No key for Anthropic} (or OpenAI, or Google) & Set the key with the key indicator below the question.\\
+\textbf{Image} greyed out in the \textbf{+} & A model of this computer answers: choose a cloud model in the status
+  bar to ask about an image.\\
+\emph{\ldots is not a text file in UTF-8} & Attach a CSV file as a \textbf{Dataset}, and a DuckDB file as a
+  \textbf{Database}.\\
 An answer that cites nothing & The passages did not answer the question; try the words the documents use, such as the
   name of the menu item.\\
 \emph{Searched: Pollis.} for a question on Julia (or the other way round) & Choose the source in \textbf{Search In}
@@ -576,8 +614,8 @@ No Julia Manual in \textbf{Search In} & Your Julia came without its documentatio
 \toprule
 \textbf{Setting} & \textbf{What it holds}\\
 \midrule
-\file{pollis.ask.answerWith} & This Computer, or the cloud model chosen in the model's menu\\
-\file{pollis.ask.chatModel} & The local chat model, the one last chosen in the model's menu\\
+\file{pollis.ask.answerWith} & This Computer, or the cloud model chosen in the status bar\\
+\file{pollis.ask.chatModel} & The local chat model, the one last chosen in the status bar\\
 \file{pollis.ask.embeddingModel} & The embedding model: the default embedding model unless you change it\\
 \file{pollis.ask.queryPrefix} & What a question is given to the embedding model as: \texttt{\small task: question answering \textbar{} query: \{text\}}\\
 \file{pollis.ask.passagePrefix} & What a passage is given to it as: \texttt{\small title: \{title\} \textbar{} text: \{text\}}\\
@@ -596,8 +634,12 @@ No Julia Manual in \textbf{Search In} & Your Julia came without its documentatio
 \textbf{File} & \textbf{Role}\\
 \midrule
 \file{.../compose/browser/compose.contribution.ts} & Help\gt Ask Pollis\\
-\file{.../compose/browser/askPollisPage.ts} & The page: the question, the model's menu, the answer as it comes, Sources\\
-\file{.../compose/node/askPollisMain.ts} & The DuckDB process that searches \file{PollisDocuments.duckdb} (\S\ref{sec:finding})\\
+\file{.../compose/browser/askPollisPage.ts} & The pane: the question, what is attached, the answer as it comes,
+  Sources; the model in the status bar and its menu\\
+\file{.../compose/browser/composerAdd.ts} & The \textbf{+} and its menu, the same for Ask Pollis and the Collaboration
+  chat\\
+\file{.../compose/node/askPollisMain.ts} & The DuckDB process that searches \file{PollisDocuments.duckdb} (\S\ref{sec:finding}),
+  and describes a database attached\\
 \file{extensions/language-julia/src/pollisDocuments.ts} & Starts the indexing after the documents are compiled\\
 \file{.../terminalserver/ask\_index.jl} & Reads, cuts and indexes the documents and the Julia Manual, and computes the
   embeddings\\
@@ -644,7 +686,7 @@ word written about it, and searches what is written for that panel's topic rathe
 \textbf{Source} & \textbf{What it holds} & \textbf{Of a panel}\\
 \midrule
 Pollis & the documents of \S\ref{sec:reads} & its wikis, and what the documents say of it\\
-Packages & the manual of each Julia package, and the Julia Manual & the packages of its \textbf{Powered by}\\
+Packages & the package vignettes, and the Julia Manual & the vignettes of the packages of its \textbf{Powered by}\\
 Books & open books on Statistics, Machine Learning, AI, Simulation and Optimisation & what they say of its topic,
   found by its name and its Overview\\
 Articles & the works the panels cite, from PollisReferences & the works it cites\\
@@ -667,10 +709,15 @@ After the seven of Ask Pollis itself, four more, each usable when done:
     again when its \file{vignette} folder has changed. The page of each heading goes into a \file{.labels} beside the
     PDF, as with Pollis's documents, so a passage is labelled with its section. Without the Internet, the registry's
     list is the last one read.
-  \item \textbf{Ask Pollis in a panel}: a box below \textbf{Key Points}, the same in every panel, from the scaffold of
-    the panels. The question is asked with the panel's name, its menu and the first lines of its Overview, \emph{The
-    question is asked in the panel \ldots}; it is searched in that panel's share of each source, with no routing, and
-    the eight passages are shared among the sources, as the 5 and 3 of routing are. First with Pollis and Packages.
+  \item \textbf{Ask Pollis in a panel}: at the right of the panel's title, in place of the microphone and the
+    speaker, a narrow pill, the same in every panel, from the scaffold of the panels: the question, which wraps to the
+    lines below as it is written, the voice tools of Ask Pollis, and the arrow. The answer comes in
+    the Ask Pollis pane, opened beside the panel, which shows \emph{Asked in} and the panel's name above its
+    own box. Of the eight passages, five come from the panel's own: its wikis, titled after it, and the vignettes of
+    the packages of its \textbf{Powered by}; the other three are routed as without a panel, among the passages that
+    are not the panel's. The model is told \emph{The question is asked in the panel \ldots}, with its menu, so that
+    \emph{this panel} and \emph{here} mean it. The questions after it keep the panel, until \textbf{Ask Without It}
+    or \textbf{New Chat}.
   \item \textbf{Books}: a catalogue of open books, each switched on by the user and then downloaded from its author's
     page on this computer, never shipped with Pollis unless its licence allows. A book's topic is found by search, not
     by a map of chapters to panels, which would not keep up with two hundred panels. A book of 600 pages is about a
@@ -715,6 +762,17 @@ After the seven of Ask Pollis itself, four more, each usable when done:
     meaning.
   \item \textbf{No reranker}: the eight passages are those of the merged ranks. A model that reads the question with
     each passage and scores it again would choose better, at the cost of a second model and some seconds.
+  \item \textbf{With and without the documents}: Evaluate Answering Models could run each model twice on the same test
+    set, with the passages and with none, as \textbf{Search In: None} does for one question, and have the judge rate
+    both against the right answer: what the documents add, as figures, model by model. Whether the answer keeps to its
+    passages, and whether the right passage is found, have no meaning without them. To be done with the next change
+    to how the passages are found.
+  \item \textbf{Read Aloud and the voice}: four tools, as the chat apps split them: Dictate, the microphone, voice to
+    text; Read Aloud, the speaker, text to voice; Voice, the waveform, voice to voice with its transcription; and the
+    language they speak. Read Aloud is in place, not working yet. Still to decide: a model made for speech or a
+    general one, which is the default, or whether the choice is left to you.
+  \item \textbf{Images on this computer}: the local models are run without their vision projector, the
+    \file{mmproj} file of llama.cpp, so only a cloud model sees an image attached.
   \item \textbf{Vignettes offline}: the vignettes of the registry are compiled from GitHub, so a computer without the
     Internet reads only those compiled before.
 \end{itemize}

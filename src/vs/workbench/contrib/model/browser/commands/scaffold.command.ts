@@ -20,6 +20,7 @@ import { IScaffoldPanelData } from '../common/model.types.js';
 import { IQuickInputService } from '../../../../../platform/quickinput/common/quickInput.js';
 import { ISecretStorageService } from '../../../../../platform/secrets/common/secrets.js';
 import { IWebviewService } from '../../../webview/browser/webview.js';
+import { IStorageService } from '../../../../../platform/storage/common/storage.js';
 import { registerScaffoldWebviewHandlers } from '../handlers/scaffold.handler.js';
 import { IApiKeyProvider } from '../handlers/model.handler.js';
 
@@ -55,6 +56,7 @@ export function openScaffoldWebview(accessor: ServicesAccessor, panel: IScaffold
 	registerScaffoldWebviewHandlers(
 		webviewInput,
 		panel.id,
+		panel.title,
 		panel.data,
 		initialModel,
 		accessor.get(IOpenerService),
@@ -71,6 +73,7 @@ export function openScaffoldWebview(accessor: ServicesAccessor, panel: IScaffold
 		accessor.get(IQuickInputService),
 		accessor.get(ISecretStorageService),
 		accessor.get(IWebviewService),
+		accessor.get(IStorageService),
 		panel.apiKey,
 	);
 }
