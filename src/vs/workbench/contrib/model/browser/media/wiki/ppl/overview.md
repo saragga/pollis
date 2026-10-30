@@ -1,6 +1,6 @@
 # Overview
 
-This webview does **Bayesian inference by sampling**. A model states a **prior** distribution for the unknown parameters and a **likelihood** for the data given them; Bayes' rule combines them into the **posterior**, the distribution of the parameters given the data. The posterior rarely has a closed form, so Turing.jl draws samples from it by **Markov Chain Monte Carlo** (MCMC), and every summary (means, intervals, predictions) is computed from the draws.
+The Sampling-Based Bayesian Inference panel does **Bayesian inference by sampling**. A model states a **prior** distribution for the unknown parameters and a **likelihood** for the data given them; Bayes' rule combines them into the **posterior**, the distribution of the parameters given the data. The posterior rarely has a closed form, so Turing.jl draws samples from it by **Markov Chain Monte Carlo** (MCMC), and every summary (means, intervals, predictions) is computed from the draws.
 
 ## The Models
 - **Gaussian**: a mean mu and a standard deviation sigma for one sample of observations.

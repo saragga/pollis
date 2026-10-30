@@ -1,6 +1,6 @@
 # Density Estimation — Overview
 
-This webview estimates a density in three ways, on the eruption durations of the Old Faithful geyser by default: a sample with two clear peaks, near 2 and 4.5 minutes, that shows quickly what each estimator keeps and what it smooths away.
+The Density Estimation panel estimates a density in three ways, on the eruption durations of the Old Faithful geyser by default: a sample with two clear peaks, near 2 and 4.5 minutes, that shows quickly what each estimator keeps and what it smooths away.
 
 ## The Three Models
 - **Histogram**: counts in bins, with StatsBase's fit(Histogram, ...). The **Specification** gives the number of bins, **Bins (n)**, or the **Edges**; **Bin Intervals** chooses (a, b] or [a, b); **Normalise** turns the counts into a PDF, a density or probabilities.

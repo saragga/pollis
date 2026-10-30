@@ -2,7 +2,7 @@
 
 ## Simple vs Log Returns
 
-Both describe the same price move, but they aggregate differently. Choosing the right one keeps your maths exact instead of approximate.
+Simple returns and log returns describe the same price move, but they aggregate differently. Choosing the right one keeps your maths exact instead of approximate.
 
 | | Simple return | Log return |
 |---|---|---|

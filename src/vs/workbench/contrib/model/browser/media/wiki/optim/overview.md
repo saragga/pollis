@@ -1,6 +1,6 @@
 # Local Optimisation — Overview
 
-This webview minimises a scalar function f(x) of several variables with **Optim.jl**, the standard Julia package for unconstrained and box-constrained optimisation. Its algorithms are grouped by the derivative information they use, which is the panel's first choice: **Gradient Free** methods compare function values only, **Gradient Required** methods follow the gradient, and **Hessian Required** methods use the matrix of second derivatives. The more a method knows about f, the fewer iterations it needs, provided that knowledge is accurate and f is smooth enough for it to mean something.
+The Local Optimisation panel minimises a scalar function f(x) of several variables with **Optim.jl**, the standard Julia package for unconstrained and box-constrained optimisation. Its algorithms are grouped by the derivative information they use, which is the panel's first choice: **Gradient Free** methods compare function values only, **Gradient Required** methods follow the gradient, and **Hessian Required** methods use the matrix of second derivatives. The more a method knows about f, the fewer iterations it needs, provided that knowledge is accurate and f is smooth enough for it to mean something.
 
 ## Gradient Free
 **Nelder-Mead** moves a simplex of n + 1 points by reflections, expansions and contractions. **Simulated Annealing** and **Particle Swarm** are stochastic searches that can leave a local basin, at the cost of many evaluations. See [Gradient Free](gradient-free.md).
@@ -17,7 +17,7 @@ This webview minimises a scalar function f(x) of several variables with **Optim.
 ## Common Workflow
 
 1. Enter the **Objective f(x)** and the **Initial Guess x0**, choose the class and the **Algorithm**, and run.
-2. Look at the **Convergence Trace** and, in two dimensions, the **Contour + Path**.
+2. Follow the iterates of the local optimiser in the **Convergence Trace** and, in two dimensions, the **Contour + Path**.
 3. Diagnose with the **Convergence Check** and the **Gradient Check**.
 4. Run a **Multi-Start** to see whether other minima exist.
 5. **Compare Algorithms** and **Autodiff vs Finite Differences**.

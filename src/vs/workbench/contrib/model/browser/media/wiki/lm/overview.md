@@ -1,6 +1,6 @@
 # Overview
 
-This webview fits **linear regression** by ordinary least squares: the expected response is a linear combination of the predictors, and the coefficients minimise the sum of squared residuals. The estimates are the same in every model of the panel; what changes is how their **standard errors** are computed, which decides the confidence intervals and tests. The panel offers the classical errors and four robust alternatives, through GLM.jl, Regress.jl and CovarianceMatrices.jl.
+The Linear Regression panel fits **linear regression** by ordinary least squares: the expected response is a linear combination of the predictors, and the coefficients minimise the sum of squared residuals. The estimates are the same in every model of the panel; what changes is how their **standard errors** are computed, which decides the confidence intervals and tests. The panel offers the classical errors and four robust alternatives, through GLM.jl, Regress.jl and CovarianceMatrices.jl.
 
 ## Standard
 Classical OLS standard errors, which assume the errors are independent with constant variance. Exact under normal errors, and the baseline for every comparison.

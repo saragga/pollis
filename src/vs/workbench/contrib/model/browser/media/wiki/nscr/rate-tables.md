@@ -17,7 +17,7 @@ As a patient is followed, the table is read at their age and calendar date at ea
 A mismatched table shows up as a negative excess hazard (patients healthier than the table assumes) or an inflated one (less healthy). See [Diagnostics](diagnostics.md).
 
 ## Your Own Table
-`RateTables.RateTable(df)` builds a table from a table with one row per cell: columns `age` and `year` (in days, as above), `value` (the daily hazard), and one column for each covariate, such as `sex`. A yearly probability of death q becomes the daily hazard -log(1 - q) / 365.241.
+`RateTables.RateTable(df)` builds a table from a table with one row per cell: columns `age` and `year` (in days), `value` (the daily hazard), and one column for each covariate, such as `sex`. A yearly probability of death q becomes the daily hazard -log(1 - q) / 365.241.
 
 ## See Also
 - [Assumptions](assumptions.md) · [Diagnostics](diagnostics.md) · [Overview](overview.md)

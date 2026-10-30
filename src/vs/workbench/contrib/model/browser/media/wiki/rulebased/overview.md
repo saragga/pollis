@@ -1,6 +1,6 @@
 # Overview
 
-This webview finds **patterns of co-occurrence** in transaction data: sets of items that often appear together, and if-then rules between them. A transaction is any record that holds a set of items: a shopping basket, the diagnoses of a patient, the words of a document, the courses a student takes, the products a firm reports. The data come in long format, one row per (transaction, item) pair, with columns Transaction and Item.
+The Rule-Based Methods panel finds **patterns of co-occurrence** in transaction data: sets of items that often appear together, and if-then rules between them. A transaction is any record that holds a set of items: a shopping basket, the diagnoses of a patient, the words of a document, the courses a student takes, the products a firm reports. The data come in long format, one row per (transaction, item) pair, with columns Transaction and Item.
 
 The panel has two models:
 

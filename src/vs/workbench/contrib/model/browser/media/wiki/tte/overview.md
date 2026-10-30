@@ -1,6 +1,6 @@
 # Overview
 
-This webview analyses **time-to-event data**: how long until something happens (death, failure, default, relapse), when some subjects are still event-free at the end of follow-up. Those subjects are **censored**: we know only that their time is longer than what was observed, and every method here uses that partial information instead of dropping it.
+The Time-to-Event Analysis panel analyses **time-to-event data**: how long until something happens (death, failure, default, relapse), when some subjects are still event-free at the end of follow-up. Those subjects are **censored**: we know only that their time is longer than what was observed, and every method here uses that partial information instead of dropping it.
 
 ## Kaplan-Meier
 The non-parametric estimate of the **survival function** S(t), the probability of being event-free beyond time t. At each event time it multiplies the survival so far by the share of those still at risk who did not have the event. From Survival.jl.

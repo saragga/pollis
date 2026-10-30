@@ -28,14 +28,6 @@ const MVIZ_TITLE = 'Multivariate Plots';
 const MVIZ_REFERENCES: IModelReference[] = [
 	{ separator: true, label: 'Software' },
 	{
-		title: 'Julia: A Fresh Approach to Numerical Computing',
-		authors: 'Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B.',
-		year: 2017,
-		journal: 'SIAM Review',
-		doi: '10.1137/141000671',
-		openAccess: false,
-	},
-	{
 		title: 'PairPlots.jl: Beautiful and Flexible Visualizations of High Dimensional Data',
 		authors: 'Thompson, William; Speagle, Joshua S.',
 		year: 2023,

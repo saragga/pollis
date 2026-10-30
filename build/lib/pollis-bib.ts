@@ -111,7 +111,7 @@ const PANEL_CONTRIBUTIONS = ['model/browser/model.contribution.ts', 'explore/bro
 /**
  * The commands that open each panel, by panel id: a command registered to open the panel imported from its
  * `commands/<id>.command.ts` (or to call that file's own opening function), directly or through a function of the
- * same file that does. A command registered some other way is not found.
+ * same file that does; or the `pageCommand` of a page's TOML. A command registered some other way is not found.
  */
 export function panelCommands(repoRoot: string): Map<string, string[]> {
 	const contribDir = path.join(repoRoot, 'src/vs/workbench/contrib');
@@ -130,6 +130,14 @@ export function panelCommands(repoRoot: string): Map<string, string[]> {
 			if (command && id) {
 				commands.set(id, [...commands.get(id) ?? [], command]);
 			}
+		}
+	}
+	// A page of Compose in the Time Arrow style of the scaffold, whose command is an action of its own, says it in its TOML
+	const webviewsDir = path.join(contribDir, 'model/browser/webviews');
+	for (const file of fs.readdirSync(webviewsDir).filter(f => f.endsWith('.toml'))) {
+		const data = parseToml(fs.readFileSync(path.join(webviewsDir, file), 'utf-8')) as { meta?: { pageCommand?: unknown } };
+		if (typeof data.meta?.pageCommand === 'string') {
+			commands.set(file.replace(/\.toml$/, ''), [data.meta.pageCommand]);
 		}
 	}
 	return commands;

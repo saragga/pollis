@@ -1,0 +1,68 @@
+# Evaluate Answering Models Webview Configuration
+# A page of Compose in the Time Arrow style of the scaffold, not a panel: only its Powered by and Learn More. `pageCommand`
+# is the command that opens it, which a panel's contribution file would say. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/compareModels.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Evaluate Answering Models"
+viewType = "pollis.compareModels"
+pageCommand = "pollis.compareModels"
+
+[[packages]]
+name = "RAGTools.jl"
+github = "https://github.com/Trumpingtons/RAGTools.jl"
+
+[[packages]]
+name = "PromptingTools.jl"
+github = "https://github.com/Trumpingtons/PromptingTools.jl"
+
+[[wikis]]
+name = "Factsheet"
+file = "compareModels/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "compareModels/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "compareModels/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "compareModels/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "compareModels/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "compareModels/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+key = "Sim...2025a"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "LPPPK...2020a"
+
+[[references]]
+key = "ZCSZW...2023a"
+
+[[references]]
+key = "EJAS2024a"

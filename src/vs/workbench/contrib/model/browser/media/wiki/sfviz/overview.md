@@ -1,6 +1,6 @@
 # Overview
 
-When a quantity is a **function of position** — `f(x, y)` or `f(x, y, z)` — ordinary plots don't fit. This webview offers four ways to see a scalar field.
+When a quantity is a **function of position** — `f(x, y)` or `f(x, y, z)` — ordinary plots don't fit. The Surfaces and Fields panel offers four ways to see a scalar field.
 
 ## Contour Plot
 Draws **level curves** (isolines) of a 2D field in the plane: every point on a line shares the same value, like contour lines on a topographic map. Compact and precise. See [Contour Plot](contour.md).

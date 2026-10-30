@@ -1,6 +1,6 @@
 # Overview
 
-This webview offers four interpolants, from a simple piecewise-linear one to a smoothing spline with exact derivatives. Each one returns an object `itp` that is evaluated like a function:
+The Interpolate Data panel offers four interpolants, from a simple piecewise-linear one to a smoothing spline with exact derivatives. Each one returns an object `itp` that is evaluated like a function:
 
 ```julia
 yq = itp(xq)                            # value at a query point

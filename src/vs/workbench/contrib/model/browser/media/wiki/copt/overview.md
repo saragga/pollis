@@ -1,6 +1,6 @@
 # Constrained Optimisation — Overview
 
-This webview solves min f(x) subject to g(x) <= 0 and lb <= x <= ub, with five methods from four packages. Gradients and Jacobians come from **ForwardDiff.jl**. The default problem minimises the squared distance to (1.5, 1), a point outside the unit disk, over the disk and the half-plane x2 <= x1: the solution is the point of the circle nearest (1.5, 1), about (0.832, 0.555), with the disk constraint active and the half-plane inactive.
+The Constrained Optimisation panel solves min f(x) subject to g(x) <= 0 and lb <= x <= ub, with five methods from four packages. Gradients and Jacobians come from **ForwardDiff.jl**. The default problem minimises the squared distance to (1.5, 1), a point outside the unit disk, over the disk and the half-plane x2 <= x1: the solution is the point of the circle nearest (1.5, 1), about (0.832, 0.555), with the disk constraint active and the half-plane inactive.
 
 ## The Methods
 - **SLSQP** (NLopt) solves a quadratic model of the problem at each step: sequential quadratic programming. See [SLSQP](slsqp.md).

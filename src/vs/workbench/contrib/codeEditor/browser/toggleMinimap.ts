@@ -25,9 +25,10 @@ export class ToggleMinimapAction extends Action2 {
 			f1: true,
 			toggled: ContextKeyExpr.equals('config.editor.minimap.enabled', true),
 			menu: {
-				id: MenuId.MenubarAppearanceMenu,
-				group: '4_editor',
-				order: 1
+				// Pollis: in the View menu above Word Wrap (toggleWordWrap.ts), not under Appearance
+				id: MenuId.MenubarViewMenu,
+				group: '7_editor',
+				order: 2
 			}
 		});
 	}

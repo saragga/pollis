@@ -16,7 +16,7 @@
 - A value is attached to **geographic areas** and you want a map.
 
 ## What It Is Not
-These are not for plain numeric distributions or two-variable relationships — use the Core Statistical and Distribution Comparison webviews for that.
+Graph and spatial plots are not for plain numeric distributions or two-variable relationships — use the Core Statistical and Distribution Comparison panels for that.
 
 ## See Also
 - [Overview](overview.md) · [Decision Guide](decision-guide.md) · [Diagnostics](diagnostics.md)

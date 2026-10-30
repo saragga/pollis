@@ -1,6 +1,6 @@
 # Overview
 
-This webview solves **non-negative least squares** (NNLS): find the vector x that makes A x as close as possible to b, in the sense of the smallest sum of squared differences, with every component of x at least zero.
+The Non-Negative Least Squares (NNLS) panel solves **non-negative least squares** (NNLS): find the vector x that makes A x as close as possible to b, in the sense of the smallest sum of squared differences, with every component of x at least zero.
 
     minimise ||A x - b||^2   subject to   x >= 0
 

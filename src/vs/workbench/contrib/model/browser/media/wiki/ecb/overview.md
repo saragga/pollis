@@ -8,7 +8,7 @@ The [ECB Data Portal](https://data.ecb.europa.eu) is the European Central Bank's
 - Within a dataflow, a **series key** selects one series by fixing every dimension. The key is dot-separated, e.g. `D.USD.EUR.SP00.A` means *daily, US dollar, per euro, reference rate (SP00), average (A)*.
 - Each series is a set of **observations**: a `TIME_PERIOD` and an `OBS_VALUE`.
 
-## The Five Topics in This Webview
+## The Five Topics in This Panel
 
 - **Exchange Rates** (`EXR`) — euro reference rates against major currencies.
 - **Key Interest Rates** (`FM`, `EST`) — the main refinancing, deposit facility, and marginal lending rates, plus the €STR.
@@ -25,7 +25,7 @@ The API can return SDMX-ML (XML), SDMX-JSON, or SDMX-CSV. **SDMX-CSV (`format=cs
 - **ECB Data Portal** — the source for euro-area statistics; SDMX REST, no key, rich dimension keys.
 - **FRED** (`FredData.jl`) — the equivalent for U.S. series; a dedicated package and an API key.
 
-The **Compare** link in the Concept Map cross-references the two.
+The **Compare** link in the Concept Map cross-references the ECB Data Portal and FRED.
 
 ## See Also
 - [Factsheet](factsheet.md) · [Finding Series](finding-series.md) · [Accessing Data](accessing-data.md)

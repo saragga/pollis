@@ -19,22 +19,27 @@ import { IConfigurationService } from '../../../../platform/configuration/common
 import { IDialogService, IFileDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
+import { INotificationService } from '../../../../platform/notification/common/notification.js';
+import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { IQuickInputService } from '../../../../platform/quickinput/common/quickInput.js';
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
-import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
-import { spinnerSvg } from '../../model/browser/webviews/webviewScaffold.js';
+import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
+import { RAG_METADATA } from '../../model/browser/webviews/rag.data.js';
+import { buildWebviewHtml, spinnerSvg } from '../../model/browser/webviews/webviewScaffold.js';
+import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
+import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
 import { ASK_EMBEDDING_MODEL, ASK_PASSAGES, embeddingPrefixes, IAskPollisPassage, IAskPollisService } from '../common/askPollis.js';
 import { askModels } from './askPollisPage.js';
 import { askAnswerCss, askAnswerScript, askPassageView } from './askPollisWebview.js';
-import { compareCss, compareSharedText, pageCommonScript } from './compareShared.js';
+import { compareCss, pageHelpersScript } from './compareShared.js';
 import { IInstalledModel } from './modelsInstalledPage.js';
 
 // Retrieval-Augmented Generation, from Compose > Retrieval-Augmented Generation (compose.contribution.ts): the
-// collections of documents a model answers from, each with its own index in ~/.pollis/rag. One page, in five steps:
+// collections of documents a model answers from, each with its own index in ~/.pollis/rag. One page of the scaffold in the Time Arrow style, in six steps:
 // 1, Document Ingestion, the documents of the collection, recorded by their paths, never copied; 2, Chunking, the
 // length of the passages, and the passages of each document once the index is built; 3, Embedding, the embedding model
 // and Build the Index, which language-julia.pollisIndexCollection does with ask_index.jl (pollisDocuments.ts); 4,
@@ -49,12 +54,6 @@ export const RAG_COMMAND_ID = 'pollis.retrievalAugmentedGeneration';
 const COLLECTIONS_KEY = 'pollis.rag.collections';
 /** The collection shown, by its id. */
 const CHOSEN_KEY = 'pollis.rag.chosen';
-/** The packages of the page, on the Powered by line. */
-const POWERED_BY = [
-	{ name: 'Poppler', url: 'https://poppler.freedesktop.org' },
-	{ name: 'llama.cpp', url: 'https://github.com/ggml-org/llama.cpp' },
-	{ name: 'DuckDB', url: 'https://duckdb.org' },
-];
 /** The lengths a passage can have, in words. */
 const PASSAGE_WORDS = [100, 150, 200, 250, 300, 400, 500];
 /** The passages of a document shown in step 2. */
@@ -105,8 +104,7 @@ type RagMessage =
 	| { readonly command: 'rerank' }
 	| { readonly command: 'answerModel'; readonly model: string }
 	| { readonly command: 'answer' }
-	| { readonly command: 'stopAnswer' }
-	| { readonly command: 'openUrl'; readonly url: string };
+	| { readonly command: 'stopAnswer' };
 
 /** How far the index of a collection has come, from language-julia.pollisCollectionProgress. */
 interface IRagProgress {
@@ -135,6 +133,10 @@ async function openRagPage(accessor: ServicesAccessor): Promise<void> {
 	const pathService = accessor.get(IPathService);
 	const askPollisService = accessor.get(IAskPollisService);
 	const configurationService = accessor.get(IConfigurationService);
+	const openerService = accessor.get(IOpenerService);
+	const notificationService = accessor.get(INotificationService);
+	const notebookEditorModelResolverService = accessor.get(INotebookEditorModelResolverService);
+	const notebookKernelService = accessor.get(INotebookKernelService);
 
 	if (openPage && !openPage.isDisposed()) {
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
@@ -157,6 +159,7 @@ async function openRagPage(accessor: ServicesAccessor): Promise<void> {
 	webviewInput.webview.setHtml(pageHtml());
 	const post = (message: object) => webviewInput.webview.postMessage(message);
 	const disposables = new DisposableStore();
+	disposables.add(registerScaffoldPageHandlers(webviewInput, 'rag', title, RAG_METADATA.rag, openerService, editorService, commandService, notificationService, notebookEditorModelResolverService, notebookKernelService, fileService, pathService, storageService));
 
 	let collections: IRagCollection[] = [];
 	try {
@@ -472,8 +475,6 @@ async function openRagPage(accessor: ServicesAccessor): Promise<void> {
 			post({ command: 'answered', id: 0, stopped: true });
 		} else if (message.command === 'stopAnswer') {
 			answering?.cancel();
-		} else if (message.command === 'openUrl' && hasKey(message, { url: true }) && POWERED_BY.some(pkg => pkg.url === message.url)) {
-			await commandService.executeCommand(OPEN_LINK_COMMAND_ID, message.url);
 		}
 	}));
 }
@@ -481,7 +482,6 @@ async function openRagPage(accessor: ServicesAccessor): Promise<void> {
 /** The page: its texts come from here; the collections and their documents from the messages. */
 function pageHtml(): string {
 	const text = {
-		poweredBy: compareSharedText().poweredBy,
 		title: localize('rag.title', "Retrieval-Augmented Generation"),
 		intro: localize('rag.intro', "A model answers from the passages of a collection of your documents: the documents are read and cut into passages, each passage is embedded, the passages nearest to a question are found, and the model answers from them. Each collection has its own index, in {0}.", '<span class="yellow">~/.pollis/rag</span>'),
 		collection: localize('rag.collection', "Collection"),
@@ -576,13 +576,10 @@ function pageHtml(): string {
 		stopped: localize('rag.stopped', "Stopped."),
 		kinds: { pdf: 'PDF', markdown: 'Markdown', text: localize('rag.text', "Text") },
 	};
-	return `<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
-	<style>
+	return buildWebviewHtml({
+		title: text.title,
+		introHtml: text.intro,
+		extraCss: `
 		${compareCss}
 		.missing { color: var(--vscode-errorForeground); }
 		input[type=text], input[type=number] { font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-panel-border)); border-radius: 2px; padding: 3px 6px; }
@@ -593,34 +590,34 @@ function pageHtml(): string {
 		.passage .text { white-space: pre-wrap; line-height: 1.4; }
 		${askAnswerCss}
 		.answering { max-width: 900px; margin-top: 8px; }
-	</style>
-</head>
-<body>
-<div class="container">
-	<h1>${text.title}</h1>
-	<div class="powered-by">${text.poweredBy}&nbsp;<span id="package-links"></span></div>
-	<p class="subtitle">${text.intro}</p>
-	<div class="row">
-		<span class="small">${text.collection}</span> <select id="collections"></select>
-		<span class="bar">
-			<button class="action current" id="newCollection">${text.newCollection}</button>
-			<button class="action" id="rename">${text.rename}</button>
-			<button class="action" id="delete">${text.delete}</button>
-		</span>
-	</div>
-	<p class="hint" id="noCollection" hidden>${text.noCollection}</p>
-
-	<div id="steps">
-		<h2 class="section"><span class="step">1</span>${text.ingestion}</h2>
+`,
+		steps: [
+			{
+				id: 'step-ingestion',
+				title: text.ingestion,
+				bodyHtml: `
 		<p class="hint">${text.ingestionIntro}</p>
+		<div class="row">
+			<span class="small">${text.collection}</span> <select id="collections"></select>
+			<span class="bar">
+				<button class="action current" id="newCollection">${text.newCollection}</button>
+				<button class="action" id="rename">${text.rename}</button>
+				<button class="action" id="delete">${text.delete}</button>
+			</span>
+		</div>
+		<p class="hint" id="noCollection" hidden>${text.noCollection}</p>
 		<div class="settings"><span class="bar"><button class="action current" id="addFiles">${text.addFiles}</button></span></div>
 		<p class="hint" id="noDocuments" hidden>${text.noDocuments}</p>
 		<table id="documents" hidden>
 			<thead><tr><th>${text.titleColumn}</th><th>${text.kind}</th><th>${text.file}</th><th>${text.status}</th><th></th></tr></thead>
 			<tbody id="documentsBody"></tbody>
 		</table>
-
-		<h2 class="section"><span class="step">2</span>${text.chunking}</h2>
+`,
+			},
+			{
+				id: 'step-chunking',
+				title: text.chunking,
+				bodyHtml: `
 		<p class="hint">${text.chunkingIntro}</p>
 		<div class="row"><span class="small">${text.passageLength}</span> <select id="words">${PASSAGE_WORDS.map(words => `<option value="${words}">${text.aboutWords.replace('{0}', String(words))}</option>`).join('')}</select></div>
 		<p class="hint" id="otherWords" hidden></p>
@@ -633,16 +630,24 @@ function pageHtml(): string {
 			<h3 class="part" id="shownTitle"></h3>
 			<div id="shownPassages"></div>
 		</div>
-
-		<h2 class="section"><span class="step">3</span>${text.embedding}</h2>
+`,
+			},
+			{
+				id: 'step-embedding',
+				title: text.embedding,
+				bodyHtml: `
 		<p class="hint">${text.embeddingIntro}</p>
 		<p class="hint" id="noModels" hidden>${text.noModels}</p>
 		<div class="row"><span class="small">${text.embeddingModel}</span> <select id="model"></select></div>
 		<p class="hint" id="otherModel" hidden>${text.otherModel}</p>
 		<div class="settings"><span class="bar"><button class="action current" id="build" disabled>${text.build}</button></span></div>
 		<div class="small status" id="buildStatus"></div>
-
-		<h2 class="section"><span class="step">4</span>${text.retrieval}</h2>
+`,
+			},
+			{
+				id: 'step-retrieval',
+				title: text.retrieval,
+				bodyHtml: `
 		<p class="hint">${text.retrievalIntro}</p>
 		<div class="row">
 			<span class="small">${text.question}</span>
@@ -653,8 +658,12 @@ function pageHtml(): string {
 		</div>
 		<div class="small status" id="searchStatus"></div>
 		<div id="foundPassages"></div>
-
-		<h2 class="section"><span class="step">5</span>${text.reranking}</h2>
+`,
+			},
+			{
+				id: 'step-reranking',
+				title: text.reranking,
+				bodyHtml: `
 		<p class="hint">${text.rerankingIntro}</p>
 		<p class="hint" id="noRerankers" hidden>${text.noRerankers}</p>
 		<div class="row">
@@ -666,8 +675,12 @@ function pageHtml(): string {
 		<div class="row"><label><input type="checkbox" id="rerankOn"> ${text.rerankOn}</label></div>
 		<div class="small status" id="rerankStatus"></div>
 		<div id="rerankedPassages"></div>
-
-		<h2 class="section"><span class="step">6</span>${text.generation}</h2>
+`,
+			},
+			{
+				id: 'step-generation',
+				title: text.generation,
+				bodyHtml: `
 		<p class="hint">${text.generationIntro}</p>
 		<div class="row">
 			<span class="small">${text.answeringModel}</span> <select id="answerModel"></select>
@@ -678,15 +691,14 @@ function pageHtml(): string {
 			<div class="answer" id="answerText"></div>
 			<div class="sources" id="answerSources"></div>
 		</div>
-	</div>
-</div>
-<script>
-	const vscode = acquireVsCodeApi();
+`,
+			},
+		],
+		pageScriptJs: `
 	const TEXT = ${JSON.stringify(text)};
-	const POWERED_BY = ${JSON.stringify(POWERED_BY)};
 	const SPINNER = '${spinnerSvg}';
 	${askAnswerScript()}
-	${pageCommonScript}
+	${pageHelpersScript}
 
 	const collectionsSelect = document.getElementById('collections');
 	collectionsSelect.addEventListener('change', () => vscode.postMessage({ command: 'choose', id: collectionsSelect.value }));
@@ -1093,9 +1105,8 @@ function pageHtml(): string {
 		}
 	});
 	vscode.postMessage({ command: 'ready' });
-</script>
-</body>
-</html>`;
+`,
+	});
 }
 
 registerAction2(class extends Action2 {

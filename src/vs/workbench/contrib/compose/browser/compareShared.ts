@@ -337,7 +337,6 @@ export function compareSharedText() {
 		tickAll: localize('compareModels.tickAll', "Tick all or none of the questions, on every page"),
 		topic: localize('compareModels.topic', "Topic"),
 		number: localize('compareModels.number', "#"),
-		poweredBy: localize('compareModels.poweredBy', "Powered by:"),
 		memoryChart: localize('compareModels.memoryChart', "Free Memory"),
 		memoryNow: localize('compareModels.memoryNow', "{0} GB free of {1} GB"),
 		memoryFree: localize('compareModels.memoryFree', "{0} GB free"),
@@ -369,15 +368,8 @@ type CompareText = ReturnType<typeof compareSharedText> & { readonly noLocal: st
 export const compareCss = `
 		* { box-sizing: border-box; }
 		[hidden] { display: none !important; }
-		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
 		.container { max-width: 1400px; margin: 0 auto; padding: 24px; }
-		h1 { font-size: 32px; font-weight: 300; margin: 0 0 4px 0; line-height: 1.2; }
-		h2.section { font-size: 18px; font-weight: 400; margin: 28px 0 6px 0; }
-		/* The four steps: the models, the questions, Run and the results */
-		.step { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; margin-right: 10px; font-size: 12px; font-weight: 600; color: var(--vscode-badge-foreground); background: var(--vscode-badge-background); vertical-align: 2px; }
-		.head { display: flex; align-items: baseline; gap: 16px; }
-		.head h2.section { flex: 1; }
-		.head .link { font-size: 12px; }
+		.step-head .link { font-size: 12px; }
 		h3.part { font-size: 14px; font-weight: 600; margin: 24px 0 4px 0; }
 		.setHint { margin: 6px 0 0 0; }
 		.illus-section { margin: 0 0 20px 0; }
@@ -476,9 +468,6 @@ export const compareCss = `
 		.servers td { padding: 2px 12px 2px 0; white-space: nowrap; }
 		.servers td.model { white-space: normal; word-break: break-word; }
 		.chart .tip { position: absolute; pointer-events: none; background: var(--vscode-editorHoverWidget-background); border: 1px solid var(--vscode-editorHoverWidget-border); color: var(--vscode-editorHoverWidget-foreground); padding: 4px 8px; border-radius: 3px; font-size: 12px; white-space: nowrap; font-variant-numeric: tabular-nums; }
-		.powered-by { margin: 4px 0 16px 0; line-height: 1.4; display: flex; align-items: baseline; flex-wrap: wrap; }
-		.package-link { color: var(--vscode-textLink-foreground); text-decoration: none; cursor: pointer; }
-		.package-link:hover { text-decoration: underline; }
 		input.count { font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; padding: 4px 6px; width: 64px; }
 		input.count:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
 		.counts { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
@@ -504,10 +493,14 @@ export function compareLocalCard(text: CompareText): string {
 		</div>`;
 }
 
+/** What stays beside the title of the second step: how many questions are ticked, and Untick All. */
+export function compareTestSetHeadHtml(text: CompareText): string {
+	return `<span class="small" id="count"></span><button class="link" id="untick" hidden>${text.untick}</button>`;
+}
+
 /** The second step, the questions of the test set chosen, with `tools` beside the test set. */
 export function compareTestSetHtml(text: CompareText, intro: string, tools: string): string {
 	return `
-	<div class="head"><h2 class="section"><span class="step">2</span>${text.questions}</h2><span class="small" id="count"></span><button class="link" id="untick" hidden>${text.untick}</button></div>
 	<p class="hint">${intro}</p>
 	<div class="settings">
 		<label class="field"><span class="small">${text.testSet}</span><select id="testSet"></select></label>
@@ -538,35 +531,21 @@ export function compareChartsHtml(text: CompareText, tokensChart = ''): string {
 }
 
 /**
- * The script both pages share: the formats, the package links, the one blue button of each bar, the table of the models
- * on this computer, the status lines, the sorted headings and the pagers. A page defines TEXT, POWERED_BY, SPINNER,
+ * The script both pages share: the formats, the one blue button of each bar, the table of the models
+ * on this computer, the status lines, the sorted headings and the pagers. A page defines TEXT, SPINNER,
  * models, rows, statusId, updateRun(), which the choice of models calls, and renderTables(), which the pagers call.
  */
 /**
- * The script every page of Compose's workflows has: format(), fixed(), yellow(), the packages of its Powered by, and
- * one blue button in each bar; with esc() and element() of askAnswerScript(), and POWERED_BY and vscode set.
+ * The helpers every page of Compose's workflows has: format(), fixed(), yellow() and one blue button in each bar; with
+ * esc() of askAnswerScript() set.
  */
-export const pageCommonScript = `
+export const pageHelpersScript = `
 	function format(template, ...values) {
 		return template.replace(/\\{(\\d+)\\}/g, (match, index) => String(values[Number(index)]));
 	}
 	function fixed(value, digits) {
 		return value === undefined || value === null ? '-' : value.toFixed(digits);
 	}
-
-	// The packages of the evaluation, each opening its page in the internal browser
-	const packageLinks = document.getElementById('package-links');
-	POWERED_BY.forEach((pkg, index) => {
-		if (index > 0) { packageLinks.appendChild(document.createTextNode(', ')); }
-		const link = element('a', 'package-link', pkg.name);
-		link.href = '#';
-		link.title = pkg.url;
-		link.addEventListener('click', event => {
-			event.preventDefault();
-			vscode.postMessage({ command: 'openUrl', url: pkg.url });
-		});
-		packageLinks.appendChild(link);
-	});
 
 	// One blue button in each bar: the last one the pointer was on
 	for (const bar of document.querySelectorAll('.bar')) {
@@ -586,7 +565,7 @@ export const pageCommonScript = `
 `;
 
 /** The script of both Evaluate pages: the common one, the models to choose, the status and the order of the questions. */
-export const compareCommonScript = `${pageCommonScript}
+export const compareCommonScript = `${pageHelpersScript}
 	/** A local model's name without its quantisation, which its file name ends with, and the quantisation. */
 	function splitName(label) {
 		const match = /[-._](?<quant>(?:UD-)?(?:I?Q\\d\\w*|MXFP4\\w*|B?F16|F32))$/i.exec(label);

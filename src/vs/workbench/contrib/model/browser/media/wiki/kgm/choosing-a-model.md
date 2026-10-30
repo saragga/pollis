@@ -104,7 +104,7 @@ Before downloading a Kaggle model:
 - [ ] Does the model size fit my hardware? (see table above)
 - [ ] Is the vote count and update date acceptable?
 - [ ] Have I read the overview for intended use and limitations?
-- [ ] Is the licence compatible with my use (academic / commercial)?
+- [ ] Is the licence of the Kaggle model compatible with my use (academic / commercial)?
 - [ ] Is the opset version ≤ 17? (ONNX.jl supports opset 17 and below)
 
 ## See Also

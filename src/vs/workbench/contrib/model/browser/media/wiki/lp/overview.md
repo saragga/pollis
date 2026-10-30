@@ -1,6 +1,6 @@
 # Overview
 
-This webview solves **linear programmes**: choose the values of variables x1, ..., xn to maximise or minimise a linear objective c1 x1 + ... + cn xn, subject to linear constraints A x <= b and x >= 0. Production planning, diets, blending, transport and assignment are classic examples. Problems are written in JuMP, which builds the model once and passes it to any of the solvers.
+The Linear Programming panel solves **linear programmes**: choose the values of variables x1, ..., xn to maximise or minimise a linear objective c1 x1 + ... + cn xn, subject to linear constraints A x <= b and x >= 0. Production planning, diets, blending, transport and assignment are classic examples. Problems are written in JuMP, which builds the model once and passes it to any of the solvers.
 
 ## Linear Programming (LP)
 All variables are **continuous**. The feasible set is a polyhedron, and if an optimum exists, one is found at a **vertex** of it. The simplex method moves from vertex to vertex, improving the objective; interior-point methods cross the inside of the polyhedron. Both find the global optimum, and the solution comes with its **dual**: a shadow price for every constraint. Solvers: **HiGHS** (the default), **Clp** and **GLPK**.

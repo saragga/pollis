@@ -1,6 +1,6 @@
 # Overview
 
-When the interesting structure is *connection* or *place*, ordinary plots fall short. This webview offers three views for that structure.
+When the interesting structure is *connection* or *place*, ordinary plots fall short. The Graph and Spatial Plots panel offers three views for that structure.
 
 ## Network Diagram
 Draws a **graph**: nodes (entities) joined by edges (relationships), placed by a layout algorithm so that connected nodes sit near each other. Reveals clusters, hubs, bridges, and paths. See [Network Diagram](network.md).

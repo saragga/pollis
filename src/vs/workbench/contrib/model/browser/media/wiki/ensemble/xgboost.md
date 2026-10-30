@@ -14,7 +14,7 @@ It also handles missing values by learning a default direction at each split, an
 - The regularisation penalties stay at the library defaults; set `lambda`, `alpha` or `gamma` in the code to change them.
 
 ## XGBoost or EvoTrees
-Both are second-order gradient boosting with histogram splits, and with the same settings give similar accuracy. Use XGBoost for very large data, to reproduce a model built elsewhere with XGBoost, or for its many options; use EvoTrees for a pure-Julia stack.
+XGBoost and EvoTrees are both second-order gradient boosting with histogram splits, and with the same settings give similar accuracy. Use XGBoost for very large data, to reproduce a model built elsewhere with XGBoost, or for its many options; use EvoTrees for a pure-Julia stack.
 
 ## See Also
 - [Gradient Boosting](gradient-boosting.md) · [Decision Guide](decision-guide.md) · [Feature Importance](feature-importance.md)

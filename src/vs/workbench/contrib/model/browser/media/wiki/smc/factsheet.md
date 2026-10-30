@@ -19,7 +19,7 @@ A **particle filter** approximates the filtering distribution p(x[t] | y[1:t]) o
 
 ## What It Is Not
 
-Not efficient for linear-Gaussian models, where the Kalman filter is exact and far cheaper; this panel uses one only to check the particles. Not suited, in its bootstrap form, to **high-dimensional states**: the number of particles needed grows exponentially with the dimension. Not a parameter estimator by itself: the parameters here are fixed inputs.
+Not efficient for linear-Gaussian models, where the Kalman filter is exact and far cheaper; the Sequential Monte Carlo panel uses one only to check the particles. Not suited, in its bootstrap form, to **high-dimensional states**: the number of particles needed grows exponentially with the dimension. Not a parameter estimator by itself: the parameters here are fixed inputs.
 
 ## See Also
 - [Overview](overview.md) · [Decision Guide](decision-guide.md) · [Assumptions](assumptions.md)

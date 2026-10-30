@@ -1,6 +1,6 @@
 # Second-Order Methods — Overview
 
-This webview minimises f(x) with Newton-type methods from **Optim.jl** and **NLopt.jl**. The gradient and Hessian come from **ForwardDiff.jl** (exact, by automatic differentiation) or **FiniteDiff.jl**, chosen by **Derivatives**. The default objective is the Rosenbrock function from (-1.2, 1), whose minimum at (1, 1) lies at the end of a narrow curved valley.
+The Second Order Methods panel minimises f(x) with Newton-type methods from **Optim.jl** and **NLopt.jl**. The gradient and Hessian come from **ForwardDiff.jl** (exact, by automatic differentiation) or **FiniteDiff.jl**, chosen by **Derivatives**. The default objective is the Rosenbrock function from (-1.2, 1), whose minimum at (1, 1) lies at the end of a narrow curved valley.
 
 ## The Newton Step
 At the point x, with gradient g and Hessian H, the quadratic model f(x) + g'd + d'Hd/2 is minimised by the step d = -H^(-1) g. When H is positive definite, that step points downhill and, near the minimum, lands almost exactly on it. Far from the minimum, or where H is indefinite, it can point the wrong way or be far too long, and each method guards against that differently.

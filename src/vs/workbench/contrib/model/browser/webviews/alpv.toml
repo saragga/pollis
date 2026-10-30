@@ -83,9 +83,6 @@ key = "Val...2024a"
 [[references]]
 key = "AV2024a"
 
-[[references]]
-key = "BEKS2017a"
-
 [[bullets]]
 text = "Equities"
 detail = "intraday, daily, weekly, and monthly OHLC time series plus latest global quotes"

@@ -63,7 +63,8 @@ function listedMenus(tree: readonly IPollisMenuNode[]): IListedMenu[] {
 				if (panel && !panels.has(panel.id)) {
 					panels.set(panel.id, {
 						id: panel.id,
-						title: node.title,
+						// Without the dots of a menu item that opens a page: Evaluate Answering Models...
+						title: node.title.replace(/\.{3}$/, ''),
 						// allow-any-unicode-next-line
 						path: path.join(' › '),
 						wikis: panel.wikis.flatMap(wiki => hasKey(wiki, { separator: true }) ? [] : [{ name: wiki.name, description: wiki.description ?? '', target: wiki.bundled ? wiki.file : wiki.url, stub: hasKey(wiki, { stub: true }) }]),
@@ -133,7 +134,7 @@ function openPanelWikisPage(accessor: ServicesAccessor): void {
 function pageHtml(): string {
 	const text = {
 		title: localize('panelWikis.title', "Panel Documentation"),
-		intro: localize('panelWikis.intro', "The wikis of every panel, the same as its Wiki tab, grouped by the menu that opens the panel. Click a wiki to read it. The switch shows the wikis written or the ones not written yet."),
+		intro: localize('panelWikis.intro', "The wikis of every panel and of the Compose pages that have them, the same as in their Learn More, grouped by the menu that opens each. Click a wiki to read it. The switch shows the wikis written or the ones not written yet."),
 		search: localize('panelWikis.search', "Search panels and wikis"),
 		written: localize('panelWikis.written', "Written"),
 		notWritten: localize('panelWikis.notWritten', "Not Written"),

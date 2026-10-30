@@ -14,7 +14,7 @@ Most datasets on the Hugging Face Hub are **public** and need no credentials. A 
 
 ## Set it in Pollis
 
-Click **Set token** on the *Powered by* line of this webview. Pollis stores the token in VS Code **Secret Storage** — never in settings, generated code, or any saved file. The same token is shared with the **Hugging Face Models** webview.
+Click **Set token** on the *Powered by* line of the Hugging Face Datasets panel. Pollis stores the token in VS Code **Secret Storage** — never in settings, generated code, or any saved file. The same token is shared with the **Hugging Face Models** panel.
 
 ## How the token is used
 

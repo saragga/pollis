@@ -1,6 +1,6 @@
 # Stochastic Gradient Methods — Overview
 
-This webview trains a parameter vector x with the rules of **Optimisers.jl**. At every step the exact gradient of f is computed by **Enzyme.jl** in reverse mode, Gaussian noise of standard deviation **Gradient Noise** is added to imitate minibatch sampling, and the rule updates x. With noise 0 the methods are deterministic.
+The Stochastic Gradient Methods panel trains a parameter vector x with the rules of **Optimisers.jl**. At every step the exact gradient of f is computed by **Enzyme.jl** in reverse mode, Gaussian noise of standard deviation **Gradient Noise** is added to imitate minibatch sampling, and the rule updates x. With noise 0 the methods are deterministic.
 
 ## Why Noise Matters
 If the loss is an average over N observations, the gradient on a random minibatch of size b is unbiased, with a variance about (N - b) / (N b) times the variance across observations. Smaller batches give cheaper and noisier steps. The noise has two effects: it makes the path jitter, and, with a constant learning rate, it stops the iterates from converging, leaving them in a cloud whose size grows with the rate and the noise.

@@ -1,6 +1,6 @@
 # Overview
 
-All four detectors in this webview start from the same idea: **an outlier is a point whose neighbourhood looks different from everyone else's**. They differ in what they measure about that neighbourhood.
+All four detectors in the Proximity-Based Outlier Detection panel start from the same idea: **an outlier is a point whose neighbourhood looks different from everyone else's**. They differ in what they measure about that neighbourhood.
 
 ## KNN
 The distance to the k-th nearest neighbour (or the mean or median of the k distances). Large distance, isolated point. Simple and hard to beat on data with a single dense cloud. See [KNN](knn.md).

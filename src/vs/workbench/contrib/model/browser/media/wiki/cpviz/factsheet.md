@@ -1,6 +1,6 @@
 # Categorical and Proportional Plots — Factsheet
 
-These plots show **composition, flow, and magnitude across categories** rather than the shape of a numeric distribution. They answer "what are the parts of the whole, and how do they relate or move?"
+Categorical and proportional plots show **composition, flow, and magnitude across categories** rather than the shape of a numeric distribution. They answer "what are the parts of the whole, and how do they relate or move?"
 
 | | |
 |---|---|
@@ -17,7 +17,7 @@ These plots show **composition, flow, and magnitude across categories** rather t
 - Comparing magnitudes around a **cycle** (nightingale rose).
 
 ## What It Is Not
-These are not for raw numeric distributions or two-variable relationships — use the Core Statistical Plots (scatter, histogram, box, violin) for that.
+Categorical and proportional plots are not for raw numeric distributions or two-variable relationships — use the Core Statistical Plots (scatter, histogram, box, violin) for that.
 
 ## See Also
 - [Overview](overview.md) · [Decision Guide](decision-guide.md) · [Diagnostics](diagnostics.md)

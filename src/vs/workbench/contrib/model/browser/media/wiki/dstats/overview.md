@@ -1,6 +1,6 @@
 # Overview
 
-This webview covers the three questions asked of almost every data set: **what does one variable look like**, **how often does each value occur**, and **how do variables move together**.
+The Descriptive Statistics panel covers the three questions asked of almost every data set: **what does one variable look like**, **how often does each value occur**, and **how do variables move together**.
 
 ## Summary
 Central tendency (mean, median), spread (standard deviation, quartiles) and shape (skewness, kurtosis) of a numeric vector, from `summarystats` and friends in StatsBase.jl. It also counts the missing values. See [Summary Stats](summary-stats.md).
@@ -13,7 +13,7 @@ The pairwise association between the columns of a numeric matrix: **Pearson** fo
 
 ## Common Workflow
 
-1. Count the **missing values** and decide how to handle them (see the Handle Missing Data webview).
+1. Count the **missing values** and decide how to handle them (see the Handle Missing Data panel).
 2. Run **Summary** on each numeric variable; compare mean and median, and look at skewness.
 3. Plot the distribution (**Box Plot** or **Violin Plot**) and run the **Outlier Check**.
 4. Run **Frequency** on each categorical variable; look for rare or misspelt levels.

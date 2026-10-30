@@ -31,7 +31,7 @@
 
 ## Decision Flow
 
-1. **What values can the quantity take?** That narrows the families (the table above).
+1. **What values can the quantity take?** That narrows the families.
 2. **How heavy are the tails?** Compare the Normal Approximation and the Q-Q plot.
 3. **Is it bounded?** Choose a family with that support, or truncate one.
 4. **Several subgroups?** A mixture. **Dependent components?** A multivariate family, not a product.

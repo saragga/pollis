@@ -1,6 +1,6 @@
 # Overview
 
-This webview fits **tree ensembles**: many decision trees whose predictions are combined into one. A single deep tree fits the training data closely but changes a lot from sample to sample; combining many trees keeps the flexibility and removes most of that instability. The same panel handles **classification** (predict a class, with probabilities) and **regression** (predict a number).
+The Ensemble Learning Methods panel fits **tree ensembles**: many decision trees whose predictions are combined into one. A single deep tree fits the training data closely but changes a lot from sample to sample; combining many trees keeps the flexibility and removes most of that instability. The same panel handles **classification** (predict a class, with probabilities) and **regression** (predict a number).
 
 ## Random Forests
 **Bagging**: each tree grows on a bootstrap sample of the rows, choosing each split among a random subset of the features, and the forest votes (classification) or averages (regression). Deep trees, low variance through averaging, little tuning. From DecisionTree.jl.

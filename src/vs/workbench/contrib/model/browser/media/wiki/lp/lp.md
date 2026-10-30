@@ -1,6 +1,6 @@
 # LP
 
-A linear programme in the form this panel uses:
+A linear programme in the form the Linear Programming panel uses:
 
     maximise (or minimise)   c' x
     subject to               A x <= b

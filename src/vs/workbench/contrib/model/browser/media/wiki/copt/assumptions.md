@@ -13,7 +13,7 @@ The constraints and bounds must have feasible points. If they do not, the solver
 The KKT conditions, and the multipliers, are guaranteed only when the active constraints are **well behaved** at the solution. The usual condition, LICQ, requires the gradients of the active constraints to be linearly independent. When it fails (two constraints tangent at the solution, or a constraint written twice), the multipliers are not unique and the solvers may struggle.
 
 ## Convexity
-If f is convex and the feasible set is convex (g convex, as for the unit disk and the half-plane), any local solution is **global**, and the KKT conditions are sufficient. Without convexity the methods find local solutions. **Frank-Wolfe and Gradient Projection assume a convex feasible set**: in this panel their oracle and projection are themselves small SLSQP problems, exact only when the set is convex.
+If f is convex and the feasible set is convex (g convex, as for the unit disk and the half-plane), any local solution is **global**, and the KKT conditions are sufficient. Without convexity the methods find local solutions. **Frank-Wolfe and Gradient Projection assume a convex feasible set**: in the Constrained Optimisation panel their oracle and projection are themselves small SLSQP problems, exact only when the set is convex.
 
 ## Scaling
 Constraints and variables on very different scales slow convergence and blur the tolerance on violation, 1e-8 here. Scale them to comparable magnitudes.

@@ -4,7 +4,7 @@
 The **Convergence Trace** plots f(x_k) - f* and the gradient norm against the iteration, on a log scale. Quasi-Newton runs typically show a slow early phase, while the approximation learns the curvature, then a curve that **bends downward**: the error falls faster than any fixed ratio, the mark of superlinear convergence. A straight line (a constant ratio) means linear convergence, as from a poor approximation or a degenerate minimum; a plateau means the method is stuck.
 
 ## Contour + Path
-For two-variable problems, the **Contour + Path** draws the iterates on the contours of f; with more variables, the others are held at the optimum. It shows whether the path follows the valley or zigzags across it, and whether the method found the minimum the start suggests.
+For a two-variable problem solved by a quasi-Newton method, the **Contour + Path** draws the iterates on the contours of f; with more variables, the others are held at the optimum. It shows whether the path follows the valley or zigzags across it, and whether the method found the minimum the start suggests.
 
 ## Convergence Check
 The **Convergence Check** reports Optim's convergence flag, the iterations, the function and gradient calls, the final gradient norm, and the **ratios of successive errors** ||x_k+1 - x*|| / ||x_k - x*|| over the last steps. Ratios tending to zero are superlinear convergence; ratios steady near a constant are linear. Optim declares convergence by default when the largest gradient component falls below 1e-8, or after 1000 iterations without it, which is not convergence. A converged flag with a large gradient norm, or an unconverged run with a small one, both deserve a look at the tolerances.

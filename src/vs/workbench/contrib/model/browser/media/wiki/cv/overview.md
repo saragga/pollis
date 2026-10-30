@@ -1,6 +1,6 @@
 # Overview
 
-This webview builds the **training and test sets** on which a model is fitted and evaluated, with DataSplits.jl. A model's error on the data it was fitted to is optimistic; an honest estimate needs data the model has not seen, and the way those data are held out decides what the estimate means. The panel offers four families of strategies, each answering a different question, and runs a least-squares model on every fold, a placeholder to replace with your own.
+The Cross-Validation Strategies panel builds the **training and test sets** on which a model is fitted and evaluated, with DataSplits.jl. A model's error on the data it was fitted to is optimistic; an honest estimate needs data the model has not seen, and the way those data are held out decides what the estimate means. The panel offers four families of strategies, each answering a different question, and runs a least-squares model on every fold, a placeholder to replace with your own.
 
 ## Cross-Validation
 **K-fold** and its variants divide the observations into k folds, each held out once while the model is fitted on the rest: stratified folds keep the response distribution in every fold, repeated k-fold averages over several random assignments, leave-one-out and leave-p-out hold out every observation or pair, and **nested CV** separates tuning from evaluation. Random **resampling** strategies (ShuffleSplit, BootstrapSplit, StratifiedShuffleSplit) draw independent train/test splits instead. See [Cross-Validation](cross-validation.md).

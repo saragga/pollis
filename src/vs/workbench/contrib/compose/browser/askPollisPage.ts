@@ -39,7 +39,7 @@ import { IWebviewViewService, WebviewView } from '../../webviewView/browser/webv
 import { createApiKeyWiring, IApiKeyWiring } from '../../model/browser/handlers/model.handler.js';
 import { composerSendSvg, spinnerCss, spinnerSvg, voiceSpeakerSvg } from '../../model/browser/webviews/webviewScaffold.js';
 import { ASK_CHAT_MODEL, ASK_CLOUD_MODELS, ASK_EMBEDDING_MODEL, ASK_PASSAGE_PREFIX, ASK_PASSAGES, ASK_QUERY_PREFIX, ASK_CLOUD_PROVIDERS, ASK_LOCAL_PREFIX, ASK_POLLIS_COMMAND_ID, ASK_THIS_COMPUTER, ASK_ATTACHED_CHARACTERS, askCloudModel, AskPollisProvider, IAskPollisAttachment, IAskPollisFromPanel, IAskPollisPanel, IAskPollisPassage, IAskPollisSearchResult, IAskPollisService } from '../common/askPollis.js';
-import { askAnswerCss, askAnswerScript, askModelName, askNothingFound, askOpenPassage, askPassageView, askSearchesNothing, askSearchIn, askWordsOnlyNote } from './askPollisWebview.js';
+import { askAnswerCss, askAnswerScript, askModelName, askNothingFound, askOpenPassage, askPassageView, askSearchedNames, askSearchesNothing, askSearchIn, askSearchSources, askWordsOnlyNote } from './askPollisWebview.js';
 import { formatBytes, IDatasetSummary, summarizeCsv } from './collaboration/collaborationDatasets.js';
 import { isDuckDbFile, MAX_DATASET_BYTES, MAX_FILE_BYTES, MAX_IMAGE_BYTES } from './collaboration/collaborationProtocol.js';
 import { COMPARE_MODELS_ADD_COMMAND_ID, COMPARE_MODELS_COMMAND_ID, ICompareModelsAdd } from './compareModelsPage.js';
@@ -67,7 +67,7 @@ import { IInstalledModel } from './modelsInstalledPage.js';
 
 type AskPollisMessage =
 	| { readonly command: 'ready' }
-	| { readonly command: 'ask'; readonly question: string; readonly collection: string; readonly attachments?: readonly IAskPollisAttachment[] }
+	| { readonly command: 'ask'; readonly question: string; readonly searchIn: readonly string[]; readonly attachments?: readonly IAskPollisAttachment[] }
 	| { readonly command: 'attachFile'; readonly name: string; readonly content: string }
 	| { readonly command: 'pickDataset' }
 	| { readonly command: 'pickDatabase' }
@@ -344,7 +344,7 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 		}
 
 		const attached = (result: IAttached) => post({ command: 'attached', attachment: result.attachment, note: result.note });
-		const ask = async (question: string, collection: string, attachments: readonly IAskPollisAttachment[]) => {
+		const ask = async (question: string, searchIn: readonly string[], attachments: readonly IAskPollisAttachment[]) => {
 			answering?.dispose(true);
 			const source = answering = new CancellationTokenSource();
 			const asked = conversation;
@@ -354,10 +354,11 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 			const askedIn = panel;
 			post({ command: 'searching', turn: index, question, attachments: attachments.map(attachment => ({ kind: attachment.kind, name: attachment.name, image: attachment.kind === 'image' ? attachment.content : undefined })) });
 			// None: nothing is searched, and the model answers from what it knows
-			const unaided = askSearchesNothing(collection);
+			const unaided = askSearchesNothing(searchIn);
 			const search = async (): Promise<IAskPollisSearchResult> => unaided ? { passages: [], searched: [], collections } : askPollisService.search({
 				question: previous ? `${previous}\n${question}` : question,
-				collections: askSearchIn(collection, collections),
+				collections: askSearchIn(searchIn, collections),
+				sources: askSearchSources(searchIn),
 				panel: askedIn,
 			});
 			let result = await search();
@@ -387,7 +388,7 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 			post({
 				command: 'found',
 				turn: index,
-				searched: result.searched,
+				searched: askSearchedNames(searchIn, result.searched),
 				collections: result.collections,
 				note: unaided ? localize('askPollis.unaided', "Answered without the documents: nothing was searched.") : askWordsOnlyNote(result),
 				passages: result.passages.map(askPassageView),
@@ -460,7 +461,7 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 					post({ command: 'collections', collections: names });
 				}, () => undefined);
 			} else if (message.command === 'ask' && message.question.trim()) {
-				ask(message.question.trim(), message.collection, message.attachments ?? []);
+				ask(message.question.trim(), message.searchIn, message.attachments ?? []);
 			} else if (message.command === 'attachFile') {
 				attached(attachText('file', message.name, message.content));
 			} else if (message.command === 'pickDataset') {
@@ -578,7 +579,7 @@ function pageHtml(language: string, writeIn: string): string {
 	const text = {
 		intro: localize('askPollis.intro', "Ask in your own words about Pollis, Julia, or the methods behind them: how to fit a model, what a setting does, what NUTS is."),
 		introSources: localize('askPollis.introSources', "The answer comes from:"),
-		introPollis: localize('askPollis.introPollis', "Pollis: its documents, the panel wikis, the package vignettes and the documents of your toolboxes"),
+		introPollis: localize('askPollis.introPollis', "Pollis: its documents, the panel wikis, the package vignettes, the package APIs and the documents of your toolboxes"),
 		introJulia: localize('askPollis.introJulia', "Julia: the Manual, and the docstrings of Base and the standard library"),
 		introCited: localize('askPollis.introCited', "Each statement ends with the number of the passage it rests on: Open shows that passage in its document."),
 		placeholder: localize('askPollis.placeholder', "Ask Pollis"),
@@ -672,7 +673,6 @@ function pageHtml(language: string, writeIn: string): string {
 		/* Below the pill: Search In on the left, the key and the model on the right */
 		.under { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 8px; margin-top: 4px; padding: 0 4px; }
 		.under > span { display: inline-flex; align-items: center; gap: 4px; }
-		select { display: none; }
 		.anchor { position: relative; }
 		.picker { display: inline-flex; align-items: center; gap: 4px; font: inherit; font-size: 12px; color: var(--vscode-descriptionForeground); background: transparent; border: none; border-radius: 6px; padding: 3px 6px; cursor: pointer; }
 		.picker:hover, .picker[aria-expanded="true"] { color: var(--vscode-foreground); background: var(--vscode-toolbar-hoverBackground); }
@@ -688,6 +688,7 @@ function pageHtml(language: string, writeIn: string): string {
 		.menu .item { display: flex; align-items: baseline; gap: 8px; width: 100%; text-align: left; font: inherit; font-size: 12px; color: inherit; background: none; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; }
 		.menu .item:hover, .menu .item:focus { color: var(--vscode-menu-selectionForeground); background: var(--vscode-menu-selectionBackground); outline: none; }
 		.menu .check { width: 12px; flex: none; }
+		.menu .check.box { align-self: center; box-sizing: border-box; height: 12px; font-size: 10px; line-height: 10px; text-align: center; border: 1px solid currentColor; border-radius: 3px; }
 		.menu .label { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 		.menu .detail { font-size: 11px; opacity: 0.7; white-space: nowrap; }
 		.menu hr { border: none; border-top: 1px solid var(--vscode-menu-separatorBackground, var(--vscode-widget-border)); margin: 4px 0; }
@@ -744,7 +745,6 @@ function pageHtml(language: string, writeIn: string): string {
 				<button class="picker" id="searchInButton" aria-haspopup="menu" aria-expanded="false" aria-label="${text.searchIn}"><span class="prefix">${text.searchInPrefix}</span><span id="searchInLabel"></span>${CHEVRON}</button>
 				<div class="menu left" id="searchInMenu" role="menu" hidden></div>
 			</span>
-			<select id="collection"></select>
 		</span>
 		<span class="small" id="api-key-status" hidden></span>
 	</div>
@@ -757,7 +757,6 @@ function pageHtml(language: string, writeIn: string): string {
 	const conversation = document.getElementById('conversation');
 	const question = document.getElementById('question');
 	const askButton = document.getElementById('ask');
-	const collection = document.getElementById('collection');
 	const keyStatus = document.getElementById('api-key-status');
 	const SEND = '${composerSendSvg}';
 	const READ_SVG = '${voiceSpeakerSvg}';
@@ -809,7 +808,7 @@ function pageHtml(language: string, writeIn: string): string {
 
 	function send(text, attached) {
 		setAnswering(true);
-		vscode.postMessage({ command: 'ask', question: text, collection: collection.value, attachments: attached || [] });
+		vscode.postMessage({ command: 'ask', question: text, searchIn, attachments: attached || [] });
 	}
 
 	/** The panel the questions are asked in, above the pill, or none. */
@@ -956,7 +955,7 @@ function pageHtml(language: string, writeIn: string): string {
 		if (event.key === 'Escape') { closeMenus(); }
 	});
 
-	/** A menu's headings, lines and items, the chosen one checked; an item calls \`choose\` with its value. */
+	/** A menu's headings, lines and items, the chosen one checked; an item calls \`choose\` with its value, and one with \`tick\`, a box, keeps the menu open. */
 	function fillMenu(box, entries, chosen, choose) {
 		box.textContent = '';
 		for (const entry of entries) {
@@ -966,30 +965,57 @@ function pageHtml(language: string, writeIn: string): string {
 				box.appendChild(element('div', 'heading', entry.heading));
 			} else {
 				const item = element('button', 'item');
-				item.setAttribute('role', 'menuitem');
-				item.append(element('span', 'check', entry.value === chosen ? '\u2713' : ''), element('span', 'label', entry.label));
+				const ticking = entry.tick !== undefined;
+				item.setAttribute('role', ticking ? 'menuitemcheckbox' : 'menuitem');
+				if (ticking) { item.setAttribute('aria-checked', String(entry.tick)); }
+				item.append(element('span', ticking ? 'check box' : 'check', (ticking ? entry.tick : entry.value === chosen) ? '\u2713' : ''), element('span', 'label', entry.label));
 				if (entry.detail) { item.appendChild(element('span', 'detail', entry.detail)); }
 				if (entry.title) { item.title = entry.title; }
 				item.addEventListener('click', event => {
 					event.stopPropagation();
-					closeMenus();
-					choose(entry.value);
+					if (ticking) {
+						const place = [...box.children].indexOf(item);
+						choose(entry.value);
+						box.children[place]?.focus();
+					} else {
+						closeMenus();
+						choose(entry.value);
+					}
 				});
 				box.appendChild(item);
 			}
 		}
 	}
 
-	// Search In: the choices of the hidden select, which setSearchIn() keeps, shown before the first question too
+	// Search In: Auto with nothing ticked, the sources ticked, all or none, shown before the first question too
+	let searchIn = [];
+	let searchInOffered = [];
 	const searchInButton = document.getElementById('searchInButton');
 	const searchInMenu = document.getElementById('searchInMenu');
 	menu(searchInButton, searchInMenu);
 	function renderSearchIn() {
-		document.getElementById('searchInLabel').textContent = collection.selectedOptions[0]?.textContent ?? '';
-		searchInButton.title = collection.title;
-		fillMenu(searchInMenu, [...collection.options].map(option => ({ value: option.value, label: option.textContent, title: option.title })), collection.value, value => {
-			collection.value = value;
-			collection.onchange?.();
+		const all = searchIn[0] === SEARCH_ALL;
+		const none = searchIn[0] === SEARCH_NONE;
+		const ticked = searchInOffered.filter(source => all || searchIn.includes(source.value));
+		document.getElementById('searchInLabel').textContent = !searchIn.length ? ANSWER_TEXT.automatic : all ? ANSWER_TEXT.all : none ? ANSWER_TEXT.none : ticked.length === 1 ? ticked[0].label : ANSWER_TEXT.sourcesCount.replace('{0}', ticked.length);
+		searchInButton.title = !searchIn.length ? ANSWER_TEXT.automaticHint : none ? ANSWER_TEXT.noneHint : all ? '' : ticked.length === 1 ? ticked[0].title : ticked.map(source => source.label).join(', ');
+		fillMenu(searchInMenu, [
+			{ value: SEARCH_NEAREST, label: ANSWER_TEXT.automatic, title: ANSWER_TEXT.automaticHint },
+			{ line: true },
+			...searchInOffered.map(source => ({ ...source, tick: ticked.includes(source) })),
+			{ line: true },
+			{ value: SEARCH_ALL, label: ANSWER_TEXT.all },
+			{ value: SEARCH_NONE, label: ANSWER_TEXT.none, title: ANSWER_TEXT.noneHint },
+		], searchIn.length ? searchIn[0] : SEARCH_NEAREST, value => {
+			if (value === SEARCH_NEAREST) {
+				searchIn = [];
+			} else if (value === SEARCH_ALL || value === SEARCH_NONE) {
+				searchIn = [value];
+			} else {
+				const values = ticked.map(source => source.value);
+				const next = values.includes(value) ? values.filter(other => other !== value) : [...values, value];
+				searchIn = next.length === searchInOffered.length ? [SEARCH_ALL] : next;
+			}
 			renderSearchIn();
 		});
 	}
@@ -997,9 +1023,9 @@ function pageHtml(language: string, writeIn: string): string {
 	// A citation shows its source
 	conversation.addEventListener('click', event => showSource(event, 'turn'));
 
-	// setSearchIn() hides its box with fewer than two collections; here Search In stays, so the box is one never shown
 	const setCollections = names => {
-		setSearchIn(document.createElement('span'), collection, names);
+		searchInOffered = searchInSources(names);
+		searchIn = searchIn.filter(value => value === SEARCH_ALL || value === SEARCH_NONE || searchInOffered.some(source => source.value === value));
 		renderSearchIn();
 	};
 	setCollections([]);
@@ -1169,6 +1195,12 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).regis
 			default: true,
 			scope: ConfigurationScope.APPLICATION,
 			markdownDescription: localize('askPollis.juliaManualSetting', "Whether **Help > Ask Pollis** searches the Julia Manual too, besides Pollis' own documents: the Manual, Base and the standard library, from the documentation that comes with the Julia that Pollis runs, so that a Julia updated brings its own. Its passages are indexed in the background, and Open shows each in that documentation."),
+		},
+		'pollis.ask.packageApis': {
+			type: 'boolean',
+			default: true,
+			scope: ConfigurationScope.APPLICATION,
+			markdownDescription: localize('askPollis.packageApisSetting', "Whether **Help > Ask Pollis** can search the Package APIs: the docstrings of the packages of the panels, read in the background from their documentation sites, at the version on this computer when the site has it. They are some twenty thousand passages, about 120 MB in the index, and are searched only with **Search In: Package APIs** or **All Sources**."),
 		},
 		'pollis.ask.passages': {
 			type: 'number',

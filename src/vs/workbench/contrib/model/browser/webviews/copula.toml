@@ -12,8 +12,14 @@ defaultModel = "main"
 name = "Copulas.jl"
 github = "https://github.com/lrnv/Copulas.jl"
 
+[[packages]]
+name = "VineCopulas.jl"
+# From GitHub main, which requires Copulas 1: the registered 0.1.2 does not load with the Copulas it allows; back to the registry once a version requiring Copulas 1 is registered
+github = "https://github.com/Santymax98/VineCopulas.jl"
+fork = true
+
 [requires]
-packages = ["Copulas.jl", "Distributions.jl", "HypothesisTests.jl", "Plots.jl", "StatsBase.jl"]
+packages = ["Copulas.jl", "Distributions.jl", "HypothesisTests.jl", "Plots.jl", "StatsBase.jl", "VineCopulas.jl"]
 
 [[notebookSections]]
 label = ""
@@ -115,6 +121,14 @@ key = "EMS2002a"
 [[references]]
 key = "GF2007a"
 
+[[models]]
+id = "main"
+label = "Fit"
+
+[[models]]
+id = "vine"
+label = "Vine Copula"
+
 [[bullets]]
 text = "Estimating the d marginal distributions parameters"
 detail = ""
@@ -129,6 +143,7 @@ detail = ""
 
 [[inputs]]
 id = "family"
+models = ["main"]
 label = "Copula"
 tooltip = ""
 kind = "select"
@@ -216,6 +231,7 @@ label = "W — Lower Fréchet"
 
 [[inputs]]
 id = "marginals"
+models = ["main"]
 label = "Marginal Distributions"
 tooltip = "One marginal distribution per variable, comma-separated (d = number of entries, d >= 2), e.g. Normal, LogNormal, Gamma. Choices: Normal, Uniform, LogNormal, Exponential, Beta, Gamma, Weibull, Pareto, TDist, Cauchy, Laplace, Gumbel, Frechet, GeneralizedExtremeValue, Poisson, NegativeBinomial. Bivariate-only families (Galambos, Hüsler–Reiss, tEV, Marshall–Olkin, W) are fixed at d = 2. Not used by the empirical families."
 default = "Normal, Normal"
@@ -223,6 +239,7 @@ when = "family!=EmpiricalCopula|BetaCopula|BernsteinCopula|CheckerboardCopula|Em
 
 [[inputs]]
 id = "method-select"
+models = ["main"]
 label = "Estimation Method"
 tooltip = ""
 kind = "select"
@@ -246,6 +263,7 @@ label = "Inversion of Blomqvist’s Beta"
 
 [[inputs]]
 id = "sklar-select"
+models = ["main"]
 label = "Margins"
 tooltip = "How the margins enter the copula fit.\nTwo-Stage (IFM) - fit the parametric margins first, then the copula on their CDF values\nPseudo-Observations - use ranks (empirical CDF), so the copula fit does not depend on the chosen margins"
 kind = "select"
@@ -261,6 +279,7 @@ label = "Pseudo-Observations"
 
 [[inputs]]
 id = "data"
+models = ["main"]
 label = "Data"
 tooltip = "A d x n matrix, one column per observation. The default simulates 500 observations from a Clayton copula with theta = 2 (Kendall's tau 0.5, dependence in the lower tail) and margins Normal(0, 1) and Normal(2, 0.5): the default Gaussian copula misses the lower tail, which Compare Copula Families and Tail Dependence show."
 default = "data"
@@ -283,12 +302,35 @@ using Copulas, Distributions, Plots
 {{?family=EmpiricalCopula|BetaCopula|BernsteinCopula|CheckerboardCopula|EmpiricalEVCopula}} plot(copula)
 '''
 
+[[codeBranches]]
+model = "vine"
+code = '''
+using Copulas, Distributions, Plots
+import VineCopulas, Random  # import, not using: VineCopulas exports names that clash with Distributions in the session
+Random.seed!(1)
+known = VineCopulas.DVineCopula([1, 2, 3], [[GaussianCopula(2, 0.55), ClaytonCopula(2, 1.4)], [FrankCopula(2, 2.0)]])  # tree 1: the pairs (1, 2) and (2, 3); tree 2: (1, 3) given 2
+U = rand(known, 1000)  # 3 x 1000, on the uniform scale
+fitted = fit(VineCopulas.DVineCopula, U; order = [1, 2, 3], family_set = :default, selection_criterion = :bic, allow_rotations = true)  # sequential, tree by tree; without order, it chooses the order too
+for (name, vine) in ("Known" => known, "Fitted" => fitted)
+    println(name, " vine, order ", vine.order, ", log-likelihood ", round(VineCopulas.loglikelihood(vine, U), digits = 1))
+    for (k, tree) in enumerate(vine.edges), c in tree
+        println("  Tree ", k, ": ", first(split(string(typeof(c)), '{')), ", Kendall's tau ", round(Copulas.τ(c), digits = 3))
+    end
+end
+V = rand(fitted, 1000)  # new draws from the fitted vine
+plot([begin
+    scatter(U[i, :], U[j, :], ms = 2, msw = 0, alpha = 0.5, label = "known vine", xlabel = "u$i", ylabel = "u$j", title = "Variables $i and $j")
+    scatter!(V[i, :], V[j, :], ms = 2, msw = 0, alpha = 0.5, label = "fitted vine")
+end for (i, j) in ((1, 2), (2, 3), (1, 3))]..., layout = (1, 3), size = (1050, 350))
+'''
+
 [[actionGroups]]
 id = "visualise"
 label = "Visualise"
 
 [[actionGroups.actions]]
 id = "pseudo-vs-sim"
+models = ["main"]
 label = "Data vs Simulated Dependence"
 desc = "Pseudo-observations (ranks scaled to 0-1) of the data beside the same number of draws from the fitted copula, first two variables: the clouds should look alike"
 code = '''
@@ -301,6 +343,7 @@ plot(p1, p2, layout=(1, 2), size=(800, 380), xlabel="u1", ylabel="u2")
 
 [[actionGroups.actions]]
 id = "marginals"
+models = ["main"]
 label = "Fitted Marginals"
 desc = "Histogram of each variable with the density of its fitted marginal distribution overlaid"
 code = '''
@@ -319,6 +362,7 @@ label = "Diagnose"
 
 [[actionGroups.actions]]
 id = "rosenblatt"
+models = ["main"]
 label = "Rosenblatt Goodness of Fit"
 desc = "The Rosenblatt transform of the data under the fitted model should be independent uniforms: KS test per coordinate and Kendall correlation between coordinates (near 0)"
 code = '''
@@ -336,6 +380,7 @@ println("Parametric bootstrap GOF (refits the model on each replicate): p = ", r
 
 [[actionGroups.actions]]
 id = "measures"
+models = ["main"]
 label = "Dependence: Data vs Model"
 desc = "Kendall and Spearman rank correlations of the data against those of 10,000 draws from the fitted copula: large gaps mean the family cannot reproduce the dependence"
 code = '''
@@ -353,6 +398,7 @@ label = "Predict"
 
 [[actionGroups.actions]]
 id = "simulate"
+models = ["main"]
 label = "Simulate From the Fitted Model"
 desc = "New observations from the fitted joint distribution next to the data (first two variables); empirical families simulate on the uniform scale"
 code = '''
@@ -365,6 +411,7 @@ scatter!(S[1, :], S[2, :], ms=2, msw=0, alpha=0.5, label="simulated")
 
 [[actionGroups.actions]]
 id = "joint-exceedance"
+models = ["main"]
 label = "Joint Exceedance Probability"
 desc = "Probability that every variable exceeds its 95th percentile at once: data, fitted copula (simulated) and the independence baseline"
 code = '''
@@ -382,6 +429,7 @@ label = "Compare"
 
 [[actionGroups.actions]]
 id = "families"
+models = ["main"]
 label = "Compare Copula Families"
 desc = "Refits the same marginals with Gaussian, Student-t, Clayton, Gumbel, Frank and Joe copulas and ranks them by AIC (lower is better)"
 code = '''
@@ -397,6 +445,7 @@ foreach(r -> println(rpad(r.family, 16), " AIC = ", round(r.aic, digits=2), "   
 
 [[actionGroups.actions]]
 id = "independence"
+models = ["main"]
 label = "Against Independence"
 desc = "Likelihood ratio test of the fitted copula against the independence copula with the same marginals"
 code = '''
@@ -414,6 +463,7 @@ label = "Interpret"
 
 [[actionGroups.actions]]
 id = "parameters"
+models = ["main"]
 label = "Parameter Estimates"
 desc = "Copula and marginal parameters with bootstrap standard errors (margins and copula refitted on every resample), and the fitted marginal distributions"
 code = '''
@@ -426,6 +476,7 @@ foreach((i, m) -> println("Marginal $i: ", m), 1:length(marginals), marginals)
 
 [[actionGroups.actions]]
 id = "tail"
+models = ["main"]
 label = "Tail Dependence"
 desc = "Chance that variable 2 is extreme given variable 1 is (5% tails), in the data and the fitted copula. Gaussian copulas have no tail dependence in the limit, but at 5% tails still give clearly positive values when the correlation is moderate (about 0.25 at rho = 0.5); Clayton loads the lower tail, Gumbel the upper"
 code = '''

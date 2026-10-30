@@ -1,6 +1,6 @@
 # Apriori
 
-Apriori (Agrawal and Srikant 1994) mines frequent itemsets level by level, and is the classic way to generate association rules. In this panel it is used by the Association Rules model.
+Apriori (Agrawal and Srikant 1994) mines frequent itemsets level by level, and is the classic way to generate association rules. In the Rule-Based Methods panel it is used by the Association Rules model.
 
 ## The Apriori Property
 Every subset of a frequent itemset is frequent; so if an itemset is infrequent, so are all its supersets. Apriori uses this to prune the search.

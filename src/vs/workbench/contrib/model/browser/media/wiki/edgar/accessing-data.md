@@ -17,7 +17,7 @@ The SEC's [fair-access policy](https://www.sec.gov/os/webmaster-faq#developers) 
 
 ### Set It Once
 
-Click **Set contact** on the "Powered by:" line at the top of the webview and enter your name and email. It is stored in VS Code and, when you **Send to Julia REPL**, injected into the session as `ENV["SEC_USER_AGENT"]` — so it never has to be written into a snippet or a saved file. A green **👤 contact** indicator confirms it is set; use **change** or **clear** to manage it.
+Click **Set contact** on the "Powered by:" line at the top of the US SEC EDGAR panel and enter your name and email. It is stored in VS Code and, when you **Send to Julia REPL**, injected into the session as `ENV["SEC_USER_AGENT"]` — so it never has to be written into a snippet or a saved file. A green **👤 contact** indicator confirms it is set; use **change** or **clear** to manage it.
 
 `EDGAR.jl` reads that env var automatically, so the snippets need no setup. To set the contact explicitly instead, call `set_user_agent`:
 

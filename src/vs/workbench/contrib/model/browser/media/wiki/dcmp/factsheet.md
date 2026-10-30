@@ -16,7 +16,7 @@
 - Inspecting the **joint and marginal** structure of two variables.
 
 ## What It Is Not
-These plots *suggest*; formal confirmation comes from goodness-of-fit tests (Kolmogorov–Smirnov, Anderson–Darling) in HypothesisTests.jl.
+Distribution comparison plots *suggest*; formal confirmation comes from goodness-of-fit tests (Kolmogorov–Smirnov, Anderson–Darling) in HypothesisTests.jl.
 
 ## See Also
 - [Overview](overview.md) · [Decision Guide](decision-guide.md) · [Diagnostics](diagnostics.md)

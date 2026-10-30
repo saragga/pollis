@@ -1,0 +1,100 @@
+# Retrieval-Augmented Generation Webview Configuration
+# A page of Compose in the Time Arrow style of the scaffold, not a panel: only its Powered by and Learn More. `pageCommand` is the command
+# that opens it, which a panel's contribution file would say. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/rag.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Retrieval-Augmented Generation"
+viewType = "pollis.retrievalAugmentedGeneration"
+pageCommand = "pollis.retrievalAugmentedGeneration"
+
+[[packages]]
+name = "DuckDB.jl"
+github = "https://github.com/duckdb/duckdb"
+
+[[packages]]
+name = "Poppler_jll.jl"
+github = "https://github.com/JuliaBinaryWrappers/Poppler_jll.jl"
+
+[[packages]]
+name = "llama.cpp"
+github = "https://github.com/ggml-org/llama.cpp"
+
+[[wikis]]
+name = "Factsheet"
+file = "rag/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "rag/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "rag/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "rag/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "rag/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "rag/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+key = "RM2019a"
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+key = "MRS2008a"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "LPPPK...2020a"
+
+[[references]]
+key = "RZ2009a"
+
+[[references]]
+key = "Jon1972a"
+
+[[references]]
+key = "SB1988a"
+
+[[references]]
+key = "RG2019a"
+
+[[references]]
+key = "MY2020a"
+
+[[references]]
+key = "CCB2009a"
+
+[[references]]
+key = "NC2019a"
+
+[[references]]
+key = "KZ2020a"
+
+[[references]]
+key = "SKSPZ2022a"

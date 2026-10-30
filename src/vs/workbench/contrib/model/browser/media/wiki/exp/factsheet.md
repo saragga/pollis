@@ -1,6 +1,6 @@
 # Expectations — Factsheet
 
-The **expectation** E[f(X)] of a function of a random variable is the integral of f against the distribution of X. This webview computes it by **Gaussian quadrature**: a weighted sum of f at a few well-chosen nodes, exact for polynomials up to a high degree and very accurate for smooth functions.
+The **expectation** E[f(X)] of a function of a random variable is the integral of f against the distribution of X. The Expectations panel computes it by **Gaussian quadrature**: a weighted sum of f at a few well-chosen nodes, exact for polynomials up to a high degree and very accurate for smooth functions.
 
 | | |
 |---|---|

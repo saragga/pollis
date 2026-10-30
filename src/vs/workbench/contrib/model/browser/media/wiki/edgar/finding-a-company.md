@@ -1,6 +1,6 @@
 # Finding a Company
 
-Every filer is identified by a **CIK** (Central Index Key). Once you have it, every data API is one request away. This page covers how to get from a name or ticker to a CIK.
+Every filer is identified by a **CIK** (Central Index Key). Once you have it, every data API is one request away. A name or ticker leads to the CIK.
 
 ## The CIK
 

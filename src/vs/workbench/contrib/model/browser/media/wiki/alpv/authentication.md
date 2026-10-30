@@ -1,6 +1,6 @@
 # Authentication
 
-Alpha Vantage requires a **free API key**. This page explains how to get one and how Pollis stores it.
+Alpha Vantage requires a **free API key**, which Pollis stores in VS Code Secret Storage.
 
 ## Get a Free Key
 
@@ -12,15 +12,15 @@ The free tier is enough for the examples here (see the Constraints page for rate
 
 ## Store It Securely in Pollis
 
-Click the **Set API key** link on the "Powered by:" line at the top of the webview. A masked input appears; paste your key and press Enter. The key is saved in **VS Code Secret Storage** (encrypted, per-machine) under `pollis.apiKey.alphavantage`.
+To store a Alpha Vantage key, click the **Set API key** link on the "Powered by:" line at the top of the Alpha Vantage panel. A masked input appears; paste the Alpha Vantage key and press Enter. The key is saved in **VS Code Secret Storage** (encrypted, per-machine) under `pollis.apiKey.alphavantage`.
 
-- A green **🔑 API key** indicator confirms it is saved.
-- Use **change** to replace it or **clear** to remove it.
-- The key is **never** written into generated code, notebooks, editor files, or settings.
+- A green **🔑 API key** indicator confirms that the Alpha Vantage key is saved.
+- Use **change** to replace the Alpha Vantage key or **clear** to remove it.
+- The Alpha Vantage key is **never** written into generated code, notebooks, editor files, or settings.
 
 ## How the Key Reaches Julia
 
-AlphaVantage.jl's global client reads the `ALPHA_VANTAGE_API_KEY` environment variable. When you **Send to Julia REPL**, Pollis first sets that variable for the session:
+AlphaVantage.jl's global client reads the `ALPHA_VANTAGE_API_KEY` environment variable. When you **Send to Julia REPL**, Pollis first sets `ALPHA_VANTAGE_API_KEY` for the session:
 
 ```julia
 ENV["ALPHA_VANTAGE_API_KEY"] = "<your key>"   # injected silently, not shown in files
@@ -28,7 +28,7 @@ using AlphaVantage
 time_series_daily("AAPL")
 ```
 
-For **Send to Editor / Notebook**, the key is *not* injected (those files persist to disk). Set it yourself in that session, e.g. by running the REPL once or adding `ENV["ALPHA_VANTAGE_API_KEY"] = "..."` locally.
+For **Send to Editor / Notebook**, the Alpha Vantage key is *not* injected (those files persist to disk). Set it yourself in that session, e.g. by running the REPL once or adding `ENV["ALPHA_VANTAGE_API_KEY"] = "..."` locally.
 
 ## Setting It Manually (Alternative)
 

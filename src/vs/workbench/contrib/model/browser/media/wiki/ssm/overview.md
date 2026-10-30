@@ -1,6 +1,6 @@
 # Overview
 
-This webview estimates the **hidden state** of a dynamic system from noisy measurements. A state-space model has two parts:
+The State-Space Inference Methods panel estimates the **hidden state** of a dynamic system from noisy measurements. A state-space model has two parts:
 
     x(t+1) = f(x(t), u(t), t) + w(t)      dynamics: how the state moves
     y(t)   = h(x(t), u(t), t) + e(t)      measurement: what is observed

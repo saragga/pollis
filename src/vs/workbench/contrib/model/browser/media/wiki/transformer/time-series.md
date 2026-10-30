@@ -10,7 +10,7 @@ Time series in finance are long (hundreds to thousands of steps), multivariate (
 
 ## PatchTST
 
-This webview uses **PatchTST** (Nie et al., 2023, ICLR) as the Time Series Transformer architecture. The key idea is **patch tokenisation**: instead of treating each time step as a token, PatchTST divides the input series into non-overlapping windows (patches) and embeds each patch as a single token via a linear projection.
+The Transformers panel uses **PatchTST** (Nie et al., 2023, ICLR) as the Time Series Transformer architecture. The key idea is **patch tokenisation**: instead of treating each time step as a token, PatchTST divides the input series into non-overlapping windows (patches) and embeds each patch as a single token via a linear projection.
 
 ### Why Patches Help
 

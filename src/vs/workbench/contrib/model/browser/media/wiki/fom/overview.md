@@ -1,6 +1,6 @@
 # First-Order Methods — Overview
 
-This webview trains a parameter vector x on a loss f(x) with the **update rules of Optimisers.jl**, the optimisers of the Flux ecosystem. The gradient is computed by **Enzyme.jl** in reverse mode, and Gaussian noise of standard deviation **Gradient Noise** is added to it at every step, to imitate the sampling noise of minibatch training; set it to 0 for the deterministic method.
+The First-Order Methods panel trains a parameter vector x on a loss f(x) with the **update rules of Optimisers.jl**, the optimisers of the Flux ecosystem. The gradient is computed by **Enzyme.jl** in reverse mode, and Gaussian noise of standard deviation **Gradient Noise** is added to it at every step, to imitate the sampling noise of minibatch training; set it to 0 for the deterministic method.
 
 ## The Rules
 - **SGD** steps along -g, scaled by the learning rate. See [SGD](sgd.md).

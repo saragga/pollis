@@ -156,8 +156,9 @@ export class ZoomInAction extends BaseZoomAction {
 				secondary: [KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.Equal, KeyMod.CtrlCmd | KeyCode.NumpadAdd]
 			},
 			menu: {
-				id: MenuId.MenubarAppearanceMenu,
-				group: '5_zoom',
+				// Pollis: the last group of the View menu, not under Appearance
+				id: MenuId.MenubarViewMenu,
+				group: '8_zoom',
 				order: 1
 			}
 		});
@@ -189,8 +190,8 @@ export class ZoomOutAction extends BaseZoomAction {
 				}
 			},
 			menu: {
-				id: MenuId.MenubarAppearanceMenu,
-				group: '5_zoom',
+				id: MenuId.MenubarViewMenu,
+				group: '8_zoom',
 				order: 2
 			}
 		});
@@ -217,8 +218,8 @@ export class ZoomResetAction extends BaseZoomAction {
 				primary: KeyMod.CtrlCmd | KeyCode.Numpad0
 			},
 			menu: {
-				id: MenuId.MenubarAppearanceMenu,
-				group: '5_zoom',
+				id: MenuId.MenubarViewMenu,
+				group: '8_zoom',
 				order: 3
 			}
 		});

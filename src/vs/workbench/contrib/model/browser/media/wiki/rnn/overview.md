@@ -36,7 +36,7 @@ Think of the cell state as a long, straight highway through the network. Informa
 
 These gates are learned from data, allowing the LSTM to keep information for thousands of time steps or to forget it immediately. The LSTM is often considered the most powerful and widely used RNN variant. A common variant, the **peephole LSTM**, allows the gates to also “peek” at the cell state for even finer control.
 
-**Mathematical Intuition**
+#### LSTM: Mathematical Intuition
 
 At each time step `t`, the LSTM takes the current input `x_t`, the previous hidden state `h_{t-1}`, and the previous cell state `c_{t-1}`. It then computes:
 
@@ -49,7 +49,7 @@ At each time step `t`, the LSTM takes the current input `x_t`, the previous hidd
 
 The gates use a sigmoid (σ) function to output values between 0 and 1, acting as filters. The `tanh` function squashes values between -1 and 1, providing non‑linearity.
 
-**Typical Applications**
+#### LSTM: Typical Applications
 
 - Language modelling and machine translation
 - Speech recognition
@@ -70,7 +70,7 @@ The two gates in a GRU are:
 
 Because it has fewer parameters, the GRU is generally faster to train and computationally more efficient, while often matching the LSTM’s performance on many tasks.
 
-**Mathematical Intuition**
+#### GRU: Mathematical Intuition
 
 At each time step `t`:
 
@@ -81,7 +81,7 @@ At each time step `t`:
 
 Notice how the update gate `z_t` controls both what to keep from the past `(1 - z_t) * h_{t-1}` and what to add from the candidate `z_t * h̃_t`.
 
-**Typical Applications**
+#### GRU: Typical Applications
 
 - Any task where computational efficiency is a priority
 - Smaller‑scale language modelling
@@ -103,7 +103,7 @@ Here is how an ESN works:
 
 Training an ESN is therefore incredibly fast and computationally cheap. However, the reservoir must be carefully designed (e.g., by controlling its spectral radius) to ensure stability and avoid exploding dynamics.
 
-**Mathematical Intuition**
+#### Echo State Network: Mathematical Intuition
 
 Let `u(t)` be the input, `r(t)` the reservoir state, and `y(t)` the output. Then:
 
@@ -115,7 +115,7 @@ where `W_in` is a fixed random input weight matrix, and `W_res` is a fixed rando
 
 Only `W_out` is trained – often by solving a linear least‑squares problem.
 
-**Typical Applications**
+#### Echo State Network: Typical Applications
 
 - Time series prediction where training speed is critical
 - Chaotic system modelling (e.g., Lorenz system)
@@ -140,7 +140,7 @@ In a typical sequence‑to‑sequence model with attention:
 
 This mechanism provides a direct shortcut to past information, dramatically improving performance on long sequences and making the model more interpretable.
 
-**Mathematical Intuition**
+#### Attention: Mathematical Intuition
 
 Given a sequence of encoder hidden states `h_1, ..., h_T`, at decoder step `i` with hidden state `s_i`, we compute:
 
@@ -148,7 +148,7 @@ Given a sequence of encoder hidden states `h_1, ..., h_T`, at decoder step `i` w
 - **Attention weights**: `α_{ij} = exp(e_{ij}) / Σ_k exp(e_{ik})` (a softmax that makes them sum to 1)
 - **Context vector**: `c_i = Σ_j α_{ij} h_j` (a weighted sum of all encoder states)
 
-**Typical Applications**
+#### Attention: Typical Applications
 
 - Neural machine translation (where attention was first applied)
 - Text summarization
@@ -173,7 +173,7 @@ These two hidden states are then combined (usually by concatenation) at each tim
 
 **Important**: BiRNNs **cannot** be used for real‑time prediction where future inputs are not yet available. They are designed for offline processing of complete sequences.
 
-**Mathematical Intuition**
+#### Attention: Mathematical Intuition
 
 At time step `t`:
 
@@ -181,7 +181,7 @@ At time step `t`:
 `h_bwd_t = RNN_bwd(x_t, h_bwd_{t+1})`
 `h_t = [h_fwd_t, h_bwd_t]`   (concatenation)
 
-**Typical Applications**
+#### Attention: Typical Applications
 
 - **Natural Language Processing**: Named entity recognition (NER), part‑of‑speech (POS) tagging
 - **Speech Recognition**: Phoneme classification using a full utterance
@@ -268,7 +268,7 @@ We have journeyed from the sophisticated gating mechanisms of the LSTM to the ra
 | **ESN** | Extremely fast training, low computational cost | Random reservoir requires careful tuning | Chaotic systems, large‑scale time series prediction |
 | **Attention‑Augmented RNN** | Handles very long sequences, interpretable | Extra computational overhead, more complex | Machine translation, text summarisation, any task where interpretability matters |
 
-**Rule of thumb**:
+### Rule of Thumb for Choosing a Recurrent Architecture
 
 - Start with an **LSTM** or **GRU** for most sequence tasks – they are robust and well‑understood.
 - If the sequence is very long (hundreds of steps), consider **attention** to avoid the bottleneck of the fixed hidden state.

@@ -2,7 +2,7 @@
 
 Financial data is relational by nature. Stocks share sectors and ETF memberships. Banks lend to each other. Transactions form directed networks of payments. While tabular models treat each entity in isolation, Graph Neural Networks (GNNs) exploit these connections directly — propagating information along edges so that a node's representation is shaped by its neighbourhood.
 
-This reference compares the four architectures in this webview, explains when each is the right choice, and bridges to related work in the RNN and CNN webviews.
+The four architectures of the Graph Neural Networks panel differ in when each is the right choice, and relate to the work of the Recurrent Neural Networks and Convolutional Neural Networks panels.
 
 ---
 
@@ -91,7 +91,7 @@ The GRU evolves the *weights*, not the hidden state. This means the model adapts
 - **Evolving transaction networks** — money-laundering rings change topology to evade detection. A temporal model trained on snapshot sequences can identify structural drift.
 - **Intraday market microstructure** — order-book relationships between stocks change throughout the trading day; EvolveGCN processes hourly snapshots.
 
-**Limitation:** EvolveGCN requires discrete, regularly-spaced snapshots. For continuous-time event graphs (e.g., individual transactions timestamped to the millisecond), TGAT or TGN are more appropriate but are not in this webview.
+**Limitation:** EvolveGCN requires discrete, regularly-spaced snapshots. For continuous-time event graphs (e.g., individual transactions timestamped to the millisecond), TGAT or TGN are more appropriate but are not in the Graph Neural Networks panel.
 
 ---
 
@@ -99,7 +99,7 @@ The GRU evolves the *weights*, not the hidden state. This means the model adapts
 
 All four architectures above assume a **homogeneous** graph — one node type, one edge type. Real financial networks are rarely this simple. A corporate ownership graph has company nodes, fund nodes, and executive nodes, connected by equity ownership, board membership, and debt issuance edges.
 
-The **Heterogeneous checkbox** in this webview wraps any of the three static architectures (GCN, GAT, GraphSAGE) in `HeteroGraphConv`, which assigns **separate weight matrices to each relation type**:
+The **Heterogeneous checkbox** in the Graph Neural Networks panel wraps any of the three static architectures (GCN, GAT, GraphSAGE) in `HeteroGraphConv`, which assigns **separate weight matrices to each relation type**:
 
 ```julia
 conv = HeteroGraphConv(
@@ -124,7 +124,7 @@ This is equivalent to what the literature calls **R-GCN** (Schlichtkrull et al.,
 
 ## GNN vs RNN and CNN
 
-Users of the RNN and CNN webviews may wonder when a GNN is the right tool instead.
+Users of the Recurrent Neural Networks and Convolutional Neural Networks panels may wonder when a GNN is the right tool instead.
 
 | Question | Use GNN | Use RNN / CNN |
 |:---|:---|:---|

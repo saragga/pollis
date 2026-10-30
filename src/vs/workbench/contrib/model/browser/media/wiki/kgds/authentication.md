@@ -10,7 +10,7 @@ Browsing the Kaggle catalogue needs no credentials. A token is required only to 
 
 ## Set them in Pollis
 
-Click **Set credentials** on the *Powered by* line of this webview and paste your username and API key. Pollis stores them in VS Code **Secret Storage** — never in settings, generated code, or any saved file. The same credentials are shared with the **Kaggle Models** webview.
+Click **Set credentials** on the *Powered by* line of the Kaggle Datasets panel and paste your username and API key. Pollis stores them in VS Code **Secret Storage** — never in settings, generated code, or any saved file. The same credentials are shared with the **Kaggle Models** panel.
 
 ## How they are used
 

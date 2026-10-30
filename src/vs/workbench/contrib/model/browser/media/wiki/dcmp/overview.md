@@ -1,6 +1,6 @@
 # Overview
 
-Comparing distributions — a sample against a theory, or two samples against each other — is central to validating modelling assumptions. This webview offers four complementary views.
+Comparing distributions — a sample against a theory, or two samples against each other — is central to validating modelling assumptions. The Distribution Comparison panel offers four complementary views.
 
 ## ECDF
 The **empirical cumulative distribution function** steps up by 1/n at each observation. Overlaying a theoretical CDF gives a direct, bin-free comparison of whole distributions. See [ECDF](ecdf.md).

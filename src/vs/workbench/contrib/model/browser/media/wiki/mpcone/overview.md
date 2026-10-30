@@ -1,6 +1,6 @@
 # Convex and Conic Programming — Overview
 
-This webview builds a convex problem in **JuMP**, which **bridges** it to cone constraints, and solves it with a conic solver. Four models show the main cones.
+The Convex and Conic Programming panel builds a convex problem in **JuMP**, which **bridges** it to cone constraints, and solves it with a conic solver. Four models show the main cones.
 
 ## The Four Models
 - **Convex Programming**: a convex objective in x >= 0 under one scalar linear constraint; JuMP turns the quadratic terms into second-order cones. See [Convex Programming](convex.md).

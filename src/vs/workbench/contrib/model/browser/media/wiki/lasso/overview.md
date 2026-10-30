@@ -1,6 +1,6 @@
 # Overview
 
-This webview fits regressions that stay stable when there are **many predictors or strongly correlated ones**, where ordinary least squares overfits or becomes unstable. Two of its models **penalise** the size of the coefficients, shrinking them toward zero and, with an L1 penalty, setting some exactly to zero; the third **projects** the predictors onto a few latent components and regresses on those. The penalised models use Lasso.jl; partial least squares is written out with LinearAlgebra.
+The Penalised & Projection Regression panel fits regressions that stay stable when there are **many predictors or strongly correlated ones**, where ordinary least squares overfits or becomes unstable. Two of its models **penalise** the size of the coefficients, shrinking them toward zero and, with an L1 penalty, setting some exactly to zero; the third **projects** the predictors onto a few latent components and regresses on those. The penalised models use Lasso.jl; partial least squares is written out with LinearAlgebra.
 
 ## Lasso
 The **lasso** minimises the residual sum of squares plus lambda times the sum of the absolute coefficients (the L1 norm). As lambda grows, coefficients shrink and drop out one by one, so the lasso **selects variables**. Among strongly correlated predictors it tends to keep one and drop the others.

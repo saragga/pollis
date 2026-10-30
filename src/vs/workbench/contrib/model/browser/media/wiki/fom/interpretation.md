@@ -16,7 +16,7 @@ The **Optimiser State** shows what the rule carries from step to step: nothing f
 **Optimization.jl Interface** runs the same rule through Optimization.jl, the common interface to Optim, NLopt and the other solvers, and checks its result against the panel's hand-written loop without noise. The two should agree; the interface is how to swap in other solvers later.
 
 ## Evaluate at New Point
-**Evaluate at New Point** compares the loss at another parameter vector with the trained one.
+In First-Order Methods, **Evaluate at New Point** compares the loss at another parameter vector with the trained one.
 
 ## See Also
 - [Diagnostics](diagnostics.md) · [Decision Guide](decision-guide.md) · [Overview](overview.md)

@@ -1,6 +1,6 @@
 # Overview
 
-This webview fits **decision trees**: models that predict by asking a sequence of yes-or-no questions about the features ("is x3 below 2.5?") and returning, at the end of each path, the majority class (classification) or the mean response (regression) of the training samples that reached it. A tree is grown greedily from the top: at each node it picks the split that most reduces the impurity of the two parts, and stops when a depth limit or a minimum leaf size is reached.
+The Decision Tree Models panel fits **decision trees**: models that predict by asking a sequence of yes-or-no questions about the features ("is x3 below 2.5?") and returning, at the end of each path, the majority class (classification) or the mean response (regression) of the training samples that reached it. A tree is grown greedily from the top: at each node it picks the split that most reduces the impurity of the two parts, and stops when a depth limit or a minimum leaf size is reached.
 
 ## Decision Tree
 The classic **CART** tree from DecisionTree.jl, with **axis-aligned** splits: each question compares one feature with a threshold. For classification it minimises the **Gini impurity** (or the entropy) of the leaves; for regression, the **squared error** around the leaf means. Two settings control its size: **max_depth**, the longest path from the root, and **min_samples_leaf**, the fewest training samples a leaf may hold.

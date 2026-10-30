@@ -19,7 +19,7 @@
 
 ## What It Is Not
 
-These detectors score points; they do not decide what counts as an outlier. The cut-off comes from an assumed **contamination** rate or from inspecting the scores. For very large or high-dimensional data with nonlinear structure, see the Learning-Based Anomaly Detection webview; to check new data against a clean reference sample, see Novelty Detection.
+Outlier detectors score points; they do not decide what counts as an outlier. The cut-off comes from an assumed **contamination** rate or from inspecting the scores. For very large or high-dimensional data with nonlinear structure, see the Learning-Based Anomaly Detection panel; to check new data against a clean reference sample, see Novelty Detection.
 
 ## See Also
 - [Overview](overview.md) · [Decision Guide](decision-guide.md) · [KNN](knn.md)

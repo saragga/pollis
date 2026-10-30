@@ -94,13 +94,6 @@ file = "smc/smoothing.md"
 bundled = true
 [[references]]
 separator = true
-label = "Software"
-
-[[references]]
-key = "BEKS2017a"
-
-[[references]]
-separator = true
 label = "Textbooks"
 
 [[references]]

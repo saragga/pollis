@@ -1,6 +1,6 @@
 # MILP
 
-A **mixed-integer linear programme** is an LP in which some variables must take integer values (or 0/1 values, for decisions). In this panel every variable is integer:
+A **mixed-integer linear programme** is an LP in which some variables must take integer values (or 0/1 values, for decisions). In the Linear Programming panel every variable is integer:
 
     maximise (or minimise)   c' x
     subject to               A x <= b

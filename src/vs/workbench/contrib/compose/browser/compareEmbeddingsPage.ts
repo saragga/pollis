@@ -12,19 +12,27 @@ import { ICommandService } from '../../../../platform/commands/common/commands.j
 import { ConfigurationTarget, IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { IDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 import { IInstantiationService, ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
+import { IOpenerService } from '../../../../platform/opener/common/opener.js';
+import { INotificationService } from '../../../../platform/notification/common/notification.js';
+import { IFileService } from '../../../../platform/files/common/files.js';
+import { IEditorService } from '../../../services/editor/common/editorService.js';
+import { IPathService } from '../../../services/path/common/pathService.js';
+import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
+import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
 import { IHostService } from '../../../services/host/browser/host.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
+import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
 import { FEWEST_ROWS, rowsChoiceScript, sortHeadingsScript, storedRows, storeRows } from '../../model/browser/webviews/webviewPager.js';
-import { spinnerSvg } from '../../model/browser/webviews/webviewScaffold.js';
-import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
+import { COMPAREEMBEDDINGS_METADATA } from '../../model/browser/webviews/compareEmbeddings.data.js';
+import { buildWebviewHtml, spinnerSvg } from '../../model/browser/webviews/webviewScaffold.js';
 import { ASK_EMBEDDING_MODEL, ASK_PASSAGE_PREFIX, ASK_PASSAGES, ASK_QUERY_PREFIX, embeddingPrefixes, IAskPollisService, IEmbeddingRun, IEmbeddingRunModel } from '../common/askPollis.js';
 import { askAnswerCss, askAnswerScript } from './askPollisWebview.js';
 import { CompareEmbeddingsRunner, IEmbeddingEnd } from './compareEmbeddingsRun.js';
 import { COMPARE_MODELS_COMMAND_ID } from './compareModelsPage.js';
 import { ICompareProgress } from './compareModelsRun.js';
-import { compareChartsHtml, compareChartsScript, compareCommonScript, compareCss, compareLocalCard, compareSharedText, compareTestSetHtml, compareTestSetScript, CompareTestSetChoice } from './compareShared.js';
+import { compareChartsHtml, compareChartsScript, compareCommonScript, compareCss, compareLocalCard, compareSharedText, compareTestSetHeadHtml, compareTestSetHtml, compareTestSetScript, CompareTestSetChoice } from './compareShared.js';
 import { IInstalledModel } from './modelsInstalledPage.js';
 
 // Evaluate Embedding Models, from Compose > Local Models > Evaluate Embedding Models... (compose.contribution.ts): the
@@ -45,11 +53,6 @@ const CHOSEN_KEY = 'pollis.compareEmbeddings.chosen';
 const TEST_SET_KEY = 'pollis.compareEmbeddings.testSet';
 /** The questions ticked in each test set, by their text, under the set's name. */
 const TICKED_KEY = 'pollis.compareEmbeddings.ticked';
-/** The packages of the evaluation, on the Powered by line. */
-const POWERED_BY = [
-	{ name: 'llama.cpp', url: 'https://github.com/ggml-org/llama.cpp' },
-	{ name: 'DuckDB', url: 'https://duckdb.org' },
-];
 
 type CompareEmbeddingsMessage =
 	| { readonly command: 'ready' }
@@ -62,8 +65,7 @@ type CompareEmbeddingsMessage =
 	| { readonly command: 'changeSets' }
 	| { readonly command: 'showRun'; readonly id: string }
 	| { readonly command: 'deleteRun'; readonly id: string }
-	| { readonly command: 'use'; readonly model: string }
-	| { readonly command: 'openUrl'; readonly url: string };
+	| { readonly command: 'use'; readonly model: string };
 
 /** The runner of the window, made the first time the page opens, so that a run goes on when the page is closed. */
 let runner: CompareEmbeddingsRunner | undefined;
@@ -122,6 +124,13 @@ async function openCompareEmbeddingsPage(accessor: ServicesAccessor): Promise<vo
 	const askPollisService = accessor.get(IAskPollisService);
 	const dialogService = accessor.get(IDialogService);
 	const hostService = accessor.get(IHostService);
+	const openerService = accessor.get(IOpenerService);
+	const editorService = accessor.get(IEditorService);
+	const notificationService = accessor.get(INotificationService);
+	const notebookEditorModelResolverService = accessor.get(INotebookEditorModelResolverService);
+	const notebookKernelService = accessor.get(INotebookKernelService);
+	const fileService = accessor.get(IFileService);
+	const pathService = accessor.get(IPathService);
 	const run = runner ??= accessor.get(IInstantiationService).createInstance(CompareEmbeddingsRunner);
 
 	if (openPage && !openPage.isDisposed()) {
@@ -146,6 +155,7 @@ async function openCompareEmbeddingsPage(accessor: ServicesAccessor): Promise<vo
 	const post = (message: object) => webviewInput.webview.postMessage(message);
 
 	const disposables = new DisposableStore();
+	disposables.add(registerScaffoldPageHandlers(webviewInput, 'compareEmbeddings', title, COMPAREEMBEDDINGS_METADATA.compareEmbeddings, openerService, editorService, commandService, notificationService, notebookEditorModelResolverService, notebookKernelService, fileService, pathService, storageService));
 	let listed: readonly (IEmbeddingRunModel & { readonly bytes?: number })[] = [];
 	let chosen: string[] = [];
 	try {
@@ -308,8 +318,6 @@ async function openCompareEmbeddingsPage(accessor: ServicesAccessor): Promise<vo
 			await showRun((await askPollisService.embeddingRuns())[0]?.id);
 		} else if (message.command === 'use' && hasKey(message, { model: true })) {
 			await use(message.model);
-		} else if (message.command === 'openUrl' && hasKey(message, { url: true }) && POWERED_BY.some(pkg => pkg.url === message.url)) {
-			await commandService.executeCommand(OPEN_LINK_COMMAND_ID, message.url);
 		}
 	}));
 }
@@ -371,34 +379,44 @@ function pageHtml(rows: number): string {
 		questionsPartIntro: localize('compareEmbeddings.questionsPartIntro', "Each question of this run, with the place of its passage for each model: among those Ask Pollis gives, then by meaning alone; - when it is not among them."),
 		places: localize('compareEmbeddings.places', "{0} · {1}", '{0}', '{1}'),
 	};
-	return `<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
-	<style>
+	return buildWebviewHtml({
+		title: text.title,
+		introHtml: text.intro,
+		extraCss: `
 		${compareCss}
 		${askAnswerCss}
-	</style>
-</head>
-<body>
-<div class="container">
-	<h1>${text.title}</h1>
-	<div class="powered-by">${text.poweredBy}&nbsp;<span id="package-links"></span></div>
-	<p class="subtitle">${text.intro}</p>
-	<div class="head"><h2 class="section"><span class="step">1</span>${text.models}</h2><span class="small" id="chosenCount"></span></div>
+`,
+		steps: [
+			{
+				id: 'step-models',
+				title: text.models,
+				headHtml: '<span class="small" id="chosenCount"></span>',
+				bodyHtml: `
 	<div class="models">${compareLocalCard(text)}</div>
-
+`,
+			},
+			{
+				id: 'step-questions',
+				title: text.questions,
+				headHtml: compareTestSetHeadHtml(text),
+				bodyHtml: `
 	${compareTestSetHtml(text, text.questionsIntro, `<span class="bar"><button class="action current" id="changeSets">${text.changeSets}</button></span>`)}
-
-	<h2 class="section"><span class="step">3</span>${text.runSection}</h2>
+`,
+			},
+			{
+				id: 'step-run',
+				title: text.runSection,
+				bodyHtml: `
 	<p class="hint">${text.runIntro}</p>
 	<div class="settings"><span class="bar"><button class="action current" id="run" disabled>${text.run}</button></span></div>
 	<div class="small status" id="runStatus"></div>
 	${compareChartsHtml(text)}
-
-	<h2 class="section"><span class="step">4</span>${text.results}</h2>
+`,
+			},
+			{
+				id: 'step-results',
+				title: text.results,
+				bodyHtml: `
 	<div class="row">
 		<span class="small">${text.earlierRuns}</span> <select id="runs"></select>
 		<button class="link" id="deleteRun">${text.deleteRun}</button>
@@ -418,11 +436,11 @@ function pageHtml(rows: number): string {
 		</table>
 		<div class="pager" id="foundPager" hidden></div>
 	</div>
-</div>
-<script>
-	const vscode = acquireVsCodeApi();
+`,
+			},
+		],
+		pageScriptJs: `
 	const TEXT = ${JSON.stringify(text)};
-	const POWERED_BY = ${JSON.stringify(POWERED_BY)};
 	const SPINNER = '${spinnerSvg}';
 	${askAnswerScript()}
 	${rowsChoiceScript()}
@@ -546,6 +564,8 @@ function pageHtml(rows: number): string {
 		document.getElementById('results').hidden = !run;
 		document.getElementById('runLine').textContent = run ? format(TEXT.runLine, new Date(run.started).toLocaleString(), run.pollis, run.questions.length, run.passages) : TEXT.noRuns;
 		document.getElementById('deleteRun').hidden = !run;
+		// A run that ends shows itself, even in a pane left closed
+		if (run) { document.getElementById('step-results').classList.remove('collapsed'); }
 		if (!run) { return; }
 		// A column for each model, the best first by how often it found the passage, then by its place; a row for each figure
 		const sorted = [...run.figures].sort((a, b) => (b.found ?? -1) - (a.found ?? -1) || (a.place ?? Infinity) - (b.place ?? Infinity));
@@ -637,9 +657,8 @@ function pageHtml(rows: number): string {
 		}
 	});
 	vscode.postMessage({ command: 'ready' });
-</script>
-</body>
-</html>`;
+`,
+	});
 }
 
 registerAction2(class extends Action2 {

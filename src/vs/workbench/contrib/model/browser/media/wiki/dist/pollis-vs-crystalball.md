@@ -7,7 +7,7 @@ Pollis uses [Distributions.jl](https://github.com/JuliaStats/Distributions.jl) a
 engine. Crystal Ball is Oracle's Monte Carlo simulation add-in for Microsoft Excel, offering 21
 predefined distributions plus a custom distribution builder.
 
-The table below marks **✓** where sampling is available and **—** where it is not.
+The distribution coverage table marks **✓** where sampling is available and **—** where it is not.
 Crystal Ball's *Custom Distribution* and Pollis's *Mixture*, *Product*, and *Convolution* capabilities
 are composite/user-defined mechanisms rather than named distributions and are summarised separately.
 

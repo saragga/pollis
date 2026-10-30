@@ -5,7 +5,7 @@ The GEV is an asymptotic result: it describes the maximum of a block only when t
 
 ## Independent, Stationary Blocks
 The maxima are assumed independent and identically distributed:
-- **Stationarity**: no trend in the maxima. A rising sea level or a changing climate violates it; the GEV parameters can then be made functions of time, which this panel does not do.
+- **Stationarity**: no trend in the maxima. A rising sea level or a changing climate violates it; the GEV parameters can then be made functions of time, which the Generalized Extreme Value Distribution panel does not do.
 - **Independence**: one block's maximum does not predict the next. Dependence within a block, such as clusters of hot days, is allowed: it changes the parameters, not the GEV form.
 - **Seasonality**: annual blocks absorb it; monthly blocks mix different seasons.
 

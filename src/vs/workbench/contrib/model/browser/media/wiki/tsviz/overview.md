@@ -2,7 +2,7 @@
 
 A **time series** is a sequence of observations indexed by time. Plotting that sequence against its time index is the single most informative step in exploratory time series analysis — the eye detects trend, seasonality, structural breaks, and anomalies far faster than any summary statistic.
 
-This webview wraps three closely related visualisations built on [Plots.jl](https://github.com/JuliaPlots/Plots.jl):
+The Time Series Plot panel wraps three closely related visualisations built on [Plots.jl](https://github.com/JuliaPlots/Plots.jl):
 
 ## Line Plot
 

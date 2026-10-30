@@ -2873,6 +2873,36 @@
 			"open_access": false
 		},
 		{
+			"key": "CCB2009a",
+			"type": "inproceedings",
+			"title": "Reciprocal Rank Fusion Outperforms Condorcet and Individual Rank Learning Methods",
+			"authors": [
+				"Cormack, Gordon V.",
+				"Clarke, Charles L. A.",
+				"Büttcher, Stefan"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2009,
+			"booktitle": "Proceedings of the 32nd International ACM SIGIR Conference on Research and Development in Information Retrieval",
+			"address": "New York, NY, USA",
+			"pages": "758-759",
+			"doi": "10.1145/1571941.1572114",
+			"openalex": "W2148972377",
+			"abstract": "Reciprocal Rank Fusion (RRF), a simple method for combining the document rankings from multiple IR systems, consistently yields better results than any individual system, and better results than the standard method Condorcet Fuse. This result is demonstrated by using RRF to combine the results of several TREC experiments, and to build a meta-learner that ranks the LETOR 3 dataset better than any previously reported method",
+			"abstract_source": "openalex",
+			"keywords": [
+				"reciprocal rank fusion",
+				"meta-learner",
+				"information retrieval evaluation"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-10-30",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "CFHT2021a",
 			"type": "misc",
 			"title": "ControlSystems.jl: A Control Toolbox for Julia",
@@ -5386,6 +5416,41 @@
 			"legacy_key": "international2016",
 			"source": "manual",
 			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "EJAS2024a",
+			"type": "inproceedings",
+			"title": "RAGAs: Automated Evaluation of Retrieval Augmented Generation",
+			"authors": [
+				"Es, Shahul",
+				"James, Jithin",
+				"Espinosa Anke, Luis",
+				"Schockaert, Steven"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2024,
+			"booktitle": "Proceedings of the 18th Conference of the European Chapter of the Association for Computational Linguistics: System Demonstrations",
+			"publisher": "Association for Computational Linguistics",
+			"address": "St. Julians, Malta",
+			"pages": "150-158",
+			"doi": "10.18653/v1/2024.eacl-demo.16",
+			"arxiv": "2309.15217",
+			"openalex": "W4411630045",
+			"url": "https://aclanthology.org/2024.eacl-demo.16/",
+			"abstract": "We introduce Ragas (Retrieval Augmented Generation Assessment), a framework for reference-free evaluation of Retrieval Augmented Generation (RAG) pipelines. RAG systems are composed of a retrieval and an LLM based generation module, and provide LLMs with knowledge from a reference textual database, which enables them to act as a natural language layer between a user and textual databases, reducing the risk of hallucinations. Evaluating RAG architectures is, however, challenging because there are several dimensions to consider: the ability of the retrieval system to identify relevant and focused context passages, the ability of the LLM to exploit such passages in a faithful way, or the quality of the generation itself. With Ragas, we put forward a suite of metrics which can be used to evaluate these different dimensions \\textit{without having to rely on ground truth human annotations}. We posit that such a framework can crucially contribute to faster evaluation cycles of RAG architectures, which is especially important given the fast adoption of LLMs.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"retrieval-augmented generation",
+				"RAG evaluation",
+				"automated assessment",
+				"large language models"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-10-30",
+			"checked": true,
 			"open_access": true
 		},
 		{
@@ -12307,6 +12372,45 @@
 			"open_access": false
 		},
 		{
+			"key": "MTMR2023a",
+			"type": "inproceedings",
+			"title": "MTEB: Massive Text Embedding Benchmark",
+			"authors": [
+				"Muennighoff, Niklas",
+				"Tazi, Nouamane",
+				"Magne, Loïc",
+				"Reimers, Nils"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2023,
+			"booktitle": "Proceedings of the 17th Conference of the European Chapter of the Association for Computational Linguistics",
+			"publisher": "Association for Computational Linguistics",
+			"address": "Dubrovnik, Croatia",
+			"pages": "2014-2037",
+			"doi": "10.18653/v1/2023.eacl-main.148",
+			"openalex": "W4386576685",
+			"url": "https://aclanthology.org/2023.eacl-main.148/",
+			"abstract": "Text embeddings are commonly evaluated on a small set of datasets from a single task not covering their possible applications to other tasks.It is unclear whether state-of-the-art embeddings on semantic textual similarity (STS) can be equally well applied to other tasks like clustering or reranking.This makes progress in the field difficult to track, as various models are constantly being proposed without proper evaluation.To solve this problem, we introduce the Massive Text Embedding Benchmark (MTEB).MTEB spans 8 embedding tasks covering a total of 58 datasets and 112 languages.Through the benchmarking of 33 models on MTEB, we establish the most comprehensive benchmark of text embeddings to date.We find that no particular text embedding method dominates across all tasks.This suggests that the field has yet to converge on a universal text embedding method and scale it up sufficiently to provide state-of-the-art results on all embedding tasks.MTEB comes with open-source code and a public leaderboard at https://github.com/ embeddings-benchmark/mteb.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"text embeddings",
+				"benchmark",
+				"semantic textual similarity",
+				"multilingual embeddings",
+				"embedding evaluation",
+				"clustering",
+				"re-ranking",
+				"cross-task generalization",
+				"open-source benchmark"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-10-30",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "MWTLM2011a",
 			"type": "inproceedings",
 			"title": "Optimizing Semantic Coherence in Topic Models",
@@ -12325,6 +12429,42 @@
 			"legacy_key": "mimno2011",
 			"source": "manual",
 			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "MY2020a",
+			"type": "article",
+			"title": "Efficient and Robust Approximate Nearest Neighbor Search Using Hierarchical Navigable Small World Graphs",
+			"authors": [
+				"Malkov, Yu A.",
+				"Yashunin, D. A."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2020,
+			"journal": "IEEE Transactions on Pattern Analysis and Machine Intelligence",
+			"volume": "42",
+			"number": "4",
+			"pages": "824-836",
+			"issn": "0162-8828",
+			"doi": "10.1109/TPAMI.2018.2889473",
+			"arxiv": "1603.09320",
+			"openalex": "W2963469388",
+			"oa_url": "https://arxiv.org/pdf/1603.09320",
+			"abstract": "We present a new approach for the approximate K-nearest neighbor search based on navigable small world graphs with controllable hierarchy (Hierarchical NSW, HNSW). The proposed solution is fully graph-based, without any need for additional search structures (typically used at the coarse search stage of the most proximity graph techniques). Hierarchical NSW incrementally builds a multi-layer structure consisting of a hierarchical set of proximity graphs (layers) for nested subsets of the stored elements. The maximum layer in which an element is present is selected randomly with an exponentially decaying probability distribution. This allows producing graphs similar to the previously studied Navigable Small World (NSW) structures while additionally having the links separated by their characteristic distance scales. Starting the search from the upper layer together with utilizing the scale separation boosts the performance compared to NSW and allows a logarithmic complexity scaling. Additional employment of a heuristic for selecting proximity graph neighbors significantly increases performance at high recall and in case of highly clustered data. Performance evaluation has demonstrated that the proposed general metric space search index is able to strongly outperform previous opensource state-of-the-art vector-only approaches. Similarity of the algorithm to the skip list structure allows straightforward balanced distributed implementation.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"approximate nearest neighbor search",
+				"proximity graphs",
+				"skip lists",
+				"distributed search",
+				"high-dimensional similarity search",
+				"logarithmic time complexity"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-10-30",
+			"checked": true,
 			"open_access": true
 		},
 		{
@@ -12733,6 +12873,38 @@
 			"source": "manual",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "NC2019a",
+			"type": "misc",
+			"title": "Passage Re-ranking with BERT",
+			"authors": [
+				"Nogueira, Rodrigo",
+				"Cho, Kyunghyun"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2019,
+			"doi": "10.48550/arXiv.1901.04085",
+			"arxiv": "1901.04085",
+			"openalex": "W2909544278",
+			"oa_url": "https://arxiv.org/pdf/1901.04085",
+			"abstract": "Recently, neural models pretrained on a language modeling task, such as ELMo (Peters et al., 2017), OpenAI GPT (Radford et al., 2018), and BERT (Devlin et al., 2018), have achieved impressive results on various natural language processing tasks such as question-answering and natural language inference. In this paper, we describe a simple re-implementation of BERT for query-based passage re-ranking. Our system is the state of the art on the TREC-CAR dataset and the top entry in the leaderboard of the MS MARCO passage retrieval task, outperforming the previous state of the art by 27% (relative) in MRR@10. The code to reproduce our results is available at https://github.com/nyu-dl/dl4marco-bert",
+			"abstract_source": "openalex",
+			"keywords": [
+				"BERT",
+				"query-based retrieval",
+				"passage retrieval",
+				"MS MARCO",
+				"natural language inference",
+				"question answering",
+				"pre-trained language models"
+			],
+			"keywords_source": "openalex",
+			"source": "datacite",
+			"retrieved": "2026-10-30",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "NM1965a",
@@ -17926,6 +18098,37 @@
 			"open_access": true
 		},
 		{
+			"key": "Voo1999a",
+			"type": "inproceedings",
+			"title": "The TREC-8 Question Answering Track Report",
+			"authors": [
+				"Voorhees, Ellen M."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1999,
+			"booktitle": "Proceedings of the Eighth Text REtrieval Conference (TREC-8)",
+			"publisher": "National Institute of Standards and Technology",
+			"report_number": "NIST Special Publication 500-246",
+			"openalex": "W2086511124",
+			"url": "https://trec.nist.gov/pubs/trec8/papers/qa_report.pdf",
+			"abstract": "The TREC-8 Question Answering track was the first large-scale evaluation of domain-independent question answering systems. This paper summarizes the results of the track by giving a brief overview of the different approaches taken to solve the problem. The most accurate systems found a correct response for more than 2/3 of the questions. Relatively simple bag-of-words approaches were adequate for finding answers when responses could be as long as a paragraph (250 bytes), but more sophisticated processing was necessary for more direct responses (50 bytes). The TREC-8 Question Answering track was an initial effort to bring the benefits of large-scale evaluation to bear on a question answering (QA) task. The goal in the QA task is to retrieve small snippets of text that contain the actual answer to a question rather than the document lists traditionally returned by text retrieval systems. The assumption is that users would usually prefer to be given the answer rather than find the a...",
+			"abstract_source": "openalex",
+			"keywords": [
+				"question answering",
+				"TREC-8",
+				"large-scale assessment",
+				"answer retrieval",
+				"text retrieval",
+				"answer length"
+			],
+			"keywords_source": "openalex",
+			"source": "manual",
+			"retrieved": "2026-10-30",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "WB2006a",
 			"type": "article",
 			"title": "On the Implementation of an Interior-Point Filter Line-Search Algorithm for Large-Scale Nonlinear Programming",
@@ -18600,6 +18803,51 @@
 			"source": "crossref",
 			"retrieved": "2026-10-23",
 			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "ZCSZW...2023a",
+			"type": "inproceedings",
+			"title": "Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena",
+			"authors": [
+				"Zheng, Lianmin",
+				"Chiang, Wei-Lin",
+				"Sheng, Ying",
+				"Zhuang, Siyuan",
+				"Wu, Zhanghao",
+				"Zhuang, Yonghao",
+				"Lin, Zi",
+				"Li, Zhuohan",
+				"Li, Dacheng",
+				"Xing, Eric P.",
+				"Zhang, Hao",
+				"Gonzalez, Joseph E.",
+				"Stoica, Ion"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2023,
+			"booktitle": "Advances in Neural Information Processing Systems 36",
+			"pages": "46595-46623",
+			"doi": "10.52202/075280-2020",
+			"arxiv": "2306.05685",
+			"openalex": "W7133239970",
+			"url": "https://papers.nips.cc/paper_files/paper/2023/hash/91f18a1287b398d378ef22505bf41832-Abstract-Datasets_and_Benchmarks.html",
+			"abstract": "Evaluating large language model (LLM) based chat assistants is challenging due to their broad capabilities and the inadequacy of existing benchmarks in measuring human preferences. To address this, we explore using strong LLMs as judges to evaluate these models on more open-ended questions. We examine the usage and limitations of LLM-as-a-judge, including position, verbosity, and self-enhancement biases, as well as limited reasoning ability, and propose solutions to mitigate some of them. We then verify the agreement between LLM judges and human preferences by introducing two benchmarks: MT-bench, a multi-turn question set; and Chatbot Arena, a crowdsourced battle platform. Our results reveal that strong LLM judges like GPT-4 can match both controlled and crowdsourced human preferences well, achieving over 80% agreement, the same level of agreement between humans. Hence, LLM-as-a-judge is a scalable and explainable way to approximate human preferences, which are otherwise very expensive to obtain. Additionally, we show our benchmark and traditional benchmarks complement each other by evaluating several variants of LLaMA and Vicuna. The MT-bench questions, 3K expert votes, and 30K conversations with human preferences are publicly available at https://github.com/lm-sys/FastChat/tree/main/fastchat/llm_judge.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"large language models",
+				"LLM-as-a-judge",
+				"automated assessment",
+				"MT-Bench",
+				"Chatbot Arena",
+				"benchmarking",
+				"chatbots"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-10-30",
+			"checked": true,
 			"open_access": true
 		},
 		{
@@ -19719,6 +19967,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "CCB2009a",
+			"count": 695,
+			"source": "crossref",
+			"date": "2026-10-30"
+		},
+		{
+			"key": "CCB2009a",
+			"count": 795,
+			"source": "openalex",
+			"date": "2026-10-30"
+		},
+		{
 			"key": "CGT2000a",
 			"count": 2291,
 			"source": "crossref",
@@ -20347,6 +20607,18 @@
 			"count": 1124,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "EJAS2024a",
+			"count": 662,
+			"source": "crossref",
+			"date": "2026-10-30"
+		},
+		{
+			"key": "EJAS2024a",
+			"count": 651,
+			"source": "openalex",
+			"date": "2026-10-30"
 		},
 		{
 			"key": "EK2018a",
@@ -22047,6 +22319,30 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "MTMR2023a",
+			"count": 449,
+			"source": "crossref",
+			"date": "2026-10-30"
+		},
+		{
+			"key": "MTMR2023a",
+			"count": 547,
+			"source": "openalex",
+			"date": "2026-10-30"
+		},
+		{
+			"key": "MY2020a",
+			"count": 1618,
+			"source": "crossref",
+			"date": "2026-10-30"
+		},
+		{
+			"key": "MY2020a",
+			"count": 1904,
+			"source": "openalex",
+			"date": "2026-10-30"
+		},
+		{
 			"key": "Mar1952a",
 			"count": 4291,
 			"source": "crossref",
@@ -22117,6 +22413,12 @@
 			"count": 1003,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "NC2019a",
+			"count": 573,
+			"source": "openalex",
+			"date": "2026-10-30"
 		},
 		{
 			"key": "NM1965a",
@@ -23421,6 +23723,12 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "Voo1999a",
+			"count": 823,
+			"source": "openalex",
+			"date": "2026-10-30"
+		},
+		{
 			"key": "WB2006a",
 			"count": 8464,
 			"source": "crossref",
@@ -23607,6 +23915,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "ZCSZW...2023a",
+			"count": 1437,
+			"source": "crossref",
+			"date": "2026-10-30"
+		},
+		{
+			"key": "ZCSZW...2023a",
+			"count": 1860,
+			"source": "openalex",
+			"date": "2026-10-30"
+		},
+		{
 			"key": "ZIRIN...2024a",
 			"count": 4,
 			"source": "crossref",
@@ -23749,7 +24069,6 @@
 				"chiara.statistics.rl.acm"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Tia...2020a",
 				"SB2018a",
 				"MBMGL...2016a",
@@ -23778,8 +24097,7 @@
 			],
 			"keys": [
 				"Val...2024a",
-				"AV2024a",
-				"BEKS2017a"
+				"AV2024a"
 			]
 		},
 		{
@@ -23790,7 +24108,6 @@
 				"chiara.explore.ande"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Muh2023a",
 				"Agg2017a",
 				"GBC2016a",
@@ -23807,7 +24124,6 @@
 				"chiara.statistics.nonlin.attr"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Dat2018a",
 				"Str2015a",
 				"Lay2015a",
@@ -23835,7 +24151,6 @@
 				"chiara.statistics.rl.azero"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Lau2021a",
 				"Hag2021a",
 				"Pal2023a",
@@ -23853,7 +24168,6 @@
 				"chiara.statistics.nlp.bert"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Che2023a",
 				"JM2024a",
 				"GBC2016a",
@@ -23870,7 +24184,6 @@
 				"chiara.optimise.evp.blv"
 			],
 			"keys": [
-				"BEKS2017a",
 				"GBS2024a",
 				"HH2018a",
 				"DKPK2015a",
@@ -23885,7 +24198,6 @@
 				"chiara.statistics.rl.bndt"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Tia...2020a",
 				"SB2018a",
 				"Sze2010a",
@@ -23901,7 +24213,6 @@
 				"chiara.simulate.mc.boot"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Geh...2023b",
 				"ET1993a",
 				"DH1997a",
@@ -23921,7 +24232,6 @@
 				"chiara.optimise.bopt"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Gar2023a",
 				"RW2006a",
 				"JSW1998a",
@@ -23938,7 +24248,6 @@
 				"chiara.optimise.sgm.cam"
 			],
 			"keys": [
-				"BEKS2017a",
 				"NW2006a",
 				"LZGJL...2023a"
 			]
@@ -23951,7 +24260,6 @@
 				"chiara.statistics.pm.cca"
 			],
 			"keys": [
-				"BEKS2017a",
 				"And2003a",
 				"Hot1936a"
 			]
@@ -23964,7 +24272,6 @@
 				"chiara.optimise.ccdr"
 			],
 			"keys": [
-				"BEKS2017a",
 				"DHL2017a",
 				"GC2024a",
 				"HH2018a",
@@ -23983,7 +24290,6 @@
 				"chiara.statistics.nonlin.cds"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Dat2018a",
 				"RN2017a",
 				"Str2015a",
@@ -24010,7 +24316,6 @@
 				"chiara.statistics.nonlin.chaos"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Dat2018a",
 				"KS2004a",
 				"Gle1987a",
@@ -24026,7 +24331,6 @@
 				"chiara.statistics.nlp.colbert"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Cha...2024a",
 				"Sim...2025a",
 				"MRS2008a",
@@ -24082,7 +24386,6 @@
 				"chiara.optimise.evp.cmp"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Chu2023a",
 				"DF1995a",
 				"FP2003a",
@@ -24099,7 +24402,6 @@
 				"chiara.statistics.nonlin.cmplx"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Dat2018a",
 				"KS2004a",
 				"CT2006a",
@@ -24115,13 +24417,40 @@
 				"chiara.statistics.nlp.cooccurrence"
 			],
 			"keys": [
-				"BEKS2017a",
 				"JTC2023a",
 				"JM2024a",
 				"MS1999a",
 				"CH1990a",
 				"Har1954a",
 				"LGD2015a"
+			]
+		},
+		{
+			"id": "compareEmbeddings",
+			"title": "Evaluate Embedding Models",
+			"commands": [
+				"pollis.compareEmbeddings"
+			],
+			"keys": [
+				"MRS2008a",
+				"RG2019a",
+				"RZ2009a",
+				"CCB2009a",
+				"MTMR2023a",
+				"Voo1999a"
+			]
+		},
+		{
+			"id": "compareModels",
+			"title": "Evaluate Answering Models",
+			"commands": [
+				"pollis.compareModels"
+			],
+			"keys": [
+				"Sim...2025a",
+				"LPPPK...2020a",
+				"ZCSZW...2023a",
+				"EJAS2024a"
 			]
 		},
 		{
@@ -24132,7 +24461,6 @@
 				"chiara.optimise.gbo.co"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Joh2007a",
 				"DHL2017a",
 				"BCP2022a",
@@ -24149,6 +24477,7 @@
 		{
 			"id": "copula",
 			"title": "Copula Estimation",
+			"description": "Fit · Vine Copula",
 			"commands": [
 				"chiara.statistics.copula.estimation"
 			],
@@ -24166,7 +24495,6 @@
 				"chiara.statistics.pm.covShrinkage"
 			],
 			"keys": [
-				"BEKS2017a",
 				"TV2004a",
 				"LW2004b",
 				"CWEH2010a",
@@ -24209,7 +24537,6 @@
 				"chiara.explore.conn.csv"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Qui2023a",
 				"Qui2023c",
 				"Sha2005a"
@@ -24224,7 +24551,6 @@
 				"chiara.statistics.nlp.fctm"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Pro2016a",
 				"JM2024a",
 				"Bis2006a",
@@ -24239,7 +24565,6 @@
 				"chiara.statistics.nlp.ctpf"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Pro2016a",
 				"JM2024a",
 				"Ble2012a",
@@ -24258,7 +24583,6 @@
 				"chiara.statistics.mwm.loocv"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Grh2024a",
 				"HTF2009a",
 				"Bis2006a",
@@ -24275,7 +24599,6 @@
 				"chiara.optimise.moo.dc"
 			],
 			"keys": [
-				"BEKS2017a",
 				"MM2022a",
 				"Deb2001a",
 				"CLV2007a",
@@ -24292,7 +24615,6 @@
 				"chiara.optimise.dco"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Tal2009a",
 				"GP2019a",
 				"FR1995a",
@@ -24322,7 +24644,6 @@
 				"chiara.optimise.ec.devol"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Pol2021a",
 				"PSL2005a",
 				"ES2015a",
@@ -24339,7 +24660,6 @@
 				"chiara.optimise.go.dg"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Flo2000a",
 				"JPS1993a",
 				"GK2001a",
@@ -24354,7 +24674,6 @@
 				"chiara.statistics.d"
 			],
 			"keys": [
-				"BEKS2017a",
 				"BPAAB...2021a",
 				"FEHP2011a"
 			]
@@ -24366,7 +24685,6 @@
 				"chiara.statistics.nonlin.dmap"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Dat2018a",
 				"ASY1996a",
 				"Hen1976a"
@@ -24380,7 +24698,6 @@
 				"chiara.optimise.dp"
 			],
 			"keys": [
-				"BEKS2017a",
 				"SS2024a",
 				"Ber2017a",
 				"Ber2012a",
@@ -24398,7 +24715,6 @@
 				"chiara.optimise.ds"
 			],
 			"keys": [
-				"BEKS2017a",
 				"MR2018a",
 				"NW2006a",
 				"CSV2009a",
@@ -24415,7 +24731,6 @@
 				"chiara.explore.dstats"
 			],
 			"keys": [
-				"BEKS2017a",
 				"JSC2023a",
 				"Bou2023a",
 				"FPP2007a",
@@ -24431,7 +24746,6 @@
 				"chiara.statistics.nlp.dtmTfidf"
 			],
 			"keys": [
-				"BEKS2017a",
 				"JTC2023a",
 				"JM2024a",
 				"MRS2008a",
@@ -24447,7 +24761,6 @@
 				"chiara.statistics.ppl.dynppl"
 			],
 			"keys": [
-				"BEKS2017a",
 				"GXG2018a",
 				"Dav2015a",
 				"GCSDV...2013a",
@@ -24464,8 +24777,7 @@
 			],
 			"keys": [
 				"ECB2024a",
-				"SDMXTWG2023a",
-				"BEKS2017a"
+				"SDMXTWG2023a"
 			]
 		},
 		{
@@ -24476,8 +24788,7 @@
 			],
 			"keys": [
 				"SEC2024a",
-				"SEC2024b",
-				"BEKS2017a"
+				"SEC2024b"
 			]
 		},
 		{
@@ -24516,7 +24827,6 @@
 				"chiara.optimise.ec.es"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Pol2021a",
 				"MR2018a",
 				"ES2015a",
@@ -24561,8 +24871,7 @@
 				"Fre2026a",
 				"FF1993a",
 				"FF2015a",
-				"JT1993a",
-				"BEKS2017a"
+				"JT1993a"
 			]
 		},
 		{
@@ -24586,7 +24895,6 @@
 				"chiara.optimise.fo"
 			],
 			"keys": [
-				"BEKS2017a",
 				"MR2018a",
 				"NW2006a",
 				"FR1964a",
@@ -24602,7 +24910,6 @@
 				"chiara.optimise.sgm.fom"
 			],
 			"keys": [
-				"BEKS2017a",
 				"MR2018a",
 				"NW2006a",
 				"FR1964a",
@@ -24621,8 +24928,7 @@
 			],
 			"keys": [
 				"Smi...2024a",
-				"FRBSL2024a",
-				"BEKS2017a"
+				"FRBSL2024a"
 			]
 		},
 		{
@@ -24633,7 +24939,6 @@
 				"chiara.optimise.ec.galg"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Pol2021a",
 				"ES2015a",
 				"Gol1989a",
@@ -24667,7 +24972,6 @@
 				"chiara.statistics.glm.positive"
 			],
 			"keys": [
-				"BEKS2017a",
 				"JSC2024a",
 				"Rag2024a",
 				"MN1989a",
@@ -24718,7 +25022,6 @@
 				"chiara.statistics.ppl.graphppl"
 			],
 			"keys": [
-				"BEKS2017a",
 				"BV2023c",
 				"Bis2006a",
 				"KF2009a",
@@ -24735,7 +25038,6 @@
 				"chiara.statistics.lm.hetero"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Gre2018a",
 				"Har1976a",
 				"Gle1969a",
@@ -24759,8 +25061,7 @@
 			],
 			"keys": [
 				"LMJTP...2021a",
-				"Luc...2024a",
-				"BEKS2017a"
+				"Luc...2024a"
 			]
 		},
 		{
@@ -24771,7 +25072,6 @@
 				"chiara.explore.hfm"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Che2023a",
 				"JMLC2024a",
 				"VSPUJ...2017a",
@@ -24786,7 +25086,6 @@
 				"chiara.explore.hmd"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Gre2022a",
 				"LR2019a",
 				"Buu2018a",
@@ -24803,7 +25102,6 @@
 				"chiara.optimise.go.hn"
 			],
 			"keys": [
-				"BEKS2017a",
 				"MR2018a",
 				"Pri1983a",
 				"LMS2003a",
@@ -24832,7 +25130,6 @@
 				"chiara.explore.idat"
 			],
 			"keys": [
-				"BEKS2017a",
 				"KHA2024a",
 				"Bar2018a",
 				"Boo2001a",
@@ -24862,8 +25159,7 @@
 			"keys": [
 				"IMF2025a",
 				"SDMXTWG2023a",
-				"IMF2026a",
-				"BEKS2017a"
+				"IMF2026a"
 			]
 		},
 		{
@@ -24874,7 +25170,6 @@
 				"chiara.simulate.jdp"
 			],
 			"keys": [
-				"BEKS2017a",
 				"ZIRIN...2024a",
 				"CT2004a",
 				"Shr2004a",
@@ -24889,8 +25184,7 @@
 				"chiara.explore.adr.kgds"
 			],
 			"keys": [
-				"Kag2024a",
-				"BEKS2017a"
+				"Kag2024a"
 			]
 		},
 		{
@@ -24901,7 +25195,6 @@
 				"chiara.explore.kgm"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Inn2018a",
 				"HZRS2016a",
 				"DCLT2019a"
@@ -24954,7 +25247,6 @@
 				"chiara.statistics.nlp.lda"
 			],
 			"keys": [
-				"BEKS2017a",
 				"JTC2023a",
 				"JM2024a",
 				"Bis2006a",
@@ -24972,7 +25264,6 @@
 				"chiara.statistics.nlp.llmTextAnalysis"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Sim2025a",
 				"Sim2025b",
 				"JM2024a",
@@ -24994,7 +25285,6 @@
 				"chiara.statistics.lm.wls"
 			],
 			"keys": [
-				"BEKS2017a",
 				"JSC2024a",
 				"Rag2024a",
 				"Woo2019a",
@@ -25015,7 +25305,6 @@
 				"chiara.statistics.lm.ar1"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Gre2018a",
 				"PW1954a"
 			]
@@ -25029,7 +25318,6 @@
 				"chiara.mp.milp"
 			],
 			"keys": [
-				"BEKS2017a",
 				"DHL2017a",
 				"HH2018a",
 				"LY2016a",
@@ -25046,7 +25334,6 @@
 				"chiara.optimise.oc.1_classical"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Kir2012a",
 				"DHS2003a",
 				"Kal1960a"
@@ -25057,7 +25344,6 @@
 			"title": "Loss Risk Measures",
 			"description": "Drawdown · Downside Risk · Value at Risk · Expected Shortfall",
 			"keys": [
-				"BEKS2017a",
 				"Oeh2024a",
 				"Mar1952a",
 				"SP1994a",
@@ -25072,7 +25358,6 @@
 				"chiara.statistics.nlp.lsa"
 			],
 			"keys": [
-				"BEKS2017a",
 				"JTC2023a",
 				"JM2024a",
 				"MRS2008a",
@@ -25088,7 +25373,6 @@
 				"chiara.optimise.madp"
 			],
 			"keys": [
-				"BEKS2017a",
 				"ESBWG...2017a",
 				"QEDT2023a",
 				"OA2016a",
@@ -25120,7 +25404,6 @@
 				"chiara.statistics.rl.marl"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Tia...2020a",
 				"SL2009b",
 				"Woo2009a",
@@ -25136,7 +25419,6 @@
 				"chiara.optimise.gfo.mb"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Joh2007b",
 				"Zha2023a",
 				"CSV2009a",
@@ -25169,7 +25451,6 @@
 				"chiara.simulate.mc.mcmc"
 			],
 			"keys": [
-				"BEKS2017a",
 				"GXG2018a",
 				"XGTTT...2020a",
 				"RC2004a",
@@ -25186,7 +25467,6 @@
 				"chiara.optimise.mdp"
 			],
 			"keys": [
-				"BEKS2017a",
 				"ESBWG...2017a",
 				"Put2005a",
 				"Koc2015a",
@@ -25203,7 +25483,6 @@
 				"chiara.simulate.mc.mlmc"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Rob2018a",
 				"Gil2015a",
 				"RC2004a",
@@ -25228,7 +25507,6 @@
 				"chiara.optimise.mopt"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Ber2022a",
 				"ABBR2023a",
 				"AMS2008a",
@@ -25246,7 +25524,6 @@
 				"chiara.optimise.oc.3_mpc"
 			],
 			"keys": [
-				"BEKS2017a",
 				"RMD2017a",
 				"Mac2002a",
 				"MM1990a",
@@ -25261,7 +25538,6 @@
 				"chiara.mp.cone"
 			],
 			"keys": [
-				"BEKS2017a",
 				"DHL2017a",
 				"GC2024a",
 				"GCG2021a",
@@ -25281,7 +25557,6 @@
 				"chiara.optimise.evp.mpec"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Chu2023a",
 				"DF1995a",
 				"LPR1996a",
@@ -25298,7 +25573,6 @@
 				"chiara.optimise.moo.pm"
 			],
 			"keys": [
-				"BEKS2017a",
 				"MM2022a",
 				"Deb2001a",
 				"ZTLFF2003a",
@@ -25313,7 +25587,6 @@
 				"chiara.mp.micp"
 			],
 			"keys": [
-				"BEKS2017a",
 				"DHL2017a",
 				"CLV2020a",
 				"CKV2022a",
@@ -25331,7 +25604,6 @@
 				"chiara.mp.minlp"
 			],
 			"keys": [
-				"BEKS2017a",
 				"DHL2017a",
 				"WB2006a",
 				"NW2006a",
@@ -25347,7 +25619,6 @@
 				"chiara.mp.sdp"
 			],
 			"keys": [
-				"BEKS2017a",
 				"DHL2017a",
 				"GC2024a",
 				"GCG2021a",
@@ -25366,7 +25637,6 @@
 				"chiara.mp.sos"
 			],
 			"keys": [
-				"BEKS2017a",
 				"DHL2017a",
 				"LWLP2023a",
 				"GC2024a",
@@ -25446,7 +25716,6 @@
 				"chiara.optimise.ngo"
 			],
 			"keys": [
-				"BEKS2017a",
 				"CLRS2022a",
 				"AMO1993a",
 				"Dij1959a",
@@ -25465,7 +25734,6 @@
 				"chiara.optimise.nlls"
 			],
 			"keys": [
-				"BEKS2017a",
 				"NW2006a",
 				"Lev1944a",
 				"Mar1963a",
@@ -25492,7 +25760,6 @@
 				"chiara.explore.nod"
 			],
 			"keys": [
-				"BEKS2017a",
 				"MA2022a",
 				"Agg2017a",
 				"CBK2009a",
@@ -25509,7 +25776,6 @@
 				"chiara.statistics.nn.node"
 			],
 			"keys": [
-				"BEKS2017a",
 				"RMMWZ...2019a",
 				"RMDGI...2020a",
 				"GBC2016a",
@@ -25526,7 +25792,6 @@
 				"chiara.explore.novd"
 			],
 			"keys": [
-				"BEKS2017a",
 				"JMLC2023a",
 				"Day2023a",
 				"CBK2009a",
@@ -25543,7 +25808,6 @@
 				"chiara.statistics.eco.oa"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Day2020a",
 				"LRU2020a",
 				"Wel1962a",
@@ -25558,7 +25822,6 @@
 				"chiara.statistics.ode"
 			],
 			"keys": [
-				"BEKS2017a",
 				"DGHP2023a",
 				"PFGLO...2025a",
 				"MGALS...2021a",
@@ -25578,7 +25841,6 @@
 				"chiara.optimise.local"
 			],
 			"keys": [
-				"BEKS2017a",
 				"MR2018a",
 				"NW2006a",
 				"BV2004a",
@@ -25595,7 +25857,6 @@
 				"chiara.optimise.moo.pb"
 			],
 			"keys": [
-				"BEKS2017a",
 				"MM2022a",
 				"Deb2001a",
 				"CLV2007a",
@@ -25613,7 +25874,6 @@
 				"chiara.statistics.rl.pgm"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Tia...2020a",
 				"SB2018a",
 				"SMSM2000a",
@@ -25629,7 +25889,6 @@
 				"chiara.optimise.go.pg"
 			],
 			"keys": [
-				"BEKS2017a",
 				"KT1987a",
 				"MZ1998a",
 				"AGK2019a"
@@ -25640,7 +25899,6 @@
 			"title": "Portfolio Optimisation",
 			"description": "Mean-Variance · Mean-CVaR · HRP · HERC",
 			"keys": [
-				"BEKS2017a",
 				"Mar1991a",
 				"Ron2013a",
 				"Mar1952a",
@@ -25660,7 +25918,6 @@
 				"chiara.statistics.ppl.turing"
 			],
 			"keys": [
-				"BEKS2017a",
 				"GXG2018a",
 				"GCSDV...2013a",
 				"Mce2020a",
@@ -25677,7 +25934,6 @@
 				"chiara.optimise.gbo.np"
 			],
 			"keys": [
-				"BEKS2017a",
 				"TSP2020a",
 				"STP2017a",
 				"PB2014a",
@@ -25698,7 +25954,6 @@
 				"chiara.statistics.pp"
 			],
 			"keys": [
-				"BEKS2017a",
 				"DV2003a",
 				"DV2008a",
 				"Ros2014a",
@@ -25722,7 +25977,6 @@
 				"chiara.simulate.pp"
 			],
 			"keys": [
-				"BEKS2017a",
 				"DV2003a",
 				"Ros2014a",
 				"Oga1981a",
@@ -25742,7 +25996,6 @@
 				"chiara.statistics.rl.ql"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Tia...2020a",
 				"SB2018a",
 				"Lap2020a",
@@ -25758,7 +26011,6 @@
 				"chiara.optimise.qn"
 			],
 			"keys": [
-				"BEKS2017a",
 				"MR2018a",
 				"NW2006a",
 				"Bro1970a",
@@ -25778,13 +26030,33 @@
 				"chiara.mp.miqp"
 			],
 			"keys": [
-				"BEKS2017a",
 				"DHL2017a",
 				"SBGBB2020a",
 				"GC2024a",
 				"NW2006a",
 				"BV2004a",
 				"Mar1952a"
+			]
+		},
+		{
+			"id": "rag",
+			"title": "Retrieval-Augmented Generation",
+			"commands": [
+				"pollis.retrievalAugmentedGeneration"
+			],
+			"keys": [
+				"RM2019a",
+				"MRS2008a",
+				"LPPPK...2020a",
+				"RZ2009a",
+				"Jon1972a",
+				"SB1988a",
+				"RG2019a",
+				"MY2020a",
+				"CCB2009a",
+				"NC2019a",
+				"KZ2020a",
+				"SKSPZ2022a"
 			]
 		},
 		{
@@ -25805,7 +26077,6 @@
 				"chiara.statistics.nn.rl"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Mar2025a",
 				"HS1997a",
 				"CMGBB...2014a"
@@ -25819,7 +26090,6 @@
 				"chiara.optimise.ropt"
 			],
 			"keys": [
-				"BEKS2017a",
 				"DHL2017a",
 				"HH2018a",
 				"GC2024a",
@@ -25839,7 +26109,6 @@
 				"chiara.statistics.nlp.rouge"
 			],
 			"keys": [
-				"BEKS2017a",
 				"JTC2023a",
 				"JSC2024b",
 				"Geh...2023a",
@@ -25887,7 +26156,6 @@
 				"chiara.statistics.ba.rxinfer"
 			],
 			"keys": [
-				"BEKS2017a",
 				"BV2023c",
 				"BV2022a",
 				"Bis2006a",
@@ -25916,7 +26184,6 @@
 				"chiara.optimise.sbo"
 			],
 			"keys": [
-				"BEKS2017a",
 				"FSK2008a",
 				"SWMW1989a",
 				"Jon2001a"
@@ -25930,7 +26197,6 @@
 				"chiara.simulate.sde"
 			],
 			"keys": [
-				"BEKS2017a",
 				"RN2017a",
 				"Oks2003a",
 				"Eva2013a"
@@ -25944,7 +26210,6 @@
 				"chiara.simulate.sdea"
 			],
 			"keys": [
-				"BEKS2017a",
 				"RN2017a",
 				"Oks2003a",
 				"Tuc1988a"
@@ -25958,7 +26223,6 @@
 				"chiara.optimise.sgm"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Inn2018a",
 				"GBC2016a",
 				"RM1951a",
@@ -25974,7 +26238,6 @@
 				"chiara.statistics.si"
 			],
 			"keys": [
-				"BEKS2017a",
 				"CFHT2021a",
 				"Lju1999a",
 				"SS1989a",
@@ -25989,7 +26252,6 @@
 				"chiara.statistics.id"
 			],
 			"keys": [
-				"BEKS2017a",
 				"SBTSC...2023a",
 				"RC2004a",
 				"BGJM2011a",
@@ -26007,7 +26269,6 @@
 				"chiara.statistics.nlp.languageModel"
 			],
 			"keys": [
-				"BEKS2017a",
 				"JTC2023a",
 				"JM2024a",
 				"MS1999a",
@@ -26023,7 +26284,6 @@
 				"chiara.simulate.mc.smc"
 			],
 			"keys": [
-				"BEKS2017a",
 				"CP2020a",
 				"DFG2001a",
 				"GSS1993a",
@@ -26041,7 +26301,6 @@
 				"chiara.optimise.so"
 			],
 			"keys": [
-				"BEKS2017a",
 				"MR2018a",
 				"Joh2007c",
 				"NW2006a",
@@ -26059,7 +26318,6 @@
 				"chiara.optimise.spro"
 			],
 			"keys": [
-				"BEKS2017a",
 				"DHL2017a",
 				"DK2021b",
 				"HH2018a",
@@ -26078,7 +26336,6 @@
 				"chiara.explore.conn.sql"
 			],
 			"keys": [
-				"BEKS2017a",
 				"RM2019a",
 				"Qui2023b",
 				"Qui2023c",
@@ -26093,7 +26350,6 @@
 				"chiara.statistics.sreg"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Cra2023a",
 				"Koz1992a",
 				"SL2009a",
@@ -26126,7 +26382,6 @@
 				"chiara.optimise.swarm"
 			],
 			"keys": [
-				"BEKS2017a",
 				"MM2022a",
 				"KES2001a",
 				"Eng2005a",
@@ -26161,7 +26416,6 @@
 				"chiara.optimise.oc.2_traj"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Kir2012a",
 				"Str2015a"
 			]
@@ -26206,7 +26460,6 @@
 				"chiara.statistics.timeseries.ssm"
 			],
 			"keys": [
-				"BEKS2017a",
 				"BSSS2019a",
 				"DK2012a",
 				"Har1990a",
@@ -26224,7 +26477,6 @@
 				"chiara.optimise.evp.vari"
 			],
 			"keys": [
-				"BEKS2017a",
 				"Chu2023a",
 				"DF1995a",
 				"FP2003a",
@@ -26255,8 +26507,7 @@
 			],
 			"keys": [
 				"WB2026a",
-				"WB2024a",
-				"BEKS2017a"
+				"WB2024a"
 			]
 		},
 		{

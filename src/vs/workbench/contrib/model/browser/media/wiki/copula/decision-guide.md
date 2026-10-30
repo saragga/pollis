@@ -28,7 +28,7 @@
 - **Rank inversion** for a quick, robust start; maximum likelihood for efficiency.
 - **Filter time series** before fitting.
 - **Several hundred observations** before trusting tail estimates.
-- **In d > 2**, one-parameter Archimedean copulas impose equal dependence on all pairs; vines relax that.
+- **In d > 2**, one-parameter Archimedean copulas impose equal dependence on all pairs; vines relax that, as the **Vine Copula** tab shows.
 
 ## See Also
 - [Factsheet](factsheet.md) · [Elliptical Copulas](elliptical.md) · [Archimedean Copulas](archimedean.md)

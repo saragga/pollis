@@ -1,6 +1,6 @@
 # NLP
 
-A **nonlinear program** is min (or max) f(x) subject to constraints g(x) <= 0, h(x) = 0 and bounds, with continuous variables and smooth, nonlinear f, g and h. In this panel it is solved locally by an interior-point method.
+A **nonlinear program** is min (or max) f(x) subject to constraints g(x) <= 0, h(x) = 0 and bounds, with continuous variables and smooth, nonlinear f, g and h. In the Nonlinear Programming panel it is solved locally by an interior-point method.
 
 ## Ipopt
 **Ipopt** (Wachter and Biegler, 2006) is the standard open-source solver for smooth NLPs. It turns inequalities into equalities with slack variables, keeps the slacks and bounded variables strictly inside their bounds with a **logarithmic barrier**, and takes Newton steps on the KKT conditions of the barrier problem for the primal and dual variables together, reducing the barrier parameter towards zero. A filter line search ensures progress, and a sparse linear solver handles the Newton systems, so problems with hundreds of thousands of variables are within reach.

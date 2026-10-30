@@ -1,6 +1,6 @@
 # Overview
 
-This webview draws samples from a probability distribution known only up to a constant, usually a Bayesian posterior, by **Markov Chain Monte Carlo** (MCMC). An MCMC sampler builds a chain of draws in which each one depends only on the previous one, constructed so that, after a **warm-up**, the draws are distributed as the target. Averages over the chain then estimate means, quantiles and probabilities. The panel shows three samplers, from the most to the least efficient on smooth continuous targets.
+The Markov Chain Monte Carlo panel draws samples from a probability distribution known only up to a constant, usually a Bayesian posterior, by **Markov Chain Monte Carlo** (MCMC). An MCMC sampler builds a chain of draws in which each one depends only on the previous one, constructed so that, after a **warm-up**, the draws are distributed as the target. Averages over the chain then estimate means, quantiles and probabilities. The panel shows three samplers, from the most to the least efficient on smooth continuous targets.
 
 ## NUTS
 The **No-U-Turn Sampler**, through Turing.jl's @model syntax: Hamiltonian Monte Carlo that chooses its own trajectory length, by stopping when the trajectory starts to turn back, and tunes its step size during warm-up to reach a target acceptance rate. The default for continuous parameters. See [NUTS](nuts.md).

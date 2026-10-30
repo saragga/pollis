@@ -49,9 +49,10 @@ export interface IAskPollisFromPanel {
 }
 
 /**
- * A passage found, with the document it is from: `page` is missing in a wiki and in the Julia Manual, `file` the PDF,
- * the wiki's Markdown or the Manual's search index; `anchor`, in the Julia Manual only, the HTML page beside that index
- * and the anchor the passage is at, as `manual/constructors.html#man-constructors`.
+ * A passage found, with the document it is from: `page` is missing in a wiki, in the Julia Manual and in the Package
+ * APIs, `file` the PDF, the wiki's Markdown, the Manual's search index or a package's file of docstrings; `anchor`, in
+ * the Julia Manual, the HTML page beside that index and the anchor the passage is at, as
+ * `manual/constructors.html#man-constructors`, and in the Package APIs the address of the docstring on its site.
  */
 export interface IAskPollisPassage {
 	readonly id: number;
@@ -75,11 +76,26 @@ export interface IAskPollisPassage {
  */
 export type AskPollisWordsOnly = 'notIndexed' | 'notEmbedded' | 'otherModel' | 'modelNotStarted';
 
+/** A source within a collection, which Search In can tick; a question is routed to the collections, never to one of these. */
+export type AskPollisSource = 'pollisTopics' | 'packageVignettes' | 'toolboxOverviews' | 'panelsWikis' | 'juliaManual' | 'juliaLibrary';
+
+/** The collection each source is part of, as ask_index.jl names them. */
+export const ASK_SOURCE_COLLECTION: Record<AskPollisSource, string> = {
+	pollisTopics: 'Pollis',
+	packageVignettes: 'Pollis',
+	toolboxOverviews: 'Pollis',
+	panelsWikis: 'Pollis',
+	juliaManual: 'Julia Manual',
+	juliaLibrary: 'Julia Manual',
+};
+
 export interface IAskPollisSearchRequest {
 	/** What is searched: the question, after the one before it in a conversation. */
 	readonly question: string;
 	/** The collections searched, as the switch sets them; without them the question is routed to the nearest. */
 	readonly collections?: readonly string[];
+	/** The only sources searched of their collections, the other collections whole. */
+	readonly sources?: readonly AskPollisSource[];
 	/** How many passages are found. */
 	readonly passages?: number;
 	/** The panel it is asked in, which gives most of the passages, the rest routed as without it. */
@@ -233,9 +249,32 @@ function askUserContent(question: string, attachments: readonly IAskPollisAttach
 /** How many of the questions before are given to the model with their answers, so that the passages still fit its context. */
 const ASK_TURNS = 4;
 
-/** What a passage is labelled with for the model, and as the source of a question of Evaluate Answering Models: its document, its page and its heading. */
+/** What a passage is labelled with for the model, and as the source of a question of Evaluate Answering Models: its document, with its version in the Package APIs, its page and its heading. */
 export function askPassageLabel(passage: IAskPollisPassage): string {
-	return [passage.title, passage.page === null ? '' : `page ${passage.page}`, passage.heading].filter(part => part).join(', ');
+	const title = passage.kind === 'api' && passage.menu ? `${passage.title} ${passage.menu}` : passage.title;
+	return [title, passage.page === null ? '' : `page ${passage.page}`, passage.heading].filter(part => part).join(', ');
+}
+
+/**
+ * How much of the docstrings of the Package APIs goes to the model with a question, in characters: about 5000 tokens,
+ * which leaves room in the 8192 of a local model for the instruction, the question and the conversation.
+ */
+const ASK_DOCSTRING_CHARACTERS = 15000;
+
+/** The text of each of `passages` for the model: a docstring is whole unless, together, they do not fit; then the longest are cut, the shorter ones staying whole. */
+function askPassageTexts(passages: readonly IAskPollisPassage[]): string[] {
+	const docstrings = passages.filter(passage => passage.kind === 'api').sort((a, b) => a.text.length - b.text.length);
+	const lengths = new Map<IAskPollisPassage, number>();
+	let left = ASK_DOCSTRING_CHARACTERS;
+	docstrings.forEach((passage, i) => {
+		const length = Math.min(passage.text.length, Math.floor(left / (docstrings.length - i)));
+		lengths.set(passage, length);
+		left -= length;
+	});
+	return passages.map(passage => {
+		const length = lengths.get(passage) ?? passage.text.length;
+		return length < passage.text.length ? `${passage.text.slice(0, length)} [...]` : passage.text;
+	});
 }
 
 /**
@@ -245,7 +284,8 @@ export function askPassageLabel(passage: IAskPollisPassage): string {
  * Retrieval-Augmented Generation, the model is told the passages are from its documents.
  */
 export function askPollisMessages(turns: readonly IAskPollisTurn[], question: string, passages: readonly IAskPollisPassage[], panel?: IAskPollisPanel, attachments?: readonly IAskPollisAttachment[], collection?: string): IAskPollisMessage[] {
-	const numbered = passages.map((passage, i) => `[${i + 1}] ${askPassageLabel(passage)}\n${passage.text}`);
+	const texts = askPassageTexts(passages);
+	const numbered = passages.map((passage, i) => `[${i + 1}] ${askPassageLabel(passage)}\n${texts[i]}`);
 	const menu = panel && passages.find(passage => passage.kind === 'wiki' && passage.title === panel.title)?.menu;
 	const asked = panel ? `\nThe question is asked in the panel ${panel.title} of Pollis${menu ? ` (${menu})` : ''}: "this panel", "here" or "this method" mean it.` : '';
 	const before = turns.slice(-ASK_TURNS);

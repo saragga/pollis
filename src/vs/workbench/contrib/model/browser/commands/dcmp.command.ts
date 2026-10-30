@@ -28,14 +28,6 @@ const DCMP_TITLE = 'Distribution Comparison Plots';
 const DCMP_REFERENCES: IModelReference[] = [
 	{ separator: true, label: 'Software' },
 	{
-		title: 'Julia: A Fresh Approach to Numerical Computing',
-		authors: 'Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B.',
-		year: 2017,
-		journal: 'SIAM Review',
-		doi: '10.1137/141000671',
-		openAccess: false,
-	},
-	{
 		title: 'StatsPlots.jl: Statistical Plotting Recipes for Julia',
 		authors: 'JuliaPlots contributors',
 		year: 2023,

@@ -18,7 +18,7 @@
 2D **contour** renders statically with **CairoMakie** (works inline in a notebook). **Surface**, **3D contour**, and **volume** want **GLMakie** — interactive OpenGL, needs a display/GPU.
 
 ## What It Is Not
-These are for *continuous fields*, not discrete points, categories, or networks — for those use the other Visualise webviews.
+Surface and field plots are for *continuous fields*, not discrete points, categories, or networks — for those use the other Visualise panels.
 
 ## See Also
 - [Overview](overview.md) · [Decision Guide](decision-guide.md) · [Diagnostics](diagnostics.md)

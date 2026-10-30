@@ -13,7 +13,7 @@ The **Solution Summary** gives the final parameters, the loss, the loss at the s
 **Compare Methods** runs SGD, Momentum, Nesterov, Adam, AdaMax and AdaGrad at the **same learning rate** over five seeds and reports the mean and spread of the late average loss. The same rate means different steps in different rules, so this compares the rules at your setting, not at their best: a poor showing may be cured by a different rate. Use the **Learning-Rate Sensitivity** with each rule before drawing conclusions, or the First-Order Methods panel's comparison, which tunes each rule first.
 
 ## Evaluate at New Point
-**Evaluate at New Point** compares the loss at another parameter vector with the trained one.
+In Stochastic Gradient Methods, **Evaluate at New Point** compares the loss at another parameter vector with the trained one.
 
 ## See Also
 - [Diagnostics](diagnostics.md) · [Decision Guide](decision-guide.md) · [Overview](overview.md)

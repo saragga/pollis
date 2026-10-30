@@ -1,6 +1,6 @@
 # Trading Agents — Factsheet
 
-Prices in modern stock markets are set in a **limit order book**: traders post buy (bid) and sell (ask) orders at prices of their choice, and a trade happens whenever an incoming order meets a resting one. This panel simulates such markets in Julia, from heterogeneous trading agents down to the order flow, and measures what comes out: the spread, volatility, fat tails and price impact.
+Prices in modern stock markets are set in a **limit order book**: traders post buy (bid) and sell (ask) orders at prices of their choice, and a trade happens whenever an incoming order meets a resting one. The Trading Agents panel simulates such markets in Julia, from heterogeneous trading agents down to the order flow, and measures what comes out: the spread, volatility, fat tails and price impact.
 
 | | |
 |---|---|

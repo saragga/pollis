@@ -14,7 +14,7 @@ mean(skipmissing(x))                    # mean of the observed values
 count(ismissing, x)                     # how many were skipped
 ```
 
-Skipping is only harmless when values are missing at random; see the Handle Missing Data webview.
+Skipping is only harmless when values are missing at random; see the Handle Missing Data panel.
 
 ## Sample, Not Population
 `std` and `var` divide by n - 1 (the unbiased sample estimate). Pass `corrected=false` for the population formula. The difference matters only for small samples.

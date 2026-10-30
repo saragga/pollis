@@ -10,7 +10,7 @@ import { IModelInput, IModelToggle, IScaffoldPanelData } from '../common/model.t
  * The parts of a scaffold panel that are not in its TOML data: at least the title and the
  * default model. Any other {@link WebviewParts} field given here replaces the generated one.
  */
-export type ScaffoldPanelOptions = Pick<WebviewParts, 'title' | 'defaultModel'> & Partial<WebviewParts>;
+export type ScaffoldPanelOptions = Partial<WebviewParts> & { readonly title: string; readonly defaultModel: string };
 
 /** The five default Next Steps groups, in their standard order. */
 const STANDARD_GROUPS = ['visualise', 'diagnose', 'predict', 'compare', 'interpret'];

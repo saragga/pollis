@@ -1,6 +1,6 @@
 # Nonlinear Programming — Overview
 
-This webview builds a JuMP model with n variables, lb <= x[i] <= ub, a nonlinear objective and one constraint, and solves it with the solver of the chosen problem class. JuMP parses the nonlinear expressions directly, computes exact derivatives, and passes them to the solver.
+The Nonlinear Programming panel builds a JuMP model with n variables, lb <= x[i] <= ub, a nonlinear objective and one constraint, and solves it with the solver of the chosen problem class. JuMP parses the nonlinear expressions directly, computes exact derivatives, and passes them to the solver.
 
 ## The Default Example
 The default objective, sum((x .- 1) .^ 2) + 3 x[1] x[2] + x[1], with n = 5 and the ball sum(x .^ 2) <= 4, is **nonconvex** because of the bilinear term 3 x[1] x[2]. It has two local minima, with objective values of about -0.54 and 1.69: a local solver may return either, depending on where it starts, which is the point of the comparison between the three classes.

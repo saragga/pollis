@@ -28,14 +28,6 @@ const CPVIZ_TITLE = 'Categorical and Proportional Plots';
 const CPVIZ_REFERENCES: IModelReference[] = [
 	{ separator: true, label: 'Software' },
 	{
-		title: 'Julia: A Fresh Approach to Numerical Computing',
-		authors: 'Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B.',
-		year: 2017,
-		journal: 'SIAM Review',
-		doi: '10.1137/141000671',
-		openAccess: false,
-	},
-	{
 		title: 'Plots.jl: Powerful Convenience for Julia Visualizations',
 		authors: 'Christ, Simon; others',
 		year: 2023,

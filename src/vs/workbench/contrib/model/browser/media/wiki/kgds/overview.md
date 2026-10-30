@@ -16,7 +16,7 @@
 
 ## Kaggle vs Hugging Face datasets
 
-Both host community datasets, but the centre of gravity differs: Kaggle leans **tabular and competition-oriented**, with rich human-written documentation; Hugging Face leans **ML-training-oriented** (text, audio, image), auto-converted to Parquet. Pollis ships a webview for each.
+Kaggle and Hugging Face both host community datasets, but the centre of gravity differs: Kaggle leans **tabular and competition-oriented**, with rich human-written documentation; Hugging Face leans **ML-training-oriented** (text, audio, image), auto-converted to Parquet. Pollis ships a panel for each.
 
 ## See Also
 - [Browsing the Catalogue](browsing.md) — search, sort, and filter

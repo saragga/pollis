@@ -4,7 +4,7 @@
 
 Self-attention is **permutation-equivariant**: if you shuffle the input tokens, the output is shuffled in exactly the same way. The attention mechanism has no inherent notion of order. For language and time series this is a problem — "rates rise then fall" and "rates fall then rise" are opposite signals, but a bare attention layer treats them identically.
 
-Positional encoding injects order information into the token representations before the first attention layer. The webview checkbox switches between the two most common approaches: **sinusoidal** (fixed) and **learned** (trained).
+Positional encoding injects order information into the token representations before the first attention layer. A checkbox of the Transformers panel switches between the two most common approaches: **sinusoidal** (fixed) and **learned** (trained).
 
 ---
 
@@ -68,7 +68,7 @@ At training time the model optimises these vectors jointly with all other parame
 
 ## Modern Variants
 
-The sinusoidal vs learned dichotomy is from 2017–2019. More recent architectures use position encodings that extend better to long sequences and encode relative rather than absolute positions. These are not in the webview template but are worth knowing.
+The sinusoidal vs learned dichotomy is from 2017–2019. More recent architectures use position encodings that extend better to long sequences and encode relative rather than absolute positions. These position encodings are not in the code of the Transformers panel but are worth knowing.
 
 ### Relative Position Encodings (Shaw et al., 2018)
 

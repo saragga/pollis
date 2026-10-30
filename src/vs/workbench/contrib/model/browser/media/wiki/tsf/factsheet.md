@@ -1,6 +1,6 @@
 # Time-Series Forecasting — Factsheet
 
-**Time-series forecasting** predicts the future values of a series from its own past, with intervals that say how uncertain the predictions are. This panel puts the classical forecasting models in one **state-space** framework: local level and trend, basic structural, exponential smoothing (ETS), ARIMA and unobserved components models, all estimated by maximum likelihood with the Kalman filter in StateSpaceModels.jl. LOESS smoothing explores the trend without a model.
+**Time-series forecasting** predicts the future values of a series from its own past, with intervals that say how uncertain the predictions are. The Time-Series Forecasting panel puts the classical forecasting models in one **state-space** framework: local level and trend, basic structural, exponential smoothing (ETS), ARIMA and unobserved components models, all estimated by maximum likelihood with the Kalman filter in StateSpaceModels.jl. LOESS smoothing explores the trend without a model.
 
 | | |
 |---|---|

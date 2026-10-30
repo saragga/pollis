@@ -4,7 +4,7 @@
 The **Convergence Trace** plots f(x_k) - f* against the iteration on a log scale. Newton's method shows a curve that **plunges** near the end (quadratic convergence); BFGS and L-BFGS, a curve that bends downward (superlinear); gradient descent and conjugate gradient on an ill-conditioned problem, a straight line (linear convergence, a constant ratio per step); Nelder-Mead, a slow, irregular descent. A plateau means the method is stuck.
 
 ## Contour + Path
-For two-variable problems, the **Contour + Path** draws the iterates on the contours of f; with more variables, the others are held at the optimum. For Nelder-Mead it follows the centroid of the simplex. It shows whether the path follows the valley or zigzags across it, as gradient descent does in the Rosenbrock valley.
+For a two-variable problem in Local Optimisation, the **Contour + Path** draws the iterates on the contours of f; with more variables, the others are held at the optimum. For Nelder-Mead it follows the centroid of the simplex. It shows whether the path follows the valley or zigzags across it, as gradient descent does in the Rosenbrock valley.
 
 ## Convergence Check
 The **Convergence Check** reports the overall flag and its three parts: **x_converged** (the step became tiny), **f_converged** (f stopped changing) and **g_converged** (the gradient became tiny, the only one that says the point is stationary), with the iterations, the function and gradient calls, and the gradient norm at the solution by automatic differentiation. Optim stops by default after 1000 iterations; reaching the limit is not convergence. Simulated Annealing and Particle Swarm have no stopping test of their own and run to the limit, so their flag says little: judge them by the trace and the gradient norm.

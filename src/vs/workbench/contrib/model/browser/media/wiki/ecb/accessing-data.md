@@ -1,6 +1,6 @@
 # Accessing Data
 
-This page is the core recipe: fetch a series with **no API key**, in **CSV**, into a **Tables.jl** table.
+The core recipe for ECB data: fetch a series with **no API key**, in **CSV**, into a **Tables.jl** table.
 
 ## The Three Packages
 

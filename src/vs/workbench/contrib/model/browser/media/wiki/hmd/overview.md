@@ -1,6 +1,6 @@
 # Overview
 
-This webview offers five ways to deal with missing values, from the simplest (throw the incomplete data away) to a low-rank matrix completion. Every method starts from the same step:
+The Handle Missing Data panel offers five ways to deal with missing values, from the simplest (throw the incomplete data away) to a low-rank matrix completion. Every method starts from the same step:
 
 ```julia
 using Impute, Tables

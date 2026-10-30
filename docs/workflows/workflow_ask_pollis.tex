@@ -60,12 +60,13 @@ you can open them and check.
 \toprule
 Reads & The documents of \menupath{Help\gt Documentation}: the Tour, the Guide, A Tour of Pollis AI+, Pollis AI+,
   the drill-downs, the panel wikis, the package vignettes and the documents of the installed toolboxes; and the
-  Julia Manual, with Base and the standard library, of the Julia that Pollis runs (\S\ref{sec:manual})\\
+  Julia Manual, with Base and the standard library, of the Julia that Pollis runs (\S\ref{sec:manual}); and, when
+  you choose them, the Package APIs, the docstrings of the panels' packages (\S\ref{sec:apis})\\
 Finds passages by & hybrid search: BM25 keyword search (DuckDB's fts extension) and embedding-based semantic search
   (cosine distance in DuckDB), merged by Reciprocal Rank Fusion into the top 8 passages, all on PollisDocuments.duckdb\\
 Answers with & a chat model on this computer, through the llama.cpp that comes with Pollis; or, if you choose, a
   cloud model with your own key\\
-Keeps & one DuckDB file, \file{~/.pollis/documents/PollisDocuments.duckdb}, a few megabytes\\
+Keeps & one DuckDB file, \file{~/.pollis/documents/PollisDocuments.duckdb}, about 25 MB, or about 140 MB with the Package APIs\\
 Sends out & nothing with a local model; with a cloud model, the question, the conversation so far and the passages
   found, never your files\\
 Compares & chat models of your choice, local and cloud, on the same questions and the same passages, scored by a
@@ -119,10 +120,13 @@ without the citation numbers and the Sources; it is not available yet (\S\ref{se
 A question is searched where it belongs: one on Pollis in Pollis's documents, one on Julia in the Julia Manual, one
 on both in both (\S\ref{sec:routing}). Under the answer, \emph{Searched: Pollis, Julia Manual.} says where.
 \textbf{Search In}, the pill below the box on the left, changes that for the next question: \textbf{Search In:
-Auto}, the default; \textbf{Pollis} or \textbf{Julia Manual} alone, the Julia Manual being also the docstrings of
-Base and the standard library (\S\ref{sec:manual}); \textbf{All Sources}; or \textbf{None}, which searches nothing:
+Auto}, the default; the sources you tick, any of \textbf{Pollis Topics}, \textbf{Package Vignettes}, \textbf{Package APIs},
+\textbf{Toolbox Overviews}, \textbf{Panels Wikis}, \textbf{Julia Manual} and \textbf{Julia Base and Standard Library}, the last two
+being one source to Auto (\S\ref{sec:manual}), the menu staying open as you tick and the pill saying how many, with their
+names on hover; \textbf{All Sources}; or \textbf{None}, which searches nothing:
 the model answers from what it knows, and \emph{Answered without the documents} under its answer says so, to see what
 the documents add. Without the Julia Manual (\S\ref{sec:settings}), Pollis is the only source, and Auto searches it.
+Auto never searches the Package APIs (\S\ref{sec:apis}): only ticking \textbf{Package APIs} and \textbf{All Sources} do.
 
 \subsection{Following up}
 Ask another question below the answer, and it is read with the conversation so far: \emph{and on Windows?} after a
@@ -185,6 +189,8 @@ The package vignettes & their PDFs, compiled in the background: those of the pac
 The installed toolboxes & their documents and their panels' wikis & as above, with the toolbox's name\\
 The Julia Manual & the search index of the documentation that comes with the Julia that Pollis runs: the Manual, Base
   and the standard library & its page, and the section or the function the passage is in\\
+The Package APIs & the docstrings on the Documenter sites of the panels' packages, read in the background & the
+  package, its version, the name of the docstring\\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -204,6 +210,23 @@ nothing to say to a question.
 The Julia Manual is a source of its own, beside Pollis's, and is searched too unless \file{pollis.ask.juliaManual} is
 off (\S\ref{sec:settings}). A Julia installed without its documentation, as some Linux distributions do, gives no
 Julia Manual, and Ask Pollis searches Pollis's documents alone.
+
+\subsection{The Package APIs}\label{sec:apis}
+A docstring says what a function, a type or a macro does, with its signature, its arguments and often an example. Most
+packages publish theirs with Documenter, whose sites all have the same form, so Ask Pollis reads them from there. The
+list of the sites comes with Pollis (\file{package\_apis.json}, written by \file{build/pollis/makePackageApis.ts}): a
+package's own site, or else its copy on JuliaHub. The search index of a site says which pages have docstrings; the
+docstrings themselves are read from the HTML of those pages, because that index has lost the backslashes and braces of
+the formulas and the fences of the code. Each docstring is one passage, whole, with its code and its formulas in LaTeX.
+
+A package is read at the version on this computer when its site has that version, otherwise at the stable version, and
+at \emph{dev} when you develop it in \file{~/.julia/dev}; the passage says which version it is. Each goes to
+\file{~/.pollis/documents/apis/NAME.json}. A version that may change is looked at again at most once a week.
+
+These passages are a source of their own, for when you look for a function that does something, rather than ask what
+a function does. Auto never searches them. Ticking \textbf{Package APIs} in \textbf{Search In}
+and \textbf{All Sources} do, and Open shows the docstring on its site. Evaluate Models and Evaluate Embedding Models leave
+them out. They are read unless \file{pollis.ask.packageApis} is off (\S\ref{sec:settings}).
 
 \section{Cutting into passages}\label{sec:passages}
 
@@ -242,14 +265,14 @@ The passages are kept in \file{~/.pollis/documents/PollisDocuments.duckdb}, on t
 \begin{lstlisting}[language=SQL]
 documents(id, kind, title, source, menu, toolbox, version, collection)   -- one row per document read
 passages(id, document, page, heading, text, anchor, embedding FLOAT[768])
-collections(name, passages)   -- one row per source: Pollis, Julia Manual
+collections(name, passages)   -- one row per source: Pollis, Julia Manual, Package APIs
 built(name, value)          -- the embedding model, its prefixes, the Pollis version
 \end{lstlisting}
 
 \file{version} is the size and date of the file a document was read from, so that only the documents that changed are
 read again (\S\ref{sec:fresh}); for the Julia Manual, the Julia version too. \file{collection} is the source a
 document belongs to (\S\ref{sec:routing}), and \file{anchor} the place of a passage of the Julia Manual in its HTML
-page.
+page, or the address of a docstring of the Package APIs.
 
 \subsection{Words: the fts index}
 DuckDB's full-text search extension, \emph{fts}, which comes with Pollis, indexes the heading and the text of each
@@ -621,6 +644,7 @@ No Julia Manual in \textbf{Search In} & Your Julia came without its documentatio
 \file{pollis.ask.passagePrefix} & What a passage is given to it as: \texttt{\small title: \{title\} \textbar{} text: \{text\}}\\
 \file{pollis.ask.passages} & How many passages go to the model: 8\\
 \file{pollis.ask.juliaManual} & Whether the Julia Manual is searched too: on\\
+\file{pollis.ask.packageApis} & Whether the Package APIs are read, for \textbf{Search In}: on\\
 \bottomrule
 \end{tabularx}
 \end{center}

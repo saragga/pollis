@@ -17,6 +17,8 @@
 // The package vignettes the list gives with what to compile them from, not compiled yet or changed since, are compiled
 // after the index is made, one at a time, and the index is then made again with them; one that cannot be compiled is
 // not tried again in this session.
+// The Package APIs, unless pollis.ask.packageApis is off, come after them: the docstrings of the packages of the panels,
+// read from their documentation sites (pollisPackageApis.ts), one package at a time, and the index is then made again.
 // The Julia Manual is that of the Julia the index is made with, the REPL's: when the REPL starts again with another
 // version of Julia, the index is made again, with that version's Manual; and when pollis.ask.juliaManual changes.
 // At Pollis' first start the REPL installs DuckDB.jl while the index is made, which then cannot be: it is made again
@@ -44,6 +46,7 @@ import { getPackageEnvironment } from './interactive/repl'
 import { whenDuckDBReady } from './pollisDuckDB'
 import { startServer } from './pollisLlamaServer'
 import { valueFile } from './pollisModels'
+import { packageApiSources, updatePackageApis } from './pollisPackageApis'
 
 let g_started = false
 let g_compiling: Promise<DocumentsAnswer> | undefined
@@ -292,21 +295,24 @@ function indexDocuments(
     g_juliaVersion = juliaExecutable.version
     let noDuckDB = false
     let compiled = false
+    let packageApisChanged = false
     g_indexing = (async () => {
         const sources = path.join(os.homedir(), '.pollis', 'documents', 'sources.json')
+        const settings = vscode.workspace.getConfiguration('pollis.ask')
+        const packageApis = settings.get<boolean>('packageApis') !== false
         let vignettes: AskSource[] = []
         try {
             const list = await vscode.commands.executeCommand<AskSource[]>('pollis.askPollis.sources')
             vignettes = list.filter((source) => source.compile && !g_vignettesFailed.has(source.file))
+            const apis = packageApis ? await packageApiSources(context.extensionPath) : []
             await fs.promises.mkdir(path.dirname(sources), { recursive: true })
-            await fs.promises.writeFile(sources, JSON.stringify(list.map((source) => ({ ...source, compile: undefined }))))
+            await fs.promises.writeFile(sources, JSON.stringify([...list.map((source) => ({ ...source, compile: undefined })), ...apis]))
         } catch (err) {
             console.error('[pollis] could not list the documents for Ask Pollis', err)
             return
         }
         // ask_index.jl loads the DuckDB engine and fts of Pollis
         await whenDuckDBReady()
-        const settings = vscode.workspace.getConfiguration('pollis.ask')
         const model = settings.get<string>('embeddingModel')?.trim() || EMBEDDING_MODEL
         const prefix = settings.get<string>('passagePrefix')?.trim() || PASSAGE_PREFIX
         // Not downloaded here: Ask Pollis offers it at first use
@@ -317,11 +323,16 @@ function indexDocuments(
         }, (progress) => (g_progress = progress))
         noDuckDB = result.error === 'noDuckDB'
         compiled = await compileVignettes(context, juliaExecutable, vignettes)
+        if (packageApis) {
+            const progress = windowProgress('Reading the Package APIs for Ask Pollis')
+            packageApisChanged = await updatePackageApis(context.extensionPath, (done, total) => progress.report(`${done} of ${total}`))
+            progress.finish()
+        }
     })().finally(() => {
         g_indexing = undefined
         g_progress = undefined
-        if (compiled && !noDuckDB) {
-            // The vignettes compiled after the index, read in the next
+        if ((compiled || packageApisChanged) && !noDuckDB) {
+            // The vignettes compiled and the Package APIs read after the index, read in the next
             g_indexAgain = true
         }
         if (noDuckDB && g_duckDBInstalled) {
@@ -519,7 +530,7 @@ export function activate(context: vscode.ExtensionContext, executableFeature: Ex
             compileVignette(context, executableFeature, request)
         ),
         vscode.workspace.onDidChangeConfiguration((e) => {
-            if (e.affectsConfiguration('pollis.ask.juliaManual')) {
+            if (e.affectsConfiguration('pollis.ask.juliaManual') || e.affectsConfiguration('pollis.ask.packageApis')) {
                 reindexDocuments(context, executableFeature)
             }
         })

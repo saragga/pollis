@@ -89,7 +89,7 @@ id = "sample"
 label = "Sample"
 
 [[bullets]]
-text = "Fit GP distribution to threshold exceedances via maximum likelihood estimation"
+text = "Fit GP distribution to threshold exceedances by maximum likelihood, probability-weighted moments or Bayesian estimation"
 detail = ""
 
 [[bullets]]
@@ -107,15 +107,15 @@ detail = ""
 [[inputs]]
 id = "data"
 label = "Data series"
-tooltip = "Full data series from which exceedances above the threshold will be extracted."
-default = "losses"
+tooltip = "Full data series from which exceedances above the threshold will be extracted. The default is the daily rainfall in south-west England, 1914-1962 (17,531 days, in millimetres), an example of Coles (2001), shipped with Extremes.jl: above 30 mm its shape xi is about 0.18, a moderately heavy tail."
+default = "rainfall"
 models = ["fit"]
 
 [[inputs]]
 id = "threshold"
 label = "Threshold u"
-tooltip = "Threshold u for fitting. Observations exceeding u are used to fit the GP distribution, which describes only the excesses over a high threshold. The 90th percentile is a common start; check it with the mean excess plot."
-default = "quantile(losses, 0.9)"
+tooltip = "Threshold u for fitting. Observations exceeding u are used to fit the GP distribution, which describes only the excesses over a high threshold. The 90th percentile, quantile(y, 0.9), is a common start; check it with the Mean Excess Plot and Threshold Stability. The default, 30 mm, is the threshold of Coles (2001) for the rainfall: nearly half the days are dry, so its 90th percentile, 10.9 mm, is too low."
+default = "30"
 models = ["fit"]
 
 [[inputs]]
@@ -183,13 +183,19 @@ models = ["sample"]
 [[codeBranches]]
 model = "fit"
 code = '''
-using Extremes
-
-exceedances        = {{data}}[{{data}} .> {{threshold}}] .- {{threshold}}  # excesses above u
-fm                 = gpfit(exceedances; method = :{{method}})  # fit GP
-sigma_hat, xi_hat  = params(fm)  # extract scale and shape
+using Extremes, Distributions, Statistics
+{{?data=rainfall}} rainfall = Extremes.dataset("rain").Rainfall  # daily rainfall (mm) in south-west England, 1914-1962 (Coles 2001). Replace rainfall with your own series.
+y = {{data}}  # the full data series
+u = {{threshold}}  # threshold
+exceedances = y[y .> u] .- u  # excesses above u
+{{?method=mle}} fm = gpfit(exceedances)  # maximum likelihood
+{{?method=pwm}} fm = gpfitpwm(exceedances)  # probability-weighted moments
+{{?method=bayes}} fm = gpfitbayes(exceedances)  # Bayesian (MCMC)
+point(v) = mean(v)  # MLE and PWM: one value; Bayesian: the posterior mean over the draws
+sigma_hat, xi_hat = point(scale(fm)), point(shape(fm))
+ci = cint(fm)  # 95% intervals for (log sigma, xi)
 println("sigma_hat (scale):  ", round(sigma_hat, digits = 6))
-println("xi_hat (shape):     ", round(xi_hat,    digits = 6))
+println("xi_hat (shape):     ", round(xi_hat,    digits = 6), "  95% interval ", round.(ci[2], digits = 3))
 println("N exceedances:      ", length(exceedances))
 '''
 
@@ -225,28 +231,69 @@ label = "Diagnose"
 
 [[actionGroups.actions]]
 id = "fit_diagnostics"
+models = ["fit"]
 label = "Fit Diagnostics"
-desc = "PP and QQ plot for GP goodness of fit to exceedances"
+desc = "PP plot and QQ plot of the fitted GP against the excesses, by the estimation method chosen: points on the red line mean a good fit"
+code = '''
+using Distributions, Plots
+e  = sort(exceedances)  # the excesses of the fit, sorted
+d  = GeneralizedPareto(0.0, sigma_hat, xi_hat)  # fitted GP of the excesses (Bayesian: at the posterior means)
+n  = length(e); pp = ((1:n) .- 0.5) ./ n  # plotting positions
+q  = quantile.(d, pp)  # fitted quantiles
+p1 = scatter(cdf.(d, e), pp; xlabel = "Fitted probability", ylabel = "Empirical probability", title = "Probability Plot", legend = false)
+plot!(p1, [0, 1], [0, 1]; color = :red)
+p2 = scatter(q, e; xlabel = "Fitted quantile", ylabel = "Empirical quantile", title = "Quantile Plot", legend = false)
+plot!(p2, q, q; color = :red)
+plot(p1, p2; layout = (1,2), size = (800, 400))
+'''
+
+[[actionGroups.actions]]
+id = "mean_excess_plot"
+models = ["fit"]
+label = "Mean Excess Plot"
+desc = "Mean of the excesses over each candidate threshold, with 95% intervals: above a threshold where the GP fits, the line is straight; the dashed line is the threshold chosen"
 code = '''
 using Extremes, Plots
-exceedances = {{data}}[{{data}} .> {{threshold}}] .- {{threshold}}  # POT excesses
-fm = gpfit(exceedances)  # fit GP
-p1 = plot(probplot(fm); title = "Probability Plot", legend = false)  # PP plot
-p2 = plot(qqplot(fm);   title = "Quantile Plot",    legend = false)  # QQ plot
-plot(p1, p2; layout = (1,2), size = (800,400))
+mrl = Extremes.mrlplot_data(y)  # mean excess over 100 candidate thresholds, with 95% intervals
+plot(mrl.Threshold, mrl.mrl; ribbon = (mrl.mrl .- mrl.lbound, mrl.ubound .- mrl.mrl), fillalpha = 0.2,
+    label = "mean excess (95% interval)", xlabel = "Threshold", ylabel = "Mean excess", title = "Mean Excess Plot")
+vline!([u]; linestyle = :dash, color = :red, label = "threshold u")
+'''
+
+[[actionGroups.actions]]
+id = "threshold_stability"
+models = ["fit"]
+label = "Threshold Stability"
+desc = "Refit by maximum likelihood at ten thresholds, from the 80th percentile to the level that leaves 25 exceedances: above a threshold where the GP fits, the shape xi and the modified scale stay constant within their 95% intervals; the dashed line is the threshold chosen"
+code = '''
+using Extremes, Statistics, Plots
+us   = range(quantile(y, 0.8), quantile(y, 1 - 25 / length(y)), length = 10)  # ten candidate thresholds, evenly spaced from the 80th percentile to the level that leaves 25 exceedances
+fits = [gpfit(y[y .> v] .- v) for v in us]  # maximum likelihood fit at each threshold
+xis  = [shape(f)[1] for f in fits]
+xci  = [cint(f)[2] for f in fits]  # 95% intervals for xi
+ss   = [scale(f)[1] - shape(f)[1] * v for (f, v) in zip(fits, us)]  # modified scale sigma - xi u, constant above a good threshold
+sse  = [sqrt([scale(f)[1], -v]' * parametervar(f) * [scale(f)[1], -v]) for (f, v) in zip(fits, us)]  # its standard error (delta method on log sigma, xi)
+p1 = plot(us, xis; ribbon = (xis .- first.(xci), last.(xci) .- xis), fillalpha = 0.2, marker = :circle, legend = false,
+    xlabel = "Threshold", ylabel = "Shape xi", title = "Shape")
+vline!(p1, [u]; linestyle = :dash, color = :red)
+p2 = plot(us, ss; ribbon = 1.96 .* sse, fillalpha = 0.2, marker = :circle, legend = false,
+    xlabel = "Threshold", ylabel = "Modified scale", title = "Modified Scale")
+vline!(p2, [u]; linestyle = :dash, color = :red)
+for v in us
+    println("u = ", round(v, digits = 4), ": ", count(>(v), y), " exceedances")
+end
+plot(p1, p2; layout = (1,2), size = (800, 400))
 '''
 
 [[actionGroups.actions]]
 id = "tail_probability"
+models = ["fit"]
 label = "Tail Probability"
-desc = "Chance that a loss beyond the threshold exceeds the largest excess seen so far, given an exceedance and unconditionally"
+desc = "Chance that a loss beyond the threshold exceeds the largest excess seen so far, given an exceedance and unconditionally, by the estimation method chosen"
 code = '''
-using Extremes, Distributions
-exceedances = {{data}}[{{data}} .> {{threshold}}] .- {{threshold}}  # POT excesses
-fm                 = gpfit(exceedances)  # fit GP
-sigma_hat, xi_hat  = params(fm)  # extract scale and shape
+using Distributions
 d_gp = GeneralizedPareto(0.0, sigma_hat, xi_hat)  # distribution of the excess over u (location 0)
-rate = length(exceedances) / length({{data}})  # share of all observations above u
+rate = length(exceedances) / length(y)  # share of all observations above u
 p_beyond = ccdf(d_gp, maximum(exceedances))  # an exceedance larger than any seen so far
 println("P(excess > largest seen | X > u): ", round(p_beyond, sigdigits = 4))
 println("P(X > u + largest excess):        ", round(rate * p_beyond, sigdigits = 4), "  (about once in ", round(Int, 1 / (rate * p_beyond)), " observations)")
@@ -258,15 +305,15 @@ label = "Interpret"
 
 [[actionGroups.actions]]
 id = "tail_behaviour"
+models = ["fit"]
 label = "Tail Behaviour"
-desc = "Classify tail type from shape parameter"
+desc = "Classify the tail from the 95% interval for the shape xi: heavy, bounded, or not distinguishable from exponential"
 code = '''
-using Extremes
-exceedances = {{data}}[{{data}} .> {{threshold}}] .- {{threshold}}  # POT excesses
-fm = gpfit(exceedances)  # fit GP
-sigma_hat, xi_hat = params(fm)  # extract parameters
-tail = xi_hat > 0.05 ? "Heavy tail" : xi_hat < -0.05 ? "Bounded support" : "Exponential tail"  # classify tail (check the confidence interval of xi before relying on it)
-println("Tail type:       ", tail)
-println("Shape (xi_hat):    ", round(xi_hat, digits = 4))
+xi_lo, xi_hi = ci[2]  # 95% interval for xi from the main code (the parameters are log sigma, xi)
+tail = xi_lo > 0 ? "Heavy (Pareto-type): the whole 95% interval for xi is above 0" :
+       xi_hi < 0 ? "Bounded: the whole 95% interval for xi is below 0" :
+       "Not distinguishable from exponential: xi = 0 lies inside the 95% interval"  # with few exceedances the interval is wide
+println("Tail type:         ", tail)
+println("Shape (xi_hat):    ", round(xi_hat, digits = 4), "  95% interval [", round(xi_lo, digits = 3), ", ", round(xi_hi, digits = 3), "]")
 println("Scale (sigma_hat): ", round(sigma_hat, digits = 4))
 '''

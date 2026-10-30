@@ -12,7 +12,7 @@ The globally convergent version adds a penalty that makes each approximation an 
 MMA was designed for **structural optimisation and topology design**, with thousands or millions of variables and only a few constraints: its cost per iteration grows with the number of variables only linearly, and the dual problem has one variable per constraint.
 
 ## Limitations
-It handles **inequality constraints only**, not equalities, and its final convergence is slower than SLSQP's.
+MMA handles **inequality constraints only**, not equalities, and its final convergence is slower than SLSQP's.
 
 ## In This Panel
 The panel uses NLopt's :LD_MMA, with gradients from ForwardDiff and the same tolerances as SLSQP. **Max Iterations** limits objective evaluations.

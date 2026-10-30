@@ -1,6 +1,6 @@
 # Quadratic Programming — Overview
 
-This webview solves **quadratic programmes**: optimisation problems with a quadratic objective or quadratic constraints, and possibly discrete choices. The running example is the long-only portfolio of n assets with expected returns mu and covariance matrix Sigma: the weights w are non-negative, sum to one, and trade off the expected return mu'w against the variance w'Sigma w. The models are written in JuMP.jl, which passes them to a solver: Clarabel (interior point) by default, OSQP or Ipopt for comparison, SCIP for the mixed-integer problem.
+The Quadratic Programming panel solves **quadratic programmes**: optimisation problems with a quadratic objective or quadratic constraints, and possibly discrete choices. The running example is the long-only portfolio of n assets with expected returns mu and covariance matrix Sigma: the weights w are non-negative, sum to one, and trade off the expected return mu'w against the variance w'Sigma w. The models are written in JuMP.jl, which passes them to a solver: Clarabel (interior point) by default, OSQP or Ipopt for comparison, SCIP for the mixed-integer problem.
 
 ## Quadratic Programming (QP)
 Minimise the portfolio **variance** w'Sigma w subject to a required expected return mu'w >= target, the budget sum(w) = 1, and 0 <= w <= 1. The objective is quadratic and the constraints linear: the classic Markowitz problem.

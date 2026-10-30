@@ -56,6 +56,31 @@ type ScaffoldWebviewMessage =
  * and videos, and Ask Pollis beside the title. `panelId` names the panel's folder under ~/.pollis (saved examples,
  * references, videos); a question asked there is answered from the wikis titled `panelTitle` first. `apiKey`, when given, adds the Powered-by credentials indicator and sets them in the Julia REPL.
  */
+/** Sends what Powered by and Learn More show: the links of the packages, and the references, notebooks and wikis there are. */
+export function postLearnMoreData(webview: { postMessage(message: unknown): void }, data: IScaffoldPanelData): void {
+	const packages = data.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
+	const hasReferences = data.references.some(r => !hasKey(r, { separator: true }));
+	const notebookSections = data.notebookSections.map(s => ({
+		label: s.label,
+		notebooks: s.notebooks.map(n => ({ name: n.name, file: n.bundled ? n.file : '', description: n.description })),
+	}));
+	const wikiSections: Array<{ label: string; wikis: Array<{ name: string; file: string; description?: string }> }> = [];
+	let currentWikiSection: { label: string; wikis: Array<{ name: string; file: string; description?: string }> } = { label: '', wikis: [] };
+	for (const w of data.wikis) {
+		if (hasKey(w, { separator: true })) {
+			wikiSections.push(currentWikiSection);
+			currentWikiSection = { label: w.label ?? '', wikis: [] };
+		} else {
+			currentWikiSection.wikis.push({ name: w.name, file: w.bundled ? w.file : '', description: w.description });
+		}
+	}
+	if (currentWikiSection.wikis.length > 0) { wikiSections.push(currentWikiSection); }
+	webview.postMessage({ command: 'packageLinks', packages });
+	webview.postMessage({ command: 'paperLinks', papers: [], hasPapers: hasReferences });
+	webview.postMessage({ command: 'notebookSections', sections: notebookSections });
+	webview.postMessage({ command: 'wikiSections', sections: wikiSections });
+}
+
 export function registerScaffoldWebviewHandlers(
 	webviewInput: ReturnType<IWebviewWorkbenchService['openWebview']>,
 	panelId: string,
@@ -99,27 +124,7 @@ export function registerScaffoldWebviewHandlers(
 	const apiKey = apiKeyProvider ? createApiKeyWiring(webviewInput.webview, apiKeyProvider, secretStorageService, quickInputService, webviewService) : undefined;
 
 	setTimeout(() => {
-		const packages = data.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
-		const hasReferences = data.references.some(r => !hasKey(r, { separator: true }));
-		const notebookSections = data.notebookSections.map(s => ({
-			label: s.label,
-			notebooks: s.notebooks.map(n => ({ name: n.name, file: n.bundled ? n.file : '', description: n.description })),
-		}));
-		const wikiSections: Array<{ label: string; wikis: Array<{ name: string; file: string; description?: string }> }> = [];
-		let currentWikiSection: { label: string; wikis: Array<{ name: string; file: string; description?: string }> } = { label: '', wikis: [] };
-		for (const w of data.wikis) {
-			if (hasKey(w, { separator: true })) {
-				wikiSections.push(currentWikiSection);
-				currentWikiSection = { label: w.label ?? '', wikis: [] };
-			} else {
-				currentWikiSection.wikis.push({ name: w.name, file: w.bundled ? w.file : '', description: w.description });
-			}
-		}
-		if (currentWikiSection.wikis.length > 0) { wikiSections.push(currentWikiSection); }
-		webviewInput.webview.postMessage({ command: 'packageLinks', packages });
-		webviewInput.webview.postMessage({ command: 'paperLinks', papers: [], hasPapers: hasReferences });
-		webviewInput.webview.postMessage({ command: 'notebookSections', sections: notebookSections });
-		webviewInput.webview.postMessage({ command: 'wikiSections', sections: wikiSections });
+		postLearnMoreData(webviewInput.webview, data);
 		if (initialModel) {
 			webviewInput.webview.postMessage({ command: 'setModel', model: initialModel });
 		}

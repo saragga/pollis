@@ -2008,6 +2008,32 @@ removed; a new Pollis, a wiki written or a vignette compiled brings their passag
 background. The passages are found by
 hybrid search: BM25 keyword search and embedding-based semantic search, merged by Reciprocal Rank Fusion into the top 8 passages, all on PollisDocuments.duckdb.
 
+\subhead{Package APIs}
+\ui{Search In} can also search the APIs of the packages of the panels: every function, type, method, macro and
+constant with its docstring, whole, with its signature, arguments, formulas and examples. So you can ask whether a
+method exists for something, without knowing its name. They are left out of \ui{Auto}, whose questions are about
+Pollis, and are searched when you tick \ui{Package APIs}, alone or with other sources, and under \ui{All Sources}. How a package publishes its API decides how
+it is read; this is the strategy for the 211 packages of the panels:
+
+\smallskip
+{\small\renewcommand{\arraystretch}{1.25}%
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.36\linewidth}r>{\raggedright\arraybackslash}X@{}}
+\textcolor{navy}{\bfseries Published as} & \textcolor{navy}{\bfseries Packages} & \textcolor{navy}{\bfseries What Pollis does} \\
+A Documenter site of its own & 136 & Reads the docstrings from the site's pages.\\
+Only JuliaHub's copy of its Documenter site & 52 & The same, from the copy.\\
+A Vitepress site & 3 & Not read yet.\\
+A site or copy without docstrings: the API in prose, or only the README & 10 & Not read yet: the docstrings in the package's source are next.\\
+No published site & 9 & Not read yet: likewise.\\
+Part of Julia & 1 & Already under \ui{Julia Base and Standard Library}.\\
+\end{tabularx}}
+\smallskip
+
+That is about 23,400 docstrings. Pollis reads them after the other documents, in the background: of the version you
+have installed if the site has it, else of the stable one, and of the latest for a package you are developing.
+\ui{Open} shows a docstring on its site, in the internal browser. They take about 120 MB, and embedding them the first time
+takes about 40 minutes on a recent laptop, longer without a GPU; what is done is kept if you close Pollis.
+Search does not wait for them. The setting \texttt{pollis.ask.packageApis} turns them off.
+
 \subhead{The model}
 The model's menu, below the box on the right, chooses the model that writes the answer: under \ui{On this computer},
 the chat models installed on your computer, the default one unless you choose another, and the one you choose is

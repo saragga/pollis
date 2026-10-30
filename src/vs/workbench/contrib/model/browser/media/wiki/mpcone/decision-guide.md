@@ -6,7 +6,7 @@
 | Norms, Euclidean distances, robust least squares, portfolio risk | **Second-Order Cone** |
 | Logs, exponentials, entropy, logistic losses, geometric programmes | **Exponential Cone** |
 | Powers, p-norms with 1 < p < 2, geometric means | **Power Cone** |
-| Matrix variables, eigenvalues | Semidefinite programming (not in this panel) |
+| Matrix variables, eigenvalues | Semidefinite programming (not in the Convex and Conic Programming panel) |
 | Non-convex objective | Nonlinear Programming panel |
 
 ## Decision Flow

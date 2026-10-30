@@ -9,7 +9,7 @@ Each continuous x[i] gets a **binary switch** z[i]:
 This is a **cardinality constraint**, the nonlinear analogue of best-subset selection, written with the bounds as big-M constants: tight bounds make the continuous relaxation tight.
 
 ## Branch and Bound
-Both solvers use branch and bound. The binaries are relaxed to [0, 1] and the continuous problem is solved; if a binary is fractional, the problem is split into two, with it fixed to 0 and to 1, and the process repeats. A relaxation's value bounds what its branch can achieve, so branches that cannot beat the best solution so far are **pruned**.
+SCIP and Juniper both use branch and bound. The binaries are relaxed to [0, 1] and the continuous problem is solved; if a binary is fractional, the problem is split into two, with it fixed to 0 and to 1, and the process repeats. A relaxation's value bounds what its branch can achieve, so branches that cannot beat the best solution so far are **pruned**.
 
 ## SCIP and Juniper
 - **SCIP** is a branch-and-cut framework: it adds cutting planes and, for nonconvex terms, **spatial branching** on continuous variables, with convex relaxations. It handles nonconvex MINLPs to global optimality.

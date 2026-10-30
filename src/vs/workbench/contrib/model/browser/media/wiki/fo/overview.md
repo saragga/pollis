@@ -1,6 +1,6 @@
 # Overview
 
-This webview minimises a smooth function f(x) of several variables with **first-order methods**: methods that use only the value of f and its **gradient**, the vector of partial derivatives, and never the matrix of second derivatives (the Hessian). Each iteration picks a **search direction** from the gradient, then a **step length** along it by a **line search**. The methods come from Optim.jl; the gradient is computed by automatic differentiation (ForwardDiff) or by finite differences.
+The First-Order Methods panel minimises a smooth function f(x) of several variables with **first-order methods**: methods that use only the value of f and its **gradient**, the vector of partial derivatives, and never the matrix of second derivatives (the Hessian). Each iteration picks a **search direction** from the gradient, then a **step length** along it by a **line search**. The methods come from Optim.jl; the gradient is computed by automatic differentiation (ForwardDiff) or by finite differences.
 
 ## Gradient Descent
 The **steepest descent** direction, minus the gradient, with a line search for the step. Simple and cheap per iteration, but slow when the function is much more curved in some directions than in others: the iterates **zig-zag** across a narrow valley. See [Gradient Descent](gradient-descent.md).

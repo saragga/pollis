@@ -12,7 +12,7 @@
 
 ## Typical Workflow
 
-1. Get a free key and store it with **Set API key** (see Authentication).
+1. Get a free Alpha Vantage key and store it with **Set API key** (see the Authentication wiki).
 2. Choose a topic (Equities, Forex, Crypto, Indicators, Economic) and a symbol.
 3. Call the matching function, e.g. `time_series_daily("AAPL")`.
 4. Inspect or post-process the returned series.
@@ -22,7 +22,7 @@
 - **Alpha Vantage** — needs a key; rate-limited on the free tier; provides server-side indicators and rich economic data.
 - **Yahoo Finance** (`YFinance.jl`) — no key; looser limits; great for raw OHLC and options.
 
-Use whichever fits your data needs; the **Compare** link in the Concept Map cross-references the two.
+Use whichever fits your data needs; the **Compare** link in the Concept Map cross-references Alpha Vantage and Yahoo Finance.
 
 ## See Also
 - [Factsheet](factsheet.md) · [Authentication](authentication.md) · [Constraints](constraints.md)

@@ -1,6 +1,6 @@
 # Overview
 
-This webview runs **hypothesis tests**: it asks whether the data are consistent with a stated claim, the **null hypothesis** (two means are equal, a series has a unit root, the residuals are not autocorrelated), and reports a **p-value**, the probability of a result at least as extreme as the one observed if the null were true. All tests come from HypothesisTests.jl.
+The Hypothesis Testing panel runs **hypothesis tests**: it asks whether the data are consistent with a stated claim, the **null hypothesis** (two means are equal, a series has a unit root, the residuals are not autocorrelated), and reports a **p-value**, the probability of a result at least as extreme as the one observed if the null were true. All tests come from HypothesisTests.jl.
 
 ## Parametric
 Tests that assume a distribution for the data, usually the normal. The **t-tests** (one-sample, two-sample with pooled variance, Welch with separate variances) and **z-tests** compare means; the **F-test** compares two variances; **One-Way ANOVA** compares the means of three or more groups; **Levene's** and **Brown-Forsythe** test equal variances across groups. For counts in categories, the **Chi-Squared**, **Power Divergence** and **Multinomial LR** tests compare observed with expected frequencies.

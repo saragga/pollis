@@ -1,6 +1,6 @@
 # Overview
 
-This webview estimates the sampling distribution of a statistic by the **bootstrap**: instead of deriving the distribution from a formula, it recomputes the statistic on many samples drawn from the data (or from a model fitted to them), and reads the standard error, the bias and confidence intervals from the spread of these **replicates**. The panel offers three ways of drawing the samples, all through Bootstrap.jl, and five confidence intervals for each.
+The Bootstrap Resampling panel estimates the sampling distribution of a statistic by the **bootstrap**: instead of deriving the distribution from a formula, it recomputes the statistic on many samples drawn from the data (or from a model fitted to them), and reads the standard error, the bias and confidence intervals from the spread of these **replicates**. The panel offers three ways of drawing the samples, all through Bootstrap.jl, and five confidence intervals for each.
 
 ## Nonparametric
 Resample the observations **with replacement**, each replicate the size of the data. The schemes are **Basic** (independent draws), **Balanced** (each observation used equally often over all replicates) and **Antithetic** (draws paired to reduce variance). See [Resampling Schemes](resampling-schemes.md).

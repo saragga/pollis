@@ -1,6 +1,6 @@
 # Finding Series
 
-Every FRED series has a short **series ID**. Once you know the ID, downloading it is one call: `get_data(f, "ID")`. This page covers how to find the right ID.
+Every FRED series has a short **series ID**. Once you know the ID, downloading it is one call: `get_data(f, "ID")`.
 
 ## Browse the FRED Website
 
@@ -34,7 +34,7 @@ Copy that ID straight into `get_data`.
 
 - Many series come in **seasonally adjusted** and **not seasonally adjusted** variants — check the title and the `seasonal_adjustment` field.
 - **Real** (inflation-adjusted) series often share a stem with their **nominal** counterpart (e.g. `GDP` vs `GDPC1`).
-- The **Next Steps** buttons in this webview pre-fill `get_data` calls for the most-used series in each topic, so you can start without hunting for an ID.
+- The **Next Steps** buttons in the Federal Reserve Economic Data panel pre-fill `get_data` calls for the most-used series in each topic, so you can start without hunting for an ID.
 
 ## See Also
 - [Transformations](transformations.md) · [Interpretation](interpretation.md) · [Authentication](authentication.md)

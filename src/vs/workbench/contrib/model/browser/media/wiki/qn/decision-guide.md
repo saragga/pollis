@@ -23,7 +23,7 @@
 
 - **Memory m** between 5 and 20 is typical; beyond 20 the gain is usually small.
 - **BFGS and L-BFGS reach the same minimum** from the same start on a well-behaved problem; they differ in cost.
-- **Scale the variables** to similar magnitudes before blaming the method.
+- **Scale the variables** to similar magnitudes before blaming a quasi-Newton method.
 - **More iterations do not fix** a line-search failure: look at the gradient and the smoothness of f.
 - **Use the exact Hessian**, not the quasi-Newton approximation, for standard errors.
 

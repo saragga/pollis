@@ -11,7 +11,7 @@ The **Hugging Face Hub** is a public repository of machine-learning datasets, mo
 
 ## The two access paths
 
-This webview exposes two complementary ways to work with a dataset:
+The Hugging Face Datasets panel exposes two complementary ways to work with a dataset:
 
 1. **The REST API (pure Julia).** Browsing the catalogue, listing the underlying files, and reading metadata are plain HTTPS GET requests that return JSON. They need only `HTTP.jl` and `JSON3.jl`, and no token for public datasets.
 2. **HuggingFaceDatasets.jl.** To pull a split directly into Julia as an indexable collection, `load_dataset` wraps the mature Python `datasets` library through PythonCall. The first call provisions a one-time Conda environment via CondaPkg.

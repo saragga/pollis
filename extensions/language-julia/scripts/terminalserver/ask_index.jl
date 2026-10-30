@@ -13,7 +13,9 @@
 # blank lines. The Julia Manual is that
 # of the Julia that runs this, which comes with it, so that a Julia updated has its own: the Manual, Base and the
 # standard library, from the search index Documenter writes beside its HTML, a section or a docstring an entry, each
-# passage with the page and anchor it is at. Each is cut into passages of about 250 words, at paragraphs, each carrying
+# passage with the page and anchor it is at. The Package APIs (kind api) are the files pollisPackageApis.ts writes in
+# ~/.pollis/documents/apis, added to the list by pollisDocuments.ts: a docstring a passage, whole, with its code and
+# formulas, and the address it is at. The others are cut into passages of about 250 words, at paragraphs, each carrying
 # the last sentence of the one before, when it is short. The passages of a document that has not changed since the last
 # index (its kind, title, menu, toolbox and the size and date of its file) are copied from it. The embeddings come from
 # ~/.pollis/documents/embeddings.duckdb, by the model and the text it was given, so that no text is embedded twice; each
@@ -103,7 +105,7 @@ const SCRIPT = bytes2hex(SHA.sha256(read(@__FILE__)))
 
 """
 A document read, kept with no passages when it has none (a wiki not written yet): `version` is the size and date of
-its file, `collection` what it is searched with (Pollis, the Julia Manual).
+its file, `collection` what it is searched with (Pollis, the Julia Manual, the Package APIs).
 """
 struct Document
 	kind::String
@@ -117,7 +119,7 @@ end
 
 """
 A passage before it is written: its page (`missing` in a wiki), the headings it is under, its text, and in the Julia
-Manual the HTML page and anchor it is at.
+Manual the HTML page and anchor it is at, in the Package APIs the address.
 """
 struct Passage
 	page::Union{Int, Missing}
@@ -562,6 +564,13 @@ function wiki_passages(file, title)
 			close_paragraph()
 			passages!(found, paragraphs, missing, heading())
 			empty!(paragraphs)
+			# The lists at a wiki's end, of works and of other wikis, say nothing a question asks about
+			if length(m[:hashes]) == 2 && strip(m[:text]) in ("References", "See Also")
+				while i + 1 <= length(lines) && !startswith(lines[i + 1], "## ")
+					i += 1
+				end
+				continue
+			end
 			# The panel and the wiki are the first two headings, ## the third
 			open_heading!(open_headings, length(m[:hashes]) + 1, strip(markdown_text(m[:text])))
 		elseif startswith(line, "```")
@@ -586,7 +595,8 @@ function wiki_passages(file, title)
 				label(k) = isempty(get(columns, k, "")) ? "" : "$(columns[k]): "
 				push!(paragraphs, join(["$(label(k))$cell" for (k, cell) in enumerate(row) if !isempty(cell)], "; "))
 			end
-		elseif isempty(strip(line))
+		elseif occursin(r"^\s*(?:-{3,}|\*{3,}|_{3,})?\s*$", line)
+			# A blank line or a horizontal rule
 			close_paragraph()
 		elseif !startswith(line, "# ")
 			push!(paragraph, markdown_text(rstrip(line)))
@@ -602,6 +612,16 @@ function text_passages(file)
 	found = Passage[]
 	passages!(found, filter(!isempty, strip.(split(read(file, String), r"\n\s*\n"))), missing, "")
 	return found
+end
+
+"""The passages of a package's API, from its file: a docstring a passage, under its name, with the address it is at."""
+function api_passages(file)
+	db = DuckDB.DB(":memory:"; config = CONFIG)
+	entries = Tables.rowtable(DBInterface.execute(db, """
+		SELECT unnest(from_json(content, '{"entries": [{"name": "VARCHAR", "url": "VARCHAR", "text": "VARCHAR"}]}').entries, recursive := true)
+		FROM read_text(?)""", [file]))
+	DBInterface.close!(db)
+	return [Passage(missing, entry.name, entry.text, entry.url) for entry in entries]
 end
 
 """
@@ -673,7 +693,8 @@ function build(found, previous; progress = true)
 			cut = try
 				document.kind in ("wiki", "markdown") ? wiki_passages(document.source, document.title) :
 					document.kind == "text" ? text_passages(document.source) :
-					document.kind == "julia" ? manual_passages(document.source) : pdf_passages(document.source)
+					document.kind == "julia" ? manual_passages(document.source) :
+					document.kind == "api" ? api_passages(document.source) : pdf_passages(document.source)
 			catch
 				nothing
 			end

@@ -16,7 +16,7 @@
 | **FP-Growth** | All frequent itemsets | Compresses the data into an FP-tree; no candidates | Large or sparse data; the usual default |
 | **FP-Close** | Closed itemsets | FP-tree | Too many itemsets, but supports must be kept |
 | **FP-Max** | Maximal itemsets | FP-tree | The most compact list of what is frequent |
-| **Apriori** | Rules (in this panel) | Level by level, with candidate generation | Rules; small to medium data |
+| **Apriori** | Rules (in the Rule-Based Methods panel) | Level by level, with candidate generation | Rules; small to medium data |
 
 ECLAT and FP-Growth return the same itemsets; they differ only in speed and memory. Run **Algorithm Timing** to choose on your data.
 

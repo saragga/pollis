@@ -1,6 +1,6 @@
 # Interpretation
 
-`get_data` returns a `FredSeries`. This page explains its fields and a few economic conventions worth knowing before you read the numbers.
+`get_data` returns a `FredSeries`, whose fields and economic conventions are worth knowing before you read the numbers.
 
 ## The `FredSeries` Object
 
@@ -18,7 +18,7 @@ s.notes               # source notes and definitions
 s.data                # DataFrame: date, value (+ realtime columns)
 ```
 
-Most analysis works off `s.data`, a `DataFrame` with a `date` and a `value` column. The `realtime_start` / `realtime_end` columns describe the vintage (see below). FredData.jl builds that table itself, so you never load DataFrames.jl: `Tables.columntable(s.data)` turns it into a NamedTuple of column vectors, and `s.data.date` / `s.data.value` give the columns directly.
+Most analysis works off `s.data`, a `DataFrame` with a `date` and a `value` column. The `realtime_start` / `realtime_end` columns describe the vintage. FredData.jl builds that table itself, so you never load DataFrames.jl: `Tables.columntable(s.data)` turns it into a NamedTuple of column vectors, and `s.data.date` / `s.data.value` give the columns directly.
 
 ## Seasonal Adjustment
 

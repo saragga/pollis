@@ -11,7 +11,7 @@
 
 ## Decision Flow
 
-1. **Are causes of death reliable?** If yes, cause-specific methods are simpler. If not, use this panel.
+1. **Are causes of death reliable?** If yes, cause-specific methods are simpler. If not, use the Net Survival & Competing Risks panel.
 2. **Is there a rate table** for the patients' country and period, with their sex? If not, these methods cannot be used.
 3. **Comparing populations or periods?** Use net survival, with Pohar-Perme.
 4. **Informing patients or planning care?** Use crude mortality.

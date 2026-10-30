@@ -8,7 +8,7 @@ The `data.sec.gov` JSON APIs give you **metadata and XBRL facts**. They do **not
 - You want **many** filings at once (a whole year of 10-Ks), not one company at a time.
 - You are building a text corpus for NLP over filings.
 
-For single, targeted documents, you can also just build the archive URL yourself (see below).
+For single, targeted documents, you can also just build the archive URL yourself.
 
 ## How It Works
 

@@ -1,6 +1,6 @@
 # Overview
 
-This webview fits regressions that do not depend on the mean and the squared error. **Robust regression** estimates the same conditional mean as least squares, but with a loss that grows more slowly than the square, so that outlying responses pull the fit less. **Quantile regression** estimates a conditional **quantile** of the response instead of its mean: the median, the lower quartile, the 90th percentile. Both use RobustModels.jl.
+The Robust and Quantile Regression panel fits regressions that do not depend on the mean and the squared error. **Robust regression** estimates the same conditional mean as least squares, but with a loss that grows more slowly than the square, so that outlying responses pull the fit less. **Quantile regression** estimates a conditional **quantile** of the response instead of its mean: the median, the lower quartile, the 90th percentile. Both use RobustModels.jl.
 
 ## Robust Regression
 An **M-estimator** minimises the sum of a loss rho(r / s) of the scaled residuals, fitted by iteratively reweighted least squares (IRLS): each observation gets a weight that falls as its residual grows. The **M-estimator** input chooses the loss:

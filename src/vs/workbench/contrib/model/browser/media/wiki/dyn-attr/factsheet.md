@@ -1,6 +1,6 @@
 # Attractor & Basin Analysis — Factsheet
 
-A deterministic dynamical system, left to run, settles onto an **attractor**. Many systems have more than one, and which one a trajectory reaches depends on where it starts: the state space is divided into **basins of attraction**. As a parameter changes, attractors can lose stability, merge or vanish at **bifurcations**, and a system can tip from one regime to another. This panel finds the attractors, maps their basins and traces the bifurcations.
+A deterministic dynamical system, left to run, settles onto an **attractor**. Many systems have more than one, and which one a trajectory reaches depends on where it starts: the state space is divided into **basins of attraction**. As a parameter changes, attractors can lose stability, merge or vanish at **bifurcations**, and a system can tip from one regime to another. The Attractor & Basin Analysis panel finds the attractors, maps their basins and traces the bifurcations.
 
 | | |
 |---|---|
@@ -19,7 +19,7 @@ A deterministic dynamical system, left to run, settles onto an **attractor**. Ma
 
 ## What It Is Not
 
-These are numerical results on a finite grid and a finite time: an attractor smaller than a grid cell, or a basin outside the grid box, is missed. Basin fractions depend on the box chosen. The methods need the equations of the system; to analyse a measured time series, use delay embedding and the time-series tools of DynamicalSystems.jl instead.
+Attractors and basins are numerical results on a finite grid and a finite time: an attractor smaller than a grid cell, or a basin outside the grid box, is missed. Basin fractions depend on the box chosen. The methods need the equations of the system; to analyse a measured time series, use delay embedding and the time-series tools of DynamicalSystems.jl instead.
 
 ## See Also
 - [Overview](overview.md) · [Decision Guide](decision-guide.md) · [Grid and Settings](settings.md)

@@ -1,6 +1,6 @@
 # Search Modes
 
-EDGAR offers several ways to *find* filings before you pull their data. This page covers the three you can drive from Julia.
+EDGAR offers several ways to *find* filings before you pull their data. Three of them can be driven from Julia.
 
 ## Full-Text Search (EFTS)
 

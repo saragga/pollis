@@ -3,9 +3,13 @@
 ## The Parameters
 - **sigma, the scale**: the typical size of an excess. With xi = 0, the excesses are exponential with mean sigma.
 - **xi, the shape**: the tail. With xi = 0.3, the tail falls like y^(-1/0.3), so only moments below order 3.3 exist; financial losses often give xi between 0.1 and 0.4.
+For the rainfall above 30 mm, 152 exceedances, Coles (2001) reports about sigma = 7.44 and xi = 0.18; the 95% interval of xi, about -0.01 to 0.38, just contains 0, so **Tail Behaviour** cannot tell the tail from exponential.
 
 ## Tail Behaviour
-**Tail Behaviour** classifies the tail as heavy (xi > 0.05), exponential (between -0.05 and 0.05) or bounded (xi < -0.05). The classification uses the point estimate: check the uncertainty of xi before relying on it, since a 95% interval of width 0.4 is common.
+For a fitted Generalized Pareto distribution, **Tail Behaviour** classifies the tail from the 95% interval of xi:
+- **Heavy (Pareto-type)** if the whole interval is above 0.
+- **Bounded** if it is below 0.
+- **Not distinguishable from exponential** if it contains 0, common with few exceedances, since an interval of width 0.4 is usual.
 
 ## Tail Probabilities
 For x above u, P(X > x) = zeta_u (1 + xi (x - u) / sigma)^(-1/xi), where zeta_u is the share of observations above u. **Tail Probability** applies it at u plus the largest excess.

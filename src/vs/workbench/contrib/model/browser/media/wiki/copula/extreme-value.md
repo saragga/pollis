@@ -12,7 +12,7 @@ Every bivariate extreme value copula has the form C(u, v) = exp(log(uv) A(log v 
 - **Husler-Reiss**: the limit of Gaussian maxima as the correlation tends to 1 at the right rate; symmetric.
 - **tEV**: the limit of the Student's t copula's maxima, with the degrees of freedom as a second parameter.
 - **Empirical EV**: a nonparametric estimate of A from the data.
-These are bivariate in this panel, fixed at d = 2.
+These are bivariate in the Copula Estimation panel, fixed at d = 2.
 
 ## Properties
 - **Upper tail dependence** whenever they are not independence; **no lower tail dependence**.

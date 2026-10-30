@@ -5,7 +5,7 @@
 | The default for curve fitting; uncertain start | **Levenberg-Marquardt** |
 | Well-scaled problem, fewer iterations wanted | **Dogleg** |
 | Small residuals and a good start | **Gauss-Newton** |
-| Model linear in the parameters | Linear regression, not this panel |
+| Model linear in the parameters | Linear regression, not the Nonlinear Least Squares panel |
 | Outliers in the data | A robust loss (Huber) or Quantile Regression |
 | Non-constant error variance | Weighted least squares |
 

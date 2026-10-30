@@ -22,7 +22,13 @@ Most vine models assume the conditional pair copulas in higher trees do not depe
 Sequentially, tree by tree, choosing each pair's family by AIC; then optionally jointly by maximum likelihood. Higher trees often carry weak dependence and can be truncated to independence.
 
 ## In This Panel
-This panel fits single-family copulas and does not fit vines. Its bivariate results, the family that fits each pair best, are the building blocks of tree 1.
+The **Fit** tab fits single-family copulas. The **Vine Copula** tab of Example Code, from VineCopulas.jl, shows a vine at work on simulated data:
+- **Build**: a three-variable D-vine with order 1, 2, 3: Gaussian for the pair (1, 2) and Clayton for (2, 3) in tree 1, Frank for (1, 3) given 2 in tree 2.
+- **Simulate**: 1,000 observations on the uniform scale.
+- **Fit back**: a D-vine with the same order, tree by tree, each pair's family and rotation chosen by BIC.
+It prints each vine's log-likelihood, and the family and Kendall's tau of each pair copula, and plots draws from both vines for each pair of variables.
+
+Read the families together with tau. With these data the fit recovers tree 1, and gives tree 2 a Gaussian copula in place of the Frank: tau 0.211 against 0.214, as both are symmetric and hard to tell apart at this strength. Without **order**, the fit also chooses the path, and may choose another one that fits about as well, so its pairs can no longer be compared with the known ones.
 
 ## See Also
 - [Archimedean Copulas](archimedean.md) · [Elliptical Copulas](elliptical.md) · [Decision Guide](decision-guide.md)

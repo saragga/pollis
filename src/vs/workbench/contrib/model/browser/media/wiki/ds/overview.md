@@ -1,6 +1,6 @@
 # Direct Search Methods — Overview
 
-This webview minimises f(x) with four direct search methods. Every evaluation the solver makes goes through a recording wrapper, so the panel keeps each evaluated point and its value, and plots progress against the number of **evaluations**, the true cost of a derivative-free method.
+The Direct Search Methods panel minimises f(x) with four direct search methods. Every evaluation the solver makes goes through a recording wrapper, so the panel keeps each evaluated point and its value, and plots progress against the number of **evaluations**, the true cost of a derivative-free method.
 
 ## Two Families
 - **Simplex methods**: **Nelder-Mead** keeps n + 1 points and reflects, expands, contracts or shrinks the simplex. See [Nelder-Mead](nelder-mead.md).

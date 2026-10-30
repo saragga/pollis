@@ -1,6 +1,6 @@
 # Overview
 
-This webview analyses a collection of texts with **large language models** (LLMs). The documents are a vector of strings: survey answers, abstracts, reports, news items, sections of a manual. The panel has four modes:
+The LLM Text Analysis panel analyses a collection of texts with **large language models** (LLMs). The documents are a vector of strings: survey answers, abstracts, reports, news items, sections of a manual. The panel has four modes:
 
 - **Tag**: mark each document with every tag that applies, from a list you give ([Tagging](tagging.md)).
 - **Classify**: put each document in exactly one category ([Classification](classification.md)).

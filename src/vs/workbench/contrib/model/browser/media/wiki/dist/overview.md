@@ -1,6 +1,6 @@
 # Overview
 
-This webview evaluates **probability distributions** with Distributions.jl: choose a distribution and its parameters, and the panel computes one of four functions at a point. The same distribution objects are what Pollis' other panels fit, sample from and use as priors, so this is the place to see how a distribution behaves before using it.
+The Distribution Functions panel evaluates **probability distributions** with Distributions.jl: choose a distribution and its parameters, and the panel computes one of four functions at a point. The same distribution objects are what Pollis' other panels fit, sample from and use as priors, so this is the place to see how a distribution behaves before using it.
 
 ## The Four Functions
 - **Probability Mass Function** (discrete): pdf(d, k), the probability that X equals k.

@@ -13,7 +13,7 @@
 ## Decision Flow
 
 1. **Choose a starting threshold**, the 90th or 95th percentile.
-2. **Check stability**: refit at several thresholds and pick the lowest above which xi is stable.
+2. **Check stability**: with **Threshold Stability** and the **Mean Excess Plot**, pick the lowest threshold above which xi is stable.
 3. **Check independence**: decluster if the exceedances come in bunches.
 4. **Fit and check** the probability and quantile plots.
 5. **Report tail quantiles with their uncertainty**.

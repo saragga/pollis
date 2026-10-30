@@ -1,6 +1,6 @@
 # SDMX and Alternatives
 
-The ECB API is an **SDMX 2.1** service. This page explains the formats and when a dedicated SDMX package is worth it over raw CSV.
+The ECB API is an **SDMX 2.1** service, in several formats; a dedicated SDMX package is sometimes worth it over raw CSV.
 
 ## The SDMX Formats
 

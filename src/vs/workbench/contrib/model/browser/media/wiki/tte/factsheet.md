@@ -19,7 +19,7 @@
 
 ## What It Is Not
 
-These methods assume right censoring that is **unrelated to the risk of the event**. They do not fix censoring caused by the outcome itself (subjects leaving because they are getting worse), and a hazard ratio is an association, not a causal effect, unless the design makes it one.
+Time-to-event methods assume right censoring that is **unrelated to the risk of the event**. They do not fix censoring caused by the outcome itself (subjects leaving because they are getting worse), and a hazard ratio is an association, not a causal effect, unless the design makes it one.
 
 ## See Also
 - [Overview](overview.md) · [Decision Guide](decision-guide.md) · [Assumptions](assumptions.md)

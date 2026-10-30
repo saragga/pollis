@@ -1,6 +1,6 @@
 # Overview
 
-This webview analyses the survival of patients with a disease, usually a cancer, from a population-based registry, **without knowing the cause of death**. Registries record who died and when, but causes of death are often missing or unreliable. Instead, each patient's risk of dying from other causes is taken from a **population rate table**: the mortality of the general population of the same age, sex and calendar year. What the patients die of beyond that is the **excess hazard**, attributed to the disease.
+The Net Survival & Competing Risks panel analyses the survival of patients with a disease, usually a cancer, from a population-based registry, **without knowing the cause of death**. Registries record who died and when, but causes of death are often missing or unreliable. Instead, each patient's risk of dying from other causes is taken from a **population rate table**: the mortality of the general population of the same age, sex and calendar year. What the patients die of beyond that is the **excess hazard**, attributed to the disease.
 
     observed hazard = expected (population) hazard + excess hazard
 

@@ -9,7 +9,7 @@ The chance that a value is missing has nothing to do with the data: a sensor dro
 The chance of missingness depends on **other, observed** variables: older respondents skip an online question more often, and age is recorded. Dropping rows is now biased; methods that use the other columns (SVD) or the order of the rows (Interpolate, LOCF) can do better.
 
 ## Missing Not at Random (MNAR)
-The chance of missingness depends on the **missing value itself**: people with high incomes decline to report their income. No method in this webview can correct for this, because the data carry no trace of the mechanism. Say so in your report, and consider a sensitivity analysis.
+The chance of missingness depends on the **missing value itself**: people with high incomes decline to report their income. No method in the Handle Missing Data panel can correct for this, because the data carry no trace of the mechanism. Say so in your report, and consider a sensitivity analysis.
 
 The **MCAR Check** action gives a quick hint (see [Diagnostics](diagnostics.md)), but no test can prove MCAR, and none can tell MAR from MNAR.
 

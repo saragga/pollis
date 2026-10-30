@@ -1,6 +1,6 @@
 # Distribution Factories — Overview
 
-This webview has two models, both built on DistributionsFactories.jl.
+The Distribution Factories panel has two models, both built on DistributionsFactories.jl.
 
 ## Moments
 **Moments** builds a distribution of the chosen **Distribution Family**, one of 27, from targets given as **Parameters** in key=value form: mean=5.0, var=2.0 by default. The keys are mean, var, std, cv (the coefficient of variation), scv (its square), second_moment (E[X^2]), mode, median, q1, q3, iqr, and quantiles, a vector of (p, q) pairs such as [(0.10, 1.0), (0.90, 10.0)]; support=0..Inf restricts the support. The number of targets matches the family's free parameters:

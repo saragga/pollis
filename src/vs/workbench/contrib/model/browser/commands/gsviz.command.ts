@@ -28,14 +28,6 @@ const GSVIZ_TITLE = 'Graph and Spatial Plots';
 const GSVIZ_REFERENCES: IModelReference[] = [
 	{ separator: true, label: 'Software' },
 	{
-		title: 'Julia: A Fresh Approach to Numerical Computing',
-		authors: 'Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B.',
-		year: 2017,
-		journal: 'SIAM Review',
-		doi: '10.1137/141000671',
-		openAccess: false,
-	},
-	{
 		title: 'Graphs.jl: Graph Algorithms for Julia',
 		authors: 'Fairbanks, James; Besançon, Mathieu; Simon, Schölly; others',
 		year: 2021,

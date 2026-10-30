@@ -1,6 +1,6 @@
 # Time-Varying Volatility Models
 
-Financial markets are characterised by periods of calm and turbulence, where volatility evolves over time rather than remaining constant. Capturing this behaviour is essential for forecasting risk, estimating uncertainty, and pricing financial instruments. This section presents three major classes of time-varying volatility models, each reflecting a different modelling philosophy and practical use case.
+Financial markets are characterised by periods of calm and turbulence, where volatility evolves over time rather than remaining constant. Capturing this behaviour is essential for forecasting risk, estimating uncertainty, and pricing financial instruments. Three major classes of time-varying volatility models each reflect a different modelling philosophy and practical use case.
 
 ---
 

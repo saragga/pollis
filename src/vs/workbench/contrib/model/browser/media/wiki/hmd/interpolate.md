@@ -23,7 +23,7 @@ result = Impute.interp(tbl) |> Impute.locf |> Impute.nocb
 - Follows the local trend, so it suits smoothly changing series (temperatures, levels, cumulative totals).
 - Uses only the neighbours in the same column; it ignores the other variables.
 - Smooths away genuine variation inside long gaps, and makes no sense for unordered rows.
-- For curved interpolation, or irregularly spaced times, see the Interpolate Data webview.
+- For curved interpolation, or irregularly spaced times, see the Interpolate Data panel.
 
 ## See Also
 - [LOCF / NOCB](locf.md) · [Substitute](substitute.md) · [Decision Guide](decision-guide.md)

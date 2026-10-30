@@ -1,6 +1,6 @@
 # Overview
 
-This webview studies the **long-term behaviour of a dynamical system**: where its trajectories end up, which starting points lead where, and how that changes when a parameter changes. Every tab uses the **Lorenz system** as its example; replace `lorenz!` with your own system to study it instead (see [The Lorenz System](lorenz.md)).
+The Attractor & Basin Analysis panel studies the **long-term behaviour of a dynamical system**: where its trajectories end up, which starting points lead where, and how that changes when a parameter changes. Every tab uses the **Lorenz system** as its example; replace `lorenz!` with your own system to study it instead (see [The Lorenz System](lorenz.md)).
 
 ## Attractor Finding
 An **attractor** is a set that nearby trajectories approach and never leave: a fixed point, a cycle, or a chaotic (strange) attractor. A system can have several at once. The tab finds all of them by running trajectories from random starting points on a grid of the state space, with the recurrence mapper of Attractors.jl.

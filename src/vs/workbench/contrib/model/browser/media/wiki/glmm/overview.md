@@ -1,6 +1,6 @@
 # Overview
 
-This webview fits **generalized linear mixed-effects models** (GLMMs): generalized linear models for binary, count or positive responses, with random effects for grouped data. The linear predictor combines fixed effects, shared by all observations, with random intercepts and slopes for each group; a link function maps it to the mean of the response, and a family gives its distribution. Models are fitted by maximum likelihood with MixedModels.jl.
+The Generalized Linear Mixed-Effects Models panel fits **generalized linear mixed-effects models** (GLMMs): generalized linear models for binary, count or positive responses, with random effects for grouped data. The linear predictor combines fixed effects, shared by all observations, with random intercepts and slopes for each group; a link function maps it to the mean of the response, and a family gives its distribution. Models are fitted by maximum likelihood with MixedModels.jl.
 
 ## Families and Links
 The **Family** sets the distribution of the response: Bernoulli for 0/1 outcomes, Binomial for proportions with a known number of trials, Poisson and NegativeBinomial for counts, Gamma and InverseGaussian for positive skewed values, and Normal. The **Link** defaults to each family's canonical link (logit, log, inverse); probit, complementary log-log, identity, square root and the others are available when theory calls for them.

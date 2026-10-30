@@ -65,7 +65,7 @@ end
 | `voteCount` | Total upvotes |
 | `updateTime` | ISO 8601 timestamp of last update |
 | `url` | Canonical URL on kaggle.com |
-| `instances` | Array of framework variants (see below) |
+| `instances` | Array of framework variants |
 
 ### Model Instances
 

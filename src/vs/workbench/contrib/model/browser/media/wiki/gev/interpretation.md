@@ -10,14 +10,14 @@ For Port Pirie, Coles (2001) reports about mu = 3.87, sigma = 0.20 and xi = -0.0
 The T-block return level z_T is the level exceeded by a block maximum with probability 1 / T: the 1 - 1 / T quantile. With annual blocks, z_100 is the 100-year level: on average exceeded once a century, and with probability 1 - (1 - 1/100)^100, about 63%, at least once in any given century. **Evaluate** gives the return level at its **Quantile p** directly.
 
 ## Tail Behaviour
-**Tail Behaviour** classifies the tail from the 95% interval of xi:
+For a fitted Generalized Extreme Value distribution, **Tail Behaviour** classifies the tail from the 95% interval of xi:
 - **Heavy (Frechet)** if the whole interval is above 0.
 - **Bounded (Weibull)** if it is below 0.
 - **Not distinguishable from Gumbel** if it contains 0, the common case with few blocks.
 It also gives the probability that a new block maximum beats the record, and its return period.
 
 ## Uncertainty
-The intervals of the return levels come from the delta method and are symmetric; profile likelihood intervals, asymmetric and usually wider above, are more accurate for long return periods. Bayesian estimation gives the posterior of any return level directly.
+With Maximum Likelihood, the intervals of the return levels come from the delta method and are symmetric; profile likelihood intervals, asymmetric and usually wider above, are more accurate for long return periods. Probability-Weighted Moments gives bootstrap intervals, and Bayesian estimation the posterior of any return level directly.
 
 ## Sample
 **Sample** shows the variability of maxima: with xi = 0.1, a few draws far above the rest are expected. The sample standard deviation converges slowly as xi approaches 0.5.

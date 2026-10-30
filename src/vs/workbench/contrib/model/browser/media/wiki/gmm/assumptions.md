@@ -7,7 +7,7 @@
 
 ## The Data
 - **Independent observations** for the sandwich standard errors and the J test; **clustered** data need the cluster bootstrap, and the J test then tends to reject too often.
-- **Stationarity and weak dependence** if the observations are a time series; the moment covariance must then allow for autocorrelation, which this panel's code does not.
+- **Stationarity and weak dependence** if the observations are a time series; the moment covariance must then allow for autocorrelation, which the Generalized Method of Moments (GMM) panel's code does not.
 
 ## The Weighting Matrix
 - Two-step GMM estimates S from first-step residuals. With **many moments relative to the sample**, this estimate is poor, and the efficient estimator loses its advantage. A rough guide: the number of moments well below the square root of the number of observations, or a few dozen at most.

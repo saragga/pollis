@@ -13,7 +13,7 @@
 2. **Are there clusters with different spreads?** A point at the edge of a sparse cluster can look like an outlier to KNN. Switch to LOF.
 3. **Are the clusters stretched along lines or curves?** LOF assumes roughly round neighbourhoods; use COF.
 4. **More than about ten features?** Try ABOD (the enhanced variant for more stable scores).
-5. **Hundreds of features or complex structure?** Move to the Learning-Based Anomaly Detection webview.
+5. **Hundreds of features or complex structure?** Move to the Learning-Based Anomaly Detection panel.
 
 ## Rules of Thumb
 - **Scale the features** before any distance-based method.

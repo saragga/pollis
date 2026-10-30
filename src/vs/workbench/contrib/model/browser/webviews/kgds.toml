@@ -287,9 +287,6 @@ description = "Pick a dataset by usability, size, file type, and licence"
 [[references]]
 key = "Kag2024a"
 
-[[references]]
-key = "BEKS2017a"
-
 [[bullets]]
 text = "Community datasets"
 detail = "hundreds of thousands of public datasets across every domain, each versioned, documented, and rated for usability"

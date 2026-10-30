@@ -1,6 +1,6 @@
 # Assumptions
 
-These plots are descriptive and impose few formal assumptions, but each expects its input in a particular form.
+Core statistical plots are descriptive and impose few formal assumptions, but each expects its input in a particular form.
 
 ## Variable Types
 - **Scatter** — two **numeric** variables.

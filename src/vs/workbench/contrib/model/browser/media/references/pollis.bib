@@ -345,8 +345,7 @@
   volume  = {59},
   pages   = {65-98},
   year    = {2017},
-  doi     = {10.1137/141000671},
-  pollis-used-in = {acm, alpv, ande, attr, azero, bert, blv, bndt, boot, bopt, cam, cca, ccdr, cds, chaos, clbt, cmp, cmplx, com, copt, covShrinkage, csv, ctm, ctpf, cv, dcm, dco, devol, dgo, dist, dmap, dp, ds, dstats, dtm, dynppl, ecb, edgar, es, ffd, fo, fom, fred, galg, glm, graphppl, hare, hfds, hfm, hmd, hns, idat, imf, jdp, kgds, kgm, lda, llmTa, lm, lmar, lp, lqr, lrm, lsa, madp, marl, mbm, mcmc, mdp, mlmc, mopt, mpc, mpcone, mpec, mpm, mpmicp, mpnlp, mpsdp, mpsos, ngo, nlls, nod, node, novd, oa, ode, optim, pbm, pgm, pgo, po, ppl, prox, ptp, ptps, ql, qn, qp, rl, ropt, rouge, rxinfer, sbo, sde, sdea, sgm, si, sid, slm, smc, so, spro, sql, sreg, swarm, traj, tssm, vari, wbd}
+  doi     = {10.1137/141000671}
 }
 
 @article{BFB2015a,
@@ -1051,6 +1050,17 @@
   year    = {1959},
   doi     = {10.1287/mnsc.6.1.73},
   pollis-used-in = {ccdr}
+}
+
+@inproceedings{CCB2009a,
+  author  = {Cormack, Gordon V. and Clarke, Charles L. A. and Büttcher, Stefan},
+  title   = {Reciprocal Rank Fusion Outperforms Condorcet and Individual Rank Learning Methods},
+  booktitle = {Proceedings of the 32nd International ACM SIGIR Conference on Research and Development in Information Retrieval},
+  address = {New York, NY, USA},
+  pages   = {758-759},
+  year    = {2009},
+  doi     = {10.1145/1571941.1572114},
+  pollis-used-in = {compareEmbeddings, rag}
 }
 
 @misc{CFHT2021a,
@@ -1927,6 +1937,21 @@
   year    = {2016},
   url     = {https://www.ecma-international.org/publications-and-standards/standards/ecma-376/},
   pollis-used-in = {xlsx}
+}
+
+@inproceedings{EJAS2024a,
+  author  = {Es, Shahul and James, Jithin and Espinosa Anke, Luis and Schockaert, Steven},
+  title   = {RAGAs: Automated Evaluation of Retrieval Augmented Generation},
+  booktitle = {Proceedings of the 18th Conference of the European Chapter of the Association for Computational Linguistics: System Demonstrations},
+  publisher = {Association for Computational Linguistics},
+  address = {St. Julians, Malta},
+  pages   = {150-158},
+  year    = {2024},
+  doi     = {10.18653/v1/2024.eacl-demo.16},
+  eprint  = {2309.15217},
+  url     = {https://aclanthology.org/2024.eacl-demo.16/},
+  archiveprefix = {arXiv},
+  pollis-used-in = {compareModels}
 }
 
 @article{EK2018a,
@@ -3341,7 +3366,7 @@
   pages   = {11-21},
   year    = {1972},
   doi     = {10.1108/eb026526},
-  pollis-used-in = {dtm}
+  pollis-used-in = {dtm, rag}
 }
 
 @article{Jon2001a,
@@ -3564,7 +3589,7 @@
   eprint  = {2004.12832},
   url     = {https://arxiv.org/abs/2004.12832},
   archiveprefix = {arXiv},
-  pollis-used-in = {clbt}
+  pollis-used-in = {clbt, rag}
 }
 
 @article{Kag2024a,
@@ -3910,7 +3935,7 @@
   eprint  = {2005.11401},
   url     = {https://arxiv.org/abs/2005.11401},
   archiveprefix = {arXiv},
-  pollis-used-in = {llmTa}
+  pollis-used-in = {compareModels, llmTa, rag}
 }
 
 @book{LPR1996a,
@@ -4437,7 +4462,7 @@
   isbn    = {9780521865715},
   doi     = {10.1017/CBO9780511809071},
   url     = {https://nlp.stanford.edu/IR-book/},
-  pollis-used-in = {clbt, dtm, lsa}
+  pollis-used-in = {clbt, compareEmbeddings, dtm, lsa, rag}
 }
 
 @article{MS1983a,
@@ -4474,6 +4499,19 @@
   pollis-used-in = {ptp, ptps}
 }
 
+@inproceedings{MTMR2023a,
+  author  = {Muennighoff, Niklas and Tazi, Nouamane and Magne, Loïc and Reimers, Nils},
+  title   = {MTEB: Massive Text Embedding Benchmark},
+  booktitle = {Proceedings of the 17th Conference of the European Chapter of the Association for Computational Linguistics},
+  publisher = {Association for Computational Linguistics},
+  address = {Dubrovnik, Croatia},
+  pages   = {2014-2037},
+  year    = {2023},
+  doi     = {10.18653/v1/2023.eacl-main.148},
+  url     = {https://aclanthology.org/2023.eacl-main.148/},
+  pollis-used-in = {compareEmbeddings}
+}
+
 @inproceedings{MWTLM2011a,
   author  = {Mimno, David and Wallach, Hanna M. and Talley, Edmund and Leenders, Miriam and McCallum, Andrew},
   title   = {Optimizing Semantic Coherence in Topic Models},
@@ -4481,6 +4519,20 @@
   year    = {2011},
   url     = {https://aclanthology.org/D11-1024/},
   pollis-used-in = {lda}
+}
+
+@article{MY2020a,
+  author  = {Malkov, Yu A. and Yashunin, D. A.},
+  title   = {Efficient and Robust Approximate Nearest Neighbor Search Using Hierarchical Navigable Small World Graphs},
+  journal = {IEEE Transactions on Pattern Analysis and Machine Intelligence},
+  number  = {4},
+  volume  = {42},
+  pages   = {824-836},
+  year    = {2020},
+  doi     = {10.1109/TPAMI.2018.2889473},
+  eprint  = {1603.09320},
+  archiveprefix = {arXiv},
+  pollis-used-in = {rag}
 }
 
 @article{MZ1998a,
@@ -4657,6 +4709,16 @@
   journal = {O'Reilly Media (2nd ed.)},
   year    = {2017},
   pollis-used-in = {abmViz}
+}
+
+@misc{NC2019a,
+  author  = {Nogueira, Rodrigo and Cho, Kyunghyun},
+  title   = {Passage Re-ranking with BERT},
+  year    = {2019},
+  doi     = {10.48550/arXiv.1901.04085},
+  eprint  = {1901.04085},
+  archiveprefix = {arXiv},
+  pollis-used-in = {rag}
 }
 
 @article{NM1965a,
@@ -5309,7 +5371,7 @@
   eprint  = {1908.10084},
   url     = {https://arxiv.org/abs/1908.10084},
   archiveprefix = {arXiv},
-  pollis-used-in = {bert}
+  pollis-used-in = {bert, compareEmbeddings, rag}
 }
 
 @article{RKMBS...2009a,
@@ -5366,7 +5428,7 @@
   pages   = {1981-1984},
   year    = {2019},
   doi     = {10.1145/3299869.3320212},
-  pollis-used-in = {sql}
+  pollis-used-in = {rag, sql}
 }
 
 @book{RMD2017a,
@@ -5560,7 +5622,7 @@
   pages   = {1-174},
   year    = {2009},
   doi     = {10.1561/1500000019},
-  pollis-used-in = {clbt}
+  pollis-used-in = {clbt, compareEmbeddings, rag}
 }
 
 @misc{Rag2024a,
@@ -5694,7 +5756,7 @@
   pages   = {513-523},
   year    = {1988},
   doi     = {10.1016/0306-4573(88)90021-0},
-  pollis-used-in = {dtm}
+  pollis-used-in = {dtm, rag}
 }
 
 @book{SB2018a,
@@ -5856,7 +5918,7 @@
   eprint  = {2112.01488},
   url     = {https://arxiv.org/abs/2112.01488},
   archiveprefix = {arXiv},
-  pollis-used-in = {clbt}
+  pollis-used-in = {clbt, rag}
 }
 
 @article{SL2009a,
@@ -6213,7 +6275,7 @@
   title   = {RAGTools.jl: Retrieval-Augmented Generation Tools in Julia},
   year    = {2025},
   url     = {https://github.com/JuliaGenAI/RAGTools.jl},
-  pollis-used-in = {clbt}
+  pollis-used-in = {clbt, compareModels}
 }
 
 @book{Sim2006a,
@@ -6530,6 +6592,16 @@
   pollis-used-in = {alpv}
 }
 
+@inproceedings{Voo1999a,
+  author  = {Voorhees, Ellen M.},
+  title   = {The TREC-8 Question Answering Track Report},
+  booktitle = {Proceedings of the Eighth Text REtrieval Conference (TREC-8)},
+  publisher = {National Institute of Standards and Technology},
+  year    = {1999},
+  url     = {https://trec.nist.gov/pubs/trec8/papers/qa_report.pdf},
+  pollis-used-in = {compareEmbeddings}
+}
+
 @article{WB2006a,
   author  = {Waechter, Andreas and Biegler, Lorenz T.},
   title   = {On the Implementation of an Interior-Point Filter Line-Search Algorithm for Large-Scale Nonlinear Programming},
@@ -6788,6 +6860,19 @@
   doi     = {10.1086/209650},
   url     = {https://doi.org/10.1086/209650},
   pollis-used-in = {vm}
+}
+
+@inproceedings{ZCSZW...2023a,
+  author  = {Zheng, Lianmin and Chiang, Wei-Lin and Sheng, Ying and Zhuang, Siyuan and Wu, Zhanghao and Zhuang, Yonghao and Lin, Zi and Li, Zhuohan and Li, Dacheng and Xing, Eric P. and Zhang, Hao and Gonzalez, Joseph E. and Stoica, Ion},
+  title   = {Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena},
+  booktitle = {Advances in Neural Information Processing Systems 36},
+  pages   = {46595-46623},
+  year    = {2023},
+  doi     = {10.52202/075280-2020},
+  eprint  = {2306.05685},
+  url     = {https://papers.nips.cc/paper_files/paper/2023/hash/91f18a1287b398d378ef22505bf41832-Abstract-Datasets_and_Benchmarks.html},
+  archiveprefix = {arXiv},
+  pollis-used-in = {compareModels}
 }
 
 @article{ZIRIN...2024a,

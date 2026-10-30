@@ -28,14 +28,6 @@ const SFVIZ_TITLE = 'Surfaces and Fields';
 const SFVIZ_REFERENCES: IModelReference[] = [
 	{ separator: true, label: 'Software' },
 	{
-		title: 'Julia: A Fresh Approach to Numerical Computing',
-		authors: 'Bezanson, Jeff; Edelman, Alan; Karpinski, Stefan; Shah, Viral B.',
-		year: 2017,
-		journal: 'SIAM Review',
-		doi: '10.1137/141000671',
-		openAccess: false,
-	},
-	{
 		title: 'Makie.jl: Flexible High-Performance Plotting for Julia',
 		authors: 'Danisch, Simon; Krumbiegel, Julius',
 		year: 2021,

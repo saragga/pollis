@@ -1,6 +1,6 @@
 # Overview
 
-This webview collects the five **core statistical plots** used at the start of almost every analysis. Each answers a different question about the data.
+The Core Statistical Plots panel collects the five **core statistical plots** used at the start of almost every analysis. Each answers a different question about the data.
 
 ## Scatter Plot
 Two numeric variables, one point per observation. Reveals **relationship**, correlation, clusters, and outliers. See [Scatter Plot](scatter.md).

@@ -1,0 +1,74 @@
+# Evaluate Embedding Models Webview Configuration
+# A page of Compose in the Time Arrow style of the scaffold, not a panel: only its Powered by and Learn More. `pageCommand`
+# is the command that opens it, which a panel's contribution file would say. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/compareEmbeddings.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Evaluate Embedding Models"
+viewType = "pollis.compareEmbeddings"
+pageCommand = "pollis.compareEmbeddings"
+
+[[packages]]
+name = "llama.cpp"
+github = "https://github.com/ggml-org/llama.cpp"
+
+[[packages]]
+name = "DuckDB"
+github = "https://duckdb.org"
+
+[[wikis]]
+name = "Factsheet"
+file = "compareEmbeddings/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "compareEmbeddings/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "compareEmbeddings/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "compareEmbeddings/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "compareEmbeddings/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "compareEmbeddings/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+key = "MRS2008a"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "RG2019a"
+
+[[references]]
+key = "RZ2009a"
+
+[[references]]
+key = "CCB2009a"
+
+[[references]]
+key = "MTMR2023a"
+
+[[references]]
+key = "Voo1999a"

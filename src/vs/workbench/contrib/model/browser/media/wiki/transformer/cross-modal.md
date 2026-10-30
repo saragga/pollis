@@ -4,7 +4,7 @@
 
 A cross-modal model combines information from two or more data modalities — data types with fundamentally different structure and representation — into a single prediction. In finance the most common pairing is **text and numerical data**: textual sources (earnings call transcripts, news articles, regulatory filings, analyst reports) alongside structured numerical features (price ratios, trading volumes, balance-sheet metrics, macro indicators).
 
-The Encoder button in this webview processes token sequences. The Cross-Modal button extends that architecture with a **numerical branch** that projects tabular features into the same embedding space and fuses them with the text representation before the prediction head.
+The Encoder button in the Transformers panel processes token sequences. The Cross-Modal button extends that architecture with a **numerical branch** that projects tabular features into the same embedding space and fuses them with the text representation before the prediction head.
 
 ---
 
@@ -44,7 +44,7 @@ The element-wise sum used here is the simplest fusion strategy. Alternatives inc
 | **Gated** | h = σ(g) ⊙ h_text + (1 − σ(g)) ⊙ h_num | Gate learned from both branches; explicit modality weighting |
 | **Cross-attention** | Q from numerical, K/V from text tokens | Allows numerical features to attend to specific text spans |
 
-The webview template generates the additive strategy. Concatenation or gating is straightforward to add after generating the template code.
+The code of the Transformers panel generates the additive strategy. Concatenation or gating is straightforward to add after generating the template code.
 
 ---
 
@@ -114,7 +114,7 @@ Deep text encoders (many layers) can develop vanishing or exploding gradients re
 
 | Approach | Strengths | Weaknesses |
 |:---|:---|:---|
-| **Cross-Modal Transformer (this webview)** | End-to-end, captures interaction between modalities | Requires paired text + numerical data; higher training cost |
+| **Cross-Modal Transformer (the Transformers panel)** | End-to-end, captures interaction between modalities | Requires paired text + numerical data; higher training cost |
 | **Text-only Transformer (Encoder button)** | Strong when text signal dominates | Ignores quantitative information |
 | **Numerical-only model (GLM, RF, XGBoost)** | Fast, interpretable, robust on tabular data | Ignores textual signal |
 | **Two-stage: embed text, then feed to tabular model** | Modular, easy to implement | Misses joint interactions; embedding is frozen |

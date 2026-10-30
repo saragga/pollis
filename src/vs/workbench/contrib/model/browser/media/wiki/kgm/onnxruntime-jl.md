@@ -151,7 +151,7 @@ println("Top-5 class indices (1-based): ", top5)
 
 ## ONNXRunTime.jl and ONNX.jl
 
-ONNX.jl is a different package: it reimplements ONNX operators in pure Julia and can turn some graphs into Julia code. It covers fewer operators, so many exported models fail to load. Use ONNXRunTime.jl to run models, as this panel does. Use ONNX.jl only if you need the graph as Julia code, for example to differentiate through it.
+ONNX.jl is a different package: it reimplements ONNX operators in pure Julia and can turn some graphs into Julia code. It covers fewer operators, so many exported models fail to load. Use ONNXRunTime.jl to run models, as the Kaggle Models panel does. Use ONNX.jl only if you need the graph as Julia code, for example to differentiate through it.
 
 ## See Also
 - [Flux.jl](flux-jl.md) · [Package Guide](package-guide.md) · [Run Inference](run-inference.md)

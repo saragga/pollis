@@ -125,7 +125,7 @@ Before pulling a model:
 - [ ] Have I read the limitations / bias section of the model card?
 - [ ] Is the benchmark dataset close to my target domain?
 - [ ] Does the model size fit my hardware budget?
-- [ ] Is the licence compatible with my use (academic / commercial)?
+- [ ] Is the licence of the Hugging Face model compatible with my use (academic / commercial)?
 - [ ] Is there a quantised version if I plan to run locally via Ollama?
 
 ## See Also

@@ -27,7 +27,7 @@
 - Computing technical indicators without implementing them yourself.
 - Reading macroeconomic series (GDP, CPI, yields, policy rates).
 
-> **API key.** Use the **Set API key** link above the page to store your free key securely in VS Code Secret Storage. It is injected into the Julia REPL session as `ENV["ALPHA_VANTAGE_API_KEY"]` and never written to a saved file.
+> **API key.** Use the **Set API key** link of the Alpha Vantage panel to store your free Alpha Vantage key securely in VS Code Secret Storage. It is injected into the Julia REPL session as `ENV["ALPHA_VANTAGE_API_KEY"]` and never written to a saved file.
 
 ## See Also
 - [Overview](overview.md) · [Authentication](authentication.md) · [Interpretation](interpretation.md)

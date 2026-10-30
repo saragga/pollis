@@ -1,6 +1,6 @@
 # Diagnostics
 
-The diagnostic actions refit the series by maximum likelihood, whatever the estimation method chosen.
+The actions of the Generalized Extreme Value panel use the fit of the main code, by the estimation method chosen; with Bayesian Estimation, the fitted distribution is taken at the posterior means of the parameters.
 
 ## Fit Diagnostics
 **Fit Diagnostics** draws two plots, with the plotting positions (i - 0.5) / n of the sorted maxima:
@@ -9,13 +9,13 @@ The diagnostic actions refit the series by maximum likelihood, whatever the esti
 One or two points off the line at the top are common with few blocks; a systematic curve is a misfit.
 
 ## Return Level Plot
-**Return Level Plot** draws the fitted return level against the return period, 2 to 500 blocks, on a log axis, with its 95% delta-method interval, and the observed maxima at their empirical return periods. The shape of the curve shows xi: straight for Gumbel, curving up for Frechet, flattening toward the bound for Weibull. The data should lie within the band, and the band widens quickly beyond the length of the record.
+**Return Level Plot** draws the fitted return level against the return period, 2 to 500 blocks, on a log axis, with its 95% interval (delta method for Maximum Likelihood, bootstrap for Probability-Weighted Moments, credible for Bayesian), and the observed maxima at their empirical return periods. The shape of the curve shows xi: straight for Gumbel, curving up for Frechet, flattening toward the bound for Weibull. The data should lie within the band, and the band widens quickly beyond the length of the record.
 
 ## Interval of xi
 The fit prints the 95% interval of xi. Whether it contains 0 decides whether the data distinguish the tail type at all, which **Tail Behaviour** reports.
 
 ## Comparing Methods
-Fitting the same series with Maximum Likelihood, Probability-Weighted Moments and Bayesian Estimation should give similar parameters; a large difference in xi signals that the sample is too small to pin the tail down.
+Fitting the same series with Maximum Likelihood, Probability-Weighted Moments and Bayesian Estimation, and running the actions after each, should give similar parameters and plots; a large difference in xi signals that the sample is too small to pin the tail down.
 
 ## Quick Checklist
 

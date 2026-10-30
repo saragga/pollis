@@ -19,7 +19,7 @@
 
 ## What It Is Not
 
-This panel samples from distributions you specify; it does not fit them to data. Its goodness-of-fit checks test the sampler against the distribution it was given, not a model against real data. For exact probabilities and quantiles without sampling, see Distribution Functions; for sampling from posteriors known only up to a constant, see Markov Chain Monte Carlo.
+The Distribution Sampling panel samples from distributions you specify; it does not fit them to data. Its goodness-of-fit checks test the sampler against the distribution it was given, not a model against real data. For exact probabilities and quantiles without sampling, see Distribution Functions; for sampling from posteriors known only up to a constant, see Markov Chain Monte Carlo.
 
 ## See Also
 - [Overview](overview.md) · [Decision Guide](decision-guide.md) · [Assumptions](assumptions.md)

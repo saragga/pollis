@@ -20,7 +20,7 @@
 
 ## Rules of Thumb
 - **Conjugate gradient beats gradient descent** on nearly every problem.
-- **Scale the variables** to similar magnitudes before blaming the method.
+- **Scale the variables** to similar magnitudes before blaming a first-order method.
 - **Check the convergence flag**, not just the final value.
 
 ## See Also

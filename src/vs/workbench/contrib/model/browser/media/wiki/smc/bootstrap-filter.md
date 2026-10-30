@@ -1,6 +1,6 @@
 # Bootstrap Filter
 
-The **bootstrap particle filter** (Gordon, Salmond and Smith, 1993) is the simplest particle filter, and the one this panel runs.
+The **bootstrap particle filter** (Gordon, Salmond and Smith, 1993) is the simplest particle filter, and the one the Sequential Monte Carlo panel runs.
 
 ## The Algorithm
 Start with N particles drawn from the initial distribution p(x[1]), all with weight 1 / N. Then, at each step t:

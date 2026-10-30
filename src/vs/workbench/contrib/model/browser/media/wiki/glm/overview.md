@@ -1,6 +1,6 @@
 # Overview
 
-This webview fits **generalized linear models** (GLMs): regressions for responses that are not normal with constant variance, such as 0/1 outcomes, counts and positive skewed amounts. A GLM has three parts: a **family**, the distribution of the response; a **linear predictor**, b0 + b1 x1 + ... + bp xp; and a **link**, the function of the mean that equals the linear predictor. Models are fitted by maximum likelihood (iteratively reweighted least squares) with GLM.jl, and robust standard errors come from CovarianceMatrices.jl.
+The Generalized Linear Models panel fits **generalized linear models** (GLMs): regressions for responses that are not normal with constant variance, such as 0/1 outcomes, counts and positive skewed amounts. A GLM has three parts: a **family**, the distribution of the response; a **linear predictor**, b0 + b1 x1 + ... + bp xp; and a **link**, the function of the mean that equals the linear predictor. Models are fitted by maximum likelihood (iteratively reweighted least squares) with GLM.jl, and robust standard errors come from CovarianceMatrices.jl.
 
 ## Bernoulli and Binomial
 **Binary response**: a 0/1 outcome (Bernoulli) or a number of successes out of n trials (Binomial). The default **logit** link gives logistic regression, whose coefficients are log odds ratios; **probit**, **complementary log-log** and **cauchit** are the alternatives.

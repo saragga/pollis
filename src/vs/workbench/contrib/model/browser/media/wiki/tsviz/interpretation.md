@@ -1,6 +1,6 @@
 # Interpretation
 
-What a time series plot *tells you* depends on what you are looking at. This page connects common visual patterns to their substantive meaning.
+What a time series plot *tells you* depends on what you are looking at. Common visual patterns each have a substantive meaning.
 
 ## Reading the Line
 

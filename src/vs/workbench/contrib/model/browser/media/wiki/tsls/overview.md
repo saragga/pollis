@@ -1,6 +1,6 @@
 # Overview
 
-This webview estimates linear models with **endogenous regressors**, variables correlated with the error because of omitted variables, simultaneity or measurement error, where least squares is biased whatever the sample size. **Two-stage least squares** uses **instruments**, variables that move the endogenous regressors but affect the response only through them, to isolate the part of their variation that is unrelated to the error. The fit uses FixedEffectModels.jl.
+The Two-Stage Least Squares (2SLS) panel estimates linear models with **endogenous regressors**, variables correlated with the error because of omitted variables, simultaneity or measurement error, where least squares is biased whatever the sample size. **Two-stage least squares** uses **instruments**, variables that move the endogenous regressors but affect the response only through them, to isolate the part of their variation that is unrelated to the error. The fit uses FixedEffectModels.jl.
 
 ## The Two Stages
 In the **first stage**, each endogenous regressor is regressed on all the instruments: the exogenous regressors (included instruments) and the excluded instruments. In the **second stage**, the response is regressed on the exogenous regressors and the first-stage fitted values. The coefficients are those of the second stage; the standard errors are computed from the structural residuals, with the actual endogenous regressors, not from the second-stage regression.

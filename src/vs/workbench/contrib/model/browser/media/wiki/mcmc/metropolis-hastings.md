@@ -20,7 +20,7 @@ The normalising constant of p cancels in the ratio, which is why the method work
 In Turing, **MH()** with no arguments is an independence sampler that proposes each parameter from its **prior**. MH(Sigma), with a covariance matrix, gives a random-walk proposal; pairs of a parameter and a proposal set them one by one.
 
 ## Strengths and Limits
-It needs no gradients, so it works with discrete parameters, black-box likelihoods and non-differentiable models. But a random walk covers a distance that grows only with the square root of the number of steps, and its efficiency falls as the dimension grows: beyond a handful of parameters, or with strong correlations, gradient-based samplers are far more efficient. Expect a low ESS relative to the number of draws.
+Metropolis-Hastings needs no gradients, so it works with discrete parameters, black-box likelihoods and non-differentiable models. But a random walk covers a distance that grows only with the square root of the number of steps, and its efficiency falls as the dimension grows: beyond a handful of parameters, or with strong correlations, gradient-based samplers are far more efficient. Expect a low ESS relative to the number of draws.
 
 ## In Turing.jl
 

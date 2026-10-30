@@ -7,7 +7,7 @@ HMC follows a simulated trajectory from the current point, and the draw is a poi
 
 ## Adaptation
 During **warm-up** NUTS also tunes:
-- the **step size**, by dual averaging, so that the average acceptance statistic reaches the **target acceptance** (0.65 in this panel, Turing's default; 0.8 in Stan);
+- the **step size**, by dual averaging, so that the average acceptance statistic reaches the **target acceptance** (0.65 in the Markov Chain Monte Carlo panel, Turing's default; 0.8 in Stan);
 - the **mass matrix**, the scale of each parameter, from the spread of the warm-up draws.
 The warm-up draws are discarded.
 

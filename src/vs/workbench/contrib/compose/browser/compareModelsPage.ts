@@ -15,17 +15,24 @@ import { IDialogService, IFileDialogService } from '../../../../platform/dialogs
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { IInstantiationService, ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { IQuickInputService } from '../../../../platform/quickinput/common/quickInput.js';
+import { IOpenerService } from '../../../../platform/opener/common/opener.js';
+import { INotificationService } from '../../../../platform/notification/common/notification.js';
+import { IEditorService } from '../../../services/editor/common/editorService.js';
+import { IPathService } from '../../../services/path/common/pathService.js';
+import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
+import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
 import { IHostService } from '../../../services/host/browser/host.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
+import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
 import { FEWEST_ROWS, rowsChoiceScript, sortHeadingsScript, storedRows, storeRows } from '../../model/browser/webviews/webviewPager.js';
-import { spinnerSvg, voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
-import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
+import { COMPAREMODELS_METADATA } from '../../model/browser/webviews/compareModels.data.js';
+import { buildWebviewHtml, spinnerSvg } from '../../model/browser/webviews/webviewScaffold.js';
 import { ASK_CLOUD_MODELS, ASK_CLOUD_PROVIDERS, ASK_LOCAL_PREFIX, askCloudModel, askPassageLabel, AskTopic, IAskPollisEvalItem, IAskPollisPassage, IAskPollisService, IAskTopicCounts, ICompareRun, ICompareRunModel } from '../common/askPollis.js';
 import { askAnswerCss, askAnswerScript, askOpenPassage, askPassageView } from './askPollisWebview.js';
 import { CompareModelsRunner, compareFigures, ICompareEnd, ICompareProgress, QUESTION_COUNTS, retrievalLine } from './compareModelsRun.js';
-import { compareChartsHtml, compareChartsScript, compareCommonScript, compareCss, compareLocalCard, compareSharedText, compareTestSetHtml, compareTestSetScript, CompareTestSetChoice, evalItemsText, mergeEvalItems, parseEvalItems, STANDARD_TEST_SET, topicLabel } from './compareShared.js';
+import { compareChartsHtml, compareChartsScript, compareCommonScript, compareCss, compareLocalCard, compareSharedText, compareTestSetHeadHtml, compareTestSetHtml, compareTestSetScript, CompareTestSetChoice, evalItemsText, mergeEvalItems, parseEvalItems, STANDARD_TEST_SET, topicLabel } from './compareShared.js';
 import { IInstalledModel } from './modelsInstalledPage.js';
 
 // Evaluate Answering Models, from Ask Pollis and Compose > Local Models > Evaluate Answering Models... (compose.contribution.ts): the chat
@@ -56,11 +63,6 @@ const COUNTS_KEY = 'pollis.compareModels.questionCounts';
 const MOST_QUESTIONS = 200;
 /** The topics of the questions, in the order of their counts beside Make Questions... */
 const TOPICS: readonly AskTopic[] = ['pollis', 'julia', 'panels'];
-/** The packages of the evaluation, on the Powered by line. */
-const POWERED_BY = [
-	{ name: 'RAGTools.jl', url: 'https://github.com/Trumpingtons/RAGTools.jl' },
-	{ name: 'PromptingTools.jl', url: 'https://github.com/Trumpingtons/PromptingTools.jl' },
-];
 /** The test set chosen, by its name, the Standard one being ''. */
 const TEST_SET_KEY = 'pollis.compareModels.testSet';
 /** The questions ticked in each test set, by their text, under the set's name. */
@@ -97,8 +99,7 @@ type CompareModelsMessage =
 	| { readonly command: 'export' }
 	| { readonly command: 'showRun'; readonly id: string }
 	| { readonly command: 'deleteRun'; readonly id: string }
-	| { readonly command: 'open'; readonly question: number; readonly passage: number }
-	| { readonly command: 'openUrl'; readonly url: string };
+	| { readonly command: 'open'; readonly question: number; readonly passage: number };
 
 /** The runner of the window, made the first time the page opens, so that a run goes on when the page is closed. */
 let runner: CompareModelsRunner | undefined;
@@ -145,6 +146,12 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 	const dialogService = accessor.get(IDialogService);
 	const hostService = accessor.get(IHostService);
 	const quickInputService = accessor.get(IQuickInputService);
+	const openerService = accessor.get(IOpenerService);
+	const editorService = accessor.get(IEditorService);
+	const notificationService = accessor.get(INotificationService);
+	const notebookEditorModelResolverService = accessor.get(INotebookEditorModelResolverService);
+	const notebookKernelService = accessor.get(INotebookKernelService);
+	const pathService = accessor.get(IPathService);
 	const run = runner ??= accessor.get(IInstantiationService).createInstance(CompareModelsRunner);
 
 	if (openPage && !openPage.input.isDisposed()) {
@@ -171,6 +178,7 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 	const post = (message: object) => webviewInput.webview.postMessage(message);
 
 	const disposables = new DisposableStore();
+	disposables.add(registerScaffoldPageHandlers(webviewInput, 'compareModels', title, COMPAREMODELS_METADATA.compareModels, openerService, editorService, commandService, notificationService, notebookEditorModelResolverService, notebookKernelService, fileService, pathService, storageService));
 	// The models listed, those on this computer first
 	let listed: readonly (ICompareRunModel & { readonly bytes?: number; readonly provider?: string })[] = [];
 	let chosen = storedList(storageService, CHOSEN_KEY, []);
@@ -498,8 +506,6 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 			if (passage) {
 				askOpenPassage(commandService, passage);
 			}
-		} else if (message.command === 'openUrl' && hasKey(message, { url: true }) && POWERED_BY.some(pkg => pkg.url === message.url)) {
-			await commandService.executeCommand(OPEN_LINK_COMMAND_ID, message.url);
 		}
 	}));
 }
@@ -600,24 +606,19 @@ function pageHtml(rows: number): string {
 		repeat: localize('compareModels.repeat', "Asking {0}", '{0}'),
 		noAnswer: localize('compareModels.noAnswer', "No answer."),
 	};
-	return `<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
-	<style>
+	return buildWebviewHtml({
+		title: text.title,
+		introHtml: text.intro,
+		extraCss: `
 		${compareCss}
 		${askAnswerCss}
-		${voiceButtonsCss}
-	</style>
-</head>
-<body>
-<div class="container">
-	<div class="title-row"><h1>${text.title}</h1>${voiceButtonsHtml}</div>
-	<div class="powered-by">${text.poweredBy}&nbsp;<span id="package-links"></span></div>
-	<p class="subtitle">${text.intro}</p>
-	<div class="head"><h2 class="section"><span class="step">1</span>${text.models}</h2><span class="small" id="chosenCount"></span></div>
+`,
+		steps: [
+			{
+				id: 'step-models',
+				title: text.models,
+				headHtml: '<span class="small" id="chosenCount"></span>',
+				bodyHtml: `
 	<div class="models">
 		${compareLocalCard(text)}
 		<div class="card">
@@ -632,7 +633,13 @@ function pageHtml(rows: number): string {
 			</table>
 		</div>
 	</div>
-
+`,
+			},
+			{
+				id: 'step-questions',
+				title: text.questions,
+				headHtml: compareTestSetHeadHtml(text),
+				bodyHtml: `
 	${compareTestSetHtml(text, text.questionsIntro, `<span class="bar"><button class="action current" id="saveAs">${text.saveAs}</button><button class="action" id="newSet">${text.newSet}</button><button class="action" id="export">${text.export}</button></span>`)}
 	<div class="illus-section collapsed change" id="changeSection">
 		<button class="illus-toggle" id="changeToggle">
@@ -666,8 +673,12 @@ function pageHtml(rows: number): string {
 			</div>
 		</div>
 	</div>
-
-	<h2 class="section"><span class="step">3</span>${text.runSection}</h2>
+`,
+			},
+			{
+				id: 'step-run',
+				title: text.runSection,
+				bodyHtml: `
 	<p class="hint">${text.runIntro}</p>
 	<div class="small warning" id="memory" hidden></div>
 	<div class="settings">
@@ -678,8 +689,12 @@ function pageHtml(rows: number): string {
 	</div>
 	<div class="small status" id="runStatus"></div>
 	${compareChartsHtml(text, `<div class="card chart" id="tokensChart"><h3>${text.tokensChart}</h3><div class="now" id="tokensNow"></div><svg role="img" aria-label="${text.tokensChart}"></svg><div class="tip" hidden></div></div>`)}
-
-	<h2 class="section"><span class="step">4</span>${text.results}</h2>
+`,
+			},
+			{
+				id: 'step-results',
+				title: text.results,
+				bodyHtml: `
 	<div class="row">
 		<span class="small">${text.earlierRuns}</span> <select id="runs"></select>
 		<button class="link" id="deleteRun">${text.deleteRun}</button>
@@ -700,11 +715,11 @@ function pageHtml(rows: number): string {
 		</table>
 		<div class="pager" id="answersPager" hidden></div>
 	</div>
-</div>
-<script>
-	const vscode = acquireVsCodeApi();
+`,
+			},
+		],
+		pageScriptJs: `
 	const TEXT = ${JSON.stringify(text)};
-	const POWERED_BY = ${JSON.stringify(POWERED_BY)};
 	const SPINNER = '${spinnerSvg}';
 	${askAnswerScript()}
 	${rowsChoiceScript()}
@@ -1014,6 +1029,8 @@ function pageHtml(rows: number): string {
 			: TEXT.noRuns;
 		document.getElementById('retrieval').textContent = run ? run.retrieval : '';
 		document.getElementById('deleteRun').hidden = !run;
+		// A run that ends shows itself, even in a pane left closed
+		if (run) { document.getElementById('step-results').classList.remove('collapsed'); }
 		if (!run) { return; }
 		// A column for each model, the best first by the first judge; a row for each figure
 		const sorted = [...run.figures].sort((a, b) => (b.scores[0] ?? -1) - (a.scores[0] ?? -1));
@@ -1095,10 +1112,8 @@ function pageHtml(rows: number): string {
 		}
 	});
 	vscode.postMessage({ command: 'ready' });
-	${voiceButtonsScript}
-</script>
-</body>
-</html>`;
+`,
+	});
 }
 
 registerAction2(class extends Action2 {

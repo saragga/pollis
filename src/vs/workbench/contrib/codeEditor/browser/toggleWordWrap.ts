@@ -340,7 +340,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarViewMenu, {
 		title: nls.localize({ key: 'miToggleWordWrap', comment: ['&& denotes a mnemonic'] }, "&&Word Wrap"),
 		toggled: EDITOR_WORD_WRAP,
 	},
-	// Pollis: below Column Selection Mode (toggleColumnSelection.ts), with no separator between them
-	order: 2,
+	// Pollis: below Column Selection Mode (toggleColumnSelection.ts) and Minimap (toggleMinimap.ts), with no separator between them
+	order: 3,
 	group: '7_editor'
 });

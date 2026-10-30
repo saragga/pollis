@@ -1,6 +1,6 @@
 # Nonsmooth and Proximal Optimisation — Overview
 
-This webview solves **penalised sparse regression**, min F(x) = 0.5 ||A x - b||^2 + lambda penalty(x), with a random m by n design A, a truth x_true whose first n / 5 coefficients are nonzero, and noise of standard deviation 0.1. The penalty is the **L1 norm** (lasso), the **L2 norm** (group lasso with one group) or the **max norm**; **ProximalOperators.jl** supplies its proximal map. A reference optimum F* is computed first by 5000 steps of accelerated proximal gradient (FISTA), so that every method's **gap** F(x) - F* can be measured.
+The Nonsmooth and Proximal Optimisation panel solves **penalised sparse regression**, min F(x) = 0.5 ||A x - b||^2 + lambda penalty(x), with a random m by n design A, a truth x_true whose first n / 5 coefficients are nonzero, and noise of standard deviation 0.1. The penalty is the **L1 norm** (lasso), the **L2 norm** (group lasso with one group) or the **max norm**; **ProximalOperators.jl** supplies its proximal map. A reference optimum F* is computed first by 5000 steps of accelerated proximal gradient (FISTA), so that every method's **gap** F(x) - F* can be measured.
 
 ## The Proximal Map
 For the L1 norm, the prox is **soft thresholding**: each coordinate is shrunk towards zero by t lambda and set to zero if smaller. For the L2 norm the whole vector is shrunk; for the max norm the largest coordinates are clipped. A proximal step generalises a gradient step to nonsmooth functions.

@@ -8,7 +8,7 @@ import { URI } from '../../../../base/common/uri.js';
 import { localize } from '../../../../nls.js';
 import { BrowserViewCommandId } from '../../../../platform/browserView/common/browserView.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
-import { IAskPollisPassage, IAskPollisSearchResult } from '../common/askPollis.js';
+import { AskPollisSource, ASK_SOURCE_COLLECTION, IAskPollisPassage, IAskPollisSearchResult } from '../common/askPollis.js';
 
 // What Ask Pollis and Evaluate Answering Models show of an answer alike: its Markdown with the citations as buttons, the Sources
 // under it with Open, and the passage opened in its document.
@@ -37,10 +37,12 @@ function headingFragment(heading: string): string {
 	return last.trim().toLowerCase().replace(/[^\p{L}\p{N}\s_-]/gu, '').replace(/\s/g, '-');
 }
 
-/** Opens a passage in its document: the PDF at its page, the panel's wiki at its heading, the Julia Manual at its section. */
+/** Opens a passage in its document: the PDF at its page, the panel's wiki at its heading, the Julia Manual at its section, a package's docstring on its site. */
 export function askOpenPassage(commandService: ICommandService, passage: IAskPollisPassage): void {
 	if (passage.kind === 'wiki') {
 		commandService.executeCommand('markdown.showPreview', URI.file(passage.file).with({ fragment: headingFragment(passage.heading) }));
+	} else if (passage.kind === 'api' && passage.anchor) {
+		commandService.executeCommand(BrowserViewCommandId.Open, passage.anchor);
 	} else if (passage.anchor) {
 		// The Julia Manual, in the HTML that comes with Julia, at the section or the docstring
 		const [page, fragment] = passage.anchor.split('#');
@@ -51,21 +53,59 @@ export function askOpenPassage(commandService: ICommandService, passage: IAskPol
 	}
 }
 
-/** What a Search In chooses: the collections nearest the question, one of them by its name, all, or none. */
+/** What a Search In chooses, a list of them or, for the collections nearest the question, an empty list: a collection by its name, a source of Pollis, all, or none. */
 const SEARCH_NEAREST = '';
 const SEARCH_ALL = '*';
 const SEARCH_NONE = '-';
+/** The collection of Pollis' own documents, as ask_index.jl names it. */
+const POLLIS = 'Pollis';
 /** The collection of the Julia Manual, as ask_index.jl names it. */
 const JULIA_MANUAL = 'Julia Manual';
+/** The collection of the Package APIs, as pollisPackageApis.ts names it, listed among the sources of Pollis, after the vignettes. */
+const PACKAGE_APIS = 'Package APIs';
+/** The sources of Pollis and of Julia's documentation, which a Search In offers in place of the collections. */
+const SEARCH_SOURCES: Record<AskPollisSource, string> = {
+	pollisTopics: localize('askPollis.pollisTopics', "Pollis Topics"),
+	packageVignettes: localize('askPollis.packageVignettes', "Package Vignettes"),
+	toolboxOverviews: localize('askPollis.toolboxOverviews', "Toolbox Overviews"),
+	panelsWikis: localize('askPollis.panelsWikis', "Panels Wikis"),
+	juliaManual: localize('askPollis.juliaManual', "Julia Manual"),
+	juliaLibrary: localize('askPollis.juliaLibrary', "Julia Base and Standard Library"),
+};
+
+/** The sources of `collection` a Search In offers, by their names. */
+function searchSourcesOf(collection: string): { readonly [source: string]: string } {
+	return Object.fromEntries(Object.entries(SEARCH_SOURCES).filter(([source]) => ASK_SOURCE_COLLECTION[source as AskPollisSource] === collection));
+}
+
+/** Whether what a Search In ticked is a source of Pollis. */
+function isSearchSource(name: string): name is AskPollisSource {
+	return Object.hasOwn(SEARCH_SOURCES, name);
+}
+
+/** The sources ticked in a Search In; nothing when the collections searched are searched whole. */
+export function askSearchSources(choice: readonly string[]): readonly AskPollisSource[] | undefined {
+	const sources = choice.filter(isSearchSource);
+	return sources.length ? sources : undefined;
+}
 
 /** The collections a Search In's choice searches, of `all` those of the index; nothing for the nearest. */
-export function askSearchIn(choice: string, all: readonly string[]): readonly string[] | undefined {
-	return choice === SEARCH_NEAREST ? undefined : choice === SEARCH_ALL ? all : [choice];
+export function askSearchIn(choice: readonly string[], all: readonly string[]): readonly string[] | undefined {
+	return !choice.length ? undefined : choice.includes(SEARCH_ALL) ? all : [...new Set(choice.map(name => isSearchSource(name) ? ASK_SOURCE_COLLECTION[name] : name))];
+}
+
+/** What the page says was searched: the collections `searched`, each as the sources of it a Search In's choice ticked. */
+export function askSearchedNames(choice: readonly string[], searched: readonly string[]): readonly string[] {
+	const sources = askSearchSources(choice) ?? [];
+	return searched.flatMap(name => {
+		const ticked = sources.filter(source => ASK_SOURCE_COLLECTION[source] === name);
+		return ticked.length ? ticked.map(source => SEARCH_SOURCES[source]) : [name];
+	});
 }
 
 /** Whether a Search In's choice is None: the model answers without the documents, to see what they add. */
-export function askSearchesNothing(choice: string): boolean {
-	return choice === SEARCH_NONE;
+export function askSearchesNothing(choice: readonly string[]): boolean {
+	return choice.includes(SEARCH_NONE);
 }
 
 /** Why the question was searched by its words only, for the page; nothing when it was searched by meaning too. */
@@ -109,7 +149,7 @@ export const askAnswerCss = `
 
 /**
  * The script of an answer and its Sources: element(), esc(), markdown(), cited(), renderSources(), showSource(),
- * which a click on a citation calls to show its source within `box`, and setSearchIn(), the choices of a Search In.
+ * which a click on a citation calls to show its source within `box`, and searchInSources(), what a Search In can tick.
  */
 export function askAnswerScript(): string {
 	const text = {
@@ -119,13 +159,21 @@ export function askAnswerScript(): string {
 		fromToolbox: localize('askPollis.fromToolbox', "{0} toolbox", '{0}'),
 		automatic: localize('askPollis.automatic', "Auto"),
 		automaticHint: localize('askPollis.automaticHint', "Pollis' own documents, the Julia Manual, or both, depending on what the question is about"),
+		pollisSources: searchSourcesOf(POLLIS),
+		juliaSources: searchSourcesOf(JULIA_MANUAL),
 		all: localize('askPollis.all', "All Sources"),
 		none: localize('askPollis.none', "None"),
-		juliaManualHint: localize('askPollis.juliaManualHint', "The Julia Manual and the docstrings of Base and the standard library, of the Julia that the REPL runs"),
+		sourcesCount: localize('askPollis.sourcesCount', "{0} Sources", '{0}'),
+		juliaManualHint: localize('askPollis.juliaManualHint', "The Julia Manual, of the Julia that the REPL runs"),
+		juliaLibraryHint: localize('askPollis.juliaLibraryHint', "The pages of Base and the standard library, mostly docstrings, of the Julia that the REPL runs"),
+		packageApisHint: localize('askPollis.packageApisHint', "The docstrings of the packages of the panels, from their documentation sites, at the version on this computer when the site has it. Searched only when ticked, or with All Sources"),
 		noneHint: localize('askPollis.noneHint', "Nothing is searched: the model answers from what it knows, without the documents, to see what they add"),
 	};
 	return `
 	const ANSWER_TEXT = ${JSON.stringify(text)};
+	const SEARCH_NEAREST = ${JSON.stringify(SEARCH_NEAREST)};
+	const SEARCH_ALL = ${JSON.stringify(SEARCH_ALL)};
+	const SEARCH_NONE = ${JSON.stringify(SEARCH_NONE)};
 
 	function element(tag, className, content) {
 		const node = document.createElement(tag);
@@ -227,28 +275,12 @@ export function askAnswerScript(): string {
 		}
 	}
 
-	/**
-	 * The choices of a Search In \`select\`: Automatic, each collection of \`names\`, all, and none; \`box\` shown
-	 * when there are two collections or more. The choice stays if it is still there; Automatic and None say on hover
-	 * what they search.
-	 */
-	function setSearchIn(box, select, names) {
-		box.hidden = names.length < 2;
-		const hints = { ${JSON.stringify(SEARCH_NEAREST)}: ANSWER_TEXT.automaticHint, ${JSON.stringify(JULIA_MANUAL)}: ANSWER_TEXT.juliaManualHint, ${JSON.stringify(SEARCH_NONE)}: ANSWER_TEXT.noneHint };
-		const hint = () => { select.title = hints[select.value] ?? ''; };
-		select.onchange = hint;
-		const chosen = select.value;
-		const options = [[${JSON.stringify(SEARCH_NEAREST)}, ANSWER_TEXT.automatic], ...names.map(name => [name, name]), [${JSON.stringify(SEARCH_ALL)}, ANSWER_TEXT.all], [${JSON.stringify(SEARCH_NONE)}, ANSWER_TEXT.none]];
-		if (select.options.length === options.length && options.every(([value], i) => select.options[i].value === value)) { return; }
-		select.textContent = '';
-		for (const [value, label] of options) {
-			const option = element('option', '', label);
-			option.value = value;
-			if (hints[value]) { option.title = hints[value]; }
-			select.appendChild(option);
-		}
-		select.value = options.some(([value]) => value === chosen) ? chosen : ${JSON.stringify(SEARCH_NEAREST)};
-		hint();
+	/** What a Search In can tick: each collection of \`names\`, Pollis and the Julia Manual as their sources, the Package APIs after the vignettes. */
+	function searchInSources(names) {
+		const hints = { juliaManual: ANSWER_TEXT.juliaManualHint, juliaLibrary: ANSWER_TEXT.juliaLibraryHint, ${JSON.stringify(PACKAGE_APIS)}: ANSWER_TEXT.packageApisHint };
+		const packageApis = names.includes(${JSON.stringify(PACKAGE_APIS)}) ? [[${JSON.stringify(PACKAGE_APIS)}, ${JSON.stringify(PACKAGE_APIS)}]] : [];
+		const pollisSources = Object.entries(ANSWER_TEXT.pollisSources).flatMap(source => source[0] === 'packageVignettes' ? [source, ...packageApis] : [source]);
+		return names.flatMap(name => name === ${JSON.stringify(POLLIS)} ? pollisSources : name === ${JSON.stringify(JULIA_MANUAL)} ? Object.entries(ANSWER_TEXT.juliaSources) : name === ${JSON.stringify(PACKAGE_APIS)} ? [] : [[name, name]]).map(([value, label]) => ({ value, label, title: hints[value] ?? '' }));
 	}
 
 	/** A click on a citation shows its source, among those of the nearest \`.\${boxClass}\` around it. */

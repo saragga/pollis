@@ -366,9 +366,6 @@ key = "LMJTP...2021a"
 [[references]]
 key = "Luc...2024a"
 
-[[references]]
-key = "BEKS2017a"
-
 [[bullets]]
 text = "Every modality"
 detail = "hundreds of thousands of datasets spanning text, image, audio, video, tabular, time-series, geospatial, document, and 3D data"

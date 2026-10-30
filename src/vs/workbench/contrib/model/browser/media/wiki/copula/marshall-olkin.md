@@ -17,7 +17,7 @@ Marshall and Olkin (1967) modelled two components that fail from three independe
 - **Data with ties**: simultaneous events that a continuous copula cannot reproduce.
 
 ## Estimation
-The singular component makes the likelihood unusual: it has a density part and a part on the curve. Rank-based inversion of Kendall's tau is the straightforward route; maximum likelihood must handle observations that lie on the curve. In this panel the family is bivariate, fixed at d = 2.
+The singular component makes the likelihood unusual: it has a density part and a part on the curve. Rank-based inversion of Kendall's tau is the straightforward route; maximum likelihood must handle observations that lie on the curve. In the Copula Estimation panel the family is bivariate, fixed at d = 2.
 
 ## See Also
 - [Extreme Value Copulas](extreme-value.md) · [Dependence Measures](dependence-measures.md) · [Decision Guide](decision-guide.md)

@@ -6,7 +6,7 @@
 MADS keeps two parameters: the **mesh size**, the spacing of the grid on which all trial points lie, and the **poll size**, the distance of the poll points from the incumbent. After a failed poll both shrink, the mesh size faster than the poll size, so the number of possible poll directions on the mesh grows without bound.
 
 ## Dense Directions
-That growth lets MADS choose poll directions that become **dense** in the unit sphere over the iterations: every direction is eventually approached. At a kink where the descent directions lie in a narrow cone, MADS eventually polls inside it; pattern search, with its fixed directions, may never do so.
+The growing number of possible poll directions on the mesh lets MADS choose poll directions that become **dense** in the unit sphere over the iterations: every direction is eventually approached. At a kink where the descent directions lie in a narrow cone, MADS eventually polls inside it; pattern search, with its fixed directions, may never do so.
 
 ## Convergence
 If f is **Lipschitz** near the limit point, MADS converges to a point that is **Clarke stationary**: no direction gives a first-order decrease in the sense of the Clarke generalised derivative. That is the natural optimality condition for non-smooth functions.

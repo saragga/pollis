@@ -12,7 +12,7 @@
 
 ## Typical Workflow
 
-1. Get a free key and store it with **Set API key** (see Authentication).
+1. Get a free FRED key and store it with **Set API key** (see the Authentication wiki).
 2. Find the series ID you want on the FRED site (see Finding Series).
 3. Create a client: `f = Fred()`.
 4. Download the series: `get_data(f, "GDPC1")`.
@@ -33,7 +33,7 @@ println(gdp.data)
 - **FRED** (`FredData.jl`) — the canonical source for U.S. macroeconomic series, with revision history (vintages) and rich units transforms.
 - **Alpha Vantage** (`AlphaVantage.jl`) — market data (equities, FX, crypto) plus a smaller set of economic indicators.
 
-Use whichever fits your data needs; the **Compare** link in the Concept Map cross-references the two.
+Use whichever fits your data needs; the **Compare** link in the Concept Map cross-references FRED and Alpha Vantage.
 
 ## See Also
 - [Factsheet](factsheet.md) · [Authentication](authentication.md) · [Finding Series](finding-series.md)

@@ -11,7 +11,7 @@ Every public company in the United States files its disclosures with the SEC thr
 
 Companies are keyed by **CIK** (Central Index Key), an integer. In the `data.sec.gov` URLs the CIK is **zero-padded to 10 digits** (Apple's `320193` becomes `CIK0000320193`). If you only have a ticker, resolve it first via `company_tickers.json` (see Finding a Company).
 
-## The Five Topics in This Webview
+## The Five Topics in This Panel
 
 - **Submissions** — a filer's filing history (`/submissions/`).
 - **Company Facts** — every XBRL fact for one company (`/api/xbrl/companyfacts/`).
@@ -31,7 +31,7 @@ Companies are keyed by **CIK** (Central Index Key), an integer. In the `data.sec
 - **EDGAR** — company-level disclosures and financial statements, by CIK.
 - **FRED** (`FredData.jl`) — aggregate macroeconomic series, by series ID.
 
-The **Compare** link in the Concept Map cross-references the two.
+The **Compare** link in the Concept Map cross-references EDGAR and FRED.
 
 ## See Also
 - [Factsheet](factsheet.md) · [Finding a Company](finding-a-company.md) · [Search Modes](search-modes.md)

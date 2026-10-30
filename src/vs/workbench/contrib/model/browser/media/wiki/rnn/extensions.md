@@ -85,7 +85,7 @@ RecurrentLayers.jl also provides helper constructors for stacked and bidirection
 
 ## Example: Swapping GRU for LiGRU
 
-The webview template generates a standard Flux GRU. To upgrade to LiGRU, change only the cell constructor:
+The code of the Recurrent Neural Networks panel generates a standard Flux GRU. To upgrade to LiGRU, change only the cell constructor:
 
 ```julia
 # Standard GRU (Flux.jl)

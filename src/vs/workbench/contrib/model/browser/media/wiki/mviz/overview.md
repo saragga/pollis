@@ -1,6 +1,6 @@
 # Overview
 
-When data has three or more variables, pairwise plots tell only part of the story. This webview offers four ways to see multivariate structure.
+When data has three or more variables, pairwise plots tell only part of the story. The Multivariate Visualisation panel offers four ways to see multivariate structure.
 
 ## Corner Plot
 A triangular matrix of pairwise scatters with marginal densities on the diagonal — the standard view for **posterior samples** and any moderate set of variables. See [Corner Plot](corner.md).

@@ -59,7 +59,7 @@ The **Long Short‑Term Memory (LSTM)** network is a special kind of RNN designe
 - **Input gate** `i_t`: decides which new information to store.
 - **Output gate** `o_t`: decides what part of the cell state to output as the hidden state.
 
-These gates are learned from data, allowing the LSTM to keep information for thousands of time steps or to forget it immediately. The LSTM is arguably the most widely used RNN variant in practice today.
+The LSTM learns its gates from data, so that it can keep information for thousands of time steps or forget it immediately. The LSTM is arguably the most widely used RNN variant in practice today.
 
 ### 3.4 Applications
 
@@ -129,7 +129,7 @@ After several such layers, each node’s representation contains information abo
 
 ### 5.3 Why GNNs are Powerful
 
-They combine node features *and* graph topology. This makes them ideal for any problem where relationships matter – which is very common in biology, chemistry, social sciences, and recommender systems.
+Graph neural networks combine node features *and* graph topology. This makes them ideal for any problem where relationships matter – which is very common in biology, chemistry, social sciences, and recommender systems.
 
 ---
 
@@ -206,7 +206,7 @@ Financial data is often noisy, non‑stationary, and filled with complex depende
 
 ## 8. Use Cases in Medicine, Pharmaceutics, and Genetics
 
-These fields generate rich, complex data: genomic sequences, protein structures, patient health records, and medical images. Deep learning has revolutionised many tasks.
+Medicine, pharmaceutics and genetics generate rich, complex data: genomic sequences, protein structures, patient health records, and medical images. Deep learning has revolutionised many tasks.
 
 ### 8.1 Feedforward Neural Networks in Medicine
 
