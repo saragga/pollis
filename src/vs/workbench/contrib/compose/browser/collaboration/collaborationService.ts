@@ -28,7 +28,7 @@ import { ChatPageMessage, ChatWorkbenchMessage, chatPageHtml, COLLABORATION_MEDI
 import { COLLABORATION_APP_ID, envelope, Envelope, formatSessionCode, IByePayload, IChatPayload, base64Bytes, IDatasetSharedPayload, IEditorSharedPayload, IFileSharedPayload, IHelloPayload, isAcceptableImage, isDuckDbFile, isEnvelope, ISessionCode, MAX_DATASET_BYTES, MAX_FILE_BYTES, MAX_IMAGE_BYTES, MAX_PARTICIPANTS, MAX_RECEIVE_BYTES, MAX_SHARE_BYTES, newSessionCode, parseSessionCode, ParticipantRole, roomIdOf, SignallingStrategy } from './collaborationProtocol.js';
 import { datasetFileName, formatBytes, IReceivedDataset, IReceivedFile, SharedDatasets, sharedFileName, summarizeCsv } from './collaborationDatasets.js';
 import { ISharedSnapshot, shareableKind, SharedEditors } from './collaborationEditors.js';
-import { getVoiceLanguage, setVoiceLanguage } from '../composerVoice.js';
+import { getVoiceLanguage, getVoiceWriteIn, setVoiceLanguage, setVoiceWriteIn } from '../composerVoice.js';
 import { IWirePacket, ReliableDelivery } from './collaborationTransport.js';
 
 // Compose > Collaboration sessions (internal-reports/collaboration-spec.md): starting, joining and leaving
@@ -155,7 +155,7 @@ class Session extends Disposable {
 		private readonly onPickDataset: () => void,
 		private readonly onPickDatabase: () => void,
 		private readonly onFileAction: (file: IReceivedFile, action: 'save' | 'attach') => void,
-		private readonly onVoiceLanguage: (language: string) => void,
+		private readonly onVoiceChoice: (choice: 'voiceLanguage' | 'voiceWriteIn', value: string) => void,
 	) {
 		super();
 		this.admitted = role === 'host';
@@ -340,7 +340,8 @@ class Session extends Disposable {
 				break;
 			}
 			case 'voiceLanguage':
-				this.onVoiceLanguage(message.value);
+			case 'voiceWriteIn':
+				this.onVoiceChoice(message.command, message.value);
 				break;
 		}
 	}
@@ -900,7 +901,7 @@ export class CollaborationService extends Disposable implements ICollaborationSe
 			() => this.sharedDatasets.pickDatabase().then(picked => picked && this.session.value?.shareFile(picked.fileName, picked.content, true)).catch(error => this.notificationService.error(String(error))),
 			(file, action) => (action === 'save' ? this.sharedDatasets.saveFile(file) : this.sharedDatasets.attachDatabase(file))
 				.catch(error => this.notificationService.error(localize('collaboration.fileActionFailed', "Could not use {0}'s {1}: {2}", file.sharer, file.payload.fileName, String(error)))),
-			language => setVoiceLanguage(this.storageService, language),
+			(choice, value) => (choice === 'voiceLanguage' ? setVoiceLanguage : setVoiceWriteIn)(this.storageService, value),
 		);
 		this.session.value = session;
 		session.onDidEnd(() => this._onDidChangeSession.fire());
@@ -939,7 +940,7 @@ export class CollaborationService extends Disposable implements ICollaborationSe
 			undefined,
 			{ group, preserveFocus: false }
 		);
-		page.webview.setHtml(chatPageHtml(getVoiceLanguage(this.storageService)));
+		page.webview.setHtml(chatPageHtml(getVoiceLanguage(this.storageService), getVoiceWriteIn(this.storageService)));
 		group.lock(true);
 		this.pageDisposables.add(group.onDidCloseEditor(() => {
 			// After the editor part, which removes an empty group itself when workbench.editor.closeEmptyGroups is on

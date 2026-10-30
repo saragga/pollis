@@ -210,7 +210,7 @@ function panelAskHtml(): string {
 	};
 	return `<div class="panel-ask">
 				<textarea id="panel-ask-question" rows="1" placeholder="${text.placeholder}" aria-label="${text.placeholder}"></textarea>
-				${composerVoiceHtml({ dictate: text.dictate, voiceMode: text.voiceMode }, 'auto')}
+				${composerVoiceHtml({ dictate: text.dictate, voiceMode: text.voiceMode }, 'auto', 'same')}
 				<button class="panel-ask-send" id="panel-ask-send" title="${text.ask}" aria-label="${text.ask}">${composerSendSvg}</button>
 			</div>`;
 }

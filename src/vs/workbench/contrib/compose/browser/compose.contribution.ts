@@ -11,6 +11,7 @@ import './toolboxExtensions.js';
 import './toolboxPanelsPage.js';
 import './askPollisPage.js';
 import { COMPARE_EMBEDDINGS_COMMAND_ID } from './compareEmbeddingsPage.js';
+import { RAG_COMMAND_ID } from './ragPage.js';
 import { COMPARE_MODELS_COMMAND_ID } from './compareModelsPage.js';
 import './askPollisSources.js';
 import { BROWSE_SKILLS_COMMAND_ID, CHOOSE_AGENT_COMMAND_ID, CREATE_PANEL_COMMAND_ID, CREATE_PANELS_FROM_REQUEST_COMMAND_ID, PACKAGE_TOOLBOX_COMMAND_ID } from './pollisAgents.js';
@@ -45,6 +46,7 @@ const NewPanelsMenu = new MenuId('menubarNewPanelsMenu');
 const OrchestrationMenu = new MenuId('menubarOrchestrationMenu');
 // Formerly Explore > Access Model Repositories: the id stays, for the panel index and Pollis Views
 const LocalModelsMenu = new MenuId('menubarAMRSubmenu');
+const KnowledgeMenu = new MenuId('menubarKnowledgeMenu');
 const ReportsMenu = new MenuId('menubarReportsMenu');
 const ReplicationMenu = new MenuId('menubarReplicationMenu');
 const REPLICATE_ARTICLE_COMMAND_ID = 'pollis.replication.replicateArticle';
@@ -86,6 +88,13 @@ MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	submenu: LocalModelsMenu,
 	title: localize('pollisLocalModels.menu', "Local Models"),
 	order: 1,
+});
+
+MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
+	group: '1_compose',
+	submenu: KnowledgeMenu,
+	title: localize('pollisKnowledge.menu', "Knowledge for Models"),
+	order: 1.5,
 });
 
 // Coding Agents, the agent every agent task of Compose uses, and Agent Skills, the library of the skills it follows
@@ -274,9 +283,22 @@ MenuRegistry.appendMenuItem(LocalModelsMenu, {
 	order: 1,
 });
 
-// The embedding models installed, compared on the same questions (compareEmbeddingsPage.ts)
-MenuRegistry.appendMenuItem(LocalModelsMenu, {
-	group: '2_compare',
+
+
+// ==============================================================
+// SUBMENU: Knowledge for Models, the documents a model, local or cloud, answers from
+// ==============================================================
+
+// Retrieval-Augmented Generation, the collections of documents a model answers from (ragPage.ts)
+MenuRegistry.appendMenuItem(KnowledgeMenu, {
+	group: '1_knowledge',
+	command: { id: RAG_COMMAND_ID, title: localize('pollisRag.menu', "Retrieval-Augmented Generation") },
+	order: 1,
+});
+
+// The embedding models installed, compared on the questions of Ask Pollis (compareEmbeddingsPage.ts)
+MenuRegistry.appendMenuItem(KnowledgeMenu, {
+	group: '1_knowledge',
 	command: { id: COMPARE_EMBEDDINGS_COMMAND_ID, title: localize('compareEmbeddings.menu', "Evaluate Embedding Models...") },
 	order: 2,
 });

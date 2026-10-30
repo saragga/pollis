@@ -32,7 +32,7 @@ import { ADD_ALERT_COMMAND_ID } from '../../../monitor/browser/alertsPage.js';
 import { localize } from '../../../../../nls.js';
 import { IStorageService } from '../../../../../platform/storage/common/storage.js';
 import { ASK_POLLIS_COMMAND_ID, IAskPollisFromPanel } from '../../../compose/common/askPollis.js';
-import { getVoiceLanguage, setVoiceLanguage } from '../../../compose/browser/composerVoice.js';
+import { getVoiceLanguage, getVoiceWriteIn, setVoiceLanguage, setVoiceWriteIn } from '../../../compose/browser/composerVoice.js';
 
 /** Messages a scaffold panel sends that are not handled by the shared wirings of model.handler.ts. */
 type ScaffoldWebviewMessage =
@@ -47,7 +47,8 @@ type ScaffoldWebviewMessage =
 	| { command: 'setApiKey' }
 	| { command: 'clearApiKey' }
 	| { command: 'askPollis'; question: string }
-	| { command: 'voiceLanguage'; value: string };
+	| { command: 'voiceLanguage'; value: string }
+	| { command: 'voiceWriteIn'; value: string };
 
 /**
  * Handle the messages of a panel built on the shared scaffold (see scaffoldParts.ts): Learn More,
@@ -122,8 +123,9 @@ export function registerScaffoldWebviewHandlers(
 		if (initialModel) {
 			webviewInput.webview.postMessage({ command: 'setModel', model: initialModel });
 		}
-		// The language of dictation of Ask Pollis beside the title, which the HTML is made without
+		// The languages spoken and written of Ask Pollis beside the title, which the HTML is made without
 		webviewInput.webview.postMessage({ command: 'voiceLanguage', value: getVoiceLanguage(storageService) });
+		webviewInput.webview.postMessage({ command: 'voiceWriteIn', value: getVoiceWriteIn(storageService) });
 		void pkgStatus.postStatus();
 		void apiKey?.postStatus();
 	}, 0);
@@ -217,6 +219,9 @@ export function registerScaffoldWebviewHandlers(
 				break;
 			case 'voiceLanguage':
 				setVoiceLanguage(storageService, msg.value);
+				break;
+			case 'voiceWriteIn':
+				setVoiceWriteIn(storageService, msg.value);
 				break;
 		}
 	}));

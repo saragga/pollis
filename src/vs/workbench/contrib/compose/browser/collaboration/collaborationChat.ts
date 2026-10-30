@@ -106,10 +106,11 @@ export type ChatWorkbenchMessage =
 	| { readonly command: 'pickDatabase' }
 	| { readonly command: 'sendFile'; readonly fileName: string; readonly content: string }
 	| { readonly command: 'file'; readonly id: string; readonly action: 'save' | 'attach' }
-	| { readonly command: 'voiceLanguage'; readonly value: string };
+	| { readonly command: 'voiceLanguage'; readonly value: string }
+	| { readonly command: 'voiceWriteIn'; readonly value: string };
 
 /** The chat page: its texts come from here, the session from the workbench's messages; `language` is that of dictation. */
-export function chatPageHtml(language: string): string {
+export function chatPageHtml(language: string, writeIn: string): string {
 	const text = {
 		title: localize('collaborationChat.title', "Collaboration Chat"),
 		participants: localize('collaborationChat.participants', "Participants:"),
@@ -231,7 +232,7 @@ export function chatPageHtml(language: string): string {
 			<div id="attachment"><img id="attachmentImage" alt=""><button class="link" id="removeImage">${text.removeImage}</button></div>
 			<div class="top">
 				<textarea id="input" rows="1" placeholder="${text.placeholder}"></textarea>
-				${composerVoiceHtml({ dictate: text.dictate, voiceMode: text.voiceMode }, language)}
+				${composerVoiceHtml({ dictate: text.dictate, voiceMode: text.voiceMode }, language, writeIn)}
 			</div>
 			<div class="tools">
 				${composerAddHtml({ add: text.add, image: text.addImage, file: text.addFile, dataset: text.addDataset, database: text.addDatabase })}

@@ -28,6 +28,10 @@
 // installed package, or from its repository on GitHub, into the file `pdf`; it answers {pdf}, or {error}. It compiles the
 // documents of the installed toolboxes too, for Help > Documentation > Toolboxes, from their folders. Beside each PDF
 // goes its .labels, the page of each heading (docs/ask_labels.tex), which ask_index.jl cuts it by.
+// The command `language-julia.pollisIndexCollection`, with {name, database, documents, words, model, prefix}, makes the
+// index of a collection of Compose > Retrieval-Augmented Generation with the same script, into the file `database`;
+// it answers {passages, embedded}, or {error}, and `language-julia.pollisCollectionProgress`, with that file, how far it
+// has come.
 
 import * as child_process from 'child_process'
 import * as fs from 'fs'
@@ -181,6 +185,99 @@ async function reindexDocuments(context: vscode.ExtensionContext, executableFeat
     }
 }
 
+/** What ask_index.jl is run with: PollisDocuments' five arguments, and a collection's index and passage length. */
+type IndexArguments = { sources: string; model: string; prefix: string; available: string; juliaManual: string; database?: string; words?: number }
+/** How an index went: its passages and those embedded once published, or why it could not be made. */
+type IndexAnswer = { passages?: number; embedded?: number; error?: string }
+
+/**
+ * Runs ask_index.jl in a hidden process of low priority, with the status bar's item `title`, when there is one, and
+ * `onProgress` told how far it has come; the embedding server started when it asks for it.
+ */
+async function runIndex(
+    context: vscode.ExtensionContext,
+    juliaExecutable: JuliaExecutable,
+    env: { [key: string]: string },
+    title: string | undefined,
+    args: IndexArguments,
+    onProgress: (progress: IndexProgress) => void
+): Promise<IndexAnswer> {
+    const answer: IndexAnswer = {}
+    const script = path.join(context.extensionPath, 'scripts', 'terminalserver', 'ask_index.jl')
+    const collection = args.database ? [args.database, String(args.words ?? 250)] : []
+    const julia = child_process.spawn(
+        juliaExecutable.command,
+        [...juliaExecutable.args, '--startup-file=no', '--history-file=no', script, args.sources, args.model, args.prefix, args.available, args.juliaManual, ...collection],
+        { env: { ...process.env, ...env }, stdio: ['pipe', 'pipe', 'ignore'], windowsHide: true }
+    )
+    julia.stdin.on('error', () => {
+        // The script has quit before it read the address
+    })
+    try {
+        if (julia.pid !== undefined) {
+            os.setPriority(julia.pid, os.constants.priority.PRIORITY_BELOW_NORMAL)
+        }
+    } catch {
+        // The process has quit already, or the system does not allow it.
+    }
+    const kill = { dispose: () => julia.kill() }
+    context.subscriptions.push(kill)
+    // The status bar's item, from the first line the script writes until it quits
+    const progress = title === undefined ? { report: () => {}, finish: () => {} } : windowProgress(title)
+    readline.createInterface({ input: julia.stdout }).on('line', (line) => {
+        let message: { [key: string]: unknown }
+        try {
+            message = JSON.parse(line)
+        } catch {
+            return
+        }
+        if (message.status === 'installing') {
+            progress.report('installing Poppler')
+        } else if (typeof message.embed === 'number') {
+            onProgress({ stage: 'embedding', done: 0, total: message.embed })
+            progress.report(`embedding 0 of ${message.embed}`)
+            // The address of the embedding server, or an empty line when it does not start
+            startServer({ model: args.model, embeddings: true, context: EMBEDDING_CONTEXT }).then(
+                (server) => {
+                    if (server.error) {
+                        console.error(`[pollis] could not start the embedding model: ${server.error}`)
+                    }
+                    julia.stdin.end(`${server.url ?? ''}\n`)
+                },
+                () => julia.stdin.end('\n')
+            )
+        } else if (typeof message.embedding === 'number' && typeof message.total === 'number') {
+            onProgress({ stage: 'embedding', done: message.embedding, total: message.total })
+            progress.report(`embedding ${message.embedding} of ${message.total}`)
+        } else if (typeof message.passages === 'number' && typeof message.embedded === 'number') {
+            answer.passages = message.passages
+            answer.embedded = message.embedded
+        } else if (typeof message.total === 'number') {
+            onProgress({ stage: 'reading', done: typeof message.done === 'number' ? message.done : 0, total: message.total })
+            progress.report(`${typeof message.done === 'number' ? message.done : 0} of ${message.total}`)
+        } else if (typeof message.error === 'string') {
+            answer.error = message.error
+            if (message.error !== 'noDuckDB') {
+                console.error(`[pollis] could not make the index ${args.database ?? 'PollisDocuments'}: ${message.error}`)
+            }
+        }
+    })
+    await new Promise<void>((resolve) => {
+        julia.on('error', (err) => {
+            console.error(`[pollis] could not make the index ${args.database ?? 'PollisDocuments'}`, err)
+            answer.error ??= 'failed'
+            resolve()
+        })
+        julia.on('close', () => resolve())
+    })
+    progress.finish()
+    const index = context.subscriptions.indexOf(kill)
+    if (index >= 0) {
+        context.subscriptions.splice(index, 1)
+    }
+    return answer
+}
+
 /** Brings PollisDocuments up to date with ask_index.jl, once the run going, if any, has finished. */
 function indexDocuments(
     context: vscode.ExtensionContext,
@@ -215,72 +312,10 @@ function indexDocuments(
         // Not downloaded here: Ask Pollis offers it at first use
         const available = fs.existsSync(valueFile(model)) ? '1' : '0'
         const juliaManual = settings.get<boolean>('juliaManual') === false ? '0' : '1'
-        const script = path.join(context.extensionPath, 'scripts', 'terminalserver', 'ask_index.jl')
-        const julia = child_process.spawn(
-            juliaExecutable.command,
-            [...juliaExecutable.args, '--startup-file=no', '--history-file=no', script, sources, model, prefix, available, juliaManual],
-            { env: { ...process.env, ...env }, stdio: ['pipe', 'pipe', 'ignore'], windowsHide: true }
-        )
-        julia.stdin.on('error', () => {
-            // The script has quit before it read the address
-        })
-        try {
-            if (julia.pid !== undefined) {
-                os.setPriority(julia.pid, os.constants.priority.PRIORITY_BELOW_NORMAL)
-            }
-        } catch {
-            // The process has quit already, or the system does not allow it.
-        }
-        const kill = { dispose: () => julia.kill() }
-        context.subscriptions.push(kill)
-        // The status bar's item, from the first line the script writes until it quits
-        const progress = windowProgress('Indexing the documentation for Ask Pollis')
-        readline.createInterface({ input: julia.stdout }).on('line', (line) => {
-            let message: { [key: string]: unknown }
-            try {
-                message = JSON.parse(line)
-            } catch {
-                return
-            }
-            if (message.status === 'installing') {
-                progress.report('installing Poppler')
-            } else if (typeof message.embed === 'number') {
-                g_progress = { stage: 'embedding', done: 0, total: message.embed }
-                progress.report(`embedding 0 of ${message.embed}`)
-                // The address of the embedding server, or an empty line when it does not start
-                startServer({ model, embeddings: true, context: EMBEDDING_CONTEXT }).then(
-                    (server) => {
-                        if (server.error) {
-                            console.error(`[pollis] could not start the embedding model for Ask Pollis: ${server.error}`)
-                        }
-                        julia.stdin.end(`${server.url ?? ''}\n`)
-                    },
-                    () => julia.stdin.end('\n')
-                )
-            } else if (typeof message.embedding === 'number' && typeof message.total === 'number') {
-                g_progress = { stage: 'embedding', done: message.embedding, total: message.total }
-                progress.report(`embedding ${message.embedding} of ${message.total}`)
-            } else if (typeof message.total === 'number') {
-                g_progress = { stage: 'reading', done: typeof message.done === 'number' ? message.done : 0, total: message.total }
-                progress.report(`${typeof message.done === 'number' ? message.done : 0} of ${message.total}`)
-            } else if (message.error === 'noDuckDB') {
-                noDuckDB = true
-            } else if (typeof message.error === 'string') {
-                console.error(`[pollis] could not index the documentation for Ask Pollis: ${message.error}`)
-            }
-        })
-        await new Promise<void>((resolve) => {
-            julia.on('error', (err) => {
-                console.error('[pollis] could not index the documentation for Ask Pollis', err)
-                resolve()
-            })
-            julia.on('close', () => resolve())
-        })
-        progress.finish()
-        const index = context.subscriptions.indexOf(kill)
-        if (index >= 0) {
-            context.subscriptions.splice(index, 1)
-        }
+        const result = await runIndex(context, juliaExecutable, env, 'Indexing the documentation for Ask Pollis', {
+            sources, model, prefix, available, juliaManual,
+        }, (progress) => (g_progress = progress))
+        noDuckDB = result.error === 'noDuckDB'
         compiled = await compileVignettes(context, juliaExecutable, vignettes)
     })().finally(() => {
         g_indexing = undefined
@@ -301,6 +336,48 @@ function indexDocuments(
             indexDocuments(context, juliaExecutable, env)
         }
     })
+}
+
+/** A collection of Retrieval-Augmented Generation to index: its documents, its index's file, and how its passages are cut and embedded. */
+type CollectionRequest = {
+    name: string
+    database: string
+    documents: { kind: string; title: string; file: string }[]
+    words: number
+    model: string
+    prefix: string
+}
+/** The collections being indexed, by their index's file, and how far each has come. */
+const g_collections = new Map<string, IndexProgress | undefined>()
+
+/**
+ * Brings a collection's index up to date with ask_index.jl, its documents listed beside it in NAME.sources.json; answers
+ * {passages, embedded}, or {error}: "busy" while it is being indexed already.
+ */
+async function indexCollection(
+    context: vscode.ExtensionContext,
+    executableFeature: ExecutableFeature,
+    request: CollectionRequest
+): Promise<IndexAnswer> {
+    if (g_collections.has(request.database)) {
+        return { error: 'busy' }
+    }
+    g_collections.set(request.database, { stage: 'reading', done: 0, total: 0 })
+    try {
+        const juliaExecutable = await executableFeature.getExecutable()
+        const sources = request.database.replace(/\.duckdb$/, '') + '.sources.json'
+        await fs.promises.mkdir(path.dirname(sources), { recursive: true })
+        await fs.promises.writeFile(sources, JSON.stringify(request.documents.map((document) => ({ ...document, menu: '', toolbox: '', collection: request.name }))))
+        await whenDuckDBReady()
+        const available = fs.existsSync(valueFile(request.model)) ? '1' : '0'
+        return await runIndex(context, juliaExecutable, getPackageEnvironment(), undefined, {
+            sources, model: request.model, prefix: request.prefix, available, juliaManual: '0', database: request.database, words: request.words,
+        }, (progress) => g_collections.set(request.database, progress))
+    } catch (err) {
+        return { error: err instanceof JuliaNotFoundError ? 'noJulia' : 'failed' }
+    } finally {
+        g_collections.delete(request.database)
+    }
 }
 
 type VignetteRequest = { source: string; name: string; pdf: string }
@@ -432,6 +509,12 @@ export function activate(context: vscode.ExtensionContext, executableFeature: Ex
         }),
         vscode.commands.registerCommand('language-julia.pollisIndexDocuments', () => reindexDocuments(context, executableFeature)),
         vscode.commands.registerCommand('language-julia.pollisAskIndexProgress', (): IndexProgress | undefined => g_progress),
+        vscode.commands.registerCommand('language-julia.pollisIndexCollection', (request: CollectionRequest) =>
+            indexCollection(context, executableFeature, request)
+        ),
+        vscode.commands.registerCommand('language-julia.pollisCollectionProgress', (database: string): IndexProgress | undefined =>
+            g_collections.get(database)
+        ),
         vscode.commands.registerCommand('language-julia.pollisCompileVignette', (request: VignetteRequest) =>
             compileVignette(context, executableFeature, request)
         ),

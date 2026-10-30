@@ -14,7 +14,7 @@ import { InstantiationType, registerSingleton } from '../../../../platform/insta
 import { IProductService } from '../../../../platform/product/common/productService.js';
 import { ISecretStorageService } from '../../../../platform/secrets/common/secrets.js';
 import { IUtilityProcessWorkerWorkbenchService } from '../../../services/utilityProcess/electron-browser/utilityProcessWorkerWorkbenchService.js';
-import { AskTopic, ASK_CHAT_MODEL, ASK_CLOUD_PROVIDERS, ASK_EMBEDDING_CONTEXT, ASK_EMBEDDING_MODEL, ASK_LOCAL_PREFIX, ASK_PASSAGES, ASK_QUERY_PREFIX, askCloudModel, askPollisMessages, IAskPollisAnswer, IAskPollisAttachment, IAskPollisChatRequest, IAskPollisFound, IAskPollisIndex, IAskPollisPanel, IAskPollisPassage, IAskPollisSearchRequest, IAskPollisSearchResult, IAskPollisSearchStamp, IAskPollisService, IAskPollisTurn, IAskTopicCounts, ICompareRun, ICompareRunSummary, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary } from '../common/askPollis.js';
+import { ASK_CHAT_MODEL, ASK_CLOUD_PROVIDERS, ASK_EMBEDDING_CONTEXT, ASK_EMBEDDING_MODEL, ASK_LOCAL_PREFIX, ASK_PASSAGES, ASK_QUERY_PREFIX, ASK_RERANK_CONTEXT, askCloudModel, askPollisMessages, IAskPassageMatch, IAskPollisAnswer, IAskPollisAttachment, IAskPollisChatRequest, IAskPollisFound, IAskPollisIndex, IAskPollisIndexedDocument, IAskPollisIndexStatus, IAskPollisPanel, IAskPollisPassage, IAskPollisReranked, IAskPollisSearchRequest, IAskPollisSearchResult, IAskPollisSearchStamp, IAskPollisService, IAskPollisTurn, IAskTopicCounts, ICompareRun, ICompareRunSummary, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary } from '../common/askPollis.js';
 
 /** What the command of the Julia extension that starts a llama.cpp server answers (pollisLlamaServer.ts). */
 interface ILlamaServerAnswer {
@@ -73,11 +73,12 @@ class AskPollisService extends Disposable implements IAskPollisService {
 	async search(request: IAskPollisSearchRequest): Promise<IAskPollisSearchResult> {
 		const { proxy } = await this.get();
 		const passages = request.passages ?? (this.configurationService.getValue<number>('pollis.ask.passages') || ASK_PASSAGES);
-		const status = await proxy.status();
+		const status = await proxy.status(request.index?.file);
 		if (!status) {
 			return { passages: [], searched: [], collections: [], wordsOnly: 'notIndexed' };
 		}
-		const model = this.configurationService.getValue<string>('pollis.ask.embeddingModel')?.trim() || ASK_EMBEDDING_MODEL;
+		// A collection's index has its own embedding model, PollisDocuments that of the setting
+		const model = request.index?.embeddingModel ?? (this.configurationService.getValue<string>('pollis.ask.embeddingModel')?.trim() || ASK_EMBEDDING_MODEL);
 		if (!status.embedded) {
 			return proxy.search({ ...request, passages, wordsOnly: 'notEmbedded' });
 		}
@@ -93,8 +94,37 @@ class AskPollisService extends Disposable implements IAskPollisService {
 		if (!server?.url) {
 			return proxy.search({ ...request, passages, wordsOnly: 'modelNotStarted', error: server?.error });
 		}
-		const prefix = this.configurationService.getValue<string>('pollis.ask.queryPrefix')?.trim() || ASK_QUERY_PREFIX;
+		const prefix = request.index?.queryPrefix ?? (this.configurationService.getValue<string>('pollis.ask.queryPrefix')?.trim() || ASK_QUERY_PREFIX);
 		return proxy.search({ ...request, passages, embedding: { url: server.url, input: prefix.replace('{text}', request.question) } });
+	}
+
+	async collectionStatus(file: string): Promise<IAskPollisIndexStatus | undefined> {
+		const { proxy } = await this.get();
+		return proxy.status(file);
+	}
+
+	async indexedDocuments(file: string): Promise<readonly IAskPollisIndexedDocument[] | undefined> {
+		const { proxy } = await this.get();
+		return proxy.indexedDocuments(file);
+	}
+
+	async documentPassages(file: string, document: string, count: number): Promise<readonly IAskPollisPassage[]> {
+		const { proxy } = await this.get();
+		return proxy.documentPassages(file, document, count);
+	}
+
+	async rerank(model: string, question: string, passages: readonly IAskPollisPassage[]): Promise<IAskPollisReranked> {
+		let server: ILlamaServerAnswer | undefined;
+		try {
+			server = await this.commandService.executeCommand<ILlamaServerAnswer>('language-julia.pollisLlamaServer', { model, reranking: true, context: ASK_RERANK_CONTEXT });
+		} catch (err) {
+			server = { error: err instanceof Error ? err.message : String(err) };
+		}
+		if (!server?.url) {
+			return { error: server?.error ?? '' };
+		}
+		const { proxy } = await this.get();
+		return proxy.rerank(server.url, question, passages.map(passage => passage.text));
 	}
 
 	async searchStamp(): Promise<IAskPollisSearchStamp | undefined> {
@@ -127,7 +157,7 @@ class AskPollisService extends Disposable implements IAskPollisService {
 		await this.commandService.executeCommand('language-julia.pollisStopLlamaServer', { model, embeddings: true, context: ASK_EMBEDDING_CONTEXT }).catch(() => undefined);
 	}
 
-	async answer(turns: readonly IAskPollisTurn[], question: string, passages: readonly IAskPollisPassage[], onText: (text: string) => void, token: CancellationToken, answerWith?: string, panel?: IAskPollisPanel, attachments?: readonly IAskPollisAttachment[]): Promise<IAskPollisAnswer> {
+	async answer(turns: readonly IAskPollisTurn[], question: string, passages: readonly IAskPollisPassage[], onText: (text: string) => void, token: CancellationToken, answerWith?: string, panel?: IAskPollisPanel, attachments?: readonly IAskPollisAttachment[], collection?: string): Promise<IAskPollisAnswer> {
 		const cloud = askCloudModel(answerWith ?? this.configurationService.getValue<string>('pollis.ask.answerWith'));
 		let chat: Omit<IAskPollisChatRequest, 'id' | 'messages'>;
 		if (cloud) {
@@ -167,7 +197,7 @@ class AskPollisService extends Disposable implements IAskPollisService {
 		try {
 			// A model of this computer does not see images yet
 			const seen = (attached: readonly IAskPollisAttachment[] | undefined) => cloud ? attached : attached?.filter(attachment => attachment.kind !== 'image');
-			const end = await proxy.chat({ ...chat, id, messages: askPollisMessages(turns.map(turn => ({ ...turn, attachments: seen(turn.attachments) })), question, passages, panel, seen(attachments)) });
+			const end = await proxy.chat({ ...chat, id, messages: askPollisMessages(turns.map(turn => ({ ...turn, attachments: seen(turn.attachments) })), question, passages, panel, seen(attachments), collection) });
 			return { model: name, ...end };
 		} finally {
 			store.dispose();
@@ -184,9 +214,9 @@ class AskPollisService extends Disposable implements IAskPollisService {
 		return proxy.spread(counts);
 	}
 
-	async topics(texts: readonly string[]): Promise<readonly (AskTopic | undefined)[] | undefined> {
+	async matches(texts: readonly string[]): Promise<readonly (IAskPassageMatch | undefined)[] | undefined> {
 		const { proxy } = await this.get();
-		return proxy.topics(texts);
+		return proxy.matches(texts);
 	}
 
 	async saveRun(run: ICompareRun): Promise<void> {

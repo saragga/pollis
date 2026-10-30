@@ -1,5 +1,5 @@
 // POLLIS: llama.cpp's llama-server, which Pollis ships (build/pollis/llamacpp.ts), for local chat and embedding models
-// in GGUF files. The command `language-julia.pollisLlamaServer`, with {model, embeddings?, thinking?, context?}, where
+// in GGUF files. The command `language-julia.pollisLlamaServer`, with {model, embeddings?, reranking?, thinking?, context?}, where
 // model is a path or an `hf:` file downloaded first if needed (pollisModels.ts), starts a server for that model file on
 // a free port of this computer, or answers with the one already running, once it is
 // ready: {url, model, media}, the address of its OpenAI-compatible API, the model's name there and what it reads besides
@@ -24,7 +24,7 @@ import * as vscode from 'vscode'
 import { MessageConnection, RequestType } from 'vscode-jsonrpc/node'
 import { availableMemory, ModelMedia, projectorOf, resolveModel } from './pollisModels'
 
-type ServerRequest = { model: string; embeddings?: boolean; thinking?: boolean; context?: number }
+type ServerRequest = { model: string; embeddings?: boolean; reranking?: boolean; thinking?: boolean; context?: number }
 type ServerAnswer = { url?: string; model?: string; media?: ModelMedia[]; error?: string }
 type Server = { process?: child_process.ChildProcess; ended?: Promise<void>; readonly ready: Promise<ServerAnswer> }
 /** A moment of a server: `bytes` is the size of its model file, `free` the memory free just after, or just before it loads, in bytes. */
@@ -32,7 +32,7 @@ type ServerEvent = { id: number; time: number; model: string; event: 'loading' |
 
 /**
  * The context of a chat model, in tokens, when the request gives none: its own can be so long that its cache fills the
- * memory. An embedding model has its own, which is short (0 asks llama-server for it).
+ * memory. An embedding model or a reranker has its own, which is short (0 asks llama-server for it).
  */
 const DEFAULT_CONTEXT = 8192
 
@@ -115,7 +115,7 @@ async function whenHealthy(url: string, running: () => boolean): Promise<boolean
 
 /** The server of a model file and way of running it, in g_servers. */
 function serverKey(request: ServerRequest): string {
-    return JSON.stringify([request.model.trim(), !!request.embeddings, !!request.thinking, request.context])
+    return JSON.stringify([request.model.trim(), !!request.embeddings, !!request.reranking, !!request.thinking, request.context])
 }
 
 export function startServer(request: ServerRequest): Promise<ServerAnswer> {
@@ -147,10 +147,11 @@ export function startServer(request: ServerRequest): Promise<ServerAnswer> {
             '--host', '127.0.0.1',
             '--port', String(port),
             '--alias', name,
-            '--ctx-size', String(request.context ?? (request.embeddings ? 0 : DEFAULT_CONTEXT)),
-            // An embedding model reads each text in one batch: with a context, a text as long as it fits
-            ...(request.embeddings && request.context ? ['--batch-size', String(request.context), '--ubatch-size', String(request.context)] : []),
-            ...(request.embeddings ? ['--embeddings'] : ['--reasoning', request.thinking ? 'on' : 'off']),
+            '--ctx-size', String(request.context ?? (request.embeddings || request.reranking ? 0 : DEFAULT_CONTEXT)),
+            // An embedding model reads each text in one batch, and a reranker a question with a passage: with a context, as long as it fits
+            ...((request.embeddings || request.reranking) && request.context ? ['--batch-size', String(request.context), '--ubatch-size', String(request.context)] : []),
+            // A reranker scores each passage for a question, at /v1/rerank
+            ...(request.reranking ? ['--reranking'] : request.embeddings ? ['--embeddings'] : ['--reasoning', request.thinking ? 'on' : 'off']),
         ]
         output.appendLine(`[${name}] ${executable} ${args.join(' ')}`)
         // The memory free before the model takes any, and its file's size

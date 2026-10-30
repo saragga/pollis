@@ -390,7 +390,10 @@ export class CompareModelsRunner {
 				const question = byQuestion.get(answer.question)!;
 				return { id: answer.id, question: question.item.question, passages: question.passages.map(judgedPassage), answer: answer.answer };
 			});
-			const retrieval = questions.filter(question => question.item.context && question.passages.length).map(question => ({ id: question.index, context: question.item.context, passages: question.passages.map(passage => passage.text) }));
+			// The rank of each question's passage among those found, by its text as the documents have it now
+			const retrieved = questions.filter(question => question.item.context && question.passages.length);
+			const matches = await this.askPollisService.matches(retrieved.map(question => question.item.context)).catch(() => undefined);
+			const retrieval = retrieved.map((question, index) => ({ id: question.index, context: matches?.[index]?.text ?? question.item.context, passages: question.passages.map(passage => passage.text) }));
 			// Two judges on this computer judge one after the other, each in a Julia process of its own, so that each
 			// model is alone in memory, its server started only when the other's has stopped
 			const rounds = judges.filter(judge => judge.local).length > 1 ? judges.map(judge => [judge]) : [judges];

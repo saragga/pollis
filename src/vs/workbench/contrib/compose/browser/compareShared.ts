@@ -310,9 +310,9 @@ export class CompareTestSetChoice {
 	}
 
 	async postItems(): Promise<void> {
-		// The topic of each question by its passage; none for a passage no longer in the documents, or when there is no index
-		const topics = await this.askPollisService.topics(this.items.map(item => item.context));
-		this.post({ command: 'items', items: this.items.map((item, index) => ({ number: index + 1, question: item.question, answer: item.answer, source: item.source, context: item.context, present: !topics || topics[index] !== undefined, topic: topicLabel(topics?.[index]) })) });
+		// The topic of each question by its passage, as the documents have it now; none for a passage no longer in the documents, or when there is no index
+		const matches = await this.askPollisService.matches(this.items.map(item => item.context));
+		this.post({ command: 'items', items: this.items.map((item, index) => ({ number: index + 1, question: item.question, answer: item.answer, source: item.source, context: matches?.[index]?.text ?? item.context, present: !matches || matches[index] !== undefined, topic: topicLabel(matches?.[index]?.topic) })) });
 	}
 }
 
@@ -542,7 +542,11 @@ export function compareChartsHtml(text: CompareText, tokensChart = ''): string {
  * on this computer, the status lines, the sorted headings and the pagers. A page defines TEXT, POWERED_BY, SPINNER,
  * models, rows, statusId, updateRun(), which the choice of models calls, and renderTables(), which the pagers call.
  */
-export const compareCommonScript = `
+/**
+ * The script every page of Compose's workflows has: format(), fixed(), yellow(), the packages of its Powered by, and
+ * one blue button in each bar; with esc() and element() of askAnswerScript(), and POWERED_BY and vscode set.
+ */
+export const pageCommonScript = `
 	function format(template, ...values) {
 		return template.replace(/\\{(\\d+)\\}/g, (match, index) => String(values[Number(index)]));
 	}
@@ -575,6 +579,14 @@ export const compareCommonScript = `
 		});
 	}
 
+	/** A message with its packages and files in the yellow. */
+	function yellow(text) {
+		return esc(text).replace(/(?<name>[A-Za-z0-9]+\\.jl\\b|~\\/\\.pollis\\/[\\w.\\/-]*\\w)/g, '<span class="yellow">$<name></span>');
+	}
+`;
+
+/** The script of both Evaluate pages: the common one, the models to choose, the status and the order of the questions. */
+export const compareCommonScript = `${pageCommonScript}
 	/** A local model's name without its quantisation, which its file name ends with, and the quantisation. */
 	function splitName(label) {
 		const match = /[-._](?<quant>(?:UD-)?(?:I?Q\\d\\w*|MXFP4\\w*|B?F16|F32))$/i.exec(label);
@@ -652,10 +664,6 @@ export const compareCommonScript = `
 		});
 	}
 
-	/** A message with its packages and files in the yellow. */
-	function yellow(text) {
-		return esc(text).replace(/(?<name>[A-Za-z0-9]+\\.jl\\b|~\\/\\.pollis\\/[\\w.\\/-]*\\w)/g, '<span class="yellow">$<name></span>');
-	}
 	function setStatus(text, error, spinning, percent) {
 		for (const id of ['setStatus', 'runStatus']) {
 			const status = document.getElementById(id);

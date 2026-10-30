@@ -279,7 +279,7 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 	// with `changed`, they are sent only if they are not the ones listed, so that a click on a model is not lost to the list drawn again;
 	// the memory free is looked again each time, for the warning above Run
 	const postModels = async (changed?: boolean) => {
-		const installed = (await commandService.executeCommand<IInstalledModel[]>('language-julia.pollisInstalledModels').catch(() => undefined) ?? []).filter(installedModel => installedModel.kind !== 'embedding');
+		const installed = (await commandService.executeCommand<IInstalledModel[]>('language-julia.pollisInstalledModels').catch(() => undefined) ?? []).filter(installedModel => installedModel.kind !== 'embedding' && installedModel.kind !== 'reranker');
 		if (changed && installed.map(installedModel => ASK_LOCAL_PREFIX + installedModel.file).join('\n') === listed.filter(model => model.local).map(model => model.value).join('\n')) {
 			await postMemory();
 			return;

@@ -1,12 +1,16 @@
 # Pollis: makes PollisDocuments, ~/.pollis/documents/PollisDocuments.duckdb, the passages of Pollis' documents that Ask
-# Pollis searches. Run by the Julia extension in a hidden process of low priority (pollisDocuments.ts), after the
-# documents are compiled, with five arguments: the list of what to read, a JSON file of {kind, title, file, menu,
+# Pollis searches, or the index of a collection of Retrieval-Augmented Generation. Run by the Julia extension in a hidden
+# process of low priority (pollisDocuments.ts), after the documents are compiled, with five arguments, and two more for
+# a collection: the list of what to read, a JSON file of {kind, title, file, menu,
 # toolbox, collection}, which the command pollis.askPollis.sources gives (askPollisSources.ts), a document of Pollis
 # when it has no collection; the embedding model, as the setting pollis.ask.embeddingModel names it; what a passage is
 # given to it as (pollis.ask.passagePrefix, with {title} and {text}); 1 when the model is on this computer, else 0; and
-# 1 when the Julia Manual is searched too (pollis.ask.juliaManual), else 0. The list has the package vignettes compiled,
+# 1 when the Julia Manual is searched too (pollis.ask.juliaManual), else 0; for a collection, the file of its index and
+# about how many words a passage has. The list has the package vignettes compiled,
 # in ~/.pollis/documents/vignettes. A PDF's text is read with pdftotext (Poppler_jll), a page at a time, and cut under
-# its headings with the .labels compile_documents.jl or compile_vignette.jl puts beside it; a wiki is cut at its headings. The Julia Manual is that
+# its headings with the .labels compile_documents.jl or compile_vignette.jl puts beside it, or a book's, which has
+# none, under its bookmarks, read with pdftohtml; a wiki or a Markdown file is cut at its headings, a text file at its
+# blank lines. The Julia Manual is that
 # of the Julia that runs this, which comes with it, so that a Julia updated has its own: the Manual, Base and the
 # standard library, from the search index Documenter writes beside its HTML, a section or a docstring an entry, each
 # passage with the page and anchor it is at. Each is cut into passages of about 250 words, at paragraphs, each carrying
@@ -48,7 +52,8 @@ found for questions that are not about it. The text before it, how to type a cha
 """
 const UNICODE_TABLE = r"^(?:Code point\(s\)|U\+[0-9A-F]{4,})"
 const OUTPUT = joinpath(homedir(), ".pollis", "documents")
-const DATABASE = joinpath(OUTPUT, "PollisDocuments.duckdb")
+"""The index made: PollisDocuments, or that of a collection."""
+const DATABASE = length(ARGS) >= 6 ? abspath(ARGS[6]) : joinpath(OUTPUT, "PollisDocuments.duckdb")
 const PARTIAL = DATABASE * ".partial"
 const ENVIRONMENT = joinpath(OUTPUT, "julia", "v$(VERSION.major).$(VERSION.minor)")
 """The environment of the packages built into Pollis, where DuckDB is."""
@@ -57,8 +62,8 @@ const BUILTIN = joinpath(homedir(), ".pollis", "julia", "environments", "v$(VERS
 const FTS = joinpath(homedir(), ".pollis", "duckdb", "fts.duckdb_extension")
 """The embeddings made, by the model and the text it was given: what an index takes its embeddings from."""
 const EMBEDDINGS = joinpath(OUTPUT, "embeddings.duckdb")
-"""About how many words a passage has."""
-const WORDS = 250
+"""About how many words a passage has: 250 for PollisDocuments, a collection's own for its."""
+const WORDS = length(ARGS) >= 7 ? parse(Int, ARGS[7]) : 250
 """The longest text the embedding model is given, in characters: well inside the 2,048 tokens of its server."""
 const LONGEST = 4000
 """How many passages go to the embedding model in one request."""
@@ -155,6 +160,13 @@ end
 """A heading or a line as it is compared: its letters and digits, in lower case."""
 key(text) = lowercase(replace(text, r"[^\p{L}\p{N}]+" => ""))
 
+"""A heading as it is compared, without its number or letter: 1. Introduction, 5.3 How many, Appendix A. Estimating."""
+heading_key(text) = key(replace(text, r"^(?:Appendix\s+)?(?:[A-Z]|\d+)(?:\.\d+)*\.?\s+" => ""))
+
+"""What an article or a book has that is not asked about: the headings of its parts, and the lines that open them in an article."""
+const BACK_MATTER = ("acknowledgments", "acknowledgements", "acknowledgment", "acknowledgement", "references", "bibliography")
+const NOT_ASKED = (BACK_MATTER..., "contents", "index")
+
 wordcount(text) = count(r"\S+", text)
 
 sentences(text) = split(text, r"(?<=[.!?])\s+(?=[\p{Lu}\p{N}\"(])")
@@ -177,11 +189,42 @@ function label_text(text)
 	return strip(replace(text, r"\s+" => " "))
 end
 
-"""The headings of a compiled document, page by page: (level, text), the topic or section 1, a heading inside it 2."""
+"""
+The headings of a PDF without a .labels, a book's, page by page, from its bookmarks: (level, text), a chapter 1, a
+section 2, those below 3; without their numbers, as the lines that spell them are compared without.
+"""
+function bookmarks(pdf)
+	found = Dict{Int, Vector{Tuple{Int, String}}}()
+	# The bookmarks are written whole whatever the pages converted: only the first is
+	xml = try
+		mktempdir() do folder
+			run(pipeline(`$(pdftohtml()) -xml -i -q -nodrm -f 1 -l 1 $pdf $(joinpath(folder, "outline"))`; stdout = devnull, stderr = devnull))
+			file = joinpath(folder, "outline.xml")
+			isfile(file) ? read(file, String) : ""
+		end
+	catch
+		""
+	end
+	depth = 0
+	for m in eachmatch(r"<outline>|</outline>|<item page=\"(?<page>\d+)\">(?<text>.*?)</item>"s, xml)
+		if m.match == "<outline>"
+			depth += 1
+		elseif m.match == "</outline>"
+			depth -= 1
+		else
+			text = replace(m[:text], r"<[^>]*>" => "", "&lt;" => "<", "&gt;" => ">", "&quot;" => "\"", "&#39;" => "'", "&amp;" => "&")
+			text = strip(replace(replace(text, r"\s+" => " "), r"^\s*\d+(?:\.\d+)*\.?\s+" => ""))
+			isempty(text) || push!(get!(found, parse(Int, m[:page]), Tuple{Int, String}[]), (clamp(depth, 1, 3), text))
+		end
+	end
+	return found
+end
+
+"""The headings of a compiled document, page by page: (level, text), the topic or section 1, a heading inside it 2; a book's from its bookmarks."""
 function labels(pdf)
 	file = splitext(pdf)[1] * ".labels"
+	isfile(file) || return bookmarks(pdf)
 	found = Dict{Int, Vector{Tuple{Int, String}}}()
-	isfile(file) || return found
 	for line in eachline(file)
 		parts = split(line, '|'; limit = 3)
 		length(parts) == 3 || continue
@@ -192,6 +235,23 @@ function labels(pdf)
 		isempty(text) || push!(get!(found, page, Tuple{Int, String}[]), (level, text))
 	end
 	return found
+end
+
+"""
+Puts back the hyphen pdftotext drops when a compound is cut at the end of a line (250-dimensional read as
+250dimensional). `raw`, the text read with -raw, keeps the lines as they are cut: a word cut there has its hyphen again
+after a number, or when the document also has it with a hyphen; not a word cut where it is only hyphenated (devel-oping).
+"""
+function rehyphenate(pages, raw)
+	written = Set(lowercase(m.match) for page in pages for m in eachmatch(r"(?<![\p{L}\d-])\p{L}+-\p{L}+(?![\p{L}\d-])", page))
+	cut = Dict{String, Int}()
+	for m in eachmatch(r"(?<![\p{L}\d./_-])(?<head>\p{L}+|\d+)-[ \t]*\n[ \t]*(?<tail>\p{Ll}+)(?![\p{L}\d./_-])", raw)
+		(all(isdigit, m[:head]) || lowercase(m[:head] * "-" * m[:tail]) in written) &&
+			(cut[lowercase(m[:head] * m[:tail])] = length(m[:head]))
+	end
+	isempty(cut) && return pages
+	mend(word) = (n = get(cut, lowercase(word), 0)) == 0 ? word : first(word, n) * "-" * last(word, length(word) - n)
+	return [replace(page, r"(?<![\p{L}\d./_-])[\p{L}\d]+(?![\p{L}\d./_-])" => mend) for page in pages]
 end
 
 """Joins the lines of a paragraph: a word cut at the end of a line is joined again when the document has it whole."""
@@ -209,6 +269,46 @@ function join_lines(lines, words)
 		end
 	end
 	return text
+end
+
+"""
+Whether a paragraph of a PDF is a label in a figure rather than text (an axis' numbers, a legend, a plot's title): at
+most twelve words, fewer than a quarter of them in lower case, ending no sentence and not an equation (one of three
+words or more with an equals sign or a relation: a label can be one, δ=0.30)
+"""
+is_label(paragraph) = wordcount(paragraph) <= 12 && !ends_sentence(paragraph) && !is_equation(paragraph) &&
+	count(r"(?<!\S)\p{Ll}{3,}[,;]?(?!\S)", paragraph) < wordcount(paragraph) / 4
+ends_sentence(paragraph) = occursin(r"[.!?:]$", paragraph)
+is_equation(paragraph) = wordcount(paragraph) >= 3 && occursin(r"[=\u2190\u223c\u2261\u2208]", paragraph)
+
+"""
+Drops each run of three labels or more in a row from a page's paragraphs: the text pdftotext reads in a figure. A
+short paragraph beside a run dropped, of six words at most and ending no sentence, goes with it: a label with words in
+lower case (delta, ESS per gradient).
+"""
+function drop_figures!(paragraphs)
+	keep = trues(length(paragraphs))
+	i = 1
+	while i <= length(paragraphs)
+		j = i
+		while j <= length(paragraphs) && is_label(paragraphs[j])
+			j += 1
+		end
+		j - i >= 3 && (keep[i:j - 1] .= false)
+		i = max(j, i + 1)
+	end
+	short(i) = keep[i] && wordcount(paragraphs[i]) <= 6 && !ends_sentence(paragraphs[i]) && !is_equation(paragraphs[i])
+	dropped = true
+	while dropped
+		dropped = false
+		for i in eachindex(paragraphs)
+			if short(i) && ((i > 1 && !keep[i - 1]) || (i < length(paragraphs) && !keep[i + 1]))
+				keep[i] = false
+				dropped = true
+			end
+		end
+	end
+	return keepat!(paragraphs, keep)
 end
 
 """Cuts the paragraphs of a run under one heading into passages of about `WORDS` words, each but the first carrying the last sentence of the one before."""
@@ -253,6 +353,7 @@ function pdf_passages(pdf)
 	pages = split(read(`$(pdftotext()) -enc UTF-8 $pdf -`, String), '\f')
 	isempty(last(pages)) && pop!(pages)
 	pages = [replace(page, '\u2011' => '-', '\u00ad' => "", '\ufb01' => "fi", '\ufb02' => "fl") for page in pages]
+	pages = rehyphenate(pages, read(`$(pdftotext()) -raw -enc UTF-8 $pdf -`, String))
 	words = Set(lowercase(m.match) for page in pages for m in eachmatch(r"\p{L}+", page))
 	# The running titles and footers: a line on many of the pages, its numbers aside; and the page numbers
 	seen = Dict{String, Int}()
@@ -260,22 +361,46 @@ function pdf_passages(pdf)
 		isempty(line) || (seen[line] = get(seen, line, 0) + 1)
 	end
 	running = Set(line for (line, n) in seen if length(pages) >= 4 && n >= max(3, 0.4 * length(pages)))
+	# A book's running titles change with its chapters: among the first or last three lines of a page, a line of eight
+	# letters or more found so on three pages or more; dropped there only, not in its text, where code repeats lines
+	edge(lines) = (filled = findall(!isempty, lines); Set([filled[1:min(3, end)]; filled[max(1, end - 2):end]]))
+	titles = Set{String}()
+	book = !isfile(splitext(pdf)[1] * ".labels")
+	if book
+		seen = Dict{String, Int}()
+		for page in pages
+			lines = [key(replace(line, r"\d+" => "")) for line in split(page, '\n')]
+			for line in unique(lines[i] for i in edge(lines))
+				length(line) >= 8 && (seen[line] = get(seen, line, 0) + 1)
+			end
+		end
+		titles = Set(line for (line, n) in seen if n >= 3)
+	end
 	headings = labels(pdf)
+	# A book's running title can also be the section it is in: a bookmark, at a page's edge, where it is not opened
+	book && union!(titles, key(text) for marks in values(headings) for (_, text) in marks if length(key(text)) >= 8)
 	open_headings = String[]
 	found = Passage[]
+	# A paragraph a page leaves without a sentence's end, carried to the next; and whether the lines are back matter
+	carried = ""
+	skipping = false
 	for (page, text) in enumerate(pages)
-		lines = [strip(line) for line in split(text, '\n')]
+		lines = String[strip(line) for line in split(text, '\n')]
+		# A page number set against the page's last word, as pdftotext can: devel27
+		final = findlast(!isempty, lines)
+		final === nothing || (lines[final] = replace(lines[final], r"(?<=\p{Ll})\d+$" => ""))
+		edges = edge(lines)
 		marks = get(headings, page, Tuple{Int, String}[])
 		# Where each heading of the page is: the lines that spell it, else after the heading before it
 		at = zeros(Int, length(marks))
 		span = ones(Int, length(marks))
 		from = 1
 		for (j, (_, heading)) in enumerate(marks)
-			wanted = key(heading)
+			wanted = heading_key(heading)
 			for i in from:length(lines), n in 1:3
 				i + n - 1 <= length(lines) || break
 				# A numbered section is spelled with its number: 5.3 How many
-				if key(replace(join(lines[i:i + n - 1], " "), r"^\d+(?:\.\d+)*\s+" => "")) == wanted
+				if heading_key(join(lines[i:i + n - 1], " ")) == wanted
 					at[j], span[j], from = i, n, i + n
 					@goto located
 				end
@@ -293,10 +418,13 @@ function pdf_passages(pdf)
 		end
 		open_heading(j) = begin
 			close_paragraph()
+			isempty(carried) || (pushfirst!(paragraphs, carried); carried = "")
+			drop_figures!(paragraphs)
 			passages!(found, paragraphs, page, heading)
 			empty!(paragraphs)
 			open_heading!(open_headings, marks[j]...)
 			heading = join(filter(!isempty, open_headings), ARROW)
+			skipping = false
 		end
 		foreach(open_heading, findall(==(0), at))
 		# The lines that spell a heading are not text
@@ -312,13 +440,48 @@ function pdf_passages(pdf)
 			k = key(replace(line, r"\d+" => ""))
 			if isempty(line)
 				close_paragraph()
-			elseif !(k in running || occursin(r"^\d+$", line) || key(line) in map(key, open_headings))
+			elseif page <= 2 && isempty(found) && occursin(r"^(?:Abstract|ABSTRACT)\b", line)
+				# An article's title, its authors and their addresses, before its abstract, are not asked about
+				empty!(paragraph)
+				empty!(paragraphs)
+				carried = ""
+				push!(paragraph, line)
+			elseif heading_key(line) in BACK_MATTER
+				# An article's acknowledgments and references, until the next heading
+				close_paragraph()
+				skipping = true
+			elseif !(skipping || k in running || (i in edges && (k in titles || key(replace(line, r"^\d+(?:\.\d+)*\.?\s+" => "")) in titles)) || occursin(r"^(?:\d+|\(\d+(?:\.\d+)?[a-z]?\))$", line) || key(replace(line, r"^\d+(?:\.\d+)*\.?\s+" => "")) in map(key, open_headings))
+				# The paragraph the page before left open goes on with the page's first line when that begins in lower case,
+				# a word cut there joined again when the document has it whole
+				if !isempty(carried) && isempty(paragraph) && isempty(paragraphs)
+					tail, head = match(r"\p{L}*$", carried).match, match(r"^\p{Ll}*", line).match
+					if isempty(head)
+						push!(paragraphs, carried)
+					else
+						glued = !isempty(tail) && lowercase(tail * head) in words
+						line = carried * (glued ? "" : " ") * line
+					end
+					carried = ""
+				end
 				push!(paragraph, line)
 			end
 		end
 		close_paragraph()
+		isempty(carried) || (pushfirst!(paragraphs, carried); carried = "")
+		drop_figures!(paragraphs)
+		# Only its last sentence, the one left unfinished, so that the rest keeps its page
+		if !isempty(paragraphs) && !occursin(r"[.!?:]$", last(paragraphs))
+			parts = sentences(pop!(paragraphs))
+			carried = last(parts)
+			length(parts) > 1 && push!(paragraphs, join(parts[1:end - 1], " "))
+		end
 		passages!(found, paragraphs, page, heading)
 	end
+	isempty(carried) || passages!(found, [carried], length(pages), join(filter(!isempty, open_headings), ARROW))
+	# Not what is asked about: the pages of a book before its first bookmark (its title, copyright and contents), and the
+	# contents, index, acknowledgments and references
+	start = book && !isempty(headings) ? minimum(keys(headings)) : 1
+	filter!(p -> p.page >= start && !(heading_key(first(split(p.heading, ARROW))) in NOT_ASKED), found)
 	return found
 end
 
@@ -378,7 +541,8 @@ markdown_text(line) = replace(line, r"!?\[(?<words>[^\]]*)\]\([^)]*\)" => s"\g<w
 
 """The passages of a wiki, cut at its headings, `nothing` for a wiki still "Not written yet."."""
 function wiki_passages(file, title)
-	lines = readlines(file)
+	# Without the roles of Sphinx and d2lbook (:label:`sec_x`, :numref:`sec_x`, :cite:`key`, :end_tab:), which only their build resolves
+	lines = [replace(line, r"^\s*:[a-z]+:\s*$|:[a-z]+:`[^`]*`" => "") for line in readlines(file)]
 	body = filter(line -> !isempty(strip(line)) && !startswith(line, "# "), lines)
 	(isempty(body) || strip(join(body, " ")) == "Not written yet.") && return nothing
 	name = something(findfirst(line -> startswith(line, "# "), lines), 0)
@@ -433,6 +597,13 @@ function wiki_passages(file, title)
 	return join_short(found)
 end
 
+"""The passages of a text file: its paragraphs, which blank lines part, under no heading."""
+function text_passages(file)
+	found = Passage[]
+	passages!(found, filter(!isempty, strip.(split(read(file, String), r"\n\s*\n"))), missing, "")
+	return found
+end
+
 """
 The passages of the Julia Manual, from its search index: an entry, a section or a docstring, under its page and title,
 cut at its paragraphs; the short ones joined as a wiki's, within their page.
@@ -482,7 +653,7 @@ function build(found, previous; progress = true)
 	DBInterface.execute(db, "CREATE TABLE documents(id INTEGER PRIMARY KEY, kind VARCHAR, title VARCHAR, source VARCHAR, menu VARCHAR, toolbox VARCHAR, version VARCHAR, collection VARCHAR)")
 	DBInterface.execute(db, "CREATE TABLE passages(id INTEGER PRIMARY KEY, document INTEGER, page INTEGER, heading VARCHAR, text VARCHAR, anchor VARCHAR, embedding FLOAT[])")
 	DBInterface.execute(db, "CREATE TABLE built(name VARCHAR PRIMARY KEY, value VARCHAR)")
-	reuse = previous !== nothing && previous.script == SCRIPT
+	reuse = previous !== nothing && previous.script == SCRIPT && get(previous.built, "words", "250") == string(WORDS)
 	reuse && DBInterface.execute(db, "ATTACH $(sql(DATABASE)) AS last (READ_ONLY)")
 
 	documents_appender = DuckDB.Appender(db, "documents")
@@ -500,7 +671,8 @@ function build(found, previous; progress = true)
 		# Not changed since the last index: its passages are copied below
 		if !(reuse && document in previous.documents)
 			cut = try
-				document.kind == "wiki" ? wiki_passages(document.source, document.title) :
+				document.kind in ("wiki", "markdown") ? wiki_passages(document.source, document.title) :
+					document.kind == "text" ? text_passages(document.source) :
 					document.kind == "julia" ? manual_passages(document.source) : pdf_passages(document.source)
 			catch
 				nothing
@@ -527,14 +699,14 @@ function build(found, previous; progress = true)
 	reuse && DBInterface.execute(db, "DETACH last")
 
 	# What each passage is given to the embedding model as, and the embeddings made of it before: a wiki's headings
-	# start with its panel and its name, a PDF's do not have its title
+	# start with its panel and its name, and a Markdown file's with its title; a PDF's do not have its title
 	DBInterface.execute(db, "ATTACH $(sql(EMBEDDINGS)) AS cache")
 	DBInterface.execute(db, "CREATE TABLE IF NOT EXISTS cache.embeddings(key VARCHAR PRIMARY KEY, embedding FLOAT[])")
 	DBInterface.execute(db, """
 		CREATE TEMP TABLE inputs AS
 		SELECT id, sha256(? || chr(10) || input) AS key, input
 		FROM (
-			SELECT p.id, left(replace(replace(?, '{title}', CASE WHEN d.kind = 'wiki' THEN p.heading ELSE concat_ws($(sql(ARROW)), d.title, nullif(p.heading, '')) END), '{text}', p.text), $LONGEST) AS input
+			SELECT p.id, left(replace(replace(?, '{title}', CASE WHEN d.kind IN ('wiki', 'markdown') THEN p.heading ELSE concat_ws($(sql(ARROW)), d.title, nullif(p.heading, '')) END), '{text}', p.text), $LONGEST) AS input
 			FROM passages p JOIN documents d ON p.document = d.id)""",
 		[EMBEDDER, PREFIX])
 	DBInterface.execute(db, "UPDATE passages SET embedding = c.embedding FROM inputs i, cache.embeddings c WHERE c.key = i.key AND passages.id = i.id")
@@ -553,8 +725,8 @@ function build(found, previous; progress = true)
 	DuckDB.query(db, "PRAGMA create_fts_index('passages', 'id', 'heading', 'text', stemmer = 'english', overwrite = 1)")
 	counts = only(Tables.rowtable(DBInterface.execute(db, "SELECT count(*) AS passages, count(embedding) AS embedded FROM passages")))
 	# builtAt, when it was built, in milliseconds: the passages Evaluate Answering Models found with the index before are reused until it is built again
-	DBInterface.execute(db, "INSERT INTO built VALUES ('script', ?), ('passages', ?), ('embedded', ?), ('dimensions', ?), ('embedder', ?), ('passagePrefix', ?), ('builtAt', ?)",
-		[SCRIPT, string(counts.passages), string(counts.embedded), dimensions > 0 ? string(dimensions) : "", EMBEDDER, PREFIX, string(round(Int, time() * 1000))])
+	DBInterface.execute(db, "INSERT INTO built VALUES ('script', ?), ('passages', ?), ('embedded', ?), ('dimensions', ?), ('embedder', ?), ('passagePrefix', ?), ('words', ?), ('builtAt', ?)",
+		[SCRIPT, string(counts.passages), string(counts.embedded), dimensions > 0 ? string(dimensions) : "", EMBEDDER, PREFIX, string(WORDS), string(round(Int, time() * 1000))])
 	DBInterface.execute(db, "CHECKPOINT")
 	DBInterface.close!(db)
 
@@ -606,9 +778,17 @@ function embed(url, todo)
 			return false
 		end
 	end
+	# A text longer than the model's context, as a passage is for Nomic Embed's 512 tokens, is embedded by its beginning,
+	# halved until the model takes it
+	function alone(position)
+		for _ in 1:4
+			request(position, position) && return
+			DBInterface.execute(db, "UPDATE todo SET input = left(input, length(input) // 2) WHERE position = ?", [position])
+		end
+	end
 	for from in 1:BATCH:length(todo)
 		to = min(from + BATCH - 1, length(todo))
-		request(from, to) || foreach(position -> request(position, position), from:to)
+		request(from, to) || foreach(alone, from:to)
 		say("{\"embedding\":$to,\"total\":$(length(todo))}")
 	end
 	DBInterface.close!(db)
@@ -619,7 +799,8 @@ previous = last_index()
 built(name) = previous === nothing ? nothing : get(previous.built, name, nothing)
 # Nothing changed, and every passage embedded, or none can be
 if previous !== nothing && previous.script == SCRIPT && previous.documents == Set(found) && built("embedder") == EMBEDDER &&
-		built("passagePrefix") == PREFIX && (built("embedded") == built("passages") || !EMBEDDABLE)
+		built("passagePrefix") == PREFIX && something(built("words"), "250") == string(WORDS) &&
+		(built("embedded") == built("passages") || !EMBEDDABLE)
 	exit()
 end
 

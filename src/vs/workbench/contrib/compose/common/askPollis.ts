@@ -20,6 +20,15 @@ export const ASK_PASSAGE_PREFIX = 'title: {title} | text: {text}';
  * (pollisDocuments.ts), so that both use the one server.
  */
 export const ASK_EMBEDDING_CONTEXT = 2048;
+
+/** The context of a reranker's server, in tokens: a question with a passage of 500 words fits it easily. */
+export const ASK_RERANK_CONTEXT = 4096;
+
+/** The scores a reranker gives passages for a question, the higher the better, in the passages' order; or why it gave none. */
+export interface IAskPollisReranked {
+	readonly scores?: readonly number[];
+	readonly error?: string;
+}
 /** How many passages go to the model, when pollis.ask.passages gives none. */
 export const ASK_PASSAGES = 8;
 
@@ -75,6 +84,21 @@ export interface IAskPollisSearchRequest {
 	readonly passages?: number;
 	/** The panel it is asked in, which gives most of the passages, the rest routed as without it. */
 	readonly panel?: IAskPollisPanel;
+	/** A collection of Retrieval-Augmented Generation, searched in place of PollisDocuments. */
+	readonly index?: IAskPollisCollectionIndex;
+}
+
+/** The index of a collection of Compose > Retrieval-Augmented Generation, and how a question is embedded to search it. */
+export interface IAskPollisCollectionIndex {
+	readonly file: string;
+	readonly embeddingModel: string;
+	readonly queryPrefix: string;
+}
+
+/** A document of an index, by its file, and how many passages it was cut into. */
+export interface IAskPollisIndexedDocument {
+	readonly file: string;
+	readonly passages: number;
 }
 
 export interface IAskPollisSearchResult {
@@ -102,6 +126,8 @@ export interface IAskPollisIndexStatus {
 	readonly passagePrefix: string;
 	/** When the index was built, in milliseconds; empty for an index of an older Pollis. */
 	readonly builtAt: string;
+	/** About how many words a passage has. */
+	readonly words: number;
 	readonly collections: readonly string[];
 }
 
@@ -163,13 +189,25 @@ export interface IAskPollisMessage {
 }
 
 /** What the model that answers is told, before the passages. */
-const ASK_INSTRUCTION = [
-	'You answer questions about Pollis and Julia from the passages below, taken from their documentation.',
-	'Use only what the passages say. Name menus, buttons and settings exactly as the passages write them.',
+const ASK_RULES = [
 	'After each statement, cite the passages it rests on, as [1] or [1, 3].',
 	'If the passages do not answer the question, say so in one sentence, and name the passages that come closest.',
 	'Answer in the language of the question.',
+];
+const ASK_INSTRUCTION = [
+	'You answer questions about Pollis and Julia from the passages below, taken from their documentation.',
+	'Use only what the passages say. Name menus, buttons and settings exactly as the passages write them.',
+	...ASK_RULES,
 ].join('\n');
+
+/** What the model is told when it answers from a collection of Retrieval-Augmented Generation, before the passages. */
+function askCollectionInstruction(collection: string): string {
+	return [
+		`You answer questions from the passages below, taken from the documents of the collection "${collection}".`,
+		'Use only what the passages say.',
+		...ASK_RULES,
+	].join('\n');
+}
 
 /** What the model is told when something is attached to the questions. */
 /** What the model is told when nothing is searched, with Search In: None, to see what the documents add to its answers. */
@@ -203,16 +241,17 @@ export function askPassageLabel(passage: IAskPollisPassage): string {
 /**
  * The messages that ask a model `question`, with its `attachments`: the instruction, the panel it is asked in, if any,
  * and the passages, numbered from 1, then the conversation so far, each question with what was attached to it. Its
- * answers are given without their citations, which were to other passages.
+ * answers are given without their citations, which were to other passages. Asked from a `collection` of
+ * Retrieval-Augmented Generation, the model is told the passages are from its documents.
  */
-export function askPollisMessages(turns: readonly IAskPollisTurn[], question: string, passages: readonly IAskPollisPassage[], panel?: IAskPollisPanel, attachments?: readonly IAskPollisAttachment[]): IAskPollisMessage[] {
+export function askPollisMessages(turns: readonly IAskPollisTurn[], question: string, passages: readonly IAskPollisPassage[], panel?: IAskPollisPanel, attachments?: readonly IAskPollisAttachment[], collection?: string): IAskPollisMessage[] {
 	const numbered = passages.map((passage, i) => `[${i + 1}] ${askPassageLabel(passage)}\n${passage.text}`);
 	const menu = panel && passages.find(passage => passage.kind === 'wiki' && passage.title === panel.title)?.menu;
 	const asked = panel ? `\nThe question is asked in the panel ${panel.title} of Pollis${menu ? ` (${menu})` : ''}: "this panel", "here" or "this method" mean it.` : '';
 	const before = turns.slice(-ASK_TURNS);
 	const attached = !!attachments?.length || before.some(turn => turn.attachments?.length) ? `\n${ASK_ATTACHED_INSTRUCTION}${passages.length ? ' Cite the passages for what you say about Pollis and Julia.' : ''}` : '';
 	// Without passages, Search In: None, the model answers from what it knows
-	const system = passages.length ? `${ASK_INSTRUCTION}${asked}${attached}\n\n${numbered.join('\n\n')}` : `${ASK_UNAIDED_INSTRUCTION}${asked}${attached}`;
+	const system = passages.length ? `${collection === undefined ? ASK_INSTRUCTION : askCollectionInstruction(collection)}${asked}${attached}\n\n${numbered.join('\n\n')}` : `${ASK_UNAIDED_INSTRUCTION}${asked}${attached}`;
 	return [
 		{ role: 'system', content: system },
 		...before.flatMap(turn => [
@@ -326,6 +365,12 @@ export interface IAskPollisEvalItem {
  * Julia Manual; `panels`, the wikis of the panels, and the documents of the toolboxes.
  */
 export type AskTopic = 'pollis' | 'julia' | 'panels';
+
+/** The passage of the index a question of a test set is about now, with its text and its topic. */
+export interface IAskPassageMatch {
+	readonly text: string;
+	readonly topic: AskTopic;
+}
 
 /** How many questions of each topic Make Questions writes. */
 export type IAskTopicCounts = Readonly<Record<AskTopic, number>>;
@@ -526,8 +571,14 @@ export interface IEmbeddingRun {
 /** The search of PollisDocuments, and the chat model's answer, in a process of their own (../node/askPollisMain.ts). */
 export interface IAskPollisIndex {
 	readonly onDidChat: Event<IAskPollisChatText>;
-	/** What the index holds, or nothing when there is none that can be read. */
-	status(): Promise<IAskPollisIndexStatus | undefined>;
+	/** What the index holds, PollisDocuments' or that of the file `database`, or nothing when there is none that can be read. */
+	status(database?: string): Promise<IAskPollisIndexStatus | undefined>;
+	/** The documents of the index `database` with their number of passages; nothing when there is no index. */
+	indexedDocuments(database: string): Promise<readonly IAskPollisIndexedDocument[] | undefined>;
+	/** The scores of `passages` for `question` by the reranker of llama-server at `url`, its /rerank. */
+	rerank(url: string, question: string, passages: readonly string[]): Promise<IAskPollisReranked>;
+	/** The first `count` passages of the document `file` in the index `database`, in their order. */
+	documentPassages(database: string, file: string, count: number): Promise<readonly IAskPollisPassage[]>;
 	search(request: IAskPollisIndexRequest): Promise<IAskPollisSearchResult>;
 	/** Writes the answer, the text sent as it comes by `onDidChat`. */
 	chat(request: IAskPollisChatRequest): Promise<IAskPollisChatEnd>;
@@ -536,8 +587,11 @@ export interface IAskPollisIndex {
 	describeDatabase(path: string): Promise<string>;
 	/** `counts` passages of each topic spread over the documents, for Make Questions: one of each document in turn, long enough to ask about. */
 	spread(counts: IAskTopicCounts): Promise<readonly IAskPollisPassage[]>;
-	/** The topic of the passage each of `texts` is the text of, nothing for a text no passage has any more; nothing at all when there is no index. */
-	topics(texts: readonly string[]): Promise<readonly (AskTopic | undefined)[] | undefined>;
+	/**
+	 * The passage each of `texts` is the text of or, when the documents have changed since, the passage that has the
+	 * most of its words; nothing for a text no passage is like any more; nothing at all when there is no index.
+	 */
+	matches(texts: readonly string[]): Promise<readonly (IAskPassageMatch | undefined)[] | undefined>;
 	/** The passages found before for each of `questions` with the search stamp `key`, nothing for a question not found with it. */
 	foundBefore(key: string, questions: readonly string[]): Promise<readonly (readonly IAskPollisPassage[] | undefined)[]>;
 	/** Keeps the passages `found` with the search stamp `key`, and forgets those found with any other. */
@@ -580,6 +634,12 @@ export interface IAskPollisService {
 	/** Every collection of the index, for a Search In before any question; none before the first index. */
 	collections(): Promise<readonly string[]>;
 	search(request: IAskPollisSearchRequest): Promise<IAskPollisSearchResult>;
+	/** What the index of a collection of Retrieval-Augmented Generation holds, as IAskPollisIndex. */
+	collectionStatus(file: string): Promise<IAskPollisIndexStatus | undefined>;
+	indexedDocuments(file: string): Promise<readonly IAskPollisIndexedDocument[] | undefined>;
+	documentPassages(file: string, document: string, count: number): Promise<readonly IAskPollisPassage[]>;
+	/** Scores each of `passages` for `question` with the reranker `model`, a GGUF file, which it starts through the Julia extension. */
+	rerank(model: string, question: string, passages: readonly IAskPollisPassage[]): Promise<IAskPollisReranked>;
 	/** Stops the embedding model of the search, if it runs, so that its memory is free; the next search starts it again. Resolves once it has stopped. */
 	stopSearchModel(): Promise<void>;
 	/**
@@ -598,15 +658,19 @@ export interface IAskPollisService {
 	 * model, with the key of its provider. `onText` is given the answer so far as it comes. Evaluate Answering Models gives
 	 * `answerWith`, a cloud model's id or `local:` and a local model's file, in place of the setting; a question asked in a
 	 * panel, the `panel`, which the model is told of; what is attached to it, the `attachments`, of which a model of this
-	 * computer is not sent the images.
+	 * computer is not sent the images; a question asked of a collection of Retrieval-Augmented Generation, its name, the
+	 * `collection`.
 	 */
-	answer(turns: readonly IAskPollisTurn[], question: string, passages: readonly IAskPollisPassage[], onText: (text: string) => void, token: CancellationToken, answerWith?: string, panel?: IAskPollisPanel, attachments?: readonly IAskPollisAttachment[]): Promise<IAskPollisAnswer>;
+	answer(turns: readonly IAskPollisTurn[], question: string, passages: readonly IAskPollisPassage[], onText: (text: string) => void, token: CancellationToken, answerWith?: string, panel?: IAskPollisPanel, attachments?: readonly IAskPollisAttachment[], collection?: string): Promise<IAskPollisAnswer>;
 	/** The tables and views of the DuckDB database at `path`, with their columns, as an attachment gives them; it is opened read-only and no view is run. */
 	describeDatabase(path: string): Promise<string>;
 	/** `counts` passages of each topic spread over the documents, for the questions of a test set. */
 	spread(counts: IAskTopicCounts): Promise<readonly IAskPollisPassage[]>;
-	/** The topic of the passage each of `texts` is the text of, nothing for a text no passage has any more; nothing at all when there is no index. */
-	topics(texts: readonly string[]): Promise<readonly (AskTopic | undefined)[] | undefined>;
+	/**
+	 * The passage each of `texts` is the text of or, when the documents have changed since, the passage that has the
+	 * most of its words; nothing for a text no passage is like any more; nothing at all when there is no index.
+	 */
+	matches(texts: readonly string[]): Promise<readonly (IAskPassageMatch | undefined)[] | undefined>;
 	/** The runs of Evaluate Answering Models, in `~/.pollis/ask/Comparisons.duckdb`. */
 	saveRun(run: ICompareRun): Promise<void>;
 	runs(): Promise<readonly ICompareRunSummary[]>;

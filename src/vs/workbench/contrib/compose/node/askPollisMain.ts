@@ -26,7 +26,7 @@ import { ProxyChannel } from '../../../../base/parts/ipc/common/ipc.js';
 import { Server as ChildProcessServer } from '../../../../base/parts/ipc/node/ipc.cp.js';
 import { Server as UtilityProcessServer } from '../../../../base/parts/ipc/node/ipc.mp.js';
 import { isUtilityProcess } from '../../../../base/parts/sandbox/node/electronTypes.js';
-import { AskTopic, ASK_PASSAGES, IAskPollisChatEnd, IAskPollisMessage, ICompareRun, ICompareRunSummary, IAskPollisChatRequest, IAskPollisChatText, IAskPollisFound, IAskPollisIndex, IAskPollisIndexRequest, IAskPollisIndexStatus, IAskPollisPanel, IAskPollisPassage, IAskPollisSearchResult, IAskPollisTimings, IAskTopicCounts, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingFound, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary } from '../common/askPollis.js';
+import { AskTopic, ASK_PASSAGES, IAskPollisChatEnd, IAskPollisMessage, ICompareRun, ICompareRunSummary, IAskPollisChatRequest, IAskPollisChatText, IAskPollisFound, IAskPollisIndex, IAskPollisIndexedDocument, IAskPollisIndexRequest, IAskPollisIndexStatus, IAskPollisPanel, IAskPollisPassage, IAskPassageMatch, IAskPollisReranked, IAskPollisSearchResult, IAskPollisTimings, IAskTopicCounts, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingFound, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary } from '../common/askPollis.js';
 
 const DATABASE = join(os.homedir(), '.pollis', 'documents', 'PollisDocuments.duckdb');
 /** The embeddings made, by the model and the text it was given, as ask_index.jl keeps them. */
@@ -191,10 +191,11 @@ function searchSql(dimensions: number, count: number, vectors?: string, where = 
 
 /**
  * The key in embeddings.duckdb of each passage and what it is given to the model $model as, with the passage prefix
- * $prefix, as ask_index.jl makes them: a wiki's headings start with its panel and its name, a PDF's do not have its title.
+ * $prefix, as ask_index.jl makes them: a wiki's headings start with its panel and its name, a Markdown file's with its
+ * title; a PDF's do not have its title.
  */
 const INPUTS_SQL = `SELECT id, sha256($model || chr(10) || input) AS key, input FROM (
-	SELECT p.id, left(replace(replace($prefix, '{title}', CASE WHEN d.kind = 'wiki' THEN p.heading ELSE concat_ws(' ' || chr(8250) || ' ', d.title, nullif(p.heading, '')) END), '{text}', p.text), 4000) AS input
+	SELECT p.id, left(replace(replace($prefix, '{title}', CASE WHEN d.kind IN ('wiki', 'markdown') THEN p.heading ELSE concat_ws(' ' || chr(8250) || ' ', d.title, nullif(p.heading, '')) END), '{text}', p.text), 4000) AS input
 	FROM passages p JOIN documents d ON p.document = d.id)`;
 
 /** A search of the index: `count` passages for `question`, from the collections nearest it, or those of `collections`. */
@@ -246,6 +247,14 @@ function optionalNumber(value: unknown): number | undefined {
 
 /** The shortest passage Make Questions asks about, in characters: a shorter one is mostly a heading or a line of a table. */
 const SHORTEST_QUESTION_PASSAGE = 400;
+
+/** The share of the words of a question's passage that the passage it now matches has at least: see matchPassages. */
+const MATCHING_WORDS = 0.6;
+
+/** The words of `text`, in lower case: its runs of letters and digits. */
+function words(text: string): Set<string> {
+	return new Set(text.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? []);
+}
 
 /** The topic of a passage by its document `d`, as AskTopic: the Julia Manual, Pollis' own documents, and the rest (the wikis, the documents of the toolboxes). */
 const TOPIC = `CASE WHEN d.kind = 'julia' THEN 'julia' WHEN d.kind = 'document' AND coalesce(d.toolbox, '') = '' THEN 'pollis' ELSE 'panels' END`;
@@ -312,15 +321,18 @@ class AskPollisIndex implements IAskPollisIndex {
 		return this.connection;
 	}
 
-	/** Runs `task` with the index attached and the default database, as its fts index needs; nothing when there is no index. */
-	private withIndex<T>(task: (connection: DuckDBConnection) => Promise<T>): Promise<T | undefined> {
+	/**
+	 * Runs `task` with the index attached and the default database, as its fts index needs: PollisDocuments, or the
+	 * index of a collection, the file `database`; nothing when there is no index.
+	 */
+	private withIndex<T>(task: (connection: DuckDBConnection) => Promise<T>, database = DATABASE): Promise<T | undefined> {
 		return this.sequencer.queue(async () => {
-			if (!fs.existsSync(DATABASE)) {
+			if (!fs.existsSync(database)) {
 				return undefined;
 			}
 			const connection = await this.connect();
 			try {
-				await connection.run(`ATTACH ${sqlString(DATABASE)} AS PollisDocuments (READ_ONLY)`);
+				await connection.run(`ATTACH ${sqlString(database)} AS PollisDocuments (READ_ONLY)`);
 			} catch {
 				return undefined;
 			}
@@ -345,6 +357,7 @@ class AskPollisIndex implements IAskPollisIndex {
 				embedder: built.get('embedder') ?? '',
 				passagePrefix: built.get('passagePrefix') ?? '',
 				builtAt: built.get('builtAt') ?? '',
+				words: Number(built.get('words') || 250),
 				collections,
 			};
 		} catch {
@@ -353,8 +366,38 @@ class AskPollisIndex implements IAskPollisIndex {
 		}
 	}
 
-	async status(): Promise<IAskPollisIndexStatus | undefined> {
-		return this.withIndex(connection => this.readStatus(connection));
+	async status(database?: string): Promise<IAskPollisIndexStatus | undefined> {
+		return this.withIndex(connection => this.readStatus(connection), database);
+	}
+
+	async indexedDocuments(database: string): Promise<readonly IAskPollisIndexedDocument[] | undefined> {
+		return this.withIndex(async connection => (await connection.runAndReadAll(
+			'SELECT d.source AS file, count(p.id) AS passages FROM documents d LEFT JOIN passages p ON p.document = d.id GROUP BY d.source'
+		)).getRowObjectsJson().map(row => ({ file: String(row.file), passages: Number(row.passages) })), database);
+	}
+
+	async rerank(url: string, question: string, passages: readonly string[]): Promise<IAskPollisReranked> {
+		try {
+			const response = await fetch(`${url}/rerank`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: question, documents: passages }) });
+			if (!response.ok) {
+				return { error: `${response.status} ${await response.text()}` };
+			}
+			const answer = await response.json() as { results: { index: number; relevance_score: number }[] };
+			const scores = passages.map(() => 0);
+			for (const result of answer.results) {
+				scores[result.index] = result.relevance_score;
+			}
+			return { scores };
+		} catch (err) {
+			return { error: err instanceof Error ? err.message : String(err) };
+		}
+	}
+
+	async documentPassages(database: string, file: string, count: number): Promise<readonly IAskPollisPassage[]> {
+		const found = await this.withIndex(async connection => (await connection.runAndReadAll(
+			`SELECT p.id, ${PASSAGE_COLUMNS}, 0 AS score FROM passages p JOIN documents d ON d.id = p.document WHERE d.source = $file ORDER BY p.id LIMIT ${Math.max(1, Math.floor(count))}`, { file }
+		)).getRowObjectsJson().map(passageOf), database);
+		return found ?? [];
 	}
 
 	async search(request: IAskPollisIndexRequest): Promise<IAskPollisSearchResult> {
@@ -385,7 +428,7 @@ class AskPollisIndex implements IAskPollisIndex {
 				...(error && !vector ? { error } : {}),
 			};
 			return result;
-		});
+		}, request.index?.file);
 		return found ?? { passages: [], searched: [], collections: [], wordsOnly: 'notIndexed' };
 	}
 
@@ -500,15 +543,16 @@ class AskPollisIndex implements IAskPollisIndex {
 					const vector = await embed(request.url, request.queryPrefix.replace('{text}', item.question));
 					const queryMs = Date.now() - embedding;
 					const result = await this.withIndex(async connection => {
+						const context = (await this.matchPassages(connection, [item.context]))[0]?.text ?? item.context;
 						const search = Date.now();
 						const given = await this.findPassages(connection, collections, { question: item.question, vector, dimensions, count: ASK_PASSAGES, vectors: 'memory.candidate' });
 						const searchMs = Date.now() - search;
 						// The place of the question's passage among all passages by meaning: how many are nearer the question, and 1
 						const row = (await connection.runAndReadAll(`WITH target AS (
 							SELECT min(array_cosine_distance(v.embedding, $vector::FLOAT[${dimensions}])) AS distance FROM memory.candidate v JOIN passages p ON p.id = v.id WHERE p.text = $context)
-							SELECT CASE WHEN t.distance IS NULL THEN NULL ELSE 1 + (SELECT count(*) FROM memory.candidate v WHERE array_cosine_distance(v.embedding, $vector::FLOAT[${dimensions}]) < t.distance) END AS meaning FROM target t`, { vector, context: item.context })).getRowObjectsJson()[0];
+							SELECT CASE WHEN t.distance IS NULL THEN NULL ELSE 1 + (SELECT count(*) FROM memory.candidate v WHERE array_cosine_distance(v.embedding, $vector::FLOAT[${dimensions}]) < t.distance) END AS meaning FROM target t`, { vector, context })).getRowObjectsJson()[0];
 						const meaning = optionalNumber(row?.meaning);
-						const hybrid = meaning === undefined ? undefined : given.passages.findIndex(passage => passage.text === item.context) + 1;
+						const hybrid = meaning === undefined ? undefined : given.passages.findIndex(passage => passage.text === context) + 1;
 						return { hybrid, meaning, queryMs, searchMs };
 					});
 					if (!result) {
@@ -643,14 +687,46 @@ class AskPollisIndex implements IAskPollisIndex {
 		return (rows ?? []).map(passageOf);
 	}
 
-	async topics(texts: readonly string[]): Promise<readonly (AskTopic | undefined)[] | undefined> {
+	async matches(texts: readonly string[]): Promise<readonly (IAskPassageMatch | undefined)[] | undefined> {
 		if (!texts.length) {
 			return [];
 		}
-		const found = await this.withIndex(async connection => new Map((await connection.runAndReadAll(
-			`SELECT p.text, any_value(${TOPIC}) AS topic FROM passages p JOIN documents d ON d.id = p.document WHERE p.text IN (${texts.map(sqlString).join(', ')}) GROUP BY p.text`))
-			.getRowObjectsJson().map(row => [String(row.text), String(row.topic) as AskTopic])));
-		return found && texts.map(text => found.get(text));
+		return this.withIndex(connection => this.matchPassages(connection, texts));
+	}
+
+	/**
+	 * The passage of each of `texts`, as matches: the one of the same text or, for a text no passage has any more (a
+	 * document edited since the question was written), the passage that has the largest share of its words, when it
+	 * has MATCHING_WORDS of them at least, the shorter of two as good.
+	 */
+	private async matchPassages(connection: DuckDBConnection, texts: readonly string[]): Promise<(IAskPassageMatch | undefined)[]> {
+		const read = async (where: string) => (await connection.runAndReadAll(`SELECT p.text, any_value(${TOPIC}) AS topic FROM passages p JOIN documents d ON d.id = p.document ${where} GROUP BY p.text`))
+			.getRowObjectsJson().map(row => ({ text: String(row.text), topic: String(row.topic) as AskTopic }));
+		const found = new Map((await read(`WHERE p.text IN (${texts.map(sqlString).join(', ')})`)).map(match => [match.text, match]));
+		const missing = new Set(texts.filter(text => text && !found.has(text)));
+		if (missing.size) {
+			const passages = (await read('')).map(match => ({ match, words: words(match.text) }));
+			for (const text of missing) {
+				const wanted = words(text);
+				let best: { match: IAskPassageMatch; share: number; size: number } | undefined;
+				for (const passage of passages) {
+					let common = 0;
+					for (const word of wanted) {
+						if (passage.words.has(word)) {
+							common++;
+						}
+					}
+					const share = common / wanted.size;
+					if (share >= MATCHING_WORDS && (!best || share > best.share || (share === best.share && passage.words.size < best.size))) {
+						best = { match: passage.match, share, size: passage.words.size };
+					}
+				}
+				if (best) {
+					found.set(text, best.match);
+				}
+			}
+		}
+		return texts.map(text => found.get(text));
 	}
 
 	/** Runs `task` with Comparisons.duckdb attached, its tables made the first time. */

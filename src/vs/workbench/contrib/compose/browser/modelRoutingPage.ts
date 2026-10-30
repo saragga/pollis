@@ -99,7 +99,7 @@ async function openModelRoutingPage(accessor: ServicesAccessor): Promise<void> {
 		const environment = await terminalEnvironment(terminalInstanceService);
 		const agents = codingAgents(configurationService);
 		const clouds = cloudModels(configurationService);
-		const installed = (await commandService.executeCommand<IInstalledModel[]>('language-julia.pollisInstalledModels') ?? []).filter(model => model.kind !== 'embedding');
+		const installed = (await commandService.executeCommand<IInstalledModel[]>('language-julia.pollisInstalledModels') ?? []).filter(model => model.kind !== 'embedding' && model.kind !== 'reranker');
 		const available = (model: string, tools = true) => agents.map(agent => tools && cellAvailable(agent, model, clouds));
 
 		// A tier on a local model is in the row of its file, or of the model the Julia extension found it on

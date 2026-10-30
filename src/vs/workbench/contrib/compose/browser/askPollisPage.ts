@@ -44,7 +44,7 @@ import { formatBytes, IDatasetSummary, summarizeCsv } from './collaboration/coll
 import { isDuckDbFile, MAX_DATASET_BYTES, MAX_FILE_BYTES, MAX_IMAGE_BYTES } from './collaboration/collaborationProtocol.js';
 import { COMPARE_MODELS_ADD_COMMAND_ID, COMPARE_MODELS_COMMAND_ID, ICompareModelsAdd } from './compareModelsPage.js';
 import { composerAddCss, composerAddHtml, composerAddScript } from './composerAdd.js';
-import { composerVoiceCss, composerVoiceHtml, composerVoiceScript, getVoiceLanguage, setVoiceLanguage } from './composerVoice.js';
+import { composerVoiceCss, composerVoiceHtml, composerVoiceScript, getVoiceLanguage, getVoiceWriteIn, setVoiceLanguage, setVoiceWriteIn } from './composerVoice.js';
 import { IInstalledModel } from './modelsInstalledPage.js';
 
 // Help > Ask Pollis: a question in your own words, answered from Pollis' own documents and Julia's, in the Ask
@@ -77,6 +77,7 @@ type AskPollisMessage =
 	| { readonly command: 'clearApiKey' }
 	| { readonly command: 'addToTestSet'; readonly turn: number }
 	| { readonly command: 'voiceLanguage'; readonly value: string }
+	| { readonly command: 'voiceWriteIn'; readonly value: string }
 	| { readonly command: 'leavePanel' };
 
 /** A question of the conversation, the passages found for it and its answer so far. */
@@ -168,9 +169,9 @@ interface IAskModels {
  * The models of the model's menu: the chat models of Models Installed, the one of pollis.ask.chatModel too when it is
  * not on this computer yet, and the cloud models; looked up each time, so that a model downloaded since is listed.
  */
-async function askModels(commandService: ICommandService, configurationService: IConfigurationService): Promise<IAskModels> {
+export async function askModels(commandService: ICommandService, configurationService: IConfigurationService): Promise<IAskModels> {
 	const setting = configurationService.getValue<string>('pollis.ask.chatModel')?.trim() || ASK_CHAT_MODEL;
-	const installed = (await commandService.executeCommand<IInstalledModel[]>('language-julia.pollisInstalledModels').catch(() => undefined) ?? []).filter(model => model.kind !== 'embedding');
+	const installed = (await commandService.executeCommand<IInstalledModel[]>('language-julia.pollisInstalledModels').catch(() => undefined) ?? []).filter(model => model.kind !== 'embedding' && model.kind !== 'reranker');
 	const current = installed.find(model => askModelName(model.file) === askModelName(setting));
 	const cloud = askCloudModel(configurationService.getValue<string>('pollis.ask.answerWith'));
 	return {
@@ -287,7 +288,7 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 		const webview = webviewView.webview;
 		webview.options = { ...webview.options, retainContextWhenHidden: true };
 		webview.contentOptions = { allowScripts: true, localResourceRoots: [] };
-		webview.setHtml(pageHtml(getVoiceLanguage(storageService)));
+		webview.setHtml(pageHtml(getVoiceLanguage(storageService), getVoiceWriteIn(storageService)));
 
 		const disposables = this.conversation.value = new DisposableStore();
 		const post = (message: object) => webview.postMessage(message);
@@ -479,6 +480,8 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 				}
 			} else if (message.command === 'voiceLanguage') {
 				setVoiceLanguage(storageService, message.value);
+			} else if (message.command === 'voiceWriteIn') {
+				setVoiceWriteIn(storageService, message.value);
 			} else if (message.command === 'setApiKey' || message.command === 'clearApiKey') {
 				const cloud = askCloudModel(configurationService.getValue<string>('pollis.ask.answerWith'));
 				if (cloud) {
@@ -570,7 +573,7 @@ CommandsRegistry.registerCommand(ASK_POLLIS_CHOOSE_MODEL_COMMAND_ID, async (acce
 
 
 /** The pane: its texts come from here, the answers from the messages of each question. */
-function pageHtml(language: string): string {
+function pageHtml(language: string, writeIn: string): string {
 	const CHEVRON = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>';
 	const text = {
 		intro: localize('askPollis.intro', "Ask in your own words about Pollis, Julia, or the methods behind them: how to fit a model, what a setting does, what NUTS is."),
@@ -728,7 +731,7 @@ function pageHtml(language: string): string {
 		<div class="small attach-note" id="attachNote" hidden></div>
 		<div class="top">
 			<textarea id="question" rows="1" placeholder="${text.placeholder}"></textarea>
-			${composerVoiceHtml({ dictate: text.dictate, voiceMode: text.voiceMode }, language)}
+			${composerVoiceHtml({ dictate: text.dictate, voiceMode: text.voiceMode }, language, writeIn)}
 		</div>
 		<div class="tools">
 			${composerAddHtml({ add: text.add, image: text.addImage, file: text.addFile, dataset: text.addDataset, database: text.addDatabase })}

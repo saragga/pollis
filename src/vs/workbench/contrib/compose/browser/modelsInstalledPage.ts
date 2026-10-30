@@ -35,7 +35,7 @@ export interface IInstalledModel {
 	readonly value?: string;
 	readonly name: string;
 	readonly sizeLabel?: string;
-	readonly kind?: 'chat' | 'embedding';
+	readonly kind?: 'chat' | 'embedding' | 'reranker';
 	readonly bytes: number;
 	readonly pollis: boolean;
 	readonly repository?: string;
@@ -163,6 +163,7 @@ function pageHtml(): string {
 		usedBy: localize('modelsInstalled.usedBy', "Model Tasks and Routing"),
 		chat: localize('modelsInstalled.chat', "Chat"),
 		embedding: localize('modelsInstalled.embedding', "Embedding"),
+		reranker: localize('modelsInstalled.reranker', "Reranker"),
 		pollis: localize('modelsInstalled.pollis', "Pollis"),
 		huggingFace: localize('modelsInstalled.huggingFace', "Hugging Face cache"),
 		showInFolder: localize('modelsInstalled.showInFolder', "Show in Folder"),
@@ -342,7 +343,7 @@ function pageHtml(): string {
 			name.appendChild(element('div', 'name', model.name));
 			name.title = model.file;
 			row.appendChild(name);
-			row.appendChild(element('td', '', model.kind === 'embedding' ? TEXT.embedding : model.kind === 'chat' ? TEXT.chat : ''));
+			row.appendChild(element('td', '', model.kind === 'embedding' ? TEXT.embedding : model.kind === 'reranker' ? TEXT.reranker : model.kind === 'chat' ? TEXT.chat : ''));
 			row.appendChild(element('td', '', [TEXT.text, ...model.media.map(medium => medium === 'image' ? TEXT.image : TEXT.audio)].join(', ')));
 			row.appendChild(element('td', model.tools ? 'installed' : '', model.tools === undefined ? '-' : model.tools ? TEXT.yes : TEXT.no));
 			const size = element('td');

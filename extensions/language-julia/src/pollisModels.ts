@@ -22,27 +22,28 @@ import { Readable } from 'stream'
 import { pipeline } from 'stream/promises'
 import * as vscode from 'vscode'
 
-export type ModelKind = 'chat' | 'embedding'
+export type ModelKind = 'chat' | 'embedding' | 'reranker'
 
 /** What a model reads besides text, through its projector. */
 export type ModelMedia = 'image' | 'audio'
 
 export const MODELS_DIR = path.join(os.homedir(), '.pollis', 'models')
 
-/** The most parameters of a model offered from Hugging Face: about 2.5 GB for chat at Q4_K_M, 0.6 GB for embeddings at Q8_0. */
-const MAX_PARAMETERS: Record<ModelKind, number> = { chat: 4.5e9, embedding: 0.6e9 }
+/** The most parameters of a model offered from Hugging Face: about 2.5 GB for chat at Q4_K_M, 0.6 GB for embeddings and rerankers at Q8_0. */
+const MAX_PARAMETERS: Record<ModelKind, number> = { chat: 4.5e9, embedding: 0.6e9, reranker: 0.6e9 }
 
 /** How many models from Hugging Face the picker offers. */
 const HUB_MODELS = 8
 
-/** The quantisation chosen in a repository with several: a good balance for chat, nearly lossless for embeddings (which are small). */
+/** The quantisation chosen in a repository with several: a good balance for chat, nearly lossless for embeddings and rerankers (which are small). */
 const QUANTS: Record<ModelKind, string[]> = {
     chat: ['Q4_K_M', 'UD-Q4_K_XL', 'Q4_K_S', 'Q4_0', 'IQ4_XS', 'Q5_K_M', 'Q6_K', 'Q8_0'],
     embedding: ['Q8_0', 'F16', 'BF16', 'Q6_K', 'Q4_K_M', 'Q4_0'],
+    reranker: ['Q8_0', 'F16', 'BF16', 'Q6_K', 'Q4_K_M', 'Q4_0'],
 }
 
 /** How recently a model offered from Hugging Face must have been updated, in years. */
-const MAX_AGE: Record<ModelKind, number> = { chat: 1, embedding: 2 }
+const MAX_AGE: Record<ModelKind, number> = { chat: 1, embedding: 2, reranker: 2 }
 
 /**
  * The tasks Hugging Face gives the repositories of each kind. Many embedding repositories have no task, so their name
@@ -51,10 +52,14 @@ const MAX_AGE: Record<ModelKind, number> = { chat: 1, embedding: 2 }
 const EMBEDDING_TASKS = ['feature-extraction', 'sentence-similarity']
 const CHAT_TASKS = ['text-generation', 'image-text-to-text', undefined]
 
-/** The searches of each publisher: its most downloaded GGUF repositories, and for embeddings, which are few among them, those of the embedding tasks. */
+/**
+ * The searches of each publisher: its most downloaded GGUF repositories, and for embeddings, which are few among them, those of
+ * the embedding tasks; rerankers by their name.
+ */
 const SEARCHES: Record<ModelKind, string[]> = {
     chat: ['limit=50'],
     embedding: ['limit=30&search=embed', 'limit=30&pipeline_tag=feature-extraction', 'limit=30&pipeline_tag=sentence-similarity'],
+    reranker: ['limit=30&search=rerank'],
 }
 
 type HubModel = { id: string; downloads: number; parameters: number }
@@ -212,7 +217,7 @@ async function readHeaderKeys(file: string, tokenizer = false): Promise<Map<stri
                 }
             } else {
                 await need(SIZES[type])
-                keys.set(key, type === 7 ? String(buffer.readUInt8(at - start) !== 0) : '')
+                keys.set(key, type === 7 ? String(buffer.readUInt8(at - start) !== 0) : type === 4 ? String(buffer.readUInt32LE(at - start)) : type === 5 ? String(buffer.readInt32LE(at - start)) : '')
                 at += SIZES[type]
             }
         }
@@ -233,7 +238,11 @@ async function callsTools(file: string): Promise<boolean> {
     return [...keys?.entries() ?? []].some(([key, value]) => key.startsWith('tokenizer.chat_template') && /\btools\b/.test(value))
 }
 
-/** The name, size label and kind of a GGUF file, from the keys of its header; an embedding model has a pooling type. */
+/**
+ * The name, size label and kind of a GGUF file, from the keys of its header: an embedding model has a pooling type, and a
+ * reranker the pooling type rank (4, LLAMA_POOLING_TYPE_RANK of llama.cpp), or, converted without it (llama-server
+ * --reranking sets it), rerank in its file's name.
+ */
 async function readModelInfo(file: string): Promise<LocalModel | undefined> {
     const keys = await readHeaderKeys(file)
     if (!keys) {
@@ -245,7 +254,7 @@ async function readModelInfo(file: string): Promise<LocalModel | undefined> {
         // The file's name, unless it is as plain as model.gguf
         name: path.basename(file, path.extname(file)).toLowerCase() === 'model' ? keys.get('general.name') || path.basename(path.dirname(file)) : path.basename(file, path.extname(file)),
         sizeLabel: keys.get('general.size_label') || undefined,
-        kind: architecture === undefined ? undefined : keys.has(`${architecture}.pooling_type`) ? 'embedding' : 'chat',
+        kind: architecture === undefined ? undefined : keys.get(`${architecture}.pooling_type`) === '4' || /rerank/i.test(path.basename(file)) ? 'reranker' : keys.has(`${architecture}.pooling_type`) ? 'embedding' : 'chat',
     }
 }
 
@@ -414,9 +423,10 @@ async function searchHub(kind: ModelKind): Promise<HubModel[]> {
         || (!model.pipeline_tag && /embed|bert/i.test(`${model.id} ${model.gguf?.architecture ?? ''}`))
     const models = [...new Map(answers.flat().map((model) => [model.id, model])).values()].filter((model) => {
         const parameters = model.gguf?.total ?? 0
-        const isKind = kind === 'embedding'
-            ? isEmbedding(model)
-            : !isEmbedding(model) && CHAT_TASKS.includes(model.pipeline_tag) && !!model.gguf?.chat_template
+        const isReranker = /rerank/i.test(model.id)
+        const isKind = kind === 'reranker' ? isReranker
+            : kind === 'embedding' ? isEmbedding(model) && !isReranker
+            : !isEmbedding(model) && !isReranker && CHAT_TASKS.includes(model.pipeline_tag) && !!model.gguf?.chat_template
         return isKind && parameters > 0 && parameters <= MAX_PARAMETERS[kind] && Date.parse(model.lastModified ?? '') > oldest
     }).sort((a, b) => (b.downloads ?? 0) - (a.downloads ?? 0))
     // The same model converted by several publishers is offered once, from the one most downloaded
@@ -472,7 +482,7 @@ type PickerItem = vscode.QuickPickItem & { value?: string; repo?: string; addFil
 
 async function chooseModel(kind: ModelKind, value: string): Promise<string | undefined> {
     const picker = vscode.window.createQuickPick<PickerItem>()
-    picker.title = kind === 'chat' ? 'Choose a Chat Model' : 'Choose an Embedding Model'
+    picker.title = kind === 'chat' ? 'Choose a Chat Model' : kind === 'reranker' ? 'Choose a Reranker' : 'Choose an Embedding Model'
     picker.placeholder = 'A model on this computer, a small one from Hugging Face (downloaded when chosen), or a GGUF file'
     picker.matchOnDescription = true
     picker.busy = true
