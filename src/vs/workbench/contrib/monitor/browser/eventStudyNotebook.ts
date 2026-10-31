@@ -5,7 +5,7 @@
 
 // The study.ipynb of an event study: Julia that runs PollisEventStudies.jl on the study's folder (study.toml,
 // events.csv and prices/), which computes, for each period, the average and cumulative average abnormal returns a
-// minute at a time with their cross-sectional t, the Boehmer, Musumeci and Poulsen (1991) test on standardized CARs
+// minute at a time with their cross-sectional t, the Boehmer, Masumeci and Poulsen (1991) test on standardized CARs
 // with Kolari and Pynnonen's (2010) adjustment for cross-correlation, their (2011) generalized rank test, and abnormal
 // volume, each with its p-value, for all the filings and for each group of them, and writes them to results/. The page
 // shows the same results, which it gets from PollisEventStudies.jl itself, as the prices come in.
@@ -29,7 +29,7 @@ The filings an alert on SEC filings fired are the events. Pollis captures the mi
 [PollisEventStudies.jl](${PACKAGE_URL}) computes, for each period, the average abnormal return (AAR) and the cumulative average abnormal return (CAAR) a minute at a time with their cross-sectional t, from the event's time and, for an event outside the regular session, from the next open. At the end of the period (for an event outside the session, the period's minutes after the next open, where the market first trades on it), each with its two-sided p-value:
 
 - the CAR's cross-sectional t;
-- the Boehmer, Musumeci and Poulsen (1991) test on standardized CARs;
+- the Boehmer, Masumeci and Poulsen (1991) test on standardized CARs;
 - the same adjusted for the correlation of the events' abnormal returns (Kolari and Pynn&ouml;nen 2010), for events whose periods overlap;
 - the generalized rank test (Kolari and Pynn&ouml;nen 2011), robust to returns far from normal;
 - Cowan's (1992) generalized sign test, on how many CARs are positive against the share of positive abnormal returns on the estimation days;
@@ -65,7 +65,7 @@ Each group of filings, with its tests at the end of the first period. Another gr
 ## Notes
 
 - **Market-adjusted**: the normal return is the benchmark's. **Market model**: alpha plus beta times the benchmark's return, estimated on the minute returns of the regular sessions of the trading days before the period, not across the night. A stock that does not trade every minute is measured from one trade to the next.
-- The standardized tests (Boehmer, Musumeci and Poulsen, its adjustment, the generalized rank test and the generalized sign test) need the estimation days, which Pollis captures for the market model only.
+- The standardized tests (Boehmer, Masumeci and Poulsen, its adjustment, the generalized rank test and the generalized sign test) need the estimation days, which Pollis captures for the market model only.
 - Yahoo Finance keeps minute prices for 30 days: the events are the filings of the 30 days before the study was made and those after, captured while Pollis was open.
 - The benchmark trades only in the regular session: after the close, the stock's moves are its own.
 `),

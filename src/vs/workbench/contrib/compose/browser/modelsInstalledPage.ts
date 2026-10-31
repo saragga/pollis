@@ -9,15 +9,25 @@ import { localize, localize2 } from '../../../../nls.js';
 import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
+import { IFileService } from '../../../../platform/files/common/files.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
+import { INotificationService } from '../../../../platform/notification/common/notification.js';
+import { IOpenerService } from '../../../../platform/opener/common/opener.js';
+import { IStorageService } from '../../../../platform/storage/common/storage.js';
+import { IEditorService } from '../../../services/editor/common/editorService.js';
 import { IHostService } from '../../../services/host/browser/host.js';
+import { IPathService } from '../../../services/path/common/pathService.js';
+import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
+import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { agentTiers, MODEL_ROUTING_COMMAND_ID, TIER_CELLS_SETTING } from './modelRouting.js';
-import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
+import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
+import { MODELSINSTALLED_METADATA } from '../../model/browser/webviews/modelsInstalled.data.js';
+import { buildWebviewHtml } from '../../model/browser/webviews/webviewScaffold.js';
 import { sortHeadingsCss, sortHeadingsScript, sortHint } from '../../model/browser/webviews/webviewPager.js';
 
-// Compose > Local Models > Models Installed: a page of the GGUF models on this computer, those Pollis downloaded
+// Compose > Local Models > Models Installed, in the Minimal style of the scaffold: a page of the GGUF models on this computer, those Pollis downloaded
 // and those in the Hugging Face cache, which the llama.cpp that comes with Pollis runs. Each shows its kind, what it
 // reads (images and audio through the projector beside it), whether it calls tools (from its chat template), its size,
 // where it is, the Model Tasks and Routing tiers that run on it, a link to show it in its folder, and Other Versions: the other files of its repository on Hugging Face
@@ -69,6 +79,14 @@ async function openModelsInstalledPage(accessor: ServicesAccessor): Promise<void
 	const hostService = accessor.get(IHostService);
 	const commandService = accessor.get(ICommandService);
 	const configurationService = accessor.get(IConfigurationService);
+	const openerService = accessor.get(IOpenerService);
+	const editorService = accessor.get(IEditorService);
+	const notificationService = accessor.get(INotificationService);
+	const notebookEditorModelResolverService = accessor.get(INotebookEditorModelResolverService);
+	const notebookKernelService = accessor.get(INotebookKernelService);
+	const fileService = accessor.get(IFileService);
+	const pathService = accessor.get(IPathService);
+	const storageService = accessor.get(IStorageService);
 
 	if (openPage && !openPage.isDisposed()) {
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
@@ -91,6 +109,7 @@ async function openModelsInstalledPage(accessor: ServicesAccessor): Promise<void
 	openPage = webviewInput;
 
 	const disposables = new DisposableStore();
+	disposables.add(registerScaffoldPageHandlers(webviewInput, 'modelsInstalled', title, MODELSINSTALLED_METADATA.modelsInstalled, openerService, editorService, commandService, notificationService, notebookEditorModelResolverService, notebookKernelService, fileService, pathService, storageService));
 	disposables.add(webviewInput.webview.onDidDispose(() => {
 		openPage = undefined;
 		disposables.dispose();
@@ -179,58 +198,44 @@ function pageHtml(): string {
 		routingIntro: localize('modelsInstalled.routingIntro', "Which tasks run on which local model:"),
 		routingLink: localize('modelsInstalled.routingLink', "Compose > Orchestration > Model Tasks and Routing"),
 	};
-	return `<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
-	<style>
-		${voiceButtonsCss}
+	return buildWebviewHtml({
+		title: text.title,
+		omitPoweredBy: !MODELSINSTALLED_METADATA.modelsInstalled.packages.length,
+		introHtml: text.intro,
+		extraCss: `
 		${sortHeadingsCss}
-		* { box-sizing: border-box; }
-		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
-		.container { max-width: 1100px; margin: 0 auto; padding: 24px; }
-		h1 { font-size: 32px; font-weight: 300; margin: 0 0 4px 0; line-height: 1.2; }
-		.subtitle { font-size: 14px; color: var(--vscode-descriptionForeground); margin: 0 0 16px 0; line-height: 1.4; max-width: 900px; }
-		.hint { color: var(--vscode-descriptionForeground); margin: 16px 0 8px 0; line-height: 1.4; max-width: 900px; }
-		table { width: 100%; border-collapse: collapse; }
-		th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--vscode-descriptionForeground); text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--vscode-widget-border); }
-		td { vertical-align: top; padding: 10px 8px; border-bottom: 1px solid var(--vscode-widget-border); line-height: 1.4; }
-		tr:hover td { background: var(--vscode-list-hoverBackground); }
-		.name { font-size: 14px; font-weight: 600; }
-		.small { font-size: 12px; color: var(--vscode-descriptionForeground); }
-		.link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; }
-		.link:hover { text-decoration: underline; }
-		.right { text-align: right; white-space: nowrap; }
-		.right .link + .link { margin-left: 12px; }
-		tr.versions td { padding-top: 4px; }
-		.versions table td { border-bottom: none; padding: 3px 8px; }
-		.installed { color: var(--vscode-testing-iconPassed); }
+		.container { max-width: 1100px; }
+		.modelsPage table { width: 100%; border-collapse: collapse; }
+		.modelsPage th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--vscode-descriptionForeground); text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--vscode-widget-border); }
+		.modelsPage td { vertical-align: top; padding: 10px 8px; border-bottom: 1px solid var(--vscode-widget-border); line-height: 1.4; }
+		.modelsPage tr:hover td { background: var(--vscode-list-hoverBackground); }
+		.modelsPage .hint { color: var(--vscode-descriptionForeground); margin: 16px 0 8px 0; line-height: 1.4; max-width: 900px; }
+		.modelsPage .name { font-size: 14px; font-weight: 600; }
+		.modelsPage .small { font-size: 12px; color: var(--vscode-descriptionForeground); }
+		.modelsPage .link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; }
+		.modelsPage .link:hover { text-decoration: underline; }
+		.modelsPage .right { text-align: right; white-space: nowrap; }
+		.modelsPage .right .link + .link { margin-left: 12px; }
+		.modelsPage tr.versions td { padding-top: 4px; }
+		.modelsPage .versions table td { border-bottom: none; padding: 3px 8px; }
+		.modelsPage .installed { color: var(--vscode-testing-iconPassed); }
 		/* llama.cpp, in the yellow of the menu paths */
 		.yellow { color: #e8a33d; }
 		body.vscode-light .yellow { color: #a8650d; }
-		table.local td:first-child { box-shadow: inset 3px 0 0 var(--vscode-textLink-foreground); padding-left: 12px; }
-		table.local tr:not(:hover) td { background: color-mix(in srgb, var(--vscode-textLink-foreground) 5%, transparent); }
-	</style>
-</head>
-<body>
-<div class="container">
-	<div class="title-row">
-		<h1>${text.title}</h1>
-		${voiceButtonsHtml}
-	</div>
-	<p class="subtitle">${text.intro}</p>
-	<table class="local">
-		<thead><tr id="headers"></tr></thead>
-		<tbody id="models"></tbody>
-	</table>
-	<p class="hint" id="none"></p>
-	<p class="hint">${text.routingIntro} <button class="link" id="routing">${text.routingLink}</button></p>
-</div>
-<script>
-	const vscode = acquireVsCodeApi();
-	${voiceButtonsScript}
+		.modelsPage table.local td:first-child { box-shadow: inset 3px 0 0 var(--vscode-textLink-foreground); padding-left: 12px; }
+		.modelsPage table.local tr:not(:hover) td { background: color-mix(in srgb, var(--vscode-textLink-foreground) 5%, transparent); }
+`,
+		bodyHtml: `
+		<div class="modelsPage">
+			<table class="local">
+				<thead><tr id="headers"></tr></thead>
+				<tbody id="models"></tbody>
+			</table>
+			<p class="hint" id="none"></p>
+			<p class="hint">${text.routingIntro} <button class="link" id="routing">${text.routingLink}</button></p>
+		</div>
+`,
+		pageScriptJs: `
 	${sortHeadingsScript()}
 	const TEXT = ${JSON.stringify(text)};
 	const models = document.getElementById('models');
@@ -396,9 +401,8 @@ function pageHtml(): string {
 		}
 	});
 	vscode.postMessage({ command: 'ready' });
-</script>
-</body>
-</html>`;
+`,
+	});
 }
 
 registerAction2(class extends Action2 {

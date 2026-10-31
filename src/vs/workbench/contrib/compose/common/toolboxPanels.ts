@@ -32,7 +32,7 @@ export interface IToolboxPanelInfo {
 	readonly keys: readonly string[];
 }
 
-/** A document of an installed toolbox, for Help > Documentation > Toolboxes: LaTeX sources Pollis compiles. */
+/** A vignette of an installed toolbox, for Help > Documentation > Toolbox Vignettes: LaTeX sources Pollis compiles. */
 export interface IToolboxDocumentInfo {
 	readonly title: string;
 	/** What it covers, in a sentence or two. */

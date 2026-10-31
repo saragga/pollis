@@ -17,8 +17,16 @@ import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWork
 import { ICitationCount, ReferenceLibrary, referenceVenue } from '../../model/browser/common/referenceLibrary.js';
 import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
 import { FEWEST_ROWS, rowsChoiceCss, rowsChoiceScript, sortHeadingsCss, sortHeadingsScript, sortHint, stickyHeadCss, stickyHeadScript, storedRows, storeRows } from '../../model/browser/webviews/webviewPager.js';
+import { IOpenerService } from '../../../../platform/opener/common/opener.js';
+import { IEditorService } from '../../../services/editor/common/editorService.js';
+import { INotificationService } from '../../../../platform/notification/common/notification.js';
+import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
+import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
+import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
+import { BROWSEREFERENCES_METADATA } from '../../model/browser/webviews/browseReferences.data.js';
+import { buildWebviewHtml } from '../../model/browser/webviews/webviewScaffold.js';
 
-// Compose > Browse References: every work in PollisReferences (all_references), those of Pollis, those the user saved
+// Compose > Browse References, in the Minimal style of the scaffold: every work in PollisReferences (all_references), those of Pollis, those the user saved
 // from Discover Literature or added to a panel, and the user's corrections, with their versions, latest citation counts and
 // the panels whose References show them. Here the user removes a work of their own, undoes a correction, or shows a work
 // in a panel's References; Discover Literature only finds and saves.
@@ -83,6 +91,13 @@ async function openBrowseReferences(accessor: ServicesAccessor, keys: readonly s
 	const commandService = accessor.get(ICommandService);
 	const quickInputService = accessor.get(IQuickInputService);
 	const storageService = accessor.get(IStorageService);
+	const openerService = accessor.get(IOpenerService);
+	const editorService = accessor.get(IEditorService);
+	const notificationService = accessor.get(INotificationService);
+	const notebookEditorModelResolverService = accessor.get(INotebookEditorModelResolverService);
+	const notebookKernelService = accessor.get(INotebookKernelService);
+	const fileService = accessor.get(IFileService);
+	const pathService = accessor.get(IPathService);
 	const library = new ReferenceLibrary(accessor.get(IFileService), accessor.get(IPathService).userHome({ preferLocal: true }));
 
 	if (openPage && !openPage.isDisposed()) {
@@ -109,6 +124,7 @@ async function openBrowseReferences(accessor: ServicesAccessor, keys: readonly s
 	openPage = webviewInput;
 
 	const disposables = new DisposableStore();
+	disposables.add(registerScaffoldPageHandlers(webviewInput, 'browseReferences', title, BROWSEREFERENCES_METADATA.browseReferences, openerService, editorService, commandService, notificationService, notebookEditorModelResolverService, notebookKernelService, fileService, pathService, storageService));
 	disposables.add(webviewInput.webview.onDidDispose(() => {
 		openPage = undefined;
 		focusKeys = undefined;
@@ -290,70 +306,61 @@ function pageHtml(rows: number): string {
 		next: localize('browseReferences.next', "Next"),
 		page: localize('browseReferences.page', "Page {0} of {1}"),
 	};
-	return `<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
-	<style>
-		${rowsChoiceCss}
+	return buildWebviewHtml({
+		title: text.title,
+		omitPoweredBy: !BROWSEREFERENCES_METADATA.browseReferences.packages.length,
+		introHtml: text.intro,
+		extraCss: `
+${rowsChoiceCss}
 		${stickyHeadCss}
 		${sortHeadingsCss}
-		* { box-sizing: border-box; }
-		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
-		.container { max-width: 1200px; margin: 0 auto; padding: 24px; }
-		h1 { font-size: 32px; font-weight: 300; margin: 0 0 4px 0; line-height: 1.2; }
-		.subtitle { font-size: 14px; color: var(--vscode-descriptionForeground); margin: 0 0 24px 0; line-height: 1.4; max-width: 900px; }
-		[hidden] { display: none !important; }
-		.toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
-		.toolbar .countNote { flex: 1; text-align: right; font-size: 12px; color: var(--vscode-descriptionForeground); }
-		input[type="text"], select { font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; padding: 4px 6px; }
-		input:focus, select:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
-		input#search { width: 360px; max-width: 100%; }
-		button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; padding: 4px 12px; cursor: pointer; font-size: 11px; opacity: 0.7; }
+		.container { max-width: 1200px; }
+		.browseReferencesPage [hidden] { display: none !important; }
+		.browseReferencesPage .toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+		.browseReferencesPage .toolbar .countNote { flex: 1; text-align: right; font-size: 12px; color: var(--vscode-descriptionForeground); }
+		.browseReferencesPage input[type="text"], .browseReferencesPage select { font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; padding: 4px 6px; }
+		.browseReferencesPage input:focus, .browseReferencesPage select:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
+		.browseReferencesPage input#search { width: 360px; max-width: 100%; }
+		.browseReferencesPage button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; padding: 4px 12px; cursor: pointer; font-size: 11px; opacity: 0.7; }
 		/* As the code buttons below a panel's Example Code: dimmed until pointed at, the blue one not */
-		button.action:not(:disabled):hover, button.action.current, button.action.primary { opacity: 1; }
-		button.action:hover { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		.browseReferencesPage button.action:not(:disabled):hover, .browseReferencesPage button.action.current, .browseReferencesPage button.action.primary { opacity: 1; }
+		.browseReferencesPage button.action:hover { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
 		/* As tall as the search field and the select beside them */
-		.toolbar > button.action { align-self: stretch; }
+		.browseReferencesPage .toolbar > button.action { align-self: stretch; }
 		/* One action blue: the first at first, then the last enabled one the pointer was on */
-		.toolbar > button.action.current { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
-		button:disabled, button:disabled:hover { opacity: 0.5; cursor: default; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); }
-		.link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; text-align: left; }
-		.link:hover { text-decoration: underline; }
-		table { width: 100%; border-collapse: collapse; font-size: 12px; }
-		th { text-align: left; font-weight: normal; color: var(--vscode-descriptionForeground); padding: 4px 8px; border-bottom: 1px solid var(--vscode-widget-border); white-space: nowrap; }
-		td { padding: 6px 8px; border-bottom: 1px solid var(--vscode-widget-border); vertical-align: top; }
-		td.actions { white-space: nowrap; }
-		td.key { font-family: var(--vscode-editor-font-family); white-space: nowrap; }
-		tr.focused td { background: var(--vscode-editor-findMatchHighlightBackground); }
-		.authors, .detail { color: var(--vscode-descriptionForeground); margin-top: 2px; }
-		.ask { color: var(--vscode-descriptionForeground); }
+		.browseReferencesPage .toolbar > button.action.current { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		.browseReferencesPage button:disabled, .browseReferencesPage button:disabled:hover { opacity: 0.5; cursor: default; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); }
+		.browseReferencesPage .link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; text-align: left; }
+		.browseReferencesPage .link:hover { text-decoration: underline; }
+		.browseReferencesPage table { width: 100%; border-collapse: collapse; font-size: 12px; }
+		.browseReferencesPage th { text-align: left; font-weight: normal; color: var(--vscode-descriptionForeground); padding: 4px 8px; border-bottom: 1px solid var(--vscode-widget-border); white-space: nowrap; }
+		.browseReferencesPage td { padding: 6px 8px; border-bottom: 1px solid var(--vscode-widget-border); vertical-align: top; }
+		.browseReferencesPage td.actions { white-space: nowrap; }
+		.browseReferencesPage td.key { font-family: var(--vscode-editor-font-family); white-space: nowrap; }
+		.browseReferencesPage tr.focused td { background: var(--vscode-editor-findMatchHighlightBackground); }
+		.browseReferencesPage .authors, .browseReferencesPage .detail { color: var(--vscode-descriptionForeground); margin-top: 2px; }
+		.browseReferencesPage .ask { color: var(--vscode-descriptionForeground); }
 		/* The pair as one work, before the merge is confirmed */
-		tr.preview td { background: var(--vscode-diffEditor-insertedLineBackground, var(--vscode-editor-findMatchHighlightBackground)); }
-		table { table-layout: fixed; }
+		.browseReferencesPage tr.preview td { background: var(--vscode-diffEditor-insertedLineBackground, var(--vscode-editor-findMatchHighlightBackground)); }
+		.browseReferencesPage table { table-layout: fixed; }
 		/* The space between two pairs of possible duplicates */
-		tr.pairGap td { height: 16px; padding: 0; border-bottom: 1px solid var(--vscode-widget-border); }
-		.duplicatesClose { padding: 12px 8px; font-size: 12px; text-align: right; }
-		col.year { width: 48px; }
-		col.key { width: 96px; }
-		col.counts { width: 150px; }
-		col.origin { width: 110px; }
-		col.panels { width: 16%; }
-		col.actions { width: 120px; }
-		td.counts div { white-space: nowrap; }
-		td.panels { overflow-wrap: anywhere; }
-		.pager { display: flex; justify-content: center; align-items: center; gap: 16px; padding: 12px 8px; font-size: 12px; color: var(--vscode-descriptionForeground); }
-		.pager .link { font-size: 12px; }
-		.pager .link:disabled { color: var(--vscode-disabledForeground); cursor: default; text-decoration: none; }
-		.empty { color: var(--vscode-descriptionForeground); padding: 12px 8px; }
-	</style>
-</head>
-<body>
-<div class="container">
-	<h1>${text.title}</h1>
-	<p class="subtitle">${text.intro}</p>
+		.browseReferencesPage tr.pairGap td { height: 16px; padding: 0; border-bottom: 1px solid var(--vscode-widget-border); }
+		.browseReferencesPage .duplicatesClose { padding: 12px 8px; font-size: 12px; text-align: right; }
+		.browseReferencesPage col.year { width: 48px; }
+		.browseReferencesPage col.key { width: 96px; }
+		.browseReferencesPage col.counts { width: 150px; }
+		.browseReferencesPage col.origin { width: 110px; }
+		.browseReferencesPage col.panels { width: 16%; }
+		.browseReferencesPage col.actions { width: 120px; }
+		.browseReferencesPage td.counts div { white-space: nowrap; }
+		.browseReferencesPage td.panels { overflow-wrap: anywhere; }
+		.browseReferencesPage .pager { display: flex; justify-content: center; align-items: center; gap: 16px; padding: 12px 8px; font-size: 12px; color: var(--vscode-descriptionForeground); }
+		.browseReferencesPage .pager .link { font-size: 12px; }
+		.browseReferencesPage .pager .link:disabled { color: var(--vscode-disabledForeground); cursor: default; text-decoration: none; }
+		.browseReferencesPage .empty { color: var(--vscode-descriptionForeground); padding: 12px 8px; }
+`,
+		bodyHtml: `
+		<div class="browseReferencesPage">
 	<div class="toolbar stickyBand" id="toolbar">
 		<input type="text" id="search" placeholder="${text.searchHint}" aria-label="${text.search}" spellcheck="false" autocomplete="off">
 		<select id="origin" aria-label="${text.show}">
@@ -375,9 +382,9 @@ function pageHtml(rows: number): string {
 	<div class="empty" id="none" hidden>${text.none}</div>
 	<div class="duplicatesClose" id="duplicatesClose" hidden><button class="link" id="closeDuplicates" title="${text.closeHint}">${text.close}</button></div>
 	<div class="pager" id="pager" hidden></div>
-</div>
-<script>
-	const vscode = acquireVsCodeApi();
+		</div>
+`,
+		pageScriptJs: `
 	const TEXT = ${JSON.stringify(text)};
 	// The rows of a page, as the user chose them: 0 for all
 	let rows = ${rows};
@@ -863,9 +870,8 @@ function pageHtml(rows: number): string {
 		}
 	});
 	vscode.postMessage({ command: 'ready' });
-</script>
-</body>
-</html>`;
+`,
+	});
 }
 
 registerAction2(class extends Action2 {

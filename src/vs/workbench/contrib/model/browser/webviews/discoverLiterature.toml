@@ -1,0 +1,67 @@
+# Discover Literature Webview Configuration
+# A page in the Minimal style of the scaffold, not a panel: Learn More only, as no Julia package powers it. `pageCommand`
+# is the command that opens it, which a panel's contribution file would say. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/discoverLiterature.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Discover Literature"
+viewType = "pollis.literatureRadar"
+pageCommand = "pollis.compose.literatureRadar"
+
+[[wikis]]
+name = "Factsheet"
+file = "discoverLiterature/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "discoverLiterature/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Citation Measures"
+file = "discoverLiterature/citation-measures.md"
+bundled = true
+
+[[wikis]]
+name = "Searching and Keys"
+file = "discoverLiterature/search-and-keys.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "Gar1955a"
+
+[[references]]
+key = "Gar1972a"
+
+[[references]]
+key = "HWWRR2015a"
+
+[[references]]
+key = "MTOD2021a"
+
+[[references]]
+key = "Mer1968a"
+
+[[references]]
+key = "PPLAM...2018a"
+
+[[references]]
+key = "PPO2022a"
+
+[[references]]
+key = "Seg1997a"
+
+[[references]]
+key = "VHE2015a"
+
+[[references]]
+key = "VVW2021a"
+
+[[references]]
+key = "WVVVV...2011a"

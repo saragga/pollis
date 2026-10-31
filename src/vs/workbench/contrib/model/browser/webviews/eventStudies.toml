@@ -1,0 +1,151 @@
+# Event Studies Webview Configuration
+# A page in the Minimal style of the scaffold, not a panel: Learn More and Powered by. `pageCommand`
+# is the command that opens it, which a panel's contribution file would say. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/eventStudies.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Event Studies"
+viewType = "pollis.eventStudies"
+pageCommand = "pollis.eventStudies.show"
+
+[[packages]]
+name = "PollisEventStudies.jl"
+github = "https://github.com/Trumpingtons/PollisEventStudies.jl"
+
+[[packages]]
+name = "MixedModels.jl"
+github = "https://github.com/JuliaStats/MixedModels.jl"
+
+[[wikis]]
+name = "Factsheet"
+file = "eventStudies/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "eventStudies/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Market Event Studies"
+file = "eventStudies/market-event-studies.md"
+bundled = true
+
+[[wikis]]
+name = "Panel Event Studies"
+file = "eventStudies/panel-event-studies.md"
+bundled = true
+
+[[wikis]]
+name = "Stepped Wedge"
+file = "eventStudies/stepped-wedge.md"
+bundled = true
+
+[[wikis]]
+name = "FOMC Releases"
+file = "eventStudies/fomc-releases.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "BB1968a"
+
+[[references]]
+key = "BG2002a"
+
+[[references]]
+key = "BJS2024a"
+
+[[references]]
+key = "BK2005a"
+
+[[references]]
+key = "BMP1991a"
+
+[[references]]
+key = "BS2023a"
+
+[[references]]
+key = "BW1985a"
+
+[[references]]
+key = "CD2020a"
+
+[[references]]
+key = "CGM2008a"
+
+[[references]]
+key = "CH1989a"
+
+[[references]]
+key = "CS2021a"
+
+[[references]]
+key = "Cow1992a"
+
+[[references]]
+key = "FFJR1969a"
+
+[[references]]
+key = "GSS2005a"
+
+[[references]]
+key = "Goo2021a"
+
+[[references]]
+key = "HH2007a"
+
+[[references]]
+key = "HHCGL2015a"
+
+[[references]]
+key = "JK2020a"
+
+[[references]]
+key = "KP2010a"
+
+[[references]]
+key = "KP2011a"
+
+[[references]]
+key = "KVXHH...2022a"
+
+[[references]]
+key = "KW2007a"
+
+[[references]]
+key = "Kut2001a"
+
+[[references]]
+key = "LM2015a"
+
+[[references]]
+key = "Mac1997a"
+
+[[references]]
+key = "NS2018a"
+
+[[references]]
+key = "Pat1976a"
+
+[[references]]
+key = "RR2023a"
+
+[[references]]
+key = "RSBP2023a"
+
+[[references]]
+key = "RSZ2017a"
+
+[[references]]
+key = "Rot2022a"
+
+[[references]]
+key = "SA2021a"
+
+[[references]]
+key = "Swa2021a"

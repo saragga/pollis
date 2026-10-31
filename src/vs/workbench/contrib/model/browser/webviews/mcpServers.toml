@@ -1,0 +1,59 @@
+# MCP Servers Webview Configuration
+# A page in the Minimal style of the scaffold, not a panel: Learn More only, as no Julia package powers it. `pageCommand`
+# is the command that opens it, which a panel's contribution file would say. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/mcpServers.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "MCP Servers"
+viewType = "pollis.mcpServers"
+pageCommand = "pollis.mcpServers"
+
+[[wikis]]
+name = "Factsheet"
+file = "mcpServers/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "mcpServers/overview.md"
+bundled = true
+
+[[wikis]]
+name = "The Servers Listed"
+file = "mcpServers/servers.md"
+bundled = true
+
+[[wikis]]
+name = "Sign-In and Tokens"
+file = "mcpServers/sign-in.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Standards"
+
+[[references]]
+key = "Har2012a"
+
+[[references]]
+key = "SBA2015a"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "GAMEH...2023a"
+
+[[references]]
+key = "HLFRA...2025a"
+
+[[references]]
+key = "HZWW2025a"
+
+[[references]]
+key = "SSLGC...2025a"
+
+[[references]]
+key = "WGWLS...2025a"

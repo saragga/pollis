@@ -17,8 +17,8 @@
 		"sst-dev.opencode",
 		"chuckjonas.duckdb",
 		"james-yu.latex-workshop",
-		"ltex-plus.vscode-ltex-plus",
-		"aviatesk.jetls-client"
+		"aviatesk.jetls-client",
+		"jolars.fatou"
 	],
 	"applicationName": "pollis",
 	"dataFolderName": ".pollis",

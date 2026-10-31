@@ -1,0 +1,117 @@
+# New Method Webview Configuration
+# A page of Compose in the Time Arrow style of the scaffold, not a panel: only its Powered by and Learn More. `pageCommand` is the command
+# that opens it, which a panel's contribution file would say. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/newMethod.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "New Method"
+viewType = "pollis.newMethod"
+pageCommand = "pollis.newMethods.create"
+
+[[packages]]
+name = "CSV.jl"
+github = "https://github.com/JuliaData/CSV.jl"
+
+[[packages]]
+name = "Tables.jl"
+github = "https://github.com/JuliaData/Tables.jl"
+
+[[packages]]
+name = "LocalRegistry.jl"
+github = "https://github.com/GunnarFarneback/LocalRegistry.jl"
+
+[[packages]]
+name = "PollisTeX.jl"
+github = "https://github.com/Trumpingtons/PollisTeX.jl"
+
+[[wikis]]
+name = "Factsheet"
+file = "newMethod/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "newMethod/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "newMethod/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "newMethod/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "newMethod/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "newMethod/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Reproducibility and Replication"
+
+[[references]]
+key = "NASEM2019a"
+
+[[references]]
+key = "GFI2016a"
+
+[[references]]
+key = "Pen2011a"
+
+[[references]]
+key = "BD1995a"
+
+[[references]]
+separator = true
+label = "Good Practice"
+
+[[references]]
+key = "SNTH2013a"
+
+[[references]]
+key = "WBCKN...2017a"
+
+[[references]]
+key = "SSM2018a"
+
+[[references]]
+separator = true
+label = "Replication in Economics"
+
+[[references]]
+key = "DTA1986a"
+
+[[references]]
+key = "MMH2006a"
+
+[[references]]
+key = "HAP2014a"
+
+[[references]]
+key = "Vil2020a"
+
+[[references]]
+key = "CL2022a"
+
+[[references]]
+separator = true
+label = "Numerical Reliability"
+
+[[references]]
+key = "Lon1967a"
+
+[[references]]
+key = "MV1999a"
+
+[[references]]
+key = "MV2003a"

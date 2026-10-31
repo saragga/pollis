@@ -1,0 +1,45 @@
+# Methods Webview Configuration
+# A page in the Minimal style of the scaffold, not a panel: Learn More only, as no Julia package powers it. `pageCommand`
+# is the command that opens it, which a panel's contribution file would say. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/browseMethods.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Methods"
+viewType = "pollis.workflowLibrary"
+pageCommand = "pollis.compose.createMethod"
+
+[[wikis]]
+name = "Factsheet"
+file = "browseMethods/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "browseMethods/overview.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "BD1995a"
+
+[[references]]
+key = "Don2010a"
+
+[[references]]
+key = "GT2007a"
+
+[[references]]
+key = "Pen2011a"
+
+[[references]]
+key = "SNTH2013a"
+
+[[references]]
+key = "SSM2018a"
+
+[[references]]
+key = "WABCD...2014a"

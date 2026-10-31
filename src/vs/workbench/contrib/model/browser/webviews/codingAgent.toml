@@ -1,0 +1,64 @@
+# Coding Agents Webview Configuration
+# A page in the Minimal style of the scaffold, not a panel: Learn More only, as no Julia package powers it. `pageCommand`
+# is the command that opens it, which a panel's contribution file would say. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/codingAgent.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Coding Agents"
+viewType = "pollis.codingAgent"
+pageCommand = "pollis.agents.chooseAgent"
+
+[[wikis]]
+name = "Factsheet"
+file = "codingAgent/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "codingAgent/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Other Agents"
+file = "codingAgent/other-agents.md"
+bundled = true
+
+[[wikis]]
+name = "Pollis Skills"
+file = "codingAgent/pollis-skills.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "BRBR2025a"
+
+[[references]]
+key = "GAMEH...2023a"
+
+[[references]]
+key = "GMMRV2026a"
+
+[[references]]
+key = "JYWYP...2023a"
+
+[[references]]
+key = "LMGZB...2026a"
+
+[[references]]
+key = "PKCD2023a"
+
+[[references]]
+key = "PSKB2023a"
+
+[[references]]
+key = "SDDRL...2023a"
+
+[[references]]
+key = "YJWLY...2024a"
+
+[[references]]
+key = "YZYDS...2023a"

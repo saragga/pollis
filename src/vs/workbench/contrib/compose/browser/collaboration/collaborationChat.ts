@@ -123,8 +123,6 @@ export function chatPageHtml(language: string, writeIn: string): string {
 		placeholder: localize('collaborationChat.placeholder', "Write a message; paste an image, or drag in an image or a file. Enter sends, Shift+Enter starts a new line."),
 		send: localize('collaborationChat.send', "Send"),
 		add: localize('collaborationChat.add', "Add an Image, a File, a Dataset or a Database"),
-		dictate: localize('collaborationChat.dictate', "Dictate the Message (not available yet)"),
-		voiceMode: localize('collaborationChat.voiceMode', "Voice Mode: speak with the others and hear them, all written down too (not available yet)"),
 		addImage: localize('collaborationChat.addImage', "Image"),
 		addFile: localize('collaborationChat.addFile', "File"),
 		addDataset: localize('collaborationChat.addDataset', "Dataset"),
@@ -187,7 +185,8 @@ export function chatPageHtml(language: string, writeIn: string): string {
 		#attachment img { max-height: 64px; border: 1px solid var(--vscode-widget-border); border-radius: 6px; }
 		.composer .top { display: flex; align-items: flex-start; gap: 6px; }
 		textarea { display: block; flex: 1; min-width: 0; width: 100%; resize: none; min-height: 24px; max-height: 160px; font: inherit; padding: 2px 2px; color: inherit; background: transparent; border: none; outline: none; }
-		.tools { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
+		.tools { display: flex; align-items: center; gap: 2px; margin-top: 4px; }
+		.tools .add { margin-right: auto; }
 		button.icon { display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; padding: 0; border-radius: 50%; color: var(--vscode-foreground); background: transparent; }
 		button.icon:hover { background: var(--vscode-toolbar-hoverBackground); }
 		button.icon svg { width: 18px; height: 18px; }
@@ -232,10 +231,10 @@ export function chatPageHtml(language: string, writeIn: string): string {
 			<div id="attachment"><img id="attachmentImage" alt=""><button class="link" id="removeImage">${text.removeImage}</button></div>
 			<div class="top">
 				<textarea id="input" rows="1" placeholder="${text.placeholder}"></textarea>
-				${composerVoiceHtml({ dictate: text.dictate, voiceMode: text.voiceMode }, language, writeIn)}
 			</div>
 			<div class="tools">
 				${composerAddHtml({ add: text.add, image: text.addImage, file: text.addFile, dataset: text.addDataset, database: text.addDatabase })}
+				${composerVoiceHtml(language, writeIn)}
 				<button class="icon primary idle" id="send" title="${text.send}" aria-label="${text.send}">${composerSendSvg}</button>
 			</div>
 		</div>

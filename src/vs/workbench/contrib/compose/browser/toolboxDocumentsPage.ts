@@ -22,7 +22,7 @@ import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_STYLE } from './libraryPage.js';
 import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
 import { IToolboxDocumentInfo, IToolboxInfo, IToolboxPanelsService } from '../common/toolboxPanels.js';
 
-// Help > Documentation > Toolboxes: the documentation the installed toolboxes bring, listed in the `documents` of their
+// Help > Documentation > Toolbox Vignettes: the vignettes the installed toolboxes bring, listed in the `documents` of their
 // pollisToolboxes contribution (toolboxExtensions.ts). A toolbox ships a document's LaTeX sources, not a PDF: Pollis
 // compiles the document with PollisTeX the first time it is opened, as it does a package vignette (the Julia
 // extension's command language-julia.pollisCompileVignette, scripts/terminalserver/compile_vignette.jl), into
@@ -60,7 +60,7 @@ export function toolboxDocumentPdf(userHome: URI, toolbox: IToolboxInfo, documen
 /** The open page, so a second request shows it again. */
 let openPage: WebviewInput | undefined;
 
-/** Opens the Toolbox Documentation page, or shows it again when it is open. */
+/** Opens the Toolbox Vignettes page, or shows it again when it is open. */
 async function openToolboxDocumentsPage(accessor: ServicesAccessor): Promise<void> {
 	const webviewWorkbenchService = accessor.get(IWebviewWorkbenchService);
 	const toolboxPanelsService = accessor.get(IToolboxPanelsService);
@@ -74,7 +74,7 @@ async function openToolboxDocumentsPage(accessor: ServicesAccessor): Promise<voi
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
 		return;
 	}
-	const title = localize('toolboxDocuments.title', "Toolbox Documentation");
+	const title = localize('toolboxDocuments.title', "Toolbox Vignettes");
 	const webviewInput = webviewWorkbenchService.openWebview(
 		{
 			title,
@@ -157,12 +157,12 @@ async function openToolboxDocumentsPage(accessor: ServicesAccessor): Promise<voi
 /** The page: its texts come from here, the documents from the `documents` message. */
 function pageHtml(): string {
 	const text = {
-		title: localize('toolboxDocuments.title', "Toolbox Documentation"),
-		intro: localize('toolboxDocuments.intro', "The documentation of the toolboxes installed in Pollis. Pollis compiles a document from its LaTeX sources, with PollisTeX, the first time it is opened. Click a title to read it."),
-		search: localize('toolboxDocuments.search', "Search documents"),
-		empty: localize('toolboxDocuments.empty', "No installed toolbox brings documentation yet."),
-		noMatch: localize('toolboxDocuments.noMatch', "No document matches."),
-		document: localize('toolboxDocuments.document', "Document"),
+		title: localize('toolboxDocuments.title', "Toolbox Vignettes"),
+		intro: localize('toolboxDocuments.intro', "A toolbox vignette is a brief overview of what a toolbox contributes: what each of its menu items and panels is for and when to use it, with the panel's wikis for the details. Pollis compiles a vignette from its LaTeX sources, with PollisTeX, the first time it is opened. Click a title to read it."),
+		search: localize('toolboxDocuments.search', "Search vignettes"),
+		empty: localize('toolboxDocuments.empty', "No installed toolbox brings a vignette yet."),
+		noMatch: localize('toolboxDocuments.noMatch', "No vignette matches."),
+		document: localize('toolboxDocuments.document', "Vignette"),
 		toolbox: localize('toolboxDocuments.toolbox', "Toolbox"),
 	};
 	return `<!DOCTYPE html>
@@ -255,8 +255,8 @@ registerAction2(class extends Action2 {
 		super({
 			id: TOOLBOX_DOCUMENTS_COMMAND_ID,
 			title: {
-				...localize2('toolboxDocuments.action', "Toolbox Documentation"),
-				mnemonicTitle: localize({ key: 'miToolboxDocuments', comment: ['&& denotes a mnemonic'] }, "&&Toolboxes"),
+				...localize2('toolboxDocuments.action', "Toolbox Vignettes"),
+				mnemonicTitle: localize({ key: 'miToolboxDocuments', comment: ['&& denotes a mnemonic'] }, "&&Toolbox Vignettes"),
 			},
 			category: Categories.Help,
 			f1: true,

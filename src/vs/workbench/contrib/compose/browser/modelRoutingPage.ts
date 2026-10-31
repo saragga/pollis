@@ -20,9 +20,18 @@ import { AGENT_TASK_TIERS_SETTING, AGENT_TASKS, AGENT_TIERS, agentTiers, cellAva
 import { CHOOSE_AGENT_COMMAND_ID, codingAgents, commandWords, findProgram, ICodingAgent, OTHER_AGENTS_SETTING, otherAgentEntries, terminalEnvironment } from './pollisAgents.js';
 import { IInstalledModel, MODELS_INSTALLED_COMMAND_ID } from './modelsInstalledPage.js';
 import { REPORTS_AGENT_COMMAND_SETTING } from './reports.js';
-import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
+import { IOpenerService } from '../../../../platform/opener/common/opener.js';
+import { IEditorService } from '../../../services/editor/common/editorService.js';
+import { INotificationService } from '../../../../platform/notification/common/notification.js';
+import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
+import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
+import { IPathService } from '../../../services/path/common/pathService.js';
+import { IStorageService } from '../../../../platform/storage/common/storage.js';
+import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
+import { MODELROUTING_METADATA } from '../../model/browser/webviews/modelRouting.data.js';
+import { buildWebviewHtml } from '../../model/browser/webviews/webviewScaffold.js';
 
-// Compose > Orchestration > Model Tasks and Routing: a table whose columns are the coding agents, those Pollis
+// Compose > Orchestration > Model Tasks and Routing, in the Minimal style of the scaffold: a table whose columns are the coding agents, those Pollis
 // knows and those of Compose > Coding Agents named by the user, and whose rows are the models: the cloud models
 // of CLOUD_MODELS_SETTING and the chat models on this computer. A cell holds the name of
 // a tier, Light, Standard, Strong or one the user types, such as Max, which makes a new tier; a tier is in one
@@ -62,6 +71,13 @@ async function openModelRoutingPage(accessor: ServicesAccessor): Promise<void> {
 	const terminalInstanceService = accessor.get(ITerminalInstanceService);
 	const commandService = accessor.get(ICommandService);
 	const hostService = accessor.get(IHostService);
+	const openerService = accessor.get(IOpenerService);
+	const editorService = accessor.get(IEditorService);
+	const notificationService = accessor.get(INotificationService);
+	const notebookEditorModelResolverService = accessor.get(INotebookEditorModelResolverService);
+	const notebookKernelService = accessor.get(INotebookKernelService);
+	const pathService = accessor.get(IPathService);
+	const storageService = accessor.get(IStorageService);
 
 	if (openPage && !openPage.isDisposed()) {
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
@@ -84,6 +100,7 @@ async function openModelRoutingPage(accessor: ServicesAccessor): Promise<void> {
 	openPage = webviewInput;
 
 	const disposables = new DisposableStore();
+	disposables.add(registerScaffoldPageHandlers(webviewInput, 'modelRouting', title, MODELROUTING_METADATA.modelRouting, openerService, editorService, commandService, notificationService, notebookEditorModelResolverService, notebookKernelService, fileService, pathService, storageService));
 	disposables.add(webviewInput.webview.onDidDispose(() => {
 		openPage = undefined;
 		disposables.dispose();
@@ -219,69 +236,56 @@ function pageHtml(): string {
 		defaultTier: localize('modelRouting.defaultTier', "{0} (Default)"),
 		notPlaced: localize('modelRouting.notPlaced', "In no cell of the table: the task cannot run"),
 	};
-	return `<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
-	<style>
-		${voiceButtonsCss}
-		* { box-sizing: border-box; }
-		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
-		.container { max-width: 1100px; margin: 0 auto; padding: 24px; }
-		h1 { font-size: 32px; font-weight: 300; margin: 0 0 4px 0; line-height: 1.2; }
-		h2 { font-size: 16px; font-weight: 600; margin: 28px 0 4px 0; }
-		.subtitle { font-size: 14px; color: var(--vscode-descriptionForeground); margin: 0 0 16px 0; line-height: 1.4; max-width: 900px; }
-		.hint { color: var(--vscode-descriptionForeground); margin: 8px 0 0 0; line-height: 1.4; max-width: 900px; }
-		code { font-family: var(--vscode-editor-font-family); font-size: 12px; background: var(--vscode-textPreformat-background); border-radius: 3px; padding: 0 3px; }
+	return buildWebviewHtml({
+		title: text.title,
+		omitPoweredBy: !MODELROUTING_METADATA.modelRouting.packages.length,
+		introHtml: text.intro,
+		extraCss: `
+		.container { max-width: 1100px; }
+		.modelRoutingPage h2 { font-size: 16px; font-weight: 600; margin: 28px 0 4px 0; }
+		.modelRoutingPage .hint { color: var(--vscode-descriptionForeground); margin: 8px 0 0 0; line-height: 1.4; max-width: 900px; }
+		.modelRoutingPage code { font-family: var(--vscode-editor-font-family); font-size: 12px; background: var(--vscode-textPreformat-background); border-radius: 3px; padding: 0 3px; }
 		/* The skills and llama.cpp, in the yellow of the menu paths */
-		code, .yellow { color: #e8a33d; }
-		body.vscode-light code, body.vscode-light .yellow { color: #a8650d; }
-		table { width: 100%; border-collapse: collapse; }
-		th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--vscode-descriptionForeground); text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--vscode-widget-border); vertical-align: bottom; }
-		td { vertical-align: middle; padding: 6px 8px; border-bottom: 1px solid var(--vscode-widget-border); line-height: 1.4; }
-		tr:hover td { background: var(--vscode-list-hoverBackground); }
-		.name { font-size: 14px; font-weight: 600; }
-		.small { font-size: 12px; color: var(--vscode-descriptionForeground); }
-		th .small { text-transform: none; letter-spacing: 0; font-weight: 400; }
-		.installed { color: var(--vscode-testing-iconPassed); }
-		.warning { color: var(--vscode-editorWarning-foreground); }
-		.link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; }
-		.link:hover { text-decoration: underline; }
+		.modelRoutingPage code, .modelRoutingPage .yellow { color: #e8a33d; }
+		body.vscode-light .modelRoutingPage code, body.vscode-light .modelRoutingPage .yellow { color: #a8650d; }
+		.modelRoutingPage table { width: 100%; border-collapse: collapse; }
+		.modelRoutingPage th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--vscode-descriptionForeground); text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--vscode-widget-border); vertical-align: bottom; }
+		.modelRoutingPage td { vertical-align: middle; padding: 6px 8px; border-bottom: 1px solid var(--vscode-widget-border); line-height: 1.4; }
+		.modelRoutingPage tr:hover td { background: var(--vscode-list-hoverBackground); }
+		.modelRoutingPage .name { font-size: 14px; font-weight: 600; }
+		.modelRoutingPage .small { font-size: 12px; color: var(--vscode-descriptionForeground); }
+		.modelRoutingPage th .small { text-transform: none; letter-spacing: 0; font-weight: 400; }
+		.modelRoutingPage .installed { color: var(--vscode-testing-iconPassed); }
+		.modelRoutingPage .warning { color: var(--vscode-editorWarning-foreground); }
+		.modelRoutingPage .link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; }
+		.modelRoutingPage .link:hover { text-decoration: underline; }
 		/* A group of rows, cloud or local, under a heading of its own */
-		#matrix tr.section td { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--vscode-descriptionForeground); padding-top: 16px; }
-		#matrix tr.section:hover td { background: none; }
+		.modelRoutingPage #matrix tr.section td { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--vscode-descriptionForeground); padding-top: 16px; }
+		.modelRoutingPage #matrix tr.section:hover td { background: none; }
 		/* The models' column as wide as its names, each agent's column as wide as its cells */
-		#matrix { width: auto; }
-		#matrix th.agentHead, #matrix td.cell { width: 170px; min-width: 170px; }
-		#matrix th.agentHead { text-align: center; }
+		.modelRoutingPage #matrix { width: auto; }
+		.modelRoutingPage #matrix th.agentHead, .modelRoutingPage #matrix td.cell { width: 170px; min-width: 170px; }
+		.modelRoutingPage #matrix th.agentHead { text-align: center; }
 		/* Code Agents over the agents' columns, with a line under it from the first to the last */
-		#matrix th.agentsGroup { text-align: center; padding-bottom: 4px; }
-		#matrix th.groupBlank { border-bottom: none; }
-		#matrix td.modelName { padding-left: 24px; padding-right: 40px; white-space: nowrap; }
-		#matrix td.cell input { width: 100%; border-color: var(--vscode-focusBorder); text-align: center; }
-		#matrix td.cell input.placed { font-weight: 600; }
+		.modelRoutingPage #matrix th.agentsGroup { text-align: center; padding-bottom: 4px; }
+		.modelRoutingPage #matrix th.groupBlank { border-bottom: none; }
+		.modelRoutingPage #matrix td.modelName { padding-left: 24px; padding-right: 40px; white-space: nowrap; }
+		.modelRoutingPage #matrix td.cell input { width: 100%; border-color: var(--vscode-focusBorder); text-align: center; }
+		.modelRoutingPage #matrix td.cell input.placed { font-weight: 600; }
 		/* The suggestions of the tiers' names open as one types, with no arrow in the field */
-		#matrix td.cell input::-webkit-calendar-picker-indicator { display: none !important; }
-		td.dashCell { text-align: center; }
-		.dash { color: var(--vscode-descriptionForeground); }
-		input, select { font-family: var(--vscode-font-family); font-size: 12px; padding: 4px 6px; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; }
-		select { color: var(--vscode-dropdown-foreground); background: var(--vscode-dropdown-background); border-color: var(--vscode-dropdown-border, var(--vscode-widget-border)); }
-		select.overridden { color: var(--vscode-textLink-foreground); }
+		.modelRoutingPage #matrix td.cell input::-webkit-calendar-picker-indicator { display: none !important; }
+		.modelRoutingPage td.dashCell { text-align: center; }
+		.modelRoutingPage .dash { color: var(--vscode-descriptionForeground); }
+		.modelRoutingPage input, .modelRoutingPage select { font-family: var(--vscode-font-family); font-size: 12px; padding: 4px 6px; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; }
+		.modelRoutingPage select { color: var(--vscode-dropdown-foreground); background: var(--vscode-dropdown-background); border-color: var(--vscode-dropdown-border, var(--vscode-widget-border)); }
+		.modelRoutingPage select.overridden { color: var(--vscode-textLink-foreground); }
 		/* The tiers of the tasks, all as wide as the cells of the table above, whatever their names */
-		#tasks select { width: 170px; }
-		input:focus, select:focus { outline: 1px solid var(--vscode-focusBorder); }
-		th.taskName { width: 30%; } th.menu { width: 22%; } th.runsOn { width: 24%; }
-	</style>
-</head>
-<body>
-<div class="container">
-	<div class="title-row">
-		<h1>${text.title}</h1>
-		${voiceButtonsHtml}
-	</div>
-	<p class="subtitle">${text.intro}</p>
+		.modelRoutingPage #tasks select { width: 170px; }
+		.modelRoutingPage input:focus, .modelRoutingPage select:focus { outline: 1px solid var(--vscode-focusBorder); }
+		.modelRoutingPage th.taskName { width: 30%; } .modelRoutingPage th.menu { width: 22%; } .modelRoutingPage th.runsOn { width: 24%; }
+`,
+		bodyHtml: `
+		<div class="modelRoutingPage">
 	<p class="subtitle">${text.localIntro}</p>
 	<table id="matrix">
 		<thead id="matrixHead"></thead>
@@ -297,10 +301,9 @@ function pageHtml(): string {
 		<thead><tr><th class="taskName">${text.task}</th><th class="menu">${text.menu}</th><th class="runsOn">${text.runsOn}</th><th>${text.skills}</th></tr></thead>
 		<tbody id="tasks"></tbody>
 	</table>
-</div>
-<script>
-	const vscode = acquireVsCodeApi();
-	${voiceButtonsScript}
+		</div>
+`,
+		pageScriptJs: `
 	const TEXT = ${JSON.stringify(text)};
 	const matrixHead = document.getElementById('matrixHead');
 	const matrixBody = document.getElementById('matrixBody');
@@ -438,9 +441,8 @@ function pageHtml(): string {
 		}
 	});
 	vscode.postMessage({ command: 'ready' });
-</script>
-</body>
-</html>`;
+`,
+	});
 }
 
 registerAction2(class extends Action2 {

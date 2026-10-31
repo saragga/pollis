@@ -3,12 +3,10 @@
  *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// The + at the start of the last line of a chat's input box, in Ask Pollis and in the Collaboration chat: its menu,
+// The + at the start of the last line of a chat's input box, in Ask Pollis, in a panel's Ask Pollis and in the Collaboration chat: its menu,
 // Image, File, Dataset and Database, and an image or a file pasted or dragged in. Each chat says what an image and a
 // file become; a dataset and a database are picked by the workbench, which each chat asks with `pickDataset` and
 // `pickDatabase`.
-
-import { composerAddSvg } from '../../model/browser/webviews/webviewScaffold.js';
 
 /** The titles of the + and of its menu's items. */
 export interface IComposerAddTitles {
@@ -19,27 +17,30 @@ export interface IComposerAddTitles {
 	readonly database: string;
 }
 
-/** The + and its menu, above it, with the file inputs of Image and File. */
-export function composerAddHtml(titles: IComposerAddTitles): string {
+const composerAddSvg = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M8 2.5v11M2.5 8h11"/></svg>`;
+
+/** The + and its menu, above it, with the file inputs of Image and File; `prefix` starts their ids. */
+export function composerAddHtml(titles: IComposerAddTitles, prefix = ''): string {
 	return `<div class="add">
-					<div id="addMenu" role="menu">
-						<button id="addImage" role="menuitem">${titles.image}</button>
-						<button id="addFile" role="menuitem">${titles.file}</button>
-						<button id="addDataset" role="menuitem">${titles.dataset}</button>
-						<button id="addDatabase" role="menuitem">${titles.database}</button>
+					<div class="add-menu" id="${prefix}addMenu" role="menu">
+						<button id="${prefix}addImage" role="menuitem">${titles.image}</button>
+						<button id="${prefix}addFile" role="menuitem">${titles.file}</button>
+						<button id="${prefix}addDataset" role="menuitem">${titles.dataset}</button>
+						<button id="${prefix}addDatabase" role="menuitem">${titles.database}</button>
 					</div>
-					<button class="icon" id="add" title="${titles.add}" aria-label="${titles.add}" aria-haspopup="menu">${composerAddSvg}</button>
-					<input type="file" id="file" accept="image/png,image/jpeg,image/gif,image/webp" hidden>
-					<input type="file" id="anyFile" hidden>
+					<button class="icon" id="${prefix}add" title="${titles.add}" aria-label="${titles.add}" aria-haspopup="menu">${composerAddSvg}</button>
+					<input type="file" id="${prefix}file" accept="image/png,image/jpeg,image/gif,image/webp" hidden>
+					<input type="file" id="${prefix}anyFile" hidden>
 				</div>`;
 }
 
 /** The menu of the +, above it. */
 export const composerAddCss = `.add { position: relative; }
-		#addMenu { display: none; position: absolute; bottom: 36px; left: 0; z-index: 1; min-width: 140px; padding: 4px 0; color: var(--vscode-menu-foreground); background: var(--vscode-menu-background); border: 1px solid var(--vscode-menu-border, var(--vscode-widget-border)); border-radius: 6px; box-shadow: 0 2px 8px var(--vscode-widget-shadow); }
-		#addMenu.open { display: block; }
-		#addMenu button { display: block; width: 100%; text-align: left; padding: 4px 14px; border-radius: 0; color: inherit; background: none; }
-		#addMenu button:not(:disabled):hover, #addMenu button:focus { color: var(--vscode-menu-selectionForeground); background: var(--vscode-menu-selectionBackground); outline: none; }
+		.add-menu { display: none; position: absolute; bottom: 36px; left: 0; z-index: 1; min-width: 140px; padding: 4px 0; color: var(--vscode-menu-foreground); background: var(--vscode-menu-background); border: 1px solid var(--vscode-menu-border, var(--vscode-widget-border)); border-radius: 6px; box-shadow: 0 2px 8px var(--vscode-widget-shadow); }
+		.add-menu.open { display: block; }
+		.add .add-menu button { display: block; width: 100%; text-align: left; padding: 4px 14px; border: none; border-radius: 0; font: inherit; font-size: 12px; color: inherit; background: none; cursor: pointer; }
+		.add .add-menu button:disabled { opacity: 0.5; cursor: default; }
+		.add .add-menu button:not(:disabled):hover, .add .add-menu button:focus { color: var(--vscode-menu-selectionForeground); background: var(--vscode-menu-selectionBackground); outline: none; }
 		body.dragging .composer { outline: 2px dashed var(--vscode-focusBorder); outline-offset: 2px; }`;
 
 /**
@@ -47,9 +48,10 @@ export const composerAddCss = `.add { position: relative; }
  * data URL, reduced when it is over `maxImageBytes` or very large: its longest side to 1600 px as PNG, then as JPEG;
  * or `{ error: 'notAnImage' }` or `{ error: 'tooLarge' }`. The second opens the menu from the +, and calls
  * `handlers.image(file)` with an image chosen, pasted in the input `inputId` or dragged in, and `handlers.file(file)`
- * with any other file chosen or dragged in.
+ * with any other file chosen or dragged in; dragged onto `dropSelector`, the whole page without one. `prefix` starts
+ * the ids of the + and its menu.
  */
-export function composerAddScript(inputId: string, maxImageBytes: number): string {
+export function composerAddScript(inputId: string, maxImageBytes: number, prefix = '', dropSelector = 'body'): string {
 	return `
 	const composerImageTypes = /^image\\/(png|jpeg|gif|webp)$/;
 	const composerImageBytes = dataUrl => Math.floor((dataUrl.length - dataUrl.indexOf(',') - 1) * 3 / 4);
@@ -84,7 +86,8 @@ export function composerAddScript(inputId: string, maxImageBytes: number): strin
 	}
 
 	function composerAdd(handlers) {
-		const byId = id => document.getElementById(id);
+		const byId = id => document.getElementById('${prefix}' + id);
+		const dropArea = document.querySelector('${dropSelector}');
 		const addMenu = byId('addMenu');
 		const closeAddMenu = () => addMenu.classList.remove('open');
 		byId('add').addEventListener('click', e => {
@@ -114,16 +117,16 @@ export function composerAddScript(inputId: string, maxImageBytes: number): strin
 				}
 			});
 		}
-		byId('${inputId}').addEventListener('paste', e => {
+		document.getElementById('${inputId}').addEventListener('paste', e => {
 			const file = [...(e.clipboardData?.files || [])].find(item => item.type.startsWith('image/'));
 			if (file) {
 				e.preventDefault();
 				handlers.image(file);
 			}
 		});
-		document.body.addEventListener('dragover', e => { e.preventDefault(); document.body.classList.add('dragging'); });
-		document.body.addEventListener('dragleave', () => document.body.classList.remove('dragging'));
-		document.body.addEventListener('drop', e => {
+		dropArea.addEventListener('dragover', e => { e.preventDefault(); document.body.classList.add('dragging'); });
+		dropArea.addEventListener('dragleave', () => document.body.classList.remove('dragging'));
+		dropArea.addEventListener('drop', e => {
 			e.preventDefault();
 			document.body.classList.remove('dragging');
 			const file = e.dataTransfer?.files?.[0];

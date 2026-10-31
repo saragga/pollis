@@ -2742,6 +2742,80 @@
 			]
 		},
 		{
+			"id": "epiBranch",
+			"title": "Branching Processes",
+			"source": "toolbox:pollis-toolbox-epidemiology",
+			"commands": [
+				{
+					"id": "chiara.simulate.epi-branch",
+					"menuTitles": [
+						"Branching Processes"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "contain",
+			"decisionFirstColumn": "Model",
+			"toml": "toolboxes/pollis-toolbox-epidemiology/panels/epiBranch.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-epidemiology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-epidemiology/notebooks",
+			"wikis": [
+				"epi-branch/assumptions.md",
+				"epi-branch/cases.md",
+				"epi-branch/contain.md",
+				"epi-branch/decision-guide.md",
+				"epi-branch/diagnostics.md",
+				"epi-branch/exact.md",
+				"epi-branch/factsheet.md",
+				"epi-branch/fit.md",
+				"epi-branch/interpretation.md",
+				"epi-branch/overview.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"EpiBranch.jl",
+				"Distributions.jl",
+				"Turing.jl",
+				"Tables.jl",
+				"Plots.jl"
+			]
+		},
+		{
+			"id": "epiCoinfection",
+			"title": "Coinfection",
+			"source": "toolbox:pollis-toolbox-epidemiology",
+			"commands": [
+				{
+					"id": "chiara.simulate.epi-coinfection",
+					"menuTitles": [
+						"Coinfection"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "two",
+			"decisionFirstColumn": "Model",
+			"toml": "toolboxes/pollis-toolbox-epidemiology/panels/epiCoinfection.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-epidemiology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-epidemiology/notebooks",
+			"wikis": [
+				"epi-coinfection/assumptions.md",
+				"epi-coinfection/community.md",
+				"epi-coinfection/decision-guide.md",
+				"epi-coinfection/detection.md",
+				"epi-coinfection/diagnostics.md",
+				"epi-coinfection/factsheet.md",
+				"epi-coinfection/interpretation.md",
+				"epi-coinfection/overview.md",
+				"epi-coinfection/two.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"CoinfectionSimulator.jl",
+				"Plots.jl"
+			]
+		},
+		{
 			"id": "epiComp",
 			"title": "Compartmental Models",
 			"source": "toolbox:pollis-toolbox-epidemiology",
@@ -2784,37 +2858,77 @@
 			]
 		},
 		{
-			"id": "epiUde",
-			"title": "Machine Learning for Epidemics",
+			"id": "epiContacts",
+			"title": "Inference on Contact Networks",
 			"source": "toolbox:pollis-toolbox-epidemiology",
 			"commands": [
 				{
-					"id": "chiara.simulate.epi-ude",
+					"id": "chiara.simulate.epi-contacts",
 					"menuTitles": [
-						"Universal Differential Equations for Epidemiology"
+						"Inference on Contact Networks"
 					]
 				}
 			],
 			"portable": true,
-			"defaultModel": "node",
+			"defaultModel": "risk",
 			"decisionFirstColumn": "Model",
-			"toml": "toolboxes/pollis-toolbox-epidemiology/panels/epiUde.toml",
+			"toml": "toolboxes/pollis-toolbox-epidemiology/panels/epiContacts.toml",
 			"wikiRoot": "toolboxes/pollis-toolbox-epidemiology/wiki",
 			"notebookRoot": "toolboxes/pollis-toolbox-epidemiology/notebooks",
-			"wikis": [],
-			"notebooks": [
-				"epi-ude/tutorial-01-neural-ode.ipynb",
-				"epi-ude/tutorial-02-ude.ipynb",
-				"epi-ude/tutorial-03-7compartment.ipynb",
-				"epi-ude/tutorial-04-bayesian-neural-ode.ipynb",
-				"epi-ude/tutorial-05-symbolic-recovery.ipynb",
-				"epi-ude/tutorial-06-qsir-italy.ipynb"
+			"wikis": [
+				"epi-contacts/assumptions.md",
+				"epi-contacts/changing.md",
+				"epi-contacts/decision-guide.md",
+				"epi-contacts/diagnostics.md",
+				"epi-contacts/factsheet.md",
+				"epi-contacts/interpretation.md",
+				"epi-contacts/overview.md",
+				"epi-contacts/risk.md",
+				"epi-contacts/source.md"
 			],
+			"notebooks": [],
 			"packages": [
-				"Lux.jl",
-				"SciMLSensitivity.jl",
-				"AdvancedHMC.jl",
-				"DataDrivenDiffEq.jl"
+				"SmallCouplingDynamicCavity.jl",
+				"Graphs.jl",
+				"Plots.jl"
+			]
+		},
+		{
+			"id": "epiNetwork",
+			"title": "Epidemics on Networks",
+			"source": "toolbox:pollis-toolbox-epidemiology",
+			"commands": [
+				{
+					"id": "chiara.simulate.epi-network",
+					"menuTitles": [
+						"Epidemics on Networks"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "sir",
+			"decisionFirstColumn": "Model",
+			"toml": "toolboxes/pollis-toolbox-epidemiology/panels/epiNetwork.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-epidemiology/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-epidemiology/notebooks",
+			"wikis": [
+				"epi-network/assumptions.md",
+				"epi-network/continuous.md",
+				"epi-network/decision-guide.md",
+				"epi-network/diagnostics.md",
+				"epi-network/factsheet.md",
+				"epi-network/interpretation.md",
+				"epi-network/overview.md",
+				"epi-network/recurring.md",
+				"epi-network/seir.md",
+				"epi-network/sir.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"GraphEpidemics.jl",
+				"Graphs.jl",
+				"Distributions.jl",
+				"Plots.jl"
 			]
 		},
 		{
@@ -8268,7 +8382,7 @@
 		{
 			"id": "var",
 			"title": "VAR Models",
-			"source": "toolbox:pollis-toolbox-econometrics",
+			"source": "toolbox:pollis-toolbox-economics",
 			"commands": [
 				{
 					"id": "chiara.statistics.arma.varModels",
@@ -8280,9 +8394,9 @@
 			"portable": true,
 			"defaultModel": "var",
 			"decisionFirstColumn": "Model",
-			"toml": "toolboxes/pollis-toolbox-econometrics/panels/var.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-econometrics/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-econometrics/notebooks",
+			"toml": "toolboxes/pollis-toolbox-economics/panels/var.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-economics/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-economics/notebooks",
 			"wikis": [
 				"var/assumptions.md",
 				"var/decision-guide.md",

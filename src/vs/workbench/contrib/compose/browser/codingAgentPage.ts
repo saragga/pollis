@@ -17,9 +17,17 @@ import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { CHOOSE_AGENT_COMMAND_ID, CODING_AGENTS, commandWords, findProgram, installSkills, OTHER_AGENTS_SETTING, otherAgentEntries, PROMPT_PLACEHOLDER, skillsInstalled, terminalEnvironment } from './pollisAgents.js';
 import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
-import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
+import { IOpenerService } from '../../../../platform/opener/common/opener.js';
+import { IEditorService } from '../../../../workbench/services/editor/common/editorService.js';
+import { INotificationService } from '../../../../platform/notification/common/notification.js';
+import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
+import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
+import { IStorageService } from '../../../../platform/storage/common/storage.js';
+import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
+import { CODINGAGENT_METADATA } from '../../model/browser/webviews/codingAgent.data.js';
+import { buildWebviewHtml } from '../../model/browser/webviews/webviewScaffold.js';
 
-// Compose > Coding Agents: a page of the coding agents Pollis knows, all of which run on local and
+// Compose > Coding Agents, in the Minimal style of the scaffold: a page of the coding agents Pollis knows, all of which run on local and
 // cloud models, in alphabetical order, each marked installed on this computer or with a link to its
 // install page, and whether it has the Pollis skills, with a link to install them; and agents of your own,
 // each a name and a command line, saved once both are filled, which Model Tasks and Routing then offers by
@@ -46,6 +54,12 @@ async function openCodingAgentPage(accessor: ServicesAccessor): Promise<void> {
 	const commandService = accessor.get(ICommandService);
 	const pathService = accessor.get(IPathService);
 	const instantiationService = accessor.get(IInstantiationService);
+	const openerService = accessor.get(IOpenerService);
+	const editorService = accessor.get(IEditorService);
+	const notificationService = accessor.get(INotificationService);
+	const notebookEditorModelResolverService = accessor.get(INotebookEditorModelResolverService);
+	const notebookKernelService = accessor.get(INotebookKernelService);
+	const storageService = accessor.get(IStorageService);
 
 	if (openPage && !openPage.isDisposed()) {
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
@@ -68,6 +82,7 @@ async function openCodingAgentPage(accessor: ServicesAccessor): Promise<void> {
 	openPage = webviewInput;
 
 	const disposables = new DisposableStore();
+	disposables.add(registerScaffoldPageHandlers(webviewInput, 'codingAgent', title, CODINGAGENT_METADATA.codingAgent, openerService, editorService, commandService, notificationService, notebookEditorModelResolverService, notebookKernelService, fileService, pathService, storageService));
 	disposables.add(webviewInput.webview.onDidDispose(() => {
 		openPage = undefined;
 		disposables.dispose();
@@ -150,59 +165,46 @@ function pageHtml(): string {
 		removeOther: localize('codingAgent.removeOther', "Remove"),
 		nameTaken: localize('codingAgent.nameTaken', "There is an agent of that name already"),
 	};
-	return `<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
-	<style>
-		${voiceButtonsCss}
-		* { box-sizing: border-box; }
-		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
-		.container { max-width: 1100px; margin: 0 auto; padding: 24px; }
-		h1 { font-size: 32px; font-weight: 300; margin: 0 0 4px 0; line-height: 1.2; }
-		h2 { font-size: 16px; font-weight: 600; margin: 28px 0 4px 0; }
-		.subtitle { font-size: 14px; color: var(--vscode-descriptionForeground); margin: 0 0 16px 0; line-height: 1.4; max-width: 900px; }
-		.hint { color: var(--vscode-descriptionForeground); margin: 0 0 8px 0; line-height: 1.4; max-width: 900px; }
-		table { width: 100%; border-collapse: collapse; }
-		th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--vscode-descriptionForeground); text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--vscode-widget-border); }
-		td { vertical-align: top; padding: 10px 8px; border-bottom: 1px solid var(--vscode-widget-border); line-height: 1.4; }
-		tr:hover td { background: var(--vscode-list-hoverBackground); }
-		.name { font-size: 14px; font-weight: 600; }
-		.small { font-size: 12px; color: var(--vscode-descriptionForeground); }
-		code, input { font-family: var(--vscode-editor-font-family); font-size: 12px; }
+	return buildWebviewHtml({
+		title: text.title,
+		omitPoweredBy: !CODINGAGENT_METADATA.codingAgent.packages.length,
+		introHtml: text.intro,
+		extraCss: `
+		.container { max-width: 1100px; }
+		.codingAgentPage h2 { font-size: 16px; font-weight: 600; margin: 28px 0 4px 0; }
+		.codingAgentPage .hint { color: var(--vscode-descriptionForeground); margin: 0 0 8px 0; line-height: 1.4; max-width: 900px; }
+		.codingAgentPage table { width: 100%; border-collapse: collapse; }
+		.codingAgentPage th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--vscode-descriptionForeground); text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--vscode-widget-border); }
+		.codingAgentPage td { vertical-align: top; padding: 10px 8px; border-bottom: 1px solid var(--vscode-widget-border); line-height: 1.4; }
+		.codingAgentPage tr:hover td { background: var(--vscode-list-hoverBackground); }
+		.codingAgentPage .name { font-size: 14px; font-weight: 600; }
+		.codingAgentPage .small { font-size: 12px; color: var(--vscode-descriptionForeground); }
+		.codingAgentPage code, .codingAgentPage input { font-family: var(--vscode-editor-font-family); font-size: 12px; }
 		/* The commands, in the yellow of the menu paths */
-		code { color: #e8a33d; }
-		body.vscode-light code { color: #a8650d; }
-		.installed { color: var(--vscode-testing-iconPassed); }
-		.warning { color: var(--vscode-editorWarning-foreground); margin-left: 10px; }
-		.link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; }
-		.link:hover { text-decoration: underline; }
-		button.action { font: inherit; padding: 3px 12px; border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; cursor: pointer; color: var(--vscode-button-foreground); background: var(--vscode-button-background); font-size: 11px; }
-		button.action:hover { background: var(--vscode-button-hoverBackground); }
-		button.action:disabled { cursor: default; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); }
-		.row { display: flex; gap: 8px; max-width: 700px; }
-		input { flex: 1; padding: 4px 6px; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; }
-		input:focus { outline: 1px solid var(--vscode-focusBorder); }
-		th.agent { width: 30%; } th.command { width: 40%; }
-		input.otherName { flex: 0 0 200px; }
-		.others { display: flex; flex-direction: column; gap: 8px; }
-		.others .row { align-items: center; }
-		.others .warning { margin-left: 0; font-size: 12px; }
-		button.action.add { font-size: 14px; line-height: 16px; padding: 2px 10px; margin-top: 8px; }
-		table.local td:first-child { box-shadow: inset 3px 0 0 var(--vscode-textLink-foreground); padding-left: 12px; }
-		table.local tr:not(:hover) td { background: color-mix(in srgb, var(--vscode-textLink-foreground) 5%, transparent); }
-		.skills { margin-top: 6px; }
-	</style>
-</head>
-<body>
-<div class="container">
-	<div class="title-row">
-		<h1>${text.title}</h1>
-		${voiceButtonsHtml}
-	</div>
-	<p class="subtitle">${text.intro}</p>
+		.codingAgentPage code { color: #e8a33d; }
+		body.vscode-light .codingAgentPage code { color: #a8650d; }
+		.codingAgentPage .installed { color: var(--vscode-testing-iconPassed); }
+		.codingAgentPage .warning { color: var(--vscode-editorWarning-foreground); margin-left: 10px; }
+		.codingAgentPage .link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; }
+		.codingAgentPage .link:hover { text-decoration: underline; }
+		.codingAgentPage button.action { font: inherit; padding: 3px 12px; border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; cursor: pointer; color: var(--vscode-button-foreground); background: var(--vscode-button-background); font-size: 11px; }
+		.codingAgentPage button.action:hover { background: var(--vscode-button-hoverBackground); }
+		.codingAgentPage button.action:disabled { cursor: default; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); }
+		.codingAgentPage .row { display: flex; gap: 8px; max-width: 700px; }
+		.codingAgentPage input { flex: 1; padding: 4px 6px; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; }
+		.codingAgentPage input:focus { outline: 1px solid var(--vscode-focusBorder); }
+		.codingAgentPage th.agent { width: 30%; } .codingAgentPage th.command { width: 40%; }
+		.codingAgentPage input.otherName { flex: 0 0 200px; }
+		.codingAgentPage .others { display: flex; flex-direction: column; gap: 8px; }
+		.codingAgentPage .others .row { align-items: center; }
+		.codingAgentPage .others .warning { margin-left: 0; font-size: 12px; }
+		.codingAgentPage button.action.add { font-size: 14px; line-height: 16px; padding: 2px 10px; margin-top: 8px; }
+		.codingAgentPage table.local td:first-child { box-shadow: inset 3px 0 0 var(--vscode-textLink-foreground); padding-left: 12px; }
+		.codingAgentPage table.local tr:not(:hover) td { background: color-mix(in srgb, var(--vscode-textLink-foreground) 5%, transparent); }
+		.codingAgentPage .skills { margin-top: 6px; }
+`,
+		bodyHtml: `
+		<div class="codingAgentPage">
 	<table class="local">
 		<thead><tr><th class="agent">${text.agent}</th><th class="command">${text.command}</th><th>${text.status}</th></tr></thead>
 		<tbody id="local"></tbody>
@@ -211,10 +213,9 @@ function pageHtml(): string {
 	<p class="hint">${text.otherIntro}</p>
 	<div class="others" id="others"></div>
 	<button class="action add" id="addOther" title="${text.addOther}" aria-label="${text.addOther}">+</button>
-</div>
-<script>
-	const vscode = acquireVsCodeApi();
-	${voiceButtonsScript}
+		</div>
+`,
+		pageScriptJs: `
 	const TEXT = ${JSON.stringify(text)};
 	const local = document.getElementById('local');
 	const others = document.getElementById('others');
@@ -343,9 +344,8 @@ function pageHtml(): string {
 		}
 	});
 	vscode.postMessage({ command: 'ready' });
-</script>
-</body>
-</html>`;
+`,
+	});
 }
 
 registerAction2(class extends Action2 {

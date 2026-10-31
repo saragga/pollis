@@ -45,23 +45,19 @@ export function setVoiceWriteIn(storageService: IStorageService, value: string):
 	storageService.store(VOICE_WRITE_IN_KEY, value, StorageScope.APPLICATION, StorageTarget.USER);
 }
 
-/** The titles of the microphone and of Voice Mode, which say what they will do in that chat. */
-export interface IComposerVoiceTitles {
-	readonly dictate: string;
-	readonly voiceMode: string;
-}
-
 const WAVEFORM = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 7v2M5 5v6M8 2.5v11M11 5v6M14 7v2"/></svg>';
 // \u6587 and A side by side on one line, as written: translation
 const TRANSLATE = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.1 2.6v1.4M0.9 4.4h6.4M5.8 5.6C5.1 8.6 3.3 11 0.9 12.4M2.4 5.6C3.1 8.6 4.9 11 7.3 12.4M8.9 12.4l2.9-8.2 2.9 8.2M9.8 9.8h4"/></svg>';
 
 /**
- * The microphone, Voice Mode and \u6587A, for the first line of a chat's input box, with the language spoken and the
- * language written kept now.
+ * The microphone, Voice Mode and \u6587A, for a chat's input box, with the language spoken and the language written
+ * kept now.
  */
-export function composerVoiceHtml(titles: IComposerVoiceTitles, language: string, writeIn: string): string {
+export function composerVoiceHtml(language: string, writeIn: string): string {
+	const dictate = localize('composerVoice.dictate', "Dictate (Not Available Yet)");
+	const voiceMode = localize('composerVoice.voiceMode', "Voice Mode (Not Available Yet)");
 	const text = {
-		languages: localize('composerVoice.languages', "Languages: the one you speak, and the one Dictate and Voice Mode write in"),
+		languages: localize('composerVoice.languages', "Language"),
 		iSpeak: localize('composerVoice.iSpeak', "I Speak"),
 		writeIn: localize('composerVoice.writeIn', "Write In"),
 		writeInNote: localize('composerVoice.writeInNote', "What you say is written in this language, translated if need be, for you to correct before you send it."),
@@ -72,8 +68,8 @@ export function composerVoiceHtml(titles: IComposerVoiceTitles, language: string
 	const languages = Object.entries(SPEECH_LANGUAGES).map(([value, { name }]) => ({ value, label: name })).sort((a, b) => a.label.localeCompare(b.label));
 	const attribute = (value: string) => value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 	return `<span class="voice-tools" data-language="${attribute(language)}" data-write-in="${attribute(writeIn)}" data-languages="${attribute(JSON.stringify(languages))}" data-text="${attribute(JSON.stringify(text))}">
-				<button class="voice-button" id="voice" title="${titles.dictate}" aria-label="${titles.dictate}">${composerMicSvg}</button>
-				<button class="voice-button" id="voiceMode" title="${titles.voiceMode}" aria-label="${titles.voiceMode}">${WAVEFORM}</button>
+				<button class="voice-button" id="voice" title="${dictate}" aria-label="${dictate}">${composerMicSvg}</button>
+				<button class="voice-button" id="voiceMode" title="${voiceMode}" aria-label="${voiceMode}">${WAVEFORM}</button>
 				<span class="voice-anchor">
 					<button class="voice-button" id="voiceLanguages" title="${text.languages}" aria-label="${text.languages}" aria-haspopup="menu" aria-expanded="false">${TRANSLATE}</button>
 					<div class="voice-menu" id="voiceMenu" role="menu" hidden></div>

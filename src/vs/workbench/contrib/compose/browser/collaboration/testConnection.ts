@@ -8,13 +8,24 @@ import { localize, localize2 } from '../../../../../nls.js';
 import { Action2, registerAction2 } from '../../../../../platform/actions/common/actions.js';
 import { IClipboardService } from '../../../../../platform/clipboard/common/clipboardService.js';
 import { ServicesAccessor } from '../../../../../platform/instantiation/common/instantiation.js';
-import { webviewGenericCspSource } from '../../../webview/common/webview.js';
 import { WebviewInput } from '../../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
 import { COLLABORATION_MEDIA, trysteroBundleUrl } from './collaborationChat.js';
 import { describeConnection, ICollaborationService, TEST_CONNECTION_COMMAND_ID } from './collaborationService.js';
+import { IOpenerService } from '../../../../../platform/opener/common/opener.js';
+import { IEditorService } from '../../../../services/editor/common/editorService.js';
+import { ICommandService } from '../../../../../platform/commands/common/commands.js';
+import { INotificationService } from '../../../../../platform/notification/common/notification.js';
+import { INotebookEditorModelResolverService } from '../../../notebook/common/notebookEditorModelResolverService.js';
+import { INotebookKernelService } from '../../../notebook/common/notebookKernelService.js';
+import { IFileService } from '../../../../../platform/files/common/files.js';
+import { IPathService } from '../../../../services/path/common/pathService.js';
+import { IStorageService } from '../../../../../platform/storage/common/storage.js';
+import { registerScaffoldPageHandlers } from '../../../model/browser/handlers/scaffoldPage.handler.js';
+import { TESTCONNECTION_METADATA } from '../../../model/browser/webviews/testConnection.data.js';
+import { buildWebviewHtml } from '../../../model/browser/webviews/webviewScaffold.js';
 
-// Compose > Collaboration > Test Connection... (task 5.1 as a feature): Pollis checks the connection itself.
+// Compose > Collaboration > Test Connection... (task 5.1 as a feature), in the Minimal style of the scaffold: Pollis checks the connection itself.
 // Whether this network reaches the servers that introduce the participants (the public nostr relays and
 // mqtt brokers), whether direct connections can work (what the STUN servers see: no answer means UDP is
 // blocked, a different mapping for each server means a strict NAT), the relay (TURN, not set up yet),
@@ -34,6 +45,15 @@ async function openTestConnectionPage(accessor: ServicesAccessor): Promise<void>
 	const webviewWorkbenchService = accessor.get(IWebviewWorkbenchService);
 	const collaborationService = accessor.get(ICollaborationService);
 	const clipboardService = accessor.get(IClipboardService);
+	const openerService = accessor.get(IOpenerService);
+	const editorService = accessor.get(IEditorService);
+	const commandService = accessor.get(ICommandService);
+	const notificationService = accessor.get(INotificationService);
+	const notebookEditorModelResolverService = accessor.get(INotebookEditorModelResolverService);
+	const notebookKernelService = accessor.get(INotebookKernelService);
+	const fileService = accessor.get(IFileService);
+	const pathService = accessor.get(IPathService);
+	const storageService = accessor.get(IStorageService);
 
 	if (openPage && !openPage.isDisposed()) {
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
@@ -57,6 +77,7 @@ async function openTestConnectionPage(accessor: ServicesAccessor): Promise<void>
 	openPage = webviewInput;
 
 	const disposables = new DisposableStore();
+	disposables.add(registerScaffoldPageHandlers(webviewInput, 'testConnection', title, TESTCONNECTION_METADATA.testConnection, openerService, editorService, commandService, notificationService, notebookEditorModelResolverService, notebookKernelService, fileService, pathService, storageService));
 	disposables.add(webviewInput.webview.onDidDispose(() => {
 		openPage = undefined;
 		disposables.dispose();
@@ -107,41 +128,32 @@ function pageHtml(): string {
 		summaryNoNostr: localize('testConnection.summaryNoNostr', "The nostr relays are blocked here but the MQTT brokers are reachable: set Settings > Pollis Collaboration Signalling to mqtt, and start the session with that."),
 		summaryNeedsRelay: localize('testConnection.summaryNeedsRelay', "Sessions can start here, but direct connections are limited, so some participants may need the relay, which is not set up yet."),
 	};
-	const csp = `default-src 'none'; style-src 'unsafe-inline'; connect-src wss: https:; script-src ${webviewGenericCspSource} 'unsafe-inline';`;
-	return `<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta http-equiv="Content-Security-Policy" content="${csp}">
-	<style>
-		* { box-sizing: border-box; }
-		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
-		.container { max-width: 900px; margin: 0 auto; padding: 24px; }
-		h1 { font-size: 32px; font-weight: 300; margin: 0 0 4px 0; line-height: 1.2; }
-		h2 { font-size: 16px; font-weight: 600; margin: 24px 0 6px 0; }
-		.subtitle { font-size: 14px; color: var(--vscode-descriptionForeground); margin: 0 0 16px 0; line-height: 1.4; }
-		.line { margin: 4px 0; line-height: 1.4; }
-		.good { color: var(--vscode-testing-iconPassed); }
-		.bad { color: var(--vscode-testing-iconFailed); }
-		.muted { color: var(--vscode-descriptionForeground); }
-		details { margin: 2px 0 6px 16px; color: var(--vscode-descriptionForeground); font-size: 12px; }
-		details code { font-family: var(--vscode-editor-font-family); }
-		#summary { font-size: 14px; padding: 10px 12px; border-left: 3px solid var(--vscode-focusBorder); background: var(--vscode-textBlockQuote-background); }
-		.buttons { display: flex; gap: 8px; margin: 12px 0; }
-		button { font: inherit; padding: 4px 12px; border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; cursor: pointer; color: var(--vscode-button-foreground); background: var(--vscode-button-background); font-size: 11px; }
+	return buildWebviewHtml({
+		title: text.title,
+		omitPoweredBy: !TESTCONNECTION_METADATA.testConnection.packages.length,
+		connectSrc: 'wss: https:',
+		introHtml: text.intro,
+		extraCss: `
+		.container { max-width: 900px; }
+		.testConnectionPage h2 { font-size: 16px; font-weight: 600; margin: 24px 0 6px 0; }
+		.testConnectionPage .line { margin: 4px 0; line-height: 1.4; }
+		.testConnectionPage .good { color: var(--vscode-testing-iconPassed); }
+		.testConnectionPage .bad { color: var(--vscode-testing-iconFailed); }
+		.testConnectionPage .muted { color: var(--vscode-descriptionForeground); }
+		.testConnectionPage details { margin: 2px 0 6px 16px; color: var(--vscode-descriptionForeground); font-size: 12px; }
+		.testConnectionPage details code { font-family: var(--vscode-editor-font-family); }
+		.testConnectionPage #summary { font-size: 14px; padding: 10px 12px; border-left: 3px solid var(--vscode-focusBorder); background: var(--vscode-textBlockQuote-background); }
+		.testConnectionPage .buttons { display: flex; gap: 8px; margin: 12px 0; }
+		.testConnectionPage button { font: inherit; padding: 4px 12px; border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; cursor: pointer; color: var(--vscode-button-foreground); background: var(--vscode-button-background); font-size: 11px; }
 		/* As the code buttons below a panel's Example Code: dimmed until pointed at, the blue ones not */
-		button.secondary { opacity: 0.7; }
-		button.secondary:not(:disabled):hover { opacity: 1; }
-		button:hover { background: var(--vscode-button-hoverBackground); }
-		button.secondary { color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); }
-		button:disabled { opacity: 0.5; cursor: default; }
-	</style>
-</head>
-<body>
-<div class="container">
-	<h1>${text.title}</h1>
-	<p class="subtitle">${text.intro}</p>
+		.testConnectionPage button.secondary { opacity: 0.7; }
+		.testConnectionPage button.secondary:not(:disabled):hover { opacity: 1; }
+		.testConnectionPage button:hover { background: var(--vscode-button-hoverBackground); }
+		.testConnectionPage button.secondary { color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); }
+		.testConnectionPage button:disabled { opacity: 0.5; cursor: default; }
+`,
+		bodyHtml: `
+		<div class="testConnectionPage">
 	<h2>${text.summary}</h2>
 	<div id="summary" class="muted">${text.checking}</div>
 	<div class="buttons">
@@ -156,9 +168,9 @@ function pageHtml(): string {
 	<div class="line muted">${text.relayNotSetUp}</div>
 	<h2>${text.session}</h2>
 	<div id="session"></div>
-</div>
-<script type="module">
-	const vscode = acquireVsCodeApi();
+		</div>
+`,
+		pageScriptJs: `
 	const TEXT = ${JSON.stringify(text)};
 	const STUN_SERVERS = ${JSON.stringify(STUN_SERVERS)};
 	const BUNDLES = ${JSON.stringify({ nostr: trysteroBundleUrl('nostr'), mqtt: trysteroBundleUrl('mqtt') })};
@@ -344,9 +356,8 @@ function pageHtml(): string {
 		}
 	});
 	run();
-</script>
-</body>
-</html>`;
+`,
+	});
 }
 
 registerAction2(class extends Action2 {

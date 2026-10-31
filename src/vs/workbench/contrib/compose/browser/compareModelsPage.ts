@@ -541,7 +541,7 @@ function pageHtml(rows: number): string {
 		newSet: localize('compareModels.newSet', "New Set..."),
 		changeSet: localize('compareModels.changeSet', "Change This Set"),
 		standardChange: localize('compareModels.standardChange', "The Standard test set cannot be changed: Save As... makes a copy of it that you can change."),
-		changeIntro: localize('compareModels.changeIntroCounts', "Make Questions... writes new questions from the documents with the model chosen in By, as many of each topic as given below it: Pollis, from Pollis' own documents; Julia Language, from the Julia Manual; Topic Panels, from the wikis of the panels and the documents of the toolboxes. Add takes one of your own; Import... reads those of a file; Delete Ticked removes the ticked ones."),
+		changeIntro: localize('compareModels.changeIntroCounts', "Make Questions... writes new questions from the documents with the model chosen in By, as many of each topic as given below it: Pollis, from Pollis' own documents; Julia Language, from the Julia Manual; Topic Panels, from the wikis of the panels and the vignettes of the toolboxes. Add takes one of your own; Import... reads those of a file; Delete Ticked removes the ticked ones."),
 		questionCounts: localize('compareModels.questionCounts', "Questions to make:"),
 		topics: TOPICS.map(topic => ({ topic, label: topicLabel(topic) })),
 		tokensChart: localize('compareModels.tokensChart', "Tokens"),

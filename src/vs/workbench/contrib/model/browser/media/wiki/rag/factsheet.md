@@ -6,7 +6,8 @@
 |---|---|
 | **Purpose** | Answer questions from your own documents, with the sources of each answer |
 | **Input** | PDF, Markdown and text files, an embedding model and an answering model; a reranker if wanted |
-| **Core packages** | [DuckDB.jl](https://github.com/duckdb/duckdb), [Poppler_jll.jl](https://github.com/JuliaBinaryWrappers/Poppler_jll.jl), [llama.cpp](https://github.com/ggml-org/llama.cpp) |
+| **Core packages** | [DuckDB.jl](https://github.com/duckdb/DuckDB.jl), [Poppler_jll.jl](https://github.com/JuliaBinaryWrappers/Poppler_jll.jl) |
+| **Local models** | Run by [llama.cpp](https://github.com/ggml-org/llama.cpp): the embedding model, the reranker and an answering model on this computer |
 | **Steps** | Document Ingestion, Chunking, Embedding, Retrieval, Reranking (optional), Generation |
 | **Output** | An index of the collection, the passages found for a question with their scores, an answer citing them by number |
 | **Key choice** | The length of the passages, and whether to rerank |

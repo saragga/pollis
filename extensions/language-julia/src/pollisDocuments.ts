@@ -14,9 +14,9 @@
 // The command `language-julia.pollisIndexDocuments` brings PollisDocuments up to date again, for the workbench when the
 // toolboxes change; and so does each vignette or toolbox document compiled, which Ask Pollis then reads. Both only once
 // the documents were compiled in this session: otherwise the REPL's start indexes them.
-// The package vignettes the list gives with what to compile them from, not compiled yet or changed since, are compiled
-// after the index is made, one at a time, and the index is then made again with them; one that cannot be compiled is
-// not tried again in this session.
+// The package and toolbox vignettes the list gives with what to compile them from, not compiled yet or changed since,
+// are compiled after the index is made, one at a time, and the index is then made again with them; one that cannot be
+// compiled is not tried again in this session.
 // The Package APIs, unless pollis.ask.packageApis is off, come after them: the docstrings of the packages of the panels,
 // read from their documentation sites (pollisPackageApis.ts), one package at a time, and the index is then made again.
 // The Julia Manual is that of the Julia the index is made with, the REPL's: when the REPL starts again with another
@@ -28,7 +28,7 @@
 // The command `language-julia.pollisCompileVignette`, with {source, name, pdf}, compiles a package's vignette for
 // Help > Documentation > Packages (scripts/terminalserver/compile_vignette.jl): from the vignette/ folder of an
 // installed package, or from its repository on GitHub, into the file `pdf`; it answers {pdf}, or {error}. It compiles the
-// documents of the installed toolboxes too, for Help > Documentation > Toolboxes, from their folders. Beside each PDF
+// vignettes of the installed toolboxes too, for Help > Documentation > Toolbox Vignettes, from their folders. Beside each PDF
 // goes its .labels, the page of each heading (docs/ask_labels.tex), which ask_index.jl cuts it by.
 // The command `language-julia.pollisIndexCollection`, with {name, database, documents, words, model, prefix}, makes the
 // index of a collection of Compose > Retrieval-Augmented Generation with the same script, into the file `database`;
@@ -401,7 +401,7 @@ async function compileVignettes(
     sources: AskSource[]
 ): Promise<boolean> {
     let compiled = false
-    const progress = windowProgress('Compiling the package vignettes for Ask Pollis')
+    const progress = windowProgress('Compiling the vignettes for Ask Pollis')
     for (const [done, source] of sources.entries()) {
         g_progress = { stage: 'compiling', done, total: sources.length }
         progress.report(`${done} of ${sources.length}`)

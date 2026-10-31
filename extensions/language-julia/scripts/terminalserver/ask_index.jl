@@ -184,7 +184,7 @@ end
 
 """The text of a heading as LaTeX wrote it to the .labels: without its commands, the second argument of \\texorpdfstring kept."""
 function label_text(text)
-	text = replace(text, r"\\ifttl@toclabel.*?\\fi\s*" => "", r"\\numberline\s*\{[^{}]*\}" => "", r"\\color\s*\{[^{}]*\}" => "")
+	text = replace(text, r"\\if(?:ttl@toclabel|num).*?\\fi\s*" => "", r"\\numberline\s*\{[^{}]*\}" => "", r"\\color\s*\{[^{}]*\}" => "")
 	text = replace(text, r"\\texorpdfstring\s*\{(?:[^{}]|\{[^{}]*\})*\}\s*\{(?<pdf>(?:[^{}]|\{[^{}]*\})*)\}" => s"\g<pdf>")
 	text = replace(text, r"\\(?<char>[&%_#$])" => s"\g<char>", r"\\(?:enspace|quad|qquad|,|;| )\s*|~" => " ")
 	text = replace(text, r"\\[A-Za-z@]+\*?\s*" => "", r"[{}]" => "")

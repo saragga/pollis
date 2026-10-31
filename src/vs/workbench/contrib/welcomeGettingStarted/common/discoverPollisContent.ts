@@ -110,4 +110,15 @@ export const discoverPollisEntries: readonly IDiscoverPollisEntry[] = [
 		media: 'reinforcementLearning.still.svg',
 		animatedMedia: 'reinforcementLearning.svg',
 	},
+	{
+		id: 'askPollis',
+		menuPath: localize('discover.askPollis.path', "Help \u203A Ask Pollis"),
+		title: localize('discover.askPollis.title', "Ask and See the Sources"),
+		description: localize('discover.askPollis.description', "Answers from the wikis, the package vignettes and the Julia manual, with the passages they came from."),
+		action: localize('discover.askPollis.action', "Open Ask Pollis"),
+		command: 'pollis.askPollis',
+		media: 'askPollis.still.svg',
+		animatedMedia: 'askPollis.svg',
+		animationSeconds: 15,
+	},
 ];

@@ -31,7 +31,7 @@ import { hasKey } from '../../../../../base/common/types.js';
 import { ADD_ALERT_COMMAND_ID } from '../../../monitor/browser/alertsPage.js';
 import { localize } from '../../../../../nls.js';
 import { IStorageService } from '../../../../../platform/storage/common/storage.js';
-import { ASK_POLLIS_COMMAND_ID, IAskPollisFromPanel } from '../../../compose/common/askPollis.js';
+import { handlePanelAskMessage, PanelAskMessage } from '../../../compose/browser/askPollisAttach.js';
 import { getVoiceLanguage, getVoiceWriteIn, setVoiceLanguage, setVoiceWriteIn } from '../../../compose/browser/composerVoice.js';
 
 /** Messages a scaffold panel sends that are not handled by the shared wirings of model.handler.ts. */
@@ -46,7 +46,7 @@ type ScaffoldWebviewMessage =
 	| { command: 'chooseModelFile'; input: string; kind: 'chat' | 'embedding'; value: string }
 	| { command: 'setApiKey' }
 	| { command: 'clearApiKey' }
-	| { command: 'askPollis'; question: string }
+	| PanelAskMessage
 	| { command: 'voiceLanguage'; value: string }
 	| { command: 'voiceWriteIn'; value: string };
 
@@ -214,13 +214,12 @@ export function registerScaffoldWebviewHandlers(
 				await apiKey?.handleClear();
 				break;
 			case 'askPollis':
+			case 'askPollisModel':
+			case 'attachFile':
+			case 'pickDataset':
+			case 'pickDatabase':
 				// Answered in Ask Pollis beside the panel, from its wikis and its packages' vignettes first
-				if (msg.question.trim()) {
-					await commandService.executeCommand(ASK_POLLIS_COMMAND_ID, {
-						question: msg.question.trim(),
-						panel: { title: panelTitle, packages: data.packages.map(pkg => pkg.name) },
-					} satisfies IAskPollisFromPanel);
-				}
+				await handlePanelAskMessage(msg, webviewInput.webview, commandService, { title: panelTitle, packages: data.packages.map(pkg => pkg.name) });
 				break;
 			case 'voiceLanguage':
 				setVoiceLanguage(storageService, msg.value);

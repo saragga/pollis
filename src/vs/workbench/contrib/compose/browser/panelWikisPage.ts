@@ -15,12 +15,20 @@ import { IEditorService } from '../../../services/editor/common/editorService.js
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { openWikiByFile } from '../../model/browser/handlers/model.handler.js';
-import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
+import { INotificationService } from '../../../../platform/notification/common/notification.js';
+import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
+import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
+import { IFileService } from '../../../../platform/files/common/files.js';
+import { IPathService } from '../../../services/path/common/pathService.js';
+import { IStorageService } from '../../../../platform/storage/common/storage.js';
+import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
+import { PANELWIKIS_METADATA } from '../../model/browser/webviews/panelWikis.data.js';
+import { buildWebviewHtml } from '../../model/browser/webviews/webviewScaffold.js';
 import { IPollisMenuNode, IPollisViewsService } from '../../pollisViews/common/pollisViews.js';
-import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_STYLE } from './libraryPage.js';
+import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_MINIMAL_STYLE } from './libraryPage.js';
 import { PANEL_WIKIS } from './panelWikis.data.js';
 
-// Help > Documentation > Panels: the wikis of every panel (Overview, Assumptions, Interpretation...), grouped by the menu
+// Help > Documentation > Panels, in the Minimal style of the scaffold: the wikis of every panel (Overview, Assumptions, Interpretation...), grouped by the menu
 // of the menu bar that opens the panel, as the panel's own Wiki tab lists them. Which panel a menu item opens comes from
 // the commands that open each panel, found by compile-toml (panelWikis.data.ts); the menu items, from the menu bar as the
 // Views panel walks it. A wiki opens as the panel opens it: the user's own copy when there is one.
@@ -90,6 +98,12 @@ function openPanelWikisPage(accessor: ServicesAccessor): void {
 	const openerService = accessor.get(IOpenerService);
 	const editorService = accessor.get(IEditorService);
 	const commandService = accessor.get(ICommandService);
+	const notificationService = accessor.get(INotificationService);
+	const notebookEditorModelResolverService = accessor.get(INotebookEditorModelResolverService);
+	const notebookKernelService = accessor.get(INotebookKernelService);
+	const fileService = accessor.get(IFileService);
+	const pathService = accessor.get(IPathService);
+	const storageService = accessor.get(IStorageService);
 
 	if (openPage && !openPage.isDisposed()) {
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
@@ -112,6 +126,7 @@ function openPanelWikisPage(accessor: ServicesAccessor): void {
 	openPage = webviewInput;
 
 	const disposables = new DisposableStore();
+	disposables.add(registerScaffoldPageHandlers(webviewInput, 'panelWikis', title, PANELWIKIS_METADATA.panelWikis, openerService, editorService, commandService, notificationService, notebookEditorModelResolverService, notebookKernelService, fileService, pathService, storageService));
 	disposables.add(webviewInput.webview.onDidDispose(() => {
 		openPage = undefined;
 		disposables.dispose();
@@ -146,14 +161,13 @@ function pageHtml(): string {
 		panel: localize('panelWikis.panel', "Panel"),
 		wikis: localize('panelWikis.wikis', "Wikis"),
 	};
-	return `<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
-	<style>${LIBRARY_PAGE_STYLE}
-		${voiceButtonsCss}
+	return buildWebviewHtml({
+		title: text.title,
+		omitPoweredBy: !PANELWIKIS_METADATA.panelWikis.packages.length,
+		introHtml: text.intro,
+		extraCss: `
+${LIBRARY_PAGE_MINIMAL_STYLE}
+	.libraryPage {
 	h2 { font-size: 18px; font-weight: 400; margin: 20px 0 4px 0; }
 	.hint { color: var(--vscode-descriptionForeground); margin: 0 0 8px 0; line-height: 1.4; max-width: 900px; }
 	.search { width: 100%; max-width: 420px; margin: 0 0 8px 0; padding: 4px 6px; font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; }
@@ -194,15 +208,11 @@ function pageHtml(): string {
 	.tab-switch.right::after { left: 22px; }
 	.tab-switch:focus-visible { outline: 1px solid var(--vscode-focusBorder); outline-offset: 2px; }
 	@media (prefers-reduced-motion: reduce) { .tab-switch, .tab-switch::after { transition: none; } }
-	.link.stub { color: var(--vscode-disabledForeground); }</style>
-</head>
-<body>
-<div class="container">
-	<div class="title-row">
-		<h1>${text.title}</h1>
-		${voiceButtonsHtml}
-	</div>
-	<p class="subtitle">${text.intro}</p>
+	.link.stub { color: var(--vscode-disabledForeground); }
+	}
+`,
+		bodyHtml: `
+		<div class="libraryPage">
 	<div class="filters">
 		<input class="search" id="search" type="search" placeholder="${text.search}" aria-label="${text.search}">
 		<div class="tabs">
@@ -214,10 +224,9 @@ function pageHtml(): string {
 	</div>
 	<p class="hint" id="note" hidden></p>
 	<div id="menus"></div>
-</div>
-<script>
-	const vscode = acquireVsCodeApi();
-	${voiceButtonsScript}
+		</div>
+`,
+		pageScriptJs: `
 	const TEXT = ${JSON.stringify(text)};
 	${LIBRARY_PAGE_HELPERS}
 
@@ -331,9 +340,8 @@ function pageHtml(): string {
 		}
 	});
 	vscode.postMessage({ command: 'ready' });
-</script>
-</body>
-</html>`;
+`,
+	});
 }
 
 registerAction2(class extends Action2 {

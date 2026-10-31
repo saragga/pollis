@@ -12,7 +12,7 @@ import { IStorageService } from '../../../../../platform/storage/common/storage.
 import { IEditorService } from '../../../../services/editor/common/editorService.js';
 import { IPathService } from '../../../../services/path/common/pathService.js';
 import { getVoiceLanguage, getVoiceWriteIn, setVoiceLanguage, setVoiceWriteIn } from '../../../compose/browser/composerVoice.js';
-import { ASK_POLLIS_COMMAND_ID, IAskPollisFromPanel } from '../../../compose/common/askPollis.js';
+import { handlePanelAskMessage, PanelAskMessage } from '../../../compose/browser/askPollisAttach.js';
 import { INotebookEditorModelResolverService } from '../../../notebook/common/notebookEditorModelResolverService.js';
 import { INotebookKernelService } from '../../../notebook/common/notebookKernelService.js';
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
@@ -25,7 +25,7 @@ type ScaffoldPageMessage =
 	| { command: 'openNotebook'; target: string }
 	| { command: 'openWiki'; target: string }
 	| { command: 'openUrl'; url: string }
-	| { command: 'askPollis'; question: string }
+	| PanelAskMessage
 	| { command: 'voiceLanguage'; value: string }
 	| { command: 'voiceWriteIn'; value: string };
 
@@ -74,13 +74,12 @@ export function registerScaffoldPageHandlers(
 				if (msg.url) { await openInBrowser(msg.url, commandService); }
 				break;
 			case 'askPollis':
+			case 'askPollisModel':
+			case 'attachFile':
+			case 'pickDataset':
+			case 'pickDatabase':
 				// Answered in Ask Pollis beside the page, from its wikis and its packages' vignettes first
-				if (msg.question.trim()) {
-					await commandService.executeCommand(ASK_POLLIS_COMMAND_ID, {
-						question: msg.question.trim(),
-						panel: { title: panelTitle, packages: data.packages.map(pkg => pkg.name) },
-					} satisfies IAskPollisFromPanel);
-				}
+				await handlePanelAskMessage(msg, webviewInput.webview, commandService, { title: panelTitle, packages: data.packages.map(pkg => pkg.name) });
 				break;
 			case 'voiceLanguage':
 				setVoiceLanguage(storageService, msg.value);

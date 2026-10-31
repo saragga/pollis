@@ -18,7 +18,15 @@ import { ServicesAccessor } from '../../../../platform/instantiation/common/inst
 import { IEditorService } from '../../../services/editor/common/editorService.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
-import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
+import { IOpenerService } from '../../../../platform/opener/common/opener.js';
+import { INotificationService } from '../../../../platform/notification/common/notification.js';
+import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
+import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
+import { IPathService } from '../../../services/path/common/pathService.js';
+import { IStorageService } from '../../../../platform/storage/common/storage.js';
+import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
+import { EVENTSTUDIES_METADATA } from '../../model/browser/webviews/eventStudies.data.js';
+import { buildWebviewHtml } from '../../model/browser/webviews/webviewScaffold.js';
 import { ADD_ALERT_COMMAND_ID } from './alertsPage.js';
 import { OPEN_LINK_COMMAND_ID } from './openLink.js';
 import { describeCondition, describeSubject, IAlertsService } from './alertsService.js';
@@ -28,7 +36,7 @@ import { DEFAULT_FOMC_INSTRUMENTS, describeFomcEvent, describeInstrument, descri
 import { ICoverageItem, IMediaCoverageRequest, newsName } from './mediaCoverageService.js';
 import { SHOW_MEDIA_COVERAGE_COMMAND_ID } from './mediaCoveragePage.js';
 
-// Compose > Workflows > Event Studies...: a page to make an event study of the filings an alert fires (its title, the
+// Compose > Workflows > Event Studies..., in the Minimal style of the scaffold: a page to make an event study of the filings an alert fires (its title, the
 // alert, the benchmark, the model, the event time and the periods), or of the FOMC's releases (the releases and the
 // instruments), the studies made, and, for the one chosen, the cumulative average abnormal return around its events
 // with its 95% band, drawn as the prices come in, the articles about them under it, and its events with their
@@ -199,6 +207,12 @@ function openEventStudiesPage(accessor: ServicesAccessor, folder: string | undef
 	const commandService = accessor.get(ICommandService);
 	const fileDialogService = accessor.get(IFileDialogService);
 	const fileService = accessor.get(IFileService);
+	const openerService = accessor.get(IOpenerService);
+	const notificationService = accessor.get(INotificationService);
+	const notebookEditorModelResolverService = accessor.get(INotebookEditorModelResolverService);
+	const notebookKernelService = accessor.get(INotebookKernelService);
+	const pathService = accessor.get(IPathService);
+	const storageService = accessor.get(IStorageService);
 
 	if (openPage && !openPage.input.isDisposed()) {
 		webviewWorkbenchService.revealWebview(openPage.input, openPage.input.group ?? -1, false);
@@ -221,6 +235,7 @@ function openEventStudiesPage(accessor: ServicesAccessor, folder: string | undef
 	webviewInput.webview.setHtml(pageHtml());
 
 	const disposables = new DisposableStore();
+	disposables.add(registerScaffoldPageHandlers(webviewInput, 'eventStudies', title, EVENTSTUDIES_METADATA.eventStudies, openerService, editorService, commandService, notificationService, notebookEditorModelResolverService, notebookKernelService, fileService, pathService, storageService));
 	disposables.add(webviewInput.webview.onDidDispose(() => {
 		openPage = undefined;
 		disposables.dispose();
@@ -1153,7 +1168,7 @@ function pageHtml(): string {
 		pValue: localize('eventStudies.pValue', "p"),
 		testEvents: localize('eventStudies.testEvents', "Events"),
 		carTest: localize('eventStudies.carTest', "CAR %, t test"),
-		bmpTest: localize('eventStudies.bmpTest', "Standardized CAR, Boehmer, Musumeci and Poulsen t"),
+		bmpTest: localize('eventStudies.bmpTest', "Standardized CAR, Boehmer, Masumeci and Poulsen t"),
 		kolariTest: localize('eventStudies.kolariTest', "Kolari and Pynnonen's adjusted BMP t"),
 		grankTest: localize('eventStudies.grankTest', "Generalized rank (GRANK) t"),
 		signTest: localize('eventStudies.signTest', "Generalized sign (Cowan) z"),
@@ -1162,138 +1177,124 @@ function pageHtml(): string {
 		volumeTest: localize('eventStudies.volumeTest', "Abnormal volume, t test"),
 		volatilityTest: localize('eventStudies.volatilityTest', "Abnormal volatility, t test"),
 	};
-	return `<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
-	<style>
-		* { box-sizing: border-box; }
-		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
-		.container { max-width: 1100px; margin: 0 auto; padding: 24px; }
-		h1 { font-size: 32px; font-weight: 300; margin: 0 0 4px 0; line-height: 1.2; }
-		h2 { font-size: 18px; font-weight: 400; margin: 0; }
-		${voiceButtonsCss}
-		.spinner { fill: none; stroke: var(--vscode-progressBar-background); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 56 20; transform-box: fill-box; transform-origin: center; animation: spin 1s linear infinite; }
+	return buildWebviewHtml({
+		title: text.title,
+		omitPoweredBy: !EVENTSTUDIES_METADATA.eventStudies.packages.length,
+		bullets: `${text.intro.map(point => `<li>${point.lines.join(' ')}${point.points ? `<ul class="methods-list">${point.points.map(sub => `<li>${sub}</li>`).join('')}</ul>` : ''}</li>`).join('')}`,
+		extraCss: `
+		.container { max-width: 1100px; }
+		.eventStudiesPage h2 { font-size: 18px; font-weight: 400; margin: 0; }
+		.eventStudiesPage .spinner { fill: none; stroke: var(--vscode-progressBar-background); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 56 20; transform-box: fill-box; transform-origin: center; animation: spin 1s linear infinite; }
 		@keyframes spin { to { transform: rotate(360deg); } }
-		.meter-track { fill: none; stroke: var(--vscode-widget-border, var(--vscode-panel-border)); stroke-width: 3; }
-		.meter-arc { fill: none; stroke: var(--vscode-progressBar-background); stroke-width: 3; stroke-linecap: round; transition: stroke-dasharray 0.25s linear; }
-		.meter-text { font-size: 10px; fill: var(--vscode-foreground); }
+		.eventStudiesPage .meter-track { fill: none; stroke: var(--vscode-widget-border, var(--vscode-panel-border)); stroke-width: 3; }
+		.eventStudiesPage .meter-arc { fill: none; stroke: var(--vscode-progressBar-background); stroke-width: 3; stroke-linecap: round; transition: stroke-dasharray 0.25s linear; }
+		.eventStudiesPage .meter-text { font-size: 10px; fill: var(--vscode-foreground); }
 		@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 3s; } }
-		.subtitle { font-size: 14px; color: var(--vscode-descriptionForeground); margin: 0 0 24px 0; line-height: 1.4; max-width: 900px; }
-		.methods-list { list-style: none; padding-left: 22px; margin: 5px 0; }
-		.methods-list li { margin: 2px 0; padding-left: 20px; position: relative; }
-		.methods-list li::before { content: ''; position: absolute; left: 0; top: calc(0.5lh - 4px); width: 8px; height: 8px; border-radius: 50%; background-color: var(--vscode-textLink-foreground); }
-		.subtitle.methods-list { margin: 0 0 24px 0; }
-		[hidden] { display: none !important; }
-		.sectionHeader { display: flex; align-items: baseline; gap: 16px; margin: 24px 0 8px 0; }
-		.sectionHeader h2 { flex: 1; }
-		.pane { padding: 16px; border-radius: 4px; background: var(--vscode-welcomePage-tileBackground, var(--vscode-editorWidget-background)); }
-		.formGrid { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 12px 16px; align-items: baseline; }
-		.hint { font-size: 12px; color: var(--vscode-descriptionForeground); margin-top: 4px; line-height: 1.4; }
-		.row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-		.row.baseline { align-items: baseline; }
-		.row .hint { margin-top: 0; }
-		input[type="text"], input[type="number"], select { font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; padding: 4px 6px; }
-		input:focus, select:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
-		input#studyTitle { width: 360px; max-width: 100%; }
-		select#alert { max-width: 100%; }
-		input#benchmark { width: 120px; text-transform: uppercase; }
-		input[type="number"] { width: 72px; }
-		.choice { display: inline-flex; align-items: center; gap: 4px; margin-right: 16px; cursor: pointer; }
-		button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; padding: 4px 12px; cursor: pointer; font-size: 11px; opacity: 0.7; }
+		.eventStudiesPage .methods-list { list-style: none; padding-left: 22px; margin: 5px 0; }
+		.eventStudiesPage .methods-list li { margin: 2px 0; padding-left: 20px; position: relative; }
+		.eventStudiesPage .methods-list li::before { content: ''; position: absolute; left: 0; top: calc(0.5lh - 4px); width: 8px; height: 8px; border-radius: 50%; background-color: var(--vscode-textLink-foreground); }
+		.eventStudiesPage .subtitle.methods-list { margin: 0 0 24px 0; }
+		.eventStudiesPage [hidden] { display: none !important; }
+		.eventStudiesPage .sectionHeader { display: flex; align-items: baseline; gap: 16px; margin: 24px 0 8px 0; }
+		.eventStudiesPage .sectionHeader h2 { flex: 1; }
+		.eventStudiesPage .pane { padding: 16px; border-radius: 4px; background: var(--vscode-welcomePage-tileBackground, var(--vscode-editorWidget-background)); }
+		.eventStudiesPage .formGrid { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 12px 16px; align-items: baseline; }
+		.eventStudiesPage .hint { font-size: 12px; color: var(--vscode-descriptionForeground); margin-top: 4px; line-height: 1.4; }
+		.eventStudiesPage .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+		.eventStudiesPage .row.baseline { align-items: baseline; }
+		.eventStudiesPage .row .hint { margin-top: 0; }
+		.eventStudiesPage input[type="text"], .eventStudiesPage input[type="number"], .eventStudiesPage select { font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; padding: 4px 6px; }
+		.eventStudiesPage input:focus, .eventStudiesPage select:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
+		.eventStudiesPage input#studyTitle { width: 360px; max-width: 100%; }
+		.eventStudiesPage select#alert { max-width: 100%; }
+		.eventStudiesPage input#benchmark { width: 120px; text-transform: uppercase; }
+		.eventStudiesPage input[type="number"] { width: 72px; }
+		.eventStudiesPage .choice { display: inline-flex; align-items: center; gap: 4px; margin-right: 16px; cursor: pointer; }
+		.eventStudiesPage button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; padding: 4px 12px; cursor: pointer; font-size: 11px; opacity: 0.7; }
 		/* As the code buttons below a panel's Example Code: dimmed until pointed at, the blue one not */
-		button.action:not(:disabled):hover, button.action.current, button.action.primary { opacity: 1; }
-		button.action:hover { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
-		button.primary { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
-		button.primary:hover { background: var(--vscode-button-hoverBackground); }
-		button:disabled { opacity: 0.5; cursor: default; }
-		button.action:disabled:hover { color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); }
-		button.primary:disabled:hover { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
-		.link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; font-size: 12px; }
-		.link:hover { text-decoration: underline; }
-		.periods { display: grid; grid-template-columns: minmax(120px, 200px) max-content max-content max-content max-content; gap: 6px 12px; align-items: center; }
-		.periods .head { font-size: 12px; color: var(--vscode-descriptionForeground); }
-		.instrumentGroup { margin-bottom: 6px; }
-		.instrumentGroup .head { font-size: 12px; color: var(--vscode-descriptionForeground); margin-bottom: 2px; }
-		.tableScroll { overflow-x: auto; }
-		.periods input[type="text"] { width: 100%; }
-		.list { border-top: 1px solid var(--vscode-widget-border); }
-		.entry { display: flex; align-items: center; gap: 12px; padding: 8px; border-bottom: 1px solid var(--vscode-widget-border); border-left: 3px solid transparent; cursor: pointer; }
-		.entry:hover { background: var(--vscode-list-hoverBackground); }
-		.entry.chosen { border-left-color: var(--vscode-focusBorder); background: var(--vscode-list-inactiveSelectionBackground); }
-		.entry .text { flex: 1; min-width: 0; line-height: 1.4; }
-		.entry .name { font-weight: 600; }
-		.entry .meta { font-size: 11px; color: var(--vscode-descriptionForeground); }
-		.empty { color: var(--vscode-descriptionForeground); padding: 12px 8px; }
-		.info { font-size: 12px; color: var(--vscode-descriptionForeground); margin-bottom: 12px; line-height: 1.4; }
-		.chartHeader { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
-		.chartCaption { font-size: 11px; color: var(--vscode-descriptionForeground); }
-		.views { display: flex; gap: 4px; }
-		.views button { font: inherit; font-size: 11px; color: var(--vscode-foreground); background: none; border: 1px solid transparent; border-radius: 2px; padding: 1px 6px; cursor: pointer; }
-		.views button:hover { background: var(--vscode-toolbar-hoverBackground); }
-		.views button.chosen { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
-		#chart { display: block; width: 100%; height: 280px; }
-		#chart .grid { stroke: var(--vscode-widget-border); stroke-width: 1; }
-		#chart .zero { stroke: var(--vscode-descriptionForeground); stroke-width: 1; }
-		#chart .event { fill: none; stroke: var(--vscode-descriptionForeground); stroke-width: 1; opacity: 0.25; }
-		#chart .band { fill: var(--vscode-textLink-foreground); opacity: 0.15; }
-		#chart .caar { fill: none; stroke: var(--vscode-textLink-foreground); stroke-width: 2; }
-		#chart .other { stroke: var(--vscode-charts-orange); stroke-width: 1; stroke-dasharray: 4 3; }
-		#chart text.other { fill: var(--vscode-charts-orange); stroke: none; }
-		#chart .articles { fill: var(--vscode-descriptionForeground); opacity: 0.6; }
-		#chart text { font-size: 10px; fill: var(--vscode-descriptionForeground); }
-		.summary { font-size: 12px; margin-top: 8px; }
-		table { width: 100%; border-collapse: collapse; font-size: 12px; }
-		th { text-align: left; font-weight: normal; color: var(--vscode-descriptionForeground); padding: 4px 8px; border-bottom: 1px solid var(--vscode-widget-border); }
-		td { padding: 4px 8px; border-bottom: 1px solid var(--vscode-widget-border); }
-		td.number, th.number { text-align: right; font-variant-numeric: tabular-nums; }
-		td.note { font-size: 12px; color: var(--vscode-descriptionForeground); }
-		tr.capturing td { color: var(--vscode-descriptionForeground); }
-		#panelChart { display: block; width: 100%; height: 300px; }
-		#panelChart .grid { stroke: var(--vscode-widget-border); stroke-width: 1; }
-		#panelChart .zero { stroke: var(--vscode-descriptionForeground); stroke-width: 1; }
-		#panelChart .start { stroke: var(--vscode-descriptionForeground); stroke-width: 1; stroke-dasharray: 4 3; }
-		#panelChart text { font-size: 10px; fill: var(--vscode-descriptionForeground); }
-		#panelChart .line { fill: none; stroke-width: 1; opacity: 0.6; }
-		#panelChart .whisker { stroke-width: 1.5; }
-		.twfe { stroke: var(--vscode-charts-blue); fill: var(--vscode-charts-blue); }
-		.sa { stroke: var(--vscode-charts-orange); fill: var(--vscode-charts-orange); }
-		.cs { stroke: var(--vscode-charts-green); fill: var(--vscode-charts-green); }
-		.sw { stroke: var(--vscode-charts-purple); fill: var(--vscode-charts-purple); }
-		.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; margin-top: 6px; }
-		.legend svg { vertical-align: middle; margin-right: 4px; }
-		.preview { margin-top: 6px; font-size: 11px; }
-		.preview td, .preview th { padding: 2px 6px; white-space: nowrap; }
-		.lines div { font-size: 12px; margin-top: 4px; }
-		.effectsCaption { font-size: 12px; color: var(--vscode-descriptionForeground); margin-bottom: 4px; }
-		.effectsCaption .columnName { color: var(--vscode-editorWarning-foreground); }
-		.effects th svg { vertical-align: middle; margin-right: 4px; }
-		.effects td.number { white-space: nowrap; }
-		.effects .interval { font-size: 11px; color: var(--vscode-descriptionForeground); }
-		.effects td.reference { color: var(--vscode-descriptionForeground); }
-		.effects td.significant .estimate { font-weight: 600; }
-		.effects td.significant.twfe { color: var(--vscode-charts-blue); }
-		.effects td.significant.sa { color: var(--vscode-charts-orange); }
-		.effects td.significant.cs { color: var(--vscode-charts-green); }
-		.effects td.significant.sw { color: var(--vscode-charts-purple); }
-		.effects tr.band td { font-size: 11px; color: var(--vscode-descriptionForeground); padding-top: 10px; }
-		.effects tr.band td:first-child { font-weight: 600; color: var(--vscode-foreground); }
-		.effectsNotes { font-size: 11px; color: var(--vscode-descriptionForeground); margin-top: 6px; }
-		.effects tr.start td { border-top: 2px solid var(--vscode-descriptionForeground); }
-		.up { color: var(--vscode-charts-green); }
-		.down { color: var(--vscode-charts-red); }
-	</style>
-</head>
-<body>
-<div class="container">
-	<div class="title-row">
-		<h1>${text.title}</h1>
-		${voiceButtonsHtml}
-	</div>
-	<ul class="subtitle methods-list">${text.intro.map(point => `<li>${point.lines.join(' ')}${point.points ? `<ul class="methods-list">${point.points.map(sub => `<li>${sub}</li>`).join('')}</ul>` : ''}</li>`).join('')}</ul>
-
+		.eventStudiesPage button.action:not(:disabled):hover, .eventStudiesPage button.action.current, .eventStudiesPage button.action.primary { opacity: 1; }
+		.eventStudiesPage button.action:hover { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		.eventStudiesPage button.primary { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		.eventStudiesPage button.primary:hover { background: var(--vscode-button-hoverBackground); }
+		.eventStudiesPage button:disabled { opacity: 0.5; cursor: default; }
+		.eventStudiesPage button.action:disabled:hover { color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); }
+		.eventStudiesPage button.primary:disabled:hover { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		.eventStudiesPage .link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; font-size: 12px; }
+		.eventStudiesPage .link:hover { text-decoration: underline; }
+		.eventStudiesPage .periods { display: grid; grid-template-columns: minmax(120px, 200px) max-content max-content max-content max-content; gap: 6px 12px; align-items: center; }
+		.eventStudiesPage .periods .head { font-size: 12px; color: var(--vscode-descriptionForeground); }
+		.eventStudiesPage .instrumentGroup { margin-bottom: 6px; }
+		.eventStudiesPage .instrumentGroup .head { font-size: 12px; color: var(--vscode-descriptionForeground); margin-bottom: 2px; }
+		.eventStudiesPage .tableScroll { overflow-x: auto; }
+		.eventStudiesPage .periods input[type="text"] { width: 100%; }
+		.eventStudiesPage .list { border-top: 1px solid var(--vscode-widget-border); }
+		.eventStudiesPage .entry { display: flex; align-items: center; gap: 12px; padding: 8px; border-bottom: 1px solid var(--vscode-widget-border); border-left: 3px solid transparent; cursor: pointer; }
+		.eventStudiesPage .entry:hover { background: var(--vscode-list-hoverBackground); }
+		.eventStudiesPage .entry.chosen { border-left-color: var(--vscode-focusBorder); background: var(--vscode-list-inactiveSelectionBackground); }
+		.eventStudiesPage .entry .text { flex: 1; min-width: 0; line-height: 1.4; }
+		.eventStudiesPage .entry .name { font-weight: 600; }
+		.eventStudiesPage .entry .meta { font-size: 11px; color: var(--vscode-descriptionForeground); }
+		.eventStudiesPage .empty { color: var(--vscode-descriptionForeground); padding: 12px 8px; }
+		.eventStudiesPage .info { font-size: 12px; color: var(--vscode-descriptionForeground); margin-bottom: 12px; line-height: 1.4; }
+		.eventStudiesPage .chartHeader { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+		.eventStudiesPage .chartCaption { font-size: 11px; color: var(--vscode-descriptionForeground); }
+		.eventStudiesPage .views { display: flex; gap: 4px; }
+		.eventStudiesPage .views button { font: inherit; font-size: 11px; color: var(--vscode-foreground); background: none; border: 1px solid transparent; border-radius: 2px; padding: 1px 6px; cursor: pointer; }
+		.eventStudiesPage .views button:hover { background: var(--vscode-toolbar-hoverBackground); }
+		.eventStudiesPage .views button.chosen { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		.eventStudiesPage #chart { display: block; width: 100%; height: 280px; }
+		.eventStudiesPage #chart .grid { stroke: var(--vscode-widget-border); stroke-width: 1; }
+		.eventStudiesPage #chart .zero { stroke: var(--vscode-descriptionForeground); stroke-width: 1; }
+		.eventStudiesPage #chart .event { fill: none; stroke: var(--vscode-descriptionForeground); stroke-width: 1; opacity: 0.25; }
+		.eventStudiesPage #chart .band { fill: var(--vscode-textLink-foreground); opacity: 0.15; }
+		.eventStudiesPage #chart .caar { fill: none; stroke: var(--vscode-textLink-foreground); stroke-width: 2; }
+		.eventStudiesPage #chart .other { stroke: var(--vscode-charts-orange); stroke-width: 1; stroke-dasharray: 4 3; }
+		.eventStudiesPage #chart text.other { fill: var(--vscode-charts-orange); stroke: none; }
+		.eventStudiesPage #chart .articles { fill: var(--vscode-descriptionForeground); opacity: 0.6; }
+		.eventStudiesPage #chart text { font-size: 10px; fill: var(--vscode-descriptionForeground); }
+		.eventStudiesPage .summary { font-size: 12px; margin-top: 8px; }
+		.eventStudiesPage table { width: 100%; border-collapse: collapse; font-size: 12px; }
+		.eventStudiesPage th { text-align: left; font-weight: normal; color: var(--vscode-descriptionForeground); padding: 4px 8px; border-bottom: 1px solid var(--vscode-widget-border); }
+		.eventStudiesPage td { padding: 4px 8px; border-bottom: 1px solid var(--vscode-widget-border); }
+		.eventStudiesPage td.number, .eventStudiesPage th.number { text-align: right; font-variant-numeric: tabular-nums; }
+		.eventStudiesPage td.note { font-size: 12px; color: var(--vscode-descriptionForeground); }
+		.eventStudiesPage tr.capturing td { color: var(--vscode-descriptionForeground); }
+		.eventStudiesPage #panelChart { display: block; width: 100%; height: 300px; }
+		.eventStudiesPage #panelChart .grid { stroke: var(--vscode-widget-border); stroke-width: 1; }
+		.eventStudiesPage #panelChart .zero { stroke: var(--vscode-descriptionForeground); stroke-width: 1; }
+		.eventStudiesPage #panelChart .start { stroke: var(--vscode-descriptionForeground); stroke-width: 1; stroke-dasharray: 4 3; }
+		.eventStudiesPage #panelChart text { font-size: 10px; fill: var(--vscode-descriptionForeground); }
+		.eventStudiesPage #panelChart .line { fill: none; stroke-width: 1; opacity: 0.6; }
+		.eventStudiesPage #panelChart .whisker { stroke-width: 1.5; }
+		.eventStudiesPage .twfe { stroke: var(--vscode-charts-blue); fill: var(--vscode-charts-blue); }
+		.eventStudiesPage .sa { stroke: var(--vscode-charts-orange); fill: var(--vscode-charts-orange); }
+		.eventStudiesPage .cs { stroke: var(--vscode-charts-green); fill: var(--vscode-charts-green); }
+		.eventStudiesPage .sw { stroke: var(--vscode-charts-purple); fill: var(--vscode-charts-purple); }
+		.eventStudiesPage .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; margin-top: 6px; }
+		.eventStudiesPage .legend svg { vertical-align: middle; margin-right: 4px; }
+		.eventStudiesPage .preview { margin-top: 6px; font-size: 11px; }
+		.eventStudiesPage .preview td, .eventStudiesPage .preview th { padding: 2px 6px; white-space: nowrap; }
+		.eventStudiesPage .lines div { font-size: 12px; margin-top: 4px; }
+		.eventStudiesPage .effectsCaption { font-size: 12px; color: var(--vscode-descriptionForeground); margin-bottom: 4px; }
+		.eventStudiesPage .effectsCaption .columnName { color: var(--vscode-editorWarning-foreground); }
+		.eventStudiesPage .effects th svg { vertical-align: middle; margin-right: 4px; }
+		.eventStudiesPage .effects td.number { white-space: nowrap; }
+		.eventStudiesPage .effects .interval { font-size: 11px; color: var(--vscode-descriptionForeground); }
+		.eventStudiesPage .effects td.reference { color: var(--vscode-descriptionForeground); }
+		.eventStudiesPage .effects td.significant .estimate { font-weight: 600; }
+		.eventStudiesPage .effects td.significant.twfe { color: var(--vscode-charts-blue); }
+		.eventStudiesPage .effects td.significant.sa { color: var(--vscode-charts-orange); }
+		.eventStudiesPage .effects td.significant.cs { color: var(--vscode-charts-green); }
+		.eventStudiesPage .effects td.significant.sw { color: var(--vscode-charts-purple); }
+		.eventStudiesPage .effects tr.band td { font-size: 11px; color: var(--vscode-descriptionForeground); padding-top: 10px; }
+		.eventStudiesPage .effects tr.band td:first-child { font-weight: 600; color: var(--vscode-foreground); }
+		.eventStudiesPage .effectsNotes { font-size: 11px; color: var(--vscode-descriptionForeground); margin-top: 6px; }
+		.eventStudiesPage .effects tr.start td { border-top: 2px solid var(--vscode-descriptionForeground); }
+		.eventStudiesPage .up { color: var(--vscode-charts-green); }
+		.eventStudiesPage .down { color: var(--vscode-charts-red); }
+`,
+		bodyHtml: `
+		<div class="eventStudiesPage">
 	<div class="sectionHeader"><h2>${text.newStudy}</h2></div>
 	<div class="pane">
 		<div class="formGrid">
@@ -1484,11 +1485,10 @@ function pageHtml(): string {
 		<div id="events"></div>
 		</div>
 	</div>
-</div>
-<script>
-	const vscode = acquireVsCodeApi();
+		</div>
+`,
+		pageScriptJs: `
 	const TEXT = ${JSON.stringify(text)};
-	${voiceButtonsScript}
 	const DEFAULT_PERIOD = ${JSON.stringify(DEFAULT_EVENT_PERIOD)};
 	const FOMC_PERIOD = ${JSON.stringify(FOMC_PERIOD)};
 	let state = { studies: [], alerts: [] };
@@ -2402,9 +2402,8 @@ function pageHtml(): string {
 	renderPeriods();
 	renderData();
 	vscode.postMessage({ command: 'ready' });
-</script>
-</body>
-</html>`;
+`,
+	});
 }
 
 registerAction2(class extends Action2 {

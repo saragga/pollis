@@ -20,13 +20,20 @@ import { IPathService } from '../../../services/path/common/pathService.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { API_PROVIDERS, ProviderRequests } from '../../model/browser/common/apiProviders.js';
-import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
+import { IOpenerService } from '../../../../platform/opener/common/opener.js';
+import { IEditorService } from '../../../services/editor/common/editorService.js';
+import { INotificationService } from '../../../../platform/notification/common/notification.js';
+import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
+import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
+import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
+import { SNOWBALLSEARCH_METADATA } from '../../model/browser/webviews/snowballSearch.data.js';
+import { buildWebviewHtml } from '../../model/browser/webviews/webviewScaffold.js';
 import { FEWEST_ROWS, isRowsChoice, rowsChoiceCss, rowsChoiceScript, sortHeadingsCss, sortHeadingsScript, sortHint, stickyHeadCss, stickyHeadScript, storedRows, storeRows } from '../../model/browser/webviews/webviewPager.js';
 import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
 import { ISnowballArticle, ISnowballDatabaseService, ISnowballSeeds, SNOWBALL_SEARCH_COMMAND_ID, SnowballRow } from '../common/snowballSearch.js';
 import { IOpenAlexWork, OPENALEX_TYPES, openAlexIdOf, sameWork, titleWords } from './literatureRadarPage.js';
 
-// Compose > Literature Radar > Snowball Search Map: from a few works the user knows, the seeds, the works their citations lead
+// Compose > Literature Radar > Snowball Search Map, in the Minimal style of the scaffold: from a few works the user knows, the seeds, the works their citations lead
 // to, poured into one pool ranked by how many seeds each is tied to (Links). The seeds come from PollisReferences, the
 // references Pollis brings and the user's, by their keys; Discover Literature's articles not saved there are kept in the
 // map's in-memory database. Each action is a step of the map's record, a TOML file of [[step]]s in ~/.pollis/literature,
@@ -377,6 +384,12 @@ function openSnowballSearch(accessor: ServicesAccessor, seeds: ISnowballSeeds | 
 	const fileService = accessor.get(IFileService);
 	const database = accessor.get(ISnowballDatabaseService);
 	const storageService = accessor.get(IStorageService);
+	const openerService = accessor.get(IOpenerService);
+	const editorService = accessor.get(IEditorService);
+	const notificationService = accessor.get(INotificationService);
+	const notebookEditorModelResolverService = accessor.get(INotebookEditorModelResolverService);
+	const notebookKernelService = accessor.get(INotebookKernelService);
+	const pathService = accessor.get(IPathService);
 	const folder = joinPath(accessor.get(IPathService).userHome({ preferLocal: true }), '.pollis', 'literature');
 
 	if (openPage && !openPage.isDisposed()) {
@@ -403,6 +416,7 @@ function openSnowballSearch(accessor: ServicesAccessor, seeds: ISnowballSeeds | 
 	openPage = webviewInput;
 
 	const disposables = new DisposableStore();
+	disposables.add(registerScaffoldPageHandlers(webviewInput, 'snowballSearch', title, SNOWBALLSEARCH_METADATA.snowballSearch, openerService, editorService, commandService, notificationService, notebookEditorModelResolverService, notebookKernelService, fileService, pathService, storageService));
 	disposables.add(webviewInput.webview.onDidDispose(() => {
 		openPage = undefined;
 		addToOpenPage = undefined;
@@ -1355,124 +1369,110 @@ function pageHtml(askContexts: boolean, portrait: boolean, saturate: ISaturateSe
 		discard: localize('snowball.discard', "Discard"),
 		working: localize('snowball.working', "Working..."),
 	};
-	return `<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
-	<style>
-		${voiceButtonsCss}
+	return buildWebviewHtml({
+		title: text.title,
+		omitPoweredBy: !SNOWBALLSEARCH_METADATA.snowballSearch.packages.length,
+		introHtml: text.intro,
+		extraCss: `
 		${rowsChoiceCss}
 		${stickyHeadCss}
 		${sortHeadingsCss}
-		* { box-sizing: border-box; }
-		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
-		.container { max-width: 1200px; margin: 0 auto; padding: 24px; }
-		h1 { font-size: 32px; font-weight: 300; margin: 0 0 4px 0; line-height: 1.2; }
-		h2 { font-size: 18px; font-weight: 400; margin: 0; }
-		.subtitle { font-size: 14px; color: var(--vscode-descriptionForeground); margin: 0 0 24px 0; line-height: 1.4; max-width: 900px; }
-		[hidden] { display: none !important; }
-		.sectionHeader { display: flex; align-items: baseline; gap: 16px; margin: 24px 0 8px 0; }
-		.sectionHeader h2 { flex: 1; }
-		.dirty { font-size: 12px; color: var(--vscode-descriptionForeground); margin-left: 8px; }
-		.headerLinks { font-size: 12px; color: var(--vscode-descriptionForeground); }
-		.pane { padding: 16px; border-radius: 4px; background: var(--vscode-welcomePage-tileBackground, var(--vscode-editorWidget-background)); }
-		.hint { font-size: 12px; color: var(--vscode-descriptionForeground); margin-top: 4px; line-height: 1.4; max-width: 760px; }
-		.row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-		input[type="text"] { font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; padding: 4px 6px; width: 480px; max-width: 100%; }
-		input:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
-		button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: 1px solid var(--vscode-button-background); border-radius: 2px; padding: 5px 16px; min-width: 96px; cursor: pointer; font-size: 11px; opacity: 0.7; }
+		.container { max-width: 1200px; }
+		.snowballPage h2 { font-size: 18px; font-weight: 400; margin: 0; }
+		.snowballPage [hidden] { display: none !important; }
+		.snowballPage .sectionHeader { display: flex; align-items: baseline; gap: 16px; margin: 24px 0 8px 0; }
+		.snowballPage .sectionHeader h2 { flex: 1; }
+		.snowballPage .dirty { font-size: 12px; color: var(--vscode-descriptionForeground); margin-left: 8px; }
+		.snowballPage .headerLinks { font-size: 12px; color: var(--vscode-descriptionForeground); }
+		.snowballPage .pane { padding: 16px; border-radius: 4px; background: var(--vscode-welcomePage-tileBackground, var(--vscode-editorWidget-background)); }
+		.snowballPage .hint { font-size: 12px; color: var(--vscode-descriptionForeground); margin-top: 4px; line-height: 1.4; max-width: 760px; }
+		.snowballPage .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+		.snowballPage input[type="text"] { font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; padding: 4px 6px; width: 480px; max-width: 100%; }
+		.snowballPage input:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
+		.snowballPage button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: 1px solid var(--vscode-button-background); border-radius: 2px; padding: 5px 16px; min-width: 96px; cursor: pointer; font-size: 11px; opacity: 0.7; }
 		/* As the code buttons below a panel's Example Code: dimmed until pointed at, the blue one not */
-		button.action:not(:disabled):hover, button.action.current, button.action.primary { opacity: 1; }
-		button.action:hover { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
-		button:disabled, button:disabled:hover { opacity: 0.5; cursor: default; }
-		.actionBar { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 12px; margin: 16px 0; }
-		.actionBar > .tick { margin-left: 12px; }
+		.snowballPage button.action:not(:disabled):hover, .snowballPage button.action.current, .snowballPage button.action.primary { opacity: 1; }
+		.snowballPage button.action:hover { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		.snowballPage button:disabled, .snowballPage button:disabled:hover { opacity: 0.5; cursor: default; }
+		.snowballPage .actionBar { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 12px; margin: 16px 0; }
+		.snowballPage .actionBar > .tick { margin-left: 12px; }
 		/* One action blue: the first at first, then the last enabled one the pointer was on */
-		.actionBar > button.action.current { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
-		.actionLabel { color: var(--vscode-descriptionForeground); }
-		.link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; text-align: left; }
-		.link:hover { text-decoration: underline; }
-		.link:disabled { color: var(--vscode-disabledForeground); cursor: default; text-decoration: none; }
-		.status { font-size: 12px; color: var(--vscode-descriptionForeground); margin-top: 8px; line-height: 1.4; }
-		.status.error { color: var(--vscode-errorForeground); }
-		.mapBox { overflow-x: auto; padding: 8px; border-radius: 4px; background: var(--vscode-welcomePage-tileBackground, var(--vscode-editorWidget-background)); }
-		.mapBox svg { display: block; }
-		.mapBox .empty { padding: 16px 8px; }
-		svg .node { cursor: pointer; }
-		svg .node rect { fill: var(--vscode-editor-background); stroke: var(--vscode-widget-border); stroke-width: 1; }
-		svg .node.seed rect { stroke: var(--vscode-textLink-foreground); }
-		svg .node.source { cursor: default; }
-		svg .node.source rect { fill: none; stroke: var(--vscode-descriptionForeground); stroke-dasharray: 3 3; }
-		svg .node.removed rect { stroke-dasharray: 4 3; stroke: var(--vscode-disabledForeground); }
-		svg .node.removed text { fill: var(--vscode-disabledForeground); }
-		svg .node.chosen rect { stroke: var(--vscode-focusBorder); stroke-width: 2; }
-		svg .node.seed.chosen rect { stroke: var(--vscode-focusBorder); stroke-width: 2; fill: var(--vscode-list-activeSelectionBackground, var(--vscode-editor-background)); }
-		svg .node.seed.chosen text { fill: var(--vscode-list-activeSelectionForeground, var(--vscode-foreground)); font-weight: 600; }
-		.shape { display: inline-block; vertical-align: middle; width: 24px; height: 12px; margin-right: 4px; box-sizing: border-box; font-size: 9px; line-height: 10px; text-align: center; }
-		.shape.source { border: 1px dashed var(--vscode-descriptionForeground); }
-		.shape.seed { border: 1px solid var(--vscode-textLink-foreground); border-radius: 6px; }
-		.shape.list { border: 1px solid var(--vscode-widget-border, var(--vscode-descriptionForeground)); background: var(--vscode-editor-background); color: var(--vscode-foreground); }
-		.chosenNote { font-size: 12px; margin: 6px 8px 0 8px; }
-		svg .node text { fill: var(--vscode-foreground); font-size: 12px; }
-		svg .node.source text { fill: var(--vscode-descriptionForeground); }
-		svg .edge { fill: none; stroke: var(--vscode-descriptionForeground); stroke-width: 1; }
-		svg .edge.removed { stroke-dasharray: 4 3; }
-		svg .arrow { fill: var(--vscode-descriptionForeground); }
-		svg .edgeLabel { fill: var(--vscode-descriptionForeground); font-size: 10px; paint-order: stroke; stroke: var(--vscode-welcomePage-tileBackground, var(--vscode-editorWidget-background)); stroke-width: 4px; }
-		.legend { font-size: 11px; color: var(--vscode-descriptionForeground); margin: 4px 8px 0 8px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; }
-		.legend[hidden] { display: none; }
-		.layoutChoice .link { font-size: 11px; }
-		.layoutChoice .link.chosen { color: var(--vscode-foreground); font-weight: 600; cursor: default; text-decoration: none; }
-		.seedList { margin: 0; padding: 0; list-style: none; }
-		.seedList li { display: flex; align-items: baseline; gap: 8px; padding: 4px 8px; border-bottom: 1px solid var(--vscode-widget-border); }
-		.seedList li.chosen { box-shadow: inset 2px 0 0 var(--vscode-focusBorder); }
-		.seedList .seedId { font-weight: 600; min-width: 28px; cursor: pointer; }
-		.seedList .seedText { flex: 1; min-width: 0; }
-		.muted { color: var(--vscode-descriptionForeground); }
-		tr.excluded > td { opacity: 0.55; }
-		.actionBar > label.number { display: inline-flex; align-items: center; gap: 6px; color: var(--vscode-descriptionForeground); }
-		.actionBar > label.number > input { width: 4em; font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, transparent); padding: 2px 4px; }
-		button.removeSeed { font: inherit; font-size: 14px; line-height: 1; color: var(--vscode-descriptionForeground); background: none; border: none; padding: 0 4px; cursor: pointer; }
-		button.removeSeed:hover { color: var(--vscode-foreground); }
-		.finder { margin-top: 20px; }
-		.found { margin-top: 4px; }
-		.found div { padding: 3px 0; font-size: 12px; }
-		.poolLine { color: var(--vscode-descriptionForeground); font-size: 12px; }
-		.verdict { font-size: 12px; margin-top: 4px; line-height: 1.4; }
-		.risen { margin-left: 6px; font-size: 11px; color: var(--vscode-textLink-foreground); white-space: nowrap; }
-		.showRow { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; margin: 8px 0; }
-		.showRow label { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
-		table { width: 100%; border-collapse: collapse; font-size: 12px; }
-		th { text-align: left; font-weight: normal; color: var(--vscode-descriptionForeground); padding: 4px 8px; border-bottom: 1px solid var(--vscode-widget-border); white-space: nowrap; }
-		th.number, td.number { text-align: right; }
-		td { padding: 6px 8px; border-bottom: 1px solid var(--vscode-widget-border); vertical-align: top; }
-		td.number { white-space: nowrap; font-variant-numeric: tabular-nums; }
-		td.dots { white-space: nowrap; color: var(--vscode-textLink-foreground); letter-spacing: 1px; cursor: pointer; }
-		tr.detail td { padding: 4px 8px 10px 32px; background: var(--vscode-welcomePage-tileBackground, var(--vscode-editorWidget-background)); }
-		.tie { margin: 6px 0; }
-		.tieHead { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
-		.tieHead .seedId { font-weight: 600; }
-		.tieHead .influential { color: var(--vscode-textLink-foreground); }
-		.context { margin: 4px 0 0 12px; padding-left: 8px; border-left: 2px solid var(--vscode-widget-border); color: var(--vscode-descriptionForeground); line-height: 1.4; }
-		.tick { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; color: var(--vscode-descriptionForeground); }
-		.authors { color: var(--vscode-descriptionForeground); margin-top: 2px; }
-		.pager { display: flex; justify-content: center; align-items: center; gap: 16px; padding: 12px 8px; font-size: 12px; color: var(--vscode-descriptionForeground); }
-		.pager .link { font-size: 12px; }
-		.empty { color: var(--vscode-descriptionForeground); padding: 12px 8px; }
-		.mapRow { display: flex; align-items: baseline; gap: 12px; padding: 4px 0; border-bottom: 1px solid var(--vscode-widget-border); }
-		.mapRow .mapName { flex: 1; }
-	</style>
-</head>
-<body>
-<div class="container">
-	<div class="title-row">
-		<h1>${text.title}</h1>
-		${voiceButtonsHtml}
-	</div>
-	<p class="subtitle">${text.intro}</p>
-
+		.snowballPage .actionBar > button.action.current { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		.snowballPage .actionLabel { color: var(--vscode-descriptionForeground); }
+		.snowballPage .link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; text-align: left; }
+		.snowballPage .link:hover { text-decoration: underline; }
+		.snowballPage .link:disabled { color: var(--vscode-disabledForeground); cursor: default; text-decoration: none; }
+		.snowballPage .status { font-size: 12px; color: var(--vscode-descriptionForeground); margin-top: 8px; line-height: 1.4; }
+		.snowballPage .status.error { color: var(--vscode-errorForeground); }
+		.snowballPage .mapBox { overflow-x: auto; padding: 8px; border-radius: 4px; background: var(--vscode-welcomePage-tileBackground, var(--vscode-editorWidget-background)); }
+		.snowballPage .mapBox svg { display: block; }
+		.snowballPage .mapBox .empty { padding: 16px 8px; }
+		.snowballPage svg .node { cursor: pointer; }
+		.snowballPage svg .node rect { fill: var(--vscode-editor-background); stroke: var(--vscode-widget-border); stroke-width: 1; }
+		.snowballPage svg .node.seed rect { stroke: var(--vscode-textLink-foreground); }
+		.snowballPage svg .node.source { cursor: default; }
+		.snowballPage svg .node.source rect { fill: none; stroke: var(--vscode-descriptionForeground); stroke-dasharray: 3 3; }
+		.snowballPage svg .node.removed rect { stroke-dasharray: 4 3; stroke: var(--vscode-disabledForeground); }
+		.snowballPage svg .node.removed text { fill: var(--vscode-disabledForeground); }
+		.snowballPage svg .node.chosen rect { stroke: var(--vscode-focusBorder); stroke-width: 2; }
+		.snowballPage svg .node.seed.chosen rect { stroke: var(--vscode-focusBorder); stroke-width: 2; fill: var(--vscode-list-activeSelectionBackground, var(--vscode-editor-background)); }
+		.snowballPage svg .node.seed.chosen text { fill: var(--vscode-list-activeSelectionForeground, var(--vscode-foreground)); font-weight: 600; }
+		.snowballPage .shape { display: inline-block; vertical-align: middle; width: 24px; height: 12px; margin-right: 4px; box-sizing: border-box; font-size: 9px; line-height: 10px; text-align: center; }
+		.snowballPage .shape.source { border: 1px dashed var(--vscode-descriptionForeground); }
+		.snowballPage .shape.seed { border: 1px solid var(--vscode-textLink-foreground); border-radius: 6px; }
+		.snowballPage .shape.list { border: 1px solid var(--vscode-widget-border, var(--vscode-descriptionForeground)); background: var(--vscode-editor-background); color: var(--vscode-foreground); }
+		.snowballPage .chosenNote { font-size: 12px; margin: 6px 8px 0 8px; }
+		.snowballPage svg .node text { fill: var(--vscode-foreground); font-size: 12px; }
+		.snowballPage svg .node.source text { fill: var(--vscode-descriptionForeground); }
+		.snowballPage svg .edge { fill: none; stroke: var(--vscode-descriptionForeground); stroke-width: 1; }
+		.snowballPage svg .edge.removed { stroke-dasharray: 4 3; }
+		.snowballPage svg .arrow { fill: var(--vscode-descriptionForeground); }
+		.snowballPage svg .edgeLabel { fill: var(--vscode-descriptionForeground); font-size: 10px; paint-order: stroke; stroke: var(--vscode-welcomePage-tileBackground, var(--vscode-editorWidget-background)); stroke-width: 4px; }
+		.snowballPage .legend { font-size: 11px; color: var(--vscode-descriptionForeground); margin: 4px 8px 0 8px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; }
+		.snowballPage .legend[hidden] { display: none; }
+		.snowballPage .layoutChoice .link { font-size: 11px; }
+		.snowballPage .layoutChoice .link.chosen { color: var(--vscode-foreground); font-weight: 600; cursor: default; text-decoration: none; }
+		.snowballPage .seedList { margin: 0; padding: 0; list-style: none; }
+		.snowballPage .seedList li { display: flex; align-items: baseline; gap: 8px; padding: 4px 8px; border-bottom: 1px solid var(--vscode-widget-border); }
+		.snowballPage .seedList li.chosen { box-shadow: inset 2px 0 0 var(--vscode-focusBorder); }
+		.snowballPage .seedList .seedId { font-weight: 600; min-width: 28px; cursor: pointer; }
+		.snowballPage .seedList .seedText { flex: 1; min-width: 0; }
+		.snowballPage .muted { color: var(--vscode-descriptionForeground); }
+		.snowballPage tr.excluded > td { opacity: 0.55; }
+		.snowballPage .actionBar > label.number { display: inline-flex; align-items: center; gap: 6px; color: var(--vscode-descriptionForeground); }
+		.snowballPage .actionBar > label.number > input { width: 4em; font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, transparent); padding: 2px 4px; }
+		.snowballPage button.removeSeed { font: inherit; font-size: 14px; line-height: 1; color: var(--vscode-descriptionForeground); background: none; border: none; padding: 0 4px; cursor: pointer; }
+		.snowballPage button.removeSeed:hover { color: var(--vscode-foreground); }
+		.snowballPage .finder { margin-top: 20px; }
+		.snowballPage .found { margin-top: 4px; }
+		.snowballPage .found div { padding: 3px 0; font-size: 12px; }
+		.snowballPage .poolLine { color: var(--vscode-descriptionForeground); font-size: 12px; }
+		.snowballPage .verdict { font-size: 12px; margin-top: 4px; line-height: 1.4; }
+		.snowballPage .risen { margin-left: 6px; font-size: 11px; color: var(--vscode-textLink-foreground); white-space: nowrap; }
+		.snowballPage .showRow { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; margin: 8px 0; }
+		.snowballPage .showRow label { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+		.snowballPage table { width: 100%; border-collapse: collapse; font-size: 12px; }
+		.snowballPage th { text-align: left; font-weight: normal; color: var(--vscode-descriptionForeground); padding: 4px 8px; border-bottom: 1px solid var(--vscode-widget-border); white-space: nowrap; }
+		.snowballPage th.number, .snowballPage td.number { text-align: right; }
+		.snowballPage td { padding: 6px 8px; border-bottom: 1px solid var(--vscode-widget-border); vertical-align: top; }
+		.snowballPage td.number { white-space: nowrap; font-variant-numeric: tabular-nums; }
+		.snowballPage td.dots { white-space: nowrap; color: var(--vscode-textLink-foreground); letter-spacing: 1px; cursor: pointer; }
+		.snowballPage tr.detail td { padding: 4px 8px 10px 32px; background: var(--vscode-welcomePage-tileBackground, var(--vscode-editorWidget-background)); }
+		.snowballPage .tie { margin: 6px 0; }
+		.snowballPage .tieHead { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
+		.snowballPage .tieHead .seedId { font-weight: 600; }
+		.snowballPage .tieHead .influential { color: var(--vscode-textLink-foreground); }
+		.snowballPage .context { margin: 4px 0 0 12px; padding-left: 8px; border-left: 2px solid var(--vscode-widget-border); color: var(--vscode-descriptionForeground); line-height: 1.4; }
+		.snowballPage .tick { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; color: var(--vscode-descriptionForeground); }
+		.snowballPage .authors { color: var(--vscode-descriptionForeground); margin-top: 2px; }
+		.snowballPage .pager { display: flex; justify-content: center; align-items: center; gap: 16px; padding: 12px 8px; font-size: 12px; color: var(--vscode-descriptionForeground); }
+		.snowballPage .pager .link { font-size: 12px; }
+		.snowballPage .empty { color: var(--vscode-descriptionForeground); padding: 12px 8px; }
+		.snowballPage .mapRow { display: flex; align-items: baseline; gap: 12px; padding: 4px 0; border-bottom: 1px solid var(--vscode-widget-border); }
+		.snowballPage .mapRow .mapName { flex: 1; }
+`,
+		bodyHtml: `
+		<div class="snowballPage">
 	<div class="sectionHeader">
 		<h2><span id="mapName"></span><span class="dirty" id="dirty" hidden>(${text.notSaved})</span></h2>
 		<div class="headerLinks"><button class="link" id="saveLink">${text.save}</button> · <button class="link" id="openLink">${text.open}</button> · <button class="link" id="newLink">${text.newSearch}</button></div>
@@ -1539,10 +1539,9 @@ function pageHtml(askContexts: boolean, portrait: boolean, saturate: ISaturateSe
 		<tbody id="poolRows"></tbody>
 	</table>
 	<div class="pager" id="pager" hidden></div>
-</div>
-<script>
-	const vscode = acquireVsCodeApi();
-	${voiceButtonsScript}
+		</div>
+`,
+		pageScriptJs: `
 	const TEXT = ${JSON.stringify(text)};
 	${rowsChoiceScript()}
 	${stickyHeadScript()}
@@ -2253,9 +2252,8 @@ function pageHtml(askContexts: boolean, portrait: boolean, saturate: ISaturateSe
 		document.getElementById('existsNote').hidden = true;
 	});
 	vscode.postMessage({ command: 'ready' });
-</script>
-</body>
-</html>`;
+`,
+	});
 }
 
 registerAction2(class extends Action2 {

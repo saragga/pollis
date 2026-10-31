@@ -22,17 +22,27 @@ import { IPathService } from '../../../services/path/common/pathService.js';
 import { parseToml, TomlValue } from '../../model/browser/common/tomlPanelData.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
-import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_STYLE } from './libraryPage.js';
+import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_MINIMAL_STYLE, LIBRARY_PAGE_STYLE } from './libraryPage.js';
 import { ContentKind, IDownloadedEntry, IPollisContentService } from './pollisContent.js';
 import { BROWSE_METHODS_COMMAND_ID, deleteUserMethods, openUserMethod, readMethodSummaries, userMethodsFolder } from './newMethods.js';
 import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
-import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
+import { IOpenerService } from '../../../../platform/opener/common/opener.js';
+import { IStorageService } from '../../../../platform/storage/common/storage.js';
+import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
+import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
+import { IScaffoldPanelData } from '../../model/browser/common/model.types.js';
+import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
+import { BROWSEMETHODS_METADATA } from '../../model/browser/webviews/browseMethods.data.js';
+import { BROWSEREPLICATIONS_METADATA } from '../../model/browser/webviews/browseReplications.data.js';
+import { buildWebviewHtml, voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
 
 export const SEARCH_WORKFLOW_LIBRARY_COMMAND_ID = 'chiara.statistics.wfl_sl';
 export const PUBLISHED_BENCHMARKS_COMMAND_ID = 'pollis.correctness.publishedBenchmarks';
 
 /** A notebook library shipped with Pollis: one folder per entry, holding its notebook and data files. */
 interface INotebookLibrary {
+	/** Its id and metadata when it is a page in the Minimal style of the scaffold, with Learn More. */
+	readonly page?: { readonly id: string; readonly data: IScaffoldPanelData };
 	/** The library's folder, relative to the app root. */
 	readonly base: AppResourcePath;
 	/** The folder under `~/.pollis/` that holds the user's own copies. */
@@ -52,6 +62,7 @@ interface INotebookLibrary {
 
 /** Compose > Replication > Browse Replications: famous analyses replicated from their articles. The folder and content key stay `workflows`, for the copies already made and the content repository. */
 const WORKFLOWS: INotebookLibrary = {
+	page: { id: 'browseReplications', data: BROWSEREPLICATIONS_METADATA.browseReplications },
 	base: 'vs/workbench/contrib/compose/browser/media/workflows',
 	userFolder: 'workflows',
 	title: localize('workflowLibrary.title', "Replications"),
@@ -64,6 +75,7 @@ const WORKFLOWS: INotebookLibrary = {
 
 /** Compose > Methods: methods no Julia package has, each tested on data against published results. */
 const NEW_METHODS: INotebookLibrary = {
+	page: { id: 'browseMethods', data: BROWSEMETHODS_METADATA.browseMethods },
 	base: 'vs/workbench/contrib/compose/browser/media/methods',
 	userFolder: 'methods',
 	title: localize('newMethods.title', "Methods"),
@@ -294,6 +306,10 @@ async function openLibraryPage(accessor: ServicesAccessor, library: INotebookLib
 	const commandService = accessor.get(ICommandService);
 	const instantiationService = accessor.get(IInstantiationService);
 	const contentService = accessor.get(IPollisContentService);
+	const openerService = accessor.get(IOpenerService);
+	const notebookEditorModelResolverService = accessor.get(INotebookEditorModelResolverService);
+	const notebookKernelService = accessor.get(INotebookKernelService);
+	const storageService = accessor.get(IStorageService);
 
 	const open = openPages.get(library);
 	if (open && !open.isDisposed()) {
@@ -342,6 +358,9 @@ async function openLibraryPage(accessor: ServicesAccessor, library: INotebookLib
 	openPages.set(library, webviewInput);
 
 	const disposables = new DisposableStore();
+	if (library.page) {
+		disposables.add(registerScaffoldPageHandlers(webviewInput, library.page.id, library.title, library.page.data, openerService, editorService, commandService, notificationService, notebookEditorModelResolverService, notebookKernelService, fileService, pathService, storageService));
+	}
 	disposables.add(webviewInput.webview.onDidDispose(() => {
 		openPages.delete(library);
 		disposables.dispose();
@@ -487,39 +506,15 @@ function pageHtml(library: INotebookLibrary): string {
 		</table>
 	</div>
 	<h2>${text.library}</h2>` : '';
-	return `<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
-	<style>
-		${voiceButtonsCss}
-${LIBRARY_PAGE_STYLE}
-	h2 { font-size: 16px; font-weight: 600; margin: 20px 0 6px 0; }
-	${library.userMethods ? `/* The methods' package files, in the yellow of their folder in the intro */
-	.file { color: #e8a33d; }
-	body.vscode-light .file { color: #a8650d; }` : ''}
-	</style>
-</head>
-<body>
-<div class="container">
-	<div class="title-row">
-		<h1>${library.title}</h1>
-		${voiceButtonsHtml}
-	</div>
-	<p class="subtitle">${library.intro}</p>
+	const body = `
 ${userMethods}
 	<table>
 		<thead><tr>
 			<th>${text.entry}</th><th>${text.article}</th><th>${text.packages}</th><th>${text.datasets}</th><th>${text.size}</th><th>${text.updated}</th>
 		</tr></thead>
 		<tbody id="entries"></tbody>
-	</table>
-</div>
-<script>
-	const vscode = acquireVsCodeApi();
-	${voiceButtonsScript}
+	</table>`;
+	const script = `
 	const TEXT = ${JSON.stringify(text)};
 	/** A source with more datasets than this shows their count, and their names on request. */
 	const LISTED = 4;
@@ -664,6 +659,53 @@ ${LIBRARY_PAGE_HELPERS}
 		}
 	});
 	vscode.postMessage({ command: 'ready' });
+`;
+	const rules = `
+	h2 { font-size: 16px; font-weight: 600; margin: 20px 0 6px 0; }
+	${library.userMethods ? `/* The methods' package files, in the yellow of their folder in the intro */
+	.file { color: #e8a33d; }` : ''}`;
+	const lightRules = library.userMethods ? 'body.vscode-light .libraryPage .file { color: #a8650d; }' : '';
+	if (library.page) {
+		return buildWebviewHtml({
+			title: library.title,
+			omitPoweredBy: !library.page.data.packages.length,
+			introHtml: library.intro,
+			extraCss: `
+${LIBRARY_PAGE_MINIMAL_STYLE}
+	.libraryPage {${rules}
+	}
+	${lightRules}
+`,
+			bodyHtml: `<div class="libraryPage">${body}</div>`,
+			pageScriptJs: script,
+		});
+	}
+	return `<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
+	<style>
+		${voiceButtonsCss}
+${LIBRARY_PAGE_STYLE}
+	${rules}
+	${library.userMethods ? 'body.vscode-light .file { color: #a8650d; }' : ''}
+	</style>
+</head>
+<body>
+<div class="container">
+	<div class="title-row">
+		<h1>${library.title}</h1>
+		${voiceButtonsHtml}
+	</div>
+	<p class="subtitle">${library.intro}</p>
+${body}
+</div>
+<script>
+	const vscode = acquireVsCodeApi();
+	${voiceButtonsScript}
+${script}
 </script>
 </body>
 </html>`;

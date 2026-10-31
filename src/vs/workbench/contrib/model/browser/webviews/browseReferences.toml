@@ -1,0 +1,67 @@
+# Browse References Webview Configuration
+# A page in the Minimal style of the scaffold, not a panel: Learn More only, as no Julia package powers it. `pageCommand`
+# is the command that opens it, which a panel's contribution file would say. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/browseReferences.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Browse References"
+viewType = "pollis.browseReferences"
+pageCommand = "pollis.compose.browseReferences"
+
+[[wikis]]
+name = "Factsheet"
+file = "browseReferences/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "browseReferences/overview.md"
+bundled = true
+
+[[wikis]]
+name = "BibTeX Entries and Keys"
+file = "browseReferences/bibtex.md"
+bundled = true
+
+[[wikis]]
+name = "Citation Searches"
+file = "browseReferences/snowball-search.md"
+bundled = true
+
+[[wikis]]
+name = "Duplicates and Merging"
+file = "browseReferences/duplicates.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+key = "Pat1988a"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "BGDHB2016a"
+
+[[references]]
+key = "EIV2007a"
+
+[[references]]
+key = "FS1969a"
+
+[[references]]
+key = "GP2005a"
+
+[[references]]
+key = "PPO2022a"
+
+[[references]]
+key = "SKNF2016a"
+
+[[references]]
+key = "Woh2014a"

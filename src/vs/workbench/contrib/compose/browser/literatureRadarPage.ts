@@ -29,7 +29,14 @@ import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWork
 import { API_PROVIDERS, ProviderRequests } from '../../model/browser/common/apiProviders.js';
 import { readReferences, ReferenceFormat } from '../../model/browser/common/referenceImport.js';
 import { findReference, ICitationCount, IReference, IReferenceVersion, nameAsReference, ReferenceLibrary, referenceBibTeX } from '../../model/browser/common/referenceLibrary.js';
-import { spinnerCss, spinnerSvg, voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
+import { IOpenerService } from '../../../../platform/opener/common/opener.js';
+import { IEditorService } from '../../../services/editor/common/editorService.js';
+import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
+import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
+import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
+import { DISCOVERLITERATURE_METADATA } from '../../model/browser/webviews/discoverLiterature.data.js';
+import { IMPORTREFERENCES_METADATA } from '../../model/browser/webviews/importReferences.data.js';
+import { spinnerCss, spinnerSvg, buildWebviewHtml } from '../../model/browser/webviews/webviewScaffold.js';
 import { FEWEST_ROWS, rowsChoiceCss, rowsChoiceScript, sortHeadingsCss, sortHeadingsScript, sortHint, stickyHeadCss, storedRows, storeRows } from '../../model/browser/webviews/webviewPager.js';
 import { describeJournal, IJournalScoresService } from '../../monitor/browser/journalScores.js';
 import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
@@ -37,7 +44,7 @@ import { ISnowballArticle, SNOWBALL_SEARCH_COMMAND_ID } from '../common/snowball
 import { IToolboxPanelsService } from '../common/toolboxPanels.js';
 import { BROWSE_REFERENCES_COMMAND_ID } from './browseReferencesPage.js';
 
-// Compose > Literature Radar > Discover Literature: the articles that stand out on a topic, searched by topic, field, years, citations,
+// Compose > Literature Radar > Discover Literature, in the Minimal style of the scaffold: the articles that stand out on a topic, searched by topic, field, years, citations,
 // influence and journal ranking in two free, open indexes of scholarly works, OpenAlex and Semantic Scholar, or in
 // either. Each lists its 200 most cited; the two lists are merged by DOI. The versions of one work an index keeps apart, as a
 // preprint and its article, are each a row of their own, grouped under the most cited, their counts never added up. OpenAlex has each article's citation percentile
@@ -695,6 +702,11 @@ function openLiteratureRadar(accessor: ServicesAccessor, mode: PageMode): void {
 	const toolboxPanelsService = accessor.get(IToolboxPanelsService);
 	const fileDialogService = accessor.get(IFileDialogService);
 	const fileService = accessor.get(IFileService);
+	const openerService = accessor.get(IOpenerService);
+	const editorService = accessor.get(IEditorService);
+	const notebookEditorModelResolverService = accessor.get(INotebookEditorModelResolverService);
+	const notebookKernelService = accessor.get(INotebookKernelService);
+	const pathService = accessor.get(IPathService);
 	const library = new ReferenceLibrary(fileService, accessor.get(IPathService).userHome({ preferLocal: true }));
 	storageService.remove(TREE_KEY, StorageScope.PROFILE);
 
@@ -721,6 +733,7 @@ function openLiteratureRadar(accessor: ServicesAccessor, mode: PageMode): void {
 	const selectedKey = mode === 'import' ? IMPORTED_KEY : SELECTED_KEY;
 
 	const disposables = new DisposableStore();
+	disposables.add(registerScaffoldPageHandlers(webviewInput, mode === 'import' ? 'importReferences' : 'discoverLiterature', title, mode === 'import' ? IMPORTREFERENCES_METADATA.importReferences : DISCOVERLITERATURE_METADATA.discoverLiterature, openerService, editorService, commandService, notificationService, notebookEditorModelResolverService, notebookKernelService, fileService, pathService, storageService));
 	disposables.add(webviewInput.webview.onDidDispose(() => {
 		openPages.delete(mode);
 		disposables.dispose();
@@ -2100,130 +2113,116 @@ function pageHtml(mode: PageMode, rows: number): string {
 		</div>
 		<div class="status" id="status" hidden></div>
 	</div>`;
-	return `<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
-	<style>
-		${voiceButtonsCss}
+	return buildWebviewHtml({
+		title: text.title,
+		omitPoweredBy: true,
+		introHtml: text.intro,
+		extraCss: `
 		${rowsChoiceCss}
 		${stickyHeadCss}
 		${sortHeadingsCss}
-		* { box-sizing: border-box; }
-		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
-		.container { max-width: 1200px; margin: 0 auto; padding: 24px; }
-		h1 { font-size: 32px; font-weight: 300; margin: 0 0 4px 0; line-height: 1.2; }
-		h2 { font-size: 18px; font-weight: 400; margin: 0; }
-		.subtitle { font-size: 14px; color: var(--vscode-descriptionForeground); margin: 0 0 24px 0; line-height: 1.4; max-width: 900px; }
-		[hidden] { display: none !important; }
-		.sectionHeader { display: flex; align-items: baseline; gap: 16px; margin: 24px 0 8px 0; }
-		.sectionHeader h2 { flex: 1; }
-		.pane { padding: 16px; border-radius: 4px; background: var(--vscode-welcomePage-tileBackground, var(--vscode-editorWidget-background)); }
-		.formGrid { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 12px 16px; align-items: baseline; }
-		.separator { grid-column: 1 / -1; border-top: 1px solid var(--vscode-textLink-foreground); }
+		.container { max-width: 1200px; }
+		.literaturePage h2 { font-size: 18px; font-weight: 400; margin: 0; }
+		.literaturePage [hidden] { display: none !important; }
+		.literaturePage .sectionHeader { display: flex; align-items: baseline; gap: 16px; margin: 24px 0 8px 0; }
+		.literaturePage .sectionHeader h2 { flex: 1; }
+		.literaturePage .pane { padding: 16px; border-radius: 4px; background: var(--vscode-welcomePage-tileBackground, var(--vscode-editorWidget-background)); }
+		.literaturePage .formGrid { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 12px 16px; align-items: baseline; }
+		.literaturePage .separator { grid-column: 1 / -1; border-top: 1px solid var(--vscode-textLink-foreground); }
 		/* The formats and extensions read, in the yellow of the menu paths of Add Feed and Journal Metrics */
-		code { font: inherit; color: #e8a33d; }
-		body.vscode-light code { color: #a8650d; }
-		.hint { font-size: 12px; color: var(--vscode-descriptionForeground); margin-top: 4px; line-height: 1.4; max-width: 760px; }
-		.row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-		input[type="text"], input[type="number"], select { font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; padding: 4px 6px; }
-		input:focus, select:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
-		input#topic { width: 480px; max-width: 100%; }
-		input[type="number"] { width: 100px; }
-		select { width: 300px; }
-		button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; border-radius: 2px; padding: 4px 12px; cursor: pointer; }
-		button.action:hover { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
-		button.primary { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
-		button.primary:hover { background: var(--vscode-button-hoverBackground); }
-		button:disabled, button:disabled:hover { opacity: 0.5; cursor: default; }
-		td.actions { white-space: nowrap; }
-		th input, td input { margin: 0 4px 0 0; vertical-align: middle; }
-		button.removeArticle { font: inherit; font-size: 14px; line-height: 1; color: var(--vscode-descriptionForeground); background: none; border: none; padding: 0 4px; cursor: pointer; }
-		button.removeArticle:hover { color: var(--vscode-foreground); }
-		.actionBar { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 8px 0; }
+		.literaturePage code { font: inherit; color: #e8a33d; }
+		body.vscode-light .literaturePage code { color: #a8650d; }
+		.literaturePage .hint { font-size: 12px; color: var(--vscode-descriptionForeground); margin-top: 4px; line-height: 1.4; max-width: 760px; }
+		.literaturePage .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+		.literaturePage input[type="text"], .literaturePage input[type="number"], .literaturePage select { font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; padding: 4px 6px; }
+		.literaturePage input:focus, .literaturePage select:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
+		.literaturePage input#topic { width: 480px; max-width: 100%; }
+		.literaturePage input[type="number"] { width: 100px; }
+		.literaturePage select { width: 300px; }
+		.literaturePage button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; border-radius: 2px; padding: 4px 12px; cursor: pointer; }
+		.literaturePage button.action:hover { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		.literaturePage button.primary { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		.literaturePage button.primary:hover { background: var(--vscode-button-hoverBackground); }
+		.literaturePage button:disabled, .literaturePage button:disabled:hover { opacity: 0.5; cursor: default; }
+		.literaturePage td.actions { white-space: nowrap; }
+		.literaturePage th input, .literaturePage td input { margin: 0 4px 0 0; vertical-align: middle; }
+		.literaturePage button.removeArticle { font: inherit; font-size: 14px; line-height: 1; color: var(--vscode-descriptionForeground); background: none; border: none; padding: 0 4px; cursor: pointer; }
+		.literaturePage button.removeArticle:hover { color: var(--vscode-foreground); }
+		.literaturePage .actionBar { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 8px 0; }
 		/* The actions on the ticked articles in one row, as wide as the page, each as wide as the others */
-		#actionBar { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
+		.literaturePage #actionBar { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
 		/* The actions on the ticked articles look as the code buttons below a panel's Example Code */
-		#actionBar > button.action { font-size: 11px; padding: 4px 10px; border-radius: 4px; box-shadow: inset 0 0 0 1px var(--vscode-button-background); opacity: 0.7; }
-		#actionBar > button.action:not(:disabled):hover, #actionBar > button.action.current { opacity: 1; }
-		#actionBar > button.action:disabled { opacity: 0.35; }
+		.literaturePage #actionBar > button.action { font-size: 11px; padding: 4px 10px; border-radius: 4px; box-shadow: inset 0 0 0 1px var(--vscode-button-background); opacity: 0.7; }
+		.literaturePage #actionBar > button.action:not(:disabled):hover, .literaturePage #actionBar > button.action.current { opacity: 1; }
+		.literaturePage #actionBar > button.action:disabled { opacity: 0.35; }
 		/* The arrow of an action that leaves the page, drawn here as \\curvearrowright: the system fonts draw it oddly */
-		.leaves { width: 1.3em; height: 1em; vertical-align: -0.12em; margin-right: 4px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+		.literaturePage .leaves { width: 1.3em; height: 1em; vertical-align: -0.12em; margin-right: 4px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 		/* One action blue: the first at first, then the last enabled one the pointer was on */
-		.actionBar > button.action.current, #importPane button.action.current, #removeConfirm > button.action.current { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		.literaturePage .actionBar > button.action.current, .literaturePage #importPane button.action.current, .literaturePage #removeConfirm > button.action.current { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
 		/* Import, before there is anything to import, is a greyed blue button */
-		#importPane button.action:disabled { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
-		.savedMark { color: var(--vscode-descriptionForeground); }
-		.chooser { margin: 8px 0; }
-		.chooser input#panelFilter { width: 480px; max-width: 100%; margin: 8px 0; }
-		.panelList { max-height: 360px; overflow-y: auto; border-top: 1px solid var(--vscode-widget-border); }
-		.panelRow { display: flex; align-items: flex-start; gap: 8px; padding: 6px 4px; border-bottom: 1px solid var(--vscode-widget-border); }
-		.panelRow > label { flex: 1; display: flex; gap: 8px; cursor: pointer; min-width: 0; }
-		.panelRow > label > div { min-width: 0; }
-		.panelPath, .panelMeta { font-size: 11px; color: var(--vscode-descriptionForeground); }
-		.panelDescription { font-size: 12px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-		.panelMeta .citesTicked { color: var(--vscode-charts-purple); }
-		.link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; text-align: left; }
-		.link:hover { text-decoration: underline; }
-		.hint .link { font-size: 12px; }
-		.pager { display: flex; justify-content: center; align-items: center; gap: 16px; padding: 12px 8px; font-size: 12px; color: var(--vscode-descriptionForeground); }
-		.pager .link { font-size: 12px; }
-		.pager .link:disabled { color: var(--vscode-disabledForeground); cursor: default; text-decoration: none; }
-		.status { font-size: 12px; color: var(--vscode-descriptionForeground); margin-top: 8px; line-height: 1.4; }
+		.literaturePage #importPane button.action:disabled { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		.literaturePage .savedMark { color: var(--vscode-descriptionForeground); }
+		.literaturePage .chooser { margin: 8px 0; }
+		.literaturePage .chooser input#panelFilter { width: 480px; max-width: 100%; margin: 8px 0; }
+		.literaturePage .panelList { max-height: 360px; overflow-y: auto; border-top: 1px solid var(--vscode-widget-border); }
+		.literaturePage .panelRow { display: flex; align-items: flex-start; gap: 8px; padding: 6px 4px; border-bottom: 1px solid var(--vscode-widget-border); }
+		.literaturePage .panelRow > label { flex: 1; display: flex; gap: 8px; cursor: pointer; min-width: 0; }
+		.literaturePage .panelRow > label > div { min-width: 0; }
+		.literaturePage .panelPath, .literaturePage .panelMeta { font-size: 11px; color: var(--vscode-descriptionForeground); }
+		.literaturePage .panelDescription { font-size: 12px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+		.literaturePage .panelMeta .citesTicked { color: var(--vscode-charts-purple); }
+		.literaturePage .link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; text-align: left; }
+		.literaturePage .link:hover { text-decoration: underline; }
+		.literaturePage .hint .link { font-size: 12px; }
+		.literaturePage .pager { display: flex; justify-content: center; align-items: center; gap: 16px; padding: 12px 8px; font-size: 12px; color: var(--vscode-descriptionForeground); }
+		.literaturePage .pager .link { font-size: 12px; }
+		.literaturePage .pager .link:disabled { color: var(--vscode-disabledForeground); cursor: default; text-decoration: none; }
+		.literaturePage .status { font-size: 12px; color: var(--vscode-descriptionForeground); margin-top: 8px; line-height: 1.4; }
 		/* No articles at all in red; what is missing from a table in amber */
-		.status.error { color: var(--vscode-errorForeground); }
-		.status .problem { color: var(--vscode-editorWarning-foreground); }
+		.literaturePage .status.error { color: var(--vscode-errorForeground); }
+		.literaturePage .status .problem { color: var(--vscode-editorWarning-foreground); }
 		/* Turning while an index is still asked for counts */
 		${spinnerCss}
-		table { width: 100%; border-collapse: collapse; font-size: 12px; }
-		th { text-align: left; font-weight: normal; color: var(--vscode-descriptionForeground); padding: 4px 8px; border-bottom: 1px solid var(--vscode-widget-border); white-space: nowrap; }
-		th.group { text-align: center; color: var(--vscode-foreground); }
-		th.number, td.number { text-align: right; }
+		.literaturePage table { width: 100%; border-collapse: collapse; font-size: 12px; }
+		.literaturePage th { text-align: left; font-weight: normal; color: var(--vscode-descriptionForeground); padding: 4px 8px; border-bottom: 1px solid var(--vscode-widget-border); white-space: nowrap; }
+		.literaturePage th.group { text-align: center; color: var(--vscode-foreground); }
+		.literaturePage th.number, .literaturePage td.number { text-align: right; }
 		/* The counts' headings in two lines when the page is narrow, rather than the articles' titles in many */
-		#resultsTable th.number { white-space: normal; }
+		.literaturePage #resultsTable th.number { white-space: normal; }
 		/* The line under an index stops short of the next, so that the columns under each are seen to be its own */
-		#resultsTable th.group { border-bottom: none; box-shadow: none; background-image: linear-gradient(var(--vscode-widget-border), var(--vscode-widget-border)); background-size: calc(100% - 16px) 1px; background-position: center bottom; background-repeat: no-repeat; }
-		td { padding: 6px 8px; border-bottom: 1px solid var(--vscode-widget-border); vertical-align: top; }
-		td.number { white-space: nowrap; font-variant-numeric: tabular-nums; }
-		td.journal { max-width: 240px; }
-		.authors { color: var(--vscode-descriptionForeground); margin-top: 2px; }
-		.versionLine { font-size: 11px; color: var(--vscode-descriptionForeground); margin-top: 4px; }
-		.versionLine .pill { margin-left: 6px; padding: 0 6px; border-radius: 9px; border: 1px solid var(--vscode-widget-border); font-size: 11px; }
-		tr.version td.title { padding-left: 20px; box-shadow: inset 2px 0 0 var(--vscode-tree-indentGuidesStroke); }
-		tr.abstract td { padding: 4px 8px 12px 8px; }
-		.abstractText { max-height: 240px; overflow-y: auto; font-size: 12px; line-height: 1.5; margin-bottom: 8px; }
-		.abstractSource { font-size: 11px; color: var(--vscode-descriptionForeground); margin-bottom: 2px; }
-		mark { background: var(--vscode-editor-findMatchHighlightBackground); color: inherit; }
-		.tag { display: inline-block; margin-top: 4px; padding: 0 6px; font-size: 11px; border-radius: 9px; border: 1px solid var(--vscode-charts-purple); color: var(--vscode-charts-purple); }
-		.sortNote { font-size: 12px; color: var(--vscode-descriptionForeground); margin: 0 8px 4px 8px; }
-		.empty { color: var(--vscode-descriptionForeground); padding: 12px 8px; }
+		.literaturePage #resultsTable th.group { border-bottom: none; box-shadow: none; background-image: linear-gradient(var(--vscode-widget-border), var(--vscode-widget-border)); background-size: calc(100% - 16px) 1px; background-position: center bottom; background-repeat: no-repeat; }
+		.literaturePage td { padding: 6px 8px; border-bottom: 1px solid var(--vscode-widget-border); vertical-align: top; }
+		.literaturePage td.number { white-space: nowrap; font-variant-numeric: tabular-nums; }
+		.literaturePage td.journal { max-width: 240px; }
+		.literaturePage .authors { color: var(--vscode-descriptionForeground); margin-top: 2px; }
+		.literaturePage .versionLine { font-size: 11px; color: var(--vscode-descriptionForeground); margin-top: 4px; }
+		.literaturePage .versionLine .pill { margin-left: 6px; padding: 0 6px; border-radius: 9px; border: 1px solid var(--vscode-widget-border); font-size: 11px; }
+		.literaturePage tr.version td.title { padding-left: 20px; box-shadow: inset 2px 0 0 var(--vscode-tree-indentGuidesStroke); }
+		.literaturePage tr.abstract td { padding: 4px 8px 12px 8px; }
+		.literaturePage .abstractText { max-height: 240px; overflow-y: auto; font-size: 12px; line-height: 1.5; margin-bottom: 8px; }
+		.literaturePage .abstractSource { font-size: 11px; color: var(--vscode-descriptionForeground); margin-bottom: 2px; }
+		.literaturePage mark { background: var(--vscode-editor-findMatchHighlightBackground); color: inherit; }
+		.literaturePage .tag { display: inline-block; margin-top: 4px; padding: 0 6px; font-size: 11px; border-radius: 9px; border: 1px solid var(--vscode-charts-purple); color: var(--vscode-charts-purple); }
+		.literaturePage .sortNote { font-size: 12px; color: var(--vscode-descriptionForeground); margin: 0 8px 4px 8px; }
+		.literaturePage .empty { color: var(--vscode-descriptionForeground); padding: 12px 8px; }
 		/* Reconcile Sources over the two sources, as one button: blue, the only one in its row, the part under the pointer brighter */
-		.reconcile { display: inline-flex; flex-direction: column; border-radius: 2px; overflow: hidden; color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
-		.reconcile button { font: inherit; color: inherit; background: none; border: none; padding: 3px 12px; cursor: pointer; }
-		.reconcile button:hover:not(:disabled) { background: var(--vscode-button-hoverBackground); }
-		.reconcile .sources { display: flex; border-top: 1px solid var(--vscode-button-separator, transparent); }
-		.reconcile .sources button { flex: 1; font-size: 11px; white-space: nowrap; }
-		.reconcile .sources button + button { border-left: 1px solid var(--vscode-button-separator, transparent); }
-		textarea#pasted { width: 100%; min-height: 140px; resize: vertical; font-family: var(--vscode-editor-font-family); font-size: 12px; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; padding: 6px; }
-		textarea#pasted:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
+		.literaturePage .reconcile { display: inline-flex; flex-direction: column; border-radius: 2px; overflow: hidden; color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		.literaturePage .reconcile button { font: inherit; color: inherit; background: none; border: none; padding: 3px 12px; cursor: pointer; }
+		.literaturePage .reconcile button:hover:not(:disabled) { background: var(--vscode-button-hoverBackground); }
+		.literaturePage .reconcile .sources { display: flex; border-top: 1px solid var(--vscode-button-separator, transparent); }
+		.literaturePage .reconcile .sources button { flex: 1; font-size: 11px; white-space: nowrap; }
+		.literaturePage .reconcile .sources button + button { border-left: 1px solid var(--vscode-button-separator, transparent); }
+		.literaturePage textarea#pasted { width: 100%; min-height: 140px; resize: vertical; font-family: var(--vscode-editor-font-family); font-size: 12px; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; padding: 6px; }
+		.literaturePage textarea#pasted:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
 		/* Ticks for many references at once, above the table */
-		.bulk { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; font-size: 12px; margin: 0 8px 8px 8px; color: var(--vscode-descriptionForeground); }
-		.bulk .link { font-size: 12px; }
-		.bulk .spacer { flex: 1; }
-		.confirm { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 8px 0; }
-		.confirm span { flex: 1; }
-	</style>
-</head>
-<body>
-<div class="container">
-	<div class="title-row">
-		<h1>${text.title}</h1>
-		${voiceButtonsHtml}
-	</div>
-	<p class="subtitle">${text.intro}</p>
-
+		.literaturePage .bulk { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; font-size: 12px; margin: 0 8px 8px 8px; color: var(--vscode-descriptionForeground); }
+		.literaturePage .bulk .link { font-size: 12px; }
+		.literaturePage .bulk .spacer { flex: 1; }
+		.literaturePage .confirm { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 8px 0; }
+		.literaturePage .confirm span { flex: 1; }
+`,
+		bodyHtml: `
+		<div class="literaturePage">
 ${mode === 'import' ? importForm : searchForm}
 	<div class="sectionHeader"><h2>${text.selected}</h2></div>
 	<div class="sortNote" id="actOnNote" hidden>${text.actOnHint}</div>
@@ -2268,10 +2267,9 @@ ${mode === 'import' ? importForm : searchForm}
 	</div>
 	<div class="status" id="actionStatus" hidden></div>
 	<div class="empty" id="noSelected">${mode === 'import' ? text.noImported : text.noSelected}</div>
-</div>
-<script>
-	const vscode = acquireVsCodeApi();
-	${voiceButtonsScript}
+		</div>
+`,
+		pageScriptJs: `
 	const TEXT = ${JSON.stringify(text)};
 	const topicElement = document.getElementById('topic');
 	const fieldElement = document.getElementById('field');
@@ -3203,9 +3201,8 @@ ${mode === 'import' ? importForm : searchForm}
 	// What another page removed from References can be saved again when this one is back in front
 	window.addEventListener('focus', () => vscode.postMessage({ command: 'checkSaved' }));
 	vscode.postMessage({ command: 'ready' });
-</script>
-</body>
-</html>`;
+`,
+	});
 }
 
 registerAction2(class extends Action2 {

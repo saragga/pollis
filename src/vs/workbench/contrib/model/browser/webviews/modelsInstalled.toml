@@ -1,0 +1,56 @@
+# Models Installed Webview Configuration
+# A page of Compose in the Minimal style of the scaffold, not a panel: only its Learn More, as no Julia package powers it. `pageCommand`
+# is the command that opens it, which a panel's contribution file would say. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/modelsInstalled.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Models Installed"
+viewType = "pollis.modelsInstalled"
+pageCommand = "pollis.localModels.installed"
+
+[[wikis]]
+name = "Factsheet"
+file = "modelsInstalled/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "modelsInstalled/overview.md"
+bundled = true
+
+[[wikis]]
+name = "GGUF Files and Quantisation"
+file = "modelsInstalled/gguf-and-quantisation.md"
+bundled = true
+
+[[wikis]]
+name = "Choosing a Local Model"
+file = "modelsInstalled/choosing.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+key = "Ger2023a"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "JKCZT...2018a"
+
+[[references]]
+key = "FAHA2023a"
+
+[[references]]
+key = "LLWL2023a"
+
+[[references]]
+key = "NC2019a"
+
+[[references]]
+key = "RG2019a"

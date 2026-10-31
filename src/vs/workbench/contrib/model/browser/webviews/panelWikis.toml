@@ -1,0 +1,49 @@
+# Panel Documentation Webview Configuration
+# A page in the Minimal style of the scaffold, not a panel: Learn More only, as no Julia package powers it. `pageCommand`
+# is the command that opens it, which a panel's contribution file would say. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/panelWikis.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Panel Documentation"
+viewType = "pollis.panelWikis"
+pageCommand = "pollis.documentation.panels"
+
+[[wikis]]
+name = "Factsheet"
+file = "panelWikis/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "panelWikis/overview.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Reports"
+
+[[references]]
+key = "Pro2026a"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "ABHHM...2019a"
+
+[[references]]
+key = "ANVLM...2019a"
+
+[[references]]
+key = "GMVVW...2021a"
+
+[[references]]
+key = "Knu1984a"
+
+[[references]]
+key = "MWZBV...2019a"
+
+[[references]]
+key = "PC1986a"

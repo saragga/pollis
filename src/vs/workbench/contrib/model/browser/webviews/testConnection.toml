@@ -1,0 +1,57 @@
+# Test Connection Webview Configuration
+# A page in the Minimal style of the scaffold, not a panel: Learn More only, as no Julia package powers it. `pageCommand`
+# is the command that opens it, which a panel's contribution file would say. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/testConnection.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Test Connection"
+viewType = "pollis.collaborationTestConnection"
+pageCommand = "pollis.collaboration.testConnection"
+
+[[wikis]]
+name = "Factsheet"
+file = "testConnection/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "testConnection/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Reading the Results"
+file = "testConnection/reading-results.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Standards"
+
+[[references]]
+key = "AJ2007a"
+
+[[references]]
+key = "KHR2018a"
+
+[[references]]
+key = "PSRWM...2020a"
+
+[[references]]
+key = "RJMR2020a"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "FSK2005a"
+
+[[references]]
+key = "HNESS...2010a"
+
+[[references]]
+key = "HP2011a"
+
+[[references]]
+key = "RWVAB...2016a"

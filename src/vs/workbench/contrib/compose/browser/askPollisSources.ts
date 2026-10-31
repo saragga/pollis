@@ -29,8 +29,8 @@ import { installedVignettes, isVignetteCompiled, IVignette, registryVignettes, v
 // compiled, and ask_index.jl cuts each file into the passages of PollisDocuments.duckdb. The package vignettes are
 // those of Help > Documentation > Package Vignettes, of the packages on this computer and of the others in the
 // registry: a vignette not compiled yet, or changed since in a package developed, comes with what to compile it from,
-// and the Julia extension compiles it before the index is made. When the registry cannot be read, its vignettes are
-// those it listed last.
+// and the Julia extension compiles it before the index is made. So does a Toolbox Vignette not compiled yet. When the
+// registry cannot be read, its vignettes are those it listed last.
 
 export const ASK_POLLIS_SOURCES_COMMAND_ID = 'pollis.askPollis.sources';
 
@@ -46,7 +46,7 @@ interface IAskPollisSource {
 	readonly menu: string;
 	/** The toolbox the file comes with, else empty. */
 	readonly toolbox: string;
-	/** For a vignette not compiled, or older than its sources: what the Julia extension compiles `file` from. */
+	/** For a package or toolbox vignette not compiled, or a package's older than its sources: what the Julia extension compiles `file` from. */
 	readonly compile?: { readonly source: string; readonly name: string };
 }
 
@@ -111,7 +111,9 @@ async function askPollisSources(accessor: ServicesAccessor): Promise<IAskPollisS
 
 	for (const toolbox of toolboxPanelsService.getToolboxes()) {
 		for (const document of toolbox.documents) {
-			sources.push({ kind: 'document', title: document.title, file: toolboxDocumentPdf(userHome, toolbox, document).fsPath, menu: '', toolbox: toolbox.title });
+			const pdf = toolboxDocumentPdf(userHome, toolbox, document);
+			const compiled = await fileService.exists(pdf);
+			sources.push({ kind: 'document', title: document.title, file: pdf.fsPath, menu: '', toolbox: toolbox.title, ...(compiled ? {} : { compile: { source: document.folder.fsPath, name: document.name } }) });
 		}
 		// The wikis are in the extension's wiki/<folder>/, the folder named after its panel (or another name)
 		const extension = await extensionService.getExtension(toolbox.extensionId);

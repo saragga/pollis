@@ -1,0 +1,75 @@
+# Replications Webview Configuration
+# A page in the Minimal style of the scaffold, not a panel: Learn More only, as no Julia package powers it. `pageCommand`
+# is the command that opens it, which a panel's contribution file would say. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/browseReplications.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Replications"
+viewType = "pollis.workflowLibrary"
+pageCommand = "chiara.statistics.wfl_sl"
+
+[[wikis]]
+name = "Factsheet"
+file = "browseReplications/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "browseReplications/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Copies and Updates"
+file = "browseReplications/copies-and-updates.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Reports"
+
+[[references]]
+key = "NASEM2019a"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "CDFHH...2016a"
+
+[[references]]
+key = "CL2022a"
+
+[[references]]
+key = "CM2018a"
+
+[[references]]
+key = "DTA1986a"
+
+[[references]]
+key = "GFI2016a"
+
+[[references]]
+key = "HAP2014a"
+
+[[references]]
+key = "Ham2007a"
+
+[[references]]
+key = "Ioa2005a"
+
+[[references]]
+key = "MMH2006a"
+
+[[references]]
+key = "MV1999a"
+
+[[references]]
+key = "MV2003a"
+
+[[references]]
+key = "OSC2015a"
+
+[[references]]
+key = "Vil2020a"

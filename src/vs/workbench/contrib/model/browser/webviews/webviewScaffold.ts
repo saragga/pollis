@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { localize } from '../../../../../nls.js';
+import { askAddHtml, askAttachCss, askAttachmentsHtml, askAttachScript } from '../../../compose/browser/askPollisAttach.js';
 import { composerVoiceCss, composerVoiceHtml, composerVoiceScript } from '../../../compose/browser/composerVoice.js';
 import { customTagCss, escJs, learnMoreCss, learnMoreMessagesJs, learnMorePanelsJs, learnMoreSectionHtml, learnMoreStateJs, learnMoreWiringJs, nextStepsSectionHtml, packageLinksMessageJs, pageBaseCss, poweredByCss, sectionCss, sectionToggleJs, stepsCss, stepsHtml, IScaffoldStep } from './scaffoldShared.js';
 
@@ -86,20 +87,27 @@ export function nextStepIcon(groupId: string): string {
 }
 
 /**
- * What a page of the scaffold has. It has one of two styles: Classical, with Example Code, and Time Arrow, when `steps`
- * is given, whose numbered panes take the place of Example Code. Title, Powered by, Ask Pollis, Next Steps and Learn More
- * are the same in both; the parts that serve only Example Code are left out in Time Arrow.
+ * What a page of the scaffold has. It has one of three styles: Classical, with Example Code; Time Arrow, when `steps`
+ * is given, whose numbered panes take the place of Example Code; and Minimal, when `bodyHtml` is given, which takes the
+ * place of Example Code as it is. Title, Powered by, Ask Pollis, Next Steps and Learn More are the same in all three; the
+ * parts that serve only Example Code are left out in Time Arrow and Minimal.
  */
 export interface WebviewParts {
 	readonly title: string;
+	/** Leave Powered by out, for a page that no Julia package powers. Default: shown. */
+	readonly omitPoweredBy?: boolean;
 	/** The Key Points. A page without them has `introHtml` instead. */
 	readonly bullets?: string;
 	/** A text in place of Key Points. */
 	readonly introHtml?: string;
 	/** Time Arrow: the panes, numbered from the top, in place of Example Code. No illustration goes with them. */
 	readonly steps?: readonly IScaffoldStep[];
-	/** Time Arrow: the page's own script, after the scaffold's, whose names are kept out of its way; `vscode` is set. */
+	/** Minimal: anything, in place of Example Code. No illustration goes with it. */
+	readonly bodyHtml?: string;
+	/** Time Arrow and Minimal: the page's own script, after the scaffold's, whose names are kept out of its way; `vscode` is set. */
 	readonly pageScriptJs?: string;
+	/** Where a Minimal page's script may connect, for the Content-Security-Policy (none by default). */
+	readonly connectSrc?: string;
 	/** Table rows HTML; when empty, the Decision Table pane is left out. */
 	readonly decisionRows?: string;
 	/** Optional HTML rendered above / below the Key Points pane (from `[notes.keyPoints]`). */
@@ -200,9 +208,6 @@ export const voiceButtonsHtml = `<span class="voice-group">
 	${voiceSpeakerHtml}
 </span>`;
 
-/** The + of a chat's input box, at the start of its last line. */
-export const composerAddSvg = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M8 2.5v11M2.5 8h11"/></svg>`;
-
 /** The send arrow of a chat's input box, at the end of its last line. */
 export const composerSendSvg = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13V3M3.5 7.5 8 3l4.5 4.5"/></svg>`;
 
@@ -210,40 +215,52 @@ export const composerSendSvg = `<svg viewBox="0 0 16 16" fill="none" stroke="cur
 const PANEL_ASK_HEIGHT = 120;
 
 /**
- * A panel's Ask Pollis, at the right of its title, in place of the microphone and speaker of the other pages: a
- * narrow pill, the question and the voice tools of a chat's input box, then the arrow; the question wraps to the lines
- * below as it is written. It is posted as `askPollis`, which Ask Pollis answers beside the panel.
+ * A panel's Ask Pollis, at the right of its title and Powered by, in place of the microphone and speaker of the other
+ * pages: a narrow pill, the question on its first line, which wraps to the lines below as it is written, and on the
+ * line under it the + at the left, and the voice tools of a chat's input box, then the arrow, at the right. It is posted
+ * as `askPollis`, with what the + attached, which Ask Pollis answers beside the panel.
  */
 export function panelAskHtml(): string {
 	const text = {
-		placeholder: localize('panelAsk.placeholder', "Ask Pollis about this panel"),
+		placeholder: localize('panelAsk.placeholder', "Ask Pollis"),
 		ask: localize('panelAsk.ask', "Ask: the answer comes in Ask Pollis, beside this panel"),
-		dictate: localize('panelAsk.dictate', "Dictate the Question (not available yet)"),
-		voiceMode: localize('panelAsk.voiceMode', "Voice Mode: ask aloud and hear the answer, both written down too (not available yet)"),
 	};
-	return `<div class="panel-ask">
+	return `<div class="panel-ask composer">
+				${askAttachmentsHtml('panel-ask-')}
 				<textarea id="panel-ask-question" rows="1" placeholder="${text.placeholder}" aria-label="${text.placeholder}"></textarea>
-				${composerVoiceHtml({ dictate: text.dictate, voiceMode: text.voiceMode }, 'auto', 'same')}
-				<button class="panel-ask-send" id="panel-ask-send" title="${text.ask}" aria-label="${text.ask}">${composerSendSvg}</button>
+				<div class="panel-ask-tools">
+					${askAddHtml('panel-ask-')}
+					${composerVoiceHtml('auto', 'same')}
+					<button class="panel-ask-send" id="panel-ask-send" title="${text.ask}" aria-label="${text.ask}">${composerSendSvg}</button>
+				</div>
 			</div>`;
 }
 
-/** The title row of a panel and its Ask Pollis: the title keeps to the top as the question grows. */
+/** The title and Powered by of a panel, with its Ask Pollis at their right: they keep to the top as the question grows. */
 export const panelAskCss = `.title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-		.title-row h1 { min-width: 0; }
-		.panel-ask { flex: 0 1 300px; min-width: 200px; display: flex; align-items: flex-start; gap: 2px; padding: 3px 5px 3px 12px; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-focusBorder); border-radius: 18px; }
+		.title-column { flex: 1; min-width: 0; }
+		.panel-ask { flex: 0 1 300px; min-width: 200px; margin-bottom: 16px; padding: 3px 10px 6px 12px; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-focusBorder); border-radius: 14px; }
 		.panel-ask:focus-within { box-shadow: 0 0 0 1px var(--vscode-focusBorder); }
-		.panel-ask textarea { flex: 1; min-width: 0; display: block; resize: none; height: 30px; max-height: ${PANEL_ASK_HEIGHT}px; overflow-y: hidden; font: inherit; line-height: 1.4; padding: 6px 2px; color: inherit; background: transparent; border: none; outline: none; }
+		.panel-ask textarea { display: block; box-sizing: border-box; width: 100%; resize: none; height: 30px; max-height: ${PANEL_ASK_HEIGHT}px; overflow-y: hidden; font: inherit; line-height: 1.4; padding: 6px 2px; color: inherit; background: transparent; border: none; outline: none; }
 		.panel-ask textarea::placeholder { color: var(--vscode-input-placeholderForeground); }
-		.panel-ask button.panel-ask-send { display: flex; align-items: center; justify-content: center; flex: none; width: 26px; height: 26px; margin: 2px 0 2px 2px; padding: 0; border: none; border-radius: 50%; color: var(--vscode-button-foreground); background: var(--vscode-button-background); opacity: 0.4; cursor: pointer; }
+		.panel-ask-tools { display: flex; align-items: center; gap: 2px; }
+		.panel-ask .add { margin-right: auto; }
+		.panel-ask .add-menu { top: 34px; bottom: auto; z-index: 3; }
+		.panel-ask input[type="file"] { display: none; }
+		.panel-ask .add button.icon { display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; padding: 0; border: none; border-radius: 50%; color: var(--vscode-foreground); background: transparent; box-shadow: inset 0 0 0 1px var(--vscode-button-background); opacity: 1; cursor: pointer; }
+		.panel-ask .add button.icon:hover { background: var(--vscode-toolbar-hoverBackground); }
+		.panel-ask .add button.icon svg { width: 18px; height: 18px; }
+		.panel-ask button.panel-ask-send { display: flex; align-items: center; justify-content: center; flex: none; width: 28px; height: 28px; padding: 0; border: none; border-radius: 50%; color: var(--vscode-button-foreground); background: var(--vscode-button-background); opacity: 0.4; cursor: pointer; }
 		.panel-ask button.panel-ask-send.ready { opacity: 1; }
 		.panel-ask button.panel-ask-send:hover { background: var(--vscode-button-hoverBackground); }
 		.panel-ask button.panel-ask-send svg { width: 14px; height: 14px; }
+		${askAttachCss}
 		${composerVoiceCss}`;
 
 /** The question grows with its text, the arrow blue when there is one; Enter or the arrow asks it, Shift+Enter starts a line. */
 export const panelAskScript = `${composerVoiceScript('panel-ask-question')}
 		(() => {
+			${askAttachScript('panel-ask-question', 'panel-ask-', '.panel-ask')}
 			const question = document.getElementById('panel-ask-question');
 			const send = document.getElementById('panel-ask-send');
 			const resize = () => {
@@ -255,7 +272,9 @@ export const panelAskScript = `${composerVoiceScript('panel-ask-question')}
 			const ask = () => {
 				const text = question.value.trim();
 				if (!text) { return; }
-				vscode.postMessage({ command: 'askPollis', question: text });
+				const attached = takeAttachments();
+				if (!attached) { return; }
+				vscode.postMessage({ command: 'askPollis', question: text, attachments: attached });
 				question.value = '';
 				resize();
 			};
@@ -270,6 +289,18 @@ export const panelAskScript = `${composerVoiceScript('panel-ask-question')}
 			// A click anywhere in the pill but on its buttons writes in the question
 			document.querySelector('.panel-ask').addEventListener('click', event => {
 				if (!event.target.closest('button, textarea, .voice-menu')) { question.focus(); }
+			});
+			// Only a cloud model is given images, and the model can change at the status bar
+			const askModel = () => vscode.postMessage({ command: 'askPollisModel' });
+			askModel();
+			question.addEventListener('focus', askModel);
+			document.getElementById('panel-ask-add').addEventListener('click', askModel);
+			window.addEventListener('message', event => {
+				if (event.data.command === 'askPollisModel') {
+					setAttachCloud(event.data.cloud);
+				} else if (event.data.command === 'attached') {
+					onAttached(event.data);
+				}
 			});
 		})();`;
 
@@ -307,12 +338,13 @@ function notWrittenNextStepsJs(): string {
  * and action arrays.
  */
 export function buildWebviewHtml(parts: WebviewParts): string {
+	const noExampleCode = parts.steps !== undefined || parts.bodyHtml !== undefined;
 	return `<!DOCTYPE html>
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline' https://*.vscode-resource.vscode-cdn.net; img-src data: https://*.vscode-resource.vscode-cdn.net; font-src data:;">
+	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline' https://*.vscode-resource.vscode-cdn.net; img-src data: https://*.vscode-resource.vscode-cdn.net; font-src data:;${parts.connectSrc ? ` connect-src ${parts.connectSrc};` : ''}">
 	<title>${parts.title}</title>
 	<style>
 		${pageBaseCss}
@@ -461,7 +493,7 @@ export function buildWebviewHtml(parts: WebviewParts): string {
 		${learnMoreCss}
 		${parts.hiddenRowCss ?? ''}
 		.code-preview .monaco-tokenized-source { white-space: pre; }
-${parts.extraCss ?? ''}${parts.steps ? `		${stepsCss}
+${parts.extraCss ?? ''}${noExampleCode ? `		${stepsCss}
 		${panelAskCss}
 ` : ''}	</style>
 	<style id="mtk-theme"></style>
@@ -470,10 +502,12 @@ ${parts.extraCss ?? ''}${parts.steps ? `		${stepsCss}
 	<div class="container">
 
 		<div class="title-row">
-			<h1>${parts.title}</h1>
+			<div class="title-column">
+				<h1>${parts.title}</h1>
+				<div class="powered-by"${parts.omitPoweredBy ? ' style="display: none;"' : ''}>Powered by:&nbsp;<span id="package-links"></span><span class="package-status" id="package-status"></span><span class="api-key-status" id="api-key-status"></span></div>
+			</div>
 			${panelAskHtml()}
 		</div>
-		<div class="powered-by">Powered by:&nbsp;<span id="package-links"></span><span class="package-status" id="package-status"></span><span class="api-key-status" id="api-key-status"></span></div>
 ${parts.bullets === undefined ? `		<p class="subtitle">${parts.introHtml ?? ''}</p>
 ` : `		<div class="section" id="sec-points">
 			<button class="section-toggle"><span class="illus-chevron"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M7.976 10.072l-4.054-4.014-.92.92 4.49 4.45.978.01 4.525-4.46-.918-.92-4.101 4.014z"/></svg></span>Key Points</button>
@@ -501,7 +535,7 @@ ${parts.decisionRows}</tbody>
 		</div>
 ` : ''}
 
-${parts.omitIllustration || parts.steps ? '' : `
+${parts.omitIllustration || noExampleCode ? '' : `
 		<div class="illus-section ${parts.illusCollapsed === false ? '' : 'collapsed'}" id="illus-section">
 			<button class="illus-toggle" id="illus-toggle">
 				<span class="illus-chevron"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M7.976 10.072l-4.054-4.014-.92.92 4.49 4.45.978.01 4.525-4.46-.918-.92-4.101 4.014z"/></svg></span>
@@ -511,7 +545,7 @@ ${parts.omitIllustration || parts.steps ? '' : `
 		</div>
 `}
 
-${parts.steps ? `		${stepsHtml(parts.steps)}
+${noExampleCode ? `		${parts.steps ? stepsHtml(parts.steps) : parts.bodyHtml}
 ` : `		<div class="section" id="sec-code">
 			<button class="section-toggle"><span class="illus-chevron"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M7.976 10.072l-4.054-4.014-.92.92 4.49 4.45.978.01 4.525-4.46-.918-.92-4.101 4.014z"/></svg></span>Example Code<span class="code-custom-tag" title="Your saved version of this example. Restore Default brings back the original.">Customised</span><span class="code-added-tag" title="A tab you added. Its x removes it. The settings of the built-in tabs are hidden here; they come back when you open one.">Added</span></button>
 			<div class="section-body">
@@ -547,7 +581,7 @@ ${parts.inputsHtml ? `\t\t<div class="scaffold-inputs" id="scaffold-inputs">\n${
 `}
 		<div class="bottom-layout">
 			<div class="left-strip">
-				${nextStepsSectionHtml(parts.nextStepsHtml ?? (parts.steps ? notWrittenNextStepsHtml() : `					<li><button class="list-btn panel-toggle" id="btn-viz">${nextStepIcon('visualise')}Visualise</button></li>
+				${nextStepsSectionHtml(parts.nextStepsHtml ?? (noExampleCode ? notWrittenNextStepsHtml() : `					<li><button class="list-btn panel-toggle" id="btn-viz">${nextStepIcon('visualise')}Visualise</button></li>
 					<li><button class="list-btn panel-toggle" id="btn-diagnose">${nextStepIcon('diagnose')}Diagnose</button></li>
 					<li><button class="list-btn panel-toggle" id="btn-predict">${nextStepIcon('predict')}Predict</button></li>
 					<li><button class="list-btn panel-toggle" id="btn-compare">${nextStepIcon('compare')}Compare</button></li>
@@ -561,7 +595,7 @@ ${parts.inputsHtml ? `\t\t<div class="scaffold-inputs" id="scaffold-inputs">\n${
 	</div>
 	<script>
 		const vscode = acquireVsCodeApi();
-${parts.steps ? '(function() {\n' : ''}		var currentModel = '${parts.defaultModel ?? ''}';
+${noExampleCode ? '(function() {\n' : ''}		var currentModel = '${parts.defaultModel ?? ''}';
 		var currentPlainCode = null;        // plain source behind the main code box (for Copy / Send)
 		var currentPanelPlainCode = null;   // plain source behind the open Next-Steps panel box
 		${learnMoreStateJs}
@@ -766,7 +800,7 @@ ${parts.illustrationOverrideJs ?? ''}			var activeIdx = MODELS.indexOf(currentMo
 			return ADDED_TAB_HINT + (document.querySelector('#sec-code .scaffold-input')
 				? '\\n\\n# The settings of the built-in tabs are hidden here; they come back when you open one.' : '');
 		}
-${parts.steps ? '' : `		if (!document.querySelector('#sec-code .scaffold-input')) {
+${noExampleCode ? '' : `		if (!document.querySelector('#sec-code .scaffold-input')) {
 			document.querySelector('.code-added-tag').title = 'A tab you added. Its x removes it.';
 		}
 `}		function isAddedTab(model) { return typeof model === 'string' && model.charAt(0) === '+'; }
@@ -922,7 +956,7 @@ ${parts.steps ? '' : `		if (!document.querySelector('#sec-code .scaffold-input')
 			});
 		}
 
-${parts.steps ? '' : `		document.getElementById('btn-edit-code').addEventListener('click', function() { setEditingCode(true); });
+${noExampleCode ? '' : `		document.getElementById('btn-edit-code').addEventListener('click', function() { setEditingCode(true); });
 		document.getElementById('btn-cancel-code').addEventListener('click', function() { setEditingCode(false); });
 		document.getElementById('btn-save-code').addEventListener('click', function() {
 			var code = document.getElementById('code-edit').value.replace(/\\s+$/, '');
@@ -970,7 +1004,7 @@ ${parts.setModelExtraJs ?? ''}			document.querySelectorAll('#model-group .toggle
 			refreshActionList();
 		}
 
-${parts.steps ? '' : `		document.getElementById('model-group').addEventListener('click', function(e) {
+${noExampleCode ? '' : `		document.getElementById('model-group').addEventListener('click', function(e) {
 			var btn = e.target.closest('[data-model]');
 			if (btn && (e.target.closest('.tab-remove') || btn.classList.contains('confirm-remove'))) { removeAddedTab(btn); return; }
 			if (btn) { setModel(btn.dataset.model); }
@@ -1304,7 +1338,7 @@ ${parts.steps ? '' : `		document.getElementById('model-group').addEventListener(
 		${parts.actionsJs ?? ''}
 
 		// ── Button wiring ────────────────────────────────────────────────────
-${parts.nextStepsWiringJs ?? (parts.steps ? notWrittenNextStepsJs() : `		document.getElementById('btn-viz').addEventListener('click', function() {
+${parts.nextStepsWiringJs ?? (noExampleCode ? notWrittenNextStepsJs() : `		document.getElementById('btn-viz').addEventListener('click', function() {
 			showRightPanel(VISUALISE_ACTIONS, 'Visualise', 'btn-viz');
 		});
 		document.getElementById('btn-diagnose').addEventListener('click', function() {
@@ -1330,7 +1364,7 @@ ${parts.nextStepsWiringJs ?? (parts.steps ? notWrittenNextStepsJs() : `		documen
 			return Array.from(lines).map(function(l) { return l.textContent || ''; }).join('\\n');
 		}
 
-${parts.steps ? '' : `		document.getElementById('btn-copy').addEventListener('click', function() {
+${noExampleCode ? '' : `		document.getElementById('btn-copy').addEventListener('click', function() {
 			navigator.clipboard.writeText(extractCode()).then(function() {
 				var btn = document.getElementById('btn-copy');
 				btn.textContent = 'Copied!';
@@ -1545,7 +1579,7 @@ ${parts.steps ? '' : `		document.getElementById('btn-copy').addEventListener('cl
 
 		setModel('${parts.defaultModel ?? ''}');
 ${parts.tailScriptJs ?? ''}
-${parts.extraJs ?? ''}${parts.steps ? '})();\n' : ''}	</script>${parts.steps ? `
+${parts.extraJs ?? ''}${noExampleCode ? '})();\n' : ''}	</script>${noExampleCode ? `
 	<script>${parts.pageScriptJs ?? ''}</script>` : ''}
 </body>
 </html>`;

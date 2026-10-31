@@ -264,8 +264,8 @@ Pollis looks and works like a familiar code editor, with five extra, curated men
 \par\vspace{3pt}\textbf{Julia packages} do the computing. They are the open-source libraries such as \pkg{GLM.jl} or \pkg{Turing.jl}. Every panel's code calls them, and Pollis installs them into Julia when a panel needs them.\par\vspace{3pt}
 \textbf{Toolbox extensions} are Pollis add-ons. Each one adds a menu of ready-made panels for a field, installed with one click from the Extensions pane. Those panels in turn run on Julia packages. You choose which panels to add, and where.\par\vspace{3pt}
 Three are ready from the start:\par\vspace{3pt}
-\textbf{Financial Econometrics}, including ARIMAX, VAR/VECM, GARCH, regime switching and advanced time-series forecasting.\par\vspace{2pt}
-\textbf{Economics}, including DSGE, heterogeneous-agent models, continuous-time macro-finance and game theory.\par\vspace{2pt}
+\textbf{Financial Econometrics}, including ARIMAX, GARCH, regime switching and advanced time-series forecasting.\par\vspace{2pt}
+\textbf{Economics}, including DSGE, VAR/VECM, heterogeneous-agent models, continuous-time macro-finance and game theory.\par\vspace{2pt}
 \textbf{Mathematical Core}, including symbolic maths, linear algebra, differential equations and solvers.\par\vspace{3pt}
 Many more are on the way. Creating a new toolbox is quick and easy: just package existing procedure panels into a ready-to-use collection. Toolboxes make it simple to share your work, extend Pollis, and make your methods available to the wider community.
 \end{minipage}\hfill
@@ -610,11 +610,11 @@ Partial Differential Equations}\hfill
 \tbcol{Economics}{Business Cycle Filters\par
 Stochastic Volatility Macroeconomic Models\par
 Dynamic Stochastic General Equilibrium (DSGE)\par
+VAR/VECM Systems\par
 Heterogeneous-Agent Models\par
 Continuous-Time Macro-Finance\par
 Game Theory}\hfill
 \tbcol{Financial Econometrics}{ARIMAX Models\par
-VAR/VECM Systems\par
 GARCH-Type Models\par
 Regime Switching Models\par
 Advanced Time-Series Forecasting\par
@@ -634,7 +634,7 @@ Fama--MacBeth Regression}\par\vspace{5pt}
 \shotcap{The Extensions pane works as in VS Code, with two differences. At the top, a \textbf{Toolboxes} section
 lists the Pollis toolboxes you have not installed yet, each with its \textbf{Install} button; below it come the
 extensions you have installed. And the recommended lists are curated by Pollis: the coding agents Claude Code,
-Codex and OpenCode, DuckDB for databases, LaTeX Workshop and LTeX+ for writing, and the JETLS client for Julia;
+Codex and OpenCode, DuckDB for databases, LaTeX Workshop for writing, and the JETLS client and Fatou for Julia;
 then the MCP servers, each set up for your coding agent in Compose \textrightarrow{} MCP Servers. Pollis never
 asks you to install any of them, and the lists can be hidden.}
 \end{minipage}

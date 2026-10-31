@@ -33,9 +33,14 @@ import { ITextFileService } from '../../../services/textfile/common/textfiles.js
 import { ITerminalInstance, ITerminalInstanceService, ITerminalService } from '../../terminal/browser/terminal.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
-import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_STYLE } from './libraryPage.js';
+import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_MINIMAL_STYLE } from './libraryPage.js';
 import { AGENT_TASKS, AgentTask, agentTiers, DEFAULT_TIER, localModelLaunch, MODEL_ROUTING_COMMAND_ID, modelName, taskTier, tierRun } from './modelRouting.js';
-import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
+import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
+import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
+import { IStorageService } from '../../../../platform/storage/common/storage.js';
+import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
+import { AGENTSKILLS_METADATA } from '../../model/browser/webviews/agentSkills.data.js';
+import { buildWebviewHtml } from '../../model/browser/webviews/webviewScaffold.js';
 
 // Compose > New Panels and Toolboxes and Compose > Methods hold tasks: you go there to get something
 // done (Create a Panel, Package a Toolbox, Write a Method...), and a coding agent of your choice does it in
@@ -496,6 +501,12 @@ async function browseSkills(accessor: ServicesAccessor): Promise<void> {
 	const editorService = accessor.get(IEditorService);
 	const commandService = accessor.get(ICommandService);
 	const instantiationService = accessor.get(IInstantiationService);
+	const openerService = accessor.get(IOpenerService);
+	const notificationService = accessor.get(INotificationService);
+	const notebookEditorModelResolverService = accessor.get(INotebookEditorModelResolverService);
+	const notebookKernelService = accessor.get(INotebookKernelService);
+	const pathService = accessor.get(IPathService);
+	const storageService = accessor.get(IStorageService);
 	const folder = pluginFolder(accessor.get(IPathService));
 
 	if (skillsPage && !skillsPage.isDisposed()) {
@@ -522,6 +533,7 @@ async function browseSkills(accessor: ServicesAccessor): Promise<void> {
 	webviewInput.webview.setHtml(skillsPageHtml(title));
 
 	const disposables = new DisposableStore();
+	disposables.add(registerScaffoldPageHandlers(webviewInput, 'agentSkills', title, AGENTSKILLS_METADATA.agentSkills, openerService, editorService, commandService, notificationService, notebookEditorModelResolverService, notebookKernelService, fileService, pathService, storageService));
 	disposables.add(webviewInput.webview.onDidDispose(() => {
 		if (skillsPage === webviewInput) {
 			skillsPage = undefined;
@@ -552,7 +564,7 @@ async function browseSkills(accessor: ServicesAccessor): Promise<void> {
 	}));
 }
 
-/** The skills page: its texts come from here, its entries from the `entries` message. */
+/** The skills page, in the Minimal style of the scaffold: its texts come from here, its entries from the `entries` message. */
 function skillsPageHtml(title: string): string {
 	const text = {
 		skill: localize('pollisSkills.skill', "Skill"),
@@ -570,30 +582,21 @@ function skillsPageHtml(title: string): string {
 	const intro = localize('pollisSkills.intro', "A skill is the know-how a coding agent reads to do a task: the agent tasks of the Compose menu use these, and any coding agent can follow them. This is the latest version of each, downloaded when the page opens. Click a name to read its {0}, or run it with your coding agent.", '<code>SKILL.md</code>');
 	const installIntro = localize('pollisSkills.installIntro', "To install the skills in your coding agent, so that it uses them in any folder, even outside Pollis:");
 	const installLink = localize('pollisSkills.installLink', "Compose > Coding Agents");
-	return `<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
-	<style>
-		${voiceButtonsCss}
-${LIBRARY_PAGE_STYLE}
-	.name { width: 40%; }
-	.links { margin-top: 6px; }
-	.install { max-width: 900px; margin: 0 0 20px 0; padding: 12px 16px; line-height: 1.4; border-left: 3px solid var(--vscode-textLink-foreground); background: color-mix(in srgb, var(--vscode-textLink-foreground) 8%, transparent); }
-	.task { display: block; margin: 0 0 4px 0; font-size: 12px; text-align: left; }
-	.request::before { content: '\u201C'; }
-	.request::after { content: '\u201D'; }
-	</style>
-</head>
-<body>
-<div class="container">
-	<div class="title-row">
-		<h1>${title}</h1>
-		${voiceButtonsHtml}
-	</div>
-	<p class="subtitle">${intro}</p>
+	return buildWebviewHtml({
+		title: title,
+		omitPoweredBy: !AGENTSKILLS_METADATA.agentSkills.packages.length,
+		introHtml: intro,
+		extraCss: `
+${LIBRARY_PAGE_MINIMAL_STYLE}
+	.libraryPage .name { width: 40%; }
+	.libraryPage .links { margin-top: 6px; }
+	.libraryPage .install { max-width: 900px; margin: 0 0 20px 0; padding: 12px 16px; line-height: 1.4; border-left: 3px solid var(--vscode-textLink-foreground); background: color-mix(in srgb, var(--vscode-textLink-foreground) 8%, transparent); }
+	.libraryPage .task { display: block; margin: 0 0 4px 0; font-size: 12px; text-align: left; }
+	.libraryPage .request::before { content: '\u201C'; }
+	.libraryPage .request::after { content: '\u201D'; }
+`,
+		bodyHtml: `
+		<div class="libraryPage">
 	<div class="install">${installIntro} <button class="link" id="codingAgent">${installLink}</button></div>
 	<table>
 		<thead><tr>
@@ -601,10 +604,9 @@ ${LIBRARY_PAGE_STYLE}
 		</tr></thead>
 		<tbody id="entries"></tbody>
 	</table>
-</div>
-<script>
-	const vscode = acquireVsCodeApi();
-	${voiceButtonsScript}
+		</div>
+`,
+		pageScriptJs: `
 	const TEXT = ${JSON.stringify(text)};
 	/** A skill with more example requests than this shows the rest on request. */
 	const LISTED = 4;
@@ -691,9 +693,8 @@ ${LIBRARY_PAGE_HELPERS}
 		}
 	});
 	vscode.postMessage({ command: 'ready' });
-</script>
-</body>
-</html>`;
+`,
+	});
 }
 
 /** Where the skills are installed for an agent other than Claude Code: the personal skills folder of Codex and OpenCode. */

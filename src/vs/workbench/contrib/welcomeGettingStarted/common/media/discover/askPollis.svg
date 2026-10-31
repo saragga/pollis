@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="270" viewBox="0 0 480 270" fill="none">
+<style>
+:root{--bg:#181a1f;--fg:#cccccc;--dim:#9d9d9d;--link:#4daafc;--line:#0078d4}
+@media (prefers-color-scheme:light){:root{--bg:#f8f8f8;--fg:#3b3b3b;--dim:#6f6f6f;--link:#005fb8;--line:#005fb8}}
+text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Ubuntu,"Noto Sans",sans-serif;fill:var(--fg)}
+.dim{fill:var(--dim)}.link{fill:var(--link)}.b{font-weight:600}
+.a,.scroll,.all{animation-duration:15s;animation-iteration-count:1;animation-fill-mode:both;animation-timing-function:linear}
+.h{opacity:0}
+.scroll{animation-name:scroll;animation-timing-function:linear}@keyframes scroll{0%,37.33%{transform:translateY(0)}76.00%,100%{transform:translateY(-142px)}}
+.all{animation-name:all;animation-timing-function:ease-out}@keyframes all{0%,86.67%{opacity:1}100%{opacity:0}}
+.k0{animation-name:k0}@keyframes k0{0%{opacity:1}4.60%{opacity:1}4.67%{opacity:0}15.27%{opacity:0}15.33%{opacity:1}100%{opacity:1}}
+.k1{animation-name:k1}@keyframes k1{0%{opacity:0}4.60%{opacity:0}4.67%{opacity:1}5.33%{opacity:1}5.40%{opacity:0}100%{opacity:0}}
+.k2{animation-name:k2}@keyframes k2{0%{opacity:0}5.33%{opacity:0}5.40%{opacity:1}6.07%{opacity:1}6.13%{opacity:0}100%{opacity:0}}
+.k3{animation-name:k3}@keyframes k3{0%{opacity:0}6.07%{opacity:0}6.13%{opacity:1}6.80%{opacity:1}6.87%{opacity:0}100%{opacity:0}}
+.k4{animation-name:k4}@keyframes k4{0%{opacity:0}6.80%{opacity:0}6.87%{opacity:1}7.53%{opacity:1}7.60%{opacity:0}100%{opacity:0}}
+.k5{animation-name:k5}@keyframes k5{0%{opacity:0}7.53%{opacity:0}7.60%{opacity:1}8.27%{opacity:1}8.33%{opacity:0}100%{opacity:0}}
+.k6{animation-name:k6}@keyframes k6{0%{opacity:0}8.27%{opacity:0}8.33%{opacity:1}9.00%{opacity:1}9.07%{opacity:0}100%{opacity:0}}
+.k7{animation-name:k7}@keyframes k7{0%{opacity:0}9.00%{opacity:0}9.07%{opacity:1}9.73%{opacity:1}9.80%{opacity:0}100%{opacity:0}}
+.k8{animation-name:k8}@keyframes k8{0%{opacity:0}9.73%{opacity:0}9.80%{opacity:1}10.47%{opacity:1}10.53%{opacity:0}100%{opacity:0}}
+.k9{animation-name:k9}@keyframes k9{0%{opacity:0}10.47%{opacity:0}10.53%{opacity:1}11.20%{opacity:1}11.27%{opacity:0}100%{opacity:0}}
+.k10{animation-name:k10}@keyframes k10{0%{opacity:0}11.20%{opacity:0}11.27%{opacity:1}11.93%{opacity:1}12.00%{opacity:0}100%{opacity:0}}
+.k11{animation-name:k11}@keyframes k11{0%{opacity:0}11.93%{opacity:0}12.00%{opacity:1}12.67%{opacity:1}12.73%{opacity:0}100%{opacity:0}}
+.k12{animation-name:k12}@keyframes k12{0%{opacity:0}12.67%{opacity:0}12.73%{opacity:1}13.40%{opacity:1}13.47%{opacity:0}100%{opacity:0}}
+.k13{animation-name:k13}@keyframes k13{0%{opacity:0}13.40%{opacity:0}13.47%{opacity:1}15.27%{opacity:1}15.33%{opacity:0}100%{opacity:0}}
+.k14{animation-name:k14}@keyframes k14{0%{opacity:0.45}4.60%{opacity:0.45}4.67%{opacity:1}15.27%{opacity:1}15.33%{opacity:0.45}100%{opacity:0.45}}
+.k15{animation-name:k15}@keyframes k15{0%{opacity:0}15.27%{opacity:0}17.00%{opacity:1}100%{opacity:1}}
+.k16{animation-name:k16}@keyframes k16{0%{opacity:0}16.00%{opacity:0}17.33%{opacity:1}19.67%{opacity:1}20.67%{opacity:0}100%{opacity:0}}
+.k17{animation-name:k17}@keyframes k17{0%{opacity:0}20.67%{opacity:0}22.13%{opacity:1}100%{opacity:1}}
+.k18{animation-name:k18}@keyframes k18{0%{opacity:0}22.67%{opacity:0}24.13%{opacity:1}100%{opacity:1}}
+.k19{animation-name:k19}@keyframes k19{0%{opacity:0}24.67%{opacity:0}26.13%{opacity:1}100%{opacity:1}}
+.k20{animation-name:k20}@keyframes k20{0%{opacity:0}26.67%{opacity:0}28.13%{opacity:1}100%{opacity:1}}
+.k21{animation-name:k21}@keyframes k21{0%{opacity:0}28.67%{opacity:0}30.13%{opacity:1}100%{opacity:1}}
+.k22{animation-name:k22}@keyframes k22{0%{opacity:0}30.67%{opacity:0}32.13%{opacity:1}100%{opacity:1}}
+.k23{animation-name:k23}@keyframes k23{0%{opacity:0}32.67%{opacity:0}34.13%{opacity:1}100%{opacity:1}}
+.k24{animation-name:k24}@keyframes k24{0%{opacity:0}35.33%{opacity:0}37.33%{opacity:1}100%{opacity:1}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+<defs>
+<linearGradient id="edge" x1="0" y1="62" x2="0" y2="204" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".07" stop-color="#fff"/><stop offset=".93" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<mask id="window" maskUnits="userSpaceOnUse" x="0" y="62" width="480" height="142"><rect x="0" y="62" width="480" height="142" fill="url(#edge)"/></mask>
+</defs>
+<rect width="480" height="270" fill="var(--bg)"/>
+<g class="all">
+<text class="dim b" x="52" y="24" font-size="11" letter-spacing=".5">ASK POLLIS</text>
+<path d="M456 13v12M450 19h12" stroke="var(--dim)" stroke-width="1.2" stroke-linecap="round"/>
+<text class="h a k15 b" x="24" y="54" font-size="15">What is NUTS?</text>
+<text class="h a k16 dim" x="24" y="80" font-size="13">Finding the passages...</text>
+<g mask="url(#window)"><g class="scroll">
+<text class="h a k17" x="24" y="80" font-size="14">NUTS stands for the No-U-Turn Sampler [<tspan class="link b">3</tspan>]. It is a</text>
+<text class="h a k18" x="24" y="100" font-size="14">Hamiltonian Monte Carlo method that tunes its own step</text>
+<text class="h a k19" x="24" y="120" font-size="14">size to reach a target acceptance rate and its own</text>
+<text class="h a k20" x="24" y="140" font-size="14">trajectory length [<tspan class="link b">3</tspan>]. NUTS is the default and the best</text>
+<text class="h a k21" x="24" y="160" font-size="14">choice for continuous parameters [<tspan class="link b">3</tspan>]. NUTS produces nearly</text>
+<text class="h a k22" x="24" y="180" font-size="14">independent draws on smooth posteriors with hundreds or</text>
+<text class="h a k23" x="24" y="200" font-size="14">thousands of parameters, with no hand tuning [<tspan class="link b">1</tspan>].</text>
+<text class="dim b h a k24" x="24" y="228" font-size="11" letter-spacing=".5">SOURCES</text>
+<text class="b h a k24" x="24" y="247" font-size="14">[1]</text>
+<text class="h a k24" x="62" y="247" font-size="14">Markov Chain Monte Carlo</text>
+<text class="link h a k24" x="456" y="247" font-size="14" text-anchor="end">Open</text>
+<text class="dim h a k24" x="62" y="263" font-size="12">Simulate &#183; Markov Chain Monte Carlo &#8250; NUTS</text>
+<text class="b h a k24" x="24" y="285" font-size="14">[3]</text>
+<text class="h a k24" x="62" y="285" font-size="14">Sampling-Based Bayesian Inference</text>
+<text class="link h a k24" x="456" y="285" font-size="14" text-anchor="end">Open</text>
+<text class="dim h a k24" x="62" y="301" font-size="12">Model &#8250; Bayesian Analysis &#183; Sampling-Based Bayesian</text>
+<text class="dim h a k24" x="62" y="317" font-size="12">Inference &#8250; Overview &#8250; The Samplers</text>
+<text class="dim h a k24" x="24" y="336" font-size="12">Searched: Pollis, Julia Manual.</text>
+</g></g>
+<rect x="18" y="210" width="444" height="54" rx="14" stroke="var(--line)" stroke-width="1.4"/>
+<text class="dim a k0" x="34" y="228" font-size="14">Ask Pollis</text>
+<text class="h a k1" x="34" y="228" font-size="14">W</text>
+<text class="h a k2" x="34" y="228" font-size="14">Wh</text>
+<text class="h a k3" x="34" y="228" font-size="14">Wha</text>
+<text class="h a k4" x="34" y="228" font-size="14">What</text>
+<text class="h a k5" x="34" y="228" font-size="14">What </text>
+<text class="h a k6" x="34" y="228" font-size="14">What i</text>
+<text class="h a k7" x="34" y="228" font-size="14">What is</text>
+<text class="h a k8" x="34" y="228" font-size="14">What is </text>
+<text class="h a k9" x="34" y="228" font-size="14">What is N</text>
+<text class="h a k10" x="34" y="228" font-size="14">What is NU</text>
+<text class="h a k11" x="34" y="228" font-size="14">What is NUT</text>
+<text class="h a k12" x="34" y="228" font-size="14">What is NUTS</text>
+<text class="h a k13" x="34" y="228" font-size="14">What is NUTS?</text>
+<circle cx="39" cy="246" r="11" stroke="var(--line)" stroke-width="1.2"/><path d="M39 240.5v11M33.5 246h11" stroke="var(--fg)" stroke-width="1.3" stroke-linecap="round"/>
+<g transform="translate(336 238)"><path fill="var(--dim)" d="M8 1a2 2 0 0 0-2 2v5a2 2 0 1 0 4 0V3a2 2 0 0 0-2-2zM5 7H4v1a4 4 0 0 0 3.5 3.969V14H5v1h6v-1H8.5v-2.031A4 4 0 0 0 12 8V7h-1v1a3 3 0 0 1-6 0V7z"/></g><g transform="translate(364 238)"><path stroke="var(--dim)" stroke-width="1.5" stroke-linecap="round" d="M2 7v2M5 5v6M8 2.5v11M11 5v6M14 7v2"/></g><g transform="translate(392 238)"><path stroke="var(--dim)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" d="M4.1 2.6v1.4M0.9 4.4h6.4M5.8 5.6C5.1 8.6 3.3 11 0.9 12.4M2.4 5.6C3.1 8.6 4.9 11 7.3 12.4M8.9 12.4l2.9-8.2 2.9 8.2M9.8 9.8h4"/></g>
+<g class="a k14" opacity=".45"><circle cx="440" cy="246" r="12" fill="var(--line)"/><path d="M440 251.5v-11M435.5 245l4.5-4.5 4.5 4.5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></g>
+</g>
+</svg>

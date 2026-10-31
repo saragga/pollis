@@ -22,9 +22,16 @@ import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWork
 import { commandLine, IMcpServer, MCP_SERVERS, MCP_SERVERS_COMMAND_ID, shellWord, UV_INSTALL_URL } from '../common/mcpServers.js';
 import { CHOOSE_AGENT_COMMAND_ID, CODING_AGENTS, commandWords, findProgram, terminalEnvironment } from './pollisAgents.js';
 import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
-import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
+import { IOpenerService } from '../../../../platform/opener/common/opener.js';
+import { IEditorService } from '../../../../workbench/services/editor/common/editorService.js';
+import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
+import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
+import { IStorageService } from '../../../../platform/storage/common/storage.js';
+import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
+import { MCPSERVERS_METADATA } from '../../model/browser/webviews/mcpServers.data.js';
+import { buildWebviewHtml } from '../../model/browser/webviews/webviewScaffold.js';
 
-// Compose > MCP Servers: a short, curated library of MCP servers (common/mcpServers.ts), which the coding agent
+// Compose > MCP Servers, in the Minimal style of the scaffold: a short, curated library of MCP servers (common/mcpServers.ts), which the coding agent
 // of Compose > Coding Agents can use to look things up while it works: search a source, read its notes, fetch
 // its data. Remote servers are run by their provider; local ones run on the user's computer with uvx, and each
 // says who makes it and links to its source or terms. Pollis adds a server to the user's own agent, for every
@@ -114,6 +121,11 @@ async function openMcpServersPage(accessor: ServicesAccessor, server: string | u
 	const commandService = accessor.get(ICommandService);
 	const pathService = accessor.get(IPathService);
 	const notificationService = accessor.get(INotificationService);
+	const openerService = accessor.get(IOpenerService);
+	const editorService = accessor.get(IEditorService);
+	const notebookEditorModelResolverService = accessor.get(INotebookEditorModelResolverService);
+	const notebookKernelService = accessor.get(INotebookKernelService);
+	const storageService = accessor.get(IStorageService);
 
 	if (openPage && !openPage.isDisposed()) {
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
@@ -140,6 +152,7 @@ async function openMcpServersPage(accessor: ServicesAccessor, server: string | u
 	openPage = webviewInput;
 
 	const disposables = new DisposableStore();
+	disposables.add(registerScaffoldPageHandlers(webviewInput, 'mcpServers', title, MCPSERVERS_METADATA.mcpServers, openerService, editorService, commandService, notificationService, notebookEditorModelResolverService, notebookKernelService, fileService, pathService, storageService));
 	disposables.add(webviewInput.webview.onDidDispose(() => {
 		openPage = undefined;
 		disposables.dispose();
@@ -267,56 +280,42 @@ function pageHtml(): string {
 		agentsHint: localize('mcpServers.agentsHint', "Install and choose your agent on"),
 		agentsLink: localize('mcpServers.agentsLink', "Compose > Coding Agents"),
 	};
-	return `<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
-	<style>
-		${voiceButtonsCss}
-		* { box-sizing: border-box; }
-		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
-		.container { max-width: 1100px; margin: 0 auto; padding: 24px; }
-		h1 { font-size: 32px; font-weight: 300; margin: 0 0 4px 0; line-height: 1.2; }
-		h2 { font-size: 18px; font-weight: 600; margin: 0; }
-		.subtitle { font-size: 14px; color: var(--vscode-descriptionForeground); margin: 0 0 8px 0; line-height: 1.4; max-width: 900px; }
-		.hint { color: var(--vscode-descriptionForeground); margin: 0 0 20px 0; line-height: 1.4; max-width: 900px; }
-		.server { border: 1px solid var(--vscode-widget-border); border-radius: 6px; padding: 16px 18px; margin: 0 0 20px 0; box-shadow: inset 3px 0 0 var(--vscode-textLink-foreground); }
-		.provider { color: var(--vscode-descriptionForeground); margin: 2px 0 10px 0; }
-		.description { margin: 0 0 12px 0; line-height: 1.4; }
-		.facts { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 0 0 12px 0; line-height: 1.4; }
-		.facts dt { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--vscode-descriptionForeground); padding-top: 2px; }
-		.facts dd { margin: 0; }
-		.facts ul { margin: 0; padding-left: 18px; }
-		code { font-family: var(--vscode-editor-font-family); font-size: 12px; }
-		table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-		th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--vscode-descriptionForeground); text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--vscode-widget-border); }
-		th.agent { width: 40%; }
-		td { vertical-align: top; padding: 8px; border-bottom: 1px solid var(--vscode-widget-border); line-height: 1.4; }
-		tr:hover td { background: var(--vscode-list-hoverBackground); }
-		.name { font-weight: 600; }
-		.small { font-size: 12px; color: var(--vscode-descriptionForeground); }
-		.added { color: var(--vscode-testing-iconPassed); }
-		.link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; }
-		.link:hover { text-decoration: underline; }
-		.separator { color: var(--vscode-descriptionForeground); margin: 0 6px; }
-		.warning { margin: 0 0 12px 0; color: var(--vscode-editorWarning-foreground); }
-	</style>
-</head>
-<body>
-<div class="container">
-	<div class="title-row">
-		<h1>${text.title}</h1>
-		${voiceButtonsHtml}
-	</div>
-	<p class="subtitle">${text.intro}</p>
+	return buildWebviewHtml({
+		title: text.title,
+		omitPoweredBy: !MCPSERVERS_METADATA.mcpServers.packages.length,
+		introHtml: text.intro,
+		extraCss: `
+		.container { max-width: 1100px; }
+		.mcpServersPage h2 { font-size: 18px; font-weight: 600; margin: 0; }
+		.mcpServersPage .hint { color: var(--vscode-descriptionForeground); margin: 0 0 20px 0; line-height: 1.4; max-width: 900px; }
+		.mcpServersPage .server { border: 1px solid var(--vscode-widget-border); border-radius: 6px; padding: 16px 18px; margin: 0 0 20px 0; box-shadow: inset 3px 0 0 var(--vscode-textLink-foreground); }
+		.mcpServersPage .provider { color: var(--vscode-descriptionForeground); margin: 2px 0 10px 0; }
+		.mcpServersPage .description { margin: 0 0 12px 0; line-height: 1.4; }
+		.mcpServersPage .facts { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 0 0 12px 0; line-height: 1.4; }
+		.mcpServersPage .facts dt { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--vscode-descriptionForeground); padding-top: 2px; }
+		.mcpServersPage .facts dd { margin: 0; }
+		.mcpServersPage .facts ul { margin: 0; padding-left: 18px; }
+		.mcpServersPage code { font-family: var(--vscode-editor-font-family); font-size: 12px; }
+		.mcpServersPage table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+		.mcpServersPage th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--vscode-descriptionForeground); text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--vscode-widget-border); }
+		.mcpServersPage th.agent { width: 40%; }
+		.mcpServersPage td { vertical-align: top; padding: 8px; border-bottom: 1px solid var(--vscode-widget-border); line-height: 1.4; }
+		.mcpServersPage tr:hover td { background: var(--vscode-list-hoverBackground); }
+		.mcpServersPage .name { font-weight: 600; }
+		.mcpServersPage .small { font-size: 12px; color: var(--vscode-descriptionForeground); }
+		.mcpServersPage .added { color: var(--vscode-testing-iconPassed); }
+		.mcpServersPage .link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; }
+		.mcpServersPage .link:hover { text-decoration: underline; }
+		.mcpServersPage .separator { color: var(--vscode-descriptionForeground); margin: 0 6px; }
+		.mcpServersPage .warning { margin: 0 0 12px 0; color: var(--vscode-editorWarning-foreground); }
+`,
+		bodyHtml: `
+		<div class="mcpServersPage">
 	<p class="hint">${text.rule} ${text.agentsHint} <button class="link" id="codingAgent">${text.agentsLink}</button></p>
 	<div id="servers"></div>
-</div>
-<script>
-	const vscode = acquireVsCodeApi();
-	${voiceButtonsScript}
+		</div>
+`,
+		pageScriptJs: `
 	const TEXT = ${JSON.stringify(text)};
 	const UV_INSTALL_URL = ${JSON.stringify(UV_INSTALL_URL)};
 	const servers = document.getElementById('servers');
@@ -428,9 +427,8 @@ function pageHtml(): string {
 		}
 	});
 	vscode.postMessage({ command: 'ready' });
-</script>
-</body>
-</html>`;
+`,
+	});
 }
 
 registerAction2(class extends Action2 {

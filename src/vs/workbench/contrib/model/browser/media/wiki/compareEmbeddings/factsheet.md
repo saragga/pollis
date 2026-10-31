@@ -6,7 +6,8 @@
 |---|---|
 | **Purpose** | Choose the embedding model of Ask Pollis by how well it finds the right passage, its speed and its memory |
 | **Input** | Embedding models on this computer and a test set of questions, each made from a passage |
-| **Core packages** | [llama.cpp](https://github.com/ggml-org/llama.cpp), [DuckDB](https://duckdb.org) |
+| **Core packages** | [DuckDB.jl](https://github.com/duckdb/DuckDB.jl) |
+| **Local models** | Run by [llama.cpp](https://github.com/ggml-org/llama.cpp), which embeds the passages and the questions |
 | **Steps** | Models, Questions, Run, Results |
 | **Output** | A column of figures for each model, the place of the passage for each question, and Use for Ask Pollis |
 | **Key choice** | Whether a larger model finds enough more passages to justify its memory and its index |

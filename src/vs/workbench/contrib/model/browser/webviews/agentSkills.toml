@@ -1,0 +1,39 @@
+# Agent Skills Webview Configuration
+# A page in the Minimal style of the scaffold, not a panel: Learn More only, as no Julia package powers it. `pageCommand`
+# is the command that opens it, which a panel's contribution file would say. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/agentSkills.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Agent Skills"
+viewType = "pollis.skillsLibrary"
+pageCommand = "pollis.skills.browse"
+
+[[wikis]]
+name = "Factsheet"
+file = "agentSkills/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "agentSkills/overview.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "And1982a"
+
+[[references]]
+key = "GLLBT...2026a"
+
+[[references]]
+key = "HIA2026a"
+
+[[references]]
+key = "WXJMX...2023a"
+
+[[references]]
+key = "YD2026a"

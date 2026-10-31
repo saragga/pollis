@@ -1,0 +1,49 @@
+# Model Tasks and Routing Webview Configuration
+# A page in the Minimal style of the scaffold, not a panel: Learn More only, as no Julia package powers it. `pageCommand`
+# is the command that opens it, which a panel's contribution file would say. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/modelRouting.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Model Tasks and Routing"
+viewType = "pollis.modelRouting"
+pageCommand = "pollis.orchestration.modelRouting"
+
+[[wikis]]
+name = "Factsheet"
+file = "modelRouting/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "modelRouting/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Tiers and Cells"
+file = "modelRouting/tiers.md"
+bundled = true
+
+[[wikis]]
+name = "Tasks"
+file = "modelRouting/tasks.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "CZZ2023a"
+
+[[references]]
+key = "DBV2024a"
+
+[[references]]
+key = "DMWSM...2024a"
+
+[[references]]
+key = "OAWCW...2024a"
+
+[[references]]
+key = "VJ2001a"

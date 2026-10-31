@@ -433,7 +433,7 @@ function pageHtml(rows: number): string {
 
 	function matches(vignette) {
 		const query = search.value.trim().toLowerCase();
-		const fields = [vignette.title, vignette.method, vignette.description, vignette.citation, vignette.topic, vignette.package, vignette.author, vignette.license, location(vignette)];
+		const fields = [vignette.title, vignette.method, vignette.description, vignette.citation, vignette.topic, vignette.package, vignette.author, vignette.license, locationOf(vignette)];
 		return (!topics.value || vignette.topic === topics.value)
 			&& (!query || fields.some(field => (field || '').toLowerCase().includes(query)));
 	}
@@ -452,7 +452,7 @@ function pageHtml(rows: number): string {
 	}
 
 	// Where the vignette comes from: this computer or the registry
-	function location(vignette) {
+	function locationOf(vignette) {
 		return vignette.installed ? TEXT.installedHere : TEXT.inRegistry;
 	}
 
@@ -493,7 +493,7 @@ function pageHtml(rows: number): string {
 			links.appendChild(link(TEXT.repository, () => vscode.postMessage({ command: 'link', url: vignette.repository })));
 			packageCell.appendChild(links);
 		}
-		cell(row, 'location').appendChild(element('div', 'small', location(vignette)));
+		cell(row, 'location').appendChild(element('div', 'small', locationOf(vignette)));
 		return row;
 	}
 
@@ -503,7 +503,7 @@ function pageHtml(rows: number): string {
 
 	// By the column chosen, from A or reversed; empty cells last; then by title
 	function compare(a, b) {
-		const value = vignette => sortColumn === 'location' ? location(vignette) : vignette[sortColumn] || '';
+		const value = vignette => sortColumn === 'location' ? locationOf(vignette) : vignette[sortColumn] || '';
 		const x = value(a), y = value(b);
 		if (!x || !y) {
 			return x === y ? a.title.localeCompare(b.title) : x ? -1 : 1;

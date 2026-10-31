@@ -37,7 +37,13 @@ import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWork
 import { AGENT_BADGE_CSS, AGENT_ICON } from './agentBadge.js';
 import { PREPARE_REGISTRATION_COMMAND_ID, skillFile, startAgent, WRITE_METHOD_COMMAND_ID, WRITE_VIGNETTE_COMMAND_ID } from './pollisAgents.js';
 import { AgentTask } from './modelRouting.js';
-import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
+import { IOpenerService } from '../../../../platform/opener/common/opener.js';
+import { IStorageService } from '../../../../platform/storage/common/storage.js';
+import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
+import { NEWMETHOD_METADATA } from '../../model/browser/webviews/newMethod.data.js';
+import { buildWebviewHtml } from '../../model/browser/webviews/webviewScaffold.js';
+import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
+import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
 
 // Compose > Under Construction..., formerly Compose > Methods > Create Methods (Browse Methods, which lists them, is in workflowLibrary.ts).
 // A method is a folder of ~/.pollis/methods with method.toml, its code in src/NAME.jl (module NAME),
@@ -49,7 +55,7 @@ import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../mod
 // copy outside Pollis (by default in the data folder of a Pollis Workspace) and records its path as `local`;
 // the page then reads the copy, falling back to the link if it is gone. Everything is done on the pages,
 // with no pickers: tables are added, the method renamed and its article set with forms on the page. Package
-// and Publish, a tab of the page, runs media/methods/package.jl, which makes the package NAME.jl in
+// and Publish, a step of the page, runs media/methods/package.jl, which makes the package NAME.jl in
 // ~/.pollis/packages, its tests the target tables computed from the data downloaded from the links, runs
 // them and, if asked, pushes the package to GitHub when they all pass and registers it in the Pollis
 // registry when it also meets the registry rules (a name of at least 5 characters, a usage example, a
@@ -720,6 +726,10 @@ async function openMethodPage(accessor: ServicesAccessor, existing?: URI, step?:
 	const environmentService = accessor.get(IEnvironmentService);
 	const configurationService = accessor.get(IConfigurationService);
 	const instantiationService = accessor.get(IInstantiationService);
+	const openerService = accessor.get(IOpenerService);
+	const notebookEditorModelResolverService = accessor.get(INotebookEditorModelResolverService);
+	const notebookKernelService = accessor.get(INotebookKernelService);
+	const storageService = accessor.get(IStorageService);
 
 	let draft = !existing;
 	// Whether the method's folder exists: a new method has none until the first thing is typed or added
@@ -771,6 +781,7 @@ async function openMethodPage(accessor: ServicesAccessor, existing?: URI, step?:
 	}
 
 	const disposables = new DisposableStore();
+	disposables.add(registerScaffoldPageHandlers(webviewInput, 'newMethod', draftTitle, NEWMETHOD_METADATA.newMethod, openerService, editorService, commandService, notificationService, notebookEditorModelResolverService, notebookKernelService, fileService, pathService, storageService));
 	disposables.add(webviewInput.webview.onDidDispose(async () => {
 		disposables.dispose();
 		if (!created) {
@@ -1013,47 +1024,74 @@ async function openMethodPage(accessor: ServicesAccessor, existing?: URI, step?:
 
 
 
-/** The styles of the method page. */
+/** The styles of the method page: the title and the draft's note, then the panes', kept inside them, away from Learn More and Ask Pollis. */
 const PAGE_STYLE = `
-		* { box-sizing: border-box; }
-		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
-		.container { padding: 20px; }
-		h1 { font-size: 26px; font-weight: 300; margin: 0 0 4px 0; line-height: 1.2; }
-		h1[contenteditable] { color: var(--vscode-textLink-foreground); display: inline-block; min-width: 120px; padding: 0 2px; border-radius: 2px; cursor: text; }
-		h1[contenteditable]:hover { outline: 1px dashed var(--vscode-textLink-foreground); }
+		h1[contenteditable] { display: inline-block; min-width: 120px; padding: 0 2px; border-radius: 2px; cursor: text; }
+		h1[contenteditable]:hover { outline: 1px dashed var(--vscode-descriptionForeground); }
 		h1[contenteditable]:focus { outline: 1px solid var(--vscode-focusBorder); }
-		h2 { font-size: 15px; font-weight: 600; margin: 24px 0 8px 0; }
-		.subtitle, .intro, .small { color: var(--vscode-descriptionForeground); }
-		.subtitle { margin: 0 0 12px 0; line-height: 1.4; }
-		.intro { margin: 0 0 12px 0; line-height: 1.4; max-width: 900px; }
-		.small { font-size: 12px; }
-		.actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px 0; }
-		button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; padding: 4px 12px; cursor: pointer; font-size: 11px; opacity: 0.7; }
-		/* As the code buttons below a panel's Example Code: dimmed until pointed at, the blue one not */
-		button.action:not(:disabled):hover, button.action.current, button.action.primary { opacity: 1; }
-		button.action:hover { background: var(--vscode-button-secondaryHoverBackground); }
-		button.action:disabled { cursor: default; opacity: 0.6; }
-${AGENT_BADGE_CSS}
-		button.primary { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
-		button.primary:hover { background: var(--vscode-button-hoverBackground); }
+		[hidden] { display: none !important; }
 		.link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; }
 		.link:hover { text-decoration: underline; }
-		.error { color: var(--vscode-errorForeground); }
-		[hidden] { display: none !important; }
-		.form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; margin: 0 0 12px 0; padding: 10px 12px; border: 1px solid var(--vscode-widget-border); border-radius: 4px; max-width: 1000px; }
-		.form label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--vscode-descriptionForeground); }
-		.form .error { flex-basis: 100%; margin: 0; }
-		.form .error:empty { display: none; }
-		input, select { font-family: var(--vscode-font-family); font-size: 13px; padding: 4px 6px; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; }
-		input.wide { width: 420px; max-width: 100%; }
-		input:focus, select:focus { outline: 1px solid var(--vscode-focusBorder); }`;
+		.notice { display: block; font-size: 12px; border-left: 3px solid var(--vscode-focusBorder); padding: 6px 10px; margin: 8px 0 0 0; max-width: 1000px; }
+		.step-link .step-number { width: 16px; height: 16px; font-size: 10px; margin-right: 3px; }
+		.step-pane {
+			* { box-sizing: border-box; }
+			h2 { font-size: 15px; font-weight: 600; margin: 24px 0 8px 0; }
+			.intro, .small { color: var(--vscode-descriptionForeground); }
+			.intro { margin: 0 0 12px 0; line-height: 1.4; max-width: 900px; }
+			.small { font-size: 12px; }
+			.actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px 0; }
+			button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; padding: 4px 12px; cursor: pointer; font-size: 11px; opacity: 0.7; }
+			/* As the code buttons below a panel's Example Code: dimmed until pointed at, the blue one not */
+			button.action:not(:disabled):hover, button.action.current, button.action.primary { opacity: 1; }
+			button.action:hover { background: var(--vscode-button-secondaryHoverBackground); }
+			button.action:disabled { cursor: default; opacity: 0.6; }
+${AGENT_BADGE_CSS}
+			button.primary { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+			button.primary:hover { background: var(--vscode-button-hoverBackground); }
+			.error { color: var(--vscode-errorForeground); }
+			.form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; margin: 0 0 12px 0; padding: 10px 12px; border: 1px solid var(--vscode-widget-border); border-radius: 4px; max-width: 1000px; }
+			.form label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--vscode-descriptionForeground); }
+			.form .error { flex-basis: 100%; margin: 0; }
+			.form .error:empty { display: none; }
+			input, select { font-family: var(--vscode-font-family); font-size: 13px; padding: 4px 6px; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; }
+			input.wide { width: 420px; max-width: 100%; }
+			input:focus, select:focus { outline: 1px solid var(--vscode-focusBorder); }
+			.tabs { display: flex; flex-wrap: wrap; gap: 16px; border-bottom: 1px solid var(--vscode-widget-border); margin: 0 0 12px 0; }
+			.tab { font: inherit; font-size: 12px; background: none; border: none; border-bottom: 2px solid transparent; color: var(--vscode-descriptionForeground); padding: 4px 0; cursor: pointer; }
+			.tab.selected { color: var(--vscode-foreground); border-bottom-color: var(--vscode-focusBorder); }
+			code { font-family: var(--vscode-editor-font-family); color: var(--vscode-textPreformat-foreground); background: var(--vscode-textPreformat-background); border-radius: 3px; padding: 0 3px; }
+			.table { margin: 0 0 20px 0; }
+			.table-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px; margin: 0 0 4px 0; }
+			.table-name { font-size: 14px; font-weight: 600; }
+			.call { font-family: var(--vscode-editor-font-family); font-size: 12px; margin: 0 0 6px 0; }
+			.scroll { overflow-x: auto; }
+			table { border-collapse: collapse; }
+			th { font-size: 12px; font-weight: 600; text-align: left; padding: 3px 10px; border-bottom: 1px solid var(--vscode-widget-border); white-space: nowrap; }
+			td { padding: 3px 10px; border-bottom: 1px solid var(--vscode-widget-border); font-family: var(--vscode-editor-font-family); font-size: 12px; white-space: nowrap; }
+			td.number { text-align: right; }
+			textarea { width: 100%; max-width: 1000px; min-height: 220px; font-family: var(--vscode-editor-font-family); font-size: 13px; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); padding: 8px; resize: vertical; margin: 0 0 12px 0; }
+			textarea:focus { outline: 1px solid var(--vscode-focusBorder); }
+			.datasets { flex-basis: 100%; max-height: 320px; overflow-y: auto; }
+			.dataset { display: flex; align-items: center; gap: 12px; padding: 4px 0; border-bottom: 1px solid var(--vscode-widget-border); }
+			.dataset .grow { flex: 1; }
+			.hint { flex-basis: 100%; margin: 0; }
+			.field { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; margin: 0 0 14px 0; max-width: 1000px; }
+			.field label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--vscode-descriptionForeground); }
+			.field .error { flex-basis: 100%; margin: 0; }
+			.field .error:empty { display: none; }
+			.publish { display: flex; flex-direction: column; gap: 12px; margin: 0 0 14px 0; max-width: 900px; }
+			.publish .row { display: flex; align-items: baseline; gap: 12px; }
+			.publish button { min-width: 260px; text-align: left; }
+		}`;
 
 /**
- * The method page, its five steps as tabs: its texts come from here, the method from the `method` message
- * and each input table from an `input` message.
+ * The method page, in the Time Arrow style of the scaffold, a pane for each of its five steps: its texts come
+ * from here, the method from the `method` message and each input table from an `input` message.
  */
 function pageHtml(): string {
 	const text = {
+		intro: localize('newMethods.page.intro', "A method reproduces what an article publishes: its tables become the tests of a Julia package, which the steps below make, with the article open beside this page."),
 		// The steps
 		stepArticle: localize('newMethods.step.article', "Article and Data"),
 		stepMethod: localize('newMethods.step.method', "Write a Method"),
@@ -1146,65 +1184,17 @@ function pageHtml(): string {
 		noSource: localize('newMethods.page.noSource', "No source yet"),
 		edit: localize('newMethods.page.edit', "Edit"),
 	};
-	return `<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
-	<style>
-		${voiceButtonsCss}
-${PAGE_STYLE}
-		.tabs { display: flex; flex-wrap: wrap; gap: 20px; border-bottom: 1px solid var(--vscode-widget-border); margin: 16px 0 12px 0; }
-		.subtabs { gap: 16px; margin: 0 0 12px 0; }
-		.tab { font: inherit; font-size: 13px; background: none; border: none; border-bottom: 2px solid transparent; color: var(--vscode-descriptionForeground); padding: 6px 0; cursor: pointer; }
-		.subtabs .tab { font-size: 12px; padding: 4px 0; }
-		.tab.selected { color: var(--vscode-foreground); border-bottom-color: var(--vscode-focusBorder); }
-		.step-number { font-size: 20px; line-height: 1; vertical-align: -2px; margin-right: 5px; color: var(--vscode-button-background); }
-		code { font-family: var(--vscode-editor-font-family); color: var(--vscode-textPreformat-foreground); background: var(--vscode-textPreformat-background); border-radius: 3px; padding: 0 3px; }
-		.step-link .step-number { font-size: 15px; vertical-align: -1px; margin-right: 3px; }
-		.table { margin: 0 0 20px 0; }
-		.table-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px; margin: 0 0 4px 0; }
-		.table-name { font-size: 14px; font-weight: 600; }
-		.call { font-family: var(--vscode-editor-font-family); font-size: 12px; margin: 0 0 6px 0; }
-		.scroll { overflow-x: auto; }
-		table { border-collapse: collapse; }
-		th { font-size: 12px; font-weight: 600; text-align: left; padding: 3px 10px; border-bottom: 1px solid var(--vscode-widget-border); white-space: nowrap; }
-		td { padding: 3px 10px; border-bottom: 1px solid var(--vscode-widget-border); font-family: var(--vscode-editor-font-family); font-size: 12px; white-space: nowrap; }
-		td.number { text-align: right; }
-		textarea { width: 100%; max-width: 1000px; min-height: 220px; font-family: var(--vscode-editor-font-family); font-size: 13px; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); padding: 8px; resize: vertical; margin: 0 0 12px 0; }
-		textarea:focus { outline: 1px solid var(--vscode-focusBorder); }
-		.datasets { flex-basis: 100%; max-height: 320px; overflow-y: auto; }
-		.dataset { display: flex; align-items: center; gap: 12px; padding: 4px 0; border-bottom: 1px solid var(--vscode-widget-border); }
-		.dataset .grow { flex: 1; }
-		.hint { flex-basis: 100%; margin: 0; }
-		.field { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; margin: 0 0 14px 0; max-width: 1000px; }
-		.field label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--vscode-descriptionForeground); }
-		.field .error { flex-basis: 100%; margin: 0; }
-		.field .error:empty { display: none; }
-		.publish { display: flex; flex-direction: column; gap: 12px; margin: 0 0 14px 0; max-width: 900px; }
-		.publish .row { display: flex; align-items: baseline; gap: 12px; }
-		.publish button { min-width: 260px; text-align: left; }
-		.notice { border-left: 3px solid var(--vscode-focusBorder); padding: 6px 10px; margin: 0 0 12px 0; max-width: 1000px; }
-	</style>
-</head>
-<body>
-<div class="container">
-	<div class="title-row">
-		<h1 id="heading" contenteditable="plaintext-only" spellcheck="false" title="${text.headingHint}"></h1>
-		${voiceButtonsHtml}
-	</div>
-	<p class="small notice" id="draftHint" hidden></p>
-	<div class="tabs" id="steps">
-		<button class="tab selected" data-step="article"><span class="step-number">&#9312;</span>${text.stepArticle}</button>
-		<button class="tab" data-step="method"><span class="step-number">&#9313;</span>${text.stepMethod}</button>
-		<button class="tab" data-step="vignette"><span class="step-number">&#9314;</span>${text.stepVignette}</button>
-		<button class="tab" data-step="register"><span class="step-number">&#9315;</span>${text.stepRegister}</button>
-		<button class="tab" data-step="package"><span class="step-number">&#9316;</span>${text.stepPackage}</button>
-	</div>
-
-	<section class="step" id="step-article">
-		<div class="tabs subtabs">
+	return buildWebviewHtml({
+		// The method's title, from the `method` message
+		title: '',
+		introHtml: `${text.intro}<span class="notice" id="draftHint" hidden></span>`,
+		extraCss: PAGE_STYLE,
+		steps: [
+			{
+				id: 'step-article',
+				title: text.stepArticle,
+				bodyHtml: `
+		<div class="tabs">
 			<button class="tab selected" data-part="article">${text.article}</button>
 			<button class="tab" data-part="inputs">${text.inputs}</button>
 			<button class="tab" data-part="targets">${text.targets}</button>
@@ -1282,9 +1272,12 @@ ${PAGE_STYLE}
 			</div>
 			<div id="targets"></div>
 		</div>
-	</section>
-
-	<section class="step" id="step-method" hidden>
+`,
+			},
+			{
+				id: 'step-method',
+				title: text.stepMethod,
+				bodyHtml: `
 		<div class="field">
 			<label>${text.title}<input class="wide" id="title" placeholder="${text.titlePlaceholder}"></label>
 			<button class="action primary" data-submit="title">${text.save}</button>
@@ -1300,9 +1293,12 @@ ${PAGE_STYLE}
 			<button class="action" data-command="open" data-file="method.toml">${text.editToml}</button>
 			<button class="action open-code" data-command="open">${text.openCode}</button>
 		</div>
-	</section>
-
-	<section class="step" id="step-vignette" hidden>
+`,
+			},
+			{
+				id: 'step-vignette',
+				title: text.stepVignette,
+				bodyHtml: `
 		<div class="field">
 			<label>${text.title}<input class="wide" id="vignetteTitle" placeholder="${text.titlePlaceholder}"></label>
 			<button class="action primary" data-submit="vignetteTitle">${text.save}</button>
@@ -1319,9 +1315,12 @@ ${PAGE_STYLE}
 			<button class="action" id="openPdf" data-command="openPdf">${text.openPdf}</button>
 		</div>
 		<p class="small" id="noVignette">${text.noVignette}</p>
-	</section>
-
-	<section class="step" id="step-register" hidden>
+`,
+			},
+			{
+				id: 'step-register',
+				title: text.stepRegister,
+				bodyHtml: `
 		<div class="field">
 			<label>${text.packageName}<input id="packageName" spellcheck="false"></label>
 			<button class="action primary" data-submit="name">${text.save}</button>
@@ -1334,9 +1333,12 @@ ${PAGE_STYLE}
 			<button class="action primary with-agent" data-command="prepareRegistration">${AGENT_ICON}${text.prepareRegistration}</button>
 			<button class="action open-code" data-command="open">${text.openCode}</button>
 		</div>
-	</section>
-
-	<section class="step" id="step-package" hidden>
+`,
+			},
+			{
+				id: 'step-package',
+				title: text.stepPackage,
+				bodyHtml: `
 		<p class="intro">${text.packageIntro}</p>
 		<div class="field">
 			<label>${text.owner}<input id="owner" spellcheck="false"></label>
@@ -1348,11 +1350,10 @@ ${PAGE_STYLE}
 			<div class="row"><button class="action" data-publish="register">${text.packageRegister}</button><span class="small">${text.packageRegisterDetail}</span></div>
 		</div>
 		<p class="error small" id="error-package"></p>
-	</section>
-</div>
-<script>
-	const vscode = acquireVsCodeApi();
-	${voiceButtonsScript}
+`,
+			},
+		],
+		pageScriptJs: `
 	const TEXT = ${JSON.stringify(text)};
 	const DATASETS_URL = ${JSON.stringify(DATASETS_URL)};
 	const inputBoxes = new Map();
@@ -1401,6 +1402,13 @@ ${PAGE_STYLE}
 		}
 	}
 
+	// A step's pane, opened and brought into view from the draft's note or by the host
+	function openStep(name) {
+		const pane = document.getElementById('step-' + name);
+		pane.classList.remove('collapsed');
+		pane.scrollIntoView({ block: 'start' });
+	}
+
 	function select(kind, name) {
 		document.querySelectorAll('[data-' + kind + ']').forEach(tab => tab.classList.toggle('selected', tab.dataset[kind] === name));
 		document.querySelectorAll('.' + kind).forEach(section => { section.hidden = section.id !== kind + '-' + name; });
@@ -1424,7 +1432,6 @@ ${PAGE_STYLE}
 		if (e.key === 'Enter' && submit) { submit.click(); }
 		if (e.key === 'Escape' && box.classList.contains('form')) { clearForm(box.id.slice('form-'.length)); }
 	}));
-	document.querySelectorAll('[data-step]').forEach(tab => tab.addEventListener('click', () => select('step', tab.dataset.step)));
 	document.querySelectorAll('[data-part]').forEach(tab => tab.addEventListener('click', () => select('part', tab.dataset.part)));
 	document.querySelectorAll('button[data-publish]').forEach(button => button.addEventListener('click', () => {
 		document.getElementById('error-package').textContent = '';
@@ -1444,7 +1451,7 @@ ${PAGE_STYLE}
 	// The draft's note, its steps as links that open them
 	function showDraftHint(container) {
 		container.textContent = '';
-		const steps = { '{0}': ['register', '\u2463', TEXT.stepRegister], '{1}': ['article', '\u2460', TEXT.stepArticle] };
+		const steps = { '{0}': ['register', '4', TEXT.stepRegister], '{1}': ['article', '1', TEXT.stepArticle] };
 		for (const part of TEXT.draftHint.split(/({[01]})/)) {
 			const step = steps[part];
 			if (!step) {
@@ -1454,7 +1461,7 @@ ${PAGE_STYLE}
 			const link = element('button', 'link step-link');
 			link.appendChild(element('span', 'step-number', step[1]));
 			link.appendChild(document.createTextNode(step[2]));
-			link.addEventListener('click', () => select('step', step[0]));
+			link.addEventListener('click', () => openStep(step[0]));
 			container.appendChild(link);
 		}
 	}
@@ -1616,7 +1623,10 @@ ${PAGE_STYLE}
 	}));
 
 	// The heading is the title, edited in place: Enter saves it, Escape or leaving it puts it back
-	const heading = document.getElementById('heading');
+	const heading = document.querySelector('.title-row h1');
+	heading.contentEditable = 'plaintext-only';
+	heading.spellcheck = false;
+	heading.title = TEXT.headingHint;
 	heading.addEventListener('keydown', e => {
 		if (e.key === 'Enter') {
 			e.preventDefault();
@@ -1639,7 +1649,7 @@ ${PAGE_STYLE}
 		if (message.command === 'input') {
 			showInput(message);
 		} else if (message.command === 'step') {
-			select('step', message.step);
+			openStep(message.step);
 		} else if (message.command === 'catalogue') {
 			catalogue = message.items;
 			renderDatasets();
@@ -1691,9 +1701,8 @@ ${PAGE_STYLE}
 		}
 	});
 	vscode.postMessage({ command: 'ready' });
-</script>
-</body>
-</html>`;
+`,
+	});
 }
 
 

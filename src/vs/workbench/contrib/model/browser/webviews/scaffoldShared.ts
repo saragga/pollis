@@ -675,7 +675,13 @@ export const stepsCss = `.step-head { display: flex; align-items: center; gap: 1
 		.step-pane .section-toggle:hover .step-title { text-decoration: underline; }
 		.step-number { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; flex-shrink: 0; margin-right: 4px; border-radius: 50%; font-size: 12px; font-weight: 600; color: var(--vscode-editor-background); background: #e8a33d; }
 		body.vscode-light .step-number { background: #a8650d; }
-		.step-pane .section-body { padding-left: 22px; }`;
+		.step-pane .section-body { padding-left: 22px; }
+		/* The tick boxes in the colours of the theme, as the browser's own stay white */
+		input[type=checkbox] { appearance: none; -webkit-appearance: none; box-sizing: border-box; position: relative; width: 14px; height: 14px; margin: 0; flex-shrink: 0; vertical-align: -2px; border: 1px solid var(--vscode-descriptionForeground); border-radius: 3px; background: var(--vscode-button-secondaryBackground); cursor: pointer; }
+		input[type=checkbox]:checked, input[type=checkbox]:indeterminate { background: var(--vscode-textLink-foreground); border-color: var(--vscode-textLink-foreground); }
+		input[type=checkbox]:checked::after { content: ''; position: absolute; left: 3px; top: 0; width: 3px; height: 7px; border: solid var(--vscode-editor-background); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+		input[type=checkbox]:indeterminate::after { content: ''; position: absolute; left: 2px; top: 5px; width: 8px; height: 2px; background: var(--vscode-editor-background); }
+		input[type=checkbox]:focus-visible { outline: 1px solid var(--vscode-focusBorder); outline-offset: 1px; }`;
 
 /** The sections that open and close. */
 export const sectionToggleJs = `document.querySelectorAll('.section-toggle').forEach(function(t) {

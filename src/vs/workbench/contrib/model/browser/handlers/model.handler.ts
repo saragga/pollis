@@ -12,6 +12,7 @@ import { IEditorService } from '../../../../services/editor/common/editorService
 import { IQuickInputService, IQuickPickSeparator } from '../../../../../platform/quickinput/common/quickInput.js';
 import { IModelPackage, IModelPaper, IModelNotebook, IModelWiki, IModelVideo, IModelReference } from '../common/model.types.js';
 import { URI } from '../../../../../base/common/uri.js';
+import { isWindows } from '../../../../../base/common/platform.js';
 import { DisposableStore } from '../../../../../base/common/lifecycle.js';
 import { disposableTimeout } from '../../../../../base/common/async.js';
 import { Event } from '../../../../../base/common/event.js';
@@ -214,7 +215,9 @@ async function readWorkspaceProject(
 export async function sendToJuliaRepl(code: string, commandService: ICommandService): Promise<boolean> {
 	const started = await commandService.executeCommand<boolean>('language-julia.startREPL');
 	if (!started) { return false; }
-	await commandService.executeCommand('workbench.action.terminal.sendSequence', { text: code + '\n' });
+	// As a paste, so the REPL reads all of it before running any: typed, what is sent while a slow line runs can be lost.
+	const text = isWindows ? code + '\n' : `\u001b[200~${code}\n\u001b[201~`;
+	await commandService.executeCommand('workbench.action.terminal.sendSequence', { text });
 	return true;
 }
 

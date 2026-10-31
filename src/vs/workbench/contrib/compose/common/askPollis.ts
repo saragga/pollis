@@ -35,6 +35,12 @@ export const ASK_PASSAGES = 8;
 /** Help > Ask Pollis, which a panel runs with an `IAskPollisFromPanel`. */
 export const ASK_POLLIS_COMMAND_ID = 'pollis.askPollis';
 
+/** What the + of Ask Pollis attaches, run with an `AskPollisAttachRequest`, which gives an `IAskPollisAttached`. */
+export const ASK_POLLIS_ATTACH_COMMAND_ID = 'pollis.askPollis.attach';
+
+/** Whether a cloud model answers, the only one given images. */
+export const ASK_POLLIS_ANSWERS_IN_CLOUD_COMMAND_ID = 'pollis.askPollis.answersInCloud';
+
 /** The panel a question is asked in: its wikis, titled after it, and the vignettes of its packages are searched first. */
 export interface IAskPollisPanel {
 	readonly title: string;
@@ -46,6 +52,7 @@ export interface IAskPollisPanel {
 export interface IAskPollisFromPanel {
 	readonly question: string;
 	readonly panel: IAskPollisPanel;
+	readonly attachments?: readonly IAskPollisAttachment[];
 }
 
 /**
@@ -174,6 +181,17 @@ export interface IAskPollisAttachment {
 	readonly name: string;
 	/** An image's data URL; else what the model is given: a file's text, a dataset's size and first rows, a database's tables and their columns. */
 	readonly content: string;
+}
+
+/** What to attach: a text file read in the page, or a dataset or a database for the workbench to pick. */
+export type AskPollisAttachRequest =
+	| { readonly kind: 'file'; readonly name: string; readonly content: string }
+	| { readonly kind: 'dataset' | 'database' };
+
+/** What the + attaches, or why it does not, or both when the text is cut. */
+export interface IAskPollisAttached {
+	readonly attachment?: IAskPollisAttachment;
+	readonly note?: string;
 }
 
 /** The most of an attachment's text the model is given: about 8,000 tokens, which a model of this computer still has room for. */
@@ -402,7 +420,7 @@ export interface IAskPollisEvalItem {
 
 /**
  * The topic of a question of a test set, by the document of its passage: `pollis`, Pollis' own documents; `julia`, the
- * Julia Manual; `panels`, the wikis of the panels, and the documents of the toolboxes.
+ * Julia Manual; `panels`, the wikis of the panels, and the vignettes of the toolboxes.
  */
 export type AskTopic = 'pollis' | 'julia' | 'panels';
 

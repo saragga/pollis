@@ -10,12 +10,8 @@ viewType = "pollis.compareEmbeddings"
 pageCommand = "pollis.compareEmbeddings"
 
 [[packages]]
-name = "llama.cpp"
-github = "https://github.com/ggml-org/llama.cpp"
-
-[[packages]]
-name = "DuckDB"
-github = "https://duckdb.org"
+name = "DuckDB.jl"
+github = "https://github.com/duckdb/DuckDB.jl"
 
 [[wikis]]
 name = "Factsheet"

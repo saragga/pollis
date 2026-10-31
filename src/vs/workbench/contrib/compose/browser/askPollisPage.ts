@@ -13,7 +13,7 @@ import { ThemeIcon } from '../../../../base/common/themables.js';
 import { URI } from '../../../../base/common/uri.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Categories } from '../../../../platform/action/common/actionCommonCategories.js';
-import { Action2, MenuId, registerAction2 } from '../../../../platform/actions/common/actions.js';
+import { Action2, MenuId, MenuRegistry, registerAction2 } from '../../../../platform/actions/common/actions.js';
 import { CommandsRegistry, ICommandService } from '../../../../platform/commands/common/commands.js';
 import { ConfigurationTarget, IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { ConfigurationScope, Extensions as ConfigurationExtensions, IConfigurationRegistry } from '../../../../platform/configuration/common/configurationRegistry.js';
@@ -38,12 +38,12 @@ import { WebviewViewPane } from '../../webviewView/browser/webviewViewPane.js';
 import { IWebviewViewService, WebviewView } from '../../webviewView/browser/webviewViewService.js';
 import { createApiKeyWiring, IApiKeyWiring } from '../../model/browser/handlers/model.handler.js';
 import { composerSendSvg, spinnerCss, spinnerSvg, voiceSpeakerSvg } from '../../model/browser/webviews/webviewScaffold.js';
-import { ASK_CHAT_MODEL, ASK_CLOUD_MODELS, ASK_EMBEDDING_MODEL, ASK_PASSAGE_PREFIX, ASK_PASSAGES, ASK_QUERY_PREFIX, ASK_CLOUD_PROVIDERS, ASK_LOCAL_PREFIX, ASK_POLLIS_COMMAND_ID, ASK_THIS_COMPUTER, ASK_ATTACHED_CHARACTERS, askCloudModel, AskPollisProvider, IAskPollisAttachment, IAskPollisFromPanel, IAskPollisPanel, IAskPollisPassage, IAskPollisSearchResult, IAskPollisService } from '../common/askPollis.js';
+import { ASK_CHAT_MODEL, ASK_CLOUD_MODELS, ASK_EMBEDDING_MODEL, ASK_PASSAGE_PREFIX, ASK_PASSAGES, ASK_QUERY_PREFIX, ASK_CLOUD_PROVIDERS, ASK_LOCAL_PREFIX, ASK_POLLIS_ANSWERS_IN_CLOUD_COMMAND_ID, ASK_POLLIS_ATTACH_COMMAND_ID, ASK_POLLIS_COMMAND_ID, ASK_THIS_COMPUTER, ASK_ATTACHED_CHARACTERS, askCloudModel, AskPollisAttachRequest, AskPollisProvider, IAskPollisAttached, IAskPollisAttachment, IAskPollisFromPanel, IAskPollisPanel, IAskPollisPassage, IAskPollisSearchResult, IAskPollisService } from '../common/askPollis.js';
+import { AskAttachMessage, askAddHtml, askAttachCss, askAttachmentsHtml, askAttachScript, handleAskAttachMessage } from './askPollisAttach.js';
 import { askAnswerCss, askAnswerScript, askModelName, askNothingFound, askOpenPassage, askPassageView, askSearchedNames, askSearchesNothing, askSearchIn, askSearchSources, askWordsOnlyNote } from './askPollisWebview.js';
 import { formatBytes, IDatasetSummary, summarizeCsv } from './collaboration/collaborationDatasets.js';
-import { isDuckDbFile, MAX_DATASET_BYTES, MAX_FILE_BYTES, MAX_IMAGE_BYTES } from './collaboration/collaborationProtocol.js';
+import { isDuckDbFile, MAX_DATASET_BYTES } from './collaboration/collaborationProtocol.js';
 import { COMPARE_MODELS_ADD_COMMAND_ID, COMPARE_MODELS_COMMAND_ID, ICompareModelsAdd } from './compareModelsPage.js';
-import { composerAddCss, composerAddHtml, composerAddScript } from './composerAdd.js';
 import { composerVoiceCss, composerVoiceHtml, composerVoiceScript, getVoiceLanguage, getVoiceWriteIn, setVoiceLanguage, setVoiceWriteIn } from './composerVoice.js';
 import { IInstalledModel } from './modelsInstalledPage.js';
 
@@ -68,9 +68,7 @@ import { IInstalledModel } from './modelsInstalledPage.js';
 type AskPollisMessage =
 	| { readonly command: 'ready' }
 	| { readonly command: 'ask'; readonly question: string; readonly searchIn: readonly string[]; readonly attachments?: readonly IAskPollisAttachment[] }
-	| { readonly command: 'attachFile'; readonly name: string; readonly content: string }
-	| { readonly command: 'pickDataset' }
-	| { readonly command: 'pickDatabase' }
+	| AskAttachMessage
 	| { readonly command: 'stop' }
 	| { readonly command: 'open'; readonly turn: number; readonly passage: number }
 	| { readonly command: 'setApiKey' }
@@ -88,17 +86,20 @@ interface IAskedTurn {
 	answer: string;
 }
 
-/** What the + attaches, or why it does not, or both when the text is cut. */
-interface IAttached {
-	readonly attachment?: IAskPollisAttachment;
-	readonly note?: string;
+/** What choosing a file to attach and reading it use. */
+interface IAttachServices {
+	readonly askPollisService: IAskPollisService;
+	readonly fileDialogService: IFileDialogService;
+	readonly fileService: IFileService;
+	readonly pathService: IPathService;
+	readonly workspaceContextService: IWorkspaceContextService;
 }
 
 /** The first rows of a dataset that an attachment gives the model. */
 const ATTACHED_ROWS = 20;
 
 /** A text attachment, cut to ASK_ATTACHED_CHARACTERS and the model told so, with a note when it is cut. */
-function attachText(kind: IAskPollisAttachment['kind'], name: string, text: string): IAttached {
+function attachText(kind: IAskPollisAttachment['kind'], name: string, text: string): IAskPollisAttached {
 	if (text.length <= ASK_ATTACHED_CHARACTERS) {
 		return { attachment: { kind, name, content: text } };
 	}
@@ -113,6 +114,78 @@ function datasetText(summary: IDatasetSummary): string {
 	const line = (cells: readonly string[]) => cells.map(cell => /[",\n\r]/.test(cell) ? `"${cell.replace(/"/g, '""')}"` : cell).join(',');
 	return [`${summary.rows} rows and ${summary.header.length} columns. The header and the first ${summary.head.length} rows:`, line(summary.header), ...summary.head.map(line)].join('\n');
 }
+
+/** A file chosen to attach, from the first folder of the workspace, else the home folder. */
+async function pickFileToAttach(accessed: IAttachServices, title: string, filters: { name: string; extensions: string[] }[]): Promise<URI | undefined> {
+	const picked = await accessed.fileDialogService.showOpenDialog({
+		title,
+		defaultUri: accessed.workspaceContextService.getWorkspace().folders[0]?.uri ?? await accessed.pathService.userHome(),
+		canSelectFiles: true,
+		canSelectMany: false,
+		filters,
+	});
+	return picked?.[0];
+}
+
+/** Add > Dataset: a CSV file, given as its size and first rows. */
+async function attachDataset(accessed: IAttachServices): Promise<IAskPollisAttached> {
+	const resource = await pickFileToAttach(accessed, localize('askPollis.attachDatasetTitle', "Attach a Dataset"), [{ name: localize('askPollis.csvFiles', "CSV Files"), extensions: ['csv'] }]);
+	if (!resource) {
+		return {};
+	}
+	const name = basename(resource);
+	const stat = await accessed.fileService.stat(resource);
+	if (stat.size > MAX_DATASET_BYTES) {
+		return { note: localize('askPollis.datasetTooLarge', "{0} is too large to attach ({1}; the limit is {2} MB).", name, formatBytes(stat.size), MAX_DATASET_BYTES / 1024 / 1024) };
+	}
+	let summary: IDatasetSummary | undefined;
+	try {
+		summary = summarizeCsv(new TextDecoder('utf-8', { fatal: true }).decode((await accessed.fileService.readFile(resource)).value.buffer), ATTACHED_ROWS);
+	} catch {
+		summary = undefined;
+	}
+	return summary ? attachText('dataset', name, datasetText(summary)) : { note: localize('askPollis.notADataset', "{0} is not a CSV file in UTF-8 text, so it was not attached.", name) };
+}
+
+/** Add > Database: a DuckDB database, given as its tables and views with their columns. */
+async function attachDatabase(accessed: IAttachServices): Promise<IAskPollisAttached> {
+	const resource = await pickFileToAttach(accessed, localize('askPollis.attachDatabaseTitle', "Attach a Database"), [{ name: localize('askPollis.duckDbFiles', "DuckDB Databases"), extensions: ['duckdb', 'db'] }]);
+	if (!resource) {
+		return {};
+	}
+	const name = basename(resource);
+	const start = await accessed.fileService.readFile(resource, { length: 16 });
+	if (!isDuckDbFile(start.value.buffer)) {
+		return { note: localize('askPollis.notADatabase', "{0} is not a DuckDB database, so it was not attached.", name) };
+	}
+	try {
+		const tables = await accessed.askPollisService.describeDatabase(resource.fsPath);
+		return attachText('database', name, tables || 'No tables.');
+	} catch (error) {
+		return { note: localize('askPollis.databaseUnreadable', "Could not read the tables of {0}: {1}", name, error instanceof Error ? error.message : String(error)) };
+	}
+}
+
+// The + of the pane and of the panels
+CommandsRegistry.registerCommand(ASK_POLLIS_ATTACH_COMMAND_ID, async (accessor: ServicesAccessor, request: AskPollisAttachRequest): Promise<IAskPollisAttached> => {
+	if (request.kind === 'file') {
+		return attachText('file', request.name, request.content);
+	}
+	const accessed: IAttachServices = {
+		askPollisService: accessor.get(IAskPollisService),
+		fileDialogService: accessor.get(IFileDialogService),
+		fileService: accessor.get(IFileService),
+		pathService: accessor.get(IPathService),
+		workspaceContextService: accessor.get(IWorkspaceContextService),
+	};
+	try {
+		return await (request.kind === 'dataset' ? attachDataset(accessed) : attachDatabase(accessed));
+	} catch (error) {
+		return { note: String(error) };
+	}
+});
+
+CommandsRegistry.registerCommand(ASK_POLLIS_ANSWERS_IN_CLOUD_COMMAND_ID, (accessor: ServicesAccessor): boolean => !!askCloudModel(accessor.get(IConfigurationService).getValue<string>('pollis.ask.answerWith')));
 
 const ASK_POLLIS_VIEW_CONTAINER_ID = 'workbench.view.pollis.ask';
 const ASK_POLLIS_VIEW_ID = 'pollis.askPollis.view';
@@ -221,66 +294,11 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 		@IQuickInputService private readonly quickInputService: IQuickInputService,
 		@IWebviewService private readonly webviewService: IWebviewService,
 		@IStorageService private readonly storageService: IStorageService,
-		@IFileDialogService private readonly fileDialogService: IFileDialogService,
-		@IFileService private readonly fileService: IFileService,
-		@IWorkspaceContextService private readonly workspaceContextService: IWorkspaceContextService,
-		@IPathService private readonly pathService: IPathService,
 	) {
 		super();
 		this._register(webviewViewService.register(ASK_POLLIS_VIEW_ID, {
 			resolve: async webviewView => this.resolve(webviewView),
 		}));
-	}
-
-	/** A file chosen to attach, from the first folder of the workspace, else the home folder. */
-	private async pickFile(title: string, filters: { name: string; extensions: string[] }[]): Promise<URI | undefined> {
-		const picked = await this.fileDialogService.showOpenDialog({
-			title,
-			defaultUri: this.workspaceContextService.getWorkspace().folders[0]?.uri ?? await this.pathService.userHome(),
-			canSelectFiles: true,
-			canSelectMany: false,
-			filters,
-		});
-		return picked?.[0];
-	}
-
-	/** Add > Dataset: a CSV file, given as its size and first rows. */
-	private async attachDataset(): Promise<IAttached> {
-		const resource = await this.pickFile(localize('askPollis.attachDatasetTitle', "Attach a Dataset"), [{ name: localize('askPollis.csvFiles', "CSV Files"), extensions: ['csv'] }]);
-		if (!resource) {
-			return {};
-		}
-		const name = basename(resource);
-		const stat = await this.fileService.stat(resource);
-		if (stat.size > MAX_DATASET_BYTES) {
-			return { note: localize('askPollis.datasetTooLarge', "{0} is too large to attach ({1}; the limit is {2} MB).", name, formatBytes(stat.size), MAX_DATASET_BYTES / 1024 / 1024) };
-		}
-		let summary: IDatasetSummary | undefined;
-		try {
-			summary = summarizeCsv(new TextDecoder('utf-8', { fatal: true }).decode((await this.fileService.readFile(resource)).value.buffer), ATTACHED_ROWS);
-		} catch {
-			summary = undefined;
-		}
-		return summary ? attachText('dataset', name, datasetText(summary)) : { note: localize('askPollis.notADataset', "{0} is not a CSV file in UTF-8 text, so it was not attached.", name) };
-	}
-
-	/** Add > Database: a DuckDB database, given as its tables and views with their columns. */
-	private async attachDatabase(): Promise<IAttached> {
-		const resource = await this.pickFile(localize('askPollis.attachDatabaseTitle', "Attach a Database"), [{ name: localize('askPollis.duckDbFiles', "DuckDB Databases"), extensions: ['duckdb', 'db'] }]);
-		if (!resource) {
-			return {};
-		}
-		const name = basename(resource);
-		const start = await this.fileService.readFile(resource, { length: 16 });
-		if (!isDuckDbFile(start.value.buffer)) {
-			return { note: localize('askPollis.notADatabase', "{0} is not a DuckDB database, so it was not attached.", name) };
-		}
-		try {
-			const tables = await this.askPollisService.describeDatabase(resource.fsPath);
-			return attachText('database', name, tables || 'No tables.');
-		} catch (error) {
-			return { note: localize('askPollis.databaseUnreadable', "Could not read the tables of {0}: {1}", name, error instanceof Error ? error.message : String(error)) };
-		}
 	}
 
 	private resolve(webviewView: WebviewView): void {
@@ -318,7 +336,7 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 		const askFrom = (asked: IAskPollisFromPanel) => {
 			panel = asked.panel;
 			if (ready) {
-				post({ command: 'askFrom', question: asked.question, panel: asked.panel.title });
+				post({ command: 'askFrom', question: asked.question, panel: asked.panel.title, attachments: asked.attachments });
 			} else {
 				waiting = asked;
 			}
@@ -343,7 +361,6 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 			pendingAsk = undefined;
 		}
 
-		const attached = (result: IAttached) => post({ command: 'attached', attachment: result.attachment, note: result.note });
 		const ask = async (question: string, searchIn: readonly string[], attachments: readonly IAskPollisAttachment[]) => {
 			answering?.dispose(true);
 			const source = answering = new CancellationTokenSource();
@@ -462,12 +479,8 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 				}, () => undefined);
 			} else if (message.command === 'ask' && message.question.trim()) {
 				ask(message.question.trim(), message.searchIn, message.attachments ?? []);
-			} else if (message.command === 'attachFile') {
-				attached(attachText('file', message.name, message.content));
-			} else if (message.command === 'pickDataset') {
-				this.attachDataset().then(attached, error => attached({ note: String(error) }));
-			} else if (message.command === 'pickDatabase') {
-				this.attachDatabase().then(attached, error => attached({ note: String(error) }));
+			} else if (message.command === 'attachFile' || message.command === 'pickDataset' || message.command === 'pickDatabase') {
+				handleAskAttachMessage(message, webview, commandService);
 			} else if (message.command === 'stop') {
 				answering?.cancel();
 			} else if (message.command === 'leavePanel') {
@@ -579,23 +592,10 @@ function pageHtml(language: string, writeIn: string): string {
 	const text = {
 		intro: localize('askPollis.intro', "Ask in your own words about Pollis, Julia, or the methods behind them: how to fit a model, what a setting does, what NUTS is."),
 		introSources: localize('askPollis.introSources', "The answer comes from:"),
-		introPollis: localize('askPollis.introPollis', "Pollis: its documents, the panel wikis, the package vignettes, the package APIs and the documents of your toolboxes"),
+		introPollis: localize('askPollis.introPollis', "Pollis: its documents, the panel wikis, the package vignettes, the package APIs and the vignettes of your toolboxes"),
 		introJulia: localize('askPollis.introJulia', "Julia: the Manual, and the docstrings of Base and the standard library"),
 		introCited: localize('askPollis.introCited', "Each statement ends with the number of the passage it rests on: Open shows that passage in its document."),
 		placeholder: localize('askPollis.placeholder', "Ask Pollis"),
-		dictate: localize('askPollis.dictate', "Dictate the Question (not available yet)"),
-		voiceMode: localize('askPollis.voiceMode', "Voice Mode: ask aloud and hear the answer, both written down too (not available yet)"),
-		add: localize('askPollis.add', "Add an Image, a File, a Dataset or a Database"),
-		addImage: localize('askPollis.addImage', "Image"),
-		addFile: localize('askPollis.addFile', "File"),
-		addDataset: localize('askPollis.addDataset', "Dataset"),
-		addDatabase: localize('askPollis.addDatabase', "Database"),
-		remove: localize('askPollis.remove', "Remove"),
-		imageLocal: localize('askPollis.imageLocal', "The models on this computer do not see images yet: choose a cloud model in the status bar to ask about an image."),
-		notAnImage: localize('askPollis.notAnImage', "Only PNG, JPEG, GIF and WebP images can be attached."),
-		imageTooLarge: localize('askPollis.imageTooLarge', "This image is too large, even reduced (the limit is {0} MB).", MAX_IMAGE_BYTES / 1024 / 1024),
-		fileTooLarge: localize('askPollis.fileTooLarge', "{0} is too large to attach (the limit is {1} MB).", '{0}', MAX_FILE_BYTES / 1024 / 1024),
-		notText: localize('askPollis.notText', "{0} is not a text file in UTF-8, so it was not attached: attach a CSV file as a Dataset and a DuckDB file as a Database.", '{0}'),
 		ask: localize('askPollis.ask', "Ask"),
 		stop: localize('askPollis.stop', "Stop"),
 		setKey: localize('askPollis.setKey', "Set API key"),
@@ -640,7 +640,8 @@ function pageHtml(language: string, writeIn: string): string {
 		.pill:focus-within { box-shadow: 0 0 0 1px var(--vscode-focusBorder); }
 		.pill.flash { box-shadow: 0 0 0 4px var(--vscode-focusBorder); }
 		.pill .top { display: flex; align-items: flex-start; gap: 6px; }
-		.pill .tools { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
+		.pill .tools { display: flex; align-items: center; gap: 2px; margin-top: 4px; }
+		.pill .tools .add { margin-right: auto; }
 		.pill textarea { flex: 1; min-width: 0; display: block; resize: none; min-height: 24px; max-height: 160px; font: inherit; line-height: 1.4; padding: 5px 2px; color: inherit; background: transparent; border: none; outline: none; }
 		.pill textarea::placeholder { color: var(--vscode-input-placeholderForeground); }
 		button.icon { display: flex; align-items: center; justify-content: center; flex: none; width: 30px; height: 30px; padding: 0; border: none; border-radius: 50%; color: var(--vscode-descriptionForeground); background: transparent; cursor: pointer; }
@@ -648,22 +649,9 @@ function pageHtml(language: string, writeIn: string): string {
 		button.icon svg { width: 18px; height: 18px; }
 		/* The + circled, as in the Collaboration chat, and its menu */
 		#add { color: var(--vscode-foreground); box-shadow: inset 0 0 0 1px var(--vscode-button-background); }
-		${composerAddCss}
-		#addMenu button { font: inherit; font-size: 12px; border: none; cursor: pointer; }
-		#addMenu button:disabled { opacity: 0.5; cursor: default; }
+		${askAttachCss}
 		/* What is attached: above the question in the pill, and below it in the conversation */
-		.attachments { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
-		.attachments:empty { display: none; }
-		.chip { display: inline-flex; align-items: center; gap: 4px; max-width: 100%; font-size: 12px; padding: 2px 4px 2px 8px; border: 1px solid var(--vscode-widget-border); border-radius: 6px; background: var(--vscode-editorWidget-background); }
-		.chip .kind { color: var(--vscode-descriptionForeground); }
-		.chip .name { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-		.chip.image { padding: 2px; }
-		.chip img { display: block; max-height: 48px; max-width: 96px; border-radius: 4px; }
-		.chip .remove { display: flex; align-items: center; justify-content: center; flex: none; width: 18px; height: 18px; padding: 0; border: none; border-radius: 4px; color: var(--vscode-descriptionForeground); background: transparent; cursor: pointer; }
-		.chip .remove:hover { color: var(--vscode-foreground); background: var(--vscode-toolbar-hoverBackground); }
-		.chip .remove svg { width: 10px; height: 10px; }
 		.turn .attachments { margin: -4px 0 8px 0; }
-		.attach-note { margin: 0 0 6px 0; }
 		/* Ask: a circled arrow, blue, greyed until there is a question; while the answer comes, Stop: an orange square */
 		button.icon.send { width: 28px; height: 28px; border: 1.5px solid var(--vscode-button-background); color: var(--vscode-button-foreground); background: var(--vscode-button-background); opacity: 0.4; }
 		button.icon.send:hover { background: var(--vscode-button-hoverBackground); }
@@ -728,14 +716,13 @@ function pageHtml(language: string, writeIn: string): string {
 	</div>
 	<div class="small asked-in" id="askedIn" hidden><span id="askedInText"></span> <button class="link" id="leavePanel">${text.leavePanel}</button></div>
 	<div class="pill composer">
-		<div class="attachments" id="attachments"></div>
-		<div class="small attach-note" id="attachNote" hidden></div>
+		${askAttachmentsHtml()}
 		<div class="top">
 			<textarea id="question" rows="1" placeholder="${text.placeholder}"></textarea>
-			${composerVoiceHtml({ dictate: text.dictate, voiceMode: text.voiceMode }, language, writeIn)}
 		</div>
 		<div class="tools">
-			${composerAddHtml({ add: text.add, image: text.addImage, file: text.addFile, dataset: text.addDataset, database: text.addDatabase })}
+			${askAddHtml()}
+			${composerVoiceHtml(language, writeIn)}
 			<button class="icon send" id="ask" title="${text.ask}" aria-label="${text.ask}">${composerSendSvg}</button>
 		</div>
 	</div>
@@ -795,15 +782,10 @@ function pageHtml(language: string, writeIn: string): string {
 		}
 		const text = question.value.trim();
 		if (!text) { return; }
-		if (!cloud && attachments.some(attachment => attachment.kind === 'image')) {
-			note(TEXT.imageLocal);
-			return;
-		}
+		const attached = takeAttachments();
+		if (!attached) { return; }
 		question.value = '';
-		send(text, attachments);
-		attachments = [];
-		renderAttachments();
-		note('');
+		send(text, attached);
 	}
 
 	function send(text, attached) {
@@ -834,88 +816,7 @@ function pageHtml(language: string, writeIn: string): string {
 	// The intro shows until the first question, and again after New Chat
 	const intro = document.getElementById('intro');
 	// The +: an image, for a cloud model only, a text file, or a dataset or a database, which the workbench picks and reads
-	${composerAddScript('question', MAX_IMAGE_BYTES)}
-	const KINDS = { image: TEXT.addImage, file: TEXT.addFile, dataset: TEXT.addDataset, database: TEXT.addDatabase };
-	const REMOVE = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>';
-	const attachmentsBox = document.getElementById('attachments');
-	const attachNote = document.getElementById('attachNote');
-	const addImage = document.getElementById('addImage');
-	let attachments = [];
-	let cloud = false;
-	function note(text) {
-		attachNote.textContent = text || '';
-		attachNote.hidden = !text;
-	}
-	/** An attachment's chip: an image's thumbnail, else its kind and name; with \`remove\`, a button that removes it. */
-	function chip(attachment, remove) {
-		const box = element('span', attachment.image ? 'chip image' : 'chip');
-		box.title = attachment.name;
-		if (attachment.image) {
-			const img = document.createElement('img');
-			img.src = attachment.image;
-			img.alt = attachment.name;
-			box.appendChild(img);
-		} else {
-			box.append(element('span', 'kind', KINDS[attachment.kind]), element('span', 'name', attachment.name));
-		}
-		if (remove) {
-			const button = element('button', 'remove');
-			button.innerHTML = REMOVE;
-			button.title = TEXT.remove;
-			button.setAttribute('aria-label', TEXT.remove + ' ' + attachment.name);
-			button.addEventListener('click', event => {
-				event.stopPropagation();
-				remove();
-			});
-			box.appendChild(button);
-		}
-		return box;
-	}
-	function renderAttachments() {
-		attachmentsBox.textContent = '';
-		attachments.forEach((attachment, i) => attachmentsBox.appendChild(chip({ ...attachment, image: attachment.kind === 'image' ? attachment.content : undefined }, () => {
-			attachments.splice(i, 1);
-			renderAttachments();
-			question.focus();
-		})));
-	}
-	function attach(attachment) {
-		attachments.push(attachment);
-		renderAttachments();
-		question.focus();
-	}
-	async function attachImage(file) {
-		if (!cloud) {
-			note(TEXT.imageLocal);
-			return;
-		}
-		const image = await composerReduceImage(file);
-		if (image.dataUrl) {
-			note('');
-			attach({ kind: 'image', name: file.name || 'image', content: image.dataUrl });
-		} else {
-			note(image.error === 'notAnImage' ? TEXT.notAnImage : TEXT.imageTooLarge);
-		}
-	}
-	async function attachFile(file) {
-		if (file.size > ${MAX_FILE_BYTES}) {
-			note(TEXT.fileTooLarge.replace('{0}', file.name));
-			return;
-		}
-		let content;
-		try {
-			content = new TextDecoder('utf-8', { fatal: true }).decode(await file.arrayBuffer());
-		} catch {
-			content = undefined;
-		}
-		if (content === undefined || content.includes('\u0000')) {
-			note(TEXT.notText.replace('{0}', file.name));
-			return;
-		}
-		// The workbench cuts a long text, and says so
-		vscode.postMessage({ command: 'attachFile', name: file.name, content });
-	}
-	composerAdd({ image: attachImage, file: attachFile });
+	${askAttachScript('question')}
 	// A click anywhere in the pill but on its buttons writes in the question
 	document.querySelector('.pill').addEventListener('click', event => {
 		if (!event.target.closest('button, textarea, .voice-menu')) { question.focus(); }
@@ -1071,18 +972,13 @@ function pageHtml(language: string, writeIn: string): string {
 			setTimeout(() => pill.classList.remove('flash'), 400);
 		} else if (message.command === 'askFrom') {
 			setPanel(message.panel);
-			send(message.question);
+			send(message.question, message.attachments);
 		} else if (message.command === 'model') {
 			// The key indicator shows while a cloud model answers, and only a cloud model is given images
 			keyStatus.hidden = !message.provider;
-			cloud = !!message.provider;
-			addImage.disabled = !cloud;
-			addImage.title = cloud ? '' : TEXT.imageLocal;
+			setAttachCloud(!!message.provider);
 		} else if (message.command === 'attached') {
-			note(message.note);
-			if (message.attachment) {
-				attach(message.attachment);
-			}
+			onAttached(message);
 		} else if (message.command === 'apiKeyStatus') {
 			renderKey(message);
 		} else if (message.command === 'searching') {
@@ -1240,6 +1136,16 @@ registerAction2(class extends Action2 {
 			focusInView?.();
 		}
 	}
+});
+
+// View > Chat, above View > Browser as in VS Code, whose own Chat view Pollis does not register
+MenuRegistry.appendMenuItem(MenuId.MenubarViewMenu, {
+	group: '4_auxbar',
+	command: {
+		id: ASK_POLLIS_COMMAND_ID,
+		title: localize({ key: 'miChat', comment: ['&& denotes a mnemonic'] }, "&&Chat")
+	},
+	order: 1
 });
 
 // --- The Ask Pollis pane (secondary side bar), after Databases and Views

@@ -5,7 +5,7 @@
 #
 # SOURCE is the vignette/ folder of an installed package, or the repository of a package on GitHub
 # (https://github.com/OWNER/NAME.jl), whose vignette/ folder is downloaded, or the folder of a document of an installed
-# toolbox, for Help > Documentation > Toolboxes (compose/browser/toolboxDocumentsPage.ts), made the same way; NAME the vignette's main file, NAME.tex;
+# toolbox, for Help > Documentation > Toolbox Vignettes (compose/browser/toolboxDocumentsPage.ts), made the same way; NAME the vignette's main file, NAME.tex;
 # PDF where the PDF goes; LABELS the app's docs/ask_labels.tex, which the main file is made to input before anything
 # else, so that NAME.labels, the page of each heading, goes beside the PDF for Ask Pollis (ask_index.jl), as with
 # Pollis' own documents. A vignette is its LaTeX sources (.tex, .bib) and its resources/ folder (images and the

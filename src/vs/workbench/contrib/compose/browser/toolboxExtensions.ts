@@ -59,11 +59,11 @@ interface IToolboxContribution {
 	/** The order among the toolboxes at the end of Extend. */
 	readonly order?: number;
 	readonly panels: IToolboxPanelContribution[];
-	/** Its documentation, in Help > Documentation > Toolboxes. */
+	/** Its vignettes, in Help > Documentation > Toolbox Vignettes. */
 	readonly documents?: IToolboxDocumentContribution[];
 }
 
-/** A document of a toolbox: LaTeX sources that Pollis compiles with PollisTeX the first time the document is opened. */
+/** A vignette of a toolbox: LaTeX sources that Pollis compiles with PollisTeX the first time the document is opened. */
 interface IToolboxDocumentContribution {
 	readonly title: string;
 	readonly description?: string;
@@ -104,14 +104,14 @@ const toolboxesExtensionPoint = ExtensionsRegistry.registerExtensionPoint<IToolb
 				},
 				documents: {
 					type: 'array',
-					description: localize('pollisToolboxes.documents', "The toolbox's documentation, listed in Help > Documentation > Toolboxes. Pollis compiles each document from its LaTeX sources the first time it is opened."),
+					description: localize('pollisToolboxes.documents', "The toolbox's vignettes, listed in Help > Documentation > Toolbox Vignettes. Pollis compiles each vignette from its LaTeX sources the first time it is opened."),
 					items: {
 						type: 'object',
 						required: ['title', 'source'],
 						properties: {
-							title: { type: 'string', description: localize('pollisToolboxes.document.title', "The document's title.") },
-							description: { type: 'string', description: localize('pollisToolboxes.document.description', "What the document covers, in a sentence or two.") },
-							source: { type: 'string', description: localize('pollisToolboxes.document.source', "The document's main .tex file, relative to the extension folder, for example docs/guide.tex. Its .bib files and a resources/ folder of images go beside it.") },
+							title: { type: 'string', description: localize('pollisToolboxes.document.title', "The vignette's title.") },
+							description: { type: 'string', description: localize('pollisToolboxes.document.description', "What the vignette covers, in a sentence or two.") },
+							source: { type: 'string', description: localize('pollisToolboxes.document.source', "The vignette's main .tex file, relative to the extension folder, for example docs/guide.tex. Its .bib files and a resources/ folder of images go beside it.") },
 						},
 					},
 				},

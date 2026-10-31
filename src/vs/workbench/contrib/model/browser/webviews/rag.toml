@@ -11,15 +11,11 @@ pageCommand = "pollis.retrievalAugmentedGeneration"
 
 [[packages]]
 name = "DuckDB.jl"
-github = "https://github.com/duckdb/duckdb"
+github = "https://github.com/duckdb/DuckDB.jl"
 
 [[packages]]
 name = "Poppler_jll.jl"
 github = "https://github.com/JuliaBinaryWrappers/Poppler_jll.jl"
-
-[[packages]]
-name = "llama.cpp"
-github = "https://github.com/ggml-org/llama.cpp"
 
 [[wikis]]
 name = "Factsheet"

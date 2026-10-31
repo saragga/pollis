@@ -1,0 +1,73 @@
+# Snowball Search Map Webview Configuration
+# A page in the Minimal style of the scaffold, not a panel: Learn More only, as no Julia package powers it. `pageCommand`
+# is the command that opens it, which a panel's contribution file would say. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/snowballSearch.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Snowball Search Map"
+viewType = "pollis.snowballSearch"
+pageCommand = "pollis.compose.snowballSearch"
+
+[[wikis]]
+name = "Factsheet"
+file = "snowballSearch/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "snowballSearch/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Rounds and Saturation"
+file = "snowballSearch/rounds-and-saturation.md"
+bundled = true
+
+[[wikis]]
+name = "Links and Citations"
+file = "snowballSearch/links-and-citations.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "CAVC2019a"
+
+[[references]]
+key = "GP2005a"
+
+[[references]]
+key = "Goo1961a"
+
+[[references]]
+key = "Gre2009a"
+
+[[references]]
+key = "HGG2022a"
+
+[[references]]
+key = "Kes1963a"
+
+[[references]]
+key = "PPO2022a"
+
+[[references]]
+key = "Pri1965a"
+
+[[references]]
+key = "SSKBW...2018a"
+
+[[references]]
+key = "Sma1973a"
+
+[[references]]
+key = "VHE2015a"
+
+[[references]]
+key = "WKRM2022a"
+
+[[references]]
+key = "Woh2014a"
