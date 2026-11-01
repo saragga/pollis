@@ -27,7 +27,6 @@ import { DF_PANEL } from './commands/df.command.js';
 import { RQR_PANEL } from './commands/rqr.command.js';
 import { SSM_PANEL } from './commands/ssm.command.js';
 import { TTE_PANEL } from './commands/tte.command.js';
-// Finance panels, deferred for a future Finance Toolbox: import { CTSV_PANEL } from './commands/ctsv.command.js';
 import { NSCR_PANEL } from './commands/nscr.command.js';
 import { TSF_PANEL } from './commands/tsf.command.js';
 import { DT_PANEL } from './commands/dt.command.js';
@@ -232,12 +231,6 @@ CommandsRegistry.registerCommand('chiara.statistics.ssm', accessor => SSM_OPEN(a
 
 CommandsRegistry.registerCommand('chiara.statistics.tvm.dtsv', () => { });
 
-// Finance panel, deferred: const CTSV_OPEN = (accessor: ServicesAccessor) => openScaffoldWebview(accessor, CTSV_PANEL);
-
-// Finance panel, deferred: CommandsRegistry.registerCommand('chiara.statistics.tvm.ctsv', accessor => CTSV_OPEN(accessor));
-// Finance panel, deferred: CommandsRegistry.registerCommand('chiara.statistics.dm.heston', accessor => CTSV_OPEN(accessor));
-// Finance panel, deferred: CommandsRegistry.registerCommand('chiara.statistics.jdm.bates', accessor => CTSV_OPEN(accessor));
-// Finance panel, deferred: CommandsRegistry.registerCommand('chiara.statistics.irm.sabr', accessor => CTSV_OPEN(accessor));
 CommandsRegistry.registerCommand('chiara.statistics.tvm.taylor', () => { });
 CommandsRegistry.registerCommand('chiara.statistics.tvm.ksc', () => { });
 CommandsRegistry.registerCommand('chiara.statistics.vm', () => { });

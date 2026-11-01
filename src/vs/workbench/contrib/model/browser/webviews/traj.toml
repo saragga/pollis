@@ -9,8 +9,8 @@ viewType = "pollis.traj"
 defaultModel = "direct"
 
 [[packages]]
-name = "TrajectoryOptimization.jl"
-github = "https://github.com/RoboticExplorationLab/TrajectoryOptimization.jl"
+name = "JuMP.jl"
+github = "https://github.com/jump-dev/JuMP.jl"
 
 [[packages.videos]]
 title = "Trajectory Optimization in Julia"
@@ -18,8 +18,16 @@ description = "Introduction to trajectory optimization methods and tools"
 url = "https://www.youtube.com/watch?v=wPFPT-Ech2c"
 
 [[packages]]
-name = "Altro.jl"
-github = "https://github.com/RoboticExplorationLab/Altro.jl"
+name = "Ipopt.jl"
+github = "https://github.com/jump-dev/Ipopt.jl"
+
+[[packages]]
+name = "NLsolve.jl"
+github = "https://github.com/JuliaNLSolvers/NLsolve.jl"
+
+[[packages]]
+name = "ForwardDiff.jl"
+github = "https://github.com/JuliaDiff/ForwardDiff.jl"
 
 [requires]
 packages = ["ForwardDiff.jl", "JuMP.jl", "Ipopt.jl", "NLsolve.jl", "ADTypes.jl", "Plots.jl"]
@@ -34,7 +42,7 @@ bundled = true
 description = "Direct collocation: transcribe continuous trajectory to finite-dimensional NLP"
 
 [[notebookSections.notebooks]]
-name = "Indirect Methods (iLQR)"
+name = "Iterative LQR (iLQR)"
 file = "trajectory-optimization/tutorial-02-ilqr.ipynb"
 bundled = true
 description = "Iterative LQR: local trajectory refinement via successive quadratic approximation"
@@ -136,16 +144,16 @@ text = "Direct Methods (Direct Collocation)"
 detail = "Transcribe continuous trajectory problem into a finite-dimensional nonlinear program. Discretize state and control along a time grid, enforce dynamics constraints at collocation points. Fast for long horizons; requires NLP solver."
 
 [[bullets]]
-text = "Indirect Methods (Iterative LQR)"
-detail = "Refine trajectory iteratively via successive quadratic approximation (iLQR). Linearise dynamics and quadraticise cost around current trajectory. Backward sweep computes optimal control gains, forward sweep integrates improved trajectory."
+text = "Indirect Methods (Pontryagin's Principle)"
+detail = "Derive the optimality conditions first, then solve them. Pontryagin's principle gives the state and costate equations with the control eliminated; multiple shooting on the state and costate runs until continuity and the terminal transversality condition hold. Accurate on smooth unconstrained problems; needs a good costate guess."
 
 [[bullets]]
 text = "Differential Dynamic Programming (DDP)"
-detail = "Second-order indirect method using backward-forward sweep with second-order Taylor expansion. More accurate than iLQR for highly nonlinear problems; locally quadratic convergence."
+detail = "Backward sweep of local quadratic value models, forward rollout with feedback gains and a line search. This is the iLQR form: the curvature of the cost is kept and the second derivatives of the dynamics are left out, so the local quadratic convergence of full DDP is not guaranteed."
 
 [[bullets]]
 text = "Augmented Lagrangian Trajectory Optimizer (ALTRO)"
-detail = "Combines DDP with constraint handling via augmented Lagrangian framework. Solves constrained trajectory problems (equality and inequality constraints). State-of-the-art solver for nonlinear robotics."
+detail = "Wraps an iLQR inner solver in an augmented Lagrangian outer loop that updates the multipliers and raises the penalty. This tab handles control bounds only; the published solver also handles state and general constraints."
 
 [[decisionRows]]
 task = "Direct Methods"
@@ -164,7 +172,7 @@ purpose = "Backward pass of local quadratic value models, forward rollout with t
 
 [[decisionRows]]
 task = "ALTRO"
-context = "Control or state limits with the speed of DDP"
+context = "Control limits with the speed of DDP"
 purpose = "Augmented Lagrangian outer loop that prices the constraints around an iLQR inner solver"
 
 [[inputs]]
@@ -188,15 +196,15 @@ default = "[pi, 0.0]"
 [[inputs]]
 id = "Q"
 label = "State Cost Q"
-tooltip = "Symmetric positive-semidefinite (n x n) running penalty on x - xf."
-default = "Diagonal([0.1, 0.1])"
+tooltip = "Symmetric positive-semidefinite (n x n) running penalty on x - xf, per unit of time."
+default = "Diagonal([2.0, 2.0])"
 newRow = true
 
 [[inputs]]
 id = "R"
 label = "Control Cost R"
-tooltip = "Symmetric positive-definite (m x m) running penalty on u; its size also sets the number of controls m."
-default = "fill(0.1, 1, 1)"
+tooltip = "Symmetric positive-definite (m x m) running penalty on u, per unit of time; its size also sets the number of controls m."
+default = "fill(2.0, 1, 1)"
 
 [[inputs]]
 id = "Qf"
@@ -293,7 +301,7 @@ n, m = length(x0), size(R, 1)
 
 rk4step(F, z) = (k1 = F(z); k2 = F(z .+ dt / 2 .* k1); k3 = F(z .+ dt / 2 .* k2); k4 = F(z .+ dt .* k3); z .+ dt / 6 .* (k1 .+ 2 .* k2 .+ 2 .* k3 .+ k4))
 rk4(x, u) = rk4step(y -> f(y, u), x)  # discrete dynamics x[k+1] = rk4(x[k], u[k])
-stage(x, u) = (dot(x - xf, Q * (x - xf)) + dot(u, R * u)) / 2
+stage(x, u) = dt * (dot(x - xf, Q * (x - xf)) + dot(u, R * u)) / 2  # running cost over one step, so N does not shift the balance of the weights
 terminal(x) = dot(x - xf, Qf * (x - xf)) / 2
 total(X, U) = sum(stage(X[k], U[k]) for k in 1:N-1) + terminal(X[N])
 rollout(U; x0=x0) = (X = [x0]; for u in U; push!(X, rk4(X[end], u)); end; X)
@@ -303,8 +311,8 @@ function tvlqr(X, U)
     P = Matrix(Qf); K = Vector{Matrix{Float64}}(undef, N - 1)
     for k in N-1:-1:1
         Ak = ForwardDiff.jacobian(x -> rk4(x, U[k]), X[k]); Bk = ForwardDiff.jacobian(u -> rk4(X[k], u), U[k])
-        K[k] = (R + Bk' * P * Bk) \ (Bk' * P * Ak)
-        P = Q + Ak' * P * (Ak - Bk * K[k])
+        K[k] = (R * dt + Bk' * P * Bk) \ (Bk' * P * Ak)
+        P = Q * dt + Ak' * P * (Ak - Bk * K[k])
     end
     K
 end
@@ -344,7 +352,7 @@ n, m = length(x0), size(R, 1)
 
 rk4step(F, z) = (k1 = F(z); k2 = F(z .+ dt / 2 .* k1); k3 = F(z .+ dt / 2 .* k2); k4 = F(z .+ dt .* k3); z .+ dt / 6 .* (k1 .+ 2 .* k2 .+ 2 .* k3 .+ k4))
 rk4(x, u) = rk4step(y -> f(y, u), x)  # discrete dynamics x[k+1] = rk4(x[k], u[k])
-stage(x, u) = (dot(x - xf, Q * (x - xf)) + dot(u, R * u)) / 2
+stage(x, u) = dt * (dot(x - xf, Q * (x - xf)) + dot(u, R * u)) / 2  # running cost over one step, so N does not shift the balance of the weights
 terminal(x) = dot(x - xf, Qf * (x - xf)) / 2
 total(X, U) = sum(stage(X[k], U[k]) for k in 1:N-1) + terminal(X[N])
 rollout(U; x0=x0) = (X = [x0]; for u in U; push!(X, rk4(X[end], u)); end; X)
@@ -354,18 +362,18 @@ function tvlqr(X, U)
     P = Matrix(Qf); K = Vector{Matrix{Float64}}(undef, N - 1)
     for k in N-1:-1:1
         Ak = ForwardDiff.jacobian(x -> rk4(x, U[k]), X[k]); Bk = ForwardDiff.jacobian(u -> rk4(X[k], u), U[k])
-        K[k] = (R + Bk' * P * Bk) \ (Bk' * P * Ak)
-        P = Q + Ak' * P * (Ak - Bk * K[k])
+        K[k] = (R * dt + Bk' * P * Bk) \ (Bk' * P * Ak)
+        P = Q * dt + Ak' * P * (Ak - Bk * K[k])
     end
     K
 end
 
 using NLsolve, ADTypes
 
-# Pontryagin: the other methods sum stage(x, u) once per interval, i.e. integrate stage / dt over time,
-# so H = stage / dt + lambda' f; with control-affine dynamics, dH/du = 0 gives u = -dt R^-1 f_u' lambda
+# Pontryagin: stage(x, u) is the running cost over one step, so the cost per unit of time is stage / dt
+# and H = stage / dt + lambda' f; with control-affine dynamics, dH/du = 0 gives u = -R^-1 f_u' lambda
 ham(x, u, lam) = stage(x, u) / dt + dot(lam, f(x, u))
-ustar(x, lam) = -dt * (R \ (ForwardDiff.jacobian(v -> f(x, v), zeros(eltype(x), m))' * lam))
+ustar(x, lam) = -(R \ (ForwardDiff.jacobian(v -> f(x, v), zeros(eltype(x), m))' * lam))
 function canonical(z)  # state and costate equations
     x, lam = z[1:n], z[n+1:end]
     u = ustar(x, lam)
@@ -419,7 +427,7 @@ n, m = length(x0), size(R, 1)
 
 rk4step(F, z) = (k1 = F(z); k2 = F(z .+ dt / 2 .* k1); k3 = F(z .+ dt / 2 .* k2); k4 = F(z .+ dt .* k3); z .+ dt / 6 .* (k1 .+ 2 .* k2 .+ 2 .* k3 .+ k4))
 rk4(x, u) = rk4step(y -> f(y, u), x)  # discrete dynamics x[k+1] = rk4(x[k], u[k])
-stage(x, u) = (dot(x - xf, Q * (x - xf)) + dot(u, R * u)) / 2
+stage(x, u) = dt * (dot(x - xf, Q * (x - xf)) + dot(u, R * u)) / 2  # running cost over one step, so N does not shift the balance of the weights
 terminal(x) = dot(x - xf, Qf * (x - xf)) / 2
 total(X, U) = sum(stage(X[k], U[k]) for k in 1:N-1) + terminal(X[N])
 rollout(U; x0=x0) = (X = [x0]; for u in U; push!(X, rk4(X[end], u)); end; X)
@@ -429,8 +437,8 @@ function tvlqr(X, U)
     P = Matrix(Qf); K = Vector{Matrix{Float64}}(undef, N - 1)
     for k in N-1:-1:1
         Ak = ForwardDiff.jacobian(x -> rk4(x, U[k]), X[k]); Bk = ForwardDiff.jacobian(u -> rk4(X[k], u), U[k])
-        K[k] = (R + Bk' * P * Bk) \ (Bk' * P * Ak)
-        P = Q + Ak' * P * (Ak - Bk * K[k])
+        K[k] = (R * dt + Bk' * P * Bk) \ (Bk' * P * Ak)
+        P = Q * dt + Ak' * P * (Ak - Bk * K[k])
     end
     K
 end
@@ -503,7 +511,7 @@ n, m = length(x0), size(R, 1)
 
 rk4step(F, z) = (k1 = F(z); k2 = F(z .+ dt / 2 .* k1); k3 = F(z .+ dt / 2 .* k2); k4 = F(z .+ dt .* k3); z .+ dt / 6 .* (k1 .+ 2 .* k2 .+ 2 .* k3 .+ k4))
 rk4(x, u) = rk4step(y -> f(y, u), x)  # discrete dynamics x[k+1] = rk4(x[k], u[k])
-stage(x, u) = (dot(x - xf, Q * (x - xf)) + dot(u, R * u)) / 2
+stage(x, u) = dt * (dot(x - xf, Q * (x - xf)) + dot(u, R * u)) / 2  # running cost over one step, so N does not shift the balance of the weights
 terminal(x) = dot(x - xf, Qf * (x - xf)) / 2
 total(X, U) = sum(stage(X[k], U[k]) for k in 1:N-1) + terminal(X[N])
 rollout(U; x0=x0) = (X = [x0]; for u in U; push!(X, rk4(X[end], u)); end; X)
@@ -513,8 +521,8 @@ function tvlqr(X, U)
     P = Matrix(Qf); K = Vector{Matrix{Float64}}(undef, N - 1)
     for k in N-1:-1:1
         Ak = ForwardDiff.jacobian(x -> rk4(x, U[k]), X[k]); Bk = ForwardDiff.jacobian(u -> rk4(X[k], u), U[k])
-        K[k] = (R + Bk' * P * Bk) \ (Bk' * P * Ak)
-        P = Q + Ak' * P * (Ak - Bk * K[k])
+        K[k] = (R * dt + Bk' * P * Bk) \ (Bk' * P * Ak)
+        P = Q * dt + Ak' * P * (Ak - Bk * K[k])
     end
     K
 end
@@ -720,8 +728,8 @@ id = "cost-breakdown"
 label = "Cost Breakdown"
 desc = "Total cost split into running state cost, control effort and terminal penalty"
 code = '''
-state_cost = sum(dot(X[k] - xf, Q * (X[k] - xf)) for k in 1:N-1) / 2
-control_cost = sum(dot(U[k], R * U[k]) for k in 1:N-1) / 2
+state_cost = dt * sum(dot(X[k] - xf, Q * (X[k] - xf)) for k in 1:N-1) / 2
+control_cost = dt * sum(dot(U[k], R * U[k]) for k in 1:N-1) / 2
 (state = state_cost, control = control_cost, terminal = terminal(X[N]), total = total(X, U))
 '''
 

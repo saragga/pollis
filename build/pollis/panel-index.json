@@ -363,7 +363,8 @@
 				"arima/tutorial-04-forecast.ipynb"
 			],
 			"packages": [
-				"StateSpaceModels.jl"
+				"StateSpaceModels.jl",
+				"Durbyn.jl"
 			]
 		},
 		{
@@ -384,8 +385,19 @@
 			"toml": "toolboxes/pollis-toolbox-econometrics/panels/atsf.toml",
 			"wikiRoot": "toolboxes/pollis-toolbox-econometrics/wiki",
 			"notebookRoot": "toolboxes/pollis-toolbox-econometrics/notebooks",
-			"wikis": [],
-			"notebooks": [],
+			"wikis": [
+				"atsf/assumptions.md",
+				"atsf/decision-guide.md",
+				"atsf/diagnostics.md",
+				"atsf/factsheet.md",
+				"atsf/interpretation.md",
+				"atsf/overview.md"
+			],
+			"notebooks": [
+				"atsf/tutorial-01-bats.ipynb",
+				"atsf/tutorial-02-theta.ipynb",
+				"atsf/tutorial-03-demand.ipynb"
+			],
 			"packages": [
 				"Durbyn.jl"
 			]
@@ -1773,7 +1785,10 @@
 				"ctmf/tutorial-01-quickstart.ipynb",
 				"ctmf/tutorial-02-lrr.ipynb",
 				"ctmf/tutorial-03-habit.ipynb",
-				"ctmf/tutorial-04-finance.ipynb"
+				"ctmf/tutorial-04-finance.ipynb",
+				"ctmf/tutorial-05-disasters.ipynb",
+				"ctmf/tutorial-06-intermediary.ipynb",
+				"ctmf/tutorial-07-uncertainty.ipynb"
 			],
 			"packages": [
 				"EconPDEs.jl"
@@ -1818,32 +1833,22 @@
 		},
 		{
 			"id": "ctsv",
-			"title": "Continuous-Time Stochastic Volatility",
-			"source": "pollis",
+			"title": "Continuous-Time Stochastic Volatility Models",
+			"source": "toolbox:pollis-toolbox-econometrics",
 			"commands": [
 				{
 					"id": "chiara.statistics.tvm.ctsv",
-					"menuTitles": []
-				},
-				{
-					"id": "chiara.statistics.dm.heston",
-					"menuTitles": []
-				},
-				{
-					"id": "chiara.statistics.jdm.bates",
-					"menuTitles": []
-				},
-				{
-					"id": "chiara.statistics.irm.sabr",
-					"menuTitles": []
+					"menuTitles": [
+						"Continuous-Time Stochastic Volatility Models"
+					]
 				}
 			],
 			"portable": true,
 			"defaultModel": "heston",
 			"decisionFirstColumn": "Model",
-			"toml": "src/vs/workbench/contrib/model/browser/webviews/ctsv.toml",
-			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
-			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"toml": "toolboxes/pollis-toolbox-econometrics/panels/ctsv.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-econometrics/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-econometrics/notebooks",
 			"wikis": [
 				"ctsv/assumptions.md",
 				"ctsv/decision-guide.md",
@@ -1851,7 +1856,13 @@
 				"ctsv/factsheet.md",
 				"ctsv/interpretation.md",
 				"ctsv/overview.md",
-				"tvm/Time-VaryingVolatilityModels.md"
+				"vcm/assumptions.md",
+				"vcm/decision-guide.md",
+				"vcm/diagnostics.md",
+				"vcm/factsheet.md",
+				"vcm/interpretation.md",
+				"vcm/overview.md",
+				"vcm/time-varying-volatility-models.md"
 			],
 			"notebooks": [
 				"ctsv/tutorial-01-heston.ipynb",
@@ -2428,11 +2439,7 @@
 				"dsge/tutorial-06-variance.ipynb"
 			],
 			"packages": [
-				"MacroModelling.jl",
-				"Dynare.jl",
-				"DSGE.jl",
-				"SolveDSGE.jl",
-				"StateSpaceEcon.jl"
+				"MacroModelling.jl"
 			]
 		},
 		{
@@ -2563,7 +2570,7 @@
 				{
 					"id": "chiara.statistics.macro.dtsvm",
 					"menuTitles": [
-						"Stochastic Volatility Macroeconomic Models"
+						"Discrete-Time Stochastic Volatility Models"
 					]
 				}
 			],
@@ -8138,8 +8145,10 @@
 				"trajectory-optimization/tutorial-04-altro.ipynb"
 			],
 			"packages": [
-				"TrajectoryOptimization.jl",
-				"Altro.jl"
+				"JuMP.jl",
+				"Ipopt.jl",
+				"NLsolve.jl",
+				"ForwardDiff.jl"
 			]
 		},
 		{
@@ -8478,7 +8487,8 @@
 				"vcm/diagnostics.md",
 				"vcm/factsheet.md",
 				"vcm/interpretation.md",
-				"vcm/overview.md"
+				"vcm/overview.md",
+				"vcm/time-varying-volatility-models.md"
 			],
 			"notebooks": [
 				"vcm/tutorial-01-garch.ipynb",
