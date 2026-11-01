@@ -40,7 +40,7 @@ import { BROWSE_REFERENCES_COMMAND_ID } from './browseReferencesPage.js';
 import { SNOWBALL_SEARCH_COMMAND_ID } from '../common/snowballSearch.js';
 import './snowballSearchPage.js';
 
-// The Mathematical Core, Finance and Economics Toolboxes come from their extensions (toolboxes/pollis-toolbox-*, not built in:
+// The Core Mathematics, Finance and Economics Toolboxes come from their extensions (toolboxes/pollis-toolbox-*, not built in:
 // installed from the Toolboxes section of the Extensions pane), see toolboxExtensions.ts
 
 const NewPanelsMenu = new MenuId('menubarNewPanelsMenu');

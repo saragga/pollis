@@ -10,7 +10,8 @@
 // answers the models on this computer, each with its value in the settings, for Compose > Local Models > Set Active Models and the
 // two Evaluate pages; `language-julia.pollisModelVersions`,
 // with a model's file, the other files of its repository, and `language-julia.pollisDownloadModel`, with an `hf:` value,
-// downloads one, for its Other Versions; `language-julia.pollisAvailableMemory`, the memory a model can have now, for
+// downloads one, for its Other Versions; `language-julia.pollisPublishedDates`, with repositories, the day each was
+// published on Hugging Face; `language-julia.pollisAvailableMemory`, the memory a model can have now, for
 // the warning of Evaluate Answering Models and the charts of the memory free during a run of either Evaluate page; `language-julia.pollisTotalMemory`,
 // the computer's memory, the top of that chart.
 
@@ -327,10 +328,9 @@ export function valueFile(value: string): string {
 
 /**
  * The models on this computer for Compose > Local Models > Set Active Models, by name: each with its size in bytes,
- * whether Pollis downloaded it or it is in the Hugging Face cache, what it reads besides text, and the tiers of
- * Model Tasks and Routing that run on it.
+ * its repository, what it reads besides text, and the tiers of Model Tasks and Routing that run on it.
  */
-async function installedModels(): Promise<(LocalModel & { value: string; bytes: number; pollis: boolean; repository?: string; media: ModelMedia[]; tools?: boolean; tiers: string[] })[]> {
+async function installedModels(): Promise<(LocalModel & { value: string; bytes: number; repository?: string; media: ModelMedia[]; tools?: boolean; tiers: string[] })[]> {
     const tierCells = vscode.workspace.getConfiguration('pollis.agents').get<Record<string, { model?: string }>>('tierCells', {})
     const tierFiles = Object.entries(tierCells).filter(([, cell]) => typeof cell?.model === 'string' && cell.model.startsWith('local:') && cell.model.length > 'local:'.length)
         .map(([tier, cell]) => ({ tier, file: path.resolve(valueFile(cell.model!.slice('local:'.length))) }))
@@ -338,7 +338,6 @@ async function installedModels(): Promise<(LocalModel & { value: string; bytes: 
         ...model,
         value: localValue(model.file),
         bytes: (await fs.promises.stat(model.file).catch(() => undefined))?.size ?? 0,
-        pollis: model.file.startsWith(MODELS_DIR + path.sep),
         repository: repositoryOf(model.file),
         media: (await projectorOf(model.file))?.media ?? [],
         tools: model.kind === 'chat' ? await callsTools(model.file).catch(() => false) : undefined,
@@ -385,6 +384,33 @@ async function modelVersions(file: string): Promise<{ value: string; name: strin
             }
         })
         .sort((a, b) => Number(a.projector) - Number(b.projector) || a.bytes - b.bytes)
+}
+
+/**
+ * The day each repository was published on Hugging Face (`YYYY-MM-DD`), for the Date column of Set Active Models. A day
+ * does not change, so each is kept in ~/.pollis/models/published.json and asked for once; one that cannot be had is left out.
+ */
+async function publishedDates(repositories: string[]): Promise<Record<string, string>> {
+    const kept = path.join(MODELS_DIR, 'published.json')
+    const dates: Record<string, string> = await fs.promises.readFile(kept, 'utf8').then((text) => JSON.parse(text), () => ({}))
+    const missing = [...new Set(repositories)].filter((repository) => !dates[repository])
+    const found = await Promise.all(missing.map(async (repository) => {
+        const response = await fetch(`https://huggingface.co/api/models/${repository}`, { signal: AbortSignal.timeout(15000) }).catch(() => undefined)
+        const answer = response?.ok ? (await response.json().catch(() => undefined)) as { createdAt?: string } | undefined : undefined
+        return { repository, day: answer?.createdAt?.slice(0, 10) }
+    }))
+    let added = false
+    for (const { repository, day } of found) {
+        if (day) {
+            dates[repository] = day
+            added = true
+        }
+    }
+    if (added) {
+        await fs.promises.mkdir(MODELS_DIR, { recursive: true })
+        await fs.promises.writeFile(kept, JSON.stringify(dates, undefined, 2))
+    }
+    return dates
 }
 
 /** Downloads an `hf:` file into ~/.pollis/models, for Other Versions of Set Active Models; true once it is there. */
@@ -590,6 +616,7 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand('language-julia.pollisChooseModel', (request: { kind: ModelKind; value?: string }) => chooseModel(request.kind, request.value ?? '')),
         vscode.commands.registerCommand('language-julia.pollisInstalledModels', () => installedModels()),
         vscode.commands.registerCommand('language-julia.pollisModelVersions', (file: string) => modelVersions(file)),
+        vscode.commands.registerCommand('language-julia.pollisPublishedDates', (repositories: string[]) => publishedDates(repositories)),
         vscode.commands.registerCommand('language-julia.pollisDownloadModel', (value: string) => downloadVersion(value)),
         vscode.commands.registerCommand('language-julia.pollisAvailableMemory', () => availableMemory()),
         vscode.commands.registerCommand('language-julia.pollisTotalMemory', () => os.totalmem())

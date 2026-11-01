@@ -14,6 +14,7 @@
 	"pollisExtensionTips": [
 		"anthropic.claude-code",
 		"openai.chatgpt",
+		"Google.geminicodeassist",
 		"sst-dev.opencode",
 		"chuckjonas.duckdb",
 		"james-yu.latex-workshop",

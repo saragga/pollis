@@ -7,7 +7,7 @@
 | **Purpose** | See the local models on this computer and get other versions of them |
 | **Input** | The GGUF files in `~/.pollis/models` and in the Hugging Face cache |
 | **Local models** | Run by [llama.cpp](https://github.com/ggml-org/llama.cpp), which comes with Pollis |
-| **Columns** | Model, Reads, Tools, Size, Where |
+| **Columns** | Model, Reads, Tools, Size, Date |
 | **Actions** | Open Folder and Other Versions, with Download |
 | **Key choice** | Which version of a model suits the memory of this computer |
 

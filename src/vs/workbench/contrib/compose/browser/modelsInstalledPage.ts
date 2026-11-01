@@ -37,7 +37,7 @@ import { COMPARE_MODELS_COMMAND_ID } from './compareModelsPage.js';
 // with a section each for the local embedding, reranker and answering models, the GGUF models on this computer, those
 // Pollis downloaded and those in the Hugging Face cache, which the llama.cpp that comes with Pollis runs, and one for the
 // cloud models, which answer. Each shows what it reads (images and audio through the projector beside it), whether it
-// calls tools (from its chat template), its size and where it is. A local one also has an icon that opens its folder and
+// calls tools (from its chat template), its size and the day its repository was published on Hugging Face. A local one also has an icon that opens its folder and
 // Other Versions: the other files of its repository on Hugging Face (other quantisations, its projector), each with its
 // size and a link to download it. A click on a column's header sorts the models of each section by it, by name at first.
 // Step 2, Set Models, sets the models of Pollis AI+, which the status bar shows: the answering model (of this computer or the cloud), the embedding model and the reranker, none or
@@ -53,7 +53,6 @@ export interface IInstalledModel {
 	readonly sizeLabel?: string;
 	readonly kind?: 'chat' | 'embedding' | 'reranker';
 	readonly bytes: number;
-	readonly pollis: boolean;
 	readonly repository?: string;
 	readonly media: readonly ('image' | 'audio')[];
 	readonly tools?: boolean;
@@ -148,6 +147,10 @@ async function openModelsInstalledPage(accessor: ServicesAccessor): Promise<void
 			},
 			models,
 		});
+		// From Hugging Face the first time, so the table does not wait for them
+		const repositories = models.flatMap(model => model.repository ? [model.repository] : []);
+		const dates = await commandService.executeCommand<Record<string, string>>('language-julia.pollisPublishedDates', repositories);
+		webviewInput.webview.postMessage({ command: 'published', dates: dates ?? {} });
 	};
 	// The files offered under each model, so that only those are downloaded
 	const offered = new Map<string, readonly IModelVersion[]>();
@@ -250,11 +253,9 @@ function pageHtml(): string {
 		toolsTooltip: localize('modelsInstalled.toolsTooltip', "Whether the model can call tools, from its chat template: the agent of a Model Tasks and Routing tier needs a model that can."),
 		sortTooltip: sortHint(),
 		size: localize('modelsInstalled.size', "Size"),
-		where: localize('modelsInstalled.where', "Where"),
+		date: localize('modelsInstalled.date', "Date"),
 		embedding: localize('modelsInstalled.embedding', "Embedding"),
 		reranker: localize('modelsInstalled.reranker', "Reranker"),
-		pollis: localize('modelsInstalled.pollis', "Pollis"),
-		huggingFace: localize('modelsInstalled.huggingFace', "Hugging Face cache"),
 		openFolder: localize('modelsInstalled.openFolder', "Open Folder"),
 		otherVersions: localize('modelsInstalled.otherVersions', "Other Versions"),
 		lookingUp: localize('modelsInstalled.lookingUp', "Looking on Hugging Face..."),
@@ -357,6 +358,7 @@ function pageHtml(): string {
 	// The models whose Other Versions are open, and what Hugging Face answered for each
 	const open = new Set();
 	const versions = new Map();
+	let published = {};
 	const downloading = new Set();
 	let lastState;
 	// The columns, with what each sorts by, and the column sorted by inside each section
@@ -365,7 +367,7 @@ function pageHtml(): string {
 		{ label: TEXT.reads, key: model => model.media.length },
 		{ label: TEXT.tools, title: TEXT.toolsTooltip, key: model => model.tools === undefined ? -1 : model.tools ? 1 : 0 },
 		{ label: TEXT.size, key: model => model.bytes },
-		{ label: TEXT.where, key: where },
+		{ label: TEXT.date, key: model => published[model.repository] || '' },
 	];
 	const sort = { column: 0, ascending: true };
 	// The sections of the table: a local model without a kind answers, as in Set Models
@@ -376,9 +378,10 @@ function pageHtml(): string {
 		{ label: TEXT.cloudModels, has: model => !!model.provider },
 	];
 
-	/** Where a model is: the company of a cloud model, the origin of a local one's file. */
-	function where(model) {
-		return model.provider || (model.pollis ? TEXT.pollis : TEXT.huggingFace);
+	/** The day a model's repository was published on Hugging Face, a dash for a model that has none, as a cloud model. */
+	function publishedDate(model) {
+		const day = published[model.repository];
+		return day ? new Date(day + 'T00:00:00').toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : '-';
 	}
 
 	function element(tag, className, content) {
@@ -523,7 +526,7 @@ function pageHtml(): string {
 					size.appendChild(element('div', 'small', model.sizeLabel));
 				}
 				row.appendChild(size);
-				row.appendChild(element('td', '', where(model)));
+				row.appendChild(element('td', '', publishedDate(model)));
 				const action = element('td', 'actions');
 				if (model.file) {
 					const reveal = element('button', 'link openFolder');
@@ -569,6 +572,11 @@ function pageHtml(): string {
 			downloading.delete(event.data.value);
 		} else if (event.data.command === 'versions') {
 			versions.set(event.data.file, event.data);
+			if (lastState) {
+				render(lastState);
+			}
+		} else if (event.data.command === 'published') {
+			published = event.data.dates;
 			if (lastState) {
 				render(lastState);
 			}
