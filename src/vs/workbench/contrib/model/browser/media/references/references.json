@@ -993,6 +993,27 @@
 			"open_access": true
 		},
 		{
+			"key": "BC2012a",
+			"type": "article",
+			"title": "The Long-Run Risks Model and Aggregate Asset Prices: An Empirical Assessment",
+			"authors": [
+				"Beeler, Jason",
+				"Campbell, John Y."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2012,
+			"journal": "Critical Finance Review",
+			"volume": "1",
+			"number": "1",
+			"pages": "141-182",
+			"issn": "2164-5744",
+			"doi": "10.1561/104.00000004",
+			"source": "manual",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "BCP2022a",
 			"type": "article",
 			"title": "FrankWolfe.jl: A High-Performance and Flexible Toolbox for Frank-Wolfe Algorithms and Conditional Gradients",
@@ -1492,7 +1513,7 @@
 		{
 			"key": "BJRL2015a",
 			"type": "book",
-			"title": "ARIMA Models for Time Series Forecasting",
+			"title": "Time Series Analysis: Forecasting and Control",
 			"authors": [
 				"Box, George E. P.",
 				"Jenkins, Gwilym M.",
@@ -17699,7 +17720,7 @@
 			"issn": "1050-5164",
 			"doi": "10.1214/aoap/1177005835",
 			"openalex": "W2086242486",
-			"url": "https://doi.org/10.1086/296071",
+			"url": "https://doi.org/10.1214/aoap/1177005835",
 			"oa_url": "https://projecteuclid.org/journals/annals-of-applied-probability/volume-1/issue-4/Estimating-Variance-From-High-Low-and-Closing-Prices/10.1214/aoap/1177005835.pdf",
 			"abstract": "The log of the price of a share is commonly modelled as a Brownian motion with drift, $\\sigma B_t + ct$, where the constants $c$ and $\\sigma$ are unknown. In order to use the Black-Scholes option pricing formula, one needs an estimate of $\\sigma$, though not of $c$. In this paper, we propose a new estimator of $\\sigma$ based on the high, low, and closing prices in a day's trading. This estimator has the merit of being unbiased whatever the drift $c$. In common with other estimators of $\\sigma$, the approximation of the true high and low values of the drifting Brownian motion by the high and low values of a random walk introduces error, often quite a serious error. We shall show how a simple correction can overcome this error almost completely.",
 			"abstract_source": "openalex",
