@@ -65,12 +65,17 @@
     \fill[logocream] (203,422) -- (339,89) -- (476,422) -- cycle;
   \end{tikzpicture}}
 
+% A topic's place: the bookmark of the PDF's outline, and what its line in the Contents links to and reads its page from.
+\newcommand{\topicmark}[1]{\pdfbookmark[0]{#1}{bookmark:#1}\hypertarget{topic:#1}{}\label{topic:#1}}
+\newcommand{\contentsentry}[1]{{\color{deepamber}\bfseries\hyperlink{topic:#1}{\pageref*{topic:#1}}} & \hyperlink{topic:#1}{#1}}
+
 % A new topic: starts on the next even page, so its two pages face each other.
 % #1 title, #2 where it is in Pollis, #3 what it is for, in one sentence.
 \newcommand{\topic}[3]{%
   \clearpage
   \ifodd\value{page}\hbox{}\thispagestyle{empty}\clearpage\fi
   \renewcommand{\topicname}{#1}%
+  \topicmark{#1}%
   \asklabel{1}{#1}%
   {\color{navy}\fontsize{20}{24}\selectfont\bfseries #1}\par\vspace{2pt}
   {\color{deepamber}\small\bfseries #2}\par\vspace{3pt}
@@ -141,7 +146,7 @@ Talk about AI comes with many new words: language models, runners, agents, harne
 servers, orchestration. This part explains them for readers who have never met them at a technical
 level: what each one is, how they fit together, and where each one is in Pollis, with examples.
 Each topic takes two facing pages; read them in order the first time, since each builds on the one
-before. Page 16 puts them all in one picture, with the words to know.
+before. Page \pageref*{topic:The Whole Picture} puts them all in one picture, with the words to know.
 
 \smallskip
 Menu paths are written \ui{Compose > Coding Agents}, and buttons as they appear, such as \ui{Install Skills}.
@@ -161,15 +166,15 @@ Questions and problems: \ui{Help > Report Issue}, or \contactemail.
 {\color{soft}\small\bfseries The AI Ecosystem}\par\smallskip
 \renewcommand{\arraystretch}{1.25}
 \begin{tabular}{@{}r@{\enspace}l@{}}
-{\color{deepamber}\bfseries 2} & Language Models\\
-{\color{deepamber}\bfseries 4} & Local Models\\
-{\color{deepamber}\bfseries 6} & Embedding and Chat Models\\
-{\color{deepamber}\bfseries 8} & Coding Agents and Harnesses\\
-{\color{deepamber}\bfseries 10} & Agent Skills\\
-{\color{deepamber}\bfseries 12} & MCP Servers\\
-{\color{deepamber}\bfseries 14} & Orchestration\\
-{\color{deepamber}\bfseries 16} & Ask Pollis\\
-{\color{deepamber}\bfseries 18} & The Whole Picture
+\contentsentry{Language Models}\\
+\contentsentry{Local Models}\\
+\contentsentry{Embedding and Chat Models}\\
+\contentsentry{Coding Agents and Harnesses}\\
+\contentsentry{Agent Skills}\\
+\contentsentry{MCP Servers}\\
+\contentsentry{Orchestration}\\
+\contentsentry{Ask Pollis}\\
+\contentsentry{The Whole Picture}
 \end{tabular}
 \end{tcolorbox}
 \end{minipage}

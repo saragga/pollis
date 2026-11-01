@@ -25,8 +25,8 @@ const LIBRARY_PAGE_RULES = `
 	.link:hover { text-decoration: underline; }
 	.links { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; }
 	.package { display: inline-block; font-size: 12px; border: 1px solid var(--vscode-widget-border); border-radius: 2px; padding: 0 4px; margin: 0 4px 4px 0; }
-	.source { margin: 0 0 4px 0; }
-	.source-name { font-weight: 600; }
+	.source { margin: 0 0 8px 0; }
+	.source-name { display: block; font-weight: 600; text-align: left; overflow-wrap: anywhere; }
 	.badge { display: inline-block; margin-left: 8px; padding: 0 6px; border-radius: 8px; font-size: 11px; font-weight: 600; vertical-align: middle; color: var(--vscode-badge-foreground); background: var(--vscode-badge-background); }`;
 
 const LIBRARY_PAGE_LIGHT_RULES = `

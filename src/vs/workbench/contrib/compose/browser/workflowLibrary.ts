@@ -23,6 +23,7 @@ import { parseToml, TomlValue } from '../../model/browser/common/tomlPanelData.j
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_MINIMAL_STYLE, LIBRARY_PAGE_STYLE } from './libraryPage.js';
+import { sortHeadingsCss, sortHeadingsScript, sortHint, stickyHeadCss } from '../../model/browser/webviews/webviewPager.js';
 import { ContentKind, IDownloadedEntry, IPollisContentService } from './pollisContent.js';
 import { BROWSE_METHODS_COMMAND_ID, deleteUserMethods, openUserMethod, readMethodSummaries, userMethodsFolder } from './newMethods.js';
 import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
@@ -66,7 +67,7 @@ const WORKFLOWS: INotebookLibrary = {
 	base: 'vs/workbench/contrib/compose/browser/media/workflows',
 	userFolder: 'workflows',
 	title: localize('workflowLibrary.title', "Replications"),
-	intro: localize('workflowLibrary.intro', "Each replication reproduces a published analysis on its public data, printing every published value beside Julia's. Click a name to open your own copy of the notebook, made in {0} the first time.", '<code>~/.pollis/workflows</code>'),
+	intro: localize('workflowLibrary.intro', "Each replication reproduces a published analysis on its public data, printing every published value beside Julia's. Click a name to open your own copy of the notebook, made in {0} the first time.", '<code class="pollisPath">~/.pollis/workflows</code>'),
 	entry: localize('workflowLibrary.entry', "Replication"),
 	empty: localize('workflowLibrary.empty', "There are no replications yet."),
 	openFailed: (label, error) => localize('workflowLibrary.openFailed', "Could not open the replication {0}: {1}", label, error),
@@ -91,7 +92,7 @@ const PUBLISHED_BENCHMARKS: INotebookLibrary = {
 	base: 'vs/workbench/contrib/compose/browser/media/correctness',
 	userFolder: 'correctness',
 	title: localize('publishedBenchmarks.title', "Published Benchmarks"),
-	intro: localize('publishedBenchmarks.intro', "Each benchmark checks Julia's results against published or certified values. Click a name to open your own copy of the notebook, made in {0} the first time.", '<code>~/.pollis/correctness</code>'),
+	intro: localize('publishedBenchmarks.intro', "Each benchmark checks Julia's results against published or certified values. Click a name to open your own copy of the notebook, made in {0} the first time.", '<code class="pollisPath">~/.pollis/correctness</code>'),
 	entry: localize('publishedBenchmarks.entry', "Benchmark"),
 	empty: localize('publishedBenchmarks.empty', "There are no published benchmarks yet."),
 	openFailed: (label, error) => localize('publishedBenchmarks.openFailed', "Could not open the benchmark {0}: {1}", label, error),
@@ -120,10 +121,12 @@ interface ILibraryEntry {
 	readonly description: string;
 	readonly article: IWorkflowMetadata['article'];
 	readonly packages: readonly string[];
-	/** The datasets by source, e.g. `PollisDatasets` with `pbc`. */
-	readonly datasets: readonly { readonly source: string; readonly url?: string; readonly names: readonly string[] }[];
+	/** The datasets by source, e.g. `PollisDatasets` with `pbc`, and what is said of how the source is read. */
+	readonly datasets: readonly { readonly source: string; readonly note?: string; readonly url?: string; readonly names: readonly string[] }[];
 	/** The size of the shipped files. */
 	readonly size: string;
+	/** The same in bytes, to sort by. */
+	readonly bytes: number;
 	/** The size of the files the notebook downloads, always or only if asked. */
 	readonly download?: string;
 	readonly optionalDownload?: string;
@@ -152,6 +155,12 @@ function packagesOf(code: string): string[] {
 	return [...packages];
 }
 
+/** A dataset's source, with the note in brackets at its end apart: `Dehejia's NBER data page (read into memory, not saved)`. */
+function splitSource(source: string): { source: string; note?: string } {
+	const parts = /^(?<name>.+?)\s*\((?<note>[a-z][^)]*)\)$/.exec(source)?.groups;
+	return parts ? { source: parts.name, note: parts.note[0].toUpperCase() + parts.note.slice(1) } : { source };
+}
+
 function formatDate(date: string | undefined): string | undefined {
 	return date && new Date(`${date}T00:00:00`).toLocaleDateString(language, { year: 'numeric', month: 'short', day: 'numeric' });
 }
@@ -170,7 +179,7 @@ async function folderSize(fileService: IFileService, folder: URI): Promise<numbe
  * and packages, and its inputs as datasets, by the source each names before a colon. Undefined
  * when the folder has no method.toml.
  */
-async function readMethodEntry(fileService: IFileService, folder: URI): Promise<Omit<ILibraryEntry, 'folder' | 'location' | 'size'> | undefined> {
+async function readMethodEntry(fileService: IFileService, folder: URI): Promise<Omit<ILibraryEntry, 'folder' | 'location' | 'size' | 'bytes'> | undefined> {
 	const tomlFile = joinPath(folder, 'method.toml');
 	if (!await fileService.exists(tomlFile)) {
 		return undefined;
@@ -226,7 +235,8 @@ async function readLibrary(fileService: IFileService, library: INotebookLibrary,
 		if (library.userMethods) {
 			const method = await readMethodEntry(fileService, folder.resource);
 			if (method) {
-				entries.push({ ...method, folder: folder.name, location: folder.resource, size: ByteSize.formatSize(await folderSize(fileService, folder.resource)) });
+				const bytes = await folderSize(fileService, folder.resource);
+				entries.push({ ...method, folder: folder.name, location: folder.resource, size: ByteSize.formatSize(bytes), bytes });
 			}
 			continue;
 		}
@@ -241,13 +251,13 @@ async function readLibrary(fileService: IFileService, library: INotebookLibrary,
 		const [heading, ...paragraphs] = (markdown ? source(markdown) : '').split(/\n\s*\n/).map(paragraph => paragraph.trim());
 		const metadata = content.metadata?.pollis?.workflow ?? {};
 
-		const datasets = new Map<string, { source: string; url?: string; names: string[] }>();
+		const datasets = new Map<string, { source: string; note?: string; url?: string; names: string[] }>();
 		let download = 0;
 		let optionalDownload = 0;
 		for (const dataset of metadata.datasets ?? []) {
 			let group = datasets.get(dataset.source);
 			if (!group) {
-				group = { source: dataset.source, url: dataset.url, names: [] };
+				group = { ...splitSource(dataset.source), url: dataset.url, names: [] };
 				datasets.set(dataset.source, group);
 			}
 			group.names.push(dataset.name);
@@ -257,6 +267,7 @@ async function readLibrary(fileService: IFileService, library: INotebookLibrary,
 				download += dataset.bytes ?? 0;
 			}
 		}
+		const bytes = await folderSize(fileService, folder.resource);
 		entries.push({
 			folder: folder.name,
 			location: folder.resource,
@@ -266,7 +277,8 @@ async function readLibrary(fileService: IFileService, library: INotebookLibrary,
 			article: metadata.article,
 			packages: packagesOf(content.cells.filter(cell => cell.cell_type === 'code').map(source).join('\n')),
 			datasets: [...datasets.values()],
-			size: ByteSize.formatSize(await folderSize(fileService, folder.resource)),
+			size: ByteSize.formatSize(bytes),
+			bytes,
 			download: download > 0 ? ByteSize.formatSize(download) : undefined,
 			optionalDownload: optionalDownload > 0 ? ByteSize.formatSize(optionalDownload) : undefined,
 			updated: formatDate(metadata.updated),
@@ -469,10 +481,12 @@ function pageHtml(library: INotebookLibrary): string {
 		size: localize('workflowLibrary.size', "Size"),
 		updated: localize('workflowLibrary.updated', "Last Updated"),
 		noArticle: localize('workflowLibrary.noArticle', "None"),
+		noDatasets: localize('workflowLibrary.noDatasets', "None"),
+		sortHint: sortHint(),
 		webPage: localize('workflowLibrary.webPage', "Web Page"),
 		copyBibtex: localize('workflowLibrary.copyBibtex', "Copy BibTeX"),
 		copied: localize('workflowLibrary.copied', "Copied"),
-		count: localize('workflowLibrary.count', "{0} files"),
+		count: localize('workflowLibrary.count', "{0} datasets"),
 		download: localize('workflowLibrary.download', "+ {0} download"),
 		optionalDownload: localize('workflowLibrary.optionalDownload', "+ {0} download if asked"),
 		more: localize('workflowLibrary.more', "more"),
@@ -506,11 +520,12 @@ function pageHtml(library: INotebookLibrary): string {
 		</table>
 	</div>
 	<h2>${text.library}</h2>` : '';
+	const heading = (column: string, label: string) => `<th class="sortable" data-sort="${column}" title="${text.sortHint}">${label}</th>`;
 	const body = `
 ${userMethods}
-	<table>
+	<table class="stickyHead">
 		<thead><tr>
-			<th>${text.entry}</th><th>${text.article}</th><th>${text.packages}</th><th>${text.datasets}</th><th>${text.size}</th><th>${text.updated}</th>
+			${heading('title', text.entry)}${heading('citation', text.article)}${heading('packages', text.packages)}${heading('datasets', text.datasets)}${heading('bytes', text.size)}${heading('updatedDate', text.updated)}
 		</tr></thead>
 		<tbody id="entries"></tbody>
 	</table>`;
@@ -519,8 +534,12 @@ ${userMethods}
 	/** A source with more datasets than this shows their count, and their names on request. */
 	const LISTED = 4;
 	const body = document.getElementById('entries');
+	let entries = [];
+	let sortColumn = 'title';
+	let sortDescending = false;
 
 ${LIBRARY_PAGE_HELPERS}
+${sortHeadingsScript()}
 
 	function nameCell(row, entry) {
 		const td = cell(row, 'name');
@@ -575,28 +594,72 @@ ${LIBRARY_PAGE_HELPERS}
 
 	function datasetsCell(row, entry) {
 		const td = cell(row);
+		if (!entry.datasets.length) {
+			td.appendChild(element('span', 'small', TEXT.noDatasets));
+			return;
+		}
+		// Each source on its own line, its datasets under it, then how it is read
 		for (const group of entry.datasets) {
-			const line = element('div', 'source');
-			const source = group.url
-				? link(group.source, () => vscode.postMessage({ command: 'link', url: group.url }))
-				: element('span', '', group.source);
-			source.classList.add('source-name');
-			line.appendChild(source);
-			line.appendChild(document.createTextNode(': '));
-			const names = element('span', '', group.names.join(', '));
+			const block = element('div', 'source');
+			if (group.source) {
+				const source = group.url
+					? link(group.source, () => vscode.postMessage({ command: 'link', url: group.url }))
+					: element('div', group.source.startsWith('Pollis') ? 'pollisPackage' : '', group.source);
+				source.classList.add('source-name');
+				block.appendChild(source);
+			}
+			const names = element('div', '', group.names.join(', '));
 			if (group.names.length > LISTED) {
 				names.hidden = true;
-				line.appendChild(link(TEXT.count.replace('{0}', group.names.length), () => { names.hidden = !names.hidden; }));
-				line.appendChild(document.createTextNode(' '));
+				block.appendChild(link(TEXT.count.replace('{0}', group.names.length), () => { names.hidden = !names.hidden; }));
 			}
-			line.appendChild(names);
-			td.appendChild(line);
+			block.appendChild(names);
+			if (group.note) {
+				block.appendChild(element('div', 'small', group.note));
+			}
+			td.appendChild(block);
 		}
 	}
 
-	function render(entries) {
+	function sortValue(entry) {
+		switch (sortColumn) {
+			case 'citation': return entry.article ? entry.article.citation : '';
+			case 'packages': return entry.packages.join(', ');
+			case 'datasets': return entry.datasets.map(group => group.source).join(', ');
+			default: return entry[sortColumn] || '';
+		}
+	}
+
+	// By the column chosen, from the smallest or reversed; empty cells last; then by title
+	function compare(a, b) {
+		const x = sortValue(a), y = sortValue(b);
+		if (!x || !y) {
+			return x === y ? a.title.localeCompare(b.title) : x ? -1 : 1;
+		}
+		const order = typeof x === 'number' ? x - y : x.localeCompare(y);
+		return (sortDescending ? -order : order) || a.title.localeCompare(b.title);
+	}
+
+	function showSort() {
+		for (const header of document.querySelectorAll('th.sortable')) {
+			header.dataset.label ??= header.textContent;
+			setSortArrow(header, header.dataset.label, header.dataset.sort === sortColumn, sortDescending);
+		}
+	}
+
+	for (const header of document.querySelectorAll('th.sortable')) {
+		header.addEventListener('click', () => {
+			sortDescending = sortColumn === header.dataset.sort ? !sortDescending : false;
+			sortColumn = header.dataset.sort;
+			showSort();
+			render();
+		});
+	}
+	showSort();
+
+	function render() {
 		body.textContent = '';
-		for (const entry of entries) {
+		for (const entry of [...entries].sort(compare)) {
 			const row = element('tr');
 			nameCell(row, entry);
 			articleCell(row, entry);
@@ -653,7 +716,8 @@ ${LIBRARY_PAGE_HELPERS}
 
 	window.addEventListener('message', event => {
 		if (event.data.command === 'entries') {
-			render(event.data.entries);
+			entries = event.data.entries;
+			render();
 		} else if (event.data.command === 'methods') {
 			renderMethods(event.data.methods);
 		}
@@ -661,10 +725,12 @@ ${LIBRARY_PAGE_HELPERS}
 	vscode.postMessage({ command: 'ready' });
 `;
 	const rules = `
+	${stickyHeadCss}
+	${sortHeadingsCss}
 	h2 { font-size: 16px; font-weight: 600; margin: 20px 0 6px 0; }
-	${library.userMethods ? `/* The methods' package files, in the yellow of their folder in the intro */
-	.file { color: #e8a33d; }` : ''}`;
-	const lightRules = library.userMethods ? 'body.vscode-light .libraryPage .file { color: #a8650d; }' : '';
+	/* The packages and the files, in the yellow of the folder in the intro */
+	.file, .package, .pollisPackage { color: #e8a33d; }`;
+	const lightRules = 'body.vscode-light .libraryPage .file, body.vscode-light .libraryPage .package, body.vscode-light .libraryPage .pollisPackage { color: #a8650d; }';
 	if (library.page) {
 		return buildWebviewHtml({
 			title: library.title,
@@ -690,7 +756,7 @@ ${LIBRARY_PAGE_MINIMAL_STYLE}
 		${voiceButtonsCss}
 ${LIBRARY_PAGE_STYLE}
 	${rules}
-	${library.userMethods ? 'body.vscode-light .file { color: #a8650d; }' : ''}
+	body.vscode-light .file, body.vscode-light .package, body.vscode-light .pollisPackage { color: #a8650d; }
 	</style>
 </head>
 <body>

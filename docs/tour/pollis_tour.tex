@@ -53,7 +53,7 @@
 \pagestyle{fancy}
 \fancyhf{}
 \renewcommand{\headrulewidth}{0pt}
-\fancyfoot[L]{\footnotesize\color{soft}\textbf{Pollis}\enspace Bright Insights through Statistical Learning, Simulation and Optimisation}
+\fancyfoot[L]{\footnotesize\color{soft}\textbf{Pollis}\enspace Bright Insights through Exploration, Modelling, Simulation and Optimisation}
 \fancyfoot[R]{\footnotesize\color{soft}\thepage}
 
 % The Pollis logo, redrawn so it prints sharply at any size
@@ -66,8 +66,14 @@
     \fill[logocream] (203,422) -- (339,89) -- (476,422) -- cycle;
   \end{tikzpicture}}
 
+% A topic's place: the bookmark of the PDF's outline, and what its line in the Contents links to and reads its page from.
+\newcommand{\topicmark}[1]{\pdfbookmark[0]{#1}{bookmark:#1}\hypertarget{topic:#1}{}\label{topic:#1}}
+\newcommand{\contentslink}[2]{{\color{deepamber}\bfseries\hyperlink{topic:#1}{\pageref*{topic:#1}}} & \hyperlink{topic:#1}{#2}}
+\newcommand{\contentsentry}[1]{\contentslink{#1}{#1}}
+
 % Page heading: kicker, title, one-line promise
 \newcommand{\pageheading}[3]{%
+  \topicmark{#1}%
   \asklabel{1}{#2}%
   {\color{deepamber}\small\bfseries\MakeUppercase{#1}}\par\vspace{1pt}
   {\color{navy}\fontsize{22}{26}\selectfont\bfseries #2}\par\vspace{3pt}
@@ -111,10 +117,11 @@
 % PAGE 1 — COVER
 % =====================================================================
 \thispagestyle{empty}
+\topicmark{From eureka to evidence}%
 \begin{minipage}[c]{24mm}\pollislogo{22mm}\end{minipage}%
 \begin{minipage}[c]{0.84\linewidth}
   {\color{navy}\fontsize{40}{42}\selectfont\bfseries Pollis}\par\vspace{2pt}
-  {\color{navy}\Large Bright Insights through Statistical Learning, Simulation and Optimisation}
+  {\color{navy}\large Bright Insights through Exploration, Modelling, Simulation and Optimisation}
 \end{minipage}
 
 \vspace{7mm}
@@ -128,34 +135,36 @@
 {\color{navy}\bfseries Contents}\par\smallskip
 \renewcommand{\arraystretch}{1.0}
 \begin{tabular}{@{}r@{\enspace}l@{}}
-{\color{deepamber}\bfseries 1} & From eureka to evidence\\
-{\color{deepamber}\bfseries 2} & What Pollis is\\
-{\color{deepamber}\bfseries 3} & Inside a panel\\
-{\color{deepamber}\bfseries 4} & Teaching built in\\
-{\color{deepamber}\bfseries 5} & Coverage\\
-{\color{deepamber}\bfseries 6} & Customisation\\
-{\color{deepamber}\bfseries 7} & Extensions\\
-{\color{deepamber}\bfseries 8} & Replication and Workflows\\
-{\color{deepamber}\bfseries 9} & Reports\\
-{\color{deepamber}\bfseries 10} & Monitor\\
-{\color{deepamber}\bfseries 11} & Collaboration\\
-{\color{deepamber}\bfseries 12} & Ask Pollis\\
-{\color{deepamber}\bfseries 13} & Free and open\\
-{\color{deepamber}\bfseries 14} & Everything in Pollis
+\contentsentry{From eureka to evidence}\\
+\contentsentry{What Pollis is}\\
+\contentsentry{Inside a panel}\\
+\contentsentry{Teaching built in}\\
+\contentsentry{Coverage}\\
+\contentsentry{Customisation}\\
+\contentsentry{Extensions}\\
+\contentslink{Replication, Methods and Workflows}{Replication and Workflows}\\
+\contentsentry{Reports}\\
+\contentsentry{Monitor}\\
+\contentsentry{Collaboration}\\
+\contentsentry{Ask Pollis}\\
+\contentsentry{Free and open}\\
+\contentsentry{Everything in Pollis}
 \end{tabular}
 \end{tcolorbox}
 \end{minipage}
 
-\vspace{6mm}
-\begin{minipage}{0.86\linewidth}\large
-A free, open-source desktop environment to explore data, build models, run
-simulations and solve optimisation problems: from your first click to your own code.
+\vspace{4mm}
+\begin{minipage}{\linewidth}\large
+Research moves back and forth between four activities: exploring, understanding, experimenting and improving,
+with each sending you back to the others. Pollis is a free, open-source desktop environment whose menus are
+their technical form: \textbf{Explore} the data and the literature, \textbf{Model} to understand,
+\textbf{Simulate} to experiment, \textbf{Optimise} to improve, from your first click to your own code.
 \end{minipage}
 
-\vspace{8mm}
-\shot{welcome_cover.jpg}
+\vspace{5mm}
+{\centering\shot[0.92\linewidth]{welcome_cover.jpg}\par}
 
-\vspace{8mm}
+\vspace{5mm}
 \begin{tcbraster}[raster columns=4, raster equal height, raster column skip=3mm,
   enhanced, colback=pale, colframe=pale, boxrule=0pt, sharp corners,
   left=5pt,right=5pt,top=6pt,bottom=6pt, fontupper=\small\raggedright]
@@ -1043,6 +1052,7 @@ of 289 open-source Julia packages.
 % PAGE 14 — EVERYTHING IN POLLIS, AT A GLANCE (back cover)
 % =====================================================================
 \thispagestyle{empty}
+\topicmark{Everything in Pollis}%
 \begin{tikzpicture}[remember picture, overlay]
   \fill[navy] (current page.south west) rectangle (current page.north east);
 \end{tikzpicture}%
@@ -1214,7 +1224,7 @@ analytical and operational workflows, reports, tests and collaboration. Toolboxe
 \end{tikzpicture}%
 \vfill
 {\centering
-{\color{cream}\Large Bright Insights through Statistical Learning, Simulation and Optimisation}\par\vspace{4pt}
+{\color{cream}\Large Bright Insights through Exploration, Modelling, Simulation and Optimisation}\par\vspace{4pt}
 {\color{amber!80}\small Pollis\enspace·\enspace free and open source\enspace·\enspace Windows, macOS, Linux\enspace·\enspace \faDownload\ \downloadlink\enspace·\enspace \faEnvelope\ \contactemail}\par\vspace{2pt}
 {\color{amber!60}\footnotesize A Tour of Pollis, dated \tourdate}\par}
 

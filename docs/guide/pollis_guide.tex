@@ -65,6 +65,12 @@
     \fill[logocream] (203,422) -- (339,89) -- (476,422) -- cycle;
   \end{tikzpicture}}
 
+% A topic's place: the bookmark of the PDF's outline, and what its line in the Contents links to and reads its page from.
+\pdfstringdefDisableCommands{\def\quad{ }}
+\newcommand{\topicmark}[1]{\pdfbookmark[0]{#1}{bookmark:#1}\hypertarget{topic:#1}{}\label{topic:#1}}
+\newcommand{\contentsentry}[1]{{\color{deepamber}\bfseries\hyperlink{topic:#1}{\pageref*{topic:#1}}} & \hyperlink{topic:#1}{#1}}
+\newcounter{subheadmark}
+
 % A new topic: starts on the next even page, so its two pages face each other.
 % #1 title, #2 where it is in Pollis, #3 what it is for, in one sentence.
 \newcommand{\topic}[3]{%
@@ -72,6 +78,7 @@
   \ifodd\value{page}\hbox{}\thispagestyle{empty}\clearpage\fi
   \renewcommand{\topicname}{#1}%
   \asklabel{1}{#1}%
+  \topicmark{#1}%
   {\color{navy}\fontsize{20}{24}\selectfont\bfseries #1}\par\vspace{2pt}
   {\color{deepamber}\small\bfseries #2}\par\vspace{3pt}
   {\color{soft}#3}\par\vspace{5pt}
@@ -84,12 +91,13 @@
   \ifodd\value{page}\else\hbox{}\thispagestyle{empty}\clearpage\fi
   \renewcommand{\topicname}{#1}%
   \asklabel{1}{#1}%
+  \topicmark{#1}%
   {\color{navy}\fontsize{20}{24}\selectfont\bfseries #1}\par\vspace{2pt}
   {\color{deepamber}\small\bfseries #2}\par\vspace{3pt}
   {\color{soft}#3}\par\vspace{5pt}
   {\color{amber}\rule{\linewidth}{0.6pt}}\par\vspace{3pt}}
 
-\newcommand{\subhead}[1]{\par\vspace{5pt}\asklabel{2}{#1}{\color{navy}\large\bfseries #1}\par\vspace{1pt}}
+\newcommand{\subhead}[1]{\par\vspace{5pt}\asklabel{2}{#1}\stepcounter{subheadmark}\pdfbookmark[1]{#1}{subhead:\thesubheadmark}{\color{navy}\large\bfseries #1}\par\vspace{1pt}}
 % A menu path or a button, as Pollis shows it
 \newcommand{\ui}[1]{\textbf{#1}}
 % A setting's id
@@ -154,28 +162,28 @@ Questions and problems: \ui{Help > Report Issue}, or \contactemail.
 {\color{navy}\large\bfseries Contents}\par\medskip
 \renewcommand{\arraystretch}{1.25}
 \begin{tabular}{@{}r@{\enspace}l@{}}
-{\color{deepamber}\bfseries 2} & Getting Started\\
-{\color{deepamber}\bfseries 4} & Inside a Panel\\
-{\color{deepamber}\bfseries 6} & Data and Databases\\
-{\color{deepamber}\bfseries 8} & Customisation\\
-{\color{deepamber}\bfseries 10} & Toolboxes\\
-{\color{deepamber}\bfseries 13} & Replication, Methods and Workflows\\
-{\color{deepamber}\bfseries 14} & Replication\\
-{\color{deepamber}\bfseries 16} & Methods\\
-{\color{deepamber}\bfseries 18} & Pollis Packages\\
-{\color{deepamber}\bfseries 20} & Reports\\
-{\color{deepamber}\bfseries 22} & RSS Feeds\\
-{\color{deepamber}\bfseries 24} & Media Coverage\\
-{\color{deepamber}\bfseries 26} & Alerts\\
-{\color{deepamber}\bfseries 28} & Event Studies\\
-{\color{deepamber}\bfseries 32} & Collaboration\\
-{\color{deepamber}\bfseries 34} & Orchestration\\
-{\color{deepamber}\bfseries 36} & Literature Radar\\
-{\color{deepamber}\bfseries 38} & Snowball Search Map\\
-{\color{deepamber}\bfseries 40} & Built-in Databases\\
-{\color{deepamber}\bfseries 42} & Ask Pollis\\
-{\color{deepamber}\bfseries 44} & Appendix: Reference Keys\\
-{\color{deepamber}\bfseries 48} & Appendix: Packages and Pull Requests
+\contentsentry{Getting Started}\\
+\contentsentry{Inside a Panel}\\
+\contentsentry{Data and Databases}\\
+\contentsentry{Customisation}\\
+\contentsentry{Toolboxes}\\
+\contentsentry{Replication, Methods and Workflows}\\
+\contentsentry{Replication}\\
+\contentsentry{Methods}\\
+\contentsentry{Pollis Packages}\\
+\contentsentry{Reports}\\
+\contentsentry{RSS Feeds}\\
+\contentsentry{Media Coverage}\\
+\contentsentry{Alerts}\\
+\contentsentry{Event Studies}\\
+\contentsentry{Collaboration}\\
+\contentsentry{Orchestration}\\
+\contentsentry{Literature Radar}\\
+\contentsentry{Snowball Search Map}\\
+\contentsentry{Built-in Databases}\\
+\contentsentry{Ask Pollis}\\
+\contentsentry{Appendix: Reference Keys}\\
+\contentsentry{Appendix: Packages and Pull Requests}
 \end{tabular}
 \end{tcolorbox}
 \end{minipage}
@@ -288,6 +296,11 @@ A Mac build for Intel processors, and signed apps.
 % PAGES 4–5 — INSIDE A PANEL
 % =====================================================================
 \topic{Inside a Panel}{Explore · Model · Simulate · Optimise}{What a panel is made of, and how to go from its example to code of your own.}
+Research moves back and forth between four activities: exploring, understanding, experimenting and improving,
+with each sending you back to the others. The menus of Pollis are their technical form: \ui{Explore} the data
+and the literature, \ui{Model} to understand, \ui{Simulate} to experiment, \ui{Optimise} to improve.
+
+\smallskip
 Each item of the \ui{Explore}, \ui{Model}, \ui{Simulate} and \ui{Optimise} menus opens a \emph{panel}:
 a page about one method, with an example you can run as it is, with simulated data or a dataset from
 PollisDatasets, and then make your own.

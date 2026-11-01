@@ -974,7 +974,7 @@ export class GettingStartedPage extends EditorPane {
 			pollisLogo,
 			$('.header-text', {},
 				$('h1.product-name.caption', {}, this.productService.nameLong),
-				$('p.subtitle.description', {}, localize({ key: 'gettingStarted.editingEvolved', comment: ['Shown as subtitle on the Welcome page.'] }, "Bright Insights through Statistical Learning, Simulation and Optimisation"))
+				$('p.subtitle.description', {}, localize({ key: 'gettingStarted.editingEvolved', comment: ['Shown as subtitle on the Welcome page.'] }, "Bright Insights through Exploration, Modelling, Simulation and Optimisation"))
 			)
 		);
 
