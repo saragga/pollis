@@ -105,7 +105,7 @@
 	white-space: nowrap;
 }
 
-/* The MCP Servers - Recommended section (pollisMcpServersView.ts) shares these rows; its icon is the MCP codicon */
+/* The Recommended MCP Servers section (pollisMcpServersView.ts) shares these rows; its icon is the MCP codicon */
 .pollis-toolboxes .pollis-toolbox .mcp-icon {
 	display: flex;
 	align-items: center;

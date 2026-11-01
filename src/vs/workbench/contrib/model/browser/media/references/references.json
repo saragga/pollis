@@ -29895,7 +29895,7 @@
 		},
 		{
 			"id": "modelsInstalled",
-			"title": "Models Installed",
+			"title": "Set Active Models",
 			"commands": [
 				"pollis.localModels.installed"
 			],

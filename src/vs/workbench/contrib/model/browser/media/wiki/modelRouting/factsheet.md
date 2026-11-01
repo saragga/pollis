@@ -17,7 +17,7 @@
 - Adding a cloud model to the table with Edit Cloud Models.
 
 ## What Model Tasks and Routing Does Not Do
-The page does not route a question by itself at run time: each task runs on the cell of its tier, the same every time until changed. It does not set the answering model of Ask Pollis, which is in the status bar, or download local models, which is done in Models Installed.
+The page does not route a question by itself at run time: each task runs on the cell of its tier, the same every time until changed. It does not set the answering model of Ask Pollis or download local models, both of which are done in Set Active Models.
 
 ## See Also
 - [Overview](overview.md) · [Tiers and Cells](tiers.md) · [Tasks](tasks.md)

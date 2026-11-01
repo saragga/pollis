@@ -151,8 +151,9 @@ searched: it goes to the model with the passages, and stays with its question, s
 speak of it too.
 
 \subsection{The model}
-The model that writes the answer is shown at the right of the status bar, the same for Ask Pollis, the panels and
-Evaluate Answering Models; a click opens its menu:
+The models of Pollis AI+ are shown in the hover of its entry at the right of the status bar, with a cloud beside its name
+while a cloud model answers; a click opens \menupath{Compose\gt Local Models\gt Set Active Models}, whose \textbf{Set Models}
+sets them. The model that writes the answer, the same for Ask Pollis, the panels and Evaluate Answering Models, is one of:
 \begin{itemize}
   \item \textbf{On this computer}: the chat models installed on this computer, run by llama.cpp; the one chosen is kept
     in \file{pollis.ask.chatModel}, for the next time.
@@ -399,7 +400,7 @@ On this computer, the model reads the passages and writes the answer without any
 billion weights answers in a few seconds on Apple silicon or with a graphics chip, and in some tens of seconds on a
 laptop without one, most of it spent reading the passages. A cloud model answers in a few seconds anywhere, and is
 better at joining passages; it is sent the instruction, the conversation and the passages, which are Pollis's documents,
-your question, and what you attach with the \textbf{+}, never other files. The status bar's tooltip says so.
+your question, and what you attach with the \textbf{+}, never other files. The hover of the status bar's entry says so.
 
 \section{The models}\label{sec:models}
 
@@ -418,8 +419,8 @@ Chat & the default chat model & a few GB & answers at once, without thinking alo
 \end{center}
 
 Both are GGUF files from Hugging Face, downloaded into \file{~/.pollis/models} the first time they are needed and listed
-in \menupath{Compose\gt Local Models\gt Models Installed}. They are the defaults, not requirements: the model picker
-offers every chat or embedding model on this computer, and \textbf{Add Model File...} any other. LLM Text Analysis
+in \menupath{Compose\gt Local Models\gt Set Active Models}. They are the defaults, not requirements: \textbf{Set Models} in that page
+offers every chat or embedding model on this computer. LLM Text Analysis
 uses the same embedding model, so it is downloaded once for both.
 
 Changing the embedding model computes every passage's embedding again, since the points of two models are not
@@ -437,7 +438,7 @@ How fast and how well each model does other work, statistics, Julia code, DuckDB
 of \menupath{Compose\gt Local Models}, a page of its own.
 
 Evaluate Answering Models is one page, opened from \menupath{Compose\gt Local Models\gt Evaluate Answering Models...}, beside the models
-it compares, and from the last item of the model's menu in the status bar. It goes in four steps, from the top
+it compares, and from Set Active Models. It goes in four steps, from the top
 down: 1, the models to compare; 2, the questions, of the test set chosen, those ticked being the ones asked; 3, the
 judge, a second judge if you want one, \textbf{Repeats} and \textbf{Run}; 4, the results of a run, the figures of
 each model and then its answers. The page remembers what you chose for the next time.
@@ -612,7 +613,7 @@ passages whose text changed are embedded again, in seconds. Nothing else: your q
   shows how far it has come.\\
 \emph{Searched by words only: the embeddings are being computed} & Nothing: ask again in a few minutes for a search by
   meaning too.\\
-\emph{The model could not be started} & Open \menupath{Compose\gt Local Models\gt Models Installed}, check that the
+\emph{The model could not be started} & Open \menupath{Compose\gt Local Models\gt Set Active Models}, check that the
   model is there and that it fits in memory, or choose a smaller one, or a cloud model.\\
 \emph{No key for Anthropic} (or OpenAI, or Google) & Set the key with the key indicator below the question.\\
 \textbf{Image} greyed out in the \textbf{+} & A model of this computer answers: choose a cloud model in the status
@@ -637,9 +638,10 @@ No Julia Manual in \textbf{Search In} & Your Julia came without its documentatio
 \toprule
 \textbf{Setting} & \textbf{What it holds}\\
 \midrule
-\file{pollis.ask.answerWith} & This Computer, or the cloud model chosen in the status bar\\
-\file{pollis.ask.chatModel} & The local chat model, the one last chosen in the status bar\\
+\file{pollis.ask.answerWith} & This Computer, or the cloud model chosen in Set Active Models\\
+\file{pollis.ask.chatModel} & The local chat model, the one last chosen in Set Active Models\\
 \file{pollis.ask.embeddingModel} & The embedding model: the default embedding model unless you change it\\
+\file{pollis.ask.reranker} & The reranker that keeps the best passages found, of three times as many: none unless you set one\\
 \file{pollis.ask.queryPrefix} & What a question is given to the embedding model as: \texttt{\small task: question answering \textbar{} query: \{text\}}\\
 \file{pollis.ask.passagePrefix} & What a passage is given to it as: \texttt{\small title: \{title\} \textbar{} text: \{text\}}\\
 \file{pollis.ask.passages} & How many passages go to the model: 8\\
@@ -659,7 +661,7 @@ No Julia Manual in \textbf{Search In} & Your Julia came without its documentatio
 \midrule
 \file{.../compose/browser/compose.contribution.ts} & Help\gt Ask Pollis\\
 \file{.../compose/browser/askPollisPage.ts} & The pane: the question, what is attached, the answer as it comes,
-  Sources; the model in the status bar and its menu\\
+  Sources; Pollis AI+ in the status bar\\
 \file{.../compose/browser/composerAdd.ts} & The \textbf{+} and its menu, the same for Ask Pollis and the Collaboration
   chat\\
 \file{.../compose/node/askPollisMain.ts} & The DuckDB process that searches \file{PollisDocuments.duckdb} (\S\ref{sec:finding}),

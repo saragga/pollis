@@ -27,7 +27,7 @@ import { IViewDescriptorService } from '../../../common/views.js';
 import { IMcpServer, MCP_SERVERS, MCP_SERVERS_COMMAND_ID } from '../../compose/common/mcpServers.js';
 
 /**
- * The MCP Servers - Recommended section of the Extensions pane: the servers of Compose > MCP Servers,
+ * The Recommended MCP Servers section of the Extensions pane: the servers of Compose > MCP Servers,
  * each with a Set Up button that opens that page at the server, where it is added to a coding agent.
  * It looks like the Toolboxes section, whose styles it shares.
  */

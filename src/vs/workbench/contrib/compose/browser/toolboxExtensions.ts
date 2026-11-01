@@ -66,7 +66,6 @@ interface IToolboxContribution {
 /** A vignette of a toolbox: LaTeX sources that Pollis compiles with PollisTeX the first time the document is opened. */
 interface IToolboxDocumentContribution {
 	readonly title: string;
-	readonly description?: string;
 	/** The main .tex file, relative to the extension folder; its .bib files and resources/ folder go beside it. */
 	readonly source: string;
 }
@@ -110,7 +109,6 @@ const toolboxesExtensionPoint = ExtensionsRegistry.registerExtensionPoint<IToolb
 						required: ['title', 'source'],
 						properties: {
 							title: { type: 'string', description: localize('pollisToolboxes.document.title', "The vignette's title.") },
-							description: { type: 'string', description: localize('pollisToolboxes.document.description', "What the vignette covers, in a sentence or two.") },
 							source: { type: 'string', description: localize('pollisToolboxes.document.source', "The vignette's main .tex file, relative to the extension folder, for example docs/guide.tex. Its .bib files and a resources/ folder of images go beside it.") },
 						},
 					},
@@ -286,7 +284,7 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 						extension.collector.error(localize('pollisToolboxes.documentSource', "The source of document {0} ({1}) must be a .tex file inside the extension folder.", document.title, document.source));
 						continue;
 					}
-					documents.push({ title: document.title, description: document.description, folder: dirname(source), name: basename(source).slice(0, -'.tex'.length) });
+					documents.push({ title: document.title, folder: dirname(source), name: basename(source).slice(0, -'.tex'.length) });
 				}
 				loaded.push({ extensionId: ExtensionIdentifier.toKey(extension.description.identifier), toolbox, location, version: extension.description.version, panels, documents });
 			}
@@ -322,7 +320,7 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 			const entry = published[publishedKey(loaded)];
 			// Until the user publishes it, a toolbox is in its default places: its menu at the end of Extend, with every panel
 			const placement = entry ? placementOf(loaded, entry) : defaultPlacement(loaded);
-			// MenuId.for: a built-in submenu (Extreme Value in Financial Econometrics) may have created the toolbox's menu id already
+			// MenuId.for: a built-in submenu (Extreme Value in Finance) may have created the toolbox's menu id already
 			const submenu = this.submenus.get(toolbox.id) ?? MenuId.for(`${TOOLBOX_SUBMENU_PREFIX}${toolbox.id}`);
 			this.submenus.set(toolbox.id, submenu);
 			if (placement.menu && loaded.panels.some(({ contribution }) => placement.panels[contribution.id]?.menu === TOOLBOX_MENU)) {

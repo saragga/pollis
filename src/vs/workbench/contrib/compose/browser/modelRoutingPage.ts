@@ -18,7 +18,8 @@ import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { AGENT_TASK_TIERS_SETTING, AGENT_TASKS, AGENT_TIERS, agentTiers, cellAvailable, CLOUD_MODELS_SETTING, CLOUD_PREFIX, cloudModels, DEFAULT_TIER_CELLS, ITierCell, LOCAL_PREFIX, MODEL_ROUTING_COMMAND_ID, modelName, OLD_AGENT_COMMAND_SETTING, OLD_AGENT_TIER_MODELS_SETTING, OLD_AGENT_TIERS_SETTING, runsLocalModels, taskTier, TIER_CELLS_SETTING, tierCells, tierOfName, tierRun } from './modelRouting.js';
 import { CHOOSE_AGENT_COMMAND_ID, codingAgents, commandWords, findProgram, ICodingAgent, OTHER_AGENTS_SETTING, otherAgentEntries, terminalEnvironment } from './pollisAgents.js';
-import { IInstalledModel, MODELS_INSTALLED_COMMAND_ID } from './modelsInstalledPage.js';
+import { MODELS_INSTALLED_COMMAND_ID } from '../common/askPollis.js';
+import { IInstalledModel } from './modelsInstalledPage.js';
 import { REPORTS_AGENT_COMMAND_SETTING } from './reports.js';
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
@@ -224,7 +225,7 @@ function pageHtml(): string {
 		agentsHint: localize('modelRouting.agentsHint', "Agents of your own are added in"),
 		agentsLink: localize('modelRouting.agentsLink', "Compose > Coding Agents"),
 		localHint: localize('modelRouting.localHint', "The local models are the chat models of"),
-		localLink: localize('modelRouting.localLink', "Compose > Local Models > Models Installed"),
+		localLink: localize('modelRouting.localLink', "Compose > Local Models > Set Active Models"),
 		cloudHint: localize('modelRouting.cloudHint', "The cloud models, and the arguments that choose each in each agent, are a setting:"),
 		cloudLink: localize('modelRouting.cloudLink', "Edit Cloud Models"),
 		tasksTitle: localize('modelRouting.tasksTitle', "Tasks"),

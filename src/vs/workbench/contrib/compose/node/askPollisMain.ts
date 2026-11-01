@@ -487,7 +487,8 @@ class AskPollisIndex implements IAskPollisIndex {
 			const rows = (await connection.runAndReadAll(searchSql(vector ? dimensions : 0, counts[i], vectors, where), { ...parameters, collection: searched[i] })).getRowObjectsJson();
 			passages.push(...rows.map(passageOf));
 		}
-		return { passages, searched };
+		// The docstrings last: a small model given "No-U-Turn Sampler (NUTS) sampler." first may repeat that line and stop
+		return { passages: [...passages.filter(passage => passage.kind !== 'api'), ...passages.filter(passage => passage.kind === 'api')], searched };
 	}
 
 	/** Runs `task` with the index and embeddings.duckdb attached, the cache made the first time. */

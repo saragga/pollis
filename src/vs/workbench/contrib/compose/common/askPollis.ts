@@ -21,6 +21,12 @@ export const ASK_PASSAGE_PREFIX = 'title: {title} | text: {text}';
  */
 export const ASK_EMBEDDING_CONTEXT = 2048;
 
+/** The command that opens Set Active Models (modelsInstalledPage.ts), which the status bar entry runs. */
+export const MODELS_INSTALLED_COMMAND_ID = 'pollis.localModels.installed';
+
+/** How many times the passages to answer from are searched for when a reranker chooses among them. */
+export const ASK_RERANK_WIDER = 3;
+
 /** The context of a reranker's server, in tokens: a question with a passage of 500 words fits it easily. */
 export const ASK_RERANK_CONTEXT = 4096;
 

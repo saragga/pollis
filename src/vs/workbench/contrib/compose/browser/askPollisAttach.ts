@@ -97,7 +97,7 @@ export function askAttachScript(inputId: string, prefix = '', dropSelector?: str
 			database: localize('askPollis.addDatabase', "Database"),
 		},
 		remove: localize('askPollis.remove', "Remove"),
-		imageLocal: localize('askPollis.imageLocal', "The models on this computer do not see images yet: choose a cloud model in the status bar to ask about an image."),
+		imageLocal: localize('askPollis.imageLocal', "The models on this computer do not see images yet: choose a cloud model in Set Active Models to ask about an image."),
 		notAnImage: localize('askPollis.notAnImage', "Only PNG, JPEG, GIF and WebP images can be attached."),
 		imageTooLarge: localize('askPollis.imageTooLarge', "This image is too large, even reduced (the limit is {0} MB).", MAX_IMAGE_BYTES / 1024 / 1024),
 		fileTooLarge: localize('askPollis.fileTooLarge', "{0} is too large to attach (the limit is {1} MB).", '{0}', MAX_FILE_BYTES / 1024 / 1024),

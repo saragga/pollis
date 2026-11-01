@@ -6,10 +6,10 @@
 import { raceCancellation, timeout } from '../../../../base/common/async.js';
 import { CancellationTokenSource } from '../../../../base/common/cancellation.js';
 import { Codicon } from '../../../../base/common/codicons.js';
+import { MarkdownString, MarkdownStringTextNewlineStyle } from '../../../../base/common/htmlContent.js';
 import { Disposable, DisposableStore, MutableDisposable } from '../../../../base/common/lifecycle.js';
 import { FileAccess } from '../../../../base/common/network.js';
 import { basename } from '../../../../base/common/resources.js';
-import { ThemeIcon } from '../../../../base/common/themables.js';
 import { URI } from '../../../../base/common/uri.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Categories } from '../../../../platform/action/common/actionCommonCategories.js';
@@ -23,7 +23,7 @@ import { IFileService } from '../../../../platform/files/common/files.js';
 import { SyncDescriptor } from '../../../../platform/instantiation/common/descriptors.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { Registry } from '../../../../platform/registry/common/platform.js';
-import { IQuickInputService, IQuickPickItem, IQuickPickSeparator } from '../../../../platform/quickinput/common/quickInput.js';
+import { IQuickInputService } from '../../../../platform/quickinput/common/quickInput.js';
 import { ISecretStorageService } from '../../../../platform/secrets/common/secrets.js';
 import { IStorageService } from '../../../../platform/storage/common/storage.js';
 import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
@@ -38,20 +38,21 @@ import { WebviewViewPane } from '../../webviewView/browser/webviewViewPane.js';
 import { IWebviewViewService, WebviewView } from '../../webviewView/browser/webviewViewService.js';
 import { createApiKeyWiring, IApiKeyWiring } from '../../model/browser/handlers/model.handler.js';
 import { composerSendSvg, spinnerCss, spinnerSvg, voiceSpeakerSvg } from '../../model/browser/webviews/webviewScaffold.js';
-import { ASK_CHAT_MODEL, ASK_CLOUD_MODELS, ASK_EMBEDDING_MODEL, ASK_PASSAGE_PREFIX, ASK_PASSAGES, ASK_QUERY_PREFIX, ASK_CLOUD_PROVIDERS, ASK_LOCAL_PREFIX, ASK_POLLIS_ANSWERS_IN_CLOUD_COMMAND_ID, ASK_POLLIS_ATTACH_COMMAND_ID, ASK_POLLIS_COMMAND_ID, ASK_THIS_COMPUTER, ASK_ATTACHED_CHARACTERS, askCloudModel, AskPollisAttachRequest, AskPollisProvider, IAskPollisAttached, IAskPollisAttachment, IAskPollisFromPanel, IAskPollisPanel, IAskPollisPassage, IAskPollisSearchResult, IAskPollisService } from '../common/askPollis.js';
+import { ASK_CHAT_MODEL, ASK_CLOUD_MODELS, ASK_EMBEDDING_MODEL, ASK_PASSAGE_PREFIX, ASK_PASSAGES, ASK_QUERY_PREFIX, ASK_RERANK_WIDER, MODELS_INSTALLED_COMMAND_ID, ASK_CLOUD_PROVIDERS, ASK_LOCAL_PREFIX, ASK_POLLIS_ANSWERS_IN_CLOUD_COMMAND_ID, ASK_POLLIS_ATTACH_COMMAND_ID, ASK_POLLIS_COMMAND_ID, ASK_THIS_COMPUTER, ASK_ATTACHED_CHARACTERS, askCloudModel, AskPollisAttachRequest, AskPollisProvider, IAskPollisAttached, IAskPollisAttachment, IAskPollisFromPanel, IAskPollisPanel, IAskPollisPassage, IAskPollisSearchResult, IAskPollisService } from '../common/askPollis.js';
 import { AskAttachMessage, askAddHtml, askAttachCss, askAttachmentsHtml, askAttachScript, handleAskAttachMessage } from './askPollisAttach.js';
-import { askAnswerCss, askAnswerScript, askModelName, askNothingFound, askOpenPassage, askPassageView, askSearchedNames, askSearchesNothing, askSearchIn, askSearchSources, askWordsOnlyNote } from './askPollisWebview.js';
+import { askAnswerCss, askAnswerScript, askModelName, askNothingFound, askOpenPassage, askPassageView, askSearchedNames, askSearchesJulia, askSearchesNothing, askSearchIn, askSearchSources, askWordsOnlyNote } from './askPollisWebview.js';
 import { formatBytes, IDatasetSummary, summarizeCsv } from './collaboration/collaborationDatasets.js';
 import { isDuckDbFile, MAX_DATASET_BYTES } from './collaboration/collaborationProtocol.js';
-import { COMPARE_MODELS_ADD_COMMAND_ID, COMPARE_MODELS_COMMAND_ID, ICompareModelsAdd } from './compareModelsPage.js';
+import { COMPARE_MODELS_ADD_COMMAND_ID, ICompareModelsAdd } from './compareModelsPage.js';
 import { composerVoiceCss, composerVoiceHtml, composerVoiceScript, getVoiceLanguage, getVoiceWriteIn, setVoiceLanguage, setVoiceWriteIn } from './composerVoice.js';
 import { IInstalledModel } from './modelsInstalledPage.js';
+import './media/pollisAiStatus.css';
 
 // Help > Ask Pollis: a question in your own words, answered from Pollis' own documents and Julia's, in the Ask
 // Pollis pane of the secondary side bar, beside Databases, Julia and Views. The question is searched in PollisDocuments
 // (IAskPollisService.search), with the one before it in the conversation, so that a follow-up finds what it follows;
 // the model of the status bar (pollis.ask.answerWith) then writes the answer from the passages found, as it
-// comes, a number in brackets after each statement: a chat model of Models Installed on this computer
+// comes, a number in brackets after each statement: a chat model of Set Active Models on this computer
 // (pollis.ask.chatModel), or a cloud model of Anthropic, Google or OpenAI with the user's own key, kept in Secret
 // Storage, which the key indicator below the question sets. A cloud model is sent the question, the conversation so far,
 // the passages and what the + attaches to a question, never another file. The + attaches an image, which only a cloud
@@ -59,8 +60,9 @@ import { IInstalledModel } from './modelsInstalledPage.js';
 // as the + of the Collaboration chat shares them (composerAdd.ts). Under the answer, Sources lists the passages cited, or all of them when none is, each with
 // Open, which opens the PDF at its page, the panel's wiki at its heading, or the Julia Manual at its section
 // (askPollisWebview.ts). The conversation is kept until Pollis closes; New Chat, in the pane's title, starts it again.
-// The model is shown at the right of the status bar, which chooses it with a menu of the models of this computer and the
-// cloud; Evaluate Answering Models..., its last item, opens Evaluate Answering Models (compareModelsPage.ts).
+// Pollis AI+ is shown at the right of the status bar, with its models in the hover and a cloud while a cloud model answers;
+// a click opens Set Active Models (modelsInstalledPage.ts), where they are set. With a reranker set, three times the
+// passages are searched for and it keeps the best (pollis.ask.reranker).
 // A question asked in a panel, in the pill at the right of its title (webviewScaffold.ts), is answered in the pane,
 // beside the panel: its wikis and the vignettes of its packages give most of the passages, and the model is told the
 // panel; the questions after it keep the panel until Ask Without It or New Chat.
@@ -190,7 +192,6 @@ CommandsRegistry.registerCommand(ASK_POLLIS_ANSWERS_IN_CLOUD_COMMAND_ID, (access
 const ASK_POLLIS_VIEW_CONTAINER_ID = 'workbench.view.pollis.ask';
 const ASK_POLLIS_VIEW_ID = 'pollis.askPollis.view';
 const ASK_POLLIS_NEW_CHAT_COMMAND_ID = 'pollis.askPollis.newChat';
-const ASK_POLLIS_CHOOSE_MODEL_COMMAND_ID = 'pollis.askPollis.chooseModel';
 
 /** The conversation of the pane once it is shown: asks it a question of a panel, or starts it again. */
 let askInView: ((asked: IAskPollisFromPanel) => void) | undefined;
@@ -239,7 +240,7 @@ interface IAskModels {
 }
 
 /**
- * The models of the model's menu: the chat models of Models Installed, the one of pollis.ask.chatModel too when it is
+ * The answering models of Set Active Models: the chat models on this computer, the one of pollis.ask.chatModel too when it is
  * not on this computer yet, and the cloud models; looked up each time, so that a model downloaded since is listed.
  */
 export async function askModels(commandService: ICommandService, configurationService: IConfigurationService): Promise<IAskModels> {
@@ -260,7 +261,7 @@ export async function askModels(commandService: ICommandService, configurationSe
 }
 
 /** Chooses the model of a menu's value: a model of this computer is kept as its file in pollis.ask.chatModel, unless it is the one there already. */
-async function chooseAskModel(configurationService: IConfigurationService, value: string): Promise<void> {
+export async function chooseAskModel(configurationService: IConfigurationService, value: string): Promise<void> {
 	if (value.startsWith(ASK_LOCAL_PREFIX)) {
 		const file = value.slice(ASK_LOCAL_PREFIX.length);
 		const setting = configurationService.getValue<string>('pollis.ask.chatModel')?.trim() || ASK_CHAT_MODEL;
@@ -372,32 +373,66 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 			post({ command: 'searching', turn: index, question, attachments: attachments.map(attachment => ({ kind: attachment.kind, name: attachment.name, image: attachment.kind === 'image' ? attachment.content : undefined })) });
 			// None: nothing is searched, and the model answers from what it knows
 			const unaided = askSearchesNothing(searchIn);
+			// Beside the search, the name looked up in the REPL: Julia's documentation of it is the answer, and whatever the
+			// search has come to stops; with none, nothing is shown and the search goes on
+			let looked = false;
+			const current = () => asked === conversation && !looked;
+			if (!attachments.length && askSearchesJulia(searchIn)) {
+				commandService.executeCommand<string | undefined>('language-julia.pollisDocOfName', question).then(doc => {
+					if (!doc || asked !== conversation || answering !== source || source.token.isCancellationRequested) {
+						return;
+					}
+					looked = true;
+					answering = undefined;
+					source.dispose(true);
+					turns[index] = { question, attachments, passages: [], answer: doc };
+					post({ command: 'found', turn: index, searched: [], collections, note: localize('askPollis.fromRepl', "From Julia's own documentation, in the REPL."), passages: [] });
+					post({ command: 'text', turn: index, text: doc });
+					post({ command: 'done', turn: index });
+				}, () => undefined);
+			}
+			const searched = previous ? `${previous}\n${question}` : question;
+			const reranker = unaided ? '' : configurationService.getValue<string>('pollis.ask.reranker')?.trim();
+			const kept = configurationService.getValue<number>('pollis.ask.passages') || ASK_PASSAGES;
 			const search = async (): Promise<IAskPollisSearchResult> => unaided ? { passages: [], searched: [], collections } : askPollisService.search({
-				question: previous ? `${previous}\n${question}` : question,
+				question: searched,
+				passages: reranker ? kept * ASK_RERANK_WIDER : undefined,
 				collections: askSearchIn(searchIn, collections),
 				sources: askSearchSources(searchIn),
 				panel: askedIn,
 			});
 			let result = await search();
 			// Before the first index, the question waits for it, with how far it has come, while the Julia extension makes it
-			while (result.wordsOnly === 'notIndexed' && asked === conversation && !source.token.isCancellationRequested) {
+			while (result.wordsOnly === 'notIndexed' && current() && !source.token.isCancellationRequested) {
 				const progress = await commandService.executeCommand<IIndexProgress>('language-julia.pollisAskIndexProgress').catch(() => undefined);
-				if (!progress) {
+				if (!progress || !current()) {
 					break;
 				}
 				post({ command: 'indexing', turn: index, text: indexingText(progress) });
 				await raceCancellation(timeout(1000), source.token);
-				if (asked === conversation && !source.token.isCancellationRequested) {
+				if (current() && !source.token.isCancellationRequested) {
 					result = await search();
 				}
 			}
-			if (asked !== conversation) {
+			if (!current()) {
 				return;
 			}
 			if (source.token.isCancellationRequested && result.wordsOnly === 'notIndexed') {
 				turns.push({ question, attachments, passages: [], answer: '' });
 				post({ command: 'done', turn: index, stopped: true });
 				return;
+			}
+			// The reranker keeps the best of what was found; if it does not answer, the search's own order stands, and the note says so
+			let rerankNote: string | undefined;
+			if (reranker && result.passages.length) {
+				const found = result.passages;
+				const reranked = await askPollisService.rerank(reranker, searched, found);
+				if (!current()) {
+					return;
+				}
+				const scores = reranked.scores;
+				rerankNote = scores ? undefined : localize('askPollis.rerankFailed', "The reranker did not answer, so the passages are in the order of the search. {0}", reranked.error ?? '');
+				result = { ...result, passages: scores ? found.map((_, position) => position).sort((a, b) => scores[b] - scores[a]).slice(0, kept).map(position => found[position]) : found.slice(0, kept) };
 			}
 			collections = result.collections;
 			const turn: IAskedTurn = { question, attachments, passages: result.passages, answer: '' };
@@ -407,7 +442,7 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 				turn: index,
 				searched: askSearchedNames(searchIn, result.searched),
 				collections: result.collections,
-				note: unaided ? localize('askPollis.unaided', "Answered without the documents: nothing was searched.") : askWordsOnlyNote(result),
+				note: unaided ? localize('askPollis.unaided', "Answered without the documents: nothing was searched.") : rerankNote ?? askWordsOnlyNote(result),
 				passages: result.passages.map(askPassageView),
 			});
 			if (!result.passages.length && !unaided) {
@@ -419,14 +454,16 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 				return;
 			}
 			const cloud = askCloudModel(configurationService.getValue<string>('pollis.ask.answerWith'));
-			post({ command: 'starting', turn: index, model: cloud?.label ?? askModelName(configurationService.getValue<string>('pollis.ask.chatModel')?.trim() || ASK_CHAT_MODEL), cloud: !!cloud });
+			// The embedding model is named only when the search used it: not with None or by words only
+			const embedded = unaided || result.wordsOnly ? undefined : askModelName(configurationService.getValue<string>('pollis.ask.embeddingModel')?.trim() || ASK_EMBEDDING_MODEL);
+			post({ command: 'starting', turn: index, model: cloud?.label ?? askModelName(configurationService.getValue<string>('pollis.ask.chatModel')?.trim() || ASK_CHAT_MODEL), cloud: !!cloud, embedded });
 			const answer = await askPollisService.answer(before, question, result.passages, text => {
-				if (asked === conversation) {
+				if (current()) {
 					turn.answer = text;
 					post({ command: 'text', turn: index, text });
 				}
 			}, source.token, undefined, askedIn, attachments);
-			if (asked !== conversation) {
+			if (!current()) {
 				return;
 			}
 			const stopped = source.token.isCancellationRequested;
@@ -511,7 +548,7 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 	}
 }
 
-/** The model the answers are written by, at the right of the status bar; a click chooses another with the model's menu. */
+/** Pollis AI+ at the right of the status bar: its models in the hover, a cloud while one answers, a click opens Set Active Models. */
 class AskPollisModelStatus extends Disposable implements IWorkbenchContribution {
 
 	static readonly ID = 'workbench.contrib.askPollisModelStatus';
@@ -526,7 +563,7 @@ class AskPollisModelStatus extends Disposable implements IWorkbenchContribution 
 		super();
 		this.update();
 		this._register(configurationService.onDidChangeConfiguration(e => {
-			if (affectsAskModel(e)) {
+			if (affectsAskModel(e) || e.affectsConfiguration('pollis.ask.embeddingModel') || e.affectsConfiguration('pollis.ask.reranker')) {
 				this.update();
 			}
 		}));
@@ -534,14 +571,27 @@ class AskPollisModelStatus extends Disposable implements IWorkbenchContribution 
 
 	private async update(): Promise<void> {
 		const models = await askModels(this.commandService, this.configurationService);
+		const embedding = askModelName(this.configurationService.getValue<string>('pollis.ask.embeddingModel')?.trim() || ASK_EMBEDDING_MODEL);
+		const reranker = this.configurationService.getValue<string>('pollis.ask.reranker')?.trim();
+		const name = localize('askPollis.statusName', "Pollis AI+");
+		const lines = [
+			models.provider
+				? localize('askPollis.statusAnsweringCloud', "Answering: {0} of {1}, with your own key", models.model, models.provider)
+				: localize('askPollis.statusAnsweringLocal', "Answering: {0}, on this computer", models.model),
+			localize('askPollis.statusEmbedding', "Embedding: {0}", embedding),
+			localize('askPollis.statusReranker', "Reranker: {0}", reranker ? askModelName(reranker) : localize('askPollis.statusNoReranker', "None")),
+		];
+		const tooltip = new MarkdownString().appendMarkdown(`**${name}**\n\n`).appendText(lines.join('\n'), MarkdownStringTextNewlineStyle.Break).appendText('\n\n');
+		if (models.provider) {
+			tooltip.appendText(localize('askPollis.statusCloud', "{0} is sent the question, the conversation so far, the passages found on this computer and what you attach with the +, never other files.", models.provider)).appendText('\n\n');
+		}
+		tooltip.appendText(localize('askPollis.statusClick', "Click to set them."));
 		const properties: IStatusbarEntry = {
-			name: localize('askPollis.statusName', "Ask Pollis Model"),
-			text: models.model,
-			ariaLabel: localize('askPollis.statusAria', "Ask Pollis answers with {0}", models.model),
-			tooltip: models.provider
-				? localize('askPollis.statusCloud', "Ask Pollis answers with {0} of {1}, with your own key: it is sent the question, the conversation so far, the passages found on this computer and what you attach with the +, never other files. Click to choose another model.", models.model, models.provider)
-				: localize('askPollis.statusLocal', "Ask Pollis answers with {0} on this computer: nothing leaves it. Click to choose another model.", models.model),
-			command: ASK_POLLIS_CHOOSE_MODEL_COMMAND_ID,
+			name,
+			text: models.provider ? `$(pollis-ai) ${name} $(cloud)` : `$(pollis-ai) ${name}`,
+			ariaLabel: lines.join(', '),
+			tooltip,
+			command: MODELS_INSTALLED_COMMAND_ID,
 		};
 		if (this.entry.value) {
 			this.entry.value.update(properties);
@@ -551,39 +601,6 @@ class AskPollisModelStatus extends Disposable implements IWorkbenchContribution 
 		}
 	}
 }
-
-interface IAskModelPick extends IQuickPickItem {
-	readonly value: string;
-}
-
-/** The model's menu as a quick pick: On This Computer, Cloud and Evaluate Answering Models..., the chosen model ticked. */
-CommandsRegistry.registerCommand(ASK_POLLIS_CHOOSE_MODEL_COMMAND_ID, async (accessor: ServicesAccessor) => {
-	const quickInputService = accessor.get(IQuickInputService);
-	const commandService = accessor.get(ICommandService);
-	const configurationService = accessor.get(IConfigurationService);
-	const models = await askModels(commandService, configurationService);
-	const item = (choice: IAskModelChoice): IAskModelPick => ({
-		value: choice.value,
-		label: choice.label,
-		description: choice.detail,
-		iconClass: choice.value === models.chosen ? ThemeIcon.asClassName(Codicon.check) : undefined,
-	});
-	const compare: IAskModelPick = { value: '', label: localize('askPollis.compareModels', "Evaluate Answering Models...") };
-	const items: (IAskModelPick | IQuickPickSeparator)[] = [
-		{ type: 'separator', label: localize('askPollis.onThisComputer', "On this computer: nothing leaves it") }, ...models.local.map(item),
-		{ type: 'separator', label: localize('askPollis.inTheCloud', "Cloud, with your own key") }, ...models.cloud.map(item),
-		{ type: 'separator' }, compare,
-	];
-	const picked = await quickInputService.pick(items, {
-		placeHolder: localize('askPollis.chooseModel', "The model that writes the answers of Ask Pollis"),
-		activeItem: items.find((entry): entry is IAskModelPick => entry.type !== 'separator' && entry.value === models.chosen),
-	});
-	if (picked === compare) {
-		await commandService.executeCommand(COMPARE_MODELS_COMMAND_ID);
-	} else if (picked) {
-		await chooseAskModel(configurationService, picked.value);
-	}
-});
 
 
 /** The pane: its texts come from here, the answers from the messages of each question. */
@@ -607,7 +624,8 @@ function pageHtml(language: string, writeIn: string): string {
 		searchIn: localize('askPollis.searchIn', "Search In"),
 		searchInPrefix: localize('askPollis.searchInPrefix', "Search In:"),
 		searching: localize('askPollis.searching', "Finding the passages..."),
-		starting: localize('askPollis.starting', "Starting {0} on this computer. The first time, it is downloaded first.", '{0}'),
+		starting: localize('askPollis.starting', "Starting answering model {0} on this computer. The first time, it is downloaded first.", '{0}'),
+		embeddingFinished: localize('askPollis.embeddingFinished', "Embedding model {0} finished. {1}", '{0}', '{1}'),
 		asking: localize('askPollis.asking', "Asking {0}...", '{0}'),
 		searched: localize('askPollis.searched', "Searched: {0}.", '{0}'),
 		stopped: localize('askPollis.stopped', "Stopped."),
@@ -634,6 +652,9 @@ function pageHtml(language: string, writeIn: string): string {
 		.subtitle p { margin: 0 0 8px 0; }
 		.subtitle ul { margin: -4px 0 8px 0; padding-left: 18px; }
 		.subtitle li { margin: 2px 0; }
+		.intro-mark { display: flex; flex-direction: column; align-items: center; gap: 12px; margin: 24px 0 24px 0; opacity: 0.75; }
+		.intro-mark svg { width: 112px; height: auto; }
+		.intro-title { font-size: 22px; font-weight: 600; }
 		.small { font-size: 12px; color: var(--vscode-descriptionForeground); line-height: 1.4; }
 		/* The question: a pill framed in blue, the question and the microphone above, + and the arrow below; it grows as it is written */
 		.pill { margin-top: 8px; padding: 8px 10px 6px 12px; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-focusBorder); border-radius: 14px; transition: box-shadow 0.3s; }
@@ -652,12 +673,11 @@ function pageHtml(language: string, writeIn: string): string {
 		${askAttachCss}
 		/* What is attached: above the question in the pill, and below it in the conversation */
 		.turn .attachments { margin: -4px 0 8px 0; }
-		/* Ask: a circled arrow, blue, greyed until there is a question; while the answer comes, Stop: an orange square */
+		/* Ask: a circled arrow, blue, greyed until there is a question; while the answer comes, Stop: a square in its place */
 		button.icon.send { width: 28px; height: 28px; border: 1.5px solid var(--vscode-button-background); color: var(--vscode-button-foreground); background: var(--vscode-button-background); opacity: 0.4; }
 		button.icon.send:hover { background: var(--vscode-button-hoverBackground); }
 		button.icon.send svg { width: 15px; height: 15px; }
 		button.icon.send.ready, button.icon.send.stop { opacity: 1; }
-		button.icon.send.stop { border-radius: 7px; border-color: var(--vscode-charts-orange); color: var(--vscode-button-foreground); background: var(--vscode-charts-orange); }
 		/* Below the pill: Search In on the left, the key and the model on the right */
 		.under { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 8px; margin-top: 4px; padding: 0 4px; }
 		.under > span { display: inline-flex; align-items: center; gap: 4px; }
@@ -704,6 +724,10 @@ function pageHtml(language: string, writeIn: string): string {
 <div class="container">
 	<div class="scroll">
 		<div class="subtitle" id="intro">
+			<div class="intro-mark">
+				<svg viewBox="-10 18 280 224" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" d="M0 228.6 40.3 130 60.4 179.1M40.3 228.6 98.6 85.1 127.9 157.1M0 228.6H260L179.3 31.4 98.6 228.6"/></svg>
+				<div class="intro-title">${text.placeholder}</div>
+			</div>
 			<p>${text.intro}</p>
 			<p>${text.introSources}</p>
 			<ul>
@@ -747,7 +771,7 @@ function pageHtml(language: string, writeIn: string): string {
 	const keyStatus = document.getElementById('api-key-status');
 	const SEND = '${composerSendSvg}';
 	const READ_SVG = '${voiceSpeakerSvg}';
-	const STOP = '<svg viewBox="0 0 16 16" fill="currentColor"><rect x="4.5" y="4.5" width="7" height="7" rx="1.5"/></svg>';
+	const STOP = '<svg viewBox="0 0 16 16" fill="currentColor"><rect x="2.2" y="2.2" width="11.6" height="11.6" rx="1.5"/></svg>';
 	// Each question's elements and what came for it
 	const turns = [];
 	let answering = false;
@@ -993,7 +1017,10 @@ function pageHtml(language: string, writeIn: string): string {
 			}
 			const answerBox = element('div', 'answer');
 			const status = element('div', 'small status', TEXT.searching);
+			status.insertAdjacentHTML('afterbegin', SPINNER);
+			// Shown when the answer is finished, not while the model is still working on it
 			const searched = element('div', 'small');
+			searched.hidden = true;
 			const sources = element('div', 'sources');
 			box.append(status, answerBox, sources, searched);
 			conversation.appendChild(box);
@@ -1010,13 +1037,16 @@ function pageHtml(language: string, writeIn: string): string {
 			turn.status.textContent = message.text;
 			turn.status.insertAdjacentHTML('afterbegin', SPINNER);
 		} else if (message.command === 'starting') {
-			turn.status.textContent = (message.cloud ? TEXT.asking : TEXT.starting).replace('{0}', message.model);
+			const next = (message.cloud ? TEXT.asking : TEXT.starting).replace('{0}', message.model);
+			turn.status.textContent = message.embedded ? TEXT.embeddingFinished.replace('{0}', message.embedded).replace('{1}', next) : next;
+			turn.status.insertAdjacentHTML('afterbegin', SPINNER);
 		} else if (message.command === 'text') {
 			turn.status.textContent = '';
 			turn.answer = message.text;
 			renderAnswer(turn, message.turn);
 		} else if (message.command === 'done') {
 			turn.done = true;
+			turn.searched.hidden = false;
 			turn.status.textContent = message.error || (message.stopped ? TEXT.stopped : '');
 			turn.status.classList.toggle('error', !!message.error);
 			renderAnswer(turn, message.turn);
@@ -1060,19 +1090,25 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).regis
 			enum: [ASK_THIS_COMPUTER, ...ASK_CLOUD_MODELS.map(model => model.id)],
 			enumItemLabels: [localize('askPollis.thisComputer', "This Computer"), ...ASK_CLOUD_MODELS.map(model => model.label)],
 			scope: ConfigurationScope.APPLICATION,
-			markdownDescription: localize('askPollis.answerWithSetting', "Who writes the answers of **Help > Ask Pollis**: the chat model of `#pollis.ask.chatModel#` on this computer, or a cloud model of Anthropic, Google or OpenAI with your own key, which the key indicator below the question keeps in VS Code Secret Storage. The model at the right of the status bar chooses it. A cloud model is sent the question, the conversation so far and the passages found on this computer, never your files."),
+			markdownDescription: localize('askPollis.answerWithSetting', "Who writes the answers of **Help > Ask Pollis**: the chat model of `#pollis.ask.chatModel#` on this computer, or a cloud model of Anthropic, Google or OpenAI with your own key, which the key indicator below the question keeps in VS Code Secret Storage. **Set Models** in Set Active Models chooses it. A cloud model is sent the question, the conversation so far and the passages found on this computer, never your files."),
 		},
 		'pollis.ask.chatModel': {
 			type: 'string',
 			default: ASK_CHAT_MODEL,
 			scope: ConfigurationScope.APPLICATION,
-			markdownDescription: localize('askPollis.chatModelSetting', "The chat model that writes the answers of **Help > Ask Pollis** on this computer, when the model chosen in the status bar is one of this computer: a GGUF file of Hugging Face as `hf:owner/repository/file.gguf`, downloaded the first time, or the path of a GGUF file. It runs in the llama.cpp that comes with Pollis."),
+			markdownDescription: localize('askPollis.chatModelSetting', "The chat model that writes the answers of **Help > Ask Pollis** on this computer, when the model chosen in Set Active Models is one of this computer: a GGUF file of Hugging Face as `hf:owner/repository/file.gguf`, downloaded the first time, or the path of a GGUF file. It runs in the llama.cpp that comes with Pollis."),
 		},
 		'pollis.ask.embeddingModel': {
 			type: 'string',
 			default: ASK_EMBEDDING_MODEL,
 			scope: ConfigurationScope.APPLICATION,
 			markdownDescription: localize('askPollis.embeddingModelSetting', "The embedding model with which **Help > Ask Pollis** finds passages by their meaning, as `hf:owner/repository/file.gguf` or the path of a GGUF file. When it changes, the passages are embedded again the next time the Julia REPL starts; until then they are searched by their words only."),
+		},
+		'pollis.ask.reranker': {
+			type: 'string',
+			default: '',
+			scope: ConfigurationScope.APPLICATION,
+			markdownDescription: localize('askPollis.rerankerSetting', "The reranker that chooses among the passages found for **Help > Ask Pollis**, and for a collection of Retrieval-Augmented Generation without its own: empty for none. It is set in **Set Active Models**."),
 		},
 		'pollis.ask.passagePrefix': {
 			type: 'string',

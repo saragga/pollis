@@ -148,7 +148,7 @@ export class ExtensionsViewletViewsContribution extends Disposable implements IW
 		/* Pollis: the MCP servers of Compose > MCP Servers, with the default views, after Recommended */
 		viewDescriptors.push({
 			id: PollisMcpServersView.ID,
-			name: localize2('pollisMcpServers', "MCP Servers - Recommended"),
+			name: localize2('pollisMcpServers', "Recommended MCP Servers"),
 			ctorDescriptor: new SyncDescriptor(PollisMcpServersView),
 			when: DefaultViewsContext,
 			weight: 30,
@@ -299,7 +299,7 @@ export class ExtensionsViewletViewsContribution extends Disposable implements IW
 		 */
 		viewDescriptors.push({
 			id: 'extensions.recommendedList',
-			name: localize2('recommendedExtensions', "Recommended"),
+			name: localize2('recommendedExtensions', "Recommended Extensions"),
 			ctorDescriptor: new SyncDescriptor(DefaultRecommendedExtensionsView, [{ flexibleHeight: true }]),
 			when: ContextKeyExpr.and(DefaultViewsContext, SortByUpdateDateContext.negate(), ContextKeyExpr.not('config.extensions.showRecommendationsOnlyOnDemand'), CONTEXT_HAS_GALLERY),
 			weight: 40,

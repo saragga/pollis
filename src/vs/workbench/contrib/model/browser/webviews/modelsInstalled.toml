@@ -1,11 +1,11 @@
-# Models Installed Webview Configuration
-# A page of Compose in the Minimal style of the scaffold, not a panel: only its Learn More, as no Julia package powers it. `pageCommand`
+# Set Active Models Webview Configuration
+# A page of Compose in the Time Arrow style of the scaffold, not a panel: only its Learn More, as no Julia package powers it. `pageCommand`
 # is the command that opens it, which a panel's contribution file would say. The build script generates:
 # - src/vs/workbench/contrib/model/browser/webviews/modelsInstalled.data.ts
 # Run: npm run gulp compile-toml
 
 [meta]
-title = "Models Installed"
+title = "Set Active Models"
 viewType = "pollis.modelsInstalled"
 pageCommand = "pollis.localModels.installed"
 

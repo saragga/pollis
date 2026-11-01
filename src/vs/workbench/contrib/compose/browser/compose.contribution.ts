@@ -23,7 +23,8 @@ import './pollisUpdate.js';
 import './vignettesPage.js';
 import './toolboxDocumentsPage.js';
 import './panelWikisPage.js';
-import { MODELS_INSTALLED_COMMAND_ID } from './modelsInstalledPage.js';
+import { MODELS_INSTALLED_COMMAND_ID } from '../common/askPollis.js';
+import './modelsInstalledPage.js';
 import './mcpServersPage.js';
 import { MCP_SERVERS_COMMAND_ID } from '../common/mcpServers.js';
 import { MODEL_ROUTING_COMMAND_ID } from './modelRouting.js';
@@ -39,7 +40,7 @@ import { BROWSE_REFERENCES_COMMAND_ID } from './browseReferencesPage.js';
 import { SNOWBALL_SEARCH_COMMAND_ID } from '../common/snowballSearch.js';
 import './snowballSearchPage.js';
 
-// The Mathematical Core, Financial Econometrics and Economics Toolboxes come from their extensions (toolboxes/pollis-toolbox-*, not built in:
+// The Mathematical Core, Finance and Economics Toolboxes come from their extensions (toolboxes/pollis-toolbox-*, not built in:
 // installed from the Toolboxes section of the Extensions pane), see toolboxExtensions.ts
 
 const NewPanelsMenu = new MenuId('menubarNewPanelsMenu');
@@ -272,7 +273,7 @@ MenuRegistry.appendMenuItem(LocalModelsMenu, {
 
 MenuRegistry.appendMenuItem(LocalModelsMenu, {
 	group: '1_models',
-	command: { id: MODELS_INSTALLED_COMMAND_ID, title: localize('modelsInstalled.menu', "Models Installed") },
+	command: { id: MODELS_INSTALLED_COMMAND_ID, title: localize('modelsInstalled.menu', "Set Active Models") },
 	order: 3,
 });
 

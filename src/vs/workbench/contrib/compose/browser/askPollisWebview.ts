@@ -108,6 +108,11 @@ export function askSearchesNothing(choice: readonly string[]): boolean {
 	return choice.includes(SEARCH_NONE);
 }
 
+/** Whether a Search In's choice may search Julia's documentation: Auto, All Sources, or the Julia Manual or one of its sources ticked. */
+export function askSearchesJulia(choice: readonly string[]): boolean {
+	return !askSearchesNothing(choice) && (!choice.length || choice.includes(SEARCH_ALL) || !!askSearchIn(choice, [])?.includes(JULIA_MANUAL));
+}
+
 /** Why the question was searched by its words only, for the page; nothing when it was searched by meaning too. */
 export function askWordsOnlyNote(result: IAskPollisSearchResult): string {
 	switch (result.wordsOnly) {
@@ -225,6 +230,9 @@ export function askAnswerScript(): string {
 				if (paragraph.length || (list && list.tag !== tag)) { flush(); }
 				list = list || { tag, items: [] };
 				list.items.push(item[2]);
+			} else if (/^-{3,}$/.test(line)) {
+				flush();
+				html.push('<hr>');
 			} else if (/^#+\\s/.test(line)) {
 				flush();
 				html.push('<p><strong>' + inline(line.replace(/^#+\\s+/, ''), count) + '</strong></p>');

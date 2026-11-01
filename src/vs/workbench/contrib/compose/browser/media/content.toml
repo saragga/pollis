@@ -75,6 +75,14 @@ sha256 = ["80cd668abc56a060c6dab39138be677a3fb6ecdc5ff5c3dda8c5e94b3475356e"]
 title = "Logistic regression: the Challenger O-rings"
 updated = "2026-10-14"
 [[workflows]]
+added = "2026-11-01"
+files = ["longrunrisks.ipynb"]
+id = "longrunrisks"
+pollis = "0.2.12"
+sha256 = ["f3cbeac8ca2255d591cf5d2539acb123dd3ab19e71791faeab4b903e3b427a61"]
+title = "Long-run risks: the model and aggregate asset prices"
+updated = "2026-11-01"
+[[workflows]]
 added = "2026-10-14"
 files = ["matching.ipynb"]
 id = "matching"

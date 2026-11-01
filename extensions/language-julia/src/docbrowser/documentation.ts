@@ -7,6 +7,22 @@ import * as repl from '../interactive/repl'
 const DOC_NO_REPL_MESSAGE =
     'Documentation is looked up from the Julia REPL. Start the Julia REPL (and load the relevant packages), then search again.'
 
+/** A Julia name, with macros (@time) and qualified names (Base.sort!). */
+const JULIA_NAME = /@?[A-Za-z_][\w!]*(?:\.[A-Za-z_][\w!]*)*/
+
+/**
+ * The documentation of `name` for Ask Pollis, from the REPL already running: a question is not a reason to start one.
+ * Nothing unless the whole of `name` is a Julia name, since the REPL evaluates what it looks up, or when Julia has no
+ * documentation for it. Cross-references become their text, as they lead nowhere in Ask Pollis.
+ */
+async function docOfName(name: string): Promise<string | undefined> {
+    if (name.match(JULIA_NAME)?.[0] !== name || !repl.isConnected()) {
+        return undefined
+    }
+    const doc = (await repl.getDocFromWord(name))?.trim()
+    return doc && !doc.startsWith('No documentation found') ? doc.replace(/\[([^\]]+)\]\(@ref[^)]*\)/g, '$1') : undefined
+}
+
 function openArgs(href: string) {
     const matches = href.match(/^((\w+:\/\/)?.+?)(?:[:#](\d+))?$/)
     let uri
@@ -75,6 +91,7 @@ export function activate(context: vscode.ExtensionContext) {
         registerCommand('language-julia.search-word', async (params: { searchTerm: string }) =>
             provider.findHelp(params)
         ),
+        registerCommand('language-julia.pollisDocOfName', docOfName),
         vscode.window.registerWebviewViewProvider('julia-documentation', provider)
     )
 }
@@ -174,11 +191,7 @@ class DocumentationViewProvider implements vscode.WebviewViewProvider {
     }
 
     private getWordAtCursor(editor: vscode.TextEditor): string | undefined {
-        // Match Julia identifiers including macros (@time) and qualified names (Base.sort!).
-        const range = editor.document.getWordRangeAtPosition(
-            editor.selection.start,
-            /@?[A-Za-z_][\w!]*(?:\.[A-Za-z_][\w!]*)*/
-        )
+        const range = editor.document.getWordRangeAtPosition(editor.selection.start, JULIA_NAME)
         return range ? editor.document.getText(range) : undefined
     }
 

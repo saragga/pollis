@@ -1275,7 +1275,7 @@ MenuRegistry.appendMenuItem(PMSubmenuId, {
 
 // ============================================
 // SUBSUBMENU: EXTREME VALUE AND RARE EVENTS
-// (in the Financial Econometrics Toolbox's menu, so it shows when that toolbox extension is installed)
+// (in the Finance Toolbox's menu, so it shows when that toolbox extension is installed)
 // ============================================
 
 MenuRegistry.appendMenuItem(MenuId.for(`${TOOLBOX_SUBMENU_PREFIX}econometrics`), {

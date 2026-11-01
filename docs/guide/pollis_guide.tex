@@ -560,7 +560,7 @@ panel. A View is not a way to stop students from opening a panel.
 A toolbox is an extension that adds a set of panels to the menus, with their wikis and notebook
 tutorials. It holds no program code: its panels are made like Pollis's own. Four are published:
 \begin{itemize}
-  \item \textbf{Financial Econometrics}: ARIMAX, VAR and VECM, GARCH-type and regime switching models,
+  \item \textbf{Finance}: ARIMAX, VAR and VECM, GARCH-type and regime switching models,
     forecasting, Bayesian asset-pricing factor models.
   \item \textbf{Economics}: business cycle filters, stochastic volatility, DSGE and heterogeneous-agent
     models, continuous-time macro-finance, game theory.
@@ -690,8 +690,10 @@ Dynamic time warping: the UCR archive baselines & Dau et al.\ (2019)\\
 Propensity score matching: the NSW experiment and its replications & Dehejia and Wahba (1999)\\
 Random forests: Breiman (2001) & Breiman (2001)\\
 LSTNet: long- and short-term patterns in multivariate time series & Lai, Chang, Yang and Liu (2018)\\
+Long-run risks: the model and aggregate asset prices & Beeler and Campbell (2012)\footnotemark\\
 \end{tabular}
 \end{center}
+\footnotetext{A partial replication: only the model side is recomputed. The article's stock returns, dividends and risk-free rates come from CRSP, which is licensed, and the journal posts no data for this article, so its data columns are shown as printed, and nothing is downloaded. \href{https://cfr.ivo-welch.org/published/papers/beeler2012longrun.pdf}{The article}, from the journal's site, and \href{https://campbell.scholars.harvard.edu/sites/g/files/omnuum5881/files/campbell/files/longrunrisks_appendix100611.pdf}{the authors' appendix}, which discusses the data sources and the modelling choices.}
 
 \subhead{Open a replication}
 \begin{enumerate}[label=\arabic*.]
@@ -879,7 +881,7 @@ HARE & Heteroskedasticity and autocorrelation estimators &
   \ui{Model > Linear Models}: \ui{Linear Models with Heteroskedasticity}, \ui{with Autocorrelation} and
   \ui{with Heteroskedasticity + AR(1)} \\
 RangeVol & Range-based volatility estimators &
-  \ui{Extend > Financial Econometrics > Measuring Volatility}, with the Financial Econometrics Toolbox \\
+  \ui{Extend > Finance > Measuring Volatility}, with the Finance Toolbox \\
 \end{tabularx}}
 
 \subhead{Install one}
@@ -1650,7 +1652,7 @@ There is no main agent: every task runs on the cell of its tier. The settings ar
 
 \subhead{Local Models}
 \ui{Compose > Local Models} has \ui{Get Models from Hugging Face} and \ui{Get Models from Kaggle}, to find
-and download models, and \ui{Models Installed}: the local models on this computer, those Pollis downloaded
+and download models, and \ui{Set Active Models}: the local models on this computer, those Pollis downloaded
 and those in the Hugging Face cache, with their \ui{Kind} (Chat or Embedding), what each \ui{Reads}, whether
 it can call \ui{Tools}, and the tiers that use it. Pollis runs them with llama.cpp, which comes with it,
 free and private: a task on a local tier starts the model first. \ui{Evaluate Answering Models...} and

@@ -35,8 +35,6 @@ export interface IToolboxPanelInfo {
 /** A vignette of an installed toolbox, for Help > Documentation > Toolbox Vignettes: LaTeX sources Pollis compiles. */
 export interface IToolboxDocumentInfo {
 	readonly title: string;
-	/** What it covers, in a sentence or two. */
-	readonly description?: string;
 	/** The folder of its sources: the main .tex, its .bib files and a resources/ folder. */
 	readonly folder: URI;
 	/** The main file's name, without .tex. */

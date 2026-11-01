@@ -38,7 +38,8 @@ interface IListedDocument {
 	/** The extension id, the toolbox id and the document's name, which find it again. */
 	readonly key: string;
 	readonly title: string;
-	readonly description: string;
+	/** The titles of the toolbox's panels. */
+	readonly panels: readonly string[];
 	readonly toolbox: string;
 	readonly extensionId: string;
 	readonly version: string;
@@ -101,7 +102,7 @@ async function openToolboxDocumentsPage(accessor: ServicesAccessor): Promise<voi
 		const documents: IListedDocument[] = toolboxPanelsService.getToolboxes().flatMap(toolbox => toolbox.documents.map(document => ({
 			key: documentKey(toolbox, document),
 			title: document.title,
-			description: document.description ?? '',
+			panels: toolbox.panels.map(panel => panel.title),
 			toolbox: toolbox.title,
 			extensionId: toolbox.extensionId,
 			version: toolbox.version,
@@ -175,7 +176,8 @@ function pageHtml(): string {
 		${voiceButtonsCss}
 	.hint { color: var(--vscode-descriptionForeground); margin: 0 0 8px 0; line-height: 1.4; max-width: 900px; }
 	.search { width: 100%; max-width: 420px; margin: 0 0 8px 0; padding: 4px 6px; font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; }
-	.search:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }</style>
+	.search:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
+	.panels { margin: 4px 0 0 0; padding: 0; list-style: none; color: var(--vscode-descriptionForeground); }</style>
 </head>
 <body>
 <div class="container">
@@ -202,19 +204,21 @@ function pageHtml(): string {
 
 	function matches(entry) {
 		const query = search.value.trim().toLowerCase();
-		return !query || [entry.title, entry.description, entry.toolbox, entry.extensionId].some(field => (field || '').toLowerCase().includes(query));
+		return !query || [entry.title, ...entry.panels, entry.toolbox, entry.extensionId].some(field => (field || '').toLowerCase().includes(query));
 	}
 
-	// (a) the document and its description, (b) its toolbox, the extension and its version
+	// (a) the document and the toolbox's panels, one per line, (b) its toolbox, the extension and its version
 	function row(entry) {
 		const row = element('tr');
 		const name = cell(row, 'name');
 		const title = element('div', 'title', entry.title);
 		title.addEventListener('click', () => vscode.postMessage({ command: 'open', key: entry.key }));
 		name.appendChild(title);
-		if (entry.description) {
-			name.appendChild(element('p', 'description clamped', entry.description));
+		const panels = element('ul', 'panels');
+		for (const panel of entry.panels) {
+			panels.appendChild(element('li', '', panel));
 		}
+		name.appendChild(panels);
 		const toolbox = cell(row);
 		toolbox.appendChild(element('div', '', entry.toolbox));
 		toolbox.appendChild(element('div', 'small file', entry.extensionId + ' ' + entry.version));

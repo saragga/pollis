@@ -7,7 +7,7 @@
 // GGUF files from the publishers of the setting pollis.localModels.publishers, updated in the last year (two for
 // embedding models, which change more slowly), small enough for a laptop without a GPU, and the most downloaded in the
 // last month. Larger models come from Compose > Local Models. The command `language-julia.pollisInstalledModels`
-// answers the models on this computer, each with its value in the settings, for Compose > Local Models > Models Installed and the
+// answers the models on this computer, each with its value in the settings, for Compose > Local Models > Set Active Models and the
 // two Evaluate pages; `language-julia.pollisModelVersions`,
 // with a model's file, the other files of its repository, and `language-julia.pollisDownloadModel`, with an `hf:` value,
 // downloads one, for its Other Versions; `language-julia.pollisAvailableMemory`, the memory a model can have now, for
@@ -326,7 +326,7 @@ export function valueFile(value: string): string {
 }
 
 /**
- * The models on this computer for Compose > Local Models > Models Installed, by name: each with its size in bytes,
+ * The models on this computer for Compose > Local Models > Set Active Models, by name: each with its size in bytes,
  * whether Pollis downloaded it or it is in the Hugging Face cache, what it reads besides text, and the tiers of
  * Model Tasks and Routing that run on it.
  */
@@ -358,7 +358,7 @@ function repositoryOf(file: string): string | undefined {
 }
 
 /**
- * The other GGUF files of a model's repository on Hugging Face, for Other Versions of Models Installed: each as an
+ * The other GGUF files of a model's repository on Hugging Face, for Other Versions of Set Active Models: each as an
  * `hf:` value with its size, whether it is a projector and whether it is on this computer already. Split models and
  * the drafts of multi-token prediction (mtp-) are left out.
  */
@@ -387,7 +387,7 @@ async function modelVersions(file: string): Promise<{ value: string; name: strin
         .sort((a, b) => Number(a.projector) - Number(b.projector) || a.bytes - b.bytes)
 }
 
-/** Downloads an `hf:` file into ~/.pollis/models, for Other Versions of Models Installed; true once it is there. */
+/** Downloads an `hf:` file into ~/.pollis/models, for Other Versions of Set Active Models; true once it is there. */
 async function downloadVersion(value: string): Promise<boolean> {
     try {
         await resolveModel(value)

@@ -189,9 +189,9 @@ async function openRagPage(accessor: ServicesAccessor): Promise<void> {
 	const rerankers = async () => (await commandService.executeCommand<IInstalledModel[]>('language-julia.pollisInstalledModels').catch(() => undefined) ?? [])
 		.filter(model => model.kind === 'reranker')
 		.map(model => ({ value: model.value ?? model.file, label: model.name, size: model.sizeLabel ?? '' }));
-	/** The reranker of a collection: its own when still there, else the first of this computer. */
+	/** The reranker of a collection: its own when still there, else that of Set Active Models, else the first of this computer. */
 	const rerankerOf = (current: IRagCollection, models: readonly { value: string }[]) =>
-		models.find(model => model.value === current.reranker)?.value ?? models[0]?.value ?? '';
+		[current.reranker, configurationService.getValue<string>('pollis.ask.reranker')?.trim()].find(value => value && models.some(model => model.value === value)) ?? models[0]?.value ?? '';
 	/** The embedding model of a collection: its own, else that of Ask Pollis, else the first of this computer. */
 	const modelOf = (current: IRagCollection, models: readonly { value: string }[]) =>
 		[current.embeddingModel, configurationService.getValue<string>('pollis.ask.embeddingModel') || ASK_EMBEDDING_MODEL].find(value => value && models.some(model => model.value === value)) ?? models[0]?.value ?? '';

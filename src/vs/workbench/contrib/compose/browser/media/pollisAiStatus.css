@@ -1,0 +1,21 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) 2026 Antonio Saragga Seabra
+ *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+/* The three triangles of Pollis AI+ in the status bar (askPollisPage.ts), written there as $(pollis-ai): a mask, so that they take the colour of the bar's text */
+.statusbar-item .codicon.codicon-pollis-ai {
+	display: inline-flex;
+	align-items: center;
+}
+
+.statusbar-item .codicon.codicon-pollis-ai::before {
+	content: '';
+	display: block;
+	/* As tall as a capital of the bar's 12px text, and as wide as that makes them */
+	width: 11.2px;
+	height: 8.5px;
+	background-color: currentColor;
+	-webkit-mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMzEuNCAyNjAgMTk3LjIiPjxwb2x5Z29uIHBvaW50cz0iMCwyMjguNiA0MC4zLDEzMCA4MC43LDIyOC42IiBvcGFjaXR5PSIwLjUiLz48cG9seWdvbiBwb2ludHM9IjQwLjMsMjI4LjYgOTguNiw4NS4xIDE1Ni45LDIyOC42IiBvcGFjaXR5PSIwLjc1Ii8+PHBvbHlnb24gcG9pbnRzPSI5OC42LDIyOC42IDE3OS4zLDMxLjQgMjYwLDIyOC42Ii8+PC9zdmc+") center / contain no-repeat;
+	mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMzEuNCAyNjAgMTk3LjIiPjxwb2x5Z29uIHBvaW50cz0iMCwyMjguNiA0MC4zLDEzMCA4MC43LDIyOC42IiBvcGFjaXR5PSIwLjUiLz48cG9seWdvbiBwb2ludHM9IjQwLjMsMjI4LjYgOTguNiw4NS4xIDE1Ni45LDIyOC42IiBvcGFjaXR5PSIwLjc1Ii8+PHBvbHlnb24gcG9pbnRzPSI5OC42LDIyOC42IDE3OS4zLDMxLjQgMjYwLDIyOC42Ii8+PC9zdmc+") center / contain no-repeat;
+}

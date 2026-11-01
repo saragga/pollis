@@ -12,7 +12,7 @@
 | **Key choice** | The judge, whose ratings every comparison rests on |
 
 ## When to Use Evaluate Answering Models
-- Choosing the answering model of Ask Pollis, which the status bar then sets for the Ask Pollis pane and for the panels.
+- Choosing the answering model of Ask Pollis, which Set Active Models then sets for the Ask Pollis pane and for the panels.
 - Deciding whether a smaller local model answers well enough to save memory and time.
 - Deciding whether a cloud model is worth its cost and worth sending the passages out of this computer.
 - Seeing whether a new model does better than the one in use, on the questions you care about.

@@ -28,7 +28,7 @@ The strong judges of [Zheng, Chiang, Sheng, Zhuang, Wu, Zhuang, Lin, Li, Li, Xin
 | Models that differ by very little | More questions before more Repeats: each new question adds more than asking the same one again |
 
 ## When a Comparison of Answering Models Is Enough
-Stop when the order of the models is the same across two runs or two judges, or when the models still in contention differ by less than their **Spread**: then speed, memory and privacy can decide. If the line of the passages found is low, stop too and turn to Evaluate Embedding Models, as better passages may do more than a better answering model. After choosing, the status bar sets the answering model for the Ask Pollis pane and for the panels.
+Stop when the order of the models is the same across two runs or two judges, or when the models still in contention differ by less than their **Spread**: then speed, memory and privacy can decide. If the line of the passages found is low, stop too and turn to Evaluate Embedding Models, as better passages may do more than a better answering model. After choosing, Set Active Models sets the answering model for the Ask Pollis pane and for the panels.
 
 ## References
 

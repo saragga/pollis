@@ -116,6 +116,14 @@ function embeddingFigures(run: IEmbeddingRun) {
 	});
 }
 
+/** Makes `value` the embedding model of Ask Pollis, with its prefixes, and makes the index again. */
+export async function useAskEmbeddingModel(configurationService: IConfigurationService, commandService: ICommandService, value: string, passage: string, query: string): Promise<void> {
+	await configurationService.updateValue('pollis.ask.embeddingModel', value === ASK_EMBEDDING_MODEL ? undefined : value, ConfigurationTarget.USER);
+	await configurationService.updateValue('pollis.ask.passagePrefix', passage === ASK_PASSAGE_PREFIX ? undefined : passage, ConfigurationTarget.USER);
+	await configurationService.updateValue('pollis.ask.queryPrefix', query === ASK_QUERY_PREFIX ? undefined : query, ConfigurationTarget.USER);
+	await commandService.executeCommand('language-julia.pollisIndexDocuments').catch(() => undefined);
+}
+
 async function openCompareEmbeddingsPage(accessor: ServicesAccessor): Promise<void> {
 	const webviewWorkbenchService = accessor.get(IWebviewWorkbenchService);
 	const commandService = accessor.get(ICommandService);
@@ -253,10 +261,7 @@ async function openCompareEmbeddingsPage(accessor: ServicesAccessor): Promise<vo
 		if (!confirmed) {
 			return;
 		}
-		await configurationService.updateValue('pollis.ask.embeddingModel', model.value === ASK_EMBEDDING_MODEL ? undefined : model.value, ConfigurationTarget.USER);
-		await configurationService.updateValue('pollis.ask.passagePrefix', model.passage === ASK_PASSAGE_PREFIX ? undefined : model.passage, ConfigurationTarget.USER);
-		await configurationService.updateValue('pollis.ask.queryPrefix', model.query === ASK_QUERY_PREFIX ? undefined : model.query, ConfigurationTarget.USER);
-		await commandService.executeCommand('language-julia.pollisIndexDocuments').catch(() => undefined);
+		await useAskEmbeddingModel(configurationService, commandService, model.value, model.passage, model.query);
 		postRun();
 		status(localize('compareEmbeddings.used', "Ask Pollis now finds passages with {0}; its index is being made again.", model.label));
 	};
