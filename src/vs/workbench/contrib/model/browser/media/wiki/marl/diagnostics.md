@@ -8,6 +8,8 @@ A learning run can look successful and still be fragile. The checks ask three th
 
 The curve stays over the bound even for a perfect policy, as it includes exploration. With **Exploration (epsilon)** e, each of N agents moves randomly with chance e, and a random step delays the team. A curve that is still falling at the end needs more **Episodes**. Trust the greedy figures in the printed result over the curve when judging the final policy.
 
+Three or four agents learn far more slowly than two, because the number of joint states grows as n^(2N) and random moves rarely bring every agent to one cell, so early episodes seldom show the team a meeting to learn from. Episodes that are enough for two agents can leave a larger team at the step cap, with `greedy_steps_to_meet` as `missing`. Raise **Episodes** first, or try the same run with fewer agents to see whether the setting or the team size is the cause.
+
 ## Greedy results against training results
 
 The printed result separates two numbers that are easy to confuse. `mean_steps_last_100` measures training behaviour, with exploration, over the last 100 episodes. `greedy_steps_to_meet` measures one run of the pure greedy policy from the start, with no random moves.

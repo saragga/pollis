@@ -188,7 +188,7 @@ default = "1"
 [[inputs]]
 id = "nagents"
 label = "Agents"
-tooltip = "Number of agents (2 to 4), starting in different corners of the grid."
+tooltip = "Number of agents (2 to 4), starting in different corners of the grid. Three or four agents learn far more slowly than two, so raise Episodes."
 default = "2"
 models = ["cooperative"]
 newRow = true
