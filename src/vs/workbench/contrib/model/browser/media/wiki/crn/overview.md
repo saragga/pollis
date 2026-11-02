@@ -36,7 +36,7 @@ The four show that one notation can hold very different dynamics. **k1 (forward 
 
 ## What Structure Can Say Without Simulation
 
-Some properties come from the list of reactions alone, whatever the rates. **Stoichiometry Matrix** shows how each reaction changes each species. **Conservation Laws** finds totals that never change. **Network Summary** reports deficiency, which can rule out oscillations for mass-action networks. That structural reasoning is the main thing gained from the notation, and it needs no parameter values at all.
+Some properties come from the list of reactions alone, whatever the rates. **Stoichiometry Matrix** shows how each reaction changes each species. **Conservation Laws** finds totals that never change. **Network Summary** reports deficiency, which can rule out oscillations for mass-action networks. That structural reasoning is the main thing gained from the notation, and it needs no parameter values at all to begin with.
 
 ## A Common Workflow for a New Network
 
