@@ -7,6 +7,7 @@ import { localize } from '../../../../../vs/nls.js';
 import { MenuRegistry, MenuId } from '../../../../platform/actions/common/actions.js';
 import { CommandsRegistry } from '../../../../platform/commands/common/commands.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
+import { TOOLBOX_SUBMENU_PREFIX } from '../../compose/common/toolboxPanels.js';
 
 import { NLLS_PANEL } from './commands/nlls.command.js';
 import { LM_PANEL } from './commands/lm.command.js';
@@ -71,6 +72,10 @@ import { NNLS_PANEL } from './commands/nnls.command.js';
 import { TSLS_PANEL } from './commands/tsls.command.js';
 import { GMM_PANEL } from './commands/gmm.command.js';
 // Finance panels, deferred for a future Finance Toolbox: import { LRM_PANEL } from './commands/lrm.command.js';
+import { GEV_PANEL } from './commands/gev.command.js';
+import { GP_PANEL } from './commands/gp.command.js';
+import { EVTRISK_PANEL } from './commands/evtRisk.command.js';
+import { EVTDIAG_PANEL } from './commands/evtDiag.command.js';
 import { HARE_PANEL } from './commands/hare.command.js';
 import { LMAR_PANEL } from './commands/lmar.command.js';
 import { LMHAR_PANEL } from './commands/lmhar.command.js';
@@ -235,6 +240,10 @@ CommandsRegistry.registerCommand('chiara.statistics.vm', () => { });
 // Finance panel, deferred: CommandsRegistry.registerCommand('chiara.statistics.eco.mmn', accessor => openScaffoldWebview(accessor, MMN_PANEL));
 
 // Finance panel, deferred: CommandsRegistry.registerCommand('chiara.statistics.rmt.lrm', accessor => openScaffoldWebview(accessor, LRM_PANEL));
+CommandsRegistry.registerCommand('chiara.statistics.ev.gev', accessor => openScaffoldWebview(accessor, GEV_PANEL));
+CommandsRegistry.registerCommand('chiara.statistics.ev.gp', accessor => openScaffoldWebview(accessor, GP_PANEL));
+CommandsRegistry.registerCommand('chiara.statistics.ev.riskMeasures', accessor => openScaffoldWebview(accessor, EVTRISK_PANEL));
+CommandsRegistry.registerCommand('chiara.statistics.ev.diagnostics', accessor => openScaffoldWebview(accessor, EVTDIAG_PANEL));
 
 CommandsRegistry.registerCommand('chiara.statistics.ml.logpdf', accessor => openScaffoldWebview(accessor, ADLP_PANEL));
 
@@ -366,6 +375,7 @@ CommandsRegistry.registerCommand('chiara.statistics.glm.positive', accessor => G
 // ============================================
 
 const MWMSubmenuId = new MenuId('menubarMWMSubmenu');
+export const EVSubmenuId = new MenuId('menubarEVSubmenu');
 const LMSubmenuId = new MenuId('menubarLMSubmenu'); // Linear Models
 const SASubmenuId = new MenuId('menubarSASubmenu');
 const NNSubmenuId = new MenuId('menubarNNSubmenu');
@@ -433,8 +443,12 @@ export const NOD_LINEAR_REGRESSION_ID = 'chiara.statistics.nod.linearRegression'
 // Density Estimation
 
 // Extreme Value and Rare Events
+export const EV_GEV_ID = 'chiara.statistics.ev.gev';
+export const EV_GP_ID = 'chiara.statistics.ev.gp';
 export const EV_RETURN_STATS_ID = 'chiara.statistics.ev.returnStats';
 export const EV_MEAN_EXCESS_ID = 'chiara.statistics.ev.meanExcess';
+export const EV_RISK_MEASURES_ID = 'chiara.statistics.ev.riskMeasures';
+export const EV_DIAGNOSTICS_ID = 'chiara.statistics.ev.diagnostics';
 
 // Dependence Modeling and Estimation
 export const COV_SIMPLE_ID = 'chiara.statistics.cov.simple';
@@ -1251,6 +1265,45 @@ MenuRegistry.appendMenuItem(PMSubmenuId, {
 	order: 1,
 });
 
+
+// ============================================
+// SUBSUBMENU: EXTREME VALUE AND RARE EVENTS
+// (in the Finance Toolbox's menu, so it shows when that toolbox extension is installed)
+// ============================================
+
+MenuRegistry.appendMenuItem(MenuId.for(`${TOOLBOX_SUBMENU_PREFIX}econometrics`), {
+	group: '4_et',
+	submenu: EVSubmenuId,
+	title: localize('showStatistics.ev', 'Extreme Value and Rare Events'),
+	order: 1,
+});
+
+// Group 1 — Distribution Fitting
+MenuRegistry.appendMenuItem(EVSubmenuId, {
+	group: '1_dist',
+	command: { id: EV_GEV_ID, title: localize('evre.gev', 'Generalized Extreme Value Distribution') },
+	order: 1,
+}); // Fit, Evaluate and Sample
+
+MenuRegistry.appendMenuItem(EVSubmenuId, {
+	group: '1_dist',
+	command: { id: EV_GP_ID, title: localize('evre.gp', 'Generalized Pareto Distribution') },
+	order: 2,
+});  // Fit, Evaluate and Sample
+
+// Group 2 — EVT Risk Measures
+MenuRegistry.appendMenuItem(EVSubmenuId, {
+	group: '2_risk',
+	command: { id: EV_RISK_MEASURES_ID, title: localize('evre.riskMeasures', 'EVT Risk Measures') },
+	order: 1,
+});
+
+// Group 3 — Diagnostics
+MenuRegistry.appendMenuItem(EVSubmenuId, {
+	group: '3_diag',
+	command: { id: EV_DIAGNOSTICS_ID, title: localize('evre.diagnostics', 'EVT Diagnostics') },
+	order: 1,
+});
 
 // ============================================
 // STUB COMMANDS: NATURAL LANGUAGE PROCESSING

@@ -1,0 +1,295 @@
+# Extreme Value Diagnostics Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/evtDiag.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Extreme Value Diagnostics"
+viewType = "pollis.evtDiag"
+defaultModel = "me"
+
+[[packages]]
+name = "Extremes.jl"
+github = "https://github.com/jojal5/Extremes.jl"
+
+[requires]
+packages = ["Extremes.jl", "Distributions.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Quick Start"
+file = "evt-diag/tutorial-01-quickstart.ipynb"
+bundled = true
+description = "Overview of EVT diagnostic tools"
+
+[[notebookSections.notebooks]]
+name = "Threshold Selection"
+file = "evt-diag/tutorial-02-threshold.ipynb"
+bundled = true
+description = "Mean excess plot and threshold stability diagnostics"
+
+[[notebookSections.notebooks]]
+name = "Tail Index Estimation"
+file = "evt-diag/tutorial-03-hill.ipynb"
+bundled = true
+description = "Hill estimator and tail index diagnostics"
+
+[[wikis]]
+name = "Overview"
+file = "evt-diag/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "evt-diag/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "evt-diag/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "evt-diag/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "evt-diag/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "evt-diag/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers (from packages)"
+
+[[references]]
+key = "JFGR2024a"
+
+[[references]]
+key = "BGST2004a"
+
+[[models]]
+id = "me"
+label = "Mean Excess"
+
+[[models]]
+id = "hill"
+label = "Hill Plot"
+
+[[models]]
+id = "qq"
+label = "QQ Plot"
+
+[[bullets]]
+text = "Mean excess plot: assess linearity to guide threshold selection"
+detail = ""
+
+[[bullets]]
+text = "Hill plot: tail index estimation across order statistics"
+detail = ""
+
+[[bullets]]
+text = "QQ plot: compare empirical and theoretical quantiles for Generalized Extreme Value or Generalized Pareto fit"
+detail = ""
+
+[[inputs]]
+id = "evtd-data"
+label = "Data series"
+tooltip = "Vector of losses as positive numbers (larger = worse), defined before running, e.g. losses = -returns. For the GEV fit it must hold block maxima, such as monthly maximum losses."
+default = "losses"
+
+[[inputs]]
+id = "evtd-n-thresholds"
+label = "Grid points"
+tooltip = "Number of thresholds at which the mean excess is computed."
+default = "100"
+models = ["me"]
+
+[[inputs]]
+id = "evtd-max-pct"
+label = "Upper pct"
+tooltip = "Highest threshold as a quantile of the data (0.95 = 95th percentile); above it too few exceedances remain."
+default = "0.95"
+models = ["me"]
+
+[[inputs]]
+id = "evtd-min-obs"
+label = "Min obs"
+tooltip = "Thresholds with fewer exceedances than this are skipped, since their mean excess is too noisy."
+default = "10"
+models = ["me"]
+
+[[inputs]]
+id = "evtd-dist-select"
+label = "Distribution"
+tooltip = "GEV: for block maxima. GP: for the excesses over the threshold below."
+kind = "select"
+default = "gev"
+models = ["qq"]
+
+[[inputs.options]]
+value = "gev"
+label = "GEV"
+
+[[inputs.options]]
+value = "gp"
+label = "GP"
+
+[[inputs]]
+id = "evtd-qq-method"
+label = "Estimation method"
+tooltip = "Maximum likelihood, probability-weighted moments (robust in small samples), or Bayesian MCMC (point estimates are posterior means)."
+kind = "select"
+default = "mle"
+models = ["qq"]
+
+[[inputs.options]]
+value = "mle"
+label = "Maximum Likelihood"
+
+[[inputs.options]]
+value = "pwm"
+label = "Probability-Weighted Moments"
+
+[[inputs.options]]
+value = "bayes"
+label = "Bayesian Estimation"
+
+[[inputs]]
+id = "evtd-threshold-qq"
+label = "Threshold u (GP)"
+tooltip = "A high threshold: the generalised Pareto describes only the excesses over it. The 90th percentile of the losses is a common start; check it with the mean excess and threshold stability plots."
+default = "quantile(losses, 0.9)"
+models = ["qq"]
+
+[[codeBranches]]
+model = "me"
+code = '''
+using Statistics, Plots
+
+u_grid  = range(minimum({{evtd-data}}), quantile({{evtd-data}}, {{evtd-max-pct}}); length = {{evtd-n-thresholds}})  # threshold grid up to {{evtd-max-pct}} percentile
+me_vals = [mean({{evtd-data}}[{{evtd-data}} .> u] .- u) for u in u_grid if sum({{evtd-data}} .> u) >= {{evtd-min-obs}}]  # mean excess (skip thresholds with too few obs)
+u_vals  = [u for u in u_grid if sum({{evtd-data}} .> u) >= {{evtd-min-obs}}]  # valid threshold values
+
+scatter(u_vals, me_vals;
+    xlabel = "Threshold u", ylabel = "Mean Excess",
+    title  = "Mean Excess Plot", legend = false)
+
+u50 = quantile({{evtd-data}}, 0.50)  # median threshold
+u75 = quantile({{evtd-data}}, 0.75)  # 75th percentile threshold
+u90 = quantile({{evtd-data}}, 0.90)  # 90th percentile threshold
+println("Mean excess at Q50: ", round(mean({{evtd-data}}[{{evtd-data}} .> u50] .- u50), digits = 4))
+println("Mean excess at Q75: ", round(mean({{evtd-data}}[{{evtd-data}} .> u75] .- u75), digits = 4))
+println("Mean excess at Q90: ", round(mean({{evtd-data}}[{{evtd-data}} .> u90] .- u90), digits = 4))
+'''
+
+[[codeBranches]]
+model = "hill"
+code = '''
+using Statistics, Plots
+xs      = sort(filter(>(0), {{evtd-data}}); rev = true)  # Hill takes logs of ratios: losses must be positive (the negative ones, gains, are dropped)
+n       = length(xs)  # number of positive losses
+k_vals  = 2:min(n-1, 200)  # order statistic indices (up to 200)
+hill_k  = [mean(log.(xs[1:k] ./ xs[k+1])) for k in k_vals]  # Hill estimate of xi = 1 / alpha (alpha = tail index) from the k largest losses
+plot(k_vals, hill_k;
+    xlabel = "k (order statistic)", ylabel = "Hill estimate of xi",
+    title  = "Hill Plot", legend = false)  # look for a flat stretch: too small k is noisy, too large k is biased
+for k in filter(<(n), [10, 50, 100])
+    h = mean(log.(xs[1:k] ./ xs[k+1]))
+    println("Hill(k=", k, "): xi = ", round(h, digits = 4), ", tail index alpha = 1/xi = ", round(1 / h, digits = 2))
+end
+'''
+
+[[codeBranches]]
+model = "qq"
+code = '''
+using Extremes, Distributions, Statistics, Plots
+# losses as positive numbers (for returns, use losses = -returns)
+point(v) = mean(v)  # MLE and PWM: one value; Bayesian: the posterior mean over the draws
+{{?evtd-dist-select=gev}} y = {{evtd-data}}  # must be block maxima (e.g. monthly maximum losses): the GEV describes maxima, not every loss
+{{?evtd-dist-select=gp}} u = {{evtd-threshold-qq}}  # threshold
+{{?evtd-dist-select=gp}} y = {{evtd-data}}[{{evtd-data}} .> u] .- u  # excesses over the threshold
+{{?evtd-qq-method=mle}} fm = {{evtd-dist-select}}fit(y)  # maximum likelihood
+{{?evtd-qq-method=pwm}} fm = {{evtd-dist-select}}fitpwm(y)  # probability-weighted moments
+{{?evtd-qq-method=bayes}} fm = {{evtd-dist-select}}fitbayes(y)  # Bayesian (MCMC)
+{{?evtd-dist-select=gev}} mu_hat, sigma_hat, xi_hat = point(location(fm)), point(scale(fm)), point(shape(fm))
+{{?evtd-dist-select=gev}} d = GeneralizedExtremeValue(mu_hat, sigma_hat, xi_hat)  # fitted GEV
+{{?evtd-dist-select=gp}} sigma_hat, xi_hat = point(scale(fm)), point(shape(fm))
+{{?evtd-dist-select=gp}} d = GeneralizedPareto(0.0, sigma_hat, xi_hat)  # fitted GP for the excesses (location 0, since u was subtracted)
+n           = length(y)
+p_vals      = [(i - 0.5) / n for i in 1:n]  # plotting positions
+empirical   = sort(y)  # sorted data
+theoretical = quantile.(Ref(d), p_vals)  # fitted quantiles
+scatter(theoretical, empirical;
+    xlabel = "Fitted quantiles", ylabel = "Empirical quantiles",
+{{?evtd-dist-select=gev}}     title  = "QQ Plot (GEV)", legend = false)
+{{?evtd-dist-select=gp}}     title  = "QQ Plot (GP excesses)", legend = false)
+plot!(theoretical, theoretical; color = :red, label = "45-degree line")
+println("Shape xi = ", round(xi_hat, digits = 3), ", scale sigma = ", round(sigma_hat, digits = 3))
+println("QQ correlation: ", round(cor(empirical, theoretical), digits = 4))  # near 1 = straight QQ plot; a scale-free summary, not a formal test
+println("QQ RMSE / sd of the data: ", round(sqrt(mean((empirical .- theoretical) .^ 2)) / std(y), digits = 3))  # deviation in units of the data spread
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "mean_excess_plot"
+label = "Mean Excess Plot"
+desc = "Plot the sample mean excess function to identify a suitable threshold"
+code = '''
+using Statistics, Plots
+u_grid  = range(minimum({{evtd-data}}), quantile({{evtd-data}}, 0.95); length = {{evtd-n-thresholds}})  # threshold grid
+me_vals = [mean({{evtd-data}}[{{evtd-data}} .> u] .- u) for u in u_grid if sum({{evtd-data}} .> u) >= 10]  # mean excess
+u_vals  = [u for u in u_grid if sum({{evtd-data}} .> u) >= 10]  # valid thresholds
+scatter(u_vals, me_vals;
+    xlabel = "Threshold u", ylabel = "Mean Excess",
+    title  = "Mean Excess Plot", legend = false)
+'''
+
+[[actionGroups.actions]]
+id = "hill_estimator_plot"
+label = "Hill Estimator Plot"
+desc = "Hill estimates of the shape xi = 1 / alpha across the number k of largest losses; needs positive losses and a heavy (Pareto-type) tail"
+code = '''
+using Statistics, Plots
+xs     = sort(filter(>(0), {{evtd-data}}); rev = true)  # positive losses only: Hill takes logs of ratios
+n      = length(xs)
+k_vals = 2:min(n-1, 200)  # consider first 200 order statistics
+hill_k = [mean(log.(xs[1:k] ./ xs[k+1])) for k in k_vals]  # Hill estimates of xi = 1 / alpha
+plot(k_vals, hill_k;
+    xlabel = "k (order statistic)", ylabel = "Hill estimate of xi",
+    title  = "Hill Plot", legend = false)
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "threshold_stability"
+label = "Threshold Stability"
+desc = "GP fits at five thresholds: above a valid threshold the shape xi and the modified scale sigma - xi u stay roughly constant (sigma itself changes with u by design)"
+code = '''
+using Extremes, Distributions, Statistics
+# losses as positive numbers; if the GP fits above u, it fits above every higher threshold with the same xi
+# and with sigma(v) = sigma(u) + xi (v - u): so xi and the modified scale sigma - xi u should be stable, sigma itself should not
+candidates = quantile.(Ref({{evtd-data}}), [0.7, 0.75, 0.8, 0.85, 0.9])  # candidate thresholds
+for u in candidates
+    exc = {{evtd-data}}[{{evtd-data}} .> u] .- u  # exceedances above u
+    if length(exc) > 10  # require minimum exceedances
+        fm        = gpfit(exc)  # maximum likelihood GP fit
+        sigma_hat = scale(fm)[1]; xi_hat = shape(fm)[1]
+        println("u=", round(u, digits=2), "  xi_hat=", round(xi_hat, digits=3), "  modified scale sigma - xi u=", round(sigma_hat - xi_hat * u, digits=3), "  n=", length(exc))
+    end
+end
+'''
