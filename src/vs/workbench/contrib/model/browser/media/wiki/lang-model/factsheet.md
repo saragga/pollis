@@ -46,7 +46,7 @@ The last column applies whichever tab is open, so read scoring actions as unigra
 
 ## Tools and textbooks
 
-Counting comes from [JuliaText Contributors (2023)](#ref-JTC2023a). The standard textbook treatments of everything here are [Daniel Jurafsky and James H. Martin (2024)](#ref-JM2024a) and [Christopher D. Manning and Hinrich Schütze (1999)](#ref-MS1999a), and those are the places to read smoothing and evaluation in full. Their chapters on n-grams also cover the unknown-word token and sentence boundary symbols, which this panel leaves out.
+Counting comes from [JuliaText Contributors (2023)](#ref-JTC2023a). The standard textbook treatments of everything here are [Daniel Jurafsky and James H. Martin (2024)](#ref-JM2024a) and [Christopher D. Manning and Hinrich Schütze (1999)](#ref-MS1999a), and those are the places to read smoothing and evaluation in full. Their chapters on n-grams also cover the unknown-word token and sentence boundary symbols, which this panel leaves out. Read them before extending the code.
 
 ## References
 
