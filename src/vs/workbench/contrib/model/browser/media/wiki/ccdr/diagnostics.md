@@ -30,7 +30,7 @@ The central check is whether stated reliability matches realised reliability. Si
 
 <a id="ref-DHL2017a"></a>Dunning, I., Huchette, J. and Lubin, M. (2017). JuMP: a modeling language for mathematical optimization. *SIAM Review* 59(2), 295–320. [doi:10.1137/15M1020575](https://doi.org/10.1137/15M1020575)
 
-<a id="ref-GC2024a"></a>Goulart, P. J. and Chen, Y. (2024). Clarabel: an interior-point solver for conic programs with quadratic objectives. [arXiv:2405.14674](https://doi.org/10.48550/arXiv.2405.14674)
+<a id="ref-GC2024a"></a>Goulart, P. J. and Chen, Y. (2024). Clarabel: an interior-point solver for conic programs with quadratic objectives. [arXiv:2405.12762](https://doi.org/10.48550/arXiv.2405.12762)
 
 ## See Also
 

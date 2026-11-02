@@ -35,7 +35,7 @@ A sampler explores the model it is given. Clean diagnostics show that the chains
 
 <a id="ref-GSVBG2019a"></a>Gabry, J., Simpson, D., Vehtari, A., Betancourt, M. and Gelman, A. (2019). Visualization in Bayesian workflow. *Journal of the Royal Statistical Society Series A* 182(2), 389–402. [doi:10.1111/rssa.12378](https://doi.org/10.1111/rssa.12378)
 
-<a id="ref-GXG2018a"></a>Ge, H., Xu, K. and Ghahramani, Z. (2018). Turing: A language for flexible probabilistic inference. [doi:10.48550/arXiv.1907.07111](https://doi.org/10.48550/arXiv.1907.07111)
+<a id="ref-GXG2018a"></a>Ge, H., Xu, K. and Ghahramani, Z. (2018). Turing: A language for flexible probabilistic inference. *Proceedings of Machine Learning Research* 84, 1682-1690. [proceedings.mlr.press/v84/ge18b](https://proceedings.mlr.press/v84/ge18b.html)
 
 <a id="ref-GCSDV...2013a"></a>Gelman, A., Carlin, J. B., Stern, H. S., Dunson, D. B., Vehtari, A. and Rubin, D. B. (2013). Bayesian Data Analysis. CRC Press (3rd ed.).
 

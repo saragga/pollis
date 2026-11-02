@@ -235,28 +235,35 @@
 		},
 		{
 			"key": "ABDM2023a",
-			"type": "misc",
+			"type": "article",
 			"title": "Explaining Black-Box Models through Counterfactuals",
 			"authors": [
-				"Altmeyer, P.",
-				"van der Blom, I.",
-				"Daxberger, E.",
-				"Martens, D."
+				"Altmeyer, Patrick",
+				"van Deursen, Arie",
+				"Liem, Cynthia C. S."
 			],
 			"author_kind": "persons",
 			"authors_complete": true,
 			"year": 2023,
-			"arxiv": "2212.07466",
-			"url": "https://arxiv.org/abs/2212.07466",
-			"abstract": "The transmission dynamics of infectious diseases in animal production are driven by several propagation routes. Contaminated vehicles traveling between farms have been associated with indirect disease transmission. In this study, we used transportation vehicle data to analyze the magnitude of farm visits by different vehicles and to propose a methodology to reconstruct vehicle contact networks considering pathogen stability and cleaning and disinfection effectiveness. Here, we collected information from 6,363 farms and Global Positioning System (GPS) records from 567 vehicles used to transport feed, animals, and people. We reconstructed vehicle contacts among the farms, conserving pathogen stability decay and different probabilities of cleaning and disinfection. Results showed that vehicle movement networks were densely connected, with up to 86% of farms connected by these movements. Movements of vehicle transporting feed and pig among farms showed the highest network connectivity. The cleaning effectiveness of was variable among the different vehicle types and highly influenced by the frequency of vehicles stopping at clean stations. A large number of between-farm contacts with a pathogen stability &gt;0.8 were present in the vehicle network even with 100% cleaning effectiveness. Finally, we identified that vehicles contacted farms from different companies. Thus, our results suggest the vehicle network is a potential mechanism for spreading pathogens among farms. Moreover, even with scenarios with high effectiveness of cleaning and disinfection, the risk of vehicles spreading diseases was not completely eliminated.",
+			"journal": "JuliaCon Proceedings",
+			"volume": "1",
+			"number": "1",
+			"pages": "130",
+			"doi": "10.21105/jcon.00130",
+			"arxiv": "2308.07198",
+			"url": "https://arxiv.org/abs/2308.07198",
+			"abstract": "We present CounterfactualExplanations.jl: a package for generating Counterfactual Explanations (CE) and Algorithmic Recourse (AR) for black-box models in Julia. CE explain how inputs into a model need to change to yield specific model predictions. Explanations that involve realistic and actionable changes can be used to provide AR: a set of proposed actions for individuals to change an undesirable outcome for the better. In this article, we discuss the usefulness of CE for Explainable Artificial Intelligence and demonstrate the functionality of our package. The package is straightforward to use and designed with a focus on customization and extensibility. We envision it to one day be the go-to place for explaining arbitrary predictive models in Julia through a diverse suite of counterfactual generators.",
 			"abstract_source": "arxiv",
 			"keywords": [
-				"q-bio.PE"
+				"cs.LG",
+				"cs.AI",
+				"cs.PL"
 			],
 			"keywords_source": "arxiv",
 			"legacy_key": "altmeyer2023",
-			"source": "manual",
-			"checked": false,
+			"source": "arxiv",
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": true
 		},
 		{
@@ -3749,10 +3756,9 @@
 			"type": "misc",
 			"title": "StateSpaceModels.jl: A Julia Package for Time-Series Analysis in a State-Space Framework",
 			"authors": [
-				"Guilherme Bodin",
-				"Raphael Saavedra",
-				"Thuener Silva",
-				"Alexandre Street"
+				"Saavedra, Raphael",
+				"Bodin, Guilherme",
+				"Souto, Mario"
 			],
 			"author_kind": "persons",
 			"authors_complete": true,
@@ -3775,8 +3781,8 @@
 			"keywords_source": "openalex",
 			"legacy_key": "bodin2019",
 			"source": "datacite",
-			"retrieved": "2026-10-23",
-			"checked": false,
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": true
 		},
 		{
@@ -3880,6 +3886,7 @@
 			"title": "RxInfer: A Julia Package for Reactive Real-Time Bayesian Inference",
 			"authors": [
 				"Bagaev, Dmitry",
+				"Podusenko, Albert",
 				"de Vries, Bert"
 			],
 			"author_kind": "persons",
@@ -3906,8 +3913,8 @@
 			"keywords_source": "openalex",
 			"legacy_key": "bagaev2023c",
 			"source": "crossref",
-			"retrieved": "2026-10-23",
-			"checked": false,
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": true
 		},
 		{
@@ -8835,7 +8842,8 @@
 			"type": "article",
 			"title": "OnlineStats.jl: A Julia package for statistics on data streams",
 			"authors": [
-				"Day, Josh"
+				"Day, Josh",
+				"Zhou, Hua"
 			],
 			"author_kind": "persons",
 			"authors_complete": true,
@@ -8863,8 +8871,8 @@
 			"keywords_source": "openalex",
 			"legacy_key": "day2020",
 			"source": "crossref",
-			"retrieved": "2026-10-23",
-			"checked": false,
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": true
 		},
 		{
@@ -10917,40 +10925,6 @@
 			"open_access": false
 		},
 		{
-			"key": "Fle1970b",
-			"type": "article",
-			"title": "The Convergence of a Class of Double-Rank Minimization Algorithms",
-			"authors": [
-				"Fletcher, Roger"
-			],
-			"author_kind": "persons",
-			"authors_complete": true,
-			"year": 1970,
-			"journal": "IMA Journal of Applied Mathematics",
-			"volume": "6",
-			"number": "1",
-			"pages": "76-90",
-			"issn": "0272-4960",
-			"doi": "10.1093/imamat/6.1.76",
-			"openalex": "W2103111465",
-			"abstract": "This paper presents a more detailed analysis of a class of minimization algorithms, which includes as a special case the DFP (Davidon-Fletcher-Powell) method, than has previously appeared. Only quadratic functions are considered but particular attention is paid to the magnitude of successive errors and their dependence upon the initial matrix. On the basis of this a possible explanation of some of the observed characteristics of the class is tentatively suggested.",
-			"abstract_source": "openalex",
-			"keywords": [
-				"DFP method",
-				"quasi-Newton methods",
-				"convergence analysis",
-				"quadratic functions",
-				"error magnitude",
-				"unconstrained optimization"
-			],
-			"keywords_source": "openalex",
-			"legacy_key": "fletcher1970b",
-			"source": "crossref",
-			"retrieved": "2026-10-23",
-			"checked": false,
-			"open_access": false
-		},
-		{
 			"key": "Fle2000a",
 			"type": "book",
 			"title": "Practical Methods of Optimization",
@@ -11206,24 +11180,19 @@
 			"author_kind": "persons",
 			"authors_complete": true,
 			"year": 2024,
-			"doi": "10.48550/arXiv.2405.14674",
-			"arxiv": "2212.08260",
-			"openalex": "W4415797370",
-			"url": "https://arxiv.org/abs/2212.08260",
-			"oa_url": "https://arxiv.org/pdf/2405.14674",
-			"abstract": "Collaborative trajectory prediction can comprehensively forecast the future motion of objects through multi-view complementary information. However, it encounters two main challenges in multi-drone collaboration settings. The expansive aerial observations make it difficult to generate precise Bird's Eye View (BEV) representations. Besides, excessive interactions can not meet real-time prediction requirements within the constrained drone-based communication bandwidth. To address these problems, we propose a novel framework named \"Drones Help Drones\" (DHD). Firstly, we incorporate the ground priors provided by the drone's inclined observation to estimate the distance between objects and drones, leading to more precise BEV generation. Secondly, we design a selective mechanism based on the local feature discrepancy to prioritize the critical information contributing to prediction tasks during inter-drone interactions. Additionally, we create the first dataset for multi-drone collaborative prediction, named \"Air-Co-Pred\", and conduct quantitative and qualitative experiments to validate the effectiveness of our DHD framework.The results demonstrate that compared to state-of-the-art approaches, DHD reduces position deviation in BEV representations by over 20% and requires only a quarter of the transmission ratio for interactions while achieving comparable prediction performance. Moreover, DHD also shows promising generalization to the collaborative 3D object detection in CoPerception-UAVs.",
-			"abstract_source": "openalex",
+			"doi": "10.48550/arXiv.2405.12762",
+			"arxiv": "2405.12762",
+			"url": "https://arxiv.org/abs/2405.12762",
+			"abstract": "We present a general-purpose interior-point solver for convex optimization problems with conic constraints. Our method is based on a homogeneous embedding method originally developed for general monotone complementarity problems and more recently applied to operator splitting methods, and here specialized to an interior-point method for problems with quadratic objectives. We allow for a variety of standard symmetric and non-symmetric cones, and provide support for chordal decomposition methods in the case of semidefinite cones. We describe the implementation of this method in the open-source solver Clarabel, and provide a detailed numerical evaluation of its performance versus several state-of-the-art solvers on a wide range of standard benchmarks problems. Clarabel is faster and more robust than competing commercial and open-source solvers across a range of test sets, with a particularly large performance advantage for problems with quadratic objectives. Clarabel is currently distributed as a standard solver for the Python CVXPY optimization suite.",
+			"abstract_source": "arxiv",
 			"keywords": [
-				"multi-UAV systems",
-				"object trajectory prediction",
-				"cooperative behavior",
-				"UAV swarms"
+				"math.OC"
 			],
-			"keywords_source": "openalex",
+			"keywords_source": "arxiv",
 			"legacy_key": "goulart2024",
-			"source": "datacite",
-			"retrieved": "2026-10-23",
-			"checked": false,
+			"source": "arxiv",
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": true
 		},
 		{
@@ -12538,22 +12507,15 @@
 			"authors_complete": true,
 			"year": 2018,
 			"booktitle": "Proceedings of the 21st International Conference on Artificial Intelligence and Statistics (AISTATS)",
-			"doi": "10.48550/arXiv.1907.07111",
-			"arxiv": "1907.07111",
-			"openalex": "W2957384639",
-			"url": "http://proceedings.mlr.press/v84/ge18b.html",
-			"oa_url": "https://arxiv.org/pdf/1907.07111",
-			"abstract": "Let $\\mathbb{F}_{2^m}$ be a finite field of cardinality $2^m$, $R=\\mathbb{F}_{2^m}+u\\mathbb{F}_{2^m}$ $(u^2=0)$ and $s,n$ be positive integers such that $n$ is odd. In this paper, we give an explicit representation for every self-dual cyclic code over the finite chain ring $R$ of length $2^sn$ and provide a calculation method to obtain all distinct codes. Moreover, we obtain a clear formula to count the number of all these self-dual cyclic codes. As an application, self-dual and $2$-quasi-cyclic codes over $\\mathbb{F}_{2^m}$ of length $2^{s+1}n$ can be obtained from self-dual cyclic code over $R$ of length $2^sn$ and by a Gray map preserving orthogonality and distances from $R$ onto $\\mathbb{F}_{2^m}^2$.",
-			"abstract_source": "openalex",
-			"keywords": [
-				"finite chain rings",
-				"Gray map"
-			],
-			"keywords_source": "openalex",
+			"volume": "84",
+			"pages": "1682-1690",
+			"url": "https://proceedings.mlr.press/v84/ge18b.html",
+			"abstract": "Probabilistic programming promises to simplify and democratize probabilistic machine learning, but successful probabilistic programming systems require flexible, generic and efficient inference engines. In this work, we present a system called Turing for building MCMC algorithms for probabilistic programming inference. Turing has a very simple syntax and makes full use of the numerical capabilities in the Julia programming language, including all implemented probability distributions, and automatic differentiation. Turing supports a wide range of popular Monte Carlo algorithms, including Hamiltonian Monte Carlo (HMC), HMC with No-U-Turns (NUTS), Gibbs sampling, sequential Monte Carlo (SMC), and several particle MCMC (PMCMC) samplers. Most importantly, Turing inference is composable: it combines MCMC operations on subsets of variables, for example using a combination of an HMC engine and a particle Gibbs (PG) engine. We explore several combinations of inference methods with the aim of finding approaches that are both efficient and universal, i.e. applicable to arbitrary probabilistic models. NUTS—a popular variant of HMC that adapts Hamiltonian simulation path length automatically, although quite powerful for exploring differentiable target distributions, is however not universal. We identify some failure modes for the NUTS engine, and demonstrate that composition of PG (for discrete variables) and NUTS (for continuous variables) can be useful when the NUTS engine is either not applicable, or simply does not work well. Our aim is to present Turing and its composable inference engines to the world and encourage other researchers to build on this system to help advance the field of probabilistic machine learning.",
+			"abstract_source": "pmlr",
 			"legacy_key": "ge2018",
-			"source": "datacite",
-			"retrieved": "2026-10-23",
-			"checked": false,
+			"source": "pmlr",
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": true
 		},
 		{
@@ -20784,9 +20746,8 @@
 			"title": "Sophia: A Scalable Stochastic Second-order Optimizer for Language Model Pre-training",
 			"authors": [
 				"Liu, Hong",
-				"Zhu, Zhiyuan",
-				"Guo, Jiarui",
-				"Jordan, Michael",
+				"Li, Zhiyuan",
+				"Hall, David",
 				"Liang, Percy",
 				"Ma, Tengyu"
 			],
@@ -20812,8 +20773,8 @@
 			"keywords_source": "openalex",
 			"legacy_key": "liu2023",
 			"source": "datacite",
-			"retrieved": "2026-10-23",
-			"checked": false,
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": true
 		},
 		{
@@ -23005,18 +22966,19 @@
 			"author_kind": "persons",
 			"authors_complete": true,
 			"year": 2025,
-			"arxiv": "2508.12942",
-			"url": "https://arxiv.org/abs/2508.12942",
-			"abstract": "Anatomic tracer studies are critical for validating and improving diffusion MRI (dMRI) tractography. However, large-scale analysis of data from such studies is hampered by the labor-intensive process of annotating fiber bundles manually on histological slides. Existing automated methods often miss sparse bundles or require complex post-processing across consecutive sections, limiting their flexibility and generalizability. We present a streamlined, fully automated framework for fiber bundle segmentation in macaque tracer data, based on a U-Net architecture with large patch sizes, foreground aware sampling, and semisupervised pre-training. Our approach eliminates common errors such as mislabeling terminals as bundles, improves detection of sparse bundles by over 20% and reduces the False Discovery Rate (FDR) by 40% compared to the state-of-the-art, all while enabling analysis of standalone slices. This new framework will facilitate the automated analysis of anatomic tracing data at a large scale, generating more ground-truth data that can be used to validate and optimize dMRI tractography methods.",
+			"arxiv": "2510.21252",
+			"url": "https://arxiv.org/abs/2510.21252",
+			"abstract": "Recurrent neural networks (RNNs) are a cornerstone of sequence modeling across various scientific and industrial applications. Owing to their versatility, numerous RNN variants have been proposed over the past decade, aiming to improve the modeling of long-term dependencies and to address challenges such as vanishing and exploding gradients. However, no central library is available to test these variations, and reimplementing diverse architectures can be time-consuming and error-prone, limiting reproducibility and exploration. Here, we introduce three open-source libraries in Julia and Python that centralize numerous recurrent cell implementations and higher-level recurrent architectures. torchrecurrent, RecurrentLayers.jl, and LuxRecurrentLayers.jl offer a consistent framework for constructing and extending RNN models, providing built-in mechanisms for customization and experimentation. All packages are available under the MIT license and actively maintained on GitHub.",
 			"abstract_source": "arxiv",
 			"keywords": [
-				"cs.CV",
-				"cs.LG"
+				"cs.LG",
+				"cs.SE"
 			],
 			"keywords_source": "arxiv",
 			"legacy_key": "martinuzzi2025",
-			"source": "manual",
-			"checked": false,
+			"source": "arxiv",
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": true
 		},
 		{
@@ -25974,34 +25936,28 @@
 		{
 			"key": "Pol2021a",
 			"type": "misc",
-			"title": "Evolutionary.jl: A Julia package for evolutionary algorithms",
+			"title": "Evolutionary.jl",
 			"authors": [
-				"Poliak, Art"
+				"Wilde, Art",
+				"Thiem, Daniel",
+				"Leo",
+				"Gupta, Abhinav",
+				"Haselgrove, Andrew",
+				"Molina, Daniel",
+				"Honeypot95",
+				"matago",
+				"Rogerluo",
+				"Churavy, Valentin"
 			],
 			"author_kind": "persons",
 			"authors_complete": true,
 			"year": 2021,
-			"doi": "10.5281/zenodo.5781169",
-			"openalex": "W6931402096",
-			"oa_url": "https://doi.org/10.5281/zenodo.5781170",
-			"abstract": "Nocarodes geniculatus Uvarov, 1928 (Figs. 756, 790–791, 847) Nocarodes daghestanicus geniculatus sbsp. n.: Uvarov 1928: 154. Nocarodes daghestanicus geniculatus Uvarov, 1928: Tarbinsky 1940: 34 Nocarodes geniculatus Uvarov, 1928: Bey-Bienko & Mistshenko 1951: 361; Bey-Bienko 1964: 252; Stolyarov 1983: 507; Presa & Garcia 1983: 17; Otte 1994: 173; Stolyarov 1997: 69; Chernyakhovskii & Ravina 1997: 242, 243; Heller et al. 1998: 60. Type locality. Russia: Daghestan, Kumtorkale. Holotype: female (ZIN). Material examined. RUSSIA: Daghestan, Kumtorkale, 6.5.1926, 1♀ (Holotype), ibidem, 11.4.1926, 1♂ (Paratype) (ZIN); ibidem, 11.6.1926, 1♂ (Paratype); Derbent, 23.4.1926, 1♀ (Paratype) (leg. M. A. Rjabov) (NHMUK); AZERBAIJAN: N.E. Azerbaidjan, E. Kavkaz [Caucasia], Predgoraya, 1000 m, 8.7.1980, 4♀ (leg. et det. Stolyarov) ZIN). Distribution. Russia: Caucasia, Daghestan, Kumtorkale, Derbent, Azerbaijan: Predgoraya, Altı-Ağaç (Fig. 847). Remarks. Stolyarov (1983) recorded this species from Azerbaijan for the first time.",
-			"abstract_source": "openalex",
-			"keywords": [
-				"Nocarodes",
-				"millipedes",
-				"taxonomy",
-				"synonymy",
-				"type specimens",
-				"species distribution",
-				"Caucasus",
-				"Azerbaijan",
-				"Dagestan"
-			],
-			"keywords_source": "openalex",
+			"doi": "10.5281/zenodo.5110647",
+			"url": "https://github.com/wildart/Evolutionary.jl",
 			"legacy_key": "poliak2021",
-			"source": "datacite",
-			"retrieved": "2026-10-23",
-			"checked": false,
+			"source": "zenodo",
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": true
 		},
 		{
@@ -27080,12 +27036,13 @@
 			"authors": [
 				"Rackauckas, Christopher",
 				"Ma, Yingbo",
-				"Dixit, Vaibhav",
-				"Guo, Xingjian",
-				"Innes, Mike",
-				"Revels, Jarrett",
-				"Nyberg, Joakim",
-				"Ivaturi, Vijay"
+				"Martensen, Julius",
+				"Warner, Collin",
+				"Zubov, Kirill",
+				"Supekar, Rohit",
+				"Skinner, Dominic",
+				"Ramadhan, Ali",
+				"Edelman, Alan"
 			],
 			"author_kind": "persons",
 			"authors_complete": true,
@@ -27110,8 +27067,8 @@
 			"keywords_source": "openalex",
 			"legacy_key": "rackauckas2020b",
 			"source": "datacite",
-			"retrieved": "2026-10-23",
-			"checked": false,
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": true
 		},
 		{
@@ -27142,15 +27099,12 @@
 			"type": "misc",
 			"title": "DiffEqFlux.jl: A Julia Library for Neural Differential Equations",
 			"authors": [
-				"Rackauckas, Christopher",
+				"Rackauckas, Chris",
+				"Innes, Mike",
 				"Ma, Yingbo",
-				"Martensen, Julius",
-				"Warner, Collin",
-				"Zubov, Kirill",
-				"Supekar, Rohit",
-				"Skinner, Dominic",
-				"Ramadhan, Ali",
-				"Edelman, Alan"
+				"Bettencourt, Jesse",
+				"White, Lyndon",
+				"Dixit, Vaibhav"
 			],
 			"author_kind": "persons",
 			"authors_complete": true,
@@ -27173,8 +27127,8 @@
 			"keywords_source": "openalex",
 			"legacy_key": "rackauckas2019",
 			"source": "datacite",
-			"retrieved": "2026-10-23",
-			"checked": false,
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": true
 		},
 		{
@@ -27708,8 +27662,10 @@
 			"authors": [
 				"Ruff, Lukas",
 				"Vandermeulen, Robert A.",
-				"Franks, Billy Joe",
-				"Mueller, Emmanuel",
+				"Görnitz, Nico",
+				"Binder, Alexander",
+				"Müller, Emmanuel",
+				"Müller, Klaus-Robert",
 				"Kloft, Marius"
 			],
 			"author_kind": "persons",
@@ -27727,7 +27683,8 @@
 			"keywords_source": "arxiv",
 			"legacy_key": "ruff2020",
 			"source": "manual",
-			"checked": false,
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": true
 		},
 		{
@@ -27748,17 +27705,15 @@
 			"authors_complete": true,
 			"year": 2018,
 			"booktitle": "ICML",
-			"arxiv": "1801.05365",
-			"url": "https://arxiv.org/abs/1801.05365",
-			"abstract": "We propose a deep learning-based solution for the problem of feature learning in one-class classification. The proposed method operates on top of a Convolutional Neural Network (CNN) of choice and produces descriptive features while maintaining a low intra-class variance in the feature space for the given class. For this purpose two loss functions, compactness loss and descriptiveness loss are proposed along with a parallel CNN architecture. A template matching-based framework is introduced to facilitate the testing process. Extensive experiments on publicly available anomaly detection, novelty detection and mobile active authentication datasets show that the proposed Deep One-Class (DOC) classification method achieves significant improvements over the state-of-the-art.",
-			"abstract_source": "arxiv",
-			"keywords": [
-				"cs.CV"
-			],
-			"keywords_source": "arxiv",
+			"volume": "80",
+			"pages": "4393-4402",
+			"url": "https://proceedings.mlr.press/v80/ruff18a.html",
+			"abstract": "Despite the great advances made by deep learning in many machine learning problems, there is a relative dearth of deep learning approaches for anomaly detection. Those approaches which do exist involve networks trained to perform a task other than anomaly detection, namely generative models or compression, which are in turn adapted for use in anomaly detection; they are not trained on an anomaly detection based objective. In this paper we introduce a new anomaly detection method—Deep Support Vector Data Description—, which is trained on an anomaly detection based objective. The adaptation to the deep regime necessitates that our neural network and training procedure satisfy certain properties, which we demonstrate theoretically. We show the effectiveness of our method on MNIST and CIFAR-10 image benchmark datasets as well as on the detection of adversarial examples of GTSRB stop signs.",
+			"abstract_source": "pmlr",
 			"legacy_key": "ruff2018",
-			"source": "manual",
-			"checked": false,
+			"source": "pmlr",
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": true
 		},
 		{
@@ -33690,18 +33645,19 @@
 			"author_kind": "persons",
 			"authors_complete": true,
 			"year": 2022,
-			"arxiv": "2210.00983",
-			"url": "https://arxiv.org/abs/2210.00983",
-			"abstract": "This article summarizes recommendations made by the Community Engagement Frontier conveners as part of the 2022 Snowmass process. It suggests that institutions involved in high energy physics (e.g., universities, national laboratories, funding agencies, etc.) add education and outreach as a valuable effort and one that should be considered in hiring and promotion decisions.",
+			"arxiv": "2210.13355",
+			"url": "https://arxiv.org/abs/2210.13355",
+			"abstract": "Most supervised machine learning tasks are subject to irreducible prediction errors. Probabilistic predictive models address this limitation by providing probability distributions that represent a belief over plausible targets, rather than point estimates. Such models can be a valuable tool in decision-making under uncertainty, provided that the model output is meaningful and interpretable. Calibrated models guarantee that the probabilistic predictions are neither over- nor under-confident. In the machine learning literature, different measures and statistical tests have been proposed and studied for evaluating the calibration of classification models. For regression problems, however, research has been focused on a weaker condition of calibration based on predicted quantiles for real-valued targets. In this paper, we propose the first framework that unifies calibration evaluation and tests for general probabilistic predictive models. It applies to any such model, including classification and regression models of arbitrary dimension. Furthermore, the framework generalizes existing measures and provides a more intuitive reformulation of a recently proposed framework for calibration in multi-class classification. In particular, we reformulate and generalize the kernel calibration error, its estimators, and hypothesis tests using scalar-valued kernels, and evaluate the calibration of real-valued regression problems.",
 			"abstract_source": "arxiv",
 			"keywords": [
-				"hep-ex",
-				"physics.ed-ph"
+				"stat.ML",
+				"cs.LG"
 			],
 			"keywords_source": "arxiv",
 			"legacy_key": "widmann2022",
-			"source": "manual",
-			"checked": false,
+			"source": "arxiv",
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": true
 		},
 		{
@@ -34180,8 +34136,6 @@
 			"issn": "0040-1706",
 			"doi": "10.1080/00401706.1962.10490022",
 			"openalex": "W1987034518",
-			"abstract": "Your use of the JSTOR archive indicates your acceptance of JSTOR's Terms and Conditions of Use, available at",
-			"abstract_source": "openalex",
 			"keywords": [
 				"sums of squares",
 				"correction terms",
@@ -34191,7 +34145,7 @@
 			"legacy_key": "welford1962",
 			"source": "crossref",
 			"retrieved": "2026-10-23",
-			"checked": false,
+			"checked": true,
 			"open_access": false
 		},
 		{
@@ -34454,27 +34408,15 @@
 			"authors_complete": true,
 			"year": 2020,
 			"booktitle": "Proceedings of The 3rd Symposium on Advances in Approximate Bayesian Inference",
-			"doi": "10.48550/arXiv.1907.07114",
-			"arxiv": "1907.07114",
-			"openalex": "W2958233353",
-			"oa_url": "https://arxiv.org/pdf/1907.07114",
-			"abstract": "The magnetization relationships for magnetically uniform spherical particles of the Saturn rings are derived. The problem of a solitary magnetized sphere and spherical particle among identical particles scattered in a disk-like structure is solved. The differential equations of motion of particles in the gravitational and magnetic field are derived. Special cases of these equations are solved exactly, and their solutions suggest that the superposition of the gravitational attraction and repulsion by a magnetic field of the iced particles which possess diamagnetism can account for the stability of Saturn rings.",
-			"abstract_source": "openalex",
-			"keywords": [
-				"Saturn rings",
-				"ring origin",
-				"ring stability",
-				"diamagnetism",
-				"magnetized particles",
-				"magnetic repulsion",
-				"gravitational attraction",
-				"charged particles"
-			],
-			"keywords_source": "openalex",
+			"volume": "118",
+			"pages": "1-10",
+			"url": "https://proceedings.mlr.press/v118/xu20a.html",
+			"abstract": "Stan’s Hamilton Monte Carlo (HMC) has demonstrated remarkable sampling robustness and efficiency in a wide range of Bayesian inference problems through carefully crafted adaption schemes to the celebrated No-U-Turn sampler (NUTS) algorithm. It is challenging to implement these adaption schemes robustly in practice, hindering wider adoption amongst practitioners who are not directly working with the Stan modelling language. AdvancedHMC.jl (AHMC) contributes a modular, well-tested, standalone implementation of NUTS that recovers and extends Stan’s NUTS algorithm. AHMC is written in Julia, a modern high-level language for scientic computing, benefoting from optional hardware acceleration and interoperability with a wealth of existing software written in both Julia and other languages, such as Python. Efficacy is demonstrated empirically by comparison with Stan through a third-party Markov chain Monte Carlo benchmarking suite.",
+			"abstract_source": "pmlr",
 			"legacy_key": "xu2020",
-			"source": "datacite",
-			"retrieved": "2026-10-23",
-			"checked": false,
+			"source": "pmlr",
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": true
 		},
 		{
@@ -39113,18 +39055,6 @@
 			"date": "2026-10-23"
 		},
 		{
-			"key": "Fle1970b",
-			"count": 2666,
-			"source": "crossref",
-			"date": "2026-10-23"
-		},
-		{
-			"key": "Fle1970b",
-			"count": 2878,
-			"source": "openalex",
-			"date": "2026-10-23"
-		},
-		{
 			"key": "Fle2000a",
 			"count": 1163,
 			"source": "crossref",
@@ -39207,12 +39137,6 @@
 			"count": 11,
 			"source": "openalex",
 			"date": "2026-10-24"
-		},
-		{
-			"key": "GC2024a",
-			"count": 12,
-			"source": "openalex",
-			"date": "2026-10-23"
 		},
 		{
 			"key": "GCG2021a",
@@ -39645,12 +39569,6 @@
 			"count": 91,
 			"source": "openalex",
 			"date": "2026-11-02"
-		},
-		{
-			"key": "GXG2018a",
-			"count": 4,
-			"source": "openalex",
-			"date": "2026-10-23"
 		},
 		{
 			"key": "Gal1886a",
@@ -44081,12 +43999,6 @@
 			"date": "2026-10-23"
 		},
 		{
-			"key": "Pol2021a",
-			"count": 0,
-			"source": "openalex",
-			"date": "2026-10-23"
-		},
-		{
 			"key": "Pow1970a",
 			"count": 266,
 			"source": "crossref",
@@ -46905,12 +46817,6 @@
 			"count": 4229,
 			"source": "openalex",
 			"date": "2026-10-31"
-		},
-		{
-			"key": "XGTTT...2020a",
-			"count": 0,
-			"source": "openalex",
-			"date": "2026-10-23"
 		},
 		{
 			"key": "Xie2021a",
@@ -49750,7 +49656,7 @@
 				"NW2006a",
 				"BV2004a",
 				"NM1965a",
-				"Fle1970b",
+				"Bro1970a",
 				"WB2006a"
 			]
 		},
