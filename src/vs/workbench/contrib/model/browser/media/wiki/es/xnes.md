@@ -20,7 +20,7 @@ The two share a population, ranks and full covariance, and they can look much al
 
 ## What the Code Does
 
-The tab calls `bboptimize` from `BlackBoxOptim.jl`, with `Method=:xnes`, the box as `SearchRange`, and **Budget** as the limit of evaluations. **Initial Step Size** does not apply here, and no starting point is passed, so that the package chooses both. `stop_reason` provides the status. `RngSeed` sets the seed, so that a run can be repeated and **Multi-Start Analysis** can vary it.
+The tab calls `bboptimize` from `BlackBoxOptim.jl`, with `Method=:xnes`, the box as `SearchRange`, and **Budget** as the limit of evaluations. **Initial Step Size** does not apply here, and no starting point is passed, so that the package chooses both. `stop_reason` provides the status. `RngSeed` sets the seed, so that a run can be repeated and **Multi-Start Analysis** can vary it. No gradient is ever requested.
 
 ## Where xNES Struggles
 
