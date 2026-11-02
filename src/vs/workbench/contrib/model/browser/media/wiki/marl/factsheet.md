@@ -67,17 +67,15 @@ On **Competitive**, each player's previous afterstate value V moves by alpha (ta
 
 The five epsilon values are 0.01, 0.05, 0.1, 0.2 and 0.4 whatever **Exploration (epsilon)** says, and those rows retrain from scratch.
 
-## Named package and textbook
+## Packages and textbook
 
-`ReinforcementLearning.jl` is the panel's named package, described by [Jun Tian (2020)](#ref-Tia...2020a), although the tabs' code does not load it. The package is a natural next step for environments and algorithms beyond the tables written out here.
+The learning code needs nothing beyond Julia's standard library, since every update is written out in the panel. `Plots` draws the charts of the **Learning Curve**, **Win Rate / Success Rate**, **Non-Stationarity**, **Greedy Match** and **Learner Comparison** actions, and the tables themselves stay readable in the printed results.
 
 For the single-agent foundations of everything in the panel, including Q-learning, TD(0) and afterstates, the standard text is [Richard S. Sutton and Andrew G. Barto (2018)](#ref-SB2018a). Its first chapter uses tic-tac-toe as its running example.
 
 ## References
 
 <a id="ref-SB2018a"></a>Sutton, R. S., & Barto, A. G. (2018). *Reinforcement Learning: An Introduction* (2nd ed.). MIT Press. [Online](http://incompleteideas.net/book/the-book-2nd.html)
-
-<a id="ref-Tia...2020a"></a>Tian, J. (2020). ReinforcementLearning.jl: A Reinforcement Learning Package for the Julia Programming Language. [GitHub](https://github.com/JuliaReinforcementLearning/ReinforcementLearning.jl)
 
 ## See Also
 

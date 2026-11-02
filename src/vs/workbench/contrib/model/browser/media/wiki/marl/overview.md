@@ -62,7 +62,7 @@ The [Factsheet](factsheet.md) lists all ten, and the [Diagnostics](diagnostics.m
 
 ## What the panel leaves out
 
-The tabs use lookup tables, so they do not scale to large problems, and the methods written for such problems are not implemented here. QMIX, MADDPG and COMA replace tables with neural networks, and training against a pool of past policies is a common guard against blind spots. The tabs' code loads neither those methods nor `ReinforcementLearning.jl`, and is written out in Base Julia.
+The tabs use lookup tables, so they do not scale to large problems, and the methods written for such problems are not implemented here. QMIX, MADDPG and COMA replace tables with neural networks, and training against a pool of past policies is a common guard against blind spots. None of those is in the tabs' code, which is written out in Base Julia.
 
 A known model calls for planning instead of learning: see **Multi-Agent Decision Processes**. The [Decision Guide](decision-guide.md) wiki says when each route fits, and textbook background is in [Yoav Shoham and Kevin Leyton-Brown (2009)](#ref-SL2009b).
 

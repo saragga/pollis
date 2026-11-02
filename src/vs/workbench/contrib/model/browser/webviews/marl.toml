@@ -9,8 +9,8 @@ viewType = "pollis.marl"
 defaultModel = "cooperative"
 
 [[packages]]
-name = "ReinforcementLearning.jl"
-github = "https://github.com/JuliaReinforcementLearning/ReinforcementLearning.jl"
+name = "Plots.jl"
+github = "https://github.com/JuliaPlots/Plots.jl"
 
 [[packages.videos]]
 title = "High Performance Computing in Julia"
@@ -81,13 +81,6 @@ bundled = true
 
 [[references]]
 separator = true
-label = "Software"
-
-[[references]]
-key = "Tia...2020a"
-
-[[references]]
-separator = true
 label = "Textbooks"
 
 [[references]]
@@ -152,11 +145,11 @@ label = "Competitive"
 
 [[bullets]]
 text = "Cooperative"
-detail = "agents share a team reward and learn to coordinate; centralised training with decentralised execution via algorithms such as QMIX or Multi-Agent Deep Deterministic Policy Gradient (MADDPG); each agent acts on its own local observations at execution time (ReinforcementLearning.jl)"
+detail = "agents share a team reward and learn to coordinate on a rendezvous grid, compared across independent learners (IQL), value decomposition (VDN) and a central joint-action learner; every agent's table sees all agents' positions, so the tab shows the difficulty of coordinating, not that of acting on partial views"
 
 [[bullets]]
 text = "Competitive"
-detail = "agents pursue opposing objectives in zero-sum or general-sum games; self-play against a pool of past policy versions drives emergent strategy and prevents exploitation of weak fixed opponents (ReinforcementLearning.jl)"
+detail = "agents pursue opposing objectives in zero-sum or general-sum games; self-play against a pool of past policy versions drives emergent strategy and prevents exploitation of weak fixed opponents"
 
 [[decisionRows]]
 task = "Cooperative"

@@ -4777,8 +4777,8 @@
 				"madp/tutorial-04-sg-generalsum.ipynb"
 			],
 			"packages": [
-				"POMDPs.jl",
-				"GameTheory.jl"
+				"JuMP.jl",
+				"HiGHS.jl"
 			]
 		},
 		{
@@ -4849,7 +4849,7 @@
 				"marl/tutorial-02-competitive.ipynb"
 			],
 			"packages": [
-				"ReinforcementLearning.jl"
+				"Plots.jl"
 			]
 		},
 		{

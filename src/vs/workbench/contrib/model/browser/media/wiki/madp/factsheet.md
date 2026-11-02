@@ -72,17 +72,17 @@ Every action reads the objects of the main run, so run the tab first after chang
 
 ## Packages and sources
 
-`POMDPs.jl` and `GameTheory.jl` are the panel's named packages, yet the tabs' code loads neither. Both are natural next steps for larger models. A framework for defining sequential decision problems and their solvers comes from [Maxim Egorov, Zachary N. Sunberg, Edward Balaban, Tim A. Wheeler, Jayesh K. Gupta and Mykel J. Kochenderfer (2017)](#ref-ESBWG...2017a). Solvers for normal-form games come from [QuantEcon Development Team (2023)](#ref-QEDT2023a).
+**Dec-POMDP** needs nothing beyond Julia's standard library, as JESP is written out in the panel's code. **Stochastic Games** states each stage's linear programme in `JuMP`, described by [Iain Dunning, Joey Huchette and Miles Lubin (2017)](#ref-DHL2017a). The solver is `HiGHS`, whose dual simplex method comes from [Qi Huangfu and J. A. Julian Hall (2018)](#ref-HH2018a).
 
-A textbook on decision making under uncertainty in general is [Mykel J. Kochenderfer (2015)](#ref-Koc2015a).
+Single-stage normal-form games, including general-sum ones, are the subject of the **Game Theory** panel in the Economics Toolbox. A textbook on decision making under uncertainty in general is [Mykel J. Kochenderfer (2015)](#ref-Koc2015a).
 
 ## References
 
-<a id="ref-ESBWG...2017a"></a>Egorov, M., Sunberg, Z. N., Balaban, E., Wheeler, T. A., Gupta, J. K., & Kochenderfer, M. J. (2017). POMDPs.jl: A Framework for Sequential Decision Making under Uncertainty. *Journal of Machine Learning Research*. [Online](https://jmlr.org/papers/v18/16-300.html)
+<a id="ref-DHL2017a"></a>Dunning, I., Huchette, J., & Lubin, M. (2017). JuMP: A Modeling Language for Mathematical Optimization. *SIAM Review* 59(2), 295-320. [doi:10.1137/15M1020575](https://doi.org/10.1137/15M1020575)
+
+<a id="ref-HH2018a"></a>Huangfu, Q., & Hall, J. A. J. (2018). Parallelizing the Dual Revised Simplex Method. *Mathematical Programming Computation* 10(1), 119-142. [doi:10.1007/s12532-017-0130-5](https://doi.org/10.1007/s12532-017-0130-5)
 
 <a id="ref-Koc2015a"></a>Kochenderfer, M. J. (2015). *Decision Making Under Uncertainty: Theory and Application*. MIT Press. [Online](https://mitpress.mit.edu/9780262029254/)
-
-<a id="ref-QEDT2023a"></a>QuantEcon Development Team (2023). GameTheory.jl: Normal-Form Game Solvers in Julia. [GitHub](https://github.com/QuantEcon/GameTheory.jl)
 
 ## See Also
 

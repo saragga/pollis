@@ -9,12 +9,12 @@ viewType = "pollis.madp"
 defaultModel = "dec"
 
 [[packages]]
-name = "POMDPs.jl"
-github = "https://github.com/JuliaPOMDP/POMDPs.jl"
+name = "JuMP.jl"
+github = "https://github.com/jump-dev/JuMP.jl"
 
 [[packages]]
-name = "GameTheory.jl"
-github = "https://github.com/QuantEcon/GameTheory.jl"
+name = "HiGHS.jl"
+github = "https://github.com/jump-dev/HiGHS.jl"
 
 [requires]
 packages = ["JuMP.jl", "HiGHS.jl", "Plots.jl"]
@@ -38,7 +38,7 @@ description = "Joint Equilibrium-based Search for Policies (JESP): alternating a
 name = "Stochastic Game: Zero-Sum"
 file = "madp/tutorial-03-sg-zerosum.ipynb"
 bundled = true
-description = "Zero-sum two-player stochastic game via minimax value iteration using GameTheory.jl: stage-game LP, Nash equilibrium, and convergence to stationary strategies"
+description = "Zero-sum two-player stochastic game via minimax value iteration using JuMP and HiGHS: stage-game LP, Nash equilibrium, and convergence to stationary strategies"
 
 [[notebookSections.notebooks]]
 name = "Stochastic Game: General-Sum"
@@ -95,10 +95,10 @@ separator = true
 label = "Software"
 
 [[references]]
-key = "ESBWG...2017a"
+key = "DHL2017a"
 
 [[references]]
-key = "QEDT2023a"
+key = "HH2018a"
 
 [[references]]
 separator = true

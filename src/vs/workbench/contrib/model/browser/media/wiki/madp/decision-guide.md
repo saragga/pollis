@@ -69,13 +69,13 @@ Each extra decimal of **Tolerance** costs ln(10) / ln(1 / gamma) iterations, abo
 
 The zero-sum structure gives a single value, reliable computation and safe strategies, and those are lost once interests partly overlap. In a general-sum game, a Nash equilibrium always exists for finite games, according to [John Nash (1951)](#ref-Nas1951a), but several may exist with different payoffs, and players may not agree on which to play.
 
-Treat the zero-sum tab as an approximation only when opposition truly dominates. Otherwise, `GameTheory.jl` solves single-stage general-sum games. A cooperative reading of a mostly shared payoff may be better served by a team model.
+Treat the zero-sum tab as an approximation only when opposition truly dominates. Otherwise, the **Game Theory** panel in the Economics Toolbox solves single-stage general-sum games. A cooperative reading of a mostly shared payoff may be better served by a team model.
 
 ## Using your own problem in the Dec-POMDP code
 
 Editing the code is the route to a problem other than Dec-Tiger. Change `reward`, `trans`, `hear` and `obs`, and the constants `NS` and `NA`, and the belief `b0`. `ACTIONS` should match the new action names, and every action that mentions listening or doors, such as **Against Baselines** and **Outcome Decomposition**, needs its own rewrite.
 
-Three limits are structural. `child` and `nodes` build binary trees, so `NO` must stay at 2 unless they are rewritten. `episode` assumes two states when it draws the next one. All functions are written for two agents, so a third needs new code throughout, and a framework such as `POMDPs.jl` may then be a better starting point. `fully_observed` is also a Dec-Tiger formula and needs replacing.
+Three limits are structural. `child` and `nodes` build binary trees, so `NO` must stay at 2 unless they are rewritten. `episode` assumes two states when it draws the next one. All functions are written for two agents, so a third needs new code throughout. `fully_observed` is also a Dec-Tiger formula and needs replacing.
 
 ## References
 
