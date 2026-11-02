@@ -39,6 +39,8 @@ The Extreme Value Risk Measures panel turns a fitted tail model into risk figure
 | Diagnose | **Return Level Uncertainty** | Asks for 95 percent intervals on the return levels at T = 10, 50 and 100 |
 | Interpret | **Empirical vs Extreme Value Risk** | Prints the empirical VaR and ES beside the Extreme Value ones |
 
+Run the Diagnose steps before relying on any risk figure from the panel.
+
 ## See Also
 
 - [Overview](overview.md) · [Diagnostics](diagnostics.md) · [Decision Guide](decision-guide.md)
