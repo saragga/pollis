@@ -47,7 +47,7 @@ Both **Hamiltonian Monte Carlo** and **Metropolis-Hastings** drop their first 10
 | Compare | **Compare Samplers**, **Prior Sensitivity** |
 | Interpret | **Summary Statistics**, **Parameter Correlations** |
 
-**Compare Samplers** and **Prior Sensitivity** run new fits with their own fixed settings, so they take longer than the other steps and ignore the inputs of the tab.
+**Compare Samplers** and **Prior Sensitivity** run new fits with their own fixed settings, so they take longer than the other steps and ignore the inputs of the tab. Edit their code to change those settings.
 
 ## See Also
 
