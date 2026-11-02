@@ -81,7 +81,7 @@ separator = true
 label = "Original Papers"
 
 [[references]]
-key = "LZGJL...2023a"
+key = "LLHLM2023a"
 
 [[models]]
 id = "sophia"

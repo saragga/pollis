@@ -12,7 +12,7 @@
 | Main functions | `search`, `crossover`, `pick`, `record!` |
 | Printed result | `best_point`, `best_value`, `evaluations` |
 
-The CMA-ES comparison comes from the package of [Art Wilde, Daniel Thiem, Leo, Abhinav Gupta, Andrew Haselgrove, Daniel Molina, Honeypot95, matago, Rogerluo and Valentin Churavy (2021)](#ref-Pol2021a).
+The CMA-ES comparison comes from the package of [Art Wilde (2021)](#ref-Wil...2021a).
 
 ## What the Inputs of the Panel Default To
 
@@ -65,7 +65,7 @@ The CMA-ES comparison comes from the package of [Art Wilde, Daniel Thiem, Leo, A
 
 ## References
 
-<a id="ref-Pol2021a"></a>Wilde, A., Thiem, D., Leo, Gupta, A., Haselgrove, A., Molina, D., Honeypot95, matago, Rogerluo and Churavy, V. (2021). Evolutionary.jl. [doi:10.5281/zenodo.5110647](https://doi.org/10.5281/zenodo.5110647)
+<a id="ref-Wil...2021a"></a>Wilde, A. (2021). Evolutionary.jl. [doi:10.5281/zenodo.5110647](https://doi.org/10.5281/zenodo.5110647)
 
 ## See Also
 

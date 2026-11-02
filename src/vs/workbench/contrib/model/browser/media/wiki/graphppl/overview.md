@@ -4,7 +4,7 @@ A probabilistic programme states a model in code, and an inference engine works 
 
 ## What Message Passing Does
 
-A joint distribution that splits into many small factors can be drawn as a graph, with one node per factor and edges for shared variables. Inference then becomes local: each node sends summaries to its neighbours, and a marginal is the product of the messages reaching a variable. [Kschischang, Frey and Loeliger (2001)](#ref-KFL2001a) gave the general form. Because each step touches few variables, the cost grows with the size of the graph rather than exponentially, and the work can be reused in real-time settings, which is the aim of [Dmitry Bagaev, Albert Podusenko and Bert de Vries (2023)](#ref-BV2023c).
+A joint distribution that splits into many small factors can be drawn as a graph, with one node per factor and edges for shared variables. Inference then becomes local: each node sends summaries to its neighbours, and a marginal is the product of the messages reaching a variable. [Kschischang, Frey and Loeliger (2001)](#ref-KFL2001a) gave the general form. Because each step touches few variables, the cost grows with the size of the graph rather than exponentially, and the work can be reused in real-time settings, which is the aim of [Dmitry Bagaev, Albert Podusenko and Bert de Vries (2023)](#ref-BPV2023a).
 
 ## How the Three Tabs Differ
 
@@ -46,7 +46,7 @@ Replace the synthetic line only once the model runs on it.
 
 ## References
 
-<a id="ref-BV2023c"></a>Bagaev, D., Podusenko, A. and de Vries, B. (2023). RxInfer: A Julia package for reactive real-time Bayesian inference. *Journal of Open Source Software* 8(84), 5161. [doi:10.21105/joss.05161](https://doi.org/10.21105/joss.05161)
+<a id="ref-BPV2023a"></a>Bagaev, D., Podusenko, A. and de Vries, B. (2023). RxInfer: A Julia package for reactive real-time Bayesian inference. *Journal of Open Source Software* 8(84), 5161. [doi:10.21105/joss.05161](https://doi.org/10.21105/joss.05161)
 
 <a id="ref-KFL2001a"></a>Kschischang, F. R., Frey, B. J. and Loeliger, H.-A. (2001). Factor graphs and the sum-product algorithm. *IEEE Transactions on Information Theory* 47(2), 498–519. [doi:10.1109/18.910572](https://doi.org/10.1109/18.910572)
 

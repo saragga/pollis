@@ -234,39 +234,6 @@
 			"open_access": true
 		},
 		{
-			"key": "ABDM2023a",
-			"type": "article",
-			"title": "Explaining Black-Box Models through Counterfactuals",
-			"authors": [
-				"Altmeyer, Patrick",
-				"van Deursen, Arie",
-				"Liem, Cynthia C. S."
-			],
-			"author_kind": "persons",
-			"authors_complete": true,
-			"year": 2023,
-			"journal": "JuliaCon Proceedings",
-			"volume": "1",
-			"number": "1",
-			"pages": "130",
-			"doi": "10.21105/jcon.00130",
-			"arxiv": "2308.07198",
-			"url": "https://arxiv.org/abs/2308.07198",
-			"abstract": "We present CounterfactualExplanations.jl: a package for generating Counterfactual Explanations (CE) and Algorithmic Recourse (AR) for black-box models in Julia. CE explain how inputs into a model need to change to yield specific model predictions. Explanations that involve realistic and actionable changes can be used to provide AR: a set of proposed actions for individuals to change an undesirable outcome for the better. In this article, we discuss the usefulness of CE for Explainable Artificial Intelligence and demonstrate the functionality of our package. The package is straightforward to use and designed with a focus on customization and extensibility. We envision it to one day be the go-to place for explaining arbitrary predictive models in Julia through a diverse suite of counterfactual generators.",
-			"abstract_source": "arxiv",
-			"keywords": [
-				"cs.LG",
-				"cs.AI",
-				"cs.PL"
-			],
-			"keywords_source": "arxiv",
-			"legacy_key": "altmeyer2023",
-			"source": "arxiv",
-			"retrieved": "2026-11-02",
-			"checked": true,
-			"open_access": true
-		},
-		{
 			"key": "ABERS1955a",
 			"type": "article",
 			"title": "An Empirical Distribution Function for Sampling with Incomplete Information",
@@ -524,6 +491,39 @@
 			"source": "crossref",
 			"retrieved": "2026-10-23",
 			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "ADL2023a",
+			"type": "article",
+			"title": "Explaining Black-Box Models through Counterfactuals",
+			"authors": [
+				"Altmeyer, Patrick",
+				"van Deursen, Arie",
+				"Liem, Cynthia C. S."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2023,
+			"journal": "JuliaCon Proceedings",
+			"volume": "1",
+			"number": "1",
+			"pages": "130",
+			"doi": "10.21105/jcon.00130",
+			"arxiv": "2308.07198",
+			"url": "https://arxiv.org/abs/2308.07198",
+			"abstract": "We present CounterfactualExplanations.jl: a package for generating Counterfactual Explanations (CE) and Algorithmic Recourse (AR) for black-box models in Julia. CE explain how inputs into a model need to change to yield specific model predictions. Explanations that involve realistic and actionable changes can be used to provide AR: a set of proposed actions for individuals to change an undesirable outcome for the better. In this article, we discuss the usefulness of CE for Explainable Artificial Intelligence and demonstrate the functionality of our package. The package is straightforward to use and designed with a focus on customization and extensibility. We envision it to one day be the go-to place for explaining arbitrary predictive models in Julia through a diverse suite of counterfactual generators.",
+			"abstract_source": "arxiv",
+			"keywords": [
+				"cs.LG",
+				"cs.AI",
+				"cs.PL"
+			],
+			"keywords_source": "arxiv",
+			"legacy_key": "altmeyer2023",
+			"source": "arxiv",
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": true
 		},
 		{
@@ -3405,6 +3405,43 @@
 			"open_access": false
 		},
 		{
+			"key": "BPV2023a",
+			"type": "article",
+			"title": "RxInfer: A Julia Package for Reactive Real-Time Bayesian Inference",
+			"authors": [
+				"Bagaev, Dmitry",
+				"Podusenko, Albert",
+				"de Vries, Bert"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2023,
+			"journal": "Journal of Open Source Software",
+			"volume": "8",
+			"number": "84",
+			"pages": "5161",
+			"issn": "2475-9066",
+			"doi": "10.21105/joss.05161",
+			"openalex": "W4366594996",
+			"oa_url": "https://joss.theoj.org/papers/10.21105/joss.05161.pdf",
+			"abstract": "Bayesian inference realizes optimal information processing through a full commitment to reasoning by probability theory.The Bayesian framework is positioned at the core of modern AI technology for applications such as speech and image recognition and generation, medical analysis, robot navigation, and more.The framework describes how a rational agent should update its beliefs when new information is revealed by the agent's environment.Unfortunately, perfect Bayesian reasoning is generally intractable, since calculations of (often) very high-dimensional integrals are required for many models of interest.As a result, a number of numerical algorithms for approximating Bayesian inference have been developed and implemented in probabilistic programming packages.Successful methods include the Laplace approximation ( Gelmanet al., 2015), variants of Monte Carlo (MC) sampling (Salimans et al., n.d.), Variational Inference (VI) (Blei et al., 2017), Automatic-Differentiation Variational Inference (ADVI) (Kucukelbir et al., 2017), and Black-Box Variational Inference (BBVI) (Bamler & Mandt, 2017).We present RxInfer.jl,which is a Julia (Jeff Bezanson et al., 2012;J. Bezanson et al., 2017) package for real-time variational Bayesian inference based on reactive message passing in a factor graph representation of the model under study (Bagaev & Vries, 2021).RxInfer.jlprovides access to a powerful model specification language that translates a textual description of a probabilistic model into a corresponding factor graph representation.In addition, RxInfer.jlsupports hybrid variational inference processes, where different Bayesian inference methods can be combined in different parts of the model, resulting in a straightforward mechanism to trade off accuracy for computational speed.The underlying implementation relies on a reactive programming paradigm and supports by design the processing of infinite asynchronous data streams.In the proposed framework, the inference engine reacts to new data and automatically updates relevant posteriors.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"variational inference",
+				"reactive programming",
+				"factor graphs",
+				"probabilistic programming",
+				"Julia package",
+				"asynchronous data streams"
+			],
+			"keywords_source": "openalex",
+			"legacy_key": "bagaev2023c",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "BPWLC2012a",
 			"type": "article",
 			"title": "A Survey of Monte Carlo Tree Search Methods",
@@ -3752,40 +3789,6 @@
 			"open_access": true
 		},
 		{
-			"key": "BSSS2019a",
-			"type": "misc",
-			"title": "StateSpaceModels.jl: A Julia Package for Time-Series Analysis in a State-Space Framework",
-			"authors": [
-				"Saavedra, Raphael",
-				"Bodin, Guilherme",
-				"Souto, Mario"
-			],
-			"author_kind": "persons",
-			"authors_complete": true,
-			"year": 2019,
-			"doi": "10.48550/arXiv.1908.01757",
-			"arxiv": "1908.01757",
-			"openalex": "W2966372872",
-			"oa_url": "https://arxiv.org/pdf/1908.01757",
-			"abstract": "StateSpaceModels.jl is an open-source Julia package for modeling, forecasting and simulating time series in a state-space framework. The package represents a straightforward tool that can be useful for a wide range of applications that deal with time series. In addition, it contains features that are not present in related commercial software, such as Monte Carlo simulation and the possibility of setting any user-defined linear model.",
-			"abstract_source": "openalex",
-			"keywords": [
-				"state-space model",
-				"time series analysis",
-				"time series forecasting",
-				"Monte Carlo simulation",
-				"Julia package",
-				"linear state-space models",
-				"open source software"
-			],
-			"keywords_source": "openalex",
-			"legacy_key": "bodin2019",
-			"source": "datacite",
-			"retrieved": "2026-11-02",
-			"checked": true,
-			"open_access": true
-		},
-		{
 			"key": "BT1997a",
 			"type": "article",
 			"title": "Introduction to Linear Optimization",
@@ -3878,43 +3881,6 @@
 			"source": "crossref",
 			"retrieved": "2026-10-23",
 			"checked": false,
-			"open_access": true
-		},
-		{
-			"key": "BV2023c",
-			"type": "article",
-			"title": "RxInfer: A Julia Package for Reactive Real-Time Bayesian Inference",
-			"authors": [
-				"Bagaev, Dmitry",
-				"Podusenko, Albert",
-				"de Vries, Bert"
-			],
-			"author_kind": "persons",
-			"authors_complete": true,
-			"year": 2023,
-			"journal": "Journal of Open Source Software",
-			"volume": "8",
-			"number": "84",
-			"pages": "5161",
-			"issn": "2475-9066",
-			"doi": "10.21105/joss.05161",
-			"openalex": "W4366594996",
-			"oa_url": "https://joss.theoj.org/papers/10.21105/joss.05161.pdf",
-			"abstract": "Bayesian inference realizes optimal information processing through a full commitment to reasoning by probability theory.The Bayesian framework is positioned at the core of modern AI technology for applications such as speech and image recognition and generation, medical analysis, robot navigation, and more.The framework describes how a rational agent should update its beliefs when new information is revealed by the agent's environment.Unfortunately, perfect Bayesian reasoning is generally intractable, since calculations of (often) very high-dimensional integrals are required for many models of interest.As a result, a number of numerical algorithms for approximating Bayesian inference have been developed and implemented in probabilistic programming packages.Successful methods include the Laplace approximation ( Gelmanet al., 2015), variants of Monte Carlo (MC) sampling (Salimans et al., n.d.), Variational Inference (VI) (Blei et al., 2017), Automatic-Differentiation Variational Inference (ADVI) (Kucukelbir et al., 2017), and Black-Box Variational Inference (BBVI) (Bamler & Mandt, 2017).We present RxInfer.jl,which is a Julia (Jeff Bezanson et al., 2012;J. Bezanson et al., 2017) package for real-time variational Bayesian inference based on reactive message passing in a factor graph representation of the model under study (Bagaev & Vries, 2021).RxInfer.jlprovides access to a powerful model specification language that translates a textual description of a probabilistic model into a corresponding factor graph representation.In addition, RxInfer.jlsupports hybrid variational inference processes, where different Bayesian inference methods can be combined in different parts of the model, resulting in a straightforward mechanism to trade off accuracy for computational speed.The underlying implementation relies on a reactive programming paradigm and supports by design the processing of infinite asynchronous data streams.In the proposed framework, the inference engine reacts to new data and automatically updates relevant posteriors.",
-			"abstract_source": "openalex",
-			"keywords": [
-				"variational inference",
-				"reactive programming",
-				"factor graphs",
-				"probabilistic programming",
-				"Julia package",
-				"asynchronous data streams"
-			],
-			"keywords_source": "openalex",
-			"legacy_key": "bagaev2023c",
-			"source": "crossref",
-			"retrieved": "2026-11-02",
-			"checked": true,
 			"open_access": true
 		},
 		{
@@ -8709,6 +8675,44 @@
 			"open_access": false
 		},
 		{
+			"key": "DZ2020a",
+			"type": "article",
+			"title": "OnlineStats.jl: A Julia package for statistics on data streams",
+			"authors": [
+				"Day, Josh",
+				"Zhou, Hua"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2020,
+			"journal": "Journal of Open Source Software",
+			"volume": "5",
+			"number": "46",
+			"pages": "1816",
+			"issn": "2475-9066",
+			"doi": "10.21105/joss.01816",
+			"openalex": "W3004586222",
+			"oa_url": "https://joss.theoj.org/papers/10.21105/joss.01816.pdf",
+			"abstract": "The growing prevalence of big and streaming data requires a new generation of tools. Data often has infinite size in the sense that new observations are continually arriving daily, hourly, etc. In recent years, several new technologies such as Kafka (Apache Software Foundation, n.d.-a) and Spark Streaming (Apache Software Foundation, n.d.-b) have been introduced for processing streaming data. Statistical tools for data streams, however, are under-developed and offer only basic functionality. The majority of statistical software can only operate on finite batches and require re-loading possibly large datasets for seemingly simple tasks such as incorporating a few more observations into an analysis. OnlineStats is a Julia (Bezanson, Edelman, Karpinski, & Shah, 2017) package for high-performance online algorithms. The OnlineStats framework is easily extensible, includes a large catalog of algorithms, provides primitives for parallel computing, and offers a weighting mechanism that allows new observations have a higher relative influence over the value of the statistic/model/visualization.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"online statistics",
+				"data streams",
+				"Julia package",
+				"online algorithms",
+				"parallel computing",
+				"observation weighting",
+				"big data",
+				"statistical software"
+			],
+			"keywords_source": "openalex",
+			"legacy_key": "day2020",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "Dad2024a",
 			"type": "article",
 			"title": "MarSwitching.jl: A Julia package for Markov switching dynamic models",
@@ -8835,44 +8839,6 @@
 			"legacy_key": "davidsonpilon2015",
 			"source": "manual",
 			"checked": false,
-			"open_access": true
-		},
-		{
-			"key": "Day2020a",
-			"type": "article",
-			"title": "OnlineStats.jl: A Julia package for statistics on data streams",
-			"authors": [
-				"Day, Josh",
-				"Zhou, Hua"
-			],
-			"author_kind": "persons",
-			"authors_complete": true,
-			"year": 2020,
-			"journal": "Journal of Open Source Software",
-			"volume": "5",
-			"number": "46",
-			"pages": "1816",
-			"issn": "2475-9066",
-			"doi": "10.21105/joss.01816",
-			"openalex": "W3004586222",
-			"oa_url": "https://joss.theoj.org/papers/10.21105/joss.01816.pdf",
-			"abstract": "The growing prevalence of big and streaming data requires a new generation of tools. Data often has infinite size in the sense that new observations are continually arriving daily, hourly, etc. In recent years, several new technologies such as Kafka (Apache Software Foundation, n.d.-a) and Spark Streaming (Apache Software Foundation, n.d.-b) have been introduced for processing streaming data. Statistical tools for data streams, however, are under-developed and offer only basic functionality. The majority of statistical software can only operate on finite batches and require re-loading possibly large datasets for seemingly simple tasks such as incorporating a few more observations into an analysis. OnlineStats is a Julia (Bezanson, Edelman, Karpinski, & Shah, 2017) package for high-performance online algorithms. The OnlineStats framework is easily extensible, includes a large catalog of algorithms, provides primitives for parallel computing, and offers a weighting mechanism that allows new observations have a higher relative influence over the value of the statistic/model/visualization.",
-			"abstract_source": "openalex",
-			"keywords": [
-				"online statistics",
-				"data streams",
-				"Julia package",
-				"online algorithms",
-				"parallel computing",
-				"observation weighting",
-				"big data",
-				"statistical software"
-			],
-			"keywords_source": "openalex",
-			"legacy_key": "day2020",
-			"source": "crossref",
-			"retrieved": "2026-11-02",
-			"checked": true,
 			"open_access": true
 		},
 		{
@@ -19738,6 +19704,43 @@
 			"open_access": true
 		},
 		{
+			"key": "LLHLM2023a",
+			"type": "inproceedings",
+			"title": "Sophia: A Scalable Stochastic Second-order Optimizer for Language Model Pre-training",
+			"authors": [
+				"Liu, Hong",
+				"Li, Zhiyuan",
+				"Hall, David",
+				"Liang, Percy",
+				"Ma, Tengyu"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2023,
+			"booktitle": "International Conference on Learning Representations",
+			"doi": "10.48550/arXiv.2305.14342",
+			"arxiv": "2305.14342",
+			"openalex": "W4378509498",
+			"oa_url": "https://arxiv.org/pdf/2305.14342",
+			"abstract": "Given the massive cost of language model pre-training, a non-trivial improvement of the optimization algorithm would lead to a material reduction on the time and cost of training. Adam and its variants have been state-of-the-art for years, and more sophisticated second-order (Hessian-based) optimizers often incur too much per-step overhead. In this paper, we propose Sophia, Second-order Clipped Stochastic Optimization, a simple scalable second-order optimizer that uses a light-weight estimate of the diagonal Hessian as the pre-conditioner. The update is the moving average of the gradients divided by the moving average of the estimated Hessian, followed by element-wise clipping. The clipping controls the worst-case update size and tames the negative impact of non-convexity and rapid change of Hessian along the trajectory. Sophia only estimates the diagonal Hessian every handful of iterations, which has negligible average per-step time and memory overhead. On language modeling with GPT models of sizes ranging from 125M to 1.5B, Sophia achieves a 2x speed-up compared to Adam in the number of steps, total compute, and wall-clock time, achieving the same perplexity with 50% fewer steps, less total compute, and reduced wall-clock time. Theoretically, we show that Sophia, in a much simplified setting, adapts to the heterogeneous curvatures in different parameter dimensions, and thus has a run-time bound that does not depend on the condition number of the loss.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"second-order optimization",
+				"preconditioning",
+				"gradient clipping",
+				"language model pretraining",
+				"training efficiency",
+				"non-convex optimization",
+				"GPT"
+			],
+			"keywords_source": "openalex",
+			"legacy_key": "liu2023",
+			"source": "datacite",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "LLW2007a",
 			"type": "article",
 			"title": "A note on Platt’s probabilistic outputs for support vector machines",
@@ -20739,43 +20742,6 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": false
-		},
-		{
-			"key": "LZGJL...2023a",
-			"type": "inproceedings",
-			"title": "Sophia: A Scalable Stochastic Second-order Optimizer for Language Model Pre-training",
-			"authors": [
-				"Liu, Hong",
-				"Li, Zhiyuan",
-				"Hall, David",
-				"Liang, Percy",
-				"Ma, Tengyu"
-			],
-			"author_kind": "persons",
-			"authors_complete": true,
-			"year": 2023,
-			"booktitle": "International Conference on Learning Representations",
-			"doi": "10.48550/arXiv.2305.14342",
-			"arxiv": "2305.14342",
-			"openalex": "W4378509498",
-			"oa_url": "https://arxiv.org/pdf/2305.14342",
-			"abstract": "Given the massive cost of language model pre-training, a non-trivial improvement of the optimization algorithm would lead to a material reduction on the time and cost of training. Adam and its variants have been state-of-the-art for years, and more sophisticated second-order (Hessian-based) optimizers often incur too much per-step overhead. In this paper, we propose Sophia, Second-order Clipped Stochastic Optimization, a simple scalable second-order optimizer that uses a light-weight estimate of the diagonal Hessian as the pre-conditioner. The update is the moving average of the gradients divided by the moving average of the estimated Hessian, followed by element-wise clipping. The clipping controls the worst-case update size and tames the negative impact of non-convexity and rapid change of Hessian along the trajectory. Sophia only estimates the diagonal Hessian every handful of iterations, which has negligible average per-step time and memory overhead. On language modeling with GPT models of sizes ranging from 125M to 1.5B, Sophia achieves a 2x speed-up compared to Adam in the number of steps, total compute, and wall-clock time, achieving the same perplexity with 50% fewer steps, less total compute, and reduced wall-clock time. Theoretically, we show that Sophia, in a much simplified setting, adapts to the heterogeneous curvatures in different parameter dimensions, and thus has a run-time bound that does not depend on the condition number of the loss.",
-			"abstract_source": "openalex",
-			"keywords": [
-				"second-order optimization",
-				"preconditioning",
-				"gradient clipping",
-				"language model pretraining",
-				"training efficiency",
-				"non-convex optimization",
-				"GPT"
-			],
-			"keywords_source": "openalex",
-			"legacy_key": "liu2023",
-			"source": "datacite",
-			"retrieved": "2026-11-02",
-			"checked": true,
-			"open_access": true
 		},
 		{
 			"key": "LZGLT...2017a",
@@ -25934,33 +25900,6 @@
 			"open_access": false
 		},
 		{
-			"key": "Pol2021a",
-			"type": "misc",
-			"title": "Evolutionary.jl",
-			"authors": [
-				"Wilde, Art",
-				"Thiem, Daniel",
-				"Leo",
-				"Gupta, Abhinav",
-				"Haselgrove, Andrew",
-				"Molina, Daniel",
-				"Honeypot95",
-				"matago",
-				"Rogerluo",
-				"Churavy, Valentin"
-			],
-			"author_kind": "persons",
-			"authors_complete": true,
-			"year": 2021,
-			"doi": "10.5281/zenodo.5110647",
-			"url": "https://github.com/wildart/Evolutionary.jl",
-			"legacy_key": "poliak2021",
-			"source": "zenodo",
-			"retrieved": "2026-11-02",
-			"checked": true,
-			"open_access": true
-		},
-		{
 			"key": "Pow1970a",
 			"type": "incollection",
 			"title": "A New Algorithm for Unconstrained Optimization",
@@ -26709,6 +26648,43 @@
 			"open_access": false
 		},
 		{
+			"key": "RIMBW...2019a",
+			"type": "misc",
+			"title": "DiffEqFlux.jl: A Julia Library for Neural Differential Equations",
+			"authors": [
+				"Rackauckas, Chris",
+				"Innes, Mike",
+				"Ma, Yingbo",
+				"Bettencourt, Jesse",
+				"White, Lyndon",
+				"Dixit, Vaibhav"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2019,
+			"doi": "10.48550/arXiv.1902.02376",
+			"arxiv": "1902.02376",
+			"openalex": "W2913467712",
+			"oa_url": "https://arxiv.org/pdf/1902.02376",
+			"abstract": "DiffEqFlux.jl is a library for fusing neural networks and differential equations. In this work we describe differential equations from the viewpoint of data science and discuss the complementary nature between machine learning models and differential equations. We demonstrate the ability to incorporate DifferentialEquations.jl-defined differential equation problems into a Flux-defined neural network, and vice versa. The advantages of being able to use the entire DifferentialEquations.jl suite for this purpose is demonstrated by counter examples where simple integration strategies fail, but the sophisticated integration strategies provided by the DifferentialEquations.jl library succeed. This is followed by a demonstration of delay differential equations and stochastic differential equations inside of neural networks. We show high-level functionality for defining neural ordinary differential equations (neural networks embedded into the differential equation) and describe the extra models in the Flux model zoo which includes neural stochastic differential equations. We conclude by discussing the various adjoint methods used for backpropogation of the differential equation solvers. DiffEqFlux.jl is an important contribution to the area, as it allows the full weight of the differential equation solvers developed from decades of research in the scientific computing field to be readily applied to the challenges posed by machine learning and data science.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"neural differential equations",
+				"neural ordinary differential equations",
+				"Julia",
+				"delay differential equations",
+				"stochastic differential equations",
+				"adjoint method",
+				"integration strategies"
+			],
+			"keywords_source": "openalex",
+			"legacy_key": "rackauckas2019",
+			"source": "datacite",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "RJ1976a",
 			"type": "article",
 			"title": "Relevance weighting of search terms",
@@ -27030,7 +27006,30 @@
 			"open_access": true
 		},
 		{
-			"key": "RMDGI...2020a",
+			"key": "RMEM2021a",
+			"type": "misc",
+			"title": "Long Expressive Memory for Sequence Modeling",
+			"authors": [
+				"Rusch, T. Konstantin",
+				"Mishra, Siddhartha",
+				"Erichson, N. Benjamin",
+				"Mahoney, Michael W."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2021,
+			"publisher": "arXiv",
+			"doi": "10.48550/arXiv.2110.04744",
+			"openalex": "W3207728292",
+			"url": "https://arxiv.org/abs/2110.04744",
+			"oa_url": "https://arxiv.org/pdf/2110.04744",
+			"source": "datacite",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "RMMWZ...2020a",
 			"type": "misc",
 			"title": "Universal Differential Equations for Scientific Machine Learning",
 			"authors": [
@@ -27066,66 +27065,6 @@
 			],
 			"keywords_source": "openalex",
 			"legacy_key": "rackauckas2020b",
-			"source": "datacite",
-			"retrieved": "2026-11-02",
-			"checked": true,
-			"open_access": true
-		},
-		{
-			"key": "RMEM2021a",
-			"type": "misc",
-			"title": "Long Expressive Memory for Sequence Modeling",
-			"authors": [
-				"Rusch, T. Konstantin",
-				"Mishra, Siddhartha",
-				"Erichson, N. Benjamin",
-				"Mahoney, Michael W."
-			],
-			"author_kind": "persons",
-			"authors_complete": true,
-			"year": 2021,
-			"publisher": "arXiv",
-			"doi": "10.48550/arXiv.2110.04744",
-			"openalex": "W3207728292",
-			"url": "https://arxiv.org/abs/2110.04744",
-			"oa_url": "https://arxiv.org/pdf/2110.04744",
-			"source": "datacite",
-			"retrieved": "2026-11-02",
-			"checked": true,
-			"open_access": true
-		},
-		{
-			"key": "RMMWZ...2019a",
-			"type": "misc",
-			"title": "DiffEqFlux.jl: A Julia Library for Neural Differential Equations",
-			"authors": [
-				"Rackauckas, Chris",
-				"Innes, Mike",
-				"Ma, Yingbo",
-				"Bettencourt, Jesse",
-				"White, Lyndon",
-				"Dixit, Vaibhav"
-			],
-			"author_kind": "persons",
-			"authors_complete": true,
-			"year": 2019,
-			"doi": "10.48550/arXiv.1902.02376",
-			"arxiv": "1902.02376",
-			"openalex": "W2913467712",
-			"oa_url": "https://arxiv.org/pdf/1902.02376",
-			"abstract": "DiffEqFlux.jl is a library for fusing neural networks and differential equations. In this work we describe differential equations from the viewpoint of data science and discuss the complementary nature between machine learning models and differential equations. We demonstrate the ability to incorporate DifferentialEquations.jl-defined differential equation problems into a Flux-defined neural network, and vice versa. The advantages of being able to use the entire DifferentialEquations.jl suite for this purpose is demonstrated by counter examples where simple integration strategies fail, but the sophisticated integration strategies provided by the DifferentialEquations.jl library succeed. This is followed by a demonstration of delay differential equations and stochastic differential equations inside of neural networks. We show high-level functionality for defining neural ordinary differential equations (neural networks embedded into the differential equation) and describe the extra models in the Flux model zoo which includes neural stochastic differential equations. We conclude by discussing the various adjoint methods used for backpropogation of the differential equation solvers. DiffEqFlux.jl is an important contribution to the area, as it allows the full weight of the differential equation solvers developed from decades of research in the scientific computing field to be readily applied to the challenges posed by machine learning and data science.",
-			"abstract_source": "openalex",
-			"keywords": [
-				"neural differential equations",
-				"neural ordinary differential equations",
-				"Julia",
-				"delay differential equations",
-				"stochastic differential equations",
-				"adjoint method",
-				"integration strategies"
-			],
-			"keywords_source": "openalex",
-			"legacy_key": "rackauckas2019",
 			"source": "datacite",
 			"retrieved": "2026-11-02",
 			"checked": true,
@@ -27656,7 +27595,7 @@
 			"open_access": true
 		},
 		{
-			"key": "RVFMK2020a",
+			"key": "RVGBM...2020a",
 			"type": "inproceedings",
 			"title": "Deep SAD: A Method for Deep Semi-Supervised Anomaly Detection",
 			"authors": [
@@ -28874,6 +28813,40 @@
 			"openalex": "W4234200495",
 			"oa_url": "https://dl.acm.org/doi/pdf/10.1145/243199.243206",
 			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "SBS2019a",
+			"type": "misc",
+			"title": "StateSpaceModels.jl: A Julia Package for Time-Series Analysis in a State-Space Framework",
+			"authors": [
+				"Saavedra, Raphael",
+				"Bodin, Guilherme",
+				"Souto, Mario"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2019,
+			"doi": "10.48550/arXiv.1908.01757",
+			"arxiv": "1908.01757",
+			"openalex": "W2966372872",
+			"oa_url": "https://arxiv.org/pdf/1908.01757",
+			"abstract": "StateSpaceModels.jl is an open-source Julia package for modeling, forecasting and simulating time series in a state-space framework. The package represents a straightforward tool that can be useful for a wide range of applications that deal with time series. In addition, it contains features that are not present in related commercial software, such as Monte Carlo simulation and the possibility of setting any user-defined linear model.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"state-space model",
+				"time series analysis",
+				"time series forecasting",
+				"Monte Carlo simulation",
+				"Julia package",
+				"linear state-space models",
+				"open source software"
+			],
+			"keywords_source": "openalex",
+			"legacy_key": "bodin2019",
+			"source": "datacite",
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
@@ -34286,6 +34259,24 @@
 			"open_access": false
 		},
 		{
+			"key": "Wil...2021a",
+			"type": "misc",
+			"title": "Evolutionary.jl",
+			"authors": [
+				"Wilde, Art"
+			],
+			"author_kind": "persons",
+			"authors_complete": false,
+			"year": 2021,
+			"doi": "10.5281/zenodo.5110647",
+			"url": "https://github.com/wildart/Evolutionary.jl",
+			"legacy_key": "poliak2021",
+			"source": "zenodo",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "Wil1945a",
 			"type": "article",
 			"title": "Individual Comparisons by Ranking Methods",
@@ -36475,6 +36466,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "BPV2023a",
+			"count": 21,
+			"source": "crossref",
+			"date": "2026-10-23"
+		},
+		{
+			"key": "BPV2023a",
+			"count": 18,
+			"source": "openalex",
+			"date": "2026-10-23"
+		},
+		{
 			"key": "BPWLC2012a",
 			"count": 2272,
 			"source": "crossref",
@@ -36601,12 +36604,6 @@
 			"date": "2026-10-23"
 		},
 		{
-			"key": "BSSS2019a",
-			"count": 6,
-			"source": "openalex",
-			"date": "2026-10-23"
-		},
-		{
 			"key": "BV2022a",
 			"count": 1,
 			"source": "crossref",
@@ -36626,18 +36623,6 @@
 		},
 		{
 			"key": "BV2023a",
-			"count": 18,
-			"source": "openalex",
-			"date": "2026-10-23"
-		},
-		{
-			"key": "BV2023c",
-			"count": 21,
-			"source": "crossref",
-			"date": "2026-10-23"
-		},
-		{
-			"key": "BV2023c",
 			"count": 18,
 			"source": "openalex",
 			"date": "2026-10-23"
@@ -38293,6 +38278,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "DZ2020a",
+			"count": 7,
+			"source": "crossref",
+			"date": "2026-10-23"
+		},
+		{
+			"key": "DZ2020a",
+			"count": 8,
+			"source": "openalex",
+			"date": "2026-10-23"
+		},
+		{
 			"key": "Dad2024a",
 			"count": 1,
 			"source": "crossref",
@@ -38325,18 +38322,6 @@
 		{
 			"key": "Dat2018a",
 			"count": 146,
-			"source": "openalex",
-			"date": "2026-10-23"
-		},
-		{
-			"key": "Day2020a",
-			"count": 7,
-			"source": "crossref",
-			"date": "2026-10-23"
-		},
-		{
-			"key": "Day2020a",
-			"count": 8,
 			"source": "openalex",
 			"date": "2026-10-23"
 		},
@@ -42067,6 +42052,12 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "LLHLM2023a",
+			"count": 33,
+			"source": "openalex",
+			"date": "2026-10-23"
+		},
+		{
 			"key": "LLW2007a",
 			"count": 602,
 			"source": "crossref",
@@ -42353,12 +42344,6 @@
 			"count": 2554,
 			"source": "openalex",
 			"date": "2026-11-02"
-		},
-		{
-			"key": "LZGJL...2023a",
-			"count": 33,
-			"source": "openalex",
-			"date": "2026-10-23"
 		},
 		{
 			"key": "LZGLT...2017a",
@@ -44215,6 +44200,12 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "RIMBW...2019a",
+			"count": 84,
+			"source": "openalex",
+			"date": "2026-10-23"
+		},
+		{
 			"key": "RJ1976a",
 			"count": 1214,
 			"source": "crossref",
@@ -44305,20 +44296,14 @@
 			"date": "2026-11-02"
 		},
 		{
-			"key": "RMDGI...2020a",
-			"count": 76,
-			"source": "openalex",
-			"date": "2026-10-23"
-		},
-		{
 			"key": "RMEM2021a",
 			"count": 11,
 			"source": "openalex",
 			"date": "2026-11-02"
 		},
 		{
-			"key": "RMMWZ...2019a",
-			"count": 84,
+			"key": "RMMWZ...2020a",
+			"count": 76,
 			"source": "openalex",
 			"date": "2026-10-23"
 		},
@@ -44933,6 +44918,12 @@
 			"count": 550,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "SBS2019a",
+			"count": 6,
+			"source": "openalex",
+			"date": "2026-10-23"
 		},
 		{
 			"key": "SBTSC...2023a",
@@ -47246,7 +47237,7 @@
 				"Agg2017a",
 				"GBC2016a",
 				"RVGDS...2018a",
-				"RVFMK2020a",
+				"RVGBM...2020a",
 				"HYZWT2021a"
 			]
 		},
@@ -47474,7 +47465,7 @@
 			],
 			"keys": [
 				"NW2006a",
-				"LZGJL...2023a"
+				"LLHLM2023a"
 			]
 		},
 		{
@@ -47693,7 +47684,7 @@
 				"EKSX1996a",
 				"Lob2021a",
 				"LL2017a",
-				"ABDM2023a",
+				"ADL2023a",
 				"DLR1977a",
 				"Llo1982a",
 				"BEF1984a",
@@ -48056,7 +48047,7 @@
 				"chiara.optimise.ec.devol"
 			],
 			"keys": [
-				"Pol2021a",
+				"Wil...2021a",
 				"PSL2005a",
 				"ES2015a",
 				"SP1997a",
@@ -48285,7 +48276,7 @@
 				"CG2016a",
 				"BBVS2021a",
 				"LL2017a",
-				"ABDM2023a"
+				"ADL2023a"
 			]
 		},
 		{
@@ -48296,7 +48287,7 @@
 				"chiara.optimise.ec.es"
 			],
 			"keys": [
-				"Pol2021a",
+				"Wil...2021a",
 				"MR2018a",
 				"ES2015a",
 				"BS2002a",
@@ -48443,7 +48434,7 @@
 				"chiara.optimise.ec.galg"
 			],
 			"keys": [
-				"Pol2021a",
+				"Wil...2021a",
 				"ES2015a",
 				"Gol1989a",
 				"HLG1999a",
@@ -48523,7 +48514,7 @@
 				"chiara.statistics.ppl.graphppl"
 			],
 			"keys": [
-				"BV2023c",
+				"BPV2023a",
 				"Bis2006a",
 				"KF2009a",
 				"RW2006a",
@@ -49587,8 +49578,8 @@
 				"chiara.statistics.nn.node"
 			],
 			"keys": [
-				"RMMWZ...2019a",
-				"RMDGI...2020a",
+				"RIMBW...2019a",
+				"RMMWZ...2020a",
 				"GBC2016a",
 				"Str2015a",
 				"CRBD2018a",
@@ -49619,7 +49610,7 @@
 				"chiara.statistics.eco.oa"
 			],
 			"keys": [
-				"Day2020a",
+				"DZ2020a",
 				"LRU2020a",
 				"Wel1962a",
 				"Pla1950a"
@@ -50094,7 +50085,7 @@
 				"chiara.statistics.ba.rxinfer"
 			],
 			"keys": [
-				"BV2023c",
+				"BPV2023a",
 				"BV2022a",
 				"Bis2006a",
 				"KF2009a",
@@ -50450,7 +50441,7 @@
 				"chiara.statistics.tsf"
 			],
 			"keys": [
-				"BSSS2019a",
+				"SBS2019a",
 				"HA2021a",
 				"DK2012a",
 				"HKOS2008a",
@@ -50482,7 +50473,7 @@
 				"chiara.statistics.timeseries.ssm"
 			],
 			"keys": [
-				"BSSS2019a",
+				"SBS2019a",
 				"DK2012a",
 				"Har1990a",
 				"WM2000a",
