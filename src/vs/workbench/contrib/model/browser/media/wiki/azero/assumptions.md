@@ -4,7 +4,7 @@ AlphaZero relies on a particular kind of problem, and the panel adds simplificat
 
 ## What Kind of Game AlphaZero Assumes
 
-The method assumes two players moving in turn, one zero-sum outcome, full information and no chance. A search needs an exact simulator, so that `play` can return the next board and any result from any position. Both panel games qualify. Hidden cards, dice or simultaneous moves break the search's reasoning, and a backed-up value with a sign flip at each ply makes sense only when one player's gain is the other's loss. Search with a learned model removes the need for a simulator, as in the work of [Schrittwieser, Antonoglou, Hubert, Simonyan, Sifre, Schmitt, Guez, Lockhart, Hassabis, Graepel, Lillicrap and Silver (2020)](#ref-SAHSS2020a).
+The method assumes two players moving in turn, one zero-sum outcome, full information and no chance. A search needs an exact simulator, so that `play` can return the next board and any result from any position. Both panel games qualify. Hidden cards, dice or simultaneous moves break the search's reasoning, and a backed-up value with a sign flip at each ply makes sense only when one player's gain is the other's loss. Search with a learned model removes the need for a simulator, as in the work of [Schrittwieser, Antonoglou, Hubert, Simonyan, Sifre, Schmitt, Guez, Lockhart, Hassabis, Graepel, Lillicrap and Silver (2020)](#ref-SAHSS...2020a).
 
 ## Why Self-Play Data Keep Changing
 
@@ -28,7 +28,7 @@ Search players with a network and no noise are deterministic, since `mcts_player
 
 ## References
 
-<a id="ref-SAHSS2020a"></a>Schrittwieser, J., Antonoglou, I., Hubert, T., Simonyan, K., Sifre, L., Schmitt, S., Guez, A., Lockhart, E., Hassabis, D., Graepel, T., Lillicrap, T. and Silver, D. (2020). Mastering Atari, Go, chess and shogi by planning with a learned model. *Nature* 588(7839), 604–609. [doi:10.1038/s41586-020-03051-4](https://doi.org/10.1038/s41586-020-03051-4)
+<a id="ref-SAHSS...2020a"></a>Schrittwieser, J., Antonoglou, I., Hubert, T., Simonyan, K., Sifre, L., Schmitt, S., Guez, A., Lockhart, E., Hassabis, D., Graepel, T., Lillicrap, T. and Silver, D. (2020). Mastering Atari, Go, chess and shogi by planning with a learned model. *Nature* 588(7839), 604–609. [doi:10.1038/s41586-020-03051-4](https://doi.org/10.1038/s41586-020-03051-4)
 
 <a id="ref-SSSAH...2017a"></a>Silver, D., Schrittwieser, J., Simonyan, K., Antonoglou, I., Huang, A., Guez, A., Hubert, T., Baker, L., Lai, M., Bolton, A., Chen, Y., Lillicrap, T., Hui, F., Sifre, L., van den Driessche, G., Graepel, T. and Hassabis, D. (2017). Mastering the game of Go without human knowledge. *Nature* 550(7676), 354–359. [doi:10.1038/nature24270](https://doi.org/10.1038/nature24270)
 

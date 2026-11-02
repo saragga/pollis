@@ -37,7 +37,7 @@ A change of target can change rankings between strategies, since Sortino and Ome
 
 ## Measuring or optimising?
 
-The panel measures risk on a given series. Optimising a portfolio against those measures is a different step, and the choice matters there. A historical ES objective can be reduced to a linear program, which [R. Tyrrell Rockafellar and Stanislav Uryasev (2000)](#ref-RU2000a) showed, and that makes it tractable with many assets.
+The panel measures risk on a given series. Optimising a portfolio against those measures is a different step, and the choice matters there. A historical ES objective can be reduced to a linear program, which [Rockafellar and Uryasev (2000)](#ref-RU2000a) showed, and that makes it tractable with many assets.
 
 VaR is not convex as a function of the weights, so optimising it directly can trap the search in local solutions and push risk into the unseen tail. Drawdown can also be optimised, with more effort. Whichever measure you choose, an optimiser concentrates on estimation errors, and a solution that looks best in sample will usually disappoint out of sample.
 

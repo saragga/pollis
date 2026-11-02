@@ -36,7 +36,7 @@ Convergence to the optimal line is good evidence but not a guarantee, as the est
 
 The learners do not explore equally at the same **Exploration (epsilon)**. Under **Independent Q-Learning (IQL)** and **Value Decomposition (VDN)**, each agent draws its own chance, so the team takes a fully greedy step only with probability (1 − e)^N. Under the **Central Joint-Action Learner**, one draw decides for all, so that probability is 1 − e.
 
-At e = 0.1 and four agents, that is about 0.66 against 0.9. The first two see more disturbance from partners' random moves, an effect called alter-exploration in the survey by [Laetitia Matignon, Guillaume J. Laurent and Nadine Le Fort-Piat (2012)](#ref-MLL2012a). **Learner Comparison** curves therefore differ partly through exploration, so compare the greedy figures as well.
+At e = 0.1 and four agents, that is about 0.66 against 0.9. The first two see more disturbance from partners' random moves, an effect called alter-exploration in the survey by [Matignon, Laurent and Le Fort-Piat (2012)](#ref-MLF2012a). **Learner Comparison** curves therefore differ partly through exploration, so compare the greedy figures as well.
 
 ## What the self-play values mean
 
@@ -81,7 +81,7 @@ Treat `states_visited` and `states_learned` as measures of how much of the probl
 
 ## References
 
-<a id="ref-MLL2012a"></a>Matignon, L., Laurent, G. J., & Le Fort-Piat, N. (2012). Independent Reinforcement Learners in Cooperative Markov Games: A Survey Regarding Coordination Problems. *The Knowledge Engineering Review* 27(1), 1-31. [doi:10.1017/S0269888912000057](https://doi.org/10.1017/S0269888912000057)
+<a id="ref-MLF2012a"></a>Matignon, L., Laurent, G. J., & Le Fort-Piat, N. (2012). Independent Reinforcement Learners in Cooperative Markov Games: A Survey Regarding Coordination Problems. *The Knowledge Engineering Review* 27(1), 1-31. [doi:10.1017/S0269888912000057](https://doi.org/10.1017/S0269888912000057)
 
 ## See Also
 

@@ -60,7 +60,7 @@ For zero-mean normal returns, in units of σ:
 
 ## Software in the panel's list
 
-The panel lists [Elias Oehne (2024)](#ref-Oeh2024a), a Julia package for performance and risk analysis that holds many of these measures. The panel's own code does not load it, since every formula is written out in full, so it serves as a next step for anyone who wants ready-made functions. Reading the code here shows exactly how each number arises.
+The panel lists [Oehne (2024)](#ref-Oeh2024a), a Julia package for performance and risk analysis that holds many of these measures. The panel's own code does not load it, since every formula is written out in full, so it serves as a next step for anyone who wants ready-made functions. Reading the code here shows exactly how each number arises.
 
 ## References
 

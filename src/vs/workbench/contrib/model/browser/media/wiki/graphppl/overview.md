@@ -4,7 +4,7 @@ A probabilistic programme states a model in code, and an inference engine works 
 
 ## What Message Passing Does
 
-A joint distribution that splits into many small factors can be drawn as a graph, with one node per factor and edges for shared variables. Inference then becomes local: each node sends summaries to its neighbours, and a marginal is the product of the messages reaching a variable. [Kschischang, Frey and Loeliger (2001)](#ref-KFL2001a) gave the general form. Because each step touches few variables, the cost grows with the size of the graph rather than exponentially, and the work can be reused in real-time settings, which is the aim of [Dmitry Bagaev, Albert Podusenko and Bert de Vries (2023)](#ref-BPV2023a).
+A joint distribution that splits into many small factors can be drawn as a graph, with one node per factor and edges for shared variables. Inference then becomes local: each node sends summaries to its neighbours, and a marginal is the product of the messages reaching a variable. [Kschischang, Frey and Loeliger (2001)](#ref-KFL2001a) gave the general form. Because each step touches few variables, the cost grows with the size of the graph rather than exponentially, and the work can be reused in real-time settings, which is the aim of [Bagaev, Podusenko and de Vries (2023)](#ref-BPV2023a).
 
 ## How the Three Tabs Differ
 

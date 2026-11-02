@@ -136,7 +136,7 @@ key = "PR2000a"
 key = "LMS2003a"
 
 [[references]]
-key = "HMM2010a"
+key = "HMP2010a"
 
 [[models]]
 id = "grasp"

@@ -6,7 +6,7 @@ Some decisions are whole functions rather than lists of numbers, such as a contr
 
 An ordinary optimiser chooses a vector. Here the unknown is a trajectory, such as a thrust u(t) at every moment on an interval, so there are infinitely many values to choose. Time is the usual infinite domain, though space or an uncertain parameter can play the same role.
 
-Writing the model on its natural domain has practical value. The integral objective and the differential equations stay visible as such, separately from how they are later discretised. [John A. Pulsipher, Weiqi Zhang, Tyler J. Hongisto and Victor M. Zavala (2022)](#ref-PZHZ2022a) set out this abstraction, and it underlies the package used in the panel, `InfiniteOpt`, which works alongside the JuMP modelling language.
+Writing the model on its natural domain has practical value. The integral objective and the differential equations stay visible as such, separately from how they are later discretised. [Pulsipher, Zhang, Hongisto and Zavala (2022)](#ref-PZHZ2022a) set out this abstraction, and it underlies the package used in the panel, `InfiniteOpt`, which works alongside the JuMP modelling language.
 
 ## The problem this panel solves
 
@@ -23,7 +23,7 @@ The one tab, **Optimal Control**, minimises the integral of a running cost subje
 
 The solver cannot handle a function directly. **Supports** picks points in time, and **Derivative Method** states how the derivative between them is approximated. The dynamics become algebraic constraints linking neighbouring values, and the integral becomes a weighted sum.
 
-That route, discretising first and then optimising, is called direct transcription ([John T. Betts (1998)](#ref-Bet1998a)). A model with 2 states, 1 control and 50 supports becomes a sparse problem in about 150 unknowns, before any added collocation points. The accuracy of the answer now rests on the mesh as well as the solver, which is why **Mesh Refinement** matters.
+That route, discretising first and then optimising, is called direct transcription ([Betts (1998)](#ref-Bet1998a)). A model with 2 states, 1 control and 50 supports becomes a sparse problem in about 150 unknowns, before any added collocation points. The accuracy of the answer now rests on the mesh as well as the solver, which is why **Mesh Refinement** matters.
 
 ## A default with an answer on paper
 

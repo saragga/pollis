@@ -4,7 +4,7 @@ Adaptive large neighbourhood search keeps several destroy operators and lets pas
 
 ## Operators that compete
 
-The original method was built for pickup and delivery routing, with several destroy and repair heuristics and weights updated from their success during the search ([Stefan Ropke and David Pisinger (2006)](#ref-RP2006a)). That paper rewards an operator by tiers, for a new best solution, a better one and an accepted one, updates weights after a segment of iterations, and accepts moves with a simulated-annealing rule.
+The original method was built for pickup and delivery routing, with several destroy and repair heuristics and weights updated from their success during the search ([Ropke and Pisinger (2006)](#ref-RP2006a)). That paper rewards an operator by tiers, for a new best solution, a better one and an accepted one, updates weights after a segment of iterations, and accepts moves with a simulated-annealing rule.
 
 The panel keeps the central idea in a compact form. Three destroy fractions compete, `FRACS = [0.25, 0.5, 0.75]`, with a single repair, and the update runs after every move. A move is accepted only when it improves the best value.
 

@@ -8,7 +8,7 @@ The tab builds `rate(U, p, t) = lambda * abs(U[1])`, with `lambda` from **Jump r
 
 ## How a Variable-Rate Jump Is Located in Time
 
-The arrival of a jump is defined by the integrated rate. JumpProcesses.jl uses the default `VR_FRM` method: it appends a state that starts at minus an exponential draw and grows at the rate, and a continuous callback fires the jump when that state crosses zero. After the jump, a new draw starts the next wait. Thinning, in the sense of [Lewis and Shedler (1979)](#ref-LS1979a), would need an upper bound on the rate, as does the `Coevolve` aggregator of [Zagatti et al. (2024)](#ref-ZIRIN...2024a). No bound holds while a diffusion can carry X upward, so the panel does not offer that aggregator.
+The arrival of a jump is defined by the integrated rate. JumpProcesses.jl uses the default `VR_FRM` method: it appends a state that starts at minus an exponential draw and grows at the rate, and a continuous callback fires the jump when that state crosses zero. After the jump, a new draw starts the next wait. Thinning, in the sense of [Lewis and Shedler (1979)](#ref-LS1979a), would need an upper bound on the rate, as does the `Coevolve` aggregator of [Zagatti, Isaacson, Rackauckas, Ilin, Ng and Bressan (2024)](#ref-ZIRIN...2024a). No bound holds while a diffusion can carry X upward, so the panel does not offer that aggregator.
 
 ## What Formulas Define the Custom Rate Jump Process
 

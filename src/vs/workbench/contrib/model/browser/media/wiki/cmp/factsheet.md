@@ -12,7 +12,7 @@
 | Printed result | `x`, `F_at_x`, `residual`, `solved` |
 | Main functions | `solve_cp`, `Fop`, `residual`, `mid` |
 
-The modelling package `Complementarity.jl` comes from [Kwon (2023)](#ref-Chu2023a), and the generated code uses the JuMP form directly.
+The modelling package `Complementarity.jl` comes from [Kwon (2023)](#ref-Kwo2023a), and the generated code uses the JuMP form directly.
 
 ## What the Inputs of the Panel Default To
 
@@ -54,7 +54,7 @@ The modelling package `Complementarity.jl` comes from [Kwon (2023)](#ref-Chu2023
 
 ## References
 
-<a id="ref-Chu2023a"></a>Kwon, C. (2023). Complementarity.jl: modeling and solving complementarity problems in Julia. [github.com/chkwon/Complementarity.jl](https://github.com/chkwon/Complementarity.jl)
+<a id="ref-Kwo2023a"></a>Kwon, C. (2023). Complementarity.jl: modeling and solving complementarity problems in Julia. [github.com/chkwon/Complementarity.jl](https://github.com/chkwon/Complementarity.jl)
 
 ## See Also
 

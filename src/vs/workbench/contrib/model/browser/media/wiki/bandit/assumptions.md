@@ -20,7 +20,7 @@ Rewards are 0 or 1, as a Bernoulli outcome. Regret bounds for **UCB** rest on bo
 
 ## What the Prior Assumes in Thompson Sampling
 
-A Beta prior on every arm says that each arm's probability comes from the same belief, and that arms are unrelated. The uniform default claims little. A strong wrong prior slows learning, as the data need time to outweigh it, and a very pessimistic one makes the search too narrow in early steps. Over a long horizon the data dominate. Over a short one, the prior can change the outcome materially, which makes its choice part of the design, as [Russo, Van Roy, Kazerouni, Osband and Wen (2018)](#ref-RVKOW2018a) discuss.
+A Beta prior on every arm says that each arm's probability comes from the same belief, and that arms are unrelated. The uniform default claims little. A strong wrong prior slows learning, as the data need time to outweigh it, and a very pessimistic one makes the search too narrow in early steps. Over a long horizon the data dominate. Over a short one, the prior can change the outcome materially, which makes its choice part of the design, as [Russo, Van Roy, Kazerouni, Osband and Wen (2018)](#ref-RRKOW2018a) discuss.
 
 ## What the Monte Carlo Averages Assume
 
@@ -30,7 +30,7 @@ Averaged actions use seeds 1 to **Monte Carlo Runs**, and they ignore **Random S
 
 <a id="ref-LS2020a"></a>Lattimore, T. and Szepesvári, C. (2020). *Bandit Algorithms*. Cambridge University Press. [doi:10.1017/9781108571401](https://doi.org/10.1017/9781108571401)
 
-<a id="ref-RVKOW2018a"></a>Russo, D., Van Roy, B., Kazerouni, A., Osband, I. and Wen, Z. (2018). A tutorial on Thompson sampling. *Foundations and Trends in Machine Learning* 11(1), 1–96. [doi:10.1561/2200000070](https://doi.org/10.1561/2200000070)
+<a id="ref-RRKOW2018a"></a>Russo, D., Van Roy, B., Kazerouni, A., Osband, I. and Wen, Z. (2018). A tutorial on Thompson sampling. *Foundations and Trends in Machine Learning* 11(1), 1–96. [doi:10.1561/2200000070](https://doi.org/10.1561/2200000070)
 
 ## See Also
 

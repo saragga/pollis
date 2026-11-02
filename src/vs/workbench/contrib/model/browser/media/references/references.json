@@ -1413,31 +1413,6 @@
 			"open_access": true
 		},
 		{
-			"key": "BBD2008a",
-			"type": "article",
-			"title": "A Comprehensive Survey of Multiagent Reinforcement Learning",
-			"authors": [
-				"Busoniu, Lucian",
-				"Babuska, Robert",
-				"De Schutter, Bart"
-			],
-			"author_kind": "persons",
-			"authors_complete": true,
-			"year": 2008,
-			"journal": "IEEE Transactions on Systems, Man, and Cybernetics, Part C (Applications and Reviews)",
-			"volume": "38",
-			"number": "2",
-			"pages": "156-172",
-			"issn": "1094-6977",
-			"doi": "10.1109/TSMCC.2007.913919",
-			"openalex": "W2099618002",
-			"oa_url": "http://resolver.tudelft.nl/uuid:4c7d3b49-06fc-400c-923e-3903b8d230fe",
-			"source": "crossref",
-			"retrieved": "2026-11-02",
-			"checked": true,
-			"open_access": true
-		},
-		{
 			"key": "BBDG2018a",
 			"type": "book",
 			"title": "Trades, Quotes and Prices: Financial Markets Under the Microscope",
@@ -1537,6 +1512,31 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "BBS2008a",
+			"type": "article",
+			"title": "A Comprehensive Survey of Multiagent Reinforcement Learning",
+			"authors": [
+				"Busoniu, Lucian",
+				"Babuska, Robert",
+				"De Schutter, Bart"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2008,
+			"journal": "IEEE Transactions on Systems, Man, and Cybernetics, Part C (Applications and Reviews)",
+			"volume": "38",
+			"number": "2",
+			"pages": "156-172",
+			"issn": "1094-6977",
+			"doi": "10.1109/TSMCC.2007.913919",
+			"openalex": "W2099618002",
+			"oa_url": "http://resolver.tudelft.nl/uuid:4c7d3b49-06fc-400c-923e-3903b8d230fe",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "BBV2008a",
@@ -2022,34 +2022,6 @@
 			"open_access": false
 		},
 		{
-			"key": "BGDHB2016a",
-			"type": "article",
-			"title": "De-duplication of database search results for systematic reviews in EndNote",
-			"authors": [
-				"Bramer, Wichor M.",
-				"Giustini, Dean",
-				"De Jonge, Gerdien B.",
-				"Holland, Leslie",
-				"Bekhuis, Tanja"
-			],
-			"author_kind": "persons",
-			"authors_complete": true,
-			"year": 2016,
-			"journal": "Journal of the Medical Library Association",
-			"volume": "104",
-			"number": "3",
-			"pages": "240-243",
-			"doi": "10.5195/jmla.2016.24",
-			"url": "https://doi.org/10.5195/jmla.2016.24",
-			"oa_url": "http://jmla.pitt.edu/ojs/jmla/article/download/24/18",
-			"abstract": "When conducting exhaustive searches for systematic reviews, information professionals search multiple databases with overlapping content. They typically remove duplicate records to reduce the reviewers’ workload associated with screening titles and abstracts; sometimes the reviewers remove the duplicates.This article describes a de-duplication method.",
-			"abstract_source": "openalex",
-			"source": "manual",
-			"retrieved": "2026-10-31",
-			"checked": true,
-			"open_access": true
-		},
-		{
 			"key": "BGGS1980a",
 			"type": "article",
 			"title": "Lyapunov Characteristic Exponents for smooth dynamical systems and for Hamiltonian systems; a method for computing all of them",
@@ -2119,6 +2091,34 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "BGJHB2016a",
+			"type": "article",
+			"title": "De-duplication of database search results for systematic reviews in EndNote",
+			"authors": [
+				"Bramer, Wichor M.",
+				"Giustini, Dean",
+				"De Jonge, Gerdien B.",
+				"Holland, Leslie",
+				"Bekhuis, Tanja"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2016,
+			"journal": "Journal of the Medical Library Association",
+			"volume": "104",
+			"number": "3",
+			"pages": "240-243",
+			"doi": "10.5195/jmla.2016.24",
+			"url": "https://doi.org/10.5195/jmla.2016.24",
+			"oa_url": "http://jmla.pitt.edu/ojs/jmla/article/download/24/18",
+			"abstract": "When conducting exhaustive searches for systematic reviews, information professionals search multiple databases with overlapping content. They typically remove duplicate records to reduce the reviewers’ workload associated with screening titles and abstracts; sometimes the reviewers remove the duplicates.This article describes a de-duplication method.",
+			"abstract_source": "openalex",
+			"source": "manual",
+			"retrieved": "2026-10-31",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "BGJM2011a",
@@ -3442,7 +3442,7 @@
 			"open_access": true
 		},
 		{
-			"key": "BPWLC2012a",
+			"key": "BPWLC...2012a",
 			"type": "article",
 			"title": "A Survey of Monte Carlo Tree Search Methods",
 			"authors": [
@@ -3657,6 +3657,27 @@
 			"source": "crossref",
 			"retrieved": "2026-10-23",
 			"checked": false,
+			"open_access": false
+		},
+		{
+			"key": "BS2004c",
+			"type": "article",
+			"title": "Econometric Analysis of Realized Covariation: High Frequency Based Covariance, Regression, and Correlation in Financial Economics",
+			"authors": [
+				"Barndorff-Nielsen, Ole E.",
+				"Shephard, Neil"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2004,
+			"journal": "Econometrica",
+			"volume": "72",
+			"number": "3",
+			"pages": "885-925",
+			"doi": "10.1111/j.1468-0262.2004.00515.x",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": false
 		},
 		{
@@ -4891,7 +4912,7 @@
 			"open_access": true
 		},
 		{
-			"key": "CAVC2019a",
+			"key": "CAZC2019a",
 			"type": "inproceedings",
 			"title": "Structural Scaffolds for Citation Intent Classification in Scientific Publications",
 			"authors": [
@@ -6636,35 +6657,6 @@
 			"open_access": false
 		},
 		{
-			"key": "Chu2023a",
-			"type": "misc",
-			"title": "Complementarity.jl: Modeling and Solving Complementarity Problems in Julia",
-			"authors": [
-				"Chung, Changhyun"
-			],
-			"author_kind": "persons",
-			"authors_complete": true,
-			"year": 2023,
-			"url": "https://github.com/chkwon/Complementarity.jl",
-			"abstract": "provides a modeling interface for mixed complementarity problems (MCP) and math programs with equilibrium problems (MPEC) via JuMP",
-			"abstract_source": "github",
-			"keywords": [
-				"complementarity",
-				"complementarity-conditions",
-				"equilibrium",
-				"equilibrium-constraints",
-				"mathematical-programming",
-				"mathematical-programs",
-				"mcp",
-				"optimization"
-			],
-			"keywords_source": "github",
-			"legacy_key": "chung2023",
-			"source": "manual",
-			"checked": false,
-			"open_access": true
-		},
-		{
 			"key": "Cod1970a",
 			"type": "article",
 			"title": "A Relational Model of Data for Large Shared Data Banks",
@@ -7538,29 +7530,6 @@
 			"open_access": false
 		},
 		{
-			"key": "DGS2015a",
-			"type": "article",
-			"title": "Inflation in the Great Recession and New Keynesian Models",
-			"authors": [
-				"Del Negro, Marco",
-				"Giannoni, Marc P.",
-				"Schorfheide, Frank"
-			],
-			"author_kind": "persons",
-			"authors_complete": true,
-			"year": 2015,
-			"journal": "American Economic Journal: Macroeconomics",
-			"volume": "7",
-			"number": "1",
-			"pages": "168-196",
-			"doi": "10.1257/mac.20140097",
-			"openalex": "W3021811462",
-			"source": "crossref",
-			"retrieved": "2026-11-02",
-			"checked": true,
-			"open_access": true
-		},
-		{
 			"key": "DGU2009a",
 			"type": "article",
 			"title": "Optimal Versus Naive Diversification: How Inefficient Is the 1/N Portfolio Strategy?",
@@ -7775,30 +7744,6 @@
 			"legacy_key": "duchi2011",
 			"source": "manual",
 			"checked": false,
-			"open_access": true
-		},
-		{
-			"key": "DHS2011b",
-			"type": "article",
-			"title": "Forecasting Time Series With Complex Seasonal Patterns Using Exponential Smoothing",
-			"authors": [
-				"De Livera, Alysha M.",
-				"Hyndman, Rob J.",
-				"Snyder, Ralph D."
-			],
-			"author_kind": "persons",
-			"authors_complete": true,
-			"year": 2011,
-			"journal": "Journal of the American Statistical Association",
-			"volume": "106",
-			"number": "496",
-			"pages": "1513-1527",
-			"doi": "10.1198/jasa.2011.tm09771",
-			"openalex": "W2109316012",
-			"legacy_key": "delivera2011",
-			"source": "crossref",
-			"retrieved": "2026-11-02",
-			"checked": true,
 			"open_access": true
 		},
 		{
@@ -9834,7 +9779,7 @@
 			"open_access": false
 		},
 		{
-			"key": "Eps1979a",
+			"key": "Epp1979a",
 			"type": "article",
 			"title": "Comovements in Stock Prices in the Very Short Run",
 			"authors": [
@@ -9919,29 +9864,6 @@
 			"retrieved": "2026-10-31",
 			"checked": true,
 			"open_access": true
-		},
-		{
-			"key": "FAM1981a",
-			"type": "article",
-			"title": "A Representation and Economic Interpretation of a Two-Level Programming Problem",
-			"authors": [
-				"Fortuny-Amat, José",
-				"McCarl, Bruce"
-			],
-			"author_kind": "persons",
-			"authors_complete": true,
-			"year": 1981,
-			"journal": "Journal of the Operational Research Society",
-			"volume": "32",
-			"number": "9",
-			"pages": "783-792",
-			"issn": "0160-5682",
-			"doi": "10.1057/jors.1981.156",
-			"openalex": "W2074376561",
-			"source": "crossref",
-			"retrieved": "2026-11-02",
-			"checked": true,
-			"open_access": false
 		},
 		{
 			"key": "FBSHE...2021a",
@@ -10206,6 +10128,29 @@
 			"pages": "607-636",
 			"doi": "10.1086/260061",
 			"openalex": "W2104795328",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "FM1981a",
+			"type": "article",
+			"title": "A Representation and Economic Interpretation of a Two-Level Programming Problem",
+			"authors": [
+				"Fortuny-Amat, José",
+				"McCarl, Bruce"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1981,
+			"journal": "Journal of the Operational Research Society",
+			"volume": "32",
+			"number": "9",
+			"pages": "783-792",
+			"issn": "0160-5682",
+			"doi": "10.1057/jors.1981.156",
+			"openalex": "W2074376561",
 			"source": "crossref",
 			"retrieved": "2026-11-02",
 			"checked": true,
@@ -11610,6 +11555,50 @@
 			"open_access": false
 		},
 		{
+			"key": "GL2007a",
+			"type": "article",
+			"title": "Statistical Analyses and Reproducible Research",
+			"authors": [
+				"Gentleman, Robert",
+				"Temple Lang, Duncan"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2007,
+			"journal": "Journal of Computational and Graphical Statistics",
+			"volume": "16",
+			"number": "1",
+			"pages": "1-23",
+			"doi": "10.1198/106186007x178663",
+			"url": "https://doi.org/10.1198/106186007x178663",
+			"abstract": "It is important, if not essential, to integrate the computations and code used in data analyses, methodological descriptions, simulations, and so on with the documents that describe and rely on them. This integration allows readers to both verify and adapt the claims in the documents. Authors can easily reproduce the results in the future, and they can present the document's contents in a different medium, for example, with interactive controls. This article describes a software framework for both authoring and distributing these integrated, dynamic documents that contain text, code, data, and any auxiliary content needed to recreate the computations. The documents are dynamic in that the contents—including figures, tables, and so on—can be recalculated each time a view of the document is generated. Our model treats a dynamic document as a master or “source” document from which one can generate different views in the form of traditional, derived documents for different audiences.We introduce the concept of a compendium as a container for one or more dynamic documents and the different elements needed when processing them, such as code and data. The compendium serves as a means for distributing, managing, and updating the collection.The step from disseminating analyses via a compendium to reproducible research is a small one. By reproducible research, we mean research papers with accompanying software tools that allow the reader to directly reproduce the results and employ the computational methods that are presented in the research paper. Some of the issues involved in paradigms for the production, distribution, and use of such reproducible research are discussed.",
+			"abstract_source": "openalex",
+			"source": "manual",
+			"retrieved": "2026-10-31",
+			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "GL2013a",
+			"type": "book",
+			"title": "Matrix Computations",
+			"authors": [
+				"Golub, Gene H.",
+				"Van Loan, Charles F."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2013,
+			"publisher": "Johns Hopkins University Press",
+			"isbn": "9781421407944",
+			"doi": "10.56021/9781421407944",
+			"legacy_key": "golub2013",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "GLLBT...2026a",
 			"type": "misc",
 			"title": "From Registry to Repository: How AI Agent Skills Are Written, Adapted, and Maintained",
@@ -12244,7 +12233,7 @@
 			"open_access": true
 		},
 		{
-			"key": "GSTV2022a",
+			"key": "GSTC2022a",
 			"type": "article",
 			"title": "The harm of class imbalance corrections for risk prediction models: illustration and simulation using logistic regression",
 			"authors": [
@@ -12334,50 +12323,6 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": true
-		},
-		{
-			"key": "GT2007a",
-			"type": "article",
-			"title": "Statistical Analyses and Reproducible Research",
-			"authors": [
-				"Gentleman, Robert",
-				"Temple Lang, Duncan"
-			],
-			"author_kind": "persons",
-			"authors_complete": true,
-			"year": 2007,
-			"journal": "Journal of Computational and Graphical Statistics",
-			"volume": "16",
-			"number": "1",
-			"pages": "1-23",
-			"doi": "10.1198/106186007x178663",
-			"url": "https://doi.org/10.1198/106186007x178663",
-			"abstract": "It is important, if not essential, to integrate the computations and code used in data analyses, methodological descriptions, simulations, and so on with the documents that describe and rely on them. This integration allows readers to both verify and adapt the claims in the documents. Authors can easily reproduce the results in the future, and they can present the document's contents in a different medium, for example, with interactive controls. This article describes a software framework for both authoring and distributing these integrated, dynamic documents that contain text, code, data, and any auxiliary content needed to recreate the computations. The documents are dynamic in that the contents—including figures, tables, and so on—can be recalculated each time a view of the document is generated. Our model treats a dynamic document as a master or “source” document from which one can generate different views in the form of traditional, derived documents for different audiences.We introduce the concept of a compendium as a container for one or more dynamic documents and the different elements needed when processing them, such as code and data. The compendium serves as a means for distributing, managing, and updating the collection.The step from disseminating analyses via a compendium to reproducible research is a small one. By reproducible research, we mean research papers with accompanying software tools that allow the reader to directly reproduce the results and employ the computational methods that are presented in the research paper. Some of the issues involved in paradigms for the production, distribution, and use of such reproducible research are discussed.",
-			"abstract_source": "openalex",
-			"source": "manual",
-			"retrieved": "2026-10-31",
-			"checked": true,
-			"open_access": false
-		},
-		{
-			"key": "GV2013a",
-			"type": "book",
-			"title": "Matrix Computations",
-			"authors": [
-				"Golub, Gene H.",
-				"Van Loan, Charles F."
-			],
-			"author_kind": "persons",
-			"authors_complete": true,
-			"year": 2013,
-			"publisher": "Johns Hopkins University Press",
-			"isbn": "9781421407944",
-			"doi": "10.56021/9781421407944",
-			"legacy_key": "golub2013",
-			"source": "crossref",
-			"retrieved": "2026-11-02",
-			"checked": true,
-			"open_access": false
 		},
 		{
 			"key": "GW1995a",
@@ -13694,7 +13639,7 @@
 			"open_access": true
 		},
 		{
-			"key": "HIBPP2018a",
+			"key": "HIBPP...2018a",
 			"type": "article",
 			"title": "Deep Reinforcement Learning That Matters",
 			"authors": [
@@ -13926,7 +13871,7 @@
 			"open_access": false
 		},
 		{
-			"key": "HKBM2017a",
+			"key": "HKBC2017a",
 			"type": "misc",
 			"title": "A Survey of Learning in Multiagent Environments: Dealing with Non-Stationarity",
 			"authors": [
@@ -14193,7 +14138,30 @@
 			"open_access": false
 		},
 		{
-			"key": "HMM2010a",
+			"key": "HMP2004a",
+			"type": "article",
+			"title": "A New Approach to Markov-Switching GARCH Models",
+			"authors": [
+				"Haas, M.",
+				"Mittnik, S.",
+				"Paolella, M. S."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2004,
+			"journal": "Journal of Financial Econometrics",
+			"volume": "2",
+			"number": "4",
+			"pages": "493-530",
+			"doi": "10.1093/jjfinec/nbh020",
+			"openalex": "W1963607300",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "HMP2010a",
 			"type": "article",
 			"title": "Variable neighbourhood search: methods and applications",
 			"authors": [
@@ -14215,27 +14183,6 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": false
-		},
-		{
-			"key": "HMP2004a",
-			"type": "article",
-			"title": "A New Approach to Markov-Switching GARCH Models",
-			"authors": [
-				"Haas, M."
-			],
-			"author_kind": "persons",
-			"authors_complete": true,
-			"year": 2004,
-			"journal": "Journal of Financial Econometrics",
-			"volume": "2",
-			"number": "4",
-			"pages": "493-530",
-			"doi": "10.1093/jjfinec/nbh020",
-			"openalex": "W1963607300",
-			"source": "crossref",
-			"retrieved": "2026-11-02",
-			"checked": true,
-			"open_access": true
 		},
 		{
 			"key": "HN1996a",
@@ -15091,7 +15038,7 @@
 			"open_access": true
 		},
 		{
-			"key": "HZHTH2018a",
+			"key": "HZHTH...2018a",
 			"type": "misc",
 			"title": "Soft Actor-Critic Algorithms and Applications",
 			"authors": [
@@ -18134,7 +18081,7 @@
 			"open_access": true
 		},
 		{
-			"key": "KVXHH...2022a",
+			"key": "KVXHH2022a",
 			"type": "article",
 			"title": "Analysis of stepped wedge cluster randomized trials in the presence of a time-varying treatment effect",
 			"authors": [
@@ -19079,6 +19026,36 @@
 			"open_access": false
 		},
 		{
+			"key": "Kwo2023a",
+			"type": "misc",
+			"title": "Complementarity.jl: Modeling and Solving Complementarity Problems in Julia",
+			"authors": [
+				"Kwon, Changhyun"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2023,
+			"url": "https://github.com/chkwon/Complementarity.jl",
+			"abstract": "provides a modeling interface for mixed complementarity problems (MCP) and math programs with equilibrium problems (MPEC) via JuMP",
+			"abstract_source": "github",
+			"keywords": [
+				"complementarity",
+				"complementarity-conditions",
+				"equilibrium",
+				"equilibrium-constraints",
+				"mathematical-programming",
+				"mathematical-programs",
+				"mcp",
+				"optimization"
+			],
+			"keywords_source": "github",
+			"legacy_key": "chung2023",
+			"source": "manual",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "LA2008a",
 			"type": "article",
 			"title": "A Sample Approximation Approach for Optimization with Probabilistic Constraints",
@@ -19377,7 +19354,7 @@
 			"open_access": false
 		},
 		{
-			"key": "LDHKPK2007a",
+			"key": "LDHKP...2007a",
 			"type": "article",
 			"title": "The Factor Graph Approach to Model-Based Signal Processing",
 			"authors": [
@@ -19513,7 +19490,7 @@
 			"open_access": true
 		},
 		{
-			"key": "LHPHE2015a",
+			"key": "LHPHE...2015a",
 			"type": "misc",
 			"title": "Continuous control with deep reinforcement learning",
 			"authors": [
@@ -19535,6 +19512,30 @@
 			"url": "https://arxiv.org/abs/1509.02971",
 			"oa_url": "https://arxiv.org/pdf/1509.02971",
 			"source": "datacite",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "LHS2011a",
+			"type": "article",
+			"title": "Forecasting Time Series With Complex Seasonal Patterns Using Exponential Smoothing",
+			"authors": [
+				"De Livera, Alysha M.",
+				"Hyndman, Rob J.",
+				"Snyder, Ralph D."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2011,
+			"journal": "Journal of the American Statistical Association",
+			"volume": "106",
+			"number": "496",
+			"pages": "1513-1527",
+			"doi": "10.1198/jasa.2011.tm09771",
+			"openalex": "W2109316012",
+			"legacy_key": "delivera2011",
+			"source": "crossref",
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
@@ -21959,7 +21960,7 @@
 			"open_access": false
 		},
 		{
-			"key": "MLL2012a",
+			"key": "MLF2012a",
 			"type": "article",
 			"title": "Independent reinforcement learners in cooperative Markov games: a survey regarding coordination problems",
 			"authors": [
@@ -22565,7 +22566,7 @@
 			"open_access": true
 		},
 		{
-			"key": "MTOD2021a",
+			"key": "MTOL2021a",
 			"type": "article",
 			"title": "Google Scholar, Microsoft Academic, Scopus, Dimensions, Web of Science, and OpenCitations’ COCI: a multidisciplinary comparison of coverage via citations",
 			"authors": [
@@ -23511,6 +23512,53 @@
 			"keywords_source": "openalex",
 			"source": "datacite",
 			"retrieved": "2026-10-30",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "NCH2015a",
+			"type": "article",
+			"title": "Obtaining Well Calibrated Probabilities Using Bayesian Binning",
+			"authors": [
+				"Pakdaman Naeini, Mahdi",
+				"Cooper, Gregory",
+				"Hauskrecht, Milos"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2015,
+			"journal": "Proceedings of the AAAI Conference on Artificial Intelligence",
+			"volume": "29",
+			"number": "1",
+			"issn": "2374-3468",
+			"doi": "10.1609/aaai.v29i1.9602",
+			"openalex": "W2254249950",
+			"oa_url": "https://doi.org/10.1609/aaai.v29i1.9602",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "NGS2015a",
+			"type": "article",
+			"title": "Inflation in the Great Recession and New Keynesian Models",
+			"authors": [
+				"Del Negro, Marco",
+				"Giannoni, Marc P.",
+				"Schorfheide, Frank"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2015,
+			"journal": "American Economic Journal: Macroeconomics",
+			"volume": "7",
+			"number": "1",
+			"pages": "168-196",
+			"doi": "10.1257/mac.20140097",
+			"openalex": "W3021811462",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
 		},
@@ -24648,31 +24696,7 @@
 			"open_access": false
 		},
 		{
-			"key": "PCH2015a",
-			"type": "article",
-			"title": "Obtaining Well Calibrated Probabilities Using Bayesian Binning",
-			"authors": [
-				"Pakdaman Naeini, Mahdi",
-				"Cooper, Gregory",
-				"Hauskrecht, Milos"
-			],
-			"author_kind": "persons",
-			"authors_complete": true,
-			"year": 2015,
-			"journal": "Proceedings of the AAAI Conference on Artificial Intelligence",
-			"volume": "29",
-			"number": "1",
-			"issn": "2374-3468",
-			"doi": "10.1609/aaai.v29i1.9602",
-			"openalex": "W2254249950",
-			"oa_url": "https://doi.org/10.1609/aaai.v29i1.9602",
-			"source": "crossref",
-			"retrieved": "2026-11-02",
-			"checked": true,
-			"open_access": true
-		},
-		{
-			"key": "PCVV2015a",
+			"key": "PCMV2015a",
 			"type": "article",
 			"title": "Epidemic processes in complex networks",
 			"authors": [
@@ -26498,30 +26522,6 @@
 			"open_access": false
 		},
 		{
-			"key": "RCD1993a",
-			"type": "article",
-			"title": "A practical method for calculating largest Lyapunov exponents from small data sets",
-			"authors": [
-				"Rosenstein, Michael T.",
-				"Collins, James J.",
-				"De Luca, Carlo J."
-			],
-			"author_kind": "persons",
-			"authors_complete": true,
-			"year": 1993,
-			"journal": "Physica D: Nonlinear Phenomena",
-			"volume": "65",
-			"number": "1-2",
-			"pages": "117-134",
-			"issn": "0167-2789",
-			"doi": "10.1016/0167-2789(93)90009-P",
-			"openalex": "W2124428761",
-			"source": "crossref",
-			"retrieved": "2026-11-02",
-			"checked": true,
-			"open_access": false
-		},
-		{
 			"key": "RCD2019a",
 			"type": "misc",
 			"title": "Latent ODEs for Irregularly-Sampled Time Series",
@@ -26551,6 +26551,30 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "RCL1993a",
+			"type": "article",
+			"title": "A practical method for calculating largest Lyapunov exponents from small data sets",
+			"authors": [
+				"Rosenstein, Michael T.",
+				"Collins, James J.",
+				"De Luca, Carlo J."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1993,
+			"journal": "Physica D: Nonlinear Phenomena",
+			"volume": "65",
+			"number": "1-2",
+			"pages": "117-134",
+			"issn": "0167-2789",
+			"doi": "10.1016/0167-2789(93)90009-P",
+			"openalex": "W2124428761",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
 		},
 		{
 			"key": "RG1978a",
@@ -27322,6 +27346,32 @@
 			"open_access": false
 		},
 		{
+			"key": "RRKOW2018a",
+			"type": "article",
+			"title": "A Tutorial on Thompson Sampling",
+			"authors": [
+				"Russo, Daniel J.",
+				"Van Roy, Benjamin",
+				"Kazerouni, Abbas",
+				"Osband, Ian",
+				"Wen, Zheng"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2018,
+			"journal": "Foundations and Trends® in Machine Learning",
+			"volume": "11",
+			"number": "1",
+			"pages": "1-96",
+			"issn": "1935-8237",
+			"doi": "10.1561/2200000070",
+			"openalex": "W4206547457",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "RS1991a",
 			"type": "article",
 			"title": "Estimating Variance from High, Low and Closing Prices",
@@ -27459,7 +27509,7 @@
 			"open_access": true
 		},
 		{
-			"key": "RSSFF...2018a",
+			"key": "RSWFF...2018a",
 			"type": "misc",
 			"title": "QMIX: Monotonic Value Function Factorisation for Deep Multi-Agent Reinforcement Learning",
 			"authors": [
@@ -27677,32 +27727,6 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
-		},
-		{
-			"key": "RVKOW2018a",
-			"type": "article",
-			"title": "A Tutorial on Thompson Sampling",
-			"authors": [
-				"Russo, Daniel J.",
-				"Van Roy, Benjamin",
-				"Kazerouni, Abbas",
-				"Osband, Ian",
-				"Wen, Zheng"
-			],
-			"author_kind": "persons",
-			"authors_complete": true,
-			"year": 2018,
-			"journal": "Foundations and Trends® in Machine Learning",
-			"volume": "11",
-			"number": "1",
-			"pages": "1-96",
-			"issn": "1935-8237",
-			"doi": "10.1561/2200000070",
-			"openalex": "W4206547457",
-			"source": "crossref",
-			"retrieved": "2026-11-02",
-			"checked": true,
-			"open_access": false
 		},
 		{
 			"key": "RW1991a",
@@ -28511,7 +28535,7 @@
 			"open_access": false
 		},
 		{
-			"key": "SAHSS2020a",
+			"key": "SAHSS...2020a",
 			"type": "article",
 			"title": "Mastering Atari, Go, chess and shogi by planning with a learned model",
 			"authors": [
@@ -29514,6 +29538,27 @@
 			"open_access": true
 		},
 		{
+			"key": "SL2009c",
+			"type": "article",
+			"title": "A systematic analysis of performance measures for classification tasks",
+			"authors": [
+				"Sokolova, Marina",
+				"Lapalme, Guy"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2009,
+			"journal": "Information Processing & Management",
+			"volume": "45",
+			"number": "4",
+			"pages": "427-437",
+			"doi": "10.1016/j.ipm.2009.03.002",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "SLA2012a",
 			"type": "inproceedings",
 			"title": "Practical Bayesian Optimization of Machine Learning Algorithms",
@@ -29887,6 +29932,27 @@
 			"open_access": false
 		},
 		{
+			"key": "SS1989b",
+			"type": "article",
+			"title": "The Quasi-Steady-State Assumption: A Case Study in Perturbation",
+			"authors": [
+				"Segel, Lee A.",
+				"Slemrod, Marshall"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1989,
+			"journal": "SIAM Review",
+			"volume": "31",
+			"number": "3",
+			"pages": "446-477",
+			"doi": "10.1137/1031091",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "SS1996a",
 			"type": "article",
 			"title": "Improved Surrogate Data for Nonlinearity Tests",
@@ -30001,6 +30067,27 @@
 			"source": "crossref",
 			"retrieved": "2026-10-23",
 			"checked": false,
+			"open_access": false
+		},
+		{
+			"key": "SS2000c",
+			"type": "article",
+			"title": "Surrogate time series",
+			"authors": [
+				"Schreiber, Thomas",
+				"Schmitz, Andreas"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2000,
+			"journal": "Physica D: Nonlinear Phenomena",
+			"volume": "142",
+			"number": "3-4",
+			"pages": "346-382",
+			"doi": "10.1016/s0167-2789(00)00043-9",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": false
 		},
 		{
@@ -32685,6 +32772,32 @@
 			"open_access": true
 		},
 		{
+			"key": "VEW2021a",
+			"type": "article",
+			"title": "Large-scale comparison of bibliographic data sources: Scopus, Web of Science, Dimensions, Crossref, and Microsoft Academic",
+			"authors": [
+				"Visser, Martijn",
+				"van Eck, Nees Jan",
+				"Waltman, Ludo"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2021,
+			"journal": "Quantitative Science Studies",
+			"volume": "2",
+			"number": "1",
+			"pages": "20-41",
+			"doi": "10.1162/qss_a_00112",
+			"url": "https://doi.org/10.1162/qss_a_00112",
+			"oa_url": "https://direct.mit.edu/qss/article-pdf/2/1/20/1906541/qss_a_00112.pdf",
+			"abstract": "Abstract We present a large-scale comparison of five multidisciplinary bibliographic data sources: Scopus, Web of Science, Dimensions, Crossref, and Microsoft Academic. The comparison considers scientific documents from the period 2008–2017 covered by these data sources. Scopus is compared in a pairwise manner with each of the other data sources. We first analyze differences between the data sources in the coverage of documents, focusing for instance on differences over time, differences per document type, and differences per discipline. We then study differences in the completeness and accuracy of citation links. Based on our analysis, we discuss the strengths and weaknesses of the different data sources. We emphasize the importance of combining a comprehensive coverage of the scientific literature with a flexible set of filters for making selections of the literature.",
+			"abstract_source": "openalex",
+			"source": "manual",
+			"retrieved": "2026-10-31",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "VFWHB2019a",
 			"type": "article",
 			"title": "Benchmarking Optimization Methods for Parameter Estimation in Large Kinetic Models",
@@ -32942,32 +33055,6 @@
 			"open_access": true
 		},
 		{
-			"key": "VVW2021a",
-			"type": "article",
-			"title": "Large-scale comparison of bibliographic data sources: Scopus, Web of Science, Dimensions, Crossref, and Microsoft Academic",
-			"authors": [
-				"Visser, Martijn",
-				"van Eck, Nees Jan",
-				"Waltman, Ludo"
-			],
-			"author_kind": "persons",
-			"authors_complete": true,
-			"year": 2021,
-			"journal": "Quantitative Science Studies",
-			"volume": "2",
-			"number": "1",
-			"pages": "20-41",
-			"doi": "10.1162/qss_a_00112",
-			"url": "https://doi.org/10.1162/qss_a_00112",
-			"oa_url": "https://direct.mit.edu/qss/article-pdf/2/1/20/1906541/qss_a_00112.pdf",
-			"abstract": "Abstract We present a large-scale comparison of five multidisciplinary bibliographic data sources: Scopus, Web of Science, Dimensions, Crossref, and Microsoft Academic. The comparison considers scientific documents from the period 2008–2017 covered by these data sources. Scopus is compared in a pairwise manner with each of the other data sources. We first analyze differences between the data sources in the coverage of documents, focusing for instance on differences over time, differences per document type, and differences per discipline. We then study differences in the completeness and accuracy of citation links. Based on our analysis, we discuss the strengths and weaknesses of the different data sources. We emphasize the importance of combining a comprehensive coverage of the scientific literature with a flexible set of filters for making selections of the literature.",
-			"abstract_source": "openalex",
-			"source": "manual",
-			"retrieved": "2026-10-31",
-			"checked": true,
-			"open_access": true
-		},
-		{
 			"key": "Val...2024a",
 			"type": "misc",
 			"title": "AlphaVantage.jl: A Julia wrapper for the Alpha Vantage API",
@@ -33147,7 +33234,7 @@
 			"open_access": true
 		},
 		{
-			"key": "WABCD...2014a",
+			"key": "WABHD...2014a",
 			"type": "article",
 			"title": "Best Practices for Scientific Computing",
 			"authors": [
@@ -33187,7 +33274,7 @@
 			"type": "article",
 			"title": "Individual-Level Modelling of Infectious Disease Data: EpiILM",
 			"authors": [
-				"V., Vineetha,Warriyar,K.",
+				"Warriyar K. V., Vineetha",
 				"Almutiry, Waleed",
 				"Deardon, Rob"
 			],
@@ -33417,6 +33504,32 @@
 			"open_access": true
 		},
 		{
+			"key": "WELVR2011a",
+			"type": "article",
+			"title": "Towards a new crown indicator: Some theoretical considerations",
+			"authors": [
+				"Waltman, Ludo",
+				"van Eck, Nees Jan",
+				"van Leeuwen, Thed N.",
+				"Visser, Martijn S.",
+				"van Raan, Anthony F.J."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2011,
+			"journal": "Journal of Informetrics",
+			"volume": "5",
+			"number": "1",
+			"pages": "37-47",
+			"doi": "10.1016/j.joi.2010.08.001",
+			"url": "https://doi.org/10.1016/j.joi.2010.08.001",
+			"oa_url": "https://scholarlypublications.universiteitleiden.nl/download/1887/15079/1?col=81522199270002711",
+			"source": "manual",
+			"retrieved": "2026-10-31",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "WF2001a",
 			"type": "article",
 			"title": "Correctness of Belief Propagation in Gaussian Graphical Models of Arbitrary Topology",
@@ -33496,29 +33609,7 @@
 			"open_access": false
 		},
 		{
-			"key": "WKK2019a",
-			"type": "misc",
-			"title": "Copula & Marginal Flows: Disentangling the Marginal from its Joint",
-			"authors": [
-				"Wiese, Magnus",
-				"Knobloch, Robert",
-				"Korn, Ralf"
-			],
-			"author_kind": "persons",
-			"authors_complete": true,
-			"year": 2019,
-			"publisher": "arXiv",
-			"doi": "10.48550/arXiv.1907.03361",
-			"openalex": "W2954459638",
-			"url": "https://arxiv.org/abs/1907.03361",
-			"oa_url": "https://arxiv.org/pdf/1907.03361",
-			"source": "datacite",
-			"retrieved": "2026-11-02",
-			"checked": true,
-			"open_access": true
-		},
-		{
-			"key": "WKRM2022a",
+			"key": "WKFM2022a",
 			"type": "article",
 			"title": "Successful combination of database search and snowballing for identification of primary studies in systematic literature studies",
 			"authors": [
@@ -33540,6 +33631,28 @@
 			"abstract_source": "openalex",
 			"source": "manual",
 			"retrieved": "2026-10-31",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "WKK2019a",
+			"type": "misc",
+			"title": "Copula & Marginal Flows: Disentangling the Marginal from its Joint",
+			"authors": [
+				"Wiese, Magnus",
+				"Knobloch, Robert",
+				"Korn, Ralf"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2019,
+			"publisher": "arXiv",
+			"doi": "10.48550/arXiv.1907.03361",
+			"openalex": "W2954459638",
+			"url": "https://arxiv.org/abs/1907.03361",
+			"oa_url": "https://arxiv.org/pdf/1907.03361",
+			"source": "datacite",
+			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
 		},
@@ -33877,7 +33990,8 @@
 			"type": "article",
 			"title": "Different Epidemic Curves for Severe Acute Respiratory Syndrome Reveal Similar Impacts of Control Measures",
 			"authors": [
-				"Wallinga, J."
+				"Wallinga, J.",
+				"Teunis, P."
 			],
 			"author_kind": "persons",
 			"authors_complete": true,
@@ -33914,6 +34028,30 @@
 			"openalex": "W2098290597",
 			"oa_url": "https://academic.oup.com/biostatistics/article-pdf/10/3/515/17735953/kxp008.pdf",
 			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "WTLGH...2021a",
+			"type": "misc",
+			"title": "Evolutionary.jl",
+			"authors": [
+				"Wilde, Art",
+				"Thiem, Daniel",
+				"Leo",
+				"Gupta, Abhinav",
+				"Haselgrove, Andrew",
+				"Molina, Daniel",
+				"Churavy, Valentin"
+			],
+			"author_kind": "persons",
+			"authors_complete": false,
+			"year": 2021,
+			"doi": "10.5281/zenodo.5110647",
+			"url": "https://github.com/wildart/Evolutionary.jl",
+			"legacy_key": "poliak2021",
+			"source": "zenodo",
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
@@ -33964,32 +34102,6 @@
 			"oa_url": "https://doi.org/10.23915/distill.00002",
 			"source": "crossref",
 			"retrieved": "2026-11-02",
-			"checked": true,
-			"open_access": true
-		},
-		{
-			"key": "WVVVV...2011a",
-			"type": "article",
-			"title": "Towards a new crown indicator: Some theoretical considerations",
-			"authors": [
-				"Waltman, Ludo",
-				"van Eck, Nees Jan",
-				"van Leeuwen, Thed N.",
-				"Visser, Martijn S.",
-				"van Raan, Anthony F.J."
-			],
-			"author_kind": "persons",
-			"authors_complete": true,
-			"year": 2011,
-			"journal": "Journal of Informetrics",
-			"volume": "5",
-			"number": "1",
-			"pages": "37-47",
-			"doi": "10.1016/j.joi.2010.08.001",
-			"url": "https://doi.org/10.1016/j.joi.2010.08.001",
-			"oa_url": "https://scholarlypublications.universiteitleiden.nl/download/1887/15079/1?col=81522199270002711",
-			"source": "manual",
-			"retrieved": "2026-10-31",
 			"checked": true,
 			"open_access": true
 		},
@@ -34257,24 +34369,6 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": false
-		},
-		{
-			"key": "Wil...2021a",
-			"type": "misc",
-			"title": "Evolutionary.jl",
-			"authors": [
-				"Wilde, Art"
-			],
-			"author_kind": "persons",
-			"authors_complete": false,
-			"year": 2021,
-			"doi": "10.5281/zenodo.5110647",
-			"url": "https://github.com/wildart/Evolutionary.jl",
-			"legacy_key": "poliak2021",
-			"source": "zenodo",
-			"retrieved": "2026-11-02",
-			"checked": true,
-			"open_access": true
 		},
 		{
 			"key": "Wil1945a",
@@ -35770,18 +35864,6 @@
 			"date": "2026-11-02"
 		},
 		{
-			"key": "BBD2008a",
-			"count": 1777,
-			"source": "crossref",
-			"date": "2026-11-02"
-		},
-		{
-			"key": "BBD2008a",
-			"count": 2236,
-			"source": "openalex",
-			"date": "2026-11-02"
-		},
-		{
 			"key": "BBDM2022a",
 			"count": 17,
 			"source": "crossref",
@@ -35816,6 +35898,18 @@
 			"count": 185,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "BBS2008a",
+			"count": 1777,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "BBS2008a",
+			"count": 2236,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "BBVKF2002a",
@@ -35980,12 +36074,6 @@
 			"date": "2026-11-02"
 		},
 		{
-			"key": "BGDHB2016a",
-			"count": 152,
-			"source": "openalex",
-			"date": "2026-10-31"
-		},
-		{
 			"key": "BGGS1980a",
 			"count": 1722,
 			"source": "crossref",
@@ -36008,6 +36096,12 @@
 			"count": 1191,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "BGJHB2016a",
+			"count": 152,
+			"source": "openalex",
+			"date": "2026-10-31"
 		},
 		{
 			"key": "BGJM2011a",
@@ -36478,13 +36572,13 @@
 			"date": "2026-10-23"
 		},
 		{
-			"key": "BPWLC2012a",
+			"key": "BPWLC...2012a",
 			"count": 2272,
 			"source": "crossref",
 			"date": "2026-11-02"
 		},
 		{
-			"key": "BPWLC2012a",
+			"key": "BPWLC...2012a",
 			"count": 2966,
 			"source": "openalex",
 			"date": "2026-11-02"
@@ -36548,6 +36642,12 @@
 			"count": 4613,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "BS2004c",
+			"count": 760,
+			"source": "crossref",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "BS2014a",
@@ -37006,7 +37106,7 @@
 			"date": "2026-10-23"
 		},
 		{
-			"key": "CAVC2019a",
+			"key": "CAZC2019a",
 			"count": 214,
 			"source": "openalex",
 			"date": "2026-10-31"
@@ -37882,18 +37982,6 @@
 			"date": "2026-11-02"
 		},
 		{
-			"key": "DGS2015a",
-			"count": 154,
-			"source": "crossref",
-			"date": "2026-11-02"
-		},
-		{
-			"key": "DGS2015a",
-			"count": 221,
-			"source": "openalex",
-			"date": "2026-11-02"
-		},
-		{
 			"key": "DGU2009a",
 			"count": 2970,
 			"source": "crossref",
@@ -37952,18 +38040,6 @@
 			"count": 211,
 			"source": "openalex",
 			"date": "2026-10-23"
-		},
-		{
-			"key": "DHS2011b",
-			"count": 892,
-			"source": "crossref",
-			"date": "2026-11-02"
-		},
-		{
-			"key": "DHS2011b",
-			"count": 1055,
-			"source": "openalex",
-			"date": "2026-11-02"
 		},
 		{
 			"key": "DJ2014a",
@@ -38650,13 +38726,13 @@
 			"date": "2026-11-02"
 		},
 		{
-			"key": "Eps1979a",
+			"key": "Epp1979a",
 			"count": 132,
 			"source": "crossref",
 			"date": "2026-11-02"
 		},
 		{
-			"key": "Eps1979a",
+			"key": "Epp1979a",
 			"count": 465,
 			"source": "openalex",
 			"date": "2026-11-02"
@@ -38670,18 +38746,6 @@
 		{
 			"key": "Eth2019a",
 			"count": 842,
-			"source": "openalex",
-			"date": "2026-11-02"
-		},
-		{
-			"key": "FAM1981a",
-			"count": 1297,
-			"source": "crossref",
-			"date": "2026-11-02"
-		},
-		{
-			"key": "FAM1981a",
-			"count": 1175,
 			"source": "openalex",
 			"date": "2026-11-02"
 		},
@@ -38766,6 +38830,18 @@
 		{
 			"key": "FM1973a",
 			"count": 14257,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "FM1981a",
+			"count": 1297,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "FM1981a",
+			"count": 1175,
 			"source": "openalex",
 			"date": "2026-11-02"
 		},
@@ -39298,6 +39374,12 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "GL2007a",
+			"count": 351,
+			"source": "openalex",
+			"date": "2026-10-31"
+		},
+		{
 			"key": "GMBAJ...2020a",
 			"count": 515,
 			"source": "crossref",
@@ -39478,13 +39560,13 @@
 			"date": "2026-10-23"
 		},
 		{
-			"key": "GSTV2022a",
+			"key": "GSTC2022a",
 			"count": 382,
 			"source": "crossref",
 			"date": "2026-11-02"
 		},
 		{
-			"key": "GSTV2022a",
+			"key": "GSTC2022a",
 			"count": 374,
 			"source": "openalex",
 			"date": "2026-11-02"
@@ -39512,12 +39594,6 @@
 			"count": 201,
 			"source": "openalex",
 			"date": "2026-10-23"
-		},
-		{
-			"key": "GT2007a",
-			"count": 351,
-			"source": "openalex",
-			"date": "2026-10-31"
 		},
 		{
 			"key": "GW1995a",
@@ -39928,13 +40004,13 @@
 			"date": "2026-10-23"
 		},
 		{
-			"key": "HIBPP2018a",
+			"key": "HIBPP...2018a",
 			"count": 1042,
 			"source": "crossref",
 			"date": "2026-11-02"
 		},
 		{
-			"key": "HIBPP2018a",
+			"key": "HIBPP...2018a",
 			"count": 1682,
 			"source": "openalex",
 			"date": "2026-11-02"
@@ -40048,7 +40124,7 @@
 			"date": "2026-11-02"
 		},
 		{
-			"key": "HKBM2017a",
+			"key": "HKBC2017a",
 			"count": 187,
 			"source": "openalex",
 			"date": "2026-11-02"
@@ -40132,18 +40208,6 @@
 			"date": "2026-10-23"
 		},
 		{
-			"key": "HMM2010a",
-			"count": 728,
-			"source": "crossref",
-			"date": "2026-11-02"
-		},
-		{
-			"key": "HMM2010a",
-			"count": 864,
-			"source": "openalex",
-			"date": "2026-11-02"
-		},
-		{
 			"key": "HMP2004a",
 			"count": 396,
 			"source": "crossref",
@@ -40152,6 +40216,18 @@
 		{
 			"key": "HMP2004a",
 			"count": 599,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "HMP2010a",
+			"count": 728,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "HMP2010a",
+			"count": 864,
 			"source": "openalex",
 			"date": "2026-11-02"
 		},
@@ -40480,7 +40556,7 @@
 			"date": "2026-10-23"
 		},
 		{
-			"key": "HZHTH2018a",
+			"key": "HZHTH...2018a",
 			"count": 1991,
 			"source": "openalex",
 			"date": "2026-11-02"
@@ -41500,13 +41576,13 @@
 			"date": "2026-11-02"
 		},
 		{
-			"key": "KVXHH...2022a",
+			"key": "KVXHH2022a",
 			"count": 68,
 			"source": "crossref",
 			"date": "2026-10-31"
 		},
 		{
-			"key": "KVXHH...2022a",
+			"key": "KVXHH2022a",
 			"count": 69,
 			"source": "openalex",
 			"date": "2026-10-31"
@@ -41950,13 +42026,13 @@
 			"date": "2026-11-02"
 		},
 		{
-			"key": "LDHKPK2007a",
+			"key": "LDHKP...2007a",
 			"count": 445,
 			"source": "crossref",
 			"date": "2026-11-02"
 		},
 		{
-			"key": "LDHKPK2007a",
+			"key": "LDHKP...2007a",
 			"count": 526,
 			"source": "openalex",
 			"date": "2026-11-02"
@@ -41992,8 +42068,20 @@
 			"date": "2026-10-23"
 		},
 		{
-			"key": "LHPHE2015a",
+			"key": "LHPHE...2015a",
 			"count": 10767,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "LHS2011a",
+			"count": 892,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "LHS2011a",
+			"count": 1055,
 			"source": "openalex",
 			"date": "2026-11-02"
 		},
@@ -42718,13 +42806,13 @@
 			"date": "2026-10-23"
 		},
 		{
-			"key": "MLL2012a",
+			"key": "MLF2012a",
 			"count": 315,
 			"source": "crossref",
 			"date": "2026-11-02"
 		},
 		{
-			"key": "MLL2012a",
+			"key": "MLF2012a",
 			"count": 418,
 			"source": "openalex",
 			"date": "2026-11-02"
@@ -42904,7 +42992,7 @@
 			"date": "2026-10-30"
 		},
 		{
-			"key": "MTOD2021a",
+			"key": "MTOL2021a",
 			"count": 1018,
 			"source": "openalex",
 			"date": "2026-10-31"
@@ -43190,6 +43278,30 @@
 			"count": 573,
 			"source": "openalex",
 			"date": "2026-10-30"
+		},
+		{
+			"key": "NCH2015a",
+			"count": 444,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "NCH2015a",
+			"count": 993,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "NGS2015a",
+			"count": 154,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "NGS2015a",
+			"count": 221,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "NM1965a",
@@ -43576,25 +43688,13 @@
 			"date": "2026-10-31"
 		},
 		{
-			"key": "PCH2015a",
-			"count": 444,
-			"source": "crossref",
-			"date": "2026-11-02"
-		},
-		{
-			"key": "PCH2015a",
-			"count": 993,
-			"source": "openalex",
-			"date": "2026-11-02"
-		},
-		{
-			"key": "PCVV2015a",
+			"key": "PCMV2015a",
 			"count": 3330,
 			"source": "crossref",
 			"date": "2026-11-02"
 		},
 		{
-			"key": "PCVV2015a",
+			"key": "PCMV2015a",
 			"count": 3697,
 			"source": "openalex",
 			"date": "2026-11-02"
@@ -44146,22 +44246,22 @@
 			"date": "2026-10-23"
 		},
 		{
-			"key": "RCD1993a",
+			"key": "RCD2019a",
+			"count": 134,
+			"source": "openalex",
+			"date": "2026-10-23"
+		},
+		{
+			"key": "RCL1993a",
 			"count": 2944,
 			"source": "crossref",
 			"date": "2026-11-02"
 		},
 		{
-			"key": "RCD1993a",
+			"key": "RCL1993a",
 			"count": 3496,
 			"source": "openalex",
 			"date": "2026-11-02"
-		},
-		{
-			"key": "RCD2019a",
-			"count": 134,
-			"source": "openalex",
-			"date": "2026-10-23"
 		},
 		{
 			"key": "RG1978a",
@@ -44404,6 +44504,18 @@
 			"date": "2026-10-31"
 		},
 		{
+			"key": "RRKOW2018a",
+			"count": 418,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "RRKOW2018a",
+			"count": 543,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "RS1991a",
 			"count": 436,
 			"source": "crossref",
@@ -44446,7 +44558,7 @@
 			"date": "2026-10-31"
 		},
 		{
-			"key": "RSSFF...2018a",
+			"key": "RSWFF...2018a",
 			"count": 1019,
 			"source": "openalex",
 			"date": "2026-11-02"
@@ -44502,18 +44614,6 @@
 		{
 			"key": "RVHL2020a",
 			"count": 621,
-			"source": "openalex",
-			"date": "2026-11-02"
-		},
-		{
-			"key": "RVKOW2018a",
-			"count": 418,
-			"source": "crossref",
-			"date": "2026-11-02"
-		},
-		{
-			"key": "RVKOW2018a",
-			"count": 543,
 			"source": "openalex",
 			"date": "2026-11-02"
 		},
@@ -44812,13 +44912,13 @@
 			"date": "2026-10-31"
 		},
 		{
-			"key": "SAHSS2020a",
+			"key": "SAHSS...2020a",
 			"count": 1237,
 			"source": "crossref",
 			"date": "2026-11-02"
 		},
 		{
-			"key": "SAHSS2020a",
+			"key": "SAHSS...2020a",
 			"count": 1221,
 			"source": "openalex",
 			"date": "2026-11-02"
@@ -45106,6 +45206,12 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "SL2009c",
+			"count": 6600,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "SLGCZ...2017a",
 			"count": 489,
 			"source": "openalex",
@@ -45214,6 +45320,12 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "SS1989b",
+			"count": 589,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "SS1996a",
 			"count": 1313,
 			"source": "crossref",
@@ -45260,6 +45372,12 @@
 			"count": 300,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "SS2000c",
+			"count": 1484,
+			"source": "crossref",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "SS2005a",
@@ -46252,6 +46370,12 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "VEW2021a",
+			"count": 865,
+			"source": "openalex",
+			"date": "2026-10-31"
+		},
+		{
 			"key": "VFWHB2019a",
 			"count": 146,
 			"source": "crossref",
@@ -46330,12 +46454,6 @@
 			"date": "2026-11-02"
 		},
 		{
-			"key": "VVW2021a",
-			"count": 865,
-			"source": "openalex",
-			"date": "2026-10-31"
-		},
-		{
 			"key": "Vei1965a",
 			"count": 278,
 			"source": "crossref",
@@ -46402,7 +46520,7 @@
 			"date": "2026-10-30"
 		},
 		{
-			"key": "WABCD...2014a",
+			"key": "WABHD...2014a",
 			"count": 719,
 			"source": "openalex",
 			"date": "2026-10-31"
@@ -46480,6 +46598,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "WELVR2011a",
+			"count": 326,
+			"source": "crossref",
+			"date": "2026-10-31"
+		},
+		{
+			"key": "WELVR2011a",
+			"count": 438,
+			"source": "openalex",
+			"date": "2026-10-31"
+		},
+		{
 			"key": "WF2001a",
 			"count": 309,
 			"source": "crossref",
@@ -46504,16 +46634,16 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "WKFM2022a",
+			"count": 437,
+			"source": "openalex",
+			"date": "2026-10-31"
+		},
+		{
 			"key": "WKK2019a",
 			"count": 11,
 			"source": "openalex",
 			"date": "2026-11-02"
-		},
-		{
-			"key": "WKRM2022a",
-			"count": 437,
-			"source": "openalex",
-			"date": "2026-10-31"
 		},
 		{
 			"key": "WL2007a",
@@ -46652,18 +46782,6 @@
 			"count": 845,
 			"source": "openalex",
 			"date": "2026-11-02"
-		},
-		{
-			"key": "WVVVV...2011a",
-			"count": 326,
-			"source": "crossref",
-			"date": "2026-10-31"
-		},
-		{
-			"key": "WVVVV...2011a",
-			"count": 438,
-			"source": "openalex",
-			"date": "2026-10-31"
 		},
 		{
 			"key": "WZ1965a",
@@ -47173,10 +47291,10 @@
 				"HZAL2018a",
 				"FHM2018a",
 				"SMSM2000a",
-				"LHPHE2015a",
+				"LHPHE...2015a",
 				"SMLJA2015a",
-				"HIBPP2018a",
-				"HZHTH2018a"
+				"HIBPP...2018a",
+				"HZHTH...2018a"
 			]
 		},
 		{
@@ -47294,8 +47412,8 @@
 				"SSSAH...2017a",
 				"SHSAL...2018a",
 				"Ros2011a",
-				"BPWLC2012a",
-				"SAHSS2020a"
+				"BPWLC...2012a",
+				"SAHSS...2020a"
 			]
 		},
 		{
@@ -47332,7 +47450,7 @@
 				"DKPK2015a",
 				"Dem2002a",
 				"Bar1998a",
-				"FAM1981a",
+				"FM1981a",
 				"HJS1992a",
 				"CMS2007a",
 				"DD2012a",
@@ -47356,7 +47474,7 @@
 				"Rob1952a",
 				"LR1985a",
 				"AG2011a",
-				"RVKOW2018a"
+				"RRKOW2018a"
 			]
 		},
 		{
@@ -47409,11 +47527,11 @@
 			"keys": [
 				"BD1995a",
 				"Don2010a",
-				"GT2007a",
+				"GL2007a",
 				"Pen2011a",
 				"SNTH2013a",
 				"SSM2018a",
-				"WABCD...2014a"
+				"WABHD...2014a"
 			]
 		},
 		{
@@ -47424,7 +47542,7 @@
 			],
 			"keys": [
 				"Pat1988a",
-				"BGDHB2016a",
+				"BGJHB2016a",
 				"EIV2007a",
 				"FS1969a",
 				"GP2005a",
@@ -47562,7 +47680,7 @@
 				"The1986a",
 				"ER1992a",
 				"TELGF1992a",
-				"RCD1993a",
+				"RCL1993a",
 				"Kan1994a",
 				"Cao1997a",
 				"MRTK2007a"
@@ -47637,14 +47755,14 @@
 				"Gne2011a",
 				"BB2012a",
 				"CD2014a",
-				"PCH2015a",
+				"NCH2015a",
 				"SR2015a",
 				"Tof2015a",
 				"SSWAF2016a",
 				"GPSW2017a",
 				"CJ2020a",
-				"GSTV2022a",
-				"SL2009b"
+				"GSTC2022a",
+				"SL2009c"
 			]
 		},
 		{
@@ -47704,7 +47822,7 @@
 				"chiara.optimise.evp.cmp"
 			],
 			"keys": [
-				"Chu2023a",
+				"Kwo2023a",
 				"DF1995a",
 				"FP2003a",
 				"Isa1992a",
@@ -47737,7 +47855,7 @@
 				"Pin1991a",
 				"TELGF1992a",
 				"SS1996a",
-				"SS2000a",
+				"SS2000c",
 				"CGP2002a",
 				"RMW2013a"
 			]
@@ -47901,7 +48019,7 @@
 				"RN2017a",
 				"Alo2006a",
 				"Mur2002a",
-				"SS1989a",
+				"SS1989b",
 				"EL2000a",
 				"Gil2007a",
 				"BH1925a",
@@ -48022,7 +48140,7 @@
 				"FR1989a",
 				"PR2000a",
 				"LMS2003a",
-				"HMM2010a"
+				"HMP2010a"
 			]
 		},
 		{
@@ -48047,7 +48165,7 @@
 				"chiara.optimise.ec.devol"
 			],
 			"keys": [
-				"Wil...2021a",
+				"WTLGH...2021a",
 				"PSL2005a",
 				"ES2015a",
 				"SP1997a",
@@ -48089,14 +48207,14 @@
 				"Gar1955a",
 				"Gar1972a",
 				"HWWRR2015a",
-				"MTOD2021a",
+				"MTOL2021a",
 				"Mer1968a",
 				"PPLAM...2018a",
 				"PPO2022a",
 				"Seg1997a",
 				"VHE2015a",
-				"VVW2021a",
-				"WVVVV...2011a"
+				"VEW2021a",
+				"WELVR2011a"
 			]
 		},
 		{
@@ -48287,7 +48405,7 @@
 				"chiara.optimise.ec.es"
 			],
 			"keys": [
-				"Wil...2021a",
+				"WTLGH...2021a",
 				"MR2018a",
 				"ES2015a",
 				"BS2002a",
@@ -48330,7 +48448,7 @@
 				"JK2020a",
 				"KP2010a",
 				"KP2011a",
-				"KVXHH...2022a",
+				"KVXHH2022a",
 				"KW2007a",
 				"Kut2001a",
 				"LM2015a",
@@ -48434,7 +48552,7 @@
 				"chiara.optimise.ec.galg"
 			],
 			"keys": [
-				"Wil...2021a",
+				"WTLGH...2021a",
 				"ES2015a",
 				"Gol1989a",
 				"HLG1999a",
@@ -48524,7 +48642,7 @@
 				"KFL2001a",
 				"WF2001a",
 				"YFW2005a",
-				"LDHKPK2007a",
+				"LDHKP...2007a",
 				"WJ2008a",
 				"BKM2017a",
 				"BV2023a"
@@ -48561,10 +48679,10 @@
 			"keys": [
 				"BHLS2011a",
 				"Zha2011a",
-				"Eps1979a",
+				"Epp1979a",
 				"LCBP1999a",
 				"Hig2002a",
-				"BS2004a",
+				"BS2004c",
 				"AMZ2005a",
 				"HY2005a",
 				"ZMA2005a",
@@ -48679,14 +48797,14 @@
 				"Gne2011a",
 				"BB2012a",
 				"CD2014a",
-				"PCH2015a",
+				"NCH2015a",
 				"SR2015a",
 				"Tof2015a",
 				"SSWAF2016a",
 				"GPSW2017a",
 				"CJ2020a",
-				"GSTV2022a",
-				"SL2009b"
+				"GSTC2022a",
+				"SL2009c"
 			]
 		},
 		{
@@ -49068,14 +49186,14 @@
 				"Tan1993a",
 				"Lit1994a",
 				"Tes1995a",
-				"BBD2008a",
-				"MLL2012a",
-				"HKBM2017a",
+				"BBS2008a",
+				"MLF2012a",
+				"HKBC2017a",
 				"LWTHA...2017a",
 				"LZGLT...2017a",
 				"SLGCZ...2017a",
 				"FFANW2018a",
-				"RSSFF...2018a",
+				"RSWFF...2018a",
 				"SHSAL...2018a"
 			]
 		},
@@ -49146,15 +49264,15 @@
 				"Gne2011a",
 				"BB2012a",
 				"CD2014a",
-				"PCH2015a",
+				"NCH2015a",
 				"SR2015a",
 				"Tof2015a",
 				"SSWAF2016a",
 				"GPSW2017a",
 				"BKLSA...2020a",
 				"CJ2020a",
-				"GSTV2022a",
-				"SL2009b"
+				"GSTC2022a",
+				"SL2009c"
 			]
 		},
 		{
@@ -49320,7 +49438,7 @@
 				"chiara.optimise.evp.mpec"
 			],
 			"keys": [
-				"Chu2023a",
+				"Kwo2023a",
 				"DF1995a",
 				"LPR1996a",
 				"FP2003a",
@@ -50037,15 +50155,15 @@
 				"Gne2011a",
 				"BB2012a",
 				"CD2014a",
-				"PCH2015a",
+				"NCH2015a",
 				"SR2015a",
 				"Tof2015a",
 				"SSWAF2016a",
 				"GPSW2017a",
 				"BKLSA...2020a",
 				"CJ2020a",
-				"GSTV2022a",
-				"SL2009b"
+				"GSTC2022a",
+				"SL2009c"
 			]
 		},
 		{
@@ -50252,7 +50370,7 @@
 				"pollis.compose.snowballSearch"
 			],
 			"keys": [
-				"CAVC2019a",
+				"CAZC2019a",
 				"GP2005a",
 				"Goo1961a",
 				"Gre2009a",
@@ -50263,7 +50381,7 @@
 				"SSKBW...2018a",
 				"Sma1973a",
 				"VHE2015a",
-				"WKRM2022a",
+				"WKFM2022a",
 				"Woh2014a"
 			]
 		},
@@ -50494,7 +50612,7 @@
 				"chiara.optimise.evp.vari"
 			],
 			"keys": [
-				"Chu2023a",
+				"Kwo2023a",
 				"DF1995a",
 				"FP2003a",
 				"KS1980a",

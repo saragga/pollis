@@ -1,7 +1,7 @@
 # Discover Literature — Citation Measures
 
 ## Why Compare Citations Within a Field and Year
-A raw citation count favours old articles and fields that cite heavily. Comparing an article with others of its field and year removes much of that. [Waltman, van Eck, van Leeuwen, Visser and van Raan (2011)](#ref-WVVVV...2011a) set out why this should be done article by article, dividing each article's citations by those expected for its field and year, and only then averaging. The columns FWCI and Percentile of Discover Literature rest on this idea.
+A raw citation count favours old articles and fields that cite heavily. Comparing an article with others of its field and year removes much of that. [Waltman, van Eck, van Leeuwen, Visser and van Raan (2011)](#ref-WELVR2011a) set out why this should be done article by article, dividing each article's citations by those expected for its field and year, and only then averaging. The columns FWCI and Percentile of Discover Literature rest on this idea.
 
 ## What FWCI and Percentile Mean in Discover Literature
 **FWCI**, field-weighted citation impact, is an article's citations over those of the average article of its field and year, as OpenAlex computes it: 1 is average, and 2 is twice the average. **Percentile** is OpenAlex's citation percentile against the same field and year, and **Influence** in the search form filters on it. Because citations are very unevenly spread, a percentile is often easier to read than a ratio, since a few articles pull the average up.
@@ -32,7 +32,7 @@ A journal's figure says little about one article: [Seglen (1997)](#ref-Seg1997a)
 
 <a id="ref-VHE2015a"></a>Valenzuela, M., Ha, V. and Etzioni, O. (2015). Identifying meaningful citations. *AAAI Workshop on Scholarly Big Data*. [aaai.org/ocs/index.php/WS/AAAIW15/paper/view/10185](https://aaai.org/ocs/index.php/WS/AAAIW15/paper/view/10185)
 
-<a id="ref-WVVVV...2011a"></a>Waltman, L., van Eck, N. J., van Leeuwen, T. N., Visser, M. S. and van Raan, A. F. (2011). Towards a new crown indicator: some theoretical considerations. *Journal of Informetrics* 5(1), 37–47. [doi:10.1016/j.joi.2010.08.001](https://doi.org/10.1016/j.joi.2010.08.001)
+<a id="ref-WELVR2011a"></a>Waltman, L., van Eck, N. J., van Leeuwen, T. N., Visser, M. S. and van Raan, A. F. (2011). Towards a new crown indicator: some theoretical considerations. *Journal of Informetrics* 5(1), 37–47. [doi:10.1016/j.joi.2010.08.001](https://doi.org/10.1016/j.joi.2010.08.001)
 
 ## See Also
 - [Factsheet](factsheet.md) · [Overview](overview.md) · [Searching and Keys](search-and-keys.md)

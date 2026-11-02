@@ -29,7 +29,7 @@ At low S, the rate is proportional to S. At high S, the enzyme is saturated, and
 
 ## When the Quasi-Steady State Holds
 
-The rate law needs SE to adjust much faster than S changes. [Segel and Slemrod (1989)](#ref-SS1989a) give a condition for this: E0 / (S0 + Km) should be small. Typical laboratory settings meet it, with little enzyme and much substrate. Raising E in the code to near S breaks the assumption, and the two descriptions then part. Comparing the full model with the rate law at such settings is a useful exercise, and the full network gives a reference that does not depend on the approximation.
+The rate law needs SE to adjust much faster than S changes. [Segel and Slemrod (1989)](#ref-SS1989b) give a condition for this: E0 / (S0 + Km) should be small. Typical laboratory settings meet it, with little enzyme and much substrate. Raising E in the code to near S breaks the assumption, and the two descriptions then part. Comparing the full model with the rate law at such settings is a useful exercise, and the full network gives a reference that does not depend on the approximation.
 
 ## How to Read the Chemical Tab
 
@@ -45,7 +45,7 @@ Real enzymes can have several steps, reversible product release, inhibitors and 
 
 <a id="ref-BH1925a"></a>Briggs, G. E. and Haldane, J. B. S. (1925). A note on the kinetics of enzyme action. *Biochemical Journal* 19(2), 338–339. [doi:10.1042/bj0190338](https://doi.org/10.1042/bj0190338)
 
-<a id="ref-SS1989a"></a>Segel, L. A. and Slemrod, M. (1989). The quasi-steady-state assumption: a case study in perturbation. *SIAM Review* 31(3), 446–477. [doi:10.1137/1031091](https://doi.org/10.1137/1031091)
+<a id="ref-SS1989b"></a>Segel, L. A. and Slemrod, M. (1989). The quasi-steady-state assumption: a case study in perturbation. *SIAM Review* 31(3), 446–477. [doi:10.1137/1031091](https://doi.org/10.1137/1031091)
 
 ## See Also
 

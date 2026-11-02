@@ -14,7 +14,7 @@ The decisions here are how to discretise, how finely and with which solver. Each
 
 ## Collocation or finite differences
 
-Collocation represents the state by a polynomial in each interval and imposes the ODE at its nodes, so on smooth problems the error falls very fast as the mesh grows ([Lorenz T. Biegler (2010)](#ref-Bie2010a)). It pays a price in extra unknowns per interval and in less stable behaviour when the control jumps.
+Collocation represents the state by a polynomial in each interval and imposes the ODE at its nodes, so on smooth problems the error falls very fast as the mesh grows ([Biegler (2010)](#ref-Bie2010a)). It pays a price in extra unknowns per interval and in less stable behaviour when the control jumps.
 
 Finite differences are simpler. Backward differences are first order and damped, so they rarely misbehave and suit a first exploration, at the cost of needing many more supports for the same accuracy. Central differences reach second order but can show saw-tooth patterns. Start with collocation, and fall back to backward differences when the control oscillates between supports. **Compare Derivative Methods** runs all four at once.
 
@@ -26,7 +26,7 @@ A smooth problem with collocation can often stop near the bottom of that range. 
 
 ## Direct or indirect
 
-Direct methods, as used here, transcribe and then optimise. Indirect methods first derive the necessary conditions of Pontryagin's principle and then solve the resulting boundary-value problem for states and costates ([John T. Betts (2010)](#ref-Bet2010a)).
+Direct methods, as used here, transcribe and then optimise. Indirect methods first derive the necessary conditions of Pontryagin's principle and then solve the resulting boundary-value problem for states and costates ([Betts (2010)](#ref-Bet2010a)).
 
 Direct is the sensible default. It needs no derivations, accepts path constraints easily and is forgiving about the initial guess. Indirect methods can reach very high accuracy, but they need the switching structure in advance and a good guess at the costates. A hybrid is common in practice: use a direct solve to find the structure and the costates, then refine with an indirect one if the accuracy justifies the work.
 

@@ -13,7 +13,7 @@ The **Tables** column counts the published tables of a method as input and targe
 **Delete** moves a method's folder to the trash, with its tables, instructions and code, after asking. **Delete Empty Methods** does the same for every method with no article, tables, instructions or code, and shows how many there are.
 
 ## Why a Method Keeps Its Code, Data and Text Together
-[Donoho (2010)](#ref-Don2010a) calls error ubiquitous in scientific computing and asks for a single script that generates all the figures and tables of a paper. [Gentleman and Temple Lang (2007)](#ref-GT2007a) propose dynamic documents, which integrate code, data and text so that readers can verify an analysis and adapt it. [Wilson, Aruliah, Brown, Chue Hong, Davis, Guy, Haddock, Huff, Mitchell, Plumbley, Waugh, White and Wilson (2014)](#ref-WABCD...2014a) gather the working habits that reduce such errors, among them version control and automated tests. A method in Pollis follows these ideas in keeping its article, tables, instructions and code in one folder.
+[Donoho (2010)](#ref-Don2010a) calls error ubiquitous in scientific computing and asks for a single script that generates all the figures and tables of a paper. [Gentleman and Temple Lang (2007)](#ref-GL2007a) propose dynamic documents, which integrate code, data and text so that readers can verify an analysis and adapt it. [Wilson, Aruliah, Brown, Chue Hong, Davis, Guy, Haddock, Huff, Mitchell, Plumbley, Waugh, White and Wilson (2014)](#ref-WABHD...2014a) gather the working habits that reduce such errors, among them version control and automated tests. A method in Pollis follows these ideas in keeping its article, tables, instructions and code in one folder.
 
 ## References
 
@@ -21,7 +21,7 @@ The **Tables** column counts the published tables of a method as input and targe
 
 <a id="ref-Don2010a"></a>Donoho, D. L. (2010). An invitation to reproducible computational research. *Biostatistics* 11(3), 385–388. [doi:10.1093/biostatistics/kxq028](https://doi.org/10.1093/biostatistics/kxq028)
 
-<a id="ref-GT2007a"></a>Gentleman, R. and Temple Lang, D. (2007). Statistical analyses and reproducible research. *Journal of Computational and Graphical Statistics* 16(1), 1–23. [doi:10.1198/106186007x178663](https://doi.org/10.1198/106186007x178663)
+<a id="ref-GL2007a"></a>Gentleman, R. and Temple Lang, D. (2007). Statistical analyses and reproducible research. *Journal of Computational and Graphical Statistics* 16(1), 1–23. [doi:10.1198/106186007x178663](https://doi.org/10.1198/106186007x178663)
 
 <a id="ref-Pen2011a"></a>Peng, R. D. (2011). Reproducible research in computational science. *Science* 334(6060), 1226–1227. [doi:10.1126/science.1213847](https://doi.org/10.1126/science.1213847)
 
@@ -29,7 +29,7 @@ The **Tables** column counts the published tables of a method as input and targe
 
 <a id="ref-SSM2018a"></a>Stodden, V., Seiler, J. and Ma, Z. (2018). An empirical analysis of journal policy effectiveness for computational reproducibility. *Proceedings of the National Academy of Sciences* 115(11), 2584–2589. [doi:10.1073/pnas.1708290115](https://doi.org/10.1073/pnas.1708290115)
 
-<a id="ref-WABCD...2014a"></a>Wilson, G., Aruliah, D. A., Brown, C. T., Chue Hong, N. P., Davis, M., Guy, R. T., Haddock, S. H. D., Huff, K. D., Mitchell, I. M., Plumbley, M. D., Waugh, B., White, E. P. and Wilson, P. (2014). Best practices for scientific computing. *PLoS Biology* 12(1), e1001745. [doi:10.1371/journal.pbio.1001745](https://doi.org/10.1371/journal.pbio.1001745)
+<a id="ref-WABHD...2014a"></a>Wilson, G., Aruliah, D. A., Brown, C. T., Chue Hong, N. P., Davis, M., Guy, R. T., Haddock, S. H. D., Huff, K. D., Mitchell, I. M., Plumbley, M. D., Waugh, B., White, E. P. and Wilson, P. (2014). Best practices for scientific computing. *PLoS Biology* 12(1), e1001745. [doi:10.1371/journal.pbio.1001745](https://doi.org/10.1371/journal.pbio.1001745)
 
 ## See Also
 - [Factsheet](factsheet.md)

@@ -10,7 +10,7 @@ The two tabs produce different kinds of numbers: a team's expected total on **De
 
 ## Reading a joint value across horizons
 
-**Joint Value** on **Dec-POMDP** need not rise with each extra stage. For Dec-Tiger at 0.85 accuracy, the published optima are −4.00 at horizon 2, 5.19 at horizon 3 and 4.80 at horizon 4, according to [Daniel Szer, François Charpillet and Shlomo Zilberstein (2005)](#ref-SCZ2005a).
+**Joint Value** on **Dec-POMDP** need not rise with each extra stage. For Dec-Tiger at 0.85 accuracy, the published optima are −4.00 at horizon 2, 5.19 at horizon 3 and 4.80 at horizon 4, according to [Szer, Charpillet and Zilberstein (2005)](#ref-SCZ2005a).
 
 Two listens are needed before an opening is worth the risk, and that explains the jump at horizon 3. A fourth stage can add a listening cost without leaving room for a second well-informed opening, which fits the small drop at horizon 4. Horizons cannot be compared as simple rates of reward.
 
@@ -30,7 +30,7 @@ A typical plan listens early and opens only after consistent hints: the door opp
 | `centralised_pomdp` | Both histories | Middle |
 | `fully_observed` | The state | Highest |
 
-`cost_of_decentralisation` is the difference between the first two, an upper limit on what a free communication channel could add. A local JESP solution inflates that figure, since part of the gap may then be search failure. Such relaxations also serve as heuristics for larger models, as studied by [Frans A. Oliehoek, Matthijs T.J. Spaan and Nikos Vlassis (2008)](#ref-OSV2008a).
+`cost_of_decentralisation` is the difference between the first two, an upper limit on what a free communication channel could add. A local JESP solution inflates that figure, since part of the gap may then be search failure. Such relaxations also serve as heuristics for larger models, as studied by [Oliehoek, Spaan and Vlassis (2008)](#ref-OSV2008a).
 
 ## Reading the Dec-POMDP outcome counts
 

@@ -24,13 +24,13 @@ The zero-count pairs therefore form two different cases. An unseen trigram with 
 
 Linear interpolation always mixes the three orders: P = λ₃ P(w given u v) + λ₂ P(w given v) + λ₁ P(w), with the λ values summing to 1.
 
-With λ = (0.6, 0.3, 0.1) and component estimates 0, 0.2 and 0.01, the result is 0 + 0.06 + 0.001 = 0.061, which is non-zero even though the trigram was never seen. The weights are fitted on held-out text, not on the training text, because training text would always favour the highest order. Letting the weights depend on the context's count improves results further, a family studied by [Stanley F. Chen and Joshua Goodman (1999)](#ref-CG1999a).
+With λ = (0.6, 0.3, 0.1) and component estimates 0, 0.2 and 0.01, the result is 0 + 0.06 + 0.001 = 0.061, which is non-zero even though the trigram was never seen. The weights are fitted on held-out text, not on the training text, because training text would always favour the highest order. Letting the weights depend on the context's count improves results further, a family studied by [Chen and Goodman (1999)](#ref-CG1999a).
 
 ## Back-off
 
 Back-off uses the highest order that has evidence, and falls to a lower one otherwise. If the trigram has been seen, a discounted trigram estimate is used. If not, the method drops to the bigram scaled by a weight, and from there to the unigram.
 
-The scheme from [Slava M. Katz (1987)](#ref-Kat1987a) discounts seen counts with Good-Turing, which frees up mass for lower orders so that the result is still a proper distribution. Interpolation always mixes, whereas back-off switches, and in many comparisons the two perform similarly. A cheap variant, stupid back-off, ignores normalisation and uses fixed penalties, which suits very large corpora.
+The scheme from [Katz (1987)](#ref-Kat1987a) discounts seen counts with Good-Turing, which frees up mass for lower orders so that the result is still a proper distribution. Interpolation always mixes, whereas back-off switches, and in many comparisons the two perform similarly. A cheap variant, stupid back-off, ignores normalisation and uses fixed penalties, which suits very large corpora.
 
 ## Is the third word worth it?
 

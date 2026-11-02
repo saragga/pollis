@@ -4,7 +4,7 @@ Twin Delayed Deep Deterministic Policy Gradient keeps a deterministic policy and
 
 ## How the TD3 Tab Learns
 
-Each step takes the actor's action with Gaussian noise of 0.1 added, or a uniform random action during the first 1000 steps. The transition enters a replay buffer, and the critics are updated on a batch of 64. Every second step, the actor takes a step to raise the first critic's value of its actions, and all target networks move towards their originals. The method extends the deterministic algorithm of [Lillicrap, Hunt, Pritzel, Heess, Erez, Tassa, Silver and Wierstra (2015)](#ref-LHPHE2015a), which uses one critic and updates everything at every step.
+Each step takes the actor's action with Gaussian noise of 0.1 added, or a uniform random action during the first 1000 steps. The transition enters a replay buffer, and the critics are updated on a batch of 64. Every second step, the actor takes a step to raise the first critic's value of its actions, and all target networks move towards their originals. The method extends the deterministic algorithm of [Lillicrap, Hunt, Pritzel, Heess, Erez, Tassa, Silver and Wierstra (2015)](#ref-LHPHE...2015a), which uses one critic and updates everything at every step.
 
 ## What TD3 Optimises
 
@@ -35,7 +35,7 @@ A deterministic policy gives one clear action per state, with simple code for ev
 
 <a id="ref-FHM2018a"></a>Fujimoto, S., van Hoof, H. and Meger, D. (2018). Addressing function approximation error in actor-critic methods. *ICML*. [proceedings.mlr.press/v80/fujimoto18a](https://proceedings.mlr.press/v80/fujimoto18a.html)
 
-<a id="ref-LHPHE2015a"></a>Lillicrap, T. P., Hunt, J. J., Pritzel, A., Heess, N., Erez, T., Tassa, Y., Silver, D. and Wierstra, D. (2015). Continuous control with deep reinforcement learning. [arXiv:1509.02971](https://arxiv.org/abs/1509.02971)
+<a id="ref-LHPHE...2015a"></a>Lillicrap, T. P., Hunt, J. J., Pritzel, A., Heess, N., Erez, T., Tassa, Y., Silver, D. and Wierstra, D. (2015). Continuous control with deep reinforcement learning. [arXiv:1509.02971](https://arxiv.org/abs/1509.02971)
 
 ## See Also
 

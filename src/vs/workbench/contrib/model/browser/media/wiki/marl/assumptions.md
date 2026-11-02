@@ -6,7 +6,7 @@ Both tabs learn from experience, so they need far fewer assumptions about the mo
 
 Every agent receives the same −1 per step, and that shared signal is the only feedback. No agent is told which of them caused a delay, so credit cannot be divided. If one agent wanders off, all agents are charged equally and the wanderer learns nothing specific.
 
-A team with partly private goals would need separate rewards and a different analysis. Credit assignment in a shared reward is a central problem of the field, and counterfactual baselines are one answer, proposed by [Jakob Foerster, Gregory Farquhar, Triantafyllos Afouras, Nantas Nardelli and Shimon Whiteson (2018)](#ref-FFANW2018a). Those baselines are not used in the panel's code.
+A team with partly private goals would need separate rewards and a different analysis. Credit assignment in a shared reward is a central problem of the field, and counterfactual baselines are one answer, proposed by [Foerster, Farquhar, Afouras, Nardelli and Whiteson (2018)](#ref-FFANW2018a). Those baselines are not used in the panel's code.
 
 ## Cooperative: every agent sees all positions
 
@@ -28,7 +28,7 @@ For a deterministic task, a constant step size is less of a concern, but coverag
 
 ## Independent learners treat the others as fixed
 
-**Independent Q-Learning (IQL)** applies a single-agent update as if the others were part of a stationary environment. That is false while they learn, so the update has no convergence guarantee, though it often works in small problems, as first examined by [Ming Tan (1993)](#ref-Tan1993a).
+**Independent Q-Learning (IQL)** applies a single-agent update as if the others were part of a stationary environment. That is false while they learn, so the update has no convergence guarantee, though it often works in small problems, as first examined by [Tan (1993)](#ref-Tan1993a).
 
 **Value Decomposition (VDN)** relaxes this during training but assumes that the team's value can be written as a sum over agents, one term per agent's own action. Tasks whose value depends on particular combinations of actions break that form. The **Central Joint-Action Learner** removes both problems, as it faces one stationary decision problem, at the cost of a much larger table.
 
@@ -48,7 +48,7 @@ Move counts keep the two viewpoints apart, as X's afterstates have one more X th
 
 Self-play assumes that playing against yourself eventually exposes your own weaknesses. In a small game with exploration, it largely does. The table's opponent is always its current self, with no pool of past versions, so a weakness that the current policy never tests can survive.
 
-The values also reflect the exploring policy, not perfect play, because updates continue after random moves. Under an **Exploration (epsilon)** of 0.1, opponents blunder sometimes, and those blunders feed into the values. In the wider literature, training against a single opponent is known to overfit to it, as shown by [Marc Lanctot, Vinicius Zambaldi, Audrunas Gruslys, Angeliki Lazaridou, Karl Tuyls, Julien Pérolat, David Silver and Thore Graepel (2017)](#ref-LZGLT...2017a).
+The values also reflect the exploring policy, not perfect play, because updates continue after random moves. Under an **Exploration (epsilon)** of 0.1, opponents blunder sometimes, and those blunders feed into the values. In the wider literature, training against a single opponent is known to overfit to it, as shown by [Lanctot, Zambaldi, Gruslys, Lazaridou, Tuyls, Perolat, Silver and Graepel (2017)](#ref-LZGLT...2017a).
 
 ## References
 

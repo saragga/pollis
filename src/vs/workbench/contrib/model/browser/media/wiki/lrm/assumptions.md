@@ -12,11 +12,11 @@ The code compounds with `cumprod(1 .+ r)`, which is right only for simple return
 
 Historical VaR and ES read the future's tail directly from past returns, so what never happened in the sample cannot appear. A sample from a calm period gives a low VaR just as danger may be building, and a crisis stays in a rolling window for exactly its length and then drops out at once.
 
-Every estimate here is unconditional or windowed. Returns are far from independent over time, because volatility clusters. A conditional approach, fitting a volatility model first and reading the tail from its residuals, reacts faster, as [Alexander J. McNeil and Rüdiger Frey (2000)](#ref-MF2000a) show. If the current market differs from the sample average, a long-sample figure says little about tomorrow.
+Every estimate here is unconditional or windowed. Returns are far from independent over time, because volatility clusters. A conditional approach, fitting a volatility model first and reading the tail from its residuals, reacts faster, as [McNeil and Frey (2000)](#ref-MF2000a) show. If the current market differs from the sample average, a long-sample figure says little about tomorrow.
 
 ## Tails, shapes and sample size
 
-`var_norm` and `es_norm` assume normal returns, which usually understates extreme losses in financial data. Cornish-Fisher adjusts for skewness and kurtosis using the expansion from [E. A. Cornish and Ronald A. Fisher (1938)](#ref-CF1938a). The expansion works for moderate departures from normality only. With strong skewness or kurtosis the quantile function can stop being monotonic, and the result then has no meaning.
+`var_norm` and `es_norm` assume normal returns, which usually understates extreme losses in financial data. Cornish-Fisher adjusts for skewness and kurtosis using the expansion from [Cornish and Fisher (1938)](#ref-CF1938a). The expansion works for moderate departures from normality only. With strong skewness or kurtosis the quantile function can stop being monotonic, and the result then has no meaning.
 
 Historical estimates assume enough data to see the tail. At alpha 0.01, 1,000 observations give only 10 tail points, and a 250-period window gives about 2 or 3. ES at that level averages those few values, so a single point moves it strongly. Skewness and kurtosis are themselves dominated by a few extreme returns, so they are noisy inputs too.
 

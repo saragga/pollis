@@ -20,7 +20,7 @@ Deep reinforcement learning fails quietly, as a network always returns a number.
 
 ## How to Check Repeatability Across Seeds
 
-**Seed Stability** trains again with seeds 1, 2 and 3 and overlays the curves, ignoring **Random Seed** and taking three times as long. A wide spread means that a single run says little. [Henderson, Islam, Bachman, Pineau, Precup and Meger (2018)](#ref-HIBPP2018a) show how much reported deep reinforcement learning results vary with seeds and with implementation choices. Three seeds reveal only gross instability. A claim that one setting beats another needs more seeds, which means widening the range in the loop.
+**Seed Stability** trains again with seeds 1, 2 and 3 and overlays the curves, ignoring **Random Seed** and taking three times as long. A wide spread means that a single run says little. [Henderson, Islam, Bachman, Pineau, Precup and Meger (2018)](#ref-HIBPP...2018a) show how much reported deep reinforcement learning results vary with seeds and with implementation choices. Three seeds reveal only gross instability. A claim that one setting beats another needs more seeds, which means widening the range in the loop.
 
 ## How to Check Behaviour Directly
 
@@ -30,7 +30,7 @@ Deep reinforcement learning fails quietly, as a network always returns a number.
 
 <a id="ref-FHM2018a"></a>Fujimoto, S., van Hoof, H. and Meger, D. (2018). Addressing function approximation error in actor-critic methods. *ICML*. [proceedings.mlr.press/v80/fujimoto18a](https://proceedings.mlr.press/v80/fujimoto18a.html)
 
-<a id="ref-HIBPP2018a"></a>Henderson, P., Islam, R., Bachman, P., Pineau, J., Precup, D. and Meger, D. (2018). Deep reinforcement learning that matters. *Proceedings of the AAAI Conference on Artificial Intelligence* 32(1). [doi:10.1609/aaai.v32i1.11694](https://doi.org/10.1609/aaai.v32i1.11694)
+<a id="ref-HIBPP...2018a"></a>Henderson, P., Islam, R., Bachman, P., Pineau, J., Precup, D. and Meger, D. (2018). Deep reinforcement learning that matters. *Proceedings of the AAAI Conference on Artificial Intelligence* 32(1). [doi:10.1609/aaai.v32i1.11694](https://doi.org/10.1609/aaai.v32i1.11694)
 
 ## See Also
 

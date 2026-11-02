@@ -71,7 +71,7 @@ The five epsilon values are 0.01, 0.05, 0.1, 0.2 and 0.4 whatever **Exploration 
 
 The learning code needs nothing beyond Julia's standard library, since every update is written out in the panel. `Plots` draws the charts of the **Learning Curve**, **Win Rate / Success Rate**, **Non-Stationarity**, **Greedy Match** and **Learner Comparison** actions, and the tables themselves stay readable in the printed results.
 
-For the single-agent foundations of everything in the panel, including Q-learning, TD(0) and afterstates, the standard text is [Richard S. Sutton and Andrew G. Barto (2018)](#ref-SB2018a). Its first chapter uses tic-tac-toe as its running example.
+For the single-agent foundations of everything in the panel, including Q-learning, TD(0) and afterstates, the standard text is [Sutton and Barto (2018)](#ref-SB2018a). Its first chapter uses tic-tac-toe as its running example.
 
 ## References
 

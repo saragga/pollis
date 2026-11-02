@@ -1,6 +1,6 @@
 # Metric Guide
 
-Each metric on the **Metrics** tab of Classification Performance summarises the same four counts in a different way. [Sokolova and Lapalme (2009)](#ref-SL2009b) compare such measures by which changes to the confusion matrix they respond to and which they ignore.
+Each metric on the **Metrics** tab of Classification Performance summarises the same four counts in a different way. [Sokolova and Lapalme (2009)](#ref-SL2009c) compare such measures by which changes to the confusion matrix they respond to and which they ignore.
 
 ## How the Confusion Matrix of a Binary Classifier Is Laid Out
 
@@ -55,7 +55,7 @@ The **Metrics** tab prints point values with no interval, and three decimal plac
 
 <a id="ref-Mat1975a"></a>Matthews, B. W. (1975). Comparison of the predicted and observed secondary structure of T4 phage lysozyme. *Biochimica et Biophysica Acta (BBA) - Protein Structure* 405(2), 442–451. [doi:10.1016/0005-2795(75)90109-9](https://doi.org/10.1016/0005-2795(75)90109-9)
 
-<a id="ref-SL2009b"></a>Sokolova, M. and Lapalme, G. (2009). A systematic analysis of performance measures for classification tasks. *Information Processing & Management* 45(4), 427–437. [doi:10.1016/j.ipm.2009.03.002](https://doi.org/10.1016/j.ipm.2009.03.002)
+<a id="ref-SL2009c"></a>Sokolova, M. and Lapalme, G. (2009). A systematic analysis of performance measures for classification tasks. *Information Processing & Management* 45(4), 427–437. [doi:10.1016/j.ipm.2009.03.002](https://doi.org/10.1016/j.ipm.2009.03.002)
 
 ## See Also
 

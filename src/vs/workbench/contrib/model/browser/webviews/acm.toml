@@ -121,16 +121,16 @@ key = "FHM2018a"
 key = "SMSM2000a"
 
 [[references]]
-key = "LHPHE2015a"
+key = "LHPHE...2015a"
 
 [[references]]
 key = "SMLJA2015a"
 
 [[references]]
-key = "HIBPP2018a"
+key = "HIBPP...2018a"
 
 [[references]]
-key = "HZHTH2018a"
+key = "HZHTH...2018a"
 
 [[models]]
 id = "a2c"

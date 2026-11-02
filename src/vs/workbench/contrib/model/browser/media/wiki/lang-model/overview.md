@@ -6,7 +6,7 @@ A statistical language model assigns a probability to a sequence of words, using
 
 The basic question is how likely a word is, given what came before it. Writing out the chain rule, the probability of a sentence is a product of such conditional probabilities, each conditioned on all earlier words.
 
-Long histories are almost never repeated in any corpus, so an n-gram model keeps only the last n − 1 words. [Claude E. Shannon (1948)](#ref-Sha1948a) used approximations of this kind for letters and words, and showed that text generated from them looks more and more like English as the order rises. That same trade runs through this panel: more context means better predictions when counts are available, and fewer counts to estimate them with.
+Long histories are almost never repeated in any corpus, so an n-gram model keeps only the last n − 1 words. [Shannon (1948)](#ref-Sha1948a) used approximations of this kind for letters and words, and showed that text generated from them looks more and more like English as the order rises. That same trade runs through this panel: more context means better predictions when counts are available, and fewer counts to estimate them with.
 
 ## Three orders of context
 
@@ -24,7 +24,7 @@ The rising numbers look like growing certainty, but the last rests on one single
 
 Any finite corpus misses most possible word sequences. Maximum likelihood gives those a probability of 0, and a single zero makes the probability of a whole sentence 0, however natural it is.
 
-Smoothing moves a little probability from seen sequences to unseen ones. **Smoothing k** sets the simplest version, add-k, which adds k to every count. Better methods exist, including discounting, interpolation and back-off, and a long comparison by [Stanley F. Chen and Joshua Goodman (1999)](#ref-CG1999a) showed how much the choice matters. Those methods are described in the [Trigram](trigram.md) and [Decision Guide](decision-guide.md) wikis.
+Smoothing moves a little probability from seen sequences to unseen ones. **Smoothing k** sets the simplest version, add-k, which adds k to every count. Better methods exist, including discounting, interpolation and back-off, and a long comparison by [Chen and Goodman (1999)](#ref-CG1999a) showed how much the choice matters. Those methods are described in the [Trigram](trigram.md) and [Decision Guide](decision-guide.md) wikis.
 
 ## From counts to the actions
 

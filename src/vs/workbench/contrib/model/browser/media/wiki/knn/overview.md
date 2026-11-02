@@ -6,7 +6,7 @@ Points close together tend to behave alike, and nearest-neighbour methods act on
 
 Most methods compress training data into coefficients and throw the data away. Nearest-neighbour methods do the reverse: they keep every example and postpone all the work until a query arrives. A new point takes the label or value of its closest stored neighbours.
 
-The rule is simple, but its theory is strong. With enough data, the error of one-nearest-neighbour classification is at most about twice the lowest error any classifier could reach ([Thomas M. Cover and Peter E. Hart (1967)](#ref-CH1967a)). With two classes and a best possible error of 5%, that bound is 2 × 0.05 × 0.95 = 9.5%. The price comes at prediction time, since each answer needs a search through the stored data, and in the choice of what close means.
+The rule is simple, but its theory is strong. With enough data, the error of one-nearest-neighbour classification is at most about twice the lowest error any classifier could reach ([Cover and Hart (1967)](#ref-CH1967a)). With two classes and a best possible error of 5%, that bound is 2 × 0.05 × 0.95 = 9.5%. The price comes at prediction time, since each answer needs a search through the stored data, and in the choice of what close means.
 
 ## Three tasks in three tabs
 
@@ -24,7 +24,7 @@ Scale matters as much as the metric. A feature measured in thousands swamps one 
 
 Checking every point takes time proportional to the size of the data for each query, and **Tree type** offers ways to avoid that. A tree groups points so that whole regions can be ruled out without touching them.
 
-A KDTree splits on one coordinate at a time ([Jon Louis Bentley (1975)](#ref-Ben1975a)), and a BallTree nests points in spheres, so it needs only the triangle inequality and works with any true metric ([Jeffrey K. Uhlmann (1991)](#ref-Uhl1991a)). A BruteTree simply checks every point. All three return the same neighbours apart from ties, so the choice concerns speed, not quality.
+A KDTree splits on one coordinate at a time ([Bentley (1975)](#ref-Ben1975a)), and a BallTree nests points in spheres, so it needs only the triangle inequality and works with any true metric ([Uhlmann (1991)](#ref-Uhl1991a)). A BruteTree simply checks every point. All three return the same neighbours apart from ties, so the choice concerns speed, not quality.
 
 ## From neighbours to predictions
 

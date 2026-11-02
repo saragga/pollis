@@ -61,7 +61,7 @@ The run also prints `status`, `objective`, `supports` and `solve_seconds`. The f
 
 ## References for the panel's tools
 
-The modelling abstraction comes from [John A. Pulsipher, Weiqi Zhang, Tyler J. Hongisto and Victor M. Zavala (2022)](#ref-PZHZ2022a). `Ipopt` is an interior-point method for large sparse nonlinear problems ([Andreas Wächter and Lorenz T. Biegler (2006)](#ref-WB2006a)), and `HiGHS` grew out of dual simplex work on linear programs ([Qi Huangfu and J. A. Julian Hall (2018)](#ref-HH2018a)).
+The modelling abstraction comes from [Pulsipher, Zhang, Hongisto and Zavala (2022)](#ref-PZHZ2022a). `Ipopt` is an interior-point method for large sparse nonlinear problems ([Wächter and Biegler (2006)](#ref-WB2006a)), and `HiGHS` grew out of dual simplex work on linear programs ([Huangfu and Hall (2018)](#ref-HH2018a)).
 
 ## References
 

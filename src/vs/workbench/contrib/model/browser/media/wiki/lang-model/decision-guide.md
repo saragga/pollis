@@ -21,7 +21,7 @@ Let held-out perplexity decide, since a rule of thumb can only give a starting p
 
 Add-k is the panel's built-in option. It works well enough for unigrams and for simple comparisons, and it is a fine place to begin. For bigrams and above it moves too much probability to unseen sequences, particularly at k = 1.
 
-Good-Turing discounting estimates the mass of unseen events from how many items were seen once ([I. J. Good (1953)](#ref-Goo1953a)): with 100 singletons in 10,000 tokens, the unseen share is about 1%. Interpolation and back-off then use lower orders, and absolute discounting with Kneser-Ney continuation counts performed well in the comparison by [Stanley F. Chen and Joshua Goodman (1999)](#ref-CG1999a). For serious use, take one of those rather than add-k.
+Good-Turing discounting estimates the mass of unseen events from how many items were seen once ([Good (1953)](#ref-Goo1953a)): with 100 singletons in 10,000 tokens, the unseen share is about 1%. Interpolation and back-off then use lower orders, and absolute discounting with Kneser-Ney continuation counts performed well in the comparison by [Chen and Goodman (1999)](#ref-CG1999a). For serious use, take one of those rather than add-k.
 
 ## How to choose k
 
@@ -31,7 +31,7 @@ The right k tends to fall as the order rises, for each context has few counts, a
 
 ## Beyond counting
 
-Refinements on n-grams go a long way. [Joshua T. Goodman (2001)](#ref-Goo2001a) surveyed and combined many of them: smoothing, skipping, clustering and sentence mixture models. Each can be added to the panel's counts by editing the code.
+Refinements on n-grams go a long way. [Goodman (2001)](#ref-Goo2001a) surveyed and combined many of them: smoothing, skipping, clustering and sentence mixture models. Each can be added to the panel's counts by editing the code.
 
 Neural models go further, since embeddings let "cat" and "dog" share evidence, and attention can reach far back. Those models need more data and computing power, and they give answers that are harder to trace. Use an n-gram when the corpus is small, speed matters or every number must be explained. Otherwise, keep it as a baseline. Any larger model should beat it on the same held-out text.
 

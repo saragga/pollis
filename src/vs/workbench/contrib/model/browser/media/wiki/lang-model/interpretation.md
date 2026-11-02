@@ -6,7 +6,7 @@ Numbers from an n-gram model are simple counts and logs, but each has a specific
 
 Cross-entropy in bits per token and perplexity are the same information on different scales: perplexity = 2 to the power of the cross-entropy. A drop of one bit per token halves the perplexity, so a move from 1,000 to 500 is one bit.
 
-Perplexity reads as an effective branching factor, the number of equally likely next words that would give the same uncertainty. A uniform choice over 1,000 words has perplexity 1,000 and about 9.97 bits per token. [Claude E. Shannon (1951)](#ref-Sha1951a) estimated the entropy of English letters by asking people to predict the next one, showing how much of the uncertainty a human reader's knowledge removes. A model's cross-entropy is always at or above the true entropy of its source, so a lower value means a closer model.
+Perplexity reads as an effective branching factor, the number of equally likely next words that would give the same uncertainty. A uniform choice over 1,000 words has perplexity 1,000 and about 9.97 bits per token. [Shannon (1951)](#ref-Sha1951a) estimated the entropy of English letters by asking people to predict the next one, showing how much of the uncertainty a human reader's knowledge removes. A model's cross-entropy is always at or above the true entropy of its source, so a lower value means a closer model.
 
 ## Frequent words and frequent pairs
 
@@ -28,7 +28,7 @@ Function-word contexts give mostly dull answers, since "the" is followed by many
 
 ## Word association with PMI
 
-**Probability Ratios** defines `pmi(w1, w2)`, pointwise mutual information: how much more often a pair occurs than if the words were independent, on a log2 scale. A value of 0 means chance level, and 3 means eight times chance. See [Christopher D. Manning and Hinrich Schütze (1999)](#ref-MS1999a) for its use on collocations.
+**Probability Ratios** defines `pmi(w1, w2)`, pointwise mutual information: how much more often a pair occurs than if the words were independent, on a log2 scale. A value of 0 means chance level, and 3 means eight times chance. See [Manning and Schütze (1999)](#ref-MS1999a) for its use on collocations.
 
 Rare pairs get high values. With N = 1,000, "new york" with all three counts at 10 gives about log2(10 × 1,000 / 101) ≈ 6.63, whereas a pair seen once whose words each appear once gives log2(1 × 1,000 / 2) ≈ 8.97. The code adds 1 to the denominator, so results differ slightly from textbook PMI. Unseen pairs give −∞. Set a minimum count before ranking pairs.
 

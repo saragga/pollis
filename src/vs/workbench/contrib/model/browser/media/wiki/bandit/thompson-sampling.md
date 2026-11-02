@@ -29,13 +29,13 @@ For a long time, Thompson sampling had strong empirical results and weak theory.
 
 ## Where Thompson Sampling Is Strong and Weak
 
-Randomised choices tolerate delayed feedback well, as the same batch of posteriors still spreads pulls across arms. Prior knowledge has a natural place, and the idea extends to many structured problems, as the tutorial of [Russo, Van Roy, Kazerouni, Osband and Wen (2018)](#ref-RVKOW2018a) shows. Weaknesses are a need for a posterior that can be sampled, and an outcome that depends on the prior over short horizons. Exploration also shrinks steadily, so it adapts poorly when arms change over time, unless old data are discounted.
+Randomised choices tolerate delayed feedback well, as the same batch of posteriors still spreads pulls across arms. Prior knowledge has a natural place, and the idea extends to many structured problems, as the tutorial of [Russo, Van Roy, Kazerouni, Osband and Wen (2018)](#ref-RRKOW2018a) shows. Weaknesses are a need for a posterior that can be sampled, and an outcome that depends on the prior over short horizons. Exploration also shrinks steadily, so it adapts poorly when arms change over time, unless old data are discounted.
 
 ## References
 
 <a id="ref-AG2011a"></a>Agrawal, S. and Goyal, N. (2011). Analysis of Thompson sampling for the multi-armed bandit problem. [arXiv:1111.1797](https://arxiv.org/abs/1111.1797)
 
-<a id="ref-RVKOW2018a"></a>Russo, D., Van Roy, B., Kazerouni, A., Osband, I. and Wen, Z. (2018). A tutorial on Thompson sampling. *Foundations and Trends in Machine Learning* 11(1), 1–96. [doi:10.1561/2200000070](https://doi.org/10.1561/2200000070)
+<a id="ref-RRKOW2018a"></a>Russo, D., Van Roy, B., Kazerouni, A., Osband, I. and Wen, Z. (2018). A tutorial on Thompson sampling. *Foundations and Trends in Machine Learning* 11(1), 1–96. [doi:10.1561/2200000070](https://doi.org/10.1561/2200000070)
 
 <a id="ref-Tho1933a"></a>Thompson, W. R. (1933). On the likelihood that one unknown probability exceeds another in view of the evidence of two samples. *Biometrika* 25(3–4), 285–294. [doi:10.1093/biomet/25.3-4.285](https://doi.org/10.1093/biomet/25.3-4.285)
 

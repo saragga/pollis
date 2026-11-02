@@ -26,7 +26,7 @@ Replacing the inner problem by these conditions gives a single-level problem, wi
 
 ## How Big-M Linearises Complementarity
 
-[Fortuny-Amat and McCarl (1981)](#ref-FAM1981a) replace each product with a binary variable z_i and two bounds:
+[Fortuny-Amat and McCarl (1981)](#ref-FM1981a) replace each product with a binary variable z_i and two bounds:
 
 - lambda_i ≤ M z_i
 - −g_i(x, y) ≤ M (1 − z_i)
@@ -49,7 +49,7 @@ Equivalence needs a convex follower with a suitable constraint qualification, an
 
 <a id="ref-DKPK2015a"></a>Dempe, S., Kalashnikov, V., Pérez-Valdés, G. A. and Kalashnykova, N. (2015). *Bilevel Programming Problems: Theory, Algorithms and Applications to Energy Networks*. Springer. [doi:10.1007/978-3-662-45827-3](https://doi.org/10.1007/978-3-662-45827-3)
 
-<a id="ref-FAM1981a"></a>Fortuny-Amat, J. and McCarl, B. (1981). A representation and economic interpretation of a two-level programming problem. *Journal of the Operational Research Society* 32(9), 783–792. [doi:10.1057/jors.1981.156](https://doi.org/10.1057/jors.1981.156)
+<a id="ref-FM1981a"></a>Fortuny-Amat, J. and McCarl, B. (1981). A representation and economic interpretation of a two-level programming problem. *Journal of the Operational Research Society* 32(9), 783–792. [doi:10.1057/jors.1981.156](https://doi.org/10.1057/jors.1981.156)
 
 <a id="ref-HJS1992a"></a>Hansen, P., Jaumard, B. and Savard, G. (1992). New branch-and-bound rules for linear bilevel programming. *SIAM Journal on Scientific and Statistical Computing* 13(5), 1194–1217. [doi:10.1137/0913069](https://doi.org/10.1137/0913069)
 

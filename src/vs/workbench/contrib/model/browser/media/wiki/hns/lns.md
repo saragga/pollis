@@ -4,7 +4,7 @@ Large neighbourhood search breaks part of a solution and rebuilds it. A single m
 
 ## Destroy and repair
 
-The idea began in vehicle routing, where the method removes a set of related customers from the routes and reinserts them with constraint programming ([Paul Shaw (1998)](#ref-Sha1998a)). Fixing most of the solution makes each repair a small problem that can be solved well, even when the whole problem is far too large to solve at once.
+The idea began in vehicle routing, where the method removes a set of related customers from the routes and reinserts them with constraint programming ([Shaw (1998)](#ref-Sha1998a)). Fixing most of the solution makes each repair a small problem that can be solved well, even when the whole problem is far too large to solve at once.
 
 Destroy and repair form a pair that must match the problem. In routing, related customers are those close together or sharing a route, since removing unrelated ones leaves little freedom for a better reinsertion.
 

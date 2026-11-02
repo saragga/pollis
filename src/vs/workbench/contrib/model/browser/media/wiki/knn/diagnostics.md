@@ -10,7 +10,7 @@ The usual cause is a tie. When two points lie at the same distance, the two sear
 
 ## Reading the k-distance curve
 
-**k-Distance Curve** sorts every point's distance to its k-th neighbour, measured in standard deviations. The left part shows points in dense regions, and the far right shows isolated points. An elbow where the curve lifts sharply is the classic guide for a radius in DBSCAN, an idea from [Martin Ester, Hans-Peter Kriegel, Jörg Sander and Xiaowei Xu (1996)](#ref-EKSX1996a).
+**k-Distance Curve** sorts every point's distance to its k-th neighbour, measured in standard deviations. The left part shows points in dense regions, and the far right shows isolated points. An elbow where the curve lifts sharply is the classic guide for a radius in DBSCAN, an idea from [Ester, Kriegel, Sander and Xu (1996)](#ref-EKSX1996a).
 
 Use the elbow value as a first **r**: most points then have at least k neighbours inside it, and the outliers do not. A smooth curve with no elbow says that the data have no clean density scale, so no single radius will separate clusters from noise. Uniform random data, the default, look like that. A very steep end picks out candidate outliers worth a look on their own.
 

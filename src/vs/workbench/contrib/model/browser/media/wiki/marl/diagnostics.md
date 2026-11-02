@@ -38,7 +38,7 @@ The test is `res.met`, which records whether all agents shared a cell when the e
 
 **Non-Stationarity** on **Cooperative** plots the learned value of the start state, `res.qtrace`, against the optimal value −(1 − gamma^(n−1)) / (1 − gamma). At gamma = 0.95 and n = 5 that optimum is about −3.71.
 
-All tables start at zero, so the curve starts at 0 and falls as actions get tried. Settling on the line suggests the team has found a shortest route. A persistent gap means the values do not match the best route, and a curve that keeps wandering under **Independent Q-Learning (IQL)** shows the moving targets of non-stationary learning, a problem surveyed by [Pablo Hernandez-Leal, Michael Kaisers, Tim Baarslag and Enrique Munoz de Cote (2017)](#ref-HKBM2017a).
+All tables start at zero, so the curve starts at 0 and falls as actions get tried. Settling on the line suggests the team has found a shortest route. A persistent gap means the values do not match the best route, and a curve that keeps wandering under **Independent Q-Learning (IQL)** shows the moving targets of non-stationary learning, a problem surveyed by [Hernandez-Leal, Kaisers, Baarslag and Munoz de Cote (2017)](#ref-HKBC2017a).
 
 ## Do different seeds coordinate?
 
@@ -77,7 +77,7 @@ Any nonzero `learned_vs_learned` shows a blunder by the table, from X or O depen
 
 ## References
 
-<a id="ref-HKBM2017a"></a>Hernandez-Leal, P., Kaisers, M., Baarslag, T., & Munoz de Cote, E. (2017). A Survey of Learning in Multiagent Environments: Dealing with Non-Stationarity. [arXiv:1707.09183](https://arxiv.org/abs/1707.09183)
+<a id="ref-HKBC2017a"></a>Hernandez-Leal, P., Kaisers, M., Baarslag, T., & Munoz de Cote, E. (2017). A Survey of Learning in Multiagent Environments: Dealing with Non-Stationarity. [arXiv:1707.09183](https://arxiv.org/abs/1707.09183)
 
 ## See Also
 

@@ -192,7 +192,7 @@ key = "BB2012a"
 key = "CD2014a"
 
 [[references]]
-key = "PCH2015a"
+key = "NCH2015a"
 
 [[references]]
 key = "SR2015a"
@@ -210,14 +210,14 @@ key = "GPSW2017a"
 key = "CJ2020a"
 
 [[references]]
-key = "GSTV2022a"
+key = "GSTC2022a"
 
 [[references]]
 separator = true
 label = "Textbooks"
 
 [[references]]
-key = "SL2009b"
+key = "SL2009c"
 
 [[models]]
 id = "grid"

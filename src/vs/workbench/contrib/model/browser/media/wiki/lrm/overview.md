@@ -4,7 +4,7 @@ Variance treats a large gain and a large loss as equally risky, yet investors wo
 
 ## Why variance is not enough
 
-Variance became the standard measure of portfolio risk with [Harry M. Markowitz (1952)](#ref-Mar1952a), and it has great mathematical convenience. For a symmetric normal return, it also fully describes the losses.
+Variance became the standard measure of portfolio risk with [Markowitz (1952)](#ref-Mar1952a), and it has great mathematical convenience. For a symmetric normal return, it also fully describes the losses.
 
 Real return series are not so obliging. Two series can share a variance while one has frequent small gains and rare crashes and the other the reverse, and an investor would never treat them alike. A strategy that sells insurance can look smooth for years, with low variance, and then lose years of profit at once. Loss measures make that left tail visible.
 

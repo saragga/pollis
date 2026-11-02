@@ -24,7 +24,7 @@ Reducing **T** towards the limit first makes the bound active: the unbounded opt
 
 The transcription approximates the true trajectories by values at supports, and it treats their behaviour between supports as smooth. Fast dynamics, a control switch or a boundary layer call for points close together, and a uniform grid may place too few of them there.
 
-**Mesh Refinement** tests the size of the grid but not its layout. A bang-bang control has jumps that a fixed grid cannot place exactly, so high-order accuracy falls away near each switch ([Matthew Kelly (2017)](#ref-Kel2017a)). The time of a switch is then known only to about one grid interval.
+**Mesh Refinement** tests the size of the grid but not its layout. A bang-bang control has jumps that a fixed grid cannot place exactly, so high-order accuracy falls away near each switch ([Kelly (2017)](#ref-Kel2017a)). The time of a switch is then known only to about one grid interval.
 
 ## A model of the real system
 

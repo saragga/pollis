@@ -18,7 +18,7 @@ Standardising treats a one-sd move as equal across features, which is a choice a
 
 Neighbours are local only when they are actually near. In a unit cube, a neighbourhood holding 1% of uniform points needs edge length 0.01^(1/d): 0.1 in 2 dimensions, 0.63 in 10 and 0.95 in 100. In high dimensions, a neighbourhood stops being local at all.
 
-Under broad conditions, the distance to the nearest point and to the farthest point become almost equal as dimensions grow ([Kevin Beyer, Jonathan Goldstein, Raghu Ramakrishnan and Uri Shaft (1999)](#ref-BGRS1999a)). That removes the meaning of near. Real data often live on a lower-dimensional surface and so behave better than their column count suggests, but the risk should be checked and not assumed away.
+Under broad conditions, the distance to the nearest point and to the farthest point become almost equal as dimensions grow ([Beyer, Goldstein, Ramakrishnan and Shaft (1999)](#ref-BGRS1999a)). That removes the meaning of near. Real data often live on a lower-dimensional surface and so behave better than their column count suggests, but the risk should be checked and not assumed away.
 
 ## Queries that resemble the stored data
 
@@ -30,7 +30,7 @@ The stored data also act as the population. If class shares in the training set 
 
 **DTW Classification** assumes classes differ in shape, and that timing differences within the window carry no class information. If when something happens is exactly what defines a class, warping removes the signal, and a narrow window or plain Euclidean distance is the right tool.
 
-Z-normalising each series removes level and scale, so classes that differ only in level become indistinguishable. All series must also have the same length L, since `Xtrain` is a matrix. The tuning method assumes that the training set is large enough to rank windows, a point [Hoang Anh Dau, Anthony Bagnall, Kaveh Kamgar, Chin-Chia Michael Yeh, Yan Zhu, Shaghayegh Gharghabi, Chotirat Ann Ratanamahatana and Eamonn Keogh (2019)](#ref-DBKYZ...2019a) illustrate with small training sets.
+Z-normalising each series removes level and scale, so classes that differ only in level become indistinguishable. All series must also have the same length L, since `Xtrain` is a matrix. The tuning method assumes that the training set is large enough to rank windows, a point [Dau, Bagnall, Kamgar, Yeh, Zhu, Gharghabi, Ratanamahatana and Keogh (2019)](#ref-DBKYZ...2019a) illustrate with small training sets.
 
 ## References
 

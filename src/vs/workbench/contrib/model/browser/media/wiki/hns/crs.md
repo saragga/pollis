@@ -6,11 +6,11 @@ Controlled random search keeps a population of points and generates each trial b
 
 The population starts with points drawn across the box. Each step picks n + 1 members, where n is the number of variables, and reflects one through the centroid of the others: trial = 2 × centroid − last point. If the trial lies inside the box and beats the worst member, it replaces that member.
 
-W. L. Price proposed this scheme, and the variant known as CRS2 always puts the current best point in the simplex, which pulls the search more strongly towards good regions ([W. L. Price (1983)](#ref-Pri1983a)). The step length needs no tuning. While points are spread out, reflections are long, and they shorten by themselves as the population contracts, so the search moves from exploring to refining without a schedule.
+W. L. Price proposed this scheme, and the variant known as CRS2 always puts the current best point in the simplex, which pulls the search more strongly towards good regions ([Price (1983)](#ref-Pri1983a)). The step length needs no tuning. While points are spread out, reflections are long, and they shorten by themselves as the population contracts, so the search moves from exploring to refining without a schedule.
 
 ## Local mutation in the panel's variant
 
-The code selects `:GN_CRS2_LM` in `NLopt`, which is CRS2 with local mutation. Reflection alone rejects many trial points near the end of a run. Local mutation adds a second way of producing a trial, drawn close to the best point, when a reflection fails to help ([P. Kaelo and M. M. Ali (2006)](#ref-KA2006a)).
+The code selects `:GN_CRS2_LM` in `NLopt`, which is CRS2 with local mutation. Reflection alone rejects many trial points near the end of a run. Local mutation adds a second way of producing a trial, drawn close to the best point, when a reflection fails to help ([Kaelo and Ali (2006)](#ref-KA2006a)).
 
 The effect is a stronger refining phase that saves evaluations once the population has gathered. The price is a greater pull towards the current best, so diversity can run out sooner on a landscape with several good valleys.
 

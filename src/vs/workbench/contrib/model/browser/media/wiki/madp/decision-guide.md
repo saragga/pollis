@@ -16,7 +16,7 @@ Start from who wants what and who knows what, since those answers select the mod
 
 Two neighbouring panels cover cases these models do not. With one decision maker, or a team that shares everything, use **Single-Agent Decision Processes**, where exact methods go much further.
 
-If nobody knows the rewards and transitions and the agents must learn from experience, use **Multi-Agent Reinforcement Learning**, as both tabs here plan from a known model. The minimax-Q algorithm of [Michael L. Littman (1994)](#ref-Lit1994a) is the classic bridge, replacing the known model in a zero-sum game with learned action values. Choose this panel when the model is known, or small enough to specify by hand.
+If nobody knows the rewards and transitions and the agents must learn from experience, use **Multi-Agent Reinforcement Learning**, as both tabs here plan from a known model. The minimax-Q algorithm of [Littman (1994)](#ref-Lit1994a) is the classic bridge, replacing the known model in a zero-sum game with learned action values. Choose this panel when the model is known, or small enough to specify by hand.
 
 ## Choosing the Dec-POMDP horizon
 
@@ -40,7 +40,7 @@ A simple rule is to double the restarts until the best value stops changing, and
 
 ## Alternatives to JESP for a Dec-POMDP
 
-The panel's code offers JESP alone. [Sven Seuken and Shlomo Zilberstein (2008)](#ref-SZ2008a) survey the other families.
+The panel's code offers JESP alone. [Seuken and Zilberstein (2008)](#ref-SZ2008a) survey the other families.
 
 | Method | Idea | Guarantee | Scale |
 |---|---|---|---|
@@ -67,7 +67,7 @@ Each extra decimal of **Tolerance** costs ln(10) / ln(1 / gamma) iterations, abo
 
 ## When a zero-sum model is not enough
 
-The zero-sum structure gives a single value, reliable computation and safe strategies, and those are lost once interests partly overlap. In a general-sum game, a Nash equilibrium always exists for finite games, according to [John Nash (1951)](#ref-Nas1951a), but several may exist with different payoffs, and players may not agree on which to play.
+The zero-sum structure gives a single value, reliable computation and safe strategies, and those are lost once interests partly overlap. In a general-sum game, a Nash equilibrium always exists for finite games, according to [Nash (1951)](#ref-Nas1951a), but several may exist with different payoffs, and players may not agree on which to play.
 
 Treat the zero-sum tab as an approximation only when opposition truly dominates. Otherwise, the **Game Theory** panel in the Economics Toolbox solves single-stage general-sum games. A cooperative reading of a mostly shared payoff may be better served by a team model.
 

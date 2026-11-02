@@ -36,13 +36,13 @@ Change one input at a time, and hold **Random Seed** fixed while comparing, then
 
 ## What to Report from an Actor-Critic Comparison
 
-Report the number of seeds, the step budget in transitions, and evaluation returns without exploration noise. [Henderson, Islam, Bachman, Pineau, Precup and Meger (2018)](#ref-HIBPP2018a) offer guidelines for more reproducible results, as small implementation differences can matter. State hyperparameters, including those fixed in the code. A claim that one method wins needs a spread across seeds, and holds only for the task and the settings used.
+Report the number of seeds, the step budget in transitions, and evaluation returns without exploration noise. [Henderson, Islam, Bachman, Pineau, Precup and Meger (2018)](#ref-HIBPP...2018a) offer guidelines for more reproducible results, as small implementation differences can matter. State hyperparameters, including those fixed in the code. A claim that one method wins needs a spread across seeds, and holds only for the task and the settings used.
 
 ## References
 
 <a id="ref-HZAL2018a"></a>Haarnoja, T., Zhou, A., Abbeel, P. and Levine, S. (2018). Soft actor-critic: off-policy maximum entropy deep reinforcement learning with a stochastic actor. *ICML*. [proceedings.mlr.press/v80/haarnoja18b](https://proceedings.mlr.press/v80/haarnoja18b.html)
 
-<a id="ref-HIBPP2018a"></a>Henderson, P., Islam, R., Bachman, P., Pineau, J., Precup, D. and Meger, D. (2018). Deep reinforcement learning that matters. *Proceedings of the AAAI Conference on Artificial Intelligence* 32(1). [doi:10.1609/aaai.v32i1.11694](https://doi.org/10.1609/aaai.v32i1.11694)
+<a id="ref-HIBPP...2018a"></a>Henderson, P., Islam, R., Bachman, P., Pineau, J., Precup, D. and Meger, D. (2018). Deep reinforcement learning that matters. *Proceedings of the AAAI Conference on Artificial Intelligence* 32(1). [doi:10.1609/aaai.v32i1.11694](https://doi.org/10.1609/aaai.v32i1.11694)
 
 <a id="ref-SB2018a"></a>Sutton, R. S. and Barto, A. G. (2018). *Reinforcement Learning: An Introduction*, 2nd ed. MIT Press. [incompleteideas.net/book](http://incompleteideas.net/book/the-book-2nd.html)
 

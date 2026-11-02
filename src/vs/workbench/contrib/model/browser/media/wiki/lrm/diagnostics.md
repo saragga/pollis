@@ -12,17 +12,17 @@ Clearly negative skewness signals a heavier left tail, and clearly positive exce
 
 **VaR Backtest** forecasts each period from the previous 250, counts how often returns breach the forecast and compares the count with what alpha implies. With 1,000 returns, it makes 750 forecasts, so alpha 0.05 expects 37.5 breaches with a standard deviation of √(750 × 0.05 × 0.95) ≈ 6.0.
 
-The p-value comes from an exact binomial test of coverage, the small-sample version of the test of [Paul H. Kupiec (1995)](#ref-Kup1995a). A low value means the VaR breaches too often or too rarely, and both count as failures. A VaR that breaches too rarely wastes capital. A forecast must be made from data before the tested period, and an in-sample VaR would breach at the rate alpha by construction, which is why the action rolls forward.
+The p-value comes from an exact binomial test of coverage, the small-sample version of the test of [Kupiec (1995)](#ref-Kup1995a). A low value means the VaR breaches too often or too rarely, and both count as failures. A VaR that breaches too rarely wastes capital. A forecast must be made from data before the tested period, and an in-sample VaR would breach at the rate alpha by construction, which is why the action rolls forward.
 
 ## Do breaches cluster?
 
-Correct coverage is only half the job. A VaR breached 5% of the time, with all the breaches in one bad month, has passed the binomial test and still failed to warn when it mattered. Conditional coverage asks whether breaches are independent over time ([Peter F. Christoffersen (1998)](#ref-Chr1998a)).
+Correct coverage is only half the job. A VaR breached 5% of the time, with all the breaches in one bad month, has passed the binomial test and still failed to warn when it mattered. Conditional coverage asks whether breaches are independent over time ([Christoffersen (1998)](#ref-Chr1998a)).
 
 The panel reports the unconditional test only, though `hits` holds what you need for more: look at whether a breach today makes one tomorrow more likely. Clusters usually mean the forecast reacts too slowly to volatility, a common failing of a historical window, and a conditional volatility model is the usual remedy.
 
 ## Testing ES is harder
 
-**VaR Backtest** tests VaR and not ES. A quantile has a natural scoring function, which allows forecasts to be compared directly. The mean beyond a quantile has no such function on its own, and that property, elicitability, is what makes direct comparison of ES forecasts difficult ([Tilmann Gneiting (2011)](#ref-Gne2011a)).
+**VaR Backtest** tests VaR and not ES. A quantile has a natural scoring function, which allows forecasts to be compared directly. The mean beyond a quantile has no such function on its own, and that property, elicitability, is what makes direct comparison of ES forecasts difficult ([Gneiting (2011)](#ref-Gne2011a)).
 
 Practical checks remain. Compare the average loss on breach days with the forecast ES across a long sample, and run a backtest on the VaR underlying your ES. A very small number of breaches makes any such comparison weak, so a formal test needs more data than a VaR backtest does.
 

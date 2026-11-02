@@ -6,11 +6,11 @@ A stochastic game extends a Markov decision process to several players, with pay
 
 The model has a finite set of states and, for each of two players, a finite set of actions. In state s, the players choose actions a1 and a2 at the same time. Player 1 receives r(s, a1, a2) and player 2 receives the negative. The next state is drawn from P(s' | s, a1, a2), and future payoffs are weighted by the discount gamma.
 
-Player 1 maximises the expected discounted total, while player 2 minimises it. In the code, `Rw[s]` holds r and `P[s][a1, a2, s2]` holds P. [Lloyd S. Shapley (1953)](#ref-Sha1953a) introduced these games, with a positive chance of stopping at each stage, which plays the same role as discounting.
+Player 1 maximises the expected discounted total, while player 2 minimises it. In the code, `Rw[s]` holds r and `P[s][a1, a2, s2]` holds P. [Shapley (1953)](#ref-Sha1953a) introduced these games, with a positive chance of stopping at each stage, which plays the same role as discounting.
 
 ## The matrix game solved in each state
 
-At the heart of the method is a one-shot game with payoff matrix G, where the row player maximises and the column player minimises. Allowing mixed strategies, the minimax theorem of [John von Neumann (1928)](#ref-Neu1928a) says that max over x of min over y of x'Gy equals min over y of max over x of x'Gy. That common number is the value of G.
+At the heart of the method is a one-shot game with payoff matrix G, where the row player maximises and the column player minimises. Allowing mixed strategies, the minimax theorem of [von Neumann (1928)](#ref-Neu1928a) says that max over x of min over y of x'Gy equals min over y of max over x of x'Gy. That common number is the value of G.
 
 `matrix_game` finds it by linear programming: maximise v, subject to x being a probability vector and every column of G giving at least v against x. The solver's dual variables on those column constraints give player 2's strategy, so one linear programme returns both strategies at once.
 
@@ -46,15 +46,15 @@ Generated games are useful for seeing how the method scales and for checking the
 
 ## General-sum stochastic games
 
-When the two payoffs do not sum to zero, each player has its own reward and the matrix-game value no longer describes both. [John Nash (1951)](#ref-Nas1951a) showed that finite games always have an equilibrium in mixed strategies, and discounted stochastic games with finite states and actions also have stationary equilibria.
+When the two payoffs do not sum to zero, each player has its own reward and the matrix-game value no longer describes both. [Nash (1951)](#ref-Nas1951a) showed that finite games always have an equilibrium in mixed strategies, and discounted stochastic games with finite states and actions also have stationary equilibria.
 
-Computing one is harder, as no single-value linear programme applies, equilibria can be many, and a stage-by-stage update need not converge. Linear programming stays available for correlated equilibria of a stage game. The tab does not implement any of this. A full treatment is in [Jerzy Filar and Koos Vrieze (1997)](#ref-FV1997a).
+Computing one is harder, as no single-value linear programme applies, equilibria can be many, and a stage-by-stage update need not converge. Linear programming stays available for correlated equilibria of a stage game. The tab does not implement any of this. A full treatment is in [Filar and Vrieze (1997)](#ref-FV1997a).
 
 ## Learning a stochastic game from play
 
 Shapley iteration assumes the payoffs and transitions are known. When they are not, a player can learn from experience with the same structure: keep a table of values for state and joint action, and use the matrix-game value of that table as the target of each update.
 
-That idea is the minimax-Q algorithm of [Michael L. Littman (1994)](#ref-Lit1994a), which framed Markov games as a setting for multi-agent reinforcement learning. The panel **Multi-Agent Reinforcement Learning** continues in that direction. A learning method needs many visits to each joint action, so a known model is much cheaper when it is available.
+That idea is the minimax-Q algorithm of [Littman (1994)](#ref-Lit1994a), which framed Markov games as a setting for multi-agent reinforcement learning. The panel **Multi-Agent Reinforcement Learning** continues in that direction. A learning method needs many visits to each joint action, so a known model is much cheaper when it is available.
 
 ## References
 

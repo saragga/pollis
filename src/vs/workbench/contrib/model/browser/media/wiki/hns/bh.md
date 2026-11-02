@@ -4,13 +4,13 @@ Basin-hopping makes a random walk over local minima, in which every proposed poi
 
 ## A staircase in place of a landscape
 
-The method was introduced for finding the lowest-energy structures of Lennard-Jones atomic clusters, with their enormous numbers of minima ([David J. Wales and Jonathan P. K. Doye (1997)](#ref-WD1997a)). Replacing each point's value by the value of the minimum it descends to turns the surface into a staircase of flat steps, and the barriers between neighbouring valleys disappear from view.
+The method was introduced for finding the lowest-energy structures of Lennard-Jones atomic clusters, with their enormous numbers of minima ([Wales and Doye (1997)](#ref-WD1997a)). Replacing each point's value by the value of the minimum it descends to turns the surface into a staircase of flat steps, and the barriers between neighbouring valleys disappear from view.
 
 That transformation is why the method is so natural on funnel-shaped landscapes. A walk that moves between adjacent steps gets to the bottom of the funnel, however high the original ridges between the valleys are.
 
 ## The acceptance rule
 
-A hop adds a Gaussian kick to the current minimum and descends. The new minimum is accepted if it is lower, and otherwise with probability exp(−(f_new − f_current) / T). The rule is the one [Nicholas Metropolis, Arianna W. Rosenbluth, Marshall N. Rosenbluth, Augusta H. Teller and Edward Teller (1953)](#ref-MRRTT1953a) used for sampling physical states.
+A hop adds a Gaussian kick to the current minimum and descends. The new minimum is accepted if it is lower, and otherwise with probability exp(−(f_new − f_current) / T). The rule is the one [Metropolis, Rosenbluth, Rosenbluth, Teller and Teller (1953)](#ref-MRRTT1953a) used for sampling physical states.
 
 The code tracks the current minimum separately from the best one, so a walk that drifts upwards never loses its best value. At **Temperature** 1.0, a minimum worse by 1 is accepted with probability exp(−1) ≈ 0.37, and one worse by 3 with exp(−3) ≈ 0.05.
 

@@ -24,7 +24,7 @@ The same number therefore means different things across metrics. Change **r** al
 
 A classification vote from **kNN Classification** can be read as a rough probability: 4 of 5 neighbours in a class suggests 0.8, with a high uncertainty at such a small k. A 3 to 2 split is little better than a coin toss, even though the output shows one label.
 
-**kNN Regression** weights each neighbour by the inverse of its distance. With values 10 and 40 at distances 1 and 2, the weights are 1 and 0.5, and the prediction is (10 + 20) / 1.5 = 20. Weighting by distance has a long history in the nearest-neighbour rule ([Sahibsingh A. Dudani (1976)](#ref-Dud1976a)). A neighbour at nearly zero distance takes almost all the weight, which makes the prediction close to that one case's value.
+**kNN Regression** weights each neighbour by the inverse of its distance. With values 10 and 40 at distances 1 and 2, the weights are 1 and 0.5, and the prediction is (10 + 20) / 1.5 = 20. Weighting by distance has a long history in the nearest-neighbour rule ([Dudani (1976)](#ref-Dud1976a)). A neighbour at nearly zero distance takes almost all the weight, which makes the prediction close to that one case's value.
 
 ## The evidence behind one prediction
 
@@ -42,7 +42,7 @@ A small case shows the gain. With a = (0, 0, 1, 0) and b = (0, 1, 0, 0), the squ
 
 **Euclidean vs DTW** reports test error next to the default rate, the error from always choosing the largest class. With classes split 70 and 30, that rate is 0.30, and a test error of about 0.30 means no real skill, however good it looks by itself.
 
-Differences between Euclidean and DTW rows should be judged against the test set's size: with 100 test series, one case equals 0.01, so a gap of 0.02 is two series. The archive reports this classifier as a baseline for time-series work. A large published comparison found only some of the newer classifiers significantly more accurate than this benchmark ([Anthony Bagnall, Jason Lines, Aaron Bostrom, James Large and Eamonn Keogh (2017)](#ref-BLBLK2017a)).
+Differences between Euclidean and DTW rows should be judged against the test set's size: with 100 test series, one case equals 0.01, so a gap of 0.02 is two series. The archive reports this classifier as a baseline for time-series work. A large published comparison found only some of the newer classifiers significantly more accurate than this benchmark ([Bagnall, Lines, Bostrom, Large and Keogh (2017)](#ref-BLBLK2017a)).
 
 ## References
 

@@ -16,13 +16,13 @@ ES is the mean loss given that the VaR level has been passed, so for the same al
 
 ## Why coherence matters
 
-A coherent risk measure satisfies four properties, including subadditivity: the risk of a combined position should not exceed the sum of the separate risks ([Philippe Artzner, Freddy Delbaen, Jean-Marc Eber and David Heath (1999)](#ref-ADEH1999a)). VaR can fail this.
+A coherent risk measure satisfies four properties, including subadditivity: the risk of a combined position should not exceed the sum of the separate risks ([Artzner, Delbaen, Eber and Heath (1999)](#ref-ADEH1999a)). VaR can fail this.
 
-Take two independent bonds, each losing 100 with probability 4%. Alone, each has a 95% VaR of 0, as 4% is below 5%. Together, at least one defaults with probability 1 − 0.96² ≈ 7.84%, so the VaR of the pair is 100, more than 0 + 0. Under ES at the same level, each bond has 0.04 × 100 / 0.05 = 80, and the pair (0.0016 × 200 + 0.0484 × 100) / 0.05 = 103.2, below 160. ES is coherent, as [Carlo Acerbi and Dirk Tasche (2002)](#ref-AT2002a) show, including for discrete losses.
+Take two independent bonds, each losing 100 with probability 4%. Alone, each has a 95% VaR of 0, as 4% is below 5%. Together, at least one defaults with probability 1 − 0.96² ≈ 7.84%, so the VaR of the pair is 100, more than 0 + 0. Under ES at the same level, each bond has 0.04 × 100 / 0.05 = 80, and the pair (0.0016 × 200 + 0.0484 × 100) / 0.05 = 103.2, below 160. ES is coherent, as [Acerbi and Tasche (2002)](#ref-AT2002a) show, including for discrete losses.
 
 ## Reading Sortino, Calmar and Omega
 
-**Risk-Adjusted Performance** prints four ratios. Sharpe divides excess return by total volatility, while Sortino uses only downside deviation ([Frank A. Sortino and Lee N. Price (1994)](#ref-SP1994a)). For the default, Sharpe is about 0.0004 / 0.01 × √252 ≈ 0.63 and Sortino about 0.93, as roughly symmetric returns give a Sortino near √2 times the Sharpe.
+**Risk-Adjusted Performance** prints four ratios. Sharpe divides excess return by total volatility, while Sortino uses only downside deviation ([Sortino and Price (1994)](#ref-SP1994a)). For the default, Sharpe is about 0.0004 / 0.01 × √252 ≈ 0.63 and Sortino about 0.93, as roughly symmetric returns give a Sortino near √2 times the Sharpe.
 
 Omega is a sum of gains over a sum of losses, equal to 1 when the mean return equals **MAR**, and about 1.1 for the default. Calmar relates annualised return to maximum drawdown over the whole sample, so it falls as the history grows. Sterling here adds 10% to the average drawdown, a convention that dampens it. Compare ratios only across series of similar length and frequency.
 

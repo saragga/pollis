@@ -34,7 +34,7 @@ The test is one-sided, on the view that structure lowers permutation entropy.
 
 ## What a Rejection Means
 
-A low p says that the data have less ordinal entropy than the null allows. That can reflect nonlinear determinism, and it can also reflect non-stationarity, a non-Gaussian shape, or differences between end points of the series. Fourier methods assume a periodic series, and a large jump between its first and last values causes spurious high-frequency power, as [Schreiber and Schmitz (2000)](#ref-SS2000a) discuss. Trim the series so that its ends match. Chaos remains only one explanation among several.
+A low p says that the data have less ordinal entropy than the null allows. That can reflect nonlinear determinism, and it can also reflect non-stationarity, a non-Gaussian shape, or differences between end points of the series. Fourier methods assume a periodic series, and a large jump between its first and last values causes spurious high-frequency power, as [Schreiber and Schmitz (2000)](#ref-SS2000c) discuss. Trim the series so that its ends match. Chaos remains only one explanation among several.
 
 ## What Failing to Reject Means
 
@@ -48,7 +48,7 @@ Permutation entropy does not change under monotonic transforms, which suits `IAA
 
 <a id="ref-SS1996a"></a>Schreiber, T. and Schmitz, A. (1996). Improved surrogate data for nonlinearity tests. *Physical Review Letters* 77(4), 635–638. [doi:10.1103/PhysRevLett.77.635](https://doi.org/10.1103/PhysRevLett.77.635)
 
-<a id="ref-SS2000a"></a>Schreiber, T. and Schmitz, A. (2000). Surrogate time series. *Physica D: Nonlinear Phenomena* 142(3–4), 346–382. [doi:10.1016/S0167-2789(00)00043-9](https://doi.org/10.1016/S0167-2789(00)00043-9)
+<a id="ref-SS2000c"></a>Schreiber, T. and Schmitz, A. (2000). Surrogate time series. *Physica D: Nonlinear Phenomena* 142(3–4), 346–382. [doi:10.1016/S0167-2789(00)00043-9](https://doi.org/10.1016/S0167-2789(00)00043-9)
 
 <a id="ref-TELGF1992a"></a>Theiler, J., Eubank, S., Longtin, A., Galdrikian, B. and Farmer, J. D. (1992). Testing for nonlinearity in time series: the method of surrogate data. *Physica D: Nonlinear Phenomena* 58(1–4), 77–94. [doi:10.1016/0167-2789(92)90102-S](https://doi.org/10.1016/0167-2789(92)90102-S)
 

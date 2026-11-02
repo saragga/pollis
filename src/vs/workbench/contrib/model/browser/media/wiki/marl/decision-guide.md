@@ -27,7 +27,7 @@ The joint learner should do best on small problems, so use it as the benchmark. 
 
 ## When central training is realistic
 
-A joint-action learner needs one controller to choose for all agents, at execution as well as in training, which many real teams cannot have. Centralised training with decentralised execution keeps the joint view only during learning. **Value Decomposition (VDN)** is the panel's example, from [Peter Sunehag, Guy Lever, Audrunas Gruslys, Wojciech Marian Czarnecki, Vinicius Zambaldi, Max Jaderberg, Marc Lanctot, Nicolas Sonnerat, Joel Z. Leibo, Karl Tuyls and Thore Graepel (2017)](#ref-SLGCZ...2017a).
+A joint-action learner needs one controller to choose for all agents, at execution as well as in training, which many real teams cannot have. Centralised training with decentralised execution keeps the joint view only during learning. **Value Decomposition (VDN)** is the panel's example, from [Sunehag, Lever, Gruslys, Czarnecki, Zambaldi, Jaderberg, Lanctot, Sonnerat, Leibo, Tuyls and Graepel (2017)](#ref-SLGCZ...2017a).
 
 In the panel, each agent still sees all positions, so the demonstration is simpler than a real decentralised task. Choose VDN where training can be shared but acting cannot, and where each agent's contribution is roughly separable.
 
@@ -66,7 +66,7 @@ Tables stop working once the state space is too large to visit. Neural methods t
 | QMIX | A monotonic mix of agent values | Value structures a sum cannot express |
 | MADDPG | Centralised critics, decentralised actors | Mixed cooperative and competitive settings |
 
-QMIX is due to [Tabish Rashid, Mikayel Samvelyan, Christian Schroeder de Witt, Gregory Farquhar, Jakob Foerster and Shimon Whiteson (2018)](#ref-RSSFF...2018a), and MADDPG to [Ryan Lowe, Yi Wu, Aviv Tamar, Jean Harb, Pieter Abbeel and Igor Mordatch (2017)](#ref-LWTHA...2017a).
+QMIX is due to [Rashid, Samvelyan, Schroeder de Witt, Farquhar, Foerster and Whiteson (2018)](#ref-RSWFF...2018a), and MADDPG to [Lowe, Wu, Tamar, Harb, Abbeel and Mordatch (2017)](#ref-LWTHA...2017a).
 
 ## Using your own environment
 
@@ -78,7 +78,7 @@ On **Competitive**, replacing tic-tac-toe means editing `wins`, `winner`, `place
 
 <a id="ref-LWTHA...2017a"></a>Lowe, R., Wu, Y., Tamar, A., Harb, J., Abbeel, P., & Mordatch, I. (2017). Multi-Agent Actor-Critic for Mixed Cooperative-Competitive Environments. *NeurIPS*. [Online](https://proceedings.neurips.cc/paper/2017/hash/68a9750337a418a86fe06c1991a1d64c-Abstract.html)
 
-<a id="ref-RSSFF...2018a"></a>Rashid, T., Samvelyan, M., Schroeder de Witt, C., Farquhar, G., Foerster, J., & Whiteson, S. (2018). QMIX: Monotonic Value Function Factorisation for Deep Multi-Agent Reinforcement Learning. [arXiv:1803.11485](https://arxiv.org/abs/1803.11485)
+<a id="ref-RSWFF...2018a"></a>Rashid, T., Samvelyan, M., Schroeder de Witt, C., Farquhar, G., Foerster, J., & Whiteson, S. (2018). QMIX: Monotonic Value Function Factorisation for Deep Multi-Agent Reinforcement Learning. [arXiv:1803.11485](https://arxiv.org/abs/1803.11485)
 
 <a id="ref-SLGCZ...2017a"></a>Sunehag, P., Lever, G., Gruslys, A., Czarnecki, W. M., Zambaldi, V., Jaderberg, M., Lanctot, M., Sonnerat, N., Leibo, J. Z., Tuyls, K., & Graepel, T. (2017). Value-Decomposition Networks For Cooperative Multi-Agent Learning. [arXiv:1706.05296](https://arxiv.org/abs/1706.05296)
 

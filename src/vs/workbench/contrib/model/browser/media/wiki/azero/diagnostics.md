@@ -16,7 +16,7 @@ Loss curves alone cannot show that a self-play system has improved, as the data 
 
 ## How to Compare with Pure MCTS
 
-**vs Pure MCTS** plays the trained search against plain MCTS, which uses uniform priors and random playouts with the same simulation budget. A trained player should beat it, or draw in tic-tac-toe, where perfect play is a draw. Failure to beat it means that the network adds little over a uniform prior and random rollouts. The same action tests the raw network against the search, a far harder test. [Browne, Powley, Whitehouse, Lucas, Cowling, Rohlfshagen, Tavener, Perez, Samothrakis and Colton (2012)](#ref-BPWLC2012a) survey plain MCTS and its variants.
+**vs Pure MCTS** plays the trained search against plain MCTS, which uses uniform priors and random playouts with the same simulation budget. A trained player should beat it, or draw in tic-tac-toe, where perfect play is a draw. Failure to beat it means that the network adds little over a uniform prior and random rollouts. The same action tests the raw network against the search, a far harder test. [Browne, Powley, Whitehouse, Lucas, Cowling, Rohlfshagen, Tavener, Perez, Samothrakis and Colton (2012)](#ref-BPWLC...2012a) survey plain MCTS and its variants.
 
 ## How to Check Progress Between Checkpoints
 
@@ -28,7 +28,7 @@ Loss curves alone cannot show that a self-play system has improved, as the data 
 
 ## References
 
-<a id="ref-BPWLC2012a"></a>Browne, C. B., Powley, E., Whitehouse, D., Lucas, S. M., Cowling, P. I., Rohlfshagen, P., Tavener, S., Perez, D., Samothrakis, S. and Colton, S. (2012). A survey of Monte Carlo tree search methods. *IEEE Transactions on Computational Intelligence and AI in Games* 4(1), 1–43. [doi:10.1109/TCIAIG.2012.2186810](https://doi.org/10.1109/TCIAIG.2012.2186810)
+<a id="ref-BPWLC...2012a"></a>Browne, C. B., Powley, E., Whitehouse, D., Lucas, S. M., Cowling, P. I., Rohlfshagen, P., Tavener, S., Perez, D., Samothrakis, S. and Colton, S. (2012). A survey of Monte Carlo tree search methods. *IEEE Transactions on Computational Intelligence and AI in Games* 4(1), 1–43. [doi:10.1109/TCIAIG.2012.2186810](https://doi.org/10.1109/TCIAIG.2012.2186810)
 
 ## See Also
 

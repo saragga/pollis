@@ -20,7 +20,7 @@ Each step is kept in the map's record, which **Save...** writes to `~/.pollis/li
 The name comes from sampling: in the s stage k name snowball sampling of [Goodman (1961)](#ref-Goo1961a), sampled individuals name others, who form the first stage, and so on. [Price (1965)](#ref-Pri1965a) described the references between scientific papers as a network, with a research front of recent work. Snowball Search Map follows that network from its seeds, with works in place of people.
 
 ## How Much a Snowball Search Adds to a Database Search
-Citations reach work that keywords miss. [Haddaway, Grainger and Gray (2022)](#ref-HGG2022a), with their tool citationchaser for forward and backward chasing, point to research disconnected in its terms though related in meaning. [Wohlin, Kalinowski, Romero Felizardo and Mendes (2022)](#ref-WKRM2022a) replicated a systematic review with a hybrid of database search and snowballing, and identified 30% more primary studies than the review's traditional search. Snowball Search Map works best with such a search behind it, as the quality of the seeds decides where the rounds go.
+Citations reach work that keywords miss. [Haddaway, Grainger and Gray (2022)](#ref-HGG2022a), with their tool citationchaser for forward and backward chasing, point to research disconnected in its terms though related in meaning. [Wohlin, Kalinowski, Romero Felizardo and Mendes (2022)](#ref-WKFM2022a) replicated a systematic review with a hybrid of database search and snowballing, and identified 30% more primary studies than the review's traditional search. Snowball Search Map works best with such a search behind it, as the quality of the seeds decides where the rounds go.
 
 ## References
 
@@ -36,7 +36,7 @@ Citations reach work that keywords miss. [Haddaway, Grainger and Gray (2022)](#r
 
 <a id="ref-Woh2014a"></a>Wohlin, C. (2014). Guidelines for snowballing in systematic literature studies and a replication in software engineering. *Proceedings of the 18th International Conference on Evaluation and Assessment in Software Engineering*, 1–10. [doi:10.1145/2601248.2601268](https://doi.org/10.1145/2601248.2601268)
 
-<a id="ref-WKRM2022a"></a>Wohlin, C., Kalinowski, M., Romero Felizardo, K. and Mendes, E. (2022). Successful combination of database search and snowballing for identification of primary studies in systematic literature studies. *Information and Software Technology* 147, 106908. [doi:10.1016/j.infsof.2022.106908](https://doi.org/10.1016/j.infsof.2022.106908)
+<a id="ref-WKFM2022a"></a>Wohlin, C., Kalinowski, M., Romero Felizardo, K. and Mendes, E. (2022). Successful combination of database search and snowballing for identification of primary studies in systematic literature studies. *Information and Software Technology* 147, 106908. [doi:10.1016/j.infsof.2022.106908](https://doi.org/10.1016/j.infsof.2022.106908)
 
 ## See Also
 - [Factsheet](factsheet.md) · [Rounds and Saturation](rounds-and-saturation.md) · [Links and Citations](links-and-citations.md)

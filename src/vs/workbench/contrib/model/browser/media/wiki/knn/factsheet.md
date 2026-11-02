@@ -34,7 +34,7 @@ On the first two tabs, data and query are standardised before the tree is built,
 | **Largest window (%)** | 10 | Top of the search 0, 1, ..., this value; Learned only |
 | **Window (%)** | 5 | Chosen width; Fixed only |
 
-A window of w per cent is ceil(L × w / 100) points. For L = 96, a 5% window is 5 points and 10% is 10. For L = 512, those are 26 and 52. The datasets come from the archive of [Hoang Anh Dau, Anthony Bagnall, Kaveh Kamgar, Chin-Chia Michael Yeh, Yan Zhu, Shaghayegh Gharghabi, Chotirat Ann Ratanamahatana and Eamonn Keogh (2019)](#ref-DBKYZ...2019a).
+A window of w per cent is ceil(L × w / 100) points. For L = 96, a 5% window is 5 points and 10% is 10. For L = 512, those are 26 and 52. The datasets come from the archive of [Dau, Bagnall, Kamgar, Yeh, Zhu, Gharghabi, Ratanamahatana and Keogh (2019)](#ref-DBKYZ...2019a).
 
 ## Actions for the search tabs
 
@@ -59,7 +59,7 @@ A window of w per cent is ceil(L × w / 100) points. For L = 96, a 5% window is 
 | Compare | **Euclidean vs DTW** | Test error at window 0, the chosen window and unconstrained, with the default rate |
 | Interpret | **Nearest Training Series** | Closest series, classes and DTW distances |
 
-The code for series comes from [Fredrik Bagge Carlson (2024)](#ref-Car2024a).
+The code for series comes from [Bagge Carlson (2024)](#ref-Car2024a).
 
 ## References
 

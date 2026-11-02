@@ -4,9 +4,9 @@ Several agents learn from experience in a shared environment, without being give
 
 ## Why learning together is harder than learning alone
 
-A single Q-learner faces a fixed environment, so its targets settle as its estimates improve, and [Christopher J. C. H. Watkins and Peter Dayan (1992)](#ref-WD1992a) proved convergence under standard conditions. With several learners, the others are part of each agent's environment, and they keep changing as they learn.
+A single Q-learner faces a fixed environment, so its targets settle as its estimates improve, and [Watkins and Dayan (1992)](#ref-WD1992a) proved convergence under standard conditions. With several learners, the others are part of each agent's environment, and they keep changing as they learn.
 
-The same action can therefore earn different results at different times, for reasons the agent cannot see. Convergence results for the single-agent case no longer apply directly, and the agents may also need to agree on one of many equally good joint behaviours. A broad survey of those problems and the methods that address them is by [Lucian Busoniu, Robert Babuska and Bart De Schutter (2008)](#ref-BBD2008a).
+The same action can therefore earn different results at different times, for reasons the agent cannot see. Convergence results for the single-agent case no longer apply directly, and the agents may also need to agree on one of many equally good joint behaviours. A broad survey of those problems and the methods that address them is by [Busoniu, Babuska and De Schutter (2008)](#ref-BBS2008a).
 
 ## Cooperative and competitive learning compared
 
@@ -32,7 +32,7 @@ No single cell is the right meeting place, and for two agents any cell on the di
 
 On the **Competitive** tab, one table of values plays both sides of tic-tac-toe, and learns from the results. Its values refer to afterstates, the boards just after a move, and each is stored from the viewpoint of the player who has just moved, so experience from either side improves the play of both.
 
-Tic-tac-toe is small enough to solve exactly, which gives the panel an objective test. Under perfect play it is a draw, so a well-trained table should never lose to a perfect opponent. Learning from self-play alone is the idea behind much stronger systems, from backgammon to the games of [David Silver, Thomas Hubert, Julian Schrittwieser, Ioannis Antonoglou, Matthew Lai, Arthur Guez, Marc Lanctot, Laurent Sifre, Dharshan Kumaran, Thore Graepel, Timothy Lillicrap, Karen Simonyan and Demis Hassabis (2018)](#ref-SHSAL...2018a).
+Tic-tac-toe is small enough to solve exactly, which gives the panel an objective test. Under perfect play it is a draw, so a well-trained table should never lose to a perfect opponent. Learning from self-play alone is the idea behind much stronger systems, from backgammon to the games of [Silver, Hubert, Schrittwieser, Antonoglou, Lai, Guez, Lanctot, Sifre, Kumaran, Graepel, Lillicrap, Simonyan and Hassabis (2018)](#ref-SHSAL...2018a).
 
 ## The three cooperative learners
 
@@ -64,11 +64,11 @@ The [Factsheet](factsheet.md) lists all ten, and the [Diagnostics](diagnostics.m
 
 The tabs use lookup tables, so they do not scale to large problems, and the methods written for such problems are not implemented here. QMIX, MADDPG and COMA replace tables with neural networks, and training against a pool of past policies is a common guard against blind spots. None of those is in the tabs' code, which is written out in Base Julia.
 
-A known model calls for planning instead of learning: see **Multi-Agent Decision Processes**. The [Decision Guide](decision-guide.md) wiki says when each route fits, and textbook background is in [Yoav Shoham and Kevin Leyton-Brown (2009)](#ref-SL2009b).
+A known model calls for planning instead of learning: see **Multi-Agent Decision Processes**. The [Decision Guide](decision-guide.md) wiki says when each route fits, and textbook background is in [Shoham and Leyton-Brown (2009)](#ref-SL2009b).
 
 ## References
 
-<a id="ref-BBD2008a"></a>Busoniu, L., Babuska, R., & De Schutter, B. (2008). A Comprehensive Survey of Multiagent Reinforcement Learning. *IEEE Transactions on Systems, Man, and Cybernetics, Part C (Applications and Reviews)* 38(2), 156-172. [doi:10.1109/TSMCC.2007.913919](https://doi.org/10.1109/TSMCC.2007.913919)
+<a id="ref-BBS2008a"></a>Busoniu, L., Babuska, R., & De Schutter, B. (2008). A Comprehensive Survey of Multiagent Reinforcement Learning. *IEEE Transactions on Systems, Man, and Cybernetics, Part C (Applications and Reviews)* 38(2), 156-172. [doi:10.1109/TSMCC.2007.913919](https://doi.org/10.1109/TSMCC.2007.913919)
 
 <a id="ref-SL2009b"></a>Shoham, Y., & Leyton-Brown, K. (2009). *Multiagent Systems: Algorithmic, Game-Theoretic, and Logical Foundations*. Cambridge University Press. [Online](https://www.masfoundations.org)
 

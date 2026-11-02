@@ -14,7 +14,7 @@ Hyperparameters are the settings a model does not learn from the data, such as t
 | **Output** | `mach`, the tuned machine, with its best settings in `fitted_params(mach).best_model` |
 | **Key choice** | How to spend a limited number of model fits |
 
-An MLJ.jl framework paper by [Blaom and co-authors (2020)](#ref-BKLSA...2020a) describes the design behind `TunedModel`, which all three tabs use.
+An MLJ.jl framework paper by [Blaom, Kiraly, Lienart, Simillides, Arenas and Vollmer (2020)](#ref-BKLSA...2020a) describes the design behind `TunedModel`, which all three tabs use.
 
 ## How Each Search Strategy Picks Configurations
 

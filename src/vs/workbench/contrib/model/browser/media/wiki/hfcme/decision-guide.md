@@ -20,31 +20,31 @@ Pick it when assets are very liquid and a coarse grid still leaves many returns.
 
 ## Pre-averaged and the choice of theta
 
-**Pre-averaged** smooths tick returns over a window of k = theta × √(number of ticks) ticks before forming products, so noise shrinks through local averaging. Its overlap rule descends from the Hayashi-Yoshida estimator, which sums products of all overlapping return intervals without any synchronisation ([Takaki Hayashi and Nakahiro Yoshida (2005)](#ref-HY2005a)). The panel's window follows [Kim Christensen, Mark Podolskij and Mathias Vetter (2013)](#ref-CPV2013a).
+**Pre-averaged** smooths tick returns over a window of k = theta × √(number of ticks) ticks before forming products, so noise shrinks through local averaging. Its overlap rule descends from the Hayashi-Yoshida estimator, which sums products of all overlapping return intervals without any synchronisation ([Hayashi and Yoshida (2005)](#ref-HY2005a)). The panel's window follows [Christensen, Podolskij and Vetter (2013)](#ref-CPV2013a).
 
 A larger **Pre-averaging Window (theta)** smooths more noise but leaves fewer effective returns. Keep 0.15 to start, then try 0.1 and 0.3: with 10,000 ticks those give windows of 10 and 30. Estimates that barely move with theta are a good sign. A matrix that fails **Matrix Validity** needs regularising before use.
 
 ## Two-Scales and the number of sub-grids
 
-**Two-Scales** averages realised covariance across K sub-sampled grids, then subtracts (n̄ / n) times the all-ticks estimate, where n̄ is the average returns per sub-grid. The noise bias is 2n̄ω² in the first term and 2nω² in the second, so the scaling cancels it ([Lan Zhang, Per A. Mykland and Yacine Aït-Sahalia (2005)](#ref-ZMA2005a)).
+**Two-Scales** averages realised covariance across K sub-sampled grids, then subtracts (n̄ / n) times the all-ticks estimate, where n̄ is the average returns per sub-grid. The noise bias is 2n̄ω² in the first term and 2nω² in the second, so the scaling cancels it ([Zhang, Mykland and Aït-Sahalia (2005)](#ref-ZMA2005a)).
 
 A larger **Sub-grids (K)** reduces noise further but leaves less signal per grid. Blank is fine at first. An explicit K deserves a check at half and double its value, and a result that moves a lot with K suggests too few ticks. The convergence rate of the original estimator is n^(1/6), slow compared with the rival methods.
 
 ## Realized Kernel and the bandwidth
 
-**Realized Kernel** weighs autocovariance matrices up to lag H with Parzen weights, which keep the matrix positive semi-definite, on refresh-time returns. Its convergence rate is n^(1/5) in its positive semi-definite form ([Ole E. Barndorff-Nielsen, Peter Reinhard Hansen, Asger Lunde and Neil Shephard (2011)](#ref-BHLS2011a)).
+**Realized Kernel** weighs autocovariance matrices up to lag H with Parzen weights, which keep the matrix positive semi-definite, on refresh-time returns. Its convergence rate is n^(1/5) in its positive semi-definite form ([Barndorff-Nielsen, Hansen, Lunde and Shephard (2011)](#ref-BHLS2011a)).
 
 The cost comes from refresh-time sampling, which reduces every asset to the pace of the slowest. The default bandwidth grows as (mean ticks per asset)^0.6: at 2,500 ticks per asset, 2,500^0.6 ≈ 109 before the constant c*. A larger **Kernel Bandwidth (H)** captures more lead-lag structure but raises variance. Leave it blank unless you have a reason to do otherwise, and compare at half and double the default if you do set one.
 
 ## Repair or re-estimate
 
-A matrix that fails **Matrix Validity** has two remedies, compared in **Raw Against Regularised**. `:nearest_correlation_matrix` makes the smallest change that restores validity, using the projection method of [Nicholas J. Higham (2002)](#ref-Hig2002a), and suits a matrix that is only slightly invalid.
+A matrix that fails **Matrix Validity** has two remedies, compared in **Raw Against Regularised**. `:nearest_correlation_matrix` makes the smallest change that restores validity, using the projection method of [Higham (2002)](#ref-Hig2002a), and suits a matrix that is only slightly invalid.
 
-`:eigenvalue_clean` treats the eigenvalues that fall inside the range expected from pure noise as uninformative ([Laurent Laloux, Pierre Cizeau, Jean-Philippe Bouchaud and Marc Potters (1999)](#ref-LCBP1999a)). With N assets and T returns that range runs from (1 − √(N/T))² to (1 + √(N/T))²: for N = 4 and T = 2,500, from 0.92 to 1.08. Prefer it for many assets and few returns. A badly invalid matrix calls for a switch of tab or a longer window before any repair.
+`:eigenvalue_clean` treats the eigenvalues that fall inside the range expected from pure noise as uninformative ([Laloux, Cizeau, Bouchaud and Potters (1999)](#ref-LCBP1999a)). With N assets and T returns that range runs from (1 − √(N/T))² to (1 + √(N/T))²: for N = 4 and T = 2,500, from 0.92 to 1.08. Prefer it for many assets and few returns. A badly invalid matrix calls for a switch of tab or a longer window before any repair.
 
 ## Where the fifth estimator fits
 
-**All Five Estimators** also runs `:spectral_covariance`, which has no tab of its own. Spectral methods work with local frequency-domain averages of the noisy returns, and they can reach high efficiency in theory ([Markus Bibinger, Nikolaus Hautsch, Peter Malec and Markus Reiß (2014)](#ref-BHMR2014a)).
+**All Five Estimators** also runs `:spectral_covariance`, which has no tab of its own. Spectral methods work with local frequency-domain averages of the noisy returns, and they can reach high efficiency in theory ([Bibinger, Hautsch, Malec and Reiß (2014)](#ref-BHMR2014a)).
 
 Treat it here as an extra voice in the comparison. If it agrees with **Realized Kernel** and **Pre-averaged**, the estimate is on firmer ground. If your own analysis settles on it, carry the code from that action into your script and call `estimate_covariance` with the symbol directly.
 

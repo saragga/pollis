@@ -4,7 +4,7 @@ Iterated local search alternates a kick with a local descent. Instead of restart
 
 ## Walking among local minima
 
-The scheme has four parts: an initial solution, a local search, a perturbation and an acceptance rule ([Helena R. Lourenço, Olivier C. Martin and Thomas Stützle (2003)](#ref-LMS2003a)). The search effectively moves in a much smaller space, the set of local minima, because each candidate has already been brought to the bottom of its valley.
+The scheme has four parts: an initial solution, a local search, a perturbation and an acceptance rule ([Lourenço, Martin and Stützle (2003)](#ref-LMS2003a)). The search effectively moves in a much smaller space, the set of local minima, because each candidate has already been brought to the bottom of its valley.
 
 In the code the first descent starts from `x_start`. Each later step adds `knob .* (ub .- lb) .* randn(n)` to the incumbent, moves the point just inside the box if the kick left it, and descends with bounded L-BFGS. A new minimum replaces the incumbent only if its value is strictly lower.
 

@@ -8,7 +8,7 @@ The three Next Steps of the Model Calibration panel measure different things. **
 
 ## How Expected Calibration Error Is Computed
 
-Cases fall into bins by predicted probability. For each bin, take the absolute gap between mean predicted probability and observed frequency, then average the gaps with weights equal to the bin's share of cases: ECE = sum((n_b / n) |mean_p_b - freq_b|). Lower is better, and 0 means no gap in any bin. [Pakdaman Naeini, Cooper and Hauskrecht (2015)](#ref-PCH2015a) introduced the measure. The panel uses `ECE(UniformBinning(10))` from CalibrationErrors.jl, and evaluates raw and calibrated values with 10 equal-width bins. With **Temperature**, the raw values are the sigmoid of the logits, equivalent to T = 1.
+Cases fall into bins by predicted probability. For each bin, take the absolute gap between mean predicted probability and observed frequency, then average the gaps with weights equal to the bin's share of cases: ECE = sum((n_b / n) |mean_p_b - freq_b|). Lower is better, and 0 means no gap in any bin. [Pakdaman Naeini, Cooper and Hauskrecht (2015)](#ref-NCH2015a) introduced the measure. The panel uses `ECE(UniformBinning(10))` from CalibrationErrors.jl, and evaluates raw and calibrated values with 10 equal-width bins. With **Temperature**, the raw values are the sigmoid of the logits, equivalent to T = 1.
 
 ## Where Expected Calibration Error Misleads
 
@@ -32,7 +32,7 @@ All three steps score `cal_probs` on the cases used to fit the mapping. **Isoton
 
 <a id="ref-DF1983a"></a>DeGroot, M. H. and Fienberg, S. E. (1983). The comparison and evaluation of forecasters. *The Statistician* 32(1/2), 12. [doi:10.2307/2987588](https://doi.org/10.2307/2987588)
 
-<a id="ref-PCH2015a"></a>Pakdaman Naeini, M., Cooper, G. and Hauskrecht, M. (2015). Obtaining well calibrated probabilities using Bayesian binning. *Proceedings of the AAAI Conference on Artificial Intelligence* 29(1). [doi:10.1609/aaai.v29i1.9602](https://doi.org/10.1609/aaai.v29i1.9602)
+<a id="ref-NCH2015a"></a>Pakdaman Naeini, M., Cooper, G. and Hauskrecht, M. (2015). Obtaining well calibrated probabilities using Bayesian binning. *Proceedings of the AAAI Conference on Artificial Intelligence* 29(1). [doi:10.1609/aaai.v29i1.9602](https://doi.org/10.1609/aaai.v29i1.9602)
 
 ## See Also
 

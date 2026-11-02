@@ -1,6 +1,6 @@
 # Imbalanced Classes
 
-Classes are imbalanced when one label is much rarer than the other. Rarity changes how some metrics read and limits what can be estimated, but [van den Goorbergh, van Smeden, Timmerman and Van Calster (2022)](#ref-GSTV2022a) show that it is not, in itself, a defect that resampling must repair.
+Classes are imbalanced when one label is much rarer than the other. Rarity changes how some metrics read and limits what can be estimated, but [van den Goorbergh, van Smeden, Timmerman and Van Calster (2022)](#ref-GSTC2022a) show that it is not, in itself, a defect that resampling must repair.
 
 ## What Class Imbalance Does to Classification Metrics
 
@@ -57,7 +57,7 @@ Instead of changing the training data, a modeller can judge probabilities with a
 
 <a id="ref-GR2007a"></a>Gneiting, T. and Raftery, A. E. (2007). Strictly proper scoring rules, prediction, and estimation. *Journal of the American Statistical Association* 102(477), 359–378. [doi:10.1198/016214506000001437](https://doi.org/10.1198/016214506000001437)
 
-<a id="ref-GSTV2022a"></a>van den Goorbergh, R., van Smeden, M., Timmerman, D. and Van Calster, B. (2022). The harm of class imbalance corrections for risk prediction models: illustration and simulation using logistic regression. *Journal of the American Medical Informatics Association* 29(9), 1525–1534. [doi:10.1093/jamia/ocac093](https://doi.org/10.1093/jamia/ocac093)
+<a id="ref-GSTC2022a"></a>van den Goorbergh, R., van Smeden, M., Timmerman, D. and Van Calster, B. (2022). The harm of class imbalance corrections for risk prediction models: illustration and simulation using logistic regression. *Journal of the American Medical Informatics Association* 29(9), 1525–1534. [doi:10.1093/jamia/ocac093](https://doi.org/10.1093/jamia/ocac093)
 
 <a id="ref-HG2009a"></a>He, H. and Garcia, E. A. (2009). Learning from imbalanced data. *IEEE Transactions on Knowledge and Data Engineering* 21(9), 1263–1284. [doi:10.1109/TKDE.2008.239](https://doi.org/10.1109/TKDE.2008.239)
 

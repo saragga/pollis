@@ -18,7 +18,7 @@ Counting runs over the flattened token list, which has N − 1 bigrams from N to
 
 Add-k per context is P(w given v) = (count(v w) + k) / (count(v) + kV). On the toy text with k = 1 and V = 5: P(cat given the) = 2 / 7 ≈ 0.29 and P(sat given the) = 1 / 7 ≈ 0.14. An unseen pair now has half the probability of a seen one.
 
-A real vocabulary makes it worse. With V = 10,000, a context seen 5 times with one follower seen 3 times has a maximum likelihood estimate of 0.6, but add-1 gives 4 / 10,005 ≈ 0.0004. That one word has lost almost all its probability to 9,999 never-seen followers. Much smaller values of k reduce the damage, but interpolation or discounting serve better, as [Stanley F. Chen and Joshua Goodman (1999)](#ref-CG1999a) showed.
+A real vocabulary makes it worse. With V = 10,000, a context seen 5 times with one follower seen 3 times has a maximum likelihood estimate of 0.6, but add-1 gives 4 / 10,005 ≈ 0.0004. That one word has lost almost all its probability to 9,999 never-seen followers. Much smaller values of k reduce the damage, but interpolation or discounting serve better, as [Chen and Goodman (1999)](#ref-CG1999a) showed.
 
 ## Where bigrams help
 

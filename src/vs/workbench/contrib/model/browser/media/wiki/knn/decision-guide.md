@@ -35,7 +35,7 @@ Small k follows the data closely and is sensitive to noise, whereas large k is s
 
 **Warping window** has three modes. Learned follows the archive's baseline: windows from 0 to **Largest window (%)** are ranked by leave-one-out error on the training set. It suits most cases, but costs n(n − 1) / 2 distances per window, about 4,950 for 100 series.
 
-Fixed suits domain knowledge about how far events may shift, and it also suits training sets too small to rank windows. Unconstrained allows any alignment and costs L² cells per pair, against about L(2r + 1) with a window: 9,216 against 2,016 at L = 96, r = 10. It can also match very unlike shapes. The narrow band is an old device, going back to speech recognition ([Hiroaki Sakoe and Seibi Chiba (1978)](#ref-SC1978a)), and it often improves accuracy as well as speed.
+Fixed suits domain knowledge about how far events may shift, and it also suits training sets too small to rank windows. Unconstrained allows any alignment and costs L² cells per pair, against about L(2r + 1) with a window: 9,216 against 2,016 at L = 96, r = 10. It can also match very unlike shapes. The narrow band is an old device, going back to speech recognition ([Sakoe and Chiba (1978)](#ref-SC1978a)), and it often improves accuracy as well as speed.
 
 ## When to leave nearest neighbours
 

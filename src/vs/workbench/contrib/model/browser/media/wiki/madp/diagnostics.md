@@ -16,7 +16,7 @@ A false result can occur even after JESP has stopped. The stopping test looks fo
 
 ## Checking Dec-Tiger against published values
 
-At **Listening Accuracy** 0.85, Dec-Tiger has known exact optima for short horizons, reported as Tiger (A) by [Daniel Szer, François Charpillet and Shlomo Zilberstein (2005)](#ref-SCZ2005a).
+At **Listening Accuracy** 0.85, Dec-Tiger has known exact optima for short horizons, reported as Tiger (A) by [Szer, Charpillet and Zilberstein (2005)](#ref-SCZ2005a).
 
 | **Horizon (T)** | Exact optimum | Source |
 |---|---|---|

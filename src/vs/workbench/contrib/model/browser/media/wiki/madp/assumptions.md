@@ -6,7 +6,7 @@ Each tab's answer rests on assumptions about what the decision makers want, what
 
 A **Dec-POMDP** team receives one number at each stage and every agent wants the total to be as large as possible. No agent has a private goal, so nobody has any reason to mislead a partner, and the joint value is the only score.
 
-Real teams can fall short of this. Agents may weigh costs differently, or a partner may act for its own benefit. Under those conditions, a policy that is best for the team may not be one that a self-interested agent would follow. Such a problem needs a model with separate rewards, such as a partially observable stochastic game, which is treated by [Frans A. Oliehoek and Christopher Amato (2016)](#ref-OA2016a).
+Real teams can fall short of this. Agents may weigh costs differently, or a partner may act for its own benefit. Under those conditions, a policy that is best for the team may not be one that a self-interested agent would follow. Such a problem needs a model with separate rewards, such as a partially observable stochastic game, which is treated by [Oliehoek and Amato (2016)](#ref-OA2016a).
 
 ## Dec-POMDP: planning together, acting apart
 
@@ -36,7 +36,7 @@ A breach of that assumption is easy to miss. If some outcomes are good or bad fo
 
 Both players see the current state exactly and choose at the same time, each without seeing the other's action. Payoffs and transitions depend on the current state and both actions, and they do not change over time. The state and action sets are finite and known to both.
 
-Under those conditions, stationary strategies are enough: a player's choice depends on the current state, not on the history. [Lloyd S. Shapley (1953)](#ref-Sha1953a) established this result. Hidden information about the state, or rules that change over time, would break the single stage-by-stage calculation that the code relies on.
+Under those conditions, stationary strategies are enough: a player's choice depends on the current state, not on the history. [Shapley (1953)](#ref-Sha1953a) established this result. Hidden information about the state, or rules that change over time, would break the single stage-by-stage calculation that the code relies on.
 
 ## Stochastic game: the discount must be under one
 

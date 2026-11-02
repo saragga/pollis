@@ -28,7 +28,7 @@ For Lorenz, j = 2 and D_KY = 2 + 0.906 / 14.57, about 2.062. Intuitively, the se
 
 ## How Exponents Are Estimated from Data
 
-Without equations, tangent dynamics are not available, so a method tracks pairs of close states, and fits a slope to the mean log distance as steps go forward. [Rosenstein, Collins and De Luca (1993)](#ref-RCD1993a) and [Kantz (1994)](#ref-Kan1994a) describe methods of that kind. Results depend on the embedding, the Theiler window and the range of the fit. **Noise Sensitivity** and **vs Linear Surrogate** use `lyapunov_from_data` in this way. The slope only makes sense over the rising part of the curve: the distance saturates at the size of the attractor.
+Without equations, tangent dynamics are not available, so a method tracks pairs of close states, and fits a slope to the mean log distance as steps go forward. [Rosenstein, Collins and De Luca (1993)](#ref-RCL1993a) and [Kantz (1994)](#ref-Kan1994a) describe methods of that kind. Results depend on the embedding, the Theiler window and the range of the fit. **Noise Sensitivity** and **vs Linear Surrogate** use `lyapunov_from_data` in this way. The slope only makes sense over the rising part of the curve: the distance saturates at the size of the attractor.
 
 ## What the Exponent Says about Forecasts
 
@@ -46,7 +46,7 @@ The Lyapunov time 1 / λ1 is the natural time scale for error growth, about 1.1 
 
 <a id="ref-KY1979a"></a>Kaplan, J. L. and Yorke, J. A. (1979). Chaotic behavior of multidimensional difference equations. In *Functional Differential Equations and Approximation of Fixed Points*, Lecture Notes in Mathematics, 204–227. Springer. [doi:10.1007/BFb0064319](https://doi.org/10.1007/BFb0064319)
 
-<a id="ref-RCD1993a"></a>Rosenstein, M. T., Collins, J. J. and De Luca, C. J. (1993). A practical method for calculating largest Lyapunov exponents from small data sets. *Physica D: Nonlinear Phenomena* 65(1–2), 117–134. [doi:10.1016/0167-2789(93)90009-P](https://doi.org/10.1016/0167-2789(93)90009-P)
+<a id="ref-RCL1993a"></a>Rosenstein, M. T., Collins, J. J. and De Luca, C. J. (1993). A practical method for calculating largest Lyapunov exponents from small data sets. *Physica D: Nonlinear Phenomena* 65(1–2), 117–134. [doi:10.1016/0167-2789(93)90009-P](https://doi.org/10.1016/0167-2789(93)90009-P)
 
 ## See Also
 

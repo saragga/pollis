@@ -21,7 +21,7 @@ On a tree, the Bethe free energy equals −log p(y) exactly, as [Yedidia, Freema
 
 ## Why One Sweep Is Enough
 
-A tree has an order in which each message depends only on messages that have been sent earlier. One pass from the leaves and one back complete the work, so that **Convergence Check** and **Iteration Sensitivity** have nothing to report on this tab. Longer chains work the same way: on a linear-Gaussian state-space model, the sweeps reproduce the Kalman filter and smoother, as [Loeliger, Dauwels, Hu, Korl, Ping and Kschischang (2007)](#ref-LDHKPK2007a) show.
+A tree has an order in which each message depends only on messages that have been sent earlier. One pass from the leaves and one back complete the work, so that **Convergence Check** and **Iteration Sensitivity** have nothing to report on this tab. Longer chains work the same way: on a linear-Gaussian state-space model, the sweeps reproduce the Kalman filter and smoother, as [Loeliger, Dauwels, Hu, Korl, Ping and Kschischang (2007)](#ref-LDHKP...2007a) show.
 
 ## What Happens with Loops
 
@@ -35,7 +35,7 @@ Exact closed-form messages exist only for special pairs of factors, such as Gaus
 
 <a id="ref-KF2009a"></a>Koller, D. and Friedman, N. (2009). *Probabilistic Graphical Models: Principles and Techniques*. MIT Press. [mitpress.mit.edu](https://mitpress.mit.edu/9780262013192/probabilistic-graphical-models/)
 
-<a id="ref-LDHKPK2007a"></a>Loeliger, H.-A., Dauwels, J., Hu, J., Korl, S., Ping, L. and Kschischang, F. R. (2007). The factor graph approach to model-based signal processing. *Proceedings of the IEEE* 95(6), 1295–1322. [doi:10.1109/JPROC.2007.896497](https://doi.org/10.1109/JPROC.2007.896497)
+<a id="ref-LDHKP...2007a"></a>Loeliger, H.-A., Dauwels, J., Hu, J., Korl, S., Ping, L. and Kschischang, F. R. (2007). The factor graph approach to model-based signal processing. *Proceedings of the IEEE* 95(6), 1295–1322. [doi:10.1109/JPROC.2007.896497](https://doi.org/10.1109/JPROC.2007.896497)
 
 <a id="ref-Pea1982a"></a>Pearl, J. (1982). Reverend Bayes on inference engines: a distributed hierarchical approach. In *Proceedings of the National Conference on Artificial Intelligence (AAAI)*.
 

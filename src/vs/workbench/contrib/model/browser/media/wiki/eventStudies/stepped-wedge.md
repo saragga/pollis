@@ -11,7 +11,7 @@ In a stepped-wedge cluster randomized trial, clusters such as clinics all start 
 | Exposure Time Indicators (ETI) | An effect at each exposure time |
 | Heterogeneity by Exposure Time (TEH) | A random effect at each exposure time, about a mean effect |
 
-The simple IT model can go badly wrong when the effect changes with time since crossing over: [Kenny, Voldal, Xia, Heagerty and Hughes (2022)](#ref-KVXHH...2022a) show that its estimate may be far from any average of the true effects, even converging to the wrong value. Unless the effect is known to be immediate and constant, a model of exposure time is the safer choice.
+The simple IT model can go badly wrong when the effect changes with time since crossing over: [Kenny, Voldal, Xia, Heagerty and Hughes (2022)](#ref-KVXHH2022a) show that its estimate may be far from any average of the true effects, even converging to the wrong value. Unless the effect is known to be immediate and constant, a model of exposure time is the safer choice.
 
 ## Choosing the Estimand and Outcome Type of a Stepped-Wedge Study
 **Estimand** is either **Average over Exposure Times** (TATE), with From and To, or **At One Exposure Time** (PTE), with At. **Outcome Type** is **Continuous** (Gaussian) or **Binary or Counts** (Binomial), the latter with **Trials** naming the column of trials for counts. **Individual** names the column of individuals when the table has a row per individual, unit and time. The results count exposure time 1 as the first time treated.
@@ -25,7 +25,7 @@ Treatment in a stepped wedge is confounded with any underlying trend over time, 
 
 <a id="ref-HH2007a"></a>Hussey, M. A. and Hughes, J. P. (2007). Design and analysis of stepped wedge cluster randomized trials. *Contemporary Clinical Trials* 28(2), 182–191. [doi:10.1016/j.cct.2006.05.007](https://doi.org/10.1016/j.cct.2006.05.007)
 
-<a id="ref-KVXHH...2022a"></a>Kenny, A., Voldal, E. C., Xia, F., Heagerty, P. J. and Hughes, J. P. (2022). Analysis of stepped wedge cluster randomized trials in the presence of a time-varying treatment effect. *Statistics in Medicine* 41(22), 4311–4339. [doi:10.1002/sim.9511](https://doi.org/10.1002/sim.9511)
+<a id="ref-KVXHH2022a"></a>Kenny, A., Voldal, E. C., Xia, F., Heagerty, P. J. and Hughes, J. P. (2022). Analysis of stepped wedge cluster randomized trials in the presence of a time-varying treatment effect. *Statistics in Medicine* 41(22), 4311–4339. [doi:10.1002/sim.9511](https://doi.org/10.1002/sim.9511)
 
 ## See Also
 - [Factsheet](factsheet.md) · [Overview](overview.md) · [Market Event Studies](market-event-studies.md) · [Panel Event Studies](panel-event-studies.md) · [FOMC Releases](fomc-releases.md)

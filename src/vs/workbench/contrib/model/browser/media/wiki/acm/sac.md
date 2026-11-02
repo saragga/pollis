@@ -17,7 +17,7 @@ The log-density includes a correction for the tanh, so that it stays a true dens
 
 ## What the Temperature Controls in SAC
 
-**Temperature (alpha)** prices entropy in units of reward. A large value gives a wide policy that explores but performs below its best. A small value gives an almost deterministic one, and 0 removes the entropy term altogether. Reward scale matters, as alpha is relative to the size of the reward, so a change in the task's reward calls for a new alpha. The tab holds alpha fixed. [Haarnoja, Zhou, Hartikainen, Tucker, Ha, Tan, Kumar, Zhu, Gupta, Abbeel and Levine (2018)](#ref-HZHTH2018a) describe an automatic adjustment against a target entropy, which would have to be added to the code.
+**Temperature (alpha)** prices entropy in units of reward. A large value gives a wide policy that explores but performs below its best. A small value gives an almost deterministic one, and 0 removes the entropy term altogether. Reward scale matters, as alpha is relative to the size of the reward, so a change in the task's reward calls for a new alpha. The tab holds alpha fixed. [Haarnoja, Zhou, Hartikainen, Tucker, Ha, Tan, Kumar, Zhu, Gupta, Abbeel and Levine (2018)](#ref-HZHTH...2018a) describe an automatic adjustment against a target entropy, which would have to be added to the code.
 
 ## Which Inputs the SAC Tab Uses
 
@@ -35,7 +35,7 @@ Off-policy reuse gives good sample use, so it suits a task where each step is co
 
 <a id="ref-HZAL2018a"></a>Haarnoja, T., Zhou, A., Abbeel, P. and Levine, S. (2018). Soft actor-critic: off-policy maximum entropy deep reinforcement learning with a stochastic actor. *ICML*. [proceedings.mlr.press/v80/haarnoja18b](https://proceedings.mlr.press/v80/haarnoja18b.html)
 
-<a id="ref-HZHTH2018a"></a>Haarnoja, T., Zhou, A., Hartikainen, K., Tucker, G., Ha, S., Tan, J., Kumar, V., Zhu, H., Gupta, A., Abbeel, P. and Levine, S. (2018). Soft actor-critic algorithms and applications. [arXiv:1812.05905](https://arxiv.org/abs/1812.05905)
+<a id="ref-HZHTH...2018a"></a>Haarnoja, T., Zhou, A., Hartikainen, K., Tucker, G., Ha, S., Tan, J., Kumar, V., Zhu, H., Gupta, A., Abbeel, P. and Levine, S. (2018). Soft actor-critic algorithms and applications. [arXiv:1812.05905](https://arxiv.org/abs/1812.05905)
 
 ## See Also
 

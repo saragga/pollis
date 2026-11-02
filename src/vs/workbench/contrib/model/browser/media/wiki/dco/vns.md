@@ -23,7 +23,7 @@ Level s applies s random double-bridge moves. A double bridge cuts the tour into
 
 ## How VNS Differs from Iterated Local Search
 
-Iterated local search also perturbs, descends and accepts. With a fixed perturbation and improving acceptance, the two are very close. The main differences are the systematic change in strength in VNS, and the wider acceptance rules in iterated local search. In practice the names overlap, and results depend more on the details than on the label. [Hansen, Mladenović and Moreno Pérez (2010)](#ref-HMM2010a) survey many variants, including skewed acceptance rules and reduced forms with no descent.
+Iterated local search also perturbs, descends and accepts. With a fixed perturbation and improving acceptance, the two are very close. The main differences are the systematic change in strength in VNS, and the wider acceptance rules in iterated local search. In practice the names overlap, and results depend more on the details than on the label. [Hansen, Mladenović and Moreno Pérez (2010)](#ref-HMP2010a) survey many variants, including skewed acceptance rules and reduced forms with no descent.
 
 ## Why Only Improvements Are Accepted
 
@@ -35,7 +35,7 @@ VNS has few parameters, and it keeps the structure of good tours, unlike restart
 
 ## References
 
-<a id="ref-HMM2010a"></a>Hansen, P., Mladenović, N. and Moreno Pérez, J. A. (2010). Variable neighbourhood search: methods and applications. *Annals of Operations Research* 175(1), 367–407. [doi:10.1007/s10479-009-0657-6](https://doi.org/10.1007/s10479-009-0657-6)
+<a id="ref-HMP2010a"></a>Hansen, P., Mladenović, N. and Moreno Pérez, J. A. (2010). Variable neighbourhood search: methods and applications. *Annals of Operations Research* 175(1), 367–407. [doi:10.1007/s10479-009-0657-6](https://doi.org/10.1007/s10479-009-0657-6)
 
 <a id="ref-LMS2003a"></a>Lourenço, H. R., Martin, O. C. and Stützle, T. (2003). Iterated local search. In *Handbook of Metaheuristics*, 320–353. Kluwer. [doi:10.1007/0-306-48056-5_11](https://doi.org/10.1007/0-306-48056-5_11)
 

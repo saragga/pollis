@@ -4,15 +4,15 @@ Simulated annealing takes single random steps and sometimes accepts a worse poin
 
 ## The analogy with cooling metal
 
-Slowly cooling a metal lets its atoms settle into a low-energy state, whereas fast cooling freezes in defects. [Scott Kirkpatrick, C. Daniel Gelatt and Mario P. Vecchi (1983)](#ref-KGV1983a) carried that picture to optimisation, treating the objective as energy and using a temperature to control acceptance.
+Slowly cooling a metal lets its atoms settle into a low-energy state, whereas fast cooling freezes in defects. [Kirkpatrick, Gelatt and Vecchi (1983)](#ref-KGV1983a) carried that picture to optimisation, treating the objective as energy and using a temperature to control acceptance.
 
 A worse move with increase d is accepted with probability exp(−d / T). At high T nearly everything passes and the search crosses ridges freely. At low T almost nothing worse passes and the search behaves like a random descent. No gradient appears anywhere, so the objective may have kinks, jumps or other features that would stop a descent.
 
 ## The version used here
 
-**SA** runs `SAMIN` from `Optim`, written for continuous variables inside box bounds ([Patrick Kofod Mogensen and Asbjørn Nilsen Riseth (2018)](#ref-MR2018a)). Continuous annealing needs a step size as well as a temperature, because the same step that works when the search is hot is far too long once it has settled.
+**SA** runs `SAMIN` from `Optim`, written for continuous variables inside box bounds ([Mogensen and Riseth (2018)](#ref-MR2018a)). Continuous annealing needs a step size as well as a temperature, because the same step that works when the search is hot is far too long once it has settled.
 
-Schemes in this family therefore adapt a step length for each variable, widening it when many moves are accepted and narrowing it when few are. [William L. Goffe, Gary D. Ferrier and John Rogers (1994)](#ref-GFR1994a) tested such an algorithm on statistical functions, including econometric estimation problems, which is the setting closest to awkward likelihoods.
+Schemes in this family therefore adapt a step length for each variable, widening it when many moves are accepted and narrowing it when few are. [Goffe, Ferrier and Rogers (1994)](#ref-GFR1994a) tested such an algorithm on statistical functions, including econometric estimation problems, which is the setting closest to awkward likelihoods.
 
 ## Cooling rate by hand
 

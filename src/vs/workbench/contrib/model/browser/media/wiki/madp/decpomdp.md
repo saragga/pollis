@@ -6,7 +6,7 @@ A decentralised partially observable Markov decision process describes a team th
 
 A Dec-POMDP has a set of agents, a set of states, and for each agent a set of actions and a set of observations. A transition function gives the next state's probabilities from the state and the joint action. An observation function gives the chances of a joint observation given that action and the next state. A single reward function scores each state and joint action, and a horizon T and an initial belief complete the model.
 
-The aim is one policy per agent, mapping that agent's own history to an action, to maximise the expected total reward. [Frans A. Oliehoek and Christopher Amato (2016)](#ref-OA2016a) give the standard modern treatment.
+The aim is one policy per agent, mapping that agent's own history to an action, to maximise the expected total reward. [Oliehoek and Amato (2016)](#ref-OA2016a) give the standard modern treatment.
 
 ## How Dec-Tiger defines the model
 
@@ -19,7 +19,7 @@ The panel's Dec-Tiger has two states (tiger left, tiger right), three actions pe
 | Observations | `obs(o1, o2, s2, a1, a2)` | Both listen: independent hints. Otherwise: 0.25 each |
 | Initial belief | `b0` | 0.5 on each side |
 
-**Listening Accuracy** generalises the fixed value of 0.85 in the original problem. These rewards and rules come from [Ranjit Nair, Milind Tambe, Makoto Yokoo, David Pynadath and Stacy Marsella (2003)](#ref-NTYPM2003a).
+**Listening Accuracy** generalises the fixed value of 0.85 in the original problem. These rewards and rules come from [Nair, Tambe, Yokoo, Pynadath and Marsella (2003)](#ref-NTYPM2003a).
 
 ## What a policy tree is
 
@@ -31,7 +31,7 @@ Because the tree has no belief inside it, an agent needs only to follow branches
 
 A single POMDP agent can summarise its past in a belief over states and plan from that. A team has no such shared summary, as each agent holds different information, and there is no central point at which it could be combined.
 
-What an agent needs for its own decision is a belief over the state and its partner's position in the partner's tree. `best_response` keeps exactly that, as `B[(s, nj)]`. Such a belief exists only when the partner's policy is fixed, which is the idea that JESP exploits. The general problem provably has no polynomial-time solution, a consequence of the NEXP-completeness result of [Daniel S. Bernstein, Robert Givan, Neil Immerman and Shlomo Zilberstein (2002)](#ref-BGIZ2002a).
+What an agent needs for its own decision is a belief over the state and its partner's position in the partner's tree. `best_response` keeps exactly that, as `B[(s, nj)]`. Such a belief exists only when the partner's policy is fixed, which is the idea that JESP exploits. The general problem provably has no polynomial-time solution, a consequence of the NEXP-completeness result of [Bernstein, Givan, Immerman and Zilberstein (2002)](#ref-BGIZ2002a).
 
 ## How JESP works, step by step
 
@@ -87,7 +87,7 @@ The third stage's expected reward is 9.19, and with −4 for the first two stage
 
 **Value of Communication / Discount Sensitivity** computes two upper bounds on any decentralised value. `central_value` is the exact POMDP over joint actions when the agents share all observations, solved by recursion on the belief. `fully_observed` is 20T for Dec-Tiger, as both agents would open the safe door at every stage.
 
-Each bound holds for any joint policy, so a JESP value exceeding either signals an error. Those relaxations have a further use, since solving a relaxed problem gives optimistic value estimates that guide search in larger Dec-POMDPs. Such approximate Q-value functions are studied by [Frans A. Oliehoek, Matthijs T.J. Spaan and Nikos Vlassis (2008)](#ref-OSV2008a).
+Each bound holds for any joint policy, so a JESP value exceeding either signals an error. Those relaxations have a further use, since solving a relaxed problem gives optimistic value estimates that guide search in larger Dec-POMDPs. Such approximate Q-value functions are studied by [Oliehoek, Spaan and Vlassis (2008)](#ref-OSV2008a).
 
 ## References
 
