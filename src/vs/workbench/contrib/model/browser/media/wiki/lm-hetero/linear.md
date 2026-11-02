@@ -12,7 +12,7 @@ The form is sigma_i² = gamma_0 + z_i' gamma. The FWLS step is one regression:
 
 e_i² = gamma_0 + z_i' gamma + error
 
-Weights are the inverses of the fitted values. If any fitted value is zero or negative, `HARE.jl` stops with an error that gives the number of rows, as no weight exists for such a row. A value below 1e-6 of the mean fitted value counts as zero. Under **Maximum likelihood**, `Fminbox` starts from the FWLS fit, or from a constant variance if that fit has a value at or below zero or gamma_0 under 1e-8. gamma_0 has a lower bound of 1e-8, the other gamma are free, and the variance is held at 1e-10 during the search. The same error applies if a fitted variance is zero or negative at the optimum. The standard errors fall back on a pseudo-inverse if the inverted information matrix has a non-positive diagonal entry.
+Weights are the inverses of the fitted values. If any fitted value is zero or negative, `HARE.jl` stops with an error that gives the number of rows, as no weight exists for such a row. A value below 1e-6 of the mean fitted value counts as zero. Under **Maximum likelihood**, the search starts from the FWLS fit, or from a constant variance if that fit has a value at or below zero. Every gamma is free, so gamma_0 can be negative if the fitted variances stay positive, and the search rejects any step to a variance at or below zero. It fits y in units of its spread, so the results do not depend on the units of y. The same error applies if a fitted variance is zero or negative at the optimum. The standard errors fall back on a pseudo-inverse if the inverted information matrix has a non-positive diagonal entry.
 
 ## Which Inputs the Linear Tab Uses
 
