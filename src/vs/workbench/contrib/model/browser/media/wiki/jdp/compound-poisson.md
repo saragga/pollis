@@ -39,7 +39,7 @@ A bounded law keeps each jump to a known range: a log-jump under 0.2 in absolute
 
 ## Where the Compound Poisson Tab Misleads
 
-The upper limit on jump size is a modelling choice, and a real shock can exceed it. A symmetric J still raises E[X(T)], because exp is convex, so typing a drift while thinking of it as total growth understates the mean by lambda kappa. Editing `Uniform` inside `affect!` alone leaves `kappa`, `kappa2` and the overlay of **Jump Size Distribution** tied to the old law, without any warning. Theory printed under non-linear f or g has no validity.
+The upper limit on jump size is a modelling choice, and a real shock can exceed it. A symmetric J still raises E[X(T)], because exp is convex, so typing a drift while thinking of it as total growth understates the growth rate of the mean by lambda kappa. Editing `Uniform` inside `affect!` alone leaves `kappa`, `kappa2` and the overlay of **Jump Size Distribution** tied to the old law, without any warning. Theory printed under non-linear f or g has no validity.
 
 ## What to Compare the Compound Poisson Tab With
 

@@ -25,7 +25,7 @@ Feedback between level and activity comes through directly: higher X brings more
 
 ## Where the Custom Rate Tab Misleads
 
-The default `VariableRateJump` saves only after a jump, so no repeated times exist in `sol`. **Plot Trajectory** then marks no jump, **Jump Counting** reports 0 observed, and **Jump Size Distribution** gets an empty list. Adding `save_positions=(true, true)` as a keyword in the `VariableRateJump` call brings repeated times back. The line of **Jump Counting** claiming a Poisson count does not apply to a rate that follows the path. Growth in X raises the rate and so the cost of a run. With additive g, X can pass through zero, where the rate falls to 0 for an instant.
+The line of **Jump Counting** claiming a Poisson count does not apply to a rate that follows the path. Jump times depend on the solver as well, since the crossing of zero is found along the numerical path, so a coarse **Step size dt** can move them. Growth in X raises the rate and so the cost of a run. With additive g, X can pass through zero, where the rate falls to 0 for an instant.
 
 ## How Custom Rate Differs from a Self-Exciting Process
 
@@ -33,7 +33,7 @@ In a self-exciting process, as in [Hawkes (1971)](#ref-Haw1971a), each event rai
 
 ## What to Compare the Custom Rate Tab With
 
-Set the rate to a constant in the code to compare with **Compound Poisson**. The jump law differs slightly, and a constant rate lets you check the mechanism against lambda T. To test timing, compare mean jump counts across solvers and steps, after restoring repeated times. Moment equations do not close here, so **Ensemble Moments** has no theory line, and repeated runs at larger `trajectories` are the only reference. [Cont and Tankov (2004)](#ref-CT2004a) cover the constant-rate models from which this tab departs.
+Set the rate to a constant in the code to compare with **Compound Poisson**. The jump law differs slightly, and a constant rate lets you check the mechanism against lambda T. To test timing, compare mean jump counts across solvers and steps. Moment equations do not close here, so **Ensemble Moments** has no theory line, and repeated runs at larger `trajectories` are the only reference. [Cont and Tankov (2004)](#ref-CT2004a) cover the constant-rate models from which this tab departs.
 
 ## References
 

@@ -4,15 +4,15 @@ The checks in the jump-diffusion panel test whether a simulation behaves as its 
 
 ## How to Inspect a Simulated Jump-Diffusion Path
 
-**Plot Trajectory** draws X(t) from `sol` and marks a point after each jump, found where two saved times are equal. Vertical moves at the marked points, with a rough continuous curve between them, are the expected picture. A number of marks far from lambda T calls for a look at the rate. In **Custom Rate** the marks do not appear, since `VariableRateJump` by default saves the state only after a jump, leaving no repeated time. Jumps then show only as steep segments in the line.
+**Plot Trajectory** draws X(t) from `sol` and marks a point after each jump, found where two saved times are equal. Vertical moves at the marked points, with a rough continuous curve between them, are the expected picture. A number of marks far from lambda T calls for a look at the rate. In **Custom Rate** the expected number is not lambda T but the integrated rate, which **Jump Counting** prints.
 
 ## How to Read the Jump Counting Check
 
-**Jump Counting** prints the observed count from repeated times and an expected count, Lambda, a sum of the rate over the saved steps. With a constant rate, Lambda is lambda T and the count is Poisson, so a gap within 2 sqrt(Lambda) is usual, and a larger one calls for another run before anything else. Repeated large gaps call for a review of any edit made to `rate` or to the jump. In **Custom Rate**, the observed count prints 0, because `VariableRateJump` by default saves no state before a jump. Editing the jump to `VariableRateJump(rate, affect!; save_positions=(true, true))` restores it. Even then the printed claim of a Poisson count does not hold, since the rate depends on the path, and 2 sqrt(Lambda) is only a rough guide.
+**Jump Counting** prints the observed count from repeated times and an expected count, Lambda, a sum of the rate over the saved steps. With a constant rate, Lambda is lambda T and the count is Poisson, so a gap within 2 sqrt(Lambda) is usual, and a larger one calls for another run before anything else. Repeated large gaps call for a review of any edit made to `rate` or to the jump. In **Custom Rate** the printed claim of a Poisson count does not hold, since the rate depends on the path, and 2 sqrt(Lambda) is only a rough guide.
 
 ## How to Compare Ensemble Moments with Theory
 
-**Ensemble Moments** prints E[X(T)] and Var[X(T)] over 500 paths with the standard error of the mean, and in the two constant-rate tabs a theory line. A Monte Carlo mean within about two standard errors of the theory is the good result. Variance is noisier, particularly with large jumps or long horizons. The theory reads m and s from f and g at X = 1 and needs f = m X and g = s X. A drift such as `-0.1*(X-1.0)` gives m = 0, and a constant g gives a wrong s, while the line still prints. **Custom Rate** prints no theory, so only repeated runs give a reference.
+**Ensemble Moments** prints E[X(T)] and Var[X(T)] over 500 paths with the standard error of the mean, and in the two constant-rate tabs a theory line. A Monte Carlo mean within about two standard errors of the theory is the good result. Variance is noisier, particularly with large jumps or long horizons. The theory reads m and s from f and g at X = 1 and needs f = m X and g = s X. A drift such as `-0.1*(X-1.0)` reads as m = 0 in **Compound Poisson** and as m = -lambda kappa in **Gaussian Jumps**, and a constant g gives a wrong s, while the line still prints. **Custom Rate** prints no theory, so only repeated runs give a reference.
 
 ## What the With vs Without Jumps Check Should Show
 
@@ -20,7 +20,7 @@ The checks in the jump-diffusion panel test whether a simulation behaves as its 
 
 ## How to Read the Jump Size Distribution Check
 
-**Jump Size Distribution** solves 200 paths, takes the realised log-jump at each repeated time, prints their count, mean and standard deviation, and overlays the assumed density. Agreement between histogram and curve confirms that `affect!` does what the overlay says, and not that the model suits any real system. A gap appears when `affect!` has been edited and the overlay has not. In **Custom Rate** the list of jumps stays empty under the default `save_positions`, so the mean is `NaN`. Writing `VariableRateJump(rate, affect!; save_positions=(true, true))` fills the list.
+**Jump Size Distribution** solves 200 paths, takes the realised log-jump at each repeated time, prints their count, mean and standard deviation, and overlays the assumed density. Agreement between histogram and curve confirms that `affect!` does what the overlay says, and not that the model suits any real system. A gap appears when `affect!` has been edited and the overlay has not. In **Custom Rate** the overlay is the density of log(1 + 0.1 Z), which is not a normal curve.
 
 ## How to Test the Step Size of a Jump-Diffusion Run
 
