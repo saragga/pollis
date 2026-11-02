@@ -143,6 +143,37 @@ key = "LL2017a"
 [[references]]
 key = "ABDM2023a"
 
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "DLR1977a"
+
+[[references]]
+key = "Llo1982a"
+
+[[references]]
+key = "BEF1984a"
+
+[[references]]
+key = "HA1985a"
+
+[[references]]
+key = "Rou1987a"
+
+[[references]]
+key = "TWH2001a"
+
+[[references]]
+key = "Lux2007a"
+
+[[references]]
+key = "PJ2009a"
+
+[[references]]
+key = "SSEKX2017a"
+
 [[models]]
 id = "km"
 label = "K-Means"

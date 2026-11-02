@@ -131,6 +131,24 @@ key = "SLA2012a"
 [[references]]
 key = "SSWAF2016a"
 
+[[references]]
+key = "Tho1933a"
+
+[[references]]
+key = "Kus1964a"
+
+[[references]]
+key = "NM1965a"
+
+[[references]]
+key = "Jon2001a"
+
+[[references]]
+key = "KKSP2017a"
+
+[[references]]
+key = "Fra2018a"
+
 [[models]]
 id = "ei"
 label = "Expected Improvement"

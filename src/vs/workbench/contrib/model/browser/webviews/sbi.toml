@@ -91,6 +91,22 @@ key = "SZH2025a"
 [[references]]
 key = "SZH2024a"
 
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "HS1997a"
+
+[[references]]
+key = "BZB2002a"
+
+[[references]]
+key = "ZKRPS...2017a"
+
+[[references]]
+key = "CBL2020a"
+
 [[models]]
 id = "point"
 label = "Point"

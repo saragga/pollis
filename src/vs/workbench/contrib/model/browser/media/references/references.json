@@ -1357,6 +1357,28 @@
 			"open_access": false
 		},
 		{
+			"key": "BCB2014a",
+			"type": "misc",
+			"title": "Neural Machine Translation by Jointly Learning to Align and Translate",
+			"authors": [
+				"Bahdanau, Dzmitry",
+				"Cho, Kyunghyun",
+				"Bengio, Yoshua"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2014,
+			"publisher": "arXiv",
+			"doi": "10.48550/arXiv.1409.0473",
+			"openalex": "W2133564696",
+			"url": "https://arxiv.org/abs/1409.0473",
+			"oa_url": "https://arxiv.org/pdf/1409.0473",
+			"source": "datacite",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "BCP2022a",
 			"type": "article",
 			"title": "FrankWolfe.jl: A High-Performance and Flexible Toolbox for Frank-Wolfe Algorithms and Conditional Gradients",
@@ -2162,6 +2184,28 @@
 			"abstract_source": "openalex",
 			"source": "manual",
 			"retrieved": "2026-10-31",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "BKK2018a",
+			"type": "misc",
+			"title": "An Empirical Evaluation of Generic Convolutional and Recurrent Networks for Sequence Modeling",
+			"authors": [
+				"Bai, Shaojie",
+				"Kolter, J. Zico",
+				"Koltun, Vladlen"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2018,
+			"publisher": "arXiv",
+			"doi": "10.48550/arXiv.1803.01271",
+			"openalex": "W2792764867",
+			"url": "https://arxiv.org/abs/1803.01271",
+			"oa_url": "https://arxiv.org/pdf/1803.01271",
+			"source": "datacite",
+			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
 		},
@@ -3080,6 +3124,30 @@
 			"abstract_source": "openalex",
 			"source": "manual",
 			"retrieved": "2026-10-31",
+			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "BSF1994a",
+			"type": "article",
+			"title": "Learning long-term dependencies with gradient descent is difficult",
+			"authors": [
+				"Bengio, Yoshua",
+				"Simard, Patrice",
+				"Frasconi, Paolo"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1994,
+			"journal": "IEEE Transactions on Neural Networks",
+			"volume": "5",
+			"number": "2",
+			"pages": "157-166",
+			"issn": "1045-9227",
+			"doi": "10.1109/72.279181",
+			"openalex": "W2107878631",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": false
 		},
@@ -4580,6 +4648,29 @@
 			"legacy_key": "chen2016",
 			"source": "manual",
 			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "CGCB2014a",
+			"type": "misc",
+			"title": "Empirical Evaluation of Gated Recurrent Neural Networks on Sequence Modeling",
+			"authors": [
+				"Chung, Junyoung",
+				"Gulcehre, Caglar",
+				"Cho, KyungHyun",
+				"Bengio, Yoshua"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2014,
+			"publisher": "arXiv",
+			"doi": "10.48550/arXiv.1412.3555",
+			"openalex": "W1924770834",
+			"url": "https://arxiv.org/abs/1412.3555",
+			"oa_url": "https://arxiv.org/pdf/1412.3555",
+			"source": "datacite",
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": true
 		},
 		{
@@ -12082,6 +12173,27 @@
 			"open_access": true
 		},
 		{
+			"key": "HJM2019a",
+			"type": "inproceedings",
+			"title": "ALTRO: A Fast Solver for Constrained Trajectory Optimization",
+			"authors": [
+				"Howell, Taylor A.",
+				"Jackson, Brian E.",
+				"Manchester, Zachary"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2019,
+			"booktitle": "2019 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)",
+			"pages": "7674-7679",
+			"doi": "10.1109/IROS40897.2019.8967788",
+			"openalex": "W3004162504",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "HJS1992a",
 			"type": "article",
 			"title": "New Branch-and-Bound Rules for Linear Bilevel Programming",
@@ -13120,6 +13232,28 @@
 			"openalex": "W1992120986",
 			"oa_url": "https://doi.org/10.1016/0885-064x(87)90024-0",
 			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "HYL2017a",
+			"type": "misc",
+			"title": "Inductive Representation Learning on Large Graphs",
+			"authors": [
+				"Hamilton, William L.",
+				"Ying, Rex",
+				"Leskovec, Jure"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2017,
+			"publisher": "arXiv",
+			"doi": "10.48550/arXiv.1706.02216",
+			"openalex": "W2624431344",
+			"url": "https://arxiv.org/abs/1706.02216",
+			"oa_url": "https://arxiv.org/pdf/1706.02216",
+			"source": "datacite",
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
@@ -14307,6 +14441,29 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "JH2004a",
+			"type": "article",
+			"title": "Harnessing Nonlinearity: Predicting Chaotic Systems and Saving Energy in Wireless Communication",
+			"authors": [
+				"Jaeger, Herbert",
+				"Haas, Harald"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2004,
+			"journal": "Science",
+			"volume": "304",
+			"number": "5667",
+			"pages": "78-80",
+			"issn": "0036-8075",
+			"doi": "10.1126/science.1091277",
+			"openalex": "W2118706537",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
 		},
 		{
 			"key": "JK2002a",
@@ -15865,6 +16022,27 @@
 			"open_access": true
 		},
 		{
+			"key": "KW2017a",
+			"type": "misc",
+			"title": "Semi-Supervised Classification with Graph Convolutional Networks",
+			"authors": [
+				"Kipf, Thomas N.",
+				"Welling, Max"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2017,
+			"publisher": "arXiv",
+			"doi": "10.48550/arXiv.1609.02907",
+			"openalex": "W2519887557",
+			"url": "https://arxiv.org/abs/1609.02907",
+			"oa_url": "https://arxiv.org/pdf/1609.02907",
+			"source": "datacite",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "KY1979a",
 			"type": "incollection",
 			"title": "Chaotic behavior of multidimensional difference equations",
@@ -16731,6 +16909,32 @@
 			"open_access": true
 		},
 		{
+			"key": "LBBH1998a",
+			"type": "article",
+			"title": "Gradient-based learning applied to document recognition",
+			"authors": [
+				"LeCun, Yann",
+				"Bottou, Léon",
+				"Bengio, Yoshua",
+				"Haffner, Patrick"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1998,
+			"journal": "Proceedings of the IEEE",
+			"volume": "86",
+			"number": "11",
+			"pages": "2278-2324",
+			"issn": "0018-9219",
+			"doi": "10.1109/5.726791",
+			"openalex": "W2112796928",
+			"oa_url": "https://hal.science/hal-03926082/document",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "LBCC2021a",
 			"type": "article",
 			"title": "Working Memory Connections for LSTM",
@@ -17062,6 +17266,30 @@
 			"url": "https://arxiv.org/abs/1509.02971",
 			"oa_url": "https://arxiv.org/pdf/1509.02971",
 			"source": "datacite",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "LHW2018a",
+			"type": "article",
+			"title": "Deeper Insights Into Graph Convolutional Networks for Semi-Supervised Learning",
+			"authors": [
+				"Li, Qimai",
+				"Han, Zhichao",
+				"Wu, Xiao-ming"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2018,
+			"journal": "Proceedings of the AAAI Conference on Artificial Intelligence",
+			"volume": "32",
+			"number": "1",
+			"issn": "2374-3468",
+			"doi": "10.1609/aaai.v32i1.11604",
+			"openalex": "W2964051675",
+			"oa_url": "https://doi.org/10.1609/aaai.v32i1.11604",
+			"source": "crossref",
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
@@ -17798,6 +18026,25 @@
 			"isbn": "9781108571401",
 			"doi": "10.1017/9781108571401",
 			"openalex": "W4206530644",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "LT2004a",
+			"type": "inproceedings",
+			"title": "Iterative Linear Quadratic Regulator Design for Nonlinear Biological Movement Systems",
+			"authors": [
+				"Li, Weiwei",
+				"Todorov, Emanuel"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2004,
+			"booktitle": "Proceedings of the First International Conference on Informatics in Control, Automation and Robotics",
+			"pages": "222-229",
+			"doi": "10.5220/0001143902220229",
 			"source": "crossref",
 			"retrieved": "2026-11-02",
 			"checked": true,
@@ -20276,6 +20523,28 @@
 			"open_access": false
 		},
 		{
+			"key": "May1966a",
+			"type": "article",
+			"title": "A Second-order Gradient Method for Determining Optimal Trajectories of Non-linear Discrete-time Systems",
+			"authors": [
+				"Mayne, David"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1966,
+			"journal": "International Journal of Control",
+			"volume": "3",
+			"number": "1",
+			"pages": "85-95",
+			"issn": "0020-7179",
+			"doi": "10.1080/00207176608921369",
+			"openalex": "W2158370675",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "May1976a",
 			"type": "article",
 			"title": "Simple mathematical models with very complicated dynamics",
@@ -20855,6 +21124,29 @@
 			"open_access": false
 		},
 		{
+			"key": "NNSK2022a",
+			"type": "misc",
+			"title": "A Time Series is Worth 64 Words: Long-term Forecasting with Transformers",
+			"authors": [
+				"Nie, Yuqi",
+				"Nguyen, Nam H.",
+				"Sinthong, Phanwadee",
+				"Kalagnanam, Jayant"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2022,
+			"publisher": "arXiv",
+			"doi": "10.48550/arXiv.2211.14730",
+			"openalex": "W4310416691",
+			"url": "https://arxiv.org/abs/2211.14730",
+			"oa_url": "https://arxiv.org/pdf/2211.14730",
+			"source": "datacite",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "NS2006a",
 			"type": "article",
 			"title": "Convex Approximations of Chance Constrained Programs",
@@ -21361,6 +21653,34 @@
 			"open_access": true
 		},
 		{
+			"key": "ODZSV...2016a",
+			"type": "misc",
+			"title": "WaveNet: A Generative Model for Raw Audio",
+			"authors": [
+				"van den Oord, Aäron",
+				"Dieleman, Sander",
+				"Zen, Heiga",
+				"Simonyan, Karen",
+				"Vinyals, Oriol",
+				"Graves, Alex",
+				"Kalchbrenner, Nal",
+				"Senior, Andrew",
+				"Kavukcuoglu, Koray"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2016,
+			"publisher": "arXiv",
+			"doi": "10.48550/arXiv.1609.03499",
+			"openalex": "W2519091744",
+			"url": "https://arxiv.org/abs/1609.03499",
+			"oa_url": "https://arxiv.org/pdf/1609.03499",
+			"source": "datacite",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "OK1974a",
 			"type": "article",
 			"title": "A General Procedure for Obtaining Maximum Likelihood Estimates in Generalized Regression Models",
@@ -21726,6 +22046,37 @@
 			"doi": "10.1609/aaai.v29i1.9602",
 			"openalex": "W2254249950",
 			"oa_url": "https://doi.org/10.1609/aaai.v29i1.9602",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "PDCMS...2020a",
+			"type": "article",
+			"title": "EvolveGCN: Evolving Graph Convolutional Networks for Dynamic Graphs",
+			"authors": [
+				"Pareja, Aldo",
+				"Domeniconi, Giacomo",
+				"Chen, Jie",
+				"Ma, Tengfei",
+				"Suzumura, Toyotaro",
+				"Kanezashi, Hiroki",
+				"Kaler, Tim",
+				"Schardl, Tao",
+				"Leiserson, Charles"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2020,
+			"journal": "Proceedings of the AAAI Conference on Artificial Intelligence",
+			"volume": "34",
+			"number": "04",
+			"pages": "5363-5370",
+			"issn": "2374-3468",
+			"doi": "10.1609/aaai.v34i04.5984",
+			"openalex": "W2925436546",
+			"oa_url": "https://ojs.aaai.org/index.php/AAAI/article/download/5984/5840",
 			"source": "crossref",
 			"retrieved": "2026-11-02",
 			"checked": true,
@@ -25950,6 +26301,31 @@
 			"open_access": true
 		},
 		{
+			"key": "SKBBT...2018a",
+			"type": "incollection",
+			"title": "Modeling Relational Data with Graph Convolutional Networks",
+			"authors": [
+				"Schlichtkrull, Michael",
+				"Kipf, Thomas N.",
+				"Bloem, Peter",
+				"van den Berg, Rianne",
+				"Titov, Ivan",
+				"Welling, Max"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2018,
+			"booktitle": "Lecture Notes in Computer Science",
+			"pages": "593-607",
+			"doi": "10.1007/978-3-319-93417-4_38",
+			"openalex": "W2604314403",
+			"oa_url": "https://research.vu.nl/en/publications/d5f42463-5cc0-477b-ade9-d24490fc3e1c",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "SKKS2010a",
 			"type": "inproceedings",
 			"title": "Gaussian Process Optimization in the Bandit Setting: No Regret and Experimental Design",
@@ -27442,17 +27818,6 @@
 			"doi": "10.1073/pnas.39.10.1095",
 			"openalex": "W2575731723",
 			"oa_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC1063912/pdf/pnas01595-0107.pdf",
-			"abstract": "Understanding the biological basis of social anxiety disorder (SAD), one of the most disabling of the anxiety disorders, will allow for novel treatment strategies to be developed. Here, we show that gut microbiota may be such a target. Mice ...Social anxiety disorder (SAD) is a crippling psychiatric disorder characterized by intense fear or anxiety in social situations and their avoidance. However, the underlying biology of SAD is unclear and better treatments are needed. Recently, the gut ...",
-			"abstract_source": "openalex",
-			"keywords": [
-				"social anxiety disorder",
-				"gut microbiota",
-				"anxiety disorders",
-				"mental illness",
-				"mouse model",
-				"treatment options"
-			],
-			"keywords_source": "openalex",
 			"legacy_key": "shapley1953",
 			"source": "crossref",
 			"retrieved": "2026-10-23",
@@ -28167,6 +28532,27 @@
 			"issn": "0167-2789",
 			"doi": "10.1016/0167-2789(92)90102-S",
 			"openalex": "W2098746383",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "TET2012a",
+			"type": "inproceedings",
+			"title": "Synthesis and stabilization of complex behaviors through online trajectory optimization",
+			"authors": [
+				"Tassa, Yuval",
+				"Erez, Tom",
+				"Todorov, Emanuel"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2012,
+			"booktitle": "2012 IEEE/RSJ International Conference on Intelligent Robots and Systems",
+			"pages": "4906-4913",
+			"doi": "10.1109/IROS.2012.6386025",
+			"openalex": "W2087617385",
 			"source": "crossref",
 			"retrieved": "2026-11-02",
 			"checked": true,
@@ -28940,6 +29326,31 @@
 			"source": "crossref",
 			"retrieved": "2026-10-23",
 			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "VCCRL...2018a",
+			"type": "misc",
+			"title": "Graph Attention Networks",
+			"authors": [
+				"Veličković, Petar",
+				"Cucurull, Guillem",
+				"Casanova, Arantxa",
+				"Romero, Adriana",
+				"Liò, Pietro",
+				"Bengio, Yoshua"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2018,
+			"publisher": "arXiv",
+			"doi": "10.48550/arXiv.1710.10903",
+			"openalex": "W2766453196",
+			"url": "https://arxiv.org/abs/1710.10903",
+			"oa_url": "https://arxiv.org/pdf/1710.10903",
+			"source": "datacite",
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": true
 		},
 		{
@@ -30644,6 +31055,27 @@
 			"open_access": true
 		},
 		{
+			"key": "YK2015a",
+			"type": "misc",
+			"title": "Multi-Scale Context Aggregation by Dilated Convolutions",
+			"authors": [
+				"Yu, Fisher",
+				"Koltun, Vladlen"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2015,
+			"publisher": "arXiv",
+			"doi": "10.48550/arXiv.1511.07122",
+			"openalex": "W2286929393",
+			"url": "https://arxiv.org/abs/1511.07122",
+			"oa_url": "https://arxiv.org/pdf/1511.07122",
+			"source": "datacite",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "YLL1999a",
 			"type": "article",
 			"title": "Evolutionary programming made faster",
@@ -30846,6 +31278,32 @@
 			"keywords_source": "openalex",
 			"source": "crossref",
 			"retrieved": "2026-10-30",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "ZCZX2023a",
+			"type": "article",
+			"title": "Are Transformers Effective for Time Series Forecasting?",
+			"authors": [
+				"Zeng, Ailing",
+				"Chen, Muxi",
+				"Zhang, Lei",
+				"Xu, Qiang"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2023,
+			"journal": "Proceedings of the AAAI Conference on Artificial Intelligence",
+			"volume": "37",
+			"number": "9",
+			"pages": "11121-11128",
+			"issn": "2374-3468",
+			"doi": "10.1609/aaai.v37i9.26317",
+			"openalex": "W4382203079",
+			"oa_url": "https://ojs.aaai.org/index.php/AAAI/article/download/26317/26089",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
 		},
@@ -31757,6 +32215,12 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "BCB2014a",
+			"count": 16214,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "BCP2022a",
 			"count": 14,
 			"source": "crossref",
@@ -32031,6 +32495,12 @@
 			"count": 2384,
 			"source": "openalex",
 			"date": "2026-10-31"
+		},
+		{
+			"key": "BKK2018a",
+			"count": 4553,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "BKLSA...2020a",
@@ -32325,6 +32795,18 @@
 			"count": 287,
 			"source": "openalex",
 			"date": "2026-10-31"
+		},
+		{
+			"key": "BSF1994a",
+			"count": 7170,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "BSF1994a",
+			"count": 8543,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "BSJ2001a",
@@ -32827,6 +33309,12 @@
 		{
 			"key": "CG1999a",
 			"count": 2100,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "CGCB2014a",
+			"count": 10994,
 			"source": "openalex",
 			"date": "2026-11-02"
 		},
@@ -35183,6 +35671,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "HJM2019a",
+			"count": 170,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "HJM2019a",
+			"count": 189,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "HJS1992a",
 			"count": 609,
 			"source": "crossref",
@@ -35585,6 +36085,12 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "HYL2017a",
+			"count": 10636,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "HZ2005a",
 			"count": 939,
 			"source": "crossref",
@@ -35967,6 +36473,18 @@
 			"count": 8,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "JH2004a",
+			"count": 3404,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "JH2004a",
+			"count": 3798,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "JK2002a",
@@ -36395,6 +36913,12 @@
 			"date": "2026-10-31"
 		},
 		{
+			"key": "KW2017a",
+			"count": 23981,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "KY1979a",
 			"count": 426,
 			"source": "crossref",
@@ -36695,6 +37219,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "LBBH1998a",
+			"count": 48777,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "LBBH1998a",
+			"count": 58786,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "LBCC2021a",
 			"count": 289,
 			"source": "crossref",
@@ -36805,6 +37341,18 @@
 		{
 			"key": "LHPHE2015a",
 			"count": 10767,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "LHW2018a",
+			"count": 1857,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "LHW2018a",
+			"count": 2873,
 			"source": "openalex",
 			"date": "2026-11-02"
 		},
@@ -37721,6 +38269,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "May1966a",
+			"count": 321,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "May1966a",
+			"count": 363,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "May1976a",
 			"count": 5657,
 			"source": "crossref",
@@ -37895,6 +38455,12 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "NNSK2022a",
+			"count": 549,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "NS2006a",
 			"count": 991,
 			"source": "crossref",
@@ -38057,6 +38623,12 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "ODZSV...2016a",
+			"count": 4901,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "OK1974a",
 			"count": 177,
 			"source": "crossref",
@@ -38173,6 +38745,18 @@
 		{
 			"key": "PCH2015a",
 			"count": 993,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "PDCMS...2020a",
+			"count": 1054,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "PDCMS...2020a",
+			"count": 99,
 			"source": "openalex",
 			"date": "2026-11-02"
 		},
@@ -39437,6 +40021,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "SKBBT...2018a",
+			"count": 3740,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "SKBBT...2018a",
+			"count": 5677,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "SKNF2016a",
 			"count": 289,
 			"source": "openalex",
@@ -40133,6 +40729,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "TET2012a",
+			"count": 558,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "TET2012a",
+			"count": 762,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "TF2013a",
 			"count": 1104,
 			"source": "crossref",
@@ -40437,6 +41045,12 @@
 			"count": 7390,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "VCCRL...2018a",
+			"count": 12099,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "VED2021a",
@@ -40973,6 +41587,12 @@
 			"date": "2026-10-31"
 		},
 		{
+			"key": "YK2015a",
+			"count": 7730,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "YLL1999a",
 			"count": 3342,
 			"source": "crossref",
@@ -41043,6 +41663,18 @@
 			"count": 1860,
 			"source": "openalex",
 			"date": "2026-10-30"
+		},
+		{
+			"key": "ZCZX2023a",
+			"count": 3082,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "ZCZX2023a",
+			"count": 3557,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "ZE2002a",
@@ -41213,12 +41845,18 @@
 				"DVD2022a",
 				"WR2015b",
 				"EA1996a",
+				"MP2007a",
+				"BBV2008a",
 				"Sch1971a",
 				"Rey1987a",
 				"Bed2003a",
 				"VCBCS1995a",
 				"PV2001a",
-				"New2002a"
+				"New2002a",
+				"ER1960a",
+				"WS1998a",
+				"BA1999a",
+				"BVL2016a"
 			]
 		},
 		{
@@ -41232,7 +41870,9 @@
 				"DVD2022a",
 				"WR2015a",
 				"MP2007a",
-				"BVL2016a"
+				"BVL2016a",
+				"Mor1991a",
+				"Sob2001a"
 			]
 		},
 		{
@@ -41248,7 +41888,10 @@
 				"WR2015a",
 				"Sch1971a",
 				"Rey1987a",
-				"Mur2017a"
+				"Mur2017a",
+				"MD1988a",
+				"TMB2002a",
+				"CSH2020a"
 			]
 		},
 		{
@@ -41263,7 +41906,12 @@
 				"SB2018a",
 				"MBMGL...2016a",
 				"HZAL2018a",
-				"FHM2018a"
+				"FHM2018a",
+				"SMSM2000a",
+				"LHPHE2015a",
+				"SMLJA2015a",
+				"HIBPP2018a",
+				"HZHTH2018a"
 			]
 		},
 		{
@@ -41276,7 +41924,15 @@
 			"keys": [
 				"BPRS2018a",
 				"MC2020a",
-				"RLP2016a"
+				"RLP2016a",
+				"Whi1982a",
+				"AA1984a",
+				"LN1989a",
+				"HG2014a",
+				"GXG2018a",
+				"MR2018a",
+				"BPAAB...2021a",
+				"NW2006a"
 			]
 		},
 		{
@@ -41344,7 +42000,17 @@
 				"chiara.statistics.pm.autoencoder"
 			],
 			"keys": [
-				"KW2013a"
+				"KW2013a",
+				"BH1989a",
+				"Kra1991a",
+				"HS2006a",
+				"VLBM2008a",
+				"RMW2014a",
+				"SY2014a",
+				"BVVDJ...2016a",
+				"APFDS...2017a",
+				"BHPMW...2018a",
+				"LBLRG...2019a"
 			]
 		},
 		{
@@ -41361,7 +42027,10 @@
 				"SB2018a",
 				"SHMGS...2016a",
 				"SSSAH...2017a",
-				"SHSAL...2018a"
+				"SHSAL...2018a",
+				"Ros2011a",
+				"BPWLC2012a",
+				"SAHSS2020a"
 			]
 		},
 		{
@@ -41377,7 +42046,12 @@
 				"GBC2016a",
 				"DCLT2019a",
 				"RG2019a",
-				"VSPUJ...2017a"
+				"VSPUJ...2017a",
+				"SN2012a",
+				"STY2017a",
+				"Eth2019a",
+				"JW2019a",
+				"RKR2020a"
 			]
 		},
 		{
@@ -41391,7 +42065,13 @@
 				"GBS2024a",
 				"HH2018a",
 				"DKPK2015a",
-				"Dem2002a"
+				"Dem2002a",
+				"Bar1998a",
+				"FAM1981a",
+				"HJS1992a",
+				"CMS2007a",
+				"DD2012a",
+				"PM2019a"
 			]
 		},
 		{
@@ -41405,8 +42085,13 @@
 				"Tia...2020a",
 				"SB2018a",
 				"Sze2010a",
+				"LS2020a",
 				"Tho1933a",
-				"ACF2002a"
+				"ACF2002a",
+				"Rob1952a",
+				"LR1985a",
+				"AG2011a",
+				"RVKOW2018a"
 			]
 		},
 		{
@@ -41441,7 +42126,13 @@
 				"JSW1998a",
 				"SKKS2010a",
 				"SLA2012a",
-				"SSWAF2016a"
+				"SSWAF2016a",
+				"Tho1933a",
+				"Kus1964a",
+				"NM1965a",
+				"Jon2001a",
+				"KKSP2017a",
+				"Fra2018a"
 			]
 		},
 		{
@@ -41521,7 +42212,12 @@
 			],
 			"keys": [
 				"And2003a",
-				"Hot1936a"
+				"Hot1936a",
+				"Bar1941a",
+				"SL1968a",
+				"Vin1976a",
+				"HSS2004a",
+				"WTH2009a"
 			]
 		},
 		{
@@ -41540,7 +42236,10 @@
 				"DY2010a",
 				"EK2018a",
 				"CC1959a",
-				"LA2008a"
+				"LA2008a",
+				"RU2000a",
+				"NS2006a",
+				"Xie2021a"
 			]
 		},
 		{
@@ -41553,7 +42252,16 @@
 				"Dat2018a",
 				"RN2017a",
 				"Str2015a",
-				"Lor1963a"
+				"Spa1982a",
+				"HNW1993a",
+				"HW1996a",
+				"DP2022a",
+				"Lor1963a",
+				"BGGS1980a",
+				"DP1980a",
+				"Hen1982a",
+				"Tuc2002a",
+				"Tsi2011a"
 			]
 		},
 		{
@@ -41581,7 +42289,18 @@
 				"Gle1987a",
 				"BGGS1980a",
 				"GP1983a",
-				"EKR1987a"
+				"EKR1987a",
+				"Lor1963a",
+				"KY1979a",
+				"Tak1981a",
+				"FS1986a",
+				"The1986a",
+				"ER1992a",
+				"TELGF1992a",
+				"RCD1993a",
+				"Kan1994a",
+				"Cao1997a",
+				"MRTK2007a"
 			]
 		},
 		{
@@ -41598,7 +42317,12 @@
 				"KZ2020a",
 				"SKSPZ2022a",
 				"DCLT2019a",
-				"RZ2009a"
+				"RZ2009a",
+				"Voo1999a",
+				"JK2002a",
+				"JDS2011a",
+				"NC2019a",
+				"SKPZ2022a"
 			]
 		},
 		{
@@ -41610,7 +42334,52 @@
 				"chiara.statistics.mwm.roc"
 			],
 			"keys": [
-				"BKLSA...2020a"
+				"BKLSA...2020a",
+				"Whe1931a",
+				"Bri1950a",
+				"DW1950a",
+				"You1950a",
+				"ABERS1955a",
+				"SW1965a",
+				"Ans1973a",
+				"Mat1975a",
+				"BP1979a",
+				"Whi1980a",
+				"HM1982a",
+				"DF1983a",
+				"Kva1985a",
+				"NW1987a",
+				"DDC1988a",
+				"AC1992a",
+				"DM1995a",
+				"JSW1998a",
+				"KZ2001a",
+				"PF2001a",
+				"CBHK2002a",
+				"ZE2002a",
+				"NC2005a",
+				"WM2005a",
+				"DG2006a",
+				"Faw2006a",
+				"HK2006a",
+				"PS2006a",
+				"VS2006a",
+				"GR2007a",
+				"LLW2007a",
+				"HG2009a",
+				"Han2009a",
+				"BBBK2011a",
+				"Gne2011a",
+				"BB2012a",
+				"CD2014a",
+				"PCH2015a",
+				"SR2015a",
+				"Tof2015a",
+				"SSWAF2016a",
+				"GPSW2017a",
+				"CJ2020a",
+				"GSTV2022a",
+				"SL2009b"
 			]
 		},
 		{
@@ -41621,7 +42390,22 @@
 				"chiara.statistics.cl.hierarchical"
 			],
 			"keys": [
-				"AF1992a"
+				"AF1992a",
+				"Sne1957a",
+				"SR1962a",
+				"War1963a",
+				"Joh1967a",
+				"LW1967a",
+				"Far1969a",
+				"Sib1973a",
+				"Def1977a",
+				"Mil1980a",
+				"Har1981a",
+				"HA1985a",
+				"MC1985a",
+				"Rou1987a",
+				"SDD2013a",
+				"ML2014a"
 			]
 		},
 		{
@@ -41635,7 +42419,16 @@
 				"EKSX1996a",
 				"Lob2021a",
 				"LL2017a",
-				"ABDM2023a"
+				"ABDM2023a",
+				"DLR1977a",
+				"Llo1982a",
+				"BEF1984a",
+				"HA1985a",
+				"Rou1987a",
+				"TWH2001a",
+				"Lux2007a",
+				"PJ2009a",
+				"SSEKX2017a"
 			]
 		},
 		{
@@ -41651,7 +42444,16 @@
 				"FP2003a",
 				"Isa1992a",
 				"CPS1992a",
-				"FP1997a"
+				"FP1997a",
+				"LH1964a",
+				"Lem1965a",
+				"KS1986a",
+				"HP1990a",
+				"Fis1992a",
+				"Rob1992a",
+				"Ral1994a",
+				"DF1995b",
+				"Rut1995a"
 			]
 		},
 		{
@@ -41666,7 +42468,28 @@
 				"KS2004a",
 				"CT2006a",
 				"BP2002a",
-				"RM2000a"
+				"RM2000a",
+				"Pin1991a",
+				"TELGF1992a",
+				"SS1996a",
+				"SS2000a",
+				"CGP2002a",
+				"RMW2013a"
+			]
+		},
+		{
+			"id": "cnn",
+			"title": "Convolutional Neural Networks",
+			"description": "1D Conv · Dilated Conv · TCN",
+			"commands": [
+				"chiara.statistics.nn.cnn"
+			],
+			"keys": [
+				"LBBH1998a",
+				"YK2015a",
+				"HZRS2016a",
+				"ODZSV...2016a",
+				"BKK2018a"
 			]
 		},
 		{
@@ -41701,7 +42524,10 @@
 				"MS1999a",
 				"CH1990a",
 				"Har1954a",
-				"LGD2015a"
+				"LGD2015a",
+				"LD1997a",
+				"BL2007a",
+				"TP2010a"
 			]
 		},
 		{
@@ -41777,7 +42603,13 @@
 				"TV2004a",
 				"LW2004b",
 				"CWEH2010a",
-				"LW2020a"
+				"LW2020a",
+				"MP1967a",
+				"Lax1985a",
+				"Joh2001a",
+				"LW2004a",
+				"SS2005a",
+				"DGJ2018a"
 			]
 		},
 		{
@@ -41804,8 +42636,16 @@
 				"RN2017a",
 				"Alo2006a",
 				"Mur2002a",
+				"SS1989a",
 				"EL2000a",
-				"Gil2007a"
+				"Gil2007a",
+				"BH1925a",
+				"Vol1926a",
+				"KM1927a",
+				"Whi1955a",
+				"Kur1972a",
+				"Gil1977a",
+				"Fei1987a"
 			]
 		},
 		{
@@ -41883,7 +42723,16 @@
 				"CLV2007a",
 				"ZL2007a",
 				"TZXZJ2021a",
-				"HR2013a"
+				"HR2013a",
+				"DD1998a",
+				"ZT1999a",
+				"Deb2000a",
+				"DPAM2002a",
+				"LTDZ2002a",
+				"ZTLFF2003a",
+				"DMM2005a",
+				"LZ2009a",
+				"ISMN2017a"
 			]
 		},
 		{
@@ -41896,9 +42745,19 @@
 			"keys": [
 				"Tal2009a",
 				"GP2019a",
+				"ABCC2011a",
+				"RR2016a",
 				"FR1995a",
 				"MH1997a",
-				"HM2001a"
+				"HM2001a",
+				"Cro1958a",
+				"BHH1959a",
+				"HK1970a",
+				"LK1973a",
+				"FR1989a",
+				"PR2000a",
+				"LMS2003a",
+				"HMM2010a"
 			]
 		},
 		{
@@ -41928,7 +42787,12 @@
 				"ES2015a",
 				"SP1997a",
 				"ZS2009a",
-				"TF2013a"
+				"TF2013a",
+				"HO2001a",
+				"BGBMZ2006a",
+				"TS2006a",
+				"DS2011a",
+				"DMS2016a"
 			]
 		},
 		{
@@ -41940,9 +42804,14 @@
 			],
 			"keys": [
 				"Flo2000a",
+				"SSL2013a",
 				"JPS1993a",
 				"GK2001a",
-				"SS2000b"
+				"SS2000b",
+				"Piy1972a",
+				"Shu1972a",
+				"JSW1998a",
+				"HN1999a"
 			]
 		},
 		{
@@ -41986,7 +42855,15 @@
 			"keys": [
 				"Dat2018a",
 				"ASY1996a",
-				"Hen1976a"
+				"Hen1976a",
+				"LY1975a",
+				"May1976a",
+				"Fei1978a",
+				"BGGS1980a",
+				"GOY1982a",
+				"ER1985a",
+				"HYG1987a",
+				"BC1991a"
 			]
 		},
 		{
@@ -42003,7 +42880,11 @@
 				"Put2005a",
 				"Bel1954a",
 				"Sha1953a",
-				"How1960a"
+				"How1960a",
+				"AHM1951a",
+				"Vei1965a",
+				"PS1978a",
+				"Ye2011a"
 			]
 		},
 		{
@@ -42049,7 +42930,14 @@
 				"JM2024a",
 				"MRS2008a",
 				"Jon1972a",
-				"SB1988a"
+				"SB1988a",
+				"Luh1957a",
+				"SWY1975a",
+				"RJ1976a",
+				"DDFLH1990a",
+				"SBM1996a",
+				"Rob2004a",
+				"RZ2009a"
 			]
 		},
 		{
@@ -42065,7 +42953,12 @@
 				"GCSDV...2013a",
 				"HG2014a",
 				"DKPR1987a",
-				"MRRTT1953a"
+				"MRRTT1953a",
+				"Has1970a",
+				"Nea2011a",
+				"Bet2017a",
+				"GSVBG2019a",
+				"VGSCB2021a"
 			]
 		},
 		{
@@ -42099,7 +42992,10 @@
 			],
 			"keys": [
 				"MH2008a",
-				"MHM2018a"
+				"MHM2018a",
+				"WVJ2016a",
+				"KL2021a",
+				"CP2023a"
 			]
 		},
 		{
@@ -42132,7 +43028,14 @@
 				"BS2002a",
 				"HO2001a",
 				"GSYWS2010a",
-				"RY2005a"
+				"RY2005a",
+				"YLL1999a",
+				"RY2000a",
+				"HK2004a",
+				"AH2005a",
+				"SGH2010a",
+				"FNKO2011a",
+				"Han2016a"
 			]
 		},
 		{
@@ -42200,7 +43103,18 @@
 			"keys": [
 				"KW2013a",
 				"HZRS2016a",
-				"Bis1994a"
+				"Bis1994a",
+				"RHW1986a",
+				"BH1989a",
+				"HSW1989a",
+				"HS2006a",
+				"HSKSS2012a",
+				"RMW2014a",
+				"IS2015a",
+				"BVVDJ...2016a",
+				"HG2016a",
+				"BKM2017a",
+				"KUMH2017a"
 			]
 		},
 		{
@@ -42260,7 +43174,12 @@
 				"Gol1989a",
 				"HLG1999a",
 				"GR2011a",
-				"Whi1994a"
+				"Whi1994a",
+				"ES1993a",
+				"Bea1994a",
+				"WM1997a",
+				"Thi1999a",
+				"SA2020a"
 			]
 		},
 		{
@@ -42307,6 +43226,22 @@
 			]
 		},
 		{
+			"id": "gnn",
+			"title": "Graph Neural Networks",
+			"description": "GCN · GAT · GraphSAGE · Temporal GNN",
+			"commands": [
+				"chiara.statistics.nn.gnn"
+			],
+			"keys": [
+				"HYL2017a",
+				"KW2017a",
+				"LHW2018a",
+				"SKBBT...2018a",
+				"VCCRL...2018a",
+				"PDCMS...2020a"
+			]
+		},
+		{
 			"id": "graphppl",
 			"title": "Probabilistic Programming with RxInfer.jl",
 			"description": "Belief Propagation · Variational Message Passing · Expectation Propagation",
@@ -42317,9 +43252,17 @@
 				"BV2023c",
 				"Bis2006a",
 				"KF2009a",
+				"RW2006a",
 				"Pea1982a",
 				"Min2001b",
-				"Min2001a"
+				"Min2001a",
+				"KFL2001a",
+				"WF2001a",
+				"YFW2005a",
+				"LDHKPK2007a",
+				"WJ2008a",
+				"BKM2017a",
+				"BV2023a"
 			]
 		},
 		{
@@ -42333,7 +43276,17 @@
 				"Gre2018a",
 				"Har1976a",
 				"Gle1969a",
-				"Whi1980a"
+				"Whi1980a",
+				"Par1966a",
+				"HH1968a",
+				"RB1968a",
+				"Aka1974a",
+				"BP1979a",
+				"Koe1981a",
+				"CR1982a",
+				"Whi1982a",
+				"JB1987a",
+				"RW2017a"
 			]
 		},
 		{
@@ -42342,7 +43295,16 @@
 			"description": "Realized · Pre-averaged · Two-Scales · Realized Kernel",
 			"keys": [
 				"BHLS2011a",
-				"Zha2011a"
+				"Zha2011a",
+				"Eps1979a",
+				"LCBP1999a",
+				"Hig2002a",
+				"BS2004a",
+				"AMZ2005a",
+				"HY2005a",
+				"ZMA2005a",
+				"CPV2013a",
+				"BHMR2014a"
 			]
 		},
 		{
@@ -42400,7 +43362,10 @@
 				"Sha1998a",
 				"RP2006a",
 				"WD1997a",
-				"KGV1983a"
+				"KGV1983a",
+				"MRRTT1953a",
+				"GFR1994a",
+				"KA2006a"
 			]
 		},
 		{
@@ -42411,7 +43376,52 @@
 				"chiara.statistics.mwm.hpt"
 			],
 			"keys": [
-				"BKLSA...2020a"
+				"BKLSA...2020a",
+				"Whe1931a",
+				"Bri1950a",
+				"DW1950a",
+				"You1950a",
+				"ABERS1955a",
+				"SW1965a",
+				"Ans1973a",
+				"Mat1975a",
+				"BP1979a",
+				"Whi1980a",
+				"HM1982a",
+				"DF1983a",
+				"Kva1985a",
+				"NW1987a",
+				"DDC1988a",
+				"AC1992a",
+				"DM1995a",
+				"JSW1998a",
+				"KZ2001a",
+				"PF2001a",
+				"CBHK2002a",
+				"ZE2002a",
+				"NC2005a",
+				"WM2005a",
+				"DG2006a",
+				"Faw2006a",
+				"HK2006a",
+				"PS2006a",
+				"VS2006a",
+				"GR2007a",
+				"LLW2007a",
+				"HG2009a",
+				"Han2009a",
+				"BBBK2011a",
+				"Gne2011a",
+				"BB2012a",
+				"CD2014a",
+				"PCH2015a",
+				"SR2015a",
+				"Tof2015a",
+				"SSWAF2016a",
+				"GPSW2017a",
+				"CJ2020a",
+				"GSTV2022a",
+				"SL2009b"
 			]
 		},
 		{
@@ -42439,7 +43449,13 @@
 				"chiara.optimise.ido"
 			],
 			"keys": [
-				"PZHZ2022a"
+				"PZHZ2022a",
+				"Bet1998a",
+				"WB2006a",
+				"Kel2017a",
+				"HH2018a",
+				"Bet2010a",
+				"Bie2010a"
 			]
 		},
 		{
@@ -42479,7 +43495,16 @@
 				"CT2004a",
 				"Shr2004a",
 				"Mer1976a",
-				"Kou2002a"
+				"Kou2002a",
+				"Pre1967a",
+				"Haw1971a",
+				"Gil1976a",
+				"LS1979a",
+				"PT1997a",
+				"BS2004a",
+				"HK2005a",
+				"MPCSS2006a",
+				"RN2017a"
 			]
 		},
 		{
@@ -42514,6 +43539,13 @@
 			],
 			"keys": [
 				"SC1978a",
+				"CH1967a",
+				"Ben1975a",
+				"Dud1976a",
+				"Uhl1991a",
+				"EKSX1996a",
+				"BGRS1999a",
+				"BLBLK2017a",
 				"DBKYZ...2019a",
 				"Car2024a"
 			]
@@ -42541,7 +43573,21 @@
 			"keys": [
 				"Hot1933a",
 				"SSM1998a",
-				"RT1982a"
+				"RT1982a",
+				"Pea1901a",
+				"Spe1904b",
+				"Hey1931a",
+				"EY1936a",
+				"Kai1958a",
+				"Hor1965a",
+				"Cat1966a",
+				"Jor1967a",
+				"VJ1990a",
+				"SSM1998b",
+				"TB1999a",
+				"HLMS2004a",
+				"ZYJ2008a",
+				"JC2016a"
 			]
 		},
 		{
@@ -42611,7 +43657,35 @@
 			],
 			"keys": [
 				"Gre2018a",
-				"PW1954a"
+				"PW1954a",
+				"CO1949a",
+				"DW1950a",
+				"HL1960a",
+				"BM1978a",
+				"Bre1978a",
+				"God1978a",
+				"LB1978a",
+				"DGL1980a",
+				"PM1980a",
+				"JB1987a",
+				"NW1987a"
+			]
+		},
+		{
+			"id": "lmhar",
+			"title": "Linear Models with Heteroskedasticity + AR(1)",
+			"description": "Sequential · Joint",
+			"commands": [
+				"chiara.statistics.lm.heteroar1"
+			],
+			"keys": [
+				"DW1950a",
+				"PW1954a",
+				"OK1974a",
+				"Har1976a",
+				"BM1978a",
+				"Whi1980a",
+				"NW1987a"
 			]
 		},
 		{
@@ -42653,7 +43727,13 @@
 				"Mar1952a",
 				"SP1994a",
 				"ADEH1999a",
-				"AT2002a"
+				"AT2002a",
+				"CF1938a",
+				"Kup1995a",
+				"Chr1998a",
+				"MF2000a",
+				"RU2000a",
+				"Gne2011a"
 			]
 		},
 		{
@@ -42678,8 +43758,8 @@
 				"chiara.optimise.madp"
 			],
 			"keys": [
-				"ESBWG...2017a",
-				"QEDT2023a",
+				"DHL2017a",
+				"HH2018a",
 				"OA2016a",
 				"SL2009b",
 				"Koc2015a",
@@ -42716,7 +43796,6 @@
 				"chiara.statistics.rl.marl"
 			],
 			"keys": [
-				"Tia...2020a",
 				"SL2009b",
 				"Woo2009a",
 				"SB2018a",
@@ -42764,7 +43843,53 @@
 				"chiara.statistics.mwm.calibration"
 			],
 			"keys": [
-				"WLZ2022a"
+				"WLZ2022a",
+				"Whe1931a",
+				"Bri1950a",
+				"DW1950a",
+				"You1950a",
+				"ABERS1955a",
+				"SW1965a",
+				"Ans1973a",
+				"Mat1975a",
+				"BP1979a",
+				"Whi1980a",
+				"HM1982a",
+				"DF1983a",
+				"Kva1985a",
+				"NW1987a",
+				"DDC1988a",
+				"AC1992a",
+				"DM1995a",
+				"JSW1998a",
+				"KZ2001a",
+				"PF2001a",
+				"CBHK2002a",
+				"ZE2002a",
+				"NC2005a",
+				"WM2005a",
+				"DG2006a",
+				"Faw2006a",
+				"HK2006a",
+				"PS2006a",
+				"VS2006a",
+				"GR2007a",
+				"LLW2007a",
+				"HG2009a",
+				"Han2009a",
+				"BBBK2011a",
+				"Gne2011a",
+				"BB2012a",
+				"CD2014a",
+				"PCH2015a",
+				"SR2015a",
+				"Tof2015a",
+				"SSWAF2016a",
+				"GPSW2017a",
+				"BKLSA...2020a",
+				"CJ2020a",
+				"GSTV2022a",
+				"SL2009b"
 			]
 		},
 		{
@@ -42828,7 +43953,11 @@
 				"RC2004a",
 				"Gil2008a",
 				"Hei1998a",
-				"KSSSU2017a"
+				"KSSSU2017a",
+				"CP1976a",
+				"Keb2005a",
+				"GW2009a",
+				"CGST2011a"
 			]
 		},
 		{
@@ -43098,7 +44227,22 @@
 			"keys": [
 				"DSB2017a",
 				"PPM2017a",
-				"DBMP2019a"
+				"DBMP2019a",
+				"GD1982a",
+				"GGR1995a",
+				"GF2007a",
+				"TV2010a",
+				"TT2013a",
+				"DKB2014a",
+				"GGML2015a",
+				"RM2015a",
+				"TOB2015a",
+				"KSJCS...2016a",
+				"GCP2017a",
+				"NMTGL2018a",
+				"WKK2019a",
+				"PNRML2021a",
+				"Nel2006a"
 			]
 		},
 		{
@@ -43370,6 +44514,11 @@
 				"Cox1955a",
 				"Oga1981a",
 				"Oga1998a",
+				"HO1974a",
+				"LS1979a",
+				"Oga1988a",
+				"MAM2009a",
+				"BMM2015a",
 				"Gar1936a",
 				"Dig1985a",
 				"MSW1998a",
@@ -43388,13 +44537,22 @@
 			"keys": [
 				"DV2003a",
 				"Ros2014a",
+				"DV2008a",
 				"Oga1981a",
 				"LS1979a",
 				"Haw1971a",
 				"HO1974a",
 				"MSW1998a",
 				"LA2014a",
-				"BBVKF2002a"
+				"BBVKF2002a",
+				"Gar1936a",
+				"Cox1955a",
+				"Dig1985a",
+				"Oga1988a",
+				"Oga1998a",
+				"MAM2009a",
+				"Ras2013a",
+				"BMM2015a"
 			]
 		},
 		{
@@ -43488,6 +44646,48 @@
 			"keys": [
 				"Mar2025a",
 				"HS1997a",
+				"CMGBB...2014a",
+				"MJCMR2014a",
+				"BG2016a",
+				"CSS2016a",
+				"KLMR2016a",
+				"LB2016a",
+				"ZL2016a",
+				"ZSKS2016a",
+				"ZWZZ2016a",
+				"Che2017a",
+				"GSKSS2017a",
+				"LLZ2017a",
+				"LLCZG2018a",
+				"RBOB2018a",
+				"WL2018a",
+				"ZXSLZ2018a",
+				"CCHC2019a",
+				"KSBKJ...2019a",
+				"TDWS2019a",
+				"RM2020a",
+				"ZW2020a",
+				"LBCC2021a",
+				"RM2021a",
+				"RMEM2021a",
+				"VED2021a",
+				"YZLLC...2024a",
+				"ZK2025a"
+			]
+		},
+		{
+			"id": "rnn",
+			"title": "Recurrent Neural Networks",
+			"description": "LSTM · GRU · Echo State · Attention",
+			"commands": [
+				"chiara.statistics.nn.rnn"
+			],
+			"keys": [
+				"BSF1994a",
+				"HS1997a",
+				"JH2004a",
+				"BCB2014a",
+				"CGCB2014a",
 				"CMGBB...2014a"
 			]
 		},
@@ -43526,6 +44726,61 @@
 				"Lin2004a",
 				"Koe2004a",
 				"Wil1945a"
+			]
+		},
+		{
+			"id": "rp",
+			"title": "Regression Performance",
+			"commands": [
+				"chiara.statistics.mwm.regressionPerf"
+			],
+			"keys": [
+				"Whe1931a",
+				"Bri1950a",
+				"DW1950a",
+				"You1950a",
+				"ABERS1955a",
+				"SW1965a",
+				"Ans1973a",
+				"Mat1975a",
+				"BP1979a",
+				"Whi1980a",
+				"HM1982a",
+				"DF1983a",
+				"Kva1985a",
+				"NW1987a",
+				"DDC1988a",
+				"AC1992a",
+				"DM1995a",
+				"JSW1998a",
+				"KZ2001a",
+				"PF2001a",
+				"CBHK2002a",
+				"ZE2002a",
+				"NC2005a",
+				"WM2005a",
+				"DG2006a",
+				"Faw2006a",
+				"HK2006a",
+				"PS2006a",
+				"VS2006a",
+				"GR2007a",
+				"LLW2007a",
+				"HG2009a",
+				"Han2009a",
+				"BBBK2011a",
+				"Gne2011a",
+				"BB2012a",
+				"CD2014a",
+				"PCH2015a",
+				"SR2015a",
+				"Tof2015a",
+				"SSWAF2016a",
+				"GPSW2017a",
+				"BKLSA...2020a",
+				"CJ2020a",
+				"GSTV2022a",
+				"SL2009b"
 			]
 		},
 		{
@@ -43582,7 +44837,11 @@
 			],
 			"keys": [
 				"SZH2025a",
-				"SZH2024a"
+				"SZH2024a",
+				"HS1997a",
+				"BZB2002a",
+				"ZKRPS...2017a",
+				"CBL2020a"
 			]
 		},
 		{
@@ -43608,7 +44867,22 @@
 			"keys": [
 				"RN2017a",
 				"Oks2003a",
-				"Eva2013a"
+				"Eva2013a",
+				"UO1930a",
+				"Ito1944a",
+				"Mar1955a",
+				"WZ1965a",
+				"Str1966a",
+				"BS1973a",
+				"Mil1975a",
+				"Kam1981a",
+				"Hig2001a",
+				"Lam2003a",
+				"Ros2010a",
+				"HJK2011a",
+				"Rob2012a",
+				"RN2017b",
+				"RN2020a"
 			]
 		},
 		{
@@ -43682,7 +44956,11 @@
 				"JM2024a",
 				"MS1999a",
 				"Kat1987a",
-				"Goo2001a"
+				"Goo2001a",
+				"Sha1948a",
+				"Sha1951a",
+				"Goo1953a",
+				"CG1999a"
 			]
 		},
 		{
@@ -43865,7 +45143,29 @@
 			],
 			"keys": [
 				"Kir2012a",
-				"Str2015a"
+				"Str2015a",
+				"Bet2010a",
+				"May1966a",
+				"Bet1998a",
+				"LT2004a",
+				"TET2012a",
+				"Kel2017a",
+				"HJM2019a"
+			]
+		},
+		{
+			"id": "transformer",
+			"title": "Transformers",
+			"description": "Encoder · Decoder · Encoder-Decoder · Time Series · Cross-Modal",
+			"commands": [
+				"chiara.statistics.nn.transformer"
+			],
+			"keys": [
+				"VSPUJ...2017a",
+				"DCLT2019a",
+				"JW2019a",
+				"NNSK2022a",
+				"ZCZX2023a"
 			]
 		},
 		{
@@ -43914,7 +45214,11 @@
 				"WM2000a",
 				"GSS1993a",
 				"Kal1960a",
-				"Whi1982a"
+				"Whi1982a",
+				"Mut1960a",
+				"Kit1996a",
+				"JU1997a",
+				"SBBA2008a"
 			]
 		},
 		{

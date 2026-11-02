@@ -91,6 +91,28 @@ name = "GNN Architectures in Finance"
 file = "gnn/gnn-architectures-finance.md"
 bundled = true
 
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "HYL2017a"
+
+[[references]]
+key = "KW2017a"
+
+[[references]]
+key = "LHW2018a"
+
+[[references]]
+key = "SKBBT...2018a"
+
+[[references]]
+key = "VCCRL...2018a"
+
+[[references]]
+key = "PDCMS...2020a"
+
 [[models]]
 id = "gcn"
 label = "GCN"

@@ -123,6 +123,31 @@ key = "Kir2012a"
 [[references]]
 key = "Str2015a"
 
+[[references]]
+key = "Bet2010a"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "May1966a"
+
+[[references]]
+key = "Bet1998a"
+
+[[references]]
+key = "LT2004a"
+
+[[references]]
+key = "TET2012a"
+
+[[references]]
+key = "Kel2017a"
+
+[[references]]
+key = "HJM2019a"
+
 [[models]]
 id = "direct"
 label = "Direct Methods"

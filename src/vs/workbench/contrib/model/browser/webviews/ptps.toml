@@ -131,6 +131,9 @@ key = "DV2003a"
 key = "Ros2014a"
 
 [[references]]
+key = "DV2008a"
+
+[[references]]
 separator = true
 label = "Original Papers"
 
@@ -154,6 +157,30 @@ key = "LA2014a"
 
 [[references]]
 key = "BBVKF2002a"
+
+[[references]]
+key = "Gar1936a"
+
+[[references]]
+key = "Cox1955a"
+
+[[references]]
+key = "Dig1985a"
+
+[[references]]
+key = "Oga1988a"
+
+[[references]]
+key = "Oga1998a"
+
+[[references]]
+key = "MAM2009a"
+
+[[references]]
+key = "Ras2013a"
+
+[[references]]
+key = "BMM2015a"
 
 [[models]]
 id = "poisson"

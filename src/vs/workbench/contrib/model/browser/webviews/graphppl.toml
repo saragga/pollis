@@ -107,6 +107,9 @@ key = "Bis2006a"
 key = "KF2009a"
 
 [[references]]
+key = "RW2006a"
+
+[[references]]
 separator = true
 label = "Original Papers"
 
@@ -118,6 +121,27 @@ key = "Min2001b"
 
 [[references]]
 key = "Min2001a"
+
+[[references]]
+key = "KFL2001a"
+
+[[references]]
+key = "WF2001a"
+
+[[references]]
+key = "YFW2005a"
+
+[[references]]
+key = "LDHKPK2007a"
+
+[[references]]
+key = "WJ2008a"
+
+[[references]]
+key = "BKM2017a"
+
+[[references]]
+key = "BV2023a"
 
 [[models]]
 id = "bp"

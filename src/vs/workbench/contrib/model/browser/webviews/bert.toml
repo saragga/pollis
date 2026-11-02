@@ -114,6 +114,21 @@ key = "RG2019a"
 [[references]]
 key = "VSPUJ...2017a"
 
+[[references]]
+key = "SN2012a"
+
+[[references]]
+key = "STY2017a"
+
+[[references]]
+key = "Eth2019a"
+
+[[references]]
+key = "JW2019a"
+
+[[references]]
+key = "RKR2020a"
+
 [[models]]
 id = "embed"
 label = "Embed"

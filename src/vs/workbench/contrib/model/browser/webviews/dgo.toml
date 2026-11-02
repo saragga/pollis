@@ -97,6 +97,9 @@ label = "Textbooks"
 key = "Flo2000a"
 
 [[references]]
+key = "SSL2013a"
+
+[[references]]
 separator = true
 label = "Original Papers"
 
@@ -108,6 +111,18 @@ key = "GK2001a"
 
 [[references]]
 key = "SS2000b"
+
+[[references]]
+key = "Piy1972a"
+
+[[references]]
+key = "Shu1972a"
+
+[[references]]
+key = "JSW1998a"
+
+[[references]]
+key = "HN1999a"
 
 [[models]]
 id = "direct"

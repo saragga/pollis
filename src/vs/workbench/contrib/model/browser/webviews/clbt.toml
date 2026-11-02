@@ -124,6 +124,21 @@ key = "DCLT2019a"
 [[references]]
 key = "RZ2009a"
 
+[[references]]
+key = "Voo1999a"
+
+[[references]]
+key = "JK2002a"
+
+[[references]]
+key = "JDS2011a"
+
+[[references]]
+key = "NC2019a"
+
+[[references]]
+key = "SKPZ2022a"
+
 [[bullets]]
 text = "Late Interaction"
 detail = "ColBERT encodes the query and each passage into one normalised vector per token; the score is the sum over query tokens of the best cosine match among the passage tokens (MaxSim)"

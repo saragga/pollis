@@ -128,6 +128,18 @@ key = "Kal1960a"
 [[references]]
 key = "Whi1982a"
 
+[[references]]
+key = "Mut1960a"
+
+[[references]]
+key = "Kit1996a"
+
+[[references]]
+key = "JU1997a"
+
+[[references]]
+key = "SBBA2008a"
+
 [[models]]
 id = "lg"
 label = "Linear Gaussian"

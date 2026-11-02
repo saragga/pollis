@@ -99,6 +99,24 @@ key = "ADEH1999a"
 [[references]]
 key = "AT2002a"
 
+[[references]]
+key = "CF1938a"
+
+[[references]]
+key = "Kup1995a"
+
+[[references]]
+key = "Chr1998a"
+
+[[references]]
+key = "MF2000a"
+
+[[references]]
+key = "RU2000a"
+
+[[references]]
+key = "Gne2011a"
+
 # Model toggles: one per family of loss risk measures
 
 [[models]]

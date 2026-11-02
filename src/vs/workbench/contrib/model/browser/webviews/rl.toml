@@ -116,6 +116,84 @@ key = "HS1997a"
 [[references]]
 key = "CMGBB...2014a"
 
+[[references]]
+key = "MJCMR2014a"
+
+[[references]]
+key = "BG2016a"
+
+[[references]]
+key = "CSS2016a"
+
+[[references]]
+key = "KLMR2016a"
+
+[[references]]
+key = "LB2016a"
+
+[[references]]
+key = "ZL2016a"
+
+[[references]]
+key = "ZSKS2016a"
+
+[[references]]
+key = "ZWZZ2016a"
+
+[[references]]
+key = "Che2017a"
+
+[[references]]
+key = "GSKSS2017a"
+
+[[references]]
+key = "LLZ2017a"
+
+[[references]]
+key = "LLCZG2018a"
+
+[[references]]
+key = "RBOB2018a"
+
+[[references]]
+key = "WL2018a"
+
+[[references]]
+key = "ZXSLZ2018a"
+
+[[references]]
+key = "CCHC2019a"
+
+[[references]]
+key = "KSBKJ...2019a"
+
+[[references]]
+key = "TDWS2019a"
+
+[[references]]
+key = "RM2020a"
+
+[[references]]
+key = "ZW2020a"
+
+[[references]]
+key = "LBCC2021a"
+
+[[references]]
+key = "RM2021a"
+
+[[references]]
+key = "RMEM2021a"
+
+[[references]]
+key = "VED2021a"
+
+[[references]]
+key = "YZLLC...2024a"
+
+[[references]]
+key = "ZK2025a"
+
 [[models]]
 id = "flux"
 label = "Flux"

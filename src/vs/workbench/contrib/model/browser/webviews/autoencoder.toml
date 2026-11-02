@@ -70,6 +70,40 @@ label = "Original Papers (from packages)"
 [[references]]
 key = "KW2013a"
 
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "BH1989a"
+
+[[references]]
+key = "Kra1991a"
+
+[[references]]
+key = "HS2006a"
+
+[[references]]
+key = "VLBM2008a"
+
+[[references]]
+key = "RMW2014a"
+
+[[references]]
+key = "SY2014a"
+
+[[references]]
+key = "BVVDJ...2016a"
+
+[[references]]
+key = "APFDS...2017a"
+
+[[references]]
+key = "BHPMW...2018a"
+
+[[references]]
+key = "LBLRG...2019a"
+
 [[models]]
 id = "ae"
 label = "Autoencoder"

@@ -101,6 +101,30 @@ label = "Original Papers"
 [[references]]
 key = "Hen1976a"
 
+[[references]]
+key = "LY1975a"
+
+[[references]]
+key = "May1976a"
+
+[[references]]
+key = "Fei1978a"
+
+[[references]]
+key = "BGGS1980a"
+
+[[references]]
+key = "GOY1982a"
+
+[[references]]
+key = "ER1985a"
+
+[[references]]
+key = "HYG1987a"
+
+[[references]]
+key = "BC1991a"
+
 [[bullets]]
 text = "DeterministicIteratedMap"
 detail = "iterate a deterministic map step by step to explore orbits and fixed points"

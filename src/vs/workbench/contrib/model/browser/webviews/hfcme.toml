@@ -82,6 +82,37 @@ key = "BHLS2011a"
 [[references]]
 key = "Zha2011a"
 
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "Eps1979a"
+
+[[references]]
+key = "LCBP1999a"
+
+[[references]]
+key = "Hig2002a"
+
+[[references]]
+key = "BS2004a"
+
+[[references]]
+key = "AMZ2005a"
+
+[[references]]
+key = "HY2005a"
+
+[[references]]
+key = "ZMA2005a"
+
+[[references]]
+key = "CPV2013a"
+
+[[references]]
+key = "BHMR2014a"
+
 [[models]]
 id = "rc"
 label = "Realized"

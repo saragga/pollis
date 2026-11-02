@@ -110,6 +110,43 @@ key = "HZRS2016a"
 [[references]]
 key = "Bis1994a"
 
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "RHW1986a"
+
+[[references]]
+key = "BH1989a"
+
+[[references]]
+key = "HSW1989a"
+
+[[references]]
+key = "HS2006a"
+
+[[references]]
+key = "HSKSS2012a"
+
+[[references]]
+key = "RMW2014a"
+
+[[references]]
+key = "IS2015a"
+
+[[references]]
+key = "BVVDJ...2016a"
+
+[[references]]
+key = "HG2016a"
+
+[[references]]
+key = "BKM2017a"
+
+[[references]]
+key = "KUMH2017a"
+
 [[models]]
 id = "mlp"
 label = "MLP"

@@ -142,6 +142,27 @@ key = "GSYWS2010a"
 [[references]]
 key = "RY2005a"
 
+[[references]]
+key = "YLL1999a"
+
+[[references]]
+key = "RY2000a"
+
+[[references]]
+key = "HK2004a"
+
+[[references]]
+key = "AH2005a"
+
+[[references]]
+key = "SGH2010a"
+
+[[references]]
+key = "FNKO2011a"
+
+[[references]]
+key = "Han2016a"
+
 [[models]]
 id = "cmaes"
 label = "CMA-ES"

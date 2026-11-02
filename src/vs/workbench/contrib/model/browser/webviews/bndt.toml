@@ -103,6 +103,9 @@ key = "SB2018a"
 key = "Sze2010a"
 
 [[references]]
+key = "LS2020a"
+
+[[references]]
 separator = true
 label = "Original Papers"
 
@@ -111,6 +114,18 @@ key = "Tho1933a"
 
 [[references]]
 key = "ACF2002a"
+
+[[references]]
+key = "Rob1952a"
+
+[[references]]
+key = "LR1985a"
+
+[[references]]
+key = "AG2011a"
+
+[[references]]
+key = "RVKOW2018a"
 
 [[models]]
 id = "egreedy"

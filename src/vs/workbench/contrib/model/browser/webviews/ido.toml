@@ -79,6 +79,32 @@ label = "Original Papers (from packages)"
 [[references]]
 key = "PZHZ2022a"
 
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "Bet1998a"
+
+[[references]]
+key = "WB2006a"
+
+[[references]]
+key = "Kel2017a"
+
+[[references]]
+key = "HH2018a"
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+key = "Bet2010a"
+
+[[references]]
+key = "Bie2010a"
+
 [[models]]
 id = "ocp"
 label = "Optimal Control"

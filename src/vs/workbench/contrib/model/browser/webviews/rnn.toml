@@ -87,6 +87,28 @@ name = "Extensions"
 file = "rnn/extensions.md"
 bundled = true
 
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "BSF1994a"
+
+[[references]]
+key = "HS1997a"
+
+[[references]]
+key = "JH2004a"
+
+[[references]]
+key = "BCB2014a"
+
+[[references]]
+key = "CGCB2014a"
+
+[[references]]
+key = "CMGBB...2014a"
+
 [[models]]
 id = "lstm"
 label = "LSTM"

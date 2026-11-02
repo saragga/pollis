@@ -103,6 +103,15 @@ key = "Har1954a"
 [[references]]
 key = "LGD2015a"
 
+[[references]]
+key = "LD1997a"
+
+[[references]]
+key = "BL2007a"
+
+[[references]]
+key = "TP2010a"
+
 [[models]]
 id = "raw"
 label = "Raw Counts"

@@ -87,6 +87,28 @@ key = "DKPK2015a"
 [[references]]
 key = "Dem2002a"
 
+[[references]]
+key = "Bar1998a"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "FAM1981a"
+
+[[references]]
+key = "HJS1992a"
+
+[[references]]
+key = "CMS2007a"
+
+[[references]]
+key = "DD2012a"
+
+[[references]]
+key = "PM2019a"
+
 [[bullets]]
 text = "Bilevel Optimisation has a strategic hierarchy: a leader chooses their strategy knowing that rational followers will respond by solving their own optimisation problem. The leader anticipates this response and optimises accordingly."
 detail = ""

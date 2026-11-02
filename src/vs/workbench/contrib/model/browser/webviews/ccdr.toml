@@ -133,6 +133,15 @@ key = "CC1959a"
 [[references]]
 key = "LA2008a"
 
+[[references]]
+key = "RU2000a"
+
+[[references]]
+key = "NS2006a"
+
+[[references]]
+key = "Xie2021a"
+
 [[models]]
 id = "cc"
 label = "Chance-Constrained"

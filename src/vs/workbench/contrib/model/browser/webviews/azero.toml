@@ -108,6 +108,15 @@ key = "SSSAH...2017a"
 [[references]]
 key = "SHSAL...2018a"
 
+[[references]]
+key = "Ros2011a"
+
+[[references]]
+key = "BPWLC2012a"
+
+[[references]]
+key = "SAHSS2020a"
+
 [[bullets]]
 text = "Self-Play"
 detail = "the current network plays against itself to generate a game history; Monte Carlo Tree Search guides action selection and produces improved policy targets stronger than the raw network output (AlphaZero.jl)"

@@ -90,6 +90,55 @@ label = "Data"
 [[references]]
 key = "AF1992a"
 
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "Sne1957a"
+
+[[references]]
+key = "SR1962a"
+
+[[references]]
+key = "War1963a"
+
+[[references]]
+key = "Joh1967a"
+
+[[references]]
+key = "LW1967a"
+
+[[references]]
+key = "Far1969a"
+
+[[references]]
+key = "Sib1973a"
+
+[[references]]
+key = "Def1977a"
+
+[[references]]
+key = "Mil1980a"
+
+[[references]]
+key = "Har1981a"
+
+[[references]]
+key = "HA1985a"
+
+[[references]]
+key = "MC1985a"
+
+[[references]]
+key = "Rou1987a"
+
+[[references]]
+key = "SDD2013a"
+
+[[references]]
+key = "ML2014a"
+
 [[models]]
 id = "ward"
 label = "Ward"

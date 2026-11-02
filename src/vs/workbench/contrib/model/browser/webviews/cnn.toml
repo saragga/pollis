@@ -76,6 +76,25 @@ name = "Causal & Multi-Channel Guide"
 file = "cnn/causal-multichannel.md"
 bundled = true
 
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "LBBH1998a"
+
+[[references]]
+key = "YK2015a"
+
+[[references]]
+key = "HZRS2016a"
+
+[[references]]
+key = "ODZSV...2016a"
+
+[[references]]
+key = "BKK2018a"
+
 [[models]]
 id = "conv1d"
 label = "1D Conv"

@@ -82,6 +82,152 @@ label = "Original Papers (from packages)"
 [[references]]
 key = "WLZ2022a"
 
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "Whe1931a"
+
+[[references]]
+key = "Bri1950a"
+
+[[references]]
+key = "DW1950a"
+
+[[references]]
+key = "You1950a"
+
+[[references]]
+key = "ABERS1955a"
+
+[[references]]
+key = "SW1965a"
+
+[[references]]
+key = "Ans1973a"
+
+[[references]]
+key = "Mat1975a"
+
+[[references]]
+key = "BP1979a"
+
+[[references]]
+key = "Whi1980a"
+
+[[references]]
+key = "HM1982a"
+
+[[references]]
+key = "DF1983a"
+
+[[references]]
+key = "Kva1985a"
+
+[[references]]
+key = "NW1987a"
+
+[[references]]
+key = "DDC1988a"
+
+[[references]]
+key = "AC1992a"
+
+[[references]]
+key = "DM1995a"
+
+[[references]]
+key = "JSW1998a"
+
+[[references]]
+key = "KZ2001a"
+
+[[references]]
+key = "PF2001a"
+
+[[references]]
+key = "CBHK2002a"
+
+[[references]]
+key = "ZE2002a"
+
+[[references]]
+key = "NC2005a"
+
+[[references]]
+key = "WM2005a"
+
+[[references]]
+key = "DG2006a"
+
+[[references]]
+key = "Faw2006a"
+
+[[references]]
+key = "HK2006a"
+
+[[references]]
+key = "PS2006a"
+
+[[references]]
+key = "VS2006a"
+
+[[references]]
+key = "GR2007a"
+
+[[references]]
+key = "LLW2007a"
+
+[[references]]
+key = "HG2009a"
+
+[[references]]
+key = "Han2009a"
+
+[[references]]
+key = "BBBK2011a"
+
+[[references]]
+key = "Gne2011a"
+
+[[references]]
+key = "BB2012a"
+
+[[references]]
+key = "CD2014a"
+
+[[references]]
+key = "PCH2015a"
+
+[[references]]
+key = "SR2015a"
+
+[[references]]
+key = "Tof2015a"
+
+[[references]]
+key = "SSWAF2016a"
+
+[[references]]
+key = "GPSW2017a"
+
+[[references]]
+key = "BKLSA...2020a"
+
+[[references]]
+key = "CJ2020a"
+
+[[references]]
+key = "GSTV2022a"
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+key = "SL2009b"
+
 [[models]]
 id = "platt"
 label = "Platt Scaling"

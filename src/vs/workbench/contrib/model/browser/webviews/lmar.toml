@@ -110,6 +110,39 @@ label = "Original Papers"
 [[references]]
 key = "PW1954a"
 
+[[references]]
+key = "CO1949a"
+
+[[references]]
+key = "DW1950a"
+
+[[references]]
+key = "HL1960a"
+
+[[references]]
+key = "BM1978a"
+
+[[references]]
+key = "Bre1978a"
+
+[[references]]
+key = "God1978a"
+
+[[references]]
+key = "LB1978a"
+
+[[references]]
+key = "DGL1980a"
+
+[[references]]
+key = "PM1980a"
+
+[[references]]
+key = "JB1987a"
+
+[[references]]
+key = "NW1987a"
+
 [[models]]
 id = "pw2step"
 label = "Prais-Winsten (2-Step)"

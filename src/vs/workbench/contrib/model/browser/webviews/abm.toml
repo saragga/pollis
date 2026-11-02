@@ -130,6 +130,12 @@ key = "WR2015b"
 key = "EA1996a"
 
 [[references]]
+key = "MP2007a"
+
+[[references]]
+key = "BBV2008a"
+
+[[references]]
 separator = true
 label = "Original Papers"
 
@@ -150,6 +156,18 @@ key = "PV2001a"
 
 [[references]]
 key = "New2002a"
+
+[[references]]
+key = "ER1960a"
+
+[[references]]
+key = "WS1998a"
+
+[[references]]
+key = "BA1999a"
+
+[[references]]
+key = "BVL2016a"
 
 [[models]]
 id = "grid"

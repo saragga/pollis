@@ -121,6 +121,24 @@ key = "BP2002a"
 [[references]]
 key = "RM2000a"
 
+[[references]]
+key = "Pin1991a"
+
+[[references]]
+key = "TELGF1992a"
+
+[[references]]
+key = "SS1996a"
+
+[[references]]
+key = "SS2000a"
+
+[[references]]
+key = "CGP2002a"
+
+[[references]]
+key = "RMW2013a"
+
 [[models]]
 id = "perm"
 label = "Permutation Entropy"

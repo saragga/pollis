@@ -106,6 +106,55 @@ key = "Oks2003a"
 [[references]]
 key = "Eva2013a"
 
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "UO1930a"
+
+[[references]]
+key = "Ito1944a"
+
+[[references]]
+key = "Mar1955a"
+
+[[references]]
+key = "WZ1965a"
+
+[[references]]
+key = "Str1966a"
+
+[[references]]
+key = "BS1973a"
+
+[[references]]
+key = "Mil1975a"
+
+[[references]]
+key = "Kam1981a"
+
+[[references]]
+key = "Hig2001a"
+
+[[references]]
+key = "Lam2003a"
+
+[[references]]
+key = "Ros2010a"
+
+[[references]]
+key = "HJK2011a"
+
+[[references]]
+key = "Rob2012a"
+
+[[references]]
+key = "RN2017b"
+
+[[references]]
+key = "RN2020a"
+
 [[models]]
 id = "add"
 label = "Additive Noise"

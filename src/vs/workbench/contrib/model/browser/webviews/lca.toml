@@ -78,6 +78,52 @@ key = "SSM1998a"
 [[references]]
 key = "RT1982a"
 
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "Pea1901a"
+
+[[references]]
+key = "Spe1904b"
+
+[[references]]
+key = "Hey1931a"
+
+[[references]]
+key = "EY1936a"
+
+[[references]]
+key = "Kai1958a"
+
+[[references]]
+key = "Hor1965a"
+
+[[references]]
+key = "Cat1966a"
+
+[[references]]
+key = "Jor1967a"
+
+[[references]]
+key = "VJ1990a"
+
+[[references]]
+key = "SSM1998b"
+
+[[references]]
+key = "TB1999a"
+
+[[references]]
+key = "HLMS2004a"
+
+[[references]]
+key = "ZYJ2008a"
+
+[[references]]
+key = "JC2016a"
+
 [[models]]
 id = "pca"
 label = "PCA"

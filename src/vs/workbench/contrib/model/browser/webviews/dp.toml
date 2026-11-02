@@ -117,6 +117,18 @@ key = "Sha1953a"
 [[references]]
 key = "How1960a"
 
+[[references]]
+key = "AHM1951a"
+
+[[references]]
+key = "Vei1965a"
+
+[[references]]
+key = "PS1978a"
+
+[[references]]
+key = "Ye2011a"
+
 [[models]]
 id = "det"
 label = "Deterministic"

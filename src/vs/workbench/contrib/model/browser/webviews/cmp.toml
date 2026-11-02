@@ -119,6 +119,33 @@ key = "CPS1992a"
 [[references]]
 key = "FP1997a"
 
+[[references]]
+key = "LH1964a"
+
+[[references]]
+key = "Lem1965a"
+
+[[references]]
+key = "KS1986a"
+
+[[references]]
+key = "HP1990a"
+
+[[references]]
+key = "Fis1992a"
+
+[[references]]
+key = "Rob1992a"
+
+[[references]]
+key = "Ral1994a"
+
+[[references]]
+key = "DF1995b"
+
+[[references]]
+key = "Rut1995a"
+
 [[models]]
 id = "lcp"
 label = "Linear Complementarity"

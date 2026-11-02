@@ -120,6 +120,33 @@ key = "TZXZJ2021a"
 [[references]]
 key = "HR2013a"
 
+[[references]]
+key = "DD1998a"
+
+[[references]]
+key = "ZT1999a"
+
+[[references]]
+key = "Deb2000a"
+
+[[references]]
+key = "DPAM2002a"
+
+[[references]]
+key = "LTDZ2002a"
+
+[[references]]
+key = "ZTLFF2003a"
+
+[[references]]
+key = "DMM2005a"
+
+[[references]]
+key = "LZ2009a"
+
+[[references]]
+key = "ISMN2017a"
+
 [[models]]
 id = "moead"
 label = "MOEA/D"

@@ -118,6 +118,59 @@ key = "PPM2017a"
 [[references]]
 key = "DBMP2019a"
 
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "GD1982a"
+
+[[references]]
+key = "GGR1995a"
+
+[[references]]
+key = "GF2007a"
+
+[[references]]
+key = "TV2010a"
+
+[[references]]
+key = "TT2013a"
+
+[[references]]
+key = "DKB2014a"
+
+[[references]]
+key = "GGML2015a"
+
+[[references]]
+key = "RM2015a"
+
+[[references]]
+key = "TOB2015a"
+
+[[references]]
+key = "KSJCS...2016a"
+
+[[references]]
+key = "GCP2017a"
+
+[[references]]
+key = "NMTGL2018a"
+
+[[references]]
+key = "WKK2019a"
+
+[[references]]
+key = "PNRML2021a"
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+key = "Nel2006a"
+
 [[models]]
 id = "realnvp"
 label = "RealNVP"

@@ -119,6 +119,21 @@ key = "DKPR1987a"
 [[references]]
 key = "MRRTT1953a"
 
+[[references]]
+key = "Has1970a"
+
+[[references]]
+key = "Nea2011a"
+
+[[references]]
+key = "Bet2017a"
+
+[[references]]
+key = "GSVBG2019a"
+
+[[references]]
+key = "VGSCB2021a"
+
 [[models]]
 id = "nuts"
 label = "No-U-Turn Sampler"

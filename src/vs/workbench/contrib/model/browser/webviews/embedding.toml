@@ -68,6 +68,19 @@ key = "MH2008a"
 [[references]]
 key = "MHM2018a"
 
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "WVJ2016a"
+
+[[references]]
+key = "KL2021a"
+
+[[references]]
+key = "CP2023a"
+
 [[models]]
 id = "tsne"
 label = "t-SNE"

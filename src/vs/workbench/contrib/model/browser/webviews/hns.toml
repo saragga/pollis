@@ -139,6 +139,15 @@ key = "WD1997a"
 [[references]]
 key = "KGV1983a"
 
+[[references]]
+key = "MRRTT1953a"
+
+[[references]]
+key = "GFR1994a"
+
+[[references]]
+key = "KA2006a"
+
 [[models]]
 id = "crs"
 label = "CRS"

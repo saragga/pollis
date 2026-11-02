@@ -96,6 +96,12 @@ key = "Tal2009a"
 key = "GP2019a"
 
 [[references]]
+key = "ABCC2011a"
+
+[[references]]
+key = "RR2016a"
+
+[[references]]
 separator = true
 label = "Original Papers"
 
@@ -107,6 +113,30 @@ key = "MH1997a"
 
 [[references]]
 key = "HM2001a"
+
+[[references]]
+key = "Cro1958a"
+
+[[references]]
+key = "BHH1959a"
+
+[[references]]
+key = "HK1970a"
+
+[[references]]
+key = "LK1973a"
+
+[[references]]
+key = "FR1989a"
+
+[[references]]
+key = "PR2000a"
+
+[[references]]
+key = "LMS2003a"
+
+[[references]]
+key = "HMM2010a"
 
 [[models]]
 id = "grasp"

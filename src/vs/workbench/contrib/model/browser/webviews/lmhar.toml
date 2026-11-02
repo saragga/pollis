@@ -72,6 +72,31 @@ name = "Diagnostics"
 file = "lm-hjar/diagnostics.md"
 bundled = true
 
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "DW1950a"
+
+[[references]]
+key = "PW1954a"
+
+[[references]]
+key = "OK1974a"
+
+[[references]]
+key = "Har1976a"
+
+[[references]]
+key = "BM1978a"
+
+[[references]]
+key = "Whi1980a"
+
+[[references]]
+key = "NW1987a"
+
 [[models]]
 id = "sequential"
 label = "Sequential"

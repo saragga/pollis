@@ -107,6 +107,25 @@ name = "Positional Encoding"
 file = "transformer/positional-encoding.md"
 bundled = true
 
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "VSPUJ...2017a"
+
+[[references]]
+key = "DCLT2019a"
+
+[[references]]
+key = "JW2019a"
+
+[[references]]
+key = "NNSK2022a"
+
+[[references]]
+key = "ZCZX2023a"
+
 [[models]]
 id = "encoder"
 label = "Encoder"

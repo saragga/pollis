@@ -117,6 +117,21 @@ key = "HZAL2018a"
 [[references]]
 key = "FHM2018a"
 
+[[references]]
+key = "SMSM2000a"
+
+[[references]]
+key = "LHPHE2015a"
+
+[[references]]
+key = "SMLJA2015a"
+
+[[references]]
+key = "HIBPP2018a"
+
+[[references]]
+key = "HZHTH2018a"
+
 [[models]]
 id = "a2c"
 label = "A2C"

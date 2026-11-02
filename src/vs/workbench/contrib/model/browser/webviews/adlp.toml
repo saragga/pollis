@@ -89,6 +89,38 @@ key = "MC2020a"
 [[references]]
 key = "RLP2016a"
 
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "Whi1982a"
+
+[[references]]
+key = "AA1984a"
+
+[[references]]
+key = "LN1989a"
+
+[[references]]
+key = "HG2014a"
+
+[[references]]
+key = "GXG2018a"
+
+[[references]]
+key = "MR2018a"
+
+[[references]]
+key = "BPAAB...2021a"
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+key = "NW2006a"
+
 [[models]]
 id = "dist"
 label = "Distribution"

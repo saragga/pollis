@@ -120,6 +120,24 @@ key = "CWEH2010a"
 [[references]]
 key = "LW2020a"
 
+[[references]]
+key = "MP1967a"
+
+[[references]]
+key = "Lax1985a"
+
+[[references]]
+key = "Joh2001a"
+
+[[references]]
+key = "LW2004a"
+
+[[references]]
+key = "SS2005a"
+
+[[references]]
+key = "DGJ2018a"
+
 [[models]]
 id = "linear"
 label = "Linear"

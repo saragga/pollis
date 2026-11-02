@@ -120,6 +120,15 @@ key = "Rey1987a"
 [[references]]
 key = "Mur2017a"
 
+[[references]]
+key = "MD1988a"
+
+[[references]]
+key = "TMB2002a"
+
+[[references]]
+key = "CSH2020a"
+
 [[models]]
 id = "static"
 label = "Static Plot"

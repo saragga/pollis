@@ -81,6 +81,21 @@ label = "Original Papers"
 [[references]]
 key = "Hot1936a"
 
+[[references]]
+key = "Bar1941a"
+
+[[references]]
+key = "SL1968a"
+
+[[references]]
+key = "Vin1976a"
+
+[[references]]
+key = "HSS2004a"
+
+[[references]]
+key = "WTH2009a"
+
 [[bullets]]
 text = "Finds linear combinations of X and Y that are maximally correlated"
 detail = "the canonical variates Zx = XAx and Zy = YAy"

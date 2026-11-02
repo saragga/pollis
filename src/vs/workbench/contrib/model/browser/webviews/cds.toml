@@ -98,11 +98,38 @@ label = "Textbooks"
 key = "Str2015a"
 
 [[references]]
+key = "Spa1982a"
+
+[[references]]
+key = "HNW1993a"
+
+[[references]]
+key = "HW1996a"
+
+[[references]]
+key = "DP2022a"
+
+[[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
 key = "Lor1963a"
+
+[[references]]
+key = "BGGS1980a"
+
+[[references]]
+key = "DP1980a"
+
+[[references]]
+key = "Hen1982a"
+
+[[references]]
+key = "Tuc2002a"
+
+[[references]]
+key = "Tsi2011a"
 
 [[bullets]]
 text = "CoupledODEs"

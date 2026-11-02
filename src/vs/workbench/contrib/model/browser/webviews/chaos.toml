@@ -120,6 +120,39 @@ key = "GP1983a"
 [[references]]
 key = "EKR1987a"
 
+[[references]]
+key = "Lor1963a"
+
+[[references]]
+key = "KY1979a"
+
+[[references]]
+key = "Tak1981a"
+
+[[references]]
+key = "FS1986a"
+
+[[references]]
+key = "The1986a"
+
+[[references]]
+key = "ER1992a"
+
+[[references]]
+key = "TELGF1992a"
+
+[[references]]
+key = "RCD1993a"
+
+[[references]]
+key = "Kan1994a"
+
+[[references]]
+key = "Cao1997a"
+
+[[references]]
+key = "MRTK2007a"
+
 [[models]]
 id = "lyap"
 label = "Lyapunov Exponents"

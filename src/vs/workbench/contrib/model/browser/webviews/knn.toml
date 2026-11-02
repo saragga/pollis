@@ -78,6 +78,27 @@ label = "Original Papers"
 key = "SC1978a"
 
 [[references]]
+key = "CH1967a"
+
+[[references]]
+key = "Ben1975a"
+
+[[references]]
+key = "Dud1976a"
+
+[[references]]
+key = "Uhl1991a"
+
+[[references]]
+key = "EKSX1996a"
+
+[[references]]
+key = "BGRS1999a"
+
+[[references]]
+key = "BLBLK2017a"
+
+[[references]]
 separator = true
 label = "Benchmarks"
 

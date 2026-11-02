@@ -117,6 +117,9 @@ key = "Alo2006a"
 key = "Mur2002a"
 
 [[references]]
+key = "SS1989a"
+
+[[references]]
 separator = true
 label = "Original Papers"
 
@@ -125,6 +128,27 @@ key = "EL2000a"
 
 [[references]]
 key = "Gil2007a"
+
+[[references]]
+key = "BH1925a"
+
+[[references]]
+key = "Vol1926a"
+
+[[references]]
+key = "KM1927a"
+
+[[references]]
+key = "Whi1955a"
+
+[[references]]
+key = "Kur1972a"
+
+[[references]]
+key = "Gil1977a"
+
+[[references]]
+key = "Fei1987a"
 
 [[models]]
 id = "chemical"
