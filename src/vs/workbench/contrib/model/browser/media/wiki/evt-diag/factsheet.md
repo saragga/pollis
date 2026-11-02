@@ -40,7 +40,7 @@ The Extreme Value Diagnostics panel examines the upper tail of a loss series bef
 | **Probability-Weighted Moments** | `gevfitpwm` | `gpfitpwm` | The single fitted value |
 | **Bayesian Estimation** | `gevfitbayes` | `gpfitbayes` | The posterior mean of each parameter, from No-U-Turn sampling |
 
-The method applies to the **QQ Plot** tab alone. **Threshold Stability** always calls `gpfit`.
+The method applies to the **QQ Plot** tab alone. **Threshold Stability** always calls `gpfit`. A gap between the methods on one data set shows how much the fitted tail depends on the way it was estimated.
 
 ## See Also
 
