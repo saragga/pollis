@@ -201,7 +201,7 @@ purpose = "Glejser's model: sigma is linear in z, so the variance is quadratic; 
 [[decisionRows]]
 task = "Linear"
 context = "The variance itself is additive in z, with z bounded away from values that would make it negative"
-purpose = "Variance linear in z; the most direct form but fitted variances must be clipped at zero"
+purpose = "Variance linear in z; the most direct form, but the fit stops with an error if a fitted variance reaches zero"
 
 [[inputs]]
 id = "X"
@@ -486,10 +486,19 @@ label = "Compare Variance Models"
 desc = "All four variance models fitted by two-step FWLS and scored by their Gaussian log-likelihood and AIC: the best-fitting shape of the heteroskedasticity"
 code = '''
 Z1 = hcat(ones(length(yv)), Zv)
-fits = [("Exponential", exponential_fwls(Xm, yv; Z=Zm), g -> exp.(Z1 * g)),
-        ("Power", power_fwls(Xm, yv; Z=Zv), g -> exp.(hcat(ones(length(yv)), log.(abs.(Zv))) * g)),
-        ("Quadratic", quadratic_fwls(Xm, yv; Z=Zm), g -> max.(Z1 * g, 1e-8) .^ 2),
-        ("Linear", linear_fwls(Xm, yv; Z=Zm), g -> max.(Z1 * g, 1e-10))]
+function fit_or_skip(name, fit, v)  # Quadratic and Linear stop with an error if a fitted value reaches zero
+    try
+        return (name, fit(), v)
+    catch e
+        e isa ArgumentError || rethrow()
+        println(name, " not fitted. ", e.msg)
+        return nothing
+    end
+end
+fits = filter(!isnothing, [fit_or_skip("Exponential", () -> exponential_fwls(Xm, yv; Z=Zm), g -> exp.(Z1 * g)),
+        fit_or_skip("Power", () -> power_fwls(Xm, yv; Z=Zv), g -> exp.(hcat(ones(length(yv)), log.(abs.(Zv))) * g)),
+        fit_or_skip("Quadratic", () -> quadratic_fwls(Xm, yv; Z=Zm), g -> max.(Z1 * g, 1e-8) .^ 2),
+        fit_or_skip("Linear", () -> linear_fwls(Xm, yv; Z=Zm), g -> max.(Z1 * g, 1e-10))])
 loglik(r, v) = -0.5 * sum(log.(2pi .* v) .+ residuals(r) .^ 2 ./ v)
 rows = [(model = n, loglik = round(loglik(r, v(r.gamma)), digits=2), aic = round(-2loglik(r, v(r.gamma)) + 2(length(coef(r)) + length(r.gamma)), digits=2), coef = round.(coef(r), digits=4)) for (n, r, v) in fits]
 sort(rows, by = r -> r.aic)

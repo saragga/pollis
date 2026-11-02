@@ -9,7 +9,7 @@ Two choices shape every fit in the panel: the form of the variance and the way i
 | Spread grows multiplicatively with the drivers, or no form is favoured by theory | **Exponential** | Log variance is linear in z, and the variance is always positive |
 | Variance scales with a power of a non-zero size variable | **Power** | Slopes are elasticities of the variance |
 | Standard deviation grows in a straight line with z | **Quadratic** | Sigma is linear in z and fitted from absolute residuals |
-| Variance itself is additive in z, with fitted values well above zero | **Linear** | The form is direct, but it needs clipping when a fit falls to zero |
+| Variance itself is additive in z, with fitted values well above zero | **Linear** | The form is direct, but the fit stops with an error if a fitted variance reaches zero |
 | Drivers contain zeros, such as dummies | **Exponential** rather than **Power** | The logarithm in **Power** needs non-zero values |
 
 ## Whether to Model the Variance or Only Correct the Standard Errors

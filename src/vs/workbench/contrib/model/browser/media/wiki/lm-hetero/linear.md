@@ -12,11 +12,11 @@ The form is sigma_i² = gamma_0 + z_i' gamma. The FWLS step is one regression:
 
 e_i² = gamma_0 + z_i' gamma + error
 
-Fitted values are clipped at 1e-10, and weights are their inverses. Under **Maximum likelihood**, the search starts from a constant variance with `Fminbox`, gamma_0 has a lower bound of 1e-8, the other gamma are free, and the variance is clipped at 1e-10. The standard errors fall back on a pseudo-inverse if the inverted information matrix has a non-positive diagonal entry.
+Weights are the inverses of the fitted values. If any fitted value is zero or negative, `HARE.jl` stops with an error that gives the number of rows, as no weight exists for such a row. A value below 1e-6 of the mean fitted value counts as zero. Under **Maximum likelihood**, `Fminbox` starts from the FWLS fit, or from a constant variance if that fit has a value at or below zero or gamma_0 under 1e-8. gamma_0 has a lower bound of 1e-8, the other gamma are free, and the variance is held at 1e-10 during the search. The same error applies if a fitted variance is zero or negative at the optimum. The standard errors fall back on a pseudo-inverse if the inverted information matrix has a non-positive diagonal entry.
 
 ## Which Inputs the Linear Tab Uses
 
-**Linear** reads **Regressors (X)**, **Response (y)** and **Variance drivers (Z)**. **Estimation** picks `linear_fwls`, `linear_ifwls` or `linear_mle`. With `nothing`, the drivers are X with an intercept. The panel gives no way to set the clipping level. **Predict at New Values** evaluates the same clipped expression at **New variance drivers**, so a new row with a negative linear part gets a standard deviation of 1e-5 and a misleadingly tight interval.
+**Linear** reads **Regressors (X)**, **Response (y)** and **Variance drivers (Z)**. **Estimation** picks `linear_fwls`, `linear_ifwls` or `linear_mle`. With `nothing`, the drivers are X with an intercept. **Predict at New Values** evaluates the fitted line at **New variance drivers**, clipped at 1e-10, so a new row with a negative linear part gets a standard deviation of 1e-5 and a misleadingly tight interval.
 
 ## Where the Linear Variance Model Is Strong
 
@@ -24,11 +24,11 @@ Additive effects on the variance have a plain reading: each unit of a driver add
 
 ## Where the Linear Variance Model Misleads
 
-Squared residuals are very noisy, and an outlier enters with its square, so gamma can be unstable. Negative fits are common with several drivers or a small baseline variance, and each one receives a weight of 1e10 in FWLS, so a few such rows can dominate the coefficients and their standard errors. `HARE.jl` warns with the number of clipped rows. A low clip also produces a heavy penalty in **Compare Variance Models** if that row has a sizeable residual. The classical standard errors on gamma are rough, because the auxiliary regression has a strongly non-constant error variance.
+Squared residuals are very noisy, and an outlier enters with its square, so gamma can be unstable. Negative fits are common with several drivers or a small baseline variance, and the error then points to **Exponential**, **Power** or OLS with robust standard errors. It usually means a straight line is the wrong form, but in a small or noisy sample the line can also cross zero by chance. **Compare Variance Models** lists **Linear** as not fitted in that case. The classical standard errors on gamma are rough, because the auxiliary regression has a strongly non-constant error variance.
 
 ## What to Compare the Linear Variance Model With
 
-**Quadratic** offers a similar shape with less sensitivity to outliers. **Exponential** avoids clipping altogether. Under **Linear**, **Iterated FWLS** and **Maximum likelihood** can drift apart from **Two-step FWLS** when rows are clipped, so a comparison of the three is a useful test of stability. In **Standardised Residuals**, a clipped row appears as an extreme point, because its residual is divided by a very small number.
+**Quadratic** offers a similar shape with less sensitivity to outliers. **Exponential** avoids the problem altogether. Under **Linear**, **Iterated FWLS** and **Maximum likelihood** can stop on data where **Two-step FWLS** runs, so a comparison of the three is a useful test of stability.
 
 ## References
 

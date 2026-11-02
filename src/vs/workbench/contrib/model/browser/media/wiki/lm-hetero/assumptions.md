@@ -24,7 +24,7 @@ The weights handle a changing variance but not correlation between errors. With 
 
 ## Why Fitted Variances Must Stay Positive in the Linear and Quadratic Tabs
 
-**Linear** and **Quadratic** can produce negative fitted values for some rows, which the code clips at 1e-10 and 1e-8. A clipped row gets an enormous weight in FWLS, so a few such rows can dominate the coefficients. A clipped row also appears in **Compare Variance Models** with a large likelihood penalty if its residual is not small. Count the clipped rows by computing `Z1 * result.gamma`, where `Z1` adds a column of ones to the drivers, and prefer **Exponential** or **Power** when many appear.
+**Linear** and **Quadratic** can produce negative fitted values for some rows. No weight exists for such a row, so `HARE.jl` stops with an error that gives the number of rows and points to **Exponential**, **Power** or OLS with robust standard errors. A value below 1e-6 of the mean fitted value counts as zero.
 
 ## References
 

@@ -16,7 +16,7 @@ Feasible weighted least squares has three steps. OLS gives residuals e_i. A regr
 
 ## How the Quadratic and Linear Tabs Model the Variance
 
-**Quadratic** makes the standard deviation linear in z. [Glejser (1969)](#ref-Gle1969a) regressed absolute residuals on such variables to test for heteroskedasticity, and [Rutemiller and Bowers (1968)](#ref-RB1968a) estimated a regression whose error standard deviation is linear in a covariate. The tab scales the fit by sqrt(pi/2) to pass from mean absolute residual to standard deviation under normality. **Linear** regresses e² on z. Such regressions of squared residuals appear in the random coefficients model of [Hildreth and Houck (1968)](#ref-HH1968a), where the variance is linear in squared regressors. Nothing keeps these two fits positive, so the code clips them.
+**Quadratic** makes the standard deviation linear in z. [Glejser (1969)](#ref-Gle1969a) regressed absolute residuals on such variables to test for heteroskedasticity, and [Rutemiller and Bowers (1968)](#ref-RB1968a) estimated a regression whose error standard deviation is linear in a covariate. The tab scales the fit by sqrt(pi/2) to pass from mean absolute residual to standard deviation under normality. **Linear** regresses e² on z. Such regressions of squared residuals appear in the random coefficients model of [Hildreth and Houck (1968)](#ref-HH1968a), where the variance is linear in squared regressors. Nothing keeps these two fits positive, so the code stops with an error if one reaches zero.
 
 ## A Common Workflow for Heteroskedastic Regression in the Panel
 

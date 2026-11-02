@@ -12,7 +12,7 @@ The form is sigma_i = gamma_0 + z_i' gamma, with the variance equal to its squar
 
 abs(e_i) = a_0 + z_i' a + error
 
-The code multiplies the estimates by sqrt(pi/2), about 1.2533, because the mean absolute value of a normal error is sigma_i sqrt(2/pi). The covariance of gamma is scaled by pi/2. Fitted sigma_i is clipped at 1e-8, and weights are 1/sigma_i².
+The code multiplies the estimates by sqrt(pi/2), about 1.2533, because the mean absolute value of a normal error is sigma_i sqrt(2/pi). The covariance of gamma is scaled by pi/2. Weights are 1/sigma_i². If any fitted sigma_i is zero or negative, `HARE.jl` stops with an error that gives the number of rows, under FWLS and **Maximum likelihood** alike. A value below 1e-6 of the mean fitted value counts as zero.
 
 ## Which Inputs the Quadratic Tab Uses
 
@@ -24,11 +24,11 @@ Absolute residuals are less sensitive to outliers than squares and, unlike the l
 
 ## Where the Quadratic Variance Model Misleads
 
-Nothing keeps gamma_0 + z_i' gamma positive. If it falls under zero the code clips it, and the row receives a very large weight in FWLS. A spread that falls and then rises again with z is not captured either, since the clip holds sigma_i at 1e-8 on the far side. The constant sqrt(pi/2) assumes normal errors, and heavier tails distort the scale of sigma_i. Since abs(e) has non-constant variance, the classical standard errors of gamma are rough.
+Nothing keeps gamma_0 + z_i' gamma positive. If it reaches zero the fit stops with an error, which usually means a straight line is the wrong form, though in a small or noisy sample the line can also cross zero by chance. A spread that falls and then rises again with z is not captured either, since a straight line cannot bend. The constant sqrt(pi/2) assumes normal errors, and heavier tails distort the scale of sigma_i. Since abs(e) has non-constant variance, the classical standard errors of gamma are rough.
 
 ## What to Compare the Quadratic Variance Model With
 
-**Linear** is the natural alternative, modelling the variance in place of the standard deviation. A comparison with **Power**, on a single positive driver, shows whether an exponent near 2 is supported. **sd_standardised** in **Remaining Heteroskedasticity** shows whether the scale looks right. **Compare Variance Models** includes **Quadratic**, but clipped rows can inflate its penalty, so check how many rows are at the clip before reading much into that rank.
+**Linear** is the natural alternative, modelling the variance in place of the standard deviation. A comparison with **Power**, on a single positive driver, shows whether an exponent near 2 is supported. **sd_standardised** in **Remaining Heteroskedasticity** shows whether the scale looks right. **Compare Variance Models** includes **Quadratic**, and lists it as not fitted if a fitted sigma_i reaches zero.
 
 ## References
 

@@ -12,7 +12,7 @@ The checks in the panel come in two kinds: tests of constant variance on OLS res
 
 ## How to Read Standardised Residuals in Heteroskedastic Regression
 
-**Standardised Residuals** divides each residual by sigma_i and plots the result against fitted values, with lines at −2, 0 and 2. A good fit gives a band of even width around zero, with about one point in twenty beyond the outer lines if errors are near normal. A fan or funnel means the form has not captured the pattern. A curve in the band points to the mean equation. Isolated extreme points can indicate outliers or rows whose fitted variance was clipped.
+**Standardised Residuals** divides each residual by sigma_i and plots the result against fitted values, with lines at −2, 0 and 2. A good fit gives a band of even width around zero, with about one point in twenty beyond the outer lines if errors are near normal. A fan or funnel means the form has not captured the pattern. A curve in the band points to the mean equation. Isolated extreme points can indicate outliers.
 
 ## How to Test Whether the Variance Model Captured the Pattern
 
@@ -24,11 +24,11 @@ The checks in the panel come in two kinds: tests of constant variance on OLS res
 
 ## How to Rank Variance Forms with Compare Variance Models
 
-**Compare Variance Models** fits all four forms by two-step FWLS and sorts them by the criterion of [Akaike (1974)](#ref-Aka1974a). The normal likelihood is evaluated at the FWLS estimates, not maximised, so the ranking is approximate. **Linear** and **Quadratic** can be penalised heavily through clipped rows. A difference of a few units is weak evidence. When forms score closely, prefer the one that is easiest to defend, as the coefficients usually differ little. The step ignores the **Estimation** input.
+**Compare Variance Models** fits all four forms by two-step FWLS and sorts them by the criterion of [Akaike (1974)](#ref-Aka1974a). The normal likelihood is evaluated at the FWLS estimates, not maximised, so the ranking is approximate. **Linear** or **Quadratic** is listed as not fitted if a fitted value reaches zero, and the other forms are still ranked. A difference of a few units is weak evidence. When forms score closely, prefer the one that is easiest to defend, as the coefficients usually differ little. The step ignores the **Estimation** input.
 
 ## How to Spot Unreliable FWLS Standard Errors
 
-Under **Two-step FWLS** and **Iterated FWLS**, the standard errors treat the fitted weights as known, so they ignore the uncertainty in gamma. Under **Linear**, `HARE.jl` warns with the number of rows whose fitted variance was clipped: those rows dominate the fit, and the standard errors cannot be trusted. Refit with **Maximum likelihood** to compare.
+Under **Two-step FWLS** and **Iterated FWLS**, the standard errors treat the fitted weights as known, so they ignore the uncertainty in gamma. Under **Linear** and **Quadratic**, every estimation option stops with an error if a fitted value reaches zero, so no reported standard error rests on such a row.
 
 ## References
 
