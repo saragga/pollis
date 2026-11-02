@@ -12,7 +12,7 @@ The variance form is sigma_i² = exp(gamma_0) × product over j of abs(z_ij)^gam
 
 log(e_i²) + 1.2704 = gamma_0 + sum over j of gamma_j log(abs(z_ij)) + error
 
-Inside `HARE.jl`, abs(z) is clipped at 1e-10 before the logarithm. The panel's helper `variance(Z)` computes exp.(hcat(1, log.(abs.(Z))) gamma) without that clip.
+Inside `HARE.jl`, abs(z) is clipped at 1e-10 before the logarithm. The panel's helper `variance(Z)` computes exp.(hcat(1, log.(abs.(Z))) gamma) without that clip, so a driver equal to zero needs care there.
 
 ## Which Inputs the Power Tab Uses
 

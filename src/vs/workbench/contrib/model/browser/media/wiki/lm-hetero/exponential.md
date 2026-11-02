@@ -16,7 +16,7 @@ The constant 1.2704 removes the mean of the log of a chi-squared variable with o
 
 ## Which Inputs the Exponential Tab Uses
 
-**Exponential** reads **Regressors (X)**, **Response (y)** and **Variance drivers (Z)**. With `nothing` as drivers, the code uses X with an intercept. **Estimation** selects `exponential_fwls`, `exponential_ifwls` or `exponential_mle`. Drivers may be negative or zero, as they enter linearly in the exponent. **New regressors** and **New variance drivers** feed **Predict at New Values**, where the fitted variance is exp.(hcat(1, Z) gamma).
+**Exponential** reads **Regressors (X)**, **Response (y)** and **Variance drivers (Z)**. With `nothing` as drivers, the code uses X with an intercept. **Estimation** selects `exponential_fwls`, `exponential_ifwls` or `exponential_mle`. Drivers may be negative or zero, as they enter linearly in the exponent. **New regressors** and **New variance drivers** feed **Predict at New Values**, where the fitted variance is exp.(hcat(1, Z) gamma). Positive variance is built in, since an exponential cannot be negative.
 
 ## Where the Exponential Variance Model Is Strong
 
