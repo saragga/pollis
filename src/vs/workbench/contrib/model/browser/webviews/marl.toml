@@ -97,14 +97,50 @@ key = "SL2009b"
 key = "Woo2009a"
 
 [[references]]
+key = "SB2018a"
+
+[[references]]
 separator = true
 label = "Original Papers"
+
+[[references]]
+key = "WD1992a"
+
+[[references]]
+key = "Tan1993a"
+
+[[references]]
+key = "Lit1994a"
+
+[[references]]
+key = "Tes1995a"
+
+[[references]]
+key = "BBD2008a"
+
+[[references]]
+key = "MLL2012a"
+
+[[references]]
+key = "HKBM2017a"
 
 [[references]]
 key = "LWTHA...2017a"
 
 [[references]]
+key = "LZGLT...2017a"
+
+[[references]]
+key = "SLGCZ...2017a"
+
+[[references]]
 key = "FFANW2018a"
+
+[[references]]
+key = "RSSFF...2018a"
+
+[[references]]
+key = "SHSAL...2018a"
 
 [[models]]
 id = "cooperative"
