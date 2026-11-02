@@ -751,15 +751,6 @@ registerHelpLink({
 });
 
 registerHelpLink({
-	id: 'pollis.action.openCodeOssVideoTutorials',
-	title: localize2('openCodeOssVideoTutorials', "Code - OSS Video Tutorials"),
-	mnemonicTitle: localize({ key: 'miCodeOssVideoTutorials', comment: ['&& denotes a mnemonic'] }, "&&Code - OSS"),
-	menu: MenubarHelpVideoTutorialsMenu,
-	order: 3,
-	url: 'https://code.visualstudio.com/docs/getstarted/introvideos'
-});
-
-registerHelpLink({
 	id: 'pollis.action.openJuliaVideoTutorials',
 	title: localize2('openJuliaVideoTutorials', "Julia Programming Language Video Tutorials"),
 	mnemonicTitle: localize({ key: 'miJuliaVideoTutorials', comment: ['&& denotes a mnemonic'] }, "&&Julia Programming Language"),
