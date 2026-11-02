@@ -37,6 +37,11 @@ bundled = true
 description = "Binary classification via differentiable cross-entropy / log-likelihood"
 
 [[wikis]]
+name = "Factsheet"
+file = "adlp/factsheet.md"
+bundled = true
+
+[[wikis]]
 name = "Overview"
 file = "adlp/overview.md"
 bundled = true
