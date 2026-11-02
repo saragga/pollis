@@ -26,6 +26,8 @@ export interface IToolboxPanelInfo {
 	readonly command: string;
 	/** Its menu item. */
 	readonly title: string;
+	/** The title of the submenu of the toolbox's menu it goes in, if any. */
+	readonly submenu?: string;
 	/** What it covers, in one line: its models' labels. */
 	readonly description?: string;
 	/** The keys of the works its References cite. */

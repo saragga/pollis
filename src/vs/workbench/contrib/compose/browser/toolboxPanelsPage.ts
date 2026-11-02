@@ -607,7 +607,7 @@ function pageHtml(): string {
 			for (const panel of toolbox.panels) {
 				const { on, place } = state.panels[panel.id];
 				if (on && place.menu === menuId) {
-					items.push({ kind: 'panel', id: panel.id, title: panel.title, group: place.group, order: place.order });
+					items.push({ kind: 'panel', id: panel.id, title: panel.title, group: place.group, order: place.order, note: menuId === TOOLBOX_MENU ? panel.submenu : undefined });
 				}
 			}
 			return items.sort(compare);
@@ -645,7 +645,7 @@ function pageHtml(): string {
 
 		const drawEntry = (entry, depth) => {
 			if (entry.kind === 'panel') {
-				row(depth, entry.title, { mine: true });
+				row(depth, entry.title, { mine: true, note: entry.note });
 			} else if (entry.kind === 'menu') {
 				const inMenu = itemsOf(TOOLBOX_MENU, []);
 				row(depth, toolbox.title, { fold: MENU_ITEM, mine: true, tag: TEXT.menuTag, note: inMenu.length ? '' : TEXT.empty });

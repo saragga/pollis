@@ -29209,31 +29209,6 @@
 			]
 		},
 		{
-			"id": "evtDiag",
-			"title": "Extreme Value Diagnostics",
-			"description": "Mean Excess · Hill Plot · QQ Plot",
-			"commands": [
-				"chiara.statistics.ev.diagnostics"
-			],
-			"keys": [
-				"JFGR2024a",
-				"BGST2004a"
-			]
-		},
-		{
-			"id": "evtRisk",
-			"title": "Extreme Value Risk Measures",
-			"description": "Return Levels · Peaks-Over-Threshold · Tail Risk",
-			"commands": [
-				"chiara.statistics.ev.riskMeasures"
-			],
-			"keys": [
-				"JFGR2024a",
-				"EKM1997a",
-				"MF2000a"
-			]
-		},
-		{
 			"id": "ffd",
 			"title": "Kenneth French Data Library",
 			"commands": [
@@ -29320,18 +29295,6 @@
 			]
 		},
 		{
-			"id": "gev",
-			"title": "Generalized Extreme Value Distribution",
-			"description": "Fit · Evaluate · Sample",
-			"commands": [
-				"chiara.statistics.ev.gev"
-			],
-			"keys": [
-				"JFGR2024a",
-				"Col2001a"
-			]
-		},
-		{
 			"id": "glm",
 			"title": "Generalized Linear Models",
 			"description": "Bernoulli · Binomial · Poisson · NegBin · Geometric · Gamma · InvGauss · Normal",
@@ -29372,18 +29335,6 @@
 				"HS1982a",
 				"Win2005a",
 				"Rub1981a"
-			]
-		},
-		{
-			"id": "gp",
-			"title": "Generalized Pareto Distribution",
-			"description": "Fit · Evaluate · Sample",
-			"commands": [
-				"chiara.statistics.ev.gp"
-			],
-			"keys": [
-				"JFGR2024a",
-				"Pic1975a"
 			]
 		},
 		{

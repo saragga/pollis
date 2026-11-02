@@ -39,12 +39,23 @@ interface IToolboxPanelContribution {
 	/** The menu group, which separators divide from the others. */
 	readonly group: string;
 	readonly order: number;
+	/** The id of the submenu of the toolbox's menu the panel is in. Default: straight in the toolbox's menu. */
+	readonly submenu?: string;
 	/** The panel's TOML, relative to the extension folder. */
 	readonly data: string;
 	/** The model toggle shown first. */
 	readonly defaultModel: string;
 	/** The first column header of the decision table. Default: "Plot". */
 	readonly decisionFirstColumn?: string;
+}
+
+/** A submenu of a toolbox's menu, which holds the panels that name it. */
+interface IToolboxSubmenuContribution {
+	readonly id: string;
+	readonly title: string;
+	/** The group in the toolbox's menu. */
+	readonly group: string;
+	readonly order: number;
 }
 
 /**
@@ -58,6 +69,8 @@ interface IToolboxContribution {
 	readonly inline?: boolean;
 	/** The order among the toolboxes at the end of Extend. */
 	readonly order?: number;
+	/** The submenus of its menu. */
+	readonly submenus?: IToolboxSubmenuContribution[];
 	readonly panels: IToolboxPanelContribution[];
 	/** Its vignettes, in Help > Documentation > Toolbox Vignettes. */
 	readonly documents?: IToolboxDocumentContribution[];
@@ -83,6 +96,20 @@ const toolboxesExtensionPoint = ExtensionsRegistry.registerExtensionPoint<IToolb
 				title: { type: 'string', description: localize('pollisToolboxes.title', "The toolbox's menu title.") },
 				inline: { type: 'boolean', description: localize('pollisToolboxes.inline', "Put the panels straight into Extend instead of into a submenu of their own.") },
 				order: { type: 'number', description: localize('pollisToolboxes.order', "The order among the toolboxes at the end of Extend.") },
+				submenus: {
+					type: 'array',
+					description: localize('pollisToolboxes.submenus', "The submenus of the toolbox's menu, which hold the panels that name them."),
+					items: {
+						type: 'object',
+						required: ['id', 'title', 'group', 'order'],
+						properties: {
+							id: { type: 'string', description: localize('pollisToolboxes.submenu.id', "The submenu's id, which its panels name.") },
+							title: { type: 'string', description: localize('pollisToolboxes.submenu.title', "The submenu's title.") },
+							group: { type: 'string', description: localize('pollisToolboxes.submenu.group', "The group in the toolbox menu.") },
+							order: { type: 'number', description: localize('pollisToolboxes.submenu.order', "The order in that group.") },
+						},
+					},
+				},
 				panels: {
 					type: 'array',
 					items: {
@@ -93,8 +120,9 @@ const toolboxesExtensionPoint = ExtensionsRegistry.registerExtensionPoint<IToolb
 							command: { type: 'string', description: localize('pollisToolboxes.panel.command', "The command that opens the panel.") },
 							title: { type: 'string', description: localize('pollisToolboxes.panel.title', "The panel's title.") },
 							menuTitle: { type: 'string', description: localize('pollisToolboxes.panel.menuTitle', "The panel's menu item. Default: its title.") },
-							group: { type: 'string', description: localize('pollisToolboxes.panel.group', "The group in the toolbox menu.") },
+							group: { type: 'string', description: localize('pollisToolboxes.panel.group', "The group in the toolbox menu, or in its submenu if it names one.") },
 							order: { type: 'number', description: localize('pollisToolboxes.panel.order', "The order in that group.") },
+							submenu: { type: 'string', description: localize('pollisToolboxes.panel.submenu', "The id of the submenu of the toolbox's menu the panel is in. Default: straight in the toolbox's menu.") },
 							data: { type: 'string', description: localize('pollisToolboxes.panel.data', "The panel's TOML, relative to the extension folder.") },
 							defaultModel: { type: 'string', description: localize('pollisToolboxes.panel.defaultModel', "The model toggle shown first.") },
 							decisionFirstColumn: { type: 'string', description: localize('pollisToolboxes.panel.decisionFirstColumn', "The first column header of the decision table.") },
@@ -220,6 +248,7 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 						id: contribution.id,
 						command: contribution.command,
 						title: contribution.menuTitle ?? contribution.title,
+						submenu: submenuOf(loaded.toolbox, contribution)?.title,
 						description: panel.data.models?.map(model => model.label).join(' \u00b7 ') || undefined,
 						keys: [...new Set(panel.data.references.flatMap(reference => (reference as IModelPaper).key ?? []))],
 					})),
@@ -256,6 +285,9 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 			for (const toolbox of extension.value) {
 				const panels: { contribution: IToolboxPanelContribution; panel: IScaffoldPanel }[] = [];
 				for (const contribution of toolbox.panels) {
+					if (contribution.submenu && !submenuOf(toolbox, contribution)) {
+						extension.collector.error(localize('pollisToolboxes.unknownSubmenu', "Panel {0} names the submenu {1}, which the toolbox does not have. It goes straight in the toolbox's menu.", contribution.id, contribution.submenu));
+					}
 					const toml = joinPath(location, contribution.data);
 					if (!isEqualOrParent(toml, location)) {
 						extension.collector.error(localize('pollisToolboxes.outside', "The data of panel {0} ({1}) must be inside the extension folder.", contribution.id, contribution.data));
@@ -320,13 +352,23 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 			const entry = published[publishedKey(loaded)];
 			// Until the user publishes it, a toolbox is in its default places: its menu at the end of Extend, with every panel
 			const placement = entry ? placementOf(loaded, entry) : defaultPlacement(loaded);
-			// MenuId.for: a built-in submenu (Extreme Value in Finance) may have created the toolbox's menu id already
 			const submenu = this.submenus.get(toolbox.id) ?? MenuId.for(`${TOOLBOX_SUBMENU_PREFIX}${toolbox.id}`);
 			this.submenus.set(toolbox.id, submenu);
 			if (placement.menu && loaded.panels.some(({ contribution }) => placement.panels[contribution.id]?.menu === TOOLBOX_MENU)) {
 				const { menu, group, order } = placement.menu;
 				append(MenuId.for(menu), { group, order, submenu, title: toolbox.title });
 			}
+			// The submenus of the toolbox's menu that have a panel in them, each added once
+			const nested = new Map<string, MenuId>();
+			const nestedMenu = ({ id, title, group, order }: IToolboxSubmenuContribution): MenuId => {
+				let menu = nested.get(id);
+				if (!menu) {
+					menu = MenuId.for(`${TOOLBOX_SUBMENU_PREFIX}${toolbox.id}.${id}`);
+					nested.set(id, menu);
+					append(submenu, { group, order, submenu: menu, title });
+				}
+				return menu;
+			};
 			for (const { contribution, panel } of loaded.panels) {
 				// The folders the panel's wikis and notebooks are in: its id, or another name (e.g. `game-theory`)
 				const folders = (entries: readonly (IModelWiki | IModelNotebook)[]) => new Set([contribution.id, ...entries.map(entry => hasKey(entry, { file: true }) ? entry.file.split('/')[0] : '').filter(folder => folder)]);
@@ -341,7 +383,8 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 				const command = { id: contribution.command, title: contribution.menuTitle ?? contribution.title };
 				if (place?.menu === TOOLBOX_MENU) {
 					if (placement.menu) {
-						append(submenu, { group: place.group, order: place.order, title: command.title, command });
+						const inSubmenu = submenuOf(toolbox, contribution);
+						append(inSubmenu ? nestedMenu(inSubmenu) : submenu, { group: place.group, order: place.order, title: command.title, command });
 					}
 				} else if (place) {
 					append(MenuId.for(place.menu), { group: place.group, order: place.order, title: command.title, command });
@@ -412,6 +455,11 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 
 function publishedKey(loaded: ILoadedToolbox): string {
 	return `${loaded.extensionId}/${loaded.toolbox.id}`;
+}
+
+/** The submenu of the toolbox's menu that a panel names, if the toolbox has it. */
+function submenuOf(toolbox: IToolboxContribution, contribution: IToolboxPanelContribution): IToolboxSubmenuContribution | undefined {
+	return toolbox.submenus?.find(submenu => submenu.id === contribution.submenu);
 }
 
 /**
