@@ -189,7 +189,7 @@ default = "y"
 id = "z"
 label = "Variance drivers (Z)"
 tooltip = "Matrix of the variables that drive the variance (n x q), without a column of ones. nothing uses the regressors X. For the power model the drivers must be non-zero."
-default = "nothing"
+default = "Z"
 
 [[inputs]]
 id = "method"
@@ -221,8 +221,8 @@ newRow = true
 [[inputs]]
 id = "znew"
 label = "New variance drivers"
-tooltip = "Variance-driver rows matching the new regressors. Leave as nothing when Z is nothing (the new regressor rows are used)."
-default = "nothing"
+tooltip = "Variance-driver rows matching the new regressors. The default reuses the last 5 rows of the drivers as a placeholder. nothing uses the new regressor rows, when the regressors drive the variance."
+default = "Zv[end-4:end, :]"
 
 [miniCharts]
 # SVG drawing functions for each model's mini-chart icon (54 x 86 box)
@@ -266,6 +266,13 @@ model = "exponential"
 code = '''
 using HARE, GLM
 
+{{?X=X}} {{?y=y}} using Random
+{{?X=X}} {{?y=y}} Random.seed!(1)  # simulated: 500 observations from a known variance model, so the estimates can be checked against the truth
+{{?X=X}} {{?y=y}} z = 1 .+ 9 .* rand(500)  # a size variable between 1 and 10
+{{?X=X}} {{?y=y}} Z = reshape(z, :, 1)  # the variance drivers (n x q)
+{{?X=X}} {{?y=y}} X = hcat(z .+ randn(500), randn(500))  # the regressors: the first moves with z, the second does not
+{{?X=X}} {{?y=y}} y = 1 .+ 2 .* X[:, 1] .- X[:, 2] .+ sqrt.(exp.(-1 .+ 0.4 .* z)) .* randn(500)  # true coefficients 1, 2, -1; true variance exp(-1 + 0.4 z). Replace X, y and Z with your own data.
+{{?y!=y}} {{?z=Z}} Z = nothing  # no drivers given: the regressors X drive the variance
 yv = Float64.({{y}})
 Xm = reshape(Float64.({{X}}), length(yv), :)  # regressors without a constant: HARE adds the intercept
 Zm = {{z}} === nothing ? nothing : reshape(Float64.({{z}}), length(yv), :)
@@ -281,6 +288,13 @@ model = "power"
 code = '''
 using HARE, GLM
 
+{{?X=X}} {{?y=y}} using Random
+{{?X=X}} {{?y=y}} Random.seed!(1)  # simulated: 500 observations from a known variance model, so the estimates can be checked against the truth
+{{?X=X}} {{?y=y}} z = 1 .+ 9 .* rand(500)  # a size variable between 1 and 10
+{{?X=X}} {{?y=y}} Z = reshape(z, :, 1)  # the variance drivers (n x q)
+{{?X=X}} {{?y=y}} X = hcat(z .+ randn(500), randn(500))  # the regressors: the first moves with z, the second does not
+{{?X=X}} {{?y=y}} y = 1 .+ 2 .* X[:, 1] .- X[:, 2] .+ sqrt.(exp(-1) .* z .^ 1.5) .* randn(500)  # true coefficients 1, 2, -1; true variance exp(-1) z^1.5. Replace X, y and Z with your own data.
+{{?y!=y}} {{?z=Z}} Z = nothing  # no drivers given: the regressors X drive the variance
 yv = Float64.({{y}})
 Xm = reshape(Float64.({{X}}), length(yv), :)  # regressors without a constant: HARE adds the intercept
 Zm = {{z}} === nothing ? nothing : reshape(Float64.({{z}}), length(yv), :)
@@ -296,6 +310,13 @@ model = "quadratic"
 code = '''
 using HARE, GLM
 
+{{?X=X}} {{?y=y}} using Random
+{{?X=X}} {{?y=y}} Random.seed!(1)  # simulated: 500 observations from a known variance model, so the estimates can be checked against the truth
+{{?X=X}} {{?y=y}} z = 1 .+ 9 .* rand(500)  # a size variable between 1 and 10
+{{?X=X}} {{?y=y}} Z = reshape(z, :, 1)  # the variance drivers (n x q)
+{{?X=X}} {{?y=y}} X = hcat(z .+ randn(500), randn(500))  # the regressors: the first moves with z, the second does not
+{{?X=X}} {{?y=y}} y = 1 .+ 2 .* X[:, 1] .- X[:, 2] .+ (0.2 .+ 0.4 .* z) .* randn(500)  # true coefficients 1, 2, -1; true standard deviation 0.2 + 0.4 z. Replace X, y and Z with your own data.
+{{?y!=y}} {{?z=Z}} Z = nothing  # no drivers given: the regressors X drive the variance
 yv = Float64.({{y}})
 Xm = reshape(Float64.({{X}}), length(yv), :)  # regressors without a constant: HARE adds the intercept
 Zm = {{z}} === nothing ? nothing : reshape(Float64.({{z}}), length(yv), :)
@@ -311,6 +332,13 @@ model = "linear"
 code = '''
 using HARE, GLM
 
+{{?X=X}} {{?y=y}} using Random
+{{?X=X}} {{?y=y}} Random.seed!(1)  # simulated: 500 observations from a known variance model, so the estimates can be checked against the truth
+{{?X=X}} {{?y=y}} z = 1 .+ 9 .* rand(500)  # a size variable between 1 and 10
+{{?X=X}} {{?y=y}} Z = reshape(z, :, 1)  # the variance drivers (n x q)
+{{?X=X}} {{?y=y}} X = hcat(z .+ randn(500), randn(500))  # the regressors: the first moves with z, the second does not
+{{?X=X}} {{?y=y}} y = 1 .+ 2 .* X[:, 1] .- X[:, 2] .+ sqrt.(0.5 .+ 1.5 .* z) .* randn(500)  # true coefficients 1, 2, -1; true variance 0.5 + 1.5 z. Replace X, y and Z with your own data.
+{{?y!=y}} {{?z=Z}} Z = nothing  # no drivers given: the regressors X drive the variance
 yv = Float64.({{y}})
 Xm = reshape(Float64.({{X}}), length(yv), :)  # regressors without a constant: HARE adds the intercept
 Zm = {{z}} === nothing ? nothing : reshape(Float64.({{z}}), length(yv), :)
