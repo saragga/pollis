@@ -433,8 +433,6 @@ export const NOD_LINEAR_REGRESSION_ID = 'chiara.statistics.nod.linearRegression'
 // Density Estimation
 
 // Extreme Value and Rare Events
-export const EV_RETURN_STATS_ID = 'chiara.statistics.ev.returnStats';
-export const EV_MEAN_EXCESS_ID = 'chiara.statistics.ev.meanExcess';
 
 // Dependence Modeling and Estimation
 export const COV_SIMPLE_ID = 'chiara.statistics.cov.simple';

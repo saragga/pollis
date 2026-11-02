@@ -36,11 +36,18 @@
 //   inline = false                         true: the entries go straight into Extend, no submenu
 //   order = 4                              optional, the order among the toolboxes at the end of Extend
 //
+//   [[menu.submenus]]                      optional: a submenu of this menu, which holds the entries that name it
+//   id = "ev"                              not with inline = true
+//   title = "Extreme Value"
+//   group = "4_ev"                         the group in this menu
+//   order = 1                              the order in that group
+//
 //   [[menu.items]]                         the entries, in the order wanted
 //   command = "chiara.statistics.lm"       the origin menu entry's command, or panel = "lm"
 //   title = "Linear Regression"            optional menu title, default: the origin's menu title
 //   group = "1_models"                     optional, default "1_panels"
 //   order = 1                              optional, default: the position in the list
+//   submenu = "ev"                         optional, the id of a [[menu.submenus]]: group and order then apply in it
 //
 //   [[menu.documents]]                     optional: the toolbox's documentation, in Help > Documentation > Toolboxes
 //   title = "Finance Toolbox Guide"
@@ -132,8 +139,20 @@ function main(): void {
 		if (!menu.id || !menu.title) {
 			fail('every [[menu]] needs an id and a title');
 		}
+		const submenus = menu.submenus ?? [];
+		if (submenus.length && menu.inline) {
+			fail(`the menu ${menu.id} is inline, so it cannot have [[menu.submenus]]`);
+		}
+		for (const submenu of submenus) {
+			if (!submenu.id || !submenu.title || !submenu.group || submenu.order === undefined) {
+				fail(`every [[menu.submenus]] of ${menu.id} needs an id, a title, a group and an order`);
+			}
+		}
 		const panels = [];
 		for (const [index, item] of (menu.items ?? []).entries()) {
+			if (item.submenu && !submenus.some(submenu => submenu.id === item.submenu)) {
+				fail(`an item of ${menu.id} names the submenu ${item.submenu}, which is not in its [[menu.submenus]]`);
+			}
 			let panel: ResolvedPanel;
 			try {
 				panel = pollis.resolve(item);
@@ -177,6 +196,7 @@ function main(): void {
 				command: mode === 'move' ? panel.command : `pollis.${name}.${panel.id}`,
 				title: panel.title,
 				...(panel.menuTitle ? { menuTitle: panel.menuTitle } : {}),
+				...(item.submenu ? { submenu: item.submenu } : {}),
 				group: item.group ?? '1_panels',
 				order: item.order ?? index + 1,
 				data: `panels/${id}.toml`,
@@ -219,6 +239,7 @@ function main(): void {
 			title: menu.title,
 			...(menu.inline ? { inline: true } : {}),
 			...(menu.order !== undefined ? { order: menu.order } : {}),
+			...(submenus.length ? { submenus } : {}),
 			panels,
 			...(documents.length ? { documents } : {}),
 		});

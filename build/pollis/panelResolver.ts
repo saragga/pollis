@@ -34,6 +34,8 @@ export interface SpecItem {
 	readonly title?: string;
 	readonly group?: string;
 	readonly order?: number;
+	/** The id of the submenu of the destination menu it goes in. */
+	readonly submenu?: string;
 }
 
 /** A destination menu of the spec. */
@@ -42,6 +44,8 @@ export interface SpecMenu {
 	readonly title: string;
 	readonly inline?: boolean;
 	readonly order?: number;
+	/** Its submenus, which hold the entries that name them. */
+	readonly submenus?: { readonly id: string; readonly title: string; readonly group: string; readonly order: number }[];
 	readonly items: SpecItem[];
 	/** The toolbox's documentation: LaTeX sources, the main file relative to the spec. */
 	readonly documents?: { readonly title: string; readonly description?: string; readonly source: string }[];
