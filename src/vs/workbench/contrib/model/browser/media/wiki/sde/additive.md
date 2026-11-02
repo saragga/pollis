@@ -22,7 +22,7 @@ Since g is constant, the Milstein correction is zero, and EM in fact reaches str
 
 ## Where Additive Noise Modelling Is Strong
 
-Additive noise fits disturbances whose size has nothing to do with the state: outside forcing and measurement-like shocks. Results are easy to check, as the linear case is fully known. Itô and Stratonovich give one equation here, so no choice of calculus is involved. Solver cost is low too, as there is no derivative of g to approximate.
+Additive noise fits disturbances whose size has nothing to do with the state: outside forcing and measurement-like shocks. Results are easy to check, as the linear case is fully known. Itô and Stratonovich give one equation here, so no choice of calculus is involved. Solver cost is low too, as there is no derivative of g to approximate. That makes it a sound first model to try.
 
 ## Where Additive Noise Modelling Misleads
 

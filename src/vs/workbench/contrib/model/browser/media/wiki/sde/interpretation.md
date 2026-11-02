@@ -12,7 +12,7 @@ The object `sol` from the main code holds one draw of the random path, with time
 
 ## Why the Mean and the Typical Path Differ Under Multiplicative Noise
 
-For f = a X and g = b X in the Itô sense, E[X(t)] = X0 exp(a t), while the median is X0 exp((a - b^2/2) t). With a below b^2/2, the mean can grow while almost every path decays to zero. The mean is carried by rare, very large paths, so sample means from a few paths tend to undershoot it at long horizons. A common misreading treats the mean curve from **Mean and Variance** as the path to expect.
+For f = a X and g = b X in the Itô sense, E[X(t)] = X0 exp(a t), while the median is X0 exp((a - b^2/2) t). With a less than b^2/2, the mean can grow while almost every path decays to zero. The mean is carried by rare, very large paths, so sample means from a few paths tend to undershoot it at long horizons. A common misreading treats the mean curve from **Mean and Variance** as the path to expect.
 
 ## How to Read Strong and Weak Order in the Solver Menu
 
