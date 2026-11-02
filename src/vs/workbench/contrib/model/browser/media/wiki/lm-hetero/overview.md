@@ -8,7 +8,7 @@ Under heteroskedasticity, with exogenous regressors, OLS coefficients stay unbia
 
 ## How Feasible Weighted Least Squares Estimates a Variance Model
 
-Feasible weighted least squares has three steps. OLS gives residuals e_i. A regression of some function of e_i on the drivers gives gamma and thus fitted variances. Least squares with weights 1/sigma_i² then gives beta. **Two-step FWLS** stops there. **Iterated FWLS** recomputes residuals from the weighted fit and repeats. **Maximum likelihood** instead maximises the normal likelihood over beta and gamma together with L-BFGS, starting from the FWLS answer, or for **Linear** from a constant variance.
+Feasible weighted least squares has three steps. OLS gives residuals e_i. A regression of some function of e_i on the drivers gives gamma and thus fitted variances. Least squares with weights 1/sigma_i² then gives beta. **Two-step FWLS** stops there. **Iterated FWLS** recomputes residuals from the weighted fit and repeats. **Maximum likelihood** instead maximises the normal likelihood over beta and gamma together with L-BFGS, starting from the OLS coefficients and the auxiliary regression on their residuals, or for **Linear** from a constant variance.
 
 ## How the Exponential and Power Tabs Model the Variance
 

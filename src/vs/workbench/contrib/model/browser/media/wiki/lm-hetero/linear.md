@@ -12,7 +12,7 @@ The form is sigma_i² = gamma_0 + z_i' gamma. The FWLS step is one regression:
 
 e_i² = gamma_0 + z_i' gamma + error
 
-Fitted values are clipped at 1e-10, and weights are their inverses. Under **Maximum likelihood**, the search starts from a constant variance with `Fminbox`, gamma_0 has a lower bound of 1e-8, the other gamma are free, and the variance is clipped at 1e-10. The standard errors fall back on a pseudo-inverse if the information matrix cannot be inverted.
+Fitted values are clipped at 1e-10, and weights are their inverses. Under **Maximum likelihood**, the search starts from a constant variance with `Fminbox`, gamma_0 has a lower bound of 1e-8, the other gamma are free, and the variance is clipped at 1e-10. The standard errors fall back on a pseudo-inverse if the inverted information matrix has a non-positive diagonal entry.
 
 ## Which Inputs the Linear Tab Uses
 

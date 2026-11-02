@@ -7,7 +7,7 @@
 | Item | Detail |
 |---|---|
 | Purpose | Estimate a mean equation by weighting, together with an equation for the error variance |
-| Julia stack | `HARE.jl` for estimators and tests, `GLM.jl` for least squares, `HypothesisTests.jl`, `Distributions.jl`, `StatsBase.jl` and `Plots.jl` for the Next Steps |
+| Julia stack | `HARE.jl` for estimators and tests, `GLM.jl` for least squares, `HypothesisTests.jl`, `Distributions.jl` and `Plots.jl` for the Next Steps |
 | Model | y_i = x_i' beta + u_i, with independent errors of variance sigma_i² that depends on z_i |
 | Input shape | **Regressors (X)** is n x k and **Variance drivers (Z)** is n x q, both without a column of ones; **Response (y)** has length n |
 | Default drivers | `nothing`, which uses X as the drivers |
@@ -20,7 +20,7 @@
 |---|---|---|---|
 | **Exponential** | sigma_i² = exp(gamma_0 + z_i' gamma) | log(e²) + 1.2704 on z | Positive by construction |
 | **Power** | sigma_i² = exp(gamma_0) × product of abs(z_ij)^gamma_j | log(e²) + 1.2704 on log abs(z) | abs(z) clipped at 1e-10 |
-| **Quadratic** | sigma_i = gamma_0 + z_i' gamma, so the variance is its square | abs(e) on z, scaled by sqrt(pi/2) | sigma_i clipped at 1e-8 |
+| **Quadratic** | sigma_i = gamma_0 + z_i' gamma, so the variance is its square | abs(e) on z, scaled by sqrt(pi/2) | sigma_i clipped at 1e-8, or 1e-10 under **Maximum likelihood** |
 | **Linear** | sigma_i² = gamma_0 + z_i' gamma | e² on z | sigma_i² clipped at 1e-10 |
 
 ## How the Estimation Options of the Heteroskedasticity Panel Differ

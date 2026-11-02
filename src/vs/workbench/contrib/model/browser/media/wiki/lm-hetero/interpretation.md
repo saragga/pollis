@@ -8,7 +8,7 @@ The panel reports two equations, one for the mean of y and one for its spread. E
 
 ## Why FWLS Standard Errors Change with the Units of y
 
-The **std_error**, **t**, **p** and interval columns under **Two-step FWLS** and **Iterated FWLS**, and **weighted_se** in **Compare with OLS**, use the frequency-weight degrees of freedom of `GLM.jl`. With sum(w) well under n, as when y has large units, they are too large. With sum(w) well over n, they are too small. Coefficients are unaffected. For standard errors that do not change with units, use **Maximum likelihood**, or run `using LinearAlgebra; X1 = hcat(ones(length(yv)), Xm); sqrt.(diag(inv(X1' * (X1 ./ variance(Zv)))))`.
+**std_error** under **Two-step FWLS** and **Iterated FWLS**, and **weighted_se** in **Compare with OLS**, use the frequency-weight degrees of freedom of `GLM.jl`, and **t**, **p** and the interval columns inherit the error through **std_error**. With sum(w) well under n, as when y has large units, the standard errors are too large. With sum(w) well over n, they are too small. Coefficients are unaffected. For standard errors that do not change with units, use **Maximum likelihood**, or run `using LinearAlgebra; X1 = hcat(ones(length(yv)), Xm); sqrt.(diag(inv(X1' * (X1 ./ variance(Zv)))))`.
 
 ## How to Read the Variance Equation in Each Tab
 
@@ -31,7 +31,7 @@ Under FWLS the standard errors of gamma come from classical least squares on the
 
 ## How to Read Predictions at New Values
 
-**Predict at New Values** gives **prediction**, **sd**, **lower95** and **upper95** for each row of **New regressors**. **sd** is the fitted error standard deviation at the new drivers, and the interval is 1.96 times that around the prediction. Uncertainty in beta and gamma is ignored, so intervals are too narrow, most of all far from the data. When **Variance drivers (Z)** was set, supply **New variance drivers**, because leaving it as `nothing` evaluates the variance at the new regressors instead.
+**Predict at New Values** gives **prediction**, **sd**, **lower95** and **upper95** for each row of **New regressors**. **sd** is the fitted error standard deviation at the new drivers, and the interval is 1.96 times that around the prediction. Uncertainty in beta and gamma is ignored, so intervals are too narrow, most of all far from the data. When **Variance drivers (Z)** was set, supply **New variance drivers**, because leaving it as `nothing` evaluates the variance at the new regressors instead, or stops on a size mismatch if Z and X have different numbers of columns.
 
 ## References
 
