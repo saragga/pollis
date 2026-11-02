@@ -12,7 +12,7 @@ All four tabs assume that one lag carries the whole dependence. Under AR(2), mov
 
 ## Why AR(1) Estimators Assume Stationary Errors
 
-The model needs the absolute value of rho to be less than one. A nearly non-stationary series gives a rho close to one and may indicate a spurious regression between trending variables, a case the correction does not cure. Behaviour at the limit differs by tab. The Prais-Winsten tabs stop with a `DomainError` when the moment estimate reaches one in absolute value, since sqrt(1 − rho²) then has no real value. **Hildreth-Lu** and **Beach-MacKinnon** return a value near the edge of their search range. Treat such a value as a warning, and consider differencing or testing the series for a unit root outside the panel.
+The model needs the absolute value of rho to be less than one. A nearly non-stationary series gives a rho close to one and may indicate a spurious regression between trending variables, a case the correction does not cure. Behaviour at the limit differs by tab. The Prais-Winsten tabs stop with a `DomainError` when the moment estimate passes one in absolute value, since sqrt(1 − rho²) then has no real value. **Hildreth-Lu** and **Beach-MacKinnon** return a value near the edge of their search range. Treat such a value as a warning, and consider differencing or testing the series for a unit root outside the panel.
 
 ## What Happens Under Non-Constant Innovation Variance in AR(1) Regression
 

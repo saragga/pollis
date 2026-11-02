@@ -17,7 +17,7 @@ Rho itself comes from residuals e_t as rho = sum e_t e_(t−1) / sum e_(t−1)²
 
 ## Which Inputs the Prais-Winsten Tabs Use
 
-**Prais-Winsten (2-Step)** calls `two_step_prais_winsten(Xm, yv)` and **Prais-Winsten (Iterated)** calls `iterated_prais_winsten(Xm, yv)`. Both read **Regressors (X)** without a column of ones, and **Response (y)**, in time order. The panel exposes no tuning option. In the iterated form, the package stops when rho changes by less than 1e-8, with at most 100 passes, and the printed result shows the number of iterations and whether it converged. The two-step form always reports converged, because it has nothing to converge.
+**Prais-Winsten (2-Step)** calls `two_step_prais_winsten(Xm, yv)` and **Prais-Winsten (Iterated)** calls `iterated_prais_winsten(Xm, yv)`. Both read **Regressors (X)** without a column of ones, and **Response (y)**, in time order. The panel exposes no tuning option. In the iterated form, the package stops when rho changes by less than 1e-8, with at most 100 passes, and the printed result shows the number of iterations and whether it converged. The two-step form prints no such line, and its `converged` field is always true, because it has nothing to converge.
 
 ## Where the Prais-Winsten Estimator Is Strong
 
@@ -25,7 +25,7 @@ The estimator keeps every period, which matters in short samples and with trende
 
 ## Where the Prais-Winsten Estimator Misleads
 
-Its standard errors treat rho as known, so they understate uncertainty when rho is imprecise. The moment formula has no bounds: a value at or beyond one in absolute value produces a `DomainError`, as the first-row factor then has no real value. In short samples the moment estimate tends to lean towards zero, leaving part of the autocorrelation uncorrected. Iterating does not turn the method into maximum likelihood, as the moment formula omits the first-observation term of the likelihood. With a lagged dependent variable among the regressors, rho and beta are both inconsistent.
+Its standard errors treat rho as known, so they understate uncertainty when rho is imprecise. The moment formula has no bounds: a value beyond one in absolute value produces a `DomainError`, as the first-row factor then has no real value. In short samples the moment estimate tends to lean towards zero, leaving part of the autocorrelation uncorrected. Iterating does not turn the method into maximum likelihood, as the moment formula omits the first-observation term of the likelihood. With a lagged dependent variable among the regressors, rho and beta are both inconsistent.
 
 ## What to Compare the Prais-Winsten Estimator With
 

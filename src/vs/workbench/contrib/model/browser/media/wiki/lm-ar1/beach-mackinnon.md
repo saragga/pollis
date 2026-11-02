@@ -20,7 +20,7 @@ S(rho) is the residual sum of squares of least squares on the Prais-Winsten tran
 
 ## Where the Beach-MacKinnon Estimator Is Strong
 
-Under normal errors the estimator uses all the information in the sample and imposes stationarity, so rho cannot leave the valid range. It returned a usable rho in the case where the moment formula of the Prais-Winsten tabs fails, namely at the edge of stationarity. The objective has one parameter, so the search is quick. The likelihood value allows comparisons between fits to the same y, such as those required for a likelihood-ratio test of nested regressor sets.
+Under normal errors the estimator uses all the information in the sample and imposes stationarity, so rho cannot leave the valid range. It returns a usable rho in the case where the moment formula of the Prais-Winsten tabs fails, namely when that formula passes one in absolute value. The objective has one parameter, so the search is quick. The likelihood value allows comparisons between fits to the same y, such as those required for a likelihood-ratio test of nested regressor sets.
 
 ## Where the Beach-MacKinnon Estimator Misleads
 

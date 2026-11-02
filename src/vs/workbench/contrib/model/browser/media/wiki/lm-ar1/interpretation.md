@@ -12,7 +12,7 @@ The outputs of the panel mix two scales: coefficients that apply to the original
 
 ## How to Read Half-Life and Effective Sample Size for AR(1) Errors
 
-**half_life** equals log(0.5)/log(rho) when rho is positive, and `NaN` otherwise. It gives the number of periods for a shock in the error to fall by half. **effective_sample_size** equals n(1 − rho)/(1 + rho). That formula comes from the variance of the mean of an AR(1) series. For regression slopes it is only a rough guide, because their precision also depends on how the regressors move over time. It is not the number of observations used in the fit.
+**half_life_periods** equals log(0.5)/log(rho) when rho is positive, and `NaN` otherwise. It gives the number of periods for a shock in the error to fall by half. **effective_sample_size** equals n(1 − rho)/(1 + rho). That formula comes from the variance of the mean of an AR(1) series. For regression slopes it is only a rough guide, because their precision also depends on how the regressors move over time. It is not the number of observations used in the fit.
 
 ## How to Read Compare with OLS for an AR(1) Regression
 

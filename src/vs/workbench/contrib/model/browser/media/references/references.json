@@ -9080,6 +9080,24 @@
 			"open_access": false
 		},
 		{
+			"key": "HL1960a",
+			"type": "techreport",
+			"title": "Demand Relations with Autocorrelated Disturbances",
+			"authors": [
+				"Hildreth, Clifford",
+				"Lu, John Y."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1960,
+			"institution": "Michigan State University Agricultural Experiment Station",
+			"report_number": "Technical Bulletin 276",
+			"openalex": "W2237470443",
+			"source": "manual",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "HL1993a",
 			"type": "book",
 			"title": "Convex Analysis and Minimization Algorithms I",
@@ -24936,6 +24954,12 @@
 			"count": 1277,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "HL1960a",
+			"count": 166,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "HL1993a",

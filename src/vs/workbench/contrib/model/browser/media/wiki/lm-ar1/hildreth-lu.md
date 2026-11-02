@@ -4,7 +4,7 @@ The Hildreth-Lu tab estimates rho by trying a fixed list of values. It keeps the
 
 ## What the Hildreth-Lu Estimator Computes
 
-For each candidate rho, Hildreth-Lu quasi-differences y and X, fits least squares and records the residual sum of squares. The value of rho with the smallest sum and the coefficients from that regression form the estimate. The method needs no starting value and no iteration, and its objective is the same as that of a Cochrane-Orcutt iteration: the conditional sum of squares, without the first observation. The code does not refine the answer between grid points. It also computes no likelihood, so `result.loglik` is `NaN` for this tab.
+The method comes from [Hildreth and Lu (1960)](#ref-HL1960a). For each candidate rho, Hildreth-Lu quasi-differences y and X, fits least squares and records the residual sum of squares. The value of rho with the smallest sum and the coefficients from that regression form the estimate. The method needs no starting value and no iteration, and its objective is the same as that of a Cochrane-Orcutt iteration: the conditional sum of squares, without the first observation. The code does not refine the answer between grid points. It also computes no likelihood, so `result.loglik` is `NaN` for this tab.
 
 ## What Formula the Hildreth-Lu Search Uses
 
@@ -19,7 +19,7 @@ Standard errors are those of the final regression, on T − 1 rows.
 
 ## Which Inputs the Hildreth-Lu Tab Uses
 
-**Hildreth-Lu** calls `hildreth_lu(Xm, yv)` with **Regressors (X)**, without a column of ones, and **Response (y)**. Neither the grid nor its size is a panel input. The package has a keyword `nrho` for the number of points, which a user can pass by editing the generated code. The printed result reports 200 iterations, which counts grid points, and always reports convergence. Neither figure is evidence that the search found a good optimum.
+**Hildreth-Lu** calls `hildreth_lu(Xm, yv)` with **Regressors (X)**, without a column of ones, and **Response (y)**. Neither the grid nor its size is a panel input. The package has a keyword `nrho` for the number of points, which a user can pass by editing the generated code. The printed result reports 200 grid points, and the `converged` field is always true. Neither figure is evidence that the search found a good optimum.
 
 ## Where the Hildreth-Lu Estimator Is Strong
 
@@ -36,6 +36,8 @@ The closest relative is **Cochrane-Orcutt (iterated)** in **All AR(1) Estimators
 ## References
 
 <a id="ref-DGL1980a"></a>Dufour, J.-M., Gaudry, M. J. I. and Liem, T. C. (1980). The Cochrane-Orcutt procedure: numerical examples of multiple admissible minima. *Economics Letters* 6(1), 43–48. [doi:10.1016/0165-1765(80)90055-5](https://doi.org/10.1016/0165-1765(80)90055-5)
+
+<a id="ref-HL1960a"></a>Hildreth, C. and Lu, J. Y. (1960). Demand relations with autocorrelated disturbances. Technical Bulletin 276, Michigan State University Agricultural Experiment Station.
 
 ## See Also
 

@@ -10,7 +10,7 @@ The four tabs usually give close answers in long samples with moderate rho. The 
 | Short sample or an imprecise first-stage rho | **Prais-Winsten (Iterated)** | Rho and the coefficients are updated until rho settles |
 | Fear of a local optimum in the iteration | **Hildreth-Lu** | Fixed grid over rho, with a resolution of about 0.01 and without the first observation |
 | Rho high or a likelihood value wanted | **Beach-MacKinnon** | Exact likelihood under normal errors, which holds rho inside the interval |
-| Moment estimate of rho at or beyond one | **Beach-MacKinnon** or **Hildreth-Lu**, after reviewing the specification | The Prais-Winsten tabs stop with an error in that case |
+| Moment estimate of rho beyond one | **Beach-MacKinnon** or **Hildreth-Lu**, after reviewing the specification | The Prais-Winsten tabs stop with an error in that case |
 
 ## Whether a Regression Needs an AR(1) Correction at All
 

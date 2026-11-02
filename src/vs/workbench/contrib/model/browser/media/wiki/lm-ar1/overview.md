@@ -16,7 +16,7 @@ Subtracting rho times last period's equation from this period's equation gives y
 
 ## How the Hildreth-Lu Tab Searches for Rho
 
-**Hildreth-Lu** avoids iteration altogether. For each of 200 equally spaced values of rho from −0.99 to 0.99, the tab quasi-differences the data, drops the first observation and records the residual sum of squares. The value with the smallest sum is kept. A fixed grid cannot be trapped by a local minimum between its points, a hazard that [Dufour, Gaudry and Liem (1980)](#ref-DGL1980a) documented for the Cochrane-Orcutt iteration. The answer can sit only on a grid point, about 0.01 apart.
+**Hildreth-Lu**, from [Hildreth and Lu (1960)](#ref-HL1960a), avoids iteration altogether. For each of 200 equally spaced values of rho from −0.99 to 0.99, the tab quasi-differences the data, drops the first observation and records the residual sum of squares. The value with the smallest sum is kept. A fixed grid cannot be trapped by a local minimum between its points, a hazard that [Dufour, Gaudry and Liem (1980)](#ref-DGL1980a) documented for the Cochrane-Orcutt iteration. The answer can sit only on a grid point, about 0.01 apart.
 
 ## How the Beach-MacKinnon Tab Uses the Likelihood
 
@@ -37,6 +37,8 @@ Subtracting rho times last period's equation from this period's equation gives y
 <a id="ref-CO1949a"></a>Cochrane, D. and Orcutt, G. H. (1949). Application of least squares regression to relationships containing auto-correlated error terms. *Journal of the American Statistical Association* 44(245), 32–61. [doi:10.1080/01621459.1949.10483290](https://doi.org/10.1080/01621459.1949.10483290)
 
 <a id="ref-DGL1980a"></a>Dufour, J.-M., Gaudry, M. J. I. and Liem, T. C. (1980). The Cochrane-Orcutt procedure: numerical examples of multiple admissible minima. *Economics Letters* 6(1), 43–48. [doi:10.1016/0165-1765(80)90055-5](https://doi.org/10.1016/0165-1765(80)90055-5)
+
+<a id="ref-HL1960a"></a>Hildreth, C. and Lu, J. Y. (1960). Demand relations with autocorrelated disturbances. Technical Bulletin 276, Michigan State University Agricultural Experiment Station.
 
 <a id="ref-PM1980a"></a>Park, R. E. and Mitchell, B. M. (1980). Estimating the autocorrelated error model with trended data. *Journal of Econometrics* 13(2), 185–201. [doi:10.1016/0304-4076(80)90014-7](https://doi.org/10.1016/0304-4076(80)90014-7)
 

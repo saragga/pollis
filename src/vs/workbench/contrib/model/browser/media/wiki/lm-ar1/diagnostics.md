@@ -4,7 +4,7 @@ Some checks here run before the correction and ask whether one is needed. Others
 
 ## How to Test for Serial Correlation Before Correcting a Regression
 
-**Serial Correlation Tests** works on OLS residuals. The statistic of [Durbin and Watson (1950)](#ref-DW1950a) is close to 2 under no autocorrelation, and `HARE.jl` gives a two-sided p-value, by an exact algorithm under 100 observations and a normal approximation from there on. The tests of [Breusch (1978)](#ref-Bre1978a) and [Godfrey (1978)](#ref-God1978a) are reported at lags 1 and 4. Small p-values support a correction. The **reading** column reports only which side of 2 the statistic lies on, and prints a direction even when **dw_p** is large, so read the p-value first. Use the Breusch-Godfrey columns when X includes lagged y, as Durbin-Watson is not valid then.
+**Serial Correlation Tests** works on OLS residuals. The statistic of [Durbin and Watson (1950)](#ref-DW1950a) is close to 2 under no autocorrelation, and `HypothesisTests.jl` gives a two-sided p-value, by an exact algorithm up to 100 observations and a normal approximation above that. The tests of [Breusch (1978)](#ref-Bre1978a) and [Godfrey (1978)](#ref-God1978a) are reported at lags 1 and 4. Small p-values support a correction. The **reading** column reports only which side of 2 the statistic lies on, and prints a direction even when **dw_p** is large, so read the p-value first. Use the Breusch-Godfrey columns when X includes lagged y, as Durbin-Watson is not valid then.
 
 ## How to Read the Correlograms of an AR(1) Regression
 
@@ -24,7 +24,7 @@ Some checks here run before the correction and ask whether one is needed. Others
 
 ## How to Test Sensitivity to the Choice of AR(1) Estimator
 
-**All AR(1) Estimators** fits six estimators on the same data: both forms of Prais-Winsten and of Cochrane-Orcutt, **Hildreth-Lu** and **Beach-MacKinnon**. Close values of rho and coefficients show that the answer does not hinge on the method. A gap between the Prais-Winsten and Cochrane-Orcutt lines suggests that the first observation has leverage, which is common with trended regressors. A gap between iterated and two-step lines suggests a first-stage rho that is imprecise. This Next Step includes the Prais-Winsten fits, so it stops with a `DomainError` if their moment estimate of rho reaches one in absolute value.
+**All AR(1) Estimators** fits six estimators on the same data: both forms of Prais-Winsten and of Cochrane-Orcutt, **Hildreth-Lu** and **Beach-MacKinnon**. Close values of rho and coefficients show that the answer does not hinge on the method. A gap between the Prais-Winsten and Cochrane-Orcutt lines suggests that the first observation has leverage, which is common with trended regressors. A gap between iterated and two-step lines suggests a first-stage rho that is imprecise. This Next Step includes the Prais-Winsten fits, so it stops with a `DomainError` if their moment estimate of rho passes one in absolute value.
 
 ## References
 
