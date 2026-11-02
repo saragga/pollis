@@ -114,17 +114,38 @@ key = "SL2009b"
 key = "Koc2015a"
 
 [[references]]
+key = "FV1997a"
+
+[[references]]
 separator = true
 label = "Original Papers"
+
+[[references]]
+key = "Neu1928a"
+
+[[references]]
+key = "Nas1951a"
 
 [[references]]
 key = "Sha1953a"
 
 [[references]]
+key = "Lit1994a"
+
+[[references]]
 key = "BGIZ2002a"
 
 [[references]]
+key = "NTYPM2003a"
+
+[[references]]
+key = "SCZ2005a"
+
+[[references]]
 key = "OSV2008a"
+
+[[references]]
+key = "SZ2008a"
 
 [[models]]
 id = "dec"
@@ -517,12 +538,12 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "zerosum-vs-general"
 label = "Local vs Global / Pure vs Mixed"
-desc = "Dec-POMDP: JESP against exhaustive search over all joint policies (horizon 2 at most). Stochastic game: pure-strategy security levels against the mixed value"
+desc = "Dec-POMDP: JESP against the true optimum, from every tree of agent 1 with agent 2's exact best response (horizon 3 at most). Stochastic game: pure-strategy security levels against the mixed value"
 code = '''
-{{?model=dec}}H = min(T, 2)
-{{?model=dec}}pols = [collect(p) for p in Iterators.product(fill(1:NA, nodes(H))...)]
-{{?model=dec}}(horizon = H, exhaustive_optimum = maximum(evaluate(p1, p2; H) for p1 in pols, p2 in pols),
-{{?model=dec}} jesp_best = maximum(jesp(k; H).value for k in 1:restarts), joint_policies_enumerated = length(pols)^2)
+{{?model=dec}}H = min(T, 3)
+{{?model=dec}}pols = [collect(p) for p in Iterators.product(fill(1:NA, nodes(H))...)]  # every tree of agent 1
+{{?model=dec}}(horizon = H, exhaustive_optimum = maximum(best_response(2, p1; H).value for p1 in pols),
+{{?model=dec}} jesp_best = maximum(jesp(k; H).value for k in 1:restarts), trees_enumerated = length(pols))
 {{?model=sg}}map(1:S) do s
 {{?model=sg}}    G = stage(s, sh.V)
 {{?model=sg}}    (state = s, pure_maximin = maximum(minimum(G, dims=2)), mixed_value = eqs[s].value, pure_minimax = minimum(maximum(G, dims=1)))

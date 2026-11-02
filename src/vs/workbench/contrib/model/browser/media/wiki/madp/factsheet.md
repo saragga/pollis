@@ -63,7 +63,7 @@ Listening leaves the tiger in place, and any door opening puts it back behind ei
 
 | Group | Action | **Dec-POMDP** output | **Stochastic Games** output |
 |---|---|---|---|
-| Compare | **Local vs Global / Pure vs Mixed** | `exhaustive_optimum` against `jesp_best`, horizon 2 at most | `pure_maximin`, `mixed_value`, `pure_minimax` per state |
+| Compare | **Local vs Global / Pure vs Mixed** | `exhaustive_optimum` against `jesp_best`, horizon 3 at most | `pure_maximin`, `mixed_value`, `pure_minimax` per state |
 | Compare | **Against Baselines** | `always_listen`, `listen_then_open`, `random_trees` | `equilibrium_player1` against `myopic_player1` |
 | Interpret | **Policy / Mixed Strategy** | Each agent's action after each history | Value and both strategies per state |
 | Interpret | **Outcome Decomposition** | Listens, tiger meetings and safe doors per episode | `immediate_payoff` and `continuation` per state |

@@ -48,7 +48,7 @@ Generated games are useful for seeing how the method scales and for checking the
 
 When the two payoffs do not sum to zero, each player has its own reward and the matrix-game value no longer describes both. [John Nash (1951)](#ref-Nas1951a) showed that finite games always have an equilibrium in mixed strategies, and discounted stochastic games with finite states and actions also have stationary equilibria.
 
-Computing one is harder, as no single-value linear programme applies, equilibria can be many, and a stage-by-stage update need not converge. Linear programming stays available for correlated equilibria of a stage game. The tab does not implement any of this. See the notebook **Stochastic Game: General-Sum**, and [Jerzy Filar and Koos Vrieze (1997)](#ref-FV1997a) for a full treatment.
+Computing one is harder, as no single-value linear programme applies, equilibria can be many, and a stage-by-stage update need not converge. Linear programming stays available for correlated equilibria of a stage game. The tab does not implement any of this. A full treatment is in [Jerzy Filar and Koos Vrieze (1997)](#ref-FV1997a).
 
 ## Learning a stochastic game from play
 

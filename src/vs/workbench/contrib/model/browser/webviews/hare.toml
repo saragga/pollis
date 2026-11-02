@@ -18,7 +18,7 @@ description = "Overview of Julia for academic and scientific computing"
 url = "https://www.youtube.com/watch?v=wPFPT-Ech2c"
 
 [requires]
-packages = ["GLM.jl", "Plots.jl", "StatsBase.jl", "HypothesisTests.jl", "Distributions.jl"]
+packages = ["GLM.jl", "Plots.jl", "StatsBase.jl", "HypothesisTests.jl"]
 
 [[notebookSections]]
 label = ""
@@ -472,16 +472,14 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "variance-equation"
 label = "Variance Equation"
-desc = "The variance parameters with standard errors and what each one means for the spread of y"
+desc = "What each variance parameter means for the spread of y; their standard errors and p-values are in the printed result"
 code = '''
-using Distributions
 names = ["intercept"; ["z$j" for j in 1:size(Zv, 2)]]
-se = sqrt.(max.(diag(result.gamma_vcov), 0))
 {{?model=exponential}} meaning(j, g) = j == 1 ? "log of the baseline variance" : "each unit of z$(j-1) multiplies the variance by $(round(exp(g), digits=3))"
 {{?model=power}} meaning(j, g) = j == 1 ? "log of the baseline variance" : "elasticity: a 1% rise in |z$(j-1)| raises the variance by $(round(g, digits=3))%"
 {{?model=quadratic}} meaning(j, g) = j == 1 ? "baseline standard deviation" : "each unit of z$(j-1) adds $(round(g, digits=4)) to the standard deviation"
 {{?model=linear}} meaning(j, g) = j == 1 ? "baseline variance" : "each unit of z$(j-1) adds $(round(g, digits=4)) to the variance"
-[(parameter = names[j], estimate = round(g, digits=4), std_error = round(se[j], digits=4), p = round(2ccdf(Normal(), abs(g / se[j])), digits=4), meaning = meaning(j, g))
+[(parameter = names[j], estimate = round(g, digits=4), meaning = meaning(j, g))
  for (j, g) in enumerate(result.gamma)]
 '''
 

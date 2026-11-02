@@ -6,13 +6,13 @@ The panel reports two equations, one for the mean of y and one for its spread. E
 
 **Coefficients** lists **estimate**, **std_error**, **t**, **p**, **lower95** and **upper95** for the mean equation. Each slope is the change in the mean of y per unit of the regressor, as in OLS, because the weights change precision and not the meaning of beta. Under **Maximum likelihood** the standard errors come from the inverse observed information. They depend on the normal likelihood and on the variance form being right ([White (1982)](#ref-Whi1982a)). A weighted estimate far from the OLS one is a warning about the specification and should not be read as a better estimate.
 
-## Why FWLS Standard Errors Change with the Units of y
+## How FWLS Standard Errors Are Computed
 
-**std_error** under **Two-step FWLS** and **Iterated FWLS**, and **weighted_se** in **Compare with OLS**, use the frequency-weight degrees of freedom of `GLM.jl`, and **t**, **p** and the interval columns inherit the error through **std_error**. With sum(w) well under n, as when y has large units, the standard errors are too large. With sum(w) well over n, they are too small. Coefficients are unaffected. For standard errors that do not change with units, use **Maximum likelihood**, or run `using LinearAlgebra; X1 = hcat(ones(length(yv)), Xm); sqrt.(diag(inv(X1' * (X1 ./ variance(Zv)))))`.
+**std_error** under **Two-step FWLS** and **Iterated FWLS**, and **weighted_se** in **Compare with OLS**, come from the weighted fit: the estimated variance is sum(w e²) / (n − k), times the inverse of X'WX. They treat the fitted weights as known, and **t**, **p** and the interval columns are built from them. If y is multiplied by a constant, the standard errors are multiplied by the same constant.
 
 ## How to Read the Variance Equation in Each Tab
 
-**Variance Equation** lists each gamma with **std_error**, **p** from the normal distribution and **meaning**. The step uses `diag`, which it does not load, so run `using LinearAlgebra` if it stops on that name.
+**Variance Equation** lists each gamma with its **estimate** and **meaning**. The printed result gives its **Std. Error**, **z**, **Pr(>|z|)** from the normal distribution and 95% limits.
 
 | Tab | Meaning of the intercept | Meaning of a slope g |
 |---|---|---|
@@ -23,11 +23,11 @@ The panel reports two equations, one for the mean of y and one for its spread. E
 
 ## How Far to Trust the Standard Errors of the Variance Equation
 
-Under FWLS the standard errors of gamma come from classical least squares on the auxiliary regression. For **Exponential** and **Power**, the log of a squared normal error has constant variance, so that calculation is reasonable under normal errors. For **Quadratic** and **Linear**, the auxiliary errors are themselves heteroskedastic, so those figures are rough and the tests based on them unreliable. Under **Maximum likelihood** they come from the observed information. A small **p** on a slope says the variance depends on that driver, and nothing about whether the mean does.
+Under FWLS the standard errors of gamma come from classical least squares on the auxiliary regression. For **Exponential** and **Power**, the log of a squared normal error has constant variance, so that calculation is reasonable under normal errors. For **Quadratic** and **Linear**, the auxiliary errors are themselves heteroskedastic, so those figures are rough and the tests based on them unreliable. Under **Maximum likelihood** they come from the observed information. A small **Pr(>|z|)** on a slope says the variance depends on that driver, and nothing about whether the mean does.
 
 ## How to Read Compare with OLS in a Heteroskedastic Regression
 
-**Compare with OLS** lists **ols**, **ols_se**, **white_se**, **weighted** and **weighted_se** by term. **white_se** is the HC1 form of the estimator of [White (1980)](#ref-Whi1980a) and applies to the OLS coefficients. A gap between **ols_se** and **white_se** measures how far heteroskedasticity disturbs classical inference for OLS. **weighted_se** belongs to a different estimator, and under FWLS it carries the unit problem of `GLM.jl`, so a smaller value is not by itself a gain in precision.
+**Compare with OLS** lists **ols**, **ols_se**, **white_se**, **weighted** and **weighted_se** by term. **white_se** is the HC1 form of the estimator of [White (1980)](#ref-Whi1980a) and applies to the OLS coefficients. A gap between **ols_se** and **white_se** measures how far heteroskedasticity disturbs classical inference for OLS. **weighted_se** belongs to a different estimator, and under FWLS it treats the fitted weights as known, so a smaller value is not by itself a gain in precision.
 
 ## How to Read Predictions at New Values
 

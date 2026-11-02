@@ -44,7 +44,7 @@ The panel's code offers JESP alone. [Sven Seuken and Shlomo Zilberstein (2008)](
 
 | Method | Idea | Guarantee | Scale |
 |---|---|---|---|
-| Exhaustive search | Evaluates every joint policy | Global | Horizon 2 in Dec-Tiger, in practice |
+| Exhaustive search | Tries every tree of one agent, with the other's best response | Global | Horizon 3 in Dec-Tiger, in practice |
 | MAA* | Heuristic search over partial joint policies | Global | Short horizons |
 | Dynamic programming | Builds trees backwards, pruning dominated ones | Global | Short horizons |
 | JESP | Alternates exact best responses | Local | Few agents, moderate horizons |
@@ -69,7 +69,7 @@ Each extra decimal of **Tolerance** costs ln(10) / ln(1 / gamma) iterations, abo
 
 The zero-sum structure gives a single value, reliable computation and safe strategies, and those are lost once interests partly overlap. In a general-sum game, a Nash equilibrium always exists for finite games, according to [John Nash (1951)](#ref-Nas1951a), but several may exist with different payoffs, and players may not agree on which to play.
 
-Treat the zero-sum tab as an approximation only when opposition truly dominates. Otherwise, use the notebook **Stochastic Game: General-Sum**, or `GameTheory.jl` for single-stage games. A cooperative reading of a mostly shared payoff may be better served by a team model.
+Treat the zero-sum tab as an approximation only when opposition truly dominates. Otherwise, `GameTheory.jl` solves single-stage general-sum games. A cooperative reading of a mostly shared payoff may be better served by a team model.
 
 ## Using your own problem in the Dec-POMDP code
 

@@ -24,7 +24,7 @@ Absolute residuals are less sensitive to outliers than squares and, unlike the l
 
 ## Where the Quadratic Variance Model Misleads
 
-Nothing keeps gamma_0 + z_i' gamma positive. If it falls under zero the code clips it, and the row receives a very large weight in FWLS. A spread that falls and then rises again with z is not captured either, since the clip holds sigma_i at 1e-8 on the far side. The constant sqrt(pi/2) assumes normal errors, and heavier tails distort the scale of sigma_i. Since abs(e) has non-constant variance, the classical standard errors of gamma are rough. Coefficient standard errors under FWLS also vary with the units of y.
+Nothing keeps gamma_0 + z_i' gamma positive. If it falls under zero the code clips it, and the row receives a very large weight in FWLS. A spread that falls and then rises again with z is not captured either, since the clip holds sigma_i at 1e-8 on the far side. The constant sqrt(pi/2) assumes normal errors, and heavier tails distort the scale of sigma_i. Since abs(e) has non-constant variance, the classical standard errors of gamma are rough.
 
 ## What to Compare the Quadratic Variance Model With
 

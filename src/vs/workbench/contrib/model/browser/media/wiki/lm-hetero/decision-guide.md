@@ -18,7 +18,7 @@ Consider leaving the coefficients alone when the aim is valid inference on OLS a
 
 ## How to Choose Between FWLS and Maximum Likelihood for Heteroskedastic Regression
 
-**Maximum likelihood** gives standard errors that do not depend on the units of y, and it is efficient if errors are normal and the form is right. It is more sensitive to a small misspecification of the variance form, as [Carroll and Ruppert (1982)](#ref-CR1982a) showed for variances tied to the regression parameter. **Two-step FWLS** and **Iterated FWLS** need no optimiser, but their coefficient standard errors follow the frequency-weight rule of `GLM.jl` and change with the scale of y. Use FWLS for the coefficients when the optimiser struggles, and take their standard errors from the hand calculation with `variance(Zv)` or compare them with the likelihood fit.
+**Maximum likelihood** is efficient if errors are normal and the form is right. It is more sensitive to a small misspecification of the variance form, as [Carroll and Ruppert (1982)](#ref-CR1982a) showed for variances tied to the regression parameter. **Two-step FWLS** and **Iterated FWLS** need no optimiser, but their coefficient standard errors treat the fitted weights as known. Use FWLS when the optimiser struggles, and compare its standard errors with the likelihood fit when you can.
 
 ## How to Choose Variance Drivers for a Heteroskedastic Regression
 

@@ -7,7 +7,7 @@
 | Item | Detail |
 |---|---|
 | Purpose | Estimate a mean equation by weighting, together with an equation for the error variance |
-| Julia stack | `HARE.jl` for estimators and tests, `GLM.jl` for least squares, `HypothesisTests.jl`, `Distributions.jl` and `Plots.jl` for the Next Steps |
+| Julia stack | `HARE.jl` for estimators and tests, `GLM.jl` for least squares, `HypothesisTests.jl` and `Plots.jl` for the Next Steps |
 | Model | y_i = x_i' beta + u_i, with independent errors of variance sigma_i² that depends on z_i |
 | Input shape | **Regressors (X)** is n x k and **Variance drivers (Z)** is n x q, both without a column of ones; **Response (y)** has length n |
 | Default drivers | `nothing`, which uses X as the drivers |
@@ -27,7 +27,7 @@
 
 | **Estimation** option | Function suffix | Procedure | Coefficient standard errors |
 |---|---|---|---|
-| **Two-step FWLS** | `_fwls` | OLS residuals, one auxiliary regression, one weighted fit | From `GLM.jl` with frequency-weight degrees of freedom, so they depend on the units of y |
+| **Two-step FWLS** | `_fwls` | OLS residuals, one auxiliary regression, one weighted fit | From the weighted fit, with sum(w e²) / (n − k) as the estimated variance |
 | **Iterated FWLS** | `_ifwls` | Repeats until coefficients move by less than 1e-8, at most 100 passes | The same as two-step |
 | **Maximum likelihood** | `_mle` | L-BFGS on the normal likelihood of both equations | Inverse observed information |
 

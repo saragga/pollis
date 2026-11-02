@@ -24,7 +24,7 @@ Additive effects on the variance have a plain reading: each unit of a driver add
 
 ## Where the Linear Variance Model Misleads
 
-Squared residuals are very noisy, and an outlier enters with its square, so gamma can be unstable. Negative fits are common with several drivers or a small baseline variance, and each one receives a weight of 1e10 in FWLS, so a few such rows can dominate the coefficients. A low clip also produces a heavy penalty in **Compare Variance Models** if that row has a sizeable residual. The classical standard errors on gamma are rough, because the auxiliary regression has a strongly non-constant error variance.
+Squared residuals are very noisy, and an outlier enters with its square, so gamma can be unstable. Negative fits are common with several drivers or a small baseline variance, and each one receives a weight of 1e10 in FWLS, so a few such rows can dominate the coefficients and their standard errors. `HARE.jl` warns with the number of clipped rows. A low clip also produces a heavy penalty in **Compare Variance Models** if that row has a sizeable residual. The classical standard errors on gamma are rough, because the auxiliary regression has a strongly non-constant error variance.
 
 ## What to Compare the Linear Variance Model With
 

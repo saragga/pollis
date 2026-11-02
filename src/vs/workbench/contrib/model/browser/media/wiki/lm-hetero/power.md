@@ -24,7 +24,7 @@ For positive size variables such as sales or population, the elasticity reading 
 
 ## Where the Power Variance Model Misleads
 
-Zeros are the main hazard. A dummy variable or a value close to zero gets a very large negative logarithm, and the row then gains great leverage in the auxiliary regression. Using the default drivers on data with such columns gives meaningless exponents. Variables that cross zero produce a variance that dips at zero, which may not be intended. A driver with little relative variation makes gamma poorly determined. The FWLS coefficient standard errors carry the same dependence on the units of y as the other tabs.
+Zeros are the main hazard. A dummy variable or a value close to zero gets a very large negative logarithm, and the row then gains great leverage in the auxiliary regression. Using the default drivers on data with such columns gives meaningless exponents. Variables that cross zero produce a variance that dips at zero, which may not be intended. A driver with little relative variation makes gamma poorly determined.
 
 ## What to Compare the Power Variance Model With
 

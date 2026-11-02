@@ -24,7 +24,7 @@ Positivity holds without any clipping, so no row can get an absurd weight from a
 
 ## Where the Exponential Variance Model Misleads
 
-Exponential growth is steep. A driver with an extreme value receives a very large fitted variance, and thus almost no weight, even when the true spread levels off. The logarithm of a near-zero residual is a large negative number, so a handful of tiny residuals can pull gamma in FWLS. Non-normal errors shift gamma_0 and so all fitted variances, which distorts prediction intervals. The FWLS standard errors of beta also depend on the units of y through the frequency-weight rule of `GLM.jl`.
+Exponential growth is steep. A driver with an extreme value receives a very large fitted variance, and thus almost no weight, even when the true spread levels off. The logarithm of a near-zero residual is a large negative number, so a handful of tiny residuals can pull gamma in FWLS. Non-normal errors shift gamma_0 and so all fitted variances, which distorts prediction intervals.
 
 ## What to Compare the Exponential Variance Model With
 

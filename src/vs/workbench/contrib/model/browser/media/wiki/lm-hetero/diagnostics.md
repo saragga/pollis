@@ -28,7 +28,7 @@ The checks in the panel come in two kinds: tests of constant variance on OLS res
 
 ## How to Spot Unreliable FWLS Standard Errors
 
-Under **Two-step FWLS** and **Iterated FWLS**, the standard errors depend on the units of y. `GLM.jl` treats the weights as frequency weights, with sum(w) − k residual degrees of freedom, and sum(w) grows or shrinks with the scale of y. **weighted_se** in **Compare with OLS** can then be far too large or too small, and `Inf` once sum(w) falls to k or lower. As a check, compute `sum(1 ./ variance(Zv))`: a value far from n signals the problem. Refit with **Maximum likelihood** to compare.
+Under **Two-step FWLS** and **Iterated FWLS**, the standard errors treat the fitted weights as known, so they ignore the uncertainty in gamma. Under **Linear**, `HARE.jl` warns with the number of rows whose fitted variance was clipped: those rows dominate the fit, and the standard errors cannot be trusted. Refit with **Maximum likelihood** to compare.
 
 ## References
 

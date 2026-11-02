@@ -42,9 +42,9 @@ At accuracy 1, `cost_of_decentralisation` should reach 0, since private hearing 
 
 ## How far the exhaustive comparison reaches
 
-**Local vs Global / Pure vs Mixed** on **Dec-POMDP** enumerates every joint policy, which is only possible for short horizons, so it uses min(T, 2). At horizon 2 there are 27 trees per agent and 729 joint policies, while horizon 3 would need about 4.8 million evaluations.
+**Local vs Global / Pure vs Mixed** on **Dec-POMDP** finds the true optimum by trying every tree of agent 1 and computing agent 2's exact best response to each. The answer equals the one from listing all joint policies, at far less cost: 2187 best responses at horizon 3, where listing pairs would need about 4.8 million evaluations.
 
-The default **Horizon (T)** of 3 is therefore checked at horizon 2 only, and the result does not extend to the horizon of the main run. Read `horizon` in the output. At accuracy 0.85, both listening twice is already optimal at horizon 2, so a match there says little. The published Dec-Tiger values are the stronger test for later horizons.
+The action uses min(T, 3), since horizon 4 would need about 14 million best responses. The default **Horizon (T)** of 3 is therefore tested at its own horizon. From horizon 4 up, read `horizon` in the output, as the comparison no longer covers the main run. The published Dec-Tiger value then remains the test at horizon 4.
 
 ## Has Shapley iteration converged?
 

@@ -52,7 +52,7 @@ The [Factsheet](factsheet.md) lists all ten, and the [Diagnostics](diagnostics.m
 
 The tabs' code covers exactly two agents, with Dec-Tiger on one side and two-player zero-sum games on the other. Point-based and other approximate Dec-POMDP solvers are not implemented, and general-sum games, where interests partly overlap, have no tab.
 
-The notebook **Stochastic Game: General-Sum** takes up that last case, and **Dec-POMDP: Broadcast Problem** applies decentralised planning to a second problem. A full account of models and solvers is in [Frans A. Oliehoek and Christopher Amato (2016)](#ref-OA2016a), and the [Decision Guide](decision-guide.md) wiki says where to go next.
+A full account of models and solvers is in [Frans A. Oliehoek and Christopher Amato (2016)](#ref-OA2016a), and the [Decision Guide](decision-guide.md) wiki says where to go next.
 
 ## References
 
