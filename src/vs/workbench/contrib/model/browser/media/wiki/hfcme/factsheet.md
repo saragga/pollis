@@ -54,7 +54,7 @@ On the simulated default, `true_covar` and `true_noise` also hold the values use
 
 ## Main sources
 
-[Ole E. Barndorff-Nielsen, Peter Reinhard Hansen, Asger Lunde and Neil Shephard (2011)](#ref-BHLS2011a) give the multivariate realised kernel of **Realized Kernel**, together with refresh-time sampling. [Lan Zhang (2011)](#ref-Zha2011a) carries the two-scales idea into the multivariate setting used by **Two-Scales**. Both are the panel's own listed references. The univariate origins of the bias correction are cited in [Diagnostics](diagnostics.md) and [Decision Guide](decision-guide.md).
+[Ole E. Barndorff-Nielsen, Peter Reinhard Hansen, Asger Lunde and Neil Shephard (2011)](#ref-BHLS2011a) give the multivariate realised kernel of **Realized Kernel**, together with refresh-time sampling. [Lan Zhang (2011)](#ref-Zha2011a) carries the two-scales idea into the multivariate setting used by **Two-Scales**. Both are the panel's own listed references, and both address noise and asynchrony together. The univariate origins of the bias correction are cited in [Diagnostics](diagnostics.md) and [Decision Guide](decision-guide.md).
 
 ## References
 
