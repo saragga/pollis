@@ -320,7 +320,6 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 			const entry = published[publishedKey(loaded)];
 			// Until the user publishes it, a toolbox is in its default places: its menu at the end of Extend, with every panel
 			const placement = entry ? placementOf(loaded, entry) : defaultPlacement(loaded);
-			// MenuId.for: a built-in submenu (Extreme Value in Finance) may have created the toolbox's menu id already
 			const submenu = this.submenus.get(toolbox.id) ?? MenuId.for(`${TOOLBOX_SUBMENU_PREFIX}${toolbox.id}`);
 			this.submenus.set(toolbox.id, submenu);
 			if (placement.menu && loaded.panels.some(({ contribution }) => placement.panels[contribution.id]?.menu === TOOLBOX_MENU)) {

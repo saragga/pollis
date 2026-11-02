@@ -45,7 +45,6 @@
 			"menubarDistSubmenu",
 			"menubarDocRepSubmenu",
 			"menubarECSubmenu",
-			"menubarEVSubmenu",
 			"menubarGBOSubmenu",
 			"menubarGFOSubmenu",
 			"menubarGOSubmenu",
@@ -2983,7 +2982,7 @@
 		{
 			"id": "evtDiag",
 			"title": "Extreme Value Diagnostics",
-			"source": "pollis",
+			"source": "toolbox:pollis-toolbox-econometrics",
 			"commands": [
 				{
 					"id": "chiara.statistics.ev.diagnostics",
@@ -2995,9 +2994,9 @@
 			"portable": true,
 			"defaultModel": "me",
 			"decisionFirstColumn": "Model",
-			"toml": "src/vs/workbench/contrib/model/browser/webviews/evtDiag.toml",
-			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
-			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"toml": "toolboxes/pollis-toolbox-econometrics/panels/evtDiag.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-econometrics/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-econometrics/notebooks",
 			"wikis": [
 				"evt-diag/assumptions.md",
 				"evt-diag/decision-guide.md",
@@ -3018,7 +3017,7 @@
 		{
 			"id": "evtRisk",
 			"title": "Extreme Value Risk Measures",
-			"source": "pollis",
+			"source": "toolbox:pollis-toolbox-econometrics",
 			"commands": [
 				{
 					"id": "chiara.statistics.ev.riskMeasures",
@@ -3030,9 +3029,9 @@
 			"portable": true,
 			"defaultModel": "rl",
 			"decisionFirstColumn": "Model",
-			"toml": "src/vs/workbench/contrib/model/browser/webviews/evtRisk.toml",
-			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
-			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"toml": "toolboxes/pollis-toolbox-econometrics/panels/evtRisk.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-econometrics/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-econometrics/notebooks",
 			"wikis": [
 				"evt-risk/assumptions.md",
 				"evt-risk/decision-guide.md",
@@ -3281,7 +3280,7 @@
 		{
 			"id": "gev",
 			"title": "Generalized Extreme Value Distribution",
-			"source": "pollis",
+			"source": "toolbox:pollis-toolbox-econometrics",
 			"commands": [
 				{
 					"id": "chiara.statistics.ev.gev",
@@ -3293,9 +3292,9 @@
 			"portable": true,
 			"defaultModel": "fit",
 			"decisionFirstColumn": "Model",
-			"toml": "src/vs/workbench/contrib/model/browser/webviews/gev.toml",
-			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
-			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"toml": "toolboxes/pollis-toolbox-econometrics/panels/gev.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-econometrics/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-econometrics/notebooks",
 			"wikis": [
 				"gev/assumptions.md",
 				"gev/decision-guide.md",
@@ -3492,7 +3491,7 @@
 		{
 			"id": "gp",
 			"title": "Generalized Pareto Distribution",
-			"source": "pollis",
+			"source": "toolbox:pollis-toolbox-econometrics",
 			"commands": [
 				{
 					"id": "chiara.statistics.ev.gp",
@@ -3504,9 +3503,9 @@
 			"portable": true,
 			"defaultModel": "fit",
 			"decisionFirstColumn": "Model",
-			"toml": "src/vs/workbench/contrib/model/browser/webviews/gp.toml",
-			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
-			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"toml": "toolboxes/pollis-toolbox-econometrics/panels/gp.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-econometrics/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-econometrics/notebooks",
 			"wikis": [
 				"gp/assumptions.md",
 				"gp/decision-guide.md",
