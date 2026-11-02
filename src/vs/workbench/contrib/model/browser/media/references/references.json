@@ -79,6 +79,36 @@
 			"open_access": false
 		},
 		{
+			"key": "ABBBD...1999a",
+			"type": "book",
+			"title": "LAPACK Users' Guide",
+			"authors": [
+				"Anderson, E.",
+				"Bai, Z.",
+				"Bischof, C.",
+				"Blackford, L. S.",
+				"Demmel, J.",
+				"Dongarra, J.",
+				"Du Croz, J.",
+				"Greenbaum, A.",
+				"Hammarling, S.",
+				"McKenney, A.",
+				"Sorensen, D."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1999,
+			"publisher": "Society for Industrial and Applied Mathematics",
+			"isbn": "9780898714470",
+			"doi": "10.1137/1.9780898719604",
+			"openalex": "W1480928214",
+			"legacy_key": "anderson1999",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "ABBR2023a",
 			"type": "article",
 			"title": "Manifolds.jl: An Extensible Julia Framework for Data Analysis on Manifolds",
@@ -177,6 +207,30 @@
 			"source": "crossref",
 			"retrieved": "2026-10-23",
 			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "ABDLZ2014a",
+			"type": "article",
+			"title": "Bayesian Inference of Epidemics on Networks via Belief Propagation",
+			"authors": [
+				"Altarelli, Fabrizio",
+				"Braunstein, Alfredo",
+				"Dall’Asta, Luca",
+				"Lage-Castellanos, Alejandro",
+				"Zecchina, Riccardo"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2014,
+			"journal": "Physical Review Letters",
+			"volume": "112",
+			"number": "11",
+			"doi": "10.1103/physrevlett.112.118701",
+			"openalex": "W2054558630",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": true
 		},
 		{
@@ -485,6 +539,51 @@
 			"open_access": true
 		},
 		{
+			"key": "AFD2022a",
+			"type": "article",
+			"title": "Pathogen.jl: Infectious Disease Transmission Network Modeling with Julia",
+			"authors": [
+				"Angevaare, Justin",
+				"Feng, Zeny",
+				"Deardon, Rob"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2022,
+			"journal": "Journal of Statistical Software",
+			"volume": "104",
+			"number": "4",
+			"doi": "10.18637/jss.v104.i04",
+			"openalex": "W4312977016",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "AFR2018a",
+			"type": "article",
+			"title": "The Pruned State-Space System for Non-Linear DSGE Models: Theory and Empirical Applications",
+			"authors": [
+				"Andreasen, Martin M",
+				"Fernández-Villaverde, Jesús",
+				"Rubio-Ramírez, Juan F"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2018,
+			"journal": "The Review of Economic Studies",
+			"volume": "85",
+			"number": "1",
+			"pages": "1-49",
+			"doi": "10.1093/restud/rdx037",
+			"openalex": "W2923803554",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "AG2011a",
 			"type": "misc",
 			"title": "Analysis of Thompson Sampling for the multi-armed bandit problem",
@@ -567,6 +666,31 @@
 			"open_access": false
 		},
 		{
+			"key": "AHLLM2022a",
+			"type": "article",
+			"title": "Income and Wealth Distribution in Macroeconomics: A Continuous-Time Approach",
+			"authors": [
+				"Achdou, Yves",
+				"Han, Jiequn",
+				"Lasry, Jean-Michel",
+				"Lions, Pierre-Louis",
+				"Moll, Benjamin"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2022,
+			"journal": "The Review of Economic Studies",
+			"volume": "89",
+			"number": "1",
+			"pages": "45-86",
+			"doi": "10.1093/restud/rdab002",
+			"openalex": "W2746594663",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "AHM1951a",
 			"type": "article",
 			"title": "Optimal Inventory Policy",
@@ -637,6 +761,30 @@
 			"source": "crossref",
 			"retrieved": "2026-10-23",
 			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "ALSSS2015a",
+			"type": "article",
+			"title": "Identification of Patient Zero in Static and Temporal Networks: Robustness and Limitations",
+			"authors": [
+				"Antulov-Fantulin, Nino",
+				"Lančić, Alen",
+				"Šmuc, Tomislav",
+				"Štefančić, Hrvoje",
+				"Šikić, Mile"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2015,
+			"journal": "Physical Review Letters",
+			"volume": "114",
+			"number": "24",
+			"doi": "10.1103/physrevlett.114.248701",
+			"openalex": "W1508299658",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": true
 		},
 		{
@@ -733,6 +881,28 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": false
+		},
+		{
+			"key": "AN2000a",
+			"type": "article",
+			"title": "The theta model: a decomposition approach to forecasting",
+			"authors": [
+				"Assimakopoulos, V.",
+				"Nikolopoulos, K."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2000,
+			"journal": "International Journal of Forecasting",
+			"volume": "16",
+			"number": "4",
+			"pages": "521-530",
+			"doi": "10.1016/s0169-2070(00)00066-2",
+			"openalex": "W1977698057",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "ANVLM...2019a",
@@ -940,6 +1110,27 @@
 			"open_access": false
 		},
 		{
+			"key": "Aiy1994a",
+			"type": "article",
+			"title": "Uninsured Idiosyncratic Risk and Aggregate Saving",
+			"authors": [
+				"Aiyagari, S. R."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1994,
+			"journal": "The Quarterly Journal of Economics",
+			"volume": "109",
+			"number": "3",
+			"pages": "659-684",
+			"doi": "10.2307/2118417",
+			"openalex": "W2096218604",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "Aka1974a",
 			"type": "article",
 			"title": "A new look at the statistical model identification",
@@ -976,6 +1167,27 @@
 			"source": "manual",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "Alt2015a",
+			"type": "article",
+			"title": "Ebola superspreading",
+			"authors": [
+				"Althaus, Christian L"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2015,
+			"journal": "The Lancet Infectious Diseases",
+			"volume": "15",
+			"number": "5",
+			"pages": "507-508",
+			"doi": "10.1016/s1473-3099(15)70135-0",
+			"openalex": "W4235406775",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "And1982a",
@@ -1015,6 +1227,27 @@
 			"legacy_key": "anderson2003",
 			"source": "manual",
 			"checked": false,
+			"open_access": false
+		},
+		{
+			"key": "And2008a",
+			"type": "article",
+			"title": "Simple and efficient simulation of the Heston stochastic volatility model",
+			"authors": [
+				"Andersen, Leif"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2008,
+			"journal": "The Journal of Computational Finance",
+			"volume": "11",
+			"number": "3",
+			"pages": "1-42",
+			"doi": "10.21314/jcf.2008.189",
+			"openalex": "W2465624924",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": false
 		},
 		{
@@ -1121,6 +1354,38 @@
 			"open_access": true
 		},
 		{
+			"key": "BBBCD...2021a",
+			"type": "article",
+			"title": "Epidemic mitigation by statistical inference from contact tracing data",
+			"authors": [
+				"Baker, Antoine",
+				"Biazzo, Indaco",
+				"Braunstein, Alfredo",
+				"Catania, Giovanni",
+				"Dall’Asta, Luca",
+				"Ingrosso, Alessandro",
+				"Krzakala, Florent",
+				"Mazza, Fabio",
+				"Mézard, Marc",
+				"Muntoni, Anna Paola",
+				"Refinetti, Maria",
+				"Sarao Mannelli, Stefano",
+				"Zdeborová, Lenka"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2021,
+			"journal": "Proceedings of the National Academy of Sciences",
+			"volume": "118",
+			"number": "32",
+			"doi": "10.1073/pnas.2106548118",
+			"openalex": "W3087055808",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "BBBK2011a",
 			"type": "inproceedings",
 			"title": "Algorithms for Hyper-Parameter Optimization",
@@ -1182,6 +1447,52 @@
 			"legacy_key": "bouchaud2018",
 			"source": "manual",
 			"checked": false,
+			"open_access": false
+		},
+		{
+			"key": "BBDM2022a",
+			"type": "article",
+			"title": "A Bayesian generative neural network framework for epidemic inference problems",
+			"authors": [
+				"Biazzo, Indaco",
+				"Braunstein, Alfredo",
+				"Dall’Asta, Luca",
+				"Mazza, Fabio"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2022,
+			"journal": "Scientific Reports",
+			"volume": "12",
+			"number": "1",
+			"doi": "10.1038/s41598-022-20898-x",
+			"openalex": "W4309334453",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "BBE2005a",
+			"type": "article",
+			"title": "Measuring the Effects of Monetary Policy: A Factor-Augmented Vector Autoregressive (FAVAR) Approach",
+			"authors": [
+				"Bernanke, B. S.",
+				"Boivin, J.",
+				"Eliasz, P."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2005,
+			"journal": "The Quarterly Journal of Economics",
+			"volume": "120",
+			"number": "1",
+			"pages": "387-422",
+			"doi": "10.1162/0033553053327452",
+			"openalex": "W2133073622",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": false
 		},
 		{
@@ -1379,6 +1690,31 @@
 			"open_access": true
 		},
 		{
+			"key": "BCDMM...2025a",
+			"type": "article",
+			"title": "Small-coupling dynamic cavity: A Bayesian mean-field framework for epidemic inference",
+			"authors": [
+				"Braunstein, Alfredo",
+				"Catania, Giovanni",
+				"Dall'Asta, Luca",
+				"Mariani, Matteo",
+				"Mazza, Fabio",
+				"Tarabolo, Mattia"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2025,
+			"journal": "Physical Review Research",
+			"volume": "7",
+			"number": "2",
+			"doi": "10.1103/physrevresearch.7.023089",
+			"openalex": "W4409797732",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "BCP2022a",
 			"type": "article",
 			"title": "FrankWolfe.jl: A High-Performance and Flexible Toolbox for Frank-Wolfe Algorithms and Conditional Gradients",
@@ -1448,6 +1784,26 @@
 			"keywords_source": "openalex",
 			"source": "crossref",
 			"retrieved": "2026-10-30",
+			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "BD2016a",
+			"type": "book",
+			"title": "Introduction to Time Series and Forecasting",
+			"authors": [
+				"Brockwell, Peter J.",
+				"Davis, Richard A."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2016,
+			"publisher": "Springer International Publishing",
+			"isbn": "9783319298528",
+			"doi": "10.1007/978-3-319-29854-2",
+			"openalex": "W4292081177",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": false
 		},
@@ -1529,6 +1885,28 @@
 			"legacy_key": "burden2015",
 			"source": "manual",
 			"checked": false,
+			"open_access": false
+		},
+		{
+			"key": "BG1969a",
+			"type": "article",
+			"title": "The Combination of Forecasts",
+			"authors": [
+				"Bates, J. M.",
+				"Granger, C. W. J."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1969,
+			"journal": "Journal of the Operational Research Society",
+			"volume": "20",
+			"number": "4",
+			"pages": "451-468",
+			"doi": "10.1057/jors.1969.103",
+			"openalex": "W1986528915",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": false
 		},
 		{
@@ -1997,6 +2375,29 @@
 			"open_access": false
 		},
 		{
+			"key": "BHJ2023a",
+			"type": "article",
+			"title": "Bayesian Solutions for the Factor Zoo: We Just Ran Two Quadrillion Models",
+			"authors": [
+				"Bryzgalova, Svetlana",
+				"Huang, Jiantao",
+				"Julliard, Christian"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2023,
+			"journal": "The Journal of Finance",
+			"volume": "78",
+			"number": "1",
+			"pages": "487-557",
+			"doi": "10.1111/jofi.13197",
+			"openalex": "W4312074767",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "BHLS2011a",
 			"type": "article",
 			"title": "Multivariate Realised Kernels: Consistent Positive Semi-Definite Estimators of the Covariation of Equity Prices with Noise and Non-Synchronous Trading",
@@ -2159,6 +2560,50 @@
 			"abstract_source": "openalex",
 			"source": "manual",
 			"retrieved": "2026-10-31",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "BK1980a",
+			"type": "article",
+			"title": "The Solution of Linear Difference Models under Rational Expectations",
+			"authors": [
+				"Blanchard, Olivier Jean",
+				"Kahn, Charles M."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1980,
+			"journal": "Econometrica",
+			"volume": "48",
+			"number": "5",
+			"pages": "1305",
+			"doi": "10.2307/1912186",
+			"openalex": "W2014077903",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "BK1999a",
+			"type": "article",
+			"title": "Measuring Business Cycles: Approximate Band-Pass Filters for Economic Time Series",
+			"authors": [
+				"Baxter, Marianne",
+				"King, Robert G."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1999,
+			"journal": "Review of Economics and Statistics",
+			"volume": "81",
+			"number": "4",
+			"pages": "575-593",
+			"doi": "10.1162/003465399558454",
+			"openalex": "W2890582035",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
 		},
@@ -2459,6 +2904,28 @@
 			"open_access": false
 		},
 		{
+			"key": "BL2013a",
+			"type": "article",
+			"title": "Inference of R0 and Transmission Heterogeneity from the Size Distribution of Stuttering Chains",
+			"authors": [
+				"Blumberg, Seth",
+				"Lloyd-Smith, James O."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2013,
+			"journal": "PLoS Computational Biology",
+			"volume": "9",
+			"number": "5",
+			"pages": "e1002993",
+			"doi": "10.1371/journal.pcbi.1002993",
+			"openalex": "W2110204999",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "BLBLK2017a",
 			"type": "article",
 			"title": "The great time series classification bake off: a review and experimental evaluation of recent algorithmic advances",
@@ -2608,6 +3075,28 @@
 			"source": "manual",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "BN1981a",
+			"type": "article",
+			"title": "A new approach to decomposition of economic time series into permanent and transitory components with particular attention to measurement of the ‘business cycle’",
+			"authors": [
+				"Beveridge, Stephen",
+				"Nelson, Charles R."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1981,
+			"journal": "Journal of Monetary Economics",
+			"volume": "7",
+			"number": "2",
+			"pages": "151-174",
+			"doi": "10.1016/0304-3932(81)90040-4",
+			"openalex": "W2032269423",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
 		},
 		{
 			"key": "BN1998a",
@@ -2827,6 +3316,29 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "BPP2008a",
+			"type": "article",
+			"title": "Consumption Inequality and Partial Insurance",
+			"authors": [
+				"Blundell, Richard",
+				"Pistaferri, Luigi",
+				"Preston, Ian"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2008,
+			"journal": "American Economic Review",
+			"volume": "98",
+			"number": "5",
+			"pages": "1887-1921",
+			"doi": "10.1257/aer.98.5.1887",
+			"openalex": "W4214669672",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
 		},
 		{
 			"key": "BPRS2018a",
@@ -3101,6 +3613,28 @@
 			"source": "crossref",
 			"retrieved": "2026-10-23",
 			"checked": false,
+			"open_access": false
+		},
+		{
+			"key": "BS2014a",
+			"type": "article",
+			"title": "A Macroeconomic Model with a Financial Sector",
+			"authors": [
+				"Brunnermeier, Markus K.",
+				"Sannikov, Yuliy"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2014,
+			"journal": "American Economic Review",
+			"volume": "104",
+			"number": "2",
+			"pages": "379-421",
+			"doi": "10.1257/aer.104.2.379",
+			"openalex": "W2123931028",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": false
 		},
 		{
@@ -3492,6 +4026,28 @@
 			"open_access": false
 		},
 		{
+			"key": "BY2004a",
+			"type": "article",
+			"title": "Risks for the Long Run: A Potential Resolution of Asset Pricing Puzzles",
+			"authors": [
+				"Bansal, Ravi",
+				"Yaron, Amir"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2004,
+			"journal": "The Journal of Finance",
+			"volume": "59",
+			"number": "4",
+			"pages": "1481-1509",
+			"doi": "10.1111/j.1540-6261.2004.00670.x",
+			"openalex": "W2113704261",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "BZB2002a",
 			"type": "article",
 			"title": "Approximate Bayesian Computation in Population Genetics",
@@ -3628,6 +4184,27 @@
 			"source": "crossref",
 			"retrieved": "2026-10-23",
 			"checked": false,
+			"open_access": false
+		},
+		{
+			"key": "Bat1996a",
+			"type": "article",
+			"title": "Jumps and Stochastic Volatility: Exchange Rate Processes Implicit in Deutsche Mark Options",
+			"authors": [
+				"Bates, David S."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1996,
+			"journal": "Review of Financial Studies",
+			"volume": "9",
+			"number": "1",
+			"pages": "69-107",
+			"doi": "10.1093/rfs/9.1.69",
+			"openalex": "W3124475197",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": false
 		},
 		{
@@ -3949,6 +4526,25 @@
 			"open_access": false
 		},
 		{
+			"key": "Bjo2018a",
+			"type": "book",
+			"title": "Epidemics: Models and Data using R",
+			"authors": [
+				"Bjørnstad, Ottar N."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2018,
+			"publisher": "Springer International Publishing",
+			"isbn": "9783319974866",
+			"doi": "10.1007/978-3-319-97487-3",
+			"openalex": "W4242998315",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "Ble2012a",
 			"type": "article",
 			"title": "Probabilistic Topic Models",
@@ -3979,6 +4575,27 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "Bol1986a",
+			"type": "article",
+			"title": "Generalized autoregressive conditional heteroskedasticity",
+			"authors": [
+				"Bollerslev, Tim"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1986,
+			"journal": "Journal of Econometrics",
+			"volume": "31",
+			"number": "3",
+			"pages": "307-327",
+			"doi": "10.1016/0304-4076(86)90063-1",
+			"openalex": "W1999996900",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "Boo1972a",
@@ -4229,6 +4846,27 @@
 			"open_access": false
 		},
 		{
+			"key": "Bro1965a",
+			"type": "article",
+			"title": "A class of methods for solving nonlinear simultaneous equations",
+			"authors": [
+				"Broyden, C. G."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1965,
+			"journal": "Mathematics of Computation",
+			"volume": "19",
+			"number": "92",
+			"pages": "577-593",
+			"doi": "10.1090/s0025-5718-1965-0198670-6",
+			"openalex": "W1977822596",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "Bro1970a",
 			"type": "article",
 			"title": "The Convergence of a Class of Double-rank Minimization Algorithms",
@@ -4421,6 +5059,28 @@
 			"open_access": false
 		},
 		{
+			"key": "CC1999a",
+			"type": "article",
+			"title": "By Force of Habit: A Consumption‐Based Explanation of Aggregate Stock Market Behavior",
+			"authors": [
+				"Campbell, John Y.",
+				"Cochrane, John H."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1999,
+			"journal": "Journal of Political Economy",
+			"volume": "107",
+			"number": "2",
+			"pages": "205-251",
+			"doi": "10.1086/250059",
+			"openalex": "W2891159187",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "CCB2009a",
 			"type": "inproceedings",
 			"title": "Reciprocal Rank Fusion Outperforms Condorcet and Individual Rank Learning Methods",
@@ -4584,6 +5244,30 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": false
+		},
+		{
+			"key": "CFFC2013a",
+			"type": "article",
+			"title": "A New Framework and Software to Estimate Time-Varying Reproduction Numbers During Epidemics",
+			"authors": [
+				"Cori, Anne",
+				"Ferguson, Neil M.",
+				"Fraser, Christophe",
+				"Cauchemez, Simon"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2013,
+			"journal": "American Journal of Epidemiology",
+			"volume": "178",
+			"number": "9",
+			"pages": "1505-1512",
+			"doi": "10.1093/aje/kwt133",
+			"openalex": "W2097446414",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "CFHT2021a",
@@ -4842,6 +5526,53 @@
 			"legacy_key": "church1990",
 			"source": "manual",
 			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "CHALL1989a",
+			"type": "article",
+			"title": "Epidemiological models with age structure, proportionate mixing, and cross-immunity",
+			"authors": [
+				"Castillo-Chavez, C.",
+				"Hethcote, H. W.",
+				"Andreasen, V.",
+				"Levin, S. A.",
+				"Liu, W. M."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1989,
+			"journal": "Journal of Mathematical Biology",
+			"volume": "27",
+			"number": "3",
+			"pages": "233-258",
+			"doi": "10.1007/bf00275810",
+			"openalex": "W2110891892",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "CHB2003a",
+			"type": "article",
+			"title": "Efficient Immunization Strategies for Computer Networks and Populations",
+			"authors": [
+				"Cohen, Reuven",
+				"Havlin, Shlomo",
+				"ben-Avraham, Daniel"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2003,
+			"journal": "Physical Review Letters",
+			"volume": "91",
+			"number": "24",
+			"doi": "10.1103/physrevlett.91.247901",
+			"openalex": "W2034413844",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": true
 		},
 		{
@@ -6191,6 +6922,28 @@
 			"open_access": false
 		},
 		{
+			"key": "Cro1972a",
+			"type": "article",
+			"title": "Forecasting and Stock Control for Intermittent Demands",
+			"authors": [
+				"Croston, J. D."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1972,
+			"journal": "Journal of the Operational Research Society",
+			"volume": "23",
+			"number": "3",
+			"pages": "289-303",
+			"doi": "10.1057/jors.1972.50",
+			"openalex": "W1989787309",
+			"legacy_key": "croston1972",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "DBKYZ...2019a",
 			"type": "article",
 			"title": "The UCR Time Series Archive",
@@ -6474,6 +7227,28 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "DF1979a",
+			"type": "article",
+			"title": "Distribution of the Estimators for Autoregressive Time Series with a Unit Root",
+			"authors": [
+				"Dickey, David A.",
+				"Fuller, Wayne A."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1979,
+			"journal": "Journal of the American Statistical Association",
+			"volume": "74",
+			"number": "366a",
+			"pages": "427-431",
+			"doi": "10.1080/01621459.1979.10482531",
+			"openalex": "W1975994995",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
 		},
 		{
 			"key": "DF1983a",
@@ -6790,6 +7565,29 @@
 			"open_access": false
 		},
 		{
+			"key": "DGS2015a",
+			"type": "article",
+			"title": "Inflation in the Great Recession and New Keynesian Models",
+			"authors": [
+				"Del Negro, Marco",
+				"Giannoni, Marc P.",
+				"Schorfheide, Frank"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2015,
+			"journal": "American Economic Journal: Macroeconomics",
+			"volume": "7",
+			"number": "1",
+			"pages": "168-196",
+			"doi": "10.1257/mac.20140097",
+			"openalex": "W3021811462",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "DGU2009a",
 			"type": "article",
 			"title": "Optimal Versus Naive Diversification: How Inefficient Is the 1/N Portfolio Strategy?",
@@ -6914,6 +7712,28 @@
 			"open_access": true
 		},
 		{
+			"key": "DHM1990a",
+			"type": "article",
+			"title": "On the definition and the computation of the basic reproduction ratio R 0 in models for infectious diseases in heterogeneous populations",
+			"authors": [
+				"Diekmann, O.",
+				"Heesterbeek, J.A.P.",
+				"Metz, J.A.J."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1990,
+			"journal": "Journal of Mathematical Biology",
+			"volume": "28",
+			"number": "4",
+			"doi": "10.1007/bf00178324",
+			"openalex": "W1913866132",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "DHS1986a",
 			"type": "article",
 			"title": "Efficient Bootstrap Simulation",
@@ -6982,6 +7802,30 @@
 			"legacy_key": "duchi2011",
 			"source": "manual",
 			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "DHS2011b",
+			"type": "article",
+			"title": "Forecasting Time Series With Complex Seasonal Patterns Using Exponential Smoothing",
+			"authors": [
+				"De Livera, Alysha M.",
+				"Hyndman, Rob J.",
+				"Snyder, Ralph D."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2011,
+			"journal": "Journal of the American Statistical Association",
+			"volume": "106",
+			"number": "496",
+			"pages": "1513-1527",
+			"doi": "10.1198/jasa.2011.tm09771",
+			"openalex": "W2109316012",
+			"legacy_key": "delivera2011",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": true
 		},
 		{
@@ -7538,6 +8382,26 @@
 			"open_access": false
 		},
 		{
+			"key": "DS1996a",
+			"type": "book",
+			"title": "Numerical Methods for Unconstrained Optimization and Nonlinear Equations",
+			"authors": [
+				"Dennis, J. E.",
+				"Schnabel, Robert B."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1996,
+			"publisher": "Society for Industrial and Applied Mathematics",
+			"isbn": "9780898713640",
+			"doi": "10.1137/1.9781611971200",
+			"openalex": "W2068484625",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "DS2011a",
 			"type": "article",
 			"title": "Differential Evolution: A Survey of the State-of-the-Art",
@@ -7745,6 +8609,28 @@
 			"open_access": false
 		},
 		{
+			"key": "DW2002a",
+			"type": "article",
+			"title": "Reproduction numbers and sub-threshold endemic equilibria for compartmental models of disease transmission",
+			"authors": [
+				"van den Driessche, P.",
+				"Watmough, James"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2002,
+			"journal": "Mathematical Biosciences",
+			"volume": "180",
+			"number": "1-2",
+			"pages": "29-48",
+			"doi": "10.1016/s0025-5564(02)00108-6",
+			"openalex": "W2112680994",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "DW2022a",
 			"type": "article",
 			"title": "Effortless estimation of basins of attraction",
@@ -7814,6 +8700,27 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "Dad2024a",
+			"type": "article",
+			"title": "MarSwitching.jl: A Julia package for Markov switching dynamic models",
+			"authors": [
+				"Dadej, Mateusz"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2024,
+			"journal": "Journal of Open Source Software",
+			"volume": "9",
+			"number": "98",
+			"pages": "6441",
+			"doi": "10.21105/joss.06441",
+			"openalex": "W4399676600",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "Dan1951a",
@@ -8294,6 +9201,30 @@
 			"open_access": false
 		},
 		{
+			"key": "ECAKF2020a",
+			"type": "article",
+			"title": "Estimating the overdispersion in COVID-19 transmission using outbreak sizes outside China",
+			"authors": [
+				"Endo, Akira",
+				"Centre for the Mathematical Modelling of Infectious Diseases COVID-19 Working Group",
+				"Abbott, Sam",
+				"Kucharski, Adam J.",
+				"Funk, Sebastian"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2020,
+			"journal": "Wellcome Open Research",
+			"volume": "5",
+			"pages": "67",
+			"doi": "10.12688/wellcomeopenres.15842.3",
+			"openalex": "W3015538318",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "ECB2024a",
 			"type": "misc",
 			"title": "ECB Data Portal: API Documentation",
@@ -8309,6 +9240,28 @@
 			"source": "manual",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "EG1987a",
+			"type": "article",
+			"title": "Co-Integration and Error Correction: Representation, Estimation, and Testing",
+			"authors": [
+				"Engle, Robert F.",
+				"Granger, C. W. J."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1987,
+			"journal": "Econometrica",
+			"volume": "55",
+			"number": "2",
+			"pages": "251",
+			"doi": "10.2307/1913236",
+			"openalex": "W2110603299",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
 		},
 		{
 			"key": "EI2016a",
@@ -8757,6 +9710,28 @@
 			"open_access": false
 		},
 		{
+			"key": "EZ1989a",
+			"type": "article",
+			"title": "Substitution, Risk Aversion, and the Temporal Behavior of Consumption and Asset Returns: A Theoretical Framework",
+			"authors": [
+				"Epstein, Larry G.",
+				"Zin, Stanley E."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1989,
+			"journal": "Econometrica",
+			"volume": "57",
+			"number": "4",
+			"pages": "937",
+			"doi": "10.2307/1913778",
+			"openalex": "W1574786337",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "Efr1979a",
 			"type": "article",
 			"title": "Bootstrap Methods: Another Look at the Jackknife",
@@ -8824,6 +9799,48 @@
 			"source": "crossref",
 			"retrieved": "2026-10-23",
 			"checked": false,
+			"open_access": false
+		},
+		{
+			"key": "Eng1982a",
+			"type": "article",
+			"title": "Autoregressive Conditional Heteroscedasticity with Estimates of the Variance of United Kingdom Inflation",
+			"authors": [
+				"Engle, Robert F."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1982,
+			"journal": "Econometrica",
+			"volume": "50",
+			"number": "4",
+			"pages": "987",
+			"doi": "10.2307/1912773",
+			"openalex": "W1979575715",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "Eng2002a",
+			"type": "article",
+			"title": "Dynamic Conditional Correlation: A Simple Class of Multivariate Generalized Autoregressive Conditional Heteroskedasticity Models",
+			"authors": [
+				"Engle, Robert"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2002,
+			"journal": "Journal of Business & Economic Statistics",
+			"volume": "20",
+			"number": "3",
+			"pages": "339-350",
+			"doi": "10.1198/073500102288618487",
+			"openalex": "W1727659491",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": false
 		},
 		{
@@ -8972,6 +9989,29 @@
 			"source": "manual",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "FCP1996a",
+			"type": "article",
+			"title": "Analytic derivatives and the computation of GARCH estimates",
+			"authors": [
+				"Fiorentini, Gabriele",
+				"Calzolari, Giorgio",
+				"Panattoni, Lorenzo"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1996,
+			"journal": "Journal of Applied Econometrics",
+			"volume": "11",
+			"number": "4",
+			"pages": "399-417",
+			"doi": "10.1002/(sici)1099-1255(199607)11:4<399::aid-jae401>3.0.co;2-r",
+			"openalex": "W2040526455",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
 		},
 		{
 			"key": "FEHP2011a",
@@ -9176,6 +10216,28 @@
 			"open_access": true
 		},
 		{
+			"key": "FM1973a",
+			"type": "article",
+			"title": "Risk, Return, and Equilibrium: Empirical Tests",
+			"authors": [
+				"Fama, Eugene F.",
+				"MacBeth, James D."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1973,
+			"journal": "Journal of Political Economy",
+			"volume": "81",
+			"number": "3",
+			"pages": "607-636",
+			"doi": "10.1086/260061",
+			"openalex": "W2104795328",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "FNKO2011a",
 			"type": "inproceedings",
 			"title": "Proposal of distance-weighted exponential natural evolution strategies",
@@ -9244,6 +10306,31 @@
 			"source": "manual",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "FPLPK2016a",
+			"type": "article",
+			"title": "Models for optimising the theta method and their relationship to state space models",
+			"authors": [
+				"Fiorucci, Jose A.",
+				"Pellegrini, Tiago R.",
+				"Louzada, Francisco",
+				"Petropoulos, Fotios",
+				"Koehler, Anne B."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2016,
+			"journal": "International Journal of Forecasting",
+			"volume": "32",
+			"number": "4",
+			"pages": "1151-1161",
+			"doi": "10.1016/j.ijforecast.2016.02.005",
+			"openalex": "W2416082767",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "FPP2007a",
@@ -9357,6 +10444,30 @@
 			"open_access": false
 		},
 		{
+			"key": "FRAF2004a",
+			"type": "article",
+			"title": "Factors that make an infectious disease outbreak controllable",
+			"authors": [
+				"Fraser, Christophe",
+				"Riley, Steven",
+				"Anderson, Roy M.",
+				"Ferguson, Neil M."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2004,
+			"journal": "Proceedings of the National Academy of Sciences",
+			"volume": "101",
+			"number": "16",
+			"pages": "6146-6151",
+			"doi": "10.1073/pnas.0307506101",
+			"openalex": "W2140763962",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "FRBSL2024a",
 			"type": "misc",
 			"title": "FRED API Documentation",
@@ -9371,6 +10482,30 @@
 			"legacy_key": "louis2024",
 			"source": "manual",
 			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "FRWZ2016a",
+			"type": "article",
+			"title": "Perturbation methods for Markov-switching dynamic stochastic general equilibrium models: Perturbation for Markov-switching DSGE models",
+			"authors": [
+				"Foerster, Andrew",
+				"Rubio-Ramírez, Juan F.",
+				"Waggoner, Daniel F.",
+				"Zha, Tao"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2016,
+			"journal": "Quantitative Economics",
+			"volume": "7",
+			"number": "2",
+			"pages": "637-669",
+			"doi": "10.3982/qe596",
+			"openalex": "W2498799476",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": true
 		},
 		{
@@ -9661,6 +10796,69 @@
 			"open_access": true
 		},
 		{
+			"key": "Fel1951a",
+			"type": "article",
+			"title": "Two Singular Diffusion Problems",
+			"authors": [
+				"Feller, William"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1951,
+			"journal": "The Annals of Mathematics",
+			"volume": "54",
+			"number": "1",
+			"pages": "173",
+			"doi": "10.2307/1969318",
+			"openalex": "W2329986772",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "Fil1994a",
+			"type": "article",
+			"title": "Business-Cycle Phases and Their Transitional Dynamics",
+			"authors": [
+				"Filardo, Andrew J."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1994,
+			"journal": "Journal of Business & Economic Statistics",
+			"volume": "12",
+			"number": "3",
+			"pages": "299-308",
+			"doi": "10.1080/07350015.1994.10524545",
+			"openalex": "W2031123121",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "Fin1993a",
+			"type": "article",
+			"title": "Herd Immunity: History, Theory, Practice",
+			"authors": [
+				"Fine, Paul E. M."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1993,
+			"journal": "Epidemiologic Reviews",
+			"volume": "15",
+			"number": "2",
+			"pages": "265-302",
+			"doi": "10.1093/oxfordjournals.epirev.a036121",
+			"openalex": "W1856378374",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "Fis1992a",
 			"type": "article",
 			"title": "A special newton-type optimization method",
@@ -9810,6 +11008,49 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "Fra1961a",
+			"type": "article",
+			"title": "The QR Transformation A Unitary Analogue to the LR Transformation--Part 1",
+			"authors": [
+				"Francis, J. G. F."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1961,
+			"journal": "The Computer Journal",
+			"volume": "4",
+			"number": "3",
+			"pages": "265-271",
+			"doi": "10.1093/comjnl/4.3.265",
+			"openalex": "W1995854415",
+			"legacy_key": "francis1961",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "Fra2007a",
+			"type": "article",
+			"title": "Estimating Individual and Household Reproduction Numbers in an Emerging Epidemic",
+			"authors": [
+				"Fraser, Christophe"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2007,
+			"journal": "PLoS ONE",
+			"volume": "2",
+			"number": "8",
+			"pages": "e758",
+			"doi": "10.1371/journal.pone.0000758",
+			"openalex": "W1999223777",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "Fra2018a",
@@ -10147,6 +11388,29 @@
 			"open_access": false
 		},
 		{
+			"key": "GFA1998a",
+			"type": "article",
+			"title": "Chaos, Persistence, and Evolution of Strain Structure in Antigenically Diverse Infectious Agents",
+			"authors": [
+				"Gupta, Sunetra",
+				"Ferguson, Neil",
+				"Anderson, Roy"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1998,
+			"journal": "Science",
+			"volume": "280",
+			"number": "5365",
+			"pages": "912-915",
+			"doi": "10.1126/science.280.5365.912",
+			"openalex": "W2001488223",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "GFI2016a",
 			"type": "article",
 			"title": "What does research reproducibility mean?",
@@ -10202,6 +11466,52 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": false
+		},
+		{
+			"key": "GG2002a",
+			"type": "article",
+			"title": "Dynamics and selection of many-strain pathogens",
+			"authors": [
+				"Gog, Julia R.",
+				"Grenfell, Bryan T."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2002,
+			"journal": "Proceedings of the National Academy of Sciences",
+			"volume": "99",
+			"number": "26",
+			"pages": "17209-17214",
+			"doi": "10.1073/pnas.252512799",
+			"openalex": "W1971707987",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "GGHH2021a",
+			"type": "article",
+			"title": "An Extended SEIR Model with Vaccination for Forecasting the COVID-19 Pandemic in Saudi Arabia Using an Ensemble Kalman Filter",
+			"authors": [
+				"Ghostine, Rabih",
+				"Gharamti, Mohamad",
+				"Hassrouny, Sally",
+				"Hoteit, Ibrahim"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2021,
+			"journal": "Mathematics",
+			"volume": "9",
+			"number": "6",
+			"pages": "636",
+			"doi": "10.3390/math9060636",
+			"openalex": "W3138210308",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "GGML2015a",
@@ -10268,6 +11578,52 @@
 			"source": "manual",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "GJR1993a",
+			"type": "article",
+			"title": "On the Relation between the Expected Value and the Volatility of the Nominal Excess Return on Stocks",
+			"authors": [
+				"Glosten, Lawrence R.",
+				"Jagannathan, Ravi",
+				"Runkle, David E."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1993,
+			"journal": "The Journal of Finance",
+			"volume": "48",
+			"number": "5",
+			"pages": "1779-1801",
+			"doi": "10.1111/j.1540-6261.1993.tb05128.x",
+			"openalex": "W2061160212",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "GK1965a",
+			"type": "article",
+			"title": "Calculating the Singular Values and Pseudo-Inverse of a Matrix",
+			"authors": [
+				"Golub, G.",
+				"Kahan, W."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1965,
+			"journal": "Journal of the Society for Industrial and Applied Mathematics Series B Numerical Analysis",
+			"volume": "2",
+			"number": "2",
+			"pages": "205-224",
+			"doi": "10.1137/0702016",
+			"openalex": "W2005423095",
+			"legacy_key": "golub1965",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
 		},
 		{
 			"key": "GK1980a",
@@ -10344,6 +11700,79 @@
 			"keywords_source": "arxiv",
 			"source": "manual",
 			"retrieved": "2026-10-31",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "GMBAJ...2020a",
+			"type": "article",
+			"title": "Practical considerations for measuring the effective reproductive number, Rt",
+			"authors": [
+				"Gostic, Katelyn M.",
+				"McGough, Lauren",
+				"Baskerville, Edward B.",
+				"Abbott, Sam",
+				"Joshi, Keya",
+				"Tedijanto, Christine",
+				"Kahn, Rebecca",
+				"Niehus, Rene",
+				"Hay, James A.",
+				"De Salazar, Pablo M.",
+				"Hellewell, Joel",
+				"Meakin, Sophie",
+				"Munday, James D.",
+				"Bosse, Nikos I.",
+				"Sherrat, Katharine",
+				"Thompson, Robin N.",
+				"White, Laura F.",
+				"Huisman, Jana S.",
+				"Scire, Jérémie",
+				"Bonhoeffer, Sebastian",
+				"Stadler, Tanja",
+				"Wallinga, Jacco",
+				"Funk, Sebastian",
+				"Lipsitch, Marc",
+				"Cobey, Sarah"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2020,
+			"journal": "PLOS Computational Biology",
+			"volume": "16",
+			"number": "12",
+			"pages": "e1008409",
+			"doi": "10.1371/journal.pcbi.1008409",
+			"openalex": "W3111883190",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "GMCGS...2022a",
+			"type": "article",
+			"title": "High-performance symbolic-numerics via multiple dispatch",
+			"authors": [
+				"Gowda, Shashi",
+				"Ma, Yingbo",
+				"Cheli, Alessandro",
+				"Gwóźzdź, Maja",
+				"Shah, Viral B.",
+				"Edelman, Alan",
+				"Rackauckas, Christopher"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2022,
+			"journal": "ACM Communications in Computer Algebra",
+			"volume": "55",
+			"number": "3",
+			"pages": "92-96",
+			"doi": "10.1145/3511528.3511535",
+			"openalex": "W3163682887",
+			"legacy_key": "GMCGSER2022a",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
 		},
@@ -10580,6 +12009,27 @@
 			"open_access": true
 		},
 		{
+			"key": "GP2018a",
+			"type": "incollection",
+			"title": "Markov Switching Models",
+			"authors": [
+				"Guidolin, Massimo",
+				"Pedio, Manuela"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2018,
+			"booktitle": "Essentials of Time Series for Financial Applications",
+			"publisher": "Elsevier",
+			"pages": "329-379",
+			"doi": "10.1016/b978-0-12-813409-2.00009-1",
+			"openalex": "W2807575446",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "GP2019a",
 			"type": "book",
 			"title": "Handbook of Metaheuristics",
@@ -10709,6 +12159,28 @@
 			"source": "crossref",
 			"retrieved": "2026-10-23",
 			"checked": false,
+			"open_access": false
+		},
+		{
+			"key": "GS2002a",
+			"type": "article",
+			"title": "A status-based approach to multiple strain dynamics",
+			"authors": [
+				"Gog, J.R.",
+				"Swinton, J."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2002,
+			"journal": "Journal of Mathematical Biology",
+			"volume": "44",
+			"number": "2",
+			"pages": "169-184",
+			"doi": "10.1007/s002850100120",
+			"openalex": "W2051457177",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": false
 		},
 		{
@@ -10953,6 +12425,26 @@
 			"open_access": false
 		},
 		{
+			"key": "GV2013a",
+			"type": "book",
+			"title": "Matrix Computations",
+			"authors": [
+				"Golub, Gene H.",
+				"Van Loan, Charles F."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2013,
+			"publisher": "Johns Hopkins University Press",
+			"isbn": "9781421407944",
+			"doi": "10.56021/9781421407944",
+			"legacy_key": "golub2013",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "GW1995a",
 			"type": "article",
 			"title": "Improved Approximation Algorithms for Maximum Cut and Satisfiability Problems Using Semidefinite Programming",
@@ -10988,6 +12480,28 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "GW2004a",
+			"type": "article",
+			"title": "Computing Nash equilibria by iterated polymatrix approximation",
+			"authors": [
+				"Govindan, Srihari",
+				"Wilson, Robert"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2004,
+			"journal": "Journal of Economic Dynamics and Control",
+			"volume": "28",
+			"number": "7",
+			"pages": "1229-1241",
+			"doi": "10.1016/s0165-1889(03)00108-8",
+			"openalex": "W2019128548",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
 		},
 		{
 			"key": "GW2009a",
@@ -11654,6 +13168,48 @@
 			"open_access": false
 		},
 		{
+			"key": "Gra1969a",
+			"type": "article",
+			"title": "Investigating Causal Relations by Econometric Models and Cross-spectral Methods",
+			"authors": [
+				"Granger, C. W. J."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1969,
+			"journal": "Econometrica",
+			"volume": "37",
+			"number": "3",
+			"pages": "424",
+			"doi": "10.2307/1912791",
+			"openalex": "W2178225550",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "Gra2008a",
+			"type": "article",
+			"title": "Ecological rules governing helminth–microparasite coinfection",
+			"authors": [
+				"Graham, Andrea L."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2008,
+			"journal": "Proceedings of the National Academy of Sciences",
+			"volume": "105",
+			"number": "2",
+			"pages": "566-570",
+			"doi": "10.1073/pnas.0707221105",
+			"openalex": "W2000337939",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "Gre2009a",
 			"type": "article",
 			"title": "How citation distortions create unfounded authority: analysis of a citation network",
@@ -11727,6 +13283,23 @@
 			"open_access": true
 		},
 		{
+			"key": "Gru1996a",
+			"type": "phdthesis",
+			"title": "On Computing Limits in a Symbolic Manipulation System",
+			"authors": [
+				"Gruntz, Dominik"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1996,
+			"doi": "10.3929/ethz-a-001631582",
+			"source": "datacite",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false,
+			"school": "ETH Zurich"
+		},
+		{
 			"key": "HA1985a",
 			"type": "article",
 			"title": "Comparing partitions",
@@ -11767,6 +13340,36 @@
 			"open_access": true
 		},
 		{
+			"key": "HABGH...2019a",
+			"type": "article",
+			"title": "Coinfections by noninteracting pathogens are not independent and require new tests of interaction",
+			"authors": [
+				"Hamelin, Frédéric M.",
+				"Allen, Linda J. S.",
+				"Bokil, Vrushali A.",
+				"Gross, Louis J.",
+				"Hilker, Frank M.",
+				"Jeger, Michael J.",
+				"Manore, Carrie A.",
+				"Power, Alison G.",
+				"Rúa, Megan A.",
+				"Cunniffe, Nik J."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2019,
+			"journal": "PLOS Biology",
+			"volume": "17",
+			"number": "12",
+			"pages": "e3000551",
+			"doi": "10.1371/journal.pbio.3000551",
+			"openalex": "W2941554603",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "HAG2018a",
 			"type": "article",
 			"title": "A Riemannian BFGS Method without Differentiated Retraction for Nonconvex Optimization Problems",
@@ -11803,6 +13406,48 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "HAGBJ...2020a",
+			"type": "article",
+			"title": "Feasibility of controlling COVID-19 outbreaks by isolation of cases and contacts",
+			"authors": [
+				"Hellewell, Joel",
+				"Abbott, Sam",
+				"Gimma, Amy",
+				"Bosse, Nikos I",
+				"Jarvis, Christopher I",
+				"Russell, Timothy W",
+				"Munday, James D",
+				"Kucharski, Adam J",
+				"Edmunds, W John",
+				"Sun, Fiona",
+				"Flasche, Stefan",
+				"Quilty, Billy J",
+				"Davies, Nicholas",
+				"Liu, Yang",
+				"Clifford, Samuel",
+				"Klepac, Petra",
+				"Jit, Mark",
+				"Diamond, Charlie",
+				"Gibbs, Hamish",
+				"van Zandvoort, Kevin",
+				"Funk, Sebastian",
+				"Eggo, Rosalind M"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2020,
+			"journal": "The Lancet Global Health",
+			"volume": "8",
+			"number": "4",
+			"pages": "e488-e496",
+			"doi": "10.1016/s2214-109x(20)30074-7",
+			"openalex": "W3008294222",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "HAP2014a",
@@ -12310,6 +13955,49 @@
 			"open_access": true
 		},
 		{
+			"key": "HK2008a",
+			"type": "article",
+			"title": "Automatic Time Series Forecasting: The forecast Package for R",
+			"authors": [
+				"Hyndman, Rob J.",
+				"Khandakar, Yeasmin"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2008,
+			"journal": "Journal of Statistical Software",
+			"volume": "27",
+			"number": "3",
+			"doi": "10.18637/jss.v027.i03",
+			"openalex": "W2116512828",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "HK2013a",
+			"type": "article",
+			"title": "Intermediary Asset Pricing",
+			"authors": [
+				"He, Zhiguo",
+				"Krishnamurthy, Arvind"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2013,
+			"journal": "American Economic Review",
+			"volume": "103",
+			"number": "2",
+			"pages": "732-770",
+			"doi": "10.1257/aer.103.2.732",
+			"openalex": "W3124112311",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "HKBM2017a",
 			"type": "misc",
 			"title": "A Survey of Learning in Multiagent Environments: Dealing with Non-Stationarity",
@@ -12350,6 +14038,30 @@
 			"source": "manual",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "HKSG2002a",
+			"type": "article",
+			"title": "A state space framework for automatic forecasting using exponential smoothing methods",
+			"authors": [
+				"Hyndman, Rob J",
+				"Koehler, Anne B",
+				"Snyder, Ralph D",
+				"Grose, Simone"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2002,
+			"journal": "International Journal of Forecasting",
+			"volume": "18",
+			"number": "3",
+			"pages": "439-454",
+			"doi": "10.1016/s0169-2070(01)00110-8",
+			"openalex": "W2162174678",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "HL1960a",
@@ -12577,6 +14289,27 @@
 			"open_access": false
 		},
 		{
+			"key": "HMP2004a",
+			"type": "article",
+			"title": "A New Approach to Markov-Switching GARCH Models",
+			"authors": [
+				"Haas, M."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2004,
+			"journal": "Journal of Financial Econometrics",
+			"volume": "2",
+			"number": "4",
+			"pages": "493-530",
+			"doi": "10.1093/jjfinec/nbh020",
+			"openalex": "W1963607300",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "HN1996a",
 			"type": "article",
 			"title": "Exchange Monte Carlo method and application to spin glass simulations",
@@ -12772,6 +14505,28 @@
 			"issn": "0025-5610",
 			"doi": "10.1007/BF01582255",
 			"openalex": "W2093246563",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "HP1997a",
+			"type": "article",
+			"title": "Postwar U.S. Business Cycles: An Empirical Investigation",
+			"authors": [
+				"Hodrick, Robert J.",
+				"Prescott, Edward C."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1997,
+			"journal": "Journal of Money, Credit and Banking",
+			"volume": "29",
+			"number": "1",
+			"pages": "1",
+			"doi": "10.2307/2953682",
+			"openalex": "W2088563154",
 			"source": "crossref",
 			"retrieved": "2026-11-02",
 			"checked": true,
@@ -12978,6 +14733,26 @@
 			"open_access": false
 		},
 		{
+			"key": "HS2015a",
+			"type": "book",
+			"title": "Bayesian Estimation of DSGE Models",
+			"authors": [
+				"Herbst, Edward P.",
+				"Schorfheide, Frank"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2015,
+			"publisher": "Princeton University Press",
+			"isbn": "9780691161082",
+			"doi": "10.23943/princeton/9780691161082.001.0001",
+			"openalex": "W3141656133",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "HSKSS2012a",
 			"type": "misc",
 			"title": "Improving neural networks by preventing co-adaptation of feature detectors",
@@ -13044,6 +14819,28 @@
 			"issn": "0893-6080",
 			"doi": "10.1016/0893-6080(89)90020-8",
 			"openalex": "W2137983211",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "HT1989a",
+			"type": "article",
+			"title": "Regression and time series model selection in small samples",
+			"authors": [
+				"Hurvich, Clifford M.",
+				"Tsai, Chih-Ling"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1989,
+			"journal": "Biometrika",
+			"volume": "76",
+			"number": "2",
+			"pages": "297-307",
+			"doi": "10.1093/biomet/76.2.297",
+			"openalex": "W1968371014",
 			"source": "crossref",
 			"retrieved": "2026-11-02",
 			"checked": true,
@@ -13184,6 +14981,29 @@
 			"abstract": "",
 			"source": "manual",
 			"retrieved": "2026-10-31",
+			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "HWWT2019a",
+			"type": "inproceedings",
+			"title": "DSANet: Dual Self-Attention Network for Multivariate Time Series Forecasting",
+			"authors": [
+				"Huang, Siteng",
+				"Wang, Donglin",
+				"Wu, Xuehan",
+				"Tang, Ao"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2019,
+			"booktitle": "Proceedings of the 28th ACM International Conference on Information and Knowledge Management",
+			"publisher": "ACM",
+			"pages": "2129-2132",
+			"doi": "10.1145/3357384.3358132",
+			"openalex": "W2988226917",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": false
 		},
@@ -13503,6 +15323,27 @@
 			"open_access": false
 		},
 		{
+			"key": "Ham1989a",
+			"type": "article",
+			"title": "A New Approach to the Economic Analysis of Nonstationary Time Series and the Business Cycle",
+			"authors": [
+				"Hamilton, James D."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1989,
+			"journal": "Econometrica",
+			"volume": "57",
+			"number": "2",
+			"pages": "357",
+			"doi": "10.2307/1912559",
+			"openalex": "W2074812030",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "Ham2007a",
 			"type": "article",
 			"title": "Viewpoint: Replication in economics",
@@ -13522,6 +15363,27 @@
 			"abstract_source": "openalex",
 			"source": "manual",
 			"retrieved": "2026-10-31",
+			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "Ham2018a",
+			"type": "article",
+			"title": "Why You Should Never Use the Hodrick-Prescott Filter",
+			"authors": [
+				"Hamilton, James D."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2018,
+			"journal": "The Review of Economics and Statistics",
+			"volume": "100",
+			"number": "5",
+			"pages": "831-843",
+			"doi": "10.1162/rest_a_00706",
+			"openalex": "W2617957753",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": false
 		},
@@ -13885,6 +15747,48 @@
 			"open_access": false
 		},
 		{
+			"key": "Hes1993a",
+			"type": "article",
+			"title": "A Closed-Form Solution for Options with Stochastic Volatility with Applications to Bond and Currency Options",
+			"authors": [
+				"Heston, Steven L."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1993,
+			"journal": "Review of Financial Studies",
+			"volume": "6",
+			"number": "2",
+			"pages": "327-343",
+			"doi": "10.1093/rfs/6.2.327",
+			"openalex": "W2064978316",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "Het2000a",
+			"type": "article",
+			"title": "The Mathematics of Infectious Diseases",
+			"authors": [
+				"Hethcote, Herbert W."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2000,
+			"journal": "SIAM Review",
+			"volume": "42",
+			"number": "4",
+			"pages": "599-653",
+			"doi": "10.1137/s0036144500371907",
+			"openalex": "W2161728228",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "Hey1931a",
 			"type": "article",
 			"title": "On finite sequences of real numbers",
@@ -13946,6 +15850,26 @@
 			"issn": "0272-4979",
 			"doi": "10.1093/imanum/22.3.329",
 			"openalex": "W2091560152",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "Hig2002b",
+			"type": "book",
+			"title": "Accuracy and Stability of Numerical Algorithms: Second Edition",
+			"authors": [
+				"Higham, Nicholas J."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2002,
+			"publisher": "Society for Industrial and Applied Mathematics",
+			"isbn": "9780898715217",
+			"doi": "10.1137/1.9780898718027",
+			"openalex": "W2020804487",
+			"legacy_key": "higham2002",
 			"source": "crossref",
 			"retrieved": "2026-11-02",
 			"checked": true,
@@ -14071,6 +15995,28 @@
 			"open_access": false
 		},
 		{
+			"key": "Hou1958a",
+			"type": "article",
+			"title": "Unitary Triangularization of a Nonsymmetric Matrix",
+			"authors": [
+				"Householder, Alston S."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1958,
+			"journal": "Journal of the ACM",
+			"volume": "5",
+			"number": "4",
+			"pages": "339-342",
+			"doi": "10.1145/320941.320947",
+			"openalex": "W2092590148",
+			"legacy_key": "householder1958",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "How1960a",
 			"type": "book",
 			"title": "Dynamic Programming and Markov Processes",
@@ -14127,6 +16073,27 @@
 			"open_access": true
 		},
 		{
+			"key": "Hug1993a",
+			"type": "article",
+			"title": "The risk-free rate in heterogeneous-agent incomplete-insurance economies",
+			"authors": [
+				"Huggett, Mark"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1993,
+			"journal": "Journal of Economic Dynamics and Control",
+			"volume": "17",
+			"number": "5-6",
+			"pages": "953-969",
+			"doi": "10.1016/0165-1889(93)90024-m",
+			"openalex": "W2128754415",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "Hul2022a",
 			"type": "article",
 			"title": "Options, Futures, and Other Derivatives",
@@ -14142,6 +16109,30 @@
 			"source": "manual",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "IMCGJ...2022a",
+			"type": "misc",
+			"title": "Symbolic-Numeric Integration of Univariate Expressions Based on Sparse Regression",
+			"authors": [
+				"Iravanian, Shahriar",
+				"Martensen, Carl Julius",
+				"Cheli, Alessandro",
+				"Gowda, Shashi",
+				"Jain, Anand",
+				"Ma, Yingbo",
+				"Rackauckas, Chris"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2022,
+			"arxiv": "2201.12468",
+			"url": "https://arxiv.org/abs/2201.12468",
+			"legacy_key": "IMCGJMR2022a",
+			"source": "arxiv",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "IMF2025a",
@@ -14609,6 +16600,29 @@
 			"open_access": true
 		},
 		{
+			"key": "JPR1994a",
+			"type": "article",
+			"title": "Bayesian Analysis of Stochastic Volatility Models",
+			"authors": [
+				"Jacquier, Eric",
+				"Polson, Nicholas G.",
+				"Rossi, Peter E."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1994,
+			"journal": "Journal of Business & Economic Statistics",
+			"volume": "12",
+			"number": "4",
+			"pages": "371-389",
+			"doi": "10.1080/07350015.1994.10524553",
+			"openalex": "W4251281949",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "JPS1993a",
 			"type": "article",
 			"title": "Lipschitzian Optimization Without the Lipschitz Constant",
@@ -14962,6 +16976,27 @@
 			"open_access": false
 		},
 		{
+			"key": "Joh1991a",
+			"type": "article",
+			"title": "Estimation and Hypothesis Testing of Cointegration Vectors in Gaussian Vector Autoregressive Models",
+			"authors": [
+				"Johansen, Soren"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1991,
+			"journal": "Econometrica",
+			"volume": "59",
+			"number": "6",
+			"pages": "1551",
+			"doi": "10.2307/2938278",
+			"openalex": "W2034707435",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "Joh2001a",
 			"type": "article",
 			"title": "On the distribution of the largest eigenvalue in principal components analysis",
@@ -15231,6 +17266,28 @@
 			"open_access": false
 		},
 		{
+			"key": "KE2005a",
+			"type": "article",
+			"title": "Networks and epidemic models",
+			"authors": [
+				"Keeling, Matt J",
+				"Eames, Ken T.D"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2005,
+			"journal": "Journal of The Royal Society Interface",
+			"volume": "2",
+			"number": "4",
+			"pages": "295-307",
+			"doi": "10.1098/rsif.2005.0051",
+			"openalex": "W2073627497",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "KES2001a",
 			"type": "article",
 			"title": "Swarm Intelligence",
@@ -15289,6 +17346,33 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": false
+		},
+		{
+			"key": "KGHLM...2010a",
+			"type": "article",
+			"title": "Identification of influential spreaders in complex networks",
+			"authors": [
+				"Kitsak, Maksim",
+				"Gallos, Lazaros K.",
+				"Havlin, Shlomo",
+				"Liljeros, Fredrik",
+				"Muchnik, Lev",
+				"Stanley, H. Eugene",
+				"Makse, Hernán A."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2010,
+			"journal": "Nature Physics",
+			"volume": "6",
+			"number": "11",
+			"pages": "888-893",
+			"doi": "10.1038/nphys1746",
+			"openalex": "W2133131640",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "KGV1983a",
@@ -15398,6 +17482,26 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
+		},
+		{
+			"key": "KL2017a",
+			"type": "book",
+			"title": "Structural Vector Autoregressive Analysis",
+			"authors": [
+				"Kilian, Lutz",
+				"Lütkepohl, Helmut"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2017,
+			"publisher": "Cambridge University Press",
+			"isbn": "9781107196575",
+			"doi": "10.1017/9781108164818",
+			"openalex": "W2770058355",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
 		},
 		{
 			"key": "KL2021a",
@@ -15545,6 +17649,93 @@
 			"open_access": true
 		},
 		{
+			"key": "KM1932a",
+			"type": "article",
+			"title": "Contributions to the mathematical theory of epidemics. II. —The problem of endemicity",
+			"authors": [
+				"Kermack, William Ogilvy",
+				"McKendrick, A. G."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1932,
+			"journal": "Proceedings of the Royal Society of London. Series A, Containing Papers of a Mathematical and Physical Character",
+			"volume": "138",
+			"number": "834",
+			"pages": "55-83",
+			"doi": "10.1098/rspa.1932.0171",
+			"openalex": "W2144301074",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "KMS2017a",
+			"type": "book",
+			"title": "Mathematics of Epidemics on Networks: From Exact to Approximate Models",
+			"authors": [
+				"Kiss, István Z.",
+				"Miller, Joel C.",
+				"Simon, Péter L."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2017,
+			"publisher": "Springer International Publishing",
+			"isbn": "9783319508047",
+			"doi": "10.1007/978-3-319-50806-1",
+			"openalex": "W4252394414",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "KMV2018a",
+			"type": "article",
+			"title": "Monetary Policy According to HANK",
+			"authors": [
+				"Kaplan, Greg",
+				"Moll, Benjamin",
+				"Violante, Giovanni L."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2018,
+			"journal": "American Economic Review",
+			"volume": "108",
+			"number": "3",
+			"pages": "697-743",
+			"doi": "10.1257/aer.20160042",
+			"openalex": "W2253894436",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "KN2010a",
+			"type": "article",
+			"title": "Message passing approach for general epidemic models",
+			"authors": [
+				"Karrer, Brian",
+				"Newman, M. E. J."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2010,
+			"journal": "Physical Review E",
+			"volume": "82",
+			"number": "1",
+			"doi": "10.1103/physreve.82.016101",
+			"openalex": "W1994731130",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "KP2006a",
 			"type": "article",
 			"title": "Generalized Reduced Rank Tests Using the Singular Value Decomposition",
@@ -15639,6 +17830,50 @@
 			"retrieved": "2026-10-31",
 			"checked": true,
 			"open_access": true
+		},
+		{
+			"key": "KPSS1992a",
+			"type": "article",
+			"title": "Testing the null hypothesis of stationarity against the alternative of a unit root",
+			"authors": [
+				"Kwiatkowski, Denis",
+				"Phillips, Peter C.B.",
+				"Schmidt, Peter",
+				"Shin, Yongcheol"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1992,
+			"journal": "Journal of Econometrics",
+			"volume": "54",
+			"number": "1-3",
+			"pages": "159-178",
+			"doi": "10.1016/0304-4076(92)90104-y",
+			"openalex": "W1588163064",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "KR2008a",
+			"type": "book",
+			"title": "Modeling Infectious Diseases in Humans and Animals",
+			"authors": [
+				"Keeling, Matt J.",
+				"Rohani, Pejman"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2008,
+			"publisher": "Princeton University Press",
+			"isbn": "9781400841035",
+			"doi": "10.1515/9781400841035",
+			"openalex": "W4302331569",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
 		},
 		{
 			"key": "KS1969a",
@@ -15770,6 +18005,29 @@
 			"url": "https://arxiv.org/abs/1901.02358",
 			"oa_url": "https://arxiv.org/pdf/1901.02358",
 			"source": "datacite",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "KSC1998a",
+			"type": "article",
+			"title": "Stochastic Volatility: Likelihood Inference and Comparison with ARCH Models",
+			"authors": [
+				"Kim, Sangjoon",
+				"Shepherd, Neil",
+				"Chib, Siddhartha"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1998,
+			"journal": "Review of Economic Studies",
+			"volume": "65",
+			"number": "3",
+			"pages": "361-393",
+			"doi": "10.1111/1467-937x.00050",
+			"openalex": "W2079672223",
+			"source": "crossref",
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
@@ -16065,6 +18323,28 @@
 			"open_access": false
 		},
 		{
+			"key": "KZ1999a",
+			"type": "article",
+			"title": "Two‐Pass Tests of Asset Pricing Models with Useless Factors",
+			"authors": [
+				"Kan, Raymond",
+				"Zhang, Chu"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1999,
+			"journal": "The Journal of Finance",
+			"volume": "54",
+			"number": "1",
+			"pages": "203-235",
+			"doi": "10.1111/0022-1082.00102",
+			"openalex": "W2120972767",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "KZ2001a",
 			"type": "article",
 			"title": "Logistic Regression in Rare Events Data",
@@ -16316,6 +18596,25 @@
 			"open_access": true
 		},
 		{
+			"key": "Kel2003a",
+			"type": "book",
+			"title": "Solving Nonlinear Equations with Newton's Method",
+			"authors": [
+				"Kelley, C. T."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2003,
+			"publisher": "Society for Industrial and Applied Mathematics",
+			"isbn": "9780898715460",
+			"doi": "10.1137/1.9780898718898",
+			"openalex": "W612879516",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "Kel2017a",
 			"type": "article",
 			"title": "An Introduction to Trajectory Optimization: How to Do Your Own Direct Collocation",
@@ -16358,6 +18657,27 @@
 			"abstract_source": "openalex",
 			"source": "manual",
 			"retrieved": "2026-10-31",
+			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "Kim1994a",
+			"type": "article",
+			"title": "Dynamic linear models with Markov-switching",
+			"authors": [
+				"Kim, Chang-Jin"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1994,
+			"journal": "Journal of Econometrics",
+			"volume": "60",
+			"number": "1-2",
+			"pages": "1-22",
+			"doi": "10.1016/0304-4076(94)90036-1",
+			"openalex": "W2014378975",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": false
 		},
@@ -16409,6 +18729,27 @@
 			"source": "crossref",
 			"retrieved": "2026-10-23",
 			"checked": false,
+			"open_access": false
+		},
+		{
+			"key": "Kle2000a",
+			"type": "article",
+			"title": "Using the generalized Schur form to solve a multivariate linear rational expectations model",
+			"authors": [
+				"Klein, Paul"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2000,
+			"journal": "Journal of Economic Dynamics and Control",
+			"volume": "24",
+			"number": "10",
+			"pages": "1405-1423",
+			"doi": "10.1016/s0165-1889(99)00045-7",
+			"openalex": "W2075102972",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": false
 		},
 		{
@@ -17318,6 +19659,29 @@
 			"open_access": false
 		},
 		{
+			"key": "LKD2010a",
+			"type": "article",
+			"title": "A comparison of biased simulation schemes for stochastic volatility models",
+			"authors": [
+				"Lord, Roger",
+				"Koekkoek, Remmert",
+				"Dijk, Dick Van"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2010,
+			"journal": "Quantitative Finance",
+			"volume": "10",
+			"number": "2",
+			"pages": "177-194",
+			"doi": "10.1080/14697680802392496",
+			"openalex": "W3123725596",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "LL2017a",
 			"type": "misc",
 			"title": "A Unified Approach to Interpreting Model Predictions",
@@ -17761,6 +20125,29 @@
 			"open_access": true
 		},
 		{
+			"key": "LMOZ2014a",
+			"type": "article",
+			"title": "Inferring the origin of an epidemic with a dynamic message-passing algorithm",
+			"authors": [
+				"Lokhov, Andrey Y.",
+				"Mézard, Marc",
+				"Ohta, Hiroki",
+				"Zdeborová, Lenka"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2014,
+			"journal": "Physical Review E",
+			"volume": "90",
+			"number": "1",
+			"doi": "10.1103/physreve.90.012801",
+			"openalex": "W2011014734",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "LMS2003a",
 			"type": "incollection",
 			"title": "Iterated Local Search: Framework and Applications",
@@ -18030,6 +20417,30 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": false
+		},
+		{
+			"key": "LSKG2005a",
+			"type": "article",
+			"title": "Superspreading and the effect of individual variation on disease emergence",
+			"authors": [
+				"Lloyd-Smith, J. O.",
+				"Schreiber, S. J.",
+				"Kopp, P. E.",
+				"Getz, W. M."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2005,
+			"journal": "Nature",
+			"volume": "438",
+			"number": "7066",
+			"pages": "355-359",
+			"doi": "10.1038/nature04153",
+			"openalex": "W2069251911",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "LT2004a",
@@ -19015,6 +21426,26 @@
 			"open_access": false
 		},
 		{
+			"key": "Lut2005a",
+			"type": "book",
+			"title": "New Introduction to Multiple Time Series Analysis",
+			"authors": [
+				"Lütkepohl, Helmut"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2005,
+			"publisher": "Springer Berlin Heidelberg",
+			"isbn": "9783540401728",
+			"doi": "10.1007/978-3-540-27752-1",
+			"openalex": "W2947626232",
+			"legacy_key": "Lt2005a",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "Lux2007a",
 			"type": "article",
 			"title": "A tutorial on spectral clustering",
@@ -19212,6 +21643,28 @@
 			"source": "crossref",
 			"retrieved": "2026-10-23",
 			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "ME2006a",
+			"type": "article",
+			"title": "Generality of the Final Size Formula for an Epidemic of a Newly Invading Infectious Disease",
+			"authors": [
+				"Ma, Junling",
+				"Earn, David J. D."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2006,
+			"journal": "Bulletin of Mathematical Biology",
+			"volume": "68",
+			"number": "3",
+			"pages": "679-702",
+			"doi": "10.1007/s11538-005-9047-7",
+			"openalex": "W2032827588",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": true
 		},
 		{
@@ -19750,6 +22203,31 @@
 			"open_access": false
 		},
 		{
+			"key": "MNLDR...2002a",
+			"type": "article",
+			"title": "Estimating Site Occupancy Rates When Detection Probabilities Are Less Than One",
+			"authors": [
+				"MacKenzie, Darryl I.",
+				"Nichols, James D.",
+				"Lachman, Gideon B.",
+				"Droege, Sam",
+				"Andrew Royle, J.",
+				"Langtimm, Catherine A."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2002,
+			"journal": "Ecology",
+			"volume": "83",
+			"number": "8",
+			"pages": "2248-2255",
+			"doi": "10.1890/0012-9658(2002)083[2248:ESORWD]2.0.CO;2",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "MP1967a",
 			"type": "article",
 			"title": "Distribution of Eigenvalues for Some Sets of Random Matrices",
@@ -20031,6 +22509,28 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "MS1996a",
+			"type": "article",
+			"title": "Potential Games",
+			"authors": [
+				"Monderer, Dov",
+				"Shapley, Lloyd S."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1996,
+			"journal": "Games and Economic Behavior",
+			"volume": "14",
+			"number": "1",
+			"pages": "124-143",
+			"doi": "10.1006/game.1996.0044",
+			"openalex": "W3022321359",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
 		},
 		{
 			"key": "MS1999a",
@@ -20477,6 +22977,25 @@
 			"open_access": false
 		},
 		{
+			"key": "Mar2015a",
+			"type": "book",
+			"title": "An Introduction to Mathematical Epidemiology",
+			"authors": [
+				"Martcheva, Maia"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2015,
+			"publisher": "Springer US",
+			"isbn": "9781489976116",
+			"doi": "10.1007/978-1-4899-7612-3",
+			"openalex": "W2335001735",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "Mar2025a",
 			"type": "misc",
 			"title": "Unified Implementations of Recurrent Neural Networks in Multiple Deep Learning Frameworks",
@@ -20640,6 +23159,27 @@
 			"open_access": false
 		},
 		{
+			"key": "Mer1973a",
+			"type": "article",
+			"title": "An Intertemporal Capital Asset Pricing Model",
+			"authors": [
+				"Merton, Robert C."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1973,
+			"journal": "Econometrica",
+			"volume": "41",
+			"number": "5",
+			"pages": "867",
+			"doi": "10.2307/1913811",
+			"openalex": "W2134807435",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "Mer1976a",
 			"type": "article",
 			"title": "Option Pricing When Underlying Stock Returns Are Discontinuous",
@@ -20777,6 +23317,26 @@
 			"source": "manual",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "Mor1978a",
+			"type": "incollection",
+			"title": "The Levenberg-Marquardt algorithm: Implementation and theory",
+			"authors": [
+				"Moré, Jorge J."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1978,
+			"booktitle": "Lecture Notes in Mathematics",
+			"publisher": "Springer Berlin Heidelberg",
+			"pages": "105-116",
+			"doi": "10.1007/bfb0067700",
+			"openalex": "W2167694888",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "Mor1991a",
@@ -21170,6 +23730,27 @@
 			"open_access": false
 		},
 		{
+			"key": "NS2013a",
+			"type": "incollection",
+			"title": "DSGE Model-Based Forecasting",
+			"authors": [
+				"Negro, Marco Del",
+				"Schorfheide, Frank"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2013,
+			"booktitle": "Handbook of Economic Forecasting",
+			"publisher": "Elsevier",
+			"pages": "57-140",
+			"doi": "10.1016/b978-0-444-53683-9.00002-5",
+			"openalex": "W1535941903",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "NS2018a",
 			"type": "article",
 			"title": "High-Frequency Identification of Monetary Non-Neutrality: The Information Effect",
@@ -21311,6 +23892,50 @@
 			"open_access": false
 		},
 		{
+			"key": "NYSM2012a",
+			"type": "article",
+			"title": "Estimating the transmission potential of supercritical processes based on the final size distribution of minor outbreaks",
+			"authors": [
+				"Nishiura, Hiroshi",
+				"Yan, Ping",
+				"Sleeman, Candace K.",
+				"Mode, Charles J."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2012,
+			"journal": "Journal of Theoretical Biology",
+			"volume": "294",
+			"pages": "48-55",
+			"doi": "10.1016/j.jtbi.2011.10.039",
+			"openalex": "W2094740420",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "Nas1950a",
+			"type": "article",
+			"title": "Equilibrium points in n -person games",
+			"authors": [
+				"Nash, John F."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1950,
+			"journal": "Proceedings of the National Academy of Sciences",
+			"volume": "36",
+			"number": "1",
+			"pages": "48-49",
+			"doi": "10.1073/pnas.36.1.48",
+			"openalex": "W2067050450",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "Nas1951a",
 			"type": "article",
 			"title": "Non-Cooperative Games",
@@ -21442,6 +24067,27 @@
 			"retrieved": "2026-10-24",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "Nel1991a",
+			"type": "article",
+			"title": "Conditional Heteroskedasticity in Asset Returns: A New Approach",
+			"authors": [
+				"Nelson, Daniel B."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1991,
+			"journal": "Econometrica",
+			"volume": "59",
+			"number": "2",
+			"pages": "347",
+			"doi": "10.2307/2938260",
+			"openalex": "W1999814123",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
 		},
 		{
 			"key": "Nel2006a",
@@ -21653,6 +24299,30 @@
 			"open_access": true
 		},
 		{
+			"key": "OCSN2007a",
+			"type": "article",
+			"title": "Stochastic volatility with leverage: Fast and efficient likelihood inference",
+			"authors": [
+				"Omori, Yasuhiro",
+				"Chib, Siddhartha",
+				"Shephard, Neil",
+				"Nakajima, Jouchi"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2007,
+			"journal": "Journal of Econometrics",
+			"volume": "140",
+			"number": "2",
+			"pages": "425-449",
+			"doi": "10.1016/j.jeconom.2006.07.008",
+			"openalex": "W2127297724",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "ODZSV...2016a",
 			"type": "misc",
 			"title": "WaveNet: A Generative Model for Raw Audio",
@@ -21796,6 +24466,28 @@
 			"retrieved": "2026-10-24",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "OT2020a",
+			"type": "article",
+			"title": "An Enhancement of the Bisection Method Average Performance Preserving Minmax Optimality",
+			"authors": [
+				"Oliveira, I. F. D.",
+				"Takahashi, R. H. C."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2020,
+			"journal": "ACM Transactions on Mathematical Software",
+			"volume": "47",
+			"number": "1",
+			"pages": "1-24",
+			"doi": "10.1145/3423597",
+			"openalex": "W3112697985",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
 		},
 		{
 			"key": "Oeh2024a",
@@ -22052,6 +24744,30 @@
 			"open_access": true
 		},
 		{
+			"key": "PCVV2015a",
+			"type": "article",
+			"title": "Epidemic processes in complex networks",
+			"authors": [
+				"Pastor-Satorras, Romualdo",
+				"Castellano, Claudio",
+				"Van Mieghem, Piet",
+				"Vespignani, Alessandro"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2015,
+			"journal": "Reviews of Modern Physics",
+			"volume": "87",
+			"number": "3",
+			"pages": "925-979",
+			"doi": "10.1103/revmodphys.87.925",
+			"openalex": "W1878853999",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "PDCMS...2020a",
 			"type": "article",
 			"title": "EvolveGCN: Evolving Graph Convolutional Networks for Dynamic Graphs",
@@ -22105,6 +24821,28 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
+		},
+		{
+			"key": "PF2007a",
+			"type": "article",
+			"title": "Emphasizing the ecology in parasite community ecology",
+			"authors": [
+				"Pedersen, Amy B.",
+				"Fenton, Andy"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2007,
+			"journal": "Trends in Ecology & Evolution",
+			"volume": "22",
+			"number": "3",
+			"pages": "133-139",
+			"doi": "10.1016/j.tree.2006.11.005",
+			"openalex": "W1970436162",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
 		},
 		{
 			"key": "PFGLO...2025a",
@@ -22165,6 +24903,32 @@
 			"legacy_key": "pineau2003",
 			"source": "manual",
 			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "PHLLU...2024a",
+			"type": "misc",
+			"title": "NonlinearSolve.jl: High-Performance and Robust Solvers for Systems of Nonlinear Equations in Julia",
+			"authors": [
+				"Pal, Avik",
+				"Holtorf, Flemming",
+				"Larsson, Axel",
+				"Loman, Torkel",
+				"Utkarsh",
+				"Schäfer, Frank",
+				"Qu, Qingyu",
+				"Edelman, Alan",
+				"Rackauckas, Chris"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2024,
+			"arxiv": "2403.16341",
+			"url": "https://arxiv.org/abs/2403.16341",
+			"legacy_key": "PHLLUSQER2024a",
+			"source": "arxiv",
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": true
 		},
 		{
@@ -22492,6 +25256,28 @@
 			"open_access": true
 		},
 		{
+			"key": "PS2021a",
+			"type": "article",
+			"title": "Boosting: Why You Can Use the HP Filter",
+			"authors": [
+				"Phillips, Peter C. B.",
+				"Shi, Zhentao"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2021,
+			"journal": "International Economic Review",
+			"volume": "62",
+			"number": "2",
+			"pages": "521-570",
+			"doi": "10.1111/iere.12495",
+			"openalex": "W3107963534",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "PSKB2023a",
 			"type": "inproceedings",
 			"title": "Do Users Write More Insecure Code with AI Assistants?",
@@ -22636,6 +25422,27 @@
 			"open_access": true
 		},
 		{
+			"key": "PV2002a",
+			"type": "article",
+			"title": "Immunization of complex networks",
+			"authors": [
+				"Pastor-Satorras, Romualdo",
+				"Vespignani, Alessandro"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2002,
+			"journal": "Physical Review E",
+			"volume": "65",
+			"number": "3",
+			"doi": "10.1103/physreve.65.036104",
+			"openalex": "W2055620707",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "PW1954a",
 			"type": "article",
 			"title": "Trend Estimators and Serial Correlation",
@@ -22774,6 +25581,27 @@
 			"legacy_key": "parkinson1980",
 			"source": "manual",
 			"checked": false,
+			"open_access": false
+		},
+		{
+			"key": "Par1982a",
+			"type": "article",
+			"title": "ARARMA models for time series analysis and forecasting",
+			"authors": [
+				"Parzen, Emanuel"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1982,
+			"journal": "Journal of Forecasting",
+			"volume": "1",
+			"number": "1",
+			"pages": "67-82",
+			"doi": "10.1002/for.3980010108",
+			"openalex": "W2047181811",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": false
 		},
 		{
@@ -23571,6 +26399,32 @@
 			"open_access": true
 		},
 		{
+			"key": "QSCCJ...2017a",
+			"type": "inproceedings",
+			"title": "A Dual-Stage Attention-Based Recurrent Neural Network for Time Series Prediction",
+			"authors": [
+				"Qin, Yao",
+				"Song, Dongjin",
+				"Chen, Haifeng",
+				"Cheng, Wei",
+				"Jiang, Guofei",
+				"Cottrell, Garrison W."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2017,
+			"booktitle": "Proceedings of the Twenty-Sixth International Joint Conference on Artificial Intelligence",
+			"publisher": "International Joint Conferences on Artificial Intelligence Organization",
+			"pages": "2627-2633",
+			"doi": "10.24963/ijcai.2017/366",
+			"openalex": "W2613328025",
+			"legacy_key": "QSCCJC2017a",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "Qui...2023a",
 			"type": "misc",
 			"title": "Tables.jl: An Interface for Tabular Data",
@@ -23804,6 +26658,28 @@
 			"open_access": true
 		},
 		{
+			"key": "RG1978a",
+			"type": "article",
+			"title": "Estimating Prevalence from the Results of a Screening Test",
+			"authors": [
+				"Rogan, Walter J.",
+				"Gladen, Beth"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1978,
+			"journal": "American Journal of Epidemiology",
+			"volume": "107",
+			"number": "1",
+			"pages": "71-76",
+			"doi": "10.1093/oxfordjournals.aje.a112510",
+			"openalex": "W2271596670",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "RG2019a",
 			"type": "inproceedings",
 			"title": "Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks",
@@ -23827,6 +26703,30 @@
 			"source": "manual",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "RGMG2003a",
+			"type": "article",
+			"title": "Ecological interference between fatal diseases",
+			"authors": [
+				"Rohani, P.",
+				"Green, C. J.",
+				"Mantilla-Beniers, N. B.",
+				"Grenfell, B. T."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2003,
+			"journal": "Nature",
+			"volume": "422",
+			"number": "6934",
+			"pages": "885-888",
+			"doi": "10.1038/nature01542",
+			"openalex": "W2024258404",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
 		},
 		{
 			"key": "RHW1986a",
@@ -24780,6 +27680,28 @@
 			"open_access": false
 		},
 		{
+			"key": "RU2002a",
+			"type": "article",
+			"title": "On Adjusting the Hodrick-Prescott Filter for the Frequency of Observations",
+			"authors": [
+				"Ravn, Morten O.",
+				"Uhlig, Harald"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2002,
+			"journal": "Review of Economics and Statistics",
+			"volume": "84",
+			"number": "2",
+			"pages": "371-376",
+			"doi": "10.1162/003465302317411604",
+			"openalex": "W2173858490",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "RVFMK2020a",
 			"type": "inproceedings",
 			"title": "Deep SAD: A Method for Deep Semi-Supervised Anomaly Detection",
@@ -24837,6 +27759,29 @@
 			"legacy_key": "ruff2018",
 			"source": "manual",
 			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "RVHL2020a",
+			"type": "article",
+			"title": "Why is it difficult to accurately predict the COVID-19 epidemic?",
+			"authors": [
+				"Roda, Weston C.",
+				"Varughese, Marie B.",
+				"Han, Donglin",
+				"Li, Michael Y."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2020,
+			"journal": "Infectious Disease Modelling",
+			"volume": "5",
+			"pages": "271-281",
+			"doi": "10.1016/j.idm.2020.03.001",
+			"openalex": "W3012864042",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
 			"open_access": true
 		},
 		{
@@ -24970,6 +27915,29 @@
 			"retrieved": "2026-10-31",
 			"checked": true,
 			"open_access": true
+		},
+		{
+			"key": "RWZ2010a",
+			"type": "article",
+			"title": "Structural Vector Autoregressions: Theory of Identification and Algorithms for Inference",
+			"authors": [
+				"Rubio-Ramírez, Juan F.",
+				"Waggoner, Daniel F.",
+				"Zha, Tao"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2010,
+			"journal": "Review of Economic Studies",
+			"volume": "77",
+			"number": "2",
+			"pages": "665-696",
+			"doi": "10.1111/j.1467-937x.2009.00578.x",
+			"openalex": "W2109425163",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
 		},
 		{
 			"key": "RY2000a",
@@ -25164,6 +28132,27 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "Ris1969a",
+			"type": "article",
+			"title": "The problem of integration in finite terms",
+			"authors": [
+				"Risch, Robert H."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1969,
+			"journal": "Transactions of the American Mathematical Society",
+			"volume": "139",
+			"number": "0",
+			"pages": "167-189",
+			"doi": "10.1090/s0002-9947-1969-0237477-8",
+			"openalex": "W2140443967",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "Rob1952a",
@@ -25693,6 +28682,29 @@
 			"open_access": false
 		},
 		{
+			"key": "SB2005a",
+			"type": "article",
+			"title": "The accuracy of intermittent demand estimates",
+			"authors": [
+				"Syntetos, Aris A.",
+				"Boylan, John E."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2005,
+			"journal": "International Journal of Forecasting",
+			"volume": "21",
+			"number": "2",
+			"pages": "303-314",
+			"doi": "10.1016/j.ijforecast.2004.10.001",
+			"openalex": "W2114733835",
+			"legacy_key": "syntetos2005",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "SB2018a",
 			"type": "book",
 			"title": "Reinforcement Learning: An Introduction",
@@ -25753,6 +28765,30 @@
 			"doi": "10.1175/2008mwr2529.1",
 			"openalex": "W2150951085",
 			"oa_url": "https://journals.ametsoc.org/downloadpdf/journals/mwre/136/12/2008mwr2529.1.pdf",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "SBC2005a",
+			"type": "article",
+			"title": "On the categorization of demand patterns",
+			"authors": [
+				"Syntetos, A A",
+				"Boylan, J E",
+				"Croston, J D"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2005,
+			"journal": "Journal of the Operational Research Society",
+			"volume": "56",
+			"number": "5",
+			"pages": "495-503",
+			"doi": "10.1057/palgrave.jors.2601841",
+			"openalex": "W1972835575",
+			"legacy_key": "syntetos2005b",
 			"source": "crossref",
 			"retrieved": "2026-11-02",
 			"checked": true,
@@ -25840,6 +28876,30 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "SBJ2006a",
+			"type": "article",
+			"title": "Forecasting for intermittent demand: the estimation of an unbiased average",
+			"authors": [
+				"Shale, E A",
+				"Boylan, J E",
+				"Johnston, F R"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2006,
+			"journal": "Journal of the Operational Research Society",
+			"volume": "57",
+			"number": "5",
+			"pages": "588-592",
+			"doi": "10.1057/palgrave.jors.2602031",
+			"openalex": "W2061277123",
+			"legacy_key": "shale2006",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
 		},
 		{
 			"key": "SBM1996a",
@@ -26401,6 +29461,29 @@
 			"open_access": false
 		},
 		{
+			"key": "SKR2011a",
+			"type": "article",
+			"title": "Statistical Inference for Multi-Pathogen Systems",
+			"authors": [
+				"Shrestha, Sourya",
+				"King, Aaron A.",
+				"Rohani, Pejman"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2011,
+			"journal": "PLoS Computational Biology",
+			"volume": "7",
+			"number": "8",
+			"pages": "e1002135",
+			"doi": "10.1371/journal.pcbi.1002135",
+			"openalex": "W2060089186",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "SKSPZ2022a",
 			"type": "inproceedings",
 			"title": "ColBERTv2: Effective and Efficient Retrieval via Lightweight Late Interaction",
@@ -26679,6 +29762,28 @@
 			"retrieved": "2026-10-30",
 			"checked": true,
 			"open_access": true
+		},
+		{
+			"key": "SP1973a",
+			"type": "article",
+			"title": "The Logic of Animal Conflict",
+			"authors": [
+				"Smith, J. Maynard",
+				"Price, G. R."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1973,
+			"journal": "Nature",
+			"volume": "246",
+			"number": "5427",
+			"pages": "15-18",
+			"doi": "10.1038/246015a0",
+			"openalex": "W1967829443",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
 		},
 		{
 			"key": "SP1994a",
@@ -27153,6 +30258,29 @@
 			"open_access": false
 		},
 		{
+			"key": "SSL2019a",
+			"type": "article",
+			"title": "Temporal pattern attention for multivariate time series forecasting",
+			"authors": [
+				"Shih, Shun-Yao",
+				"Sun, Fan-Keng",
+				"Lee, Hung-yi"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2019,
+			"journal": "Machine Learning",
+			"volume": "108",
+			"number": "8-9",
+			"pages": "1421-1441",
+			"doi": "10.1007/s10994-019-05815-0",
+			"openalex": "W2890096158",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "SSLGC...2025a",
 			"type": "misc",
 			"title": "Beyond the Protocol: Unveiling Attack Vectors in the Model Context Protocol (MCP) Ecosystem",
@@ -27391,6 +30519,28 @@
 			"open_access": true
 		},
 		{
+			"key": "SU2004a",
+			"type": "article",
+			"title": "Solving dynamic general equilibrium models using a second-order approximation to the policy function",
+			"authors": [
+				"Schmitt-Grohé, Stephanie",
+				"Uribe, Martı́n"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2004,
+			"journal": "Journal of Economic Dynamics and Control",
+			"volume": "28",
+			"number": "4",
+			"pages": "755-775",
+			"doi": "10.1016/s0165-1889(03)00043-5",
+			"openalex": "W3121467051",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "SW1965a",
 			"type": "article",
 			"title": "An analysis of variance test for normality (complete samples)",
@@ -27447,6 +30597,28 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "SW2007a",
+			"type": "article",
+			"title": "Shocks and Frictions in US Business Cycles: A Bayesian DSGE Approach",
+			"authors": [
+				"Smets, Frank",
+				"Wouters, Rafael"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2007,
+			"journal": "American Economic Review",
+			"volume": "97",
+			"number": "3",
+			"pages": "586-606",
+			"doi": "10.1257/aer.97.3.586",
+			"openalex": "W3123970111",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
 		},
 		{
 			"key": "SWDRK2017a",
@@ -27585,6 +30757,28 @@
 			"issn": "1387-2532",
 			"doi": "10.1007/s10458-007-9026-5",
 			"openalex": "W2029280655",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "SZ2011a",
+			"type": "article",
+			"title": "Rumors in a Network: Who's the Culprit?",
+			"authors": [
+				"Shah, Devavrat",
+				"Zaman, Tauhid"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2011,
+			"journal": "IEEE Transactions on Information Theory",
+			"volume": "57",
+			"number": "8",
+			"pages": "5163-5181",
+			"doi": "10.1109/tit.2011.2158885",
+			"openalex": "W2111772797",
 			"source": "crossref",
 			"retrieved": "2026-11-02",
 			"checked": true,
@@ -27851,6 +31045,27 @@
 			"open_access": true
 		},
 		{
+			"key": "Sha1992a",
+			"type": "article",
+			"title": "On the Estimation of Beta-Pricing Models",
+			"authors": [
+				"Shanken, Jay"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1992,
+			"journal": "Review of Financial Studies",
+			"volume": "5",
+			"number": "1",
+			"pages": "1-33",
+			"doi": "10.1093/rfs/5.1.1",
+			"openalex": "W2142152317",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "Sha1998a",
 			"type": "incollection",
 			"title": "Using Constraint Programming and Local Search Methods to Solve Vehicle Routing Problems",
@@ -28003,6 +31218,27 @@
 			"open_access": true
 		},
 		{
+			"key": "Sim1980a",
+			"type": "article",
+			"title": "Macroeconomics and Reality",
+			"authors": [
+				"Sims, Christopher A."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1980,
+			"journal": "Econometrica",
+			"volume": "48",
+			"number": "1",
+			"pages": "1",
+			"doi": "10.2307/1912017",
+			"openalex": "W2019459021",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "Sim2006a",
 			"type": "book",
 			"title": "Optimal State Estimation: Kalman, H-infinity, and Nonlinear Approaches",
@@ -28141,6 +31377,25 @@
 			"source": "manual",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "Smi1982a",
+			"type": "book",
+			"title": "Evolution and the Theory of Games",
+			"authors": [
+				"Smith, John Maynard"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1982,
+			"publisher": "Cambridge University Press",
+			"isbn": "9780521246736",
+			"doi": "10.1017/cbo9780511806292",
+			"openalex": "W1415442047",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
 		},
 		{
 			"key": "Sne1957a",
@@ -28412,6 +31667,27 @@
 			"open_access": true
 		},
 		{
+			"key": "TB1997a",
+			"type": "book",
+			"title": "Numerical Linear Algebra",
+			"authors": [
+				"Trefethen, Lloyd N.",
+				"Bau, III, David"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1997,
+			"publisher": "Society for Industrial and Applied Mathematics",
+			"isbn": "9780898713619",
+			"doi": "10.1137/1.9780898719574",
+			"openalex": "W4320800818",
+			"legacy_key": "trefethen1997",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "TB1999a",
 			"type": "article",
 			"title": "Probabilistic Principal Component Analysis",
@@ -28592,6 +31868,28 @@
 			"open_access": false
 		},
 		{
+			"key": "TJ1978a",
+			"type": "article",
+			"title": "Evolutionary stable strategies and game dynamics",
+			"authors": [
+				"Taylor, Peter D.",
+				"Jonker, Leo B."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1978,
+			"journal": "Mathematical Biosciences",
+			"volume": "40",
+			"number": "1-2",
+			"pages": "145-156",
+			"doi": "10.1016/0025-5564(78)90077-9",
+			"openalex": "W2028798910",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "TL1980a",
 			"type": "article",
 			"title": "Threshold Autoregression, Limit Cycles and Cyclical Data",
@@ -28624,6 +31922,33 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "TLBBB...2010a",
+			"type": "article",
+			"title": "Species Interactions in a Parasite Community Drive Infection Risk in a Wildlife Population",
+			"authors": [
+				"Telfer, Sandra",
+				"Lambin, Xavier",
+				"Birtles, Richard",
+				"Beldomenico, Pablo",
+				"Burthe, Sarah",
+				"Paterson, Steve",
+				"Begon, Mike"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2010,
+			"journal": "Science",
+			"volume": "330",
+			"number": "6001",
+			"pages": "243-246",
+			"doi": "10.1126/science.1190333",
+			"openalex": "W2063830905",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "TMB2002a",
@@ -28713,6 +32038,38 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": false
+		},
+		{
+			"key": "TSGPK...2019a",
+			"type": "article",
+			"title": "Improved inference of time-varying reproduction numbers during infectious disease outbreaks",
+			"authors": [
+				"Thompson, R.N.",
+				"Stockwin, J.E.",
+				"van Gaalen, R.D.",
+				"Polonsky, J.A.",
+				"Kamvar, Z.N.",
+				"Demarsh, P.A.",
+				"Dahlqwist, E.",
+				"Li, S.",
+				"Miguel, E.",
+				"Jombart, T.",
+				"Lessler, J.",
+				"Cauchemez, S.",
+				"Cori, A."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2019,
+			"journal": "Epidemics",
+			"volume": "29",
+			"pages": "100356",
+			"doi": "10.1016/j.epidem.2019.100356",
+			"openalex": "W2971072970",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "TSL2000a",
@@ -29254,6 +32611,27 @@
 			"open_access": false
 		},
 		{
+			"key": "Uhl2005a",
+			"type": "article",
+			"title": "What are the effects of monetary policy on output? Results from an agnostic identification procedure",
+			"authors": [
+				"Uhlig, Harald"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2005,
+			"journal": "Journal of Monetary Economics",
+			"volume": "52",
+			"number": "2",
+			"pages": "381-419",
+			"doi": "10.1016/j.jmoneco.2004.05.007",
+			"openalex": "W2015106170",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "VB1996a",
 			"type": "article",
 			"title": "Semidefinite Programming",
@@ -29789,6 +33167,27 @@
 			"open_access": false
 		},
 		{
+			"key": "Vol2008a",
+			"type": "article",
+			"title": "SIR dynamics in random networks with heterogeneous connectivity",
+			"authors": [
+				"Volz, Erik"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2008,
+			"journal": "Journal of Mathematical Biology",
+			"volume": "56",
+			"number": "3",
+			"pages": "293-310",
+			"doi": "10.1007/s00285-007-0116-4",
+			"openalex": "W2096287634",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "Voo1999a",
 			"type": "inproceedings",
 			"title": "The TREC-8 Question Answering Track Report",
@@ -29852,6 +33251,29 @@
 			"abstract_source": "openalex",
 			"source": "manual",
 			"retrieved": "2026-10-31",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "WAD2020a",
+			"type": "article",
+			"title": "Individual-Level Modelling of Infectious Disease Data: EpiILM",
+			"authors": [
+				"V., Vineetha,Warriyar,K.",
+				"Almutiry, Waleed",
+				"Deardon, Rob"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2020,
+			"journal": "The R Journal",
+			"volume": "12",
+			"number": "1",
+			"pages": "87",
+			"doi": "10.32614/rj-2020-020",
+			"openalex": "W3092492044",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
 		},
@@ -30194,6 +33616,28 @@
 			"open_access": true
 		},
 		{
+			"key": "WL2007a",
+			"type": "article",
+			"title": "How generation intervals shape the relationship between growth rates and reproductive numbers",
+			"authors": [
+				"Wallinga, J",
+				"Lipsitch, M"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2007,
+			"journal": "Proceedings of the Royal Society B: Biological Sciences",
+			"volume": "274",
+			"number": "1609",
+			"pages": "599-604",
+			"doi": "10.1098/rspb.2006.3754",
+			"openalex": "W2117002055",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "WL2018a",
 			"type": "misc",
 			"title": "The unreasonable effectiveness of the forget gate",
@@ -30210,6 +33654,26 @@
 			"url": "https://arxiv.org/abs/1804.04849",
 			"oa_url": "https://arxiv.org/pdf/1804.04849",
 			"source": "datacite",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "WLSW2024a",
+			"type": "misc",
+			"title": "Transmission Channel Analysis in Dynamic Models",
+			"authors": [
+				"Wegner, Enrico",
+				"Lieb, Lenard",
+				"Smeekes, Stephan",
+				"Wilms, Ines"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2024,
+			"arxiv": "2405.18987",
+			"url": "https://arxiv.org/abs/2405.18987",
+			"source": "arxiv",
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
@@ -30391,6 +33855,29 @@
 			"open_access": false
 		},
 		{
+			"key": "WRK2005a",
+			"type": "article",
+			"title": "Appropriate Models for the Management of Infectious Diseases",
+			"authors": [
+				"Wearing, Helen J",
+				"Rohani, Pejman",
+				"Keeling, Matt J"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2005,
+			"journal": "PLoS Medicine",
+			"volume": "2",
+			"number": "7",
+			"pages": "e174",
+			"doi": "10.1371/journal.pmed.0020174",
+			"openalex": "W2137863132",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "WS1998a",
 			"type": "article",
 			"title": "Collective Dynamics of Small-World Networks",
@@ -30455,6 +33942,27 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "WT2004a",
+			"type": "article",
+			"title": "Different Epidemic Curves for Severe Acute Respiratory Syndrome Reveal Similar Impacts of Control Measures",
+			"authors": [
+				"Wallinga, J."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2004,
+			"journal": "American Journal of Epidemiology",
+			"volume": "160",
+			"number": "6",
+			"pages": "509-516",
+			"doi": "10.1093/aje/kwh255",
+			"openalex": "W2102187991",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "WTH2009a",
@@ -30611,6 +34119,27 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
+		},
+		{
+			"key": "Wac2013a",
+			"type": "article",
+			"title": "Can Time‐Varying Risk of Rare Disasters Explain Aggregate Stock Market Volatility?",
+			"authors": [
+				"Wachter, Jessica A."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2013,
+			"journal": "The Journal of Finance",
+			"volume": "68",
+			"number": "3",
+			"pages": "987-1035",
+			"doi": "10.1111/jofi.12018",
+			"openalex": "W2553992319",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
 		},
 		{
 			"key": "War1963a",
@@ -31237,6 +34766,27 @@
 			"open_access": false
 		},
 		{
+			"key": "Yu2005a",
+			"type": "article",
+			"title": "On leverage in a stochastic volatility model",
+			"authors": [
+				"Yu, Jun"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2005,
+			"journal": "Journal of Econometrics",
+			"volume": "127",
+			"number": "2",
+			"pages": "165-178",
+			"doi": "10.1016/j.jeconom.2004.08.002",
+			"openalex": "W3121918541",
+			"source": "crossref",
+			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "ZCSZW...2023a",
 			"type": "inproceedings",
 			"title": "Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena",
@@ -31855,6 +35405,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "ABBBD...1999a",
+			"count": 2996,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "ABBBD...1999a",
+			"count": 4432,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "ABBR2023a",
 			"count": 14,
 			"source": "crossref",
@@ -31889,6 +35451,18 @@
 			"count": 1215,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "ABDLZ2014a",
+			"count": 168,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "ABDLZ2014a",
+			"count": 218,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "ABERS1955a",
@@ -31981,6 +35555,30 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "AFD2022a",
+			"count": 6,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "AFD2022a",
+			"count": 6,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "AFR2018a",
+			"count": 141,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "AFR2018a",
+			"count": 170,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "AG2011a",
 			"count": 899,
 			"source": "openalex",
@@ -32011,6 +35609,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "AHLLM2022a",
+			"count": 293,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "AHLLM2022a",
+			"count": 398,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "AHM1951a",
 			"count": 735,
 			"source": "crossref",
@@ -32035,6 +35645,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "ALSSS2015a",
+			"count": 86,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "ALSSS2015a",
+			"count": 99,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "AMH2008a",
 			"count": 332,
 			"source": "crossref",
@@ -32055,6 +35677,18 @@
 		{
 			"key": "AMZ2005a",
 			"count": 875,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "AN2000a",
+			"count": 430,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "AN2000a",
+			"count": 510,
 			"source": "openalex",
 			"date": "2026-11-02"
 		},
@@ -32107,6 +35741,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "Aiy1994a",
+			"count": 1833,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Aiy1994a",
+			"count": 2803,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "Aka1974a",
 			"count": 43410,
 			"source": "crossref",
@@ -32119,10 +35765,34 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "Alt2015a",
+			"count": 90,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Alt2015a",
+			"count": 90,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "And1982a",
 			"count": 3663,
 			"source": "openalex",
 			"date": "2026-10-31"
+		},
+		{
+			"key": "And2008a",
+			"count": 241,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "And2008a",
+			"count": 265,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "Ans1973a",
@@ -32155,6 +35825,18 @@
 			"date": "2026-10-31"
 		},
 		{
+			"key": "BBBCD...2021a",
+			"count": 25,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "BBBCD...2021a",
+			"count": 29,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "BBD2008a",
 			"count": 1777,
 			"source": "crossref",
@@ -32163,6 +35845,30 @@
 		{
 			"key": "BBD2008a",
 			"count": 2236,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "BBDM2022a",
+			"count": 17,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "BBDM2022a",
+			"count": 17,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "BBE2005a",
+			"count": 362,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "BBE2005a",
+			"count": 1854,
 			"source": "openalex",
 			"date": "2026-11-02"
 		},
@@ -32221,6 +35927,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "BCDMM...2025a",
+			"count": 3,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "BCDMM...2025a",
+			"count": 4,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "BCP2022a",
 			"count": 14,
 			"source": "crossref",
@@ -32245,6 +35963,18 @@
 			"date": "2026-10-30"
 		},
 		{
+			"key": "BD2016a",
+			"count": 792,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "BD2016a",
+			"count": 1191,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "BEF1984a",
 			"count": 5723,
 			"source": "crossref",
@@ -32267,6 +35997,18 @@
 			"count": 6097,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "BG1969a",
+			"count": 2436,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "BG1969a",
+			"count": 3202,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "BG1996a",
@@ -32443,6 +36185,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "BHJ2023a",
+			"count": 125,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "BHJ2023a",
+			"count": 149,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "BHLS2011a",
 			"count": 380,
 			"source": "crossref",
@@ -32489,6 +36243,30 @@
 			"count": 2272,
 			"source": "openalex",
 			"date": "2026-10-31"
+		},
+		{
+			"key": "BK1980a",
+			"count": 1469,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "BK1980a",
+			"count": 2412,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "BK1999a",
+			"count": 1643,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "BK1999a",
+			"count": 2833,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "BK2005a",
@@ -32587,6 +36365,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "BL2013a",
+			"count": 191,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "BL2013a",
+			"count": 189,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "BLBLK2017a",
 			"count": 1248,
 			"source": "crossref",
@@ -32633,6 +36423,18 @@
 			"count": 1775,
 			"source": "openalex",
 			"date": "2026-10-31"
+		},
+		{
+			"key": "BN1981a",
+			"count": 1457,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "BN1981a",
+			"count": 2310,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "BN1998a",
@@ -32705,6 +36507,18 @@
 			"count": 98,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "BPP2008a",
+			"count": 849,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "BPP2008a",
+			"count": 989,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "BPT2012a",
@@ -32789,6 +36603,18 @@
 			"count": 4613,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "BS2014a",
+			"count": 1582,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "BS2014a",
+			"count": 1980,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "BS2023a",
@@ -32923,6 +36749,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "BY2004a",
+			"count": 3374,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "BY2004a",
+			"count": 4253,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "BZB2002a",
 			"count": 2521,
 			"source": "crossref",
@@ -32969,6 +36807,18 @@
 			"count": 429,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "Bat1996a",
+			"count": 1852,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Bat1996a",
+			"count": 2271,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "Bea1994a",
@@ -33097,6 +36947,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "Bjo2018a",
+			"count": 72,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Bjo2018a",
+			"count": 61,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "Ble2012a",
 			"count": 4240,
 			"source": "crossref",
@@ -33107,6 +36969,18 @@
 			"count": 5511,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "Bol1986a",
+			"count": 15992,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Bol1986a",
+			"count": 22348,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "Boo1972a",
@@ -33181,6 +37055,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "Bro1965a",
+			"count": 2253,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Bro1965a",
+			"count": 2790,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "Bro1970a",
 			"count": 2666,
 			"source": "crossref",
@@ -33247,6 +37133,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "CC1999a",
+			"count": 3865,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "CC1999a",
+			"count": 5094,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "CCB2009a",
 			"count": 695,
 			"source": "crossref",
@@ -33297,6 +37195,18 @@
 		{
 			"key": "CF1938a",
 			"count": 652,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "CFFC2013a",
+			"count": 1566,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "CFFC2013a",
+			"count": 1530,
 			"source": "openalex",
 			"date": "2026-11-02"
 		},
@@ -33377,6 +37287,30 @@
 			"count": 595,
 			"source": "openalex",
 			"date": "2026-10-31"
+		},
+		{
+			"key": "CHALL1989a",
+			"count": 250,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "CHALL1989a",
+			"count": 324,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "CHB2003a",
+			"count": 927,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "CHB2003a",
+			"count": 1168,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "CI2002a",
@@ -33805,6 +37739,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "Cro1972a",
+			"count": 579,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Cro1972a",
+			"count": 762,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "DBKYZ...2019a",
 			"count": 1029,
 			"source": "crossref",
@@ -33875,6 +37821,18 @@
 			"count": 2280,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "DF1979a",
+			"count": 7158,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "DF1979a",
+			"count": 23226,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "DF1983a",
@@ -33997,6 +37955,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "DGS2015a",
+			"count": 154,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "DGS2015a",
+			"count": 221,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "DGU2009a",
 			"count": 2970,
 			"source": "crossref",
@@ -34033,6 +38003,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "DHM1990a",
+			"count": 4226,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "DHM1990a",
+			"count": 179,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "DHS1986a",
 			"count": 25,
 			"source": "crossref",
@@ -34043,6 +38025,18 @@
 			"count": 211,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "DHS2011b",
+			"count": 892,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "DHS2011b",
+			"count": 1055,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "DJ2014a",
@@ -34255,6 +38249,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "DS1996a",
+			"count": 1779,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "DS1996a",
+			"count": 7616,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "DS2011a",
 			"count": 4826,
 			"source": "crossref",
@@ -34309,6 +38315,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "DW2002a",
+			"count": 8629,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "DW2002a",
+			"count": 10037,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "DW2022a",
 			"count": 40,
 			"source": "crossref",
@@ -34331,6 +38349,18 @@
 			"count": 1905,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "Dad2024a",
+			"count": 1,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Dad2024a",
+			"count": 0,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "Dan1955a",
@@ -34471,6 +38501,30 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "ECAKF2020a",
+			"count": 519,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "ECAKF2020a",
+			"count": 556,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "EG1987a",
+			"count": 19725,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "EG1987a",
+			"count": 32013,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "EIV2007a",
 			"count": 1978,
 			"source": "openalex",
@@ -34609,6 +38663,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "EZ1989a",
+			"count": 3174,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "EZ1989a",
+			"count": 4275,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "Efr1979a",
 			"count": 13123,
 			"source": "crossref",
@@ -34631,6 +38697,30 @@
 			"count": 3455,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "Eng1982a",
+			"count": 15143,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Eng1982a",
+			"count": 20704,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Eng2002a",
+			"count": 6182,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Eng2002a",
+			"count": 7137,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "Eps1979a",
@@ -34665,6 +38755,18 @@
 		{
 			"key": "FAM1981a",
 			"count": 1175,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "FCP1996a",
+			"count": 75,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "FCP1996a",
+			"count": 154,
 			"source": "openalex",
 			"date": "2026-11-02"
 		},
@@ -34729,6 +38831,18 @@
 			"date": "2026-10-31"
 		},
 		{
+			"key": "FM1973a",
+			"count": 11241,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "FM1973a",
+			"count": 14257,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "FNKO2011a",
 			"count": 15,
 			"source": "crossref",
@@ -34751,6 +38865,18 @@
 			"count": 1081,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "FPLPK2016a",
+			"count": 63,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "FPLPK2016a",
+			"count": 73,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "FR1964a",
@@ -34787,6 +38913,30 @@
 			"count": 2792,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "FRAF2004a",
+			"count": 1030,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "FRAF2004a",
+			"count": 1138,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "FRWZ2016a",
+			"count": 67,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "FRWZ2016a",
+			"count": 75,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "FS1969a",
@@ -34903,6 +39053,42 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "Fel1951a",
+			"count": 734,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Fel1951a",
+			"count": 861,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Fil1994a",
+			"count": 805,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Fil1994a",
+			"count": 884,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Fin1993a",
+			"count": 712,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Fin1993a",
+			"count": 906,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "Fis1992a",
 			"count": 632,
 			"source": "crossref",
@@ -34961,6 +39147,30 @@
 			"count": 494,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "Fra1961a",
+			"count": 579,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Fra1961a",
+			"count": 688,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Fra2007a",
+			"count": 475,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Fra2007a",
+			"count": 493,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "Fra2018a",
@@ -35065,6 +39275,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "GFA1998a",
+			"count": 267,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "GFA1998a",
+			"count": 298,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "GFI2016a",
 			"count": 1012,
 			"source": "crossref",
@@ -35089,6 +39311,30 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "GG2002a",
+			"count": 292,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "GG2002a",
+			"count": 308,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "GGHH2021a",
+			"count": 144,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "GGHH2021a",
+			"count": 160,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "GGML2015a",
 			"count": 509,
 			"source": "openalex",
@@ -35107,6 +39353,30 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "GJR1993a",
+			"count": 11537,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "GJR1993a",
+			"count": 9047,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "GK1965a",
+			"count": 932,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "GK1965a",
+			"count": 1787,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "GK2001a",
 			"count": 289,
 			"source": "crossref",
@@ -35117,6 +39387,30 @@
 			"count": 333,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "GMBAJ...2020a",
+			"count": 515,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "GMBAJ...2020a",
+			"count": 571,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "GMCGS...2022a",
+			"count": 60,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "GMCGS...2022a",
+			"count": 63,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "GMVVW...2021a",
@@ -35173,6 +39467,18 @@
 			"date": "2026-10-31"
 		},
 		{
+			"key": "GP2018a",
+			"count": 1,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "GP2018a",
+			"count": 5,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "GPSW2017a",
 			"count": 3437,
 			"source": "openalex",
@@ -35213,6 +39519,18 @@
 			"count": 1652,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "GS2002a",
+			"count": 93,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "GS2002a",
+			"count": 97,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "GS2004a",
@@ -35303,6 +39621,18 @@
 			"count": 3584,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "GW2004a",
+			"count": 38,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "GW2004a",
+			"count": 57,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "GW2009a",
@@ -35521,6 +39851,30 @@
 			"date": "2026-10-31"
 		},
 		{
+			"key": "Gra1969a",
+			"count": 17572,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Gra1969a",
+			"count": 23005,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Gra2008a",
+			"count": 376,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Gra2008a",
+			"count": 391,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "Gre2009a",
 			"count": 498,
 			"source": "openalex",
@@ -35539,6 +39893,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "HABGH...2019a",
+			"count": 37,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "HABGH...2019a",
+			"count": 43,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "HAG2018a",
 			"count": 63,
 			"source": "crossref",
@@ -35549,6 +39915,18 @@
 			"count": 66,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "HAGBJ...2020a",
+			"count": 2025,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "HAGBJ...2020a",
+			"count": 2549,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "HAP2014a",
@@ -35743,8 +40121,44 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "HK2008a",
+			"count": 2662,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "HK2008a",
+			"count": 3547,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "HK2013a",
+			"count": 1162,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "HK2013a",
+			"count": 1405,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "HKBM2017a",
 			"count": 187,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "HKSG2002a",
+			"count": 884,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "HKSG2002a",
+			"count": 1078,
 			"source": "openalex",
 			"date": "2026-11-02"
 		},
@@ -35827,6 +40241,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "HMP2004a",
+			"count": 396,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "HMP2004a",
+			"count": 599,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "HN1996a",
 			"count": 2448,
 			"source": "crossref",
@@ -35901,6 +40327,18 @@
 		{
 			"key": "HP1990a",
 			"count": 1819,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "HP1997a",
+			"count": 4373,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "HP1997a",
+			"count": 7362,
 			"source": "openalex",
 			"date": "2026-11-02"
 		},
@@ -35983,6 +40421,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "HS2015a",
+			"count": 108,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "HS2015a",
+			"count": 175,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "HSKSS2012a",
 			"count": 6380,
 			"source": "openalex",
@@ -36009,6 +40459,18 @@
 		{
 			"key": "HSW1989a",
 			"count": 21724,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "HT1989a",
+			"count": 5472,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "HT1989a",
+			"count": 6589,
 			"source": "openalex",
 			"date": "2026-11-02"
 		},
@@ -36059,6 +40521,18 @@
 			"count": 2828,
 			"source": "openalex",
 			"date": "2026-10-31"
+		},
+		{
+			"key": "HWWT2019a",
+			"count": 237,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "HWWT2019a",
+			"count": 251,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "HY2005a",
@@ -36127,10 +40601,34 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "Ham1989a",
+			"count": 6807,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Ham1989a",
+			"count": 9697,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "Ham2007a",
 			"count": 273,
 			"source": "openalex",
 			"date": "2026-10-31"
+		},
+		{
+			"key": "Ham2018a",
+			"count": 1141,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Ham2018a",
+			"count": 1353,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "Han1982a",
@@ -36271,6 +40769,30 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "Hes1993a",
+			"count": 7103,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Hes1993a",
+			"count": 8762,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Het2000a",
+			"count": 5494,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Het2000a",
+			"count": 6718,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "Hey1931a",
 			"count": 85,
 			"source": "crossref",
@@ -36303,6 +40825,18 @@
 		{
 			"key": "Hig2002a",
 			"count": 890,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Hig2002b",
+			"count": 2254,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Hig2002b",
+			"count": 3800,
 			"source": "openalex",
 			"date": "2026-11-02"
 		},
@@ -36355,6 +40889,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "Hou1958a",
+			"count": 516,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Hou1958a",
+			"count": 629,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "Hub1964a",
 			"count": 5777,
 			"source": "crossref",
@@ -36365,6 +40911,18 @@
 			"count": 7199,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "Hug1993a",
+			"count": 836,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Hug1993a",
+			"count": 1270,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "IS2015a",
@@ -36505,6 +41063,18 @@
 			"date": "2026-10-31"
 		},
 		{
+			"key": "JPR1994a",
+			"count": 1650,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "JPR1994a",
+			"count": 611,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "JPS1993a",
 			"count": 1536,
 			"source": "crossref",
@@ -36595,6 +41165,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "Joh1991a",
+			"count": 6962,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Joh1991a",
+			"count": 11156,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "Joh2001a",
 			"count": 1410,
 			"source": "crossref",
@@ -36673,6 +41255,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "KE2005a",
+			"count": 1636,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "KE2005a",
+			"count": 1881,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "KFL2001a",
 			"count": 4917,
 			"source": "crossref",
@@ -36681,6 +41275,18 @@
 		{
 			"key": "KFL2001a",
 			"count": 6487,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "KGHLM...2010a",
+			"count": 2961,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "KGHLM...2010a",
+			"count": 3226,
 			"source": "openalex",
 			"date": "2026-11-02"
 		},
@@ -36699,6 +41305,18 @@
 		{
 			"key": "KKSP2017a",
 			"count": 17,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "KL2017a",
+			"count": 709,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "KL2017a",
+			"count": 1056,
 			"source": "openalex",
 			"date": "2026-11-02"
 		},
@@ -36757,6 +41375,54 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "KM1932a",
+			"count": 727,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "KM1932a",
+			"count": 1080,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "KMS2017a",
+			"count": 433,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "KMS2017a",
+			"count": 485,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "KMV2018a",
+			"count": 1135,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "KMV2018a",
+			"count": 1395,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "KN2010a",
+			"count": 298,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "KN2010a",
+			"count": 365,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "KP2006a",
 			"count": 2318,
 			"source": "crossref",
@@ -36805,6 +41471,30 @@
 			"date": "2026-10-31"
 		},
 		{
+			"key": "KPSS1992a",
+			"count": 8984,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "KPSS1992a",
+			"count": 12650,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "KR2008a",
+			"count": 1977,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "KR2008a",
+			"count": 2766,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "KS1969a",
 			"count": 3545,
 			"source": "crossref",
@@ -36843,6 +41533,18 @@
 		{
 			"key": "KSBKJ...2019a",
 			"count": 116,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "KSC1998a",
+			"count": 1610,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "KSC1998a",
+			"count": 2265,
 			"source": "openalex",
 			"date": "2026-11-02"
 		},
@@ -36927,6 +41629,18 @@
 		{
 			"key": "KY1979a",
 			"count": 729,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "KZ1999a",
+			"count": 238,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "KZ1999a",
+			"count": 330,
 			"source": "openalex",
 			"date": "2026-11-02"
 		},
@@ -37027,6 +41741,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "Kel2003a",
+			"count": 670,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Kel2003a",
+			"count": 1109,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "Kel2017a",
 			"count": 523,
 			"source": "crossref",
@@ -37051,6 +41777,18 @@
 			"date": "2026-10-31"
 		},
 		{
+			"key": "Kim1994a",
+			"count": 998,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Kim1994a",
+			"count": 1439,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "Kit1996a",
 			"count": 2377,
 			"source": "crossref",
@@ -37061,6 +41799,18 @@
 			"count": 2405,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "Kle2000a",
+			"count": 441,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Kle2000a",
+			"count": 771,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "Knu1984a",
@@ -37369,6 +42119,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "LKD2010a",
+			"count": 257,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "LKD2010a",
+			"count": 314,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "LLCZG2018a",
 			"count": 972,
 			"source": "openalex",
@@ -37459,6 +42221,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "LMOZ2014a",
+			"count": 240,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "LMOZ2014a",
+			"count": 322,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "LMS2003a",
 			"count": 555,
 			"source": "crossref",
@@ -37539,6 +42313,18 @@
 		{
 			"key": "LS2020a",
 			"count": 983,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "LSKG2005a",
+			"count": 2416,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "LSKG2005a",
+			"count": 2511,
 			"source": "openalex",
 			"date": "2026-11-02"
 		},
@@ -37855,6 +42641,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "Lut2005a",
+			"count": 3103,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Lut2005a",
+			"count": 5950,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "Lux2007a",
 			"count": 8500,
 			"source": "crossref",
@@ -37907,6 +42705,18 @@
 			"count": 1640,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "ME2006a",
+			"count": 238,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "ME2006a",
+			"count": 263,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "MF2000a",
@@ -38053,6 +42863,12 @@
 			"date": "2026-10-30"
 		},
 		{
+			"key": "MNLDR...2002a",
+			"count": 3749,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "MP1967a",
 			"count": 1708,
 			"source": "crossref",
@@ -38147,6 +42963,18 @@
 			"count": 1411,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "MS1996a",
+			"count": 3602,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "MS1996a",
+			"count": 3620,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "MSW1998a",
@@ -38257,6 +43085,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "Mar2015a",
+			"count": 925,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Mar2015a",
+			"count": 1347,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "Mat1975a",
 			"count": 4593,
 			"source": "crossref",
@@ -38311,6 +43151,18 @@
 			"date": "2026-10-31"
 		},
 		{
+			"key": "Mer1973a",
+			"count": 4788,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Mer1973a",
+			"count": 6561,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "Mer1976a",
 			"count": 4537,
 			"source": "crossref",
@@ -38355,6 +43207,18 @@
 		{
 			"key": "Mil1980a",
 			"count": 1163,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Mor1978a",
+			"count": 3048,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Mor1978a",
+			"count": 5796,
 			"source": "openalex",
 			"date": "2026-11-02"
 		},
@@ -38473,6 +43337,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "NS2013a",
+			"count": 128,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "NS2013a",
+			"count": 278,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "NS2018a",
 			"count": 1270,
 			"source": "crossref",
@@ -38521,6 +43397,30 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "NYSM2012a",
+			"count": 64,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "NYSM2012a",
+			"count": 63,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Nas1950a",
+			"count": 5626,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Nas1950a",
+			"count": 7558,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "Nas1951a",
 			"count": 6613,
 			"source": "crossref",
@@ -38567,6 +43467,18 @@
 			"count": 2573,
 			"source": "openalex",
 			"date": "2026-10-24"
+		},
+		{
+			"key": "Nel1991a",
+			"count": 7194,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Nel1991a",
+			"count": 10277,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "Neu1928a",
@@ -38623,6 +43535,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "OCSN2007a",
+			"count": 395,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "OCSN2007a",
+			"count": 464,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "ODZSV...2016a",
 			"count": 4901,
 			"source": "openalex",
@@ -38669,6 +43593,18 @@
 			"count": 271,
 			"source": "openalex",
 			"date": "2026-10-24"
+		},
+		{
+			"key": "OT2020a",
+			"count": 39,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "OT2020a",
+			"count": 47,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "Oga1981a",
@@ -38749,6 +43685,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "PCVV2015a",
+			"count": 3330,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "PCVV2015a",
+			"count": 3697,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "PDCMS...2020a",
 			"count": 1054,
 			"source": "crossref",
@@ -38769,6 +43717,18 @@
 		{
 			"key": "PF2001a",
 			"count": 1251,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "PF2007a",
+			"count": 512,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "PF2007a",
+			"count": 575,
 			"source": "openalex",
 			"date": "2026-11-02"
 		},
@@ -38881,6 +43841,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "PS2021a",
+			"count": 104,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "PS2021a",
+			"count": 111,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "PSKB2023a",
 			"count": 256,
 			"source": "openalex",
@@ -38923,6 +43895,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "PV2002a",
+			"count": 952,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "PV2002a",
+			"count": 1283,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "PZHZ2022a",
 			"count": 30,
 			"source": "crossref",
@@ -38955,6 +43939,18 @@
 		{
 			"key": "Par1966a",
 			"count": 428,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Par1982a",
+			"count": 89,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Par1982a",
+			"count": 120,
 			"source": "openalex",
 			"date": "2026-11-02"
 		},
@@ -39205,6 +44201,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "QSCCJ...2017a",
+			"count": 1203,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "QSCCJ...2017a",
+			"count": 1648,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "RB1968a",
 			"count": 127,
 			"source": "crossref",
@@ -39257,6 +44265,30 @@
 			"count": 134,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "RG1978a",
+			"count": 868,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "RG1978a",
+			"count": 999,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "RGMG2003a",
+			"count": 167,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "RGMG2003a",
+			"count": 174,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "RHW1986a",
@@ -39553,6 +44585,30 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "RU2002a",
+			"count": 1324,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "RU2002a",
+			"count": 1986,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "RVHL2020a",
+			"count": 352,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "RVHL2020a",
+			"count": 621,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "RVKOW2018a",
 			"count": 418,
 			"source": "crossref",
@@ -39593,6 +44649,18 @@
 			"count": 59,
 			"source": "openalex",
 			"date": "2026-10-31"
+		},
+		{
+			"key": "RWZ2010a",
+			"count": 776,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "RWZ2010a",
+			"count": 903,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "RY2000a",
@@ -39665,6 +44733,18 @@
 			"count": 7789,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "Ris1969a",
+			"count": 234,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Ris1969a",
+			"count": 335,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "Rob1952a",
@@ -39859,6 +44939,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "SB2005a",
+			"count": 406,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "SB2005a",
+			"count": 498,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "SBBA2008a",
 			"count": 600,
 			"source": "crossref",
@@ -39867,6 +44959,18 @@
 		{
 			"key": "SBBA2008a",
 			"count": 704,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "SBC2005a",
+			"count": 350,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "SBC2005a",
+			"count": 434,
 			"source": "openalex",
 			"date": "2026-11-02"
 		},
@@ -39893,6 +44997,18 @@
 			"count": 1229,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "SBJ2006a",
+			"count": 55,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "SBJ2006a",
+			"count": 66,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "SBM1996a",
@@ -40051,6 +45167,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "SKR2011a",
+			"count": 76,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "SKR2011a",
+			"count": 72,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "SL1968a",
 			"count": 439,
 			"source": "crossref",
@@ -40109,6 +45237,18 @@
 			"count": 880,
 			"source": "openalex",
 			"date": "2026-10-30"
+		},
+		{
+			"key": "SP1973a",
+			"count": 5079,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "SP1973a",
+			"count": 6253,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "SP1994a",
@@ -40273,6 +45413,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "SSL2019a",
+			"count": 895,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "SSL2019a",
+			"count": 965,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "SSM1998b",
 			"count": 6350,
 			"source": "crossref",
@@ -40327,6 +45479,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "SU2004a",
+			"count": 745,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "SU2004a",
+			"count": 1217,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "SW1965a",
 			"count": 15326,
 			"source": "crossref",
@@ -40349,6 +45513,18 @@
 			"count": 736,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "SW2007a",
+			"count": 3899,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "SW2007a",
+			"count": 4636,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "SWY1975a",
@@ -40395,6 +45571,18 @@
 		{
 			"key": "SZ2008a",
 			"count": 190,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "SZ2011a",
+			"count": 558,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "SZ2011a",
+			"count": 692,
 			"source": "openalex",
 			"date": "2026-11-02"
 		},
@@ -40513,6 +45701,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "Sha1992a",
+			"count": 1253,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Sha1992a",
+			"count": 1615,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "Sha1998a",
 			"count": 929,
 			"source": "crossref",
@@ -40561,6 +45761,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "Sim1980a",
+			"count": 8099,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Sim1980a",
+			"count": 12853,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "Sim2006a",
 			"count": 4915,
 			"source": "crossref",
@@ -40583,6 +45795,18 @@
 			"count": 5344,
 			"source": "openalex",
 			"date": "2026-10-31"
+		},
+		{
+			"key": "Smi1982a",
+			"count": 4999,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Smi1982a",
+			"count": 6930,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "Sne1957a",
@@ -40687,6 +45911,18 @@
 			"date": "2026-10-31"
 		},
 		{
+			"key": "TB1997a",
+			"count": 2543,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "TB1997a",
+			"count": 3301,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "TB1999a",
 			"count": 2681,
 			"source": "crossref",
@@ -40753,6 +45989,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "TJ1978a",
+			"count": 2767,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "TJ1978a",
+			"count": 3461,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "TL1980a",
 			"count": 1023,
 			"source": "crossref",
@@ -40763,6 +46011,18 @@
 			"count": 1316,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "TLBBB...2010a",
+			"count": 531,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "TLBBB...2010a",
+			"count": 563,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "TMB2002a",
@@ -40803,6 +46063,18 @@
 		{
 			"key": "TS2006a",
 			"count": 446,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "TSGPK...2019a",
+			"count": 470,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "TSGPK...2019a",
+			"count": 493,
 			"source": "openalex",
 			"date": "2026-11-02"
 		},
@@ -41023,6 +46295,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "Uhl2005a",
+			"count": 1655,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Uhl2005a",
+			"count": 2308,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "VB1996a",
 			"count": 3371,
 			"source": "crossref",
@@ -41197,6 +46481,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "Vol2008a",
+			"count": 304,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Vol2008a",
+			"count": 377,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "Voo1999a",
 			"count": 823,
 			"source": "openalex",
@@ -41207,6 +46503,18 @@
 			"count": 719,
 			"source": "openalex",
 			"date": "2026-10-31"
+		},
+		{
+			"key": "WAD2020a",
+			"count": 3,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "WAD2020a",
+			"count": 5,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "WB2006a",
@@ -41305,6 +46613,18 @@
 			"date": "2026-10-31"
 		},
 		{
+			"key": "WL2007a",
+			"count": 1036,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "WL2007a",
+			"count": 1220,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "WL2018a",
 			"count": 68,
 			"source": "openalex",
@@ -41359,6 +46679,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "WRK2005a",
+			"count": 387,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "WRK2005a",
+			"count": 538,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
 			"key": "WS1998a",
 			"count": 34971,
 			"source": "crossref",
@@ -41381,6 +46713,18 @@
 			"count": 10036,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "WT2004a",
+			"count": 1103,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "WT2004a",
+			"count": 1199,
+			"source": "openalex",
+			"date": "2026-11-02"
 		},
 		{
 			"key": "WTH2009a",
@@ -41427,6 +46771,18 @@
 		{
 			"key": "WZ1965a",
 			"count": 682,
+			"source": "openalex",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Wac2013a",
+			"count": 861,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Wac2013a",
+			"count": 916,
 			"source": "openalex",
 			"date": "2026-11-02"
 		},
@@ -41650,6 +47006,18 @@
 			"key": "You1950a",
 			"count": 7994,
 			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Yu2005a",
+			"count": 314,
+			"source": "crossref",
+			"date": "2026-11-02"
+		},
+		{
+			"key": "Yu2005a",
+			"count": 411,
+			"source": "openalex",
 			"date": "2026-11-02"
 		},
 		{
