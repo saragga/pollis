@@ -47,7 +47,7 @@ All inputs apply to all tabs, although **Context Smoothing** has no effect on `W
 | **PPMI** | `W = pmi_matrix(C; alpha)` |
 | **PMI** | `W = pmi_matrix(C; alpha, positive = false)` |
 
-Some actions compute PPMI for themselves, whichever tab is open, and **Co-Occurrence Heatmap** is the one that draws the current `W`.
+Some actions compute PPMI for themselves, whichever tab is open, and **Co-Occurrence Heatmap** is the one that draws the current `W`, so its figure changes between tabs.
 
 ## What Each Next Step in the Panel Shows
 
