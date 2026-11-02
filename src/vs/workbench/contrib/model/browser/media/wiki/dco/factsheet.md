@@ -30,7 +30,7 @@
 | **VND** | Full descent from a random tour; the first from nearest neighbour |
 | **VNS** | Shake the best tour, then full descent |
 
-Iterations therefore differ in cost between tabs, so compare time, and not iteration counts, when comparing tabs.
+Iterations therefore differ in cost between tabs, so compare time, and not iteration counts, when comparing the tabs.
 
 ## What the Generated Code Fixes
 
