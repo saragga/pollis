@@ -16,21 +16,21 @@ The printed result separates two numbers that are easy to confuse. `mean_steps_l
 |---|---|---|
 | `mean_steps_last_100` | Yes | Behaviour during learning |
 | `greedy_steps_to_meet` | No | Quality of the final policy |
-| `lower_bound` | No | Fewest steps possible, n − 1 |
+| `lower_bound` | No | Fewest steps possible, from `best_steps` |
 
 A `greedy_steps_to_meet` of `missing` means the greedy team never met within the cap, even if training often did.
 
 ## How tight is the lower bound?
 
-`lower_bound` is n − 1, and the dashed lines in **Learning Curve** and **Learner Comparison** use the same figure. It can always be reached with two or three agents. With four agents, all corners are occupied, and the meeting cell must lie within n − 1 steps of each corner, which only the centre cell of an odd grid can do.
+`lower_bound` is `best_steps`: over all cells, the smallest value of the longest distance from any agent's start to that cell. Agents may wait, so the team can always meet in exactly that many steps, and the bound is tight. The dashed lines in **Learning Curve** and **Learner Comparison** use the same figure, and the "optimal" line in **Non-Stationarity** is computed from it.
 
-So four agents on an even grid need at least n steps, and a gap of one step there is no failure. The "optimal" line in **Non-Stationarity** rests on the same n − 1, so it sits slightly too high in that case.
+Two or three agents need n − 1 steps. With four agents, all corners are occupied, and the meeting cell must lie within n − 1 steps of each corner, which only the centre cell of an odd grid can do. So four agents on an even grid need n steps.
 
 ## Reading the success rate
 
 **Win Rate / Success Rate** on **Cooperative** shows the share of episodes in which the agents met, as a moving average. A value near 1 with a learning curve near the bound indicates reliable training behaviour.
 
-The test is `res.lens .< maxsteps`, so an episode that meets on exactly the last permitted step counts as a failure, and the `met_share` of **Evaluation** works the same way. The error is small unless the team regularly takes the full 4n steps. For a borderline run, compare `greedy_steps_to_meet` with the cap of 4n.
+The test is `res.met`, which records whether all agents shared a cell when the episode ended. An episode that meets on exactly the last permitted step therefore counts as a success, and one that reaches the cap of 4n apart counts as a failure. The `met_share` of **Evaluation** works the same way.
 
 ## Is the team's start value correct?
 

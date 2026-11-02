@@ -149,7 +149,7 @@ detail = "agents share a team reward and learn to coordinate on a rendezvous gri
 
 [[bullets]]
 text = "Competitive"
-detail = "agents pursue opposing objectives in zero-sum or general-sum games; self-play against a pool of past policy versions drives emergent strategy and prevents exploitation of weak fixed opponents"
+detail = "two players with opposing objectives in tic-tac-toe, a zero-sum game; one table plays both sides against its current self, with no pool of past versions, and is scored against random and perfect opponents"
 
 [[decisionRows]]
 task = "Cooperative"
@@ -264,6 +264,7 @@ maxsteps = 4n  # step cap per episode
 # Rendezvous: reward -1 per step until all agents stand on the same cell
 moves = [(0, 0), (-1, 0), (0, 1), (1, 0), (0, -1)]  # stay, up, right, down, left
 starts = [(1, 1), (n, n), (1, n), (n, 1)][1:N]
+best_steps = minimum(maximum(abs(r - s[1]) + abs(c - s[2]) for s in starts) for r in 1:n, c in 1:n)  # fewest steps for all agents to reach one cell
 move(p, a) = (clamp(p[1] + moves[a][1], 1, n), clamp(p[2] + moves[a][2], 1, n))
 step_env(s, a) = (s2 = Tuple(move(s[i], a[i]) for i in 1:N); (s2, -1.0, all(==(s2[1]), s2)))
 joint = vec(collect(Iterators.product(fill(1:5, N)...)))  # all joint actions
@@ -279,7 +280,7 @@ function train(; learner=learner, episodes=episodes, seed=seed, epsilon=epsilon)
         learner == "central" && return (rand(rng) < epsilon ? rand(rng, joint) : greedy(s))
         Tuple(rand(rng) < epsilon ? rand(rng, 1:5) : argmax(qi(i, s)) for i in 1:N)
     end
-    lens = zeros(Int, episodes); qtrace = zeros(episodes)
+    lens = zeros(Int, episodes); met = falses(episodes); qtrace = zeros(episodes)
     for ep in 1:episodes
         s = Tuple(starts)
         for t in 1:maxsteps
@@ -297,13 +298,13 @@ function train(; learner=learner, episodes=episodes, seed=seed, epsilon=epsilon)
                 q = qj(s); k = findfirst(==(a), joint)
                 q[k] += alpha * (r + (done ? 0.0 : gamma * maximum(qj(s2))) - q[k])
             end
-            s = s2; lens[ep] = t
+            s = s2; lens[ep] = t; met[ep] = done
             done && break
         end
         s0 = Tuple(starts)
         qtrace[ep] = learner == "central" ? maximum(qj(s0)) : learner == "vdn" ? sum(maximum(qi(i, s0)) for i in 1:N) : mean(maximum(qi(i, s0)) for i in 1:N)
     end
-    (greedy = greedy, lens = lens, qtrace = qtrace, Qs = Qs, Qj = Qj, qi = qi, qj = qj)
+    (greedy = greedy, lens = lens, met = met, qtrace = qtrace, Qs = Qs, Qj = Qj, qi = qi, qj = qj)
 end
 
 function rollout(policy)  # greedy joint trajectory from the start
@@ -318,7 +319,7 @@ movavg(x, w) = [mean(x[max(1, i - w + 1):i]) for i in eachindex(x)]
 
 res = train()
 path = rollout(res.greedy)
-(learner = learner, greedy_steps_to_meet = all(==(path[end][1]), path[end]) ? length(path) - 1 : missing, lower_bound = n - 1,
+(learner = learner, greedy_steps_to_meet = all(==(path[end][1]), path[end]) ? length(path) - 1 : missing, lower_bound = best_steps,
  mean_steps_last_100 = mean(res.lens[max(1, end - 99):end]), states_visited = learner == "central" ? length(res.Qj) : length(res.Qs[1]))
 '''
 
@@ -429,7 +430,7 @@ code = '''
 using Plots
 
 {{?model=cooperative}}plot(movavg(res.lens, 50), xlabel="episode", ylabel="steps to meet (moving average of 50)", label=learner)
-{{?model=cooperative}}hline!([n - 1], linestyle=:dash, label="lower bound")
+{{?model=cooperative}}hline!([best_steps], linestyle=:dash, label="lower bound")
 {{?model=competitive}}w = max(1, div(episodes, 50))
 {{?model=competitive}}plot([movavg(Float64.(res.hist.outcomes .== k), w) for k in (1, 0, -1)], label=["X wins" "draw" "O wins"],
 {{?model=competitive}}    xlabel="self-play game", ylabel="share (moving average of $w)")
@@ -442,7 +443,7 @@ desc = "Cooperative: share of episodes in which the agents met within the step c
 code = '''
 using Plots
 
-{{?model=cooperative}}plot(movavg(Float64.(res.lens .< maxsteps), 50), xlabel="episode", ylabel="share of episodes that met (moving average of 50)", legend=false, ylims=(0, 1.05))
+{{?model=cooperative}}plot(movavg(Float64.(res.met), 50), xlabel="episode", ylabel="share of episodes that met (moving average of 50)", legend=false, ylims=(0, 1.05))
 {{?model=competitive}}p1 = plot(res.hist.game, [[r.win for r in res.hist.vs_random], [r.draw for r in res.hist.vs_random], [r.loss for r in res.hist.vs_random]],
 {{?model=competitive}}    label=["win" "draw" "loss"], title="vs random", xlabel="self-play game", ylims=(0, 1))
 {{?model=competitive}}p2 = plot(res.hist.game, [[r.win for r in res.hist.vs_perfect], [r.draw for r in res.hist.vs_perfect], [r.loss for r in res.hist.vs_perfect]],
@@ -462,7 +463,7 @@ code = '''
 using Plots
 
 {{?model=cooperative}}plot(res.qtrace, xlabel="episode", ylabel="value of the start state", label=learner)
-{{?model=cooperative}}hline!([-sum(gamma^k for k in 0:(n - 2))], linestyle=:dash, label="optimal")
+{{?model=cooperative}}hline!([-sum(gamma^k for k in 0:(best_steps - 1))], linestyle=:dash, label="optimal")
 {{?model=competitive}}function opening_values(g)
 {{?model=competitive}}    r = train(episodes=g, checkpoints=1)
 {{?model=competitive}}    [value(r.V, place(zeros(Int, 9), m, 1), 1) for m in 1:9]
@@ -529,16 +530,16 @@ label = "Evaluation"
 desc = "Cooperative: success rate and mean steps of the greedy joint policy when one agent instead acts randomly. Competitive: win, draw and loss shares over 400 games against random and perfect opponents"
 code = '''
 {{?model=cooperative}}function with_random_agent(j; reps=200, rng=MersenneTwister(4))
-{{?model=cooperative}}    steps = map(1:reps) do k
+{{?model=cooperative}}    runs = map(1:reps) do k
 {{?model=cooperative}}        s = Tuple(starts)
 {{?model=cooperative}}        for t in 1:maxsteps
 {{?model=cooperative}}            a = collect(res.greedy(s)); j > 0 && (a[j] = rand(rng, 1:5))
 {{?model=cooperative}}            s, r, done = step_env(s, Tuple(a))
-{{?model=cooperative}}            done && return t
+{{?model=cooperative}}            done && return (met = true, steps = t)
 {{?model=cooperative}}        end
-{{?model=cooperative}}        maxsteps
+{{?model=cooperative}}        (met = false, steps = maxsteps)
 {{?model=cooperative}}    end
-{{?model=cooperative}}    (random_agent = j == 0 ? "none" : "agent $j", met_share = mean(steps .< maxsteps), mean_steps = mean(steps))
+{{?model=cooperative}}    (random_agent = j == 0 ? "none" : "agent $j", met_share = mean(x.met for x in runs), mean_steps = mean(x.steps for x in runs))
 {{?model=cooperative}}end
 {{?model=cooperative}}[with_random_agent(j) for j in 0:N]
 {{?model=competitive}}[merge((opponent = "random",), evaluate(res.V, randomp; games=400)), merge((opponent = "perfect",), evaluate(res.V, perfectp; games=400))]
@@ -559,7 +560,7 @@ code = '''
 {{?model=cooperative}}for l in ["iql", "vdn", "central"]
 {{?model=cooperative}}    plot!(plt, movavg(train(learner=l).lens, 50), label=l)
 {{?model=cooperative}}end
-{{?model=cooperative}}hline!(plt, [n - 1], linestyle=:dash, label="lower bound")
+{{?model=cooperative}}hline!(plt, [best_steps], linestyle=:dash, label="lower bound")
 {{?model=competitive}}function stage(frac)
 {{?model=competitive}}    r = train(episodes=max(1, round(Int, frac * episodes)), checkpoints=1)
 {{?model=competitive}}    (games = round(Int, frac * episodes), random_win = r.hist.vs_random[end].win, random_loss = r.hist.vs_random[end].loss,
