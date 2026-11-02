@@ -8,7 +8,7 @@ A falling training loss says only that the optimiser is working. These checks as
 
 ## How to Detect Overfitting in a Convolutional Network
 
-**Held-Out Error** compares the error on training sequences with the error on held-out sequences, which the user supplies as `X_test` and `y_test`. A small gap with a low error is the aim. A large gap means the filters have memorised the training windows, so reduce **out_channels** or depth, raise **dropout** in **TCN**, or gather more data. For time series, hold out the latest windows rather than a random sample: overlapping neighbours in a random split share most of their values, and the held-out error then looks better than it is.
+**Held-Out Error** compares the error on training sequences with the error on held-out sequences, `X_test` and `y_test`. A small gap with a low error is the aim. A large gap means the filters have memorised the training windows, so reduce **out_channels** or depth, raise **dropout** in **TCN**, or gather more data. For time series, hold out the latest windows rather than a random sample: overlapping neighbours in a random split share most of their values, and the held-out error then looks better than it is.
 
 ## How to Check Whether the Network Beats a Simple Model
 

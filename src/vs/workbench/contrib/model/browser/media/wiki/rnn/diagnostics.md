@@ -12,11 +12,11 @@ For **LSTM**, **GRU** and **Attention**, **Training Curve** continues training f
 
 ## How to Detect Overfitting in a Recurrent Network
 
-**Held-Out Error** compares the error on training sequences with the error on `X_test` and `y_test`, which the user supplies in the same shape. A large gap means the network has memorised windows, so reduce **hidden_size** or **num_layers**, or raise **dropout**. Hold out the latest windows and not a random sample. With overlapping windows, a random split places near-copies of training data in the test set, and the error looks far better than it would in use.
+**Held-Out Error** compares the error on training sequences with the error on held-out sequences, `X_test` and `y_test`, in the same shape. A large gap means the network has memorised windows, so reduce **hidden_size** or **num_layers**, or raise **dropout**. Hold out the latest windows and not a random sample. With overlapping windows, a random split places near-copies of training data in the test set, and the error looks far better than it would in use.
 
-## What the Linear Baseline Measures Here
+## How to Check Whether the Network Beats a Simple Model
 
-**vs Linear Baseline** fits least squares to the flattened windows and compares in-sample errors for both models. This comparison is a check of fit and says nothing about forecasting. The output also reports `linear_can_interpolate`, which is true when the features are at least as many as the sequences: the linear fit can then match the training data exactly, and its low error means nothing. For a fair verdict, compute both errors on held-out windows.
+**vs Linear Baseline** fits least squares to the flattened input windows and compares the held-out error with that of the network, on `X_test` and `y_test`. A network that does not beat this baseline has found no useful nonlinearity, so the simple model is the better choice. On noisy financial series, losing to a linear model or to a naive forecast is a common result, and it is informative in itself.
 
 ## How to Check Long Memory with Input Saliency
 

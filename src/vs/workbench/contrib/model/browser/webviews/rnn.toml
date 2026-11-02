@@ -142,7 +142,7 @@ purpose = "Recurrent encoder plus attention over every hidden state"
 [[inputs]]
 id = "xvar"
 label = "Sequence data"
-tooltip = "input_size x T x n array: n sequences of T time steps, each step a vector of input_size features."
+tooltip = "input_size x T x n array: n sequences of T time steps, each step a vector of input_size features. The default, X, is simulated: 780 windows of 20 steps from a threshold autoregression, with the latest 180 held out as X_test and y_test."
 default = "X"
 
 [[inputs]]
@@ -155,7 +155,7 @@ default = "y"
 id = "input-size"
 label = "input_size"
 tooltip = "Number of features observed at each time step."
-default = "10"
+default = "1"
 newRow = true
 
 [[inputs]]
@@ -306,11 +306,23 @@ return s;
 model = "lstm"
 code = '''
 using Flux, Statistics
+{{?xvar=X}} using Random
 
 input_size  = {{input-size}}  # input features per time step
 hidden_size = {{hidden-size}}  # hidden units per layer
 output_size = {{output-size}}  # output dimension
 num_layers  = {{num-layers}}  # stacked LSTM layers
+
+{{?xvar=X}} # Example data, simulated: a threshold autoregression, whose next value depends on the last through a kink at zero, which a linear model cannot follow. Replace it with your own arrays.
+{{?xvar=X}} Random.seed!(1)
+{{?xvar=X}} series = zeros(Float32, input_size, 1000)
+{{?xvar=X}} for t in 2:1000
+{{?xvar=X}}     series[:, t] = -0.9f0 .* abs.(series[:, t - 1]) .+ 0.5f0 .* randn(Float32, input_size)  # slope 0.9 below zero, -0.9 above
+{{?xvar=X}} end
+{{?xvar=X}} windows(s) = stack(s[:, t:t + 19] for t in 1:size(s, 2) - 20), stack(s[1:output_size, t + 20] for t in 1:size(s, 2) - 20)  # every window of 20 steps, and the values after it
+{{?xvar=X}} X, y = windows(series[:, 1:800])  # input_size x 20 x 780, output_size x 780
+{{?xvar=X}} X_test, y_test = windows(series[:, 801:end])  # the latest 180 windows, held out
+{{?xvar=X}} X_new = X_test[:, :, 1:3]  # three of them, as new sequences
 
 {{?direction=uni}} layer(n_in) = LSTM(n_in => hidden_size)
 {{?direction=uni}} width = hidden_size
@@ -343,11 +355,23 @@ end
 model = "gru"
 code = '''
 using Flux, Statistics
+{{?xvar=X}} using Random
 
 input_size  = {{input-size}}  # input features per time step
 hidden_size = {{hidden-size}}  # hidden units per layer
 output_size = {{output-size}}  # output dimension
 num_layers  = {{num-layers}}  # stacked GRU layers
+
+{{?xvar=X}} # Example data, simulated: a threshold autoregression, whose next value depends on the last through a kink at zero, which a linear model cannot follow. Replace it with your own arrays.
+{{?xvar=X}} Random.seed!(1)
+{{?xvar=X}} series = zeros(Float32, input_size, 1000)
+{{?xvar=X}} for t in 2:1000
+{{?xvar=X}}     series[:, t] = -0.9f0 .* abs.(series[:, t - 1]) .+ 0.5f0 .* randn(Float32, input_size)  # slope 0.9 below zero, -0.9 above
+{{?xvar=X}} end
+{{?xvar=X}} windows(s) = stack(s[:, t:t + 19] for t in 1:size(s, 2) - 20), stack(s[1:output_size, t + 20] for t in 1:size(s, 2) - 20)  # every window of 20 steps, and the values after it
+{{?xvar=X}} X, y = windows(series[:, 1:800])  # input_size x 20 x 780, output_size x 780
+{{?xvar=X}} X_test, y_test = windows(series[:, 801:end])  # the latest 180 windows, held out
+{{?xvar=X}} X_new = X_test[:, :, 1:3]  # three of them, as new sequences
 
 {{?direction=uni}} layer(n_in) = GRU(n_in => hidden_size)
 {{?direction=uni}} width = hidden_size
@@ -380,6 +404,7 @@ end
 model = "esn"
 code = '''
 using Flux, LinearAlgebra
+{{?xvar=X}} using Random
 
 input_size     = {{input-size}}  # input features per time step
 reservoir_size = {{reservoir-size}}  # fixed reservoir neurons
@@ -387,6 +412,17 @@ output_size    = {{output-size}}  # output dimension
 alpha          = {{leaking-rate}}  # leaking rate in (0, 1]
 rho            = {{spectral-radius}}  # target spectral radius
 sparsity       = {{sparsity}}  # fraction of zero reservoir weights
+
+{{?xvar=X}} # Example data, simulated: a threshold autoregression, whose next value depends on the last through a kink at zero, which a linear model cannot follow. Replace it with your own arrays.
+{{?xvar=X}} Random.seed!(1)
+{{?xvar=X}} series = zeros(Float32, input_size, 1000)
+{{?xvar=X}} for t in 2:1000
+{{?xvar=X}}     series[:, t] = -0.9f0 .* abs.(series[:, t - 1]) .+ 0.5f0 .* randn(Float32, input_size)  # slope 0.9 below zero, -0.9 above
+{{?xvar=X}} end
+{{?xvar=X}} windows(s) = stack(s[:, t:t + 19] for t in 1:size(s, 2) - 20), stack(s[1:output_size, t + 20] for t in 1:size(s, 2) - 20)  # every window of 20 steps, and the values after it
+{{?xvar=X}} X, y = windows(series[:, 1:800])  # input_size x 20 x 780, output_size x 780
+{{?xvar=X}} X_test, y_test = windows(series[:, 801:end])  # the latest 180 windows, held out
+{{?xvar=X}} X_new = X_test[:, :, 1:3]  # three of them, as new sequences
 
 W_in  = randn(Float32, reservoir_size, input_size) .* 0.1f0  # input weights (fixed)
 W_res = randn(Float32, reservoir_size, reservoir_size) .* (rand(Float32, reservoir_size, reservoir_size) .> sparsity)
@@ -413,11 +449,23 @@ loss(model, x, y) = Flux.mse(model(x), y)
 model = "attn"
 code = '''
 using Flux
+{{?xvar=X}} using Random
 
 input_size  = {{input-size}}  # input features per time step
 hidden_size = {{hidden-size}}  # GRU hidden units
 output_size = {{output-size}}  # output dimension
 num_heads   = {{num-heads}}  # attention heads (must divide hidden_size)
+
+{{?xvar=X}} # Example data, simulated: a threshold autoregression, whose next value depends on the last through a kink at zero, which a linear model cannot follow. Replace it with your own arrays.
+{{?xvar=X}} Random.seed!(1)
+{{?xvar=X}} series = zeros(Float32, input_size, 1000)
+{{?xvar=X}} for t in 2:1000
+{{?xvar=X}}     series[:, t] = -0.9f0 .* abs.(series[:, t - 1]) .+ 0.5f0 .* randn(Float32, input_size)  # slope 0.9 below zero, -0.9 above
+{{?xvar=X}} end
+{{?xvar=X}} windows(s) = stack(s[:, t:t + 19] for t in 1:size(s, 2) - 20), stack(s[1:output_size, t + 20] for t in 1:size(s, 2) - 20)  # every window of 20 steps, and the values after it
+{{?xvar=X}} X, y = windows(series[:, 1:800])  # input_size x 20 x 780, output_size x 780
+{{?xvar=X}} X_test, y_test = windows(series[:, 801:end])  # the latest 180 windows, held out
+{{?xvar=X}} X_new = X_test[:, :, 1:3]  # three of them, as new sequences
 
 struct AttnRNN  # GRU encoder, then the last state attends over every step
     rnn; attn; readout
@@ -533,12 +581,11 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "linear-baseline"
 label = "vs Linear Baseline"
-desc = "Training MSE of the network against least squares on the flattened input windows (both in-sample; with fewer sequences than features the linear fit can interpolate, MSE near 0)"
+desc = "Held-out MSE of the network against least squares on the flattened input windows"
 code = '''
-Z = reshape({{xvar}}, :, size({{xvar}}, 3))  # flatten each window into one feature vector
-Z1 = vcat(Z, ones(Float32, 1, size(Z, 2)))  # add an intercept row
-W = {{yvar}} / Z1  # least-squares coefficients
-(network = loss(model, {{xvar}}, {{yvar}}), linear = Flux.mse(W * Z1, {{yvar}}), linear_can_interpolate = size(Z1, 1) >= size(Z1, 2))  # in-sample for both
+flat(X) = vcat(reshape(X, :, size(X, 3)), ones(Float32, 1, size(X, 3)))  # each window as one feature vector, plus an intercept row
+W = {{yvar}} / flat({{xvar}})  # least-squares coefficients, fitted on the training windows
+(network = loss(model, X_test, y_test), linear = Flux.mse(W * flat(X_test), y_test))  # both on held-out windows: in-sample the network wins by capacity alone
 '''
 
 [[actionGroups]]

@@ -1871,7 +1871,7 @@
 				"ctsv/tutorial-04-calibration.ipynb"
 			],
 			"packages": [
-				"DiffEqFinancial.jl",
+				"StochasticVolatility.jl",
 				"Distributions.jl"
 			]
 		},

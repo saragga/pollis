@@ -118,7 +118,7 @@ purpose = "Causal, dilated and residual blocks (Bai et al. 2018)"
 [[inputs]]
 id = "xvar"
 label = "Sequence data"
-tooltip = "T x in_channels x n array: n sequences of T time steps (the layout Flux's Conv expects)."
+tooltip = "T x in_channels x n array: n sequences of T time steps (the layout Flux's Conv expects). The default, X, is simulated: 780 windows of 20 steps from a threshold autoregression, with the latest 180 held out as X_test and y_test."
 default = "X"
 
 [[inputs]]
@@ -257,12 +257,24 @@ return s;
 model = "conv1d"
 code = '''
 using Flux
+{{?xvar=X}} using Random
 
 in_channels  = {{in-channels}}  # input channels
 out_channels = {{out-channels}}  # feature maps per layer
 kernel_size  = {{kernel-size}}  # convolution window
 num_layers   = {{num-layers}}  # stacked conv layers
 output_size  = {{output-size}}  # output dimension
+
+{{?xvar=X}} # Example data, simulated: a threshold autoregression, whose next value depends on the last through a kink at zero, which a linear model cannot follow. Replace it with your own arrays.
+{{?xvar=X}} Random.seed!(1)
+{{?xvar=X}} series = zeros(Float32, in_channels, 1000)
+{{?xvar=X}} for t in 2:1000
+{{?xvar=X}}     series[:, t] = -0.9f0 .* abs.(series[:, t - 1]) .+ 0.5f0 .* randn(Float32, in_channels)  # slope 0.9 below zero, -0.9 above
+{{?xvar=X}} end
+{{?xvar=X}} windows(s) = stack(permutedims(s[:, t:t + 19]) for t in 1:size(s, 2) - 20), stack(s[1:output_size, t + 20] for t in 1:size(s, 2) - 20)  # every window of 20 steps, and the values after it
+{{?xvar=X}} X, y = windows(series[:, 1:800])  # 20 x in_channels x 780, output_size x 780
+{{?xvar=X}} X_test, y_test = windows(series[:, 801:end])  # the latest 180 windows, held out
+{{?xvar=X}} X_new = X_test[:, :, 1:3]  # three of them, as new sequences
 
 {{?padding=same}} pad = SamePad()  # symmetric padding: full context
 {{?padding=causal}} pad = (kernel_size - 1, 0)  # left-only padding: no look-ahead
@@ -288,6 +300,7 @@ end
 model = "dilated"
 code = '''
 using Flux
+{{?xvar=X}} using Random
 
 in_channels   = {{in-channels}}  # input channels
 out_channels  = {{out-channels}}  # feature maps per layer
@@ -295,6 +308,17 @@ kernel_size   = {{kernel-size}}  # convolution window
 num_layers    = {{num-layers}}  # stacked dilated layers
 dilation_base = {{dilation-base}}  # dilation at layer l is dilation_base^(l-1)
 output_size   = {{output-size}}  # output dimension
+
+{{?xvar=X}} # Example data, simulated: a threshold autoregression, whose next value depends on the last through a kink at zero, which a linear model cannot follow. Replace it with your own arrays.
+{{?xvar=X}} Random.seed!(1)
+{{?xvar=X}} series = zeros(Float32, in_channels, 1000)
+{{?xvar=X}} for t in 2:1000
+{{?xvar=X}}     series[:, t] = -0.9f0 .* abs.(series[:, t - 1]) .+ 0.5f0 .* randn(Float32, in_channels)  # slope 0.9 below zero, -0.9 above
+{{?xvar=X}} end
+{{?xvar=X}} windows(s) = stack(permutedims(s[:, t:t + 19]) for t in 1:size(s, 2) - 20), stack(s[1:output_size, t + 20] for t in 1:size(s, 2) - 20)  # every window of 20 steps, and the values after it
+{{?xvar=X}} X, y = windows(series[:, 1:800])  # 20 x in_channels x 780, output_size x 780
+{{?xvar=X}} X_test, y_test = windows(series[:, 801:end])  # the latest 180 windows, held out
+{{?xvar=X}} X_new = X_test[:, :, 1:3]  # three of them, as new sequences
 
 receptive_field = 1 + (kernel_size - 1) * sum(dilation_base^(l - 1) for l in 1:num_layers)  # time steps seen by each output
 
@@ -322,6 +346,7 @@ end
 model = "tcn"
 code = '''
 using Flux
+{{?xvar=X}} using Random
 
 in_channels  = {{in-channels}}  # input channels
 out_channels = {{out-channels}}  # feature maps per residual block
@@ -329,6 +354,17 @@ kernel_size  = {{kernel-size}}  # convolution window
 num_blocks   = {{num-blocks}}  # residual blocks; dilation doubles: 1, 2, 4, ...
 dropout      = {{dropout}}  # dropout inside each block
 output_size  = {{output-size}}  # output dimension
+
+{{?xvar=X}} # Example data, simulated: a threshold autoregression, whose next value depends on the last through a kink at zero, which a linear model cannot follow. Replace it with your own arrays.
+{{?xvar=X}} Random.seed!(1)
+{{?xvar=X}} series = zeros(Float32, in_channels, 1000)
+{{?xvar=X}} for t in 2:1000
+{{?xvar=X}}     series[:, t] = -0.9f0 .* abs.(series[:, t - 1]) .+ 0.5f0 .* randn(Float32, in_channels)  # slope 0.9 below zero, -0.9 above
+{{?xvar=X}} end
+{{?xvar=X}} windows(s) = stack(permutedims(s[:, t:t + 19]) for t in 1:size(s, 2) - 20), stack(s[1:output_size, t + 20] for t in 1:size(s, 2) - 20)  # every window of 20 steps, and the values after it
+{{?xvar=X}} X, y = windows(series[:, 1:800])  # 20 x in_channels x 780, output_size x 780
+{{?xvar=X}} X_test, y_test = windows(series[:, 801:end])  # the latest 180 windows, held out
+{{?xvar=X}} X_new = X_test[:, :, 1:3]  # three of them, as new sequences
 
 struct TCNBlock  # two causal dilated convolutions with a residual connection
     conv1; conv2; downsample; drop
