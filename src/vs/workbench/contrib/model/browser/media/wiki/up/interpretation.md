@@ -1,6 +1,6 @@
 # Uncertainty Propagation: Interpretation
 
-How to read what the **Uncertainty Propagation** panel prints: the estimate and its standard uncertainty, the interval, the percentiles and tail probabilities, and the share of the output variance attributed to each input.
+How to read what the **Uncertainty Propagation** panel prints: the estimate and its standard uncertainty, the interval, the percentiles and tail probabilities, and the contribution of each input to the standard uncertainty.
 
 ## Estimate and standard uncertainty
 
@@ -16,9 +16,9 @@ For an asymmetric distribution, the shortest interval with the same probability 
 
 ## In Plain Terms
 
-**In Plain Terms** states the result as the mean plus or minus one standard deviation, rounded to four and two significant digits, gives the relative uncertainty as the standard deviation in percent of the absolute mean, and repeats the interval at the chosen level.
+**In Plain Terms** states the estimate, the mean of the particles, with its standard uncertainty, their standard deviation, and the probabilistically symmetric coverage interval at the chosen coverage probability. It rounds the standard uncertainty to two significant digits and the other values to the same decimal position, and gives the relative uncertainty as the standard deviation in percent of the absolute mean.
 
-Among the items [Joint Committee for Guides in Metrology (2008b)](#ref-JCGM2008b) would typically report are the estimate, its standard uncertainty, the coverage probability, the ends of the interval and whether the interval is probabilistically symmetric or shortest. One or two significant digits would usually be adequate for the standard uncertainty, in their guidance.
+Among the items [Joint Committee for Guides in Metrology (2008b)](#ref-JCGM2008b) would typically report are the estimate, its standard uncertainty, the coverage probability, the ends of the interval and whether the interval is probabilistically symmetric or shortest. In their clause 5.5.2, the estimate, its standard uncertainty and the ends of the interval are reported to the same decimal position as the least significant digit of the standard uncertainty, for which one or two significant digits would usually be adequate.
 
 ## Percentiles and probabilities
 
@@ -28,9 +28,9 @@ Among the items [Joint Committee for Guides in Metrology (2008b)](#ref-JCGM2008b
 
 ## Which Input Matters
 
-**Which Input Matters** ranks the inputs by the squared correlation between their particles and the output particles. The panel's description calls this roughly the share of output variance that each input explains, exact for linear, independent inputs.
+**Which Input Matters** follows Annex B of [Joint Committee for Guides in Metrology (2008b)](#ref-JCGM2008b): for each input, it evaluates the expression with all other inputs held at their means, its best estimates. The standard deviation of the resulting output is the contribution of that input, and its ratio to the standard deviation of the input can be taken as a sensitivity coefficient, one that takes all higher-order terms of the Taylor series into account. The action ranks the inputs by their contributions.
 
-The decomposition of [Joint Committee for Guides in Metrology (2008a)](#ref-JCGM2008a) for the linear case writes the combined variance as a sum of terms, one for each input, each the squared product of a sensitivity coefficient and the standard uncertainty of that input. [Joint Committee for Guides in Metrology (2008b)](#ref-JCGM2008b) note that sensitivity coefficients are not an inherent part of the Monte Carlo approach, though approximations to them can be provided that take all higher-order terms into account.
+The decomposition of [Joint Committee for Guides in Metrology (2008a)](#ref-JCGM2008a) for the linear case writes the combined variance as a sum of terms, one for each input, each the squared product of a sensitivity coefficient and the standard uncertainty of that input. [Joint Committee for Guides in Metrology (2008b)](#ref-JCGM2008b) add that such a table, the uncertainty budget, may be useful to identify the dominant terms, but where the propagation of distributions is more appropriate it should be regarded as a qualitative tool.
 
 **Output Against Each Input** draws the output particles against the particles of each input in turn. The description of the action reads a clear pattern as a sign of which inputs drive the output, and its shape as a sign of whether the relation is linear.
 

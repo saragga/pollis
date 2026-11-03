@@ -4,9 +4,9 @@ The **Diagnose** and **Compare** groups of the **Uncertainty Propagation** panel
 
 ## Convergence in Particles
 
-**Convergence in Particles** plots the running mean and the running standard deviation over the first k particles of the output, for about 100 values of k from 20 to n, and prints the Monte Carlo standard error of the mean, `pstd(result) / sqrt(n)`. The panel's description reads flat curves as a sign that n is large enough.
+**Convergence in Particles** plots the running mean and the running standard deviation over the first k particles of the output, for about 100 values of k from 20 to n. It also runs the variables and the expression ten more times, with seeds **Seed** + 1 to **Seed** + 10, and computes for the mean, the standard deviation and the two ends of the interval the standard deviation of the average of the ten estimates.
 
-[Joint Committee for Guides in Metrology (2008b)](#ref-JCGM2008b) give the reason for the square root: the average of M model values is a realisation of a random variable with expectation E(Y) and variance V(Y)/M, so its closeness to E(Y) can be expected to be proportional to M^(−1/2).
+This follows the adaptive procedure of [Joint Committee for Guides in Metrology (2008b)](#ref-JCGM2008b), clause 7.9.4: a result is deemed to have stabilised when twice that standard deviation is less than the numerical tolerance δ associated with the standard uncertainty. With two significant digits, u(y) is written as c × 10^ℓ, with c a two-digit integer, and δ = ½ × 10^ℓ. The action prints twice the standard deviation, δ and whether each result has stabilised.
 
 ## Sampling variance
 
@@ -22,13 +22,13 @@ The package samples common univariate distributions systematically, which, as [B
 
 ## Shape of the Output
 
-**Shape of the Output** reports the skewness and the excess kurtosis of the output particles, `skewness(p)` and `kurtosis(p)`, and two intervals at the chosen level: a normal interval, the mean plus the normal quantiles times the standard deviation, and the quantile interval of the particles.
+**Shape of the Output** reports the skewness and the excess kurtosis of the output particles, `skewness(p)` and `kurtosis(p)`, and two intervals at the chosen coverage probability: the mean plus or minus k standard deviations, with k the normal quantile, and the probabilistically symmetric coverage interval of the particles.
 
-In the panel's words, far from 0 a mean plus or minus a standard deviation misdescribes the uncertainty, and the quantile interval should be used. [Joint Committee for Guides in Metrology (2008b)](#ref-JCGM2008b) list skewness and kurtosis, with the mode and the median, among the information that the sorted model values provide beyond the expectation and the standard deviation.
+[Joint Committee for Guides in Metrology (2008b)](#ref-JCGM2008b) list skewness and kurtosis, with the mode and the median, among the information that the sorted model values provide beyond the expectation and the standard deviation.
 
 ## Against Linear Propagation as a check
 
-**Against Linear Propagation** builds a `measurement(pmean(v), pstd(v))` from the mean and standard deviation of each input, evaluates the expression on them with Measurements.jl and sets the linear mean and standard deviation beside the Monte Carlo ones.
+**Against Linear Propagation** builds a `measurement(pmean(v), pstd(v))` from the mean and standard deviation of each input, evaluates the expression on them with Measurements.jl and sets the linear mean and standard deviation beside the Monte Carlo ones. It then forms the interval y ± U_p of the linear result, with U_p the standard uncertainty times the normal quantile, and computes the endpoint differences d_low = |y − U_p − y_low| and d_high = |y + U_p − y_high|, equations (19) and (20) of [Joint Committee for Guides in Metrology (2008b)](#ref-JCGM2008b), with the tolerance δ of the Monte Carlo standard uncertainty.
 
 [Joint Committee for Guides in Metrology (2008b)](#ref-JCGM2008b) recommend applying both the linear framework and the Monte Carlo method when it is unclear whether the conditions for the first hold, and comparing their coverage intervals: if both ends agree within a numerical tolerance set by the meaningful digits of the standard uncertainty, the linear framework is validated for that case. A favourable comparison lets the linear framework be used again for sufficiently similar problems.
 

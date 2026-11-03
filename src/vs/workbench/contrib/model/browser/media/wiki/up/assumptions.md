@@ -8,11 +8,11 @@ The Monte Carlo supplement, [Joint Committee for Guides in Metrology (2008b)](#r
 
 In the panel, the model is **Expression** and the output is `result`, one uncertain value carried as particles. The expression can be any Julia code that accepts real numbers: [Bagge Carlson (2020)](#ref-Car2020a) note that a program written in Julia that operates on any form of real number also operates on `Particles`, since the methods of the basic functions and operators are implemented for that type.
 
-## Independent inputs
+## Independent and correlated inputs
 
-The tooltip of **Uncertain Variables** asks for one independent input per line. Formulation in [Joint Committee for Guides in Metrology (2008b)](#ref-JCGM2008b) assigns a distribution to each input and a joint distribution to those inputs that are not independent.
+The tooltip of **Uncertain Variables** asks for one input per line, independent of the others, and for correlated inputs drawn together from one multivariate distribution. Formulation in [Joint Committee for Guides in Metrology (2008b)](#ref-JCGM2008b) assigns a distribution to each input and a joint distribution to those inputs that are not independent.
 
-The MonteCarloMeasurements.jl documentation shows such a joint assignment: a multivariate distribution passed to `Particles`, for example an `MvNormal`, returns a vector of correlated particles. Inputs built on separate lines are independent of each other, and the default permutation of systematic samples keeps them from correlating strongly. Derived quantities belong in **Expression**, as the tooltip asks.
+The MonteCarloMeasurements.jl documentation shows such a joint assignment: a multivariate distribution passed to `Particles`, for example an `MvNormal`, returns a vector of correlated particles, which the line `x, y = Particles(n, MvNormal([0.0, 0.0], [1.0 0.5; 0.5 1.0]))` of the tooltip unpacks into two inputs. Inputs built on separate lines are independent of each other, and the default permutation of systematic samples keeps them from correlating strongly. Derived quantities belong in **Expression**, as the tooltip asks.
 
 ## Conditions for the Monte Carlo method
 

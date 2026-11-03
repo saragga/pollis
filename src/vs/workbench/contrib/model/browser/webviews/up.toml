@@ -16,6 +16,14 @@ github = "https://github.com/baggepinnen/MonteCarloMeasurements.jl"
 name = "Distributions.jl"
 github = "https://github.com/JuliaStats/Distributions.jl"
 
+[[packages]]
+name = "Measurements.jl"
+github = "https://github.com/JuliaPhysics/Measurements.jl"
+
+[[packages]]
+name = "Plots.jl"
+github = "https://github.com/JuliaPlots/Plots.jl"
+
 [requires]
 packages = ["MonteCarloMeasurements.jl", "Distributions.jl", "Measurements.jl", "Plots.jl"]
 
@@ -35,10 +43,10 @@ bundled = true
 description = "Propagating uncertainty through nonlinear functions and composite expressions"
 
 [[notebookSections.notebooks]]
-name = "Confidence Intervals"
+name = "Coverage Intervals"
 file = "up/tutorial-03-confidence-intervals.ipynb"
 bundled = true
-description = "Computing credible intervals and percentile statistics from particles"
+description = "Computing coverage intervals and percentile statistics from particles"
 
 [[notebookSections.notebooks]]
 name = "Sensitivity Analysis"
@@ -92,7 +100,7 @@ detail = "define uncertain variables as probability distributions (Normal, Unifo
 
 [[bullets]]
 text = "Statistics"
-detail = "mean, standard deviation, and confidence intervals (CI) of the propagated output"
+detail = "mean, standard deviation and probabilistically symmetric coverage interval of the propagated output"
 
 [[references]]
 separator = true
@@ -117,7 +125,7 @@ key = "JCGM2008b"
 [[inputs]]
 id = "variables"
 label = "Uncertain Variables"
-tooltip = "One independent input per line: name = Particles(n, Distribution(parameters)). Distributions: Normal, Uniform, LogNormal, Exponential, Beta, Gamma, Weibull, TDist, ... Write derived quantities (z = x * y) into the expression, not here."
+tooltip = "One input per line: name = Particles(n, Distribution(parameters)), independent of the others. Distributions: Normal, Uniform, LogNormal, Exponential, Beta, Gamma, Weibull, TDist, ... Correlated inputs come from one multivariate distribution: x, y = Particles(n, MvNormal([0.0, 0.0], [1.0 0.5; 0.5 1.0])). Write derived quantities (z = x * y) into the expression, not here."
 kind = "textarea"
 default = "x = Particles(n, Normal(0.0, 1.0))\ny = Particles(n, Uniform(0.0, 1.0))"
 
@@ -130,7 +138,7 @@ default = "x + y"
 [[inputs]]
 id = "n-particles"
 label = "Particles (n)"
-tooltip = "Monte Carlo samples carried by each uncertain variable. More particles give smoother estimates at a higher cost."
+tooltip = "Monte Carlo samples carried by each uncertain variable. JCGM 101 7.2.2 suggests at least 10^4/(1 - p) trials for a coverage probability p: 100000 at 90%, 200000 at 95% and 1000000 at 99%."
 kind = "select"
 default = "1000"
 
@@ -158,6 +166,18 @@ label = "5000"
 value = "10000"
 label = "10000"
 
+[[inputs.options]]
+value = "100000"
+label = "100000"
+
+[[inputs.options]]
+value = "200000"
+label = "200000"
+
+[[inputs.options]]
+value = "1000000"
+label = "1000000"
+
 [[inputs]]
 id = "seed"
 label = "Seed"
@@ -166,8 +186,8 @@ default = "42"
 
 [[inputs]]
 id = "ci-level"
-label = "CI Level"
-tooltip = "Central interval reported from the quantiles of the output particles."
+label = "Coverage Probability"
+tooltip = "Coverage probability p of the probabilistically symmetric coverage interval, whose ends are the (1 - p)/2 and (1 + p)/2 quantiles of the output particles (JCGM 101 7.7)."
 kind = "select"
 default = "95"
 
@@ -206,10 +226,11 @@ collect_names!(used, :({{expression}}))
 ins = [s => getfield(here, s) for s in sort!(collect(used)) if isdefined(here, s) && getfield(here, s) isa Particles]  # the uncertain inputs the expression uses
 fexpr = eval(Expr(:->, Expr(:tuple, first.(ins)...), :({{expression}})))  # the expression as a function of the inputs
 tail = (100 - {{ci-level}}) / 200  # tail probability on each side
+tolerance(u) = 0.5 * 10.0^(floor(Int, log10(u)) - 1)  # numerical tolerance of u with two significant digits (JCGM 101 7.9.2)
 
 println("Mean:  ", pmean(result))
 println("Std:   ", pstd(result))
-println("{{ci-level}}% CI: [", pquantile(result, tail), ", ", pquantile(result, 1 - tail), "]")
+println("{{ci-level}}% coverage interval: [", pquantile(result, tail), ", ", pquantile(result, 1 - tail), "]")
 '''
 
 [[actionGroups]]
@@ -219,12 +240,12 @@ label = "Visualise"
 [[actionGroups.actions]]
 id = "distribution"
 label = "Output Distribution"
-desc = "Histogram of the output particles with the mean and the chosen credible interval"
+desc = "Histogram of the output particles with the mean and the probabilistically symmetric coverage interval"
 code = '''
 using Plots
 histogram(result.particles, bins=60, normalize=:pdf, alpha=0.6, label="output particles")
 vline!([pmean(result)], lw=2, label="mean")
-vline!([pquantile(result, tail), pquantile(result, 1 - tail)], ls=:dash, label="{{ci-level}}% interval")
+vline!([pquantile(result, tail), pquantile(result, 1 - tail)], ls=:dash, label="{{ci-level}}% coverage interval")
 '''
 
 [[actionGroups.actions]]
@@ -243,19 +264,29 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "convergence"
 label = "Convergence in Particles"
-desc = "Running mean and standard deviation over the first k particles, and the Monte Carlo standard error of the mean: flat curves mean n is large enough"
+desc = "Running mean and standard deviation over the first k particles, and ten more runs with new seeds: twice the standard deviation of the average of the estimates against the numerical tolerance, as in the adaptive procedure of JCGM 101 7.9.4"
 code = '''
 using Plots, Statistics
+function rerun(s)  # one more application of the Monte Carlo method with seed s
+    Random.seed!(s)
+    {{variables}}
+    r = {{expression}}
+    [pmean(r), pstd(r), pquantile(r, tail), pquantile(r, 1 - tail)]
+end
+h = 10
+est = reduce(hcat, [rerun({{seed}} + k) for k in 1:h])  # one column per run
+s_avg = [std(est[i, :]) / sqrt(h) for i in 1:4]  # standard deviation of the average of h estimates (JCGM 101 7.9.4 g)
+delta = tolerance(mean(est[2, :]))
+display([(quantity = q, twice_sd_of_average = 2s, tolerance = delta, stabilised = 2s <= delta) for (q, s) in zip(["mean", "std", "lower end", "upper end"], s_avg)])
 ks = unique(round.(Int, range(20, n; length=100)))
 p = result.particles
-println("Monte Carlo standard error of the mean: ", pstd(result) / sqrt(n))
 plot(plot(ks, [mean(p[1:k]) for k in ks], legend=false, title="running mean"), plot(ks, [std(p[1:k]) for k in ks], legend=false, title="running std"), xlabel="particles", size=(700, 300))
 '''
 
 [[actionGroups.actions]]
 id = "normality"
 label = "Shape of the Output"
-desc = "Skewness and excess kurtosis of the output: far from 0, a mean plus or minus a standard deviation misdescribes the uncertainty, and the quantile interval should be used"
+desc = "Skewness and excess kurtosis of the output, and the interval mean plus or minus k standard deviations, with k the normal quantile, beside the probabilistically symmetric coverage interval"
 code = '''
 using Distributions
 p = result.particles
@@ -291,11 +322,15 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "linear"
 label = "Against Linear Propagation"
-desc = "First-order (delta method) propagation with Measurements.jl, from the mean and standard deviation of each input: it misses nonlinearity and the correlation between inputs"
+desc = "First-order propagation with Measurements.jl, from the mean and standard deviation of each input taken as independent, compared with the Monte Carlo coverage interval as in JCGM 101 8.1.3: the endpoint differences against the numerical tolerance"
 code = '''
 using Measurements
 lin = Base.invokelatest(fexpr, [measurement(pmean(v), pstd(v)) for (_, v) in ins]...)
-(monte_carlo = (mean = pmean(result), std = pstd(result)), linear = (mean = Measurements.value(lin), std = Measurements.uncertainty(lin)))
+y, U = Measurements.value(lin), quantile(Normal(), 1 - tail) * Measurements.uncertainty(lin)  # y +/- U_p with a normal coverage factor
+d_low, d_high = abs(y - U - pquantile(result, tail)), abs(y + U - pquantile(result, 1 - tail))  # JCGM 101 (19) and (20)
+delta = tolerance(pstd(result))
+(monte_carlo = (mean = pmean(result), std = pstd(result)), linear = (mean = y, std = Measurements.uncertainty(lin)),
+ d_low = d_low, d_high = d_high, tolerance = delta, linear_validated = d_low <= delta && d_high <= delta)
 '''
 
 [[actionGroups.actions]]
@@ -314,19 +349,21 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "summary"
 label = "In Plain Terms"
-desc = "The result as a value with its uncertainty, the relative uncertainty and the chosen interval"
+desc = "The result with its standard uncertainty and coverage interval, rounded as in JCGM 101 5.5.2, and the relative uncertainty"
 code = '''
 m, s = pmean(result), pstd(result)
-println("The output is ", round(m, sigdigits=4), " +/- ", round(s, sigdigits=2), " (one standard deviation).")
+d = s > 0 ? 1 - floor(Int, log10(s)) : 4  # decimals that give s two significant digits; the other values keep the same decimal position (JCGM 101 5.5.2)
+r(v) = round(v; digits=d)
+println("The output is ", r(m), " with standard uncertainty ", r(s), ".")
 println("Relative uncertainty: ", round(100 * s / abs(m), digits=1), "% of the mean.")
-println("With {{ci-level}}% probability it lies between ", round(pquantile(result, tail), sigdigits=4), " and ", round(pquantile(result, 1 - tail), sigdigits=4), ".")
+println("The probabilistically symmetric {{ci-level}}% coverage interval is [", r(pquantile(result, tail)), ", ", r(pquantile(result, 1 - tail)), "].")
 '''
 
 [[actionGroups.actions]]
 id = "sensitivity"
 label = "Which Input Matters"
-desc = "Squared correlation between each input and the output: roughly the share of output variance each input explains (exact for linear, independent inputs)"
+desc = "For each input, the output with all other inputs held at their means, as in JCGM 101 Annex B: its standard deviation is the contribution of the input, and the ratio to the input's standard deviation a sensitivity coefficient"
 code = '''
-using Statistics
-sort([(input = k, share_of_variance = round(cor(v.particles, result.particles)^2, digits=3)) for (k, v) in ins], by = r -> -r.share_of_variance)
+one_at_a_time(k) = Base.invokelatest(fexpr, [j == k ? v : pmean(v) for (j, (_, v)) in enumerate(ins)]...)  # the other inputs at their best estimates
+sort([(input = name, contribution = pstd(one_at_a_time(k)), sensitivity = pstd(one_at_a_time(k)) / pstd(v), output_std = pstd(result)) for (k, (name, v)) in enumerate(ins)], by = r -> -r.contribution)
 '''

@@ -10,7 +10,7 @@ A summary of the **Uncertainty Propagation** panel: its method, its inputs with 
 | Package | MonteCarloMeasurements.jl, `Particles` |
 | Distributions | Distributions.jl |
 | Linear comparison | Measurements.jl, first order |
-| Inputs | **Uncertain Variables**, **Expression**, **Particles (n)**, **Seed**, **CI Level** |
+| Inputs | **Uncertain Variables**, **Expression**, **Particles (n)**, **Seed**, **Coverage Probability** |
 | Printed | mean, standard deviation, central interval |
 | Action groups | Visualise, Diagnose, Predict, Compare, Interpret |
 
@@ -18,7 +18,7 @@ A summary of the **Uncertainty Propagation** panel: its method, its inputs with 
 
 ## Uncertain Variables and Expression
 
-**Uncertain Variables** takes one independent input per line, in the form `name = Particles(n, Distribution(parameters))`. The tooltip names Normal, Uniform, LogNormal, Exponential, Beta, Gamma, Weibull and TDist among the distributions, and asks for derived quantities, such as `z = x * y`, to go into the expression. The default inputs are
+**Uncertain Variables** takes one input per line, in the form `name = Particles(n, Distribution(parameters))`, independent of the others; correlated inputs come from one multivariate distribution, `x, y = Particles(n, MvNormal(...))`. The tooltip names Normal, Uniform, LogNormal, Exponential, Beta, Gamma, Weibull and TDist among the distributions, and asks for derived quantities, such as `z = x * y`, to go into the expression. The default inputs are
 
 ```
 x = Particles(n, Normal(0.0, 1.0))
@@ -27,15 +27,15 @@ y = Particles(n, Uniform(0.0, 1.0))
 
 **Expression** is a Julia expression of the variables, `x + y` by default. Every particle is pushed through it. Following its tooltip, constants and functions of your own are fine when the variables are passed as arguments, `f(x, y)`.
 
-## Particles, Seed and CI Level
+## Particles, Seed and Coverage Probability
 
 | Input | Options | Default |
 | --- | --- | --- |
-| **Particles (n)** | 100, 500, 1000, 2000, 5000, 10000 | 1000 |
+| **Particles (n)** | 100, 500, 1000, 2000, 5000, 10000, 100000, 200000, 1000000 | 1000 |
 | **Seed** | an integer | 42 |
-| **CI Level** | 90%, 95%, 99% | 95% |
+| **Coverage Probability** | 90%, 95%, 99% | 95% |
 
-**Particles (n)** is the number of Monte Carlo samples carried by each variable; the tooltip notes that more particles give smoother estimates at a higher cost. The code calls `Random.seed!(seed)` before the variables are built, so that the particles are reproducible. **CI Level** sets the central interval reported from the quantiles of the output particles.
+**Particles (n)** is the number of Monte Carlo samples carried by each variable; the tooltip gives the number of trials that JCGM 101 suggests for each coverage probability. The code calls `Random.seed!(seed)` before the variables are built, so that the particles are reproducible. **Coverage Probability** sets p of the probabilistically symmetric coverage interval, whose ends are quantiles of the output particles.
 
 ## Printed statistics
 
@@ -44,10 +44,10 @@ The main code prints three lines:
 ```
 Mean:  pmean(result)
 Std:   pstd(result)
-95% CI: [pquantile(result, tail), pquantile(result, 1 - tail)]
+95% coverage interval: [pquantile(result, tail), pquantile(result, 1 - tail)]
 ```
 
-with `tail = (100 - CI) / 200`, the probability in each tail, 0.025 at the 95% level. In the MonteCarloMeasurements.jl documentation, `pmean` and `pstd` extract the mean and the standard deviation of particles, and functions with the prefix p, such as `pquantile`, give further statistics of the particle cloud.
+with `tail = (100 - p) / 200`, the probability in each tail, 0.025 for a coverage probability of 95%. The main code also defines `tolerance(u)`, the numerical tolerance of clause 7.9.2 of JCGM 101 with two significant digits, which **Convergence in Particles** and **Against Linear Propagation** use. In the MonteCarloMeasurements.jl documentation, `pmean` and `pstd` extract the mean and the standard deviation of particles, and functions with the prefix p, such as `pquantile`, give further statistics of the particle cloud.
 
 ## Sampling in the package
 
@@ -57,7 +57,7 @@ The documentation gives the constructor `Particles([rng,] N, d; permute=true, sy
 
 ## Packages and references
 
-The main code loads MonteCarloMeasurements, Distributions and Random. The actions add Plots for **Output Distribution**, **Output Against Each Input** and **Convergence in Particles**, Statistics for the running statistics and correlations, and Measurements for **Against Linear Propagation**.
+The main code loads MonteCarloMeasurements, Distributions and Random. The actions add Plots for **Output Distribution**, **Output Against Each Input** and **Convergence in Particles**, Statistics for the running statistics and the repeated runs, and Measurements for **Against Linear Propagation**.
 
 The panel lists the papers of [Bagge Carlson (2020)](#ref-Car2020a) and [Giordano (2016)](#ref-Gio2016a) under Software, and the GUM of [Joint Committee for Guides in Metrology (2008a)](#ref-JCGM2008a) and its Monte Carlo supplement, [Joint Committee for Guides in Metrology (2008b)](#ref-JCGM2008b), under Standards.
 

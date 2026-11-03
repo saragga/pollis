@@ -36,7 +36,7 @@ The actions work on `result`, the output particles, and several also on `ins`, t
 
 The Factsheet lists the inputs, defaults and printed statistics. Assumptions covers what the Monte Carlo method and the linear comparison require of the model and the inputs, Diagnostics the checks on the number of particles and on the shape of the output, and Interpretation how to read the estimate, the interval and the input shares. The Decision Guide sets Monte Carlo and linear propagation side by side.
 
-The panel's notebooks are Uncertainty Propagation Basics, Nonlinear Propagation, Confidence Intervals, Sensitivity Analysis and Correlated Inputs.
+The panel's notebooks are Uncertainty Propagation Basics, Nonlinear Propagation, Coverage Intervals, Sensitivity Analysis and Correlated Inputs.
 
 ## References
 

@@ -26,15 +26,15 @@ For a small but important subset of problems the linear framework is exact. The 
 
 ## Number of particles
 
-**Particles (n)** runs from 100 to 10000. Its tooltip puts the trade-off simply: more particles give smoother estimates at a higher cost.
+**Particles (n)** runs from 100 to 1000000. Its tooltip gives the guidance of [Joint Committee for Guides in Metrology (2008b)](#ref-JCGM2008b), clause 7.2.2: a number of trials at least 10⁴ times greater than 1/(1 − p), which is 100 000 at 90%, 200 000 at 95% and 1 000 000 at 99%.
 
-[Joint Committee for Guides in Metrology (2008b)](#ref-JCGM2008b) note that a number of trials chosen in advance gives no direct control over the quality of the results, since the number needed depends on the shape of the output distribution and on the coverage probability, and they recommend a number large compared with 1/(1 − p). They also describe an adaptive procedure that adds trials until the results of interest have stabilised. **Convergence in Particles** and **Fewer Particles** show, for the current expression, how far the statistics still move with n.
+[Joint Committee for Guides in Metrology (2008b)](#ref-JCGM2008b) note that a number of trials chosen in advance gives no direct control over the quality of the results, since the number needed depends on the shape of the output distribution and on the coverage probability, and they also describe an adaptive procedure that adds trials until the results of interest have stabilised. **Convergence in Particles** applies its stabilisation test to ten further runs, and **Fewer Particles** shows how far the statistics still move with n.
 
-## CI Level
+## Coverage Probability
 
-**CI Level** offers 90%, 95% and 99%. A higher level puts the ends of the interval further into the tails, where fewer particles lie; [Joint Committee for Guides in Metrology (2008b)](#ref-JCGM2008b) note that the larger the coverage probability, the more trials the ends of the interval need.
+**Coverage Probability** offers 90%, 95% and 99%. A higher level puts the ends of the interval further into the tails, where fewer particles lie; [Joint Committee for Guides in Metrology (2008b)](#ref-JCGM2008b) note that the larger the coverage probability, the more trials the ends of the interval need.
 
-Before reporting an interval at 99%, **Fewer Particles** at that level shows whether its ends have settled at the chosen n. **Shape of the Output** compares the quantile interval with the normal interval at the same level.
+Before reporting an interval at 99%, **Fewer Particles** at that level shows whether its ends have settled at the chosen n. **Shape of the Output** compares the coverage interval with the mean plus or minus k standard deviations at the same probability.
 
 ## Which action to use
 
