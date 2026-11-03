@@ -9,13 +9,17 @@ viewType = "pollis.ql"
 defaultModel = "tabular"
 
 [[packages]]
-name = "ReinforcementLearning.jl"
-github = "https://github.com/JuliaReinforcementLearning/ReinforcementLearning.jl"
+name = "Flux.jl"
+github = "https://github.com/FluxML/Flux.jl"
 
 [[packages.videos]]
 title = "High Performance Computing in Julia"
 description = "An 18-video course by Jamie Mair on writing fast Julia code"
 url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
+
+[[packages]]
+name = "Plots.jl"
+github = "https://github.com/JuliaPlots/Plots.jl"
 
 [requires]
 packages = ["Flux.jl", "Plots.jl"]
@@ -27,7 +31,7 @@ label = ""
 name = "Tabular Q-Learning"
 file = "ql/tutorial-01-tabular.ipynb"
 bundled = true
-description = "Q-table update rule, epsilon-greedy exploration, GridWorld and FrozenLake environments"
+description = "Q-table update rule and epsilon-greedy exploration on the Cliff Walking grid"
 
 [[notebookSections.notebooks]]
 name = "Deep Q-Network"
@@ -119,16 +123,16 @@ label = "DQN"
 
 [[bullets]]
 text = "Tabular"
-detail = "maintains an exact lookup table of Q-values updated via the Bellman equation after each transition; exact and interpretable for small discrete state-action spaces (ReinforcementLearning.jl)"
+detail = "maintains an exact lookup table of Q-values updated via the Bellman equation after each transition; exact and interpretable for small discrete state-action spaces"
 
 [[bullets]]
 text = "Deep Q-Network (DQN)"
-detail = "approximates Q-values with a neural network; stabilised by experience replay and a periodically frozen target network; handles high-dimensional or pixel-based observations (ReinforcementLearning.jl)"
+detail = "approximates Q-values with a neural network; stabilised by experience replay and a periodically frozen target network; handles high-dimensional or pixel-based observations"
 
 [[decisionRows]]
 task = "Tabular"
 context = "Small, discrete state and action spaces (grid worlds, board positions, inventory levels)"
-purpose = "Keeps one Q(s, a) entry per state-action pair and updates it towards r + gamma max Q(s', a'); converges to the optimal Q under enough exploration"
+purpose = "Keeps one Q(s, a) entry per state-action pair and updates it towards r + gamma max Q(s', a'); converges to the optimal Q with probability 1 when every state-action pair is visited infinitely often and the step sizes over the visits to each pair sum to infinity while their squares sum to a finite value"
 
 [[decisionRows]]
 task = "DQN"
@@ -162,7 +166,7 @@ default = "0.99"
 [[inputs]]
 id = "eps"
 label = "Exploration (epsilon)"
-tooltip = "Probability of a random action in the epsilon-greedy behaviour policy."
+tooltip = "Probability of a random action in the epsilon-greedy behaviour policy, constant over training. Epsilon Decay compares a linear decay from 1.0 to this value."
 default = "0.1"
 
 [[inputs]]
@@ -249,12 +253,16 @@ function step_env(p, a)  # returns (next position, reward, done)
     return (q, -1.0, q == goal)
 end
 
-function train_tabular(; episodes=episodes, alpha=0.5, epsilon=epsilon, seed=seed, onpolicy=false)  # Q-learning (or SARSA if onpolicy)
+eps_at(ep, epsilon, episodes, decay) = decay ? max(epsilon, 1 - (1 - epsilon) * (ep - 1) / max(div(episodes, 2), 1)) : epsilon  # constant, or linear from 1.0 to epsilon over the first half of the episodes
+
+function train_tabular(; episodes=episodes, alpha=0.5, epsilon=epsilon, seed=seed, onpolicy=false, decay=false)  # Q-learning (or SARSA if onpolicy)
     rng = MersenneTwister(seed)
     Qt = zeros(nrows * ncols, 4)
-    pick(p) = rand(rng) < epsilon ? rand(rng, 1:4) : argmax(Qt[sid(p), :])
+    eps = Ref(epsilon)  # exploration probability of the current episode
+    pick(p) = rand(rng) < eps[] ? rand(rng, 1:4) : argmax(Qt[sid(p), :])
     returns = zeros(episodes); tderr = Float64[]
     for ep in 1:episodes
+        eps[] = eps_at(ep, epsilon, episodes, decay)
         p = start; a = pick(p); G = 0.0
         for t in 1:maxsteps
             q, r, done = step_env(p, a)
@@ -309,12 +317,16 @@ function step_env(p, a)  # returns (next position, reward, done)
     return (q, -1.0, q == goal)
 end
 
-function train_tabular(; episodes=episodes, alpha=0.5, epsilon=epsilon, seed=seed, onpolicy=false)  # Q-learning (or SARSA if onpolicy)
+eps_at(ep, epsilon, episodes, decay) = decay ? max(epsilon, 1 - (1 - epsilon) * (ep - 1) / max(div(episodes, 2), 1)) : epsilon  # constant, or linear from 1.0 to epsilon over the first half of the episodes
+
+function train_tabular(; episodes=episodes, alpha=0.5, epsilon=epsilon, seed=seed, onpolicy=false, decay=false)  # Q-learning (or SARSA if onpolicy)
     rng = MersenneTwister(seed)
     Qt = zeros(nrows * ncols, 4)
-    pick(p) = rand(rng) < epsilon ? rand(rng, 1:4) : argmax(Qt[sid(p), :])
+    eps = Ref(epsilon)  # exploration probability of the current episode
+    pick(p) = rand(rng) < eps[] ? rand(rng, 1:4) : argmax(Qt[sid(p), :])
     returns = zeros(episodes); tderr = Float64[]
     for ep in 1:episodes
+        eps[] = eps_at(ep, epsilon, episodes, decay)
         p = start; a = pick(p); G = 0.0
         for t in 1:maxsteps
             q, r, done = step_env(p, a)
@@ -332,24 +344,25 @@ end
 using Flux
 
 lr, batch, hidden = {{lr}}, {{batch}}, {{hidden}}  # optimiser and network settings
-capacity, sync = 10_000, 200  # replay buffer size, target-network sync period (steps)
+capacity, sync = 10_000, 200  # replay buffer size, target-network sync period C (gradient updates)
 feat(p) = Float32.(1:nrows * ncols .== sid(p))  # one-hot state encoding
 
-function train_dqn(; episodes=episodes, epsilon=epsilon, seed=seed)
+function train_dqn(; episodes=episodes, epsilon=epsilon, seed=seed, decay=false)
     rng = MersenneTwister(seed); Random.seed!(seed)
     net = Chain(Dense(nrows * ncols => hidden, relu), Dense(hidden => 4))  # Q-network
     target_net = deepcopy(net)
     opt = Flux.setup(Adam(lr), net)
     buffer = Tuple{Vector{Float32}, Int, Float32, Vector{Float32}, Bool}[]  # replay buffer (s, a, r, s', done)
-    returns = zeros(episodes); tderr = Float64[]; nsteps = 0
+    returns = zeros(episodes); tderr = Float64[]; nupdates = 0
     for ep in 1:episodes
+        eps = eps_at(ep, epsilon, episodes, decay)  # exploration probability of this episode
         p = start; G = 0.0
         for t in 1:maxsteps
             s = feat(p)
-            a = rand(rng) < epsilon ? rand(rng, 1:4) : argmax(net(s))
+            a = rand(rng) < eps ? rand(rng, 1:4) : argmax(net(s))
             q, r, done = step_env(p, a)
             push!(buffer, (s, a, Float32(r), feat(q), done)); length(buffer) > capacity && popfirst!(buffer)
-            G += r; p = q; nsteps += 1
+            G += r; p = q
             if length(buffer) >= batch
                 B = buffer[rand(rng, 1:length(buffer), batch)]
                 S, S2 = reduce(hcat, [b[1] for b in B]), reduce(hcat, [b[4] for b in B])
@@ -358,8 +371,9 @@ function train_dqn(; episodes=episodes, epsilon=epsilon, seed=seed)
                 loss, grads = Flux.withgradient(m -> Flux.mse(m(S)[idx], y), net)
                 Flux.update!(opt, net, grads[1])
                 push!(tderr, sqrt(loss))  # RMS TD error of the minibatch
+                nupdates += 1
+                nupdates % sync == 0 && (target_net = deepcopy(net))  # clone the network every C updates
             end
-            nsteps % sync == 0 && (target_net = deepcopy(net))
             done && break
         end
         returns[ep] = G
@@ -425,9 +439,9 @@ plot(movavg(abs.(res.tderr), 200), xlabel="update", ylabel="|TD error| (moving a
 '''
 
 [[actionGroups.actions]]
-id = "epsilon-decay"
+id = "seed-stability"
 label = "Seed Stability"
-desc = "Learning curves for five random seeds: how reliable training is"
+desc = "Learning curves for five random seeds: how much training varies from seed to seed"
 code = '''
 using Plots
 
@@ -503,6 +517,19 @@ function sweep(e)
     (epsilon = e, mean_return_last_50 = round(mean(r.returns[max(1, end - 49):end]), digits=1), greedy_return = rollout(r.Q).G)
 end
 [sweep(e) for e in [0.01, 0.05, 0.1, 0.2, 0.3]]
+'''
+
+[[actionGroups.actions]]
+id = "epsilon-decay"
+label = "Epsilon Decay"
+desc = "Constant epsilon against epsilon annealed linearly from 1.0 to epsilon over the first half of the episodes"
+code = '''
+using Plots
+
+annealed = train(decay=true)
+plot(movavg(res.returns, 20), label="constant epsilon = $epsilon", xlabel="episode", ylabel="return (moving average of 20)", ylims=(-10 * (nrows + ncols), 0))
+plot!(movavg(annealed.returns, 20), label="annealed from 1.0 to $epsilon")
+title!("greedy returns: $(rollout(res.Q).G) vs $(rollout(annealed.Q).G)")
 '''
 
 [[actionGroups]]

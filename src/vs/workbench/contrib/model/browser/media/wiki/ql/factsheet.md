@@ -39,7 +39,7 @@ The network is written with Flux, by [Innes (2018)](#ref-Inn2018a).
 | **Batch Size** | 32 | DQN |
 | **Hidden Units** | 64 | DQN |
 
-The DQN code also fixes a replay buffer of 10 000 transitions and copies the network to the target network every 200 steps.
+The DQN code also fixes a replay buffer of 10 000 transitions and copies the network to the target network every 200 gradient updates.
 
 ## Outputs
 
@@ -57,7 +57,7 @@ The DQN code also fixes a replay buffer of 10 000 transitions and copies the net
 | Visualise | **Learning Curve**, **Value Heatmap** | Return per episode with a moving average of 20; maxₐ Q(s, a) over the grid |
 | Diagnose | **TD Error**, **Seed Stability** | Moving average of the TD error over updates; learning curves for seeds 1 to 5 |
 | Predict | **Greedy Policy**, **Expected Return** | Greedy path over the grid; returns of 100 greedy and 100 ε-greedy episodes |
-| Compare | **Algorithm Comparison**, **Exploration Sweep** | Q-learning against Sarsa, or DQN against tabular Q-learning; ε from 0.01 to 0.3 |
+| Compare | **Algorithm Comparison**, **Exploration Sweep**, **Epsilon Decay** | Q-learning against Sarsa, or DQN against tabular Q-learning; ε from 0.01 to 0.3; constant against annealed ε |
 | Interpret | **Policy Table**, **Model Summary** | Greedy action in every cell; size and coverage of the table, or of the network |
 
 ## Further reading

@@ -15,7 +15,7 @@ The table follows the panel's decision table. The convergence theorem of [Watkin
 
 **Exploration (epsilon)** sets the probability of a random action, 0.1 by default, the value of the Cliff Walking example of [Sutton and Barto (2018)](#ref-SB2018a). A positive ε keeps every action in a visited cell possible, which the convergence conditions of [Watkins and Dayan (1992)](#ref-WD1992a) need.
 
-**Exploration Sweep** shows the training return and the greedy return for ε from 0.01 to 0.3. In the deep Q-network of [Mnih, Kavukcuoglu, Silver, Rusu, Veness, Bellemare, Graves, Riedmiller, Fidjeland, Ostrovski, Petersen, Beattie, Sadik, Antonoglou, King, Kumaran, Wierstra, Legg and Hassabis (2015)](#ref-MKSRV...2015a), ε was annealed linearly from 1.0 to 0.1 over the first million frames and held at 0.1 thereafter; the panel keeps ε fixed for the whole run.
+**Exploration Sweep** shows the training return and the greedy return for ε from 0.01 to 0.3. In the deep Q-network of [Mnih, Kavukcuoglu, Silver, Rusu, Veness, Bellemare, Graves, Riedmiller, Fidjeland, Ostrovski, Petersen, Beattie, Sadik, Antonoglou, King, Kumaran, Wierstra, Legg and Hassabis (2015)](#ref-MKSRV...2015a), ε was annealed linearly from 1.0 to 0.1 over the first million frames and held at 0.1 thereafter. The panel keeps ε fixed for the whole run, and **Epsilon Decay** compares that run with one in which ε falls linearly from 1.0 to **Exploration (epsilon)** over the first half of the episodes.
 
 ## Step sizes
 
@@ -33,7 +33,7 @@ For **DQN**, **Adam Learning Rate** is the step size of the Adam optimiser, 1e-3
 
 **Hidden Units** sets the width of the single hidden layer, 64 by default. The input is a one-hot vector of rows × columns entries, one per cell, and the output has one value for each of the 4 actions, the architecture of [Mnih, Kavukcuoglu, Silver, Rusu, Veness, Bellemare, Graves, Riedmiller, Fidjeland, Ostrovski, Petersen, Beattie, Sadik, Antonoglou, King, Kumaran, Wierstra, Legg and Hassabis (2015)](#ref-MKSRV...2015a) in which a single forward pass gives the Q-values of all actions.
 
-The replay buffer of 10 000 transitions and the synchronisation of the target network every 200 steps are fixed in the code. In [Mnih, Kavukcuoglu, Silver, Rusu, Veness, Bellemare, Graves, Riedmiller, Fidjeland, Ostrovski, Petersen, Beattie, Sadik, Antonoglou, King, Kumaran, Wierstra, Legg and Hassabis (2015)](#ref-MKSRV...2015a), the replay memory held the 1 million most recent frames.
+The replay buffer of 10 000 transitions and the synchronisation of the target network every C = 200 gradient updates are fixed in the code. In [Mnih, Kavukcuoglu, Silver, Rusu, Veness, Bellemare, Graves, Riedmiller, Fidjeland, Ostrovski, Petersen, Beattie, Sadik, Antonoglou, King, Kumaran, Wierstra, Legg and Hassabis (2015)](#ref-MKSRV...2015a), the replay memory held the 1 million most recent frames.
 
 ## Checking the result
 

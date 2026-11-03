@@ -46,8 +46,8 @@ Every C updates, [Mnih, Kavukcuoglu, Silver, Rusu, Veness, Bellemare, Graves, Ri
 | Minibatch | **Batch Size** transitions drawn at random, with replacement, once the buffer holds that many |
 | Loss | Mean squared TD error, with targets from the target network |
 | Optimiser | Adam with **Adam Learning Rate** |
-| Target network | A copy of the Q-network, renewed every 200 environment steps |
-| Exploration | ε-greedy with **Exploration (epsilon)**, fixed over training |
+| Target network | A copy of the Q-network, renewed every C = 200 gradient updates |
+| Exploration | ε-greedy with **Exploration (epsilon)**, fixed over training; **Epsilon Decay** anneals it from 1.0 |
 
 One gradient step is taken after every environment step. The network, the Adam optimiser and the gradients come from Flux, by [Innes (2018)](#ref-Inn2018a), in which models are written in Julia's mathematical syntax and trained by automatic differentiation.
 
