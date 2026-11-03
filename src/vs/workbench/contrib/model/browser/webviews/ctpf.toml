@@ -19,7 +19,7 @@ name = "PollisDatasets.jl"
 github = "https://github.com/Trumpingtons/PollisDatasets.jl"
 
 [requires]
-packages = ["TopicModelsVB.jl"]
+packages = ["TopicModelsVB.jl", "PollisDatasets.jl"]
 
 [[notebookSections]]
 label = ""
@@ -88,16 +88,6 @@ key = "Pro2016a"
 
 [[references]]
 separator = true
-label = "Textbooks"
-
-[[references]]
-key = "JM2024a"
-
-[[references]]
-key = "Ble2012a"
-
-[[references]]
-separator = true
 label = "Original Papers"
 
 [[references]]
@@ -107,7 +97,7 @@ key = "WB2011a"
 key = "GCB2014a"
 
 [[references]]
-key = "GHB2014a"
+key = "GHB2015a"
 
 [[references]]
 separator = true
@@ -126,7 +116,7 @@ detail = "number of latent topics shared between the document model and the reco
 
 [[bullets]]
 text = "TopicModelsVB.jl"
-detail = "variational Bayes implementation of CTPF, LDA, fLDA, CTM and Focused CTM"
+detail = "variational Bayes implementation of CTPF, LDA, fLDA, CTM and fCTM"
 
 [[inputs]]
 id = "corpus"
@@ -168,12 +158,17 @@ docs  = {{corpus}}
 words = [split(lowercase(replace(d, r"[^A-Za-z ]" => " "))) for d in docs]
 vocab = sort(unique(reduce(vcat, words)))
 key   = Dict(w => i for (i, w) in enumerate(vocab))
+text  = Corpus([Document([key[w] for w in ws]) for ws in words], vocab=vocab)  # the text alone, without users
+fixcorp!(text, stop=true)  # drop stop words; empty documents are kept, so the documents stay aligned with the columns of R
+words = [[text.vocab[t] for t in doc.terms] for doc in text.docs]  # the words left in each document, in their order
+vocab = sort(unique(reduce(vcat, words)))
+key   = Dict(w => i for (i, w) in enumerate(vocab))
 function mkdoc(ws, r)  # bag of words plus the readers (users) of the document and their ratings
     t = [key[w] for w in ws]; u = unique(t)
     Document(terms=u, counts=[count(==(i), t) for i in u], readers=findall(!iszero, r), ratings=Int.(r[findall(!iszero, r)]))
 end
 corp = Corpus([mkdoc(words[d], R[:, d]) for d in eachindex(docs)], vocab=vocab, users=string.(1:size(R, 1)))
-# no fixcorp!: it can re-key users and drop documents, breaking the alignment with R
+# no fixcorp! on corp: it can re-key users and drop documents, breaking the alignment with R
 
 model = CTPF(corp, {{k}})  # topics shared by the text (Poisson words) and the ratings (Poisson preferences)
 train!(model, iter={{iters}})  # coordinate-ascent variational inference
@@ -197,12 +192,17 @@ docs  = {{corpus}}
 words = [split(lowercase(replace(d, r"[^A-Za-z ]" => " "))) for d in docs]
 vocab = sort(unique(reduce(vcat, words)))
 key   = Dict(w => i for (i, w) in enumerate(vocab))
+text  = Corpus([Document([key[w] for w in ws]) for ws in words], vocab=vocab)  # the text alone, without users
+fixcorp!(text, stop=true)  # drop stop words; empty documents are kept, so the documents stay aligned with the columns of R
+words = [[text.vocab[t] for t in doc.terms] for doc in text.docs]  # the words left in each document, in their order
+vocab = sort(unique(reduce(vcat, words)))
+key   = Dict(w => i for (i, w) in enumerate(vocab))
 function mkdoc(ws, r)  # bag of words plus the readers (users) of the document and their ratings
     t = [key[w] for w in ws]; u = unique(t)
     Document(terms=u, counts=[count(==(i), t) for i in u], readers=findall(!iszero, r), ratings=Int.(r[findall(!iszero, r)]))
 end
 corp = Corpus([mkdoc(words[d], R[:, d]) for d in eachindex(docs)], vocab=vocab, users=string.(1:size(R, 1)))
-# no fixcorp!: it can re-key users and drop documents, breaking the alignment with R
+# no fixcorp! on corp: it can re-key users and drop documents, breaking the alignment with R
 model = CTPF(corp, {{k}})
 train!(model, iter={{iters}}, printelbo=false)
 
@@ -221,12 +221,17 @@ docs  = {{corpus}}
 words = [split(lowercase(replace(d, r"[^A-Za-z ]" => " "))) for d in docs]
 vocab = sort(unique(reduce(vcat, words)))
 key   = Dict(w => i for (i, w) in enumerate(vocab))
+text  = Corpus([Document([key[w] for w in ws]) for ws in words], vocab=vocab)  # the text alone, without users
+fixcorp!(text, stop=true)  # drop stop words; empty documents are kept, so the documents stay aligned with the columns of R
+words = [[text.vocab[t] for t in doc.terms] for doc in text.docs]  # the words left in each document, in their order
+vocab = sort(unique(reduce(vcat, words)))
+key   = Dict(w => i for (i, w) in enumerate(vocab))
 function mkdoc(ws, r)  # bag of words plus the readers (users) of the document and their ratings
     t = [key[w] for w in ws]; u = unique(t)
     Document(terms=u, counts=[count(==(i), t) for i in u], readers=findall(!iszero, r), ratings=Int.(r[findall(!iszero, r)]))
 end
 corp = Corpus([mkdoc(words[d], R[:, d]) for d in eachindex(docs)], vocab=vocab, users=string.(1:size(R, 1)))
-# no fixcorp!: it can re-key users and drop documents, breaking the alignment with R
+# no fixcorp! on corp: it can re-key users and drop documents, breaking the alignment with R
 model = CTPF(corp, {{k}})
 train!(model, iter={{iters}}, printelbo=false)
 
@@ -253,12 +258,17 @@ docs  = {{corpus}}
 words = [split(lowercase(replace(d, r"[^A-Za-z ]" => " "))) for d in docs]
 vocab = sort(unique(reduce(vcat, words)))
 key   = Dict(w => i for (i, w) in enumerate(vocab))
+text  = Corpus([Document([key[w] for w in ws]) for ws in words], vocab=vocab)  # the text alone, without users
+fixcorp!(text, stop=true)  # drop stop words; empty documents are kept, so the documents stay aligned with the columns of R
+words = [[text.vocab[t] for t in doc.terms] for doc in text.docs]  # the words left in each document, in their order
+vocab = sort(unique(reduce(vcat, words)))
+key   = Dict(w => i for (i, w) in enumerate(vocab))
 function mkdoc(ws, r)  # bag of words plus the readers (users) of the document and their ratings
     t = [key[w] for w in ws]; u = unique(t)
     Document(terms=u, counts=[count(==(i), t) for i in u], readers=findall(!iszero, r), ratings=Int.(r[findall(!iszero, r)]))
 end
 corp = Corpus([mkdoc(words[d], R[:, d]) for d in eachindex(docs)], vocab=vocab, users=string.(1:size(R, 1)))
-# no fixcorp!: it can re-key users and drop documents, breaking the alignment with R
+# no fixcorp! on corp: it can re-key users and drop documents, breaking the alignment with R
 
 # document completion: fit on the odd-position words, score the even-position words
 corp = Corpus([mkdoc(words[d][1:2:end], R[:, d]) for d in eachindex(docs)], vocab=vocab, users=string.(1:size(R, 1)))
@@ -282,8 +292,8 @@ heldout_perplexity(ctpf_pword(model))  # held-out word perplexity
 
 [[actionGroups.actions]]
 id = "recommendation-recall"
-label = "Recommendation Recall"
-desc = "Hold out one reader per document, train, and report the mean percentile rank of the held-out user among the users recommended for that document"
+label = "Held-Out User Rank"
+desc = "Hold out one reader per document, as in the TopicModelsVB README, train, and report the mean percentile rank of the held-out user among the users recommended for that document"
 code = '''
 using TopicModelsVB, Random, Statistics
 
@@ -292,12 +302,17 @@ docs  = {{corpus}}
 words = [split(lowercase(replace(d, r"[^A-Za-z ]" => " "))) for d in docs]
 vocab = sort(unique(reduce(vcat, words)))
 key   = Dict(w => i for (i, w) in enumerate(vocab))
+text  = Corpus([Document([key[w] for w in ws]) for ws in words], vocab=vocab)  # the text alone, without users
+fixcorp!(text, stop=true)  # drop stop words; empty documents are kept, so the documents stay aligned with the columns of R
+words = [[text.vocab[t] for t in doc.terms] for doc in text.docs]  # the words left in each document, in their order
+vocab = sort(unique(reduce(vcat, words)))
+key   = Dict(w => i for (i, w) in enumerate(vocab))
 function mkdoc(ws, r)  # bag of words plus the readers (users) of the document and their ratings
     t = [key[w] for w in ws]; u = unique(t)
     Document(terms=u, counts=[count(==(i), t) for i in u], readers=findall(!iszero, r), ratings=Int.(r[findall(!iszero, r)]))
 end
 corp = Corpus([mkdoc(words[d], R[:, d]) for d in eachindex(docs)], vocab=vocab, users=string.(1:size(R, 1)))
-# no fixcorp!: it can re-key users and drop documents, breaking the alignment with R
+# no fixcorp! on corp: it can re-key users and drop documents, breaking the alignment with R
 
 # hold out one reader of each document with at least one (README method), then rank that user among the recommendations
 Random.seed!(1)
@@ -339,12 +354,17 @@ docs  = {{corpus}}
 words = [split(lowercase(replace(d, r"[^A-Za-z ]" => " "))) for d in docs]
 vocab = sort(unique(reduce(vcat, words)))
 key   = Dict(w => i for (i, w) in enumerate(vocab))
+text  = Corpus([Document([key[w] for w in ws]) for ws in words], vocab=vocab)  # the text alone, without users
+fixcorp!(text, stop=true)  # drop stop words; empty documents are kept, so the documents stay aligned with the columns of R
+words = [[text.vocab[t] for t in doc.terms] for doc in text.docs]  # the words left in each document, in their order
+vocab = sort(unique(reduce(vcat, words)))
+key   = Dict(w => i for (i, w) in enumerate(vocab))
 function mkdoc(ws, r)  # bag of words plus the readers (users) of the document and their ratings
     t = [key[w] for w in ws]; u = unique(t)
     Document(terms=u, counts=[count(==(i), t) for i in u], readers=findall(!iszero, r), ratings=Int.(r[findall(!iszero, r)]))
 end
 corp = Corpus([mkdoc(words[d], R[:, d]) for d in eachindex(docs)], vocab=vocab, users=string.(1:size(R, 1)))
-# no fixcorp!: it can re-key users and drop documents, breaking the alignment with R
+# no fixcorp! on corp: it can re-key users and drop documents, breaking the alignment with R
 model = CTPF(corp, {{k}})
 train!(model, iter={{iters}}, printelbo=false)
 
@@ -356,7 +376,7 @@ showurecs(model, user_id, 10)  # the same list with document titles
 [[actionGroups.actions]]
 id = "infer-topics"
 label = "Infer Topics"
-desc = "Topic mix of a new, unrated document and the users to recommend it to (cold start)"
+desc = "Topic mix of a new, unrated document and the users to recommend it to (cold start): the document joins the corpus without readers and the model is fitted again"
 code = '''
 using TopicModelsVB
 
@@ -365,12 +385,17 @@ docs  = {{corpus}}
 words = [split(lowercase(replace(d, r"[^A-Za-z ]" => " "))) for d in docs]
 vocab = sort(unique(reduce(vcat, words)))
 key   = Dict(w => i for (i, w) in enumerate(vocab))
+text  = Corpus([Document([key[w] for w in ws]) for ws in words], vocab=vocab)  # the text alone, without users
+fixcorp!(text, stop=true)  # drop stop words; empty documents are kept, so the documents stay aligned with the columns of R
+words = [[text.vocab[t] for t in doc.terms] for doc in text.docs]  # the words left in each document, in their order
+vocab = sort(unique(reduce(vcat, words)))
+key   = Dict(w => i for (i, w) in enumerate(vocab))
 function mkdoc(ws, r)  # bag of words plus the readers (users) of the document and their ratings
     t = [key[w] for w in ws]; u = unique(t)
     Document(terms=u, counts=[count(==(i), t) for i in u], readers=findall(!iszero, r), ratings=Int.(r[findall(!iszero, r)]))
 end
 corp = Corpus([mkdoc(words[d], R[:, d]) for d in eachindex(docs)], vocab=vocab, users=string.(1:size(R, 1)))
-# no fixcorp!: it can re-key users and drop documents, breaking the alignment with R
+# no fixcorp! on corp: it can re-key users and drop documents, breaking the alignment with R
 
 # CTPF has no predict: add the new document without readers and refit
 new_doc = "text of a new unrated document"
@@ -400,12 +425,17 @@ docs  = {{corpus}}
 words = [split(lowercase(replace(d, r"[^A-Za-z ]" => " "))) for d in docs]
 vocab = sort(unique(reduce(vcat, words)))
 key   = Dict(w => i for (i, w) in enumerate(vocab))
+text  = Corpus([Document([key[w] for w in ws]) for ws in words], vocab=vocab)  # the text alone, without users
+fixcorp!(text, stop=true)  # drop stop words; empty documents are kept, so the documents stay aligned with the columns of R
+words = [[text.vocab[t] for t in doc.terms] for doc in text.docs]  # the words left in each document, in their order
+vocab = sort(unique(reduce(vcat, words)))
+key   = Dict(w => i for (i, w) in enumerate(vocab))
 function mkdoc(ws, r)  # bag of words plus the readers (users) of the document and their ratings
     t = [key[w] for w in ws]; u = unique(t)
     Document(terms=u, counts=[count(==(i), t) for i in u], readers=findall(!iszero, r), ratings=Int.(r[findall(!iszero, r)]))
 end
 corp = Corpus([mkdoc(words[d], R[:, d]) for d in eachindex(docs)], vocab=vocab, users=string.(1:size(R, 1)))
-# no fixcorp!: it can re-key users and drop documents, breaking the alignment with R
+# no fixcorp! on corp: it can re-key users and drop documents, breaking the alignment with R
 
 # document completion: fit on the odd-position words, score the even-position words
 corp = Corpus([mkdoc(words[d][1:2:end], R[:, d]) for d in eachindex(docs)], vocab=vocab, users=string.(1:size(R, 1)))
@@ -460,12 +490,17 @@ docs  = {{corpus}}
 words = [split(lowercase(replace(d, r"[^A-Za-z ]" => " "))) for d in docs]
 vocab = sort(unique(reduce(vcat, words)))
 key   = Dict(w => i for (i, w) in enumerate(vocab))
+text  = Corpus([Document([key[w] for w in ws]) for ws in words], vocab=vocab)  # the text alone, without users
+fixcorp!(text, stop=true)  # drop stop words; empty documents are kept, so the documents stay aligned with the columns of R
+words = [[text.vocab[t] for t in doc.terms] for doc in text.docs]  # the words left in each document, in their order
+vocab = sort(unique(reduce(vcat, words)))
+key   = Dict(w => i for (i, w) in enumerate(vocab))
 function mkdoc(ws, r)  # bag of words plus the readers (users) of the document and their ratings
     t = [key[w] for w in ws]; u = unique(t)
     Document(terms=u, counts=[count(==(i), t) for i in u], readers=findall(!iszero, r), ratings=Int.(r[findall(!iszero, r)]))
 end
 corp = Corpus([mkdoc(words[d], R[:, d]) for d in eachindex(docs)], vocab=vocab, users=string.(1:size(R, 1)))
-# no fixcorp!: it can re-key users and drop documents, breaking the alignment with R
+# no fixcorp! on corp: it can re-key users and drop documents, breaking the alignment with R
 
 # document completion: fit on the odd-position words, score the even-position words
 corp = Corpus([mkdoc(words[d][1:2:end], R[:, d]) for d in eachindex(docs)], vocab=vocab, users=string.(1:size(R, 1)))
@@ -507,12 +542,17 @@ docs  = {{corpus}}
 words = [split(lowercase(replace(d, r"[^A-Za-z ]" => " "))) for d in docs]
 vocab = sort(unique(reduce(vcat, words)))
 key   = Dict(w => i for (i, w) in enumerate(vocab))
+text  = Corpus([Document([key[w] for w in ws]) for ws in words], vocab=vocab)  # the text alone, without users
+fixcorp!(text, stop=true)  # drop stop words; empty documents are kept, so the documents stay aligned with the columns of R
+words = [[text.vocab[t] for t in doc.terms] for doc in text.docs]  # the words left in each document, in their order
+vocab = sort(unique(reduce(vcat, words)))
+key   = Dict(w => i for (i, w) in enumerate(vocab))
 function mkdoc(ws, r)  # bag of words plus the readers (users) of the document and their ratings
     t = [key[w] for w in ws]; u = unique(t)
     Document(terms=u, counts=[count(==(i), t) for i in u], readers=findall(!iszero, r), ratings=Int.(r[findall(!iszero, r)]))
 end
 corp = Corpus([mkdoc(words[d], R[:, d]) for d in eachindex(docs)], vocab=vocab, users=string.(1:size(R, 1)))
-# no fixcorp!: it can re-key users and drop documents, breaking the alignment with R
+# no fixcorp! on corp: it can re-key users and drop documents, breaking the alignment with R
 model = CTPF(corp, {{k}})
 train!(model, iter={{iters}}, printelbo=false)
 
@@ -522,7 +562,7 @@ showtopics(model, 5)  # top-5 words per topic as label
 [[actionGroups.actions]]
 id = "item-topics"
 label = "Item-Topic Mix"
-desc = "Latent topic composition of each document, and how far the readers shift it"
+desc = "Topic mix of each document from its text, E[theta_d], and with the topic offsets learned from its readers, E[theta_d + epsilon_d], each normalised to sum to 1"
 code = '''
 using TopicModelsVB
 
@@ -531,18 +571,23 @@ docs  = {{corpus}}
 words = [split(lowercase(replace(d, r"[^A-Za-z ]" => " "))) for d in docs]
 vocab = sort(unique(reduce(vcat, words)))
 key   = Dict(w => i for (i, w) in enumerate(vocab))
+text  = Corpus([Document([key[w] for w in ws]) for ws in words], vocab=vocab)  # the text alone, without users
+fixcorp!(text, stop=true)  # drop stop words; empty documents are kept, so the documents stay aligned with the columns of R
+words = [[text.vocab[t] for t in doc.terms] for doc in text.docs]  # the words left in each document, in their order
+vocab = sort(unique(reduce(vcat, words)))
+key   = Dict(w => i for (i, w) in enumerate(vocab))
 function mkdoc(ws, r)  # bag of words plus the readers (users) of the document and their ratings
     t = [key[w] for w in ws]; u = unique(t)
     Document(terms=u, counts=[count(==(i), t) for i in u], readers=findall(!iszero, r), ratings=Int.(r[findall(!iszero, r)]))
 end
 corp = Corpus([mkdoc(words[d], R[:, d]) for d in eachindex(docs)], vocab=vocab, users=string.(1:size(R, 1)))
-# no fixcorp!: it can re-key users and drop documents, breaking the alignment with R
+# no fixcorp! on corp: it can re-key users and drop documents, breaking the alignment with R
 model = CTPF(corp, {{k}})
 train!(model, iter={{iters}}, printelbo=false)
 
 for d in 1:length(corp.docs)
     theta = model.gimel[d] ./ model.dalet  # E[theta_d]: topic intensities from the text
-    eps   = model.zayin[d] ./ model.het  # E[epsilon_d]: offsets learned from the readers
-    println("doc ", d, ": topic mix ", round.(theta ./ sum(theta), digits=2), "  reader offset ", round(sum(eps) / sum(theta), digits=2))
+    eps   = model.zayin[d] ./ model.het  # E[epsilon_d]: topic offsets learned from the readers
+    println("doc ", d, ": text ", round.(theta ./ sum(theta), digits=2), "  text and readers ", round.((theta .+ eps) ./ sum(theta .+ eps), digits=2))
 end
 '''

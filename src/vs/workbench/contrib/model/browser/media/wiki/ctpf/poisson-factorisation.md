@@ -4,7 +4,7 @@ Poisson factorisation models a matrix of user-item counts as Poisson variables w
 
 ## The model
 
-[Gopalan, Hofman and Blei (2014)](#ref-GHB2014a) describe Poisson factorisation as a probabilistic model of users and items that associates each user with a latent vector of preferences and each item with a latent vector of attributes, constrains both to be sparse and non-negative, and draws each cell of the observed matrix from a Poisson distribution whose rate is the inner product of the two:
+[Gopalan, Hofman and Blei (2015)](#ref-GHB2015a) describe Poisson factorisation as a probabilistic model of users and items that associates each user with a latent vector of preferences and each item with a latent vector of attributes, constrains both to be sparse and non-negative, and draws each cell of the observed matrix from a Poisson distribution whose rate is the inner product of the two:
 
 y_ui ∼ Poisson(θ_uᵀβ_i).
 
@@ -12,7 +12,7 @@ In their hierarchical version, the preferences and attributes have Gamma priors 
 
 ## Properties
 
-[Gopalan, Hofman and Blei (2014)](#ref-GHB2014a) list properties of the model:
+[Gopalan, Hofman and Blei (2015)](#ref-GHB2015a) list properties of the model:
 
 - the Gamma priors, with a small shape parameter, encourage sparse representations, most weights close to zero and only a few large;
 - the model captures the long-tailed distributions of user activity and item popularity found in consumption data;
@@ -21,9 +21,9 @@ In their hierarchical version, the preferences and attributes have Gamma priors 
 
 ## Budgets
 
-[Gopalan, Hofman and Blei (2014)](#ref-GHB2014a) show that, given the total consumption b_u of a user, the counts of that user over the items follow a multinomial with probabilities proportional to θ_uᵀβ_i. Learning a Poisson factorisation, in their words, is effectively the same as learning a budget for each user and how that budget is distributed across items.
+[Gopalan, Hofman and Blei (2015)](#ref-GHB2015a) show that, given the total consumption b_u of a user, the counts of that user over the items follow a multinomial with probabilities proportional to θ_uᵀβ_i. Learning a Poisson factorisation, in their words, is effectively the same as learning a budget for each user and how that budget is distributed across items.
 
-The budget itself is Poisson, b_u ∼ Poisson(θ_uᵀ Σ_i β_i). [Gopalan, Hofman and Blei (2014)](#ref-GHB2014a) write that the ability of the model to capture the distribution of user activity is encoded in these assumptions.
+The budget itself is Poisson, b_u ∼ Poisson(θ_uᵀ Σ_i β_i). [Gopalan, Hofman and Blei (2015)](#ref-GHB2015a) write that the ability of the model to capture the distribution of user activity is encoded in these assumptions.
 
 ## In CTPF
 
@@ -47,7 +47,7 @@ TopicModelsVB.jl stores the shape and rate parameters of the Gamma factors in th
 
 <a id="ref-GCB2014a"></a>Gopalan, P., Charlin, L., & Blei, D. M. (2014). Content-Based Recommendations with Poisson Factorization. *Advances in Neural Information Processing Systems* 27, 3176-3184. [cs.columbia.edu](http://www.cs.columbia.edu/~blei/papers/GopalanCharlinBlei2014.pdf)
 
-<a id="ref-GHB2014a"></a>Gopalan, P., Hofman, J. M., & Blei, D. M. (2014). Scalable Recommendation with Hierarchical Poisson Factorization. *Proceedings of the 31st Conference on Uncertainty in Artificial Intelligence (UAI 2015)*. [auai.org](https://auai.org/uai2015/proceedings/papers/208.pdf)
+<a id="ref-GHB2015a"></a>Gopalan, P., Hofman, J. M., & Blei, D. M. (2015). Scalable Recommendation with Hierarchical Poisson Factorization. *Proceedings of the Thirty-First Conference on Uncertainty in Artificial Intelligence*, 326-335. [auai.org](https://auai.org/uai2015/proceedings/papers/208.pdf)
 
 ## See Also
 

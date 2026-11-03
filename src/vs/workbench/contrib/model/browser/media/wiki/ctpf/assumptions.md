@@ -22,15 +22,15 @@ The offsets ε_d capture the deviation of a document from its topic intensities,
 
 ## Zeros and sparsity
 
-[Gopalan, Hofman and Blei (2014)](#ref-GHB2014a) show that the likelihood of Poisson factorisation depends only on the non-zero entries of the user-item matrix, which makes computation efficient for sparse data. They also explain that the model has two ways of explaining an unconsumed item, lack of interest or lack of opportunity, so it implicitly down-weights the contribution of the items that a user did not consume.
+[Gopalan, Hofman and Blei (2015)](#ref-GHB2015a) show that the likelihood of Poisson factorisation depends only on the non-zero entries of the user-item matrix, which makes computation efficient for sparse data. They also explain that the model has two ways of explaining an unconsumed item, lack of interest or lack of opportunity, so it implicitly down-weights the contribution of the items that a user did not consume.
 
 The Gamma priors with a small shape parameter, in their words, encourage sparse representations of users and items, with most weights close to zero and only a few large.
 
 ## Alignment of documents and users
 
-The code keeps column d of the rating matrix with document d of the corpus, and row u with user u. The code comment explains that `fixcorp!` is not called because it can re-key users and drop documents, breaking that alignment.
+The code keeps column d of the rating matrix with document d of the corpus, and row u with user u. The code comment explains that `fixcorp!` is not called on the corpus with the readers, because it can re-key users and drop documents, breaking that alignment.
 
-As a consequence the vocabulary keeps every word of the texts, since the stop word removal of `fixcorp!` is not applied.
+Stop words are removed earlier, by `fixcorp!(text, stop = true)` on a corpus of the text alone, which has no users to re-key and keeps its empty documents.
 
 ## Variational inference
 
@@ -42,7 +42,7 @@ The panel's code comment calls `train!` coordinate-ascent variational inference,
 
 <a id="ref-GCB2014a"></a>Gopalan, P., Charlin, L., & Blei, D. M. (2014). Content-Based Recommendations with Poisson Factorization. *Advances in Neural Information Processing Systems* 27, 3176-3184. [cs.columbia.edu](http://www.cs.columbia.edu/~blei/papers/GopalanCharlinBlei2014.pdf)
 
-<a id="ref-GHB2014a"></a>Gopalan, P., Hofman, J. M., & Blei, D. M. (2014). Scalable Recommendation with Hierarchical Poisson Factorization. *Proceedings of the 31st Conference on Uncertainty in Artificial Intelligence (UAI 2015)*. [auai.org](https://auai.org/uai2015/proceedings/papers/208.pdf)
+<a id="ref-GHB2015a"></a>Gopalan, P., Hofman, J. M., & Blei, D. M. (2015). Scalable Recommendation with Hierarchical Poisson Factorization. *Proceedings of the Thirty-First Conference on Uncertainty in Artificial Intelligence*, 326-335. [auai.org](https://auai.org/uai2015/proceedings/papers/208.pdf)
 
 ## See Also
 

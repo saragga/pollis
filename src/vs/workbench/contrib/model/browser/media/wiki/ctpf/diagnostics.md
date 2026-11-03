@@ -18,9 +18,9 @@ Words that appear only in the held-out half have no topic weight, and the code c
 
 Documents with no scored word are skipped. The ratings are kept for every document, so the fitted model uses the full rating matrix while its text is scored on unseen words.
 
-## Recommendation Recall
+## Held-Out User Rank
 
-**Recommendation Recall** follows the README of TopicModelsVB.jl: with `Random.seed!(1)`, it removes one reader at random from each document that has at least one, trains the model, and looks up the held-out user in `model.drecs[d]`, the users recommended for document d.
+**Held-Out User Rank** follows the README of TopicModelsVB.jl: with `Random.seed!(1)`, it removes one reader at random from each document that has at least one, trains the model, and looks up the held-out user in `model.drecs[d]`, the users recommended for document d.
 
 For a list of length n where the held-out user appears at position p, the score is (n − p) / (n − 1). The code comment reads 1 as the held-out user ranked first for its document and 0.5 as random; the action returns the mean over the documents.
 

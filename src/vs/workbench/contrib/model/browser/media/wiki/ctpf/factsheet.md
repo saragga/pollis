@@ -30,7 +30,7 @@ The default **Ratings** is simulated: `sprand(50, D, 0.08, n -> rand(1:5, n))` a
 
 ## Building the corpus
 
-The code lowercases each document, keeps letters and spaces, and splits it into words. Each document becomes
+The code lowercases each document, keeps letters and spaces, and splits it into words. It removes stop words with `fixcorp!(text, stop = true)` on a corpus of the text alone, before any reader is attached, and keeps the empty documents, so that document d stays column d of the rating matrix. Each document then becomes
 
 ```
 Document(terms = u, counts = ..., readers = findall(!iszero, r), ratings = Int.(r[...]))
@@ -38,7 +38,7 @@ Document(terms = u, counts = ..., readers = findall(!iszero, r), ratings = Int.(
 
 with u its distinct vocabulary keys, the counts of each, and, from column d of the rating matrix, the users who rated it and their ratings. The `Corpus` takes the vocabulary and the users `"1"`, …, `"U"`.
 
-The code comment explains why `fixcorp!` is not called: it can re-key users and drop documents, breaking the alignment with R. The README of TopicModelsVB.jl gives the same warning for its CiteULike example, where removing user keys and then fixing a corpus may reorder its user dictionary.
+The code comment explains why `fixcorp!` is not called on the corpus with the readers: it can re-key users and drop documents, breaking the alignment with R. The README of TopicModelsVB.jl gives the same warning for its CiteULike example, where removing user keys and then fixing a corpus may reorder its user dictionary.
 
 ## Output
 
@@ -55,34 +55,15 @@ The panel's code comments read `model.gimel ./ model.dalet` as E[θ_d], `model.z
 
 ## Packages
 
-The main code loads TopicModelsVB, PollisDatasets for the default corpus, and Random and SparseArrays for the simulated ratings. **Recommendation Recall** and **Compare k Topics** add Statistics. **CTPF vs LDA** fits `LDA(corp, k)` of the same package on the text alone, and **Infer Topics** reads the topic mix of a new document with `topicdist`.
+The main code loads TopicModelsVB, PollisDatasets for the default corpus, and Random and SparseArrays for the simulated ratings. **Held-Out User Rank** and **Compare k Topics** add Statistics. **CTPF vs LDA** fits `LDA(corp, k)` of the same package on the text alone, and **Infer Topics** reads the topic mix of a new document with `topicdist`.
 
 The TopicModelsVB.jl entry of the panel points to a fork that accepts Distributions 0.25 and precompiles on Julia 1.13.
 
-## References in the panel
-
-| Section | Works |
-| --- | --- |
-| Software | [Proffitt (2016)](#ref-Pro2016a) |
-| Textbooks | [Jurafsky and Martin (2024)](#ref-JM2024a), [Blei (2012)](#ref-Ble2012a) |
-| Original Papers | [Wang and Blei (2011)](#ref-WB2011a), [Gopalan, Charlin and Blei (2014)](#ref-GCB2014a), [Gopalan, Hofman and Blei (2014)](#ref-GHB2014a) |
-| Evaluation | [Wallach, Murray, Salakhutdinov and Mimno (2009)](#ref-WMSM2009a) |
-
 ## References
-
-<a id="ref-Ble2012a"></a>Blei, D. M. (2012). Probabilistic Topic Models. *Communications of the ACM* 55(4), 77-84. [doi:10.1145/2133806.2133826](https://doi.org/10.1145/2133806.2133826)
 
 <a id="ref-GCB2014a"></a>Gopalan, P., Charlin, L., & Blei, D. M. (2014). Content-Based Recommendations with Poisson Factorization. *Advances in Neural Information Processing Systems* 27, 3176-3184. [cs.columbia.edu](http://www.cs.columbia.edu/~blei/papers/GopalanCharlinBlei2014.pdf)
 
-<a id="ref-GHB2014a"></a>Gopalan, P., Hofman, J. M., & Blei, D. M. (2014). Scalable Recommendation with Hierarchical Poisson Factorization. *Proceedings of the 31st Conference on Uncertainty in Artificial Intelligence (UAI 2015)*. [auai.org](https://auai.org/uai2015/proceedings/papers/208.pdf)
-
-<a id="ref-JM2024a"></a>Jurafsky, D., & Martin, J. H. (2024). *Speech and Language Processing* (3rd ed., draft). [web.stanford.edu](https://web.stanford.edu/~jurafsky/slp3/)
-
 <a id="ref-Pro2016a"></a>Proffitt, E. (2016). TopicModelsVB.jl: Variational Bayesian Topic Modeling in Julia. [github.com](https://github.com/ericproffitt/TopicModelsVB.jl)
-
-<a id="ref-WMSM2009a"></a>Wallach, H. M., Murray, I., Salakhutdinov, R., & Mimno, D. (2009). Evaluation Methods for Topic Models. *Proceedings of the 26th International Conference on Machine Learning*, 1105-1112. [doi:10.1145/1553374.1553515](https://doi.org/10.1145/1553374.1553515)
-
-<a id="ref-WB2011a"></a>Wang, C., & Blei, D. M. (2011). Collaborative Topic Modeling for Recommending Scientific Articles. *Proceedings of the 17th ACM SIGKDD International Conference on Knowledge Discovery and Data Mining*, 448-456. [doi:10.1145/2020408.2020480](https://doi.org/10.1145/2020408.2020480)
 
 ## See Also
 

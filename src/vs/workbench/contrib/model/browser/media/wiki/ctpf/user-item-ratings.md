@@ -36,7 +36,7 @@ and names the users `"1"` to `"U"`. The default is simulated, 50 readers who eac
 
 ## Held-out readers
 
-**Recommendation Recall** removes one reader from each document that has one, with `Random.seed!(1)`, trains the model and scores the position of the held-out user in `model.drecs[d]`, (n − p) / (n − 1), averaged over the documents. The method is that of the README's CiteULike example, which removes one reader from each document and measures the success of the model at putting the correct user back.
+**Held-Out User Rank** removes one reader from each document that has one, with `Random.seed!(1)`, trains the model and scores the position of the held-out user in `model.drecs[d]`, (n − p) / (n − 1), averaged over the documents. The method is that of the README's CiteULike example, which removes one reader from each document and measures the success of the model at putting the correct user back.
 
 ## Original setting
 

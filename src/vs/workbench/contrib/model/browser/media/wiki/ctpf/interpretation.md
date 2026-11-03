@@ -10,7 +10,7 @@ How to read the output of the **Collaborative Topic Poisson Factorisation** pane
 
 ## What a document is about, and who reads it
 
-**Item-Topic Mix** prints for each document its topic mix, E[θ_d] normalised to sum to 1, and a reader offset, the sum of E[ε_d] divided by the sum of E[θ_d]. The description of the action reads the second as how far the readers shift the composition of the document.
+**Item-Topic Mix** prints for each document two topic mixes, each normalised to sum to 1: E[θ_d], from the text, and E[θ_d + ε_d], which adds the topic offsets learned from the readers. The second is the part of the document that enters the rate of its ratings, η_uᵀ(θ_d + ε_d).
 
 [Gopalan, Charlin and Blei (2014)](#ref-GCB2014a) illustrate the two parts with the EM paper of Dempster, Laird and Rubin in the Mendeley data: the topic intensities show what the paper is about, probabilistic modelling and statistical algorithms, and the offsets show the preferences of its readers, which include computer vision and statistical network analysis.
 
@@ -36,7 +36,7 @@ The ranking follows the expected rate E[η_uᵀ(θ_d + ε_d)]. For a document wi
 
 [Gopalan, Charlin and Blei (2014)](#ref-GCB2014a) use θ and ε together to find subclasses of articles in a topic: those with a high intensity in the topic, those with a low intensity but a large θ_dk + ε_dk, which reveal the outside interests of the topic's readers, and those with a high intensity that also draw readers from outside.
 
-**Item-Topic Mix** gives the inputs for such a reading: the topic mix of each document and the size of its reader offset.
+**Item-Topic Mix** gives the inputs for such a reading: the topic mix of each document from its text, and the mix once the offsets are added.
 
 ## References
 
