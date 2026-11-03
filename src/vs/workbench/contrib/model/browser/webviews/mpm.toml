@@ -126,10 +126,38 @@ separator = true
 label = "Original Papers"
 
 [[references]]
-key = "ZTLFF2003a"
+key = "Sch1995a"
 
 [[references]]
 key = "ZT1999a"
+
+[[references]]
+key = "Vel1999a"
+
+[[references]]
+key = "ZDT2000a"
+
+[[references]]
+key = "ZLT2001a"
+
+[[references]]
+key = "DPAM2002a"
+
+[[references]]
+key = "ZTLFF2003a"
+
+[[references]]
+key = "CC2005a"
+
+[[references]]
+key = "IISN2018a"
+
+[[references]]
+separator = true
+label = "Reviews"
+
+[[references]]
+key = "ABCDS2021a"
 
 [[models]]
 id = "hv"

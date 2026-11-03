@@ -172,6 +172,31 @@
 			"open_access": false
 		},
 		{
+			"key": "ABCDS2021a",
+			"type": "article",
+			"title": "Performance Indicators in Multiobjective Optimization",
+			"authors": [
+				"Audet, Charles",
+				"Bigeon, Jean",
+				"Cartier, Dominique",
+				"Le Digabel, Sébastien",
+				"Salomon, Ludovic"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2021,
+			"journal": "European Journal of Operational Research",
+			"volume": "292",
+			"number": "2",
+			"pages": "397-422",
+			"doi": "10.1016/j.ejor.2020.11.016",
+			"oa_url": "https://hal.science/hal-03048871/document",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "ABD2002a",
 			"type": "article",
 			"title": "Range-Based Estimation of Stochastic Volatility Models",
@@ -5145,6 +5170,27 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
+		},
+		{
+			"key": "CC2005a",
+			"type": "article",
+			"title": "Solving Multiobjective Optimization Problems Using an Artificial Immune System",
+			"authors": [
+				"Coello Coello, Carlos A.",
+				"Cruz Cortés, Nareli"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2005,
+			"journal": "Genetic Programming and Evolvable Machines",
+			"volume": "6",
+			"number": "2",
+			"pages": "163-190",
+			"doi": "10.1007/s10710-005-6164-x",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": false
 		},
 		{
 			"key": "CCB2009a",
@@ -16222,6 +16268,31 @@
 			"legacy_key": "hull2022",
 			"source": "manual",
 			"checked": false,
+			"open_access": false
+		},
+		{
+			"key": "IISN2018a",
+			"type": "article",
+			"title": "How to Specify a Reference Point in Hypervolume Calculation for Fair Performance Comparison",
+			"authors": [
+				"Ishibuchi, Hisao",
+				"Imada, Ryo",
+				"Setoguchi, Yu",
+				"Nojima, Yusuke"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2018,
+			"journal": "Evolutionary Computation",
+			"volume": "26",
+			"number": "3",
+			"pages": "411-440",
+			"doi": "10.1162/evco_a_00226",
+			"abstract": "The hypervolume indicator has frequently been used for comparing evolutionary multi-objective optimization (EMO) algorithms. A reference point is needed for hypervolume calculation. However, its specification has not been discussed in detail from a viewpoint of fair performance comparison. A slightly worse point than the nadir point is usually used for hypervolume calculation in the EMO community. In this paper, we propose a reference point specification method for fair performance comparison of EMO algorithms. First, we discuss the relation between the reference point specification and the optimal distribution of solutions for hypervolume maximization. It is demonstrated that the optimal distribution of solutions strongly depends on the location of the reference point when a multi-objective problem has an inverted triangular Pareto front. Next, we propose a reference point specification method based on theoretical discussions on the optimal distribution of solutions. The basic idea is to specify the reference point so that a set of well-distributed solutions over the entire linear Pareto front has a large hypervolume and all solutions in such a solution set have similar hypervolume contributions. Then, we examine whether the proposed method can appropriately specify the reference point through computational experiments on various test problems. Finally, we examine the usefulness of the proposed method in a hypervolume-based EMO algorithm.",
+			"abstract_source": "crossref",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
 			"open_access": false
 		},
 		{
@@ -31793,6 +31864,22 @@
 			"open_access": false
 		},
 		{
+			"key": "Sch1995a",
+			"type": "techreport",
+			"title": "Fault Tolerant Design Using Single and Multicriteria Genetic Algorithm Optimization",
+			"authors": [
+				"Schott, Jason R."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1995,
+			"institution": "Air Force Institute of Technology",
+			"source": "manual",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "Sch2001a",
 			"type": "article",
 			"title": "Convergence Properties of a Regularization Scheme for Mathematical Programs with Complementarity Constraints",
@@ -33976,6 +34063,22 @@
 			"open_access": false
 		},
 		{
+			"key": "Vel1999a",
+			"type": "techreport",
+			"title": "Multiobjective Evolutionary Algorithms: Classifications, Analyses, and New Innovations",
+			"authors": [
+				"Van Veldhuizen, David A."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1999,
+			"institution": "Air Force Institute of Technology",
+			"source": "manual",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "Vil2020a",
 			"type": "article",
 			"title": "Reproducibility and Replicability in Economics",
@@ -35842,6 +35945,30 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
+		},
+		{
+			"key": "ZDT2000a",
+			"type": "article",
+			"title": "Comparison of Multiobjective Evolutionary Algorithms: Empirical Results",
+			"authors": [
+				"Zitzler, Eckart",
+				"Deb, Kalyanmoy",
+				"Thiele, Lothar"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2000,
+			"journal": "Evolutionary Computation",
+			"volume": "8",
+			"number": "2",
+			"pages": "173-195",
+			"doi": "10.1162/106365600568202",
+			"abstract": "In this paper, we provide a systematic comparison of various evolutionary approaches to multiobjective optimization using six carefully chosen test functions. Each test function involves a particular feature that is known to cause difficulty in the evolutionary optimization process, mainly in converging to the Pareto-optimal front (e.g., multimodality and deception). By investigating these different problem features separately, it is possible to predict the kind of problems to which a certain technique is or is not well suited. However, in contrast to what was suspected beforehand, the experimental results indicate a hierarchy of the algorithms under consideration. Furthermore, the emerging effects are evidence that the suggested test functions provide sufficient complexity to compare multiobjective optimizers. Finally, elitism is shown to be an important factor for improving evolutionary multiobjective search.",
+			"abstract_source": "crossref",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": false
 		},
 		{
 			"key": "ZE2002a",
@@ -50856,8 +50983,16 @@
 			"keys": [
 				"MM2022a",
 				"Deb2001a",
+				"Sch1995a",
+				"ZT1999a",
+				"Vel1999a",
+				"ZDT2000a",
+				"ZLT2001a",
+				"DPAM2002a",
 				"ZTLFF2003a",
-				"ZT1999a"
+				"CC2005a",
+				"IISN2018a",
+				"ABCDS2021a"
 			]
 		},
 		{

@@ -72,7 +72,7 @@ Every action reads `front`, `front2` and `ref`, so changing an input and rerunni
 
 ## Package and textbooks
 
-`Metaheuristics.jl`, described by [Mejia-de-Dios and Mezura-Montes (2022)](#ref-MM2022a), implements metaheuristics for single- and multi-objective optimisation, with test problems and performance indicators among its utilities. [Deb (2001)](#ref-Deb2001a) is a textbook on multi-objective optimisation with evolutionary algorithms. [Zitzler, Thiele, Laumanns, Fonseca and da Fonseca (2003)](#ref-ZTLFF2003a) develop a mathematical framework for classifying quality indicators and analyse their limitations.
+`Metaheuristics.jl`, described by [Mejia-de-Dios and Mezura-Montes (2022)](#ref-MM2022a), implements metaheuristics for single- and multi-objective optimisation, with test problems and performance indicators among its utilities. [Deb (2001)](#ref-Deb2001a) is a textbook on multi-objective optimisation with evolutionary algorithms. `Plots` draws the charts, and the package's `TestProblems` module supplies ZDT1 with its true front. [Zitzler, Thiele, Laumanns, Fonseca and da Fonseca (2003)](#ref-ZTLFF2003a) develop a mathematical framework for classifying quality indicators and analyse their limitations.
 
 ## References
 
