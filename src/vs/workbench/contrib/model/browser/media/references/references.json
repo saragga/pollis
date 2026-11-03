@@ -27293,6 +27293,25 @@
 			"open_access": true
 		},
 		{
+			"key": "Pro2016b",
+			"type": "misc",
+			"title": "Filtered Latent Dirichlet Allocation: Variational Algorithm",
+			"authors": [
+				"Proffitt, Eric"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2016,
+			"url": "https://github.com/ericproffitt/TopicModelsVB.jl/blob/master/fLDA/fLDA.pdf",
+			"oa_url": "https://raw.githubusercontent.com/ericproffitt/TopicModelsVB.jl/master/fLDA/fLDA.pdf",
+			"abstract": "Filtered latent Dirichlet allocation (fLDA) is a natural extension of latent Dirichlet allocation (Blei et al. 2003) which organically captures and filters out corpus-specific stop words that are not otherwise caught by generic stop word lists.",
+			"abstract_source": "author",
+			"source": "manual",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "Pro2026a",
 			"type": "misc",
 			"title": "Diátaxis: A Way of Thinking About and Doing Documentation",
@@ -50009,7 +50028,10 @@
 				"JM2024a",
 				"Bis2006a",
 				"BL2006a",
-				"BNJ2003a"
+				"BNJ2003a",
+				"Pro2016b",
+				"WMSM2009a",
+				"MWTLM2011a"
 			]
 		},
 		{
