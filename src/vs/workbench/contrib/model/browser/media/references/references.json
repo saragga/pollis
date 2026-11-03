@@ -10141,6 +10141,8 @@
 			"authors_complete": true,
 			"year": 2005,
 			"publisher": "Wiley",
+			"address": "Hoboken, NJ",
+			"isbn": "9780470091913",
 			"legacy_key": "engelbrecht2005",
 			"source": "manual",
 			"checked": false,
@@ -14876,6 +14878,8 @@
 			"issn": "0025-5610",
 			"doi": "10.1007/BF01582255",
 			"openalex": "W2093246563",
+			"abstract": "Over the past decade, the field of finite-dimensional variational inequality and complementarity problems has seen a rapid development in its theory of existence, uniqueness and sensitivity of solution(s), in the theory of algorithms, and in the application of these techniques to transportation planning, regional science, socio-economic analysis, energy modeling, and game theory. This paper provides a state-of-the-art review of these developments as well as a summary of some open research topics in this growing field.",
+			"abstract_source": "author",
 			"source": "crossref",
 			"retrieved": "2026-11-02",
 			"checked": true,
@@ -15949,6 +15953,30 @@
 			"legacy_key": "harvey1990",
 			"source": "manual",
 			"checked": false,
+			"open_access": false
+		},
+		{
+			"key": "Har1991a",
+			"type": "article",
+			"title": "Generalized Nash games and quasi-variational inequalities",
+			"authors": [
+				"Harker, Patrick T."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1991,
+			"journal": "European Journal of Operational Research",
+			"volume": "54",
+			"number": "1",
+			"pages": "81-94",
+			"issn": "0377-2217",
+			"doi": "10.1016/0377-2217(91)90325-P",
+			"openalex": "W2017850498",
+			"abstract": "A generalized Nash game is an n-person noncooperative game with nondisjoint strategy sets; other names for this game form include social equilibria and pseudo-Nash games. This paper explores both the qualitative and quantitative properties of such games through the use of quasi-variational inequality theory. Several interesting relationships between the variational and quasi-variational inequality forms of this class of games are described and the practical implementation of generalized Nash games are explored at length.",
+			"abstract_source": "author",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
 			"open_access": false
 		},
 		{
@@ -42428,6 +42456,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "Har1991a",
+			"count": 358,
+			"source": "crossref",
+			"date": "2026-11-03"
+		},
+		{
+			"key": "Har1991a",
+			"count": 432,
+			"source": "openalex",
+			"date": "2026-11-03"
+		},
+		{
 			"key": "Has1970a",
 			"count": 12426,
 			"source": "crossref",
@@ -52604,7 +52644,6 @@
 				"DK2021b",
 				"HH2018a",
 				"Dan1955a",
-				"PP1991a",
 				"RW1991a"
 			]
 		},

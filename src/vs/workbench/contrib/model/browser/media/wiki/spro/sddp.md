@@ -4,7 +4,7 @@ The **SDDP** tab solves the multistage inventory problem with stochastic dual dy
 
 ## The algorithm
 
-[Dowson and Kapelevich (2021)](#ref-DK2021b) present SDDP.jl as an open-source library for multistage stochastic programming problems with the stochastic dual dynamic programming algorithm, built on JuMP, which gives it a solver-agnostic interface. The algorithm goes back to [Pereira and Pinto (1991)](#ref-PP1991a), in a paper on energy planning.
+[Dowson and Kapelevich (2021)](#ref-DK2021b) present SDDP.jl as an open-source library for multistage stochastic programming problems with the stochastic dual dynamic programming algorithm, built on JuMP, which gives it a solver-agnostic interface.
 
 The SDDP.jl documentation writes the problem as a dynamic programming recursion over the nodes of a policy graph and notes that the cost-to-go term, a nested expectation, makes it intractable to solve exactly. SDDP applies Kelley's cutting plane algorithm to the cost-to-go functions, under-approximating each by cuts, first-order approximations at visited states.
 
@@ -46,8 +46,6 @@ The trained policy is a decision rule per node, mapping the incoming state and t
 ## References
 
 <a id="ref-DK2021b"></a>Dowson, O., & Kapelevich, L. (2021). SDDP.jl: A Julia Package for Stochastic Dual Dynamic Programming. *INFORMS Journal on Computing* 33(1), 27-33. [doi:10.1287/ijoc.2020.0987](https://doi.org/10.1287/ijoc.2020.0987)
-
-<a id="ref-PP1991a"></a>Pereira, M. V. F., & Pinto, L. M. V. G. (1991). Multi-stage Stochastic Optimization Applied to Energy Planning. *Mathematical Programming* 52(1-3), 359-375. [doi:10.1007/BF01582895](https://doi.org/10.1007/BF01582895)
 
 ## See Also
 

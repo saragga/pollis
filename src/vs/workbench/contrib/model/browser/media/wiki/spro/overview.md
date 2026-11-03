@@ -33,7 +33,7 @@ The extensive form writes one copy of the recourse variables for every node of t
 
 ## Stochastic dual dynamic programming
 
-[Dowson and Kapelevich (2021)](#ref-DK2021b) present SDDP.jl, an open-source library for solving multistage stochastic programming problems with the stochastic dual dynamic programming algorithm, built on JuMP. The algorithm goes back to [Pereira and Pinto (1991)](#ref-PP1991a).
+[Dowson and Kapelevich (2021)](#ref-DK2021b) present SDDP.jl, an open-source library for solving multistage stochastic programming problems with the stochastic dual dynamic programming algorithm, built on JuMP.
 
 The SDDP.jl documentation explains that the algorithm applies Kelley's cutting plane method to the cost-to-go terms of a dynamic programming recursion. A forward pass simulates the policy and records the states visited; a backward pass adds a cut at each visited state; the first-stage problem with its cuts gives a lower bound, and Monte Carlo simulation of the policy a statistical estimate of its cost.
 
@@ -52,8 +52,6 @@ The extensive form of the panel builds the same condition into the tree: every n
 <a id="ref-DHL2017a"></a>Dunning, I., Huchette, J., & Lubin, M. (2017). JuMP: A Modeling Language for Mathematical Optimization. *SIAM Review* 59(2), 295-320. [doi:10.1137/15M1020575](https://doi.org/10.1137/15M1020575)
 
 <a id="ref-HH2018a"></a>Huangfu, Q., & Hall, J. A. J. (2018). Parallelizing the Dual Revised Simplex Method. *Mathematical Programming Computation* 10(1), 119-142. [doi:10.1007/s12532-017-0130-5](https://doi.org/10.1007/s12532-017-0130-5)
-
-<a id="ref-PP1991a"></a>Pereira, M. V. F., & Pinto, L. M. V. G. (1991). Multi-stage Stochastic Optimization Applied to Energy Planning. *Mathematical Programming* 52(1-3), 359-375. [doi:10.1007/BF01582895](https://doi.org/10.1007/BF01582895)
 
 <a id="ref-RW1991a"></a>Rockafellar, R. T., & Wets, R. J-B. (1991). Scenarios and Policy Aggregation in Optimization Under Uncertainty. *Mathematics of Operations Research* 16(1), 119-147. [doi:10.1287/moor.16.1.119](https://doi.org/10.1287/moor.16.1.119)
 

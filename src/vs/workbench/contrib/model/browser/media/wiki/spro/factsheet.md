@@ -22,7 +22,7 @@ The panel's problem, formulations, inputs and actions at a glance.
 | **Multistage** | Extensive-form LP on a scenario tree | S^T paths | First order, expected cost, number of paths |
 | **SDDP** | `SDDP.LinearPolicyGraph` with T + 1 stages | **SDDP Iterations** forward and backward passes | First order, lower bound, simulated cost with its 95% half-width |
 
-The extensive form is built with JuMP, presented by [Dunning, Huchette and Lubin (2017)](#ref-DHL2017a), and solved with HiGHS ([Huangfu and Hall (2018)](#ref-HH2018a)); the SDDP tab uses SDDP.jl ([Dowson and Kapelevich (2021)](#ref-DK2021b)), which implements the algorithm of [Pereira and Pinto (1991)](#ref-PP1991a).
+The extensive form is built with JuMP, presented by [Dunning, Huchette and Lubin (2017)](#ref-DHL2017a), and solved with HiGHS ([Huangfu and Hall (2018)](#ref-HH2018a)); the SDDP tab uses SDDP.jl ([Dowson and Kapelevich (2021)](#ref-DK2021b)).
 
 ## Inputs
 
@@ -55,7 +55,7 @@ The tooltip of **Scenarios per Stage (S)** advises keeping S^T under about 20 00
 |---|---|
 | Two-stage models | [Dantzig (1955)](#ref-Dan1955a) |
 | Scenario bundling and policy aggregation | [Rockafellar and Wets (1991)](#ref-RW1991a) |
-| SDDP | [Pereira and Pinto (1991)](#ref-PP1991a), [Dowson and Kapelevich (2021)](#ref-DK2021b) and the SDDP.jl documentation |
+| SDDP | [Dowson and Kapelevich (2021)](#ref-DK2021b) and the SDDP.jl documentation |
 | Software | [Dunning, Huchette and Lubin (2017)](#ref-DHL2017a), [Huangfu and Hall (2018)](#ref-HH2018a) |
 
 The SDDP.jl documentation includes an introductory theory tutorial that implements a simplified version of the algorithm with JuMP and HiGHS.
@@ -69,8 +69,6 @@ The SDDP.jl documentation includes an introductory theory tutorial that implemen
 <a id="ref-DHL2017a"></a>Dunning, I., Huchette, J., & Lubin, M. (2017). JuMP: A Modeling Language for Mathematical Optimization. *SIAM Review* 59(2), 295-320. [doi:10.1137/15M1020575](https://doi.org/10.1137/15M1020575)
 
 <a id="ref-HH2018a"></a>Huangfu, Q., & Hall, J. A. J. (2018). Parallelizing the Dual Revised Simplex Method. *Mathematical Programming Computation* 10(1), 119-142. [doi:10.1007/s12532-017-0130-5](https://doi.org/10.1007/s12532-017-0130-5)
-
-<a id="ref-PP1991a"></a>Pereira, M. V. F., & Pinto, L. M. V. G. (1991). Multi-stage Stochastic Optimization Applied to Energy Planning. *Mathematical Programming* 52(1-3), 359-375. [doi:10.1007/BF01582895](https://doi.org/10.1007/BF01582895)
 
 <a id="ref-RW1991a"></a>Rockafellar, R. T., & Wets, R. J-B. (1991). Scenarios and Policy Aggregation in Optimization Under Uncertainty. *Mathematics of Operations Research* 16(1), 119-147. [doi:10.1287/moor.16.1.119](https://doi.org/10.1287/moor.16.1.119)
 
