@@ -309,7 +309,7 @@ id = "optimizer"
 label = "Optimizer"
 tooltip = "Local optimizer passed to calibrate. PEtab.jl recommends Optim.IPNewton() with the exact Hessian for small models (under 10 ODEs and under 20 estimated parameters), Fides.CustomHessian() with a Gauss-Newton Hessian for medium-sized ones, and (L)BFGS methods such as Fides.BFGS() for large ones. Optim.LBFGS() is also supported."
 kind = "select"
-default = "Fides.CustomHessian()"
+default = "Optim.IPNewton()"
 models = ["single", "multi", "profile"]
 
 [[inputs.options]]

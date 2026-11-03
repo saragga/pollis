@@ -19,7 +19,7 @@ The panel's models, inputs, functions and sources at a glance.
 | **Observed Outputs** | S + E and P | **Structural Identifiability** |
 | **PEtab YAML (Optional)** | empty: the built-in problem | estimation models |
 | **Seed** | 1 | estimation models |
-| **Optimizer** | Fides (Exact Hessian) | single, multi, profile |
+| **Optimizer** | Optim IPNewton | single, multi, profile |
 | **Gradient Method** | ForwardDiff | estimation models |
 | **n Starts** | 50 | multi, profile |
 | **Confidence Level** | 0.95 | profile |
