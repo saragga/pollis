@@ -19,10 +19,10 @@ The decision table on the panel gives the same choices.
 |---|---|---|
 | Small and medium problems, high accuracy | Clarabel | Interior point, the panel's default |
 | Large sparse problems | COSMO | Low cost per iteration, chordal decomposition |
-| Very large problems, where a rough bound suffices | SCS | Operator splitting, with a homogeneous self-dual embedding |
+| Very large problems | SCS | Operator splitting, with a homogeneous self-dual embedding |
 | Cones beyond the standard ones | Hypatia | A generic interface for further cones |
 
-[Goulart and Chen (2024)](#ref-GC2024a) describe Clarabel's support for chordal decomposition of semidefinite cones. [Garstka, Cannon and Goulart (2021)](#ref-GCG2021a) present COSMO as particularly efficient for large problems, such as the semidefinite programs that arise in portfolio optimisation, graph theory and robust control. [Coey, Kapelevich and Vielma (2022)](#ref-CKV2022a) introduce Hypatia's generic interface for exotic cones, through which natural formulations can be solved directly. **Solver Comparison** runs all four on the problem at hand.
+[Goulart and Chen (2024)](#ref-GC2024a) describe Clarabel's support for chordal decomposition of semidefinite cones. [Garstka, Cannon and Goulart (2021)](#ref-GCG2021a) present COSMO as particularly efficient for large problems, such as the semidefinite programs that arise in portfolio optimisation, graph theory and robust control. [O'Donoghue, Chu, Parikh and Boyd (2016)](#ref-OCPB2016a) introduce SCS as a first-order method for very large convex cone programs: compared with interior-point methods, first-order methods scale to very large problems, at the cost of more time to reach very high accuracy. [Coey, Kapelevich and Vielma (2022)](#ref-CKV2022a) introduce Hypatia's generic interface for exotic cones, through which natural formulations can be solved directly. **Solver Comparison** runs all four on the problem at hand.
 
 ## How large can n be?
 
@@ -61,6 +61,8 @@ Step 2 comes before reading any value, because a solution without a small dualit
 <a id="ref-GCG2021a"></a>Garstka, M., Cannon, M., & Goulart, P. (2021). COSMO: A Conic Operator Splitting Method for Convex Conic Problems. *Journal of Optimization Theory and Applications* 190(3), 779-810. [doi:10.1007/s10957-021-01896-x](https://doi.org/10.1007/s10957-021-01896-x)
 
 <a id="ref-GC2024a"></a>Goulart, P. J., & Chen, Y. (2024). Clarabel: An Interior-Point Solver for Conic Programs with Quadratic Objectives. [doi:10.48550/arXiv.2405.12762](https://doi.org/10.48550/arXiv.2405.12762)
+
+<a id="ref-OCPB2016a"></a>O'Donoghue, B., Chu, E., Parikh, N., & Boyd, S. (2016). Conic Optimization via Operator Splitting and Homogeneous Self-Dual Embedding. *Journal of Optimization Theory and Applications* 169(3), 1042-1068. [doi:10.1007/s10957-016-0892-3](https://doi.org/10.1007/s10957-016-0892-3)
 
 <a id="ref-VB1996a"></a>Vandenberghe, L., & Boyd, S. (1996). Semidefinite Programming. *SIAM Review* 38(1), 49-95. [doi:10.1137/1038003](https://doi.org/10.1137/1038003)
 
