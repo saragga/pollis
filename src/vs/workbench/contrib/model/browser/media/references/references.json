@@ -15549,6 +15549,30 @@
 			"open_access": true
 		},
 		{
+			"key": "Hau2000a",
+			"type": "article",
+			"title": "Value-Function Approximations for Partially Observable Markov Decision Processes",
+			"authors": [
+				"Hauskrecht, Milos"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2000,
+			"journal": "Journal of Artificial Intelligence Research",
+			"volume": "13",
+			"pages": "33-94",
+			"issn": "1076-9757",
+			"doi": "10.1613/jair.678",
+			"openalex": "W2169294731",
+			"oa_url": "https://jair.org/index.php/jair/article/download/10262/24449",
+			"abstract": "Partially observable Markov decision processes (POMDPs) provide an elegant mathematical framework for modeling complex decision and planning problems in stochastic domains in which states of the system are observable only indirectly, via a set of imperfect or noisy observations. The modeling advantage of POMDPs, however, comes at a price -- exact methods for solving them are computationally very expensive and thus applicable in practice only to very simple problems. We focus on efficient approximation (heuristic) methods that attempt to alleviate the computational problem and trade off accuracy for speed. We have two objectives here. First, we survey various approximation methods, analyze their properties and relations and provide some new insights into their differences. Second, we present a number of new approximation methods and novel refinements of existing techniques. The theoretical results are supported by experiments on a problem from the agent navigation domain.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "Haw1971a",
 			"type": "article",
 			"title": "Spectra of Some Self-Exciting and Mutually Exciting Point Processes",
@@ -17387,6 +17411,29 @@
 			"open_access": true
 		},
 		{
+			"key": "KHL2008a",
+			"type": "inproceedings",
+			"title": "SARSOP: Efficient Point-Based POMDP Planning by Approximating Optimally Reachable Belief Spaces",
+			"authors": [
+				"Kurniawati, Hanna",
+				"Hsu, David",
+				"Lee, Wee Sun"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2008,
+			"booktitle": "Robotics: Science and Systems IV",
+			"doi": "10.15607/RSS.2008.IV.009",
+			"openalex": "W2099430963",
+			"oa_url": "https://doi.org/10.15607/rss.2008.iv.009",
+			"abstract": "Motion planning in uncertain and dynamic environments is an essential capability for autonomous robots.Partially observable Markov decision processes (POMDPs) provide a principled mathematical framework for solving such problems, but they are often avoided in robotics due to high computational complexity.Our goal is to create practical POMDP algorithms and software for common robotic tasks.To this end, we have developed a new point-based POMDP algorithm that exploits the notion of optimally reachable belief spaces to improve computational efficiency.In simulation, we successfully applied the algorithm to a set of common robotic tasks, including instances of coastal navigation, grasping, mobile robot exploration, and target tracking, all modeled as POMDPs with a large number of states.In most of the instances studied, our algorithm substantially outperformed one of the fastest existing point-based algorithms.A software package implementing our algorithm is available for download at",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "KHR2018a",
 			"type": "misc",
 			"title": "Interactive Connectivity Establishment (ICE): A Protocol for Network Address Translator (NAT) Traversal (RFC 8445)",
@@ -17930,6 +17977,27 @@
 			"legacy_key": "kantz2004",
 			"source": "manual",
 			"checked": false,
+			"open_access": false
+		},
+		{
+			"key": "KS2006a",
+			"type": "inproceedings",
+			"title": "Bandit Based Monte-Carlo Planning",
+			"authors": [
+				"Kocsis, Levente",
+				"Szepesvári, Csaba"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2006,
+			"booktitle": "Machine Learning: ECML 2006",
+			"publisher": "Springer",
+			"pages": "282-293",
+			"doi": "10.1007/11871842_29",
+			"openalex": "W1625390266",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
 			"open_access": false
 		},
 		{
@@ -19354,6 +19422,27 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
+		},
+		{
+			"key": "LCK1995a",
+			"type": "inproceedings",
+			"title": "Learning Policies for Partially Observable Environments: Scaling Up",
+			"authors": [
+				"Littman, Michael L.",
+				"Cassandra, Anthony R.",
+				"Kaelbling, Leslie Pack"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1995,
+			"booktitle": "Machine Learning Proceedings 1995",
+			"pages": "362-370",
+			"doi": "10.1016/B978-1-55860-377-6.50052-9",
+			"openalex": "W1539216098",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": false
 		},
 		{
 			"key": "LCYL2018a",
@@ -30124,6 +30213,31 @@
 			"open_access": false
 		},
 		{
+			"key": "SPS1999a",
+			"type": "article",
+			"title": "Between MDPs and Semi-MDPs: A Framework for Temporal Abstraction in Reinforcement Learning",
+			"authors": [
+				"Sutton, Richard S.",
+				"Precup, Doina",
+				"Singh, Satinder"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1999,
+			"journal": "Artificial Intelligence",
+			"volume": "112",
+			"number": "1-2",
+			"pages": "181-211",
+			"issn": "0004-3702",
+			"doi": "10.1016/S0004-3702(99)00052-1",
+			"openalex": "W2109910161",
+			"oa_url": "https://www.sciencedirect.com/science/article/pii/S0004370299000521/pdf",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "SPSSW2001a",
 			"type": "article",
 			"title": "Estimating the Support of a High-Dimensional Distribution",
@@ -30211,6 +30325,31 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
+		},
+		{
+			"key": "SS1973a",
+			"type": "article",
+			"title": "The Optimal Control of Partially Observable Markov Processes over a Finite Horizon",
+			"authors": [
+				"Smallwood, Richard D.",
+				"Sondik, Edward J."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1973,
+			"journal": "Operations Research",
+			"volume": "21",
+			"number": "5",
+			"pages": "1071-1088",
+			"issn": "0030-364X",
+			"doi": "10.1287/opre.21.5.1071",
+			"openalex": "W2034725503",
+			"abstract": "This paper formulates the optimal control problem for a class of mathematical models in which the system to be controlled is characterized by a finite-state discrete-time Markov process. The states of this internal process are not directly observable by the controller; rather, he has available a set of observable outputs that are only probabilistically related to the internal state of the system. The formulation is illustrated by a simple machine-maintenance example, and other specific application areas are also discussed. The paper demonstrates that, if there are only a finite number of control intervals remaining, then the optimal payoff function is a piecewise-linear, convex function of the current state probabilities of the internal Markov process. In addition, an algorithm for utilizing this property to calculate the optimal control policy and payoff function for any finite horizon is outlined. These results are illustrated by a numerical example for the machine-maintenance problem.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": false
 		},
 		{
 			"key": "SS1989a",
@@ -30852,6 +30991,25 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": false
+		},
+		{
+			"key": "SV2010a",
+			"type": "inproceedings",
+			"title": "Monte-Carlo Planning in Large POMDPs",
+			"authors": [
+				"Silver, David",
+				"Veness, Joel"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2010,
+			"booktitle": "Advances in Neural Information Processing Systems 23",
+			"openalex": "W2171084228",
+			"url": "https://papers.nips.cc/paper_files/paper/2010/hash/edfbe1afcf9246bb0d40eb4d8027d90f-Abstract.html",
+			"source": "openalex",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "SW1965a",
@@ -41044,6 +41202,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "Hau2000a",
+			"count": 287,
+			"source": "crossref",
+			"date": "2026-11-03"
+		},
+		{
+			"key": "Hau2000a",
+			"count": 529,
+			"source": "openalex",
+			"date": "2026-11-03"
+		},
+		{
 			"key": "Haw1971a",
 			"count": 1794,
 			"source": "crossref",
@@ -41638,6 +41808,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "KHL2008a",
+			"count": 328,
+			"source": "crossref",
+			"date": "2026-11-03"
+		},
+		{
+			"key": "KHL2008a",
+			"count": 776,
+			"source": "openalex",
+			"date": "2026-11-03"
+		},
+		{
 			"key": "KKSP2017a",
 			"count": 17,
 			"source": "openalex",
@@ -41864,6 +42046,18 @@
 			"count": 107,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "KS2006a",
+			"count": 1445,
+			"source": "crossref",
+			"date": "2026-11-03"
+		},
+		{
+			"key": "KS2006a",
+			"count": 2946,
+			"source": "openalex",
+			"date": "2026-11-03"
 		},
 		{
 			"key": "KS2009a",
@@ -42350,6 +42544,18 @@
 			"count": 1245,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "LCK1995a",
+			"count": 281,
+			"source": "crossref",
+			"date": "2026-11-03"
+		},
+		{
+			"key": "LCK1995a",
+			"count": 659,
+			"source": "openalex",
+			"date": "2026-11-03"
 		},
 		{
 			"key": "LCYL2018a",
@@ -45742,6 +45948,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "SPS1999a",
+			"count": 1879,
+			"source": "crossref",
+			"date": "2026-11-03"
+		},
+		{
+			"key": "SPS1999a",
+			"count": 3119,
+			"source": "openalex",
+			"date": "2026-11-03"
+		},
+		{
 			"key": "SPSSW2001a",
 			"count": 4888,
 			"source": "crossref",
@@ -45776,6 +45994,18 @@
 			"count": 5333,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "SS1973a",
+			"count": 898,
+			"source": "crossref",
+			"date": "2026-11-03"
+		},
+		{
+			"key": "SS1973a",
+			"count": 1479,
+			"source": "openalex",
+			"date": "2026-11-03"
 		},
 		{
 			"key": "SS1989b",
@@ -49804,9 +50034,17 @@
 				"ESBWG...2017a",
 				"Put2005a",
 				"Koc2015a",
+				"Bel1954a",
+				"SS1973a",
+				"LCK1995a",
 				"KLC1998a",
+				"SPS1999a",
+				"Hau2000a",
 				"PGT2003a",
-				"Put1994a"
+				"KS2006a",
+				"KHL2008a",
+				"SV2010a",
+				"BPWLC...2012a"
 			]
 		},
 		{

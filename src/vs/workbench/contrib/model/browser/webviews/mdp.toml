@@ -12,6 +12,21 @@ defaultModel = "mdp"
 name = "POMDPs.jl"
 github = "https://github.com/JuliaPOMDP/POMDPs.jl"
 
+[[packages.videos]]
+title = "Decision Making Under Uncertainty with POMDPs.jl: Introduction"
+description = "Julia Academy course by Robert Moss: how to build and solve decision problems with POMDPs.jl"
+url = "https://www.youtube.com/watch?v=yrC2O7T7aKU&list=PLP8iPy9hna6QPqk4N8eBk0oXzLrLbOtTA"
+
+[[packages.videos]]
+title = "MDPs: Markov Decision Processes"
+description = "Julia Academy course by Robert Moss: Markov decision processes with POMDPs.jl"
+url = "https://www.youtube.com/watch?v=uHEjez97BvE&list=PLP8iPy9hna6QPqk4N8eBk0oXzLrLbOtTA"
+
+[[packages.videos]]
+title = "POMDPs: Partially Observable Markov Decision Processes"
+description = "Julia Academy course by Robert Moss: partially observable problems with POMDPs.jl"
+url = "https://www.youtube.com/watch?v=KDFzObtE6cs&list=PLP8iPy9hna6QPqk4N8eBk0oXzLrLbOtTA"
+
 [[packages]]
 name = "DiscreteValueIteration.jl"
 github = "https://github.com/JuliaPOMDP/DiscreteValueIteration.jl"
@@ -125,13 +140,41 @@ separator = true
 label = "Original Papers"
 
 [[references]]
+key = "Bel1954a"
+
+[[references]]
+key = "SS1973a"
+
+[[references]]
+key = "LCK1995a"
+
+[[references]]
 key = "KLC1998a"
+
+[[references]]
+key = "SPS1999a"
+
+[[references]]
+key = "Hau2000a"
 
 [[references]]
 key = "PGT2003a"
 
 [[references]]
-key = "Put1994a"
+key = "KS2006a"
+
+[[references]]
+key = "KHL2008a"
+
+[[references]]
+key = "SV2010a"
+
+[[references]]
+separator = true
+label = "Reviews"
+
+[[references]]
+key = "BPWLC...2012a"
 
 [[models]]
 id = "mdp"
