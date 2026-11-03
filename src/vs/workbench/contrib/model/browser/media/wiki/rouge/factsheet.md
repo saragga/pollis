@@ -6,8 +6,8 @@ The panel's metrics, data, inputs, outputs and sources at a glance.
 
 | Metric | Unit matched | TextAnalysis function | F weight | Source |
 |---|---|---|---|---|
-| **ROUGE-1** | Unigrams | `rouge_n(refs, cand, 1)` | F1 | [Lin (2004)](#ref-Lin2004a) |
-| **ROUGE-2** | Bigrams | `rouge_n(refs, cand, 2)` | F1 | [Lin (2004)](#ref-Lin2004a) |
+| **ROUGE-1** | Unigrams | `rouge_clipped(refs, cand, 1)`, on the n-grams of TextAnalysis | F1 | [Lin (2004)](#ref-Lin2004a) |
+| **ROUGE-2** | Bigrams | `rouge_clipped(refs, cand, 2)`, on the n-grams of TextAnalysis | F1 | [Lin (2004)](#ref-Lin2004a) |
 | **ROUGE-L** | Longest common subsequence of the whole texts | `rouge_l_sentence(refs, cand, β)` | **F Weight (beta)** | [Lin (2004)](#ref-Lin2004a) |
 | **ROUGE-Lsum** | Union longest common subsequence, sentence by sentence | `rouge_l_summary(refs, cand, β)` | **F Weight (beta)** | [Lin (2004)](#ref-Lin2004a) |
 
@@ -59,7 +59,7 @@ The run prints the macro average of precision, recall and F over the documents, 
 |---|---|---|
 | Paired t-test on the F differences | HypothesisTests, by [JuliaStats Contributors (2024)](#ref-JSC2024b) | — |
 | Wilcoxon signed-rank test | HypothesisTests, by [JuliaStats Contributors (2024)](#ref-JSC2024b) | [Wilcoxon (1945)](#ref-Wil1945a) |
-| Paired bootstrap, percentile interval | Bootstrap.jl, by [Gehring (2023)](#ref-Geh...2023a) | [Efron and Tibshirani (1993)](#ref-ET1993a), [Koehn (2004)](#ref-Koe2004a) |
+| Paired bootstrap, percentile interval | Bootstrap.jl, by [Gehring (2023)](#ref-Geh...2023a) | [Koehn (2004)](#ref-Koe2004a); [Efron and Tibshirani (1993)](#ref-ET1993a), as cited by [Jurafsky and Martin (2024)](#ref-JM2024a) |
 
 [Jurafsky and Martin (2024)](#ref-JM2024a) describe the paired bootstrap test for comparing two systems on the same test set.
 

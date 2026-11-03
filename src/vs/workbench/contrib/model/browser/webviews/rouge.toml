@@ -29,7 +29,7 @@ name = "PollisDatasets.jl"
 github = "https://github.com/Trumpingtons/PollisDatasets.jl"
 
 [requires]
-packages = ["TextAnalysis.jl", "HypothesisTests.jl", "Bootstrap.jl", "Plots.jl"]
+packages = ["TextAnalysis.jl", "HypothesisTests.jl", "Bootstrap.jl", "Plots.jl", "PollisDatasets.jl"]
 
 [[notebookSections]]
 label = ""
@@ -143,7 +143,7 @@ label = "ROUGE-Lsum"
 
 [[bullets]]
 text = "ROUGE-N"
-detail = "recall: share of reference n-grams found in the candidate; precision: share of candidate n-grams found in a reference (rouge_n)"
+detail = "recall: share of reference n-grams found in the candidate; precision: share of candidate n-grams found in a reference; each candidate n-gram counts at most as often as it occurs in the reference"
 
 [[bullets]]
 text = "ROUGE-L and ROUGE-Lsum"
@@ -183,7 +183,7 @@ label = "Average"
 [[inputs]]
 id = "beta"
 label = "F Weight (beta)"
-tooltip = "Integer weight of recall against precision in the ROUGE-L F score: 1 weighs them equally (as rouge_score does); larger values favour recall. rouge_n always reports F1."
+tooltip = "Integer weight of recall against precision in the ROUGE-L F score: 1 weighs them equally; larger values favour recall. ROUGE-1 and ROUGE-2 always report F1."
 default = "1"
 models = ["rougel", "rougelsum"]
 
@@ -220,7 +220,7 @@ default = "[\"replace with a reference summary\"]"
 [[codeBranches]]
 model = "rouge1"
 code = '''
-using TextAnalysis, Statistics  # rouge_n, rouge_l_sentence, rouge_l_summary, Score, average; mean, median
+using TextAnalysis, Statistics  # ngrams, StringDocument, rouge_l_sentence, rouge_l_summary, Score, average; mean, median
 {{?candidates=summaries}} using PollisDatasets
 
 {{?candidates=summaries}} guide  = dataset("pollis_guide");  # The Pollis Guide, one row per section; datasetinfo("pollis_guide") describes it
@@ -235,9 +235,18 @@ using TextAnalysis, Statistics  # rouge_n, rouge_l_sentence, rouge_l_summary, Sc
 as_refs(r) = r isa AbstractString ? [lowercase(r)] : lowercase.(r)  # one or several references per document
 cands = lowercase.({{candidates}})  # one summary per document
 refs  = as_refs.({{references}})
+function rouge_clipped(rs, c, n)  # ROUGE-N of Lin (2004) against each reference: a candidate n-gram matches at most as often as it occurs in the reference
+    gc = ngrams(StringDocument(c), n)
+    map(rs) do r
+        gr = ngrams(StringDocument(r), n)
+        m = sum(min(k, get(gr, g, 0)) for (g, k) in gc; init = 0)  # clipped matches
+        p, rc = m / max(sum(values(gc); init = 0), 1), m / max(sum(values(gr); init = 0), 1)
+        Score(p, rc, p + rc > 0 ? 2 * p * rc / (p + rc) : 0.0)  # F1
+    end
+end
 length(cands) == length(refs) || error("Candidates and references need one entry per document.")
 
-metric(r, c) = rouge_n(r, c, 1)  # unigram overlap; F is F1
+metric(r, c) = rouge_clipped(r, c, 1)  # unigram overlap; F is F1
 {{?multi-ref=best}} pick(s) = argmax(s)  # the reference with the highest F (TextAnalysis argmax over Scores)
 {{?multi-ref=average}} pick(s) = average(s)  # the mean over the references
 score_docs(cs) = [pick(metric(r, c)) for (r, c) in zip(refs, cs)]  # one Score per document
@@ -250,7 +259,7 @@ println("Macro average over ", length(scores), " documents: ", average(scores))
 [[codeBranches]]
 model = "rouge2"
 code = '''
-using TextAnalysis, Statistics  # rouge_n, rouge_l_sentence, rouge_l_summary, Score, average; mean, median
+using TextAnalysis, Statistics  # ngrams, StringDocument, rouge_l_sentence, rouge_l_summary, Score, average; mean, median
 {{?candidates=summaries}} using PollisDatasets
 
 {{?candidates=summaries}} guide  = dataset("pollis_guide");  # The Pollis Guide, one row per section; datasetinfo("pollis_guide") describes it
@@ -265,9 +274,18 @@ using TextAnalysis, Statistics  # rouge_n, rouge_l_sentence, rouge_l_summary, Sc
 as_refs(r) = r isa AbstractString ? [lowercase(r)] : lowercase.(r)  # one or several references per document
 cands = lowercase.({{candidates}})  # one summary per document
 refs  = as_refs.({{references}})
+function rouge_clipped(rs, c, n)  # ROUGE-N of Lin (2004) against each reference: a candidate n-gram matches at most as often as it occurs in the reference
+    gc = ngrams(StringDocument(c), n)
+    map(rs) do r
+        gr = ngrams(StringDocument(r), n)
+        m = sum(min(k, get(gr, g, 0)) for (g, k) in gc; init = 0)  # clipped matches
+        p, rc = m / max(sum(values(gc); init = 0), 1), m / max(sum(values(gr); init = 0), 1)
+        Score(p, rc, p + rc > 0 ? 2 * p * rc / (p + rc) : 0.0)  # F1
+    end
+end
 length(cands) == length(refs) || error("Candidates and references need one entry per document.")
 
-metric(r, c) = rouge_n(r, c, 2)  # bigram overlap; F is F1
+metric(r, c) = rouge_clipped(r, c, 2)  # bigram overlap; F is F1
 {{?multi-ref=best}} pick(s) = argmax(s)  # the reference with the highest F (TextAnalysis argmax over Scores)
 {{?multi-ref=average}} pick(s) = average(s)  # the mean over the references
 score_docs(cs) = [pick(metric(r, c)) for (r, c) in zip(refs, cs)]  # one Score per document
@@ -280,7 +298,7 @@ println("Macro average over ", length(scores), " documents: ", average(scores))
 [[codeBranches]]
 model = "rougel"
 code = '''
-using TextAnalysis, Statistics  # rouge_n, rouge_l_sentence, rouge_l_summary, Score, average; mean, median
+using TextAnalysis, Statistics  # ngrams, StringDocument, rouge_l_sentence, rouge_l_summary, Score, average; mean, median
 {{?candidates=summaries}} using PollisDatasets
 
 {{?candidates=summaries}} guide  = dataset("pollis_guide");  # The Pollis Guide, one row per section; datasetinfo("pollis_guide") describes it
@@ -295,6 +313,15 @@ using TextAnalysis, Statistics  # rouge_n, rouge_l_sentence, rouge_l_summary, Sc
 as_refs(r) = r isa AbstractString ? [lowercase(r)] : lowercase.(r)  # one or several references per document
 cands = lowercase.({{candidates}})  # one summary per document
 refs  = as_refs.({{references}})
+function rouge_clipped(rs, c, n)  # ROUGE-N of Lin (2004) against each reference: a candidate n-gram matches at most as often as it occurs in the reference
+    gc = ngrams(StringDocument(c), n)
+    map(rs) do r
+        gr = ngrams(StringDocument(r), n)
+        m = sum(min(k, get(gr, g, 0)) for (g, k) in gc; init = 0)  # clipped matches
+        p, rc = m / max(sum(values(gc); init = 0), 1), m / max(sum(values(gr); init = 0), 1)
+        Score(p, rc, p + rc > 0 ? 2 * p * rc / (p + rc) : 0.0)  # F1
+    end
+end
 length(cands) == length(refs) || error("Candidates and references need one entry per document.")
 
 metric(r, c) = rouge_l_sentence(r, c, {{beta}})  # LCS of the whole texts, each read as one sequence
@@ -310,7 +337,7 @@ println("Macro average over ", length(scores), " documents: ", average(scores))
 [[codeBranches]]
 model = "rougelsum"
 code = '''
-using TextAnalysis, Statistics  # rouge_n, rouge_l_sentence, rouge_l_summary, Score, average; mean, median
+using TextAnalysis, Statistics  # ngrams, StringDocument, rouge_l_sentence, rouge_l_summary, Score, average; mean, median
 {{?candidates=summaries}} using PollisDatasets
 
 {{?candidates=summaries}} guide  = dataset("pollis_guide");  # The Pollis Guide, one row per section; datasetinfo("pollis_guide") describes it
@@ -325,6 +352,15 @@ using TextAnalysis, Statistics  # rouge_n, rouge_l_sentence, rouge_l_summary, Sc
 as_refs(r) = r isa AbstractString ? [lowercase(r)] : lowercase.(r)  # one or several references per document
 cands = lowercase.({{candidates}})  # one summary per document
 refs  = as_refs.({{references}})
+function rouge_clipped(rs, c, n)  # ROUGE-N of Lin (2004) against each reference: a candidate n-gram matches at most as often as it occurs in the reference
+    gc = ngrams(StringDocument(c), n)
+    map(rs) do r
+        gr = ngrams(StringDocument(r), n)
+        m = sum(min(k, get(gr, g, 0)) for (g, k) in gc; init = 0)  # clipped matches
+        p, rc = m / max(sum(values(gc); init = 0), 1), m / max(sum(values(gr); init = 0), 1)
+        Score(p, rc, p + rc > 0 ? 2 * p * rc / (p + rc) : 0.0)  # F1
+    end
+end
 length(cands) == length(refs) || error("Candidates and references need one entry per document.")
 
 metric(r, c) = rouge_l_summary(r, c, {{beta}})  # union LCS sentence by sentence; needs sentence punctuation
@@ -377,8 +413,6 @@ for (name, v) in (("precision", P), ("recall", R), ("F", F))
     println(rpad(name, 10), "mean ", round(mean(v); digits = 3), "   median ", round(median(v); digits = 3),
             "   min ", round(minimum(v); digits = 3), "   max ", round(maximum(v); digits = 3))
 end
-{{?model=rouge1|rouge2}} over = findall(>(1), R)  # rouge_n counts a repeated candidate n-gram every time (no clipping)
-{{?model=rouge1|rouge2}} isempty(over) || println("Recall above 1 in documents ", over, ": the candidate repeats n-grams of the reference")
 '''
 
 [[actionGroups.actions]]
@@ -432,8 +466,8 @@ id = "compare-metrics"
 label = "Compare Metrics"
 desc = "ROUGE-1, ROUGE-2, ROUGE-L and ROUGE-Lsum side by side for System A"
 code = '''
-metrics = ("ROUGE-1"    => (r, c) -> rouge_n(r, c, 1),
-           "ROUGE-2"    => (r, c) -> rouge_n(r, c, 2),
+metrics = ("ROUGE-1"    => (r, c) -> rouge_clipped(r, c, 1),
+           "ROUGE-2"    => (r, c) -> rouge_clipped(r, c, 2),
            "ROUGE-L"    => (r, c) -> rouge_l_sentence(r, c, 1),
            "ROUGE-Lsum" => (r, c) -> rouge_l_summary(r, c, 1))  # F1 throughout
 for (name, m) in metrics

@@ -12,9 +12,9 @@ where S runs over the reference summaries, n is the length of the n-gram and Cou
 
 ## Precision and F1
 
-TextAnalysis, by [JuliaText Contributors (2023)](#ref-JTC2023a), describes `rouge_n` as computing the n-gram recall between candidate and references, and returns for every reference a score with precision, recall and F. As the panel's bullet puts it, recall is the share of reference n-grams found in the candidate and precision the share of candidate n-grams found in a reference.
+The panel computes ROUGE-N in its own function, `rouge_clipped`, from the n-gram counts that `ngrams` of TextAnalysis, by [JuliaText Contributors (2023)](#ref-JTC2023a), returns for a document. A candidate n-gram matches at most as often as it occurs in the reference, the maximum number of co-occurring n-grams of the definition, so recall and precision lie between 0 and 1. For every reference, the function returns a TextAnalysis `Score` with precision, recall and F. As the panel's bullet puts it, recall is the share of reference n-grams found in the candidate and precision the share of candidate n-grams found in a reference.
 
-The F of `rouge_n` is F1, the harmonic mean of the two, whatever the value of **F Weight (beta)**, which applies only to the measures based on longest common subsequences.
+The F of `rouge_clipped` is F1, the harmonic mean of the two, whatever the value of **F Weight (beta)**, which applies only to the measures based on longest common subsequences.
 
 ## Unigrams and bigrams
 
@@ -35,11 +35,11 @@ ROUGE-L, which counts matches in sequence, separates the two, and is the subject
 
 With several references, [Lin (2004)](#ref-Lin2004a) computes the pairwise ROUGE-N between the candidate and every reference and takes the maximum as the final score. He also notes that the numerator of the definition sums over all references, which gives more weight to n-grams occurring in several of them, favouring candidates that are similar to the consensus of the references.
 
-In the panel, `rouge_n` returns one score per reference, and **Several References** keeps either the best one, by F, or their average.
+In the panel, `rouge_clipped` returns one score per reference, and **Several References** keeps either the best one, by F, or their average.
 
 ## In the panel
 
-The code calls `rouge_n(refs, cand, 1)` on the **ROUGE-1** tab and `rouge_n(refs, cand, 2)` on the **ROUGE-2** tab, after lowercasing both sides. The example in the TextAnalysis documentation scores one candidate against two references for n = 1 and n = 2, and takes the best score of each with `argmax`, the same pattern as Best Match.
+The code calls `rouge_clipped(refs, cand, 1)` on the **ROUGE-1** tab and `rouge_clipped(refs, cand, 2)` on the **ROUGE-2** tab, after lowercasing both sides. The example in the TextAnalysis documentation scores one candidate against two references for n = 1 and n = 2 with `rouge_n`, and takes the best score of each with `argmax`, the same pattern as Best Match.
 
 **Compare Metrics** puts ROUGE-1 and ROUGE-2 beside ROUGE-L and ROUGE-Lsum for the same candidates.
 
