@@ -22,6 +22,14 @@ title = "Probabilistic Programming with RxInfer.jl"
 description = "Tutorial demonstrating factor graph models and VMP inference"
 url = "https://www.youtube.com/watch?v=qXrvDVm_fnE"
 
+[[packages]]
+name = "GLMakie.jl"
+github = "https://github.com/MakieOrg/Makie.jl"
+
+[[packages]]
+name = "Turing.jl"
+github = "https://github.com/TuringLang/Turing.jl"
+
 [requires]
 packages = ["RxInfer.jl", "GLMakie.jl", "Turing.jl"]
 
@@ -80,7 +88,7 @@ description = "Online Bayesian inference with forgetting factors to track non-st
 name = "Hidden Markov Model"
 file = "rxinfer/basic-09-hidden-markov-model.ipynb"
 bundled = true
-description = "Structured variational inference in an HMM with unknown transition and observation matrices"
+description = "Structured variational inference in an HMM, learning the transition and observation matrices with Dirichlet priors"
 
 [[notebookSections.notebooks]]
 name = "Incomplete Data"
@@ -104,7 +112,7 @@ description = "Control in Partially Observable MDPs via reactive message passing
 name = "Bike Rental Demand"
 file = "rxinfer/basic-13-bike-rental-demand.ipynb"
 bundled = true
-description = "Time-series forecasting with RxInfer using bike rental demand as a real-data example"
+description = "Missing data and predictions of bike rental demand, on data from a Kaggle dataset"
 
 [[notebookSections.notebooks]]
 name = "T-Maze Active Inference"
@@ -122,7 +130,7 @@ description = "Active inference for the mountain car control problem using RxInf
 name = "Assessing Skills"
 file = "rxinfer/advanced-02-assessing-skills.ipynb"
 bundled = true
-description = "Exact inference to assess student skills from test results; inspired by Bishop MBML Chapter 2"
+description = "Custom @node and @rule definitions for a root cause analysis of test results; inspired by Chapter 2 of Model-Based Machine Learning (Winn et al.)"
 
 [[notebookSections.notebooks]]
 name = "Bayesian Structured Time Series"
@@ -146,7 +154,7 @@ description = "Non-conjugate message passing via local CVI approximation: extens
 name = "Drone Dynamics"
 file = "rxinfer/advanced-06-drone-dynamics.ipynb"
 bundled = true
-description = "Automated inference to simulate drone dynamics with RxInfer"
+description = "Motion planning for a drone by probabilistic inference with RxInfer"
 
 [[notebookSections.notebooks]]
 name = "EFE Minimization"
@@ -236,7 +244,7 @@ description = "Online VMP inference in a Hierarchical Gaussian Filter (Senoz et 
 name = "Invertible Neural Networks"
 file = "rxinfer/problem-05-invertible-neural-networks.ipynb"
 bundled = true
-description = "Variational inference with invertible neural networks in factor graphs (van Erp)"
+description = "Invertible neural networks in factor graphs with RxInfer: a tutorial"
 
 [[notebookSections.notebooks]]
 name = "Ising Model"
@@ -248,7 +256,7 @@ description = "Temperature estimation over a grid with binary observations using
 name = "Litter Model"
 file = "rxinfer/problem-07-litter-model.ipynb"
 bundled = true
-description = "Estimating daily litter events from real data with Bayesian inference"
+description = "Estimating daily litter events with Bayesian inference"
 
 [[notebookSections.notebooks]]
 name = "ODE Parameter Estimation"
@@ -272,7 +280,7 @@ description = "Comparing BIFM Kalman smoother with RTS implementation via messag
 name = "Simple Nonlinear Node"
 file = "rxinfer/problem-11-simple-nonlinear-node.ipynb"
 bundled = true
-description = "Custom non-conjugate factor node with nonlinear link function and arbitrary message rules"
+description = "Custom factor node with nonlinear function approximation by samplelist and its own sum-product rules"
 
 [[notebookSections.notebooks]]
 name = "Structural Dynamics (AKF)"
@@ -302,7 +310,7 @@ description = "LLM integration with RxInfer for probabilistic reasoning"
 name = "Latent VAR Model"
 file = "rxinfer/experimental-03-latent-var-autoregressive.ipynb"
 bundled = true
-description = "Latent Vector Autoregressive Model with recurrent switching dynamics"
+description = "Experimental Latent Vector Autoregressive Model built from AR sub-models"
 
 [[notebookSections.notebooks]]
 name = "Recurrent Switching LDS"
@@ -410,7 +418,7 @@ text = "Produces an approximate posterior distribution rather than asymptoticall
 detail = ""
 
 [[bullets]]
-text = "Much faster and more scalable than sampling-based approaches, optimised for reactive inference"
+text = "Tends to be faster than Markov chain Monte Carlo sampling; reactive message passing handles state-space models with hundreds of thousands of random variables on a standard laptop"
 detail = ""
 
 [[bullets]]
@@ -741,7 +749,7 @@ using RxInfer
 {{?model=streaming}} F, F_alt = sum(result.free_energy_final_only_history), sum(alt.free_energy_final_only_history)  # sequential (prequential) bound over the stream
 println("Free energy, fitted model: ", F)  # an upper bound on -log evidence: lower means more evidence, with complexity already penalised
 println("Free energy, alternative:  ", F_alt)
-println(F < F_alt ? "The fitted model is preferred" : "The alternative is preferred", "; log Bayes factor approx ", round(F_alt - F, digits = 2))  # a difference of a few units is already strong evidence
+println(F < F_alt ? "The fitted model is preferred" : "The alternative is preferred", "; log Bayes factor approx ", round(F_alt - F, digits = 2))
 '''
 
 [[actionGroups]]
