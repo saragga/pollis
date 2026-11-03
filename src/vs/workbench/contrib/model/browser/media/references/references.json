@@ -35544,6 +35544,27 @@
 			"open_access": false
 		},
 		{
+			"key": "Wil2019a",
+			"type": "book",
+			"title": "Network Flow Algorithms",
+			"authors": [
+				"Williamson, David P."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2019,
+			"publisher": "Cambridge University Press",
+			"isbn": "9781316636831",
+			"doi": "10.1017/9781316888568",
+			"oa_url": "http://www.networkflowalgs.com/book.pdf",
+			"abstract": "Network flow theory has been used across a number of disciplines, including theoretical computer science, operations research, and discrete math, to model not only problems in the transportation of goods and information, but also a wide range of applications from image segmentation problems in computer vision to deciding when a baseball team has been eliminated from contention. This graduate text and reference presents a succinct, unified view of a wide variety of efficient combinatorial algorithms for network flow problems, including many results not found in other books. It covers maximum flows, minimum-cost flows, generalized flows, multicommodity flows, and global minimum cuts and also presents recent work on computing electrical flows along with recent applications of these flows to classical problems in network flow theory.",
+			"abstract_source": "author",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "Win2005a",
 			"type": "article",
 			"title": "A Finite Sample Correction for the Variance of Linear Efficient Two-Step GMM Estimators",
@@ -51237,6 +51258,7 @@
 			"keys": [
 				"FBSHE...2021a",
 				"AMO1993a",
+				"Wil2019a",
 				"CLRS2022a",
 				"FF1956a",
 				"Din1970a",
