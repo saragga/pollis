@@ -4,7 +4,7 @@ How to read the output of the **Latent Semantic Analysis** panel: documents and 
 
 ## Documents in the space
 
-**Document-Topic Mix** computes `doc_weights = U_k S_k`, the weight of each document on each latent dimension, and prints its size, documents × k. **Document Similarity** uses the same vectors.
+**Document-Topic Mix** computes `doc_weights = U_k S_k`, the weight of each document on each latent dimension, prints its size, documents × k, and shows the weights of the first 10 documents on the first 5 dimensions. **Document Similarity** uses the same vectors.
 
 [Deerwester, Dumais, Furnas, Landauer and Harshman (1990)](#ref-DDFLH1990a) show that the document-to-document dot products of the rank-k matrix are the dot products between rows of DS, the right singular vectors scaled by the singular values, so the rows of DS serve as coordinates for documents. In the panel, where rows are documents, U_k S_k plays the part of DS. The comment of **Document Similarity** adds that unscaled U_k would weight every dimension equally.
 
@@ -16,7 +16,7 @@ How to read the output of the **Latent Semantic Analysis** panel: documents and 
 
 ## Terms in the space
 
-**Term Space** plots the term vectors of the first two dimensions, the first two columns of V, one point per term.
+**Term Space** plots every term on the first two dimensions, as a row of V_k S_k, and labels the 20 terms farthest from the origin.
 
 [Deerwester, Dumais, Furnas, Landauer and Harshman (1990)](#ref-DDFLH1990a) use the rows of TS as coordinates for terms when comparing two terms, and TS^½ and DS^½ when comparing a term with a document. They write that no single configuration of points allows both kinds of comparison, but the configurations differ only by a stretching or shrinking of the axes.
 

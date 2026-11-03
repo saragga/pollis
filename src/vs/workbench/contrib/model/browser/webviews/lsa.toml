@@ -20,8 +20,12 @@ github = "https://github.com/JuliaLang/LinearAlgebra.jl"
 name = "PollisDatasets.jl"
 github = "https://github.com/Trumpingtons/PollisDatasets.jl"
 
+[[packages]]
+name = "Plots.jl"
+github = "https://github.com/JuliaPlots/Plots.jl"
+
 [requires]
-packages = ["TextAnalysis.jl", "LinearAlgebra.jl", "Plots.jl"]
+packages = ["TextAnalysis.jl", "LinearAlgebra.jl", "Plots.jl", "PollisDatasets.jl"]
 
 [[notebookSections]]
 label = ""
@@ -85,16 +89,6 @@ key = "JTC2023a"
 
 [[references]]
 separator = true
-label = "Textbooks"
-
-[[references]]
-key = "JM2024a"
-
-[[references]]
-key = "MRS2008a"
-
-[[references]]
-separator = true
 label = "Original Papers"
 
 [[references]]
@@ -124,7 +118,7 @@ default = "corpus"
 [[inputs]]
 id = "k"
 label = "Dimensions (k)"
-tooltip = "Number of latent dimensions to retain from the SVD; typically 50–300"
+tooltip = "Number of latent dimensions to retain from the SVD, at most the number of documents or terms; Deerwester, Dumais, Furnas, Landauer and Harshman (1990) used 50-100 in various problems and 100 for the MED collection"
 default = "50"
 
 [[codeBranches]]
@@ -144,10 +138,10 @@ update_lexicon!(crps)  # build vocabulary
 dtm     = DocumentTermMatrix(crps)  # document-term matrix
 M       = Matrix(tf_idf(dtm))  # TF-IDF matrix (docs x terms)
 U, S, V = svd(M)  # full SVD decomposition
-
-U_k     = U[:, 1:{{k}}]  # document vectors in latent space
-S_k     = S[1:{{k}}]  # singular values (variance explained)
-V_k     = V[:, 1:{{k}}]  # term vectors in latent space
+k       = min({{k}}, length(S))  # at most the number of singular values, min(documents, terms)
+U_k     = U[:, 1:k]  # document vectors in latent space
+S_k     = S[1:k]  # singular values (variance explained)
+V_k     = V[:, 1:k]  # term vectors in latent space
 '''
 
 [[actionGroups]]
@@ -164,7 +158,8 @@ using TextAnalysis, LinearAlgebra
 crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
 prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)
 F   = svd(Matrix(tf_idf(DocumentTermMatrix(crps))))  # SVD
-D_k = F.U[:, 1:{{k}}] .* transpose(F.S[1:{{k}}])  # doc vectors U_k S_k (unscaled U_k would weight every dimension equally)
+k = min({{k}}, length(F.S))  # at most the number of singular values, min(documents, terms)
+D_k = F.U[:, 1:k] .* transpose(F.S[1:k])  # doc vectors U_k S_k (unscaled U_k would weight every dimension equally)
 
 norms   = norm.(eachrow(D_k))  # L2 norm per document
 D_norm  = D_k ./ norms  # normalised document matrix
@@ -174,7 +169,7 @@ sim_mat = D_norm * transpose(D_norm)  # cosine similarity matrix
 [[actionGroups.actions]]
 id = "term-space"
 label = "Term Space"
-desc = "Top terms projected onto the first two latent dimensions"
+desc = "Every term on the first two latent dimensions, as a row of V_k S_k, the coordinates Deerwester, Dumais, Furnas, Landauer and Harshman (1990) use to compare terms; the 20 terms farthest from the origin are labelled"
 code = '''
 using TextAnalysis, LinearAlgebra, Plots
 
@@ -183,7 +178,10 @@ prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)
 dtm  = DocumentTermMatrix(crps)  # document-term matrix
 
 F    = svd(Matrix(tf_idf(dtm)))  # SVD decomposition
-scatter(F.V[:, 1], F.V[:, 2], xlabel="Dim 1", ylabel="Dim 2")  # term projections on first two dimensions
+T2   = F.V[:, 1:2] .* transpose(F.S[1:2])  # term coordinates: rows of V_k S_k on the first two dimensions
+top  = sortperm(norm.(eachrow(T2)), rev=true)[1:min(20, end)]  # the 20 terms farthest from the origin
+scatter(T2[:, 1], T2[:, 2], ms=2, c=:lightgray, label="terms", xlabel="Dim 1", ylabel="Dim 2")
+scatter!(T2[top, 1], T2[top, 2], ms=4, label="farthest 20", series_annotations=Plots.text.(dtm.terms[top], 7, :left))  # Plots.text: TextAnalysis also exports text
 '''
 
 [[actionGroups]]
@@ -200,9 +198,9 @@ using TextAnalysis, LinearAlgebra, Plots
 crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
 prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)
 S    = svd(Matrix(tf_idf(DocumentTermMatrix(crps)))).S  # singular values
-
+k    = min({{k}}, length(S))  # at most the number of singular values, min(documents, terms)
 var_exp = cumsum(S .^ 2) ./ sum(S .^ 2)  # cumulative variance explained
-plot(1:{{k}}, var_exp[1:{{k}}], xlabel="k", ylabel="Cumulative variance")  # scree-style plot
+plot(1:k, var_exp[1:k], xlabel="k", ylabel="Cumulative variance")  # scree-style plot
 '''
 
 [[actionGroups.actions]]
@@ -217,7 +215,8 @@ prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)
 M    = Matrix(tf_idf(DocumentTermMatrix(crps)))  # TF-IDF matrix
 
 F    = svd(M)  # full SVD
-M_k  = F.U[:, 1:{{k}}] * Diagonal(F.S[1:{{k}}]) * F.Vt[1:{{k}}, :]  # rank-k approximation
+k = min({{k}}, length(F.S))  # at most the number of singular values, min(documents, terms)
+M_k  = F.U[:, 1:k] * Diagonal(F.S[1:k]) * F.Vt[1:k, :]  # rank-k approximation
 println("Frobenius error: ", norm(M - M_k))  # reconstruction error
 '''
 
@@ -228,15 +227,15 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "query-docs"
 label = "Query Documents"
-desc = "Find documents most similar to a query vector"
+desc = "Documents ranked by the cosine of their vectors U_k S_k with that of document query_idx"
 code = '''
 using TextAnalysis, LinearAlgebra
 
 crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
 prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)
 F    = svd(Matrix(tf_idf(DocumentTermMatrix(crps))))  # SVD
-
-D_k   = F.U[:, 1:{{k}}] .* transpose(F.S[1:{{k}}])  # doc vectors U_k S_k
+k = min({{k}}, length(F.S))  # at most the number of singular values, min(documents, terms)
+D_k   = F.U[:, 1:k] .* transpose(F.S[1:k])  # doc vectors U_k S_k
 q_vec = D_k[query_idx, :]  # query document vector in latent space
 sims  = D_k * q_vec ./ (norm.(eachrow(D_k)) .* norm(q_vec))  # cosine similarities
 sortperm(sims, rev=true)  # ranked document indices
@@ -252,10 +251,11 @@ using TextAnalysis, LinearAlgebra
 crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
 prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)
 dtm  = DocumentTermMatrix(crps)
-F    = svd(Matrix(tf_idf(dtm)))  # the latent space to fold into
-
-counts = Matrix(dtm.dtm)
-idf    = log.(size(counts, 1) ./ vec(sum(counts .> 0; dims=1)))  # the corpus idf weights, log(n / df)
+W    = Matrix(tf_idf(dtm))  # the matrix that was decomposed
+F    = svd(W)  # the latent space to fold into
+k = min({{k}}, length(F.S))  # at most the number of singular values, min(documents, terms)
+T    = Matrix(tf(dtm))  # term frequencies: the share of each document contributed by each term
+idf  = [(d = findfirst(>(0), T[:, j]); W[d, j] / T[d, j]) for j in axes(T, 2)]  # the weight tf_idf gives each term, read off the matrix as tf_idf / tf
 
 d_new = StringDocument(new_text)  # new document to fold in
 prepare!(d_new, strip_punctuation | strip_case)  # same cleaning as the corpus
@@ -264,9 +264,8 @@ v_new = zeros(length(dtm.terms))
 for t in tokens(d_new)
     j = get(col, t, 0); j > 0 && (v_new[j] += 1)  # count terms in the existing vocabulary; unseen terms are dropped
 end
-v_new = v_new ./ max(sum(v_new), 1) .* idf  # tf-idf weighting as in the matrix that was decomposed
-
-u_new = (transpose(F.V[:, 1:{{k}}]) * v_new) ./ F.S[1:{{k}}]  # fold-in: u = S_k^-1 transpose(V_k) v, comparable with rows of U_k
+v_new = v_new ./ max(sum(v_new), 1) .* idf  # term frequencies of the new document times the corpus weights
+u_new = (transpose(F.V[:, 1:k]) * v_new) ./ F.S[1:k]  # fold-in: u = S_k^-1 transpose(V_k) v, comparable with rows of U_k
 println("Latent vector: ", u_new)  # latent representation of new document
 '''
 
@@ -293,7 +292,7 @@ plot(ks, errors, xlabel="k", ylabel="Reconstruction error")  # elbow plot for k 
 [[actionGroups.actions]]
 id = "compare-tfidf"
 label = "Raw vs TF-IDF"
-desc = "LSA on raw counts vs. TF-IDF weighted DTM"
+desc = "Share of the squared Frobenius norm that the first k dimensions capture, for the raw counts and for the TF-IDF matrix, each against its own total"
 code = '''
 using TextAnalysis, LinearAlgebra
 
@@ -303,8 +302,9 @@ dtm   = DocumentTermMatrix(crps)  # document-term matrix
 
 F_raw   = svd(Matrix(dtm.dtm))  # SVD on raw term counts
 F_tfidf = svd(Matrix(tf_idf(dtm)))  # SVD on TF-IDF weighted matrix
-println("Variance (raw):   ", F_raw.S[1:{{k}}] .^ 2 |> sum)  # variance captured by raw LSA
-println("Variance (tfidf): ", F_tfidf.S[1:{{k}}] .^ 2 |> sum)  # variance captured by TF-IDF LSA
+share(F, k) = sum(F.S[1:min(k, end)] .^ 2) / sum(F.S .^ 2)  # first k squared singular values over all of them: free of the scale of the matrix
+println("Share captured (raw):    ", round(share(F_raw, {{k}}), digits=3))
+println("Share captured (tf-idf): ", round(share(F_tfidf, {{k}}), digits=3))
 '''
 
 [[actionGroups]]
@@ -324,7 +324,7 @@ dtm  = DocumentTermMatrix(crps)  # document-term matrix
 
 F     = svd(Matrix(tf_idf(dtm)))  # SVD decomposition
 terms = dtm.terms  # vocabulary aligned to columns of V
-for dim in 1:min({{k}}, 5)  # inspect top 5 dimensions
+for dim in 1:min({{k}}, length(F.S), 5)  # inspect top 5 dimensions
     idx = sortperm(abs.(F.V[:, dim]), rev=true)[1:10]  # top 10 term indices
     println("Dim $dim: ", terms[idx])
 end
@@ -333,7 +333,7 @@ end
 [[actionGroups.actions]]
 id = "doc-topics"
 label = "Document-Topic Mix"
-desc = "Latent dimension weights for each document"
+desc = "Weights U_k S_k of the first 10 documents on the first 5 latent dimensions"
 code = '''
 using TextAnalysis, LinearAlgebra
 
@@ -341,6 +341,8 @@ crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
 prepare!(crps, strip_punctuation | strip_case); update_lexicon!(crps)
 F    = svd(Matrix(tf_idf(DocumentTermMatrix(crps))))  # SVD decomposition
 
-doc_weights = F.U[:, 1:{{k}}] .* F.S[1:{{k}}]'  # scale by singular values
-println("Document-topic matrix: ", size(doc_weights))  # shape: n_docs x k
+k    = min({{k}}, length(F.S))  # at most the number of singular values, min(documents, terms)
+doc_weights = F.U[:, 1:k] .* transpose(F.S[1:k])  # scale by singular values: n_docs x k
+println("Document-topic matrix: ", size(doc_weights, 1), " documents x ", k, " dimensions")
+round.(doc_weights[1:min(10, end), 1:min(5, k)], digits=3)  # first 10 documents on the first 5 dimensions
 '''

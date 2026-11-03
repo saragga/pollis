@@ -22,7 +22,7 @@ The method is that of [Deerwester, Dumais, Furnas, Landauer and Harshman (1990)]
 | Input | Default | Tooltip, in brief |
 | --- | --- | --- |
 | **Corpus** | `corpus` | array of text documents |
-| **Dimensions (k)** | `50` | latent dimensions to retain from the SVD; typically 50–300 |
+| **Dimensions (k)** | `50` | latent dimensions to retain from the SVD, at most the number of documents or terms; 50-100 in various problems of [Deerwester, Dumais, Furnas, Landauer and Harshman (1990)](#ref-DDFLH1990a), 100 for MED |
 
 The tooltip of **Corpus** adds that the default example also defines `query_idx` and `new_text` for **Query Documents** and **Fold-In New Doc**. With the default corpus, `query_idx = 2`, the section Install Pollis, and `new_text` is a question about installing Julia and the packages of a panel.
 
@@ -55,25 +55,11 @@ The panel loads TextAnalysis for the corpus, the document-term matrix and `tf_id
 
 TextAnalysis.jl also has `lsa(dtm)`, which its documentation describes as Latent Semantic Analysis on a corpus or document-term matrix; the panel calls `svd` directly and reads U, S and V in its actions.
 
-## References in the panel
-
-| Section | Works |
-| --- | --- |
-| Software | [JuliaText Contributors (2023)](#ref-JTC2023a) |
-| Textbooks | [Jurafsky and Martin (2024)](#ref-JM2024a), [Manning, Raghavan and Schütze (2008)](#ref-MRS2008a) |
-| Original Papers | [Deerwester, Dumais, Furnas, Landauer and Harshman (1990)](#ref-DDFLH1990a), [Dumais (2004)](#ref-Dum2004a) |
-
 ## References
 
 <a id="ref-DDFLH1990a"></a>Deerwester, S., Dumais, S. T., Furnas, G. W., Landauer, T. K., & Harshman, R. (1990). Indexing by Latent Semantic Analysis. *Journal of the American Society for Information Science* 41(6), 391-407. [doi:10.1002/(SICI)1097-4571(199009)41:6&lt;391::AID-ASI1&gt;3.0.CO;2-9](https://doi.org/10.1002/(SICI)1097-4571(199009)41:6%3C391::AID-ASI1%3E3.0.CO;2-9)
 
-<a id="ref-Dum2004a"></a>Dumais, S. T. (2004). Latent Semantic Analysis. *Annual Review of Information Science and Technology* 38(1), 188-230. [doi:10.1002/aris.1440380105](https://doi.org/10.1002/aris.1440380105)
-
 <a id="ref-JTC2023a"></a>JuliaText Contributors (2023). TextAnalysis.jl: Julia NLP Toolkit. [github.com](https://github.com/JuliaText/TextAnalysis.jl)
-
-<a id="ref-JM2024a"></a>Jurafsky, D., & Martin, J. H. (2024). *Speech and Language Processing* (3rd ed., draft). [web.stanford.edu](https://web.stanford.edu/~jurafsky/slp3/)
-
-<a id="ref-MRS2008a"></a>Manning, C. D., Raghavan, P., & Schütze, H. (2008). *Introduction to Information Retrieval*. Cambridge University Press. [doi:10.1017/CBO9780511809071](https://doi.org/10.1017/CBO9780511809071)
 
 ## See Also
 

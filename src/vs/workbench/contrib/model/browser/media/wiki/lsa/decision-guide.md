@@ -4,7 +4,7 @@ Choices in the **Latent Semantic Analysis** panel: the number of dimensions, the
 
 ## Number of dimensions
 
-The tooltip of **Dimensions (k)** gives 50–300 as the typical range, and the panel's second bullet describes k as a trade-off between noise reduction and information loss.
+The tooltip of **Dimensions (k)** limits k to the number of documents or terms and recalls that [Deerwester, Dumais, Furnas, Landauer and Harshman (1990)](#ref-DDFLH1990a) approximated the term-document matrix with 50-100 factors in various problems and used 100 for the MED collection. The panel's second bullet describes k as a trade-off between noise reduction and information loss.
 
 [Deerwester, Dumais, Furnas, Landauer and Harshman (1990)](#ref-DDFLH1990a) write that the choice of k is critical: large enough to fit all the real structure in the data, small enough not to fit the sampling error or unimportant details. They used an operational criterion, the value of k that gave good retrieval performance, and reported results from a 100-factor space. The Dimensionality page gives the details.
 
@@ -16,7 +16,7 @@ The tooltip of **Dimensions (k)** gives 50–300 as the typical range, and the p
 
 ## Raw counts or TF-IDF
 
-**Raw vs TF-IDF** decomposes both the raw count matrix and the TF-IDF matrix and prints, for each, the sum of the k largest squared singular values.
+**Raw vs TF-IDF** decomposes both the raw count matrix and the TF-IDF matrix and prints, for each, the share of its squared Frobenius norm that the first k dimensions capture: the sum of the k largest squared singular values over the sum of all of them. Each share is relative to its own matrix, so the two can be compared although the matrices are on different scales.
 
 [Deerwester, Dumais, Furnas, Landauer and Harshman (1990)](#ref-DDFLH1990a) analysed a matrix of raw term frequencies in their tests and note that reweighting can prevent documents of different length from having different effects, or express which terms matter more. The TextAnalysis.jl documentation of [JuliaText Contributors (2023)](#ref-JTC2023a) gives the same two reasons for TF-IDF: some documents are longer than others, and some words are more frequent than others.
 
@@ -43,7 +43,7 @@ The tooltip of **Dimensions (k)** gives 50–300 as the typical range, and the p
 
 ## Reading further
 
-The panel lists [Jurafsky and Martin (2024)](#ref-JM2024a) and [Manning, Raghavan and Schütze (2008)](#ref-MRS2008a) as textbooks. [Deerwester, Dumais, Furnas, Landauer and Harshman (1990)](#ref-DDFLH1990a) is the original paper on latent semantic indexing, and [Dumais (2004)](#ref-Dum2004a) a review of latent semantic analysis that covers its applications to information retrieval, filtering and cross-language retrieval, its relation to models of human memory, and its computational issues. The software entry is [JuliaText Contributors (2023)](#ref-JTC2023a).
+[Deerwester, Dumais, Furnas, Landauer and Harshman (1990)](#ref-DDFLH1990a) is the original paper on latent semantic indexing, and [Dumais (2004)](#ref-Dum2004a) a review of latent semantic analysis that covers its applications to information retrieval, filtering and cross-language retrieval, its relation to models of human memory, and its computational issues. The software entry is [JuliaText Contributors (2023)](#ref-JTC2023a). In the original paper, documents are represented by about 100 vectors of factor weights, and queries by pseudo-document vectors formed from weighted combinations of terms, with the documents whose cosine exceeds a threshold returned.
 
 ## References
 
@@ -52,10 +52,6 @@ The panel lists [Jurafsky and Martin (2024)](#ref-JM2024a) and [Manning, Raghava
 <a id="ref-Dum2004a"></a>Dumais, S. T. (2004). Latent Semantic Analysis. *Annual Review of Information Science and Technology* 38(1), 188-230. [doi:10.1002/aris.1440380105](https://doi.org/10.1002/aris.1440380105)
 
 <a id="ref-JTC2023a"></a>JuliaText Contributors (2023). TextAnalysis.jl: Julia NLP Toolkit. [github.com](https://github.com/JuliaText/TextAnalysis.jl)
-
-<a id="ref-JM2024a"></a>Jurafsky, D., & Martin, J. H. (2024). *Speech and Language Processing* (3rd ed., draft). [web.stanford.edu](https://web.stanford.edu/~jurafsky/slp3/)
-
-<a id="ref-MRS2008a"></a>Manning, C. D., Raghavan, P., & Schütze, H. (2008). *Introduction to Information Retrieval*. Cambridge University Press. [doi:10.1017/CBO9780511809071](https://doi.org/10.1017/CBO9780511809071)
 
 ## See Also
 

@@ -34,7 +34,7 @@ They also note that the MED collection was built from the returns of keyword sea
 | **Reconstruction Error** | Frobenius norm of M − M_k at the chosen k |
 | **Compare k Values** | Frobenius error for k = 10, 25, 50, 100, 200 |
 
-The tooltip of **Dimensions (k)** gives 50–300 as the typical range, and the default is 50. **Compare k Values** keeps only the values of k no larger than the number of singular values, the rank of the matrix.
+The default is 50. Every action uses at most as many dimensions as there are singular values, the smaller of the numbers of documents and terms, and **Compare k Values** keeps only the values of k no larger than that number.
 
 ## The upper limit
 

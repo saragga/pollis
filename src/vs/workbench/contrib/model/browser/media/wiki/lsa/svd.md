@@ -44,7 +44,7 @@ chosen so that putting in a real document of the matrix gives back its own row o
 
 ## Fold-In New Doc
 
-**Fold-In New Doc** counts the terms of `new_text` that are in the vocabulary, dropping unseen terms, and weights them as in the decomposed matrix: term counts divided by the document's length and multiplied by the corpus idf, log(n / df). It then computes
+**Fold-In New Doc** counts the terms of `new_text` that are in the vocabulary, dropping unseen terms, and weights them as in the decomposed matrix: term counts divided by the document's length, the term frequency of the TextAnalysis.jl documentation, and multiplied by the weight that `tf_idf` gave each term in the corpus, read off the matrix as tf_idf / tf. It then computes
 
 u = S_k⁻¹ V_kᵀ v,
 

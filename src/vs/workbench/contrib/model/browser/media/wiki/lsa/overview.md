@@ -40,7 +40,7 @@ Each action rebuilds the corpus from **Corpus** and computes its own SVD.
 
 The Factsheet lists the inputs, the preparation of the corpus and the output. Assumptions covers the term-document matrix and the linear model behind the SVD, Diagnostics the variance and the reconstruction error, Interpretation the dimensions, documents and terms, and the Decision Guide the choices of the panel. SVD and Dimensionality describe the decomposition and the number of dimensions.
 
-The notebook LSA covers latent semantic analysis by truncated SVD of a TF-IDF matrix with TextAnalysis.jl and LinearAlgebra.jl. The panel's textbooks are [Jurafsky and Martin (2024)](#ref-JM2024a) and [Manning, Raghavan and Schütze (2008)](#ref-MRS2008a).
+The notebook LSA covers latent semantic analysis by truncated SVD of a TF-IDF matrix with TextAnalysis.jl and LinearAlgebra.jl.
 
 ## References
 
@@ -49,10 +49,6 @@ The notebook LSA covers latent semantic analysis by truncated SVD of a TF-IDF ma
 <a id="ref-Dum2004a"></a>Dumais, S. T. (2004). Latent Semantic Analysis. *Annual Review of Information Science and Technology* 38(1), 188-230. [doi:10.1002/aris.1440380105](https://doi.org/10.1002/aris.1440380105)
 
 <a id="ref-JTC2023a"></a>JuliaText Contributors (2023). TextAnalysis.jl: Julia NLP Toolkit. [github.com](https://github.com/JuliaText/TextAnalysis.jl)
-
-<a id="ref-JM2024a"></a>Jurafsky, D., & Martin, J. H. (2024). *Speech and Language Processing* (3rd ed., draft). [web.stanford.edu](https://web.stanford.edu/~jurafsky/slp3/)
-
-<a id="ref-MRS2008a"></a>Manning, C. D., Raghavan, P., & Schütze, H. (2008). *Introduction to Information Retrieval*. Cambridge University Press. [doi:10.1017/CBO9780511809071](https://doi.org/10.1017/CBO9780511809071)
 
 ## See Also
 

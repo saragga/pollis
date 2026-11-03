@@ -9430,8 +9430,8 @@
 			"issn": "0066-4200",
 			"doi": "10.1002/aris.1440380105",
 			"openalex": "W2152311353",
-			"abstract": "Annual Review of Information Science and TechnologyVolume 38, Issue 1 p. 188-230 Article Latent semantic analysis Susan T. Dumais, Susan T. Dumais Microsoft Research, Redmond, WashingtonSearch for more papers by this author Susan T. Dumais, Susan T. Dumais Microsoft Research, Redmond, WashingtonSearch for more papers by this author First published: 22 September 2005 https://doi.org/10.1002/aris.1440380105Citations: 509Read the full textAboutPDF ToolsRequest permissionExport citationAdd to favoritesTrack citation ShareShare Give accessShare full text accessShare full-text accessPlease review our Terms and Conditions of Use and check box below to share full-text version of article.I have read and accept the Wiley Online Library Terms and Conditions of UseShareable LinkUse the link below to share a full-text version of this article with your friends and colleagues. Learn more.Copy URL Share a linkShare onFacebookTwitterLinkedInRedditWechat Citing Literature Volume38, Issue12004Pages 188-230 RelatedInformation",
-			"abstract_source": "openalex",
+			"abstract": "Presents a literature review that covers the following topics related to Latent Semantic Analysis (LSA): (1) LSA overview; (2) applications of LSA, including information retrieval (IR), information filtering, cross-language retrieval, and other IR-related LSA applications; (3) modeling human memory, including the relationship of LSA to other techniques; and (4) computational issues with LSA.",
+			"abstract_source": "author",
 			"keywords": [
 				"latent semantic analysis",
 				"term-document matrix",
@@ -23299,7 +23299,7 @@
 			"authors": [
 				"Manning, Christopher D.",
 				"Raghavan, Prabhakar",
-				"Schutze, Hinrich"
+				"Schütze, Hinrich"
 			],
 			"author_kind": "persons",
 			"authors_complete": true,
@@ -51215,8 +51215,6 @@
 			],
 			"keys": [
 				"JTC2023a",
-				"JM2024a",
-				"MRS2008a",
 				"DDFLH1990a",
 				"Dum2004a"
 			]
