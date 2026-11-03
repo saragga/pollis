@@ -30850,27 +30850,6 @@
 			"open_access": true
 		},
 		{
-			"key": "SLAJM2015a",
-			"type": "inproceedings",
-			"title": "Trust Region Policy Optimization",
-			"authors": [
-				"Schulman, John",
-				"Levine, Sergey",
-				"Abbeel, Pieter",
-				"Jordan, Michael",
-				"Moritz, Philipp"
-			],
-			"author_kind": "persons",
-			"authors_complete": true,
-			"year": 2015,
-			"booktitle": "ICML",
-			"url": "https://proceedings.mlr.press/v37/schulman15.html",
-			"legacy_key": "schulman2015",
-			"source": "manual",
-			"checked": false,
-			"open_access": true
-		},
-		{
 			"key": "SLGCZ...2017a",
 			"type": "misc",
 			"title": "Value-Decomposition Networks For Cooperative Multi-Agent Learning",
@@ -30898,6 +30877,27 @@
 			"source": "datacite",
 			"retrieved": "2026-11-02",
 			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "SLMJA2015a",
+			"type": "inproceedings",
+			"title": "Trust Region Policy Optimization",
+			"authors": [
+				"Schulman, John",
+				"Levine, Sergey",
+				"Moritz, Philipp",
+				"Jordan, Michael",
+				"Abbeel, Pieter"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2015,
+			"booktitle": "ICML",
+			"url": "https://proceedings.mlr.press/v37/schulman15.html",
+			"legacy_key": "schulman2015",
+			"source": "manual",
+			"checked": false,
 			"open_access": true
 		},
 		{
@@ -51919,7 +51919,7 @@
 				"SB2018a",
 				"SMSM2000a",
 				"SWDRK2017a",
-				"SLAJM2015a",
+				"SLMJA2015a",
 				"Wil1992a",
 				"KB2015a"
 			]

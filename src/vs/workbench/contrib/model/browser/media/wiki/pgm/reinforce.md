@@ -18,7 +18,11 @@ with a learning rate αᵢⱼ, a reinforcement baseline bᵢⱼ and the characte
 
 The vector ∇ln π, which they call the eligibility vector, is the direction in parameter space that most increases the probability of repeating Aₜ in Sₜ. The update moves along it in proportion to the return, and the division by the action probability implicit in ∇ln π keeps frequently selected actions from winning out only because they are updated more often.
 
-Because REINFORCE uses the complete return up to the end of the episode, it is a Monte Carlo method, well defined for episodic tasks with updates made after each episode is completed.
+The text treats the undiscounted case; the boxed algorithm, written for the general discounted case, includes a factor γᵗ:
+
+θ ← θ + α γᵗ G ∇ln π(Aₜ|Sₜ, θ)
+
+and REINFORCE with baseline replaces G by G − v̂(Sₜ, w). Because REINFORCE uses the complete return up to the end of the episode, it is a Monte Carlo method, well defined for episodic tasks with updates made after each episode is completed.
 
 ## Variance and the baseline
 
@@ -30,7 +34,7 @@ Subtracting a baseline b(s) from the return leaves the expected update unchanged
 
 The policy is a softmax of linear action preferences, π(·|s) = softmax(W [s; 1]), the parameterisation that [Sutton and Barto (2018)](#ref-SB2018a) call soft-max in action preferences; the code computes the eligibility vector as (𝟙ₐ − π(·|s)) [s; 1]ᵀ. W starts at zero, a uniform policy.
 
-Each update collects **Episodes per Update** episodes, fits the critic V(s) = φ(s)ᵀw by least squares on the discounted returns of the batch, takes the advantage Gₜ − V(Sₜ), normalised to mean 0 and sd 1 over the batch, and averages advantage × ∇log π over all steps. The resulting gradient is followed by one step of Adam, by [Kingma and Ba (2015)](#ref-KB2015a), with **Learning Rate**.
+Each update collects **Episodes per Update** episodes, fits the critic V(s) = φ(s)ᵀw by least squares on the discounted returns of the batch, takes the advantage Gₜ − V(Sₜ), normalised to mean 0 and sd 1 over the batch, and averages γᵗ × advantage × ∇log π over all steps, with t = 0 at the first step of each episode. The resulting gradient is followed by one step of Adam, by [Kingma and Ba (2015)](#ref-KB2015a), with **Learning Rate**.
 
 ## Inputs and settings
 

@@ -9,8 +9,8 @@ viewType = "pollis.pgm"
 defaultModel = "reinforce"
 
 [[packages]]
-name = "ReinforcementLearning.jl"
-github = "https://github.com/JuliaReinforcementLearning/ReinforcementLearning.jl"
+name = "Plots.jl"
+github = "https://github.com/JuliaPlots/Plots.jl"
 
 [[packages.videos]]
 title = "High Performance Computing in Julia"
@@ -27,19 +27,19 @@ label = ""
 name = "REINFORCE"
 file = "pgm/tutorial-01-reinforce.ipynb"
 bundled = true
-description = "Monte Carlo policy gradient with baseline; full-episode returns; Flux.jl policy network"
+description = "Monte Carlo policy gradient with a learned baseline on CartPole; full-episode discounted returns; linear-softmax policy in plain Julia"
 
 [[notebookSections.notebooks]]
 name = "PPO"
 file = "pgm/tutorial-02-ppo.ipynb"
 bundled = true
-description = "Proximal Policy Optimization with clipped surrogate objective; parallel environment rollouts"
+description = "Proximal Policy Optimisation with the clipped surrogate objective; several epochs of updates on each batch of episodes"
 
 [[notebookSections.notebooks]]
 name = "TRPO"
 file = "pgm/tutorial-03-trpo.ipynb"
 bundled = true
-description = "Trust Region Policy Optimization with KL divergence constraint; conjugate gradient solver"
+description = "Trust Region Policy Optimisation with a limit on the mean KL divergence; conjugate gradient for the natural-gradient step and a backtracking line search"
 
 [[wikis]]
 name = "Factsheet"
@@ -115,7 +115,7 @@ key = "SMSM2000a"
 key = "SWDRK2017a"
 
 [[references]]
-key = "SLAJM2015a"
+key = "SLMJA2015a"
 
 [[references]]
 key = "Wil1992a"
@@ -137,29 +137,29 @@ label = "TRPO"
 
 [[bullets]]
 text = "REINFORCE"
-detail = "Monte Carlo policy gradient; updates the policy using the full-episode discounted return as a gradient weight; simple and unbiased but high variance; suited to episodic tasks and small networks (ReinforcementLearning.jl)"
+detail = "Monte Carlo policy gradient; weights each step by gamma^t and the discounted return from that step; simple and unbiased but high variance; suited to episodic tasks and small networks"
 
 [[bullets]]
 text = "Proximal Policy Optimisation (PPO)"
-detail = "clips the probability ratio of new to old policy to prevent large updates; reuses each rollout batch for multiple gradient epochs; widely used default choice for continuous control (ReinforcementLearning.jl)"
+detail = "clips the probability ratio of new to old policy to prevent large updates; reuses each batch for several epochs of gradient updates; some of the benefits of TRPO, but much simpler to implement"
 
 [[bullets]]
 text = "Trust Region Policy Optimisation (TRPO)"
-detail = "constrains the Kullback–Leibler divergence between successive policies; guarantees monotonic improvement; natural gradient step computed via conjugate gradient (ReinforcementLearning.jl)"
+detail = "constrains the Kullback–Leibler divergence between successive policies; a practical approximation of a procedure with guaranteed monotonic improvement; natural gradient step computed via conjugate gradient"
 
 [[decisionRows]]
 task = "REINFORCE"
 context = "Simplest policy gradient; teaching, small problems, a baseline"
-purpose = "Monte Carlo policy gradient: raises the log-probability of each action in proportion to its advantage (return minus a learned baseline)"
+purpose = "Monte Carlo policy gradient: raises the log-probability of each action in proportion to gamma^t times its advantage (return minus a learned baseline)"
 
 [[decisionRows]]
 task = "PPO"
-context = "Default choice in practice; robust, reuses each batch for several epochs"
+context = "Some of the benefits of TRPO, simpler to implement; reuses each batch for several epochs"
 purpose = "Proximal Policy Optimisation: maximises a clipped importance-weighted surrogate so the new policy cannot move far from the one that collected the data"
 
 [[decisionRows]]
 task = "TRPO"
-context = "When monotone, controlled policy improvement matters"
+context = "When the policy should improve steadily, with little tuning of hyperparameters"
 purpose = "Trust Region Policy Optimisation: natural-gradient step (Fisher matrix via conjugate gradient) with a line search enforcing a KL-divergence limit"
 
 [[inputs]]
@@ -311,10 +311,11 @@ function collect_batch(W, rng; n=batch)  # episodes, flattened states and action
     trajs = [run_episode(W, rng) for k in 1:n]
     S, A = reduce(vcat, [t.S for t in trajs]), reduce(vcat, [t.A for t in trajs])
     G = reduce(vcat, [discount(t.R) for t in trajs])
+    disc = reduce(vcat, [gamma .^ (0:length(t.R)-1) for t in trajs])  # gamma^t, t = 0 at the first step of each episode
     Phi = reduce(vcat, [transpose(phi(s)) for s in S])
     w = (transpose(Phi) * Phi + 1e-3I) \ (transpose(Phi) * G)  # least-squares critic V(s) = phi(s) w
     adv = G .- Phi * w
-    (trajs = trajs, S = S, A = A, adv = (adv .- mean(adv)) ./ (std(adv) + 1e-8), critic = w)
+    (trajs = trajs, S = S, A = A, adv = (adv .- mean(adv)) ./ (std(adv) + 1e-8), disc = disc, critic = w)
 end
 
 function adam_step!(W, g, st; lr)  # gradient ascent with Adam moments st = (m, v, t)
@@ -325,7 +326,7 @@ end
 adam_state() = (m = zeros(2, 5), v = zeros(2, 5), t = Ref(0))
 
 function update_reinforce!(W, B, st; lr=0.05)
-    g = mean(B.adv[i] * glogp(W, B.S[i], B.A[i]) for i in eachindex(B.A))  # policy gradient
+    g = mean(B.disc[i] * B.adv[i] * glogp(W, B.S[i], B.A[i]) for i in eachindex(B.A))  # policy gradient: gamma^t x advantage x grad log pi
     adam_step!(W, g, st; lr)
     norm(g)
 end
@@ -449,10 +450,11 @@ function collect_batch(W, rng; n=batch)  # episodes, flattened states and action
     trajs = [run_episode(W, rng) for k in 1:n]
     S, A = reduce(vcat, [t.S for t in trajs]), reduce(vcat, [t.A for t in trajs])
     G = reduce(vcat, [discount(t.R) for t in trajs])
+    disc = reduce(vcat, [gamma .^ (0:length(t.R)-1) for t in trajs])  # gamma^t, t = 0 at the first step of each episode
     Phi = reduce(vcat, [transpose(phi(s)) for s in S])
     w = (transpose(Phi) * Phi + 1e-3I) \ (transpose(Phi) * G)  # least-squares critic V(s) = phi(s) w
     adv = G .- Phi * w
-    (trajs = trajs, S = S, A = A, adv = (adv .- mean(adv)) ./ (std(adv) + 1e-8), critic = w)
+    (trajs = trajs, S = S, A = A, adv = (adv .- mean(adv)) ./ (std(adv) + 1e-8), disc = disc, critic = w)
 end
 
 function adam_step!(W, g, st; lr)  # gradient ascent with Adam moments st = (m, v, t)
@@ -463,7 +465,7 @@ end
 adam_state() = (m = zeros(2, 5), v = zeros(2, 5), t = Ref(0))
 
 function update_reinforce!(W, B, st; lr=0.05)
-    g = mean(B.adv[i] * glogp(W, B.S[i], B.A[i]) for i in eachindex(B.A))  # policy gradient
+    g = mean(B.disc[i] * B.adv[i] * glogp(W, B.S[i], B.A[i]) for i in eachindex(B.A))  # policy gradient: gamma^t x advantage x grad log pi
     adam_step!(W, g, st; lr)
     norm(g)
 end
@@ -587,10 +589,11 @@ function collect_batch(W, rng; n=batch)  # episodes, flattened states and action
     trajs = [run_episode(W, rng) for k in 1:n]
     S, A = reduce(vcat, [t.S for t in trajs]), reduce(vcat, [t.A for t in trajs])
     G = reduce(vcat, [discount(t.R) for t in trajs])
+    disc = reduce(vcat, [gamma .^ (0:length(t.R)-1) for t in trajs])  # gamma^t, t = 0 at the first step of each episode
     Phi = reduce(vcat, [transpose(phi(s)) for s in S])
     w = (transpose(Phi) * Phi + 1e-3I) \ (transpose(Phi) * G)  # least-squares critic V(s) = phi(s) w
     adv = G .- Phi * w
-    (trajs = trajs, S = S, A = A, adv = (adv .- mean(adv)) ./ (std(adv) + 1e-8), critic = w)
+    (trajs = trajs, S = S, A = A, adv = (adv .- mean(adv)) ./ (std(adv) + 1e-8), disc = disc, critic = w)
 end
 
 function adam_step!(W, g, st; lr)  # gradient ascent with Adam moments st = (m, v, t)
@@ -601,7 +604,7 @@ end
 adam_state() = (m = zeros(2, 5), v = zeros(2, 5), t = Ref(0))
 
 function update_reinforce!(W, B, st; lr=0.05)
-    g = mean(B.adv[i] * glogp(W, B.S[i], B.A[i]) for i in eachindex(B.A))  # policy gradient
+    g = mean(B.disc[i] * B.adv[i] * glogp(W, B.S[i], B.A[i]) for i in eachindex(B.A))  # policy gradient: gamma^t x advantage x grad log pi
     adam_step!(W, g, st; lr)
     norm(g)
 end
@@ -721,7 +724,7 @@ plot(res.hist.kl, xlabel="policy update", ylabel="mean KL(old || new)", label="{
 [[actionGroups.actions]]
 id = "seed-stability"
 label = "Seed Stability"
-desc = "Learning curves for five random seeds: policy-gradient training is notoriously variable"
+desc = "Learning curves for five random seeds: how much training varies from seed to seed"
 code = '''
 using Plots
 

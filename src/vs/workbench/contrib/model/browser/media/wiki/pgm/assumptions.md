@@ -18,7 +18,7 @@ The panel's softmax of linear action preferences meets both conditions: every ac
 
 The policy gradient theorem weights states by the on-policy distribution, the distribution of states under the policy being improved, as [Sutton and Barto (2018)](#ref-SB2018a) write. Each batch of **Episodes per Update** episodes is therefore collected with the current policy, and used for one update before a new batch is collected.
 
-PPO and TRPO evaluate the new policy on the batch of the old one through the probability ratio π_θ(aₜ|sₜ) / π_θold(aₜ|sₜ), which [Schulman, Wolski, Dhariwal, Radford and Klimov (2017)](#ref-SWDRK2017a) and [Schulman, Levine, Abbeel, Jordan and Moritz (2015)](#ref-SLAJM2015a) use in their surrogate objectives; the clip and the KL limit keep the new policy close to the one that collected the data.
+PPO and TRPO evaluate the new policy on the batch of the old one through the probability ratio π_θ(aₜ|sₜ) / π_θold(aₜ|sₜ), which [Schulman, Wolski, Dhariwal, Radford and Klimov (2017)](#ref-SWDRK2017a) and [Schulman, Levine, Moritz, Jordan and Abbeel (2015)](#ref-SLMJA2015a) use in their surrogate objectives; the clip and the KL limit keep the new policy close to the one that collected the data.
 
 ## A baseline that ignores the action
 
@@ -42,7 +42,7 @@ The panel keeps **Learning Rate** constant and uses Adam, by [Kingma and Ba (201
 
 <a id="ref-KB2015a"></a>Kingma, D. P., & Ba, J. L. (2015). Adam: A Method for Stochastic Optimization. *International Conference on Learning Representations*. [doi:10.48550/arXiv.1412.6980](https://doi.org/10.48550/arXiv.1412.6980)
 
-<a id="ref-SLAJM2015a"></a>Schulman, J., Levine, S., Abbeel, P., Jordan, M., & Moritz, P. (2015). Trust Region Policy Optimization. *ICML*. [proceedings.mlr.press](https://proceedings.mlr.press/v37/schulman15.html)
+<a id="ref-SLMJA2015a"></a>Schulman, J., Levine, S., Moritz, P., Jordan, M., & Abbeel, P. (2015). Trust Region Policy Optimization. *ICML*. [proceedings.mlr.press](https://proceedings.mlr.press/v37/schulman15.html)
 
 <a id="ref-SWDRK2017a"></a>Schulman, J., Wolski, F., Dhariwal, P., Radford, A., & Klimov, O. (2017). Proximal Policy Optimization Algorithms. [arXiv:1707.06347](https://arxiv.org/abs/1707.06347)
 

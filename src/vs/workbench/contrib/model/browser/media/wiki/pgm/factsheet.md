@@ -19,9 +19,9 @@ The panel's environment, policy, algorithms, inputs, outputs and sources at a gl
 
 | Algorithm | Update of W | Source |
 |---|---|---|
-| **REINFORCE** | One Adam step along the mean of advantage × ∇log π | [Williams (1992)](#ref-Wil1992a), [Sutton and Barto (2018)](#ref-SB2018a) |
+| **REINFORCE** | One Adam step along the mean of γᵗ × advantage × ∇log π | [Williams (1992)](#ref-Wil1992a), [Sutton and Barto (2018)](#ref-SB2018a) |
 | **PPO** | **Epochs** Adam steps along the gradient of the clipped surrogate | [Schulman, Wolski, Dhariwal, Radford and Klimov (2017)](#ref-SWDRK2017a) |
-| **TRPO** | Conjugate-gradient step on the Fisher matrix, scaled to **Max KL**, with a backtracking line search | [Schulman, Levine, Abbeel, Jordan and Moritz (2015)](#ref-SLAJM2015a) |
+| **TRPO** | Conjugate-gradient step on the Fisher matrix, scaled to **Max KL**, with a backtracking line search | [Schulman, Levine, Moritz, Jordan and Abbeel (2015)](#ref-SLMJA2015a) |
 
 Adam, by [Kingma and Ba (2015)](#ref-KB2015a), uses moment decay rates 0.9 and 0.999 in the panel.
 
@@ -66,7 +66,7 @@ Adam, by [Kingma and Ba (2015)](#ref-KB2015a), uses moment decay rates 0.9 and 0
 |---|---|
 | Policy gradient methods, REINFORCE and actor–critic methods | [Sutton and Barto (2018)](#ref-SB2018a) |
 | The policy gradient theorem with function approximation | [Sutton, McAllester, Singh and Mansour (2000)](#ref-SMSM2000a) |
-| ReinforcementLearning.jl | [Tian (2020)](#ref-Tia...2020a) |
+| ReinforcementLearning.jl, for experiments beyond the panel's code | [Tian (2020)](#ref-Tia...2020a) |
 
 The original papers of REINFORCE, PPO and TRPO are listed in the table of algorithms, and each algorithm has its own page under Algorithms, with its update, its inputs and the way the panel implements it.
 
@@ -74,7 +74,7 @@ The original papers of REINFORCE, PPO and TRPO are listed in the table of algori
 
 <a id="ref-KB2015a"></a>Kingma, D. P., & Ba, J. L. (2015). Adam: A Method for Stochastic Optimization. *International Conference on Learning Representations*. [doi:10.48550/arXiv.1412.6980](https://doi.org/10.48550/arXiv.1412.6980)
 
-<a id="ref-SLAJM2015a"></a>Schulman, J., Levine, S., Abbeel, P., Jordan, M., & Moritz, P. (2015). Trust Region Policy Optimization. *ICML*. [proceedings.mlr.press](https://proceedings.mlr.press/v37/schulman15.html)
+<a id="ref-SLMJA2015a"></a>Schulman, J., Levine, S., Moritz, P., Jordan, M., & Abbeel, P. (2015). Trust Region Policy Optimization. *ICML*. [proceedings.mlr.press](https://proceedings.mlr.press/v37/schulman15.html)
 
 <a id="ref-SWDRK2017a"></a>Schulman, J., Wolski, F., Dhariwal, P., Radford, A., & Klimov, O. (2017). Proximal Policy Optimization Algorithms. [arXiv:1707.06347](https://arxiv.org/abs/1707.06347)
 

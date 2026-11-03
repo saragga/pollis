@@ -46,7 +46,7 @@ In the panel, PPO and TRPO start from the same batch, critic and advantages; PPO
 | **Epochs** | Gradient epochs on each batch | 10 |
 | **Learning Rate** | Adam step size | 0.05 |
 
-The panel's decision table calls PPO the default choice in practice, robust and reusing each batch for several epochs. **KL Divergence** shows how far each update moves the policy, and **REINFORCE vs PPO vs TRPO** compares the learning curves of the three algorithms on the same seed.
+The panel's decision table suggests PPO for some of the benefits of TRPO at a simpler implementation, as [Schulman, Wolski, Dhariwal, Radford and Klimov (2017)](#ref-SWDRK2017a) describe it, reusing each batch for several epochs. **KL Divergence** shows how far each update moves the policy, and **REINFORCE vs PPO vs TRPO** compares the learning curves of the three algorithms on the same seed.
 
 ## References
 

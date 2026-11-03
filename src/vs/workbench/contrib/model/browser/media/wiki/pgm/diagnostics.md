@@ -24,13 +24,13 @@ The advantages that weight the gradient are normalised within each batch, to mea
 
 **KL Divergence** plots the mean KL divergence between the policy before and after each update, over the states of the batch. As its description says, PPO and TRPO keep it small, while REINFORCE does not control it; for TRPO, a dashed line marks **Max KL**.
 
-[Schulman, Levine, Abbeel, Jordan and Moritz (2015)](#ref-SLAJM2015a) constrain the average KL divergence, a heuristic approximation of the maximum over states that the theory calls for, and [Schulman, Wolski, Dhariwal, Radford and Klimov (2017)](#ref-SWDRK2017a) design the clipped surrogate to remove the incentive for large changes in the probability ratio.
+[Schulman, Levine, Moritz, Jordan and Abbeel (2015)](#ref-SLMJA2015a) constrain the average KL divergence, a heuristic approximation of the maximum over states that the theory calls for, and [Schulman, Wolski, Dhariwal, Radford and Klimov (2017)](#ref-SWDRK2017a) design the clipped surrogate to remove the incentive for large changes in the probability ratio.
 
 ## Variation across seeds
 
 **Seed Stability** plots the learning curves of the selected algorithm for seeds 1 to 5, with all other settings unchanged. Different seeds give different start states and actions, and so different batches and updates.
 
-Published comparisons average over several runs for the same reason: [Schulman, Wolski, Dhariwal, Radford and Klimov (2017)](#ref-SWDRK2017a) ran each algorithm with three random seeds on each environment, and [Schulman, Levine, Abbeel, Jordan and Moritz (2015)](#ref-SLAJM2015a) show learning curves averaged across five runs of each algorithm.
+Published comparisons average over several runs for the same reason: [Schulman, Wolski, Dhariwal, Radford and Klimov (2017)](#ref-SWDRK2017a) ran each algorithm with three random seeds on each environment, and [Schulman, Levine, Moritz, Jordan and Abbeel (2015)](#ref-SLMJA2015a) show learning curves averaged across five runs of each algorithm.
 
 ## The critic
 
@@ -40,7 +40,7 @@ The critic of the action is fitted on a fresh batch collected with the trained p
 
 ## References
 
-<a id="ref-SLAJM2015a"></a>Schulman, J., Levine, S., Abbeel, P., Jordan, M., & Moritz, P. (2015). Trust Region Policy Optimization. *ICML*. [proceedings.mlr.press](https://proceedings.mlr.press/v37/schulman15.html)
+<a id="ref-SLMJA2015a"></a>Schulman, J., Levine, S., Moritz, P., Jordan, M., & Abbeel, P. (2015). Trust Region Policy Optimization. *ICML*. [proceedings.mlr.press](https://proceedings.mlr.press/v37/schulman15.html)
 
 <a id="ref-SWDRK2017a"></a>Schulman, J., Wolski, F., Dhariwal, P., Radford, A., & Klimov, O. (2017). Proximal Policy Optimization Algorithms. [arXiv:1707.06347](https://arxiv.org/abs/1707.06347)
 

@@ -26,7 +26,7 @@ with μ the on-policy distribution of states. [Sutton, McAllester, Singh and Man
 |---|---|---|
 | **REINFORCE** | One gradient step per batch, weighted by the advantage | [Williams (1992)](#ref-Wil1992a) |
 | **PPO** | Several epochs on a clipped surrogate objective | [Schulman, Wolski, Dhariwal, Radford and Klimov (2017)](#ref-SWDRK2017a) |
-| **TRPO** | A natural-gradient step within a limit on the KL divergence | [Schulman, Levine, Abbeel, Jordan and Moritz (2015)](#ref-SLAJM2015a) |
+| **TRPO** | A natural-gradient step within a limit on the KL divergence | [Schulman, Levine, Moritz, Jordan and Abbeel (2015)](#ref-SLMJA2015a) |
 
 All three share the same environment, policy, critic and batches of episodes, and differ only in the update.
 
@@ -44,7 +44,7 @@ The actions fall into five groups: Visualise shows the learning curve and the en
 
 ## References
 
-<a id="ref-SLAJM2015a"></a>Schulman, J., Levine, S., Abbeel, P., Jordan, M., & Moritz, P. (2015). Trust Region Policy Optimization. *ICML*. [proceedings.mlr.press](https://proceedings.mlr.press/v37/schulman15.html)
+<a id="ref-SLMJA2015a"></a>Schulman, J., Levine, S., Moritz, P., Jordan, M., & Abbeel, P. (2015). Trust Region Policy Optimization. *ICML*. [proceedings.mlr.press](https://proceedings.mlr.press/v37/schulman15.html)
 
 <a id="ref-SWDRK2017a"></a>Schulman, J., Wolski, F., Dhariwal, P., Radford, A., & Klimov, O. (2017). Proximal Policy Optimization Algorithms. [arXiv:1707.06347](https://arxiv.org/abs/1707.06347)
 
