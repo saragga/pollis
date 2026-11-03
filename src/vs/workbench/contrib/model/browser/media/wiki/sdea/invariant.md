@@ -21,6 +21,8 @@ h = fit(Histogram, terminal, nbins=50)
 
 A stationary solution has ∂p/∂t = 0 and solves the equation with the left side set to 0. For SDEs of the form dx = −½ v′(x) dt + dβ, they give it as p(x) = exp(−v(x)/q)/Z.
 
+[Øksendal (1998)](#ref-Oks1998a) states the equation as Kolmogorov's forward equation, d/dt p_t(x, y) = A*_y p_t(x, y), for the transition density p_t(x, y) of an Itô diffusion, where A*_y is the adjoint of its generator, acting on the variable y.
+
 ## The Ornstein–Uhlenbeck case
 
 For the Ornstein–Uhlenbeck process dx = −λx dt + dβ, v(x) = λx² and [Särkkä and Solin (2019)](#ref-SS2019a) find the stationary density proportional to exp(−λx²/q), a normal with mean 0 and variance q/(2λ). In the panel's notation, with f = −θX and g = σ, q = σ² and the variance is σ²/(2θ).
@@ -46,6 +48,8 @@ For other drifts and diffusions, the stationary density may have no closed form.
 The ensemble estimate needs no closed form of the density: the histogram of `terminal` is built from the paths alone. Repeating the tab with a longer **Time span T** and comparing the histograms shows whether the horizon is long enough.
 
 ## References
+
+<a id="ref-Oks1998a"></a>Øksendal, B. (1998). *Stochastic Differential Equations: An Introduction with Applications* (5th ed.). Springer. [doi:10.1007/978-3-662-03620-4](https://doi.org/10.1007/978-3-662-03620-4)
 
 <a id="ref-SS2019a"></a>Särkkä, S., & Solin, A. (2019). *Applied Stochastic Differential Equations*. Cambridge University Press. [doi:10.1017/9781108186735](https://doi.org/10.1017/9781108186735)
 

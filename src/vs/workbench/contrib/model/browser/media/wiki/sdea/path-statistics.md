@@ -36,6 +36,8 @@ The panel computes the mean and standard deviation directly from the interpolate
 
 With the default additive noise, g = 0.3, the spread of the paths grows from 0 and levels off as the mean reversion balances the noise. With multiplicative noise, such as g = 0.2*X, the diffusion depends on the state, and the tooltip of **Diffusion g(X,t)** gives that expression as its example.
 
+For the geometric Brownian motion dN = rN dt + αN dB, [Øksendal (1998)](#ref-Oks1998a) derives the Itô solution N₀ exp((r − ½α²)t + αB), and shows that the Stratonovich interpretation of the same equation gives N₀ exp(rt + αB). He notes that the two interpretations coincide when the diffusion does not depend on x, as with additive noise; the panel solves the Itô equation.
+
 **Compare Noise Levels** shows the effect of the diffusion constant on sd[X(t)] for the current drift, with σ = 0.1, 0.3 and 0.6.
 
 ## Reading the output
@@ -45,6 +47,8 @@ The code leaves `mean_path` and `std_path` as vectors over `t_grid`; **Fan Chart
 The decision row of the panel gives the purpose of the tab as characterising trajectory uncertainty over time, with mean and variance envelopes.
 
 ## References
+
+<a id="ref-Oks1998a"></a>Øksendal, B. (1998). *Stochastic Differential Equations: An Introduction with Applications* (5th ed.). Springer. [doi:10.1007/978-3-662-03620-4](https://doi.org/10.1007/978-3-662-03620-4)
 
 <a id="ref-RN2017a"></a>Rackauckas, C., & Nie, Q. (2017). DifferentialEquations.jl: A Performant and Feature-Rich Ecosystem for Solving Differential Equations in Julia. *Journal of Open Research Software* 5(1), 15. [doi:10.5334/jors.151](https://doi.org/10.5334/jors.151)
 

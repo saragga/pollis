@@ -63,12 +63,15 @@ The actions use **Solver**, with **Step size dt** for EM and RKMil.
 |---|---|
 | DifferentialEquations.jl | [Rackauckas and Nie (2017)](#ref-RN2017a) |
 | SDEs, Fokker–Planck–Kolmogorov, numerical methods, first exit times | [Särkkä and Solin (2019)](#ref-SS2019a) |
+| Existence and uniqueness, diffusions, Dynkin's formula, Kolmogorov equations | [Øksendal (1998)](#ref-Oks1998a) |
 
 The DifferentialEquations.jl documentation covers the ensemble interface, `ContinuousCallback` and the SDE solvers, with the strong and weak order of each and the forms of noise it handles. The panel runs every ensemble with EnsembleThreads, the documentation's default ensemble algorithm, which splits the trajectories over the threads of one computer.
 
 ## References
 
 <a id="ref-RN2017a"></a>Rackauckas, C., & Nie, Q. (2017). DifferentialEquations.jl: A Performant and Feature-Rich Ecosystem for Solving Differential Equations in Julia. *Journal of Open Research Software* 5(1), 15. [doi:10.5334/jors.151](https://doi.org/10.5334/jors.151)
+
+<a id="ref-Oks1998a"></a>Øksendal, B. (1998). *Stochastic Differential Equations: An Introduction with Applications* (5th ed.). Springer. [doi:10.1007/978-3-662-03620-4](https://doi.org/10.1007/978-3-662-03620-4)
 
 <a id="ref-SS2019a"></a>Särkkä, S., & Solin, A. (2019). *Applied Stochastic Differential Equations*. Cambridge University Press. [doi:10.1017/9781108186735](https://doi.org/10.1017/9781108186735)
 

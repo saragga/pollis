@@ -47,11 +47,13 @@ For the default process, the mean equation of [Särkkä and Solin (2019)](#ref-S
 
 ## Further reading
 
-[Särkkä and Solin (2019)](#ref-SS2019a) cover Itô calculus, the Fokker–Planck–Kolmogorov equation, linear SDEs, numerical simulation, filtering and parameter estimation, with exercises and algorithms; the author's copy is available online. [Rackauckas and Nie (2017)](#ref-RN2017a) describe DifferentialEquations.jl, and its documentation gives the ensemble interface, the callbacks and the full list of SDE solvers with their orders. Among the ensemble algorithms, it names EnsembleThreads, the default, as local multithreading, fastest when the trajectories are quick, and recommends EnsembleDistributed when each trajectory takes at least about a millisecond.
+[Särkkä and Solin (2019)](#ref-SS2019a) cover Itô calculus, the Fokker–Planck–Kolmogorov equation, linear SDEs, numerical simulation, filtering and parameter estimation, with exercises and algorithms; the author's copy is available online. [Øksendal (1998)](#ref-Oks1998a) covers Itô integrals, the existence and uniqueness of solutions, diffusions and their generators, Dynkin's formula, the Kolmogorov equations and the Feynman–Kac formula, with exercises and solutions. [Rackauckas and Nie (2017)](#ref-RN2017a) describe DifferentialEquations.jl, and its documentation gives the ensemble interface, the callbacks and the full list of SDE solvers with their orders. Among the ensemble algorithms, it names EnsembleThreads, the default, as local multithreading, fastest when the trajectories are quick, and recommends EnsembleDistributed when each trajectory takes at least about a millisecond.
 
 ## References
 
 <a id="ref-RN2017a"></a>Rackauckas, C., & Nie, Q. (2017). DifferentialEquations.jl: A Performant and Feature-Rich Ecosystem for Solving Differential Equations in Julia. *Journal of Open Research Software* 5(1), 15. [doi:10.5334/jors.151](https://doi.org/10.5334/jors.151)
+
+<a id="ref-Oks1998a"></a>Øksendal, B. (1998). *Stochastic Differential Equations: An Introduction with Applications* (5th ed.). Springer. [doi:10.1007/978-3-662-03620-4](https://doi.org/10.1007/978-3-662-03620-4)
 
 <a id="ref-SS2019a"></a>Särkkä, S., & Solin, A. (2019). *Applied Stochastic Differential Equations*. Cambridge University Press. [doi:10.1017/9781108186735](https://doi.org/10.1017/9781108186735)
 

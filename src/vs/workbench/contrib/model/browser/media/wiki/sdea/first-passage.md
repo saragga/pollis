@@ -8,6 +8,12 @@ For a path started at X₀, the first passage time is the first time t at which 
 
 [Särkkä and Solin (2019)](#ref-SS2019a) use the related first exit time Tₑ of the process from a domain, the first time the path leaves it, and compute expectations over the exit points by simulating N paths from the starting point until their first exit time. A threshold on a scalar process is the boundary of a half-line.
 
+## Brownian motion
+
+For one-dimensional Brownian motion started at x > 0, [Øksendal (1998)](#ref-Oks1998a) shows in his exercises that the first time τ at which it reaches 0 is finite almost surely, with an infinite expected value. Its Laplace transform is E[exp(−λτ)] = exp(−√(2λ) x), and its density is f(t, x) = x/√(2πt³) exp(−x²/(2t)), for t > 0.
+
+For a one-dimensional Itô diffusion with drift μ(X) and diffusion σ(X), started at x in an interval (a, c), he gives the probability of leaving the interval through c as (f(x) − f(a))/(f(c) − f(a)), where f solves μ f′ + ½σ² f″ = 0; for Brownian motion it is (x − a)/(c − a). Dynkin's formula gives the expected exit time of n-dimensional Brownian motion from the ball of radius R, started at a, as (R² − |a|²)/n.
+
 ## The callback
 
 ```
@@ -50,6 +56,8 @@ The tab uses the selected **Solver**, and **Step size dt** for EM and RKMil. The
 The bullets of the panel note that the callback gives the first passage times without post-processing of the paths.
 
 ## References
+
+<a id="ref-Oks1998a"></a>Øksendal, B. (1998). *Stochastic Differential Equations: An Introduction with Applications* (5th ed.). Springer. [doi:10.1007/978-3-662-03620-4](https://doi.org/10.1007/978-3-662-03620-4)
 
 <a id="ref-SS2019a"></a>Särkkä, S., & Solin, A. (2019). *Applied Stochastic Differential Equations*. Cambridge University Press. [doi:10.1017/9781108186735](https://doi.org/10.1017/9781108186735)
 

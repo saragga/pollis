@@ -8,6 +8,12 @@ The panel solves a scalar SDE, dX = f(X, t) dt + g(X, t) dW, with one Brownian m
 
 [Särkkä and Solin (2019)](#ref-SS2019a) explain the difference: the Itô integral evaluates the integrand at the start of each interval, the Stratonovich integral at its middle point. A Stratonovich SDE can be converted into an equivalent Itô equation, and when the diffusion does not depend on the state, as with the default g = 0.3, the two interpretations are the same.
 
+## Existence and uniqueness
+
+[Øksendal (1998)](#ref-Oks1998a) gives conditions for an SDE dX = b(t, X) dt + σ(t, X) dB to have a unique solution: a linear growth bound, |b(t, x)| + |σ(t, x)| ≤ C(1 + |x|), a Lipschitz condition, |b(t, x) − b(t, y)| + |σ(t, x) − σ(t, y)| ≤ D|x − y|, and an initial value with a finite second moment, independent of the Brownian motion. The solution is then continuous in t and unique.
+
+He motivates the two conditions with deterministic equations. dX/dt = X², with X₀ = 1, breaks the growth bound and has the solution 1/(1 − t), which explodes at t = 1; the growth bound ensures that the solution does not explode in finite time. dX/dt = 3X^(2/3), with X₀ = 0, breaks the Lipschitz condition at 0 and has more than one solution. The default drift, −0.5*X, and diffusion, 0.3, satisfy both conditions.
+
 ## Independent paths
 
 Every path of the ensemble uses its own Brownian motion, so the paths are independent draws from the law of the solution. The mean and standard deviation across paths, the crossing times and the terminal values are then samples of independent, identically distributed quantities; the panel's standard errors divide the standard deviation across paths by √N.
@@ -39,6 +45,8 @@ For the Ornstein–Uhlenbeck process dx = −λx dt + dβ, [Särkkä and Solin (
 For the Ornstein–Uhlenbeck process, v(x) = λx² and the stationary law is normal with mean 0 and variance q/(2λ). For more general stationary solutions, [Särkkä and Solin (2019)](#ref-SS2019a) refer to the book by Gardiner.
 
 ## References
+
+<a id="ref-Oks1998a"></a>Øksendal, B. (1998). *Stochastic Differential Equations: An Introduction with Applications* (5th ed.). Springer. [doi:10.1007/978-3-662-03620-4](https://doi.org/10.1007/978-3-662-03620-4)
 
 <a id="ref-RN2017a"></a>Rackauckas, C., & Nie, Q. (2017). DifferentialEquations.jl: A Performant and Feature-Rich Ecosystem for Solving Differential Equations in Julia. *Journal of Open Research Software* 5(1), 15. [doi:10.5334/jors.151](https://doi.org/10.5334/jors.151)
 

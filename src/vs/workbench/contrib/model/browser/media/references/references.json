@@ -22000,6 +22000,27 @@
 			"open_access": false
 		},
 		{
+			"key": "Lju2010a",
+			"type": "article",
+			"title": "Perspectives on System Identification",
+			"authors": [
+				"Ljung, Lennart"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2010,
+			"journal": "Annual Reviews in Control",
+			"volume": "34",
+			"number": "1",
+			"pages": "1-12",
+			"issn": "1367-5788",
+			"doi": "10.1016/j.arcontrol.2009.12.001",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "Llo1982a",
 			"type": "article",
 			"title": "Least squares quantization in PCM",
@@ -25578,6 +25599,25 @@
 			"source": "manual",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "Oks1998a",
+			"type": "book",
+			"title": "Stochastic Differential Equations: An Introduction with Applications",
+			"authors": [
+				"Øksendal, Bernt"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1998,
+			"publisher": "Springer (5th ed.)",
+			"address": "Berlin, Heidelberg",
+			"isbn": "9783540637202",
+			"doi": "10.1007/978-3-662-03620-4",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": false
 		},
 		{
 			"key": "Oks2003a",
@@ -52430,6 +52470,7 @@
 			],
 			"keys": [
 				"RN2017a",
+				"Oks1998a",
 				"SS2019a"
 			]
 		},
@@ -52459,7 +52500,8 @@
 				"CFHT2021a",
 				"SS1989a",
 				"OM1994b",
-				"OM1995a"
+				"OM1995a",
+				"Lju2010a"
 			]
 		},
 		{
