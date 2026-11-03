@@ -7326,6 +7326,28 @@
 			"open_access": false
 		},
 		{
+			"key": "DDT2019a",
+			"type": "misc",
+			"title": "Augmented Neural ODEs",
+			"authors": [
+				"Dupont, Emilien",
+				"Doucet, Arnaud",
+				"Teh, Yee Whye"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2019,
+			"doi": "10.48550/arXiv.1904.01681",
+			"arxiv": "1904.01681",
+			"oa_url": "https://arxiv.org/pdf/1904.01681",
+			"abstract": "We show that Neural Ordinary Differential Equations (ODEs) learn representations that preserve the topology of the input space and prove that this implies the existence of functions Neural ODEs cannot represent. To address these limitations, we introduce Augmented Neural ODEs which, in addition to being more expressive models, are empirically more stable, generalize better and have a lower computational cost than Neural ODEs.",
+			"abstract_source": "author",
+			"source": "datacite",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "DE1996a",
 			"type": "article",
 			"title": "Bootstrap Confidence Intervals",
@@ -51478,7 +51500,9 @@
 				"GBC2016a",
 				"Str2015a",
 				"CRBD2018a",
-				"RCD2019a"
+				"RCD2019a",
+				"DDT2019a",
+				"KB2015a"
 			]
 		},
 		{

@@ -115,6 +115,12 @@ key = "CRBD2018a"
 [[references]]
 key = "RCD2019a"
 
+[[references]]
+key = "DDT2019a"
+
+[[references]]
+key = "KB2015a"
+
 [[models]]
 id = "node"
 label = "Neural ODE"
