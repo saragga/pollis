@@ -10,8 +10,8 @@ viewType = "pollis.eventStudies"
 pageCommand = "pollis.eventStudies.show"
 
 [[packages]]
-name = "PollisEventStudies.jl"
-github = "https://github.com/Trumpingtons/PollisEventStudies.jl"
+name = "EventStudies.jl"
+github = "https://github.com/Trumpingtons/EventStudies.jl"
 
 [[packages]]
 name = "MixedModels.jl"

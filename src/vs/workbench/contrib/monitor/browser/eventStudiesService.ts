@@ -57,7 +57,7 @@ export type EventTime = 'firstPublic' | 'accepted';
 export type EventSource = 'filings' | 'fomc' | 'panel';
 
 /**
- * The estimators of PollisEventStudies.jl a panel study runs: two-way fixed effects with Sun and Abraham's (2021)
+ * The estimators of EventStudies.jl a panel study runs: two-way fixed effects with Sun and Abraham's (2021)
  * interaction-weighted estimator, Callaway and Sant'Anna's (2021), and the stepped-wedge mixed model.
  */
 export type PanelEstimator = 'panel_event_study' | 'callaway_santanna' | 'stepped_wedge';
@@ -78,7 +78,7 @@ export interface ISteppedWedgeSettings {
 	readonly individual?: string;
 }
 
-/** A panel event study's table and its columns, as the keywords of PollisEventStudies.jl in its study.toml. */
+/** A panel event study's table and its columns, as the keywords of EventStudies.jl in its study.toml. */
 export interface IPanelSettings {
 	/** The table, a CSV file in the study's folder. */
 	readonly data: string;
@@ -122,7 +122,7 @@ export interface IEventStudy {
 	/** For the market model: the trading days before the event its alpha and beta are estimated on. */
 	readonly estimationDays: number;
 	readonly periods: readonly IEventPeriod[];
-	/** What PollisEventStudies.jl groups the filings by: form, item, session or ticker; empty for no groups. */
+	/** What EventStudies.jl groups the filings by: form, item, session or ticker; empty for no groups. */
 	readonly groupBy?: string;
 	/** For a panel event study: its table and columns, and its estimators. */
 	readonly panel?: IPanelSettings;
@@ -850,7 +850,7 @@ export class EventStudiesService extends Disposable implements IEventStudiesServ
 			event.duringSession !== undefined ? String(event.duringSession) : '',
 			event.nextOpen !== undefined ? new Date(event.nextOpen).toISOString() : '',
 			event.status, event.url,
-			// The time the study takes, for PollisEventStudies.jl; read back from accepted and released
+			// The time the study takes, for EventStudies.jl; read back from accepted and released
 			iso(study ? eventTime(study, event) : event.accepted),
 			iso(event.released), event.releaseWire ?? '', event.releaseTitle ?? '', event.releaseUrl ?? '', iso(event.newsChecked),
 			event.barMinutes !== undefined ? String(event.barMinutes) : '', event.video ?? '',
@@ -955,7 +955,7 @@ function readStudy(folder: string, toml: TomlValue): IEventStudy | undefined {
 	};
 }
 
-/** A panel study's settings from its study.toml, which PollisEventStudies.jl reads with the same keywords. */
+/** A panel study's settings from its study.toml, which EventStudies.jl reads with the same keywords. */
 function readPanel(toml: TomlValue): IPanelSettings {
 	const text = (value: unknown) => typeof value === 'string' ? value.trim() : '';
 	const whole = (value: unknown) => typeof value === 'number' && Number.isInteger(value) ? value : undefined;
@@ -1001,7 +1001,7 @@ function writeStudy(study: IEventStudy): string {
 		const panel = study.panel;
 		const lines = [
 			`title = ${text(study.title)}`,
-			`# A panel event study, computed by PollisEventStudies.jl for the Event Studies page; study.ipynb does the same and writes results/`,
+			`# A panel event study, computed by EventStudies.jl for the Event Studies page; study.ipynb does the same and writes results/`,
 			`source = "panel"`,
 			`# The table of units over time, in this folder`,
 			`data = ${text(panel.data)}`,

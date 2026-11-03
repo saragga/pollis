@@ -43,19 +43,19 @@ import { SHOW_MEDIA_COVERAGE_COMMAND_ID } from './mediaCoveragePage.js';
 // newswire release and EDGAR's acceptance; for FOMC releases, each instrument's average move and its move at each. Or
 // a panel event study of a table of units over time (its columns and estimators), and its results: the effects by
 // event time of each estimator with their 95% intervals, and its tests and estimates. The results of a study of filings
-// or of FOMC releases are PollisEventStudies.jl's, computed in a hidden Julia process of the Julia extension
+// or of FOMC releases are EventStudies.jl's, computed in a hidden Julia process of the Julia extension
 // (event_studies.jl) from the study's folder; the page only draws them.
 
 const MINUTE = 60_000;
-// The command of the Julia extension that answers with PollisEventStudies.jl's results
+// The command of the Julia extension that answers with EventStudies.jl's results
 const EVENT_STUDIES_COMMAND_ID = 'language-julia.pollisEventStudies';
 // The command that gives the fraction of a study computed so far, by its request's token
 const EVENT_STUDIES_PROGRESS_COMMAND_ID = 'language-julia.pollisEventStudiesProgress';
 // How often the page asks how far the study has come
 const PROGRESS_MILLISECONDS = 250;
-// How long to wait before asking again while Julia installs PollisEventStudies.jl
+// How long to wait before asking again while Julia installs EventStudies.jl
 const INSTALLING_RETRY_MILLISECONDS = 15_000;
-// What PollisEventStudies.jl can group the filings by
+// What EventStudies.jl can group the filings by
 const GROUP_BY = ['form', 'item', 'session', 'ticker'];
 // The hour in New York, where the market is
 const newYorkHour = safeIntl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour: 'numeric', hourCycle: 'h23' });
@@ -66,7 +66,8 @@ type EventStudiesMessage =
 	| { readonly command: 'create'; readonly title: string; readonly source: EventSource; readonly alert: string; readonly releases: readonly FomcEvent[]; readonly instruments: readonly string[]; readonly benchmark: string; readonly model: EventModel; readonly eventTime: EventTime; readonly estimationDays: number; readonly periods: readonly IEventPeriod[]; readonly groupBy: string; readonly panel?: IPanelForm }
 	| { readonly command: 'chooseData' }
 	| { readonly command: 'addAlert' }
-	| { readonly command: 'openUrl'; readonly url: string }
+	// Not `openUrl`, which the scaffold's handler answers too, without this page's filter
+	| { readonly command: 'openEventLink'; readonly url: string }
 	| { readonly command: 'mediaCoverage'; readonly folder: string; readonly accession: string }
 	| { readonly command: 'openFolder'; readonly folder: string }
 	| { readonly command: 'openStudyFile'; readonly folder: string }
@@ -123,7 +124,7 @@ interface IWindowCurves {
 	readonly counts: readonly number[];
 }
 
-/** PollisEventStudies.jl's AAR and CAAR a minute at a time, with the CAAR's 95% band (`averages` in Julia). */
+/** EventStudies.jl's AAR and CAAR a minute at a time, with the CAAR's 95% band (`averages` in Julia). */
 interface IJuliaAverages {
 	readonly minute: readonly number[];
 	readonly events: readonly number[];
@@ -132,7 +133,7 @@ interface IJuliaAverages {
 	readonly caar_upper: readonly (number | null)[];
 }
 
-/** PollisEventStudies.jl's results over a period of a study of filings (`analyse` in Julia); null where a value is missing. */
+/** EventStudies.jl's results over a period of a study of filings (`analyse` in Julia); null where a value is missing. */
 interface IJuliaFilingsPeriod {
 	/** The events used, a column a value. */
 	readonly events: {
@@ -152,14 +153,14 @@ interface IJuliaFilingsPeriod {
 	readonly outcomes: { readonly accession: readonly string[]; readonly outcome: readonly string[]; readonly notes: readonly string[] };
 }
 
-/** PollisEventStudies.jl's results over a period of a study of FOMC releases, by instrument. */
+/** EventStudies.jl's results over a period of a study of FOMC releases, by instrument. */
 interface IJuliaFomcPeriod {
 	readonly moves: { readonly accession: readonly string[] };
 	readonly paths: Readonly<Record<string, { readonly minute: readonly number[]; readonly events: readonly number[]; readonly mean: readonly (number | null)[]; readonly lower: readonly (number | null)[]; readonly upper: readonly (number | null)[] }>>;
 	readonly curves: Readonly<Record<string, readonly ((readonly (number | null)[]) | null)[]>>;
 }
 
-/** A panel study's results by PollisEventStudies.jl: each table its results file would hold, by the file's name, a column at a time. */
+/** A panel study's results by EventStudies.jl: each table its results file would hold, by the file's name, a column at a time. */
 type IJuliaTables = Readonly<Record<string, Readonly<Record<string, readonly (string | number | boolean | null)[]>>>>;
 
 /** What event_studies.jl answers: the results of each period, or of each estimator of a panel study, or why there are none. */
@@ -169,7 +170,7 @@ interface IJuliaAnswer {
 	readonly tables?: IJuliaTables;
 }
 
-/** PollisEventStudies.jl's results for a study, or why there are none, shown in their place. */
+/** EventStudies.jl's results for a study, or why there are none, shown in their place. */
 interface IAnalysed {
 	readonly periods?: IJuliaAnswer['periods'];
 	readonly tables?: IJuliaTables;
@@ -284,14 +285,14 @@ function openEventStudiesPage(accessor: ServicesAccessor, folder: string | undef
 		});
 	};
 
-	// Asked again while Julia installs PollisEventStudies.jl
+	// Asked again while Julia installs EventStudies.jl
 	const retry = disposables.add(new RunOnceScheduler(() => sendStudy(), INSTALLING_RETRY_MILLISECONDS));
 	// The study whose results the page has, to say the first time that they are being computed
 	let shown: string | undefined;
 	// How long each study took to compute the last time, by its folder, to tell how far it has come between Julia's steps
 	const durations = new Map<string, number>();
 
-	/** PollisEventStudies.jl's results for the study, or why there are none, shown in their place; `onProgress` is told the fraction computed as it goes. */
+	/** EventStudies.jl's results for the study, or why there are none, shown in their place; `onProgress` is told the fraction computed as it goes. */
 	const analyse = async (study: IEventStudy, onProgress?: (fraction: number, step: string) => void): Promise<IAnalysed> => {
 		const token = generateUuid();
 		const started = Date.now();
@@ -325,15 +326,15 @@ function openEventStudiesPage(accessor: ServicesAccessor, folder: string | undef
 		}
 		if (answer?.error === 'installing') {
 			retry.schedule();
-			return { busy: true, problem: localize('eventStudies.installing', "Julia is installing PollisEventStudies.jl, which computes the study, the first time it is needed: the results come in a minute or two") };
+			return { busy: true, problem: localize('eventStudies.installing', "Julia is installing EventStudies.jl, which computes the study, the first time it is needed: the results come in a minute or two") };
 		}
 		if (answer?.error === 'noJulia') {
-			return { problem: localize('eventStudies.needsJulia', "Needs Julia, which computes the study with PollisEventStudies.jl") };
+			return { problem: localize('eventStudies.needsJulia', "Needs Julia, which computes the study with EventStudies.jl") };
 		}
-		return { problem: answer?.error && answer.error !== 'failed' ? localize('eventStudies.juliaError', "PollisEventStudies.jl could not compute the study: {0}", answer.error) : localize('eventStudies.juliaFailed', "PollisEventStudies.jl could not compute the study: Julia stopped") };
+		return { problem: answer?.error && answer.error !== 'failed' ? localize('eventStudies.juliaError', "EventStudies.jl could not compute the study: {0}", answer.error) : localize('eventStudies.juliaFailed', "EventStudies.jl could not compute the study: Julia stopped") };
 	};
 
-	/** Posts the study, with PollisEventStudies.jl's results; the first time, with a word that they are being computed. */
+	/** Posts the study, with EventStudies.jl's results; the first time, with a word that they are being computed. */
 	const postAnalysed = async (study: IEventStudy, post: (analysed: IAnalysed) => void) => {
 		const first = shown !== study.folder;
 		if (first) {
@@ -564,7 +565,7 @@ function openEventStudiesPage(accessor: ServicesAccessor, folder: string | undef
 			case 'addAlert':
 				await commandService.executeCommand(ADD_ALERT_COMMAND_ID, undefined, 'filings');
 				break;
-			case 'openUrl':
+			case 'openEventLink':
 				// Only the SEC's pages, the filings at EDGAR, the Federal Reserve's releases, and the newswire releases and broadcasts the studies found
 				if (message.url.startsWith('https://www.sec.gov/') || message.url.startsWith('https://www.federalreserve.gov/') || eventStudiesService.getStudies().some(study => eventStudiesService.getEvents(study.folder).some(event => event.releaseUrl === message.url || event.video === message.url))) {
 					await commandService.executeCommand(OPEN_LINK_COMMAND_ID, message.url);
@@ -685,13 +686,13 @@ interface IJuliaProgress {
 function describeStep(progress: IJuliaProgress | undefined): string {
 	const step = progress?.step;
 	if (!step || progress.done === undefined || !progress.steps) {
-		return localize('eventStudies.computing', "PollisEventStudies.jl is computing the study...");
+		return localize('eventStudies.computing', "EventStudies.jl is computing the study...");
 	}
 	const what = step === 'MixedModels' || step === 'WildBootTests'
 		? localize('eventStudies.loadingPackage', "Julia is loading {0}.jl, which the study needs", step)
 		: (PANEL_ESTIMATORS as readonly string[]).includes(step)
-			? localize('eventStudies.computingEstimator', "PollisEventStudies.jl is computing {0}", describeEstimator(step as PanelEstimator))
-			: localize('eventStudies.computingPeriod', "PollisEventStudies.jl is computing the period {0}", step);
+			? localize('eventStudies.computingEstimator', "EventStudies.jl is computing {0}", describeEstimator(step as PanelEstimator))
+			: localize('eventStudies.computingPeriod', "EventStudies.jl is computing the period {0}", step);
 	return progress.steps > 1 ? localize('eventStudies.step', "{0} (step {1} of {2})...", what, progress.done + 1, progress.steps) : localize('eventStudies.stepOnly', "{0}...", what);
 }
 
@@ -708,7 +709,7 @@ function figure(value: string | undefined): string {
 }
 
 /** Each estimator's effects by event time from a panel study's results; the stepped wedge's exposure time e is event time e - 1. */
-/** PollisEventStudies.jl's tables of a panel study as rows, each value as its results file would have it; '' where missing. */
+/** EventStudies.jl's tables of a panel study as rows, each value as its results file would have it; '' where missing. */
 function panelResults(tables: IJuliaTables): IPanelResults {
 	return {
 		tables: new Map(Object.entries(tables).map(([name, columns]) => {
@@ -898,7 +899,7 @@ function articleCounts(times: readonly (number | undefined)[], news: readonly (r
 	return counts;
 }
 
-/** Why PollisEventStudies.jl left an event out of a period, or what an event it used lacks, by the outcome's or the note's code. */
+/** Why EventStudies.jl left an event out of a period, or what an event it used lacks, by the outcome's or the note's code. */
 function describeOutcome(code: string): string {
 	switch (code) {
 		case 'no_stock_prices': return localize('eventStudies.noStockPrices', "Left out: no prices for the stock");
@@ -913,7 +914,7 @@ function describeOutcome(code: string): string {
 }
 
 /**
- * A period's results as the page draws them: PollisEventStudies.jl's, each event's in the order of the page's events,
+ * A period's results as the page draws them: EventStudies.jl's, each event's in the order of the page's events,
  * which also has the events without a ticker or a time, that Julia does not see.
  */
 function filingsResults(result: IJuliaFilingsPeriod, events: readonly IStudyEvent[]) {
@@ -1161,7 +1162,7 @@ function pageHtml(): string {
 		abnormalVolumeHint: localize('eventStudies.abnormalVolumeHint', "The mean log(1 + volume) of the regular-session minutes of the period less that of the minutes before it"),
 		abnormalVolatility: localize('eventStudies.abnormalVolatility', "Abnormal Volatility"),
 		abnormalVolatilityHint: localize('eventStudies.abnormalVolatilityHint', "The log of the ratio of the abnormal returns' root mean square in the regular-session minutes of the period to that before it"),
-		testsCaption: localize('eventStudies.testsCaption', "Tests at the end of the period, from the event, by PollisEventStudies.jl"),
+		testsCaption: localize('eventStudies.testsCaption', "Tests at the end of the period, from the event, by EventStudies.jl"),
 		test: localize('eventStudies.test', "Test"),
 		mean: localize('eventStudies.mean', "Mean"),
 		statistic: localize('eventStudies.statistic', "Statistic"),
@@ -1811,7 +1812,7 @@ function pageHtml(): string {
 		renderEvents();
 	}
 
-	/** The tests at the end of the period from the event, PollisEventStudies.jl's. */
+	/** The tests at the end of the period from the event, EventStudies.jl's. */
 	function renderTests() {
 		const container = document.getElementById('tests');
 		container.textContent = '';
@@ -2174,11 +2175,11 @@ function pageHtml(): string {
 			row.appendChild(element('td', '', event.time));
 			const title = element('td');
 			const link = element('button', 'link', event.title);
-			link.addEventListener('click', () => vscode.postMessage({ command: 'openUrl', url: event.url }));
+			link.addEventListener('click', () => vscode.postMessage({ command: 'openEventLink', url: event.url }));
 			title.append(link, ' \u00b7 ', newsLink(event));
 			if (event.video) {
 				const video = element('button', 'link', TEXT.video);
-				video.addEventListener('click', () => vscode.postMessage({ command: 'openUrl', url: event.video }));
+				video.addEventListener('click', () => vscode.postMessage({ command: 'openEventLink', url: event.video }));
 				title.append(' \u00b7 ', video);
 			}
 			row.appendChild(title);
@@ -2216,7 +2217,7 @@ function pageHtml(): string {
 			return;
 		}
 		const curves = curvesShown();
-		// PollisEventStudies.jl's results for each event, null for one it has none for (yet)
+		// EventStudies.jl's results for each event, null for one it has none for (yet)
 		const rows = study.curves[periodIndex].rows;
 		const table = element('table');
 		const head = element('tr');
@@ -2236,7 +2237,7 @@ function pageHtml(): string {
 			if (event.releaseUrl) {
 				const wire = element('button', 'link', event.releaseWire);
 				wire.title = event.releaseTitle;
-				wire.addEventListener('click', () => vscode.postMessage({ command: 'openUrl', url: event.releaseUrl }));
+				wire.addEventListener('click', () => vscode.postMessage({ command: 'openEventLink', url: event.releaseUrl }));
 				release.append(' ', wire);
 			}
 			row.appendChild(release);
@@ -2244,7 +2245,7 @@ function pageHtml(): string {
 			row.appendChild(element('td', '', event.lead));
 			const company = element('td');
 			const link = element('button', 'link', event.name + (event.ticker ? ' (' + event.ticker + ')' : ''));
-			link.addEventListener('click', () => vscode.postMessage({ command: 'openUrl', url: event.url }));
+			link.addEventListener('click', () => vscode.postMessage({ command: 'openEventLink', url: event.url }));
 			company.append(link, ' \u00b7 ', newsLink(event));
 			row.appendChild(company);
 			row.appendChild(element('td', '', event.form));

@@ -1342,7 +1342,7 @@ and the S\&P 500. While Pollis is open it captures the prices from Yahoo Finance
 result on the page. A \emph{panel event study} follows an outcome over the years, quarters or months after
 units are treated at different times: states adopting a policy, firms a rule, or the clinics of a stepped-wedge
 trial crossing from control to treatment one group after another, from a table of your own. Either way the
-study is a folder that a notebook analyses with PollisEventStudies.jl.
+study is a folder that a notebook analyses with EventStudies.jl.
 
 \subhead{A study of SEC filings}
 \begin{enumerate}[label=\arabic*.]
@@ -1396,7 +1396,7 @@ older than 30 days.
 Each study is a folder in \texttt{\textasciitilde/.pollis/event-studies}: \texttt{study.toml}, its settings;
 \texttt{events.csv}, the events with their times in UTC; \texttt{prices/}, a file of bars per event; and,
 for filings, \texttt{news/}, the articles about each. \ui{Open Notebook} opens \texttt{study.ipynb}, which
-installs PollisEventStudies.jl from the Pollis registry and runs it on the folder:
+installs EventStudies.jl from the Pollis registry and runs it on the folder:
 \begin{itemize}
   \item filings: for each period, the average and cumulative average abnormal returns a minute at a time with
     their t, the CAR's t, the Boehmer, Masumeci and Poulsen (1991) test, and abnormal volume;
@@ -1457,7 +1457,7 @@ until its notebook runs.
 \newpage
 \subhead{Run and read it}
 \ui{Your Studies} shows the table, its columns and the estimators. \ui{Open Notebook} opens \texttt{study.ipynb},
-which installs PollisEventStudies.jl from the Pollis registry (and MixedModels.jl for the stepped wedge), runs the
+which installs EventStudies.jl from the Pollis registry (and MixedModels.jl for the stepped wedge), runs the
 estimators \texttt{study.toml} names on \texttt{panel.csv} and writes the results to \texttt{results/}. The page
 then draws:
 \begin{itemize}
@@ -2215,7 +2215,7 @@ The lists are as of 28 October 2026.
 
 \subhead{Packages created}
 Eighteen packages, each with the date its repository was created on GitHub. The methods and
-PollisEventStudies are in the Pollis registry, created on 13 October 2026; the others are installed from GitHub.
+EventStudies are in the Pollis registry, created on 13 October 2026; the others are installed from GitHub.
 
 \smallskip
 {\small\renewcommand{\arraystretch}{1.2}%
@@ -2236,7 +2236,7 @@ PeriodicGARCH & 15 Oct 2026 & Periodic GARCH: volatility with a calendar dummy &
 PropensityMatching & 15 Oct 2026 & Propensity score matching: Dehejia and Wahba, and its replications & Pollis \\
 ThresholdAR & 15 Oct 2026 & Threshold autoregression: SETAR models and limit cycles & Pollis \\
 PollisJournals & 20 Oct 2026 & The journals of OpenAlex, for the PollisJournals database & --- \\
-PollisEventStudies & 21 Oct 2026 & Intraday event studies of SEC filings & Pollis \\
+EventStudies & 21 Oct 2026 & Intraday event studies of SEC filings & Pollis \\
 PollisRSS & 25 Oct 2026 & The feeds of \ui{Explore > RSS > RSS Feeds}, by topic & --- \\
 PollisReferences & 25 Oct 2026 & The works Pollis cites, with their citation counts & --- \\
 \end{tabularx}}

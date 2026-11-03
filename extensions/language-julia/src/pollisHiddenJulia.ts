@@ -4,7 +4,7 @@
 //   ~/.pollis/alerts/julia/vX.Y), through the command `language-julia.pollisAlertStatistics`, with a request such as
 //   {op: 'update', key, spec, value, history?}. Its trackers are forgotten when it quits, and the next update asks for
 //   history again.
-// - The results of the event studies, by PollisEventStudies.jl (event_studies.jl, ~/.pollis/event-studies/julia/vX.Y),
+// - The results of the event studies, by EventStudies.jl (event_studies.jl, ~/.pollis/event-studies/julia/vX.Y),
 //   through the command `language-julia.pollisEventStudies`, with a request such as {op: 'analyse', folder, token}.
 //   While it computes, `language-julia.pollisEventStudiesProgress` with the request's token gives how far it has come:
 //   {progress, done, steps, step}, the fraction done and the step it is on.

@@ -109,7 +109,7 @@ export async function activate(context: vscode.ExtensionContext) {
         packagepath.activate(context, executableFeature)
         console.debug(`[julia activation] packagepath.activate: ${(performance.now() - t).toFixed(1)}ms`)
 
-        // POLLIS: OnlineStats.jl for the alerts on statistical conditions, PollisEventStudies.jl for the event studies.
+        // POLLIS: OnlineStats.jl for the alerts on statistical conditions, EventStudies.jl for the event studies.
         pollisHiddenJulia.activate(context, executableFeature)
         // POLLIS: the package vignettes, compiled with PollisTeX when Help > Documentation > Packages opens one.
         pollisDocuments.activate(context, executableFeature)

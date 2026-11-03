@@ -1,4 +1,4 @@
-% Pollis Domain Packages: Market Event Studies (PollisEventStudies.jl) -- draft 1 (22 October 2026)
+% Pollis Domain Packages: Market Event Studies (EventStudies.jl) -- draft 1 (22 October 2026)
 % Compile with: latexmk -pdf dp_event_studies.tex && latexmk -c
 \input{newmethods_style}
 
@@ -48,7 +48,7 @@
    trading that is not every minute, and the moves of rate futures at a release. The Julia event-study code we compared
    works on daily returns. Also the stepped-wedge mixed model with effects by exposure time, which R's steppedwedge
    has.}
-  {\fn{PollisEventStudies.jl}, registered in PollisRegistry: \fn{run\_study("path/to/study")}.}
+  {\fn{EventStudies.jl}, registered in PollisRegistry: \fn{run\_study("path/to/study")}.}
   {116 tests: synthetic studies whose answers are known, built minute by minute, and the panel estimators against R's
    fixest, did, fwildclusterboot and steppedwedge; no published intraday table yet (see Still open).}
 
@@ -269,7 +269,7 @@ Each study folder has a \fn{study.ipynb} that Pollis writes when the study is ma
   \item \textbf{What the folder holds}: \fn{study.toml}, \fn{events.csv}, \fn{prices/} and \fn{news/} (the articles
     Google News lists from a day before each filing to a day after), and what the package computes from them.
   \item \textbf{Install and run.} The cell adds PollisRegistry when it is not among the registries, adds
-    PollisEventStudies when it is not installed and updates it when it is older than the study needs, then runs
+    EventStudies when it is not installed and updates it when it is older than the study needs, then runs
     \fn{run\_study} on the notebook's own folder (or the study's path, when the notebook was moved), which prints the
     report and writes \fn{results/}.
   \item \textbf{Each event}: \fn{results[1].events}, the table of the first period's events.

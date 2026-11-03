@@ -3,14 +3,14 @@
  *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// The study.ipynb of an event study: Julia that runs PollisEventStudies.jl on the study's folder (study.toml,
+// The study.ipynb of an event study: Julia that runs EventStudies.jl on the study's folder (study.toml,
 // events.csv and prices/), which computes, for each period, the average and cumulative average abnormal returns a
 // minute at a time with their cross-sectional t, the Boehmer, Masumeci and Poulsen (1991) test on standardized CARs
 // with Kolari and Pynnonen's (2010) adjustment for cross-correlation, their (2011) generalized rank test, and abnormal
 // volume, each with its p-value, for all the filings and for each group of them, and writes them to results/. The page
-// shows the same results, which it gets from PollisEventStudies.jl itself, as the prices come in.
+// shows the same results, which it gets from EventStudies.jl itself, as the prices come in.
 
-const PACKAGE_URL = 'https://github.com/Trumpingtons/PollisEventStudies.jl';
+const PACKAGE_URL = 'https://github.com/Trumpingtons/EventStudies.jl';
 const REGISTRY_URL = 'https://github.com/Trumpingtons/PollisRegistry';
 
 /** The notebook of the event study in `folder` (its path on disk), as the JSON of a Jupyter notebook in Julia. */
@@ -26,7 +26,7 @@ The filings an alert on SEC filings fired are the events. Pollis captures the mi
 - **prices/**: a file per filing, with the minute bars of the stock and of the benchmark;
 - **news/**: a file per filing, with the articles Google News lists from a day before EDGAR accepted it to a day after.
 
-[PollisEventStudies.jl](${PACKAGE_URL}) computes, for each period, the average abnormal return (AAR) and the cumulative average abnormal return (CAAR) a minute at a time with their cross-sectional t, from the event's time and, for an event outside the regular session, from the next open. At the end of the period (for an event outside the session, the period's minutes after the next open, where the market first trades on it), each with its two-sided p-value:
+[EventStudies.jl](${PACKAGE_URL}) computes, for each period, the average abnormal return (AAR) and the cumulative average abnormal return (CAAR) a minute at a time with their cross-sectional t, from the event's time and, for an event outside the regular session, from the next open. At the end of the period (for an event outside the session, the period's minutes after the next open, where the market first trades on it), each with its two-sided p-value:
 
 - the CAR's cross-sectional t;
 - the Boehmer, Masumeci and Poulsen (1991) test on standardized CARs;
@@ -40,7 +40,7 @@ The filings an alert on SEC filings fired are the events. Pollis captures the mi
 With **group_by** in study.toml (form, item, session or ticker), the same for each group of filings. It writes them to **results/**. Events still capturing prices count up to the last complete minute: run all again as they come in.
 `),
 		code(String.raw`
-${install('0.5.1')}
+${install('0.1.0')}
 
 const STUDY = isfile(joinpath(pwd(), "study.toml")) ? pwd() : raw"${folder}"
 results = run_study(STUDY)
@@ -79,7 +79,7 @@ Each group of filings, with its tests at the end of the first period. Another gr
 }
 
 /**
- * The notebook of a study of FOMC releases in `folder`: Julia that runs PollisEventStudies.jl on it, which computes
+ * The notebook of a study of FOMC releases in `folder`: Julia that runs EventStudies.jl on it, which computes
  * each instrument's move over each period at each release, their mean with its cross-sectional t and the mean move a
  * minute at a time, and writes them to results/.
  */
@@ -95,10 +95,10 @@ The FOMC's releases, from the Federal Reserve's Monetary Policy Press Releases f
 - **instruments.csv**: for each release, the Yahoo Finance symbol of each instrument (the contract months follow from the release's month), its unit, its scale and the minutes each bar spans (1, or 5 for a release older than 30 days);
 - **prices/**: a file per release, with the bars of each symbol.
 
-[PollisEventStudies.jl](${PACKAGE_URL}) computes each instrument's move from the start of the period to its end at each release, the mean move with its cross-sectional t, and the mean move a minute at a time, and writes them to **results/**. Moves are in basis points of the implied rate (100 less the price) for federal funds (FF1 to FF4) and SOFR futures (SR1, SFR1 to SFR5), of the yield for the 5- and 10-year yields (^FVX, ^TNX), and in per cent for prices (ZT, TIP, ^GSPC, ES). FF1 is scaled by D / (D - d), D the days of the month and d the release's day, as the contract settles on the month's average rate (Kuttner 2001); in the month's last week FF2 stands in for it, unscaled.
+[EventStudies.jl](${PACKAGE_URL}) computes each instrument's move from the start of the period to its end at each release, the mean move with its cross-sectional t, and the mean move a minute at a time, and writes them to **results/**. Moves are in basis points of the implied rate (100 less the price) for federal funds (FF1 to FF4) and SOFR futures (SR1, SFR1 to SFR5), of the yield for the 5- and 10-year yields (^FVX, ^TNX), and in per cent for prices (ZT, TIP, ^GSPC, ES). FF1 is scaled by D / (D - d), D the days of the month and d the release's day, as the contract settles on the month's average rate (Kuttner 2001); in the month's last week FF2 stands in for it, unscaled.
 `),
 		code(String.raw`
-${install('0.5.1')}
+${install('0.1.0')}
 
 const STUDY = isfile(joinpath(pwd(), "study.toml")) ? pwd() : raw"${folder}"
 results = run_study(STUDY)
@@ -129,7 +129,7 @@ results[1].moves
 }
 
 /**
- * The notebook of a panel event study in `folder`: Julia that runs PollisEventStudies.jl on its table with the
+ * The notebook of a panel event study in `folder`: Julia that runs EventStudies.jl on its table with the
  * estimators of its study.toml, loading MixedModels.jl for the stepped wedge, and writes the results to results/.
  */
 export function panelStudyNotebook(folder: string): string {
@@ -142,16 +142,16 @@ Units observed over time, first treated at different times: states adopting a po
 - **study.toml**: the table (data), its columns (unit, time, outcome, and cohort, the time each unit is first treated, or treatment, not 0 from then on), the event times estimated (leads and lags) and the estimators, with the keywords of Callaway and Sant'Anna in [callaway_santanna] and of the stepped wedge in [stepped_wedge];
 - **panel.csv**: the table, copied here when the study was made.
 
-[PollisEventStudies.jl](${PACKAGE_URL}) runs the estimators study.toml names:
+[EventStudies.jl](${PACKAGE_URL}) runs the estimators study.toml names:
 
 - **panel_event_study**: the effects by event time by two-way fixed effects and by Sun and Abraham's (2021) interaction-weighted estimator, which stays right when the effects differ between cohorts, with standard errors clustered by unit and the test of pre-trends;
 - **callaway_santanna**: Callaway and Sant'Anna's (2021) effect of each cohort at each time against the units not yet or never treated, and its averages by event time, by cohort, by calendar time and overall;
 - **stepped_wedge**: the mixed model of Hussey and Hughes (2007), with the units as clusters and their correlation, and the effects by exposure time of Kenny et al. (2022), fitted by MixedModels.jl.
 
-It writes them to **results/**. The Event Studies page shows the same results, which it gets from PollisEventStudies.jl itself. After an edit of study.toml, run all again.
+It writes them to **results/**. The Event Studies page shows the same results, which it gets from EventStudies.jl itself. After an edit of study.toml, run all again.
 `),
 		code(String.raw`
-${install('0.5.1')}
+${install('0.1.0')}
 import TOML
 
 const STUDY = isfile(joinpath(pwd(), "study.toml")) ? pwd() : raw"${folder}"
@@ -168,7 +168,7 @@ results = run_study(STUDY)
 A result per estimator, in the order of estimators in study.toml: **effects** by event time (for the stepped wedge, **by_exposure**, by exposure time, 1 being the first time treated), and for Callaway and Sant'Anna its **overall** averages.
 `),
 		code(String.raw`
-[r isa PollisEventStudies.SteppedWedgeResult ? r.by_exposure : r.effects for r in results]
+[r isa EventStudies.SteppedWedgeResult ? r.by_exposure : r.effects for r in results]
 `),
 		markdown(String.raw`
 ## Notes
@@ -187,21 +187,21 @@ A result per estimator, in the order of estimators in study.toml: **effects** by
 	}, undefined, 1);
 }
 
-/** Julia that loads PollisEventStudies.jl, adding it from the Pollis registry, and updating it when older than `minimum`. */
+/** Julia that loads EventStudies.jl, adding it from the Pollis registry, and updating it when older than `minimum`. */
 function install(minimum: string): string {
 	return String.raw`import Pkg
 # From the Pollis registry, added when it is not there, and updated when older than this study needs
 if !any(registry -> registry.name == "PollisRegistry", Pkg.Registry.reachable_registries())
 	Pkg.Registry.add(url = "${REGISTRY_URL}")
 end
-installed = [info.version for info in values(Pkg.dependencies()) if info.name == "PollisEventStudies"]
+installed = [info.version for info in values(Pkg.dependencies()) if info.name == "EventStudies"]
 if isempty(installed)
-	Pkg.add("PollisEventStudies")
+	Pkg.add("EventStudies")
 elseif installed[1] < v"${minimum}"
 	Pkg.Registry.update("PollisRegistry")
-	Pkg.update("PollisEventStudies")
+	Pkg.update("EventStudies")
 end
-using PollisEventStudies`;
+using EventStudies`;
 }
 
 /** A cell's source: its lines, each but the last ending in a newline. */

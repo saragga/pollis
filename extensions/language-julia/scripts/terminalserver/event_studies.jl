@@ -1,6 +1,6 @@
-# Pollis: the results of the event studies, computed by PollisEventStudies.jl, for the Event Studies page. Run by the
+# Pollis: the results of the event studies, computed by EventStudies.jl, for the Event Studies page. Run by the
 # Julia extension in a hidden process (pollisHiddenJulia.ts), in its own environment, ~/.pollis/event-studies/julia/vX.Y,
-# which it makes with PollisEventStudies, from the Pollis registry, and JSON3 the first time, and updates when the
+# which it makes with EventStudies, from the Pollis registry, and JSON3 the first time, and updates when the
 # package is older than the page needs; the user's environments are never touched. It reads a request in JSON per line
 # on stdin and writes the answer, with the request's id, as a line on stdout:
 #   {"id", "op": "analyse", "folder"} -> {"id", "source": "filings", "periods": [...]} for a study of filings, each
@@ -15,28 +15,28 @@
 # releases, by its name, or, for a panel study, the loading of a package, by its name, and each estimator.
 import Pkg
 
-# The oldest PollisEventStudies with what the page shows: the CAAR's band, the curves from the next open and the
+# The oldest EventStudies with what the page shows: the CAAR's band, the curves from the next open and the
 # panel studies' tables
-const MINIMUM = v"0.5.1"
+const MINIMUM = v"0.1.0"
 const REGISTRY_URL = "https://github.com/Trumpingtons/PollisRegistry"
 const ENVIRONMENT = joinpath(homedir(), ".pollis", "event-studies", "julia", "v$(VERSION.major).$(VERSION.minor)")
 Pkg.activate(ENVIRONMENT; io = devnull)
 installed = Dict(info.name => info.version for info in values(Pkg.dependencies()) if info.is_direct_dep)
-if !haskey(installed, "PollisEventStudies") || !haskey(installed, "JSON3") ||
-        (installed["PollisEventStudies"] !== nothing && installed["PollisEventStudies"] < MINIMUM)
+if !haskey(installed, "EventStudies") || !haskey(installed, "JSON3") ||
+        (installed["EventStudies"] !== nothing && installed["EventStudies"] < MINIMUM)
     println("{\"status\":\"installing\"}")
     flush(stdout)
     if !any(registry -> registry.name == "PollisRegistry", Pkg.Registry.reachable_registries())
         Pkg.Registry.add(url = REGISTRY_URL; io = devnull)
     end
-    if haskey(installed, "PollisEventStudies")
+    if haskey(installed, "EventStudies")
         Pkg.Registry.update("PollisRegistry"; io = devnull)
-        Pkg.update("PollisEventStudies"; io = devnull)
+        Pkg.update("EventStudies"; io = devnull)
     end
-    Pkg.add([name for name in ("PollisEventStudies", "JSON3") if !haskey(installed, name)]; io = devnull)
+    Pkg.add([name for name in ("EventStudies", "JSON3") if !haskey(installed, name)]; io = devnull)
 end
 
-using PollisEventStudies, JSON3, Dates
+using EventStudies, JSON3, Dates
 
 println("{\"status\":\"ready\"}")
 flush(stdout)
@@ -50,9 +50,9 @@ plain(x::Symbol) = String(x)
 plain(x::AbstractVector) = [plain(value) for value in x]
 plain(x::NamedTuple) = Dict{Symbol, Any}(key => plain(value) for (key, value) in pairs(x))
 plain(x::AbstractDict) = Dict{String, Any}(string(key) => plain(value) for (key, value) in x)
-plain(x::PollisEventStudies.Period) = Dict{Symbol, Any}(:name => x.name, :before => x.before, :after => x.after, :next_open => x.next_open)
+plain(x::EventStudies.Period) = Dict{Symbol, Any}(:name => x.name, :before => x.before, :after => x.after, :next_open => x.next_open)
 
-# Loads a package of the environment that PollisEventStudies.jl extends, adding it the first time
+# Loads a package of the environment that EventStudies.jl extends, adding it the first time
 function load(name)
     any(info -> info.name == name && info.is_direct_dep, values(Pkg.dependencies())) || Pkg.add(name; io = devnull)
     Core.eval(Main, :(using $(Symbol(name))))
@@ -72,7 +72,7 @@ function stepwise(f, id, study, field)
     values = getfield(study, field)
     results = Any[]
     for (k, value) in enumerate(values)
-        report(id, k - 1, length(values), value isa PollisEventStudies.Period ? value.name : string(value))
+        report(id, k - 1, length(values), value isa EventStudies.Period ? value.name : string(value))
         append!(results, f(part(study, field, [value])))
     end
     report(id, length(values), length(values))
@@ -83,12 +83,12 @@ function answer(request, id)
     op = String(request.op)
     if op == "analyse"
         study = read_study(String(request.folder))
-        if study isa PollisEventStudies.FomcStudy
+        if study isa EventStudies.FomcEventStudy
             periods = [Dict{Symbol, Any}(:period => plain(result.period), :moves => plain(result.moves),
                 :summary => plain(result.summary), :paths => plain(result.paths), :curves => plain(result.curves))
                 for result in stepwise(analyse, id, study, :periods)]
             return Dict{Symbol, Any}(:source => "fomc", :periods => periods)
-        elseif study isa PollisEventStudies.Study
+        elseif study isa EventStudies.EventStudy
             return Dict{Symbol, Any}(:source => "filings", :periods => plain(stepwise(analyse, id, study, :periods)))
         end
         needed = [name for (name, wanted) in (("MixedModels", "stepped_wedge" in study.estimators),
@@ -105,8 +105,8 @@ function answer(request, id)
             append!(results, Base.invokelatest(analyse, part(study, :estimators, [estimator])))
         end
         report(id, steps, steps)
-        tables = Dict{String, Any}(name => plain(PollisEventStudies.Tables.columntable(table))
-            for result in results for (name, table) in Base.invokelatest(PollisEventStudies.result_tables, result))
+        tables = Dict{String, Any}(name => plain(EventStudies.Tables.columntable(table))
+            for result in results for (name, table) in Base.invokelatest(EventStudies.result_tables, result))
         return Dict{Symbol, Any}(:source => "panel", :tables => tables)
     end
     return Dict{Symbol, Any}(:error => "unknown op $op")
