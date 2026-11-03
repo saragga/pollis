@@ -22408,6 +22408,28 @@
 			"open_access": true
 		},
 		{
+			"key": "MG2017a",
+			"type": "article",
+			"title": "Chaotic Gravitational Constants for the Gravitational Search Algorithm",
+			"authors": [
+				"Mirjalili, Seyedali",
+				"Gandomi, Amir H."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2017,
+			"journal": "Applied Soft Computing",
+			"volume": "53",
+			"pages": "407-419",
+			"issn": "1568-4946",
+			"doi": "10.1016/j.asoc.2017.01.008",
+			"openalex": "W2569943405",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "MGALS...2021a",
 			"type": "misc",
 			"title": "ModelingToolkit: A Composable Graph Transformation System for Equation-Based Modeling",
@@ -52439,7 +52461,8 @@
 				"CJ2015a",
 				"KB2007a",
 				"ML2016a",
-				"RNS2009a"
+				"RNS2009a",
+				"MG2017a"
 			]
 		},
 		{
