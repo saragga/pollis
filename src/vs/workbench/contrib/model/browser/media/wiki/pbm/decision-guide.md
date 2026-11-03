@@ -8,8 +8,8 @@ Which algorithm to run, how to set the population and the number of generations,
 |---|---|
 | Two or three objectives, with or without constraints | **NSGA-II** |
 | Four or more objectives | **NSGA-III** |
-| Fronts with uneven density, or an archive of elite solutions wanted | **SPEA2** |
-| Quality judged by hypervolume, evaluations affordable | **SMS-EMOA** |
+| Two or three objectives, with an archive of non-dominated solutions next to the population | **SPEA2** |
+| Two or three objectives, quality judged by hypervolume | **SMS-EMOA** |
 
 The table follows the panel's decision table. The Metaheuristics.jl guide gives a similar selection: `NSGA2`, `SPEA2` or `SMS_EMOA` for two or three objectives, `NSGA3` for more than three, and `NSGA2` or `NSGA3` among the choices for constrained multi-objective problems.
 

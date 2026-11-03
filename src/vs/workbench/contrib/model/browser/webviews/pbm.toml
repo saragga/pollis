@@ -17,6 +17,10 @@ title = "High Performance Computing in Julia"
 description = "An 18-video course by Jamie Mair on writing fast Julia code"
 url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
 
+[[packages]]
+name = "Plots.jl"
+github = "https://github.com/JuliaPlots/Plots.jl"
+
 [requires]
 packages = ["Metaheuristics.jl", "Plots.jl"]
 
@@ -171,23 +175,23 @@ detail = "hypervolume-based steady-state selection; maximises dominated hypervol
 
 [[decisionRows]]
 task = "NSGA-II"
-context = "The default multi-objective evolutionary algorithm for two or three objectives, with or without constraints"
-purpose = "Fast non-dominated sorting plus crowding distance: a well-spread approximation of the Pareto front at low cost. Default problem: Binh-Korn, two objectives and two nonlinear constraints"
+context = "Two or three objectives, with or without constraints"
+purpose = "Fast non-dominated sorting in O(MN²) with crowding distance, and a dominance modified for constraints; in its original tests, a better spread and convergence than PAES and SPEA on most problems. Default problem: Binh-Korn, two objectives and two nonlinear constraints"
 
 [[decisionRows]]
 task = "NSGA-III"
-context = "Many objectives (four or more), where crowding distance no longer separates solutions"
-purpose = "Replaces crowding with a set of reference directions, keeping an even spread across a high-dimensional front"
+context = "Many-objective problems, with four or more objectives"
+purpose = "The NSGA-II framework, with the emphasis on non-dominated members close to a set of supplied reference points; satisfactory results on test problems with three to 15 objectives"
 
 [[decisionRows]]
 task = "SPEA2"
-context = "Fronts with uneven density or when an external archive of elite solutions is wanted"
-purpose = "Strength-based fitness with k-nearest-neighbour density and archive truncation, which preserves boundary solutions"
+context = "Two or three objectives, with an archive of non-dominated solutions kept next to the population"
+purpose = "Its three improvements over SPEA: a fine-grained fitness assignment by dominance strength, a density estimation technique and an enhanced archive truncation method"
 
 [[decisionRows]]
 task = "SMS-EMOA"
-context = "When the quality of the front is judged by hypervolume and evaluations are affordable"
-purpose = "Steady-state selection that discards the solution contributing least hypervolume: usually the highest hypervolume, at a higher cost per generation"
+context = "Two or three objectives, with the quality of the front judged by its hypervolume"
+purpose = "Steady-state: one offspring per iteration, and the solution with the smallest hypervolume contribution is discarded; all contributions take Θ(N log N) time for two and three objectives"
 
 [[inputs]]
 id = "obj"

@@ -52,7 +52,7 @@ The reference point is the nadir plus 10% of the distance from the ideal to the 
 
 | Topic | Work |
 |---|---|
-| The package | [Mejia-de-Dios and Mezura-Montes (2022)](#ref-MM2022a) |
+| The package | [Mejía-de-Dios and Mezura-Montes (2022)](#ref-MM2022a) |
 | Textbooks on evolutionary multi-objective optimisation | [Deb (2001)](#ref-Deb2001a), [Coello Coello, Lamont and Van Veldhuizen (2007)](#ref-CLV2007a) |
 | Pareto dominance, the four algorithms and performance assessment | [Emmerich and Deutz (2025)](#ref-ED2025a) |
 
@@ -72,9 +72,9 @@ The original papers of the four algorithms are listed in the table of algorithms
 
 <a id="ref-ED2025a"></a>Emmerich, M., & Deutz, A. (2025). Multicriteria Optimization and Decision Making: Principles, Algorithms and Case Studies (Updated and revised ed.). [doi:10.48550/arXiv.2407.00359](https://doi.org/10.48550/arXiv.2407.00359)
 
-<a id="ref-MM2022a"></a>Mejia-de-Dios, J.-A., & Mezura-Montes, E. (2022). Metaheuristics: A Julia Package for Single- and Multi-Objective Optimization. *Journal of Open Source Software* 7(78), 4723. [doi:10.21105/joss.04723](https://doi.org/10.21105/joss.04723)
+<a id="ref-MM2022a"></a>Mejía-de-Dios, J.-A., & Mezura-Montes, E. (2022). Metaheuristics: A Julia Package for Single- and Multi-Objective Optimization. *Journal of Open Source Software* 7(78), 4723. [doi:10.21105/joss.04723](https://doi.org/10.21105/joss.04723)
 
-<a id="ref-ZLT2001a"></a>Zitzler, E., Laumanns, M., & Thiele, L. (2001). SPEA2: Improving the Strength Pareto Evolutionary Algorithm. *TIK-Report 103, ETH Zurich*.
+<a id="ref-ZLT2001a"></a>Zitzler, E., Laumanns, M., & Thiele, L. (2001). SPEA2: Improving the Strength Pareto Evolutionary Algorithm. *TIK-Report 103, ETH Zurich*. [doi:10.3929/ethz-a-004284029](https://doi.org/10.3929/ethz-a-004284029)
 
 ## See Also
 

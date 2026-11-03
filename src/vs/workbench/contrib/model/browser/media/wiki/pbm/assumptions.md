@@ -4,7 +4,7 @@ What the four algorithms take for granted: minimised objectives within box bound
 
 ## Minimised objectives within bounds
 
-[Mejia-de-Dios and Mezura-Montes (2022)](#ref-MM2022a) state the problem that Metaheuristics.jl solves: minimise f(x) subject to gⱼ(x) ≤ 0 for j = 1, …, J and hₗ(x) = 0 for l = 1, …, L, with every decision variable between a lower and an upper bound, where f can be single- or multi-objective.
+[Mejía-de-Dios and Mezura-Montes (2022)](#ref-MM2022a) state the problem that Metaheuristics.jl solves: minimise f(x) subject to gⱼ(x) ≤ 0 for j = 1, …, J and hₗ(x) = 0 for l = 1, …, L, with every decision variable between a lower and an upper bound, where f can be single- or multi-objective.
 
 All entries of **Objectives** are therefore minimised; an objective to maximise enters with a minus sign. **Bounds** gives the box, one column per decision variable, and the candidate solutions are drawn within it.
 
@@ -12,7 +12,7 @@ All entries of **Objectives** are therefore minimised; an objective to maximise 
 
 The objective function returns a tuple of three vectors, objectives, inequality constraints and equality constraints, as the documentation of each algorithm states, and a solution is feasible when gᵢ(x) ≤ 0 and hⱼ(x) = 0. **Inequality Constraints** and **Equality Constraints** take `[0.0]` when there are none, which is always satisfied.
 
-[Deb, Pratap, Agarwal and Meyarivan (2002)](#ref-DPAM2002a) handle constraints by modifying the definition of dominance, and [Mejia-de-Dios and Mezura-Montes (2022)](#ref-MM2022a) note that Metaheuristics.jl handles both equality and inequality constraints. **Front Statistics** reports the largest total constraint violation among the non-dominated solutions.
+[Deb, Pratap, Agarwal and Meyarivan (2002)](#ref-DPAM2002a) handle constraints by modifying the definition of dominance, and [Mejía-de-Dios and Mezura-Montes (2022)](#ref-MM2022a) note that Metaheuristics.jl handles both equality and inequality constraints. **Front Statistics** reports the largest total constraint violation among the non-dominated solutions.
 
 ## Conflicting objectives
 
@@ -22,7 +22,7 @@ The default problem has conflicting objectives: the first is smallest at the ori
 
 ## No gradients, but a budget
 
-The four algorithms use only objective and constraint values, never derivatives. [Mejia-de-Dios and Mezura-Montes (2022)](#ref-MM2022a) describe metaheuristics as stochastic algorithms that approximate optimal solutions quickly where not all of the mathematical properties of the problem are known.
+The four algorithms use only objective and constraint values, never derivatives. [Mejía-de-Dios and Mezura-Montes (2022)](#ref-MM2022a) describe metaheuristics as stochastic algorithms that approximate optimal solutions quickly where not all of the mathematical properties of the problem are known.
 
 What they need instead is a budget of evaluations, set here by **Population** and **Iterations**. [Emmerich and Deutz (2025)](#ref-ED2025a) point out that computation time is often gauged by counting function evaluations, and **Front Statistics** prints the number used.
 
@@ -44,7 +44,7 @@ The panel sets the reference point 10% beyond the nadir of the front and keeps o
 
 <a id="ref-ED2025a"></a>Emmerich, M., & Deutz, A. (2025). Multicriteria Optimization and Decision Making: Principles, Algorithms and Case Studies (Updated and revised ed.). [doi:10.48550/arXiv.2407.00359](https://doi.org/10.48550/arXiv.2407.00359)
 
-<a id="ref-MM2022a"></a>Mejia-de-Dios, J.-A., & Mezura-Montes, E. (2022). Metaheuristics: A Julia Package for Single- and Multi-Objective Optimization. *Journal of Open Source Software* 7(78), 4723. [doi:10.21105/joss.04723](https://doi.org/10.21105/joss.04723)
+<a id="ref-MM2022a"></a>Mejía-de-Dios, J.-A., & Mezura-Montes, E. (2022). Metaheuristics: A Julia Package for Single- and Multi-Objective Optimization. *Journal of Open Source Software* 7(78), 4723. [doi:10.21105/joss.04723](https://doi.org/10.21105/joss.04723)
 
 ## See Also
 

@@ -52,7 +52,7 @@ Each metric has its own page: [Hypervolume](hv.md), [Generational Distance](gd.m
 
 <a id="ref-ZDT2000a"></a>Zitzler, E., Deb, K., & Thiele, L. (2000). Comparison of Multiobjective Evolutionary Algorithms: Empirical Results. *Evolutionary Computation* 8(2), 173-195. [doi:10.1162/106365600568202](https://doi.org/10.1162/106365600568202)
 
-<a id="ref-ZLT2001a"></a>Zitzler, E., Laumanns, M., & Thiele, L. (2001). SPEA2: Improving the Strength Pareto Evolutionary Algorithm. TIK-Report 103, ETH Zurich.
+<a id="ref-ZLT2001a"></a>Zitzler, E., Laumanns, M., & Thiele, L. (2001). SPEA2: Improving the Strength Pareto Evolutionary Algorithm. TIK-Report 103, ETH Zurich. [doi:10.3929/ethz-a-004284029](https://doi.org/10.3929/ethz-a-004284029)
 
 <a id="ref-ZT1999a"></a>Zitzler, E., & Thiele, L. (1999). Multiobjective Evolutionary Algorithms: A Comparative Case Study and the Strength Pareto Approach. *IEEE Transactions on Evolutionary Computation* 3(4), 257-271. [doi:10.1109/4235.797969](https://doi.org/10.1109/4235.797969)
 

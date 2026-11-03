@@ -8,21 +8,17 @@
 
 SPEA2 improves on it in three ways: a fine-grained fitness assignment strategy, a density estimation technique, and an enhanced archive truncation method. Their comparison of SPEA2 with SPEA and two other modern elitist methods, PESA and NSGA-II, on different test problems yields promising results.
 
-## Strength and density
+## Strength, density and the archive
 
 [Emmerich and Deutz (2025)](#ref-ED2025a) classify SPEA2 as Pareto-based, but with a different ranking criterion from non-dominated sorting: the strength of an individual depends on how many other individuals it dominates and by how many it is dominated. In SPEA, clustering served as a secondary ranking criterion, and both operators, the strength and the secondary criterion, were refined in SPEA2.
 
-The panel's decision table describes the density as a k-nearest-neighbour estimate, combined with the strength-based fitness; [Zitzler, Laumanns and Thiele (2001)](#ref-ZLT2001a) list the density estimation technique as the second of their three improvements over SPEA.
-
-## The archive
+[Zitzler, Laumanns and Thiele (2001)](#ref-ZLT2001a) list the density estimation technique as the second of their three improvements over SPEA, after the fine-grained fitness assignment.
 
 SPEA2 maintains an archive of non-dominated solutions next to the population, a feature [Emmerich and Deutz (2025)](#ref-ED2025a) mention alongside its refined operators. The archive holds non-dominated solutions across generations, and the enhanced archive truncation method is the third improvement that [Zitzler, Laumanns and Thiele (2001)](#ref-ZLT2001a) list.
 
-The panel's decision table describes the truncation as one that preserves boundary solutions, so that the extremes of the front are not lost when the archive is reduced.
-
 ## When to use it
 
-The panel's decision table suggests **SPEA2** for fronts with uneven density, or when an external archive of elite solutions is wanted. The Metaheuristics.jl guide lists `SPEA2` with `NSGA2` and `SMS_EMOA` for problems with two or three objectives.
+The panel's decision table suggests **SPEA2** for two or three objectives, when an archive of non-dominated solutions is to be kept next to the population. The Metaheuristics.jl guide lists `SPEA2` with `NSGA2` and `SMS_EMOA` for problems with two or three objectives.
 
 **Compare Algorithms** and **IGD Comparison** show how its front compares with those of the other three algorithms on the same problem, budget and seed.
 
@@ -36,7 +32,7 @@ The output is read the same way: the front, its ideal and nadir points, its hype
 
 <a id="ref-ED2025a"></a>Emmerich, M., & Deutz, A. (2025). Multicriteria Optimization and Decision Making: Principles, Algorithms and Case Studies (Updated and revised ed.). [doi:10.48550/arXiv.2407.00359](https://doi.org/10.48550/arXiv.2407.00359)
 
-<a id="ref-ZLT2001a"></a>Zitzler, E., Laumanns, M., & Thiele, L. (2001). SPEA2: Improving the Strength Pareto Evolutionary Algorithm. *TIK-Report 103, ETH Zurich*.
+<a id="ref-ZLT2001a"></a>Zitzler, E., Laumanns, M., & Thiele, L. (2001). SPEA2: Improving the Strength Pareto Evolutionary Algorithm. *TIK-Report 103, ETH Zurich*. [doi:10.3929/ethz-a-004284029](https://doi.org/10.3929/ethz-a-004284029)
 
 ## See Also
 

@@ -72,7 +72,7 @@ Every action reads `front`, `front2` and `ref`, so changing an input and rerunni
 
 ## Package and textbooks
 
-`Metaheuristics.jl`, described by [Mejia-de-Dios and Mezura-Montes (2022)](#ref-MM2022a), implements metaheuristics for single- and multi-objective optimisation, with test problems and performance indicators among its utilities. [Deb (2001)](#ref-Deb2001a) is a textbook on multi-objective optimisation with evolutionary algorithms. `Plots` draws the charts, and the package's `TestProblems` module supplies ZDT1 with its true front. [Zitzler, Thiele, Laumanns, Fonseca and da Fonseca (2003)](#ref-ZTLFF2003a) develop a mathematical framework for classifying quality indicators and analyse their limitations.
+`Metaheuristics.jl`, described by [Mejía-de-Dios and Mezura-Montes (2022)](#ref-MM2022a), implements metaheuristics for single- and multi-objective optimisation, with test problems and performance indicators among its utilities. [Deb (2001)](#ref-Deb2001a) is a textbook on multi-objective optimisation with evolutionary algorithms. `Plots` draws the charts, and the package's `TestProblems` module supplies ZDT1 with its true front. [Zitzler, Thiele, Laumanns, Fonseca and da Fonseca (2003)](#ref-ZTLFF2003a) develop a mathematical framework for classifying quality indicators and analyse their limitations.
 
 ## References
 
@@ -84,11 +84,11 @@ Every action reads `front`, `front2` and `ref`, so changing an input and rerunni
 
 <a id="ref-IISN2018a"></a>Ishibuchi, H., Imada, R., Setoguchi, Y., & Nojima, Y. (2018). How to Specify a Reference Point in Hypervolume Calculation for Fair Performance Comparison. *Evolutionary Computation* 26(3), 411-440. [doi:10.1162/evco_a_00226](https://doi.org/10.1162/evco_a_00226)
 
-<a id="ref-MM2022a"></a>Mejia-de-Dios, J.-A., & Mezura-Montes, E. (2022). Metaheuristics: A Julia Package for Single- and Multi-Objective Optimization. *Journal of Open Source Software* 7(78), 4723. [doi:10.21105/joss.04723](https://doi.org/10.21105/joss.04723)
+<a id="ref-MM2022a"></a>Mejía-de-Dios, J.-A., & Mezura-Montes, E. (2022). Metaheuristics: A Julia Package for Single- and Multi-Objective Optimization. *Journal of Open Source Software* 7(78), 4723. [doi:10.21105/joss.04723](https://doi.org/10.21105/joss.04723)
 
 <a id="ref-ZDT2000a"></a>Zitzler, E., Deb, K., & Thiele, L. (2000). Comparison of Multiobjective Evolutionary Algorithms: Empirical Results. *Evolutionary Computation* 8(2), 173-195. [doi:10.1162/106365600568202](https://doi.org/10.1162/106365600568202)
 
-<a id="ref-ZLT2001a"></a>Zitzler, E., Laumanns, M., & Thiele, L. (2001). SPEA2: Improving the Strength Pareto Evolutionary Algorithm. TIK-Report 103, ETH Zurich.
+<a id="ref-ZLT2001a"></a>Zitzler, E., Laumanns, M., & Thiele, L. (2001). SPEA2: Improving the Strength Pareto Evolutionary Algorithm. TIK-Report 103, ETH Zurich. [doi:10.3929/ethz-a-004284029](https://doi.org/10.3929/ethz-a-004284029)
 
 <a id="ref-ZT1999a"></a>Zitzler, E., & Thiele, L. (1999). Multiobjective Evolutionary Algorithms: A Comparative Case Study and the Strength Pareto Approach. *IEEE Transactions on Evolutionary Computation* 3(4), 257-271. [doi:10.1109/4235.797969](https://doi.org/10.1109/4235.797969)
 

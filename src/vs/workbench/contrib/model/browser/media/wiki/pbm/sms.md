@@ -34,7 +34,7 @@ They add that SMS-EMOA typically converges to regularly spaced approximations of
 
 [Emmerich and Deutz (2025)](#ref-ED2025a) report that all hypervolume contributions of a population can be computed in time Θ(N log N) for two and three objectives, and cite faster incremental methods for more. In Metaheuristics.jl, `SMS_EMOA` has a parameter `n_samples`, 10 000 by default, the number of samples used to approximate the hypervolume in many-objective problems, with more than two objectives.
 
-The panel's decision table suggests **SMS-EMOA** when the quality of the front is judged by hypervolume and evaluations are affordable.
+The panel's decision table suggests **SMS-EMOA** for two or three objectives, when the quality of the front is judged by its hypervolume.
 
 ## In the panel
 

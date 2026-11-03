@@ -23,7 +23,7 @@ The Pareto optimal solutions form the Pareto set in decision space, and their ob
 | **SPEA2** | Strength-based fitness, density estimation and an archive | [Zitzler, Laumanns and Thiele (2001)](#ref-ZLT2001a) |
 | **SMS-EMOA** | Non-dominated sorting, then hypervolume contribution | [Beume, Naujoks and Emmerich (2007)](#ref-BNE2007a) |
 
-All four come from Metaheuristics.jl, by [Mejia-de-Dios and Mezura-Montes (2022)](#ref-MM2022a), and are called with the same `optimize(f, bounds, algorithm)` interface.
+All four come from Metaheuristics.jl, by [Mejía-de-Dios and Mezura-Montes (2022)](#ref-MM2022a), and are called with the same `optimize(f, bounds, algorithm)` interface.
 
 ## The problem
 
@@ -51,9 +51,9 @@ The actions fall into five groups: Visualise plots the front and the convergence
 
 <a id="ref-ED2025a"></a>Emmerich, M., & Deutz, A. (2025). Multicriteria Optimization and Decision Making: Principles, Algorithms and Case Studies (Updated and revised ed.). [doi:10.48550/arXiv.2407.00359](https://doi.org/10.48550/arXiv.2407.00359)
 
-<a id="ref-MM2022a"></a>Mejia-de-Dios, J.-A., & Mezura-Montes, E. (2022). Metaheuristics: A Julia Package for Single- and Multi-Objective Optimization. *Journal of Open Source Software* 7(78), 4723. [doi:10.21105/joss.04723](https://doi.org/10.21105/joss.04723)
+<a id="ref-MM2022a"></a>Mejía-de-Dios, J.-A., & Mezura-Montes, E. (2022). Metaheuristics: A Julia Package for Single- and Multi-Objective Optimization. *Journal of Open Source Software* 7(78), 4723. [doi:10.21105/joss.04723](https://doi.org/10.21105/joss.04723)
 
-<a id="ref-ZLT2001a"></a>Zitzler, E., Laumanns, M., & Thiele, L. (2001). SPEA2: Improving the Strength Pareto Evolutionary Algorithm. *TIK-Report 103, ETH Zurich*.
+<a id="ref-ZLT2001a"></a>Zitzler, E., Laumanns, M., & Thiele, L. (2001). SPEA2: Improving the Strength Pareto Evolutionary Algorithm. *TIK-Report 103, ETH Zurich*. [doi:10.3929/ethz-a-004284029](https://doi.org/10.3929/ethz-a-004284029)
 
 ## See Also
 
