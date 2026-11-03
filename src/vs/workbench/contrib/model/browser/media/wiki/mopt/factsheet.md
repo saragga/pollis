@@ -1,6 +1,6 @@
-# Optimization on Riemannian Manifolds: Factsheet
+# Optimisation on Riemannian Manifolds: Factsheet
 
-A quick reference for **Optimization on Riemannian Manifolds**: the four algorithms, their inputs, what stops a run and what each action computes. All four run through `Manopt.jl` on a manifold from `Manifolds.jl`, and the gradient comes from `ForwardDiff` and `ManifoldDiff`.
+A quick reference for **Optimisation on Riemannian Manifolds**: the four algorithms, their inputs, what stops a run and what each action computes. All four run through `Manopt.jl` on a manifold from `Manifolds.jl`, and the gradient comes from `ForwardDiff` and `ManifoldDiff`.
 
 ## The four algorithms side by side
 
@@ -91,7 +91,7 @@ The gradient norm is measured in the metric of the manifold, through `norm(M, p,
 
 ## Packages and textbooks
 
-`Manopt.jl` is described by [Bergmann (2022)](#ref-Ber2022a), and `Manifolds.jl` by [Axen, Baran, Bergmann and Rzecki (2023)](#ref-ABBR2023a). `ForwardDiff` and `ManifoldDiff` supply the gradient, and `Plots` draws the three charts.
+`Manopt.jl` is described by [Bergmann (2022)](#ref-Ber2022a), and `Manifolds.jl` by [Axen, Baran, Bergmann and Rzecki (2023)](#ref-ABBR2023a). `ForwardDiff` and `ManifoldDiff` supply the gradient, and `Plots` draws the three charts. All four packages besides `Plots` are listed under Powered by.
 
 [Boumal (2023)](#ref-Bou2023b) is an introduction to the field, with a free pre-publication version on its author's website. [Absil, Mahony and Sepulchre (2008)](#ref-AMS2008a) treat line-search and trust-region algorithms on matrix manifolds.
 

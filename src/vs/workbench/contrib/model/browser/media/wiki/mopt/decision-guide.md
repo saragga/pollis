@@ -1,4 +1,4 @@
-# Optimization on Riemannian Manifolds: Decision Guide
+# Optimisation on Riemannian Manifolds: Decision Guide
 
 The first choice is the manifold, which follows from what the unknown is. The algorithm comes next, set by the size of the problem, the accuracy wanted and what a gradient costs.
 

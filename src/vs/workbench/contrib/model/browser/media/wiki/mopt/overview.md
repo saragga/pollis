@@ -1,6 +1,6 @@
-# Optimization on Riemannian Manifolds: Overview
+# Optimisation on Riemannian Manifolds: Overview
 
-Some unknowns have to stay on a curved set: a unit vector, a matrix with orthonormal columns, a subspace, a positive definite matrix. **Optimization on Riemannian Manifolds** takes that set as the whole search space, so every iterate meets the constraint by construction and the problem can be solved as an unconstrained one on the manifold.
+Some unknowns have to stay on a curved set: a unit vector, a matrix with orthonormal columns, a subspace, a positive definite matrix. **Optimisation on Riemannian Manifolds** takes that set as the whole search space, so every iterate meets the constraint by construction and the problem can be solved as an unconstrained one on the manifold.
 
 ## What kind of problem does the panel solve?
 

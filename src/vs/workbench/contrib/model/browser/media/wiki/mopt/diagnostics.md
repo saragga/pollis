@@ -1,4 +1,4 @@
-# Optimization on Riemannian Manifolds: Diagnostics
+# Optimisation on Riemannian Manifolds: Diagnostics
 
 A run returns a point and a reason for stopping, and the checks ask whether that reason can be trusted: whether the gradient was right, whether the limit or the tolerance ended the run, and whether another start or a tighter tolerance changes the answer.
 

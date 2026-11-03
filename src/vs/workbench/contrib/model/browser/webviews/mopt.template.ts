@@ -8,7 +8,7 @@ import { buildScaffoldHtml } from './scaffoldParts.js';
 
 export function getMoptHtml(): string {
 	return buildScaffoldHtml('mopt', MOPT_METADATA.mopt, {
-		title: 'Optimization on Riemannian Manifolds',
+		title: 'Optimisation on Riemannian Manifolds',
 		defaultModel: 'gd',
 		decisionFirstColumn: 'Solver',
 	});

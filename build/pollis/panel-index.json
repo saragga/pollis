@@ -5155,7 +5155,7 @@
 		},
 		{
 			"id": "mopt",
-			"title": "Optimization on Riemannian Manifolds",
+			"title": "Optimisation on Riemannian Manifolds",
 			"source": "pollis",
 			"commands": [
 				{
@@ -5191,7 +5191,9 @@
 			],
 			"packages": [
 				"Manopt.jl",
-				"Manifolds.jl"
+				"Manifolds.jl",
+				"ManifoldDiff.jl",
+				"ForwardDiff.jl"
 			]
 		},
 		{

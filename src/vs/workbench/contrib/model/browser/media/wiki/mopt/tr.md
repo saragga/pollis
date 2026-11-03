@@ -37,7 +37,7 @@ Near the solution the actual and predicted drops both become tiny, so the ratio 
 
 The panel's code supplies no Hessian, so the solver approximates each Hessian-vector product by finite differences of the gradient, as its documentation says. In the construction described by [Boumal (2023)](#ref-Bou2023b), each product costs one retraction, one gradient and one transport.
 
-That explains the wording of the panel's description: a superlinear local rate with the approximation, and a quadratic rate only with an exact Hessian. `trust_regions` accepts a Hessian function, `Hess_f`, as an optional argument, and supplying one takes an edit to the call in the code.
+The panel's description gives both rates: superlinear with the approximation, and quadratic with an exact Hessian. `trust_regions` accepts a Hessian function, `Hess_f`, as an optional argument, and supplying one takes an edit to the call in the code.
 
 ## How fast is it, and where does it stop?
 

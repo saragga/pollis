@@ -50106,7 +50106,7 @@
 		},
 		{
 			"id": "mopt",
-			"title": "Optimization on Riemannian Manifolds",
+			"title": "Optimisation on Riemannian Manifolds",
 			"description": "Gradient Descent · Conjugate Gradient · Quasi-Newton · Trust Regions",
 			"commands": [
 				"chiara.optimise.mopt"

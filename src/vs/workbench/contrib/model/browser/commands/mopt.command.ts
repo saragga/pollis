@@ -10,7 +10,7 @@ import { getMoptHtml } from '../webviews/mopt.template.js';
 export const MOPT_PANEL: IScaffoldPanel = {
 	id: 'mopt',
 	viewType: 'pollis.mopt',
-	title: 'Optimization on Riemannian Manifolds',
+	title: 'Optimisation on Riemannian Manifolds',
 	data: MOPT_METADATA.mopt,
 	html: getMoptHtml,
 };

@@ -30,7 +30,7 @@ Each trial needs a gradient as well as a cost, so a search can take more work th
 
 [Huang, Absil and Gallivan (2018)](#ref-HAG2018a) define a Riemannian BFGS method based on a cautious update and a weak line search condition. They prove global convergence to stationary points with no convexity assumption, and superlinear convergence to a nondegenerate minimiser. The weak condition removes the need for information from a differentiated retraction.
 
-That result is for BFGS with a cautious update. The panel's run uses the limited-memory form and the solver's default `cautious_update=false`, and setting that keyword to `true` adds the cautious rule. Treat the panel's rate as something to observe on **Iterate Path**, as the **Algorithm Guide** does in calling it superlinear in practice.
+The solver's `cautious_update` keyword turns the cautious rule on, and `solve(cautious_update=true)` runs it. The rate on the problem in hand shows on **Iterate Path**, where a line that bends downwards marks fast convergence.
 
 ## What does a run look like?
 

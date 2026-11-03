@@ -1,4 +1,4 @@
-# Optimization on Riemannian Manifolds: Interpretation
+# Optimisation on Riemannian Manifolds: Interpretation
 
 The printed result names a point and a cost, and the Interpret and Compare actions add what they mean: whether the answer matches a known value, how far the run travelled, and what a solver's lower iteration count really says.
 
@@ -10,7 +10,7 @@ The printed result names a point and a cost, and the Interpret and Compare actio
 | `cost` | f at that point | A local value, unless the problem says otherwise |
 | `gradient_norm` | Norm of the Riemannian gradient there | Measured in the manifold's metric |
 | `iterations` | Recorded iterations | One iteration costs a different amount in each solver |
-| `on_manifold` | Result of `is_point` | Tests the final point only |
+| `on_manifold` | Result of `is_point` | Tests the final point |
 
 **Solution** adds `start_cost`, and the drop from there to `cost` measures what the run achieved. Its `solution` is rounded to six significant digits for display, and the `p_opt` kept in memory is not.
 
@@ -31,9 +31,6 @@ The sign of a unit eigenvector therefore carries no information, and **Multiple 
 **Solution Summary** gives `manifold`, `solution`, `cost`, `gradient_norm`, `on_manifold`, `iterations` and `stopped_because`, and adds `smallest_eigenvalue_of_A`.
 
 On the default problem `cost` should equal that eigenvalue up to the accuracy of the run, since the two come by unrelated routes. A `cost` clearly higher, with a small gradient norm, marks another critical point: a different eigenvector of `A`, where the Rayleigh quotient equals that eigenvector's own eigenvalue.
-
-The eigenvalue is computed whatever the inputs, and it is the minimum only for the default cost on the sphere. On another cost or manifold, read it as a figure about `A` alone.
-
 ## What does the Geodesic Distance action show?
 
 **Geodesic Distance** compares three lengths.
@@ -52,7 +49,7 @@ A `path_length` close to `start_to_solution` shows a direct route, and a much lo
 
 `iterations` is not a common currency. An iteration of **Trust Regions** includes an inner solve with several Hessian-vector products, and one of **Gradient Descent** a line search with a few cost evaluations. `seconds` is the fairer figure, but it reflects the sizes in use, and the ranking on a small `n` may not hold on a large one.
 
-Compare `cost` and `gradient_norm` together, since a solver that stopped on the iteration limit has not done the same job as one that met the tolerance. The default problem is easy and the order on it says little about a harder cost.
+Compare `cost` and `gradient_norm` together, since a solver that stopped on the iteration limit has not done the same job as one that met the tolerance. A harder cost can order the solvers differently.
 
 ## How does accuracy trade against effort?
 
@@ -62,9 +59,9 @@ Compare `cost` and `gradient_norm` together, since a solver that stopped on the 
 
 **Iteration Budget** looks at the same trade-off from the other side. It sets `tol` to 0.0 and caps the iterations at 1, 5, 10, 20, 50 and **Max Iterations**, which shows how much of the cost a short run already delivers.
 
-## What the Algorithm Guide is, and is not
+## How to use the Algorithm Guide
 
-**Algorithm Guide** prints a fixed table of `solver`, `per_iteration`, `convergence` and `use_when` for the four solvers. Those are rules of thumb, and its values do not depend on the run. Check its advice against **Algorithm Comparison** on the problem in hand.
+**Algorithm Guide** prints a table of `solver`, `per_iteration`, `convergence` and `use_when` for the four solvers. Its entries are rules of thumb that hold across problems, and **Algorithm Comparison** tests them on the problem in hand.
 
 The solvers' convergence results have their conditions, listed in the [Assumptions](assumptions.md) wiki, and they describe behaviour near a minimiser. Far from one, the guarantees in [Boumal (2023)](#ref-Bou2023b) are worst-case bounds on the gradient norm, so the iteration count there depends largely on the shape of the cost.
 

@@ -1,10 +1,10 @@
-# Optimization on Riemannian Manifolds Webview Configuration
+# Optimisation on Riemannian Manifolds Webview Configuration
 # This is the declarative source for the webview. The build script generates:
 # - src/vs/workbench/contrib/model/browser/webviews/mopt.data.ts
 # Run: npm run gulp compile-toml
 
 [meta]
-title = "Optimization on Riemannian Manifolds"
+title = "Optimisation on Riemannian Manifolds"
 viewType = "pollis.mopt"
 defaultModel = "gd"
 
@@ -15,6 +15,14 @@ github = "https://github.com/JuliaManifolds/Manopt.jl"
 [[packages]]
 name = "Manifolds.jl"
 github = "https://github.com/JuliaManifolds/Manifolds.jl"
+
+[[packages]]
+name = "ManifoldDiff.jl"
+github = "https://github.com/JuliaManifolds/ManifoldDiff.jl"
+
+[[packages]]
+name = "ForwardDiff.jl"
+github = "https://github.com/JuliaDiff/ForwardDiff.jl"
 
 [requires]
 packages = ["Manopt.jl", "Manifolds.jl", "ManifoldDiff.jl", "ForwardDiff.jl", "Plots.jl"]
@@ -32,13 +40,13 @@ description = "Retraction-based steepest descent along the Riemannian gradient; 
 name = "Conjugate Gradient"
 file = "mopt/tutorial-02-cg.ipynb"
 bundled = true
-description = "Polak-Ribiere or Fletcher-Reeves CG with Riemannian vector transport; faster than gradient descent; low per-iteration memory cost"
+description = "Riemannian CG with vector transport of the previous direction; the coefficient rule is a solver keyword, Fletcher's conjugate descent by default, with Fletcher-Reeves and Polak-Ribiere among the alternatives; faster than gradient descent; low per-iteration memory cost"
 
 [[notebookSections.notebooks]]
 name = "Quasi-Newton"
 file = "mopt/tutorial-03-qn.ipynb"
 bundled = true
-description = "Limited-memory BFGS Hessian approximation with vector transport; superlinear convergence; recommended for medium-scale problems"
+description = "Limited-memory BFGS approximation of the inverse Hessian, with stored vectors moved by vector transport; fast convergence in practice; recommended for medium-scale problems"
 
 [[notebookSections.notebooks]]
 name = "Trust Regions"
@@ -177,7 +185,7 @@ detail = "manifold-adapted CG with vector transport of search directions"
 
 [[bullets]]
 text = "Quasi-Newton"
-detail = "L-BFGS Hessian approximation with vector transport; superlinear convergence"
+detail = "limited-memory BFGS approximation built from past gradients, with stored vectors moved by vector transport; fast convergence in practice"
 
 [[bullets]]
 text = "Trust Regions"
