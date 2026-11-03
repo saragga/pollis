@@ -11433,6 +11433,31 @@
 			"open_access": true
 		},
 		{
+			"key": "GCB2014a",
+			"type": "inproceedings",
+			"title": "Content-Based Recommendations with Poisson Factorization",
+			"authors": [
+				"Gopalan, Prem",
+				"Charlin, Laurent",
+				"Blei, David M."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2014,
+			"booktitle": "Advances in Neural Information Processing Systems",
+			"volume": "27",
+			"pages": "3176-3184",
+			"openalex": "W2125261539",
+			"url": "http://www.cs.columbia.edu/~blei/papers/GopalanCharlinBlei2014.pdf",
+			"oa_url": "http://www.cs.columbia.edu/~blei/papers/GopalanCharlinBlei2014.pdf",
+			"abstract": "We develop collaborative topic Poisson factorization (CTPF), a generative model of articles and reader preferences. CTPF can be used to build recommender systems by learning from reader histories and content to recommend personalized articles of interest. In detail, CTPF models both reader behavior and article texts with Poisson distributions, connecting the latent topics that represent the texts with the latent preferences that represent the readers. This provides better recommendations than competing methods and gives an interpretable latent space for understanding patterns of readership. Further, we exploit stochastic variational inference to model massive real-world datasets. For example, we can fit CPTF to the full arXiv usage dataset, which contains over 43 million ratings and 42 million word counts, within a day. We demonstrate empirically that our model outperforms several baselines, including the previous state-of-the art approach.",
+			"abstract_source": "author",
+			"source": "manual",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "GCG2021a",
 			"type": "article",
 			"title": "COSMO: A Conic Operator Splitting Method for Convex Conic Problems",
@@ -50045,7 +50070,9 @@
 				"JM2024a",
 				"Ble2012a",
 				"WB2011a",
-				"GHB2014a"
+				"GCB2014a",
+				"GHB2014a",
+				"WMSM2009a"
 			]
 		},
 		{

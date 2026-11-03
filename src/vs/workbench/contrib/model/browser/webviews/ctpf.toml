@@ -104,7 +104,17 @@ label = "Original Papers"
 key = "WB2011a"
 
 [[references]]
+key = "GCB2014a"
+
+[[references]]
 key = "GHB2014a"
+
+[[references]]
+separator = true
+label = "Evaluation"
+
+[[references]]
+key = "WMSM2009a"
 
 [[bullets]]
 text = "CTPF"
