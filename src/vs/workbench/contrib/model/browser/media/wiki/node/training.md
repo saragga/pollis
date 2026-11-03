@@ -4,7 +4,7 @@ How the panel fits the network to the data: the loss, the gradient by adjoint se
 
 ## The loss
 
-Every model integrates its ODE from the first observation, u0 = obs_data[:, 1], and saves the solution at **Time points**. The loss is the squared error against the observed trajectory, summed over states and times:
+Every model integrates its ODE from the first observation, u0 = obs_data[:, 1] at time t0 = tsteps[1], and saves the solution at **Time points**. The loss is the squared error against the observed trajectory, summed over states and times:
 
 L(θ) = Σᵢ Σⱼ (ûᵢ(tⱼ; θ) − yᵢⱼ)²
 

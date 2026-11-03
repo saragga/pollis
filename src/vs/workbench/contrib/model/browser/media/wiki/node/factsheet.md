@@ -15,13 +15,14 @@ The panel's models, inputs, software and results at a glance.
 | Input | Default | Role |
 |---|---|---|
 | **Observed trajectory** | `obs_data` | n × m matrix of observed states; first column = initial condition |
-| **Time points** | `tsteps` | One observation time per column, within [0, T] |
+| **Time points** | `tsteps` | One observation time per column, increasing, up to T; the first is t0, the time of the initial condition |
 | **State dimension (n)** | 2 | Number of state variables |
 | **Hidden units** | 32 | Width of each hidden layer |
 | **Augmented dimensions** | 2 | Extra zero-initialised states (**Augmented** only) |
 | **Time span end (T)** | 10.0 | End of the training interval |
 | **Learning rate** | 0.01 | Adam step size |
 | **Iterations** | 300 | Number of gradient steps |
+| **Random Seed** | 42 | Initial weights of the network; new initial condition of **Forward Simulation** |
 
 ## Training
 

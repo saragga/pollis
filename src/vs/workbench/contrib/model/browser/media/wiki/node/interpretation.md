@@ -4,9 +4,9 @@ How to read what the fitted model says about the system: simulations from new st
 
 ## Forward simulation
 
-**Forward Simulation** starts the fitted model from a new initial condition, the first observation plus random normal noise with standard deviation 0.5 in every state, and integrates it at 200 points up to T. The new trajectory shows what the learned dynamics do from a state the training never started from.
+**Forward Simulation** starts the fitted model from a new initial condition, the first observation plus random normal noise with standard deviation 0.5 in every state, and integrates it from t0 at 200 points up to T. The new trajectory shows what the learned dynamics do from a state the training never started from.
 
-The noise is drawn without a fixed seed, so each run starts from a different point. A trajectory from the new start that behaves like the observed one, for instance spiralling towards the same point, is consistent with dynamics learned around the data rather than along one path alone.
+The noise is drawn from a generator seeded with **Random Seed**, so a run is repeated exactly with the same seed, and another seed starts from another point. A trajectory from the new start that behaves like the observed one, for instance spiralling towards the same point, is consistent with dynamics learned around the data rather than along one path alone.
 
 ## Extrapolation
 

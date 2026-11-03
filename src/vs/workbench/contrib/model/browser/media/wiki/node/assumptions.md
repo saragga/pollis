@@ -1,6 +1,6 @@
 # Neural ODEs for System Identification: Assumptions
 
-What the three models take for granted: autonomous dynamics, a fully observed state, a known initial condition at time zero, smooth vector fields, a squared-error fit, and, for the UDE, a known part of the physics.
+What the three models take for granted: autonomous dynamics, a fully observed state, a known initial condition at the first observation time, smooth vector fields, a squared-error fit, and, for the UDE, a known part of the physics.
 
 ## Autonomous dynamics
 
@@ -16,7 +16,7 @@ A system driven by an external input that varies with time, or whose rules chang
 
 ## The initial condition
 
-Every model starts its integration from the first column of **Observed trajectory**, taken as the exact state at time 0, as the tooltip of the input states. The solution is saved at **Time points**, so the first of them is expected to be 0, and the others to lie within [0, T].
+Every model starts its integration from the first column of **Observed trajectory**, taken as the exact state at t0, the first of the **Time points**, as the tooltips of the two inputs state. The solution is saved at **Time points**, which are expected to increase up to T.
 
 Noise in the first observation is therefore carried into the whole fitted trajectory, since the initial condition is not estimated. **Initial-Condition Sensitivity** shows how much a change of 1% in u0 moves the fitted trajectory over time.
 
@@ -30,7 +30,7 @@ Unique solutions imply that two trajectories of the same autonomous ODE cannot c
 
 The loss adds the squared differences between the fitted and observed values over all states and times, with equal weight for each. States measured on a larger scale contribute larger differences, so the fit follows them more closely unless the data are rescaled beforehand.
 
-The loss uses no prior on the parameters and no penalty on the network's weights. The fitted parameters `p_opt` are the end point of **Iterations** steps of Adam from a random initialisation of the network, by the method of [Kingma and Ba (2015)](#ref-KB2015a).
+The loss uses no prior on the parameters and no penalty on the network's weights. The fitted parameters `p_opt` are the end point of **Iterations** steps of Adam from a random initialisation of the network, fixed by **Random Seed**, by the method of [Kingma and Ba (2015)](#ref-KB2015a).
 
 ## Known physics in the UDE
 

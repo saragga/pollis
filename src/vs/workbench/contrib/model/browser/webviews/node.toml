@@ -17,6 +17,38 @@ title = "High Performance Computing in Julia"
 description = "An 18-video course by Jamie Mair on writing fast Julia code"
 url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
 
+[[packages]]
+name = "OrdinaryDiffEq.jl"
+github = "https://github.com/SciML/OrdinaryDiffEq.jl"
+
+[[packages]]
+name = "SciMLSensitivity.jl"
+github = "https://github.com/SciML/SciMLSensitivity.jl"
+
+[[packages]]
+name = "Lux.jl"
+github = "https://github.com/LuxDL/Lux.jl"
+
+[[packages]]
+name = "ComponentArrays.jl"
+github = "https://github.com/SciML/ComponentArrays.jl"
+
+[[packages]]
+name = "Optimization.jl"
+github = "https://github.com/SciML/Optimization.jl"
+
+[[packages]]
+name = "OptimizationOptimisers.jl"
+github = "https://github.com/SciML/Optimization.jl/tree/master/lib/OptimizationOptimisers"
+
+[[packages]]
+name = "Enzyme.jl"
+github = "https://github.com/EnzymeAD/Enzyme.jl"
+
+[[packages]]
+name = "Plots.jl"
+github = "https://github.com/JuliaPlots/Plots.jl"
+
 [requires]
 packages = ["Plots.jl", "DiffEqFlux.jl", "OrdinaryDiffEq.jl", "SciMLSensitivity.jl", "Lux.jl", "ComponentArrays.jl", "Optimization.jl", "OptimizationOptimisers.jl", "Enzyme.jl"]
 
@@ -173,7 +205,7 @@ default = "obs_data"
 [[inputs]]
 id = "tvar"
 label = "Time points"
-tooltip = "Observation times, one per column of the observed trajectory, within [0, T]."
+tooltip = "Observation times, increasing, one per column of the observed trajectory, up to T. The integration starts at the first of them, the time of the initial condition."
 default = "tsteps"
 
 [[inputs]]
@@ -214,6 +246,12 @@ id = "maxiter"
 label = "Iterations"
 tooltip = "Number of gradient steps. Start with 300 and increase if the loss has not converged."
 default = "300"
+
+[[inputs]]
+id = "seed"
+label = "Random Seed"
+tooltip = "Seed for the initial weights of the network and for the new initial condition of Forward Simulation."
+default = "42"
 
 [miniCharts]
 # SVG drawing functions for each model's mini-chart icon (54 x 86 box)
@@ -264,6 +302,7 @@ hidden  = {{hidden}}  # hidden units per layer
 T       = {{tspan}}f0  # end of the training time span
 lr      = {{lr}}  # Adam learning rate
 maxiter = {{maxiter}}  # training iterations
+seed    = {{seed}}  # random seed for the initial weights of the network and the draws of the actions
 
 if !@isdefined(obs_data)  # no data in the session: simulate the damped cubic spiral of the DiffEqFlux tutorial as a demo
     n == 2 || error("the demo data is 2-dimensional: set n = 2 or define obs_data and tsteps")
@@ -272,14 +311,15 @@ if !@isdefined(obs_data)  # no data in the session: simulate the damped cubic sp
     obs_data = Array(solve(ODEProblem((u, p, t) -> transpose(A_true) * u .^ 3, Float32[2.0, 0.0], (0f0, T)), Tsit5(); saveat=tsteps))
 end
 obs_data = Float32.({{yvar}})  # observed trajectory, n x number of time points
-tsteps   = Float32.(collect({{tvar}}))  # observation times in [0, T]
-u0       = obs_data[:, 1]  # initial condition: the first observation
+tsteps   = Float32.(collect({{tvar}}))  # observation times, increasing, up to T
+t0       = tsteps[1]  # time of the first observation
+u0       = obs_data[:, 1]  # initial condition: the first observation, at time t0
 solver   = (reltol=1f-3, abstol=1f-3)  # ODE solver tolerances
 
 nn = Chain(Dense(n => hidden, tanh), Dense(hidden => hidden, tanh), Dense(hidden => n))  # learned vector field du/dt = nn(u)
-ps, st = Lux.setup(Random.default_rng(), nn)
+ps, st = Lux.setup(Xoshiro(seed), nn)
 ps = ComponentArray(ps)
-predict(p, u0, t) = Array(first(NeuralODE(nn, (0f0, t[end]), Tsit5(); saveat=t, solver..., sensealg=InterpolatingAdjoint(autojacvec=EnzymeVJP()))(u0, p, st)))  # n x length(t)
+predict(p, u0, t) = Array(first(NeuralODE(nn, (t0, t[end]), Tsit5(); saveat=t, solver..., sensealg=InterpolatingAdjoint(autojacvec=EnzymeVJP()))(u0, p, st)))  # n x length(t)
 vector_field(u, p) = first(nn(u, p, st))  # du/dt at state u
 
 loss(p) = sum(abs2, predict(p, u0, tsteps) .- obs_data)  # squared error against the observed trajectory
@@ -301,6 +341,7 @@ hidden  = {{hidden}}  # hidden units per layer
 T       = {{tspan}}f0  # end of the training time span
 lr      = {{lr}}  # Adam learning rate
 maxiter = {{maxiter}}  # training iterations
+seed    = {{seed}}  # random seed for the initial weights of the network and the draws of the actions
 
 if !@isdefined(obs_data)  # no data in the session: simulate the damped cubic spiral of the DiffEqFlux tutorial as a demo
     n == 2 || error("the demo data is 2-dimensional: set n = 2 or define obs_data and tsteps")
@@ -309,16 +350,17 @@ if !@isdefined(obs_data)  # no data in the session: simulate the damped cubic sp
     obs_data = Array(solve(ODEProblem((u, p, t) -> transpose(A_true) * u .^ 3, Float32[2.0, 0.0], (0f0, T)), Tsit5(); saveat=tsteps))
 end
 obs_data = Float32.({{yvar}})  # observed trajectory, n x number of time points
-tsteps   = Float32.(collect({{tvar}}))  # observation times in [0, T]
-u0       = obs_data[:, 1]  # initial condition: the first observation
+tsteps   = Float32.(collect({{tvar}}))  # observation times, increasing, up to T
+t0       = tsteps[1]  # time of the first observation
+u0       = obs_data[:, 1]  # initial condition: the first observation, at time t0
 solver   = (reltol=1f-3, abstol=1f-3)  # ODE solver tolerances
 
 aug = {{augment}}  # extra states, starting at zero
 nn = Chain(Dense(n + aug => hidden, tanh), Dense(hidden => hidden, tanh), Dense(hidden => n + aug))  # dynamics in the augmented space
-ps, st = Lux.setup(Random.default_rng(), nn)
+ps, st = Lux.setup(Xoshiro(seed), nn)
 ps = ComponentArray(ps)
 lift(u) = vcat(u, zeros(Float32, aug))  # append the augmented states
-predict_full(p, u0, t) = Array(first(NeuralODE(nn, (0f0, t[end]), Tsit5(); saveat=t, solver..., sensealg=InterpolatingAdjoint(autojacvec=EnzymeVJP()))(lift(u0), p, st)))  # (n + aug) x length(t)
+predict_full(p, u0, t) = Array(first(NeuralODE(nn, (t0, t[end]), Tsit5(); saveat=t, solver..., sensealg=InterpolatingAdjoint(autojacvec=EnzymeVJP()))(lift(u0), p, st)))  # (n + aug) x length(t)
 predict(p, u0, t) = predict_full(p, u0, t)[1:n, :]  # keep the observed states
 vector_field_full(z, p) = first(nn(z, p, st))  # dz/dt in the augmented space: the observed states alone do not determine their velocity
 
@@ -341,6 +383,7 @@ hidden  = {{hidden}}  # hidden units per layer
 T       = {{tspan}}f0  # end of the training time span
 lr      = {{lr}}  # Adam learning rate
 maxiter = {{maxiter}}  # training iterations
+seed    = {{seed}}  # random seed for the initial weights of the network and the draws of the actions
 
 if !@isdefined(obs_data)  # no data in the session: simulate the damped cubic spiral of the DiffEqFlux tutorial as a demo
     n == 2 || error("the demo data is 2-dimensional: set n = 2 or define obs_data and tsteps")
@@ -349,17 +392,18 @@ if !@isdefined(obs_data)  # no data in the session: simulate the damped cubic sp
     obs_data = Array(solve(ODEProblem((u, p, t) -> transpose(A_true) * u .^ 3, Float32[2.0, 0.0], (0f0, T)), Tsit5(); saveat=tsteps))
 end
 obs_data = Float32.({{yvar}})  # observed trajectory, n x number of time points
-tsteps   = Float32.(collect({{tvar}}))  # observation times in [0, T]
-u0       = obs_data[:, 1]  # initial condition: the first observation
+tsteps   = Float32.(collect({{tvar}}))  # observation times, increasing, up to T
+t0       = tsteps[1]  # time of the first observation
+u0       = obs_data[:, 1]  # initial condition: the first observation, at time t0
 solver   = (reltol=1f-3, abstol=1f-3)  # ODE solver tolerances
 
 known(u, theta) = theta .* u  # known physics with unknown rates (here growth or decay of each state): replace with your model
 nn = Chain(Dense(n => hidden, tanh), Dense(hidden => n))  # learns the missing terms
-ps_nn, st = Lux.setup(Random.default_rng(), nn)
+ps_nn, st = Lux.setup(Xoshiro(seed), nn)
 ps = ComponentArray(theta=zeros(Float32, n), nn=ps_nn)
 vector_field(u, p) = known(u, p.theta) .+ first(nn(u, p.nn, st))  # du/dt = known + learned
-prob = ODEProblem((u, p, t) -> vector_field(u, p), u0, (0f0, T), ps)
-predict(p, u0, t) = Array(solve(remake(prob; u0, p, tspan=(0f0, t[end])), Tsit5(); saveat=t, solver...,
+prob = ODEProblem((u, p, t) -> vector_field(u, p), u0, (t0, T), ps)
+predict(p, u0, t) = Array(solve(remake(prob; u0, p, tspan=(t0, t[end])), Tsit5(); saveat=t, solver...,
                                 sensealg=InterpolatingAdjoint(autojacvec=EnzymeVJP())))  # n x length(t)
 
 loss(p) = sum(abs2, predict(p, u0, tsteps) .- obs_data)  # squared error against the observed trajectory
@@ -393,7 +437,7 @@ desc = "Fitted and observed trajectories of the first two states in phase space"
 code = '''
 using Plots
 
-pred = predict(p_opt, u0, range(0f0, T; length=500))
+pred = predict(p_opt, u0, range(t0, T; length=500))
 plot(pred[1, :], pred[2, :], label="fitted", lw=2, xlabel="x1", ylabel="x2")
 scatter!(obs_data[1, :], obs_data[2, :], label="observed", ms=3)
 scatter!([u0[1]], [u0[2]], label="start", marker=:star5, ms=8)
@@ -451,7 +495,7 @@ desc = "Distance over time between trajectories started at u0 and at a slightly 
 code = '''
 using LinearAlgebra, Plots
 
-t = range(0f0, T; length=200)
+t = range(t0, T; length=200)
 delta = norm.(eachcol(predict(p_opt, u0, t) .- predict(p_opt, u0 .* 1.01f0, t)))  # 1% perturbation
 plot(t, delta, xlabel="time", ylabel="distance between trajectories", legend=false)
 '''
@@ -467,8 +511,8 @@ desc = "Run the fitted model forward from a new initial condition"
 code = '''
 using Plots
 
-u_new = obs_data[:, 1] .+ 0.5f0 .* randn(Float32, n)  # new initial condition
-t_new = range(0f0, T; length=200)
+u_new = u0 .+ 0.5f0 .* randn(Xoshiro(seed + 1), Float32, n)  # new initial condition at time t0, reproducible with seed
+t_new = range(t0, T; length=200)
 pred_new = predict(p_opt, u_new, t_new)
 plot(t_new, permutedims(pred_new), label=permutedims(string.("x", 1:n)), xlabel="time")
 '''
@@ -480,7 +524,7 @@ desc = "Extend the prediction to twice the training horizon to test generalisati
 code = '''
 using Plots
 
-t_extrap = range(0f0, 2T; length=400)
+t_extrap = range(t0, 2T; length=400)
 pred_extrap = predict(p_opt, u0, t_extrap)
 plot(t_extrap, permutedims(pred_extrap), label=permutedims(string.("x", 1:n)), xlabel="time")
 scatter!(tsteps, permutedims(obs_data), label=false, ms=2)
@@ -501,8 +545,8 @@ held = cut+1:length(tsteps)  # held-out horizon
 loss_fit(p) = sum(abs2, predict(p, u0, tsteps[1:cut]) .- obs_data[:, 1:cut])
 res_fit = solve(OptimizationProblem(OptimizationFunction((p, _) -> loss_fit(p), Optimization.AutoEnzyme()), ps),
                 OptimizationOptimisers.Adam(lr); maxiters=maxiter)  # neural model refit on the training part
-prob_lin = ODEProblem((u, A, t) -> A * u, u0, (0f0, tsteps[end]), zeros(Float32, n, n))
-predict_lin(A, t) = Array(solve(remake(prob_lin; p=A, tspan=(0f0, t[end])), Tsit5(); saveat=t, solver...,
+prob_lin = ODEProblem((u, A, t) -> A * u, u0, (t0, tsteps[end]), zeros(Float32, n, n))
+predict_lin(A, t) = Array(solve(remake(prob_lin; p=A, tspan=(t0, t[end])), Tsit5(); saveat=t, solver...,
                                 sensealg=InterpolatingAdjoint(autojacvec=EnzymeVJP())))
 optf_lin = OptimizationFunction((A, _) -> sum(abs2, predict_lin(A, tsteps[1:cut]) .- obs_data[:, 1:cut]), Optimization.AutoEnzyme())
 res_lin = solve(OptimizationProblem(optf_lin, zeros(Float32, n, n)), OptimizationOptimisers.Adam(lr); maxiters=maxiter)
@@ -525,7 +569,7 @@ r1, r2 = extrema(obs_data[1, :]), extrema(obs_data[2, :])
 {{?model!=augmented}} base = vec(mean(obs_data; dims=2))  # states beyond the first two held at their mean
 {{?model!=augmented}} grid = vec([(x, y) for x in range(r1..., length=15), y in range(r2..., length=15)])
 {{?model!=augmented}} field = [vector_field(Float32.(vcat(x, y, base[3:end])), p_opt) for (x, y) in grid]
-{{?model=augmented}} full = predict_full(p_opt, u0, range(0f0, T; length=60))  # fitted path including the extra states
+{{?model=augmented}} full = predict_full(p_opt, u0, range(t0, T; length=60))  # fitted path including the extra states
 {{?model=augmented}} grid = [(z[1], z[2]) for z in eachcol(full)]  # no grid: the velocity of x1, x2 depends on the extra states, so it is only defined along a path
 {{?model=augmented}} field = [vector_field_full(z, p_opt)[1:2] for z in eachcol(full)]  # du/dt of x1, x2 with the extra states at their fitted values
 scale = 0.06 * (r1[2] - r1[1]) / maximum(norm, field)
@@ -542,7 +586,7 @@ using LinearAlgebra, Statistics
 
 solver_fit = solver
 solver = (reltol=1f-6, abstol=1f-7)  # tight tolerances: solver error must stay well below the 1e-4 perturbation
-t = collect(range(0f0, 2T; length=400))
+t = collect(range(t0, 2T; length=400))
 traj = predict(p_opt, u0, t)
 dist = norm.(eachcol(traj .- predict(p_opt, u0 .+ 1f-4, t)))
 solver = solver_fit  # restore the fitting tolerances
