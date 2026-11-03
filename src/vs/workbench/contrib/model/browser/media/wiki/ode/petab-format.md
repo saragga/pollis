@@ -4,7 +4,7 @@ PEtab is a standard format for parameter estimation problems with ODE models. Th
 
 ## A format for estimation problems
 
-[Schmiester, Schälte, Bergmann, Camba, Dudkin, Egert, Fröhlich, Fuhrmann, Hauber, Kemmer, Lakrisenko, Loos, Merkt, Müller, Pathirana, Raue, Sahle, Schaber, Stapor, Ulrich, Villaverde, Weindl, Wierling, Stelling, Timmer, Hasenauer and Theis (2021)](#ref-SSBCD...2021a) introduced PEtab because estimation toolboxes used their own input formats, which made it hard to reuse a problem or reproduce its results in another tool. The format describes everything an estimation needs: the model, the experimental conditions, the observables and their noise models, the measurements, and the parameters to estimate.
+[Schmiester, Schälte, Bergmann, Camba, Dudkin, Egert, Fröhlich, Fuhrmann, Hauber, Kemmer, Lakrisenko, Loos, Merkt, Müller, Pathirana, Raimúndez, Refisch, Rosenblatt, Stapor, Städter, Wang, Wieland, Banga, Timmer, Villaverde, Sahle, Kreutz, Hasenauer and Weindl (2021)](#ref-SSBCD...2021a) introduced PEtab because estimation toolboxes used their own input formats, which made it hard to reuse a problem or reproduce its results in another tool. The format describes everything an estimation needs: the model, the experimental conditions, the observables and their noise models, the measurements, and the parameters to estimate.
 
 The authors implemented support in eight systems biology toolboxes, among them COPASI, AMICI, pyPESTO, Data2Dynamics and MEIGO, and provide a Python library for validating problems and visualising results.
 
@@ -20,7 +20,7 @@ The authors implemented support in eight systems biology toolboxes, among them C
 | Visualisation (TSV) | Optional instructions for plotting data and simulations |
 | Problem (YAML) | The file that links all the others into one problem |
 
-The parameter table's priors can inform starting points or serve Bayesian inference, as [Schmiester, Schälte, Bergmann, Camba, Dudkin, Egert, Fröhlich, Fuhrmann, Hauber, Kemmer, Lakrisenko, Loos, Merkt, Müller, Pathirana, Raue, Sahle, Schaber, Stapor, Ulrich, Villaverde, Weindl, Wierling, Stelling, Timmer, Hasenauer and Theis (2021)](#ref-SSBCD...2021a) note.
+The parameter table's priors can inform starting points or serve Bayesian inference, as [Schmiester, Schälte, Bergmann, Camba, Dudkin, Egert, Fröhlich, Fuhrmann, Hauber, Kemmer, Lakrisenko, Loos, Merkt, Müller, Pathirana, Raimúndez, Refisch, Rosenblatt, Stapor, Städter, Wang, Wieland, Banga, Timmer, Villaverde, Sahle, Kreutz, Hasenauer and Weindl (2021)](#ref-SSBCD...2021a) note.
 
 ## PEtab.jl
 
@@ -60,7 +60,7 @@ As the tooltip of the input states, the comparisons with true values and the pre
 
 <a id="ref-RSBMS...2013a"></a>Raue, A., Schilling, M., Bachmann, J., Matteson, A., Schelker, M., Kaschek, D., Hug, S., Kreutz, C., Harms, B. D., Theis, F. J., Klingmüller, U., & Timmer, J. (2013). Lessons Learned from Quantitative Dynamical Modeling in Systems Biology. *PLOS ONE* 8(9), e74335. [doi:10.1371/journal.pone.0074335](https://doi.org/10.1371/journal.pone.0074335)
 
-<a id="ref-SSBCD...2021a"></a>Schmiester, L., Schälte, Y., Bergmann, F. T., Camba, T., Dudkin, E., Egert, J., Fröhlich, F., Fuhrmann, L., Hauber, A. L., Kemmer, S., Lakrisenko, P., Loos, C., Merkt, S., Müller, W., Pathirana, D., Raue, A., Sahle, S., Schaber, J., Stapor, P., Ulrich, E., Villaverde, A. F., Weindl, D., Wierling, C., Stelling, J., Timmer, J., Hasenauer, J., & Theis, F. (2021). PEtab: Interoperable Specification of Parameter Estimation Problems in Systems Biology. *PLOS Computational Biology* 17(1), e1008646. [doi:10.1371/journal.pcbi.1008646](https://doi.org/10.1371/journal.pcbi.1008646)
+<a id="ref-SSBCD...2021a"></a>Schmiester, L., Schälte, Y., Bergmann, F. T., Camba, T., Dudkin, E., Egert, J., Fröhlich, F., Fuhrmann, L., Hauber, A. L., Kemmer, S., Lakrisenko, P., Loos, C., Merkt, S., Müller, W., Pathirana, D., Raimúndez, E., Refisch, L., Rosenblatt, M., Stapor, P. L., Städter, P., Wang, D., Wieland, F.-G., Banga, J. R., Timmer, J., Villaverde, A. F., Sahle, S., Kreutz, C., Hasenauer, J., & Weindl, D. (2021). PEtab: Interoperable Specification of Parameter Estimation Problems in Systems Biology. *PLOS Computational Biology* 17(1), e1008646. [doi:10.1371/journal.pcbi.1008646](https://doi.org/10.1371/journal.pcbi.1008646)
 
 ## See Also
 

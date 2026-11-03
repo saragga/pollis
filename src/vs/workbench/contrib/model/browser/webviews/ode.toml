@@ -24,6 +24,58 @@ github = "https://github.com/insysbio/LikelihoodProfiler.jl"
 name = "AdvancedHMC.jl"
 github = "https://github.com/TuringLang/AdvancedHMC.jl"
 
+[[packages]]
+name = "Catalyst.jl"
+github = "https://github.com/SciML/Catalyst.jl"
+
+[[packages]]
+name = "OrdinaryDiffEqRosenbrock.jl"
+github = "https://github.com/SciML/OrdinaryDiffEq.jl/tree/master/lib/OrdinaryDiffEqRosenbrock"
+
+[[packages]]
+name = "Fides.jl"
+github = "https://github.com/fides-dev/Fides.jl"
+
+[[packages]]
+name = "Optim.jl"
+github = "https://github.com/JuliaNLSolvers/Optim.jl"
+
+[[packages]]
+name = "OptimizationLBFGSB.jl"
+github = "https://github.com/SciML/Optimization.jl/tree/master/lib/OptimizationLBFGSB"
+
+[[packages]]
+name = "SciMLSensitivity.jl"
+github = "https://github.com/SciML/SciMLSensitivity.jl"
+
+[[packages]]
+name = "Distributions.jl"
+github = "https://github.com/JuliaStats/Distributions.jl"
+
+[[packages]]
+name = "Bijectors.jl"
+github = "https://github.com/TuringLang/Bijectors.jl"
+
+[[packages]]
+name = "LogDensityProblems.jl"
+github = "https://github.com/tpapp/LogDensityProblems.jl"
+
+[[packages]]
+name = "LogDensityProblemsAD.jl"
+github = "https://github.com/tpapp/LogDensityProblemsAD.jl"
+
+[[packages]]
+name = "MCMCChains.jl"
+github = "https://github.com/TuringLang/MCMCChains.jl"
+
+[[packages]]
+name = "StatsPlots.jl"
+github = "https://github.com/JuliaPlots/StatsPlots.jl"
+
+[[packages]]
+name = "Plots.jl"
+github = "https://github.com/JuliaPlots/Plots.jl"
+
 [requires]
 packages = ["PEtab.jl", "StructuralIdentifiability.jl", "LikelihoodProfiler.jl", "AdvancedHMC.jl", "Catalyst.jl", "OrdinaryDiffEqRosenbrock.jl", "Distributions.jl", "Fides.jl", "Optim.jl", "OptimizationLBFGSB.jl", "SciMLSensitivity.jl", "Bijectors.jl", "LogDensityProblems.jl", "LogDensityProblemsAD.jl", "MCMCChains.jl", "StatsPlots.jl", "Plots.jl"]
 
@@ -255,7 +307,7 @@ models = ["single", "multi", "profile", "bayes"]
 [[inputs]]
 id = "optimizer"
 label = "Optimizer"
-tooltip = "Local optimizer passed to calibrate. Fides with the exact Hessian is PEtab.jl's recommendation for small models; Fides.BFGS() approximates the Hessian; Optim's IPNewton and LBFGS are alternatives."
+tooltip = "Local optimizer passed to calibrate. PEtab.jl recommends Optim.IPNewton() with the exact Hessian for small models (under 10 ODEs and under 20 estimated parameters), Fides.CustomHessian() with a Gauss-Newton Hessian for medium-sized ones, and (L)BFGS methods such as Fides.BFGS() for large ones. Optim.LBFGS() is also supported."
 kind = "select"
 default = "Fides.CustomHessian()"
 models = ["single", "multi", "profile"]
