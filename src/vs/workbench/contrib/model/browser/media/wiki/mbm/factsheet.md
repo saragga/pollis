@@ -84,7 +84,7 @@ Loosen `rhoend` or `xtol_rel` by editing the code when the objective carries noi
 
 ## Packages and textbooks
 
-`PRIMA.jl` wraps the reference implementations of Powell's methods by [Zhang (2023)](#ref-Zha2023a), and `NLopt.jl` wraps the library of [Johnson (2007)](#ref-Joh2007b). `Plots` draws the three charts.
+`PRIMA.jl` wraps the reference implementations of Powell's methods by [Zhang (2023)](#ref-Zha2023a), and `NLopt.jl` wraps the library of [Johnson (2007)](#ref-Joh2007a). `Plots` draws the three charts.
 
 The theory of models, geometry and trust regions is set out by [Conn, Scheinberg and Vicente (2009)](#ref-CSV2009a). Line searches, conjugate directions and the trust-region framework in the wider setting of nonlinear optimisation are in [Nocedal and Wright (2006)](#ref-NW2006a).
 
@@ -92,7 +92,7 @@ The theory of models, geometry and trust regions is set out by [Conn, Scheinberg
 
 <a id="ref-CSV2009a"></a>Conn, A. R., Scheinberg, K., & Vicente, L. N. (2009). *Introduction to Derivative-Free Optimization*. SIAM. [doi:10.1137/1.9780898718768](https://doi.org/10.1137/1.9780898718768)
 
-<a id="ref-Joh2007b"></a>Johnson, S. G. (2007). The NLopt Nonlinear-Optimisation Package.
+<a id="ref-Joh2007a"></a>Johnson, S. G. (2007). The NLopt Nonlinear-Optimization Package. [github.com/stevengj/nlopt](https://github.com/stevengj/nlopt)
 
 <a id="ref-NW2006a"></a>Nocedal, J., & Wright, S. J. (2006). *Numerical Optimization* (2nd ed.). Springer. [doi:10.1007/978-0-387-40065-5](https://doi.org/10.1007/978-0-387-40065-5)
 

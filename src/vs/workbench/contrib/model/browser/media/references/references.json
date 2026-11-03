@@ -17502,46 +17502,15 @@
 		{
 			"key": "Joh2007a",
 			"type": "misc",
-			"title": "NLopt: A free/open-source library for nonlinear optimization",
+			"title": "The NLopt Nonlinear-Optimization Package",
 			"authors": [
 				"Johnson, Steven G."
 			],
 			"author_kind": "persons",
 			"authors_complete": true,
 			"year": 2007,
+			"url": "https://github.com/stevengj/nlopt",
 			"legacy_key": "johnson2007a",
-			"source": "manual",
-			"checked": false,
-			"open_access": true
-		},
-		{
-			"key": "Joh2007b",
-			"type": "misc",
-			"title": "The NLopt Nonlinear-Optimisation Package",
-			"authors": [
-				"Johnson, Steven G."
-			],
-			"author_kind": "persons",
-			"authors_complete": true,
-			"year": 2007,
-			"legacy_key": "johnson2007b",
-			"source": "manual",
-			"checked": false,
-			"open_access": true
-		},
-		{
-			"key": "Joh2007c",
-			"type": "article",
-			"title": "The NLopt nonlinear-optimization package",
-			"authors": [
-				"Johnson, Steven G."
-			],
-			"author_kind": "persons",
-			"authors_complete": true,
-			"year": 2007,
-			"journal": "NLopt Documentation",
-			"url": "https://nlopt.readthedocs.io/en/latest/",
-			"legacy_key": "johnson2007c",
 			"source": "manual",
 			"checked": false,
 			"open_access": true
@@ -18745,7 +18714,7 @@
 		{
 			"key": "KT1987a",
 			"type": "article",
-			"title": "Stochastic Global Optimization Methods Part I: Clustering Methods",
+			"title": "Stochastic Global Optimization Methods Part II: Multi Level Methods",
 			"authors": [
 				"Rinnooy Kan, A. H. G.",
 				"Timmer, G. T."
@@ -23688,23 +23657,6 @@
 			"retrieved": "2026-10-30",
 			"checked": true,
 			"open_access": true
-		},
-		{
-			"key": "MZ1998a",
-			"type": "article",
-			"title": "An Adaptive Approach to Stochastic Global Optimization",
-			"authors": [
-				"Madsen, Kaj",
-				"Zertchaninov, Serguei"
-			],
-			"author_kind": "persons",
-			"authors_complete": true,
-			"year": 1998,
-			"journal": "Technical Report",
-			"legacy_key": "madsen1998",
-			"source": "manual",
-			"checked": false,
-			"open_access": false
 		},
 		{
 			"key": "Mac1997a",
@@ -36657,6 +36609,26 @@
 			"doi": "10.3929/ethz-a-004284029",
 			"oa_url": "https://doi.org/10.3929/ethz-a-004284029",
 			"legacy_key": "zitzler2001",
+			"source": "manual",
+			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "ZM1998a",
+			"type": "techreport",
+			"title": "A C++ Programme for Global Optimization",
+			"authors": [
+				"Zertchaninov, Serguei",
+				"Madsen, Kaj"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1998,
+			"publisher": "Department of Mathematical Modelling, Technical University of Denmark",
+			"address": "Lyngby",
+			"institution": "IMM-REP-1998-04",
+			"url": "https://github.com/stevengj/nlopt/blob/master/src/algs/stogo/techreport.pdf",
+			"legacy_key": "madsen1998",
 			"source": "manual",
 			"checked": false,
 			"open_access": true
@@ -51215,7 +51187,7 @@
 				"chiara.optimise.gfo.mb"
 			],
 			"keys": [
-				"Joh2007b",
+				"Joh2007a",
 				"Zha2023a",
 				"CSV2009a",
 				"CGT2000a",
@@ -51932,10 +51904,10 @@
 				"chiara.optimise.go.pg"
 			],
 			"keys": [
-				"Joh2007c",
+				"Joh2007a",
 				"RLP2016a",
 				"KT1987a",
-				"MZ1998a",
+				"ZM1998a",
 				"AGK2019a"
 			]
 		},
@@ -52508,7 +52480,7 @@
 			],
 			"keys": [
 				"MR2018a",
-				"Joh2007c",
+				"Joh2007a",
 				"NW2006a",
 				"CGT2000a",
 				"WB2006a",

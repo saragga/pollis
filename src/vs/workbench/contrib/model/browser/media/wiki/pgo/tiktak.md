@@ -24,7 +24,7 @@ with a mixing weight θⱼ ∈ (0, 1]. Early on, θⱼ is small, to allow a broa
 
 ## In the panel
 
-The panel calls `TikTak(N)` from MultistartOptimization.jl, whose documentation states that it implements TikTak as described by [Arnoud, Guvenen and Kleineberg (2019)](#ref-AGK2019a), with defaults from their paper. N is a quarter of **Budget**, 500 by default, and the code keeps the best 10% as starting points. The local searches use **Local Optimiser** through `NLopt_local_method`, with a relative step tolerance of 10⁻⁶, and each is limited to a share of the remaining budget.
+The panel calls `TikTak(N; keep_ratio = 0.1)` from MultistartOptimization.jl, whose documentation states that it implements TikTak as described by [Arnoud, Guvenen and Kleineberg (2019)](#ref-AGK2019a), with defaults from their paper. N is a quarter of **Budget**, 500 by default, and the code keeps the best 10% as starting points. The local searches use **Local Optimiser** through `NLopt_local_method`, with a relative step tolerance of 10⁻⁶, and each is limited to an equal share of the remaining budget, one share for each kept point.
 
 `multistart_minimization` returns the best location and value; when the best point is a Sobol point, there is no return code, and the panel reports `SUCCESS`.
 

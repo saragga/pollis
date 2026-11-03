@@ -6,7 +6,7 @@
 
 [Rinnooy Kan and Timmer (1987)](#ref-KT1987a) describe two stochastic methods for global optimisation that, with probability 1, find all relevant local minima of the objective function with the smallest possible number of local searches, and examine their computational performance analytically and empirically.
 
-The NLopt documentation of [Johnson (2007)](#ref-Joh2007c) describes MLSL as a multistart algorithm, which runs a sequence of local optimisations from random or low-discrepancy starting points, distinguished by a clustering heuristic that helps it avoid repeated searches of the same local optima, and by theoretical guarantees of finding all local optima in a finite number of local minimisations.
+The NLopt documentation of [Johnson (2007)](#ref-Joh2007a) describes MLSL as a multistart algorithm, which runs a sequence of local optimisations from random or low-discrepancy starting points, distinguished by a clustering heuristic that helps it avoid repeated searches of the same local optima, and by theoretical guarantees of finding all local optima in a finite number of local minimisations.
 
 ## The steps
 
@@ -47,11 +47,11 @@ NLopt supports only bound-constrained problems for MLSL, which matches the box o
 
 <a id="ref-AGK2019a"></a>Arnoud, A., Guvenen, F., & Kleineberg, T. (2019). *Benchmarking Global Optimizers*. NBER Working Paper 26340. National Bureau of Economic Research. [doi:10.3386/w26340](https://doi.org/10.3386/w26340)
 
-<a id="ref-Joh2007c"></a>Johnson, S. G. (2007). The NLopt Nonlinear-Optimization Package. *NLopt Documentation*. [nlopt.readthedocs.io](https://nlopt.readthedocs.io/en/latest/)
+<a id="ref-Joh2007a"></a>Johnson, S. G. (2007). The NLopt Nonlinear-Optimization Package. [github.com/stevengj/nlopt](https://github.com/stevengj/nlopt)
 
 <a id="ref-RLP2016a"></a>Revels, J., Lubin, M., & Papamarkou, T. (2016). Forward-Mode Automatic Differentiation in Julia. [arXiv:1607.07892](https://arxiv.org/abs/1607.07892)
 
-<a id="ref-KT1987a"></a>Rinnooy Kan, A. H. G., & Timmer, G. T. (1987). Stochastic Global Optimization Methods Part I: Clustering Methods. *Mathematical Programming* 39(1), 57-78. [doi:10.1007/BF02592071](https://doi.org/10.1007/BF02592071)
+<a id="ref-KT1987a"></a>Rinnooy Kan, A. H. G., & Timmer, G. T. (1987). Stochastic Global Optimization Methods Part II: Multi Level Methods. *Mathematical Programming* 39(1), 57-78. [doi:10.1007/BF02592071](https://doi.org/10.1007/BF02592071)
 
 ## See Also
 

@@ -36,7 +36,7 @@ All five come from M. J. D. Powell, and the panel runs them through the implemen
 
 ## Two methods that build no interpolation model
 
-**PRAXIS** and **Sbplx** come through [Johnson (2007)](#ref-Joh2007b) and give the panel a contrast to the trust-region family.
+**PRAXIS** and **Sbplx** come through [Johnson (2007)](#ref-Joh2007a) and give the panel a contrast to the trust-region family.
 
 **PRAXIS** is the principal-axis method of [Brent (1973)](#ref-Bre1973a). It runs line searches along a set of directions and improves those directions from what the searches reveal about curvature. **Sbplx** reimplements the Subplex method of [Rowan (1990)](#ref-Row1990a), which runs Nelder-Mead on small groups of variables in turn. It uses only comparisons of values, so it depends less on smoothness than any method that fits a model.
 
@@ -66,7 +66,7 @@ When derivatives can be had, by automatic differentiation or otherwise, a gradie
 
 <a id="ref-CSV2009a"></a>Conn, A. R., Scheinberg, K., & Vicente, L. N. (2009). *Introduction to Derivative-Free Optimization*. SIAM. [doi:10.1137/1.9780898718768](https://doi.org/10.1137/1.9780898718768)
 
-<a id="ref-Joh2007b"></a>Johnson, S. G. (2007). The NLopt Nonlinear-Optimisation Package.
+<a id="ref-Joh2007a"></a>Johnson, S. G. (2007). The NLopt Nonlinear-Optimization Package. [github.com/stevengj/nlopt](https://github.com/stevengj/nlopt)
 
 <a id="ref-KS2009a"></a>Kok, S., & Sandrock, C. (2009). Locating and Characterizing the Stationary Points of the Extended Rosenbrock Function. *Evolutionary Computation* 17(3), 437-453. [doi:10.1162/evco.2009.17.3.437](https://doi.org/10.1162/evco.2009.17.3.437)
 

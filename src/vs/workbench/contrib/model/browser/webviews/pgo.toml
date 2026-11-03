@@ -94,7 +94,7 @@ separator = true
 label = "Software"
 
 [[references]]
-key = "Joh2007c"
+key = "Joh2007a"
 
 [[references]]
 key = "RLP2016a"
@@ -107,7 +107,7 @@ label = "Original Papers"
 key = "KT1987a"
 
 [[references]]
-key = "MZ1998a"
+key = "ZM1998a"
 
 [[references]]
 key = "AGK2019a"
@@ -130,7 +130,7 @@ detail = "multi-level single-linkage; multi-start local search with clustering t
 
 [[bullets]]
 text = "StoGO-R"
-detail = "randomised stochastic branch-and-bound; gradient-based bounding with random branching order"
+detail = "stochastic branch-and-bound over boxes; gradient-based local searches from regular and random points in each box, and lower bounds from the largest gradient seen"
 
 [[bullets]]
 text = "TikTak"
@@ -144,7 +144,7 @@ purpose = "Multi-level single-linkage: sample low-discrepancy points and start a
 [[decisionRows]]
 task = "StoGO-R"
 context = "Smooth problems with cheap gradients"
-purpose = "Branch-and-bound over boxes with gradient-based local searches inside each, with randomised box sampling"
+purpose = "Branch-and-bound over boxes: local searches from regular and random points in each box, and a lower bound from the largest gradient seen to discard boxes"
 
 [[decisionRows]]
 task = "TikTak"
@@ -325,8 +325,9 @@ function search(; alg=ALG, budget=budget, lb=lb, ub=ub, seed=1)
     end
     if alg == :TIKTAK
         N = max(div(budget, 4), 2)  # a quarter of the budget on Sobol points
-        tiktak = TikTak(N)  # keeps the best 10% as starting points
-        local_evals = div(budget - N, max(tiktak.initial_N - 1, 1))  # the rest split among the local searches
+        keep = 0.1  # share of the Sobol points kept as starting points
+        tiktak = TikTak(N; keep_ratio = keep)
+        local_evals = div(budget - N, max(round(Int, keep * N), 1))  # the rest split among the local searches, one per kept point
         local_method = NLopt_local_method(getfield(NLopt, LOCAL); xtol_rel=1e-6, maxeval=max(local_evals, 1))
         m = multistart_minimization(tiktak, local_method, MinimizationProblem(obj, lb, ub); use_threads=false)
         ret = hasproperty(m, :ret) ? m.ret : :SUCCESS  # no ret when the best point is a Sobol point
@@ -469,9 +470,9 @@ id = "algorithm-properties"
 label = "Algorithm Properties"
 desc = "What the selected algorithm assumes and guarantees"
 code = '''
-{{?model=mlsl}} (algorithm = "MLSL", deterministic = false, needs_gradient = LOCAL == :LD_LBFGS, local_refinement = true, local_optimizer = LOCAL, guarantee = "finds every local minimum with probability 1 as samples grow", practical_dimension = "up to about 20")
+{{?model=mlsl}} (algorithm = "MLSL", deterministic = false, needs_gradient = LOCAL == :LD_LBFGS, local_refinement = true, local_optimizer = LOCAL, guarantee = "finds every local minimum with probability 1 as samples grow")
 {{?model=tiktak}} (algorithm = "TikTak", deterministic = true, needs_gradient = LOCAL == :LD_LBFGS, local_refinement = true, local_optimizer = LOCAL, guarantee = "none: a heuristic; see the benchmarks of Arnoud, Guvenen and Kleineberg (2019)")
-{{?model=stogo-r}} (algorithm = "StoGO-R", deterministic = false, needs_gradient = true, local_refinement = true, guarantee = "branch-and-bound with bounds from gradients", practical_dimension = "up to about 10")
+{{?model=stogo-r}} (algorithm = "StoGO-R", deterministic = false, needs_gradient = true, local_refinement = true, guarantee = "none: the best result within the budget, by branch-and-bound with lower bounds from the largest gradient seen")
 '''
 
 [[actionGroups.actions]]

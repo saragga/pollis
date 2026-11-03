@@ -4,7 +4,7 @@
 
 ## What problem does Sbplx solve?
 
-**Sbplx** minimises f(x) inside the box given by **Lower Bounds** and **Upper Bounds**. The panel runs `NLopt.Opt(:LN_SBPLX, n)` from the package of [Johnson (2007)](#ref-Joh2007b), with `lower_bounds`, `upper_bounds`, `maxeval`, `xtol_rel = 1e-10` and `initial_step = fill(rhobeg, n)`.
+**Sbplx** minimises f(x) inside the box given by **Lower Bounds** and **Upper Bounds**. The panel runs `NLopt.Opt(:LN_SBPLX, n)` from the package of [Johnson (2007)](#ref-Joh2007a), with `lower_bounds`, `upper_bounds`, `maxeval`, `xtol_rel = 1e-10` and `initial_step = fill(rhobeg, n)`.
 
 Johnson's code is a reimplementation of Rowan's method and not a wrapper of the original. **Initial Radius** sets the first step of the search, and it has no connection with a trust region here. The bounds apply in the main run, so the method's `violation` is `bound_violation`.
 
@@ -53,7 +53,7 @@ As n grows, the gap in `minimum` usually widens in favour of **Sbplx**. At very 
 
 <a id="ref-CSV2009a"></a>Conn, A. R., Scheinberg, K., & Vicente, L. N. (2009). *Introduction to Derivative-Free Optimization*. SIAM. [doi:10.1137/1.9780898718768](https://doi.org/10.1137/1.9780898718768)
 
-<a id="ref-Joh2007b"></a>Johnson, S. G. (2007). The NLopt Nonlinear-Optimisation Package.
+<a id="ref-Joh2007a"></a>Johnson, S. G. (2007). The NLopt Nonlinear-Optimization Package. [github.com/stevengj/nlopt](https://github.com/stevengj/nlopt)
 
 <a id="ref-LRWW1998a"></a>Lagarias, J. C., Reeds, J. A., Wright, M. H., & Wright, P. E. (1998). Convergence Properties of the Nelder-Mead Simplex Method in Low Dimensions. *SIAM Journal on Optimization* 9(1), 112-147. [doi:10.1137/S1052623496303470](https://doi.org/10.1137/S1052623496303470)
 

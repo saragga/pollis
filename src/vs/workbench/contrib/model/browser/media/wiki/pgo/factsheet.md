@@ -7,7 +7,7 @@ The panel's methods, inputs, outputs and sources at a glance.
 | Method | Call | Random | Gradients | Source |
 |---|---|---|---|---|
 | **MLSL** | NLopt `G_MLSL_LDS` with **Local Optimiser** | Yes | Only with L-BFGS | [Rinnooy Kan and Timmer (1987)](#ref-KT1987a) |
-| **StoGO-R** | NLopt `GD_STOGO_RAND` | Yes | Yes, from ForwardDiff | [Madsen and Zertchaninov (1998)](#ref-MZ1998a) |
+| **StoGO-R** | NLopt `GD_STOGO_RAND` | Yes | Yes, from ForwardDiff | [Zertchaninov and Madsen (1998)](#ref-ZM1998a) |
 | **TikTak** | MultistartOptimization.jl `TikTak` with an NLopt local method | No | Only with L-BFGS | [Arnoud, Guvenen and Kleineberg (2019)](#ref-AGK2019a) |
 
 The local searches of MLSL and TikTak stop at a relative step tolerance `xtol_rel = 1e-6`. NLopt's random numbers are seeded with `NLopt.srand(seed)`, seed 1 in the main code.
@@ -30,7 +30,7 @@ The length of **Lower Bounds** sets the dimension.
 |---|---|
 | Sobol points | A quarter of **Budget**, 500 by default |
 | Starting points kept | The best 10% of the Sobol points |
-| Local searches | Each limited to (**Budget** − Sobol points) / (`tiktak.initial_N` − 1) evaluations |
+| Local searches | One from each kept point, each limited to (**Budget** − Sobol points) / (kept points) evaluations |
 | Mixing weight | θᵢ = min(max(0.1, (i/N*)^½), 0.995), the rule of [Arnoud, Guvenen and Kleineberg (2019)](#ref-AGK2019a) |
 
 ## Outputs
@@ -58,10 +58,10 @@ Every evaluation is also stored, as `res.points` and `res.values`, for **Objecti
 
 | Topic | Work |
 |---|---|
-| Clustering and multi-level methods | [Rinnooy Kan and Timmer (1987)](#ref-KT1987a) |
-| StoGO | [Madsen and Zertchaninov (1998)](#ref-MZ1998a) |
+| Multi-level methods | [Rinnooy Kan and Timmer (1987)](#ref-KT1987a) |
+| StoGO | [Zertchaninov and Madsen (1998)](#ref-ZM1998a) |
 | TikTak and a benchmark of global optimisers | [Arnoud, Guvenen and Kleineberg (2019)](#ref-AGK2019a) |
-| NLopt's algorithms | [Johnson (2007)](#ref-Joh2007c) |
+| NLopt's algorithms | [Johnson (2007)](#ref-Joh2007a) |
 | ForwardDiff | [Revels, Lubin and Papamarkou (2016)](#ref-RLP2016a) |
 
 Each method has its own page under Algorithm Details, with its global and local stages and the way the panel calls it.
@@ -70,13 +70,14 @@ Each method has its own page under Algorithm Details, with its global and local 
 
 <a id="ref-AGK2019a"></a>Arnoud, A., Guvenen, F., & Kleineberg, T. (2019). *Benchmarking Global Optimizers*. NBER Working Paper 26340. National Bureau of Economic Research. [doi:10.3386/w26340](https://doi.org/10.3386/w26340)
 
-<a id="ref-Joh2007c"></a>Johnson, S. G. (2007). The NLopt Nonlinear-Optimization Package. *NLopt Documentation*. [nlopt.readthedocs.io](https://nlopt.readthedocs.io/en/latest/)
+<a id="ref-Joh2007a"></a>Johnson, S. G. (2007). The NLopt Nonlinear-Optimization Package. [github.com/stevengj/nlopt](https://github.com/stevengj/nlopt)
 
-<a id="ref-MZ1998a"></a>Madsen, K., & Zertchaninov, S. (1998). An Adaptive Approach to Stochastic Global Optimization. *Technical Report*.
 
 <a id="ref-RLP2016a"></a>Revels, J., Lubin, M., & Papamarkou, T. (2016). Forward-Mode Automatic Differentiation in Julia. [arXiv:1607.07892](https://arxiv.org/abs/1607.07892)
 
-<a id="ref-KT1987a"></a>Rinnooy Kan, A. H. G., & Timmer, G. T. (1987). Stochastic Global Optimization Methods Part I: Clustering Methods. *Mathematical Programming* 39(1), 57-78. [doi:10.1007/BF02592071](https://doi.org/10.1007/BF02592071)
+<a id="ref-KT1987a"></a>Rinnooy Kan, A. H. G., & Timmer, G. T. (1987). Stochastic Global Optimization Methods Part II: Multi Level Methods. *Mathematical Programming* 39(1), 57-78. [doi:10.1007/BF02592071](https://doi.org/10.1007/BF02592071)
+
+<a id="ref-ZM1998a"></a>Zertchaninov, S., & Madsen, K. (1998). *A C++ Programme for Global Optimization*. IMM-REP-1998-04. Department of Mathematical Modelling, Technical University of Denmark. [github.com/stevengj/nlopt](https://github.com/stevengj/nlopt/blob/master/src/algs/stogo/techreport.pdf)
 
 ## See Also
 

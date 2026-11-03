@@ -13,14 +13,14 @@ They write that such algorithms typically have two stages: a global stage, which
 | Method | Global stage | Local stage | Source |
 |---|---|---|---|
 | **MLSL** | Low-discrepancy samples, with a clustering rule that skips points near found minima | **Local Optimiser** | [Rinnooy Kan and Timmer (1987)](#ref-KT1987a) |
-| **StoGO-R** | Branch-and-bound over boxes, with random points in each box | A gradient-based local search | [Madsen and Zertchaninov (1998)](#ref-MZ1998a) |
+| **StoGO-R** | Branch-and-bound over boxes, with regular and random points in each box | A gradient-based local search | [Zertchaninov and Madsen (1998)](#ref-ZM1998a) |
 | **TikTak** | The best Sobol points, pulled ever closer to the best minimum found | **Local Optimiser** | [Arnoud, Guvenen and Kleineberg (2019)](#ref-AGK2019a) |
 
 [Arnoud, Guvenen and Kleineberg (2019)](#ref-AGK2019a) benchmark all three, with other global optimisers, on difficult test functions and on the estimation of an economic model.
 
 ## The software
 
-NLopt, documented by [Johnson (2007)](#ref-Joh2007c), provides MLSL as `G_MLSL_LDS` and the randomised StoGO as `GD_STOGO_RAND`, together with the local algorithms BOBYQA, Nelder-Mead and L-BFGS and the other global methods of **Compare Methods**. MultistartOptimization.jl implements TikTak as described by [Arnoud, Guvenen and Kleineberg (2019)](#ref-AGK2019a), with NLopt's local methods for the local stage.
+NLopt, documented by [Johnson (2007)](#ref-Joh2007a), provides MLSL as `G_MLSL_LDS` and the randomised StoGO as `GD_STOGO_RAND`, together with the local algorithms BOBYQA, Nelder-Mead and L-BFGS and the other global methods of **Compare Methods**. MultistartOptimization.jl implements TikTak as described by [Arnoud, Guvenen and Kleineberg (2019)](#ref-AGK2019a), with NLopt's local methods for the local stage.
 
 Gradients, where an algorithm asks for them, come from ForwardDiff.jl, by [Revels, Lubin and Papamarkou (2016)](#ref-RLP2016a), which differentiates the expression of **Objective f(x)** automatically.
 
@@ -44,13 +44,14 @@ The actions fall into five groups: Visualise draws the objective with every eval
 
 <a id="ref-AGK2019a"></a>Arnoud, A., Guvenen, F., & Kleineberg, T. (2019). *Benchmarking Global Optimizers*. NBER Working Paper 26340. National Bureau of Economic Research. [doi:10.3386/w26340](https://doi.org/10.3386/w26340)
 
-<a id="ref-Joh2007c"></a>Johnson, S. G. (2007). The NLopt Nonlinear-Optimization Package. *NLopt Documentation*. [nlopt.readthedocs.io](https://nlopt.readthedocs.io/en/latest/)
+<a id="ref-Joh2007a"></a>Johnson, S. G. (2007). The NLopt Nonlinear-Optimization Package. [github.com/stevengj/nlopt](https://github.com/stevengj/nlopt)
 
-<a id="ref-MZ1998a"></a>Madsen, K., & Zertchaninov, S. (1998). An Adaptive Approach to Stochastic Global Optimization. *Technical Report*.
 
 <a id="ref-RLP2016a"></a>Revels, J., Lubin, M., & Papamarkou, T. (2016). Forward-Mode Automatic Differentiation in Julia. [arXiv:1607.07892](https://arxiv.org/abs/1607.07892)
 
-<a id="ref-KT1987a"></a>Rinnooy Kan, A. H. G., & Timmer, G. T. (1987). Stochastic Global Optimization Methods Part I: Clustering Methods. *Mathematical Programming* 39(1), 57-78. [doi:10.1007/BF02592071](https://doi.org/10.1007/BF02592071)
+<a id="ref-KT1987a"></a>Rinnooy Kan, A. H. G., & Timmer, G. T. (1987). Stochastic Global Optimization Methods Part II: Multi Level Methods. *Mathematical Programming* 39(1), 57-78. [doi:10.1007/BF02592071](https://doi.org/10.1007/BF02592071)
+
+<a id="ref-ZM1998a"></a>Zertchaninov, S., & Madsen, K. (1998). *A C++ Programme for Global Optimization*. IMM-REP-1998-04. Department of Mathematical Modelling, Technical University of Denmark. [github.com/stevengj/nlopt](https://github.com/stevengj/nlopt/blob/master/src/algs/stogo/techreport.pdf)
 
 ## See Also
 

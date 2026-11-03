@@ -1,12 +1,14 @@
 # Stochastic Search with Local Refinement: StoGO-R
 
-**StoGO-R**, the randomised variant of StoGO, by [Madsen and Zertchaninov (1998)](#ref-MZ1998a), divides the box into smaller boxes by branch and bound, and searches each with a gradient-based local search started from random points.
+**StoGO-R**, the randomised variant of StoGO, by [Zertchaninov and Madsen (1998)](#ref-ZM1998a), divides the box into smaller boxes by branch and bound, and searches each with gradient-based local searches started from regular and random points.
 
 ## Branch and bound with local searches
 
-The NLopt documentation of [Johnson (2007)](#ref-Joh2007c) describes StoGO as a global optimisation algorithm that systematically divides the search space, which must be bound-constrained, into smaller hyper-rectangles by a branch-and-bound technique, and searches them with a gradient-based local search, a BFGS variant, optionally including some randomness. NLopt provides it as `GD_STOGO`, and the randomised variant as `GD_STOGO_RAND`, the one the panel runs.
+The NLopt documentation of [Johnson (2007)](#ref-Joh2007a) describes StoGO as a global optimisation algorithm that systematically divides the search space, which must be bound-constrained, into smaller hyper-rectangles by a branch-and-bound technique, and searches them with a gradient-based local search, a BFGS variant, optionally including some randomness. NLopt provides it as `GD_STOGO`, and the randomised variant as `GD_STOGO_RAND`, the one the panel runs.
 
-[Madsen and Zertchaninov (1998)](#ref-MZ1998a) present the approach as an adaptive approach to stochastic global optimisation.
+[Zertchaninov and Madsen (1998)](#ref-ZM1998a) describe the C++ implementation of a stochastic branch-and-bound method for global optimisation over a box parallel to the coordinate axes. In each box, the method samples regular points, the centre and two points on either side of it along each axis, and random points, uniformly distributed in the box, and starts local searches from them. A lower bound for f in the box, from the sampled values and the largest gradient seen, decides whether the box is discarded.
+
+They do not aim to guarantee that the global minimum is found, but to get the best possible out of a given amount of computational resources: the user specifies how much computer time and storage to spend, not an accuracy.
 
 ## The steps
 
@@ -41,17 +43,18 @@ StoGO ignores the start point that NLopt requires and searches the whole box, as
 
 The panel's decision table suggests **StoGO-R** for smooth problems with cheap gradients. In the benchmark of [Arnoud, Guvenen and Kleineberg (2019)](#ref-AGK2019a), StoGO performed well on the test functions.
 
-NLopt supports only bound-constrained problems for StoGO. **Algorithm Properties** summarises the method: random, gradient-based, with local refinement and bounds from gradients. **Local Polish** and **Solution** apply to its answer as to the others, and **Compare Methods** sets it beside MLSL and the NLopt methods without local searches.
+NLopt supports only bound-constrained problems for StoGO. **Algorithm Properties** summarises the method: random, gradient-based, with local refinement, and with no guarantee beyond the best result within the budget. **Local Polish** and **Solution** apply to its answer as to the others, and **Compare Methods** sets it beside MLSL and the NLopt methods without local searches.
 
 ## References
 
 <a id="ref-AGK2019a"></a>Arnoud, A., Guvenen, F., & Kleineberg, T. (2019). *Benchmarking Global Optimizers*. NBER Working Paper 26340. National Bureau of Economic Research. [doi:10.3386/w26340](https://doi.org/10.3386/w26340)
 
-<a id="ref-Joh2007c"></a>Johnson, S. G. (2007). The NLopt Nonlinear-Optimization Package. *NLopt Documentation*. [nlopt.readthedocs.io](https://nlopt.readthedocs.io/en/latest/)
+<a id="ref-Joh2007a"></a>Johnson, S. G. (2007). The NLopt Nonlinear-Optimization Package. [github.com/stevengj/nlopt](https://github.com/stevengj/nlopt)
 
-<a id="ref-MZ1998a"></a>Madsen, K., & Zertchaninov, S. (1998). An Adaptive Approach to Stochastic Global Optimization. *Technical Report*.
 
 <a id="ref-RLP2016a"></a>Revels, J., Lubin, M., & Papamarkou, T. (2016). Forward-Mode Automatic Differentiation in Julia. [arXiv:1607.07892](https://arxiv.org/abs/1607.07892)
+
+<a id="ref-ZM1998a"></a>Zertchaninov, S., & Madsen, K. (1998). *A C++ Programme for Global Optimization*. IMM-REP-1998-04. Department of Mathematical Modelling, Technical University of Denmark. [github.com/stevengj/nlopt](https://github.com/stevengj/nlopt/blob/master/src/algs/stogo/techreport.pdf)
 
 ## See Also
 

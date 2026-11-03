@@ -33,7 +33,7 @@ In return, n + 1 points are the cheapest possible model, and a slope is less aff
 
 ## Comparing the two implementations
 
-**NLopt vs PRIMA** runs the same problem through `:LN_COBYLA` from [Johnson (2007)](#ref-Joh2007b) and through `PRIMA`. The first descends from Powell's original code, and the second is the modernised rewrite. Results can differ, as can the number of evaluations, since their stopping rules differ. The two rows have `max_constraint` beside `minimum` so that a lower value can be weighed against any larger breach.
+**NLopt vs PRIMA** runs the same problem through `:LN_COBYLA` from [Johnson (2007)](#ref-Joh2007a) and through `PRIMA`. The first descends from Powell's original code, and the second is the modernised rewrite. Results can differ, as can the number of evaluations, since their stopping rules differ. The two rows have `max_constraint` beside `minimum` so that a lower value can be weighed against any larger breach.
 
 On **LINCOA**, the same action passes A x − b to COBYLA as if those were nonlinear constraints, which gives a useful comparison with the linear-constraint method. The general setting and its theory are in [Conn, Scheinberg and Vicente (2009)](#ref-CSV2009a).
 
@@ -41,7 +41,7 @@ On **LINCOA**, the same action passes A x − b to COBYLA as if those were nonli
 
 <a id="ref-CSV2009a"></a>Conn, A. R., Scheinberg, K., & Vicente, L. N. (2009). *Introduction to Derivative-Free Optimization*. SIAM. [doi:10.1137/1.9780898718768](https://doi.org/10.1137/1.9780898718768)
 
-<a id="ref-Joh2007b"></a>Johnson, S. G. (2007). The NLopt Nonlinear-Optimisation Package.
+<a id="ref-Joh2007a"></a>Johnson, S. G. (2007). The NLopt Nonlinear-Optimization Package. [github.com/stevengj/nlopt](https://github.com/stevengj/nlopt)
 
 <a id="ref-Pow1994a"></a>Powell, M. J. D. (1994). A Direct Search Optimisation Method That Models the Objective and Constraint Functions by Linear Interpolation. In *Advances in Optimization and Numerical Analysis*, 51-67. Springer. [doi:10.1007/978-94-015-8330-5_4](https://doi.org/10.1007/978-94-015-8330-5_4)
 

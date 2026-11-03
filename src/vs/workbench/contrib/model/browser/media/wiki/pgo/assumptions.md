@@ -4,7 +4,7 @@ What the three methods take for granted: a finite box, an objective that can be 
 
 ## A finite box
 
-All three methods search a box given by **Lower Bounds** and **Upper Bounds**. The NLopt documentation of [Johnson (2007)](#ref-Joh2007c) states that all its global algorithms require bound constraints on all the optimisation parameters, and that MLSL and StoGO support only bound-constrained problems. TikTak draws its Sobol points over the same box, through `MinimizationProblem(obj, lb, ub)`.
+All three methods search a box given by **Lower Bounds** and **Upper Bounds**. The NLopt documentation of [Johnson (2007)](#ref-Joh2007a) states that all its global algorithms require bound constraints on all the optimisation parameters, and that MLSL and StoGO support only bound-constrained problems. TikTak draws its Sobol points over the same box, through `MinimizationProblem(obj, lb, ub)`.
 
 The length of **Lower Bounds** sets the dimension. Constraints other than bounds cannot be given; NLopt notes that its global methods can be combined with an augmented Lagrangian method for nonlinear constraints, which the panel does not do.
 
@@ -42,11 +42,11 @@ TikTak is deterministic: for a given objective, box and budget it always returns
 
 <a id="ref-AGK2019a"></a>Arnoud, A., Guvenen, F., & Kleineberg, T. (2019). *Benchmarking Global Optimizers*. NBER Working Paper 26340. National Bureau of Economic Research. [doi:10.3386/w26340](https://doi.org/10.3386/w26340)
 
-<a id="ref-Joh2007c"></a>Johnson, S. G. (2007). The NLopt Nonlinear-Optimization Package. *NLopt Documentation*. [nlopt.readthedocs.io](https://nlopt.readthedocs.io/en/latest/)
+<a id="ref-Joh2007a"></a>Johnson, S. G. (2007). The NLopt Nonlinear-Optimization Package. [github.com/stevengj/nlopt](https://github.com/stevengj/nlopt)
 
 <a id="ref-RLP2016a"></a>Revels, J., Lubin, M., & Papamarkou, T. (2016). Forward-Mode Automatic Differentiation in Julia. [arXiv:1607.07892](https://arxiv.org/abs/1607.07892)
 
-<a id="ref-KT1987a"></a>Rinnooy Kan, A. H. G., & Timmer, G. T. (1987). Stochastic Global Optimization Methods Part I: Clustering Methods. *Mathematical Programming* 39(1), 57-78. [doi:10.1007/BF02592071](https://doi.org/10.1007/BF02592071)
+<a id="ref-KT1987a"></a>Rinnooy Kan, A. H. G., & Timmer, G. T. (1987). Stochastic Global Optimization Methods Part II: Multi Level Methods. *Mathematical Programming* 39(1), 57-78. [doi:10.1007/BF02592071](https://doi.org/10.1007/BF02592071)
 
 ## See Also
 

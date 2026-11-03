@@ -4,7 +4,7 @@ The PRincipal AXIS method of [Brent (1973)](#ref-Bre1973a) searches along lines,
 
 ## What problem does PRAXIS solve?
 
-**PRAXIS** minimises a smooth f(x) with no limits on x. The panel runs `NLopt.Opt(:LN_PRAXIS, n)` from the package of [Johnson (2007)](#ref-Joh2007b), with `maxeval` from **Max Evaluations**, `xtol_rel = 1e-10` and `initial_step = fill(rhobeg, n)`.
+**PRAXIS** minimises a smooth f(x) with no limits on x. The panel runs `NLopt.Opt(:LN_PRAXIS, n)` from the package of [Johnson (2007)](#ref-Joh2007a), with `maxeval` from **Max Evaluations**, `xtol_rel = 1e-10` and `initial_step = fill(rhobeg, n)`.
 
 The code sets no bounds on it, so the box applies only to **Multi-Start** and the charts. As for **NEWUOA** and **UOBYQA**, the printed `violation` is 0.0 by definition, and **Bounds Feasibility** shows whether the answer lies in the box. **Initial Radius** here means a first step size, with no trust region attached.
 
@@ -48,7 +48,7 @@ Avoid it where f has kinks or noise, since parabolic line searches rely on smoot
 
 <a id="ref-Bre1973a"></a>Brent, R. P. (1973). *Algorithms for Minimization without Derivatives*. Prentice-Hall.
 
-<a id="ref-Joh2007b"></a>Johnson, S. G. (2007). The NLopt Nonlinear-Optimisation Package.
+<a id="ref-Joh2007a"></a>Johnson, S. G. (2007). The NLopt Nonlinear-Optimization Package. [github.com/stevengj/nlopt](https://github.com/stevengj/nlopt)
 
 <a id="ref-NW2006a"></a>Nocedal, J., & Wright, S. J. (2006). *Numerical Optimization* (2nd ed.). Springer. [doi:10.1007/978-0-387-40065-5](https://doi.org/10.1007/978-0-387-40065-5)
 

@@ -26,7 +26,7 @@ A curve that is flat over the last part of the budget suggests that the method s
 | `STOPVAL_REACHED` | The target value was reached |
 | `MAXTIME_REACHED` | The time limit was reached |
 
-NLopt's reference, in the documentation of [Johnson (2007)](#ref-Joh2007c), lists the same codes, with negative values for failures; any other code is reported as a failure, with a prompt to check the bounds and the objective.
+NLopt's reference, in the documentation of [Johnson (2007)](#ref-Joh2007a), lists the same codes, with negative values for failures; any other code is reported as a failure, with a prompt to check the bounds and the objective.
 
 ## Variation across seeds
 
@@ -50,7 +50,7 @@ With the default box, the origin lies at 0.42 of the way along the first variabl
 
 <a id="ref-AGK2019a"></a>Arnoud, A., Guvenen, F., & Kleineberg, T. (2019). *Benchmarking Global Optimizers*. NBER Working Paper 26340. National Bureau of Economic Research. [doi:10.3386/w26340](https://doi.org/10.3386/w26340)
 
-<a id="ref-Joh2007c"></a>Johnson, S. G. (2007). The NLopt Nonlinear-Optimization Package. *NLopt Documentation*. [nlopt.readthedocs.io](https://nlopt.readthedocs.io/en/latest/)
+<a id="ref-Joh2007a"></a>Johnson, S. G. (2007). The NLopt Nonlinear-Optimization Package. [github.com/stevengj/nlopt](https://github.com/stevengj/nlopt)
 
 <a id="ref-RLP2016a"></a>Revels, J., Lubin, M., & Papamarkou, T. (2016). Forward-Mode Automatic Differentiation in Julia. [arXiv:1607.07892](https://arxiv.org/abs/1607.07892)
 

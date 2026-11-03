@@ -40,25 +40,26 @@ For TikTak, a quarter of the budget goes to the Sobol points; [Arnoud, Guvenen a
 | Would another method do better here? | **Compare Methods** |
 | Where did the method search? | **Objective Landscape** |
 
-NLopt's documentation, by [Johnson (2007)](#ref-Joh2007c), recommends polishing the result of a global optimisation with a local one, since many global algorithms devote more effort to searching the space than to locating the optimum precisely.
+NLopt's documentation, by [Johnson (2007)](#ref-Joh2007a), recommends polishing the result of a global optimisation with a local one, since many global algorithms devote more effort to searching the space than to locating the optimum precisely.
 
 ## Other global methods
 
 **Compare Methods** adds three further NLopt global methods: AGS, DIRECT-L and CRS2. NLopt's documentation describes DIRECT-L as a deterministic search that divides the domain into smaller and smaller hyper-rectangles, biased towards local search, CRS2 as a controlled random search that evolves a random population of points by heuristic rules, and AGS as a derivative-free method that reduces the problem to one dimension along a Hilbert curve.
 
-[Rinnooy Kan and Timmer (1987)](#ref-KT1987a), [Madsen and Zertchaninov (1998)](#ref-MZ1998a) and [Arnoud, Guvenen and Kleineberg (2019)](#ref-AGK2019a) are the original sources for the three methods of the panel.
+[Rinnooy Kan and Timmer (1987)](#ref-KT1987a), [Zertchaninov and Madsen (1998)](#ref-ZM1998a) and [Arnoud, Guvenen and Kleineberg (2019)](#ref-AGK2019a) are the original sources for the three methods of the panel.
 
 ## References
 
 <a id="ref-AGK2019a"></a>Arnoud, A., Guvenen, F., & Kleineberg, T. (2019). *Benchmarking Global Optimizers*. NBER Working Paper 26340. National Bureau of Economic Research. [doi:10.3386/w26340](https://doi.org/10.3386/w26340)
 
-<a id="ref-Joh2007c"></a>Johnson, S. G. (2007). The NLopt Nonlinear-Optimization Package. *NLopt Documentation*. [nlopt.readthedocs.io](https://nlopt.readthedocs.io/en/latest/)
+<a id="ref-Joh2007a"></a>Johnson, S. G. (2007). The NLopt Nonlinear-Optimization Package. [github.com/stevengj/nlopt](https://github.com/stevengj/nlopt)
 
-<a id="ref-MZ1998a"></a>Madsen, K., & Zertchaninov, S. (1998). An Adaptive Approach to Stochastic Global Optimization. *Technical Report*.
 
 <a id="ref-RLP2016a"></a>Revels, J., Lubin, M., & Papamarkou, T. (2016). Forward-Mode Automatic Differentiation in Julia. [arXiv:1607.07892](https://arxiv.org/abs/1607.07892)
 
-<a id="ref-KT1987a"></a>Rinnooy Kan, A. H. G., & Timmer, G. T. (1987). Stochastic Global Optimization Methods Part I: Clustering Methods. *Mathematical Programming* 39(1), 57-78. [doi:10.1007/BF02592071](https://doi.org/10.1007/BF02592071)
+<a id="ref-KT1987a"></a>Rinnooy Kan, A. H. G., & Timmer, G. T. (1987). Stochastic Global Optimization Methods Part II: Multi Level Methods. *Mathematical Programming* 39(1), 57-78. [doi:10.1007/BF02592071](https://doi.org/10.1007/BF02592071)
+
+<a id="ref-ZM1998a"></a>Zertchaninov, S., & Madsen, K. (1998). *A C++ Programme for Global Optimization*. IMM-REP-1998-04. Department of Mathematical Modelling, Technical University of Denmark. [github.com/stevengj/nlopt](https://github.com/stevengj/nlopt/blob/master/src/algs/stogo/techreport.pdf)
 
 ## See Also
 

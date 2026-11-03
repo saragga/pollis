@@ -10,7 +10,7 @@ For an objective whose minimum is unknown, `best_value` is an upper bound on the
 
 ## What the methods promise
 
-**Algorithm Properties** states what the selected method assumes and guarantees. For MLSL, [Rinnooy Kan and Timmer (1987)](#ref-KT1987a) give methods that find all relevant local minima with probability 1; NLopt's documentation, by [Johnson (2007)](#ref-Joh2007c), speaks of theoretical guarantees of finding all local optima in a finite number of local minimisations.
+**Algorithm Properties** states what the selected method assumes and guarantees. For MLSL, [Rinnooy Kan and Timmer (1987)](#ref-KT1987a) give methods that find all relevant local minima with probability 1; NLopt's documentation, by [Johnson (2007)](#ref-Joh2007a), speaks of theoretical guarantees of finding all local optima in a finite number of local minimisations.
 
 StoGO-R bounds f in each box using gradients, and TikTak is described by **Algorithm Properties** as a heuristic, supported by the benchmarks of [Arnoud, Guvenen and Kleineberg (2019)](#ref-AGK2019a). **Seed Robustness** and **Compare Methods** show, for the problem at hand, how stable and how good the answer is.
 
@@ -42,9 +42,9 @@ NLopt's documentation advises that a fair way to compare algorithms is to ask ho
 
 <a id="ref-AGK2019a"></a>Arnoud, A., Guvenen, F., & Kleineberg, T. (2019). *Benchmarking Global Optimizers*. NBER Working Paper 26340. National Bureau of Economic Research. [doi:10.3386/w26340](https://doi.org/10.3386/w26340)
 
-<a id="ref-Joh2007c"></a>Johnson, S. G. (2007). The NLopt Nonlinear-Optimization Package. *NLopt Documentation*. [nlopt.readthedocs.io](https://nlopt.readthedocs.io/en/latest/)
+<a id="ref-Joh2007a"></a>Johnson, S. G. (2007). The NLopt Nonlinear-Optimization Package. [github.com/stevengj/nlopt](https://github.com/stevengj/nlopt)
 
-<a id="ref-KT1987a"></a>Rinnooy Kan, A. H. G., & Timmer, G. T. (1987). Stochastic Global Optimization Methods Part I: Clustering Methods. *Mathematical Programming* 39(1), 57-78. [doi:10.1007/BF02592071](https://doi.org/10.1007/BF02592071)
+<a id="ref-KT1987a"></a>Rinnooy Kan, A. H. G., & Timmer, G. T. (1987). Stochastic Global Optimization Methods Part II: Multi Level Methods. *Mathematical Programming* 39(1), 57-78. [doi:10.1007/BF02592071](https://doi.org/10.1007/BF02592071)
 
 ## See Also
 
