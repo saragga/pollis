@@ -53,9 +53,9 @@ The stationary law of the Ornstein–Uhlenbeck process, a normal with variance q
 | Diagnose | **Convergence in N** | E[X(T)] and sd[X(T)] with standard errors for N = 50 to 1 000, and the exact Ornstein–Uhlenbeck moments when the drift is linear and the diffusion constant |
 | Predict | **Quantile Bands** | 10th, 50th and 90th percentile paths |
 | Compare | **Compare Noise Levels** | sd[X(t)] for constant diffusion 0.1, 0.3 and 0.6 with the same drift |
-| Interpret | **Fokker-Planck Density** | Histogram of X(1000) for the default Ornstein–Uhlenbeck process against its stationary normal density |
+| Interpret | **Fokker-Planck Density** | Histogram of X(T) against the exact normal density of X(T) when the process is Ornstein–Uhlenbeck |
 
-The actions use SRIW1 with its default adaptive steps.
+The actions use **Solver**, with **Step size dt** for EM and RKMil.
 
 ## Further reading
 
@@ -63,17 +63,14 @@ The actions use SRIW1 with its default adaptive steps.
 |---|---|
 | DifferentialEquations.jl | [Rackauckas and Nie (2017)](#ref-RN2017a) |
 | SDEs, Fokker–Planck–Kolmogorov, numerical methods, first exit times | [Särkkä and Solin (2019)](#ref-SS2019a) |
-| The theory of SDEs and diffusions | [Øksendal (2003)](#ref-Oks2003a) |
 
-The DifferentialEquations.jl documentation covers the ensemble interface, `ContinuousCallback` and the SDE solvers, with the strong and weak order of each and the forms of noise it handles.
+The DifferentialEquations.jl documentation covers the ensemble interface, `ContinuousCallback` and the SDE solvers, with the strong and weak order of each and the forms of noise it handles. The panel runs every ensemble with EnsembleThreads, the documentation's default ensemble algorithm, which splits the trajectories over the threads of one computer.
 
 ## References
 
 <a id="ref-RN2017a"></a>Rackauckas, C., & Nie, Q. (2017). DifferentialEquations.jl: A Performant and Feature-Rich Ecosystem for Solving Differential Equations in Julia. *Journal of Open Research Software* 5(1), 15. [doi:10.5334/jors.151](https://doi.org/10.5334/jors.151)
 
 <a id="ref-SS2019a"></a>Särkkä, S., & Solin, A. (2019). *Applied Stochastic Differential Equations*. Cambridge University Press. [doi:10.1017/9781108186735](https://doi.org/10.1017/9781108186735)
-
-<a id="ref-Oks2003a"></a>Øksendal, B. (2003). *Stochastic Differential Equations: An Introduction with Applications* (6th ed.). Springer. [doi:10.1007/978-3-642-14394-6](https://doi.org/10.1007/978-3-642-14394-6)
 
 ## See Also
 

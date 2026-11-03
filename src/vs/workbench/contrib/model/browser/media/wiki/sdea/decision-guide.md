@@ -10,7 +10,7 @@ Which analysis answers which question, which solver to pick, and how many paths 
 | When does the process first reach a level? | **First Passage Time** | Reliability, exit problems, threshold-crossing events |
 | Where does the process settle in the long run? | **Invariant Distribution** | Long-run equilibrium; Fokker–Planck steady state |
 
-[Särkkä and Solin (2019)](#ref-SS2019a) describe simulation until the first exit time from a domain as a way to compute expected values over the exit points, and the stationary solution of the Fokker–Planck–Kolmogorov equation as the density for which ∂p/∂t = 0. [Øksendal (2003)](#ref-Oks2003a) applies diffusions to boundary value problems and optimal stopping.
+[Särkkä and Solin (2019)](#ref-SS2019a) describe simulation until the first exit time from a domain as a way to compute expected values over the exit points, and the stationary solution of the Fokker–Planck–Kolmogorov equation as the density for which ∂p/∂t = 0.
 
 ## Simulation or equations
 
@@ -47,15 +47,13 @@ For the default process, the mean equation of [Särkkä and Solin (2019)](#ref-S
 
 ## Further reading
 
-[Särkkä and Solin (2019)](#ref-SS2019a) cover Itô calculus, the Fokker–Planck–Kolmogorov equation, linear SDEs, numerical simulation, filtering and parameter estimation, with exercises and algorithms; the author's copy is available online. [Øksendal (2003)](#ref-Oks2003a) is an introduction to SDEs with applications, from Itô integrals to diffusions, filtering, optimal stopping, stochastic control and mathematical finance. [Rackauckas and Nie (2017)](#ref-RN2017a) describe DifferentialEquations.jl, and its documentation gives the ensemble interface, the callbacks and the full list of SDE solvers with their orders.
+[Särkkä and Solin (2019)](#ref-SS2019a) cover Itô calculus, the Fokker–Planck–Kolmogorov equation, linear SDEs, numerical simulation, filtering and parameter estimation, with exercises and algorithms; the author's copy is available online. [Rackauckas and Nie (2017)](#ref-RN2017a) describe DifferentialEquations.jl, and its documentation gives the ensemble interface, the callbacks and the full list of SDE solvers with their orders. Among the ensemble algorithms, it names EnsembleThreads, the default, as local multithreading, fastest when the trajectories are quick, and recommends EnsembleDistributed when each trajectory takes at least about a millisecond.
 
 ## References
 
 <a id="ref-RN2017a"></a>Rackauckas, C., & Nie, Q. (2017). DifferentialEquations.jl: A Performant and Feature-Rich Ecosystem for Solving Differential Equations in Julia. *Journal of Open Research Software* 5(1), 15. [doi:10.5334/jors.151](https://doi.org/10.5334/jors.151)
 
 <a id="ref-SS2019a"></a>Särkkä, S., & Solin, A. (2019). *Applied Stochastic Differential Equations*. Cambridge University Press. [doi:10.1017/9781108186735](https://doi.org/10.1017/9781108186735)
-
-<a id="ref-Oks2003a"></a>Øksendal, B. (2003). *Stochastic Differential Equations: An Introduction with Applications* (6th ed.). Springer. [doi:10.1007/978-3-642-14394-6](https://doi.org/10.1007/978-3-642-14394-6)
 
 ## See Also
 

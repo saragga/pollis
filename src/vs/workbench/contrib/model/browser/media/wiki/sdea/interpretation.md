@@ -30,7 +30,7 @@ The mean and standard deviation are conditional on crossing before the horizon. 
 
 **Invariant Distribution** prints the mean and standard deviation of X(T) across the paths, and the code builds a 50-bin histogram of the terminal values. For the default process, [Särkkä and Solin (2019)](#ref-SS2019a) give the stationary law as normal with mean 0 and variance q/(2λ), here 0.3²/(2 · 0.5) = 0.09, so a standard deviation of 0.3.
 
-**Fokker-Planck Density** overlays that normal density on the normalised histogram of X(1 000) from the default process. A histogram that follows the curve shows the ensemble reproducing the stationary Fokker–Planck–Kolmogorov solution.
+**Fokker-Planck Density** overlays the normal density of X(T) on the normalised histogram of X(T) when the drift is linear and the diffusion constant; for a long T, it is that stationary density. A histogram that follows the curve shows the ensemble reproducing the stationary Fokker–Planck–Kolmogorov solution.
 
 ## Noise levels
 

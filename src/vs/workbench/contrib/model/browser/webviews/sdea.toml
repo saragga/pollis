@@ -16,6 +16,14 @@ github = "https://github.com/SciML/DifferentialEquations.jl"
 name = "StochasticDiffEq.jl"
 github = "https://github.com/SciML/StochasticDiffEq.jl"
 
+[[packages]]
+name = "StatsBase.jl"
+github = "https://github.com/JuliaStats/StatsBase.jl"
+
+[[packages]]
+name = "Plots.jl"
+github = "https://github.com/JuliaPlots/Plots.jl"
+
 [requires]
 packages = ["Plots.jl", "StatsBase.jl"]
 
@@ -99,12 +107,6 @@ key = "RN2017a"
 [[references]]
 separator = true
 label = "Textbooks"
-
-[[references]]
-key = "Oks2003a"
-
-[[references]]
-key = "Tuc1988a"
 
 [[references]]
 key = "SS2019a"
@@ -277,10 +279,12 @@ id = "fan-chart"
 label = "Fan Chart"
 desc = "Mean path with two bands: mean +/- 2 sd of the paths (where individual paths lie) and mean +/- 2 standard errors (the Monte Carlo uncertainty of the mean itself)"
 code = '''
-using StochasticDiffEq, Statistics, Plots  # fan chart: mean +/- 1 and 2 standard deviations
+using StochasticDiffEq, Statistics, Plots  # fan chart: mean +/- 2 sd of the paths and mean +/- 2 standard errors
 
 f(X,p,t)={{f}}; g(X,p,t)={{g}}  # drift and diffusion
-ens = solve(EnsembleProblem(SDEProblem(f,g,{{X0}},(0.0,{{T}}))), SRIW1(), EnsembleThreads(), trajectories={{N}})  # {{N}} paths
+prob = SDEProblem(f,g,{{X0}},(0.0,{{T}}))
+{{?solver=SRIW1|LambaEM}} ens = solve(EnsembleProblem(prob), {{solver}}(), EnsembleThreads(), trajectories={{N}})  # {{N}} paths
+{{?solver!=SRIW1|LambaEM}} ens = solve(EnsembleProblem(prob), {{solver}}(), EnsembleThreads(), trajectories={{N}}, dt={{dt}})  # {{N}} paths
 t  = range(0.0,{{T}},length=200)  # time grid
 mu = [mean(s(ti) for s in ens) for ti in t]  # mean path
 sd = [std(s(ti) for s in ens)  for ti in t]  # std path
@@ -312,12 +316,13 @@ exact_sd   = is_ou ? abs(sigma) * sqrt((1 - exp(-2theta * T)) / (2theta)) : NaN
 is_ou && println("Exact OU moments: E[X(T)] = ", round(exact_mean, sigdigits=4), ", sd[X(T)] = ", round(exact_sd, sigdigits=4))
 
 for N in [50, 100, 250, 500, 1000]  # sweep ensemble sizes
-    ens = solve(EnsembleProblem(prob), SRIW1(), EnsembleThreads(), trajectories=N)
+{{?solver=SRIW1|LambaEM}}    ens = solve(EnsembleProblem(prob), {{solver}}(), EnsembleThreads(), trajectories=N)
+{{?solver!=SRIW1|LambaEM}}    ens = solve(EnsembleProblem(prob), {{solver}}(), EnsembleThreads(), trajectories=N, dt={{dt}})
     xT = [s.u[end] for s in ens]
     m, sd = mean(xT), std(xT)
     se = sd / sqrt(N)  # Monte Carlo standard error of the mean
     print("N=", N, "  E[X(T)]=", round(m, sigdigits=4), " (se ", round(se, sigdigits=2), ")  sd[X(T)]=", round(sd, sigdigits=4), " (se ", round(sd / sqrt(2 * (N - 1)), sigdigits=2), ")")
-    println(is_ou ? "  z vs exact mean = " * string(round((m - exact_mean) / se, digits=2)) : "")  # |z| above about 2 repeatedly signals bias (step size or solver)
+    println(is_ou ? "  z vs exact mean = " * string(round((m - exact_mean) / se, digits=2)) : "")  # z = (estimate - exact mean) / standard error
 end
 '''
 
@@ -333,7 +338,9 @@ code = '''
 using StochasticDiffEq, Statistics, Plots  # quantile envelopes: 10th, 50th, 90th percentile paths
 
 f(X,p,t)={{f}}; g(X,p,t)={{g}}  # drift and diffusion
-ens = solve(EnsembleProblem(SDEProblem(f,g,{{X0}},(0.0,{{T}}))), SRIW1(), EnsembleThreads(), trajectories={{N}})  # {{N}} paths
+prob = SDEProblem(f,g,{{X0}},(0.0,{{T}}))
+{{?solver=SRIW1|LambaEM}} ens = solve(EnsembleProblem(prob), {{solver}}(), EnsembleThreads(), trajectories={{N}})  # {{N}} paths
+{{?solver!=SRIW1|LambaEM}} ens = solve(EnsembleProblem(prob), {{solver}}(), EnsembleThreads(), trajectories={{N}}, dt={{dt}})  # {{N}} paths
 t   = range(0.0,{{T}},length=200)  # time grid
 q10 = [quantile([s(ti) for s in ens], 0.10) for ti in t]  # 10th percentile
 q50 = [quantile([s(ti) for s in ens], 0.50) for ti in t]  # median
@@ -357,7 +364,9 @@ t = range(0.0, {{T}}, length=200)  # time grid
 plt = plot(xlabel="t", ylabel="std of X(t)")
 for sigma in [0.1, 0.3, 0.6]  # sweep noise strengths
     g(X, p, t) = sigma
-    ens = solve(EnsembleProblem(SDEProblem(f, g, {{X0}}, (0.0, {{T}}))), SRIW1(), EnsembleThreads(), trajectories={{N}})
+    prob = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))
+{{?solver=SRIW1|LambaEM}}    ens = solve(EnsembleProblem(prob), {{solver}}(), EnsembleThreads(), trajectories={{N}})
+{{?solver!=SRIW1|LambaEM}}    ens = solve(EnsembleProblem(prob), {{solver}}(), EnsembleThreads(), trajectories={{N}}, dt={{dt}})
     sd  = [std(s(ti) for s in ens) for ti in t]  # spread across paths: this is what the noise level changes
     plot!(plt, t, sd, label="sigma=" * string(sigma))
 end
@@ -371,16 +380,31 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "fokker-planck"
 label = "Fokker-Planck Density"
-desc = "Compare empirical invariant density against the analytical Fokker-Planck solution"
+desc = "Histogram of X(T) against the exact density of X(T), the Fokker-Planck solution, when the process is Ornstein-Uhlenbeck (linear drift, constant diffusion); for a long T it is the stationary density"
 code = '''
-using StochasticDiffEq, StatsBase, Plots  # compare empirical stationary density to Fokker-Planck solution
+using StochasticDiffEq, StatsBase, Plots  # empirical density of X(T) against the Fokker-Planck solution
 
-f(X, p, t) = -0.5 * X; g(X, p, t) = 0.3  # Ornstein-Uhlenbeck: stationary ~ Normal(0, sigma^2/(2*theta))
-ens = solve(EnsembleProblem(SDEProblem(f, g, {{X0}}, (0.0, 1000.0))), SRIW1(), EnsembleThreads(), trajectories={{N}})  # long-horizon ensemble
-samples = [s.u[end] for s in ens]  # terminal samples from stationary distribution
+f(X, p, t) = {{f}}; g(X, p, t) = {{g}}  # drift and diffusion
+prob = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))  # horizon T = {{T}}
+{{?solver=SRIW1|LambaEM}} ens = solve(EnsembleProblem(prob), {{solver}}(), EnsembleThreads(), trajectories={{N}})  # {{N}} paths
+{{?solver!=SRIW1|LambaEM}} ens = solve(EnsembleProblem(prob), {{solver}}(), EnsembleThreads(), trajectories={{N}}, dt={{dt}})  # {{N}} paths
+samples = [s.u[end] for s in ens]  # terminal values X(T)
+T, x0 = {{T}}, {{X0}}
+
+# exact density when the drift is -theta X and the diffusion a constant sigma (detected numerically)
+theta = f(0.0, nothing, 0.0) - f(1.0, nothing, 0.0)
+sigma = g(0.0, nothing, 0.0)
+is_ou = f(0.0, nothing, 0.0) == 0 && isapprox(f(2.0, nothing, 0.0), -2theta) && g(1.0, nothing, 0.0) == sigma && theta > 0
 
 h = fit(Histogram, samples, nbins=40, closed=:left)  # empirical histogram
-x = -2:0.01:2  # evaluation grid
-fp_density = exp.(-x.^2 / (0.3^2 / 0.5)) ./ sqrt(pi * 0.3^2 / 0.5)  # Fokker-Planck stationary density for OU
-plot(h, normalize=:pdf, alpha=0.5, label="empirical"); plot!(x, fp_density, label="Fokker-Planck")  # overlay analytical vs empirical
+plt = plot(h, normalize=:pdf, alpha=0.5, label="empirical X(T)")
+if is_ou
+    m = x0 * exp(-theta * T)  # transition density of the Ornstein-Uhlenbeck process: Normal(m, v)
+    v = sigma^2 * (1 - exp(-2theta * T)) / (2theta)  # v tends to the stationary variance sigma^2 / (2 theta) as T grows
+    x = range(extrema(samples)..., length=400)
+    plot!(plt, x, exp.(-(x .- m) .^ 2 ./ (2v)) ./ sqrt(2pi * v), label="Fokker-Planck (Ornstein-Uhlenbeck)")
+else
+    println("The exact density is drawn only for an Ornstein-Uhlenbeck process: linear drift -theta X and constant diffusion")
+end
+plt
 '''

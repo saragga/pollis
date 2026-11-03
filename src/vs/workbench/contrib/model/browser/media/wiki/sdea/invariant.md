@@ -25,7 +25,7 @@ A stationary solution has ∂p/∂t = 0 and solves the equation with the left si
 
 For the Ornstein–Uhlenbeck process dx = −λx dt + dβ, v(x) = λx² and [Särkkä and Solin (2019)](#ref-SS2019a) find the stationary density proportional to exp(−λx²/q), a normal with mean 0 and variance q/(2λ). In the panel's notation, with f = −θX and g = σ, q = σ² and the variance is σ²/(2θ).
 
-For the defaults, θ = 0.5 and σ = 0.3, the stationary law is Normal(0, 0.09), with standard deviation 0.3. **Fokker-Planck Density** overlays exactly this density, written as exp(−x²/(σ²/θ))/√(πσ²/θ), on the normalised histogram of X(1 000) from the default process.
+For the defaults, θ = 0.5 and σ = 0.3, the stationary law is Normal(0, 0.09), with standard deviation 0.3. **Fokker-Planck Density** overlays the normal density of X(T), with mean x₀ exp(−θT) and variance σ²(1 − exp(−2θT))/(2θ), on the normalised histogram of X(T); for a long T, it is this stationary density.
 
 ## The horizon
 

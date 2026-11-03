@@ -10,7 +10,7 @@ dX = f(X, t) dt + g(X, t) dW, X(0) = X₀,
 
 with drift **Drift f(X,t)**, diffusion **Diffusion g(X,t)** and a Brownian motion W. The default, f = −0.5 X and g = 0.3, is an Ornstein–Uhlenbeck process: the drift pulls X back towards 0, and the noise keeps it moving.
 
-[Särkkä and Solin (2019)](#ref-SS2019a) give the solution of the Ornstein–Uhlenbeck equation dx = −λx dt + dβ as x(t) = exp(−λt) x₀ + ∫₀ᵗ exp(−λ(t − τ)) dβ(τ), and use the process as a running example for moments, stationary distributions and numerical methods. [Øksendal (2003)](#ref-Oks2003a) develops the theory of SDEs and diffusions, with applications to boundary value problems, optimal stopping, stochastic control and mathematical finance.
+[Särkkä and Solin (2019)](#ref-SS2019a) give the solution of the Ornstein–Uhlenbeck equation dx = −λx dt + dβ as x(t) = exp(−λt) x₀ + ∫₀ᵗ exp(−λ(t − τ)) dβ(τ), and use the process as a running example for moments, stationary distributions and numerical methods.
 
 ## Ensembles
 
@@ -55,8 +55,6 @@ Each solution in `ens` can be evaluated at any time with `s(t)`; the documentati
 <a id="ref-RN2017a"></a>Rackauckas, C., & Nie, Q. (2017). DifferentialEquations.jl: A Performant and Feature-Rich Ecosystem for Solving Differential Equations in Julia. *Journal of Open Research Software* 5(1), 15. [doi:10.5334/jors.151](https://doi.org/10.5334/jors.151)
 
 <a id="ref-SS2019a"></a>Särkkä, S., & Solin, A. (2019). *Applied Stochastic Differential Equations*. Cambridge University Press. [doi:10.1017/9781108186735](https://doi.org/10.1017/9781108186735)
-
-<a id="ref-Oks2003a"></a>Øksendal, B. (2003). *Stochastic Differential Equations: An Introduction with Applications* (6th ed.). Springer. [doi:10.1007/978-3-642-14394-6](https://doi.org/10.1007/978-3-642-14394-6)
 
 ## See Also
 

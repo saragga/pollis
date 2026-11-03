@@ -41,7 +41,7 @@ The code prints the number of crossings out of N and the mean and standard devia
 
 `fpt` holds one crossing time per crossing path, an i.i.d. sample from the distribution of the first passage time, conditional on crossing before 1 000. A histogram or empirical distribution function of `fpt` shows its shape; the mean and standard deviation summarise it.
 
-The panel's decision row names reliability, exit problems and threshold-crossing events as the uses of the tab. [Øksendal (2003)](#ref-Oks2003a) gives chapters to the basic properties of diffusions and to their applications to boundary value problems.
+The panel's decision row names reliability, exit problems and threshold-crossing events as the uses of the tab. [Särkkä and Solin (2019)](#ref-SS2019a) illustrate exit times with Ornstein–Uhlenbeck processes started 100 times from each point of a 50 × 50 grid and simulated with the exact transition density until they hit a side of the unit square; the exit points give a Monte Carlo solution of an elliptic partial differential equation.
 
 ## Solver and noise
 
@@ -52,8 +52,6 @@ The bullets of the panel note that the callback gives the first passage times wi
 ## References
 
 <a id="ref-SS2019a"></a>Särkkä, S., & Solin, A. (2019). *Applied Stochastic Differential Equations*. Cambridge University Press. [doi:10.1017/9781108186735](https://doi.org/10.1017/9781108186735)
-
-<a id="ref-Oks2003a"></a>Øksendal, B. (2003). *Stochastic Differential Equations: An Introduction with Applications* (6th ed.). Springer. [doi:10.1007/978-3-642-14394-6](https://doi.org/10.1007/978-3-642-14394-6)
 
 ## See Also
 
