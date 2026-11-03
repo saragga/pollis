@@ -354,6 +354,32 @@
 			"open_access": true
 		},
 		{
+			"key": "ABV2009a",
+			"type": "article",
+			"title": "Min–Max and Min–Max Regret Versions of Combinatorial Optimization Problems: A Survey",
+			"authors": [
+				"Aissi, Hassene",
+				"Bazgan, Cristina",
+				"Vanderpooten, Daniel"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2009,
+			"journal": "European Journal of Operational Research",
+			"volume": "197",
+			"number": "2",
+			"pages": "427-438",
+			"issn": "0377-2217",
+			"doi": "10.1016/j.ejor.2008.09.012",
+			"oa_url": "https://www.lamsade.dauphine.fr/~bazgan/Papers/EJOR09a.pdf",
+			"abstract": "Min-max and min-max regret criteria are commonly used to define robust solutions. After motivating the use of these criteria, we present general results. Then, we survey complexity results for the min-max and min-max regret versions of some combinatorial optimization problems: shortest path, spanning tree, assignment, min cut, min s-t cut, knapsack. Since most of these problems are NP-hard, we also investigate the approximability of these problems. Furthermore, we present algorithms to solve these problems to optimality.",
+			"abstract_source": "author",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "AC1992a",
 			"type": "article",
 			"title": "Error measures for generalizing about forecasting methods: Empirical comparisons",
@@ -24815,6 +24841,29 @@
 			"source": "manual",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "Nes1997a",
+			"type": "article",
+			"title": "A Few Remarks on the History of MST-Problem",
+			"authors": [
+				"Nešetřil, Jaroslav"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1997,
+			"journal": "Archivum Mathematicum",
+			"volume": "33",
+			"number": "1-2",
+			"pages": "15-22",
+			"issn": "0044-8753",
+			"oa_url": "http://dml.cz/dmlcz/107593",
+			"abstract": "On the background of Borůvka's pioneering work we present a survey of the development related to the Minimum Spanning Tree Problem. We also complement the historical paper Graham-Hell by a few remarks and provide an update of the extensive literature devoted to this problem.",
+			"abstract_source": "author",
+			"source": "manual",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "Neu1928a",
@@ -51325,13 +51374,17 @@
 				"chiara.optimise.ngo"
 			],
 			"keys": [
+				"FBSHE...2021a",
 				"CLRS2022a",
 				"AMO1993a",
+				"Wil2019a",
 				"Dij1959a",
 				"MG2004a",
 				"FF1956a",
 				"Kru1956a",
-				"Kuh1955a"
+				"Kuh1955a",
+				"ABV2009a",
+				"Nes1997a"
 			]
 		},
 		{

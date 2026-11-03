@@ -140,6 +140,13 @@ bundled = true
 
 [[references]]
 separator = true
+label = "Software"
+
+[[references]]
+key = "FBSHE...2021a"
+
+[[references]]
+separator = true
 label = "Textbooks"
 
 [[references]]
@@ -147,6 +154,9 @@ key = "CLRS2022a"
 
 [[references]]
 key = "AMO1993a"
+
+[[references]]
+key = "Wil2019a"
 
 [[references]]
 separator = true
@@ -166,6 +176,16 @@ key = "Kru1956a"
 
 [[references]]
 key = "Kuh1955a"
+
+[[references]]
+separator = true
+label = "Reviews"
+
+[[references]]
+key = "ABV2009a"
+
+[[references]]
+key = "Nes1997a"
 
 [[models]]
 id = "sp"
