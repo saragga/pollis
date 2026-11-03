@@ -33966,7 +33966,7 @@
 		{
 			"key": "Tuc1988a",
 			"type": "book",
-			"title": "A First Passage Time Primer for Stochastic Differential Equations",
+			"title": "Introduction to Theoretical Neurobiology: Volume 2, Nonlinear and Stochastic Theories",
 			"authors": [
 				"Tuckwell, Henry C."
 			],
@@ -33974,9 +33974,12 @@
 			"authors_complete": true,
 			"year": 1988,
 			"publisher": "Cambridge University Press",
+			"isbn": "9780521352178",
+			"doi": "10.1017/CBO9780511623202",
 			"legacy_key": "tuckwell1988",
-			"source": "manual",
-			"checked": false,
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
 			"open_access": false
 		},
 		{
