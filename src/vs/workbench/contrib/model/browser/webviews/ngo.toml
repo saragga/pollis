@@ -9,28 +9,28 @@ viewType = "pollis.ngo"
 defaultModel = "sp"
 
 [[packages]]
-name = "RobustShortestPath.jl"
-github = "https://github.com/chkwon/RobustShortestPath.jl"
-
-[[packages]]
 name = "Graphs.jl"
 github = "https://github.com/JuliaGraphs/Graphs.jl"
-
-[[packages]]
-name = "SimpleWeightedGraphs.jl"
-github = "https://github.com/JuliaGraphs/SimpleWeightedGraphs.jl"
 
 [[packages]]
 name = "GraphsFlows.jl"
 github = "https://github.com/JuliaGraphs/GraphsFlows.jl"
 
 [[packages]]
-name = "GraphsOptim.jl"
-github = "https://github.com/JuliaGraphs/GraphsOptim.jl"
-
-[[packages]]
 name = "Hungarian.jl"
 github = "https://github.com/Gnimuc/Hungarian.jl"
+
+[[packages]]
+name = "JuMP.jl"
+github = "https://github.com/jump-dev/JuMP.jl"
+
+[[packages]]
+name = "HiGHS.jl"
+github = "https://github.com/jump-dev/HiGHS.jl"
+
+[[packages]]
+name = "Plots.jl"
+github = "https://github.com/JuliaPlots/Plots.jl"
 
 [requires]
 packages = ["Graphs.jl", "GraphsFlows.jl", "Hungarian.jl", "JuMP.jl", "HiGHS.jl", "Plots.jl"]
@@ -48,13 +48,13 @@ description = "Dijkstra, Bellman-Ford, and A* for single-source shortest paths o
 name = "Robust Shortest Path"
 file = "ngo/tutorial-02-rsp.ipynb"
 bundled = true
-description = "Min-max regret robust shortest path with interval edge weights via RobustShortestPath.jl"
+description = "Min-max regret robust shortest path with interval edge weights, by enumerating the simple paths"
 
 [[notebookSections.notebooks]]
 name = "Network Flow"
 file = "ngo/tutorial-03-nf.ipynb"
 bundled = true
-description = "Maximum flow and minimum cut on directed capacity networks via Dinic and push-relabel"
+description = "Maximum flow and minimum cut on directed capacity networks via push-relabel, with Edmonds-Karp, Dinic and Boykov-Kolmogorov for comparison"
 
 [[notebookSections.notebooks]]
 name = "Spanning Tree"
@@ -66,7 +66,7 @@ description = "Minimum spanning tree via Kruskal and Prim on undirected weighted
 name = "Bipartite Matching"
 file = "ngo/tutorial-05-bm.ipynb"
 bundled = true
-description = "Maximum weight bipartite matching via GraphsOptim; maximises matched pairs"
+description = "Maximum-weight bipartite matching via the Hungarian algorithm on shifted weights; maximises the total weight of the matched pairs"
 
 [[notebookSections.notebooks]]
 name = "Assignment"
@@ -225,7 +225,7 @@ detail = "Kruskal and Prim MST; minimum-weight connected spanning subgraph"
 
 [[bullets]]
 text = "Bipartite Matching"
-detail = "maximum weight matching on a bipartite graph; maximises matched pairs"
+detail = "maximum-weight matching on a bipartite graph; maximises the total weight of the matched pairs"
 
 [[bullets]]
 text = "Assignment"
@@ -825,9 +825,9 @@ id = "directed-vs-undirected"
 label = "Baseline Comparison"
 desc = "Directed against undirected graph (paths and flows), shortest-path tree against spanning tree, or greedy against optimal pairing"
 code = '''
-{{?model=sp|nf}}Ws = max.(W, transpose(W))  # every edge usable in both directions
+{{?model=sp|nf}}Ws = ifelse.(W .> 0, W, transpose(W))  # every arc also usable in reverse: a missing reverse arc takes the weight of the existing one
 {{?model=sp|nf}}(directed = objective(sol), undirected = objective(solve(Ws)))
-{{?model=rsp}}(directed = objective(sol), undirected = objective(solve(max.(W, transpose(W)); Wu=max.(Wu, transpose(Wu)))))
+{{?model=rsp}}(directed = objective(sol), undirected = objective(solve(ifelse.(W .> 0, W, transpose(W)); Wu=ifelse.(W .> 0, Wu, transpose(Wu)))))  # a missing reverse arc takes the interval of the existing one
 {{?model=st}}Ws = max.(W, transpose(W)); m = size(W, 1)
 {{?model=st}}ds = dijkstra_shortest_paths(SimpleGraph(Ws), 1, Ws)
 {{?model=st}}(minimum_spanning_tree = sol.weight, shortest_path_tree_from_1 = sum(Ws[ds.parents[v], v] for v in 2:m if ds.parents[v] > 0))
@@ -871,12 +871,12 @@ code = '''
 [[actionGroups.actions]]
 id = "algorithm-guide"
 label = "Algorithm Guide"
-desc = "Rules of thumb for choosing an algorithm in each problem class"
+desc = "For each problem class, the panel's algorithm and the alternatives its references describe"
 code = '''
-[(problem = "shortest path", use = "Dijkstra", when = "non-negative weights; Bellman-Ford for negative weights, A* with a good heuristic for geometric graphs"),
- (problem = "robust shortest path", use = "min-max regret by enumeration", when = "small graphs; use MILP formulations or budgeted uncertainty for large ones"),
- (problem = "maximum flow", use = "push-relabel or Dinic", when = "Edmonds-Karp for teaching, Boykov-Kolmogorov for image-segmentation grids"),
- (problem = "spanning tree", use = "Kruskal on sparse graphs, Prim on dense graphs", when = "weights on undirected edges"),
- (problem = "bipartite matching", use = "Hungarian (weighted) or Hopcroft-Karp (unweighted)", when = "pairs of rows and columns along existing edges"),
- (problem = "assignment", use = "Hungarian", when = "every row to one column at minimum cost; linear programming gives the same answer")]
+[(problem = "shortest path", use = "Dijkstra", when = "non-negative lengths; Bellman-Ford for negative lengths, which also detects negative-cost cycles"),
+ (problem = "robust shortest path", use = "min-max regret by enumerating the simple paths", when = "small graphs; mixed integer formulations, branch-and-bound or path ranking for larger ones"),
+ (problem = "maximum flow", use = "push-relabel", when = "among the fastest in practice; shortest augmenting paths (Edmonds-Karp) and blocking flows (Dinic) are the other families"),
+ (problem = "spanning tree", use = "Kruskal", when = "weights on undirected edges; Prim's and Boruvka's algorithms also find a minimum spanning tree"),
+ (problem = "bipartite matching", use = "Hungarian on weights shifted to costs", when = "pairs of rows and columns along existing edges, at most one partner each"),
+ (problem = "assignment", use = "Hungarian", when = "every worker to one job at minimum cost; the cost matrix need not be square")]
 '''

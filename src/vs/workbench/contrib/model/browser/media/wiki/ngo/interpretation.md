@@ -48,7 +48,7 @@ A change of zero means that an alternative of equal value exists without that ed
 
 ## Baseline comparisons
 
-**Baseline Comparison** sets each solution against a simpler alternative. For paths and flows, the baseline makes every edge usable in both directions, with the larger of the two weights where both directions have one. Capacities can then only grow, so the maximum flow cannot fall; for paths, new routes appear but some edges become longer, so the shortest length can move either way.
+**Baseline Comparison** sets each solution against a simpler alternative. For paths and flows, the baseline makes every edge usable in both directions: an arc whose reverse is missing gains one with the same weight, and a pair with arcs both ways keeps its two weights. The graph only gains arcs, so the shortest length cannot rise and the maximum flow cannot fall.
 
 For **Spanning Tree**, the baseline is the tree of shortest paths from vertex 1, which minimises distances from one vertex rather than total weight, so its weight is at least that of the minimum spanning tree. For **Bipartite Matching** and **Assignment**, a greedy method takes the heaviest or cheapest free pair first, and `gap` measures what it misses against the Hungarian optimum of [Kuhn (1955)](#ref-Kuh1955a).
 

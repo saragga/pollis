@@ -37,7 +37,7 @@ Which model fits a question, which action answers it, which function of the Juli
 | Flows and cuts | `maximum_flow`, `mincut` | GraphsFlows.jl |
 | Assignment and weighted matching | `hungarian` | Hungarian.jl |
 
-For negative lengths, [Williamson (2019)](#ref-Wil2019a) replaces Dijkstra's algorithm by Bellman–Ford, and shows how to modify it to detect negative-cost cycles. **Algorithm Guide** prints a rule of thumb for each problem class. Graphs.jl, by [Fairbanks, Besançon, Schölly, Hoffimann, Eubank and Karpinski (2021)](#ref-FBSHE...2021a), documents each function with its arguments.
+For negative lengths, [Williamson (2019)](#ref-Wil2019a) replaces Dijkstra's algorithm by Bellman–Ford, and shows how to modify it to detect negative-cost cycles. **Algorithm Guide** prints, for each problem class, the panel's algorithm and the alternatives that these pages describe. Graphs.jl, by [Fairbanks, Besançon, Schölly, Hoffimann, Eubank and Karpinski (2021)](#ref-FBSHE...2021a), documents each function with its arguments.
 
 ## Choosing the inputs
 
