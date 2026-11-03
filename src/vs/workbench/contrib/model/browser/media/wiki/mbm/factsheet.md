@@ -75,7 +75,7 @@ Loosen `rhoend` or `xtol_rel` by editing the code when the objective carries noi
 
 | Group | Action | Output |
 |---|---|---|
-| Compare | **Method Comparison** | `minimum`, `evaluations`, `seconds` for six methods without general constraints |
+| Compare | **Method Comparison** | `minimum`, `evaluations`, `seconds` for all seven methods and Nelder-Mead, without general constraints |
 | Compare | **NLopt vs PRIMA** | Both versions of COBYLA: `minimum`, `evaluations`, `max_constraint`, `status` |
 | Compare | **Budget Sweep** | `minimum` and `status` at budgets from 50 up to **Max Evaluations** |
 | Interpret | **Solution Summary** | Each variable's start, value and bounds, with the run totals |

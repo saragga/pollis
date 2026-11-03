@@ -74,7 +74,7 @@ At a constrained minimum a negative entry is expected in the direction that cros
 
 ## Comparing methods and implementations fairly
 
-**Method Comparison** runs six methods on f with the same start and budget, leaving out constraints other than the box, and only **BOBYQA (box)** receives the box there. On a constrained problem its values can therefore lie below the constrained `minimum`, and they answer a different question. `seconds` comes from a second, compiled run, and it matters only when f is cheap enough for the solver's arithmetic to count. For an expensive f, read `evaluations`.
+**Method Comparison** runs all seven methods and plain Nelder-Mead on f with the same start and budget, leaving out general constraints. Rows marked `(box)` keep to the box, while **NEWUOA**, **UOBYQA** and **PRAXIS** ignore it and can reach lower values outside it. On a constrained problem, values can also lie below the constrained `minimum`, since they answer a different question. `seconds` comes from a second, compiled run, and it matters only when f is cheap enough for the solver's arithmetic to count. For an expensive f, read `evaluations`.
 
 **NLopt vs PRIMA** runs COBYLA in both implementations. Their stopping rules differ, `rhoend` in one and `xtol_rel` in the other, so `evaluations` is not a pure measure of efficiency. Compare `minimum` and `max_constraint` together, since a lower value bought with a larger breach is no gain. On methods without general constraints, the action uses a constant inactive constraint and tests only the box.
 

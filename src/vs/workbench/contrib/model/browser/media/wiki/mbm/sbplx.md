@@ -39,7 +39,7 @@ A wide empirical comparison including non-smooth problems is in [Rios and Sahini
 
 ## Comparing Sbplx with plain Nelder-Mead
 
-**Method Comparison** includes both, through `:LN_SBPLX` and `:LN_NELDERMEAD`, with the same start and budget. Neither receives the box in that action, so a row for **Sbplx** there can differ from the main run whenever the box is active.
+**Method Comparison** includes both, through `:LN_SBPLX` and `:LN_NELDERMEAD`, with the same start, budget and box.
 
 As n grows, the gap in `minimum` usually widens in favour of **Sbplx**. At very small n the two nearly coincide, since a subspace can hold most of the variables. A review of the wider family of direct-search methods is in [Conn, Scheinberg and Vicente (2009)](#ref-CSV2009a), and more of them are in the **Direct Search Methods** panel.
 

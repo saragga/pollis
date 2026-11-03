@@ -238,11 +238,11 @@ id = "sbplx"
 label = "Sbplx"
 
 [[bullets]]
-text = "Powell quadratic-model methods via PRIMA.jl: COBYLA, BOBYQA, NEWUOA, UOBYQA, LINCOA"
+text = "Powell's trust-region methods via PRIMA.jl: COBYLA with linear models; BOBYQA, NEWUOA, UOBYQA and LINCOA with quadratic models"
 detail = ""
 
 [[bullets]]
-text = "Direct pattern methods via NLopt.jl: PRAXIS, Sbplx"
+text = "Methods without an interpolation model via NLopt.jl: PRAXIS with line searches along conjugate directions; Sbplx with Nelder-Mead on subspaces"
 detail = ""
 
 [[decisionRows]]
@@ -761,20 +761,24 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "method-comparison"
 label = "Method Comparison"
-desc = "The PRIMA solvers and the NLopt PRAXIS, Sbplx and Nelder-Mead on the objective with the same start and budget (constraints other than bounds are left out)"
+desc = "All seven methods and the NLopt Nelder-Mead on the objective with the same start and budget (general constraints are left out; the rows marked box keep to the box)"
 code = '''
 using PRIMA, NLopt
 
 run_prima(solver; kw...) = (r = solver(f, x0; maxfun=maxfun, rhobeg=rhobeg, rhoend=1e-8, kw...); (fx = r[2].fx, evals = r[2].nf))
-function run_nlopt(alg)
+function run_nlopt(alg; box=false)
     opt = NLopt.Opt(alg, length(x0)); count = Ref(0)
     opt.min_objective = (x, grad) -> (count[] += 1; f(x))
+    if box
+        opt.lower_bounds, opt.upper_bounds = lb, ub
+    end
     opt.maxeval = maxfun; opt.xtol_rel = 1e-10; opt.initial_step = fill(rhobeg, length(x0))
     fx, _, _ = NLopt.optimize(opt, x0)
     (fx = fx, evals = count[])
 end
-methods = ["NEWUOA" => () -> run_prima(newuoa), "UOBYQA" => () -> run_prima(uobyqa), "BOBYQA (box)" => () -> run_prima(bobyqa; xl=lb, xu=ub),
-           "PRAXIS" => () -> run_nlopt(:LN_PRAXIS), "Sbplx" => () -> run_nlopt(:LN_SBPLX), "Nelder-Mead" => () -> run_nlopt(:LN_NELDERMEAD)]
+methods = ["COBYLA (box)" => () -> run_prima(cobyla; xl=lb, xu=ub), "BOBYQA (box)" => () -> run_prima(bobyqa; xl=lb, xu=ub),
+           "NEWUOA" => () -> run_prima(newuoa), "UOBYQA" => () -> run_prima(uobyqa), "LINCOA (box)" => () -> run_prima(lincoa; xl=lb, xu=ub),
+           "PRAXIS" => () -> run_nlopt(:LN_PRAXIS), "Sbplx (box)" => () -> run_nlopt(:LN_SBPLX; box=true), "Nelder-Mead (box)" => () -> run_nlopt(:LN_NELDERMEAD; box=true)]
 map(methods) do (name, run)
     run()  # warm-up: the first call includes compilation
     sec = @elapsed r = run()  # time of a compiled run

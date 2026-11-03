@@ -29,7 +29,7 @@ That has three practical results. f and c must both be computable outside the fe
 
 A linear model has no curvature, so a step is always pushed out to the edge of the ball or to a constraint. Near a constrained solution with enough active constraints, that is fine, as the constraints themselves fix the point. In the interior or along a curved boundary, it progresses slowly, and a smooth objective can use many times the evaluations **BOBYQA** would need for the same accuracy.
 
-In return, n + 1 points are the cheapest possible model, and a slope is less affected by small irregularities than a curvature estimate fitted from the same few values. Raise **Max Evaluations** well beyond the levels that suit the quadratic methods, and use **Budget Sweep** to see the effect.
+In return, n + 1 points are the cheapest possible model, and a slope is less affected by small irregularities than a curvature estimate fitted from the same few values. Raise **Max Evaluations** well beyond the levels that suit the quadratic methods, and use **Budget Sweep** to see the effect. `COBYLA (box)` in **Method Comparison** sets the cost beside the quadratic methods, with the general constraints left out.
 
 ## Comparing the two implementations
 
