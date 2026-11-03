@@ -130,6 +130,9 @@ key = "BA1999a"
 [[references]]
 key = "WS1998a"
 
+[[references]]
+key = "HG2008a"
+
 [[models]]
 id = "erdos"
 label = "Erdos-Renyi"
