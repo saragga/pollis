@@ -130,6 +130,9 @@ label = "Original Papers"
 [[references]]
 key = "OM1994b"
 
+[[references]]
+key = "OM1995a"
+
 [[models]]
 id = "arx"
 label = "ARX"

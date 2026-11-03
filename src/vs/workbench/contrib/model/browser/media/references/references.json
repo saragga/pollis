@@ -25221,6 +25221,32 @@
 			"open_access": false
 		},
 		{
+			"key": "OM1995a",
+			"type": "article",
+			"title": "A Unifying Theorem for Three Subspace System Identification Algorithms",
+			"authors": [
+				"Van Overschee, Peter",
+				"De Moor, Bart"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1995,
+			"journal": "Automatica",
+			"volume": "31",
+			"number": "12",
+			"pages": "1853-1864",
+			"issn": "0005-1098",
+			"doi": "10.1016/0005-1098(95)00072-0",
+			"openalex": "W2034487019",
+			"oa_url": "https://ftp.esat.kuleuven.be/pub/stadius/ida/reports/93-50.pdf",
+			"abstract": "The aim of this paper is to indicate and explore the similarities between three different subspace algorithms for the identification of combined deterministic-stochastic systems. The similarities between these algorithms have been obscured, due to different notations and backgrounds. It is shown that all three algorithms are special cases of one unifying theorem. The comparison also reveals that the three algorithms use exactly the same subspace to determine the order and the extended observability matrix, but that the weighting matrix, used to calculate a basis for the column space of the observability matrix is different in the three cases.",
+			"abstract_source": "author",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "OSC2015a",
 			"type": "article",
 			"title": "Estimating the reproducibility of psychological science",
@@ -52239,7 +52265,8 @@
 				"Lju1999a",
 				"SS1989a",
 				"Kat2005a",
-				"OM1994b"
+				"OM1994b",
+				"OM1995a"
 			]
 		},
 		{
