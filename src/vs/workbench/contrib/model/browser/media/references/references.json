@@ -6697,6 +6697,27 @@
 			"open_access": true
 		},
 		{
+			"key": "Car2020a",
+			"type": "misc",
+			"title": "MonteCarloMeasurements.jl: Nonlinear Propagation of Arbitrary Multivariate Distributions by means of Method Overloading",
+			"authors": [
+				"Bagge Carlson, Fredrik"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2020,
+			"doi": "10.48550/arXiv.2001.07625",
+			"arxiv": "2001.07625",
+			"url": "https://arxiv.org/abs/2001.07625",
+			"oa_url": "https://arxiv.org/pdf/2001.07625",
+			"abstract": "This manuscript outlines a software package that facilitates working with probability distributions by means of Monte-Carlo methods, in a way that allows for propagation of multivariate probability distributions through arbitrary functions. We provide a type that represents probability distributions by an internal vector of unweighted samples, Particles, which is a subtype of a Real number and behaves just like a regular real number in calculations by means of method overloading. This makes the software easy to work with and presents minimal friction for the user. We highlight how this design facilitates optimal usage of SIMD instructions and showcase the package for uncertainty propagation through an off-the-shelf ODE solver as well as for robust probabilistic optimization with automatic differentiation.",
+			"abstract_source": "author",
+			"source": "arxiv",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "Car2024a",
 			"type": "misc",
 			"title": "DynamicAxisWarping.jl: Dynamic Time Warping and Related Algorithms in Julia",
@@ -13096,6 +13117,27 @@
 			"open_access": false
 		},
 		{
+			"key": "Gio2016a",
+			"type": "misc",
+			"title": "Uncertainty Propagation with Functionally Correlated Quantities",
+			"authors": [
+				"Giordano, Mosè"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2016,
+			"doi": "10.48550/arXiv.1610.08716",
+			"arxiv": "1610.08716",
+			"url": "https://arxiv.org/abs/1610.08716",
+			"oa_url": "https://arxiv.org/pdf/1610.08716",
+			"abstract": "Many uncertainty propagation software exist, written in different programming languages, but not all of them are able to handle functional correlation between quantities. In this paper we review one strategy to deal with uncertainty propagation of quantities that are functionally correlated, and introduce a new software offering this feature: the Julia package Measurements.jl. It supports real and complex numbers with uncertainty, arbitrary-precision calculations, mathematical and linear algebra operations with matrices and arrays.",
+			"abstract_source": "author",
+			"source": "arxiv",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "Gle1969a",
 			"type": "article",
 			"title": "A New Test for Heteroskedasticity",
@@ -16701,6 +16743,46 @@
 			"oa_url": "https://www.ncbi.nlm.nih.gov/pmc/articles/4792409",
 			"source": "crossref",
 			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "JCGM2008a",
+			"type": "techreport",
+			"title": "Evaluation of Measurement Data — Guide to the Expression of Uncertainty in Measurement",
+			"authors": [
+				"Joint Committee for Guides in Metrology"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2008,
+			"publisher": "BIPM",
+			"institution": "JCGM 100:2008",
+			"url": "https://www.bipm.org/documents/20126/2071204/JCGM_100_2008_E.pdf",
+			"oa_url": "https://www.bipm.org/documents/20126/2071204/JCGM_100_2008_E.pdf",
+			"source": "manual",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "JCGM2008b",
+			"type": "techreport",
+			"title": "Evaluation of Measurement Data — Supplement 1 to the “Guide to the Expression of Uncertainty in Measurement” — Propagation of Distributions Using a Monte Carlo Method",
+			"authors": [
+				"Joint Committee for Guides in Metrology"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2008,
+			"publisher": "BIPM",
+			"institution": "JCGM 101:2008",
+			"url": "https://www.bipm.org/documents/20126/2071204/JCGM_101_2008_E.pdf",
+			"oa_url": "https://www.bipm.org/documents/20126/2071204/JCGM_101_2008_E.pdf",
+			"abstract": "This Supplement provides a general numerical approach, consistent with the broad principles of the GUM, for carrying out the calculations required as part of an evaluation of measurement uncertainty. The approach applies to arbitrary models having a single output quantity where the input quantities are characterized by any specified PDFs.",
+			"abstract_source": "author",
+			"source": "manual",
+			"retrieved": "2026-11-03",
 			"checked": true,
 			"open_access": true
 		},
@@ -52583,6 +52665,19 @@
 				"Kit1996a",
 				"JU1997a",
 				"SBBA2008a"
+			]
+		},
+		{
+			"id": "up",
+			"title": "Uncertainty Propagation",
+			"commands": [
+				"chiara.statistics.up"
+			],
+			"keys": [
+				"Car2020a",
+				"Gio2016a",
+				"JCGM2008a",
+				"JCGM2008b"
 			]
 		},
 		{

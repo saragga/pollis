@@ -94,6 +94,26 @@ detail = "define uncertain variables as probability distributions (Normal, Unifo
 text = "Statistics"
 detail = "mean, standard deviation, and confidence intervals (CI) of the propagated output"
 
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+key = "Car2020a"
+
+[[references]]
+key = "Gio2016a"
+
+[[references]]
+separator = true
+label = "Standards"
+
+[[references]]
+key = "JCGM2008a"
+
+[[references]]
+key = "JCGM2008b"
+
 [[inputs]]
 id = "variables"
 label = "Uncertain Variables"
