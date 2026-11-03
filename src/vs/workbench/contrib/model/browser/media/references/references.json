@@ -1280,6 +1280,30 @@
 			"open_access": false
 		},
 		{
+			"key": "Ath1971a",
+			"type": "article",
+			"title": "The Role and Use of the Stochastic Linear-Quadratic-Gaussian Problem in Control System Design",
+			"authors": [
+				"Athans, Michael"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1971,
+			"journal": "IEEE Transactions on Automatic Control",
+			"volume": "16",
+			"number": "6",
+			"pages": "529-552",
+			"issn": "0018-9286",
+			"doi": "10.1109/TAC.1971.1099818",
+			"openalex": "W2134935236",
+			"abstract": "The role of the linear-quadratic stochastic control problem in engineering design is reviewed in tutorial fashion. The design approach is motivated by considering the control of a non-linear uncertain plant about a desired input-output response. It is demonstrated how a design philosophy based on 1) deterministic perturbation control, 2) stochastic state estimation, and 3) linearized stochastic control leads to an overall closed-loop control system. The emphasis of the paper is on the philosophy of the design process, the modeling issue, and the formulation of the problem; the results are given for the sake of completeness, but no proofs are included. The systematic off-line nature of the design process is stressed throughout.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "BA1999a",
 			"type": "article",
 			"title": "Emergence of Scaling in Random Networks",
@@ -7713,7 +7737,7 @@
 		{
 			"key": "DHS2003a",
 			"type": "book",
-			"title": "Linear Control Systems Analysis and Design",
+			"title": "Linear Control System Analysis and Design with MATLAB",
 			"authors": [
 				"D'Azzo, John J.",
 				"Houpis, Constantine H.",
@@ -7722,7 +7746,7 @@
 			"author_kind": "persons",
 			"authors_complete": true,
 			"year": 2003,
-			"publisher": "CRC Press (5th ed.)",
+			"publisher": "Marcel Dekker (5th ed.)",
 			"legacy_key": "dazzo2003",
 			"source": "manual",
 			"checked": false,
@@ -9044,6 +9068,30 @@
 			"retrieved": "2026-10-31",
 			"checked": true,
 			"open_access": true
+		},
+		{
+			"key": "Doy1978a",
+			"type": "article",
+			"title": "Guaranteed Margins for LQG Regulators",
+			"authors": [
+				"Doyle, John C."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1978,
+			"journal": "IEEE Transactions on Automatic Control",
+			"volume": "23",
+			"number": "4",
+			"pages": "756-757",
+			"issn": "0018-9286",
+			"doi": "10.1109/TAC.1978.1101812",
+			"openalex": "W1997177885",
+			"abstract": "There are none.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": false
 		},
 		{
 			"key": "Dud1976a",
@@ -16664,6 +16712,31 @@
 			"open_access": false
 		},
 		{
+			"key": "JT1961a",
+			"type": "article",
+			"title": "On Linear Control Theory",
+			"authors": [
+				"Joseph, Peter D.",
+				"Tou, Julius T."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1961,
+			"journal": "Transactions of the American Institute of Electrical Engineers, Part II: Applications and Industry",
+			"volume": "80",
+			"number": "4",
+			"pages": "193-196",
+			"issn": "0097-2185",
+			"doi": "10.1109/TAI.1961.6371743",
+			"openalex": "W2038107162",
+			"abstract": "Optimum control of linear multivariable processes is the concern of this paper. The optimum control problem is studied via the state-variable concept and the dynamic-programing technique. A linear multivariable control system is shown to have optimum performance with respect to a quadratic performance criterion, if both the controller and the estimator are independently designed in an optimum manner.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "JT1993a",
 			"type": "article",
 			"title": "Returns to Buying Winners and Selling Losers: Implications for Stock Market Efficiency",
@@ -18583,15 +18656,15 @@
 		},
 		{
 			"key": "Kir2012a",
-			"type": "article",
-			"title": "Optimal Control: An Introduction",
+			"type": "book",
+			"title": "Optimal Control Theory: An Introduction",
 			"authors": [
 				"Kirk, Donald E."
 			],
 			"author_kind": "persons",
 			"authors_complete": true,
 			"year": 2012,
-			"journal": "Dover Publications",
+			"publisher": "Dover Publications",
 			"url": "https://doverpublications.com/",
 			"legacy_key": "kirk2012",
 			"source": "manual",
@@ -20956,6 +21029,31 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "Lau1979a",
+			"type": "article",
+			"title": "A Schur Method for Solving Algebraic Riccati Equations",
+			"authors": [
+				"Laub, Alan J."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1979,
+			"journal": "IEEE Transactions on Automatic Control",
+			"volume": "24",
+			"number": "6",
+			"pages": "913-921",
+			"issn": "0018-9286",
+			"doi": "10.1109/TAC.1979.1102178",
+			"openalex": "W2163334725",
+			"oa_url": "https://dspace.mit.edu/bitstream/1721.1/1301/1/R-0859-05666488.pdf",
+			"abstract": "In this paper a new algorithm for solving algebraic Riccati equations (both continuous-time and discrete-time versions) is presented. The method studied is a variant of the classical eigenvector approach and uses instead an appropriate set of Schur vectors, thereby gaining substantial numerical advantages. Considerable discussion is devoted to a number of numerical issues. The method is apparently quite numerically stable and performs reliably on systems with dense matrices up to order 100 or so, storage being the main limiting factor.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "Lau2021a",
@@ -28664,6 +28762,31 @@
 			"open_access": false
 		},
 		{
+			"key": "SA1977a",
+			"type": "article",
+			"title": "Gain and Phase Margin for Multiloop LQG Regulators",
+			"authors": [
+				"Safonov, Michael G.",
+				"Athans, Michael"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1977,
+			"journal": "IEEE Transactions on Automatic Control",
+			"volume": "22",
+			"number": "2",
+			"pages": "173-179",
+			"issn": "0018-9286",
+			"doi": "10.1109/TAC.1977.1101470",
+			"openalex": "W2142522228",
+			"abstract": "Multiloop linear-quadratic state-feedback (LQSF) regulators are shown to be robust against a variety of large dynamical linear time-invariant and memoryless nonlinear time-varying variations in open-loop dynamics. The results are interpreted in terms of the classical concepts of gain and phase margin, thus strengthening the link between classical and modern feedback theory.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "SA2020a",
 			"type": "article",
 			"title": "Machine Coded Compact Genetic Algorithms for Real Parameter Optimization Problems",
@@ -34620,6 +34743,28 @@
 			"open_access": false
 		},
 		{
+			"key": "Won1968a",
+			"type": "article",
+			"title": "On the Separation Theorem of Stochastic Control",
+			"authors": [
+				"Wonham, W. Murray"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1968,
+			"journal": "SIAM Journal on Control",
+			"volume": "6",
+			"number": "2",
+			"pages": "312-326",
+			"issn": "0036-1402",
+			"doi": "10.1137/0306023",
+			"openalex": "W2121156749",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "Woo2009a",
 			"type": "book",
 			"title": "An Introduction to MultiAgent Systems",
@@ -36007,6 +36152,18 @@
 			"count": 977,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "Ath1971a",
+			"count": 544,
+			"source": "crossref",
+			"date": "2026-11-03"
+		},
+		{
+			"key": "Ath1971a",
+			"count": 691,
+			"source": "openalex",
+			"date": "2026-11-03"
 		},
 		{
 			"key": "BA1999a",
@@ -38655,6 +38812,18 @@
 			"date": "2026-10-31"
 		},
 		{
+			"key": "Doy1978a",
+			"count": 595,
+			"source": "crossref",
+			"date": "2026-11-03"
+		},
+		{
+			"key": "Doy1978a",
+			"count": 791,
+			"source": "openalex",
+			"date": "2026-11-03"
+		},
+		{
 			"key": "Dud1976a",
 			"count": 1157,
 			"source": "crossref",
@@ -41253,6 +41422,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "JT1961a",
+			"count": 68,
+			"source": "crossref",
+			"date": "2026-11-03"
+		},
+		{
+			"key": "JT1961a",
+			"count": 198,
+			"source": "openalex",
+			"date": "2026-11-03"
+		},
+		{
 			"key": "JT1993a",
 			"count": 9879,
 			"source": "crossref",
@@ -42679,6 +42860,18 @@
 			"count": 260,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "Lau1979a",
+			"count": 783,
+			"source": "crossref",
+			"date": "2026-11-03"
+		},
+		{
+			"key": "Lau1979a",
+			"count": 1022,
+			"source": "openalex",
+			"date": "2026-11-03"
 		},
 		{
 			"key": "Lax1985a",
@@ -45141,6 +45334,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "SA1977a",
+			"count": 436,
+			"source": "crossref",
+			"date": "2026-11-03"
+		},
+		{
+			"key": "SA1977a",
+			"count": 561,
+			"source": "openalex",
+			"date": "2026-11-03"
+		},
+		{
 			"key": "SA2020a",
 			"count": 3,
 			"source": "crossref",
@@ -47179,6 +47384,18 @@
 			"count": 4229,
 			"source": "openalex",
 			"date": "2026-10-31"
+		},
+		{
+			"key": "Won1968a",
+			"count": 452,
+			"source": "crossref",
+			"date": "2026-11-03"
+		},
+		{
+			"key": "Won1968a",
+			"count": 543,
+			"source": "openalex",
+			"date": "2026-11-03"
 		},
 		{
 			"key": "Xie2021a",
@@ -49351,7 +49568,14 @@
 			"keys": [
 				"Kir2012a",
 				"DHS2003a",
-				"Kal1960a"
+				"Ber2017a",
+				"Kal1960a",
+				"JT1961a",
+				"Won1968a",
+				"Ath1971a",
+				"SA1977a",
+				"Doy1978a",
+				"Lau1979a"
 			]
 		},
 		{

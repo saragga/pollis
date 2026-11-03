@@ -112,11 +112,32 @@ key = "Kir2012a"
 key = "DHS2003a"
 
 [[references]]
+key = "Ber2017a"
+
+[[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
 key = "Kal1960a"
+
+[[references]]
+key = "JT1961a"
+
+[[references]]
+key = "Won1968a"
+
+[[references]]
+key = "Ath1971a"
+
+[[references]]
+key = "SA1977a"
+
+[[references]]
+key = "Doy1978a"
+
+[[references]]
+key = "Lau1979a"
 
 [[models]]
 id = "sf"
