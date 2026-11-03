@@ -6,7 +6,7 @@
 import { localize } from '../../../../../vs/nls.js';
 import { MenuRegistry, MenuId } from '../../../../platform/actions/common/actions.js';
 import { CommandsRegistry } from '../../../../platform/commands/common/commands.js';
-import { INotificationService } from '../../../../platform/notification/common/notification.js';
+import { INotificationService, NOT_AVAILABLE_NOTIFICATION_ID_PREFIX, Severity } from '../../../../platform/notification/common/notification.js';
 import './toolboxExtensions.js';
 import './toolboxPanelsPage.js';
 import './askPollisPage.js';
@@ -452,10 +452,14 @@ MenuRegistry.appendMenuItem(ReportsMenu, {
 	order: 1,
 });
 
-/** Registers a command that says its menu item is not built yet. */
+/** Registers a command that says, in amber, that its menu item is not built yet. */
 function registerNotYetImplemented(id: string, title: string): void {
 	CommandsRegistry.registerCommand(id, accessor => {
-		accessor.get(INotificationService).info(localize('compose.notYetImplemented', "{0}: Not yet implemented", title.replace(/\.\.\.$/, '')));
+		accessor.get(INotificationService).notify({
+			id: NOT_AVAILABLE_NOTIFICATION_ID_PREFIX + id,
+			severity: Severity.Info,
+			message: localize('compose.notYetImplemented', "{0}: Not yet implemented", title.replace(/\.\.\.$/, '')),
+		});
 	});
 }
 
@@ -524,9 +528,7 @@ const collaborationItems = [
 
 for (const item of collaborationItems) {
 	if (!IMPLEMENTED_COLLABORATION_COMMANDS.has(item.id)) {
-		CommandsRegistry.registerCommand(item.id, accessor => {
-			accessor.get(INotificationService).info(localize('collaboration.notYetImplemented', "{0}: Not yet implemented", item.title.replace(/\.\.\.$/, '')));
-		});
+		registerNotYetImplemented(item.id, item.title);
 	}
 	MenuRegistry.appendMenuItem(item.menu, {
 		group: item.group,

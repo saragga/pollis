@@ -38,6 +38,7 @@ import { WBD_PANEL } from '../../model/browser/commands/wbd.command.js';
 import { FFD_PANEL } from '../../model/browser/commands/ffd.command.js';
 import { IDAT_PANEL } from '../../model/browser/commands/idat.command.js';
 import { CSV_PANEL } from '../../model/browser/commands/csv.command.js';
+import { PDF_PANEL } from '../../model/browser/commands/pdf.command.js';
 import { SQL_PANEL } from '../../model/browser/commands/sql.command.js';
 import { openHfmWebview } from '../../model/browser/commands/hfm.command.js';
 import { openKgmWebview } from '../../model/browser/commands/kgm.command.js';
@@ -71,6 +72,7 @@ const KGM_ID  = 'chiara.explore.kgm';
 const SQL_ID = 'chiara.explore.conn.sql';
 const XLSX_ID = 'chiara.explore.conn.xlsx';
 const CSV_ID = 'chiara.explore.conn.csv';
+const PDF_ID = 'chiara.explore.conn.pdf';
 const YFIN_ID = 'chiara.explore.adr.yfin';
 const ALPV_ID = 'chiara.explore.adr.alpv';
 export const FRED_ID = 'chiara.explore.adr.fred';
@@ -177,6 +179,7 @@ CommandsRegistry.registerCommand(KGM_ID, (accessor: ServicesAccessor) => {
 
 CommandsRegistry.registerCommand(SQL_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, SQL_PANEL));
 CommandsRegistry.registerCommand(CSV_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, CSV_PANEL));
+CommandsRegistry.registerCommand(PDF_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, PDF_PANEL));
 
 CommandsRegistry.registerCommand(XLSX_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, XLSX_PANEL));
 
@@ -1217,6 +1220,15 @@ MenuRegistry.appendMenuItem(CONNSubmenuId, {
 	},
 	order: 3,
 });  // CSV.jl
+
+MenuRegistry.appendMenuItem(CONNSubmenuId, {
+	group: '2_conn',
+	command: {
+		id: PDF_ID,
+		title: localize('conn.pdf', 'PDF Files'),
+	},
+	order: 4,
+});  // Poppler_jll.jl
 
 
 // ===================================================

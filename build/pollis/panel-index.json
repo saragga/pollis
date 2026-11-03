@@ -6363,6 +6363,39 @@
 			]
 		},
 		{
+			"id": "pdf",
+			"title": "PDF Files",
+			"source": "pollis",
+			"commands": [
+				{
+					"id": "chiara.explore.conn.pdf",
+					"menuTitles": [
+						"PDF Files"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "text",
+			"decisionFirstColumn": "Tab",
+			"toml": "src/vs/workbench/contrib/model/browser/webviews/pdf.toml",
+			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
+			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"wikis": [
+				"pdf/areas.md",
+				"pdf/decision-guide.md",
+				"pdf/diagnostics.md",
+				"pdf/factsheet.md",
+				"pdf/overview.md",
+				"pdf/pages-and-attachments.md",
+				"pdf/rendering-and-conversion.md",
+				"pdf/text-and-tables.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"Poppler_jll.jl"
+			]
+		},
+		{
 			"id": "pgm",
 			"title": "Policy Gradient Methods",
 			"source": "pollis",

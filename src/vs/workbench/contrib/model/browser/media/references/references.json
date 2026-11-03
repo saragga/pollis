@@ -25913,6 +25913,24 @@
 			"open_access": true
 		},
 		{
+			"key": "PD2025a",
+			"type": "misc",
+			"title": "Poppler: A PDF Rendering Library",
+			"authors": [
+				"Poppler Developers"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2025,
+			"url": "https://poppler.freedesktop.org/",
+			"abstract": "Poppler is a PDF rendering library based on the xpdf-3.0 code base.",
+			"abstract_source": "author",
+			"source": "manual",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "PDCMS...2020a",
 			"type": "article",
 			"title": "EvolveGCN: Evolving Graph Convolutional Networks for Dynamic Graphs",
@@ -52173,6 +52191,19 @@
 				"DJ2014a",
 				"ZLT2001a",
 				"BNE2007a"
+			]
+		},
+		{
+			"id": "pdf",
+			"title": "PDF Files",
+			"description": "Extract Text · Tables · Document Info · Fonts · Images · Render Pages · Convert · Split · Merge · Attachments",
+			"commands": [
+				"chiara.explore.conn.pdf"
+			],
+			"keys": [
+				"PD2025a",
+				"Qui2023a",
+				"Qui2023c"
 			]
 		},
 		{

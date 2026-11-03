@@ -563,6 +563,7 @@
 		"--vscode-notificationsErrorIcon-foreground",
 		"--vscode-notificationsInfo-accent",
 		"--vscode-notificationsInfoIcon-foreground",
+		"--vscode-notificationsNotAvailable-accent",
 		"--vscode-notificationsWarning-accent",
 		"--vscode-notificationsWarningIcon-foreground",
 		"--vscode-outputView-background",

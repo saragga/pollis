@@ -1334,6 +1334,32 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ---------------------------------------------------------
 
+Poppler 25.10.0 - GPL-2.0 or GPL-3.0
+https://poppler.freedesktop.org
+
+Pollis installs Poppler_jll (https://github.com/JuliaBinaryWrappers/Poppler_jll.jl),
+the build of Poppler 25.10.0 by the Julia BinaryBuilder project, into its Julia
+environment: Ask Pollis reads the text of PDF documents with its pdftotext, and
+Explore > Access Files and Databases > PDF Files runs its command-line tools.
+Pollis runs these tools as separate programs and does not link to the Poppler
+libraries.
+
+Poppler is a PDF rendering library based on the Xpdf code base, copyright
+Glyph & Cog, LLC and The Poppler Developers.
+
+Xpdf is licensed under the GNU General Public License (GPL), version 2 or 3, and
+all changes made under the Poppler project are licensed under GPL version 2 or
+later, as stated in the README-XPDF file and in the headers of Poppler's source
+files. The texts of both versions of the GPL are distributed with the Poppler
+sources, in COPYING (GPL v2) and COPYING3 (GPL v3).
+
+Poppler is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+---------------------------------------------------------
+
+---------------------------------------------------------
+
 expand-abbreviation 0.5.8 - MIT
 https://github.com/emmetio/expand-abbreviation
 
