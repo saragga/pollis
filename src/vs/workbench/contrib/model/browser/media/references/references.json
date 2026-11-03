@@ -1176,6 +1176,28 @@
 			"open_access": false
 		},
 		{
+			"key": "Alt2007a",
+			"type": "article",
+			"title": "Mixed Hidden Markov Models",
+			"authors": [
+				"Altman, Rachel MacKay"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2007,
+			"journal": "Journal of the American Statistical Association",
+			"volume": "102",
+			"number": "477",
+			"pages": "201-210",
+			"issn": "0162-1459",
+			"doi": "10.1198/016214506000001086",
+			"openalex": "W1996525588",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "Alt2015a",
 			"type": "article",
 			"title": "Ebola superspreading",
@@ -2519,6 +2541,32 @@
 			"oa_url": "https://arxiv.org/pdf/1804.03599",
 			"source": "datacite",
 			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "BHWK2011a",
+			"type": "article",
+			"title": "Prediction-Corrected Visual Predictive Checks for Diagnosing Nonlinear Mixed-Effects Models",
+			"authors": [
+				"Bergstrand, Martin",
+				"Hooker, Andrew C.",
+				"Wallin, Johan E.",
+				"Karlsson, Mats O."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2011,
+			"journal": "The AAPS Journal",
+			"volume": "13",
+			"number": "2",
+			"pages": "143-151",
+			"issn": "1550-7416",
+			"doi": "10.1208/s12248-011-9255-z",
+			"openalex": "W2042553471",
+			"oa_url": "https://link.springer.com/content/pdf/10.1208/s12248-011-9255-z.pdf",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
 			"checked": true,
 			"open_access": true
 		},
@@ -7402,6 +7450,29 @@
 			"open_access": false
 		},
 		{
+			"key": "DG2003a",
+			"type": "article",
+			"title": "Nonlinear models for repeated measurement data: An overview and update",
+			"authors": [
+				"Davidian, Marie",
+				"Giltinan, David M."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2003,
+			"journal": "Journal of Agricultural, Biological, and Environmental Statistics",
+			"volume": "8",
+			"number": "4",
+			"pages": "387-419",
+			"issn": "1085-7117",
+			"doi": "10.1198/1085711032697",
+			"openalex": "W1973239973",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "DG2006a",
 			"type": "inproceedings",
 			"title": "The relationship between Precision-Recall and ROC curves",
@@ -8029,6 +8100,31 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "DLM1999a",
+			"type": "article",
+			"title": "Convergence of a stochastic approximation version of the EM algorithm",
+			"authors": [
+				"Delyon, Bernard",
+				"Lavielle, Marc",
+				"Moulines, Eric"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1999,
+			"journal": "The Annals of Statistics",
+			"volume": "27",
+			"number": "1",
+			"pages": "94-128",
+			"issn": "0090-5364",
+			"doi": "10.1214/aos/1018031103",
+			"openalex": "W1596437242",
+			"oa_url": "https://projecteuclid.org/journals/annals-of-statistics/volume-27/issue-1/Convergence-of-a-stochastic-approximation-version-of-the-EM-algorithm/10.1214/aos/1018031103.pdf",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "DLR1977a",
@@ -12373,6 +12469,28 @@
 			"open_access": true
 		},
 		{
+			"key": "GTDC2024a",
+			"type": "misc",
+			"title": "ModelPredictiveControl.jl: Advanced Process Control Made Easy in Julia",
+			"authors": [
+				"Gagnon, Francis",
+				"Thivierge, Alex",
+				"Desbiens, André",
+				"Bagge Carlson, Fredrik"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2024,
+			"doi": "10.48550/arXiv.2411.09764",
+			"arxiv": "2411.09764",
+			"url": "https://arxiv.org/abs/2411.09764",
+			"oa_url": "https://arxiv.org/pdf/2411.09764",
+			"source": "arxiv",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "GW1995a",
 			"type": "article",
 			"title": "Improved Approximation Algorithms for Maximum Cut and Satisfiability Problems Using Semidefinite Programming",
@@ -13403,6 +13521,31 @@
 			"retrieved": "2026-10-30",
 			"checked": true,
 			"open_access": false
+		},
+		{
+			"key": "HASGW...2026a",
+			"type": "misc",
+			"title": "NoLimits.jl: Flexible and Composable Nonlinear Mixed-Effects Modeling in Julia",
+			"authors": [
+				"Huth, Manuel",
+				"Arruda, Jonas",
+				"Schmid, Nina",
+				"Gusinow, Roy",
+				"Wieland, Vincent",
+				"Peiter, Clemens",
+				"Hasenauer, Jan"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2026,
+			"doi": "10.48550/arXiv.2606.24427",
+			"arxiv": "2606.24427",
+			"url": "https://arxiv.org/abs/2606.24427",
+			"oa_url": "https://arxiv.org/pdf/2606.24427",
+			"source": "arxiv",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "HC2002a",
@@ -16904,6 +17047,28 @@
 			"open_access": true
 		},
 		{
+			"key": "Jac2011a",
+			"type": "article",
+			"title": "Multi-State Models for Panel Data: The msm Package for R",
+			"authors": [
+				"Jackson, Christopher H."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2011,
+			"journal": "Journal of Statistical Software",
+			"volume": "38",
+			"number": "8",
+			"issn": "1548-7660",
+			"doi": "10.18637/jss.v038.i08",
+			"openalex": "W1919480245",
+			"oa_url": "https://doi.org/10.18637/jss.v038.i08",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "Jen1955a",
 			"type": "article",
 			"title": "The frequency distribution of the annual maximum (or minimum) values of meteorological elements",
@@ -17477,6 +17642,52 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
+		},
+		{
+			"key": "KL2004a",
+			"type": "article",
+			"title": "Coupling a stochastic approximation version of EM with an MCMC procedure",
+			"authors": [
+				"Kuhn, Estelle",
+				"Lavielle, Marc"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2004,
+			"journal": "ESAIM: Probability and Statistics",
+			"volume": "8",
+			"pages": "115-131",
+			"issn": "1292-8100",
+			"doi": "10.1051/ps:2004007",
+			"openalex": "W2055742299",
+			"oa_url": "https://www.esaim-ps.org/articles/ps/pdf/2004/01/ps0312.pdf",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "KL2005a",
+			"type": "article",
+			"title": "Maximum likelihood estimation in nonlinear mixed effects models",
+			"authors": [
+				"Kuhn, Estelle",
+				"Lavielle, Marc"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2005,
+			"journal": "Computational Statistics & Data Analysis",
+			"volume": "49",
+			"number": "4",
+			"pages": "1020-1038",
+			"issn": "0167-9473",
+			"doi": "10.1016/j.csda.2004.07.002",
+			"openalex": "W2063698062",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": false
 		},
 		{
 			"key": "KL2017a",
@@ -19296,6 +19507,29 @@
 			"openalex": "W2093230975",
 			"source": "crossref",
 			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "LB1990a",
+			"type": "article",
+			"title": "Nonlinear Mixed Effects Models for Repeated Measures Data",
+			"authors": [
+				"Lindstrom, Mary J.",
+				"Bates, Douglas M."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1990,
+			"journal": "Biometrics",
+			"volume": "46",
+			"number": "3",
+			"pages": "673-687",
+			"issn": "0006-341X",
+			"doi": "10.2307/2532087",
+			"openalex": "W1993147091",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
 			"checked": true,
 			"open_access": false
 		},
@@ -24924,6 +25158,49 @@
 			"open_access": false
 		},
 		{
+			"key": "PB1995a",
+			"type": "article",
+			"title": "Approximations to the Log-Likelihood Function in the Nonlinear Mixed-Effects Model",
+			"authors": [
+				"Pinheiro, José C.",
+				"Bates, Douglas M."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1995,
+			"journal": "Journal of Computational and Graphical Statistics",
+			"volume": "4",
+			"number": "1",
+			"pages": "12-35",
+			"issn": "1061-8600",
+			"doi": "10.1080/10618600.1995.10474663",
+			"openalex": "W1967495697",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "PB2000a",
+			"type": "book",
+			"title": "Mixed-Effects Models in S and S-PLUS",
+			"authors": [
+				"Pinheiro, José C.",
+				"Bates, Douglas M."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2000,
+			"publisher": "Springer New York",
+			"isbn": "9781441903174",
+			"doi": "10.1007/978-1-4419-0318-1",
+			"openalex": "W4206439534",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "PB2014a",
 			"type": "article",
 			"title": "Proximal Algorithms",
@@ -28305,6 +28582,28 @@
 			"open_access": false
 		},
 		{
+			"key": "Rab1989a",
+			"type": "article",
+			"title": "A tutorial on hidden Markov models and selected applications in speech recognition",
+			"authors": [
+				"Rabiner, L. R."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1989,
+			"journal": "Proceedings of the IEEE",
+			"volume": "77",
+			"number": "2",
+			"pages": "257-286",
+			"issn": "0018-9219",
+			"doi": "10.1109/5.18626",
+			"openalex": "W2125838338",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "Rag2024a",
 			"type": "misc",
 			"title": "CovarianceMatrices.jl: Robust Covariance Matrix Estimators",
@@ -29697,6 +29996,30 @@
 			"source": "crossref",
 			"retrieved": "2026-10-23",
 			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "SK2009a",
+			"type": "article",
+			"title": "Importance of Shrinkage in Empirical Bayes Estimates for Diagnostics: Problems and Solutions",
+			"authors": [
+				"Savic, Radojka M.",
+				"Karlsson, Mats O."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2009,
+			"journal": "The AAPS Journal",
+			"volume": "11",
+			"number": "3",
+			"pages": "558-569",
+			"issn": "1550-7416",
+			"doi": "10.1208/s12248-009-9133-0",
+			"openalex": "W2065039877",
+			"oa_url": "https://link.springer.com/content/pdf/10.1208/s12248-009-9133-0.pdf",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
 			"open_access": true
 		},
 		{
@@ -34442,6 +34765,29 @@
 			"open_access": false
 		},
 		{
+			"key": "WT1990a",
+			"type": "article",
+			"title": "A Monte Carlo Implementation of the EM Algorithm and the Poor Man's Data Augmentation Algorithms",
+			"authors": [
+				"Wei, Greg C. G.",
+				"Tanner, Martin A."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1990,
+			"journal": "Journal of the American Statistical Association",
+			"volume": "85",
+			"number": "411",
+			"pages": "699-704",
+			"issn": "0162-1459",
+			"doi": "10.1080/01621459.1990.10474930",
+			"openalex": "W2072634211",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "WT2004a",
 			"type": "article",
 			"title": "Different Epidemic Curves for Severe Acute Respiratory Syndrome Reveal Similar Impacts of Control Measures",
@@ -34635,6 +34981,28 @@
 			"openalex": "W2553992319",
 			"source": "crossref",
 			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "Wan2007a",
+			"type": "article",
+			"title": "Derivation of various NONMEM estimation methods",
+			"authors": [
+				"Wang, Yaning"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2007,
+			"journal": "Journal of Pharmacokinetics and Pharmacodynamics",
+			"volume": "34",
+			"number": "5",
+			"pages": "575-593",
+			"issn": "1567-567X",
+			"doi": "10.1007/s10928-007-9060-6",
+			"openalex": "W1998539289",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
 			"checked": true,
 			"open_access": false
 		},
@@ -34897,6 +35265,28 @@
 			"abstract_source": "openalex",
 			"source": "manual",
 			"retrieved": "2026-10-31",
+			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "Wol1993a",
+			"type": "article",
+			"title": "Laplace's Approximation for Nonlinear Mixed Models",
+			"authors": [
+				"Wolfinger, Russ"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1993,
+			"journal": "Biometrika",
+			"volume": "80",
+			"number": "4",
+			"pages": "791-795",
+			"issn": "0006-3444",
+			"doi": "10.1093/biomet/80.4.791",
+			"openalex": "W2063830806",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
 			"checked": true,
 			"open_access": false
 		},
@@ -36270,6 +36660,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "Alt2007a",
+			"count": 205,
+			"source": "crossref",
+			"date": "2026-11-03"
+		},
+		{
+			"key": "Alt2007a",
+			"count": 246,
+			"source": "openalex",
+			"date": "2026-11-03"
+		},
+		{
 			"key": "Alt2015a",
 			"count": 90,
 			"source": "crossref",
@@ -36742,6 +37144,18 @@
 			"count": 555,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "BHWK2011a",
+			"count": 1352,
+			"source": "crossref",
+			"date": "2026-11-03"
+		},
+		{
+			"key": "BHWK2011a",
+			"count": 1436,
+			"source": "openalex",
+			"date": "2026-11-03"
 		},
 		{
 			"key": "BJ1997a",
@@ -38412,6 +38826,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "DG2003a",
+			"count": 336,
+			"source": "crossref",
+			"date": "2026-11-03"
+		},
+		{
+			"key": "DG2003a",
+			"count": 417,
+			"source": "openalex",
+			"date": "2026-11-03"
+		},
+		{
 			"key": "DG2006a",
 			"count": 4853,
 			"source": "crossref",
@@ -38620,6 +39046,18 @@
 			"count": 3914,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "DLM1999a",
+			"count": 625,
+			"source": "crossref",
+			"date": "2026-11-03"
+		},
+		{
+			"key": "DLM1999a",
+			"count": 781,
+			"source": "openalex",
+			"date": "2026-11-03"
 		},
 		{
 			"key": "DLR1977a",
@@ -41646,6 +42084,18 @@
 			"date": "2026-10-31"
 		},
 		{
+			"key": "Jac2011a",
+			"count": 1060,
+			"source": "crossref",
+			"date": "2026-11-03"
+		},
+		{
+			"key": "Jac2011a",
+			"count": 1308,
+			"source": "openalex",
+			"date": "2026-11-03"
+		},
+		{
 			"key": "Jen1955a",
 			"count": 1218,
 			"source": "crossref",
@@ -41824,6 +42274,30 @@
 			"count": 17,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "KL2004a",
+			"count": 227,
+			"source": "crossref",
+			"date": "2026-11-03"
+		},
+		{
+			"key": "KL2004a",
+			"count": 262,
+			"source": "openalex",
+			"date": "2026-11-03"
+		},
+		{
+			"key": "KL2005a",
+			"count": 487,
+			"source": "crossref",
+			"date": "2026-11-03"
+		},
+		{
+			"key": "KL2005a",
+			"count": 478,
+			"source": "openalex",
+			"date": "2026-11-03"
 		},
 		{
 			"key": "KL2017a",
@@ -42496,6 +42970,18 @@
 			"count": 6720,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "LB1990a",
+			"count": 1488,
+			"source": "crossref",
+			"date": "2026-11-03"
+		},
+		{
+			"key": "LB1990a",
+			"count": 1795,
+			"source": "openalex",
+			"date": "2026-11-03"
 		},
 		{
 			"key": "LB2016a",
@@ -44286,6 +44772,30 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "PB1995a",
+			"count": 1266,
+			"source": "crossref",
+			"date": "2026-11-03"
+		},
+		{
+			"key": "PB1995a",
+			"count": 1187,
+			"source": "openalex",
+			"date": "2026-11-03"
+		},
+		{
+			"key": "PB2000a",
+			"count": 8325,
+			"source": "crossref",
+			"date": "2026-11-03"
+		},
+		{
+			"key": "PB2000a",
+			"count": 11188,
+			"source": "openalex",
+			"date": "2026-11-03"
+		},
+		{
 			"key": "PB2014a",
 			"count": 2812,
 			"source": "crossref",
@@ -45348,6 +45858,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "Rab1989a",
+			"count": 15739,
+			"source": "crossref",
+			"date": "2026-11-03"
+		},
+		{
+			"key": "Rab1989a",
+			"count": 22745,
+			"source": "openalex",
+			"date": "2026-11-03"
+		},
+		{
 			"key": "Ral1994a",
 			"count": 93,
 			"source": "crossref",
@@ -45802,6 +46324,18 @@
 			"count": 3559,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "SK2009a",
+			"count": 608,
+			"source": "crossref",
+			"date": "2026-11-03"
+		},
+		{
+			"key": "SK2009a",
+			"count": 641,
+			"source": "openalex",
+			"date": "2026-11-03"
 		},
 		{
 			"key": "SKBBT...2018a",
@@ -47436,6 +47970,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "WT1990a",
+			"count": 1073,
+			"source": "crossref",
+			"date": "2026-11-03"
+		},
+		{
+			"key": "WT1990a",
+			"count": 1453,
+			"source": "openalex",
+			"date": "2026-11-03"
+		},
+		{
 			"key": "WT2004a",
 			"count": 1103,
 			"source": "crossref",
@@ -47494,6 +48040,18 @@
 			"count": 916,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "Wan2007a",
+			"count": 99,
+			"source": "crossref",
+			"date": "2026-11-03"
+		},
+		{
+			"key": "Wan2007a",
+			"count": 116,
+			"source": "openalex",
+			"date": "2026-11-03"
 		},
 		{
 			"key": "War1963a",
@@ -47614,6 +48172,18 @@
 			"count": 4229,
 			"source": "openalex",
 			"date": "2026-10-31"
+		},
+		{
+			"key": "Wol1993a",
+			"count": 265,
+			"source": "crossref",
+			"date": "2026-11-03"
+		},
+		{
+			"key": "Wol1993a",
+			"count": 366,
+			"source": "openalex",
+			"date": "2026-11-03"
 		},
 		{
 			"key": "Won1968a",
@@ -50135,8 +50705,13 @@
 				"chiara.optimise.oc.3_mpc"
 			],
 			"keys": [
+				"GTDC2024a",
+				"SBGBB2020a",
+				"WB2006a",
 				"RMD2017a",
 				"Mac2002a",
+				"Kal1960a",
+				"JU1997a",
 				"MM1990a",
 				"MRRS2000a"
 			]

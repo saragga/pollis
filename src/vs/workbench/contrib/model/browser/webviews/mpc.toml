@@ -88,6 +88,19 @@ bundled = true
 
 [[references]]
 separator = true
+label = "Software"
+
+[[references]]
+key = "GTDC2024a"
+
+[[references]]
+key = "SBGBB2020a"
+
+[[references]]
+key = "WB2006a"
+
+[[references]]
+separator = true
 label = "Textbooks"
 
 [[references]]
@@ -99,6 +112,12 @@ key = "Mac2002a"
 [[references]]
 separator = true
 label = "Original Papers"
+
+[[references]]
+key = "Kal1960a"
+
+[[references]]
+key = "JU1997a"
 
 [[references]]
 key = "MM1990a"
