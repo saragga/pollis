@@ -2093,6 +2093,27 @@
 			"open_access": false
 		},
 		{
+			"key": "BGFB1994a",
+			"type": "book",
+			"title": "Linear Matrix Inequalities in System and Control Theory",
+			"authors": [
+				"Boyd, Stephen",
+				"El Ghaoui, Laurent",
+				"Feron, Eric",
+				"Balakrishnan, Venkataramanan"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1994,
+			"publisher": "SIAM",
+			"doi": "10.1137/1.9781611970777",
+			"oa_url": "https://web.stanford.edu/~boyd/lmibook/lmibook.pdf",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "BGGS1980a",
 			"type": "article",
 			"title": "Lyapunov Characteristic Exponents for smooth dynamical systems and for Hamiltonian systems; a method for computing all of them",
@@ -51039,8 +51060,10 @@
 				"GC2024a",
 				"GCG2021a",
 				"OCPB2016a",
+				"CKV2022a",
 				"BV2004a",
 				"VB1996a",
+				"BGFB1994a",
 				"GW1995a",
 				"NN1994a"
 			]

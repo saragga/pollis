@@ -121,6 +121,9 @@ key = "GCG2021a"
 key = "OCPB2016a"
 
 [[references]]
+key = "CKV2022a"
+
+[[references]]
 separator = true
 label = "Textbooks"
 
@@ -129,6 +132,9 @@ key = "BV2004a"
 
 [[references]]
 key = "VB1996a"
+
+[[references]]
+key = "BGFB1994a"
 
 [[references]]
 separator = true
