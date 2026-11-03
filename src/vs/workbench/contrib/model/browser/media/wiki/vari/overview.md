@@ -22,7 +22,7 @@ JuMP takes the interval from the bounds of the variables, and the panel's code w
 
 [Dirkse and Ferris (1995)](#ref-DF1995a) describe PATH as an implementation of a stabilised Newton method for the mixed complementarity problem. A path-generation procedure builds a piecewise linear path from the current point to the Newton point, and a step length criterion with a non-monotone pathsearch chooses the next iterate. They show the algorithm to be globally convergent under assumptions that generalise those needed for similar results in the smooth case.
 
-PATHSolver.jl wraps PATH for Julia, through its C interface and through MathOptInterface, so that JuMP models can use it. [Kwon (2023)](#ref-Kwo2023a) provides Complementarity.jl, a modelling interface for mixed complementarity problems and for mathematical programs with equilibrium constraints, built on JuMP and PATHSolver.jl.
+PATHSolver.jl wraps PATH for Julia, through its C interface and through MathOptInterface, so that JuMP models can use it. The panel's code builds a JuMP model, declares the bounds of the box as variable bounds and states the problem with `complements(F(x), x)`, which the JuMP documentation describes as a mixed complementarity constraint whose interval set comes from the bounds of x.
 
 ## Where VIs arise
 
@@ -30,9 +30,9 @@ The panel's second bullet names traffic assignment, spatial price equilibrium, c
 
 [Dafermos and Sparrow (1969)](#ref-DS1969a) describe two criteria for traffic: a network can be run by a central authority that minimises the total cost, or be user optimised, with each user choosing the cheapest route in the light of the other users' decisions. The two criteria lead in general to different traffic patterns, as Pigou first observed and Wardrop later calculated for simple networks.
 
-## Textbooks and the original paper
+## The original paper
 
-The panel lists two textbooks: [Facchinei and Pang (2003)](#ref-FP2003a), on finite-dimensional variational inequalities and complementarity problems, and [Kinderlehrer and Stampacchia (1980)](#ref-KS1980a), an introduction to variational inequalities and their applications. Among the original papers it lists [Hartman and Stampacchia (1966)](#ref-HS1966a), on some non-linear elliptic differential-functional equations, published in *Acta Mathematica*, together with [Dafermos and Sparrow (1969)](#ref-DS1969a), on the traffic assignment problem for a general network, published in the *Journal of Research of the National Bureau of Standards*.
+The panel lists [Dafermos and Sparrow (1969)](#ref-DS1969a), on the traffic assignment problem for a general network, published in the *Journal of Research of the National Bureau of Standards*. The traffic demands between pairs of nodes and the convex travelling cost functions on the links are given, and the paper formulates the problems of finding the traffic patterns that either minimise the total cost or equilibrate the users' costs, and constructs algorithms for their solution.
 
 ## Wikis and notebooks
 
@@ -45,14 +45,6 @@ The notebooks are Variational Inequality, which solves the VI through its comple
 <a id="ref-DS1969a"></a>Dafermos, S. C., & Sparrow, F. T. (1969). The Traffic Assignment Problem for a General Network. *Journal of Research of the National Bureau of Standards, Section B* 73B(2), 91-118. [doi:10.6028/jres.073B.010](https://doi.org/10.6028/jres.073B.010)
 
 <a id="ref-DF1995a"></a>Dirkse, S. P., & Ferris, M. C. (1995). The PATH Solver: A Nonmonotone Stabilization Scheme for Mixed Complementarity Problems. *Optimization Methods and Software* 5(2), 123-156. [doi:10.1080/10556789508805606](https://doi.org/10.1080/10556789508805606)
-
-<a id="ref-FP2003a"></a>Facchinei, F., & Pang, J.-S. (2003). *Finite-Dimensional Variational Inequalities and Complementarity Problems* (Vols. I and II). Springer. [doi:10.1007/b97543](https://doi.org/10.1007/b97543), [doi:10.1007/b97544](https://doi.org/10.1007/b97544)
-
-<a id="ref-HS1966a"></a>Hartman, P., & Stampacchia, G. (1966). On Some Non-Linear Elliptic Differential-Functional Equations. *Acta Mathematica* 115, 271-310. [doi:10.1007/BF02392210](https://doi.org/10.1007/BF02392210)
-
-<a id="ref-KS1980a"></a>Kinderlehrer, D., & Stampacchia, G. (1980). *An Introduction to Variational Inequalities and Their Applications*. Academic Press; SIAM reprint, 2000. [doi:10.1137/1.9780898719451](https://doi.org/10.1137/1.9780898719451)
-
-<a id="ref-Kwo2023a"></a>Kwon, C. (2023). Complementarity.jl: Modeling and Solving Complementarity Problems in Julia. [github.com](https://github.com/chkwon/Complementarity.jl)
 
 ## See Also
 

@@ -14,7 +14,7 @@ A summary of the **Variational Inequalities** panel: its two problems, its input
 | Default | Cournot duopoly, costs 1 and 2, price 10 − x1 − x2 |
 | Action groups | Visualise, Diagnose, Predict, Compare, Interpret |
 
-The panel lists Complementarity.jl, by [Kwon (2023)](#ref-Kwo2023a), and PATHSolver.jl as its packages, and the PATH paper of [Dirkse and Ferris (1995)](#ref-DF1995a) under Software.
+The panel lists JuMP.jl, PATHSolver.jl, LinearAlgebra.jl and Plots.jl as its packages, and the PATH paper of [Dirkse and Ferris (1995)](#ref-DF1995a) under Software.
 
 ## Inputs
 
@@ -57,8 +57,6 @@ The licence string can be stored in the `PATH_LICENSE_STRING` environment variab
 ## References
 
 <a id="ref-DF1995a"></a>Dirkse, S. P., & Ferris, M. C. (1995). The PATH Solver: A Nonmonotone Stabilization Scheme for Mixed Complementarity Problems. *Optimization Methods and Software* 5(2), 123-156. [doi:10.1080/10556789508805606](https://doi.org/10.1080/10556789508805606)
-
-<a id="ref-Kwo2023a"></a>Kwon, C. (2023). Complementarity.jl: Modeling and Solving Complementarity Problems in Julia. [github.com](https://github.com/chkwon/Complementarity.jl)
 
 ## See Also
 

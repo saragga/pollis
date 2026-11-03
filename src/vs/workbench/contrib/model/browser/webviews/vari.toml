@@ -9,12 +9,20 @@ viewType = "pollis.vari"
 defaultModel = "vi"
 
 [[packages]]
-name = "Complementarity.jl"
-github = "https://github.com/chkwon/Complementarity.jl"
+name = "JuMP.jl"
+github = "https://github.com/jump-dev/JuMP.jl"
 
 [[packages]]
 name = "PATHSolver.jl"
 github = "https://github.com/chkwon/PATHSolver.jl"
+
+[[packages]]
+name = "LinearAlgebra.jl"
+github = "https://github.com/JuliaLang/LinearAlgebra.jl"
+
+[[packages]]
+name = "Plots.jl"
+github = "https://github.com/JuliaPlots/Plots.jl"
 
 [requires]
 packages = ["JuMP.jl", "PATHSolver.jl", "Plots.jl"]
@@ -83,27 +91,11 @@ separator = true
 label = "Software"
 
 [[references]]
-key = "Kwo2023a"
-
-[[references]]
 key = "DF1995a"
 
 [[references]]
 separator = true
-label = "Textbooks"
-
-[[references]]
-key = "FP2003a"
-
-[[references]]
-key = "KS1980a"
-
-[[references]]
-separator = true
 label = "Original Papers"
-
-[[references]]
-key = "HS1966a"
 
 [[references]]
 key = "DS1969a"
@@ -132,7 +124,7 @@ purpose = "Find x* in K with F(x*)'(y - x*) >= 0 for every y in K. On a box this
 [[decisionRows]]
 task = "Quasi-Variational Inequality"
 context = "Constraint set that moves with the solution, K(x): generalised Nash equilibria with shared resources, where each player's feasible set depends on the others' decisions"
-purpose = "Find x* in K(x*) solving the VI on K(x*). Solved by damped fixed-point iteration: solve the VI on K(x_k), move halfway towards it, update the set (undamped, the default problem cycles). Generalised Nash equilibria are typically not unique: the point reached depends on the start and the damping. Default: the same duopoly with a shared capacity x1 + x2 <= 5, which binds"
+purpose = "Find x* in K(x*) solving the VI on K(x*). Solved by damped fixed-point iteration: solve the VI on K(x_k), move halfway towards it, update the set. Default: the same duopoly with a shared capacity x1 + x2 <= 5, which binds"
 
 [[inputs]]
 id = "n"
@@ -303,32 +295,23 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "check-vi"
 label = "VI Residual"
-desc = "Natural residual ||x* - P_K(x* - F(x*))|| and a direct check of the VI inequality F(x*)'(y - x*) >= 0 on 10000 random points y of K(x*)"
+desc = "Natural residual ||x* - P_K(x* - F(x*))|| and a direct check of the VI inequality F(x*)'(y - x*) >= 0 on 10000 random points y of K(x*), drawn within 10 of x* along an infinite bound"
 code = '''
 rng = MersenneTwister(1)
 Fx = Fop(sol.x)
-box(i) = (max(lb[i], sol.x[i] - 10), min(ub[i], sol.x[i] + 10))  # sample a bounded part of K
+box(i) = (isfinite(lb[i]) ? lb[i] : sol.x[i] - 10, isfinite(ub[i]) ? ub[i] : sol.x[i] + 10)  # K itself, cut at 10 from x* where a bound is infinite
 ys = [[box(i)[1] + rand(rng) * (box(i)[2] - box(i)[1]) for i in 1:n] for _ in 1:10000]
 (natural_residual = residual(sol.x), min_inner_product = minimum(dot(Fx, y - sol.x) for y in ys), holds = minimum(dot(Fx, y - sol.x) for y in ys) >= -1e-8)
 '''
 
 [[actionGroups.actions]]
 id = "check-conv"
+models = ["qvi"]
 label = "Convergence Check"
-desc = "Step length ||x_{k+1} - x_k|| of the iteration: the fixed-point loop over K(x_k) for the QVI, or the projection method x <- P_K(x - gamma F(x)) for the VI"
+desc = "Step length ||x_{k+1} - x_k|| of the damped fixed-point loop over K(x_k), one VI solve per step"
 code = '''
 using Plots
-function projection_steps(gamma=0.2)
-    x, steps = zeros(n), Float64[]
-    for _ in 1:200
-        y = clamp.(x .- gamma .* Fop(x), Kset(x)...)
-        push!(steps, norm(y - x)); x = y
-        steps[end] < 1e-12 && break
-    end
-    steps
-end
-{{?model=qvi}}steps = sol.steps
-{{?model=vi}}steps = projection_steps()
+steps = sol.steps
 plot(max.(steps, 1e-16), marker=:o, ms=2, yscale=:log10, xlabel="Iteration", ylabel="||x_{k+1} - x_k||", legend=false, title="Fixed-point convergence")
 '''
 
@@ -339,15 +322,16 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "param-solve"
 label = "Parametric VI"
-desc = "Equilibrium path as every component of F is shifted down by t (for Cournot, a rise of t in the demand intercept), warm-starting each solve"
+desc = "Equilibrium path as every component of F is shifted down by t (for Cournot, a rise of t in the demand intercept), each solve started at the previous solution"
 code = '''
 using Plots
 ts = range(-3, 3, length=41)
 function solution_path(ts)
-    xs = Vector{Float64}[]
+    xs, prev = Vector{Float64}[], copy(sol.x)
     for t in ts
-{{?model=vi}}        r = solve(x -> Fop(x) .- t)
-{{?model=qvi}}        r = solve_qvi(x -> Fop(x) .- t)
+{{?model=vi}}        r = solve_vi(x -> Fop(x) .- t; start=prev)
+{{?model=qvi}}        r = solve_qvi(x -> Fop(x) .- t; x0=prev)
+        r.ok && (prev = r.x)
         push!(xs, r.ok ? r.x : fill(NaN, n))
     end
     reduce(hcat, xs)
@@ -376,13 +360,12 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "equilibrium"
 label = "Equilibrium Interpretation"
-desc = "Each component at the solution: interior (F_i = 0, the first-order condition holds), or at a bound, where |F_i| is the shadow value of relaxing that bound"
+desc = "Each component at the solution, by the relations of the mixed complementarity problem: interior with F_i = 0, at the lower bound with F_i >= 0, or at the upper bound with F_i <= 0"
 code = '''
 tol = 1e-6
 Fx = Fop(sol.x)
 [(i = i, x = round(sol.x[i], digits=5), F = round(Fx[i], digits=5),
-  status = sol.x[i] <= lb[i] + tol ? "at lower bound" : sol.x[i] >= ub[i] - tol ? "at upper bound" : "interior, F = 0",
-  shadow_value = abs(Fx[i]) > tol ? round(abs(Fx[i]), digits=5) : 0.0) for i in 1:n]
+  status = sol.x[i] <= lb[i] + tol ? "at lower bound, F >= 0" : sol.x[i] >= ub[i] - tol ? "at upper bound, F <= 0" : "interior, F = 0") for i in 1:n]
 '''
 
 [[actionGroups.actions]]

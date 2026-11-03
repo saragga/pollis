@@ -26,9 +26,9 @@ Both the VI and the QVI report whether their solves succeeded: `solved` in the o
 
 The default ties each firm's upper bound to the other's output, 5 − x_j, which the decision table describes as a shared capacity x1 + x2 ≤ 5. Its context names generalised Nash equilibria with shared resources, where each player's feasible set depends on the others' decisions.
 
-## Uniqueness
+## The start and the damping
 
-The decision table of the QVI states that generalised Nash equilibria are typically not unique, and that the point reached depends on the start and on the damping. The QVI code starts from `x0 = zeros(n)` with `damp = 0.5`, and the decision table adds that, undamped, the default problem cycles.
+The QVI code starts from `x0 = zeros(n)` and moves each iterate halfway, `damp = 0.5`, towards the solution of the VI on the current box. **Parametric VI** starts each solve at the solution for the previous shift, beginning with the solution of the main code.
 
 The VI page runs a single solve from the start of 0.5 in every coordinate. The decision table names its contexts: Nash-Cournot equilibria with capacities, traffic equilibria, contact problems and the KKT systems of convex programmes.
 

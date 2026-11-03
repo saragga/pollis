@@ -7503,7 +7503,7 @@
 		{
 			"key": "DF1995a",
 			"type": "article",
-			"title": "PATH Solver: A Non-Monotone Stabilisation Scheme for the Solution of Nonlinear Complementarity Problems",
+			"title": "The PATH Solver: A Nonmonotone Stabilization Scheme for Mixed Complementarity Problems",
 			"authors": [
 				"Dirkse, Steven P.",
 				"Ferris, Michael C."
@@ -7518,7 +7518,7 @@
 			"issn": "1055-6788",
 			"doi": "10.1080/10556789508805606",
 			"openalex": "W2001024683",
-			"abstract": "The PATH solver is an implementation of a stabilized Newton method for the solution of the Mixed Complementarity Problem. The stabilization scheme employs a path-generation procedure which is used to construct a piecewise-linear path from the current point to the Newton point; a step length acceptance criterion and a non-monotone pathsearch are then used to choose the next iterate. The algorithm is shown to be globally convergent under assumptions which generalize those required to obtain similar results in the smooth case. Several impleέentation issues are discussed, and extensive computational results obtained from problems commonly found in the literature are given",
+			"abstract": "The PATH solver is an implementation of a stabilized Newton method for the solution of the Mixed Complementarity Problem. The stabilization scheme employs a path-generation procedure which is used to construct a piecewise-linear path from the current point to the Newton point; a step length acceptance criterion and a non-monotone pathsearch are then used to choose the next iterate. The algorithm is shown to be globally convergent under assumptions which generalize those required to obtain similar results in the smooth case. Several implementation issues are discussed, and extensive computational results obtained from problems commonly found in the literature are given",
 			"abstract_source": "openalex",
 			"legacy_key": "dirkse1995",
 			"source": "crossref",
@@ -8573,8 +8573,8 @@
 			"doi": "10.6028/jres.073B.010",
 			"openalex": "W2006122291",
 			"oa_url": "https://doi.org/10.6028/jres.073b.010",
-			"abstract": "A tra ns portatio n network is co ns id e red . The traffic de mands assoc iat ed wit h pairs of nodes and th e (co nvex) trav e ling cos t functions associat ed with th e link s a re assumed give n. Th e twu prob le ms of findin g th e traffi c patt e rn s whi c h e ith er minimize th e total cos t or e quilibrate th e use rs' c os ts are fo rmulat e d , and a lgo rithm s are co ns tru c ted for th e so lutio n of th ese prob lems.",
-			"abstract_source": "openalex",
+			"abstract": "A transportation network is considered. The traffic demands associated with pairs of nodes and the (convex) traveling cost functions associated with the links are assumed given. The two problems of finding the traffic patterns which either minimize the total cost or equilibrate the users' costs are formulated, and algorithms are constructed for the solution of these problems.",
+			"abstract_source": "author",
 			"keywords": [
 				"discrete distributions",
 				"linear programming"
@@ -10576,7 +10576,10 @@
 			"author_kind": "persons",
 			"authors_complete": true,
 			"year": 2003,
-			"publisher": "Springer (Vol. I & II)",
+			"publisher": "Springer",
+			"address": "New York",
+			"isbn": "9780387955803",
+			"doi": "10.1007/b97543",
 			"legacy_key": "facchinei2003",
 			"source": "manual",
 			"checked": false,
@@ -18477,25 +18480,8 @@
 			"author_kind": "persons",
 			"authors_complete": true,
 			"year": 1980,
-			"publisher": "SIAM",
-			"isbn": "9780898714661",
-			"doi": "10.1137/1.9780898719451",
-			"openalex": "W1516681311",
-			"abstract": "Preface to the SIAM edition Preface Glossary of notations Introduction Part I. Variational Inequalities in Rn Part II. Variational Inequalities in Hilbert Space Part III. Variational Inequalities for Monotone Operators Part IV. Problems of Regularity Part V. Free Boundary Problems and the Coincidence Set of the Solution Part VI. Free Boundary Problems Governed by Elliptic Equations and Systems Part VII. Applications of Variational Inequalities Part VIII. A One Phase Stefan Problem Bibliography Index.",
-			"abstract_source": "openalex",
-			"keywords": [
-				"variational inequalities",
-				"monotone operators",
-				"free boundary problem",
-				"coincidence set",
-				"elliptic equations",
-				"elliptic systems",
-				"regularity theory",
-				"one-phase Stefan problem",
-				"Hilbert spaces",
-				"Rn"
-			],
-			"keywords_source": "openalex",
+			"publisher": "Academic Press",
+			"address": "New York",
 			"legacy_key": "kinderlehrer1980",
 			"source": "crossref",
 			"retrieved": "2026-10-23",
@@ -52817,11 +52803,7 @@
 				"chiara.optimise.evp.vari"
 			],
 			"keys": [
-				"Kwo2023a",
 				"DF1995a",
-				"FP2003a",
-				"KS1980a",
-				"HS1966a",
 				"DS1969a"
 			]
 		},

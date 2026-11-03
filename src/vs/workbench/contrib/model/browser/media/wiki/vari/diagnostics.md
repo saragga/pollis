@@ -1,6 +1,6 @@
 # Variational Inequalities: Diagnostics
 
-The **Variational Inequalities** panel checks a solution in four ways: the natural residual, a direct test of the inequality, the gap function and the steps of an iteration.
+The **Variational Inequalities** panel checks a solution in four ways: the natural residual, a direct test of the inequality, the gap function and, for the QVI, the steps of the iteration.
 
 ## Natural residual
 
@@ -14,7 +14,7 @@ with P_K the projection onto the box, `clamp.(x .- F(x), lb, ub)`. The code comm
 
 ## VI Residual
 
-**VI Residual** reports the natural residual and checks the defining inequality directly. With the generator `MersenneTwister(1)`, it draws 10 000 random points y of K(x*), limited to a distance of 10 from x* in every coordinate so that an unbounded box can be sampled, and computes the smallest value of F(x*)ᵀ(y − x*).
+**VI Residual** reports the natural residual and checks the defining inequality directly. With the generator `MersenneTwister(1)`, it draws 10 000 random points y of K(x*), uniformly in each coordinate between the bounds, with an infinite bound replaced by x*_i ∓ 10 so that an unbounded box can be sampled, and computes the smallest value of F(x*)ᵀ(y − x*).
 
 The field `holds` is true when that minimum is no lower than −10⁻⁸. For the VI, the set is the fixed box; for the QVI, the box at the solution.
 
@@ -30,9 +30,9 @@ The action compares the gap at the start point, `clamp.(zeros(n), K(0)...)`, wit
 
 ## Convergence Check
 
-**Convergence Check** plots the step length ‖x_{k+1} − x_k‖ of an iteration on a logarithmic scale. For the QVI, the steps are those of the damped fixed-point loop that produced the solution, one VI solve each.
+**Convergence Check**, an action of the QVI, plots the step length ‖x_{k+1} − x_k‖ on a logarithmic scale. The steps are those of the damped fixed-point loop that produced the solution, one VI solve each, so the plot shows how the iteration approached its fixed point.
 
-For the VI, which PATH solves directly, the action runs the projection method x ← P_K(x − γF(x)) with γ = 0.2 from the origin, for up to 200 iterations or until a step is shorter than 10⁻¹². The description sets the two loops side by side as the fixed-point iterations of each problem.
+The loop stops after 200 steps or when a step is shorter than 10⁻⁹, and `solved` is true when the last step is under 10⁻⁶. The VI needs no such check: PATH solves it in a single call, and `solved` reports the termination status of that call.
 
 ## The solver's report
 

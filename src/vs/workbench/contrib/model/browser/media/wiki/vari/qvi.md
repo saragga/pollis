@@ -24,11 +24,11 @@ end
 
 Each step solves the VI on the box at the current point, starting PATH from that point, and moves halfway, `damp = 0.5`, towards the new solution: x_{k+1} = x_k + damp · (VI(F, K(x_k)) − x_k). The loop stops after 200 steps or when a step is shorter than 10⁻⁹, and the solve counts as successful when the last step is under 10⁻⁶.
 
-## Damping and uniqueness
+## Damping and the start
 
-The decision table explains the choice of damping: undamped, the default problem cycles. It adds that generalised Nash equilibria are typically not unique, so that the point reached depends on the start and on the damping.
+With `damp = 0.5`, each iterate moves halfway towards the solution of the VI on the current box; `damp = 1.0` takes that solution itself, as `solve` does in the code, whose comment notes that a fixed K converges in one undamped step.
 
-The start is `x0 = zeros(n)`. **Convergence Check** plots the step lengths of the loop on a logarithmic scale, the record of how the iteration approached its fixed point.
+The start is `x0 = zeros(n)`, and **Parametric VI** starts each shift from the solution for the previous one. **Convergence Check** plots the step lengths of the loop on a logarithmic scale, the record of how the iteration approached its fixed point.
 
 ## The default problem
 
@@ -48,15 +48,11 @@ The actions evaluate K at the solution, so **VI Residual**, **Gap Function**, **
 
 ## Background
 
-PATH, the solver of each inner VI, is the method of [Dirkse and Ferris (1995)](#ref-DF1995a): a Newton method for the mixed complementarity problem, stabilised by a pathsearch along a piecewise linear path to the Newton point. Every step of the QVI loop is one such solve, warm-started at the current iterate. For the theory of variational and complementarity problems in finite dimensions, the panel lists the textbook of [Facchinei and Pang (2003)](#ref-FP2003a), with the introduction of [Kinderlehrer and Stampacchia (1980)](#ref-KS1980a).
+PATH, the solver of each inner VI, is the method of [Dirkse and Ferris (1995)](#ref-DF1995a): a Newton method for the mixed complementarity problem, stabilised by a pathsearch along a piecewise linear path to the Newton point. A step length acceptance criterion and a non-monotone pathsearch choose the next iterate, and they show the algorithm to be globally convergent under assumptions that generalise those needed in the smooth case. Every step of the QVI loop is one such solve, started at the current iterate.
 
 ## References
 
 <a id="ref-DF1995a"></a>Dirkse, S. P., & Ferris, M. C. (1995). The PATH Solver: A Nonmonotone Stabilization Scheme for Mixed Complementarity Problems. *Optimization Methods and Software* 5(2), 123-156. [doi:10.1080/10556789508805606](https://doi.org/10.1080/10556789508805606)
-
-<a id="ref-FP2003a"></a>Facchinei, F., & Pang, J.-S. (2003). *Finite-Dimensional Variational Inequalities and Complementarity Problems* (Vols. I and II). Springer. [doi:10.1007/b97543](https://doi.org/10.1007/b97543), [doi:10.1007/b97544](https://doi.org/10.1007/b97544)
-
-<a id="ref-KS1980a"></a>Kinderlehrer, D., & Stampacchia, G. (1980). *An Introduction to Variational Inequalities and Their Applications*. Academic Press; SIAM reprint, 2000. [doi:10.1137/1.9780898719451](https://doi.org/10.1137/1.9780898719451)
 
 ## See Also
 

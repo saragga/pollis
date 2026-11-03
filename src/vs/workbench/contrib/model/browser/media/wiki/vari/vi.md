@@ -43,23 +43,17 @@ with the box [0, 3] × [0, 3]. The decision table lists further contexts: traffi
 
 ## Actions for the VI
 
-**Convergence Check** runs, for the VI, the projection method x ← P_K(x − γF(x)) with γ = 0.2 from the origin and plots its step lengths, while the solution itself comes from PATH.
-
-**Bounds vs NCP** removes the upper bounds and solves again, and **Parametric VI** shifts F down by t from −3 to 3 and plots the path of the solution. **Equilibrium Interpretation** then labels each component as interior or at a bound.
+**VI Residual** checks the inequality on random points of the box, and **Bounds vs NCP** removes the upper bounds and solves again. **Parametric VI** shifts F down by t from −3 to 3, starts each solve at the previous solution and plots the path. **Equilibrium Interpretation** then labels each component as interior or at a bound. **Operator Field** draws −F over the box in the first two coordinates, and **Gap Function** compares the gap at the start point with the gap at x*.
 
 ## Background
 
-[Dafermos and Sparrow (1969)](#ref-DS1969a) formulate traffic assignment on a general network under two criteria, total cost minimisation by a central authority and user optimisation, where each user takes the cheapest route given the others, and construct algorithms for both. The panel lists the textbooks of [Facchinei and Pang (2003)](#ref-FP2003a) and [Kinderlehrer and Stampacchia (1980)](#ref-KS1980a) for the theory of the VI.
+[Dafermos and Sparrow (1969)](#ref-DS1969a) formulate traffic assignment on a general network under two criteria, total cost minimisation by a central authority and user optimisation, where each user takes the cheapest route given the others, and construct algorithms for both. They recall that the two criteria lead in general to different traffic patterns, as Pigou first observed in an example of a simple network with two nodes and two links, and that Wardrop calculated both patterns for two nodes joined by n independent paths.
 
 ## References
 
 <a id="ref-DS1969a"></a>Dafermos, S. C., & Sparrow, F. T. (1969). The Traffic Assignment Problem for a General Network. *Journal of Research of the National Bureau of Standards, Section B* 73B(2), 91-118. [doi:10.6028/jres.073B.010](https://doi.org/10.6028/jres.073B.010)
 
 <a id="ref-DF1995a"></a>Dirkse, S. P., & Ferris, M. C. (1995). The PATH Solver: A Nonmonotone Stabilization Scheme for Mixed Complementarity Problems. *Optimization Methods and Software* 5(2), 123-156. [doi:10.1080/10556789508805606](https://doi.org/10.1080/10556789508805606)
-
-<a id="ref-FP2003a"></a>Facchinei, F., & Pang, J.-S. (2003). *Finite-Dimensional Variational Inequalities and Complementarity Problems* (Vols. I and II). Springer. [doi:10.1007/b97543](https://doi.org/10.1007/b97543), [doi:10.1007/b97544](https://doi.org/10.1007/b97544)
-
-<a id="ref-KS1980a"></a>Kinderlehrer, D., & Stampacchia, G. (1980). *An Introduction to Variational Inequalities and Their Applications*. Academic Press; SIAM reprint, 2000. [doi:10.1137/1.9780898719451](https://doi.org/10.1137/1.9780898719451)
 
 ## See Also
 
