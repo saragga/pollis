@@ -39,7 +39,7 @@ A rendezvous, a landing or a planned manoeuvre belongs in the K[k] rows. A worke
 
 ## How to get finite-horizon behaviour from the panel
 
-No input of the panel asks for this design, but the recursion is short enough to add to the code. After `n, m = size(B)`, write the loop from the steps above for your T and Qf, with a list of gains filled from the last to the first.
+The recursion is short enough to add to the code. After `n, m = size(B)`, write the loop from the steps above for your T and Qf, with a list of gains filled from the last to the first.
 
 Then copy `simulate` with `K[k]` in place of `K`. **Predicted Cost** then provides a useful yardstick, since `predicted_cost` from the stationary P applies to the infinite-horizon problem. Compare it with x0' P[0] x0 as T grows and watch the two meet.
 

@@ -43,7 +43,7 @@ The plant is x[k+1] = A x[k] + B u[k], with noise w added on **Output-Feedback L
 | `sim` | The default simulation |
 | `A_cl` | A − B K |
 
-The printed result has `gain`, `closed_loop_poles`, `stable` and `simulated_cost`. `closed_loop_poles` and `stable` both concern A − B K alone, including on **Output-Feedback LQG**, where the estimator poles of A − L C appear only in the **Closed-Loop Poles** chart.
+The printed result has `gain`, `closed_loop_poles`, `stable` and `simulated_cost`. `closed_loop_poles` and `stable` refer to A − B K, and on **Output-Feedback LQG** the **Closed-Loop Poles** chart adds the estimator poles of A − L C.
 
 ## Visualise, Diagnose and Predict actions
 

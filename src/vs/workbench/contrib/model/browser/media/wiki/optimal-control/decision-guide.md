@@ -45,7 +45,7 @@ A plant that is only nearly linear is still a good case for these models. LQR ar
 
 ## How fast should it be sampled?
 
-**Sample Time** does not enter the design directly, as it comes in through A and B. A rule used in classical digital design is to sample several times faster than the fastest closed-loop mode, with guidance in [D'Azzo, Houpis and Sheldon (2003)](#ref-DHS2003a).
+**Sample Time** does not enter the design directly, as it comes in through A and B. Sampled-data and digital control systems are treated in [D'Azzo, Houpis and Sheldon (2003)](#ref-DHS2003a).
 
 Slower sampling leaves more time between corrections, and the loop gives up margin. Very fast sampling brings the poles close to 1 and can make numerical work harder. After any change, rebuild **System Matrix A** and **Input Matrix B** from the continuous model, and rescale **State Cost Q** and **Control Cost R** with the sample time.
 
@@ -59,7 +59,7 @@ Slower sampling leaves more time between corrections, and the loop gives up marg
 6. Read the margins again, since estimation can reduce them.
 7. Test on a perturbed plant by editing `simulate`.
 
-Step 7 matters most for a real system, as all the panel's other simulations use the design model itself and are therefore too kind.
+Step 7 matters most for a real system, as the other simulations use the design model itself.
 
 ## References
 

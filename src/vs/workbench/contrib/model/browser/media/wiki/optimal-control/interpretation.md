@@ -44,13 +44,13 @@ A point near the bend of the curve is usually a good design, as moving away from
 | `gain_crossover` | Frequency at which `gain_margin` is measured | Compare with the sampling frequency |
 | `phase_crossover` | Frequency at which `phase_margin_degrees` is measured | Compare with the sampling frequency |
 
-Classical design texts such as [D'Azzo, Houpis and Sheldon (2003)](#ref-DHS2003a) give the usual targets. Remember that the two crossover labels name the frequencies by the margin they belong to, and a textbook may use them the other way round.
+Classical design texts such as [D'Azzo, Houpis and Sheldon (2003)](#ref-DHS2003a) give the usual targets.
 
 ## Which margins can you count on?
 
 In continuous time with full state, multiloop LQR has strong guarantees, as [Safonov and Athans (1977)](#ref-SA1977a) show: at least 60 degrees of phase margin and an infinite upward gain margin in each loop. These facts are widely quoted, and they do not apply to these models.
 
-In discrete time the loop satisfies only |1 + L| ≥ sqrt(R / (R + B' P B)) for one input, and the bound is below 1, so the guarantee weakens as R falls relative to B' P B. The margins have to be read, not assumed. On LQG the case is sharper still. Asked about guaranteed margins for LQG, the abstract of [Doyle (1978)](#ref-Doy1978a) reads in full: "There are none." The estimator can strip the margins away, so read `phase_margin_degrees` on **Output-Feedback LQG** before trusting the state-feedback figure.
+A sampled loop has no such guarantee, so the margins of a discrete-time design have to be read, not assumed. On LQG the case is sharper still. Asked about guaranteed margins for LQG, the abstract of [Doyle (1978)](#ref-Doy1978a) reads in full: "There are none." The estimator can strip the margins away, so read `phase_margin_degrees` on **Output-Feedback LQG** before trusting the state-feedback figure.
 
 ## What a comparison with no control means
 

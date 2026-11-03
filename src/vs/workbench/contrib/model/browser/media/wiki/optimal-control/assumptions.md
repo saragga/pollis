@@ -17,7 +17,7 @@ A large **Initial State x0** is therefore a test of the model as well as the con
 | Positive definite | R | All inputs cost something | The problem is ill-posed |
 | Positive semidefinite | Q | No reward for deviation | The cost has no lower bound |
 
-**Controllability & Observability** tests the stronger conditions, that the ranks equal n. A rank below n is not fatal if the lost modes are stable, which `open_loop_poles` lets you judge.
+**Controllability & Observability** gives the ranks, and a rank of n meets the condition at once. A rank below n is acceptable if the lost modes are stable, which `open_loop_poles` lets you judge.
 
 ## Do the inputs have limits?
 
@@ -42,13 +42,13 @@ On **Output-Feedback LQG**, w and v are zero-mean, Gaussian, white and independe
 
 The formula assumes that A and B are known, and real models always contain errors. Full-state LQR tolerates a good deal of this in continuous time, because of its strong margins. A sampled-data loop tolerates less, and an LQG loop may have very little.
 
-The panel simulates with the same A and B used in the design, so no chart in it reveals model error directly. To test it, design with the current matrices and then edit `simulate` in the code so that the plant uses a perturbed A. **Stability Margins** gives one quantitative measure of what can be tolerated, for one input and one output.
+The simulations use the same A and B as the design. To test the effect of model error, design with the current matrices and then edit `simulate` in the code so that the plant uses a perturbed A. **Stability Margins** gives one quantitative measure of what can be tolerated, for one input and one output.
 
 ## Are the units and the sampling consistent?
 
 Q and R compare quantities with different units, so the numbers mean nothing until the units are fixed. A state in metres and another in micrometres need very different weights to express the same concern.
 
-The cost is also a sum per step, so halving **Sample Time** doubles the number of terms for the same real duration. To keep a design comparable across sample times, scale Q and R with the sample time. A and B have to be resampled as well, since **Sample Time** alone does not change them. The default **Input Matrix B** assumes a zero-order hold, in which the input stays constant over each sample, and that is the form of the **Control Signal** chart. Classical guidance on choosing a sampling rate is in [D'Azzo, Houpis and Sheldon (2003)](#ref-DHS2003a).
+The cost is also a sum per step, so halving **Sample Time** doubles the number of terms for the same real duration. To keep a design comparable across sample times, scale Q and R with the sample time. A and B have to be resampled as well, since **Sample Time** alone does not change them. The default **Input Matrix B** assumes a zero-order hold, in which the input stays constant over each sample, and that is the form of the **Control Signal** chart. Sampled-data and digital control systems are treated in [D'Azzo, Houpis and Sheldon (2003)](#ref-DHS2003a).
 
 ## References
 

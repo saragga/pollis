@@ -12,7 +12,7 @@ A Riccati solver usually returns a gain whenever one exists, so the checks ask s
 | `cost_observability_rank` | Q sees every mode | Some modes are not penalised, and the gain ignores stable ones |
 | `measurement_observability_rank` | y reveals every state | The estimator cannot correct some modes |
 
-The tests are stricter than the theory needs, as the condition for a stabilising solution is stabilisability and detectability. For each mode missing from a rank, check whether its pole in `open_loop_poles` lies inside the unit circle. Rank is also sharp at the edge: nearly dependent columns can pass the test while the design needs very large gains.
+A stabilising solution requires stabilisability and detectability, so a rank below n is acceptable when the missing modes are stable. For each mode missing from a rank, check whether its pole in `open_loop_poles` lies inside the unit circle. Rank is also sharp at the edge: nearly dependent columns can pass the test while the design needs very large gains.
 
 ## How stable is the closed loop?
 
@@ -20,7 +20,7 @@ The tests are stricter than the theory needs, as the condition for a stabilising
 
 `stable` is true when `maximum(abs, eigvals(A_cl)) < 1`, which is a yes-or-no answer. The distance from the circle is what matters in practice: a pole of modulus r shrinks that mode by r per step, so r very near 1 means slow decay even though `stable` is true. A pole near −1 or with a large angle gives an oscillation at each sample, which is usually a sign of too aggressive a design for that **Sample Time**.
 
-On **Output-Feedback LQG**, the printed `stable` does not cover the estimator. Check the diamonds of A − L C on the chart as well, as both sets belong to the closed loop.
+On **Output-Feedback LQG**, `stable` refers to A − B K, and the diamonds on the chart show A − L C. Read both, as both sets belong to the closed loop.
 
 ## Do the signals look reasonable?
 
@@ -53,7 +53,7 @@ A persistent gap suggests **Output Matrix C** cannot see the state in question, 
 
 **Stability Margins** breaks the loop at the plant input and gives `gain_margin` and `phase_margin_degrees`, for one input and one output.
 
-`gain_crossover` is the frequency at which the `gain_margin` is measured, and `phase_crossover` the frequency at which the `phase_margin_degrees` is measured, in radians per second. `gain_margin` is a factor, not in decibels, and `Inf` means the phase never crosses −180 degrees. Compare the two models on the same problem, since the warning of [Doyle (1978)](#ref-Doy1978a) is that the estimator can remove the margins of the state-feedback design, however good they were.
+`gain_crossover` is the frequency at which the `gain_margin` is measured, and `phase_crossover` the frequency at which the `phase_margin_degrees` is measured. `margin` gives the gain margin as a magnitude and the phase margin in degrees, and it returns the smallest of each. Compare the two models on the same problem, since the warning of [Doyle (1978)](#ref-Doy1978a) is that the estimator can remove the margins of the state-feedback design, however good they were.
 
 ## Common failures and their usual causes
 

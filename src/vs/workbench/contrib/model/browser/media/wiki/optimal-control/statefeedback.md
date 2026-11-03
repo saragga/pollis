@@ -21,7 +21,7 @@ The gain then follows directly: K = (R + B' P B)^(−1) B' P A. `simulate` runs 
 | Scale Q and R together | None | Identical `K`, scaled cost |
 | Set an entry of Q to zero | Less attention to that state | It may drift, if stable |
 
-As R grows without limit, stable open-loop poles stay put and unstable ones move to their reflections in the unit circle, which is the least effort that still stabilises. As R falls towards zero, effort stops counting and the response approaches the fastest that the sampled system allows, at a large but finite gain. **Control-Weight Sweep** moves along that range.
+As R grows, effort becomes expensive and the design moves towards the least effort that still stabilises. As R falls towards zero, effort stops counting and the response approaches the fastest that the sampled system allows. **Control-Weight Sweep** moves along that range.
 
 ## What a double integrator shows
 

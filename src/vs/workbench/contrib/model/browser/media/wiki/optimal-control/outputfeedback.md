@@ -35,17 +35,15 @@ The cost then splits. [Joseph and Tou (1961)](#ref-JT1961a) showed for linear mu
 
 ## What cost should you expect?
 
-Noise never stops, so the total cost grows with **Steps** and has no finite limit, and the proper measure is the cost per step. Over a long run, that average settles at:
+Noise never stops, so the total cost grows with **Steps** and has no finite limit, and the proper measure is the cost per step. Part of that cost comes from the process noise, which no controller avoids, and part from acting on an imperfect estimate, which falls as the estimate improves.
 
-trace(P W) + trace(K' (R + B' P B) K S)
-
-The first term is the cost of the process noise, which no controller avoids. The second is the cost of acting on an imperfect estimate, and it falls as the estimate improves. Dividing `simulated_cost` by **Steps** over a long run approximates this average, once the transient from **Initial State x0** has gone. That is why `predicted_cost` in **Predicted Cost** is not a target here: x0' P x0 counts neither term.
+Dividing `simulated_cost` by **Steps** over a long run gives an estimate of the cost per step, once the transient from **Initial State x0** has gone. `predicted_cost` in **Predicted Cost** answers a different question, since x0' P x0 is the cost of the noise-free problem.
 
 ## What happens to the robustness?
 
 The state-feedback loop has margins of its own, and the estimator changes the loop. Separation guarantees optimality for the assumed model, and it says nothing about robustness when the model is wrong.
 
-[Doyle (1978)](#ref-Doy1978a) gave a simple example whose margins can be made arbitrarily small, however good the separate designs look. **Stability Margins** computes the margins of the actual controller in series with the plant, `ss(A - B * K - L * C, L, K, 0, Ts) * ss(A, B, C, 0, Ts)`, so compare them with the figures from **State-Feedback LQR** on the same matrices. If they fall a long way, a common remedy adds fictitious process noise through the input channel, using W + q B B' for a growing q. That speeds up the estimator and tends to move the margins back towards the state-feedback figures, at the price of more noise passed to the input.
+[Doyle (1978)](#ref-Doy1978a) gave a simple example whose margins can be made arbitrarily small, however good the separate designs look. **Stability Margins** computes the margins of the actual controller in series with the plant, `ss(A - B * K - L * C, L, K, 0, Ts) * ss(A, B, C, 0, Ts)`, so compare them with the figures from **State-Feedback LQR** on the same matrices. If they fall a long way, change **Process Noise W** and **Measurement Noise V** as tuning values and read the margins again.
 
 ## Reading a simulation
 

@@ -18,7 +18,7 @@ A run that stopped by itself, on a final radius or a small change in x, has sati
 | `active_constraints` | Number of constraints within 1e-6 of binding | Not applicable |
 | `projected_gradient_norm` | Gradient left after removing the active normals | Always, at a minimum |
 
-On a constrained minimum a large `gradient_norm` is normal. Rounding limits what can be seen, at about 1e-10 times the size of f, so a value at that level is as good as zero. The projection ignores the signs of the multipliers, and **Scaling Check** supplies those.
+On a constrained minimum a large `gradient_norm` is normal. Rounding limits what can be seen, and that limit grows with the size of f. **Scaling Check** supplies the signs of the multipliers, which complete the reading.
 
 ## Reading the Convergence Curve
 
@@ -47,7 +47,7 @@ With more than two variables, the surface is a slice through the minimiser, wher
 | `max_distance_between_minimisers` | Widest gap between final points |
 | `mean_evaluations` | Typical cost of one run |
 
-A low `share_at_best` indicates several local minima, or runs that ended early, and the two can be told apart by raising **Max Evaluations**. A large distance alongside a high share points to a flat region or to equivalent solutions. The starts ignore any constraint other than the box, and the output does not report `violation`, so a surprisingly low value on **COBYLA** or **LINCOA** needs checking from that start.
+A low `share_at_best` indicates several local minima, or runs that ended early, and the two can be told apart by raising **Max Evaluations**. A large distance alongside a high share points to a flat region or to equivalent solutions. The starts come from the box, so on **COBYLA** or **LINCOA** a surprisingly low value is worth checking from that start with **Constraint Check**.
 
 ## Does a restart improve the result?
 

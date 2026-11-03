@@ -24,7 +24,7 @@ An algebraic Riccati equation is quadratic in P, so it has several symmetric sol
 | (A, Q^(1/2)) detectable | The solution is the unique positive semidefinite one, and it stabilises |
 | R positive definite | The inverse in K exists |
 
-**Controllability & Observability** tests the stronger forms of the first two. `ared` in **Predicted Cost** returns the stabilising solution in `riccati_solution`.
+**Controllability & Observability** gives the ranks that bear on the first two. `ared` in **Predicted Cost** returns the stabilising solution in `riccati_solution`.
 
 ## How is P computed?
 
@@ -48,7 +48,7 @@ That result holds for the design model. A real plant that differs from A and B m
 
 The cost has no discount factor, so every step counts the same, and that is why stability is built in: a state that does not decay keeps adding to the sum.
 
-A discount g < 1 is common in economics and in **Reinforcement Learning**. It reduces to the same equation with A and B scaled by sqrt(g), but its optimal policy need not stabilise the original system, because cost far in the future counts for little. To explore this, design with `sqrt(g) .* A` and `sqrt(g) .* B` in the code, and then check `eigvals(A - B * K)` with the original A and B.
+A discount below 1 is common in economics and in **Reinforcement Learning**. Later costs then count for little, so the optimal policy of a discounted problem need not stabilise the system.
 
 ## References
 
