@@ -41,11 +41,11 @@ The panel shifts the input by nk − 1 samples before `armax`, which has a built
 ## The predictor
 
 ```
-predictor(G, c)  # innovation form in observer canonical form (Ljung, ch. 4)
+predictor(G, c)  # innovation form in observer canonical form
 PredictionStateSpace(sys, reshape(c .- a[2:end], n, 1))  # K = c - a
 ```
 
-The code builds a state-space predictor of A(q)y = B(q)u + C(q)e in observer canonical form, with innovation gain K = c − a, and refers to chapter 4 of [Ljung (1999)](#ref-Lju1999a). For ARX, c is empty and the noise model is 1/A; for ARMAX, c holds c₁, …, c_nc from the numerator of the noise model and the noise model is C/A.
+The code builds a state-space predictor of A(q)y = B(q)u + C(q)e in observer canonical form, with innovation gain K = c − a. For ARX, c is empty and the noise model is 1/A; for ARMAX, c holds c₁, …, c_nc from the numerator of the noise model and the noise model is C/A.
 
 **Predicted Output** and **k-Step Prediction** use this predictor; the code comment notes that the package predicts more than one step ahead only for state-space models.
 
@@ -56,8 +56,6 @@ The documentation states that `stochastic = true` returns a transfer function wi
 The description of the action derives the standard deviations from the least-squares covariance. The same action refits ARX on each half of the estimation data, with the same **na**, **nb** and **nk**, and overlays the Bode plots, which shows the spread of the frequency response as well as that of the coefficients.
 
 ## References
-
-<a id="ref-Lju1999a"></a>Ljung, L. (1999). *System Identification: Theory for the User* (2nd ed.). Prentice Hall.
 
 <a id="ref-SS1989a"></a>Söderström, T., & Stoica, P. (1989). *System Identification*. Prentice Hall. [user.it.uu.se](http://user.it.uu.se/~ts/sysidbook.pdf)
 

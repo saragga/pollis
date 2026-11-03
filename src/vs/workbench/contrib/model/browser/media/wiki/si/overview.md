@@ -27,9 +27,9 @@ They call least squares for the ARX model the equation error method and interpre
 
 ## Subspace methods
 
-[Van Overschee and De Moor (1994)](#ref-OM1994b) derive two N4SID algorithms for the identification of combined deterministic-stochastic systems: a state sequence is determined from the projection of input-output data, and the algorithms are non-iterative and use the QR and singular value decompositions.
+The package documentation states that `n4sid` implements the simplified algorithm, alg 2, of [Van Overschee and De Moor (1994)](#ref-OM1994b). [Van Overschee and De Moor (1995)](#ref-OM1995a) spell out N4SID as "numerical algorithms for subspace state space system identification".
 
-[Van Overschee and De Moor (1995)](#ref-OM1995a) show that N4SID, MOESP and CVA are special cases of one unifying theorem and differ only in a weighting matrix. [Katayama (2005)](#ref-Kat2005a) gives a book-length treatment, from realisation theory and the Kalman filter to the ORT and CCA subspace methods and closed-loop identification.
+[Van Overschee and De Moor (1995)](#ref-OM1995a) show that N4SID, MOESP and CVA are special cases of one unifying theorem and differ only in a weighting matrix. In their simulation example, the fourth-order system is identified equally well by the three algorithms, and the second-order approximation has the smallest variance with CVA, an observation they report from other simulation studies too but could not prove.
 
 ## Validation
 
@@ -45,15 +45,11 @@ ntr = round(Int, 0.7 * length(data))
 dtr, dval = data[1:ntr], data[ntr+1:end]
 ```
 
-`iddata` holds the output, the input and the sample time **h**. ControlSystems.jl, presented by [Bagge Carlson, Fält, Heimerson and Troeng (2021)](#ref-CFHT2021a), provides the transfer-function and state-space types and the `bodeplot`, `pzmap` and `lsim` functions of the actions. The code of the **ARX** and **ARMAX** tabs builds the innovation-form predictor with a comment that refers to chapter 4 of [Ljung (1999)](#ref-Lju1999a).
+`iddata` holds the output, the input and the sample time **h**. ControlSystems.jl, presented by [Bagge Carlson, Fält, Heimerson and Troeng (2021)](#ref-CFHT2021a), provides the transfer-function and state-space types and the `bodeplot`, `pzmap` and `lsim` functions of the actions. The code of the **ARX** and **ARMAX** tabs builds the innovation-form predictor in observer canonical form, because the package predicts more than one step ahead only for state-space models.
 
 ## References
 
 <a id="ref-CFHT2021a"></a>Bagge Carlson, F., Fält, M., Heimerson, A., & Troeng, O. (2021). ControlSystems.jl: A Control Toolbox in Julia. *2021 60th IEEE Conference on Decision and Control (CDC)*. [doi:10.1109/CDC45484.2021.9683403](https://doi.org/10.1109/CDC45484.2021.9683403)
-
-<a id="ref-Kat2005a"></a>Katayama, T. (2005). *Subspace Methods for System Identification*. Springer. [doi:10.1007/1-84628-158-X](https://doi.org/10.1007/1-84628-158-X)
-
-<a id="ref-Lju1999a"></a>Ljung, L. (1999). *System Identification: Theory for the User* (2nd ed.). Prentice Hall.
 
 <a id="ref-SS1989a"></a>Söderström, T., & Stoica, P. (1989). *System Identification*. Prentice Hall. [user.it.uu.se](http://user.it.uu.se/~ts/sysidbook.pdf)
 

@@ -8,7 +8,7 @@ The **OE** tab fits an output-error model, y = [B(q)/F(q)]u + e, which describes
 
 θ̂ = arg min Σₜ ε²(t, θ),  ε(t, θ) = y(t) − [B(q⁻¹)/A(q⁻¹)] u(t),
 
-the sum of squared differences between the measured output and the output of the model driven by the input alone. The panel writes the denominator as F(q), and the decision table gives the purpose of the tab as an output-error model with the plant dynamics decoupled from the noise model. [Söderström and Stoica (1989)](#ref-SS1989a) treat the method in a complement to their chapter on prediction error methods.
+the sum of squared differences between the measured output and the output of the model driven by the input alone. The panel writes the denominator as F(q), and the decision table gives the purpose of the tab as an output-error model with no noise model, fitted by minimising the simulation error. [Söderström and Stoica (1989)](#ref-SS1989a) treat the method in a complement to their chapter on prediction error methods.
 
 ## Consistency
 

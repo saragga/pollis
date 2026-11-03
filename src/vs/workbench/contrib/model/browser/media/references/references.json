@@ -5480,8 +5480,8 @@
 		},
 		{
 			"key": "CFHT2021a",
-			"type": "misc",
-			"title": "ControlSystems.jl: A Control Toolbox for Julia",
+			"type": "inproceedings",
+			"title": "ControlSystems.jl: A Control Toolbox in Julia",
 			"authors": [
 				"Bagge Carlson, Fredrik",
 				"Fält, Mattias",
@@ -5491,10 +5491,14 @@
 			"author_kind": "persons",
 			"authors_complete": true,
 			"year": 2021,
+			"booktitle": "2021 60th IEEE Conference on Decision and Control (CDC)",
+			"pages": "4847-4853",
+			"doi": "10.1109/CDC45484.2021.9683403",
 			"legacy_key": "baggecarlson2021",
-			"source": "manual",
-			"checked": false,
-			"open_access": true
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": false
 		},
 		{
 			"key": "CG1999a",
@@ -25320,16 +25324,6 @@
 			"issn": "0005-1098",
 			"doi": "10.1016/0005-1098(94)90230-5",
 			"openalex": "W2130212796",
-			"keywords": [
-				"early warning",
-				"change detection",
-				"condition-based maintenance",
-				"system identification",
-				"model reduction",
-				"Monte Carlo estimation",
-				"autoregressive models"
-			],
-			"keywords_source": "openalex",
 			"legacy_key": "vanoverschee1994b",
 			"source": "crossref",
 			"retrieved": "2026-10-24",
@@ -31244,19 +31238,24 @@
 		{
 			"key": "SS1989a",
 			"type": "book",
-			"title": "Identification of Linear Systems",
+			"title": "System Identification",
 			"authors": [
-				"Soderstrom, Torsten",
+				"Söderström, Torsten",
 				"Stoica, Petre"
 			],
 			"author_kind": "persons",
 			"authors_complete": true,
 			"year": 1989,
-			"publisher": "Prentice Hall",
+			"publisher": "Prentice Hall International",
+			"address": "Hemel Hempstead",
+			"isbn": "9780138812362",
+			"url": "http://user.it.uu.se/~ts/sysidbook.pdf",
+			"oa_url": "http://user.it.uu.se/~ts/sysidbook.pdf",
 			"legacy_key": "soderstrom1989",
 			"source": "manual",
-			"checked": false,
-			"open_access": false
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "SS1989b",
@@ -52458,9 +52457,7 @@
 			],
 			"keys": [
 				"CFHT2021a",
-				"Lju1999a",
 				"SS1989a",
-				"Kat2005a",
 				"OM1994b",
 				"OM1995a"
 			]

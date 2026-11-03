@@ -12,6 +12,14 @@ defaultModel = "arx"
 name = "ControlSystemIdentification.jl"
 github = "https://github.com/baggepinnen/ControlSystemIdentification.jl"
 
+[[packages]]
+name = "ControlSystems.jl"
+github = "https://github.com/JuliaControl/ControlSystems.jl"
+
+[[packages]]
+name = "Plots.jl"
+github = "https://github.com/JuliaPlots/Plots.jl"
+
 [requires]
 packages = ["ControlSystemIdentification.jl", "ControlSystems.jl", "Plots.jl"]
 
@@ -22,37 +30,37 @@ label = ""
 name = "ARX Identification"
 file = "si/tutorial-01-arx.ipynb"
 bundled = true
-description = "Fitting ARX and ARMAX models, order selection via AIC/BIC, and residual analysis"
+description = "Transfer-function estimation by least squares, total and weighted total least squares and pseudo-linear regression, compared by simulation and Bode plots"
 
 [[notebookSections.notebooks]]
 name = "State-Space (N4SID)"
 file = "si/tutorial-02-statespace.ipynb"
 bundled = true
-description = "Subspace identification of state-space models with N4SID for SISO and MIMO systems"
+description = "Prediction-error estimation of state-space models with newpem: measurement noise, other error metrics, regularisation and models of increasing order"
 
 [[notebookSections.notebooks]]
 name = "Robust Identification"
 file = "si/tutorial-05-robust.ipynb"
 bundled = true
-description = "Robust identification using regularisation and uncertainty-aware model fitting"
+description = "AR models under impulsive alpha-sub-Gaussian noise: least squares, total and robust total least squares, and lowrankfilter"
 
 [[notebookSections.notebooks]]
 name = "Spectral Analysis"
 file = "si/tutorial-03-spectral.ipynb"
 bundled = true
-description = "Non-parametric frequency-response estimation via spectral analysis and Welch periodogram"
+description = "Coherence check, then non-parametric estimates of the frequency response and the noise spectrum with tfest"
 
 [[notebookSections.notebooks]]
 name = "Impulse Response"
 file = "si/tutorial-04-impulse-response.ipynb"
 bundled = true
-description = "Estimating impulse response functions and converting to frequency-domain representations"
+description = "Impulse-response estimation with a high-order FIR model, impulseest, as the noise grows and with more data"
 
 [[notebookSections.notebooks]]
 name = "Time vs Frequency Domain"
 file = "si/tutorial-06-time-vs-freq.ipynb"
 bundled = true
-description = "Comparing time-domain PEM and frequency-domain methods on the same identification problem"
+description = "A time-domain ARX fit and a frequency-domain tfest fit of a lightly damped second-order system, compared by poles, static gain and Bode curves"
 
 [[wikis]]
 name = "Factsheet"
@@ -115,13 +123,7 @@ separator = true
 label = "Textbooks"
 
 [[references]]
-key = "Lju1999a"
-
-[[references]]
 key = "SS1989a"
-
-[[references]]
-key = "Kat2005a"
 
 [[references]]
 separator = true
@@ -183,7 +185,7 @@ purpose = "Subspace identification of state-space models; handles MIMO systems a
 [[decisionRows]]
 task = "OE"
 context = "y = [B(q)/F(q)]u + e"
-purpose = "Output-error model, plant dynamics decoupled from noise model"
+purpose = "Output-error model with no noise model, fitted by minimising the simulation error with newpem (focus = :simulation)"
 
 [[inputs]]
 id = "y"
@@ -227,7 +229,7 @@ models = ["armax"]
 [[inputs]]
 id = "nf"
 label = "nf"
-tooltip = "Order of the F(q) polynomial (denominator of plant transfer function). Only used in OE models."
+tooltip = "Number of poles of the plant, the order of F(q). The tab fits a state-space model with nf states by newpem with focus = :simulation, which sets the Kalman gain to zero. Only used in OE models."
 default = "2"
 models = ["oe"]
 
@@ -248,7 +250,7 @@ models = ["n4sid"]
 [[inputs]]
 id = "l"
 label = "l (horizon)"
-tooltip = "Future horizon for the subspace algorithm. Larger values improve accuracy but increase computation. Leave blank for automatic selection."
+tooltip = "Algorithm parameter i of n4sid, the number of block rows of the extended observability matrix in Van Overschee and De Moor (1995). The package documentation states that it generally needs no tuning; leave blank for the package default."
 default = ""
 models = ["n4sid"]
 
@@ -271,7 +273,7 @@ fitm(d) = arx(d, {{na}}, {{nb}}; inputdelay = {{nk}})  # ARX: A(q)y = B(q)u + e,
 model = fitm(dtr)
 
 # The package predicts h > 1 steps only for state-space models, so build the predictor of A(q)y = B(q)u + C(q)e
-function predictor(G, c = Float64[])  # innovation form in observer canonical form (Ljung, ch. 4), C = 1 + c1/q + ...
+function predictor(G, c = Float64[])  # innovation form in observer canonical form, C = 1 + c1/q + ...
     a, b = denvec(G)[1], numvec(G)[1]
     b = [zeros(length(a) - length(b)); b]  # B over the same powers of z as A
     n = max(length(a) - 1, length(c))
@@ -313,7 +315,7 @@ end
 model, noisemodel = fitm(dtr; noise = true)
 
 # The package predicts h > 1 steps only for state-space models, so build the predictor of A(q)y = B(q)u + C(q)e
-function predictor(G, c = Float64[])  # innovation form in observer canonical form (Ljung, ch. 4), C = 1 + c1/q + ...
+function predictor(G, c = Float64[])  # innovation form in observer canonical form, C = 1 + c1/q + ...
     a, b = denvec(G)[1], numvec(G)[1]
     b = [zeros(length(a) - length(b)); b]  # B over the same powers of z as A
     n = max(length(a) - 1, length(c))

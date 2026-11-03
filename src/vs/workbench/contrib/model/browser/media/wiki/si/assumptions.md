@@ -24,7 +24,7 @@ The ARX model has v(t) = e(t), white, when the true system has the ARX form. The
 
 [Söderström and Stoica (1989)](#ref-SS1989a) assume open-loop operation for their output-error analysis, E u(t)e(s) = 0 for all t and s, and list low-order linear feedback among the cases in which least squares fails.
 
-Assumption 2 of [Van Overschee and De Moor (1995)](#ref-OM1995a), an input uncorrelated with the process and measurement noise, is satisfied in open loop; in closed loop, the authors note, the noise would be fed back to the inputs through the controller. [Katayama (2005)](#ref-Kat2005a) gives a chapter to the identification of closed-loop systems.
+Assumption 2 of [Van Overschee and De Moor (1995)](#ref-OM1995a), an input uncorrelated with the process and measurement noise, is satisfied in open loop; in closed loop, the authors note, the noise would be fed back to the inputs through the controller.
 
 The default data are open loop: the binary input does not depend on the output.
 
@@ -41,8 +41,6 @@ Assumption 4 of [Van Overschee and De Moor (1995)](#ref-OM1995a) is an infinite 
 **nk** is the input delay in samples. The tooltip advises nk = 1 when there is no extra delay beyond the inherent one-step delay; a larger value shifts the B polynomial by nk − 1 further samples.
 
 ## References
-
-<a id="ref-Kat2005a"></a>Katayama, T. (2005). *Subspace Methods for System Identification*. Springer. [doi:10.1007/1-84628-158-X](https://doi.org/10.1007/1-84628-158-X)
 
 <a id="ref-SS1989a"></a>Söderström, T., & Stoica, P. (1989). *System Identification*. Prentice Hall. [user.it.uu.se](http://user.it.uu.se/~ts/sysidbook.pdf)
 

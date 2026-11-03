@@ -17,7 +17,7 @@ The package returns an `N4SIDStateSpace`, which the ControlSystemIdentification.
 
 [Van Overschee and De Moor (1995)](#ref-OM1995a) describe subspace algorithms in two steps. In the first, the algorithm computes from the data a subspace that coincides with the column space of the extended observability matrix Γᵢ, whose dimension is the order n of the system. In the second, either A and C follow from the shift invariance of that subspace, or, as in N4SID, two state sequences are determined and combined with the data, so that all the system matrices follow from a set of equations solved by least squares.
 
-[Van Overschee and De Moor (1994)](#ref-OM1994b) derive two N4SID algorithms; the abstract states that they are non-iterative and use the QR and singular value decompositions, and that the second trades accuracy for simplicity. The package documentation states that `n4sid` implements the simplified algorithm, alg 2.
+The package documentation states that `n4sid` implements the simplified algorithm, alg 2, from the N4SID paper of [Van Overschee and De Moor (1994)](#ref-OM1994b). [Van Overschee and De Moor (1995)](#ref-OM1995a) count MOESP and N4SID as the two algorithms based on geometrical and linear algebra concepts, while CVA rests on statistical arguments and principal angles and directions.
 
 ## Projections and singular values
 
@@ -28,8 +28,6 @@ The order equals the number of non-zero singular values of the weighted projecti
 ## The states as Kalman filter estimates
 
 [Van Overschee and De Moor (1995)](#ref-OM1995a) define the state sequence Xᵢ as in the N4SID paper: each column is the output of a non-steady-state Kalman filter built from the system matrices, so that the columns are the outputs of a bank of Kalman filters in parallel. The point, they write, is that the sequence can be obtained directly from the input-output data, without knowledge of the system matrices.
-
-[Katayama (2005)](#ref-Kat2005a) gives chapters to the Kalman filter, to the realisation of deterministic systems and to stochastic realisation theory before the subspace identification methods, ORT and CCA.
 
 ## Weightings: N4SID, MOESP and CVA
 
@@ -50,8 +48,6 @@ The documentation describes `subspaceid`, the newer implementation, which choose
 The tooltip of **l (horizon)** reads that larger values improve accuracy but increase computation.
 
 ## References
-
-<a id="ref-Kat2005a"></a>Katayama, T. (2005). *Subspace Methods for System Identification*. Springer. [doi:10.1007/1-84628-158-X](https://doi.org/10.1007/1-84628-158-X)
 
 <a id="ref-OM1994b"></a>Van Overschee, P., & De Moor, B. (1994). N4SID: Subspace Algorithms for the Identification of Combined Deterministic-Stochastic Systems. *Automatica* 30(1), 75-93. [doi:10.1016/0005-1098(94)90230-5](https://doi.org/10.1016/0005-1098(94)90230-5)
 
