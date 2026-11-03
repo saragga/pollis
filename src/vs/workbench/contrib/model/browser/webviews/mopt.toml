@@ -121,8 +121,26 @@ key = "AMS2008a"
 key = "Bou2023b"
 
 [[references]]
+key = "NW2006a"
+
+[[references]]
+key = "CGT2000a"
+
+[[references]]
+key = "Fle2000a"
+
+[[references]]
 separator = true
 label = "Original Papers"
+
+[[references]]
+key = "FR1964a"
+
+[[references]]
+key = "PR1969a"
+
+[[references]]
+key = "LN1989a"
 
 [[references]]
 key = "ABG2007a"
