@@ -50,11 +50,11 @@ k_max = k_min N^(1/(γ − 1))
 
 so hubs can be orders of magnitude larger than typical nodes, while in a random network the largest degree grows only logarithmically. For the model with m > 1, Barabasi gives the diameter as growing like ln N / ln ln N, more slowly than ln N, so distances are shorter than in a random graph of the same size. The clustering coefficient of the model decreases with size as (ln N)² / N, more slowly than the 1/N of a random network.
 
-**Centrality Profile** and **Hub Influence** look for the hubs through betweenness.
+**Scale-Free** and **Hub Influence** take the nodes of highest degree as the hubs, while **Centrality Profile** ranks the nodes by betweenness.
 
 ## Robust and fragile
 
-[Barabasi (2016)](#ref-Bar2016a) shows that scale-free networks withstand the random removal of nodes, which mostly strikes the many small nodes, but break apart quickly when the hubs are removed in decreasing order of degree. In a random network, attacks and random failures have more similar effects, since there are no hubs to target. **Hub Influence** removes the hub with the highest betweenness and prints the change in average path length.
+[Barabasi (2016)](#ref-Bar2016a) shows that scale-free networks withstand the random removal of nodes, which mostly strikes the many small nodes, but break apart quickly when the hubs are removed in decreasing order of degree. In a random network, attacks and random failures have more similar effects, since there are no hubs to target. **Hub Influence** removes the node of highest degree and prints the change in average path length.
 
 ## References
 

@@ -4,7 +4,7 @@ How to check a generated graph before reading its measures: whether it is connec
 
 ## Connectivity
 
-**Connectivity** reports `is_connected`, the number of components from `connected_components`, and the sizes of the largest and the smallest, for a random network with the panel's N and p. [Barabasi (2016)](#ref-Bar2016a) places a random network in one of four regimes by its mean degree:
+**Connectivity** reports `is_connected`, the number of components from `connected_components`, and the sizes of the largest and the smallest, for a graph of the chosen model, the random network for **Attributed**. [Barabasi (2016)](#ref-Bar2016a) places a random network in one of four regimes by its mean degree:
 
 | Mean degree | Regime | Structure |
 |---|---|---|
@@ -33,7 +33,7 @@ A variance close to the mean degree is the mark of the random network; a much la
 
 ## Centrality values
 
-**Centrality Profile** prints the five nodes of highest betweenness in a random network, with their betweenness and closeness. Graphs.jl, by [Fairbanks, Besançon, Schölly, Hoffimann, Eubank and Karpinski (2021)](#ref-FBSHE...2021a), defines betweenness as
+**Centrality Profile** prints the five nodes of highest betweenness in a graph of the chosen model, with their betweenness and closeness. Graphs.jl, by [Fairbanks, Besançon, Schölly, Hoffimann, Eubank and Karpinski (2021)](#ref-FBSHE...2021a), defines betweenness as
 
 bc(v) = (1/𝒩) Σ_(s ≠ t ≠ v) σ_st(v) / σ_st
 

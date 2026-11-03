@@ -10,7 +10,7 @@ C_Δ = 3 × number of triangles / number of connected triplets
 
 and the factor 3 counts each triangle once for each of its three triplets. The two are not equivalent: in a double star, ⟨C⟩ tends to 1 while C_Δ falls like 1/N. [Humphries and Gurney (2008)](#ref-HG2008a) find them often in good agreement, but differing by an order of magnitude for some networks.
 
-The panel prints `global_clustering_coefficient` of Graphs.jl, by [Fairbanks, Besançon, Schölly, Hoffimann, Eubank and Karpinski (2021)](#ref-FBSHE...2021a); the clustering of [Watts and Strogatz (1998)](#ref-WS1998a) is the average of the local coefficients, which `local_clustering_coefficient` returns node by node.
+The panel prints both: `global_clustering_coefficient` of Graphs.jl, by [Fairbanks, Besançon, Schölly, Hoffimann, Eubank and Karpinski (2021)](#ref-FBSHE...2021a), and the mean of `local_clustering_coefficient`, which returns the local coefficients node by node. The second is the clustering of [Watts and Strogatz (1998)](#ref-WS1998a), the average of the local coefficients.
 
 ## Reading the comparison
 
@@ -32,7 +32,7 @@ The panel prints `global_clustering_coefficient` of Graphs.jl, by [Fairbanks, Be
 
 where C and L are the clustering and mean shortest path of the graph, and C_rand and L_rand those of an Erdős–Rényi graph with the same numbers of nodes and edges. A small world has a similar path length, λ_g ≈ 1, and greater clustering, γ_g > 1, than the random graph, and the authors deem a network small-world when S > 1, an assertion that can be tested statistically.
 
-**Small-World Index** and the **Small-World** model print σ in that form, with a random network of the same mean degree as reference. In the Watts–Strogatz model, Humphries and Gurney show that S has a unique maximum at intermediate rewiring, the maximum trade-off between high clustering and short path length, and that it falls as the edge density rises.
+**Small-World Index** and the **Small-World** model print σ in that form, with the global clustering coefficient, which Humphries and Gurney mainly consider, and with `erdos_renyi(nv(g), ne(g))`, a random graph with the same numbers of nodes and edges, as reference. In the Watts–Strogatz model, Humphries and Gurney show that S has a unique maximum at intermediate rewiring, the maximum trade-off between high clustering and short path length, and that it falls as the edge density rises.
 
 Across the real networks they examine, Humphries and Gurney find a linear relation between S and the size n, and show analytically that the Watts–Strogatz models assigned to those networks scale in the same way. Linearity is not inevitable, they add, and S is not maximal for an arbitrary network of a given size.
 
@@ -46,13 +46,17 @@ which has only the solution S = 0 for ⟨k⟩ ≤ 1 and a positive one for ⟨k�
 
 ## The fitted exponent
 
-**Degree Distribution Fit** counts how many nodes of a scale-free graph have each degree and takes the least-squares slope of log count against log degree as the estimate of γ. [Barabasi and Albert (1999)](#ref-BA1999a) found γ = 2.9 ± 0.1 in their simulations and γ = 3 from a mean-field calculation, independent of the number of edges each new node brings.
+**Degree Distribution Fit** estimates γ by the maximum-likelihood formula that [Barabasi (2016)](#ref-Bar2016a) gives for a discrete degree distribution,
 
-[Barabasi (2016)](#ref-Bar2016a) plots degree distributions with logarithmic binning, with bins that widen with the degree so that each holds enough observations, or as a cumulative distribution; both extend the scaling region into the high degrees, where each degree is typically carried by a single node.
+γ = 1 + n [Σᵢ ln(kᵢ / (K_min − 1/2))]⁻¹
+
+where the sum runs over the n nodes of degree kᵢ ≥ K_min. Barabasi chooses K_min by scanning its values for the smallest Kolmogorov–Smirnov distance between the data and the fitted distribution; the panel takes K_min = **k (edges / neighbours)**. [Barabasi and Albert (1999)](#ref-BA1999a) found γ = 2.9 ± 0.1 in their simulations and γ = 3 from a mean-field calculation, independent of the number of edges each new node brings.
+
+Barabasi adds that a quick estimate from a straight line fitted to p_k on a log-log plot can be affected by systematic biases. He plots degree distributions with logarithmic binning, with bins that widen with the degree so that each holds enough observations, or as a cumulative distribution; both extend the scaling region into the high degrees, where each degree is typically carried by a single node.
 
 ## The effect of a hub
 
-**Hub Influence** removes the node of highest betweenness from a scale-free graph and prints the average path before and after. [Barabasi (2016)](#ref-Bar2016a) notes that the hubs shorten paths by linking many small-degree nodes, and that the removal of a single hub is unlikely to fragment a network, as the remaining hubs still hold it together. Under an attack that removes hubs one after another in decreasing order of degree, by contrast, the removal of a small fraction of the hubs is enough to break a scale-free network into tiny clusters.
+**Hub Influence** removes the hub, the node of highest degree, from a scale-free graph and prints the average path before and after. [Barabasi (2016)](#ref-Bar2016a) notes that the hubs shorten paths by linking many small-degree nodes, and that the removal of a single hub is unlikely to fragment a network, as the remaining hubs still hold it together. Under an attack that removes hubs one after another in decreasing order of degree, by contrast, the removal of a small fraction of the hubs is enough to break a scale-free network into tiny clusters.
 
 ## References
 

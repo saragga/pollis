@@ -9,9 +9,9 @@ A quick reference for **Network Analysis**: the four models, the inputs, what ea
 | **Erdos-Renyi** | `erdos_renyi(N, p)` | Each pair linked with probability p | p (N − 1) |
 | **Scale-Free** | `barabasi_albert(N, k)` | k edges per new node, by preferential attachment | About 2k |
 | **Small-World** | `watts_strogatz(N, 2k, p)` | k neighbours on each side, each edge rewired with probability p | 2k |
-| **Attributed** | `MetaGraph` | N vertices with data, round(N p) random pairs | At most 2 round(N p) / N |
+| **Attributed** | `MetaGraph` | N vertices with data, each pair linked with probability p | p (N − 1) |
 
-The mean degree of the random network is p(N − 1), as [Barabasi (2016)](#ref-Bar2016a) derives; the other two follow from the generators' documentation in Graphs.jl, by [Fairbanks, Besançon, Schölly, Hoffimann, Eubank and Karpinski (2021)](#ref-FBSHE...2021a).
+The mean degree of the random network, and of the attributed graph built the same way, is p(N − 1), as [Barabasi (2016)](#ref-Bar2016a) derives; the other two follow from the generators' documentation in Graphs.jl, by [Fairbanks, Besançon, Schölly, Hoffimann, Eubank and Karpinski (2021)](#ref-FBSHE...2021a).
 
 ## Inputs
 
@@ -20,43 +20,44 @@ The mean degree of the random network is p(N − 1), as [Barabasi (2016)](#ref-B
 | **N (nodes)** | 100 | All | Number of vertices |
 | **k (edges / neighbours)** | 3 | **Scale-Free**, **Small-World**, and the comparisons | Edges per new node, or neighbours on each side of the ring |
 | **p (probability)** | 0.05 | **Erdos-Renyi**, **Small-World**, **Attributed** | Link probability, or rewiring probability |
+| **Seed** | 42 | All | Seed of the generators and of the attributed graph's data |
 
-No random seed is set, so each run, and each action, draws a new graph.
+With the same inputs and **Seed**, each run and each action draws the same graph; another **Seed** draws another one.
 
 ## What a run prints
 
 | Model | Output |
 |---|---|
-| **Erdos-Renyi** | Nodes, edges, mean degree, clustering, average path |
-| **Scale-Free** | Maximum degree, mean degree, clustering, the five nodes of highest betweenness and their centralities |
-| **Small-World** | Clustering and average path of the graph and of a random graph with the same mean degree, and the small-world index |
+| **Erdos-Renyi** | Nodes, edges, mean degree, global and average local clustering, average path |
+| **Scale-Free** | Maximum degree, mean degree, global and average local clustering, the five nodes of highest degree with their degrees and betweenness |
+| **Small-World** | Clustering and average path of the graph and of a random graph with the same numbers of nodes and edges, and the small-world index |
 | **Attributed** | Vertices, edges, infected vertices out of N |
 
-Clustering is Graphs.jl's `global_clustering_coefficient`. The average path is the mean of the shortest-path distances over all ordered pairs of distinct vertices joined by a path.
+Clustering is printed both as Graphs.jl's `global_clustering_coefficient` and as the mean of its `local_clustering_coefficient`; the small-world index uses the global one. The average path is the mean of the shortest-path distances over all ordered pairs of distinct vertices joined by a path.
 
 ## Visualise, Diagnose and Predict actions
 
 | Group | Action | Output |
 |---|---|---|
 | Visualise | **Degree Distribution** | A 20-bin histogram of the degrees of a new graph of the chosen model; the random network for **Attributed** |
-| Visualise | **Adjacency Heatmap** | The adjacency matrix of a random network with N and p |
-| Diagnose | **Connectivity** | Whether a random network is connected, its number of components, the largest and the smallest |
-| Diagnose | **Centrality Profile** | The five nodes of highest betweenness in a random network, with their betweenness and closeness |
+| Visualise | **Adjacency Heatmap** | The adjacency matrix of a graph of the chosen model; the random network for **Attributed** |
+| Diagnose | **Connectivity** | Whether a graph of the chosen model is connected, its number of components, the largest and the smallest |
+| Diagnose | **Centrality Profile** | The five nodes of highest betweenness in a graph of the chosen model, with their betweenness and closeness |
 | Predict | **Percolation Threshold** | The fraction of nodes in the largest component of random networks, for p from 0.01 to 0.2 |
-| Predict | **Degree Distribution Fit** | An estimate of the power-law exponent of a scale-free graph |
+| Predict | **Degree Distribution Fit** | The maximum-likelihood estimate of the power-law exponent of a scale-free graph, from the degrees of at least k |
 
 ## Compare and Interpret actions
 
 | Group | Action | Output |
 |---|---|---|
-| Compare | **ER vs BA vs WS** | Clustering and average path of the three models at mean degree 2k |
+| Compare | **ER vs BA vs WS** | Global and average local clustering and average path of the three models at mean degree 2k |
 | Compare | **Degree Variance** | Variance and maximum of the degrees for the three models |
-| Interpret | **Small-World Index** | The index σ of a small-world graph against a random one |
-| Interpret | **Hub Influence** | The average path of a scale-free graph before and after removing its node of highest betweenness |
+| Interpret | **Small-World Index** | The index σ of a small-world graph against a random graph with the same numbers of nodes and edges |
+| Interpret | **Hub Influence** | The average path of a scale-free graph before and after removing its node of highest degree |
 
 ## Packages and textbooks
 
-Graphs.jl provides the generators, `degree`, `global_clustering_coefficient`, `gdistances`, `connected_components`, `betweenness_centrality` and `closeness_centrality`. MetaGraphsNext.jl builds the attributed graph, StatsBase counts the degrees for the fit, and GLMakie draws the histogram and the heat map.
+Graphs.jl provides the generators, `degree`, `global_clustering_coefficient`, `local_clustering_coefficient`, `gdistances`, `connected_components`, `betweenness_centrality` and `closeness_centrality`. MetaGraphsNext.jl builds the attributed graph, and GLMakie draws the histogram and the heat map.
 
 [Barabasi (2016)](#ref-Bar2016a) covers random, scale-free and small-world networks and their robustness, and [Newman (2010)](#ref-New2010a) the measures, models and processes of network science. The original papers are [Erdos and Renyi (1960)](#ref-ER1960a), [Watts and Strogatz (1998)](#ref-WS1998a) and [Barabasi and Albert (1999)](#ref-BA1999a), and the small-world index is that of [Humphries and Gurney (2008)](#ref-HG2008a).
 

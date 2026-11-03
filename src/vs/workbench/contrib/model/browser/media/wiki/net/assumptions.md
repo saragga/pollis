@@ -10,7 +10,7 @@ The **Attributed** model carries weights as edge data, but the measures of Graph
 
 ## One realisation of a random model
 
-Every generator is random, and no seed is fixed. [Barabasi (2016)](#ref-Bar2016a) stresses that networks generated with the same parameters look different, and do not even have the same number of links. A printed value is therefore one draw from a distribution, and two actions, each drawing its own graph, describe different realisations.
+Every generator is random. [Barabasi (2016)](#ref-Bar2016a) stresses that networks generated with the same parameters look different, and do not even have the same number of links. A printed value is therefore one draw from a distribution. **Seed** fixes the draw: with the same inputs, each run and each action generate the same graph, and another **Seed** gives another realisation.
 
 Statements about a model, such as γ = 3 for preferential attachment or the threshold ⟨k⟩ = 1 for the giant component, concern its expected or large-N behaviour, and a single graph of 100 nodes shows them only approximately.
 

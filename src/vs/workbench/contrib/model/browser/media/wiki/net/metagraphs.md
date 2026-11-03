@@ -10,15 +10,15 @@ The MetaGraphsNext.jl documentation describes the package as a type-stable repla
 
 ## The panel's graph
 
-The code builds an empty `MetaGraph` on an undirected `Graph()`, with three types fixed at construction:
+The code builds an empty `MetaGraph` on an undirected `Graph()`, with three types fixed at construction by the keywords `label_type`, `vertex_data_type` and `edge_data_type`:
 
 | Part | Type | Content |
 |---|---|---|
-| Label | `Int` | The name of each vertex, 1 to N |
+| Label | `Symbol` | The name of each vertex, `:v1`, `:v2` and so on |
 | Vertex data | `NamedTuple{(:weight, :state), Tuple{Float64, Symbol}}` | A random weight in [0, 1) and a state drawn from `:S`, `:I` and `:R` |
 | Edge data | `Float64` | A random weight in [0, 1) |
 
-It then draws round(N p) pairs of vertices at random and links each pair of distinct vertices, so the graph has at most that many edges. The code then counts the vertices in state `:I`, which its comments call infected, and prints the counts of vertices, edges and infected vertices.
+It then links each pair of distinct vertices with probability p, as in the random network, with a random weight as edge data. **Seed** fixes the data and the edges. The code then counts the vertices in state `:I`, which its comments call infected, and prints the counts of vertices, edges and infected vertices.
 
 ## A dictionary-like interface
 
@@ -26,7 +26,7 @@ The MetaGraphsNext.jl documentation describes access through labels, as in a dic
 
 | Code | Effect |
 |---|---|
-| `mg[i] = data` | Adds a vertex labelled i, or replaces its data if it exists |
+| `mg[label] = data` | Adds a vertex with that label, or replaces its data if it exists |
 | `mg[u, v] = data` | Adds an edge between two existing labels, or replaces its data |
 | `mg[v]` | Returns the data of vertex v |
 | `labels(mg)` | Iterates over the vertex labels |
@@ -42,7 +42,7 @@ selects vertices by an attribute, and the same pattern selects edges through `ed
 
 The documentation distinguishes the label of a vertex from its code, the integer that Graphs.jl algorithms use. Without deletions, codes follow the order of insertion; `code_for` and `label_for` convert between them. Methods inherited from Graphs.jl, such as `nv`, `ne` or `degree`, refer to vertices by codes.
 
-Codes are reassigned after `rem_vertex!` to stay contiguous, while labels do not change, so the documentation recommends converting systematically to and from labels. It discourages integer labels in general, to avoid confusion with codes, but notes that using the codes as labels may be reasonable when labels are not needed; the panel's labels 1 to N equal the codes as long as no vertex is removed.
+Codes are reassigned after `rem_vertex!` to stay contiguous, while labels do not change, so the documentation recommends converting systematically to and from labels. It discourages integer labels in general, to avoid confusion with codes, but notes that using the codes as labels may be reasonable when labels are not needed. The panel's labels are symbols, so they cannot be mistaken for codes.
 
 ## Weights from data
 
