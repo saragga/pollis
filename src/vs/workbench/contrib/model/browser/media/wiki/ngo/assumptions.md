@@ -4,15 +4,15 @@ What the six models take for granted: the generated graph, known and non-negativ
 
 ## The generated graph
 
-**Random Seed** fixes a random generator, and every ordered pair i → j with i ≠ j becomes an edge with probability **Edge Density**, with an integer weight from 1 to 9. The chain 1 → 2 → … → n is then completed, with a weight from 5 to 9 for any of its edges not already drawn, so that every vertex can be reached from vertex 1, as the tooltip of **Edge Density** states.
+**Random Seed** fixes a random generator, and every ordered pair i → j with i ≠ j becomes an edge with probability **Edge Density**, with an integer weight from 1 to 9. A pair that is not drawn has no edge, marked Inf for **Shortest Path**, **Robust Shortest Path** and **Spanning Tree** and 0 for **Network Flow** and **Bipartite Matching**. The chain 1 → 2 → … → n is then completed, with a weight from 5 to 9 for any of its edges not already drawn, so that every vertex can be reached from vertex 1, as the tooltip of **Edge Density** states.
 
-The matrix is directed: W[i, j] and W[j, i] are drawn separately. Any matrix typed into **Weight Matrix (n x n)** replaces the generated one, with the same reading of its entries: a positive value is an edge with that weight, and 0 means no edge.
+The matrix is directed: W[i, j] and W[j, i] are drawn separately. Any matrix typed into **Weight Matrix (n x n)** replaces the generated one, with the same reading of its entries, as the tooltip of **Weight Matrix (n x n)** gives it. For **Shortest Path**, **Robust Shortest Path** and **Spanning Tree**, a finite entry off the diagonal is an edge of that length, 0 included, and Inf means no edge. For **Network Flow** and **Bipartite Matching**, a positive entry is an edge with that capacity or weight, and 0 means no edge.
 
 ## Known, non-negative weights
 
 **Shortest Path**, **Network Flow**, **Spanning Tree**, **Bipartite Matching** and **Assignment** take every weight as a fixed, known number. Dijkstra's algorithm in particular relies on non-negative lengths: [Williamson (2019)](#ref-Wil2019a) proves its correctness under that condition, and turns to Bellman–Ford when some lengths are negative.
 
-Since a zero entry means a missing edge, an edge of length zero cannot be entered through the matrix. The generated weights are all at least 1, and **Weight Uncertainty** multiplies them by factors between 0.8 and 1.2, so they stay positive. **Network Flow** reads the same entries as capacities, which are non-negative by definition.
+An edge of length zero is entered as 0 in the matrices of the three path and tree models, and a missing edge as Inf. The generated weights are all at least 1, and **Weight Uncertainty** multiplies them by factors between 0.8 and 1.2, so they stay positive and a missing edge stays Inf. **Network Flow** reads the entries as capacities, which are non-negative by definition, and an arc of capacity 0 carries no flow.
 
 ## Independent intervals
 
@@ -22,7 +22,7 @@ The tooltip of **Upper Bounds (n x n)** requires upper ≥ lower on every edge, 
 
 ## An undirected reading for trees
 
-A spanning tree joins vertices without regard to direction. **Spanning Tree** therefore turns the directed matrix into an undirected one: i and j are joined if either W[i, j] or W[j, i] is positive, and the edge takes the larger of the two weights. [Nešetřil (1997)](#ref-Nes1997a) states the problem for a connected undirected graph with real weights on its edges, and `kruskal_mst` of Graphs.jl, by [Fairbanks, Besançon, Schölly, Hoffimann, Eubank and Karpinski (2021)](#ref-FBSHE...2021a), is documented for a connected, undirected graph.
+A spanning tree joins vertices without regard to direction. **Spanning Tree** therefore turns the directed matrix into an undirected one: i and j are joined if either W[i, j] or W[j, i] is finite, and the edge takes the larger of the two weights when both are, and the finite one otherwise. [Nešetřil (1997)](#ref-Nes1997a) states the problem for a connected undirected graph with real weights on its edges, and `kruskal_mst` of Graphs.jl, by [Fairbanks, Besançon, Schölly, Hoffimann, Eubank and Karpinski (2021)](#ref-FBSHE...2021a), is documented for a connected, undirected graph.
 
 The chain added by the generator makes the undirected graph connected; with a typed matrix that leaves it disconnected, `spans_all_vertices` reports false.
 

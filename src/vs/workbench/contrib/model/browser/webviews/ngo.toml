@@ -283,7 +283,7 @@ default = "1"
 [[inputs]]
 id = "mat"
 label = "Weight Matrix (n x n)"
-tooltip = "W[i, j] > 0 is an edge i -> j with that weight (0 = no edge). Shortest paths: lengths; Robust: lower bounds; Network Flow: capacities; Spanning Tree: weights (symmetrised); Bipartite Matching: row-column weights. Replace with your own matrix literal if you like."
+tooltip = "Shortest Path, Robust Shortest Path and Spanning Tree: a finite W[i, j] is an edge i -> j of that length, 0 included, and Inf = no edge (Robust: lower bounds; Spanning Tree: lengths symmetrised). Network Flow and Bipartite Matching: W[i, j] > 0 is an edge with that capacity or weight, and 0 = no edge. Replace with your own matrix literal if you like."
 default = "random_weights(n, density, seed)"
 models = ["sp", "rsp", "nf", "st", "bm"]
 newRow = true
@@ -292,7 +292,7 @@ newRow = true
 id = "matub"
 label = "Upper Bounds (n x n)"
 tooltip = "Upper bounds of the interval weights for the Robust Shortest Path; must satisfy upper >= lower on every edge."
-default = "W .+ (W .> 0) .* rand(MersenneTwister(seed + 1), 0:6, n, n)"
+default = "W .+ isfinite.(W) .* rand(MersenneTwister(seed + 1), 0:6, n, n)"
 models = ["rsp"]
 
 [[inputs]]
@@ -392,21 +392,23 @@ using Graphs, Random
 n = {{n}}  # number of vertices
 density = {{density}}  # probability of each directed edge
 seed = {{seed}}  # random seed for the generated weights
-function random_weights(n, density, seed)  # random integer weights 1-9; 0 = no edge
+function random_weights(n, density, seed)  # random integer lengths 1-9; Inf = no edge
     rng = MersenneTwister(seed)
-    W = [i != j && rand(rng) < density ? Float64(rand(rng, 1:9)) : 0.0 for i in 1:n, j in 1:n]
+    W = [i != j && rand(rng) < density ? Float64(rand(rng, 1:9)) : Inf for i in 1:n, j in 1:n]
     for i in 1:n-1  # the chain 1 -> 2 -> ... -> n keeps every vertex reachable from 1
-        W[i, i+1] == 0 && (W[i, i+1] = Float64(rand(rng, 5:9)))
+        isinf(W[i, i+1]) && (W[i, i+1] = Float64(rand(rng, 5:9)))
     end
     W
 end
-W = {{mat}}  # W[i, j] > 0 is an edge i -> j with that weight
+W = {{mat}}  # a finite W[i, j] is an edge i -> j of that length, 0 included; Inf = no edge
 source = {{src}}  # start vertex
 target = {{dst}}  # end vertex
-remove_edge(W, i, j) = (W2 = copy(W); W2[i, j] = 0; W2)  # the graph without edge i -> j
+remove_edge(W, i, j) = (W2 = copy(W); W2[i, j] = Inf; W2)  # the graph without edge i -> j
+adjacency(W) = [i != j && isfinite(W[i, j]) for i in axes(W, 1), j in axes(W, 2)]  # edges: the finite entries off the diagonal
+is_edge(W, i, j) = i != j && isfinite(W[i, j])
 
 function solve(W=W; source=source, target=target)
-    g = SimpleDiGraph(W)
+    g = SimpleDiGraph(adjacency(W))
     ds = dijkstra_shortest_paths(g, source, W)  # Dijkstra with the weights as edge lengths
     (path = enumerate_paths(ds, target), cost = ds.dists[target], dists = ds.dists)
 end
@@ -425,19 +427,21 @@ using Graphs, Random
 n = {{n}}  # number of vertices
 density = {{density}}  # probability of each directed edge
 seed = {{seed}}  # random seed for the generated weights
-function random_weights(n, density, seed)  # random integer weights 1-9; 0 = no edge
+function random_weights(n, density, seed)  # random integer lengths 1-9; Inf = no edge
     rng = MersenneTwister(seed)
-    W = [i != j && rand(rng) < density ? Float64(rand(rng, 1:9)) : 0.0 for i in 1:n, j in 1:n]
+    W = [i != j && rand(rng) < density ? Float64(rand(rng, 1:9)) : Inf for i in 1:n, j in 1:n]
     for i in 1:n-1  # the chain 1 -> 2 -> ... -> n keeps every vertex reachable from 1
-        W[i, i+1] == 0 && (W[i, i+1] = Float64(rand(rng, 5:9)))
+        isinf(W[i, i+1]) && (W[i, i+1] = Float64(rand(rng, 5:9)))
     end
     W
 end
-W = {{mat}}  # W[i, j] > 0 is an edge i -> j with that weight
+W = {{mat}}  # a finite W[i, j] is an edge i -> j of that length, 0 included; Inf = no edge
 Wu = {{matub}}  # upper bounds: the true weight of edge i -> j lies in [W[i, j], Wu[i, j]]
 source = {{src}}  # start vertex
 target = {{dst}}  # end vertex
-remove_edge(W, i, j) = (W2 = copy(W); W2[i, j] = 0; W2)  # the graph without edge i -> j
+remove_edge(W, i, j) = (W2 = copy(W); W2[i, j] = Inf; W2)  # the graph without edge i -> j
+adjacency(W) = [i != j && isfinite(W[i, j]) for i in axes(W, 1), j in axes(W, 2)]  # edges: the finite entries off the diagonal
+is_edge(W, i, j) = i != j && isfinite(W[i, j])
 
 pathcost(p, C) = sum(C[p[k], p[k+1]] for k in 1:length(p)-1)
 function regret(p, W, Wu, g; source=source, target=target)  # worst case: p's edges at their upper bounds, all others at their lower bounds
@@ -448,7 +452,7 @@ function regret(p, W, Wu, g; source=source, target=target)  # worst case: p's ed
     pathcost(p, C) - dijkstra_shortest_paths(g, source, C).dists[target]
 end
 function solve(W=W; source=source, target=target, Wu=Wu)
-    g = SimpleDiGraph(W)
+    g = SimpleDiGraph(adjacency(W))
     paths = collect(all_simple_paths(g, source, target))  # every simple path (exact, small graphs only)
     isempty(paths) && return (path = Int[], regret = Inf, cost_low = Inf, cost_high = Inf, paths = paths, regrets = Float64[])
     r = [regret(p, W, Wu, g; source, target) for p in paths]
@@ -482,10 +486,12 @@ W = {{mat}}  # W[i, j] > 0 is an edge i -> j with that weight
 source = {{src}}  # start vertex
 target = {{dst}}  # end vertex
 remove_edge(W, i, j) = (W2 = copy(W); W2[i, j] = 0; W2)  # the graph without edge i -> j
+adjacency(W) = W .> 0  # edges: the positive entries
+is_edge(W, i, j) = W[i, j] > 0
 using GraphsFlows
 
 function solve(W=W; source=source, target=target, algorithm=PushRelabelAlgorithm())
-    g = SimpleDiGraph(W)
+    g = SimpleDiGraph(adjacency(W))
     value, F = maximum_flow(g, source, target, W, algorithm)  # W holds the arc capacities
     (value = value, flow = F)
 end
@@ -504,20 +510,23 @@ using Graphs, Random
 n = {{n}}  # number of vertices
 density = {{density}}  # probability of each directed edge
 seed = {{seed}}  # random seed for the generated weights
-function random_weights(n, density, seed)  # random integer weights 1-9; 0 = no edge
+function random_weights(n, density, seed)  # random integer lengths 1-9; Inf = no edge
     rng = MersenneTwister(seed)
-    W = [i != j && rand(rng) < density ? Float64(rand(rng, 1:9)) : 0.0 for i in 1:n, j in 1:n]
+    W = [i != j && rand(rng) < density ? Float64(rand(rng, 1:9)) : Inf for i in 1:n, j in 1:n]
     for i in 1:n-1  # the chain 1 -> 2 -> ... -> n keeps every vertex reachable from 1
-        W[i, i+1] == 0 && (W[i, i+1] = Float64(rand(rng, 5:9)))
+        isinf(W[i, i+1]) && (W[i, i+1] = Float64(rand(rng, 5:9)))
     end
     W
 end
-W = {{mat}}  # W[i, j] > 0 is an edge i -> j with that weight
-remove_edge(W, i, j) = (W2 = copy(W); W2[i, j] = 0; W2[j, i] = 0; W2)  # the graph without edge i -- j
+W = {{mat}}  # a finite W[i, j] is an edge i -> j of that length, 0 included; Inf = no edge
+remove_edge(W, i, j) = (W2 = copy(W); W2[i, j] = Inf; W2[j, i] = Inf; W2)  # the graph without edge i -- j
+adjacency(W) = [i != j && isfinite(W[i, j]) for i in axes(W, 1), j in axes(W, 2)]  # edges: the finite entries off the diagonal
+is_edge(W, i, j) = i != j && isfinite(W[i, j])
+symmetrise(W) = [isfinite(W[i, j]) && isfinite(W[j, i]) ? max(W[i, j], W[j, i]) : min(W[i, j], W[j, i]) for i in axes(W, 1), j in axes(W, 2)]  # undirected: i -- j is an edge if either direction has a length, the larger where both do
 
 function solve(W=W)
-    Wu = max.(W, transpose(W))  # undirected: i -- j is an edge if either direction has a weight
-    g = SimpleGraph(Wu)
+    Wu = symmetrise(W)  # undirected lengths
+    g = SimpleGraph(adjacency(Wu))
     tree = [(src(e), dst(e)) for e in kruskal_mst(g, Wu)]  # Kruskal's algorithm
     (tree = tree, weight = sum(Wu[i, j] for (i, j) in tree; init=0.0), spanning = length(tree) == size(W, 1) - 1)
 end
@@ -546,6 +555,8 @@ function random_weights(n, density, seed)  # random integer weights 1-9; 0 = no 
 end
 W = {{mat}}  # W[i, j] > 0 is an edge i -> j with that weight
 remove_edge(W, i, j) = (W2 = copy(W); W2[i, j] = 0; W2)  # the graph without edge i -> j
+adjacency(W) = W .> 0  # edges: the positive entries
+is_edge(W, i, j) = W[i, j] > 0
 using Hungarian
 
 function solve(W=W)  # rows are the left vertices, columns the right vertices
@@ -569,6 +580,7 @@ n = {{n}}  # number of workers and jobs
 seed = {{seed}}  # random seed for the generated costs
 W = {{cost}}  # W[i, j] = cost of assigning worker i to job j
 remove_edge(W, i, j) = (W2 = copy(W); W2[i, j] = 10 * sum(W); W2)  # forbid the pair with a prohibitive cost
+adjacency(W) = trues(size(W))  # every worker-job pair is allowed
 
 function solve(W=W)
     assignment, cost = hungarian(W)  # Hungarian algorithm, minimises the total cost
@@ -599,7 +611,7 @@ m = size(W, 1)
 {{?model=bm|am}}seg(i, j) = ([xy[i][1], xy[m + j][1]], [xy[i][2], xy[m + j][2]])
 plt = plot(legend=false, axis=false, grid=false)
 {{?model!=am}}for i in 1:m, j in 1:size(W, 2)
-{{?model!=am}}    W[i, j] > 0 && plot!(plt, seg(i, j)..., color=:lightgray)
+{{?model!=am}}    is_edge(W, i, j) && plot!(plt, seg(i, j)..., color=:lightgray)
 {{?model!=am}}end
 for (i, j) in sol_edges(sol)
     plot!(plt, seg(i, j)..., color=:red, linewidth=3)
@@ -617,7 +629,7 @@ code = '''
 using Plots
 
 e = sol_edges(sol)
-heatmap(W, yflip=true, xlabel="to / column", ylabel="from / row", color=:viridis)
+heatmap(replace(W, Inf => NaN), yflip=true, xlabel="to / column", ylabel="from / row", color=:viridis)  # missing edges (Inf) left blank
 scatter!(last.(e), first.(e), color=:red, marker=:x, markersize=8, legend=false)
 '''
 
@@ -634,8 +646,8 @@ using Plots
 {{?model=nf}}arcs = [(i, j) for i in 1:size(W, 1), j in 1:size(W, 2) if W[i, j] > 0]
 {{?model=nf}}bar(string.(arcs), [W[i, j] for (i, j) in arcs], alpha=0.3, label="capacity", xrotation=60)
 {{?model=nf}}bar!(string.(arcs), [max(sol.flow[i, j], 0) for (i, j) in arcs], label="flow")
-{{?model=st}}Wu = max.(W, transpose(W))
-{{?model=st}}histogram([Wu[i, j] for i in 1:size(W, 1) for j in i+1:size(W, 1) if Wu[i, j] > 0], alpha=0.4, label="all edges", xlabel="weight")
+{{?model=st}}Wu = symmetrise(W)
+{{?model=st}}histogram([Wu[i, j] for i in 1:size(W, 1) for j in i+1:size(W, 1) if isfinite(Wu[i, j])], alpha=0.4, label="all edges", xlabel="weight")
 {{?model=st}}histogram!([Wu[i, j] for (i, j) in sol.tree], label="spanning tree")
 {{?model=bm|am}}bar(string.(sol_edges(sol)), [W[i, j] for (i, j) in sol_edges(sol)], ylabel="weight / cost", legend=false, xrotation=60)
 '''
@@ -650,7 +662,7 @@ label = "Solution Validation"
 desc = "Check that the solution satisfies every constraint of the problem"
 code = '''
 {{?model=sp|rsp}}p = sol.path
-{{?model=sp|rsp}}(starts_at_source = first(p) == source, ends_at_target = last(p) == target, edges_exist = all(W[i, j] > 0 for (i, j) in sol_edges(sol)),
+{{?model=sp|rsp}}(starts_at_source = first(p) == source, ends_at_target = last(p) == target, edges_exist = all(is_edge(W, i, j) for (i, j) in sol_edges(sol)),
 {{?model=sp}} simple_path = allunique(p), weight_sum = sum(W[i, j] for (i, j) in sol_edges(sol); init=0.0), reported_cost = sol.cost)
 {{?model=rsp}} simple_path = allunique(p), regret_nonnegative = sol.regret >= 0, bounds_ordered = all(Wu .>= W))
 {{?model=nf}}F = sol.flow; m = size(W, 1)
@@ -673,18 +685,18 @@ id = "algorithm-variants"
 label = "Cross-Check"
 desc = "Confirm the optimum independently: Bellman-Ford, sampled scenarios, min-cut, Prim, or the linear-programming relaxation"
 code = '''
-{{?model=sp}}bf = bellman_ford_shortest_paths(SimpleDiGraph(W), source, W)
+{{?model=sp}}bf = bellman_ford_shortest_paths(SimpleDiGraph(adjacency(W)), source, W)
 {{?model=sp}}(dijkstra = sol.cost, bellman_ford = bf.dists[target], same_path = enumerate_paths(bf, target) == sol.path)
-{{?model=rsp}}Random.seed!(2); g = SimpleDiGraph(W)
+{{?model=rsp}}Random.seed!(2); g = SimpleDiGraph(adjacency(W))
 {{?model=rsp}}sampled = map(1:500) do k  # random scenarios inside the intervals
-{{?model=rsp}}    C = W .+ rand(size(W)...) .* (Wu .- W)
+{{?model=rsp}}    C = ifelse.(adjacency(W), W .+ rand(size(W)...) .* (Wu .- W), Inf)
 {{?model=rsp}}    pathcost(sol.path, C) - dijkstra_shortest_paths(g, source, C).dists[target]
 {{?model=rsp}}end
 {{?model=rsp}}(largest_sampled_regret = maximum(sampled), worst_case_regret = sol.regret, bound_holds = maximum(sampled) <= sol.regret + 1e-9)
-{{?model=nf}}part1, part2, cut = mincut(SimpleDiGraph(W), source, target, W, PushRelabelAlgorithm())
+{{?model=nf}}part1, part2, cut = mincut(SimpleDiGraph(adjacency(W)), source, target, W, PushRelabelAlgorithm())
 {{?model=nf}}(max_flow = sol.value, min_cut = cut, equal = isapprox(sol.value, cut), source_side = part1, sink_side = part2)
-{{?model=st}}Wu = max.(W, transpose(W))
-{{?model=st}}prim = sum(Wu[src(e), dst(e)] for e in prim_mst(SimpleGraph(Wu), Wu); init=0.0)
+{{?model=st}}Wu = symmetrise(W)
+{{?model=st}}prim = sum(Wu[src(e), dst(e)] for e in prim_mst(SimpleGraph(adjacency(Wu)), Wu); init=0.0)
 {{?model=st}}(kruskal = sol.weight, prim = prim, equal = isapprox(sol.weight, prim))
 {{?model=bm|am}}using JuMP, HiGHS
 {{?model=bm|am}}m, k = size(W)
@@ -706,7 +718,7 @@ id = "connectivity"
 label = "Connectivity Check"
 desc = "Vertex and edge counts, weak and strong components, and the vertices reachable from vertex 1"
 code = '''
-{{?model!=am}}g = SimpleDiGraph(W)
+{{?model!=am}}g = SimpleDiGraph(adjacency(W))
 {{?model!=am}}(vertices = nv(g), edges = ne(g), observed_density = ne(g) / (nv(g) * (nv(g) - 1)), weakly_connected = is_weakly_connected(g),
 {{?model!=am}} strong_components = strongly_connected_components(g), reachable_from_1 = findall(isfinite, dijkstra_shortest_paths(g, 1).dists))
 {{?model=am}}(complete_bipartite = true, workers = size(W, 1), jobs = size(W, 2), cost_range = extrema(W))
@@ -737,9 +749,9 @@ id = "all-pairs"
 label = "All Pairs / Vertex Values"
 desc = "All-pairs distances (shortest paths), max flow to every sink, distances inside the tree, or the value of each row (matching and assignment)"
 code = '''
-{{?model=sp|rsp}}round.(floyd_warshall_shortest_paths(SimpleDiGraph(W), W).dists, digits=2)  # Inf = unreachable
+{{?model=sp|rsp}}round.(floyd_warshall_shortest_paths(SimpleDiGraph(adjacency(W)), W).dists, digits=2)  # Inf = unreachable
 {{?model=nf}}[(sink = t, max_flow = solve(W; target=t).value) for t in 1:size(W, 1) if t != source]
-{{?model=st}}Wu = max.(W, transpose(W)); tg = SimpleGraph(size(W, 1))
+{{?model=st}}Wu = symmetrise(W); tg = SimpleGraph(size(W, 1))
 {{?model=st}}for (i, j) in sol.tree
 {{?model=st}}    add_edge!(tg, i, j)
 {{?model=st}}end
@@ -771,12 +783,12 @@ label = "Algorithm Comparison"
 desc = "Time alternative algorithms on the same instance (for the robust path: robust against nominal and pessimistic paths)"
 code = '''
 bench(f) = (f(); @elapsed f())  # second run, after compilation
-{{?model=sp}}g = SimpleDiGraph(W)
+{{?model=sp}}g = SimpleDiGraph(adjacency(W))
 {{?model=sp}}[(algorithm = "Dijkstra", seconds = bench(() -> dijkstra_shortest_paths(g, source, W))),
 {{?model=sp}} (algorithm = "Bellman-Ford", seconds = bench(() -> bellman_ford_shortest_paths(g, source, W))),
 {{?model=sp}} (algorithm = "A* (zero heuristic)", seconds = bench(() -> a_star(g, source, target, W))),
 {{?model=sp}} (algorithm = "Floyd-Warshall (all pairs)", seconds = bench(() -> floyd_warshall_shortest_paths(g, W)))]
-{{?model=rsp}}g = SimpleDiGraph(W)
+{{?model=rsp}}g = SimpleDiGraph(adjacency(W))
 {{?model=rsp}}cand = ["robust (min-max regret)" => sol.path, "nominal (lower bounds)" => enumerate_paths(dijkstra_shortest_paths(g, source, W), target),
 {{?model=rsp}}        "pessimistic (upper bounds)" => enumerate_paths(dijkstra_shortest_paths(g, source, Wu), target),
 {{?model=rsp}}        "midpoint" => enumerate_paths(dijkstra_shortest_paths(g, source, (W .+ Wu) ./ 2), target)]
@@ -784,7 +796,7 @@ bench(f) = (f(); @elapsed f())  # second run, after compilation
 {{?model=nf}}[(algorithm = name, max_flow = solve(; algorithm=a).value, seconds = bench(() -> solve(; algorithm=a)))
 {{?model=nf}} for (name, a) in ["Push-relabel" => PushRelabelAlgorithm(), "Edmonds-Karp" => EdmondsKarpAlgorithm(),
 {{?model=nf}}                   "Dinic" => DinicAlgorithm(), "Boykov-Kolmogorov" => BoykovKolmogorovAlgorithm()]]
-{{?model=st}}Wu = max.(W, transpose(W)); g = SimpleGraph(Wu)
+{{?model=st}}Wu = symmetrise(W); g = SimpleGraph(adjacency(Wu))
 {{?model=st}}[(algorithm = "Kruskal", seconds = bench(() -> kruskal_mst(g, Wu))), (algorithm = "Prim", seconds = bench(() -> prim_mst(g, Wu)))]
 {{?model=bm|am}}using JuMP, HiGHS
 {{?model=bm|am}}function lp_solve(W)
@@ -825,11 +837,11 @@ id = "directed-vs-undirected"
 label = "Baseline Comparison"
 desc = "Directed against undirected graph (paths and flows), shortest-path tree against spanning tree, or greedy against optimal pairing"
 code = '''
-{{?model=sp|nf}}Ws = ifelse.(W .> 0, W, transpose(W))  # every arc also usable in reverse: a missing reverse arc takes the weight of the existing one
+{{?model=sp|nf}}Ws = ifelse.(adjacency(W), W, transpose(W))  # every arc also usable in reverse: a missing reverse arc takes the weight of the existing one
 {{?model=sp|nf}}(directed = objective(sol), undirected = objective(solve(Ws)))
-{{?model=rsp}}(directed = objective(sol), undirected = objective(solve(ifelse.(W .> 0, W, transpose(W)); Wu=ifelse.(W .> 0, Wu, transpose(Wu)))))  # a missing reverse arc takes the interval of the existing one
-{{?model=st}}Ws = max.(W, transpose(W)); m = size(W, 1)
-{{?model=st}}ds = dijkstra_shortest_paths(SimpleGraph(Ws), 1, Ws)
+{{?model=rsp}}(directed = objective(sol), undirected = objective(solve(ifelse.(adjacency(W), W, transpose(W)); Wu=ifelse.(adjacency(W), Wu, transpose(Wu)))))  # a missing reverse arc takes the interval of the existing one
+{{?model=st}}Ws = symmetrise(W); m = size(W, 1)
+{{?model=st}}ds = dijkstra_shortest_paths(SimpleGraph(adjacency(Ws)), 1, Ws)
 {{?model=st}}(minimum_spanning_tree = sol.weight, shortest_path_tree_from_1 = sum(Ws[ds.parents[v], v] for v in 2:m if ds.parents[v] > 0))
 {{?model=bm|am}}used_rows = Set{Int}(); used_cols = Set{Int}(); greedy = 0.0
 {{?model=bm}}for (i, j) in sort([(i, j) for i in axes(W, 1), j in axes(W, 2) if W[i, j] > 0], by=e -> -W[e...])  # heaviest edge first
@@ -856,7 +868,7 @@ code = '''
 {{?model=st}}problem = "minimum spanning tree: total weight"
 {{?model=bm}}problem = "maximum-weight bipartite matching: total weight"
 {{?model=am}}problem = "minimum-cost assignment: total cost"
-(problem = problem, objective = objective(sol), solution_edges = sol_edges(sol), rows = size(W, 1), columns = size(W, 2), nonzero_entries = count(>(0), W))
+(problem = problem, objective = objective(sol), solution_edges = sol_edges(sol), rows = size(W, 1), columns = size(W, 2), edges = count(adjacency(W)))
 '''
 
 [[actionGroups.actions]]

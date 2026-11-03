@@ -6,7 +6,7 @@
 
 A directed graph has a length c(i, j) on every edge i → j, and the length of a path is the sum of the lengths of its edges. The shortest path problem asks for a path of least length from a source s to a target t, and in its single-source form for the least length d(i) from s to every vertex i.
 
-[Williamson (2019)](#ref-Wil2019a) notes that the lengths are really costs, so the problem could be called the cheapest path problem, and treats it as the simplest flow problem with costs: an uncapacitated one, in which sending a(i) units from s to i costs a(i)·d(i) along a cheapest path. In the panel, the entry W[i, j] of **Weight Matrix (n x n)** is the length of the edge i → j, and 0 marks a missing edge.
+[Williamson (2019)](#ref-Wil2019a) notes that the lengths are really costs, so the problem could be called the cheapest path problem, and treats it as the simplest flow problem with costs: an uncapacitated one, in which sending a(i) units from s to i costs a(i)·d(i) along a cheapest path. In the panel, the entry W[i, j] of **Weight Matrix (n x n)** is the length of the edge i → j, 0 included, and Inf marks a missing edge.
 
 ## Dijkstra's algorithm
 
@@ -20,7 +20,7 @@ Marking and updating repeat until every reachable vertex is marked, and labels o
 
 When some lengths are negative, the Bellman–Ford algorithm passes over all edges, applying the same update, n − 1 times. [Williamson (2019)](#ref-Wil2019a) shows that after k passes every label is at most the length of the shortest path with at most k edges, so n − 1 passes suffice when no negative-cost cycle can be reached from s; with such a cycle, the shortest path is not defined. Williamson notes that the algorithm is traditionally attributed jointly to Bellman and Ford, and was found by others at about the same time.
 
-The lengths drawn by the panel are integers from 1 to 9, all positive, and **Cross-Check** runs `bellman_ford_shortest_paths` on the same graph to confirm the length and the path found by Dijkstra's algorithm.
+The lengths drawn by the panel are integers from 1 to 9, all positive; a typed matrix can also hold lengths of zero, which Dijkstra's algorithm accepts as non-negative. **Cross-Check** runs `bellman_ford_shortest_paths` on the same graph to confirm the length and the path found by Dijkstra's algorithm.
 
 ## In the panel
 

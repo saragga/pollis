@@ -43,7 +43,7 @@ For negative lengths, [Williamson (2019)](#ref-Wil2019a) replaces Dijkstra's alg
 
 **Vertices (n)** sets the size of the problem. For **Robust Shortest Path**, every simple path is enumerated, and the number of paths grows quickly with **Vertices (n)** and **Edge Density**, which keeps the model to small graphs; for larger ones, [Aissi, Bazgan and Vanderpooten (2009)](#ref-ABV2009a) survey mixed integer formulations, branch-and-bound and the path-ranking algorithm of [Montemanni and Gambardella (2004)](#ref-MG2004a).
 
-**Edge Density** controls how many alternatives exist: with few edges besides the chain 1 → 2 → … → n, there are few other routes for paths and flows, and few pairs to match. **Upper Bounds (n x n)** sets the width of each interval of the robust model. A matrix of one's own can replace any default, with 0 for a missing edge.
+**Edge Density** controls how many alternatives exist: with few edges besides the chain 1 → 2 → … → n, there are few other routes for paths and flows, and few pairs to match. **Upper Bounds (n x n)** sets the width of each interval of the robust model. A matrix of one's own can replace any default, with Inf for a missing edge in **Shortest Path**, **Robust Shortest Path** and **Spanning Tree**, and 0 in **Network Flow** and **Bipartite Matching**.
 
 ## When to use another panel
 

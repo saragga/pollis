@@ -33,7 +33,7 @@ Graphs.jl, by [Fairbanks, Besançon, Schölly, Hoffimann, Eubank and Karpinski (
 
 ## In the panel
 
-The weight matrix is directed, so the code first symmetrises it: the undirected edge i – j exists if either i → j or j → i has a weight, and takes the larger of the two. It then builds a `SimpleGraph` and calls `kruskal_mst(g, Wu)`. The result prints `tree_edges`, `total_weight` and `spans_all_vertices`, which is true when the tree has n − 1 edges.
+The weight matrix is directed, so the code first symmetrises it: the undirected edge i – j exists if either i → j or j → i has a finite length, and takes the larger of the two when both do. It then builds a `SimpleGraph` and calls `kruskal_mst(g, Wu)`. The result prints `tree_edges`, `total_weight` and `spans_all_vertices`, which is true when the tree has n − 1 edges.
 
 The chain 1 → 2 → … → n added by the generator keeps the undirected graph connected, so the default inputs always have a spanning tree. **Cross-Check** computes the weight of the tree found by `prim_mst` and compares it with Kruskal's, and **Baseline Comparison** sets the tree against the tree of shortest paths from vertex 1.
 

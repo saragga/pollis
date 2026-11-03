@@ -27,7 +27,7 @@ Four of the models take the weights as known. **Robust Shortest Path** instead t
 
 Graphs.jl, by [Fairbanks, Besançon, Schölly, Hoffimann, Eubank and Karpinski (2021)](#ref-FBSHE...2021a), provides the graph types and the functions `dijkstra_shortest_paths`, `all_simple_paths` and `kruskal_mst`. GraphsFlows.jl adds `maximum_flow` and `mincut` on the same graphs, and Hungarian.jl provides `hungarian` for assignment. JuMP and HiGHS solve the linear programmes of **Cross-Check** and **Algorithm Comparison** for matching and assignment.
 
-Graphs are built from **Weight Matrix (n x n)**, whose entry W[i, j] is the weight of the directed edge i → j, with 0 for no edge.
+Graphs are built from **Weight Matrix (n x n)**, whose entry W[i, j] is the weight of the directed edge i → j. A missing edge is Inf for **Shortest Path**, **Robust Shortest Path** and **Spanning Tree**, where 0 is an edge of length zero, and 0 for **Network Flow** and **Bipartite Matching**.
 
 ## How the panel is organised
 
