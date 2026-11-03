@@ -22354,6 +22354,32 @@
 			"open_access": true
 		},
 		{
+			"key": "MGP2002a",
+			"type": "article",
+			"title": "Instability of Scale-Free Networks under Node-Breaking Avalanches",
+			"authors": [
+				"Moreno, Y.",
+				"Gómez, J. B.",
+				"Pacheco, A. F."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2002,
+			"journal": "Europhysics Letters",
+			"volume": "58",
+			"number": "4",
+			"pages": "630-636",
+			"issn": "0295-5075",
+			"doi": "10.1209/epl/i2002-00442-2",
+			"oa_url": "https://arxiv.org/pdf/cond-mat/0106136",
+			"abstract": "The instability introduced in a large scale-free network by the triggering of node-breaking avalanches is analyzed using the fiber-bundle model as conceptual framework. We found, by measuring the size of the giant component, the avalanche size distribution and other quantities, the existence of an abrupt transition. This test of strength for complex networks like Internet is more stringent than others recently considered like the random removal of nodes, analyzed within the framework of percolation theory. Finally, we discuss the possible implications of our results and their relevance in forecasting cascading failures in scale-free networks.",
+			"abstract_source": "author",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "MH1997a",
 			"type": "article",
 			"title": "Variable Neighborhood Search",
@@ -28082,6 +28108,32 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "RPJK2016a",
+			"type": "article",
+			"title": "The Kuramoto Model in Complex Networks",
+			"authors": [
+				"Rodrigues, Francisco A.",
+				"Peron, Thomas K. DM.",
+				"Ji, Peng",
+				"Kurths, Jürgen"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2016,
+			"journal": "Physics Reports",
+			"volume": "610",
+			"pages": "1-98",
+			"issn": "0370-1573",
+			"doi": "10.1016/j.physrep.2015.10.008",
+			"oa_url": "https://arxiv.org/pdf/1511.07139",
+			"abstract": "Synchronization of an ensemble of oscillators is an emergent phenomenon present in several complex systems, ranging from social and physical to biological and technological systems. The most successful approach to describe how coherent behavior emerges in these complex systems is given by the paradigmatic Kuramoto model. This model has been traditionally studied in complete graphs. However, besides being intrinsically dynamical, complex systems present very heterogeneous structure, which can be represented as complex networks. This report is dedicated to review main contributions in the field of synchronization in networks of Kuramoto oscillators. In particular, we provide an overview of the impact of network patterns on the local and global dynamics of coupled phase oscillators. We cover many relevant topics, which encompass a description of the most used analytical approaches and the analysis of several numerical results. Furthermore, we discuss recent developments on variations of the Kuramoto model in networks, including the presence of noise and inertia. The rich potential for applications is discussed for special fields in engineering, neuroscience, physics and Earth science. Finally, we conclude by discussing problems that remain open after the last decade of intensive research on the Kuramoto model and point out some promising directions for future research.",
+			"abstract_source": "author",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "RR2016a",
@@ -51170,7 +51222,9 @@
 				"New2010a",
 				"BBV2008a",
 				"Kur1984a",
-				"ML2002a"
+				"ML2002a",
+				"MGP2002a",
+				"RPJK2016a"
 			]
 		},
 		{

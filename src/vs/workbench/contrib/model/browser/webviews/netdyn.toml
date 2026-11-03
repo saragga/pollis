@@ -105,6 +105,16 @@ key = "Kur1984a"
 [[references]]
 key = "ML2002a"
 
+[[references]]
+key = "MGP2002a"
+
+[[references]]
+separator = true
+label = "Reviews"
+
+[[references]]
+key = "RPJK2016a"
+
 [[models]]
 id = "kuramoto"
 label = "Kuramoto"
