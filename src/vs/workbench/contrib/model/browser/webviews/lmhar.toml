@@ -13,7 +13,7 @@ name = "HARE.jl"
 github = "https://github.com/Trumpingtons/HARE.jl"
 
 [requires]
-packages = ["HARE.jl", "GLM.jl", "HypothesisTests.jl", "Plots.jl"]
+packages = ["HARE.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -152,6 +152,14 @@ model = "sequential"
 code = '''
 using HARE
 
+{{?X=X}} {{?y=y}} using Random
+{{?X=X}} {{?y=y}} Random.seed!(1)  # simulated: 300 periods from a known model, so the estimates can be checked against the truth
+{{?X=X}} {{?y=y}} X = hcat(sin.((1:300) ./ 20) .+ 0.3 .* randn(300), randn(300))  # the regressors: the first moves slowly over time, the second does not
+{{?X=X}} {{?y=y}} sigma2 = exp.(-1 .+ 0.8 .* X[:, 1])  # the variance: with Z = nothing, X drives it, with true gamma -1, 0.8, 0
+{{?X=X}} {{?y=y}} u = zeros(300); u[1] = sqrt(sigma2[1] / (1 - 0.7^2)) * randn()
+{{?X=X}} {{?y=y}} for t in 2:300; u[t] = 0.7 * u[t-1] + sqrt(sigma2[t]) * randn(); end  # u_t = 0.7 u_(t-1) + sigma_t e_t
+{{?X=X}} {{?y=y}} y = 1 .+ 2 .* X[:, 1] .- X[:, 2] .+ u  # true coefficients 1, 2, -1; true rho 0.7. Replace X and y with your own, in time order
+
 result = {{method}}_sequential({{X}}, {{y}}, Z={{Z}})  # sequential FGLS: AR(1) correction first, then the heteroskedasticity correction
 
 display(coeftable(result))  # coefficient table with corrected standard errors
@@ -163,6 +171,14 @@ println(result.gamma)  # log-variance parameters gamma: log(sigma_t^2) = gamma_0
 model = "joint"
 code = '''
 using HARE
+
+{{?X=X}} {{?y=y}} using Random
+{{?X=X}} {{?y=y}} Random.seed!(1)  # simulated: 300 periods from a known model, so the estimates can be checked against the truth
+{{?X=X}} {{?y=y}} X = hcat(sin.((1:300) ./ 20) .+ 0.3 .* randn(300), randn(300))  # the regressors: the first moves slowly over time, the second does not
+{{?X=X}} {{?y=y}} sigma2 = exp.(-1 .+ 0.8 .* X[:, 1])  # the variance: with Z = nothing, X drives it, with true gamma -1, 0.8, 0
+{{?X=X}} {{?y=y}} u = zeros(300); u[1] = sqrt(sigma2[1] / (1 - 0.7^2)) * randn()
+{{?X=X}} {{?y=y}} for t in 2:300; u[t] = 0.7 * u[t-1] + sqrt(sigma2[t]) * randn(); end  # u_t = 0.7 u_(t-1) + sigma_t e_t
+{{?X=X}} {{?y=y}} y = 1 .+ 2 .* X[:, 1] .- X[:, 2] .+ u  # true coefficients 1, 2, -1; true rho 0.7. Replace X and y with your own, in time order
 
 result = {{method}}_joint({{X}}, {{y}}, Z={{Z}})  # joint: rho and gamma by maximum likelihood with beta concentrated out, then GLS for beta (Iterated alternates the two until convergence)
 
@@ -180,11 +196,9 @@ id = "durbin-watson"
 label = "Durbin-Watson Test"
 desc = "Test for AR(1) autocorrelation in OLS residuals before applying the combined correction"
 code = '''
-using GLM, HypothesisTests
+using HARE
 
-ols   = lm(hcat(ones(length({{y}})), {{X}}), {{y}})  # OLS baseline with the intercept HARE adds
-resid = residuals(ols)  # OLS residuals
-DurbinWatsonTest(modelmatrix(ols), resid)  # DW near 2 = no autocorrelation
+durbin_watson_test({{X}}, {{y}})  # on the OLS residuals; DW near 2 = no autocorrelation
 '''
 
 [[actionGroups.actions]]
@@ -202,11 +216,11 @@ id = "residual-plot"
 label = "Residual Diagnostics"
 desc = "Plot OLS residuals over time (AR(1) pattern) and squared residuals vs fitted (heteroskedasticity pattern)"
 code = '''
-using GLM, Plots
+using HARE, Plots
 
-ols   = lm(hcat(ones(length({{y}})), {{X}}), {{y}})  # OLS baseline with the intercept HARE adds
-resid = residuals(ols)  # OLS residuals
-fitt  = fitted(ols)  # fitted values
+fit_ols = ols({{X}}, {{y}})  # OLS baseline: HARE adds the intercept
+resid = residuals(fit_ols)  # OLS residuals
+fitt  = fitted(fit_ols)  # fitted values
 
 p1 = plot(resid, title="Residuals over time")  # look for autocorrelation pattern
 p2 = scatter(fitt, resid .^ 2, title="Squared residuals vs fitted")  # fan shape = heteroskedasticity
@@ -237,9 +251,9 @@ id = "compare-ols"
 label = "Compare with OLS"
 desc = "Side-by-side comparison of OLS and FGLS coefficients and standard errors"
 code = '''
-using HARE, GLM
+using HARE
 
-ols_fit  = lm(hcat(ones(length({{y}})), {{X}}), {{y}})  # OLS baseline with the intercept HARE adds
+ols_fit  = ols({{X}}, {{y}})  # OLS baseline: HARE adds the intercept
 {{?model=sequential}} fgls_fit = {{method}}_sequential({{X}}, {{y}}, Z={{Z}})  # FGLS corrected
 {{?model=joint}} fgls_fit = {{method}}_joint({{X}}, {{y}}, Z={{Z}})  # FGLS corrected
 

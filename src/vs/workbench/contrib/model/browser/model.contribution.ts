@@ -14,6 +14,7 @@ import { GLM_PANEL } from './commands/glm.command.js';
 import { openScaffoldWebview } from './commands/scaffold.command.js';
 import { LMM_PANEL } from './commands/lmm.command.js';
 import { GLMM_PANEL } from './commands/glmm.command.js';
+import { NLMM_PANEL } from './commands/nlmm.command.js';
 import { LASSO_PANEL } from './commands/lasso.command.js';
 import { RNG_PANEL } from './commands/rng.command.js';
 import { QRNG_PANEL } from './commands/qrng.command.js';
@@ -179,6 +180,8 @@ CommandsRegistry.registerCommand('chiara.statistics.nlls', accessor => openScaff
 CommandsRegistry.registerCommand('chiara.statistics.lmm', accessor => openScaffoldWebview(accessor, LMM_PANEL));
 
 CommandsRegistry.registerCommand('chiara.statistics.glmm', accessor => openScaffoldWebview(accessor, GLMM_PANEL));
+
+CommandsRegistry.registerCommand('chiara.statistics.nlmm', accessor => openScaffoldWebview(accessor, NLMM_PANEL));
 
 CommandsRegistry.registerCommand('chiara.statistics.lm', accessor => openScaffoldWebview(accessor, LM_PANEL));
 CommandsRegistry.registerCommand('chiara.statistics.lm.ols', accessor => openScaffoldWebview(accessor, LM_PANEL, 'ols'));
@@ -482,6 +485,7 @@ export const RQR_QUANTILE_L1L2_ID = 'chiara.statistics.rqr.ql1l2';
 // Panel Data and Mixed-Effects
 export const LMM_COMMAND_ID = 'chiara.statistics.lmm';
 export const GLMM_COMMAND_ID = 'chiara.statistics.glmm';
+export const NLMM_COMMAND_ID = 'chiara.statistics.nlmm';
 
 // Residual Covariance Matrix Estimation
 export const RC_HAC_KERNEL_ID = 'chiara.statistics.rc.hacKernel';
@@ -643,7 +647,7 @@ export const NN_GNN_ID = 'chiara.statistics.nn.gnn';
 export const NN_TF_ID = 'chiara.statistics.nn.transformer';
 export const NN_MDN_ID = 'chiara.statistics.nn.mdn';
 export const NN_INN_ID = 'chiara.statistics.nn.inn';
-export const NN_RL_ID =  'chiara.statistics.nn.rl';
+export const NN_RL_ID = 'chiara.statistics.nn.rl';
 
 // RNN sub-types
 export const RNN_LSTM_ID = 'chiara.statistics.nn.rnn.lstm';
@@ -772,11 +776,30 @@ MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
-	group: '3_regression',
+	group: '2_regression',
 	submenu: LMSubmenuId,
 	title: localize('showStatistics.lm', 'Linear Models'),
 	order: 1,
 });
+
+MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
+	group: '2_regression',
+	command: {
+		id: GLM_COMMAND_ID,
+		title: localize('showStatistics.glm', 'Generalised Linear Models'),
+	},
+	order: 2,
+});
+
+MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
+	group: '2_regression',
+	command: {
+		id: NLREG_COMMAND_ID,
+		title: localize('showStatistics.nlls', 'Nonlinear Models'),
+	},
+	order: 3,
+});
+
 
 MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
 	group: '3_regression',
@@ -784,16 +807,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
 		id: LMM_COMMAND_ID,
 		title: localize('showStatistics.lmm', 'Linear Mixed Models'),
 	},
-	order: 2,
-});
-
-MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
-	group: '3_regression',
-	command: {
-		id: GLM_COMMAND_ID,
-		title: localize('showStatistics.glm', 'Generalised Linear Models'),
-	},
-	order: 3,
+	order: 1,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
@@ -802,22 +816,24 @@ MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
 		id: GLMM_COMMAND_ID,
 		title: localize('showStatistics.glmm', 'Generalised Linear Mixed Models'),
 	},
-	order: 4,
+	order: 2,
 });
-
 
 MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
 	group: '3_regression',
 	command: {
-		id: NLREG_COMMAND_ID,
-		title: localize('showStatistics.nlls', 'Nonlinear Regression'),
+		id: NLMM_COMMAND_ID,
+		title: localize('showStatistics.nlmm', 'Nonlinear Mixed Models'),
 	},
-	order: 5,
+	order: 3,
 });
 
 
+
+
+
 MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
-	group: '3_regression',
+	group: '4_regression',
 	command: {
 		id: RR_LASSO_ID,
 		title: localize('showStatistics.lasso', 'Penalised and Projection Regression'),
@@ -826,7 +842,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
-	group: '3_regression',
+	group: '4_regression',
 	command: {
 		id: RQR_COMMAND_ID,
 		title: localize('showStatistics.rqr', 'Robust and Quantile Regression'),
@@ -836,44 +852,44 @@ MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
 
 
 MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
-	group: '4_time_series',
+	group: '5_time_series',
 	command: { id: 'chiara.statistics.tsf', title: localize('showStatistics.tsf', 'Time-Series Forecasting') },
 	order: 1,
 }); // StateSpaceModels.jl + LOESS.jl
 
 MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
-	group: '4_time_series',
+	group: '5_time_series',
 	command: { id: 'chiara.statistics.ssm', title: localize('showStatistics.ssm', 'State-Space Inference Methods') },
 	order: 2,
 }); // LowLevelParticleFilters.jl,
 
 MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
-	group: '4_time_series',
+	group: '5_time_series',
 	command: { id: 'chiara.statistics.si', title: localize('showStatistics.si', 'System Identification Methods') },
 	order: 3,
 }); // ControlSystemIdentification.jl
 
 MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
-	group: '4_time_series',
+	group: '5_time_series',
 	command: { id: 'chiara.statistics.ode', title: localize('showStatistics.ode', 'ODE Inference Methods') },
 	order: 4,
 }); // PEtab.jl, StructuralIdentifiability.jl
 
 MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
-	group: '4_time_series',
+	group: '5_time_series',
 	submenu: NDSubmenuId,
 	title: localize('showStatistics.nd', 'Nonlinear Dynamics'),
 	order: 5,
 }); // DynamicalSystems.jl
 
 MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
-	group: '5_time_related',
+	group: '6_time_related',
 	command: { id: 'chiara.statistics.pp', title: localize('showStatistics.pp', 'Point Processes') },
 	order: 1,
 }); // PointProcesses.jl, Hawkes.jl, HawkesProcesses.jl, NetworkHawkesProcesses.jl
 
 MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
-	group: '5_time_related',
+	group: '6_time_related',
 	submenu: SASubmenuId,
 	title: localize('showStatistics.sa', 'Survival Analysis'),
 	order: 2,
@@ -881,14 +897,14 @@ MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
 
 
 MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
-	group: '6_bayesian',
+	group: '7_bayesian',
 	submenu: BASubmenuId,
 	title: localize('showStatistics.ba', 'Bayesian Analysis'),
 	order: 1,
 }); // Turing, RxInfer.jl
 
 MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
-	group: '7_ml',
+	group: '8_ml',
 	command: {
 		id: DTRF_DT_ID,
 		title: localize('showStatistics.dtrf', 'Decision Trees'),
@@ -897,7 +913,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
-	group: '7_ml',
+	group: '8_ml',
 	command: {
 		id: KNN_COMMAND_ID,
 		title: localize('showStatistics.knn', 'K-Nearest Neighbours'),
@@ -907,42 +923,42 @@ MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
 
 
 MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
-	group: '7_ml',
+	group: '8_ml',
 	command: { id: AR_ASSOCIATION_RULES_ID, title: localize('showStatistics.ar', 'Rule-Based Methods') },
 	order: 3,
 });
 
 
 MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
-	group: '7_ml',
+	group: '8_ml',
 	submenu: NNSubmenuId,
 	title: localize('showStatistics.nn', 'Neural Network Architectures'),
 	order: 5,
 }); // Flux.jl, RecurrentLayers.jl, GeometricFlux.jl, Transformers.jl
 
 MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
-	group: '7_ml',
+	group: '8_ml',
 	command: { id: ENS_ENSEMBLE_METHODS_ID, title: localize('showStatistics.ens', 'Ensemble Learning Methods') },
 	order: 6,
 });
 
 
 MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
-	group: '8_unsupervised',
+	group: '9_unsupervised',
 	submenu: CLSubmenuId,
 	title: localize('showStatistics.cl', 'Clustering'),
 	order: 1,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
-	group: '8_unsupervised',
+	group: '9_unsupervised',
 	submenu: PMSubmenuId,
 	title: localize('showStatistics.pm', 'Dimensionality Reduction Methods'),
 	order: 2,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
-	group: '8_unsupervised',
+	group: '9_unsupervised',
 	submenu: NLPSubmenuId,
 	title: localize('showStatistics.nlp', 'Natural Language Processing'),
 	order: 3,
@@ -1170,9 +1186,9 @@ MenuRegistry.appendMenuItem(NNSubmenuId, {
 }); // NeuralEstimators.jl — amortized Bayesian posterior inference
 
 MenuRegistry.appendMenuItem(NNSubmenuId, {
- 	group: '2_nn_estimation',
+	group: '2_nn_estimation',
 	command: { id: 'chiara.statistics.nn.node', title: localize('nn.node', 'Neural ODEs for System Identification') },
- 	order: 2,
+	order: 2,
 }); // DiffEqFlux.jl
 
 

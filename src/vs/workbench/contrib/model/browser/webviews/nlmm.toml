@@ -1,0 +1,730 @@
+# Nonlinear Mixed Models Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/nlmm.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Nonlinear Mixed Models"
+viewType = "pollis.nlmm"
+defaultModel = "curves"
+decisionFirstColumn = "Choice"
+
+[[packages]]
+name = "NoLimits.jl"
+github = "https://github.com/manuhuth/NoLimits.jl"
+
+[requires]
+packages = ["NoLimits.jl", "Distributions.jl", "CairoMakie.jl", "OrdinaryDiffEq.jl", "Turing.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Nonlinear Curves"
+file = "nlmm/tutorial-01-nonlinear-curves.ipynb"
+bundled = true
+description = "A decay curve with a random effect per subject, from table to diagnostics"
+
+[[notebookSections.notebooks]]
+name = "ODE Dynamics"
+file = "nlmm/tutorial-02-ode-dynamics.ipynb"
+bundled = true
+description = "A compartmental model with dosing events and subject-level parameters"
+
+[[notebookSections.notebooks]]
+name = "Markov Models"
+file = "nlmm/tutorial-03-markov-models.ipynb"
+bundled = true
+description = "A continuous-time hidden Markov model with a random effect on a transition rate"
+
+[[notebookSections.notebooks]]
+name = "Neural Components"
+file = "nlmm/tutorial-04-neural-components.ipynb"
+bundled = true
+description = "A small network that learns how a covariate shifts a rate inside the model"
+
+[[wikis]]
+name = "Overview"
+file = "nlmm/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Factsheet"
+file = "nlmm/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "nlmm/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "nlmm/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "nlmm/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Model Structures"
+
+[[wikis]]
+name = "Nonlinear Curves"
+file = "nlmm/nonlinear-curves.md"
+bundled = true
+
+[[wikis]]
+name = "ODE Dynamics"
+file = "nlmm/ode-dynamics.md"
+bundled = true
+
+[[wikis]]
+name = "Markov Models"
+file = "nlmm/markov-models.md"
+bundled = true
+
+[[wikis]]
+name = "Neural Components"
+file = "nlmm/neural-components.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Inference"
+
+[[wikis]]
+name = "Estimation Methods"
+file = "nlmm/estimation-methods.md"
+bundled = true
+
+[[wikis]]
+name = "Uncertainty Quantification"
+file = "nlmm/uncertainty-quantification.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+key = "HASGW...2026a"
+
+[[references]]
+key = "GXG2018a"
+
+[[references]]
+key = "RN2017a"
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+key = "PB2000a"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "LB1990a"
+
+[[references]]
+key = "DG2003a"
+
+[[references]]
+key = "PB1995a"
+
+[[references]]
+key = "Wol1993a"
+
+[[references]]
+key = "Wan2007a"
+
+[[references]]
+key = "DLR1977a"
+
+[[references]]
+key = "WT1990a"
+
+[[references]]
+key = "DLM1999a"
+
+[[references]]
+key = "KL2004a"
+
+[[references]]
+key = "KL2005a"
+
+[[references]]
+key = "HG2014a"
+
+[[references]]
+key = "Rab1989a"
+
+[[references]]
+key = "Alt2007a"
+
+[[references]]
+key = "Jac2011a"
+
+[[references]]
+key = "HSW1989a"
+
+[[references]]
+key = "CRBD2018a"
+
+[[references]]
+key = "RMMWZ...2020a"
+
+[[references]]
+key = "BHWK2011a"
+
+[[references]]
+key = "SK2009a"
+
+[[references]]
+key = "Whi1982a"
+
+[[references]]
+key = "RKMBS...2009a"
+
+[[models]]
+id = "curves"
+label = "Nonlinear Curves"
+
+[[models]]
+id = "ode"
+label = "ODE Dynamics"
+
+[[models]]
+id = "markov"
+label = "Markov Models"
+
+[[models]]
+id = "neural"
+label = "Neural Components"
+
+[[bullets]]
+text = "First run"
+detail = "installing and compiling <code>NoLimits.jl</code> and its dependencies can take well over ten minutes, on every tab. Each estimator also compiles on its first fit, and MCMC and the plots add large packages of their own"
+
+[[bullets]]
+text = "One interface"
+detail = "the model, the data and <code>fit_model</code> stay the same on all four tabs, and <strong>Estimation</strong> changes only the method"
+
+[[bullets]]
+text = "Longitudinal data"
+detail = "repeated measurements on each subject, with random effects that let subjects differ in parameters that enter the model nonlinearly"
+
+[[bullets]]
+text = "Four structures"
+detail = "closed-form curves, differential equations with dosing, Markov models with hidden states, and neural networks inside the model"
+
+[[decisionRows]]
+task = "Nonlinear Curves"
+context = "Closed-form mean curve"
+purpose = "Growth, decay or dose-response shapes written as a formula. The fastest of the four tabs."
+
+[[decisionRows]]
+task = "ODE Dynamics"
+context = "Known rate equations"
+purpose = "Mechanisms written as rates between compartments, with doses or other discrete inputs."
+
+[[decisionRows]]
+task = "Markov Models"
+context = "Moves between states"
+purpose = "Outcomes driven by a discrete state, observed directly or only through noisy signals."
+
+[[decisionRows]]
+task = "Neural Components"
+context = "Unknown functional form"
+purpose = "A part of the model, such as a covariate effect, is left for a small network to learn."
+
+[[decisionRows]]
+task = "Laplace"
+context = "Mildly nonlinear random effects"
+purpose = "Approximates the integral over the random effects at their mode. Fast and general."
+
+[[decisionRows]]
+task = "FOCEI"
+context = "Supported outcome family"
+purpose = "The same kind of approximation with cheaper curvature. Not available for Markov outcomes."
+
+[[decisionRows]]
+task = "SAEM"
+context = "Strongly nonlinear random effects"
+purpose = "Simulates the random effects and updates by stochastic approximation, with no linearisation."
+
+[[decisionRows]]
+task = "MCEM"
+context = "No curvature assumption"
+purpose = "Averages over simulated random effects inside each EM step."
+
+[[decisionRows]]
+task = "MCMC"
+context = "Full posterior needed"
+purpose = "Samples parameters and random effects jointly. Needs priors, and is the slowest."
+
+[[inputs]]
+id = "estimator"
+label = "Estimation"
+tooltip = "How the model is fitted. Only the method changes: the model and the data stay as they are.\nLaplace - approximates the integral over the random effects at their mode\nFOCEI - a similar approximation with cheaper curvature, for common outcome families\nSAEM - stochastic approximation EM, for strongly nonlinear random effects\nMCEM - Monte Carlo EM, with no curvature assumption\nMCMC - samples the posterior with Turing.jl, using the priors in the model"
+kind = "select"
+default = "Laplace"
+
+[[inputs.options]]
+value = "Laplace"
+label = "Laplace"
+
+[[inputs.options]]
+value = "FOCEI"
+label = "First-Order Conditional Estimation With Interaction (FOCEI)"
+models = ["curves", "ode", "neural"]
+
+[[inputs.options]]
+value = "SAEM"
+label = "Stochastic Approximation EM (SAEM)"
+
+[[inputs.options]]
+value = "MCEM"
+label = "Monte Carlo EM (MCEM)"
+
+[[inputs.options]]
+value = "MCMC"
+label = "Markov Chain Monte Carlo (MCMC)"
+
+[[codeBranches]]
+model = "curves"
+code = '''
+# First run: installing and compiling NoLimits.jl and its dependencies can take well over ten minutes, and each estimator compiles on its first fit.
+using NoLimits  # nonlinear mixed-effects models
+using Distributions  # distributions in the model
+using Random  # fixed seed for the simulated data
+{{?estimator=MCMC}} import Turing  # the sampler: import, because using would clash with names in NoLimits
+
+# Simulated: y = 10 exp(u) exp(-0.4 t) + e, with u ~ N(0, 0.25^2) per subject and e ~ N(0, 0.3^2). Replace it with your own table.
+rng = MersenneTwister(1)
+n = 20; times = [0.0, 1.0, 2.0, 4.0, 8.0]
+u = 0.25 .* randn(rng, n)
+ID = repeat(1:n, inner=length(times)); t = repeat(times, outer=n)
+y = 10 .* exp.(u[ID]) .* exp.(-0.4 .* t) .+ 0.3 .* randn(rng, length(ID))
+data = (ID=ID, t=t, y=y)  # any Tables.jl table
+
+model = @Model begin
+    @fixedEffects begin  # starting values; prior= is used by MCMC only
+        A = RealNumber(8.0, scale=:log, prior=LogNormal(2.0, 1.0))  # typical baseline
+        k = RealNumber(0.5, scale=:log, prior=LogNormal(-1.0, 1.0))  # typical decay rate
+        omega = RealNumber(0.3, scale=:log, prior=LogNormal(-1.0, 1.0))  # spread between subjects
+        sigma = RealNumber(0.5, scale=:log, prior=LogNormal(-1.0, 1.0))  # residual spread
+    end
+    @covariates begin
+        t = Covariate()
+    end
+    @randomEffects begin
+        eta = RandomEffect(Normal(0.0, omega); column=:ID)  # one value per subject
+    end
+    @formulas begin
+        y ~ Normal(A * exp(eta) * exp(-k * t), sigma)
+    end
+end
+
+dm = DataModel(model, data; primary_id=:ID, time_col=:t)  # binds the model to the table
+{{?estimator!=MCMC}} method = NoLimits.{{estimator}}()
+{{?estimator=MCMC}} method = NoLimits.MCMC(; turing_kwargs=(n_samples=300, n_adapt=150, progress=false))  # a short run: raise n_samples for real work
+res = fit_model(dm, method)
+{{?estimator!=MCMC}} println("Converged: ", get_converged(res))
+display(NoLimits.summarize(res))
+'''
+
+[[codeBranches]]
+model = "ode"
+code = '''
+# First run: installing and compiling NoLimits.jl, OrdinaryDiffEq.jl and their dependencies can take well over ten minutes, and each estimator compiles on its first fit.
+using NoLimits  # nonlinear mixed-effects models
+using Distributions  # distributions in the model
+using OrdinaryDiffEq  # the ODE solver
+using Random  # fixed seed for the simulated data
+{{?estimator=MCMC}} import Turing  # the sampler: import, because using would clash with names in NoLimits
+
+# Simulated: one oral dose at t = 0 with ka = 1.2, cl = 2 exp(u1), v = 20 exp(u2), u1 ~ N(0, 0.2^2), u2 ~ N(0, 0.15^2), noise 0.1. Replace it with your own table.
+rng = MersenneTwister(1)
+n = 12; times = [0.5, 1.0, 2.0, 4.0, 8.0, 12.0, 24.0]; dose = 100.0
+ID = Int[]; t = Float64[]; EVID = Int[]; AMT = Float64[]; RATE = Float64[]; CMT = Union{String, Missing}[]; y = Union{Float64, Missing}[]
+for i in 1:n
+    ka, cl, v = 1.2, 2.0 * exp(0.2 * randn(rng)), 20.0 * exp(0.15 * randn(rng))
+    push!(ID, i); push!(t, 0.0); push!(EVID, 1); push!(AMT, dose); push!(RATE, 0.0); push!(CMT, "depot"); push!(y, missing)  # the dose
+    for s in times
+        c = dose * ka / (v * (ka - cl / v)) * (exp(-cl / v * s) - exp(-ka * s))  # the solution of the two equations below
+        push!(ID, i); push!(t, s); push!(EVID, 0); push!(AMT, 0.0); push!(RATE, 0.0); push!(CMT, missing); push!(y, c + 0.1 * randn(rng))
+    end
+end
+data = (ID=ID, t=t, EVID=EVID, AMT=AMT, RATE=RATE, CMT=CMT, y=y)  # EVID = 1 marks a dose of AMT into compartment CMT; RATE = 0 is instantaneous
+
+raw = @Model begin
+    @covariates begin
+        t = Covariate()
+    end
+    @fixedEffects begin  # starting values; prior= is used by MCMC only
+        ka = RealNumber(1.0, scale=:log, prior=LogNormal(0.0, 1.0))  # absorption rate
+        cl = RealNumber(1.5, scale=:log, prior=LogNormal(0.5, 1.0))  # typical clearance
+        v = RealNumber(15.0, scale=:log, prior=LogNormal(3.0, 1.0))  # typical volume
+        omega_cl = RealNumber(0.3, scale=:log, prior=LogNormal(-1.0, 1.0))  # spread of clearance between subjects
+        omega_v = RealNumber(0.3, scale=:log, prior=LogNormal(-1.0, 1.0))  # spread of volume between subjects
+        sigma = RealNumber(0.3, scale=:log, prior=LogNormal(-1.0, 1.0))  # residual spread
+    end
+    @randomEffects begin
+        eta_cl = RandomEffect(Normal(0.0, omega_cl); column=:ID)
+        eta_v = RandomEffect(Normal(0.0, omega_v); column=:ID)
+    end
+    @preDifferentialEquation begin  # each subject's parameters, computed before the solve
+        cl_i = cl * exp(eta_cl)
+        v_i = v * exp(eta_v)
+    end
+    @DifferentialEquation begin
+        D(depot) ~ -ka * depot
+        D(center) ~ ka * depot - cl_i / v_i * center
+    end
+    @initialDE begin
+        depot = 0.0
+        center = 0.0
+    end
+    @formulas begin
+        y ~ Normal(center(t) / v_i, sigma)
+    end
+end
+model = set_solver_config(raw; saveat_mode=:saveat, alg=Tsit5(), kwargs=(abstol=1e-6, reltol=1e-6))
+
+dm = DataModel(model, data; primary_id=:ID, time_col=:t, evid_col=:EVID, amt_col=:AMT, rate_col=:RATE, cmt_col=:CMT)
+{{?estimator!=MCMC}} method = NoLimits.{{estimator}}()
+{{?estimator=MCMC}} method = NoLimits.MCMC(; turing_kwargs=(n_samples=300, n_adapt=150, progress=false))  # a short run: raise n_samples for real work
+res = fit_model(dm, method)
+{{?estimator!=MCMC}} println("Converged: ", get_converged(res))
+display(NoLimits.summarize(res))
+'''
+
+[[codeBranches]]
+model = "markov"
+code = '''
+# First run: installing and compiling NoLimits.jl and its dependencies can take well over ten minutes, and each estimator compiles on its first fit. MCMC is slow on this tab, because each likelihood runs a filter over every subject.
+using NoLimits  # nonlinear mixed-effects models
+using Distributions  # distributions in the model
+using LinearAlgebra  # matrix exponential for the simulated data
+using Random  # fixed seed for the simulated data
+{{?estimator=MCMC}} import Turing  # the sampler: import, because using would clash with names in NoLimits
+
+# Simulated: a hidden state moves from 1 to 2 at rate 0.3 exp(u), u ~ N(0, 0.6^2) per subject, and back at rate 0.2. Signal y = 1 or 2 matches the state with probability 0.95 and 0.9. Replace it with your own table.
+rng = MersenneTwister(1)
+n = 60; m = 20
+ID = Int[]; t = Float64[]; dt = Float64[]; y = Int[]
+emission = [0.95 0.05; 0.1 0.9]
+for i in 1:n
+    u = 0.6 * randn(rng)
+    P = exp([-0.3 * exp(u) 0.3 * exp(u); 0.2 -0.2])  # transition probabilities over one time unit
+    z = 1
+    for j in 1:m
+        z = rand(rng, Categorical(P[z, :]))
+        push!(ID, i); push!(t, Float64(j)); push!(dt, 1.0); push!(y, rand(rng, Categorical(emission[z, :])))
+    end
+end
+data = (ID=ID, t=t, dt=dt, y=y)  # dt is the time since the previous observation
+
+model = @Model begin
+    @covariates begin
+        t = Covariate()
+        dt = Covariate()
+    end
+    @fixedEffects begin  # starting values; prior= is used by MCMC only
+        q12 = RealNumber(0.2, scale=:log, prior=LogNormal(-1.0, 1.0))  # typical rate from state 1 to 2
+        q21 = RealNumber(0.2, scale=:log, prior=LogNormal(-1.0, 1.0))  # rate from state 2 to 1
+        omega = RealNumber(0.3, scale=:log, prior=LogNormal(-1.0, 1.0))  # spread of q12 between subjects
+        p1 = RealNumber(0.8, scale=:logit, prior=Beta(2.0, 1.0))  # P(y = 1 | state 1)
+        p2 = RealNumber(0.7, scale=:logit, prior=Beta(2.0, 1.0))  # P(y = 2 | state 2)
+    end
+    @randomEffects begin
+        eta = RandomEffect(Normal(0.0, omega); column=:ID)
+    end
+    @formulas begin
+        r12 = q12 * exp(eta)
+        Q = [-r12 r12; q21 -q21]  # rate matrix: each row sums to zero
+        y ~ ContinuousTimeDiscreteStatesHMM(Q, (Categorical([p1, 1 - p1]), Categorical([1 - p2, p2])), Categorical([1.0, 0.0]), dt)
+    end
+end
+
+dm = DataModel(model, data; primary_id=:ID, time_col=:t)
+{{?estimator!=MCMC}} method = NoLimits.{{estimator}}()
+{{?estimator=MCMC}} method = NoLimits.MCMC(; turing_kwargs=(n_samples=300, n_adapt=150, progress=false))  # a short run: raise n_samples for real work
+res = fit_model(dm, method)
+{{?estimator!=MCMC}} println("Converged: ", get_converged(res))
+display(NoLimits.summarize(res))
+'''
+
+[[codeBranches]]
+model = "neural"
+code = '''
+# First run: installing and compiling NoLimits.jl and its dependencies can take well over ten minutes, and each estimator compiles on its first fit. MCMC is slow on this tab, because it samples every network weight.
+using NoLimits  # nonlinear mixed-effects models
+using Distributions  # distributions in the model
+using Random  # fixed seed for the simulated data
+{{?estimator=MCMC}} import Turing  # the sampler: import, because using would clash with names in NoLimits
+
+# Simulated: y = 10 exp(u) exp(-k t) + e, where the rate k = 0.4 exp(sin(2 x)) depends on a subject's covariate x, u ~ N(0, 0.2^2) and e ~ N(0, 0.3^2). Replace it with your own table.
+rng = MersenneTwister(1)
+n = 20; times = [0.0, 1.0, 2.0, 4.0, 8.0]
+xs = 2 .* rand(rng, n) .- 1
+u = 0.2 .* randn(rng, n)
+ID = repeat(1:n, inner=length(times)); t = repeat(times, outer=n); x = xs[ID]
+y = 10 .* exp.(u[ID]) .* exp.(-0.4 .* exp.(sin.(2 .* x)) .* t) .+ 0.3 .* randn(rng, length(ID))
+data = (ID=ID, t=t, x=x, y=y)  # any Tables.jl table
+
+model = @Model begin
+    @covariates begin
+        t = Covariate()
+        x = ConstantCovariate(constant_on=:ID)  # one value per subject
+    end
+    @fixedEffects begin  # starting values; prior= is used by MCMC only
+        A = RealNumber(8.0, scale=:log, prior=LogNormal(2.0, 1.0))  # typical baseline
+        omega = RealNumber(0.3, scale=:log, prior=LogNormal(-1.0, 1.0))  # spread between subjects
+        sigma = RealNumber(0.5, scale=:log, prior=LogNormal(-1.0, 1.0))  # residual spread
+        w = FFNNParameters((1, 2, 1); activation=:tanh, function_name=:NN, prior=fill(Normal(0.0, 2.0), 7))  # 1 input, 2 hidden units, 1 output: 7 weights
+    end
+    @randomEffects begin
+        eta = RandomEffect(Normal(0.0, omega); column=:ID)
+    end
+    @formulas begin
+        k = exp(NN([x], w)[1])  # the network learns how x shifts the rate
+        y ~ Normal(A * exp(eta) * exp(-k * t), sigma)
+    end
+end
+
+dm = DataModel(model, data; primary_id=:ID, time_col=:t)
+{{?estimator!=MCMC}} method = NoLimits.{{estimator}}()
+{{?estimator=MCMC}} method = NoLimits.MCMC(; turing_kwargs=(n_samples=300, n_adapt=150, progress=false))  # a short run: raise n_samples for real work
+res = fit_model(dm, method)
+{{?estimator!=MCMC}} println("Converged: ", get_converged(res))  # Laplace and FOCEI often stop at their iteration limit here, because network weights have flat directions; SAEM and MCEM stop by their own rule
+display(NoLimits.summarize(res))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "observed"
+label = "Observed Trajectories"
+desc = "The raw measurements of the first eight subjects, one panel each, before any model is judged"
+code = '''
+using CairoMakie
+plot_data(dm; individuals_idx=1:8, ncols=4)
+'''
+
+[[actionGroups.actions]]
+id = "fits"
+label = "Fitted Trajectories"
+desc = "The model's trajectory against the data for the first eight subjects: the first check of the structural model"
+code = '''
+using CairoMakie
+plot_fits(res; individuals_idx=1:8, ncols=4)
+'''
+
+[[actionGroups.actions]]
+id = "hidden"
+label = "Hidden State Probabilities"
+desc = "The filtered probability of each hidden state over time for the first eight subjects"
+models = ["markov"]
+code = '''
+using CairoMakie
+plot_hidden_states(res; individuals_idx=1:8, ncols=4)
+'''
+
+[[actionGroups.actions]]
+id = "learned"
+label = "Learned Rate Against the Covariate"
+desc = "The rate the network has learned at each value of the covariate, against the rate that generated the simulated data"
+models = ["neural"]
+when = "estimator!=MCMC"
+code = '''
+using CairoMakie
+grid = collect(-1.0:0.02:1.0)
+weights = get_params(res; scale=:untransformed).w
+network = get_model_funs(model).NN
+fig = Figure(); ax = Axis(fig[1, 1], xlabel="x", ylabel="Rate k")
+lines!(ax, grid, [exp(network([g], weights)[1]) for g in grid], label="Learned")
+lines!(ax, grid, 0.4 .* exp.(sin.(2 .* grid)), linestyle=:dash, label="Simulated")  # replace or remove with your own table
+axislegend(ax); fig
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "vpc"
+label = "Visual Predictive Check"
+desc = "Simulates from the fitted model and sets percentile bands against the same percentiles of the data: bands that miss the data point to a wrong structure or wrong variability"
+code = '''
+using CairoMakie
+plot_vpc(res; n_simulations=100, percentiles=[5, 50, 95])
+'''
+
+[[actionGroups.actions]]
+id = "residual-qq"
+label = "Residual Q-Q Plot"
+desc = "Quantile residuals against the standard normal: points off the line mean the residual distribution or the mean curve is wrong"
+models = ["curves", "ode", "neural"]
+code = '''
+using CairoMakie
+plot_residual_qq(res; residual=:quantile)
+'''
+
+[[actionGroups.actions]]
+id = "re-density"
+label = "Random-Effects Density"
+desc = "The estimated random effects against the density the model assumes: skew or several modes suggest a missing covariate or the wrong distribution"
+code = '''
+using CairoMakie
+plot_random_effects_pdf(res)
+'''
+
+[[actionGroups.actions]]
+id = "shrinkage"
+label = "Shrinkage of the Random Effects"
+desc = "One minus the spread of the estimated random effects over their fitted spread: above about 0.3, a subject's estimate says little about that subject, and plots of them mislead"
+when = "estimator!=MCMC"
+code = '''
+using CairoMakie
+display(compute_shrinkage(res))
+plot_shrinkage(res)
+'''
+
+[[actionGroups.actions]]
+id = "trajectories"
+label = "Estimator Trajectories"
+desc = "Refits and shows each parameter over the EM iterations: a trace that still drifts at the end has not settled"
+when = "estimator=SAEM|MCEM"
+code = '''
+using CairoMakie
+traced = fit_model(dm, NoLimits.{{estimator}}(; store_diagnostics=true))
+plot_em_trajectories(traced)
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "population-individual"
+label = "Population and Individual Predictions"
+desc = "The typical subject's prediction, with random effects at their mean, against each subject's own prediction: the gap between them is what the random effects add"
+models = ["curves", "ode", "neural"]
+when = "estimator!=MCMC"
+code = '''
+using CairoMakie
+population = predict(res, data; re_mode=:population).prediction  # the typical subject
+individual = predict(res, data; re_mode=:ebe).prediction  # each subject's own
+fig = Figure(); ax = Axis(fig[1, 1], xlabel="Population prediction", ylabel="Individual prediction")
+scatter!(ax, population, individual, markersize=6); ablines!(ax, 0, 1, linestyle=:dash)
+fig
+'''
+
+[[actionGroups.actions]]
+id = "new-subject"
+label = "Predict a New Subject"
+desc = "The prediction for a subject the model has not seen, with the random effects at their mean"
+code = '''
+{{?model=curves}} new = (ID=fill(999, 9), t=collect(0.0:1.0:8.0), y=fill(missing, 9))
+{{?model=ode}} new = (ID=fill(999, 8), t=[0.0, 0.5, 1.0, 2.0, 4.0, 8.0, 12.0, 24.0], EVID=[1, 0, 0, 0, 0, 0, 0, 0], AMT=[100.0, 0, 0, 0, 0, 0, 0, 0], RATE=zeros(8), CMT=["depot", missing, missing, missing, missing, missing, missing, missing], y=fill(missing, 8))
+{{?model=markov}} new = (ID=fill(999, 9), t=collect(1.0:9.0), dt=ones(9), y=fill(missing, 9))
+{{?model=neural}} new = (ID=fill(999, 9), t=collect(0.0:1.0:8.0), x=fill(0.5, 9), y=fill(missing, 9))
+display(predict(res, new; re_mode=:population))
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "estimators"
+label = "Compare Two Estimators"
+desc = "Refits the same model and data with a second estimator and sets the estimates side by side: a large gap means the approximation matters"
+when = "estimator!=MCMC"
+code = '''
+{{?estimator!=SAEM}} other = fit_model(dm, NoLimits.SAEM())
+{{?estimator=SAEM}} other = fit_model(dm, NoLimits.Laplace())
+{{?estimator!=SAEM}} display(compare_parameters("{{estimator}}" => res, "SAEM" => other))
+{{?estimator=SAEM}} display(compare_parameters("SAEM" => res, "Laplace" => other))
+'''
+
+[[actionGroups.actions]]
+id = "cross-validation"
+label = "Cross-Validation of Two Estimators"
+desc = "Three-fold cross-validation over each subject's observations, for Laplace and SAEM: the higher mean log-likelihood on held-out rows predicts better. Each fold is a full fit"
+code = '''
+using Random
+cv = cross_validate(dm, 3; kind=:observation, rng=MersenneTwister(1))
+for (name, candidate) in (("Laplace", NoLimits.Laplace()), ("SAEM", NoLimits.SAEM()))
+    score = fit_cv(cv, candidate)
+    println(name, ": mean test log-likelihood = ", round(score.mean_test_loglikelihood, digits=2))
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "half-life"
+label = "Half-Life"
+desc = "The time for the decay curve or the elimination phase to halve, for a typical subject"
+models = ["curves", "ode"]
+when = "estimator!=MCMC"
+code = '''
+p = get_params(res; scale=:untransformed)
+{{?model=curves}} println("Half-life = ", round(log(2) / p.k, digits=3))
+{{?model=ode}} println("Half-life = ", round(log(2) * p.v / p.cl, digits=3))
+'''
+
+[[actionGroups.actions]]
+id = "sojourn"
+label = "Stationary Shares and Sojourn Times"
+desc = "For a typical subject, the long-run share of time in each hidden state and the mean stay in it before leaving"
+models = ["markov"]
+when = "estimator!=MCMC"
+code = '''
+p = get_params(res; scale=:untransformed)
+println("Long-run share of time in state 1 = ", round(p.q21 / (p.q12 + p.q21), digits=3))
+println("Mean stay: state 1 = ", round(1 / p.q12, digits=2), ", state 2 = ", round(1 / p.q21, digits=2))
+'''
+
+[[actionGroups.actions]]
+id = "subject-effects"
+label = "Random Effects per Subject"
+desc = "Each subject's estimated random effect: how far that subject sits from the typical one"
+when = "estimator!=MCMC"
+code = '''
+display(get_random_effects(res))
+'''
+
+[[actionGroups.actions]]
+id = "uncertainty"
+label = "Uncertainty Intervals"
+desc = "Intervals for the fixed effects, from the curvature of the likelihood or, after MCMC, from the posterior draws, with a density for each parameter"
+code = '''
+using CairoMakie
+uq = compute_uq(res)
+display(NoLimits.summarize(uq))
+plot_uq_distributions(uq; scale=:natural, plot_type=:density)
+'''
+
+[[actionGroups.actions]]
+id = "chains"
+label = "Posterior Chain Summary"
+desc = "Means, intervals, effective sample sizes and R-hat of the MCMC draws: a low effective sample size means the run was too short"
+when = "estimator=MCMC"
+code = '''
+display(get_chain(res))
+'''

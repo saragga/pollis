@@ -51061,6 +51061,41 @@
 			]
 		},
 		{
+			"id": "nlmm",
+			"title": "Nonlinear Mixed Models",
+			"description": "Nonlinear Curves · ODE Dynamics · Markov Models · Neural Components",
+			"commands": [
+				"chiara.statistics.nlmm"
+			],
+			"keys": [
+				"HASGW...2026a",
+				"GXG2018a",
+				"RN2017a",
+				"PB2000a",
+				"LB1990a",
+				"DG2003a",
+				"PB1995a",
+				"Wol1993a",
+				"Wan2007a",
+				"DLR1977a",
+				"WT1990a",
+				"DLM1999a",
+				"KL2004a",
+				"KL2005a",
+				"HG2014a",
+				"Rab1989a",
+				"Alt2007a",
+				"Jac2011a",
+				"HSW1989a",
+				"CRBD2018a",
+				"RMMWZ...2020a",
+				"BHWK2011a",
+				"SK2009a",
+				"Whi1982a",
+				"RKMBS...2009a"
+			]
+		},
+		{
 			"id": "nnls",
 			"title": "Non-Negative Least Squares (NNLS)",
 			"commands": [

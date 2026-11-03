@@ -5819,6 +5819,42 @@
 			]
 		},
 		{
+			"id": "nlmm",
+			"title": "Nonlinear Mixed Models",
+			"source": "pollis",
+			"commands": [
+				{
+					"id": "chiara.statistics.nlmm",
+					"menuTitles": [
+						"Nonlinear Mixed Models"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "curves",
+			"decisionFirstColumn": "Choice",
+			"toml": "src/vs/workbench/contrib/model/browser/webviews/nlmm.toml",
+			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
+			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"wikis": [
+				"nlmm/assumptions.md",
+				"nlmm/decision-guide.md",
+				"nlmm/diagnostics.md",
+				"nlmm/estimation-methods.md",
+				"nlmm/factsheet.md",
+				"nlmm/markov-models.md",
+				"nlmm/neural-components.md",
+				"nlmm/nonlinear-curves.md",
+				"nlmm/ode-dynamics.md",
+				"nlmm/overview.md",
+				"nlmm/uncertainty-quantification.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"NoLimits.jl"
+			]
+		},
+		{
 			"id": "nnls",
 			"title": "Non-Negative Least Squares (NNLS)",
 			"source": "pollis",

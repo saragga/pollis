@@ -18,7 +18,7 @@ description = "Overview of Julia for academic and scientific computing"
 url = "https://www.youtube.com/watch?v=wPFPT-Ech2c"
 
 [requires]
-packages = ["GLM.jl", "Plots.jl", "StatsBase.jl", "HypothesisTests.jl"]
+packages = ["Plots.jl", "StatsBase.jl", "HypothesisTests.jl"]
 
 [[notebookSections]]
 label = ""
@@ -214,52 +214,17 @@ tooltip = "Rows of regressor values for the forecast periods, one row per step. 
 default = "Xm[end-4:end, :]"
 newRow = true
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.pw2step]
-# Residual series with a single rho arrow between neighbours
-svg = '''
-var y = [46, 40, 36, 40, 48, 54, 52, 44, 38];
-var d = '';
-for (var i = 0; i < y.length; i++) { d += (i ? 'L' : 'M') + (6 + i * 5.5) + ',' + y[i]; }
-return '<line x1="4" y1="45" x2="50" y2="45" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>'
-	+ '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.5"/>'
-	+ '<path d="M17,30 Q20,24 23,30" fill="none" stroke="currentColor" stroke-width="1.2"/>';
-'''
-
-[miniCharts.pwiter]
-# Circular arrows: rho and beta updated until convergence
-svg = '''
-return '<path d="M16,40 A11,11 0 0 1 38,40" fill="none" stroke="currentColor" stroke-width="1.5"/>'
-	+ '<path d="M38,48 A11,11 0 0 1 16,48" fill="none" stroke="currentColor" stroke-width="1.5"/>'
-	+ '<path d="M35,36 L38,41 L41,36" fill="none" stroke="currentColor" stroke-width="1.5"/>'
-	+ '<path d="M19,52 L16,47 L13,52" fill="none" stroke="currentColor" stroke-width="1.5"/>';
-'''
-
-[miniCharts.hildreth]
-# Residual sum of squares over a grid of rho with its minimum marked
-svg = '''
-var d = '', s = '';
-for (var i = 0; i <= 10; i++) { var x = 6 + i * 4.2, r = (i - 6.5) / 4; var y = (32 + 26 * r * r).toFixed(1); d += (i ? 'L' : 'M') + x + ',' + y; s += '<circle cx="' + x + '" cy="' + y + '" r="1.2" fill="currentColor"/>'; }
-return '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1"/>' + s
-	+ '<line x1="33.3" y1="24" x2="33.3" y2="66" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/>';
-'''
-
-[miniCharts.beach]
-# Log-likelihood peak in rho
-svg = '''
-var d = '';
-for (var i = 0; i <= 46; i++) { var r = (i - 28) / 10; d += (i ? 'L' : 'M') + (4 + i) + ',' + (66 - 38 * Math.exp(-r * r)).toFixed(1); }
-return '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.5"/>'
-	+ '<line x1="32" y1="28" x2="32" y2="66" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/>';
-'''
-
 [[codeBranches]]
 model = "pw2step"
 code = '''
-using HARE, GLM
+using HARE
 
+{{?X=X}} {{?y=y}} using Random
+{{?X=X}} {{?y=y}} Random.seed!(1)  # simulated: 300 periods from a known AR(1) model, so the estimates can be checked against the truth
+{{?X=X}} {{?y=y}} X = hcat(sin.((1:300) ./ 20) .+ 0.3 .* randn(300), randn(300))  # the regressors: the first moves slowly over time, the second does not
+{{?X=X}} {{?y=y}} u = zeros(300); u[1] = randn() / sqrt(1 - 0.7^2)  # the errors start from their long-run distribution
+{{?X=X}} {{?y=y}} for t in 2:300; u[t] = 0.7 * u[t-1] + randn(); end  # u_t = 0.7 u_(t-1) + e_t
+{{?X=X}} {{?y=y}} y = 1 .+ 2 .* X[:, 1] .- X[:, 2] .+ u  # true coefficients 1, 2, -1; true rho 0.7. Replace X and y with your own, in time order
 yv = Float64.({{y}})
 Xm = reshape(Float64.({{X}}), length(yv), :)  # regressors without a constant: HARE adds the intercept
 estimate(X, y) = two_step_prais_winsten(X, y)  # rho from OLS residuals, then GLS keeping the first observation
@@ -269,8 +234,14 @@ result = estimate(Xm, yv)
 [[codeBranches]]
 model = "pwiter"
 code = '''
-using HARE, GLM
+using HARE
 
+{{?X=X}} {{?y=y}} using Random
+{{?X=X}} {{?y=y}} Random.seed!(1)  # simulated: 300 periods from a known AR(1) model, so the estimates can be checked against the truth
+{{?X=X}} {{?y=y}} X = hcat(sin.((1:300) ./ 20) .+ 0.3 .* randn(300), randn(300))  # the regressors: the first moves slowly over time, the second does not
+{{?X=X}} {{?y=y}} u = zeros(300); u[1] = randn() / sqrt(1 - 0.7^2)  # the errors start from their long-run distribution
+{{?X=X}} {{?y=y}} for t in 2:300; u[t] = 0.7 * u[t-1] + randn(); end  # u_t = 0.7 u_(t-1) + e_t
+{{?X=X}} {{?y=y}} y = 1 .+ 2 .* X[:, 1] .- X[:, 2] .+ u  # true coefficients 1, 2, -1; true rho 0.7. Replace X and y with your own, in time order
 yv = Float64.({{y}})
 Xm = reshape(Float64.({{X}}), length(yv), :)  # regressors without a constant: HARE adds the intercept
 estimate(X, y) = iterated_prais_winsten(X, y)  # alternates rho and GLS steps until convergence
@@ -280,8 +251,14 @@ result = estimate(Xm, yv)
 [[codeBranches]]
 model = "hildreth"
 code = '''
-using HARE, GLM
+using HARE
 
+{{?X=X}} {{?y=y}} using Random
+{{?X=X}} {{?y=y}} Random.seed!(1)  # simulated: 300 periods from a known AR(1) model, so the estimates can be checked against the truth
+{{?X=X}} {{?y=y}} X = hcat(sin.((1:300) ./ 20) .+ 0.3 .* randn(300), randn(300))  # the regressors: the first moves slowly over time, the second does not
+{{?X=X}} {{?y=y}} u = zeros(300); u[1] = randn() / sqrt(1 - 0.7^2)  # the errors start from their long-run distribution
+{{?X=X}} {{?y=y}} for t in 2:300; u[t] = 0.7 * u[t-1] + randn(); end  # u_t = 0.7 u_(t-1) + e_t
+{{?X=X}} {{?y=y}} y = 1 .+ 2 .* X[:, 1] .- X[:, 2] .+ u  # true coefficients 1, 2, -1; true rho 0.7. Replace X and y with your own, in time order
 yv = Float64.({{y}})
 Xm = reshape(Float64.({{X}}), length(yv), :)  # regressors without a constant: HARE adds the intercept
 estimate(X, y) = hildreth_lu(X, y)  # grid search over rho for the smallest transformed RSS
@@ -291,8 +268,14 @@ result = estimate(Xm, yv)
 [[codeBranches]]
 model = "beach"
 code = '''
-using HARE, GLM
+using HARE
 
+{{?X=X}} {{?y=y}} using Random
+{{?X=X}} {{?y=y}} Random.seed!(1)  # simulated: 300 periods from a known AR(1) model, so the estimates can be checked against the truth
+{{?X=X}} {{?y=y}} X = hcat(sin.((1:300) ./ 20) .+ 0.3 .* randn(300), randn(300))  # the regressors: the first moves slowly over time, the second does not
+{{?X=X}} {{?y=y}} u = zeros(300); u[1] = randn() / sqrt(1 - 0.7^2)  # the errors start from their long-run distribution
+{{?X=X}} {{?y=y}} for t in 2:300; u[t] = 0.7 * u[t-1] + randn(); end  # u_t = 0.7 u_(t-1) + e_t
+{{?X=X}} {{?y=y}} y = 1 .+ 2 .* X[:, 1] .- X[:, 2] .+ u  # true coefficients 1, 2, -1; true rho 0.7. Replace X and y with your own, in time order
 yv = Float64.({{y}})
 Xm = reshape(Float64.({{X}}), length(yv), :)  # regressors without a constant: HARE adds the intercept
 estimate(X, y) = beach_mackinnon(X, y)  # exact maximum likelihood for beta and rho
@@ -405,9 +388,9 @@ id = "vs-ols"
 label = "Compare with OLS"
 desc = "OLS and the corrected estimates side by side: the coefficients are often close, but OLS standard errors are too small under positive autocorrelation"
 code = '''
-ols = lm(hcat(ones(length(yv)), Xm), yv)
+fit_ols = ols(Xm, yv)  # OLS: HARE adds the intercept
 [(term = n, ols = round(a, digits=4), ols_se = round(sa, digits=4), corrected = round(b, digits=4), corrected_se = round(sb, digits=4))
- for (n, a, sa, b, sb) in zip(coefnames(result), coef(ols), stderror(ols), coef(result), stderror(result))]
+ for (n, a, sa, b, sb) in zip(coefnames(result), coef(fit_ols), stderror(fit_ols), coef(result), stderror(result))]
 '''
 
 [[actionGroups.actions]]
