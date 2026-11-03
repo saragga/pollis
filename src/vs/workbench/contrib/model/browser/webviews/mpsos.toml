@@ -25,7 +25,7 @@ name = "SCS.jl"
 github = "https://github.com/jump-dev/SCS.jl"
 
 [requires]
-packages = ["SumOfSquares.jl", "DynamicPolynomials.jl", "Clarabel.jl", "Plots.jl"]
+packages = ["SumOfSquares.jl", "DynamicPolynomials.jl", "Clarabel.jl", "COSMO.jl", "SCS.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -205,7 +205,7 @@ models = ["polyopt"]
 [[inputs]]
 id = "solver"
 label = "Solver"
-tooltip = "SOS problems reduce to semidefinite programmes. Clarabel: interior point, the default and most accurate. COSMO: ADMM, lower memory for large or sparse problems. SCS: first-order, very large problems when a rough bound suffices."
+tooltip = "SOS problems reduce to semidefinite programmes. Clarabel, the default: interior point, with a homogeneous embedding. COSMO: operator splitting, with chordal decomposition for sparse SDPs. SCS: operator splitting, with a homogeneous self-dual embedding."
 kind = "select"
 default = "Clarabel"
 newRow = true
@@ -315,14 +315,19 @@ heatmap(labels, labels, Q, aspect_ratio=:equal, yflip=true, color=:RdBu, clims=(
 [[actionGroups.actions]]
 id = "polynomial-surface"
 label = "Polynomial Contours"
-desc = "p over the (x1, x2) plane, the other variables held at 0"
+desc = "p over the (x1, x2) plane, the other variables held at 0, or against x1 when n = 1"
 code = '''
 using Plots
 
 xs = range(-box, box, length=80)
-f(a, b) = p(x => [a; b; zeros(n - 2)])
-contour(xs, xs, f, fill=true, xlabel="x1", ylabel="x2", color=:viridis)
-{{?model=polyopt}} contour!(xs, xs, (a, b) -> f(a, b) - objective_value(model), levels=[0], color=:white, linewidth=2, label="p = lower bound")
+if n == 1  # p against x1
+    plot(xs, a -> p(x => [a]), xlabel="x1", ylabel="p", label="p")
+{{?model=polyopt}}     hline!([objective_value(model)], linestyle=:dash, label="lower bound")
+else  # p over the (x1, x2) plane, the other variables at 0
+    f = (a, b) -> p(x => [a; b; zeros(n - 2)])
+    contour(xs, xs, f, fill=true, xlabel="x1", ylabel="x2", color=:viridis)
+{{?model=polyopt}}     contour!(xs, xs, (a, b) -> f(a, b) - objective_value(model), levels=[0], color=:white, linewidth=2, label="p = lower bound")
+end
 '''
 
 [[actionGroups]]
@@ -406,6 +411,7 @@ code = '''
 {{?model=sos}} sos_lb = lower_bound(maxdegree(p))
 {{?model=polyopt}} sos_lb = objective_value(model)
 pts = [box .* (2 .* rand(n) .- 1) for _ in 1:100_000]
+{{?model=polyopt}} isempty(equalities(S)) || error("SOS vs Sampling needs a Domain of inequalities only: random points do not satisfy an equality")
 {{?model=polyopt}} filter!(q -> all(g(x => q) >= 0 for g in inequalities(S)), pts)  # keep points in the domain
 sampled = minimum(q -> p(x => q), pts)
 (sos_lower_bound = sos_lb, sampled_minimum = sampled, gap = sampled - sos_lb)

@@ -38,7 +38,7 @@ The solver is passed to `SOSModel`, and changing **Solver** changes nothing else
 | Group | Action | Output |
 |---|---|---|
 | Visualise | **Gram Matrix Heatmap** | Q as a heat map, rows and columns labelled by monomials |
-| Visualise | **Polynomial Contours** | p on the (x1, x2) plane within ±`box`, the other variables at 0, with the contour p = `lower_bound` for **Polynomial Optimisation** |
+| Visualise | **Polynomial Contours** | p on the (x1, x2) plane within ±`box`, the other variables at 0, or against x1 when **n** is 1, with the level p = `lower_bound` for **Polynomial Optimisation** |
 | Diagnose | **Feasibility Check** | Termination, primal and dual status |
 | Diagnose | **Gram PSD Check** | `min_eigenvalue`, `psd`, and for certification `max_residual_coefficient` |
 | Predict | **Tighten Relaxation** | Lower bounds at four even degrees, from the degree of p up |

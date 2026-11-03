@@ -6,7 +6,7 @@ What the panel takes for granted about the polynomial, the domain and the relaxa
 
 **Polynomial p(x)** must be a polynomial expression in the vector `x` of **n** variables, created by `@polyvar x[1:n]`. Sums, products, powers with integer exponents and broadcasts such as `sum(x .^ 4)` all give polynomials, while functions such as `exp` or `abs` do not. Coefficients are real numbers.
 
-**Polynomial Contours** evaluates p with the first two variables on a grid and the others at zero, so it needs **n** of at least 2.
+**Polynomial Contours** evaluates p with the first two variables on a grid and the others at zero, and plots p against x1 when **n** is 1.
 
 ## Even degree
 

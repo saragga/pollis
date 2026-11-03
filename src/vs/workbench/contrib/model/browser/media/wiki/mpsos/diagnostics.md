@@ -26,7 +26,7 @@ For **Polynomial Optimisation** the check reads the Gram matrix of σ_0 alone; t
 
 ## Is the bound tight?
 
-**SOS vs Sampling** evaluates p at 100,000 points drawn uniformly in the box [−`box`, `box`]^n, keeps for **Polynomial Optimisation** those that satisfy every inequality of **Domain**, and prints the smallest value. For a domain given by inequalities every kept point lies in K, so `sampled_minimum` is an upper bound on the minimum, and
+**SOS vs Sampling** evaluates p at 100,000 points drawn uniformly in the box [−`box`, `box`]^n, keeps for **Polynomial Optimisation** those that satisfy every inequality of **Domain**, and prints the smallest value. With an equality in **Domain**, the action stops with an error instead. For a domain given by inequalities every kept point lies in K, so `sampled_minimum` is an upper bound on the minimum, and
 
 `sos_lower_bound` ≤ minimum ≤ `sampled_minimum`
 
