@@ -9,7 +9,7 @@ A quick reference for **Model Predictive Control**: the two controllers, their i
 | **Linear MPC** | `LinModel` from a transfer function | Convex quadratic program | OSQP | `SteadyKalmanFilter` |
 | **Nonlinear MPC** | `NonLinModel` from f and h | Nonlinear program | Ipopt | `UnscentedKalmanFilter` |
 
-Both use `SingleShooting()` as the transcription by default. OSQP is described by [Stellato, Banjac, Goulart, Bemporad and Boyd (2020)](#ref-SBGBB2020a), and Ipopt by [Waechter and Biegler (2006)](#ref-WB2006a).
+Both use `SingleShooting()` as the transcription by default. OSQP is described by [Stellato, Banjac, Goulart, Bemporad and Boyd (2020)](#ref-SBGBB2020a), and Ipopt by [Wächter and Biegler (2006)](#ref-WB2006a).
 
 ## Inputs for Linear MPC
 
@@ -101,7 +101,7 @@ Every action rebuilds the controller through `build` or reuses `res`, so changin
 
 <a id="ref-SBGBB2020a"></a>Stellato, B., Banjac, G., Goulart, P., Bemporad, A., & Boyd, S. (2020). OSQP: An Operator Splitting Solver for Quadratic Programs. *Mathematical Programming Computation* 12(4), 637-672. [doi:10.1007/s12532-020-00179-2](https://doi.org/10.1007/s12532-020-00179-2)
 
-<a id="ref-WB2006a"></a>Waechter, A., & Biegler, L. T. (2006). On the Implementation of an Interior-Point Filter Line-Search Algorithm for Large-Scale Nonlinear Programming. *Mathematical Programming* 106(1), 25-57. [doi:10.1007/s10107-004-0559-y](https://doi.org/10.1007/s10107-004-0559-y)
+<a id="ref-WB2006a"></a>Wächter, A., & Biegler, L. T. (2006). On the Implementation of an Interior-Point Filter Line-Search Algorithm for Large-Scale Nonlinear Programming. *Mathematical Programming* 106(1), 25-57. [doi:10.1007/s10107-004-0559-y](https://doi.org/10.1007/s10107-004-0559-y)
 
 ## See Also
 

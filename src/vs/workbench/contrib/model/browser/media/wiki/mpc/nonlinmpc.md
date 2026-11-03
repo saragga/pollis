@@ -17,7 +17,7 @@ The pendulum, its settings and the torque limits follow the nonlinear example in
 
 ## What is solved at each step?
 
-With a nonlinear model the predicted outputs are nonlinear in the inputs, so the problem is a nonlinear program, generally nonconvex. The default solver is Ipopt, the interior-point filter line-search method of [Waechter and Biegler (2006)](#ref-WB2006a), with derivatives from automatic differentiation.
+With a nonlinear model the predicted outputs are nonlinear in the inputs, so the problem is a nonlinear program, generally nonconvex. The default solver is Ipopt, the interior-point filter line-search method of [Wächter and Biegler (2006)](#ref-WB2006a), with derivatives from automatic differentiation.
 
 The default transcription is single shooting: the decision variables are the input moves, and the states follow by simulating the model forward. [Rawlings, Mayne and Diehl (2017)](#ref-RMD2017a) describe direct single shooting and multiple shooting in their chapter on numerical optimal control. The package also offers `MultipleShooting()` through the `transcription` keyword, which makes the states decision variables as well.
 
@@ -66,7 +66,7 @@ Each step integrates the model over the horizon many times inside the solver, so
 
 <a id="ref-RMD2017a"></a>Rawlings, J. B., Mayne, D. Q., & Diehl, M. M. (2017). *Model Predictive Control: Theory, Computation, and Design* (2nd ed.). Nob Hill Publishing.
 
-<a id="ref-WB2006a"></a>Waechter, A., & Biegler, L. T. (2006). On the Implementation of an Interior-Point Filter Line-Search Algorithm for Large-Scale Nonlinear Programming. *Mathematical Programming* 106(1), 25-57. [doi:10.1007/s10107-004-0559-y](https://doi.org/10.1007/s10107-004-0559-y)
+<a id="ref-WB2006a"></a>Wächter, A., & Biegler, L. T. (2006). On the Implementation of an Interior-Point Filter Line-Search Algorithm for Large-Scale Nonlinear Programming. *Mathematical Programming* 106(1), 25-57. [doi:10.1007/s10107-004-0559-y](https://doi.org/10.1007/s10107-004-0559-y)
 
 ## See Also
 
