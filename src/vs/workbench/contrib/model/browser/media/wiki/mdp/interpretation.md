@@ -25,7 +25,7 @@ The gap between the best and the second-best action is the cost of a mistake in 
 
 `order_by_stock` lists the best order at each stock level, and **Policy Map** shows the same thing as bars.
 
-A common pattern is to order up to some target level, so the order falls one for one as stock rises, until it reaches zero. **Largest Order (A)** can cap the order at low stock, which you can see as a flat stretch. That target reflects the balance between the margin on a sale and the cost of holding a unit, and raising **Mean Demand** or the price moves it upwards. Single-product inventory is a standard example in [Puterman (2005)](#ref-Put2005a), and it is a useful comparison for the shape you see.
+A common pattern is to order up to some target level, so the order falls one for one as stock rises, until it reaches zero. **Largest Order (A)** can cap the order at low stock, which you can see as a flat stretch. That target reflects the balance between the margin on a sale and the cost of holding a unit, and raising **Mean Demand** or the price moves it upwards.
 
 ## How to read alpha vectors
 
@@ -61,7 +61,7 @@ A small difference is a useful finding too, since a simple rule that is nearly o
 
 **Online Planning / Reward Rate** on **Semi-MDP** simulates 20,000 periods and gives `reward_per_period` and `share_of_decisions`.
 
-`reward_per_period` is undiscounted, so it can favour a different ranking from the discounted values when gamma is small. `share_of_decisions` counts decisions and not time. A `replace` takes four periods, so its share of time is larger than its share of decisions. To get the fraction of time in each action, weight each share by its `tau`. This comparison of long-run rate and discounted value is treated at length by [Puterman (2005)](#ref-Put2005a).
+`reward_per_period` is undiscounted, so it can favour a different ranking from the discounted values when gamma is small. `share_of_decisions` counts decisions and not time. A `replace` takes four periods, so its share of time is larger than its share of decisions. To get the fraction of time in each action, weight each share by its `tau`. The long-run average reward criterion is treated at length by [Puterman (2005)](#ref-Put2005a).
 
 ## References
 

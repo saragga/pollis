@@ -39,6 +39,14 @@ github = "https://github.com/JuliaPOMDP/QMDP.jl"
 name = "MCTS.jl"
 github = "https://github.com/JuliaPOMDP/MCTS.jl"
 
+[[packages]]
+name = "SARSOP.jl"
+github = "https://github.com/JuliaPOMDP/SARSOP.jl"
+
+[[packages]]
+name = "BasicPOMCP.jl"
+github = "https://github.com/JuliaPOMDP/BasicPOMCP.jl"
+
 [requires]
 packages = ["POMDPs.jl", "POMDPTools.jl", "DiscreteValueIteration.jl", "QMDP.jl", "SARSOP.jl", "MCTS.jl", "BasicPOMCP.jl", "Plots.jl"]
 
@@ -196,6 +204,10 @@ detail = "any domain where decisions are sequential, states are fully observable
 text = "A Partially Observable MDP (POMDP) extends the MDP to settings where the true state is hidden: the agent receives only a noisy observation and must maintain a belief distribution over all possible states, planning over the continuous belief space rather than the discrete state space. POMDPs model medical diagnosis under uncertain test results, autonomous driving under sensor noise, dialogue systems, and search-and-rescue"
 detail = "domains where the agent must balance information-gathering actions (sensing, listening) against task-achieving ones to act optimally despite incomplete information."
 
+[[bullets]]
+text = "A Semi-Markov Decision Process (Semi-MDP) extends the MDP to actions that take different amounts of time: the discount over a transition depends on how long the action lasts, so a long repair delays every later reward. Semi-MDPs model maintenance, scheduling, queues and extended actions in reinforcement learning"
+detail = "domains where decisions do not fall at regular intervals, and treating every action as one period can change the best policy."
+
 [[decisionRows]]
 task = "MDP"
 context = "The state is fully observed and every decision takes one period (inventory, queues, games)"
@@ -293,7 +305,7 @@ A = {{A}}  # largest order: actions 0:A
 dmean = {{dmean}}  # mean demand per period (Poisson)
 gamma = {{gamma}}  # discount factor
 price, order_cost, holding_cost = 8.0, 2.0, 0.5  # per unit
-dprob = [exp(-dmean + d * log(dmean) - sum(log, 1:d; init=0.0)) for d in 0:S]  # Poisson probabilities
+dprob = [exp(-dmean + (d == 0 ? 0.0 : d * log(dmean)) - sum(log, 1:d; init=0.0)) for d in 0:S]  # Poisson probabilities
 dprob[end] += 1 - sum(dprob)  # demand of S or more lumped together
 
 struct InventoryMDP <: MDP{Int, Int} end

@@ -14,7 +14,7 @@ Each period starts with s units in stock. The manager orders a units, up to **La
 | Reward | `price` × expected sales − `order_cost` × a − `holding_cost` × y |
 | Start | An empty warehouse |
 
-The reward is the expected value over demand, so it is a function of s and a. Single-product stochastic inventory of this form is a standard example in [Puterman (2005)](#ref-Put2005a).
+The reward is the expected value over demand, so it is a function of s and a.
 
 ## How the code states the problem
 

@@ -6,7 +6,7 @@ A solver returns the best policy for the model it was given, so the conclusions 
 
 The next state has to depend only on the current state and action. If the past still matters, the policy is optimal for a problem you do not have.
 
-The remedy is usually to enlarge the state. Demand with a seasonal pattern needs the season in the state, and a machine whose wear rate depends on its age needs the age. On the other side, each added variable multiplies the number of states, as the value iteration of [Puterman (2005)](#ref-Put2005a) visits every one of them in each sweep. Look at how the state in the **MDP** code is the stock alone, which is enough only because demand is independent from one period to the next.
+The remedy is usually to enlarge the state. Demand with a seasonal pattern needs the season in the state, and a machine whose wear rate depends on its age needs the age. On the other side, each added variable multiplies the number of states, as value iteration, treated in [Puterman (2005)](#ref-Put2005a), visits every one of them in each sweep. Look at how the state in the **MDP** code is the stock alone, which is enough only because demand is independent from one period to the next.
 
 ## Are the transition probabilities known?
 
@@ -49,7 +49,7 @@ The belief is only as good as that model. If listening is truly less accurate th
 
 The number of periods an action takes must be known in advance here, as `tau` fixes it for each action, though the general theory allows a random duration.
 
-Rewards in the code are counted when an action starts, and the discount gamma^tau applies to what follows. A long action with income spread over its duration would need that income summed with its own discounting. Nothing happens during an action in this model: no new decision is made, and the condition does not change until the action ends. If interruptions matter, the action should be split into shorter ones, and the framework of [Puterman (2005)](#ref-Put2005a) covers general forms.
+Rewards in the code are counted when an action starts, and the discount gamma^tau applies to what follows. A long action with income spread over its duration would need that income summed with its own discounting. Nothing happens during an action in this model: no new decision is made, and the condition does not change until the action ends. If interruptions matter, the action should be split into shorter ones.
 
 ## How large a problem is feasible?
 
@@ -60,7 +60,7 @@ Rewards in the code are counted when an action starts, and the discount gamma^ta
 | SARSOP | Beliefs reached under good policies | Far larger than exact POMDP solvers |
 | MCTS, POMCP | Number of simulations per decision | Very large, even without explicit tables |
 
-The examples in the code are deliberately small, so that every value can be read. [Kurniawati, Hsu and Lee (2008)](#ref-KHL2008a) report SARSOP on problems well beyond the size of the Tiger problem.
+The examples in the code are deliberately small, so that every value can be read. [Kurniawati, Hsu and Lee (2008)](#ref-KHL2008a) report SARSOP on problems with up to 15,517 states.
 
 ## References
 

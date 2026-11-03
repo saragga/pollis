@@ -5076,7 +5076,9 @@
 				"POMDPs.jl",
 				"DiscreteValueIteration.jl",
 				"QMDP.jl",
-				"MCTS.jl"
+				"MCTS.jl",
+				"SARSOP.jl",
+				"BasicPOMCP.jl"
 			]
 		},
 		{

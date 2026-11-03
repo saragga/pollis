@@ -71,7 +71,7 @@ The values are discounted totals in the units of the reward. On **POMDP**, the v
 
 `POMDPs.jl`, from [Egorov, Sunberg, Balaban, Wheeler, Gupta and Kochenderfer (2017)](#ref-ESBWG...2017a), separates the statement of a problem from the solver, so `DiscreteValueIteration`, `QMDP`, `SARSOP`, `MCTS` and `BasicPOMCP` all work on the same `m`.
 
-The standard reference for the theory of MDPs and semi-Markov problems is [Puterman (2005)](#ref-Put2005a). [Kochenderfer (2015)](#ref-Koc2015a) covers decision making under uncertainty more broadly, including the online and belief-state methods.
+The theory of discounted and average-reward MDPs, with continuous-time models, is set out by [Puterman (2005)](#ref-Put2005a). [Kochenderfer (2015)](#ref-Koc2015a) covers decision making under uncertainty more broadly, including the online and belief-state methods.
 
 ## References
 

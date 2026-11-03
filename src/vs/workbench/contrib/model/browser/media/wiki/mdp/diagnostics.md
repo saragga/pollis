@@ -6,7 +6,7 @@ A policy can be checked in three ways: whether the solver has converged, whether
 
 **Belief Update / Bellman Residual** on **MDP** and **Semi-MDP** applies the Bellman operator T once more to the solved values, and reports `max_bellman_residual`, the largest change in any state.
 
-A residual r bounds the error in the values: the distance from V to V* is at most r / (1 − gamma), a standard result in [Puterman (2005)](#ref-Put2005a). So the residual has to be read with the discount in mind, as gamma near 1 enlarges the bound.
+A residual r bounds the error in the values: the distance from V to V* is at most r / (1 − gamma), a bound that [Hauskrecht (2000)](#ref-Hau2000a) states for value iteration on beliefs. So the residual has to be read with the discount in mind, as gamma near 1 enlarges the bound.
 
 The stopping settings are `belres=1e-6` on **MDP** and `tol=1e-8` on **Semi-MDP**. On **Semi-MDP**, `iterations` should be well below `maxiter=10_000`, as reaching that figure means that the tolerance was not met.
 
@@ -62,7 +62,6 @@ Compute a standard error before reading a small difference as real. Raise the co
 
 | Failure | Usual cause | What to try |
 |---|---|---|
-| Error or `NaN` at **Mean Demand** of 0 | Poisson probabilities use log(0) | Use a small positive value |
 | **Solver vs Baseline** fails on **POMDP** | `SARSOP` not installed or built | Check that package |
 | Very slow value iteration | Gamma close to 1 | Lower gamma, or reduce **States (S)** |
 | Same action everywhere | Rewards dominate the dynamics | Look at the size of the costs |
@@ -70,7 +69,7 @@ Compute a standard error before reading a small difference as real. Raise the co
 
 ## References
 
-<a id="ref-Put2005a"></a>Puterman, M. L. (2005). *Markov Decision Processes: Discrete Stochastic Dynamic Programming* (2nd ed.). Wiley. [doi:10.1002/9780470316887](https://doi.org/10.1002/9780470316887)
+<a id="ref-Hau2000a"></a>Hauskrecht, M. (2000). Value-Function Approximations for Partially Observable Markov Decision Processes. *Journal of Artificial Intelligence Research* 13, 33-94. [doi:10.1613/jair.678](https://doi.org/10.1613/jair.678)
 
 ## See Also
 

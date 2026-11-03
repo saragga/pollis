@@ -8,7 +8,7 @@ The only change to the Bellman equation is the discount, which now depends on th
 
 Q(s, a) = R(s, a) + gamma^tau(a) · sum over s' of P(s' | s, a) V(s')
 
-A long action delays all that follows. A repair of four periods therefore costs its explicit price and also pushes every later reward further into the future. Semi-Markov decision processes are treated in their general form by [Puterman (2005)](#ref-Put2005a), where the duration can be random and depend on the transition. In the panel's code each action's duration is fixed by `tau`.
+A long action delays all that follows. A repair of four periods therefore costs its explicit price and also pushes every later reward further into the future. [Sutton, Precup and Singh (1999)](#ref-SPS1999a) define a semi-Markov decision process through a joint distribution of the next state and the transit time, so the duration can be random and depend on the transition, and they point to [Puterman (2005)](#ref-Put2005a) for such processes. In the panel's code each action's duration is fixed by `tau`.
 
 ## The default maintenance problem
 
