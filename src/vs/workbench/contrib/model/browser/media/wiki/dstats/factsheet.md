@@ -1,4 +1,4 @@
-# Descriptive and Online Statistics — Factsheet
+# Descriptive Statistics — Factsheet
 
 **Descriptive statistics** summarise what a data set looks like: where its values sit, how widely they spread, what shape their distribution has, how often each category occurs, and how variables move together. They are the first step of every analysis and make no claim beyond the data at hand.
 

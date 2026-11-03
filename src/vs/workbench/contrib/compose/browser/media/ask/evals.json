@@ -270,13 +270,13 @@
   "answer": "A sustained shift in a series' mean: it adds up the standardised deviations minus an allowance k, and raises an alarm when the sum exceeds h, so a persistent change too small to see in one observation still triggers it."
  },
  {
-  "source": "Descriptive and Online Statistics, Descriptive and Online Statistics › Interpretation",
+  "source": "Descriptive Statistics, Descriptive Statistics › Interpretation",
   "context": "Centre\nThe mean is the balance point of the values; the median is the middle value. For symmetric data they agree. In right-skewed data (incomes, waiting times) the mean is pulled above the median by the long tail, and the median is the better \"typical\" value.\n\nSpread\nThe standard deviation is in the units of the data. For roughly normal data, about two-thirds of the values lie within one standard deviation of the mean and about 95% within two. The interquartile range (Q3 - Q1) holds the middle half of the data and is not affected by outliers. The Percentile Report gives the full profile.",
   "question": "When is the median a better typical value than the mean?",
   "answer": "In skewed data, such as incomes or waiting times: the long tail pulls the mean above the median, and the median is the better typical value. For symmetric data they agree."
  },
  {
-  "source": "Descriptive and Online Statistics, Descriptive and Online Statistics › Decision Guide",
+  "source": "Descriptive Statistics, Descriptive Statistics › Decision Guide",
   "context": "Question: What is a typical value, and how spread out are the values?; Data: Numeric vector; Method: Summary (Summary Stats); Why: Centre, spread and shape in one call\n\nQuestion: How often does each category occur?; Data: Categorical or discrete vector; Method: Frequency (Frequency); Why: Counts and proportions per level\n\nQuestion: Are two categorical variables related?; Data: Two categorical vectors; Method: Frequency (cross-tabulation); Why: Joint counts show the pattern\n\nQuestion: Do numeric variables move together linearly?; Data: Numeric matrix; Method: Correlation, Pearson (Correlation); Why: Linear association\n\nQuestion: Do they move together in the same direction, whatever the shape?; Data: Numeric or ordinal matrix; Method: Correlation, Spearman; Why: Rank-based, robust to outliers",
   "question": "Should I use Pearson or Spearman correlation?",
   "answer": "Pearson for a linear association between numeric variables; Spearman, which is rank-based and robust to outliers, for whether they move together in the same direction whatever the shape, and for ordinal data."

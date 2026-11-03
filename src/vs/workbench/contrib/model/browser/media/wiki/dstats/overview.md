@@ -1,6 +1,6 @@
 # Overview
 
-The Descriptive and Online Statistics panel covers the three questions asked of almost every data set: **what does one variable look like**, **how often does each value occur**, and **how do variables move together**.
+The Descriptive Statistics panel covers the three questions asked of almost every data set: **what does one variable look like**, **how often does each value occur**, and **how do variables move together**.
 
 ## Summary
 Central tendency (mean, median), spread (standard deviation, quartiles) and shape (skewness, kurtosis) of a numeric vector, from `summarystats` and friends in StatsBase.jl. It also counts the missing values. See [Summary Stats](summary-stats.md).

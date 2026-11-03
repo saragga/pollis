@@ -41,6 +41,7 @@
 			"menubarCompileGaloreMenu",
 			"menubarCopulaSubmenu",
 			"menubarCorrectnessMenu",
+			"menubarDOSSubmenu",
 			"menubarDVSubmenu",
 			"menubarDistSubmenu",
 			"menubarDocRepSubmenu",
@@ -2447,13 +2448,13 @@
 		},
 		{
 			"id": "dstats",
-			"title": "Descriptive and Online Statistics",
+			"title": "Descriptive Statistics",
 			"source": "pollis",
 			"commands": [
 				{
 					"id": "chiara.explore.dstats",
 					"menuTitles": [
-						"Descriptive and Online Statistics"
+						"Descriptive Statistics"
 					]
 				}
 			],
@@ -6107,12 +6108,14 @@
 		},
 		{
 			"id": "oa",
-			"title": "Online Algorithms",
+			"title": "Online Statistics",
 			"source": "pollis",
 			"commands": [
 				{
-					"id": "chiara.statistics.eco.oa",
-					"menuTitles": []
+					"id": "chiara.explore.oa",
+					"menuTitles": [
+						"Online Statistics"
+					]
 				}
 			],
 			"portable": true,
@@ -6124,23 +6127,25 @@
 			"wikis": [
 				"online-alg/assumptions.md",
 				"online-alg/decision-guide.md",
-				"online-alg/descriptive.md",
 				"online-alg/diagnostics.md",
 				"online-alg/factsheet.md",
 				"online-alg/histogram.md",
 				"online-alg/interpretation.md",
 				"online-alg/linreg.md",
+				"online-alg/memory.md",
 				"online-alg/overview.md",
-				"online-alg/quantile.md"
+				"online-alg/quantile.md",
+				"online-alg/running-summary.md"
 			],
 			"notebooks": [
-				"online-alg/tutorial-01-descriptive.ipynb",
+				"online-alg/tutorial-01-running-summary.ipynb",
 				"online-alg/tutorial-02-quantile.ipynb",
 				"online-alg/tutorial-03-histogram.ipynb",
 				"online-alg/tutorial-04-linreg.ipynb"
 			],
 			"packages": [
-				"OnlineStats.jl"
+				"OnlineStats.jl",
+				"Plots.jl"
 			]
 		},
 		{

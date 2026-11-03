@@ -20,6 +20,7 @@ import { ILanguageService } from '../../../../editor/common/languages/language.j
 import { IThemeService } from '../../../../platform/theme/common/themeService.js';
 import { IRequestService } from '../../../../platform/request/common/request.js';
 import { DSTATS_PANEL } from '../../model/browser/commands/dstats.command.js';
+import { OA_PANEL } from '../../model/browser/commands/oa.command.js';
 import { openScaffoldWebview } from '../../model/browser/commands/scaffold.command.js';
 import { NOD_PANEL } from '../../model/browser/commands/nod.command.js';
 import { ANDE_PANEL } from '../../model/browser/commands/ande.command.js';
@@ -59,6 +60,7 @@ import { JOURNAL_METRICS_COMMAND_ID } from '../../databases/common/databaseDrive
 
 export const EXPL_COMMAND_ID = 'workbench.action.showExplore';
 const DSTATS_ID = 'chiara.explore.dstats';
+const OA_ID = 'chiara.explore.oa';
 const NOD_ID = 'chiara.explore.nod';
 const ANDE_ID = 'chiara.explore.ande';
 const NOVD_ID = 'chiara.explore.novd';
@@ -121,6 +123,7 @@ CommandsRegistry.registerCommand(EXPL_COMMAND_ID, () => {
 });
 
 CommandsRegistry.registerCommand(DSTATS_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, DSTATS_PANEL));
+CommandsRegistry.registerCommand(OA_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, OA_PANEL));
 
 CommandsRegistry.registerCommand(NOD_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, NOD_PANEL));
 
@@ -954,6 +957,9 @@ const CONNSubmenuId = new MenuId('menubarCONNSubmenu');
 // Define a new submenu ID for "Data Visualization"
 const DVSubmenuId = new MenuId('menubarDVSubmenu');
 
+// Define a new submenu ID for "Descriptive and Online Statistics"
+const DOSSubmenuId = new MenuId('menubarDOSSubmenu');
+
 // Define a new submenu ID for "Anomalies and Novelties"
 const ANSubmenuId = new MenuId('menubarANSubmenu');
 
@@ -1039,9 +1045,22 @@ MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 
 MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 	group: '3_explore',
-	command: { id: DSTATS_ID, title: localize('eda.ds', 'Descriptive and Online Statistics') },
+	submenu: DOSSubmenuId,
+	title: localize('showExplore.dos', 'Descriptive and Online Statistics'),
 	order: 2,
+});
+
+MenuRegistry.appendMenuItem(DOSSubmenuId, {
+	group: '1_dos',
+	command: { id: DSTATS_ID, title: localize('eda.ds', 'Descriptive Statistics') },
+	order: 1,
 }); // StatsBase.jl + FreqTables.jl + Statistics.jl
+
+MenuRegistry.appendMenuItem(DOSSubmenuId, {
+	group: '1_dos',
+	command: { id: OA_ID, title: localize('eda.oa', 'Online Statistics') },
+	order: 2,
+}); // OnlineStats.jl
 
 MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 	group: '3_explore',

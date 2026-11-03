@@ -1,10 +1,10 @@
-# Online Algorithms Webview Configuration
+# Online Statistics Webview Configuration
 # This is the declarative source for the webview. The build script generates:
 # - src/vs/workbench/contrib/model/browser/webviews/oa.data.ts
 # Run: npm run gulp compile-toml
 
 [meta]
-title = "Online Algorithms"
+title = "Online Statistics"
 viewType = "pollis.oa"
 defaultModel = "desc"
 
@@ -17,6 +17,10 @@ title = "Julia in Academia"
 description = "Overview of Julia for academic and scientific computing"
 url = "https://www.youtube.com/watch?v=wPFPT-Ech2c"
 
+[[packages]]
+name = "Plots.jl"
+github = "https://github.com/JuliaPlots/Plots.jl"
+
 [requires]
 packages = ["OnlineStats.jl", "Plots.jl"]
 
@@ -24,28 +28,28 @@ packages = ["OnlineStats.jl", "Plots.jl"]
 label = ""
 
 [[notebookSections.notebooks]]
-name = "Descriptive Statistics"
-file = "online-alg/tutorial-01-descriptive.ipynb"
+name = "Running Summary Statistics"
+file = "online-alg/tutorial-01-running-summary.ipynb"
 bundled = true
-description = "Single-pass mean, variance, extrema and moments on streaming data using OnlineStats Series"
+description = "Mean, variance, extrema, skewness and kurtosis of a stream, with incremental, rolling and exponentially weighted memory"
 
 [[notebookSections.notebooks]]
 name = "Quantile Estimation"
 file = "online-alg/tutorial-02-quantile.ipynb"
 bundled = true
-description = "Approximate quantile estimation on a data stream with the P-squared algorithm"
+description = "The median and quartiles of a stream with the P-squared algorithm, and how the estimates settle"
 
 [[notebookSections.notebooks]]
 name = "Online Histogram"
 file = "online-alg/tutorial-03-histogram.ipynb"
 bundled = true
-description = "Adaptive histogram of streaming data without storing observations"
+description = "A histogram of a stream in a fixed number of bins, and the density and quantiles read from it"
 
 [[notebookSections.notebooks]]
 name = "Online Linear Regression"
 file = "online-alg/tutorial-04-linreg.ipynb"
 bundled = true
-description = "Recursive least-squares linear regression updating coefficients as new observations arrive"
+description = "Least squares from running sums of cross-products, with equal or exponential weights, and predictions made as the data arrive"
 
 [[wikis]]
 name = "Factsheet"
@@ -78,12 +82,17 @@ file = "online-alg/decision-guide.md"
 bundled = true
 
 [[wikis]]
+name = "Incremental, Rolling and Exponentially Weighted Statistics"
+file = "online-alg/memory.md"
+bundled = true
+
+[[wikis]]
 separator = true
 label = "Online Estimators"
 
 [[wikis]]
-name = "Descriptive Stats"
-file = "online-alg/descriptive.md"
+name = "Running Summary"
+file = "online-alg/running-summary.md"
 bundled = true
 
 [[wikis]]
@@ -125,9 +134,15 @@ key = "Wel1962a"
 [[references]]
 key = "Pla1950a"
 
+[[references]]
+key = "JC1985a"
+
+[[references]]
+key = "BT2010a"
+
 [[models]]
 id = "desc"
-label = "Descriptive Stats"
+label = "Running Summary"
 
 [[models]]
 id = "quantile"
@@ -142,20 +157,55 @@ id = "linreg"
 label = "Linear Regression"
 
 [[bullets]]
-text = "Descriptive Statistics"
-detail = "single-pass mean, variance, extrema and moments; updates in O(1) per observation without storing data"
+text = "Running Summary Statistics"
+detail = "mean, variance, extrema, skewness and kurtosis in one pass, each new observation updating them at a fixed cost and without storing the data; incremental, rolling window or exponentially weighted memory"
 
 [[bullets]]
 text = "Quantile Estimation"
-detail = "approximate streaming quantiles via the P2 algorithm; no sorting or full data retention required"
+detail = "the P-squared algorithm of Jain and Chlamtac: five markers per quantile, moved as observations arrive, with no sorting and no stored data"
 
 [[bullets]]
 text = "Online Histogram"
-detail = "adaptive histogram that refines bin boundaries as data arrives; memory-bounded density estimation"
+detail = "a fixed number of bins whose centres follow the data: each new value becomes a bin and the two closest bins merge, as in Ben-Haim and Tom-Tov; density and quantiles read from the bins"
 
 [[bullets]]
 text = "Online Linear Regression"
-detail = "exact least squares from sufficient statistics; updates beta and standard errors incrementally as each observation is processed"
+detail = "exact least squares from running sums of cross-products, with the coefficients solved when asked for; equal or exponential weights"
+
+[[decisionRows]]
+task = "Running Summary"
+context = "Centre, spread and shape"
+purpose = "Mean, variance, extrema, skewness and kurtosis of a stream, updated with each observation"
+
+[[decisionRows]]
+task = "Quantile"
+context = "Median or percentiles"
+purpose = "One quantile per estimator, from five markers, without sorting or storing the data"
+
+[[decisionRows]]
+task = "Histogram"
+context = "Whole distribution"
+purpose = "The shape of the stream in a fixed number of bins, with density and quantiles read from them"
+
+[[decisionRows]]
+task = "Linear Regression"
+context = "Response on predictors"
+purpose = "Least squares coefficients from running sums, solved whenever they are needed"
+
+[[decisionRows]]
+task = "Incremental"
+context = "Stable process"
+purpose = "Every observation counts equally, so the estimate settles on the value of the whole stream"
+
+[[decisionRows]]
+task = "Rolling Window"
+context = "Last n observations"
+purpose = "Only the most recent observations count, and each leaves the window after n more arrive"
+
+[[decisionRows]]
+task = "Exponentially Weighted"
+context = "Gradual change"
+purpose = "Every observation counts, with weights that fall geometrically with age"
 
 [[inputs]]
 id = "data"
@@ -170,6 +220,49 @@ label = "Covariate matrix (X)"
 tooltip = "Design matrix (T x k) paired row-by-row with the response vector. Include a column of ones for the intercept. The default simulates 10,000 rows: a column of ones and one standard normal predictor."
 default = "X"
 
+[[inputs]]
+id = "memory"
+models = ["desc"]
+label = "Memory"
+tooltip = "Incremental weighs every observation so far equally. Rolling Window keeps the last observations, as many as Window or span, and summarises them. Exponentially Weighted gives each new observation the weight 2/(span + 1), so older observations count less and less; Extrema still covers every observation."
+kind = "select"
+default = "incremental"
+
+[[inputs.options]]
+value = "incremental"
+label = "Incremental"
+
+[[inputs.options]]
+value = "rolling"
+label = "Rolling Window"
+
+[[inputs.options]]
+value = "exponential"
+label = "Exponentially Weighted"
+
+[[inputs]]
+id = "memoryLr"
+models = ["linreg"]
+label = "Memory"
+tooltip = "Incremental weighs every observation so far equally, which gives ordinary least squares. Exponentially Weighted gives each new observation the weight 2/(span + 1), which gives least squares weighted towards recent observations. LinReg keeps no window of observations, so there is no Rolling Window."
+kind = "select"
+default = "incremental"
+
+[[inputs.options]]
+value = "incremental"
+label = "Incremental"
+
+[[inputs.options]]
+value = "exponential"
+label = "Exponentially Weighted"
+
+[[inputs]]
+id = "span"
+models = ["desc", "linreg"]
+label = "Window or span"
+tooltip = "Rolling Window: the number of most recent observations kept. Exponentially Weighted: the span s of ExponentialWeight(s), which gives each new observation the weight 2/(s + 1). Not used by Incremental."
+default = "100"
+
 [[codeBranches]]
 model = "desc"
 code = '''
@@ -179,12 +272,17 @@ using OnlineStats
 {{?data=data}} Random.seed!(1)  # simulated: a stream of 10,000 draws from Exponential(1), whose mean and variance are 1, median log(2) = 0.693, skewness 2 and excess kurtosis 6
 {{?data=data}} data = randexp(10_000)  # Replace data with your own stream of observations.
 
-o = Series(Mean(), Variance(), Extrema())  # bundle multiple stats into one pass
-fit!(o, {{data}})  # update all stats in a single pass
+{{?memory=incremental}} s = fit!(Series(Mean(), Variance(), Extrema(), Moments()), {{data}})  # every observation so far, equally weighted
+{{?memory=exponential}} w = ExponentialWeight({{span}})  # each new observation gets the weight 2/(span + 1)
+{{?memory=exponential}} s = fit!(Series(Mean(weight=w), Variance(weight=w), Extrema(), Moments(weight=w)), {{data}})  # older observations count less and less; Extrema has no weight
+{{?memory=rolling}} window = fit!(MovingWindow({{span}}, Float64), {{data}})  # keeps only the last span observations
+{{?memory=rolling}} s = fit!(Series(Mean(), Variance(), Extrema(), Moments()), value(window))  # the summary of the window, from the values kept
 
-println("Mean:     ", value(o[1]))  # running mean
-println("Variance: ", value(o[2]))  # running variance (Welford)
-println("Extrema:  ", value(o[3]))  # running min and max
+println("Mean:     ", value(s[1]))
+println("Variance: ", value(s[2]))
+println("Extrema:  ", extrema(s[3]))  # min and max
+println("Skewness: ", skewness(s[4]))
+println("Kurtosis: ", kurtosis(s[4]))  # excess kurtosis: 0 for a normal distribution
 '''
 
 [[codeBranches]]
@@ -203,6 +301,7 @@ println("Median: ", value(o))  # current quantile estimate
 
 qs = Series(P2Quantile(0.25), P2Quantile(0.5), P2Quantile(0.75))  # quartiles in one pass
 fit!(qs, {{data}})  # update all quartile estimators
+println("Quartiles: ", value(qs))  # first quartile, median, third quartile
 '''
 
 [[codeBranches]]
@@ -217,7 +316,7 @@ using OnlineStats
 o = KHist(20)  # adaptive histogram with up to 20 bins
 fit!(o, {{data}})  # update histogram as data arrives
 
-println(value(o))  # bin edges and counts
+println(value(o))  # bin centres and counts
 println(OnlineStats.pdf(o, 1.0))  # density estimate at a given point (for the default stream, the true density at 1 is exp(-1) = 0.368)
 '''
 
@@ -231,11 +330,12 @@ using OnlineStats
 {{?X=X}} X = [ones(10_000) randn(10_000)]  # an intercept column and one predictor
 {{?X=X}} {{?data=data}} data = X * [1.0, 2.0] .+ randn(10_000)  # the response stream. Replace X and data with your own.
 
-o = LinReg(size({{X}}, 2))  # online regression: k = number of predictors
+{{?memoryLr=incremental}} o = LinReg()  # ordinary least squares from every observation so far
+{{?memoryLr=exponential}} o = LinReg(weight=ExponentialWeight({{span}}))  # least squares weighted towards recent observations
 fit!(o, zip(eachrow({{X}}), {{data}}))  # stream (x_t, y_t) pairs row by row
 
 beta = coef(o)  # current coefficient estimates
-println("Coefficients: ", beta)  # exact OLS from the running sufficient statistics
+println("Coefficients: ", beta)  # solved from the running sums of cross-products
 '''
 
 [[actionGroups]]
@@ -335,8 +435,8 @@ println("Prediction: ", predict(o, x_new))  # out-of-sample prediction
 [[actionGroups.actions]]
 id = "stream-predict"
 models = ["linreg"]
-label = "Rolling Predictions"
-desc = "Update the regression model and produce predictions simultaneously as data streams in"
+label = "One-Step-Ahead Predictions"
+desc = "Predict each response from the coefficients so far, then update the model with it"
 code = '''
 using OnlineStats
 
@@ -369,23 +469,23 @@ println("Merged mean: ", value(o1))  # equivalent to batch mean over all data
 '''
 
 [[actionGroups.actions]]
-id = "windowed-vs-global"
-label = "Windowed vs Global"
-desc = "Compare a fixed-window moving average against the global running mean"
+id = "memory-schemes"
+label = "Incremental, Rolling and Exponential"
+desc = "Plot the running mean under the three kinds of memory: every observation, the last span observations, and exponentially decaying weights"
 code = '''
 using OnlineStats, Statistics, Plots
 
-global_mean   = Mean()  # cumulative mean (all history)
-windowed_mean = MovingWindow(50, Float64)  # last 50 observations
+span = 100  # window length and span: change it to see how fast each estimate forgets
+incremental = Mean()  # every observation so far, equally weighted
+rolling = MovingWindow(span, Float64)  # the last span observations
+weighted = Mean(weight=ExponentialWeight(span))  # each new observation gets the weight 2/(span + 1)
 
-gm = Float64[]  # store global means
-wm = Float64[]  # store windowed means
-
+mi = Float64[]; mr = Float64[]; me = Float64[]
 for x in {{data}}
-    fit!(global_mean, x); fit!(windowed_mean, x)
-    push!(gm, value(global_mean)); push!(wm, mean(value(windowed_mean)))
+    fit!(incremental, x); fit!(rolling, x); fit!(weighted, x)
+    push!(mi, value(incremental)); push!(mr, mean(value(rolling))); push!(me, value(weighted))
 end
-plot([gm wm], label=["Global" "Window=50"])  # compare both estimates over time
+plot([mi mr me], label=["Incremental" "Rolling Window" "Exponentially Weighted"], xlabel="Observations", ylabel="Mean")  # how each estimate follows the stream
 '''
 
 [[actionGroups]]
@@ -413,13 +513,13 @@ println("Extrema:  ", value(o[4]))  # min and max
 id = "regression-coefs"
 models = ["linreg"]
 label = "Regression Coefficients"
-desc = "Extract and display the coefficient estimates (exact OLS from the running sufficient statistics)"
+desc = "Display the coefficient estimates, solved from the running sums of cross-products, and the number of observations"
 code = '''
 using OnlineStats
 
 o = LinReg(size({{X}}, 2))  # online regression
 fit!(o, zip(eachrow({{X}}), {{data}}))  # stream data
 
-println("Coefficients: ", coef(o))  # exact OLS from the running sufficient statistics
+println("Coefficients: ", coef(o))  # ordinary least squares from the running sums of cross-products
 println("Observations: ", nobs(o))  # number of observations processed
 '''

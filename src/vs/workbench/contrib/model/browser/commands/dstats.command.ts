@@ -10,7 +10,7 @@ import { getDstatsHtml } from '../webviews/dstats.template.js';
 export const DSTATS_PANEL: IScaffoldPanel = {
 	id: 'dstats',
 	viewType: 'pollis.dstats',
-	title: 'Descriptive and Online Statistics',
+	title: 'Descriptive Statistics',
 	data: DSTATS_METADATA.dstats,
 	html: getDstatsHtml,
 };

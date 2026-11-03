@@ -1,3 +1,0 @@
-# Descriptive
-
-Not written yet.

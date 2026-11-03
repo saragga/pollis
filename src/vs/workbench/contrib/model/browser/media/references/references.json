@@ -4009,6 +4009,40 @@
 			"open_access": false
 		},
 		{
+			"key": "BT2010a",
+			"type": "article",
+			"title": "A Streaming Parallel Decision Tree Algorithm",
+			"authors": [
+				"Ben-Haim, Yael",
+				"Tom-Tov, Elad"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2010,
+			"journal": "Journal of Machine Learning Research",
+			"volume": "11",
+			"number": "28",
+			"pages": "849-872",
+			"openalex": "W2152837238",
+			"url": "https://www.jmlr.org/papers/v11/ben-haim10a.html",
+			"oa_url": "https://www.jmlr.org/papers/volume11/ben-haim10a/ben-haim10a.pdf",
+			"abstract": "We propose a new algorithm for building decision tree classifiers. The algorithm is executed in a distributed environment and is especially designed for classifying large data sets and streaming data. It is empirically shown to be as accurate as a standard decision tree classifier, while being scalable for processing of streaming data on multiple processors. These findings are supported by a rigorous analysis of the algorithm's accuracy. The essence of the algorithm is to quickly construct histograms at the processors, which compress the data to a fixed amount of memory. A master processor uses this information to find near-optimal split points to terminal tree nodes. Our analysis shows that guarantees on the local accuracy of split points imply guarantees on the overall tree accuracy.",
+			"abstract_source": "manual",
+			"keywords": [
+				"decision tree construction",
+				"data streams",
+				"parallel algorithms",
+				"distributed computing",
+				"scalability",
+				"data classification"
+			],
+			"keywords_source": "openalex",
+			"source": "manual",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "BV2004a",
 			"type": "book",
 			"title": "Convex Optimization",
@@ -16826,6 +16860,40 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": false
+		},
+		{
+			"key": "JC1985a",
+			"type": "article",
+			"title": "The P² Algorithm for Dynamic Calculation of Quantiles and Histograms Without Storing Observations",
+			"authors": [
+				"Jain, Raj",
+				"Chlamtac, Imrich"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1985,
+			"journal": "Communications of the ACM",
+			"volume": "28",
+			"number": "10",
+			"pages": "1076-1085",
+			"issn": "0001-0782",
+			"doi": "10.1145/4372.4378",
+			"openalex": "W1983560552",
+			"oa_url": "https://dl.acm.org/doi/pdf/10.1145/4372.4378",
+			"abstract": "A heuristic algorithm is proposed for dynamic calculation of the median and other quantiles. The estimates are produced dynamically as the observations are generated. The observations are not stored; therefore, the algorithm has a very small and fixed storage requirement regardless of the number of observations. This makes it ideal for implementing in a quantile chip that can be used in industrial controllers and recorders. The algorithm is further extended to histogram plotting. The accuracy of the algorithm is analyzed.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"quantile estimation",
+				"median estimation",
+				"dynamic data processing",
+				"online algorithms",
+				"histogram plotting"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "JC2016a",
@@ -50411,7 +50479,7 @@
 		},
 		{
 			"id": "dstats",
-			"title": "Descriptive and Online Statistics",
+			"title": "Descriptive Statistics",
 			"description": "Summary · Frequency · Correlation",
 			"commands": [
 				"chiara.explore.dstats"
@@ -51937,16 +52005,18 @@
 		},
 		{
 			"id": "oa",
-			"title": "Online Algorithms",
-			"description": "Descriptive Stats · Quantile · Histogram · Linear Regression",
+			"title": "Online Statistics",
+			"description": "Running Summary · Quantile · Histogram · Linear Regression",
 			"commands": [
-				"chiara.statistics.eco.oa"
+				"chiara.explore.oa"
 			],
 			"keys": [
 				"DZ2020a",
 				"LRU2020a",
 				"Wel1962a",
-				"Pla1950a"
+				"Pla1950a",
+				"JC1985a",
+				"BT2010a"
 			]
 		},
 		{

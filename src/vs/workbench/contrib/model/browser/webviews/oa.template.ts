@@ -8,7 +8,7 @@ import { buildScaffoldHtml } from './scaffoldParts.js';
 
 export function getOaHtml(): string {
 	return buildScaffoldHtml('oa', OA_METADATA.oa, {
-		title: 'Online Algorithms',
+		title: 'Online Statistics',
 		defaultModel: 'desc',
 		decisionFirstColumn: 'Model',
 	});

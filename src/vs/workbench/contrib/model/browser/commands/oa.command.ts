@@ -10,7 +10,7 @@ import { getOaHtml } from '../webviews/oa.template.js';
 export const OA_PANEL: IScaffoldPanel = {
 	id: 'oa',
 	viewType: 'pollis.oa',
-	title: 'Online Algorithms',
+	title: 'Online Statistics',
 	data: OA_METADATA.oa,
 	html: getOaHtml,
 };

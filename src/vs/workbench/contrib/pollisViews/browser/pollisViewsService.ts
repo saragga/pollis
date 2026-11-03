@@ -29,7 +29,7 @@ const BUILTIN_VIEWS: readonly IPollisView[] = [
 		name: 'Min',
 		show: [
 			// Explore: the Visualise plot types StatsPlots.jl can draw (it includes Plots.jl),
-			// and Descriptive and Online Statistics
+			// and Descriptive Statistics
 			'chiara.explore.dvcs.scatter',
 			'chiara.explore.dvcs.bar',
 			'chiara.explore.dvcs.histogram',

@@ -8,7 +8,7 @@ import { buildScaffoldHtml } from './scaffoldParts.js';
 
 export function getDstatsHtml(): string {
 	return buildScaffoldHtml('dstats', DSTATS_METADATA.dstats, {
-		title: 'Descriptive and Online Statistics',
+		title: 'Descriptive Statistics',
 		defaultModel: 'summ',
 		decisionFirstColumn: 'Method',
 	});
