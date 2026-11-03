@@ -21495,6 +21495,34 @@
 			"open_access": true
 		},
 		{
+			"key": "Lau2009a",
+			"type": "incollection",
+			"title": "Sums of Squares, Moment Matrices and Optimization over Polynomials",
+			"authors": [
+				"Laurent, Monique"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2009,
+			"booktitle": "Emerging Applications of Algebraic Geometry",
+			"editors": [
+				"Putinar, Mihai",
+				"Sullivant, Seth"
+			],
+			"publisher": "Springer",
+			"address": "New York, NY",
+			"pages": "157-270",
+			"isbn": "9780387096858",
+			"doi": "10.1007/978-0-387-09686-5_7",
+			"oa_url": "https://homepages.cwi.nl/~monique/files/moment-ima-update-new.pdf",
+			"abstract": "We consider the problem of minimizing a polynomial over a semialgebraic set defined by polynomial equations and inequalities, which is NP-hard in general. Hierarchies of semidefinite relaxations have been proposed in the literature, involving positive semidefinite moment matrices and the dual theory of sums of squares of polynomials. We present these hierarchies of approximations and their main properties: asymptotic/finite convergence, optimality certificate, and extraction of global optimum solutions. We review the mathematical tools underlying these properties, in particular, some sums of squares representation results for positive polynomials, some results about moment matrices (in particular, of Curto and Fialkow), and the algebraic eigenvalue method for solving zero-dimensional systems of polynomial equations. We try whenever possible to provide detailed proofs and background.",
+			"abstract_source": "author",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "Lau2021a",
 			"type": "misc",
 			"title": "AlphaZero.jl: A Julia Implementation of the AlphaZero Algorithm",
@@ -51084,7 +51112,8 @@
 				"BPT2012a",
 				"Las2015a",
 				"Par2003a",
-				"Las2001a"
+				"Las2001a",
+				"Lau2009a"
 			]
 		},
 		{

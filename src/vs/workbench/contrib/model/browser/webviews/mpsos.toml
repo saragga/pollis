@@ -139,6 +139,13 @@ key = "Par2003a"
 [[references]]
 key = "Las2001a"
 
+[[references]]
+separator = true
+label = "Reviews"
+
+[[references]]
+key = "Lau2009a"
+
 [[models]]
 id = "sos"
 label = "Sum of Squares Certification"
