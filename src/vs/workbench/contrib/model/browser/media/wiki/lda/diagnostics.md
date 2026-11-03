@@ -12,11 +12,11 @@ the exponential of minus the average log probability per word. In their words, i
 
 [Griffiths and Steyvers (2004)](#ref-GS2004a) use the same measure, and note that chance performance gives a perplexity equal to the size of the vocabulary.
 
-## Document completion
+## Held-out tokens
 
 [Wallach, Murray, Salakhutdinov and Mimno (2009)](#ref-WMSM2009a) describe document completion as estimating the probability of the second half of a document given the first: the first half of each held-out document is added to the training data and the second half is kept for evaluation.
 
-The panel's **Held-Out Perplexity** follows the same idea within every document. With **Seed**, it holds out each token with probability **Held-Out Share**, fits LDA on the rest, and scores the held-out tokens. The description reads lower as better, and the action compares the result with a unigram baseline.
+The panel's **Held-Out Perplexity** also scores tokens that were not used for fitting, but holds them out within every document. With **Seed**, it holds out each token with probability **Held-Out Share**, fits LDA on the rest, and scores the held-out tokens. The description reads lower as better, and the action compares the result with a unigram baseline.
 
 ## The estimates scored
 

@@ -36,19 +36,15 @@ The main code fits the model once; **Held-Out Perplexity**, **Compare k Topics**
 
 The Factsheet lists the inputs, the preparation of the corpus and the output. Assumptions covers the bag of words, the fixed number of topics and the Dirichlet priors, Diagnostics the held-out perplexity and the coherence of topics, Interpretation the topics and mixtures, and the Decision Guide the choices of the panel. The LDA page describes the model and its sampler.
 
-The notebook LDA covers topic modelling with TextAnalysis.jl. The panel's textbooks are [Jurafsky and Martin (2024)](#ref-JM2024a) and [Bishop (2006)](#ref-Bis2006a).
+The notebook LDA covers topic modelling with TextAnalysis.jl.
 
 ## References
-
-<a id="ref-Bis2006a"></a>Bishop, C. M. (2006). *Pattern Recognition and Machine Learning*. Springer. [doi:10.1007/978-0-387-45528-0](https://doi.org/10.1007/978-0-387-45528-0)
 
 <a id="ref-BNJ2003a"></a>Blei, D. M., Ng, A. Y., & Jordan, M. I. (2003). Latent Dirichlet Allocation. *Journal of Machine Learning Research* 3, 993-1022. [jmlr.org](https://jmlr.org/papers/v3/blei03a.html)
 
 <a id="ref-GS2004a"></a>Griffiths, T. L., & Steyvers, M. (2004). Finding Scientific Topics. *Proceedings of the National Academy of Sciences* 101(suppl. 1), 5228-5235. [doi:10.1073/pnas.0307752101](https://doi.org/10.1073/pnas.0307752101)
 
 <a id="ref-JTC2023a"></a>JuliaText Contributors (2023). TextAnalysis.jl: Julia NLP Toolkit. [github.com](https://github.com/JuliaText/TextAnalysis.jl)
-
-<a id="ref-JM2024a"></a>Jurafsky, D., & Martin, J. H. (2024). *Speech and Language Processing* (3rd ed., draft). [web.stanford.edu](https://web.stanford.edu/~jurafsky/slp3/)
 
 ## See Also
 

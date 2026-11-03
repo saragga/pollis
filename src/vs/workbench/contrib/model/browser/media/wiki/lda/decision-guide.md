@@ -4,7 +4,7 @@ Choices in the **Latent Dirichlet Allocation** panel: the number of topics, the 
 
 ## Number of topics
 
-**Compare k Topics** fits LDA with k = 2, 5, 10 and 20, on the same split and seed, and prints the held-out perplexity and the mean UMass coherence of each. It plots the perplexity against k with the unigram baseline as a dashed line; the code comment advises choosing k where the curve flattens and coherence holds.
+**Compare k Topics** fits LDA with k = 2, 5, 10 and 20, on the same split and seed, and prints the held-out perplexity and the mean UMass coherence of each. It plots the perplexity against k with the unigram baseline as a dashed line, the same for every k since the split is the same.
 
 [Griffiths and Steyvers (2004)](#ref-GS2004a) chose the number of topics for their PNAS abstracts by Bayesian model selection, approximating the likelihood P(w ∣ T) by the harmonic mean of P(w ∣ z, T) over posterior samples. They found the best fit at 300 topics and note that the result depends on α and β and on the preparation of the data. [Wallach, Murray, Salakhutdinov and Mimno (2009)](#ref-WMSM2009a) compare the harmonic mean method with other estimators of the probability of held-out documents.
 
@@ -47,19 +47,15 @@ The panel's bullet says that phi and theta are read from the last sweep, so one 
 
 ## Reading further
 
-The panel lists [Jurafsky and Martin (2024)](#ref-JM2024a) and [Bishop (2006)](#ref-Bis2006a) as textbooks. Its original papers are [Blei, Ng and Jordan (2003)](#ref-BNJ2003a) for the model, [Griffiths and Steyvers (2004)](#ref-GS2004a) for the collapsed Gibbs sampler, [Wallach, Murray, Salakhutdinov and Mimno (2009)](#ref-WMSM2009a) for the evaluation of topic models on held-out documents, and [Mimno, Wallach, Talley, Leenders and McCallum (2011)](#ref-MWTLM2011a) for the coherence measure. The software entry is [JuliaText Contributors (2023)](#ref-JTC2023a).
+The panel's original papers are [Blei, Ng and Jordan (2003)](#ref-BNJ2003a) for the model, [Griffiths and Steyvers (2004)](#ref-GS2004a) for the collapsed Gibbs sampler, [Wallach, Murray, Salakhutdinov and Mimno (2009)](#ref-WMSM2009a) for the evaluation of topic models on held-out documents, and [Mimno, Wallach, Talley, Leenders and McCallum (2011)](#ref-MWTLM2011a) for the coherence measure. The software entry is [JuliaText Contributors (2023)](#ref-JTC2023a), whose documentation of `lda` describes α < 1 as yielding a sparse topic mixture and β < 1 a sparse word mixture, and values greater than 1 as more uniform mixtures.
 
 ## References
-
-<a id="ref-Bis2006a"></a>Bishop, C. M. (2006). *Pattern Recognition and Machine Learning*. Springer. [doi:10.1007/978-0-387-45528-0](https://doi.org/10.1007/978-0-387-45528-0)
 
 <a id="ref-BNJ2003a"></a>Blei, D. M., Ng, A. Y., & Jordan, M. I. (2003). Latent Dirichlet Allocation. *Journal of Machine Learning Research* 3, 993-1022. [jmlr.org](https://jmlr.org/papers/v3/blei03a.html)
 
 <a id="ref-GS2004a"></a>Griffiths, T. L., & Steyvers, M. (2004). Finding Scientific Topics. *Proceedings of the National Academy of Sciences* 101(suppl. 1), 5228-5235. [doi:10.1073/pnas.0307752101](https://doi.org/10.1073/pnas.0307752101)
 
 <a id="ref-JTC2023a"></a>JuliaText Contributors (2023). TextAnalysis.jl: Julia NLP Toolkit. [github.com](https://github.com/JuliaText/TextAnalysis.jl)
-
-<a id="ref-JM2024a"></a>Jurafsky, D., & Martin, J. H. (2024). *Speech and Language Processing* (3rd ed., draft). [web.stanford.edu](https://web.stanford.edu/~jurafsky/slp3/)
 
 <a id="ref-MWTLM2011a"></a>Mimno, D., Wallach, H. M., Talley, E., Leenders, M., & McCallum, A. (2011). Optimizing Semantic Coherence in Topic Models. *Proceedings of the 2011 Conference on Empirical Methods in Natural Language Processing*, 262-272. [aclanthology.org](https://aclanthology.org/D11-1024/)
 

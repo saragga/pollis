@@ -12,8 +12,16 @@ defaultModel = "lda"
 name = "TextAnalysis.jl"
 github = "https://github.com/JuliaText/TextAnalysis.jl"
 
+[[packages]]
+name = "PollisDatasets.jl"
+github = "https://github.com/Trumpingtons/PollisDatasets.jl"
+
+[[packages]]
+name = "Plots.jl"
+github = "https://github.com/JuliaPlots/Plots.jl"
+
 [requires]
-packages = ["TextAnalysis.jl", "Plots.jl"]
+packages = ["TextAnalysis.jl", "Plots.jl", "PollisDatasets.jl"]
 
 [[notebookSections]]
 label = ""
@@ -72,16 +80,6 @@ key = "JTC2023a"
 
 [[references]]
 separator = true
-label = "Textbooks"
-
-[[references]]
-key = "JM2024a"
-
-[[references]]
-key = "Bis2006a"
-
-[[references]]
-separator = true
 label = "Original Papers"
 
 [[references]]
@@ -115,7 +113,7 @@ detail = "corpus cleaning, document-term matrix and lda(dtm, k, iterations, ...)
 [[inputs]]
 id = "corpus"
 label = "Corpus"
-tooltip = "Vector of text documents, e.g. corpus = [\"first doc\", \"second doc\"]"
+tooltip = "Vector of text documents, e.g. corpus = [\"first doc\", \"second doc\"]. The default, corpus, is the text of The Pollis Guide from PollisDatasets, one document per section."
 default = "corpus"
 
 [[inputs]]
@@ -145,7 +143,7 @@ default = "0.01"
 [[inputs]]
 id = "holdout"
 label = "Held-Out Share"
-tooltip = "Share of each document tokens held out for the document-completion perplexity"
+tooltip = "Share of the tokens of each document held out for the held-out perplexity"
 default = "0.1"
 
 [[inputs]]
@@ -170,6 +168,9 @@ default = "\"replace with the text of a new document\""
 model = "lda"
 code = '''
 using TextAnalysis, SparseArrays, LinearAlgebra, Random  # corpus, DTM and lda; sparse counts; dot; seeding
+{{?corpus=corpus}} using PollisDatasets
+
+{{?corpus=corpus}} corpus = dataset("pollis_guide").text;  # The Pollis Guide, one document per section; datasetinfo("pollis_guide") describes it. Replace it with your own vector of strings.
 
 crps = Corpus([StringDocument(d) for d in {{corpus}}])  # one document per string
 prepare!(crps, strip_punctuation | strip_case | strip_numbers | strip_stopwords)  # clean text and drop stop words
@@ -180,9 +181,7 @@ N, V  = size(dtm.dtm)
 
 k, iters = {{k}}, {{iters}}  # topics, Gibbs sweeps
 a, b     = {{alpha}}, {{beta}}  # Dirichlet priors: document-topic a, topic-word b
-# lda smooths the topic-word counts with its 4th argument and the document-topic counts with its 5th
-# (the reverse of its docstring), so b goes 4th and a goes 5th
-fit_lda(m, kk) = (Random.seed!({{seed}}); lda(m, kk, iters, b, a; showprogress = false))  # lda samples with the global RNG
+fit_lda(m, kk) = (Random.seed!({{seed}}); lda(m, kk, iters, a, b; showprogress = false))  # alpha 4th and beta 5th, as in the documentation; lda samples with the global RNG
 phi, theta = fit_lda(dtm, k)  # phi: k x V p(word | topic); theta: k x N p(topic | document); counts of the last sweep
 
 top_words(P, t, n = 10) = terms[sortperm(Vector(P[t, :]), rev = true)[1:n]]  # n most probable words of topic t
@@ -194,8 +193,8 @@ function umass(ws)  # UMass coherence of a ranked word list (Mimno et al. 2011):
     sum(log((D(ix[m], ix[l]) + 1) / D(ix[l], ix[l])) for m in 2:length(ix) for l in 1:m-1)
 end
 
-# Document completion (Wallach et al. 2009): hold out a share of each document tokens, fit on the rest,
-# and score the held-out tokens with the posterior-mean estimates; an add-one unigram model is the baseline to beat
+# Held-out perplexity: hold out a random share of the tokens of every (document, term) cell, fit on the rest,
+# and score the held-out tokens with the posterior-mean estimates; an add-one unigram model is the baseline
 function heldout_perplexity(kk; share = {{holdout}})
     Random.seed!({{seed}})
     d, w, c = findnz(dtm.dtm)
@@ -252,11 +251,11 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "perplexity"
 label = "Held-Out Perplexity"
-desc = "Document-completion perplexity against a unigram baseline; lower is better"
+desc = "Perplexity of the held-out tokens against a unigram baseline; lower is better"
 code = '''
 r = heldout_perplexity(k)  # refits on the training tokens
 println("Held-out perplexity at k = $k: LDA ", round(r.lda; digits = 1), "   unigram baseline ", round(r.unigram; digits = 1), "   (vocabulary size $V)")
-println(r.lda < r.unigram ? "The topics predict unseen tokens better than word frequencies alone." : "LDA does not beat the unigram model: try fewer topics, more sweeps or a larger corpus.")
+println(r.lda < r.unigram ? "The topics predict the held-out tokens better than the unigram model." : "The unigram model predicts the held-out tokens at least as well as the topics.")
 '''
 
 [[actionGroups.actions]]
@@ -322,7 +321,7 @@ for (kk, r) in zip(ks, res)
     println("k = $kk: held-out perplexity ", round(r.lda; digits = 1), "   mean UMass ", round(mean(umass(top_words(r.phi, t)) for t in 1:kk); digits = 2))
 end
 plot(ks, [r.lda for r in res], marker = :o, label = "LDA", xlabel = "topics k", ylabel = "held-out perplexity")
-hline!([res[1].unigram], ls = :dash, label = "unigram baseline")  # choose k where the curve flattens and coherence holds
+hline!([res[1].unigram], ls = :dash, label = "unigram baseline")  # the same split for every k, so one baseline
 '''
 
 [[actionGroups.actions]]
