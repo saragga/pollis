@@ -32,11 +32,6 @@
 	--pollis-notification-accent: var(--vscode-notificationsError-accent);
 }
 
-/* Pollis: a menu item that does nothing yet, in amber, whatever its severity */
-.monaco-workbench .notifications-list-container .notification-list-item.not-available:is(.severity-info, .severity-warning, .severity-error) {
-	--pollis-notification-accent: var(--vscode-notificationsNotAvailable-accent);
-}
-
 .monaco-workbench .notifications-list-container .notification-list-item:is(.severity-info, .severity-warning, .severity-error) {
 	box-shadow: inset 4px 0 0 var(--pollis-notification-accent);
 }

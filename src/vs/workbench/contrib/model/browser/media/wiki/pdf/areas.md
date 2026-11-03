@@ -23,7 +23,15 @@ The four area inputs are in points, the unit of PDF pages: one point is 1/72 inc
 
 ## Finding the numbers of an area on a page
 
-**Show a Page**, in Visualise, draws the page at 72 dpi, so the pixels of the plot are points and its axes read directly as Left and Top. Reading the corners of a table or a figure off the axes gives the four numbers. **Show the Area** draws the same page with the area outlined in red, which shows before a tab runs whether the rectangle takes in a caption, a footnote or a neighbouring column. A margin of a few points around the block keeps letters on its edge inside without taking in lines nearby.
+**Show a Page**, in Visualise, draws the page at 72 dpi, so the pixels of the plot are points and its axes read directly as Left and Top. Reading the corners of a table or a figure off the axes gives the four numbers. **Show the Area** draws the same page with the area outlined in red, which shows before a tab runs whether the rectangle takes in a caption, a footnote or a neighbouring column. A margin of a few points around the block keeps letters on its edge inside without taking in lines nearby. Select Area, the pane above the inputs, gives the four numbers by dragging on the page instead.
+
+## Selecting an area with the mouse in Select Area
+
+The **Select Area** pane of the PDF Files panel shows a page of the file in **File**, drawn by `pdftoppm` at 144 dpi, with arrows to the previous and next pages. Dragging a rectangle on the page sets **Left**, **Top**, **Width** and **Height (pt)** to it, rounded to whole points, and sets **Region** to Area. On Extract Text, Render Pages and Convert, **First Page** and **Last Page** become the page shown; on Tables, **Page** does. The frame of the rectangle turns green for a moment when the inputs are set, and the area appears cut out beside the page, with its page and its four numbers. Typing in the area inputs moves the rectangle on the page shown.
+
+## Sending an area of a PDF to Ask Pollis
+
+Below the cut-out area of Select Area, three buttons put the area in the question of the panel's Ask Pollis, beside the title, as an attachment. **Text** attaches the text of the area from `pdftotext -layout`, as a .txt file. **Table** attaches the cells of the area as a CSV file separated by semicolons, grouped into rows and columns as on the Tables tab, with its **Column Gap (pt)** and **Row Tolerance (pt)**. **Image** attaches a PNG picture of the area, which only a cloud model receives. In the Ask Pollis pane, the **PDF...** item of the + menu opens a PDF chosen from the disk in the PDF Files panel, whose Select Area then sends areas of it to Ask Pollis.
 
 ## A PDF of just the area
 

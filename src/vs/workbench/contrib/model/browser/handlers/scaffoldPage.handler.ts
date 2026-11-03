@@ -78,6 +78,7 @@ export function registerScaffoldPageHandlers(
 			case 'attachFile':
 			case 'pickDataset':
 			case 'pickDatabase':
+			case 'openPdf':
 				// Answered in Ask Pollis beside the page, from its wikis and its packages' vignettes first
 				await handlePanelAskMessage(msg, webviewInput.webview, commandService, { title: panelTitle, packages: data.packages.map(pkg => pkg.name) });
 				break;

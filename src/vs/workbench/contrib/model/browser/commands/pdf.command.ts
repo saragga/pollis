@@ -6,6 +6,7 @@
 import { IScaffoldPanel } from './scaffold.command.js';
 import { PDF_METADATA } from '../webviews/pdf.data.js';
 import { getPdfHtml } from '../webviews/pdf.template.js';
+import { registerPdfAreaHandlers } from '../handlers/pdf.handler.js';
 
 export const PDF_PANEL: IScaffoldPanel = {
 	id: 'pdf',
@@ -13,4 +14,5 @@ export const PDF_PANEL: IScaffoldPanel = {
 	title: 'PDF Files',
 	data: PDF_METADATA.pdf,
 	html: getPdfHtml,
+	pageHandlers: registerPdfAreaHandlers,
 };

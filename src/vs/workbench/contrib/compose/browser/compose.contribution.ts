@@ -5,8 +5,7 @@
 
 import { localize } from '../../../../../vs/nls.js';
 import { MenuRegistry, MenuId } from '../../../../platform/actions/common/actions.js';
-import { CommandsRegistry } from '../../../../platform/commands/common/commands.js';
-import { INotificationService, NOT_AVAILABLE_NOTIFICATION_ID_PREFIX, Severity } from '../../../../platform/notification/common/notification.js';
+import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
 import './toolboxExtensions.js';
 import './toolboxPanelsPage.js';
 import './askPollisPage.js';
@@ -317,13 +316,15 @@ MenuRegistry.appendMenuItem(ReplicationMenu, {
 	order: 1,
 });
 
+/** The precondition of a menu item not built yet: never met, so the menu shows the item greyed out, as macOS does. */
+const NOT_YET_AVAILABLE = ContextKeyExpr.false();
+
 // The coding agent replicates an article: not built yet
 MenuRegistry.appendMenuItem(ReplicationMenu, {
 	group: '1_replication',
-	command: { id: REPLICATE_ARTICLE_COMMAND_ID, title: localize('replication.replicateArticle', "Replicate a Classical Article...") },
+	command: { id: REPLICATE_ARTICLE_COMMAND_ID, title: localize('replication.replicateArticle', "Replicate a Classical Article..."), precondition: NOT_YET_AVAILABLE },
 	order: 2,
 });
-registerNotYetImplemented(REPLICATE_ARTICLE_COMMAND_ID, localize('replication.replicateArticle', "Replicate a Classical Article..."));
 
 // ==============================================================
 // SUBMENU: Workflows
@@ -334,24 +335,21 @@ registerNotYetImplemented(REPLICATE_ARTICLE_COMMAND_ID, localize('replication.re
 // Operational workflows do a job on the user's own work, such as a notebook made into a report (operationalWorkflows.ts)
 MenuRegistry.appendMenuItem(WorkflowsMenu, {
 	group: '1_build',
-	command: { id: BROWSE_WORKFLOWS_COMMAND_ID, title: localize('workflows.browse', "Browse Workflows...") },
+	command: { id: BROWSE_WORKFLOWS_COMMAND_ID, title: localize('workflows.browse', "Browse Workflows..."), precondition: NOT_YET_AVAILABLE },
 	order: 1,
 });
-registerNotYetImplemented(BROWSE_WORKFLOWS_COMMAND_ID, localize('workflows.browse', "Browse Workflows..."));
 
 MenuRegistry.appendMenuItem(WorkflowsMenu, {
 	group: '1_build',
-	command: { id: EXTRACT_WORKFLOW_COMMAND_ID, title: localize('workflows.extract', "Extract a Workflow...") },
+	command: { id: EXTRACT_WORKFLOW_COMMAND_ID, title: localize('workflows.extract', "Extract a Workflow..."), precondition: NOT_YET_AVAILABLE },
 	order: 2,
 });
-registerNotYetImplemented(EXTRACT_WORKFLOW_COMMAND_ID, localize('workflows.extract', "Extract a Workflow..."));
 
 MenuRegistry.appendMenuItem(WorkflowsMenu, {
 	group: '1_build',
-	command: { id: COMBINE_WORKFLOWS_COMMAND_ID, title: localize('workflows.combine', "Combine Workflows...") },
+	command: { id: COMBINE_WORKFLOWS_COMMAND_ID, title: localize('workflows.combine', "Combine Workflows..."), precondition: NOT_YET_AVAILABLE },
 	order: 3,
 });
-registerNotYetImplemented(COMBINE_WORKFLOWS_COMMAND_ID, localize('workflows.combine', "Combine Workflows..."));
 
 // Event studies of the filings an alert on SEC filings fires, with the minute prices around each (eventStudiesPage.ts)
 MenuRegistry.appendMenuItem(WorkflowsMenu, {
@@ -368,20 +366,18 @@ MenuRegistry.appendMenuItem(WorkflowsMenu, {
 
 MenuRegistry.appendMenuItem(WorkflowsMenu, {
 	group: '2_operational',
-	command: { id: CREATE_OPERATIONAL_WORKFLOW_COMMAND_ID, title: localize('operationalWorkflows.create', "Create Operational Workflow...") },
+	command: { id: CREATE_OPERATIONAL_WORKFLOW_COMMAND_ID, title: localize('operationalWorkflows.create', "Create Operational Workflow..."), precondition: NOT_YET_AVAILABLE },
 	order: 2,
 });
 // Not built yet
-registerNotYetImplemented(CREATE_OPERATIONAL_WORKFLOW_COMMAND_ID, localize('operationalWorkflows.create', "Create Operational Workflow..."));
 
 // Agent sessions run on a schedule, as in the Automations page of VS Code's Agents window. Not in
 // Code - OSS 1.117.0: it comes with the rebase
 MenuRegistry.appendMenuItem(WorkflowsMenu, {
 	group: '3_automations',
-	command: { id: AUTOMATIONS_COMMAND_ID, title: localize('workflows.automations', "Automations...") },
+	command: { id: AUTOMATIONS_COMMAND_ID, title: localize('workflows.automations', "Automations..."), precondition: NOT_YET_AVAILABLE },
 	order: 1,
 });
-registerNotYetImplemented(AUTOMATIONS_COMMAND_ID, localize('workflows.automations', "Automations..."));
 
 
 
@@ -452,22 +448,10 @@ MenuRegistry.appendMenuItem(ReportsMenu, {
 	order: 1,
 });
 
-/** Registers a command that says, in amber, that its menu item is not built yet. */
-function registerNotYetImplemented(id: string, title: string): void {
-	CommandsRegistry.registerCommand(id, accessor => {
-		accessor.get(INotificationService).notify({
-			id: NOT_AVAILABLE_NOTIFICATION_ID_PREFIX + id,
-			severity: Severity.Info,
-			message: localize('compose.notYetImplemented', "{0}: Not yet implemented", title.replace(/\.\.\.$/, '')),
-		});
-	});
-}
-
 for (const item of composeItems) {
-	registerNotYetImplemented(item.id, item.title);
 	MenuRegistry.appendMenuItem(item.menu, {
 		group: item.group,
-		command: { id: item.id, title: item.title },
+		command: { id: item.id, title: item.title, precondition: NOT_YET_AVAILABLE },
 		order: item.order,
 	});
 }
@@ -527,12 +511,9 @@ const collaborationItems = [
 ];
 
 for (const item of collaborationItems) {
-	if (!IMPLEMENTED_COLLABORATION_COMMANDS.has(item.id)) {
-		registerNotYetImplemented(item.id, item.title);
-	}
 	MenuRegistry.appendMenuItem(item.menu, {
 		group: item.group,
-		command: { id: item.id, title: item.title },
+		command: { id: item.id, title: item.title, precondition: IMPLEMENTED_COLLABORATION_COMMANDS.has(item.id) ? undefined : NOT_YET_AVAILABLE },
 		order: item.order,
 	});
 }

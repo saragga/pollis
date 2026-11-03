@@ -125,12 +125,6 @@ export function isNotificationSource(thing: unknown): thing is INotificationSour
 	return false;
 }
 
-/**
- * Pollis: the start of the id of a notification that says a menu item does nothing yet. Such a notification is drawn
- * in amber, apart from the information, warnings and errors.
- */
-export const NOT_AVAILABLE_NOTIFICATION_ID_PREFIX = 'pollis.notAvailable.';
-
 export interface INotification extends INotificationProperties {
 
 	/**

@@ -6,7 +6,7 @@
 // The + at the start of the last line of a chat's input box, in Ask Pollis, in a panel's Ask Pollis and in the Collaboration chat: its menu,
 // Image, File, Dataset and Database, and an image or a file pasted or dragged in. Each chat says what an image and a
 // file become; a dataset and a database are picked by the workbench, which each chat asks with `pickDataset` and
-// `pickDatabase`.
+// `pickDatabase`. Ask Pollis has a PDF... item too, which asks the workbench with `openPdf` to open a PDF in PDF Files.
 
 /** The titles of the + and of its menu's items. */
 export interface IComposerAddTitles {
@@ -15,6 +15,8 @@ export interface IComposerAddTitles {
 	readonly file: string;
 	readonly dataset: string;
 	readonly database: string;
+	/** PDF..., in the menus that have it. */
+	readonly pdf?: string;
 }
 
 const composerAddSvg = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M8 2.5v11M2.5 8h11"/></svg>`;
@@ -26,7 +28,8 @@ export function composerAddHtml(titles: IComposerAddTitles, prefix = ''): string
 						<button id="${prefix}addImage" role="menuitem">${titles.image}</button>
 						<button id="${prefix}addFile" role="menuitem">${titles.file}</button>
 						<button id="${prefix}addDataset" role="menuitem">${titles.dataset}</button>
-						<button id="${prefix}addDatabase" role="menuitem">${titles.database}</button>
+						<button id="${prefix}addDatabase" role="menuitem">${titles.database}</button>${titles.pdf ? `
+						<button id="${prefix}addPdf" role="menuitem">${titles.pdf}</button>` : ''}
 					</div>
 					<button class="icon" id="${prefix}add" title="${titles.add}" aria-label="${titles.add}" aria-haspopup="menu">${composerAddSvg}</button>
 					<input type="file" id="${prefix}file" accept="image/png,image/jpeg,image/gif,image/webp" hidden>
@@ -108,6 +111,7 @@ export function composerAddScript(inputId: string, maxImageBytes: number, prefix
 		byId('addFile').addEventListener('click', () => byId('anyFile').click());
 		byId('addDataset').addEventListener('click', () => vscode.postMessage({ command: 'pickDataset' }));
 		byId('addDatabase').addEventListener('click', () => vscode.postMessage({ command: 'pickDatabase' }));
+		byId('addPdf')?.addEventListener('click', () => vscode.postMessage({ command: 'openPdf' }));
 		for (const [id, handler] of [['file', handlers.image], ['anyFile', handlers.file]]) {
 			byId(id).addEventListener('change', () => {
 				const file = byId(id).files[0];

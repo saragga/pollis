@@ -44,6 +44,9 @@ export const ASK_POLLIS_COMMAND_ID = 'pollis.askPollis';
 /** What the + of Ask Pollis attaches, run with an `AskPollisAttachRequest`, which gives an `IAskPollisAttached`. */
 export const ASK_POLLIS_ATTACH_COMMAND_ID = 'pollis.askPollis.attach';
 
+/** PDF... in the + of Ask Pollis: a PDF picked, opened in PDF Files, whose Select Area sends its areas to the panel's Ask Pollis. */
+export const ASK_POLLIS_OPEN_PDF_COMMAND_ID = 'pollis.askPollis.openPdf';
+
 /** Whether a cloud model answers, the only one given images. */
 export const ASK_POLLIS_ANSWERS_IN_CLOUD_COMMAND_ID = 'pollis.askPollis.answersInCloud';
 

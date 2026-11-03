@@ -821,13 +821,6 @@ export const NOTIFICATIONS_ERROR_ACCENT = registerColor('notificationsError.acce
 	hcLight: NOTIFICATIONS_ERROR_ICON_FOREGROUND
 }, localize('notificationsErrorAccent', "Accent color of error notifications: the bar at the left edge, the icon and a faint tint. Notifications slide in from the bottom right of the window."));
 
-export const NOTIFICATIONS_NOT_AVAILABLE_ACCENT = registerColor('notificationsNotAvailable.accent', {
-	dark: Color.fromHex('#D29922'),
-	light: Color.fromHex('#9A6700'),
-	hcDark: NOTIFICATIONS_WARNING_ICON_FOREGROUND,
-	hcLight: NOTIFICATIONS_WARNING_ICON_FOREGROUND
-}, localize('notificationsNotAvailableAccent', "Accent color of the notifications that say a menu item does nothing yet: the bar at the left edge and the icon. Notifications slide in from the bottom right of the window."));
-
 export const WINDOW_ACTIVE_BORDER = registerColor('window.activeBorder', {
 	dark: null,
 	light: null,

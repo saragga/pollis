@@ -1,6 +1,6 @@
 # PDF Files: Factsheet
 
-A quick reference for the **PDF Files** panel: the ten tabs, the Poppler tool behind each, the inputs and the Next Steps actions. Every tab runs the command-line tools of Poppler ([Poppler Developers (2025)](#ref-PD2025a)), which `Poppler_jll.jl` installs for macOS, Linux and Windows.
+A quick reference for the **PDF Files** panel: the ten tabs, the Poppler tool behind each, the inputs, the Select Area pane and the Next Steps actions. Every tab runs the command-line tools of Poppler ([Poppler Developers (2025)](#ref-PD2025a)), which `Poppler_jll.jl` installs for macOS, Linux and Windows.
 
 ## The ten tabs of PDF Files side by side
 
@@ -33,6 +33,17 @@ A quick reference for the **PDF Files** panel: the ten tabs, the Poppler tool be
 | **Format** | SVG | Convert | SVG, PDF, PostScript, EPS, HTML or XML |
 
 The remaining inputs choose what a single tab shows or does: **Show** on Document Info and Fonts, **Images** on Images, **Image Format** and **Colour** on Render Pages, **Split Into** on Split, **Append Files** on Merge, and **Action** and **File to Attach** on Attachments.
+
+## The Select Area pane of PDF Files
+
+| Part | What it does |
+|---|---|
+| **The page** | A page of File drawn by `pdftoppm`, with arrows to the previous and next pages |
+| **Dragging on the page** | Sets Left, Top, Width and Height to the rectangle, Region to Area, and the page range to the page; the frame turns green |
+| **Cropped Area** | The area cut out of the page, with its page and its four numbers in points |
+| **Text**, **Table**, **Image** | The text, the cells as CSV or a picture of the area, attached to the question of the panel's Ask Pollis |
+
+The **PDF...** item of the + menu of Ask Pollis opens a PDF from the disk in the PDF Files panel.
 
 ## Next Steps actions of PDF Files
 

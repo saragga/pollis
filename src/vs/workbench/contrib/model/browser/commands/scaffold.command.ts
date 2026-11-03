@@ -19,7 +19,9 @@ import { IWorkspaceContextService } from '../../../../../platform/workspace/comm
 import { IScaffoldPanelData } from '../common/model.types.js';
 import { IQuickInputService } from '../../../../../platform/quickinput/common/quickInput.js';
 import { ISecretStorageService } from '../../../../../platform/secrets/common/secrets.js';
-import { IWebviewService } from '../../../webview/browser/webview.js';
+import { IWebview, IWebviewService } from '../../../webview/browser/webview.js';
+import { IDisposable } from '../../../../../base/common/lifecycle.js';
+import { disposableTimeout } from '../../../../../base/common/async.js';
 import { IStorageService } from '../../../../../platform/storage/common/storage.js';
 import { registerScaffoldWebviewHandlers } from '../handlers/scaffold.handler.js';
 import { IApiKeyProvider } from '../handlers/model.handler.js';
@@ -34,10 +36,12 @@ export interface IScaffoldPanel {
 	readonly html: () => string;
 	/** Credentials the panel's code needs (an API key, a contact): kept in Secret Storage and set as environment variables in the Julia REPL. */
 	readonly apiKey?: IApiKeyProvider;
+	/** Answers the messages of the panel's own script, beside the shared ones; what it returns is disposed with the panel. */
+	readonly pageHandlers?: (webview: IWebview, accessor: ServicesAccessor) => IDisposable;
 }
 
-/** Open a scaffold panel, optionally on a given model toggle. */
-export function openScaffoldWebview(accessor: ServicesAccessor, panel: IScaffoldPanel, initialModel?: string): void {
+/** Open a scaffold panel, optionally on a given model toggle and with some inputs set, by their ids. */
+export function openScaffoldWebview(accessor: ServicesAccessor, panel: IScaffoldPanel, initialModel?: string, initialInputs?: Readonly<Record<string, string>>): void {
 	const webviewInput = accessor.get(IWebviewWorkbenchService).openWebview(
 		{
 			title: panel.title,
@@ -53,7 +57,7 @@ export function openScaffoldWebview(accessor: ServicesAccessor, panel: IScaffold
 
 	webviewInput.webview.setHtml(panel.html());
 
-	registerScaffoldWebviewHandlers(
+	const disposables = registerScaffoldWebviewHandlers(
 		webviewInput,
 		panel.id,
 		panel.title,
@@ -76,4 +80,15 @@ export function openScaffoldWebview(accessor: ServicesAccessor, panel: IScaffold
 		accessor.get(IStorageService),
 		panel.apiKey,
 	);
+	if (panel.pageHandlers) {
+		disposables.add(panel.pageHandlers(webviewInput.webview, accessor));
+	}
+	if (initialInputs) {
+		// After the model, which the shared handlers set first
+		disposables.add(disposableTimeout(() => {
+			for (const [input, value] of Object.entries(initialInputs)) {
+				webviewInput.webview.postMessage({ command: 'setInputValue', input, value });
+			}
+		}, 0));
+	}
 }

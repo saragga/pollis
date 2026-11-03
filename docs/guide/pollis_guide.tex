@@ -466,17 +466,34 @@ from \texttt{PGPASSWORD} or \texttt{\textasciitilde/.pgpass}.
 \subhead{Panels for data}
 \begin{itemize}
   \item \ui{Explore > Access Files and Databases}: \ui{SQL Databases} (query, import a CSV, Parquet or JSON
-    file, save a table, export a query), \ui{CSV Files} and \ui{Excel Workbooks}.
+    file, save a table, export a query), \ui{CSV Files}, \ui{Excel Workbooks} and \ui{PDF Files}.
   \item \ui{Explore > Access Data Libraries}: Hugging Face and Kaggle datasets, Yahoo Finance, Alpha Vantage,
     US SEC EDGAR, FRED and the European Central Bank. A provider that needs an API key shows
     \ui{Set API key} on the \ui{Powered by:} line; the key is kept in your system's secure storage.
 \end{itemize}
+
+\subhead{PDF Files}
+\ui{Explore > Access Files and Databases > PDF Files} reads a PDF with the Poppler tools, in ten tabs: its
+text and tables, document information, fonts and images, its pages as images, conversion to SVG, PDF,
+PostScript, HTML or XML, splitting, merging and attachments. Extract Text, Tables, Render Pages and Convert
+work on the whole page or on an area of it.
+\begin{enumerate}[label=\arabic*.]
+  \item Give the PDF in \ui{File}. The default, \texttt{sample.pdf}, is the sample of PollisDatasets.
+  \item Open \ui{Select Area}, above the inputs: the page is drawn, with arrows to the other pages.
+  \item Drag a box around a table, a paragraph or a figure. Its frame turns green, \ui{Left}, \ui{Top},
+    \ui{Width} and \ui{Height} fill in, \ui{Region} becomes \ui{Area}, and the area is shown cut out beside
+    the page. The Example Code works on the same area.
+  \item \ui{Text}, \ui{Table} or \ui{Image}, under the area, puts its text, its cells as a CSV file, or a
+    picture of it in the question of the panel's Ask Pollis, beside the title.
+\end{enumerate}
+In Ask Pollis, \ui{PDF...} in the + opens a PDF of yours in PDF Files (Ask Pollis, page 46).
 
 \begin{trouble}
 \textbf{The view shows no tables} & Choose \ui{Refresh Schemas}. A new database stays empty until you create a table in the Julia REPL. \\
 \textbf{\ui{PollisDatasets} does not connect} & The Julia REPL has not started yet, or is still installing: wait for the Welcome page to say the database is ready. \\
 \textbf{Cannot write to \texttt{pollis}} & The built-in database is read-only: save your tables in a database of your own. \\
 \textbf{PostgreSQL does not connect} & Check the host, port and \ui{SSL Mode}; the \ui{Connection Timeout} is 10 seconds. \\
+\textbf{\ui{Select Area} shows no page} & The first time, Julia installs Poppler, for a minute or two; the page then comes by itself. A PDF with a password is not shown. \\
 \end{trouble}
 
 \begin{note}{Not available yet}
@@ -2058,6 +2075,14 @@ is the last item. The passages are always found on your
 computer; a cloud model is sent the question, the conversation and the eight passages, which are Pollis' documents, and nothing else.
 
 \newpage
+\subhead{Add to a question}
+The + at the start of the question adds, as a chip above it: \ui{Image}, a picture, given only to a cloud model;
+\ui{File}, a text file; \ui{Dataset}, a CSV file, given as its size, its header and its first rows; and
+\ui{Database}, a DuckDB file, given as its tables and their columns. A long text is cut, and a note says so.
+\ui{PDF...} opens a PDF in PDF Files, whose \ui{Select Area} sends the text, the table or a picture of an
+area of a page (Data and Databases, page 6). Every panel has an Ask Pollis of its own, with its +, at the
+right of its title; its answer comes in the Ask Pollis pane beside the panel.
+
 \subhead{Evaluate Answering Models}
 \ui{Evaluate Answering Models}, the last item of the model's menu and in \ui{Compose > Local Models}, sets the models you choose against each other on the same
 questions, the same passages and the same instruction: local models of different sizes, say, against Claude

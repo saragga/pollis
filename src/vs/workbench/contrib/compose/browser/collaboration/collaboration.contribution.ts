@@ -20,7 +20,7 @@ import './testConnection.js';
 // Compose > Collaboration: starting, joining and leaving a session, the chat, Test Connection, Share My Editor and Share Dataset.
 // The menu items are in compose.contribution.ts; these are the commands behind them.
 
-/** The Collaboration commands built so far; compose.contribution.ts leaves them out of its "Not yet implemented" stubs. */
+/** The Collaboration commands built so far; compose.contribution.ts shows the others greyed out in the menu. */
 export const IMPLEMENTED_COLLABORATION_COMMANDS: ReadonlySet<string> = new Set([
 	'pollis.collaboration.startSideBySide',
 	'pollis.collaboration.joinSession',

@@ -18,7 +18,7 @@ import { INotificationViewItem, NotificationViewItem, NotificationViewItemConten
 import { ClearNotificationAction, ExpandNotificationAction, CollapseNotificationAction, ConfigureNotificationAction, getNotificationExpandIcon, getNotificationCollapseIcon } from './notificationsActions.js';
 import { IKeybindingService } from '../../../../platform/keybinding/common/keybinding.js';
 import { ProgressBar } from '../../../../base/browser/ui/progressbar/progressbar.js';
-import { INotificationService, NOT_AVAILABLE_NOTIFICATION_ID_PREFIX, NotificationsFilter, Severity, isNotificationSource } from '../../../../platform/notification/common/notification.js';
+import { INotificationService, NotificationsFilter, Severity, isNotificationSource } from '../../../../platform/notification/common/notification.js';
 import { isNonEmptyArray } from '../../../../base/common/arrays.js';
 import { Codicon } from '../../../../base/common/codicons.js';
 import { ThemeIcon } from '../../../../base/common/themables.js';
@@ -433,8 +433,6 @@ export class NotificationTemplateRenderer extends Disposable {
 		this.template.container.classList.toggle('severity-info', notification.severity === Severity.Info);
 		this.template.container.classList.toggle('severity-warning', notification.severity === Severity.Warning);
 		this.template.container.classList.toggle('severity-error', notification.severity === Severity.Error);
-		// Pollis: a menu item that does nothing yet, in amber
-		this.template.container.classList.toggle('not-available', !!notification.id?.startsWith(NOT_AVAILABLE_NOTIFICATION_ID_PREFIX));
 	}
 
 	private renderMessage(notification: INotificationViewItem, customHover: IManagedHover): boolean {

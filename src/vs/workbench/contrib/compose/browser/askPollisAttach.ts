@@ -5,19 +5,20 @@
 
 // What the + of Ask Pollis attaches to a question, the same in its pane and in the pill of a panel: the + and its menu,
 // the chips above the question, and the messages they send to the workbench, which picks a dataset or a database and
-// cuts a long text (ASK_POLLIS_ATTACH_COMMAND_ID, in askPollisPage.ts).
+// cuts a long text (ASK_POLLIS_ATTACH_COMMAND_ID, in askPollisPage.ts), or opens a PDF in PDF Files (ASK_POLLIS_OPEN_PDF_COMMAND_ID).
 
 import { localize } from '../../../../nls.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
-import { ASK_POLLIS_ANSWERS_IN_CLOUD_COMMAND_ID, ASK_POLLIS_ATTACH_COMMAND_ID, ASK_POLLIS_COMMAND_ID, AskPollisAttachRequest, IAskPollisAttached, IAskPollisAttachment, IAskPollisFromPanel, IAskPollisPanel } from '../common/askPollis.js';
+import { ASK_POLLIS_ANSWERS_IN_CLOUD_COMMAND_ID, ASK_POLLIS_ATTACH_COMMAND_ID, ASK_POLLIS_COMMAND_ID, ASK_POLLIS_OPEN_PDF_COMMAND_ID, AskPollisAttachRequest, IAskPollisAttached, IAskPollisAttachment, IAskPollisFromPanel, IAskPollisPanel } from '../common/askPollis.js';
 import { MAX_FILE_BYTES, MAX_IMAGE_BYTES } from './collaboration/collaborationProtocol.js';
 import { composerAddCss, composerAddHtml, composerAddScript } from './composerAdd.js';
 
-/** The messages of the +: a text file read in the page, or a dataset or a database for the workbench to pick. */
+/** The messages of the +: a text file read in the page, a dataset or a database for the workbench to pick, or a PDF to open in PDF Files. */
 export type AskAttachMessage =
 	| { readonly command: 'attachFile'; readonly name: string; readonly content: string }
 	| { readonly command: 'pickDataset' }
-	| { readonly command: 'pickDatabase' };
+	| { readonly command: 'pickDatabase' }
+	| { readonly command: 'openPdf' };
 
 /** The messages of a panel's Ask Pollis: its question, what the + attaches, and which model answers. */
 export type PanelAskMessage =
@@ -25,8 +26,12 @@ export type PanelAskMessage =
 	| { readonly command: 'askPollis'; readonly question: string; readonly attachments?: readonly IAskPollisAttachment[] }
 	| { readonly command: 'askPollisModel' };
 
-/** Runs a message of the + and posts what it attached, or why not, as `attached`. */
+/** Runs a message of the + and posts what it attached, or why not, as `attached`; PDF... attaches nothing itself. */
 export async function handleAskAttachMessage(message: AskAttachMessage, webview: { postMessage(message: unknown): void }, commandService: ICommandService): Promise<void> {
+	if (message.command === 'openPdf') {
+		await commandService.executeCommand(ASK_POLLIS_OPEN_PDF_COMMAND_ID);
+		return;
+	}
 	let request: AskPollisAttachRequest;
 	if (message.command === 'attachFile') {
 		request = { kind: 'file', name: message.name, content: message.content };
@@ -53,11 +58,12 @@ export async function handlePanelAskMessage(message: PanelAskMessage, webview: {
 /** The + and its menu; `prefix` starts their ids, where a page may already have an `add` or a `file`. */
 export function askAddHtml(prefix = ''): string {
 	return composerAddHtml({
-		add: localize('askPollis.add', "Add an Image, a File, a Dataset or a Database"),
+		add: localize('askPollis.add', "Add an Image, a File, a Dataset, a Database or an Area of a PDF"),
 		image: localize('askPollis.addImage', "Image"),
 		file: localize('askPollis.addFile', "File"),
 		dataset: localize('askPollis.addDataset', "Dataset"),
 		database: localize('askPollis.addDatabase', "Database"),
+		pdf: localize('askPollis.addPdf', "PDF..."),
 	}, prefix);
 }
 

@@ -516,7 +516,7 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 				}, () => undefined);
 			} else if (message.command === 'ask' && message.question.trim()) {
 				ask(message.question.trim(), message.searchIn, message.attachments ?? []);
-			} else if (message.command === 'attachFile' || message.command === 'pickDataset' || message.command === 'pickDatabase') {
+			} else if (message.command === 'attachFile' || message.command === 'pickDataset' || message.command === 'pickDatabase' || message.command === 'openPdf') {
 				handleAskAttachMessage(message, webview, commandService);
 			} else if (message.command === 'stop') {
 				answering?.cancel();

@@ -6364,7 +6364,6 @@
 		},
 		{
 			"id": "pdf",
-			"title": "PDF Files",
 			"source": "pollis",
 			"commands": [
 				{
@@ -6374,26 +6373,8 @@
 					]
 				}
 			],
-			"portable": true,
-			"defaultModel": "text",
-			"decisionFirstColumn": "Tab",
-			"toml": "src/vs/workbench/contrib/model/browser/webviews/pdf.toml",
-			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
-			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
-			"wikis": [
-				"pdf/areas.md",
-				"pdf/decision-guide.md",
-				"pdf/diagnostics.md",
-				"pdf/factsheet.md",
-				"pdf/overview.md",
-				"pdf/pages-and-attachments.md",
-				"pdf/rendering-and-conversion.md",
-				"pdf/text-and-tables.md"
-			],
-			"notebooks": [],
-			"packages": [
-				"Poppler_jll.jl"
-			]
+			"portable": false,
+			"reason": "the panel pdf has its own code (illustrationLabel, illustrationIntro, headScriptJs, illustrationOverrideJs, extraCss, tailScriptJs in src/vs/workbench/contrib/model/browser/webviews/pdf.template.ts), so it cannot go in a data-only extension"
 		},
 		{
 			"id": "pgm",
