@@ -91,6 +91,16 @@ bundled = true
 
 [[references]]
 separator = true
+label = "Software"
+
+[[references]]
+key = "Joh2007c"
+
+[[references]]
+key = "RLP2016a"
+
+[[references]]
+separator = true
 label = "Original Papers"
 
 [[references]]
