@@ -10634,6 +10634,42 @@
 			"open_access": false
 		},
 		{
+			"key": "FP2009a",
+			"type": "article",
+			"title": "Media Coverage and the Cross-section of Stock Returns",
+			"authors": [
+				"Fang, Lily",
+				"Peress, Joel"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2009,
+			"journal": "The Journal of Finance",
+			"volume": "64",
+			"number": "5",
+			"pages": "2023-2052",
+			"issn": "0022-1082",
+			"doi": "10.1111/j.1540-6261.2009.01493.x",
+			"openalex": "W3125591525",
+			"url": "https://doi.org/10.1111/j.1540-6261.2009.01493.x",
+			"oa_url": "https://doi.org/10.2139/ssrn.971202",
+			"abstract": "By reaching a broad population of investors, mass media can alleviate informational frictions and affect security pricing even if it does not supply genuine news. We investigate this hypothesis by studying the cross-sectional relation between media coverage and expected stock returns. We find that stocks with no media coverage earn higher returns than stocks with high media coverage even after controlling for well-known risk factors. These results are more pronounced among small stocks and stocks with high individual ownership, low analyst following, and high idiosyncratic volatility. Our findings suggest that the breadth of information dissemination affects stock returns.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"media coverage",
+				"cross-section of stock returns",
+				"information frictions",
+				"analyst coverage",
+				"idiosyncratic volatility",
+				"information dissemination"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "FPLPK2016a",
 			"type": "article",
 			"title": "Models for optimising the theta method and their relationship to state space models",
@@ -33972,6 +34008,41 @@
 			"open_access": true
 		},
 		{
+			"key": "Tet2007a",
+			"type": "article",
+			"title": "Giving Content to Investor Sentiment: The Role of Media in the Stock Market",
+			"authors": [
+				"Tetlock, Paul C."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2007,
+			"journal": "The Journal of Finance",
+			"volume": "62",
+			"number": "3",
+			"pages": "1139-1168",
+			"issn": "0022-1082",
+			"doi": "10.1111/j.1540-6261.2007.01232.x",
+			"openalex": "W3122944446",
+			"url": "https://doi.org/10.1111/j.1540-6261.2007.01232.x",
+			"oa_url": "https://doi.org/10.2139/ssrn.685145",
+			"abstract": "I quantitatively measure the interactions between the media and the stock market using daily content from a popular Wall Street Journal column. I find that high media pessimism predicts downward pressure on market prices followed by a reversion to fundamentals, and unusually high or low pessimism predicts high market trading volume. These and similar results are consistent with theoretical models of noise and liquidity traders, and are inconsistent with theories of media content as a proxy for new information about fundamental asset values, as a proxy for market volatility, or as a sideshow with no relationship to asset markets.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"investor sentiment",
+				"Wall Street Journal",
+				"stock market",
+				"trading volume",
+				"noise traders",
+				"media content"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "The1986a",
 			"type": "article",
 			"title": "Spurious dimension from correlation algorithms applied to limited time-series data",
@@ -51532,6 +51603,17 @@
 				"KHL2008a",
 				"SV2010a",
 				"BPWLC...2012a"
+			]
+		},
+		{
+			"id": "mediaCoverage",
+			"title": "Media Coverage",
+			"commands": [
+				"pollis.mediaCoverage.show"
+			],
+			"keys": [
+				"FP2009a",
+				"Tet2007a"
 			]
 		},
 		{

@@ -1035,7 +1035,7 @@ export class ExtensionsListView extends AbstractExtensionsListView<IExtension> {
 			), extensionId => extensionId.toLowerCase());
 	}
 
-	// Get All types of recommendations, trimmed to show a max of 8 at any given time
+	// Get All types of recommendations, trimmed to show a max of 10 at any given time (Pollis: 8 upstream)
 	private async getAllRecommendationsModel(options: IQueryOptions, token: CancellationToken): Promise<IPagedModel<IExtension>> {
 		const localExtensions = await this.extensionsWorkbenchService.queryLocal(this.options.server);
 		const localExtensionIds = localExtensions.map(e => e.identifier.id.toLowerCase());
@@ -1057,7 +1057,7 @@ export class ExtensionsListView extends AbstractExtensionsListView<IExtension> {
 		const installableRecommendations = await this.getInstallableRecommendations(allRecommendations, { ...options, source: 'recommendations-all', sortBy: undefined }, token);
 
 		const result: IExtension[] = [];
-		for (let i = 0; i < installableRecommendations.length && result.length < 8; i++) {
+		for (let i = 0; i < installableRecommendations.length && result.length < 10; i++) {
 			const recommendation = allRecommendations[i];
 			if (isString(recommendation)) {
 				const extension = installableRecommendations.find(extension => areSameExtensions(extension.identifier, { id: recommendation }));

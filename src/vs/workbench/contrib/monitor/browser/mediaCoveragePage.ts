@@ -7,8 +7,19 @@ import { DisposableStore } from '../../../../base/common/lifecycle.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
+import { IFileService } from '../../../../platform/files/common/files.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
+import { INotificationService } from '../../../../platform/notification/common/notification.js';
+import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { IQuickInputService } from '../../../../platform/quickinput/common/quickInput.js';
+import { IStorageService } from '../../../../platform/storage/common/storage.js';
+import { IEditorService } from '../../../services/editor/common/editorService.js';
+import { IPathService } from '../../../services/path/common/pathService.js';
+import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
+import { MEDIACOVERAGE_METADATA } from '../../model/browser/webviews/mediaCoverage.data.js';
+import { buildWebviewHtml } from '../../model/browser/webviews/webviewScaffold.js';
+import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
+import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { describeItems, IAlertsService } from './alertsService.js';
@@ -16,7 +27,6 @@ import { describeRelease, FOMC_FEED, fomcRelease } from './fomcReleases.js';
 import { COVERAGE_SOURCES, CoverageMarks, CoverageSource, IMediaCoverageRequest, IMediaCoverageService, KEY_PAGES, KEYED_SOURCES, KeyedSource } from './mediaCoverageService.js';
 import { OPEN_LINK_COMMAND_ID } from './openLink.js';
 import { IRssFeedsService } from './rssFeedsService.js';
-import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
 
 // Explore > Media Coverage: words over any period: how many news articles there were, by hour, day or week, with the
 // FOMC's releases, a ticker's SEC filings or a time of the user's marked; and the articles, newest first, which open in
@@ -30,7 +40,8 @@ type CoverageMessage =
 	| { readonly command: 'setSources'; readonly sources: readonly CoverageSource[] }
 	| { readonly command: 'setKey'; readonly source: KeyedSource }
 	| { readonly command: 'getKey'; readonly source: KeyedSource }
-	| { readonly command: 'openUrl'; readonly url: string };
+	// Not `openUrl`, which the scaffold's handler answers too
+	| { readonly command: 'openArticle'; readonly url: string };
 
 const DAY = 24 * 60 * 60 * 1000;
 const MARKS: readonly CoverageMarks[] = ['none', 'fomc', 'filings', 'time'];
@@ -62,6 +73,14 @@ function openMediaCoveragePage(accessor: ServicesAccessor, request: IMediaCovera
 	const rssFeedsService = accessor.get(IRssFeedsService);
 	const commandService = accessor.get(ICommandService);
 	const quickInputService = accessor.get(IQuickInputService);
+	const openerService = accessor.get(IOpenerService);
+	const editorService = accessor.get(IEditorService);
+	const notificationService = accessor.get(INotificationService);
+	const notebookEditorModelResolverService = accessor.get(INotebookEditorModelResolverService);
+	const notebookKernelService = accessor.get(INotebookKernelService);
+	const fileService = accessor.get(IFileService);
+	const pathService = accessor.get(IPathService);
+	const storageService = accessor.get(IStorageService);
 
 	if (openPage && !openPage.input.isDisposed()) {
 		webviewWorkbenchService.revealWebview(openPage.input, openPage.input.group ?? -1, false);
@@ -84,6 +103,7 @@ function openMediaCoveragePage(accessor: ServicesAccessor, request: IMediaCovera
 	webviewInput.webview.setHtml(pageHtml());
 
 	const disposables = new DisposableStore();
+	disposables.add(registerScaffoldPageHandlers(webviewInput, 'mediaCoverage', title, MEDIACOVERAGE_METADATA.mediaCoverage, openerService, editorService, commandService, notificationService, notebookEditorModelResolverService, notebookKernelService, fileService, pathService, storageService));
 	disposables.add(webviewInput.webview.onDidDispose(() => {
 		openPage = undefined;
 		disposables.dispose();
@@ -199,7 +219,7 @@ function openMediaCoveragePage(accessor: ServicesAccessor, request: IMediaCovera
 				});
 				break;
 			}
-			case 'openUrl':
+			case 'openArticle':
 				if (/^https?:\/\//.test(message.url)) {
 					await commandService.executeCommand(OPEN_LINK_COMMAND_ID, message.url);
 				}
@@ -259,74 +279,61 @@ function pageHtml(): string {
 		source: localize('mediaCoverage.source', "Source"),
 		sources: localize('mediaCoverage.sources', "Google News and Yahoo Finance are shown only, for personal reading; Google News lists at most 100 articles a search, so a long period has gaps. The New York Times lists 10 articles a request, at most 5 requests a minute: Pollis asks for the newest 50. The Guardian lists 200 a request: Pollis asks for the newest 1,000."),
 	};
-	return `<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
-	<style>
-		${voiceButtonsCss}
-		* { box-sizing: border-box; }
-		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
-		.container { max-width: 1100px; margin: 0 auto; padding: 24px; }
-		h1 { font-size: 32px; font-weight: 300; margin: 0 0 4px 0; line-height: 1.2; }
-		h2 { font-size: 18px; font-weight: 400; margin: 0; }
-		.subtitle { font-size: 14px; color: var(--vscode-descriptionForeground); margin: 0 0 24px 0; line-height: 1.4; max-width: 900px; }
-		[hidden] { display: none !important; }
-		.sectionHeader { display: flex; align-items: baseline; gap: 16px; margin: 24px 0 8px 0; }
-		.sectionHeader h2 { flex: 1; }
-		.pane { padding: 16px; border-radius: 4px; background: var(--vscode-welcomePage-tileBackground, var(--vscode-editorWidget-background)); }
-		.formGrid { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 12px 16px; align-items: baseline; }
-		.hint { font-size: 12px; color: var(--vscode-descriptionForeground); margin-top: 4px; line-height: 1.4; }
-		.row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-		input[type="text"], select { font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; padding: 4px 6px; }
-		input:focus, select:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
-		input#words { width: 480px; max-width: 100%; }
-		button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; padding: 4px 12px; cursor: pointer; font-size: 11px; opacity: 0.7; }
+	return buildWebviewHtml({
+		title: text.title,
+		omitPoweredBy: !MEDIACOVERAGE_METADATA.mediaCoverage.packages.length,
+		introHtml: text.intro,
+		extraCss: `
+		.container { max-width: 1100px; }
+		.mediaCoveragePage * { box-sizing: border-box; }
+		.mediaCoveragePage h2 { font-size: 18px; font-weight: 400; margin: 0; }
+		.mediaCoveragePage [hidden] { display: none !important; }
+		.mediaCoveragePage .sectionHeader { display: flex; align-items: baseline; gap: 16px; margin: 24px 0 8px 0; }
+		.mediaCoveragePage .sectionHeader h2 { flex: 1; }
+		.mediaCoveragePage .pane { padding: 16px; border-radius: 4px; background: var(--vscode-welcomePage-tileBackground, var(--vscode-editorWidget-background)); }
+		.mediaCoveragePage .formGrid { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 12px 16px; align-items: baseline; }
+		.mediaCoveragePage .hint { font-size: 12px; color: var(--vscode-descriptionForeground); margin-top: 4px; line-height: 1.4; }
+		.mediaCoveragePage .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+		.mediaCoveragePage input[type="text"], .mediaCoveragePage select { font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; padding: 4px 6px; }
+		.mediaCoveragePage input:focus, .mediaCoveragePage select:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
+		.mediaCoveragePage input#words { width: 480px; max-width: 100%; }
+		.mediaCoveragePage button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; padding: 4px 12px; cursor: pointer; font-size: 11px; opacity: 0.7; }
 		/* As the code buttons below a panel's Example Code: dimmed until pointed at, the blue one not */
-		button.action:not(:disabled):hover, button.action.current, button.action.primary { opacity: 1; }
-		button.action:hover { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
-		button.primary { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
-		button.primary:hover { background: var(--vscode-button-hoverBackground); }
-		button:disabled, button:disabled:hover { opacity: 0.5; cursor: default; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); }
-		button.primary:disabled, button.primary:disabled:hover { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
-		select#days, select#marks { width: 240px; }
-		.link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; font-size: 12px; text-align: left; }
-		.link:hover { text-decoration: underline; }
-		.status { font-size: 12px; color: var(--vscode-descriptionForeground); margin-top: 8px; }
-		.status.error { color: var(--vscode-errorForeground); }
-		.info { font-size: 12px; color: var(--vscode-descriptionForeground); margin-bottom: 8px; line-height: 1.4; }
-		#chart { display: block; width: 100%; height: 240px; }
-		#chart .grid { stroke: var(--vscode-widget-border); stroke-width: 1; }
-		#chart .articles { fill: var(--vscode-textLink-foreground); opacity: 0.7; cursor: pointer; }
-		#chart .chosen { opacity: 1; }
-		#chart .filing { stroke: var(--vscode-charts-red); stroke-width: 1; stroke-dasharray: 3 3; }
-		#chart text { font-size: 10px; fill: var(--vscode-descriptionForeground); }
-		#chart text.filingLabel { fill: var(--vscode-charts-red); cursor: pointer; }
-		table { width: 100%; border-collapse: collapse; font-size: 12px; }
-		th { text-align: left; font-weight: normal; color: var(--vscode-descriptionForeground); padding: 4px 8px; border-bottom: 1px solid var(--vscode-widget-border); }
-		td { padding: 4px 8px; border-bottom: 1px solid var(--vscode-widget-border); vertical-align: top; }
-		td.when { white-space: nowrap; color: var(--vscode-descriptionForeground); }
-		td.outlet { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-		td.source { white-space: nowrap; color: var(--vscode-descriptionForeground); }
-		.empty { color: var(--vscode-descriptionForeground); padding: 12px 8px; }
-		.sourceList { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 12px; align-items: baseline; }
-		.sourceList label { white-space: nowrap; }
-		.sourceList .hint { margin-top: 0; }
-		.sourceList input[type="text"] { width: 90px; margin-left: 8px; }
-		input[type="date"], input[type="datetime-local"] { font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; padding: 3px 6px; }
-		.footnote { font-size: 11px; color: var(--vscode-descriptionForeground); margin-top: 16px; line-height: 1.4; }
-	</style>
-</head>
-<body>
-<div class="container">
-	<div class="title-row">
-		<h1>${text.title}</h1>
-		${voiceButtonsHtml}
-	</div>
-	<p class="subtitle">${text.intro}</p>
-
+		.mediaCoveragePage button.action:not(:disabled):hover, .mediaCoveragePage button.action.current, .mediaCoveragePage button.action.primary { opacity: 1; }
+		.mediaCoveragePage button.action:hover { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		.mediaCoveragePage button.primary { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		.mediaCoveragePage button.primary:hover { background: var(--vscode-button-hoverBackground); }
+		.mediaCoveragePage button:disabled, .mediaCoveragePage button:disabled:hover { opacity: 0.5; cursor: default; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); }
+		.mediaCoveragePage button.primary:disabled, .mediaCoveragePage button.primary:disabled:hover { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		.mediaCoveragePage select#days, .mediaCoveragePage select#marks { width: 240px; }
+		.mediaCoveragePage .link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; font-size: 12px; text-align: left; }
+		.mediaCoveragePage .link:hover { text-decoration: underline; }
+		.mediaCoveragePage .status { font-size: 12px; color: var(--vscode-descriptionForeground); margin-top: 8px; }
+		.mediaCoveragePage .status.error { color: var(--vscode-errorForeground); }
+		.mediaCoveragePage .info { font-size: 12px; color: var(--vscode-descriptionForeground); margin-bottom: 8px; line-height: 1.4; }
+		.mediaCoveragePage #chart { display: block; width: 100%; height: 240px; }
+		.mediaCoveragePage #chart .grid { stroke: var(--vscode-widget-border); stroke-width: 1; }
+		.mediaCoveragePage #chart .articles { fill: var(--vscode-textLink-foreground); opacity: 0.7; cursor: pointer; }
+		.mediaCoveragePage #chart .chosen { opacity: 1; }
+		.mediaCoveragePage #chart .filing { stroke: var(--vscode-charts-red); stroke-width: 1; stroke-dasharray: 3 3; }
+		.mediaCoveragePage #chart text { font-size: 10px; fill: var(--vscode-descriptionForeground); }
+		.mediaCoveragePage #chart text.filingLabel { fill: var(--vscode-charts-red); cursor: pointer; }
+		.mediaCoveragePage table { width: 100%; border-collapse: collapse; font-size: 12px; }
+		.mediaCoveragePage th { text-align: left; font-weight: normal; color: var(--vscode-descriptionForeground); padding: 4px 8px; border-bottom: 1px solid var(--vscode-widget-border); }
+		.mediaCoveragePage td { padding: 4px 8px; border-bottom: 1px solid var(--vscode-widget-border); vertical-align: top; }
+		.mediaCoveragePage td.when { white-space: nowrap; color: var(--vscode-descriptionForeground); }
+		.mediaCoveragePage td.outlet { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+		.mediaCoveragePage td.source { white-space: nowrap; color: var(--vscode-descriptionForeground); }
+		.mediaCoveragePage .empty { color: var(--vscode-descriptionForeground); padding: 12px 8px; }
+		.mediaCoveragePage .sourceList { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 12px; align-items: baseline; }
+		.mediaCoveragePage .sourceList label { white-space: nowrap; }
+		.mediaCoveragePage .sourceList .hint { margin-top: 0; }
+		.mediaCoveragePage .sourceList input[type="text"] { width: 90px; margin-left: 8px; }
+		.mediaCoveragePage input[type="date"], .mediaCoveragePage input[type="datetime-local"] { font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; padding: 3px 6px; }
+		.mediaCoveragePage .footnote { font-size: 11px; color: var(--vscode-descriptionForeground); margin-top: 16px; line-height: 1.4; }
+`,
+		bodyHtml: `
+		<div class="mediaCoveragePage">
 	<div class="pane">
 		<div class="formGrid">
 			<label for="words">${text.words}</label>
@@ -384,10 +391,9 @@ function pageHtml(): string {
 		<div class="empty" id="noItems" hidden>${text.noItems}</div>
 	</div>
 	<div class="footnote">${text.sources}</div>
-</div>
-<script>
-	const vscode = acquireVsCodeApi();
-	${voiceButtonsScript}
+		</div>
+`,
+		pageScriptJs: `
 	const TEXT = ${JSON.stringify(text)};
 	const SVG = 'http://www.w3.org/2000/svg';
 	const wordsElement = document.getElementById('words');
@@ -599,7 +605,7 @@ function pageHtml(): string {
 			label.textContent = mark.label;
 			svg('title', {}, label).textContent = mark.description;
 			if (mark.url) {
-				label.addEventListener('click', () => vscode.postMessage({ command: 'openUrl', url: mark.url }));
+				label.addEventListener('click', () => vscode.postMessage({ command: 'openArticle', url: mark.url }));
 			}
 		}
 		// The first, middle and last buckets' times
@@ -633,7 +639,7 @@ function pageHtml(): string {
 			link.className = 'link';
 			link.textContent = item.title;
 			link.title = item.url;
-			link.addEventListener('click', () => vscode.postMessage({ command: 'openUrl', url: item.url }));
+			link.addEventListener('click', () => vscode.postMessage({ command: 'openArticle', url: item.url }));
 			headline.appendChild(link);
 			const source = document.createElement('td');
 			source.className = 'source';
@@ -691,9 +697,8 @@ function pageHtml(): string {
 	updateForm();
 	wordsElement.focus();
 	vscode.postMessage({ command: 'ready' });
-</script>
-</body>
-</html>`;
+`,
+	});
 }
 
 registerAction2(class extends Action2 {

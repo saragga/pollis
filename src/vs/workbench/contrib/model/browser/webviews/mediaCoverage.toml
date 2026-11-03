@@ -1,0 +1,35 @@
+# Media Coverage Webview Configuration
+# A page in the Minimal style of the scaffold, not a panel: Learn More only, as no Julia package powers it. `pageCommand`
+# is the command that opens it, which a panel's contribution file would say. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/mediaCoverage.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Media Coverage"
+viewType = "pollis.mediaCoverage"
+pageCommand = "pollis.mediaCoverage.show"
+
+[[wikis]]
+name = "Factsheet"
+file = "mediaCoverage/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "mediaCoverage/overview.md"
+bundled = true
+
+[[wikis]]
+name = "News Sources"
+file = "mediaCoverage/sources.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "FP2009a"
+
+[[references]]
+key = "Tet2007a"
