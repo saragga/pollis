@@ -31,6 +31,8 @@ The package documentation states that `n4sid` implements the simplified algorith
 
 [Van Overschee and De Moor (1995)](#ref-OM1995a) show that N4SID, MOESP and CVA are special cases of one unifying theorem and differ only in a weighting matrix. In their simulation example, the fourth-order system is identified equally well by the three algorithms, and the second-order approximation has the smallest variance with CVA, an observation they report from other simulation studies too but could not prove.
 
+[Ljung (2010)](#ref-Lju2010a) sees two main avenues in the development of system identification. The realisation avenue starts from the realisation of linear state-space models from impulse responses and leads to subspace methods; it has developed techniques based on SVD and QR factorisations. The prediction-error approach, more in line with statistical time-series analysis and econometrics, typically leads to nonlinear optimisation by iterative search.
+
 ## Validation
 
 Every tab splits the data into the first 70% for estimation and the last 30% for validation, and prints the fit of the simulated output on the validation data. [Söderström and Stoica (1989)](#ref-SS1989a) answer the question "is a model flexible enough?" in two ways: with plots and common sense, comparing the model output with the measured output, and with statistical tests on the residuals.
@@ -50,6 +52,8 @@ dtr, dval = data[1:ntr], data[ntr+1:end]
 ## References
 
 <a id="ref-CFHT2021a"></a>Bagge Carlson, F., Fält, M., Heimerson, A., & Troeng, O. (2021). ControlSystems.jl: A Control Toolbox in Julia. *2021 60th IEEE Conference on Decision and Control (CDC)*. [doi:10.1109/CDC45484.2021.9683403](https://doi.org/10.1109/CDC45484.2021.9683403)
+
+<a id="ref-Lju2010a"></a>Ljung, L. (2010). Perspectives on System Identification. *Annual Reviews in Control* 34(1), 1-12. [doi:10.1016/j.arcontrol.2009.12.001](https://doi.org/10.1016/j.arcontrol.2009.12.001)
 
 <a id="ref-SS1989a"></a>Söderström, T., & Stoica, P. (1989). *System Identification*. Prentice Hall. [user.it.uu.se](http://user.it.uu.se/~ts/sysidbook.pdf)
 

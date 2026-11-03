@@ -41,6 +41,12 @@ The order equals the number of non-zero singular values of the weighted projecti
 
 The documentation describes `subspaceid`, the newer implementation, which chooses the weighting among `:MOESP`, `:CVA`, `:N4SID` and `:IVM`, with `:MOESP` as the default.
 
+## A one-shot method
+
+[Ljung (2010)](#ref-Lju2010a) describes subspace methods, among them N4SID and MOESP, as a one-shot estimation procedure for black-box linear state-space models and, pushing the interpretation slightly, as a form of regularised least squares for ARX models. He lists them among the results of convexification in system identification, the formulation of an estimation method as a problem that does not give rise to local minima.
+
+He adds that consistent, non-optimal, non-iterative methods, such as instrumental variables and N4SID, can be used to get into the domain of attraction of the global minimum of the prediction-error criterion of a linear black-box model.
+
 ## The horizon
 
 **l (horizon)** is passed to `n4sid` as the keyword `i`, which the package documentation describes as an algorithm parameter that generally needs no tuning; left blank, the package default is used. [Van Overschee and De Moor (1995)](#ref-OM1995a) call i a user-defined index that is "large enough": it is the number of block rows of the extended observability matrix Γᵢ, with i > n, and the theorem assumes an input persistently exciting of order 2i.
@@ -48,6 +54,8 @@ The documentation describes `subspaceid`, the newer implementation, which choose
 The tooltip of **l (horizon)** reads that larger values improve accuracy but increase computation.
 
 ## References
+
+<a id="ref-Lju2010a"></a>Ljung, L. (2010). Perspectives on System Identification. *Annual Reviews in Control* 34(1), 1-12. [doi:10.1016/j.arcontrol.2009.12.001](https://doi.org/10.1016/j.arcontrol.2009.12.001)
 
 <a id="ref-OM1994b"></a>Van Overschee, P., & De Moor, B. (1994). N4SID: Subspace Algorithms for the Identification of Combined Deterministic-Stochastic Systems. *Automatica* 30(1), 75-93. [doi:10.1016/0005-1098(94)90230-5](https://doi.org/10.1016/0005-1098(94)90230-5)
 

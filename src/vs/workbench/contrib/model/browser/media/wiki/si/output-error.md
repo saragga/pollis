@@ -32,11 +32,15 @@ The ControlSystemIdentification.jl documentation describes `newpem` as a new imp
 
 With K = 0, the one-step prediction of the model is its simulation. The descriptions of **Predicted Output** and **k-Step Prediction** state that OE has no noise model, so its prediction equals its simulation.
 
+[Ljung (2010)](#ref-Lju2010a) notes that the non-convex criterion is normally no serious problem for linear black-box models, since non-iterative methods such as N4SID can bring the search into the domain of attraction of the global minimum; the issue is much more pressing for physically parameterised grey-box models, even in the linear case.
+
 ## Simulation and frequency
 
 The documentation notes that simulation tends to require accurate low-frequency properties, especially for integrating systems. **Fit Percentage** and the validation fit printed by every tab use `simulate`, whose output, the documentation states, is not affected by the noise model and Kalman gain, so every printed fit is a simulation fit.
 
 The criterion of the **OE** tab is that same simulation error, on the estimation data. **Compare Structures** prints the validation fit of the OE model beside those of ARX, ARMAX and N4SID, with the same estimation and validation data.
+
+[Ljung (2010)](#ref-Lju2010a) gives an example of a linear model of a nonlinear system: for the static system y(t) = u(t) + 0.01u³(t) and a certain non-Gaussian, bounded input, the linear second-order equivalent is dynamic, with a very high gain at low frequencies, and it is this linear model that an output-error method produces.
 
 ## Orders and delay
 
@@ -45,6 +49,8 @@ The criterion of the **OE** tab is that same simulation error, on the estimation
 The tab has no **nk** input. `newpem` forces the D matrix to zero by default, `zeroD = true`, so the model has no direct term from u(t) to y(t); the default plant also starts with u(t−1). The documentation adds that, as the prediction horizon h of `newpem` approaches infinity, the problem approaches the `focus = :simulation` case.
 
 ## References
+
+<a id="ref-Lju2010a"></a>Ljung, L. (2010). Perspectives on System Identification. *Annual Reviews in Control* 34(1), 1-12. [doi:10.1016/j.arcontrol.2009.12.001](https://doi.org/10.1016/j.arcontrol.2009.12.001)
 
 <a id="ref-SS1989a"></a>Söderström, T., & Stoica, P. (1989). *System Identification*. Prentice Hall. [user.it.uu.se](http://user.it.uu.se/~ts/sysidbook.pdf)
 

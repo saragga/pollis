@@ -27,7 +27,7 @@ For least squares on an ARX model, [Söderström and Stoica (1989)](#ref-SS1989a
 
 The ControlSystemIdentification.jl documentation gives the trade-off: simulation tends to require accurate low-frequency properties, especially for integrating systems, while prediction favours an accurate model for higher frequencies. If there are significant input disturbances or the system is unstable, prediction focus is generally preferred.
 
-The **OE** tab fits with `focus = :simulation`, minimising the simulation error; the documentation of `newpem` suggests that focus when the default prediction focus produces an unstable model for a stable system or poor simulation performance. The other three tabs give predictors with a noise model, used by **Predicted Output** and **k-Step Prediction**.
+The **OE** tab fits with `focus = :simulation`, minimising the simulation error; the documentation of `newpem` suggests that focus when the default prediction focus produces an unstable model for a stable system or poor simulation performance. The other three tabs give predictors with a noise model, used by **Predicted Output** and **k-Step Prediction**. [Ljung (2010)](#ref-Lju2010a) writes that the typical intended use of a model in system identification is prediction or control, so that models of the noise affecting the system are often essential.
 
 ## Choosing orders
 
@@ -42,6 +42,8 @@ The **OE** tab fits with `focus = :simulation`, minimising the simulation error;
 
 The action description states that ranking by the fit on held-out data penalises overfitting directly.
 
+[Ljung (2010)](#ref-Lju2010a) gives the expected fit on validation data as the fit on estimation data adjusted for the complexity of the model set, with d = dim θ and N data: (1 + d/N)/(1 − d/N) times the fit for Akaike's Final Prediction Error, (1 + 2d/N) times for Akaike's Information Criterion in the Gaussian case, and 1/(1 − d/N)² times for generalised cross-validation. One should not, he concludes, be so impressed by a good fit to estimation data if the model set has been quite flexible.
+
 ## Comparing structures
 
 **Compare Structures** fits ARX, ARMAX, N4SID and OE to the same estimation data with the current orders, prints the validation fit of each and overlays their Bode plots. **Residual Analysis** on each tab then shows the residual autocorrelation and the input-residual correlation of that structure, the quantities of the whiteness and independence tests of [Söderström and Stoica (1989)](#ref-SS1989a).
@@ -49,6 +51,8 @@ The action description states that ranking by the fit on held-out data penalises
 The four structures share the estimation data, the validation data and the fit criterion, so the printed fits are on the same scale.
 
 ## References
+
+<a id="ref-Lju2010a"></a>Ljung, L. (2010). Perspectives on System Identification. *Annual Reviews in Control* 34(1), 1-12. [doi:10.1016/j.arcontrol.2009.12.001](https://doi.org/10.1016/j.arcontrol.2009.12.001)
 
 <a id="ref-SS1989a"></a>Söderström, T., & Stoica, P. (1989). *System Identification*. Prentice Hall. [user.it.uu.se](http://user.it.uu.se/~ts/sysidbook.pdf)
 

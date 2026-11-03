@@ -65,6 +65,7 @@ The tooltip of **Output data (y)** notes that ARX with na = nb = 2 should recove
 | Model structures, least squares, prediction error methods, validation | [Söderström and Stoica (1989)](#ref-SS1989a) |
 | N4SID | [Van Overschee and De Moor (1994)](#ref-OM1994b) |
 | N4SID, MOESP and CVA in one theorem | [Van Overschee and De Moor (1995)](#ref-OM1995a) |
+| Realisation and prediction-error avenues, model complexity, nonlinear models | [Ljung (2010)](#ref-Lju2010a) |
 | ControlSystems.jl | [Bagge Carlson, Fält, Heimerson and Troeng (2021)](#ref-CFHT2021a) |
 
 The ControlSystemIdentification.jl documentation describes the estimators, `iddata`, the validation plots and `modelfit`.
@@ -72,6 +73,8 @@ The ControlSystemIdentification.jl documentation describes the estimators, `idda
 ## References
 
 <a id="ref-CFHT2021a"></a>Bagge Carlson, F., Fält, M., Heimerson, A., & Troeng, O. (2021). ControlSystems.jl: A Control Toolbox in Julia. *2021 60th IEEE Conference on Decision and Control (CDC)*. [doi:10.1109/CDC45484.2021.9683403](https://doi.org/10.1109/CDC45484.2021.9683403)
+
+<a id="ref-Lju2010a"></a>Ljung, L. (2010). Perspectives on System Identification. *Annual Reviews in Control* 34(1), 1-12. [doi:10.1016/j.arcontrol.2009.12.001](https://doi.org/10.1016/j.arcontrol.2009.12.001)
 
 <a id="ref-SS1989a"></a>Söderström, T., & Stoica, P. (1989). *System Identification*. Prentice Hall. [user.it.uu.se](http://user.it.uu.se/~ts/sysidbook.pdf)
 
