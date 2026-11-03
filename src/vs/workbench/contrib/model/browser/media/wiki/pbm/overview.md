@@ -4,13 +4,13 @@
 
 ## Pareto optimality
 
-When objectives conflict, no single solution is best in all of them. [Emmerich and Deutz (2024)](#ref-ED2024a) define Pareto dominance informally: a solution A dominates a solution B if A is better in at least one criterion and not worse in any other. A solution is Pareto optimal if no other solution dominates it, so that it cannot be improved in one criterion without worsening another.
+When objectives conflict, no single solution is best in all of them. [Emmerich and Deutz (2025)](#ref-ED2025a) define Pareto dominance informally: a solution A dominates a solution B if A is better in at least one criterion and not worse in any other. A solution is Pareto optimal if no other solution dominates it, so that it cannot be improved in one criterion without worsening another.
 
-The Pareto optimal solutions form the Pareto set in decision space, and their objective vectors form the Pareto front. A multi-objective algorithm returns a finite set of mutually non-dominated points, which [Emmerich and Deutz (2024)](#ref-ED2024a) call an approximation set of the Pareto front.
+The Pareto optimal solutions form the Pareto set in decision space, and their objective vectors form the Pareto front. A multi-objective algorithm returns a finite set of mutually non-dominated points, which [Emmerich and Deutz (2025)](#ref-ED2025a) call an approximation set of the Pareto front.
 
 ## Evolutionary multi-objective algorithms
 
-[Emmerich and Deutz (2024)](#ref-ED2024a) write that interest in multi-objective evolutionary algorithms surged after the book of [Deb (2001)](#ref-Deb2001a), and that the algorithms differ mainly in their selection operators. They name three paradigms: Pareto-based algorithms, which rank by Pareto dominance first and by diversity among equally ranked points second, such as NSGA-II and SPEA2; indicator-based algorithms, which select by a performance indicator such as the hypervolume; and decomposition-based algorithms, among which they place NSGA-III.
+[Emmerich and Deutz (2025)](#ref-ED2025a) write that interest in multi-objective evolutionary algorithms surged after the book of [Deb (2001)](#ref-Deb2001a), and that the algorithms differ mainly in their selection operators. They name three paradigms: Pareto-based algorithms, which rank by Pareto dominance first and by diversity among equally ranked points second, such as NSGA-II and SPEA2; indicator-based algorithms, which select by a performance indicator such as the hypervolume; and decomposition-based algorithms, among which they place NSGA-III.
 
 [Coello Coello, Lamont and Van Veldhuizen (2007)](#ref-CLV2007a) treat evolutionary algorithms for multi-objective problems at book length.
 
@@ -49,7 +49,7 @@ The actions fall into five groups: Visualise plots the front and the convergence
 
 <a id="ref-DPAM2002a"></a>Deb, K., Pratap, A., Agarwal, S., & Meyarivan, T. (2002). A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II. *IEEE Transactions on Evolutionary Computation* 6(2), 182-197. [doi:10.1109/4235.996017](https://doi.org/10.1109/4235.996017)
 
-<a id="ref-ED2024a"></a>Emmerich, M., & Deutz, A. (2024). Multicriteria Optimization and Decision Making: Principles, Algorithms and Case Studies. [doi:10.48550/arXiv.2407.00359](https://doi.org/10.48550/arXiv.2407.00359)
+<a id="ref-ED2025a"></a>Emmerich, M., & Deutz, A. (2025). Multicriteria Optimization and Decision Making: Principles, Algorithms and Case Studies (Updated and revised ed.). [doi:10.48550/arXiv.2407.00359](https://doi.org/10.48550/arXiv.2407.00359)
 
 <a id="ref-MM2022a"></a>Mejia-de-Dios, J.-A., & Mezura-Montes, E. (2022). Metaheuristics: A Julia Package for Single- and Multi-Objective Optimization. *Journal of Open Source Software* 7(78), 4723. [doi:10.21105/joss.04723](https://doi.org/10.21105/joss.04723)
 

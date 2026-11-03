@@ -10,13 +10,13 @@ Its fast non-dominated sorting runs in O(MN²), and its selection operator creat
 
 ## The generational loop
 
-[Emmerich and Deutz (2024)](#ref-ED2024a) give the loop. Each generation creates N offspring from the current population: parents are chosen by binary tournament, in which the better-ranked of two individuals wins, and recombined; for real-valued problems, with simulated binary crossover and polynomial mutation. Parents and offspring are merged, and the N best of the merged set, by the multi-objective ranking, form the next population.
+[Emmerich and Deutz (2025)](#ref-ED2025a) give the loop. Each generation creates N offspring from the current population: parents are chosen by binary tournament, in which the better-ranked of two individuals wins, and recombined; for real-valued problems, with simulated binary crossover and polynomial mutation. Parents and offspring are merged, and the N best of the merged set, by the multi-objective ranking, form the next population.
 
 The loop runs until a termination criterion is met, such as convergence or a limit on the computational budget; in the panel, **Iterations** generations.
 
 ## Non-dominated sorting
 
-Non-dominated sorting partitions the population into layers. In the recursion of [Emmerich and Deutz (2024)](#ref-ED2024a), the first layer R₁ holds the non-dominated solutions of the population, and each next layer the non-dominated solutions of what remains:
+Non-dominated sorting partitions the population into layers. In the recursion of [Emmerich and Deutz (2025)](#ref-ED2025a), the first layer R₁ holds the non-dominated solutions of the population, and each next layer the non-dominated solutions of what remains:
 
 R₁ = ND(P), Rₖ₊₁ = ND(P \ (R₁ ∪ … ∪ Rₖ))
 
@@ -24,7 +24,7 @@ The rank of a solution is the index of its layer, and solutions in the same laye
 
 ## Crowding distance
 
-Within a layer, the crowding distance ranks solutions by the space around them. For each objective i, [Emmerich and Deutz (2024)](#ref-ED2024a) take the nearest neighbours of x on either side in that objective, lᵢ and uᵢ, and set cᵢ(x) = uᵢ − lᵢ; the crowding distance is the mean over the m objectives,
+Within a layer, the crowding distance ranks solutions by the space around them. For each objective i, [Emmerich and Deutz (2025)](#ref-ED2025a) take the nearest neighbours of x on either side in that objective, lᵢ and uᵢ, and set cᵢ(x) = uᵢ − lᵢ; the crowding distance is the mean over the m objectives,
 
 c(x) = (1/m) Σᵢ cᵢ(x)
 
@@ -46,7 +46,7 @@ The main code calls `NSGA2(N = N, options = Options(iterations = ..., seed = 1, 
 
 <a id="ref-DPAM2002a"></a>Deb, K., Pratap, A., Agarwal, S., & Meyarivan, T. (2002). A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II. *IEEE Transactions on Evolutionary Computation* 6(2), 182-197. [doi:10.1109/4235.996017](https://doi.org/10.1109/4235.996017)
 
-<a id="ref-ED2024a"></a>Emmerich, M., & Deutz, A. (2024). Multicriteria Optimization and Decision Making: Principles, Algorithms and Case Studies. [doi:10.48550/arXiv.2407.00359](https://doi.org/10.48550/arXiv.2407.00359)
+<a id="ref-ED2025a"></a>Emmerich, M., & Deutz, A. (2025). Multicriteria Optimization and Decision Making: Principles, Algorithms and Case Studies (Updated and revised ed.). [doi:10.48550/arXiv.2407.00359](https://doi.org/10.48550/arXiv.2407.00359)
 
 ## See Also
 

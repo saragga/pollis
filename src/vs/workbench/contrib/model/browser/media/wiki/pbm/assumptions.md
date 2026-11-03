@@ -16,7 +16,7 @@ The objective function returns a tuple of three vectors, objectives, inequality 
 
 ## Conflicting objectives
 
-A Pareto front exists as a set of more than one point only when the objectives conflict: if one solution were best in every objective, it would dominate all others, and the front would reduce to it. [Emmerich and Deutz (2024)](#ref-ED2024a) describe ideal solutions where all objectives are optimally met as rare, so that the aim is to find good compromises and avoid lose-lose outcomes.
+A Pareto front exists as a set of more than one point only when the objectives conflict: if one solution were best in every objective, it would dominate all others, and the front would reduce to it. [Emmerich and Deutz (2025)](#ref-ED2025a) describe ideal solutions where all objectives are optimally met as rare, so that the aim is to find good compromises and avoid lose-lose outcomes.
 
 The default problem has conflicting objectives: the first is smallest at the origin, the second at (5, 5).
 
@@ -24,13 +24,13 @@ The default problem has conflicting objectives: the first is smallest at the ori
 
 The four algorithms use only objective and constraint values, never derivatives. [Mejia-de-Dios and Mezura-Montes (2022)](#ref-MM2022a) describe metaheuristics as stochastic algorithms that approximate optimal solutions quickly where not all of the mathematical properties of the problem are known.
 
-What they need instead is a budget of evaluations, set here by **Population** and **Iterations**. [Emmerich and Deutz (2024)](#ref-ED2024a) point out that computation time is often gauged by counting function evaluations, and **Front Statistics** prints the number used.
+What they need instead is a budget of evaluations, set here by **Population** and **Iterations**. [Emmerich and Deutz (2025)](#ref-ED2025a) point out that computation time is often gauged by counting function evaluations, and **Front Statistics** prints the number used.
 
 ## Randomness and the seed
 
 All four algorithms are stochastic, and their result depends on the random numbers drawn. The main code fixes `seed = 1` in `Options`, so a run can be repeated exactly. **Hypervolume** runs the algorithm with seeds 1 to 5 to show how much the result varies.
 
-[Emmerich and Deutz (2024)](#ref-ED2024a) describe the attainment curve approach, which summarises the outcome sets of several runs of an algorithm through the probability that a point in objective space is attained.
+[Emmerich and Deutz (2025)](#ref-ED2025a) describe the attainment curve approach, which summarises the outcome sets of several runs of an algorithm through the probability that a point in objective space is attained.
 
 ## A reference point for the hypervolume
 
@@ -42,7 +42,7 @@ The panel sets the reference point 10% beyond the nadir of the front and keeps o
 
 <a id="ref-DPAM2002a"></a>Deb, K., Pratap, A., Agarwal, S., & Meyarivan, T. (2002). A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II. *IEEE Transactions on Evolutionary Computation* 6(2), 182-197. [doi:10.1109/4235.996017](https://doi.org/10.1109/4235.996017)
 
-<a id="ref-ED2024a"></a>Emmerich, M., & Deutz, A. (2024). Multicriteria Optimization and Decision Making: Principles, Algorithms and Case Studies. [doi:10.48550/arXiv.2407.00359](https://doi.org/10.48550/arXiv.2407.00359)
+<a id="ref-ED2025a"></a>Emmerich, M., & Deutz, A. (2025). Multicriteria Optimization and Decision Making: Principles, Algorithms and Case Studies (Updated and revised ed.). [doi:10.48550/arXiv.2407.00359](https://doi.org/10.48550/arXiv.2407.00359)
 
 <a id="ref-MM2022a"></a>Mejia-de-Dios, J.-A., & Mezura-Montes, E. (2022). Metaheuristics: A Julia Package for Single- and Multi-Objective Optimization. *Journal of Open Source Software* 7(78), 4723. [doi:10.21105/joss.04723](https://doi.org/10.21105/joss.04723)
 

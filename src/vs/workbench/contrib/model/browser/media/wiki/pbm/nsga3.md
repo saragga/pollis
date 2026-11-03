@@ -12,7 +12,7 @@ The panel's decision table follows the same division: **NSGA-II** for two or thr
 
 NSGA-III follows the NSGA-II framework and emphasises population members that are non-dominated, yet close to a set of supplied reference points, in the words of [Deb and Jain (2014)](#ref-DJ2014a). Non-dominated sorting still ranks the merged population; the reference points take the place of crowding as the second criterion.
 
-[Emmerich and Deutz (2024)](#ref-ED2024a) place NSGA-III among the decomposition-based algorithms, which split a problem into subproblems that each target a different section of the Pareto front, and note that NSGA-III, designed for many-objective optimisation, uses dynamically updated reference points.
+[Emmerich and Deutz (2025)](#ref-ED2025a) place NSGA-III among the decomposition-based algorithms, which split a problem into subproblems that each target a different section of the Pareto front, and note that NSGA-III, designed for many-objective optimisation, uses dynamically updated reference points.
 
 ## Results of the original paper
 
@@ -34,7 +34,7 @@ For four or more objectives, **Objectives** takes a longer vector, and **Pareto 
 
 <a id="ref-DJ2014a"></a>Deb, K., & Jain, H. (2014). An Evolutionary Many-Objective Optimization Algorithm Using Reference-Point-Based Nondominated Sorting Approach, Part I: Solving Problems with Box Constraints. *IEEE Transactions on Evolutionary Computation* 18(4), 577-601. [doi:10.1109/TEVC.2013.2281535](https://doi.org/10.1109/TEVC.2013.2281535)
 
-<a id="ref-ED2024a"></a>Emmerich, M., & Deutz, A. (2024). Multicriteria Optimization and Decision Making: Principles, Algorithms and Case Studies. [doi:10.48550/arXiv.2407.00359](https://doi.org/10.48550/arXiv.2407.00359)
+<a id="ref-ED2025a"></a>Emmerich, M., & Deutz, A. (2025). Multicriteria Optimization and Decision Making: Principles, Algorithms and Case Studies (Updated and revised ed.). [doi:10.48550/arXiv.2407.00359](https://doi.org/10.48550/arXiv.2407.00359)
 
 ## See Also
 

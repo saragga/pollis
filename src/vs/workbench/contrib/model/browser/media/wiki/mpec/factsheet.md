@@ -80,7 +80,7 @@ Every action reads `sol` or calls `equilibrium` and `solve_mpec` again, so chang
 
 ## Packages and textbooks
 
-`Complementarity.jl`, by [Kwon (2023)](#ref-Kwo2023a), provides modelling for mixed complementarity problems and MPECs through JuMP, and `PATHSolver.jl` wraps the PATH solver, with an interface through which JuMP passes complementarity problems to it. `Plots` draws the charts.
+`JuMP`, by [Dunning, Huchette and Lubin (2017)](#ref-DHL2017a), is the modelling language in which every model of the panel is written, with the equilibrium as a `complements` constraint. `Ipopt`, the interior-point filter line-search algorithm for large-scale nonlinear programming of [Wächter and Biegler (2006)](#ref-WB2006a), solves the regularised, penalised and relaxed problems, and `PATHSolver.jl` wraps the PATH solver, with an interface through which JuMP passes complementarity problems to it. `Plots` draws the charts.
 
 [Luo, Pang and Ralph (1996)](#ref-LPR1996a) is the monograph on MPECs, covering optimality conditions, exact penalisation and algorithms. [Facchinei and Pang (2003)](#ref-FP2003a) treat variational inequalities and complementarity problems in two volumes.
 
@@ -88,17 +88,19 @@ Every action reads `sol` or calls `equilibrium` and `solve_mpec` again, so chang
 
 <a id="ref-DF1995a"></a>Dirkse, S. P., & Ferris, M. C. (1995). PATH Solver: A Non-Monotone Stabilisation Scheme for the Solution of Nonlinear Complementarity Problems. *Optimization Methods and Software* 5(2), 123-156. [doi:10.1080/10556789508805606](https://doi.org/10.1080/10556789508805606)
 
+<a id="ref-DHL2017a"></a>Dunning, I., Huchette, J., & Lubin, M. (2017). JuMP: A Modeling Language for Mathematical Optimization. *SIAM Review* 59(2), 295-320. [doi:10.1137/15M1020575](https://doi.org/10.1137/15M1020575)
+
 <a id="ref-FP2003a"></a>Facchinei, F., & Pang, J.-S. (2003). *Finite-Dimensional Variational Inequalities and Complementarity Problems*. Springer.
 
 <a id="ref-HR2004a"></a>Hu, X. M., & Ralph, D. (2004). Convergence of a Penalty Method for Mathematical Programming with Complementarity Constraints. *Journal of Optimization Theory and Applications* 123(2), 365-390. [doi:10.1007/s10957-004-5154-0](https://doi.org/10.1007/s10957-004-5154-0)
-
-<a id="ref-Kwo2023a"></a>Kwon, C. (2023). Complementarity.jl: Modeling and Solving Complementarity Problems in Julia. [github.com/chkwon/Complementarity.jl](https://github.com/chkwon/Complementarity.jl)
 
 <a id="ref-LPR1996a"></a>Luo, Z.-Q., Pang, J.-S., & Ralph, D. (1996). *Mathematical Programs with Equilibrium Constraints*. Cambridge University Press. [doi:10.1017/CBO9780511983658](https://doi.org/10.1017/CBO9780511983658)
 
 <a id="ref-Sch2001a"></a>Scholtes, S. (2001). Convergence Properties of a Regularization Scheme for Mathematical Programs with Complementarity Constraints. *SIAM Journal on Optimization* 11(4), 918-936. [doi:10.1137/S1052623499361233](https://doi.org/10.1137/S1052623499361233)
 
 <a id="ref-SSM1983a"></a>Sherali, H. D., Soyster, A. L., & Murphy, F. H. (1983). Stackelberg-Nash-Cournot Equilibria: Characterizations and Computations. *Operations Research* 31(2), 253-276. [doi:10.1287/opre.31.2.253](https://doi.org/10.1287/opre.31.2.253)
+
+<a id="ref-WB2006a"></a>Wächter, A., & Biegler, L. T. (2006). On the Implementation of an Interior-Point Filter Line-Search Algorithm for Large-Scale Nonlinear Programming. *Mathematical Programming* 106(1), 25-57. [doi:10.1007/s10107-004-0559-y](https://doi.org/10.1007/s10107-004-0559-y)
 
 ## See Also
 

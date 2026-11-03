@@ -9466,7 +9466,7 @@
 			"open_access": true
 		},
 		{
-			"key": "ED2024a",
+			"key": "ED2025a",
 			"type": "misc",
 			"title": "Multicriteria Optimization and Decision Making: Principles, Algorithms and Case Studies",
 			"authors": [
@@ -9475,7 +9475,8 @@
 			],
 			"author_kind": "persons",
 			"authors_complete": true,
-			"year": 2024,
+			"year": 2025,
+			"edition": "Updated and Revised",
 			"doi": "10.48550/arXiv.2407.00359",
 			"arxiv": "2407.00359",
 			"oa_url": "https://arxiv.org/pdf/2407.00359",
@@ -51474,7 +51475,8 @@
 				"chiara.optimise.evp.mpec"
 			],
 			"keys": [
-				"Kwo2023a",
+				"DHL2017a",
+				"WB2006a",
 				"DF1995a",
 				"LPR1996a",
 				"FP2003a",
@@ -51897,7 +51899,7 @@
 				"MM2022a",
 				"Deb2001a",
 				"CLV2007a",
-				"ED2024a",
+				"ED2025a",
 				"DPAM2002a",
 				"DJ2014a",
 				"ZLT2001a",

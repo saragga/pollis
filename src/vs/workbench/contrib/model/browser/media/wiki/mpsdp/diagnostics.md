@@ -24,7 +24,7 @@ JuMP's `primal_feasibility_report` measures each violation as the distance betwe
 
 | `relative_gap` | Reading |
 |---|---|
-| Below 1e-6 | Optimal to the precision of an interior-point solver |
+| Under 1e-6 | Optimal to the precision of an interior-point solver |
 | Small, but more than 1e-6 | A solution to a looser tolerance |
 | Large | Not converged, or a problem without strict feasibility |
 

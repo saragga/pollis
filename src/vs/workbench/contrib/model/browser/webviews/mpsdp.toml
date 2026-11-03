@@ -29,7 +29,7 @@ name = "Hypatia.jl"
 github = "https://github.com/jump-dev/Hypatia.jl"
 
 [requires]
-packages = ["JuMP.jl", "Clarabel.jl", "Plots.jl"]
+packages = ["JuMP.jl", "Clarabel.jl", "COSMO.jl", "SCS.jl", "Hypatia.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -226,7 +226,7 @@ models = ["sdprelax"]
 [[inputs]]
 id = "solver"
 label = "Solver"
-tooltip = "Clarabel: interior point, the default and most accurate. COSMO: ADMM, lower memory for large sparse problems. SCS: first-order, very large problems when a rough bound suffices. Hypatia: interior point, robust on degenerate or ill-conditioned problems."
+tooltip = "Clarabel, the default: interior point, with a homogeneous embedding. COSMO: operator splitting, with chordal decomposition for sparse SDPs. SCS: operator splitting, with a homogeneous self-dual embedding. Hypatia: generic conic primal-dual interior point, written in Julia."
 kind = "select"
 default = "Clarabel"
 newRow = true
@@ -391,7 +391,7 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "sensitivity"
 label = "Sensitivity Analysis"
-desc = "Shadow prices of the scalar constraints: the change in the optimal value per unit change in each right-hand side"
+desc = "Shadow prices of the scalar equality constraints: the change in the objective from an infinitesimal relaxation of each constraint"
 code = '''
 cons = all_constraints(model, AffExpr, MOI.EqualTo{Float64})
 append!(cons, all_constraints(model, AffExpr, MOI.LessThan{Float64}), all_constraints(model, AffExpr, MOI.GreaterThan{Float64}))

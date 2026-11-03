@@ -28,7 +28,7 @@ The decision table on the panel gives the same choices.
 
 The variable X has n(n + 1)/2 distinct entries, so the cost grows quickly with **n**. [Boyd and Vandenberghe (2004)](#ref-BV2004a) note that the dual SDP of the two-way partitioning problem can be solved efficiently even for n around 1000, while checking every partition is possible only for small problems, around n ≤ 30.
 
-**vs Baseline** uses brute force up to n = 20, which gives the exact maximum cut to compare with the relaxation. Above that, the SDP bound is the reference.
+**vs Baseline** uses brute force up to n = 20, which gives the exact maximum cut to compare with the relaxation. Beyond that, the SDP bound is the reference.
 
 ## When is another panel the better place?
 

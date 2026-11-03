@@ -4,13 +4,13 @@
 
 ## An indicator-based algorithm
 
-[Emmerich and Deutz (2024)](#ref-ED2024a) present SMS-EMOA as the classical example of indicator-based multi-objective optimisation, in which a performance indicator, a scalar measure of the quality of a Pareto front approximation, guides selection. SMS-EMOA uses the hypervolume indicator, and they note that theoretical analysis attests favourable properties to it: maximising it yields approximations with points on the Pareto front, well distributed across it.
+[Emmerich and Deutz (2025)](#ref-ED2025a) present SMS-EMOA as the classical example of indicator-based multi-objective optimisation, in which a performance indicator, a scalar measure of the quality of a Pareto front approximation, guides selection. SMS-EMOA uses the hypervolume indicator, and they note that theoretical analysis attests favourable properties to it: maximising it yields approximations with points on the Pareto front, well distributed across it.
 
 The title of [Beume, Naujoks and Emmerich (2007)](#ref-BNE2007a), multiobjective selection based on dominated hypervolume, names the principle.
 
 ## The hypervolume
 
-For an approximation set A in m objectives and a reference point r, [Emmerich and Deutz (2024)](#ref-ED2024a) define the hypervolume indicator as the Lebesgue measure of the region dominated by A and bounded by r:
+For an approximation set A in m objectives and a reference point r, [Emmerich and Deutz (2025)](#ref-ED2025a) define the hypervolume indicator as the Lebesgue measure of the region dominated by A and bounded by r:
 
 HI(A) = Vol({y : y ⪯ r and a ⪯ y for some a ∈ A})
 
@@ -18,7 +18,7 @@ The measure is a length for m = 1, an area for m = 2 and a volume for m = 3. The
 
 ## A steady-state loop
 
-Each iteration of SMS-EMOA, as [Emmerich and Deutz (2024)](#ref-ED2024a) describe it, creates a single offspring by recombination and mutation. The offspring joins the population, which then has N + 1 members, and a subset of size N with maximal hypervolume is kept.
+Each iteration of SMS-EMOA, as [Emmerich and Deutz (2025)](#ref-ED2025a) describe it, creates a single offspring by recombination and mutation. The offspring joins the population, which then has N + 1 members, and a subset of size N with maximal hypervolume is kept.
 
 With the reference point unchanged, the hypervolume of the population can then only grow or stay equal as the iterations go on. When all solutions are non-dominated, keeping the subset of maximal hypervolume amounts to deleting the point with the smallest exclusive contribution,
 
@@ -26,13 +26,13 @@ With the reference point unchanged, the hypervolume of the population can then o
 
 ## Dominated solutions
 
-When the population contains dominated solutions, the standard implementation partitions it into layers of equal dominance rank, as in NSGA-II, and discards the solution with the smallest hypervolume contribution on the worst-ranked layer, as [Emmerich and Deutz (2024)](#ref-ED2024a) explain.
+When the population contains dominated solutions, the standard implementation partitions it into layers of equal dominance rank, as in NSGA-II, and discards the solution with the smallest hypervolume contribution on the worst-ranked layer, as [Emmerich and Deutz (2025)](#ref-ED2025a) explain.
 
 They add that SMS-EMOA typically converges to regularly spaced approximations of the Pareto front, with a density that depends on the local curvature of the front; for two objectives, the density is highest where the slope of the front is −45°.
 
 ## Computational cost
 
-[Emmerich and Deutz (2024)](#ref-ED2024a) report that all hypervolume contributions of a population can be computed in time Θ(N log N) for two and three objectives, and cite faster incremental methods for more. In Metaheuristics.jl, `SMS_EMOA` has a parameter `n_samples`, 10 000 by default, the number of samples used to approximate the hypervolume in many-objective problems, with more than two objectives.
+[Emmerich and Deutz (2025)](#ref-ED2025a) report that all hypervolume contributions of a population can be computed in time Θ(N log N) for two and three objectives, and cite faster incremental methods for more. In Metaheuristics.jl, `SMS_EMOA` has a parameter `n_samples`, 10 000 by default, the number of samples used to approximate the hypervolume in many-objective problems, with more than two objectives.
 
 The panel's decision table suggests **SMS-EMOA** when the quality of the front is judged by hypervolume and evaluations are affordable.
 
@@ -46,7 +46,7 @@ The panel computes the hypervolume of every front with `PerformanceIndicators.hy
 
 <a id="ref-BNE2007a"></a>Beume, N., Naujoks, B., & Emmerich, M. (2007). SMS-EMOA: Multiobjective Selection Based on Dominated Hypervolume. *European Journal of Operational Research* 181(3), 1653-1669. [doi:10.1016/j.ejor.2006.08.008](https://doi.org/10.1016/j.ejor.2006.08.008)
 
-<a id="ref-ED2024a"></a>Emmerich, M., & Deutz, A. (2024). Multicriteria Optimization and Decision Making: Principles, Algorithms and Case Studies. [doi:10.48550/arXiv.2407.00359](https://doi.org/10.48550/arXiv.2407.00359)
+<a id="ref-ED2025a"></a>Emmerich, M., & Deutz, A. (2025). Multicriteria Optimization and Decision Making: Principles, Algorithms and Case Studies (Updated and revised ed.). [doi:10.48550/arXiv.2407.00359](https://doi.org/10.48550/arXiv.2407.00359)
 
 ## See Also
 

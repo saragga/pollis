@@ -10,13 +10,13 @@ SPEA2 improves on it in three ways: a fine-grained fitness assignment strategy, 
 
 ## Strength and density
 
-[Emmerich and Deutz (2024)](#ref-ED2024a) classify SPEA2 as Pareto-based, but with a different ranking criterion from non-dominated sorting: the strength of an individual depends on how many other individuals it dominates and by how many it is dominated. In SPEA, clustering served as a secondary ranking criterion, and both operators, the strength and the secondary criterion, were refined in SPEA2.
+[Emmerich and Deutz (2025)](#ref-ED2025a) classify SPEA2 as Pareto-based, but with a different ranking criterion from non-dominated sorting: the strength of an individual depends on how many other individuals it dominates and by how many it is dominated. In SPEA, clustering served as a secondary ranking criterion, and both operators, the strength and the secondary criterion, were refined in SPEA2.
 
 The panel's decision table describes the density as a k-nearest-neighbour estimate, combined with the strength-based fitness; [Zitzler, Laumanns and Thiele (2001)](#ref-ZLT2001a) list the density estimation technique as the second of their three improvements over SPEA.
 
 ## The archive
 
-SPEA2 maintains an archive of non-dominated solutions next to the population, a feature [Emmerich and Deutz (2024)](#ref-ED2024a) mention alongside its refined operators. The archive holds non-dominated solutions across generations, and the enhanced archive truncation method is the third improvement that [Zitzler, Laumanns and Thiele (2001)](#ref-ZLT2001a) list.
+SPEA2 maintains an archive of non-dominated solutions next to the population, a feature [Emmerich and Deutz (2025)](#ref-ED2025a) mention alongside its refined operators. The archive holds non-dominated solutions across generations, and the enhanced archive truncation method is the third improvement that [Zitzler, Laumanns and Thiele (2001)](#ref-ZLT2001a) list.
 
 The panel's decision table describes the truncation as one that preserves boundary solutions, so that the extremes of the front are not lost when the archive is reduced.
 
@@ -34,7 +34,7 @@ The output is read the same way: the front, its ideal and nadir points, its hype
 
 ## References
 
-<a id="ref-ED2024a"></a>Emmerich, M., & Deutz, A. (2024). Multicriteria Optimization and Decision Making: Principles, Algorithms and Case Studies. [doi:10.48550/arXiv.2407.00359](https://doi.org/10.48550/arXiv.2407.00359)
+<a id="ref-ED2025a"></a>Emmerich, M., & Deutz, A. (2025). Multicriteria Optimization and Decision Making: Principles, Algorithms and Case Studies (Updated and revised ed.). [doi:10.48550/arXiv.2407.00359](https://doi.org/10.48550/arXiv.2407.00359)
 
 <a id="ref-ZLT2001a"></a>Zitzler, E., Laumanns, M., & Thiele, L. (2001). SPEA2: Improving the Strength Pareto Evolutionary Algorithm. *TIK-Report 103, ETH Zurich*.
 

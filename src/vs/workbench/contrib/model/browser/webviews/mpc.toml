@@ -12,6 +12,10 @@ defaultModel = "linmpc"
 name = "ModelPredictiveControl.jl"
 github = "https://github.com/JuliaControl/ModelPredictiveControl.jl"
 
+[[packages]]
+name = "ControlSystemsBase.jl"
+github = "https://github.com/JuliaControl/ControlSystems.jl/tree/master/lib/ControlSystemsBase"
+
 [requires]
 packages = ["ModelPredictiveControl.jl", "ControlSystemsBase.jl", "Plots.jl"]
 

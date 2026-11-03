@@ -9,8 +9,12 @@ viewType = "pollis.mpec"
 defaultModel = ""
 
 [[packages]]
-name = "Complementarity.jl"
-github = "https://github.com/chkwon/Complementarity.jl"
+name = "JuMP.jl"
+github = "https://github.com/jump-dev/JuMP.jl"
+
+[[packages]]
+name = "Ipopt.jl"
+github = "https://github.com/jump-dev/Ipopt.jl"
 
 [[packages]]
 name = "PATHSolver.jl"
@@ -72,7 +76,10 @@ separator = true
 label = "Software"
 
 [[references]]
-key = "Kwo2023a"
+key = "DHL2017a"
+
+[[references]]
+key = "WB2006a"
 
 [[references]]
 key = "DF1995a"

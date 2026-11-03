@@ -54,7 +54,7 @@ The reference point is the nadir plus 10% of the distance from the ideal to the 
 |---|---|
 | The package | [Mejia-de-Dios and Mezura-Montes (2022)](#ref-MM2022a) |
 | Textbooks on evolutionary multi-objective optimisation | [Deb (2001)](#ref-Deb2001a), [Coello Coello, Lamont and Van Veldhuizen (2007)](#ref-CLV2007a) |
-| Pareto dominance, the four algorithms and performance assessment | [Emmerich and Deutz (2024)](#ref-ED2024a) |
+| Pareto dominance, the four algorithms and performance assessment | [Emmerich and Deutz (2025)](#ref-ED2025a) |
 
 The original papers of the four algorithms are listed in the table of algorithms, and each has its own page under Algorithms, with its selection mechanism and its parameters in Metaheuristics.jl.
 
@@ -70,7 +70,7 @@ The original papers of the four algorithms are listed in the table of algorithms
 
 <a id="ref-DPAM2002a"></a>Deb, K., Pratap, A., Agarwal, S., & Meyarivan, T. (2002). A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II. *IEEE Transactions on Evolutionary Computation* 6(2), 182-197. [doi:10.1109/4235.996017](https://doi.org/10.1109/4235.996017)
 
-<a id="ref-ED2024a"></a>Emmerich, M., & Deutz, A. (2024). Multicriteria Optimization and Decision Making: Principles, Algorithms and Case Studies. [doi:10.48550/arXiv.2407.00359](https://doi.org/10.48550/arXiv.2407.00359)
+<a id="ref-ED2025a"></a>Emmerich, M., & Deutz, A. (2025). Multicriteria Optimization and Decision Making: Principles, Algorithms and Case Studies (Updated and revised ed.). [doi:10.48550/arXiv.2407.00359](https://doi.org/10.48550/arXiv.2407.00359)
 
 <a id="ref-MM2022a"></a>Mejia-de-Dios, J.-A., & Mezura-Montes, E. (2022). Metaheuristics: A Julia Package for Single- and Multi-Objective Optimization. *Journal of Open Source Software* 7(78), 4723. [doi:10.21105/joss.04723](https://doi.org/10.21105/joss.04723)
 
