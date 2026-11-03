@@ -6,7 +6,7 @@ A summary of the **Correlated Topic Model** panel: its two models, its inputs, h
 
 | Item | Value |
 | --- | --- |
-| Models | CTM, `CTM(corp, k)`; Focused CTM, `fCTM(corp, k)` |
+| Models | CTM, `CTM(corp, k)`; Filtered CTM, `fCTM(corp, k)` |
 | Package | TopicModelsVB.jl |
 | Prior on topic proportions | logistic normal, with a K × K covariance |
 | Fitting | variational EM, `train!(model, iter = iters)` |
@@ -49,34 +49,13 @@ The main code loads TopicModelsVB and, for the default corpus, PollisDatasets. T
 
 The TopicModelsVB.jl entry of the panel points to a fork that accepts Distributions 0.25, precompiles on Julia 1.13 and fixes `predict` for fLDA and fCTM, following upstream pull request 42.
 
-## References in the panel
-
-| Section | Works |
-| --- | --- |
-| Software | [Proffitt (2016a)](#ref-Pro2016a) |
-| Textbooks | [Jurafsky and Martin (2024)](#ref-JM2024a), [Bishop (2006)](#ref-Bis2006a) |
-| Original Papers | [Blei and Lafferty (2006)](#ref-BL2006a), [Blei, Ng and Jordan (2003)](#ref-BNJ2003a), [Proffitt (2016b)](#ref-Pro2016b) |
-| Evaluation | [Wallach, Murray, Salakhutdinov and Mimno (2009)](#ref-WMSM2009a), [Mimno, Wallach, Talley, Leenders and McCallum (2011)](#ref-MWTLM2011a) |
-
 ## References
-
-<a id="ref-Bis2006a"></a>Bishop, C. M. (2006). *Pattern Recognition and Machine Learning*. Springer. [doi:10.1007/978-0-387-45528-0](https://doi.org/10.1007/978-0-387-45528-0)
-
-<a id="ref-BNJ2003a"></a>Blei, D. M., Ng, A. Y., & Jordan, M. I. (2003). Latent Dirichlet Allocation. *Journal of Machine Learning Research* 3, 993-1022. [jmlr.org](https://jmlr.org/papers/v3/blei03a.html)
 
 <a id="ref-BL2006a"></a>Blei, D. M., & Lafferty, J. D. (2006). Correlated Topic Models. *Advances in Neural Information Processing Systems* 18, 147-154. [proceedings.neurips.cc](https://proceedings.neurips.cc/paper/2005/hash/9e82757e9a1c12cb710ad680db11f6f1-Abstract.html)
 
-<a id="ref-JM2024a"></a>Jurafsky, D., & Martin, J. H. (2024). *Speech and Language Processing* (3rd ed., draft). [web.stanford.edu](https://web.stanford.edu/~jurafsky/slp3/)
-
-<a id="ref-MWTLM2011a"></a>Mimno, D., Wallach, H. M., Talley, E., Leenders, M., & McCallum, A. (2011). Optimizing Semantic Coherence in Topic Models. *Proceedings of the 2011 Conference on Empirical Methods in Natural Language Processing*, 262-272. [aclanthology.org](https://aclanthology.org/D11-1024/)
-
 <a id="ref-Pro2016a"></a>Proffitt, E. (2016a). TopicModelsVB.jl: Variational Bayesian Topic Modeling in Julia. [github.com](https://github.com/ericproffitt/TopicModelsVB.jl)
-
-<a id="ref-Pro2016b"></a>Proffitt, E. (2016b). Filtered Latent Dirichlet Allocation: Variational Algorithm. [github.com](https://github.com/ericproffitt/TopicModelsVB.jl/blob/master/fLDA/fLDA.pdf)
-
-<a id="ref-WMSM2009a"></a>Wallach, H. M., Murray, I., Salakhutdinov, R., & Mimno, D. (2009). Evaluation Methods for Topic Models. *Proceedings of the 26th International Conference on Machine Learning*, 1105-1112. [doi:10.1145/1553374.1553515](https://doi.org/10.1145/1553374.1553515)
 
 ## See Also
 
 - [Overview](overview.md) · [Assumptions](assumptions.md) · [Diagnostics](diagnostics.md) · [Interpretation](interpretation.md) · [Decision Guide](decision-guide.md)
-- [CTM](ctm.md) · [Focused CTM](fctm.md)
+- [CTM](ctm.md) · [Filtered CTM](fctm.md)

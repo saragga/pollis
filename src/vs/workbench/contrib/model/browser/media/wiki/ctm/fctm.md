@@ -1,6 +1,6 @@
-# Correlated Topic Model: Focused CTM
+# Correlated Topic Model: Filtered CTM
 
-The **Focused CTM** model fits `fCTM(corp, k)` of TopicModelsVB.jl, which the package calls the filtered correlated topic model: a CTM in which a switch sends some words to a background distribution, so that corpus-specific stop words stay out of the topics.
+The **Filtered CTM** model fits `fCTM(corp, k)` of TopicModelsVB.jl, which the package calls the filtered correlated topic model: a CTM in which a switch sends some words to a background distribution, so that corpus-specific stop words stay out of the topics.
 
 ## The filter
 
@@ -15,7 +15,7 @@ The terms with the highest probability in κ are those most likely to be corpus-
 
 The README of TopicModelsVB.jl applies the same idea to the CTM: filtering dynamically identifies and suppresses stop words that would otherwise clutter up the topic distribution output. The topic proportions keep the logistic normal prior of [Blei and Lafferty (2006)](#ref-BL2006a), with its covariance between topics.
 
-The panel's bullet describes the model as a structured variant of the CTM that separates background words from topic-specific words, and the main code comment says that background words are filtered out of the topics.
+The panel's bullet follows the README: a CTM with a filter that dynamically identifies and suppresses stop words which would otherwise clutter up the topics. The main code comment says that corpus-specific stop words are filtered out of the topics.
 
 ## Variational updates
 
@@ -30,13 +30,13 @@ showtopics(model, 10)
 topicdist(model, 1)
 ```
 
-The fitted model holds η in `model.eta` and κ in `model.kappa`. The held-out code of **Perplexity** and **CTM vs Focused CTM** uses both: for a Focused CTM, the probability of a word w is η · Σ_k θ_k β_{k,w} + (1 − η) κ_w.
+The fitted model holds η in `model.eta` and κ in `model.kappa`. The held-out code of **Perplexity** and **CTM vs Filtered CTM** uses both: for a Filtered CTM, the probability of a word w is η · Σ_k θ_k β_{k,w} + (1 − η) κ_w.
 
 The TopicModelsVB.jl entry of the panel points to a fork that, among other changes, fixes `predict` for fLDA and fCTM.
 
-## CTM vs Focused CTM
+## CTM vs Filtered CTM
 
-**CTM vs Focused CTM** fits a CTM and a Focused CTM with the same k and iterations on the same training documents, and prints for each the held-out perplexity and the mean UMass coherence of [Mimno, Wallach, Talley, Leenders and McCallum (2011)](#ref-MWTLM2011a). The description of the action sets the question as topic quality with and without background separation.
+**CTM vs Filtered CTM** fits a CTM and a Filtered CTM with the same k and iterations on the same training documents, and prints for each the held-out perplexity and the mean UMass coherence of [Mimno, Wallach, Talley, Leenders and McCallum (2011)](#ref-MWTLM2011a). The description of the action sets the question as topic quality with and without background separation.
 
 The README illustrates the filtered model on National Science Foundation abstracts, where it labels the nine topics of an fCTM from their top words and reads the largest entries of `model.sigma` as related topics.
 

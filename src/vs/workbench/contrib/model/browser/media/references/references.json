@@ -2984,7 +2984,7 @@
 		},
 		{
 			"key": "BL2006a",
-			"type": "article",
+			"type": "inproceedings",
 			"title": "Correlated Topic Models",
 			"authors": [
 				"Blei, David M.",
@@ -2993,8 +2993,20 @@
 			"author_kind": "persons",
 			"authors_complete": true,
 			"year": 2006,
-			"journal": "Advances in Neural Information Processing Systems",
+			"booktitle": "Advances in Neural Information Processing Systems",
+			"editors": [
+				"Weiss, Yair",
+				"Schölkopf, Bernhard",
+				"Platt, John"
+			],
+			"publisher": "MIT Press",
+			"address": "Cambridge, MA",
+			"volume": "18",
+			"pages": "147-154",
 			"url": "https://proceedings.neurips.cc/paper/2005/hash/9e82757e9a1c12cb710ad680db11f6f1-Abstract.html",
+			"oa_url": "https://proceedings.neurips.cc/paper_files/paper/2005/file/9e82757e9a1c12cb710ad680db11f6f1-Paper.pdf",
+			"abstract": "Topic models, such as latent Dirichlet allocation (LDA), can be useful tools for the statistical analysis of document collections and other discrete data. The LDA model assumes that the words of each document arise from a mixture of topics, each of which is a distribution over the vocabulary. A limitation of LDA is the inability to model topic correlation even though, for example, a document about genetics is more likely to also be about disease than x-ray astronomy. This limitation stems from the use of the Dirichlet distribution to model the variability among the topic proportions. In this paper we develop the correlated topic model (CTM), where the topic proportions exhibit correlation via the logistic normal distribution [1]. We derive a mean-field variational inference algorithm for approximate posterior inference in this model, which is complicated by the fact that the logistic normal is not conjugate to the multinomial. The CTM gives a better fit than LDA on a collection of OCRed articles from the journal Science. Furthermore, the CTM provides a natural way of visualizing and exploring this and other unstructured data sets.",
+			"abstract_source": "author",
 			"legacy_key": "blei2006",
 			"source": "manual",
 			"checked": false,
@@ -17007,7 +17019,7 @@
 		},
 		{
 			"key": "JM2024a",
-			"type": "article",
+			"type": "book",
 			"title": "Speech and Language Processing",
 			"authors": [
 				"Jurafsky, Daniel",
@@ -17016,7 +17028,7 @@
 			"author_kind": "persons",
 			"authors_complete": true,
 			"year": 2024,
-			"journal": "Pearson (3rd ed., draft)",
+			"edition": "3rd, draft",
 			"url": "https://web.stanford.edu/~jurafsky/slp3/",
 			"legacy_key": "jurafsky2024",
 			"source": "manual",
@@ -50113,15 +50125,13 @@
 		{
 			"id": "ctm",
 			"title": "Correlated Topic Model",
-			"description": "CTM · Focused CTM",
+			"description": "CTM · Filtered CTM",
 			"commands": [
 				"chiara.statistics.nlp.ctm",
 				"chiara.statistics.nlp.fctm"
 			],
 			"keys": [
 				"Pro2016a",
-				"JM2024a",
-				"Bis2006a",
 				"BL2006a",
 				"BNJ2003a",
 				"Pro2016b",

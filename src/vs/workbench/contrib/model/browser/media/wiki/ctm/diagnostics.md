@@ -12,17 +12,17 @@ They describe perplexity as the effective number of equally likely words accordi
 
 ## Document completion
 
-[Wallach, Murray, Salakhutdinov and Mimno (2009)](#ref-WMSM2009a) call this kind of evaluation document completion: the probability of the second half of a document given the first. In the panel, **Perplexity** holds out 20% of the documents with `randperm(Xoshiro(1), ...)` and fits the model on the rest.
+[Wallach, Murray, Salakhutdinov and Mimno (2009)](#ref-WMSM2009a) describe document completion: the probability of the second half of a document given the first. **Perplexity** also observes one part of each held-out document and scores the rest. It holds out 20% of the documents with `randperm(Xoshiro(1), ...)` and fits the model on the rest.
 
-For each held-out document with at least two distinct words, the odd-numbered distinct terms form the observed half; `predict` infers the topic proportions from them with the topics held fixed. The even-numbered terms are scored, each word with probability Σ_k θ_k β_{k,w}, weighted by its count, and the action returns exp(−ll / n).
+For each held-out document with at least two distinct words, the odd-numbered distinct terms, with their counts, form the observed part; `predict` infers the topic proportions from them with the topics held fixed. The even-numbered distinct terms are scored, so the split is one of distinct words rather than of word positions, and the two parts need not hold the same number of words. Each scored term has probability Σ_k θ_k β_{k,w}, weighted by its count, and the action returns exp(−ll / n).
 
-Words absent from the training documents have zero topic weight, so the code removes them from both halves. For the Focused CTM, the probability mixes in the background distribution: η · Σ_k θ_k β_{k,w} + (1 − η) κ_w.
+Words absent from the training documents have zero topic weight, so the code removes them from both parts. For the Filtered CTM, the probability mixes in the background distribution: η · Σ_k θ_k β_{k,w} + (1 − η) κ_w.
 
 ## Reading the perplexity
 
-The panel's description reads lower perplexity as better and states that in-sample perplexity keeps falling as topics are added, so it cannot choose a model; the code comment adds that the held-out value is comparable across k because the documents were not used for fitting.
+The panel's description reads lower perplexity as better; the code comment adds that the held-out value is comparable across k because the documents were not used for fitting.
 
-[Blei and Lafferty (2006)](#ref-BL2006a) use the same kind of measure for the CTM: predictive perplexity on partially observed held-out documents, as a function of the share of words observed.
+[Blei and Lafferty (2006)](#ref-BL2006a), for whom lower numbers denote more predictive power, use the same kind of measure for the CTM: predictive perplexity on partially observed held-out documents, as a function of the share of words observed.
 
 ## Topic Coherence
 
@@ -36,7 +36,7 @@ The smoothing count of 1 avoids the logarithm of zero. The panel takes M = 10 an
 
 [Mimno, Wallach, Talley, Leenders and McCallum (2011)](#ref-MWTLM2011a) built the measure from the co-occurrence of words in the documents being modelled, without an external reference collection, and found it a better indicator of topics judged poor by domain experts than the size of the topic. The panel's code comment reads values closer to 0 as more coherent.
 
-Coherence is computed on the full corpus in **Topic Coherence**, **Compare k Topics** and **CTM vs Focused CTM**, while perplexity uses the held-out documents only.
+Coherence is computed on the full corpus in **Topic Coherence**, **Compare k Topics** and **CTM vs Filtered CTM**, while perplexity uses the held-out documents only.
 
 ## Training
 
@@ -53,4 +53,4 @@ Coherence is computed on the full corpus in **Topic Coherence**, **Compare k Top
 ## See Also
 
 - [Factsheet](factsheet.md) · [Overview](overview.md) · [Assumptions](assumptions.md) · [Interpretation](interpretation.md) · [Decision Guide](decision-guide.md)
-- [CTM](ctm.md) · [Focused CTM](fctm.md)
+- [CTM](ctm.md) · [Filtered CTM](fctm.md)

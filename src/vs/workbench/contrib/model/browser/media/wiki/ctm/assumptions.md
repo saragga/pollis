@@ -14,9 +14,9 @@ The CTM draws the log proportions η of each document from a multivariate normal
 
 The contrast is with the Dirichlet of [Blei, Ng and Jordan (2003)](#ref-BNJ2003a), under which, in the account of [Blei and Lafferty (2006)](#ref-BL2006a), the components of the proportions vector are nearly independent. The CTM keeps the rest of the LDA process: given the proportions, each word picks a topic and is drawn from that topic.
 
-## Background words in the Focused CTM
+## Background words in the Filtered CTM
 
-**Focused CTM** adds a second source of words. In the filtered LDA of [Proffitt (2016b)](#ref-Pro2016b), a Bernoulli switch c with probability η decides for each word whether it comes from the topic distribution β_z or from the stop word distribution κ:
+**Filtered CTM** adds a second source of words. In the filtered LDA of [Proffitt (2016b)](#ref-Pro2016b), a Bernoulli switch c with probability η decides for each word whether it comes from the topic distribution β_z or from the stop word distribution κ:
 
 w ∼ Categorical((1 − c) κ + c β_z).
 
@@ -40,13 +40,13 @@ The vocabulary is the set of distinct words left in the corpus after `trim=true`
 
 ## References
 
-<a id="ref-BNJ2003a"></a>Blei, D. M., Ng, A. Y., & Jordan, M. I. (2003). Latent Dirichlet Allocation. *Journal of Machine Learning Research* 3, 993-1022. [jmlr.org](https://jmlr.org/papers/v3/blei03a.html)
-
 <a id="ref-BL2006a"></a>Blei, D. M., & Lafferty, J. D. (2006). Correlated Topic Models. *Advances in Neural Information Processing Systems* 18, 147-154. [proceedings.neurips.cc](https://proceedings.neurips.cc/paper/2005/hash/9e82757e9a1c12cb710ad680db11f6f1-Abstract.html)
+
+<a id="ref-BNJ2003a"></a>Blei, D. M., Ng, A. Y., & Jordan, M. I. (2003). Latent Dirichlet Allocation. *Journal of Machine Learning Research* 3, 993-1022. [jmlr.org](https://jmlr.org/papers/v3/blei03a.html)
 
 <a id="ref-Pro2016b"></a>Proffitt, E. (2016b). Filtered Latent Dirichlet Allocation: Variational Algorithm. [github.com](https://github.com/ericproffitt/TopicModelsVB.jl/blob/master/fLDA/fLDA.pdf)
 
 ## See Also
 
 - [Factsheet](factsheet.md) · [Overview](overview.md) · [Diagnostics](diagnostics.md) · [Interpretation](interpretation.md) · [Decision Guide](decision-guide.md)
-- [CTM](ctm.md) · [Focused CTM](fctm.md)
+- [CTM](ctm.md) · [Filtered CTM](fctm.md)

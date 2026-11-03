@@ -22,7 +22,7 @@ The README of TopicModelsVB.jl labels the topics of its own examples from their 
 
 ## Topic Network
 
-**Topic Network** draws a graph whose nodes are the topics and whose edges join the pairs with a correlation greater than 0.1, without self-loops. [Blei and Lafferty (2006)](#ref-BL2006a) build a graph of the same kind from 16 351 Science articles, each node a topic labelled with its five most probable phrases, and find densely connected groups of topics in materials science, geology and cell biology.
+**Topic Network** draws a graph whose nodes are the topics and whose edges join the pairs with a positive correlation, without self-loops. [Blei and Lafferty (2006)](#ref-BL2006a) build a graph of the same kind from 16 351 Science articles, each node a topic labelled with its five most probable phrases, and find densely connected groups of topics in materials science, geology and cell biology.
 
 Their example shows the use they make of it: a researcher alerted to a correlated topic not contained in an article could browse the collection in a topic-guided manner.
 
@@ -32,7 +32,7 @@ Their example shows the use they make of it: a researcher alerted to a correlate
 
 ## Background words
 
-For the Focused CTM, `model.eta` is the probability that a word comes from a topic and `model.kappa` the background distribution, as in the held-out code of the panel. The words with the highest probability in κ are, following [Proffitt (2016b)](#ref-Pro2016b), those most likely to be corpus-specific stop words, and their appearance in the topics is suppressed. The top words of `model.kappa`, sorted by probability, list the words the model has sent to the background.
+For the Filtered CTM, `model.eta` is the probability that a word comes from a topic and `model.kappa` the background distribution, as in the held-out code of the panel. The words with the highest probability in κ are, following [Proffitt (2016b)](#ref-Pro2016b), those most likely to be corpus-specific stop words, and their appearance in the topics is suppressed. The top words of `model.kappa`, sorted by probability, list the words the model has sent to the background.
 
 ## References
 
@@ -45,4 +45,4 @@ For the Focused CTM, `model.eta` is the probability that a word comes from a top
 ## See Also
 
 - [Factsheet](factsheet.md) · [Overview](overview.md) · [Assumptions](assumptions.md) · [Diagnostics](diagnostics.md) · [Decision Guide](decision-guide.md)
-- [CTM](ctm.md) · [Focused CTM](fctm.md)
+- [CTM](ctm.md) · [Filtered CTM](fctm.md)

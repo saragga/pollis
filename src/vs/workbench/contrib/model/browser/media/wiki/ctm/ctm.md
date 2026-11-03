@@ -33,7 +33,7 @@ topicdist(model, 1)
 
 The default fits 10 topics in 1000 iterations to the sections of The Pollis Guide, after the preprocessing that lowercases the text, keeps letters only and removes stop words. The output lists the top ten words of each topic and the topic proportions of the first section.
 
-All the actions of the panel fit `CTM`, and **CTM vs Focused CTM** also fits `fCTM` beside it.
+The actions fit the selected model, `CTM` or `fCTM`, and **CTM vs Filtered CTM** fits both side by side.
 
 ## Results in the original paper
 
@@ -48,4 +48,4 @@ The comparison used importance sampling with the fitted variational distribution
 ## See Also
 
 - [Factsheet](factsheet.md) · [Overview](overview.md) · [Assumptions](assumptions.md) · [Diagnostics](diagnostics.md) · [Interpretation](interpretation.md) · [Decision Guide](decision-guide.md)
-- [Focused CTM](fctm.md)
+- [Filtered CTM](fctm.md)

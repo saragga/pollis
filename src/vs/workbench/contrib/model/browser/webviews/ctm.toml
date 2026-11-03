@@ -18,6 +18,18 @@ fork = true
 name = "PollisDatasets.jl"
 github = "https://github.com/Trumpingtons/PollisDatasets.jl"
 
+[[packages]]
+name = "Graphs.jl"
+github = "https://github.com/JuliaGraphs/Graphs.jl"
+
+[[packages]]
+name = "GraphPlot.jl"
+github = "https://github.com/JuliaGraphs/GraphPlot.jl"
+
+[[packages]]
+name = "Plots.jl"
+github = "https://github.com/JuliaPlots/Plots.jl"
+
 [requires]
 packages = ["TopicModelsVB.jl", "GraphPlot.jl", "Graphs.jl", "Plots.jl"]
 
@@ -31,10 +43,10 @@ bundled = true
 description = "Correlated Topic Model with logistic-normal prior for capturing topic correlations using TopicModelsVB.jl"
 
 [[notebookSections.notebooks]]
-name = "Focused CTM"
+name = "Filtered CTM"
 file = "ctm/tutorial-02-fctm.ipynb"
 bundled = true
-description = "Focused CTM with background word separation using TopicModelsVB.jl"
+description = "Filtered CTM, which identifies and suppresses corpus-specific stop words, using TopicModelsVB.jl"
 
 [[wikis]]
 name = "Factsheet"
@@ -76,7 +88,7 @@ file = "ctm/ctm.md"
 bundled = true
 
 [[wikis]]
-name = "Focused CTM"
+name = "Filtered CTM"
 file = "ctm/fctm.md"
 bundled = true
 
@@ -86,16 +98,6 @@ label = "Software"
 
 [[references]]
 key = "Pro2016a"
-
-[[references]]
-separator = true
-label = "Textbooks"
-
-[[references]]
-key = "JM2024a"
-
-[[references]]
-key = "Bis2006a"
 
 [[references]]
 separator = true
@@ -126,19 +128,19 @@ label = "CTM"
 
 [[models]]
 id = "fctm"
-label = "Focused CTM"
+label = "Filtered CTM"
 
 [[bullets]]
 text = "CTM"
 detail = "extends LDA with a logistic-normal prior; captures correlations between topics via a covariance matrix"
 
 [[bullets]]
-text = "Focused CTM"
-detail = "structured variant of CTM; separates background words from topic-specific words"
+text = "Filtered CTM"
+detail = "CTM with a filter that dynamically identifies and suppresses stop words which would otherwise clutter up the topics"
 
 [[bullets]]
 text = "TopicModelsVB.jl"
-detail = "variational Bayes implementation of LDA, fLDA, CTM, Focused CTM and CTPF"
+detail = "variational Bayes implementation of LDA, fLDA, CTM, fCTM and CTPF"
 
 [[inputs]]
 id = "corpus"
@@ -195,7 +197,7 @@ key   = Dict(w => i for (i, w) in enumerate(vocab))  # word -> vocabulary key
 corp  = Corpus([Document([key[w] for w in ws]) for ws in words], vocab=vocab)  # TopicModelsVB corpus (its own type, not a document-term matrix)
 fixcorp!(corp, stop=true, condense=true, remove_empty_docs=true, trim=true)  # drop stop words, merge repeated words into counts
 
-model = fCTM(corp, {{k}})  # filtered CTM: background words are filtered out of the topics; {{k}} topics
+model = fCTM(corp, {{k}})  # filtered CTM: corpus-specific stop words are filtered out of the topics; {{k}} topics
 train!(model, iter={{iters}})  # variational EM training
 
 showtopics(model, 10)  # top 10 words of each topic
@@ -219,7 +221,8 @@ vocab = sort(unique(reduce(vcat, words)))  # vocabulary
 key   = Dict(w => i for (i, w) in enumerate(vocab))  # word -> vocabulary key
 corp  = Corpus([Document([key[w] for w in ws]) for ws in words], vocab=vocab)  # TopicModelsVB corpus (its own type, not a document-term matrix)
 fixcorp!(corp, stop=true, condense=true, remove_empty_docs=true, trim=true)  # drop stop words, merge repeated words into counts
-model = CTM(corp, {{k}}); train!(model, iter={{iters}}, printelbo=false)  # fit CTM
+{{?model=ctm}}model = CTM(corp, {{k}}); train!(model, iter={{iters}}, printelbo=false)  # fit CTM
+{{?model=fctm}}model = fCTM(corp, {{k}}); train!(model, iter={{iters}}, printelbo=false)  # fit filtered CTM
 
 showtopics(model, 10)  # top 10 words per topic
 '''
@@ -237,7 +240,8 @@ vocab = sort(unique(reduce(vcat, words)))  # vocabulary
 key   = Dict(w => i for (i, w) in enumerate(vocab))  # word -> vocabulary key
 corp  = Corpus([Document([key[w] for w in ws]) for ws in words], vocab=vocab)  # TopicModelsVB corpus (its own type, not a document-term matrix)
 fixcorp!(corp, stop=true, condense=true, remove_empty_docs=true, trim=true)  # drop stop words, merge repeated words into counts
-model = CTM(corp, {{k}}); train!(model, iter={{iters}}, printelbo=false)  # fit CTM
+{{?model=ctm}}model = CTM(corp, {{k}}); train!(model, iter={{iters}}, printelbo=false)  # fit CTM
+{{?model=fctm}}model = fCTM(corp, {{k}}); train!(model, iter={{iters}}, printelbo=false)  # fit filtered CTM
 
 s = sqrt.(diag(model.sigma))  # topic standard deviations
 R = Matrix(model.sigma) ./ (s * transpose(s))  # covariance to correlation
@@ -251,7 +255,7 @@ label = "Diagnose"
 [[actionGroups.actions]]
 id = "perplexity"
 label = "Perplexity"
-desc = "Perplexity on held-out documents (document completion); lower is better. In-sample perplexity keeps falling as topics are added, so it cannot choose a model"
+desc = "Perplexity on held-out documents: the topic mix of each is inferred from its odd-numbered distinct words and the even-numbered ones are scored; lower is better"
 code = '''
 using TopicModelsVB, LinearAlgebra, Random
 
@@ -265,14 +269,14 @@ test  = randperm(Xoshiro(1), length(corp))[1:max(1, div(length(corp), 5))]  # ho
 train = Corpus(docs=corp.docs[setdiff(eachindex(corp.docs), test)], vocab=corp.vocab)  # same vocabulary keys
 held  = filter(d -> length(d.terms) >= 2, corp.docs[test])  # held-out documents with at least two distinct words
 
-function heldout_perplexity(model, held)  # document completion: infer each topic mix from half the words, score the other half
-    seen(d) = [i for i in 1:2:length(d.terms) if sum(model.beta[:, d.terms[i]]) > 0]  # the observed half, without the words absent from the training documents, whose zero topic weight would break predict
+function heldout_perplexity(model, held)  # infer each topic mix from the odd-numbered distinct words, score the even-numbered ones
+    seen(d) = [i for i in 1:2:length(d.terms) if sum(model.beta[:, d.terms[i]]) > 0]  # the odd-numbered distinct words, without the words absent from the training documents, whose zero topic weight would break predict
     held = filter(d -> !isempty(seen(d)), held)
     obs = Corpus(docs=[Document(terms=d.terms[seen(d)], counts=d.counts[seen(d)]) for d in held], vocab=model.corp.vocab)
     fit = predict(obs, model)  # topic proportions of the held-out documents, topics fixed
     ll, n = 0.0, 0
     for (j, d) in enumerate(held)
-        t, c = d.terms[2:2:end], d.counts[2:2:end]  # the unseen half
+        t, c = d.terms[2:2:end], d.counts[2:2:end]  # the even-numbered distinct words, with their counts
         keep = vec(sum(model.beta[:, t], dims=1)) .> 0; t, c = t[keep], c[keep]  # words absent from the training documents have zero topic weight, so are not scored
         pw = transpose(model.beta[:, t]) * topicdist(fit, j)  # p(word) = sum over topics of theta times beta
         model isa fCTM && (pw = model.eta .* pw .+ (1 - model.eta) .* model.kappa[t])  # fCTM: mix in the filtered background words
@@ -281,7 +285,8 @@ function heldout_perplexity(model, held)  # document completion: infer each topi
     exp(-ll / n)  # lower is better, comparable across k because the documents were not used for fitting
 end
 
-model = CTM(train, {{k}}); train!(model, iter={{iters}}, printelbo=false)  # fit on the training documents only
+{{?model=ctm}}model = CTM(train, {{k}}); train!(model, iter={{iters}}, printelbo=false)  # fit on the training documents only
+{{?model=fctm}}model = fCTM(train, {{k}}); train!(model, iter={{iters}}, printelbo=false)  # fit on the training documents only
 heldout_perplexity(model, held)  # held-out perplexity
 '''
 
@@ -298,7 +303,8 @@ vocab = sort(unique(reduce(vcat, words)))  # vocabulary
 key   = Dict(w => i for (i, w) in enumerate(vocab))  # word -> vocabulary key
 corp  = Corpus([Document([key[w] for w in ws]) for ws in words], vocab=vocab)  # TopicModelsVB corpus (its own type, not a document-term matrix)
 fixcorp!(corp, stop=true, condense=true, remove_empty_docs=true, trim=true)  # drop stop words, merge repeated words into counts
-model = CTM(corp, {{k}}); train!(model, iter={{iters}}, printelbo=false)  # fit CTM
+{{?model=ctm}}model = CTM(corp, {{k}}); train!(model, iter={{iters}}, printelbo=false)  # fit CTM
+{{?model=fctm}}model = fCTM(corp, {{k}}); train!(model, iter={{iters}}, printelbo=false)  # fit filtered CTM
 
 function umass(model, corp; n=10)  # UMass coherence of each topic from document co-occurrence: closer to 0 is more coherent
     D = [Set(d.terms) for d in corp.docs]
@@ -332,7 +338,8 @@ vocab = sort(unique(reduce(vcat, words)))  # vocabulary
 key   = Dict(w => i for (i, w) in enumerate(vocab))  # word -> vocabulary key
 corp  = Corpus([Document([key[w] for w in ws]) for ws in words], vocab=vocab)  # TopicModelsVB corpus (its own type, not a document-term matrix)
 fixcorp!(corp, stop=true, condense=true, remove_empty_docs=true, trim=true)  # drop stop words, merge repeated words into counts
-model = CTM(corp, {{k}}); train!(model, iter={{iters}}, printelbo=false)  # fit CTM
+{{?model=ctm}}model = CTM(corp, {{k}}); train!(model, iter={{iters}}, printelbo=false)  # fit CTM
+{{?model=fctm}}model = fCTM(corp, {{k}}); train!(model, iter={{iters}}, printelbo=false)  # fit filtered CTM
 
 new_text = "replace with the text of a new document"
 ids = [key[w] for w in split(lowercase(replace(new_text, r"[^A-Za-z ]" => " "))) if haskey(key, w)]  # known words only
@@ -354,7 +361,8 @@ vocab = sort(unique(reduce(vcat, words)))  # vocabulary
 key   = Dict(w => i for (i, w) in enumerate(vocab))  # word -> vocabulary key
 corp  = Corpus([Document([key[w] for w in ws]) for ws in words], vocab=vocab)  # TopicModelsVB corpus (its own type, not a document-term matrix)
 fixcorp!(corp, stop=true, condense=true, remove_empty_docs=true, trim=true)  # drop stop words, merge repeated words into counts
-model = CTM(corp, {{k}}); train!(model, iter={{iters}}, printelbo=false)  # fit CTM
+{{?model=ctm}}model = CTM(corp, {{k}}); train!(model, iter={{iters}}, printelbo=false)  # fit CTM
+{{?model=fctm}}model = fCTM(corp, {{k}}); train!(model, iter={{iters}}, printelbo=false)  # fit filtered CTM
 
 topic_idx = 1  # topic of interest
 theta = [topicdist(model, d)[topic_idx] for d in 1:length(corp)]  # share of the topic in each document
@@ -382,14 +390,14 @@ test  = randperm(Xoshiro(1), length(corp))[1:max(1, div(length(corp), 5))]  # ho
 train = Corpus(docs=corp.docs[setdiff(eachindex(corp.docs), test)], vocab=corp.vocab)  # same vocabulary keys
 held  = filter(d -> length(d.terms) >= 2, corp.docs[test])  # held-out documents with at least two distinct words
 
-function heldout_perplexity(model, held)  # document completion: infer each topic mix from half the words, score the other half
-    seen(d) = [i for i in 1:2:length(d.terms) if sum(model.beta[:, d.terms[i]]) > 0]  # the observed half, without the words absent from the training documents, whose zero topic weight would break predict
+function heldout_perplexity(model, held)  # infer each topic mix from the odd-numbered distinct words, score the even-numbered ones
+    seen(d) = [i for i in 1:2:length(d.terms) if sum(model.beta[:, d.terms[i]]) > 0]  # the odd-numbered distinct words, without the words absent from the training documents, whose zero topic weight would break predict
     held = filter(d -> !isempty(seen(d)), held)
     obs = Corpus(docs=[Document(terms=d.terms[seen(d)], counts=d.counts[seen(d)]) for d in held], vocab=model.corp.vocab)
     fit = predict(obs, model)  # topic proportions of the held-out documents, topics fixed
     ll, n = 0.0, 0
     for (j, d) in enumerate(held)
-        t, c = d.terms[2:2:end], d.counts[2:2:end]  # the unseen half
+        t, c = d.terms[2:2:end], d.counts[2:2:end]  # the even-numbered distinct words, with their counts
         keep = vec(sum(model.beta[:, t], dims=1)) .> 0; t, c = t[keep], c[keep]  # words absent from the training documents have zero topic weight, so are not scored
         pw = transpose(model.beta[:, t]) * topicdist(fit, j)  # p(word) = sum over topics of theta times beta
         model isa fCTM && (pw = model.eta .* pw .+ (1 - model.eta) .* model.kappa[t])  # fCTM: mix in the filtered background words
@@ -409,14 +417,15 @@ function umass(model, corp; n=10)  # UMass coherence of each topic from document
 end
 
 for k in [5, 10, 20, 50]  # sweep over topic counts
-    m = CTM(train, k); train!(m, iter={{iters}}, printelbo=false)  # fit on the training documents only
+{{?model=ctm}}    m = CTM(train, k); train!(m, iter={{iters}}, printelbo=false)  # fit on the training documents only
+{{?model=fctm}}    m = fCTM(train, k); train!(m, iter={{iters}}, printelbo=false)  # fit on the training documents only
     println("k=", k, "  held-out perplexity=", round(heldout_perplexity(m, held), digits=1), "  mean coherence=", round(mean(umass(m, corp)), digits=2))
 end
 '''
 
 [[actionGroups.actions]]
 id = "ctm-vs-fctm"
-label = "CTM vs Focused CTM"
+label = "CTM vs Filtered CTM"
 desc = "Topic quality with and without background separation: held-out perplexity and topic coherence"
 code = '''
 using TopicModelsVB, LinearAlgebra, Random, Statistics
@@ -441,14 +450,14 @@ function umass(model, corp; n=10)  # UMass coherence of each topic from document
     end
 end
 
-function heldout_perplexity(model, held)  # document completion: infer each topic mix from half the words, score the other half
-    seen(d) = [i for i in 1:2:length(d.terms) if sum(model.beta[:, d.terms[i]]) > 0]  # the observed half, without the words absent from the training documents, whose zero topic weight would break predict
+function heldout_perplexity(model, held)  # infer each topic mix from the odd-numbered distinct words, score the even-numbered ones
+    seen(d) = [i for i in 1:2:length(d.terms) if sum(model.beta[:, d.terms[i]]) > 0]  # the odd-numbered distinct words, without the words absent from the training documents, whose zero topic weight would break predict
     held = filter(d -> !isempty(seen(d)), held)
     obs = Corpus(docs=[Document(terms=d.terms[seen(d)], counts=d.counts[seen(d)]) for d in held], vocab=model.corp.vocab)
     fit = predict(obs, model)  # topic proportions of the held-out documents, topics fixed
     ll, n = 0.0, 0
     for (j, d) in enumerate(held)
-        t, c = d.terms[2:2:end], d.counts[2:2:end]  # the unseen half
+        t, c = d.terms[2:2:end], d.counts[2:2:end]  # the even-numbered distinct words, with their counts
         keep = vec(sum(model.beta[:, t], dims=1)) .> 0; t, c = t[keep], c[keep]  # words absent from the training documents have zero topic weight, so are not scored
         pw = transpose(model.beta[:, t]) * topicdist(fit, j)  # p(word) = sum over topics of theta times beta
         model isa fCTM && (pw = model.eta .* pw .+ (1 - model.eta) .* model.kappa[t])  # fCTM: mix in the filtered background words
@@ -480,11 +489,12 @@ vocab = sort(unique(reduce(vcat, words)))  # vocabulary
 key   = Dict(w => i for (i, w) in enumerate(vocab))  # word -> vocabulary key
 corp  = Corpus([Document([key[w] for w in ws]) for ws in words], vocab=vocab)  # TopicModelsVB corpus (its own type, not a document-term matrix)
 fixcorp!(corp, stop=true, condense=true, remove_empty_docs=true, trim=true)  # drop stop words, merge repeated words into counts
-model = CTM(corp, {{k}}); train!(model, iter={{iters}}, printelbo=false)  # fit CTM
+{{?model=ctm}}model = CTM(corp, {{k}}); train!(model, iter={{iters}}, printelbo=false)  # fit CTM
+{{?model=fctm}}model = fCTM(corp, {{k}}); train!(model, iter={{iters}}, printelbo=false)  # fit filtered CTM
 
 s = sqrt.(diag(model.sigma))  # topic standard deviations
 R = Matrix(model.sigma) ./ (s * transpose(s))  # covariance to correlation
-adj = (R .> 0.1) .& .!Matrix{Bool}(I, model.K, model.K)  # edges: correlation above 0.1, no self-loops
+adj = (R .> 0) .& .!Matrix{Bool}(I, model.K, model.K)  # edges: positive correlation, no self-loops
 gplot(SimpleGraph(adj), nodelabel=1:model.K)  # visualise topic network
 '''
 
@@ -501,7 +511,8 @@ vocab = sort(unique(reduce(vcat, words)))  # vocabulary
 key   = Dict(w => i for (i, w) in enumerate(vocab))  # word -> vocabulary key
 corp  = Corpus([Document([key[w] for w in ws]) for ws in words], vocab=vocab)  # TopicModelsVB corpus (its own type, not a document-term matrix)
 fixcorp!(corp, stop=true, condense=true, remove_empty_docs=true, trim=true)  # drop stop words, merge repeated words into counts
-model = CTM(corp, {{k}}); train!(model, iter={{iters}}, printelbo=false)  # fit CTM
+{{?model=ctm}}model = CTM(corp, {{k}}); train!(model, iter={{iters}}, printelbo=false)  # fit CTM
+{{?model=fctm}}model = fCTM(corp, {{k}}); train!(model, iter={{iters}}, printelbo=false)  # fit filtered CTM
 
 showtopics(model, 5)  # top 5 words per topic as label
 '''
