@@ -100,7 +100,13 @@ label = "Original Papers"
 key = "SWMW1989a"
 
 [[references]]
+key = "JSW1998a"
+
+[[references]]
 key = "Jon2001a"
+
+[[references]]
+key = "RS2007a"
 
 [[models]]
 id = "rsm"

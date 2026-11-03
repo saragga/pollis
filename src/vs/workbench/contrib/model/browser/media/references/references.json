@@ -28386,6 +28386,30 @@
 			"open_access": false
 		},
 		{
+			"key": "RS2007a",
+			"type": "article",
+			"title": "A Stochastic Radial Basis Function Method for the Global Optimization of Expensive Functions",
+			"authors": [
+				"Regis, Rommel G.",
+				"Shoemaker, Christine A."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2007,
+			"journal": "INFORMS Journal on Computing",
+			"volume": "19",
+			"number": "4",
+			"pages": "497-509",
+			"doi": "10.1287/ijoc.1060.0182",
+			"openalex": "W1988945200",
+			"abstract": "We introduce a new framework for the global optimization of computationally expensive multimodal functions when derivatives are unavailable. The proposed Stochastic Response Surface (SRS) Method iteratively utilizes a response surface model to approximate the expensive function and identifies a promising point for function evaluation from a set of randomly generated points, called candidate points. Assuming some mild technical conditions, SRS converges to the global minimum in a probabilistic sense. We also propose Metric SRS (MSRS), which is a special case of SRS where the function evaluation point in each iteration is chosen to be the best candidate point according to two criteria: the estimated function value obtained from the response surface model, and the minimum distance from previously evaluated points. We develop a global optimization version and a multistart local optimization version of MSRS. In the numerical experiments, we used a radial basis function (RBF) model for MSRS and the resulting algorithms, Global MSRBF and Multistart Local MSRBF, were compared to 6 alternative global optimization methods, including a multistart derivative-based local optimization method. Multiple trials of all algorithms were compared on 17 multimodal test problems and on a 12-dimensional groundwater bioremediation application involving partial differential equations. The results indicate that Multistart Local MSRBF is the best on most of the higher dimensional problems, including the groundwater problem. It is also at least as good as the other algorithms on most of the lower dimensional problems. Global MSRBF is competitive with the other alternatives on most of the lower dimensional test problems and also on the groundwater problem. These results suggest that MSRBF is a promising approach for the global optimization of expensive functions.",
+			"abstract_source": "crossref",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "RS2013a",
 			"type": "article",
 			"title": "Derivative-Free Optimization: A Review of Algorithms and Comparison of Software Implementations",
@@ -52119,7 +52143,9 @@
 			"keys": [
 				"FSK2008a",
 				"SWMW1989a",
-				"Jon2001a"
+				"JSW1998a",
+				"Jon2001a",
+				"RS2007a"
 			]
 		},
 		{
