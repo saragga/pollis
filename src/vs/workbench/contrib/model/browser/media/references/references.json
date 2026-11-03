@@ -20431,9 +20431,9 @@
 			"authors": [
 				"Lindner, Michael",
 				"Lincoln, Lucas",
-				"Drauschke, Franziska",
+				"Drauschke, Fenja",
 				"Koulen, Julia M.",
-				"Wurfel, Hans",
+				"Würfel, Hans",
 				"Plietzsch, Anton",
 				"Hellmann, Frank"
 			],
@@ -20443,6 +20443,7 @@
 			"journal": "Chaos",
 			"volume": "31",
 			"number": "6",
+			"pages": "063133",
 			"issn": "1054-1500",
 			"doi": "10.1063/5.0051387",
 			"openalex": "W3113478948",

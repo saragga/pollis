@@ -41,7 +41,7 @@ Their result is that global cascades occur when the network has a highly heterog
 
 ## Attacks on hubs
 
-**Cascade Resilience** starts a cascade from each of the five nodes of highest betweenness, a measure that, like the load of [Motter and Lai (2002)](#ref-ML2002a), counts the shortest paths through a node, and prints the fraction of nodes that fail. The trigger is given a load equal to its capacity plus one, so it sheds more than a randomly chosen trigger would.
+**Cascade Resilience** starts a cascade from each of the five nodes of highest betweenness, a measure that, like the load of [Motter and Lai (2002)](#ref-ML2002a), counts the shortest paths through a node, and prints the fraction of nodes that fail. The trigger fails and sheds its own load, as a random trigger does.
 
 Comparing those fractions with the cascades from random triggers in **Cascade Size Distribution** sets attacks against random failures, the contrast that Motter and Lai draw.
 

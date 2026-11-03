@@ -4,7 +4,7 @@ How to check a run before reading its result: whether the oscillators have settl
 
 ## Has r settled?
 
-The Kuramoto run prints r at the final time T only. **Order Parameter** plots r(t) over the whole integration, which shows whether r has reached a plateau or is still rising, and whether it fluctuates around a level. A curve still climbing at the end calls for a longer **T (time)**, as its tooltip suggests for checking whether synchronisation persists.
+The Kuramoto run prints r averaged over the second half of the integration, from T/2 to T, and the review likewise defines r as an average over a suitably long time interval from a starting time tₛ. **Order Parameter** plots r(t) over the whole integration, which shows whether r has reached a plateau or is still rising, and whether it fluctuates around a level. A curve still climbing at the end calls for a longer **T (time)**, as its tooltip suggests for checking whether synchronisation persists.
 
 [Rodrigues, Peron, Ji and Kurths (2016)](#ref-RPJK2016a) study the relaxation towards synchrony. For identical natural frequencies, linearising around the synchronised state gives perturbations that decay at a rate set by the second smallest eigenvalue σ₂ of a Laplacian of the network, with relaxation time τ_r = −1/Re σ₂, so the structure of the network sets how long synchronisation takes.
 
@@ -30,11 +30,11 @@ A single cascade depends on the trigger and the draw of loads, so the panel repe
 
 ## The network itself
 
-Each failed node passes its load only to its neighbours, so the degrees of the network shape every cascade. **Topology vs Cascade** and **Topology vs Sync** repeat the processes on a random network and, for synchronisation, a small-world network, which separates the effect of the process from that of the structure. Graphs.jl's `laplacian_matrix` and `betweenness_centrality` give the measures used by **Critical Coupling** and **Cascade Resilience**; NetworkDynamics.jl, by [Lindner, Lincoln, Drauschke, Koulen, Wurfel, Plietzsch and Hellmann (2021)](#ref-LLDKW...2021a), assembles the oscillator network that **Order Parameter** integrates.
+Each failed node passes its load only to its neighbours, so the degrees of the network shape every cascade. **Topology vs Cascade** and **Topology vs Sync** repeat the processes on a random network and, for synchronisation, a small-world network, which separates the effect of the process from that of the structure. Graphs.jl's `laplacian_matrix` and `betweenness_centrality` give the measures used by **Critical Coupling** and **Cascade Resilience**; NetworkDynamics.jl, by [Lindner, Lincoln, Drauschke, Koulen, Würfel, Plietzsch and Hellmann (2021)](#ref-LLDKW...2021a), assembles the oscillator network that **Order Parameter** integrates.
 
 ## References
 
-<a id="ref-LLDKW...2021a"></a>Lindner, M., Lincoln, L., Drauschke, F., Koulen, J. M., Wurfel, H., Plietzsch, A., & Hellmann, F. (2021). NetworkDynamics.jl: Composing and Simulating Complex Networks in Julia. *Chaos* 31(6), 063133. [doi:10.1063/5.0051387](https://doi.org/10.1063/5.0051387)
+<a id="ref-LLDKW...2021a"></a>Lindner, M., Lincoln, L., Drauschke, F., Koulen, J. M., Würfel, H., Plietzsch, A., & Hellmann, F. (2021). NetworkDynamics.jl: Composing and Simulating Complex Networks in Julia. *Chaos* 31(6), 063133. [doi:10.1063/5.0051387](https://doi.org/10.1063/5.0051387)
 
 <a id="ref-MGP2002a"></a>Moreno, Y., Gómez, J. B., & Pacheco, A. F. (2002). Instability of Scale-Free Networks under Node-Breaking Avalanches. *Europhysics Letters* 58(4), 630-636. [doi:10.1209/epl/i2002-00442-2](https://doi.org/10.1209/epl/i2002-00442-2)
 

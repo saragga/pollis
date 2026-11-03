@@ -6,23 +6,23 @@ How to read what the panel prints: the order parameter and the state of synchron
 
 The order parameter of [Kuramoto (1984)](#ref-Kur1984a) is the length of the centroid of the phases on the unit circle: close to 0 when the phases are spread around the circle, close to 1 when the oscillators move as one cluster. Between the two, [Rodrigues, Peron, Ji and Kurths (2016)](#ref-RPJK2016a) describe a partially synchronised state in which the oscillators with natural frequencies small enough are locked to the mean field and the others drift.
 
-**Synchronisation State** labels the result with the code's thresholds: synchronised for r > 0.85, partial synchronisation for r between 0.4 and 0.85, incoherent for r of 0.4 or less. The labels summarise r; the curve of **Order Parameter** shows how it was reached.
+**Synchronisation State** prints r, averaged over the second half of the run, with K and the mean-field estimate K_c, and says whether K exceeds K_c, which the review gives as the coupling for the onset of synchronisation. The curve of **Order Parameter** shows how r was reached.
 
 ## The coupling sweep
 
-**Coupling Sweep** plots the final r for K from 0 to 1.5. For the complete graph, the review gives r = 0 up to the critical coupling and a growth like (λ − λ_c)^(1/2) after it, the signature of a second-order transition. For a finite network, the finite-size scaling of [Diagnostics](diagnostics.md) applies, and r at the transition depends on N.
+**Coupling Sweep** plots r, averaged over the second half of each run, for K from 0 to 1.5. For the complete graph, the review gives r = 0 up to the critical coupling and a growth like (λ − λ_c)^(1/2) after it, the signature of a second-order transition. For a finite network, the finite-size scaling of [Diagnostics](diagnostics.md) applies, and r at the transition depends on N.
 
 Wider natural frequencies move the transition to stronger coupling: in the classic result λ_c = 2/(π g(0)), and for a normal density g(0) falls as the standard deviation **sigma (freq.)** grows.
 
 ## The estimated critical coupling
 
-**Critical Coupling** computes the algebraic connectivity λ₂, the second smallest eigenvalue of the Laplacian of the network, and the code's estimate K_c = 2 std(ω)/λ₂, and prints the current K beside it. The estimate grows with the spread of the frequencies and falls as the network becomes better connected.
+**Critical Coupling** computes the first two moments of the degrees, ⟨k⟩ and ⟨k²⟩, and the mean-field estimate of [Rodrigues, Peron, Ji and Kurths (2016)](#ref-RPJK2016a), K_c = (2/(π g(0))) ⟨k⟩/⟨k²⟩, in which 2/(π g(0)) is the critical coupling of Kuramoto for the complete graph. The code evaluates g(0) for the normal density of **sigma (freq.)** and prints the current K beside the estimate.
 
-[Rodrigues, Peron, Ji and Kurths (2016)](#ref-RPJK2016a) present two analytical estimates for comparison: (2/(π g(0)))/σ_max, with σ_max the largest eigenvalue of the adjacency matrix, and (2/(π g(0))) ⟨k⟩/⟨k²⟩ from the mean-field approximation. The review notes that the first gives accurate results where other approaches fail, and that both predict a threshold that vanishes for large scale-free networks with γ ≤ 3, while simulations suggest a finite one.
+The review also presents the frequency approximation, (2/(π g(0)))/σ_max, with σ_max the largest eigenvalue of the adjacency matrix. It notes that this approximation gives accurate results where other approaches fail, and that both predict a threshold that vanishes for large scale-free networks with γ ≤ 3, while simulations suggest a finite one.
 
 ## Topology and synchronisation
 
-**Topology vs Sync** prints λ₂ and the estimate for a random network, a scale-free network and a small-world network with mean degree close to 6. In the mean-field result, the more heterogeneous the degrees, the smaller the coupling needed, so in that approximation the hubs of the scale-free network lower its threshold compared with a random network of the same mean degree.
+**Topology vs Sync** prints ⟨k⟩, ⟨k²⟩ and the mean-field K_c for a random network, a scale-free network and a small-world network with mean degree close to 6. In the mean-field result, the more heterogeneous the degrees, the smaller the coupling needed, so in that approximation the hubs of the scale-free network lower its threshold compared with a random network of the same mean degree.
 
 For small-world networks, the review reports that a small fraction of shortcuts improves synchronisation dramatically compared with the regular lattice, and that the gain saturates for intermediate rewiring probabilities.
 

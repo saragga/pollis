@@ -4,7 +4,7 @@ What the two models take for granted: a fixed scale-free network, oscillators de
 
 ## A fixed, unweighted network
 
-Both models run on `barabasi_albert(N, 3)`, an undirected network in which every link counts the same, and the network does not change while the process runs. In the cascade, failed nodes stay in the graph but no longer take load. [Lindner, Lincoln, Drauschke, Koulen, Wurfel, Plietzsch and Hellmann (2021)](#ref-LLDKW...2021a) build NetworkDynamics.jl for heterogeneous components, with their own parameters and even their own laws on every vertex and edge, together with events, algebraic constraints, delays and noise; the panel's Kuramoto model uses identical edges and vertices that differ only in their natural frequency.
+Both models run on `barabasi_albert(N, 3)`, an undirected network in which every link counts the same, and the network does not change while the process runs. In the cascade, failed nodes stay in the graph but no longer take load. [Lindner, Lincoln, Drauschke, Koulen, Würfel, Plietzsch and Hellmann (2021)](#ref-LLDKW...2021a) build NetworkDynamics.jl for heterogeneous components, with their own parameters and even their own laws on every vertex and edge, together with events, algebraic constraints, delays and noise; the panel's Kuramoto model uses identical edges and vertices that differ only in their natural frequency.
 
 ## Phase oscillators
 
@@ -30,7 +30,7 @@ The model of [Motter and Lai (2002)](#ref-ML2002a) rests on a different assumpti
 
 ## References
 
-<a id="ref-LLDKW...2021a"></a>Lindner, M., Lincoln, L., Drauschke, F., Koulen, J. M., Wurfel, H., Plietzsch, A., & Hellmann, F. (2021). NetworkDynamics.jl: Composing and Simulating Complex Networks in Julia. *Chaos* 31(6), 063133. [doi:10.1063/5.0051387](https://doi.org/10.1063/5.0051387)
+<a id="ref-LLDKW...2021a"></a>Lindner, M., Lincoln, L., Drauschke, F., Koulen, J. M., Würfel, H., Plietzsch, A., & Hellmann, F. (2021). NetworkDynamics.jl: Composing and Simulating Complex Networks in Julia. *Chaos* 31(6), 063133. [doi:10.1063/5.0051387](https://doi.org/10.1063/5.0051387)
 
 <a id="ref-ML2002a"></a>Motter, A. E., & Lai, Y.-C. (2002). Cascade-based Attacks on Complex Networks. *Physical Review E* 66(6), 065102. [doi:10.1103/PhysRevE.66.065102](https://doi.org/10.1103/PhysRevE.66.065102)
 

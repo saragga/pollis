@@ -4,7 +4,7 @@
 
 ## Dynamics on networks
 
-[Lindner, Lincoln, Drauschke, Koulen, Wurfel, Plietzsch and Hellmann (2021)](#ref-LLDKW...2021a) describe systems made of local components that interact through a network: producers and consumers of energy linked by power lines, neurons linked by synapses, cities linked by travellers who carry a disease. The structure that couples the components is neither regular nor completely random, and small changes in it may have large effects on the dynamics of the whole.
+[Lindner, Lincoln, Drauschke, Koulen, Würfel, Plietzsch and Hellmann (2021)](#ref-LLDKW...2021a) describe systems made of local components that interact through a network: producers and consumers of energy linked by power lines, neurons linked by synapses, cities linked by travellers who carry a disease. The structure that couples the components is neither regular nor completely random, and small changes in it may have large effects on the dynamics of the whole.
 
 [Barrat, Barthelemy and Vespignani (2008)](#ref-BBV2008a) give a unified account of how complex patterns of connectivity shape dynamical processes, from resilience and synchronisation to epidemics, traffic and breakdown, and [Newman (2010)](#ref-New2010a) covers processes on networks alongside their structure.
 
@@ -35,7 +35,7 @@ The actions fall into five groups: Visualise plots r over time and the distribut
 
 <a id="ref-Kur1984a"></a>Kuramoto, Y. (1984). *Chemical Oscillations, Waves, and Turbulence*. Springer.
 
-<a id="ref-LLDKW...2021a"></a>Lindner, M., Lincoln, L., Drauschke, F., Koulen, J. M., Wurfel, H., Plietzsch, A., & Hellmann, F. (2021). NetworkDynamics.jl: Composing and Simulating Complex Networks in Julia. *Chaos* 31(6), 063133. [doi:10.1063/5.0051387](https://doi.org/10.1063/5.0051387)
+<a id="ref-LLDKW...2021a"></a>Lindner, M., Lincoln, L., Drauschke, F., Koulen, J. M., Würfel, H., Plietzsch, A., & Hellmann, F. (2021). NetworkDynamics.jl: Composing and Simulating Complex Networks in Julia. *Chaos* 31(6), 063133. [doi:10.1063/5.0051387](https://doi.org/10.1063/5.0051387)
 
 <a id="ref-ML2002a"></a>Motter, A. E., & Lai, Y.-C. (2002). Cascade-based Attacks on Complex Networks. *Physical Review E* 66(6), 065102. [doi:10.1103/PhysRevE.66.065102](https://doi.org/10.1103/PhysRevE.66.065102)
 

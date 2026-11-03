@@ -49,15 +49,15 @@ The second says that the more heterogeneous the degrees, the weaker the coupling
 
 ## The implementation
 
-NetworkDynamics.jl, by [Lindner, Lincoln, Drauschke, Koulen, Wurfel, Plietzsch and Hellmann (2021)](#ref-LLDKW...2021a), builds a network from vertex and edge models. The panel's edge is an `EdgeModel` whose output at the destination is K sin(θ_src − θ_dst); wrapped in `AntiSymmetric`, the source end receives the negative, so each link pulls both phases towards each other. Each `VertexModel` adds the sum of its incident edge outputs, `esum`, to its natural frequency, and `g=1` makes its first state, the phase, its output.
+NetworkDynamics.jl, by [Lindner, Lincoln, Drauschke, Koulen, Würfel, Plietzsch and Hellmann (2021)](#ref-LLDKW...2021a), builds a network from vertex and edge models. The panel's edge is an `EdgeModel` whose output at the destination is K sin(θ_src − θ_dst); wrapped in `AntiSymmetric`, the source end receives the negative, so each link pulls both phases towards each other. Each `VertexModel` adds the sum of its incident edge outputs, `esum`, to its natural frequency, and `g=1` makes its first state, the phase, its output.
 
-`Network(g, verts, edge)` returns the right-hand side as a function compatible with OrdinaryDiffEq.jl, and the code integrates it from random initial phases over [0, **T (time)**] with `Tsit5`, then computes R from the final phases.
+`Network(g, verts, edge)` returns the right-hand side as a function compatible with OrdinaryDiffEq.jl, and the code integrates it from random initial phases over [0, **T (time)**] with `Tsit5`, then averages R over the second half of the run. **Critical Coupling**, **Topology vs Sync** and **Synchronisation State** use the mean-field approximation of the table, with g(0) of the normal density of **sigma (freq.)**.
 
 ## References
 
 <a id="ref-Kur1984a"></a>Kuramoto, Y. (1984). *Chemical Oscillations, Waves, and Turbulence*. Springer.
 
-<a id="ref-LLDKW...2021a"></a>Lindner, M., Lincoln, L., Drauschke, F., Koulen, J. M., Wurfel, H., Plietzsch, A., & Hellmann, F. (2021). NetworkDynamics.jl: Composing and Simulating Complex Networks in Julia. *Chaos* 31(6), 063133. [doi:10.1063/5.0051387](https://doi.org/10.1063/5.0051387)
+<a id="ref-LLDKW...2021a"></a>Lindner, M., Lincoln, L., Drauschke, F., Koulen, J. M., Würfel, H., Plietzsch, A., & Hellmann, F. (2021). NetworkDynamics.jl: Composing and Simulating Complex Networks in Julia. *Chaos* 31(6), 063133. [doi:10.1063/5.0051387](https://doi.org/10.1063/5.0051387)
 
 <a id="ref-RPJK2016a"></a>Rodrigues, F. A., Peron, T. K. DM., Ji, P., & Kurths, J. (2016). The Kuramoto Model in Complex Networks. *Physics Reports* 610, 1-98. [doi:10.1016/j.physrep.2015.10.008](https://doi.org/10.1016/j.physrep.2015.10.008)
 
