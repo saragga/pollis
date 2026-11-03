@@ -17775,7 +17775,7 @@
 		},
 		{
 			"key": "KES2001a",
-			"type": "article",
+			"type": "book",
 			"title": "Swarm Intelligence",
 			"authors": [
 				"Kennedy, James",
@@ -17785,10 +17785,14 @@
 			"author_kind": "persons",
 			"authors_complete": true,
 			"year": 2001,
-			"journal": "Morgan Kaufmann",
+			"publisher": "Morgan Kaufmann",
+			"address": "San Francisco",
+			"isbn": "9781558605954",
+			"doi": "10.1016/B978-1-55860-595-4.X5000-1",
 			"legacy_key": "kennedy2001",
-			"source": "manual",
-			"checked": false,
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
 			"open_access": false
 		},
 		{
@@ -52665,13 +52669,10 @@
 			],
 			"keys": [
 				"MM2022a",
-				"KES2001a",
-				"Eng2005a",
 				"KE1995a",
 				"CJ2015a",
 				"KB2007a",
 				"ML2016a",
-				"RNS2009a",
 				"MG2017a"
 			]
 		},

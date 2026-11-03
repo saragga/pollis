@@ -24,7 +24,7 @@ The share at the best and the largest distance between solutions separate two ca
 
 **Population Sensitivity** runs N = 10, 20, 40, 80 and 160 members with iterations div(NP · budget, N), so that N times the iterations stays about constant, with three seeds each, and prints the mean and the worst best value.
 
-A small swarm runs for more iterations, a large one explores more points per iteration. The **Hyperparameter Guide** of the PSO tab states the trade-off as more particles exploring more at the cost of more evaluations per iteration.
+A small swarm runs for more iterations, a large one evaluates more points per iteration. The documentation's examples of `WOA` on a three-variable sphere function show the effect of N on the cost: 15 000 function calls with N = 30 and 50 000 with N = 100, both in 500 iterations.
 
 ## Local Refinement
 

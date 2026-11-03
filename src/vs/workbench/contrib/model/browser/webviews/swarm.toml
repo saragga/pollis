@@ -17,6 +17,18 @@ title = "High Performance Computing in Julia"
 description = "An 18-video course by Jamie Mair on writing fast Julia code"
 url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
 
+[[packages]]
+name = "Optim.jl"
+github = "https://github.com/JuliaNLSolvers/Optim.jl"
+
+[[packages]]
+name = "ADTypes.jl"
+github = "https://github.com/SciML/ADTypes.jl"
+
+[[packages]]
+name = "Plots.jl"
+github = "https://github.com/JuliaPlots/Plots.jl"
+
 [requires]
 packages = ["Metaheuristics.jl", "Optim.jl", "ADTypes.jl", "Plots.jl"]
 
@@ -33,7 +45,7 @@ description = "Particle swarm optimisation: social and cognitive velocity update
 name = "CSO"
 file = "swarm/tutorial-02-cso.ipynb"
 bundled = true
-description = "Competitive swarm optimiser: pairwise competition updates loser velocity toward winner and global mean"
+description = "Competitive swarm optimiser: in pairwise competitions, the loser learns from the winner, with no personal or global bests"
 
 [[notebookSections.notebooks]]
 name = "ABC"
@@ -121,16 +133,6 @@ key = "MM2022a"
 
 [[references]]
 separator = true
-label = "Textbooks"
-
-[[references]]
-key = "KES2001a"
-
-[[references]]
-key = "Eng2005a"
-
-[[references]]
-separator = true
 label = "Original Papers"
 
 [[references]]
@@ -144,9 +146,6 @@ key = "KB2007a"
 
 [[references]]
 key = "ML2016a"
-
-[[references]]
-key = "RNS2009a"
 
 [[references]]
 key = "MG2017a"
@@ -177,7 +176,7 @@ detail = "particle swarm optimisation; social and cognitive velocity updates dri
 
 [[bullets]]
 text = "CSO"
-detail = "competitive swarm optimiser; pairwise competition updates the loser toward the winner and the global mean"
+detail = "competitive swarm optimiser; in pairwise competitions the loser learns from the winner, with no personal or global bests"
 
 [[bullets]]
 text = "ABC"
@@ -193,28 +192,28 @@ detail = "gravitational search algorithm; agents attract each other via simulate
 
 [[decisionRows]]
 task = "PSO"
-context = "Continuous box-constrained problems; the standard swarm baseline"
+context = "Nonlinear functions over a box, with the particle swarm concept of Kennedy and Eberhart (1995)"
 purpose = "Particles move with inertia towards their own best and the swarm's best positions"
 
 [[decisionRows]]
 task = "CSO"
-context = "Higher-dimensional problems where PSO converges prematurely"
-purpose = "Competitive Swarm Optimiser: random pairs compete, and the loser learns from the winner and the swarm mean, with no personal or global bests kept"
+context = "Large scale optimisation, tested on problems of dimensionality up to 5000 (Cheng and Jin, 2015); the Metaheuristics.jl documentation recommends CSO for large-scale problems"
+purpose = "Competitive Swarm Optimiser of Metaheuristics.jl: random pairs compete, and the loser learns from the winner, with no personal or global bests kept"
 
 [[decisionRows]]
 task = "ABC"
-context = "Multimodal problems where exploration matters more than speed"
+context = "Multivariable, multimodal functions, where Karaboga and Basturk (2007) found that it can get out of a local minimum"
 purpose = "Artificial Bee Colony: employed and onlooker bees perturb food sources; sources that stop improving are abandoned to scouts"
 
 [[decisionRows]]
 task = "WOA"
-context = "Quick exploratory runs with almost no parameters to tune"
+context = "Few parameters to adjust: two main internal parameters, A and C (Mirjalili and Lewis, 2016), and only N in the WOA type of Metaheuristics.jl"
 purpose = "Whale Optimisation: encircling the best solution and spiral bubble-net moves, with a shrinking exploration coefficient"
 
 [[decisionRows]]
 task = "GSA"
-context = "Problems where a smooth exploration-to-exploitation schedule helps"
-purpose = "Gravitational Search: agents attract each other with forces proportional to their fitness-derived masses; here the chaotic variant CGSA of Metaheuristics.jl"
+context = "Gravitational search with chaotic gravitational constants (Mirjalili and Gandomi, 2017)"
+purpose = "CGSA of Metaheuristics.jl, an extension of the gravitational search algorithm with chaotic gravitational constants"
 
 [[inputs]]
 id = "n"
@@ -251,13 +250,13 @@ newRow = true
 [[inputs]]
 id = "budget"
 label = "Iterations"
-tooltip = "Number of iterations. Evaluations per iteration differ: about one per particle (PSO, WOA, GSA), one per pair (CSO) or two per bee (ABC); the comparisons therefore use evaluations."
+tooltip = "Number of iterations. The number of evaluations per iteration differs between the algorithms, so the comparisons use evaluations."
 default = "500"
 
 [[inputs]]
 id = "phi"
-label = "Mean Attraction (phi)"
-tooltip = "Weight of the pull of each loser towards the swarm mean; 0 disables it. Around 0.1 in moderate dimensions."
+label = "Phi"
+tooltip = "The phi parameter of the CSO type of Metaheuristics.jl, 0.1 by default."
 default = "0.1"
 models = ["cso"]
 newRow = true
@@ -325,7 +324,7 @@ end
 
 function search(; iters=budget, N=NP, seed=1, lb=lb, ub=ub, f=f)
     fr, vals = recorder(f)
-    alg = PSO(N=N, options=Options(iterations=iters, f_calls_limit=1e12, seed=seed))  # explicit cap: otherwise PSO and ABC stop at 10000 n evaluations  # particle swarm optimisation
+    alg = PSO(N=N, options=Options(iterations=iters, f_calls_limit=1e12, seed=seed))  # f_calls_limit = 1e12, so that iterations ends the run  # particle swarm optimisation
     r = Metaheuristics.optimize(fr, [transpose(lb); transpose(ub)], alg)
     (x = minimizer(r), fx = minimum(r), trace = accumulate(min, vals), evals = length(vals), pop = positions(r))
 end
@@ -338,7 +337,7 @@ x_best, f_best = res.x, res.fx
 [[codeBranches]]
 model = "cso"
 code = '''
-using Random, LinearAlgebra, Statistics
+using Metaheuristics, Random, LinearAlgebra, Statistics
 
 n = {{n}}  # dimension
 f(x) = {{obj}}  # objective
@@ -353,25 +352,13 @@ function recorder(f)
     fr, vals
 end
 
-PHI = {{phi}}  # pull towards the swarm mean
+PHI = {{phi}}  # the phi parameter of CSO
 
-# Competitive Swarm Optimiser (Cheng and Jin, 2015)
 function search(; iters=budget, N=NP, seed=1, lb=lb, ub=ub, f=f, phi=PHI)
-    Random.seed!(seed)
-    fr, vals = recorder(f); d = length(lb)
-    X = [lb .+ rand(d) .* (ub .- lb) for _ in 1:N]; V = [zeros(d) for _ in 1:N]; fX = fr.(X)
-    for t in 1:iters
-        xbar = mean(X)
-        p = randperm(N)
-        for k in 1:2:N-1
-            i, j = p[k], p[k+1]
-            w, l = fX[i] <= fX[j] ? (i, j) : (j, i)  # winner, loser
-            V[l] = rand(d) .* V[l] .+ rand(d) .* (X[w] .- X[l]) .+ phi .* rand(d) .* (xbar .- X[l])  # the loser learns
-            X[l] = clamp.(X[l] .+ V[l], lb, ub); fX[l] = fr(X[l])
-        end
-    end
-    k = argmin(fX)
-    (x = X[k], fx = fX[k], trace = accumulate(min, vals), evals = length(vals), pop = permutedims(reduce(hcat, X)))
+    fr, vals = recorder(f)
+    alg = CSO(N=N, φ=phi, options=Options(iterations=iters, f_calls_limit=1e12, seed=seed))  # f_calls_limit = 1e12, so that iterations ends the run  # competitive swarm optimiser
+    r = Metaheuristics.optimize(fr, [transpose(lb); transpose(ub)], alg)
+    (x = minimizer(r), fx = minimum(r), trace = accumulate(min, vals), evals = length(vals), pop = positions(r))
 end
 
 res = search()
@@ -399,7 +386,7 @@ end
 
 function search(; iters=budget, N=NP, seed=1, lb=lb, ub=ub, f=f)
     fr, vals = recorder(f)
-    alg = ABC(N=N, options=Options(iterations=iters, f_calls_limit=1e12, seed=seed))  # explicit cap: otherwise PSO and ABC stop at 10000 n evaluations  # artificial bee colony
+    alg = ABC(N=N, options=Options(iterations=iters, f_calls_limit=1e12, seed=seed))  # f_calls_limit = 1e12, so that iterations ends the run  # artificial bee colony
     r = Metaheuristics.optimize(fr, [transpose(lb); transpose(ub)], alg)
     (x = minimizer(r), fx = minimum(r), trace = accumulate(min, vals), evals = length(vals), pop = positions(r))
 end
@@ -429,7 +416,7 @@ end
 
 function search(; iters=budget, N=NP, seed=1, lb=lb, ub=ub, f=f)
     fr, vals = recorder(f)
-    alg = WOA(N=N, options=Options(iterations=iters, f_calls_limit=1e12, seed=seed))  # explicit cap: otherwise PSO and ABC stop at 10000 n evaluations  # whale optimisation algorithm
+    alg = WOA(N=N, options=Options(iterations=iters, f_calls_limit=1e12, seed=seed))  # f_calls_limit = 1e12, so that iterations ends the run  # whale optimisation algorithm
     r = Metaheuristics.optimize(fr, [transpose(lb); transpose(ub)], alg)
     (x = minimizer(r), fx = minimum(r), trace = accumulate(min, vals), evals = length(vals), pop = positions(r))
 end
@@ -459,7 +446,7 @@ end
 
 function search(; iters=budget, N=NP, seed=1, lb=lb, ub=ub, f=f)
     fr, vals = recorder(f)
-    alg = CGSA(N=N, options=Options(iterations=iters, f_calls_limit=1e12, seed=seed))  # explicit cap: otherwise PSO and ABC stop at 10000 n evaluations  # chaotic gravitational search algorithm
+    alg = CGSA(N=N, options=Options(iterations=iters, f_calls_limit=1e12, seed=seed))  # f_calls_limit = 1e12, so that iterations ends the run  # chaotic gravitational search algorithm
     r = Metaheuristics.optimize(fr, [transpose(lb); transpose(ub)], alg)
     (x = minimizer(r), fx = minimum(r), trace = accumulate(min, vals), evals = length(vals), pop = positions(r))
 end
@@ -600,11 +587,11 @@ starts = [lb .+ (0.05 .+ 0.9 .* rand(length(lb))) .* (ub .- lb) for _ in 1:10]
 [[actionGroups.actions]]
 id = "vs-swarm"
 label = "Algorithm Shootout"
-desc = "PSO, ABC, WOA and CGSA (Metaheuristics.jl) with the same number of evaluations as this run, 3 seeds each"
+desc = "PSO, CSO, ABC, WOA and CGSA (Metaheuristics.jl) with the same number of evaluations as this run, 3 seeds each"
 code = '''
 using Metaheuristics
 
-algs = ["PSO" => PSO, "ABC" => ABC, "WOA" => WOA, "CGSA" => CGSA]
+algs = ["PSO" => PSO, "CSO" => CSO, "ABC" => ABC, "WOA" => WOA, "CGSA" => CGSA]
 map(algs) do (name, A)
     v = map(1:3) do s
         minimum(Metaheuristics.optimize(f, [transpose(lb); transpose(ub)], A(N=NP, options=Options(iterations=10^6, f_calls_limit=res.evals, seed=s))))
@@ -646,13 +633,13 @@ code = '''
 [[actionGroups.actions]]
 id = "hyperparams"
 label = "Hyperparameter Guide"
-desc = "The main settings of the selected algorithm and their effect"
+desc = "The main settings of the selected algorithm, their values and their meaning in the Metaheuristics.jl documentation and the original paper"
 code = '''
-{{?model=pso}}[(parameter = "N", value = NP, effect = "more particles explore more but cost more evaluations per iteration"), (parameter = "C1, C2", value = "2.0, 2.0 (Metaheuristics.jl defaults)", effect = "pull towards the personal and global best"), (parameter = "inertia", value = "0.8 (default)", effect = "higher keeps momentum and exploration, lower converges faster")]
-{{?model=cso}}[(parameter = "N", value = NP, effect = "half the swarm is updated each iteration"), (parameter = "phi", value = PHI, effect = "pull of losers towards the swarm mean: more diversity when larger")]
-{{?model=abc}}[(parameter = "N", value = NP, effect = "number of food sources and bees"), (parameter = "limit", value = "10 (default)", effect = "trials without improvement before a source is abandoned to a scout")]
-{{?model=woa}}[(parameter = "N", value = NP, effect = "number of whales"), (parameter = "a", value = "decreases from 2 to 0", effect = "controls the switch from exploration to encircling the best")]
-{{?model=gsa}}[(parameter = "N", value = NP, effect = "number of agents"), (parameter = "chaos map", value = "Metaheuristics.jl default", effect = "chaotic schedule of the gravitational constant, from exploration to exploitation")]
+{{?model=pso}}[(parameter = "N", value = NP, meaning = "population size"), (parameter = "C1, C2", value = "2.0, 2.0 (defaults)", meaning = "learning rates"), (parameter = "inertia", value = "0.8 (default)", meaning = "controls the inertia weight")]
+{{?model=cso}}[(parameter = "N", value = NP, meaning = "population size, 400 by default in Metaheuristics.jl"), (parameter = "phi", value = PHI, meaning = "the phi parameter of CSO, 0.1 by default")]
+{{?model=abc}}[(parameter = "N", value = NP, meaning = "population size; half employed bees, half onlookers"), (parameter = "limit", value = "10 (default)", meaning = "cycles without improvement after which a food source is abandoned and replaced by a scout")]
+{{?model=woa}}[(parameter = "N", value = NP, meaning = "number of whales, the only parameter of WOA"), (parameter = "a", value = "linearly decreased from 2 to 0", meaning = "sets A; iterations with |A| >= 1 explore, those with |A| < 1 exploit")]
+{{?model=gsa}}[(parameter = "N", value = NP, meaning = "population size"), (parameter = "chaosIndex", value = "9 (default)", meaning = "integer from 1 to 10 that selects the function modelling the chaos")]
 '''
 
 [[actionGroups.actions]]

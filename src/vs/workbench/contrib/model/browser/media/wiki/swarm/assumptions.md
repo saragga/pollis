@@ -12,7 +12,7 @@ The five algorithms are called with f alone: no gradient is passed or computed. 
 
 Every variable has a lower and an upper bound, from **Lower Bounds** and **Upper Bounds**. [Mejía-de-Dios and Mezura-Montes (2022)](#ref-MM2022a) write the problem of Metaheuristics.jl as the minimisation of f over the product of intervals [x_min, x_max], with optional inequality and equality constraints that the panel does not use.
 
-The panel's CSO keeps the particles in the box with `clamp`, after each move. Its initial positions are drawn uniformly inside the box, `lb .+ rand(d) .* (ub .- lb)`.
+All five tabs pass the box to Metaheuristics.jl as the 2 × n matrix `[transpose(lb); transpose(ub)]`, lower bounds in the first row and upper bounds in the second.
 
 ## Objectives in any dimension
 
@@ -22,7 +22,7 @@ The panel's CSO keeps the particles in the box with `clamp`, after each move. It
 
 ## A budget of evaluations
 
-Each run stops after **Iterations** iterations; the code passes `f_calls_limit = 1e12` with the comment that otherwise PSO and ABC stop at 10 000 n evaluations. The number of evaluations per iteration depends on the algorithm, as the tooltip of **Iterations** explains, so the comparisons of the panel use evaluations: **Algorithm Shootout** gives every algorithm the number of evaluations of the current run.
+Each run stops after **Iterations** iterations; the code passes `f_calls_limit = 1e12`, so that the number of iterations ends the run. The number of evaluations per iteration depends on the algorithm, as the tooltip of **Iterations** notes, so the comparisons of the panel use evaluations: **Algorithm Shootout** gives every algorithm the number of evaluations of the current run.
 
 The Metaheuristics.jl documentation describes `f_calls_limit` as the maximum number of function evaluations and `iterations` as the maximum number of iterations allowed.
 
@@ -30,7 +30,7 @@ The Metaheuristics.jl documentation describes `f_calls_limit` as the maximum num
 
 The algorithms are stochastic: each run draws random initial positions and random coefficients. The main run uses seed 1; **Run Consistency** uses seeds 1 to 10, **Multi-Start** seeds 1 to 5, and **Population Sensitivity** and **Algorithm Shootout** seeds 1 to 3.
 
-The Metaheuristics.jl documentation describes `seed` as a non-negative integer for the random generator. The panel's CSO calls `Random.seed!(seed)` before drawing its swarm.
+The Metaheuristics.jl documentation describes `seed` as a non-negative integer for the random generator. Every tab passes `seed` through `Options`.
 
 ## Scale of the variables
 

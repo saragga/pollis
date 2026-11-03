@@ -18,7 +18,7 @@ PSO(; N = 0, C1 = 2.0, C2 = 2.0, ω = 0.8, information = Information(), options 
 
 with C1 and C2 the learning rates, N the population size and ω the parameter that controls the inertia weight. The panel sets N to **Swarm Size** and keeps the other defaults.
 
-The **Hyperparameter Guide** of the tab lists the three settings: N, where more particles explore more but cost more evaluations per iteration; C1 and C2, the pull towards the personal and the global best; and the inertia, where a higher value keeps momentum and exploration and a lower one converges faster, in the panel's words.
+The **Hyperparameter Guide** of the tab lists the three settings with the meaning the documentation gives them: N, the population size; C1 and C2, the learning rates; and ω, which controls the inertia weight, at its default of 0.8.
 
 ## The tab in Julia
 
@@ -28,7 +28,7 @@ r = Metaheuristics.optimize(fr, [transpose(lb); transpose(ub)], alg)
 (x = minimizer(r), fx = minimum(r), pop = positions(r))
 ```
 
-`fr` is f wrapped in the panel's recorder. The comment of the code explains `f_calls_limit = 1e12` as an explicit cap, since otherwise PSO and ABC stop at 10 000 n evaluations. The tooltip of **Iterations** counts about one evaluation per particle and iteration for PSO, so the default run of 40 particles and 500 iterations evaluates f about 20 000 times.
+`fr` is f wrapped in the panel's recorder. `f_calls_limit = 1e12` leaves **Iterations** as the end of the run. The documentation's example of `PSO()` on a three-variable sphere function reports 1 000 iterations and 30 000 function calls.
 
 ## Features in the package
 
@@ -40,23 +40,17 @@ In the panel, PSO is the standard swarm baseline of the decision table, for cont
 
 **Convergence Curve** shows the best value against the evaluations, and **Population Snapshot** the final particles over the contours of f in x1 and x2, with the best point as a star. **Swarm Diversity** reports how spread the final particles are, relative to the box.
 
-**Population Sensitivity** varies N at about the same number of evaluations, and **Run Consistency** the seed. **Algorithm Shootout** runs PSO beside ABC, WOA and CGSA with the evaluations of the current run.
+**Population Sensitivity** varies N at about the same number of evaluations, and **Run Consistency** the seed. **Algorithm Shootout** runs PSO beside CSO, ABC, WOA and CGSA with the evaluations of the current run.
 
-## Textbooks
+## Particle swarms without bests
 
-[Kennedy, Eberhart and Shi (2001)](#ref-KES2001a) wrote *Swarm Intelligence*, a book by two of the authors of particle swarm optimisation with Shi, and [Engelbrecht (2005)](#ref-Eng2005a) *Fundamentals of Computational Swarm Intelligence*. The panel lists both under Textbooks.
-
-The **CSO** tab also updates velocities, but, as [Cheng and Jin (2015)](#ref-CJ2015a) describe, it uses neither personal nor global bests: a pairwise competition decides which particle learns from which.
+[Cheng and Jin (2015)](#ref-CJ2015a) describe CSO as fundamentally inspired by particle swarm optimisation but conceptually very different: neither the personal best position of each particle nor the global best position is involved in updating the particles. Instead, in a pairwise competition, the particle that loses updates its position by learning from the winner. The **CSO** tab runs it with `CSO` of Metaheuristics.jl, on the same box, with the same swarm size and iterations as the PSO tab.
 
 ## References
 
 <a id="ref-CJ2015a"></a>Cheng, R., & Jin, Y. (2015). A Competitive Swarm Optimizer for Large Scale Optimization. *IEEE Transactions on Cybernetics* 45(2), 191-204. [doi:10.1109/TCYB.2014.2322602](https://doi.org/10.1109/TCYB.2014.2322602)
 
-<a id="ref-Eng2005a"></a>Engelbrecht, A. P. (2005). *Fundamentals of Computational Swarm Intelligence*. Wiley.
-
 <a id="ref-KE1995a"></a>Kennedy, J., & Eberhart, R. C. (1995). Particle Swarm Optimization. *ICNN'95 — International Conference on Neural Networks* 4, 1942-1948. [doi:10.1109/ICNN.1995.488968](https://doi.org/10.1109/ICNN.1995.488968)
-
-<a id="ref-KES2001a"></a>Kennedy, J., Eberhart, R. C., & Shi, Y. (2001). *Swarm Intelligence*. Morgan Kaufmann.
 
 <a id="ref-MM2022a"></a>Mejía-de-Dios, J.-A., & Mezura-Montes, E. (2022). Metaheuristics: A Julia Package for Single- and Multi-Objective Optimization. *Journal of Open Source Software* 7(78), 4723. [doi:10.21105/joss.04723](https://doi.org/10.21105/joss.04723)
 

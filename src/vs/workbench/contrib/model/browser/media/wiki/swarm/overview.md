@@ -17,12 +17,12 @@ on [−5.12, 5.12]ⁿ, which the tooltip describes as having its global minimum 
 | Tab | Algorithm | Implementation | Original paper |
 |---|---|---|---|
 | **PSO** | Particle swarm optimisation | `PSO` of Metaheuristics.jl | [Kennedy and Eberhart (1995)](#ref-KE1995a) |
-| **CSO** | Competitive swarm optimiser | Plain Julia in the panel's code | [Cheng and Jin (2015)](#ref-CJ2015a) |
+| **CSO** | Competitive swarm optimiser | `CSO` of Metaheuristics.jl | [Cheng and Jin (2015)](#ref-CJ2015a) |
 | **ABC** | Artificial bee colony | `ABC` of Metaheuristics.jl | [Karaboga and Basturk (2007)](#ref-KB2007a) |
 | **WOA** | Whale optimisation algorithm | `WOA` of Metaheuristics.jl | [Mirjalili and Lewis (2016)](#ref-ML2016a) |
-| **GSA** | Chaotic gravitational search | `CGSA` of Metaheuristics.jl | [Rashedi, Nezamabadi-pour and Saryazdi (2009)](#ref-RNS2009a), [Mirjalili and Gandomi (2017)](#ref-MG2017a) |
+| **GSA** | Chaotic gravitational search | `CGSA` of Metaheuristics.jl | [Mirjalili and Gandomi (2017)](#ref-MG2017a) |
 
-The bullets of the panel summarise each one: social and cognitive velocity updates for PSO; pairwise competition for CSO; employed, onlooker and scout bee phases for ABC; bubble-net attacking and spiral updating for WOA; and simulated gravity proportional to fitness mass for GSA.
+The bullets of the panel summarise each one: social and cognitive velocity updates for PSO; pairwise competitions for CSO; employed, onlooker and scout bee phases for ABC; bubble-net attacking and spiral updating for WOA; and simulated gravity proportional to fitness mass for GSA.
 
 ## Particle swarms
 
@@ -30,11 +30,11 @@ The bullets of the panel summarise each one: social and cognitive velocity updat
 
 [Cheng and Jin (2015)](#ref-CJ2015a) propose the competitive swarm optimiser for large scale optimisation, inspired by particle swarm optimisation but conceptually very different: neither the personal best of each particle nor the global best is used to update the particles; a pairwise competition lets the loser learn from the winner.
 
-## Textbooks
+## Bees, whales and gravity
 
-[Kennedy, Eberhart and Shi (2001)](#ref-KES2001a) wrote the book *Swarm Intelligence*, and [Engelbrecht (2005)](#ref-Eng2005a) *Fundamentals of Computational Swarm Intelligence*. The panel lists both as textbooks.
+[Karaboga and Basturk (2007)](#ref-KB2007a) base the artificial bee colony algorithm on the intelligent behaviour of a honey bee swarm, with employed bees, onlookers and scouts, and use it to optimise multivariable functions. [Mirjalili and Lewis (2016)](#ref-ML2016a) propose the whale optimisation algorithm, which mimics the social behaviour of humpback whales and is inspired by their bubble-net hunting strategy.
 
-The papers of [Karaboga and Basturk (2007)](#ref-KB2007a), [Mirjalili and Lewis (2016)](#ref-ML2016a) and [Rashedi, Nezamabadi-pour and Saryazdi (2009)](#ref-RNS2009a) introduce the artificial bee colony algorithm for numerical function optimisation, the whale optimisation algorithm and the gravitational search algorithm, and [Mirjalili and Gandomi (2017)](#ref-MG2017a) add chaotic gravitational constants to the gravitational search algorithm, the variant of the **GSA** tab.
+The Metaheuristics.jl documentation describes CGSA, the algorithm of the **GSA** tab, as an extension of the gravitational search algorithm with chaotic gravitational constants, citing [Mirjalili and Gandomi (2017)](#ref-MG2017a).
 
 ## The panel in Julia
 
@@ -49,21 +49,15 @@ Metaheuristics.jl takes the bounds as a 2 × n matrix, lower bounds in the first
 
 <a id="ref-CJ2015a"></a>Cheng, R., & Jin, Y. (2015). A Competitive Swarm Optimizer for Large Scale Optimization. *IEEE Transactions on Cybernetics* 45(2), 191-204. [doi:10.1109/TCYB.2014.2322602](https://doi.org/10.1109/TCYB.2014.2322602)
 
-<a id="ref-Eng2005a"></a>Engelbrecht, A. P. (2005). *Fundamentals of Computational Swarm Intelligence*. Wiley.
-
 <a id="ref-KB2007a"></a>Karaboga, D., & Basturk, B. (2007). A Powerful and Efficient Algorithm for Numerical Function Optimization: Artificial Bee Colony (ABC) Algorithm. *Journal of Global Optimization* 39(3), 459-471. [doi:10.1007/s10898-007-9149-x](https://doi.org/10.1007/s10898-007-9149-x)
 
 <a id="ref-KE1995a"></a>Kennedy, J., & Eberhart, R. C. (1995). Particle Swarm Optimization. *ICNN'95 — International Conference on Neural Networks* 4, 1942-1948. [doi:10.1109/ICNN.1995.488968](https://doi.org/10.1109/ICNN.1995.488968)
 
-<a id="ref-KES2001a"></a>Kennedy, J., Eberhart, R. C., & Shi, Y. (2001). *Swarm Intelligence*. Morgan Kaufmann.
-
 <a id="ref-MM2022a"></a>Mejía-de-Dios, J.-A., & Mezura-Montes, E. (2022). Metaheuristics: A Julia Package for Single- and Multi-Objective Optimization. *Journal of Open Source Software* 7(78), 4723. [doi:10.21105/joss.04723](https://doi.org/10.21105/joss.04723)
-
-<a id="ref-ML2016a"></a>Mirjalili, S., & Lewis, A. (2016). The Whale Optimization Algorithm. *Advances in Engineering Software* 95, 51-67. [doi:10.1016/j.advengsoft.2016.01.008](https://doi.org/10.1016/j.advengsoft.2016.01.008)
 
 <a id="ref-MG2017a"></a>Mirjalili, S., & Gandomi, A. H. (2017). Chaotic Gravitational Constants for the Gravitational Search Algorithm. *Applied Soft Computing* 53, 407-419. [doi:10.1016/j.asoc.2017.01.008](https://doi.org/10.1016/j.asoc.2017.01.008)
 
-<a id="ref-RNS2009a"></a>Rashedi, E., Nezamabadi-pour, H., & Saryazdi, S. (2009). GSA: A Gravitational Search Algorithm. *Information Sciences* 179(13), 2232-2248. [doi:10.1016/j.ins.2009.03.004](https://doi.org/10.1016/j.ins.2009.03.004)
+<a id="ref-ML2016a"></a>Mirjalili, S., & Lewis, A. (2016). The Whale Optimization Algorithm. *Advances in Engineering Software* 95, 51-67. [doi:10.1016/j.advengsoft.2016.01.008](https://doi.org/10.1016/j.advengsoft.2016.01.008)
 
 ## See Also
 

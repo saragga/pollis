@@ -28,15 +28,15 @@ The three numbers place the swarm among local searches with the same box: a lowe
 
 ## Comparing algorithms
 
-**Algorithm Shootout** runs PSO, ABC, WOA and CGSA of Metaheuristics.jl with `f_calls_limit` set to the evaluations of the current run, three seeds each, and prints the mean and the worst best value. **Benchmark Functions** runs the current algorithm on the sphere, Rosenbrock, Rastrigin and Ackley functions and prints the best value and the distance to the known optimum, the origin or, for Rosenbrock, the point of all ones.
+**Algorithm Shootout** runs PSO, CSO, ABC, WOA and CGSA of Metaheuristics.jl with `f_calls_limit` set to the evaluations of the current run, three seeds each, and prints the mean and the worst best value. **Benchmark Functions** runs the current algorithm on the sphere, Rosenbrock, Rastrigin and Ackley functions and prints the best value and the distance to the known optimum, the origin or, for Rosenbrock, the point of all ones.
 
 Comparisons of this kind hold for the budget, the box, the dimension and the seeds used: the action prints them with the result.
 
 ## Settings and scaling
 
-**Hyperparameter Guide** lists the main settings of the selected algorithm, with the values the panel uses and the effect the panel ascribes to each, such as the inertia of PSO or the limit of ABC.
+**Hyperparameter Guide** lists the main settings of the selected algorithm, with the values the panel uses and their meaning in the Metaheuristics.jl documentation or the original paper, such as the inertia weight of PSO, the `limit` of ABC after which a food source is abandoned, or the coefficient a of WOA.
 
-**Dimension Scaling** re-runs the search for n = 2, 5, 10, 20 and 40 with the same per-variable bounds and prints the best value, the evaluations and the run time. [Cheng and Jin (2015)](#ref-CJ2015a) describe CSO as an optimiser for large scale optimisation, tested on problems of dimensionality up to 5 000; the decision table of the panel names higher-dimensional problems as the context of the CSO tab.
+**Dimension Scaling** re-runs the search for n = 2, 5, 10, 20 and 40 with the same per-variable bounds and prints the best value, the evaluations and the run time. [Cheng and Jin (2015)](#ref-CJ2015a) describe CSO as an optimiser for large scale optimisation, tested on problems of dimensionality up to 5 000; the decision table of the panel gives large scale optimisation as the context of the CSO tab.
 
 ## References
 

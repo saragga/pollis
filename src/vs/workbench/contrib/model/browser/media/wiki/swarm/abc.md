@@ -1,14 +1,20 @@
 # Swarm Intelligence: ABC
 
-The **ABC** tab runs the artificial bee colony algorithm with `ABC` of Metaheuristics.jl. Food sources are candidate solutions; employed and onlooker bees perturb them, and sources that stop improving are abandoned to scouts.
+The **ABC** tab runs the artificial bee colony algorithm with `ABC` of Metaheuristics.jl. Food sources are candidate solutions; employed and onlooker bees search around them, and sources that cannot be improved are abandoned and replaced by scouts.
 
 ## Origin
 
-[Karaboga and Basturk (2007)](#ref-KB2007a) present the artificial bee colony (ABC) algorithm as a powerful and efficient algorithm for numerical function optimisation. The Metaheuristics.jl documentation introduces its `ABC` type with the title of that paper and states that it implements the original parameters of the algorithm.
+[Karaboga and Basturk (2007)](#ref-KB2007a) describe ABC as an optimisation algorithm based on the intelligent behaviour of a honey bee swarm. They use it to optimise multivariable functions and compare it with a genetic algorithm, particle swarm optimisation and a particle swarm inspired evolutionary algorithm; in their results, ABC outperforms the other algorithms.
 
-The bullet of the panel summarises the method as employed, onlooker and scout bee phases that balance exploitation and exploration, and the notebook on ABC uses the same words.
+The Metaheuristics.jl documentation introduces its `ABC` type with the title of that paper and states that it implements the original parameters of the algorithm.
 
-## Parameters in Metaheuristics.jl
+## Three groups of bees
+
+The colony has employed bees, onlookers and scouts. The first half of the colony consists of employed bees and the second half of onlookers, with one employed bee for every food source. An employed bee whose food source is exhausted by the employed and onlooker bees becomes a scout.
+
+[Karaboga and Basturk (2007)](#ref-KB2007a) keep a new food source only if it has equal or better nectar than the old one, a greedy selection. A position that cannot be improved through a predetermined number of cycles, called `limit`, is abandoned, and a scout replaces it with a random position.
+
+## Parameters
 
 The documentation gives the signature
 
@@ -17,21 +23,21 @@ ABC(; N = 50, Ne = div(N + 1, 2), No = div(N + 1, 2), limit = 10,
     information = Information(), options = Options())
 ```
 
-with N the population size, Ne the number of employed bees, No the number of onlooker bees, and `limit` related to the number of times a solution is visited. The panel sets N to **Swarm Size**, so with the default of 40, Ne and No are both div(41, 2) = 20.
+with N the population size, Ne the number of employed bees and No the number of onlooker bees. The panel sets N to **Swarm Size**, so with the default of 40, Ne and No are both div(41, 2) = 20.
 
-The **Hyperparameter Guide** of the tab lists N, the number of food sources and bees, and `limit`, 10 by default, as the number of trials without improvement before a source is abandoned to a scout.
+[Karaboga and Basturk (2007)](#ref-KB2007a) name three control parameters of the basic ABC: the number of food sources, equal to the number of employed or onlooker bees, the value of `limit` and the maximum cycle number. The **Hyperparameter Guide** of the tab lists N and `limit`.
 
-## Food sources and bees
+## Exploration and exploitation
 
-The decision table describes the purpose of the tab: employed and onlooker bees perturb food sources, and sources that stop improving are abandoned to scouts. In the panel, each food source is a point of the box, evaluated by f, and the final sources are what `positions(r)` returns.
+In the paper, onlookers and employed bees carry out the exploitation of the search space, and scouts control the exploration. More scouts encourage exploration, and more onlookers on a food source increase exploitation; in their experiments, the number of scouts was one.
 
-The **Hyperparameter Guide** ties abandonment to `limit`: a source that has not improved in `limit` trials goes to a scout. The decision table names multimodal problems, where exploration matters more than speed, as the context of the tab.
+[Karaboga and Basturk (2007)](#ref-KB2007a) tested the algorithms on five high-dimensional benchmark functions with multimodality, and conclude that ABC can get out of a local minimum and can be used for multivariable, multimodal function optimisation. The decision table of the panel gives that context for the tab.
 
 ## Evaluations
 
-The tooltip of **Iterations** counts two evaluations per bee and iteration for ABC, against about one per particle for PSO, WOA and GSA. The comparisons of the panel therefore use evaluations: **Algorithm Shootout** gives ABC, PSO, WOA and CGSA the same number of evaluations as the current run.
+The documentation's example of `ABC()` on a three-variable sphere function reports 595 iterations and 30 020 function calls with N = 50. The comparisons of the panel use evaluations: **Algorithm Shootout** gives ABC and the four other algorithms the same number of evaluations as the current run.
 
-The code comment explains the explicit `f_calls_limit = 1e12` of the tab: otherwise PSO and ABC stop at 10 000 n evaluations.
+`f_calls_limit = 1e12` leaves **Iterations** as the end of the run; the documentation describes `f_calls_limit` as the maximum number of function evaluations.
 
 ## Features in the package
 
@@ -41,17 +47,13 @@ The panel's problems have only box constraints, which the Metaheuristics.jl tabs
 
 ## Reading an ABC run
 
-**Population Snapshot** draws the final food sources, `positions(r)`, over the contours of f, and **Swarm Diversity** measures their spread relative to the box. **Convergence Curve** shows the best value against the evaluations, two per bee and iteration.
+**Population Snapshot** draws the final food sources, `positions(r)`, over the contours of f, and **Swarm Diversity** measures their spread relative to the box. **Convergence Curve** shows the best value against the evaluations.
 
-**Run Consistency** repeats the run with ten seeds and **Multi-Start** keeps the best of five. The panel's textbooks are [Kennedy, Eberhart and Shi (2001)](#ref-KES2001a) and [Engelbrecht (2005)](#ref-Eng2005a).
+**Run Consistency** repeats the run with ten seeds and **Multi-Start** keeps the best of five; [Karaboga and Basturk (2007)](#ref-KB2007a) repeated each of their experiments 30 times with different random seeds.
 
 ## References
 
-<a id="ref-Eng2005a"></a>Engelbrecht, A. P. (2005). *Fundamentals of Computational Swarm Intelligence*. Wiley.
-
 <a id="ref-KB2007a"></a>Karaboga, D., & Basturk, B. (2007). A Powerful and Efficient Algorithm for Numerical Function Optimization: Artificial Bee Colony (ABC) Algorithm. *Journal of Global Optimization* 39(3), 459-471. [doi:10.1007/s10898-007-9149-x](https://doi.org/10.1007/s10898-007-9149-x)
-
-<a id="ref-KES2001a"></a>Kennedy, J., Eberhart, R. C., & Shi, Y. (2001). *Swarm Intelligence*. Morgan Kaufmann.
 
 <a id="ref-MM2022a"></a>Mejía-de-Dios, J.-A., & Mezura-Montes, E. (2022). Metaheuristics: A Julia Package for Single- and Multi-Objective Optimization. *Journal of Open Source Software* 7(78), 4723. [doi:10.21105/joss.04723](https://doi.org/10.21105/joss.04723)
 
