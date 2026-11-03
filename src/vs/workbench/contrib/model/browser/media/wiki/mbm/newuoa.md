@@ -53,7 +53,7 @@ An unconstrained minimum has a small `gradient_norm` in **Convergence Check**, a
 
 <a id="ref-MW2009a"></a>Moré, J. J., & Wild, S. M. (2009). Benchmarking Derivative-Free Optimization Algorithms. *SIAM Journal on Optimization* 20(1), 172-191. [doi:10.1137/080724083](https://doi.org/10.1137/080724083)
 
-<a id="ref-Pow2004a"></a>Powell, M. J. D. (2004). Least Frobenius Norm Updating of Quadratic Models That Satisfy Interpolation Conditions. *Mathematical Programming* 100(1). [doi:10.1007/s10107-003-0490-7](https://doi.org/10.1007/s10107-003-0490-7)
+<a id="ref-Pow2004a"></a>Powell, M. J. D. (2004). Least Frobenius Norm Updating of Quadratic Models That Satisfy Interpolation Conditions. *Mathematical Programming* 100(1), 183-215. [doi:10.1007/s10107-003-0490-7](https://doi.org/10.1007/s10107-003-0490-7)
 
 <a id="ref-Pow2006a"></a>Powell, M. J. D. (2006). The NEWUOA Software for Unconstrained Optimisation Without Derivatives. In *Large-Scale Nonlinear Optimization*, 255-297. Springer. [doi:10.1007/0-387-30065-1_16](https://doi.org/10.1007/0-387-30065-1_16)
 

@@ -45,7 +45,7 @@ Long curved valleys cost many evaluations, as the model has only limited curvatu
 
 <a id="ref-CSV2009a"></a>Conn, A. R., Scheinberg, K., & Vicente, L. N. (2009). *Introduction to Derivative-Free Optimization*. SIAM. [doi:10.1137/1.9780898718768](https://doi.org/10.1137/1.9780898718768)
 
-<a id="ref-Pow2004a"></a>Powell, M. J. D. (2004). Least Frobenius Norm Updating of Quadratic Models That Satisfy Interpolation Conditions. *Mathematical Programming* 100(1). [doi:10.1007/s10107-003-0490-7](https://doi.org/10.1007/s10107-003-0490-7)
+<a id="ref-Pow2004a"></a>Powell, M. J. D. (2004). Least Frobenius Norm Updating of Quadratic Models That Satisfy Interpolation Conditions. *Mathematical Programming* 100(1), 183-215. [doi:10.1007/s10107-003-0490-7](https://doi.org/10.1007/s10107-003-0490-7)
 
 <a id="ref-Pow2009a"></a>Powell, M. J. D. (2009). The BOBYQA Algorithm for Bound Constrained Optimisation Without Derivatives. Report DAMTP 2009/NA06, University of Cambridge.
 
