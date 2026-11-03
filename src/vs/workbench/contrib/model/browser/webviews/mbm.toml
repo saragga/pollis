@@ -151,6 +151,9 @@ label = "Textbooks"
 key = "CSV2009a"
 
 [[references]]
+key = "CGT2000a"
+
+[[references]]
 key = "NW2006a"
 
 [[references]]
@@ -176,7 +179,35 @@ key = "Pow2015a"
 key = "Bre1973a"
 
 [[references]]
+key = "Pow1964a"
+
+[[references]]
+key = "Pow2004a"
+
+[[references]]
+key = "NM1965a"
+
+[[references]]
 key = "Row1990a"
+
+[[references]]
+separator = true
+label = "Reviews and Analysis"
+
+[[references]]
+key = "LMW2019a"
+
+[[references]]
+key = "MW2009a"
+
+[[references]]
+key = "RS2013a"
+
+[[references]]
+key = "LRWW1998a"
+
+[[references]]
+key = "KS2009a"
 
 [[models]]
 id = "cobyla"

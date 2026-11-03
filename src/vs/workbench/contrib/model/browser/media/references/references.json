@@ -17860,6 +17860,31 @@
 			"open_access": false
 		},
 		{
+			"key": "KS2009a",
+			"type": "article",
+			"title": "Locating and Characterizing the Stationary Points of the Extended Rosenbrock Function",
+			"authors": [
+				"Kok, Schalk",
+				"Sandrock, Carl"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2009,
+			"journal": "Evolutionary Computation",
+			"volume": "17",
+			"number": "3",
+			"pages": "437-453",
+			"issn": "1063-6560",
+			"doi": "10.1162/evco.2009.17.3.437",
+			"openalex": "W2152074179",
+			"abstract": "Two variants of the extended Rosenbrock function are analyzed in order to find the stationary points. The first variant is shown to possess a single stationary point, the global minimum. The second variant has numerous stationary points for high dimensionality. A previously proposed method is shown to be numerically intractable, requiring arbitrary precision computation in many cases to enumerate candidate solutions. Instead, a standard Newtonian method with multi-start is applied to locate stationary points. The relative magnitude of the negative and positive eigenvalues of the Hessian is also computed, in order to characterize the saddle points. For dimensions up to 100, only two local minimizers are found, but many saddle points exist. Two saddle points with a single negative eigenvalue exist for high dimensionality, which may appear as \"near\" local minima. The remaining saddle points we found have a predictable form, and a method is proposed to estimate their number. Monte Carlo simulation indicates that it is unlikely to escape these saddle points using uniform random search. A standard particle swarm algorithm also struggles to improve upon a saddle point contained within the initial population.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "KSBKJ...2019a",
 			"type": "misc",
 			"title": "FastGRNN: A Fast, Accurate, Stable and Tiny Kilobyte Sized Gated Recurrent Neural Network",
@@ -20150,6 +20175,32 @@
 			"open_access": true
 		},
 		{
+			"key": "LMW2019a",
+			"type": "article",
+			"title": "Derivative-Free Optimization Methods",
+			"authors": [
+				"Larson, Jeffrey",
+				"Menickelly, Matt",
+				"Wild, Stefan M."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2019,
+			"journal": "Acta Numerica",
+			"volume": "28",
+			"pages": "287-404",
+			"issn": "0962-4929",
+			"doi": "10.1017/S0962492919000060",
+			"openalex": "W2941034199",
+			"oa_url": "https://arxiv.org/pdf/1904.11585",
+			"abstract": "In many optimization problems arising from scientific, engineering and artificial intelligence applications, objective and constraint functions are available only as the output of a black-box or simulation oracle that does not provide derivative information. Such settings necessitate the use of methods for derivative-free, or zeroth-order, optimization. We provide a review and perspectives on developments in these methods, with an emphasis on highlighting recent developments and on unifying treatment of such problems in the non-linear optimization and machine learning literature. We categorize methods based on assumed properties of the black-box functions, as well as features of the methods. We first overview the primary setting of deterministic methods applied to unconstrained, non-convex optimization problems where the objective function is defined by a deterministic black-box oracle. We then discuss developments in randomized methods, methods that assume some additional structure about the objective (including convexity, separability and general non-smooth compositions), methods for problems where the output of the black-box oracle is stochastic, and methods for handling different types of constraints.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "LN1989a",
 			"type": "article",
 			"title": "On the Limited Memory BFGS Method for Large Scale Optimization",
@@ -20328,6 +20379,33 @@
 			"source": "manual",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "LRWW1998a",
+			"type": "article",
+			"title": "Convergence Properties of the Nelder-Mead Simplex Method in Low Dimensions",
+			"authors": [
+				"Lagarias, Jeffrey C.",
+				"Reeds, James A.",
+				"Wright, Margaret H.",
+				"Wright, Paul E."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1998,
+			"journal": "SIAM Journal on Optimization",
+			"volume": "9",
+			"number": "1",
+			"pages": "112-147",
+			"issn": "1052-6234",
+			"doi": "10.1137/S1052623496303470",
+			"openalex": "W2024991751",
+			"abstract": "The Nelder--Mead simplex algorithm, first published in 1965, is an enormously popular direct search method for multidimensional unconstrained minimization. Despite its widespread use, essentially no theoretical results have been proved explicitly for the Nelder--Mead algorithm. This paper presents convergence properties of the Nelder--Mead algorithm applied to strictly convex functions in dimensions 1 and 2. We prove convergence to a minimizer for dimension 1, and various limited convergence results for dimension 2. A counterexample of McKinnon gives a family of strictly convex functions in two dimensions and a set of initial conditions for which the Nelder--Mead algorithm converges to a nonminimizer. It is not yet known whether the Nelder--Mead method can be proved to converge to a minimizer for a more specialized class of convex functions in two dimensions.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": false
 		},
 		{
 			"key": "LS1979a",
@@ -22655,6 +22733,31 @@
 			"keywords_source": "openalex",
 			"source": "crossref",
 			"retrieved": "2026-10-30",
+			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "MW2009a",
+			"type": "article",
+			"title": "Benchmarking Derivative-Free Optimization Algorithms",
+			"authors": [
+				"Moré, Jorge J.",
+				"Wild, Stefan M."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2009,
+			"journal": "SIAM Journal on Optimization",
+			"volume": "20",
+			"number": "1",
+			"pages": "172-191",
+			"issn": "1052-6234",
+			"doi": "10.1137/080724083",
+			"openalex": "W2057830724",
+			"abstract": "We propose data profiles as a tool for analyzing the performance of derivative-free optimization solvers when there are constraints on the computational budget. We use performance and data profiles, together with a convergence test that measures the decrease in function value, to analyze the performance of three solvers on sets of smooth, noisy, and piecewise-smooth problems. Our results provide estimates for the performance difference between these solvers, and show that on these problems, the model-based solver tested performs better than the two direct search solvers tested.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
 			"checked": true,
 			"open_access": false
 		},
@@ -25924,6 +26027,30 @@
 			"open_access": false
 		},
 		{
+			"key": "Pow1964a",
+			"type": "article",
+			"title": "An Efficient Method for Finding the Minimum of a Function of Several Variables without Calculating Derivatives",
+			"authors": [
+				"Powell, Michael J.D."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1964,
+			"journal": "The Computer Journal",
+			"volume": "7",
+			"number": "2",
+			"pages": "155-162",
+			"issn": "0010-4620",
+			"doi": "10.1093/comjnl/7.2.155",
+			"openalex": "W2114013702",
+			"abstract": "A simple variation of the well-known method of minimizing a function of several variables by changing one parameter at a time is described. This variation is such that when the procedure is applied to a quadratic form, it causes conjugate directions to be chosen, so the ultimate rate of convergence is fast when the method is used to minimize a general function. A further variation completes the method, and its ensures that the convergence rate from a bad approximation to a minimum is always efficient. Practical applications of the procedure have proved to be very satisfactory, and numerical examples are given in which functions of up to twenty variables are minimized.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "Pow1970a",
 			"type": "incollection",
 			"title": "A New Algorithm for Unconstrained Optimization",
@@ -26013,6 +26140,27 @@
 			"source": "crossref",
 			"retrieved": "2026-10-23",
 			"checked": false,
+			"open_access": false
+		},
+		{
+			"key": "Pow2004a",
+			"type": "article",
+			"title": "Least Frobenius Norm Updating of Quadratic Models That Satisfy Interpolation Conditions",
+			"authors": [
+				"Powell, Michael J.D."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2004,
+			"journal": "Mathematical Programming",
+			"volume": "100",
+			"number": "1",
+			"issn": "0025-5610",
+			"doi": "10.1007/s10107-003-0490-7",
+			"openalex": "W2043626538",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
 			"open_access": false
 		},
 		{
@@ -27433,6 +27581,32 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "RS2013a",
+			"type": "article",
+			"title": "Derivative-Free Optimization: A Review of Algorithms and Comparison of Software Implementations",
+			"authors": [
+				"Rios, Luis Miguel",
+				"Sahinidis, Nikolaos V."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2013,
+			"journal": "Journal of Global Optimization",
+			"volume": "56",
+			"number": "3",
+			"pages": "1247-1293",
+			"issn": "0925-5001",
+			"doi": "10.1007/s10898-012-9951-y",
+			"openalex": "W2160960847",
+			"oa_url": "https://link.springer.com/content/pdf/10.1007/s10898-012-9951-y.pdf",
+			"abstract": "This paper addresses the solution of bound-constrained optimization problems using algorithms that require only the availability of objective function values but no derivative information. We refer to these algorithms as derivative-free algorithms. Fueled by a growing number of applications in science and engineering, the development of derivative-free optimization algorithms has long been studied, and it has found renewed interest in recent time. Along with many derivative-free algorithms, many software implementations have also appeared. The paper presents a review of derivative-free algorithms, followed by a systematic comparison of 22 related implementations using a test set of 502 problems. The test bed includes convex and nonconvex problems, smooth as well as nonsmooth problems. The algorithms were tested under the same conditions and ranked under several criteria, including their ability to find near-global solutions for nonconvex problems, improve a given starting point, and refine a near-optimal solution. A total of 112,448 problem instances were solved. We find that the ability of all these solvers to obtain good solutions diminishes with increasing problem size. For the problems used in this study, , , and are better, on average, than other derivative-free solvers in terms of solution quality within 2,500 function evaluations. These global solvers outperform local solvers even for convex problems. Finally, , , and show superior performance in terms of refining a near-optimal solution.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "RSBMS...2013a",
@@ -41510,6 +41684,12 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "KS2009a",
+			"count": 40,
+			"source": "openalex",
+			"date": "2026-11-03"
+		},
+		{
 			"key": "KSBKJ...2019a",
 			"count": 116,
 			"source": "openalex",
@@ -42242,6 +42422,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "LMW2019a",
+			"count": 411,
+			"source": "crossref",
+			"date": "2026-11-03"
+		},
+		{
+			"key": "LMW2019a",
+			"count": 455,
+			"source": "openalex",
+			"date": "2026-11-03"
+		},
+		{
 			"key": "LN1989a",
 			"count": 7125,
 			"source": "crossref",
@@ -42288,6 +42480,18 @@
 			"count": 2098,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "LRWW1998a",
+			"count": 6294,
+			"source": "crossref",
+			"date": "2026-11-03"
+		},
+		{
+			"key": "LRWW1998a",
+			"count": 7449,
+			"source": "openalex",
+			"date": "2026-11-03"
 		},
 		{
 			"key": "LS1979a",
@@ -43020,6 +43224,18 @@
 			"count": 219,
 			"source": "openalex",
 			"date": "2026-10-30"
+		},
+		{
+			"key": "MW2009a",
+			"count": 486,
+			"source": "crossref",
+			"date": "2026-11-03"
+		},
+		{
+			"key": "MW2009a",
+			"count": 573,
+			"source": "openalex",
+			"date": "2026-11-03"
 		},
 		{
 			"key": "MWZBV...2019a",
@@ -44084,6 +44300,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "Pow1964a",
+			"count": 3697,
+			"source": "crossref",
+			"date": "2026-11-03"
+		},
+		{
+			"key": "Pow1964a",
+			"count": 4632,
+			"source": "openalex",
+			"date": "2026-11-03"
+		},
+		{
 			"key": "Pow1970a",
 			"count": 266,
 			"source": "crossref",
@@ -44118,6 +44346,18 @@
 			"count": 352,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "Pow2004a",
+			"count": 84,
+			"source": "crossref",
+			"date": "2026-11-03"
+		},
+		{
+			"key": "Pow2004a",
+			"count": 129,
+			"source": "openalex",
+			"date": "2026-11-03"
 		},
 		{
 			"key": "Pow2006a",
@@ -44538,6 +44778,18 @@
 			"count": 14888,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "RS2013a",
+			"count": 1030,
+			"source": "crossref",
+			"date": "2026-11-03"
+		},
+		{
+			"key": "RS2013a",
+			"count": 1277,
+			"source": "openalex",
+			"date": "2026-11-03"
 		},
 		{
 			"key": "RSBMS...2013a",
@@ -49208,6 +49460,7 @@
 				"Joh2007b",
 				"Zha2023a",
 				"CSV2009a",
+				"CGT2000a",
 				"NW2006a",
 				"Pow1994a",
 				"Pow2009a",
@@ -49215,7 +49468,15 @@
 				"Pow2002a",
 				"Pow2015a",
 				"Bre1973a",
-				"Row1990a"
+				"Pow1964a",
+				"Pow2004a",
+				"NM1965a",
+				"Row1990a",
+				"LMW2019a",
+				"MW2009a",
+				"RS2013a",
+				"LRWW1998a",
+				"KS2009a"
 			]
 		},
 		{
