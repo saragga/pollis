@@ -66,6 +66,7 @@ The robust counterparts are written in JuMP, by [Dunning, Huchette and Lubin (20
 | Robust convex optimisation with ellipsoidal sets | [Ben-Tal and Nemirovski (1998)](#ref-BN1998a) |
 | The budget of uncertainty and the price of robustness | [Bertsimas and Sim (2004)](#ref-BS2004b) |
 | Robust discrete optimisation and network flows | [Bertsimas and Sim (2003)](#ref-BS2003a) |
+| The scenario approach | [Calafiore and Campi (2006)](#ref-CC2006a) |
 | Linear programming and duality | [Bertsimas and Tsitsiklis (1997)](#ref-BT1997a) |
 | The first robust linear programme | [Soyster (1973)](#ref-Soy1973a) |
 
@@ -80,6 +81,8 @@ The robust counterparts are written in JuMP, by [Dunning, Huchette and Lubin (20
 <a id="ref-BS2004b"></a>Bertsimas, D., & Sim, M. (2004). The Price of Robustness. *Operations Research* 52(1), 35-53. [doi:10.1287/opre.1030.0065](https://doi.org/10.1287/opre.1030.0065)
 
 <a id="ref-BT1997a"></a>Bertsimas, D., & Tsitsiklis, J. N. (1997). *Introduction to Linear Optimization*. Athena Scientific. [athenasc.com](http://www.athenasc.com/linoptbook.html)
+
+<a id="ref-CC2006a"></a>Calafiore, G. C., & Campi, M. C. (2006). The Scenario Approach to Robust Control Design. *IEEE Transactions on Automatic Control* 51(5), 742-753. [doi:10.1109/TAC.2006.875041](https://doi.org/10.1109/TAC.2006.875041)
 
 <a id="ref-DHL2017a"></a>Dunning, I., Huchette, J., & Lubin, M. (2017). JuMP: A Modeling Language for Mathematical Optimization. *SIAM Review* 59(2), 295-320. [doi:10.1137/15M1020575](https://doi.org/10.1137/15M1020575)
 

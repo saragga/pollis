@@ -20,6 +20,10 @@ github = "https://github.com/jump-dev/HiGHS.jl"
 name = "Clarabel.jl"
 github = "https://github.com/oxfordcontrol/Clarabel.jl"
 
+[[packages]]
+name = "Plots.jl"
+github = "https://github.com/JuliaPlots/Plots.jl"
+
 [requires]
 packages = ["JuMP.jl", "HiGHS.jl", "Clarabel.jl", "Plots.jl"]
 
@@ -142,6 +146,9 @@ key = "BS2004b"
 
 [[references]]
 key = "BS2003a"
+
+[[references]]
+key = "CC2006a"
 
 [[models]]
 id = "box"
@@ -581,7 +588,8 @@ label = "Violation Probability"
 desc = "Monte Carlo probability that each constraint is violated when every coefficient deviates independently and uniformly within rho"
 code = '''
 pv(x) = [round(mean(dot(Ak[i, :], x) > b[i] + 1e-9 for Ak in draws), digits=4) for i in 1:nc]
-{{?model=budget}}println("Bertsimas-Sim bound per constraint: ", round(exp(-par.gamma^2 / (2n)), digits=4))
+{{?model=budget}}J = [count(>(0), Ahat[i, :]) for i in 1:nc]  # |J_i|: the uncertain coefficients of row i
+{{?model=budget}}println("Bertsimas-Sim bound per constraint: ", round.(exp.(-par.gamma^2 ./ (2 .* J)), digits=4))
 (nominal_per_constraint = pv(nom.x), robust_per_constraint = pv(sol.x), nominal_any = violation(nom.x), robust_any = violation(sol.x))
 '''
 

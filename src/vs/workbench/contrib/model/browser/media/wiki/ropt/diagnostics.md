@@ -24,7 +24,7 @@ By construction, the robust plan's worst-case use stays within capacity in every
 
 **Violation Probability** applies the nominal and the robust plan to 10 000 matrices of independent uniform coefficients, and reports for each constraint the share of draws in which it is violated, and the share in which any constraint is violated.
 
-On the **Budgeted** tab it also prints exp(−Γ²/(2n)), with n the number of products. The bound of [Bertsimas and Sim (2004)](#ref-BS2004b) for constraint i is exp(−Γᵢ²/(2∣Jᵢ∣)), with ∣Jᵢ∣ the number of uncertain coefficients in the row, so the printed value is the bound for a row in which all n coefficients are uncertain.
+On the **Budgeted** tab it also prints, for each constraint i, the bound of [Bertsimas and Sim (2004)](#ref-BS2004b), exp(−Γᵢ²/(2∣Jᵢ∣)), with ∣Jᵢ∣ the number of uncertain coefficients in the row, those with âᵢⱼ > 0.
 
 For the **Ellipsoidal** set, [Ben-Tal, El Ghaoui and Nemirovski (2009)](#ref-BGN2009a) give the bound exp(−Ω²/2) per constraint, with Ω the radius **Ellipsoid Radius (omega)**.
 

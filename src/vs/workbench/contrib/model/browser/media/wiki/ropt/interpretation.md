@@ -38,6 +38,8 @@ The boundary of the robust region is straight for the **Box**, **Budgeted** and 
 
 [Ben-Tal and Nemirovski (1998)](#ref-BN1998a) note that when the uncertainty set is the convex hull of a finite set of scenarios, the robust counterpart of a problem affine in the data is simply the problem with the constraints of every scenario. The scenario LP is therefore the robust counterpart for the convex hull of the K sampled matrices, a set that grows with K.
 
+[Calafiore and Campi (2006)](#ref-CC2006a) call this the scenario approach: sampling the constraints of a problem with a linear objective and uncertain convex constraints gives a standard convex problem, the scenario problem, whose solution is approximately feasible for the original constraints. The measure of the set of original constraints that the scenario solution violates decreases rapidly to zero as the number of samples grows, and they give an explicit bound on the number of samples needed for a specified level of probabilistic guarantee.
+
 ## All sets side by side
 
 **All Sets vs Nominal** solves the nominal problem and the robust counterparts of all four sets, at the current ρ and, where they apply, ω and Γ, and lists their plans, profits and simulated violation probabilities.
@@ -59,6 +61,8 @@ With the default Γ = 1, the **Budgeted** and **Polyhedral** sets coincide: ‖u
 <a id="ref-BS2004b"></a>Bertsimas, D., & Sim, M. (2004). The Price of Robustness. *Operations Research* 52(1), 35-53. [doi:10.1287/opre.1030.0065](https://doi.org/10.1287/opre.1030.0065)
 
 <a id="ref-BT1997a"></a>Bertsimas, D., & Tsitsiklis, J. N. (1997). *Introduction to Linear Optimization*. Athena Scientific. [athenasc.com](http://www.athenasc.com/linoptbook.html)
+
+<a id="ref-CC2006a"></a>Calafiore, G. C., & Campi, M. C. (2006). The Scenario Approach to Robust Control Design. *IEEE Transactions on Automatic Control* 51(5), 742-753. [doi:10.1109/TAC.2006.875041](https://doi.org/10.1109/TAC.2006.875041)
 
 <a id="ref-Soy1973a"></a>Soyster, A. L. (1973). Convex Programming with Set-Inclusive Constraints and Applications to Inexact Linear Programming. *Operations Research* 21(5), 1154-1157. [doi:10.1287/opre.21.5.1154](https://doi.org/10.1287/opre.21.5.1154)
 

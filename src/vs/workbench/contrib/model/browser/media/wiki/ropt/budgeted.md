@@ -36,7 +36,7 @@ a bound that does not depend on the solution. [Ben-Tal, El Ghaoui and Nemirovski
 
 ## In the panel
 
-**Violation Probability** on the **Budgeted** tab prints exp(−Γ²/(2n)), the bound for a row with n uncertain coefficients, next to the simulated violation frequencies of each constraint. **Price of Robustness** solves the counterpart for Γ from 0 to n in steps of 0.25 and plots the profit and the simulated probability of violation.
+**Violation Probability** on the **Budgeted** tab prints exp(−Γ²/(2∣Jᵢ∣)) for each row, with ∣Jᵢ∣ its number of uncertain coefficients, those with âᵢⱼ > 0, next to the simulated violation frequencies of each constraint. **Price of Robustness** solves the counterpart for Γ from 0 to n in steps of 0.25 and plots the profit and the simulated probability of violation.
 
 The panel's decision table describes the set as tunable: it keeps an LP and interpolates between nominal, Γ = 0, and box, Γ = n.
 
