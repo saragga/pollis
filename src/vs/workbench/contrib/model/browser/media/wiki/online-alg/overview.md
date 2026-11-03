@@ -6,7 +6,7 @@ The Online Statistics panel computes statistics of a data stream in a single pas
 
 Online statistics suit data that arrive one observation at a time, such as quotes, sensor readings or log events, and data too large to hold in memory at once. A batch statistic needs the whole sample and must be computed again when an observation arrives. An online statistic keeps a small summary of what it has seen and updates that summary with each new observation. Streams of this kind, and the algorithms that summarise them with bounded memory, are the subject of the data stream chapter of [Leskovec, Rajaraman and Ullman (2020)](#ref-LRU2020a).
 
-## The four tabs of the Online Statistics panel
+## The five tabs of the Online Statistics panel
 
 | Tab | What it estimates | OnlineStats.jl type |
 |---|---|---|
@@ -14,16 +14,17 @@ Online statistics suit data that arrive one observation at a time, such as quote
 | **Quantile** | The median and other quantiles | `P2Quantile` |
 | **Histogram** | The distribution, in a fixed number of bins | `KHist` |
 | **Linear Regression** | Least squares coefficients of a response on predictors | `LinReg` |
+| **Correlation** | Covariance and correlation matrices of several variables | `CovMatrix` |
 
 Each tab prints its estimates, and the Next Steps actions plot, check, predict and compare them.
 
 ## Incremental, rolling and exponentially weighted memory
 
-The **Memory** input decides which observations an estimate reflects. **Incremental** weighs every observation so far equally. **Rolling Window** keeps only the most recent observations, as many as **Window or span**. **Exponentially Weighted** keeps every observation but gives older ones geometrically smaller weights. The **Running Summary** tab offers all three, **Linear Regression** offers **Incremental** and **Exponentially Weighted**, and **Quantile** and **Histogram** are incremental only. The page [Incremental, Rolling and Exponentially Weighted Statistics](memory.md) compares the three.
+The **Memory** input decides which observations an estimate reflects. **Incremental** weighs every observation so far equally. **Rolling Window** keeps only the most recent observations, as many as **Window or span**. **Exponentially Weighted** keeps every observation but gives older ones geometrically smaller weights. The **Running Summary** and **Correlation** tabs offer all three, **Linear Regression** offers **Incremental** and **Exponentially Weighted**, and **Quantile** and **Histogram** are incremental only. The page [Incremental, Rolling and Exponentially Weighted Statistics](memory.md) compares the three.
 
 ## How Online Statistics differs from Descriptive Statistics
 
-The Descriptive Statistics panel works on a complete sample held in memory and gives exact quantiles, frequencies and correlations of that sample. The Online Statistics panel gives the same kinds of summaries for data that keep arriving, at the price of approximation for quantiles and histograms. Mean, variance, moments, extrema and least squares coefficients are exact in both panels when the memory is **Incremental**.
+The Descriptive Statistics panel works on a complete sample held in memory and gives exact quantiles, frequencies and correlations of that sample. The Online Statistics panel gives the same kinds of summaries for data that keep arriving, at the price of approximation for quantiles and histograms. Mean, variance, moments, extrema, covariances, correlations and least squares coefficients are exact in both panels when the memory is **Incremental**.
 
 ## A common workflow with Online Statistics
 
@@ -32,6 +33,7 @@ The Descriptive Statistics panel works on a complete sample held in memory and g
 3. Run **Incremental, Rolling and Exponential** to see whether the level drifts; if it does, switch **Memory** to **Rolling Window** or **Exponentially Weighted** and choose **Window or span**.
 4. Add **Quantile** and **Histogram** for the shape of the distribution.
 5. Use **Linear Regression** when a response depends on predictors, with **One-Step-Ahead Predictions** to check how well it predicts.
+6. Use **Correlation** for several variables at once, with **Correlation Over Time** to see whether their co-movement changes.
 
 ## References
 
@@ -42,4 +44,4 @@ The Descriptive Statistics panel works on a complete sample held in memory and g
 ## See Also
 
 - [Overview](overview.md) · [Factsheet](factsheet.md) · [Assumptions](assumptions.md) · [Diagnostics](diagnostics.md) · [Interpretation](interpretation.md) · [Decision Guide](decision-guide.md)
-- [Incremental, Rolling and Exponentially Weighted Statistics](memory.md) · [Running Summary](running-summary.md) · [Quantile](quantile.md) · [Histogram](histogram.md) · [Linear Regression](linreg.md)
+- [Incremental, Rolling and Exponentially Weighted Statistics](memory.md) · [Running Summary](running-summary.md) · [Quantile](quantile.md) · [Histogram](histogram.md) · [Linear Regression](linreg.md) · [Correlation](correlation.md)

@@ -1,6 +1,6 @@
 # Incremental, Rolling and Exponentially Weighted Statistics
 
-Three kinds of memory decide which observations an online estimate reflects. The **Memory** input of the Online Statistics panel chooses among them on the **Running Summary** and **Linear Regression** tabs, and **Window or span** sets how far back the rolling and exponentially weighted estimates look.
+Three kinds of memory decide which observations an online estimate reflects. The **Memory** input of the Online Statistics panel chooses among them on the **Running Summary**, **Linear Regression** and **Correlation** tabs, and **Window or span** sets how far back the rolling and exponentially weighted estimates look.
 
 ## How OnlineStats.jl updates an estimate
 
@@ -30,6 +30,7 @@ Three kinds of memory decide which observations an online estimate reflects. The
 | **Quantile** | Yes | No | No |
 | **Histogram** | Yes | No | No |
 | **Linear Regression** | Yes | No | Yes |
+| **Correlation** | Yes | Yes | Yes |
 
 `P2Quantile` and `KHist` take no weight, and `LinReg` keeps sums rather than observations, so it has no window to roll. `Extrema` records the smallest and largest values ever seen under every kind of memory except **Rolling Window**, where the summary is computed from the window alone.
 
@@ -42,4 +43,4 @@ Three kinds of memory decide which observations an online estimate reflects. The
 ## See Also
 
 - [Overview](overview.md) · [Factsheet](factsheet.md) · [Assumptions](assumptions.md) · [Diagnostics](diagnostics.md) · [Interpretation](interpretation.md) · [Decision Guide](decision-guide.md)
-- [Incremental, Rolling and Exponentially Weighted Statistics](memory.md) · [Running Summary](running-summary.md) · [Quantile](quantile.md) · [Histogram](histogram.md) · [Linear Regression](linreg.md)
+- [Incremental, Rolling and Exponentially Weighted Statistics](memory.md) · [Running Summary](running-summary.md) · [Quantile](quantile.md) · [Histogram](histogram.md) · [Linear Regression](linreg.md) · [Correlation](correlation.md)

@@ -1,10 +1,10 @@
 # Running Summary
 
-The **Running Summary** tab of the Online Statistics panel computes the mean, variance, extrema, skewness and kurtosis of a stream in one pass, with `Series(Mean(), Variance(), Extrema(), Moments())` from `OnlineStats.jl` ([Day and Zhou, 2020](#ref-DZ2020a)). A `Series` passes each observation to every statistic it holds, so the stream is read once.
+The **Running Summary** tab of the Online Statistics panel computes the mean, variance, standard deviation, extrema, skewness and kurtosis of a stream in one pass, with `Series(Mean(), Variance(), Extrema(), Moments())` from `OnlineStats.jl` ([Day and Zhou, 2020](#ref-DZ2020a)). A `Series` passes each observation to every statistic it holds, so the stream is read once.
 
 ## How the running variance is updated
 
-`Variance` updates the mean and the sum of squared deviations together as each observation arrives, in the form given by [Welford (1962)](#ref-Wel1962a). The sum of squares of deviations is corrected step by step instead of being computed as the sum of squares minus a squared total, which avoids the loss of digits that subtraction causes when the values are large compared with their spread. `value` returns the variance with the correction n/(n − 1), so with **Incremental** memory it equals the sample variance `var` of `Statistics`.
+`Variance` updates the mean and the sum of squared deviations together as each observation arrives, in the form given by [Welford (1962)](#ref-Wel1962a). The sum of squares of deviations is corrected step by step instead of being computed as the sum of squares minus a squared total, which avoids the loss of digits that subtraction causes when the values are large compared with their spread. `value` returns the variance with the correction n/(n − 1), so with **Incremental** memory it equals the sample variance `var` of `Statistics`. The tab prints the standard deviation as its square root.
 
 ## How skewness and kurtosis are computed in the Running Summary
 
@@ -31,4 +31,4 @@ The **Running Summary** tab of the Online Statistics panel computes the mean, va
 ## See Also
 
 - [Overview](overview.md) · [Factsheet](factsheet.md) · [Assumptions](assumptions.md) · [Diagnostics](diagnostics.md) · [Interpretation](interpretation.md) · [Decision Guide](decision-guide.md)
-- [Incremental, Rolling and Exponentially Weighted Statistics](memory.md) · [Running Summary](running-summary.md) · [Quantile](quantile.md) · [Histogram](histogram.md) · [Linear Regression](linreg.md)
+- [Incremental, Rolling and Exponentially Weighted Statistics](memory.md) · [Running Summary](running-summary.md) · [Quantile](quantile.md) · [Histogram](histogram.md) · [Linear Regression](linreg.md) · [Correlation](correlation.md)

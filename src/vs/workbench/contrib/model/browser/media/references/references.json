@@ -52006,7 +52006,7 @@
 		{
 			"id": "oa",
 			"title": "Online Statistics",
-			"description": "Running Summary · Quantile · Histogram · Linear Regression",
+			"description": "Running Summary · Quantile · Histogram · Linear Regression · Correlation",
 			"commands": [
 				"chiara.explore.oa"
 			],

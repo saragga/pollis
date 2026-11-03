@@ -10,8 +10,9 @@ Which tab of the Online Statistics panel answers a question, which **Memory** to
 | What is the median, or another percentile? | **Quantile** |
 | What does the whole distribution look like? | **Histogram** |
 | How does a response depend on predictors? | **Linear Regression** |
+| Do several variables move together? | **Correlation** |
 
-The tabs read the same **Data stream**, so one pass can feed several of them: a `Series` holds any mix of statistics, as the **Running Summary** tab shows with four of them.
+The first four tabs read the same **Data stream**, so one pass can feed several of them: a `Series` holds any mix of statistics, as the **Running Summary** tab shows with four of them.
 
 ## Which memory to choose
 
@@ -30,11 +31,11 @@ The tabs read the same **Data stream**, so one pass can feed several of them: a 
 
 ## When estimates of several streams must be combined
 
-`merge!` combines two estimates built on separate parts of a stream, for example on separate processors or files, as the **Merge Parallel Streams** action shows. With **Incremental** memory, `Mean`, `Variance` and `LinReg` merge exactly, and `KHist` merges its bins. `P2Quantile` cannot be merged, so quantiles of partitions are better read from merged `KHist` histograms. Merges are meant for **Incremental** memory: an exponentially weighted estimate depends on the order of its observations, which two separate partitions do not share.
+`merge!` combines two estimates built on separate parts of a stream, for example on separate processors or files, as the **Merge Parallel Streams** action shows. With **Incremental** memory, `Mean`, `Variance`, `CovMatrix` and `LinReg` merge exactly, and `KHist` merges its bins. `P2Quantile` cannot be merged, so quantiles of partitions are better read from merged `KHist` histograms. Merges are meant for **Incremental** memory: an exponentially weighted estimate depends on the order of its observations, which two separate partitions do not share.
 
 ## When to use the Descriptive Statistics panel instead
 
-When the whole sample fits in memory and will not grow, the Descriptive Statistics panel gives exact quantiles, frequency tables and correlations of the sample, with no approximation. The Online Statistics panel is the choice when observations keep arriving, when the sample is too large to hold, or when recent observations should count more than old ones. The two panels sit together under Explore > Descriptive and Online Statistics.
+When the whole sample fits in memory and will not grow, the Descriptive Statistics panel gives exact quantiles and frequency tables of the sample, with no approximation, and correlations by Spearman as well as Pearson. The Online Statistics panel is the choice when observations keep arriving, when the sample is too large to hold, or when recent observations should count more than old ones. The two panels sit together under Explore > Descriptive and Online Statistics.
 
 ## References
 
@@ -43,4 +44,4 @@ When the whole sample fits in memory and will not grow, the Descriptive Statisti
 ## See Also
 
 - [Overview](overview.md) · [Factsheet](factsheet.md) · [Assumptions](assumptions.md) · [Diagnostics](diagnostics.md) · [Interpretation](interpretation.md) · [Decision Guide](decision-guide.md)
-- [Incremental, Rolling and Exponentially Weighted Statistics](memory.md) · [Running Summary](running-summary.md) · [Quantile](quantile.md) · [Histogram](histogram.md) · [Linear Regression](linreg.md)
+- [Incremental, Rolling and Exponentially Weighted Statistics](memory.md) · [Running Summary](running-summary.md) · [Quantile](quantile.md) · [Histogram](histogram.md) · [Linear Regression](linreg.md) · [Correlation](correlation.md)

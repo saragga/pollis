@@ -6126,6 +6126,7 @@
 			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
 			"wikis": [
 				"online-alg/assumptions.md",
+				"online-alg/correlation.md",
 				"online-alg/decision-guide.md",
 				"online-alg/diagnostics.md",
 				"online-alg/factsheet.md",
@@ -6141,7 +6142,8 @@
 				"online-alg/tutorial-01-running-summary.ipynb",
 				"online-alg/tutorial-02-quantile.ipynb",
 				"online-alg/tutorial-03-histogram.ipynb",
-				"online-alg/tutorial-04-linreg.ipynb"
+				"online-alg/tutorial-04-linreg.ipynb",
+				"online-alg/tutorial-05-correlation.ipynb"
 			],
 			"packages": [
 				"OnlineStats.jl",

@@ -51,6 +51,12 @@ file = "online-alg/tutorial-04-linreg.ipynb"
 bundled = true
 description = "Least squares from running sums of cross-products, with equal or exponential weights, and predictions made as the data arrive"
 
+[[notebookSections.notebooks]]
+name = "Online Covariance and Correlation"
+file = "online-alg/tutorial-05-correlation.ipynb"
+bundled = true
+description = "Covariance and correlation matrices of several streams, with incremental, rolling and exponentially weighted memory, and a correlation that changes"
+
 [[wikis]]
 name = "Factsheet"
 file = "online-alg/factsheet.md"
@@ -110,6 +116,11 @@ name = "Linear Regression"
 file = "online-alg/linreg.md"
 bundled = true
 
+[[wikis]]
+name = "Correlation"
+file = "online-alg/correlation.md"
+bundled = true
+
 [[references]]
 separator = true
 label = "Software"
@@ -156,6 +167,10 @@ label = "Histogram"
 id = "linreg"
 label = "Linear Regression"
 
+[[models]]
+id = "cor"
+label = "Correlation"
+
 [[bullets]]
 text = "Running Summary Statistics"
 detail = "mean, variance, extrema, skewness and kurtosis in one pass, each new observation updating them at a fixed cost and without storing the data; incremental, rolling window or exponentially weighted memory"
@@ -171,6 +186,10 @@ detail = "a fixed number of bins whose centres follow the data: each new value b
 [[bullets]]
 text = "Online Linear Regression"
 detail = "exact least squares from running sums of cross-products, with the coefficients solved when asked for; equal or exponential weights"
+
+[[bullets]]
+text = "Covariance and Correlation"
+detail = "covariance and correlation matrices of several variables from running averages of each row and its cross-products; incremental, rolling window or exponentially weighted memory"
 
 [[decisionRows]]
 task = "Running Summary"
@@ -193,6 +212,11 @@ context = "Response on predictors"
 purpose = "Least squares coefficients from running sums, solved whenever they are needed"
 
 [[decisionRows]]
+task = "Correlation"
+context = "Co-movement of variables"
+purpose = "Covariance and correlation matrices of several streams, updated with each row of observations"
+
+[[decisionRows]]
 task = "Incremental"
 context = "Stable process"
 purpose = "Every observation counts equally, so the estimate settles on the value of the whole stream"
@@ -209,6 +233,7 @@ purpose = "Every observation counts, with weights that fall geometrically with a
 
 [[inputs]]
 id = "data"
+models = ["desc", "quantile", "hist", "linreg"]
 label = "Data stream"
 tooltip = "Vector or iterator of observations. Can be processed in a single pass with fit! or flushed observation by observation. The default simulates 10,000 draws from Exponential(1), a skewed stream whose true mean (1), variance (1), median (0.693), skewness (2) and excess kurtosis (6) the online estimates should approach; on the Linear Regression tab it is the response y = 1 + 2x + noise."
 default = "data"
@@ -221,10 +246,17 @@ tooltip = "Design matrix (T x k) paired row-by-row with the response vector. Inc
 default = "X"
 
 [[inputs]]
+id = "vars"
+models = ["cor"]
+label = "Variables matrix"
+tooltip = "Matrix with one row per observation and one column per variable (T x p), read row by row. The default simulates 10,000 rows of three standard normal variables whose true correlations are 0.6 (columns 1 and 2), 0.3 (1 and 3) and 0.5 (2 and 3)."
+default = "vars"
+
+[[inputs]]
 id = "memory"
-models = ["desc"]
+models = ["desc", "cor"]
 label = "Memory"
-tooltip = "Incremental weighs every observation so far equally. Rolling Window keeps the last observations, as many as Window or span, and summarises them. Exponentially Weighted gives each new observation the weight 2/(span + 1), so older observations count less and less; Extrema still covers every observation."
+tooltip = "Incremental weighs every observation so far equally. Rolling Window keeps the last observations, as many as Window or span, and summarises them. Exponentially Weighted gives each new observation the weight 2/(span + 1), so older observations count less and less; on Running Summary, Extrema still covers every observation."
 kind = "select"
 default = "incremental"
 
@@ -258,7 +290,7 @@ label = "Exponentially Weighted"
 
 [[inputs]]
 id = "span"
-models = ["desc", "linreg"]
+models = ["desc", "linreg", "cor"]
 label = "Window or span"
 tooltip = "Rolling Window: the number of most recent observations kept. Exponentially Weighted: the span s of ExponentialWeight(s), which gives each new observation the weight 2/(s + 1). Not used by Incremental."
 default = "100"
@@ -280,6 +312,7 @@ using OnlineStats
 
 println("Mean:     ", value(s[1]))
 println("Variance: ", value(s[2]))
+println("Std dev:  ", sqrt(value(s[2])))  # standard deviation: the square root of the variance
 println("Extrema:  ", extrema(s[3]))  # min and max
 println("Skewness: ", skewness(s[4]))
 println("Kurtosis: ", kurtosis(s[4]))  # excess kurtosis: 0 for a normal distribution
@@ -338,12 +371,36 @@ beta = coef(o)  # current coefficient estimates
 println("Coefficients: ", beta)  # solved from the running sums of cross-products
 '''
 
+[[codeBranches]]
+model = "cor"
+code = '''
+using OnlineStats
+{{?vars=vars}} using Random, LinearAlgebra
+
+{{?vars=vars}} Random.seed!(1)  # simulated: three variables whose true correlations are 0.6, 0.3 and 0.5
+{{?vars=vars}} S = [1.0 0.6 0.3; 0.6 1.0 0.5; 0.3 0.5 1.0]  # the true covariance matrix, also the correlation matrix (unit variances)
+{{?vars=vars}} vars = randn(10_000, 3) * cholesky(S).U  # one row per observation. Replace vars with your own matrix, one row per observation and one column per variable.
+
+{{?memory=incremental}} o = fit!(CovMatrix(), eachrow({{vars}}))  # every row so far, equally weighted
+{{?memory=exponential}} o = fit!(CovMatrix(weight=ExponentialWeight({{span}})), eachrow({{vars}}))  # each new row gets the weight 2/(span + 1)
+{{?memory=rolling}} window = fit!(MovingWindow({{span}}, Vector{Float64}), collect.(eachrow({{vars}})))  # keeps only the last span rows
+{{?memory=rolling}} o = fit!(CovMatrix(), value(window))  # covariance of the window, from the rows kept
+
+C = copy(cov(o))  # covariance matrix (copied: cov and cor return the same stored matrix)
+R = copy(cor(o))  # correlation matrix
+println("Means:               ", mean(o))
+println("Standard deviations: ", sqrt.(var(o)))
+println("Covariance matrix:   ", round.(C, digits=3))
+println("Correlation matrix:  ", round.(R, digits=3))
+'''
+
 [[actionGroups]]
 id = "visualise"
 label = "Visualise"
 
 [[actionGroups.actions]]
 id = "running-mean"
+models = ["desc", "quantile", "hist", "linreg"]
 label = "Running Mean"
 desc = "Plot the running mean after each observation to inspect convergence"
 code = '''
@@ -356,6 +413,7 @@ plot(means, xlabel="Observations", ylabel="Running mean", label="Mean")  # conve
 
 [[actionGroups.actions]]
 id = "hist-plot"
+models = ["desc", "quantile", "hist", "linreg"]
 label = "Online Histogram"
 desc = "Visualise the adaptive histogram density built from the data stream"
 code = '''
@@ -368,6 +426,7 @@ plot(o)  # plot density estimate
 
 [[actionGroups.actions]]
 id = "quantile-convergence"
+models = ["desc", "quantile", "hist", "linreg"]
 label = "Quantile Convergence"
 desc = "Track how the online median estimate converges as observations accumulate"
 code = '''
@@ -378,12 +437,43 @@ medians = map(x -> (fit!(o, x); value(o)), {{data}})  # running median series
 plot(medians, xlabel="Observations", ylabel="Online median")  # convergence plot
 '''
 
+[[actionGroups.actions]]
+id = "correlation-over-time"
+models = ["cor"]
+label = "Correlation Over Time"
+desc = "Plot the exponentially weighted correlation of the first two columns after each row"
+code = '''
+using OnlineStats, Plots
+
+o = CovMatrix(weight=ExponentialWeight(100))  # span 100: change it to see how fast the estimate forgets
+r12 = Float64[]
+for x in eachrow({{vars}})
+    fit!(o, x)
+    push!(r12, nobs(o) > 1 ? cor(o)[1, 2] : NaN)  # correlation of columns 1 and 2 so far
+end
+plot(r12, xlabel="Observations", ylabel="Correlation of columns 1 and 2", label="Exponentially weighted, span 100")
+'''
+
 [[actionGroups]]
 id = "diagnose"
 label = "Diagnose"
 
 [[actionGroups.actions]]
+id = "compare-batch-cor"
+models = ["cor"]
+label = "vs Batch Correlation"
+desc = "Compare the online covariance and correlation matrices with the batch ones of Statistics"
+code = '''
+using OnlineStats, Statistics
+
+o = fit!(CovMatrix(), eachrow({{vars}}))  # every row, equally weighted
+println("Largest covariance difference:  ", maximum(abs.(cov(o) .- cov({{vars}}))))  # cov(o) is used before cor(o) overwrites it
+println("Largest correlation difference: ", maximum(abs.(cor(o) .- cor({{vars}}))))
+'''
+
+[[actionGroups.actions]]
 id = "compare-batch"
+models = ["desc", "quantile", "hist", "linreg"]
 label = "vs Batch Statistics"
 desc = "Compare online estimates against exact batch values to verify accuracy"
 code = '''
@@ -400,6 +490,7 @@ println("Batch  variance:  ", var({{data}}))  # exact batch value
 
 [[actionGroups.actions]]
 id = "nobs"
+models = ["desc", "quantile", "hist", "linreg"]
 label = "Observation Count"
 desc = "Inspect how many observations have been processed by each online stat"
 code = '''
@@ -455,6 +546,7 @@ label = "Compare"
 
 [[actionGroups.actions]]
 id = "merge-stats"
+models = ["desc", "quantile", "hist", "linreg"]
 label = "Merge Parallel Streams"
 desc = "Combine online stats from two independent data partitions without re-reading data"
 code = '''
@@ -470,6 +562,7 @@ println("Merged mean: ", value(o1))  # equivalent to batch mean over all data
 
 [[actionGroups.actions]]
 id = "memory-schemes"
+models = ["desc", "quantile", "hist", "linreg"]
 label = "Incremental, Rolling and Exponential"
 desc = "Plot the running mean under the three kinds of memory: every observation, the last span observations, and exponentially decaying weights"
 code = '''
@@ -494,6 +587,7 @@ label = "Interpret"
 
 [[actionGroups.actions]]
 id = "summary-stats"
+models = ["desc", "quantile", "hist", "linreg"]
 label = "Summary Statistics"
 desc = "Full descriptive summary: mean, variance, skewness, kurtosis and extrema in one pass"
 code = '''
