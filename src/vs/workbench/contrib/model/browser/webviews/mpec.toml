@@ -92,10 +92,22 @@ separator = true
 label = "Original Papers"
 
 [[references]]
+key = "SSM1983a"
+
+[[references]]
 key = "FP1997a"
 
 [[references]]
 key = "SS2000a"
+
+[[references]]
+key = "Sch2001a"
+
+[[references]]
+key = "HR2004a"
+
+[[references]]
+key = "RW2004a"
 
 [[bullets]]
 text = "A Mathematical Programming with Equilibrium Constraints (MPEC) is the problem of a single decision-maker who minimises an objective subject to both standard constraints and an equilibrium condition"
