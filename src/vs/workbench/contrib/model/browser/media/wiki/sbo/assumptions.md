@@ -38,7 +38,7 @@ The search is confined to the box from **Lower Bounds** to **Upper Bounds**: the
 
 ## The dimension and the design
 
-A full quadratic in n variables has (n + 1)(n + 2)/2 coefficients, 6 for n = 2 and 66 for n = 10, and the least-squares fit needs at least as many points to determine them. **Surrogate Guide** lists the same minimum.
+A full quadratic in n variables has (n + 1)(n + 2)/2 coefficients, 6 for n = 2 and 66 for n = 10, and the least-squares fit needs at least as many points to determine them. **Surrogate Guide** lists the same number of coefficients.
 
 For the initial design of the Kriging approach, [Jones, Schonlau and Welch (1998)](#ref-JSW1998a) write that, based on past experience, about 10k points are needed in k dimensions. [Forrester, Sóbester and Keane (2008)](#ref-FSK2008a) discuss the curse of dimensionality and how many sample plan and infill points to use.
 

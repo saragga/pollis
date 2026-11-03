@@ -12,6 +12,18 @@ defaultModel = "rsm"
 name = "Surrogates.jl"
 github = "https://github.com/SciML/Surrogates.jl"
 
+[[packages]]
+name = "SpecialFunctions.jl"
+github = "https://github.com/JuliaMath/SpecialFunctions.jl"
+
+[[packages]]
+name = "Optim.jl"
+github = "https://github.com/JuliaNLSolvers/Optim.jl"
+
+[[packages]]
+name = "Plots.jl"
+github = "https://github.com/JuliaPlots/Plots.jl"
+
 [requires]
 packages = ["Surrogates.jl", "SpecialFunctions.jl", "Optim.jl", "Plots.jl"]
 
@@ -22,19 +34,19 @@ label = ""
 name = "Response Surface Methods"
 file = "sbo/tutorial-01-rsm.ipynb"
 bundled = true
-description = "Polynomial response surface fitted to sample data; minimised directly; interpretable for low-dimensional smooth problems"
+description = "Full quadratic fitted by least squares; the next point is its minimum among Gaussian candidates around the best point"
 
 [[notebookSections.notebooks]]
 name = "Kriging"
 file = "sbo/tutorial-02-kriging.ipynb"
 bundled = true
-description = "GP interpolant from geostatistics; provides uncertainty estimates; used with EI or LCBS acquisition; suited to expensive black-box problems"
+description = "Gaussian-process interpolant with a squared-exponential kernel; the next point maximises expected improvement"
 
 [[notebookSections.notebooks]]
 name = "Radial Basis Functions"
 file = "sbo/tutorial-03-rbf.ipynb"
 bundled = true
-description = "Exact interpolant using radial basis functions; no uncertainty estimate; flexible kernel choice; scales to higher dimensions"
+description = "Cubic radial basis interpolant with a linear tail; the next point weighs a low prediction against the distance from evaluated points"
 
 [[wikis]]
 name = "Factsheet"
@@ -108,6 +120,13 @@ key = "Jon2001a"
 [[references]]
 key = "RS2007a"
 
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+key = "SMLC2026a"
+
 [[models]]
 id = "rsm"
 label = "Response Surface Methods"
@@ -130,12 +149,12 @@ detail = "GP interpolant from geostatistics; uncertainty estimates guide EI acqu
 
 [[bullets]]
 text = "Radial Basis Functions"
-detail = "exact radial basis interpolant with flexible kernel choice; no uncertainty estimate; scales to moderate dimensions"
+detail = "cubic radial basis interpolant with a linear tail; no uncertainty estimate; distance from the evaluated points drives exploration, as in the stochastic RBF method"
 
 [[decisionRows]]
 task = "Response Surface Methods"
 context = "Smooth, low-dimensional objectives, when an interpretable model is wanted"
-purpose = "Fits a full quadratic by least squares and moves to its minimum within a region around the best point"
+purpose = "Fits a full quadratic by least squares and moves to its minimum among Gaussian candidates around the best point"
 
 [[decisionRows]]
 task = "Kriging"
@@ -144,7 +163,7 @@ purpose = "Gaussian-process interpolant with a length scale chosen by marginal l
 
 [[decisionRows]]
 task = "Radial Basis Functions"
-context = "Moderate dimensions and budgets; fast to refit"
+context = "Expensive multimodal objectives without derivatives, including higher-dimensional ones"
 purpose = "Cubic RBF interpolant with a linear tail; the next point balances a low prediction against distance from evaluated points (stochastic RBF)"
 
 [[inputs]]
@@ -187,8 +206,8 @@ default = "40"
 
 [[inputs]]
 id = "radius"
-label = "Region Size"
-tooltip = "Size of the region around the best point in which the quadratic is minimised, as a fraction of the box."
+label = "Candidate Spread"
+tooltip = "Standard deviation of the Gaussian candidate points around the best point, as a fraction of the box width in each variable. The next point is the candidate with the lowest value of the quadratic."
 default = "0.2"
 models = ["rsm"]
 newRow = true
@@ -240,7 +259,7 @@ unit(x, lb, ub) = (x .- lb) ./ (ub .- lb)  # the box mapped to [0, 1]^n
 # candidate points: uniform in the box and Gaussian around the best point
 candidates(xb, lb, ub, r; k=500) = [[lb .+ rand(length(lb)) .* (ub .- lb) for _ in 1:k];
                                     [clamp.(xb .+ r .* (ub .- lb) .* randn(length(lb)), lb, ub) for _ in 1:k]]
-RADIUS = {{radius}}  # region around the best point
+RADIUS = {{radius}}  # standard deviation of the candidates, as a fraction of the box
 
 features(z) = [1.0; z; [z[i] * z[j] for i in eachindex(z) for j in i:length(z)]]  # full quadratic
 function fit(X, y, lb, ub)
@@ -566,7 +585,7 @@ label = "Solution Summary"
 desc = "Each variable of the best point with its bounds, and the model's own settings"
 code = '''
 (variables = [(variable = i, value = x_best[i], lower = lb[i], upper = ub[i]) for i in eachindex(x_best)],
-{{?model=rsm}} quadratic_coefficients = round.(res.model.coefficients, sigdigits=4), region = RADIUS,
+{{?model=rsm}} quadratic_coefficients = round.(res.model.coefficients, sigdigits=4), candidate_spread = RADIUS,
 {{?model=kriging}} length_scale = res.model.length_scale,
  best_value = f_best, initial_samples = n0, guided_evaluations = budget)
 '''
@@ -586,9 +605,9 @@ score(P) = (yt = f.(P); yp = res.model.mean.(P); (rmse = sqrt(mean(abs2, yp .- y
 [[actionGroups.actions]]
 id = "surrogate-guide"
 label = "Surrogate Guide"
-desc = "When to use a response surface, Kriging or radial basis functions"
+desc = "How each surrogate is fitted and how it chooses the next point"
 code = '''
-[(surrogate = "Response surface (quadratic)", best_for = "smooth, nearly quadratic objectives in low dimension", cost = "needs at least (n + 1)(n + 2) / 2 points", uncertainty = false),
- (surrogate = "Kriging (Gaussian process)", best_for = "very expensive objectives and small budgets; principled exploration via expected improvement", cost = "cubic in the number of points", uncertainty = true),
- (surrogate = "Radial basis functions", best_for = "moderate dimensions and budgets; robust default", cost = "cubic in the number of points, but no hyperparameters", uncertainty = false)]
+[(surrogate = "Response surface (quadratic)", fit = "least squares, (n + 1)(n + 2) / 2 coefficients", tuned = "nothing", next_point = "lowest prediction among Gaussian candidates around the best point", uncertainty = false),
+ (surrogate = "Kriging (Gaussian process)", fit = "interpolant, squared-exponential kernel", tuned = "length scale, by marginal likelihood", next_point = "largest expected improvement", uncertainty = true),
+ (surrogate = "Radial basis functions", fit = "interpolant, cubic radial functions plus a linear tail", tuned = "nothing", next_point = "weighted score of the prediction and the distance from evaluated points", uncertainty = false)]
 '''

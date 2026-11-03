@@ -18,7 +18,7 @@ where Φᵢⱼ = ‖zᵢ − zⱼ‖³ and P has a column of ones and the coordi
 
 [Jones, Schonlau and Welch (1998)](#ref-JSW1998a) describe the thin-plate spline as a linear combination of basis functions that include polynomial terms and terms of the form φ(‖x − xᵢ‖), with φ(t) = t² log t, and show that the DACE predictor can also be written as a combination of basis functions, one per data point, that interpolates the data. The panel's interpolant has the same structure with φ(t) = t³.
 
-They point to the difference between the two: the basis functions of the spline are fixed in advance, while those of the DACE predictor depend on correlation parameters tuned to the data by maximum likelihood. The panel's radial basis surrogate has no parameter to tune, which **Surrogate Guide** lists as no hyperparameters.
+They point to the difference between the two: the basis functions of the spline are fixed in advance, while those of the DACE predictor depend on correlation parameters tuned to the data by maximum likelihood. The panel's radial basis surrogate has no parameter to tune, and **Surrogate Guide** lists nothing tuned for it.
 
 ## Stochastic response surfaces
 
@@ -44,7 +44,7 @@ The surrogate has no standard error: `sd = x -> 0.0`. Exploration in the score c
 
 ## In the panel
 
-**Leave-One-Out Error** and **Model Accuracy** check the interpolant away from the evaluated points. **Compare with Surrogates.jl** fits the RadialBasis surrogate of Surrogates.jl, with its own defaults, to the same points.
+**Leave-One-Out Error** and **Model Accuracy** check the interpolant away from the evaluated points. **Compare with Surrogates.jl** fits the RadialBasis surrogate of Surrogates.jl, by [SciML Contributors (2026)](#ref-SMLC2026a), with its own defaults, to the same points.
 
 [Forrester, Sóbester and Keane (2008)](#ref-FSK2008a) treat radial basis function models in their chapter on constructing a surrogate, for noise-free and for noisy data, beside polynomial models, Kriging and support vector regression.
 
@@ -55,6 +55,8 @@ The surrogate has no standard error: `sd = x -> 0.0`. Exploration in the score c
 <a id="ref-JSW1998a"></a>Jones, D. R., Schonlau, M., & Welch, W. J. (1998). Efficient Global Optimization of Expensive Black-Box Functions. *Journal of Global Optimization* 13(4), 455-492. [doi:10.1023/A:1008306431147](https://doi.org/10.1023/A:1008306431147)
 
 <a id="ref-RS2007a"></a>Regis, R. G., & Shoemaker, C. A. (2007). A Stochastic Radial Basis Function Method for the Global Optimization of Expensive Functions. *INFORMS Journal on Computing* 19(4), 497-509. [doi:10.1287/ijoc.1060.0182](https://doi.org/10.1287/ijoc.1060.0182)
+
+<a id="ref-SMLC2026a"></a>SciML Contributors (2026). Surrogates.jl: Surrogate Modeling and Optimization for Scientific Machine Learning. [doi:10.5281/zenodo.12571718](https://doi.org/10.5281/zenodo.12571718)
 
 ## See Also
 

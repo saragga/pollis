@@ -19,7 +19,7 @@ When to use a surrogate, which of the panel's three to choose, and how to split 
 |---|---|---|
 | **Response Surface Methods** | Smooth, low-dimensional objectives, when an interpretable model is wanted | [Forrester, Sóbester and Keane (2008)](#ref-FSK2008a), polynomial models |
 | **Kriging** | Expensive black boxes with few evaluations, where uncertainty should guide sampling | [Sacks, Welch, Mitchell and Wynn (1989)](#ref-SWMW1989a), [Jones, Schonlau and Welch (1998)](#ref-JSW1998a) |
-| **Radial Basis Functions** | Moderate dimensions and budgets | [Regis and Shoemaker (2007)](#ref-RS2007a) |
+| **Radial Basis Functions** | Expensive multimodal objectives without derivatives, including higher-dimensional ones | [Regis and Shoemaker (2007)](#ref-RS2007a) |
 
 [Forrester, Sóbester and Keane (2008)](#ref-FSK2008a) give a section to the question of which surrogate to use for which purpose. [Jones, Schonlau and Welch (1998)](#ref-JSW1998a) compare, on the Branin function with 21 points, a DACE surface, a general quadratic and a thin-plate spline, and find the DACE surface the closest to the true contours.
 
@@ -27,16 +27,16 @@ When to use a surrogate, which of the panel's three to choose, and how to split 
 
 Only **Kriging** gives a predictive standard deviation, and with it the expected improvement. [Sacks, Welch, Mitchell and Wynn (1989)](#ref-SWMW1989a) note that modelling the output as a stochastic process makes estimates of the uncertainty of predictions available, and [Jones, Schonlau and Welch (1998)](#ref-JSW1998a) build the balance between local and global search on that uncertainty.
 
-**Response Surface Methods** and **Radial Basis Functions** have no uncertainty estimate. The response surface searches near the best point within **Region Size**; the radial basis surrogate uses the distance from the evaluated points in place of an uncertainty, as [Regis and Shoemaker (2007)](#ref-RS2007a) propose.
+**Response Surface Methods** and **Radial Basis Functions** have no uncertainty estimate. The response surface searches among Gaussian candidates around the best point, with standard deviation **Candidate Spread**; the radial basis surrogate uses the distance from the evaluated points in place of an uncertainty, as [Regis and Shoemaker (2007)](#ref-RS2007a) propose.
 
 ## Design and budget
 
 | Setting | Default | Guidance | Source |
 |---|---|---|---|
 | **Initial Samples** | 10 | About 10k points in k dimensions for the initial Kriging design | [Jones, Schonlau and Welch (1998)](#ref-JSW1998a) |
-| **Initial Samples**, quadratic | 10 | At least (n + 1)(n + 2)/2, the number of quadratic coefficients | **Surrogate Guide** |
+| **Initial Samples**, quadratic | 10 | At least (n + 1)(n + 2)/2, the number of quadratic coefficients | The panel's code |
 | **Evaluations** | 40 | Until the expected improvement drops under 1% of the best value, in EGO | [Jones, Schonlau and Welch (1998)](#ref-JSW1998a) |
-| **Region Size** | 0.2 | Spread of the quadratic's candidates around the best point, as a fraction of the box | The panel's code |
+| **Candidate Spread** | 0.2 | Standard deviation of the quadratic's candidates around the best point, as a fraction of the box | The panel's code |
 
 **Sample Size Sensitivity** and **Budget Sensitivity** show, for the current objective, how the best value changes with the design size at a fixed total and with the number of guided evaluations.
 

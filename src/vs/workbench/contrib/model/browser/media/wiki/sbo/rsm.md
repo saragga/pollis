@@ -18,7 +18,7 @@ with 1 + n + n(n + 1)/2 coefficients: a constant, the linear terms, the squares 
 
 ## The next point
 
-`acquire` draws 1 000 points from a normal distribution centred at the best evaluated point, with standard deviation **Region Size** times the width of the box in each variable, clamps them to the box, and returns the one with the lowest predicted value.
+`acquire` draws 1 000 points from a normal distribution centred at the best evaluated point, with standard deviation **Candidate Spread** times the width of the box in each variable, clamps them to the box, and returns the one with the lowest predicted value.
 
 [Jones, Schonlau and Welch (1998)](#ref-JSW1998a) describe the simplest way to use a response surface for optimisation: fit a surface and find its minimum. They show that the process, even when iterated, can lead to a local minimum, because it puts all the emphasis on exploiting the predictor. The Gaussian candidates keep each step near the best point, and the new evaluation changes the fit at the next iteration.
 
@@ -36,13 +36,13 @@ In a regression, [Jones, Schonlau and Welch (1998)](#ref-JSW1998a) note, the coe
 
 ## The number of points
 
-The quadratic has (n + 1)(n + 2)/2 coefficients: 6 in two dimensions, 10 in three, 21 in five, 66 in ten. **Surrogate Guide** gives the same number as the minimum design; with the default **Initial Samples**, 10, the first fit has enough points for n ≤ 3.
+The quadratic has (n + 1)(n + 2)/2 coefficients: 6 in two dimensions, 10 in three, 21 in five, 66 in ten. **Surrogate Guide** gives the same number of coefficients; with the default **Initial Samples**, 10, the first fit has enough points for n ≤ 3.
 
 [Jones, Schonlau and Welch (1998)](#ref-JSW1998a) note that flexible functional forms have many parameters, so that many function evaluations are needed to estimate them. The count of quadratic terms grows with the square of n.
 
-## Region Size
+## Candidate Spread
 
-**Region Size**, 0.2 by default, is the standard deviation of the Gaussian candidates as a fraction of the box. A smaller value keeps the next point closer to the best one; a larger value lets the quadratic's minimum be sought further away.
+**Candidate Spread**, 0.2 by default, is the standard deviation of the Gaussian candidates as a fraction of the box. A smaller value keeps the next point closer to the best one; a larger value lets the quadratic's minimum be sought further away.
 
 **Exploration Check** shows the spread of the guided points that results, and **Convergence Trace** shows whether the best value keeps improving.
 

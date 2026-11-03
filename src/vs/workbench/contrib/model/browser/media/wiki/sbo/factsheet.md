@@ -18,7 +18,7 @@ All three work in the unit box: every variable is mapped to [0, 1] by (x − low
 |---|---|
 | Initial design | Latin hypercube with one point per stratum in every variable |
 | Candidates | 500 uniform in the box and 500 Gaussian around the best point, clamped to the box |
-| Spread of the Gaussian candidates | 0.1 of the box for **Kriging** and **Radial Basis Functions**; **Region Size** for **Response Surface Methods** |
+| Spread of the Gaussian candidates | 0.1 of the box for **Kriging** and **Radial Basis Functions**; **Candidate Spread** for **Response Surface Methods** |
 | Seed | 1 for the main run |
 | Result | Best evaluated point, its value, the number of evaluations and the trace of the best value |
 
@@ -33,7 +33,7 @@ The response surface uses only the Gaussian candidates; the other two use both s
 | **Lower Bounds**, **Upper Bounds** | fill(−2.0, n), fill(2.0, n) | The search box |
 | **Initial Samples** | 10 | Points of the Latin-hypercube design |
 | **Evaluations** | 40 | Surrogate-guided evaluations after the design |
-| **Region Size** | 0.2 | Response surface only: spread of the candidates around the best point, as a fraction of the box |
+| **Candidate Spread** | 0.2 | Response surface only: standard deviation of the candidates around the best point, as a fraction of the box |
 
 ## Actions
 
@@ -43,7 +43,7 @@ The response surface uses only the Gaussian candidates; the other two use both s
 | Diagnose | **Leave-One-Out Error**, **Exploration Check**, **Sample Size Sensitivity** | Cross-validated error; spread of the guided points; best value for other design sizes |
 | Predict | **Best Solution**, **Multi-Start**, **Local Refinement** | Best point and prediction there; three seeds; Nelder–Mead polish with up to 100 evaluations |
 | Compare | **Compare with Surrogates.jl**, **Budget Sensitivity**, **Compare with Direct Search** | Holdout error against Surrogates.jl; best value for other budgets; random search and Nelder–Mead |
-| Interpret | **Solution Summary**, **Model Accuracy**, **Surrogate Guide** | Variables and settings; RMSE and R² on the box and near the best point; a summary table |
+| Interpret | **Solution Summary**, **Model Accuracy**, **Surrogate Guide** | Variables and settings; RMSE and R² on the box and near the best point; how each surrogate is fitted and chooses the next point |
 
 ## Further reading
 

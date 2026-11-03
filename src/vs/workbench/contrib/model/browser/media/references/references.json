@@ -10891,17 +10891,20 @@
 			"type": "book",
 			"title": "Engineering Design via Surrogate Modelling: A Practical Guide",
 			"authors": [
-				"Forrester, Alexander I.J.",
-				"Sobester, Andras",
+				"Forrester, Alexander I. J.",
+				"Sóbester, András",
 				"Keane, Andy J."
 			],
 			"author_kind": "persons",
 			"authors_complete": true,
 			"year": 2008,
 			"publisher": "Wiley",
+			"isbn": "9780470060681",
+			"doi": "10.1002/9780470770801",
 			"legacy_key": "forrester2008",
-			"source": "manual",
-			"checked": false,
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
 			"open_access": false
 		},
 		{
@@ -17587,9 +17590,14 @@
 			"authors_complete": true,
 			"year": 2001,
 			"journal": "Journal of Global Optimization",
+			"volume": "21",
+			"number": "4",
+			"pages": "345-383",
+			"doi": "10.1023/A:1012771025575",
 			"legacy_key": "jones2001",
-			"source": "manual",
-			"checked": false,
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
 			"open_access": false
 		},
 		{
@@ -30878,6 +30886,34 @@
 			"open_access": true
 		},
 		{
+			"key": "SMLC2026a",
+			"type": "misc",
+			"title": "Surrogates.jl: Surrogate Modeling and Optimization for Scientific Machine Learning",
+			"authors": [
+				"SciML Contributors"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2026,
+			"doi": "10.5281/zenodo.12571718",
+			"url": "https://github.com/SciML/Surrogates.jl",
+			"abstract": "Surrogate modeling and optimization for scientific machine learning (SciML)",
+			"abstract_source": "github",
+			"keywords": [
+				"surrogate",
+				"surrogate-based-optimization",
+				"surrogate-models",
+				"optimization",
+				"julia",
+				"sciml"
+			],
+			"keywords_source": "github",
+			"source": "datacite",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "SMLJA2015a",
 			"type": "misc",
 			"title": "High-Dimensional Continuous Control Using Generalized Advantage Estimation",
@@ -32034,9 +32070,16 @@
 			"authors_complete": true,
 			"year": 1989,
 			"journal": "Statistical Science",
+			"volume": "4",
+			"number": "4",
+			"pages": "409-423",
+			"doi": "10.1214/ss/1177012413",
+			"abstract": "Many scientific phenomena are now investigated by complex computer models or codes. A computer experiment is a number of runs of the code with various inputs. A feature of many computer experiments is that the output is deterministic--rerunning the code with the same inputs gives identical observations. Often, the codes are computationally expensive to run, and a common objective of an experiment is to fit a cheaper predictor of the output to the data. Our approach is to model the deterministic output as the realization of a stochastic process, thereby providing a statistical basis for designing experiments (choosing the inputs) for efficient prediction. With this model, estimates of uncertainty of predictions are also available. Recent work in this area is reviewed, a number of applications are discussed, and we demonstrate our methodology with an example.",
+			"abstract_source": "crossref",
 			"legacy_key": "sacks1989",
-			"source": "manual",
-			"checked": false,
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
 			"open_access": false
 		},
 		{
@@ -52347,7 +52390,8 @@
 				"SWMW1989a",
 				"JSW1998a",
 				"Jon2001a",
-				"RS2007a"
+				"RS2007a",
+				"SMLC2026a"
 			]
 		},
 		{
