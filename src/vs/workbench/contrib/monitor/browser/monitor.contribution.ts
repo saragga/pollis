@@ -45,7 +45,7 @@ class AlertsStatusBar extends Disposable implements IWorkbenchContribution {
 		const tooltip = unread === 1 ? localize('alerts.unreadOne', "1 alert fired, not read yet") : localize('alerts.unreadMany', "{0} alerts fired, not read yet", unread);
 		const properties = {
 			name: localize('alerts.statusName', "Pollis Alerts"),
-			text: `$(bell-dot) ${unread}`,
+			text: `$(radio-tower) ${unread}`,
 			ariaLabel: tooltip,
 			tooltip,
 			command: SHOW_FIRED_ALERTS_COMMAND_ID,

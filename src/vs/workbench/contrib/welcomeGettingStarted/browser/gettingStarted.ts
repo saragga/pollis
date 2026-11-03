@@ -124,6 +124,8 @@ const JULIA_INSTALLED_KEY = 'julia.juliaInstalled';
 const JULIA_REPL_VERSION_KEY = 'julia.replVersion';
 // Set by the Julia extension while it compiles stale packages in the background, at the start of a session.
 const JULIA_PRECOMPILING_KEY = 'julia.precompiling';
+// Set by the Julia extension: whether juliaup manages the Julia it found, so that `juliaup update` updates it.
+const JULIA_JULIAUP_MANAGED_KEY = 'julia.juliaupManaged';
 const DISMISSED_ANNOUNCEMENTS_KEY = 'pollis.welcome.dismissedReleases';
 // Pollis: the tab of the Alerts and RSS section chosen last
 const MONITOR_TAB_KEY = 'pollis.welcome.monitorTab';
@@ -447,6 +449,11 @@ export class GettingStartedPage extends EditorPane {
 			case 'installJulia': {
 				// Pollis: the Julia extension asks how to install Julia (juliaup download, a custom command or a path).
 				this.commandService.executeCommand('language-julia.retriggerInstallation');
+				break;
+			}
+			case 'updateJulia': {
+				// Pollis: the Julia extension runs `juliaup update` in a terminal, then offers to restart the Julia REPL.
+				this.commandService.executeCommand('language-julia.updateJulia');
 				break;
 			}
 			case 'setJuliaPath': {
@@ -1258,7 +1265,7 @@ export class GettingStartedPage extends EditorPane {
 		}));
 		// The status line shows the version of Julia once its REPL has started.
 		this.categoriesSlideDisposables.add(this.contextService.onDidChangeContext(e => {
-			if (e.affectsSome(new Set([JULIA_INSTALLED_KEY, JULIA_REPL_VERSION_KEY, JULIA_PRECOMPILING_KEY]))) {
+			if (e.affectsSome(new Set([JULIA_INSTALLED_KEY, JULIA_REPL_VERSION_KEY, JULIA_PRECOMPILING_KEY, JULIA_JULIAUP_MANAGED_KEY]))) {
 				renderAlerts();
 			}
 			if (e.affectsSome(new Set([JULIA_REPL_VERSION_KEY]))) {
@@ -1432,8 +1439,10 @@ export class GettingStartedPage extends EditorPane {
 
 	/**
 	 * Pollis: announces a release of Julia or of a package Pollis relies on, newer than the one installed, until it is dismissed.
+	 * A release of Julia can be installed from it when juliaup manages the Julia the user has.
 	 */
 	private buildReleaseAnnouncement(release: IPollisRelease): HTMLElement {
+		const canUpdate = release.name === 'Julia' && this.contextService.getContextKeyValue<boolean>(JULIA_JULIAUP_MANAGED_KEY) === true;
 		return $('.pollis-alert.info', { role: 'status' },
 			$('span.pollis-alert-icon.codicon.codicon-broadcast'),
 			$('.pollis-alert-body', {},
@@ -1441,6 +1450,7 @@ export class GettingStartedPage extends EditorPane {
 				$('p.pollis-alert-description', {}, localize('pollis.releaseInstalled', "You have {0}.", release.installed)),
 				$('.pollis-alert-actions', {},
 					$('button.button-link', { 'x-dispatch': `openLink:${release.url}` }, localize('pollis.releaseNotes', "Release Notes")),
+					...(canUpdate ? [$('button.button-link', { 'x-dispatch': 'updateJulia' }, localize('pollis.updateJulia', "Update Julia"))] : []),
 				),
 			),
 			// The icon is a span inside the button: a button's own font would replace the icon font.

@@ -7,9 +7,10 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const watch = process.platform === 'win32' ? require('./watch-win32.ts').default : require('vscode-gulp-watch');
 
-// The temporary file of `sed -i` on macOS, `.!PID!name`: it is gone before vscode-gulp-watch reads it, and that failed read ends the process
-const sedTemporaryFile = /[\\/]\.!\d+![^\\/]*$/;
+// Temporary files that are gone before vscode-gulp-watch reads them, a failed read that ends the process:
+// `.!PID!name` of `sed -i` on macOS, and `name.tmp.PID.HEX` of tools that write a file and rename it over the original
+const temporaryFile = /[\\/](?:\.!\d+![^\\/]*|[^\\/]+\.tmp\.\d+\.[0-9a-f]+)$/;
 
 export default function (pattern: any, options?: any): ReturnType<typeof watch> {
-	return watch(pattern, { ignored: sedTemporaryFile, ...options });
+	return watch(pattern, { ignored: temporaryFile, ...options });
 }

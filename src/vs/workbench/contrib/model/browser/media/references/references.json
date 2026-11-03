@@ -50371,7 +50371,7 @@
 		},
 		{
 			"id": "dstats",
-			"title": "Descriptive Statistics",
+			"title": "Descriptive and Online Statistics",
 			"description": "Summary · Frequency · Correlation",
 			"commands": [
 				"chiara.explore.dstats"

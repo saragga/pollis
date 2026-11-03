@@ -1039,7 +1039,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 
 MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 	group: '3_explore',
-	command: { id: DSTATS_ID, title: localize('eda.ds', 'Descriptive Statistics') },
+	command: { id: DSTATS_ID, title: localize('eda.ds', 'Descriptive and Online Statistics') },
 	order: 2,
 }); // StatsBase.jl + FreqTables.jl + Statistics.jl
 

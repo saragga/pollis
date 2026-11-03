@@ -1,10 +1,10 @@
-# Descriptive Statistics Webview Configuration
+# Descriptive and Online Statistics Webview Configuration
 # This is the declarative source for the webview. The build script generates:
 # - src/vs/workbench/contrib/model/browser/webviews/dstats.data.ts
 # Run: npm run gulp compile-toml
 
 [meta]
-title = "Descriptive Statistics"
+title = "Descriptive and Online Statistics"
 viewType = "pollis.dstats"
 defaultModel = "summ"
 

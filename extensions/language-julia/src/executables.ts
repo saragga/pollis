@@ -404,6 +404,28 @@ export class ExecutableFeature {
                     throw err
                 }
             }),
+            // POLLIS: updates the juliaup channels to their latest versions, for the welcome page's announcement
+            // of a newer Julia; the Julia REPL runs the new version once it restarts.
+            registerCommand('language-julia.updateJulia', async () => {
+                try {
+                    const juliaup = await this.getJuliaupExecutable(false)
+                    await juliaup.run(['update'], { show: true })
+                } catch (err) {
+                    if (err instanceof JuliaNotFoundError) {
+                        // Without juliaup, or the update failed in the task terminal, which says so.
+                        return
+                    }
+                    throw err
+                }
+                const restart = 'Restart Julia REPL'
+                const choice = await vscode.window.showInformationMessage(
+                    'Julia is updated. The Julia REPL runs the new version once it restarts.',
+                    restart
+                )
+                if (choice === restart) {
+                    await vscode.commands.executeCommand('language-julia.restartREPL')
+                }
+            }),
             registerCommand('language-julia.showExecutableOutput', async () => {
                 this.outputChannel.show()
             })
@@ -440,6 +462,7 @@ export class ExecutableFeature {
             if (exe) {
                 this.outputChannel.appendLine(outputPrefix + `using '${exe.command}' (v${exe.version}) as executable`)
                 this.setJuliaInstalled(true)
+                void this.setJuliaupManaged(exe)
 
                 return exe
             }
@@ -451,6 +474,7 @@ export class ExecutableFeature {
                 const exe = new JuliaExecutable(option, version)
                 this.outputChannel.appendLine(outputPrefix + `using '${exe.command}' (v${exe.version}) as executable`)
                 this.setJuliaInstalled(true)
+                void this.setJuliaupManaged(exe)
 
                 return exe
             } else {
@@ -492,6 +516,7 @@ export class ExecutableFeature {
                 const channel = await juliaup.getChannel(configuredJuliaupChannel)
                 this.outputChannel.appendLine(outputPrefix + `using juliaup channel ${channel.name}`)
                 this.setJuliaInstalled(true)
+                vscode.commands.executeCommand('setContext', 'julia.juliaupManaged', true)
 
                 return new JuliaExecutable(channel)
             } catch {
@@ -506,6 +531,7 @@ export class ExecutableFeature {
                 const channel = await juliaup.getDefaultChannel()
                 this.outputChannel.appendLine(outputPrefix + `using default juliaup channel ${channel.name}`)
                 this.setJuliaInstalled(true)
+                vscode.commands.executeCommand('setContext', 'julia.juliaupManaged', true)
 
                 return new JuliaExecutable(channel)
             } catch {
@@ -728,6 +754,18 @@ export class ExecutableFeature {
 
     public setJuliaupInstalled(isInstalled: boolean) {
         vscode.commands.executeCommand('setContext', 'julia.juliaupInstalled', isInstalled)
+    }
+
+    /**
+     * POLLIS: sets `julia.juliaupManaged`, whether `juliaup update` updates the Julia `exe`: `julia` on the PATH while
+     * juliaup is installed (juliaup's launcher), or a path inside juliaup's folders.
+     */
+    private async setJuliaupManaged(exe: JuliaExecutable) {
+        const juliaupFolders = [this.installRoot(), path.join(os.homedir(), '.julia', 'juliaup')]
+        const managed =
+            (await this.hasJuliaup()) &&
+            (!path.isAbsolute(exe.command) || juliaupFolders.some((folder) => exe.command.startsWith(folder + path.sep)))
+        vscode.commands.executeCommand('setContext', 'julia.juliaupManaged', managed)
     }
 
     // Impl

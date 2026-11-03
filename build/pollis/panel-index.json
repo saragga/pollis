@@ -1752,7 +1752,10 @@
 			],
 			"packages": [
 				"TopicModelsVB.jl",
-				"PollisDatasets.jl"
+				"PollisDatasets.jl",
+				"Graphs.jl",
+				"GraphPlot.jl",
+				"Plots.jl"
 			]
 		},
 		{
@@ -2444,13 +2447,13 @@
 		},
 		{
 			"id": "dstats",
-			"title": "Descriptive Statistics",
+			"title": "Descriptive and Online Statistics",
 			"source": "pollis",
 			"commands": [
 				{
 					"id": "chiara.explore.dstats",
 					"menuTitles": [
-						"Descriptive Statistics"
+						"Descriptive and Online Statistics"
 					]
 				}
 			],
@@ -4269,7 +4272,9 @@
 				"lda/tutorial-01-lda.ipynb"
 			],
 			"packages": [
-				"TextAnalysis.jl"
+				"TextAnalysis.jl",
+				"PollisDatasets.jl",
+				"Plots.jl"
 			]
 		},
 		{
@@ -4739,7 +4744,8 @@
 			"packages": [
 				"TextAnalysis.jl",
 				"LinearAlgebra.jl",
-				"PollisDatasets.jl"
+				"PollisDatasets.jl",
+				"Plots.jl"
 			]
 		},
 		{
@@ -5231,7 +5237,8 @@
 				"mpc/tutorial-04-disturbance.ipynb"
 			],
 			"packages": [
-				"ModelPredictiveControl.jl"
+				"ModelPredictiveControl.jl",
+				"ControlSystemsBase.jl"
 			]
 		},
 		{
@@ -5311,7 +5318,8 @@
 				"mpec/tutorial-01-mpec.ipynb"
 			],
 			"packages": [
-				"Complementarity.jl",
+				"JuMP.jl",
+				"Ipopt.jl",
 				"PATHSolver.jl"
 			]
 		},
@@ -5599,7 +5607,8 @@
 			],
 			"packages": [
 				"NetworkDynamics.jl",
-				"Graphs.jl"
+				"Graphs.jl",
+				"OrdinaryDiffEq.jl"
 			]
 		},
 		{
@@ -5728,12 +5737,12 @@
 				"ngo/tutorial-06-am.ipynb"
 			],
 			"packages": [
-				"RobustShortestPath.jl",
 				"Graphs.jl",
-				"SimpleWeightedGraphs.jl",
 				"GraphsFlows.jl",
-				"GraphsOptim.jl",
-				"Hungarian.jl"
+				"Hungarian.jl",
+				"JuMP.jl",
+				"HiGHS.jl",
+				"Plots.jl"
 			]
 		},
 		{
@@ -6005,7 +6014,15 @@
 				"node/tutorial-03-ude.ipynb"
 			],
 			"packages": [
-				"DiffEqFlux.jl"
+				"DiffEqFlux.jl",
+				"OrdinaryDiffEq.jl",
+				"SciMLSensitivity.jl",
+				"Lux.jl",
+				"ComponentArrays.jl",
+				"Optimization.jl",
+				"OptimizationOptimisers.jl",
+				"Enzyme.jl",
+				"Plots.jl"
 			]
 		},
 		{
@@ -6165,7 +6182,20 @@
 				"PEtab.jl",
 				"StructuralIdentifiability.jl",
 				"LikelihoodProfiler.jl",
-				"AdvancedHMC.jl"
+				"AdvancedHMC.jl",
+				"Catalyst.jl",
+				"OrdinaryDiffEqRosenbrock.jl",
+				"Fides.jl",
+				"Optim.jl",
+				"OptimizationLBFGSB.jl",
+				"SciMLSensitivity.jl",
+				"Distributions.jl",
+				"Bijectors.jl",
+				"LogDensityProblems.jl",
+				"LogDensityProblemsAD.jl",
+				"MCMCChains.jl",
+				"StatsPlots.jl",
+				"Plots.jl"
 			]
 		},
 		{
@@ -6279,7 +6309,8 @@
 				"pbm/tutorial-04-sms.ipynb"
 			],
 			"packages": [
-				"Metaheuristics.jl"
+				"Metaheuristics.jl",
+				"Plots.jl"
 			]
 		},
 		{
@@ -6357,7 +6388,7 @@
 				"pgm/tutorial-03-trpo.ipynb"
 			],
 			"packages": [
-				"ReinforcementLearning.jl"
+				"Plots.jl"
 			]
 		},
 		{
@@ -6676,7 +6707,8 @@
 				"ql/tutorial-02-dqn.ipynb"
 			],
 			"packages": [
-				"ReinforcementLearning.jl"
+				"Flux.jl",
+				"Plots.jl"
 			]
 		},
 		{
@@ -7079,7 +7111,8 @@
 			"packages": [
 				"JuMP.jl",
 				"HiGHS.jl",
-				"Clarabel.jl"
+				"Clarabel.jl",
+				"Plots.jl"
 			]
 		},
 		{
@@ -7432,7 +7465,9 @@
 				"rxinfer/problem-13-universal-mixtures.ipynb"
 			],
 			"packages": [
-				"RxInfer.jl"
+				"RxInfer.jl",
+				"GLMakie.jl",
+				"Turing.jl"
 			]
 		},
 		{
@@ -7548,7 +7583,10 @@
 				"sbo/tutorial-03-rbf.ipynb"
 			],
 			"packages": [
-				"Surrogates.jl"
+				"Surrogates.jl",
+				"SpecialFunctions.jl",
+				"Optim.jl",
+				"Plots.jl"
 			]
 		},
 		{
@@ -7626,7 +7664,9 @@
 			],
 			"packages": [
 				"DifferentialEquations.jl",
-				"StochasticDiffEq.jl"
+				"StochasticDiffEq.jl",
+				"StatsBase.jl",
+				"Plots.jl"
 			]
 		},
 		{
@@ -7705,7 +7745,9 @@
 				"si/tutorial-06-time-vs-freq.ipynb"
 			],
 			"packages": [
-				"ControlSystemIdentification.jl"
+				"ControlSystemIdentification.jl",
+				"ControlSystems.jl",
+				"Plots.jl"
 			]
 		},
 		{
@@ -7904,9 +7946,10 @@
 				"spro/tutorial-03-sddp.ipynb"
 			],
 			"packages": [
-				"StochasticPrograms.jl",
+				"JuMP.jl",
 				"SDDP.jl",
-				"HiGHS.jl"
+				"HiGHS.jl",
+				"Plots.jl"
 			]
 		},
 		{
@@ -8068,7 +8111,10 @@
 				"swarm/tutorial-05-gsa.ipynb"
 			],
 			"packages": [
-				"Metaheuristics.jl"
+				"Metaheuristics.jl",
+				"Optim.jl",
+				"ADTypes.jl",
+				"Plots.jl"
 			]
 		},
 		{
@@ -8425,7 +8471,9 @@
 			],
 			"packages": [
 				"MonteCarloMeasurements.jl",
-				"Distributions.jl"
+				"Distributions.jl",
+				"Measurements.jl",
+				"Plots.jl"
 			]
 		},
 		{
@@ -8499,8 +8547,10 @@
 				"vari/tutorial-02-qvi.ipynb"
 			],
 			"packages": [
-				"Complementarity.jl",
-				"PATHSolver.jl"
+				"JuMP.jl",
+				"PATHSolver.jl",
+				"LinearAlgebra.jl",
+				"Plots.jl"
 			]
 		},
 		{
