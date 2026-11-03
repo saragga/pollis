@@ -32,7 +32,7 @@ The extensive form is built with JuMP, presented by [Dunning, Huchette and Lubin
 | **Periods (T)** | 3 | Multistage, SDDP | Number of demand periods |
 | **SDDP Iterations** | 100 | SDDP | Iteration limit of `SDDP.train` |
 
-The tooltip of **Scenarios per Stage (S)** advises keeping S^T under about 10 000; with the defaults, the tree of the **Multistage** tab has 20³ = 8 000 paths.
+The tooltip of **Scenarios per Stage (S)** advises keeping S^T under about 20 000; with the defaults, the tree of the **Multistage** tab has 20³ = 8 000 paths.
 
 ## Actions
 
@@ -45,7 +45,7 @@ The tooltip of **Scenarios per Stage (S)** advises keeping S^T under about 10 00
 | Predict | **Out-of-Sample** | Cost distribution on fresh demand scenarios |
 | Predict | **Stage Plan** | Mean order, sales and stock per period |
 | Compare | **Wait-and-See** | WS, RP and EEV, with EVPI = RP − WS and VSS = EEV − RP |
-| Compare | **Extensive Form vs SDDP** | Cost, first order and run time of both methods |
+| Compare | **Extensive Form vs SDDP** | Optimal cost of the extensive form, lower bound of SDDP, first order and run time |
 | Interpret | **Value of Initial Stock** | Expected cost against the initial stock, and the value of one more unit |
 | Interpret | **Critical Fractile** | Order-up-to levels against the newsvendor fractiles |
 
@@ -56,14 +56,11 @@ The tooltip of **Scenarios per Stage (S)** advises keeping S^T under about 10 00
 | Two-stage models | [Dantzig (1955)](#ref-Dan1955a) |
 | Scenario bundling and policy aggregation | [Rockafellar and Wets (1991)](#ref-RW1991a) |
 | SDDP | [Pereira and Pinto (1991)](#ref-PP1991a), [Dowson and Kapelevich (2021)](#ref-DK2021b) and the SDDP.jl documentation |
-| Textbooks | [Birge and Louveaux (2011)](#ref-BL2011a), [Shapiro, Dentcheva and Ruszczyński (2021)](#ref-SDR2021a) |
 | Software | [Dunning, Huchette and Lubin (2017)](#ref-DHL2017a), [Huangfu and Hall (2018)](#ref-HH2018a) |
 
 The SDDP.jl documentation includes an introductory theory tutorial that implements a simplified version of the algorithm with JuMP and HiGHS.
 
 ## References
-
-<a id="ref-BL2011a"></a>Birge, J. R., & Louveaux, F. (2011). *Introduction to Stochastic Programming* (2nd ed.). Springer. [doi:10.1007/978-1-4614-0237-4](https://doi.org/10.1007/978-1-4614-0237-4)
 
 <a id="ref-Dan1955a"></a>Dantzig, G. B. (1955). Linear Programming under Uncertainty. *Management Science* 1(3-4), 197-206. [doi:10.1287/mnsc.1.3-4.197](https://doi.org/10.1287/mnsc.1.3-4.197)
 
@@ -76,8 +73,6 @@ The SDDP.jl documentation includes an introductory theory tutorial that implemen
 <a id="ref-PP1991a"></a>Pereira, M. V. F., & Pinto, L. M. V. G. (1991). Multi-stage Stochastic Optimization Applied to Energy Planning. *Mathematical Programming* 52(1-3), 359-375. [doi:10.1007/BF01582895](https://doi.org/10.1007/BF01582895)
 
 <a id="ref-RW1991a"></a>Rockafellar, R. T., & Wets, R. J-B. (1991). Scenarios and Policy Aggregation in Optimization Under Uncertainty. *Mathematics of Operations Research* 16(1), 119-147. [doi:10.1287/moor.16.1.119](https://doi.org/10.1287/moor.16.1.119)
-
-<a id="ref-SDR2021a"></a>Shapiro, A., Dentcheva, D., & Ruszczyński, A. (2021). *Lectures on Stochastic Programming: Modeling and Theory* (3rd ed.). SIAM. [doi:10.1137/1.9781611976595](https://doi.org/10.1137/1.9781611976595)
 
 ## See Also
 

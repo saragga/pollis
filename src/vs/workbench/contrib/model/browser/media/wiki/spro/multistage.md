@@ -6,7 +6,7 @@ The **Multistage** tab extends the inventory problem to **Periods (T)** periods.
 
 Node k of period t has the parent div(k − 1, S) + 1 in period t − 1 and the demand dem[mod1(k, S)], so every node has S children, one for each sampled demand value. Period t has S^t nodes, and the tree has S^T root-to-leaf paths, each with probability 1/S^T.
 
-With the defaults, S = 20 and T = 3, the tree has 20 + 400 + 8 000 nodes and 8 000 paths. The tooltip of **Scenarios per Stage (S)** advises keeping S^T under about 10 000.
+With the defaults, S = 20 and T = 3, the tree has 20 + 400 + 8 000 nodes and 8 000 paths. The tooltip of **Scenarios per Stage (S)** advises keeping S^T under about 20 000.
 
 ## Decisions on the tree
 
@@ -18,7 +18,7 @@ The orders of the last period are fixed at 0, since nothing is ordered after the
 
 The decision table describes the tab as decisions and observations that alternate over several periods, where each decision may use only what has been observed. Writing one order per node enforces that condition: the paths that share a node share its history of demands and its decision.
 
-[Rockafellar and Wets (1991)](#ref-RW1991a) describe the alternative of working with whole scenarios, bundled at various levels to reflect the availability of information, with iterative adjustments to the decision policy that remove the dependence on hindsight. The panel's notebook on multistage inventory mentions progressive hedging.
+[Rockafellar and Wets (1991)](#ref-RW1991a) describe the alternative of working with whole scenarios, bundled at various levels to reflect the availability of information, with iterative adjustments to the decision policy that remove the dependence on hindsight.
 
 ## Size of the extensive form
 
@@ -36,15 +36,11 @@ The model has three variables, order, sales and stock, for each of the S + S² +
 
 **Stage Plan** prints, for each period from 0 to T, the mean order, sales and stock over the nodes of that period. **Decision Paths** draws the orders and the stock along 30 randomly chosen paths, seed 3.
 
-**Critical Fractile** compares the mean stock after ordering in each period, the order-up-to level, with the fractiles (p − c)/(p − c + h) for periods whose leftovers carry over and (p − c)/(p + h) for the last period, as the action description gives them. [Birge and Louveaux (2011)](#ref-BL2011a) and [Shapiro, Dentcheva and Ruszczyński (2021)](#ref-SDR2021a) each give a chapter to multistage stochastic programs.
+**Critical Fractile** compares the mean stock after ordering in each period, the order-up-to level, with the fractiles (p − c)/(p − c + h) for periods whose leftovers carry over and (p − c)/(p + h) for the last period, as the action description gives them.
 
 ## References
 
-<a id="ref-BL2011a"></a>Birge, J. R., & Louveaux, F. (2011). *Introduction to Stochastic Programming* (2nd ed.). Springer. [doi:10.1007/978-1-4614-0237-4](https://doi.org/10.1007/978-1-4614-0237-4)
-
 <a id="ref-RW1991a"></a>Rockafellar, R. T., & Wets, R. J-B. (1991). Scenarios and Policy Aggregation in Optimization Under Uncertainty. *Mathematics of Operations Research* 16(1), 119-147. [doi:10.1287/moor.16.1.119](https://doi.org/10.1287/moor.16.1.119)
-
-<a id="ref-SDR2021a"></a>Shapiro, A., Dentcheva, D., & Ruszczyński, A. (2021). *Lectures on Stochastic Programming: Modeling and Theory* (3rd ed.). SIAM. [doi:10.1137/1.9781611976595](https://doi.org/10.1137/1.9781611976595)
 
 ## See Also
 

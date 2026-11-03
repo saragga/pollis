@@ -28,7 +28,7 @@ The introductory theory tutorial explains why: when a subproblem is a linear pro
 
 ## Stagewise independence
 
-The SDDP.jl documentation states that the random variable of each node is independent of the random variables in all other nodes. The decision table of the panel names stagewise-independent uncertainty and convex costs as the context of the **SDDP** tab, and the second bullet of the panel describes stagewise independence as a Markovian condition that makes the backward pass tractable.
+The SDDP.jl documentation states that the random variable of each node is independent of the random variables in all other nodes. The decision table of the panel names stagewise-independent uncertainty and convex costs as the context of the **SDDP** tab, and [Dowson and Kapelevich (2021)](#ref-DK2021b) name stagewise independence of the random variable, with convexity of the Bellman function and continuous state variables, as the specific form under which SDDP can efficiently find an optimal policy, to within some bound.
 
 In the panel, every period draws from the same S values with equal probabilities, independently of the earlier periods, so the demand is stagewise independent in all three tabs.
 
@@ -37,6 +37,8 @@ In the panel, every period draws from the same S values with equal probabilities
 `SDDP.LinearPolicyGraph` takes a `lower_bound` on the objective; the panel sets it to −p · T · max(demand), the revenue of selling the largest demand in every period at no cost. The SDDP.jl documentation warns that the bound should not be needlessly loose, which slows convergence, but that a bound chosen too tight may cut off the feasible region and lead to a suboptimal solution.
 
 ## References
+
+<a id="ref-DK2021b"></a>Dowson, O., & Kapelevich, L. (2021). SDDP.jl: A Julia Package for Stochastic Dual Dynamic Programming. *INFORMS Journal on Computing* 33(1), 27-33. [doi:10.1287/ijoc.2020.0987](https://doi.org/10.1287/ijoc.2020.0987)
 
 <a id="ref-Dan1955a"></a>Dantzig, G. B. (1955). Linear Programming under Uncertainty. *Management Science* 1(3-4), 197-206. [doi:10.1287/mnsc.1.3-4.197](https://doi.org/10.1287/mnsc.1.3-4.197)
 

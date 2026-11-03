@@ -12,13 +12,11 @@ The choice among the three tabs rests on how decisions and observations alternat
 
 ## Two stages or several
 
-[Dantzig (1955)](#ref-Dan1955a) describes models whose activities are divided into two or more stages, with only the first-stage quantities to be determined now. When the uncertainty is revealed once and a single recourse follows, the **Two-Stage** tab applies; when orders and demands alternate, the **Multistage** and **SDDP** tabs apply.
-
-[Birge and Louveaux (2011)](#ref-BL2011a) treat two-stage recourse problems and multistage stochastic programs in separate chapters, and so do [Shapiro, Dentcheva and Ruszczyński (2021)](#ref-SDR2021a).
+[Dantzig (1955)](#ref-Dan1955a) describes models whose activities are divided into two or more stages, with only the first-stage quantities to be determined now. When the uncertainty is revealed once and a single recourse follows, the **Two-Stage** tab applies; when orders and demands alternate, the **Multistage** and **SDDP** tabs apply. [Dowson and Kapelevich (2021)](#ref-DK2021b) describe SDDP as a dynamic programming-inspired algorithm that decomposes the multistage stochastic optimisation problem in time into a series of sequential subproblems, each choosing an action to minimise the cost of the current decision plus the cost-to-go of the remaining stages.
 
 ## Extensive form or SDDP
 
-The extensive form of the **Multistage** tab has one set of variables for each of the S + S² + … + S^T nodes of the tree. The tooltip of **Scenarios per Stage (S)** advises keeping S^T under about 10 000, and the tooltip of **Periods (T)** states that the extensive form grows as S^T while SDDP grows only linearly in T.
+The extensive form of the **Multistage** tab has one set of variables for each of the S + S² + … + S^T nodes of the tree. The tooltip of **Scenarios per Stage (S)** advises keeping S^T under about 20 000, and the tooltip of **Periods (T)** states that the extensive form grows as S^T while SDDP grows only linearly in T.
 
 The SDDP.jl documentation describes its result as a policy, a set of decision rules, with a lower bound from the cuts and a statistical estimate of its cost from simulation. **Extensive Form vs SDDP** compares the two on the current inputs.
 
@@ -26,7 +24,7 @@ The SDDP.jl documentation describes its result as a policy, a set of decision ru
 
 The SDDP.jl documentation lists the assumptions of the algorithm: a finite number of nodes; finite, discrete random variables; convex problems, with linear transition functions; no infinite loops in the policy graph; and relatively complete recourse. The random variable of each node is independent of those of all other nodes.
 
-The panel's second bullet adds that, for problems with continuous state spaces and Markovian transitions, Stochastic Dynamic Programming in the Dynamic Optimisation menu is the natural alternative.
+[Dowson and Kapelevich (2021)](#ref-DK2021b) explain that traditional dynamic programming estimates the cost-to-go function at a set of discretised points, which limits it to low-dimensional problems, while SDDP approximates it with piecewise linear cuts. With stagewise independent noise, a convex cost-to-go function and continuous state variables, SDDP can efficiently find an optimal policy, to within some bound.
 
 ## Scenario count and iterations
 
@@ -42,13 +40,11 @@ For **SDDP**, **SDDP Iterations** sets the number of forward and backward passes
 
 ## References
 
-<a id="ref-BL2011a"></a>Birge, J. R., & Louveaux, F. (2011). *Introduction to Stochastic Programming* (2nd ed.). Springer. [doi:10.1007/978-1-4614-0237-4](https://doi.org/10.1007/978-1-4614-0237-4)
+<a id="ref-DK2021b"></a>Dowson, O., & Kapelevich, L. (2021). SDDP.jl: A Julia Package for Stochastic Dual Dynamic Programming. *INFORMS Journal on Computing* 33(1), 27-33. [doi:10.1287/ijoc.2020.0987](https://doi.org/10.1287/ijoc.2020.0987)
 
 <a id="ref-Dan1955a"></a>Dantzig, G. B. (1955). Linear Programming under Uncertainty. *Management Science* 1(3-4), 197-206. [doi:10.1287/mnsc.1.3-4.197](https://doi.org/10.1287/mnsc.1.3-4.197)
 
 <a id="ref-RW1991a"></a>Rockafellar, R. T., & Wets, R. J-B. (1991). Scenarios and Policy Aggregation in Optimization Under Uncertainty. *Mathematics of Operations Research* 16(1), 119-147. [doi:10.1287/moor.16.1.119](https://doi.org/10.1287/moor.16.1.119)
-
-<a id="ref-SDR2021a"></a>Shapiro, A., Dentcheva, D., & Ruszczyński, A. (2021). *Lectures on Stochastic Programming: Modeling and Theory* (3rd ed.). SIAM. [doi:10.1137/1.9781611976595](https://doi.org/10.1137/1.9781611976595)
 
 ## See Also
 

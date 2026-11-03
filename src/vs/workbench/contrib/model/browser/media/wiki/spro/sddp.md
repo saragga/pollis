@@ -35,7 +35,7 @@ The SDDP.jl documentation describes the confidence interval as an estimate for a
 
 The SDDP.jl documentation lists five assumptions: finitely many nodes; finite, discrete random variables; convex problems; no infinite loops; and relatively complete recourse. The random variable of a node is independent of those of all other nodes.
 
-The decision table names stagewise-independent uncertainty and convex costs as the context of the tab, and the panel's bullet describes stagewise independence as the Markovian condition that makes the backward pass tractable. In the tab, every stage after the first draws from the same S demand values with probability 1/S.
+The decision table names stagewise-independent uncertainty and convex costs as the context of the tab, and the panel's second bullet names stagewise independent noise, convex cost-to-go functions and continuous state variables, the form under which, [Dowson and Kapelevich (2021)](#ref-DK2021b) write, the algorithm can efficiently find an optimal policy. In the tab, every stage after the first draws from the same S demand values with probability 1/S.
 
 ## Value functions and decision rules
 

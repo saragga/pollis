@@ -3030,7 +3030,7 @@
 			"title": "Introduction to Stochastic Programming",
 			"authors": [
 				"Birge, John R.",
-				"Louveaux, Francois"
+				"Louveaux, François"
 			],
 			"author_kind": "persons",
 			"authors_complete": true,
@@ -30306,15 +30306,14 @@
 			"authors": [
 				"Shapiro, Alexander",
 				"Dentcheva, Darinka",
-				"Ruszczynski, Andrzej"
+				"Ruszczyński, Andrzej"
 			],
 			"author_kind": "persons",
 			"authors_complete": true,
 			"year": 2021,
 			"publisher": "SIAM (3rd ed.)",
-			"isbn": "9780898716870",
-			"doi": "10.1137/1.9780898718751",
-			"openalex": "W4247165901",
+			"isbn": "9781611976588",
+			"doi": "10.1137/1.9781611976595",
 			"keywords": [
 				"stochastic programming",
 				"optimization under uncertainty",
@@ -30325,7 +30324,7 @@
 			"keywords_source": "openalex",
 			"legacy_key": "shapiro2021",
 			"source": "crossref",
-			"retrieved": "2026-10-23",
+			"retrieved": "2026-11-03",
 			"checked": false,
 			"open_access": false
 		},
@@ -52606,8 +52605,6 @@
 				"DHL2017a",
 				"DK2021b",
 				"HH2018a",
-				"BL2011a",
-				"SDR2021a",
 				"Dan1955a",
 				"PP1991a",
 				"RW1991a"

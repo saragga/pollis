@@ -9,8 +9,8 @@ viewType = "pollis.spro"
 defaultModel = "ts"
 
 [[packages]]
-name = "StochasticPrograms.jl"
-github = "https://github.com/martinbiel/StochasticPrograms.jl"
+name = "JuMP.jl"
+github = "https://github.com/jump-dev/JuMP.jl"
 
 [[packages.videos]]
 title = "High Performance Computing in Julia"
@@ -25,6 +25,10 @@ github = "https://github.com/odow/SDDP.jl"
 name = "HiGHS.jl"
 github = "https://github.com/jump-dev/HiGHS.jl"
 
+[[packages]]
+name = "Plots.jl"
+github = "https://github.com/JuliaPlots/Plots.jl"
+
 [requires]
 packages = ["JuMP.jl", "HiGHS.jl", "SDDP.jl", "Plots.jl"]
 
@@ -35,19 +39,19 @@ label = ""
 name = "Two-Stage: Newsvendor"
 file = "spro/tutorial-01-two-stage.ipynb"
 bundled = true
-description = "Two-stage stochastic newsvendor problem: optimal order quantity under demand uncertainty using StochasticPrograms.jl and HiGHS"
+description = "Order before demand is known and sell once it is revealed, as one extensive-form linear program over S sampled demand values, built with JuMP and solved with HiGHS"
 
 [[notebookSections.notebooks]]
 name = "Multistage Inventory"
 file = "spro/tutorial-02-multistage.ipynb"
 bundled = true
-description = "Multistage stochastic inventory control over T periods with scenario tree generation and progressive hedging via StochasticPrograms.jl"
+description = "The same inventory problem over T periods on a scenario tree with S branches per period, solved as one extensive-form linear program"
 
 [[notebookSections.notebooks]]
 name = "SDDP: Hydro Scheduling"
 file = "spro/tutorial-03-sddp.ipynb"
 bundled = true
-description = "Hydrothermal scheduling with SDDP.jl: forward-backward pass, cutting plane convergence, and policy simulation over many stages"
+description = "The same inventory problem with SDDP.jl: training by forward and backward passes, the lower bound from the cuts, and simulation of the policy"
 
 [[wikis]]
 name = "Factsheet"
@@ -113,16 +117,6 @@ key = "HH2018a"
 
 [[references]]
 separator = true
-label = "Textbooks"
-
-[[references]]
-key = "BL2011a"
-
-[[references]]
-key = "SDR2021a"
-
-[[references]]
-separator = true
 label = "Original Papers"
 
 [[references]]
@@ -147,12 +141,12 @@ id = "sddp"
 label = "SDDP"
 
 [[bullets]]
-text = "Stochastic Programming discretises uncertainty into a finite set of scenarios or cuts and optimises decisions jointly over that representation. Unlike Stochastic Dynamic Programming"
-detail = "which solves the Bellman equation over a continuous state space and relies on Markovian structure — SP does not require the problem to be Markovian and can handle arbitrary scenario-dependent recourse."
+text = "Stochastic Programming divides decisions into stages: only the first-stage quantities are determined now"
+detail = "the later ones depend on the earlier stages and on the uncertain demands. The Two-Stage and Multistage tabs replace the demand by S equally likely values per period and solve the whole scenario tree as one linear program."
 
 [[bullets]]
-text = "Stochastic Dual Dynamic Programming (SDDP) bridges the two: it handles many-stage SPs via Benders cuts, but assumes stagewise independence"
-detail = "a Markovian condition — to make the backward pass tractable. For problems with continuous state spaces and Markovian transitions, Stochastic Dynamic Programming in the Dynamic Optimisation menu is the natural alternative."
+text = "Stochastic Dual Dynamic Programming (SDDP) decomposes the multistage problem in time into a series of subproblems"
+detail = "and approximates the cost-to-go of each stage by piecewise linear cuts, where traditional dynamic programming evaluates it at a set of discretised points. It needs stagewise independent noise, convex cost-to-go functions and continuous state variables."
 
 [[decisionRows]]
 task = "Two-Stage"
@@ -172,7 +166,7 @@ purpose = "Stochastic dual dynamic programming (SDDP.jl): forward simulations an
 [[inputs]]
 id = "S"
 label = "Scenarios per Stage (S)"
-tooltip = "Number of equally likely demand values sampled from Uniform(50, 150) for each period. The multistage tree has S^T paths, so keep S^T below about 10000."
+tooltip = "Number of equally likely demand values sampled from Uniform(50, 150) for each period. The multistage tree has S^T paths, so keep S^T below about 20 000, the limit of Extensive Form vs SDDP and Scenario Count Study."
 default = "20"
 
 [[inputs]]
@@ -542,15 +536,15 @@ ws = (cost - price) * T * mean(demand)  # with perfect information every period'
 [[actionGroups.actions]]
 id = "ef-vs-sddp"
 label = "Extensive Form vs SDDP"
-desc = "The same problem solved exactly as one extensive-form LP and approximately by SDDP: optimal cost, first order and run time"
+desc = "The same problem solved exactly as one extensive-form LP and approximately by SDDP: the optimal cost of the extensive form, the lower bound of SDDP, the first order and the run time"
 code = '''
 t_ef = @elapsed ef = S^T <= 20_000 ? solve_ef() : nothing
 t_sddp = @elapsed begin
     m = build_sddp()
     SDDP.train(m; iteration_limit = 100, print_level = 0)
 end
-[(method = "extensive form", cost = ef === nothing ? NaN : round(ef.obj, digits=2), first_order = ef === nothing ? NaN : round(ef.x0, digits=2), seconds = round(t_ef, digits=2)),
- (method = "SDDP (100 iterations)", cost = round(SDDP.calculate_bound(m), digits=2), first_order = round(SDDP.simulate(m, 1, [:ordered])[1][1][:ordered].out, digits=2), seconds = round(t_sddp, digits=2))]
+[(method = "extensive form", optimal_cost = ef === nothing ? NaN : round(ef.obj, digits=2), lower_bound = NaN, first_order = ef === nothing ? NaN : round(ef.x0, digits=2), seconds = round(t_ef, digits=2)),
+ (method = "SDDP (100 iterations)", optimal_cost = NaN, lower_bound = round(SDDP.calculate_bound(m), digits=2), first_order = round(SDDP.simulate(m, 1, [:ordered])[1][1][:ordered].out, digits=2), seconds = round(t_sddp, digits=2))]
 '''
 
 [[actionGroups]]

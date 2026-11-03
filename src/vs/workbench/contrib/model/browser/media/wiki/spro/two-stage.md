@@ -41,7 +41,7 @@ With the panel's prices, the fractile is 3/5.5, about 0.545, and `quantile(deman
 | EVPI | RP − WS | |
 | VSS | EEV − RP | |
 
-[Birge and Louveaux (2011)](#ref-BL2011a) give a chapter to the value of information and the stochastic solution, and the decision table names EVPI and VSS as outputs of the tab.
+The decision table names EVPI and VSS as outputs of the tab.
 
 ## The tab in Julia
 
@@ -55,8 +55,6 @@ m = Model(HiGHS.Optimizer)
 The model is built with JuMP, presented by [Dunning, Huchette and Lubin (2017)](#ref-DHL2017a), and solved with HiGHS. The same function `solve_ef` serves the **Multistage** tab, with T > 1; its keyword `root` fixes the first order, which **Bound Gap**, **Out-of-Sample** and **Wait-and-See** use to evaluate a given order.
 
 ## References
-
-<a id="ref-BL2011a"></a>Birge, J. R., & Louveaux, F. (2011). *Introduction to Stochastic Programming* (2nd ed.). Springer. [doi:10.1007/978-1-4614-0237-4](https://doi.org/10.1007/978-1-4614-0237-4)
 
 <a id="ref-Dan1955a"></a>Dantzig, G. B. (1955). Linear Programming under Uncertainty. *Management Science* 1(3-4), 197-206. [doi:10.1287/mnsc.1.3-4.197](https://doi.org/10.1287/mnsc.1.3-4.197)
 

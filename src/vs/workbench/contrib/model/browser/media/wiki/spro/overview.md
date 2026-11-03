@@ -43,15 +43,7 @@ In the multistage tabs, each decision may use only the demands observed so far, 
 
 The extensive form of the panel builds the same condition into the tree: every node has one order, shared by all the paths that pass through it.
 
-## Textbooks
-
-[Birge and Louveaux (2011)](#ref-BL2011a) give chapters to two-stage recourse problems, multistage stochastic programs, the value of information and the stochastic solution, and Monte Carlo methods. [Shapiro, Dentcheva and Ruszczyński (2021)](#ref-SDR2021a) give chapters to two-stage problems, multistage problems, statistical inference and computational methods, among others.
-
-The tabs of the panel follow the same order as those chapters: the **Two-Stage** tab for two-stage recourse, the **Multistage** tab for a scenario tree, and the **SDDP** tab for a decomposition of the multistage problem by stages. The **Wait-and-See** action computes the value of perfect information and of the stochastic solution.
-
 ## References
-
-<a id="ref-BL2011a"></a>Birge, J. R., & Louveaux, F. (2011). *Introduction to Stochastic Programming* (2nd ed.). Springer. [doi:10.1007/978-1-4614-0237-4](https://doi.org/10.1007/978-1-4614-0237-4)
 
 <a id="ref-Dan1955a"></a>Dantzig, G. B. (1955). Linear Programming under Uncertainty. *Management Science* 1(3-4), 197-206. [doi:10.1287/mnsc.1.3-4.197](https://doi.org/10.1287/mnsc.1.3-4.197)
 
@@ -64,8 +56,6 @@ The tabs of the panel follow the same order as those chapters: the **Two-Stage**
 <a id="ref-PP1991a"></a>Pereira, M. V. F., & Pinto, L. M. V. G. (1991). Multi-stage Stochastic Optimization Applied to Energy Planning. *Mathematical Programming* 52(1-3), 359-375. [doi:10.1007/BF01582895](https://doi.org/10.1007/BF01582895)
 
 <a id="ref-RW1991a"></a>Rockafellar, R. T., & Wets, R. J-B. (1991). Scenarios and Policy Aggregation in Optimization Under Uncertainty. *Mathematics of Operations Research* 16(1), 119-147. [doi:10.1287/moor.16.1.119](https://doi.org/10.1287/moor.16.1.119)
-
-<a id="ref-SDR2021a"></a>Shapiro, A., Dentcheva, D., & Ruszczyński, A. (2021). *Lectures on Stochastic Programming: Modeling and Theory* (3rd ed.). SIAM. [doi:10.1137/1.9781611976595](https://doi.org/10.1137/1.9781611976595)
 
 ## See Also
 

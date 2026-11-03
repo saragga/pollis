@@ -8,8 +8,6 @@ For **Two-Stage** and **Multistage**, **Bound Gap** solves the sampled problem t
 
 It then fixes the first order of the panel's solution and re-solves on ten fresh samples, seeds 201 to 210, with 2 000 demand values for **Two-Stage** and S values per period for **Multistage**. The mean of those costs estimates the cost of the chosen first order, and the action prints the gap between the two means.
 
-[Shapiro, Dentcheva and Ruszczyński (2021)](#ref-SDR2021a) give a chapter to statistical inference for stochastic programs, and [Birge and Louveaux (2011)](#ref-BL2011a) chapters to evaluating and approximating expectations and to Monte Carlo methods.
-
 ## Bound Gap for SDDP
 
 For **SDDP**, the action prints `SDDP.calculate_bound`, the lower bound from the cuts, against the mean simulated cost of 500 policy simulations with a 95% confidence interval, and the gap as a percentage of the bound.
@@ -47,10 +45,6 @@ The SDDP.jl documentation lists the causes of an infeasible subproblem as a mist
 The panel's coefficients are the prices 5, 2 and 0.5 and demands between 50 and 150, within a few orders of magnitude of each other.
 
 ## References
-
-<a id="ref-BL2011a"></a>Birge, J. R., & Louveaux, F. (2011). *Introduction to Stochastic Programming* (2nd ed.). Springer. [doi:10.1007/978-1-4614-0237-4](https://doi.org/10.1007/978-1-4614-0237-4)
-
-<a id="ref-SDR2021a"></a>Shapiro, A., Dentcheva, D., & Ruszczyński, A. (2021). *Lectures on Stochastic Programming: Modeling and Theory* (3rd ed.). SIAM. [doi:10.1137/1.9781611976595](https://doi.org/10.1137/1.9781611976595)
 
 ## See Also
 

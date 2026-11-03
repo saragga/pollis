@@ -12,7 +12,7 @@ Later orders are not single numbers: in the **Multistage** tab there is one orde
 
 **Wait-and-See** prints three costs. RP is the optimal expected cost of the recourse problem. WS, the wait-and-see cost, assumes perfect information: every period's demand is ordered exactly, so the code computes it as (c − p) · T · mean(demand). EEV is the expected cost of the first order of the deterministic problem with the mean demand, used under the real uncertainty.
 
-The action description defines EVPI = RP − WS, the expected value of perfect information, and VSS = EEV − RP, the value of the stochastic solution. [Birge and Louveaux (2011)](#ref-BL2011a) give a chapter to the value of information and the stochastic solution. For **SDDP**, the action uses the simulated cost and the lower bound in place of RP and prints EVPI only.
+The action description defines EVPI = RP − WS, the expected value of perfect information, and VSS = EEV − RP, the value of the stochastic solution. For **SDDP**, the action uses the simulated cost and the lower bound in place of RP and prints EVPI only.
 
 ## The critical fractile
 
@@ -34,13 +34,11 @@ The SDDP.jl documentation explains the link: the dual variable of the constraint
 
 ## Extensive Form vs SDDP
 
-**Extensive Form vs SDDP** solves the same problem both ways and prints the cost, the first order and the run time. The extensive form is solved when S^T ≤ 20 000; SDDP is trained for 100 iterations, and its printed cost is `SDDP.calculate_bound`, the lower bound.
+**Extensive Form vs SDDP** solves the same problem both ways and prints the optimal cost of the extensive form, the lower bound of SDDP, the first order and the run time of each. The extensive form is solved when S^T ≤ 20 000; SDDP is trained for 100 iterations, and its lower bound is `SDDP.calculate_bound`. Each row leaves the other column at NaN.
 
 The input tooltip of **Periods (T)** notes that the extensive form grows as S^T while SDDP grows only linearly in T. The theory tutorial of SDDP.jl adds that the random variable at which an SDDP policy is evaluated can be out-of-sample, unlike in progressive hedging or the deterministic equivalent.
 
 ## References
-
-<a id="ref-BL2011a"></a>Birge, J. R., & Louveaux, F. (2011). *Introduction to Stochastic Programming* (2nd ed.). Springer. [doi:10.1007/978-1-4614-0237-4](https://doi.org/10.1007/978-1-4614-0237-4)
 
 ## See Also
 
