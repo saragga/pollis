@@ -106,6 +106,9 @@ key = "Oks2003a"
 [[references]]
 key = "Tuc1988a"
 
+[[references]]
+key = "SS2019a"
+
 [[models]]
 id = "paths"
 label = "Path Statistics"

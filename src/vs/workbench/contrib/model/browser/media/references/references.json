@@ -31258,6 +31258,28 @@
 			"open_access": false
 		},
 		{
+			"key": "SS2019a",
+			"type": "book",
+			"title": "Applied Stochastic Differential Equations",
+			"authors": [
+				"Särkkä, Simo",
+				"Solin, Arno"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2019,
+			"publisher": "Cambridge University Press",
+			"address": "Cambridge",
+			"isbn": "9781316510087",
+			"doi": "10.1017/9781108186735",
+			"openalex": "W2940934113",
+			"oa_url": "https://users.aalto.fi/~ssarkka/pub/sde_book.pdf",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "SS2024a",
 			"type": "misc",
 			"title": "Quantitative Economics with Julia",
@@ -52186,7 +52208,8 @@
 			"keys": [
 				"RN2017a",
 				"Oks2003a",
-				"Tuc1988a"
+				"Tuc1988a",
+				"SS2019a"
 			]
 		},
 		{
