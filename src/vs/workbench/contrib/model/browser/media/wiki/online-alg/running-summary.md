@@ -10,17 +10,18 @@ The **Running Summary** tab of the Online Statistics panel computes the mean, va
 
 `Moments` keeps the running averages of x, x², x³ and x⁴ and computes skewness and kurtosis from them when asked. `kurtosis` returns the excess kurtosis, which is 0 for a normal distribution. Skewness is 0 for a symmetric distribution, positive when the right tail is longer and negative when the left tail is. The **Summary Statistics** action prints the same five values from a fresh `Series`, without the **Memory** choice of the tab.
 
-## The three kinds of memory on the Running Summary tab
+## The four kinds of memory on the Running Summary tab
 
 | Memory | Code | What the summary covers |
 |---|---|---|
 | **Incremental** | `Series(Mean(), Variance(), Extrema(), Moments())` | Every observation so far, equally weighted |
 | **Rolling Window** | `MovingWindow(span, Float64)`, then a `Series` fitted to its values | The last **Window or span** observations |
+| **Time Window** | `MovingTimeWindow(period; timetype=DateTime, valtype=Float64)`, then a `Series` fitted to its values | The observations within **Time window** of the latest time stamp |
 | **Exponentially Weighted** | `Mean(weight=w)`, `Variance(weight=w)`, `Moments(weight=w)` with `w = ExponentialWeight(span)` | Every observation, recent ones weighted more |
 
 ## Extrema under each memory
 
-`Extrema` takes no weight, so with **Exponentially Weighted** memory it still reports the smallest and largest values of the whole stream. With **Rolling Window** memory the summary is computed from the window, so the extrema are those of the last **Window or span** observations. `extrema(s[3])` returns the minimum and maximum as a pair, and `value(s[3])` adds how many times each has occurred.
+`Extrema` takes no weight, so with **Exponentially Weighted** memory it still reports the smallest and largest values of the whole stream. With **Rolling Window** and **Time Window** memory the summary is computed from the window, so the extrema are those of the observations it holds. `extrema(s[3])` returns the minimum and maximum as a pair, and `value(s[3])` adds how many times each has occurred.
 
 ## References
 
@@ -31,4 +32,4 @@ The **Running Summary** tab of the Online Statistics panel computes the mean, va
 ## See Also
 
 - [Overview](overview.md) · [Factsheet](factsheet.md) · [Assumptions](assumptions.md) · [Diagnostics](diagnostics.md) · [Interpretation](interpretation.md) · [Decision Guide](decision-guide.md)
-- [Incremental, Rolling and Exponentially Weighted Statistics](memory.md) · [Running Summary](running-summary.md) · [Quantile](quantile.md) · [Histogram](histogram.md) · [Linear Regression](linreg.md) · [Correlation](correlation.md)
+- [Incremental, Rolling and Exponentially Weighted Statistics](memory.md) · [Running Summary](running-summary.md) · [Quantile](quantile.md) · [Histogram](histogram.md) · [Linear Regression](linreg.md) · [Correlation](correlation.md) · [Autocorrelation](autocorrelation.md)

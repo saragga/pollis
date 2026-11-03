@@ -11,8 +11,9 @@ Which tab of the Online Statistics panel answers a question, which **Memory** to
 | What does the whole distribution look like? | **Histogram** |
 | How does a response depend on predictors? | **Linear Regression** |
 | Do several variables move together? | **Correlation** |
+| Does each observation depend on those before it? | **Autocorrelation** |
 
-The first four tabs read the same **Data stream**, so one pass can feed several of them: a `Series` holds any mix of statistics, as the **Running Summary** tab shows with four of them.
+All tabs but **Correlation** read the same **Data stream**, so one pass can feed several of them: a `Series` holds any mix of statistics, as the **Running Summary** tab shows with four of them.
 
 ## Which memory to choose
 
@@ -20,6 +21,7 @@ The first four tabs read the same **Data stream**, so one pass can feed several 
 |---|---|
 | The stream comes from one distribution, and precision matters most | **Incremental** |
 | Only the latest observations matter, and each should count fully while it does | **Rolling Window** |
+| Only a recent period of time matters, however many observations it holds | **Time Window** |
 | The level drifts, and recent observations should count more with fixed memory | **Exponentially Weighted** |
 | The estimate must equal a batch statistic on the same data | **Incremental** |
 
@@ -44,4 +46,4 @@ When the whole sample fits in memory and will not grow, the Descriptive Statisti
 ## See Also
 
 - [Overview](overview.md) · [Factsheet](factsheet.md) · [Assumptions](assumptions.md) · [Diagnostics](diagnostics.md) · [Interpretation](interpretation.md) · [Decision Guide](decision-guide.md)
-- [Incremental, Rolling and Exponentially Weighted Statistics](memory.md) · [Running Summary](running-summary.md) · [Quantile](quantile.md) · [Histogram](histogram.md) · [Linear Regression](linreg.md) · [Correlation](correlation.md)
+- [Incremental, Rolling and Exponentially Weighted Statistics](memory.md) · [Running Summary](running-summary.md) · [Quantile](quantile.md) · [Histogram](histogram.md) · [Linear Regression](linreg.md) · [Correlation](correlation.md) · [Autocorrelation](autocorrelation.md)

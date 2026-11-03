@@ -1,10 +1,10 @@
 # Incremental, Rolling and Exponentially Weighted Statistics
 
-Three kinds of memory decide which observations an online estimate reflects. The **Memory** input of the Online Statistics panel chooses among them on the **Running Summary**, **Linear Regression** and **Correlation** tabs, and **Window or span** sets how far back the rolling and exponentially weighted estimates look.
+Four kinds of memory decide which observations an online estimate reflects. The **Memory** input of the Online Statistics panel chooses among them on the **Running Summary**, **Linear Regression**, **Correlation** and **Autocorrelation** tabs, and **Window or span** sets how far back the rolling and exponentially weighted estimates look.
 
 ## How OnlineStats.jl updates an estimate
 
-`OnlineStats.jl` updates most of its estimates by smoothing: after observation t, the new value is the old value moved a fraction γ(t) of the way towards what observation t alone would give, `smooth(a, b, γ) = a + γ * (b - a)`. A weight object supplies γ(t). This weighting mechanism, which lets new observations have more influence than old ones, is part of the design described by [Day and Zhou (2020)](#ref-DZ2020a). Incremental and exponentially weighted memory are two choices of the weight; rolling memory works differently, by keeping the observations themselves.
+`OnlineStats.jl` updates most of its estimates by smoothing: after observation t, the new value is the old value moved a fraction γ(t) of the way towards what observation t alone would give, `smooth(a, b, γ) = a + γ * (b - a)`. A weight object supplies γ(t). This weighting mechanism, which lets new observations have more influence than old ones, is part of the design described by [Day and Zhou (2020)](#ref-DZ2020a). Incremental and exponentially weighted memory are two choices of the weight; rolling and time windows work differently, by keeping the observations themselves.
 
 ## Incremental statistics: every observation counts equally
 
@@ -12,7 +12,11 @@ Three kinds of memory decide which observations an online estimate reflects. The
 
 ## Rolling statistics: the last n observations
 
-**Rolling Window** keeps the most recent n observations in `MovingWindow(n, Float64)`, a circular buffer, and summarises them on request. Each observation counts fully while it is in the window and not at all once n newer ones have arrived. The memory needed grows with n, unlike the fixed memory of the other two kinds. Sliding windows of this kind are a standard model of a data stream in [Leskovec, Rajaraman and Ullman (2020)](#ref-LRU2020a). For observations with time stamps, `MovingTimeWindow` keeps those within a period, such as the last five minutes, instead of a count.
+**Rolling Window** keeps the most recent n observations in `MovingWindow(n, Float64)`, a circular buffer, and summarises them on request. Each observation counts fully while it is in the window and not at all once n newer ones have arrived. The memory needed grows with n, unlike the fixed memory of incremental and exponentially weighted estimates. Sliding windows of this kind are a standard model of a data stream in [Leskovec, Rajaraman and Ullman (2020)](#ref-LRU2020a).
+
+## Time windows: the last period of time
+
+**Time Window** keeps the observations of a recent period, set by **Time window**, such as `Minute(30)`, with `MovingTimeWindow` of `OnlineStats.jl`. Each observation comes with a time stamp from **Time stamps**, and after each new one the window drops every observation more than the period older than the latest time stamp. The window is counted back from the data, not from the clock, so historical observations replay as they would have arrived. The number of observations in the window varies: a busy period holds many, a quiet one few. Unlike **Rolling Window**, which keeps a fixed count, a time window suits observations that arrive at irregular intervals, such as quotes.
 
 ## Exponentially weighted statistics: older observations count less
 
@@ -24,15 +28,16 @@ Three kinds of memory decide which observations an online estimate reflects. The
 
 ## Which tabs of Online Statistics offer which memory
 
-| Tab | Incremental | Rolling Window | Exponentially Weighted |
-|---|---|---|---|
-| **Running Summary** | Yes | Yes | Yes, except **Extrema** |
-| **Quantile** | Yes | No | No |
-| **Histogram** | Yes | No | No |
-| **Linear Regression** | Yes | No | Yes |
-| **Correlation** | Yes | Yes | Yes |
+| Tab | Incremental | Rolling Window | Time Window | Exponentially Weighted |
+|---|---|---|---|---|
+| **Running Summary** | Yes | Yes | Yes | Yes, except **Extrema** |
+| **Quantile** | Yes | No | No | No |
+| **Histogram** | Yes | No | No | No |
+| **Linear Regression** | Yes | No | No | Yes |
+| **Correlation** | Yes | Yes | Yes | Yes |
+| **Autocorrelation** | Yes | Yes | Yes | Yes |
 
-`P2Quantile` and `KHist` take no weight, and `LinReg` keeps sums rather than observations, so it has no window to roll. `Extrema` records the smallest and largest values ever seen under every kind of memory except **Rolling Window**, where the summary is computed from the window alone.
+`P2Quantile` and `KHist` take no weight, and `LinReg` keeps sums rather than observations, so it has no window to roll. `Extrema` records the smallest and largest values ever seen under every kind of memory except **Rolling Window** and **Time Window**, where the summary is computed from the window alone.
 
 ## References
 
@@ -43,4 +48,4 @@ Three kinds of memory decide which observations an online estimate reflects. The
 ## See Also
 
 - [Overview](overview.md) · [Factsheet](factsheet.md) · [Assumptions](assumptions.md) · [Diagnostics](diagnostics.md) · [Interpretation](interpretation.md) · [Decision Guide](decision-guide.md)
-- [Incremental, Rolling and Exponentially Weighted Statistics](memory.md) · [Running Summary](running-summary.md) · [Quantile](quantile.md) · [Histogram](histogram.md) · [Linear Regression](linreg.md) · [Correlation](correlation.md)
+- [Incremental, Rolling and Exponentially Weighted Statistics](memory.md) · [Running Summary](running-summary.md) · [Quantile](quantile.md) · [Histogram](histogram.md) · [Linear Regression](linreg.md) · [Correlation](correlation.md) · [Autocorrelation](autocorrelation.md)

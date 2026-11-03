@@ -10,15 +10,16 @@ The **Correlation** tab of the Online Statistics panel computes the covariance a
 
 `cov(o)` and `cor(o)` both return the matrix stored inside `CovMatrix`, and each call writes its result into that same matrix. A covariance matrix kept from `cov(o)` therefore changes into the correlation matrix as soon as `cor(o)` is called. The **Correlation** tab takes a `copy` of each result, and the **vs Batch Correlation** action compares the covariance before it asks for the correlation. Code that keeps both matrices, or keeps one while fitting more rows, needs the same copies.
 
-## The three kinds of memory on the Correlation tab
+## The four kinds of memory on the Correlation tab
 
 | Memory | Code | What the matrices cover |
 |---|---|---|
 | **Incremental** | `CovMatrix()` | Every row so far, equally weighted |
 | **Rolling Window** | `MovingWindow(span, Vector{Float64})`, then a `CovMatrix` fitted to its rows | The last **Window or span** rows |
+| **Time Window** | `MovingTimeWindow(period; timetype=DateTime, valtype=Vector{Float64})`, then a `CovMatrix` fitted to its rows | The rows within **Time window** of the latest time stamp |
 | **Exponentially Weighted** | `CovMatrix(weight=ExponentialWeight(span))` | Every row, recent ones weighted more |
 
-The rolling window stores each row as a `Vector{Float64}`, so its memory grows with **Window or span** times the number of variables, while the other two keep only p means and p by p cross-products.
+The rolling and time windows store each row as a `Vector{Float64}`, so their memory grows with the number of rows they hold times the number of variables, while the other two keep only p means and p by p cross-products.
 
 ## Correlations that change over time
 
@@ -37,4 +38,4 @@ With **Incremental** memory, `cov(o)` and `cor(o)` equal the batch matrices of `
 ## See Also
 
 - [Overview](overview.md) · [Factsheet](factsheet.md) · [Assumptions](assumptions.md) · [Diagnostics](diagnostics.md) · [Interpretation](interpretation.md) · [Decision Guide](decision-guide.md)
-- [Incremental, Rolling and Exponentially Weighted Statistics](memory.md) · [Running Summary](running-summary.md) · [Quantile](quantile.md) · [Histogram](histogram.md) · [Linear Regression](linreg.md) · [Correlation](correlation.md)
+- [Incremental, Rolling and Exponentially Weighted Statistics](memory.md) · [Running Summary](running-summary.md) · [Quantile](quantile.md) · [Histogram](histogram.md) · [Linear Regression](linreg.md) · [Correlation](correlation.md) · [Autocorrelation](autocorrelation.md)

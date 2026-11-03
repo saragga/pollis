@@ -6,9 +6,9 @@ The **Histogram** tab of the Online Statistics panel builds a histogram of a str
 
 `KHist(k)` keeps at most k bins, each a centre and a count. Each new observation becomes a bin of its own with count 1. When that makes more than k bins, the two bins whose centres are closest merge into one, whose count is the sum of the two and whose centre is their average weighted by the counts. The bins therefore crowd where the data are dense and spread out where they are sparse. The documentation of `OnlineStats.jl` notes one difference from [Ben-Haim and Tom-Tov (2010)](#ref-BT2010a): the bins of the minimum and the maximum never merge, so the extrema are kept exactly.
 
-## Reading density, quantiles and moments from KHist
+## Reading shares, quantiles and moments from KHist
 
-`value(o)` returns the bin centres and their counts, not bin edges. `OnlineStats.pdf(o, x)` gives a density estimate at x by linear interpolation between the counts of neighbouring centres, scaled by the area under that curve. The documentation of `OnlineStats.jl` lists `mean`, `var`, `std`, `quantile` and `median` of a `KHist`, all approximations computed from the bins. The **Online Histogram** action plots a 30-bin `KHist` with `Plots.jl`.
+`value(o)` returns the bin centres and their counts, not bin edges. `ecdf(o)` returns the empirical distribution function of the bins, so `ecdf(o)(x)` is the share of the stream at or below x, which the **Histogram** tab prints at 1.0. A density estimate also exists, `pdf`, which interpolates linearly between the counts of neighbouring centres; it belongs to `OnlineStatsBase` and is not part of the public names of `OnlineStats.jl`, so Julia warns when it is called as `OnlineStats.pdf`. The documentation of `OnlineStats.jl` lists `mean`, `var`, `std`, `quantile` and `median` of a `KHist`, all approximations computed from the bins. The **Online Histogram** action plots a 30-bin `KHist` with `Plots.jl`.
 
 ## Choosing the number of bins
 
@@ -27,4 +27,4 @@ The default of 20 bins gives a coarse picture with very little memory. More bins
 ## See Also
 
 - [Overview](overview.md) · [Factsheet](factsheet.md) · [Assumptions](assumptions.md) · [Diagnostics](diagnostics.md) · [Interpretation](interpretation.md) · [Decision Guide](decision-guide.md)
-- [Incremental, Rolling and Exponentially Weighted Statistics](memory.md) · [Running Summary](running-summary.md) · [Quantile](quantile.md) · [Histogram](histogram.md) · [Linear Regression](linreg.md) · [Correlation](correlation.md)
+- [Incremental, Rolling and Exponentially Weighted Statistics](memory.md) · [Running Summary](running-summary.md) · [Quantile](quantile.md) · [Histogram](histogram.md) · [Linear Regression](linreg.md) · [Correlation](correlation.md) · [Autocorrelation](autocorrelation.md)

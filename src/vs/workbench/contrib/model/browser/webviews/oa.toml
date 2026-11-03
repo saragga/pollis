@@ -57,6 +57,12 @@ file = "online-alg/tutorial-05-correlation.ipynb"
 bundled = true
 description = "Covariance and correlation matrices of several streams, with incremental, rolling and exponentially weighted memory, and a correlation that changes"
 
+[[notebookSections.notebooks]]
+name = "Online Autocorrelation"
+file = "online-alg/tutorial-06-autocorrelation.ipynb"
+bundled = true
+description = "Autocorrelations of a stream up to a chosen lag, a correlogram, a time window over time-stamped observations, and a dependence that changes"
+
 [[wikis]]
 name = "Factsheet"
 file = "online-alg/factsheet.md"
@@ -121,6 +127,11 @@ name = "Correlation"
 file = "online-alg/correlation.md"
 bundled = true
 
+[[wikis]]
+name = "Autocorrelation"
+file = "online-alg/autocorrelation.md"
+bundled = true
+
 [[references]]
 separator = true
 label = "Software"
@@ -171,6 +182,10 @@ label = "Linear Regression"
 id = "cor"
 label = "Correlation"
 
+[[models]]
+id = "acf"
+label = "Autocorrelation"
+
 [[bullets]]
 text = "Running Summary Statistics"
 detail = "mean, variance, extrema, skewness and kurtosis in one pass, each new observation updating them at a fixed cost and without storing the data; incremental, rolling window or exponentially weighted memory"
@@ -189,7 +204,11 @@ detail = "exact least squares from running sums of cross-products, with the coef
 
 [[bullets]]
 text = "Covariance and Correlation"
-detail = "covariance and correlation matrices of several variables from running averages of each row and its cross-products; incremental, rolling window or exponentially weighted memory"
+detail = "covariance and correlation matrices of several variables from running averages of each row and its cross-products; incremental, rolling window, time window or exponentially weighted memory"
+
+[[bullets]]
+text = "Autocorrelation"
+detail = "autocovariances and autocorrelations of a stream up to a chosen lag, from running averages of each observation and its lagged values; incremental, rolling window, time window or exponentially weighted memory"
 
 [[decisionRows]]
 task = "Running Summary"
@@ -217,6 +236,11 @@ context = "Co-movement of variables"
 purpose = "Covariance and correlation matrices of several streams, updated with each row of observations"
 
 [[decisionRows]]
+task = "Autocorrelation"
+context = "Dependence on the past"
+purpose = "How strongly each observation is related to those one, two or more steps before it"
+
+[[decisionRows]]
 task = "Incremental"
 context = "Stable process"
 purpose = "Every observation counts equally, so the estimate settles on the value of the whole stream"
@@ -227,15 +251,20 @@ context = "Last n observations"
 purpose = "Only the most recent observations count, and each leaves the window after n more arrive"
 
 [[decisionRows]]
+task = "Time Window"
+context = "Last period of time"
+purpose = "Only the observations of a recent period count, however many there were, which needs a time stamp for each"
+
+[[decisionRows]]
 task = "Exponentially Weighted"
 context = "Gradual change"
 purpose = "Every observation counts, with weights that fall geometrically with age"
 
 [[inputs]]
 id = "data"
-models = ["desc", "quantile", "hist", "linreg"]
+models = ["desc", "quantile", "hist", "linreg", "acf"]
 label = "Data stream"
-tooltip = "Vector or iterator of observations. Can be processed in a single pass with fit! or flushed observation by observation. The default simulates 10,000 draws from Exponential(1), a skewed stream whose true mean (1), variance (1), median (0.693), skewness (2) and excess kurtosis (6) the online estimates should approach; on the Linear Regression tab it is the response y = 1 + 2x + noise."
+tooltip = "Vector or iterator of observations. Can be processed in a single pass with fit! or flushed observation by observation. The default simulates 10,000 draws from Exponential(1), a skewed stream whose true mean (1), variance (1), median (0.693), skewness (2) and excess kurtosis (6) the online estimates should approach; on the Linear Regression tab it is the response y = 1 + 2x + noise, and on the Autocorrelation tab an AR(1) stream, y(t) = 0.7 y(t-1) + e(t), whose autocorrelation at lag k is 0.7^k."
 default = "data"
 
 [[inputs]]
@@ -254,9 +283,9 @@ default = "vars"
 
 [[inputs]]
 id = "memory"
-models = ["desc", "cor"]
+models = ["desc", "cor", "acf"]
 label = "Memory"
-tooltip = "Incremental weighs every observation so far equally. Rolling Window keeps the last observations, as many as Window or span, and summarises them. Exponentially Weighted gives each new observation the weight 2/(span + 1), so older observations count less and less; on Running Summary, Extrema still covers every observation."
+tooltip = "Incremental weighs every observation so far equally. Rolling Window keeps the last observations, as many as Window or span, and summarises them. Time Window keeps the observations whose time stamps fall within Time window of the latest one. Exponentially Weighted gives each new observation the weight 2/(span + 1), so older observations count less and less; on Running Summary, Extrema still covers every observation."
 kind = "select"
 default = "incremental"
 
@@ -267,6 +296,10 @@ label = "Incremental"
 [[inputs.options]]
 value = "rolling"
 label = "Rolling Window"
+
+[[inputs.options]]
+value = "time"
+label = "Time Window"
 
 [[inputs.options]]
 value = "exponential"
@@ -290,10 +323,33 @@ label = "Exponentially Weighted"
 
 [[inputs]]
 id = "span"
-models = ["desc", "linreg", "cor"]
+models = ["desc", "linreg", "cor", "acf"]
 label = "Window or span"
-tooltip = "Rolling Window: the number of most recent observations kept. Exponentially Weighted: the span s of ExponentialWeight(s), which gives each new observation the weight 2/(s + 1). Not used by Incremental."
+tooltip = "Rolling Window: the number of most recent observations kept. Exponentially Weighted: the span s of ExponentialWeight(s), which gives each new observation the weight 2/(s + 1). Not used by Incremental or Time Window."
 default = "100"
+
+[[inputs]]
+id = "times"
+models = ["desc", "cor", "acf"]
+when = "memory=time"
+label = "Time stamps"
+tooltip = "A DateTime for each observation, in the order of the observations. The default gives one observation per second from 2 January 2026, 09:30."
+default = "times"
+
+[[inputs]]
+id = "period"
+models = ["desc", "cor", "acf"]
+when = "memory=time"
+label = "Time window"
+tooltip = "A period from Dates, such as Minute(30), Hour(1) or Day(5). The window keeps the observations whose time stamps are no more than this period before the latest time stamp."
+default = "Minute(30)"
+
+[[inputs]]
+id = "lags"
+models = ["acf"]
+label = "Lags"
+tooltip = "The largest lag k: the tab estimates the autocovariances and autocorrelations at lags 0, 1, ..., k."
+default = "10"
 
 [[codeBranches]]
 model = "desc"
@@ -309,6 +365,10 @@ using OnlineStats
 {{?memory=exponential}} s = fit!(Series(Mean(weight=w), Variance(weight=w), Extrema(), Moments(weight=w)), {{data}})  # older observations count less and less; Extrema has no weight
 {{?memory=rolling}} window = fit!(MovingWindow({{span}}, Float64), {{data}})  # keeps only the last span observations
 {{?memory=rolling}} s = fit!(Series(Mean(), Variance(), Extrema(), Moments()), value(window))  # the summary of the window, from the values kept
+{{?memory=time}} using Dates
+{{?memory=time}} {{?times=times}} times = DateTime(2026, 1, 2, 9, 30) .+ Second.(0:length({{data}}) - 1)  # one observation per second. Replace times with the time stamps of your observations.
+{{?memory=time}} window = fit!(MovingTimeWindow({{period}}; timetype=DateTime, valtype=Float64), zip({{times}}, {{data}}))  # keeps the observations within the period before the latest time stamp
+{{?memory=time}} s = fit!(Series(Mean(), Variance(), Extrema(), Moments()), last.(value(window)))  # the summary of the observations in the window
 
 println("Mean:     ", value(s[1]))
 println("Variance: ", value(s[2]))
@@ -350,7 +410,7 @@ o = KHist(20)  # adaptive histogram with up to 20 bins
 fit!(o, {{data}})  # update histogram as data arrives
 
 println(value(o))  # bin centres and counts
-println(OnlineStats.pdf(o, 1.0))  # density estimate at a given point (for the default stream, the true density at 1 is exp(-1) = 0.368)
+println(ecdf(o)(1.0))  # share of the stream at or below 1, read from the bins (for the default stream, the true share is 1 - exp(-1) = 0.632)
 '''
 
 [[codeBranches]]
@@ -385,6 +445,10 @@ using OnlineStats
 {{?memory=exponential}} o = fit!(CovMatrix(weight=ExponentialWeight({{span}})), eachrow({{vars}}))  # each new row gets the weight 2/(span + 1)
 {{?memory=rolling}} window = fit!(MovingWindow({{span}}, Vector{Float64}), collect.(eachrow({{vars}})))  # keeps only the last span rows
 {{?memory=rolling}} o = fit!(CovMatrix(), value(window))  # covariance of the window, from the rows kept
+{{?memory=time}} using Dates
+{{?memory=time}} {{?times=times}} times = DateTime(2026, 1, 2, 9, 30) .+ Second.(0:size({{vars}}, 1) - 1)  # one row per second. Replace times with the time stamps of your rows.
+{{?memory=time}} window = fit!(MovingTimeWindow({{period}}; timetype=DateTime, valtype=Vector{Float64}), zip({{times}}, collect.(eachrow({{vars}}))))  # keeps the rows within the period before the latest time stamp
+{{?memory=time}} o = fit!(CovMatrix(), last.(value(window)))  # covariance of the rows in the window
 
 C = copy(cov(o))  # covariance matrix (copied: cov and cor return the same stored matrix)
 R = copy(cor(o))  # correlation matrix
@@ -394,13 +458,37 @@ println("Covariance matrix:   ", round.(C, digits=3))
 println("Correlation matrix:  ", round.(R, digits=3))
 '''
 
+[[codeBranches]]
+model = "acf"
+code = '''
+using OnlineStats
+{{?data=data}} using Random
+
+{{?data=data}} Random.seed!(1)  # simulated: an AR(1) stream, y(t) = 0.7 y(t-1) + e(t), whose autocorrelation at lag k is 0.7^k
+{{?data=data}} e = randn(10_000); data = zeros(10_000); data[1] = e[1]
+{{?data=data}} for t in 2:10_000; data[t] = 0.7 * data[t - 1] + e[t]; end  # Replace data with your own stream of observations, in time order.
+
+{{?memory=incremental}} o = fit!(AutoCov({{lags}}), {{data}})  # every observation so far, equally weighted
+{{?memory=exponential}} o = fit!(AutoCov({{lags}}, weight=ExponentialWeight({{span}})), {{data}})  # each new observation gets the weight 2/(span + 1)
+{{?memory=rolling}} window = fit!(MovingWindow({{span}}, Float64), {{data}})  # keeps only the last span observations, in order
+{{?memory=rolling}} o = fit!(AutoCov({{lags}}), value(window))  # autocovariances of the window
+{{?memory=time}} using Dates
+{{?memory=time}} {{?times=times}} times = DateTime(2026, 1, 2, 9, 30) .+ Second.(0:length({{data}}) - 1)  # one observation per second. Replace times with the time stamps of your observations.
+{{?memory=time}} window = fit!(MovingTimeWindow({{period}}; timetype=DateTime, valtype=Float64), zip({{times}}, {{data}}))  # keeps the observations within the period before the latest time stamp
+{{?memory=time}} o = fit!(AutoCov({{lags}}), last.(value(window)))  # autocovariances of the observations in the window, in time order
+
+println("Lags:             ", 0:{{lags}})
+println("Autocovariances:  ", round.(autocov(o), digits=3))
+println("Autocorrelations: ", round.(autocor(o), digits=3))  # 1 at lag 0
+'''
+
 [[actionGroups]]
 id = "visualise"
 label = "Visualise"
 
 [[actionGroups.actions]]
 id = "running-mean"
-models = ["desc", "quantile", "hist", "linreg"]
+models = ["desc", "quantile", "hist", "linreg", "acf"]
 label = "Running Mean"
 desc = "Plot the running mean after each observation to inspect convergence"
 code = '''
@@ -413,7 +501,7 @@ plot(means, xlabel="Observations", ylabel="Running mean", label="Mean")  # conve
 
 [[actionGroups.actions]]
 id = "hist-plot"
-models = ["desc", "quantile", "hist", "linreg"]
+models = ["desc", "quantile", "hist", "linreg", "acf"]
 label = "Online Histogram"
 desc = "Visualise the adaptive histogram density built from the data stream"
 code = '''
@@ -426,7 +514,7 @@ plot(o)  # plot density estimate
 
 [[actionGroups.actions]]
 id = "quantile-convergence"
-models = ["desc", "quantile", "hist", "linreg"]
+models = ["desc", "quantile", "hist", "linreg", "acf"]
 label = "Quantile Convergence"
 desc = "Track how the online median estimate converges as observations accumulate"
 code = '''
@@ -454,6 +542,18 @@ end
 plot(r12, xlabel="Observations", ylabel="Correlation of columns 1 and 2", label="Exponentially weighted, span 100")
 '''
 
+[[actionGroups.actions]]
+id = "acf-plot"
+models = ["acf"]
+label = "Autocorrelation Plot"
+desc = "Plot the autocorrelations against the lag, as a correlogram"
+code = '''
+using OnlineStats, Plots
+
+o = fit!(AutoCov({{lags}}), {{data}})  # every observation, equally weighted
+bar(0:{{lags}}, autocor(o), xlabel="Lag", ylabel="Autocorrelation", legend=false)  # correlogram
+'''
+
 [[actionGroups]]
 id = "diagnose"
 label = "Diagnose"
@@ -473,7 +573,7 @@ println("Largest correlation difference: ", maximum(abs.(cor(o) .- cor({{vars}})
 
 [[actionGroups.actions]]
 id = "compare-batch"
-models = ["desc", "quantile", "hist", "linreg"]
+models = ["desc", "quantile", "hist", "linreg", "acf"]
 label = "vs Batch Statistics"
 desc = "Compare online estimates against exact batch values to verify accuracy"
 code = '''
@@ -490,7 +590,7 @@ println("Batch  variance:  ", var({{data}}))  # exact batch value
 
 [[actionGroups.actions]]
 id = "nobs"
-models = ["desc", "quantile", "hist", "linreg"]
+models = ["desc", "quantile", "hist", "linreg", "acf"]
 label = "Observation Count"
 desc = "Inspect how many observations have been processed by each online stat"
 code = '''
@@ -546,7 +646,7 @@ label = "Compare"
 
 [[actionGroups.actions]]
 id = "merge-stats"
-models = ["desc", "quantile", "hist", "linreg"]
+models = ["desc", "quantile", "hist", "linreg", "acf"]
 label = "Merge Parallel Streams"
 desc = "Combine online stats from two independent data partitions without re-reading data"
 code = '''
@@ -562,7 +662,7 @@ println("Merged mean: ", value(o1))  # equivalent to batch mean over all data
 
 [[actionGroups.actions]]
 id = "memory-schemes"
-models = ["desc", "quantile", "hist", "linreg"]
+models = ["desc", "quantile", "hist", "linreg", "acf"]
 label = "Incremental, Rolling and Exponential"
 desc = "Plot the running mean under the three kinds of memory: every observation, the last span observations, and exponentially decaying weights"
 code = '''
@@ -587,7 +687,7 @@ label = "Interpret"
 
 [[actionGroups.actions]]
 id = "summary-stats"
-models = ["desc", "quantile", "hist", "linreg"]
+models = ["desc", "quantile", "hist", "linreg", "acf"]
 label = "Summary Statistics"
 desc = "Full descriptive summary: mean, variance, skewness, kurtosis and extrema in one pass"
 code = '''
