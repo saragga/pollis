@@ -117,6 +117,12 @@ key = "SWDRK2017a"
 [[references]]
 key = "SLAJM2015a"
 
+[[references]]
+key = "Wil1992a"
+
+[[references]]
+key = "KB2015a"
+
 [[models]]
 id = "reinforce"
 label = "REINFORCE"
