@@ -117,6 +117,15 @@ key = "PFGLO...2025a"
 key = "MGALS...2021a"
 
 [[references]]
+key = "LMIGK...2023a"
+
+[[references]]
+key = "BM2020a"
+
+[[references]]
+key = "XGTTT...2020a"
+
+[[references]]
 separator = true
 label = "Textbooks"
 
@@ -141,6 +150,12 @@ key = "VFWHB2019a"
 
 [[references]]
 key = "FS2022a"
+
+[[references]]
+key = "HG2014a"
+
+[[references]]
+key = "VGSCB2021a"
 
 [[models]]
 id = "struct"

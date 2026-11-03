@@ -3127,6 +3127,31 @@
 			"open_access": false
 		},
 		{
+			"key": "BM2020a",
+			"type": "article",
+			"title": "Confidence Intervals by Constrained Optimization—An Algorithm and Software Package for Practical Identifiability Analysis in Systems Biology",
+			"authors": [
+				"Borisov, Ivan",
+				"Metelkin, Evgeny"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2020,
+			"journal": "PLOS Computational Biology",
+			"volume": "16",
+			"number": "12",
+			"pages": "e1008495",
+			"issn": "1553-7358",
+			"doi": "10.1371/journal.pcbi.1008495",
+			"oa_url": "https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1008495",
+			"abstract": "Practical identifiability of Systems Biology models has received a lot of attention in recent scientific research. It addresses the crucial question for models' predictability: how accurately can the models' parameters be recovered from available experimental data. The methods based on profile likelihood are among the most reliable methods of practical identification. However, these methods are often computationally demanding or lead to inaccurate estimations of parameters' confidence intervals. Development of methods, which can accurately produce parameters' confidence intervals in reasonable computational time, is of utmost importance for Systems Biology and QSP modeling. We propose an algorithm Confidence Intervals by Constraint Optimization (CICO) based on profile likelihood, designed to speed-up confidence intervals estimation and reduce computational cost. The numerical implementation of the algorithm includes settings to control the accuracy of confidence intervals estimates. The algorithm was tested on a number of Systems Biology models, including Taxol treatment model and STAT5 Dimerization model, discussed in the current article. The CICO algorithm is implemented in a software package freely available in Julia (https://github.com/insysbio/LikelihoodProfiler.jl) and Python (https://github.com/insysbio/LikelihoodProfiler.py).",
+			"abstract_source": "author",
+			"source": "crossref",
+			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "BMM2015a",
 			"type": "article",
 			"title": "Hawkes Processes in Finance",
@@ -51546,12 +51571,17 @@
 				"DGHP2023a",
 				"PFGLO...2025a",
 				"MGALS...2021a",
+				"LMIGK...2023a",
+				"BM2020a",
+				"XGTTT...2020a",
 				"BW1988a",
 				"SSBCD...2021a",
 				"RKMBS...2009a",
 				"RSBMS...2013a",
 				"VFWHB2019a",
-				"FS2022a"
+				"FS2022a",
+				"HG2014a",
+				"VGSCB2021a"
 			]
 		},
 		{
