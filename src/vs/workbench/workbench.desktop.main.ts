@@ -191,6 +191,9 @@ import './contrib/mcp/electron-browser/mcp.contribution.js';
 import './contrib/monitor/electron-browser/rssFeedsService.js';
 import './contrib/monitor/electron-browser/alertsService.js';
 
+// Pollis: the memory of the computer, in the status bar
+import './contrib/memoryMonitor/electron-browser/memoryMonitor.contribution.js';
+
 // Pollis: the duckdb> terminal
 import './contrib/databases/electron-browser/duckdbShell.contribution.js';
 

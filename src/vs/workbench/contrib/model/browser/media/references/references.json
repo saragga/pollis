@@ -52278,62 +52278,6 @@
 			]
 		},
 		{
-			"id": "ptp",
-			"title": "Point Processes",
-			"description": "Poisson · Inhomogeneous · Cox · Hawkes · Network Hawkes",
-			"commands": [
-				"chiara.statistics.pp"
-			],
-			"keys": [
-				"DV2003a",
-				"DV2008a",
-				"Ros2014a",
-				"Haw1971a",
-				"Cox1955a",
-				"Oga1981a",
-				"Oga1998a",
-				"HO1974a",
-				"LS1979a",
-				"Oga1988a",
-				"MAM2009a",
-				"BMM2015a",
-				"Gar1936a",
-				"Dig1985a",
-				"MSW1998a",
-				"Ras2013a",
-				"LA2014a",
-				"BBVKF2002a"
-			]
-		},
-		{
-			"id": "ptps",
-			"title": "Point Process Simulation",
-			"description": "Poisson · Inhomogeneous · Cox · Hawkes · Network Hawkes",
-			"commands": [
-				"chiara.simulate.pp"
-			],
-			"keys": [
-				"DV2003a",
-				"Ros2014a",
-				"DV2008a",
-				"Oga1981a",
-				"LS1979a",
-				"Haw1971a",
-				"HO1974a",
-				"MSW1998a",
-				"LA2014a",
-				"BBVKF2002a",
-				"Gar1936a",
-				"Cox1955a",
-				"Dig1985a",
-				"Oga1988a",
-				"Oga1998a",
-				"MAM2009a",
-				"Ras2013a",
-				"BMM2015a"
-			]
-		},
-		{
 			"id": "ql",
 			"title": "Q-Learning",
 			"description": "Tabular · DQN",

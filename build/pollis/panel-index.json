@@ -6576,21 +6576,21 @@
 		{
 			"id": "ptp",
 			"title": "Point Processes",
-			"source": "pollis",
+			"source": "toolbox:pollis-toolbox-econometrics",
 			"commands": [
 				{
 					"id": "chiara.statistics.pp",
 					"menuTitles": [
-						"Point Processes"
+						"Model"
 					]
 				}
 			],
 			"portable": true,
 			"defaultModel": "poisson",
 			"decisionFirstColumn": "Model",
-			"toml": "src/vs/workbench/contrib/model/browser/webviews/ptp.toml",
-			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
-			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"toml": "toolboxes/pollis-toolbox-econometrics/panels/ptp.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-econometrics/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-econometrics/notebooks",
 			"wikis": [
 				"ptp/assumptions.md",
 				"ptp/cox-process.md",
@@ -6632,21 +6632,21 @@
 		{
 			"id": "ptps",
 			"title": "Point Process Simulation",
-			"source": "pollis",
+			"source": "toolbox:pollis-toolbox-econometrics",
 			"commands": [
 				{
 					"id": "chiara.simulate.pp",
 					"menuTitles": [
-						"Point Processes"
+						"Simulate"
 					]
 				}
 			],
 			"portable": true,
 			"defaultModel": "poisson",
 			"decisionFirstColumn": "Model",
-			"toml": "src/vs/workbench/contrib/model/browser/webviews/ptps.toml",
-			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
-			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"toml": "toolboxes/pollis-toolbox-econometrics/panels/ptps.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-econometrics/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-econometrics/notebooks",
 			"wikis": [
 				"ptp/assumptions.md",
 				"ptp/cox-process.md",

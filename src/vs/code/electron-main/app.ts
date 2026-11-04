@@ -73,6 +73,8 @@ import { IRequestService } from '../../platform/request/common/request.js';
 import { RequestChannel } from '../../platform/request/common/requestIpc.js';
 import { ALERTS_MAILBOX_CHANNEL } from '../../platform/alertsMailbox/common/alertsMailbox.js';
 import { AlertsMailboxService } from '../../platform/alertsMailbox/node/alertsMailboxService.js';
+import { MEMORY_MONITOR_CHANNEL } from '../../platform/memoryMonitor/common/memoryMonitor.js';
+import { MemoryMonitorService } from '../../platform/memoryMonitor/node/memoryMonitorService.js';
 import { IProductService } from '../../platform/product/common/productService.js';
 import { getRemoteAuthority } from '../../platform/remote/common/remoteHosts.js';
 import { SharedProcess } from '../../platform/sharedProcess/electron-main/sharedProcess.js';
@@ -1295,6 +1297,8 @@ export class CodeApplication extends Disposable {
 		mainProcessElectronServer.registerChannel('request', new RequestChannel(accessor.get(IRequestService)));
 		// Pollis: the alerts mailbox, read over IMAP for the RSS Feeds
 		mainProcessElectronServer.registerChannel(ALERTS_MAILBOX_CHANNEL, ProxyChannel.fromService(new AlertsMailboxService(), disposables));
+		// Pollis: the memory of the computer and the apps that use it, for the status bar
+		mainProcessElectronServer.registerChannel(MEMORY_MONITOR_CHANNEL, ProxyChannel.fromService(new MemoryMonitorService(), disposables));
 
 		// Process
 		const processChannel = ProxyChannel.fromService(new ProcessMainService(this.logService, accessor.get(IDiagnosticsService), accessor.get(IDiagnosticsMainService)), disposables);

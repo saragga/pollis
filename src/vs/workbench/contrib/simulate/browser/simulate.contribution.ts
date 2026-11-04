@@ -8,7 +8,6 @@ import { MenuRegistry, MenuId } from '../../../../platform/actions/common/action
 import { CommandsRegistry } from '../../../../platform/commands/common/commands.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 
-import { PTPS_PANEL } from '../../model/browser/commands/ptps.command.js';
 import { SID_PANEL } from '../../model/browser/commands/sid.command.js';
 import { openScaffoldWebview } from '../../model/browser/commands/scaffold.command.js';
 import { MCMC_PANEL } from '../../model/browser/commands/mcmc.command.js';
@@ -95,15 +94,6 @@ MenuRegistry.appendMenuItem(MenuId.MenubarSimulateMenu, {
 	},
 	order: 1,
 }); // MonteCarloMeasurements.jl
-
-
-MenuRegistry.appendMenuItem(MenuId.MenubarSimulateMenu, {
-	group: '3_simulation',
-	command: {id: 'chiara.simulate.pp',
-		title: localize('simulation.pp', 'Point Processes')
-	},
-	order: 1,
-}); // PointProcesses.jl, HawkesProcesses.jl, NetworkHawkesProcesses.jl,
 
 
 MenuRegistry.appendMenuItem(MenuId.MenubarSimulateMenu, {
@@ -290,10 +280,6 @@ MenuRegistry.appendMenuItem(NCMSubmenuId, {
 // ============================================
 // COMMAND REGISTRATIONS
 // ============================================
-
-CommandsRegistry.registerCommand('chiara.simulate.pp', (accessor: ServicesAccessor) =>
-	openScaffoldWebview(accessor, PTPS_PANEL)
-);
 
 CommandsRegistry.registerCommand('chiara.statistics.id', (accessor: ServicesAccessor) =>
 	openScaffoldWebview(accessor, SID_PANEL)

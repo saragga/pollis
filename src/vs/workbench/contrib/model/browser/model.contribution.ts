@@ -103,7 +103,6 @@ import { CTM_PANEL } from './commands/ctm.command.js';
 import { BERT_PANEL } from './commands/bert.command.js';
 import { CLBT_PANEL } from './commands/clbt.command.js';
 import { CTPF_PANEL } from './commands/ctpf.command.js';
-import { PTP_PANEL } from './commands/ptp.command.js';
 import { SREG_PANEL } from './commands/sreg.command.js';
 import { SI_PANEL } from './commands/si.command.js';
 import { ODE_PANEL } from './commands/ode.command.js';
@@ -243,10 +242,6 @@ CommandsRegistry.registerCommand('chiara.statistics.ml.logpdf', accessor => open
 const TTE_OPEN = (accessor: ServicesAccessor, initialMethod?: string) => openScaffoldWebview(accessor, TTE_PANEL, initialMethod);
 
 CommandsRegistry.registerCommand('chiara.statistics.tte', accessor => TTE_OPEN(accessor));
-
-const PTP_OPEN = (accessor: ServicesAccessor, initialModel?: string) => openScaffoldWebview(accessor, PTP_PANEL, initialModel);
-
-CommandsRegistry.registerCommand('chiara.statistics.pp', accessor => PTP_OPEN(accessor));
 
 const NSCR_OPEN = (accessor: ServicesAccessor, initialMethod?: string) => openScaffoldWebview(accessor, NSCR_PANEL, initialMethod);
 
@@ -878,12 +873,6 @@ MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
 	title: localize('showStatistics.nd', 'Nonlinear Dynamics'),
 	order: 5,
 }); // DynamicalSystems.jl
-
-MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
-	group: '6_time_related',
-	command: { id: 'chiara.statistics.pp', title: localize('showStatistics.pp', 'Point Processes') },
-	order: 1,
-}); // PointProcesses.jl, Hawkes.jl, HawkesProcesses.jl, NetworkHawkesProcesses.jl
 
 MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
 	group: '6_time_related',
