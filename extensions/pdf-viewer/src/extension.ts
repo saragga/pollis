@@ -3,20 +3,20 @@
  *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// The PDF Viewer of Pollis: the editor of .pdf files, with pdf.js, and the commands that open a PDF in it (Explore >
-// Access Files > PDF Files, the PDF... of the + of Ask Pollis).
+// The PDF Viewer of Pollis: the editor of .pdf files, with pdf.js, and the commands that open a PDF in it (Compose >
+// PDF Files, the PDF... of the + of Ask Pollis).
 
 import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { PDF_VIEWER_VIEW_TYPE, PdfViewerProvider } from './pdfViewer';
+import { PDF_VIEWER_VIEW_TYPE, PdfViewerProvider, ViewerMode } from './pdfViewer';
 
 /** The command of the Julia extension that runs pdf_tools.jl, which gives the path of the sample PDF of PollisDatasets. */
 const PDF_SAMPLE_COMMAND_ID = 'language-julia.pollisPdfSample';
 
-/** Opens `resource` in the PDF Viewer, beside the active editor when `toSide`. */
-async function openInViewer(resource: vscode.Uri, toSide?: boolean): Promise<void> {
-	await vscode.commands.executeCommand('vscode.openWith', resource, PDF_VIEWER_VIEW_TYPE, toSide ? vscode.ViewColumn.Beside : undefined);
+/** Opens `resource` in the PDF Viewer: in the active editor group, beside it when `toSide`, or in the group of `column`. */
+async function openInViewer(resource: vscode.Uri, toSide?: boolean, column?: vscode.ViewColumn): Promise<void> {
+	await vscode.commands.executeCommand('vscode.openWith', resource, PDF_VIEWER_VIEW_TYPE, toSide ? vscode.ViewColumn.Beside : column);
 }
 
 /** Asks for a PDF on the disk. */
@@ -61,12 +61,11 @@ async function sampleInDepot(): Promise<vscode.Uri | undefined> {
 	return found?.uri;
 }
 
-/** Opens the sample PDF of PollisDatasets: from the Julia depot, else at the path the hidden Julia process gives. */
-async function openSample(): Promise<void> {
+/** The sample PDF of PollisDatasets: from the Julia depot, else at the path the hidden Julia process gives; undefined, with a message, when it cannot be had. */
+async function findSample(): Promise<vscode.Uri | undefined> {
 	const inDepot = await sampleInDepot();
 	if (inDepot) {
-		await openInViewer(inDepot);
-		return;
+		return inDepot;
 	}
 	let answer: { readonly path?: string; readonly error?: string } | undefined;
 	try {
@@ -77,7 +76,7 @@ async function openSample(): Promise<void> {
 		answer = undefined;
 	}
 	if (answer?.path) {
-		await openInViewer(vscode.Uri.file(answer.path));
+		return vscode.Uri.file(answer.path);
 	} else if (answer?.error === 'installing') {
 		vscode.window.showInformationMessage(vscode.l10n.t("Julia is installing PollisDatasets, which has the sample PDF, the first time it is needed: try again in a minute or two."));
 	} else if (answer?.error === 'noJulia' || !answer) {
@@ -85,7 +84,23 @@ async function openSample(): Promise<void> {
 	} else {
 		vscode.window.showWarningMessage(vscode.l10n.t("The sample PDF could not be found: {0}", answer.error ?? ''));
 	}
+	return undefined;
 }
+
+/** The PDF shown in the PDF Viewer, and its editor group: the active group, else another. */
+function shownPdf(): { readonly uri: vscode.Uri; readonly column: vscode.ViewColumn } | undefined {
+	const groups = [vscode.window.tabGroups.activeTabGroup, ...vscode.window.tabGroups.all.filter(group => !group.isActive)];
+	for (const group of groups) {
+		const input = group.activeTab?.input;
+		if (input instanceof vscode.TabInputCustom && input.viewType === PDF_VIEWER_VIEW_TYPE) {
+			return { uri: input.uri, column: group.viewColumn };
+		}
+	}
+	return undefined;
+}
+
+/** The modes of Compose > PDF Files. */
+const VIEWER_MODES: readonly ViewerMode[] = ['read', 'tools', 'crop', 'highlight', 'text', 'draw', 'image'];
 
 /** What the workbench may ask of `pollis.pdfViewer.open`: the page to show (from 1), and an editor beside the active one. */
 interface IOpenOptions {
@@ -111,9 +126,22 @@ export function activate(context: vscode.ExtensionContext): void {
 				await openInViewer(target, options?.toSide);
 			}
 		}),
-		vscode.commands.registerCommand('pollis.pdfViewer.openSample', openSample),
-		// Explore > Access Files > PDF Files: the sample, as the other panels start on an example; Open a PDF... in the viewer's title bar opens another
-		vscode.commands.registerCommand('pollis.pdfViewer.openFromMenu', openSample),
+		vscode.commands.registerCommand('pollis.pdfViewer.openSample', async () => {
+			const sample = await findSample();
+			if (sample) {
+				await openInViewer(sample);
+			}
+		}),
+		// Compose > PDF Files: the PDF shown, else the sample, as the other panels start on an example, in the viewer with the mode's tool ready; Open a PDF... in the title bar opens another
+		vscode.commands.registerCommand('pollis.pdfViewer.openInMode', async (mode?: string) => {
+			const viewerMode = VIEWER_MODES.find(known => known === mode) ?? 'read';
+			const shown = shownPdf();
+			const target = shown?.uri ?? await findSample();
+			if (target) {
+				provider.showMode(target, viewerMode);
+				await openInViewer(target, false, shown?.column);
+			}
+		}),
 		// The viewer's title bar, which passes the PDF shown: the dialog opens another one
 		vscode.commands.registerCommand('pollis.pdfViewer.openAnother', async () => {
 			const target = await pickPdf();

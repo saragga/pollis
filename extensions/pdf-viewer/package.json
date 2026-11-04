@@ -57,8 +57,8 @@
         "category": "PDF"
       },
       {
-        "command": "pollis.pdfViewer.openFromMenu",
-        "title": "%command.openFromMenu%",
+        "command": "pollis.pdfViewer.openInMode",
+        "title": "%command.openInMode%",
         "category": "PDF"
       },
       {
@@ -71,7 +71,7 @@
     "menus": {
       "commandPalette": [
         {
-          "command": "pollis.pdfViewer.openFromMenu",
+          "command": "pollis.pdfViewer.openInMode",
           "when": "false"
         },
         {

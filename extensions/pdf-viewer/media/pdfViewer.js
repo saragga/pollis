@@ -3,9 +3,9 @@
  *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// Pollis in the viewer of pdf.js: its options before it starts, the PDF from the extension, saving through it, and
-// the tools sidebar: Select Area with the text, the table and the picture of an area, and the Poppler tools
-// (poppler.js). Runs after pdf.mjs, before viewer.mjs.
+// Pollis in the viewer of pdf.js: its options before it starts, the PDF from the extension, saving through it, the
+// modes of Compose > PDF Files, and the tools sidebar, shown or hidden by Tools: Show | Hide: Select Area with the
+// text, the table and the picture of an area, and the Poppler tools (poppler.js). Runs after pdf.mjs, before viewer.mjs.
 
 import { areaCells, areaText, cellsCsv, cellsTabbed, pageWords } from './cells.js';
 import { popplerTools } from './poppler.js';
@@ -85,13 +85,80 @@ try {
 	// The frame around is of another origin
 }
 
-/** Once the viewer has started: the box of the area follows the pages, and a new document drops what was read of the one before. */
+/**
+ * Once the viewer has started: the box of the area follows the pages, a new document drops what was read of the one
+ * before, and a mode waits for the markup tools and the outline of the document. Select Area and a markup tool of
+ * pdf.js are not on together.
+ */
 function onInitialized() {
 	const { eventBus } = app();
 	for (const name of ['pagerendered', 'scalechanging', 'rotationchanging', 'pagesinit']) {
 		eventBus.on(name, () => setTimeout(redrawBox));
 	}
 	eventBus.on('documentloaded', () => wordsCache.clear());
+	eventBus.on('annotationeditoruimanager', () => {
+		editorReady = true;
+		setTimeout(applyMode);
+	});
+	eventBus.on('outlineloaded', event => {
+		outlineCount = event.outlineCount ?? 0;
+		setTimeout(applyMode);
+	});
+	eventBus.on('annotationeditormodechanged', event => {
+		editorMode = event.mode;
+		if (editorMode > 0 && selecting) {
+			setSelecting(false);
+		}
+	});
+}
+
+// ---- The modes of Compose > PDF Files
+
+/** The markup tools of pdf.js (AnnotationEditorType), by mode: Highlight, Add Text, Draw, and Add or Edit Images. */
+const EDITOR_MODES = { highlight: 9, text: 3, draw: 15, image: 13 };
+/** No markup tool (AnnotationEditorType.NONE). */
+const NO_EDITOR = 0;
+/** The outline in the left pane of pdf.js (SidebarView.OUTLINE). */
+const OUTLINE_VIEW = 2;
+
+/** Whether the markup tools of pdf.js are ready for the document open, and the one that is on. */
+let editorReady = false;
+let editorMode = NO_EDITOR;
+/** The number of entries of the document's outline, once pdf.js has read it. */
+let outlineCount;
+/** The mode asked for, until the document is ready for it. */
+let pendingMode;
+
+function setMode(mode) {
+	pendingMode = mode;
+	applyMode();
+}
+
+/** Puts the viewer in the mode asked for, once the document has what the mode needs. */
+function applyMode() {
+	const mode = pendingMode;
+	// A file that forbids changes has no markup tools: only their modes wait for them
+	if (!mode || !app()?.pdfDocument || (mode in EDITOR_MODES && !editorReady) || (mode === 'read' && outlineCount === undefined)) {
+		return;
+	}
+	pendingMode = undefined;
+	const { eventBus, viewsManager } = app();
+	const editor = EDITOR_MODES[mode] ?? NO_EDITOR;
+	if (editorReady && editor !== editorMode) {
+		eventBus.dispatch('switchannotationeditormode', { source: window, mode: editor });
+	}
+	setSelecting(mode === 'crop');
+	if (mode === 'read') {
+		setToolsShown(false, true);
+		// The outline, else the thumbnails of the pages
+		if (outlineCount) {
+			viewsManager?.switchView(OUTLINE_VIEW, true);
+		} else {
+			viewsManager?.open();
+		}
+	} else if (mode === 'tools') {
+		setToolsShown(true, true);
+	}
 }
 
 /** The worker of pdf.js, made from its text: a webview cannot start a worker from the extension's files, another origin. */
@@ -115,6 +182,12 @@ async function openDocument(message) {
 	takeOverSaving(viewer);
 	window.PDFViewerApplicationOptions.set('workerPort', await getWorkerPort());
 	fileName = message.name;
+	// The markup tools and the outline are the new document's
+	editorReady = false;
+	outlineCount = undefined;
+	if (message.mode) {
+		pendingMode = message.mode;
+	}
 	const keep = message.reload && viewer.pdfDocument ? { page: viewer.page, scale: viewer.pdfViewer.currentScaleValue, top: viewer.pdfViewer.container.scrollTop } : undefined;
 	if (keep) {
 		viewer.eventBus.on('pagesinit', () => {
@@ -133,6 +206,7 @@ async function openDocument(message) {
 		return;
 	}
 	poppler.documentOpened();
+	applyMode();
 	if (area && area.page > viewer.pagesCount) {
 		clearArea();
 	} else if (area) {
@@ -163,7 +237,7 @@ function takeOverSaving(viewer) {
 	viewer.downloadManager.download = (data, _url, filename) => post({ command: 'saveAs', kind: 'pdf', name: filename || fileName, data });
 	viewer.downloadManager.openOrDownloadData = (data, filename) => {
 		if (poppler.shows(filename)) {
-			showTools('poppler');
+			setToolsShown(true, false);
 			poppler.showAttachment(filename, data);
 			return false;
 		}
@@ -178,8 +252,12 @@ window.addEventListener('message', event => {
 		openDocument(message);
 	} else if (message?.command === 'page') {
 		showPage(message.page);
-	} else if (['popplerResult', 'popplerStatus', 'fileRead'].includes(message?.command)) {
+	} else if (message?.command === 'mode') {
+		setMode(message.mode);
+	} else if (['popplerResult', 'popplerStatus', 'fileRead', 'colorized'].includes(message?.command)) {
 		poppler.received(message);
+	} else if (message?.command === 'themeChanged') {
+		poppler.recolor();
 	} else if (message?.command === 'menuChoice') {
 		menuChosen(message);
 	}
@@ -291,7 +369,7 @@ window.addEventListener('keydown', event => {
 	}
 }, true);
 
-// ---- The toolbar: Select Area and the tools sidebar
+// ---- The toolbar: Select Area, Tools: Show | Hide for the tools sidebar, and the More menu (>>)
 
 const outer = document.getElementById('outerContainer');
 const viewerContainer = document.getElementById('viewerContainer');
@@ -303,56 +381,76 @@ selectButton.title = T.selectAreaTitle;
 selectButton.setAttribute('aria-pressed', 'false');
 selectButton.appendChild(element('span', '', T.selectArea));
 
-// Poppler Tools: a button with its name, whose menu lists the ten tools
-const popplerButton = element('button', 'toolbarButton pollisPopplerToggle pollisLabelled');
-popplerButton.type = 'button';
-popplerButton.title = T.popplerTitle;
-popplerButton.setAttribute('aria-haspopup', 'menu');
-popplerButton.appendChild(element('span', '', T.poppler));
+// Tools: Show | Hide, the switch of the Welcome page: the side chosen in the foreground colour, the knob beside it
+const toolsSwitch = element('div', 'pollisToolsSwitch');
+toolsSwitch.title = T.toolsTitle;
+const showSide = element('button', 'pollisSwitchSide', T.show);
+const knob = element('button', 'pollisSwitchKnob');
+const hideSide = element('button', 'pollisSwitchSide', T.hide);
+for (const side of [showSide, knob, hideSide]) {
+	side.type = 'button';
+}
+toolsSwitch.append(element('span', 'pollisSwitchLabel', T.tools), showSide, knob, hideSide);
+showSide.addEventListener('click', () => setToolsShown(true, true));
+hideSide.addEventListener('click', () => setToolsShown(false, true));
+knob.addEventListener('click', () => setToolsShown(tools.hidden, true));
 
-const separator = element('div', 'verticalToolbarSeparator');
-toolbarRight.prepend(selectButton, popplerButton, separator);
+// Select Area beside the markup tools of pdf.js, as it too works on the page; the switch at the right end, above
+// the sidebar it opens, after the More menu (>>)
+toolbarRight.insertBefore(selectButton, document.getElementById('editorModeButtons'));
+toolbarRight.append(element('div', 'verticalToolbarSeparator'), toolsSwitch);
 
-/** The sidebar at the right of the pages: the Area of Select Area, or the Poppler Tools, one at a time. */
+// The menu of >> is More: pdf.js calls it Tools, the name of the switch. Without its l10n ids, pdf.js leaves it as it is
+const moreButton = document.getElementById('secondaryToolbarToggleButton');
+moreButton.removeAttribute('data-l10n-id');
+moreButton.title = T.more;
+const moreLabel = moreButton.querySelector('span');
+moreLabel.removeAttribute('data-l10n-id');
+moreLabel.textContent = T.more;
+
+/** The sidebar at the right of the pages: the Area of Select Area, and the tools. */
 const tools = element('aside', 'pollisTools');
 tools.id = 'pollisTools';
 tools.hidden = true;
 document.getElementById('mainContainer').appendChild(tools);
 const popplerPage = element('div', 'pollisPage');
 
-/** Shows the sidebar with `page`, 'area' or 'poppler', or hides it. */
-let shownPage;
-function showTools(page) {
-	shownPage = page;
-	tools.hidden = !page;
-	areaSection.hidden = page !== 'area';
-	popplerPage.hidden = page !== 'poppler';
-	outer.classList.toggle('pollisToolsOpen', !!page);
-	popplerButton.classList.toggle('toggled', page === 'poppler');
+/** Shows or hides the sidebar; `remember` keeps the choice for the next PDF. */
+function setToolsShown(shown, remember) {
+	tools.hidden = !shown;
+	outer.classList.toggle('pollisToolsOpen', shown);
+	showSide.classList.toggle('active', shown);
+	hideSide.classList.toggle('active', !shown);
+	showSide.setAttribute('aria-pressed', String(shown));
+	hideSide.setAttribute('aria-pressed', String(!shown));
+	knob.classList.toggle('right', !shown);
+	knob.setAttribute('aria-label', shown ? T.hideTools : T.showTools);
+	if (remember) {
+		post({ command: 'toolsShown', shown });
+	}
 	// The pages fit the narrower view
 	window.dispatchEvent(new Event('resize'));
 }
-popplerButton.addEventListener('click', () => postMenu(popplerButton, poppler.menuItems(shownPage === 'poppler'), id => {
-	if (id === 'all') {
-		showTools(shownPage === 'poppler' ? undefined : 'poppler');
-	} else {
-		showTools('poppler');
-		poppler.open(id);
-	}
-}));
 
-/** Select Area: dragging on a page draws an area, shown in the sidebar once drawn; switched off, the sidebar closes. */
+/**
+ * The Area section: the area once drawn; else, while Select Area is off, how to draw one. While Select Area is on and
+ * no area is drawn, it would only repeat what the button says.
+ */
+function showAreaSection() {
+	areaSection.hidden = selecting && !area;
+}
+
+/** Select Area: dragging on a page draws an area, shown in the sidebar once drawn. A markup tool of pdf.js goes off. */
 let selecting = false;
 function setSelecting(on) {
 	selecting = on;
 	viewerContainer.classList.toggle('pollisSelecting', on);
 	selectButton.classList.toggle('toggled', on);
 	selectButton.setAttribute('aria-pressed', String(on));
-	if (on && area) {
-		showTools('area');
-	} else if (!on && shownPage === 'area') {
-		showTools(undefined);
+	if (on && editorMode > 0 && editorReady) {
+		app().eventBus.dispatch('switchannotationeditormode', { source: window, mode: NO_EDITOR });
 	}
+	showAreaSection();
 }
 selectButton.addEventListener('click', () => setSelecting(!selecting));
 // Escape clears the area, and then switches Select Area off
@@ -378,7 +476,16 @@ function section(title, parent = tools) {
 
 // The area
 const areaSection = section(T.area);
-const areaHint = element('p', 'pollisHint', T.areaHint);
+// The hint, with the icon of Select Area in place of {0}
+const areaHint = element('p', 'pollisHint');
+for (const [i, part] of T.areaHint.split('{0}').entries()) {
+	if (i) {
+		const icon = element('span', 'pollisInlineIcon pollisSelectAreaIcon');
+		icon.setAttribute('aria-hidden', 'true');
+		areaHint.appendChild(icon);
+	}
+	areaHint.append(part);
+}
 const areaBody = element('div', 'pollisAreaBody');
 areaBody.hidden = true;
 areaSection.append(areaHint, areaBody);
@@ -443,6 +550,8 @@ const areaName = () => `${stem()} p${area.page}`;
 // The Poppler tools, the other page of the sidebar
 tools.appendChild(popplerPage);
 const poppler = popplerTools(popplerPage, { T, config, post, app, element, button, format, table, stem, getArea: () => area });
+showAreaSection();
+setToolsShown(!!config.toolsShown, false);
 
 /** The page view of pdf.js of page `n`, from 1. */
 const pageView = n => app().pdfViewer.getPageView(n - 1);
@@ -546,7 +655,8 @@ viewerContainer.addEventListener('pointerup', async event => {
 	areaBox.classList.add('flash');
 	poppler.areaChanged(area);
 	// The area's text, table and picture are in the sidebar, which shows them once the area is drawn
-	showTools('area');
+	showAreaSection();
+	setToolsShown(true, false);
 	await computeArea();
 }, true);
 
@@ -557,6 +667,7 @@ function clearArea() {
 	areaBody.hidden = true;
 	areaHint.hidden = false;
 	poppler.areaChanged(undefined);
+	showAreaSection();
 }
 
 /** The words of page `n`, kept while the document is open. */

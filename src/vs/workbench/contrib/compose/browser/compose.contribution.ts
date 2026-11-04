@@ -5,6 +5,9 @@
 
 import { localize } from '../../../../../vs/nls.js';
 import { MenuRegistry, MenuId } from '../../../../platform/actions/common/actions.js';
+import { CommandsRegistry, ICommandService } from '../../../../platform/commands/common/commands.js';
+import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
+import { PDF_VIEWER_OPEN_IN_MODE_COMMAND_ID } from '../../../common/pdfViewer.js';
 import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
 import './toolboxExtensions.js';
 import './toolboxPanelsPage.js';
@@ -63,10 +66,11 @@ const ComparisonsMenu = new MenuId('menubarComparisonsMenu');
 const CompileGaloreMenu = new MenuId('menubarCompileGaloreMenu');
 const CollaborationMenu = new MenuId('menubarCollaborationMenu');
 const LiteratureMenu = new MenuId('menubarLiteratureMenu');
+const PdfFilesMenu = new MenuId('menubarPdfFilesMenu');
 
 // ------------------- COMPOSE ------------------------
 
-// The Compose menu: Coding Agents and Agent Skills (codingAgentPage.ts, pollisAgents.ts), MCP Servers (mcpServersPage.ts), Orchestration, Local Models, New Panels and Toolboxes, Literature (Discover Literature, Import References, Browse References), Replication, Methods, Workflows, Reports,
+// The Compose menu: Coding Agents and Agent Skills (codingAgentPage.ts, pollisAgents.ts), MCP Servers (mcpServersPage.ts), Orchestration, Local Models, New Panels and Toolboxes, Literature (Discover Literature, Import References, Browse References), Replication, Methods, Workflows, Reports, PDF Files,
 // Correctness Tests, Horse Races, Compile Galore and Collaboration, which combine panels. The Toolbox Panels page (toolboxPanelsPage.ts) opens from
 // the Edit button of an installed toolbox in the Extensions pane.
 MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
@@ -203,6 +207,13 @@ MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
+	group: '2_compose',
+	submenu: PdfFilesMenu,
+	title: localize('compose.pdfFiles', "PDF Files"),
+	order: 7,
+});
+
+MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	group: '3_compose',
 	submenu: CorrectnessMenu,
 	title: localize('pollisCorrectness.menu', "Correctness Tests"),
@@ -228,6 +239,77 @@ MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	submenu: CollaborationMenu,
 	title: localize('pollisCollaboration.menu', 'Collaboration'),
 	order: 1,
+});
+
+// ==============================================================
+// SUBMENU: PDF Files, the PDF Viewer (extensions/pdf-viewer) opened for a task: on the PDF shown, else on the sample
+// of PollisDatasets. Every item opens the same viewer, with Select Area, Print and Save
+// ==============================================================
+
+const PDF_READ_COMMAND_ID = 'chiara.compose.pdf.read';
+const PDF_TOOLS_COMMAND_ID = 'chiara.compose.pdf.tools';
+const PDF_CROP_COMMAND_ID = 'chiara.compose.pdf.crop';
+const PDF_HIGHLIGHT_COMMAND_ID = 'chiara.compose.pdf.highlight';
+const PDF_TEXT_COMMAND_ID = 'chiara.compose.pdf.text';
+const PDF_DRAW_COMMAND_ID = 'chiara.compose.pdf.draw';
+const PDF_IMAGE_COMMAND_ID = 'chiara.compose.pdf.image';
+
+// Each command and the mode the viewer opens in: the outline, the tools sidebar, Select Area, or a markup tool of pdf.js
+for (const [id, mode] of [
+	[PDF_READ_COMMAND_ID, 'read'],
+	[PDF_TOOLS_COMMAND_ID, 'tools'],
+	[PDF_CROP_COMMAND_ID, 'crop'],
+	[PDF_HIGHLIGHT_COMMAND_ID, 'highlight'],
+	[PDF_TEXT_COMMAND_ID, 'text'],
+	[PDF_DRAW_COMMAND_ID, 'draw'],
+	[PDF_IMAGE_COMMAND_ID, 'image'],
+] as const) {
+	CommandsRegistry.registerCommand(id, (accessor: ServicesAccessor) => accessor.get(ICommandService).executeCommand(PDF_VIEWER_OPEN_IN_MODE_COMMAND_ID, mode));
+}
+
+MenuRegistry.appendMenuItem(PdfFilesMenu, {
+	group: '1_pdf',
+	command: { id: PDF_READ_COMMAND_ID, title: localize('compose.pdfRead', "Read") },
+	order: 1,
+});
+
+// The Poppler tools in the sidebar, in Julia: text, tables, document info, fonts, images, render, convert, split, merge, attachments
+MenuRegistry.appendMenuItem(PdfFilesMenu, {
+	group: '1_pdf',
+	command: { id: PDF_TOOLS_COMMAND_ID, title: localize('compose.pdfExtractConvert', "Extract and Convert") },
+	order: 2,
+});
+
+// Select Area on: the text, the table or the picture of an area, or the area as a PDF
+MenuRegistry.appendMenuItem(PdfFilesMenu, {
+	group: '1_pdf',
+	command: { id: PDF_CROP_COMMAND_ID, title: localize('compose.pdfCrop', "Crop") },
+	order: 3,
+});
+
+// The markup tools of pdf.js, saved in a new PDF with Save
+MenuRegistry.appendMenuItem(PdfFilesMenu, {
+	group: '2_markup',
+	command: { id: PDF_HIGHLIGHT_COMMAND_ID, title: localize('compose.pdfHighlight', "Highlight") },
+	order: 1,
+});
+
+MenuRegistry.appendMenuItem(PdfFilesMenu, {
+	group: '2_markup',
+	command: { id: PDF_TEXT_COMMAND_ID, title: localize('compose.pdfAddText', "Add Text") },
+	order: 2,
+});
+
+MenuRegistry.appendMenuItem(PdfFilesMenu, {
+	group: '2_markup',
+	command: { id: PDF_DRAW_COMMAND_ID, title: localize('compose.pdfDraw', "Draw") },
+	order: 3,
+});
+
+MenuRegistry.appendMenuItem(PdfFilesMenu, {
+	group: '2_markup',
+	command: { id: PDF_IMAGE_COMMAND_ID, title: localize('compose.pdfImages', "Add or Edit Images") },
+	order: 4,
 });
 
 // ==============================================================

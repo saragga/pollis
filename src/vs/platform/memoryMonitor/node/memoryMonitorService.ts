@@ -45,13 +45,17 @@ export class MemoryMonitorService implements IMemoryMonitorService {
 			const pageSize = Number(/page size of (?<size>\d+) bytes/.exec(stat)?.groups?.size ?? 4096);
 			const pages = (name: string) => Number(new RegExp(`^${name}:\\s+(?<pages>\\d+)`, 'm').exec(stat)?.groups?.pages ?? 0);
 			const used = (pages('Anonymous pages') - pages('Pages purgeable') + pages('Pages wired down') + pages('Pages occupied by compressor')) * pageSize;
-			return { total, used: Math.min(total, used) };
+			// The swap in use, such as "total = 12288.00M  used = 11011.38M  free = 1276.62M"
+			const swap = await run('sysctl', ['vm.swapusage']).catch(() => '');
+			const swapped = /used = (?<megabytes>[\d.]+)M/.exec(swap)?.groups?.megabytes;
+			return { total, used: Math.min(total, used), swapped: swapped ? Number(swapped) * 1024 ** 2 : undefined };
 		}
 		if (process.platform === 'linux') {
 			const meminfo = await fs.readFile('/proc/meminfo', 'utf8');
-			const available = Number(/^MemAvailable:\s+(?<kilobytes>\d+)/m.exec(meminfo)?.groups?.kilobytes);
+			const kilobytes = (name: string) => Number(new RegExp(`^${name}:\\s+(?<kilobytes>\\d+)`, 'm').exec(meminfo)?.groups?.kilobytes ?? 0);
+			const available = kilobytes('MemAvailable');
 			if (available) {
-				return { total, used: total - available * 1024 };
+				return { total, used: total - available * 1024, swapped: (kilobytes('SwapTotal') - kilobytes('SwapFree')) * 1024 };
 			}
 		}
 		return { total, used: total - os.freemem() };

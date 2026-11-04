@@ -74,7 +74,6 @@ const KGM_ID  = 'chiara.explore.kgm';
 const SQL_ID = 'chiara.explore.conn.sql';
 const XLSX_ID = 'chiara.explore.conn.xlsx';
 const CSV_ID = 'chiara.explore.conn.csv';
-const PDF_ID = 'chiara.explore.conn.pdf';
 const YFIN_ID = 'chiara.explore.adr.yfin';
 const ALPV_ID = 'chiara.explore.adr.alpv';
 export const FRED_ID = 'chiara.explore.adr.fred';
@@ -181,8 +180,6 @@ CommandsRegistry.registerCommand(KGM_ID, (accessor: ServicesAccessor) => {
 
 CommandsRegistry.registerCommand(SQL_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, SQL_PANEL));
 CommandsRegistry.registerCommand(CSV_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, CSV_PANEL));
-// PDF Files: a PDF from the disk, or the sample of PollisDatasets, in the PDF Viewer (extensions/pdf-viewer)
-CommandsRegistry.registerCommand(PDF_ID, (accessor: ServicesAccessor) => accessor.get(ICommandService).executeCommand('pollis.pdfViewer.openFromMenu'));
 // PDF... in the + of Ask Pollis: a PDF picked, in the PDF Viewer, whose Send to Ask Pollis attaches its areas to the question
 CommandsRegistry.registerCommand(ASK_POLLIS_OPEN_PDF_COMMAND_ID, (accessor: ServicesAccessor) => accessor.get(ICommandService).executeCommand(PDF_VIEWER_OPEN_COMMAND_ID));
 
@@ -1207,7 +1204,7 @@ MenuRegistry.appendMenuItem(ADRSubmenuId, {
 
 // ===================================================
 // SUBMENU: ACCESS FILES
-// The formats by kind, one group each: tables, documents, maps, sound and voice, music, and Life Sciences, a submenu
+// The formats by kind, one group each: tables, maps, sound and voice, music, and Life Sciences, a submenu
 // of its own for the many formats of medicine and biology.
 // ===================================================
 
@@ -1226,12 +1223,6 @@ MenuRegistry.appendMenuItem(CONNSubmenuId, {
 	command: { id: XLSX_ID, title: localize('conn.excel', 'Excel Workbooks') },
 	order: 2,
 });  // XLSX.jl
-
-MenuRegistry.appendMenuItem(CONNSubmenuId, {
-	group: '2_documents',
-	command: { id: PDF_ID, title: localize('conn.pdf', 'PDF Files') },
-	order: 1,
-});  // the PDF Viewer
 
 // Access Files > Life Sciences: a few of the most common formats of each family, the rest to come with the toolboxes
 // of their fields, which can add theirs to this submenu

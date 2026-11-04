@@ -78,21 +78,31 @@ registerAction2(class extends Action2 {
 		const pathService = accessor.get(IPathService);
 		const environmentService = accessor.get(IEnvironmentService);
 
-		const folders = await fileDialogService.showOpenDialog({
-			title: localize('pollisWorkspace.pick', "Choose or Create the Folder of the Pollis Workspace"),
-			openLabel: mnemonicButtonLabel(localize({ key: 'pollisWorkspace.pickLabel', comment: ['&& denotes a mnemonic'] }, "&&Make Pollis Workspace")),
-			canSelectFolders: true,
-			canSelectFiles: false,
-			canSelectMany: false,
-			defaultUri: joinPath(pathService.userHome({ preferLocal: true }), 'Documents'),
+		// A new folder, named in a save dialog, so that the folder it opens in never becomes the workspace by itself;
+		// the name offered is one not taken yet in Documents
+		const documents = joinPath(pathService.userHome({ preferLocal: true }), 'Documents');
+		const name = localize('pollisWorkspace.defaultName', "Pollis Workspace");
+		let offered = joinPath(documents, name);
+		for (let n = 2; await fileService.exists(offered); n++) {
+			offered = joinPath(documents, `${name} ${n}`);
+		}
+		const folder = await fileDialogService.showSaveDialog({
+			title: localize('pollisWorkspace.pick', "Name the Folder of the New Pollis Workspace"),
+			saveLabel: mnemonicButtonLabel(localize({ key: 'pollisWorkspace.pickLabel', comment: ['&& denotes a mnemonic'] }, "&&Create")),
+			defaultUri: offered,
 		});
-		const folder = folders?.[0];
 		if (!folder) {
 			return;
 		}
 		if (isInsidePollis(folder, pathService, environmentService)) {
 			throw new Error(localize('pollisWorkspace.insidePollis', "A Pollis Workspace keeps your work outside Pollis: choose a folder outside {0}.", folder.fsPath));
 		}
+		// A file of that name cannot hold the workspace; a folder of that name becomes it, keeping what it has
+		const existing = await fileService.exists(folder) ? await fileService.stat(folder) : undefined;
+		if (existing && !existing.isDirectory) {
+			throw new Error(localize('pollisWorkspace.isFile', "{0} is a file: give the Pollis Workspace another name.", basename(folder)));
+		}
+		await fileService.createFolder(folder);
 		const marker = joinPath(folder, MARKER_FILE);
 		if (!await fileService.exists(marker)) {
 			await fileService.writeFile(marker, VSBuffer.fromString(markerToml(basename(folder))));

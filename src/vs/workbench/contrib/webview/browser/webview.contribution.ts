@@ -16,6 +16,7 @@ import { IEditorService } from '../../../services/editor/common/editorService.js
 import { WebviewFindAccessibilityHelp } from './webviewFindAccessibilityHelp.js';
 // POLLIS: the menus of webviews as the workbench's menus
 import './webviewMenu.js';
+import './webviewColorize.js';
 
 
 const PRIORITY = 100;

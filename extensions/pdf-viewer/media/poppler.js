@@ -26,6 +26,56 @@ const PICTURE_TYPES = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg',
 const extensionOf = name => /\.(?<extension>[^./\\]+)$/.exec(name)?.groups.extension.toLowerCase() ?? '';
 const nameOf = path => path.substring(path.replace(/\\/g, '/').lastIndexOf('/') + 1);
 
+/** The brackets, coloured by depth as the editor colours them: an opening one and its closing one alike. */
+const OPENING = '([{';
+const CLOSING = ')]}';
+
+/**
+ * Colours the brackets of coloured code by their depth, in the theme's colours for bracket pairs, as the panels do;
+ * those of comments keep the colour of the comment.
+ */
+function colorBrackets(root) {
+	let depth = 0;
+	const texts = [];
+	const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+	for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+		texts.push(node);
+	}
+	for (const node of texts) {
+		// A comment is a token of its own, which starts with #
+		if (node.parentElement?.textContent.trimStart().startsWith('#')) {
+			continue;
+		}
+		const fragment = document.createDocumentFragment();
+		let run = '';
+		for (const character of node.nodeValue) {
+			const opening = OPENING.includes(character);
+			if (!opening && !CLOSING.includes(character)) {
+				run += character;
+				continue;
+			}
+			if (run) {
+				fragment.appendChild(document.createTextNode(run));
+				run = '';
+			}
+			if (!opening) {
+				depth = Math.max(0, depth - 1);
+			}
+			const bracket = document.createElement('span');
+			bracket.textContent = character;
+			bracket.style.color = `var(--vscode-editorBracketHighlight-foreground${depth % 6 + 1})`;
+			fragment.appendChild(bracket);
+			if (opening) {
+				depth++;
+			}
+		}
+		if (run) {
+			fragment.appendChild(document.createTextNode(run));
+		}
+		node.replaceWith(fragment);
+	}
+}
+
 /** A string of Julia code. */
 const juliaString = text => `"${text.replace(/[\\"$]/g, character => `\\${character}`)}"`;
 
@@ -60,6 +110,10 @@ export function popplerTools(parent, context) {
 
 	// pdf.js starts after the tools are made
 	const pageCount = () => app()?.pdfDocument?.numPages ?? 0;
+
+	/** The colours of the tokens of the coloured code, in the theme's colours. */
+	const tokenStyle = element('style');
+	document.head.appendChild(tokenStyle);
 
 	// ---- The options of every tool: the pages, the area and the password
 
@@ -329,9 +383,43 @@ export function popplerTools(parent, context) {
 		const codeBlock = element('pre');
 		const codeActions = element('div', 'pollisButtons');
 		codeActions.append(
-			button(T.copyCode, undefined, () => post({ command: 'copy', text: codeBlock.textContent })),
-			button(T.runInRepl, T.runInReplTitle, () => post({ command: 'runInRepl', code: codeBlock.textContent })),
+			button(T.copyCode, undefined, () => post({ command: 'copy', text: codeText })),
+			button(T.runInRepl, T.runInReplTitle, () => post({ command: 'runInRepl', code: codeText })),
 		);
+
+		/** The code, and the code last coloured: shown plain at once, and coloured as the panels colour theirs once the fold is open. */
+		let codeText = '';
+		let colored;
+		const setCode = text => {
+			codeText = text;
+			if (colored !== text) {
+				colored = undefined;
+				codeBlock.textContent = text;
+			}
+			if (codeFold.open) {
+				colorize();
+			}
+		};
+		async function colorize() {
+			const text = codeText;
+			if (colored === text) {
+				return;
+			}
+			const answer = await ask({ command: 'colorize', code: text });
+			// The code changed meanwhile, or Pollis could not colour it
+			if (text !== codeText || !answer.html) {
+				return;
+			}
+			tokenStyle.textContent = answer.css ?? '';
+			codeBlock.innerHTML = answer.html;
+			colorBrackets(codeBlock);
+			colored = text;
+		}
+		codeFold.addEventListener('toggle', () => {
+			if (codeFold.open) {
+				colorize();
+			}
+		});
 		codeFold.append(codeBlock, codeActions);
 		body.append(runRow, status, result, codeFold);
 		parent.appendChild(details);
@@ -341,10 +429,10 @@ export function popplerTools(parent, context) {
 		const refresh = () => {
 			const planned = plan();
 			if (typeof planned !== 'object') {
-				codeBlock.textContent = `# ${planned ?? ''}`;
+				setCode(`# ${planned ?? ''}`);
 				return;
 			}
-			codeBlock.textContent = code ? code(planned) : requestCode(planned.request, chosen);
+			setCode(code ? code(planned) : requestCode(planned.request, chosen));
 		};
 		options.addEventListener('input', () => {
 			chosen = undefined;
@@ -386,7 +474,14 @@ export function popplerTools(parent, context) {
 			planned.show(result, answer);
 		}
 
-		const entry = { key, title, details, refresh };
+		/** Colours the code again, in the colours of another theme. */
+		const recolor = () => {
+			colored = undefined;
+			if (codeFold.open) {
+				colorize();
+			}
+		};
+		const entry = { key, title, details, refresh, recolor };
 		tools.push(entry);
 		return entry;
 	}
@@ -434,7 +529,15 @@ export function popplerTools(parent, context) {
 		}
 		const command = `\`$(${request.tool}()) ${args.map(juliaArgument).join(' ')}\``;
 		if (request.pages) {
-			lines.push(`for page in ${request.pages[0]}:${request.pages[request.pages.length - 1]}`, `\trun(${command})`, 'end');
+			// A run of pages as a range, else the list of the pages given
+			const pages = request.pages;
+			const run = pages.every((page, i) => page === pages[0] + i);
+			const list = run ? `${pages[0]}:${pages[pages.length - 1]}` : `[${pages.join(', ')}]`;
+			if (args[args.length - 1] === '-') {
+				lines.push(`text = join(read(${command}, String) for page in ${list})  # - writes to standard output`, 'print(text)');
+			} else {
+				lines.push(`for page in ${list}`, `\trun(${command})`, 'end');
+			}
 		} else if (args[args.length - 1] === '-') {
 			lines.push(`text = read(${command}, String)  # - writes to standard output`, 'print(text)');
 		} else {
@@ -452,8 +555,13 @@ export function popplerTools(parent, context) {
 	// ---- Extract Text
 
 	let textOrder;
+	let textPages;
 	tool('text', T.extractText, T.extractTextShort, T.extractTextHint, row => {
 		textOrder = selectField(T.textOrder, T.textOrderTitle, [['reading', T.readingOrder], ['layout', T.physicalLayout], ['raw', T.streamOrder]], row);
+		textPages = element('input', 'pollisWide');
+		textPages.type = 'text';
+		textPages.placeholder = T.pagesPlaceholder;
+		field(T.splitPages, T.splitPagesTitle, textPages, row);
 	}, () => {
 		const range = pageRange();
 		if (typeof range !== 'object') {
@@ -461,9 +569,22 @@ export function popplerTools(parent, context) {
 		}
 		const order = textOrder.value === 'reading' ? [] : [`-${textOrder.value}`];
 		const area = croppedArea();
+		const suffix = area ? ' area' : '';
+		// The pages given, such as 1-3, 7, each read in its turn; or else First Page to Last Page in one run
+		const text = textPages.value.trim();
+		if (text) {
+			const ranges = pageRanges(text, pageCount());
+			if (!ranges) {
+				return format(T.badPages, pageCount());
+			}
+			return {
+				request: { tool: 'pdftotext', args: [...password(), '-enc', 'UTF-8', ...order, '-f', '{page}', '-l', '{page}', ...cropArgs(area), '{pdf}', '-'], pages: ranges.flat() },
+				show: showText(`${stem()} p${text.replace(/\s+/g, '')}${suffix}.txt`),
+			};
+		}
 		return {
 			request: { tool: 'pdftotext', args: [...password(), '-enc', 'UTF-8', ...order, ...rangeArgs(range), ...cropArgs(area), '{pdf}', '-'] },
-			show: showText(`${stem()} p${range.first}-${range.last}${area ? ' area' : ''}.txt`),
+			show: showText(`${stem()} p${range.first}-${range.last}${suffix}.txt`),
 		};
 	});
 
@@ -528,21 +649,6 @@ export function popplerTools(parent, context) {
 			'end',
 			'cells',
 		].join('\n');
-	});
-
-	// ---- Document Info
-
-	let infoDetail;
-	tool('info', T.documentInfo, T.documentInfoShort, T.documentInfoHint, row => {
-		infoDetail = selectField(T.show, undefined, [['summary', T.summary], ['meta', T.xmpMetadata], ['box', T.pageBoxes], ['url', T.links], ['dests', T.namedDestinations], ['struct-text', T.structureTree], ['js', T.javaScript]], row);
-	}, () => {
-		const count = pageCount();
-		if (!count) {
-			return T.noDocument;
-		}
-		const detail = infoDetail.value;
-		const args = detail === 'summary' ? ['-isodates'] : detail === 'box' ? ['-box', '-f', '1', '-l', String(count)] : [`-${detail}`];
-		return { request: { tool: 'pdfinfo', args: [...password(), ...args, '{pdf}'] }, show: showText(`${stem()} ${detail === 'summary' ? 'info' : detail}.txt`) };
 	});
 
 	// ---- Fonts
@@ -628,6 +734,21 @@ export function popplerTools(parent, context) {
 	});
 	const attachmentView = element('div', 'pollisResult');
 	attachmentsTool.details.querySelector('.pollisFoldBody').appendChild(attachmentView);
+
+	// ---- Document Info
+
+	let infoDetail;
+	tool('info', T.documentInfo, T.documentInfoShort, T.documentInfoHint, row => {
+		infoDetail = selectField(T.show, undefined, [['summary', T.summary], ['meta', T.xmpMetadata], ['box', T.pageBoxes], ['url', T.links], ['dests', T.namedDestinations], ['struct-text', T.structureTree], ['js', T.javaScript]], row);
+	}, () => {
+		const count = pageCount();
+		if (!count) {
+			return T.noDocument;
+		}
+		const detail = infoDetail.value;
+		const args = detail === 'summary' ? ['-isodates'] : detail === 'box' ? ['-box', '-f', '1', '-l', String(count)] : [`-${detail}`];
+		return { request: { tool: 'pdfinfo', args: [...password(), ...args, '{pdf}'] }, show: showText(`${stem()} ${detail === 'summary' ? 'info' : detail}.txt`) };
+	});
 
 	group(T.makeGroup);
 
@@ -743,19 +864,6 @@ export function popplerTools(parent, context) {
 	refreshAll();
 
 	return {
-		/** The items of the menu of Poppler Tools: the tools to read the PDF, those that make files, and the whole sidebar. */
-		menuItems(shown) {
-			const items = tools.map(entry => ({ id: entry.key, label: entry.title }));
-			const makeFrom = tools.findIndex(entry => entry.key === 'render');
-			return [...items.slice(0, makeFrom), { separator: true }, ...items.slice(makeFrom), { separator: true }, { id: 'all', label: shown ? T.hidePoppler : T.showAllTools }];
-		},
-		/** Opens the fold of the tool `key` alone, and brings it into view. */
-		open(key) {
-			for (const entry of tools) {
-				entry.details.open = entry.key === key;
-			}
-			tools.find(entry => entry.key === key)?.details.scrollIntoView({ block: 'start' });
-		},
 		/** A new area, or none: Only the Area is on for a new one, and the pages are its page. */
 		areaChanged(area) {
 			onlyArea.disabled = !area;
@@ -780,6 +888,12 @@ export function popplerTools(parent, context) {
 			attachmentView.appendChild(list);
 			show?.click();
 			attachmentsTool.details.scrollIntoView({ block: 'nearest' });
+		},
+		/** The code of the tools coloured again, in the colours of the theme now chosen. */
+		recolor() {
+			for (const entry of tools) {
+				entry.recolor();
+			}
 		},
 		/** Whether a file of this name is shown by its kind. */
 		shows: name => !!showLabel(name),

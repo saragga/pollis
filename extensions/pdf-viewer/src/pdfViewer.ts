@@ -13,6 +13,12 @@ import * as vscode from 'vscode';
 
 export const PDF_VIEWER_VIEW_TYPE = 'pollis.pdfViewer';
 
+/**
+ * What the viewer is opened for, from Compose > PDF Files: reading, with the outline; the tools sidebar shown; Select
+ * Area on; or a markup tool of pdf.js ready: Highlight, Add Text, Draw, or Add or Edit Images.
+ */
+export type ViewerMode = 'read' | 'tools' | 'crop' | 'highlight' | 'text' | 'draw' | 'image';
+
 /** The command of the workbench that puts an attachment in the question of the Ask Pollis pane (askPollisPage.ts). */
 const ASK_POLLIS_ADD_ATTACHMENT_COMMAND_ID = 'pollis.askPollis.addAttachment';
 
@@ -27,16 +33,24 @@ type ViewerMessage =
 	| { readonly command: 'poppler'; readonly token: number; readonly request: PopplerRequest }
 	| { readonly command: 'reveal' | 'openFile'; readonly path: string }
 	| { readonly command: 'readFile'; readonly token: number; readonly path: string }
-	| { readonly command: 'runInRepl'; readonly code: string };
+	| { readonly command: 'runInRepl'; readonly code: string }
+	| { readonly command: 'toolsShown'; readonly shown: boolean }
+	| { readonly command: 'colorize'; readonly token: number; readonly code: string };
 
 /** The command of Pollis that shows a menu of the webview as the workbench's menu (native on macOS), and gives back the chosen item's id. */
 const SHOW_MENU_COMMAND_ID = '_pollis.webview.showMenu';
+
+/** The command of Pollis that colours Julia code as the panels colour theirs, in the theme's colours: (code) => { html, css }. */
+const COLORIZE_COMMAND_ID = '_pollis.webview.colorizeJulia';
 
 /** The command of the Julia extension that runs a Poppler tool in its hidden Julia process (pdf_tools.jl). */
 const POPPLER_COMMAND_ID = 'language-julia.pollisPoppler';
 
 /** The key, in the global state, of the folder last chosen to save a file of the viewer or of the Poppler tools in. */
 const SAVE_FOLDER_KEY = 'pollis.pdfViewer.saveFolder';
+
+/** The key, in the global state, of whether the tools sidebar was last shown or hidden, for the next PDF. */
+const TOOLS_SHOWN_KEY = 'pollis.pdfViewer.toolsShown';
 
 /** How long to wait before asking again while Julia installs Poppler_jll, the first time. */
 const INSTALL_RETRY_MS = 3000;
@@ -186,15 +200,17 @@ function viewerText(): Record<string, string> {
 		selectArea: vscode.l10n.t("Select Area"),
 		selectAreaTitle: vscode.l10n.t("Select Area: drag on a page to take the text, the table or the picture of an area"),
 		openFailed: vscode.l10n.t("{0} could not be opened: {1}"),
-		popplerTitle: vscode.l10n.t("Poppler Tools: ten tools that read the PDF or make files from it, with Poppler in Julia"),
+		tools: vscode.l10n.t("Tools:"),
+		more: vscode.l10n.t("More"),
+		toolsTitle: vscode.l10n.t("The sidebar at the right of the pages: the area of Select Area, and the tools that read the PDF or make files from it, in Julia"),
+		showTools: vscode.l10n.t("Show the Tools"),
+		hideTools: vscode.l10n.t("Hide the Tools"),
 		readGroup: vscode.l10n.t("Read"),
 		makeGroup: vscode.l10n.t("Make"),
-		showAllTools: vscode.l10n.t("Show All Tools"),
-		hidePoppler: vscode.l10n.t("Hide Poppler Tools"),
-		extractTextShort: vscode.l10n.t("The text of the pages or the area"),
+		extractTextShort: vscode.l10n.t("The text of the pages (e.g. 1-3, 7) or the area"),
 		tablesShort: vscode.l10n.t("The cells of a table in the area"),
 		documentInfoShort: vscode.l10n.t("Title, pages, page size, metadata, links"),
-		fontsShort: vscode.l10n.t("The fonts, embedded or substituted"),
+		fontsShort: vscode.l10n.t("Whether the fonts are embedded, as publishers often require"),
 		imagesShort: vscode.l10n.t("List the images, or save them"),
 		attachmentsShort: vscode.l10n.t("List, save or add embedded files"),
 		renderPagesShort: vscode.l10n.t("Pages or the area as PNG, JPEG or TIFF"),
@@ -202,7 +218,7 @@ function viewerText(): Record<string, string> {
 		splitShort: vscode.l10n.t("One file per page, per range, or the pages given"),
 		mergeShort: vscode.l10n.t("This PDF and others, in one file"),
 		area: vscode.l10n.t("Area"),
-		areaHint: vscode.l10n.t("Click Select Area in the toolbar, then drag on a page. A click on the page or Escape clears the area."),
+		areaHint: vscode.l10n.t("Click Select Area {0} in the toolbar, then drag on a page. A click on the page or Escape clears the area."),
 		areaNumbers: vscode.l10n.t("Page {0} · Left {1}, Top {2}, Width {3}, Height {4} pt"),
 		clearArea: vscode.l10n.t("Clear the Area"),
 		noText: vscode.l10n.t("There is no text in the area: the page may be a scan, or the area may hold only a picture."),
@@ -232,8 +248,8 @@ function viewerText(): Record<string, string> {
 		juliaCode: vscode.l10n.t("Julia Code"),
 		copyCode: vscode.l10n.t("Copy"),
 		working: vscode.l10n.t("Working..."),
-		poppler: vscode.l10n.t("Poppler Tools"),
-		popplerHint: vscode.l10n.t("Poppler reads the file on the disk, in Julia. Each tool has its Julia code, to copy or run in the REPL."),
+		poppler: vscode.l10n.t("Tools"),
+		popplerHint: vscode.l10n.t("Each tool reads the PDF or makes files from it with Poppler, a PDF library, in Julia, and shows its Julia code to copy or run in the REPL."),
 		firstPage: vscode.l10n.t("First Page"),
 		lastPage: vscode.l10n.t("Last Page"),
 		lastPageTitle: vscode.l10n.t("Empty for the last page of the file"),
@@ -264,7 +280,7 @@ function viewerText(): Record<string, string> {
 		hide: vscode.l10n.t("Hide"),
 		notRead: vscode.l10n.t("The file could not be read."),
 		extractText: vscode.l10n.t("Extract Text"),
-		extractTextHint: vscode.l10n.t("pdftotext. Physical Layout keeps the columns of a table side by side."),
+		extractTextHint: vscode.l10n.t("pdftotext. Pages takes a list, such as 1-3, 7; empty, First Page to Last Page. Physical Layout keeps the columns of a table side by side."),
 		textOrder: vscode.l10n.t("Text Order"),
 		textOrderTitle: vscode.l10n.t("Reading Order undoes columns and hyphenation; Physical Layout keeps words where they are on the page, so table columns stay side by side; Content Stream Order keeps the order in which the file draws the text."),
 		readingOrder: vscode.l10n.t("Reading Order"),
@@ -339,6 +355,8 @@ export class PdfViewerProvider implements vscode.CustomReadonlyEditorProvider<Pd
 	private readonly panels = new Map<string, Set<vscode.WebviewPanel>>();
 	/** The page to show a PDF at when its panel opens, by its URI. */
 	private readonly pendingPages = new Map<string, number>();
+	/** The mode to open a PDF in when its panel opens, by its URI. */
+	private readonly pendingModes = new Map<string, ViewerMode>();
 
 	constructor(private readonly extensionUri: vscode.Uri, private readonly globalState: vscode.Memento) { }
 
@@ -377,6 +395,18 @@ export class PdfViewerProvider implements vscode.CustomReadonlyEditorProvider<Pd
 		}
 	}
 
+	/** Puts the viewer of a PDF in `mode`: the panels that show it, else the next one to open it. */
+	showMode(uri: vscode.Uri, mode: ViewerMode): void {
+		const open = this.panels.get(uri.toString());
+		if (open?.size) {
+			for (const panel of open) {
+				panel.webview.postMessage({ command: 'mode', mode });
+			}
+		} else {
+			this.pendingModes.set(uri.toString(), mode);
+		}
+	}
+
 	openCustomDocument(uri: vscode.Uri): PdfDocument {
 		return new PdfDocument(uri);
 	}
@@ -405,10 +435,12 @@ export class PdfViewerProvider implements vscode.CustomReadonlyEditorProvider<Pd
 		const send = async (reload: boolean) => {
 			try {
 				const data = await readBytes(document.uri);
-				// The page asked for before the panel opened, the first time
+				// The page and the mode asked for before the panel opened, the first time
 				const page = reload ? undefined : this.pendingPages.get(key);
+				const mode = reload ? undefined : this.pendingModes.get(key);
 				this.pendingPages.delete(key);
-				await post({ command: 'open', data, name: baseName(document.uri), reload, page });
+				this.pendingModes.delete(key);
+				await post({ command: 'open', data, name: baseName(document.uri), reload, page, mode });
 			} catch (error) {
 				vscode.window.showWarningMessage(vscode.l10n.t("{0} could not be read: {1}", baseName(document.uri), String(error)));
 			}
@@ -422,6 +454,9 @@ export class PdfViewerProvider implements vscode.CustomReadonlyEditorProvider<Pd
 			reload = setTimeout(() => send(true), 300);
 		};
 		disposables.push(watcher, watcher.onDidChange(changed), watcher.onDidCreate(changed), { dispose: () => clearTimeout(reload) });
+
+		// The Julia code of the tools is coloured again in the colours of another theme
+		disposables.push(vscode.window.onDidChangeActiveColorTheme(() => post({ command: 'themeChanged' })));
 
 		// The files the Poppler tools have written, which the webview may reveal, open or read, and the folders they wrote in, which it may reveal
 		const written = new Set<string>();
@@ -484,6 +519,19 @@ export class PdfViewerProvider implements vscode.CustomReadonlyEditorProvider<Pd
 				case 'runInRepl':
 					await runInRepl(message.code);
 					break;
+				case 'colorize': {
+					let colorized: { readonly html: string; readonly css: string } | undefined;
+					try {
+						colorized = await vscode.commands.executeCommand<{ readonly html: string; readonly css: string } | undefined>(COLORIZE_COMMAND_ID, message.code);
+					} catch {
+						colorized = undefined;
+					}
+					await post({ command: 'colorized', token: message.token, html: colorized?.html, css: colorized?.css });
+					break;
+				}
+				case 'toolsShown':
+					await this.globalState.update(TOOLS_SHOWN_KEY, message.shown);
+					break;
 				case 'menu': {
 					let chosen: string | undefined;
 					try {
@@ -505,7 +553,7 @@ export class PdfViewerProvider implements vscode.CustomReadonlyEditorProvider<Pd
 	 */
 	private async runPoppler(request: PopplerRequest, pdf: vscode.Uri, folder: vscode.Uri, written: Set<string>, installing: () => void, stopped: () => boolean): Promise<PopplerAnswer> {
 		if (pdf.scheme !== 'file') {
-			return { error: vscode.l10n.t("The Poppler tools read a file on the disk, and this PDF is not one: save a copy with File > Save As... and open it.") };
+			return { error: vscode.l10n.t("The tools read a file on the disk, and this PDF is not one: save a copy with File > Save As... and open it.") };
 		}
 		let dir: vscode.Uri | undefined;
 		let out: vscode.Uri | undefined;
@@ -522,7 +570,7 @@ export class PdfViewerProvider implements vscode.CustomReadonlyEditorProvider<Pd
 			}
 		}
 		if ((dir && dir.scheme !== 'file') || (out && out.scheme !== 'file')) {
-			return { error: vscode.l10n.t("The Poppler tools write files on the disk: choose a folder there.") };
+			return { error: vscode.l10n.t("The tools write files on the disk: choose a folder there.") };
 		}
 		const outputFolder = dir ?? (out && vscode.Uri.joinPath(out, '..'));
 		if (outputFolder) {
@@ -569,9 +617,9 @@ export class PdfViewerProvider implements vscode.CustomReadonlyEditorProvider<Pd
 
 		const answer = await askJulia(julia, installing, stopped);
 		if (!answer) {
-			return { error: vscode.l10n.t("The Poppler tools run in the Julia extension of Pollis, which is not enabled.") };
+			return { error: vscode.l10n.t("The tools run in the Julia extension of Pollis, which is not enabled.") };
 		} else if (answer.error === 'noJulia') {
-			return { error: vscode.l10n.t("The Poppler tools run in Julia, which was not found: install Julia, or give its path in the settings of the Julia extension.") };
+			return { error: vscode.l10n.t("The tools run in Julia, which was not found: install Julia, or give its path in the settings of the Julia extension.") };
 		} else if (answer.error === 'failed') {
 			return { error: vscode.l10n.t("Julia could not install or start Poppler_jll: check the internet connection, then try again.") };
 		} else if (answer.error) {
@@ -614,6 +662,7 @@ export class PdfViewerProvider implements vscode.CustomReadonlyEditorProvider<Pd
 				iccs: `${url('pdfjs', 'web', 'iccs')}/`,
 			},
 			text: viewerText(),
+			toolsShown: this.globalState.get<boolean>(TOOLS_SHOWN_KEY, false),
 		};
 		const n = nonce();
 		const source = webview.cspSource;

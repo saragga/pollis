@@ -465,8 +465,7 @@ from \texttt{PGPASSWORD} or \texttt{\textasciitilde/.pgpass}.
 
 \subhead{Panels for data}
 \begin{itemize}
-  \item \ui{Explore > Access Files}: the formats by kind, tables (\ui{CSV Files}, \ui{Excel Workbooks}),
-    documents (\ui{PDF Files}), maps, sound and voice, music, and \ui{Life Sciences}, a submenu for medical
+  \item \ui{Explore > Access Files}: the formats by kind, tables (\ui{CSV Files}, \ui{Excel Workbooks}), maps, sound and voice, music, and \ui{Life Sciences}, a submenu for medical
     imaging, biosignals, genomics and clinical records; the formats not in Pollis yet, such as Parquet,
     GeoJSON or DICOM, are greyed out, and the toolboxes of a field can bring more.
   \item \ui{Explore > Access Databases}: SQL databases, Pollis's own among them (query, import a CSV, Parquet or
@@ -479,10 +478,14 @@ from \texttt{PGPASSWORD} or \texttt{\textasciitilde/.pgpass}.
 \subhead{PDF Files}
 Every PDF opens in the PDF Viewer of Pollis, from the Explorer, \ui{File > Open}, \ui{Help > Documentation},
 the vignettes, \ui{Reports}, \ui{New Methods} and the sources of Ask Pollis, with its pages, outline,
-thumbnails, search, zoom and form fields. \ui{Explore > Access Files > PDF Files} opens the
-sample of PollisDatasets in it, and \ui{Open a PDF...}, in the viewer's title bar, a PDF of yours. The tools of Pollis show in a sidebar at the right of the pages:
-the area once \ui{Select Area} has drawn one, and the Poppler tools from the menu of \ui{Poppler Tools},
-beside it in the toolbar, which lists the tools that read the PDF and those that make files from it.
+thumbnails, search, zoom and form fields. \ui{Compose > PDF Files} opens the PDF shown, else the sample of
+PollisDatasets, for a task: \ui{Read} (the outline, else the thumbnails),
+\ui{Extract and Convert} (the Poppler tools), \ui{Crop} (\ui{Select Area} on), and the markup tools
+\ui{Highlight}, \ui{Add Text}, \ui{Draw} and \ui{Add or Edit Images}. Every item opens the same viewer,
+whose toolbar always has \ui{Select Area}, \ui{Print} and \ui{Save}; \ui{Open a PDF...}, in its title bar,
+opens a PDF of yours. \ui{Tools: Show | Hide}, at the right end of the toolbar, shows or hides the sidebar at the right of
+the pages, with the area of \ui{Select Area} and the Poppler tools, those that read the PDF and those that
+make files from it; the viewer keeps the choice for the next PDF.
 \begin{enumerate}[label=\arabic*.]
   \item Choose \ui{Select Area} in the toolbar, and drag a box around a table, a paragraph or a figure. Its
     frame flashes green, and the sidebar shows its position in points from the top left corner of the page,
@@ -490,16 +493,17 @@ beside it in the toolbar, which lists the tools that read the PDF and those that
   \item \ui{Copy Text}, \ui{Copy Table}, \ui{Save CSV...} and \ui{Save PNG...} take the area away;
     \ui{Text}, \ui{Table} or \ui{Image}, under \ui{Send to Ask Pollis}, puts its text, its cells as a CSV
     file, or a picture of it in the question of the Ask Pollis pane.
-  \item \ui{Poppler Tools} runs the tools of Poppler, in Julia, on the pages given, or on the area with
-    \ui{Only the Area}: \ui{Extract Text}, \ui{Tables}, \ui{Document Info}, \ui{Fonts}, \ui{Images},
-    \ui{Render Pages}, \ui{Convert} (SVG, PostScript, EPS, HTML or XML, or the area as PDF), \ui{Split} (one file per page,
-    the pages given, such as 1-3, 5, in one file, or a file per range), \ui{Merge} and
-    \ui{Attachments}. Each tool has its options, \ui{Run}, and its \ui{Julia Code}, to copy or run in the
+  \item The Poppler tools, in the sidebar, run Poppler in Julia on the pages given, or on the area with
+    \ui{Only the Area}: \ui{Extract Text} (also of the pages given, such as 1-3, 7), \ui{Tables},
+    \ui{Fonts}, \ui{Images}, \ui{Attachments}, \ui{Document Info}, \ui{Render Pages}, \ui{Convert} (SVG, PostScript, EPS, HTML or XML, or the area as PDF), \ui{Split} (one file per page,
+    the pages given, such as 1-3, 5, in one file, or a file per range) and \ui{Merge}. Each tool has its options, \ui{Run}, and its \ui{Julia Code}, to copy or run in the
     REPL. What a tool prints is shown below it; the files it writes go to the folder or the file you choose,
     and a CSV file shows as a table, a picture as itself and a text file as its text. An attachment chosen in
     the left pane shows there too. The dialogs open in the folder you chose last, or at first in the PDF's
     folder, or in Documents for a PDF of a Julia package, as the sample of PollisDatasets; the result names
     the folder, with \ui{Reveal in Finder} (\ui{Reveal in File Explorer} on Windows).
+  \item \ui{Highlight}, \ui{Add Text}, \ui{Draw} and \ui{Add or Edit Images}, in the toolbar, mark up the
+    pages; \ui{Save} writes the PDF with the marks in a new file.
   \item \ui{Print}, in the toolbar, prints the PDF with the system's print dialog.
 \end{enumerate}
 The internal browser, \ui{Explore > Browser}, does not show PDFs: a PDF that a page links to opens in the PDF
@@ -969,9 +973,9 @@ a coding agent can then polish the draft into a finished document.
 
 \subhead{Before you start: a Pollis Workspace}
 Reports are written in the \texttt{reports} folder of a \emph{Pollis Workspace}: an ordinary folder for
-your own work, outside Pollis. To make one, choose \ui{File > New Pollis Workspace...}, then choose or
-create a folder, for example in your Documents, and click \ui{Make Pollis Workspace}. Pollis puts a
-\texttt{pollis.toml} file and a \texttt{data} folder in it, and opens it. Next time, open that folder with
+your own work, outside Pollis. To make one, choose \ui{File > New Pollis Workspace...}, give the folder a
+name (it starts as Pollis Workspace, in your Documents), and click \ui{Create}. Pollis makes the folder,
+puts a \texttt{pollis.toml} file and a \texttt{data} folder in it, and opens it. Next time, open that folder with
 \ui{File > Open Folder...}.
 
 \subhead{Make a report or slides}

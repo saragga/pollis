@@ -13,6 +13,8 @@ export const MEMORY_MONITOR_CHANNEL = 'memoryMonitor';
 export interface IMemoryReading {
 	readonly total: number;
 	readonly used: number;
+	/** How much is swapped out to the disk, where the system reports it (macOS and Linux). */
+	readonly swapped?: number;
 }
 
 /** A process of the computer. */
