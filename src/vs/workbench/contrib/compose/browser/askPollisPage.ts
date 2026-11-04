@@ -1209,7 +1209,7 @@ registerAction2(class extends Action2 {
 	}
 });
 
-// View > Chat, above View > Browser as in VS Code, whose own Chat view Pollis does not register
+// View > Chat, as in VS Code, whose own Chat view Pollis does not register
 MenuRegistry.appendMenuItem(MenuId.MenubarViewMenu, {
 	group: '4_auxbar',
 	command: {

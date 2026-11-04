@@ -56,6 +56,8 @@ const BUILTIN_VIEWS: readonly IPollisView[] = [
 			'chiara.explore.dvsf.contour',
 			'chiara.explore.dvsf.surface',
 			'chiara.explore.dstats',
+			// Explore > Browser
+			'workbench.action.browser.openFromViewMenu',
 			// Model
 			'chiara.statistics.d',
 			'chiara.statistics.de',

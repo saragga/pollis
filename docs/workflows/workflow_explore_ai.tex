@@ -1,0 +1,289 @@
+% Pollis drill-down: Explore with Pollis AI+, the chat model sent out into the world with tools and skills, beside
+% Ask Pollis AI+, which answers from Pollis's own documents; and how each harness is measured, model by model, so that
+% the progress of the harnesses can be seen (4 November 2026).
+% Written before the code, as these are to work: the plan to build them from. Check every statement against Pollis
+% once it is built.
+% Compile with: latexmk -pdf workflow_explore_ai.tex
+\input{workflow_style}
+
+\usepackage{titlesec}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{listings}
+
+\fancyhf{}
+\fancyfoot[L]{\footnotesize\color{soft}\textbf{Pollis}\enspace Drill-down: Explore with Pollis AI+}
+\fancyfoot[R]{\footnotesize\color{soft}\thepage}
+
+\titleformat{\section}{\color{navy}\large\bfseries}{\color{deepamber}\thesection}{0.6em}{}
+\titleformat{\subsection}{\color{navy}\normalsize\bfseries}{\color{deepamber}\thesubsection}{0.5em}{}
+\titlespacing*{\section}{0pt}{12pt}{4pt}
+\titlespacing*{\subsection}{0pt}{8pt}{2pt}
+\setlength{\parskip}{4pt}
+
+\lstset{basicstyle=\ttfamily\footnotesize, columns=fullflexible, keepspaces=true, breaklines=true,
+  backgroundcolor=\color{pale}, frame=leftline, rulecolor=\color{amber}, framerule=2pt, xleftmargin=6pt,
+  framexleftmargin=6pt, aboveskip=4pt, belowskip=4pt, upquote=true, tabsize=2}
+
+\usepackage{xurl}
+\newcommand{\file}[1]{{\small\nolinkurl{#1}}}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+
+\begin{document}
+
+\workflowhead[Drill-Down]{Explore with Pollis AI+}
+  {The same small model, sent out into the world with tools and skills}
+  {Two harnesses for one chat model: Ask Pollis AI+, which answers from Pollis's own documents, and Explore with
+   Pollis AI+, which searches, reads and computes beyond them; the skills that make a small model on this computer
+   reliable at both; and how each harness is measured, model by model, so that its progress can be seen.}
+
+\begin{nbox}
+{\color{amber}\bfseries Drill-down.}\enspace
+The plan of Explore with Pollis AI+ and of the measure of its harnesses, written before the code. It builds on the
+drill-down of Ask Pollis, whose Evaluate Answering Models it extends (\S\ref{sec:measure}).
+\end{nbox}
+
+\tableofcontents
+
+\section{Two harnesses, one model}\label{sec:two}
+
+A chat model alone answers from what it happens to know. A \textbf{harness} is everything Pollis puts around it: the
+instruction, what it is given to read, the tools it may call, the steps it is led through, and the checks on what
+it writes. The model can be the same for two jobs; the harness is what fits it to each.
+
+\begin{center}\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{@{}p{0.2\linewidth}LL@{}}
+\toprule
+& \textbf{Ask Pollis AI+} & \textbf{Explore with Pollis AI+}\\
+\midrule
+Answers about & Pollis, its toolboxes, its packages and Julia & the world beyond Pollis: papers, data, the web, your
+  own files\\
+Reads & a closed set of documents, indexed once (the drill-down of Ask Pollis) & what its tools bring back for the
+  question: search results, pages, PDFs, tables\\
+Harness & retrieval: the eight passages found, and an instruction to keep to them and cite them & skills: fixed
+  steps, each with its tools, and checks between them (\S\ref{sec:skills})\\
+Tools & none & web search and fetch, scholarly search, the PDF Viewer and its Poppler tools, Julia, your references,
+  the MCP servers you set up (\S\ref{sec:tools})\\
+Menu & \menupath{View\gt Chat} and \menupath{Help\gt Ask Pollis} & \menupath{Explore\gt Explore with Pollis AI+}\\
+Sends out & nothing with a local model & with a local model, only the searches and the pages fetched; with a cloud
+  model, also what it reads\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Ask Pollis AI+ is help: it answers what Pollis is and how to use it. Explore with Pollis AI+ is exploration, which is
+why it goes in the Explore menu, with the Browser at its top.
+
+\section{A harness for a small model}\label{sec:small}
+
+A model with two or four billion weights is good at small, well-posed tasks: write a search query, choose the
+passage that answers, take the numbers out of a table, summarise a section. It is poor at long free loops, where it
+must choose among many tools and plan several steps ahead, since a mistake at one step is carried into every step
+after it. So the harness does the planning, and the model the small decisions.
+
+\begin{center}\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{@{}p{0.27\linewidth}p{0.2\linewidth}L@{}}
+\toprule
+\textbf{Model} & \textbf{Harness} & \textbf{The model decides}\\
+\midrule
+About 2B weights (effective), such as Gemma E2B & fixed workflow & only what each step asks, in a form fixed in advance\\
+About 4B (effective), such as Gemma E4B & fixed workflow & the same, with longer steps: a whole section to summarise\\
+About 12B, such as Gemma 12B & guided & which of two or three tools a step calls, and when a step is done\\
+A cloud model, such as Claude & free & the steps themselves, with every tool of the skill\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\textbf{Effective} weights: E2B and E4B hold more weights in memory than their names say, which the memory figure of
+\S\ref{sec:figures} shows.
+
+\subsection{Answers in a fixed form}
+At each step of a workflow, the model's answer is held to a JSON schema: llama-server, which runs the local models,
+then lets the model write only what fits the schema. A small model asked for \texttt{\{"query": "..."\}} cannot answer
+with a paragraph instead, so the step that reads its answer never fails on its form; only its content can be wrong,
+and the next step's check is for that.
+
+\subsection{Checks between the steps}
+Each step's output is checked before the next step uses it, by the harness, not by the model: a query that is empty,
+a page that has no text, a number that is not in the table it was taken from, a citation to a source that was not
+read. A step that fails its check is run once more with what was wrong said in its instruction, and then stops the
+skill with what it has, saying which step failed.
+
+\section{The tools}\label{sec:tools}
+
+\begin{center}\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{@{}p{0.24\linewidth}L@{}}
+\toprule
+\textbf{Tool} & \textbf{What it does}\\
+\midrule
+Web search & a query in, a list of titles, links and snippets out\\
+Fetch & a link in, the text of the page out, without its menus and adverts\\
+Scholarly search & Semantic Scholar, OpenAlex and arXiv: works, with their authors, abstracts, citations and DOIs\\
+Read a PDF & the text of a PDF, page by page, with Poppler's \file{pdftotext}, as the PDF Viewer's Extract Text gives it\\
+Julia & a computation whose result has to be right: a number in a summary, the solution of a problem\\
+Your references & the works of PollisReferences and your library: is a work there, and with what key\\
+MCP servers & those of \menupath{Compose\gt MCP Servers}, when a skill names them\\
+LaTeX & a document compiled by PollisTeX, for the skills that give a PDF\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+A tool is called by the harness, at the step that needs it, for the small models, and by the model for the cloud one.
+Every call is shown in the answer, with what went in and what came out, so that you can see what was read.
+
+\section{The skills}\label{sec:skills}
+
+A skill is a folder in the format of Agent Skills: a \file{SKILL.md} that says what the skill is for and its steps,
+with the files those steps need. Pollis already uses this format for its agent skills (\menupath{Compose\gt Agent
+Skills}), so the skills of Explore with Pollis AI+ can be read by a coding agent too. A skill adds to it, in its
+front matter, the steps of the fixed workflow, each with its tool, its schema and its check, for the small models.
+
+\begin{lstlisting}
+---
+name: summarise-a-paper
+description: The question, data, method, results and limits of a paper, with the pages they come from, as a PDF.
+steps:
+  - read:      { tool: read-pdf }
+  - outline:   { schema: sections.json,  check: every section has pages }
+  - summarise: { schema: summary.json,   check: every page cited exists, every number is in the text }
+  - write:     { tool: latex, template: summary.tex }
+---
+\end{lstlisting}
+
+\subsection{The first skills}
+The first skills are those of the Self-Study toolbox, in the order its Guide gives, and one of Explore:
+\begin{center}\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{@{}p{0.26\linewidth}L@{}}
+\toprule
+\textbf{Skill} & \textbf{Steps}\\
+\midrule
+Make More Problems & read the problems given; name the skill each tests; write new ones at the same level; solve
+  each, in Julia when it is a computation; keep those whose solution checks; write the PDF\\
+Summarise a Paper & read the PDF; find its sections; summarise question, data, method, results and limits, each with
+  its pages; check every number against the text; write the PDF\\
+Explain a Topic in Depth & take the paragraph or the area; list its concepts; explain each, with the steps of its
+  argument and an example; write the PDF\\
+Text into Slides & read the text; find its main points; one slide each, with at most five lines; compile with
+  PollisTeX; keep the LaTeX source\\
+Slides into Prose and Audio & read the slides; write the text that joins them, slide by slide; read it aloud with a
+  voice model; write the PDF and the audio file\\
+Find Papers on a Question & write two or three queries; search the scholarly sources; keep the works that answer;
+  summarise each in two lines, with its DOI; mark those already in your references\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{Measuring the harnesses}\label{sec:measure}
+
+Evaluate Answering Models compares models on the same questions, the same passages and the same instruction, so that
+what is compared is the model alone. To see what a harness adds, the comparison turns around: the model is held, and
+the harness changes. The open point \emph{With and without the documents}, of the drill-down of Ask Pollis, is the
+first case of it: a model with no harness, and with the passages.
+
+\subsection{The harness as a dimension}
+A run chooses models, as now, and harnesses: \textbf{None}, the model alone, and the versions of the harness of the
+test set, each with its number. A harness version is frozen once it is used in a run: its instruction, its steps,
+its schemas and its checks are kept with the run, so that a run months later can be set beside it. Each row of the
+figures is then a model with a harness:
+
+\begin{center}\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{@{}llcccc@{}}
+\toprule
+\textbf{Model} & \textbf{Harness} & \textbf{Right} & \textbf{Seconds} & \textbf{Tokens} & \textbf{Memory}\\
+\midrule
+Gemma E2B & None & & & & \\
+Gemma E2B & Version 1 & & & & \\
+Gemma E2B & Version 2 & & & & \\
+Gemma E4B & None, 1, 2 & & & & \\
+Gemma 12B & None, 1, 2 & & & & \\
+Claude & None, 2 & & & & \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The cloud model is run with the harness too: that shows how much each model gains from it, which is the figure that
+matters, since the harnesses are what Pollis makes.
+
+\subsection{The figures}\label{sec:figures}
+Beside those Evaluate Answering Models gives now, the score from 1 to 5, its five parts, the seconds and the tokens:
+\begin{center}\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{@{}p{0.22\linewidth}L@{}}
+\toprule
+\textbf{Figure} & \textbf{What it says}\\
+\midrule
+Right & the share of answers the judge finds agree with the right answer of the test set; for a skill, the share
+  whose output meets its rubric (\S\ref{sec:sets})\\
+Gain & for a harness, Right minus that of the same model with None\\
+Steps, Tool Calls & per answer, how many steps were run and tools called, and how many failed their check\\
+Tokens & per answer, read and written, the tools' results included, since they are read too\\
+Memory & for a local model, the most memory it used, which for E2B and E4B is more than their names say\\
+Machine & the computer a run was made on, its chip and its memory, kept with the run\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Comparable over months}
+\begin{itemize}
+  \item \textbf{A frozen test set}, and a new one under a new name, never a changed one: Standard stays as it is.
+  \item \textbf{A frozen judge}: the judge of a series of runs stays the same model, named with its version; a new
+    judge starts a new series.
+  \item \textbf{The machine}: local seconds are compared only between runs on the same machine.
+  \item \textbf{Frozen sources for Explore}: the web changes its answers, so a test set of Explore keeps the pages
+    and PDFs its questions were made from; a run reads those, not the web, unless you choose \textbf{Live}.
+\end{itemize}
+
+\subsection{The test sets}\label{sec:sets}
+\begin{itemize}
+  \item \textbf{Ask Pollis}: Standard, the 100 questions Pollis comes with, as now.
+  \item \textbf{Explore}: questions whose answers are in open-access papers and pages kept with the test set: a
+    number, a method, a finding, an author.
+  \item \textbf{Self-Study}: tasks with a rubric rather than one right answer. A summary is right when it has the
+    paper's question, data, method, results and limits, each with a page that holds it; a problem when its solution
+    checks, in Julia for a computation; slides when each main point of the text is on one. The Self-Study toolbox
+    brings this test set, and its Guide shows the table of \S\ref{sec:measure} for its tasks.
+\end{itemize}
+
+\subsection{What to expect}
+On closed tasks, where the answer is in what the model is given, a summary of a paper you give it or a question about
+Pollis, a well-harnessed model of four or twelve billion weights can come close to a cloud model: the harness finds
+and checks, and the model only has to read. On open reasoning, where nothing given holds the answer, the gap stays
+wide, and grows as the cloud models improve. The figures show where a model on this computer is already enough, and
+where it is not yet, and each new harness version moves that line.
+
+\section{The steps}\label{sec:steps}
+\begin{enumerate}[label=\arabic*.]
+  \item \textbf{The harness as a dimension} of Evaluate Answering Models: None and the harness of Ask Pollis, with
+    the figures Right and Gain, on Standard. It measures what is there today, before anything new.
+  \item \textbf{The skill runner}: a skill's steps, its schemas through llama-server, its checks, its tools called
+    by the harness; shown step by step in the answer.
+  \item \textbf{Make More Problems}, the first skill, and the Self-Study test set with its rubric.
+  \item \textbf{Read a PDF, Julia and LaTeX} as tools, and \textbf{Summarise a Paper}.
+  \item \textbf{Explore with Pollis AI+} in the Explore menu, with \textbf{Explain a Topic in Depth} and
+    \textbf{Text into Slides}.
+  \item \textbf{Web search, fetch and scholarly search}, with \textbf{Find Papers on a Question} and the Explore
+    test set, with its frozen sources.
+  \item \textbf{A voice model}, with \textbf{Slides into Prose and Audio}.
+\end{enumerate}
+
+\section{Open points}\label{sec:open}
+\begin{itemize}
+  \item \textbf{Web search}: a service with a key of yours, a free one with limits, or a search engine run on this
+    computer; and what the hover of the answer says is sent out.
+  \item \textbf{Tool calls of the 12B model}: whether it chooses among two or three tools reliably enough to be
+    guided rather than led, which the figures of \S\ref{sec:figures} answer.
+  \item \textbf{Memory}: a 12B model and a page or a PDF in its context may not fit a laptop with 16 GB; the warning
+    of Evaluate Answering Models covers runs, and the skill runner needs one of its own.
+  \item \textbf{The voice model}, for Read Aloud and for the audio of Slides into Prose and Audio: one made for speech
+    or a general one, and which is the default.
+  \item \textbf{The judge of a rubric}: a model reading a summary against a rubric judges less surely than one
+    comparing two answers; a second judge (as in Evaluate Answering Models) and checks done by the harness, such as the
+    pages cited, make it surer.
+\end{itemize}
+
+\end{document}

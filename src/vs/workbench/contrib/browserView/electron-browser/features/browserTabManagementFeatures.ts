@@ -447,14 +447,15 @@ class OpenBrowserFromViewMenuAction extends Action2 {
 	}
 }
 
-// Register in View menu
-MenuRegistry.appendMenuItem(MenuId.MenubarViewMenu, {
-	group: '4_auxbar',
+// POLLIS: Explore > Browser, at the top of Explore in a group of its own: the general tool for the sources outside
+// Pollis, whose pages several items of Explore open in it
+MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
+	group: '0_browser',
 	command: {
 		id: OpenBrowserFromViewMenuAction.ID,
-		title: localize({ key: 'miOpenBrowser', comment: ['&& denotes a mnemonic'] }, "&&Browser")
+		title: localize('miExploreBrowser', "Browser")
 	},
-	order: 2
+	order: 1
 });
 
 // Register as "Close All Browser Tabs" action in editor title menu to align with the regular "Close All" action
