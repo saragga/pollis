@@ -223,7 +223,7 @@ class MemoryStatus extends Disposable implements IWorkbenchContribution {
 		const total = gigabytes(reading.total);
 		const properties: IStatusbarEntry = {
 			name: localize('memory.name', "Memory"),
-			text: `$(dashboard) ${localize('memory.text', "{0} / {1} GB", used, total)}`,
+			text: localize('memory.label', "Memory: {0} / {1} GB", used, total),
 			ariaLabel: localize('memory.summary', "Memory used on this computer: {0} GB of {1} GB ({2}%)", used, total, Math.round(share * 100)),
 			tooltip: this.tooltip,
 			command: ShowTooltipCommand,
