@@ -184,6 +184,44 @@ function inJuliaDepot(folder: string): boolean {
 	});
 }
 
+/**
+ * The file `name` of the folder files/ of PollisDatasets, in a copy already in a Julia depot (JULIA_DEPOT_PATH, else
+ * ~/.julia), the most recent if there are several; its files, such as the sample PDF, are the same in every version.
+ */
+export async function datasetsFileInDepot(name: string): Promise<vscode.Uri | undefined> {
+	const depots = (process.env.JULIA_DEPOT_PATH ?? '').split(path.delimiter).filter(depot => depot);
+	let found: { uri: vscode.Uri; mtime: number } | undefined;
+	for (const depot of depots.length ? depots : [path.join(os.homedir(), '.julia')]) {
+		const packages = vscode.Uri.file(path.join(depot, 'packages', 'PollisDatasets'));
+		let versions: [string, vscode.FileType][];
+		try {
+			versions = await vscode.workspace.fs.readDirectory(packages);
+		} catch {
+			continue;
+		}
+		for (const [version] of versions) {
+			const uri = vscode.Uri.joinPath(packages, version, 'files', name);
+			try {
+				const { mtime } = await vscode.workspace.fs.stat(uri);
+				if (!found || mtime > found.mtime) {
+					found = { uri, mtime };
+				}
+			} catch {
+				// A version without the file
+			}
+		}
+	}
+	return found?.uri;
+}
+
+/**
+ * The name of a file of the folder files/ of PollisDatasets that `uri` is, in a copy of the package, such as
+ * ~/.julia/packages/PollisDatasets/jivbF/files/sample.pdf; Julia deletes such a copy some time after an update.
+ */
+function datasetsFileName(uri: vscode.Uri): string | undefined {
+	return /[\\/]packages[\\/]PollisDatasets[\\/][^\\/]+[\\/]files[\\/](?<name>[^\\/]+)$/.exec(uri.fsPath)?.groups?.name;
+}
+
 /** A path as it is shown: from the home folder as ~ on macOS and Linux. */
 function pathLabel(file: string): string {
 	const home = os.homedir();
@@ -408,6 +446,26 @@ export class PdfViewerProvider implements vscode.CustomReadonlyEditorProvider<Pd
 		}
 	}
 
+	/**
+	 * A PDF no longer on the disk, as in a tab restored after its file was moved or deleted: a file of PollisDatasets,
+	 * such as the sample, from a copy of the package Julia has deleted, opens from the current copy in place of the tab;
+	 * any other is named, with the folder it was in.
+	 */
+	private async missing(uri: vscode.Uri, panel: vscode.WebviewPanel): Promise<void> {
+		const name = datasetsFileName(uri);
+		const current = name ? await datasetsFileInDepot(name) : undefined;
+		if (current && current.toString() !== uri.toString()) {
+			const tab = vscode.window.tabGroups.all.flatMap(group => group.tabs)
+				.find(candidate => candidate.input instanceof vscode.TabInputCustom && candidate.input.viewType === PDF_VIEWER_VIEW_TYPE && candidate.input.uri.toString() === uri.toString());
+			await vscode.commands.executeCommand('vscode.openWith', current, PDF_VIEWER_VIEW_TYPE, { viewColumn: tab?.group.viewColumn ?? panel.viewColumn, preserveFocus: !panel.active, preview: false });
+			if (tab) {
+				await vscode.window.tabGroups.close(tab, true);
+			}
+			return;
+		}
+		vscode.window.showWarningMessage(vscode.l10n.t("{0} is no longer at {1}: it was moved or deleted.", baseName(uri), pathLabel(path.dirname(uri.fsPath))));
+	}
+
 	openCustomDocument(uri: vscode.Uri): PdfDocument {
 		return new PdfDocument(uri);
 	}
@@ -443,7 +501,11 @@ export class PdfViewerProvider implements vscode.CustomReadonlyEditorProvider<Pd
 				this.pendingModes.delete(key);
 				await post({ command: 'open', data, name: baseName(document.uri), reload, page, mode });
 			} catch (error) {
-				vscode.window.showWarningMessage(vscode.l10n.t("{0} could not be read: {1}", baseName(document.uri), String(error)));
+				if (error instanceof vscode.FileSystemError && error.code === 'FileNotFound') {
+					await this.missing(document.uri, panel);
+				} else {
+					vscode.window.showWarningMessage(vscode.l10n.t("{0} could not be read: {1}", baseName(document.uri), String(error)));
+				}
 			}
 		};
 

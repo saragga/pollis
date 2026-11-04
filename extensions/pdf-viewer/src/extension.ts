@@ -6,10 +6,8 @@
 // The PDF Viewer of Pollis: the editor of .pdf files, with pdf.js, and the commands that open a PDF in it (Compose >
 // PDF Files, the PDF... of the + of Ask Pollis).
 
-import * as os from 'os';
-import * as path from 'path';
 import * as vscode from 'vscode';
-import { PDF_VIEWER_VIEW_TYPE, PdfViewerProvider, ViewerMode } from './pdfViewer';
+import { datasetsFileInDepot, PDF_VIEWER_VIEW_TYPE, PdfViewerProvider, ViewerMode } from './pdfViewer';
 
 /** The command of the Julia extension that runs pdf_tools.jl, which gives the path of the sample PDF of PollisDatasets. */
 const PDF_SAMPLE_COMMAND_ID = 'language-julia.pollisPdfSample';
@@ -31,39 +29,9 @@ async function pickPdf(): Promise<vscode.Uri | undefined> {
 	return picked?.[0];
 }
 
-/**
- * The sample PDF in a copy of PollisDatasets already in a Julia depot (JULIA_DEPOT_PATH, else ~/.julia), the most
- * recent if there are several; the sample is the same in every version.
- */
-async function sampleInDepot(): Promise<vscode.Uri | undefined> {
-	const depots = (process.env.JULIA_DEPOT_PATH ?? '').split(path.delimiter).filter(depot => depot);
-	let found: { uri: vscode.Uri; mtime: number } | undefined;
-	for (const depot of depots.length ? depots : [path.join(os.homedir(), '.julia')]) {
-		const packages = vscode.Uri.file(path.join(depot, 'packages', 'PollisDatasets'));
-		let versions: [string, vscode.FileType][];
-		try {
-			versions = await vscode.workspace.fs.readDirectory(packages);
-		} catch {
-			continue;
-		}
-		for (const [version] of versions) {
-			const uri = vscode.Uri.joinPath(packages, version, 'files', 'sample.pdf');
-			try {
-				const { mtime } = await vscode.workspace.fs.stat(uri);
-				if (!found || mtime > found.mtime) {
-					found = { uri, mtime };
-				}
-			} catch {
-				// A version without the sample
-			}
-		}
-	}
-	return found?.uri;
-}
-
 /** The sample PDF of PollisDatasets: from the Julia depot, else at the path the hidden Julia process gives; undefined, with a message, when it cannot be had. */
 async function findSample(): Promise<vscode.Uri | undefined> {
-	const inDepot = await sampleInDepot();
+	const inDepot = await datasetsFileInDepot('sample.pdf');
 	if (inDepot) {
 		return inDepot;
 	}
