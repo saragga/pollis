@@ -482,8 +482,10 @@ export class Menubar extends Disposable {
 		}));
 
 		const actions = [about];
-		// Pollis: Check for Updates... (or where an update has got to) after About, as in VS Code
+		// Pollis: Check for Updates... (or where an update has got to) after About, as in VS Code, then Check for Data
+		// Package Updates... (pollisDataPackages.ts)
 		actions.push(...this.getUpdateMenuItems());
+		actions.push(this.createMenuItem(nls.localize({ key: 'mCheckDataPackageUpdates', comment: ['&& denotes a mnemonic'] }, "Check for &&Data Package Updates..."), 'pollis.checkDataPackageUpdates'));
 
 		if (preferences) {
 			actions.push(...[

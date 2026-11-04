@@ -22,6 +22,7 @@ import './codingAgentPage.js';
 import './modelRoutingPage.js';
 import './pollisContent.js';
 import './pollisUpdate.js';
+import './pollisDataPackages.js';
 import './vignettesPage.js';
 import './toolboxDocumentsPage.js';
 import './panelWikisPage.js';

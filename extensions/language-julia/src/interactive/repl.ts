@@ -1472,6 +1472,7 @@ export function activate(
         registerCommand('language-julia.stopREPL', stopREPL),
         registerCommand('language-julia.restartREPL', restartREPL),
         registerCommand('language-julia.replSession', async () => isConnected() ? g_replSession : 0),
+        registerCommand('language-julia.pollisUpdateDataPackages', updateDataPackages),
         registerCommand('language-julia.disconnectREPL', disconnectREPL),
         registerCommand('language-julia.selectBlock', selectJuliaBlock),
         registerCommand('language-julia.executeCodeBlockOrSelection', evaluateBlockOrSelection),
@@ -1653,6 +1654,42 @@ async function installPollisDB(juliaExecutable: JuliaExecutable) {
             precompileREPLPackages(juliaExecutable)
         }
     })
+}
+
+/** What Update Data Packages answers the workbench: the packages updated and whether GitHub could be reached, or why it could not run. */
+type DataPackagesAnswer = { readonly updated: readonly string[]; readonly offline: boolean } | { readonly error: 'noJulia' | 'busy' | 'failed'; readonly detail?: string }
+
+// POLLIS: Update Data Packages, for the workbench's menu item: update_data_packages.jl in a hidden process, which does
+// at once what installPollisDB does at the REPL's start; never while that runs.
+async function updateDataPackages(): Promise<DataPackagesAnswer> {
+    if (g_installingPollisDB) {
+        return { error: 'busy' }
+    }
+    let juliaExecutable: JuliaExecutable
+    try {
+        juliaExecutable = await g_ExecutableFeature.getExecutable()
+    } catch (err) {
+        return err instanceof JuliaNotFoundError ? { error: 'noJulia' } : { error: 'failed', detail: String(err) }
+    }
+    g_installingPollisDB = true
+    try {
+        // The databases are made again with the DuckDB engine and fts from ~/.pollis/duckdb/.
+        await whenDuckDBReady()
+        const script = path.join(g_context.extensionPath, 'scripts', 'terminalserver', 'update_data_packages.jl')
+        const { stdout } = await promisify(child_process.execFile)(juliaExecutable.command, [
+            ...juliaExecutable.args,
+            '--startup-file=no',
+            '--history-file=no',
+            script,
+        ], { env: { ...process.env, ...getCustomEnvironmentVariables() }, maxBuffer: 16 * 1024 * 1024, windowsHide: true })
+        const line = stdout.split(/\r?\n/).find(text => text.startsWith('POLLIS_DATA_PACKAGES '))
+        return line ? JSON.parse(line.slice('POLLIS_DATA_PACKAGES '.length)) : { error: 'failed', detail: stdout.trim().split(/\r?\n/).pop() }
+    } catch (err) {
+        const stderr = (err as { stderr?: string }).stderr
+        return { error: 'failed', detail: stderr?.trim().split(/\r?\n/).pop() ?? String(err) }
+    } finally {
+        g_installingPollisDB = false
+    }
 }
 
 export function deactivate() {
