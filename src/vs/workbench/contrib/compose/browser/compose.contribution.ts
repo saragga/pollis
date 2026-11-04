@@ -247,22 +247,26 @@ MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 // ==============================================================
 
 const PDF_READ_COMMAND_ID = 'chiara.compose.pdf.read';
-const PDF_TOOLS_COMMAND_ID = 'chiara.compose.pdf.tools';
+const PDF_EXTRACT_COMMAND_ID = 'chiara.compose.pdf.extract';
+const PDF_MERGE_COMMAND_ID = 'chiara.compose.pdf.merge';
 const PDF_CROP_COMMAND_ID = 'chiara.compose.pdf.crop';
+const PDF_CONVERT_COMMAND_ID = 'chiara.compose.pdf.convert';
 const PDF_HIGHLIGHT_COMMAND_ID = 'chiara.compose.pdf.highlight';
 const PDF_TEXT_COMMAND_ID = 'chiara.compose.pdf.text';
-const PDF_DRAW_COMMAND_ID = 'chiara.compose.pdf.draw';
 const PDF_IMAGE_COMMAND_ID = 'chiara.compose.pdf.image';
+const PDF_DRAW_COMMAND_ID = 'chiara.compose.pdf.draw';
 
-// Each command and the mode the viewer opens in: the outline, the tools sidebar, Select Area, or a markup tool of pdf.js
+// Each command and the mode the viewer opens in: the outline, a tool of the sidebar, Select Area, or a markup tool of pdf.js
 for (const [id, mode] of [
 	[PDF_READ_COMMAND_ID, 'read'],
-	[PDF_TOOLS_COMMAND_ID, 'tools'],
+	[PDF_EXTRACT_COMMAND_ID, 'extract'],
+	[PDF_MERGE_COMMAND_ID, 'merge'],
 	[PDF_CROP_COMMAND_ID, 'crop'],
+	[PDF_CONVERT_COMMAND_ID, 'convert'],
 	[PDF_HIGHLIGHT_COMMAND_ID, 'highlight'],
 	[PDF_TEXT_COMMAND_ID, 'text'],
-	[PDF_DRAW_COMMAND_ID, 'draw'],
 	[PDF_IMAGE_COMMAND_ID, 'image'],
+	[PDF_DRAW_COMMAND_ID, 'draw'],
 ] as const) {
 	CommandsRegistry.registerCommand(id, (accessor: ServicesAccessor) => accessor.get(ICommandService).executeCommand(PDF_VIEWER_OPEN_IN_MODE_COMMAND_ID, mode));
 }
@@ -273,18 +277,32 @@ MenuRegistry.appendMenuItem(PdfFilesMenu, {
 	order: 1,
 });
 
-// The Poppler tools in the sidebar, in Julia: text, tables, document info, fonts, images, render, convert, split, merge, attachments
+// The pages given, such as 1-3, 7, in one new PDF, or one file per page or per range
 MenuRegistry.appendMenuItem(PdfFilesMenu, {
 	group: '1_pdf',
-	command: { id: PDF_TOOLS_COMMAND_ID, title: localize('compose.pdfExtractConvert', "Extract and Convert") },
+	command: { id: PDF_EXTRACT_COMMAND_ID, title: localize('compose.pdfExtractPages', "Extract Pages") },
 	order: 2,
+});
+
+// This PDF and others, in one file
+MenuRegistry.appendMenuItem(PdfFilesMenu, {
+	group: '1_pdf',
+	command: { id: PDF_MERGE_COMMAND_ID, title: localize('compose.pdfMergePages', "Merge Pages") },
+	order: 3,
 });
 
 // Select Area on: the text, the table or the picture of an area, or the area as a PDF
 MenuRegistry.appendMenuItem(PdfFilesMenu, {
 	group: '1_pdf',
-	command: { id: PDF_CROP_COMMAND_ID, title: localize('compose.pdfCrop', "Crop") },
-	order: 3,
+	command: { id: PDF_CROP_COMMAND_ID, title: localize('compose.pdfCropArea', "Crop Area") },
+	order: 4,
+});
+
+// Pages as SVG, PostScript, EPS, HTML or XML, or the area as PDF
+MenuRegistry.appendMenuItem(PdfFilesMenu, {
+	group: '1_pdf',
+	command: { id: PDF_CONVERT_COMMAND_ID, title: localize('compose.pdfConvert', "Convert") },
+	order: 5,
 });
 
 // The markup tools of pdf.js, saved in a new PDF with Save
@@ -296,19 +314,19 @@ MenuRegistry.appendMenuItem(PdfFilesMenu, {
 
 MenuRegistry.appendMenuItem(PdfFilesMenu, {
 	group: '2_markup',
-	command: { id: PDF_TEXT_COMMAND_ID, title: localize('compose.pdfAddText', "Add Text") },
+	command: { id: PDF_TEXT_COMMAND_ID, title: localize('compose.pdfAddEditText', "Add or Edit Text") },
 	order: 2,
 });
 
 MenuRegistry.appendMenuItem(PdfFilesMenu, {
 	group: '2_markup',
-	command: { id: PDF_DRAW_COMMAND_ID, title: localize('compose.pdfDraw', "Draw") },
+	command: { id: PDF_IMAGE_COMMAND_ID, title: localize('compose.pdfImages', "Add or Edit Images") },
 	order: 3,
 });
 
 MenuRegistry.appendMenuItem(PdfFilesMenu, {
 	group: '2_markup',
-	command: { id: PDF_IMAGE_COMMAND_ID, title: localize('compose.pdfImages', "Add or Edit Images") },
+	command: { id: PDF_DRAW_COMMAND_ID, title: localize('compose.pdfDraw', "Draw") },
 	order: 4,
 });
 

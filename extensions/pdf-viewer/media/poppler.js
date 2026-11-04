@@ -3,8 +3,8 @@
  *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// The Poppler tools of the tools sidebar: Extract Text, Tables, Document Info, Fonts, Images, Render Pages, Convert,
-// Split, Merge and Attachments. Each is a fold with its options, Run and its Julia code. The extension runs the tool of
+// The Poppler tools of the tools sidebar: Extract Text, Tables, Fonts, Images, Attachments, Document Info, Render
+// Pages, Convert, Extract Pages and Merge Pages. Each is a fold with its options, Run and its Julia code. The extension runs the tool of
 // Poppler_jll in the hidden Julia process of the Julia extension (pdf_tools.jl), on the file on the disk, and asks
 // for the folder or the file to save to. The files written, and the files attached to the PDF, are shown by their
 // kind: a CSV file as a table, a picture as itself, a text file as its text.
@@ -817,12 +817,12 @@ export function popplerTools(parent, context) {
 		}
 	});
 
-	// ---- Split
+	// ---- Extract Pages: in one file, one file per page or one per range
 
 	let splitMode;
 	let splitPages;
 	tool('split', T.split, T.splitShort, T.splitHint, row => {
-		splitMode = selectField(T.splitInto, undefined, [['pages', T.filePerPage], ['one', T.pagesIntoOne], ['ranges', T.filePerRange]], row);
+		splitMode = selectField(T.splitInto, undefined, [['one', T.pagesIntoOne], ['pages', T.filePerPage], ['ranges', T.filePerRange]], row);
 		splitPages = element('input', 'pollisWide');
 		splitPages.type = 'text';
 		splitPages.placeholder = T.pagesPlaceholder;
@@ -852,7 +852,7 @@ export function popplerTools(parent, context) {
 		return { request: { parts: ranges.map(pages => ({ pages, out: `{dir}/${stem()} p${name(pages)}.pdf` })), output: { kind: 'folder' } }, show: showFiles };
 	});
 
-	// ---- Merge
+	// ---- Merge Pages
 
 	tool('merge', T.merge, T.mergeShort, T.mergeHint, () => { }, () => pageCount()
 		? { request: { tool: 'pdfunite', args: ['{pdf}', '{more}', '{out}'], pick: 'pdfs', output: { kind: 'file', name: `${stem()} merged.pdf`, extension: 'pdf' } }, show: showFiles }
@@ -888,6 +888,23 @@ export function popplerTools(parent, context) {
 			attachmentView.appendChild(list);
 			show?.click();
 			attachmentsTool.details.scrollIntoView({ block: 'nearest' });
+		},
+		/**
+		 * Opens the fold of the tool `key` alone and brings it into view; for Extract Pages, with `splitInto` chosen, and
+		 * the field of its pages ready for One File.
+		 */
+		openTool(key, splitInto) {
+			for (const entry of tools) {
+				entry.details.open = entry.key === key;
+			}
+			if (splitInto) {
+				splitMode.value = splitInto;
+				refreshAll();
+			}
+			tools.find(entry => entry.key === key)?.details.scrollIntoView({ block: 'start' });
+			if (splitInto === 'one') {
+				splitPages.focus({ preventScroll: true });
+			}
 		},
 		/** The code of the tools coloured again, in the colours of the theme now chosen. */
 		recolor() {

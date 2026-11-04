@@ -100,7 +100,7 @@ function shownPdf(): { readonly uri: vscode.Uri; readonly column: vscode.ViewCol
 }
 
 /** The modes of Compose > PDF Files. */
-const VIEWER_MODES: readonly ViewerMode[] = ['read', 'tools', 'crop', 'highlight', 'text', 'draw', 'image'];
+const VIEWER_MODES: readonly ViewerMode[] = ['read', 'extract', 'merge', 'crop', 'convert', 'highlight', 'text', 'image', 'draw'];
 
 /** What the workbench may ask of `pollis.pdfViewer.open`: the page to show (from 1), and an editor beside the active one. */
 interface IOpenOptions {

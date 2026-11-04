@@ -479,9 +479,10 @@ from \texttt{PGPASSWORD} or \texttt{\textasciitilde/.pgpass}.
 Every PDF opens in the PDF Viewer of Pollis, from the Explorer, \ui{File > Open}, \ui{Help > Documentation},
 the vignettes, \ui{Reports}, \ui{New Methods} and the sources of Ask Pollis, with its pages, outline,
 thumbnails, search, zoom and form fields. \ui{Compose > PDF Files} opens the PDF shown, else the sample of
-PollisDatasets, for a task: \ui{Read} (the outline, else the thumbnails),
-\ui{Extract and Convert} (the Poppler tools), \ui{Crop} (\ui{Select Area} on), and the markup tools
-\ui{Highlight}, \ui{Add Text}, \ui{Draw} and \ui{Add or Edit Images}. Every item opens the same viewer,
+PollisDatasets, for a task: \ui{Read} (the outline, else the thumbnails), \ui{Extract Pages} (the pages
+given, such as 1-3, 7, in one new PDF, or one file per page or per range), \ui{Merge Pages}, \ui{Crop Area}
+(\ui{Select Area} on) and \ui{Convert} (that tool open in the sidebar), and the markup tools \ui{Highlight}, \ui{Add or Edit Text},
+\ui{Add or Edit Images} and \ui{Draw}. Every item opens the same viewer,
 whose toolbar always has \ui{Select Area}, \ui{Print} and \ui{Save}; \ui{Open a PDF...}, in its title bar,
 opens a PDF of yours. \ui{Tools: Show | Hide}, at the right end of the toolbar, shows or hides the sidebar at the right of
 the pages, with the area of \ui{Select Area} and the Poppler tools, those that read the PDF and those that
@@ -495,14 +496,14 @@ make files from it; the viewer keeps the choice for the next PDF.
     file, or a picture of it in the question of the Ask Pollis pane.
   \item The Poppler tools, in the sidebar, run Poppler in Julia on the pages given, or on the area with
     \ui{Only the Area}: \ui{Extract Text} (also of the pages given, such as 1-3, 7), \ui{Tables},
-    \ui{Fonts}, \ui{Images}, \ui{Attachments}, \ui{Document Info}, \ui{Render Pages}, \ui{Convert} (SVG, PostScript, EPS, HTML or XML, or the area as PDF), \ui{Split} (one file per page,
-    the pages given, such as 1-3, 5, in one file, or a file per range) and \ui{Merge}. Each tool has its options, \ui{Run}, and its \ui{Julia Code}, to copy or run in the
+    \ui{Fonts}, \ui{Images}, \ui{Attachments}, \ui{Document Info}, \ui{Render Pages}, \ui{Convert} (SVG, PostScript, EPS, HTML or XML, or the area as PDF), \ui{Extract Pages} (the pages
+    given, such as 1-3, 5, in one file, or a file per page or per range) and \ui{Merge Pages}. Each tool has its options, \ui{Run}, and its \ui{Julia Code}, to copy or run in the
     REPL. What a tool prints is shown below it; the files it writes go to the folder or the file you choose,
     and a CSV file shows as a table, a picture as itself and a text file as its text. An attachment chosen in
     the left pane shows there too. The dialogs open in the folder you chose last, or at first in the PDF's
     folder, or in Documents for a PDF of a Julia package, as the sample of PollisDatasets; the result names
     the folder, with \ui{Reveal in Finder} (\ui{Reveal in File Explorer} on Windows).
-  \item \ui{Highlight}, \ui{Add Text}, \ui{Draw} and \ui{Add or Edit Images}, in the toolbar, mark up the
+  \item \ui{Highlight}, \ui{Add or Edit Text}, \ui{Add or Edit Images} and \ui{Draw}, in the toolbar, mark up the
     pages; \ui{Save} writes the PDF with the marks in a new file.
   \item \ui{Print}, in the toolbar, prints the PDF with the system's print dialog.
 \end{enumerate}

@@ -15,6 +15,10 @@ export interface IMemoryReading {
 	readonly used: number;
 	/** How much is swapped out to the disk, where the system reports it (macOS and Linux). */
 	readonly swapped?: number;
+	/** On macOS, the apps' memory held compressed, at its size before compression, in RAM and in the swap. */
+	readonly compressed?: number;
+	/** On macOS, the RAM the compressed memory takes. */
+	readonly compressedInRam?: number;
 }
 
 /** A process of the computer. */

@@ -514,6 +514,11 @@ export class HoverService extends Disposable implements IHoverService {
 			}
 			return;
 		}
+		// POLLIS: a modifier alone, or several held together such as Cmd+Shift before the 3 of a screenshot, leaves the
+		// hover open
+		if (e.key === 'Meta' || e.key === 'Shift' || e.key === 'Control') {
+			return;
+		}
 		const event = new StandardKeyboardEvent(e);
 		const keybinding = this._keybindingService.resolveKeyboardEvent(event);
 		if (keybinding.getSingleModifierDispatchChords().some(value => !!value) || this._keybindingService.softDispatch(event, event.target).kind !== ResultKind.NoMatchingKb) {

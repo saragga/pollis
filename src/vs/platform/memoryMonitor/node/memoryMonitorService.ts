@@ -48,7 +48,13 @@ export class MemoryMonitorService implements IMemoryMonitorService {
 			// The swap in use, such as "total = 12288.00M  used = 11011.38M  free = 1276.62M"
 			const swap = await run('sysctl', ['vm.swapusage']).catch(() => '');
 			const swapped = /used = (?<megabytes>[\d.]+)M/.exec(swap)?.groups?.megabytes;
-			return { total, used: Math.min(total, used), swapped: swapped ? Number(swapped) * 1024 ** 2 : undefined };
+			return {
+				total,
+				used: Math.min(total, used),
+				swapped: swapped ? Number(swapped) * 1024 ** 2 : undefined,
+				compressed: pages('Pages stored in compressor') * pageSize,
+				compressedInRam: pages('Pages occupied by compressor') * pageSize,
+			};
 		}
 		if (process.platform === 'linux') {
 			const meminfo = await fs.readFile('/proc/meminfo', 'utf8');

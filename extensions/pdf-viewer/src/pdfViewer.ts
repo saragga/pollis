@@ -14,10 +14,11 @@ import * as vscode from 'vscode';
 export const PDF_VIEWER_VIEW_TYPE = 'pollis.pdfViewer';
 
 /**
- * What the viewer is opened for, from Compose > PDF Files: reading, with the outline; the tools sidebar shown; Select
- * Area on; or a markup tool of pdf.js ready: Highlight, Add Text, Draw, or Add or Edit Images.
+ * What the viewer is opened for, from Compose > PDF Files: reading, with the outline; a tool of the sidebar open
+ * (Extract Pages, Merge Pages or Convert); Select Area on; or a markup tool of pdf.js ready: Highlight, Add or Edit
+ * Text, Add or Edit Images, or Draw.
  */
-export type ViewerMode = 'read' | 'tools' | 'crop' | 'highlight' | 'text' | 'draw' | 'image';
+export type ViewerMode = 'read' | 'extract' | 'merge' | 'crop' | 'convert' | 'highlight' | 'text' | 'image' | 'draw';
 
 /** The command of the workbench that puts an attachment in the question of the Ask Pollis pane (askPollisPage.ts). */
 const ASK_POLLIS_ADD_ATTACHMENT_COMMAND_ID = 'pollis.askPollis.addAttachment';
@@ -215,7 +216,7 @@ function viewerText(): Record<string, string> {
 		attachmentsShort: vscode.l10n.t("List, save or add embedded files"),
 		renderPagesShort: vscode.l10n.t("Pages or the area as PNG, JPEG or TIFF"),
 		convertShort: vscode.l10n.t("Pages as SVG, PostScript, EPS, HTML or XML, or the area as PDF"),
-		splitShort: vscode.l10n.t("One file per page, per range, or the pages given"),
+		splitShort: vscode.l10n.t("The pages given, in one new PDF or one file per page or range"),
 		mergeShort: vscode.l10n.t("This PDF and others, in one file"),
 		area: vscode.l10n.t("Area"),
 		areaHint: vscode.l10n.t("Click Select Area {0} in the toolbar, then drag on a page. A click on the page or Escape clears the area."),
@@ -244,7 +245,7 @@ function viewerText(): Record<string, string> {
 		images: vscode.l10n.t("Images"),
 		attachments: vscode.l10n.t("Attachments"),
 		save: vscode.l10n.t("Save..."),
-		split: vscode.l10n.t("Split"),
+		split: vscode.l10n.t("Extract Pages"),
 		juliaCode: vscode.l10n.t("Julia Code"),
 		copyCode: vscode.l10n.t("Copy"),
 		working: vscode.l10n.t("Working..."),
@@ -254,7 +255,7 @@ function viewerText(): Record<string, string> {
 		lastPage: vscode.l10n.t("Last Page"),
 		lastPageTitle: vscode.l10n.t("Empty for the last page of the file"),
 		password: vscode.l10n.t("Password"),
-		passwordTitle: vscode.l10n.t("The user password of an encrypted file. Split, Merge and adding an attachment cannot read encrypted files."),
+		passwordTitle: vscode.l10n.t("The user password of an encrypted file. Extract Pages, Merge Pages and adding an attachment cannot read encrypted files."),
 		onlyArea: vscode.l10n.t("Only the Area"),
 		onlyAreaOf: vscode.l10n.t("Only the Area of Page {0}"),
 		onlyAreaTitle: vscode.l10n.t("Extract Text, Render Pages and Convert to SVG or PDF take only the area of each page of the range. Select Area draws one."),
@@ -326,19 +327,19 @@ function viewerText(): Record<string, string> {
 		convertHtmlHint: vscode.l10n.t("pdftohtml: one web page with the text and the images."),
 		convertXmlHint: vscode.l10n.t("pdftohtml: every line of text with its position and font, for programs to read."),
 		pdfOfArea: vscode.l10n.t("PDF of the Area"),
-		pdfNeedsArea: vscode.l10n.t("PDF of the Area needs Only the Area; Split writes whole pages."),
+		pdfNeedsArea: vscode.l10n.t("PDF of the Area needs Only the Area; Extract Pages writes whole pages."),
 		convertFormatTitle: vscode.l10n.t("SVG takes the pages or the area; PDF of the Area needs Only the Area; EPS holds one page, the first of the range."),
 		areaFormats: vscode.l10n.t("Only SVG and PDF of the Area take the area: turn Only the Area off for the other formats."),
 		splitHint: vscode.l10n.t("pdfseparate, and pdfunite for the pages put in one file."),
-		splitInto: vscode.l10n.t("Split Into"),
+		splitInto: vscode.l10n.t("Save As"),
 		filePerPage: vscode.l10n.t("One File per Page"),
-		pagesIntoOne: vscode.l10n.t("Pages into One File"),
+		pagesIntoOne: vscode.l10n.t("One File"),
 		filePerRange: vscode.l10n.t("One File per Range"),
 		splitPages: vscode.l10n.t("Pages"),
 		splitPagesTitle: vscode.l10n.t("Pages and ranges, such as 1-3, 5; empty for First Page to Last Page"),
 		pagesPlaceholder: vscode.l10n.t("e.g. 1-3, 5"),
 		badPages: vscode.l10n.t("Give pages from 1 to {0}, such as 1-3, 5."),
-		merge: vscode.l10n.t("Merge"),
+		merge: vscode.l10n.t("Merge Pages"),
 		mergeHint: vscode.l10n.t("pdfunite: this PDF first, then the ones chosen, in the order of their names."),
 		attachmentsHint: vscode.l10n.t("pdfdetach lists or saves them; pdfattach adds a file in a new PDF."),
 		action: vscode.l10n.t("Action"),
@@ -662,7 +663,8 @@ export class PdfViewerProvider implements vscode.CustomReadonlyEditorProvider<Pd
 				iccs: `${url('pdfjs', 'web', 'iccs')}/`,
 			},
 			text: viewerText(),
-			toolsShown: this.globalState.get<boolean>(TOOLS_SHOWN_KEY, false),
+			// Shown until the user hides it
+			toolsShown: this.globalState.get<boolean>(TOOLS_SHOWN_KEY, true),
 		};
 		const n = nonce();
 		const source = webview.cspSource;

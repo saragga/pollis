@@ -89,15 +89,45 @@ function cell(text: string): string {
 }
 
 /**
- * The hover: the memory in use and swapped, a table of the apps that use the most, largest first, with the Julia
- * processes of each Pollis under it, what to do about another Pollis or a Julia process left behind, and why the apps
- * can add up to more than the computer has.
+ * The hover: the memory in use, in the RAM and swapped, what macOS holds compressed, and why the apps can add up to
+ * more than the RAM and swap; a table of the apps that use the most, largest first, with the Julia processes of each
+ * Pollis under it; and what to do about another Pollis or a Julia process left behind.
  */
 function memoryMarkdown(reading: IMemoryReading, snapshot: IMemoryProcesses): MarkdownString {
 	const markdown = new MarkdownString('', { supportThemeIcons: true, isTrusted: { enabledCommands: [END_JULIA_COMMAND_ID, PROCESS_EXPLORER_COMMAND_ID] } });
-	const used = localize('memory.inUse', "{0} GB of {1} GB in use", gigabytes(reading.used), gigabytes(reading.total));
-	const swapped = reading.swapped ? localize('memory.swapped', "{0} GB swapped to disk", gigabytes(reading.swapped)) : undefined;
-	markdown.appendMarkdown(`**${cell(localize('memory.heading', "Memory"))}**: ${cell(swapped ? `${used} \u00b7 ${swapped}` : used)}\n\n`);
+	// The memory in use: in the RAM, plus what is swapped to the disk, with their sum from the figures shown
+	const ram = gigabytes(reading.used);
+	const total = gigabytes(reading.total);
+	const swap = reading.swapped ? gigabytes(reading.swapped) : '0';
+	const swapped = swap !== '0';
+	const inUse = swapped
+		? localize('memory.inUseSwap', "{0} GB of the {1} GB of RAM + {2} GB of swap = {3} GB", ram, total, swap, String(Number((Number(ram) + Number(swap)).toFixed(1))))
+		: localize('memory.inUse', "{0} GB of {1} GB in use", ram, total);
+	markdown.appendMarkdown(`**${cell(localize('memory.heading', "Memory"))}**: ${cell(inUse)}\n\n`);
+	// On macOS, the apps' memory held compressed, at its size before compression, and the room it takes
+	const compressed = reading.compressed ? gigabytes(reading.compressed) : '0';
+	const isCompressed = compressed !== '0' && reading.compressedInRam !== undefined;
+	if (isCompressed) {
+		const heldIn = gigabytes(reading.compressedInRam ?? 0);
+		markdown.appendMarkdown(`**${cell(localize('memory.compressedHeading', "Compressed"))}**: ${cell(swapped
+			? localize('memory.compressedSwap', "{0} GB of the apps' memory, held in {1} GB of RAM and in the swap", compressed, heldIn)
+			: localize('memory.compressed', "{0} GB of the apps' memory, held in {1} GB of RAM", compressed, heldIn))}\n\n`);
+	}
+	// Why the memory in use, and the apps, can add up to more than the RAM
+	const notes: string[] = [];
+	if (swapped) {
+		notes.push(localize('memory.swapNote', "Swap is space on the disk that holds what the RAM has no room for."));
+	}
+	if (snapshot.platform !== 'darwin') {
+		notes.push(localize('memory.noteOther', "Memory shared by several processes is counted in each app below, so the apps can add up to more than the memory in use."));
+	} else if (isCompressed) {
+		notes.push(swapped
+			? localize('memory.noteMacSwap', "macOS also compresses memory the apps are not using: each app below is counted with that memory at its size before compression, so the apps can add up to much more than the RAM and swap.")
+			: localize('memory.noteMac', "macOS also compresses memory the apps are not using: each app below is counted with that memory at its size before compression, so the apps can add up to much more than the RAM."));
+	} else {
+		notes.push(localize('memory.noteMacPlain', "Each app below is counted as Activity Monitor counts it, so the apps can add up to more than the memory in use."));
+	}
+	markdown.appendMarkdown(`$(info) *${cell(notes.join(' '))}*\n\n`);
 
 	const groups = groupProcesses(snapshot);
 	const self = groups.find(group => group.self);
@@ -136,10 +166,6 @@ function memoryMarkdown(reading: IMemoryReading, snapshot: IMemoryProcesses): Ma
 	for (const warning of warnings) {
 		markdown.appendMarkdown(`${warning}\n\n`);
 	}
-	// Why the apps add up to more than the memory in use
-	markdown.appendMarkdown(`*${cell(snapshot.platform === 'darwin'
-		? localize('memory.noteMac', "Each app is counted as Activity Monitor counts it, with what is compressed or swapped to disk, so the apps can add up to more than the computer has.")
-		: localize('memory.noteOther', "Memory shared by several processes is counted in each, so the apps can add up to more than the memory in use."))}*\n\n`);
 	markdown.appendMarkdown(`[${cell(localize('memory.processExplorer', "Open Process Explorer"))}](command:${PROCESS_EXPLORER_COMMAND_ID}) ${cell(localize('memory.processExplorerDescription', "for every process of this Pollis"))}`);
 	return markdown;
 }

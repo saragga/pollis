@@ -114,8 +114,10 @@ function onInitialized() {
 
 // ---- The modes of Compose > PDF Files
 
-/** The markup tools of pdf.js (AnnotationEditorType), by mode: Highlight, Add Text, Draw, and Add or Edit Images. */
-const EDITOR_MODES = { highlight: 9, text: 3, draw: 15, image: 13 };
+/** The markup tools of pdf.js (AnnotationEditorType), by mode: Highlight, Add or Edit Text, Add or Edit Images, and Draw. */
+const EDITOR_MODES = { highlight: 9, text: 3, image: 13, draw: 15 };
+/** The tools of the sidebar, by mode, and for Extract Pages what it saves as: One File. */
+const TOOL_MODES = { extract: ['split', 'one'], merge: ['merge'], convert: ['convert'] };
 /** No markup tool (AnnotationEditorType.NONE). */
 const NO_EDITOR = 0;
 /** The outline in the left pane of pdf.js (SidebarView.OUTLINE). */
@@ -156,8 +158,9 @@ function applyMode() {
 		} else {
 			viewsManager?.open();
 		}
-	} else if (mode === 'tools') {
+	} else if (TOOL_MODES[mode]) {
 		setToolsShown(true, true);
+		poppler.openTool(...TOOL_MODES[mode]);
 	}
 }
 

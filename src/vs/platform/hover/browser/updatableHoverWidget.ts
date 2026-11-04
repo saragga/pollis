@@ -8,7 +8,7 @@ import { isManagedHoverTooltipMarkdownString, type IHoverWidget, type IManagedHo
 import type { IHoverDelegate, IHoverDelegateOptions, IHoverDelegateTarget } from '../../../base/browser/ui/hover/hoverDelegate.js';
 import { HoverPosition } from '../../../base/browser/ui/hover/hoverWidget.js';
 import { CancellationTokenSource } from '../../../base/common/cancellation.js';
-import { isMarkdownString, type IMarkdownString } from '../../../base/common/htmlContent.js';
+import { isMarkdownString, MarkdownString, type IMarkdownString } from '../../../base/common/htmlContent.js';
 import { IDisposable } from '../../../base/common/lifecycle.js';
 import { isFunction, isString } from '../../../base/common/types.js';
 import { localize } from '../../../nls.js';
@@ -64,8 +64,9 @@ export class ManagedHoverWidget implements IDisposable {
 			if (managedContent instanceof Promise) {
 
 				// show 'Loading' if no hover is up yet
+				// POLLIS: with the spinner of Pollis, the sync icon turning
 				if (!this._hoverWidget) {
-					this.show(localize('iconLabel.loading', "Loading..."), focus, options);
+					this.show(new MarkdownString(`$(sync~spin) ${localize('iconLabel.loading', "Loading...")}`, { supportThemeIcons: true }), focus, options);
 				}
 
 				resolvedContent = await managedContent;

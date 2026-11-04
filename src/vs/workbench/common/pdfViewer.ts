@@ -14,7 +14,7 @@ export const PDF_VIEWER_OPEN_COMMAND_ID = 'pollis.pdfViewer.open';
 
 /**
  * The command of the PDF Viewer that opens the PDF shown, else the sample of PollisDatasets, in a mode:
- * (mode: 'read' | 'tools' | 'crop' | 'highlight' | 'text' | 'draw' | 'image').
+ * (mode: 'read' | 'extract' | 'merge' | 'crop' | 'convert' | 'highlight' | 'text' | 'image' | 'draw').
  */
 export const PDF_VIEWER_OPEN_IN_MODE_COMMAND_ID = 'pollis.pdfViewer.openInMode';
 

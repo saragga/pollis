@@ -145,10 +145,10 @@ html #viewsManager .treeView .treeItemToggler:hover ~ .treeItems {
 	color: inherit;
 }
 
-/* The page number in its field and the number of pages beside it in one font: a field takes the font of fields, not
-	the page's */
-html #pageNumber,
-html #numPages {
+/* The page number in its field and the number of pages beside it in one font: pdf.js gives the inputs of its toolbar
+	the system's font (#toolbarContainer #toolbarViewer input), larger than its labels' */
+#toolbarContainer #toolbarViewer #pageNumber,
+#toolbarContainer #toolbarViewer #numPages {
 	font-family: var(--vscode-font-family);
 	font-size: 12px;
 	font-weight: 400;
