@@ -15,12 +15,15 @@ import * as task from './lib/task.ts';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-/** The header of the files written here, which the lint rule header/header asks of every TypeScript file of Pollis. */
+/** The header of the files written here, which the lint rule header/header asks of every TypeScript file of Pollis, and the lint rule they are exempt from. */
 const GENERATED_HEADER = [
 	'/*---------------------------------------------------------------------------------------------',
 	' *  Copyright (c) 2026 Antonio Saragga Seabra',
 	' *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.',
 	' *--------------------------------------------------------------------------------------------*/',
+	'',
+	// The data are JSON, whose strings are double-quoted but never shown to the user as they are
+	'/* eslint-disable local/code-no-unexternalized-strings */',
 	'',
 ];
 const repoRoot = path.join(__dirname, '..');

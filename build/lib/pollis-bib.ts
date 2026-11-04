@@ -89,6 +89,8 @@ const REFERENCE_FIELDS: readonly (keyof IReference)[] = ['key', 'type', 'title',
 export async function readReferencesDatabase(repoRoot: string): Promise<IReferencesDatabase> {
 	const file = JSON.parse(await pinnedPackageFile(repoRoot, { name: 'PollisReferences', file: 'references.json', clone: 'POLLIS_REFERENCES' })) as { references: Partial<IReference>[]; counts: ICount[] };
 	const empty = Object.fromEntries(REFERENCE_FIELDS.map(field => [field, null]));
+	// Every field present, null where the work's JSON leaves it out
+	// eslint-disable-next-line local/code-no-dangerous-type-assertions
 	const references = file.references.map(reference => ({ ...empty, ...reference }) as IReference).sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
 	const order = (a: ICount, b: ICount) => a.key < b.key ? -1 : a.key > b.key ? 1 : a.source < b.source ? -1 : a.source > b.source ? 1 : a.date < b.date ? -1 : a.date > b.date ? 1 : 0;
 	return { references: new Map(references.map(reference => [reference.key, reference])), counts: [...file.counts].sort(order) };
