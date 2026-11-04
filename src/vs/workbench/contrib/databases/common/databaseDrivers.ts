@@ -149,6 +149,11 @@ export function isInMemoryConnection(profile: IDatabaseConnectionProfile): boole
 	return profile.driver === 'duckdb' && (!path || path === ':memory:');
 }
 
+/** Whether a connection is a saved DuckDB database, not built in and not read-only, that tables can be written to. */
+export function isWritableConnection(profile: IDatabaseConnectionProfile | undefined): boolean {
+	return !!profile && profile.driver === 'duckdb' && !profile.builtin && !(stringValue(profile, 'path') && fieldValue(profile, 'readonly') === true);
+}
+
 /** A short description of where a connection points, e.g. `:memory:` or `user@host:5432/db`. */
 export function describeConnection(profile: IDatabaseConnectionProfile): string {
 	switch (profile.driver) {
@@ -274,4 +279,126 @@ export function generatePreviewCode(id: string, schema: string, table: string): 
 /** The code that opens a table of the REPL connection `id` in the Table Viewer. */
 export function generateBrowseCode(id: string, schema: string, table: string): string {
 	return `PollisDB.browse(${juliaString(id)}, ${juliaString(quoteSqlName(schema, table))}; title = ${juliaString(table)})`;
+}
+
+/** `name`, quoted only when SQL needs it. */
+export function sqlName(name: string): string {
+	return /^[A-Za-z_][A-Za-z0-9_]*$/.test(name) ? name : quoteSqlName(name);
+}
+
+/**
+ * Where the code of a task of the Databases view runs: in a notebook cell, whose kernel does not have
+ * the connections of the Julia REPL, or in the Julia REPL, where the connection of the view is used.
+ */
+export type DatabaseTaskTarget = 'notebook' | 'repl';
+
+/** A file format DuckDB writes with `COPY ... TO`. */
+export type DatabaseExportFormat = 'parquet' | 'csv' | 'json';
+
+/**
+ * The code that runs `body` on the connection of `profile`. In a notebook, the cell connects once, as
+ * the view does; in the Julia REPL, a database the view has not connected is connected first, so it
+ * appears in the view.
+ */
+function taskCode(profile: IDatabaseConnectionProfile, target: DatabaseTaskTarget, connected: boolean, body: string[]): string {
+	if (target === 'repl') {
+		return [...(connected ? [] : [generateSessionConnectCode(profile, false)]), 'using Tables', '', ...body].join('\n');
+	}
+	const [using, ...connect] = generateConnectionCode(profile).split('\n');
+	return [
+		...(profile.driver === 'duckdb' ? ['isdefined(Main, :PollisDB) && PollisDB.install()  # DuckDB is built into Pollis'] : []),
+		`${using}, Tables`,
+		'',
+		`if !isdefined(Main, :${profile.variable})  # connect once, as the Databases view does`,
+		...connect.map(line => '\t' + line),
+		'end',
+		'',
+		...body,
+	].join('\n');
+}
+
+/** Where {@link sqlWithFile} puts the file: a character no SQL name of the view holds. */
+const FILE_MARK = '\u0001';
+
+/** A Julia string holding `sql`, with `$file` at {@link FILE_MARK}, quoted for SQL when `file` needs it. */
+function sqlWithFile(sql: string, file: string): string {
+	return juliaString(sql).replace(FILE_MARK, () => file.includes('\'') ? `$(replace(file, "'" => "''"))` : '$file');
+}
+
+/** The lines that count the rows of `table` and show it in the Databases view. */
+function tableWrittenLines(profile: IDatabaseConnectionProfile, table: string): string[] {
+	return [
+		`n = first(Tables.columntable(DBInterface.execute(${profile.variable}, ${juliaString(`SELECT count(*) AS n FROM ${table}`)})).n)`,
+		`println(${juliaString(`Table ${table}: `)}, n, " rows")`,
+		`isdefined(Main, :PollisDB) && PollisDB.refresh(${juliaString(profile.id)})  # shows the table in the Databases view`,
+	];
+}
+
+/**
+ * The code of the Query task: an example query, to edit, on `table` of `schema`, or one that lists the
+ * tables of the database.
+ */
+export function generateQueryTaskCode(profile: IDatabaseConnectionProfile, target: DatabaseTaskTarget, connected: boolean, schema?: string, table?: string): string {
+	const sql = schema !== undefined && table !== undefined
+		? `SELECT * FROM ${sqlName(schema)}.${sqlName(table)} LIMIT 10`
+		: profile.driver === 'sqlite'
+			? `SELECT type, name FROM sqlite_master WHERE type IN ('table', 'view') ORDER BY name`
+			: `SELECT table_schema, table_name, table_type FROM information_schema.tables WHERE table_schema NOT IN ('information_schema', 'pg_catalog') ORDER BY 1, 2`;
+	return taskCode(profile, target, connected, [
+		'sql = raw"""',
+		sql,
+		'"""',
+		`tbl = Tables.columntable(DBInterface.execute(${profile.variable}, sql))  # named tuple of column vectors`,
+		'println(length(first(tbl)), " rows x ", length(tbl), " columns")',
+		'println(Tables.schema(tbl))',
+	]);
+}
+
+/** The DuckDB function that reads `file`, by its extension. */
+function duckdbReader(file: string): string {
+	return /\.parquet$/i.test(file) ? 'read_parquet' : /\.(json|jsonl|ndjson)$/i.test(file) ? 'read_json' : 'read_csv';
+}
+
+/** The code of the Import File task: a CSV, Parquet or JSON file read into `table` of a DuckDB database. */
+export function generateImportTaskCode(profile: IDatabaseConnectionProfile, target: DatabaseTaskTarget, connected: boolean, file: string, table: string, append: boolean): string {
+	const name = sqlName(table);
+	const reader = duckdbReader(file);
+	return taskCode(profile, target, connected, [
+		`file = ${juliaString(file)}`,
+		`DBInterface.execute(${profile.variable}, ${sqlWithFile(append ? `INSERT INTO ${name} SELECT * FROM ${reader}('${FILE_MARK}')` : `CREATE OR REPLACE TABLE ${name} AS SELECT * FROM ${reader}('${FILE_MARK}')`, file)})`,
+		...tableWrittenLines(profile, name),
+	]);
+}
+
+/** The code of the Save Table task: the Julia table `variable` written to `table` of a DuckDB database. */
+export function generateSaveTaskCode(profile: IDatabaseConnectionProfile, target: DatabaseTaskTarget, connected: boolean, variable: string, table: string, append: boolean): string {
+	const name = sqlName(table);
+	return taskCode(profile, target, connected, [
+		`DuckDB.register_table(${profile.variable}, Tables.columntable(${variable}), "julia_data")  # a view of the Julia columns, not a copy`,
+		`DBInterface.execute(${profile.variable}, ${juliaString(append ? `INSERT INTO ${name} SELECT * FROM julia_data` : `CREATE OR REPLACE TABLE ${name} AS SELECT * FROM julia_data`)})`,
+		`DuckDB.unregister_table(${profile.variable}, "julia_data")`,
+		...tableWrittenLines(profile, name),
+	]);
+}
+
+/**
+ * The code of the Export task: `table` of `schema` written to `file`, by DuckDB in `format`, or, from
+ * SQLite and PostgreSQL, as CSV by CSV.jl.
+ */
+export function generateExportTaskCode(profile: IDatabaseConnectionProfile, target: DatabaseTaskTarget, connected: boolean, schema: string, table: string, file: string, format: DatabaseExportFormat): string {
+	const select = `SELECT * FROM ${sqlName(schema)}.${sqlName(table)}`;
+	return taskCode(profile, target, connected, [
+		...(profile.driver === 'duckdb'
+			? [
+				`file = ${juliaString(file)}`,
+				`DBInterface.execute(${profile.variable}, ${sqlWithFile(`COPY (${select}) TO '${FILE_MARK}' (FORMAT ${format})`, file)})`,
+			]
+			: [
+				'using CSV',
+				'',
+				`file = ${juliaString(file)}`,
+				`CSV.write(file, Tables.columntable(DBInterface.execute(${profile.variable}, ${juliaString(select)})))`,
+			]),
+		'println("Wrote ", file, " (", filesize(file), " bytes)")',
+	]);
 }

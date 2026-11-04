@@ -385,7 +385,7 @@ The microphone and speaker buttons beside the title: voice comes in a later vers
 % =====================================================================
 % PAGES 6–7 — DATA AND DATABASES
 % =====================================================================
-\topic{Data and Databases}{Databases view · Explore > Access Files and Databases}{The datasets that come with Pollis, your own databases, and the Databases view.}
+\topic{Data and Databases}{Databases view · Explore > Access Files · Explore > Access Databases}{The datasets that come with Pollis, your own databases, and the Databases view.}
 
 Pollis comes with a collection of real datasets, PollisDatasets, that its examples use, and connects to
 DuckDB, SQLite and PostgreSQL databases. All the work with data is done in Julia: the Databases view shows
@@ -465,8 +465,12 @@ from \texttt{PGPASSWORD} or \texttt{\textasciitilde/.pgpass}.
 
 \subhead{Panels for data}
 \begin{itemize}
-  \item \ui{Explore > Access Files and Databases}: \ui{SQL Databases} (query, import a CSV, Parquet or JSON
-    file, save a table, export a query), \ui{CSV Files}, \ui{Excel Workbooks} and \ui{PDF Files}.
+  \item \ui{Explore > Access Files}: the formats by kind, tables (\ui{CSV Files}, \ui{Excel Workbooks}),
+    documents (\ui{PDF Files}), maps, sound and voice, music, and \ui{Life Sciences}, a submenu for medical
+    imaging, biosignals, genomics and clinical records; the formats not in Pollis yet, such as Parquet,
+    GeoJSON or DICOM, are greyed out, and the toolboxes of a field can bring more.
+  \item \ui{Explore > Access Databases}: SQL databases, Pollis's own among them (query, import a CSV, Parquet or
+    JSON file, save a table, export a query).
   \item \ui{Explore > Access Data Libraries}: Hugging Face and Kaggle datasets, Yahoo Finance, Alpha Vantage,
     US SEC EDGAR, FRED and the European Central Bank. A provider that needs an API key shows
     \ui{Set API key} on the \ui{Powered by:} line; the key is kept in your system's secure storage.
@@ -475,8 +479,8 @@ from \texttt{PGPASSWORD} or \texttt{\textasciitilde/.pgpass}.
 \subhead{PDF Files}
 Every PDF opens in the PDF Viewer of Pollis, from the Explorer, \ui{File > Open}, \ui{Help > Documentation},
 the vignettes, \ui{Reports}, \ui{New Methods} and the sources of Ask Pollis, with its pages, outline,
-thumbnails, search, zoom and form fields. \ui{Explore > Access Files and Databases > PDF Files} opens a PDF of
-yours, or the sample of PollisDatasets, in it. The tools of Pollis show in a sidebar at the right of the pages:
+thumbnails, search, zoom and form fields. \ui{Explore > Access Files > PDF Files} opens the
+sample of PollisDatasets in it, and \ui{Open a PDF...}, in the viewer's title bar, a PDF of yours. The tools of Pollis show in a sidebar at the right of the pages:
 the area once \ui{Select Area} has drawn one, and the Poppler tools from the menu of \ui{Poppler Tools},
 beside it in the toolbar, which lists the tools that read the PDF and those that make files from it.
 \begin{enumerate}[label=\arabic*.]

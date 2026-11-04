@@ -30,7 +30,7 @@ import { IViewPaneOptions, ViewPane } from '../../../browser/parts/views/viewPan
 import { IViewDescriptorService } from '../../../common/views.js';
 import { IDatabaseColumn, IDatabaseConnectionsService, IDatabaseSchema, IDatabaseSession, IDatabaseTable } from '../common/databaseConnections.js';
 import './media/connectionsView.css';
-import { describeConnection, DOCUMENTS_DATABASE_ID, getDatabaseDriver, IDatabaseConnectionProfile, isInMemoryConnection, JOURNALS_DATABASE_ID, REFERENCES_DATABASE_ID, RSS_DATABASE_ID } from '../common/databaseDrivers.js';
+import { describeConnection, DOCUMENTS_DATABASE_ID, getDatabaseDriver, IDatabaseConnectionProfile, isInMemoryConnection, isWritableConnection, JOURNALS_DATABASE_ID, REFERENCES_DATABASE_ID, RSS_DATABASE_ID } from '../common/databaseDrivers.js';
 
 /** The context menu of an item in the Connections view. Its commands receive an {@link IDatabaseItemArg}. */
 export const DatabaseConnectionContextMenu = new MenuId('DatabaseConnectionContext');
@@ -51,6 +51,8 @@ export const DatabaseItemBuiltin = new RawContextKey<boolean>('pollisDatabaseBui
 export const DatabaseItemId = new RawContextKey<string>('pollisDatabaseId', undefined);
 /** Whether the tables of the item's connection are shown below it. */
 export const DatabaseItemExpanded = new RawContextKey<boolean>('pollisDatabaseExpanded', false);
+/** Whether the item's database is a saved DuckDB database, not built in and not read-only, that tables can be written to. */
+export const DatabaseItemWritable = new RawContextKey<boolean>('pollisDatabaseWritable', false);
 
 export const NEW_CONNECTION_COMMAND_ID = 'pollis.databases.newConnection';
 export const CONNECT_DATABASE_COMMAND_ID = 'pollis.databases.connect';
@@ -453,6 +455,7 @@ export class DatabaseConnectionsView extends ViewPane {
 			[DatabaseItemBuiltin.key, !!this.databaseConnectionsService.getConnection(item.id)?.builtin],
 			[DatabaseItemExpanded.key, this.expanded.has(item.id)],
 			[DatabaseItemId.key, item.id],
+			[DatabaseItemWritable.key, isWritableConnection(this.databaseConnectionsService.getConnection(item.id))],
 		];
 	}
 

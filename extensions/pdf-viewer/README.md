@@ -15,10 +15,10 @@ The file reloads when it changes on disk, keeping the page and the zoom, so a PD
 
 ## Commands
 
-- **Open a PDF...**: opens a PDF from the disk.
+- **Open a PDF...**: opens a PDF from the disk; also a button in the viewer's title bar.
 - **Open the Sample PDF**: opens the sample PDF of PollisDatasets.
 
-Explore > Access Files and Databases > PDF Files and the PDF... of Ask Pollis' + open PDFs in this viewer.
+Explore > Access Files > PDF Files opens the sample PDF, and the PDF... of Ask Pollis' + opens a PDF of yours, in this viewer.
 
 ## Third-party software
 

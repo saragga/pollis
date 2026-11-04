@@ -60,6 +60,12 @@
         "command": "pollis.pdfViewer.openFromMenu",
         "title": "%command.openFromMenu%",
         "category": "PDF"
+      },
+      {
+        "command": "pollis.pdfViewer.openAnother",
+        "title": "%command.open%",
+        "category": "PDF",
+        "icon": "$(folder-opened)"
       }
     ],
     "menus": {
@@ -67,6 +73,17 @@
         {
           "command": "pollis.pdfViewer.openFromMenu",
           "when": "false"
+        },
+        {
+          "command": "pollis.pdfViewer.openAnother",
+          "when": "false"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "pollis.pdfViewer.openAnother",
+          "when": "activeCustomEditorId == pollis.pdfViewer",
+          "group": "navigation@1"
         }
       ]
     }

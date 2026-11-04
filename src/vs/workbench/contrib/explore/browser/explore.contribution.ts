@@ -6,6 +6,7 @@
 import { localize } from '../../../../../vs/nls.js';
 import { MenuRegistry, MenuId } from '../../../../platform/actions/common/actions.js';
 import { CommandsRegistry, ICommandService } from '../../../../platform/commands/common/commands.js';
+import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { IWebviewService } from '../../webview/browser/webview.js';
@@ -958,7 +959,7 @@ const ADRSubmenuId = new MenuId('menubarADRSubmenu');
 
 // "Access Model Repositories" (Hugging Face and Kaggle Models) moved to Compose > Local Models (compose.contribution.ts)
 
-// Define a new submenu ID for "Connectors"
+// Explore > Access Files (its id kept from its earlier name, for the panel index and the Views)
 const CONNSubmenuId = new MenuId('menubarCONNSubmenu');
 
 // Define a new submenu ID for "Data Visualization"
@@ -984,11 +985,22 @@ MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 	group: '1_explore',
 	submenu: CONNSubmenuId,
-	title: localize('showExplore.formats', 'Access Files and Databases'),
+	title: localize('showExplore.files', 'Access Files'),
 	order: 3,
 });
 
-// Explore > RSS and Explore > Alerts: what Pollis watches for the user, after Access Files and Databases.
+// Explore > Access Databases: SQL Databases, below Access Files, in a place of its own, as Pollis keeps its own
+// databases (the Databases view)
+MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
+	group: '1_explore',
+	command: {
+		id: SQL_ID,
+		title: localize('showExplore.databases', 'Access Databases'),
+	},
+	order: 4,
+});  // DuckDB.jl
+
+// Explore > RSS and Explore > Alerts: what Pollis watches for the user, after Access Databases.
 const RssSubmenuId = new MenuId('menubarRssSubmenu');
 const AlertsSubmenuId = new MenuId('menubarAlertsSubmenu');
 
@@ -1194,45 +1206,111 @@ MenuRegistry.appendMenuItem(ADRSubmenuId, {
 }); // FamaFrenchData.jl
 
 // ===================================================
-// SUBMENU: FORMATS AND PROTOCOLS
+// SUBMENU: ACCESS FILES
+// The formats by kind, one group each: tables, documents, maps, sound and voice, music, and Life Sciences, a submenu
+// of its own for the many formats of medicine and biology.
 // ===================================================
 
+/** The precondition of a format not built yet: never met, so the menu shows it greyed out. */
+const NOT_YET_AVAILABLE = ContextKeyExpr.false();
 
+// The formats Pollis reads, each written out, as the panel index (build/pollis/makePanelIndex.ts) reads them
 MenuRegistry.appendMenuItem(CONNSubmenuId, {
-	group: '2_conn',
-	command: {
-		id: SQL_ID,
-		title: localize('conn.sql', 'SQL Databases'),
-	},
+	group: '1_tables',
+	command: { id: CSV_ID, title: localize('conn.csv', 'CSV Files') },
 	order: 1,
-});  // DuckDB.jl
+});  // CSV.jl
 
 MenuRegistry.appendMenuItem(CONNSubmenuId, {
-	group: '2_conn',
-	command: {
-		id: XLSX_ID,
-		title: localize('conn.excel', 'Excel Workbooks'),
-	},
+	group: '1_tables',
+	command: { id: XLSX_ID, title: localize('conn.excel', 'Excel Workbooks') },
 	order: 2,
 });  // XLSX.jl
 
 MenuRegistry.appendMenuItem(CONNSubmenuId, {
-	group: '2_conn',
-	command: {
-		id: CSV_ID,
-		title: localize('conn.csv', 'CSV Files'),
-	},
-	order: 3,
-});  // CSV.jl
+	group: '2_documents',
+	command: { id: PDF_ID, title: localize('conn.pdf', 'PDF Files') },
+	order: 1,
+});  // the PDF Viewer
 
+// Access Files > Life Sciences: a few of the most common formats of each family, the rest to come with the toolboxes
+// of their fields, which can add theirs to this submenu
+const LifeSciencesSubmenuId = new MenuId('menubarLifeSciencesSubmenu');
 MenuRegistry.appendMenuItem(CONNSubmenuId, {
-	group: '2_conn',
-	command: {
-		id: PDF_ID,
-		title: localize('conn.pdf', 'PDF Files'),
+	group: '6_life',
+	submenu: LifeSciencesSubmenuId,
+	title: localize('conn.lifeSciences', 'Life Sciences'),
+	order: 1,
+});
+
+// The formats not built yet, greyed out in their groups, after those Pollis reads
+const FORMATS_TO_COME: readonly { readonly menu: MenuId; readonly group: string; readonly first: number; readonly items: readonly { readonly id: string; readonly title: string }[] }[] = [
+	{
+		menu: CONNSubmenuId, group: '1_tables', first: 3, items: [
+			{ id: 'chiara.explore.conn.parquet', title: localize('conn.parquet', 'Parquet Files') },
+			{ id: 'chiara.explore.conn.json', title: localize('conn.json', 'JSON Files') },
+		]
 	},
-	order: 4,
-});  // Poppler_jll.jl
+	{
+		menu: CONNSubmenuId, group: '3_maps', first: 1, items: [
+			{ id: 'chiara.explore.conn.geojson', title: localize('conn.geojson', 'GeoJSON Files') },
+			{ id: 'chiara.explore.conn.shapefile', title: localize('conn.shapefile', 'Shapefiles') },
+			{ id: 'chiara.explore.conn.geopackage', title: localize('conn.geopackage', 'GeoPackage Files') },
+		]
+	},
+	{
+		// Recordings: sound in general, and the formats of voice
+		menu: CONNSubmenuId, group: '4_sound', first: 1, items: [
+			{ id: 'chiara.explore.conn.wav', title: localize('conn.wav', 'WAV Files') },
+			{ id: 'chiara.explore.conn.mp3', title: localize('conn.mp3', 'MP3 Files') },
+			{ id: 'chiara.explore.conn.m4a', title: localize('conn.m4a', 'M4A Files') },
+			{ id: 'chiara.explore.conn.opus', title: localize('conn.opus', 'Opus Files') },
+			{ id: 'chiara.explore.conn.textgrid', title: localize('conn.textgrid', 'Praat TextGrids') },
+		]
+	},
+	{
+		// Scores: written notes rather than recorded sound
+		menu: CONNSubmenuId, group: '5_music', first: 1, items: [
+			{ id: 'chiara.explore.conn.midi', title: localize('conn.midi', 'MIDI Files') },
+			{ id: 'chiara.explore.conn.musicxml', title: localize('conn.musicxml', 'MusicXML Files') },
+		]
+	},
+	{
+		// Medical imaging: MRI, CT and X-ray
+		menu: LifeSciencesSubmenuId, group: '1_imaging', first: 1, items: [
+			{ id: 'chiara.explore.conn.dicom', title: localize('conn.dicom', 'DICOM Files') },
+			{ id: 'chiara.explore.conn.nifti', title: localize('conn.nifti', 'NIfTI Files') },
+		]
+	},
+	{
+		// Biosignals: ECG, EEG and sleep
+		menu: LifeSciencesSubmenuId, group: '2_signals', first: 1, items: [
+			{ id: 'chiara.explore.conn.edf', title: localize('conn.edf', 'EDF Files') },
+			{ id: 'chiara.explore.conn.wfdb', title: localize('conn.wfdb', 'WFDB Records') },
+		]
+	},
+	{
+		// DNA and genomics
+		menu: LifeSciencesSubmenuId, group: '3_genomics', first: 1, items: [
+			{ id: 'chiara.explore.conn.fasta', title: localize('conn.fasta', 'FASTA and FASTQ Files') },
+			{ id: 'chiara.explore.conn.vcf', title: localize('conn.vcf', 'VCF Files') },
+		]
+	},
+	{
+		// Clinical records
+		menu: LifeSciencesSubmenuId, group: '4_clinical', first: 1, items: [
+			{ id: 'chiara.explore.conn.fhir', title: localize('conn.fhir', 'FHIR Resources') },
+		]
+	},
+];
+
+for (const { menu, group, first, items } of FORMATS_TO_COME) {
+	items.forEach((item, index) => MenuRegistry.appendMenuItem(menu, {
+		group,
+		command: { id: item.id, title: item.title, precondition: NOT_YET_AVAILABLE },
+		order: first + index,
+	}));
+}
 
 
 // ===================================================

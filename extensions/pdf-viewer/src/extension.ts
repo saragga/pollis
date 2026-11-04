@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 // The PDF Viewer of Pollis: the editor of .pdf files, with pdf.js, and the commands that open a PDF in it (Explore >
-// Access Files and Databases > PDF Files, the PDF... of the + of Ask Pollis).
+// Access Files > PDF Files, the PDF... of the + of Ask Pollis).
 
 import * as os from 'os';
 import * as path from 'path';
@@ -112,15 +112,13 @@ export function activate(context: vscode.ExtensionContext): void {
 			}
 		}),
 		vscode.commands.registerCommand('pollis.pdfViewer.openSample', openSample),
-		// Explore > Access Files and Databases > PDF Files
-		vscode.commands.registerCommand('pollis.pdfViewer.openFromMenu', async () => {
-			const open: vscode.QuickPickItem = { label: vscode.l10n.t("Open a PDF..."), description: vscode.l10n.t("From the disk") };
-			const sample: vscode.QuickPickItem = { label: vscode.l10n.t("Open the Sample PDF"), description: vscode.l10n.t("A short report with a table, from PollisDatasets") };
-			const chosen = await vscode.window.showQuickPick([open, sample], { title: vscode.l10n.t("PDF Files"), placeHolder: vscode.l10n.t("The PDF to open in the PDF Viewer") });
-			if (chosen === open) {
-				await vscode.commands.executeCommand('pollis.pdfViewer.open');
-			} else if (chosen === sample) {
-				await openSample();
+		// Explore > Access Files > PDF Files: the sample, as the other panels start on an example; Open a PDF... in the viewer's title bar opens another
+		vscode.commands.registerCommand('pollis.pdfViewer.openFromMenu', openSample),
+		// The viewer's title bar, which passes the PDF shown: the dialog opens another one
+		vscode.commands.registerCommand('pollis.pdfViewer.openAnother', async () => {
+			const target = await pickPdf();
+			if (target) {
+				await openInViewer(target);
 			}
 		}),
 	);

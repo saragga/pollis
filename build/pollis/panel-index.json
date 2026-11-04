@@ -51,6 +51,7 @@
 			"menubarGOSubmenu",
 			"menubarKnowledgeMenu",
 			"menubarLMSubmenu",
+			"menubarLifeSciencesSubmenu",
 			"menubarLiteratureMenu",
 			"menubarMOOSubmenu",
 			"menubarMPCCPSubmenu",
@@ -7969,7 +7970,7 @@
 				{
 					"id": "chiara.explore.conn.sql",
 					"menuTitles": [
-						"SQL Databases"
+						"Access Databases"
 					]
 				}
 			],
