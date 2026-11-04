@@ -9,7 +9,6 @@ import { URI } from '../../../../base/common/uri.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, MenuId, registerAction2 } from '../../../../platform/actions/common/actions.js';
 import { Categories } from '../../../../platform/action/common/actionCommonCategories.js';
-import { BrowserViewCommandId } from '../../../../platform/browserView/common/browserView.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
@@ -21,6 +20,7 @@ import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWork
 import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_STYLE } from './libraryPage.js';
 import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
 import { IToolboxDocumentInfo, IToolboxInfo, IToolboxPanelsService } from '../common/toolboxPanels.js';
+import { openPdfInViewer } from '../../../common/pdfViewer.js';
 
 // Help > Documentation > Toolbox Vignettes: the vignettes the installed toolboxes bring, listed in the `documents` of their
 // pollisToolboxes contribution (toolboxExtensions.ts). A toolbox ships a document's LaTeX sources, not a PDF: Pollis
@@ -136,7 +136,7 @@ async function openToolboxDocumentsPage(accessor: ServicesAccessor): Promise<voi
 				return;
 			}
 		}
-		commandService.executeCommand(BrowserViewCommandId.Open, pdf.toString(true));
+		openPdfInViewer(commandService, pdf);
 	};
 
 	disposables.add(webviewInput.webview.onMessage((e: { message: ToolboxDocumentsMessage }) => {

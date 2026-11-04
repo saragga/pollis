@@ -1,0 +1,8 @@
+{
+	"displayName": "PDF Viewer",
+	"description": "Pollis' viewer of PDF files, with pdf.js: reading, search, outline, thumbnails, forms, annotations and saving, and tools to select an area of a page and take its text, table or image",
+	"customEditor.displayName": "PDF Viewer",
+	"command.open": "Open a PDF...",
+	"command.openSample": "Open the Sample PDF",
+	"command.openFromMenu": "PDF Files"
+}

@@ -30,6 +30,7 @@ import { vignettesIndex } from './newMethods.js';
 import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
 import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
 import { FEWEST_ROWS, rowsChoiceCss, rowsChoiceScript, sortHeadingsCss, sortHeadingsScript, sortHint, stickyHeadCss, stickyHeadScript, storedRows, storeRows } from '../../model/browser/webviews/webviewPager.js';
+import { openPdfInViewer } from '../../../common/pdfViewer.js';
 
 // Help > Documentation > Package Vignettes, the Package Vignettes page: a vignette belongs to its package, as in R. One list:
 // the vignettes of the Pollis registry, in Vignettes.toml at its root, which Package and Publish adds to on
@@ -289,7 +290,12 @@ async function openVignettesPage(accessor: ServicesAccessor): Promise<void> {
 	// A vignette's PDF: compiled from its sources the first time, then the copy compiled
 	const openVignette = async (entry: IVignette) => {
 		if (!entry.source) {
-			commandService.executeCommand(BrowserViewCommandId.Open, entry.pdf.startsWith('file:') ? URI.parse(entry.pdf).toString(true) : entry.pdf);
+			// A PDF on the disk in the PDF Viewer; one on the web in the internal browser, which hands it to the viewer
+			if (entry.pdf.startsWith('file:')) {
+				openPdfInViewer(commandService, URI.parse(entry.pdf));
+			} else {
+				commandService.executeCommand(BrowserViewCommandId.Open, entry.pdf);
+			}
 			return;
 		}
 		const pdf = vignettePdf(pathService.userHome({ preferLocal: true }), entry);
@@ -311,7 +317,7 @@ async function openVignettesPage(accessor: ServicesAccessor): Promise<void> {
 				return;
 			}
 		}
-		commandService.executeCommand(BrowserViewCommandId.Open, pdf.toString(true));
+		openPdfInViewer(commandService, pdf);
 	};
 
 	disposables.add(webviewInput.webview.onMessage(async (e: { message: VignettesMessage }) => {

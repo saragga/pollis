@@ -9,6 +9,7 @@ import { localize } from '../../../../nls.js';
 import { BrowserViewCommandId } from '../../../../platform/browserView/common/browserView.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { AskPollisSource, ASK_SOURCE_COLLECTION, IAskPollisPassage, IAskPollisSearchResult } from '../common/askPollis.js';
+import { openPdfInViewer } from '../../../common/pdfViewer.js';
 
 // What Ask Pollis and Evaluate Answering Models show of an answer alike: its Markdown with the citations as buttons, the Sources
 // under it with Open, and the passage opened in its document.
@@ -48,8 +49,8 @@ export function askOpenPassage(commandService: ICommandService, passage: IAskPol
 		const [page, fragment] = passage.anchor.split('#');
 		commandService.executeCommand(BrowserViewCommandId.Open, joinPath(dirname(URI.file(passage.file)), page).with({ fragment: fragment ?? '' }).toString(true));
 	} else {
-		// The PDF viewer of the integrated browser opens a PDF at the page of its #page=
-		commandService.executeCommand(BrowserViewCommandId.Open, URI.file(passage.file).with({ fragment: passage.page === null ? '' : `page=${passage.page}` }).toString(true));
+		// The PDF at the passage's page, in the PDF Viewer
+		openPdfInViewer(commandService, URI.file(passage.file), { page: passage.page ?? undefined });
 	}
 }
 

@@ -12,7 +12,6 @@ import { ThemeIcon } from '../../../../base/common/themables.js';
 import { URI } from '../../../../base/common/uri.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, MenuId, MenuRegistry, registerAction2 } from '../../../../platform/actions/common/actions.js';
-import { BrowserViewCommandId } from '../../../../platform/browserView/common/browserView.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { ConfigurationScope, Extensions as ConfigurationExtensions, IConfigurationRegistry } from '../../../../platform/configuration/common/configurationRegistry.js';
 import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
@@ -25,7 +24,7 @@ import { registerIcon } from '../../../../platform/theme/common/iconRegistry.js'
 import { registerThemingParticipant } from '../../../../platform/theme/common/themeService.js';
 import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
 import { ResourceContextKey } from '../../../common/contextkeys.js';
-import { IEditorService } from '../../../services/editor/common/editorService.js';
+import { IEditorService, SIDE_GROUP } from '../../../services/editor/common/editorService.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { ITextFileService } from '../../../services/textfile/common/textfiles.js';
 import { debugIconStartForeground } from '../../debug/browser/debugColors.js';
@@ -130,10 +129,9 @@ async function pickNotebook(editorService: IEditorService, fileDialogService: IF
 	return picked?.[0];
 }
 
-/** Opens the PDF in the integrated browser beside the editor, or reloads it there. */
-function showPdf(commandService: ICommandService, pdf: URI): Promise<unknown> {
-	const url = pdf.toString(true);
-	return commandService.executeCommand(BrowserViewCommandId.Open, { url, reuseUrlFilter: url, openToSide: true });
+/** Opens the PDF in the PDF Viewer beside the editor, or shows it there: the viewer reloads it when it changes. */
+function showPdf(editorService: IEditorService, pdf: URI): Promise<unknown> {
+	return editorService.openEditor({ resource: pdf, options: { pinned: true, preserveFocus: true, revealIfOpened: true } }, SIDE_GROUP);
 }
 
 /** Calls `show` each time the PDF is written, until the returned store is disposed. */
@@ -202,7 +200,7 @@ async function makeReport(accessor: ServicesAccessor, kind: IReportKind): Promis
 	const disposables = watchPdf(fileService, pdf, async () => {
 		disposables.dispose();
 		await editorService.openEditor({ resource: tex, options: { pinned: true, preserveFocus: true } });
-		await showPdf(commandService, pdf);
+		await showPdf(editorService, pdf);
 	});
 	disposables.add(new RunOnceScheduler(() => disposables.dispose(), EXPORT_TIMEOUT)).schedule();
 
@@ -219,7 +217,6 @@ async function polishReport(accessor: ServicesAccessor, resource?: URI): Promise
 	const textFileService = accessor.get(ITextFileService);
 	const fileService = accessor.get(IFileService);
 	const notificationService = accessor.get(INotificationService);
-	const commandService = accessor.get(ICommandService);
 	const instantiationService = accessor.get(IInstantiationService);
 
 	const tex = resource ?? editorFile(editorService, '.tex');
@@ -240,7 +237,7 @@ async function polishReport(accessor: ServicesAccessor, resource?: URI): Promise
 		return;
 	}
 	const pdf = joinPath(folder, basenameOrAuthority(tex).replace(/\.tex$/, '.pdf'));
-	const disposables = watchPdf(fileService, pdf, () => showPdf(commandService, pdf));
+	const disposables = watchPdf(fileService, pdf, () => showPdf(editorService, pdf));
 	disposables.add(terminal.onDisposed(() => disposables.dispose()));
 }
 
@@ -261,7 +258,7 @@ async function compileLatex(accessor: ServicesAccessor, resource?: URI): Promise
 	// Watches until the PDF changes or the time runs out (a failed compile leaves it as it was)
 	const disposables = watchPdf(fileService, pdf, () => {
 		disposables.dispose();
-		return showPdf(commandService, pdf);
+		return showPdf(editorService, pdf);
 	});
 	disposables.add(new RunOnceScheduler(() => disposables.dispose(), COMPILE_TIMEOUT)).schedule();
 

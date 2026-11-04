@@ -52194,19 +52194,6 @@
 			]
 		},
 		{
-			"id": "pdf",
-			"title": "PDF Files",
-			"description": "Extract Text · Tables · Document Info · Fonts · Images · Render Pages · Convert · Split · Merge · Attachments",
-			"commands": [
-				"chiara.explore.conn.pdf"
-			],
-			"keys": [
-				"PD2025a",
-				"Qui2023a",
-				"Qui2023c"
-			]
-		},
-		{
 			"id": "pgm",
 			"title": "Policy Gradient Methods",
 			"description": "REINFORCE · PPO · TRPO",

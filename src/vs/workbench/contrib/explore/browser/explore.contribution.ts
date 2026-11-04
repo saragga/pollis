@@ -6,8 +6,7 @@
 import { localize } from '../../../../../vs/nls.js';
 import { MenuRegistry, MenuId } from '../../../../platform/actions/common/actions.js';
 import { CommandsRegistry, ICommandService } from '../../../../platform/commands/common/commands.js';
-import { IInstantiationService, ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
-import { IFileDialogService } from '../../../../platform/dialogs/common/dialogs.js';
+import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { IWebviewService } from '../../webview/browser/webview.js';
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
@@ -39,7 +38,6 @@ import { WBD_PANEL } from '../../model/browser/commands/wbd.command.js';
 import { FFD_PANEL } from '../../model/browser/commands/ffd.command.js';
 import { IDAT_PANEL } from '../../model/browser/commands/idat.command.js';
 import { CSV_PANEL } from '../../model/browser/commands/csv.command.js';
-import { PDF_PANEL } from '../../model/browser/commands/pdf.command.js';
 import { SQL_PANEL } from '../../model/browser/commands/sql.command.js';
 import { openHfmWebview } from '../../model/browser/commands/hfm.command.js';
 import { openKgmWebview } from '../../model/browser/commands/kgm.command.js';
@@ -60,6 +58,7 @@ import { ADD_ALERT_COMMAND_ID, SHOW_ALERTS_COMMAND_ID } from '../../monitor/brow
 import { SHOW_MEDIA_COVERAGE_COMMAND_ID } from '../../monitor/browser/mediaCoveragePage.js';
 import { JOURNAL_METRICS_COMMAND_ID } from '../../databases/common/databaseDrivers.js';
 import { ASK_POLLIS_OPEN_PDF_COMMAND_ID } from '../../compose/common/askPollis.js';
+import { PDF_VIEWER_OPEN_COMMAND_ID } from '../../../common/pdfViewer.js';
 
 export const EXPL_COMMAND_ID = 'workbench.action.showExplore';
 const DSTATS_ID = 'chiara.explore.dstats';
@@ -181,22 +180,10 @@ CommandsRegistry.registerCommand(KGM_ID, (accessor: ServicesAccessor) => {
 
 CommandsRegistry.registerCommand(SQL_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, SQL_PANEL));
 CommandsRegistry.registerCommand(CSV_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, CSV_PANEL));
-CommandsRegistry.registerCommand(PDF_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, PDF_PANEL));
-// PDF... in the + of Ask Pollis: PDF Files on the PDF picked, with Select Area to send its areas to the panel's Ask Pollis
-CommandsRegistry.registerCommand(ASK_POLLIS_OPEN_PDF_COMMAND_ID, async (accessor: ServicesAccessor) => {
-	const instantiationService = accessor.get(IInstantiationService);
-	const picked = await accessor.get(IFileDialogService).showOpenDialog({
-		title: localize('conn.pdf.pick', "Open a PDF in PDF Files"),
-		canSelectFiles: true,
-		canSelectFolders: false,
-		canSelectMany: false,
-		filters: [{ name: localize('conn.pdf.filter', "PDF Files"), extensions: ['pdf'] }],
-	});
-	if (picked?.[0]) {
-		// With forward slashes, which Julia reads on every system, where a backslash would start an escape in the Example Code
-		instantiationService.invokeFunction(opener => openScaffoldWebview(opener, PDF_PANEL, undefined, { path: picked[0].fsPath.replace(/\\/g, '/') }));
-	}
-});
+// PDF Files: a PDF from the disk, or the sample of PollisDatasets, in the PDF Viewer (extensions/pdf-viewer)
+CommandsRegistry.registerCommand(PDF_ID, (accessor: ServicesAccessor) => accessor.get(ICommandService).executeCommand('pollis.pdfViewer.openFromMenu'));
+// PDF... in the + of Ask Pollis: a PDF picked, in the PDF Viewer, whose Send to Ask Pollis attaches its areas to the question
+CommandsRegistry.registerCommand(ASK_POLLIS_OPEN_PDF_COMMAND_ID, (accessor: ServicesAccessor) => accessor.get(ICommandService).executeCommand(PDF_VIEWER_OPEN_COMMAND_ID));
 
 CommandsRegistry.registerCommand(XLSX_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, XLSX_PANEL));
 

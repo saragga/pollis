@@ -13,7 +13,6 @@ import { generateUuid } from '../../../../base/common/uuid.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Categories } from '../../../../platform/action/common/actionCommonCategories.js';
 import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
-import { BrowserViewCommandId } from '../../../../platform/browserView/common/browserView.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { IDialogService, IFileDialogService } from '../../../../platform/dialogs/common/dialogs.js';
@@ -37,6 +36,7 @@ import { askModels } from './askPollisPage.js';
 import { askAnswerCss, askAnswerScript, askPassageView } from './askPollisWebview.js';
 import { compareCss, pageHelpersScript } from './compareShared.js';
 import { IInstalledModel } from './modelsInstalledPage.js';
+import { openPdfInViewer } from '../../../common/pdfViewer.js';
 
 // Retrieval-Augmented Generation, from Compose > Retrieval-Augmented Generation (compose.contribution.ts): the
 // collections of documents a model answers from, each with its own index in ~/.pollis/rag. One page of the scaffold in the Time Arrow style, in six steps:
@@ -333,7 +333,7 @@ async function openRagPage(accessor: ServicesAccessor): Promise<void> {
 		} else if (message.command === 'open' && current && hasKey(message, { file: true })) {
 			const document = current.documents.find(d => d.file === message.file);
 			if (document?.kind === 'pdf') {
-				await commandService.executeCommand(BrowserViewCommandId.Open, URI.file(document.file).toString(true));
+				await openPdfInViewer(commandService, URI.file(document.file));
 			} else if (document) {
 				await editorService.openEditor({ resource: URI.file(document.file) });
 			}
@@ -396,7 +396,7 @@ async function openRagPage(accessor: ServicesAccessor): Promise<void> {
 		} else if (message.command === 'openPassage' && current && hasKey(message, { file: true }) && current.documents.some(d => d.file === message.file)) {
 			const document = current.documents.find(d => d.file === message.file)!;
 			if (document.kind === 'pdf') {
-				await commandService.executeCommand(BrowserViewCommandId.Open, URI.file(document.file).toString(true) + (message.page ? `#page=${message.page}` : ''));
+				await openPdfInViewer(commandService, URI.file(document.file), { page: message.page || undefined });
 			} else {
 				await editorService.openEditor({ resource: URI.file(document.file) });
 			}

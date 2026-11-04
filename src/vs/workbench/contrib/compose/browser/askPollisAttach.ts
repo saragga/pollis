@@ -5,7 +5,7 @@
 
 // What the + of Ask Pollis attaches to a question, the same in its pane and in the pill of a panel: the + and its menu,
 // the chips above the question, and the messages they send to the workbench, which picks a dataset or a database and
-// cuts a long text (ASK_POLLIS_ATTACH_COMMAND_ID, in askPollisPage.ts), or opens a PDF in PDF Files (ASK_POLLIS_OPEN_PDF_COMMAND_ID).
+// cuts a long text (ASK_POLLIS_ATTACH_COMMAND_ID, in askPollisPage.ts), or opens a PDF in the PDF Viewer (ASK_POLLIS_OPEN_PDF_COMMAND_ID).
 
 import { localize } from '../../../../nls.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
@@ -13,7 +13,7 @@ import { ASK_POLLIS_ANSWERS_IN_CLOUD_COMMAND_ID, ASK_POLLIS_ATTACH_COMMAND_ID, A
 import { MAX_FILE_BYTES, MAX_IMAGE_BYTES } from './collaboration/collaborationProtocol.js';
 import { composerAddCss, composerAddHtml, composerAddScript } from './composerAdd.js';
 
-/** The messages of the +: a text file read in the page, a dataset or a database for the workbench to pick, or a PDF to open in PDF Files. */
+/** The messages of the +: a text file read in the page, a dataset or a database for the workbench to pick, or a PDF to open in the PDF Viewer. */
 export type AskAttachMessage =
 	| { readonly command: 'attachFile'; readonly name: string; readonly content: string }
 	| { readonly command: 'pickDataset' }

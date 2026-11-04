@@ -1,0 +1,624 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) 2026 Antonio Saragga Seabra
+ *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+/* pdf.js in the colours of the theme of Pollis */
+:root {
+	--body-bg-color: var(--vscode-editor-background);
+	--main-color: var(--vscode-foreground);
+	--toolbar-bg-color: var(--vscode-editorGroupHeader-tabsBackground, var(--vscode-editor-background));
+	--toolbar-border-color: var(--vscode-editorGroupHeader-tabsBorder, var(--vscode-panel-border, transparent));
+	--toolbar-icon-bg-color: var(--vscode-foreground);
+	--toolbar-icon-hover-bg-color: var(--vscode-foreground);
+	--button-hover-color: var(--vscode-toolbar-hoverBackground);
+	/* A button that is on keeps the colour of the others and is marked by its background, like the toggles of Find */
+	--toggled-btn-color: var(--vscode-inputOption-activeForeground, var(--vscode-foreground));
+	--toggled-btn-bg-color: var(--vscode-inputOption-activeBackground, var(--vscode-toolbar-activeBackground));
+	--field-color: var(--vscode-input-foreground);
+	--field-bg-color: var(--vscode-input-background);
+	--field-border-color: var(--vscode-input-border, var(--vscode-panel-border, transparent));
+	--pollis-tools-width: 320px;
+	/* The chevrons of Pollis' trees, for the outline and the folds of the sidebar */
+	--pollis-chevron-right: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M6.146 3.146a.5.5 0 0 0 0 .707L10.292 8l-4.146 4.145a.5.5 0 0 0 .707.707l4.5-4.5a.5.5 0 0 0 0-.707l-4.5-4.5a.5.5 0 0 0-.707 0z'/%3E%3C/svg%3E");
+	--pollis-chevron-down: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.146 5.854l4.5 4.5a.5.5 0 0 0 .707 0l4.5-4.5a.5.5 0 0 0-.707-.707L8 9.293 3.854 5.147a.5.5 0 0 0-.707.707z'/%3E%3C/svg%3E");
+	--pollis-tools-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M5.669 0.999C5.521 0.945 5.347 0.968 5.214 1.062C5.081 1.155 5.002 1.308 5.002 1.47V3.286C5.002 3.561 4.777 3.786 4.502 3.786C4.227 3.786 4.002 3.561 4.002 3.286V1.47C4.002 1.308 3.923 1.156 3.790 1.062C3.658 0.967 3.485 0.945 3.335 0.999C1.939 1.495 1.002 2.816 1.002 4.287C1.002 5.646 1.792 6.876 3.002 7.449V13.5C3.002 14.327 3.675 15 4.502 15C5.329 15 6.002 14.327 6.002 13.5V7.449C7.212 6.876 8.002 5.646 8.002 4.287C8.002 2.816 7.064 1.495 5.669 0.999ZM5.336 6.644C5.136 6.714 5.002 6.904 5.002 7.116V13.501C5.002 13.776 4.777 14.001 4.502 14.001C4.227 14.001 4.002 13.776 4.002 13.501V7.116C4.002 6.904 3.868 6.715 3.668 6.644C2.672 6.292 2.002 5.345 2.002 4.288C2.002 3.496 2.385 2.765 3.002 2.301V3.288C3.002 4.115 3.675 4.788 4.502 4.788C5.329 4.788 6.002 4.115 6.002 3.288V2.301C6.619 2.765 7.002 3.496 7.002 4.288C7.002 5.346 6.332 6.293 5.336 6.644ZM13.5 8H13.002V4.118L13.449 3.223C13.509 3.105 13.518 2.967 13.476 2.841L12.976 1.341C12.908 1.137 12.716 0.998 12.501 0.998H10.501C10.286 0.998 10.095 1.137 10.026 1.341L9.526 2.841C9.484 2.967 9.494 3.105 9.553 3.223L10 4.118V8H9.500C9.224 8 9.000 8.224 9.000 8.5V12.5C9.000 13.879 10.121 15 11.5 15C12.879 15 14 13.879 14 12.5V8.5C14 8.224 13.776 8 13.5 8ZM10.862 2.001H12.141L12.461 2.963L12.054 3.777C12.02 3.846 12.001 3.923 12.001 4.001V8.001H11.001V4.001C11.001 3.924 10.983 3.847 10.949 3.777L10.542 2.963L10.862 2.001ZM13.002 12.5C13.002 13.327 12.329 14 11.502 14C10.675 14 10.002 13.327 10.002 12.5V9H13.002V12.5Z'/%3E%3C/svg%3E");
+	/* The icons are at full strength; disabled buttons keep their own dimming */
+	--toolbar-icon-opacity: 1;
+}
+
+/* The menus (the >> menu, the find bar and the menu of the Pages pane) in the colours of the theme's menus, slightly
+	see-through like the menus of the system, instead of the violet greys of pdf.js */
+:root {
+	--pollis-menu-bg: color-mix(in srgb, var(--vscode-menu-background, var(--vscode-editorWidget-background)) 88%, transparent);
+	--doorhanger-bg-color: var(--pollis-menu-bg);
+	--doorhanger-border-color: var(--vscode-menu-border, var(--vscode-widget-border, transparent));
+	--doorhanger-hover-color: var(--vscode-menu-selectionForeground, var(--vscode-menu-foreground));
+	--doorhanger-separator-color: var(--vscode-menu-separatorBackground, var(--vscode-widget-border));
+}
+
+.doorHanger,
+.doorHangerRight {
+	color: var(--vscode-menu-foreground);
+	-webkit-backdrop-filter: blur(20px);
+	backdrop-filter: blur(20px);
+}
+
+#secondaryToolbar {
+	--button-hover-color: var(--vscode-menu-selectionBackground);
+}
+
+html .popupMenu {
+	--menu-bg: var(--pollis-menu-bg);
+	--menu-text-color: var(--vscode-menu-foreground);
+	--menu-border-color: var(--vscode-menu-border, var(--vscode-widget-border, transparent));
+	--menuitem-hover-bg: var(--vscode-menu-selectionBackground);
+	--menuitem-text-hover-fg: var(--vscode-menu-selectionForeground, var(--vscode-menu-foreground));
+	--menu-backdrop-filter: blur(20px);
+}
+
+/* The Pages pane is docked at the left edge, square and full height like the side bars of Pollis, in their colours */
+html #viewsManager {
+	--sidebar-bg-color: var(--vscode-sideBar-background, var(--vscode-editor-background));
+	--sidebar-border-radius: 0;
+	--sidebar-box-shadow: none;
+	--sidebar-backdrop-filter: none;
+	--views-text-color: var(--vscode-sideBar-foreground, var(--vscode-foreground));
+	--sidebar-border-color: var(--vscode-sideBar-border, var(--vscode-widget-border, transparent));
+	inset-block-start: 100%;
+	height: var(--viewer-container-height);
+	border-block: none;
+	border-inline-start: none;
+}
+
+#outerContainer.viewsManagerOpen #viewsManager {
+	inset-inline-start: 0;
+}
+
+/* The thumbnails are square like the pages */
+html #thumbnailsView > .thumbnail > .thumbnailImageContainer,
+html #thumbnailsView > .thumbnail > .thumbnailImageContainer > img {
+	border-radius: 0;
+}
+
+/* The thumbnails of the Pages pane: a frame in light blue on the page shown; the page under the pointer is shaded, with
+	a frame in the blue of the buttons; the page number is below the page */
+html #viewsManager {
+	--image-border-width: 4px;
+	--image-hover-border-color: var(--vscode-button-background);
+	--header-bg: var(--vscode-menu-background, var(--vscode-editorWidget-background));
+	--header-shadow: 0 1px 0 var(--vscode-sideBarSectionHeader-border, transparent);
+}
+
+html #thumbnailsView > .thumbnail > .thumbnailImageContainer[aria-current="page"]:hover {
+	box-shadow: var(--image-hover-shadow) !important;
+}
+
+html #thumbnailsView > .thumbnail > .thumbnailImageContainer:hover > img {
+	filter: brightness(0.8);
+}
+
+html #thumbnailsView > .thumbnail:not(.isDragging) > .thumbnailImageContainer::after {
+	inset-block: calc(100% + 6px) auto !important;
+	background-color: transparent !important;
+	border: none !important;
+	outline: none !important;
+	color: var(--vscode-descriptionForeground) !important;
+}
+
+html #thumbnailsView > .thumbnail:has([aria-current="page"]):not(.isDragging) > .thumbnailImageContainer::after {
+	color: var(--vscode-foreground) !important;
+}
+
+/* The Document Outline, Attachments and Layers are trees like Pollis' own: the chevrons of the Explorer, square rows,
+	and the colours of its lists for the row under the pointer and the section shown */
+html #viewsManager .treeView {
+	--treeitem-color: var(--vscode-foreground);
+	--treeitem-bg-color: var(--vscode-list-hoverBackground);
+	--treeitem-hover-color: var(--vscode-list-hoverForeground, var(--vscode-foreground));
+	--treeitem-selected-color: var(--vscode-list-inactiveSelectionForeground, var(--vscode-foreground));
+	--treeitem-selected-bg-color: var(--vscode-list-inactiveSelectionBackground);
+	--treeitem-collapsed-icon: var(--pollis-chevron-right);
+	--treeitem-expanded-icon: var(--pollis-chevron-down);
+}
+
+html #viewsManager .treeView:focus-within {
+	--treeitem-selected-color: var(--vscode-list-activeSelectionForeground, var(--vscode-foreground));
+	--treeitem-selected-bg-color: var(--vscode-list-activeSelectionBackground);
+}
+
+html #viewsManager .treeView .treeItemToggler::before {
+	background-color: var(--vscode-icon-foreground, var(--vscode-foreground));
+}
+
+html #viewsManager .treeView .treeItem > a,
+html #viewsManager .treeView .treeItemToggler:hover + a {
+	border-radius: 0;
+}
+
+/* Pointing at a chevron marks its row only, as in the Explorer, not the whole branch under it */
+html #viewsManager .treeView .treeItemToggler:hover ~ .treeItems {
+	background-color: transparent;
+	color: inherit;
+}
+
+/* The page number in its field and the number of pages beside it in one font: a field takes the font of fields, not
+	the page's */
+html #pageNumber,
+html #numPages {
+	font-family: var(--vscode-font-family);
+	font-size: 12px;
+	font-weight: 400;
+	font-variant-numeric: tabular-nums;
+}
+
+/* The page is the width of the editor: the webview's default padding of the body would push the right end of the
+	toolbar out of sight */
+html body {
+	padding: 0;
+}
+
+/* Opening a file is Pollis' (File > Open, the Explorer), and a bookmark of the webview leads nowhere */
+#secondaryOpenFile,
+#viewBookmark {
+	display: none !important;
+}
+
+/* The two buttons of Pollis in the toolbar */
+.toolbarButton.pollisSelectArea::before {
+	-webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M1 1h3v1.5H2.5V4H1zM6 1h4v1.5H6zM12 1h3v3h-1.5V2.5H12zM1 6h1.5v4H1zM13.5 6H15v4h-1.5zM1 12h1.5v1.5H4V15H1zM6 13.5h4V15H6zM13.5 12H15v3h-3v-1.5h1.5z'/%3E%3C/svg%3E");
+	mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M1 1h3v1.5H2.5V4H1zM6 1h4v1.5H6zM12 1h3v3h-1.5V2.5H12zM1 6h1.5v4H1zM13.5 6H15v4h-1.5zM1 12h1.5v1.5H4V15H1zM6 13.5h4V15H6zM13.5 12H15v3h-3v-1.5h1.5z'/%3E%3C/svg%3E");
+}
+
+/* Poppler Tools: the tools of Pollis' Tools codicon, a wrench and a screwdriver */
+.toolbarButton.pollisPopplerToggle::before {
+	-webkit-mask-image: var(--pollis-tools-icon);
+	mask-image: var(--pollis-tools-icon);
+}
+
+/* Poppler Tools in the toolbar: its icon, its name and a chevron for its menu; the name goes when the editor is narrow */
+.toolbarButton.pollisLabelled {
+	aspect-ratio: unset;
+	gap: 4px;
+	padding-inline: 6px 4px;
+}
+
+.toolbarButton.pollisLabelled > span {
+	width: auto;
+	height: auto;
+	overflow: visible;
+	white-space: nowrap;
+	font-family: var(--vscode-font-family);
+	font-size: 12px;
+	color: var(--vscode-foreground);
+}
+
+.toolbarButton.pollisLabelled::after {
+	content: "";
+	flex: none;
+	width: 14px;
+	height: 14px;
+	background-color: var(--toolbar-icon-bg-color);
+	-webkit-mask-image: var(--pollis-chevron-down);
+	mask-image: var(--pollis-chevron-down);
+	-webkit-mask-size: cover;
+	mask-size: cover;
+}
+
+@media all and (max-width: 840px) {
+	.toolbarButton.pollisLabelled > span {
+		display: none;
+	}
+}
+
+/* Select Area: a cross over the pages, where dragging draws the box and does not select text */
+#viewerContainer.pollisSelecting .page,
+#viewerContainer.pollisSelecting .page * {
+	cursor: crosshair !important;
+	user-select: none !important;
+}
+
+.pollisAreaBox {
+	position: absolute;
+	box-sizing: border-box;
+	z-index: 30;
+	pointer-events: none;
+	border: 2px solid var(--vscode-focusBorder);
+	background: color-mix(in srgb, var(--vscode-focusBorder) 12%, transparent);
+}
+
+.pollisAreaBox.flash {
+	animation: pollis-flash 0.8s ease-out;
+}
+
+@keyframes pollis-flash {
+	0%, 45% {
+		border-color: var(--vscode-charts-green);
+		background: color-mix(in srgb, var(--vscode-charts-green) 30%, transparent);
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--vscode-charts-green) 45%, transparent);
+	}
+	100% {
+		box-shadow: 0 0 0 0 transparent;
+	}
+}
+
+/* The pages start right of the outline and thumbnails at any width: below 840px pdf.js lays them over the pages, and an
+	editor group is often that narrow. This selector outweighs its !important rule. */
+#outerContainer.viewsManagerOpen #viewerContainer:not(.pdfPresentationMode) {
+	inset-inline-start: var(--viewsManager-width, 0) !important;
+}
+
+/* The tools sidebar, at the right of the pages, below the toolbar */
+#outerContainer.pollisToolsOpen #viewerContainer:not(.pdfPresentationMode) {
+	inset-inline-end: var(--pollis-tools-width);
+}
+
+.pollisTools {
+	position: absolute;
+	inset-block: var(--toolbar-height) 0;
+	inset-inline-end: 0;
+	width: var(--pollis-tools-width);
+	box-sizing: border-box;
+	overflow: auto;
+	padding: 4px 12px 16px;
+	font-family: var(--vscode-font-family);
+	font-size: 12px;
+	color: var(--vscode-foreground);
+	background: var(--vscode-sideBar-background, var(--vscode-editor-background));
+	border-inline-start: 1px solid var(--vscode-sideBar-border, var(--vscode-panel-border, transparent));
+}
+
+.pollisTools[hidden] {
+	display: none;
+}
+
+.pollisTools h2,
+.pollisTools summary {
+	margin: 14px 0 8px;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--vscode-sideBarSectionHeader-foreground, var(--vscode-foreground));
+}
+
+.pollisTools h3 {
+	margin: 12px 0 6px;
+	font-size: 12px;
+	font-weight: 600;
+}
+
+/* The folds open and close with the chevrons of Pollis' trees, not the browser's triangles */
+.pollisTools summary {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	list-style: none;
+	cursor: pointer;
+}
+
+.pollisTools summary::-webkit-details-marker {
+	display: none;
+}
+
+.pollisTools summary::before {
+	content: "";
+	flex: none;
+	width: 16px;
+	height: 16px;
+	background-color: var(--vscode-icon-foreground, currentColor);
+	-webkit-mask-image: var(--pollis-chevron-right);
+	mask-image: var(--pollis-chevron-right);
+}
+
+.pollisTools details[open] > summary::before {
+	-webkit-mask-image: var(--pollis-chevron-down);
+	mask-image: var(--pollis-chevron-down);
+}
+
+/* The header of the outline has its title only */
+#viewsManagerCurrentOutlineButton {
+	display: none !important;
+}
+
+.pollisFold summary {
+	text-transform: none;
+	letter-spacing: 0;
+	font-size: 12px;
+	margin: 6px 0;
+}
+
+.pollisSection .pollisFold summary {
+	font-weight: 500;
+}
+
+/* The groups of the Poppler tools, and each tool's name over what it does */
+.pollisTools h3.pollisGroup {
+	margin: 16px 0 4px;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--vscode-descriptionForeground);
+}
+
+.pollisTools summary:has(.pollisFoldTitle) {
+	align-items: flex-start;
+}
+
+.pollisFoldTitle {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	font-weight: 500;
+	line-height: 16px;
+}
+
+.pollisFoldDescription {
+	font-weight: 400;
+	color: var(--vscode-descriptionForeground);
+}
+
+.pollisFoldBody {
+	margin: 0 0 8px 20px;
+}
+
+.pollisHint {
+	margin: 4px 0;
+	color: var(--vscode-descriptionForeground);
+	line-height: 1.4;
+}
+
+.pollisAreaHeader {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 6px;
+}
+
+.pollisNumbers {
+	color: var(--vscode-descriptionForeground);
+	line-height: 1.4;
+}
+
+.pollisIconButton {
+	flex: none;
+	width: 20px;
+	height: 20px;
+	padding: 0;
+	border: none;
+	border-radius: 4px;
+	font-size: 15px;
+	line-height: 1;
+	color: var(--vscode-descriptionForeground);
+	background: transparent;
+	cursor: pointer;
+}
+
+.pollisIconButton:hover {
+	color: var(--vscode-foreground);
+	background: var(--vscode-toolbar-hoverBackground);
+}
+
+.pollisPicture {
+	margin: 8px 0;
+	color: var(--vscode-descriptionForeground);
+}
+
+.pollisPicture img {
+	display: block;
+	max-width: 100%;
+	max-height: 160px;
+	background: #fff;
+	box-shadow: 0 0 0 1px var(--vscode-widget-border, var(--vscode-panel-border));
+}
+
+.pollisTableBox {
+	max-height: 260px;
+	overflow: auto;
+}
+
+.pollisTable {
+	border-collapse: collapse;
+	font-size: 11px;
+	font-variant-numeric: tabular-nums;
+}
+
+.pollisTable td,
+.pollisTable th {
+	padding: 2px 6px;
+	border: 1px solid var(--vscode-widget-border, var(--vscode-panel-border, rgba(128, 128, 128, 0.35)));
+	white-space: nowrap;
+	vertical-align: top;
+}
+
+.pollisTable th {
+	text-align: start;
+	font-weight: 600;
+}
+
+.pollisTableScroll {
+	max-width: 100%;
+	overflow-x: auto;
+}
+
+.pollisList td {
+	white-space: normal;
+	overflow-wrap: anywhere;
+}
+
+.pollisList td:first-child {
+	overflow-wrap: normal;
+}
+
+.pollisSettings {
+	display: flex;
+	gap: 10px;
+	margin: 8px 0;
+}
+
+.pollisField {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	color: var(--vscode-descriptionForeground);
+}
+
+.pollisTools input {
+	box-sizing: border-box;
+	min-width: 0;
+	padding: 3px 6px;
+	font: inherit;
+	color: var(--vscode-input-foreground);
+	background: var(--vscode-input-background);
+	border: 1px solid var(--vscode-input-border, transparent);
+	border-radius: 2px;
+}
+
+.pollisField input {
+	width: 90px;
+}
+
+.pollisTools input:focus {
+	outline: 1px solid var(--vscode-focusBorder);
+	outline-offset: -1px;
+}
+
+.pollisButtons {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin: 6px 0;
+}
+
+.pollisButton {
+	padding: 3px 9px;
+	font: inherit;
+	color: var(--vscode-button-secondaryForeground);
+	background: var(--vscode-button-secondaryBackground);
+	border: 1px solid var(--vscode-button-border, transparent);
+	border-radius: 2px;
+	cursor: pointer;
+}
+
+.pollisButton:hover {
+	color: var(--vscode-button-foreground);
+	background: var(--vscode-button-background);
+}
+
+/* The options of the Poppler tools, as many to a row as fit */
+.pollisOptions {
+	flex-wrap: wrap;
+	row-gap: 6px;
+}
+
+.pollisTools select {
+	box-sizing: border-box;
+	width: 150px;
+	padding: 2px 4px;
+	font: inherit;
+	color: var(--vscode-dropdown-foreground);
+	background: var(--vscode-dropdown-background);
+	border: 1px solid var(--vscode-dropdown-border, transparent);
+	border-radius: 2px;
+}
+
+.pollisTools select:focus {
+	outline: 1px solid var(--vscode-focusBorder);
+	outline-offset: -1px;
+}
+
+.pollisCheck {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin: 6px 0;
+}
+
+.pollisCheck input {
+	margin: 0;
+	accent-color: var(--vscode-checkbox-selectBackground, var(--vscode-button-background));
+}
+
+.pollisCheck:has(input:disabled) {
+	color: var(--vscode-disabledForeground);
+}
+
+/* What a tool prints, and the files it writes */
+.pollisOutput {
+	max-height: 280px;
+	margin: 6px 0;
+	padding: 8px;
+	overflow: auto;
+	font-family: var(--vscode-editor-font-family, monospace);
+	font-size: 11px;
+	line-height: 1.45;
+	white-space: pre;
+	background: var(--vscode-textCodeBlock-background, rgba(128, 128, 128, 0.1));
+	border-radius: 3px;
+}
+
+/* The folder a tool wrote its files in, in the yellow of paths, with Reveal beside it */
+.pollisWritten {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px;
+}
+
+.pollisPath {
+	color: #e8a33d;
+	word-break: break-all;
+}
+
+body.vscode-light .pollisPath,
+body.vscode-high-contrast-light .pollisPath {
+	color: #a8650d;
+}
+
+.pollisFiles {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin: 6px 0;
+}
+
+.pollisFileName {
+	color: var(--vscode-foreground);
+	overflow-wrap: anywhere;
+}
+
+.pollisFile .pollisButtons {
+	margin: 4px 0 0;
+}
+
+.pollisFileView {
+	margin: 4px 0 0;
+}
+
+.pollisCode {
+	margin-top: 10px;
+}
+
+.pollisCode summary {
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	font-size: 11px;
+	font-weight: 600;
+}
+
+.pollisCode pre {
+	margin: 6px 0;
+	padding: 8px;
+	overflow: auto;
+	font-family: var(--vscode-editor-font-family, monospace);
+	font-size: 11px;
+	line-height: 1.45;
+	white-space: pre;
+	background: var(--vscode-textCodeBlock-background, rgba(128, 128, 128, 0.1));
+	border-radius: 3px;
+}
+
+.pollisField input.pollisWide {
+	width: 150px;
+}

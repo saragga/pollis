@@ -75,6 +75,7 @@ const compilations = [
 	'extensions/markdown-language-features/tsconfig.json',
 	'extensions/markdown-math/tsconfig.json',
 	'extensions/media-preview/tsconfig.json',
+	'extensions/pdf-viewer/tsconfig.json',
 	'extensions/merge-conflict/tsconfig.json',
 	'extensions/terminal-suggest/tsconfig.json',
 	'extensions/microsoft-authentication/tsconfig.json',

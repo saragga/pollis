@@ -1,0 +1,84 @@
+{
+  "name": "pdf-viewer",
+  "displayName": "%displayName%",
+  "description": "%description%",
+  "extensionKind": [
+    "ui",
+    "workspace"
+  ],
+  "version": "10.0.0",
+  "publisher": "vscode",
+  "license": "AGPL-3.0",
+  "engines": {
+    "vscode": "^1.70.0"
+  },
+  "main": "./out/extension",
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "capabilities": {
+    "virtualWorkspaces": true,
+    "untrustedWorkspaces": {
+      "supported": true
+    }
+  },
+  "contributes": {
+    "customEditors": [
+      {
+        "viewType": "pollis.pdfViewer",
+        "displayName": "%customEditor.displayName%",
+        "priority": "default",
+        "selector": [
+          {
+            "filenamePattern": "*.pdf"
+          },
+          {
+            "filenamePattern": "*.PDF"
+          }
+        ]
+      }
+    ],
+    "configurationDefaults": {
+      "workbench.editorAssociations": {
+        "*.pdf": "pollis.pdfViewer",
+        "*.PDF": "pollis.pdfViewer"
+      }
+    },
+    "commands": [
+      {
+        "command": "pollis.pdfViewer.open",
+        "title": "%command.open%",
+        "category": "PDF"
+      },
+      {
+        "command": "pollis.pdfViewer.openSample",
+        "title": "%command.openSample%",
+        "category": "PDF"
+      },
+      {
+        "command": "pollis.pdfViewer.openFromMenu",
+        "title": "%command.openFromMenu%",
+        "category": "PDF"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "pollis.pdfViewer.openFromMenu",
+          "when": "false"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "compile": "gulp compile-extension:pdf-viewer",
+    "watch": "gulp watch-extension:pdf-viewer",
+    "vscode:prepublish": "npm run build-ext",
+    "build-ext": "node ../../node_modules/gulp/bin/gulp.js --gulpfile ../../build/gulpfile.extensions.mjs compile-extension:pdf-viewer ./tsconfig.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/saragga/pollis.git"
+  }
+}

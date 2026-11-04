@@ -6363,20 +6363,6 @@
 			]
 		},
 		{
-			"id": "pdf",
-			"source": "pollis",
-			"commands": [
-				{
-					"id": "chiara.explore.conn.pdf",
-					"menuTitles": [
-						"PDF Files"
-					]
-				}
-			],
-			"portable": false,
-			"reason": "the panel pdf has its own code (illustrationLabel, illustrationIntro, headScriptJs, illustrationOverrideJs, extraCss, tailScriptJs in src/vs/workbench/contrib/model/browser/webviews/pdf.template.ts), so it cannot go in a data-only extension"
-		},
-		{
 			"id": "pgm",
 			"title": "Policy Gradient Methods",
 			"source": "pollis",

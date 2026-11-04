@@ -5,7 +5,7 @@
 	<meta charset="UTF-8">
 
 	<meta http-equiv="Content-Security-Policy"
-		content="default-src 'none'; script-src 'sha256-TaWGDzV7c9rUH2q/5ygOyYUHSyHIqBMYfucPh3lnKvU=' 'self'; frame-src 'self'; style-src 'unsafe-inline';">
+		content="default-src 'none'; script-src 'sha256-hyONj/O2sbYsvWs4U7hNxC9tFGk3qFCvmE+OVLluMFc=' 'self'; frame-src 'self'; style-src 'unsafe-inline';">
 
 	<!-- Disable pinch zooming -->
 	<meta name="viewport"
@@ -1050,6 +1050,10 @@
 				}
 				if (options.allowForms) {
 					sandboxRules.add('allow-forms');
+				}
+				// POLLIS: the print dialog, for the PDF Viewer only (webviewElement.ts)
+				if (options.allowModals) {
+					sandboxRules.add('allow-modals');
 				}
 				newFrame.setAttribute('sandbox', Array.from(sandboxRules).join(' '));
 

@@ -38,11 +38,11 @@ import { WebviewViewPane } from '../../webviewView/browser/webviewViewPane.js';
 import { IWebviewViewService, WebviewView } from '../../webviewView/browser/webviewViewService.js';
 import { createApiKeyWiring, IApiKeyWiring } from '../../model/browser/handlers/model.handler.js';
 import { composerSendSvg, spinnerCss, spinnerSvg, voiceSpeakerSvg } from '../../model/browser/webviews/webviewScaffold.js';
-import { ASK_CHAT_MODEL, ASK_CLOUD_MODELS, ASK_EMBEDDING_MODEL, ASK_PASSAGE_PREFIX, ASK_PASSAGES, ASK_QUERY_PREFIX, ASK_RERANK_WIDER, MODELS_INSTALLED_COMMAND_ID, ASK_CLOUD_PROVIDERS, ASK_LOCAL_PREFIX, ASK_POLLIS_ANSWERS_IN_CLOUD_COMMAND_ID, ASK_POLLIS_ATTACH_COMMAND_ID, ASK_POLLIS_COMMAND_ID, ASK_THIS_COMPUTER, ASK_ATTACHED_CHARACTERS, askCloudModel, AskPollisAttachRequest, AskPollisProvider, IAskPollisAttached, IAskPollisAttachment, IAskPollisFromPanel, IAskPollisPanel, IAskPollisPassage, IAskPollisSearchResult, IAskPollisService } from '../common/askPollis.js';
+import { ASK_CHAT_MODEL, ASK_CLOUD_MODELS, ASK_EMBEDDING_MODEL, ASK_PASSAGE_PREFIX, ASK_PASSAGES, ASK_QUERY_PREFIX, ASK_RERANK_WIDER, MODELS_INSTALLED_COMMAND_ID, ASK_CLOUD_PROVIDERS, ASK_LOCAL_PREFIX, ASK_POLLIS_ANSWERS_IN_CLOUD_COMMAND_ID, ASK_POLLIS_ADD_ATTACHMENT_COMMAND_ID, ASK_POLLIS_ATTACH_COMMAND_ID, ASK_POLLIS_COMMAND_ID, ASK_THIS_COMPUTER, ASK_ATTACHED_CHARACTERS, askCloudModel, AskPollisAttachRequest, AskPollisProvider, IAskPollisAddAttachment, IAskPollisAttached, IAskPollisAttachment, IAskPollisFromPanel, IAskPollisPanel, IAskPollisPassage, IAskPollisSearchResult, IAskPollisService } from '../common/askPollis.js';
 import { AskAttachMessage, askAddHtml, askAttachCss, askAttachmentsHtml, askAttachScript, handleAskAttachMessage } from './askPollisAttach.js';
 import { askAnswerCss, askAnswerScript, askModelName, askNothingFound, askOpenPassage, askPassageView, askSearchedNames, askSearchesJulia, askSearchesNothing, askSearchIn, askSearchSources, askWordsOnlyNote } from './askPollisWebview.js';
 import { formatBytes, IDatasetSummary, summarizeCsv } from './collaboration/collaborationDatasets.js';
-import { isDuckDbFile, MAX_DATASET_BYTES } from './collaboration/collaborationProtocol.js';
+import { isDuckDbFile, MAX_DATASET_BYTES, MAX_IMAGE_BYTES } from './collaboration/collaborationProtocol.js';
 import { COMPARE_MODELS_ADD_COMMAND_ID, ICompareModelsAdd } from './compareModelsPage.js';
 import { composerVoiceCss, composerVoiceHtml, composerVoiceScript, getVoiceLanguage, getVoiceWriteIn, setVoiceLanguage, setVoiceWriteIn } from './composerVoice.js';
 import { IInstalledModel } from './modelsInstalledPage.js';
@@ -189,6 +189,27 @@ CommandsRegistry.registerCommand(ASK_POLLIS_ATTACH_COMMAND_ID, async (accessor: 
 
 CommandsRegistry.registerCommand(ASK_POLLIS_ANSWERS_IN_CLOUD_COMMAND_ID, (accessor: ServicesAccessor): boolean => !!askCloudModel(accessor.get(IConfigurationService).getValue<string>('pollis.ask.answerWith')));
 
+// The text, the table or the picture of an area of a PDF, from Send to Ask Pollis of the PDF Viewer
+CommandsRegistry.registerCommand(ASK_POLLIS_ADD_ATTACHMENT_COMMAND_ID, async (accessor: ServicesAccessor, request: IAskPollisAddAttachment): Promise<void> => {
+	const viewsService = accessor.get(IViewsService);
+	let attached: IAskPollisAttached;
+	if (request.kind === 'image') {
+		// The bytes of a data URL: three for every four characters of its Base64
+		const bytes = Math.floor((request.content.length - request.content.indexOf(',') - 1) * 3 / 4);
+		attached = bytes > MAX_IMAGE_BYTES
+			? { note: localize('askPollis.areaImageTooLarge', "The picture of the area is too large to attach (the limit is {0} MB): select a smaller area.", MAX_IMAGE_BYTES / 1024 / 1024) }
+			: { attachment: { kind: 'image', name: request.name, content: request.content } };
+	} else {
+		attached = attachText('file', request.name, request.content);
+	}
+	if (attachInView) {
+		attachInView(attached);
+	} else {
+		pendingAttachments.push(attached);
+	}
+	await viewsService.openView(ASK_POLLIS_VIEW_ID, true);
+});
+
 const ASK_POLLIS_VIEW_CONTAINER_ID = 'workbench.view.pollis.ask';
 const ASK_POLLIS_VIEW_ID = 'pollis.askPollis.view';
 const ASK_POLLIS_NEW_CHAT_COMMAND_ID = 'pollis.askPollis.newChat';
@@ -200,6 +221,9 @@ let newChatInView: (() => void) | undefined;
 let focusInView: (() => void) | undefined;
 /** A question of a panel asked before the pane was shown, which it asks when it is. */
 let pendingAsk: IAskPollisFromPanel | undefined;
+/** Puts an attachment in the question of the pane, once it is shown; those given before wait in `pendingAttachments`. */
+let attachInView: ((attached: IAskPollisAttached) => void) | undefined;
+const pendingAttachments: IAskPollisAttached[] = [];
 
 /** How far the Julia extension has come with the documents and their index (pollisDocuments.ts). */
 interface IIndexProgress {
@@ -351,6 +375,13 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 			post({ command: 'newChat' });
 		};
 		askInView = askFrom;
+		attachInView = attached => {
+			if (ready) {
+				post({ command: 'attached', attachment: attached.attachment, note: attached.note });
+			} else {
+				pendingAttachments.push(attached);
+			}
+		};
 		newChatInView = newChat;
 		focusInView = () => {
 			if (ready) {
@@ -490,6 +521,7 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 
 		disposables.add(webviewView.onDispose(() => {
 			askInView = undefined;
+			attachInView = undefined;
 			newChatInView = undefined;
 			focusInView = undefined;
 			answering?.dispose(true);
@@ -507,6 +539,9 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 				if (waiting) {
 					askFrom(waiting);
 					waiting = undefined;
+				}
+				for (const attached of pendingAttachments.splice(0)) {
+					post({ command: 'attached', attachment: attached.attachment, note: attached.note });
 				}
 				postModel();
 				// Search In lists the sources before the first question too

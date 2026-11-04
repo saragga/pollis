@@ -29,7 +29,7 @@ import { MCP_SERVERS_COMMAND_ID } from '../common/mcpServers.js';
 import { MODEL_ROUTING_COMMAND_ID } from './modelRouting.js';
 import { BROWSE_OPERATIONAL_WORKFLOWS_COMMAND_ID } from './operationalWorkflows.js';
 import { EXPORT_NOTEBOOK_LATEX_COMMAND_ID, MAKE_NOTEBOOK_SLIDES_COMMAND_ID, POLISH_REPORT_COMMAND_ID } from './reports.js';
-// Practise a Topic and Write an Exercise: in the Command Palette only, the menus are now the Learning and Practice toolbox
+// Practise a Topic and Write an Exercise: in the Command Palette only, the menus are now the Self-Study: Learn and Practise toolbox
 import './practice.js';
 import { IMPLEMENTED_COLLABORATION_COMMANDS } from './collaboration/collaboration.contribution.js';
 import { PUBLISHED_BENCHMARKS_COMMAND_ID, SEARCH_WORKFLOW_LIBRARY_COMMAND_ID } from './workflowLibrary.js';

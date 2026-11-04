@@ -755,11 +755,13 @@ async function openMethodPage(accessor: ServicesAccessor, existing?: URI, step?:
 	}
 	// A saved copy, when the user made one and it is still there, else the link
 	const copy = async (local: string | undefined) => local && await fileService.exists(URI.file(local)) ? URI.file(local) : undefined;
+	// The saved copy in the PDF Viewer, else the article's link in the internal browser
 	const openArticle = async () => {
 		const local = await copy(method?.articleLocal);
-		const url = local?.toString(true) ?? method?.article;
-		if (url) {
-			await commandService.executeCommand(BrowserViewCommandId.Open, { url, reuseUrlFilter: url, ephemeral: true });
+		if (local) {
+			await editorService.openEditor({ resource: local, options: { revealIfOpened: true } });
+		} else if (method?.article) {
+			await commandService.executeCommand(BrowserViewCommandId.Open, { url: method.article, reuseUrlFilter: method.article, ephemeral: true });
 		}
 	};
 	await openArticle();
@@ -988,8 +990,8 @@ async function openMethodPage(accessor: ServicesAccessor, existing?: URI, step?:
 			run(openArticle);
 		} else if (message.command === 'openPdf') {
 			if (current.vignettePdf) {
-				const url = joinPath(folder, ...current.vignettePdf.split('/')).toString(true);
-				run(async () => { await commandService.executeCommand(BrowserViewCommandId.Open, { url, reuseUrlFilter: url }); });
+				const pdf = joinPath(folder, ...current.vignettePdf.split('/'));
+				run(async () => { await editorService.openEditor({ resource: pdf, options: { revealIfOpened: true } }); });
 			}
 		} else if (message.command === 'saveArticle') {
 			run(async () => {

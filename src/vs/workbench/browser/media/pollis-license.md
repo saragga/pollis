@@ -57,6 +57,7 @@ available under the MIT License.
 | DuckDB.jl (Pollis fork) | MIT | https://github.com/Trumpingtons/DuckDB.jl |
 | fts extension for DuckDB | MIT | https://github.com/duckdb/duckdb-fts |
 | Poppler (Poppler_jll) | GPL-2.0 or GPL-3.0 | https://poppler.freedesktop.org |
+| PDF.js | Apache-2.0 | https://github.com/mozilla/pdf.js |
 
 A complete list of third-party notices, including the applicable copyright notices and license
 texts, is available in the [Third-Party Notices](pollis-notice.md) file distributed with the

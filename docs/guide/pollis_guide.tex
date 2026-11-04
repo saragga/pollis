@@ -473,27 +473,41 @@ from \texttt{PGPASSWORD} or \texttt{\textasciitilde/.pgpass}.
 \end{itemize}
 
 \subhead{PDF Files}
-\ui{Explore > Access Files and Databases > PDF Files} reads a PDF with the Poppler tools, in ten tabs: its
-text and tables, document information, fonts and images, its pages as images, conversion to SVG, PDF,
-PostScript, HTML or XML, splitting, merging and attachments. Extract Text, Tables, Render Pages and Convert
-work on the whole page or on an area of it.
+Every PDF opens in the PDF Viewer of Pollis, from the Explorer, \ui{File > Open}, \ui{Help > Documentation},
+the vignettes, \ui{Reports}, \ui{New Methods} and the sources of Ask Pollis, with its pages, outline,
+thumbnails, search, zoom and form fields. \ui{Explore > Access Files and Databases > PDF Files} opens a PDF of
+yours, or the sample of PollisDatasets, in it. The tools of Pollis show in a sidebar at the right of the pages:
+the area once \ui{Select Area} has drawn one, and the Poppler tools from the menu of \ui{Poppler Tools},
+beside it in the toolbar, which lists the tools that read the PDF and those that make files from it.
 \begin{enumerate}[label=\arabic*.]
-  \item Give the PDF in \ui{File}. The default, \texttt{sample.pdf}, is the sample of PollisDatasets.
-  \item Open \ui{Select Area}, above the inputs: the page is drawn, with arrows to the other pages.
-  \item Drag a box around a table, a paragraph or a figure. Its frame turns green, \ui{Left}, \ui{Top},
-    \ui{Width} and \ui{Height} fill in, \ui{Region} becomes \ui{Area}, and the area is shown cut out beside
-    the page. The Example Code works on the same area.
-  \item \ui{Text}, \ui{Table} or \ui{Image}, under the area, puts its text, its cells as a CSV file, or a
-    picture of it in the question of the panel's Ask Pollis, beside the title.
+  \item Choose \ui{Select Area} in the toolbar, and drag a box around a table, a paragraph or a figure. Its
+    frame flashes green, and the sidebar shows its position in points from the top left corner of the page,
+    a picture of it and its table.
+  \item \ui{Copy Text}, \ui{Copy Table}, \ui{Save CSV...} and \ui{Save PNG...} take the area away;
+    \ui{Text}, \ui{Table} or \ui{Image}, under \ui{Send to Ask Pollis}, puts its text, its cells as a CSV
+    file, or a picture of it in the question of the Ask Pollis pane.
+  \item \ui{Poppler Tools} runs the tools of Poppler, in Julia, on the pages given, or on the area with
+    \ui{Only the Area}: \ui{Extract Text}, \ui{Tables}, \ui{Document Info}, \ui{Fonts}, \ui{Images},
+    \ui{Render Pages}, \ui{Convert} (SVG, PostScript, EPS, HTML or XML, or the area as PDF), \ui{Split} (one file per page,
+    the pages given, such as 1-3, 5, in one file, or a file per range), \ui{Merge} and
+    \ui{Attachments}. Each tool has its options, \ui{Run}, and its \ui{Julia Code}, to copy or run in the
+    REPL. What a tool prints is shown below it; the files it writes go to the folder or the file you choose,
+    and a CSV file shows as a table, a picture as itself and a text file as its text. An attachment chosen in
+    the left pane shows there too. The dialogs open in the folder you chose last, or at first in the PDF's
+    folder, or in Documents for a PDF of a Julia package, as the sample of PollisDatasets; the result names
+    the folder, with \ui{Reveal in Finder} (\ui{Reveal in File Explorer} on Windows).
+  \item \ui{Print}, in the toolbar, prints the PDF with the system's print dialog.
 \end{enumerate}
-In Ask Pollis, \ui{PDF...} in the + opens a PDF of yours in PDF Files (Ask Pollis, page 46).
+The internal browser does not show PDFs: a PDF that a page links to opens in the PDF Viewer. It is kept in a
+temporary folder that is emptied when Pollis quits; \ui{File > Save As...} keeps a copy. In Ask Pollis, \ui{PDF...} in the + opens a PDF of yours in the PDF Viewer (Ask Pollis,
+page 46).
 
 \begin{trouble}
 \textbf{The view shows no tables} & Choose \ui{Refresh Schemas}. A new database stays empty until you create a table in the Julia REPL. \\
 \textbf{\ui{PollisDatasets} does not connect} & The Julia REPL has not started yet, or is still installing: wait for the Welcome page to say the database is ready. \\
 \textbf{Cannot write to \texttt{pollis}} & The built-in database is read-only: save your tables in a database of your own. \\
 \textbf{PostgreSQL does not connect} & Check the host, port and \ui{SSL Mode}; the \ui{Connection Timeout} is 10 seconds. \\
-\textbf{\ui{Select Area} shows no page} & The first time, Julia installs Poppler, for a minute or two; the page then comes by itself. A PDF with a password is not shown. \\
+\textbf{A Poppler tool says Julia is installing} & The first time, Julia installs Poppler, for a minute or two; the tool then runs by itself. For a PDF with a password, give it in \ui{Password}. \\
 \end{trouble}
 
 \begin{note}{Not available yet}
@@ -563,7 +577,7 @@ Your own things are files in \texttt{\textasciitilde/.pollis}, kept when Pollis 
 \texttt{examples} & your Example Code and added tabs (Inside a Panel, page 4)\\
 \texttt{workflows} & your copies of the replications (page 14)\\
 \texttt{methods}, \texttt{packages} & your new methods and their packages (page 16)\\
-\texttt{practice} & the exercises you write (the Learning and Practice toolbox)\\
+\texttt{practice} & the exercises you write (the Self-Study toolbox)\\
 \texttt{rss} & the items of your RSS feeds (page 22)\\
 \texttt{ask/sets} & your test sets of Evaluate Answering Models (page 47)\\
 \end{tabular}
@@ -588,7 +602,10 @@ panel. A View is not a way to stop students from opening a panel.
 \topic{Toolboxes}{Extensions pane > Toolboxes · Compose > New Panels and Toolboxes}{Adding a whole field to Pollis with a toolbox extension.}
 
 A toolbox is an extension that adds a set of panels to the menus, with their wikis and notebook
-tutorials. It holds no program code: its panels are made like Pollis's own. Four are published:
+tutorials. It holds no program code: its panels are made like Pollis's own. A toolbox may cover a field, such
+as medicine, astrophysics, tourism or music, or a way of working, such as self-study, with Pollis AI+ as a
+study companion: \textbf{Self-Study: Learn and Practise}, the last below. Lifestyle toolboxes, for everyday
+tasks such as planning a trip, are coming soon. Four are published:
 \begin{itemize}
   \item \textbf{Finance}: ARIMAX, VAR and VECM, GARCH-type and regime switching models,
     forecasting, Bayesian asset-pricing factor models.
@@ -596,8 +613,10 @@ tutorials. It holds no program code: its panels are made like Pollis's own. Four
     models, continuous-time macro-finance, game theory.
   \item \textbf{Core Mathematics}: symbolic maths, linear algebra, nonlinear systems, numerical
     differentiation and integration, ordinary and partial differential equations.
-  \item \textbf{Learning and Practice}: multiple-choice exercises whose data and answers Julia computes, and
-    a panel to write new ones; described in its own guide, \emph{Learning and Practice}.
+  \item \textbf{Self-Study: Learn and Practise}: turn your slides, notes and PDFs into what helps you
+    study: more problems with their solutions, a topic explained in depth, a summary of a paper, prose and
+    audio from slides, or slides from a long text. For students, and for teachers preparing their classes.
+    Its Self-Study Guide and its vignette are in \ui{Help > Documentation > Toolboxes}.
 \end{itemize}
 
 \subhead{Install a toolbox}
@@ -798,7 +817,8 @@ Each method is a folder in \texttt{\textasciitilde/.pollis/methods}.
 
 \subhead{1. Article and Data}
 \begin{itemize}
-  \item \ui{Article}: the \ui{Article Link}. Pollis opens it in the integrated browser and keeps no copy;
+  \item \ui{Article}: the \ui{Article Link}. Pollis opens it in the integrated browser, and a PDF in the PDF
+    Viewer, and keeps no copy;
     \ui{Save a Copy...} saves one outside Pollis, by default in the \texttt{data} folder of your Pollis
     Workspace (Reports, page 20).
   \item \ui{Input Tables}, the data the method is computed from: \ui{Empty Table} to type one in,
@@ -958,7 +978,7 @@ create a folder, for example in your Documents, and click \ui{Make Pollis Worksp
     starting in \texttt{\textasciitilde/.pollis/workflows}.
   \item The Julia REPL installs PollisTeX if it is missing, runs the notebook's code cells in order and
     compiles the document.
-  \item The \texttt{.tex} opens in the editor, and the PDF beside it, in the integrated browser.
+  \item The \texttt{.tex} opens in the editor, and the PDF beside it, in the PDF Viewer.
 \end{enumerate}
 The files are in \texttt{reports/\emph{NAME}} of the workspace, \emph{NAME} being the notebook's:
 \texttt{report.tex} or \texttt{slides.tex} and its PDF, each cell's printed output in
@@ -2025,7 +2045,8 @@ comes from a passage of a document, and you can open that passage.
   \item Type a question in your own words, such as \emph{How do I make a cheap model do the small jobs?}, in
     English or in another language, and press Enter. The answer comes in the language of the question.
   \item After each statement, a number such as \ui{[1]} names its source. Under \ui{Sources}, each source has
-    its document and section, and \ui{Open} shows the passage in its document, in the internal browser.
+    its document and section, and \ui{Open} shows the passage in its document: a PDF at its page, in the PDF
+    Viewer.
   \item Ask a follow-up, such as \emph{and for Codex?}: it is read with the conversation so far.
     \ui{New Chat}, beside the title, starts again.
 \end{enumerate}
@@ -2079,7 +2100,7 @@ computer; a cloud model is sent the question, the conversation and the eight pas
 The + at the start of the question adds, as a chip above it: \ui{Image}, a picture, given only to a cloud model;
 \ui{File}, a text file; \ui{Dataset}, a CSV file, given as its size, its header and its first rows; and
 \ui{Database}, a DuckDB file, given as its tables and their columns. A long text is cut, and a note says so.
-\ui{PDF...} opens a PDF in PDF Files, whose \ui{Select Area} sends the text, the table or a picture of an
+\ui{PDF...} opens a PDF in the PDF Viewer, whose \ui{Select Area} sends the text, the table or a picture of an
 area of a page (Data and Databases, page 6). Every panel has an Ask Pollis of its own, with its +, at the
 right of its title; its answer comes in the Ask Pollis pane beside the panel.
 

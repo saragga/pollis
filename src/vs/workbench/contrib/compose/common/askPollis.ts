@@ -44,8 +44,21 @@ export const ASK_POLLIS_COMMAND_ID = 'pollis.askPollis';
 /** What the + of Ask Pollis attaches, run with an `AskPollisAttachRequest`, which gives an `IAskPollisAttached`. */
 export const ASK_POLLIS_ATTACH_COMMAND_ID = 'pollis.askPollis.attach';
 
-/** PDF... in the + of Ask Pollis: a PDF picked, opened in PDF Files, whose Select Area sends its areas to the panel's Ask Pollis. */
+/** PDF... in the + of Ask Pollis: a PDF picked, opened in the PDF Viewer, whose Select Area sends its areas to Ask Pollis. */
 export const ASK_POLLIS_OPEN_PDF_COMMAND_ID = 'pollis.askPollis.openPdf';
+
+/**
+ * Puts an attachment in the question of the Ask Pollis pane, and shows the pane: a text file, cut as the + cuts it, or
+ * a PNG image as a data URL. Run by the PDF Viewer with an `IAskPollisAddAttachment`.
+ */
+export const ASK_POLLIS_ADD_ATTACHMENT_COMMAND_ID = 'pollis.askPollis.addAttachment';
+
+/** What `ASK_POLLIS_ADD_ATTACHMENT_COMMAND_ID` is run with. */
+export interface IAskPollisAddAttachment {
+	readonly kind: 'file' | 'image';
+	readonly name: string;
+	readonly content: string;
+}
 
 /** Whether a cloud model answers, the only one given images. */
 export const ASK_POLLIS_ANSWERS_IN_CLOUD_COMMAND_ID = 'pollis.askPollis.answersInCloud';

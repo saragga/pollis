@@ -25,6 +25,7 @@ import { IFileService } from '../../../platform/files/common/files.js';
 import { INotificationService } from '../../../platform/notification/common/notification.js';
 import { joinPath } from '../../../base/common/resources.js';
 import { IPathService } from '../../services/path/common/pathService.js';
+import { openPdfInViewer } from '../../common/pdfViewer.js';
 
 class KeybindingsReferenceAction extends Action2 {
 
@@ -552,7 +553,7 @@ async function openDocument(accessor: ServicesAccessor, file: string): Promise<v
 	const notificationService = accessor.get(INotificationService);
 	const uri = joinPath(await accessor.get(IPathService).userHome(), '.pollis', 'documents', file);
 	if (await fileService.exists(uri)) {
-		commandService.executeCommand(BrowserViewCommandId.Open, uri.toString(true));
+		openPdfInViewer(commandService, uri);
 	} else {
 		notificationService.info(localize('documentNotCompiled', "{0} is not compiled yet. Pollis compiles its documentation from the LaTeX sources when Julia starts, and the status bar shows how far it has come.", POLLIS_DOCUMENTS[file]));
 	}
@@ -730,6 +731,13 @@ registerAction2(class extends Action2 {
 			notificationService.info(localize('compileDocumentsDone', "The documents are compiled."));
 		}
 	}
+});
+
+// The sample PDF of PollisDatasets in the PDF Viewer (the command of extensions/pdf-viewer), to try the viewer on
+MenuRegistry.appendMenuItem(MenubarHelpDocumentationMenu, {
+	group: '3_test',
+	command: { id: 'pollis.pdfViewer.openSample', title: localize({ key: 'miTestPdf', comment: ['&& denotes a mnemonic'] }, "&&Test PDF") },
+	order: 1
 });
 
 registerHelpLink({

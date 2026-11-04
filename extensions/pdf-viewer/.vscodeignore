@@ -1,0 +1,5 @@
+src/**
+tsconfig*.json
+esbuild*
+out/**
+cgmanifest.json

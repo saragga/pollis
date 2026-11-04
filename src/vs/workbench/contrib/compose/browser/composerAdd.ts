@@ -6,7 +6,7 @@
 // The + at the start of the last line of a chat's input box, in Ask Pollis, in a panel's Ask Pollis and in the Collaboration chat: its menu,
 // Image, File, Dataset and Database, and an image or a file pasted or dragged in. Each chat says what an image and a
 // file become; a dataset and a database are picked by the workbench, which each chat asks with `pickDataset` and
-// `pickDatabase`. Ask Pollis has a PDF... item too, which asks the workbench with `openPdf` to open a PDF in PDF Files.
+// `pickDatabase`. Ask Pollis has a PDF... item too, which asks the workbench with `openPdf` to open a PDF in the PDF Viewer.
 
 /** The titles of the + and of its menu's items. */
 export interface IComposerAddTitles {

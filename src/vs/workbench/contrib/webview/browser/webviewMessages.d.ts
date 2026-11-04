@@ -51,6 +51,8 @@ interface UpdateContentEvent {
 		allowMultipleAPIAcquire: boolean;
 		allowScripts: boolean;
 		allowForms: boolean;
+		/** POLLIS: the print dialog, for the PDF Viewer only. */
+		allowModals: boolean;
 	};
 	state: any;
 	cspSource: string;

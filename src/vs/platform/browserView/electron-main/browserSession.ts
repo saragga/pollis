@@ -3,13 +3,24 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { session } from 'electron';
+import { app, session } from 'electron';
 import { joinPath } from '../../../base/common/resources.js';
 import { URI } from '../../../base/common/uri.js';
 import { IApplicationStorageMainService } from '../../storage/electron-main/storageMainService.js';
 import { BrowserViewStorageScope } from '../common/browserView.js';
 import { BrowserSessionTrust, IBrowserSessionTrust } from './browserSessionTrust.js';
 import { FileAccess } from '../../../base/common/network.js';
+import { Emitter, Event } from '../../../base/common/event.js';
+import { existsSync, mkdirSync, rmSync } from 'fs';
+import { extname, join } from '../../../base/common/path.js';
+
+/** POLLIS: a PDF downloaded by a page of a browser view, saved in a temporary folder that is emptied on quit. */
+export interface IBrowserPdfDownload {
+	readonly contents: Electron.WebContents;
+	readonly file: URI;
+	readonly url: string;
+	readonly completed: boolean;
+}
 
 // Same as webviews, minus clipboard-read
 const allowedPermissions = new Set([
@@ -183,6 +194,12 @@ export class BrowserSession {
 
 	private readonly _trust: BrowserSessionTrust;
 
+	private readonly _onDidDownloadPdf = new Emitter<IBrowserPdfDownload>();
+	/** POLLIS: fires when a PDF a page reached is downloaded, for its view to open it in the PDF Viewer. */
+	readonly onDidDownloadPdf: Event<IBrowserPdfDownload> = this._onDidDownloadPdf.event;
+
+	private readonly _pdfHandOffs = new WeakSet<Electron.WebContents>();
+
 	private constructor(
 		/**
 		 * Unique identifier for this session.  Derived from what makes the
@@ -232,6 +249,53 @@ export class BrowserSession {
 			type: 'frame',
 			filePath: FileAccess.asFileUri('vs/platform/browserView/electron-browser/preload-browserView.js').fsPath
 		});
+
+		// POLLIS: the views do not show PDFs (Chromium's PDF viewer needs plugins, which are off). A page that is a PDF
+		// comes as a download instead, with the session's cookies, and the view stays on the page it was on
+		this.electronSession.webRequest.onHeadersReceived((details, callback) => callback(this.pdfAsDownload(details)));
+		this.electronSession.on('will-download', (_event, item, contents) => {
+			if (!isPdfDownload(item)) {
+				return;
+			}
+			const file = pdfSavePath(item.getFilename());
+			item.setSavePath(file);
+			item.once('done', (_doneEvent, state) => this._onDidDownloadPdf.fire({ contents, file: URI.file(file), url: item.getURL(), completed: state === 'completed' }));
+		});
+	}
+
+	/** POLLIS: the response of a page that is a PDF, made an attachment, so that it downloads. */
+	private pdfAsDownload(details: Electron.OnHeadersReceivedListenerDetails): Electron.HeadersReceivedResponse {
+		if (details.resourceType !== 'mainFrame' || !details.webContents || details.statusCode >= 300) {
+			return {};
+		}
+		const headers: Record<string, string[]> = {};
+		let type = '';
+		let disposition = '';
+		for (const [name, values] of Object.entries(details.responseHeaders ?? {})) {
+			const key = name.toLowerCase();
+			if (key === 'content-type') {
+				type = values[0] ?? '';
+			}
+			if (key === 'content-disposition') {
+				disposition = values[0] ?? '';
+			} else {
+				headers[name] = values;
+			}
+		}
+		if (!/^\s*application\/(x-)?pdf\b/i.test(type)) {
+			return {};
+		}
+		this._pdfHandOffs.add(details.webContents);
+		headers['Content-Disposition'] = [attachmentDisposition(disposition)];
+		return { responseHeaders: headers };
+	}
+
+	/**
+	 * POLLIS: whether a page of the web contents was a PDF, made a download, since this was last asked; its load then
+	 * fails in the view.
+	 */
+	takePdfHandOff(contents: Electron.WebContents): boolean {
+		return this._pdfHandOffs.delete(contents);
 	}
 
 	/**
@@ -243,4 +307,48 @@ export class BrowserSession {
 	}
 
 	// #endregion
+}
+
+/** POLLIS: a Content-Disposition that downloads, keeping the file name the server gives. */
+function attachmentDisposition(disposition: string): string {
+	if (/^\s*attachment\b/i.test(disposition)) {
+		return disposition;
+	}
+	if (/^\s*inline\b/i.test(disposition)) {
+		return disposition.replace(/^\s*inline\b/i, 'attachment');
+	}
+	return disposition.trim() ? `attachment; ${disposition}` : 'attachment';
+}
+
+/** POLLIS: whether a download is a PDF, by its type or by the extension of its name. */
+function isPdfDownload(item: Electron.DownloadItem): boolean {
+	return /^application\/(x-)?pdf$/i.test(item.getMimeType()) || extname(item.getFilename()).toLowerCase() === '.pdf';
+}
+
+let pdfFolder: string | undefined;
+
+/**
+ * POLLIS: the folder of the PDFs the browser views download, made on the first one: a folder of this run of the app in
+ * the system's temporary folder, removed when the app quits.
+ */
+function getPdfFolder(): string {
+	if (!pdfFolder) {
+		const folder = join(app.getPath('temp'), `pollis-pdfs-${process.pid}`);
+		mkdirSync(folder, { recursive: true });
+		app.once('will-quit', () => rmSync(folder, { recursive: true, force: true }));
+		pdfFolder = folder;
+	}
+	return pdfFolder;
+}
+
+/** POLLIS: where a downloaded PDF is saved, in the folder of the PDFs, with a number added to its name when it is taken. */
+function pdfSavePath(filename: string): string {
+	const folder = getPdfFolder();
+	const name = extname(filename).toLowerCase() === '.pdf' ? filename : `${filename}.pdf`;
+	const stem = name.slice(0, -extname(name).length);
+	let file = join(folder, name);
+	for (let n = 2; existsSync(file); n++) {
+		file = join(folder, `${stem} (${n}).pdf`);
+	}
+	return file;
 }

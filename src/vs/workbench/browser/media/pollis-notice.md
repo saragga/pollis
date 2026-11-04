@@ -14,6 +14,7 @@ Pollis is licensed under the GNU Affero General Public License v3.0, and incorpo
 | DuckDB.jl (Pollis fork) | MIT | https://github.com/Trumpingtons/DuckDB.jl |
 | fts extension for DuckDB | MIT | https://github.com/duckdb/duckdb-fts |
 | Poppler (Poppler_jll) | GPL-2.0 or GPL-3.0 | https://poppler.freedesktop.org |
+| PDF.js | Apache-2.0 | https://github.com/mozilla/pdf.js |
 
 julia-vscode bundles a number of Julia packages (under `scripts/packages/`); each retains its own (predominantly MIT) license as distributed in the upstream project.
 
@@ -23,7 +24,9 @@ Pollis ships the official DuckDB library (libduckdb), with the DuckDB Node API (
 
 Pollis also ships the fts extension for DuckDB, full-text search, built by DuckDB from duckdb-fts. It includes the Snowball stemmers (libstemmer, BSD-3-Clause, Copyright Martin Porter and Richard Boulton).
 
-Pollis installs Poppler_jll, the build of Poppler 25.10.0 by the Julia BinaryBuilder project, into its Julia environment: Ask Pollis reads the text of PDF documents with its `pdftotext`, and Explore > Access Files and Databases > PDF Files runs its command-line tools. Pollis runs these tools as separate programs and does not link to the Poppler libraries.
+Pollis installs Poppler_jll, the build of Poppler 25.10.0 by the Julia BinaryBuilder project, into its Julia environment: Ask Pollis reads the text of PDF documents with its `pdftotext`. Pollis runs this tool as a separate program and does not link to the Poppler libraries.
+
+Pollis ships the legacy build of PDF.js 6.4.299 in its PDF Viewer (`extensions/pdf-viewer/pdfjs`). PDF.js includes the Adobe CMaps (BSD-3-Clause), the Foxit standard fonts (BSD-3-Clause), the Liberation Sans fonts (GPL-2.0 with the font exception), the JBIG2 decoder of PDFium (BSD-3-Clause), OpenJPEG (BSD-2-Clause), qcms (MIT) and an ICC profile (CC0-1.0); their full license texts are distributed with it, in `LICENSE` and the `LICENSE*` files of its `web` folders.
 
 ---
 
@@ -37,12 +40,13 @@ Pollis installs Poppler_jll, the build of Poppler 25.10.0 by the Julia BinaryBui
 - **DuckDB**, **DuckDB Node API**, **fts extension for DuckDB** — Copyright 2018-2025 Stichting DuckDB Foundation.
 - **DuckDB.jl** — Copyright 2018-2024 Stichting DuckDB Foundation.
 - **Poppler** — Copyright Glyph & Cog, LLC and The Poppler Developers.
+- **PDF.js** — Copyright Mozilla Foundation.
 
 ---
 
 ## MIT License
 
-The components listed above, except Poppler, are distributed under the MIT License. The following terms apply to each such component, with the copyright notice replaced by the corresponding notice above:
+The components listed above, except Poppler and PDF.js, are distributed under the MIT License. The following terms apply to each such component, with the copyright notice replaced by the corresponding notice above:
 
 ```
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -71,3 +75,11 @@ SOFTWARE.
 Poppler is based on Xpdf, which is licensed under the GNU General Public License (GPL), version 2 or 3; all changes made under the Poppler project are licensed under GPL version 2 or later, as stated in the README-XPDF file and in the headers of Poppler's source files. The texts of both versions of the GPL are distributed with the Poppler sources, in `COPYING` (GPL v2) and `COPYING3` (GPL v3), at https://gitlab.freedesktop.org/poppler/poppler.
 
 Poppler is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+---
+
+## Apache License 2.0 (PDF.js)
+
+PDF.js is licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0; its full text is distributed with PDF.js, in `extensions/pdf-viewer/pdfjs/LICENSE`.
+
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.

@@ -8,9 +8,10 @@
 //   through the command `language-julia.pollisEventStudies`, with a request such as {op: 'analyse', folder, token}.
 //   While it computes, `language-julia.pollisEventStudiesProgress` with the request's token gives how far it has come:
 //   {progress, done, steps, step}, the fraction done and the step it is on.
-// - The pages of a PDF for the Select Area pane of PDF Files, by Poppler (pdf_pages.jl, ~/.pollis/pdf/julia/vX.Y),
-//   through the command `language-julia.pollisPdfPages`, with a request such as {op: 'page', file, cwd, page, dpi}: the
-//   image of a page or of an area of it, or the text or the cells of an area.
+// - The Poppler tools of the PDF Viewer, by Poppler_jll, and the path of the sample PDF of PollisDatasets for its Test
+//   PDF (pdf_tools.jl, ~/.pollis/pdf/julia/vX.Y), through the commands `language-julia.pollisPoppler`, with a request
+//   such as {op: 'run', tool: 'pdftotext', args, dir?} or {op: 'pages', file, parts: [{pages, out}]}, and
+//   `language-julia.pollisPdfSample`, with the request {op: 'sample', file: 'sample.pdf'}.
 // The workbench gets the script's answer. A process starts with the first request and quits after ten minutes without one.
 
 import * as child_process from 'child_process'
@@ -157,12 +158,13 @@ class HiddenJulia {
 export function activate(context: vscode.ExtensionContext, executableFeature: ExecutableFeature) {
     const alertStatistics = new HiddenJulia(context, executableFeature, 'alert_stats.jl', 'the statistics of the alerts')
     const eventStudies = new HiddenJulia(context, executableFeature, 'event_studies.jl', 'the event studies')
-    const pdfPages = new HiddenJulia(context, executableFeature, 'pdf_pages.jl', 'the pages of the PDF files')
+    const pdfTools = new HiddenJulia(context, executableFeature, 'pdf_tools.jl', 'the Poppler tools of the PDF Viewer')
     context.subscriptions.push(
         vscode.commands.registerCommand('language-julia.pollisAlertStatistics', (request: Answer) => alertStatistics.answer(request)),
         vscode.commands.registerCommand('language-julia.pollisEventStudies', (request: Answer) => eventStudies.answer(request)),
         vscode.commands.registerCommand('language-julia.pollisEventStudiesProgress', (token: string) => eventStudies.progress(token)),
-        vscode.commands.registerCommand('language-julia.pollisPdfPages', (request: Answer) => pdfPages.answer(request)),
-        { dispose: () => { alertStatistics.stop(); eventStudies.stop(); pdfPages.stop() } }
+        vscode.commands.registerCommand('language-julia.pollisPdfSample', (request: Answer) => pdfTools.answer(request)),
+        vscode.commands.registerCommand('language-julia.pollisPoppler', (request: Answer) => pdfTools.answer(request)),
+        { dispose: () => { alertStatistics.stop(); eventStudies.stop(); pdfTools.stop() } }
     )
 }

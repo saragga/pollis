@@ -75,6 +75,12 @@ interface WebviewActionContext {
 
 const webviewIdContext = 'webviewId';
 
+/**
+ * POLLIS: the extension whose webviews may open the print dialog (the sandbox's allow-modals): the PDF Viewer
+ * (extensions/pdf-viewer), whose pdf.js prints with window.print().
+ */
+const PRINTING_EXTENSION_ID = 'vscode.pdf-viewer';
+
 export class WebviewElement extends Disposable implements IWebviewElement, WebviewFindDelegate {
 
 	protected readonly id = generateUuid();
@@ -396,13 +402,21 @@ export class WebviewElement extends Disposable implements IWebviewElement, Webvi
 		}
 	}
 
+	/** POLLIS: whether the webview may open the print dialog, for the PDF Viewer only. */
+	private allowsModals(): boolean {
+		return ExtensionIdentifier.equals(this.extension?.id, PRINTING_EXTENSION_ID);
+	}
+
 	private _createElement(options: WebviewOptions, _contentOptions: WebviewContentOptions) {
 		// Do not start loading the webview yet.
 		// Wait the end of the ctor when all listeners have been hooked up.
 		const element = document.createElement('iframe');
 		element.name = this.id;
 		element.className = `webview ${options.customClasses || ''}`;
-		element.sandbox.add('allow-scripts', 'allow-same-origin', 'allow-forms', 'allow-pointer-lock', 'allow-downloads');
+		// POLLIS: allow-modals, so that the frame of the content may have it too (a frame cannot have more than the one
+		// around it); index.html gives it to the content of the PDF Viewer only. The extension of a custom editor's
+		// webview is set after this element is made, so this frame cannot depend on it.
+		element.sandbox.add('allow-scripts', 'allow-same-origin', 'allow-forms', 'allow-pointer-lock', 'allow-downloads', 'allow-modals');
 
 		const allowRules = ['cross-origin-isolated', 'autoplay', 'local-network-access'];
 		if (!isFirefox) {
@@ -668,6 +682,7 @@ export class WebviewElement extends Disposable implements IWebviewElement, Webvi
 				allowMultipleAPIAcquire: !!this._content.options.allowMultipleAPIAcquire,
 				allowScripts: allowScripts,
 				allowForms: this._content.options.allowForms ?? allowScripts, // For back compat, we allow forms by default when scripts are enabled
+				allowModals: allowScripts && this.allowsModals(),
 			},
 			state: this._content.state,
 			cspSource: webviewGenericCspSource,

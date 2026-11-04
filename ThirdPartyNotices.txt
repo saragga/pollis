@@ -1339,9 +1339,8 @@ https://poppler.freedesktop.org
 
 Pollis installs Poppler_jll (https://github.com/JuliaBinaryWrappers/Poppler_jll.jl),
 the build of Poppler 25.10.0 by the Julia BinaryBuilder project, into its Julia
-environment: Ask Pollis reads the text of PDF documents with its pdftotext, and
-Explore > Access Files and Databases > PDF Files runs its command-line tools.
-Pollis runs these tools as separate programs and does not link to the Poppler
+environment: Ask Pollis reads the text of PDF documents with its pdftotext.
+Pollis runs this tool as a separate program and does not link to the Poppler
 libraries.
 
 Poppler is a PDF rendering library based on the Xpdf code base, copyright
@@ -1356,6 +1355,46 @@ sources, in COPYING (GPL v2) and COPYING3 (GPL v3).
 Poppler is distributed in the hope that it will be useful, but WITHOUT ANY
 WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 PARTICULAR PURPOSE. See the GNU General Public License for more details.
+---------------------------------------------------------
+
+---------------------------------------------------------
+
+PDF.js 6.4.299 - Apache-2.0
+https://github.com/mozilla/pdf.js
+
+Pollis ships the legacy build of PDF.js, by the Mozilla Foundation, in its PDF
+Viewer (extensions/pdf-viewer/pdfjs). The full text of each license below is
+distributed with it, in the file named.
+
+Copyright Mozilla Foundation
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+this file except in compliance with the License. You may obtain a copy of the
+License at http://www.apache.org/licenses/LICENSE-2.0 (pdfjs/LICENSE).
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied. See the License for the
+specific language governing permissions and limitations under the License.
+
+PDF.js includes:
+
+- Adobe CMaps (web/cmaps), Copyright 1990-2009 Adobe Systems Incorporated,
+  BSD-3-Clause (web/cmaps/LICENSE).
+- Foxit standard fonts (web/standard_fonts), Copyright 2014 PDFium Authors,
+  BSD-3-Clause (web/standard_fonts/LICENSE_FOXIT).
+- Liberation Sans fonts (web/standard_fonts), Red Hat, Inc., GPL-2.0 with the
+  font exception (web/standard_fonts/LICENSE_LIBERATION).
+- The JBIG2 decoder of PDFium, Copyright 2014 The PDFium Authors, BSD-3-Clause
+  (web/wasm/LICENSE_JBIG2), compiled to WebAssembly by the Mozilla Foundation,
+  Apache-2.0 (web/wasm/LICENSE_PDFJS_JBIG2).
+- OpenJPEG, Copyright 2002-2014 Universite catholique de Louvain (UCL) and
+  others, BSD-2-Clause (web/wasm/LICENSE_OPENJPEG), compiled to WebAssembly by
+  the Mozilla Foundation, BSD-2-Clause (web/wasm/LICENSE_PDFJS_OPENJPEG).
+- qcms, Copyright 2009-2024 Mozilla Corporation and 1998-2007 Marti Maria, MIT
+  (web/wasm/LICENSE_QCMS and web/wasm/LICENSE_PDFJS_QCMS).
+- The CGATS001Compat-v2-micro ICC profile (web/iccs), CC0-1.0
+  (web/iccs/LICENSE).
 ---------------------------------------------------------
 
 ---------------------------------------------------------

@@ -21,6 +21,8 @@ import { BrowserSession } from './browserSession.js';
 import { IAuxiliaryWindow } from '../../auxiliaryWindow/electron-main/auxiliaryWindow.js';
 import { hasKey } from '../../../base/common/types.js';
 import { SCAN_CODE_STR_TO_EVENT_KEY_CODE } from '../../../base/common/keyCodes.js';
+import { URI } from '../../../base/common/uri.js';
+import { INativeOpenFileRequest } from '../../window/common/window.js';
 
 /**
  * Represents a single browser view instance with its WebContentsView and all associated logic.
@@ -98,9 +100,6 @@ export class BrowserView extends Disposable implements ICDPTarget {
 			webviewTag: false,
 			session: this.session.electronSession,
 
-			// Chromium's PDF viewer, so a PDF (e.g. an article opened by Compose > Methods) shows in the view
-			plugins: true,
-
 			// TODO@kycutler: Remove this once https://github.com/electron/electron/issues/42578 is fixed
 			type: 'browserView'
 		};
@@ -111,6 +110,23 @@ export class BrowserView extends Disposable implements ICDPTarget {
 			...(options?.webContents ? { webContents: options.webContents } : {})
 		});
 		this._view.setBackgroundColor('#FFFFFF');
+
+		// POLLIS: a PDF a page reaches is downloaded by the session and opened in the window, in the editor of .pdf files,
+		// the PDF Viewer (extensions/pdf-viewer). A tab opened only for the PDF has no page left, and closes
+		this._register(this.session.onDidDownloadPdf(download => {
+			const contents = this._view.webContents;
+			if (download.contents !== contents) {
+				return;
+			}
+			if (!download.completed) {
+				this.logService.warn(`[BrowserView] The PDF ${download.url} was not downloaded`);
+				return;
+			}
+			this._openFileInWindow(download.file);
+			if (!contents.isDestroyed() && contents.getURL() === '') {
+				contents.close({ waitForBeforeUnload: false });
+			}
+		}));
 
 		this._view.webContents.setWindowOpenHandler((details) => {
 			const location = (() => {
@@ -514,7 +530,16 @@ export class BrowserView extends Disposable implements ICDPTarget {
 	 * Load a URL in this view
 	 */
 	async loadURL(url: string): Promise<void> {
-		await this._view.webContents.loadURL(url);
+		const contents = this._view.webContents;
+		this.session.takePdfHandOff(contents);
+		try {
+			await contents.loadURL(url);
+		} catch (error) {
+			// POLLIS: a PDF is downloaded and opened in the PDF Viewer, and its load fails in the view
+			if (!this.session.takePdfHandOff(contents)) {
+				throw error;
+			}
+		}
 	}
 
 	/**
@@ -725,6 +750,13 @@ export class BrowserView extends Disposable implements ICDPTarget {
 		}
 
 		super.dispose();
+	}
+
+	/** POLLIS: opens a file in the window of the view (the main window of an auxiliary one), in its editor. */
+	private _openFileInWindow(file: URI): void {
+		const window = this._window && hasKey(this._window, { parentId: true }) ? this._codeWindowById(this._window.parentId) : this._codeWindowById(this._window?.win?.id);
+		const request: INativeOpenFileRequest = { filesToOpenOrCreate: [{ fileUri: file }] };
+		(window ?? this.windowsMainService.getLastActiveWindow())?.sendWhenReady('vscode:openFiles', CancellationToken.None, request);
 	}
 
 	private _windowById(windowId: number | undefined): ICodeWindow | IAuxiliaryWindow | undefined {
