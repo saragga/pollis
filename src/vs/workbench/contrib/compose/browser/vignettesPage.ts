@@ -7,7 +7,7 @@ import { RunOnceScheduler } from '../../../../base/common/async.js';
 import { CancellationToken } from '../../../../base/common/cancellation.js';
 import { toErrorMessage } from '../../../../base/common/errorMessage.js';
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
-import { joinPath } from '../../../../base/common/resources.js';
+import { basename, joinPath } from '../../../../base/common/resources.js';
 import { URI } from '../../../../base/common/uri.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, MenuId, registerAction2 } from '../../../../platform/actions/common/actions.js';
@@ -158,16 +158,56 @@ async function packageVignette(fileService: IFileService, root: URI): Promise<IV
 }
 
 /**
+ * The packages that the environments in Julia's log of the manifests it has used (~/.julia/logs/manifest_usage.toml)
+ * hold, as NAME@VERSION; undefined without the log. A copy in the depot that none of them holds is left over from an
+ * update or a removal, until Julia's garbage collection deletes it.
+ */
+async function packagesInUse(fileService: IFileService, julia: URI): Promise<Set<string> | undefined> {
+	let log: string;
+	try {
+		log = (await fileService.readFile(joinPath(julia, 'logs', 'manifest_usage.toml'))).value.toString();
+	} catch {
+		return undefined;
+	}
+	const manifests = [...log.matchAll(/^\[\["(?<path>.+)"\]\]$/gm)].map(match => (match.groups?.path ?? '').replace(/\\\\/g, '\\'));
+	const used = new Set<string>();
+	await Promise.all(manifests.map(async manifest => {
+		try {
+			const text = (await fileService.readFile(URI.file(manifest))).value.toString();
+			for (const entry of text.split(/^\[\[deps\./m).slice(1)) {
+				used.add(`${entry.slice(0, entry.indexOf(']]'))}@${/^version\s*=\s*"(?<version>[^"]+)"/m.exec(entry)?.groups?.version ?? ''}`);
+			}
+		} catch {
+			// An environment since deleted
+		}
+	}));
+	return used;
+}
+
+/** The version in the Project.toml of the package in `root`. */
+async function projectVersion(fileService: IFileService, root: URI): Promise<string> {
+	try {
+		return /^version\s*=\s*"(?<version>[^"]+)"/m.exec((await fileService.readFile(joinPath(root, 'Project.toml'))).value.toString())?.groups?.version ?? '';
+	} catch {
+		return '';
+	}
+}
+
+/**
  * The vignettes of the packages on this computer: those developed, ~/.julia/dev/NAME, and those installed in the
- * Julia depot, ~/.julia/packages/NAME/SLUG, of a package installed in several versions the newest. A package
+ * Julia depot, ~/.julia/packages/NAME/SLUG, that an environment holds, of a package in several versions the newest. A package
  * developed shows its vignette as it is being written, in place of an installed version's.
  */
 export async function installedVignettes(fileService: IFileService, pathService: IPathService): Promise<IVignette[]> {
 	const julia = joinPath(pathService.userHome({ preferLocal: true }), '.julia');
 	const developed = (await Promise.all((await subfolders(fileService, joinPath(julia, 'dev'))).map(root => packageVignette(fileService, root))))
 		.filter((entry): entry is IVignette => !!entry);
+	const used = await packagesInUse(fileService, julia);
 	const installed = await Promise.all((await subfolders(fileService, joinPath(julia, 'packages'))).map(async folder => {
-		const entries = await Promise.all((await subfolders(fileService, folder)).map(version => packageVignette(fileService, version)));
+		const versions = await subfolders(fileService, folder);
+		const inUse = used ? (await Promise.all(versions.map(async version => used.has(`${basename(folder)}@${await projectVersion(fileService, version)}`) ? version : undefined)))
+			.filter((version): version is URI => !!version) : versions;
+		const entries = await Promise.all(inUse.map(version => packageVignette(fileService, version)));
 		return entries.filter((entry): entry is IVignette => !!entry).sort((a, b) => compareVersions(b.version, a.version))[0];
 	}));
 	return [
@@ -393,6 +433,8 @@ function pageHtml(rows: number): string {
 	.search { width: 100%; max-width: 420px; }
 	.search:focus, .topics:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
 	.topic { width: 12%; }
+	/* The article is a link, which a button centres: its heading and the dash of no article too */
+	th.article, td.article { text-align: center; }
 	.location { width: 12%; }
 	.error { color: var(--vscode-errorForeground); }</style>
 </head>

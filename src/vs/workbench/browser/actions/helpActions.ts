@@ -733,13 +733,6 @@ registerAction2(class extends Action2 {
 	}
 });
 
-// The sample PDF of PollisDatasets in the PDF Viewer (the command of extensions/pdf-viewer), to try the viewer on
-MenuRegistry.appendMenuItem(MenubarHelpDocumentationMenu, {
-	group: '3_test',
-	command: { id: 'pollis.pdfViewer.openSample', title: localize({ key: 'miTestPdf', comment: ['&& denotes a mnemonic'] }, "&&Test PDF") },
-	order: 1
-});
-
 registerHelpLink({
 	id: 'pollis.action.openCodeOssDocumentation',
 	title: localize2('openCodeOssDocumentation', "Code - OSS Documentation"),

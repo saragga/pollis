@@ -22,13 +22,15 @@ const REGISTRY_URL = "https://github.com/Trumpingtons/PollisRegistry"
 const ENVIRONMENT = joinpath(homedir(), ".pollis", "event-studies", "julia", "v$(VERSION.major).$(VERSION.minor)")
 Pkg.activate(ENVIRONMENT; io = devnull)
 installed = Dict(info.name => info.version for info in values(Pkg.dependencies()) if info.is_direct_dep)
-if !haskey(installed, "EventStudies") || !haskey(installed, "JSON3") ||
+if !haskey(installed, "EventStudies") || !haskey(installed, "JSON3") || haskey(installed, "PollisEventStudies") ||
         (installed["EventStudies"] !== nothing && installed["EventStudies"] < MINIMUM)
     println("{\"status\":\"installing\"}")
     flush(stdout)
     if !any(registry -> registry.name == "PollisRegistry", Pkg.Registry.reachable_registries())
         Pkg.Registry.add(url = REGISTRY_URL; io = devnull)
     end
+    # EventStudies was called PollisEventStudies: an environment made under that name drops it
+    haskey(installed, "PollisEventStudies") && Pkg.rm("PollisEventStudies"; io = devnull)
     if haskey(installed, "EventStudies")
         Pkg.Registry.update("PollisRegistry"; io = devnull)
         Pkg.update("EventStudies"; io = devnull)
