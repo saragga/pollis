@@ -178,6 +178,60 @@ export interface WebviewParts {
 	readonly extraJs?: string;
 }
 
+/**
+ * The script function `colorizeBrackets(root, commentStart)` of the code boxes: colours the brackets of code
+ * tokenized with `tokenizeToString` by their depth, as the editor does, except in comments, which start with
+ * `commentStart` (`#`, Julia's, when not given; `--` for SQL). Example Code uses it, and so can a page's own
+ * script (`pageScriptJs`) for its code.
+ */
+export const colorizeBracketsJs = `// Bracket-pair colourisation, mirroring the editor: colour () [] {} by nesting depth using
+// the active theme's bracket colours. Open and matching close share a colour; depth cycles 1..6.
+function colorizeBrackets(root, commentStart) {
+	var OPEN = '([{', CLOSE = ')]}';
+	var COMMENT = commentStart || '#';
+	var depth = 0;
+	var nodes = [];
+	var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+	var n;
+	while ((n = walker.nextNode())) { nodes.push(n); }
+	// A tokenized comment is its own span whose first non-space chars start a comment ('#' in Julia).
+	// Skip those so brackets inside comments keep the comment colour.
+	function inComment(node) {
+		var el = node.parentElement;
+		if (!el) { return false; }
+		var t = el.textContent || '';
+		var i = 0;
+		while (i < t.length && (t.charAt(i) === ' ' || t.charAt(i) === '\t')) { i++; }
+		return t.substr(i, COMMENT.length) === COMMENT;
+	}
+	nodes.forEach(function(node) {
+		if (inComment(node)) { return; }
+		var text = node.nodeValue;
+		var frag = document.createDocumentFragment();
+		var buf = '';
+		var flush = function() { if (buf) { frag.appendChild(document.createTextNode(buf)); buf = ''; } };
+		for (var i = 0; i < text.length; i++) {
+			var ch = text[i];
+			var idx;
+			if (OPEN.indexOf(ch) !== -1) {
+				flush();
+				idx = (depth % 6) + 1; depth++;
+			} else if (CLOSE.indexOf(ch) !== -1) {
+				flush();
+				depth = depth > 0 ? depth - 1 : 0; idx = (depth % 6) + 1;
+			} else {
+				buf += ch; continue;
+			}
+			var s = document.createElement('span');
+			s.textContent = ch;
+			s.style.color = 'var(--vscode-editorBracketHighlight-foreground' + idx + ')';
+			frag.appendChild(s);
+		}
+		flush();
+		node.parentNode.replaceChild(frag, node);
+	});
+}`;
+
 /** The spinner of every page of Pollis: the two curved arrows of the sync icon, turning; its CSS is `spinnerCss`. */
 export const spinnerSvg = '<svg class="spin" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.5A5.5 5.5 0 0 1 12.8 5"/><path d="M13 2.5v2.7h-2.7"/><path d="M13.5 9.5A5.5 5.5 0 0 1 3.2 11"/><path d="M3 13.5v-2.7h2.7"/></svg>';
 
@@ -1447,52 +1501,7 @@ ${noExampleCode ? '' : `		document.getElementById('btn-copy').addEventListener('
 			});
 		})();
 
-		// Bracket-pair colourisation, mirroring the editor: colour () [] {} by nesting depth using
-		// the active theme's bracket colours. Open and matching close share a colour; depth cycles 1..6.
-		function colorizeBrackets(root) {
-			var OPEN = '([{', CLOSE = ')]}';
-			var depth = 0;
-			var nodes = [];
-			var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
-			var n;
-			while ((n = walker.nextNode())) { nodes.push(n); }
-			// A tokenized comment is its own span whose first non-space char is '#'.
-			// Skip those so brackets inside comments keep the comment colour.
-			function inComment(node) {
-				var el = node.parentElement;
-				if (!el) { return false; }
-				var t = el.textContent || '';
-				var i = 0;
-				while (i < t.length && (t.charAt(i) === ' ' || t.charAt(i) === '\t')) { i++; }
-				return t.charAt(i) === '#';
-			}
-			nodes.forEach(function(node) {
-				if (inComment(node)) { return; }
-				var text = node.nodeValue;
-				var frag = document.createDocumentFragment();
-				var buf = '';
-				var flush = function() { if (buf) { frag.appendChild(document.createTextNode(buf)); buf = ''; } };
-				for (var i = 0; i < text.length; i++) {
-					var ch = text[i];
-					var idx;
-					if (OPEN.indexOf(ch) !== -1) {
-						flush();
-						idx = (depth % 6) + 1; depth++;
-					} else if (CLOSE.indexOf(ch) !== -1) {
-						flush();
-						depth = depth > 0 ? depth - 1 : 0; idx = (depth % 6) + 1;
-					} else {
-						buf += ch; continue;
-					}
-					var s = document.createElement('span');
-					s.textContent = ch;
-					s.style.color = 'var(--vscode-editorBracketHighlight-foreground' + idx + ')';
-					frag.appendChild(s);
-				}
-				flush();
-				node.parentNode.replaceChild(frag, node);
-			});
-		}
+		${colorizeBracketsJs}
 
 		function renderPackageStatus(statuses, env) {
 			var el = document.getElementById('package-status');

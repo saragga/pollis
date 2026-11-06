@@ -14,7 +14,7 @@ import { InstantiationType, registerSingleton } from '../../../../platform/insta
 import { IProductService } from '../../../../platform/product/common/productService.js';
 import { ISecretStorageService } from '../../../../platform/secrets/common/secrets.js';
 import { IUtilityProcessWorkerWorkbenchService } from '../../../services/utilityProcess/electron-browser/utilityProcessWorkerWorkbenchService.js';
-import { ASK_CHAT_MODEL, ASK_CLOUD_PROVIDERS, ASK_EMBEDDING_CONTEXT, ASK_EMBEDDING_MODEL, ASK_LOCAL_PREFIX, ASK_PASSAGES, ASK_QUERY_PREFIX, ASK_RERANK_CONTEXT, askCloudModel, askPollisMessages, IAskPassageMatch, IAskPollisAnswer, IAskPollisAttachment, IAskPollisChatRequest, IAskPollisFound, IAskPollisIndex, IAskPollisIndexedDocument, IAskPollisIndexStatus, IAskPollisPanel, IAskPollisPassage, IAskPollisReranked, IAskPollisSearchRequest, IAskPollisSearchResult, IAskPollisSearchStamp, IAskPollisService, IAskPollisTurn, IAskTopicCounts, ICompareRun, ICompareRunSummary, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary, IRerankRun, IRerankRunSummary } from '../common/askPollis.js';
+import { ASK_CHAT_MODEL, ASK_CLOUD_PROVIDERS, ASK_EMBEDDING_CONTEXT, ASK_EMBEDDING_MODEL, ASK_LOCAL_PREFIX, ASK_PASSAGES, ASK_QUERY_PREFIX, ASK_RERANK_CONTEXT, ASK_SIMILARITY_PREFIX, askCloudModel, askPollisMessages, IAskPassageMatch, IAskPollisAnswer, IAskPollisAttachment, IAskPollisChatRequest, IAskPollisFound, IAskPollisIndex, IAskPollisIndexedDocument, IAskPollisIndexStatus, IAskPollisPanel, IAskPollisPassage, IAskPollisReranked, IAskPollisSearchRequest, IAskPollisSearchResult, IAskPollisSearchStamp, IAskPollisService, IAskPollisTurn, IAskTopicCounts, ICompareRun, ICompareRunSummary, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary, IRerankRun, IRerankRunSummary } from '../common/askPollis.js';
 
 /** What the command of the Julia extension that starts a llama.cpp server answers (pollisLlamaServer.ts). */
 interface ILlamaServerAnswer {
@@ -155,6 +155,31 @@ class AskPollisService extends Disposable implements IAskPollisService {
 		const model = this.configurationService.getValue<string>('pollis.ask.embeddingModel')?.trim() || ASK_EMBEDDING_MODEL;
 		// The request that started it, by which the Julia extension knows its server
 		await this.commandService.executeCommand('language-julia.pollisStopLlamaServer', { model, embeddings: true, context: ASK_EMBEDDING_CONTEXT }).catch(() => undefined);
+	}
+
+	async similarities(pairs: readonly (readonly [string, string])[]): Promise<readonly number[] | undefined> {
+		const { proxy } = await this.get();
+		const status = await proxy.status();
+		const model = this.configurationService.getValue<string>('pollis.ask.embeddingModel')?.trim() || ASK_EMBEDDING_MODEL;
+		// Only the model the index was embedded with, which is then on this computer, so that nothing is downloaded for it
+		if (!status?.embedded || status.embedder !== model) {
+			return undefined;
+		}
+		let server: ILlamaServerAnswer | undefined;
+		try {
+			server = await this.commandService.executeCommand<ILlamaServerAnswer>('language-julia.pollisLlamaServer', { model, embeddings: true, context: ASK_EMBEDDING_CONTEXT });
+		} catch {
+			return undefined;
+		}
+		if (!server?.url) {
+			return undefined;
+		}
+		const prefix = this.configurationService.getValue<string>('pollis.ask.queryPrefix')?.trim() || ASK_SIMILARITY_PREFIX;
+		try {
+			return await proxy.similarities(server.url, pairs.map(([a, b]) => [prefix.replace('{text}', a), prefix.replace('{text}', b)] as const));
+		} catch {
+			return undefined;
+		}
 	}
 
 	async answer(turns: readonly IAskPollisTurn[], question: string, passages: readonly IAskPollisPassage[], onText: (text: string) => void, token: CancellationToken, answerWith?: string, panel?: IAskPollisPanel, attachments?: readonly IAskPollisAttachment[], collection?: string): Promise<IAskPollisAnswer> {

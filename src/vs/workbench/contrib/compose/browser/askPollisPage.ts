@@ -6,7 +6,10 @@
 import { raceCancellation, timeout } from '../../../../base/common/async.js';
 import { CancellationTokenSource } from '../../../../base/common/cancellation.js';
 import { Codicon } from '../../../../base/common/codicons.js';
-import { MarkdownString, MarkdownStringTextNewlineStyle } from '../../../../base/common/htmlContent.js';
+import { escapeMarkdownSyntaxTokens, MarkdownString } from '../../../../base/common/htmlContent.js';
+import { escape } from '../../../../base/common/strings.js';
+import { isDark } from '../../../../platform/theme/common/theme.js';
+import { IThemeService } from '../../../../platform/theme/common/themeService.js';
 import { Disposable, DisposableStore, MutableDisposable } from '../../../../base/common/lifecycle.js';
 import { FileAccess } from '../../../../base/common/network.js';
 import { basename } from '../../../../base/common/resources.js';
@@ -609,6 +612,7 @@ class AskPollisModelStatus extends Disposable implements IWorkbenchContribution 
 		@IStatusbarService private readonly statusbarService: IStatusbarService,
 		@ICommandService private readonly commandService: ICommandService,
 		@IConfigurationService private readonly configurationService: IConfigurationService,
+		@IThemeService private readonly themeService: IThemeService,
 	) {
 		super();
 		this.update();
@@ -617,6 +621,8 @@ class AskPollisModelStatus extends Disposable implements IWorkbenchContribution 
 				this.update();
 			}
 		}));
+		// The yellow of the models' names is that of the theme's kind
+		this._register(themeService.onDidColorThemeChange(() => this.update()));
 	}
 
 	private async update(): Promise<void> {
@@ -626,14 +632,19 @@ class AskPollisModelStatus extends Disposable implements IWorkbenchContribution 
 		// Named in the hover, and in the status bar's menu that hides its entries, by its full name
 		const name = localize('askPollis.statusName', "Active Pollis AI+ Models");
 		const label = localize('askPollis.statusLabel', "Active Models");
-		const lines = [
+		// Each line as said, with the model's name as it is, and as the hover shows it, with the name in the Pollis yellow
+		const linesWith = (model: (name: string) => string) => [
 			models.provider
-				? localize('askPollis.statusAnsweringCloud', "Answering: {0} of {1}, with your own key", models.model, models.provider)
-				: localize('askPollis.statusAnsweringLocal', "Answering: {0}, on this computer", models.model),
-			localize('askPollis.statusEmbedding', "Embedding: {0}", embedding),
-			localize('askPollis.statusReranker', "Reranker: {0}", reranker ? askModelName(reranker) : localize('askPollis.statusNoReranker', "None")),
+				? localize('askPollis.statusAnsweringCloud', "Answering: {0} of {1}, with your own key", model(models.model), escapeMarkdownSyntaxTokens(models.provider))
+				: localize('askPollis.statusAnsweringLocal', "Answering: {0}, on this computer", model(models.model)),
+			localize('askPollis.statusEmbedding', "Embedding: {0}", model(embedding)),
+			localize('askPollis.statusReranker', "Reranker: {0}", reranker ? model(askModelName(reranker)) : localize('askPollis.statusNoReranker', "None")),
 		];
-		const tooltip = new MarkdownString().appendMarkdown(`**${name}**\n\n`).appendText(lines.join('\n'), MarkdownStringTextNewlineStyle.Break).appendText('\n\n');
+		const lines = linesWith(model => model);
+		// The Pollis yellow of the pages, #e8a33d, and #a8650d in a light theme
+		const color = isDark(this.themeService.getColorTheme().type) ? '#e8a33d' : '#a8650d';
+		const yellow = (model: string) => `<span style="color:${color};">${escapeMarkdownSyntaxTokens(escape(model))}</span>`;
+		const tooltip = new MarkdownString(undefined, { supportHtml: true }).appendMarkdown(`**${name}**\n\n`).appendMarkdown(linesWith(yellow).join('  \n')).appendText('\n\n');
 		if (models.provider) {
 			tooltip.appendText(localize('askPollis.statusCloud', "{0} is sent the question, the conversation so far, the passages found on this computer and what you attach with the +, never other files.", models.provider)).appendText('\n\n');
 		}

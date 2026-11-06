@@ -120,7 +120,9 @@ export class PollisViewsView extends ViewPane {
 	private tree: WorkbenchObjectTree<IMenuElement> | undefined;
 	private messageHeader: HTMLElement | undefined;
 	private headerMessage: HTMLElement | undefined;
-	private saveViewAsButton: Button | undefined;
+	private treeContainer: HTMLElement | undefined;
+	/** Below the last menu item: Save View As..., for a built-in View. */
+	private footer: HTMLElement | undefined;
 	private menus: readonly IPollisMenuNode[] = [];
 	/** The elements of the tree by path, kept so the tree keeps its expanded menus across refreshes. */
 	private readonly elements = new Map<string, IMenuElement>();
@@ -159,14 +161,16 @@ export class PollisViewsView extends ViewPane {
 
 		this.messageHeader = dom.append(root, dom.$('.pollis-views-header'));
 		this.headerMessage = dom.append(this.messageHeader, dom.$('.message'));
-		this.saveViewAsButton = this._register(new Button(this.messageHeader, { ...defaultButtonStyles, secondary: true }));
-		this.saveViewAsButton.label = localize('pollisViewsPanel.saveAs', "Save View As...");
-		this._register(this.saveViewAsButton.onDidClick(() => this.commandService.executeCommand('pollis.views.saveAs')));
+		this.treeContainer = dom.append(root, dom.$('.pollis-views-tree'));
+		this.footer = dom.append(root, dom.$('.pollis-views-footer'));
+		const saveViewAsButton = this._register(new Button(this.footer, { ...defaultButtonStyles }));
+		saveViewAsButton.label = localize('pollisViewsPanel.saveAs', "Save View As...");
+		this._register(saveViewAsButton.onDidClick(() => this.commandService.executeCommand('pollis.views.saveAs')));
 
 		this.tree = this._register(this.instantiationService.createInstance(
 			WorkbenchObjectTree<IMenuElement>,
 			'PollisViews',
-			dom.append(root, dom.$('.pollis-views-tree')),
+			this.treeContainer,
 			new MenuElementDelegate(),
 			[new MenuElementRenderer(() => !!this.viewsService.getActiveView().resource, (element, visible) => this.toggle(element, visible))],
 			{
@@ -179,6 +183,8 @@ export class PollisViewsView extends ViewPane {
 				},
 			},
 		));
+		// The footer follows the last row, so the tree is as tall as its rows, up to the room there is
+		this._register(this.tree.onDidChangeContentHeight(() => this.layoutTree()));
 		this._register(this.tree.onDidChangeCollapseState(e => {
 			const element = e.node.element;
 			if (element) {
@@ -200,7 +206,7 @@ export class PollisViewsView extends ViewPane {
 
 	/** Renders the active View; `readMenus` reads the menus of the menu bar again first. */
 	private refresh(readMenus: boolean): void {
-		if (!this.tree || !this.messageHeader || !this.headerMessage || !this.saveViewAsButton) {
+		if (!this.tree || !this.messageHeader || !this.headerMessage || !this.footer) {
 			return;
 		}
 		if (readMenus || !this.menus.length) {
@@ -210,7 +216,7 @@ export class PollisViewsView extends ViewPane {
 		this.headerMessage.textContent = view.resource
 			? localize('pollisViewsPanel.editable', "View \"{0}\": tick an item to show it in the menus, untick it to hide it. Changes apply at once.", view.name)
 			: localize('pollisViewsPanel.builtin', "View \"{0}\" is built in, so it cannot be changed. Save it as a View of your own to choose its menu items.", view.name);
-		this.saveViewAsButton.element.classList.toggle('hidden', !!view.resource);
+		this.footer.classList.toggle('hidden', !!view.resource);
 
 		const show = view.show && new Set(view.show);
 		const hide = new Set(view.hide);
@@ -342,8 +348,11 @@ export class PollisViewsView extends ViewPane {
 	}
 
 	private layoutTree(): void {
-		if (this.lastSize && this.messageHeader) {
-			this.tree?.layout(Math.max(0, this.lastSize.height - this.messageHeader.offsetHeight), this.lastSize.width);
+		if (this.lastSize && this.messageHeader && this.footer && this.treeContainer && this.tree) {
+			const room = Math.max(0, this.lastSize.height - this.messageHeader.offsetHeight - this.footer.offsetHeight);
+			const height = Math.min(this.tree.contentHeight, room);
+			this.treeContainer.style.height = `${height}px`;
+			this.tree.layout(height, this.lastSize.width);
 		}
 	}
 }

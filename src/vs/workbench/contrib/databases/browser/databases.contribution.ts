@@ -22,8 +22,6 @@ import { IProgressService, ProgressLocation } from '../../../../platform/progres
 import { IQuickInputService } from '../../../../platform/quickinput/common/quickInput.js';
 import { Registry } from '../../../../platform/registry/common/platform.js';
 import { registerIcon } from '../../../../platform/theme/common/iconRegistry.js';
-import { ViewAction } from '../../../browser/parts/views/viewPane.js';
-import { ViewPaneContainer } from '../../../browser/parts/views/viewPaneContainer.js';
 import { IViewContainersRegistry, IViewsRegistry, ViewContainerLocation, Extensions as ViewExtensions } from '../../../common/views.js';
 import { IViewsService } from '../../../services/views/common/viewsService.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
@@ -41,13 +39,11 @@ import './wrdsPage.js';
 import { DatabaseConnectionsService } from './databaseConnectionsService.js';
 import { JournalMetricsReader, readCsv, readXlsx, yearOfFileName } from './journalMetrics.js';
 import './journalMetricsPage.js';
-import { CONNECT_DATABASE_COMMAND_ID, DatabaseConnectionContextMenu, DatabaseConnectionsView, DatabaseItemConnected, DatabaseItemExpanded, DatabaseItemId, DatabaseItemInlineMenu, DatabaseItemBuiltin, DatabaseItemKind, DatabaseItemSaved, DatabaseItemWritable, DatabasesNewConnectionMenu, DISCONNECT_DATABASE_COMMAND_ID, IDatabaseItemArg, BROWSE_TABLE_COMMAND_ID, OPEN_SCHEMA_COMMAND_ID, PREVIEW_TABLE_COMMAND_ID, REFRESH_DATABASE_COMMAND_ID } from './connectionsView.js';
+import { BuiltinDatabasesView, CONNECT_DATABASE_COMMAND_ID, DATABASES_VIEW_CONTAINER_ID, DatabaseConnectionContextMenu, DatabaseConnectionsView, DatabasesViewPaneContainer, databasesViewIdOf, UserDatabasesView, DatabaseItemConnected, DatabaseItemExpanded, DatabaseItemId, DatabaseItemInlineMenu, DatabaseItemBuiltin, DatabaseItemKind, DatabaseItemSaved, DatabaseItemWritable, DatabasesNewConnectionMenu, DISCONNECT_DATABASE_COMMAND_ID, IDatabaseItemArg, BROWSE_TABLE_COMMAND_ID, OPEN_SCHEMA_COMMAND_ID, PREVIEW_TABLE_COMMAND_ID, REFRESH_DATABASE_COMMAND_ID } from './connectionsView.js';
 
 registerSingleton(IDatabaseConnectionsService, DatabaseConnectionsService, InstantiationType.Delayed);
 
-// --- Databases container (secondary side bar) and Connections view
-
-const DATABASES_VIEW_CONTAINER_ID = 'workbench.view.pollis.databases';
+// --- Databases container (secondary side bar) and its Pollis Built-In and User views
 
 const databasesViewIcon = registerIcon('databases-view-icon', Codicon.database, localize('databasesViewIcon', "View icon of the Databases view."));
 
@@ -55,36 +51,47 @@ const databasesViewContainer = Registry.as<IViewContainersRegistry>(ViewExtensio
 	id: DATABASES_VIEW_CONTAINER_ID,
 	title: localize2('databases.viewContainer.label', "Databases"),
 	icon: databasesViewIcon,
-	ctorDescriptor: new SyncDescriptor(ViewPaneContainer, [DATABASES_VIEW_CONTAINER_ID, { mergeViewWithContainerWhenSingleView: true }]),
+	ctorDescriptor: new SyncDescriptor(DatabasesViewPaneContainer),
 	storageId: DATABASES_VIEW_CONTAINER_ID,
 	// After the Julia views, which extensions register from order 101 on: session state first, then its databases.
 	order: 1000,
 }, ViewContainerLocation.AuxiliaryBar);
 
 const viewsRegistry = Registry.as<IViewsRegistry>(ViewExtensions.ViewsRegistry);
+// Both always shown, so the container has no Views menu to hide them
 viewsRegistry.registerViews([{
-	id: DatabaseConnectionsView.ID,
-	name: localize2('databases.connections', "Connections"),
+	id: BuiltinDatabasesView.ID,
+	name: localize2('databases.builtin', "Pollis Built-In"),
 	containerIcon: databasesViewIcon,
-	// Title the container "Databases" rather than "Databases: Connections" while this is its only view
-	singleViewPaneContainerTitle: databasesViewContainer.title.value,
-	ctorDescriptor: new SyncDescriptor(DatabaseConnectionsView),
+	ctorDescriptor: new SyncDescriptor(BuiltinDatabasesView),
 	canToggleVisibility: false,
 	canMoveView: true,
+	order: 1,
+}, {
+	id: UserDatabasesView.ID,
+	name: localize2('databases.user', "User"),
+	containerIcon: databasesViewIcon,
+	ctorDescriptor: new SyncDescriptor(UserDatabasesView),
+	canToggleVisibility: false,
+	canMoveView: true,
+	order: 2,
 }], databasesViewContainer);
-
-viewsRegistry.registerViewWelcomeContent(DatabaseConnectionsView.ID, {
-	content: localize('databases.welcome', "No database connections yet. Connections open in the Julia REPL through DBInterface.jl: DuckDB, ODBC, PostgreSQL and SQLite. Once connected, their tables and columns appear here.\n[New Connection](command:{0})", NEW_CONNECTION_COMMAND_ID),
-});
 
 // --- Commands
 
-const connectionsViewTitle = ContextKeyExpr.equals('view', DatabaseConnectionsView.ID);
+/** The title of the Databases container, which holds the buttons of both its views. */
+const databasesTitle = ContextKeyExpr.equals('viewContainer', DATABASES_VIEW_CONTAINER_ID);
 const onConnection = DatabaseItemKind.isEqualTo('connection');
 const onSavedConnection = ContextKeyExpr.and(onConnection, DatabaseItemSaved);
 const onEditableConnection = ContextKeyExpr.and(onSavedConnection, DatabaseItemBuiltin.negate());
 const onWritableConnection = ContextKeyExpr.and(onConnection, DatabaseItemWritable);
 const onSavedTable = ContextKeyExpr.and(DatabaseItemKind.isEqualTo('table'), DatabaseItemSaved);
+
+/** The view that lists connection `id`. */
+function databasesViewOf(accessor: ServicesAccessor, id: string): DatabaseConnectionsView | undefined {
+	const viewId = databasesViewIdOf(accessor.get(IDatabaseConnectionsService).getConnection(id));
+	return accessor.get(IViewsService).getViewWithId<DatabaseConnectionsView>(viewId) ?? undefined;
+}
 
 /** The saved profile an item command was invoked on. */
 function profileOf(accessor: ServicesAccessor, arg: IDatabaseItemArg | undefined): IDatabaseConnectionProfile | undefined {
@@ -156,7 +163,7 @@ registerAction2(class extends Action2 {
 			icon: Codicon.plus,
 			f1: true,
 			// The view shows it as "+ New", with a dropdown of the engines (DatabasesNewConnectionMenu).
-			menu: { id: MenuId.ViewTitle, when: connectionsViewTitle, group: 'navigation', order: 1 },
+			menu: { id: MenuId.ViewContainerTitle, when: databasesTitle, group: 'navigation', order: 1 },
 		});
 	}
 	run(accessor: ServicesAccessor): void {
@@ -188,7 +195,7 @@ registerAction2(class extends Action2 {
 		});
 	}
 	async run(accessor: ServicesAccessor): Promise<void> {
-		await accessor.get(IViewsService).openView(DatabaseConnectionsView.ID, true);
+		await accessor.get(IViewsService).openView(UserDatabasesView.ID, true);
 	}
 });
 
@@ -211,33 +218,31 @@ for (const [order, driver] of (['duckdb', 'odbc', 'postgres', 'sqlite'] as const
 	MenuRegistry.appendMenuItem(DatabasesNewConnectionMenu, { command: { id: `${NEW_CONNECTION_COMMAND_ID}.${driver}`, title: label }, group: 'navigation', order });
 }
 
-registerAction2(class extends ViewAction<DatabaseConnectionsView> {
+registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: 'pollis.databases.showTables',
 			title: localize2('databases.showTables', "Show Tables"),
 			icon: Codicon.table,
-			viewId: DatabaseConnectionsView.ID,
 			menu: { id: DatabaseItemInlineMenu, when: ContextKeyExpr.and(onConnection, DatabaseItemExpanded.negate()), group: 'inline', order: 2 },
 		});
 	}
-	runInView(_accessor: ServicesAccessor, view: DatabaseConnectionsView, arg: IDatabaseItemArg): void {
-		view.showTables(arg.id);
+	run(accessor: ServicesAccessor, arg: IDatabaseItemArg): void {
+		databasesViewOf(accessor, arg.id)?.showTables(arg.id);
 	}
 });
 
-registerAction2(class extends ViewAction<DatabaseConnectionsView> {
+registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: 'pollis.databases.hideTables',
 			title: localize2('databases.hideTables', "Hide Tables"),
 			icon: Codicon.collapseAll,
-			viewId: DatabaseConnectionsView.ID,
 			menu: { id: DatabaseItemInlineMenu, when: ContextKeyExpr.and(onConnection, DatabaseItemExpanded), group: 'inline', order: 2 },
 		});
 	}
-	runInView(_accessor: ServicesAccessor, view: DatabaseConnectionsView, arg: IDatabaseItemArg): void {
-		view.hideTables(arg.id);
+	run(accessor: ServicesAccessor, arg: IDatabaseItemArg): void {
+		databasesViewOf(accessor, arg.id)?.hideTables(arg.id);
 	}
 });
 
@@ -250,7 +255,7 @@ registerAction2(class extends Action2 {
 			icon: Codicon.refresh,
 			f1: true,
 			menu: [
-				{ id: MenuId.ViewTitle, when: connectionsViewTitle, group: 'navigation', order: 2 },
+				{ id: MenuId.ViewContainerTitle, when: databasesTitle, group: 'navigation', order: 2 },
 				{ id: DatabaseConnectionContextMenu, when: ContextKeyExpr.and(onConnection, DatabaseItemConnected), group: '1_connect', order: 3 },
 				{ id: DatabaseItemInlineMenu, when: ContextKeyExpr.and(onConnection, DatabaseItemConnected), group: 'inline', order: 3 },
 			],
@@ -444,7 +449,7 @@ registerAction2(class extends Action2 {
 			id: 'pollis.databases.learnMore',
 			title: localize2('databases.learnMore', "Learn More: SQL Databases"),
 			icon: Codicon.book,
-			menu: { id: MenuId.ViewTitle, when: connectionsViewTitle, group: 'navigation', order: 3 },
+			menu: { id: MenuId.ViewContainerTitle, when: databasesTitle, group: 'navigation', order: 3 },
 		});
 	}
 	async run(accessor: ServicesAccessor): Promise<void> {

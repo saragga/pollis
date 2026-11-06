@@ -405,18 +405,19 @@ export async function startREPL(
     return true
 }
 
+/**
+ * Pollis: the terminal is "Julia REPL", as the DuckDB REPL is "DuckDB REPL", so that the terminal list shows the name in
+ * full; the status bar shows the Julia version. A REPL on a juliaup channel of its own keeps its version and channel in
+ * the name, so that two REPLs are told apart.
+ */
 function makeTerminalName(juliaExecutable: JuliaExecutable) {
     const version = juliaExecutable.version
     const channelName = juliaExecutable.juliaupChannel?.name
-    let name = `Julia REPL (v${version}`
 
     if (channelName === undefined || version.includes(channelName)) {
-        name += ')'
-    } else {
-        name += `, +${channelName})`
+        return 'Julia REPL'
     }
-
-    return name
+    return `Julia REPL (v${version}, +${channelName})`
 }
 
 async function startREPLWithVersion(channelName?: string) {

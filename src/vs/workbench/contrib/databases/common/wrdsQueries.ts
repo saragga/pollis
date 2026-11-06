@@ -31,6 +31,8 @@ export interface IWrdsDataset {
 	readonly group: WrdsDatasetGroup;
 	readonly label: string;
 	readonly description: string;
+	/** The names of the tables, libraries and columns that {@link description} mentions, which the page colours. */
+	readonly names: readonly string[];
 	/** The Julia variable its data goes into by default. */
 	readonly variable: string;
 	/** The identifiers that narrow it to some securities or firms, if any. */
@@ -51,6 +53,7 @@ export const WRDS_DATASETS: readonly IWrdsDataset[] = [
 		group: 'stocks',
 		label: localize('wrds.crspMonthly', "CRSP Monthly Stock File"),
 		description: localize('wrds.crspMonthly.description', "Monthly returns, prices and shares outstanding of US common stocks listed on the NYSE, NYSE American and Nasdaq, from crsp.msf_v2 and crsp.stksecurityinfohist."),
+		names: ['crsp.msf_v2', 'crsp.stksecurityinfohist'],
 		variable: 'crsp_monthly',
 		identifier: 'permno',
 		dated: true,
@@ -60,6 +63,7 @@ export const WRDS_DATASETS: readonly IWrdsDataset[] = [
 		group: 'stocks',
 		label: localize('wrds.crspMonthlyGvkey', "CRSP Monthly with GVKEY"),
 		description: localize('wrds.crspMonthlyGvkey.description', "The CRSP Monthly Stock File with the GVKEY of the Compustat firm that the CRSP-Compustat link names for each stock in each month, empty where no link holds: the stock data that step 4, Merge, joins to Compustat."),
+		names: [],
 		variable: 'crsp_monthly_gvkey',
 		identifier: 'permno',
 		dated: true,
@@ -69,6 +73,7 @@ export const WRDS_DATASETS: readonly IWrdsDataset[] = [
 		group: 'stocks',
 		label: localize('wrds.crspDaily', "CRSP Daily Stock File"),
 		description: localize('wrds.crspDaily.description', "Daily returns and market capitalisation of the same US common stocks as the monthly file, from crsp.dsf_v2 and crsp.stksecurityinfohist: the returns of an event study. Narrow it by PERMNO and dates, as all stocks over many years make tens of millions of rows."),
+		names: ['crsp.dsf_v2', 'crsp.stksecurityinfohist'],
 		variable: 'crsp_daily',
 		identifier: 'permno',
 		dated: true,
@@ -78,6 +83,7 @@ export const WRDS_DATASETS: readonly IWrdsDataset[] = [
 		group: 'stocks',
 		label: localize('wrds.compustatAnnual', "Compustat Annual Fundamentals"),
 		description: localize('wrds.compustatAnnual.description', "Balance sheet, income and cash flow items by firm and fiscal year, from comp.funda, kept to one row per firm and year: industrial format, standard data, domestic population, consolidated statements."),
+		names: ['comp.funda'],
 		variable: 'compustat_annual',
 		identifier: 'gvkey',
 		dated: true,
@@ -87,6 +93,7 @@ export const WRDS_DATASETS: readonly IWrdsDataset[] = [
 		group: 'stocks',
 		label: localize('wrds.compustatQuarterly', "Compustat Quarterly Fundamentals"),
 		description: localize('wrds.compustatQuarterly.description', "Assets, equity, sales and net income by firm and fiscal quarter, with the date the quarter's earnings were reported (rdq), from comp.fundq, with the filters of the annual data."),
+		names: ['rdq', 'comp.fundq'],
 		variable: 'compustat_quarterly',
 		identifier: 'gvkey',
 		dated: true,
@@ -96,6 +103,7 @@ export const WRDS_DATASETS: readonly IWrdsDataset[] = [
 		group: 'stocks',
 		label: localize('wrds.ccmLinks', "CRSP-Compustat Link"),
 		description: localize('wrds.ccmLinks.description', "The links between Compustat firms (GVKEY) and CRSP securities (PERMNO), with the dates each holds, from crsp.ccmxpf_lnkhist: links of types LU and LC, primary securities only."),
+		names: ['crsp.ccmxpf_lnkhist'],
 		variable: 'ccm_links',
 		identifier: 'gvkey',
 		dated: false,
@@ -105,6 +113,7 @@ export const WRDS_DATASETS: readonly IWrdsDataset[] = [
 		group: 'options',
 		label: localize('wrds.optionPrices', "OptionMetrics Option Prices"),
 		description: localize('wrds.optionPrices.description', "Daily best bid and offer, volume, open interest, implied volatility and delta of listed US options, by underlying security (SECID), expiry, call or put, and strike, from the tables of OptionMetrics, one per year (optionm.opprcd followed by the year), joined over the years of From and To. Narrow it by SECID: a year of all options is very large."),
+		names: ['optionm.opprcd'],
 		variable: 'option_prices',
 		identifier: 'secid',
 		dated: true,
@@ -114,6 +123,7 @@ export const WRDS_DATASETS: readonly IWrdsDataset[] = [
 		group: 'options',
 		label: localize('wrds.optionSecurities', "OptionMetrics Securities"),
 		description: localize('wrds.optionSecurities.description', "The securities of OptionMetrics, each SECID with its CUSIP and the other names it has had since each effective date, from optionm_all.secnmd: where to find the SECID of a stock, and the CUSIP that links it to CRSP."),
+		names: ['optionm_all.secnmd'],
 		variable: 'option_securities',
 		identifier: 'secid',
 		dated: false,
@@ -123,6 +133,7 @@ export const WRDS_DATASETS: readonly IWrdsDataset[] = [
 		group: 'events',
 		label: localize('wrds.ibesAnnouncements', "IBES Earnings Announcements"),
 		description: localize('wrds.ibesAnnouncements.description', "The earnings per share that US firms announced, quarterly (QTR) and annual (ANN), with the date and time of each announcement, from ibes.actu_epsus, and the CRSP PERMNO that the IBES-CRSP link (wrdsapps_link_crsp_ibes.ibcrsphist) names for the IBES ticker on that date, with a score of 1 or 2: the events of an event study of earnings."),
+		names: ['ibes.actu_epsus', 'wrdsapps_link_crsp_ibes.ibcrsphist'],
 		variable: 'ibes_announcements',
 		identifier: 'ibesTicker',
 		dated: true,
@@ -132,6 +143,7 @@ export const WRDS_DATASETS: readonly IWrdsDataset[] = [
 		group: 'events',
 		label: localize('wrds.keyDevelopments', "Capital IQ Key Developments"),
 		description: localize('wrds.keyDevelopments.description', "Corporate events, such as executive changes, dividend increases, delistings and bankruptcy filings, each with its announcement date, headline and type, from S&P Capital IQ (ciq.wrds_keydev), by Capital IQ company ID. To narrow it by date too, choose Browse the Libraries, library ciq, table wrds_keydev, and its date column."),
+		names: ['ciq.wrds_keydev', 'ciq', 'wrds_keydev'],
 		variable: 'key_developments',
 		identifier: 'companyid',
 		dated: false,

@@ -1,7 +1,7 @@
 import * as vscode from 'vscode'
 import * as rpc from 'vscode-jsonrpc'
 import { JuliaKernel } from '../notebook/notebookKernel'
-import { onEvent, registerCommand, wrapCrashReporting } from '../utils'
+import { registerCommand, wrapCrashReporting } from '../utils'
 import { displayPlot } from './plots'
 import { notifyTypeDisplay, notifyTypeReplShowInGrid, onExit, onFinishEval, onInit } from './repl'
 import { openFile } from './results'
@@ -37,23 +37,8 @@ abstract class AbstractWorkspaceNode {
 }
 
 abstract class SessionNode extends AbstractWorkspaceNode {
-    _showModules: boolean
-
-    constructor() {
-        super()
-
-        this._showModules = vscode.workspace.getConfiguration('julia').get('workspace.showModules')
-        onEvent(vscode.workspace.onDidChangeConfiguration, (config) => {
-            if (config.affectsConfiguration('julia.workspace.showModules')) {
-                this._showModules = vscode.workspace.getConfiguration('julia').get('workspace.showModules')
-                this.updateReplVariables()
-            }
-        })
-    }
-
-    public toggleModules(show) {
-        this._showModules = show
-    }
+    // Pollis: the Workspace always lists the top-level modules
+    readonly _showModules = true
 
     public abstract getConnection()
 
@@ -208,14 +193,6 @@ export class WorkspaceFeature {
             registerCommand(
                 'language-julia.workspaceGoToFile',
                 async (node: VariableNode) => await this.openLocation(node)
-            ),
-            registerCommand(
-                'language-julia.showModules',
-                async () => await this._REPLTreeDataProvider.toggleModules(true)
-            ),
-            registerCommand(
-                'language-julia.hideModules',
-                async () => await this._REPLTreeDataProvider.toggleModules(false)
             )
         )
     }
@@ -316,17 +293,5 @@ export class REPLTreeDataProvider implements vscode.TreeDataProvider<AbstractWor
             treeItem.collapsibleState = vscode.TreeItemCollapsibleState.Expanded
             return treeItem
         }
-    }
-
-    async toggleModules(show: boolean) {
-        this.workspaceFeature._REPLNode.toggleModules(show)
-        await this.workspaceFeature._REPLNode.updateReplVariables()
-        for (const node of this.workspaceFeature._NotebookNodes) {
-            node.toggleModules(show)
-            await node.updateReplVariables()
-        }
-        await vscode.workspace
-            .getConfiguration('julia')
-            .update('workspace.showModules', show, vscode.ConfigurationTarget.Global)
     }
 }

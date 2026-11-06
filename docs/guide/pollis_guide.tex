@@ -421,6 +421,9 @@ Then query it in the Julia REPL with SQL:
 
 \subhead{The Databases view}
 \begin{itemize}
+  \item It has two sections: \ui{Pollis Built-In}, the five databases that come with Pollis, and \ui{User},
+    your own databases and those shown from the Julia REPL. \ui{New}, \ui{Refresh Schemas}, \ui{Learn More}
+    and \ui{New DuckDB Terminal} are at the top of the view, for both.
   \item Click a connection to connect it in the Julia REPL; \ui{Disconnect} closes it.
   \item On a table, \ui{Open in Table Viewer} shows its rows; right-click it for
     \ui{Preview Rows in Julia REPL}.
@@ -1122,7 +1125,7 @@ Every item Pollis reads is added to a monthly file in \texttt{\textasciitilde/.p
 stays when its feed drops it. \emph{PollisRSS} is a DuckDB database over those files, made with PollisDatasets the first time the Julia
 REPL starts (Data and Databases, page 6), and empty until feeds are read:
 \begin{enumerate}[label=\arabic*.]
-  \item In the Databases view, click \ui{PollisRSS}, marked \ui{built-in}. It connects in the Julia REPL as
+  \item In the Databases view, click \ui{PollisRSS}, under \ui{Pollis Built-In}. It connects in the Julia REPL as
     \texttt{rss}, read-only.
   \item Query its four views: \texttt{items}, one row per item (feed, topic, title, link, published,
     received, summary, picture and media); \texttt{feeds}, one row per feed with its number of items;
@@ -1931,8 +1934,8 @@ found. \ui{Open...} brings a saved map back; \ui{New Search} starts again.
 
 Pollis makes five DuckDB databases the first time the Julia REPL starts (Getting Started, page 2): four in
 \texttt{\textasciitilde/.pollis/databases}, and PollisDocuments in \texttt{\textasciitilde/.pollis/documents}, once the documents are compiled. All five are read-only: Pollis rebuilds them when what
-they come from changes, and your own tables go in a database of your own. In the Databases view each is
-marked \ui{built-in}; clicking it connects it in the Julia REPL. The \texttt{duckdb>} terminal, the
+they come from changes, and your own tables go in a database of your own. In the Databases view they are listed
+under \ui{Pollis Built-In}; clicking one connects it in the Julia REPL. The \texttt{duckdb>} terminal, the
 \texttt{sql>} mode and \texttt{PollisDB.connect()} attach all five (Data and Databases, page 6).
 
 \begin{center}\small

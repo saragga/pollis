@@ -379,14 +379,6 @@
                 "icon": "$(debug-stop)"
             },
             {
-                "command": "language-julia.showModules",
-                "title": "Show modules in Workspace"
-            },
-            {
-                "command": "language-julia.hideModules",
-                "title": "Hide modules in Workspace"
-            },
-            {
                 "title": "Debug Cell",
                 "command": "language-julia.runAndDebugCell",
                 "icon": "$(debug-alt-small)"
@@ -598,16 +590,6 @@
                     "command": "language-julia.enable-compiled-mode",
                     "when": "view == debugger-compiled && julia.debuggerCompiledMode == false",
                     "group": "navigation"
-                },
-                {
-                    "command": "language-julia.showModules",
-                    "when": "view == REPLVariables && config.julia.workspace.showModules == false",
-                    "group": "menu"
-                },
-                {
-                    "command": "language-julia.hideModules",
-                    "when": "view == REPLVariables && config.julia.workspace.showModules == true",
-                    "group": "menu"
                 }
             ],
             "editor/context": [
@@ -659,14 +641,6 @@
                 },
                 {
                     "command": "language-julia.stopKernel",
-                    "when": "false"
-                },
-                {
-                    "command": "language-julia.showModules",
-                    "when": "false"
-                },
-                {
-                    "command": "language-julia.hideModules",
                     "when": "false"
                 },
                 {
@@ -1144,12 +1118,6 @@
                         "image/svg+xml"
                     ],
                     "description": "Default MIME type for plots. Determines whether plots are rendered as PNG or SVG by default."
-                },
-                "julia.workspace.showModules": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Show top-level modules in the workspace.",
-                    "scope": "application"
                 },
                 "julia.languageServerExecutablePath": {
                     "type": "string",

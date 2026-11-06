@@ -39,12 +39,12 @@ import { IInstalledModel } from './modelsInstalledPage.js';
 
 // Evaluate Answering Models, from Ask Pollis and Compose > Local Models > Evaluate Answering Models... (compose.contribution.ts): the chat
 // models of this computer and the cloud models of Ask Pollis, compared on the questions of a test set, the same
-// passages and the same instruction for every model, the answers rated by one or two judges with RAGTools.jl
-// (compareModelsRun.ts). One page, in four steps: 1, the models to compare; 2, the questions, of the test set chosen,
+// passages and the same instruction for every model, each answer scored against the right answer by the embedding
+// model of the search and, if any, rated by one or two judges (compareModelsRun.ts). One page, in four steps: 1, the models to compare; 2, the questions, of the test set chosen,
 // the Standard one that Pollis ships or one of the user's, a copy of another (Save As...) or a new one (New Set...),
 // those ticked being the ones asked, all when none is; in the user's sets, Change This Set makes them from the
 // documents with a model (Make Questions...), adds them by hand (Add, or Add to the Test Set... under an answer of Ask
-// Pollis), imports them and deletes the ticked ones, and every set can be exported; 3, the judges, the Repeats and Run;
+// Pollis), imports them and deletes the ticked ones, and every set can be exported; 3, the judges, none, one or two, the Repeats and Run;
 // 4, the results of the run shown, this one or an earlier one: the figures of each model, then its questions with
 // each model's rating, a click on one showing each model's answer side by side. The choices are remembered for the
 // next time.
@@ -71,8 +71,8 @@ const TOPICS: readonly AskTopic[] = ['pollis', 'julia', 'panels'];
 const TEST_SET_KEY = 'pollis.compareModels.testSet';
 /** The questions ticked in each test set, by their text, under the set's name. */
 const TICKED_KEY = 'pollis.compareModels.ticked';
-/** The judge, and the model that makes the questions, the first time: a cloud model, so that no local model is downloaded for it. */
-const DEFAULT_JUDGE = 'claude-sonnet-5-5';
+/** The model that makes the questions, the first time: a cloud model, so that no local model is downloaded for it. The judge is None the first time. */
+const DEFAULT_QUESTIONS_BY = 'claude-sonnet-5-5';
 const REPEATS = [1, 2, 3, 5];
 /** What a local model needs besides its file, for its context and its work, in bytes. */
 const MODEL_MARGIN = 1.5 * 1024 ** 3;
@@ -187,8 +187,8 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 	// The models listed, those on this computer first
 	let listed: readonly (ICompareRunModel & { readonly bytes?: number; readonly provider?: string })[] = [];
 	let chosen = storedList(storageService, CHOSEN_KEY, []);
-	let judges = storedList(storageService, JUDGES_KEY, [DEFAULT_JUDGE]);
-	let questionsBy = storageService.get(QUESTIONS_BY_KEY, StorageScope.APPLICATION, DEFAULT_JUDGE);
+	let judges = storedList(storageService, JUDGES_KEY, []);
+	let questionsBy = storageService.get(QUESTIONS_BY_KEY, StorageScope.APPLICATION, DEFAULT_QUESTIONS_BY);
 	let repeats = storageService.getNumber(REPEATS_KEY, StorageScope.APPLICATION, 1);
 	let style = askPollisStyle(storageService.get(STYLE_KEY, StorageScope.APPLICATION, ASK_DEFAULT_STYLE)).id;
 	let counts = storedCounts(storageService);
@@ -388,10 +388,6 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 	/** Runs the questions ticked, by their text, or all of them when none is. */
 	const startRun = (questions: readonly string[]) => {
 		const runJudges = judges.map(model).filter(candidate => !!candidate).map(({ value, label, local, size }) => ({ value, label, local, size }));
-		if (!runJudges.length) {
-			status(localize('compareModels.noJudge', "Choose the judge, beside Run."), true);
-			return;
-		}
 		const ticked = new Set(questions);
 		post({ command: 'running', running: true });
 		run.run(chosenModels(), runJudges, repeats, ticked.size ? testSet.items.filter(item => ticked.has(item.question)) : testSet.items, style).then(end => {
@@ -528,7 +524,7 @@ function pageHtml(rows: number): string {
 	const text = {
 		...compareSharedText(),
 		title: localize('compareModels.title', "Evaluate Answering Models"),
-		intro: localize('compareModels.intro', "Which model should answer Ask Pollis? Each model chosen answers every question of the test set from the same passages, with the same instruction, so that what differs is the model alone; a judge then rates each answer, with {0}. The local models run one after the other, each alone in memory.", '<span class="yellow">RAGTools.jl</span>'),
+		intro: localize('compareModels.introScores', "Which model should answer Ask Pollis? Each model chosen answers every question of the test set from the same passages, with the same instruction, so that what differs is the model alone. Each answer gets an answer score, how near it is to the right answer by the embedding model of the search, and, if you choose one, a judge's rating against the right answer, with {0}. The local models run one after the other, each alone in memory.", '<span class="yellow">PromptingTools.jl</span>'),
 		models: localize('compareModels.models', "Models"),
 		cloud: localize('compareModels.inTheCloud', "In the Cloud, With Your Own Key"),
 		cloudShort: localize('compareModels.cloud', "In the Cloud"),
@@ -545,7 +541,7 @@ function pageHtml(rows: number): string {
 		repeatsHint: localize('compareModels.repeatsHint', "How many times each model answers each question: more than once shows how much its answers vary, in Spread."),
 		run: localize('compareModels.run', "Run"),
 		runSection: localize('compareModels.runSection', "Run"),
-		runIntro: localize('compareModels.runIntro', "Each model chosen answers each question to ask, as many times as Repeats; the judge, and the second judge if there is one, then rate every answer."),
+		runIntro: localize('compareModels.runIntroScores', "Each model chosen answers each question to ask, as many times as Repeats, and each answer gets its answer score; the judge, and the second judge if there is one, then rate every answer against the right answer. With Judge set to None, the run costs no tokens beyond the answers."),
 		runMany: localize('compareModels.runMany', "Run {0} Questions With {1} Models", '{0}', '{1}'),
 		runOneQuestion: localize('compareModels.runOneQuestion', "Run 1 Question With {1} Models", '{0}', '{1}'),
 		runOneModel: localize('compareModels.runOneModel', "Run {0} Questions With 1 Model", '{0}', '{1}'),
@@ -576,7 +572,7 @@ function pageHtml(rows: number): string {
 		rightAnswer: localize('compareModels.rightAnswer', "The right answer"),
 		passage: localize('compareModels.passage', "The passage it was made from"),
 		answers: localize('compareModels.answers', "Answers"),
-		answersIntro: localize('compareModels.answersIntro', "The questions of this run, with each model's rating by the first judge, then the seconds each took to answer. Click a question to see each model's answer side by side, with its sources, seconds and ratings, and the right answer."),
+		answersIntro: localize('compareModels.answersIntroScores', "The questions of this run, with each model's rating by the first judge, or its answer score when the run has no judge, then the seconds each took to answer. Click a question to see each model's answer side by side, with its sources, seconds, answer score and ratings, and the right answer."),
 		answerPlaceholder: localize('compareModels.answerPlaceholder', "The right answer"),
 		questionPlaceholder: localize('compareModels.questionPlaceholder', "A question that the documents answer"),
 		findPassages: localize('compareModels.findPassages', "Find Passages"),
@@ -588,12 +584,17 @@ function pageHtml(rows: number): string {
 		noRuns: localize('compareModels.noRuns', "No run yet: choose the models and the questions, then Run."),
 		runLine: localize('compareModels.runLine', "{0}, Pollis {1}: {2} questions, judged by {3}.", '{0}', '{1}', '{2}', '{3}'),
 		runLineRepeats: localize('compareModels.runLineRepeats', "{0}, Pollis {1}: {2} questions, each asked {4} times, judged by {3}.", '{0}', '{1}', '{2}', '{3}', '{4}'),
+		runLineUnjudged: localize('compareModels.runLineUnjudged', "{0}, Pollis {1}: {2} questions, with no judge.", '{0}', '{1}', '{2}'),
+		runLineUnjudgedRepeats: localize('compareModels.runLineUnjudgedRepeats', "{0}, Pollis {1}: {2} questions, each asked {3} times, with no judge.", '{0}', '{1}', '{2}', '{3}'),
 		runOption: localize('compareModels.runOption', "{0}: {1}, {2} questions", '{0}', '{1}', '{2}'),
 		and: localize('compareModels.and', "{0} and {1}", '{0}', '{1}'),
 		where: localize('compareModels.where', "Where"),
 		score: localize('compareModels.score', "Score"),
 		scoreBy: localize('compareModels.scoreBy', "Score by {0}", '{0}'),
-		scoreHint: localize('compareModels.scoreHint', "The judge's rating of the answers, from 1 to 5, on average: the mean of the five parts after it"),
+		scoreHint: localize('compareModels.scoreHintRight', "The judge's rating of the answers against the right answers, from 1 to 5, on average; in a run before these ratings, against the passages found, the mean of the five parts after it"),
+		answerScore: localize('compareModels.answerScore', "Answer Score"),
+		answerScoreHint: localize('compareModels.answerScoreHint', "How near the answers are to the right answers in meaning, on average: the cosine similarity of their embeddings by the embedding model of the search, from -1 to 1, higher being nearer. It needs no judge"),
+		answerScoreOf: localize('compareModels.answerScoreOf', "Answer score {0}", '{0}'),
 		relevance: localize('compareModels.relevance', "Relevance"),
 		completeness: localize('compareModels.completeness', "Completeness"),
 		clarity: localize('compareModels.clarity', "Clarity"),
@@ -762,7 +763,15 @@ function pageHtml(rows: number): string {
 	let statusId = 'runStatus';
 
 	${compareCommonScript}
+	/** The second judge only with a first one: with Judge set to None, it is None too. */
+	function secondJudgeEnabled() {
+		const second = document.getElementById('secondJudge');
+		second.disabled = !document.getElementById('judge').value;
+		if (second.disabled) { second.value = ''; }
+	}
+
 	function settings() {
+		secondJudgeEnabled();
 		const counts = Object.fromEntries(TEXT.topics.map(({ topic }) => [topic, Number(document.getElementById('count-' + topic).value) || 0]));
 		vscode.postMessage({ command: 'settings', judges: [document.getElementById('judge').value, document.getElementById('secondJudge').value], questionsBy: document.getElementById('questionsBy').value, repeats: Number(document.getElementById('repeats').value), style: document.getElementById('style').value, counts });
 	}
@@ -799,8 +808,9 @@ function pageHtml(rows: number): string {
 			cloud.appendChild(modelRow(model, [[model.label, 'name'], [model.provider || '', 'small']], chosen));
 		}
 		updateChosen();
-		fillSelect(document.getElementById('judge'), judges[0], false);
+		fillSelect(document.getElementById('judge'), judges[0], true);
 		fillSelect(document.getElementById('secondJudge'), judges[1], true);
+		secondJudgeEnabled();
 		fillSelect(document.getElementById('questionsBy'), questionsBy, false);
 		document.getElementById('repeats').value = String(repeats);
 		document.getElementById('style').value = style;
@@ -937,11 +947,17 @@ function pageHtml(rows: number): string {
 		if (choice) { setMessage({ command: 'add', question: addQuestion.value, answer: addAnswer.value, passage: Number(choice.value) }); }
 	});
 
-	/** The rating of a model for a question of the run shown, by its place in the run, by the first judge, on average over its askings. */
+	/**
+	 * The rating of a model for a question of the run shown, by its place in the run, by the first judge or, in a run
+	 * with no judge, its answer score, on average over its askings.
+	 */
 	function questionScore(index, model) {
 		const judge = run.judges[0];
-		const finals = run.answers.filter(answer => answer.question === index && answer.model === model).flatMap(answer => answer.scores.filter(score => score.judge === judge).map(score => score.final));
-		return finals.length ? finals.reduce((sum, value) => sum + value, 0) / finals.length : undefined;
+		const answers = run.answers.filter(answer => answer.question === index && answer.model === model);
+		const values = judge
+			? answers.flatMap(answer => answer.scores.filter(score => score.judge === judge).map(score => score.final))
+			: answers.map(answer => answer.similarity).filter(value => typeof value === 'number');
+		return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : undefined;
 	}
 
 	/** The seconds a model took to answer a question, the mean of its repeats. */
@@ -984,8 +1000,11 @@ function pageHtml(rows: number): string {
 				const block = element('div', 'asking');
 				if (answers.length > 1) { block.appendChild(element('div', 'small', format(TEXT.repeat, answer.repeat + 1))); }
 				if (answer.timings) { block.appendChild(element('div', 'small figures', answerFigures(answer.timings))); }
+				if (typeof answer.similarity === 'number') { block.appendChild(element('div', 'small', format(TEXT.answerScoreOf, answer.similarity.toFixed(2)))); }
 				for (const score of answer.scores) {
-					const line = element('div', 'small', format(TEXT.ratedBy, score.judge, score.final.toFixed(2)) + ' (' + [TEXT.relevance + ' ' + score.relevance, TEXT.completeness + ' ' + score.completeness, TEXT.clarity + ' ' + score.clarity, TEXT.consistency + ' ' + score.consistency, TEXT.helpfulness + ' ' + score.helpfulness].join(' \\u00b7 ') + ')');
+					// The five parts of a rating against the passages, in a run before the ratings against the right answer
+					const parts = ['relevance', 'completeness', 'clarity', 'consistency', 'helpfulness'].filter(part => typeof score[part] === 'number').map(part => TEXT[part] + ' ' + score[part]);
+					const line = element('div', 'small', format(TEXT.ratedBy, score.judge, score.final.toFixed(2)) + (parts.length ? ' (' + parts.join(' \\u00b7 ') + ')' : ''));
 					line.title = score.rationale;
 					block.appendChild(line);
 				}
@@ -1050,16 +1069,17 @@ function pageHtml(rows: number): string {
 		head.textContent = '';
 		body.textContent = '';
 		document.getElementById('results').hidden = !run;
-		document.getElementById('runLine').textContent = run
-			? format(run.repeats > 1 ? TEXT.runLineRepeats : TEXT.runLine, new Date(run.started).toLocaleString(), run.pollis, run.questions.length, run.judges.length > 1 ? format(TEXT.and, run.judges[0], run.judges[1]) : run.judges[0] || '-', run.repeats) + ' ' + format(TEXT.runStyle, run.style)
-			: TEXT.noRuns;
+		document.getElementById('runLine').textContent = !run ? TEXT.noRuns : (run.judges.length
+			? format(run.repeats > 1 ? TEXT.runLineRepeats : TEXT.runLine, new Date(run.started).toLocaleString(), run.pollis, run.questions.length, run.judges.length > 1 ? format(TEXT.and, run.judges[0], run.judges[1]) : run.judges[0], run.repeats)
+			: format(run.repeats > 1 ? TEXT.runLineUnjudgedRepeats : TEXT.runLineUnjudged, new Date(run.started).toLocaleString(), run.pollis, run.questions.length, run.repeats)) + ' ' + format(TEXT.runStyle, run.style);
 		document.getElementById('retrieval').textContent = run ? run.retrieval : '';
 		document.getElementById('deleteRun').hidden = !run;
 		// A run that ends shows itself, even in a pane left closed
 		if (run) { document.getElementById('step-results').classList.remove('collapsed'); }
 		if (!run) { return; }
-		// A column for each model, the best first by the first judge; a row for each figure
-		const sorted = [...run.figures].sort((a, b) => (b.scores[0] ?? -1) - (a.scores[0] ?? -1));
+		// A column for each model, the best first by the first judge, or by the answer score in a run with no judge; a row for each figure
+		const best = figures => run.judges.length ? figures.scores[0] ?? -1 : figures.similarity ?? -2;
+		const sorted = [...run.figures].sort((a, b) => best(b) - best(a));
 		head.appendChild(element('th', '', TEXT.model));
 		for (const figures of sorted) { head.appendChild(element('th', 'number', figures.label)); }
 		const line = (label, hint, value, className) => {
@@ -1071,8 +1091,12 @@ function pageHtml(rows: number): string {
 			body.appendChild(row);
 		};
 		line(TEXT.where, '', figures => figures.where, 'small');
+		if (run.figures.some(figures => figures.similarity !== undefined)) { line(TEXT.answerScore, TEXT.answerScoreHint, figures => fixed(figures.similarity, 2)); }
 		run.judges.forEach((judge, index) => line(run.judges.length > 1 ? format(TEXT.scoreBy, judge) : TEXT.score, TEXT.scoreHint, figures => fixed(figures.scores[index], 2)));
-		for (const part of ['relevance', 'completeness', 'clarity', 'consistency', 'helpfulness']) { line(TEXT[part], '', figures => fixed(figures[part], 2)); }
+		// The five parts only in a run before the ratings against the right answer
+		for (const part of ['relevance', 'completeness', 'clarity', 'consistency', 'helpfulness']) {
+			if (run.figures.some(figures => figures[part] !== undefined)) { line(TEXT[part], '', figures => fixed(figures[part], 2)); }
+		}
 		line(TEXT.notScored, TEXT.notScoredHint, figures => String(figures.notScored));
 		line(TEXT.firstWordHeading, TEXT.firstWordHint, figures => fixed(figures.firstWord, 0));
 		line(TEXT.secondsHeading, '', figures => fixed(figures.seconds, 1));

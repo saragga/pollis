@@ -6,7 +6,12 @@
 import { disposableTimeout } from '../../../../base/common/async.js';
 import { DisposableStore, MutableDisposable } from '../../../../base/common/lifecycle.js';
 import { joinPath } from '../../../../base/common/resources.js';
+import { escapeRegExpCharacters } from '../../../../base/common/strings.js';
 import { hasKey } from '../../../../base/common/types.js';
+import { TokenizationRegistry } from '../../../../editor/common/languages.js';
+import { ILanguageService } from '../../../../editor/common/languages/language.js';
+import { generateTokensCSSForColorMap } from '../../../../editor/common/languages/supports/tokenization.js';
+import { tokenizeToString } from '../../../../editor/common/languages/textToHtmlTokenizer.js';
 import { generateUuid } from '../../../../base/common/uuid.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
@@ -17,13 +22,14 @@ import { ServicesAccessor } from '../../../../platform/instantiation/common/inst
 import { INotificationService } from '../../../../platform/notification/common/notification.js';
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { IStorageService } from '../../../../platform/storage/common/storage.js';
+import { IThemeService } from '../../../../platform/theme/common/themeService.js';
 import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { sendToJuliaRepl } from '../../model/browser/handlers/model.handler.js';
 import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
 import { WRDS_METADATA } from '../../model/browser/webviews/wrds.data.js';
-import { buildWebviewHtml, spinnerSvg } from '../../model/browser/webviews/webviewScaffold.js';
+import { buildWebviewHtml, colorizeBracketsJs, spinnerSvg } from '../../model/browser/webviews/webviewScaffold.js';
 import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
 import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
@@ -32,7 +38,7 @@ import { compareCss } from '../../compose/browser/compareShared.js';
 import { defaultCopyFolder } from '../../pollisWorkspace/browser/pollisWorkspace.contribution.js';
 import { IDatabaseConnectionsService } from '../common/databaseConnections.js';
 import { generateConnectionCode, generateSessionConnectCode, generateSessionDisconnectCode, IDatabaseConnectionProfile, isValidJuliaIdentifier, isWrdsConnection, SHOW_CONNECTIONS_COMMAND_ID, WRDS_PAGE_COMMAND_ID, WRDS_PRESET } from '../common/databaseDrivers.js';
-import { generateWrdsCountCode, generateWrdsExtractCode, generateWrdsMergeCode, isValidMergeSource, IWrdsBrowseChoice, IWrdsDatasetChoice, IWrdsMergeChoice, WRDS_DATASET_GROUPS, WRDS_DATASETS, WrdsDestination, wrdsBrowseSql, wrdsDatasetSql } from '../common/wrdsQueries.js';
+import { generateWrdsCountCode, generateWrdsExtractCode, generateWrdsMergeCode, isValidMergeSource, IWrdsBrowseChoice, IWrdsDataset, IWrdsDatasetChoice, IWrdsMergeChoice, WRDS_DATASET_GROUPS, WRDS_DATASETS, WrdsDestination, wrdsBrowseSql, wrdsDatasetSql } from '../common/wrdsQueries.js';
 import { OPEN_SCHEMA_COMMAND_ID } from './connectionsView.js';
 
 // Wharton Research Data Services (WRDS), from Explore > Access Data Libraries (explore.contribution.ts). A page of the
@@ -41,6 +47,9 @@ import { OPEN_SCHEMA_COMMAND_ID } from './connectionsView.js';
 // is; 2, Choose Data, a common dataset (wrdsQueries.ts) or a table of a library browsed, as a query that can be edited;
 // 3, Extract, the query counted or run in the Julia REPL, into a variable and, if asked, a Parquet, CSV or DuckDB file;
 // 4, Merge, CRSP and Compustat extracts joined on this computer with DuckDB, by an annual or a quarterly timing rule.
+
+/** The code boxes of the page, by the id of their element: the Julia code of Connect, Extract and Merge, and the colours of the SQL box. */
+type CodeBox = 'code' | 'extractCode' | 'mergeCode' | 'sqlColors';
 
 /** How long Connect waits for the REPL to report the connection: the connection's own timeout, and a margin. */
 const CONNECT_WAIT_MS = 150_000;
@@ -85,6 +94,8 @@ async function openWrdsPage(accessor: ServicesAccessor): Promise<void> {
 	const storageService = accessor.get(IStorageService);
 	const fileDialogService = accessor.get(IFileDialogService);
 	const contextService = accessor.get(IWorkspaceContextService);
+	const languageService = accessor.get(ILanguageService);
+	const themeService = accessor.get(IThemeService);
 
 	if (openPage && !openPage.isDisposed()) {
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
@@ -108,6 +119,31 @@ async function openWrdsPage(accessor: ServicesAccessor): Promise<void> {
 	const post = (message: object) => webviewInput.webview.postMessage(message);
 	const disposables = new DisposableStore();
 	disposables.add(registerScaffoldPageHandlers(webviewInput, 'wrds', title, WRDS_METADATA.wrds, openerService, editorService, commandService, notificationService, notebookEditorModelResolverService, notebookKernelService, fileService, pathService, storageService));
+
+	/** The code of each code box, and how many times each has been set. */
+	const codes = new Map<CodeBox, string>();
+	const codeVersions = new Map<CodeBox, number>();
+	/**
+	 * Shows `code` in a code box, coloured as Example Code colours it: the theme's tokens, then its brackets by
+	 * depth. The SQL box's colours come with the text they are of, for the page to drop them once it has changed.
+	 */
+	const postCode = async (box: CodeBox, code: string): Promise<void> => {
+		codes.set(box, code);
+		// Tokenizing is async: drop a result that a newer code has already overtaken.
+		const version = (codeVersions.get(box) ?? 0) + 1;
+		codeVersions.set(box, version);
+		const html = await tokenizeToString(languageService, code, box === 'sqlColors' ? 'sql' : 'julia');
+		if (codeVersions.get(box) !== version) {
+			return;
+		}
+		const colorMap = TokenizationRegistry.getColorMap();
+		post({ command: 'colorizedCode', box, html, css: colorMap ? generateTokensCSSForColorMap(colorMap) : '', text: code });
+	};
+	disposables.add(themeService.onDidColorThemeChange(() => {
+		for (const [box, code] of codes) {
+			postCode(box, code);
+		}
+	}));
 
 	/** The saved WRDS connection: the first connection of the Databases view to the server of WRDS. */
 	const savedProfile = () => databaseConnectionsService.getConnections().find(isWrdsConnection);
@@ -179,8 +215,8 @@ async function openWrdsPage(accessor: ServicesAccessor): Promise<void> {
 			libraries: session?.schemas.length ?? 0,
 			error: session?.error,
 			variable: saved?.variable ?? WRDS_PRESET.variable,
-			code: generateConnectionCode(draftProfile(user, pgpass)),
 		});
+		postCode('code', generateConnectionCode(draftProfile(user, pgpass)));
 	};
 	disposables.add(databaseConnectionsService.onDidChangeConnections(() => {
 		postState();
@@ -197,7 +233,7 @@ async function openWrdsPage(accessor: ServicesAccessor): Promise<void> {
 			postState();
 			postLibraries();
 		} else if (message.command === 'draft' && hasKey(message, { user: true, pgpass: true })) {
-			post({ command: 'code', code: generateConnectionCode(draftProfile(message.user, message.pgpass)) });
+			postCode('code', generateConnectionCode(draftProfile(message.user, message.pgpass)));
 		} else if (message.command === 'connect' && hasKey(message, { user: true, pgpass: true }) && message.user.trim()) {
 			const profile = draftProfile(message.user, message.pgpass);
 			const connected = !!databaseConnectionsService.getSession(profile.id);
@@ -235,7 +271,10 @@ async function openWrdsPage(accessor: ServicesAccessor): Promise<void> {
 			}
 			postLibraries();
 		} else if (message.command === 'extractDraft' && hasKey(message, { sql: true, variable: true, destination: true, file: true })) {
-			post({ command: 'extractCode', code: extractCode(message) });
+			postCode('extractCode', extractCode(message));
+			if (message.sql !== codes.get('sqlColors')) {
+				postCode('sqlColors', message.sql);
+			}
 		} else if ((message.command === 'count' || message.command === 'extract') && hasKey(message, { sql: true, variable: true, destination: true, file: true })) {
 			if (!message.sql.trim() || (message.command === 'extract' && (!isValidJuliaIdentifier(message.variable) || (message.destination !== 'variable' && !message.file.trim())))) {
 				return;
@@ -243,7 +282,7 @@ async function openWrdsPage(accessor: ServicesAccessor): Promise<void> {
 			await sendToJuliaRepl(extractCode(message), commandService);
 			post({ command: 'sent', action: message.command });
 		} else if (message.command === 'mergeDraft' && hasKey(message, { choice: true, variable: true, destination: true, file: true })) {
-			post({ command: 'mergeCode', code: mergeCode(message) });
+			postCode('mergeCode', mergeCode(message));
 		} else if (message.command === 'merge' && hasKey(message, { choice: true, variable: true, destination: true, file: true })) {
 			if (!isValidMergeSource(message.choice.stocks) || !isValidMergeSource(message.choice.firms) || !isValidJuliaIdentifier(message.variable) || (message.destination !== 'variable' && !message.file.trim())) {
 				return;
@@ -279,6 +318,24 @@ async function openWrdsPage(accessor: ServicesAccessor): Promise<void> {
 	}));
 }
 
+/** The description of a dataset in parts, the names of its tables, libraries and columns apart, which the page colours. */
+function descriptionParts(dataset: IWrdsDataset): { readonly text: string; readonly name?: boolean }[] {
+	if (!dataset.names.length) {
+		return [{ text: dataset.description }];
+	}
+	// The longest first, so that a library.table is not taken for its library; a name stands alone, not inside a longer one,
+	// though a full stop may end the sentence after it
+	const names = [...dataset.names].sort((a, b) => b.length - a.length).map(escapeRegExpCharacters);
+	const parts: { readonly text: string; readonly name?: boolean }[] = [];
+	let last = 0;
+	for (const match of dataset.description.matchAll(new RegExp(`(?<![\\w.])(?:${names.join('|')})(?!\\w|\\.\\w)`, 'g'))) {
+		parts.push({ text: dataset.description.slice(last, match.index) }, { text: match[0], name: true });
+		last = match.index + match[0].length;
+	}
+	parts.push({ text: dataset.description.slice(last) });
+	return parts;
+}
+
 function pageHtml(): string {
 	const options = WRDS_PRESET.options ?? {};
 	const text = {
@@ -291,7 +348,7 @@ function pageHtml(): string {
 		password: localize('wrds.password', "Password"),
 		askRepl: localize('wrds.askRepl', "Ask for It in the Julia REPL"),
 		pgpass: localize('wrds.pgpass', "Read It from {0}", '<span class="yellow">~/.pgpass</span>'),
-		settings: localize('wrds.settings', "Server {0}, port {1}, database {2}, SSL required.", `<code>${options['host']}</code>`, `<code>${options['port']}</code>`, `<code>${options['dbname']}</code>`),
+		settings: localize('wrds.settings', "Server {0}, port {1}, database {2}, SSL required.", `<span class="yellow">${options['host']}</span>`, `<span class="yellow">${options['port']}</span>`, `<span class="yellow">${options['dbname']}</span>`),
 		duo: localize('wrds.duo', "Each sign-in waits for a Duo push approved on your phone. WRDS remembers the approval for 30 days, as long as you connect from the same IP address."),
 		code: localize('wrds.code', "Julia Code"),
 		connectButton: localize('wrds.connectButton', "Connect"),
@@ -370,7 +427,7 @@ function pageHtml(): string {
 		needSources: localize('wrds.needSources', "Name the stock data and the firm data: a Julia variable, or a Parquet or CSV file."),
 		sentMerge: localize('wrds.sentMerge', "Sent to the Julia REPL: the rows and columns of the merged data show there."),
 	};
-	const datasets = WRDS_DATASETS.map(dataset => ({ id: dataset.id, group: dataset.group, label: dataset.label, description: dataset.description, variable: dataset.variable, identifier: dataset.identifier, dated: dataset.dated }));
+	const datasets = WRDS_DATASETS.map(dataset => ({ id: dataset.id, group: dataset.group, label: dataset.label, description: descriptionParts(dataset), variable: dataset.variable, identifier: dataset.identifier, dated: dataset.dated }));
 	const datasetOptions = Object.entries(WRDS_DATASET_GROUPS)
 		.map(([group, label]) => `<optgroup label="${label}">${datasets.filter(d => d.group === group).map(d => `<option value="${d.id}">${d.label}</option>`).join('')}</optgroup>`)
 		.join('');
@@ -384,11 +441,22 @@ function pageHtml(): string {
 		.missing { color: var(--vscode-errorForeground); }
 		input[type=text] { font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-panel-border)); border-radius: 2px; padding: 3px 6px; min-width: 18em; }
 		input[type=text]:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
+		/* The fields to fill in: their border always in the blue of a focused field, as the Ask Pollis box's is */
+		#user, #dataset, #identifiers, #variable, #stocks, #firms, #mergeVariable { border-color: var(--vscode-focusBorder); }
 		input::placeholder { color: var(--vscode-input-placeholderForeground); }
 		.wrds-code { margin: 6px 0 0; padding: 10px 12px; background: var(--vscode-textCodeBlock-background); border-radius: 3px; font-family: var(--vscode-editor-font-family); font-size: var(--vscode-editor-font-size); white-space: pre; overflow-x: auto; tab-size: 4; max-width: 900px; }
 		.choices label { margin-right: 16px; }
+		/* The calendar button of From and To: drawn for a dark page in a dark theme, where it would be dark on dark */
+		body.vscode-dark input[type=date], body.vscode-high-contrast:not(.vscode-high-contrast-light) input[type=date] { color-scheme: dark; }
+		input[type=date]::-webkit-calendar-picker-indicator { opacity: 1; cursor: pointer; }
 		input[type=date], select, textarea { font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-panel-border)); border-radius: 2px; padding: 3px 6px; }
-		textarea.wrds-sql { display: block; width: 100%; max-width: 900px; font-family: var(--vscode-editor-font-family); font-size: var(--vscode-editor-font-size); tab-size: 4; resize: vertical; }
+		/* The SQL box: a transparent text box over its text coloured as the editor colours SQL, the two scrolled together */
+		.wrds-sql-box { position: relative; max-width: 900px; }
+		textarea.wrds-sql, .wrds-sql-colors { box-sizing: border-box; font-family: var(--vscode-editor-font-family); font-size: var(--vscode-editor-font-size); line-height: 1.4; tab-size: 4; white-space: pre; overflow-wrap: normal; padding: 3px 6px; border: 1px solid transparent; border-radius: 2px; }
+		textarea.wrds-sql { position: relative; z-index: 1; display: block; width: 100%; overflow: auto; resize: vertical; color: transparent; background: transparent; caret-color: var(--vscode-input-foreground); border-color: var(--vscode-input-border, var(--vscode-panel-border)); }
+		textarea.wrds-sql::selection { color: transparent; background: var(--vscode-editor-selectionBackground); }
+		.wrds-sql-colors { position: absolute; inset: 0; margin: 0; overflow: hidden; pointer-events: none; color: var(--vscode-input-foreground); background: var(--vscode-input-background); }
+		.wrds-sql-colors .monaco-tokenized-source { white-space: pre; }
 		.wrds-columns { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 2px 16px; max-width: 900px; max-height: 240px; overflow-y: auto; margin: 4px 0 8px; }
 		.wrds-columns label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 		.wrds-columns .type { color: var(--vscode-descriptionForeground); }
@@ -449,11 +517,14 @@ function pageHtml(): string {
 			</div>
 		</div>
 		<div class="row" id="dateRow">
-			<span class="small">${text.from}</span> <input type="date" id="start" value="2000-01-01">
+			<span class="small">${text.from}</span> <input type="date" id="start">
 			<span class="small">${text.to}</span> <input type="date" id="end">
 		</div>
 		<h3 class="part">${text.sql}</h3>
-		<textarea class="wrds-sql" id="sql" rows="14" spellcheck="false"></textarea>
+		<div class="wrds-sql-box">
+			<pre class="wrds-sql-colors" id="sqlColors" aria-hidden="true"></pre>
+			<textarea class="wrds-sql" id="sql" rows="14" spellcheck="false" wrap="off"></textarea>
+		</div>
 `,
 			},
 			{
@@ -512,13 +583,14 @@ function pageHtml(): string {
 		<h3 class="part">${text.code}</h3>
 		<pre class="wrds-code" id="mergeCode"></pre>
 		<div class="settings"><span class="bar">
-			<button class="action" id="merge">${text.mergeButton}</button>
+			<button class="action current" id="merge">${text.mergeButton}</button>
 		</span></div>
 		<div class="small status" id="mergeStatus"></div>
 `,
 			},
 		],
 		pageScriptJs: `
+	${colorizeBracketsJs}
 	const TEXT = ${JSON.stringify(text)};
 	const SPINNER = ${JSON.stringify(spinnerSvg)};
 	const userInput = document.getElementById('user');
@@ -554,7 +626,6 @@ function pageHtml(): string {
 		askRepl.checked = !message.pgpass;
 		pgpass.checked = message.pgpass;
 		document.getElementById('connectIntro').innerHTML = TEXT.connectIntro.replace('{0}', '<code>' + message.variable + '</code>');
-		document.getElementById('code').textContent = message.code;
 		connectButton.textContent = message.connected ? TEXT.reconnect : TEXT.connectButton;
 		document.getElementById('disconnect').hidden = !message.connected;
 		document.getElementById('edit').hidden = !message.saved;
@@ -616,7 +687,18 @@ function pageHtml(): string {
 		const browsing = sourceBrowse.checked;
 		document.getElementById('datasetBox').hidden = browsing;
 		document.getElementById('browseBox').hidden = !browsing;
-		document.getElementById('datasetDescription').textContent = dataset.description;
+		const description = document.getElementById('datasetDescription');
+		description.textContent = '';
+		for (const part of dataset.description) {
+			if (part.name) {
+				const name = document.createElement('span');
+				name.className = 'yellow';
+				name.textContent = part.text;
+				description.append(name);
+			} else {
+				description.append(part.text);
+			}
+		}
 		document.getElementById('identifierRow').hidden = !dataset.identifier;
 		document.getElementById('identifierLabel').textContent = dataset.identifier ? TEXT.identifiers[dataset.identifier] : '';
 		document.getElementById('dateRow').hidden = browsing ? !dateColumnSelect.value : !dataset.dated;
@@ -686,7 +768,21 @@ function pageHtml(): string {
 		compose();
 	});
 	dateColumnSelect.addEventListener('change', () => { renderSource(); compose(); });
-	sqlArea.addEventListener('input', sendExtractDraft);
+	const sqlColors = document.getElementById('sqlColors');
+	/** The SQL box's text, uncoloured, until its colours come: what is typed shows at once. */
+	function showSqlText() {
+		sqlColors.textContent = sqlArea.value + '\\n';
+		syncSqlScroll();
+	}
+	function syncSqlScroll() {
+		sqlColors.scrollTop = sqlArea.scrollTop;
+		sqlColors.scrollLeft = sqlArea.scrollLeft;
+	}
+	sqlArea.addEventListener('scroll', syncSqlScroll);
+	sqlArea.addEventListener('input', () => {
+		showSqlText();
+		sendExtractDraft();
+	});
 
 	// Step 3: Extract
 	const variableInput = document.getElementById('variable');
@@ -799,18 +895,26 @@ function pageHtml(): string {
 		const message = event.data;
 		if (message.command === 'state') {
 			render(message);
-		} else if (message.command === 'code') {
-			document.getElementById('code').textContent = message.code;
+		} else if (message.command === 'colorizedCode') {
+			if (message.box === 'sqlColors' && message.text !== sqlArea.value) {
+				return;
+			}
+			document.getElementById('mtk-theme').textContent = message.css;
+			const box = document.getElementById(message.box);
+			box.innerHTML = message.html;
+			colorizeBrackets(box, message.box === 'sqlColors' ? '--' : '#');
+			if (message.box === 'sqlColors') {
+				// A last empty line, as the text box has, so the two scroll alike
+				box.append(document.createElement('br'));
+				syncSqlScroll();
+			}
 		} else if (message.command === 'libraries') {
 			renderLibraries(message);
 		} else if (message.command === 'sql') {
 			sqlArea.value = message.sql;
+			showSqlText();
 			suggestVariable();
 			sendExtractDraft();
-		} else if (message.command === 'extractCode') {
-			document.getElementById('extractCode').textContent = message.code;
-		} else if (message.command === 'mergeCode') {
-			document.getElementById('mergeCode').textContent = message.code;
 		} else if (message.command === 'file') {
 			if (message.target === 'mergeFile') {
 				mergeFileInput.value = message.file;

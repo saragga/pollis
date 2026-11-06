@@ -85,6 +85,22 @@
 	min-height: 0;
 }
 
+/* The User view lists nothing: its message, in place of the tree */
+.databases-empty.hidden,
+.databases-tree.hidden {
+	display: none;
+}
+
+/* The names of packages and engines, in the Pollis yellow */
+.databases-empty .package-name {
+	color: #e8a33d;
+}
+
+.monaco-workbench.vs .databases-empty .package-name,
+.monaco-workbench.hc-light .databases-empty .package-name {
+	color: #a8650d;
+}
+
 .database-item .actions .codicon-plug {
 	color: var(--vscode-charts-green);
 }

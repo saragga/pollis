@@ -521,7 +521,9 @@ class ViewsExtensionHandler implements IWorkbenchContribution {
 						when: ContextKeyExpr.deserialize(item.when),
 						containerIcon: icon || viewContainer?.icon,
 						containerTitle: item.contextualTitle || (viewContainer && (typeof viewContainer.title === 'string' ? viewContainer.title : viewContainer.title.value)),
-						canToggleVisibility: true,
+						// Pollis: the Julia pane always shows its three views (Workspace, Documentation, Plot Navigator),
+						// so it has no Views menu ("Views and More Actions...") to hide them
+						canToggleVisibility: key !== 'julia-explorer',
 						canMoveView: viewContainer?.id !== REMOTE,
 						treeView: type === ViewType.Tree ? this.instantiationService.createInstance(CustomTreeView, item.id, item.name, extension.description.identifier.value) : undefined,
 						collapsed: this.showCollapsed(container) || initialVisibility === InitialVisibility.Collapsed,

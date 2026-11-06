@@ -6,11 +6,9 @@
 #   - "questions": RAGTools.build_qa_evals has the model `model` write, for each passage of `passages` ({source,
 #     context}), a question that only that passage answers, and the answer; each is written as {"item"}, a QAEvalItem
 #     of RAGTools.jl, as it comes.
-#   - "judge": each answer of `answers` ({id, question, passages, answer}) is rated by each model of `judges` against
-#     the passages it was given, with the template :RAGJudgeAnswerFromContext and the five parts of
-#     RAGTools.JudgeAllScores, written as {"score"}; and for each question of `retrieval` ({id, context, passages}), made
-#     from a passage, whether that passage was among those found and at what place (RAGTools.score_retrieval_rank),
-#     written as {"rank"}.
+#   - "judge": each answer of `answers` ({id, question, right, answer}) is rated by each model of `judges` against
+#     the right answer, from 1 to 5 with a rationale, written as {"score"}; the judge reads only the question, the
+#     right answer and the answer, not the passages the answer was written from.
 # A model is {name, provider, file}: provider "local" for a model of this computer, else "anthropic", "google" or
 # "openai". Its own environment, ~/.pollis/ask/julia/vX.Y, gets the packages the first time, while {"status":
 # "installing"} is written. It writes a line of JSON on stdout as it goes: {"done", "total"} after each item, in "judge"
@@ -96,55 +94,71 @@ function questions()
 	end
 end
 
-"""The passages an answer was written from, numbered as the model was given them."""
-numbered(passages) = join(("[$(i)] $(text)" for (i, text) in enumerate(passages)), "\n\n")
+"""A judge's rating of an answer against the right answer: why, in a sentence or two, then a whole number from 1 to 5."""
+Base.@kwdef struct AnswerRating
+	rationale::String
+	rating::Int
+end
+
+"""What the judge is told: how to rate an answer against the right answer."""
+const JUDGE_INSTRUCTION = """
+You grade an answer to a question by comparing it with the right answer. Rate from 1 to 5 how well the answer agrees
+with the right answer:
+5: it gives the facts of the right answer and nothing that contradicts it;
+4: it gives the main facts of the right answer, with a minor omission or a minor inaccuracy;
+3: it gives part of the right answer, or its main fact with an error;
+2: it misses the main fact of the right answer, or is mostly wrong;
+1: it is wrong, unrelated to the question, or declines to answer.
+Correct details that the right answer does not have are not a fault; anything that contradicts it is.
+Give the rationale first, in one or two sentences, then the rating."""
+
+"""What the judge is asked about an answer."""
+judge_prompt(answer) = """
+Question:
+$(answer.question)
+
+Right answer:
+$(answer.right)
+
+Answer to rate:
+$(answer.answer)"""
 
 """
-A judge's reply as RAGTools.JudgeAllScores, or why it cannot be. A reply that does not fit the type exactly (a part
-given as 4.5 or as "4") comes as a Dict: its parts are read as numbers, each part rounded to a whole one.
+A judge's reply as a rating from 1 to 5 and its rationale, or why it cannot be read. A reply that does not fit the
+type exactly (a rating given as 4.5 or as "4") comes as a Dict: its rating is read as a number, rounded, and held
+between 1 and 5.
 """
-function scores_of(content)
-	content isa RAGTools.JudgeAllScores && return content
+function rating_of(content)
+	content isa AnswerRating && return (; rating = clamp(content.rating, 1, 5), content.rationale)
 	content isa AbstractDict || return "the judge's reply could not be read"
 	reply = Dict(Symbol(key) => value for (key, value) in content)
-	number(value) = value isa Real ? Float64(value) : value isa AbstractString ? tryparse(Float64, strip(value)) : nothing
-	parts = (:relevance, :completeness, :clarity, :consistency, :helpfulness, :final_rating)
-	values = Dict(part => number(get(reply, part, nothing)) for part in parts)
-	absent = [String(part) for part in parts if isnothing(values[part]) || !isfinite(values[part])]
-	isempty(absent) || return "the judge's reply has no $(join(absent, ", "))"
+	value = get(reply, :rating, nothing)
+	number = value isa Real ? Float64(value) : value isa AbstractString ? tryparse(Float64, strip(value)) : nothing
+	(isnothing(number) || !isfinite(number)) && return "the judge's reply has no rating"
 	rationale = get(reply, :rationale, nothing)
-	RAGTools.JudgeAllScores(; (part => (part == :final_rating ? values[part] : round(Int, values[part])) for part in parts)...,
-		rationale = rationale isa AbstractString ? String(rationale) : nothing)
+	(; rating = clamp(round(Int, number), 1, 5), rationale = rationale isa AbstractString ? String(rationale) : "")
 end
 
 """
-Each answer rated by each judge against its passages, with the five parts of RAGTools.JudgeAllScores; and the places of
-the passages found. A judge on this computer replies in JSON mode, held by llama-server to the type's schema, as a
-small model does not always give the parts as whole numbers when it calls a tool.
+Each answer rated by each judge against the right answer. A judge on this computer replies in JSON mode, held by
+llama-server to the type's schema, as a small model does not always give the rating as a whole number when it calls a tool.
 """
 function judge()
-	for question in JOB.retrieval
-		candidates = String.(question.passages)
-		rank = isempty(candidates) ? nothing : RAGTools.score_retrieval_rank(String(question.context), candidates)
-		json((; rank = (; question.id, rank)))
-	end
 	judges = [(spec = judge, call = use_model(judge)) for judge in JOB.judges]
 	total = length(JOB.answers) * length(judges)
 	done = 0
 	tokens = [0, 0]
 	for (spec, call) in judges, answer in JOB.answers
 		try
-			msg = aiextract(:RAGJudgeAnswerFromContext; call.model, call.api_kwargs, verbose = false,
-				question = String(answer.question), context = numbered(answer.passages), answer = String(answer.answer),
-				return_type = RAGTools.JudgeAllScores, json_mode = spec.provider == "local" ? true : nothing)
+			prompt = [PT.SystemMessage(JUDGE_INSTRUCTION), PT.UserMessage(judge_prompt(answer))]
+			msg = aiextract(prompt; call.model, call.api_kwargs, verbose = false,
+				return_type = AnswerRating, json_mode = spec.provider == "local" ? true : nothing)
 			tokens .+= msg.tokens
-			scores = scores_of(msg.content)
-			if scores isa RAGTools.JudgeAllScores
-				json((; score = (; answer.id, judge = spec.name, scores.relevance, scores.completeness, scores.clarity,
-					scores.consistency, scores.helpfulness, scores.final_rating, scores.rationale,
-					tokens = msg.tokens)))
+			rated = rating_of(msg.content)
+			if rated isa AbstractString
+				json((; failed = answer.id, judge = spec.name, error = rated))
 			else
-				json((; failed = answer.id, judge = spec.name, error = scores))
+				json((; score = (; answer.id, judge = spec.name, rated.rating, rated.rationale, tokens = msg.tokens)))
 			end
 		catch err
 			json((; failed = answer.id, judge = spec.name, error = failure(err)))

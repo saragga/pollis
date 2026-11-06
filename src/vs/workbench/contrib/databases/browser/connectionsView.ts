@@ -5,7 +5,8 @@
 
 import * as dom from '../../../../base/browser/dom.js';
 import { ActionBar, IActionViewItem } from '../../../../base/browser/ui/actionbar/actionbar.js';
-import { IDropdownMenuActionViewItemOptions } from '../../../../base/browser/ui/dropdown/dropdownActionViewItem.js';
+import { Button } from '../../../../base/browser/ui/button/button.js';
+import { IBaseActionViewItemOptions } from '../../../../base/browser/ui/actionbar/actionViewItems.js';
 import { IListVirtualDelegate } from '../../../../base/browser/ui/list/list.js';
 import { IObjectTreeElement, ITreeContextMenuEvent, ITreeNode, ITreeRenderer } from '../../../../base/browser/ui/tree/tree.js';
 import { Action, IAction } from '../../../../base/common/actions.js';
@@ -23,14 +24,25 @@ import { IContextMenuService } from '../../../../platform/contextview/browser/co
 import { IHoverService } from '../../../../platform/hover/browser/hover.js';
 import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
 import { IKeybindingService } from '../../../../platform/keybinding/common/keybinding.js';
+import { ILogService } from '../../../../platform/log/common/log.js';
 import { WorkbenchObjectTree } from '../../../../platform/list/browser/listService.js';
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
+import { IStorageService } from '../../../../platform/storage/common/storage.js';
+import { ITelemetryService } from '../../../../platform/telemetry/common/telemetry.js';
+import { defaultButtonStyles } from '../../../../platform/theme/browser/defaultStyles.js';
 import { IThemeService } from '../../../../platform/theme/common/themeService.js';
+import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
 import { IViewPaneOptions, ViewPane } from '../../../browser/parts/views/viewPane.js';
+import { ViewPaneContainer } from '../../../browser/parts/views/viewPaneContainer.js';
 import { IViewDescriptorService } from '../../../common/views.js';
+import { IExtensionService } from '../../../services/extensions/common/extensions.js';
+import { IWorkbenchLayoutService } from '../../../services/layout/browser/layoutService.js';
 import { IDatabaseColumn, IDatabaseConnectionsService, IDatabaseSchema, IDatabaseSession, IDatabaseTable } from '../common/databaseConnections.js';
 import './media/connectionsView.css';
 import { describeConnection, DOCUMENTS_DATABASE_ID, getDatabaseDriver, IDatabaseConnectionProfile, isInMemoryConnection, isWritableConnection, JOURNALS_DATABASE_ID, NEW_CONNECTION_COMMAND_ID, REFERENCES_DATABASE_ID, RSS_DATABASE_ID } from '../common/databaseDrivers.js';
+
+/** The Databases container of the secondary side bar, with its Pollis Built-In and User views. */
+export const DATABASES_VIEW_CONTAINER_ID = 'workbench.view.pollis.databases';
 
 /** The context menu of an item in the Connections view. Its commands receive an {@link IDatabaseItemArg}. */
 export const DatabaseConnectionContextMenu = new MenuId('DatabaseConnectionContext');
@@ -255,7 +267,7 @@ class ItemRenderer implements ITreeRenderer<DatabaseItem, void, IItemTemplate> {
 }
 
 
-/** The title's New Connection button, labelled "+ New", with a dropdown that opens it on a given engine. */
+/** The container title's New Connection button, labelled "+ New", with a dropdown that opens it on a given engine. */
 class NewConnectionActionViewItem extends DropdownWithPrimaryActionViewItem {
 
 	override render(container: HTMLElement): void {
@@ -270,16 +282,55 @@ class NewConnectionActionViewItem extends DropdownWithPrimaryActionViewItem {
 }
 
 /**
- * The Connections view lists the saved connections and those shown from the REPL with
- * `PollisDB.show`. Expanding a connection (clicking it, its twistie or Show Tables) connects it if
- * needed and shows the tree of its schemas, tables and columns in place, below the connection.
+ * The Databases container. Its title holds the buttons of both views (New Connection, Refresh Schemas,
+ * Learn More and the DuckDB REPL), always shown, and New Connection renders as "+ New" with the engines.
  */
-export class DatabaseConnectionsView extends ViewPane {
+export class DatabasesViewPaneContainer extends ViewPaneContainer {
 
-	static readonly ID = 'pollis.databases.connections';
+	/** The dropdown action of the title's "+ New" button, replaced whenever the title renders it again. */
+	private readonly newConnectionDisposables = this._register(new DisposableStore());
+
+	constructor(
+		@IMenuService private readonly menuService: IMenuService,
+		@IContextKeyService private readonly contextKeyService: IContextKeyService,
+		@IInstantiationService instantiationService: IInstantiationService,
+		@IConfigurationService configurationService: IConfigurationService,
+		@IWorkbenchLayoutService layoutService: IWorkbenchLayoutService,
+		@IContextMenuService contextMenuService: IContextMenuService,
+		@ITelemetryService telemetryService: ITelemetryService,
+		@IExtensionService extensionService: IExtensionService,
+		@IThemeService themeService: IThemeService,
+		@IStorageService storageService: IStorageService,
+		@IWorkspaceContextService contextService: IWorkspaceContextService,
+		@IViewDescriptorService viewDescriptorService: IViewDescriptorService,
+		@ILogService logService: ILogService,
+	) {
+		super(DATABASES_VIEW_CONTAINER_ID, { mergeViewWithContainerWhenSingleView: true }, instantiationService, configurationService, layoutService, contextMenuService, telemetryService, extensionService, themeService, storageService, contextService, viewDescriptorService, logService);
+	}
+
+	override getActionViewItem(action: IAction, options: IBaseActionViewItemOptions): IActionViewItem | undefined {
+		if (action instanceof MenuItemAction && action.id === NEW_CONNECTION_COMMAND_ID) {
+			this.newConnectionDisposables.clear();
+			const engines = getFlatContextMenuActions(this.menuService.getMenuActions(DatabasesNewConnectionMenu, this.contextKeyService));
+			const dropdown = this.newConnectionDisposables.add(new Action('databases.newConnectionEngines', localize('newConnection.engines', "New Connection To..."), undefined, true));
+			return this.instantiationService.createInstance(NewConnectionActionViewItem, action, dropdown, engines, '', { hoverDelegate: options.hoverDelegate });
+		}
+		return super.getActionViewItem(action, options);
+	}
+}
+
+/**
+ * A view of the Databases container. It lists saved connections and, in the User view, those shown
+ * from the REPL with `PollisDB.show`. Expanding a connection (clicking it, its twistie or Show Tables)
+ * connects it if needed and shows the tree of its schemas, tables and columns in place, below it.
+ */
+export abstract class DatabaseConnectionsView extends ViewPane {
 
 	private tree: WorkbenchObjectTree<DatabaseItem> | undefined;
 	private root: HTMLElement | undefined;
+	private treeContainer: HTMLElement | undefined;
+	/** The message of the User view while it lists nothing. */
+	private empty: HTMLElement | undefined;
 	/** The connection items in the tree by id, the objects the tree knows them by. */
 	private readonly connections = new Map<string, DatabaseItem & { kind: 'connection' }>();
 	/** Connections expanded while not connected, being connected from the view; their tables show once the REPL reports them. */
@@ -289,8 +340,6 @@ export class DatabaseConnectionsView extends ViewPane {
 	/** The ids of the expanded items, kept across refreshes. */
 	private readonly expanded = new Set<string>();
 	private lastSize: { height: number; width: number } | undefined;
-	/** The dropdown action of the title's "+ New" button, replaced whenever the title renders it again. */
-	private readonly newConnectionDisposables = this._register(new DisposableStore());
 
 	constructor(
 		options: IViewPaneOptions,
@@ -311,18 +360,21 @@ export class DatabaseConnectionsView extends ViewPane {
 		this._register(this.databaseConnectionsService.onDidChangeConnections(() => this.refresh()));
 	}
 
-	override shouldShowWelcome(): boolean {
-		return this.databaseConnectionsService.getConnections().length === 0 && this.databaseConnectionsService.getSessions().length === 0;
-	}
+	/** Whether the view lists the databases built into Pollis, rather than the user's own. */
+	protected abstract listsBuiltin(): boolean;
 
 	protected override renderBody(container: HTMLElement): void {
 		super.renderBody(container);
 		this.root = dom.append(container, dom.$('.databases-view'));
+		if (!this.listsBuiltin()) {
+			this.empty = this.renderEmpty(this.root);
+		}
+		this.treeContainer = dom.append(this.root, dom.$('.databases-tree'));
 
 		this.tree = this._register(this.instantiationService.createInstance(
 			WorkbenchObjectTree<DatabaseItem>,
 			'DatabaseConnections',
-			dom.append(this.root, dom.$('.databases-tree')),
+			this.treeContainer,
 			new ItemDelegate(),
 			[new ItemRenderer(item => this.itemContext(item), this.hoverService, this.menuService, this.contextKeyService, this.instantiationService)],
 			{
@@ -357,6 +409,29 @@ export class DatabaseConnectionsView extends ViewPane {
 		}));
 		this._register(this.tree.onContextMenu(e => this.onContextMenu(e)));
 		this.refresh();
+	}
+
+	/**
+	 * The message of the User view while it lists nothing, and New Connection, drawn as a welcome view is
+	 * (whose text cannot be coloured): the names of the package and the engines in the Pollis yellow.
+	 */
+	private renderEmpty(parent: HTMLElement): HTMLElement {
+		const empty = dom.append(parent, dom.$('.welcome-view-content.databases-empty'));
+		const message = dom.append(empty, dom.$('p'));
+		const names = ['DBInterface.jl', 'DuckDB', 'ODBC', 'PostgreSQL', 'SQLite'];
+		const text = localize('databases.empty', "No databases of your own yet. They open in the Julia REPL through {0}: {1}, {2}, {3} and {4}. Once connected, their tables and columns appear here.", '{0}', '{1}', '{2}', '{3}', '{4}');
+		// The split keeps the placeholders' numbers at the odd places
+		for (const [index, part] of text.split(/\{(?<name>\d)\}/).entries()) {
+			if (index % 2) {
+				dom.append(message, dom.$('span.package-name', undefined, names[Number(part)]));
+			} else if (part) {
+				message.append(part);
+			}
+		}
+		const button = this._register(new Button(dom.append(empty, dom.$('.button-container')), { ...defaultButtonStyles }));
+		button.label = localize('databases.empty.newConnection', "New Connection");
+		this._register(button.onDidClick(() => this.commandService.executeCommand(NEW_CONNECTION_COMMAND_ID)));
+		return empty;
 	}
 
 	/** Show the tables of connection `id` below it, connecting it first if the REPL does not hold it. */
@@ -437,18 +512,32 @@ export class DatabaseConnectionsView extends ViewPane {
 		}
 		if (this.tree && this.root) {
 			this.tree.setChildren(null, this.connectionElements());
+			const listsNothing = !!this.empty && !this.connections.size;
+			this.empty?.classList.toggle('hidden', !listsNothing);
+			this.treeContainer?.classList.toggle('hidden', listsNothing);
 			this.layoutTree();
 		}
-		this._onDidChangeViewWelcomeState.fire();
 	}
 
-	/** The saved profiles, then the connections shown from the REPL, each with its schemas below it. */
-	private connectionElements(): IObjectTreeElement<DatabaseItem>[] {
+	/**
+	 * The ids of the connections the view lists: the built-in databases, or the user's saved profiles
+	 * followed by the connections shown from the REPL.
+	 */
+	private connectionIds(): string[] {
 		const profiles = this.databaseConnectionsService.getConnections();
+		const listed = profiles.filter(p => !!p.builtin === this.listsBuiltin()).map(p => p.id);
+		if (this.listsBuiltin()) {
+			return listed;
+		}
 		const saved = new Set(profiles.map(p => p.id));
 		const shown = this.databaseConnectionsService.getSessions().filter(s => !saved.has(s.id)).sort((a, b) => a.name.localeCompare(b.name));
+		return [...listed, ...shown.map(s => s.id)];
+	}
+
+	/** The connections of {@link connectionIds}, each with its schemas below it. */
+	private connectionElements(): IObjectTreeElement<DatabaseItem>[] {
 		this.connections.clear();
-		return [...profiles.map(p => p.id), ...shown.map(s => s.id)].map(id => {
+		return this.connectionIds().map(id => {
 			const item: DatabaseItem & { kind: 'connection' } = { kind: 'connection', id, profile: this.databaseConnectionsService.getConnection(id), session: this.databaseConnectionsService.getSession(id) };
 			this.connections.set(id, item);
 			const children: IObjectTreeElement<DatabaseItem>[] = item.session
@@ -510,16 +599,6 @@ export class DatabaseConnectionsView extends ViewPane {
 		});
 	}
 
-	override createActionViewItem(action: IAction, options?: IDropdownMenuActionViewItemOptions): IActionViewItem | undefined {
-		if (action instanceof MenuItemAction && action.id === NEW_CONNECTION_COMMAND_ID) {
-			this.newConnectionDisposables.clear();
-			const engines = getFlatContextMenuActions(this.menuService.getMenuActions(DatabasesNewConnectionMenu, this.contextKeyService));
-			const dropdown = this.newConnectionDisposables.add(new Action('databases.newConnectionEngines', localize('newConnection.engines', "New Connection To..."), undefined, true));
-			return this.instantiationService.createInstance(NewConnectionActionViewItem, action, dropdown, engines, '', { hoverDelegate: options?.hoverDelegate });
-		}
-		return super.createActionViewItem(action, options);
-	}
-
 	override focus(): void {
 		super.focus();
 		this.tree?.domFocus();
@@ -536,4 +615,29 @@ export class DatabaseConnectionsView extends ViewPane {
 			this.tree?.layout(this.lastSize.height, this.lastSize.width);
 		}
 	}
+}
+
+/** The databases built into Pollis: PollisDatasets, PollisRSS, PollisJournals, PollisReferences and PollisDocuments. */
+export class BuiltinDatabasesView extends DatabaseConnectionsView {
+
+	static readonly ID = 'pollis.databases.builtin';
+
+	protected override listsBuiltin(): boolean {
+		return true;
+	}
+}
+
+/** The user's own databases: the saved connections and those shown from the REPL with `PollisDB.show`. */
+export class UserDatabasesView extends DatabaseConnectionsView {
+
+	static readonly ID = 'pollis.databases.connections';
+
+	protected override listsBuiltin(): boolean {
+		return false;
+	}
+}
+
+/** The view that lists the connection of `profile`: Pollis Built-In for a built-in database, else User. */
+export function databasesViewIdOf(profile: IDatabaseConnectionProfile | undefined): string {
+	return profile?.builtin ? BuiltinDatabasesView.ID : UserDatabasesView.ID;
 }

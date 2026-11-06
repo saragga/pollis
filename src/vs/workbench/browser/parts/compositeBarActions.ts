@@ -162,6 +162,7 @@ export class CompositeBarActionViewItem extends BaseActionViewItem {
 	private badgeContent: HTMLElement | undefined;
 	private readonly badgeDisposable = this._register(new MutableDisposable<DisposableStore>());
 	private mouseUpTimeout: Timeout | undefined;
+	private readonly clickedUntilBlur = this._register(new MutableDisposable());
 	private keybindingLabel: string | undefined | null;
 
 	constructor(
@@ -435,6 +436,23 @@ export class CompositeBarActionViewItem extends BaseActionViewItem {
 		return keybinding?.getLabel();
 	}
 
+	/**
+	 * Pollis: keeps the clicked state, which hides the keyboard focus line, until the item loses focus.
+	 * A menu opened with the mouse gives focus back to the item when it closes, long after the clicked
+	 * state of the click has gone, and the item would show the focus line of the keyboard.
+	 */
+	protected keepClickedUntilBlur(): void {
+		if (this.mouseUpTimeout) {
+			clearTimeout(this.mouseUpTimeout);
+			this.mouseUpTimeout = undefined;
+		}
+		this.container.classList.add('clicked');
+		this.clickedUntilBlur.value = addDisposableListener(this.container, EventType.BLUR, () => {
+			this.clickedUntilBlur.clear();
+			this.container.classList.remove('clicked');
+		});
+	}
+
 	override dispose(): void {
 		super.dispose();
 
@@ -483,10 +501,17 @@ export class CompositeOverflowActivityActionViewItem extends CompositeBarActionV
 	}
 
 	showMenu(): void {
+		// Pollis: opened with the mouse (the item is still clicked), the item shows no focus line once the menu closes
+		const byMouse = this.container.classList.contains('clicked');
 		this.contextMenuService.showContextMenu({
 			getAnchor: () => this.container,
 			getActions: () => this.getActions(),
 			getCheckedActionsRepresentation: () => 'radio',
+			onHide: () => {
+				if (byMouse) {
+					this.keepClickedUntilBlur();
+				}
+			},
 		});
 	}
 

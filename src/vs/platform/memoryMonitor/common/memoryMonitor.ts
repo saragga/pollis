@@ -78,16 +78,10 @@ export function juliaRole(command: string): JuliaRole {
 	return JULIA_ROLES.find(([pattern]) => pattern.test(command))?.[1] ?? 'julia';
 }
 
-/** The version of Julia that `command` runs, when its path names it, as juliaup's do. */
-export function juliaVersion(command: string): string | undefined {
-	return /julia-(?<version>\d+\.\d+\.\d+)/.exec(command)?.groups?.version;
-}
-
 /** A Julia process, in the app that started it. */
 export interface IMemoryJulia {
 	readonly pid: number;
 	readonly role: JuliaRole;
-	readonly version: string | undefined;
 	readonly memory: number;
 	readonly elapsed: number;
 }
@@ -174,7 +168,7 @@ export function groupProcesses(snapshot: IMemoryProcesses): IMemoryGroup[] {
 		group.elapsed = Math.max(group.elapsed, process.elapsed);
 		group.self ||= process.pid === snapshot.self;
 		if (isJulia(process.command)) {
-			group.julia.push({ pid: process.pid, role: juliaRole(process.command), version: juliaVersion(process.command), memory: process.memory, elapsed: process.elapsed });
+			group.julia.push({ pid: process.pid, role: juliaRole(process.command), memory: process.memory, elapsed: process.elapsed });
 		}
 	}
 	return [...groups.values()]

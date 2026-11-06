@@ -28,9 +28,11 @@ import { askFolder, CompareSampler, CompareTestSets, evalItem, ICompareSample, I
 // (IAskPollisService.searchStamp), then has each model answer every question from them, as Ask Pollis
 // would (IAskPollisService.answer: the same instruction, the same passages), the cloud models together and the local
 // ones one after the other, each server stopped once it has answered, the embedding model of the search and the chat
-// model of Ask Pollis before them, so that each runs alone in memory. The judges then rate each answer, and RAGTools.jl places each question's own passage among
-// those found, in a Julia process of the Julia extension (language-julia.pollisCompareModels, ask_compare.jl), given the
-// keys of the cloud providers it needs from Secret Storage; two judges on this computer in one process each, one after
+// model of Ask Pollis before them, so that each runs alone in memory. Two scores need no judge: the place of each
+// question's own passage among those found (the passage it was made from, or the wiki of its Panel FAQ entry), and the
+// answer score, how near each answer is to the right answer by the embedding model of the search. The judges, if any,
+// then rate each answer against the right answer, in a Julia process of the Julia extension (language-julia.pollisCompareModels,
+// ask_compare.jl), given the keys of the cloud providers it needs from Secret Storage; two judges on this computer in one process each, one after
 // the other, so that each is alone in memory too. The run is kept in Comparisons.duckdb. There is one runner
 // per window, so that a run goes on when the page is closed, and the page opened again shows how far it has come.
 
@@ -43,14 +45,10 @@ interface IJuliaAnswer {
 	readonly error?: string;
 }
 
-/** A line the script wrote: a question made, a rating, a place, or what went wrong for an item. */
+/** A line the script wrote: a question made, a rating, or what went wrong for an item. */
 interface IJuliaLine {
 	readonly item?: IAskPollisEvalItem;
-	readonly score?: {
-		readonly id: string; readonly judge: string; readonly relevance: number; readonly completeness: number; readonly clarity: number;
-		readonly consistency: number; readonly helpfulness: number; readonly final_rating: number; readonly rationale: string;
-	};
-	readonly rank?: { readonly id: number; readonly rank: number | null };
+	readonly score?: { readonly id: string; readonly judge: string; readonly rating: number; readonly rationale: string };
 	readonly failed?: number | string;
 	readonly judge?: string;
 	readonly error?: string;
@@ -111,9 +109,17 @@ function juliaError(error: string): string {
 	}
 }
 
-/** What a passage is given to the judge as: as the model that answered was given it. */
-function judgedPassage(passage: IAskPollisPassage): string {
-	return `${askPassageLabel(passage)}\n${passage.text}`;
+/**
+ * The place of `context` among `passages`, from 1: the first that holds it or that it holds, as RAGTools.jl's
+ * score_retrieval_rank; 0 when none does.
+ */
+function contextRank(context: string, passages: readonly IAskPollisPassage[]): number {
+	return passages.findIndex(passage => passage.text.includes(context) || context.includes(passage.text)) + 1;
+}
+
+/** The place of the wiki `wikiFile` of a Panel FAQ entry among `passages`, from 1: the first of its passages; 0 when none is. */
+function wikiRank(wikiFile: string, passages: readonly IAskPollisPassage[]): number {
+	return passages.findIndex(passage => passage.kind === 'wiki' && passage.file.replace(/\\/g, '/').endsWith(`/${wikiFile}`)) + 1;
 }
 
 export class CompareModelsRunner {
@@ -284,8 +290,8 @@ export class CompareModelsRunner {
 	}
 
 	/**
-	 * Asks every question of `items` of every model of `models`, `repeats` times, and has the answers rated by each
-	 * judge of `judges`; the run is kept, as far as it came when stopped. The style `styleId` of Ask Pollis finds the
+	 * Asks every question of `items` of every model of `models`, `repeats` times, scores the answers against the right
+	 * answers and has them rated by each judge of `judges`, if any; the run is kept, as far as it came when stopped. The style `styleId` of Ask Pollis finds the
 	 * passages and asks the models, as the pane does; a question of the Panel FAQ is asked in its panel.
 	 */
 	async run(models: readonly ICompareRunModel[], judges: readonly ICompareRunModel[], repeats: number, items: readonly IAskPollisEvalItem[], styleId?: string): Promise<ICompareEnd> {
@@ -359,6 +365,20 @@ export class CompareModelsRunner {
 			await this.commandService.executeCommand('language-julia.pollisStopLlamaServer', { model: reranker, reranking: true, context: ASK_RERANK_CONTEXT }).catch(() => undefined);
 		}
 
+		// The place of each question's own passage among those found, by its text as the documents have it now, or of
+		// the wiki that answers a question of the Panel FAQ
+		const ranks = new Map<number, number>();
+		const retrieved = questions.filter(question => question.item.context && question.passages.length);
+		const matches = retrieved.length ? await this.askPollisService.matches(retrieved.map(question => question.item.context)).catch(() => undefined) : undefined;
+		for (const [position, question] of retrieved.entries()) {
+			ranks.set(question.index, contextRank(matches?.[position]?.text ?? question.item.context, question.passages));
+		}
+		for (const question of questions) {
+			if (question.item.wikiFile && !ranks.has(question.index)) {
+				ranks.set(question.index, wikiRank(question.item.wikiFile, question.passages));
+			}
+		}
+
 		// The answers: the cloud models together, each question after the other; the local models one after the other
 		const answers: ICompareRunAnswer[] = [];
 		const total = questions.length * models.length * repeats;
@@ -396,30 +416,39 @@ export class CompareModelsRunner {
 			...models.filter(model => !model.local).map(model => answerAll(model)),
 		]);
 
-		// The ratings, and the places of the passages found
+		// The answer scores: how near each answer is to the right answer, by the embedding model of the search, which stops then
+		const byQuestion = new Map(questions.map(question => [question.index, question]));
+		const scorable = answers.map((answer, position) => ({ answer, position, right: byQuestion.get(answer.question)?.item.answer ?? '' })).filter(({ answer, right }) => !answer.error && answer.answer && right);
+		if (!token.isCancellationRequested && scorable.length) {
+			this.report(localize('compareModels.scoringAnswers', "Scoring the answers against the right answers..."));
+			const similarities = await this.askPollisService.similarities(scorable.map(({ answer, right }) => [answer.answer, right] as const));
+			for (const [index, { answer, position }] of scorable.entries()) {
+				const similarity = similarities?.[index];
+				if (similarity !== undefined) {
+					answers[position] = { ...answer, similarity };
+				}
+			}
+			await this.askPollisService.stopSearchModel();
+		}
+
+		// The ratings of the judges, if any, against the right answer
 		const scores: ICompareRunScore[] = [];
 		const unrated: ICompareRunUnrated[] = [];
-		const ranks = new Map<number, number>();
 		let error: string | undefined;
 		const rated = answers.filter(answer => !answer.error && answer.answer);
-		if (!token.isCancellationRequested && rated.length) {
+		if (!token.isCancellationRequested && rated.length && judges.length) {
 			this.sampler.mark('judge');
 			this.report(localize('compareModels.startingJulia', "Starting the Julia process of the evaluation..."));
-			const byQuestion = new Map(questions.map(question => [question.index, question]));
 			const judgedAnswers = rated.map(answer => {
-				const question = byQuestion.get(answer.question)!;
-				return { id: answer.id, question: question.item.question, passages: question.passages.map(judgedPassage), answer: answer.answer };
+				const item = byQuestion.get(answer.question)!.item;
+				return { id: answer.id, question: item.question, right: item.answer, answer: answer.answer };
 			});
-			// The rank of each question's passage among those found, by its text as the documents have it now
-			const retrieved = questions.filter(question => question.item.context && question.passages.length);
-			const matches = await this.askPollisService.matches(retrieved.map(question => question.item.context)).catch(() => undefined);
-			const retrieval = retrieved.map((question, index) => ({ id: question.index, context: matches?.[index]?.text ?? question.item.context, passages: question.passages.map(passage => passage.text) }));
 			// Two judges on this computer judge one after the other, each in a Julia process of its own, so that each
 			// model is alone in memory, its server started only when the other's has stopped
 			const rounds = judges.filter(judge => judge.local).length > 1 ? judges.map(judge => [judge]) : [judges];
 			const lines: IJuliaLine[] = [];
 			let failure: string | undefined;
-			for (const [round, roundJudges] of rounds.entries()) {
+			for (const roundJudges of rounds) {
 				if (token.isCancellationRequested) {
 					break;
 				}
@@ -427,7 +456,6 @@ export class CompareModelsRunner {
 					task: 'judge',
 					judges: roundJudges.map(judge => this.juliaModel(judge.value)),
 					answers: judgedAnswers,
-					retrieval: round === 0 ? retrieval : [],
 				}, roundJudges.map(judge => judge.value), rounds.length > 1
 					? localize('compareModels.judgingBy', "Judging by {0}: {1} of {2} ratings.", roundJudges[0].label, '{0}', '{1}')
 					: localize('compareModels.judging', "Judging: {0} of {1} ratings.", '{0}', '{1}'));
@@ -438,10 +466,8 @@ export class CompareModelsRunner {
 			const labels = new Map(judges.map(judge => [this.juliaModel(judge.value).name, judge.label]));
 			for (const line of judged.lines ?? []) {
 				if (line.score) {
-					const { id: answer, judge, relevance, completeness, clarity, consistency, helpfulness, final_rating, rationale } = line.score;
-					scores.push({ answer, judge: labels.get(judge) ?? judge, relevance, completeness, clarity, consistency, helpfulness, final: final_rating, rationale });
-				} else if (line.rank) {
-					ranks.set(line.rank.id, line.rank.rank ?? 0);
+					const { id: answer, judge, rating, rationale } = line.score;
+					scores.push({ answer, judge: labels.get(judge) ?? judge, final: rating, rationale });
 				} else if (typeof line.failed === 'string' && line.judge) {
 					unrated.push({ answer: line.failed, judge: labels.get(line.judge) ?? line.judge, error: line.error ?? '' });
 				}
@@ -450,14 +476,6 @@ export class CompareModelsRunner {
 				error = juliaError(judged.error);
 			} else if (!scores.length) {
 				error = localize('compareModels.notJudged', "No answer was rated. {0}", judged.lines?.find(line => line.failed !== undefined)?.error ?? '');
-			}
-		}
-
-		// The place of the wiki that answers a question of the Panel FAQ, among the passages found for it: the first of its passages
-		for (const question of questions) {
-			if (question.item.wikiFile && !ranks.has(question.index)) {
-				const wikiFile = question.item.wikiFile;
-				ranks.set(question.index, question.passages.findIndex(passage => passage.kind === 'wiki' && passage.file.replace(/\\/g, '/').endsWith(`/${wikiFile}`)) + 1);
 			}
 		}
 
@@ -501,6 +519,8 @@ export interface ICompareFigures {
 	readonly label: string;
 	readonly local: boolean;
 	readonly size?: string;
+	/** The mean answer score, the cosine similarity of the answers and the right answers. */
+	readonly similarity?: number;
 	/** The mean rating of each judge, in the order of the run's judges. */
 	readonly scores: readonly (number | undefined)[];
 	readonly relevance?: number;
@@ -528,7 +548,7 @@ export function compareFigures(run: ICompareRun): ICompareFigures[] {
 		const answers = run.answers.filter(answer => answer.model === model.value);
 		const ids = new Set(answers.map(answer => answer.id));
 		const scores = run.scores.filter(score => ids.has(score.answer));
-		const part = (key: 'relevance' | 'completeness' | 'clarity' | 'consistency' | 'helpfulness') => mean(scores.map(score => score[key]));
+		const part = (key: 'relevance' | 'completeness' | 'clarity' | 'consistency' | 'helpfulness') => mean(scores.map(score => score[key]).filter((value): value is number => value !== undefined));
 		const timed = answers.map(answer => answer.timings).filter(timings => !!timings);
 		const of = (key: 'firstWord' | 'seconds' | 'reading' | 'writing' | 'tokensRead' | 'tokensWritten') => mean(timed.map(timings => timings[key]).filter((value): value is number => typeof value === 'number'));
 		// Scored by every judge; the questions not asked, after Stop, are not counted
@@ -553,6 +573,7 @@ export function compareFigures(run: ICompareRun): ICompareFigures[] {
 			label: model.label,
 			local: model.local,
 			size: model.size,
+			similarity: mean(answers.map(answer => answer.similarity).filter((value): value is number => value !== undefined)),
 			scores: judges.map(judge => mean(scores.filter(score => score.judge === judge).map(score => score.final))),
 			relevance: part('relevance'),
 			completeness: part('completeness'),

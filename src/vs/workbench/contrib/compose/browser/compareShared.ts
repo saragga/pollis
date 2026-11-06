@@ -339,7 +339,14 @@ export class CompareTestSetChoice {
 	async postItems(): Promise<void> {
 		// The topic of each question by its passage, as the documents have it now; none for a passage no longer in the documents, or when there is no index; a question of the Panel FAQ has its panel and no passage
 		const matches = await this.askPollisService.matches(this.items.map(item => item.context));
-		this.post({ command: 'items', items: this.items.map((item, index) => ({ number: index + 1, question: item.question, answer: item.answer, source: item.source, context: matches?.[index]?.text ?? item.context, present: !matches || matches[index] !== undefined || !item.context, topic: topicLabel(matches?.[index]?.topic ?? (item.panel ? 'panels' : undefined)) })) });
+		// The group Tick at Random spreads a draw over: a question of the Panel FAQ by its panel, any other by its topic
+		this.post({
+			command: 'items', items: this.items.map((item, index) => ({
+				number: index + 1, question: item.question, answer: item.answer, source: item.source, context: matches?.[index]?.text ?? item.context,
+				present: !matches || matches[index] !== undefined || !item.context, topic: topicLabel(matches?.[index]?.topic ?? (item.panel ? 'panels' : undefined)),
+				group: item.panel ? `panel:${item.panel.title}` : `topic:${matches?.[index]?.topic ?? ''}`,
+			}))
+		});
 	}
 }
 
@@ -363,6 +370,9 @@ export function compareSharedText() {
 		yoursHint: localize('compareModels.yoursHint', "Yours, in {0}: every change is saved as you make it, the ticks too.", '{0}'),
 		countTicked: localize('compareModels.countTicked', "{0} of {1} ticked", '{0}', '{1}'),
 		untick: localize('compareModels.untick', "Untick All"),
+		tickRandom: localize('compareModels.tickRandom', "Tick at Random"),
+		tickRandomHint: localize('compareModels.tickRandomHint', "Ticks this many questions in place of those ticked, drawn at random and spread over the test set: the questions of the Panel FAQ over as many panels as there can be, the others over the topics, each in its share. The ticks stay until you draw again, so that runs of different models or styles ask the same questions."),
+		randomCount: localize('compareModels.randomCount', "How many questions to tick at random"),
 		tickAll: localize('compareModels.tickAll', "Tick all or none of the questions, on every page"),
 		topic: localize('compareModels.topic', "Topic"),
 		number: localize('compareModels.number', "#"),
@@ -501,6 +511,7 @@ export const compareCss = `
 		input.count:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
 		.counts { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 		.counts label { display: inline-flex; gap: 6px; align-items: center; }
+		.random { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
 `;
 
 /** The table of the models on this computer, to choose those to evaluate. */
@@ -522,6 +533,9 @@ export function compareLocalCard(text: CompareText): string {
 		</div>`;
 }
 
+/** How many questions Tick at Random ticks, at first. */
+const RANDOM_COUNT = 10;
+
 /** What stays beside the title of the second step: how many questions are ticked, and Untick All. */
 export function compareTestSetHeadHtml(text: CompareText): string {
 	return `<span class="small" id="count"></span><button class="link" id="untick" hidden>${text.untick}</button>`;
@@ -536,6 +550,7 @@ export function compareTestSetHtml(text: CompareText, intro: string, tools: stri
 		${tools}
 	</div>
 	<p class="small setHint" id="setHint"></p>
+	<div class="random bar" id="random" hidden><input type="number" class="count" id="randomCount" min="1" value="${RANDOM_COUNT}" aria-label="${text.randomCount}" title="${text.randomCount}"><button class="action current" id="tickRandom" title="${text.tickRandomHint}">${text.tickRandom}</button></div>
 	<div class="small status" id="setStatus"></div>
 	<p class="hint" id="noItems" hidden>${text.noItems}</p>
 	<div class="pager" id="pagerTop" hidden></div>
@@ -823,8 +838,42 @@ export const compareTestSetScript = `
 		}
 		document.getElementById('count').textContent = !items.length ? '' : ticked.size ? format(TEXT.countTicked, ticked.size, items.length) : format(TEXT.count, items.length);
 		document.getElementById('untick').hidden = !ticked.size;
+		document.getElementById('random').hidden = items.length < 2;
 		testSetChanged();
 	}
+	/**
+	 * Ticks \`count\` questions at random in place of those ticked, spread over their groups: one at a time from the group
+	 * that has had the fewest for its weight, ties broken at random, its question at random. A panel of the Panel FAQ
+	 * weighs 1, so that a draw reaches as many panels as there can be; a topic weighs its number of questions, so that
+	 * each topic keeps its share.
+	 */
+	function tickAtRandom(count) {
+		const shuffle = list => {
+			for (let i = list.length - 1; i > 0; i--) {
+				const j = Math.floor(Math.random() * (i + 1));
+				[list[i], list[j]] = [list[j], list[i]];
+			}
+			return list;
+		};
+		const byGroup = new Map();
+		for (const item of items) { byGroup.set(item.group || '', [...(byGroup.get(item.group || '') || []), item]); }
+		const groups = shuffle([...byGroup.entries()].map(([name, members]) => ({ left: shuffle([...members]), taken: 0, weight: name.startsWith('panel:') ? 1 : members.length })));
+		ticked.clear();
+		for (let drawn = 0; drawn < Math.min(count, items.length); drawn++) {
+			let next;
+			for (const group of groups) {
+				if (group.left.length && (!next || group.taken / group.weight < next.taken / next.weight)) { next = group; }
+			}
+			ticked.add(next.left.pop().question);
+			next.taken++;
+		}
+		ticksChanged();
+		render();
+	}
+	document.getElementById('tickRandom').addEventListener('click', () => {
+		const count = Math.floor(Number(document.getElementById('randomCount').value));
+		if (count > 0) { tickAtRandom(count); }
+	});
 	/** The test sets to choose from and the one shown, with its ticks. */
 	function showSets(message) {
 		const select = document.getElementById('testSet');

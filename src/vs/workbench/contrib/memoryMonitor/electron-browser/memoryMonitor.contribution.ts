@@ -50,16 +50,28 @@ function gigabytes(bytes: number): string {
 	return String(Number((bytes / 1024 ** 3).toFixed(1)));
 }
 
-/** `bytes` as 1.4 GB or 254 MB. */
+/**
+ * `bytes` in megabytes, such as 5 734 MB or 254 MB, so that the apps compare at a glance: the thousands set apart by a
+ * narrow no-break space, as the SI writes them, since a comma or a point is the decimal mark in some languages.
+ */
 function size(bytes: number): string {
-	return bytes >= 1024 ** 3
-		? localize('memory.gigabytes', "{0} GB", (bytes / 1024 ** 3).toFixed(1))
-		: localize('memory.megabytes', "{0} MB", Math.round(bytes / 1024 ** 2));
+	return localize('memory.megabytes', "{0} MB", String(Math.round(bytes / 1024 ** 2)).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f'));
 }
 
-/** How long a process has run, such as 4 days. */
+/** How long a process has run, such as 4 days, or 12 secs for one just started. */
 function runningFor(elapsed: number): string {
-	return fromNow(Date.now() - elapsed * 1000, false, true);
+	return fromNow(Date.now() - elapsed * 1000, false, true, true);
+}
+
+/**
+ * The space between the columns of the table: the hover gives a table no padding, and takes no style for one. Written as
+ * entities, as the Markdown renderer trims each cell, non-breaking spaces too.
+ */
+const COLUMN_GAP = '&emsp;'.repeat(3);
+
+/** A row of the table: the app on the left, its memory and how long it has run on the right, with a gap between each. */
+function tableRow(app: string, memory: string, running: string): string {
+	return `| ${app}${COLUMN_GAP} | ${COLUMN_GAP}${memory} | ${COLUMN_GAP}${running} |`;
 }
 
 function juliaLabel(role: JuliaRole): string {
@@ -137,13 +149,13 @@ function memoryMarkdown(reading: IMemoryReading, snapshot: IMemoryProcesses): Ma
 	groups.filter((group, index) => index < MAX_APPS || group.self || group.orphan || anotherPollis(group)).forEach(group => {
 		if (group.orphan) {
 			const julia = group.julia[0];
-			rows.push(`| $(warning) ${cell(juliaLabel(julia.role))} | ${size(julia.memory)} | ${cell(runningFor(julia.elapsed))} |`);
+			rows.push(tableRow(`$(warning) ${cell(juliaLabel(julia.role))}`, size(julia.memory), cell(runningFor(julia.elapsed))));
 			const end = `[${cell(localize('memory.end', "End"))}](command:${END_JULIA_COMMAND_ID}?${encodeURIComponent(JSON.stringify([julia.pid]))})`;
 			warnings.push(`$(warning) ${cell(localize('memory.orphan', "{0} is still running, though the app that started it has quit: end it to free its memory.", juliaLabel(julia.role)))} ${end}`);
 			return;
 		}
 		const name = group.self ? localize('memory.self', "{0} (this one)", group.name) : group.name;
-		rows.push(`| ${anotherPollis(group) ? '$(warning) ' : ''}${cell(name)} | ${size(group.memory)} | ${cell(runningFor(group.elapsed))} |`);
+		rows.push(tableRow(`${anotherPollis(group) ? '$(warning) ' : ''}${cell(name)}`, size(group.memory), cell(runningFor(group.elapsed))));
 		if (anotherPollis(group)) {
 			const folder = group.key.replace(/[\\/][^\\/]+$/, '');
 			warnings.push(`$(warning) ${cell(isMacintosh
@@ -153,14 +165,14 @@ function memoryMarkdown(reading: IMemoryReading, snapshot: IMemoryProcesses): Ma
 		// The Julia processes of a Pollis, one by one: those it shows nowhere else
 		if (group.self || anotherPollis(group)) {
 			for (const julia of group.julia) {
-				const version = julia.version ? ` \u00b7 ${cell(localize('memory.julia.version', "Julia {0}", julia.version))}` : '';
-				rows.push(`| \u00a0\u00a0\u21b3 ${cell(juliaLabel(julia.role))} | ${size(julia.memory)} | ${cell(runningFor(julia.elapsed))}${version} |`);
+				rows.push(tableRow(`&emsp;\u21b3 ${cell(juliaLabel(julia.role))}`, size(julia.memory), cell(runningFor(julia.elapsed))));
 			}
 		}
 	});
 	markdown.appendMarkdown([
-		`| ${cell(localize('memory.app', "App"))} | ${cell(localize('memory.memory', "Memory"))} | ${cell(localize('memory.running', "Running For"))} |`,
-		'|---|--:|---|',
+		tableRow(cell(localize('memory.app', "App")), cell(localize('memory.memory', "Memory")), cell(localize('memory.running', "Running For"))),
+		// Each column aligned, its heading too: without, the browser centres the headings
+		'|:--|--:|--:|',
 		...rows,
 	].join('\n') + '\n\n');
 	for (const warning of warnings) {

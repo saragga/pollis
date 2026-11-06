@@ -32,6 +32,27 @@ const CHANGES = new Set<StatementType>([StatementType.INSERT, StatementType.UPDA
 
 const dim = (text: string) => `\x1b[2m${text}\x1b[0m`;
 const red = (text: string) => `\x1b[31m${text}\x1b[0m`;
+/** Bold green, as the Julia REPL writes julia>: the terminal theme's green. */
+const green = (text: string) => `\x1b[1;32m${text}\x1b[0m`;
+
+const PROMPT = `${green('duckdb>')} `;
+const CONTINUATION = `${green('   ...>')} `;
+
+/**
+ * A sequence of VS Code's shell integration (OSC 633), as the Julia REPL writes them: the terminal then marks each
+ * prompt with a circle, blue when its command succeeded and red when it failed, with Rerun Command and Copy Output.
+ */
+const shellIntegration = (code: string) => `\x1b]633;${code}\x07`;
+
+/** A command line as shell integration takes it: a backslash doubled, a semicolon and the characters up to the space as \xAB. */
+function escapedCommandLine(text: string): string {
+	return [...text].map(character => character === '\\' ? '\\\\'
+		: character === ';' || character.charCodeAt(0) <= 0x20 ? `\\x${character.charCodeAt(0).toString(16).padStart(2, '0')}`
+			: character).join('');
+}
+
+/** How a command ended: `quit` ends the shell. */
+type CommandEnd = 'succeeded' | 'failed' | 'quit';
 
 function sqlString(text: string): string {
 	return `'${text.replace(/'/g, `''`)}'`;
@@ -125,22 +146,17 @@ class Shell {
 
 	constructor(private readonly connection: DuckDBConnection) { }
 
-	/** Attach the built-in databases and load fts; returns what to tell the user about them. */
+	/** Attach the built-in databases and load fts; returns what went wrong, if anything: the shell starts at its prompt, as the Julia REPL does. */
 	async prepare(): Promise<string[]> {
 		const notes: string[] = [];
-		const attached: string[] = [];
 		for (const file of BUILTINS) {
 			if (fs.existsSync(file)) {
 				try {
 					await this.connection.run(`ATTACH IF NOT EXISTS ${sqlString(file)} (READ_ONLY)`);
-					attached.push(file.replace(/^.*[\\/]|\.duckdb$/g, ''));
 				} catch (err) {
 					notes.push(red(String((err as Error).message)));
 				}
 			}
-		}
-		if (attached.length) {
-			notes.push(dim(`Attached read-only: ${attached.join(', ')}.`));
 		}
 		if (fs.existsSync(FTS)) {
 			try {
@@ -159,36 +175,34 @@ class Shell {
 		return this.running;
 	}
 
-	/** Run a dot command; returns false to quit. */
-	async command(line: string): Promise<boolean> {
+	/** Run a dot command. */
+	async command(line: string): Promise<CommandEnd> {
 		const [name, ...args] = line.trim().split(/\s+/);
+		const ended = (succeeded: boolean): CommandEnd => succeeded ? 'succeeded' : 'failed';
 		switch (name) {
 			case '.quit':
 			case '.exit':
-				return false;
+				return 'quit';
 			case '.help':
 				console.log(HELP);
-				break;
+				return 'succeeded';
 			case '.timer':
 				this.timer = args[0] !== 'off';
-				break;
+				return 'succeeded';
 			case '.databases':
-				await this.run('SELECT database_name AS name, path, readonly FROM duckdb_databases() WHERE NOT internal ORDER BY 1;');
-				break;
+				return ended(await this.run('SELECT database_name AS name, path, readonly FROM duckdb_databases() WHERE NOT internal ORDER BY 1;'));
 			case '.tables':
-				await this.run('SELECT database, schema, name FROM (SHOW ALL TABLES) ORDER BY ALL;');
-				break;
+				return ended(await this.run('SELECT database, schema, name FROM (SHOW ALL TABLES) ORDER BY ALL;'));
 			case '.schema':
-				await this.run(`SELECT sql FROM (SELECT database_name, table_name, sql FROM duckdb_tables() UNION ALL SELECT database_name, view_name, sql FROM duckdb_views() WHERE NOT internal)${args[0] ? ` WHERE table_name = ${sqlString(args[0])}` : ''} ORDER BY database_name, table_name;`);
-				break;
+				return ended(await this.run(`SELECT sql FROM (SELECT database_name, table_name, sql FROM duckdb_tables() UNION ALL SELECT database_name, view_name, sql FROM duckdb_views() WHERE NOT internal)${args[0] ? ` WHERE table_name = ${sqlString(args[0])}` : ''} ORDER BY database_name, table_name;`));
 			default:
 				console.log(red(`Unknown command ${name}; .help lists the commands.`));
+				return 'failed';
 		}
-		return true;
 	}
 
-	/** Run every statement of `sql`, showing the result of each. */
-	async run(sql: string): Promise<void> {
+	/** Run every statement of `sql`, showing the result of each; whether all of them ran. */
+	async run(sql: string): Promise<boolean> {
 		this.running = true;
 		try {
 			const statements = await this.connection.extractStatements(sql);
@@ -233,8 +247,10 @@ class Shell {
 					prepared.destroySync();
 				}
 			}
+			return true;
 		} catch (err) {
 			console.log(red((err as Error).message));
+			return false;
 		} finally {
 			this.running = false;
 		}
@@ -282,8 +298,6 @@ async function main(): Promise<void> {
 	const instance = await DuckDBInstance.create(file, { autoinstall_known_extensions: 'false', autoload_known_extensions: 'false' });
 	const connection = await instance.connect();
 	const shell = new Shell(connection);
-	const version = (await connection.runAndReadAll('SELECT library_version FROM pragma_version()')).getRows()[0][0];
-	console.log(`DuckDB ${version} in Pollis${file === ':memory:' ? ', an in-memory database' : `, ${file}`}. Type .help for help.`);
 	for (const note of await shell.prepare()) {
 		console.log(note);
 	}
@@ -293,7 +307,7 @@ async function main(): Promise<void> {
 	const rl = readline.createInterface({
 		input: process.stdin,
 		output: process.stdout,
-		prompt: 'duckdb> ',
+		prompt: PROMPT,
 		history: readHistory(),
 		historySize: HISTORY_SIZE,
 		removeHistoryDuplicates: true,
@@ -303,14 +317,29 @@ async function main(): Promise<void> {
 	});
 	rl.on('history', history => writeHistory(history));
 
+	/**
+	 * The prompt of a new command, between the marks of its start and end, written apart from the prompt itself so
+	 * that readline, which writes the prompt again as the line is edited, does not mark it again.
+	 */
+	const prompt = () => {
+		process.stdout.write(shellIntegration('A'));
+		rl.setPrompt(PROMPT);
+		rl.prompt();
+		process.stdout.write(shellIntegration('B'));
+	};
+	/** The command `commandLine` begins to run: its line, then the mark of its output. */
+	const started = (commandLine: string) => process.stdout.write(shellIntegration(`E;${escapedCommandLine(commandLine)}`) + shellIntegration('C'));
+	/** The command has ended: succeeded or failed, or with no status for an empty line or one dropped. */
+	const finished = (end?: CommandEnd) => process.stdout.write(shellIntegration(end ? `D;${end === 'failed' ? 1 : 0}` : 'D'));
+
 	rl.on('SIGINT', () => {
 		if (!shell.interrupt()) {
 			// Ctrl+C at the prompt drops what was typed, as in DuckDB's own shell.
 			buffer = '';
 			rl.write(null, { ctrl: true, name: 'u' });
 			process.stdout.write('\n');
-			rl.setPrompt('duckdb> ');
-			rl.prompt();
+			finished();
+			prompt();
 		}
 	});
 	rl.on('close', () => {
@@ -319,29 +348,36 @@ async function main(): Promise<void> {
 		process.exit(0);
 	});
 
-	rl.prompt();
+	// The shell reports every command line, so the terminal need not guess them from the screen
+	process.stdout.write(shellIntegration('P;HasRichCommandDetection=True'));
+	prompt();
 	for await (const line of rl) {
 		if (!buffer && line.trim().startsWith('.')) {
-			if (!await shell.command(line)) {
+			started(line.trim());
+			const end = await shell.command(line);
+			if (end === 'quit') {
 				rl.close();
 				return;
 			}
+			finished(end);
 		} else {
 			buffer += (buffer ? '\n' : '') + line;
 			if (!complete(buffer)) {
-				rl.setPrompt('   ...> ');
+				rl.setPrompt(CONTINUATION);
 				rl.prompt();
 				continue;
 			}
 			const sql = buffer;
 			buffer = '';
-			if (!blank(sql)) {
+			if (blank(sql)) {
+				finished();
+			} else {
+				started(sql);
 				// readline stays active, so that Ctrl+C reaches it and stops the query.
-				await shell.run(sql);
+				finished(await shell.run(sql) ? 'succeeded' : 'failed');
 			}
 		}
-		rl.setPrompt('duckdb> ');
-		rl.prompt();
+		prompt();
 	}
 }
 

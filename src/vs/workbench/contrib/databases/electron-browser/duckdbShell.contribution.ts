@@ -11,7 +11,7 @@ import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextke
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { INativeWorkbenchEnvironmentService } from '../../../services/environment/electron-browser/environmentService.js';
 import { ITerminalService } from '../../terminal/browser/terminal.js';
-import { DatabaseConnectionsView } from '../browser/connectionsView.js';
+import { DATABASES_VIEW_CONTAINER_ID } from '../browser/connectionsView.js';
 
 /** The duckdb> shell, which Electron runs as Node through bootstrap-fork. */
 const DUCKDB_SHELL_ENTRYPOINT = 'vs/workbench/contrib/databases/node/duckdbShellMain';
@@ -24,7 +24,7 @@ registerAction2(class extends Action2 {
 			category: localize2('databases.category', "Databases"),
 			icon: Codicon.terminal,
 			f1: true,
-			menu: { id: MenuId.ViewTitle, when: ContextKeyExpr.equals('view', DatabaseConnectionsView.ID), group: 'navigation', order: 3 },
+			menu: { id: MenuId.ViewContainerTitle, when: ContextKeyExpr.equals('viewContainer', DATABASES_VIEW_CONTAINER_ID), group: 'navigation', order: 3 },
 		});
 	}
 
@@ -34,11 +34,15 @@ registerAction2(class extends Action2 {
 		const environmentService = accessor.get(INativeWorkbenchEnvironmentService);
 		const instance = await terminalService.createTerminal({
 			config: {
-				name: localize('databases.duckdbTerminal', "DuckDB"),
+				name: localize('databases.duckdbRepl', "DuckDB REPL"),
 				executable: environmentService.execPath,
 				args: [FileAccess.asFileUri('bootstrap-fork.js').fsPath, ...(typeof file === 'string' ? [file] : [])],
 				env: { ELECTRON_RUN_AS_NODE: '1', VSCODE_ESM_ENTRYPOINT: DUCKDB_SHELL_ENTRYPOINT },
-				icon: Codicon.database,
+				// The icon of the button that opens it, as the Julia REPL has
+				icon: Codicon.terminal,
+				// Owned as the Julia REPL is, by the feature that opens it: the terminal shows no hint of its own
+				// (Show suggestions) after the prompt, and never relaunches the shell when the environment changes
+				isExtensionOwnedTerminal: true,
 			},
 		});
 		terminalService.setActiveInstance(instance);

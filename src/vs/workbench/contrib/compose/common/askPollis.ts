@@ -16,6 +16,11 @@ export const ASK_QUERY_PREFIX = 'task: question answering | query: {text}';
 /** What a passage is given to the embedding model as, when pollis.ask.passagePrefix gives nothing: EmbeddingGemma's form for a document; the Julia extension has the same. */
 export const ASK_PASSAGE_PREFIX = 'title: {title} | text: {text}';
 /**
+ * What an answer and the right answer are given to the embedding model as, for the answer score of Evaluate Answering
+ * Models, when pollis.ask.queryPrefix gives nothing: EmbeddingGemma's form for sentence similarity; with that setting, its form.
+ */
+export const ASK_SIMILARITY_PREFIX = 'task: sentence similarity | query: {text}';
+/**
  * The context of the embedding server, in tokens: the same as the Julia extension's when it indexes
  * (pollisDocuments.ts), so that both use the one server.
  */
@@ -494,7 +499,7 @@ export interface ICompareRunSummary {
 	/** The version of Pollis it ran on. */
 	readonly pollis: string;
 	readonly models: readonly ICompareRunModel[];
-	/** The judges, by their labels. */
+	/** The judges, by their labels; none when the run has the free scores only. */
 	readonly judges: readonly string[];
 	readonly repeats: number;
 	readonly questions: number;
@@ -523,17 +528,23 @@ export interface ICompareRunAnswer {
 	/** Why the model gave no answer. */
 	readonly error?: string;
 	readonly timings?: IAskPollisTimings;
+	/** Its answer score: the cosine similarity of its embedding and that of the right answer, by the embedding model of the search. */
+	readonly similarity?: number;
 }
 
-/** A judge's rating of an answer, the five parts of RAGTools.JudgeAllScores, each from 1 to 5, and the mean of them. */
+/**
+ * A judge's rating of an answer, from 1 to 5, against the right answer of the test set, and why; a run before the
+ * ratings against the right answer has the five parts of RAGTools.JudgeAllScores too, against the passages found, and
+ * their mean as the rating.
+ */
 export interface ICompareRunScore {
 	readonly answer: string;
 	readonly judge: string;
-	readonly relevance: number;
-	readonly completeness: number;
-	readonly clarity: number;
-	readonly consistency: number;
-	readonly helpfulness: number;
+	readonly relevance?: number;
+	readonly completeness?: number;
+	readonly clarity?: number;
+	readonly consistency?: number;
+	readonly helpfulness?: number;
 	readonly final: number;
 	readonly rationale: string;
 }
@@ -724,6 +735,8 @@ export interface IAskPollisIndex {
 	indexedDocuments(database: string): Promise<readonly IAskPollisIndexedDocument[] | undefined>;
 	/** The scores of `passages` for `question` by the reranker of llama-server at `url`, its /rerank. */
 	rerank(url: string, question: string, passages: readonly string[]): Promise<IAskPollisReranked>;
+	/** The cosine similarity of the two texts of each of `pairs`, by the embedding model of llama-server at `url`, its /embeddings. */
+	similarities(url: string, pairs: readonly (readonly [string, string])[]): Promise<readonly number[]>;
 	/** The first `count` passages of the document `file` in the index `database`, in their order. */
 	documentPassages(database: string, file: string, count: number): Promise<readonly IAskPollisPassage[]>;
 	search(request: IAskPollisIndexRequest): Promise<IAskPollisSearchResult>;
@@ -794,6 +807,11 @@ export interface IAskPollisService {
 	rerank(model: string, question: string, passages: readonly IAskPollisPassage[]): Promise<IAskPollisReranked>;
 	/** Stops the embedding model of the search, if it runs, so that its memory is free; the next search starts it again. Resolves once it has stopped. */
 	stopSearchModel(): Promise<void>;
+	/**
+	 * The cosine similarity of the two texts of each of `pairs` by the embedding model of the search, which it starts
+	 * through the Julia extension; nothing when that model cannot start, or has not embedded the index.
+	 */
+	similarities(pairs: readonly (readonly [string, string])[]): Promise<readonly number[] | undefined>;
 	/**
 	 * What a search by meaning and words depends on now: the index, its build time, the embedding model, its query
 	 * prefix, the number of passages and Pollis' version; nothing when a question would be searched by its words only.

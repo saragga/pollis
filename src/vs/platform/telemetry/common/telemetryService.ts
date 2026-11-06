@@ -304,7 +304,10 @@ configurationRegistry.registerConfiguration({
 				localize('telemetry.telemetryLevel.off', "Disables all product telemetry.")
 			],
 			'markdownDescription': getTelemetryLevelSettingDescription(),
-			'default': TelemetryConfiguration.ON,
+			// Pollis: no telemetry (supportsTelemetry is always false). Off by default, and the deprecation message
+			// hides the setting from the Settings editor unless it has been set, so it is not offered as a choice.
+			'default': TelemetryConfiguration.OFF,
+			'deprecationMessage': localize('telemetry.telemetryLevel.pollis', "Pollis sends no telemetry."),
 			'restricted': true,
 			'scope': ConfigurationScope.APPLICATION,
 			'tags': ['usesOnlineServices', 'telemetry'],
@@ -356,7 +359,8 @@ configurationRegistry.registerConfiguration({
 				!product.privacyStatementUrl ?
 					localize('telemetry.enableTelemetry', "Enable diagnostic data to be collected. This helps us to better understand how {0} is performing and where improvements need to be made.", product.nameLong) :
 					localize('telemetry.enableTelemetryMd', "Enable diagnostic data to be collected. This helps us to better understand how {0} is performing and where improvements need to be made. [Read more]({1}) about what we collect and our privacy statement.", product.nameLong, product.privacyStatementUrl),
-			'default': true,
+			// Pollis: off, as the setting that replaces it
+			'default': false,
 			'restricted': true,
 			'markdownDeprecationMessage': localize('enableTelemetryDeprecated', "If this setting is false, no telemetry will be sent regardless of the new setting's value. Deprecated in favor of the {0} setting.", `\`#${TELEMETRY_SETTING_ID}#\``),
 			'scope': ConfigurationScope.APPLICATION,

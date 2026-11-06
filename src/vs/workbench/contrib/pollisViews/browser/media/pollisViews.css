@@ -26,16 +26,22 @@
 	opacity: 0.7;
 }
 
-/* The Views panel: a message (and Create View... for a built-in View) above the tree of menu items */
+/* The Views panel: a message above the tree of menu items, and Save View As... below it for a built-in View */
 .pollis-views-panel .pollis-views-header {
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
 	padding: 6px 20px 8px;
 	color: var(--vscode-descriptionForeground);
 }
 
-.pollis-views-panel .pollis-views-header .monaco-button.hidden {
+/* The menus one step in from the edge, their twisties in line with the message above */
+.pollis-views-panel .pollis-views-tree {
+	padding-left: 12px;
+}
+
+.pollis-views-panel .pollis-views-footer {
+	padding: 10px 20px 8px;
+}
+
+.pollis-views-panel .pollis-views-footer.hidden {
 	display: none;
 }
 

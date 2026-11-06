@@ -301,6 +301,8 @@ const COMPARISONS_TABLES = [
 	'ALTER TABLE Comparisons.runs ADD COLUMN IF NOT EXISTS style VARCHAR',
 	'CREATE TABLE IF NOT EXISTS Comparisons.questions(run VARCHAR, question INTEGER, source VARCHAR, context VARCHAR, text VARCHAR, answer VARCHAR, passages VARCHAR, rank INTEGER)',
 	'CREATE TABLE IF NOT EXISTS Comparisons.answers(run VARCHAR, id VARCHAR, question INTEGER, model VARCHAR, repeat INTEGER, answer VARCHAR, error VARCHAR, first_word DOUBLE, seconds DOUBLE, reading DOUBLE, writing DOUBLE, tokens_read INTEGER, tokens_written INTEGER)',
+	// The answer score of an answer, added with it: an answer before it has none
+	'ALTER TABLE Comparisons.answers ADD COLUMN IF NOT EXISTS similarity DOUBLE',
 	'CREATE TABLE IF NOT EXISTS Comparisons.scores(run VARCHAR, answer VARCHAR, judge VARCHAR, relevance INTEGER, completeness INTEGER, clarity INTEGER, consistency INTEGER, helpfulness INTEGER, final DOUBLE, rationale VARCHAR)',
 	'CREATE TABLE IF NOT EXISTS Comparisons.unrated(run VARCHAR, answer VARCHAR, judge VARCHAR, error VARCHAR)',
 	'CREATE TABLE IF NOT EXISTS Comparisons.found(stamp VARCHAR, question VARCHAR, passages VARCHAR, PRIMARY KEY(stamp, question))',
@@ -329,6 +331,24 @@ async function embedAll(url: string, inputs: readonly string[]): Promise<string>
 		throw new Error(`${response.status} ${await response.text()}`);
 	}
 	return response.text();
+}
+
+/** How many pairs of texts the answer scores embed at a time. */
+const SIMILARITY_BATCH = 8;
+/** How much of an answer the answer score embeds: about 1,500 tokens, within the embedding server's context. */
+const SIMILARITY_CHARACTERS = 6000;
+
+/** The cosine similarity of the vectors `a` and `b`; 0 when either is all zeros. */
+function cosine(a: readonly number[], b: readonly number[]): number {
+	let dot = 0;
+	let normA = 0;
+	let normB = 0;
+	for (let index = 0; index < a.length; index++) {
+		dot += a[index] * b[index];
+		normA += a[index] * a[index];
+		normB += b[index] * b[index];
+	}
+	return normA && normB ? dot / Math.sqrt(normA * normB) : 0;
 }
 
 class AskPollisIndex implements IAskPollisIndex {
@@ -427,6 +447,20 @@ class AskPollisIndex implements IAskPollisIndex {
 		} catch (err) {
 			return { error: err instanceof Error ? err.message : String(err) };
 		}
+	}
+
+	async similarities(url: string, pairs: readonly (readonly [string, string])[]): Promise<readonly number[]> {
+		const similarities: number[] = [];
+		// A few pairs at a time, each text cut to fit the server's context
+		for (let start = 0; start < pairs.length; start += SIMILARITY_BATCH) {
+			const inputs = pairs.slice(start, start + SIMILARITY_BATCH).flat().map(text => text.slice(0, SIMILARITY_CHARACTERS));
+			const answer = JSON.parse(await embedAll(url, inputs)) as { data: { index?: number; embedding: number[] }[] };
+			const vectors = answer.data.map((item, position) => ({ position: item.index ?? position, embedding: item.embedding })).sort((a, b) => a.position - b.position).map(item => item.embedding);
+			for (let index = 0; index + 1 < vectors.length; index += 2) {
+				similarities.push(cosine(vectors[index], vectors[index + 1]));
+			}
+		}
+		return similarities;
 	}
 
 	async documentPassages(database: string, file: string, count: number): Promise<readonly IAskPollisPassage[]> {
@@ -830,13 +864,17 @@ class AskPollisIndex implements IAskPollisIndex {
 				}
 				for (const answer of run.answers) {
 					const timings = answer.timings;
-					await connection.run('INSERT INTO Comparisons.answers VALUES ($run, $id, $question, $model, $repeat, $answer, $error::VARCHAR, $firstWord::DOUBLE, $seconds::DOUBLE, $reading::DOUBLE, $writing::DOUBLE, $tokensRead::INTEGER, $tokensWritten::INTEGER)', {
+					await connection.run('INSERT INTO Comparisons.answers (run, id, question, model, repeat, answer, error, first_word, seconds, reading, writing, tokens_read, tokens_written, similarity) VALUES ($run, $id, $question, $model, $repeat, $answer, $error::VARCHAR, $firstWord::DOUBLE, $seconds::DOUBLE, $reading::DOUBLE, $writing::DOUBLE, $tokensRead::INTEGER, $tokensWritten::INTEGER, $similarity::DOUBLE)', {
 						run: summary.id, id: answer.id, question: answer.question, model: answer.model, repeat: answer.repeat, answer: answer.answer, error: answer.error ?? null,
 						firstWord: timings?.firstWord ?? null, seconds: timings?.seconds ?? null, reading: timings?.reading ?? null, writing: timings?.writing ?? null, tokensRead: timings?.tokensRead ?? null, tokensWritten: timings?.tokensWritten ?? null,
+						similarity: answer.similarity ?? null,
 					});
 				}
 				for (const score of run.scores) {
-					await connection.run('INSERT INTO Comparisons.scores VALUES ($run, $answer, $judge, $relevance, $completeness, $clarity, $consistency, $helpfulness, $final, $rationale)', { run: summary.id, ...score });
+					await connection.run('INSERT INTO Comparisons.scores VALUES ($run, $answer, $judge, $relevance::INTEGER, $completeness::INTEGER, $clarity::INTEGER, $consistency::INTEGER, $helpfulness::INTEGER, $final, $rationale)', {
+						run: summary.id, answer: score.answer, judge: score.judge, final: score.final, rationale: score.rationale,
+						relevance: score.relevance ?? null, completeness: score.completeness ?? null, clarity: score.clarity ?? null, consistency: score.consistency ?? null, helpfulness: score.helpfulness ?? null,
+					});
 				}
 				for (const unrated of run.unrated) {
 					await connection.run('INSERT INTO Comparisons.unrated VALUES ($run, $answer, $judge, $error)', { run: summary.id, ...unrated });
@@ -901,15 +939,16 @@ class AskPollisIndex implements IAskPollisIndex {
 						tokensRead: optionalNumber(row.tokens_read),
 						tokensWritten: optionalNumber(row.tokens_written),
 					},
+					similarity: optionalNumber(row.similarity),
 				})),
 				scores: scores.map(row => ({
 					answer: String(row.answer),
 					judge: String(row.judge),
-					relevance: Number(row.relevance),
-					completeness: Number(row.completeness),
-					clarity: Number(row.clarity),
-					consistency: Number(row.consistency),
-					helpfulness: Number(row.helpfulness),
+					relevance: optionalNumber(row.relevance),
+					completeness: optionalNumber(row.completeness),
+					clarity: optionalNumber(row.clarity),
+					consistency: optionalNumber(row.consistency),
+					helpfulness: optionalNumber(row.helpfulness),
 					final: Number(row.final),
 					rationale: String(row.rationale ?? ''),
 				})),
