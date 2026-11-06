@@ -50298,6 +50298,18 @@
 			]
 		},
 		{
+			"id": "compareRerankers",
+			"title": "Evaluate Reranking Models",
+			"commands": [
+				"pollis.compareRerankers"
+			],
+			"keys": [
+				"MRS2008a",
+				"NC2019a",
+				"Voo1999a"
+			]
+		},
+		{
 			"id": "copt",
 			"title": "Constrained Optimisation",
 			"description": "SLSQP · MMA · Interior Point · Frank–Wolfe · Gradient Projection",

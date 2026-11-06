@@ -17,7 +17,7 @@
 - Downloading another quantisation of a model, or its projector, from its repository on Hugging Face.
 
 ## What Set Active Models Does Not Do
-Set Active Models does not set the tiers, which Model Tasks and Routing does, and it does not compare models, which Evaluate Answering Models and Evaluate Embedding Models do. New models are not searched for here either, since **Other Versions** only offers other files of a repository already on the computer. How well a model works is measured by Evaluate Answering Models and Evaluate Embedding Models, on questions with known answers.
+Set Active Models does not set the tiers, which Model Tasks and Routing does, and it does not compare models, which Evaluate Answering Models, Evaluate Embedding Models and Evaluate Reranking Models do. New models are not searched for here either, since **Other Versions** only offers other files of a repository already on the computer. How well a model works is measured by those three pages, on questions with known answers.
 
 ## See Also
 - [Overview](overview.md) · [GGUF Files and Quantisation](gguf-and-quantisation.md) · [Choosing a Local Model](choosing.md)

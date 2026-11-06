@@ -35,7 +35,7 @@ import { ICompareProgress } from './compareModelsRun.js';
 import { compareChartsHtml, compareChartsScript, compareCommonScript, compareCss, compareLocalCard, compareSharedText, compareTestSetHeadHtml, compareTestSetHtml, compareTestSetScript, CompareTestSetChoice } from './compareShared.js';
 import { IInstalledModel } from './modelsInstalledPage.js';
 
-// Evaluate Embedding Models, from Compose > Local Models > Evaluate Embedding Models... (compose.contribution.ts): the
+// Evaluate Embedding Models, from Compose > Knowledge for Models > Evaluate Embedding Models... (compose.contribution.ts): the
 // embedding models of this computer, compared on the questions of a test set of Evaluate Answering Models, which the
 // sets are changed in. One page, in four steps: 1, the models to compare; 2, the questions, those ticked being the ones
 // searched, all when none is; 3, Run, which embeds the passages each model has not embedded yet, once ever, into the

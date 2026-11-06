@@ -1,0 +1,61 @@
+# Evaluate Reranking Models Webview Configuration
+# A page of Compose in the Time Arrow style of the scaffold, not a panel: only its Powered by and Learn More. `pageCommand`
+# is the command that opens it, which a panel's contribution file would say. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/compareRerankers.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Evaluate Reranking Models"
+viewType = "pollis.compareRerankers"
+pageCommand = "pollis.compareRerankers"
+
+[[packages]]
+name = "DuckDB.jl"
+github = "https://github.com/duckdb/DuckDB.jl"
+
+[[wikis]]
+name = "Factsheet"
+file = "compareRerankers/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "compareRerankers/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "compareRerankers/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "compareRerankers/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "compareRerankers/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "compareRerankers/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+key = "MRS2008a"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "NC2019a"
+
+[[references]]
+key = "Voo1999a"

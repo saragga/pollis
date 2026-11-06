@@ -151,8 +151,8 @@ searched: it goes to the model with the passages, and stays with its question, s
 speak of it too.
 
 \subsection{The model}
-The models of Pollis AI+ are shown in the hover of its entry at the right of the status bar, with a cloud beside its name
-while a cloud model answers; a click opens \menupath{Compose\gt Local Models\gt Set Active Models}, whose \textbf{Set Models}
+The models of Pollis AI+ are shown in the hover of \textbf{Active Models}, their entry at the right of the status bar,
+with a cloud beside it while a cloud model answers; a click opens \menupath{Compose\gt Local Models\gt Set Active Models}, whose \textbf{Set Models}
 sets them. The model that writes the answer, the same for Ask Pollis, the panels and Evaluate Answering Models, is one of:
 \begin{itemize}
   \item \textbf{On this computer}: the chat models installed on this computer, run by llama.cpp; the one chosen is kept
@@ -226,8 +226,8 @@ at \emph{dev} when you develop it in \file{~/.julia/dev}; the passage says which
 
 These passages are a source of their own, for when you look for a function that does something, rather than ask what
 a function does. Auto never searches them. Ticking \textbf{Package APIs} in \textbf{Search In}
-and \textbf{All Sources} do, and Open shows the docstring on its site. Evaluate Models and Evaluate Embedding Models leave
-them out. They are read unless \file{pollis.ask.packageApis} is off (\S\ref{sec:settings}).
+and \textbf{All Sources} do, and Open shows the docstring on its site. Evaluate Answering Models, Evaluate Embedding
+Models and Evaluate Reranking Models leave them out. They are read unless \file{pollis.ask.packageApis} is off (\S\ref{sec:settings}).
 
 \section{Cutting into passages}\label{sec:passages}
 
@@ -544,8 +544,8 @@ passages they are made from.
 
 \section{Comparing the embedding models}\label{sec:compareEmbeddings}
 
-Which model should find the passages? \menupath{Compose\gt Local Models\gt Evaluate Embedding Models...}, below
-Evaluate Answering Models, compares the embedding models on this computer on the same test sets. It goes in the same
+Which model should find the passages? \menupath{Compose\gt Knowledge for Models\gt Evaluate Embedding Models...}
+compares the embedding models on this computer on the same test sets. It goes in the same
 four steps: 1, the models; 2, the questions, of the test set chosen, those ticked being the ones searched, all when
 none is (the test sets are made and changed in Evaluate Answering Models, which \textbf{Change the Test Sets...}
 opens); 3, \textbf{Run}, with the charts of the memory free and Model Servers; 4, the results.
@@ -575,6 +575,36 @@ Below them, each question with the place of its passage for each model, among th
 \textbf{Use for Ask Pollis}, under a model, makes it the embedding model of Ask Pollis, with its prefixes
 (\file{pollis.ask.embeddingModel}, \file{pollis.ask.passagePrefix} and \file{pollis.ask.queryPrefix}), and makes the
 index again, from the embeddings the run kept. The runs are kept in \file{~/.pollis/ask/Comparisons.duckdb}.
+
+\section{Comparing the rerankers}\label{sec:compareRerankers}
+
+Which reranker should choose the passages, or should any? \menupath{Compose\gt Knowledge for Models\gt Evaluate
+Reranking Models...}, below Evaluate Embedding Models, compares the rerankers on this computer on the same test sets,
+in the same four steps: 1, the models; 2, the questions; 3, \textbf{Run}, with the charts of the memory free and Model
+Servers; 4, the results.
+
+\subsection{A run}
+The passages of each question are found once, by words and meaning with the embedding model of Ask Pollis, three times
+as many as Ask Pollis gives, as Ask Pollis finds them when a reranker is set; those found before for the same question
+with the same search stamp are taken again, as in Evaluate Answering Models. The embedding model and the chat model are
+then stopped, and each reranker chosen runs alone in memory, one after the other, scoring the same passages for each
+question. The passage each question was made from is known by its text as the documents have it now, or, for a question
+of the Panel FAQ, by its wiki. \textbf{No Reranker}, the order of the search, is measured in every run. No question or
+passage leaves the computer.
+
+\subsection{The figures}
+A column for each reranker and for No Reranker, the best first:
+\begin{itemize}
+  \item \textbf{Found} and \textbf{Place}: how often the passage the question was made from is among those Ask Pollis
+    gives, the first in the reranker's order, and its place among them, on average.
+  \item \textbf{Place Among All Found}: its place among all the passages found, in the reranker's order, the median.
+  \item \textbf{Reranking, ms} and \textbf{Memory, GB}: the milliseconds to score the passages of a question, and the
+    memory the reranker's server took.
+\end{itemize}
+Above them, the share of the questions whose passage was among those found at all, which no reranker can exceed;
+below them, each question with the place of its passage in the order of each reranker. \textbf{Use for Ask Pollis},
+under a reranker, makes it the reranker of Ask Pollis (\file{pollis.ask.reranker}); under No Reranker, it sets none.
+The runs are kept in \file{~/.pollis/ask/Comparisons.duckdb}.
 
 \section{Keeping the index up to date}\label{sec:fresh}
 
@@ -661,7 +691,7 @@ No Julia Manual in \textbf{Search In} & Your Julia came without its documentatio
 \midrule
 \file{.../compose/browser/compose.contribution.ts} & Help\gt Ask Pollis\\
 \file{.../compose/browser/askPollisPage.ts} & The pane: the question, what is attached, the answer as it comes,
-  Sources; Pollis AI+ in the status bar\\
+  Sources; Active Models in the status bar\\
 \file{.../compose/browser/composerAdd.ts} & The \textbf{+} and its menu, the same for Ask Pollis and the Collaboration
   chat\\
 \file{.../compose/node/askPollisMain.ts} & The DuckDB process that searches \file{PollisDocuments.duckdb} (\S\ref{sec:finding}),
@@ -680,7 +710,11 @@ No Julia Manual in \textbf{Search In} & Your Julia came without its documentatio
   Pollis\\
 \file{.../compose/browser/compareEmbeddingsRun.ts} & A run of Evaluate Embedding Models: each model's server in turn,
   the passages embedded, the questions searched\\
-\file{.../compose/browser/compareShared.ts} & What both pages share: the test sets, the models on this computer, the
+\file{.../compose/browser/compareRerankersPage.ts} & Evaluate Reranking Models: the page, its figures, and Use for Ask
+  Pollis\\
+\file{.../compose/browser/compareRerankersRun.ts} & A run of Evaluate Reranking Models: the passages found once, then
+  each reranker's server in turn\\
+\file{.../compose/browser/compareShared.ts} & What the pages share: the test sets, the models on this computer, the
   charts and Model Servers\\
 \file{.../compose/browser/compareModelsRun.ts} & A run: the answers, through Ask Pollis, each local model in turn, then
   the judging; and the questions made; the test set read and written\\

@@ -232,7 +232,7 @@ class MemoryStatus extends Disposable implements IWorkbenchContribution {
 		if (this.entry.value) {
 			this.entry.value.update(properties);
 		} else {
-			// Left of Pollis AI+, which is flush right
+			// Left of Active Models, which is flush right
 			this.entry.value = this.statusbarService.addEntry(properties, 'status.pollis.memory', StatusbarAlignment.RIGHT, -999999);
 		}
 	}

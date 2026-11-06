@@ -32,6 +32,7 @@ import { askModels, chooseAskModel } from './askPollisPage.js';
 import { askModelName } from './askPollisWebview.js';
 import { COMPARE_EMBEDDINGS_COMMAND_ID, useAskEmbeddingModel } from './compareEmbeddingsPage.js';
 import { COMPARE_MODELS_COMMAND_ID } from './compareModelsPage.js';
+import { COMPARE_RERANKERS_COMMAND_ID } from './compareRerankersPage.js';
 
 // Compose > Local Models > Set Active Models, in the Time Arrow style of the scaffold. Step 1, Browse Models, is a table
 // with a section each for the local embedding, reranker and answering models, the GGUF models on this computer, those
@@ -41,7 +42,7 @@ import { COMPARE_MODELS_COMMAND_ID } from './compareModelsPage.js';
 // Other Versions: the other files of its repository on Hugging Face (other quantisations, its projector), each with its
 // size and a link to download it. A click on a column's header sorts the models of each section by it, by name at first.
 // Step 2, Set Models, sets the models of Pollis AI+, which the status bar shows: the answering model (of this computer or the cloud), the embedding model and the reranker, none or
-// one. Next Steps opens Evaluate Answering Models and Evaluate Embedding Models. The models are looked up again
+// one. Next Steps opens Evaluate Answering Models, Evaluate Embedding Models and Evaluate Reranking Models. The models are looked up again
 // (language-julia.pollisInstalledModels) when the page is shown again or Pollis gets the focus back.
 
 /** A model on this computer, as language-julia.pollisInstalledModels answers it. */
@@ -73,6 +74,7 @@ type ModelsMessage =
 	| { readonly command: 'routing' }
 	| { readonly command: 'evaluateAnswering' }
 	| { readonly command: 'evaluateEmbedding' }
+	| { readonly command: 'evaluateReranking' }
 	| { readonly command: 'setAnswering'; readonly value: string }
 	| { readonly command: 'setEmbedding'; readonly value: string }
 	| { readonly command: 'setReranker'; readonly value: string }
@@ -181,6 +183,8 @@ async function openModelsInstalledPage(accessor: ServicesAccessor): Promise<void
 			commandService.executeCommand(COMPARE_MODELS_COMMAND_ID);
 		} else if (message.command === 'evaluateEmbedding') {
 			commandService.executeCommand(COMPARE_EMBEDDINGS_COMMAND_ID);
+		} else if (message.command === 'evaluateReranking') {
+			commandService.executeCommand(COMPARE_RERANKERS_COMMAND_ID);
 		} else if (message.command === 'setAnswering') {
 			const answering = await askModels(commandService, configurationService);
 			if ([...answering.local, ...answering.cloud].some(model => model.value === message.value)) {
@@ -242,6 +246,7 @@ function pageHtml(): string {
 		noRerankers: localize('modelsInstalled.noRerankers', "No reranker on this computer yet: Get Models from Hugging Face offers them."),
 		evaluateAnswering: localize('modelsInstalled.evaluateAnswering', "Evaluate Answering Models"),
 		evaluateEmbedding: localize('modelsInstalled.evaluateEmbedding', "Evaluate Embedding Models"),
+		evaluateReranking: localize('modelsInstalled.evaluateReranking', "Evaluate Reranking Models"),
 		model: localize('modelsInstalled.model', "Model"),
 		reads: localize('modelsInstalled.reads', "Reads"),
 		text: localize('modelsInstalled.text', "Text"),
@@ -345,9 +350,11 @@ function pageHtml(): string {
 			},
 		],
 		nextStepsHtml: `					<li><button class="list-btn" id="btn-evaluate-answering">${nextStepIcon('compare')}${text.evaluateAnswering}</button></li>
-					<li><button class="list-btn" id="btn-evaluate-embedding">${nextStepIcon('compare')}${text.evaluateEmbedding}</button></li>`,
+					<li><button class="list-btn" id="btn-evaluate-embedding">${nextStepIcon('compare')}${text.evaluateEmbedding}</button></li>
+				<li><button class="list-btn" id="btn-evaluate-reranking">${nextStepIcon('compare')}${text.evaluateReranking}</button></li>`,
 		nextStepsWiringJs: `		document.getElementById('btn-evaluate-answering').addEventListener('click', function() { vscode.postMessage({ command: 'evaluateAnswering' }); });
-		document.getElementById('btn-evaluate-embedding').addEventListener('click', function() { vscode.postMessage({ command: 'evaluateEmbedding' }); });`,
+		document.getElementById('btn-evaluate-embedding').addEventListener('click', function() { vscode.postMessage({ command: 'evaluateEmbedding' }); });
+		document.getElementById('btn-evaluate-reranking').addEventListener('click', function() { vscode.postMessage({ command: 'evaluateReranking' }); });`,
 		pageScriptJs: `
 	${sortHeadingsScript()}
 	const TEXT = ${JSON.stringify(text)};

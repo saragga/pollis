@@ -13,6 +13,7 @@ import './toolboxExtensions.js';
 import './toolboxPanelsPage.js';
 import './askPollisPage.js';
 import { COMPARE_EMBEDDINGS_COMMAND_ID } from './compareEmbeddingsPage.js';
+import { COMPARE_RERANKERS_COMMAND_ID } from './compareRerankersPage.js';
 import { RAG_COMMAND_ID } from './ragPage.js';
 import { COMPARE_MODELS_COMMAND_ID } from './compareModelsPage.js';
 import './askPollisSources.js';
@@ -402,6 +403,13 @@ MenuRegistry.appendMenuItem(KnowledgeMenu, {
 	group: '1_knowledge',
 	command: { id: COMPARE_EMBEDDINGS_COMMAND_ID, title: localize('compareEmbeddings.menu', "Evaluate Embedding Models...") },
 	order: 2,
+});
+
+// The rerankers installed, compared on the questions of Ask Pollis (compareRerankersPage.ts)
+MenuRegistry.appendMenuItem(KnowledgeMenu, {
+	group: '1_knowledge',
+	command: { id: COMPARE_RERANKERS_COMMAND_ID, title: localize('compareRerankers.menu', "Evaluate Reranking Models...") },
+	order: 3,
 });
 
 

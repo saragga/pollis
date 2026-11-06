@@ -671,6 +671,50 @@ export interface IEmbeddingRun {
 	readonly found: readonly IEmbeddingRunFound[];
 }
 
+/** A reranker of a run of Evaluate Reranking Models, with what was measured of it; the value '' for none, the passages kept in the order of the search. */
+export interface IRerankRunModel {
+	readonly value: string;
+	readonly label: string;
+	/** Its download, as Compose > Local Models shows it. */
+	readonly size?: string;
+	/** The bytes of memory its server took. */
+	readonly memory?: number;
+	readonly error?: string;
+}
+
+/** A run of Evaluate Reranking Models, as the list of the earlier runs shows it. */
+export interface IRerankRunSummary {
+	readonly id: string;
+	readonly started: number;
+	readonly pollis: string;
+	readonly models: readonly IRerankRunModel[];
+	readonly questions: number;
+	/** The passages found for each question, which each reranker puts in its order. */
+	readonly found: number;
+	/** The passages Ask Pollis gives: the first of them in that order. */
+	readonly kept: number;
+	/** The embedding model that found them. */
+	readonly embedder: string;
+}
+
+/**
+ * Where a reranker put the passage a question was made from, among all the passages found: its place, from 1, 0 when
+ * it was not found, nothing when the index has no such passage; and the milliseconds the reranking of the question took.
+ */
+export interface IRerankRunFound {
+	readonly question: number;
+	readonly model: string;
+	readonly place?: number;
+	readonly ms?: number;
+}
+
+/** A run of Evaluate Reranking Models, kept in `~/.pollis/ask/Comparisons.duckdb`. */
+export interface IRerankRun {
+	readonly summary: IRerankRunSummary;
+	readonly questions: readonly IAskPollisEvalItem[];
+	readonly found: readonly IRerankRunFound[];
+}
+
 /** The search of PollisDocuments, and the chat model's answer, in a process of their own (../node/askPollisMain.ts). */
 export interface IAskPollisIndex {
 	readonly onDidChat: Event<IAskPollisChatText>;
@@ -717,6 +761,11 @@ export interface IAskPollisIndex {
 	embeddingRuns(): Promise<readonly IEmbeddingRunSummary[]>;
 	loadEmbeddingRun(id: string): Promise<IEmbeddingRun | undefined>;
 	deleteEmbeddingRun(id: string): Promise<void>;
+	saveRerankRun(run: IRerankRun): Promise<void>;
+	/** The runs of Evaluate Reranking Models, the latest first. */
+	rerankRuns(): Promise<readonly IRerankRunSummary[]>;
+	loadRerankRun(id: string): Promise<IRerankRun | undefined>;
+	deleteRerankRun(id: string): Promise<void>;
 }
 
 /** How an answer ended, and the model that wrote it. */
@@ -788,4 +837,9 @@ export interface IAskPollisService {
 	embeddingRuns(): Promise<readonly IEmbeddingRunSummary[]>;
 	loadEmbeddingRun(id: string): Promise<IEmbeddingRun | undefined>;
 	deleteEmbeddingRun(id: string): Promise<void>;
+	/** The runs of Evaluate Reranking Models, in `~/.pollis/ask/Comparisons.duckdb`. */
+	saveRerankRun(run: IRerankRun): Promise<void>;
+	rerankRuns(): Promise<readonly IRerankRunSummary[]>;
+	loadRerankRun(id: string): Promise<IRerankRun | undefined>;
+	deleteRerankRun(id: string): Promise<void>;
 }

@@ -26,7 +26,7 @@ import { ProxyChannel } from '../../../../base/parts/ipc/common/ipc.js';
 import { Server as ChildProcessServer } from '../../../../base/parts/ipc/node/ipc.cp.js';
 import { Server as UtilityProcessServer } from '../../../../base/parts/ipc/node/ipc.mp.js';
 import { isUtilityProcess } from '../../../../base/parts/sandbox/node/electronTypes.js';
-import { AskPollisSource, AskTopic, ASK_PASSAGES, ASK_SOURCE_COLLECTION, IAskPollisChatEnd, IAskPollisMessage, ICompareRun, ICompareRunSummary, IAskPollisChatRequest, IAskPollisChatText, IAskPollisFound, IAskPollisIndex, IAskPollisIndexedDocument, IAskPollisIndexRequest, IAskPollisIndexStatus, IAskPollisPanel, IAskPollisPanelShare, IAskPollisPassage, IAskPassageMatch, IAskPollisReranked, IAskPollisSearchResult, IAskPollisTimings, IAskTopicCounts, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingFound, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary } from '../common/askPollis.js';
+import { AskPollisSource, AskTopic, ASK_PASSAGES, ASK_SOURCE_COLLECTION, IAskPollisChatEnd, IAskPollisMessage, ICompareRun, ICompareRunSummary, IAskPollisChatRequest, IAskPollisChatText, IAskPollisFound, IAskPollisIndex, IAskPollisIndexedDocument, IAskPollisIndexRequest, IAskPollisIndexStatus, IAskPollisPanel, IAskPollisPanelShare, IAskPollisPassage, IAskPassageMatch, IAskPollisReranked, IAskPollisSearchResult, IAskPollisTimings, IAskTopicCounts, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingFound, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary, IRerankRun, IRerankRunSummary } from '../common/askPollis.js';
 
 const DATABASE = join(os.homedir(), '.pollis', 'documents', 'PollisDocuments.duckdb');
 /** The embeddings made, by the model and the text it was given, as ask_index.jl keeps them. */
@@ -292,7 +292,8 @@ const TOPIC = `CASE WHEN d.kind = 'julia' THEN 'julia' WHEN d.kind = 'document' 
 /**
  * The tables of Comparisons.duckdb: a run, the passages found for each of its questions, the answers, the judges'
  * scores and why a judge did not rate an answer; the passages found for a question with a search stamp, those of
- * the latest stamp only; and a run of Evaluate Embedding Models, its questions and what each model found for them.
+ * the latest stamp only; a run of Evaluate Embedding Models, its questions and what each model found for them; and a
+ * run of Evaluate Reranking Models, its questions and where each reranker put the passage of each.
  */
 const COMPARISONS_TABLES = [
 	'CREATE TABLE IF NOT EXISTS Comparisons.runs(id VARCHAR PRIMARY KEY, started BIGINT, pollis VARCHAR, models VARCHAR, judges VARCHAR, repeats INTEGER, questions INTEGER)',
@@ -306,6 +307,9 @@ const COMPARISONS_TABLES = [
 	'CREATE TABLE IF NOT EXISTS Comparisons.embeddingRuns(id VARCHAR PRIMARY KEY, started BIGINT, pollis VARCHAR, models VARCHAR, questions INTEGER, passages INTEGER)',
 	'CREATE TABLE IF NOT EXISTS Comparisons.embeddingQuestions(run VARCHAR, question INTEGER, source VARCHAR, context VARCHAR, text VARCHAR, answer VARCHAR)',
 	'CREATE TABLE IF NOT EXISTS Comparisons.embeddingFound(run VARCHAR, question INTEGER, model VARCHAR, hybrid INTEGER, meaning INTEGER, query_ms DOUBLE, search_ms DOUBLE)',
+	'CREATE TABLE IF NOT EXISTS Comparisons.rerankRuns(id VARCHAR PRIMARY KEY, started BIGINT, pollis VARCHAR, models VARCHAR, questions INTEGER, found INTEGER, kept INTEGER, embedder VARCHAR)',
+	'CREATE TABLE IF NOT EXISTS Comparisons.rerankQuestions(run VARCHAR, question INTEGER, source VARCHAR, context VARCHAR, text VARCHAR, answer VARCHAR)',
+	'CREATE TABLE IF NOT EXISTS Comparisons.rerankFound(run VARCHAR, question INTEGER, model VARCHAR, place INTEGER, ms DOUBLE)',
 ];
 
 /** The embedding of `input`, as DuckDB reads a list, from the llama.cpp server at `url` (its OpenAI /embeddings). */
@@ -984,6 +988,76 @@ class AskPollisIndex implements IAskPollisIndex {
 
 	async deleteEmbeddingRun(id: string): Promise<void> {
 		await this.withComparisons(connection => this.removeEmbeddingRun(connection, id));
+	}
+
+	/** Takes away the run `run` of Evaluate Reranking Models from its tables. */
+	private async removeRerankRun(connection: DuckDBConnection, run: string): Promise<void> {
+		for (const table of ['rerankRuns', 'rerankQuestions', 'rerankFound']) {
+			await connection.run(`DELETE FROM Comparisons.${table} WHERE ${table === 'rerankRuns' ? 'id' : 'run'} = $run`, { run });
+		}
+	}
+
+	async saveRerankRun(run: IRerankRun): Promise<void> {
+		await this.withComparisons(async connection => {
+			const { summary } = run;
+			await connection.run('BEGIN TRANSACTION');
+			try {
+				await this.removeRerankRun(connection, summary.id);
+				await connection.run('INSERT INTO Comparisons.rerankRuns VALUES ($id, $started, $pollis, $models, $questions, $found, $kept, $embedder)', {
+					id: summary.id, started: summary.started, pollis: summary.pollis, models: JSON.stringify(summary.models), questions: summary.questions, found: summary.found, kept: summary.kept, embedder: summary.embedder,
+				});
+				for (const [question, item] of run.questions.entries()) {
+					await connection.run('INSERT INTO Comparisons.rerankQuestions VALUES ($run, $question, $source, $context, $text, $answer)', {
+						run: summary.id, question, source: item.source, context: item.context, text: item.question, answer: item.answer,
+					});
+				}
+				for (const found of run.found) {
+					await connection.run('INSERT INTO Comparisons.rerankFound VALUES ($run, $question, $model, $place::INTEGER, $ms::DOUBLE)', {
+						run: summary.id, question: found.question, model: found.model, place: found.place ?? null, ms: found.ms ?? null,
+					});
+				}
+				await connection.run('COMMIT');
+			} catch (err) {
+				await connection.run('ROLLBACK');
+				throw err;
+			}
+		});
+	}
+
+	private rerankSummaryOf(row: Row): IRerankRunSummary {
+		return {
+			id: String(row.id),
+			started: Number(row.started),
+			pollis: String(row.pollis ?? ''),
+			models: JSON.parse(String(row.models ?? '[]')),
+			questions: Number(row.questions),
+			found: Number(row.found),
+			kept: Number(row.kept),
+			embedder: String(row.embedder ?? ''),
+		};
+	}
+
+	async rerankRuns(): Promise<readonly IRerankRunSummary[]> {
+		return this.withComparisons(async connection =>
+			(await connection.runAndReadAll('SELECT * FROM Comparisons.rerankRuns ORDER BY started DESC')).getRowObjectsJson().map(row => this.rerankSummaryOf(row)));
+	}
+
+	async loadRerankRun(id: string): Promise<IRerankRun | undefined> {
+		return this.withComparisons(async connection => {
+			const row = (await connection.runAndReadAll('SELECT * FROM Comparisons.rerankRuns WHERE id = $id', { id })).getRowObjectsJson()[0];
+			if (!row) {
+				return undefined;
+			}
+			const questions = (await connection.runAndReadAll('SELECT * FROM Comparisons.rerankQuestions WHERE run = $id ORDER BY question', { id })).getRowObjectsJson()
+				.map(question => ({ source: String(question.source), context: String(question.context), question: String(question.text), answer: String(question.answer) }));
+			const found = (await connection.runAndReadAll('SELECT * FROM Comparisons.rerankFound WHERE run = $id ORDER BY question', { id })).getRowObjectsJson()
+				.map(found => ({ question: Number(found.question), model: String(found.model), place: optionalNumber(found.place), ms: optionalNumber(found.ms) }));
+			return { summary: this.rerankSummaryOf(row), questions, found };
+		});
+	}
+
+	async deleteRerankRun(id: string): Promise<void> {
+		await this.withComparisons(connection => this.removeRerankRun(connection, id));
 	}
 
 	async foundBefore(key: string, questions: readonly string[]): Promise<readonly (readonly IAskPollisPassage[] | undefined)[]> {

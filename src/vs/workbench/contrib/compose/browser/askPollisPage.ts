@@ -63,7 +63,7 @@ import './media/pollisAiStatus.css';
 // as the + of the Collaboration chat shares them (composerAdd.ts). Under the answer, Sources lists the passages cited, or all of them when none is, each with
 // Open, which opens the PDF at its page, the panel's wiki at its heading, or the Julia Manual at its section
 // (askPollisWebview.ts). The conversation is kept until Pollis closes; New Chat, in the pane's title, starts it again.
-// Pollis AI+ is shown at the right of the status bar, with its models in the hover and a cloud while a cloud model answers;
+// Active Models is shown at the right of the status bar, with the models in the hover and a cloud while a cloud model answers;
 // a click opens Set Active Models (modelsInstalledPage.ts), where they are set. With a reranker set, three times the
 // passages are searched for and it keeps the best (pollis.ask.reranker).
 // A question asked in a panel, in the pill at the right of its title (webviewScaffold.ts), is answered in the pane,
@@ -598,7 +598,7 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 	}
 }
 
-/** Pollis AI+ at the right of the status bar: its models in the hover, a cloud while one answers, a click opens Set Active Models. */
+/** Active Models at the right of the status bar: the models of Pollis AI+ in the hover, a cloud while one answers, a click opens Set Active Models. */
 class AskPollisModelStatus extends Disposable implements IWorkbenchContribution {
 
 	static readonly ID = 'workbench.contrib.askPollisModelStatus';
@@ -623,7 +623,9 @@ class AskPollisModelStatus extends Disposable implements IWorkbenchContribution 
 		const models = await askModels(this.commandService, this.configurationService);
 		const embedding = askModelName(this.configurationService.getValue<string>('pollis.ask.embeddingModel')?.trim() || ASK_EMBEDDING_MODEL);
 		const reranker = this.configurationService.getValue<string>('pollis.ask.reranker')?.trim();
-		const name = localize('askPollis.statusName', "Pollis AI+");
+		// Named in the hover, and in the status bar's menu that hides its entries, by its full name
+		const name = localize('askPollis.statusName', "Active Pollis AI+ Models");
+		const label = localize('askPollis.statusLabel', "Active Models");
 		const lines = [
 			models.provider
 				? localize('askPollis.statusAnsweringCloud', "Answering: {0} of {1}, with your own key", models.model, models.provider)
@@ -638,7 +640,7 @@ class AskPollisModelStatus extends Disposable implements IWorkbenchContribution 
 		tooltip.appendText(localize('askPollis.statusClick', "Click to set them."));
 		const properties: IStatusbarEntry = {
 			name,
-			text: models.provider ? `$(pollis-ai) ${name} $(cloud)` : `$(pollis-ai) ${name}`,
+			text: models.provider ? `$(pollis-ai) ${label} $(cloud)` : `$(pollis-ai) ${label}`,
 			ariaLabel: lines.join(', '),
 			tooltip,
 			command: MODELS_INSTALLED_COMMAND_ID,
