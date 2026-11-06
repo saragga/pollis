@@ -447,3 +447,54 @@ using StatsPlots, MCMCChains
 plot(chain; seriestype = :density)  # KDE of posterior marginals
 title!("Posterior Marginal Densities")  # overlay all chains per parameter
 '''
+
+# ── FAQ: shown in Learn More, and the Panel FAQ test set of Evaluate Answering Models (hidden = true: the test set only) ──
+
+[[faq]]
+question = "Which sampler should I choose?"
+wiki = "Decision Guide"
+answer = """
+NUTS first, for continuous parameters and a differentiable density: it tunes itself and gives nearly independent draws. HMC, with AdvancedHMC.jl, suits a log density written by hand when you want to choose the integrator, the metric and the trajectory. Metropolis-Hastings needs only density values, so it serves when there is no gradient, few parameters, or discrete parameters.
+
+Compare samplers by their ESS per second, not by their draws.
+"""
+
+[[faq]]
+question = "How do I know the chains have converged?"
+wiki = "Diagnostics"
+answer = """
+Run several chains, and check before reading any summary. R-hat should be below 1.01, the effective sample size above about 100 per chain, and the trace plot should look like stationary noise around a constant level, with no trend, flat stretches or jumps between levels. With HMC and NUTS there should be no divergent transitions.
+
+Diagnostics can show problems but never prove their absence.
+"""
+
+[[faq]]
+question = "What should I do about divergent transitions?"
+wiki = "Diagnostics"
+answer = """
+Divergent transitions mark regions where the leapfrog integration has broken down, regions the sampler cannot explore, so even a few bias the results. Raise the target acceptance, which gives smaller steps, and if they remain, reparametrise the model, for example with a non-centred form of a hierarchical model.
+"""
+
+[[faq]]
+question = "Why is the effective sample size so much lower than the number of draws here?"
+wiki = "Diagnostics"
+hidden = true
+answer = """
+The draws of a chain are correlated, and the ESS is the number of independent draws that would give the same precision. Slow decay of the autocorrelation, that is slow mixing, is what lowers it. NUTS often reaches an ESS close to the number of draws, Metropolis-Hastings only a small fraction of it; with Metropolis-Hastings, tune the proposal scale or move to a gradient-based sampler.
+"""
+
+[[faq]]
+question = "What acceptance rate should I aim for with this?"
+wiki = "Diagnostics"
+hidden = true
+answer = """
+It depends on the sampler. For random-walk Metropolis-Hastings, about 0.23 is the classic optimum in many dimensions, and up to about 0.44 in one dimension; near 0 or near 1, rescale the proposal. HMC and NUTS adapt their step size to a target acceptance, 0.65 in this panel; a much lower average after warm-up suggests the step size is too large for parts of the target.
+"""
+
+[[faq]]
+question = "Is the MCSE the uncertainty about the parameter?"
+wiki = "Interpretation"
+hidden = true
+answer = """
+No. The Monte Carlo standard error, the posterior standard deviation divided by the square root of the ESS, is the precision of the posterior mean as computed from this chain. The uncertainty about the parameter is measured by the posterior standard deviation, and by the credible and HPD intervals.
+"""

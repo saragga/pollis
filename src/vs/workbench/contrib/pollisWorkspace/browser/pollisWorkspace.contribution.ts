@@ -68,7 +68,7 @@ registerAction2(class extends Action2 {
 			title: localize2('pollisWorkspace.new', "New Pollis Workspace..."),
 			category: localize2('pollisWorkspace.category', "Pollis"),
 			f1: true,
-			menu: { id: MenuId.MenubarFileMenu, group: '2_open', order: 4 },
+			menu: { id: MenuId.MenubarFileMenu, group: '3_workspace', order: 0 },
 		});
 	}
 	async run(accessor: ServicesAccessor): Promise<void> {
@@ -79,12 +79,13 @@ registerAction2(class extends Action2 {
 		const environmentService = accessor.get(IEnvironmentService);
 
 		// A new folder, named in a save dialog, so that the folder it opens in never becomes the workspace by itself;
-		// the name offered is one not taken yet in Documents
+		// the name offered is one not taken yet in Documents, with no space, so that paths to it need no quoting in
+		// scripts, the terminal or LaTeX
 		const documents = joinPath(pathService.userHome({ preferLocal: true }), 'Documents');
-		const name = localize('pollisWorkspace.defaultName', "Pollis Workspace");
+		const name = 'PollisWorkspace';
 		let offered = joinPath(documents, name);
 		for (let n = 2; await fileService.exists(offered); n++) {
-			offered = joinPath(documents, `${name} ${n}`);
+			offered = joinPath(documents, `${name}${n}`);
 		}
 		const folder = await fileDialogService.showSaveDialog({
 			title: localize('pollisWorkspace.pick', "Name the Folder of the New Pollis Workspace"),

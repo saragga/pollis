@@ -6,6 +6,7 @@
 import { Event } from '../../../../base/common/event.js';
 import { URI } from '../../../../base/common/uri.js';
 import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
+import { IAskPollisEvalItem } from './askPollis.js';
 
 /** The command that opens the page where the user chooses a toolbox's panels, given the extension id. */
 export const CHOOSE_TOOLBOX_PANELS_COMMAND_ID = 'pollis.toolboxes.choosePanels';
@@ -26,12 +27,16 @@ export interface IToolboxPanelInfo {
 	readonly command: string;
 	/** Its menu item. */
 	readonly title: string;
+	/** The title the panel shows, and asks Ask Pollis with: its wikis are indexed under it. */
+	readonly panelTitle: string;
 	/** The title of the submenu of the toolbox's menu it goes in, if any. */
 	readonly submenu?: string;
 	/** What it covers, in one line: its models' labels. */
 	readonly description?: string;
 	/** The keys of the works its References cite. */
 	readonly keys: readonly string[];
+	/** The questions of its FAQ, the hidden ones too, as the Panel FAQ test set of Evaluate Answering Models asks them. */
+	readonly faq: readonly IAskPollisEvalItem[];
 }
 
 /** A vignette of an installed toolbox, for Help > Documentation > Toolbox Vignettes: LaTeX sources Pollis compiles. */

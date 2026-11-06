@@ -31,6 +31,17 @@ const SHIPPED_TEST_SET: AppResourcePath = 'vs/workbench/contrib/compose/browser/
 /** The name of the Standard test set among the test sets: the user's have names of their own. */
 export const STANDARD_TEST_SET = '';
 
+/** The Panel FAQ test set, which compile-toml makes from the FAQ of the panels, the hidden questions with the shown. */
+const PANEL_FAQ_FILE: AppResourcePath = 'vs/workbench/contrib/compose/browser/media/ask/panelFaq.json';
+
+/** The name of the Panel FAQ test set among the test sets, which no file of the user's can have, for its slash. */
+export const PANEL_FAQ_TEST_SET = '/panelFaq';
+
+/** Whether the test set `name` comes with Pollis, and so cannot be changed. */
+export function isShippedTestSet(name: string): boolean {
+	return name === STANDARD_TEST_SET || name === PANEL_FAQ_TEST_SET;
+}
+
 /** A moment of a run, every SAMPLE_SECONDS, for the charts of the page: the memory free and the tokens used until then. */
 export interface ICompareSample {
 	/** Since the run started. */
@@ -91,9 +102,17 @@ export function isEvalItem(value: unknown): value is IAskPollisEvalItem {
 		&& typeof item.context === 'string' && typeof item.source === 'string' && !!item.question.trim();
 }
 
-/** A question of a test set with only its four fields, in RAGTools.jl's order. */
+/** A question of a test set with its four fields, in RAGTools.jl's order, and the panel it is asked in, if any, with the wiki that answers it. */
 export function evalItem(item: IAskPollisEvalItem): IAskPollisEvalItem {
-	return { source: item.source, context: item.context, question: item.question, answer: item.answer };
+	const panel = item.panel && typeof item.panel.title === 'string' && Array.isArray(item.panel.packages)
+		? { title: item.panel.title, packages: item.panel.packages.filter(name => typeof name === 'string'), ...(typeof item.panel.card === 'string' ? { card: item.panel.card } : {}) }
+		: undefined;
+	return {
+		source: item.source, context: item.context, question: item.question, answer: item.answer,
+		...(panel ? { panel } : {}),
+		...(typeof item.wikiFile === 'string' && item.wikiFile ? { wikiFile: item.wikiFile } : {}),
+		...(item.hidden === true ? { hidden: true } : {}),
+	};
 }
 
 /** The questions of a file of RAGTools.jl, or nothing when it holds none. */
@@ -150,16 +169,16 @@ export class CompareTestSets {
 	/** The questions of the test set `name`: the Standard one from Pollis, the user's from their file; empty when it cannot be read. */
 	async read(name: string): Promise<IAskPollisEvalItem[]> {
 		try {
-			const file = name === STANDARD_TEST_SET ? FileAccess.asFileUri(SHIPPED_TEST_SET) : joinPath(await this.folder(), `${name}.json`);
+			const file = name === STANDARD_TEST_SET ? FileAccess.asFileUri(SHIPPED_TEST_SET) : name === PANEL_FAQ_TEST_SET ? FileAccess.asFileUri(PANEL_FAQ_FILE) : joinPath(await this.folder(), `${name}.json`);
 			return parseEvalItems((await this.fileService.readFile(file)).value.toString()) ?? [];
 		} catch {
 			return [];
 		}
 	}
 
-	/** Writes the user's test set `name`, made when it is new; the Standard one is never written. */
+	/** Writes the user's test set `name`, made when it is new; those that come with Pollis are never written. */
 	async write(name: string, items: readonly IAskPollisEvalItem[]): Promise<void> {
-		if (name !== STANDARD_TEST_SET) {
+		if (!isShippedTestSet(name)) {
 			await this.fileService.writeFile(joinPath(await this.folder(), `${name}.json`), VSBuffer.fromString(evalItemsText(items)));
 		}
 	}
@@ -274,6 +293,8 @@ export class CompareTestSetChoice {
 		private readonly sets: CompareTestSets,
 		private readonly keys: { readonly testSet: string; readonly ticked: string },
 		private readonly post: (message: object) => void,
+		/** When the Panel FAQ test set is among those to choose from: the questions of the FAQ of the installed toolboxes' panels, which it holds with those of Pollis' own. */
+		private readonly panelFaq?: () => readonly IAskPollisEvalItem[],
 	) {
 		this.name = storageService.get(keys.testSet, StorageScope.APPLICATION, STANDARD_TEST_SET);
 		this.ticks = storedTicks(storageService, keys.ticked);
@@ -293,26 +314,32 @@ export class CompareTestSetChoice {
 		this.storageService.store(this.keys.ticked, JSON.stringify(this.ticks), StorageScope.APPLICATION, StorageTarget.USER);
 	}
 
-	/** Shows the test set `name`, a name among the user's sets or the Standard one, and remembers it for the next time. */
+	/** Shows the test set `name`, a name among the user's sets or one that comes with Pollis, and remembers it for the next time. */
 	async choose(name: string): Promise<void> {
 		const names = await this.sets.names();
-		this.name = names.includes(name) ? name : STANDARD_TEST_SET;
+		this.name = names.includes(name) || (this.panelFaq && name === PANEL_FAQ_TEST_SET) ? name : STANDARD_TEST_SET;
 		this.storageService.store(this.keys.testSet, this.name, StorageScope.APPLICATION, StorageTarget.USER);
-		this.post({ command: 'sets', sets: names, chosen: this.name, ticked: this.ticked() });
-		this.items = await this.sets.read(this.name);
+		this.post({ command: 'sets', sets: names, panelFaq: this.panelFaq ? PANEL_FAQ_TEST_SET : undefined, chosen: this.name, shipped: isShippedTestSet(this.name), ticked: this.ticked() });
+		this.items = await this.read();
 		await this.postItems();
+	}
+
+	/** The questions of the test set shown, those of the installed toolboxes' panels added to Panel FAQ. */
+	private async read(): Promise<IAskPollisEvalItem[]> {
+		const items = await this.sets.read(this.name);
+		return this.panelFaq && this.name === PANEL_FAQ_TEST_SET ? [...items, ...this.panelFaq()] : items;
 	}
 
 	/** Reads the test set shown again, after a change. */
 	async reload(): Promise<void> {
-		this.items = await this.sets.read(this.name);
+		this.items = await this.read();
 		await this.postItems();
 	}
 
 	async postItems(): Promise<void> {
-		// The topic of each question by its passage, as the documents have it now; none for a passage no longer in the documents, or when there is no index
+		// The topic of each question by its passage, as the documents have it now; none for a passage no longer in the documents, or when there is no index; a question of the Panel FAQ has its panel and no passage
 		const matches = await this.askPollisService.matches(this.items.map(item => item.context));
-		this.post({ command: 'items', items: this.items.map((item, index) => ({ number: index + 1, question: item.question, answer: item.answer, source: item.source, context: matches?.[index]?.text ?? item.context, present: !matches || matches[index] !== undefined, topic: topicLabel(matches?.[index]?.topic) })) });
+		this.post({ command: 'items', items: this.items.map((item, index) => ({ number: index + 1, question: item.question, answer: item.answer, source: item.source, context: matches?.[index]?.text ?? item.context, present: !matches || matches[index] !== undefined || !item.context, topic: topicLabel(matches?.[index]?.topic ?? (item.panel ? 'panels' : undefined)) })) });
 	}
 }
 
@@ -331,6 +358,8 @@ export function compareSharedText() {
 		questions: localize('compareModels.questions', "Questions"),
 		testSet: localize('compareModels.testSet', "Test Set"),
 		standard: localize('compareModels.standard', "Standard"),
+		panelFaq: localize('compareModels.panelFaq', "Panel FAQ"),
+		panelFaqHint: localize('compareModels.panelFaqHint', "Panel FAQ comes with Pollis: the questions of the FAQ of its panels and of the panels of the toolboxes installed, those Learn More shows and those it does not, each asked in its panel. It cannot be changed: Save As... makes a copy of it that you can change."),
 		yoursHint: localize('compareModels.yoursHint', "Yours, in {0}: every change is saved as you make it, the ticks too.", '{0}'),
 		countTicked: localize('compareModels.countTicked', "{0} of {1} ticked", '{0}', '{1}'),
 		untick: localize('compareModels.untick', "Untick All"),
@@ -801,13 +830,14 @@ export const compareTestSetScript = `
 		const select = document.getElementById('testSet');
 		select.textContent = '';
 		select.appendChild(new Option(TEXT.standard, ''));
+		if (message.panelFaq) { select.appendChild(new Option(TEXT.panelFaq, message.panelFaq)); }
 		for (const name of message.sets) { select.appendChild(new Option(name, name)); }
 		select.value = message.chosen;
-		standard = !message.chosen;
+		standard = message.shipped;
 		ticked.clear();
 		for (const question of message.ticked) { ticked.add(question); }
 		document.getElementById('setHint').innerHTML = standard
-			? esc(TEXT.standardHint)
+			? esc(message.panelFaq && message.chosen === message.panelFaq ? TEXT.panelFaqHint : TEXT.standardHint)
 			: esc(TEXT.yoursHint).replace('{0}', '<span class="yellow">' + esc('~/.pollis/ask/sets/' + message.chosen + '.json') + '</span>');
 		testSetChanged();
 	}

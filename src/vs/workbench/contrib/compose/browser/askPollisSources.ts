@@ -125,7 +125,7 @@ async function askPollisSources(accessor: ServicesAccessor): Promise<IAskPollisS
 			const panel = toolbox.panels.find(panel => panel.id === folder.name);
 			const menu = panel ? paths.get(panel.command) ?? '' : '';
 			for (const file of (await resolveChildren(fileService, folder.resource)).filter(file => !file.isDirectory && file.name.endsWith('.md'))) {
-				await wiki(`${folder.name}/${file.name}`, panel?.title ?? toolbox.title, menu, toolbox.title);
+				await wiki(`${folder.name}/${file.name}`, panel?.panelTitle ?? toolbox.title, menu, toolbox.title);
 			}
 		}
 	}

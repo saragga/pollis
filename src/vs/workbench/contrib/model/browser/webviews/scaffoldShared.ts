@@ -111,7 +111,20 @@ export const learnMoreCss = `.panel-back:disabled, .panel-close:disabled { opaci
 		.nb-card { background: transparent; border: 1px solid var(--vscode-widget-border); border-radius: 4px; padding: 10px 12px; cursor: pointer; text-align: left; font-family: var(--vscode-font-family); display: flex; flex-direction: column; width: 100%; transition: background 0.1s; }
 		.nb-card:hover { background: var(--vscode-list-hoverBackground); border-color: var(--vscode-textLink-foreground); }
 		.nb-label { font-size: 13px; font-weight: 500; color: var(--vscode-textLink-foreground); margin-bottom: 4px; }
-		.nb-desc { font-size: 11px; color: var(--vscode-descriptionForeground); line-height: 1.4; }`;
+		.nb-desc { font-size: 11px; color: var(--vscode-descriptionForeground); line-height: 1.4; }
+		/* FAQ: each question opens its answer below it; the code and the package names in it in our yellow. */
+		.faq-list { display: flex; flex-direction: column; gap: 8px; }
+		.faq-item { border: 1px solid var(--vscode-widget-border); border-radius: 4px; }
+		.faq-item.open { border-color: var(--vscode-textLink-foreground); }
+		.faq-question { display: block; width: 100%; background: transparent; border: none; padding: 10px 12px; text-align: left; cursor: pointer; font-family: var(--vscode-font-family); font-size: 13px; font-weight: 500; color: var(--vscode-textLink-foreground); }
+		.faq-question:hover { background: var(--vscode-list-hoverBackground); }
+		.faq-answer { display: none; padding: 0 12px 10px; font-size: 12px; line-height: 1.5; color: var(--vscode-foreground); }
+		.faq-item.open .faq-answer { display: block; }
+		.faq-answer p { margin: 0 0 8px; }
+		.faq-answer code { font-family: var(--vscode-editor-font-family); font-size: 11px; color: #e8a33d; }
+		body.vscode-light .faq-answer code { color: #a8650d; }
+		.faq-wiki { background: none; border: none; padding: 0; font-size: 11px; font-family: var(--vscode-font-family); color: var(--vscode-textLink-foreground); cursor: pointer; }
+		.faq-wiki:hover { color: var(--vscode-textLink-activeForeground); text-decoration: underline; }`;
 
 /** The Next Steps section, with the items of its list. */
 export function nextStepsSectionHtml(items: string): string {
@@ -125,11 +138,15 @@ ${items}
 				</div>`;
 }
 
-/** The Learn More section, in its mandatory order: Local Wikis, Notebook Tutorials, Multimedia Tutorials, Explore References. */
+/**
+ * The Learn More section, in its mandatory order: FAQ, Local Wikis, Notebook Tutorials, Multimedia Tutorials, Explore
+ * References. FAQ is shown only when the panel has questions in its FAQ.
+ */
 export const learnMoreSectionHtml = `<div class="section collapsed" id="sec-learn">
 				<button class="section-toggle"><span class="illus-chevron"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M7.976 10.072l-4.054-4.014-.92.92 4.49 4.45.978.01 4.525-4.46-.918-.92-4.101 4.014z"/></svg></span>Learn More</button>
 				<div class="section-body">
 				<ul class="column-list">
+					<li id="faq-item" style="display: none;"><button class="list-btn panel-toggle" id="btn-faq"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M8 11C8.41421 11 8.75 11.3358 8.75 11.75C8.75 12.1642 8.41421 12.5 8 12.5C7.58579 12.5 7.25 12.1642 7.25 11.75C7.25 11.3358 7.58579 11 8 11Z"/><path d="M8 4C9.262 4 10.25 4.988 10.25 6.25C10.25 7.333 9.68352 7.89852 9.22852 8.35352C8.82052 8.76052 8.5 9.082 8.5 9.75C8.5 10.026 8.276 10.25 8 10.25C7.724 10.25 7.5 10.026 7.5 9.75C7.5 8.667 8.06648 8.10148 8.52148 7.64648C8.92948 7.23948 9.25 6.918 9.25 6.25C9.25 5.538 8.712 5 8 5C7.288 5 6.75 5.538 6.75 6.25C6.75 6.526 6.526 6.75 6.25 6.75C5.974 6.75 5.75 6.526 5.75 6.25C5.75 4.988 6.738 4 8 4Z"/><path fill-rule="evenodd" clip-rule="evenodd" d="M8 1C11.86 1 15 4.14 15 8C15 11.86 11.86 15 8 15C4.14 15 1 11.86 1 8C1 4.14 4.14 1 8 1ZM8 2C4.691 2 2 4.691 2 8C2 11.309 4.691 14 8 14C11.309 14 14 11.309 14 8C14 4.691 11.309 2 8 2Z"/></svg>FAQ</button></li>
 					<li><button class="list-btn panel-toggle" id="btn-wiki"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M2.5 2C1.67157 2 1 2.67157 1 3.5V12.5C1 13.3284 1.67157 14 2.5 14H6C6.8178 14 7.54389 13.6073 8 13.0002C8.45612 13.6073 9.1822 14 10 14H13.5C14.3284 14 15 13.3284 15 12.5V3.5C15 2.67157 14.3284 2 13.5 2H10C9.1822 2 8.45612 2.39267 8 2.99976C7.54389 2.39267 6.8178 2 6 2H2.5ZM7.5 4.5V11.5C7.5 12.3284 6.82843 13 6 13H2.5C2.22386 13 2 12.7761 2 12.5V3.5C2 3.22386 2.22386 3 2.5 3H6C6.82843 3 7.5 3.67157 7.5 4.5ZM8.5 11.5V4.5C8.5 3.67157 9.17157 3 10 3H13.5C13.7761 3 14 3.22386 14 3.5V12.5C14 12.7761 13.7761 13 13.5 13H10C9.17157 13 8.5 12.3284 8.5 11.5Z"/></svg>Local Wikis</button></li>
 					<li><button class="list-btn panel-toggle" id="btn-notebook-tutorials"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M4.75 3C4.33579 3 4 3.33579 4 3.75V5.25C4 5.66421 4.33579 6 4.75 6H10.25C10.6642 6 11 5.66421 11 5.25V3.75C11 3.33579 10.6642 3 10.25 3H4.75ZM5 5V4H10V5H5ZM2 2.75C2 1.7835 2.7835 1 3.75 1H11.25C12.2165 1 13 1.7835 13 2.75V13.25C13 14.2165 12.2165 15 11.25 15H3.75C2.7835 15 2 14.2165 2 13.25V2.75ZM3.75 2C3.33579 2 3 2.33579 3 2.75V13.25C3 13.6642 3.33579 14 3.75 14H11.25C11.6642 14 12 13.6642 12 13.25V2.75C12 2.33579 11.6642 2 11.25 2H3.75ZM14.625 4H14V6H14.625C14.8321 6 15 5.83211 15 5.625V4.375C15 4.16789 14.8321 4 14.625 4ZM14 7H14.625C14.8321 7 15 7.16789 15 7.375V8.625C15 8.83211 14.8321 9 14.625 9H14V7ZM14.625 10H14V12H14.625C14.8321 12 15 11.8321 15 11.625V10.375C15 10.1679 14.8321 10 14.625 10Z"/></svg>Notebook Tutorials</button></li>
 					<li><button class="list-btn panel-toggle has-actions" id="btn-documentation"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M8 1C4.14 1 1 4.14 1 8C1 11.86 4.14 15 8 15C11.86 15 15 11.86 15 8C15 4.14 11.86 1 8 1ZM8 14C4.691 14 2 11.309 2 8C2 4.691 4.691 2 8 2C11.309 2 14 4.691 14 8C14 11.309 11.309 14 8 14ZM10.712 8C10.712 8.153 10.63 8.294 10.498 8.371L6.964 10.413C6.536 10.66 6 10.351 6 9.857V6.144C6 5.649 6.536 5.34 6.964 5.588L10.498 7.63C10.631 7.707 10.712 7.847 10.712 8Z"/></svg>Multimedia Tutorials</button></li>
@@ -140,6 +157,7 @@ export const learnMoreSectionHtml = `<div class="section collapsed" id="sec-lear
 
 /** What the right panel and Learn More keep. */
 export const learnMoreStateJs = `var currentPanelId = null;
+		var faq = [];
 		var wikiSections = [];
 		var notebookSections = [];
 		var rightPanel = document.getElementById('right-panel');`;
@@ -147,8 +165,48 @@ export const learnMoreStateJs = `var currentPanelId = null;
 /** Escape a string for HTML. */
 export const escJs = `function esc(s)      { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }`;
 
-/** The panels of Learn More. Needs esc(), vscode, rightPanel, currentPanelId, wikiSections, notebookSections and hideRightPanel(). */
-export const learnMorePanelsJs = `function renderNotebookPanel() {
+/** The panels of Learn More. Needs esc(), vscode, rightPanel, currentPanelId, faq, wikiSections, notebookSections and hideRightPanel(). */
+export const learnMorePanelsJs = `// An answer of the FAQ: its paragraphs, with the code between backticks
+		function faqAnswerHtml(text) {
+			return String(text).split(/\\n\\s*\\n/).map(function(paragraph) {
+				return '<p>' + esc(paragraph.trim()).replace(/\`([^\`]+)\`/g, '<code>$1</code>') + '</p>';
+			}).join('');
+		}
+
+		// The file of the wiki named \`name\` among Local Wikis, '' when it is not there
+		function wikiFileNamed(name) {
+			var file = '';
+			wikiSections.forEach(function(section) {
+				section.wikis.forEach(function(w) { if (!file && w.name === name) { file = w.file; } });
+			});
+			return file;
+		}
+
+		function renderFaqPanel() {
+			var html = '<div class="panel-header">'
+				+ '<span class="right-panel-title">FAQ</span>'
+				+ '<button class="panel-close" id="btn-panel-close">&#xd7;</button>'
+				+ '</div><div class="nb-panel-scroll"><div class="faq-list">';
+			faq.forEach(function(entry, i) {
+				var wikiFile = entry.wiki ? wikiFileNamed(entry.wiki) : '';
+				html += '<div class="faq-item" data-faq="' + i + '">'
+					+ '<button class="faq-question">' + esc(entry.question) + '</button>'
+					+ '<div class="faq-answer">' + faqAnswerHtml(entry.answer)
+					+ (wikiFile ? '<button class="faq-wiki" data-wiki="' + esc(wikiFile) + '">' + esc(entry.wiki) + '</button>' : '')
+					+ '</div></div>';
+			});
+			html += '</div></div>';
+			rightPanel.innerHTML = html;
+			document.getElementById('btn-panel-close').addEventListener('click', hideRightPanel);
+			rightPanel.querySelectorAll('.faq-question').forEach(function(question) {
+				question.addEventListener('click', function() { question.closest('.faq-item').classList.toggle('open'); });
+			});
+			rightPanel.querySelectorAll('.faq-wiki[data-wiki]').forEach(function(link) {
+				link.addEventListener('click', function() { vscode.postMessage({ command: 'openWiki', target: link.dataset.wiki }); });
+			});
+		}
+
+		function renderNotebookPanel() {
 			var html = '<div class="panel-header">'
 				+ '<span class="right-panel-title">Notebook Tutorials</span>'
 				+ '<button class="panel-close" id="btn-panel-close">&#xd7;</button>'
@@ -605,7 +663,16 @@ export const learnMorePanelsJs = `function renderNotebookPanel() {
 		}`;
 
 /** The buttons of Learn More. */
-export const learnMoreWiringJs = `document.getElementById('btn-wiki').addEventListener('click', function() {
+export const learnMoreWiringJs = `document.getElementById('btn-faq').addEventListener('click', function() {
+			if (currentPanelId === 'btn-faq') { hideRightPanel(); return; }
+			currentPanelId = 'btn-faq';
+			document.querySelectorAll('.panel-toggle').forEach(function(b) { b.classList.remove('panel-active'); });
+			this.classList.add('panel-active');
+			renderFaqPanel();
+			rightPanel.style.display = 'block';
+		});
+
+		document.getElementById('btn-wiki').addEventListener('click', function() {
 			if (currentPanelId === 'btn-wiki') { hideRightPanel(); return; }
 			currentPanelId = 'btn-wiki';
 			document.querySelectorAll('.panel-toggle').forEach(function(b) { b.classList.remove('panel-active'); });
@@ -711,6 +778,10 @@ export const packageLinksMessageJs = `if (msg.command === 'packageLinks') {
 export const learnMoreMessagesJs = `if (msg.command === 'paperLinks') {
 				var btn = document.getElementById('btn-paper');
 				if (btn) { btn.classList.toggle('has-actions', !!msg.hasPapers); }
+			}
+			if (msg.command === 'faq') {
+				faq = msg.faq || [];
+				document.getElementById('faq-item').style.display = faq.length ? '' : 'none';
 			}
 			if (msg.command === 'notebookSections') { notebookSections = msg.sections || []; }
 			if (msg.command === 'wikiSections') { wikiSections = msg.sections || []; }

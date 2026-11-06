@@ -26,7 +26,7 @@ import { ProxyChannel } from '../../../../base/parts/ipc/common/ipc.js';
 import { Server as ChildProcessServer } from '../../../../base/parts/ipc/node/ipc.cp.js';
 import { Server as UtilityProcessServer } from '../../../../base/parts/ipc/node/ipc.mp.js';
 import { isUtilityProcess } from '../../../../base/parts/sandbox/node/electronTypes.js';
-import { AskPollisSource, AskTopic, ASK_PASSAGES, ASK_SOURCE_COLLECTION, IAskPollisChatEnd, IAskPollisMessage, ICompareRun, ICompareRunSummary, IAskPollisChatRequest, IAskPollisChatText, IAskPollisFound, IAskPollisIndex, IAskPollisIndexedDocument, IAskPollisIndexRequest, IAskPollisIndexStatus, IAskPollisPanel, IAskPollisPassage, IAskPassageMatch, IAskPollisReranked, IAskPollisSearchResult, IAskPollisTimings, IAskTopicCounts, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingFound, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary } from '../common/askPollis.js';
+import { AskPollisSource, AskTopic, ASK_PASSAGES, ASK_SOURCE_COLLECTION, IAskPollisChatEnd, IAskPollisMessage, ICompareRun, ICompareRunSummary, IAskPollisChatRequest, IAskPollisChatText, IAskPollisFound, IAskPollisIndex, IAskPollisIndexedDocument, IAskPollisIndexRequest, IAskPollisIndexStatus, IAskPollisPanel, IAskPollisPanelShare, IAskPollisPassage, IAskPassageMatch, IAskPollisReranked, IAskPollisSearchResult, IAskPollisTimings, IAskTopicCounts, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingFound, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary } from '../common/askPollis.js';
 
 const DATABASE = join(os.homedir(), '.pollis', 'documents', 'PollisDocuments.duckdb');
 /** The embeddings made, by the model and the text it was given, as ask_index.jl keeps them. */
@@ -213,6 +213,8 @@ interface IPassageQuery {
 	readonly vectors?: string;
 	/** The panel asked in, whose passages are the first share. */
 	readonly panel?: IAskPollisPanel;
+	/** The share of the passages from the panel's own: NEAREST_SHARE when not given. */
+	readonly panelShare?: number | IAskPollisPanelShare;
 }
 
 /** The collection of the Package APIs, as pollisPackageApis.ts names it, which only a choice of Search In searches. */
@@ -294,6 +296,8 @@ const TOPIC = `CASE WHEN d.kind = 'julia' THEN 'julia' WHEN d.kind = 'document' 
  */
 const COMPARISONS_TABLES = [
 	'CREATE TABLE IF NOT EXISTS Comparisons.runs(id VARCHAR PRIMARY KEY, started BIGINT, pollis VARCHAR, models VARCHAR, judges VARCHAR, repeats INTEGER, questions INTEGER)',
+	// The style of Ask Pollis of a run, added with the styles: a run before them has none, and was Classical
+	'ALTER TABLE Comparisons.runs ADD COLUMN IF NOT EXISTS style VARCHAR',
 	'CREATE TABLE IF NOT EXISTS Comparisons.questions(run VARCHAR, question INTEGER, source VARCHAR, context VARCHAR, text VARCHAR, answer VARCHAR, passages VARCHAR, rank INTEGER)',
 	'CREATE TABLE IF NOT EXISTS Comparisons.answers(run VARCHAR, id VARCHAR, question INTEGER, model VARCHAR, repeat INTEGER, answer VARCHAR, error VARCHAR, first_word DOUBLE, seconds DOUBLE, reading DOUBLE, writing DOUBLE, tokens_read INTEGER, tokens_written INTEGER)',
 	'CREATE TABLE IF NOT EXISTS Comparisons.scores(run VARCHAR, answer VARCHAR, judge VARCHAR, relevance INTEGER, completeness INTEGER, clarity INTEGER, consistency INTEGER, helpfulness INTEGER, final DOUBLE, rationale VARCHAR)',
@@ -446,7 +450,7 @@ class AskPollisIndex implements IAskPollisIndex {
 				}
 			}
 			const { passages, searched } = await this.findPassages(connection, status.collections, {
-				question: request.question, vector, dimensions: vector ? status.dimensions : 0, count: Math.max(1, request.passages ?? ASK_PASSAGES), collections: request.collections, sources: request.sources, panel: request.panel,
+				question: request.question, vector, dimensions: vector ? status.dimensions : 0, count: Math.max(1, request.passages ?? ASK_PASSAGES), collections: request.collections, sources: request.sources, panel: request.panel, panelShare: request.panelShare,
 			});
 			const result: IAskPollisSearchResult = {
 				passages,
@@ -478,7 +482,8 @@ class AskPollisIndex implements IAskPollisIndex {
 		let where = `d.collection = $collection${source}`;
 		if (query.panel) {
 			const panel = panelSql(query.panel);
-			const rows = (await connection.runAndReadAll(searchSql(vector ? dimensions : 0, shares(query.count, 2)[0], vectors, `${panel}${source}`), parameters)).getRowObjectsJson();
+			const share = Math.min(query.count, query.panelShare === undefined ? shares(query.count, 2)[0] : Math.ceil(query.count * await this.panelShare(connection, query, panel, searched, source)));
+			const rows = (await connection.runAndReadAll(searchSql(vector ? dimensions : 0, share, vectors, `${panel}${source}`), parameters)).getRowObjectsJson();
 			passages.push(...rows.map(passageOf));
 			where = `${where} AND NOT ${panel}`;
 		}
@@ -489,6 +494,27 @@ class AskPollisIndex implements IAskPollisIndex {
 		}
 		// The docstrings last: a small model given "No-U-Turn Sampler (NUTS) sampler." first may repeat that line and stop
 		return { passages: [...passages.filter(passage => passage.kind !== 'api'), ...passages.filter(passage => passage.kind === 'api')], searched };
+	}
+
+	/**
+	 * The share of the passages from the panel's own (`panel`, its SQL condition) for `query`: a share `{ near, far }` is
+	 * `near` when the panel's nearest passage is within ROUTE_MARGIN of the nearest among it and the collections
+	 * `searched`, as a collection must be to be searched, and `near` when the search is by words only.
+	 */
+	private async panelShare(connection: DuckDBConnection, query: IPassageQuery, panel: string, searched: readonly string[], source: string): Promise<number> {
+		const share = query.panelShare;
+		if (typeof share === 'number' || share === undefined) {
+			return share ?? NEAREST_SHARE;
+		}
+		const { vector, dimensions, vectors } = query;
+		if (!vector) {
+			return share.near;
+		}
+		const embedding = vectors ? 'v.embedding' : 'p.embedding';
+		const distance = `array_cosine_distance(${embedding}, $vector::FLOAT[${dimensions}])`;
+		const among = searched.length ? `(${panel} OR d.collection IN (${searched.map(sqlString).join(', ')}))` : panel;
+		const [row] = (await connection.runAndReadAll(`SELECT min(CASE WHEN ${panel} THEN ${distance} END) AS panel, min(${distance}) AS best FROM passages p JOIN documents d ON p.document = d.id${vectors ? ` JOIN ${vectors} v ON v.id = p.id` : ''} WHERE ${embedding} IS NOT NULL AND ${among}${source}`, { vector })).getRowObjectsJson();
+		return row?.panel !== null && row?.panel !== undefined && Number(row.panel) - Number(row.best) <= ROUTE_MARGIN ? share.near : share.far;
 	}
 
 	/** Runs `task` with the index and embeddings.duckdb attached, the cache made the first time. */
@@ -790,8 +816,8 @@ class AskPollisIndex implements IAskPollisIndex {
 			await connection.run('BEGIN TRANSACTION');
 			try {
 				await this.removeRun(connection, summary.id);
-				await connection.run('INSERT INTO Comparisons.runs VALUES ($id, $started, $pollis, $models, $judges, $repeats, $questions)', {
-					id: summary.id, started: summary.started, pollis: summary.pollis, models: JSON.stringify(summary.models), judges: JSON.stringify(summary.judges), repeats: summary.repeats, questions: summary.questions,
+				await connection.run('INSERT INTO Comparisons.runs (id, started, pollis, models, judges, repeats, questions, style) VALUES ($id, $started, $pollis, $models, $judges, $repeats, $questions, $style::VARCHAR)', {
+					id: summary.id, started: summary.started, pollis: summary.pollis, models: JSON.stringify(summary.models), judges: JSON.stringify(summary.judges), repeats: summary.repeats, questions: summary.questions, style: summary.style ?? null,
 				});
 				for (const question of run.questions) {
 					await connection.run('INSERT INTO Comparisons.questions VALUES ($run, $question, $source, $context, $text, $answer, $passages, $rank::INTEGER)', {
@@ -828,6 +854,7 @@ class AskPollisIndex implements IAskPollisIndex {
 			judges: JSON.parse(String(row.judges ?? '[]')),
 			repeats: Number(row.repeats),
 			questions: Number(row.questions),
+			...(row.style ? { style: String(row.style) } : {}),
 		};
 	}
 

@@ -494,3 +494,52 @@ ci = confint(result)
 [(term = n, estimate = round(b, digits=4), std_error = round(s, digits=4), t = round(t, digits=2), p = round(p, digits=4), lower95 = round(ci[i, 1], digits=4), upper95 = round(ci[i, 2], digits=4))
  for (i, (n, b, s, t, p)) in enumerate(zip(coefnames(result), coef(result), stderror(result), tstat(result), pvalues(result)))]
 '''
+
+# ── FAQ: shown in Learn More, and the Panel FAQ test set of Evaluate Answering Models (hidden = true: the test set only) ──
+
+[[faq]]
+question = "Which variance form should I choose?"
+wiki = "Decision Guide"
+answer = """
+Exponential when the spread grows multiplicatively with the drivers, or when theory favours no form: the variance is always positive and any real driver is allowed. Power when the variance scales with a power of a non-zero size variable; its slopes are elasticities of the variance. Quadratic when the standard deviation grows in a straight line with z. Linear when the variance itself is additive in z, with fitted values well above zero.
+
+Compare Variance Models ranks the four forms by AIC, approximately: a difference of a few units is weak evidence.
+"""
+
+[[faq]]
+question = "Should I model the variance or just use robust standard errors?"
+wiki = "Decision Guide"
+answer = """
+When the aim is valid inference on OLS and no variance form has support, leave the coefficients alone: `white_se` in Compare with OLS gives that inference without assuming any form. Model the variance when the form is credible, when the efficiency gain matters, or when the prediction intervals need to follow the spread. Romano and Wolf (2017) argue for a combination, weighted fits with robust standard errors.
+"""
+
+[[faq]]
+question = "FWLS or maximum likelihood?"
+wiki = "Decision Guide"
+answer = """
+Maximum likelihood is efficient when the errors are normal and the variance form is right, but more sensitive to a small misspecification of the form. Two-step and Iterated FWLS need no optimiser, but their coefficient standard errors treat the fitted weights as known. Use FWLS when the optimiser struggles, and compare its standard errors with the likelihood fit when you can.
+"""
+
+[[faq]]
+question = "Why does this tab stop with an error about fitted values reaching zero?"
+wiki = "Assumptions"
+hidden = true
+answer = """
+The Linear and Quadratic forms can produce zero or negative fitted values for some rows, and no weight exists for such a row, so `HARE.jl` stops with an error that gives the number of rows. A value below 1e-6 of the mean fitted value counts as zero. It usually means a straight line is the wrong form; use Exponential, Power, or OLS with robust standard errors.
+"""
+
+[[faq]]
+question = "Can I use a dummy variable as a variance driver with the Power form?"
+wiki = "Power"
+hidden = true
+answer = """
+No: Power takes logarithms of the absolute drivers, so every driver must be non-zero. A dummy or a value close to zero gets a very large negative logarithm and great leverage in the auxiliary regression, which gives meaningless exponents. The default drivers, `nothing`, use every regressor, so a dummy in X breaks this too. Use Exponential when the drivers contain zeros.
+"""
+
+[[faq]]
+question = "Are the prediction intervals of Predict at New Values too narrow?"
+wiki = "Interpretation"
+hidden = true
+answer = """
+Yes. The interval is 1.96 times the fitted error standard deviation at the new drivers, around the prediction, and it ignores the uncertainty in beta and gamma, so it is too narrow, most of all far from the data. When Variance drivers (Z) was set, supply New variance drivers too.
+"""

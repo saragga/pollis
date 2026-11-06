@@ -30,9 +30,11 @@ import { FEWEST_ROWS, rowsChoiceScript, sortHeadingsScript, storedRows, storeRow
 import { COMPAREMODELS_METADATA } from '../../model/browser/webviews/compareModels.data.js';
 import { buildWebviewHtml, spinnerSvg } from '../../model/browser/webviews/webviewScaffold.js';
 import { ASK_CLOUD_MODELS, ASK_CLOUD_PROVIDERS, ASK_LOCAL_PREFIX, askCloudModel, askPassageLabel, AskTopic, IAskPollisEvalItem, IAskPollisPassage, IAskPollisService, IAskTopicCounts, ICompareRun, ICompareRunModel } from '../common/askPollis.js';
+import { ASK_DEFAULT_STYLE, ASK_POLLIS_STYLES, askPollisStyle } from '../common/askPollisStyles.js';
+import { IToolboxPanelsService } from '../common/toolboxPanels.js';
 import { askAnswerCss, askAnswerScript, askOpenPassage, askPassageView } from './askPollisWebview.js';
 import { CompareModelsRunner, compareFigures, ICompareEnd, ICompareProgress, QUESTION_COUNTS, retrievalLine } from './compareModelsRun.js';
-import { compareChartsHtml, compareChartsScript, compareCommonScript, compareCss, compareLocalCard, compareSharedText, compareTestSetHeadHtml, compareTestSetHtml, compareTestSetScript, CompareTestSetChoice, evalItemsText, mergeEvalItems, parseEvalItems, STANDARD_TEST_SET, topicLabel } from './compareShared.js';
+import { compareChartsHtml, compareChartsScript, compareCommonScript, compareCss, compareLocalCard, compareSharedText, compareTestSetHeadHtml, compareTestSetHtml, compareTestSetScript, CompareTestSetChoice, evalItemsText, mergeEvalItems, parseEvalItems, STANDARD_TEST_SET, isShippedTestSet, topicLabel } from './compareShared.js';
 import { IInstalledModel } from './modelsInstalledPage.js';
 
 // Evaluate Answering Models, from Ask Pollis and Compose > Local Models > Evaluate Answering Models... (compose.contribution.ts): the chat
@@ -57,6 +59,8 @@ const CHOSEN_KEY = 'pollis.compareModels.chosen';
 const JUDGES_KEY = 'pollis.compareModels.judges';
 const QUESTIONS_BY_KEY = 'pollis.compareModels.questionsBy';
 const REPEATS_KEY = 'pollis.compareModels.repeats';
+/** The style of Ask Pollis the runs use, by its id. */
+const STYLE_KEY = 'pollis.compareModels.style';
 /** How many questions of each topic Make Questions writes. */
 const COUNTS_KEY = 'pollis.compareModels.questionCounts';
 /** The most questions of a topic that Make Questions writes at a time. */
@@ -83,7 +87,7 @@ export interface ICompareModelsAdd {
 type CompareModelsMessage =
 	| { readonly command: 'ready' }
 	| { readonly command: 'choose'; readonly chosen: readonly string[] }
-	| { readonly command: 'settings'; readonly judges: readonly string[]; readonly questionsBy: string; readonly repeats: number; readonly counts: IAskTopicCounts }
+	| { readonly command: 'settings'; readonly judges: readonly string[]; readonly questionsBy: string; readonly repeats: number; readonly style: string; readonly counts: IAskTopicCounts }
 	| { readonly command: 'rows'; readonly rows: number }
 	| { readonly command: 'makeQuestions' }
 	| { readonly command: 'run'; readonly questions: readonly string[] }
@@ -141,6 +145,7 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 	const commandService = accessor.get(ICommandService);
 	const storageService = accessor.get(IStorageService);
 	const askPollisService = accessor.get(IAskPollisService);
+	const toolboxPanelsService = accessor.get(IToolboxPanelsService);
 	const fileService = accessor.get(IFileService);
 	const fileDialogService = accessor.get(IFileDialogService);
 	const dialogService = accessor.get(IDialogService);
@@ -185,8 +190,9 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 	let judges = storedList(storageService, JUDGES_KEY, [DEFAULT_JUDGE]);
 	let questionsBy = storageService.get(QUESTIONS_BY_KEY, StorageScope.APPLICATION, DEFAULT_JUDGE);
 	let repeats = storageService.getNumber(REPEATS_KEY, StorageScope.APPLICATION, 1);
+	let style = askPollisStyle(storageService.get(STYLE_KEY, StorageScope.APPLICATION, ASK_DEFAULT_STYLE)).id;
 	let counts = storedCounts(storageService);
-	const testSet = new CompareTestSetChoice(storageService, askPollisService, run.sets, { testSet: TEST_SET_KEY, ticked: TICKED_KEY }, post);
+	const testSet = new CompareTestSetChoice(storageService, askPollisService, run.sets, { testSet: TEST_SET_KEY, ticked: TICKED_KEY }, post, () => toolboxPanelsService.getToolboxes().flatMap(toolbox => toolbox.panels.flatMap(panel => panel.faq)));
 	let shown: ICompareRun | undefined;
 	// The passages Add chooses from: those an answer of Ask Pollis was written from, or those found for the question
 	let addPassages: readonly IAskPollisPassage[] = [];
@@ -208,6 +214,7 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 				pollis: shown.summary.pollis,
 				judges: shown.summary.judges,
 				repeats: shown.summary.repeats,
+				style: askPollisStyle(shown.summary.style).label,
 				figures: compareFigures(shown).map(figures => ({ ...figures, where: where(figures) })),
 				retrieval: retrievalLine(shown),
 				questions: shown.questions.map(question => ({ question: question.item.question, answer: question.item.answer, source: question.item.source, context: question.item.context, passages: question.passages.map(askPassageView) })),
@@ -243,6 +250,10 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 	const changeable = () => {
 		if (testSet.name === STANDARD_TEST_SET) {
 			status(localize('compareModels.standardFixed', "The Standard test set cannot be changed: Save As... makes a copy of it that you can change, and New Set... an empty one."), true);
+			return false;
+		}
+		if (isShippedTestSet(testSet.name)) {
+			status(localize('compareModels.panelFaqFixed', "The Panel FAQ test set cannot be changed: it is made from the FAQ of the panels. Save As... makes a copy of it that you can change."), true);
 			return false;
 		}
 		return true;
@@ -296,7 +307,7 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 			...installed.map(installedModel => ({ value: ASK_LOCAL_PREFIX + installedModel.file, label: installedModel.name, local: true, size: installedModel.sizeLabel, bytes: installedModel.bytes })),
 			...ASK_CLOUD_MODELS.map(cloud => ({ value: cloud.id, label: cloud.label, local: false, provider: ASK_CLOUD_PROVIDERS[cloud.provider].label })),
 		];
-		post({ command: 'models', models: listed.map(({ value, label, local, size, bytes, provider }) => ({ value, label, local, size, bytes, provider })), chosen, judges, questionsBy, repeats, counts });
+		post({ command: 'models', models: listed.map(({ value, label, local, size, bytes, provider }) => ({ value, label, local, size, bytes, provider })), chosen, judges, questionsBy, repeats, style, counts });
 		await postMemory();
 	};
 
@@ -383,7 +394,7 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 		}
 		const ticked = new Set(questions);
 		post({ command: 'running', running: true });
-		run.run(chosenModels(), runJudges, repeats, ticked.size ? testSet.items.filter(item => ticked.has(item.question)) : testSet.items).then(end => {
+		run.run(chosenModels(), runJudges, repeats, ticked.size ? testSet.items.filter(item => ticked.has(item.question)) : testSet.items, style).then(end => {
 			// The checks before any work, which end nothing
 			if (!end.run && end.error && !run.running) {
 				status(end.error, true);
@@ -451,11 +462,13 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 			judges = message.judges.filter(value => value).slice(0, 2);
 			questionsBy = message.questionsBy;
 			repeats = REPEATS.includes(message.repeats) ? message.repeats : 1;
+			style = askPollisStyle(message.style).id;
 			counts = questionCounts(message.counts);
 			storageService.store(COUNTS_KEY, JSON.stringify(counts), StorageScope.APPLICATION, StorageTarget.USER);
 			storageService.store(JUDGES_KEY, JSON.stringify(judges), StorageScope.APPLICATION, StorageTarget.USER);
 			storageService.store(QUESTIONS_BY_KEY, questionsBy, StorageScope.APPLICATION, StorageTarget.USER);
 			storageService.store(REPEATS_KEY, repeats, StorageScope.APPLICATION, StorageTarget.USER);
+			storageService.store(STYLE_KEY, style, StorageScope.APPLICATION, StorageTarget.USER);
 			await postMemory();
 		} else if (message.command === 'rows' && hasKey(message, { rows: true })) {
 			storeRows(storageService, 'compareModels', message.rows);
@@ -525,6 +538,10 @@ function pageHtml(rows: number): string {
 		secondJudge: localize('compareModels.secondJudge', "Second Judge"),
 		none: localize('compareModels.none', "None"),
 		repeats: localize('compareModels.repeats', "Repeats"),
+		style: localize('compareModels.style', "Style"),
+		styleHint: localize('compareModels.styleHint', "The style of Ask Pollis that finds the passages and asks the models, as Help > Ask Pollis does: the styles can be compared on the same test set."),
+		styles: ASK_POLLIS_STYLES.map(askStyle => ({ value: askStyle.id, label: askStyle.label, title: askStyle.description })),
+		runStyle: localize('compareModels.runStyle', "Style: {0}.", '{0}'),
 		repeatsHint: localize('compareModels.repeatsHint', "How many times each model answers each question: more than once shows how much its answers vary, in Spread."),
 		run: localize('compareModels.run', "Run"),
 		runSection: localize('compareModels.runSection', "Run"),
@@ -684,6 +701,7 @@ function pageHtml(rows: number): string {
 	<div class="settings">
 		<label class="field"><span class="small">${text.judge}</span><select id="judge"></select></label>
 		<label class="field"><span class="small">${text.secondJudge}</span><select id="secondJudge"></select></label>
+		<label class="field" title="${text.styleHint}"><span class="small">${text.style}</span><select id="style"></select></label>
 		<label class="field" title="${text.repeatsHint}"><span class="small">${text.repeats}</span><select id="repeats">${REPEATS.map(count => `<option value="${count}">${count}</option>`).join('')}</select></label>
 		<span class="bar"><button class="action current" id="run" disabled>${text.run}</button></span>
 	</div>
@@ -746,7 +764,7 @@ function pageHtml(rows: number): string {
 	${compareCommonScript}
 	function settings() {
 		const counts = Object.fromEntries(TEXT.topics.map(({ topic }) => [topic, Number(document.getElementById('count-' + topic).value) || 0]));
-		vscode.postMessage({ command: 'settings', judges: [document.getElementById('judge').value, document.getElementById('secondJudge').value], questionsBy: document.getElementById('questionsBy').value, repeats: Number(document.getElementById('repeats').value), counts });
+		vscode.postMessage({ command: 'settings', judges: [document.getElementById('judge').value, document.getElementById('secondJudge').value], questionsBy: document.getElementById('questionsBy').value, repeats: Number(document.getElementById('repeats').value), style: document.getElementById('style').value, counts });
 	}
 
 	function fillSelect(select, chosen, none) {
@@ -766,7 +784,14 @@ function pageHtml(rows: number): string {
 		select.value = models.some(model => model.value === chosen) ? chosen : none ? '' : (models.find(model => !model.local) || models[0] || {}).value || '';
 	}
 
-	function renderModels(chosen, judges, questionsBy, repeats, counts) {
+	// The styles of Ask Pollis to run with
+	for (const askStyle of TEXT.styles) {
+		const option = new Option(askStyle.label, askStyle.value);
+		option.title = askStyle.title;
+		document.getElementById('style').appendChild(option);
+	}
+
+	function renderModels(chosen, judges, questionsBy, repeats, style, counts) {
 		renderLocal(chosen);
 		const cloud = document.getElementById('cloudBody');
 		cloud.textContent = '';
@@ -778,6 +803,7 @@ function pageHtml(rows: number): string {
 		fillSelect(document.getElementById('secondJudge'), judges[1], true);
 		fillSelect(document.getElementById('questionsBy'), questionsBy, false);
 		document.getElementById('repeats').value = String(repeats);
+		document.getElementById('style').value = style;
 		for (const { topic } of TEXT.topics) { document.getElementById('count-' + topic).value = String(counts[topic]); }
 	}
 	document.querySelector('.models').addEventListener('change', event => {
@@ -787,7 +813,7 @@ function pageHtml(rows: number): string {
 		updateChosen();
 		vscode.postMessage({ command: 'choose', chosen: chosenValues() });
 	});
-	for (const id of ['judge', 'secondJudge', 'questionsBy', 'repeats', ...TEXT.topics.map(({ topic }) => 'count-' + topic)]) {
+	for (const id of ['judge', 'secondJudge', 'questionsBy', 'repeats', 'style', ...TEXT.topics.map(({ topic }) => 'count-' + topic)]) {
 		document.getElementById(id).addEventListener('change', settings);
 	}
 
@@ -1025,7 +1051,7 @@ function pageHtml(rows: number): string {
 		body.textContent = '';
 		document.getElementById('results').hidden = !run;
 		document.getElementById('runLine').textContent = run
-			? format(run.repeats > 1 ? TEXT.runLineRepeats : TEXT.runLine, new Date(run.started).toLocaleString(), run.pollis, run.questions.length, run.judges.length > 1 ? format(TEXT.and, run.judges[0], run.judges[1]) : run.judges[0] || '-', run.repeats)
+			? format(run.repeats > 1 ? TEXT.runLineRepeats : TEXT.runLine, new Date(run.started).toLocaleString(), run.pollis, run.questions.length, run.judges.length > 1 ? format(TEXT.and, run.judges[0], run.judges[1]) : run.judges[0] || '-', run.repeats) + ' ' + format(TEXT.runStyle, run.style)
 			: TEXT.noRuns;
 		document.getElementById('retrieval').textContent = run ? run.retrieval : '';
 		document.getElementById('deleteRun').hidden = !run;
@@ -1066,7 +1092,7 @@ function pageHtml(rows: number): string {
 		const message = event.data;
 		if (message.command === 'models') {
 			models = message.models;
-			renderModels(message.chosen, message.judges, message.questionsBy, message.repeats, message.counts);
+			renderModels(message.chosen, message.judges, message.questionsBy, message.repeats, message.style, message.counts);
 		} else if (message.command === 'sets') {
 			showSets(message);
 		} else if (message.command === 'items') {

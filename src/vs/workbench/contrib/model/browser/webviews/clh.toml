@@ -554,3 +554,56 @@ fit!(tree, X, labels)
 print_tree(tree)  # feature thresholds that separate the clusters
 mean(predict(tree, X) .== labels)  # fidelity: share of observations the rules place correctly
 '''
+
+# ── FAQ: shown in Learn More, and the Panel FAQ test set of Evaluate Answering Models (hidden = true: the test set only) ──
+
+[[faq]]
+question = "Which linkage should I choose?"
+wiki = "Factsheet"
+answer = """
+It depends on the clusters you expect. Ward forms compact groups of similar size, and always uses Euclidean distances. Complete forms tight groups with a small diameter. Single follows elongated, connected shapes, but can chain through noise. Average lies between Complete and Single, and is a sensible first choice when no shape is expected and a non-Euclidean distance is needed.
+
+Linkage Comparison fits all four at the same k: several linkages giving similar partitions is reassuring, and wide disagreement shows that the grouping depends on the method.
+"""
+
+[[faq]]
+question = "How do I choose the number of clusters?"
+wiki = "Diagnostics"
+answer = """
+The panel takes k as an input and does not estimate it. In Merge Heights, look for a k whose point stands well above the point at k + 1: the groups at that cut formed at low heights and join only at a much greater one. Choosing k gives the mean silhouette for k from 2 to 10, where a clear peak is mild support for that value. Read the two together, since no procedure settles the number of clusters for all data, and check whether the resulting clusters mean something in the subject.
+
+Changing k only moves the cut: the tree stays the same.
+"""
+
+[[faq]]
+question = "Should I standardise my features first?"
+wiki = "Assumptions"
+answer = """
+Usually, when the columns are on different scales: a feature with a large range dominates the Euclidean, Manhattan and Chebyshev distances whatever its importance, and under Ward one column with a large variance can decide most merges. The panel standardises its default `X_train`, but not a matrix you supply.
+
+Standardising is itself a choice: it gives every column equal variance, which can dilute a feature whose large variance reflects a real separation, and makes noise columns weigh as much as informative ones.
+"""
+
+[[faq]]
+question = "Why is there no Distance input on this tab?"
+wiki = "Ward Linkage"
+hidden = true
+answer = """
+On the Ward tab the criterion is defined on squared Euclidean distances, because it measures the growth in a sum of squares around a centroid, so the code always forms `pairwise(Euclidean(), X, dims=1)`. When only a non-Euclidean dissimilarity makes sense for the subject, use the Complete or Average tab, which offer Euclidean, Manhattan, Cosine and Chebyshev.
+"""
+
+[[faq]]
+question = "The cophenetic correlation is high: does that mean my clusters are good?"
+wiki = "Cophenetic Correlation"
+hidden = true
+answer = """
+No. A high cophenetic correlation says the tree is a fair summary of the pairwise distances, but it describes the whole tree: it does not depend on k, does not assess the clusters of a cut, and does not test whether groups exist. One remote group can raise it even when the structure inside the main mass is lost. Pair it with Silhouette Analysis or Choosing k, which score a cut.
+"""
+
+[[faq]]
+question = "Why does single linkage give me one big cluster and a few tiny ones?"
+wiki = "Single Linkage"
+hidden = true
+answer = """
+With a small k, single linkage often returns one large cluster and a few tiny ones, since the top merges of its tree tend to attach isolated points. This is chaining: a few intermediate points between two groups can connect them at a low height, which the Dendrogram shows as a staircase of leaves joining one growing group. The tiny clusters also mark observations far from all others, so the tab works as a screen for outliers. Linkage Comparison shows the smallest cluster size of each linkage.
+"""

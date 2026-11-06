@@ -140,11 +140,16 @@ const DOCUMENTS_DB = joinpath(homedir(), ".pollis", "documents", "PollisDocument
 """The folder of the snapshots, one `<id>.<window>.json` per connection, watched by the Databases view."""
 const SESSIONS = joinpath(homedir(), ".pollis", "databases", "sessions")
 
-"""A connection shown in the Databases view, and the name it is shown with."""
+"""
+A connection shown in the Databases view, the name it is shown with, and the schemas whose tables were read when
+opened in the view, of a database too large to read whole (`LAZY_TABLES`).
+"""
 struct Entry
     con::Any
     name::String
+    opened::Set{String}
 end
+Entry(con, name::AbstractString) = Entry(con, name, Set{String}())
 
 const CONNECTIONS = Dict{String,Entry}()
 const COUNTER = Ref(0)
@@ -180,18 +185,96 @@ const SQL_SQLITE = """
     WHERE m.type IN ('table', 'view') AND m.name NOT LIKE 'sqlite_%'
     ORDER BY m.name, p.cid"""
 
+"""The query that lists the columns of `con`, or `nothing` for ODBC, whose driver lists them itself (`odbc_catalog`)."""
 function introspection_sql(con)
     e = engine(con)
     e == "DuckDB" && return SQL_DUCKDB
     e == "SQLite" && return SQL_SQLITE
     e == "LibPQ" && return SQL_POSTGRES
+    e == "ODBC" && return nothing
     error("PollisDB: unsupported connection type $(typeof(con))")
 end
 
-"""Schemas, tables and columns of `con`, as nested Dicts ready for JSON."""
-function introspect(con)
+"""The schemas of the databases behind ODBC that hold the database's own tables, not the user's."""
+const ODBC_SYSTEM_SCHEMAS = Set(["information_schema", "pg_catalog", "sys"])
+
+"""
+The columns of the tables and views of an ODBC connection, as the query of `introspection_sql` gives them, from the
+catalog functions of its driver: the databases behind ODBC have no catalog query in common (Oracle has no
+information_schema). A database without schemas (MySQL) shows its catalog in their place.
+"""
+function odbc_catalog(con)
+    ODBC, Tables = parentmodule(typeof(con)), loaded(TABLES)
+    # The names of the columns ODBC returns are upper case in the standard, lower case in some drivers
+    lower(cols) = NamedTuple{Tuple(Symbol.(lowercase.(string.(keys(cols)))))}(values(cols))
+    text(x) = x === missing || x === nothing ? "" : string(x)
+    schema(cols, i) = isempty(text(cols.table_schem[i])) ? text(cols.table_cat[i]) : text(cols.table_schem[i])
+    tables = lower(Tables.columntable(ODBC.tables(con; tabletype = "TABLE,VIEW")))
+    kinds = Dict((schema(tables, i), text(tables.table_name[i])) => text(tables.table_type[i]) for i in eachindex(tables.table_name)
+                 if lowercase(schema(tables, i)) ∉ ODBC_SYSTEM_SCHEMAS)
+    columns = lower(Tables.columntable(ODBC.columns(con)))
+    keep = [haskey(kinds, (schema(columns, i), text(columns.table_name[i]))) for i in eachindex(columns.table_name)]
+    rows = findall(keep)
+    return (
+        table_schema = [schema(columns, i) for i in rows],
+        table_name = [text(columns.table_name[i]) for i in rows],
+        table_type = [kinds[(schema(columns, i), text(columns.table_name[i]))] for i in rows],
+        column_name = [text(columns.column_name[i]) for i in rows],
+        data_type = [text(columns.type_name[i]) for i in rows],
+    )
+end
+
+"""
+The number of tables above which the Databases view lists the schemas of a PostgreSQL database first, and reads the
+tables of a schema when it is opened: WRDS, for one, holds thousands of tables in hundreds of schemas.
+"""
+const LAZY_TABLES = 500
+
+"""The schemas of a PostgreSQL database the user may use, and the number of tables and views in each, from its catalog."""
+const SQL_POSTGRES_SCHEMAS = """
+    SELECT n.nspname AS table_schema, count(c.oid) AS tables
+    FROM pg_namespace n
+    LEFT JOIN pg_class c ON c.relnamespace = n.oid AND c.relkind IN ('r', 'v', 'm', 'p', 'f')
+    WHERE n.nspname NOT LIKE 'pg\\_%' AND n.nspname <> 'information_schema' AND has_schema_privilege(n.oid, 'USAGE')
+    GROUP BY n.nspname
+    ORDER BY n.nspname"""
+
+"""The columns of the tables and views of one schema of a PostgreSQL database, the schema given as `\$1`."""
+const SQL_POSTGRES_SCHEMA = """
+    SELECT c.table_schema, c.table_name, t.table_type, c.column_name, c.data_type
+    FROM information_schema.columns c
+    JOIN information_schema.tables t USING (table_catalog, table_schema, table_name)
+    WHERE c.table_schema = \$1
+    ORDER BY c.table_name, c.ordinal_position"""
+
+"""
+Schemas, tables and columns of `con`, as nested Dicts ready for JSON. A PostgreSQL database of more than `LAZY_TABLES`
+tables gives its schemas alone, each with its number of tables and `"unread": true`, but for the schemas `opened`,
+whose tables are read.
+"""
+function introspect(con; opened::Set{String} = Set{String}())
     DBInterface, Tables = loaded(DBINTERFACE), loaded(TABLES)
-    cols = Tables.columntable(DBInterface.execute(con, introspection_sql(con)))
+    if engine(con) == "LibPQ"
+        counts = Tables.columntable(DBInterface.execute(con, SQL_POSTGRES_SCHEMAS))
+        if sum(counts.tables; init = 0) > LAZY_TABLES
+            return map(eachindex(counts.table_schema)) do i
+                name = string(counts.table_schema[i])
+                name in opened || return Dict{String,Any}("name" => name, "tables" => Any[], "tableCount" => Int(counts.tables[i]), "unread" => true)
+                try
+                    schema = schemas_of(Tables.columntable(DBInterface.execute(con, SQL_POSTGRES_SCHEMA, [name])))
+                    isempty(schema) ? Dict{String,Any}("name" => name, "tables" => Any[]) : only(schema)
+                catch err
+                    Dict{String,Any}("name" => name, "tables" => Any[], "error" => sprint(showerror, err))
+                end
+            end
+        end
+    end
+    query = introspection_sql(con)
+    return schemas_of(query === nothing ? odbc_catalog(con) : Tables.columntable(DBInterface.execute(con, query)))
+end
+
+"""The schemas, tables and columns of `cols`, the columns the query of `introspection_sql` gives, as nested Dicts."""
+function schemas_of(cols)
     text(x) = x === missing ? "" : string(x)
     commented = hasproperty(cols, :table_comment)  # DuckDB only
     schemas = Dict{String,Any}[]
@@ -251,7 +334,7 @@ end
 function write_snapshot(id::AbstractString, entry::Entry)
     snapshot = Dict{String,Any}("id" => id, "name" => entry.name, "engine" => engine(entry.con), "updated" => string(now()), "pid" => getpid(), "window" => WINDOW)
     try
-        snapshot["schemas"] = introspect(entry.con)
+        snapshot["schemas"] = introspect(entry.con; opened = entry.opened)
     catch err
         snapshot["schemas"] = Any[]
         snapshot["error"] = sprint(showerror, err)
@@ -279,7 +362,7 @@ end
 """
     show(con; name = "<engine> Connection")
 
-Show `con`, a DBInterface connection to DuckDB, SQLite or PostgreSQL, in the Databases view, and
+Show `con`, a DBInterface connection to DuckDB, an ODBC data source, PostgreSQL or SQLite, in the Databases view, and
 return it. Showing it again renames it and re-reads its schemas.
 
 ```julia
@@ -303,6 +386,19 @@ Re-read the schemas of every registered connection, or of one, e.g. after `CREAT
 refresh() = foreach(refresh, collect(keys(CONNECTIONS)))
 function refresh(id::AbstractString)
     haskey(CONNECTIONS, id) && write_snapshot(id, CONNECTIONS[id])
+    return nothing
+end
+
+"""
+    open_schema(id, schema)
+
+Read the tables of `schema` of the connection shown as `id`, a database whose schemas the Databases view lists first,
+and show them below the schema; they are read again on each refresh.
+"""
+function open_schema(id::AbstractString, schema::AbstractString)
+    entry = CONNECTIONS[id]
+    push!(entry.opened, schema)
+    write_snapshot(id, entry)
     return nothing
 end
 
@@ -337,8 +433,7 @@ connection shown as `id` or from `con`.
 """
 preview(id::AbstractString, table::AbstractString; limit::Integer = 100) = preview(CONNECTIONS[id].con, table; limit)
 function preview(con, table::AbstractString; limit::Integer = 100)
-    DBInterface, Tables = loaded(DBINTERFACE), loaded(TABLES)
-    cols = Tables.columntable(DBInterface.execute(con, "SELECT * FROM $table LIMIT $limit"))
+    cols = first_rows(con, table, limit)
     names = collect(string.(keys(cols)))
     cells = [[x === missing ? "missing" : string(x) for x in col] for col in values(cols)]
     width(j) = min(40, maximum(length, cells[j]; init = length(names[j])))
@@ -355,6 +450,26 @@ function preview(con, table::AbstractString; limit::Integer = 100)
 end
 
 """
+The first `limit` rows of `table`, a quoted and possibly schema-qualified name, as a column table. The databases
+behind ODBC write a row limit each their own way (LIMIT, TOP, FETCH FIRST), so from ODBC the rows are read one at a
+time, and those after the first `limit` are left unread.
+"""
+function first_rows(con, table::AbstractString, limit::Integer)
+    DBInterface, Tables = loaded(DBINTERFACE), loaded(TABLES)
+    engine(con) == "ODBC" || return Tables.columntable(DBInterface.execute(con, "SELECT * FROM $table LIMIT $limit"))
+    cursor = DBInterface.execute(con, "SELECT * FROM $table"; iterate_rows = true)
+    names = Tables.schema(cursor).names
+    columns = [Any[] for _ in names]
+    n = 0
+    for row in Tables.rows(cursor)
+        n >= limit && break
+        foreach(j -> push!(columns[j], Tables.getcolumn(row, j)), eachindex(names))
+        (n += 1) >= limit && break  # before the next row is fetched
+    end
+    return NamedTuple{Tuple(names)}(Tuple(columns))
+end
+
+"""
     browse(id, table; limit = 100_000, title = table)
     browse(con, table; limit = 100_000, title = table)
 
@@ -363,8 +478,8 @@ Viewer of the Julia extension, from the connection shown as `id` or from `con`.
 """
 browse(id::AbstractString, table::AbstractString; limit::Integer = 100_000, title::AbstractString = table) = browse(CONNECTIONS[id].con, table; limit, title)
 function browse(con, table::AbstractString; limit::Integer = 100_000, title::AbstractString = table)
-    DBInterface, Tables = loaded(DBINTERFACE), loaded(TABLES)
-    rows = Tables.rowtable(DBInterface.execute(con, "SELECT * FROM $table LIMIT $limit"))
+    Tables = loaded(TABLES)
+    rows = Tables.rowtable(first_rows(con, table, limit))
     Base.invokelatest(Main.VSCodeServer.vscodedisplay, rows, title)
     return nothing
 end
@@ -407,6 +522,92 @@ function connect(path::AbstractString = ":memory:"; name::AbstractString = "Duck
         end
         show && PollisDB.show(db; name)
         db
+    end
+end
+
+"""
+    fetch(con, query)
+
+The result of `query` on `con` as a column table, a named tuple of vectors, with the decimal columns of PostgreSQL
+(`numeric`, read as `Decimal`) made `Float64`, which DuckDB, Parquet and CSV take.
+
+```julia
+crsp = PollisDB.fetch(wrds, "SELECT permno, mthcaldt, mthret FROM crsp.msf_v2 LIMIT 10")
+```
+"""
+function fetch(con, query::AbstractString)
+    DBInterface, Tables = loaded(DBINTERFACE), loaded(TABLES)
+    cols = Base.invokelatest(() -> Tables.columntable(DBInterface.execute(con, query)))
+    function float(col)
+        T = nonmissingtype(eltype(col))
+        T === Union{} || !(T <: AbstractFloat) || T <: Union{Float64,Float32,Float16} ? col : [x === missing ? missing : Float64(x) for x in col]
+    end
+    return map(float, cols)
+end
+
+"""
+    save(tbl, file; table = "data")
+
+Write the column table `tbl` to `file`, by its extension: Parquet (`.parquet`), CSV (`.csv`), or a table named `table`
+of a DuckDB database (`.duckdb`, made if missing, the table replaced if there), with the DuckDB engine of Pollis.
+"""
+function save(tbl, file::AbstractString; table::AbstractString = "data")
+    DuckDB = get(() -> Base.require(DUCKDB), Base.loaded_modules, DUCKDB)
+    DBInterface = loaded(DBINTERFACE)
+    quoted(s) = "'" * replace(s, "'" => "''") * "'"
+    extension = lowercase(splitext(file)[2])
+    extension in (".parquet", ".csv", ".duckdb") || error("PollisDB: save writes .parquet, .csv or .duckdb files, not $file")
+    mkpath(dirname(abspath(file)))
+    duck = connect(; builtins = false, fts = false, show = false)
+    try
+        Base.invokelatest() do
+            DuckDB.register_table(duck, tbl, "pollis_save")
+            if extension == ".duckdb"
+                DBInterface.execute(duck, "ATTACH $(quoted(file)) AS pollis_target")
+                DBInterface.execute(duck, "CREATE OR REPLACE TABLE pollis_target.main.\"$(replace(table, "\"" => "\"\""))\" AS SELECT * FROM pollis_save")
+                DBInterface.execute(duck, "DETACH pollis_target")
+            else
+                DBInterface.execute(duck, "COPY pollis_save TO $(quoted(file)) (FORMAT $(extension == ".parquet" ? "parquet" : "csv"))")
+            end
+        end
+    finally
+        DBInterface.close!(duck)
+    end
+    println("Wrote ", file, extension == ".duckdb" ? " (table $table)" : "", ": ", filesize(file), " bytes")
+    return nothing
+end
+
+"""
+    query_tables(query; tables...)
+
+The result of `query`, as `fetch` gives it, in a DuckDB database in memory where each keyword is a table: a column
+table, such as a named tuple of vectors, or the path of a Parquet (`.parquet`) or CSV (`.csv`) file.
+
+```julia
+merged = PollisDB.query_tables("SELECT * FROM a JOIN b USING (id)"; a = (id = [1, 2], x = [0.5, 0.7]), b = "b.parquet")
+```
+"""
+function query_tables(query::AbstractString; tables...)
+    DuckDB = get(() -> Base.require(DUCKDB), Base.loaded_modules, DUCKDB)
+    DBInterface = loaded(DBINTERFACE)
+    quoted(s) = "'" * replace(s, "'" => "''") * "'"
+    duck = connect(; builtins = false, fts = false, show = false)
+    try
+        Base.invokelatest() do
+            for (name, tbl) in tables
+                if tbl isa AbstractString
+                    extension = lowercase(splitext(tbl)[2])
+                    extension in (".parquet", ".csv") || error("PollisDB: query_tables reads .parquet or .csv files, not $tbl")
+                    reader = extension == ".parquet" ? "read_parquet" : "read_csv_auto"
+                    DBInterface.execute(duck, "CREATE VIEW \"$name\" AS SELECT * FROM $reader($(quoted(tbl)))")
+                else
+                    DuckDB.register_table(duck, tbl, String(name))
+                end
+            end
+        end
+        return fetch(duck, query)
+    finally
+        DBInterface.close!(duck)
     end
 end
 

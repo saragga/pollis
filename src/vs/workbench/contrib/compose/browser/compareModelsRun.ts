@@ -16,7 +16,8 @@ import { IFileService } from '../../../../platform/files/common/files.js';
 import { IProductService } from '../../../../platform/product/common/productService.js';
 import { ISecretStorageService } from '../../../../platform/secrets/common/secrets.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
-import { ASK_CHAT_MODEL, ASK_CLOUD_PROVIDERS, ASK_LOCAL_PREFIX, askCloudModel, askPassageLabel, IAskPollisAnswer, IAskPollisEvalItem, IAskPollisFound, IAskPollisPassage, IAskPollisService, IAskTopicCounts, ICompareRun, ICompareRunAnswer, ICompareRunModel, ICompareRunQuestion, ICompareRunScore, ICompareRunUnrated } from '../common/askPollis.js';
+import { ASK_CHAT_MODEL, ASK_CLOUD_PROVIDERS, ASK_LOCAL_PREFIX, ASK_PASSAGES, ASK_RERANK_CONTEXT, askCloudModel, askPassageLabel, IAskPollisAnswer, IAskPollisEvalItem, IAskPollisFound, IAskPollisPassage, IAskPollisService, IAskTopicCounts, ICompareRun, ICompareRunAnswer, ICompareRunModel, ICompareRunQuestion, ICompareRunScore, ICompareRunUnrated } from '../common/askPollis.js';
+import { askPollisStyle, askStyleAnswerPanel, askStyleRerank, askStyleReranks, askStyleSearchKey, askStyleSearchRequest } from '../common/askPollisStyles.js';
 import { askModelName } from './askPollisWebview.js';
 import { askFolder, CompareSampler, CompareTestSets, evalItem, ICompareSample, ICompareSamples, isEvalItem, mergeEvalItems } from './compareShared.js';
 
@@ -284,9 +285,10 @@ export class CompareModelsRunner {
 
 	/**
 	 * Asks every question of `items` of every model of `models`, `repeats` times, and has the answers rated by each
-	 * judge of `judges`; the run is kept, as far as it came when stopped.
+	 * judge of `judges`; the run is kept, as far as it came when stopped. The style `styleId` of Ask Pollis finds the
+	 * passages and asks the models, as the pane does; a question of the Panel FAQ is asked in its panel.
 	 */
-	async run(models: readonly ICompareRunModel[], judges: readonly ICompareRunModel[], repeats: number, items: readonly IAskPollisEvalItem[]): Promise<ICompareEnd> {
+	async run(models: readonly ICompareRunModel[], judges: readonly ICompareRunModel[], repeats: number, items: readonly IAskPollisEvalItem[], styleId?: string): Promise<ICompareEnd> {
 		if (this.source) {
 			return { error: localize('compareModels.busy', "Wait for the run to end, or stop it.") };
 		}
@@ -305,8 +307,13 @@ export class CompareModelsRunner {
 
 		// The passages of each question, found once for every model: those found before with the same search stamp are
 		// taken again, so that the embedding model loads only for the others, and every run gets the same passages
+		const style = askPollisStyle(styleId);
+		const reranker = this.configurationService.getValue<string>('pollis.ask.reranker')?.trim();
+		const kept = this.configurationService.getValue<number>('pollis.ask.passages') || ASK_PASSAGES;
+		const requests = items.map(item => askStyleSearchRequest(style, { question: item.question, panel: item.panel }, kept, reranker));
+		const keys = requests.map(request => askStyleSearchKey(style, request));
 		const stamp = await this.askPollisService.searchStamp();
-		const before = stamp ? await this.askPollisService.foundBefore(stamp.key, items.map(item => item.question)).catch(() => []) : [];
+		const before = stamp ? await this.askPollisService.foundBefore(stamp.key, keys).catch(() => []) : [];
 		const reused = before.filter(passages => passages !== undefined).length;
 		if (stamp && reused) {
 			this.sampler.note({ model: askModelName(stamp.embedder), event: 'reused', reused: [reused, items.length] });
@@ -323,11 +330,11 @@ export class CompareModelsRunner {
 				continue;
 			}
 			this.report(localize('compareModels.finding', "Finding the passages of question {0} of {1}...", index + 1, items.length), index, items.length);
-			const result = await this.askPollisService.search({ question: item.question });
+			const result = await this.askPollisService.search(requests[index]);
 			questions.push({ index, item, passages: result.passages });
 			// Only a search by meaning and words is kept: one by words only, when the embedding model did not start, is not the same
 			if (stamp && !result.wordsOnly) {
-				found.push({ question: item.question, passages: result.passages });
+				found.push({ question: keys[index], passages: result.passages });
 			}
 		}
 		if (stamp && found.length) {
@@ -339,6 +346,19 @@ export class CompareModelsRunner {
 		// The embedding model of the search is not needed again in the run: its memory goes to the models answering and judging
 		await this.askPollisService.stopSearchModel();
 
+		// The reranker of the style chooses among the passages found, kept as found, then stops too
+		if (askStyleReranks(style, reranker) && !token.isCancellationRequested) {
+			for (const [position, question] of questions.entries()) {
+				if (token.isCancellationRequested) {
+					break;
+				}
+				this.report(localize('compareModels.reranking', "Reranking the passages of question {0} of {1}...", position + 1, questions.length), position, questions.length);
+				const reranked = await askStyleRerank(style, this.askPollisService, reranker, question.item.question, question.item.panel, { passages: question.passages, searched: [], collections: [] }, kept);
+				questions[position] = { ...question, passages: reranked.result.passages };
+			}
+			await this.commandService.executeCommand('language-julia.pollisStopLlamaServer', { model: reranker, reranking: true, context: ASK_RERANK_CONTEXT }).catch(() => undefined);
+		}
+
 		// The answers: the cloud models together, each question after the other; the local models one after the other
 		const answers: ICompareRunAnswer[] = [];
 		const total = questions.length * models.length * repeats;
@@ -349,7 +369,7 @@ export class CompareModelsRunner {
 						continue;
 					}
 					let text = '';
-					const answer = await this.askPollisService.answer([], question.item.question, question.passages, answered => text = answered, token, model.value);
+					const answer = await this.askPollisService.answer([], question.item.question, question.passages, answered => text = answered, token, model.value, askStyleAnswerPanel(style, question.item.panel));
 					if (token.isCancellationRequested) {
 						return;
 					}
@@ -433,6 +453,14 @@ export class CompareModelsRunner {
 			}
 		}
 
+		// The place of the wiki that answers a question of the Panel FAQ, among the passages found for it: the first of its passages
+		for (const question of questions) {
+			if (question.item.wikiFile && !ranks.has(question.index)) {
+				const wikiFile = question.item.wikiFile;
+				ranks.set(question.index, question.passages.findIndex(passage => passage.kind === 'wiki' && passage.file.replace(/\\/g, '/').endsWith(`/${wikiFile}`)) + 1);
+			}
+		}
+
 		const run: ICompareRun = {
 			summary: {
 				id,
@@ -442,6 +470,7 @@ export class CompareModelsRunner {
 				judges: judges.map(judge => judge.label),
 				repeats,
 				questions: questions.length,
+				style: style.id,
 			},
 			questions: questions.map(question => ranks.has(question.index) ? { ...question, rank: ranks.get(question.index) } : question),
 			answers,

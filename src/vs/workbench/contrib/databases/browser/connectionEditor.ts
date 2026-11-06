@@ -18,7 +18,7 @@ import { IThemeService } from '../../../../platform/theme/common/themeService.js
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { sendToJuliaRepl } from '../../model/browser/handlers/model.handler.js';
 import { IDatabaseConnectionsService } from '../common/databaseConnections.js';
-import { DATABASE_DRIVERS, DatabaseDriverId, generateConnectionCode, generateSessionConnectCode, getDatabaseDriver, IDatabaseConnectionProfile, validateConnectionProfile } from '../common/databaseDrivers.js';
+import { DATABASE_DRIVERS, DatabaseDriverId, generateConnectionCode, generateSessionConnectCode, getDatabaseDriver, IDatabaseConnectionPreset, IDatabaseConnectionProfile, validateConnectionProfile, WRDS_PRESET } from '../common/databaseDrivers.js';
 
 /** Messages the connection form sends. Each carries the profile as currently filled in. */
 type ConnectionEditorMessage =
@@ -38,9 +38,9 @@ function newProfile(driver: DatabaseDriverId): IDatabaseConnectionProfile {
  * Open the connection form in an editor tab: a driver list on the left and, on the right, the
  * driver's fields with the Julia code they generate. The profile can be saved for the Connections
  * view, or saved and connected in the Julia REPL. Passing `profile` edits an existing one; a new
- * one starts with `driver` selected.
+ * one starts with the driver `start` selected, or filled in from the preset `start`.
  */
-export function openConnectionEditor(accessor: ServicesAccessor, profile?: IDatabaseConnectionProfile, driver: DatabaseDriverId = 'duckdb'): void {
+export function openConnectionEditor(accessor: ServicesAccessor, profile?: IDatabaseConnectionProfile, start: DatabaseDriverId | IDatabaseConnectionPreset = 'duckdb'): void {
 	const databaseConnectionsService = accessor.get(IDatabaseConnectionsService);
 	const commandService = accessor.get(ICommandService);
 	const fileDialogService = accessor.get(IFileDialogService);
@@ -69,7 +69,9 @@ export function openConnectionEditor(accessor: ServicesAccessor, profile?: IData
 	const disposables = new DisposableStore();
 	disposables.add(webview.onDidDispose(() => disposables.dispose()));
 
-	let lastProfile = profile ?? newProfile(driver);
+	const preset: IDatabaseConnectionPreset = typeof start === 'string' ? { driver: start } : start;
+	const blank = newProfile(preset.driver);
+	let lastProfile = profile ?? { ...blank, name: preset.name ?? blank.name, variable: preset.variable ?? blank.variable, options: { ...blank.options, ...preset.options } };
 	let codeVersion = 0;
 	const postCode = async (): Promise<void> => {
 		// Tokenizing is async: drop a result that a newer edit has already overtaken.
@@ -89,7 +91,9 @@ export function openConnectionEditor(accessor: ServicesAccessor, profile?: IData
 		switch (msg.command) {
 			case 'ready': {
 				const drivers = DATABASE_DRIVERS.map(d => ({ ...d, blank: newProfile(d.id).options }));
-				webview.postMessage({ command: 'init', drivers, profile: lastProfile, editing: !!profile });
+				// The services reached through an engine, each a button on its engine's tab that fills in the form
+				const presets = [{ ...WRDS_PRESET, label: localize('form.fillWrds', "Fill In for WRDS") }];
+				webview.postMessage({ command: 'init', drivers, presets, profile: lastProfile, editing: !!profile });
 				await postCode();
 				break;
 			}
@@ -178,6 +182,8 @@ function connectionEditorHtml(): string {
 		.checkbox label { font-weight: normal; }
 		.radio-group { display: flex; gap: 16px; padding: 4px 0; }
 		.radio-group label { font-weight: normal; display: inline-flex; align-items: center; gap: 4px; }
+		.presets { display: flex; gap: 8px; margin: -8px 0 20px; }
+		.presets:empty { display: none; }
 		.code-box { margin-top: 20px; }
 		pre { margin: 6px 0 0; padding: 10px 12px; background: var(--vscode-textCodeBlock-background); border-radius: 3px; font-family: var(--vscode-editor-font-family); font-size: var(--vscode-editor-font-size); white-space: pre; overflow-x: auto; tab-size: 4; }
 		.problems { color: var(--vscode-errorForeground); margin: 10px 0 0; padding-left: 18px; }
@@ -198,6 +204,7 @@ function connectionEditorHtml(): string {
 		<main class="form">
 			<h1 id="driver-title"></h1>
 			<p class="description" id="driver-description"></p>
+			<div class="presets" id="driver-presets"></div>
 			<div id="common-fields"></div>
 			<div id="driver-fields"></div>
 			<div class="code-box">
@@ -215,6 +222,7 @@ function connectionEditorHtml(): string {
 		const vscode = acquireVsCodeApi();
 		const S = ${JSON.stringify(connectionEditorStrings())};
 		let drivers = [];
+		let presets = [];
 		let profile;
 		let editing = false;
 
@@ -258,6 +266,21 @@ function connectionEditorHtml(): string {
 			document.getElementById('driver-title').textContent = driver.label;
 			document.getElementById('driver-description').textContent = driver.description + ' ' + S.packages + ': ' + driver.packages.map(p => p + '.jl').join(', ');
 			document.querySelectorAll('.driver').forEach(b => b.classList.toggle('active', b.dataset.driver === driver.id));
+			const presetBox = document.getElementById('driver-presets');
+			presetBox.textContent = '';
+			presets.filter(p => p.driver === driver.id).forEach(p => {
+				const button = el('button', { className: 'action', textContent: p.label });
+				// The settings of the service; the name and variable only while they are empty or the defaults
+				button.addEventListener('click', () => {
+					profile.name = profile.name.trim() || !p.name ? profile.name : p.name;
+					profile.variable = p.variable && (!profile.variable || profile.variable === 'con') ? p.variable : profile.variable;
+					profile.options = Object.assign({}, profile.options, p.options);
+					renderCommon();
+					renderDriverFields();
+					post('update');
+				});
+				presetBox.appendChild(button);
+			});
 			const box = document.getElementById('driver-fields');
 			box.textContent = '';
 			driver.fields.forEach(f => {
@@ -303,6 +326,7 @@ function connectionEditorHtml(): string {
 			const msg = e.data;
 			if (msg.command === 'init') {
 				drivers = msg.drivers;
+				presets = msg.presets;
 				profile = msg.profile;
 				editing = msg.editing;
 				const list = document.getElementById('driver-list');

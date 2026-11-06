@@ -592,3 +592,54 @@ for n in numeric
 	end
 end
 '''
+
+# ── FAQ: shown in Learn More, and the Panel FAQ test set of Evaluate Answering Models (hidden = true: the test set only) ──
+
+[[faq]]
+question = "Which method should I use to handle missing values?"
+wiki = "Decision Guide"
+answer = """
+If only a few percent of rows are incomplete and the MCAR Check is clean, Drop is fine. For rows ordered in time, use Interpolate for smooth series and LOCF / NOCB for step-like ones such as prices or statuses, then Chain Fill to close the ends. With several correlated numeric columns, try SVD. Otherwise Substitute, with the median for skewed columns and the mode for categorical ones.
+
+Not sure? Run Method Comparison and pick the lowest holdout RMSE, then confirm with Sensitivity Analysis.
+"""
+
+[[faq]]
+question = "What is the difference between MCAR, MAR and MNAR?"
+wiki = "Assumptions"
+answer = """
+Missing completely at random (MCAR): missingness has nothing to do with the data, and dropping rows loses precision but adds no bias. Missing at random (MAR): it depends on other, observed variables, so dropping rows is biased, and methods that use the other columns or the order of the rows can do better. Missing not at random (MNAR): it depends on the missing value itself, and no method in the panel can correct for it.
+
+No test can prove MCAR, and none can tell MAR from MNAR.
+"""
+
+[[faq]]
+question = "Are standard errors valid after imputation?"
+wiki = "Interpretation"
+answer = """
+They are too small. Every method in the panel fills each gap with one value, and standard errors and p-values computed from the filled table treat those values as if they had been observed; the more you impute, the larger the understatement. This is single imputation, not multiple imputation. Keep a record of which cells were filled, and check with Sensitivity Analysis whether the conclusions depend on them.
+"""
+
+[[faq]]
+question = "Why are there still missing values at the start of the series after this?"
+wiki = "Interpolate"
+hidden = true
+answer = """
+Interpolate cannot fill leading or trailing gaps, since there is nothing to interpolate towards before the first observed value or after the last one. LOCF cannot fill leading gaps and NOCB cannot fill trailing ones. The Chain Fill action closes both ends with `Impute.locf` followed by `Impute.nocb`.
+"""
+
+[[faq]]
+question = "Why did the correlations get weaker after filling the gaps with the mean?"
+wiki = "Substitute"
+hidden = true
+answer = """
+Substitute writes the same value, the column's mean, into every gap, and those values do not move with the other columns, so correlations weaken and the variance shrinks; Distribution Shift shows a spike at the mean. When relations between variables are the point of the analysis, prefer SVD, which uses the relations between columns, or Interpolate for time series.
+"""
+
+[[faq]]
+question = "How do I choose the rank for SVD?"
+wiki = "SVD"
+hidden = true
+answer = """
+The rank is the number of underlying patterns assumed to drive the columns, and it must be smaller than the number of columns. Low ranks, 1 to 3, give smooth, conservative fills; higher ranks follow the data more closely but can overfit the noise. Run Holdout Evaluation at a few ranks and keep the one with the lowest RMSE.
+"""

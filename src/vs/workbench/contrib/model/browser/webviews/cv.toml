@@ -495,3 +495,56 @@ in_s  = [my_model_eval(X[:, tr], y[tr], X[:, tr], y[tr]) for (tr, te) in fold_pa
 out_s = [my_model_eval(X[:, tr], y[tr], X[:, te], y[te]) for (tr, te) in fold_pairs]  # test RMSE
 println("Optimism (test minus training RMSE): ", mean(out_s) - mean(in_s))  # positive = overfitting
 '''
+
+# ── FAQ: shown in Learn More, and the Panel FAQ test set of Evaluate Answering Models (hidden = true: the test set only) ──
+
+[[faq]]
+question = "How many folds should I use?"
+wiki = "Decision Guide"
+answer = """
+5 or 10 folds balance the bias of small training sets against the variance of small test sets: the training sets are then 80% or 90% of the data. With very few observations, use leave-one-out or repeated k-fold; with many, 5 folds or a single hold-out split.
+
+Fix the seed, and use the same folds for every model you compare.
+"""
+
+[[faq]]
+question = "Can I use shuffled k-fold on time series or grouped data?"
+wiki = "Assumptions"
+answer = """
+No: shuffled k-fold assumes exchangeable observations, independent draws with no order or grouping linking them, and on grouped or time-ordered data it gives optimistic scores.
+
+For new groups (patients, batches, firms) use GroupKFold or GroupShuffleSplit, which keep each group whole. For forecasting use TimeSeriesSplit, or TimeSplit for a single origin; for the error over a whole autocorrelated series, BlockedCV; for labels that overlap in time, PurgedKFold.
+"""
+
+[[faq]]
+question = "How do I avoid leakage?"
+wiki = "Assumptions"
+answer = """
+Fit everything learned from data inside the fold, on the training indices only: scaling, imputation, feature selection, dimensionality reduction and tuning. Fitting them on all rows first leaks information from the test folds and makes the score optimistic.
+
+Also keep entities off both sides of the split when new entities are the target, and never train on the future when the target is forecasting. The Leakage Check tests all three.
+"""
+
+[[faq]]
+question = "Can I report the spread of the fold scores here as a standard error?"
+wiki = "Interpretation"
+hidden = true
+answer = """
+No. The folds share most of their training data, so their scores are correlated, and the naive standard error, the standard deviation of the fold scores over the square root of k, is optimistic. The spread shows how much the score depends on the partition; repeating the cross-validation with other seeds shows the sensitivity to the partition, but does not make the folds independent.
+"""
+
+[[faq]]
+question = "Is the test score of the Kennard-Stone split an estimate of how my model will perform?"
+wiki = "Distance-Based"
+hidden = true
+answer = """
+No. Kennard-Stone and the other distance-based strategies put the extreme and isolated observations in the training set and leave the test set inside the region it covers, so the test set is not a random sample. Studies comparing it with large blind test sets have found its score pessimistic with small training sets and optimistic with large ones. To estimate performance, hold out evaluation data first, then apply the selection to the training part only.
+"""
+
+[[faq]]
+question = "I tuned the hyperparameters with these folds: is the CV score still unbiased?"
+wiki = "Interpretation"
+hidden = true
+answer = """
+No: scores used to tune a model are optimistic. Use nested cross-validation, where an inner cross-validation on each outer training set chooses the hyperparameters and the outer folds estimate the error of the whole procedure, tuning included; or keep an untouched test set. The inner scores choose; only the outer scores estimate.
+"""

@@ -26,7 +26,17 @@ export interface IDatabaseTable {
 
 export interface IDatabaseSchema {
 	readonly name: string;
+	/** Its tables; none while `unread`. */
 	readonly tables: readonly IDatabaseTable[];
+	/**
+	 * Whether its tables are read only when it is opened in the Databases view: the schemas of a database too large to
+	 * read whole, such as WRDS.
+	 */
+	readonly unread?: boolean;
+	/** The number of its tables and views, given while `unread`. */
+	readonly tableCount?: number;
+	/** Why its tables could not be read, if they could not. */
+	readonly error?: string;
 }
 
 /**
@@ -37,7 +47,7 @@ export interface IDatabaseSession {
 	/** The id of the connection profile, or a `repl-` id for a connection shown with `PollisDB.show`. */
 	readonly id: string;
 	readonly name: string;
-	/** The package that opened the connection: `DuckDB`, `SQLite` or `LibPQ`. */
+	/** The package that opened the connection: `DuckDB`, `LibPQ`, `ODBC` or `SQLite`. */
 	readonly engine: string;
 	/** When the schemas were last read, as an ISO date-time in the REPL's local time. */
 	readonly updated: string;

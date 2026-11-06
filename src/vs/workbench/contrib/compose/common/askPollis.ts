@@ -68,6 +68,18 @@ export interface IAskPollisPanel {
 	readonly title: string;
 	/** The packages of its Powered by, as `GLM.jl`, the titles of their vignettes. */
 	readonly packages: readonly string[];
+	/** What it holds, as panelCard writes it, given to the model by the styles that tell it of the panel's content. */
+	readonly card?: string;
+}
+
+/**
+ * The share of the passages from a panel's own that depends on the question: `near` when the panel's nearest passage is
+ * almost as near the question as the nearest of all, as near as a collection must be to be searched, else `far`; `near`
+ * when the search is by words only.
+ */
+export interface IAskPollisPanelShare {
+	readonly near: number;
+	readonly far: number;
 }
 
 /** A question asked in a panel, which Ask Pollis answers beside it. */
@@ -129,6 +141,8 @@ export interface IAskPollisSearchRequest {
 	readonly passages?: number;
 	/** The panel it is asked in, which gives most of the passages, the rest routed as without it. */
 	readonly panel?: IAskPollisPanel;
+	/** The share of the passages from the panel's own, as its style sets it: 5/8 when not given. */
+	readonly panelShare?: number | IAskPollisPanelShare;
 	/** A collection of Retrieval-Augmented Generation, searched in place of PollisDocuments. */
 	readonly index?: IAskPollisCollectionIndex;
 }
@@ -327,7 +341,8 @@ export function askPollisMessages(turns: readonly IAskPollisTurn[], question: st
 	const texts = askPassageTexts(passages);
 	const numbered = passages.map((passage, i) => `[${i + 1}] ${askPassageLabel(passage)}\n${texts[i]}`);
 	const menu = panel && passages.find(passage => passage.kind === 'wiki' && passage.title === panel.title)?.menu;
-	const asked = panel ? `\nThe question is asked in the panel ${panel.title} of Pollis${menu ? ` (${menu})` : ''}: "this panel", "here" or "this method" mean it.` : '';
+	const card = panel?.card ? `\nWhat the panel holds, which the passages may not say:\n${panel.card}` : '';
+	const asked = panel ? `\nThe question is asked in the panel ${panel.title} of Pollis${menu ? ` (${menu})` : ''}: "this panel", "here" or "this method" mean it.${card}` : '';
 	const before = turns.slice(-ASK_TURNS);
 	const attached = !!attachments?.length || before.some(turn => turn.attachments?.length) ? `\n${ASK_ATTACHED_INSTRUCTION}${passages.length ? ' Cite the passages for what you say about Pollis and Julia.' : ''}` : '';
 	// Without passages, Search In: None, the model answers from what it knows
@@ -438,6 +453,12 @@ export interface IAskPollisEvalItem {
 	readonly context: string;
 	readonly question: string;
 	readonly answer: string;
+	/** A question of the FAQ of a panel, from the Panel FAQ test set: the panel it is asked in. */
+	readonly panel?: IAskPollisPanel;
+	/** The wiki that answers it, as the panel's TOML names its file, as `boot/assumptions.md`; its place among the passages found is the question's place. */
+	readonly wikiFile?: string;
+	/** Whether the question is one of the FAQ the panel does not show. */
+	readonly hidden?: boolean;
 }
 
 /**
@@ -477,6 +498,8 @@ export interface ICompareRunSummary {
 	readonly judges: readonly string[];
 	readonly repeats: number;
 	readonly questions: number;
+	/** The style of Ask Pollis that found the passages and asked the models, by its id; Classical for a run before styles. */
+	readonly style?: string;
 }
 
 /** A question of a run, with the passages found for it, the same for every model. */

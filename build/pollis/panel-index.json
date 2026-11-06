@@ -27,6 +27,7 @@
 			"extensionsSearchActionsMenu",
 			"extensionsSortSubMenu",
 			"menubarABSSubmenu",
+			"menubarADBSubmenu",
 			"menubarADRSubmenu",
 			"menubarAMRSubmenu",
 			"menubarANSubmenu",
@@ -7971,7 +7972,7 @@
 				{
 					"id": "chiara.explore.conn.sql",
 					"menuTitles": [
-						"Access Databases"
+						"SQL Databases"
 					]
 				}
 			],

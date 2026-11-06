@@ -412,3 +412,50 @@ terms = m.terms  # the DTM's own column order, so each IDF is paired with its te
 sorted = sort(collect(zip(terms, idf)), by=x->x[2], rev=true)  # terms with highest IDF first
 println(sorted[1:10])  # top 10 discriminative terms
 '''
+
+# ── FAQ: shown in Learn More, and the Panel FAQ test set of Evaluate Answering Models (hidden = true: the test set only) ──
+
+[[faq]]
+question = "Which tab should I use: DTM, TF-IDF or BM25?"
+wiki = "Decision Guide"
+answer = """
+DTM, the raw counts, to inspect the vocabulary or to feed a topic model such as LDA, which expects counts. TF-IDF with cosine similarity to compare documents with each other, or as features for a classifier. BM25 to rank documents for a short query: it is built for query against document, and is not symmetric. When the task is a mix of these, start with TF-IDF and use the others as checks.
+"""
+
+[[faq]]
+question = "What is the difference between TF-IDF and BM25?"
+wiki = "BM25"
+answer = """
+Both weight a term by how often it occurs in a document and how rare it is in the corpus. In BM25 repeated terms saturate, levelling off at k1 + 1, so the first mention says most of what a document has to say about a term, and document length enters explicitly, set by b. In TF-IDF a term's count rises linearly, and length is handled by normalising the vectors. TF-IDF vs BM25 ranks the corpus both ways for one query.
+"""
+
+[[faq]]
+question = "Why does my query score zero for every document?"
+wiki = "Diagnostics"
+answer = """
+None of its terms is in the vocabulary, and the sort order is then arbitrary. A query must be cleaned like the corpus: stop words have no column, and a capitalised word misses because `dtv` gets the raw string while the corpus was lowered. Clean the query with `prepare!` on the query document, and run Query Vector to see how many of its terms have non-zero counts.
+"""
+
+[[faq]]
+question = "Does a high cosine similarity here mean the document answers my question?"
+wiki = "Interpretation"
+hidden = true
+answer = """
+No. A ranking says which documents use the query's terms in the most concentrated way, a proxy for relevance; it does not mean that the top document answers the question, and synonyms get no credit, so a matching document in other words scores zero. Scores between 0 and 1 have no absolute scale either: compare them within one query.
+"""
+
+[[faq]]
+question = "Can I compare the BM25 scores of two different queries?"
+wiki = "Interpretation"
+hidden = true
+answer = """
+Generally not: BM25 scores are unbounded and depend on the query and the corpus, and a query with rare terms or more terms scores higher. Within one query, the order and the size of the gaps can be read: a large drop after the first few documents suggests a clear match.
+"""
+
+[[faq]]
+question = "Why are filing and filings counted as different terms?"
+wiki = "Assumptions"
+hidden = true
+answer = """
+Stemming is not applied: `prepare!` removes punctuation, case and stop words only, so "filing" and "filings" stay apart. Stemming helps small collections, and may hurt precision in a larger one. Whatever cleaning you choose, check it against your own corpus, and apply the same steps to documents and queries.
+"""

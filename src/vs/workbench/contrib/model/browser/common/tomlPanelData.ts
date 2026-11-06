@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 // No runtime imports: the build (build/lib/toml-to-ts.ts) runs this file directly under Node.
-import type { IScaffoldPanelData } from './model.types.js';
+import type { IModelFaq, IModelFaqItem, IScaffoldPanelData } from './model.types.js';
 
 /** A table of a parsed TOML file. */
 export interface TomlValue {
@@ -215,6 +215,82 @@ function parseValue(str: string): unknown {
 	return str;
 }
 
+/** The questions of the `[[faq]]` table of a parsed panel TOML, those without a question or an answer left out. */
+export function panelFaq(data: TomlValue): IModelFaq[] {
+	const entries = Array.isArray(data.faq) ? data.faq as TomlValue[] : [];
+	return entries.flatMap(entry => {
+		const question = typeof entry.question === 'string' ? entry.question.trim() : '';
+		const answer = typeof entry.answer === 'string' ? entry.answer.trim() : '';
+		if (!question || !answer) {
+			return [];
+		}
+		return [{
+			question,
+			answer,
+			...(typeof entry.wiki === 'string' && entry.wiki.trim() ? { wiki: entry.wiki.trim() } : {}),
+			...(entry.hidden === true ? { hidden: true } : {}),
+		}];
+	});
+}
+
+/** A label or text of a panel as plain text: without its tags, its character references read. */
+function plainText(text: string): string {
+	return text.replace(/<[^>]+>/g, '')
+		.replace(/&#x(?<hex>[0-9a-f]+);/gi, (_, hex: string) => String.fromCodePoint(parseInt(hex, 16)))
+		.replace(/&#(?<decimal>\d+);/g, (_, decimal: string) => String.fromCodePoint(Number(decimal)))
+		.replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&')
+		.replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * What a panel holds, for a model answering a question asked in it (the Panel Aware style of Ask Pollis): its models,
+ * Key Points, decision table, inputs and packages, as plain text. Never its FAQ, whose questions test Ask Pollis.
+ */
+export function panelCard(data: IScaffoldPanelData): string {
+	const lines: string[] = [];
+	const models = (data.models ?? []).map(model => plainText(model.label));
+	if (models.length > 1) {
+		lines.push(`Its models, each a tab: ${models.join('; ')}.`);
+	}
+	const bullets = (data.bullets ?? []).map(bullet => `- ${plainText(bullet.text)}: ${plainText(bullet.detail)}`);
+	if (bullets.length) {
+		lines.push('Its Key Points:', ...bullets);
+	}
+	const rows = (data.decisionRows ?? []).map(row => `- ${plainText(row.task)}: ${plainText(row.context)}. ${plainText(row.purpose)}`);
+	if (rows.length) {
+		lines.push('Which to choose, as its decision table says:', ...rows);
+	}
+	const inputs = [...new Set((data.inputs ?? []).map(input => plainText(input.label)).filter(label => label))];
+	if (inputs.length) {
+		lines.push(`Its inputs, which fill in its Example Code: ${inputs.join('; ')}.`);
+	}
+	const packages = data.packages.map(pkg => pkg.name);
+	if (packages.length) {
+		lines.push(`Powered by: ${packages.join(', ')}.`);
+	}
+	return lines.join('\n');
+}
+
+/**
+ * The questions of the FAQ of a panel, the hidden ones too, as the Panel FAQ test set of Evaluate Answering Models
+ * holds them: each asked in the panel `title`, with the file of the wiki that answers it when the panel bundles it.
+ */
+export function panelFaqItems(data: TomlValue, title: string): IModelFaqItem[] {
+	const panel = tomlToPanelData(data);
+	return panelFaq(data).map(entry => {
+		const wiki = entry.wiki ? panel.wikis.find(candidate => 'name' in candidate && candidate.name === entry.wiki) : undefined;
+		return {
+			source: `Panel FAQ, ${title}${entry.wiki ? `, ${entry.wiki}` : ''}`,
+			context: '',
+			question: entry.question,
+			answer: entry.answer,
+			panel: { title, packages: panel.packages.map(pkg => pkg.name), card: panelCard(panel) },
+			...(wiki && 'bundled' in wiki && wiki.bundled ? { wikiFile: wiki.file } : {}),
+			...(entry.hidden ? { hidden: true } : {}),
+		};
+	});
+}
+
 /**
  * The panel data of a parsed panel TOML, with its fields in the order the generated `*.data.ts`
  * files list them; the optional fields are present only when the TOML gives them.
@@ -249,6 +325,8 @@ export function tomlToPanelData(data: TomlValue): IScaffoldPanelData {
 		['codeBranches', data.codeBranches],
 		['actionGroups', data.actionGroups],
 		['inputs', data.inputs],
+		// [[faq]]: the hidden questions are for the Panel FAQ test set only, never in the panel's data
+		['faq', panelFaq(data).filter(entry => !entry.hidden)],
 	];
 	for (const [key, value] of optional) {
 		if (Array.isArray(value) ? value.length : value) {

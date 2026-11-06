@@ -633,3 +633,56 @@ println("bias / SE = ", round(b / se; digits = 3), ", bias-corrected estimate = 
 println(abs(b / se) < 0.25 ? "Bias is under a quarter of the standard error: Efron and Tibshirani (1993, section 10.6) suggest leaving the estimate uncorrected." :
     "Bias is a quarter of the standard error or more: the statistic may need correcting, or a different statistic; the correction itself adds variance.")
 '''
+
+# ── FAQ: shown in Learn More, and the Panel FAQ test set of Evaluate Answering Models (hidden = true: the test set only) ──
+
+[[faq]]
+question = "How many replicates should I use?"
+wiki = "Assumptions"
+answer = """
+About 1,000 replicates are enough for a standard error, and about 2,000 to 10,000 for the percentile, basic and BCa intervals, which depend on the tails of the replicates. The studentised interval also needs a nested bootstrap inside each replicate, the panel's Inner Replicates (often 50 to 200), which multiplies the cost.
+
+Required Replicates shows how the standard error and the interval endpoints settle as replicates are added: if the endpoints still move in the second significant digit, use more.
+"""
+
+[[faq]]
+question = "Which confidence interval should I report?"
+wiki = "Decision Guide"
+answer = """
+BCa is the usual default, with 2,000 replicates or more. When the replicates are close to normal, the normal or percentile interval is fine; the studentised interval suits a statistic whose standard error can be estimated well in each replicate.
+
+When the five intervals of the Interval Plot agree, the choice does not matter. When they differ, Interval Choice shows why, from the bias correction z0, the acceleration a and the skewness of the replicates.
+"""
+
+[[faq]]
+question = "Can I bootstrap a time series?"
+wiki = "Maximum Entropy Bootstrap"
+answer = """
+Not by resampling single observations: drawing them independently turns any series into white noise, so the standard error of the mean of a positively autocorrelated series comes out too small, and an autocorrelation is pulled towards zero.
+
+Choose the Time Series model, the maximum entropy bootstrap (Vinod, 2006). Each replicate keeps the time order and much of the shape of the series, so the dependence carries over to the replicates. It needs no block length and copes with trends and level shifts.
+"""
+
+[[faq]]
+question = "When does this method fail?"
+wiki = "Factsheet"
+hidden = true
+answer = """
+The bootstrap cannot create information. With very small samples the replicates take few distinct values and the intervals are too narrow: distrust it below about 20 observations. It fails for statistics that depend on the extremes, such as the maximum or the minimum, and resampling independent observations fails for dependent data, which need the time-series model or whole clusters resampled.
+"""
+
+[[faq]]
+question = "What does z0 mean here?"
+wiki = "Interpretation"
+hidden = true
+answer = """
+z0 is the bias correction of the BCa interval: the share of replicates below the estimate, on the normal scale. It is zero when the bootstrap distribution is centred on the estimate. Interval Choice shows it beside a, the acceleration, and the skewness of the replicates: when z0 and a are close to zero and the skewness is small, the percentile and normal intervals are fine; otherwise prefer BCa or studentised.
+"""
+
+[[faq]]
+question = "Should I worry about the bias it shows?"
+wiki = "Diagnostics"
+hidden = true
+answer = """
+Compare the bias with the standard error. A bias below about a quarter of the standard error can be ignored; a larger one is a warning that the statistic is biased and the percentile interval off-centre. Bias Correction subtracts the estimated bias, but adds variance, so it is worth it only when the bias is large compared with the standard error; BCa corrects for bias inside the interval instead.
+"""

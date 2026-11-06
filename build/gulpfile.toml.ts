@@ -9,7 +9,7 @@ import { fileURLToPath } from 'url';
 import gulp from 'gulp';
 import { generateTypeScriptFromToml } from './lib/toml-to-ts.ts';
 import { generatePollisBib, panelCommands, readReferencesDatabase, refreshReferenceCopies, REFERENCES_FOLDER } from './lib/pollis-bib.ts';
-import { parseToml } from '../src/vs/workbench/contrib/model/browser/common/tomlPanelData.ts';
+import { panelFaq, panelFaqItems, parseToml, tomlToPanelData } from '../src/vs/workbench/contrib/model/browser/common/tomlPanelData.ts';
 import { pinnedPackageFile } from './lib/pollis-packages.ts';
 import * as task from './lib/task.ts';
 
@@ -33,6 +33,12 @@ const referencesDumpPath = path.join(repoRoot, REFERENCES_FOLDER, 'references.js
 const rssCataloguePath = path.join(repoRoot, 'src/vs/workbench/contrib/monitor/browser/rssCatalogue.data.ts');
 const panelWikisPath = path.join(repoRoot, 'src/vs/workbench/contrib/compose/browser/panelWikis.data.ts');
 const wikiDir = path.join(repoRoot, 'src/vs/workbench/contrib/model/browser/media/wiki');
+const panelFaqPath = path.join(repoRoot, 'src/vs/workbench/contrib/compose/browser/media/ask/panelFaq.json');
+
+/** Whether an entry of a panel's wikis is a separator between their sections. */
+function hasSeparator(wiki: object): wiki is { separator: true } {
+	return 'separator' in wiki && !!wiki.separator;
+}
 
 /** Whether a bundled wiki is still a stub: its title and "Not written yet." only. */
 function isStubWiki(file: string): boolean {
@@ -92,6 +98,20 @@ export const compileTomlTask = task.define('compile-toml', async () => {
 	].join('\n'));
 	const stubs = panels.reduce((count, panel) => count + panel.wikis.filter(wiki => wiki.stub).length, 0);
 	console.log(`[toml] Generated panelWikis.data.ts: ${panels.length} panels, ${stubs} wikis not written yet`);
+
+	// The Panel FAQ test set of Evaluate Answering Models: the FAQ of every panel, the hidden questions with the shown
+	const faqItems = tomlFiles.flatMap(file => {
+		const data = parseToml(fs.readFileSync(path.join(tomlOutDir, file), 'utf-8'));
+		const title = typeof (data.meta as { title?: unknown } | undefined)?.title === 'string' ? (data.meta as { title: string }).title : file.replace(/\.toml$/, '');
+		const panel = tomlToPanelData(data);
+		const unknownWikis = panelFaq(data).filter(entry => entry.wiki && !panel.wikis.some(wiki => !hasSeparator(wiki) && wiki.name === entry.wiki));
+		if (unknownWikis.length) {
+			throw new Error(`[toml] ${file}: the FAQ names wikis the panel does not have: ${unknownWikis.map(entry => entry.wiki).join(', ')}`);
+		}
+		return panelFaqItems(data, title);
+	});
+	writeIfChanged(panelFaqPath, JSON.stringify(faqItems, null, 1) + '\n');
+	console.log(`[toml] Generated panelFaq.json: ${faqItems.length} questions, ${faqItems.filter(item => item.hidden).length} of them hidden`);
 
 	// The citations the Compose notebooks and the shipped methods keep for Pollis to read
 	for (const file of refreshReferenceCopies(repoRoot, database.references)) {

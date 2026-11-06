@@ -22,8 +22,9 @@ import { ExtensionsRegistry, IExtensionPointUser } from '../../../services/exten
 import { IModelNotebook, IModelPaper, IModelWiki } from '../../model/browser/common/model.types.js';
 import { IScaffoldPanel, openScaffoldWebview } from '../../model/browser/commands/scaffold.command.js';
 import { registerExternalFolder } from '../../model/browser/common/customCopyFileSystem.js';
-import { parseToml, tomlToPanelData } from '../../model/browser/common/tomlPanelData.js';
+import { panelFaqItems, parseToml, tomlToPanelData } from '../../model/browser/common/tomlPanelData.js';
 import { buildScaffoldHtml } from '../../model/browser/webviews/scaffoldParts.js';
+import { IAskPollisEvalItem } from '../common/askPollis.js';
 import { IToolboxDocumentInfo, IToolboxInfo, IToolboxPanelsService, IToolboxPlace, IToolboxPlacement, TOOLBOX_END_GROUP, TOOLBOX_MENU, TOOLBOX_SUBMENU_PREFIX } from '../common/toolboxPanels.js';
 
 /** A panel of a toolbox contributed by an extension. */
@@ -152,7 +153,7 @@ interface ILoadedToolbox {
 	readonly toolbox: IToolboxContribution;
 	readonly location: URI;
 	readonly version: string;
-	readonly panels: readonly { readonly contribution: IToolboxPanelContribution; readonly panel: IScaffoldPanel }[];
+	readonly panels: readonly { readonly contribution: IToolboxPanelContribution; readonly panel: IScaffoldPanel; readonly faq: readonly IAskPollisEvalItem[] }[];
 	readonly documents: readonly IToolboxDocumentInfo[];
 }
 
@@ -244,13 +245,15 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 					title: loaded.toolbox.title,
 					version: loaded.version,
 					documents: loaded.documents,
-					panels: loaded.panels.map(({ contribution, panel }) => ({
+					panels: loaded.panels.map(({ contribution, panel, faq }) => ({
 						id: contribution.id,
 						command: contribution.command,
 						title: contribution.menuTitle ?? contribution.title,
+						panelTitle: contribution.title,
 						submenu: submenuOf(loaded.toolbox, contribution)?.title,
 						description: panel.data.models?.map(model => model.label).join(' \u00b7 ') || undefined,
 						keys: [...new Set(panel.data.references.flatMap(reference => (reference as IModelPaper).key ?? []))],
+						faq,
 					})),
 					defaultPlacement: defaultPlacement(loaded),
 					published: entry ? placementOf(loaded, entry) : defaultPlacement(loaded),
@@ -283,7 +286,7 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 		for (const extension of extensions) {
 			const location = extension.description.extensionLocation;
 			for (const toolbox of extension.value) {
-				const panels: { contribution: IToolboxPanelContribution; panel: IScaffoldPanel }[] = [];
+				const panels: { contribution: IToolboxPanelContribution; panel: IScaffoldPanel; faq: readonly IAskPollisEvalItem[] }[] = [];
 				for (const contribution of toolbox.panels) {
 					if (contribution.submenu && !submenuOf(toolbox, contribution)) {
 						extension.collector.error(localize('pollisToolboxes.unknownSubmenu', "Panel {0} names the submenu {1}, which the toolbox does not have. It goes straight in the toolbox's menu.", contribution.id, contribution.submenu));
@@ -294,9 +297,11 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 						continue;
 					}
 					try {
-						const data = tomlToPanelData(parseToml((await this.fileService.readFile(toml)).value.toString()));
+						const parsed = parseToml((await this.fileService.readFile(toml)).value.toString());
+						const data = tomlToPanelData(parsed);
 						panels.push({
 							contribution,
+							faq: panelFaqItems(parsed, contribution.title),
 							panel: {
 								id: contribution.id,
 								viewType: `pollis.${contribution.id}`,

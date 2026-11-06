@@ -1,0 +1,61 @@
+# Wharton Research Data Services (WRDS) Webview Configuration
+# A page of Explore in the Time Arrow style of the scaffold, not a panel: only its Powered by and Learn More. `pageCommand`
+# is the command that opens it, which a panel's contribution file would say. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/wrds.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Wharton Research Data Services (WRDS)"
+viewType = "pollis.wrds"
+pageCommand = "pollis.wrds"
+
+[[packages]]
+name = "LibPQ.jl"
+github = "https://github.com/JuliaDatabases/LibPQ.jl"
+
+[[packages]]
+name = "DBInterface.jl"
+github = "https://github.com/JuliaDatabases/DBInterface.jl"
+
+[[packages]]
+name = "Tables.jl"
+github = "https://github.com/JuliaData/Tables.jl"
+
+[[wikis]]
+name = "Factsheet"
+file = "wrds/factsheet.md"
+bundled = true
+description = "The settings of the WRDS server, the packages and the files Pollis uses to connect"
+
+[[wikis]]
+name = "Overview"
+file = "wrds/overview.md"
+bundled = true
+description = "What WRDS is, how Pollis connects to it, and how its libraries appear in the Databases view"
+
+[[wikis]]
+name = "Choosing Data"
+file = "wrds/choosing-data.md"
+bundled = true
+description = "The common datasets of WRDS and their filters, browsing a library, and narrowing a query"
+
+[[wikis]]
+name = "Extracting Data"
+file = "wrds/extracting-data.md"
+bundled = true
+description = "Counting rows, bringing the data into a Julia variable, and saving it to Parquet, CSV or DuckDB"
+
+[[wikis]]
+name = "Merging Data"
+file = "wrds/merging-data.md"
+bundled = true
+description = "Joining CRSP and Compustat by the annual timing of Fama and French or the quarterly report date"
+
+[[references]]
+key = "FF1993a"
+
+[[references]]
+key = "HXZ2015a"
+
+[[references]]
+key = "SVW2023a"

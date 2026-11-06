@@ -5,8 +5,11 @@
 
 import { localize } from '../../../../nls.js';
 
-/** The database engines a connection can target. Each one connects through DBInterface.jl. */
-export type DatabaseDriverId = 'duckdb' | 'sqlite' | 'postgres';
+/**
+ * The database engines a connection can target. Each one connects through DBInterface.jl; `odbc` reaches any database
+ * with an ODBC driver the user installed (SQL Server, Oracle, Db2, Snowflake, ...).
+ */
+export type DatabaseDriverId = 'duckdb' | 'odbc' | 'sqlite' | 'postgres';
 
 /** Where a connection profile is stored: for every workspace, or for the current one only. */
 export type DatabaseConnectionTarget = 'global' | 'workspace';
@@ -46,6 +49,46 @@ export const DOCUMENTS_DATABASE_ID = 'pollisdocuments';
 /** The command of the Journal Metrics page, the sources of PollisJournals' levels and metrics, to import or remove. */
 export const JOURNAL_METRICS_COMMAND_ID = 'pollis.databases.journalMetrics';
 
+/** The command that opens the connection form; followed by `.` and a driver id, it opens the form on that driver. */
+export const NEW_CONNECTION_COMMAND_ID = 'pollis.databases.newConnection';
+
+/** The command of the WRDS page, Explore > Access Data Libraries > Wharton Research Data Services (WRDS). */
+export const WRDS_PAGE_COMMAND_ID = 'pollis.wrds';
+
+/** The command that opens the connection form filled in for WRDS ({@link WRDS_PRESET}). */
+export const NEW_WRDS_CONNECTION_COMMAND_ID = 'pollis.databases.newConnection.wrds';
+
+/** A new connection's starting point: its engine and, optionally, its name, variable and field values. */
+export interface IDatabaseConnectionPreset {
+	readonly driver: DatabaseDriverId;
+	readonly name?: string;
+	readonly variable?: string;
+	readonly options?: Readonly<Record<string, string | boolean>>;
+}
+
+/** The host of the PostgreSQL server of WRDS (Wharton Research Data Services). */
+const WRDS_HOST = 'wrds-pgdata.wharton.upenn.edu';
+
+/**
+ * WRDS, Wharton Research Data Services: a PostgreSQL server, with the settings WRDS gives its users, who add their
+ * WRDS username. Each sign-in waits for a Duo push approved on the phone, so the connection waits longer than the
+ * form's default.
+ */
+export const WRDS_PRESET: IDatabaseConnectionPreset = {
+	driver: 'postgres',
+	name: 'WRDS',
+	variable: 'wrds',
+	options: { host: WRDS_HOST, port: '9737', dbname: 'wrds', sslmode: 'require', connectTimeout: '120' },
+};
+
+/** Whether a connection is to the PostgreSQL server of WRDS. */
+export function isWrdsConnection(profile: IDatabaseConnectionProfile): boolean {
+	return profile.driver === 'postgres' && stringValue(profile, 'host').toLowerCase() === WRDS_HOST;
+}
+
+/** The command that shows the Connections of the Databases view, where saved connections are managed. */
+export const SHOW_CONNECTIONS_COMMAND_ID = 'pollis.databases.showConnections';
+
 /** One input of a driver's connection form. */
 export interface IDatabaseDriverField {
 	readonly id: string;
@@ -69,6 +112,7 @@ export interface IDatabaseDriver {
 	readonly fields: readonly IDatabaseDriverField[];
 }
 
+/** The drivers, in alphabetical order, as the Connection Type list of the connection form shows them. */
 export const DATABASE_DRIVERS: readonly IDatabaseDriver[] = [
 	{
 		id: 'duckdb',
@@ -81,12 +125,15 @@ export const DATABASE_DRIVERS: readonly IDatabaseDriver[] = [
 		],
 	},
 	{
-		id: 'sqlite',
-		label: 'SQLite',
-		description: localize('sqlite.description', "Single-file database. The file is created if it does not exist."),
-		packages: ['SQLite', 'DBInterface'],
+		id: 'odbc',
+		label: 'ODBC',
+		description: localize('odbc.description', "Any database with an ODBC driver, such as SQL Server, Oracle, Db2 or Snowflake. Install the database's ODBC driver first; on macOS and Linux, ODBC.jl keeps its own list of drivers, which ODBC.adddriver adds to."),
+		packages: ['ODBC', 'DBInterface'],
 		fields: [
-			{ id: 'path', label: localize('sqlite.path', "Database File"), kind: 'file', defaultValue: '', placeholder: 'data.sqlite', required: true },
+			{ id: 'source', label: localize('odbc.source', "Data Source"), kind: 'text', defaultValue: '', placeholder: localize('odbc.source.placeholder', "A data source name, or a connection string such as Driver={{0}};Server=host;Database=db", 'ODBC Driver 18 for SQL Server'), required: true, description: localize('odbc.source.description', "Leave the password out: it is asked for in the REPL") },
+			{ id: 'user', label: localize('odbc.user', "Username"), kind: 'text', defaultValue: '' },
+			{ id: 'promptPassword', label: localize('odbc.promptPassword', "Ask for Password in the REPL"), kind: 'checkbox', defaultValue: true, description: localize('odbc.promptPassword.description', "Otherwise the driver signs in without one, e.g. with the account of the computer") },
+			{ id: 'driverManager', label: localize('odbc.driverManager', "Driver Manager"), kind: 'select', defaultValue: 'default', options: ['default', 'unixODBC', 'iODBC'], description: localize('odbc.driverManager.description', "On macOS, Microsoft's SQL Server driver needs unixODBC") },
 		],
 	},
 	{
@@ -102,6 +149,15 @@ export const DATABASE_DRIVERS: readonly IDatabaseDriver[] = [
 			{ id: 'promptPassword', label: localize('postgres.promptPassword', "Ask for Password in the REPL"), kind: 'checkbox', defaultValue: true, description: localize('postgres.promptPassword.description', "Otherwise libpq uses PGPASSWORD or ~/.pgpass") },
 			{ id: 'sslmode', label: localize('postgres.sslmode', "SSL Mode"), kind: 'select', defaultValue: 'prefer', options: ['disable', 'allow', 'prefer', 'require', 'verify-ca', 'verify-full'] },
 			{ id: 'connectTimeout', label: localize('postgres.connectTimeout', "Connection Timeout (s)"), kind: 'number', defaultValue: '10' },
+		],
+	},
+	{
+		id: 'sqlite',
+		label: 'SQLite',
+		description: localize('sqlite.description', "Single-file database. The file is created if it does not exist."),
+		packages: ['SQLite', 'DBInterface'],
+		fields: [
+			{ id: 'path', label: localize('sqlite.path', "Database File"), kind: 'file', defaultValue: '', placeholder: 'data.sqlite', required: true },
 		],
 	},
 ];
@@ -129,7 +185,7 @@ function stringValue(profile: IDatabaseConnectionProfile, id: string): string {
 }
 
 /** A Julia string literal holding `value`. */
-function juliaString(value: string): string {
+export function juliaString(value: string): string {
 	return '"' + value.replace(/[\\"$]/g, c => '\\' + c) + '"';
 }
 
@@ -159,6 +215,14 @@ export function describeConnection(profile: IDatabaseConnectionProfile): string 
 	switch (profile.driver) {
 		case 'duckdb':
 			return stringValue(profile, 'path') || ':memory:';
+		case 'odbc': {
+			// The data source name, or the server of a connection string; never the rest of the string
+			const source = stringValue(profile, 'source');
+			const user = stringValue(profile, 'user');
+			const settings = new Map(source.split(';').map(pair => pair.split('=')).filter(pair => pair.length > 1).map(([key, ...value]) => [key.trim().toLowerCase(), value.join('=').trim()]));
+			const where = !source.includes('=') ? source : settings.get('dsn') || settings.get('server') || settings.get('host') || settings.get('driver') || 'ODBC';
+			return `${user ? user + '@' : ''}${where}`;
+		}
 		case 'sqlite':
 			return stringValue(profile, 'path');
 		case 'postgres': {
@@ -187,6 +251,13 @@ export function validateConnectionProfile(profile: IDatabaseConnectionProfile): 
 			problems.push(localize('validate.number', "{0} must be a whole number.", field.label));
 		}
 	}
+	if (isWrdsConnection(profile) && !stringValue(profile, 'user')) {
+		problems.push(localize('validate.wrdsUser', "Enter your WRDS username."));
+	}
+	// A profile never holds a password: it is saved in plain text
+	if (profile.driver === 'odbc' && /(^|;)\s*(pwd|password)\s*=/i.test(stringValue(profile, 'source'))) {
+		problems.push(localize('validate.odbcPassword', "Leave the password out of the connection string: Pollis asks for it in the REPL."));
+	}
 	return problems;
 }
 
@@ -202,6 +273,23 @@ export function generateConnectionCode(profile: IDatabaseConnectionProfile): str
 			lines.push(`${variable} = DBInterface.connect(DuckDB.DB, ${juliaString(path || ':memory:')}${readonly})`);
 			break;
 		}
+		case 'odbc': {
+			const manager = stringValue(profile, 'driverManager');
+			if (manager === 'unixODBC' || manager === 'iODBC') {
+				lines.push(`ODBC.set${manager}()`);
+			}
+			const user = stringValue(profile, 'user');
+			const credentials = [
+				...(user ? [`user = ${juliaString(user)}`] : []),
+				...(fieldValue(profile, 'promptPassword') === true ? ['password = password'] : []),
+			];
+			if (fieldValue(profile, 'promptPassword') === true) {
+				// Typed into the REPL, never in the code, the history or a file; ODBC.jl shreds it once connected
+				lines.push(`password = Base.getpass(${juliaString(`Password for ${describeConnection(profile)}`)})`);
+			}
+			lines.push(`${variable} = DBInterface.connect(ODBC.Connection, ${juliaString(stringValue(profile, 'source'))}${credentials.length ? '; ' + credentials.join(', ') : ''})`);
+			break;
+		}
 		case 'sqlite':
 			lines.push(`${variable} = DBInterface.connect(SQLite.DB, ${juliaString(stringValue(profile, 'path'))})`);
 			break;
@@ -215,19 +303,22 @@ export function generateConnectionCode(profile: IDatabaseConnectionProfile): str
 				['connect_timeout', stringValue(profile, 'connectTimeout')],
 			].filter(([, value]) => value).map(([key, value]) => `${key}=${conninfoValue(value)}`);
 			const connect = `DBInterface.connect(LibPQ.Connection, ${juliaString(parts.join(' '))})`;
+			// WRDS signs in only once a Duo push is approved on the phone
+			const duo = isWrdsConnection(profile) ? ['println("WRDS: approve the Duo push on your phone to connect")'] : [];
 			if (fieldValue(profile, 'promptPassword') === true) {
 				// The password is typed into the REPL and handed to libpq through PGPASSWORD for the
 				// duration of the call only, so it never appears in the code, the history or a file.
 				const account = describeConnection({ ...profile, options: { ...profile.options, dbname: '' } });
 				lines.push(
 					`password = Base.getpass(${juliaString(`Password for ${account}`)})`,
+					...duo,
 					`${variable} = withenv("PGPASSWORD" => read(password, String)) do`,
 					`\t${connect}`,
 					'end',
 					'Base.shred!(password)',
 				);
 			} else {
-				lines.push(`${variable} = ${connect}`);
+				lines.push(...duo, `${variable} = ${connect}`);
 			}
 			break;
 		}
@@ -259,6 +350,11 @@ export function generateSessionConnectCode(profile: IDatabaseConnectionProfile, 
 /** The code that closes the REPL connection `id` and removes it from the Databases view. */
 export function generateSessionDisconnectCode(id: string): string {
 	return `PollisDB.disconnect(${juliaString(id)})`;
+}
+
+/** The code that reads the tables of `schema` of the REPL connection `id`, a database whose schemas are listed first. */
+export function generateOpenSchemaCode(id: string, schema: string): string {
+	return `PollisDB.open_schema(${juliaString(id)}, ${juliaString(schema)})`;
 }
 
 /** The code that re-reads the schemas of the REPL connection `id`, or of every one. */
@@ -317,6 +413,14 @@ function taskCode(profile: IDatabaseConnectionProfile, target: DatabaseTaskTarge
 	].join('\n');
 }
 
+/**
+ * The code that runs `body` in the Julia REPL on the connection of `profile`, connecting it first when the Databases view
+ * has not, as the tasks of the view do.
+ */
+export function generateReplTaskCode(profile: IDatabaseConnectionProfile, connected: boolean, body: readonly string[]): string {
+	return taskCode(profile, 'repl', connected, [...body]);
+}
+
 /** Where {@link sqlWithFile} puts the file: a character no SQL name of the view holds. */
 const FILE_MARK = '\u0001';
 
@@ -339,12 +443,25 @@ function tableWrittenLines(profile: IDatabaseConnectionProfile, table: string): 
  * tables of the database.
  */
 export function generateQueryTaskCode(profile: IDatabaseConnectionProfile, target: DatabaseTaskTarget, connected: boolean, schema?: string, table?: string): string {
-	const sql = schema !== undefined && table !== undefined
-		? `SELECT * FROM ${sqlName(schema)}.${sqlName(table)} LIMIT 10`
-		: profile.driver === 'sqlite'
-			? `SELECT type, name FROM sqlite_master WHERE type IN ('table', 'view') ORDER BY name`
-			: `SELECT table_schema, table_name, table_type FROM information_schema.tables WHERE table_schema NOT IN ('information_schema', 'pg_catalog') ORDER BY 1, 2`;
+	const odbc = profile.driver === 'odbc';
+	if (odbc && (schema === undefined || table === undefined)) {
+		// The databases of ODBC have no catalog query in common (Oracle has no information_schema): ODBC lists the tables itself
+		return taskCode(profile, target, connected, [
+			`tbl = Tables.columntable(ODBC.tables(${profile.variable}; tabletype = "TABLE,VIEW"))  # named tuple of column vectors`,
+			'println(length(first(tbl)), " tables and views")',
+			'println(Tables.schema(tbl))',
+		]);
+	}
+	const sql = odbc
+		? `SELECT * FROM ${sqlName(schema!)}.${sqlName(table!)}`
+		: schema !== undefined && table !== undefined
+			? `SELECT * FROM ${sqlName(schema)}.${sqlName(table)} LIMIT 10`
+			: profile.driver === 'sqlite'
+				? `SELECT type, name FROM sqlite_master WHERE type IN ('table', 'view') ORDER BY name`
+				: `SELECT table_schema, table_name, table_type FROM information_schema.tables WHERE table_schema NOT IN ('information_schema', 'pg_catalog') ORDER BY 1, 2`;
 	return taskCode(profile, target, connected, [
+		// No row limit is written in every database's SQL alike
+		...(odbc ? ['# The first rows only: LIMIT 10 at the end (MySQL, Snowflake), TOP 10 after SELECT (SQL Server) or FETCH FIRST 10 ROWS ONLY at the end (Oracle, Db2)'] : []),
 		'sql = raw"""',
 		sql,
 		'"""',
@@ -383,7 +500,7 @@ export function generateSaveTaskCode(profile: IDatabaseConnectionProfile, target
 
 /**
  * The code of the Export task: `table` of `schema` written to `file`, by DuckDB in `format`, or, from
- * SQLite and PostgreSQL, as CSV by CSV.jl.
+ * the other engines, as CSV by CSV.jl.
  */
 export function generateExportTaskCode(profile: IDatabaseConnectionProfile, target: DatabaseTaskTarget, connected: boolean, schema: string, table: string, file: string, format: DatabaseExportFormat): string {
 	const select = `SELECT * FROM ${sqlName(schema)}.${sqlName(table)}`;

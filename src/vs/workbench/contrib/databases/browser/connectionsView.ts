@@ -30,7 +30,7 @@ import { IViewPaneOptions, ViewPane } from '../../../browser/parts/views/viewPan
 import { IViewDescriptorService } from '../../../common/views.js';
 import { IDatabaseColumn, IDatabaseConnectionsService, IDatabaseSchema, IDatabaseSession, IDatabaseTable } from '../common/databaseConnections.js';
 import './media/connectionsView.css';
-import { describeConnection, DOCUMENTS_DATABASE_ID, getDatabaseDriver, IDatabaseConnectionProfile, isInMemoryConnection, isWritableConnection, JOURNALS_DATABASE_ID, REFERENCES_DATABASE_ID, RSS_DATABASE_ID } from '../common/databaseDrivers.js';
+import { describeConnection, DOCUMENTS_DATABASE_ID, getDatabaseDriver, IDatabaseConnectionProfile, isInMemoryConnection, isWritableConnection, JOURNALS_DATABASE_ID, NEW_CONNECTION_COMMAND_ID, REFERENCES_DATABASE_ID, RSS_DATABASE_ID } from '../common/databaseDrivers.js';
 
 /** The context menu of an item in the Connections view. Its commands receive an {@link IDatabaseItemArg}. */
 export const DatabaseConnectionContextMenu = new MenuId('DatabaseConnectionContext');
@@ -54,10 +54,11 @@ export const DatabaseItemExpanded = new RawContextKey<boolean>('pollisDatabaseEx
 /** Whether the item's database is a saved DuckDB database, not built in and not read-only, that tables can be written to. */
 export const DatabaseItemWritable = new RawContextKey<boolean>('pollisDatabaseWritable', false);
 
-export const NEW_CONNECTION_COMMAND_ID = 'pollis.databases.newConnection';
 export const CONNECT_DATABASE_COMMAND_ID = 'pollis.databases.connect';
 export const DISCONNECT_DATABASE_COMMAND_ID = 'pollis.databases.disconnect';
 export const REFRESH_DATABASE_COMMAND_ID = 'pollis.databases.refresh';
+/** Reads the tables of a schema listed without them, when it is opened. */
+export const OPEN_SCHEMA_COMMAND_ID = 'pollis.databases.openSchema';
 export const PREVIEW_TABLE_COMMAND_ID = 'pollis.databases.previewTable';
 export const BROWSE_TABLE_COMMAND_ID = 'pollis.databases.browseTable';
 
@@ -74,7 +75,7 @@ type DatabaseItem =
 	| { readonly kind: 'schema'; readonly id: string; readonly schema: IDatabaseSchema }
 	| { readonly kind: 'table'; readonly id: string; readonly schema: string; readonly table: IDatabaseTable }
 	| { readonly kind: 'column'; readonly id: string; readonly schema: string; readonly table: string; readonly column: IDatabaseColumn }
-	| { readonly kind: 'message'; readonly id: string; readonly message: string };
+	| { readonly kind: 'message'; readonly id: string; readonly message: string; readonly schema?: string };
 
 function itemId(item: DatabaseItem): string {
 	switch (item.kind) {
@@ -82,7 +83,7 @@ function itemId(item: DatabaseItem): string {
 		case 'schema': return `${item.id}/${item.schema.name}`;
 		case 'table': return `${item.id}/${item.schema}/${item.table.name}`;
 		case 'column': return `${item.id}/${item.schema}/${item.table}/${item.column.name}`;
-		case 'message': return `${item.id}/!message`;
+		case 'message': return item.schema === undefined ? `${item.id}/!message` : `${item.id}/${item.schema}/!message`;
 	}
 }
 
@@ -209,7 +210,7 @@ class ItemRenderer implements ITreeRenderer<DatabaseItem, void, IItemTemplate> {
 			case 'schema':
 				icon = Codicon.symbolNamespace;
 				name = item.schema.name;
-				description = localize('schema.tables', "{0} tables", item.schema.tables.length);
+				description = localize('schema.tables', "{0} tables", item.schema.unread ? item.schema.tableCount ?? 0 : item.schema.tables.length);
 				break;
 			case 'table':
 				icon = item.table.kind === 'view' ? Codicon.eye : Codicon.table;
@@ -283,6 +284,8 @@ export class DatabaseConnectionsView extends ViewPane {
 	private readonly connections = new Map<string, DatabaseItem & { kind: 'connection' }>();
 	/** Connections expanded while not connected, being connected from the view; their tables show once the REPL reports them. */
 	private readonly pending = new Set<string>();
+	/** The ids of the schemas opened while unread, whose tables the REPL is reading. */
+	private readonly pendingSchemas = new Set<string>();
 	/** The ids of the expanded items, kept across refreshes. */
 	private readonly expanded = new Set<string>();
 	private lastSize: { height: number; width: number } | undefined;
@@ -343,6 +346,8 @@ export class DatabaseConnectionsView extends ViewPane {
 			}
 			if (item.kind === 'connection') {
 				this.onDidToggleConnection(item, !e.node.collapsed);
+			} else if (item.kind === 'schema' && !e.node.collapsed && item.schema.unread) {
+				this.openSchema(item.id, item.schema.name);
 			}
 		}));
 		this._register(this.tree.onMouseDblClick(e => {
@@ -388,15 +393,36 @@ export class DatabaseConnectionsView extends ViewPane {
 		}
 	}
 
-	/** A single schema (DuckDB's `main`, SQLite) starts expanded. */
+	/** A single schema (DuckDB's `main`, SQLite) starts expanded, its tables read if they are not. */
 	private expandSingleSchema(id: string): void {
 		const schemas = this.databaseConnectionsService.getSession(id)?.schemas ?? [];
 		if (schemas.length === 1) {
 			this.expanded.add(`${id}/${schemas[0].name}`);
+			if (schemas[0].unread) {
+				this.openSchema(id, schemas[0].name);
+			}
+		}
+	}
+
+	/** Have the REPL read the tables of `schema` of connection `id`, which show below it once it has. */
+	private openSchema(id: string, schema: string): void {
+		const key = `${id}/${schema}`;
+		if (!this.pendingSchemas.has(key)) {
+			this.pendingSchemas.add(key);
+			this.commandService.executeCommand(OPEN_SCHEMA_COMMAND_ID, { id, schema } satisfies IDatabaseItemArg);
+			this.refresh();
 		}
 	}
 
 	private refresh(): void {
+		// A schema whose tables the REPL has read, or that is gone, is no longer waited for.
+		for (const key of this.pendingSchemas) {
+			const [id, ...name] = key.split('/');
+			const schema = this.databaseConnectionsService.getSession(id)?.schemas.find(s => s.name === name.join('/'));
+			if (!schema?.unread) {
+				this.pendingSchemas.delete(key);
+			}
+		}
 		for (const id of this.pending) {
 			if (this.databaseConnectionsService.getSession(id)) {
 				this.pending.delete(id);
@@ -441,10 +467,20 @@ export class DatabaseConnectionsView extends ViewPane {
 		}
 		const collapsible = (item: DatabaseItem, children: IObjectTreeElement<DatabaseItem>[]): IObjectTreeElement<DatabaseItem> =>
 			children.length ? { element: item, children, collapsible: true, collapsed: !this.expanded.has(itemId(item)) } : { element: item };
-		return session.schemas.map(schema => collapsible({ kind: 'schema', id, schema }, schema.tables.map(table => collapsible(
-			{ kind: 'table', id, schema: schema.name, table },
-			table.columns.map(column => ({ element: { kind: 'column', id, schema: schema.name, table: table.name, column } })),
-		))));
+		return session.schemas.map(schema => schema.unread || schema.error
+			// Its tables are read when it is opened; until then, or if they could not be, a line says so
+			? {
+				element: { kind: 'schema', id, schema },
+				children: schema.error
+					? [{ element: { kind: 'message', id, schema: schema.name, message: schema.error } }]
+					: this.pendingSchemas.has(`${id}/${schema.name}`) ? [{ element: { kind: 'message', id, schema: schema.name, message: localize('schema.reading', "Reading its tables in the Julia REPL...") } }] : [],
+				collapsible: true,
+				collapsed: !this.expanded.has(`${id}/${schema.name}`),
+			}
+			: collapsible({ kind: 'schema', id, schema }, schema.tables.map(table => collapsible(
+				{ kind: 'table', id, schema: schema.name, table },
+				table.columns.map(column => ({ element: { kind: 'column', id, schema: schema.name, table: table.name, column } })),
+			))));
 	}
 
 	private itemContext(item: DatabaseItem): [string, string | boolean][] {

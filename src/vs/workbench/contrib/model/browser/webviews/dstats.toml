@@ -413,3 +413,50 @@ for (p, v) in zip(pcts, vals)
     println(lpad(string(round(Int, 100p)), 3), "th pct: ", round(v; digits=4))
 end
 '''
+
+# ── FAQ: shown in Learn More, and the Panel FAQ test set of Evaluate Answering Models (hidden = true: the test set only) ──
+
+[[faq]]
+question = "Should I report the mean or the median?"
+wiki = "Decision Guide"
+answer = """
+Report the mean and the standard deviation for roughly symmetric data, and the median and the interquartile range for skewed data. When the mean and the median are far apart, relative to the standard deviation, or the Outlier Check flags many values, the distribution is skewed or has outliers, and the median is the better typical value: in right-skewed data such as incomes, the long tail pulls the mean above it.
+"""
+
+[[faq]]
+question = "Pearson or Spearman correlation?"
+wiki = "Correlation"
+answer = """
+Pearson measures linear association, and suits roughly linear relations without extreme points. Spearman is Pearson's r on the ranks of the values: it measures monotonic association and is robust to outliers. Start with Pearson, and switch to Spearman when a scatter plot shows a curve or outliers; when the two disagree, the relation is curved or driven by a few extreme points.
+"""
+
+[[faq]]
+question = "Why does the mean come out as missing?"
+wiki = "Assumptions"
+answer = """
+In Julia missing values propagate: `mean([1, missing, 3])` is `missing`, not 2. Skip them explicitly with `mean(skipmissing(x))`, and report how many there were with `count(ismissing, x)`. Skipping is harmless only when values are missing at random; see the Handle Missing Data panel.
+"""
+
+[[faq]]
+question = "My kurtosis is negative here: is that an error?"
+wiki = "Interpretation"
+hidden = true
+answer = """
+No. `kurtosis` in StatsBase.jl is excess kurtosis: 0 for a normal distribution, positive for heavy tails, with more extreme values than a normal, and negative for light tails. Below about 50 observations, treat skewness and kurtosis as rough indications only, and look at a Violin Plot as well.
+"""
+
+[[faq]]
+question = "Can I describe a column of region codes like 1, 2 and 3 with Summary?"
+wiki = "Assumptions"
+hidden = true
+answer = """
+No: a column of codes is categorical even though it is stored as integers, so a mean of it has no meaning. Describe it with Frequency, which counts and gives the proportion of each level, with `freqtable` from FreqTables.jl and `countmap` from StatsBase.jl.
+"""
+
+[[faq]]
+question = "Why do I get NaN in the correlation matrix?"
+wiki = "Diagnostics"
+hidden = true
+answer = """
+A constant column has zero standard deviation, and gives `NaN` correlations with every other column. Check also the orientation of the matrix: `cor(X)` treats columns as variables and rows as observations, and `cor` does not skip missing values, so keep the complete rows first.
+"""

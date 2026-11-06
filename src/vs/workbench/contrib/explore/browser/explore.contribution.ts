@@ -57,7 +57,7 @@ import { IWorkspaceContextService } from '../../../../platform/workspace/common/
 import { ADD_FEED_COMMAND_ID, RSS_FEEDS_COMMAND_ID } from '../../monitor/browser/rssFeedsPage.js';
 import { ADD_ALERT_COMMAND_ID, SHOW_ALERTS_COMMAND_ID } from '../../monitor/browser/alertsPage.js';
 import { SHOW_MEDIA_COVERAGE_COMMAND_ID } from '../../monitor/browser/mediaCoveragePage.js';
-import { JOURNAL_METRICS_COMMAND_ID } from '../../databases/common/databaseDrivers.js';
+import { JOURNAL_METRICS_COMMAND_ID, NEW_CONNECTION_COMMAND_ID, SHOW_CONNECTIONS_COMMAND_ID, WRDS_PAGE_COMMAND_ID } from '../../databases/common/databaseDrivers.js';
 import { ASK_POLLIS_OPEN_PDF_COMMAND_ID } from '../../compose/common/askPollis.js';
 import { PDF_VIEWER_OPEN_COMMAND_ID } from '../../../common/pdfViewer.js';
 
@@ -986,15 +986,52 @@ MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 	order: 3,
 });
 
-// Explore > Access Databases: SQL Databases, below Access Files, in a place of its own, as Pollis keeps its own
-// databases (the Databases view)
+// Explore > Access Databases, below Access Files, in a place of its own, as Pollis keeps its own databases (the
+// Databases view): the connection form opened on each database engine, in alphabetical order, then on ODBC, which
+// reaches the others, then the Connections of the Databases view and the SQL Databases panel
+const ADBSubmenuId = new MenuId('menubarADBSubmenu');
+
 MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 	group: '1_explore',
-	command: {
-		id: SQL_ID,
-		title: localize('showExplore.databases', 'Access Databases'),
-	},
+	submenu: ADBSubmenuId,
+	title: localize('showExplore.databases', "Access Databases"),
 	order: 4,
+});
+
+MenuRegistry.appendMenuItem(ADBSubmenuId, {
+	group: '1_connect',
+	command: { id: `${NEW_CONNECTION_COMMAND_ID}.duckdb`, title: localize('showExplore.connectDuckDB', "Connect to DuckDB...") },
+	order: 1,
+});
+
+MenuRegistry.appendMenuItem(ADBSubmenuId, {
+	group: '1_connect',
+	command: { id: `${NEW_CONNECTION_COMMAND_ID}.postgres`, title: localize('showExplore.connectPostgres', "Connect to PostgreSQL...") },
+	order: 2,
+});
+
+MenuRegistry.appendMenuItem(ADBSubmenuId, {
+	group: '1_connect',
+	command: { id: `${NEW_CONNECTION_COMMAND_ID}.sqlite`, title: localize('showExplore.connectSQLite', "Connect to SQLite...") },
+	order: 3,
+});
+
+MenuRegistry.appendMenuItem(ADBSubmenuId, {
+	group: '2_odbc',
+	command: { id: `${NEW_CONNECTION_COMMAND_ID}.odbc`, title: localize('showExplore.connectODBC', "Connect via ODBC...") },
+	order: 1,
+});
+
+MenuRegistry.appendMenuItem(ADBSubmenuId, {
+	group: '3_manage',
+	command: { id: SHOW_CONNECTIONS_COMMAND_ID, title: localize('showExplore.showConnections', "Show Connections") },
+	order: 1,
+});
+
+MenuRegistry.appendMenuItem(ADBSubmenuId, {
+	group: '3_manage',
+	command: { id: SQL_ID, title: localize('showExplore.sqlDatabases', "SQL Databases") },
+	order: 2,
 });  // DuckDB.jl
 
 // Explore > RSS and Explore > Alerts: what Pollis watches for the user, after Access Databases.
@@ -1152,6 +1189,13 @@ MenuRegistry.appendMenuItem(ADRSubmenuId, {
 	},
 	order: 3,
 }); // ScrapeSEC.jl
+
+// The databases of finance, accounting and economics research, on WRDS's PostgreSQL server (databases/browser/wrdsPage.ts)
+MenuRegistry.appendMenuItem(ADRSubmenuId, {
+	group: '2_ds',
+	command: { id: WRDS_PAGE_COMMAND_ID, title: localize('ft.wrds', "Wharton Research Data Services (WRDS)") },
+	order: 4,
+}); // LibPQ.jl
 
 // Regulatory filings
 

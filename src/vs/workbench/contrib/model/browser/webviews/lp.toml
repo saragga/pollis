@@ -452,3 +452,54 @@ rc = reduced_cost.(x)
 {{?model=milp}} undo(); optimize!(model)
 [(variable = i, value = value(x[i]), cost = c[i], reduced_cost = rc[i]) for i in 1:n]
 '''
+
+# ── FAQ: shown in Learn More, and the Panel FAQ test set of Evaluate Answering Models (hidden = true: the test set only) ──
+
+[[faq]]
+question = "Should I use LP or MILP?"
+wiki = "Decision Guide"
+answer = """
+If the variables can be fractional, or the quantities are large (tonnes, hours), an LP is usually enough, and its rounded solution close to optimal. Whole units, yes-or-no decisions, either-or conditions and fixed costs need binary or integer variables: MILP.
+
+Solve as an LP first even if integers are needed: it gives a bound and shows whether the model is feasible. HiGHS is the default solver for both.
+"""
+
+[[faq]]
+question = "What is a shadow price?"
+wiki = "Interpretation"
+answer = """
+The shadow price of a constraint is the change in the optimal objective per extra unit of its right-hand side, as long as the change stays within the constraint's sensitivity range. In a maximisation of profit with a capacity constraint, it is the most it would be worth paying for one more unit of capacity. A constraint that is not binding has a shadow price of 0.
+"""
+
+[[faq]]
+question = "What does DUAL_INFEASIBLE mean?"
+wiki = "Diagnostics"
+answer = """
+That the problem is, usually, unbounded: the objective can improve without limit. A constraint is missing, or the sense (maximise or minimise) is wrong. By duality, an unbounded primal has an infeasible dual, which is why JuMP reports it this way.
+
+Always check the termination status before reading the solution.
+"""
+
+[[faq]]
+question = "The solver says INFEASIBLE here: what should I look for?"
+wiki = "Diagnostics"
+hidden = true
+answer = """
+INFEASIBLE means no x satisfies all the constraints at once. Look for contradictory constraints, a wrong sign, or a right-hand side that is too tight. Remember the panel's form: every variable is at least 0 and every constraint is A x <= b, so a >= constraint must be entered as a <= constraint multiplied by -1, and an equality as two inequalities.
+"""
+
+[[faq]]
+question = "Can I trust the shadow prices of the MILP model?"
+wiki = "MILP"
+hidden = true
+answer = """
+Only as a guide. A MILP has no useful dual solution: with all variables fixed at their integer values, every dual is zero. The panel's Shadow Prices, Reduced Costs and Sensitivity Analysis for a MILP are those of the LP relaxation, which show which resources matter but are not exact values.
+"""
+
+[[faq]]
+question = "Why is the MILP so slow to solve?"
+wiki = "MILP"
+hidden = true
+answer = """
+MILP is NP-hard, and solving time can grow exponentially with the size of the problem. Look at the LP Relaxation Gap: a large gap means the formulation is weak, and branch-and-bound will need many nodes. Tighter formulations solve faster: the smallest valid big-M coefficients, explicit bounds on the variables, and aggregate constraints split into stronger individual ones.
+"""

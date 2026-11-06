@@ -692,3 +692,50 @@ slack_low, slack_high = x_best .- lb, ub .- x_best
 (inside_box = all(slack_low .>= 0) && all(slack_high .>= 0), min_slack = minimum([slack_low; slack_high]),
  at_lower = findall(slack_low .< 1e-6 .* (ub .- lb)), at_upper = findall(slack_high .< 1e-6 .* (ub .- lb)))
 '''
+
+# ── FAQ: shown in Learn More, and the Panel FAQ test set of Evaluate Answering Models (hidden = true: the test set only) ──
+
+[[faq]]
+question = "Which genetic algorithm should I use?"
+wiki = "Decision Guide"
+answer = """
+GA for continuous or mixed problems, as a baseline to edit. Compact GA when memory is tight or a model of bits is wanted. BRKGA for combinatorial problems through a decoder: prefer it as soon as the solution is a permutation or a schedule, since a real-coded crossover is meaningless there. MCCGA for continuous problems without designing an encoding. If the choice is open, start with GA.
+"""
+
+[[faq]]
+question = "How large should the population be?"
+wiki = "Decision Guide"
+answer = """
+Start with 10 to 20 times the number of variables, about 50 to 100 at n = 5. The product of Population Size and Generations sets the budget, and Population Size Study compares sizes at equal evaluations. On multimodal problems a larger size and fewer generations often help, and on smooth problems the opposite. Too small a population converges on a poor solution, and more generations do not help after that.
+"""
+
+[[faq]]
+question = "When should I use another method instead of a genetic algorithm?"
+wiki = "Decision Guide"
+answer = """
+For continuous, non-separable or ill-conditioned problems, CMA-ES; for continuous problems of moderate dimension, differential evolution; for few, very costly evaluations, Bayesian optimisation; with a gradient and few minima, local solvers with restarts; for linear or convex problems with integers, mixed-integer programming, which also gives a proof of optimality that a GA cannot give. Compare with CMA-ES and Compare with DE test the first two on your own objective.
+"""
+
+[[faq]]
+question = "My run is stuck at a value of 1 on the default function: what does that mean?"
+wiki = "Diagnostics"
+hidden = true
+answer = """
+On the Rastrigin function, a flat line at a whole number such as 1 or 2 usually marks a local minimum one or two integer steps from the origin: a value near 1 means that one coordinate sits near ±1, and near 2 that two do. Run Multi-Run Reliability to see how often runs reach the best value, and try a larger population or restarts.
+"""
+
+[[faq]]
+question = "Why does the premature flag never fire on the GA tab?"
+wiki = "Diagnostics"
+hidden = true
+answer = """
+The `premature` flag of Stagnation Check requires a final diversity below 1e-6, with the last gain in the first half of the run. On GA with a positive Mutation Rate, or on BRKGA with mutants, such a low diversity is all but impossible, since mutation and fresh mutants keep adding spread. Read the idle generations and the diversity plot instead. On the compact tabs the flag is meaningful, as there the model does collapse.
+"""
+
+[[faq]]
+question = "Is the default test function a fair test of these methods?"
+wiki = "Assumptions"
+hidden = true
+answer = """
+It flatters some of them. The Rastrigin function is symmetric, separable and has its optimum at the centre of the box: real-coded crossover pulls children to the middle of the population, a separable function suits per-gene operators, and Evaluate New Point starts from the centre. Before forming a general view, shift the optimum, for instance with x .- 1.3 in Objective f(x), and rotate the coordinates.
+"""

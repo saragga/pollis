@@ -211,6 +211,33 @@ export interface IModelInput {
 	readonly modelFile?: 'chat' | 'embedding';
 }
 
+/**
+ * A question of the FAQ of a panel, its `[[faq]]` table, with the answer its author gives: shown in Learn More, and a
+ * question of the Panel FAQ test set of Evaluate Answering Models. `wiki`, the name of the wiki that answers it, lets
+ * the evaluation check that its passage was found. A `hidden` one is a question of the test set only: it never
+ * reaches the panel.
+ */
+/**
+ * A question of a panel's FAQ as the Panel FAQ test set of Evaluate Answering Models holds it, an IAskPollisEvalItem:
+ * the panel it is asked in, and the file of the wiki that answers it, as `boot/assumptions.md`.
+ */
+export interface IModelFaqItem {
+	readonly source: string;
+	readonly context: string;
+	readonly question: string;
+	readonly answer: string;
+	readonly panel: { readonly title: string; readonly packages: readonly string[]; readonly card?: string };
+	readonly wikiFile?: string;
+	readonly hidden?: boolean;
+}
+
+export interface IModelFaq {
+	readonly question: string;
+	readonly answer: string;
+	readonly wiki?: string;
+	readonly hidden?: boolean;
+}
+
 /** The declarative content of a panel built on the shared scaffold (generated from its TOML). */
 export interface IScaffoldPanelData {
 	readonly packages: IModelPackage[];
@@ -228,4 +255,6 @@ export interface IScaffoldPanelData {
 	readonly codeBranches?: IModelCodeBranch[];
 	readonly actionGroups?: IModelActionGroup[];
 	readonly inputs?: IModelInput[];
+	/** The questions of its FAQ shown in Learn More, the hidden ones left out. */
+	readonly faq?: IModelFaq[];
 }

@@ -10,7 +10,7 @@ import { basename, joinPath } from '../../../../base/common/resources.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, MenuId, MenuRegistry, registerAction2 } from '../../../../platform/actions/common/actions.js';
 import { IClipboardService } from '../../../../platform/clipboard/common/clipboardService.js';
-import { ICommandService } from '../../../../platform/commands/common/commands.js';
+import { CommandsRegistry, ICommandService } from '../../../../platform/commands/common/commands.js';
 import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
 import { IDialogService, IFileDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
@@ -25,6 +25,7 @@ import { registerIcon } from '../../../../platform/theme/common/iconRegistry.js'
 import { ViewAction } from '../../../browser/parts/views/viewPane.js';
 import { ViewPaneContainer } from '../../../browser/parts/views/viewPaneContainer.js';
 import { IViewContainersRegistry, IViewsRegistry, ViewContainerLocation, Extensions as ViewExtensions } from '../../../common/views.js';
+import { IViewsService } from '../../../services/views/common/viewsService.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { autoSelectJuliaKernel, sendToJuliaRepl } from '../../model/browser/handlers/model.handler.js';
@@ -34,12 +35,13 @@ import { NotebookViewModel } from '../../notebook/browser/viewModel/notebookView
 import { CellKind } from '../../notebook/common/notebookCommon.js';
 import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
 import { IDatabaseConnectionsService } from '../common/databaseConnections.js';
-import { DatabaseExportFormat, DatabaseTaskTarget, generateBrowseCode, generateConnectionCode, generateExportTaskCode, generateImportTaskCode, generatePreviewCode, generateQueryTaskCode, generateSaveTaskCode, generateSessionConnectCode, generateSessionDisconnectCode, generateSessionRefreshCode, getDatabaseDriver, IDatabaseConnectionProfile, isValidJuliaIdentifier, JOURNALS_DATABASE_ID, sqlName } from '../common/databaseDrivers.js';
+import { DatabaseExportFormat, DatabaseTaskTarget, generateBrowseCode, generateConnectionCode, generateExportTaskCode, generateImportTaskCode, generatePreviewCode, generateQueryTaskCode, generateSaveTaskCode, generateSessionConnectCode, generateSessionDisconnectCode, generateOpenSchemaCode, generateSessionRefreshCode, getDatabaseDriver, IDatabaseConnectionProfile, isValidJuliaIdentifier, JOURNALS_DATABASE_ID, NEW_CONNECTION_COMMAND_ID, NEW_WRDS_CONNECTION_COMMAND_ID, SHOW_CONNECTIONS_COMMAND_ID, sqlName, WRDS_PRESET } from '../common/databaseDrivers.js';
 import { openConnectionEditor } from './connectionEditor.js';
+import './wrdsPage.js';
 import { DatabaseConnectionsService } from './databaseConnectionsService.js';
 import { JournalMetricsReader, readCsv, readXlsx, yearOfFileName } from './journalMetrics.js';
 import './journalMetricsPage.js';
-import { CONNECT_DATABASE_COMMAND_ID, DatabaseConnectionContextMenu, DatabaseConnectionsView, DatabaseItemConnected, DatabaseItemExpanded, DatabaseItemId, DatabaseItemInlineMenu, DatabaseItemBuiltin, DatabaseItemKind, DatabaseItemSaved, DatabaseItemWritable, DatabasesNewConnectionMenu, DISCONNECT_DATABASE_COMMAND_ID, IDatabaseItemArg, BROWSE_TABLE_COMMAND_ID, NEW_CONNECTION_COMMAND_ID, PREVIEW_TABLE_COMMAND_ID, REFRESH_DATABASE_COMMAND_ID } from './connectionsView.js';
+import { CONNECT_DATABASE_COMMAND_ID, DatabaseConnectionContextMenu, DatabaseConnectionsView, DatabaseItemConnected, DatabaseItemExpanded, DatabaseItemId, DatabaseItemInlineMenu, DatabaseItemBuiltin, DatabaseItemKind, DatabaseItemSaved, DatabaseItemWritable, DatabasesNewConnectionMenu, DISCONNECT_DATABASE_COMMAND_ID, IDatabaseItemArg, BROWSE_TABLE_COMMAND_ID, OPEN_SCHEMA_COMMAND_ID, PREVIEW_TABLE_COMMAND_ID, REFRESH_DATABASE_COMMAND_ID } from './connectionsView.js';
 
 registerSingleton(IDatabaseConnectionsService, DatabaseConnectionsService, InstantiationType.Delayed);
 
@@ -72,7 +74,7 @@ viewsRegistry.registerViews([{
 }], databasesViewContainer);
 
 viewsRegistry.registerViewWelcomeContent(DatabaseConnectionsView.ID, {
-	content: localize('databases.welcome', "No database connections yet. Connections open in the Julia REPL through DBInterface.jl: DuckDB, SQLite and PostgreSQL. Once connected, their tables and columns appear here.\n[New Connection](command:{0})", NEW_CONNECTION_COMMAND_ID),
+	content: localize('databases.welcome', "No database connections yet. Connections open in the Julia REPL through DBInterface.jl: DuckDB, ODBC, PostgreSQL and SQLite. Once connected, their tables and columns appear here.\n[New Connection](command:{0})", NEW_CONNECTION_COMMAND_ID),
 });
 
 // --- Commands
@@ -162,7 +164,35 @@ registerAction2(class extends Action2 {
 	}
 });
 
-for (const [order, driver] of (['duckdb', 'postgres', 'sqlite'] as const).entries()) {
+registerAction2(class extends Action2 {
+	constructor() {
+		super({
+			id: NEW_WRDS_CONNECTION_COMMAND_ID,
+			title: localize2('databases.newWrdsConnection', "New WRDS Connection"),
+			category: localize2('databases.category', "Databases"),
+			f1: true,
+		});
+	}
+	run(accessor: ServicesAccessor): void {
+		openConnectionEditor(accessor, undefined, WRDS_PRESET);
+	}
+});
+
+registerAction2(class extends Action2 {
+	constructor() {
+		super({
+			id: SHOW_CONNECTIONS_COMMAND_ID,
+			title: localize2('databases.showConnections', "Show Connections"),
+			category: localize2('databases.category', "Databases"),
+			f1: true,
+		});
+	}
+	async run(accessor: ServicesAccessor): Promise<void> {
+		await accessor.get(IViewsService).openView(DatabaseConnectionsView.ID, true);
+	}
+});
+
+for (const [order, driver] of (['duckdb', 'odbc', 'postgres', 'sqlite'] as const).entries()) {
 	const label = getDatabaseDriver(driver).label;
 	registerAction2(class extends Action2 {
 		constructor() {
@@ -231,6 +261,13 @@ registerAction2(class extends Action2 {
 		if (accessor.get(IDatabaseConnectionsService).getSessions().length) {
 			await sendToJuliaRepl(generateSessionRefreshCode(arg?.id), accessor.get(ICommandService));
 		}
+	}
+});
+
+// Opening a schema listed without its tables, in the Connections view, has the REPL read them
+CommandsRegistry.registerCommand(OPEN_SCHEMA_COMMAND_ID, async (accessor: ServicesAccessor, arg: IDatabaseItemArg) => {
+	if (arg.schema !== undefined) {
+		await sendToJuliaRepl(generateOpenSchemaCode(arg.id, arg.schema), accessor.get(ICommandService));
 	}
 });
 
@@ -546,7 +583,7 @@ registerAction2(class extends Action2 {
 		}
 		const fileDialogService = accessor.get(IFileDialogService);
 		const task = databaseTask(accessor);
-		// DuckDB writes Parquet, CSV and JSON itself; from SQLite and PostgreSQL, CSV.jl writes CSV.
+		// DuckDB writes Parquet, CSV and JSON itself; from the other engines, CSV.jl writes CSV.
 		const duckdb = profile.driver === 'duckdb';
 		const file = await fileDialogService.showSaveDialog({
 			title: localize('databases.export.title', "Export {0}", table),

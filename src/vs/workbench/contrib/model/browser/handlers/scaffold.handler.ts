@@ -13,6 +13,7 @@ import { INotificationService } from '../../../../../platform/notification/commo
 import { ICommandService } from '../../../../../platform/commands/common/commands.js';
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
 import { IScaffoldPanelData } from '../common/model.types.js';
+import { panelCard } from '../common/tomlPanelData.js';
 import { IQuickInputService } from '../../../../../platform/quickinput/common/quickInput.js';
 import { ISecretStorageService } from '../../../../../platform/secrets/common/secrets.js';
 import { IWebviewService } from '../../../webview/browser/webview.js';
@@ -56,7 +57,7 @@ type ScaffoldWebviewMessage =
  * and videos, and Ask Pollis beside the title. `panelId` names the panel's folder under ~/.pollis (saved examples,
  * references, videos); a question asked there is answered from the wikis titled `panelTitle` first. `apiKey`, when given, adds the Powered-by credentials indicator and sets them in the Julia REPL.
  */
-/** Sends what Powered by and Learn More show: the links of the packages, and the references, notebooks and wikis there are. */
+/** Sends what Powered by and Learn More show: the links of the packages, and the references, notebooks, wikis and FAQ there are. */
 export function postLearnMoreData(webview: { postMessage(message: unknown): void }, data: IScaffoldPanelData): void {
 	const packages = data.packages.map(pkg => ({ name: pkg.name, url: pkg.github }));
 	const hasReferences = data.references.some(r => !hasKey(r, { separator: true }));
@@ -79,6 +80,7 @@ export function postLearnMoreData(webview: { postMessage(message: unknown): void
 	webview.postMessage({ command: 'paperLinks', papers: [], hasPapers: hasReferences });
 	webview.postMessage({ command: 'notebookSections', sections: notebookSections });
 	webview.postMessage({ command: 'wikiSections', sections: wikiSections });
+	webview.postMessage({ command: 'faq', faq: (data.faq ?? []).map(entry => ({ question: entry.question, answer: entry.answer, wiki: entry.wiki })) });
 }
 
 export function registerScaffoldWebviewHandlers(
@@ -220,7 +222,7 @@ export function registerScaffoldWebviewHandlers(
 			case 'pickDatabase':
 			case 'openPdf':
 				// Answered in Ask Pollis beside the panel, from its wikis and its packages' vignettes first
-				await handlePanelAskMessage(msg, webviewInput.webview, commandService, { title: panelTitle, packages: data.packages.map(pkg => pkg.name) });
+				await handlePanelAskMessage(msg, webviewInput.webview, commandService, { title: panelTitle, packages: data.packages.map(pkg => pkg.name), card: panelCard(data) });
 				break;
 			case 'voiceLanguage':
 				setVoiceLanguage(storageService, msg.value);
