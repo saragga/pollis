@@ -447,13 +447,13 @@ class OpenBrowserFromViewMenuAction extends Action2 {
 	}
 }
 
-// POLLIS: Explore > Browser, at the top of Explore in a group of its own: the general tool for the sources outside
+// POLLIS: Explore > Browse the Web, at the top of Explore in a group of its own: the general tool for the sources outside
 // Pollis, whose pages several items of Explore open in it
 MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 	group: '0_browser',
 	command: {
 		id: OpenBrowserFromViewMenuAction.ID,
-		title: localize('miExploreBrowser', "Browser")
+		title: localize('miExploreBrowser', "Browse the Web")
 	},
 	order: 1
 });

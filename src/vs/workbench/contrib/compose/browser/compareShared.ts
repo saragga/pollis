@@ -515,7 +515,7 @@ export const compareCss = `
 `;
 
 /** The table of the models on this computer, to choose those to evaluate. */
-export function compareLocalCard(text: CompareText): string {
+export function compareLocalCard(text: Pick<CompareText, 'thisComputer' | 'chooseAll' | 'sortHint' | 'model' | 'parameters' | 'quantisation' | 'download' | 'noLocal'>): string {
 	return `
 		<div class="card">
 			<h3>${text.thisComputer}</h3>
@@ -562,7 +562,7 @@ export function compareTestSetHtml(text: CompareText, intro: string, tools: stri
 }
 
 /** The charts of a run, the memory free and `tokensChart` (none on a page whose models count no tokens), and Model Servers. */
-export function compareChartsHtml(text: CompareText, tokensChart = ''): string {
+export function compareChartsHtml(text: Pick<CompareText, 'memoryChart' | 'chartsHint' | 'servers' | 'serversHint'>, tokensChart = ''): string {
 	return `
 	<div id="charts" hidden>
 		<div class="charts">

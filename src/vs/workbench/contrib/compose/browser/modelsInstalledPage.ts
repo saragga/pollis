@@ -284,7 +284,8 @@ function pageHtml(): string {
 		.container { max-width: 1100px; }
 		.modelsPage .setModels { display: grid; grid-template-columns: max-content minmax(0, 720px); gap: 4px 12px; align-items: center; }
 		.modelsPage .setModels label { font-weight: 600; }
-		.modelsPage .setModels select { width: 100%; padding: 3px 4px; color: var(--vscode-dropdown-foreground); background: var(--vscode-dropdown-background); border: 1px solid var(--vscode-dropdown-border, transparent); border-radius: 2px; font: inherit; }
+		.modelsPage .setModels select { width: 100%; padding: 3px 4px; color: var(--vscode-dropdown-foreground); background: var(--vscode-dropdown-background); border: 1px solid var(--vscode-focusBorder); border-radius: 2px; font: inherit; }
+		.modelsPage .setModels select:focus { outline: none; }
 		.modelsPage .setModels .about { grid-column: 2; margin-bottom: 10px; }
 		.modelsPage table { width: 100%; border-collapse: collapse; }
 		.modelsPage th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--vscode-descriptionForeground); text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--vscode-widget-border); }

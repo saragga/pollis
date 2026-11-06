@@ -1,0 +1,83 @@
+# Model Benchmarks Webview Configuration
+# A page of Compose in the Time Arrow style of the scaffold, not a panel: only its Powered by and Learn More. `pageCommand`
+# is the command that opens it, which a panel's contribution file would say. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/modelBenchmarks.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Model Benchmarks"
+viewType = "pollis.modelBenchmarks"
+pageCommand = "pollis.modelBenchmarks"
+
+[[packages]]
+name = "JSON3.jl"
+github = "https://github.com/quinnj/JSON3.jl"
+
+[[packages]]
+name = "DuckDB.jl"
+github = "https://github.com/duckdb/DuckDB.jl"
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "MMLU-Pro"
+file = "modelBenchmarks/mmlu-pro.ipynb"
+bundled = true
+description = "A stratified sample of MMLU-Pro answered by the chat models of this computer, as the page runs it"
+
+[[notebookSections.notebooks]]
+name = "GSM8K"
+file = "modelBenchmarks/gsm8k.ipynb"
+bundled = true
+description = "A random sample of GSM8K answered by the chat models of this computer, as the page runs it"
+
+[[wikis]]
+name = "Factsheet"
+file = "modelBenchmarks/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "modelBenchmarks/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "modelBenchmarks/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "modelBenchmarks/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "modelBenchmarks/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "modelBenchmarks/decision-guide.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+key = "Coc1977a"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "CKBCJ...2021a"
+
+[[references]]
+key = "HBBZM...2021a"
+
+[[references]]
+key = "WMZNC...2024a"

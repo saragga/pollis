@@ -30,7 +30,7 @@ import { FEWEST_ROWS, rowsChoiceScript, sortHeadingsScript, storedRows, storeRow
 import { COMPAREMODELS_METADATA } from '../../model/browser/webviews/compareModels.data.js';
 import { buildWebviewHtml, spinnerSvg } from '../../model/browser/webviews/webviewScaffold.js';
 import { ASK_CLOUD_MODELS, ASK_CLOUD_PROVIDERS, ASK_LOCAL_PREFIX, askCloudModel, askPassageLabel, AskTopic, IAskPollisEvalItem, IAskPollisPassage, IAskPollisService, IAskTopicCounts, ICompareRun, ICompareRunModel } from '../common/askPollis.js';
-import { ASK_DEFAULT_STYLE, ASK_POLLIS_STYLES, askPollisStyle } from '../common/askPollisStyles.js';
+import { ASK_DEFAULT_STRATEGY, askPollisStrategy, askStrategyLabel, IAskPollisStrategiesService } from '../common/askPollisStrategies.js';
 import { IToolboxPanelsService } from '../common/toolboxPanels.js';
 import { askAnswerCss, askAnswerScript, askOpenPassage, askPassageView } from './askPollisWebview.js';
 import { CompareModelsRunner, compareFigures, ICompareEnd, ICompareProgress, QUESTION_COUNTS, retrievalLine } from './compareModelsRun.js';
@@ -52,6 +52,8 @@ import { IInstalledModel } from './modelsInstalledPage.js';
 export const COMPARE_MODELS_COMMAND_ID = 'pollis.compareModels';
 /** Opens Evaluate Answering Models at Add, with a question, its answer and the passages to choose from: {question, answer, passages}. */
 export const COMPARE_MODELS_ADD_COMMAND_ID = 'pollis.compareModels.add';
+/** Opens Evaluate Answering Models with the answering strategy of the id given chosen. */
+export const COMPARE_MODELS_STRATEGY_COMMAND_ID = 'pollis.compareModels.strategy';
 
 /** The models chosen, by their values, kept for the next time the page opens. */
 const CHOSEN_KEY = 'pollis.compareModels.chosen';
@@ -59,8 +61,8 @@ const CHOSEN_KEY = 'pollis.compareModels.chosen';
 const JUDGES_KEY = 'pollis.compareModels.judges';
 const QUESTIONS_BY_KEY = 'pollis.compareModels.questionsBy';
 const REPEATS_KEY = 'pollis.compareModels.repeats';
-/** The style of Ask Pollis the runs use, by its id. */
-const STYLE_KEY = 'pollis.compareModels.style';
+/** The strategy of Ask Pollis the runs use, by its id. */
+const STRATEGY_KEY = 'pollis.compareModels.strategy';
 /** How many questions of each topic Make Questions writes. */
 const COUNTS_KEY = 'pollis.compareModels.questionCounts';
 /** The most questions of a topic that Make Questions writes at a time. */
@@ -87,7 +89,7 @@ export interface ICompareModelsAdd {
 type CompareModelsMessage =
 	| { readonly command: 'ready' }
 	| { readonly command: 'choose'; readonly chosen: readonly string[] }
-	| { readonly command: 'settings'; readonly judges: readonly string[]; readonly questionsBy: string; readonly repeats: number; readonly style: string; readonly counts: IAskTopicCounts }
+	| { readonly command: 'settings'; readonly judges: readonly string[]; readonly questionsBy: string; readonly repeats: number; readonly strategy: string; readonly counts: IAskTopicCounts }
 	| { readonly command: 'rows'; readonly rows: number }
 	| { readonly command: 'makeQuestions' }
 	| { readonly command: 'run'; readonly questions: readonly string[] }
@@ -109,7 +111,7 @@ type CompareModelsMessage =
 let runner: CompareModelsRunner | undefined;
 
 /** The open page, so a second request shows it again. */
-let openPage: { readonly input: WebviewInput; add(add: ICompareModelsAdd): void } | undefined;
+let openPage: { readonly input: WebviewInput; add(add: ICompareModelsAdd): void; strategy(id: string): void } | undefined;
 
 function storedList(storageService: IStorageService, key: string, fallback: readonly string[]): string[] {
 	try {
@@ -140,12 +142,13 @@ function withoutCitations(answer: string): string {
 	return answer.replace(/\s*\[\d+(?:\s*,\s*\d+)*\]/g, '').trim();
 }
 
-async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareModelsAdd): Promise<void> {
+async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareModelsAdd, strategyId?: string): Promise<void> {
 	const webviewWorkbenchService = accessor.get(IWebviewWorkbenchService);
 	const commandService = accessor.get(ICommandService);
 	const storageService = accessor.get(IStorageService);
 	const askPollisService = accessor.get(IAskPollisService);
 	const toolboxPanelsService = accessor.get(IToolboxPanelsService);
+	const strategiesService = accessor.get(IAskPollisStrategiesService);
 	const fileService = accessor.get(IFileService);
 	const fileDialogService = accessor.get(IFileDialogService);
 	const dialogService = accessor.get(IDialogService);
@@ -163,6 +166,9 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 		webviewWorkbenchService.revealWebview(openPage.input, openPage.input.group ?? -1, false);
 		if (add) {
 			openPage.add(add);
+		}
+		if (strategyId) {
+			openPage.strategy(strategyId);
 		}
 		return;
 	}
@@ -190,7 +196,8 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 	let judges = storedList(storageService, JUDGES_KEY, []);
 	let questionsBy = storageService.get(QUESTIONS_BY_KEY, StorageScope.APPLICATION, DEFAULT_QUESTIONS_BY);
 	let repeats = storageService.getNumber(REPEATS_KEY, StorageScope.APPLICATION, 1);
-	let style = askPollisStyle(storageService.get(STYLE_KEY, StorageScope.APPLICATION, ASK_DEFAULT_STYLE)).id;
+	// Its id as stored, a strategy of a file among them, checked once the files are read
+	let strategy = strategyId ?? storageService.get(STRATEGY_KEY, StorageScope.APPLICATION, ASK_DEFAULT_STRATEGY);
 	let counts = storedCounts(storageService);
 	const testSet = new CompareTestSetChoice(storageService, askPollisService, run.sets, { testSet: TEST_SET_KEY, ticked: TICKED_KEY }, post, () => toolboxPanelsService.getToolboxes().flatMap(toolbox => toolbox.panels.flatMap(panel => panel.faq)));
 	let shown: ICompareRun | undefined;
@@ -214,7 +221,7 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 				pollis: shown.summary.pollis,
 				judges: shown.summary.judges,
 				repeats: shown.summary.repeats,
-				style: askPollisStyle(shown.summary.style).label,
+				strategy: askStrategyLabel(shown.summary.strategy, strategiesService.getStrategies()),
 				figures: compareFigures(shown).map(figures => ({ ...figures, where: where(figures) })),
 				retrieval: retrievalLine(shown),
 				questions: shown.questions.map(question => ({ question: question.item.question, answer: question.item.answer, source: question.item.source, context: question.item.context, passages: question.passages.map(askPassageView) })),
@@ -307,7 +314,7 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 			...installed.map(installedModel => ({ value: ASK_LOCAL_PREFIX + installedModel.file, label: installedModel.name, local: true, size: installedModel.sizeLabel, bytes: installedModel.bytes })),
 			...ASK_CLOUD_MODELS.map(cloud => ({ value: cloud.id, label: cloud.label, local: false, provider: ASK_CLOUD_PROVIDERS[cloud.provider].label })),
 		];
-		post({ command: 'models', models: listed.map(({ value, label, local, size, bytes, provider }) => ({ value, label, local, size, bytes, provider })), chosen, judges, questionsBy, repeats, style, counts });
+		post({ command: 'models', models: listed.map(({ value, label, local, size, bytes, provider }) => ({ value, label, local, size, bytes, provider })), chosen, judges, questionsBy, repeats, strategy, counts });
 		await postMemory();
 	};
 
@@ -347,12 +354,20 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 		}
 	};
 
+	// The answering strategies to run with, Pollis' own and the user's, listed again when a file of them changes
+	const postStrategies = () => post({ command: 'strategies', strategies: strategiesService.getStrategies().map(askStrategy => ({ value: askStrategy.id, label: askStrategy.label, title: askStrategy.description })) });
+	disposables.add(strategiesService.onDidChange(() => postStrategies()));
 	disposables.add(run.onDidProgress((progress: ICompareProgress | undefined) => post({ command: 'progress', progress })));
 	disposables.add(run.onDidSample(sample => post({ command: 'sample', sample, memory: run.samples.memory, first: run.samples.samples.length === 1 })));
 	disposables.add(run.onDidEnd(end => ended(end)));
 	openPage = {
 		input: webviewInput,
 		add: next => postAdd(next.passages, { question: next.question, answer: withoutCitations(next.answer) }),
+		strategy: id => {
+			strategy = askPollisStrategy(id, strategiesService.getStrategies()).id;
+			storageService.store(STRATEGY_KEY, strategy, StorageScope.APPLICATION, StorageTarget.USER);
+			postModels();
+		},
 	};
 
 	const chosenModels = () => listed.filter(candidate => chosen.includes(candidate.value)).map(({ value, label, local, size }) => ({ value, label, local, size }));
@@ -390,7 +405,7 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 		const runJudges = judges.map(model).filter(candidate => !!candidate).map(({ value, label, local, size }) => ({ value, label, local, size }));
 		const ticked = new Set(questions);
 		post({ command: 'running', running: true });
-		run.run(chosenModels(), runJudges, repeats, ticked.size ? testSet.items.filter(item => ticked.has(item.question)) : testSet.items, style).then(end => {
+		run.run(chosenModels(), runJudges, repeats, ticked.size ? testSet.items.filter(item => ticked.has(item.question)) : testSet.items, strategy).then(end => {
 			// The checks before any work, which end nothing
 			if (!end.run && end.error && !run.running) {
 				status(end.error, true);
@@ -439,6 +454,9 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 	disposables.add(webviewInput.webview.onMessage(async (e: { message: CompareModelsMessage }) => {
 		const message = e.message;
 		if (message.command === 'ready') {
+			await strategiesService.loaded;
+			strategy = askPollisStrategy(strategy, strategiesService.getStrategies()).id;
+			postStrategies();
 			await postModels();
 			await testSet.choose(testSet.name);
 			const latest = (await askPollisService.runs())[0];
@@ -458,13 +476,13 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 			judges = message.judges.filter(value => value).slice(0, 2);
 			questionsBy = message.questionsBy;
 			repeats = REPEATS.includes(message.repeats) ? message.repeats : 1;
-			style = askPollisStyle(message.style).id;
+			strategy = askPollisStrategy(message.strategy, strategiesService.getStrategies()).id;
 			counts = questionCounts(message.counts);
 			storageService.store(COUNTS_KEY, JSON.stringify(counts), StorageScope.APPLICATION, StorageTarget.USER);
 			storageService.store(JUDGES_KEY, JSON.stringify(judges), StorageScope.APPLICATION, StorageTarget.USER);
 			storageService.store(QUESTIONS_BY_KEY, questionsBy, StorageScope.APPLICATION, StorageTarget.USER);
 			storageService.store(REPEATS_KEY, repeats, StorageScope.APPLICATION, StorageTarget.USER);
-			storageService.store(STYLE_KEY, style, StorageScope.APPLICATION, StorageTarget.USER);
+			storageService.store(STRATEGY_KEY, strategy, StorageScope.APPLICATION, StorageTarget.USER);
 			await postMemory();
 		} else if (message.command === 'rows' && hasKey(message, { rows: true })) {
 			storeRows(storageService, 'compareModels', message.rows);
@@ -534,10 +552,9 @@ function pageHtml(rows: number): string {
 		secondJudge: localize('compareModels.secondJudge', "Second Judge"),
 		none: localize('compareModels.none', "None"),
 		repeats: localize('compareModels.repeats', "Repeats"),
-		style: localize('compareModels.style', "Style"),
-		styleHint: localize('compareModels.styleHint', "The style of Ask Pollis that finds the passages and asks the models, as Help > Ask Pollis does: the styles can be compared on the same test set."),
-		styles: ASK_POLLIS_STYLES.map(askStyle => ({ value: askStyle.id, label: askStyle.label, title: askStyle.description })),
-		runStyle: localize('compareModels.runStyle', "Style: {0}.", '{0}'),
+		strategy: localize('compareModels.strategy', "Strategy"),
+		strategyHint: localize('compareModels.strategyHint', "The answering strategy of Ask Pollis that finds the passages and asks the models, as Help > Ask Pollis does: the strategies can be compared on the same test set."),
+		runStrategy: localize('compareModels.runStrategy', "Strategy: {0}.", '{0}'),
 		repeatsHint: localize('compareModels.repeatsHint', "How many times each model answers each question: more than once shows how much its answers vary, in Spread."),
 		run: localize('compareModels.run', "Run"),
 		runSection: localize('compareModels.runSection', "Run"),
@@ -702,7 +719,7 @@ function pageHtml(rows: number): string {
 	<div class="settings">
 		<label class="field"><span class="small">${text.judge}</span><select id="judge"></select></label>
 		<label class="field"><span class="small">${text.secondJudge}</span><select id="secondJudge"></select></label>
-		<label class="field" title="${text.styleHint}"><span class="small">${text.style}</span><select id="style"></select></label>
+		<label class="field" title="${text.strategyHint}"><span class="small">${text.strategy}</span><select id="strategy"></select></label>
 		<label class="field" title="${text.repeatsHint}"><span class="small">${text.repeats}</span><select id="repeats">${REPEATS.map(count => `<option value="${count}">${count}</option>`).join('')}</select></label>
 		<span class="bar"><button class="action current" id="run" disabled>${text.run}</button></span>
 	</div>
@@ -773,7 +790,7 @@ function pageHtml(rows: number): string {
 	function settings() {
 		secondJudgeEnabled();
 		const counts = Object.fromEntries(TEXT.topics.map(({ topic }) => [topic, Number(document.getElementById('count-' + topic).value) || 0]));
-		vscode.postMessage({ command: 'settings', judges: [document.getElementById('judge').value, document.getElementById('secondJudge').value], questionsBy: document.getElementById('questionsBy').value, repeats: Number(document.getElementById('repeats').value), style: document.getElementById('style').value, counts });
+		vscode.postMessage({ command: 'settings', judges: [document.getElementById('judge').value, document.getElementById('secondJudge').value], questionsBy: document.getElementById('questionsBy').value, repeats: Number(document.getElementById('repeats').value), strategy: document.getElementById('strategy').value, counts });
 	}
 
 	function fillSelect(select, chosen, none) {
@@ -793,14 +810,19 @@ function pageHtml(rows: number): string {
 		select.value = models.some(model => model.value === chosen) ? chosen : none ? '' : (models.find(model => !model.local) || models[0] || {}).value || '';
 	}
 
-	// The styles of Ask Pollis to run with
-	for (const askStyle of TEXT.styles) {
-		const option = new Option(askStyle.label, askStyle.value);
-		option.title = askStyle.title;
-		document.getElementById('style').appendChild(option);
+	// The answering strategies to run with, and the one chosen
+	let chosenStrategy = '';
+	function renderStrategies(strategies) {
+		const select = document.getElementById('strategy');
+		select.replaceChildren(...strategies.map(askStrategy => {
+			const option = new Option(askStrategy.label, askStrategy.value);
+			option.title = askStrategy.title;
+			return option;
+		}));
+		if (chosenStrategy) { select.value = chosenStrategy; }
 	}
 
-	function renderModels(chosen, judges, questionsBy, repeats, style, counts) {
+	function renderModels(chosen, judges, questionsBy, repeats, strategy, counts) {
 		renderLocal(chosen);
 		const cloud = document.getElementById('cloudBody');
 		cloud.textContent = '';
@@ -813,7 +835,8 @@ function pageHtml(rows: number): string {
 		secondJudgeEnabled();
 		fillSelect(document.getElementById('questionsBy'), questionsBy, false);
 		document.getElementById('repeats').value = String(repeats);
-		document.getElementById('style').value = style;
+		chosenStrategy = strategy;
+		document.getElementById('strategy').value = strategy;
 		for (const { topic } of TEXT.topics) { document.getElementById('count-' + topic).value = String(counts[topic]); }
 	}
 	document.querySelector('.models').addEventListener('change', event => {
@@ -823,7 +846,7 @@ function pageHtml(rows: number): string {
 		updateChosen();
 		vscode.postMessage({ command: 'choose', chosen: chosenValues() });
 	});
-	for (const id of ['judge', 'secondJudge', 'questionsBy', 'repeats', 'style', ...TEXT.topics.map(({ topic }) => 'count-' + topic)]) {
+	for (const id of ['judge', 'secondJudge', 'questionsBy', 'repeats', 'strategy', ...TEXT.topics.map(({ topic }) => 'count-' + topic)]) {
 		document.getElementById(id).addEventListener('change', settings);
 	}
 
@@ -1071,7 +1094,7 @@ function pageHtml(rows: number): string {
 		document.getElementById('results').hidden = !run;
 		document.getElementById('runLine').textContent = !run ? TEXT.noRuns : (run.judges.length
 			? format(run.repeats > 1 ? TEXT.runLineRepeats : TEXT.runLine, new Date(run.started).toLocaleString(), run.pollis, run.questions.length, run.judges.length > 1 ? format(TEXT.and, run.judges[0], run.judges[1]) : run.judges[0], run.repeats)
-			: format(run.repeats > 1 ? TEXT.runLineUnjudgedRepeats : TEXT.runLineUnjudged, new Date(run.started).toLocaleString(), run.pollis, run.questions.length, run.repeats)) + ' ' + format(TEXT.runStyle, run.style);
+			: format(run.repeats > 1 ? TEXT.runLineUnjudgedRepeats : TEXT.runLineUnjudged, new Date(run.started).toLocaleString(), run.pollis, run.questions.length, run.repeats)) + ' ' + format(TEXT.runStrategy, run.strategy);
 		document.getElementById('retrieval').textContent = run ? run.retrieval : '';
 		document.getElementById('deleteRun').hidden = !run;
 		// A run that ends shows itself, even in a pane left closed
@@ -1116,7 +1139,9 @@ function pageHtml(rows: number): string {
 		const message = event.data;
 		if (message.command === 'models') {
 			models = message.models;
-			renderModels(message.chosen, message.judges, message.questionsBy, message.repeats, message.style, message.counts);
+			renderModels(message.chosen, message.judges, message.questionsBy, message.repeats, message.strategy, message.counts);
+		} else if (message.command === 'strategies') {
+			renderStrategies(message.strategies);
 		} else if (message.command === 'sets') {
 			showSets(message);
 		} else if (message.command === 'items') {
@@ -1181,3 +1206,4 @@ registerAction2(class extends Action2 {
 });
 
 CommandsRegistry.registerCommand(COMPARE_MODELS_ADD_COMMAND_ID, (accessor: ServicesAccessor, add: ICompareModelsAdd) => openCompareModelsPage(accessor, add));
+CommandsRegistry.registerCommand(COMPARE_MODELS_STRATEGY_COMMAND_ID, (accessor: ServicesAccessor, strategyId: string) => openCompareModelsPage(accessor, undefined, typeof strategyId === 'string' ? strategyId : undefined));

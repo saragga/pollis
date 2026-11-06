@@ -336,13 +336,13 @@
 		},
 		{
 			"id": "arima",
-			"title": "ARIMA Models",
+			"title": "ARIMAX and SARIMA Models",
 			"source": "toolbox:pollis-toolbox-econometrics",
 			"commands": [
 				{
 					"id": "chiara.statistics.arma.arima",
 					"menuTitles": [
-						"ARIMAX Models"
+						"ARIMAX and SARIMA Models"
 					]
 				}
 			],
@@ -4967,47 +4967,6 @@
 			]
 		},
 		{
-			"id": "mcat",
-			"title": "MeshCat — 3D Visualisation",
-			"source": "toolbox:pollis-toolbox-robotics",
-			"commands": [
-				{
-					"id": "chiara.explore.rt.3_mcat",
-					"menuTitles": [
-						"MeshCat 3D Visualisation"
-					]
-				}
-			],
-			"portable": true,
-			"defaultModel": "scene",
-			"decisionFirstColumn": "Model",
-			"toml": "toolboxes/pollis-toolbox-robotics/panels/mcat.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-robotics/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-robotics/notebooks",
-			"wikis": [
-				"mcat/anim.md",
-				"mcat/assumptions.md",
-				"mcat/decision-guide.md",
-				"mcat/diagnostics.md",
-				"mcat/factsheet.md",
-				"mcat/frame.md",
-				"mcat/interpretation.md",
-				"mcat/overview.md",
-				"mcat/scene.md",
-				"mcat/urdf.md"
-			],
-			"notebooks": [
-				"mcat/tutorial-01-scene.ipynb",
-				"mcat/tutorial-02-anim.ipynb",
-				"mcat/tutorial-03-frame.ipynb",
-				"mcat/tutorial-04-urdf.ipynb"
-			],
-			"packages": [
-				"MeshCat.jl",
-				"CoordinateTransformations.jl"
-			]
-		},
-		{
 			"id": "mcmc",
 			"title": "Markov Chain Monte Carlo",
 			"source": "pollis",
@@ -6886,89 +6845,6 @@
 			]
 		},
 		{
-			"id": "rctl",
-			"title": "Robot Control",
-			"source": "toolbox:pollis-toolbox-robotics",
-			"commands": [
-				{
-					"id": "chiara.explore.rt.2_rctl",
-					"menuTitles": [
-						"Robot Control"
-					]
-				}
-			],
-			"portable": true,
-			"defaultModel": "ik",
-			"decisionFirstColumn": "Model",
-			"toml": "toolboxes/pollis-toolbox-robotics/panels/rctl.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-robotics/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-robotics/notebooks",
-			"wikis": [
-				"rctl/assumptions.md",
-				"rctl/ct.md",
-				"rctl/decision-guide.md",
-				"rctl/diagnostics.md",
-				"rctl/factsheet.md",
-				"rctl/ik.md",
-				"rctl/imp.md",
-				"rctl/interpretation.md",
-				"rctl/overview.md",
-				"rctl/pd.md"
-			],
-			"notebooks": [
-				"rctl/tutorial-01-ik.ipynb",
-				"rctl/tutorial-02-pd.ipynb",
-				"rctl/tutorial-03-ct.ipynb",
-				"rctl/tutorial-04-imp.ipynb"
-			],
-			"packages": [
-				"RobotDynamics.jl",
-				"RigidBodyDynamics.jl"
-			]
-		},
-		{
-			"id": "rdyn",
-			"title": "Robot Dynamics",
-			"source": "toolbox:pollis-toolbox-robotics",
-			"commands": [
-				{
-					"id": "chiara.explore.rt.1_rdyn",
-					"menuTitles": [
-						"Robot Dynamics"
-					]
-				}
-			],
-			"portable": true,
-			"defaultModel": "rot",
-			"decisionFirstColumn": "Model",
-			"toml": "toolboxes/pollis-toolbox-robotics/panels/rdyn.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-robotics/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-robotics/notebooks",
-			"wikis": [
-				"rdyn/assumptions.md",
-				"rdyn/decision-guide.md",
-				"rdyn/diagnostics.md",
-				"rdyn/factsheet.md",
-				"rdyn/fd.md",
-				"rdyn/fk.md",
-				"rdyn/id.md",
-				"rdyn/interpretation.md",
-				"rdyn/overview.md",
-				"rdyn/rotations.md"
-			],
-			"notebooks": [
-				"rdyn/tutorial-01-rotations.ipynb",
-				"rdyn/tutorial-02-fk.ipynb",
-				"rdyn/tutorial-03-fd.ipynb",
-				"rdyn/tutorial-04-id.ipynb"
-			],
-			"packages": [
-				"Rotations.jl",
-				"RobotDynamics.jl",
-				"RigidBodyDynamics.jl"
-			]
-		},
-		{
 			"id": "rl",
 			"title": "Recurrent Layers",
 			"source": "pollis",
@@ -7480,47 +7356,6 @@
 				"RxInfer.jl",
 				"GLMakie.jl",
 				"Turing.jl"
-			]
-		},
-		{
-			"id": "rzoo",
-			"title": "RobotZoo — Robot Model Library",
-			"source": "toolbox:pollis-toolbox-robotics",
-			"commands": [
-				{
-					"id": "chiara.explore.rt.4_rzoo",
-					"menuTitles": [
-						"Robot Model Library"
-					]
-				}
-			],
-			"portable": true,
-			"defaultModel": "pend",
-			"decisionFirstColumn": "Model",
-			"toml": "toolboxes/pollis-toolbox-robotics/panels/rzoo.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-robotics/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-robotics/notebooks",
-			"wikis": [
-				"rzoo/assumptions.md",
-				"rzoo/bicycle.md",
-				"rzoo/cartpole.md",
-				"rzoo/decision-guide.md",
-				"rzoo/diagnostics.md",
-				"rzoo/factsheet.md",
-				"rzoo/interpretation.md",
-				"rzoo/overview.md",
-				"rzoo/pendulum.md",
-				"rzoo/quadrotor.md"
-			],
-			"notebooks": [
-				"rzoo/tutorial-01-pendulum.ipynb",
-				"rzoo/tutorial-02-cartpole.ipynb",
-				"rzoo/tutorial-03-bicycle.ipynb",
-				"rzoo/tutorial-04-quadrotor.ipynb"
-			],
-			"packages": [
-				"RobotZoo.jl",
-				"RobotDynamics.jl"
 			]
 		},
 		{

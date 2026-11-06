@@ -297,8 +297,8 @@ const TOPIC = `CASE WHEN d.kind = 'julia' THEN 'julia' WHEN d.kind = 'document' 
  */
 const COMPARISONS_TABLES = [
 	'CREATE TABLE IF NOT EXISTS Comparisons.runs(id VARCHAR PRIMARY KEY, started BIGINT, pollis VARCHAR, models VARCHAR, judges VARCHAR, repeats INTEGER, questions INTEGER)',
-	// The style of Ask Pollis of a run, added with the styles: a run before them has none, and was Classical
-	'ALTER TABLE Comparisons.runs ADD COLUMN IF NOT EXISTS style VARCHAR',
+	// The answering strategy of a run: a run without one was Base
+	'ALTER TABLE Comparisons.runs ADD COLUMN IF NOT EXISTS strategy VARCHAR',
 	'CREATE TABLE IF NOT EXISTS Comparisons.questions(run VARCHAR, question INTEGER, source VARCHAR, context VARCHAR, text VARCHAR, answer VARCHAR, passages VARCHAR, rank INTEGER)',
 	'CREATE TABLE IF NOT EXISTS Comparisons.answers(run VARCHAR, id VARCHAR, question INTEGER, model VARCHAR, repeat INTEGER, answer VARCHAR, error VARCHAR, first_word DOUBLE, seconds DOUBLE, reading DOUBLE, writing DOUBLE, tokens_read INTEGER, tokens_written INTEGER)',
 	// The answer score of an answer, added with it: an answer before it has none
@@ -834,6 +834,12 @@ class AskPollisIndex implements IAskPollisIndex {
 				for (const table of COMPARISONS_TABLES) {
 					await connection.run(table);
 				}
+				// A run kept in the column style keeps its answering strategy
+				if ((await connection.runAndReadAll(`SELECT 1 FROM duckdb_columns() WHERE database_name = 'Comparisons' AND table_name = 'runs' AND column_name = 'style'`)).getRowObjectsJson().length) {
+					await connection.run('UPDATE Comparisons.runs SET strategy = coalesce(strategy, style)');
+					await connection.run('ALTER TABLE Comparisons.runs DROP COLUMN style');
+				}
+				await connection.run(`UPDATE Comparisons.runs SET strategy = 'base' WHERE strategy = 'classical'`);
 				return await task(connection);
 			} finally {
 				await connection.run('DETACH Comparisons');
@@ -854,8 +860,8 @@ class AskPollisIndex implements IAskPollisIndex {
 			await connection.run('BEGIN TRANSACTION');
 			try {
 				await this.removeRun(connection, summary.id);
-				await connection.run('INSERT INTO Comparisons.runs (id, started, pollis, models, judges, repeats, questions, style) VALUES ($id, $started, $pollis, $models, $judges, $repeats, $questions, $style::VARCHAR)', {
-					id: summary.id, started: summary.started, pollis: summary.pollis, models: JSON.stringify(summary.models), judges: JSON.stringify(summary.judges), repeats: summary.repeats, questions: summary.questions, style: summary.style ?? null,
+				await connection.run('INSERT INTO Comparisons.runs (id, started, pollis, models, judges, repeats, questions, strategy) VALUES ($id, $started, $pollis, $models, $judges, $repeats, $questions, $strategy::VARCHAR)', {
+					id: summary.id, started: summary.started, pollis: summary.pollis, models: JSON.stringify(summary.models), judges: JSON.stringify(summary.judges), repeats: summary.repeats, questions: summary.questions, strategy: summary.strategy ?? null,
 				});
 				for (const question of run.questions) {
 					await connection.run('INSERT INTO Comparisons.questions VALUES ($run, $question, $source, $context, $text, $answer, $passages, $rank::INTEGER)', {
@@ -896,7 +902,7 @@ class AskPollisIndex implements IAskPollisIndex {
 			judges: JSON.parse(String(row.judges ?? '[]')),
 			repeats: Number(row.repeats),
 			questions: Number(row.questions),
-			...(row.style ? { style: String(row.style) } : {}),
+			...(row.strategy ? { strategy: String(row.strategy) } : {}),
 		};
 	}
 

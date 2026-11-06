@@ -271,7 +271,7 @@ async function getEnvPath() {
         const envPathConfig = getEnvironmentPathConfig()
         const absEnvPathConfig = absEnvPath(resolvePath(envPathConfig))
         if (envPathConfig) {
-            if (await fs.exists(absEnvPathConfig)) {
+            if ((await fs.exists(absEnvPathConfig)) && !(await isAnotherVersionsDefaultEnv(absEnvPathConfig))) {
                 g_path_of_current_environment = envPathConfig
                 return g_path_of_current_environment
             }
@@ -279,6 +279,23 @@ async function getEnvPath() {
         g_path_of_current_environment = await getDefaultEnvPath()
     }
     return g_path_of_current_environment
+}
+
+// POLLIS: the default environment of another Julia version, such as v1.12 kept in the workspace settings after an
+// upgrade to Julia 1.13, gives way to the default environment of the Julia in use; an environment chosen on purpose,
+// such as a project folder or a named environment, is kept
+async function isAnotherVersionsDefaultEnv(envPath: string) {
+    let defaultEnvPath: string
+    try {
+        defaultEnvPath = await getDefaultEnvPath()
+    } catch {
+        return false
+    }
+    return (
+        /^v\d+\.\d+$/.test(path.basename(envPath)) &&
+        path.dirname(path.resolve(envPath)) === path.dirname(path.resolve(defaultEnvPath)) &&
+        path.basename(envPath) !== path.basename(defaultEnvPath)
+    )
 }
 
 function absEnvPath(p: string | null) {

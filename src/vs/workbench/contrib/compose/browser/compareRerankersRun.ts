@@ -12,7 +12,7 @@ import { IFileService } from '../../../../platform/files/common/files.js';
 import { IProductService } from '../../../../platform/product/common/productService.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { ASK_CHAT_MODEL, ASK_EMBEDDING_MODEL, ASK_PASSAGES, ASK_RERANK_CONTEXT, ASK_RERANK_WIDER, IAskPollisEvalItem, IAskPollisFound, IAskPollisPassage, IAskPollisSearchRequest, IAskPollisService, IRerankRun, IRerankRunFound, IRerankRunModel } from '../common/askPollis.js';
-import { askPollisStyle, askStyleSearchKey } from '../common/askPollisStyles.js';
+import { askPollisStrategy, askStrategySearchKey } from '../common/askPollisStrategies.js';
 import { ICompareProgress } from './compareModelsRun.js';
 import { CompareSampler, CompareTestSets, ICompareSample, ICompareSamples } from './compareShared.js';
 
@@ -136,9 +136,9 @@ export class CompareRerankersRunner {
 		// The passages of each question, found once for every reranker, as Ask Pollis finds them with a reranker set;
 		// those found before with the same search stamp are taken again, as Evaluate Answering Models takes them
 		const kept = this.configurationService.getValue<number>('pollis.ask.passages') || ASK_PASSAGES;
-		const style = askPollisStyle(undefined);
+		const strategy = askPollisStrategy(undefined);
 		const requests: IAskPollisSearchRequest[] = items.map(item => ({ question: item.question, passages: kept * ASK_RERANK_WIDER }));
-		const keys = requests.map(request => askStyleSearchKey(style, request));
+		const keys = requests.map(request => askStrategySearchKey(strategy, request));
 		const stamp = await this.askPollisService.searchStamp();
 		const before = stamp ? await this.askPollisService.foundBefore(stamp.key, keys).catch(() => []) : [];
 		const passages: (readonly IAskPollisPassage[])[] = [];

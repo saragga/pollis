@@ -582,8 +582,10 @@ function pageHtml(): string {
 		extraCss: `
 		${compareCss}
 		.missing { color: var(--vscode-errorForeground); }
-		input[type=text], input[type=number] { font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-panel-border)); border-radius: 2px; padding: 3px 6px; }
-		input[type=text]:focus, input[type=number]:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
+		input[type=text], input[type=number] { font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border-radius: 2px; padding: 3px 6px; }
+		/* Every field in the blue of a field chosen, chosen or not */
+		input[type=text], input[type=number], select, textarea { border: 1px solid var(--vscode-focusBorder); }
+		input[type=text]:focus, input[type=number]:focus, select:focus, textarea:focus { outline: none; }
 		input::placeholder { color: var(--vscode-input-placeholderForeground); }
 		.passage { margin: 8px 0; padding: 8px 12px; border-left: 2px solid var(--vscode-textBlockQuote-border); background: var(--vscode-textBlockQuote-background); max-width: 900px; }
 		.passage .small { margin-bottom: 4px; }

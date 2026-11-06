@@ -5,7 +5,8 @@
 // ready: {url, model, media}, the address of its OpenAI-compatible API, the model's name there and what it reads besides
 // text, or {error} with the last lines it printed. A projector (mmproj) in the model's folder is loaded with it, so that
 // the model reads the images or audio it was made for (pollisModels.ts, projectorOf). Julia asks the same
-// with the request `pollis/llamaServer` (Pollis.llama_server in Pollis.jl), from the REPL or a notebook. There is one server
+// with the request `pollis/llamaServer` (Pollis.llama_server in Pollis.jl), from the REPL or a notebook, and stops it with
+// `pollis/stopLlamaServer` (Pollis.stop_llama_server), as Model Benchmarks does between models. There is one server
 // per model file and way of running it; each stops when Pollis quits, or with `language-julia.pollisStopLlamaServers`;
 // `language-julia.pollisStopLlamaServer`, with the request that started it, stops one, and answers once it has ended,
 // its memory free: Evaluate Answering Models and Evaluate Embedding Models run each local model alone.
@@ -49,6 +50,7 @@ const EVENTS_KEPT = 200
 const FREED_DELAY = 1500
 
 const requestTypeLlamaServer = new RequestType<ServerRequest, ServerAnswer, void>('pollis/llamaServer')
+const requestTypeStopLlamaServer = new RequestType<ServerRequest, null, void>('pollis/stopLlamaServer')
 
 const SERVER_NAME = process.platform === 'win32' ? 'llama-server.exe' : 'llama-server'
 
@@ -211,9 +213,13 @@ export function startServer(request: ServerRequest): Promise<ServerAnswer> {
     return ready
 }
 
-/** Lets the Julia of a REPL or notebook connected through `connection` ask for a server (Pollis.llama_server). */
+/** Lets the Julia of a REPL or notebook connected through `connection` ask for a server (Pollis.llama_server) and stop it (Pollis.stop_llama_server). */
 export function answerLlamaServerRequests(connection: MessageConnection) {
     connection.onRequest(requestTypeLlamaServer, (request) => startServer(request))
+    connection.onRequest(requestTypeStopLlamaServer, async (request) => {
+        await stopServer(request)
+        return null
+    })
 }
 
 /** Stops the server that `request` started, if it runs, and resolves once its process has ended and its memory was measured. */

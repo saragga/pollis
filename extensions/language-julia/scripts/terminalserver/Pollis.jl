@@ -70,6 +70,37 @@ function llama_server(model::AbstractString; embeddings::Bool = false, thinking:
 	return answer["url"]::String
 end
 
+"""
+    Pollis.stop_llama_server(model; embeddings = false, thinking = false)
+
+Stops the llama-server that `Pollis.llama_server` started for `model` with the same settings, and returns once it
+has ended and its memory is free, so that the next model runs alone in memory.
+"""
+function stop_llama_server(model::AbstractString; embeddings::Bool = false, thinking::Bool = false)
+	server = isdefined(Main, :VSCodeServer) ? Main.VSCodeServer : nothing
+	(server === nothing || server.conn_endpoint[] === nothing) && error("Pollis.stop_llama_server runs only in the Julia REPL or a notebook of Pollis.")
+	server.JSONRPC.send_request(server.conn_endpoint[], "pollis/stopLlamaServer", Dict("model" => model, "embeddings" => embeddings, "thinking" => thinking))
+	return nothing
+end
+
+"""
+    Pollis.model_benchmarks()
+
+The module of Model Benchmarks (Compose > Knowledge for Models > Model Benchmarks...), loaded the first time: the
+benchmarks downloaded, the stratified samples drawn, the chat models of this computer run and their answers
+graded, as the page does. See `?ModelBenchmarks` once loaded.
+
+```julia
+MB = Pollis.model_benchmarks()
+MB.download("gsm8k")
+```
+"""
+function model_benchmarks()
+	isdefined(Main, :ModelBenchmarks) || Base.include(Main, joinpath(@__DIR__, "model_benchmarks.jl"))
+	# Defined in a newer world than this function's when it was just included
+	return Base.invokelatest(getglobal, Main, :ModelBenchmarks)
+end
+
 const REPL_ID = Base.PkgId(Base.UUID("3fa0cd96-eef1-5676-8a61-b3b8758bbffb"), "REPL")
 
 """

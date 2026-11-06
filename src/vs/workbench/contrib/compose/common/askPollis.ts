@@ -73,7 +73,7 @@ export interface IAskPollisPanel {
 	readonly title: string;
 	/** The packages of its Powered by, as `GLM.jl`, the titles of their vignettes. */
 	readonly packages: readonly string[];
-	/** What it holds, as panelCard writes it, given to the model by the styles that tell it of the panel's content. */
+	/** What it holds, as panelCard writes it, given to the model by the strategies that tell it of the panel's content. */
 	readonly card?: string;
 }
 
@@ -146,7 +146,7 @@ export interface IAskPollisSearchRequest {
 	readonly passages?: number;
 	/** The panel it is asked in, which gives most of the passages, the rest routed as without it. */
 	readonly panel?: IAskPollisPanel;
-	/** The share of the passages from the panel's own, as its style sets it: 5/8 when not given. */
+	/** The share of the passages from the panel's own, as its strategy sets it: 5/8 when not given. */
 	readonly panelShare?: number | IAskPollisPanelShare;
 	/** A collection of Retrieval-Augmented Generation, searched in place of PollisDocuments. */
 	readonly index?: IAskPollisCollectionIndex;
@@ -503,8 +503,8 @@ export interface ICompareRunSummary {
 	readonly judges: readonly string[];
 	readonly repeats: number;
 	readonly questions: number;
-	/** The style of Ask Pollis that found the passages and asked the models, by its id; Classical for a run before styles. */
-	readonly style?: string;
+	/** The strategy of Ask Pollis that found the passages and asked the models, by its id; Base for a run without one. */
+	readonly strategy?: string;
 }
 
 /** A question of a run, with the passages found for it, the same for every model. */

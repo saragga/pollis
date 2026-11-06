@@ -45,9 +45,9 @@ function memoryService(mainProcessService: IMainProcessService): IMemoryMonitorS
 	return ProxyChannel.toService<IMemoryMonitorService>(mainProcessService.getChannel(MEMORY_MONITOR_CHANNEL));
 }
 
-/** `bytes` in gigabytes, with one decimal unless it is whole, such as 11.2 or 16. */
+/** `bytes` in gigabytes, always with one decimal, such as 11.2 or 16.0, so that the figures keep their width. */
 function gigabytes(bytes: number): string {
-	return String(Number((bytes / 1024 ** 3).toFixed(1)));
+	return (bytes / 1024 ** 3).toFixed(1);
 }
 
 /**
@@ -110,15 +110,15 @@ function memoryMarkdown(reading: IMemoryReading, snapshot: IMemoryProcesses): Ma
 	// The memory in use: in the RAM, plus what is swapped to the disk, with their sum from the figures shown
 	const ram = gigabytes(reading.used);
 	const total = gigabytes(reading.total);
-	const swap = reading.swapped ? gigabytes(reading.swapped) : '0';
-	const swapped = swap !== '0';
+	const swap = gigabytes(reading.swapped ?? 0);
+	const swapped = Number(swap) > 0;
 	const inUse = swapped
-		? localize('memory.inUseSwap', "{0} GB of the {1} GB of RAM + {2} GB of swap = {3} GB", ram, total, swap, String(Number((Number(ram) + Number(swap)).toFixed(1))))
+		? localize('memory.inUseSwap', "{0} GB of the {1} GB of RAM + {2} GB of swap = {3} GB", ram, total, swap, (Number(ram) + Number(swap)).toFixed(1))
 		: localize('memory.inUse', "{0} GB of {1} GB in use", ram, total);
 	markdown.appendMarkdown(`**${cell(localize('memory.heading', "Memory"))}**: ${cell(inUse)}\n\n`);
 	// On macOS, the apps' memory held compressed, at its size before compression, and the room it takes
-	const compressed = reading.compressed ? gigabytes(reading.compressed) : '0';
-	const isCompressed = compressed !== '0' && reading.compressedInRam !== undefined;
+	const compressed = gigabytes(reading.compressed ?? 0);
+	const isCompressed = Number(compressed) > 0 && reading.compressedInRam !== undefined;
 	if (isCompressed) {
 		const heldIn = gigabytes(reading.compressedInRam ?? 0);
 		markdown.appendMarkdown(`**${cell(localize('memory.compressedHeading', "Compressed"))}**: ${cell(swapped

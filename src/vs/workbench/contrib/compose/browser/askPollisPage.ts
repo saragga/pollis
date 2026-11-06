@@ -44,7 +44,7 @@ import { IWebviewViewService, WebviewView } from '../../webviewView/browser/webv
 import { createApiKeyWiring, IApiKeyWiring } from '../../model/browser/handlers/model.handler.js';
 import { composerSendSvg, spinnerCss, spinnerSvg, voiceSpeakerSvg } from '../../model/browser/webviews/webviewScaffold.js';
 import { ASK_CHAT_MODEL, ASK_CLOUD_MODELS, ASK_EMBEDDING_MODEL, ASK_PASSAGE_PREFIX, ASK_PASSAGES, ASK_QUERY_PREFIX, MODELS_INSTALLED_COMMAND_ID, ASK_CLOUD_PROVIDERS, ASK_LOCAL_PREFIX, ASK_POLLIS_ANSWERS_IN_CLOUD_COMMAND_ID, ASK_POLLIS_ADD_ATTACHMENT_COMMAND_ID, ASK_POLLIS_ATTACH_COMMAND_ID, ASK_POLLIS_COMMAND_ID, ASK_THIS_COMPUTER, ASK_ATTACHED_CHARACTERS, askCloudModel, AskPollisAttachRequest, AskPollisProvider, IAskPollisAddAttachment, IAskPollisAttached, IAskPollisAttachment, IAskPollisFromPanel, IAskPollisPanel, IAskPollisPassage, IAskPollisSearchResult, IAskPollisService } from '../common/askPollis.js';
-import { ASK_DEFAULT_STYLE, ASK_POLLIS_STYLES, askPollisStyle, askStyleAnswerPanel, askStyleRerank, askStyleReranks, askStyleSearchRequest } from '../common/askPollisStyles.js';
+import { ASK_DEFAULT_STRATEGY, IAskPollisStrategiesService, askPollisStrategy, askStrategyAnswerPanel, askStrategyRerank, askStrategyReranks, askStrategySearchRequest } from '../common/askPollisStrategies.js';
 import { AskAttachMessage, askAddHtml, askAttachCss, askAttachmentsHtml, askAttachScript, handleAskAttachMessage } from './askPollisAttach.js';
 import { askAnswerCss, askAnswerScript, askModelName, askNothingFound, askOpenPassage, askPassageView, askSearchedNames, askSearchesJulia, askSearchesNothing, askSearchIn, askSearchSources, askWordsOnlyNote } from './askPollisWebview.js';
 import { formatBytes, IDatasetSummary, summarizeCsv } from './collaboration/collaborationDatasets.js';
@@ -66,7 +66,7 @@ import './media/pollisAiStatus.css';
 // as the + of the Collaboration chat shares them (composerAdd.ts). Under the answer, Sources lists the passages cited, or all of them when none is, each with
 // Open, which opens the PDF at its page, the panel's wiki at its heading, or the Julia Manual at its section
 // (askPollisWebview.ts). The conversation is kept until Pollis closes; New Chat, in the pane's title, starts it again.
-// Active Models is shown at the right of the status bar, with the models in the hover and a cloud while a cloud model answers;
+// Active AI Models is shown at the right of the status bar, with the models in the hover and a cloud while a cloud model answers;
 // a click opens Set Active Models (modelsInstalledPage.ts), where they are set. With a reranker set, three times the
 // passages are searched for and it keeps the best (pollis.ask.reranker).
 // A question asked in a panel, in the pill at the right of its title (webviewScaffold.ts), is answered in the pane,
@@ -85,7 +85,7 @@ type AskPollisMessage =
 	| { readonly command: 'voiceLanguage'; readonly value: string }
 	| { readonly command: 'voiceWriteIn'; readonly value: string }
 	| { readonly command: 'leavePanel' }
-	| { readonly command: 'style'; readonly value: string };
+	| { readonly command: 'strategy'; readonly value: string };
 
 /** A question of the conversation, the passages found for it and its answer so far. */
 interface IAskedTurn {
@@ -326,6 +326,7 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 		@IQuickInputService private readonly quickInputService: IQuickInputService,
 		@IWebviewService private readonly webviewService: IWebviewService,
 		@IStorageService private readonly storageService: IStorageService,
+		@IAskPollisStrategiesService private readonly strategiesService: IAskPollisStrategiesService,
 	) {
 		super();
 		this._register(webviewViewService.register(ASK_POLLIS_VIEW_ID, {
@@ -348,12 +349,14 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 			google: createApiKeyWiring(webview, { label: ASK_CLOUD_PROVIDERS.google.label, fields: [{ secretKey: ASK_CLOUD_PROVIDERS.google.secretKey, envVar: ASK_CLOUD_PROVIDERS.google.envVar, prompt: localize('askPollis.googleKey', "Google API key") }] }, this.secretStorageService, this.quickInputService, this.webviewService),
 			openai: createApiKeyWiring(webview, { label: ASK_CLOUD_PROVIDERS.openai.label, fields: [{ secretKey: ASK_CLOUD_PROVIDERS.openai.secretKey, envVar: ASK_CLOUD_PROVIDERS.openai.envVar, prompt: localize('askPollis.openaiKey', "OpenAI API key") }] }, this.secretStorageService, this.quickInputService, this.webviewService),
 		};
-		// Style under the question: the styles of Ask Pollis and the one of the setting
-		const postStyle = () => post({
-			command: 'styles',
-			styles: ASK_POLLIS_STYLES.map(style => ({ value: style.id, label: style.label, title: style.description })),
-			chosen: askPollisStyle(configurationService.getValue<string>('pollis.ask.style')).id,
+		// Strategy under the question: the answering strategies, Pollis' own and the user's, and the one of the setting
+		const strategiesService = this.strategiesService;
+		const postStrategy = () => post({
+			command: 'strategies',
+			strategies: strategiesService.getStrategies().map(strategy => ({ value: strategy.id, label: strategy.label, title: strategy.description })),
+			chosen: askPollisStrategy(configurationService.getValue<string>('pollis.ask.strategy'), strategiesService.getStrategies()).id,
 		});
+		disposables.add(strategiesService.onDidChange(() => postStrategy()));
 		const postModel = () => {
 			const cloud = askCloudModel(configurationService.getValue<string>('pollis.ask.answerWith'));
 			post({ command: 'model', provider: cloud && ASK_CLOUD_PROVIDERS[cloud.provider].label });
@@ -436,11 +439,12 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 				}, () => undefined);
 			}
 			const searched = previous ? `${previous}\n${question}` : question;
-			// The style of Ask Pollis takes its steps: the search, the reranking and how the model is asked
-			const style = askPollisStyle(configurationService.getValue<string>('pollis.ask.style'));
+			// The answering strategy takes its steps: the search, the reranking and how the model is asked
+			await strategiesService.loaded;
+			const strategy = askPollisStrategy(configurationService.getValue<string>('pollis.ask.strategy'), strategiesService.getStrategies());
 			const reranker = unaided ? '' : configurationService.getValue<string>('pollis.ask.reranker')?.trim();
 			const kept = configurationService.getValue<number>('pollis.ask.passages') || ASK_PASSAGES;
-			const search = async (): Promise<IAskPollisSearchResult> => unaided ? { passages: [], searched: [], collections } : askPollisService.search(askStyleSearchRequest(style, {
+			const search = async (): Promise<IAskPollisSearchResult> => unaided ? { passages: [], searched: [], collections } : askPollisService.search(askStrategySearchRequest(strategy, {
 				question: searched,
 				collections: askSearchIn(searchIn, collections),
 				sources: askSearchSources(searchIn),
@@ -469,8 +473,8 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 			}
 			// The reranker keeps the best of what was found; if it does not answer, the search's own order stands, and the note says so
 			let rerankNote: string | undefined;
-			if (askStyleReranks(style, reranker) && result.passages.length) {
-				const reranked = await askStyleRerank(style, askPollisService, reranker, searched, askedIn, result, kept);
+			if (askStrategyReranks(strategy, reranker) && result.passages.length) {
+				const reranked = await askStrategyRerank(strategy, askPollisService, reranker, searched, askedIn, result, kept);
 				if (!current()) {
 					return;
 				}
@@ -505,7 +509,7 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 					turn.answer = text;
 					post({ command: 'text', turn: index, text });
 				}
-			}, source.token, undefined, askStyleAnswerPanel(style, askedIn), attachments);
+			}, source.token, undefined, askStrategyAnswerPanel(strategy, askedIn), attachments);
 			if (!current()) {
 				return;
 			}
@@ -543,8 +547,8 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 			if (affectsAskModel(e)) {
 				postModel();
 			}
-			if (e.affectsConfiguration('pollis.ask.style')) {
-				postStyle();
+			if (e.affectsConfiguration('pollis.ask.strategy')) {
+				postStrategy();
 			}
 		}));
 		disposables.add(webview.onMessage((e: { message: AskPollisMessage }) => {
@@ -559,7 +563,7 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 					post({ command: 'attached', attachment: attached.attachment, note: attached.note });
 				}
 				postModel();
-				postStyle();
+				postStrategy();
 				// Search In lists the sources before the first question too
 				askPollisService.collections().then(names => {
 					collections = names;
@@ -573,8 +577,8 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 				answering?.cancel();
 			} else if (message.command === 'leavePanel') {
 				panel = undefined;
-			} else if (message.command === 'style') {
-				configurationService.updateValue('pollis.ask.style', askPollisStyle(message.value).id, ConfigurationTarget.USER);
+			} else if (message.command === 'strategy') {
+				configurationService.updateValue('pollis.ask.strategy', askPollisStrategy(message.value, strategiesService.getStrategies()).id, ConfigurationTarget.USER);
 			} else if (message.command === 'open') {
 				open(message);
 			} else if (message.command === 'addToTestSet') {
@@ -601,7 +605,7 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 	}
 }
 
-/** Active Models at the right of the status bar: the models of Pollis AI+ in the hover, a cloud while one answers, a click opens Set Active Models. */
+/** Active AI Models at the right of the status bar: the models of Pollis AI+ in the hover, a cloud while one answers, a click opens Set Active Models. */
 class AskPollisModelStatus extends Disposable implements IWorkbenchContribution {
 
 	static readonly ID = 'workbench.contrib.askPollisModelStatus';
@@ -631,7 +635,7 @@ class AskPollisModelStatus extends Disposable implements IWorkbenchContribution 
 		const reranker = this.configurationService.getValue<string>('pollis.ask.reranker')?.trim();
 		// Named in the hover, and in the status bar's menu that hides its entries, by its full name
 		const name = localize('askPollis.statusName', "Active Pollis AI+ Models");
-		const label = localize('askPollis.statusLabel', "Active Models");
+		const label = localize('askPollis.statusLabel', "Active AI Models");
 		// Each line as said, with the model's name as it is, and as the hover shows it, with the name in the Pollis yellow
 		const linesWith = (model: (name: string) => string) => [
 			models.provider
@@ -686,8 +690,8 @@ function pageHtml(language: string, writeIn: string): string {
 		clearKey: localize('askPollis.clearKey', "clear"),
 		searchIn: localize('askPollis.searchIn', "Search In"),
 		searchInPrefix: localize('askPollis.searchInPrefix', "Search In:"),
-		style: localize('askPollis.style', "Style"),
-		stylePrefix: localize('askPollis.stylePrefix', "Style:"),
+		strategy: localize('askPollis.strategy', "Strategy"),
+		strategyPrefix: localize('askPollis.strategyPrefix', "Strategy:"),
 		searching: localize('askPollis.searching', "Finding the passages..."),
 		starting: localize('askPollis.starting', "Starting answering model {0} on this computer. The first time, it is downloaded first.", '{0}'),
 		embeddingFinished: localize('askPollis.embeddingFinished', "Embedding model {0} finished. {1}", '{0}', '{1}'),
@@ -745,15 +749,14 @@ function pageHtml(language: string, writeIn: string): string {
 		button.icon.send.ready, button.icon.send.stop { opacity: 1; }
 		/* Below the pill: Search In on the left, the key and the model on the right */
 		.under { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 8px; margin-top: 4px; padding: 0 4px; }
-		.under > span { display: inline-flex; align-items: center; gap: 4px; }
+		.under > span { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; }
 		.anchor { position: relative; }
-		.picker { display: inline-flex; align-items: center; gap: 4px; font: inherit; font-size: 12px; color: var(--vscode-descriptionForeground); background: transparent; border: none; border-radius: 6px; padding: 3px 6px; cursor: pointer; }
+		.picker { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; font: inherit; font-size: 12px; color: var(--vscode-descriptionForeground); background: transparent; border: none; border-radius: 6px; padding: 3px 6px; cursor: pointer; }
 		.picker:hover, .picker[aria-expanded="true"] { color: var(--vscode-foreground); background: var(--vscode-toolbar-hoverBackground); }
 		.picker svg { width: 10px; height: 10px; }
 		/* Search In, a pill: the prefix muted, the choice in the text's color */
-		#searchInButton, #styleButton { color: var(--vscode-foreground); border: 1px solid var(--vscode-widget-border, var(--vscode-input-border, transparent)); border-radius: 999px; padding: 2px 8px; }
-		#searchInButton .prefix, #styleButton .prefix { color: var(--vscode-descriptionForeground); }
-		#styleButton { margin-left: 6px; }
+		#searchInButton, #strategyButton { color: var(--vscode-foreground); border: 1px solid var(--vscode-widget-border, var(--vscode-input-border, transparent)); border-radius: 999px; padding: 2px 8px; }
+		#searchInButton .prefix, #strategyButton .prefix { color: var(--vscode-descriptionForeground); }
 		/* The menus of the pickers, upwards, or downwards when there is no room above */
 		.menu { position: absolute; bottom: 28px; z-index: 2; min-width: min(250px, calc(100vw - 8px)); max-width: calc(100vw - 8px); max-height: 60vh; overflow-y: auto; padding: 4px; color: var(--vscode-menu-foreground); background: var(--vscode-menu-background); border: 1px solid var(--vscode-menu-border, var(--vscode-widget-border)); border-radius: 8px; box-shadow: 0 4px 16px var(--vscode-widget-shadow); }
 		.menu.down { bottom: auto; top: 28px; }
@@ -823,8 +826,8 @@ function pageHtml(language: string, writeIn: string): string {
 				<div class="menu left" id="searchInMenu" role="menu" hidden></div>
 			</span>
 			<span class="anchor">
-				<button class="picker" id="styleButton" aria-haspopup="menu" aria-expanded="false" aria-label="${text.style}"><span class="prefix">${text.stylePrefix}</span><span id="styleLabel"></span>${CHEVRON}</button>
-				<div class="menu left" id="styleMenu" role="menu" hidden></div>
+				<button class="picker" id="strategyButton" aria-haspopup="menu" aria-expanded="false" aria-label="${text.strategy}"><span class="prefix">${text.strategyPrefix}</span><span id="strategyLabel"></span>${CHEVRON}</button>
+				<div class="menu left" id="strategyMenu" role="menu" hidden></div>
 			</span>
 		</span>
 		<span class="small" id="api-key-status" hidden></span>
@@ -1015,15 +1018,15 @@ function pageHtml(language: string, writeIn: string): string {
 		});
 	}
 
-	// Style: the style of Ask Pollis, which the setting keeps
-	const styleButton = document.getElementById('styleButton');
-	const styleMenu = document.getElementById('styleMenu');
-	menu(styleButton, styleMenu);
-	function renderStyles(message) {
-		const chosen = message.styles.find(style => style.value === message.chosen) || message.styles[0];
-		document.getElementById('styleLabel').textContent = chosen ? chosen.label : '';
-		styleButton.title = chosen ? chosen.title : '';
-		fillMenu(styleMenu, message.styles, message.chosen, value => vscode.postMessage({ command: 'style', value }));
+	// Strategy: the strategy of Ask Pollis, which the setting keeps
+	const strategyButton = document.getElementById('strategyButton');
+	const strategyMenu = document.getElementById('strategyMenu');
+	menu(strategyButton, strategyMenu);
+	function renderStrategies(message) {
+		const chosen = message.strategies.find(strategy => strategy.value === message.chosen) || message.strategies[0];
+		document.getElementById('strategyLabel').textContent = chosen ? chosen.label : '';
+		strategyButton.title = chosen ? chosen.title : '';
+		fillMenu(strategyMenu, message.strategies, message.chosen, value => vscode.postMessage({ command: 'strategy', value }));
 	}
 
 	// A citation shows its source
@@ -1063,8 +1066,8 @@ function pageHtml(language: string, writeIn: string): string {
 		const turn = turns[message.turn];
 		if (message.command === 'collections') {
 			setCollections(message.collections);
-		} else if (message.command === 'styles') {
-			renderStyles(message);
+		} else if (message.command === 'strategies') {
+			renderStrategies(message);
 		} else if (message.command === 'newChat') {
 			turns.length = 0;
 			conversation.textContent = '';
@@ -1187,14 +1190,11 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).regis
 			scope: ConfigurationScope.APPLICATION,
 			markdownDescription: localize('askPollis.embeddingModelSetting', "The embedding model with which **Help > Ask Pollis** finds passages by their meaning, as `hf:owner/repository/file.gguf` or the path of a GGUF file. When it changes, the passages are embedded again the next time the Julia REPL starts; until then they are searched by their words only."),
 		},
-		'pollis.ask.style': {
+		'pollis.ask.strategy': {
 			type: 'string',
-			enum: ASK_POLLIS_STYLES.map(style => style.id),
-			enumItemLabels: ASK_POLLIS_STYLES.map(style => style.label),
-			enumDescriptions: ASK_POLLIS_STYLES.map(style => style.description),
-			default: ASK_DEFAULT_STYLE,
+			default: ASK_DEFAULT_STRATEGY,
 			scope: ConfigurationScope.APPLICATION,
-			markdownDescription: localize('askPollis.styleSetting', "The style of **Help > Ask Pollis**: how it finds the passages, chooses among them and asks the model. It is chosen with **Style** under the question too, and Evaluate Answering Models compares the styles."),
+			markdownDescription: localize('askPollis.strategySetting', "The answering strategy of **Help > Ask Pollis**, by its id: how it finds the passages, chooses among them and asks the model. Pollis has `base` and `panelAware`, and a strategy of yours is a TOML file of `~/.pollis/ask/strategies/`. It is chosen with **Strategy** under the question too, and Evaluate Answering Models compares the strategies."),
 		},
 		'pollis.ask.reranker': {
 			type: 'string',

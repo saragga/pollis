@@ -1,0 +1,30 @@
+# Answering Strategies Webview Configuration
+# A page in the Minimal style of the scaffold, not a panel: Learn More only, as no Julia package powers it. `pageCommand`
+# is the command that opens it, which a panel's contribution file would say. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/answeringStrategies.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Answering Strategies"
+viewType = "pollis.answeringStrategies"
+pageCommand = "pollis.answeringStrategies"
+
+[[wikis]]
+name = "Factsheet"
+file = "answeringStrategies/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "answeringStrategies/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Writing a Strategy"
+file = "answeringStrategies/writing.md"
+bundled = true
+
+[[wikis]]
+name = "Comparing Strategies"
+file = "answeringStrategies/comparing.md"
+bundled = true

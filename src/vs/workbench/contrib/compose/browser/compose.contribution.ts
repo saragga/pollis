@@ -14,8 +14,11 @@ import './toolboxPanelsPage.js';
 import './askPollisPage.js';
 import { COMPARE_EMBEDDINGS_COMMAND_ID } from './compareEmbeddingsPage.js';
 import { COMPARE_RERANKERS_COMMAND_ID } from './compareRerankersPage.js';
+import { MODEL_BENCHMARKS_COMMAND_ID } from './modelBenchmarksPage.js';
 import { RAG_COMMAND_ID } from './ragPage.js';
+import { ANSWERING_STRATEGIES_COMMAND_ID } from './answeringStrategiesPage.js';
 import { COMPARE_MODELS_COMMAND_ID } from './compareModelsPage.js';
+import './askPollisStrategiesService.js';
 import './askPollisSources.js';
 import { BROWSE_SKILLS_COMMAND_ID, CHOOSE_AGENT_COMMAND_ID, CREATE_PANEL_COMMAND_ID, CREATE_PANELS_FROM_REQUEST_COMMAND_ID, PACKAGE_TOOLBOX_COMMAND_ID } from './pollisAgents.js';
 import { BROWSE_METHODS_COMMAND_ID, CREATE_METHOD_COMMAND_ID } from './newMethods.js';
@@ -398,6 +401,12 @@ MenuRegistry.appendMenuItem(KnowledgeMenu, {
 	order: 1,
 });
 
+MenuRegistry.appendMenuItem(KnowledgeMenu, {
+	group: '1_knowledge',
+	command: { id: ANSWERING_STRATEGIES_COMMAND_ID, title: localize('answeringStrategies.menu', "Answering Strategies") },
+	order: 1.5,
+});
+
 // The embedding models installed, compared on the questions of Ask Pollis (compareEmbeddingsPage.ts)
 MenuRegistry.appendMenuItem(KnowledgeMenu, {
 	group: '1_knowledge',
@@ -410,6 +419,13 @@ MenuRegistry.appendMenuItem(KnowledgeMenu, {
 	group: '1_knowledge',
 	command: { id: COMPARE_RERANKERS_COMMAND_ID, title: localize('compareRerankers.menu', "Evaluate Reranking Models...") },
 	order: 3,
+});
+
+// The chat models installed, run on published benchmarks, on a stratified sample of their questions (modelBenchmarksPage.ts)
+MenuRegistry.appendMenuItem(KnowledgeMenu, {
+	group: '1_knowledge',
+	command: { id: MODEL_BENCHMARKS_COMMAND_ID, title: localize('modelBenchmarks.menu', "Model Benchmarks...") },
+	order: 4,
 });
 
 

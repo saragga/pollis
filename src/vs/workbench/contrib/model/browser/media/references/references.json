@@ -5953,6 +5953,43 @@
 			"open_access": false
 		},
 		{
+			"key": "CKBCJ...2021a",
+			"type": "misc",
+			"title": "Training Verifiers to Solve Math Word Problems",
+			"authors": [
+				"Cobbe, Karl",
+				"Kosaraju, Vineet",
+				"Bavarian, Mohammad",
+				"Chen, Mark",
+				"Jun, Heewoo",
+				"Kaiser, Lukasz",
+				"Plappert, Matthias",
+				"Tworek, Jerry",
+				"Hilton, Jacob",
+				"Nakano, Reiichiro",
+				"Hesse, Christopher",
+				"Schulman, John"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2021,
+			"arxiv": "2110.14168",
+			"openalex": "W3210904070",
+			"url": "https://arxiv.org/abs/2110.14168",
+			"oa_url": "https://arxiv.org/pdf/2110.14168",
+			"abstract": "State-of-the-art language models can match human performance on many tasks, but they still struggle to robustly perform multi-step mathematical reasoning. To diagnose the failures of current models and support research, we introduce GSM8K, a dataset of 8.5K high quality linguistically diverse grade school math word problems. We find that even the largest transformer models fail to achieve high test performance, despite the conceptual simplicity of this problem distribution. To increase performance, we propose training verifiers to judge the correctness of model completions. At test time, we generate many candidate solutions and select the one ranked highest by the verifier. We demonstrate that verification significantly improves performance on GSM8K, and we provide strong empirical evidence that verification scales more effectively with increased data than a finetuning baseline.",
+			"abstract_source": "arxiv",
+			"keywords": [
+				"cs.LG",
+				"cs.CL"
+			],
+			"keywords_source": "arxiv",
+			"source": "manual",
+			"retrieved": "2026-11-06",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "CKV2022a",
 			"type": "article",
 			"title": "Solving Natural Conic Formulations with Hypatia.jl",
@@ -6939,6 +6976,25 @@
 			"openalex": "W1977970167",
 			"source": "crossref",
 			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "Coc1977a",
+			"type": "book",
+			"title": "Sampling Techniques",
+			"authors": [
+				"Cochran, William G."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1977,
+			"publisher": "Wiley",
+			"address": "New York",
+			"edition": "3rd",
+			"isbn": "9780471162407",
+			"source": "manual",
+			"retrieved": "2026-11-06",
 			"checked": true,
 			"open_access": false
 		},
@@ -13896,6 +13952,41 @@
 			"oa_url": "https://arxiv.org/pdf/2606.24427",
 			"source": "arxiv",
 			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "HBBZM...2021a",
+			"type": "inproceedings",
+			"title": "Measuring Massive Multitask Language Understanding",
+			"authors": [
+				"Hendrycks, Dan",
+				"Burns, Collin",
+				"Basart, Steven",
+				"Zou, Andy",
+				"Mazeika, Mantas",
+				"Song, Dawn",
+				"Steinhardt, Jacob"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2021,
+			"booktitle": "International Conference on Learning Representations",
+			"arxiv": "2009.03300",
+			"openalex": "W3121904249",
+			"url": "https://openreview.net/forum?id=d7KBjmI3GmQ",
+			"oa_url": "https://arxiv.org/pdf/2009.03300",
+			"abstract": "We propose a new test to measure a text model's multitask accuracy. The test covers 57 tasks including elementary mathematics, US history, computer science, law, and more. To attain high accuracy on this test, models must possess extensive world knowledge and problem solving ability. We find that while most recent models have near random-chance accuracy, the very largest GPT-3 model improves over random chance by almost 20 percentage points on average. However, on every one of the 57 tasks, the best models still need substantial improvements before they can reach expert-level accuracy. Models also have lopsided performance and frequently do not know when they are wrong. Worse, they still have near-random accuracy on some socially important subjects such as morality and law. By comprehensively evaluating the breadth and depth of a model's academic and professional understanding, our test can be used to analyze models across many tasks and to identify important shortcomings.",
+			"abstract_source": "arxiv",
+			"keywords": [
+				"cs.CY",
+				"cs.AI",
+				"cs.CL",
+				"cs.LG"
+			],
+			"keywords_source": "arxiv",
+			"source": "manual",
+			"retrieved": "2026-11-06",
 			"checked": true,
 			"open_access": true
 		},
@@ -35601,6 +35692,50 @@
 			"open_access": true
 		},
 		{
+			"key": "WMZNC...2024a",
+			"type": "inproceedings",
+			"title": "MMLU-Pro: A More Robust and Challenging Multi-Task Language Understanding Benchmark",
+			"authors": [
+				"Wang, Yubo",
+				"Ma, Xueguang",
+				"Zhang, Ge",
+				"Ni, Yuansheng",
+				"Chandra, Abhranil",
+				"Guo, Shiguang",
+				"Ren, Weiming",
+				"Arulraj, Aaran",
+				"He, Xuan",
+				"Jiang, Ziyan",
+				"Li, Tianle",
+				"Ku, Max",
+				"Wang, Kai",
+				"Zhuang, Alex",
+				"Fan, Rongqi",
+				"Yue, Xiang",
+				"Chen, Wenhu"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2024,
+			"booktitle": "Advances in Neural Information Processing Systems 37",
+			"pages": "95266-95290",
+			"doi": "10.52202/079017-3018",
+			"arxiv": "2406.01574",
+			"openalex": "W4415796274",
+			"url": "https://arxiv.org/abs/2406.01574",
+			"oa_url": "https://arxiv.org/pdf/2406.01574",
+			"abstract": "In the age of large-scale language models, benchmarks like the Massive Multitask Language Understanding (MMLU) have been pivotal in pushing the boundaries of what AI can achieve in language comprehension and reasoning across diverse domains. However, as models continue to improve, their performance on these benchmarks has begun to plateau, making it increasingly difficult to discern differences in model capabilities. This paper introduces MMLU-Pro, an enhanced dataset designed to extend the mostly knowledge-driven MMLU benchmark by integrating more challenging, reasoning-focused questions and expanding the choice set from four to ten options. Additionally, MMLU-Pro eliminates the trivial and noisy questions in MMLU. Our experimental results show that MMLU-Pro not only raises the challenge, causing a significant drop in accuracy by 16% to 33% compared to MMLU but also demonstrates greater stability under varying prompts. With 24 different prompt styles tested, the sensitivity of model scores to prompt variations decreased from 4-5% in MMLU to just 2% in MMLU-Pro. Additionally, we found that models utilizing Chain of Thought (CoT) reasoning achieved better performance on MMLU-Pro compared to direct answering, which is in stark contrast to the findings on the original MMLU, indicating that MMLU-Pro includes more complex reasoning questions. Our assessments confirm that MMLU-Pro is a more discriminative benchmark to better track progress in the field.",
+			"abstract_source": "arxiv",
+			"keywords": [
+				"cs.CL"
+			],
+			"keywords_source": "arxiv",
+			"source": "crossref",
+			"retrieved": "2026-11-06",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "WR2015a",
 			"type": "book",
 			"title": "An Introduction to Agent-Based Modeling",
@@ -39330,6 +39465,12 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "CKBCJ...2021a",
+			"count": 3018,
+			"source": "openalex",
+			"date": "2026-11-06"
+		},
+		{
 			"key": "CKV2022a",
 			"count": 38,
 			"source": "crossref",
@@ -41908,6 +42049,12 @@
 			"count": 1204,
 			"source": "openalex",
 			"date": "2026-10-30"
+		},
+		{
+			"key": "HBBZM...2021a",
+			"count": 448,
+			"source": "openalex",
+			"date": "2026-11-06"
 		},
 		{
 			"key": "HG2009a",
@@ -49020,6 +49167,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "WMZNC...2024a",
+			"count": 124,
+			"source": "crossref",
+			"date": "2026-11-06"
+		},
+		{
+			"key": "WMZNC...2024a",
+			"count": 320,
+			"source": "openalex",
+			"date": "2026-11-06"
+		},
+		{
 			"key": "WRK2005a",
 			"count": 387,
 			"source": "crossref",
@@ -51749,6 +51908,19 @@
 			"keys": [
 				"GMSS2019a",
 				"GMSS2023a"
+			]
+		},
+		{
+			"id": "modelBenchmarks",
+			"title": "Model Benchmarks",
+			"commands": [
+				"pollis.modelBenchmarks"
+			],
+			"keys": [
+				"Coc1977a",
+				"CKBCJ...2021a",
+				"HBBZM...2021a",
+				"WMZNC...2024a"
 			]
 		},
 		{

@@ -243,7 +243,7 @@ function plainText(text: string): string {
 }
 
 /**
- * What a panel holds, for a model answering a question asked in it (the Panel Aware style of Ask Pollis): its models,
+ * What a panel holds, for a model answering a question asked in it (the Panel Aware strategy of Ask Pollis): its models,
  * Key Points, decision table, inputs and packages, as plain text. Never its FAQ, whose questions test Ask Pollis.
  */
 export function panelCard(data: IScaffoldPanelData): string {

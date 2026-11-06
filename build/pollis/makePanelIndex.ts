@@ -142,13 +142,13 @@ function pollisPanels(pollis: Pollis, warnings: string[]): IndexPanel[] {
 	})];
 }
 
-/** The panels of the published toolboxes (toolboxes/<name>/package.json). */
+/** The panels of the published toolboxes (toolboxes/<name>/package.json); a toolbox kept for later has a DEFERRED.md. */
 function toolboxPanels(warnings: string[]): IndexPanel[] {
 	const panels: IndexPanel[] = [];
 	for (const name of fs.readdirSync(TOOLBOXES_DIR).sort()) {
 		const folder = path.join(TOOLBOXES_DIR, name);
 		const manifestFile = path.join(folder, 'package.json');
-		if (!fs.existsSync(manifestFile)) {
+		if (!fs.existsSync(manifestFile) || fs.existsSync(path.join(folder, 'DEFERRED.md'))) {
 			continue;
 		}
 		const manifest = JSON.parse(fs.readFileSync(manifestFile, 'utf-8'));

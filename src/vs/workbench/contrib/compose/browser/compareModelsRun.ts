@@ -17,7 +17,7 @@ import { IProductService } from '../../../../platform/product/common/productServ
 import { ISecretStorageService } from '../../../../platform/secrets/common/secrets.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { ASK_CHAT_MODEL, ASK_CLOUD_PROVIDERS, ASK_LOCAL_PREFIX, ASK_PASSAGES, ASK_RERANK_CONTEXT, askCloudModel, askPassageLabel, IAskPollisAnswer, IAskPollisEvalItem, IAskPollisFound, IAskPollisPassage, IAskPollisService, IAskTopicCounts, ICompareRun, ICompareRunAnswer, ICompareRunModel, ICompareRunQuestion, ICompareRunScore, ICompareRunUnrated } from '../common/askPollis.js';
-import { askPollisStyle, askStyleAnswerPanel, askStyleRerank, askStyleReranks, askStyleSearchKey, askStyleSearchRequest } from '../common/askPollisStyles.js';
+import { askPollisStrategy, askStrategyAnswerPanel, IAskPollisStrategiesService, askStrategyRerank, askStrategyReranks, askStrategySearchKey, askStrategySearchRequest } from '../common/askPollisStrategies.js';
 import { askModelName } from './askPollisWebview.js';
 import { askFolder, CompareSampler, CompareTestSets, evalItem, ICompareSample, ICompareSamples, isEvalItem, mergeEvalItems } from './compareShared.js';
 
@@ -147,6 +147,7 @@ export class CompareModelsRunner {
 		@IFileService private readonly fileService: IFileService,
 		@IPathService private readonly pathService: IPathService,
 		@IProductService private readonly productService: IProductService,
+		@IAskPollisStrategiesService private readonly strategiesService: IAskPollisStrategiesService,
 	) {
 		this.sampler = new CompareSampler(commandService);
 		this.onDidSample = this.sampler.onDidSample;
@@ -291,10 +292,10 @@ export class CompareModelsRunner {
 
 	/**
 	 * Asks every question of `items` of every model of `models`, `repeats` times, scores the answers against the right
-	 * answers and has them rated by each judge of `judges`, if any; the run is kept, as far as it came when stopped. The style `styleId` of Ask Pollis finds the
+	 * answers and has them rated by each judge of `judges`, if any; the run is kept, as far as it came when stopped. The strategy `strategyId` of Ask Pollis finds the
 	 * passages and asks the models, as the pane does; a question of the Panel FAQ is asked in its panel.
 	 */
-	async run(models: readonly ICompareRunModel[], judges: readonly ICompareRunModel[], repeats: number, items: readonly IAskPollisEvalItem[], styleId?: string): Promise<ICompareEnd> {
+	async run(models: readonly ICompareRunModel[], judges: readonly ICompareRunModel[], repeats: number, items: readonly IAskPollisEvalItem[], strategyId?: string): Promise<ICompareEnd> {
 		if (this.source) {
 			return { error: localize('compareModels.busy', "Wait for the run to end, or stop it.") };
 		}
@@ -313,11 +314,12 @@ export class CompareModelsRunner {
 
 		// The passages of each question, found once for every model: those found before with the same search stamp are
 		// taken again, so that the embedding model loads only for the others, and every run gets the same passages
-		const style = askPollisStyle(styleId);
+		await this.strategiesService.loaded;
+		const strategy = askPollisStrategy(strategyId, this.strategiesService.getStrategies());
 		const reranker = this.configurationService.getValue<string>('pollis.ask.reranker')?.trim();
 		const kept = this.configurationService.getValue<number>('pollis.ask.passages') || ASK_PASSAGES;
-		const requests = items.map(item => askStyleSearchRequest(style, { question: item.question, panel: item.panel }, kept, reranker));
-		const keys = requests.map(request => askStyleSearchKey(style, request));
+		const requests = items.map(item => askStrategySearchRequest(strategy, { question: item.question, panel: item.panel }, kept, reranker));
+		const keys = requests.map(request => askStrategySearchKey(strategy, request));
 		const stamp = await this.askPollisService.searchStamp();
 		const before = stamp ? await this.askPollisService.foundBefore(stamp.key, keys).catch(() => []) : [];
 		const reused = before.filter(passages => passages !== undefined).length;
@@ -352,14 +354,14 @@ export class CompareModelsRunner {
 		// The embedding model of the search is not needed again in the run: its memory goes to the models answering and judging
 		await this.askPollisService.stopSearchModel();
 
-		// The reranker of the style chooses among the passages found, kept as found, then stops too
-		if (askStyleReranks(style, reranker) && !token.isCancellationRequested) {
+		// The reranker of the strategy chooses among the passages found, kept as found, then stops too
+		if (askStrategyReranks(strategy, reranker) && !token.isCancellationRequested) {
 			for (const [position, question] of questions.entries()) {
 				if (token.isCancellationRequested) {
 					break;
 				}
 				this.report(localize('compareModels.reranking', "Reranking the passages of question {0} of {1}...", position + 1, questions.length), position, questions.length);
-				const reranked = await askStyleRerank(style, this.askPollisService, reranker, question.item.question, question.item.panel, { passages: question.passages, searched: [], collections: [] }, kept);
+				const reranked = await askStrategyRerank(strategy, this.askPollisService, reranker, question.item.question, question.item.panel, { passages: question.passages, searched: [], collections: [] }, kept);
 				questions[position] = { ...question, passages: reranked.result.passages };
 			}
 			await this.commandService.executeCommand('language-julia.pollisStopLlamaServer', { model: reranker, reranking: true, context: ASK_RERANK_CONTEXT }).catch(() => undefined);
@@ -389,7 +391,7 @@ export class CompareModelsRunner {
 						continue;
 					}
 					let text = '';
-					const answer = await this.askPollisService.answer([], question.item.question, question.passages, answered => text = answered, token, model.value, askStyleAnswerPanel(style, question.item.panel));
+					const answer = await this.askPollisService.answer([], question.item.question, question.passages, answered => text = answered, token, model.value, askStrategyAnswerPanel(strategy, question.item.panel));
 					if (token.isCancellationRequested) {
 						return;
 					}
@@ -488,7 +490,7 @@ export class CompareModelsRunner {
 				judges: judges.map(judge => judge.label),
 				repeats,
 				questions: questions.length,
-				style: style.id,
+				strategy: strategy.id,
 			},
 			questions: questions.map(question => ranks.has(question.index) ? { ...question, rank: ranks.get(question.index) } : question),
 			answers,
