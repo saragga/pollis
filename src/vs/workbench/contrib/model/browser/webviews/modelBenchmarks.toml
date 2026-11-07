@@ -80,4 +80,14 @@ key = "CKBCJ...2021a"
 key = "HBBZM...2021a"
 
 [[references]]
+key = "RRS2020a"
+
+[[references]]
 key = "WMZNC...2024a"
+
+[[references]]
+separator = true
+label = "Algorithm Details"
+
+[[references]]
+key = "Hon2013a"

@@ -20,12 +20,13 @@ MB.run_models!(run, ["hf:unsloth/Qwen3.5-0.8B-GGUF/Qwen3.5-0.8B-Q4_K_M.gguf"])
 MB.figures(run)
 ```
 
-A benchmark is downloaded once into `DATA/<benchmark>`: its questions, `questions.jsonl`, one question a line with
-its id, its stratum, the question, its choices and its right answer; its examples, `examples.jsonl`, the questions
-with worked answers that a prompt with examples shows first; and `info.json`, the number of questions of each
-stratum. A sample is drawn from the strata chosen, by proportional or equal allocation, with a seed, so that it can
-be drawn again. A run is kept in `RUNS`: `<id>.json`, the benchmark, the settings, the sample and the figures of each
-model, written as the model answers, and `<id>.jsonl`, each answer as it comes, with its grade and its timings.
+A benchmark is downloaded once into `DATA/<benchmark>`, at a fixed revision of its dataset: its questions,
+`questions.jsonl`, one question a line with its id, its stratum, the question, its choices and its right answer; its
+examples, `examples.jsonl`, the questions with worked answers that a prompt with examples shows first; and
+`info.json`, the revision and the number of questions of each stratum. A sample is drawn from the strata chosen, by
+proportional or equal allocation, with a seed, so that it can be drawn again. A run is kept in `RUNS`: `<id>.json`,
+the benchmark and its revision, the settings, the sample and the figures of each model, written as the model answers,
+and `<id>.jsonl`, each answer as it comes, with its grade and its timings.
 """
 module ModelBenchmarks
 
@@ -82,6 +83,8 @@ and how its answer is read and graded. `strata` names the column the questions a
 struct Benchmark
 	id::String
 	name::String
+	"""The revision of the dataset on Hugging Face its files are downloaded from, so that a later download gives the same questions."""
+	revision::String
 	questions::String
 	examples::String
 	strata::Union{Nothing, String}
@@ -95,6 +98,8 @@ struct Benchmark
 	grade::Function
 	"""The examples a prompt shows: those of the question's stratum, the first `shots`."""
 	examples_of::Function
+	"""The probability that an answer picked at random among the question's options is right, or nothing for a benchmark without options."""
+	chance::Union{Nothing, Function}
 end
 
 const LETTERS = collect("ABCDEFGHIJ")
@@ -179,29 +184,35 @@ function gsm8k_grade(extracted, answer)
 	given !== nothing && right !== nothing && abs(given - right) <= 1e-6 * max(1, abs(right))
 end
 
+# The revisions of the datasets on Hugging Face, fixed so that the questions do not change when a dataset is updated
+const MMLU_PRO_REVISION = "b189ec765aa7ed75c8acfea42df31fdae71f97be"
+const GSM8K_REVISION = "740312add88f781978c0658806c59bc2815b9866"
+
 """The benchmarks Model Benchmarks runs, by their id."""
 const BENCHMARKS = Dict(
 	"mmlu-pro" => Benchmark(
-		"mmlu-pro", "MMLU-Pro",
-		"https://huggingface.co/datasets/TIGER-Lab/MMLU-Pro/resolve/main/data/test-00000-of-00001.parquet",
-		"https://huggingface.co/datasets/TIGER-Lab/MMLU-Pro/resolve/main/data/validation-00000-of-00001.parquet",
+		"mmlu-pro", "MMLU-Pro", MMLU_PRO_REVISION,
+		"https://huggingface.co/datasets/TIGER-Lab/MMLU-Pro/resolve/$(MMLU_PRO_REVISION)/data/test-00000-of-00001.parquet",
+		"https://huggingface.co/datasets/TIGER-Lab/MMLU-Pro/resolve/$(MMLU_PRO_REVISION)/data/validation-00000-of-00001.parquet",
 		"category",
 		(row, index) -> mmlu_pro_row(row),
 		mmlu_pro_prompt,
 		mmlu_pro_extract,
 		(extracted, answer) -> extracted == answer,
 		(examples, question, shots) -> first(filter(example -> example.stratum == question.stratum, examples), shots),
+		question -> 1 / length(question.choices),
 	),
 	"gsm8k" => Benchmark(
-		"gsm8k", "GSM8K",
-		"https://huggingface.co/datasets/openai/gsm8k/resolve/main/main/test-00000-of-00001.parquet",
-		"https://huggingface.co/datasets/openai/gsm8k/resolve/main/main/train-00000-of-00001.parquet",
+		"gsm8k", "GSM8K", GSM8K_REVISION,
+		"https://huggingface.co/datasets/openai/gsm8k/resolve/$(GSM8K_REVISION)/main/test-00000-of-00001.parquet",
+		"https://huggingface.co/datasets/openai/gsm8k/resolve/$(GSM8K_REVISION)/main/train-00000-of-00001.parquet",
 		nothing,
 		gsm8k_row,
 		gsm8k_prompt,
 		gsm8k_extract,
 		gsm8k_grade,
 		(examples, question, shots) -> first(examples, shots),
+		nothing,
 	),
 )
 
@@ -244,15 +255,27 @@ function fetch_file(url, path)
 	mv(partial, path; force = true)
 end
 
+"""The revision of the dataset that the questions of `benchmark` on this computer come from, or "" when unknown."""
+function downloaded_revision(id)
+	path = joinpath(DATA, String(id), "info.json")
+	isfile(path) || return ""
+	String(get(JSON3.read(read(path, String)), :revision, ""))
+end
+
 """
     download(benchmark; progress = (done, total) -> nothing)
 
-Downloads the questions and examples of `benchmark` ("mmlu-pro", "gsm8k") into `DATA/<benchmark>`, once, and answers
-its `info`: the number of questions of each stratum.
+Downloads the questions and examples of `benchmark` ("mmlu-pro", "gsm8k") into `DATA/<benchmark>`, once, at the
+revision of the dataset that Model Benchmarks fixes, and answers its `info`: the revision and the number of questions
+of each stratum. Files of another revision are downloaded again.
 """
 function download(id; progress = (done, total) -> nothing)
 	benchmark = benchmark_of(id)
 	folder = joinpath(DATA, benchmark.id)
+	if downloaded_revision(benchmark.id) != benchmark.revision
+		rm(joinpath(folder, "questions.parquet"); force = true)
+		rm(joinpath(folder, "examples.parquet"); force = true)
+	end
 	progress(0, 3)
 	questions_file = fetch_file(benchmark.questions, joinpath(folder, "questions.parquet"))
 	progress(1, 3)
@@ -266,7 +289,7 @@ function download(id; progress = (done, total) -> nothing)
 	for question in questions
 		counts[question.stratum] = get(counts, question.stratum, 0) + 1
 	end
-	info = (; benchmark = benchmark.id, downloaded = string(now(UTC)), count = length(questions),
+	info = (; benchmark = benchmark.id, revision = benchmark.revision, downloaded = string(now(UTC)), count = length(questions),
 		strata = [(; name, count = counts[name]) for name in sort(collect(keys(counts)))])
 	write_json(joinpath(folder, "info.json"), info)
 	progress(3, 3)
@@ -364,15 +387,24 @@ end
 # A run
 # ---------------------------------------------------------------------------------------------
 
+"""The longest answer when a run asks for the answer alone, without thinking."""
+const ANSWER_ONLY_TOKENS = 32
+
 """
     new_run(benchmark, sample; shots = 0, reasoning = true, thinking = false, max_tokens = 2048, pollis = "")
 
 A run of `benchmark` on the questions of `sample` (from `draw`): with `shots` examples before each question, the
 answer worked step by step or given alone (`reasoning`), the model thinking first or not (`thinking`, for the
-models that do), at most `max_tokens` tokens an answer. Kept in `RUNS`; answers its id.
+models that do), at most `max_tokens` tokens an answer, or `ANSWER_ONLY_TOKENS` for the answer alone without
+thinking. Kept in `RUNS`; answers its id.
 """
 function new_run(id, sample; shots::Integer = 0, reasoning::Bool = true, thinking::Bool = false, max_tokens::Integer = 2048, pollis::AbstractString = "")
-	run = (; id = string(uuid4()), started = round(Int, time() * 1000), pollis = String(pollis), benchmark = benchmark_of(id).id,
+	benchmark = benchmark_of(id).id
+	# The answer alone, without thinking: room for the answer and a short sentence, so that an answer worked out
+	# against the instruction is cut off at once
+	reasoning || thinking || (max_tokens = ANSWER_ONLY_TOKENS)
+	run = (; id = string(uuid4()), started = round(Int, time() * 1000), pollis = String(pollis), benchmark,
+		revision = downloaded_revision(benchmark),
 		settings = (; shots, reasoning, thinking, maxTokens = max_tokens),
 		sample = (; sample.seed, sample.allocation, sample.size, sample.strata, questions = sample.ids),
 		models = [])
@@ -424,6 +456,22 @@ function available_memory()
 	Int(Sys.free_memory())
 end
 
+const MODEL_DOWNLOADER = Ref{Union{Nothing, Downloads.Downloader}}(nothing)
+
+"""
+The downloader of the requests to a model's server, made the first time: llama-server sends nothing until the answer is
+written, which can take minutes, so the 20 seconds without a byte after which Downloads gives up are lifted; the
+`timeout` of each answer still holds.
+"""
+function model_downloader()
+	if MODEL_DOWNLOADER[] === nothing
+		downloader = Downloads.Downloader()
+		downloader.easy_hook = (easy, info) -> Downloads.Curl.setopt(easy, Downloads.Curl.CURLOPT_LOW_SPEED_TIME, 0)
+		MODEL_DOWNLOADER[] = downloader
+	end
+	MODEL_DOWNLOADER[]
+end
+
 """
 One answer of the model at `url`, the OpenAI-compatible API of its llama-server: its text, why it ended, its tokens
 and its timings, as llama-server measures them; or the error.
@@ -433,7 +481,7 @@ function ask(url, prompt; max_tokens, timeout = 900)
 	output = IOBuffer()
 	started = time()
 	response = Downloads.request(rstrip(url, '/') * "/chat/completions"; method = "POST", input = IOBuffer(body), output,
-		headers = ["Content-Type" => "application/json"], timeout, throw = false)
+		headers = ["Content-Type" => "application/json"], timeout, throw = false, downloader = model_downloader())
 	seconds = time() - started
 	response isa Downloads.Response || return (; error = first(sprint(showerror, response), 300), seconds)
 	text = String(take!(output))
@@ -457,7 +505,7 @@ end
 
 Has the model `model` (its file or `hf:` value), whose llama-server is at `url`, answer the questions of the run
 `run`, one after the other, each answer written as it comes and graded; the model's figures are kept in the run
-every ten answers and at the end. The memory it takes is `free_before`, the memory free before its server started,
+after each answer and at the end. The memory it takes is `free_before`, the memory free before its server started,
 less the least memory free while it answers.
 """
 function run_model!(id, model, url; label = model, size = "", free_before = available_memory(), progress = (done, total, tokens) -> nothing)
@@ -490,10 +538,11 @@ function run_model!(id, model, url; label = model, size = "", free_before = avai
 					answer.seconds, answer.promptTokens, answer.writtenTokens, answer.promptMs, answer.readingSpeed, answer.writingSpeed, answer.tokenMs)
 			end
 			open(io -> (JSON3.write(io, record); println(io)), answers_file(id), "a")
+			# The figures kept after each answer, before it is reported, so that the page shows the run as it goes
+			save_model!(id, entry)
 			progress(done, length(questions), tokens)
 			# A server that stopped answering: the questions left are not asked
 			failures >= 3 && failures == done && break
-			done % 10 == 0 && save_model!(id, entry)
 		end
 	finally
 		close(watch)
@@ -580,15 +629,42 @@ function stratified_score(strata, right, asked)
 end
 
 """
+The probability that answers picked at random get at least `right` of the questions right, the answer to each
+question right with its own probability of `chances`: the upper tail of the Poisson binomial distribution (Hong, 2013),
+computed exactly by adding the questions one at a time.
+"""
+function chance_of_at_least(right, chances)
+	# distribution[k + 1]: the probability of k right answers among the questions added so far
+	distribution = [1.0]
+	for chance in chances
+		next = zeros(length(distribution) + 1)
+		next[1:end - 1] .+= (1 - chance) .* distribution
+		next[2:end] .+= chance .* distribution
+		distribution = next
+	end
+	right <= 0 ? 1.0 : min(1.0, sum(distribution[right + 1:end]; init = 0.0))
+end
+
+"""The chance of a random answer to each question of a benchmark, by question id, read once; nothing for a benchmark without options."""
+const CHANCES = Dict{String, Dict{String, Float64}}()
+function chances_of(id)
+	benchmark = benchmark_of(id)
+	benchmark.chance === nothing && return nothing
+	get!(() -> Dict(question.id => Float64(benchmark.chance(question)) for question in read_questions(benchmark.id)), CHANCES, benchmark.id)
+end
+
+"""
     figures(run)
 
 The figures of each model of the run `run`: its score with the half-width of its 95% interval, its score in each
-stratum, the questions answered, those whose answer could not be read and those cut off at the most tokens, the
-time to its first token, how fast it read and wrote, the seconds an answer took and the memory it took.
+stratum, the questions answered, the probability that answers picked at random would get as many right or more
+(`byChance`, nothing for a benchmark without options), those whose answer could not be read and those cut off at
+the most tokens, the time to its first token, how fast it read and wrote, the seconds an answer took and the memory it took.
 """
 function figures(id; run = load_run(id))
 	answers = load_answers(id)
 	strata = run[:sample][:strata]
+	chances = chances_of(run[:benchmark])
 	map(run[:models]) do model
 		mine = [answer for answer in answers if String(answer.model) == String(model[:value])]
 		answered = [answer for answer in mine if !haskey(answer, :error)]
@@ -600,12 +676,15 @@ function figures(id; run = load_run(id))
 			answer.correct && (right[stratum] = get(right, stratum, 0) + 1)
 		end
 		overall = stratified_score(strata, right, asked)
+		total = sum(values(right); init = 0)
+		# Answers that could not be read count as wrong, as in the score
+		by_chance = chances === nothing || isempty(answered) ? nothing : chance_of_at_least(total, [chances[String(answer.id)] for answer in answered])
 		numbers(key) = [Float64(answer[key]) for answer in answered if get(answer, key, nothing) isa Real]
 		first_token = [Float64(answer.promptMs) + something(get(answer, :tokenMs, nothing), 0.0) for answer in answered if get(answer, :promptMs, nothing) isa Real]
 		lowest = get(model, :lowestFree, nothing)
 		before = get(model, :freeBefore, nothing)
 		(; value = String(model[:value]), label = String(model[:label]), questions = length(answered), failed = length(mine) - length(answered),
-			score = overall.score, half = overall.half, right = sum(values(right); init = 0),
+			score = overall.score, half = overall.half, right = total, byChance = by_chance,
 			strata = [(; name = stratum.name, asked = get(asked, String(stratum.name), 0), right = get(right, String(stratum.name), 0)) for stratum in strata],
 			unread = count(answer -> answer.extracted === nothing, answered),
 			cutOff = count(answer -> get(answer, :finish, "") == "length", answered),
@@ -644,7 +723,9 @@ function main(task_file)
 			info = download(task.benchmark; progress = (done, total) -> say((; done, total)))
 			say((; info))
 		elseif task.task == "start"
-			sample = draw(task.benchmark; size = task.sample.size, strata = task.sample.strata === nothing ? nothing : String.(task.sample.strata),
+			# All the strata when the job names none: the page leaves them out when every stratum is ticked
+			strata = get(task.sample, :strata, nothing)
+			sample = draw(task.benchmark; size = task.sample.size, strata = strata === nothing ? nothing : String.(strata),
 				allocation = task.sample.allocation, seed = task.sample.seed)
 			id = new_run(task.benchmark, sample; shots = task.settings.shots, reasoning = task.settings.reasoning,
 				thinking = task.settings.thinking, max_tokens = task.settings.maxTokens, pollis = task.pollis)

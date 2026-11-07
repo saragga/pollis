@@ -148,6 +148,21 @@ export function parseToml(content: string): TomlValue {
 				continue;
 			}
 
+			// An array over several lines: the lines that follow, comments left out, until its brackets close
+			if (valueStart.startsWith('[') && openBrackets(valueStart) > 0) {
+				const parts = [valueStart];
+				i++;
+				while (i < lines.length && openBrackets(parts.join(' ')) > 0) {
+					const next = lines[i].trim();
+					if (next && !next.startsWith('#')) {
+						parts.push(next);
+					}
+					i++;
+				}
+				currentSection[key] = parseValue(parts.join(' '));
+				continue;
+			}
+
 			currentSection[key] = parseValue(valueStart);
 			i++;
 			continue;
@@ -157,6 +172,29 @@ export function parseToml(content: string): TomlValue {
 	}
 
 	return result;
+}
+
+/** How many of the brackets of `text` are still open, those inside strings not counted. */
+function openBrackets(text: string): number {
+	let open = 0;
+	let quote = '';
+	for (let index = 0; index < text.length; index++) {
+		const character = text[index];
+		if (quote) {
+			if (character === '\\' && quote === '"') {
+				index++;
+			} else if (character === quote) {
+				quote = '';
+			}
+		} else if (character === '"' || character === `'`) {
+			quote = character;
+		} else if (character === '[') {
+			open++;
+		} else if (character === ']') {
+			open--;
+		}
+	}
+	return open;
 }
 
 function parseValue(str: string): unknown {
@@ -215,22 +253,128 @@ function parseValue(str: string): unknown {
 	return str;
 }
 
-/** The questions of the `[[faq]]` table of a parsed panel TOML, those without a question or an answer left out. */
+/** The fewest and the most options of a hidden question of the FAQ, the right one among them. */
+export const FAQ_FEWEST_CHOICES = 4;
+export const FAQ_MOST_CHOICES = 10;
+/** The longest option of a hidden question, in characters. */
+const FAQ_LONGEST_CHOICE = 200;
+/** Options that do not choose: they let a model answer without knowing which option is right. */
+const FAQ_NOT_CHOOSING = /\b(?:all|none) of the (?:above|others)\b|\bboth [a-j] and [a-j]\b|\bneither [a-j] nor [a-j]\b/i;
+
+const faqText = (value: unknown) => typeof value === 'string' ? value.trim() : '';
+const faqList = (value: unknown) => Array.isArray(value) ? value.map(item => typeof item === 'string' ? item.trim() : '') : undefined;
+
+/**
+ * What is wrong with the `[[faq]]` entries of a parsed panel TOML, each named by its question: errors, which stop the
+ * build, and warnings. A shown entry has an answer and no options; a hidden one is a closed question, with its right
+ * option, `right`, from 3 to 9 wrong ones, `wrong`, and an optional `explanation`, and no answer.
+ */
+export function faqProblems(data: TomlValue): { readonly errors: string[]; readonly warnings: string[] } {
+	const errors: string[] = [];
+	const warnings: string[] = [];
+	const entries = Array.isArray(data.faq) ? data.faq as TomlValue[] : [];
+	for (const [index, entry] of entries.entries()) {
+		const question = faqText(entry.question);
+		const name = question ? `"${question}"` : `FAQ entry ${index + 1}`;
+		if (!question) {
+			errors.push(`${name} has no question`);
+		}
+		if (entry.hidden !== true) {
+			if (!faqText(entry.answer)) {
+				errors.push(`${name} is shown and has no answer`);
+			}
+			if (entry.right !== undefined || entry.wrong !== undefined) {
+				errors.push(`${name} is shown and has options: only a hidden question is closed`);
+			}
+			continue;
+		}
+		if (entry.answer !== undefined) {
+			errors.push(`${name} is hidden and has an answer: a hidden question has its options, right and wrong`);
+		}
+		const right = faqText(entry.right);
+		const wrong = faqList(entry.wrong);
+		if (!right || !wrong) {
+			errors.push(`${name} is hidden and has no ${!right ? 'right option' : 'wrong options'}`);
+			continue;
+		}
+		const choices = [right, ...wrong];
+		if (choices.length < FAQ_FEWEST_CHOICES || choices.length > FAQ_MOST_CHOICES) {
+			errors.push(`${name} has ${choices.length} options: from ${FAQ_FEWEST_CHOICES} to ${FAQ_MOST_CHOICES}, the right one among them`);
+		}
+		if (choices.some(choice => !choice)) {
+			errors.push(`${name} has an empty option`);
+		}
+		const normal = choices.map(choice => choice.toLowerCase().replace(/\s+/g, ' '));
+		if (new Set(normal).size < normal.length) {
+			errors.push(`${name} has the same option twice`);
+		}
+		for (const choice of choices.filter(choice => FAQ_NOT_CHOOSING.test(choice))) {
+			errors.push(`${name} has an option that does not choose: "${choice}"`);
+		}
+		for (const choice of choices.filter(choice => choice.length > FAQ_LONGEST_CHOICE)) {
+			errors.push(`${name} has an option longer than ${FAQ_LONGEST_CHOICE} characters: "${choice.slice(0, 40)}..."`);
+		}
+		if (entry.explanation !== undefined && typeof entry.explanation !== 'string') {
+			errors.push(`${name} has an explanation that is not text`);
+		}
+		// A right option much the longest is a clue that models learn
+		if (wrong.length && right.length > 1.5 * Math.max(...wrong.map(choice => choice.length))) {
+			warnings.push(`${name}: the right option is much the longest`);
+		}
+		if (!faqText(entry.explanation)) {
+			warnings.push(`${name} has no explanation`);
+		}
+	}
+	return { errors, warnings };
+}
+
+/**
+ * The questions of the `[[faq]]` table of a parsed panel TOML, those without a question or an answer left out: a
+ * hidden one with its right option as its answer and its wrong options.
+ */
 export function panelFaq(data: TomlValue): IModelFaq[] {
 	const entries = Array.isArray(data.faq) ? data.faq as TomlValue[] : [];
 	return entries.flatMap(entry => {
-		const question = typeof entry.question === 'string' ? entry.question.trim() : '';
-		const answer = typeof entry.answer === 'string' ? entry.answer.trim() : '';
-		if (!question || !answer) {
+		const question = faqText(entry.question);
+		const hidden = entry.hidden === true;
+		const answer = hidden ? faqText(entry.right) : faqText(entry.answer);
+		const wrong = hidden ? faqList(entry.wrong)?.filter(choice => choice) : undefined;
+		const explanation = hidden ? faqText(entry.explanation) : '';
+		if (!question || !answer || (hidden && !wrong?.length)) {
 			return [];
 		}
 		return [{
 			question,
 			answer,
 			...(typeof entry.wiki === 'string' && entry.wiki.trim() ? { wiki: entry.wiki.trim() } : {}),
-			...(entry.hidden === true ? { hidden: true } : {}),
+			...(hidden ? { hidden: true, wrong } : {}),
+			...(explanation ? { explanation } : {}),
 		}];
 	});
+}
+
+/**
+ * `choices` in an order of their own, the same each time for the same `question`: the options of a closed question,
+ * so that the right one is not where its author wrote it, and every run asks them in the same order.
+ */
+function shuffledChoices(choices: readonly string[], question: string): string[] {
+	// FNV-1a of the question seeds mulberry32, which draws the Fisher-Yates shuffle
+	let seed = 0x811c9dc5;
+	for (const character of question) {
+		seed = Math.imul(seed ^ character.codePointAt(0)!, 0x01000193);
+	}
+	const random = () => {
+		seed = (seed + 0x6d2b79f5) | 0;
+		let value = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+		value = (value + Math.imul(value ^ (value >>> 7), 61 | value)) ^ value;
+		return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
+	};
+	const shuffled = [...choices];
+	for (let index = shuffled.length - 1; index > 0; index--) {
+		const other = Math.floor(random() * (index + 1));
+		[shuffled[index], shuffled[other]] = [shuffled[other], shuffled[index]];
+	}
+	return shuffled;
 }
 
 /** A label or text of a panel as plain text: without its tags, its character references read. */
@@ -252,7 +396,7 @@ export function panelCard(data: IScaffoldPanelData): string {
 	if (models.length > 1) {
 		lines.push(`Its models, each a tab: ${models.join('; ')}.`);
 	}
-	const bullets = (data.bullets ?? []).map(bullet => `- ${plainText(bullet.text)}: ${plainText(bullet.detail)}`);
+	const bullets = (data.bullets ?? []).map(bullet => bullet.detail?.trim() ? `- ${plainText(bullet.text)}: ${plainText(bullet.detail)}` : `- ${plainText(bullet.text)}`);
 	if (bullets.length) {
 		lines.push('Its Key Points:', ...bullets);
 	}
@@ -272,13 +416,15 @@ export function panelCard(data: IScaffoldPanelData): string {
 }
 
 /**
- * The questions of the FAQ of a panel, the hidden ones too, as the Panel FAQ test set of Evaluate Answering Models
- * holds them: each asked in the panel `title`, with the file of the wiki that answers it when the panel bundles it.
+ * The hidden questions of the FAQ of a panel, closed questions, as the Panel FAQ test set of Evaluate Answering Models
+ * holds them: each asked in the panel `title` with its options in an order of their own, with the file of the wiki
+ * that answers it when the panel bundles it. The shown questions are for Learn More only: their answers are in view.
  */
 export function panelFaqItems(data: TomlValue, title: string): IModelFaqItem[] {
 	const panel = tomlToPanelData(data);
-	return panelFaq(data).map(entry => {
+	return panelFaq(data).filter(entry => entry.hidden && entry.wrong).map(entry => {
 		const wiki = entry.wiki ? panel.wikis.find(candidate => 'name' in candidate && candidate.name === entry.wiki) : undefined;
+		const choices = shuffledChoices([entry.answer, ...entry.wrong!], entry.question);
 		return {
 			source: `Panel FAQ, ${title}${entry.wiki ? `, ${entry.wiki}` : ''}`,
 			context: '',
@@ -286,7 +432,10 @@ export function panelFaqItems(data: TomlValue, title: string): IModelFaqItem[] {
 			answer: entry.answer,
 			panel: { title, packages: panel.packages.map(pkg => pkg.name), card: panelCard(panel) },
 			...(wiki && 'bundled' in wiki && wiki.bundled ? { wikiFile: wiki.file } : {}),
-			...(entry.hidden ? { hidden: true } : {}),
+			hidden: true,
+			choices,
+			rightChoice: choices.indexOf(entry.answer),
+			...(entry.explanation ? { explanation: entry.explanation } : {}),
 		};
 	});
 }
@@ -326,7 +475,7 @@ export function tomlToPanelData(data: TomlValue): IScaffoldPanelData {
 		['actionGroups', data.actionGroups],
 		['inputs', data.inputs],
 		// [[faq]]: the hidden questions are for the Panel FAQ test set only, never in the panel's data
-		['faq', panelFaq(data).filter(entry => !entry.hidden)],
+		['faq', panelFaq(data).filter(entry => !entry.hidden).map(({ question, answer, wiki }) => ({ question, answer, ...(wiki ? { wiki } : {}) }))],
 	];
 	for (const [key, value] of optional) {
 		if (Array.isArray(value) ? value.length : value) {

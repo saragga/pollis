@@ -521,25 +521,70 @@ Maximum likelihood is efficient when the errors are normal and the variance form
 """
 
 [[faq]]
-question = "Why does this tab stop with an error about fitted values reaching zero?"
+question = "Which variance forms can give zero or negative fitted variances for some rows, so that HARE.jl stops with an error?"
 wiki = "Assumptions"
 hidden = true
-answer = """
-The Linear and Quadratic forms can produce zero or negative fitted values for some rows, and no weight exists for such a row, so `HARE.jl` stops with an error that gives the number of rows. A value below 1e-6 of the mean fitted value counts as zero. It usually means a straight line is the wrong form; use Exponential, Power, or OLS with robust standard errors.
-"""
+right = "Linear and Quadratic"
+wrong = [
+  "Exponential and Power",
+  "Exponential and Linear",
+  "Power and Quadratic",
+  "Exponential only",
+]
+explanation = "No weight exists for a row with a zero or negative fitted value, which Linear and Quadratic can produce; Exponential and Power keep the fitted variance positive."
 
 [[faq]]
-question = "Can I use a dummy variable as a variance driver with the Power form?"
+question = "Which two p-values of Heteroskedasticity Tests always use X, whatever Variance drivers (Z) holds?"
+wiki = "Diagnostics"
+hidden = true
+right = "breusch_pagan_p and white_p"
+wrong = [
+  "harvey_p and glejser_p",
+  "harvey_p and white_p",
+  "glejser_p and breusch_pagan_p",
+  "breusch_pagan_p and harvey_p",
+  "white_p and glejser_p",
+]
+explanation = "Heteroskedasticity Tests reports four p-values on OLS residuals: harvey_p and glejser_p use Variance drivers (Z), while breusch_pagan_p and white_p always use X."
+
+[[faq]]
+question = "On the Power tab, at what value does HARE.jl clip abs(z) before taking its logarithm?"
 wiki = "Power"
 hidden = true
-answer = """
-No: Power takes logarithms of the absolute drivers, so every driver must be non-zero. A dummy or a value close to zero gets a very large negative logarithm and great leverage in the auxiliary regression, which gives meaningless exponents. The default drivers, `nothing`, use every regressor, so a dummy in X breaks this too. Use Exponential when the drivers contain zeros.
-"""
+right = "1e-10"
+wrong = [
+  "1e-6",
+  "1e-8",
+  "1e-12",
+  "1e-16",
+  "1",
+]
+explanation = "Inside HARE.jl, abs(z) is clipped at 1e-10 before the logarithm; the panel's helper variance(Z) has no such clip, so a driver equal to zero needs care there."
 
 [[faq]]
-question = "Are the prediction intervals of Predict at New Values too narrow?"
-wiki = "Interpretation"
+question = "Which search does exponential_mle use for the Exponential tab with Maximum likelihood?"
+wiki = "Exponential"
 hidden = true
-answer = """
-Yes. The interval is 1.96 times the fitted error standard deviation at the new drivers, around the prediction, and it ignores the uncertainty in beta and gamma, so it is too narrow, most of all far from the data. When Variance drivers (Z) was set, supply New variance drivers too.
-"""
+right = "A warm-started L-BFGS search"
+wrong = [
+  "A Newton-Raphson search from zero",
+  "A Nelder-Mead search from the OLS fit",
+  "Fisher scoring from a constant variance",
+  "A grid search over the slopes of z",
+  "The EM algorithm from a constant variance",
+]
+explanation = "The likelihood of the Exponential form is smooth, which suits the warm-started L-BFGS search of exponential_mle."
+
+[[faq]]
+question = "Where does the Decision Guide of Linear Models with Heteroskedasticity send time-ordered data with correlated errors?"
+wiki = "Decision Guide"
+hidden = true
+right = "To Linear Models with Heteroskedasticity + AR(1)"
+wrong = [
+  "To Compare with OLS, and its white_se",
+  "To the Power tab, with time as its driver",
+  "To Iterated FWLS on the Exponential tab",
+  "To a volatility model of the past shocks",
+  "To the Linear tab, with lagged residuals in Z",
+]
+explanation = "Time-ordered data with correlated errors belong in Linear Models with Heteroskedasticity + AR(1), where the variance form is exponential; a variance that depends on its own past calls for a volatility model."

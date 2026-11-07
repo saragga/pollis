@@ -12,7 +12,6 @@ import { DS_PANEL } from '../../model/browser/commands/ds.command.js';
 import { SO_PANEL } from '../../model/browser/commands/so.command.js';
 import { FO_PANEL } from '../../model/browser/commands/fo.command.js';
 import { QN_PANEL } from '../../model/browser/commands/qn.command.js';
-import { SGM_PANEL } from '../../model/browser/commands/sgm.command.js';
 import { FOM_PANEL } from '../../model/browser/commands/fom.command.js';
 import { CAM_PANEL } from '../../model/browser/commands/cam.command.js';
 import { NLLS_PANEL } from '../../model/browser/commands/nlls.command.js';
@@ -66,7 +65,6 @@ const SO_ID = 'chiara.optimise.so';
 const FO_ID = 'chiara.optimise.fo';
 const NLLS_ID = 'chiara.optimise.nlls';
 const QN_ID = 'chiara.optimise.qn';
-const SGM_ID = 'chiara.optimise.sgm';
 const FOM_ID = 'chiara.optimise.sgm.fom';
 const CAM_ID = 'chiara.optimise.sgm.cam';
 const DGO_ID = 'chiara.optimise.go.dg';
@@ -112,7 +110,6 @@ CommandsRegistry.registerCommand(FO_ID, accessor => openScaffoldWebview(accessor
 
 CommandsRegistry.registerCommand(QN_ID, accessor => openScaffoldWebview(accessor, QN_PANEL));
 
-CommandsRegistry.registerCommand(SGM_ID, accessor => openScaffoldWebview(accessor, SGM_PANEL));
 
 CommandsRegistry.registerCommand(FOM_ID, accessor => openScaffoldWebview(accessor, FOM_PANEL));
 
@@ -467,7 +464,7 @@ MenuRegistry.appendMenuItem(GBOSubmenuId, {
 
 MenuRegistry.appendMenuItem(SGMSubmenuId, {
 	group: '1_sgm',
-	command: { id: FOM_ID, title: localize('sgm.fom', 'First-Order Methods') },
+	command: { id: FOM_ID, title: localize('sgm.fom', 'Stochastic Gradient Methods') },
 	order: 1,
 });
 

@@ -604,3 +604,102 @@ D0 = nulldeviance(model)  # deviance of the intercept-only model
 println("Explained deviance: ", round(1 - D / D0; digits=3))
 println("McFadden pseudo R2: ", round(r2(model, :McFadden); digits=3))
 '''
+
+# ── FAQ: shown in Learn More, and the Panel FAQ test set of Evaluate Answering Models (hidden = true: the test set only) ──
+
+[[faq]]
+question = "Which family should I choose?"
+wiki = "Decision Guide"
+answer = """
+The kind of response picks the family group: Bernoulli for a 0/1 outcome, Binomial for successes out of n trials, Poisson or Negative Binomial for counts, Gamma or Inverse Gaussian for positive amounts, and Normal for an unrestricted continuous response with constant variance.
+
+For counts, fit the Poisson first and run the Overdispersion Check: above about 1.5, move to the Negative Binomial. For amounts, compare the Gamma and the Inverse Gaussian by the Information Criteria, and look at how the residual spread grows with the fitted values.
+"""
+
+[[faq]]
+question = "How do I read an odds ratio?"
+wiki = "Interpretation"
+answer = """
+With the logit link, exp(coefficient) multiplies the odds p / (1 - p) per unit of the covariate: 2 means the odds double, 0.5 that they halve. Coefficient Interpretation computes it for each covariate.
+
+An odds ratio is not a ratio of probabilities, and the two are close only when the outcome is rare. To report a change in probability points, use Marginal Effects, which averages the change over the observations.
+"""
+
+[[faq]]
+question = "Can I trust the standard errors of my Poisson model?"
+wiki = "Diagnostics"
+answer = """
+Only if the counts vary as much as the Poisson allows, with the variance equal to the mean. Counts usually vary more, and then the Poisson standard errors are too small. The Overdispersion Check divides the sum of squared Pearson residuals by the residual degrees of freedom: about 1 is fine, well above 1 is not.
+
+The remedies are the Negative Binomial, which estimates the extra dispersion, or robust (HC) standard errors, which change the uncertainty and not the estimates.
+"""
+
+[[faq]]
+question = "How does Marginal Effects of the Generalized Linear Models panel deal with an effect that depends on the other covariates?"
+wiki = "Interpretation"
+hidden = true
+right = "It averages the effect over the observations"
+wrong = [
+  "It sets the other covariates at their means",
+  "It sets the other covariates at their medians",
+  "It sets the other covariates at zero",
+  "It reports the effect at each observation, unaveraged",
+  "It reports the effect at the first observation",
+]
+explanation = "Marginal Effects gives the average change in the mean response per unit of one continuous covariate, on the response scale; it depends on where the other covariates are, so it is averaged over the observations."
+
+[[faq]]
+question = "Which model does the Likelihood Ratio Test of the Generalized Linear Models panel compare the fitted model with?"
+wiki = "Diagnostics"
+hidden = true
+right = "The intercept-only model"
+wrong = [
+  "The saturated model",
+  "The model without its last covariate",
+  "The Poisson model of the same covariates",
+  "The same model with the canonical link",
+  "The model with every pairwise interaction",
+]
+explanation = "The Likelihood Ratio Test compares the model with the intercept-only model: twice the gain in log-likelihood follows a chi-squared distribution with as many degrees of freedom as covariates."
+
+[[faq]]
+question = "How is the Confidence Band of the Generalized Linear Models panel built?"
+wiki = "Interpretation"
+hidden = true
+right = "On the link scale, then transformed back"
+wrong = [
+  "On the response scale, by the delta method",
+  "By a bootstrap of the observations",
+  "By simulation from the coefficients' distribution",
+  "On the response scale, from HC3 errors",
+  "By profile likelihood on the response scale",
+]
+explanation = "Predicted Mean and Confidence Band give the fitted mean, with its interval, for chosen covariate values; the interval is built on the link scale and transformed back, so it is not symmetric around the prediction."
+
+[[faq]]
+question = "Which core packages does the Generalized Linear Models panel use?"
+wiki = "Factsheet"
+hidden = true
+right = "GLM.jl and CovarianceMatrices.jl"
+wrong = [
+  "GLM.jl and Vcov.jl",
+  "GLM.jl and StatsModels.jl",
+  "Econometrics.jl and CovarianceMatrices.jl",
+  "GLM.jl and FixedEffectModels.jl",
+  "MixedModels.jl and CovarianceMatrices.jl",
+]
+explanation = "The core packages of the Generalized Linear Models panel are GLM.jl and CovarianceMatrices.jl."
+
+[[faq]]
+question = "How does the NegBin tab of the Generalized Linear Models panel set its dispersion parameter?"
+wiki = "Overview"
+hidden = true
+right = "It estimates it with the coefficients, as R's glm.nb does"
+wrong = [
+  "It fixes it at 1, as the Geometric tab does",
+  "It takes it from the Overdispersion Check, before the fit",
+  "It estimates it by moments from the Poisson residuals",
+  "It takes it from an input of the tab, set by the user",
+  "It searches a grid of values for the lowest AIC",
+]
+explanation = "The Negative Binomial adds a dispersion parameter, estimated with the coefficients as in R's glm.nb; the Geometric is the Negative Binomial with that parameter fixed at 1."

@@ -44,7 +44,7 @@ import { compareFigures } from './compareModelsRun.js';
 import { COMPARE_MODELS_STRATEGY_COMMAND_ID } from './compareModelsPage.js';
 import { compareCss, pageHelpersScript } from './compareShared.js';
 
-// Compose > Knowledge for Models > Answering Strategies, in the Minimal style of the scaffold: a table of the answering
+// Compose > Knowledge for AI Models > Ask Pollis Strategies, in the Minimal style of the scaffold: a table of the answering
 // strategies of Ask Pollis, Pollis' own and those of ~/.pollis/ask/strategies/, each with what it does in one sentence
 // and its score on the Panel FAQ in the latest run of Evaluate Answering Models with it, and Use in its row, which makes
 // it the strategy of Ask Pollis. A click on a strategy opens its details below the table: its steps, what it needs, its
@@ -221,7 +221,7 @@ function newId(label: string, taken: ReadonlySet<string>): string {
 	return id;
 }
 
-/** Opens the Answering Strategies page, or shows it again when it is open. */
+/** Opens the Ask Pollis Strategies page, or shows it again when it is open. */
 async function openAnsweringStrategiesPage(accessor: ServicesAccessor): Promise<void> {
 	const webviewWorkbenchService = accessor.get(IWebviewWorkbenchService);
 	const configurationService = accessor.get(IConfigurationService);
@@ -247,7 +247,7 @@ async function openAnsweringStrategiesPage(accessor: ServicesAccessor): Promise<
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
 		return;
 	}
-	const title = localize('answeringStrategies.title', "Answering Strategies");
+	const title = localize('answeringStrategies.title', "Ask Pollis Strategies");
 	const webviewInput = webviewWorkbenchService.openWebview(
 		{
 			title,
@@ -376,7 +376,7 @@ async function openAnsweringStrategiesPage(accessor: ServicesAccessor): Promise<
 			await readRuns();
 			sendState();
 		} catch (error) {
-			notificationService.error(localize('answeringStrategies.failed', "The Answering Strategies page could not be drawn: {0}", error instanceof Error ? error.message : String(error)));
+			notificationService.error(localize('answeringStrategies.failed', "The Ask Pollis Strategies page could not be drawn: {0}", error instanceof Error ? error.message : String(error)));
 		}
 	};
 	disposables.add(strategiesService.onDidChange(() => sendState()));
@@ -468,10 +468,10 @@ async function openAnsweringStrategiesPage(accessor: ServicesAccessor): Promise<
 			scoreLine(strategy),
 			...(base ? [scoreLine(base)] : []),
 			'',
-			'- [x] The strategy works in Ask Pollis, and passes the check of the Answering Strategies page.',
+			'- [x] The strategy works in Ask Pollis, and passes the check of the Ask Pollis Strategies page.',
 			'- [x] I may share this under AGPL-3.0, the license of this repository.',
 			'',
-			'Proposed from the Answering Strategies page of Pollis.',
+			'Proposed from the Ask Pollis Strategies page of Pollis.',
 		].join('\n');
 	};
 
@@ -630,7 +630,7 @@ async function openAnsweringStrategiesPage(accessor: ServicesAccessor): Promise<
 /** The page: its texts come from here, the strategies, problems and catalogue from the `state` message. */
 function pageHtml(): string {
 	const text = {
-		title: localize('answeringStrategies.title', "Answering Strategies"),
+		title: localize('answeringStrategies.title', "Ask Pollis Strategies"),
 		intro: localize('answeringStrategies.intro', "Ask Pollis answers a question in three steps: it searches the passages of the wikis and vignettes, may have a reranker choose among them, and asks the model. An answering strategy says how each step is done. Use in a row makes Ask Pollis answer with that strategy; a click on a strategy shows its steps, its latest runs and what can be done with it. Your own strategies are TOML files of {0} ({1}).", '<span class="yellow">~/.pollis/ask/strategies/</span>', `<button class="link" data-command="openFolder">${localize('answeringStrategies.openFolder', "Open Folder")}</button>`),
 		use: localize('answeringStrategies.use', "Use"),
 		evaluate: localize('answeringStrategies.evaluate', "Evaluate..."),
@@ -881,7 +881,7 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: ANSWERING_STRATEGIES_COMMAND_ID,
-			title: localize2('answeringStrategies.action', "Answering Strategies"),
+			title: localize2('answeringStrategies.action', "Ask Pollis Strategies"),
 			category: localize2('answeringStrategies.category', "Compose"),
 			f1: true,
 		});

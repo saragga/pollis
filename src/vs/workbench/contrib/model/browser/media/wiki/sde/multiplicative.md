@@ -38,7 +38,7 @@ Proportional noise brings heavy right tails, and sample moments over long horizo
 
 ## What to Compare the Multiplicative Noise Tab With
 
-Compare with **Stratonovich** on the same f and g to see the effect of the extra drift, 0.5 g dg/dX. Compare SRIW1 with EM at a small fixed step to judge discretisation error, using ensemble statistics and not single paths. For proportional shocks with sudden moves, the **Gaussian Jumps** tab of the Jump-Diffusion Processes panel adds log-normal jumps to the same structure.
+Compare with additive noise through **Additive vs Multiplicative Noise**, which runs both on one Brownian path with noise of the same size at X0. Compare SRIW1 with EM at a small fixed step to judge discretisation error, using ensemble statistics and not single paths. For proportional shocks with sudden moves, the **Gaussian Jumps** tab of the Jump-Diffusion Processes panel adds log-normal jumps to the same structure.
 
 ## References
 
@@ -52,4 +52,4 @@ Compare with **Stratonovich** on the same f and g to see the effect of the extra
 
 ## See Also
 
-- [Factsheet](factsheet.md) · [Additive](additive.md) · [Stratonovich](stratonovich.md) · [Interpretation](interpretation.md)
+- [Factsheet](factsheet.md) · [Additive](additive.md) · [Interpretation](interpretation.md)

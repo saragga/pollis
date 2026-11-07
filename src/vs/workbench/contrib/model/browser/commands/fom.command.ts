@@ -10,7 +10,7 @@ import { getFomHtml } from '../webviews/fom.template.js';
 export const FOM_PANEL: IScaffoldPanel = {
 	id: 'fom',
 	viewType: 'pollis.fom',
-	title: 'First-Order Methods',
+	title: 'Stochastic Gradient Methods',
 	data: FOM_METADATA.fom,
 	html: getFomHtml,
 };

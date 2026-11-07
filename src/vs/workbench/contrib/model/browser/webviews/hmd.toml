@@ -621,25 +621,71 @@ They are too small. Every method in the panel fills each gap with one value, and
 """
 
 [[faq]]
-question = "Why are there still missing values at the start of the series after this?"
+question = "What share of the observed values does Holdout Evaluation hide in the Handle Missing Data panel?"
+wiki = "Diagnostics"
+hidden = true
+right = "20%"
+wrong = [
+  "5%",
+  "10%",
+  "25%",
+  "33%",
+  "50%",
+]
+explanation = "Holdout Evaluation hides 20% of the observed values, fills them with the chosen method, and reports the RMSE against the hidden truth, next to the column's standard deviation."
+
+[[faq]]
+question = "What does the Chain Fill action of the Handle Missing Data panel run?"
+wiki = "LOCF / NOCB"
+hidden = true
+right = "Impute.locf, then Impute.nocb"
+wrong = [
+  "Impute.nocb, then Impute.locf",
+  "Impute.interp, then Impute.locf",
+  "Impute.interp, then Impute.nocb",
+  "Impute.substitute with the median",
+  "Impute.svd at rank 2",
+]
+explanation = "LOCF cannot fill leading gaps and NOCB cannot fill trailing ones; Chain Fill closes both ends with Impute.locf(tbl) |> Impute.nocb."
+
+[[faq]]
+question = "Which action of the Handle Missing Data panel reports the number of complete rows, to run before Drop?"
+wiki = "Drop"
+hidden = true
+right = "Missing Summary"
+wrong = [
+  "Missing Count Plot",
+  "Missing Heatmap",
+  "MCAR Check",
+  "Distribution Shift",
+  "Method Comparison",
+]
+explanation = "Losses compound across columns, so run Missing Summary first: it reports the number of complete rows."
+
+[[faq]]
+question = "Where does the Interpolate wiki of the Handle Missing Data panel send curved interpolation, or irregularly spaced times?"
 wiki = "Interpolate"
 hidden = true
-answer = """
-Interpolate cannot fill leading or trailing gaps, since there is nothing to interpolate towards before the first observed value or after the last one. LOCF cannot fill leading gaps and NOCB cannot fill trailing ones. The Chain Fill action closes both ends with `Impute.locf` followed by `Impute.nocb`.
-"""
+right = "To the Interpolate Data panel"
+wrong = [
+  "To the SVD tab, at a higher rank",
+  "To the LOCF / NOCB tab",
+  "To Impute.interp with a time argument",
+  "To the Substitute tab, with the median",
+  "To the Time Series Forecasting panel",
+]
+explanation = "Interpolate fills each gap with a straight line between the neighbouring observed values; for curved interpolation, or irregularly spaced times, see the Interpolate Data panel."
 
 [[faq]]
-question = "Why did the correlations get weaker after filling the gaps with the mean?"
-wiki = "Substitute"
-hidden = true
-answer = """
-Substitute writes the same value, the column's mean, into every gap, and those values do not move with the other columns, so correlations weaken and the variance shrinks; Distribution Shift shows a spike at the mean. When relations between variables are the point of the analysis, prefer SVD, which uses the relations between columns, or Interpolate for time series.
-"""
-
-[[faq]]
-question = "How do I choose the rank for SVD?"
+question = "Which action does the SVD wiki of the Handle Missing Data panel use to choose the rank?"
 wiki = "SVD"
 hidden = true
-answer = """
-The rank is the number of underlying patterns assumed to drive the columns, and it must be smaller than the number of columns. Low ranks, 1 to 3, give smooth, conservative fills; higher ranks follow the data more closely but can overfit the noise. Run Holdout Evaluation at a few ranks and keep the one with the lowest RMSE.
-"""
+right = "Holdout Evaluation, at a few ranks"
+wrong = [
+  "Method Comparison, at a few ranks",
+  "Sensitivity Analysis, at a few ranks",
+  "Distribution Shift, at a few ranks",
+  "MCAR Check, before the fit",
+  "Missing Summary, before the fit",
+]
+explanation = "Low ranks (1 to 3) give smooth, conservative fills and higher ranks can overfit the noise; use Holdout Evaluation at a few ranks and keep the one with the lowest RMSE."

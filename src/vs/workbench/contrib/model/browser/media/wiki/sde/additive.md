@@ -44,4 +44,4 @@ Run the same drift in **Multiplicative Noise** with a proportional **Diffusion g
 
 ## See Also
 
-- [Factsheet](factsheet.md) · [Multiplicative](multiplicative.md) · [Stratonovich](stratonovich.md) · [Diagnostics](diagnostics.md)
+- [Factsheet](factsheet.md) · [Multiplicative](multiplicative.md) · [Diagnostics](diagnostics.md)

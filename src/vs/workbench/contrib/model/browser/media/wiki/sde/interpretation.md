@@ -18,10 +18,6 @@ For f = a X and g = b X in the Itô sense, E[X(t)] = X0 exp(a t), while the medi
 
 Strong order describes how fast E|X(T) - X_h(T)| falls with the step h, so it concerns following a particular Brownian path. Weak order describes how fast errors in expectations such as E[X(T)^2] fall, so it concerns the law only. Orders are rates, not accuracies, and a high-order solver can lose to EM at a coarse step. For statistics over many paths, weak order is the one that counts, and pathwise work such as filtering or sensitivity along a path needs strong order.
 
-## How to Read the Difference Between Itô and Stratonovich
-
-The two calculi are linked by a drift term: a Stratonovich equation with drift f equals an Itô equation with drift f + 0.5 g dg/dX. For g = b X the term is 0.5 b^2 X, so the Stratonovich mean grows at a + b^2/2 where the Itô mean grows at a. Neither answer is more accurate than the other, since they solve different models. The term vanishes for constant g, which makes the choice irrelevant under **Additive Noise**.
-
 ## What the Histogram in Stationary Distribution Means
 
 The histogram pools states along one long path, so it estimates a long-run law only if the process forgets its start and the run far exceeds the correlation time. Neighbouring points are strongly dependent, so the effective sample is smaller than the count of points. Under g = b X and f = a X, the state heads to zero or to infinity, apart from the boundary case a = b^2/2 in the Itô form, so the plot shows only where this path has been.

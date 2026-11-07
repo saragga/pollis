@@ -225,7 +225,7 @@ function pageHtml(): string {
 		agentsHint: localize('modelRouting.agentsHint', "Agents of your own are added in"),
 		agentsLink: localize('modelRouting.agentsLink', "Compose > Coding Agents"),
 		localHint: localize('modelRouting.localHint', "The local models are the chat models of"),
-		localLink: localize('modelRouting.localLink', "Compose > Local Models > Set Active Models"),
+		localLink: localize('modelRouting.localLink', "Compose > Local AI Models > Set Active Models"),
 		cloudHint: localize('modelRouting.cloudHint', "The cloud models, and the arguments that choose each in each agent, are a setting:"),
 		cloudLink: localize('modelRouting.cloudLink', "Edit Cloud Models"),
 		tasksTitle: localize('modelRouting.tasksTitle', "Tasks"),

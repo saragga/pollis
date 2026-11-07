@@ -526,25 +526,71 @@ Also keep entities off both sides of the split when new entities are the target,
 """
 
 [[faq]]
-question = "Can I report the spread of the fold scores here as a standard error?"
-wiki = "Interpretation"
+question = "How many strategies does the Cross-Validation Strategies panel offer, and in how many families?"
+wiki = "Factsheet"
 hidden = true
-answer = """
-No. The folds share most of their training data, so their scores are correlated, and the naive standard error, the standard deviation of the fold scores over the square root of k, is optimistic. The spread shows how much the score depends on the partition; repeating the cross-validation with other seeds shows the sensitivity to the partition, but does not make the folds independent.
-"""
+right = "24, in four families"
+wrong = [
+  "12, in three families",
+  "18, in four families",
+  "24, in three families",
+  "30, in five families",
+  "16, in two families",
+]
+explanation = "The panel offers 24 strategies of DataSplits.jl, in four families: cross-validation and resampling, distance-based, group-aware and time-series."
 
 [[faq]]
-question = "Is the test score of the Kennard-Stone split an estimate of how my model will perform?"
-wiki = "Distance-Based"
+question = "How many repeats does RepeatedKFold run in the Cross-Validation Strategies panel?"
+wiki = "Cross-Validation"
 hidden = true
-answer = """
-No. Kennard-Stone and the other distance-based strategies put the extreme and isolated observations in the training set and leave the test set inside the region it covers, so the test set is not a random sample. Studies comparing it with large blind test sets have found its score pessimistic with small training sets and optimistic with large ones. To estimate performance, hold out evaluation data first, then apply the selection to the training part only.
-"""
+right = "3"
+wrong = [
+  "2",
+  "5",
+  "10",
+  "20",
+  "As many as k",
+]
+explanation = "RepeatedKFold runs k-fold several times with different shuffles, and the panel uses 3 repeats, giving k times 3 folds."
 
 [[faq]]
-question = "I tuned the hyperparameters with these folds: is the CV score still unbiased?"
-wiki = "Interpretation"
+question = "What does Class Balance show for each training and test fold of the Cross-Validation Strategies panel?"
+wiki = "Diagnostics"
 hidden = true
-answer = """
-No: scores used to tune a model are optimistic. Use nested cross-validation, where an inner cross-validation on each outer training set chooses the hyperparameters and the outer folds estimate the error of the whole procedure, tuning included; or keep an untouched test set. The inner scores choose; only the outer scores estimate.
-"""
+right = "The share of rows with the response above its median"
+wrong = [
+  "The share of rows in each class of a categorical response",
+  "The mean and the standard deviation of the response",
+  "The ratio of the largest class to the smallest",
+  "The share of rows with a missing response",
+  "The share of rows with the response above its mean",
+]
+explanation = "Class Balance shows the share of rows with the response above its median in each training and test fold; shares that vary a lot across folds mean the folds see different parts of the response distribution."
+
+[[faq]]
+question = "How many time steps does PurgedKFold purge and embargo in the Cross-Validation Strategies panel?"
+wiki = "Time-Series"
+hidden = true
+right = "Two"
+wrong = [
+  "One",
+  "Five",
+  "Ten",
+  "As many as the test block",
+  "None by default",
+]
+explanation = "The panel purges and embargoes two time steps; the sizes are to be chosen from the length of the overlapping windows, never to improve the score."
+
+[[faq]]
+question = "Which model does the Cross-Validation Strategies panel fit and score on every fold?"
+wiki = "Overview"
+hidden = true
+right = "A least-squares model, a placeholder for your own"
+wrong = [
+  "A ridge regression, its penalty tuned in each fold",
+  "A random forest of 100 trees, with default settings",
+  "A k-nearest-neighbour regression with five neighbours",
+  "A lasso regression, its penalty chosen by NestedCV",
+  "A gradient-boosted tree model from EvoTrees.jl",
+]
+explanation = "The panel runs a least-squares model on every fold, a placeholder to replace with your own, and reports the mean and spread of the test RMSE."

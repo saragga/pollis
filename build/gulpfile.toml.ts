@@ -9,7 +9,7 @@ import { fileURLToPath } from 'url';
 import gulp from 'gulp';
 import { generateTypeScriptFromToml } from './lib/toml-to-ts.ts';
 import { generatePollisBib, panelCommands, readReferencesDatabase, refreshReferenceCopies, REFERENCES_FOLDER } from './lib/pollis-bib.ts';
-import { panelFaq, panelFaqItems, parseToml, tomlToPanelData } from '../src/vs/workbench/contrib/model/browser/common/tomlPanelData.ts';
+import { faqProblems, panelFaq, panelFaqItems, parseToml, tomlToPanelData } from '../src/vs/workbench/contrib/model/browser/common/tomlPanelData.ts';
 import { pinnedPackageFile } from './lib/pollis-packages.ts';
 import * as task from './lib/task.ts';
 
@@ -99,7 +99,7 @@ export const compileTomlTask = task.define('compile-toml', async () => {
 	const stubs = panels.reduce((count, panel) => count + panel.wikis.filter(wiki => wiki.stub).length, 0);
 	console.log(`[toml] Generated panelWikis.data.ts: ${panels.length} panels, ${stubs} wikis not written yet`);
 
-	// The Panel FAQ test set of Evaluate Answering Models: the FAQ of every panel, the hidden questions with the shown
+	// The Panel FAQ test set of Evaluate Answering Models: the hidden questions of the FAQ of every panel, closed questions
 	const faqItems = tomlFiles.flatMap(file => {
 		const data = parseToml(fs.readFileSync(path.join(tomlOutDir, file), 'utf-8'));
 		const title = typeof (data.meta as { title?: unknown } | undefined)?.title === 'string' ? (data.meta as { title: string }).title : file.replace(/\.toml$/, '');
@@ -108,10 +108,17 @@ export const compileTomlTask = task.define('compile-toml', async () => {
 		if (unknownWikis.length) {
 			throw new Error(`[toml] ${file}: the FAQ names wikis the panel does not have: ${unknownWikis.map(entry => entry.wiki).join(', ')}`);
 		}
+		const problems = faqProblems(data);
+		for (const warning of problems.warnings) {
+			console.warn(`[toml] ${file}: ${warning}`);
+		}
+		if (problems.errors.length) {
+			throw new Error(`[toml] ${file}: the FAQ breaks its rules:\n${problems.errors.map(error => `  - ${error}`).join('\n')}`);
+		}
 		return panelFaqItems(data, title);
 	});
 	writeIfChanged(panelFaqPath, JSON.stringify(faqItems, null, 1) + '\n');
-	console.log(`[toml] Generated panelFaq.json: ${faqItems.length} questions, ${faqItems.filter(item => item.hidden).length} of them hidden`);
+	console.log(`[toml] Generated panelFaq.json: ${faqItems.length} closed questions`);
 
 	// The citations the Compose notebooks and the shipped methods keep for Pollis to read
 	for (const file of refreshReferenceCopies(repoRoot, database.references)) {

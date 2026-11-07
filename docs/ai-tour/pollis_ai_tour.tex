@@ -271,7 +271,7 @@ lets you make that choice once for each task.
 % =====================================================================
 % PAGES 4–5 — LOCAL MODELS
 % =====================================================================
-\topic{Local Models}{Compose > Local Models > Set Active Models}{Language models that run on your own computer, and the runner that runs them.}
+\topic{Local Models}{Compose > Local AI Models > Set Active Models}{Language models that run on your own computer, and the runner that runs them.}
 
 \subhead{Why a runner is needed}
 A downloaded model is a large file of numbers; on its own, it does nothing. A \emph{runner} is a program
@@ -294,7 +294,7 @@ or a task needs a local model, and stops it when Pollis quits.
 
 \newpage
 \subhead{Getting a model}
-\ui{Compose > Local Models} has \ui{Get Models from Hugging Face} and \ui{Get Models from Kaggle}, to find
+\ui{Compose > Local AI Models} has \ui{Get Models from Hugging Face} and \ui{Get Models from Kaggle}, to find
 models and download them, and \ui{Set Active Models}, the local models on this computer: those Pollis
 downloaded and those in the Hugging Face cache. For each, it shows:
 \begin{itemize}
@@ -313,7 +313,7 @@ computer's memory, with room to spare for the conversation.
 
 \subhead{Example: a coding agent on a local model}
 \begin{enumerate}[label=\arabic*.]
-  \item Get a chat model: \ui{Compose > Local Models > Get Models from Hugging Face}.
+  \item Get a chat model: \ui{Compose > Local AI Models > Get Models from Hugging Face}.
   \item In \ui{Compose > Orchestration > Model Tasks and Routing}, type \ui{Light} in the cell of
     Claude Code, Codex or OpenCode on that model's row.
   \item Start a Light task, such as \ui{Polish with Agent} on a report. The agent
@@ -775,7 +775,7 @@ Claude or GPT, can write the answers instead, with your own key; the passages ar
 \newpage
 \subhead{Evaluate Answering Models}
 Which chat model should answer? A small one is quicker, a larger one better, a cloud one better still, at a price.
-\ui{Evaluate Answering Models}, on the Ask Pollis page and in \ui{Compose > Local Models}, answers with figures, for the models you choose: Qwen3.5 0.8B, 4B and 9B
+\ui{Evaluate Answering Models}, on the Ask Pollis page and in \ui{Compose > Local AI Models}, answers with figures, for the models you choose: Qwen3.5 0.8B, 4B and 9B
 on your computer, say, against Claude Sonnet. Every model is given the same questions, the same passages and the same
 instruction, so that only the model differs, and the local models run one at a time.
 \begin{pairs}[0.24]
@@ -783,17 +783,46 @@ The questions & a test set. The Standard one comes with Pollis, 100 questions re
   documents, 40 on the panel wikis, 20 on the Julia Manual; a newer Pollis may update it. Or one of yours, a copy of
   another with \ui{Save As...} or a new one with \ui{New Set...}, to which a model adds questions made from the
   documents, the default model unless you choose another, one for each passage, as many of each topic (Pollis, Julia Language, Topic Panels) as you give, with the answer; or you add
-  your own, on the page or from Ask Pollis with \ui{Add to the Test Set...}.\\
-The figures & for each model, the mean score, its five parts, the answers not scored, the seconds and the tokens per
-  answer. Every run is kept, to set beside a later one.\\
-The answers & a click on a question of the run shows each model's answer side by side, with its sources, seconds and ratings.\\
+  your own, on the page or from Ask Pollis with \ui{Add to the Test Set...}. The Panel FAQ comes with Pollis too: the
+  closed questions of the FAQ of its panels, 5 from each of 20, which Learn More does not show, each with 4 to 10
+  options, the right one among them, and asked in its panel.\\
+The passages & \ui{Found in the Library}: an answering strategy of Ask Pollis, chosen in \ui{Strategy}, finds them in
+  the documents as Ask Pollis does, which tests the search and the answer together (open library answering). \ui{The
+  Question's Own Passage}: each model is given the passage the question was made from, or the wiki of a question of
+  the Panel FAQ, with no search, which tests the answer alone (open book answering). \ui{None}: each model is given
+  no passage and answers from what it learned in training alone (closed book answering), which shows the questions a
+  model answers without the documents.\\
+The figures & for each model, the answer score, the rating of each judge, the answers not scored, the seconds and the
+  tokens per answer, and how often the right passage was found; for the closed questions, the right answers, those that chose the right option, and the probability of
+  as many by guessing. Every run is kept, to set beside a later one.\\
+The answers & a click on a question of the run shows each model's answer side by side, with its sources, seconds,
+  answer score and ratings; for a closed question, its options, the option each model chose and, when the author wrote one, why the
+  right option is right.\\
 \end{pairs}
 
+\subhead{Open and closed questions}
+A panel's FAQ has two kinds of question. The \emph{open} ones are for you: Learn More shows them, each answered in a
+few sentences, with a link to the wiki that says more. The \emph{closed} ones are for the models: only Evaluate
+Answering Models asks them, and Ask Pollis never reads them, so no answer can be copied from them. Each gives the
+model its options and needs no judge: the answer is right or wrong by the option it chooses, and the probability
+of as many right answers by guessing shows how far the score is above luck. The options come in an order fixed by
+the question, and a build of Pollis checks each one: 4 to 10 options, none the same as another, none such as
+``All of the above''.
+\begin{note}{A test set has an author}
+The closed questions of the Panel FAQ were written with Claude from the panel wikis. Like a judge, a test set may
+favour the family of the model that wrote it: read Claude's scores on it beside those of other families with care. A
+run with \ui{Passages} set to \ui{None} shows the questions that models answer right without the wikis, which test
+what they learned rather than what the panels say.
+\end{note}
+
 \subhead{The judge}
-A \emph{judge} is a model that reads a question, the passages and an answer, and rates the answer from 1 to 5: how
-relevant, complete, clear and helpful it is, and how consistent with the passages. Pollis judges with RAGTools.jl,
-the same package as the Q\&A of LLM Text Analysis. The judge is the default model unless you choose another, and can be any chat model;
-a small local model judges poorly.
+Two scores need no judge: how often the right passage was among those found, and the \emph{answer score}, how
+near an answer is in meaning to the right answer of the test set, the cosine similarity of the two by the
+embedding model of the search, from $-1$ to 1. A \emph{judge} is a model that reads a question, its right answer and
+an answer, and rates the answer from 1 to 5 by how well it agrees with the right answer: 5 when it gives the facts of
+the right answer and nothing that contradicts it, 1 when it is wrong or unrelated. The judge does not see the
+passages. Pollis asks the judge with PromptingTools.jl, by an instruction of its own; \ui{Make Questions...} writes questions with RAGTools.jl, the same package as the Q\&A of LLM Text Analysis. \ui{Judge} is \ui{None}
+unless you choose a model, which can be any chat model; a small local model judges poorly.
 \begin{note}{A judge has a family}
 A judge may favour the answers of its own family: Claude those of Claude. A run can be scored by two judges, such as
 Claude Sonnet and GPT-5.5, side by side; where they agree, the figures can be trusted more.
@@ -801,7 +830,7 @@ Claude Sonnet and GPT-5.5, side by side; where they agree, the figures can be tr
 
 \subhead{The search, measured too}
 For a question made from a passage, the run checks whether that passage was among the eight found. That depends on
-the embedding model, not on the chat model: \ui{Evaluate Embedding Models}, in \ui{Compose > Local Models}, compares
+the embedding model, not on the chat model: \ui{Evaluate Embedding Models}, in \ui{Compose > Knowledge for AI Models}, compares
 the embedding models on your computer on the same test sets, how often and where each finds the passage, how fast,
 and in how much memory; \ui{Use for Ask Pollis} makes the one you choose the one Ask Pollis uses.
 

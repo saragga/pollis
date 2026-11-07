@@ -43,7 +43,10 @@ function panelModels(data: IScaffoldPanelData): IModelToggle[] {
 
 function buildBulletsHtml(data: IScaffoldPanelData): string {
 	if (!data.bullets?.length) { return ''; }
-	return '\n' + data.bullets.map(b => `\t\t\t\t\t<li><strong>${htmlEsc(b.text)}</strong> &#8212; ${b.detail}</li>`).join('\n') + '\n\t\t\t\t';
+	// A Key Point without a detail is a sentence of its own: plain text, no dash.
+	return '\n' + data.bullets.map(b => b.detail?.trim()
+		? `\t\t\t\t\t<li><strong>${htmlEsc(b.text)}</strong> &#8212; ${b.detail}</li>`
+		: `\t\t\t\t\t<li>${htmlEsc(b.text)}</li>`).join('\n') + '\n\t\t\t\t';
 }
 
 function buildDecisionRowsHtml(data: IScaffoldPanelData): string {

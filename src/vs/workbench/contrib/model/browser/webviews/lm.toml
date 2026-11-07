@@ -486,3 +486,102 @@ X = modelmatrix(model)[:, 2:end];  # predictors without the intercept
 beta_std = coef(model)[2:end] .* vec(std(X; dims=1)) ./ std(response(model));  # standardised effects
 println(beta_std)
 '''
+
+# ── FAQ: shown in Learn More, and the Panel FAQ test set of Evaluate Answering Models (hidden = true: the test set only) ──
+
+[[faq]]
+question = "Which standard errors should I use?"
+wiki = "Decision Guide"
+answer = """
+The ones that match how the errors depart from independence and constant variance. For independent observations use HC standard errors, HC3 in small samples or HC1 to match Stata's robust: they cost little when the variance is constant. For a time series use HAC, and check that the kernels agree; for grouped observations cluster at the level at which the errors may be correlated, as long as there are enough clusters; for a panel with shocks that hit all entities at once use Driscoll-Kraay.
+
+The comparisons of the panel help: HC Variants, HAC Kernels, Clustering Effect and Cross-Sectional Dependence show how much the standard errors change from one estimator to the next.
+"""
+
+[[faq]]
+question = "Do robust standard errors fix a biased coefficient?"
+wiki = "Assumptions"
+answer = """
+No. Robust standard errors fix the inference, not the estimates. If an omitted variable is correlated with the predictors, if the causation runs the other way, or if the predictors are measured with error, OLS is biased, and no choice of standard errors repairs this.
+
+Check the mean first: a curve in Residuals vs Fitted means the mean is not linear in the predictors, and needs a transformed predictor or another term.
+"""
+
+[[faq]]
+question = "My R-squared is low: are the coefficients useless?"
+wiki = "Interpretation"
+answer = """
+No. A low R-squared says the predictors explain a small share of the variance of y, not that the coefficients are wrong; a high one does not prove the model is right either. R-squared always rises when a predictor is added, which adjusted R-squared penalises.
+
+What decides whether a coefficient can be trusted is whether its predictor is exogenous and its standard errors match the errors of the data.
+"""
+
+[[faq]]
+question = "Which three core packages does the Linear Regression panel use?"
+wiki = "Factsheet"
+hidden = true
+right = "GLM.jl, Regress.jl and CovarianceMatrices.jl"
+wrong = [
+  "GLM.jl, FixedEffectModels.jl and Vcov.jl",
+  "GLM.jl, StatsModels.jl and RegressionTables.jl",
+  "Regress.jl, Econometrics.jl and Vcov.jl",
+  "FixedEffectModels.jl, CovarianceMatrices.jl and HypothesisTests.jl",
+  "GLM.jl, MixedModels.jl and CovarianceMatrices.jl",
+]
+explanation = "The core packages of the Linear Regression panel are GLM.jl, Regress.jl and CovarianceMatrices.jl."
+
+[[faq]]
+question = "Which kernels does the Decision Guide of the Linear Regression panel give for the HAC model?"
+wiki = "Decision Guide"
+hidden = true
+right = "Bartlett (Newey-West), Parzen and Andrews quadratic spectral"
+wrong = [
+  "Bartlett (Newey-West), Tukey-Hanning and truncated",
+  "Parzen, Daniell and Andrews quadratic spectral",
+  "Bartlett (Newey-West), Parzen and Gaussian",
+  "Truncated, Bartlett (Newey-West) and Epanechnikov",
+  "Andrews quadratic spectral, Daniell and Tukey-Hanning",
+]
+explanation = "For time series with autocorrelated errors, the HAC model offers Newey-West (Bartlett kernel), Parzen and Andrews quadratic spectral; the three should roughly agree."
+
+[[faq]]
+question = "Which cluster-robust estimator does the Clustered model of the Linear Regression panel use?"
+wiki = "Decision Guide"
+hidden = true
+right = "CR1, by the cluster identifier"
+wrong = [
+  "CR0, by the cluster identifier",
+  "CR2, with the Bell-McCaffrey correction",
+  "CR3, the jackknife of the clusters",
+  "HC1, with clusters as the observations",
+  "A wild cluster bootstrap, by default",
+]
+explanation = "For grouped observations (firms, states, schools) the Clustered model uses CR1 by the cluster identifier; with few clusters, consider a wild cluster bootstrap."
+
+[[faq]]
+question = "What does the Replicate action of the Linear Regression panel do?"
+wiki = "Overview"
+hidden = true
+right = "It checks the code against published results"
+wrong = [
+  "It refits the model on a bootstrap sample",
+  "It writes the code as a script to share",
+  "It fits the same model in R and compares",
+  "It reruns the fit on a random half of the data",
+  "It copies the estimates into a LaTeX table",
+]
+explanation = "The last step of the panel's workflow reads the Confidence Intervals and the Standardised Coefficients; Replicate checks the code against published results."
+
+[[faq]]
+question = "Which standard errors does Cross-Sectional Dependence set side by side in the Linear Regression panel?"
+wiki = "Diagnostics"
+hidden = true
+right = "Driscoll-Kraay and clustered"
+wrong = [
+  "Clustered and HC1",
+  "HAC and HC",
+  "Robust and classical",
+  "Driscoll-Kraay and HAC",
+  "Clustered and HAC",
+]
+explanation = "HC Variants compares robust errors with classical ones, HAC Kernels HAC with HC, Clustering Effect clustered with HC1, and Cross-Sectional Dependence Driscoll-Kraay with clustered: larger Driscoll-Kraay errors signal common shocks across entities."

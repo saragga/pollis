@@ -585,25 +585,71 @@ Standardising is itself a choice: it gives every column equal variance, which ca
 """
 
 [[faq]]
-question = "Why is there no Distance input on this tab?"
+question = "Which package does the Hierarchical Clustering panel use for Surrogate Tree Rules?"
+wiki = "Factsheet"
+hidden = true
+right = "DecisionTree.jl"
+wrong = [
+  "Clustering.jl",
+  "MLJ.jl",
+  "EvoTrees.jl",
+  "XGBoost.jl",
+  "ScikitLearn.jl",
+]
+explanation = "The panel uses Clustering.jl for hclust, cutree, silhouettes, kmeans and randindex, Distances.jl for pairwise, StatsPlots.jl and Plots.jl for the charts, and DecisionTree.jl for Surrogate Tree Rules."
+
+[[faq]]
+question = "For which values of k does Choosing k report the mean silhouette in the Hierarchical Clustering panel?"
+wiki = "Diagnostics"
+hidden = true
+right = "From 2 to 10, all cut from the same tree"
+wrong = [
+  "From 1 to 10, all cut from the same tree",
+  "From 2 to 20, each from a new fit",
+  "From 2 to 5, all cut from the same tree",
+  "From 3 to 15, each from a new fit",
+  "From 2 to the square root of n",
+]
+explanation = "Choosing k reports the mean silhouette for k from 2 to 10, all cut from the same tree; a clear peak is mild support for that value."
+
+[[faq]]
+question = "On the Average tab, with Distance set to Cosine, which distance does Agreement with K-Means compare on?"
+wiki = "Average Linkage"
+hidden = true
+right = "Euclidean"
+wrong = [
+  "Cosine",
+  "Manhattan",
+  "Chebyshev",
+  "Squared cosine",
+  "Mahalanobis",
+]
+explanation = "Agreement with K-Means is Euclidean whichever Distance the tab holds, which makes it a less direct contrast than Linkage Comparison."
+
+[[faq]]
+question = "How does Assign New Data place a new observation on the Ward tab of the Hierarchical Clustering panel?"
 wiki = "Ward Linkage"
 hidden = true
-answer = """
-On the Ward tab the criterion is defined on squared Euclidean distances, because it measures the growth in a sum of squares around a centroid, so the code always forms `pairwise(Euclidean(), X, dims=1)`. When only a non-Euclidean dissimilarity makes sense for the subject, use the Complete or Average tab, which offer Euclidean, Manhattan, Cosine and Chebyshev.
-"""
+right = "By its mean Euclidean distance to the members of each cluster"
+wrong = [
+  "By the smallest rise in the within-cluster sum of squares",
+  "By its Euclidean distance to the centroid of each cluster",
+  "By its distance to the nearest member of any cluster",
+  "By its largest distance to the members of each cluster",
+  "By a vote of its k nearest neighbours among the members",
+]
+explanation = "On the Ward tab, Assign New Data uses the mean Euclidean distance to the members of each cluster, which is the rule of Average and not Ward's criterion."
 
 [[faq]]
-question = "The cophenetic correlation is high: does that mean my clusters are good?"
+question = "From which fields of the tree hc does the panel's function cophenetic fill the matrix of cophenetic distances?"
 wiki = "Cophenetic Correlation"
 hidden = true
-answer = """
-No. A high cophenetic correlation says the tree is a fair summary of the pairwise distances, but it describes the whole tree: it does not depend on k, does not assess the clusters of a cut, and does not test whether groups exist. One remote group can raise it even when the structure inside the main mass is lost. Pair it with Silhouette Analysis or Choosing k, which score a cut.
-"""
-
-[[faq]]
-question = "Why does single linkage give me one big cluster and a few tiny ones?"
-wiki = "Single Linkage"
-hidden = true
-answer = """
-With a small k, single linkage often returns one large cluster and a few tiny ones, since the top merges of its tree tend to attach isolated points. This is chaining: a few intermediate points between two groups can connect them at a low height, which the Dendrogram shows as a staircase of leaves joining one growing group. The tiny clusters also mark observations far from all others, so the tab works as a screen for outliers. Linkage Comparison shows the smallest cluster size of each linkage.
-"""
+right = "hc.merges and hc.heights"
+wrong = [
+  "hc.order and hc.heights",
+  "hc.merges and hc.order",
+  "hc.labels and hc.heights",
+  "hc.linkage and hc.order",
+  "hc.heights alone",
+]
+explanation = "The panel's own function cophenetic fills the matrix from hc.merges and hc.heights, and the action then takes cor over the upper triangles of D and the cophenetic matrix."

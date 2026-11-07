@@ -315,3 +315,102 @@ code = '''
 {{?model=modal}} # No counterfactual generator in CounterfactualExplanations.jl supports modal decision trees
 {{?model=dt}} {{?task=regression}} # CounterfactualExplanations.jl supports classifiers only: switch Task to classification
 '''
+
+# ── FAQ: shown in Learn More, and the Panel FAQ test set of Evaluate Answering Models (hidden = true: the test set only) ──
+
+[[faq]]
+question = "How deep should the tree be?"
+wiki = "Decision Guide"
+answer = """
+Start with a shallow tree, a depth of 3 to 5, to read the main rules. Then run Depth vs Accuracy and pick the depth where the cross-validated accuracy stops improving, preferring the shallowest tree within the noise of the best score.
+
+Raise min_samples_leaf if many leaves hold only a few samples, and confirm the choice with Cross-Validation and on the test set.
+"""
+
+[[faq]]
+question = "Which feature importance should I read?"
+wiki = "Interpretation"
+answer = """
+Permutation importance, which measures how much the test accuracy or R-squared drops when a feature's values are shuffled: it is the more honest measure of what the model relies on. Impurity importance, summed over the splits on the training data, favours continuous features and those with many distinct values.
+
+Correlated features share importance, so a low value does not mean a feature is irrelevant, and importances describe the model, not causes in the world.
+"""
+
+[[faq]]
+question = "My tree is perfect on the training data: is it a good model?"
+wiki = "Diagnostics"
+answer = """
+Not necessarily: a deep enough tree fits the training data perfectly and learns noise. Never judge a tree on its training accuracy. In Depth vs Accuracy, the training accuracy keeps rising with the depth while the cross-validated accuracy rises, levels off and then falls.
+
+A large gap between the two at the chosen depth means the tree is still too complex, or the data too few. Tree vs Random Forest shows how much an ensemble gains on the test set.
+"""
+
+[[faq]]
+question = "Through which framework does the Decision Tree Models panel run ModalDecisionTrees.jl?"
+wiki = "Overview"
+hidden = true
+right = "MLJ"
+wrong = [
+  "DecisionTree.jl's own API",
+  "ScikitLearn.jl",
+  "Flux.jl",
+  "Turing.jl",
+  "Lux.jl",
+]
+explanation = "The Modal Decision Tree comes from ModalDecisionTrees.jl, through MLJ: a column may hold a whole series per instance, and the splits reason over its parts with modal logic."
+
+[[faq]]
+question = "How many folds does Depth vs Accuracy cross-validate with in the Decision Tree Models panel?"
+wiki = "Diagnostics"
+hidden = true
+right = "5"
+wrong = [
+  "2",
+  "3",
+  "10",
+  "20",
+  "One per sample, leave-one-out",
+]
+explanation = "Depth vs Accuracy plots the training accuracy and the 5-fold cross-validated accuracy as max_depth grows."
+
+[[faq]]
+question = "Which generator does Counterfactual Explanations use for the trees of the Decision Tree Models panel?"
+wiki = "Interpretation"
+hidden = true
+right = "Feature Tweak"
+wrong = [
+  "Wachter",
+  "DiCE",
+  "Growing Spheres",
+  "CLUE",
+  "REVISE",
+]
+explanation = "Counterfactual Explanations finds the smallest change in a sample's features that would change its prediction, with the Feature Tweak generator for trees."
+
+[[faq]]
+question = "For which task is the Modal Decision Tree used in the Decision Tree Models panel?"
+wiki = "Assumptions"
+hidden = true
+right = "Classification only"
+wrong = [
+  "Regression only",
+  "Classification and regression alike",
+  "Forecasting the next value of a series",
+  "Clustering whole series by their shape",
+  "Detecting anomalies within a series",
+]
+explanation = "Class labels are given as text or categorical values, and the modal tree is used here for classification."
+
+[[faq]]
+question = "Which core packages does the Decision Tree Models panel use?"
+wiki = "Factsheet"
+hidden = true
+right = "DecisionTree.jl and ModalDecisionTrees.jl"
+wrong = [
+  "DecisionTree.jl and EvoTrees.jl",
+  "DecisionTree.jl and BetaML.jl",
+  "ScikitLearn.jl and ModalDecisionTrees.jl",
+  "EvoTrees.jl and XGBoost.jl",
+  "MLJ.jl and LightGBM.jl",
+]
+explanation = "The core packages of the Decision Tree Models panel are DecisionTree.jl, for the CART tree, and ModalDecisionTrees.jl, for the modal tree."

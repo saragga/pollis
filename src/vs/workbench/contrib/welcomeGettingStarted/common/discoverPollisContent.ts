@@ -70,7 +70,7 @@ export const discoverPollisEntries: readonly IDiscoverPollisEntry[] = [
 	},
 	{
 		id: 'diffusionProcesses',
-		menuPath: localize('discover.diffusionProcesses.path', "Simulate \u203A Stochastic Differential Equations"),
+		menuPath: localize('discover.diffusionProcesses.path', "Simulate"),
 		title: localize('discover.diffusionProcesses.title', "Simulate Diffusion Processes"),
 		description: localize('discover.diffusionProcesses.description', "Simulate many paths of a stochastic differential equation and watch the spread of outcomes grow."),
 		action: localize('discover.diffusionProcesses.action', "Open Diffusion Processes"),

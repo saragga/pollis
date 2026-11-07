@@ -75,7 +75,7 @@ const PdfFilesMenu = new MenuId('menubarPdfFilesMenu');
 
 // ------------------- COMPOSE ------------------------
 
-// The Compose menu: Coding Agents and Agent Skills (codingAgentPage.ts, pollisAgents.ts), MCP Servers (mcpServersPage.ts), Orchestration, Local Models, New Panels and Toolboxes, Literature (Discover Literature, Import References, Browse References), Replication, Methods, Workflows, Reports, PDF Files,
+// The Compose menu: Coding Agents and Agent Skills (codingAgentPage.ts, pollisAgents.ts), MCP Servers (mcpServersPage.ts), Orchestration, Local AI Models, Knowledge for AI Models, New Panels and Toolboxes, Literature (Discover Literature, Import References, Browse References), Replication, Methods, Workflows, Reports, PDF Files,
 // Correctness Tests, Horse Races, Compile Galore and Collaboration, which combine panels. The Toolbox Panels page (toolboxPanelsPage.ts) opens from
 // the Edit button of an installed toolbox in the Extensions pane.
 MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
@@ -95,14 +95,14 @@ MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	group: '1_compose',
 	submenu: LocalModelsMenu,
-	title: localize('pollisLocalModels.menu', "Local Models"),
+	title: localize('pollisLocalModels.menu', "Local AI Models"),
 	order: 1,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	group: '1_compose',
 	submenu: KnowledgeMenu,
-	title: localize('pollisKnowledge.menu', "Knowledge for Models"),
+	title: localize('pollisKnowledge.menu', "Knowledge for AI Models"),
 	order: 1.5,
 });
 
@@ -359,7 +359,7 @@ MenuRegistry.appendMenuItem(NewPanelsMenu, {
 
 
 // ==============================================================
-// SUBMENU: Local Models, the models to download (the panels of explore.contribution.ts) and the
+// SUBMENU: Local AI Models, the models to download (the panels of explore.contribution.ts) and the
 // models on this computer (modelsInstalledPage.ts)
 // ==============================================================
 
@@ -388,10 +388,17 @@ MenuRegistry.appendMenuItem(LocalModelsMenu, {
 	order: 1,
 });
 
+// The chat models installed, run on published benchmarks, on a stratified sample of their questions (modelBenchmarksPage.ts)
+MenuRegistry.appendMenuItem(LocalModelsMenu, {
+	group: '2_compare',
+	command: { id: MODEL_BENCHMARKS_COMMAND_ID, title: localize('modelBenchmarks.menu', "Model Benchmarks...") },
+	order: 2,
+});
+
 
 
 // ==============================================================
-// SUBMENU: Knowledge for Models, the documents a model, local or cloud, answers from
+// SUBMENU: Knowledge for AI Models, the documents a model, local or cloud, answers from
 // ==============================================================
 
 // Retrieval-Augmented Generation, the collections of documents a model answers from (ragPage.ts)
@@ -401,31 +408,25 @@ MenuRegistry.appendMenuItem(KnowledgeMenu, {
 	order: 1,
 });
 
+// The strategies of Ask Pollis, the ways it finds the passages and answers from them (answeringStrategiesPage.ts)
 MenuRegistry.appendMenuItem(KnowledgeMenu, {
 	group: '1_knowledge',
-	command: { id: ANSWERING_STRATEGIES_COMMAND_ID, title: localize('answeringStrategies.menu', "Answering Strategies") },
-	order: 1.5,
+	command: { id: ANSWERING_STRATEGIES_COMMAND_ID, title: localize('answeringStrategies.menu', "Ask Pollis Strategies") },
+	order: 2,
 });
 
 // The embedding models installed, compared on the questions of Ask Pollis (compareEmbeddingsPage.ts)
 MenuRegistry.appendMenuItem(KnowledgeMenu, {
-	group: '1_knowledge',
+	group: '2_evaluate',
 	command: { id: COMPARE_EMBEDDINGS_COMMAND_ID, title: localize('compareEmbeddings.menu', "Evaluate Embedding Models...") },
-	order: 2,
+	order: 1,
 });
 
 // The rerankers installed, compared on the questions of Ask Pollis (compareRerankersPage.ts)
 MenuRegistry.appendMenuItem(KnowledgeMenu, {
-	group: '1_knowledge',
+	group: '2_evaluate',
 	command: { id: COMPARE_RERANKERS_COMMAND_ID, title: localize('compareRerankers.menu', "Evaluate Reranking Models...") },
-	order: 3,
-});
-
-// The chat models installed, run on published benchmarks, on a stratified sample of their questions (modelBenchmarksPage.ts)
-MenuRegistry.appendMenuItem(KnowledgeMenu, {
-	group: '1_knowledge',
-	command: { id: MODEL_BENCHMARKS_COMMAND_ID, title: localize('modelBenchmarks.menu', "Model Benchmarks...") },
-	order: 4,
+	order: 2,
 });
 
 

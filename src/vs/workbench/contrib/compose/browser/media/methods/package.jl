@@ -15,8 +15,12 @@
 #
 # A method folder holds method.toml (name, title, author, description, topic, license (optional: MIT, written as
 # the package's LICENSE, or another whose text is the method folder's LICENSE; none when empty), citation, version, usage (Julia code
-# that shows how to call the method, for the README), packages, and a
-# [targets.NAME] table for each target: source, call, tolerance, and an [inputs.NAME] table for each input:
+# that shows how to call the method, for the README), packages, compat (optional: a table of version bounds of the
+# packages, such as Optim = "1, 2"; a package left out gets every version of the major version installed, such as
+# "2" for 2.3.2 or "0.25" for 0.25.1, and a standard library every 1.x), [[articles]] (the other articles whose tables are
+# targets too, when there are several: key, citation, doi, article, as for the first), and a
+# [targets.NAME] table for each target: source, call, tolerance, untested (the cells shown in the vignette but not
+# tested, each as [row label, column name]), and an [inputs.NAME] table for each input:
 # url or file, source, delim, columns, header (false for a file without a header line, its columns then
 # Column1, Column2, ...), skipto, limit), src/NAME.jl (module NAME), targets/*.csv and inputs/*.csv. An input is
 # a link, which the tests download into memory, writing nothing to disk, or a file of the method
@@ -78,15 +82,16 @@ function runtests(name, method)
 		"\treturn rows, string.(columns[2:end]), values",
 		"end",
 		"",
-		"\"Tests each printed value against the result rounded to the digits printed.\"",
-		"function check(result, file, tolerance)",
+		"\"Tests each printed value against the result rounded to the digits printed, but the untested cells, each (row label, column name).\"",
+		"function check(result, file, tolerance, untested = Tuple{String, String}[])",
 		"\trows, columns, values = target(file)",
 		"\tresult = result isa AbstractVecOrMat ? result : Tables.matrix(result)",
 		"\tresult = reshape(result, size(result, 1), :)",
 		"\t@test size(result) == size(values)",
+		"\t@test isempty(setdiff(untested, [(row, column) for row in rows for column in columns]))",
 		"\tfor i in axes(values, 1), j in axes(values, 2)",
 		"\t\tprinted = values[i, j]",
-		"\t\t(printed === nothing || isempty(printed)) && continue",
+		"\t\t(printed === nothing || isempty(printed) || (rows[i], columns[j]) in untested) && continue",
 		"\t\tmantissa, exponent = occursin(r\"[eE]\", printed) ? split(printed, r\"[eE]\") : (printed, \"0\")",
 		"\t\tdigits = (occursin('.', mantissa) ? length(split(mantissa, '.')[2]) : 0) - parse(Int, exponent)",
 		"\t\tpublished = parse(Float64, printed)",
@@ -118,7 +123,8 @@ function runtests(name, method)
 			end
 			push!(lines, "\t\t$input = input($(repr(haskey(link, "file") ? link["file"] : link["url"]))$options)")
 		end
-		push!(lines, "\t\tcheck($call, $(repr(file)), $(get(spec, "tolerance", 0)))", "\tend")
+		untested = join(["($(repr(string(row))), $(repr(string(column))))" for (row, column) in get(spec, "untested", [])], ", ")
+		push!(lines, "\t\tcheck($call, $(repr(file)), $(get(spec, "tolerance", 0))" * (isempty(untested) ? ")" : ", [$untested])"), "\tend")
 		named && push!(lines, "\telse", "\t\t@info \"Not tested: $(get(spec, "source", file)). To test it: Pkg.test(\\\"$name\\\"; test_args = [\\\"$file\\\"])\"", "\tend")
 	end
 	push!(lines, "end", "")
@@ -150,6 +156,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+"The articles whose tables are the targets: the method's own, then those of [[articles]]."
+articles(method) = [Dict{String, Any}(key => get(article, key, "") for key in ("key", "citation", "doi", "article"))
+	for article in [method; get(method, "articles", Dict{String, Any}[])]]
+
 vignette_title(method) = let title = get(method, "vignette_title", ""); isempty(title) ? get(method, "title", method["name"]) : title end
 
 function readme(name, method)
@@ -162,10 +172,12 @@ function readme(name, method)
 		get(method, "description", ""),
 		"",
 	]
-	citation = get(method, "citation", "")
-	if !isempty(citation)
-		doi = get(method, "doi", "")
-		push!(lines, "Article: $citation" * (isempty(doi) ? "" : " [doi:$doi](https://doi.org/$doi)"), "")
+	cited = [article["citation"] * (isempty(article["doi"]) ? "" : " [doi:$(article["doi"])](https://doi.org/$(article["doi"]))")
+		for article in articles(method) if !isempty(article["citation"])]
+	if length(cited) == 1
+		push!(lines, "Article: $(only(cited))", "")
+	elseif length(cited) > 1
+		push!(lines, "Articles:", "", ("- " .* cited)..., "")
 	end
 	usage = strip(get(method, "usage", ""))
 	isempty(usage) || push!(lines, "## Usage", "", "```julia", usage, "```", "")
@@ -207,13 +219,40 @@ function vignette_entry(name, method, repository)
 		"version" => get(method, "version", "0.1.0"),
 		"author" => get(method, "author", ""),
 		"description" => get(method, "description", ""),
-		"citation" => get(method, "citation", ""),
+		"citation" => join(filter(!isempty, [get(article, "citation", "") for article in articles(method)]), " "),
 		"article" => let article = get(method, "article", ""), doi = get(method, "doi", ""); isempty(article) && !isempty(doi) ? "https://doi.org/$doi" : article end,
 		"topic" => get(method, "topic", ""),
 		"license" => get(method, "license", ""),
 		"repository" => repository,
 		"source" => "$name.tex",
 	))
+end
+
+"""
+Writes the [compat] bounds of the package at `root`, its project active: those of the method's `compat` table, and
+for each other dependency every version of the major version installed (a standard library every 1.x). Pkg.add
+writes the version installed as the lowest, which would keep the package out of any environment that needs an
+older version of a dependency.
+"""
+function write_compat(root, method)
+	project = joinpath(root, "Project.toml")
+	data = TOML.parsefile(project)
+	given = get(method, "compat", Dict{String, Any}())
+	installed = Dict(info.name => info.version for info in values(Pkg.dependencies()) if info.is_direct_dep)
+	compat = Dict{String, Any}()
+	for name in keys(get(data, "deps", Dict{String, Any}()))
+		version = get(installed, name, nothing)
+		if haskey(given, name)
+			compat[name] = given[name]
+		elseif version !== nothing
+			compat[name] = version.major > 0 ? string(version.major) : "0.$(version.minor)"
+		end
+	end
+	for (name, bound) in given
+		haskey(compat, name) || name == "julia" && (compat[name] = bound)
+	end
+	isempty(compat) ? delete!(data, "compat") : (data["compat"] = compat)
+	open(io -> TOML.print(io, data; sorted = true), project, "w")
 end
 
 "Makes or refreshes the package of a method in the packages folder; returns its folder."
@@ -283,6 +322,7 @@ function package(packages, folder, owner)
 	Pkg.activate(root)
 	dependencies = get(method, "packages", String[])
 	isempty(dependencies) || Pkg.add(dependencies)
+	write_compat(root, method)
 	Pkg.activate(joinpath(root, "test"))
 	Pkg.add(unique(["Test", "CSV", "Downloads", "Tables", get(extra, "packages", String[])...]))
 	Pkg.activate(root)
@@ -360,7 +400,8 @@ function main(args)
 			if skip
 				println("\n$name: tests not run (--no-tests).")
 			else
-				Pkg.test()
+				# One thread for each core, for the methods whose code runs in parallel
+				Pkg.test(; julia_args = ["--threads=auto"])
 				println("\n$name: all tests pass.")
 			end
 			problems = registry_problems(root, name, method)

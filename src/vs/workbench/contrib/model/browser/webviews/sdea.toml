@@ -234,8 +234,8 @@ prob = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))  # base SDE problem
 {{?solver!=SRIW1|LambaEM}} ens  = solve(EnsembleProblem(prob), {{solver}}(), EnsembleThreads(), trajectories={{N}}, dt={{dt}})  # {{N}} parallel paths
 
 t_grid    = range(0.0, {{T}}, length=200)  # evaluation time grid
-mean_path = [mean(s(t) for s in ens) for t in t_grid]  # E[X(t)] at each grid point
-std_path  = [std(s(t)  for s in ens) for t in t_grid]  # std[X(t)]: width of uncertainty band
+mean_path = [mean(s(t) for s in ens.u) for t in t_grid]  # E[X(t)] at each grid point
+std_path  = [std(s(t)  for s in ens.u) for t in t_grid]  # std[X(t)]: width of uncertainty band
 '''
 
 [[codeBranches]]
@@ -252,8 +252,8 @@ cb = ContinuousCallback(condition, affect!)  # callback that stops each path at 
 prob = SDEProblem(f, g, {{X0}}, (0.0, 1000.0))  # long horizon: paths terminate early via callback
 {{?solver=SRIW1|LambaEM}} ens  = solve(EnsembleProblem(prob), {{solver}}(), EnsembleThreads(), trajectories={{N}}, callback=cb)  # run ensemble with termination callback
 {{?solver!=SRIW1|LambaEM}} ens  = solve(EnsembleProblem(prob), {{solver}}(), EnsembleThreads(), trajectories={{N}}, callback=cb, dt={{dt}})  # run ensemble with termination callback
-hit  = [sol.t[end] < 1000.0 for sol in ens]  # paths stopped by the threshold; the others are censored at the horizon
-fpt  = [sol.t[end] for sol in ens][hit]  # first passage times of the paths that crossed
+hit  = [sol.t[end] < 1000.0 for sol in ens.u]  # paths stopped by the threshold; the others are censored at the horizon
+fpt  = [sol.t[end] for sol in ens.u][hit]  # first passage times of the paths that crossed
 println("Crossed: ", count(hit), " of ", length(hit), " paths")
 println("Mean FPT: ", mean(fpt), "  Std: ", std(fpt))  # summary statistics (conditional on crossing before the horizon)
 '''
@@ -268,7 +268,7 @@ prob = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))  # long horizon T = {{T}} for stat
 {{?solver=SRIW1|LambaEM}} ens  = solve(EnsembleProblem(prob), {{solver}}(), EnsembleThreads(), trajectories={{N}})  # {{N}} independent long paths
 {{?solver!=SRIW1|LambaEM}} ens  = solve(EnsembleProblem(prob), {{solver}}(), EnsembleThreads(), trajectories={{N}}, dt={{dt}})  # {{N}} independent long paths
 
-terminal = [sol.u[end] for sol in ens]  # terminal values: samples from stationary distribution
+terminal = [sol.u[end] for sol in ens.u]  # terminal values: samples from stationary distribution
 h = fit(Histogram, terminal, nbins=50)  # histogram approximation of the invariant density
 println("Stationary mean: ", mean(terminal), "  Std: ", std(terminal))  # sample statistics
 '''
@@ -289,8 +289,8 @@ prob = SDEProblem(f,g,{{X0}},(0.0,{{T}}))
 {{?solver=SRIW1|LambaEM}} ens = solve(EnsembleProblem(prob), {{solver}}(), EnsembleThreads(), trajectories={{N}})  # {{N}} paths
 {{?solver!=SRIW1|LambaEM}} ens = solve(EnsembleProblem(prob), {{solver}}(), EnsembleThreads(), trajectories={{N}}, dt={{dt}})  # {{N}} paths
 t  = range(0.0,{{T}},length=200)  # time grid
-mu = [mean(s(ti) for s in ens) for ti in t]  # mean path
-sd = [std(s(ti) for s in ens)  for ti in t]  # std path
+mu = [mean(s(ti) for s in ens.u) for ti in t]  # mean path
+sd = [std(s(ti) for s in ens.u)  for ti in t]  # std path
 plot(t, mu, ribbon=2 .* sd, fillalpha=0.15, label="paths: mean +/- 2 sd")  # spread of individual paths, not a confidence band
 plot!(t, mu, ribbon=2 .* sd ./ sqrt({{N}}), fillalpha=0.5, label="mean +/- 2 standard errors")  # confidence band for E[X(t)]
 '''
@@ -321,7 +321,7 @@ is_ou && println("Exact OU moments: E[X(T)] = ", round(exact_mean, sigdigits=4),
 for N in [50, 100, 250, 500, 1000]  # sweep ensemble sizes
 {{?solver=SRIW1|LambaEM}}    ens = solve(EnsembleProblem(prob), {{solver}}(), EnsembleThreads(), trajectories=N)
 {{?solver!=SRIW1|LambaEM}}    ens = solve(EnsembleProblem(prob), {{solver}}(), EnsembleThreads(), trajectories=N, dt={{dt}})
-    xT = [s.u[end] for s in ens]
+    xT = [s.u[end] for s in ens.u]
     m, sd = mean(xT), std(xT)
     se = sd / sqrt(N)  # Monte Carlo standard error of the mean
     print("N=", N, "  E[X(T)]=", round(m, sigdigits=4), " (se ", round(se, sigdigits=2), ")  sd[X(T)]=", round(sd, sigdigits=4), " (se ", round(sd / sqrt(2 * (N - 1)), sigdigits=2), ")")
@@ -345,9 +345,9 @@ prob = SDEProblem(f,g,{{X0}},(0.0,{{T}}))
 {{?solver=SRIW1|LambaEM}} ens = solve(EnsembleProblem(prob), {{solver}}(), EnsembleThreads(), trajectories={{N}})  # {{N}} paths
 {{?solver!=SRIW1|LambaEM}} ens = solve(EnsembleProblem(prob), {{solver}}(), EnsembleThreads(), trajectories={{N}}, dt={{dt}})  # {{N}} paths
 t   = range(0.0,{{T}},length=200)  # time grid
-q10 = [quantile([s(ti) for s in ens], 0.10) for ti in t]  # 10th percentile
-q50 = [quantile([s(ti) for s in ens], 0.50) for ti in t]  # median
-q90 = [quantile([s(ti) for s in ens], 0.90) for ti in t]  # 90th percentile
+q10 = [quantile([s(ti) for s in ens.u], 0.10) for ti in t]  # 10th percentile
+q50 = [quantile([s(ti) for s in ens.u], 0.50) for ti in t]  # median
+q90 = [quantile([s(ti) for s in ens.u], 0.90) for ti in t]  # 90th percentile
 plot(t, q50, ribbon=(q50.-q10, q90.-q50), fillalpha=0.2, label="10-90% band")  # fan chart with quantile bands
 '''
 
@@ -370,7 +370,7 @@ for sigma in [0.1, 0.3, 0.6]  # sweep noise strengths
     prob = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))
 {{?solver=SRIW1|LambaEM}}    ens = solve(EnsembleProblem(prob), {{solver}}(), EnsembleThreads(), trajectories={{N}})
 {{?solver!=SRIW1|LambaEM}}    ens = solve(EnsembleProblem(prob), {{solver}}(), EnsembleThreads(), trajectories={{N}}, dt={{dt}})
-    sd  = [std(s(ti) for s in ens) for ti in t]  # spread across paths: this is what the noise level changes
+    sd  = [std(s(ti) for s in ens.u) for ti in t]  # spread across paths: this is what the noise level changes
     plot!(plt, t, sd, label="sigma=" * string(sigma))
 end
 plt
@@ -391,7 +391,7 @@ f(X, p, t) = {{f}}; g(X, p, t) = {{g}}  # drift and diffusion
 prob = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))  # horizon T = {{T}}
 {{?solver=SRIW1|LambaEM}} ens = solve(EnsembleProblem(prob), {{solver}}(), EnsembleThreads(), trajectories={{N}})  # {{N}} paths
 {{?solver!=SRIW1|LambaEM}} ens = solve(EnsembleProblem(prob), {{solver}}(), EnsembleThreads(), trajectories={{N}}, dt={{dt}})  # {{N}} paths
-samples = [s.u[end] for s in ens]  # terminal values X(T)
+samples = [s.u[end] for s in ens.u]  # terminal values X(T)
 T, x0 = {{T}}, {{X0}}
 
 # exact density when the drift is -theta X and the diffusion a constant sigma (detected numerically)

@@ -880,3 +880,102 @@ code = '''
 {{?model=graph}} display(fig)
 {{?model=graph}} println("The white line is R0 = 1: large outbreaks happen above and to the left of it")
 '''
+
+# ── FAQ: shown in Learn More, and the Panel FAQ test set of Evaluate Answering Models (hidden = true: the test set only) ──
+
+[[faq]]
+question = "Does a pattern the model produces show how a real system works?"
+wiki = "Interpretation"
+answer = """
+No. A run shows what a set of rules can produce, under the stated assumptions: it can suggest a mechanism, rule one out as insufficient, and show which parameters matter. Other rules might produce the same pattern.
+
+Nothing in the panel is fitted to data, so the printed shares should not be quoted as forecasts. To make claims about a real system, a model needs calibration and validation, beyond the checks of the panel, which test that the code does what the rules say.
+"""
+
+[[faq]]
+question = "How many runs do I need before reading a result?"
+wiki = "Diagnostics"
+answer = """
+More than one. Reproducibility runs seeds 1 to 10 and prints the mean, the standard deviation and the range of the outcome: a wide spread means that one run says little, and that a change of a parameter must be judged against this spread.
+
+Ensemble runs 20 replicates and draws every trajectory: one band points to a single typical outcome, trajectories that split to more than one. Replicates are the proper basis for any claim about a parameter's effect.
+"""
+
+[[faq]]
+question = "Why did the epidemic stay tiny although R0 is above 1?"
+wiki = "Interpretation"
+answer = """
+Usually because the outbreak died out by chance. Chance events are built into the network model: with few first cases, an infection can fail to spread even when R0 is above 1, a result that a deterministic curve cannot show.
+
+Single runs vary widely. Ensemble draws a histogram of final size over 20 replicates and counts the major outbreaks, those above 10%.
+"""
+
+[[faq]]
+question = "When does Convergence call a run of the Continuous Space tab stationary in the Agent-Based Models panel?"
+wiki = "Diagnostics"
+hidden = true
+right = "When mean polarisation in the third and last quarters differs by under 0.05"
+wrong = [
+  "When mean polarisation in the first and last halves differs by under 0.01",
+  "When polarisation stays above 0.9 for the last tenth of the run",
+  "When polarisation varies by under 0.05 over the last 100 steps",
+  "When mean polarisation in the third and last quarters differs by under 0.01",
+  "When every particle moves within 0.05 radians of the mean heading",
+]
+explanation = "Convergence applies a different test on each tab: Continuous Space compares mean polarisation in the third and the last quarter of the run, and calls a gap under 0.05 stationary."
+
+[[faq]]
+question = "When does Summary call the result of the Grid Space tab of the Agent-Based Models panel emergent?"
+wiki = "Interpretation"
+hidden = true
+right = "When the same-group share passes Threshold by more than 0.2"
+wrong = [
+  "When the same-group share passes Threshold by more than 0.05",
+  "When the same-group share passes Threshold by more than 0.5",
+  "When every resident is happy with their neighbours",
+  "When the same-group share passes 0.9, whatever Threshold is",
+  "When the same-group share passes one half, the random start",
+]
+explanation = "Summary sets the same-group share reached against Threshold, and calls the result emergent when it passes Threshold by more than 0.2."
+
+[[faq]]
+question = "In what order does the Agent-Based Models panel activate its agents in each step?"
+wiki = "Overview"
+hidden = true
+right = "Each agent once, in a fresh random order, one after another"
+wrong = [
+  "All agents at once, each from the state of the last step",
+  "Each agent once, by its id, in the same order every step",
+  "One agent drawn at random, once per step",
+  "Each agent once, in a random order drawn at the start",
+  "Each agent once, the least satisfied first",
+]
+explanation = "StandardABM with Schedulers.Randomly() activates every agent once per step, in a fresh random order; an agent acts on the state as the agents before it left it, so updates are sequential and not simultaneous."
+
+[[faq]]
+question = "In what unit is the Noise of the Continuous Space tab of the Agent-Based Models panel given?"
+wiki = "Continuous Space"
+hidden = true
+right = "As a share of pi"
+wrong = [
+  "As an angle in degrees",
+  "As a share of 2 pi",
+  "As a standard deviation in radians",
+  "As the chance of a random heading",
+  "As a share of the speed",
+]
+explanation = "The tab's noise is a share of pi, so its values do not map one to one on the published noise amplitude without a factor of two pi."
+
+[[faq]]
+question = "Which strategies does Scenario compare on the Graph Space tab of the Agent-Based Models panel?"
+wiki = "Graph Space"
+hidden = true
+right = "No vaccination, random vaccination and vaccination of the best-connected"
+wrong = [
+  "Random vaccination at 10%, 30% and 50% of the people",
+  "No vaccination, random vaccination and ring vaccination of contacts",
+  "No vaccination, vaccination of random people's neighbours, and quarantine",
+  "Vaccination of the best-connected at 10%, 30% and 50% of the people",
+  "No vaccination, a lower beta, and a higher gamma",
+]
+explanation = "Scenario compares no vaccination, random vaccination and vaccination of the best-connected people."

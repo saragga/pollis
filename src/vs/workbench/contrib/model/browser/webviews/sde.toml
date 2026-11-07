@@ -34,12 +34,6 @@ file = "sde/tutorial-02-multiplicative.ipynb"
 bundled = true
 description = "State-dependent diffusion with the SRIW1 adaptive Itô solver"
 
-[[notebookSections.notebooks]]
-name = "Stratonovich"
-file = "sde/tutorial-03-stratonovich.ipynb"
-bundled = true
-description = "Stratonovich interpretation using EulerHeun; compare with Itô solution"
-
 [[wikis]]
 name = "Factsheet"
 file = "sde/factsheet.md"
@@ -84,11 +78,6 @@ name = "Multiplicative Noise"
 file = "sde/multiplicative.md"
 bundled = true
 
-[[wikis]]
-name = "Stratonovich"
-file = "sde/stratonovich.md"
-bundled = true
-
 [[references]]
 separator = true
 label = "Software"
@@ -120,19 +109,10 @@ key = "Ito1944a"
 key = "Mar1955a"
 
 [[references]]
-key = "WZ1965a"
-
-[[references]]
-key = "Str1966a"
-
-[[references]]
 key = "BS1973a"
 
 [[references]]
 key = "Mil1975a"
-
-[[references]]
-key = "Kam1981a"
 
 [[references]]
 key = "Hig2001a"
@@ -145,9 +125,6 @@ key = "Ros2010a"
 
 [[references]]
 key = "HJK2011a"
-
-[[references]]
-key = "Rob2012a"
 
 [[references]]
 key = "RN2017b"
@@ -163,21 +140,13 @@ label = "Additive Noise"
 id = "mul"
 label = "Multiplicative Noise"
 
-[[models]]
-id = "strat"
-label = "Stratonovich"
+[[bullets]]
+text = "Additive Noise"
+detail = "dX = f(X,t) dt + sigma dW, noise of constant size: Ornstein-Uhlenbeck processes, outside forcing, shocks that do not depend on the state"
 
 [[bullets]]
-text = "Define continuous-time stochastic systems as dX = f(X,t) dt + g(X,t) dW and solve with high-performance adaptive solvers"
-detail = ""
-
-[[bullets]]
-text = "Choose between constant (additive) and state-dependent (multiplicative) noise; select Itô or Stratonovich calculus"
-detail = ""
-
-[[bullets]]
-text = "All three formulations use the unified SDEProblem / solve() interface from StochasticDiffEq.jl"
-detail = ""
+text = "Multiplicative Noise"
+detail = "dX = f(X,t) dt + g(X,t) dW, noise that grows with the state: geometric Brownian motion, proportional volatility, population dynamics"
 
 [[decisionRows]]
 task = "Additive Noise"
@@ -188,11 +157,6 @@ purpose = "Environmental forcing, Ornstein-Uhlenbeck, perturbations independent 
 task = "Multiplicative Noise"
 context = "State-dependent noise sigma(X)"
 purpose = "Geometric Brownian motion, proportional volatility, population dynamics"
-
-[[decisionRows]]
-task = "Stratonovich"
-context = "State-dependent noise (Stratonovich calculus)"
-purpose = "Physics-derived models, smooth-noise limits, Wong-Zakai approximations"
 
 [[inputs]]
 id = "f"
@@ -212,7 +176,7 @@ id = "g"
 label = "Diffusion g(X,t)"
 tooltip = "Julia expression for the diffusion function g(X, p, t). Example: 0.2*X for multiplicative (geometric BM) noise."
 default = "0.2*X"
-models = ["mul", "strat"]
+models = ["mul"]
 
 [[inputs]]
 id = "solver"
@@ -251,21 +215,6 @@ value = "RKMil"
 label = "RKMil (Fixed Step, Strong 1)"
 models = ["mul"]
 
-[[inputs.options]]
-value = "EulerHeun"
-label = "EulerHeun (Fixed Step, Order 1)"
-models = ["strat"]
-
-[[inputs.options]]
-value = "LambaEulerHeun"
-label = "LambaEulerHeun (Adaptive, Order 1)"
-models = ["strat"]
-
-[[inputs.options]]
-value = "RKMilCommute"
-label = "RKMilCommute (Fixed Step, Order 1)"
-models = ["strat"]
-
 [[inputs]]
 id = "X0"
 label = "Initial state X0"
@@ -283,7 +232,7 @@ id = "dt"
 label = "Step size dt"
 tooltip = "Fixed time step used by the selected solver. Smaller values improve accuracy at higher compute cost. Not needed for adaptive solvers."
 default = "0.01"
-when = "solver!=LambaEM|SOSRA2|SRIW1|LambaEulerHeun"
+when = "solver!=LambaEM|SOSRA2|SRIW1"
 
 [[codeBranches]]
 model = "add"
@@ -294,8 +243,8 @@ f(X, p, t) = {{f}}  # drift function
 g(X, p, t) = {{sigma}}  # constant diffusion: additive noise strength sigma = {{sigma}}
 
 prob = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))  # SDE with X0 = {{X0}}, t in [0, {{T}}]
-{{?solver=LambaEM|SOSRA2|SRIW1|LambaEulerHeun}} sol  = solve(prob, {{solver}}())  # {{solver}} (adaptive)
-{{?solver!=LambaEM|SOSRA2|SRIW1|LambaEulerHeun}} sol  = solve(prob, {{solver}}(), dt={{dt}})  # {{solver}}, fixed step dt = {{dt}}
+{{?solver=LambaEM|SOSRA2|SRIW1}} sol  = solve(prob, {{solver}}())  # {{solver}} (adaptive)
+{{?solver!=LambaEM|SOSRA2|SRIW1}} sol  = solve(prob, {{solver}}(), dt={{dt}})  # {{solver}}, fixed step dt = {{dt}}
 '''
 
 [[codeBranches]]
@@ -307,23 +256,8 @@ f(X, p, t) = {{f}}  # drift function
 g(X, p, t) = {{g}}  # state-dependent diffusion: g(X,t) = {{g}}
 
 prob = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))  # multiplicative SDE
-{{?solver=LambaEM|SOSRA2|SRIW1|LambaEulerHeun}} sol  = solve(prob, {{solver}}())  # {{solver}} (adaptive)
-{{?solver!=LambaEM|SOSRA2|SRIW1|LambaEulerHeun}} sol  = solve(prob, {{solver}}(), dt={{dt}})  # {{solver}}, fixed step dt = {{dt}}
-'''
-
-[[codeBranches]]
-model = "strat"
-code = '''
-using StochasticDiffEq  # Stratonovich SDE: dX = f(X,t) dt + g(X,t) o dW
-
-f(X, p, t) = {{f}}  # drift (Stratonovich form)
-g(X, p, t) = {{g}}  # diffusion (Stratonovich interpretation)
-
-prob = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))  # Stratonovich SDE
-{{?solver=LambaEM|SOSRA2|SRIW1|LambaEulerHeun}} sol  = solve(prob, {{solver}}())  # {{solver}} (adaptive)
-{{?solver!=LambaEM|SOSRA2|SRIW1|LambaEulerHeun}} sol  = solve(prob, {{solver}}(), dt={{dt}})  # {{solver}}, fixed step dt = {{dt}}
-
-# Ito equivalent: f_ito(X,t) = f(X,t) + 0.5 * g(X,t) * dg/dX  # Ito-Stratonovich correction for reference
+{{?solver=LambaEM|SOSRA2|SRIW1}} sol  = solve(prob, {{solver}}())  # {{solver}} (adaptive)
+{{?solver!=LambaEM|SOSRA2|SRIW1}} sol  = solve(prob, {{solver}}(), dt={{dt}})  # {{solver}}, fixed step dt = {{dt}}
 '''
 
 [[actionGroups]]
@@ -388,8 +322,8 @@ using StochasticDiffEq, Statistics, Plots  # ensemble moments against closed for
 
 ens  = solve(EnsembleProblem(prob), {{solver}}(), EnsembleThreads(), dt={{dt}}, trajectories=1000)  # 1000 paths of the panel problem
 t_grid = 0:0.1:{{T}}  # evaluation time grid
-means  = [mean(s(t) for s in ens) for t in t_grid]  # Monte Carlo E[X(t)]
-vars   = [var(s(t) for s in ens) for t in t_grid]  # Monte Carlo Var[X(t)]
+means  = [mean(s(t) for s in ens.u) for t in t_grid]  # Monte Carlo E[X(t)]
+vars   = [var(s(t) for s in ens.u) for t in t_grid]  # Monte Carlo Var[X(t)]
 
 # Closed forms assume f = a X (scalar X0); a and b are read off f and g at X = 1, so they are only valid for linear f and g
 a  = f(1.0, nothing, 0.0)
@@ -398,8 +332,6 @@ X0 = {{X0}}
 {{?model=add}}m_exact = X0 .* exp.(a .* t_grid); v_exact = s2 .* (exp.(2a .* t_grid) .- 1) ./ (2a)
 {{?model=mul}}b = g(1.0, nothing, 0.0)  # g = b X: geometric Brownian motion (Ito)
 {{?model=mul}}m_exact = X0 .* exp.(a .* t_grid); v_exact = X0^2 .* exp.(2a .* t_grid) .* (exp.(b^2 .* t_grid) .- 1)
-{{?model=strat}}b = g(1.0, nothing, 0.0)  # g = b X in Stratonovich form = Ito drift (a + b^2/2) X
-{{?model=strat}}m_exact = X0 .* exp.((a + b^2 / 2) .* t_grid); v_exact = X0^2 .* exp.((2a + b^2) .* t_grid) .* (exp.(b^2 .* t_grid) .- 1)
 plot(t_grid, means, label="ensemble mean"); plot!(t_grid, m_exact, ls=:dash, label="exact mean")
 plot!(t_grid, vars, label="ensemble variance"); plot!(t_grid, v_exact, ls=:dash, label="exact variance", xlabel="t")
 '''
@@ -409,17 +341,20 @@ id = "compare"
 label = "Compare"
 
 [[actionGroups.actions]]
-id = "ito-vs-strat"
-label = "Ito vs Stratonovich"
-desc = "Solve the same f and g as Ito (Euler-Maruyama) and as Stratonovich (Euler-Heun) on one shared Brownian path; they coincide when g is constant"
+id = "add-vs-mul"
+label = "Additive vs Multiplicative Noise"
+desc = "Solve the same drift with noise of the same size at X0, constant in one solve and proportional to X in the other, on one shared Brownian path"
 code = '''
-using StochasticDiffEq, DiffEqNoiseProcess, Plots  # compare Ito and Stratonovich solutions
+using StochasticDiffEq, DiffEqNoiseProcess, Plots  # additive against multiplicative noise on one Brownian path
 
-# The interpretation is set by the solver, not by SDEProblem: EM is Ito, EulerHeun is Stratonovich
-sol_ito   = solve(SDEProblem(f, g, {{X0}}, (0.0, {{T}})), EM(), dt={{dt}})  # Ito solution, records its Brownian path
-p_strat   = SDEProblem(f, g, {{X0}}, (0.0, {{T}}); noise=NoiseWrapper(sol_ito.W))  # replay the same path
-sol_strat = solve(p_strat, EulerHeun(), dt={{dt}})  # Stratonovich solution (Ito drift + 0.5 g dg/dX)
-plot(sol_ito, label="Ito"); plot!(sol_strat, label="Stratonovich")  # overlay both solutions
+X0 = {{X0}}
+s0 = g(X0, nothing, 0.0)  # the noise size of this tab at X0
+g_add(X, p, t) = s0  # additive: the same size whatever the state
+g_mul(X, p, t) = s0 * X / X0  # multiplicative: the same size at X0, then proportional to X
+sol_add = solve(SDEProblem(f, g_add, X0, (0.0, {{T}})), EM(), dt={{dt}}, save_noise=true)  # records its Brownian path
+sol_mul = solve(SDEProblem(f, g_mul, X0, (0.0, {{T}}); noise=NoiseWrapper(sol_add.W)), EM(), dt={{dt}})  # replays the same path
+plot(sol_add, label="additive: g = $(round(s0, sigdigits=3))", xlabel="t", ylabel="X(t)")
+plot!(sol_mul, label="multiplicative: g = $(round(s0 / X0, sigdigits=3)) X")
 '''
 
 [[actionGroups]]
@@ -440,5 +375,5 @@ h   = normalize(fit(Histogram, xs, nbins=50), mode=:pdf)  # histogram normalised
 plot(h, xlabel="X", ylabel="density", label="empirical", alpha=0.6)
 {{?model=add}}a = f(1.0, nothing, 0.0); s2 = g(1.0, nothing, 0.0)^2  # f = a X with a < 0 and constant g: Ornstein-Uhlenbeck
 {{?model=add}}a < 0 && plot!(x -> pdf(Normal(0, sqrt(s2 / (-2a))), x), extrema(xs)..., lw=2, label="Normal(0, sigma^2 / (2 theta))")
-{{?model=mul|strat}}# for g = b X the process decays to 0 or explodes; a nondegenerate stationary law needs a mean-reverting drift with a constant term
+{{?model=mul}}# for g = b X the process decays to 0 or explodes; a nondegenerate stationary law needs a mean-reverting drift with a constant term
 '''

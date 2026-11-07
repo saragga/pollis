@@ -1,10 +1,10 @@
 # Overview
 
-A diffusion is a continuous random path whose small moves have a mean set by a drift and a variance set by a diffusion coefficient. The integral that gives such an equation a precise meaning was introduced by [Itô (1944)](#ref-Ito1944a), and a second definition with ordinary calculus rules by [Stratonovich (1966)](#ref-Str1966a).
+A diffusion is a continuous random path whose small moves have a mean set by a drift and a variance set by a diffusion coefficient. The integral that gives such an equation a precise meaning was introduced by [Itô (1944)](#ref-Ito1944a).
 
 ## What a Stochastic Differential Equation Says
 
-The form dX = f(X,t) dt + g(X,t) dW is shorthand for an integral equation: X(t) equals X(0), plus the integral of f over time, plus the integral of g against Brownian motion W. Over a short step h, X moves by about f h plus g times a Normal(0, h) draw, so the noise is of size sqrt(h) and dominates the drift at small scales. Brownian paths are too rough for an ordinary integral, and the result depends on where g is read within each step: at the start for Itô, at the midpoint for Stratonovich.
+The form dX = f(X,t) dt + g(X,t) dW is shorthand for an integral equation: X(t) equals X(0), plus the integral of f over time, plus the integral of g against Brownian motion W. Over a short step h, X moves by about f h plus g times a Normal(0, h) draw, so the noise is of size sqrt(h) and dominates the drift at small scales. Brownian paths are too rough for an ordinary integral, and the result depends on where g is read within each step. The panel reads it at the start, as the Itô integral does; the Stratonovich integral, which reads it at the midpoint, is treated in the Stochastic Differential Equations panel of the Core Mathematics Toolbox.
 
 ## Where the Numerical Methods for Diffusions Come From
 
@@ -18,10 +18,6 @@ The **Additive Noise** tab solves dX = f(X,t) dt + sigma dW with `SDEProblem(f, 
 
 The **Multiplicative Noise** tab takes any **Diffusion g(X,t)** and solves the Itô equation, so noise can grow or shrink with the state. With f = a X and g = b X the result is geometric Brownian motion, the price model of [Black and Scholes (1973)](#ref-BS1973a), in which X stays positive and has a log-normal law. The solver must now handle the changing size of g across a step, which is why EM drops to strong order 1/2 here, and why RKMil and SRIW1 add further terms.
 
-## How the Stratonovich Tab Works
-
-`SDEProblem` holds no flag for the calculus, because the solver decides it. The **Stratonovich** tab differs from **Multiplicative Noise** only in its menu, where EulerHeun and LambaEulerHeun read g across the step and so solve the Stratonovich equation. [Wong and Zakai (1965)](#ref-WZ1965a) showed that ordinary integrals driven by smoothed noise converge to this form in the limit. RKMilCommute also sits in that menu, but the panel calls it without `interpretation`, and the package then applies Itô.
-
 ## A Common Workflow in the Diffusion Processes Panel
 
 1. Choose the tab from the form of the noise, and type the drift and the diffusion.
@@ -29,7 +25,7 @@ The **Multiplicative Noise** tab takes any **Diffusion g(X,t)** and solves the I
 3. Run **Ensemble Paths** to see how far paths spread.
 4. With linear f and g, compare with the closed forms through **Mean and Variance**.
 5. Lower **Step size dt** or tighten the tolerances until the statistics of interest settle.
-6. Use **Ito vs Stratonovich** and **Stationary Distribution** where the question calls for them.
+6. Use **Additive vs Multiplicative Noise** and **Stationary Distribution** where the question calls for them.
 
 ## References
 
@@ -47,12 +43,8 @@ The **Multiplicative Noise** tab takes any **Diffusion g(X,t)** and solves the I
 
 <a id="ref-Ros2010a"></a>Rößler, A. (2010). Runge–Kutta methods for the strong approximation of solutions of stochastic differential equations. *SIAM Journal on Numerical Analysis* 48(3), 922–952. [doi:10.1137/09076636X](https://doi.org/10.1137/09076636X)
 
-<a id="ref-Str1966a"></a>Stratonovich, R. L. (1966). A new representation for stochastic integrals and equations. *SIAM Journal on Control* 4(2), 362–371. [doi:10.1137/0304028](https://doi.org/10.1137/0304028)
-
 <a id="ref-UO1930a"></a>Uhlenbeck, G. E. and Ornstein, L. S. (1930). On the theory of the Brownian motion. *Physical Review* 36(5), 823–841. [doi:10.1103/PhysRev.36.823](https://doi.org/10.1103/PhysRev.36.823)
-
-<a id="ref-WZ1965a"></a>Wong, E. and Zakai, M. (1965). On the convergence of ordinary integrals to stochastic integrals. *The Annals of Mathematical Statistics* 36(5), 1560–1564. [doi:10.1214/aoms/1177699916](https://doi.org/10.1214/aoms/1177699916)
 
 ## See Also
 
-- [Factsheet](factsheet.md) · [Assumptions](assumptions.md) · [Decision Guide](decision-guide.md) · [Additive](additive.md) · [Multiplicative](multiplicative.md) · [Stratonovich](stratonovich.md)
+- [Factsheet](factsheet.md) · [Assumptions](assumptions.md) · [Decision Guide](decision-guide.md) · [Additive](additive.md) · [Multiplicative](multiplicative.md)

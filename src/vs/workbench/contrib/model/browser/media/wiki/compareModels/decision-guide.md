@@ -12,6 +12,7 @@
 ## Which Judge to Choose
 | Situation | Choice of judge |
 |---|---|
+| A first look, or a run that costs nothing | None: the Answer Score needs no judge |
 | A cloud key is available | A strong cloud model as Judge, which uses no memory on this computer |
 | Everything has to stay on this computer | The largest local chat model that fits in memory with the models compared |
 | The judge is also among the models compared | Another Judge: a judge favours its own answers |
@@ -22,13 +23,16 @@ The strong judges of [Zheng, Chiang, Sheng, Zhuang, Wu, Zhuang, Lin, Li, Li, Xin
 ## Which Questions and How Many Repeats
 | Situation | Choice of questions |
 |---|---|
-| A first look at a model | About twenty questions of the Standard test set, with Repeats at 1 |
+| A first look at a model | About twenty questions of the Standard test set, ticked with Tick at Random, with Repeats at 1 |
+| Comparing the strategies of Ask Pollis | The same questions, ticked once, with each Strategy in turn |
+| How much the search costs the answers | The same questions twice: Found in the Library, then The Question's Own Passage |
+| Choosing a model by how it answers alone | The Question's Own Passage, which leaves the search out |
 | A decision between two or three models | All the questions of the Standard test set, with Repeats at 2 or 3 |
 | Questions about your own field | A test set of your own, with Make Questions... or Add |
 | Models that differ by very little | More questions before more Repeats: each new question adds more than asking the same one again |
 
 ## When a Comparison of Answering Models Is Enough
-Stop when the order of the models is the same across two runs or two judges, or when the models still in contention differ by less than their **Spread**: then speed, memory and privacy can decide. If the line of the passages found is low, stop too and turn to Evaluate Embedding Models, as better passages may do more than a better answering model. After choosing, Set Active Models sets the answering model for the Ask Pollis pane and for the panels.
+Stop when the order of the models is the same across two runs or two judges, or when the models still in contention differ by less than their **Spread**: then speed, memory and privacy can decide. If the line of the passages found is low, stop too and turn to Evaluate Embedding Models, Evaluate Reranking Models or Ask Pollis Strategies, as better passages may do more than a better answering model. After choosing, Set Active Models sets the answering model for the Ask Pollis pane and for the panels.
 
 ## References
 

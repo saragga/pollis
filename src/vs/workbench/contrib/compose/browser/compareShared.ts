@@ -107,12 +107,24 @@ export function evalItem(item: IAskPollisEvalItem): IAskPollisEvalItem {
 	const panel = item.panel && typeof item.panel.title === 'string' && Array.isArray(item.panel.packages)
 		? { title: item.panel.title, packages: item.panel.packages.filter(name => typeof name === 'string'), ...(typeof item.panel.card === 'string' ? { card: item.panel.card } : {}) }
 		: undefined;
+	const closed = closedChoices(item);
 	return {
 		source: item.source, context: item.context, question: item.question, answer: item.answer,
 		...(panel ? { panel } : {}),
 		...(typeof item.wikiFile === 'string' && item.wikiFile ? { wikiFile: item.wikiFile } : {}),
 		...(item.hidden === true ? { hidden: true } : {}),
+		...(closed ? { choices: closed, rightChoice: closed.indexOf(item.answer) } : {}),
+		...(closed && typeof item.explanation === 'string' && item.explanation.trim() ? { explanation: item.explanation } : {}),
 	};
+}
+
+/** The options of a closed question, when it has 2 or more, all text and different, with its answer among them; otherwise nothing. */
+function closedChoices(item: IAskPollisEvalItem): string[] | undefined {
+	const choices = Array.isArray(item.choices) ? item.choices : undefined;
+	if (!choices || choices.length < 2 || choices.some(choice => typeof choice !== 'string' || !choice.trim()) || new Set(choices).size !== choices.length || !choices.includes(item.answer)) {
+		return undefined;
+	}
+	return [...choices];
 }
 
 /** The questions of a file of RAGTools.jl, or nothing when it holds none. */
@@ -366,7 +378,7 @@ export function compareSharedText() {
 		testSet: localize('compareModels.testSet', "Test Set"),
 		standard: localize('compareModels.standard', "Standard"),
 		panelFaq: localize('compareModels.panelFaq', "Panel FAQ"),
-		panelFaqHint: localize('compareModels.panelFaqHint', "Panel FAQ comes with Pollis: the questions of the FAQ of its panels and of the panels of the toolboxes installed, those Learn More shows and those it does not, each asked in its panel. It cannot be changed: Save As... makes a copy of it that you can change."),
+		panelFaqHint: localize('compareModels.panelFaqHint', "Panel FAQ comes with Pollis: the questions of the FAQ that the panels of Pollis and of the toolboxes installed do not show in Learn More, each with the options its author wrote and asked in its panel. An answer is right when it chooses the right option. It cannot be changed: Save As... makes a copy of it that you can change."),
 		yoursHint: localize('compareModels.yoursHint', "Yours, in {0}: every change is saved as you make it, the ticks too.", '{0}'),
 		countTicked: localize('compareModels.countTicked', "{0} of {1} ticked", '{0}', '{1}'),
 		untick: localize('compareModels.untick', "Untick All"),
@@ -469,6 +481,8 @@ export const compareCss = `
 		td.origin { width: 24%; }
 		tr.detail > td { padding: 12px 8px 16px 8px; }
 		.right { margin: 0 0 12px 0; max-width: 900px; }
+		.right ol.choices { margin: 4px 0 6px 0; padding-left: 24px; }
+		.right ol.choices li.chosen { font-weight: 600; }
 		.columns { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
 		.column { border: 1px solid var(--vscode-widget-border); border-radius: 4px; padding: 12px; min-width: 0; }
 		.column h4 { font-size: 14px; font-weight: 600; margin: 0 0 2px 0; }

@@ -464,6 +464,11 @@ export interface IAskPollisEvalItem {
 	readonly wikiFile?: string;
 	/** Whether the question is one of the FAQ the panel does not show. */
 	readonly hidden?: boolean;
+	/** A closed question: its options in the order they are asked, `answer` the right one, at `rightChoice`. */
+	readonly choices?: readonly string[];
+	readonly rightChoice?: number;
+	/** Why the right option is right, when the author wrote it. */
+	readonly explanation?: string;
 }
 
 /**
@@ -487,7 +492,7 @@ export interface ICompareRunModel {
 	readonly value: string;
 	readonly label: string;
 	readonly local: boolean;
-	/** A local model's download, as Compose > Local Models shows it. */
+	/** A local model's download, as Compose > Local AI Models shows it. */
 	readonly size?: string;
 }
 
@@ -505,6 +510,13 @@ export interface ICompareRunSummary {
 	readonly questions: number;
 	/** The strategy of Ask Pollis that found the passages and asked the models, by its id; Base for a run without one. */
 	readonly strategy?: string;
+	/**
+	 * Open Book Answering: each model was given the question's own passage, or the passages of the wiki of a question
+	 * of the Panel FAQ, with no search; without it or `closedBook`, Open Library Answering, the passages found by the strategy.
+	 */
+	readonly openBook?: boolean;
+	/** Closed Book Answering: each model was given no passage, and answered from what it learned alone. */
+	readonly closedBook?: boolean;
 }
 
 /** A question of a run, with the passages found for it, the same for every model. */
@@ -530,6 +542,8 @@ export interface ICompareRunAnswer {
 	readonly timings?: IAskPollisTimings;
 	/** Its answer score: the cosine similarity of its embedding and that of the right answer, by the embedding model of the search. */
 	readonly similarity?: number;
+	/** For a closed question, the option the answer chose, from 0; nothing when no option could be read from it. */
+	readonly choice?: number;
 }
 
 /**
@@ -648,7 +662,7 @@ export interface IEmbeddingEvaluated {
 export interface IEmbeddingRunModel extends IEmbeddingPrefixes {
 	readonly value: string;
 	readonly label: string;
-	/** Its download, as Compose > Local Models shows it. */
+	/** Its download, as Compose > Local AI Models shows it. */
 	readonly size?: string;
 	readonly dimensions?: number;
 	/** The bytes of memory its server took. */
@@ -686,7 +700,7 @@ export interface IEmbeddingRun {
 export interface IRerankRunModel {
 	readonly value: string;
 	readonly label: string;
-	/** Its download, as Compose > Local Models shows it. */
+	/** Its download, as Compose > Local AI Models shows it. */
 	readonly size?: string;
 	/** The bytes of memory its server took. */
 	readonly memory?: number;
@@ -752,6 +766,8 @@ export interface IAskPollisIndex {
 	 * most of its words; nothing for a text no passage is like any more; nothing at all when there is no index.
 	 */
 	matches(texts: readonly string[]): Promise<readonly (IAskPassageMatch | undefined)[] | undefined>;
+	/** The passages of the wiki `wikiFile` of a panel, as the Panel FAQ names it (`boot/assumptions.md`), in their order; none when the index does not hold it. */
+	wikiPassages(wikiFile: string): Promise<readonly IAskPollisPassage[]>;
 	/** The passages found before for each of `questions` with the search stamp `key`, nothing for a question not found with it. */
 	foundBefore(key: string, questions: readonly string[]): Promise<readonly (readonly IAskPollisPassage[] | undefined)[]>;
 	/** Keeps the passages `found` with the search stamp `key`, and forgets those found with any other. */
@@ -841,6 +857,8 @@ export interface IAskPollisService {
 	 * most of its words; nothing for a text no passage is like any more; nothing at all when there is no index.
 	 */
 	matches(texts: readonly string[]): Promise<readonly (IAskPassageMatch | undefined)[] | undefined>;
+	/** The passages of the wiki `wikiFile` of a panel, as the Panel FAQ names it (`boot/assumptions.md`), in their order; none when the index does not hold it. */
+	wikiPassages(wikiFile: string): Promise<readonly IAskPollisPassage[]>;
 	/** The runs of Evaluate Answering Models, in `~/.pollis/ask/Comparisons.duckdb`. */
 	saveRun(run: ICompareRun): Promise<void>;
 	runs(): Promise<readonly ICompareRunSummary[]>;

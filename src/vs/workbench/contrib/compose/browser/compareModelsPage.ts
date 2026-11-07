@@ -33,11 +33,11 @@ import { ASK_CLOUD_MODELS, ASK_CLOUD_PROVIDERS, ASK_LOCAL_PREFIX, askCloudModel,
 import { ASK_DEFAULT_STRATEGY, askPollisStrategy, askStrategyLabel, IAskPollisStrategiesService } from '../common/askPollisStrategies.js';
 import { IToolboxPanelsService } from '../common/toolboxPanels.js';
 import { askAnswerCss, askAnswerScript, askOpenPassage, askPassageView } from './askPollisWebview.js';
-import { CompareModelsRunner, compareFigures, ICompareEnd, ICompareProgress, QUESTION_COUNTS, retrievalLine } from './compareModelsRun.js';
+import { CompareModelsRunner, compareFigures, ComparePassages, ICompareEnd, ICompareProgress, isClosed, QUESTION_COUNTS, retrievalLine } from './compareModelsRun.js';
 import { compareChartsHtml, compareChartsScript, compareCommonScript, compareCss, compareLocalCard, compareSharedText, compareTestSetHeadHtml, compareTestSetHtml, compareTestSetScript, CompareTestSetChoice, evalItemsText, mergeEvalItems, parseEvalItems, STANDARD_TEST_SET, isShippedTestSet, topicLabel } from './compareShared.js';
 import { IInstalledModel } from './modelsInstalledPage.js';
 
-// Evaluate Answering Models, from Ask Pollis and Compose > Local Models > Evaluate Answering Models... (compose.contribution.ts): the chat
+// Evaluate Answering Models, from Ask Pollis and Compose > Local AI Models > Evaluate Answering Models... (compose.contribution.ts): the chat
 // models of this computer and the cloud models of Ask Pollis, compared on the questions of a test set, the same
 // passages and the same instruction for every model, each answer scored against the right answer by the embedding
 // model of the search and, if any, rated by one or two judges (compareModelsRun.ts). One page, in four steps: 1, the models to compare; 2, the questions, of the test set chosen,
@@ -63,6 +63,14 @@ const QUESTIONS_BY_KEY = 'pollis.compareModels.questionsBy';
 const REPEATS_KEY = 'pollis.compareModels.repeats';
 /** The strategy of Ask Pollis the runs use, by its id. */
 const STRATEGY_KEY = 'pollis.compareModels.strategy';
+/** Where the passages of the runs come from: found (Open Library Answering), the question's own (Open Book Answering) or none (Closed Book Answering). */
+const PASSAGES_KEY = 'pollis.compareModels.passages';
+const PASSAGES: readonly ComparePassages[] = ['library', 'own', 'none'];
+
+/** `value` if it is one of the passages settings, else Found in the Library. */
+function passagesOf(value: unknown): ComparePassages {
+	return PASSAGES.find(passages => passages === value) ?? 'library';
+}
 /** How many questions of each topic Make Questions writes. */
 const COUNTS_KEY = 'pollis.compareModels.questionCounts';
 /** The most questions of a topic that Make Questions writes at a time. */
@@ -89,7 +97,7 @@ export interface ICompareModelsAdd {
 type CompareModelsMessage =
 	| { readonly command: 'ready' }
 	| { readonly command: 'choose'; readonly chosen: readonly string[] }
-	| { readonly command: 'settings'; readonly judges: readonly string[]; readonly questionsBy: string; readonly repeats: number; readonly strategy: string; readonly counts: IAskTopicCounts }
+	| { readonly command: 'settings'; readonly judges: readonly string[]; readonly questionsBy: string; readonly repeats: number; readonly strategy: string; readonly passages: string; readonly counts: IAskTopicCounts }
 	| { readonly command: 'rows'; readonly rows: number }
 	| { readonly command: 'makeQuestions' }
 	| { readonly command: 'run'; readonly questions: readonly string[] }
@@ -198,6 +206,7 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 	let repeats = storageService.getNumber(REPEATS_KEY, StorageScope.APPLICATION, 1);
 	// Its id as stored, a strategy of a file among them, checked once the files are read
 	let strategy = strategyId ?? storageService.get(STRATEGY_KEY, StorageScope.APPLICATION, ASK_DEFAULT_STRATEGY);
+	let passages = passagesOf(storageService.get(PASSAGES_KEY, StorageScope.APPLICATION));
 	let counts = storedCounts(storageService);
 	const testSet = new CompareTestSetChoice(storageService, askPollisService, run.sets, { testSet: TEST_SET_KEY, ticked: TICKED_KEY }, post, () => toolboxPanelsService.getToolboxes().flatMap(toolbox => toolbox.panels.flatMap(panel => panel.faq)));
 	let shown: ICompareRun | undefined;
@@ -222,9 +231,14 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 				judges: shown.summary.judges,
 				repeats: shown.summary.repeats,
 				strategy: askStrategyLabel(shown.summary.strategy, strategiesService.getStrategies()),
+				openBook: !!shown.summary.openBook,
+				closedBook: !!shown.summary.closedBook,
 				figures: compareFigures(shown).map(figures => ({ ...figures, where: where(figures) })),
 				retrieval: retrievalLine(shown),
-				questions: shown.questions.map(question => ({ question: question.item.question, answer: question.item.answer, source: question.item.source, context: question.item.context, passages: question.passages.map(askPassageView) })),
+				questions: shown.questions.map(question => ({
+					question: question.item.question, answer: question.item.answer, source: question.item.source, context: question.item.context, passages: question.passages.map(askPassageView),
+					...(isClosed(question.item) ? { choices: question.item.choices, rightChoice: question.item.rightChoice, explanation: question.item.explanation } : {}),
+				})),
 				answers: shown.answers.map(answer => ({ ...answer, scores: shown!.scores.filter(score => score.answer === answer.id), unrated: shown!.unrated.filter(unrated => unrated.answer === answer.id) })),
 			},
 			latest,
@@ -314,7 +328,7 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 			...installed.map(installedModel => ({ value: ASK_LOCAL_PREFIX + installedModel.file, label: installedModel.name, local: true, size: installedModel.sizeLabel, bytes: installedModel.bytes })),
 			...ASK_CLOUD_MODELS.map(cloud => ({ value: cloud.id, label: cloud.label, local: false, provider: ASK_CLOUD_PROVIDERS[cloud.provider].label })),
 		];
-		post({ command: 'models', models: listed.map(({ value, label, local, size, bytes, provider }) => ({ value, label, local, size, bytes, provider })), chosen, judges, questionsBy, repeats, strategy, counts });
+		post({ command: 'models', models: listed.map(({ value, label, local, size, bytes, provider }) => ({ value, label, local, size, bytes, provider })), chosen, judges, questionsBy, repeats, strategy, passages, counts });
 		await postMemory();
 	};
 
@@ -405,7 +419,7 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 		const runJudges = judges.map(model).filter(candidate => !!candidate).map(({ value, label, local, size }) => ({ value, label, local, size }));
 		const ticked = new Set(questions);
 		post({ command: 'running', running: true });
-		run.run(chosenModels(), runJudges, repeats, ticked.size ? testSet.items.filter(item => ticked.has(item.question)) : testSet.items, strategy).then(end => {
+		run.run(chosenModels(), runJudges, repeats, ticked.size ? testSet.items.filter(item => ticked.has(item.question)) : testSet.items, strategy, passages).then(end => {
 			// The checks before any work, which end nothing
 			if (!end.run && end.error && !run.running) {
 				status(end.error, true);
@@ -477,12 +491,14 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 			questionsBy = message.questionsBy;
 			repeats = REPEATS.includes(message.repeats) ? message.repeats : 1;
 			strategy = askPollisStrategy(message.strategy, strategiesService.getStrategies()).id;
+			passages = passagesOf(message.passages);
 			counts = questionCounts(message.counts);
 			storageService.store(COUNTS_KEY, JSON.stringify(counts), StorageScope.APPLICATION, StorageTarget.USER);
 			storageService.store(JUDGES_KEY, JSON.stringify(judges), StorageScope.APPLICATION, StorageTarget.USER);
 			storageService.store(QUESTIONS_BY_KEY, questionsBy, StorageScope.APPLICATION, StorageTarget.USER);
 			storageService.store(REPEATS_KEY, repeats, StorageScope.APPLICATION, StorageTarget.USER);
 			storageService.store(STRATEGY_KEY, strategy, StorageScope.APPLICATION, StorageTarget.USER);
+			storageService.store(PASSAGES_KEY, passages, StorageScope.APPLICATION, StorageTarget.USER);
 			await postMemory();
 		} else if (message.command === 'rows' && hasKey(message, { rows: true })) {
 			storeRows(storageService, 'compareModels', message.rows);
@@ -547,14 +563,21 @@ function pageHtml(rows: number): string {
 		cloud: localize('compareModels.inTheCloud', "In the Cloud, With Your Own Key"),
 		cloudShort: localize('compareModels.cloud', "In the Cloud"),
 		provider: localize('compareModels.provider', "Provider"),
-		noLocal: localize('compareModels.noLocal', "No chat model on this computer yet: Compose > Local Models downloads them."),
+		noLocal: localize('compareModels.noLocal', "No chat model on this computer yet: Compose > Local AI Models downloads them."),
 		judge: localize('compareModels.judge', "Judge"),
 		secondJudge: localize('compareModels.secondJudge', "Second Judge"),
 		none: localize('compareModels.none', "None"),
 		repeats: localize('compareModels.repeats', "Repeats"),
 		strategy: localize('compareModels.strategy', "Strategy"),
 		strategyHint: localize('compareModels.strategyHint', "The answering strategy of Ask Pollis that finds the passages and asks the models, as Help > Ask Pollis does: the strategies can be compared on the same test set."),
-		runStrategy: localize('compareModels.runStrategy', "Strategy: {0}.", '{0}'),
+		passages: localize('compareModels.passages', "Passages"),
+		passagesLibrary: localize('compareModels.passagesLibrary', "Found in the Library"),
+		passagesOwn: localize('compareModels.passagesOwn', "The Question's Own Passage"),
+		passagesNone: localize('compareModels.passagesNone', "None"),
+		passagesHint: localize('compareModels.passagesHintNone', "Found in the Library: the strategy finds the passages in the documents, as Ask Pollis does, which tests the search and the answer together (Open Library Answering). The Question's Own Passage: each model is given the passage the question was made from, or the wiki of a question of the Panel FAQ, with no search, which tests the answer alone (Open Book Answering). None: each model is given no passage and answers from what it learned in training alone (Closed Book Answering), which shows the questions a model answers without the documents."),
+		runOpenLibrary: localize('compareModels.runOpenLibrary', "Open Library Answering, with the strategy {0}.", '{0}'),
+		runOpenBook: localize('compareModels.runOpenBook', "Open Book Answering: each model was given the question's own passage."),
+		runClosedBook: localize('compareModels.runClosedBook', "Closed Book Answering: each model was given no passage."),
 		repeatsHint: localize('compareModels.repeatsHint', "How many times each model answers each question: more than once shows how much its answers vary, in Spread."),
 		run: localize('compareModels.run', "Run"),
 		runSection: localize('compareModels.runSection', "Run"),
@@ -589,7 +612,7 @@ function pageHtml(rows: number): string {
 		rightAnswer: localize('compareModels.rightAnswer', "The right answer"),
 		passage: localize('compareModels.passage', "The passage it was made from"),
 		answers: localize('compareModels.answers', "Answers"),
-		answersIntro: localize('compareModels.answersIntroScores', "The questions of this run, with each model's rating by the first judge, or its answer score when the run has no judge, then the seconds each took to answer. Click a question to see each model's answer side by side, with its sources, seconds, answer score and ratings, and the right answer."),
+		answersIntro: localize('compareModels.answersIntroClosed', "The questions of this run, with each model's share of right answers for a closed question, and for an open one its rating by the first judge, or its answer score when the run has no judge, then the seconds each took to answer. Click a question to see each model's answer side by side, with its sources, seconds, the option it chose or its answer score and ratings, and the right answer."),
 		answerPlaceholder: localize('compareModels.answerPlaceholder', "The right answer"),
 		questionPlaceholder: localize('compareModels.questionPlaceholder', "A question that the documents answer"),
 		findPassages: localize('compareModels.findPassages', "Find Passages"),
@@ -612,6 +635,17 @@ function pageHtml(rows: number): string {
 		answerScore: localize('compareModels.answerScore', "Answer Score"),
 		answerScoreHint: localize('compareModels.answerScoreHint', "How near the answers are to the right answers in meaning, on average: the cosine similarity of their embeddings by the embedding model of the search, from -1 to 1, higher being nearer. It needs no judge"),
 		answerScoreOf: localize('compareModels.answerScoreOf', "Answer score {0}", '{0}'),
+		rightAnswers: localize('compareModels.rightAnswers', "Right Answers"),
+		rightAnswersHint: localize('compareModels.rightAnswersHint', "Of the answers to the closed questions, those that chose the right option, and their share. An answer with no option that can be read counts as wrong"),
+		rightAnswersValue: localize('compareModels.rightAnswersValue', "{0} of {1} ({2}%)", '{0}', '{1}', '{2}'),
+		byChance: localize('compareModels.byChance', "By Chance"),
+		byChanceHint: localize('compareModels.byChanceHint', "The probability of as many right answers or more by guessing, each option of a question as likely as the others (the Poisson binomial distribution). The smaller it is, the less the right answers can be put down to luck"),
+		byChanceBelow: localize('compareModels.byChanceBelow', "< 0.001"),
+		options: localize('compareModels.options', "The options"),
+		explanation: localize('compareModels.explanation', "Why"),
+		chose: localize('compareModels.chose', "Chose {0}: right", '{0}'),
+		choseWrong: localize('compareModels.choseWrong', "Chose {0}: wrong", '{0}'),
+		choseNone: localize('compareModels.choseNone', "No option could be read: wrong"),
 		relevance: localize('compareModels.relevance', "Relevance"),
 		completeness: localize('compareModels.completeness', "Completeness"),
 		clarity: localize('compareModels.clarity', "Clarity"),
@@ -719,6 +753,7 @@ function pageHtml(rows: number): string {
 	<div class="settings">
 		<label class="field"><span class="small">${text.judge}</span><select id="judge"></select></label>
 		<label class="field"><span class="small">${text.secondJudge}</span><select id="secondJudge"></select></label>
+		<label class="field" title="${text.passagesHint}"><span class="small">${text.passages}</span><select id="passages"><option value="library">${text.passagesLibrary}</option><option value="own">${text.passagesOwn}</option><option value="none">${text.passagesNone}</option></select></label>
 		<label class="field" title="${text.strategyHint}"><span class="small">${text.strategy}</span><select id="strategy"></select></label>
 		<label class="field" title="${text.repeatsHint}"><span class="small">${text.repeats}</span><select id="repeats">${REPEATS.map(count => `<option value="${count}">${count}</option>`).join('')}</select></label>
 		<span class="bar"><button class="action current" id="run" disabled>${text.run}</button></span>
@@ -787,10 +822,16 @@ function pageHtml(rows: number): string {
 		if (second.disabled) { second.value = ''; }
 	}
 
+	/** The strategy finds the passages: it has nothing to do when each model is given the question's own passage, or none. */
+	function strategyEnabled() {
+		document.getElementById('strategy').disabled = document.getElementById('passages').value !== 'library';
+	}
+
 	function settings() {
 		secondJudgeEnabled();
 		const counts = Object.fromEntries(TEXT.topics.map(({ topic }) => [topic, Number(document.getElementById('count-' + topic).value) || 0]));
-		vscode.postMessage({ command: 'settings', judges: [document.getElementById('judge').value, document.getElementById('secondJudge').value], questionsBy: document.getElementById('questionsBy').value, repeats: Number(document.getElementById('repeats').value), strategy: document.getElementById('strategy').value, counts });
+		strategyEnabled();
+		vscode.postMessage({ command: 'settings', judges: [document.getElementById('judge').value, document.getElementById('secondJudge').value], questionsBy: document.getElementById('questionsBy').value, repeats: Number(document.getElementById('repeats').value), strategy: document.getElementById('strategy').value, passages: document.getElementById('passages').value, counts });
 	}
 
 	function fillSelect(select, chosen, none) {
@@ -822,7 +863,7 @@ function pageHtml(rows: number): string {
 		if (chosenStrategy) { select.value = chosenStrategy; }
 	}
 
-	function renderModels(chosen, judges, questionsBy, repeats, strategy, counts) {
+	function renderModels(chosen, judges, questionsBy, repeats, strategy, passages, counts) {
 		renderLocal(chosen);
 		const cloud = document.getElementById('cloudBody');
 		cloud.textContent = '';
@@ -837,6 +878,8 @@ function pageHtml(rows: number): string {
 		document.getElementById('repeats').value = String(repeats);
 		chosenStrategy = strategy;
 		document.getElementById('strategy').value = strategy;
+		document.getElementById('passages').value = passages;
+		strategyEnabled();
 		for (const { topic } of TEXT.topics) { document.getElementById('count-' + topic).value = String(counts[topic]); }
 	}
 	document.querySelector('.models').addEventListener('change', event => {
@@ -846,7 +889,7 @@ function pageHtml(rows: number): string {
 		updateChosen();
 		vscode.postMessage({ command: 'choose', chosen: chosenValues() });
 	});
-	for (const id of ['judge', 'secondJudge', 'questionsBy', 'repeats', 'strategy', ...TEXT.topics.map(({ topic }) => 'count-' + topic)]) {
+	for (const id of ['judge', 'secondJudge', 'questionsBy', 'repeats', 'passages', 'strategy', ...TEXT.topics.map(({ topic }) => 'count-' + topic)]) {
 		document.getElementById(id).addEventListener('change', settings);
 	}
 
@@ -977,7 +1020,10 @@ function pageHtml(rows: number): string {
 	function questionScore(index, model) {
 		const judge = run.judges[0];
 		const answers = run.answers.filter(answer => answer.question === index && answer.model === model);
-		const values = judge
+		const closed = run.questions[index]?.choices;
+		const values = closed
+			? answers.map(answer => answer.choice === run.questions[index].rightChoice ? 1 : 0)
+			: judge
 			? answers.flatMap(answer => answer.scores.filter(score => score.judge === judge).map(score => score.final))
 			: answers.map(answer => answer.similarity).filter(value => typeof value === 'number');
 		return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : undefined;
@@ -1007,10 +1053,22 @@ function pageHtml(rows: number): string {
 		const cell = element('td');
 		cell.colSpan = columns;
 		const right = element('div', 'right');
-		right.appendChild(element('h3', 'small', TEXT.rightAnswer));
-		right.appendChild(element('div', '', asked.answer));
-		right.appendChild(element('div', 'small', TEXT.passage + ': ' + asked.source));
-		right.lastChild.title = asked.context;
+		const letter = choice => 'ABCDEFGHIJ'[choice];
+		if (asked.choices) {
+			right.appendChild(element('h3', 'small', TEXT.options));
+			const list = element('ol', 'choices');
+			list.type = 'A';
+			asked.choices.forEach((choice, index) => list.appendChild(element('li', index === asked.rightChoice ? 'chosen' : '', choice)));
+			right.appendChild(list);
+			if (asked.explanation) { right.appendChild(element('div', 'small', TEXT.explanation + ': ' + asked.explanation)); }
+		} else {
+			right.appendChild(element('h3', 'small', TEXT.rightAnswer));
+			right.appendChild(element('div', '', asked.answer));
+		}
+		if (asked.source) {
+			right.appendChild(element('div', 'small', TEXT.passage + ': ' + asked.source));
+			right.lastChild.title = asked.context;
+		}
 		cell.appendChild(right);
 		const columnsBox = element('div', 'columns');
 		for (const figures of run.figures) {
@@ -1023,6 +1081,9 @@ function pageHtml(rows: number): string {
 				const block = element('div', 'asking');
 				if (answers.length > 1) { block.appendChild(element('div', 'small', format(TEXT.repeat, answer.repeat + 1))); }
 				if (answer.timings) { block.appendChild(element('div', 'small figures', answerFigures(answer.timings))); }
+				if (asked.choices && !answer.error) {
+					block.appendChild(element('div', 'small', typeof answer.choice !== 'number' ? TEXT.choseNone : format(answer.choice === asked.rightChoice ? TEXT.chose : TEXT.choseWrong, '(' + letter(answer.choice) + ')')));
+				}
 				if (typeof answer.similarity === 'number') { block.appendChild(element('div', 'small', format(TEXT.answerScoreOf, answer.similarity.toFixed(2)))); }
 				for (const score of answer.scores) {
 					// The five parts of a rating against the passages, in a run before the ratings against the right answer
@@ -1094,14 +1155,14 @@ function pageHtml(rows: number): string {
 		document.getElementById('results').hidden = !run;
 		document.getElementById('runLine').textContent = !run ? TEXT.noRuns : (run.judges.length
 			? format(run.repeats > 1 ? TEXT.runLineRepeats : TEXT.runLine, new Date(run.started).toLocaleString(), run.pollis, run.questions.length, run.judges.length > 1 ? format(TEXT.and, run.judges[0], run.judges[1]) : run.judges[0], run.repeats)
-			: format(run.repeats > 1 ? TEXT.runLineUnjudgedRepeats : TEXT.runLineUnjudged, new Date(run.started).toLocaleString(), run.pollis, run.questions.length, run.repeats)) + ' ' + format(TEXT.runStrategy, run.strategy);
+			: format(run.repeats > 1 ? TEXT.runLineUnjudgedRepeats : TEXT.runLineUnjudged, new Date(run.started).toLocaleString(), run.pollis, run.questions.length, run.repeats)) + ' ' + (run.openBook ? TEXT.runOpenBook : run.closedBook ? TEXT.runClosedBook : format(TEXT.runOpenLibrary, run.strategy));
 		document.getElementById('retrieval').textContent = run ? run.retrieval : '';
 		document.getElementById('deleteRun').hidden = !run;
 		// A run that ends shows itself, even in a pane left closed
 		if (run) { document.getElementById('step-results').classList.remove('collapsed'); }
 		if (!run) { return; }
 		// A column for each model, the best first by the first judge, or by the answer score in a run with no judge; a row for each figure
-		const best = figures => run.judges.length ? figures.scores[0] ?? -1 : figures.similarity ?? -2;
+		const best = figures => figures.closed ? figures.right / figures.closed : run.judges.length ? figures.scores[0] ?? -1 : figures.similarity ?? -2;
 		const sorted = [...run.figures].sort((a, b) => best(b) - best(a));
 		head.appendChild(element('th', '', TEXT.model));
 		for (const figures of sorted) { head.appendChild(element('th', 'number', figures.label)); }
@@ -1114,6 +1175,10 @@ function pageHtml(rows: number): string {
 			body.appendChild(row);
 		};
 		line(TEXT.where, '', figures => figures.where, 'small');
+		if (run.figures.some(figures => figures.closed)) {
+			line(TEXT.rightAnswers, TEXT.rightAnswersHint, figures => figures.closed ? format(TEXT.rightAnswersValue, figures.right, figures.closed, (100 * figures.right / figures.closed).toFixed(1)) : '-');
+			line(TEXT.byChance, TEXT.byChanceHint, figures => typeof figures.byChance !== 'number' ? '-' : figures.byChance < 0.001 ? TEXT.byChanceBelow : figures.byChance.toFixed(3));
+		}
 		if (run.figures.some(figures => figures.similarity !== undefined)) { line(TEXT.answerScore, TEXT.answerScoreHint, figures => fixed(figures.similarity, 2)); }
 		run.judges.forEach((judge, index) => line(run.judges.length > 1 ? format(TEXT.scoreBy, judge) : TEXT.score, TEXT.scoreHint, figures => fixed(figures.scores[index], 2)));
 		// The five parts only in a run before the ratings against the right answer
@@ -1139,7 +1204,7 @@ function pageHtml(rows: number): string {
 		const message = event.data;
 		if (message.command === 'models') {
 			models = message.models;
-			renderModels(message.chosen, message.judges, message.questionsBy, message.repeats, message.strategy, message.counts);
+			renderModels(message.chosen, message.judges, message.questionsBy, message.repeats, message.strategy, message.passages, message.counts);
 		} else if (message.command === 'strategies') {
 			renderStrategies(message.strategies);
 		} else if (message.command === 'sets') {

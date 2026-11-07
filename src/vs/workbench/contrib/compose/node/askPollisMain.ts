@@ -26,7 +26,7 @@ import { ProxyChannel } from '../../../../base/parts/ipc/common/ipc.js';
 import { Server as ChildProcessServer } from '../../../../base/parts/ipc/node/ipc.cp.js';
 import { Server as UtilityProcessServer } from '../../../../base/parts/ipc/node/ipc.mp.js';
 import { isUtilityProcess } from '../../../../base/parts/sandbox/node/electronTypes.js';
-import { AskPollisSource, AskTopic, ASK_PASSAGES, ASK_SOURCE_COLLECTION, IAskPollisChatEnd, IAskPollisMessage, ICompareRun, ICompareRunSummary, IAskPollisChatRequest, IAskPollisChatText, IAskPollisFound, IAskPollisIndex, IAskPollisIndexedDocument, IAskPollisIndexRequest, IAskPollisIndexStatus, IAskPollisPanel, IAskPollisPanelShare, IAskPollisPassage, IAskPassageMatch, IAskPollisReranked, IAskPollisSearchResult, IAskPollisTimings, IAskTopicCounts, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingFound, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary, IRerankRun, IRerankRunSummary } from '../common/askPollis.js';
+import { AskPollisSource, AskTopic, ASK_PASSAGES, ASK_SOURCE_COLLECTION, IAskPollisChatEnd, IAskPollisMessage, ICompareRun, ICompareRunSummary, IAskPollisChatRequest, IAskPollisChatText, IAskPollisEvalItem, IAskPollisFound, IAskPollisIndex, IAskPollisIndexedDocument, IAskPollisIndexRequest, IAskPollisIndexStatus, IAskPollisPanel, IAskPollisPanelShare, IAskPollisPassage, IAskPassageMatch, IAskPollisReranked, IAskPollisSearchResult, IAskPollisTimings, IAskTopicCounts, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingFound, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary, IRerankRun, IRerankRunSummary } from '../common/askPollis.js';
 
 const DATABASE = join(os.homedir(), '.pollis', 'documents', 'PollisDocuments.duckdb');
 /** The embeddings made, by the model and the text it was given, as ask_index.jl keeps them. */
@@ -275,6 +275,15 @@ function optionalNumber(value: unknown): number | undefined {
 	return value === null || value === undefined ? undefined : Number(value);
 }
 
+/** A question of a run read back, with its options, at the place of its right answer among them, and its explanation, when it was a closed question. */
+function closedItem(item: IAskPollisEvalItem, choices: unknown, explanation: unknown): IAskPollisEvalItem {
+	const options: unknown = typeof choices === 'string' ? JSON.parse(choices) : undefined;
+	if (!Array.isArray(options) || !options.every(option => typeof option === 'string')) {
+		return item;
+	}
+	return { ...item, choices: options, rightChoice: options.indexOf(item.answer), ...(typeof explanation === 'string' && explanation ? { explanation } : {}) };
+}
+
 /** The shortest passage Make Questions asks about, in characters: a shorter one is mostly a heading or a line of a table. */
 const SHORTEST_QUESTION_PASSAGE = 400;
 
@@ -299,10 +308,18 @@ const COMPARISONS_TABLES = [
 	'CREATE TABLE IF NOT EXISTS Comparisons.runs(id VARCHAR PRIMARY KEY, started BIGINT, pollis VARCHAR, models VARCHAR, judges VARCHAR, repeats INTEGER, questions INTEGER)',
 	// The answering strategy of a run: a run without one was Base
 	'ALTER TABLE Comparisons.runs ADD COLUMN IF NOT EXISTS strategy VARCHAR',
+	// Open Book Answering: each model given the question's own passage, with no search
+	'ALTER TABLE Comparisons.runs ADD COLUMN IF NOT EXISTS open_book BOOLEAN',
+	// Closed Book Answering: each model given no passage
+	'ALTER TABLE Comparisons.runs ADD COLUMN IF NOT EXISTS closed_book BOOLEAN',
 	'CREATE TABLE IF NOT EXISTS Comparisons.questions(run VARCHAR, question INTEGER, source VARCHAR, context VARCHAR, text VARCHAR, answer VARCHAR, passages VARCHAR, rank INTEGER)',
 	'CREATE TABLE IF NOT EXISTS Comparisons.answers(run VARCHAR, id VARCHAR, question INTEGER, model VARCHAR, repeat INTEGER, answer VARCHAR, error VARCHAR, first_word DOUBLE, seconds DOUBLE, reading DOUBLE, writing DOUBLE, tokens_read INTEGER, tokens_written INTEGER)',
 	// The answer score of an answer, added with it: an answer before it has none
 	'ALTER TABLE Comparisons.answers ADD COLUMN IF NOT EXISTS similarity DOUBLE',
+	// A closed question: its options in the order asked, as JSON, why the right one is right, and the option each answer chose
+	'ALTER TABLE Comparisons.questions ADD COLUMN IF NOT EXISTS choices VARCHAR',
+	'ALTER TABLE Comparisons.questions ADD COLUMN IF NOT EXISTS explanation VARCHAR',
+	'ALTER TABLE Comparisons.answers ADD COLUMN IF NOT EXISTS choice INTEGER',
 	'CREATE TABLE IF NOT EXISTS Comparisons.scores(run VARCHAR, answer VARCHAR, judge VARCHAR, relevance INTEGER, completeness INTEGER, clarity INTEGER, consistency INTEGER, helpfulness INTEGER, final DOUBLE, rationale VARCHAR)',
 	'CREATE TABLE IF NOT EXISTS Comparisons.unrated(run VARCHAR, answer VARCHAR, judge VARCHAR, error VARCHAR)',
 	'CREATE TABLE IF NOT EXISTS Comparisons.found(stamp VARCHAR, question VARCHAR, passages VARCHAR, PRIMARY KEY(stamp, question))',
@@ -461,6 +478,13 @@ class AskPollisIndex implements IAskPollisIndex {
 			}
 		}
 		return similarities;
+	}
+
+	async wikiPassages(wikiFile: string): Promise<readonly IAskPollisPassage[]> {
+		const found = await this.withIndex(async connection => (await connection.runAndReadAll(
+			`SELECT p.id, ${PASSAGE_COLUMNS}, 0 AS score FROM passages p JOIN documents d ON d.id = p.document WHERE d.kind = 'wiki' AND suffix(replace(d.source, '\\', '/'), '/' || $file) ORDER BY p.id`, { file: wikiFile }
+		)).getRowObjectsJson().map(passageOf));
+		return found ?? [];
 	}
 
 	async documentPassages(database: string, file: string, count: number): Promise<readonly IAskPollisPassage[]> {
@@ -860,20 +884,21 @@ class AskPollisIndex implements IAskPollisIndex {
 			await connection.run('BEGIN TRANSACTION');
 			try {
 				await this.removeRun(connection, summary.id);
-				await connection.run('INSERT INTO Comparisons.runs (id, started, pollis, models, judges, repeats, questions, strategy) VALUES ($id, $started, $pollis, $models, $judges, $repeats, $questions, $strategy::VARCHAR)', {
-					id: summary.id, started: summary.started, pollis: summary.pollis, models: JSON.stringify(summary.models), judges: JSON.stringify(summary.judges), repeats: summary.repeats, questions: summary.questions, strategy: summary.strategy ?? null,
+				await connection.run('INSERT INTO Comparisons.runs (id, started, pollis, models, judges, repeats, questions, strategy, open_book, closed_book) VALUES ($id, $started, $pollis, $models, $judges, $repeats, $questions, $strategy::VARCHAR, $openBook, $closedBook)', {
+					id: summary.id, started: summary.started, pollis: summary.pollis, models: JSON.stringify(summary.models), judges: JSON.stringify(summary.judges), repeats: summary.repeats, questions: summary.questions, strategy: summary.strategy ?? null, openBook: !!summary.openBook, closedBook: !!summary.closedBook,
 				});
 				for (const question of run.questions) {
-					await connection.run('INSERT INTO Comparisons.questions VALUES ($run, $question, $source, $context, $text, $answer, $passages, $rank::INTEGER)', {
+					await connection.run('INSERT INTO Comparisons.questions (run, question, source, context, text, answer, passages, rank, choices, explanation) VALUES ($run, $question, $source, $context, $text, $answer, $passages, $rank::INTEGER, $choices::VARCHAR, $explanation::VARCHAR)', {
 						run: summary.id, question: question.index, source: question.item.source, context: question.item.context, text: question.item.question, answer: question.item.answer, passages: JSON.stringify(question.passages), rank: question.rank ?? null,
+						choices: question.item.choices ? JSON.stringify(question.item.choices) : null, explanation: question.item.explanation ?? null,
 					});
 				}
 				for (const answer of run.answers) {
 					const timings = answer.timings;
-					await connection.run('INSERT INTO Comparisons.answers (run, id, question, model, repeat, answer, error, first_word, seconds, reading, writing, tokens_read, tokens_written, similarity) VALUES ($run, $id, $question, $model, $repeat, $answer, $error::VARCHAR, $firstWord::DOUBLE, $seconds::DOUBLE, $reading::DOUBLE, $writing::DOUBLE, $tokensRead::INTEGER, $tokensWritten::INTEGER, $similarity::DOUBLE)', {
+					await connection.run('INSERT INTO Comparisons.answers (run, id, question, model, repeat, answer, error, first_word, seconds, reading, writing, tokens_read, tokens_written, similarity, choice) VALUES ($run, $id, $question, $model, $repeat, $answer, $error::VARCHAR, $firstWord::DOUBLE, $seconds::DOUBLE, $reading::DOUBLE, $writing::DOUBLE, $tokensRead::INTEGER, $tokensWritten::INTEGER, $similarity::DOUBLE, $choice::INTEGER)', {
 						run: summary.id, id: answer.id, question: answer.question, model: answer.model, repeat: answer.repeat, answer: answer.answer, error: answer.error ?? null,
 						firstWord: timings?.firstWord ?? null, seconds: timings?.seconds ?? null, reading: timings?.reading ?? null, writing: timings?.writing ?? null, tokensRead: timings?.tokensRead ?? null, tokensWritten: timings?.tokensWritten ?? null,
-						similarity: answer.similarity ?? null,
+						similarity: answer.similarity ?? null, choice: answer.choice ?? null,
 					});
 				}
 				for (const score of run.scores) {
@@ -903,6 +928,8 @@ class AskPollisIndex implements IAskPollisIndex {
 			repeats: Number(row.repeats),
 			questions: Number(row.questions),
 			...(row.strategy ? { strategy: String(row.strategy) } : {}),
+			...(row.open_book ? { openBook: true } : {}),
+			...(row.closed_book ? { closedBook: true } : {}),
 		};
 	}
 
@@ -926,7 +953,7 @@ class AskPollisIndex implements IAskPollisIndex {
 				summary: this.summaryOf(run),
 				questions: questions.map(row => ({
 					index: Number(row.question),
-					item: { source: String(row.source ?? ''), context: String(row.context ?? ''), question: String(row.text ?? ''), answer: String(row.answer ?? '') },
+					item: closedItem({ source: String(row.source ?? ''), context: String(row.context ?? ''), question: String(row.text ?? ''), answer: String(row.answer ?? '') }, row.choices, row.explanation),
 					passages: JSON.parse(String(row.passages ?? '[]')),
 					rank: optionalNumber(row.rank),
 				})),
@@ -946,6 +973,7 @@ class AskPollisIndex implements IAskPollisIndex {
 						tokensWritten: optionalNumber(row.tokens_written),
 					},
 					similarity: optionalNumber(row.similarity),
+					choice: optionalNumber(row.choice),
 				})),
 				scores: scores.map(row => ({
 					answer: String(row.answer),

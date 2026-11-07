@@ -39,7 +39,6 @@ MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 const SFSubmenuId  = new MenuId('menubarSFSubmenu');   // Sampling Foundations
 const PPLSubmenuId  = new MenuId('menubarPPLSubmenu');  // Probabilistic Programming Languages
 const TSSSubmenuId  = new MenuId('menubarTSSSubmenu');  // Time-Series Simulation
-const SDESubmenuId  = new MenuId('menubarSDESubmenu');  // Stochastic Differential Equations
 const ABSSubmenuId  = new MenuId('menubarABSSubmenu');  // Agent-Based Simulation
 const NCMSubmenuId  = new MenuId('menubarNCMSubmenu');  // Network Models
 // ============================================
@@ -116,10 +115,21 @@ MenuRegistry.appendMenuItem(MenuId.MenubarSimulateMenu, {
 
 MenuRegistry.appendMenuItem(MenuId.MenubarSimulateMenu, {
 	group: '3_simulation',
-	submenu: SDESubmenuId,
-	title: localize('simulation.sde', 'Stochastic Differential Equations'),
+	command: { id: 'chiara.simulate.sde', title: localize('simulate.sde', 'Diffusion Processes') },
 	order: 5,
-}); // StochasticDiffEq.jl, JumpProcesses.jl
+}); // StochasticDiffEq.jl — additive, multiplicative, Stratonovich
+
+MenuRegistry.appendMenuItem(MenuId.MenubarSimulateMenu, {
+	group: '3_simulation',
+	command: { id: 'chiara.simulate.jdp', title: localize('simulate.jdp', 'Jump-Diffusion Processes') },
+	order: 6,
+}); // JumpProcesses.jl — Compound Poisson, Gaussian jumps, custom rate
+
+MenuRegistry.appendMenuItem(MenuId.MenubarSimulateMenu, {
+	group: '3_simulation',
+	command: { id: 'chiara.simulate.sdea', title: localize('simulate.sdea', 'SDE Ensemble Analysis') },
+	order: 7,
+}); // DifferentialEquations.jl — path statistics, first passage time, invariant distribution
 
 
 MenuRegistry.appendMenuItem(MenuId.MenubarSimulateMenu, {
@@ -200,29 +210,6 @@ MenuRegistry.appendMenuItem(TSSSubmenuId, {
 	command: { id: 'chiara.statistics.timeseries.ssm', title: localize('timeseries.ssm', 'State Space Models') },
 	order: 5,
 }); // StateSpaceModels.jl, DifferentialEquations.jl
-
-
-// ============================================
-// SUBMENU: STOCHASTIC DIFFERENTIAL EQUATIONS
-// ============================================
-
-MenuRegistry.appendMenuItem(SDESubmenuId, {
-	group: '1_sde',
-	command: { id: 'chiara.simulate.sde', title: localize('simulate.sde', 'Diffusion Processes') },
-	order: 1,
-}); // StochasticDiffEq.jl — additive, multiplicative, Stratonovich
-
-MenuRegistry.appendMenuItem(SDESubmenuId, {
-	group: '1_sde',
-	command: { id: 'chiara.simulate.jdp', title: localize('simulate.jdp', 'Jump-Diffusion Processes') },
-	order: 2,
-}); // JumpProcesses.jl — Compound Poisson, Gaussian jumps, custom rate
-
-MenuRegistry.appendMenuItem(SDESubmenuId, {
-	group: '1_sde',
-	command: { id: 'chiara.simulate.sdea', title: localize('simulate.sdea', 'Ensemble Analysis') },
-	order: 3,
-}); // DifferentialEquations.jl — path statistics, first passage time, invariant distribution
 
 
 // ============================================

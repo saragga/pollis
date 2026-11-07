@@ -152,7 +152,7 @@ speak of it too.
 
 \subsection{The model}
 The models of Pollis AI+ are shown in the hover of \textbf{Active AI Models}, their entry at the right of the status bar,
-with a cloud beside it while a cloud model answers; a click opens \menupath{Compose\gt Local Models\gt Set Active Models}, whose \textbf{Set Models}
+with a cloud beside it while a cloud model answers; a click opens \menupath{Compose\gt Local AI Models\gt Set Active Models}, whose \textbf{Set Models}
 sets them. The model that writes the answer, the same for Ask Pollis, the panels and Evaluate Answering Models, is one of:
 \begin{itemize}
   \item \textbf{On this computer}: the chat models installed on this computer, run by llama.cpp; the one chosen is kept
@@ -419,7 +419,7 @@ Chat & the default chat model & a few GB & answers at once, without thinking alo
 \end{center}
 
 Both are GGUF files from Hugging Face, downloaded into \file{~/.pollis/models} the first time they are needed and listed
-in \menupath{Compose\gt Local Models\gt Set Active Models}. They are the defaults, not requirements: \textbf{Set Models} in that page
+in \menupath{Compose\gt Local AI Models\gt Set Active Models}. They are the defaults, not requirements: \textbf{Set Models} in that page
 offers every chat or embedding model on this computer. LLM Text Analysis
 uses the same embedding model, so it is downloaded once for both.
 
@@ -433,11 +433,11 @@ in \file{~/.pollis/documents/embeddings.duckdb}, so a model used before, or eval
 Which model should answer: a small one that is quick, a larger one that is slower, or a cloud model? \textbf{Compare
 Models...}, on the Ask Pollis page, answers that with figures, for the models you choose: any chat models on this
 computer, of any size, and any cloud models with a key, such as Qwen3.5 0.8B, 2B, 4B and 9B, Llama 3.2 1B and 3B and
-Llama 3.1 8B against Claude Sonnet. The local models are those of \menupath{Compose\gt Local Models}, downloaded there.
+Llama 3.1 8B against Claude Sonnet. The local models are those of \menupath{Compose\gt Local AI Models}, downloaded there.
 How fast and how well each model does other work, statistics, Julia code, DuckDB SQL and summaries, is the benchmark
-of \menupath{Compose\gt Local Models}, a page of its own.
+of \menupath{Compose\gt Local AI Models}, a page of its own.
 
-Evaluate Answering Models is one page, opened from \menupath{Compose\gt Local Models\gt Evaluate Answering Models...}, beside the models
+Evaluate Answering Models is one page, opened from \menupath{Compose\gt Local AI Models\gt Evaluate Answering Models...}, beside the models
 it compares, and from Set Active Models. It goes in four steps, from the top
 down: 1, the models to compare; 2, the questions, of the test set chosen, those ticked being the ones asked; 3, the
 judge, a second judge if you want one, \textbf{Repeats} and \textbf{Run}; 4, the results of a run, the figures of
@@ -544,7 +544,7 @@ passages they are made from.
 
 \section{Comparing the embedding models}\label{sec:compareEmbeddings}
 
-Which model should find the passages? \menupath{Compose\gt Knowledge for Models\gt Evaluate Embedding Models...}
+Which model should find the passages? \menupath{Compose\gt Knowledge for AI Models\gt Evaluate Embedding Models...}
 compares the embedding models on this computer on the same test sets. It goes in the same
 four steps: 1, the models; 2, the questions, of the test set chosen, those ticked being the ones searched, all when
 none is (the test sets are made and changed in Evaluate Answering Models, which \textbf{Change the Test Sets...}
@@ -578,7 +578,7 @@ index again, from the embeddings the run kept. The runs are kept in \file{~/.pol
 
 \section{Comparing the rerankers}\label{sec:compareRerankers}
 
-Which reranker should choose the passages, or should any? \menupath{Compose\gt Knowledge for Models\gt Evaluate
+Which reranker should choose the passages, or should any? \menupath{Compose\gt Knowledge for AI Models\gt Evaluate
 Reranking Models...}, below Evaluate Embedding Models, compares the rerankers on this computer on the same test sets,
 in the same four steps: 1, the models; 2, the questions; 3, \textbf{Run}, with the charts of the memory free and Model
 Servers; 4, the results.
@@ -643,7 +643,7 @@ passages whose text changed are embedded again, in seconds. Nothing else: your q
   shows how far it has come.\\
 \emph{Searched by words only: the embeddings are being computed} & Nothing: ask again in a few minutes for a search by
   meaning too.\\
-\emph{The model could not be started} & Open \menupath{Compose\gt Local Models\gt Set Active Models}, check that the
+\emph{The model could not be started} & Open \menupath{Compose\gt Local AI Models\gt Set Active Models}, check that the
   model is there and that it fits in memory, or choose a smaller one, or a cloud model.\\
 \emph{No key for Anthropic} (or OpenAI, or Google) & Set the key with the key indicator below the question.\\
 \textbf{Image} greyed out in the \textbf{+} & A model of this computer answers: choose a cloud model in the status

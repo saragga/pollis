@@ -43,6 +43,8 @@ export interface IBenchmarkStratum {
 /** What info.json says of a benchmark downloaded. */
 export interface IBenchmarkInfo {
 	readonly benchmark: string;
+	/** The revision of the dataset on Hugging Face the questions come from. */
+	readonly revision?: string;
 	readonly downloaded: string;
 	readonly count: number;
 	readonly strata: readonly IBenchmarkStratum[];
@@ -79,6 +81,8 @@ export interface IBenchmarkFigures {
 	readonly score: number | null;
 	readonly half: number | null;
 	readonly right: number;
+	/** The probability that answers picked at random would get as many right or more; null for a benchmark without options, absent in a run kept before it was measured. */
+	readonly byChance?: number | null;
 	readonly strata: readonly { readonly name: string; readonly asked: number; readonly right: number }[];
 	readonly unread: number;
 	readonly cutOff: number;
@@ -97,6 +101,8 @@ export interface IBenchmarkRun {
 	readonly started: number;
 	readonly pollis: string;
 	readonly benchmark: string;
+	/** The revision of the dataset on Hugging Face its questions came from. */
+	readonly revision?: string;
 	readonly settings: IBenchmarkSettings;
 	readonly sample: {
 		readonly seed: number;
@@ -142,6 +148,8 @@ interface IScriptProgress {
 	readonly model: number;
 	readonly models: number;
 	readonly tokens?: readonly [number, number];
+	/** The run's id, once its sample is drawn. */
+	readonly run?: string;
 }
 
 /** The folder of Model Benchmarks, ~/.pollis/benchmarks. */
@@ -157,6 +165,10 @@ export class ModelBenchmarksRunner {
 
 	private readonly _onDidEnd = new Emitter<IBenchmarkEnd>();
 	readonly onDidEnd = this._onDidEnd.event;
+
+	private readonly _onDidAnswer = new Emitter<string>();
+	/** The id of the run running, each time one of its models starts or a new answer of it is kept. */
+	readonly onDidAnswer = this._onDidAnswer.event;
 
 	private _running = false;
 	private stopped = false;
@@ -219,10 +231,17 @@ export class ModelBenchmarksRunner {
 
 	/** Runs `job` in the hidden Julia process, with `models` after it, its progress reported with `label(progress)`. */
 	private async script(job: object, models: readonly IBenchmarkModel[], label: (progress: IScriptProgress) => string): Promise<IScriptAnswer> {
+		let answered: string | undefined;
 		const poll = mainWindow.setInterval(async () => {
 			const progress = await this.commandService.executeCommand<IScriptProgress>('language-julia.pollisModelBenchmarksProgress').catch(() => undefined);
 			if (!progress || !this._running) {
 				return;
+			}
+			// A model started, or an answer kept: the run as it now is
+			const now = progress.run ? `${progress.run}/${progress.model}/${progress.done}` : undefined;
+			if (progress.run && now !== answered) {
+				answered = now;
+				this._onDidAnswer.fire(progress.run);
 			}
 			if (progress.tokens) {
 				this.sampler.tokens = { read: progress.tokens[0], written: progress.tokens[1] };

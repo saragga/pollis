@@ -8,7 +8,7 @@ import { buildScaffoldHtml } from './scaffoldParts.js';
 
 export function getFomHtml(): string {
 	return buildScaffoldHtml('fom', FOM_METADATA.fom, {
-		title: 'First-Order Methods',
+		title: 'Stochastic Gradient Methods',
 		defaultModel: 'sgd',
 		decisionFirstColumn: 'Rule',
 	});

@@ -35,7 +35,7 @@ import { ICompareProgress } from './compareModelsRun.js';
 import { compareChartsHtml, compareChartsScript, compareCommonScript, compareCss, compareLocalCard, compareSharedText, compareTestSetHeadHtml, compareTestSetHtml, compareTestSetScript, CompareTestSetChoice } from './compareShared.js';
 import { IInstalledModel } from './modelsInstalledPage.js';
 
-// Evaluate Embedding Models, from Compose > Knowledge for Models > Evaluate Embedding Models... (compose.contribution.ts): the
+// Evaluate Embedding Models, from Compose > Knowledge for AI Models > Evaluate Embedding Models... (compose.contribution.ts): the
 // embedding models of this computer, compared on the questions of a test set of Evaluate Answering Models, which the
 // sets are changed in. One page, in four steps: 1, the models to compare; 2, the questions, those ticked being the ones
 // searched, all when none is; 3, Run, which embeds the passages each model has not embedded yet, once ever, into the
@@ -334,7 +334,7 @@ function pageHtml(rows: number): string {
 		title: localize('compareEmbeddings.title', "Evaluate Embedding Models"),
 		intro: localize('compareEmbeddings.intro', "Which model should find the passages that Ask Pollis answers from? Each question of a test set was made from a passage: each model chosen searches every question as Ask Pollis would, and the page shows how often that passage is found, and where. Each passage is embedded once by each model, ever: a later run, and the index of Ask Pollis, take it from {0}.", '<span class="yellow">~/.pollis/documents/embeddings.duckdb</span>'),
 		models: localize('compareEmbeddings.models', "Models"),
-		noLocal: localize('compareEmbeddings.noLocal', "No embedding model on this computer yet: Compose > Local Models downloads them."),
+		noLocal: localize('compareEmbeddings.noLocal', "No embedding model on this computer yet: Compose > Local AI Models downloads them."),
 		questionsIntro: localize('compareEmbeddings.questionsIntro', "The test sets of Evaluate Answering Models: each question with the passage it was made from. Tick the questions to search, a click anywhere on a row ticks it; with none ticked, Run searches them all."),
 		standardHint: localize('compareEmbeddings.standardHint', "Standard comes with Pollis. Your own test sets are made and changed in Evaluate Answering Models."),
 		changeSets: localize('compareEmbeddings.changeSets', "Change the Test Sets..."),

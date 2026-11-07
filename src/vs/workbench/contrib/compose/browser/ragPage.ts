@@ -515,7 +515,7 @@ function pageHtml(): string {
 		embedding: localize('rag.embedding', "Embedding"),
 		embeddingIntro: localize('rag.embeddingIntro', "An embedding model turns each passage into a vector, so that the passages nearest in meaning to a question are found. Each passage is embedded once by each model, ever: building again, or another collection, takes it from {0}.", '<span class="yellow">~/.pollis/documents/embeddings.duckdb</span>'),
 		embeddingModel: localize('rag.embeddingModel', "Embedding Model"),
-		noModels: localize('rag.noModels', "No embedding model on this computer yet: Compose > Local Models downloads them."),
+		noModels: localize('rag.noModels', "No embedding model on this computer yet: Compose > Local AI Models downloads them."),
 		build: localize('rag.build', "Build the Index"),
 		buildNeeds: localize('rag.buildNeeds', "Add documents, and choose an embedding model."),
 		built: localize('rag.built', "Built {0}: {1} passages of about {2} words, {3} embedded with {4}.", '{0}', '{1}', '{2}', '{3}', '{4}'),

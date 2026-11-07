@@ -896,3 +896,102 @@ display(result)  # full report: hypotheses, statistic, p-value
 p = pvalue(result)
 foreach(a -> println("alpha = ", a, ": ", p < a ? "reject H0" : "do not reject H0"), (0.10, 0.05, 0.01))
 '''
+
+# ── FAQ: shown in Learn More, and the Panel FAQ test set of Evaluate Answering Models (hidden = true: the test set only) ──
+
+[[faq]]
+question = "Which test should I use?"
+wiki = "Decision Guide"
+answer = """
+The claim picks the row of the Decision Guide: a mean, a variance, a proportion, a distribution, a dependence or a forecast comparison. Then the number of samples, and whether they are paired: paired measurements are tested on their differences.
+
+Run Check Test Assumptions next. If normality fails in a small sample, use the nonparametric test of the row; if the variances differ, use Welch. When unsure, the Permutation p-Value needs only exchangeability.
+"""
+
+[[faq]]
+question = "My p-value is 0.03: what does it mean?"
+wiki = "Interpretation"
+answer = """
+That if the null hypothesis were true, a test statistic at least as extreme as the one observed would occur about 3 times in 100. It is not the probability that the null is true, nor the probability that the result is due to chance.
+
+It does not say how large the departure is either: report the Effect Size and a confidence interval with it, since with a large sample a tiny effect is significant.
+"""
+
+[[faq]]
+question = "The test did not reject: does that show the null is true?"
+wiki = "Interpretation"
+answer = """
+No. Retaining the null means the data are consistent with it, and possibly with many alternatives too; a small sample may simply lack the power to see a real difference.
+
+Power by Resampling estimates the power to detect an effect of the size observed at several sample sizes: low power at the current size means a non-significant result says little. A confidence interval shows which values of the parameter the data cannot rule out.
+"""
+
+[[faq]]
+question = "What does Check Test Assumptions give in the Hypothesis Testing panel?"
+wiki = "Diagnostics"
+hidden = true
+right = "Each sample's size, standard deviation and Jarque-Bera p-value, and Levene's test"
+wrong = [
+  "Each sample's Shapiro-Wilk p-value, and an F-test of the variances",
+  "Each sample's skewness, kurtosis and Anderson-Darling p-value",
+  "Each sample's Kolmogorov-Smirnov p-value, and Bartlett's test",
+  "Each sample's mean, median and outliers, and the Fligner-Killeen test",
+  "Each sample's Q-Q correlation, and the Brown-Forsythe test",
+]
+explanation = "Check Test Assumptions gives each sample's size, standard deviation and Jarque-Bera p-value, and also runs Levene's test for equal variances."
+
+[[faq]]
+question = "Which test does Equality of Covariance run in the Hypothesis Testing panel?"
+wiki = "Overview"
+hidden = true
+right = "Bartlett's test"
+wrong = [
+  "Box's M test",
+  "Levene's test",
+  "Hotelling's T-squared",
+  "The Brown-Forsythe test",
+  "The Fligner-Killeen test",
+]
+explanation = "The multivariate tests are Hotelling's T-squared for mean vectors, Equality of Covariance (Bartlett's test) for the covariance matrices of two groups, and the Correlation test."
+
+[[faq]]
+question = "Which package gives the Hypothesis Testing panel its bootstrap intervals?"
+wiki = "Factsheet"
+hidden = true
+right = "Bootstrap.jl"
+wrong = [
+  "HypothesisTests.jl",
+  "Resampling.jl",
+  "StatsBase.jl",
+  "Distributions.jl",
+  "MLJ.jl",
+]
+explanation = "The core packages are HypothesisTests.jl, for every test, and Bootstrap.jl for the intervals."
+
+[[faq]]
+question = "How does Power by Resampling estimate power in the Hypothesis Testing panel?"
+wiki = "Diagnostics"
+hidden = true
+right = "It resamples the data at several sizes, reruns the test, and counts the rejections"
+wrong = [
+  "It uses the noncentral t distribution at the observed effect size",
+  "It reads Cohen's tables for a medium effect at the current size",
+  "It simulates normal data with each sample's mean and standard deviation",
+  "It converts the observed p-value by the formula for observed power",
+  "It permutes the group labels and counts the rejections at each size",
+]
+explanation = "Power by Resampling resamples the data at several sample sizes and reruns the test many times; the share of rejections estimates the power to detect an effect of the size observed."
+
+[[faq]]
+question = "Which measure does Effect Size report for two samples in the Hypothesis Testing panel?"
+wiki = "Interpretation"
+hidden = true
+right = "Hedges' g"
+wrong = [
+  "Cohen's d",
+  "Glass's delta",
+  "Eta-squared",
+  "Omega-squared",
+  "The rank-biserial correlation",
+]
+explanation = "Effect Size reports Cohen's d for one sample, Hedges' g for two, and eta-squared, the share of variance explained by the groups, for several."

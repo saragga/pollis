@@ -74,7 +74,6 @@
 			"menubarReportsMenu",
 			"menubarRssSubmenu",
 			"menubarSASubmenu",
-			"menubarSDESubmenu",
 			"menubarSDMSubmenu",
 			"menubarSFSubmenu",
 			"menubarSGMSubmenu",
@@ -7463,13 +7462,11 @@
 				"sde/factsheet.md",
 				"sde/interpretation.md",
 				"sde/multiplicative.md",
-				"sde/overview.md",
-				"sde/stratonovich.md"
+				"sde/overview.md"
 			],
 			"notebooks": [
 				"sde/tutorial-01-additive.ipynb",
-				"sde/tutorial-02-multiplicative.ipynb",
-				"sde/tutorial-03-stratonovich.ipynb"
+				"sde/tutorial-02-multiplicative.ipynb"
 			],
 			"packages": [
 				"StochasticDiffEq.jl",
@@ -7484,7 +7481,7 @@
 				{
 					"id": "chiara.simulate.sdea",
 					"menuTitles": [
-						"Ensemble Analysis"
+						"SDE Ensemble Analysis"
 					]
 				}
 			],
@@ -7515,6 +7512,40 @@
 				"StochasticDiffEq.jl",
 				"StatsBase.jl",
 				"Plots.jl"
+			]
+		},
+		{
+			"id": "sdes",
+			"title": "Stochastic Differential Equations",
+			"source": "toolbox:pollis-toolbox-mathematical-core",
+			"commands": [
+				{
+					"id": "chiara.toolboxes.sde",
+					"menuTitles": [
+						"Stochastic Differential Equations"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "ito",
+			"decisionFirstColumn": "Task",
+			"toml": "toolboxes/pollis-toolbox-mathematical-core/panels/sdes.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-mathematical-core/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-mathematical-core/notebooks",
+			"wikis": [
+				"sdes/assumptions.md",
+				"sdes/decision-guide.md",
+				"sdes/diagnostics.md",
+				"sdes/factsheet.md",
+				"sdes/interpretation.md",
+				"sdes/overview.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"StochasticDiffEq.jl",
+				"DiffEqNoiseProcess.jl",
+				"Symbolics.jl",
+				"DiffEqDevTools.jl"
 			]
 		},
 		{

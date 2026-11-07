@@ -1,10 +1,10 @@
-# First-Order Methods Webview Configuration
+# Stochastic Gradient Methods Webview Configuration
 # This is the declarative source for the webview. The build script generates:
 # - src/vs/workbench/contrib/model/browser/webviews/fom.data.ts
 # Run: npm run gulp compile-toml
 
 [meta]
-title = "First-Order Methods"
+title = "Stochastic Gradient Methods"
 viewType = "pollis.fom"
 defaultModel = "sgd"
 

@@ -437,3 +437,99 @@ upto = [maximum((s + r.sigma[s+1] - 1 for s in 0:nS-1 if r.sigma[s+1] > 1); init
 plot(plot(gammas, [r.v[1] for r in sols], marker=:o, xlabel="gamma", ylabel="V*(0)", legend=false),
     plot(gammas, upto, marker=:o, xlabel="gamma", ylabel="order-up-to level", legend=false), layout=(1, 2), size=(900, 350))
 '''
+
+# ── FAQ: shown in Learn More, and the Panel FAQ test set of Evaluate Answering Models (hidden = true: the test set only) ──
+
+[[faq]]
+question = "Why does Value vs Policy Iteration print same_policy = false?"
+wiki = "Diagnostics"
+answer = """
+VFI, PFI and MPFI should reach the same policy, but a false value may just reflect ties, where two orders give the same value, or the tolerance of value iteration. Compare the values too: if they agree, the policies are equally good.
+
+Read iterations with care: they count different kinds of step and are not comparable as work, and the timings of the first call include compilation, so run the action twice before reading ms.
+"""
+
+[[faq]]
+question = "Is value_at_empty_stock the profit per period?"
+wiki = "Interpretation"
+answer = """
+No. It is the discounted profit, over an infinite horizon, of starting with empty stock and acting optimally. Multiply it by 1 - γ to get an equivalent per-period figure.
+
+Values grow as 1 / (1 - γ), so comparing them across discounts mixes profit and scale: Discount Sensitivity is best read through the per-period values and the order-up-to level.
+"""
+
+[[faq]]
+question = "Which algorithm should I run?"
+wiki = "Decision Guide"
+answer = """
+PFI, policy iteration, for a small state, a discount near 1 and an exact answer; VFI, value iteration, for a large state, sparse transitions or a moderate discount; MPFI, modified policy iteration, as a middle ground that is often the fastest in practice; backward_induction for a finite horizon, with a policy for each period.
+
+A higher discount slows value iteration, as its sweeps scale with 1 / (1 - γ), but hardly slows policy iteration.
+"""
+
+[[faq]]
+question = "On the Deterministic tab at the defaults, with γ = 0.95, what is the value V(0) of starting with empty stock?"
+wiki = "Deterministic DP"
+hidden = true
+right = "600"
+wrong = [
+  "30",
+  "300",
+  "540",
+  "570",
+]
+explanation = "Ordering exactly the demand of 5 earns 8 × 5 - 2 × 5 = 30 each period, so V(0) = 30 / (1 - γ) = 600."
+
+[[faq]]
+question = "On the Stochastic tab at the defaults, with 10 demand scenarios, what is the order-up-to level?"
+wiki = "Stochastic DP"
+hidden = true
+right = "10"
+wrong = [
+  "5",
+  "12",
+  "8",
+  "9",
+]
+explanation = "The critical ratio (p - c) / (p - γc + h) is 6 / 6.6, about 0.909; with 10 scenarios F(9) = 0.9 and F(10) = 1, so the level is 10."
+
+[[faq]]
+question = "Why does a simple order-up-to rule apply to the panel's inventory model?"
+wiki = "Assumptions"
+hidden = true
+right = "There is no fixed order cost"
+wrong = [
+  "Demand is known in advance",
+  "Orders arrive after a lead time",
+  "Unmet demand is backlogged",
+  "Leftover stock spoils",
+]
+explanation = "With no fixed order cost a simple order-up-to rule applies; a fixed cost generally gives a rule with two levels, which reorders only when stock falls low enough."
+
+[[faq]]
+question = "At γ = 0.95, about how many sweeps of value iteration from zero does Convergence take to reach a residual of 1e-8 in the Dynamic Programming panel?"
+wiki = "Diagnostics"
+hidden = true
+right = "About 430"
+wrong = [
+  "About 20",
+  "About 43",
+  "About 100",
+  "About 1,000",
+  "About 5,000",
+]
+explanation = "Theory says the residual falls at least as fast as γ^k; at γ = 0.95, starting from a first residual of about 40, reaching 1e-8 takes about 430 sweeps."
+
+[[faq]]
+question = "Which tolerance and limit of sweeps does the Dynamic Programming panel solve to?"
+wiki = "Factsheet"
+hidden = true
+right = "A tolerance of 1e-8, up to 5000 sweeps"
+wrong = [
+  "A tolerance of 1e-6, up to 1000 sweeps",
+  "A tolerance of 1e-4, up to 500 sweeps",
+  "A tolerance of 1e-8, up to 1000 sweeps",
+  "A tolerance of 1e-10, up to 10000 sweeps",
+  "A tolerance of 1e-12, with no limit of sweeps",
+]
+explanation = "The panel solves a discounted inventory problem exactly on a grid of stock levels with QuantEcon.jl, to a tolerance of 1e-8, up to 5000 sweeps."

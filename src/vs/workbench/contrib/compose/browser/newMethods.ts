@@ -34,7 +34,6 @@ import { defaultCopyFolder, isInsidePollis } from '../../pollisWorkspace/browser
 import { ITerminalService } from '../../terminal/browser/terminal.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
-import { AGENT_BADGE_CSS, AGENT_ICON } from './agentBadge.js';
 import { PREPARE_REGISTRATION_COMMAND_ID, skillFile, startAgent, WRITE_METHOD_COMMAND_ID, WRITE_VIGNETTE_COMMAND_ID } from './pollisAgents.js';
 import { AgentTask } from './modelRouting.js';
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
@@ -140,8 +139,9 @@ interface IMethod {
 	readonly folder: URI;
 	readonly name: string;
 	readonly title: string;
+	/** The citations of the method's articles, its own first, then those of `[[articles]]`. */
 	readonly citation?: string;
-	/** The link to read the article: its own, or its DOI's. */
+	/** The link to read the method's own article: its own, or its DOI's. */
 	readonly article?: string;
 	/** The path of a copy of the article the user saved, opened instead of the link while it exists. */
 	readonly articleLocal?: string;
@@ -246,7 +246,8 @@ async function readMethod(fileService: IFileService, folder: URI): Promise<IMeth
 		folder,
 		name,
 		title,
-		citation: text(toml.citation),
+		// The method's article, then the others whose tables are targets too ([[articles]])
+		citation: [toml, ...(Array.isArray(toml.articles) ? toml.articles : [])].map(article => text(table(article).citation)).filter(Boolean).join(' ') || undefined,
 		article: text(toml.article) ?? (doi ? `https://doi.org/${doi}` : undefined),
 		articleLocal: text(toml.article_local),
 		inputs: inputs.sort((a, b) => a.name.localeCompare(b.name)),
@@ -1048,7 +1049,6 @@ const PAGE_STYLE = `
 			button.action:not(:disabled):hover, button.action.current, button.action.primary { opacity: 1; }
 			button.action:hover { background: var(--vscode-button-secondaryHoverBackground); }
 			button.action:disabled { cursor: default; opacity: 0.6; }
-${AGENT_BADGE_CSS}
 			button.primary { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
 			button.primary:hover { background: var(--vscode-button-hoverBackground); }
 			.error { color: var(--vscode-errorForeground); }
@@ -1216,7 +1216,7 @@ function pageHtml(): string {
 				<button class="action choice primary" data-group="inputs" data-choice="input">${text.emptyTable}</button>
 				<button class="action choice" data-group="inputs" data-choice="link">${text.addLink}</button>
 				<button class="action choice" data-group="inputs" data-choice="datasets">${text.addDatasets}</button>
-				<button class="action choice with-agent" data-group="inputs" data-choice="inputArticle">${AGENT_ICON}${text.addFromArticle}</button>
+				<button class="action choice" data-group="inputs" data-choice="inputArticle">${text.addFromArticle}</button>
 			</div>
 			<div class="form" id="form-input" data-group="inputs">
 				<label>${text.tableName}<input id="inputName" spellcheck="false" placeholder="${text.tableNamePlaceholder}"></label>
@@ -1254,7 +1254,7 @@ function pageHtml(): string {
 			<div class="actions">
 				<button class="action choice primary" data-group="targets" data-choice="target">${text.emptyTable}</button>
 				<button class="action choice" data-group="targets" data-choice="targetFiles">${text.targetFiles}</button>
-				<button class="action choice with-agent" data-group="targets" data-choice="targetArticle">${AGENT_ICON}${text.addFromArticle}</button>
+				<button class="action choice" data-group="targets" data-choice="targetArticle">${text.addFromArticle}</button>
 			</div>
 			<div class="form" id="form-target" data-group="targets">
 				<label>${text.tableName}<input id="targetName" spellcheck="false" placeholder="${text.tableNamePlaceholder}"></label>
@@ -1291,7 +1291,7 @@ function pageHtml(): string {
 		<p class="intro">${text.instructionsIntro}</p>
 		<textarea id="instructions" placeholder="${text.instructionsPlaceholder}"></textarea>
 		<div class="actions">
-			<button class="action primary with-agent" data-command="writeMethod">${AGENT_ICON}${text.writeMethod}</button>
+			<button class="action primary" data-command="writeMethod">${text.writeMethod}</button>
 			<button class="action" data-command="open" data-file="method.toml">${text.editToml}</button>
 			<button class="action open-code" data-command="open">${text.openCode}</button>
 		</div>
@@ -1312,7 +1312,7 @@ function pageHtml(): string {
 		<p class="intro">${text.vignetteIntro}</p>
 		<textarea id="vignetteInstructions" placeholder="${text.vignettePlaceholder}"></textarea>
 		<div class="actions">
-			<button class="action primary with-agent" data-command="writeVignette">${AGENT_ICON}${text.writeVignette}</button>
+			<button class="action primary" data-command="writeVignette">${text.writeVignette}</button>
 			<button class="action" id="editVignette" data-command="open">${text.editVignette}</button>
 			<button class="action" id="openPdf" data-command="openPdf">${text.openPdf}</button>
 		</div>
@@ -1332,7 +1332,7 @@ function pageHtml(): string {
 		</div>
 		<p class="intro">${text.registerIntro}</p>
 		<div class="actions">
-			<button class="action primary with-agent" data-command="prepareRegistration">${AGENT_ICON}${text.prepareRegistration}</button>
+			<button class="action primary" data-command="prepareRegistration">${text.prepareRegistration}</button>
 			<button class="action open-code" data-command="open">${text.openCode}</button>
 		</div>
 `,

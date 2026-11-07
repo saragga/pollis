@@ -5547,6 +5547,29 @@
 			"open_access": false
 		},
 		{
+			"key": "CFWB2017a",
+			"type": "inproceedings",
+			"title": "Reading Wikipedia to Answer Open-Domain Questions",
+			"authors": [
+				"Chen, Danqi",
+				"Fisch, Adam",
+				"Weston, Jason",
+				"Bordes, Antoine"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2017,
+			"booktitle": "Proceedings of the 55th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)",
+			"pages": "1870-1879",
+			"doi": "10.18653/v1/P17-1171",
+			"openalex": "W2962985038",
+			"oa_url": "https://www.aclweb.org/anthology/P17-1171.pdf",
+			"source": "crossref",
+			"retrieved": "2026-11-06",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "CG1999a",
 			"type": "article",
 			"title": "An empirical study of smoothing techniques for language modeling",
@@ -5833,6 +5856,38 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
+		},
+		{
+			"key": "CHP2014a",
+			"type": "article",
+			"title": "Optimal Test for Markov Switching Parameters",
+			"authors": [
+				"Carrasco, Marine",
+				"Hu, Liang",
+				"Ploberger, Werner"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2014,
+			"journal": "Econometrica",
+			"volume": "82",
+			"number": "2",
+			"pages": "765-784",
+			"issn": "0012-9682",
+			"doi": "10.3982/ECTA8609",
+			"openalex": "W1701296759",
+			"keywords": [
+				"optimal tests",
+				"random coefficient models",
+				"contiguous alternatives",
+				"asymptotic optimality",
+				"local alternatives"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-06",
+			"checked": false,
+			"open_access": false
 		},
 		{
 			"key": "CI2002a",
@@ -6502,6 +6557,37 @@
 			"open_access": true
 		},
 		{
+			"key": "CS2012a",
+			"type": "article",
+			"title": "Testing for Regime Switching: A Comment",
+			"authors": [
+				"Carter, Andrew V.",
+				"Steigerwald, Douglas G."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2012,
+			"journal": "Econometrica",
+			"volume": "80",
+			"number": "4",
+			"pages": "1809-1812",
+			"issn": "0012-9682",
+			"doi": "10.3982/ECTA9622",
+			"openalex": "W2125627682",
+			"keywords": [
+				"regime switching",
+				"Markov regime switching",
+				"quasi-maximum likelihood estimator",
+				"consistency of tests",
+				"autoregressive models"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-06",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "CS2021a",
 			"type": "article",
 			"title": "Difference-in-Differences with multiple time periods",
@@ -6697,6 +6783,37 @@
 			"publisher": "Wiley-Interscience (2nd ed.)",
 			"legacy_key": "cover2006",
 			"source": "manual",
+			"checked": false,
+			"open_access": false
+		},
+		{
+			"key": "CW2007a",
+			"type": "article",
+			"title": "Testing for Regime Switching",
+			"authors": [
+				"Cho, Jin Seo",
+				"White, Halbert"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2007,
+			"journal": "Econometrica",
+			"volume": "75",
+			"number": "6",
+			"pages": "1671-1720",
+			"issn": "0012-9682",
+			"doi": "10.1111/j.1468-0262.2007.00809.x",
+			"openalex": "W2142482685",
+			"keywords": [
+				"regime switching",
+				"Markov regime switching",
+				"mixture models",
+				"quasi-likelihood ratio test",
+				"asymptotic null distribution"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-06",
 			"checked": false,
 			"open_access": false
 		},
@@ -8392,6 +8509,38 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "DL2017a",
+			"type": "article",
+			"title": "Identification-robust moment-based tests for Markov switching in autoregressive models",
+			"authors": [
+				"Dufour, Jean-Marie",
+				"Luger, Richard"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2017,
+			"journal": "Econometric Reviews",
+			"volume": "36",
+			"number": "6-9",
+			"pages": "713-727",
+			"issn": "0747-4938",
+			"doi": "10.1080/07474938.2017.1307548",
+			"openalex": "W2952793736",
+			"oa_url": "https://www.tandfonline.com/doi/pdf/10.1080/07474938.2017.1307548",
+			"keywords": [
+				"Markov regime switching",
+				"autoregressive models",
+				"linearity testing",
+				"identification failure",
+				"mixture of normal distributions"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-06",
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "DLM1999a",
@@ -13087,6 +13236,36 @@
 			"open_access": false
 		},
 		{
+			"key": "Gar1998a",
+			"type": "article",
+			"title": "Asymptotic Null Distribution of the Likelihood Ratio Test in Markov Switching Models",
+			"authors": [
+				"Garcia, René"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1998,
+			"journal": "International Economic Review",
+			"volume": "39",
+			"number": "3",
+			"pages": "763",
+			"issn": "0020-6598",
+			"doi": "10.2307/2527399",
+			"openalex": "W2099647580",
+			"keywords": [
+				"Markov regime switching",
+				"likelihood ratio test",
+				"asymptotic null distribution",
+				"nuisance parameters",
+				"transition probabilities"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-06",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "Gar2023a",
 			"type": "book",
 			"title": "Bayesian Optimization",
@@ -16003,6 +16182,65 @@
 			"open_access": false
 		},
 		{
+			"key": "Han1992a",
+			"type": "article",
+			"title": "The likelihood ratio test under nonstandard conditions: Testing the Markov switching model of GNP",
+			"authors": [
+				"Hansen, Bruce E."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1992,
+			"journal": "Journal of Applied Econometrics",
+			"volume": "7",
+			"number": "S1",
+			"pages": "S61-S82",
+			"issn": "0883-7252",
+			"doi": "10.1002/jae.3950070506",
+			"openalex": "W4246950982",
+			"keywords": [
+				"likelihood ratio test",
+				"empirical process theory",
+				"asymptotic distribution",
+				"Markov regime switching",
+				"GNP"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-06",
+			"checked": false,
+			"open_access": false
+		},
+		{
+			"key": "Han1996a",
+			"type": "article",
+			"title": "Erratum: The likelihood ratio test under nonstandard conditions: Testing the Markov switching model of GNP",
+			"authors": [
+				"Hansen, Bruce E."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1996,
+			"journal": "Journal of Applied Econometrics",
+			"volume": "11",
+			"number": "2",
+			"pages": "195-198",
+			"issn": "0883-7252",
+			"doi": "10.1002/(SICI)1099-1255(199603)11:2<195::AID-JAE375>3.0.CO;2-2",
+			"openalex": "W2033465281",
+			"oa_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/%28SICI%291099-1255%28199603%2911%3A2%3C195%3A%3AAID-JAE375%3E3.0.CO%3B2-2",
+			"keywords": [
+				"likelihood ratio test",
+				"Markov regime switching",
+				"GNP"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-06",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "Han2009a",
 			"type": "article",
 			"title": "Measuring classifier performance: a coherent alternative to the area under the ROC curve",
@@ -16451,6 +16689,27 @@
 			"open_access": true
 		},
 		{
+			"key": "Hig2000a",
+			"type": "article",
+			"title": "Mean-Square and Asymptotic Stability of the Stochastic Theta Method",
+			"authors": [
+				"Higham, Desmond J."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2000,
+			"journal": "SIAM Journal on Numerical Analysis",
+			"volume": "38",
+			"number": "3",
+			"pages": "753-769",
+			"issn": "0036-1429",
+			"doi": "10.1137/S003614299834736X",
+			"source": "crossref",
+			"retrieved": "2026-11-07",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "Hig2001a",
 			"type": "article",
 			"title": "An Algorithmic Introduction to Numerical Simulation of Stochastic Differential Equations",
@@ -16553,6 +16812,27 @@
 			"source": "manual",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "Hon2013a",
+			"type": "article",
+			"title": "On computing the distribution function for the Poisson binomial distribution",
+			"authors": [
+				"Hong, Yili"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2013,
+			"journal": "Computational Statistics & Data Analysis",
+			"volume": "59",
+			"pages": "41-51",
+			"issn": "0167-9473",
+			"doi": "10.1016/j.csda.2012.10.006",
+			"openalex": "W1965014932",
+			"source": "crossref",
+			"retrieved": "2026-11-06",
+			"checked": true,
+			"open_access": false
 		},
 		{
 			"key": "Hor1965a",
@@ -18566,6 +18846,26 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
+		},
+		{
+			"key": "KP1992a",
+			"type": "book",
+			"title": "Numerical Solution of Stochastic Differential Equations",
+			"authors": [
+				"Kloeden, Peter E.",
+				"Platen, Eckhard"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1992,
+			"publisher": "Springer",
+			"address": "Berlin, Heidelberg",
+			"isbn": "9783662126165",
+			"doi": "10.1007/978-3-662-12616-5",
+			"source": "crossref",
+			"retrieved": "2026-11-07",
+			"checked": true,
+			"open_access": false
 		},
 		{
 			"key": "KP2006a",
@@ -27968,6 +28268,26 @@
 			"open_access": false
 		},
 		{
+			"key": "RD2024a",
+			"type": "misc",
+			"title": "MSTest: An R-Package for Testing Markov Switching Models",
+			"authors": [
+				"Rodriguez-Rondon, Gabriel",
+				"Dufour, Jean-Marie"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2024,
+			"arxiv": "2411.08188",
+			"url": "https://arxiv.org/abs/2411.08188",
+			"abstract": "We present the R package MSTest, which implements hypothesis testing procedures to identify the number of regimes in Markov switching models. These models have wide-ranging applications in economics, finance, and numerous other fields. The MSTest package includes the Monte Carlo likelihood ratio test procedures proposed by Rodriguez-Rondon and Dufour (2024), the moment-based tests of Dufour and Luger (2017), the parameter stability tests of Carrasco, Hu, and Ploberger (2014), and the likelihood ratio test of Hansen (1992). Additionally, the package enables users to simulate and estimate univariate and multivariate Markov switching and hidden Markov processes, using the expectation-maximization (EM) algorithm or maximum likelihood estimation (MLE). We demonstrate the functionality of the MSTest package through both simulation experiments and an application to U.S. GNP growth data.",
+			"abstract_source": "arxiv",
+			"source": "arxiv",
+			"retrieved": "2026-11-06",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "RG1978a",
 			"type": "article",
 			"title": "Estimating Prevalence from the Results of a Screening Test",
@@ -28787,6 +29107,28 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": false
+		},
+		{
+			"key": "RRS2020a",
+			"type": "inproceedings",
+			"title": "How Much Knowledge Can You Pack Into the Parameters of a Language Model?",
+			"authors": [
+				"Roberts, Adam",
+				"Raffel, Colin",
+				"Shazeer, Noam"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2020,
+			"booktitle": "Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP)",
+			"pages": "5418-5426",
+			"doi": "10.18653/v1/2020.emnlp-main.437",
+			"openalex": "W3008686018",
+			"oa_url": "https://www.aclweb.org/anthology/2020.emnlp-main.437.pdf",
+			"source": "crossref",
+			"retrieved": "2026-11-06",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "RS1991a",
@@ -32989,7 +33331,7 @@
 			"type": "misc",
 			"title": "RAGTools.jl: Retrieval-Augmented Generation Tools in Julia",
 			"authors": [
-				"Simsa, Jan"
+				"Simecek, Jan"
 			],
 			"author_kind": "persons",
 			"authors_complete": false,
@@ -39429,6 +39771,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "CHP2014a",
+			"count": 61,
+			"source": "crossref",
+			"date": "2026-11-06"
+		},
+		{
+			"key": "CHP2014a",
+			"count": 83,
+			"source": "openalex",
+			"date": "2026-11-06"
+		},
+		{
 			"key": "CI2002a",
 			"count": 235,
 			"source": "crossref",
@@ -39651,6 +40005,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "CS2012a",
+			"count": 18,
+			"source": "crossref",
+			"date": "2026-11-06"
+		},
+		{
+			"key": "CS2012a",
+			"count": 23,
+			"source": "openalex",
+			"date": "2026-11-06"
+		},
+		{
 			"key": "CS2021a",
 			"count": 8805,
 			"source": "crossref",
@@ -39709,6 +40075,18 @@
 			"count": 3217,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "CW2007a",
+			"count": 113,
+			"source": "crossref",
+			"date": "2026-11-06"
+		},
+		{
+			"key": "CW2007a",
+			"count": 144,
+			"source": "openalex",
+			"date": "2026-11-06"
 		},
 		{
 			"key": "CWEH2010a",
@@ -40237,6 +40615,18 @@
 			"count": 3914,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "DL2017a",
+			"count": 6,
+			"source": "crossref",
+			"date": "2026-11-06"
+		},
+		{
+			"key": "DL2017a",
+			"count": 6,
+			"source": "openalex",
+			"date": "2026-11-06"
 		},
 		{
 			"key": "DLM1999a",
@@ -41799,6 +42189,18 @@
 			"date": "2026-10-31"
 		},
 		{
+			"key": "Gar1998a",
+			"count": 362,
+			"source": "crossref",
+			"date": "2026-11-06"
+		},
+		{
+			"key": "Gar1998a",
+			"count": 537,
+			"source": "openalex",
+			"date": "2026-11-06"
+		},
+		{
 			"key": "Gil1976a",
 			"count": 5429,
 			"source": "crossref",
@@ -42771,6 +43173,30 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "Han1992a",
+			"count": 596,
+			"source": "crossref",
+			"date": "2026-11-06"
+		},
+		{
+			"key": "Han1992a",
+			"count": 607,
+			"source": "openalex",
+			"date": "2026-11-06"
+		},
+		{
+			"key": "Han1996a",
+			"count": 143,
+			"source": "crossref",
+			"date": "2026-11-06"
+		},
+		{
+			"key": "Han1996a",
+			"count": 643,
+			"source": "openalex",
+			"date": "2026-11-06"
+		},
+		{
 			"key": "Han2009a",
 			"count": 865,
 			"source": "crossref",
@@ -42955,6 +43381,12 @@
 			"count": 150,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "Hig2000a",
+			"count": 306,
+			"source": "crossref",
+			"date": "2026-11-07"
 		},
 		{
 			"key": "Hig2001a",
@@ -43633,6 +44065,12 @@
 			"count": 365,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "KP1992a",
+			"count": 3282,
+			"source": "crossref",
+			"date": "2026-11-07"
 		},
 		{
 			"key": "KP2006a",
@@ -50451,7 +50889,10 @@
 			],
 			"keys": [
 				"Sim...2025a",
+				"Sim2025b",
+				"CFWB2017a",
 				"LPPPK...2020a",
+				"RRS2020a",
 				"ZCSZW...2023a",
 				"EJAS2024a"
 			]
@@ -51045,7 +51486,7 @@
 		},
 		{
 			"id": "fom",
-			"title": "First-Order Methods",
+			"title": "Stochastic Gradient Methods",
 			"description": "SGD · Adam · AdaMax · AdaGrad · Momentum · Nesterov · RMSProp · AdamW",
 			"commands": [
 				"chiara.optimise.sgm.fom"
@@ -51920,7 +52361,9 @@
 				"Coc1977a",
 				"CKBCJ...2021a",
 				"HBBZM...2021a",
-				"WMZNC...2024a"
+				"RRS2020a",
+				"WMZNC...2024a",
+				"Hon2013a"
 			]
 		},
 		{
@@ -52848,7 +53291,7 @@
 		{
 			"id": "sde",
 			"title": "Diffusion Processes",
-			"description": "Additive Noise · Multiplicative Noise · Stratonovich",
+			"description": "Additive Noise · Multiplicative Noise",
 			"commands": [
 				"chiara.simulate.sde"
 			],
@@ -52859,16 +53302,12 @@
 				"UO1930a",
 				"Ito1944a",
 				"Mar1955a",
-				"WZ1965a",
-				"Str1966a",
 				"BS1973a",
 				"Mil1975a",
-				"Kam1981a",
 				"Hig2001a",
 				"Lam2003a",
 				"Ros2010a",
 				"HJK2011a",
-				"Rob2012a",
 				"RN2017b",
 				"RN2020a"
 			]
@@ -52884,21 +53323,6 @@
 				"RN2017a",
 				"Oks1998a",
 				"SS2019a"
-			]
-		},
-		{
-			"id": "sgm",
-			"title": "Stochastic Gradient Methods",
-			"description": "SGD · Adam · AdaMax · AdaGrad",
-			"commands": [
-				"chiara.optimise.sgm"
-			],
-			"keys": [
-				"Inn2018a",
-				"GBC2016a",
-				"RM1951a",
-				"DHS2011a",
-				"KB2015a"
 			]
 		},
 		{

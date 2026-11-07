@@ -6,8 +6,8 @@
 // The models offered from Hugging Face follow rules rather than a list, so that they change as new models come out:
 // GGUF files from the publishers of the setting pollis.localModels.publishers, updated in the last year (two for
 // embedding models, which change more slowly), small enough for a laptop without a GPU, and the most downloaded in the
-// last month. Larger models come from Compose > Local Models. The command `language-julia.pollisInstalledModels`
-// answers the models on this computer, each with its value in the settings, for Compose > Local Models > Set Active Models and the
+// last month. Larger models come from Compose > Local AI Models. The command `language-julia.pollisInstalledModels`
+// answers the models on this computer, each with its value in the settings, for Compose > Local AI Models > Set Active Models and the
 // two Evaluate pages; `language-julia.pollisModelVersions`,
 // with a model's file, the other files of its repository, and `language-julia.pollisDownloadModel`, with an `hf:` value,
 // downloads one, for its Other Versions; `language-julia.pollisPublishedDates`, with repositories, the day each was
@@ -327,7 +327,7 @@ export function valueFile(value: string): string {
 }
 
 /**
- * The models on this computer for Compose > Local Models > Set Active Models, by name: each with its size in bytes,
+ * The models on this computer for Compose > Local AI Models > Set Active Models, by name: each with its size in bytes,
  * its repository, what it reads besides text, and the tiers of Model Tasks and Routing that run on it.
  */
 async function installedModels(): Promise<(LocalModel & { value: string; bytes: number; repository?: string; media: ModelMedia[]; tools?: boolean; tiers: string[] })[]> {

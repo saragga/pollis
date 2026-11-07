@@ -55,11 +55,20 @@ label = "Software"
 key = "Sim...2025a"
 
 [[references]]
+key = "Sim2025b"
+
+[[references]]
 separator = true
 label = "Original Papers"
 
 [[references]]
+key = "CFWB2017a"
+
+[[references]]
 key = "LPPPK...2020a"
+
+[[references]]
+key = "RRS2020a"
 
 [[references]]
 key = "ZCSZW...2023a"

@@ -418,3 +418,102 @@ code = '''
 b, se = coef(model), stderror(model)
 foreach((n, a, s) -> println(rpad(n, 20), " HR = ", round(exp(a), digits=3), "   95% CI [", round(exp(a - 1.96s), digits=3), ", ", round(exp(a + 1.96s), digits=3), "]"), coefnames(model), b, se)
 '''
+
+# ── FAQ: shown in Learn More, and the Panel FAQ test set of Evaluate Answering Models (hidden = true: the test set only) ──
+
+[[faq]]
+question = "Why not run an ordinary regression on the observed times?"
+wiki = "Factsheet"
+answer = """
+Because some times are only partly observed. A censored subject was event-free when follow-up ended, so its time is known only to be longer than the one recorded. A regression on the observed times treats those as events, and understates survival.
+
+Time-to-event methods use the censored times for what they are: Kaplan-Meier for survival over time, Cox PH and AFT to relate the timing of events to covariates. They assume that censoring is unrelated to the risk of the event.
+"""
+
+[[faq]]
+question = "Should I use Cox PH or AFT?"
+wiki = "Decision Guide"
+answer = """
+Start with Cox PH, which needs no baseline distribution and gives hazard ratios, and run the Proportional Hazards Check. If proportional hazards fails, or you need predicted times or extrapolation beyond follow-up, use AFT, which gives time ratios and a full distribution of times.
+
+To choose the AFT distribution, look at the Cumulative Hazard plot, where a straight line suggests a Weibull, then fit several and compare them by AIC, preferring the simplest within about 2 of the best.
+"""
+
+[[faq]]
+question = "Why is the median survival time NA?"
+wiki = "Interpretation"
+answer = """
+Because the Kaplan-Meier curve never drops to 50% within follow-up: the estimated share still event-free stays above a half to the end. The same holds for the time at which the curve drops to 25%, when it never drops that far.
+
+The Restricted Mean Survival Time, the area under the curve up to a horizon, gives an average event-free time within the follow-up window even then.
+"""
+
+[[faq]]
+question = "Which package gives the Aalen-Johansen and AFT tabs of the Time-to-Event Analysis panel?"
+wiki = "Overview"
+hidden = true
+right = "LSurvival.jl"
+wrong = [
+  "Survival.jl",
+  "SurvivalAnalysis.jl",
+  "CompetingRisks.jl",
+  "GLM.jl",
+  "Turing.jl",
+]
+explanation = "Kaplan-Meier, Nelson-Aalen and Cox PH come from Survival.jl; Aalen-Johansen and AFT from LSurvival.jl."
+
+[[faq]]
+question = "Which two groups does the Proportional Hazards Check of the Time-to-Event Analysis panel plot log(-log S) for?"
+wiki = "Diagnostics"
+hidden = true
+right = "The low and high halves of the Cox model's risk score"
+wrong = [
+  "The two values of the first covariate of the model",
+  "The subjects censored and those with the event",
+  "The low and high halves of the observed times",
+  "The first and last quartiles of the risk score",
+  "The groups given to Compare Groups (Log-Rank)",
+]
+explanation = "The Proportional Hazards Check plots log(-log S) against log t for the low and high halves of the Cox model's risk score: roughly parallel curves support proportional hazards."
+
+[[faq]]
+question = "Where does the Time-to-Event Analysis panel start the fit of the Generalised Gamma AFT model?"
+wiki = "Diagnostics"
+hidden = true
+right = "From the Weibull's estimates, with kappa = 0"
+wrong = [
+  "From LSurvival's own start, with kappa = -10",
+  "From the Log-Normal's estimates, with a large kappa",
+  "From the Exponential's estimates, with kappa = 1",
+  "From zero coefficients, with kappa = 1",
+  "From the Gamma's estimates, with log-scale 0",
+]
+explanation = "LSurvival's own starting value for the Generalised Gamma, kappa = -10, can give a log-likelihood below that of the Weibull it contains, so the panel starts it from the Weibull's estimates, with kappa = 0: the Weibull itself."
+
+[[faq]]
+question = "How is the event column coded for the Aalen-Johansen tab of the Time-to-Event Analysis panel?"
+wiki = "Factsheet"
+hidden = true
+right = "0 for censored, and 1, 2, ... for the causes"
+wrong = [
+  "1 for censored, and 2, 3, ... for the causes",
+  "-1 for censored, and 1, 2, ... for the causes",
+  "0 for censored, and the causes' names as strings",
+  "missing for censored, and 1, 2, ... for the causes",
+  "One column of 0 and 1 for each of the causes",
+]
+explanation = "The input is a table with a time column, an event column (0 = censored, 1 = event; 1, 2, ... = causes for Aalen-Johansen) and, for regression, covariates."
+
+[[faq]]
+question = "Which AFT distribution does the Decision Guide of the Time-to-Event Analysis panel prefer?"
+wiki = "Decision Guide"
+hidden = true
+right = "The simplest within about 2 AIC of the best"
+wrong = [
+  "The one with the lowest AIC, however small the gap",
+  "The Generalised Gamma, which contains the others",
+  "The Weibull, unless the Proportional Hazards Check fails",
+  "The Log-Normal, for its closed-form median",
+  "The one with the lowest BIC, however small the gap",
+]
+explanation = "Look at the Cumulative Hazard plot, then fit several distributions and compare them by AIC; prefer the simplest distribution within about 2 AIC of the best."

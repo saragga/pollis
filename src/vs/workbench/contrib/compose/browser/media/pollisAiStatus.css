@@ -12,9 +12,9 @@
 .statusbar-item .codicon.codicon-pollis-ai::before {
 	content: '';
 	display: block;
-	/* As tall as a capital of the bar's 12px text, and as wide as that makes them */
-	width: 11.2px;
-	height: 8.5px;
+	/* The 16px box of the bar's other icons, the bell and the broadcast tower: the triangles fill its width, about 12px tall */
+	width: 16px;
+	height: 16px;
 	background-color: currentColor;
 	-webkit-mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMzEuNCAyNjAgMTk3LjIiPjxwb2x5Z29uIHBvaW50cz0iMCwyMjguNiA0MC4zLDEzMCA4MC43LDIyOC42IiBvcGFjaXR5PSIwLjUiLz48cG9seWdvbiBwb2ludHM9IjQwLjMsMjI4LjYgOTguNiw4NS4xIDE1Ni45LDIyOC42IiBvcGFjaXR5PSIwLjc1Ii8+PHBvbHlnb24gcG9pbnRzPSI5OC42LDIyOC42IDE3OS4zLDMxLjQgMjYwLDIyOC42Ii8+PC9zdmc+") center / contain no-repeat;
 	mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMzEuNCAyNjAgMTk3LjIiPjxwb2x5Z29uIHBvaW50cz0iMCwyMjguNiA0MC4zLDEzMCA4MC43LDIyOC42IiBvcGFjaXR5PSIwLjUiLz48cG9seWdvbiBwb2ludHM9IjQwLjMsMjI4LjYgOTguNiw4NS4xIDE1Ni45LDIyOC42IiBvcGFjaXR5PSIwLjc1Ii8+PHBvbHlnb24gcG9pbnRzPSI5OC42LDIyOC42IDE3OS4zLDMxLjQgMjYwLDIyOC42Ii8+PC9zdmc+") center / contain no-repeat;

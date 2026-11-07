@@ -481,25 +481,71 @@ Always check the termination status before reading the solution.
 """
 
 [[faq]]
-question = "The solver says INFEASIBLE here: what should I look for?"
+question = "Which solvers does the Mixed-Integer LP (MILP) tab of the Linear Programming panel offer?"
+wiki = "Overview"
+hidden = true
+right = "HiGHS and GLPK"
+wrong = [
+  "HiGHS, Clp and GLPK",
+  "HiGHS and Clp",
+  "Clp and GLPK",
+  "HiGHS, Cbc and GLPK",
+  "HiGHS and SCIP",
+]
+explanation = "The LP tab offers HiGHS (the default), Clp and GLPK; the MILP tab, solved by branch-and-bound, offers HiGHS and GLPK."
+
+[[faq]]
+question = "In what form does the Linear Programming panel write every problem?"
+wiki = "Assumptions"
+hidden = true
+right = "A x <= b, with every variable at least 0"
+wrong = [
+  "A x = b, with every variable at least 0",
+  "A x >= b, with every variable at least 0",
+  "A x <= b, with every variable free",
+  "l <= A x <= u, with bounds on each variable",
+  "A x = b, with every variable free",
+]
+explanation = "In the Linear Programming panel every variable is at least 0, and every constraint is of the form A x <= b: an equality is two inequalities, and a >= constraint is a <= constraint multiplied by -1."
+
+[[faq]]
+question = "On the MILP tab of the Linear Programming panel, which variables must take integer values?"
+wiki = "MILP"
+hidden = true
+right = "Every variable"
+wrong = [
+  "Those ticked in an Integer input",
+  "The first variable only",
+  "Those with a fractional value in the LP relaxation",
+  "Those with a positive objective coefficient",
+  "Those that appear in a binding constraint",
+]
+explanation = "A mixed-integer linear programme is an LP in which some variables must take integer values; in the Linear Programming panel every variable is integer."
+
+[[faq]]
+question = "Which of JuMP's dual quantities does the Linear Programming panel report?"
+wiki = "Duality"
+hidden = true
+right = "shadow_price and reduced_cost"
+wrong = [
+  "dual and reduced_cost",
+  "dual alone, in the conic convention",
+  "shadow_price and dual",
+  "dual_objective_value alone",
+  "reduced_cost alone",
+]
+explanation = "JuMP's dual follows the conic convention, whose sign can differ with the sense of the problem and the kind of constraint; the panel reports shadow_price and reduced_cost."
+
+[[faq]]
+question = "What does the Feasibility Check of the Linear Programming panel report?"
 wiki = "Diagnostics"
 hidden = true
-answer = """
-INFEASIBLE means no x satisfies all the constraints at once. Look for contradictory constraints, a wrong sign, or a right-hand side that is too tight. Remember the panel's form: every variable is at least 0 and every constraint is A x <= b, so a >= constraint must be entered as a <= constraint multiplied by -1, and an equality as two inequalities.
-"""
-
-[[faq]]
-question = "Can I trust the shadow prices of the MILP model?"
-wiki = "MILP"
-hidden = true
-answer = """
-Only as a guide. A MILP has no useful dual solution: with all variables fixed at their integer values, every dual is zero. The panel's Shadow Prices, Reduced Costs and Sensitivity Analysis for a MILP are those of the LP relaxation, which show which resources matter but are not exact values.
-"""
-
-[[faq]]
-question = "Why is the MILP so slow to solve?"
-wiki = "MILP"
-hidden = true
-answer = """
-MILP is NP-hard, and solving time can grow exponentially with the size of the problem. Look at the LP Relaxation Gap: a large gap means the formulation is weak, and branch-and-bound will need many nodes. Tighter formulations solve faster: the smallest valid big-M coefficients, explicit bounds on the variables, and aggregate constraints split into stronger individual ones.
-"""
+right = "The termination status and the primal status"
+wrong = [
+  "The dual status and the objective bound",
+  "The slack of each constraint at the optimum",
+  "The relative gap of branch-and-bound",
+  "The number of simplex iterations taken",
+  "The condition number of the matrix A",
+]
+explanation = "The Feasibility Check reports the termination and primal status: OPTIMAL, INFEASIBLE, DUAL_INFEASIBLE, or TIME_LIMIT or OTHER_LIMIT for a MILP stopped early. Never read the solution before checking the status."

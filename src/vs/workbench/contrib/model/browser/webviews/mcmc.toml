@@ -476,25 +476,71 @@ Divergent transitions mark regions where the leapfrog integration has broken dow
 """
 
 [[faq]]
-question = "Why is the effective sample size so much lower than the number of draws here?"
-wiki = "Diagnostics"
+question = "What target acceptance does the NUTS tab of the Markov Chain Monte Carlo panel tune its step size to?"
+wiki = "NUTS"
 hidden = true
-answer = """
-The draws of a chain are correlated, and the ESS is the number of independent draws that would give the same precision. Slow decay of the autocorrelation, that is slow mixing, is what lowers it. NUTS often reaches an ESS close to the number of draws, Metropolis-Hastings only a small fraction of it; with Metropolis-Hastings, tune the proposal scale or move to a gradient-based sampler.
-"""
+right = "0.65"
+wrong = [
+  "0.234",
+  "0.44",
+  "0.8",
+  "0.9",
+  "0.95",
+]
+explanation = "NUTS tunes its step size by dual averaging so that the average acceptance statistic reaches the target acceptance: 0.65 in the Markov Chain Monte Carlo panel, Turing's default; 0.8 in Stan."
 
 [[faq]]
-question = "What acceptance rate should I aim for with this?"
-wiki = "Diagnostics"
+question = "Over how many warm-up steps does the HMC tab of the Markov Chain Monte Carlo panel adapt its step size and mass matrix?"
+wiki = "HMC"
 hidden = true
-answer = """
-It depends on the sampler. For random-walk Metropolis-Hastings, about 0.23 is the classic optimum in many dimensions, and up to about 0.44 in one dimension; near 0 or near 1, rescale the proposal. HMC and NUTS adapt their step size to a target acceptance, 0.65 in this panel; a much lower average after warm-up suggests the step size is too large for parts of the target.
-"""
+right = "500, then dropped"
+wrong = [
+  "100, then dropped",
+  "200, then kept",
+  "1,000, then dropped",
+  "2,000, then kept",
+  "As many as Samples, then dropped",
+]
+explanation = "A StanHMCAdaptor adapts the step size and the mass matrix over 500 warm-up steps that are then dropped."
 
 [[faq]]
-question = "Is the MCSE the uncertainty about the parameter?"
-wiki = "Interpretation"
+question = "With which automatic differentiation package does the HMC tab of the Markov Chain Monte Carlo panel take the gradients of log_density(x)?"
+wiki = "HMC"
 hidden = true
-answer = """
-No. The Monte Carlo standard error, the posterior standard deviation divided by the square root of the ESS, is the precision of the posterior mean as computed from this chain. The uncertainty about the parameter is measured by the posterior standard deviation, and by the credible and HPD intervals.
-"""
+right = "ForwardDiff"
+wrong = [
+  "Zygote",
+  "ReverseDiff",
+  "Enzyme",
+  "Mooncake",
+  "FiniteDiff",
+]
+explanation = "The panel builds the sampler from a DiagEuclideanMetric, a Hamiltonian from the log density with ForwardDiff gradients, a Leapfrog integrator, an HMCKernel with a fixed number of steps and a StanHMCAdaptor."
+
+[[faq]]
+question = "On the Metropolis-Hastings tab, where does Turing's MH() with no arguments draw its proposals from?"
+wiki = "Assumptions"
+hidden = true
+right = "Each parameter's prior, whatever the current point"
+wrong = [
+  "A unit-variance random walk around the current point",
+  "A random walk with the covariance of the warm-up",
+  "A Langevin step along the gradient of the posterior",
+  "A normal distribution around the posterior mode",
+  "A uniform step of at most 1 around the current point",
+]
+explanation = "Turing's MH() with no arguments proposes each parameter from its prior, independently of the current point; a covariance matrix, MH(Sigma), gives a random-walk proposal instead."
+
+[[faq]]
+question = "How long a warm-up does the Decision Guide of the Markov Chain Monte Carlo panel call a safe default for NUTS?"
+wiki = "Decision Guide"
+hidden = true
+right = "As many steps as the draws kept"
+wrong = [
+  "A tenth of the draws kept",
+  "Half as many steps as the draws kept",
+  "Twice as many steps as the draws kept",
+  "100 steps, whatever the draws kept",
+  "10,000 steps, whatever the draws kept",
+]
+explanation = "As many warm-up steps as the draws kept is a safe default for NUTS; fewer may do for simple targets."

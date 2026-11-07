@@ -1,4 +1,4 @@
-# First-Order Methods — Factsheet
+# Stochastic Gradient Methods — Factsheet
 
 A **first-order method** updates the parameters from the gradient alone: x_new = x - step, where the step is built from the current gradient g, and in most rules from a running memory of past gradients (a velocity, or averages of g and g squared).
 

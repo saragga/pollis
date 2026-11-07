@@ -717,25 +717,70 @@ For continuous, non-separable or ill-conditioned problems, CMA-ES; for continuou
 """
 
 [[faq]]
-question = "My run is stuck at a value of 1 on the default function: what does that mean?"
+question = "On which tabs is the premature flag of Stagnation Check meaningful?"
 wiki = "Diagnostics"
 hidden = true
-answer = """
-On the Rastrigin function, a flat line at a whole number such as 1 or 2 usually marks a local minimum one or two integer steps from the origin: a value near 1 means that one coordinate sits near ±1, and near 2 that two do. Run Multi-Run Reliability to see how often runs reach the best value, and try a larger population or restarts.
-"""
+right = "Compact GA and MCCGA"
+wrong = [
+  "GA, with a positive Mutation Rate",
+  "BRKGA, with mutants",
+  "GA and BRKGA together",
+  "Every tab alike",
+]
+explanation = "The flag needs a final diversity below 1e-6, which mutation on GA and fresh mutants on BRKGA all but rule out; on the compact tabs the model does collapse."
 
 [[faq]]
-question = "Why does the premature flag never fire on the GA tab?"
-wiki = "Diagnostics"
-hidden = true
-answer = """
-The `premature` flag of Stagnation Check requires a final diversity below 1e-6, with the last gain in the first half of the run. On GA with a positive Mutation Rate, or on BRKGA with mutants, such a low diversity is all but impossible, since mutation and fresh mutants keep adding spread. Read the idle generations and the diversity plot instead. On the compact tabs the flag is meaningful, as there the model does collapse.
-"""
-
-[[faq]]
-question = "Is the default test function a fair test of these methods?"
+question = "How many seeds does the Genetic Algorithms panel give for reliability, and how many for comparison?"
 wiki = "Assumptions"
 hidden = true
-answer = """
-It flatters some of them. The Rastrigin function is symmetric, separable and has its optimum at the centre of the box: real-coded crossover pulls children to the middle of the population, a separable function suits per-gene operators, and Evaluate New Point starts from the centre. Before forming a general view, shift the optimum, for instance with x .- 1.3 in Objective f(x), and rotate the coordinates.
-"""
+right = "10 for reliability, 3 to 5 for comparison"
+wrong = [
+  "30 for reliability, 10 for comparison",
+  "5 for reliability, 1 for comparison",
+  "100 for reliability, 30 for comparison",
+  "10 for reliability, 10 for comparison",
+  "20 for reliability, 5 for comparison",
+]
+explanation = "A fixed seed of 1 makes one run repeatable, not typical; claims about a method need many seeds, and the panel gives 10 for reliability and 3 to 5 for comparison."
+
+[[faq]]
+question = "Which operators does the GA tab of the Genetic Algorithms panel use?"
+wiki = "Classic GA"
+hidden = true
+right = "Tournament selection, intermediate crossover, Gaussian mutation, one elite"
+wrong = [
+  "Roulette-wheel selection, one-point crossover, bit-flip mutation, no elite",
+  "Tournament selection, SBX crossover, polynomial mutation, two elites",
+  "Rank selection, uniform crossover, Gaussian mutation, one elite",
+  "Tournament selection, blend crossover, uniform mutation, no elite",
+  "Universal sampling, arithmetic crossover, Cauchy mutation, one elite",
+]
+explanation = "The GA tab runs a real-coded genetic algorithm: tournament selection, intermediate crossover, Gaussian mutation and one elite, each operator in a few lines of the generated code."
+
+[[faq]]
+question = "What is the decoder of the BRKGA tab of the Genetic Algorithms panel?"
+wiki = "BRKGA"
+hidden = true
+right = "lb .+ k .* (ub .- lb)"
+wrong = [
+  "sortperm(k)",
+  "ub .- k .* (ub .- lb)",
+  "lb .+ round.(k) .* (ub .- lb)",
+  "(k .- 0.5) .* (ub .- lb)",
+  "lb .+ k .^ 2 .* (ub .- lb)",
+]
+explanation = "In the panel, the decoder is simply lb .+ k .* (ub .- lb), since the default problem is continuous; for scheduling, routing or packing only decode and the objective have to change."
+
+[[faq]]
+question = "What is the default Mutation Rate of the Genetic Algorithms panel, and what does its Decision Guide suggest at n = 5?"
+wiki = "Decision Guide"
+hidden = true
+right = "0.1, against 1 / n = 0.2"
+wrong = [
+  "0.2, against 1 / n = 0.2",
+  "0.01, against 1 / n = 0.2",
+  "0.05, against 1 / n = 0.1",
+  "0.1, against 1 / n = 0.5",
+  "0.5, against 1 / n = 0.2",
+]
+explanation = "Set Mutation Rate near 1 / n per gene, which at n = 5 gives 0.2; the default of 0.1 is a modest version of that."

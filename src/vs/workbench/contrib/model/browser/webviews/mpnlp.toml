@@ -576,3 +576,99 @@ cons = [c for c in all_constraints(model; include_variable_in_set_constraints=tr
 [(constraint = c, slack = abs(value(c) - MOI.constant(constraint_object(c).set)),
   binding = abs(value(c) - MOI.constant(constraint_object(c).set)) < 1e-6) for c in cons]
 '''
+
+# ── FAQ: shown in Learn More, and the Panel FAQ test set of Evaluate Answering Models (hidden = true: the test set only) ──
+
+[[faq]]
+question = "Is the solution Ipopt found the best one?"
+wiki = "Interpretation"
+answer = """
+Not necessarily. Ipopt and MadNLP find a local optimum, a point satisfying the KKT conditions, and claim nothing about other regions; it is global only when the problem is convex. On the default nonconvex problem the result depends on the start.
+
+Multi-Start re-solves from 20 random starting points and draws the objective values found, and the Optimality Gap Check compares the local optimum with EAGO's global one: equal values mean the local optimum is global.
+"""
+
+[[faq]]
+question = "The solver says LOCALLY_INFEASIBLE: is my problem infeasible?"
+wiki = "Diagnostics"
+answer = """
+Not proven. For a local solver, LOCALLY_INFEASIBLE means no feasible point was found from that start, and another start may succeed; INFEASIBLE from a global solver is a proof of infeasibility.
+
+Status and Feasibility lists the constraints violated by more than 1e-6 at the reported point. Multi-Start tries 20 other starting points in the box.
+"""
+
+[[faq]]
+question = "Why do KKT Conditions and Constraint Sensitivity report an error under MINLP?"
+wiki = "MINLP"
+answer = """
+Because they need duals, which interior-point solvers such as Ipopt return and MINLP solvers such as SCIP and Juniper usually do not, so both actions report it.
+
+For MINLP, Solver Statistics gives the nodes and the relative gap, and the Optimality Gap Check compares the integer optimum with the continuous relaxation, the price of the integrality.
+"""
+
+[[faq]]
+question = "On the panel's default problem, about what objective value does the global minimum have?"
+wiki = "Global NLP"
+hidden = true
+right = "About -0.54"
+wrong = [
+  "About 1.69",
+  "About 0",
+  "About -2",
+  "About 4",
+]
+explanation = "The default problem, with its bilinear term 3 x[1] x[2], has two local minima: a local solver may return the one at about 1.69, and a global solver returns the one at about -0.54."
+
+[[faq]]
+question = "Why is Juniper exact for convex MINLPs only?"
+wiki = "MINLP"
+hidden = true
+right = "It solves the relaxation at each node with Ipopt, a local solver"
+wrong = [
+  "It never branches on the binary variables",
+  "It builds McCormick relaxations of the expressions",
+  "It needs finite bounds on every variable",
+  "It returns no duals at the solution",
+]
+explanation = "For a nonconvex MINLP, a node's relaxation solved locally may not be a valid bound, so Juniper's result is a good feasible solution without a guarantee; SCIP handles nonconvex MINLPs to global optimality."
+
+[[faq]]
+question = "Where does the panel start every variable of an NLP?"
+wiki = "NLP"
+hidden = true
+right = "At (lb + ub) / 2"
+wrong = [
+  "At lb",
+  "At ub",
+  "At a random point of the box",
+  "At the global optimum of EAGO",
+]
+explanation = "The panel starts every variable at (lb + ub) / 2, 0 by default, and on the default nonconvex problem the result depends on that start, which Multi-Start explores."
+
+[[faq]]
+question = "Under the Mixed-Integer NLP (MINLP) class, how does the Nonlinear Programming panel make its problem mixed-integer?"
+wiki = "Overview"
+hidden = true
+right = "Each x[i] gets a binary switch z[i], and at most Max Nonzeros are on"
+wrong = [
+  "Every x[i] must take an integer value within its bounds",
+  "x[1] and x[2], the bilinear pair, must take integer values",
+  "Each x[i] is rounded to the nearest integer after the solve",
+  "The first Max Nonzeros of the x[i] must take integer values",
+  "Each x[i] must be 0 or 1, and at most Max Nonzeros are 1",
+]
+explanation = "Under MINLP, each x[i] gets a binary switch z[i], x[i] can be nonzero only when z[i] = 1, and at most Max Nonzeros switches are on; SCIP or Juniper solve it by branch and bound."
+
+[[faq]]
+question = "What does the KKT Conditions action of the Nonlinear Programming panel list for each constraint?"
+wiki = "KKT Conditions"
+hidden = true
+right = "Its value, its multiplier, and the multiplier times the slack"
+wrong = [
+  "Its slack, and whether it binds below 1e-6",
+  "Its multiplier, and the range over which it holds",
+  "Its gradient, and the Hessian of the Lagrangian",
+  "Its value, and any violation above 1e-6",
+  "Its multiplier, and the objective's change per unit",
+]
+explanation = "Interior-point solvers return the multipliers, and the KKT Conditions action lists each constraint's value, multiplier and the product multiplier times slack, which should be near 0."

@@ -605,3 +605,102 @@ using StatsPlots, Distributions
 density(vec(Array(chain[:, par, :])); label="posterior")  # posterior for par
 plot!(Normal(0, 10); label="prior Normal(0, 10)")  # its prior: a posterior much narrower than the prior is driven by the data
 '''
+
+# ── FAQ: shown in Learn More, and the Panel FAQ test set of Evaluate Answering Models (hidden = true: the test set only) ──
+
+[[faq]]
+question = "How do I know the sampler worked?"
+wiki = "Diagnostics"
+answer = """
+Check every run before reading any result. The Trace Plot should show overlapping, stationary chains; R-hat should be below 1.01; the effective sample size above about 100 per chain; and NUTS should report no divergent transitions.
+
+If they fail, raise the target acceptance or reparametrise, and run longer. Then check the fit itself with the Posterior Predictive Check: the observed data should look like one of the replicated data sets.
+"""
+
+[[faq]]
+question = "What does a 95% credible interval mean?"
+wiki = "Interpretation"
+answer = """
+That the parameter lies in it with posterior probability 0.95, given the model and the prior: the statement people often wrongly attach to a frequentist confidence interval.
+
+The equal-tailed interval cuts 2.5% from each end of the posterior draws; the HPD Interval is the shortest interval with 95% of the mass, and differs from it when the posterior is skewed.
+"""
+
+[[faq]]
+question = "Do the priors matter?"
+wiki = "Assumptions"
+answer = """
+They are part of the model. With many data the likelihood dominates; with few, the prior matters, and a different prior gives a different answer. Marginal Posteriors overlays prior and posterior: a posterior much narrower than the prior means the data were informative.
+
+The panel uses weakly informative priors, Normal(0, 10) for means and coefficients and Exponential(1) for standard deviations, which assume data on a scale of roughly units to tens: with data in thousands, rescale them or widen the priors.
+"""
+
+[[faq]]
+question = "For the samplers themselves in more depth, which panel does the Overview of the Sampling-Based Bayesian Inference panel point to?"
+wiki = "Overview"
+hidden = true
+right = "Markov Chain Monte Carlo"
+wrong = [
+  "Variational Inference",
+  "Message Passing",
+  "Bootstrap Resampling",
+  "Hypothesis Testing",
+  "Genetic Algorithms",
+]
+explanation = "NUTS and HMC need the gradient of the log posterior, from the chosen AD backend; the Markov Chain Monte Carlo panel covers the samplers themselves in more depth."
+
+[[faq]]
+question = "In which form is the Hierarchical model of the Sampling-Based Bayesian Inference panel written?"
+wiki = "Overview"
+hidden = true
+right = "The non-centred form"
+wrong = [
+  "The centred form",
+  "With the group means integrated out",
+  "With complete pooling of the groups",
+  "Centred for large groups, non-centred for small ones",
+  "With no pooling, one model per group",
+]
+explanation = "The Hierarchical model is written in its non-centred form, which samples much better when the group spread is small."
+
+[[faq]]
+question = "Against divergent transitions, how high does the Sampling-Based Bayesian Inference panel say to raise the target acceptance of NUTS?"
+wiki = "Diagnostics"
+hidden = true
+right = "Towards 0.95 or 0.99"
+wrong = [
+  "Towards 0.65",
+  "Towards 0.8",
+  "Down towards 0.5",
+  "Down towards 0.234",
+  "To exactly 1",
+]
+explanation = "Even a few divergences mean part of the posterior was not explored: raise the target acceptance (towards 0.95 or 0.99), which shortens the steps, or reparametrise."
+
+[[faq]]
+question = "Beside Turing.jl and MCMCChains.jl, which core package does the Sampling-Based Bayesian Inference panel use?"
+wiki = "Factsheet"
+hidden = true
+right = "PosteriorStats.jl"
+wrong = [
+  "ArviZ.jl",
+  "PSIS.jl",
+  "AdvancedHMC.jl",
+  "StatsPlots.jl",
+  "ParetoSmooth.jl",
+]
+explanation = "The core packages of the panel are Turing.jl, MCMCChains.jl and PosteriorStats.jl."
+
+[[faq]]
+question = "Which AD Backend does the Decision Guide of the Sampling-Based Bayesian Inference panel suggest for a hierarchical model with many groups?"
+wiki = "Decision Guide"
+hidden = true
+right = "A reverse-mode one: AutoEnzyme, AutoMooncake or AutoReverseDiff"
+wrong = [
+  "AutoForwardDiff, whatever the number of parameters",
+  "AutoForwardDiff with a chunk size of one per group",
+  "No backend: MH, which needs no gradients",
+  "A finite-difference one, to avoid any tracing",
+  "AutoZygote, the only one that handles loops",
+]
+explanation = "AutoForwardDiff suits models with up to a few dozen parameters; a reverse-mode backend (AutoEnzyme, AutoMooncake, AutoReverseDiff) suits models with many parameters, such as hierarchical models with many groups."

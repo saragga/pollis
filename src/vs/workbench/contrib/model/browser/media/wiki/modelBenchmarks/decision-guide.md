@@ -5,6 +5,7 @@
 |---|---|
 | A first look at some models | 2 or 3 questions in each subject of MMLU-Pro, or 30 problems of GSM8K |
 | Choosing between two models | Enough questions for their intervals not to overlap: often 200 or more |
+| A model's **By Chance** is not small | More questions, before reading its score as better than guessing |
 | Comparing the subjects of a model | Equal allocation, 10 questions or more in each subject |
 | Estimating the score on the whole benchmark | Proportional allocation, every subject ticked |
 | Repeating a run with another model or setting | The same seed, size and allocation |
@@ -15,7 +16,7 @@
 | The benchmarks' own way of asking | Worked Step by Step, no examples |
 | Many answers could not be read | Examples First, which shows the form of the answer |
 | Many answers cut off | A larger Longest Answer |
-| The quickest run | The Answer Only, with a Longest Answer of 256 |
+| The quickest run | The Answer Only, with Thinking off: each answer at most 32 tokens |
 | A model that thinks | Thinking on, with a larger Longest Answer, against the same model with Thinking off |
 
 ## Which Model to Choose

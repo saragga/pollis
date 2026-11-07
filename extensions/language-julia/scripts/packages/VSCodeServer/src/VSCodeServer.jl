@@ -179,6 +179,7 @@ function serve(conn_pipename, debug_pipename; is_dev=false, error_handler=nothin
         msg_dispatcher[repl_showingrid_notification_type] = repl_showingrid_notification
         msg_dispatcher[repl_loadedModules_request_type] = repl_loadedModules_request
         msg_dispatcher[repl_isModuleLoaded_request_type] = repl_isModuleLoaded_request
+        msg_dispatcher[repl_threads_request_type] = repl_threads_request
         msg_dispatcher[repl_getcompletions_request_type] = repl_getcompletions_request
         msg_dispatcher[repl_resolvecompletion_request_type] = repl_resolvecompletion_request
         msg_dispatcher[repl_getdocfromword_request_type] = repl_getdocfromword_request

@@ -18,13 +18,13 @@ The diffusion panel has no data to validate against, so its checks ask two narro
 
 **Mean and Variance** computes moments over 1000 paths and overlays closed forms. Solid and dashed curves that stay close, apart from sampling noise that grows with the variance, are the good outcome. A gap that shrinks with **Step size dt** is discretisation error. The formulas read a and b off f and g at X = 1, so they apply only to f = a X and, outside **Additive Noise**, g = b X, and nothing warns otherwise. A drift such as `-0.5*(X-2)` gives a wrong dashed curve, and a = 0 gives `NaN` for the additive variance.
 
-## What the Ito vs Stratonovich Chart Can and Cannot Show
+## How to Read the Additive vs Multiplicative Noise Chart
 
-**Ito vs Stratonovich** solves f and g with EM and with EulerHeun, always at **Step size dt**, whatever **Solver** holds. The first solve omits `save_noise=true`, so StochasticDiffEq.jl keeps only the two ends of the Brownian path. `NoiseWrapper` therefore cannot replay the path, and the second solve takes fresh bridge values between those ends, none of which are stored. Do not read the gap in this chart as the effect of the calculus. Adding `save_noise=true` to the EM call makes the second solve follow the recorded path, and for constant g the two curves should then agree up to discretisation error.
+**Additive vs Multiplicative Noise** solves **Drift f(X,t)** twice with EM at **Step size dt**, whatever **Solver** holds. The first solve takes a constant noise of size g(X0), and the second takes g(X0) X / X0, the same size at the start, then in proportion to X. The first solve keeps its Brownian path with `save_noise=true`, and `NoiseWrapper` replays it in the second, so both curves start together and react to the same shocks. Where the path rises above X0, the multiplicative curve swings more widely, and below X0 it calms down. Under a drift that pulls towards zero, the multiplicative curve flattens as it approaches zero, while the additive one keeps its spread and can cross zero.
 
 ## How to Judge the Stationary Distribution Check
 
-**Stationary Distribution** simulates to t = 1000, drops t up to 100, and plots a histogram of states every 0.1. In **Additive Noise** with f = a X and a < 0, it adds the normal curve with variance sigma^2 / (2 theta), where theta = -a, and the histogram should follow that curve. A clear gap suggests a step that is too large or a burn-in too short for a slow theta. In **Multiplicative Noise** and **Stratonovich** no curve is drawn, since g = b X has no proper stationary law.
+**Stationary Distribution** simulates to t = 1000, drops t up to 100, and plots a histogram of states every 0.1. In **Additive Noise** with f = a X and a < 0, it adds the normal curve with variance sigma^2 / (2 theta), where theta = -a, and the histogram should follow that curve. A clear gap suggests a step that is too large or a burn-in too short for a slow theta. In **Multiplicative Noise** no curve is drawn, since g = b X has no proper stationary law.
 
 ## How to Test the Step Size on Your Own Diffusion
 

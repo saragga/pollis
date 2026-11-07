@@ -4,8 +4,9 @@
 | What you see | Likely cause | What to try |
 |---|---|---|
 | Many answers under **Cut Off** | The worked answers are longer than **Longest Answer** allows | A larger Longest Answer, or The Answer Only |
+| Answers under **Cut Off** with The Answer Only | The model works out its answer against the instruction, and reaches 32 tokens | Worked Step by Step, or Examples First, which shows the form of the answer |
 | Many answers under **Could Not Be Read** | The model does not end with "the answer is" | Examples First, which shows the form; open a question to read the answers |
-| Every model scores near chance | Answers cut off or unread, or questions too hard for small models | Read Cut Off and Could Not Be Read first |
+| Every model scores near chance | Answers cut off or unread, or questions too hard for small models | Read Cut Off and Could Not Be Read first, then **By Chance** |
 | The **95% Interval** is a dash | A stratum has one question only | Two questions at least in each stratum ticked |
 | The interval is wide | Few questions | More questions; the line under the strata gives the widest interval |
 | Two runs of a model differ | Different samples or settings | The same seed and settings, which the lines above the results give |

@@ -551,3 +551,102 @@ code = '''
 {{?model=arima}} phi = [c for (n, c) in zip(ct.names, ct.coef) if startswith(n, "ar_L")]
 {{?model=arima}} (ar_persistence = round(sum(phi; init=0.0), digits=4), shock_half_life = isempty(phi) || sum(phi) <= 0 ? 0.0 : round(log(0.5) / log(min(sum(phi), 0.9999)), digits=2), note = "on the differenced series; with d >= 1 every shock also shifts the level permanently")
 '''
+
+# ── FAQ: shown in Learn More, and the Panel FAQ test set of Evaluate Answering Models (hidden = true: the test set only) ──
+
+[[faq]]
+question = "Which model should I start with?"
+wiki = "Decision Guide"
+answer = """
+Plot the series with a LOESS trend first, and take logs if the variation grows with the level. Then fit two or three candidates with the components the plot shows: a Local Level for a drifting level, a Local Linear Trend for a drifting slope, ETS Damped for a trend that should flatten, a Seasonal Model or ETS with a Period for seasonality, ARIMA for autocorrelation after differencing.
+
+Simple models win surprisingly often, so keep the local level among the candidates, and compare them by backtest error at the horizon that matters.
+"""
+
+[[faq]]
+question = "Can I compare the models by AIC in Information Criteria?"
+wiki = "Interpretation"
+answer = """
+Only the rows with the same number of observations in their likelihood. The initial states have a diffuse start: the first few observations, one per nonstationary state, initialise the filter and are left out of the likelihood, so models with more diffuse states are fitted to fewer observations.
+
+Information Criteria lists that number beside AIC, AICc and BIC. Across rows that differ in it, the Rolling-Origin Backtest is the fair comparison.
+"""
+
+[[faq]]
+question = "How do I know the model fits well enough?"
+wiki = "Diagnostics"
+answer = """
+The standardised residuals should look like white noise with unit variance: no trend, no change in spread, roughly normal, as Residual Analysis shows. Ljung-Box and ACF tests them for autocorrelation: a p-value above 0.05 and no spike at the seasonal lag are good signs.
+
+Then the Rolling-Origin Backtest: the error should grow smoothly with the horizon, and a model whose error at step 1 is much worse than its in-sample fit is overfitting.
+"""
+
+[[faq]]
+question = "How does the Rolling-Origin Backtest of the Time-Series Forecasting panel choose its origins and horizon?"
+wiki = "Diagnostics"
+hidden = true
+right = "8 origins from 70% of the sample, up to 12 steps from each"
+wrong = [
+  "10 origins from 50% of the sample, up to 24 steps from each",
+  "5 origins from 80% of the sample, up to 6 steps from each",
+  "8 origins from 90% of the sample, 1 step from each",
+  "Every observation from 50% of the sample, up to 12 steps",
+  "12 origins from 70% of the sample, up to 8 steps from each",
+]
+explanation = "Rolling-Origin Backtest refits the model at 8 origins from 70% of the sample to the end, forecasts up to 12 steps from each, and plots the mean absolute error by horizon."
+
+[[faq]]
+question = "What is the default Order (p, d, q) of the ARIMA tab of the Time-Series Forecasting panel?"
+wiki = "Overview"
+hidden = true
+right = "(1, 1, 1)"
+wrong = [
+  "(0, 1, 1)",
+  "(1, 0, 0)",
+  "(2, 1, 2)",
+  "(1, 1, 0)",
+  "(0, 1, 0)",
+]
+explanation = "ARIMA takes Order (p, d, q), autoregressive lags, differences and moving-average lags, (1, 1, 1) by default."
+
+[[faq]]
+question = "Which models does Information Criteria fit and list in the Time-Series Forecasting panel?"
+wiki = "Interpretation"
+hidden = true
+right = "Local level, local linear trend, basic structural, the best ETS and the best ARIMA"
+wrong = [
+  "Local level, the best ETS, the best ARIMA, LOESS and unobserved components",
+  "Every ETS form and every ARIMA order up to (2, 1, 2)",
+  "The model of the tab, with and without its seasonal component",
+  "Local level, local linear trend, the best ETS and a seasonal naive forecast",
+  "The best ARIMA, the best ETS and the theta method, with their average",
+]
+explanation = "Information Criteria fits a local level, a local linear trend, a basic structural model, the best ETS and the best ARIMA, and lists AIC, AICc and BIC with the number of observations in each likelihood."
+
+[[faq]]
+question = "Which core packages does the Time-Series Forecasting panel use?"
+wiki = "Factsheet"
+hidden = true
+right = "StateSpaceModels.jl and Loess.jl"
+wrong = [
+  "Durbyn.jl and Loess.jl",
+  "StateSpaceModels.jl and TimeSeries.jl",
+  "StateSpaceModels.jl and StatsForecast.jl",
+  "ARIMA.jl and Loess.jl",
+  "TSAnalysis.jl and Loess.jl",
+]
+explanation = "The core packages of the Time-Series Forecasting panel are StateSpaceModels.jl and Loess.jl."
+
+[[faq]]
+question = "How can missing values be given to the Time-Series Forecasting panel?"
+wiki = "Assumptions"
+hidden = true
+right = "As NaN, which the Kalman filter handles"
+wrong = [
+  "As missing, which the panel drops first",
+  "As any value, filled by linear interpolation",
+  "As NaN, filled by the last value before the fit",
+  "As zeros, which the panel treats as gaps",
+  "Not at all: they stop the fit with an error",
+]
+explanation = "Observations are equally spaced and in order, oldest first; missing values can be handled by the Kalman filter as NaN, but irregular dates cannot."

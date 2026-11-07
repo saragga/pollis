@@ -12,7 +12,7 @@
 | Device | CPU, with `use_gpu = false` |
 | Printed result | Ranked passages with scores, with relevant ones starred, plus Recall@k and RR@k for a labelled query |
 
-The packages come from [Chaudhary (2024)](#ref-Cha...2024a) and [Simsa (2025)](#ref-Sim...2025a).
+The packages come from [Chaudhary (2024)](#ref-Cha...2024a) and [Simecek (2025)](#ref-Sim...2025a).
 
 ## What the Inputs of the Panel Default To
 
@@ -63,7 +63,7 @@ The cut-off for all three is **Top-k**, and labels exist only for the built-in q
 
 <a id="ref-Cha...2024a"></a>Chaudhary, S. (2024). ColBERT.jl: efficient, late-interaction retrieval systems in Julia. [github.com/JuliaGenAI/ColBERT.jl](https://github.com/JuliaGenAI/ColBERT.jl)
 
-<a id="ref-Sim...2025a"></a>Simsa, J. (2025). RAGTools.jl: retrieval-augmented generation tools in Julia. [github.com/JuliaGenAI/RAGTools.jl](https://github.com/JuliaGenAI/RAGTools.jl)
+<a id="ref-Sim...2025a"></a>Simecek, J. (2025). RAGTools.jl: retrieval-augmented generation tools in Julia. [github.com/JuliaGenAI/RAGTools.jl](https://github.com/JuliaGenAI/RAGTools.jl)
 
 ## See Also
 

@@ -664,25 +664,72 @@ Choose the Time Series model, the maximum entropy bootstrap (Vinod, 2006). Each 
 """
 
 [[faq]]
-question = "When does this method fail?"
+question = "Which distributions can the Parametric model of the Bootstrap Resampling panel draw its replicates from?"
 wiki = "Factsheet"
 hidden = true
-answer = """
-The bootstrap cannot create information. With very small samples the replicates take few distinct values and the intervals are too narrow: distrust it below about 20 observations. It fails for statistics that depend on the extremes, such as the maximum or the minimum, and resampling independent observations fails for dependent data, which need the time-series model or whole clusters resampled.
-"""
+right = "Normal, Log-Normal, Gamma and Exponential"
+wrong = [
+  "Normal, Student's t, Gamma and Weibull",
+  "Normal, Log-Normal, Beta and Poisson",
+  "Normal, Gamma, Weibull and Pareto",
+  "Normal and Student's t only",
+  "Exponential, Weibull, Gamma and Beta",
+]
+explanation = "The panel's models are Nonparametric (Basic, Balanced, Antithetic), Parametric (Normal, Log-Normal, Gamma, Exponential) and Time Series (maximum entropy)."
 
 [[faq]]
-question = "What does z0 mean here?"
-wiki = "Interpretation"
+question = "Which three ways of drawing the replicates of the nonparametric bootstrap does Bootstrap.jl offer in the panel?"
+wiki = "Resampling Schemes"
 hidden = true
-answer = """
-z0 is the bias correction of the BCa interval: the share of replicates below the estimate, on the normal scale. It is zero when the bootstrap distribution is centred on the estimate. Interval Choice shows it beside a, the acceleration, and the skewness of the replicates: when z0 and a are close to zero and the skewness is small, the percentile and normal intervals are fine; otherwise prefer BCa or studentised.
-"""
+right = "Basic, balanced and antithetic sampling"
+wrong = [
+  "Basic, block and wild sampling",
+  "Basic, stratified and smoothed sampling",
+  "Balanced, Bayesian and importance sampling",
+  "Moving block, circular block and stationary sampling",
+  "Basic, balanced and m-out-of-n sampling",
+]
+explanation = "Bootstrap.jl offers basic, balanced and antithetic sampling; they target the same bootstrap distribution, and differ in how much Monte Carlo noise a given number of replicates leaves."
 
 [[faq]]
-question = "Should I worry about the bias it shows?"
+question = "Which action of the Bootstrap Resampling panel shows whether a single observation dominates the estimate?"
 wiki = "Diagnostics"
 hidden = true
-answer = """
-Compare the bias with the standard error. A bias below about a quarter of the standard error can be ignored; a larger one is a warning that the statistic is biased and the percentile interval off-centre. Bias Correction subtracts the estimated bias, but adds variance, so it is worth it only when the bias is large compared with the standard error; BCa corrects for bias inside the interval instead.
-"""
+right = "Jackknife Influence"
+wrong = [
+  "Replicate Histogram",
+  "Replicate Shape",
+  "Required Replicates",
+  "Interval Coverage",
+  "Compare Schemes",
+  "Width vs Sample Size",
+]
+explanation = "Jackknife Influence recomputes the statistic leaving out one observation at a time: one whose removal moves the estimate far more than the others dominates the result."
+
+[[faq]]
+question = "Which five intervals does Bootstrap.jl give from the same replicates in the panel?"
+wiki = "Confidence Intervals"
+hidden = true
+right = "Percentile, basic, normal, BCa and studentised"
+wrong = [
+  "Percentile, basic, normal, BCa and ABC",
+  "Percentile, normal, BCa, ABC and double bootstrap",
+  "Percentile, basic, BCa, studentised and Bayesian",
+  "Basic, normal, BCa, studentised and profile likelihood",
+  "Percentile, basic, normal, studentised and calibrated",
+]
+explanation = "Bootstrap.jl gives the percentile, basic, normal, BCa and studentised intervals from the same replicates."
+
+[[faq]]
+question = "Below about how many observations does the Decision Guide of the Bootstrap Resampling panel say to distrust the bootstrap?"
+wiki = "Decision Guide"
+hidden = true
+right = "About 20"
+wrong = [
+  "About 5",
+  "About 10",
+  "About 50",
+  "About 100",
+  "About 200",
+]
+explanation = "Its rules of thumb are BCa by default with 2,000 replicates or more, to resample the way the data were drawn, and to distrust the bootstrap below about 20 observations, and for the maximum or minimum."

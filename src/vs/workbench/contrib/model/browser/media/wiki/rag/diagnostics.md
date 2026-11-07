@@ -24,7 +24,7 @@ Trying one question at a time misleads. Write ten or twenty questions whose righ
 - **Place of the right passage**: how far down it comes when it is found; reranking is meant to improve this.
 - **Precision at k**: the share of the first k that are relevant, which matters when many passages could answer.
 
-[Manning, Raghavan and Schütze (2008)](#ref-MRS2008a) cover the evaluation of ranked retrieval in full. Change one thing at a time and compare on the same questions. Compose > Local Models has **Evaluate Embedding Models** and **Evaluate Answering Models**, which do this across models on test sets of questions.
+[Manning, Raghavan and Schütze (2008)](#ref-MRS2008a) cover the evaluation of ranked retrieval in full. Change one thing at a time and compare on the same questions. **Evaluate Embedding Models**, in Compose > Knowledge for AI Models, and **Evaluate Answering Models**, in Compose > Local AI Models, do this across models on test sets of questions.
 
 ## Checking an Answer
 Reading a citation is the real check: does the passage say what the sentence citing it says? Check especially:

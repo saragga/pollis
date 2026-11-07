@@ -1,4 +1,4 @@
-// POLLIS: the runs of Model Benchmarks (Compose > Knowledge for Models > Model Benchmarks...), in a hidden Julia process
+// POLLIS: the runs of Model Benchmarks (Compose > Local AI Models > Model Benchmarks...), in a hidden Julia process
 // of their own (scripts/terminalserver/model_benchmarks.jl), which a notebook loads too (Pollis.model_benchmarks()).
 // The command `language-julia.pollisModelBenchmarks`, with {job, models?}, runs the task `job` of the script: "download"
 // a benchmark, or "start" a run, which draws its sample; with `models`, each is then run on that run, one after the
@@ -23,7 +23,7 @@ import { availableMemory } from './pollisModels'
 type BenchmarkModel = { value: string; label: string; size?: string }
 type BenchmarkRequest = { job: { task: 'download' | 'start'; settings?: { thinking?: boolean } } & { [key: string]: unknown }; models?: BenchmarkModel[] }
 type BenchmarkAnswer = { lines?: object[]; errors?: { [model: string]: string }; error?: string }
-type BenchmarkProgress = { status: 'starting' | 'installing' | 'loading' | 'running'; done: number; total: number; model: number; models: number; tokens?: [number, number] }
+type BenchmarkProgress = { status: 'starting' | 'installing' | 'loading' | 'running'; done: number; total: number; model: number; models: number; tokens?: [number, number]; run?: string }
 
 let g_running: { process?: child_process.ChildProcess; stopped: boolean; progress: BenchmarkProgress } | undefined
 
@@ -106,7 +106,8 @@ async function runTask(context: vscode.ExtensionContext, executableFeature: Exec
             if (!run || running.stopped) {
                 break
             }
-            running.progress = { status: 'loading', done: 0, total: 0, model: index + 1, models: models.length }
+            // The run's id with the progress, so that the page shows the run as its answers come
+            running.progress = { status: 'loading', done: 0, total: 0, model: index + 1, models: models.length, run }
             const freeBefore = await availableMemory().catch(() => undefined)
             const server = await startServer({ model: model.value, thinking })
             if (!server.url) {

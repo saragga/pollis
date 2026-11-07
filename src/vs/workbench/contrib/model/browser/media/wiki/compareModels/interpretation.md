@@ -1,21 +1,20 @@
 # Interpretation
 
-## What the Score of an Answering Model Means
-**Score** is the judge's rating of a model's answers from 1 to 5, on average over the questions; each answer's rating is the mean of its five parts. Columns in **Results** go from the best Score to the worst, by the first judge. A Score is relative: it depends on the judge and on the questions, so it compares models within one run and says little across runs with another judge. A gap of a few hundredths between two models is usually not a real difference.
+## What the Scores of an Answering Model Mean
+**Answer Score** is how near a model's answers are in meaning to the right answers, on average: the cosine similarity of their embeddings by the embedding model of the search, from -1 to 1, higher being nearer. **Score** is the judge's rating of a model's answers against the right answers, from 1 to 5, on average over the questions. Columns in **Results** go from the best to the worst, by the Score of the first judge, or by the Answer Score in a run without a judge. Both are relative: they depend on the questions, and the Score on the judge and the Answer Score on the embedding model, so they compare models within one run and say little across runs with another judge or embedding model. A gap of a few hundredths between two models is usually not a real difference.
 
-## The Five Parts of an Answer's Rating
-The judge gives each part a whole number from 1 to 5, following the instructions of RAGTools.jl ([Simsa (2025)](#ref-Sim...2025a)).
+## The Judge's Scale
+The judge rates each answer with a whole number from 1 to 5, after a reason of a sentence or two.
 
-| Part of the rating | What the judge is asked |
+| Rating | The answer |
 |---|---|
-| Relevance | How well does the answer align with the passages? |
-| Completeness | Does the answer cover all the essential points of the passages? |
-| Clarity | How clear and understandable is the answer? |
-| Consistency | How consistent is the answer with the passages as a whole? |
-| Helpfulness | How helpful is the answer in answering the question? |
+| 5 | Gives the facts of the right answer and nothing that contradicts it |
+| 4 | Gives the main facts of the right answer, with a minor omission or a minor inaccuracy |
+| 3 | Gives part of the right answer, or its main fact with an error |
+| 2 | Misses the main fact of the right answer, or is mostly wrong |
+| 1 | Is wrong, unrelated to the question, or declines to answer |
 
-## Reading the Parts of the Rating Together
-Two models with one Score can differ in their parts. Low **Consistency** with high **Clarity** is the pattern to watch: an answer that reads well and departs from the passages. Low **Completeness** with high **Consistency** marks a model that is accurate and leaves things out, which more length or another instruction may help. **Relevance** and **Helpfulness** tend to move together, as both ask whether the answer addresses what was asked.
+Correct details that the right answer does not have are not a fault; anything that contradicts it is. The Answer Score and the Score usually agree on the order of the models; when they do not, the answers where they differ most need reading.
 
 ## Comparing Two Judges
 With a **Second Judge**, **Results** shows the Score by each judge. Judges that put the models in the same order give some confidence in that order, even when one judge is stricter on every model. Judges that reverse two models show that the difference between those two is not settled by the ratings, and the answers need reading. **Answers** shows the rating by the first judge; a click on a question shows the ratings by both.
@@ -29,12 +28,11 @@ With a **Second Judge**, **Results** shows the Score by each judge. Judges that 
 ## What Spread Means
 **Spread** appears when **Repeats** is above 1. It has two numbers: how many points the rating by the first judge varies, and how many seconds the answer time varies, from one asking of the same question to the next, as a standard deviation averaged over the questions. A difference in Score smaller than the Spread of the models is weak evidence that one is better. A model with a low Spread gives more dependable answers from one asking to the next.
 
+## Open Library, Open Book and Closed Book Answering
+A run with **Found in the Library** measures open library answering, the search and the answer together; a run with **The Question's Own Passage** measures open book answering, the answer alone, and has no line of the passages found. A run with **None** measures closed book answering, what each model answers from what it learned alone, and has no line of the passages found either. The line under **Results** says which a run was. Two runs of the same models on the same questions, one with the passages found and one with its own passage, show how much the answers lose to the search: a model that scores well with its own passage and less well with the passages found answers well, and is held back by what the search finds. A run with **None** shows which questions a model answers without the documents: a question that most models answer right with no passage tests what they learned, not what they read in the documents of Pollis.
+
 ## The Line of the Passages Found
-A line in **Results** says for how many questions the passage a question was made from was among those found, and at what average place, with place 1 the first. The line is the same for every model, as all get the same passages. A high figure means the models had what they needed, so their ratings can be taken at face value. A low figure means the ratings rest on answers to passages that often lacked the answer.
-
-## References
-
-<a id="ref-Sim...2025a"></a>Simsa, J. (2025). *RAGTools.jl: Retrieval-Augmented Generation Tools in Julia*. [github.com/JuliaGenAI/RAGTools.jl](https://github.com/JuliaGenAI/RAGTools.jl)
+A line in **Results** says for how many questions the passage a question was made from was among those found, and at what average place, with place 1 the first. The line is the same for every model, as all get the same passages. A high figure means the models had what they needed. A low figure means they often answered without the passage they needed, from what they know, so their scores say more about what they know than about how well they answer from the documents.
 
 ## See Also
 - [Assumptions](assumptions.md) · [Diagnostics](diagnostics.md) · [Decision Guide](decision-guide.md)

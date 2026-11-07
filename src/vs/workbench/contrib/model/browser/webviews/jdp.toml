@@ -390,7 +390,7 @@ code = '''
 using Statistics  # ensemble statistics for the jump problem above (jprob)
 
 ens = solve(EnsembleProblem(jprob), alg, EnsembleThreads(); trajectories=500, skw...)  # 500 paths
-XT  = [first(s.u[end]) for s in ens]  # terminal values
+XT  = [first(s.u[end]) for s in ens.u]  # terminal values
 println("Monte Carlo: E[X(T)] = ", round(mean(XT), digits=4), "  Var[X(T)] = ", round(var(XT), digits=4), "  (se of mean ", round(std(XT) / sqrt(500), digits=4), ")")
 {{?model=cpj|gauss}} m, s = f(1.0, nothing, 0.0), g(1.0, nothing, 0.0)  # drift and volatility coefficients, valid when f = m X and g = s X
 {{?model=cpj|gauss}} EX  = {{X0}} * exp((m + {{lambda}} * kappa) * {{T}})  # E[X(T)] for linear drift with multiplicative jumps
@@ -412,8 +412,8 @@ using Statistics, StatsBase, Plots  # same drift and diffusion, with and without
 
 ens_d = solve(EnsembleProblem(prob), alg, EnsembleThreads(); trajectories=500, skw...)  # pure diffusion (base SDE)
 ens_j = solve(EnsembleProblem(jprob), alg, EnsembleThreads(); trajectories=500, skw...)  # jump-diffusion
-rd = [log(first(s.u[end]) / {{X0}}) for s in ens_d]  # log growth over [0, T]
-rj = [log(first(s.u[end]) / {{X0}}) for s in ens_j]
+rd = [log(first(s.u[end]) / {{X0}}) for s in ens_d.u]  # log growth over [0, T]
+rj = [log(first(s.u[end]) / {{X0}}) for s in ens_j.u]
 for (name, r) in (("diffusion only", rd), ("jump-diffusion", rj))
     println(rpad(name, 16), " mean ", round(mean(r), digits=4), "  sd ", round(std(r), digits=4), "  skew ", round(skewness(r), digits=3), "  excess kurtosis ", round(kurtosis(r), digits=3))
 end
@@ -434,7 +434,7 @@ using StatsBase, Distributions, Plots  # recover jumps from the simulated paths,
 
 ens = solve(EnsembleProblem(jprob), alg, EnsembleThreads(); trajectories=200, skw...)  # 200 paths of the model above
 logjumps = Float64[]
-for s in ens
+for s in ens.u
     for i in 1:length(s.t)-1
         if s.t[i+1] == s.t[i]  # a jump saves the state before and after at the same time
             push!(logjumps, log(first(s.u[i+1]) / first(s.u[i])))  # realised log-jump log(X(t+) / X(t-))

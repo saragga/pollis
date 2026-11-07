@@ -438,25 +438,71 @@ In Julia missing values propagate: `mean([1, missing, 3])` is `missing`, not 2. 
 """
 
 [[faq]]
-question = "My kurtosis is negative here: is that an error?"
-wiki = "Interpretation"
+question = "In the Frequency method of the Descriptive Statistics panel, what does freqtable do with missing values?"
+wiki = "Frequency"
 hidden = true
-answer = """
-No. `kurtosis` in StatsBase.jl is excess kurtosis: 0 for a normal distribution, positive for heavy tails, with more extreme values than a normal, and negative for light tails. Below about 50 observations, treat skewness and kurtosis as rough indications only, and look at a Violin Plot as well.
-"""
+right = "It counts missing as a level of its own"
+wrong = [
+  "It drops the missing values without a word",
+  "It stops with an error until they are removed",
+  "It adds them to the most frequent level",
+  "It returns missing for every count",
+  "It counts them in a margin outside the table",
+]
+explanation = "freqtable counts missing as a level of its own, which is often what you want to see; pass skipmissing=true to leave it out."
 
 [[faq]]
-question = "Can I describe a column of region codes like 1, 2 and 3 with Summary?"
-wiki = "Assumptions"
-hidden = true
-answer = """
-No: a column of codes is categorical even though it is stored as integers, so a mean of it has no meaning. Describe it with Frequency, which counts and gives the proportion of each level, with `freqtable` from FreqTables.jl and `countmap` from StatsBase.jl.
-"""
-
-[[faq]]
-question = "Why do I get NaN in the correlation matrix?"
+question = "Which values does the Outlier Check of the Descriptive Statistics panel flag?"
 wiki = "Diagnostics"
 hidden = true
-answer = """
-A constant column has zero standard deviation, and gives `NaN` correlations with every other column. Check also the orientation of the matrix: `cor(X)` treats columns as variables and rows as observations, and `cor` does not skip missing values, so keep the complete rows first.
-"""
+right = "Those beyond Q1 - 1.5 IQR or Q3 + 1.5 IQR"
+wrong = [
+  "Those more than 3 standard deviations from the mean",
+  "Those more than 2 standard deviations from the mean",
+  "Those beyond Q1 - 3 IQR or Q3 + 3 IQR",
+  "Those more than 3 MADs from the median",
+  "Those below the 1st or above the 99th percentile",
+]
+explanation = "The Outlier Check flags values outside the Tukey fences, Q1 - 1.5 IQR and Q3 + 1.5 IQR."
+
+[[faq]]
+question = "How does the Shape Interpretation action of the Descriptive Statistics panel read a skewness of 0.7?"
+wiki = "Interpretation"
+hidden = true
+right = "Moderately skewed"
+wrong = [
+  "Approximately symmetric",
+  "Strongly skewed",
+  "Heavy-tailed",
+  "Light-tailed",
+  "Too few observations to say",
+]
+explanation = "Shape Interpretation reads a skewness between -0.5 and 0.5 as approximately symmetric, from 0.5 to 1 (or -1 to -0.5) as moderately skewed, and beyond 1 or -1 as strongly skewed."
+
+[[faq]]
+question = "Which call gives the 10% trimmed mean in the Summary method of the Descriptive Statistics panel?"
+wiki = "Summary Stats"
+hidden = true
+right = "mean(trim(x; prop=0.1))"
+wrong = [
+  "trimmean(x, 0.1)",
+  "mean(x; trim=0.1)",
+  "mean(winsor(x; prop=0.1))",
+  "trim(mean(x); prop=0.1)",
+  "mean(trim(x; prop=0.2))",
+]
+explanation = "StatsBase.jl offers estimators that resist outliers: iqr(x), mad(x; normalize=true) and mean(trim(x; prop=0.1)), the 10% trimmed mean."
+
+[[faq]]
+question = "Which call does the Correlation method of the Descriptive Statistics panel use for the Spearman rank correlation matrix?"
+wiki = "Correlation"
+hidden = true
+right = "corspearman(X)"
+wrong = [
+  "cor(X; method=:spearman)",
+  "spearmancor(X)",
+  "rankcor(X)",
+  "corkendall(X)",
+  "cov(X; ranks=true)",
+]
+explanation = "cor(X) gives the Pearson matrix, corspearman(X) the Spearman rank matrix and corkendall(X) Kendall's tau, with the columns as the variables."

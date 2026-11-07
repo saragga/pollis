@@ -244,6 +244,11 @@ class AskPollisService extends Disposable implements IAskPollisService {
 		return proxy.matches(texts);
 	}
 
+	async wikiPassages(wikiFile: string): Promise<readonly IAskPollisPassage[]> {
+		const { proxy } = await this.get();
+		return proxy.wikiPassages(wikiFile);
+	}
+
 	async saveRun(run: ICompareRun): Promise<void> {
 		const { proxy } = await this.get();
 		return proxy.saveRun(run);

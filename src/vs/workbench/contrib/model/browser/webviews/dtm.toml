@@ -437,25 +437,70 @@ None of its terms is in the vocabulary, and the sort order is then arbitrary. A 
 """
 
 [[faq]]
-question = "Does a high cosine similarity here mean the document answers my question?"
-wiki = "Interpretation"
+question = "What text is docs, the default corpus of the Document-Term Matrix & TF-IDF panel?"
+wiki = "Overview"
 hidden = true
-answer = """
-No. A ranking says which documents use the query's terms in the most concentrated way, a proxy for relevance; it does not mean that the top document answers the question, and synonyms get no credit, so a matching document in other words scores zero. Scores between 0 and 1 have no absolute scale either: compare them within one query.
-"""
+right = "The Pollis Guide, one document per section"
+wrong = [
+  "The Reuters-21578 news articles, one per article",
+  "The State of the Union addresses, one per speech",
+  "The 20 Newsgroups posts, one document per post",
+  "The 10-K filings of 50 firms, one per filing",
+  "The wikis of Pollis, one document per page",
+]
+explanation = "Corpus variable names a Julia vector of strings; its default, docs, is the text of The Pollis Guide, with one document per section, loaded from PollisDatasets."
 
 [[faq]]
-question = "Can I compare the BM25 scores of two different queries?"
-wiki = "Interpretation"
+question = "What does the Sparsity Report of the Document-Term Matrix & TF-IDF panel print, and what values are normal for text?"
+wiki = "Diagnostics"
 hidden = true
-answer = """
-Generally not: BM25 scores are unbounded and depend on the query and the corpus, and a query with rare terms or more terms scores higher. Within one query, the order and the size of the gaps can be read: a large drop after the first few documents suggests a clear match.
-"""
+right = "The share of zero entries; above 95% is normal"
+wrong = [
+  "The share of zero entries; below 50% is normal",
+  "The share of non-zero entries; above 95% is normal",
+  "The number of terms in one document; below 10 is normal",
+  "The mean count per entry; about 1 is normal",
+  "The share of stop words removed; about 40% is normal",
+]
+explanation = "Sparsity Report prints the share of zero entries, 1 − nnz / (D × V); values above 95% are normal for text, which is why the matrix is stored in sparse form."
 
 [[faq]]
-question = "Why are filing and filings counted as different terms?"
+question = "What does TF-IDF vs BM25 print in the Document-Term Matrix & TF-IDF panel?"
+wiki = "Interpretation"
+hidden = true
+right = "Only the indices of the documents, ranked both ways"
+wrong = [
+  "The two scores of each document, side by side",
+  "The rank correlation of the two orderings",
+  "The first lines of the top ten documents of each",
+  "The difference of the two scores of each document",
+  "The terms each weighting ranks highest for the query",
+]
+explanation = "TF-IDF vs BM25 ranks the corpus both ways for one query and prints only document indices, so that its differences are in rank alone; read the documents involved before deciding which ranking is better."
+
+[[faq]]
+question = "How are k1 and b of the BM25 tab of the Document-Term Matrix & TF-IDF panel changed?"
+wiki = "Decision Guide"
+hidden = true
+right = "By editing the call to bm_25 in the code"
+wrong = [
+  "With the k1 and b inputs of the tab",
+  "With an action that tunes them on the corpus",
+  "By passing them to prepare! before the tab runs",
+  "In the settings of TextAnalysis.jl, before Run",
+  "They are fixed, and cannot be changed",
+]
+explanation = "BM25 takes k1 and b from bm_25, and changing them means editing that call in the code, with its parameters taken from the package's documentation."
+
+[[faq]]
+question = "Why does the panel's cleaning count \"filing\" and \"filings\" as different terms?"
 wiki = "Assumptions"
 hidden = true
-answer = """
-Stemming is not applied: `prepare!` removes punctuation, case and stop words only, so "filing" and "filings" stay apart. Stemming helps small collections, and may hurt precision in a larger one. Whatever cleaning you choose, check it against your own corpus, and apply the same steps to documents and queries.
-"""
+right = "It does not apply stemming"
+wrong = [
+  "It keeps the case of words",
+  "It keeps punctuation",
+  "It counts word n-grams",
+  "It weights terms by IDF",
+]
+explanation = "prepare! removes punctuation, case and stop words only; stemming is not applied, so \"filing\" and \"filings\" stay apart."

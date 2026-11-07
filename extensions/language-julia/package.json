@@ -973,9 +973,9 @@
                         "string",
                         "null"
                     ],
-                    "default": null,
+                    "default": "auto",
                     "scope": "machine-overridable",
-                    "markdownDescription": "Number of threads to use for Julia processes. A value of `auto` works on Julia versions that allow for `--threads=auto`."
+                    "markdownDescription": "Number of threads to use for Julia processes. A value of `auto` works on Julia versions that allow for `--threads=auto`: Julia then starts one thread for each core of the computer. A change takes effect when the REPL restarts."
                 },
                 "julia.editor": {
                     "type": "string",

@@ -35,7 +35,7 @@ import { CompareRerankersRunner, IRerankEnd, NO_RERANKER } from './compareRerank
 import { compareChartsHtml, compareChartsScript, compareCommonScript, compareCss, compareLocalCard, compareSharedText, compareTestSetHeadHtml, compareTestSetHtml, compareTestSetScript, CompareTestSetChoice } from './compareShared.js';
 import { IInstalledModel } from './modelsInstalledPage.js';
 
-// Evaluate Reranking Models, from Compose > Knowledge for Models > Evaluate Reranking Models... (compose.contribution.ts):
+// Evaluate Reranking Models, from Compose > Knowledge for AI Models > Evaluate Reranking Models... (compose.contribution.ts):
 // the rerankers of this computer, compared on the questions of a test set of Evaluate Answering Models, which the sets
 // are changed in. One page, in four steps, as Evaluate Embedding Models: 1, the rerankers to compare; 2, the questions,
 // those ticked being the ones run, all when none is; 3, Run, which finds the passages of each question once, as Ask
@@ -315,7 +315,7 @@ function pageHtml(rows: number): string {
 		title: localize('compareRerankers.title', "Evaluate Reranking Models"),
 		intro: localize('compareRerankers.intro', "Which reranker should choose the passages that Ask Pollis answers from? With a reranker set, Ask Pollis finds {0} times the passages it gives, and the reranker reads the question with each of them and keeps the best. Each question of a test set was made from a passage: each reranker chosen puts the same passages in its order, and the page shows how often that passage is among those Ask Pollis gives, and where, beside the order of the search with no reranker.", ASK_RERANK_WIDER),
 		models: localize('compareRerankers.models', "Models"),
-		noLocal: localize('compareRerankers.noLocal', "No reranking model on this computer yet: Compose > Local Models downloads them."),
+		noLocal: localize('compareRerankers.noLocal', "No reranking model on this computer yet: Compose > Local AI Models downloads them."),
 		questionsIntro: localize('compareRerankers.questionsIntro', "The test sets of Evaluate Answering Models: each question with the passage it was made from. Tick the questions to run, a click anywhere on a row ticks it; with none ticked, Run takes them all."),
 		standardHint: localize('compareRerankers.standardHint', "Standard comes with Pollis. Your own test sets are made and changed in Evaluate Answering Models."),
 		changeSets: localize('compareRerankers.changeSets', "Change the Test Sets..."),

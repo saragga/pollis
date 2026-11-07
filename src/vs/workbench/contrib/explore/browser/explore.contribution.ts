@@ -954,7 +954,7 @@ CommandsRegistry.registerCommand(TSVIZ_OHLC_ID, (accessor: ServicesAccessor) => 
 // Define a new submenu ID for "Dataset Repositories"
 const ADRSubmenuId = new MenuId('menubarADRSubmenu');
 
-// "Access Model Repositories" (Hugging Face and Kaggle Models) moved to Compose > Local Models (compose.contribution.ts)
+// "Access Model Repositories" (Hugging Face and Kaggle Models) moved to Compose > Local AI Models (compose.contribution.ts)
 
 // Explore > Access Files (its id kept from its earlier name, for the panel index and the Views)
 const CONNSubmenuId = new MenuId('menubarCONNSubmenu');

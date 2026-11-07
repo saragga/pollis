@@ -31,7 +31,7 @@ import { compareChartsHtml, compareChartsScript, compareCommonScript, compareCss
 import { IBenchmarkAnswer, IBenchmarkEnd, IBenchmarkInfo, IBenchmarkModel, IBenchmarkQuestion, IBenchmarkRun, IBenchmarkSampleRequest, IBenchmarkSettings, ModelBenchmarksRunner } from './modelBenchmarksRun.js';
 import { IInstalledModel } from './modelsInstalledPage.js';
 
-// Model Benchmarks, from Compose > Knowledge for Models > Model Benchmarks... (compose.contribution.ts): the chat models
+// Model Benchmarks, from Compose > Local AI Models > Model Benchmarks... (compose.contribution.ts): the chat models
 // of this computer run on published benchmarks, on a stratified random sample of their questions. One page, in five
 // steps: 1, the benchmark, downloaded once; 2, the sample: the strata to draw from, how many questions, shared in
 // proportion to the strata or equally, and the seed, which draws the same sample again; 3, the models and how they
@@ -104,7 +104,9 @@ function publishedScores(): readonly IPublishedScore[] {
 	const qwenThinking = localize('modelBenchmarks.qwenThinking', "Qwen's model card, thinking on; temperature 1.0, top-p 0.95, top-k 20, presence penalty 1.5; full precision");
 	const llama = 'https://github.com/meta-llama/llama-models/blob/main/models/llama3_2/MODEL_CARD.md';
 	const llamaSetting = localize('modelBenchmarks.llamaSetting', "Meta's model card: 8 worked examples first, the answer worked step by step; bf16");
+	const gemmaSetting = localize('modelBenchmarks.gemmaSetting', "Google's model card, for the instruction-tuned model; the card does not give the prompt, the examples, thinking or the precision");
 	return [
+		{ benchmark: 'mmlu-pro', model: 'gemma-4-e4b-it', score: 0.694, setting: gemmaSetting, source: 'https://huggingface.co/google/gemma-4-E4B-it' },
 		{ benchmark: 'mmlu-pro', model: 'qwen3.5-0.8b', thinking: false, score: 0.297, setting: qwenNoThinking, source: qwen },
 		{ benchmark: 'mmlu-pro', model: 'qwen3.5-0.8b', thinking: true, score: 0.423, setting: qwenThinking, source: qwen },
 		{ benchmark: 'mmlu-pro', model: 'qwen3.5-2b', thinking: false, score: 0.553, setting: qwenNoThinking, source: 'https://huggingface.co/Qwen/Qwen3.5-2B' },
@@ -138,6 +140,9 @@ const DEFAULT_SETTINGS: IBenchmarkSettings = { shots: 0, reasoning: true, thinki
 
 /** The longest question shown in the table of a run; the whole of it opens with its answers. */
 const QUESTION_SHOWN = 400;
+
+/** The longest answer, in tokens, of the answer alone without thinking, as model_benchmarks.jl sets it for such a run. */
+const ANSWER_ONLY_TOKENS = 32;
 
 type ModelBenchmarksMessage =
 	| { readonly command: 'ready' }
@@ -372,6 +377,8 @@ async function openModelBenchmarksPage(accessor: ServicesAccessor): Promise<void
 	disposables.add(run.onDidProgress((progress: ICompareProgress | undefined) => post({ command: 'progress', progress })));
 	disposables.add(run.onDidSample(sample => post({ command: 'sample', sample, memory: run.samples.memory, first: run.samples.samples.length === 1 })));
 	disposables.add(run.onDidEnd(end => ended(end)));
+	// The run running shown in Results, each answer as it is kept
+	disposables.add(run.onDidAnswer(id => showRun(id)));
 	disposables.add(webviewInput.webview.onDidDispose(() => {
 		openPage = undefined;
 		disposables.dispose();
@@ -468,7 +475,7 @@ function pageHtml(rows: number, entries: readonly IBenchmarkEntry[]): string {
 		precision: localize('modelBenchmarks.precision', "{0} questions of the {1} of the strata ticked: the 95% interval of a score is at most {2} points on either side.", '{0}', '{1}', '{2}'),
 		precisionNone: localize('modelBenchmarks.precisionNone', "{0} questions of the {1} of the strata ticked. A stratum with one question has no variance that can be measured: with two questions at least in each, the score has its 95% interval.", '{0}', '{1}'),
 		modelsSection: localize('modelBenchmarks.modelsSection', "Models"),
-		noLocal: localize('modelBenchmarks.noLocal', "No chat model on this computer yet: Compose > Local Models downloads them."),
+		noLocal: localize('modelBenchmarks.noLocal', "No chat model on this computer yet: Compose > Local AI Models downloads them."),
 		examples: localize('modelBenchmarks.examples', "Examples First"),
 		examplesNone: localize('modelBenchmarks.examplesNone', "None"),
 		answers: localize('modelBenchmarks.answers', "Answers"),
@@ -479,6 +486,7 @@ function pageHtml(rows: number, entries: readonly IBenchmarkEntry[]): string {
 		thinkingOn: localize('modelBenchmarks.thinkingOn', "On, for the Models That Think"),
 		maxTokens: localize('modelBenchmarks.maxTokens', "Longest Answer, Tokens"),
 		settingsHint: localize('modelBenchmarks.settingsHint', "The examples are the benchmark's own worked answers, shown before each question. An answer longer than the longest allowed is cut off, and counted as such in the results."),
+		answerOnlyTokens: localize('modelBenchmarks.answerOnlyTokens', "The answer alone, with thinking off, is cut off at {0} tokens: room for the answer and a short sentence.", ANSWER_ONLY_TOKENS),
 		runSection: localize('modelBenchmarks.runSection', "Run"),
 		runIntro: localize('modelBenchmarks.runIntro', "The sample is drawn, then each model chosen, one after the other and alone in memory, answers its questions. A run can be stopped: the answers given until then are kept."),
 		run: localize('modelBenchmarks.run', "Run"),
@@ -496,6 +504,7 @@ function pageHtml(rows: number, entries: readonly IBenchmarkEntry[]): string {
 		deleteRun: localize('modelBenchmarks.deleteRun', "Delete Run"),
 		noRuns: localize('modelBenchmarks.noRuns', "No run yet: choose the benchmark, the sample and the models, then Run."),
 		runLine: localize('modelBenchmarks.runLine', "{0}, Pollis {1}: {2}, {3} questions drawn with the seed {4}, {5} allocation.", '{0}', '{1}', '{2}', '{3}', '{4}', '{5}'),
+		benchmarkRevision: localize('modelBenchmarks.benchmarkRevision', "{0} at revision {1}", '{0}', '{1}'),
 		settingsLine: localize('modelBenchmarks.settingsLine', "{0} examples first; {1}; thinking {2}; at most {3} tokens an answer.", '{0}', '{1}', '{2}', '{3}'),
 		runOption: localize('modelBenchmarks.runOption', "{0}: {1}, {2}, {3} questions", '{0}', '{1}', '{2}', '{3}'),
 		where: localize('modelBenchmarks.where', "Where"),
@@ -505,6 +514,9 @@ function pageHtml(rows: number, entries: readonly IBenchmarkEntry[]): string {
 		intervalHint: localize('modelBenchmarks.intervalHint', "The points on either side of the score within which the score on all the questions of the strata ticked lies, 95 times in 100; none when a stratum has one question only"),
 		right: localize('modelBenchmarks.right', "Right Answers"),
 		rightOf: localize('modelBenchmarks.rightOf', "{0} of {1}", '{0}', '{1}'),
+		byChance: localize('modelBenchmarks.byChance', "By Chance"),
+		byChanceHint: localize('modelBenchmarks.byChanceHint', "The probability that answers picked at random among each question's options would get as many right or more; a dash for a benchmark whose answers are numbers"),
+		byChanceBelow: localize('modelBenchmarks.byChanceBelow', "< 0.001"),
 		unread: localize('modelBenchmarks.unread', "Could Not Be Read"),
 		unreadHint: localize('modelBenchmarks.unreadHint', "The answers in which no answer could be found, counted as wrong"),
 		cutOff: localize('modelBenchmarks.cutOff', "Cut Off"),
@@ -626,10 +638,10 @@ function pageHtml(rows: number, entries: readonly IBenchmarkEntry[]): string {
 			<option value="false">${text.thinkingOff}</option><option value="true">${text.thinkingOn}</option>
 		</select></label>
 		<label class="field"><span class="small">${text.maxTokens}</span><select id="maxTokens">
-			<option value="256">256</option><option value="512">512</option><option value="1024">1024</option><option value="2048">2048</option><option value="4096">4096</option>
+			<option value="${ANSWER_ONLY_TOKENS}" hidden>${ANSWER_ONLY_TOKENS}</option><option value="256">256</option><option value="512">512</option><option value="1024">1024</option><option value="2048">2048</option><option value="4096">4096</option>
 		</select></label>
 	</div>
-	<p class="small">${text.settingsHint}</p>
+	<p class="small">${text.settingsHint} ${text.answerOnlyTokens}</p>
 `,
 			},
 			{
@@ -679,6 +691,7 @@ function pageHtml(rows: number, entries: readonly IBenchmarkEntry[]): string {
 		],
 		pageScriptJs: `
 	const TEXT = ${JSON.stringify(text)};
+	const ANSWER_ONLY_TOKENS = ${ANSWER_ONLY_TOKENS};
 	const SPINNER = '${spinnerSvg}';
 	const ENTRIES = ${JSON.stringify(entries.map(entry => ({ id: entry.id, name: entry.name, strata: entry.strata, bytes: entry.bytes })))};
 	${askAnswerScript()}
@@ -887,17 +900,24 @@ function pageHtml(rows: number, entries: readonly IBenchmarkEntry[]): string {
 		document.getElementById('shots').value = String(settings.shots);
 		document.getElementById('reasoning').value = String(settings.reasoning);
 		document.getElementById('thinking').value = String(settings.thinking);
-		document.getElementById('maxTokens').value = String(settings.maxTokens);
+		// The answer alone without thinking has its own longest answer, the run's; the one chosen is kept for the others
+		const longest = document.getElementById('maxTokens');
+		const answerOnly = !settings.reasoning && !settings.thinking;
+		longest.disabled = answerOnly;
+		longest.value = String(answerOnly ? ANSWER_ONLY_TOKENS : settings.maxTokens);
+		longest.title = answerOnly ? TEXT.answerOnlyTokens : '';
 	}
 	for (const id of ['shots', 'reasoning', 'thinking', 'maxTokens']) {
 		document.getElementById(id).addEventListener('change', () => {
+			const longest = document.getElementById('maxTokens');
 			settings = {
 				shots: Number(document.getElementById('shots').value),
 				reasoning: document.getElementById('reasoning').value === 'true',
 				thinking: document.getElementById('thinking').value === 'true',
-				maxTokens: Number(document.getElementById('maxTokens').value),
+				maxTokens: longest.disabled ? settings.maxTokens : Number(longest.value),
 			};
 			vscode.postMessage({ command: 'settings', settings });
+			renderSettings();
 		});
 	}
 
@@ -927,6 +947,10 @@ function pageHtml(rows: number, entries: readonly IBenchmarkEntry[]): string {
 	function percent(value) {
 		return value === undefined || value === null ? '-' : (100 * value).toFixed(1) + '%';
 	}
+	/** The probability of doing as well by chance, with three decimals, or below 0.001. */
+	function chance(value) {
+		return value === undefined || value === null ? '-' : value < 0.001 ? TEXT.byChanceBelow : value.toFixed(3);
+	}
 	function points(value) {
 		return value === undefined || value === null ? '-' : '\\u00b1' + (100 * value).toFixed(1);
 	}
@@ -938,7 +962,7 @@ function pageHtml(rows: number, entries: readonly IBenchmarkEntry[]): string {
 		body.textContent = '';
 		const figures = run ? [...run.figures].sort((a, b) => (b.score ?? -1) - (a.score ?? -1)) : [];
 		document.getElementById('results').hidden = !run || !figures.length;
-		document.getElementById('runLine').textContent = run ? format(TEXT.runLine, new Date(run.started).toLocaleString(), run.pollis, run.benchmark, run.sample.size, run.sample.seed, run.sample.allocation === 'equal' ? TEXT.equal : TEXT.proportional) : TEXT.noRuns;
+		document.getElementById('runLine').textContent = run ? format(TEXT.runLine, new Date(run.started).toLocaleString(), run.pollis, run.revision ? format(TEXT.benchmarkRevision, run.benchmark, run.revision.slice(0, 7)) : run.benchmark, run.sample.size, run.sample.seed, run.sample.allocation === 'equal' ? TEXT.equal : TEXT.proportional) : TEXT.noRuns;
 		document.getElementById('settingsLine').textContent = run ? format(TEXT.settingsLine, run.settings.shots, run.settings.reasoning ? TEXT.reasoningOn : TEXT.reasoningOff, run.settings.thinking ? TEXT.thinkingOn : TEXT.thinkingOff, run.settings.maxTokens) : '';
 		document.getElementById('deleteRun').hidden = !run;
 		// A run that ends shows itself, even in a pane left closed
@@ -964,6 +988,7 @@ function pageHtml(rows: number, entries: readonly IBenchmarkEntry[]): string {
 		line(TEXT.score, TEXT.scoreHint, model => percent(model.score));
 		line(TEXT.interval, TEXT.intervalHint, model => points(model.half));
 		line(TEXT.right, '', model => format(TEXT.rightOf, model.right, model.questions));
+		line(TEXT.byChance, TEXT.byChanceHint, model => chance(model.byChance));
 		line(TEXT.unread, TEXT.unreadHint, model => String(model.unread));
 		line(TEXT.cutOff, TEXT.cutOffHint, model => String(model.cutOff));
 		if (figures.some(model => model.failed)) { line(TEXT.failed, TEXT.failedHint, model => String(model.failed)); }

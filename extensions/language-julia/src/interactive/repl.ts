@@ -72,6 +72,42 @@ async function startREPLWithVersionCommand(versionName?: string) {
 
 let g_replStatusBarItem: vscode.StatusBarItem | undefined
 
+// POLLIS: the threads of the running REPL, those of its default pool and of its interactive pool, read once
+// when it connects: Julia fixes them when it starts, so they change only with a restart.
+const requestTypeReplThreads = new rpc.RequestType<void, number[], void>('repl/threads')
+let g_replThreads: number[] | undefined
+
+async function readReplThreads(connection: rpc.MessageConnection) {
+    g_replThreads = undefined
+    try {
+        g_replThreads = await connection.sendRequest(requestTypeReplThreads, null)
+    } catch {
+        // A REPL server without the request, or a REPL closed meanwhile: no count is shown.
+    }
+    updateReplStatusBar()
+}
+
+// POLLIS: the threads of the REPL in its status bar item, and in its tooltip where they come from.
+function replThreadsText(): { text: string; tooltip: string } {
+    if (!g_replThreads) {
+        return { text: '', tooltip: '' }
+    }
+    const [threads, interactive] = g_replThreads
+    const setting = vscode.workspace.getConfiguration('julia').get<number | string | null>('NumThreads')
+    const source = setting !== null && setting !== undefined
+        ? `the setting julia.NumThreads (${setting})`
+        : process.env['JULIA_NUM_THREADS'] !== undefined
+            ? `the environment variable JULIA_NUM_THREADS (${process.env['JULIA_NUM_THREADS']})`
+            : 'Julia\'s default'
+    const pools = interactive > 0
+        ? `${threads} ${threads === 1 ? 'thread' : 'threads'} for computations and ${interactive} interactive`
+        : `${threads} ${threads === 1 ? 'thread' : 'threads'}`
+    return {
+        text: ` · ${threads} ${threads === 1 ? 'thread' : 'threads'}`,
+        tooltip: `\n${pools}, set by ${source}. A change takes effect when the REPL restarts.`,
+    }
+}
+
 // Click handler for the status-bar Julia REPL item: start it if down, otherwise offer actions.
 async function showREPLActions() {
     if (!isConnected()) {
@@ -103,8 +139,9 @@ function updateReplStatusBar() {
         return
     }
     if (isConnected()) {
-        g_replStatusBarItem.text = '$(circle-filled) Julia REPL'
-        g_replStatusBarItem.tooltip = 'Julia REPL running — click for actions (show / restart / stop)'
+        const threads = replThreadsText()
+        g_replStatusBarItem.text = '$(circle-filled) Julia REPL' + threads.text
+        g_replStatusBarItem.tooltip = 'Julia REPL running — click for actions (show / restart / stop)' + threads.tooltip
     } else {
         g_replStatusBarItem.text = '$(circle-outline) Julia REPL'
         g_replStatusBarItem.tooltip = 'Start the Julia REPL'
@@ -1508,8 +1545,14 @@ export function activate(
     context.subscriptions.push(
         g_replStatusBarItem,
         registerCommand('language-julia.showREPLActions', showREPLActions),
-        onInit(() => updateReplStatusBar()),
-        onExit(() => updateReplStatusBar())
+        onInit(({ connection }) => {
+            updateReplStatusBar()
+            readReplThreads(connection)
+        }),
+        onExit(() => {
+            g_replThreads = undefined
+            updateReplStatusBar()
+        })
     )
 
     results.activate(context)

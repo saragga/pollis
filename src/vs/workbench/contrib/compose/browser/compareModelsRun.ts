@@ -3,7 +3,7 @@
  *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationTokenSource } from '../../../../base/common/cancellation.js';
+import { CancellationToken, CancellationTokenSource } from '../../../../base/common/cancellation.js';
 import { mainWindow } from '../../../../base/browser/window.js';
 import { VSBuffer } from '../../../../base/common/buffer.js';
 import { Emitter, Event } from '../../../../base/common/event.js';
@@ -17,7 +17,7 @@ import { IProductService } from '../../../../platform/product/common/productServ
 import { ISecretStorageService } from '../../../../platform/secrets/common/secrets.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { ASK_CHAT_MODEL, ASK_CLOUD_PROVIDERS, ASK_LOCAL_PREFIX, ASK_PASSAGES, ASK_RERANK_CONTEXT, askCloudModel, askPassageLabel, IAskPollisAnswer, IAskPollisEvalItem, IAskPollisFound, IAskPollisPassage, IAskPollisService, IAskTopicCounts, ICompareRun, ICompareRunAnswer, ICompareRunModel, ICompareRunQuestion, ICompareRunScore, ICompareRunUnrated } from '../common/askPollis.js';
-import { askPollisStrategy, askStrategyAnswerPanel, IAskPollisStrategiesService, askStrategyRerank, askStrategyReranks, askStrategySearchKey, askStrategySearchRequest } from '../common/askPollisStrategies.js';
+import { askPollisStrategy, askStrategyAnswerPanel, IAskPollisStrategiesService, IAskPollisStrategy, askStrategyRerank, askStrategyReranks, askStrategySearchKey, askStrategySearchRequest } from '../common/askPollisStrategies.js';
 import { askModelName } from './askPollisWebview.js';
 import { askFolder, CompareSampler, CompareTestSets, evalItem, ICompareSample, ICompareSamples, isEvalItem, mergeEvalItems } from './compareShared.js';
 
@@ -84,6 +84,12 @@ export interface ICompareEnd {
 	readonly stopped?: boolean;
 }
 
+/**
+ * Where the passages of a run come from: found by the strategy in the documents (Open Library Answering), the question's
+ * own passage (Open Book Answering), or none, each model answering from what it learned alone (Closed Book Answering).
+ */
+export type ComparePassages = 'library' | 'own' | 'none';
+
 /** Why a model gave no answer, or nothing when it gave one or was stopped. */
 function answerError(answer: IAskPollisAnswer, text: string, stopped: boolean): string | undefined {
 	if (answer.noKey) {
@@ -117,9 +123,61 @@ function contextRank(context: string, passages: readonly IAskPollisPassage[]): n
 	return passages.findIndex(passage => passage.text.includes(context) || context.includes(passage.text)) + 1;
 }
 
+/** The passage a question of a test set was made from, as the models are given it: its text, under the source the test set names. */
+function ownPassage(item: IAskPollisEvalItem): IAskPollisPassage {
+	return { id: 0, collection: '', kind: 'document', title: item.source, file: '', menu: '', toolbox: '', page: null, heading: '', text: item.context, anchor: null, score: 0 };
+}
+
 /** The place of the wiki `wikiFile` of a Panel FAQ entry among `passages`, from 1: the first of its passages; 0 when none is. */
 function wikiRank(wikiFile: string, passages: readonly IAskPollisPassage[]): number {
 	return passages.findIndex(passage => passage.kind === 'wiki' && passage.file.replace(/\\/g, '/').endsWith(`/${wikiFile}`)) + 1;
+}
+
+/** The letters of the options of a closed question, as MMLU-Pro letters its ten. */
+const CHOICE_LETTERS = 'ABCDEFGHIJ';
+
+/** Whether `item` is a closed question, which an answer gets right by choosing its right option. */
+export function isClosed(item: IAskPollisEvalItem): item is IAskPollisEvalItem & { readonly choices: readonly string[]; readonly rightChoice: number } {
+	return !!item.choices?.length && item.choices.length <= CHOICE_LETTERS.length && item.rightChoice !== undefined && item.rightChoice >= 0;
+}
+
+/**
+ * A closed question as the models are asked it: the question, its options each after its letter, and how to end the
+ * answer, as MMLU-Pro asks (Wang et al., 2024). In English, as the instruction of Ask Pollis is.
+ */
+function closedQuestion(item: IAskPollisEvalItem & { readonly choices: readonly string[] }): string {
+	const options = item.choices.map((choice, index) => `${CHOICE_LETTERS[index]}. ${choice}`).join('\n');
+	return `${item.question}\n\n${options}\n\nChoose one of these options and finish your answer with "The answer is (X)", where X is the letter of the option.`;
+}
+
+/**
+ * The option an answer to a closed question of `count` options chose, from 0, read as MMLU-Pro's evaluation scripts read it
+ * (TIGER-AI-Lab/MMLU-Pro): "the answer is (X)", else the last "Answer: X", else the last letter that stands alone; nothing when none is read.
+ */
+export function chosenOption(text: string, count: number): number | undefined {
+	const letters = `[${CHOICE_LETTERS[0]}-${CHOICE_LETTERS[count - 1]}]`;
+	const found = new RegExp(`answer is \\(?(?<letter>${letters})\\)?`).exec(text)
+		?? new RegExp(`[\\s\\S]*[aA]nswer:\\s*\\(?(?<letter>${letters})\\)?`).exec(text)
+		?? new RegExp(`\\b(?<letter>${letters})\\b(?![\\s\\S]*\\b${letters}\\b)`).exec(text);
+	const letter = found?.groups?.letter;
+	return letter ? CHOICE_LETTERS.indexOf(letter) : undefined;
+}
+
+/**
+ * The probability of `right` or more right answers by chance, each answer right with its own probability of `chances`:
+ * the upper tail of the Poisson binomial distribution, by its recursion (Hong, 2013).
+ */
+function chanceOfAtLeast(right: number, chances: readonly number[]): number {
+	let distribution = [1];
+	for (const chance of chances) {
+		const next = new Array<number>(distribution.length + 1).fill(0);
+		for (const [count, probability] of distribution.entries()) {
+			next[count] += probability * (1 - chance);
+			next[count + 1] += probability * chance;
+		}
+		distribution = next;
+	}
+	return Math.min(1, distribution.slice(right).reduce((sum, probability) => sum + probability, 0));
 }
 
 export class CompareModelsRunner {
@@ -291,31 +349,12 @@ export class CompareModelsRunner {
 	}
 
 	/**
-	 * Asks every question of `items` of every model of `models`, `repeats` times, scores the answers against the right
-	 * answers and has them rated by each judge of `judges`, if any; the run is kept, as far as it came when stopped. The strategy `strategyId` of Ask Pollis finds the
-	 * passages and asks the models, as the pane does; a question of the Panel FAQ is asked in its panel.
+	 * Open Library Answering: the passages of each question of `items`, found by `strategy` as Ask Pollis finds them, once
+	 * for every model, and the place of each question's own passage among them; or why none were found.
 	 */
-	async run(models: readonly ICompareRunModel[], judges: readonly ICompareRunModel[], repeats: number, items: readonly IAskPollisEvalItem[], strategyId?: string): Promise<ICompareEnd> {
-		if (this.source) {
-			return { error: localize('compareModels.busy', "Wait for the run to end, or stop it.") };
-		}
-		if (!models.length) {
-			return { error: localize('compareModels.noModels', "Choose the models to compare, above.") };
-		}
-		if (!items.length) {
-			return { error: localize('compareModels.noItems', "No questions yet: Make Questions... writes them from the documents, and Add takes your own.") };
-		}
-		const source = this.source = new CancellationTokenSource();
-		const token = source.token;
-		const id = generateUuid();
-		const started = Date.now();
-		await this.sampler.start();
-		this.sampler.mark('search');
-
+	private async searchPassages(items: readonly IAskPollisEvalItem[], strategy: IAskPollisStrategy, token: CancellationToken): Promise<{ readonly questions: ICompareRunQuestion[]; readonly ranks: Map<number, number> } | string> {
 		// The passages of each question, found once for every model: those found before with the same search stamp are
 		// taken again, so that the embedding model loads only for the others, and every run gets the same passages
-		await this.strategiesService.loaded;
-		const strategy = askPollisStrategy(strategyId, this.strategiesService.getStrategies());
 		const reranker = this.configurationService.getValue<string>('pollis.ask.reranker')?.trim();
 		const kept = this.configurationService.getValue<number>('pollis.ask.passages') || ASK_PASSAGES;
 		const requests = items.map(item => askStrategySearchRequest(strategy, { question: item.question, panel: item.panel }, kept, reranker));
@@ -349,7 +388,7 @@ export class CompareModelsRunner {
 			await this.askPollisService.keepFound(stamp.key, found).catch(() => undefined);
 		}
 		if (questions.length && !questions.some(question => question.passages.length)) {
-			return this.end({ error: localize('compareModels.nothingFound', "No passages were found: Pollis may not have indexed its documents yet.") });
+			return localize('compareModels.nothingFound', "No passages were found: Pollis may not have indexed its documents yet.");
 		}
 		// The embedding model of the search is not needed again in the run: its memory goes to the models answering and judging
 		await this.askPollisService.stopSearchModel();
@@ -380,6 +419,66 @@ export class CompareModelsRunner {
 				ranks.set(question.index, wikiRank(question.item.wikiFile, question.passages));
 			}
 		}
+		return { questions, ranks };
+	}
+
+	/** Open Book Answering: each question of `items` with its own passage, or with the passages of its wiki for a question of the Panel FAQ; no search. */
+	private async ownPassages(items: readonly IAskPollisEvalItem[], token: CancellationToken): Promise<ICompareRunQuestion[]> {
+		const questions: ICompareRunQuestion[] = [];
+		for (const [index, item] of items.entries()) {
+			if (token.isCancellationRequested) {
+				break;
+			}
+			const passages = item.context ? [ownPassage(item)] : item.wikiFile ? await this.askPollisService.wikiPassages(item.wikiFile).catch(() => []) : [];
+			questions.push({ index, item, passages });
+		}
+		return questions;
+	}
+
+	/**
+	 * Asks every question of `items` of every model of `models`, `repeats` times, scores the answers against the right
+	 * answers and has them rated by each judge of `judges`, if any; the run is kept, as far as it came when stopped. The strategy `strategyId` of Ask Pollis finds the
+	 * passages and asks the models, as the pane does; with `passages` own each model is given the question's own passage,
+	 * with no search, and with none no passage at all; a question of the Panel FAQ is asked in its panel.
+	 */
+	async run(models: readonly ICompareRunModel[], judges: readonly ICompareRunModel[], repeats: number, items: readonly IAskPollisEvalItem[], strategyId?: string, passages: ComparePassages = 'library'): Promise<ICompareEnd> {
+		if (this.source) {
+			return { error: localize('compareModels.busy', "Wait for the run to end, or stop it.") };
+		}
+		if (!models.length) {
+			return { error: localize('compareModels.noModels', "Choose the models to compare, above.") };
+		}
+		if (!items.length) {
+			return { error: localize('compareModels.noItems', "No questions yet: Make Questions... writes them from the documents, and Add takes your own.") };
+		}
+		const source = this.source = new CancellationTokenSource();
+		const token = source.token;
+		const id = generateUuid();
+		const started = Date.now();
+		await this.sampler.start();
+		this.sampler.mark('search');
+
+		// The passages of each question, the same for every model: its own (Open Book Answering), those the strategy
+		// finds as Ask Pollis does (Open Library Answering), or none (Closed Book Answering)
+		await this.strategiesService.loaded;
+		const strategy = askPollisStrategy(passages === 'library' ? strategyId : undefined, this.strategiesService.getStrategies());
+		const closedBook = passages === 'none';
+		let questions: ICompareRunQuestion[];
+		let ranks = new Map<number, number>();
+		if (closedBook) {
+			questions = items.map((item, index) => ({ index, item, passages: [] }));
+		} else if (passages === 'own') {
+			questions = await this.ownPassages(items, token);
+			if (questions.length && !questions.some(question => question.passages.length)) {
+				return this.end({ error: localize('compareModels.noOwnPassages', "None of the questions has a passage of its own here: the questions of the Panel FAQ need the wikis of the panels in the index of Ask Pollis.") });
+			}
+		} else {
+			const searched = await this.searchPassages(items, strategy, token);
+			if (typeof searched === 'string') {
+				return this.end({ error: searched });
+			}
+			({ questions, ranks } = searched);
+		}
 
 		// The answers: the cloud models together, each question after the other; the local models one after the other
 		const answers: ICompareRunAnswer[] = [];
@@ -387,16 +486,20 @@ export class CompareModelsRunner {
 		const answerAll = async (model: ICompareRunModel) => {
 			for (const question of questions) {
 				for (let repeat = 0; repeat < repeats; repeat++) {
-					if (token.isCancellationRequested || !question.passages.length) {
+					if (token.isCancellationRequested || !closedBook && !question.passages.length) {
 						continue;
 					}
 					let text = '';
-					const answer = await this.askPollisService.answer([], question.item.question, question.passages, answered => text = answered, token, model.value, askStrategyAnswerPanel(strategy, question.item.panel));
+					const item = question.item;
+					const closed = isClosed(item);
+					const asked = closed ? closedQuestion(item) : item.question;
+					const answer = await this.askPollisService.answer([], asked, question.passages, answered => text = answered, token, model.value, askStrategyAnswerPanel(strategy, item.panel));
 					if (token.isCancellationRequested) {
 						return;
 					}
 					const error = answerError(answer, text, false);
-					answers.push({ id: generateUuid(), question: question.index, model: model.value, repeat, answer: text, error, timings: error ? undefined : answer.timings });
+					const choice = closed && !error ? chosenOption(text, item.choices.length) : undefined;
+					answers.push({ id: generateUuid(), question: question.index, model: model.value, repeat, answer: text, error, timings: error ? undefined : answer.timings, ...(choice !== undefined ? { choice } : {}) });
 					this.sampler.tokens = { read: this.sampler.tokens.read + (answer.timings?.tokensRead ?? 0), written: this.sampler.tokens.written + (answer.timings?.tokensWritten ?? 0) };
 					this.report(localize('compareModels.answering', "Answering: {0} of {1} answers, the last by {2}.", answers.length, total, model.label), answers.length, total);
 				}
@@ -418,9 +521,14 @@ export class CompareModelsRunner {
 			...models.filter(model => !model.local).map(model => answerAll(model)),
 		]);
 
-		// The answer scores: how near each answer is to the right answer, by the embedding model of the search, which stops then
+		// The answer scores of the open questions: how near each answer is to the right answer, by the embedding model of
+		// the search, which stops then; an answer to a closed question is right or wrong by the option it chose
 		const byQuestion = new Map(questions.map(question => [question.index, question]));
-		const scorable = answers.map((answer, position) => ({ answer, position, right: byQuestion.get(answer.question)?.item.answer ?? '' })).filter(({ answer, right }) => !answer.error && answer.answer && right);
+		const open = (answer: ICompareRunAnswer) => {
+			const item = byQuestion.get(answer.question)?.item;
+			return !!item && !isClosed(item);
+		};
+		const scorable = answers.map((answer, position) => ({ answer, position, right: byQuestion.get(answer.question)?.item.answer ?? '' })).filter(({ answer, right }) => !answer.error && answer.answer && right && open(answer));
 		if (!token.isCancellationRequested && scorable.length) {
 			this.report(localize('compareModels.scoringAnswers', "Scoring the answers against the right answers..."));
 			const similarities = await this.askPollisService.similarities(scorable.map(({ answer, right }) => [answer.answer, right] as const));
@@ -437,7 +545,7 @@ export class CompareModelsRunner {
 		const scores: ICompareRunScore[] = [];
 		const unrated: ICompareRunUnrated[] = [];
 		let error: string | undefined;
-		const rated = answers.filter(answer => !answer.error && answer.answer);
+		const rated = answers.filter(answer => !answer.error && answer.answer && open(answer));
 		if (!token.isCancellationRequested && rated.length && judges.length) {
 			this.sampler.mark('judge');
 			this.report(localize('compareModels.startingJulia', "Starting the Julia process of the evaluation..."));
@@ -490,7 +598,7 @@ export class CompareModelsRunner {
 				judges: judges.map(judge => judge.label),
 				repeats,
 				questions: questions.length,
-				strategy: strategy.id,
+				...(passages === 'own' ? { openBook: true } : closedBook ? { closedBook } : { strategy: strategy.id }),
 			},
 			questions: questions.map(question => ranks.has(question.index) ? { ...question, rank: ranks.get(question.index) } : question),
 			answers,
@@ -525,6 +633,11 @@ export interface ICompareFigures {
 	readonly similarity?: number;
 	/** The mean rating of each judge, in the order of the run's judges. */
 	readonly scores: readonly (number | undefined)[];
+	/** Of its answers to the closed questions, those without an option read or with none given counted wrong: how many there were, and how many were right. */
+	readonly closed: number;
+	readonly right: number;
+	/** The probability of as many right answers or more by guessing, each option of a question as likely as the others. */
+	readonly byChance?: number;
 	readonly relevance?: number;
 	readonly completeness?: number;
 	readonly clarity?: number;
@@ -545,9 +658,15 @@ export interface ICompareFigures {
 /** The figures of each model of `run`. */
 export function compareFigures(run: ICompareRun): ICompareFigures[] {
 	const { judges, repeats } = run.summary;
-	const asked = run.questions.filter(question => question.passages.length).length * repeats;
+	const asked = run.questions.filter(question => run.summary.closedBook || question.passages.length).length * repeats;
+	const items = new Map(run.questions.map(question => [question.index, question.item]));
 	return run.summary.models.map(model => {
 		const answers = run.answers.filter(answer => answer.model === model.value);
+		const closed = answers.flatMap(answer => {
+			const item = items.get(answer.question);
+			return item && isClosed(item) ? [{ answer, item }] : [];
+		});
+		const right = closed.filter(({ answer, item }) => answer.choice === item.rightChoice).length;
 		const ids = new Set(answers.map(answer => answer.id));
 		const scores = run.scores.filter(score => ids.has(score.answer));
 		const part = (key: 'relevance' | 'completeness' | 'clarity' | 'consistency' | 'helpfulness') => mean(scores.map(score => score[key]).filter((value): value is number => value !== undefined));
@@ -558,7 +677,9 @@ export function compareFigures(run: ICompareRun): ICompareFigures[] {
 		for (const score of scores) {
 			scoredBy.set(score.answer, (scoredBy.get(score.answer) ?? 0) + 1);
 		}
-		const scored = answers.filter(answer => (scoredBy.get(answer.id) ?? 0) >= judges.length).length;
+		// An answer to a closed question is scored by the option it chose, with no judge
+		const closedIds = new Set(closed.map(({ answer }) => answer.id));
+		const scored = answers.filter(answer => closedIds.has(answer.id) ? !answer.error : (scoredBy.get(answer.id) ?? 0) >= judges.length).length;
 		let spreadScore: number | undefined;
 		let spreadSeconds: number | undefined;
 		if (repeats > 1) {
@@ -577,6 +698,9 @@ export function compareFigures(run: ICompareRun): ICompareFigures[] {
 			size: model.size,
 			similarity: mean(answers.map(answer => answer.similarity).filter((value): value is number => value !== undefined)),
 			scores: judges.map(judge => mean(scores.filter(score => score.judge === judge).map(score => score.final))),
+			closed: closed.length,
+			right,
+			byChance: closed.length ? chanceOfAtLeast(right, closed.map(({ item }) => 1 / item.choices.length)) : undefined,
 			relevance: part('relevance'),
 			completeness: part('completeness'),
 			clarity: part('clarity'),

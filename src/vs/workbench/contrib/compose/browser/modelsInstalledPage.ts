@@ -34,7 +34,7 @@ import { COMPARE_EMBEDDINGS_COMMAND_ID, useAskEmbeddingModel } from './compareEm
 import { COMPARE_MODELS_COMMAND_ID } from './compareModelsPage.js';
 import { COMPARE_RERANKERS_COMMAND_ID } from './compareRerankersPage.js';
 
-// Compose > Local Models > Set Active Models, in the Time Arrow style of the scaffold. Step 1, Browse Models, is a table
+// Compose > Local AI Models > Set Active Models, in the Time Arrow style of the scaffold. Step 1, Browse Models, is a table
 // with a section each for the local embedding, reranker and answering models, the GGUF models on this computer, those
 // Pollis downloaded and those in the Hugging Face cache, which the llama.cpp that comes with Pollis runs, and one for the
 // cloud models, which answer. Each shows what it reads (images and audio through the projector beside it), whether it

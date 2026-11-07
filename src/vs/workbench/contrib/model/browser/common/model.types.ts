@@ -229,13 +229,24 @@ export interface IModelFaqItem {
 	readonly panel: { readonly title: string; readonly packages: readonly string[]; readonly card?: string };
 	readonly wikiFile?: string;
 	readonly hidden?: boolean;
+	/** A closed question, a hidden one of the FAQ: its options in the order they are asked, `answer` the right one, at `rightChoice`. */
+	readonly choices?: readonly string[];
+	readonly rightChoice?: number;
+	/** Why the right option is right, when the author wrote it. */
+	readonly explanation?: string;
 }
 
+/**
+ * A question of the `[[faq]]` table of a panel. A shown one, which Learn More shows, has its answer; a hidden one is a
+ * closed question of the Panel FAQ test set: `answer` is its right option, `wrong` the others.
+ */
 export interface IModelFaq {
 	readonly question: string;
 	readonly answer: string;
 	readonly wiki?: string;
 	readonly hidden?: boolean;
+	readonly wrong?: readonly string[];
+	readonly explanation?: string;
 }
 
 /** The declarative content of a panel built on the shared scaffold (generated from its TOML). */
