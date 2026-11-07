@@ -14,7 +14,7 @@ import { InstantiationType, registerSingleton } from '../../../../platform/insta
 import { IProductService } from '../../../../platform/product/common/productService.js';
 import { ISecretStorageService } from '../../../../platform/secrets/common/secrets.js';
 import { IUtilityProcessWorkerWorkbenchService } from '../../../services/utilityProcess/electron-browser/utilityProcessWorkerWorkbenchService.js';
-import { ASK_CHAT_MODEL, ASK_CLOUD_PROVIDERS, ASK_EMBEDDING_CONTEXT, ASK_EMBEDDING_MODEL, ASK_LOCAL_PREFIX, ASK_PASSAGES, ASK_QUERY_PREFIX, ASK_RERANK_CONTEXT, ASK_SIMILARITY_PREFIX, askCloudModel, askPollisMessages, IAskPassageMatch, IAskPollisAnswer, IAskPollisAttachment, IAskPollisChatRequest, IAskPollisFound, IAskPollisIndex, IAskPollisIndexedDocument, IAskPollisIndexStatus, IAskPollisPanel, IAskPollisPassage, IAskPollisReranked, IAskPollisSearchRequest, IAskPollisSearchResult, IAskPollisSearchStamp, IAskPollisService, IAskPollisTurn, IAskTopicCounts, ICompareRun, ICompareRunSummary, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary, IRerankRun, IRerankRunSummary } from '../common/askPollis.js';
+import { ASK_CHAT_MODEL, ASK_CLOUD_PROVIDERS, ASK_EMBEDDING_CONTEXT, ASK_EMBEDDING_MODEL, ASK_LOCAL_PREFIX, ASK_PASSAGES, ASK_QUERY_PREFIX, ASK_RERANK_CONTEXT, ASK_SIMILARITY_PREFIX, askCloudModel, askPollisMessages, IAskPassageMatch, IAskPollisAnswer, IAskPollisAttachment, IAskPollisChatRequest, IAskPollisFound, IAskPollisIndex, IAskPollisIndexedDocument, IAskPollisIndexStatus, IAskPollisPanel, IAskPollisPassage, IAskPollisReranked, IAskPollisSearchRequest, IAskPollisSearchResult, IAskPollisSearchStamp, IAskPollisService, IAskPollisTurn, IAskTopicCounts, IBenchmarkAnswer, IBenchmarkRun, ICompareRun, ICompareRunSummary, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary, IRerankRun, IRerankRunSummary } from '../common/askPollis.js';
 
 /** What the command of the Julia extension that starts a llama.cpp server answers (pollisLlamaServer.ts). */
 interface ILlamaServerAnswer {
@@ -322,6 +322,31 @@ class AskPollisService extends Disposable implements IAskPollisService {
 	async deleteRerankRun(id: string): Promise<void> {
 		const { proxy } = await this.get();
 		return proxy.deleteRerankRun(id);
+	}
+
+	async importBenchmarkRuns(ids?: readonly string[]): Promise<void> {
+		const { proxy } = await this.get();
+		return proxy.importBenchmarkRuns(ids);
+	}
+
+	async benchmarkRuns(): Promise<readonly IBenchmarkRun[]> {
+		const { proxy } = await this.get();
+		return proxy.benchmarkRuns();
+	}
+
+	async loadBenchmarkRun(id: string): Promise<IBenchmarkRun | undefined> {
+		const { proxy } = await this.get();
+		return proxy.loadBenchmarkRun(id);
+	}
+
+	async loadBenchmarkAnswers(id: string): Promise<readonly IBenchmarkAnswer[]> {
+		const { proxy } = await this.get();
+		return proxy.loadBenchmarkAnswers(id);
+	}
+
+	async deleteBenchmarkRun(id: string): Promise<void> {
+		const { proxy } = await this.get();
+		return proxy.deleteBenchmarkRun(id);
 	}
 }
 

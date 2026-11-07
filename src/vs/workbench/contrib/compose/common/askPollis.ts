@@ -740,6 +740,89 @@ export interface IRerankRun {
 	readonly found: readonly IRerankRunFound[];
 }
 
+/** How the models of a run of Model Benchmarks answer: the examples shown first, worked answers or the answer alone, thinking, and the most tokens of an answer. */
+export interface IBenchmarkSettings {
+	readonly shots: number;
+	readonly reasoning: boolean;
+	readonly thinking: boolean;
+	readonly maxTokens: number;
+}
+
+/** A model of a run of Model Benchmarks: its file or `hf:` value, its name and its size. */
+export interface IBenchmarkModel {
+	readonly value: string;
+	readonly label: string;
+	readonly size?: string;
+}
+
+/** A model's figures in a run of Model Benchmarks, as PollisBenchmarks.jl computes them (figures). */
+export interface IBenchmarkFigures {
+	readonly value: string;
+	readonly label: string;
+	readonly questions: number;
+	readonly failed: number;
+	readonly score: number | null;
+	readonly half: number | null;
+	readonly right: number;
+	/** The probability that answers picked at random would get as many right or more; null for a benchmark without options, absent in a run kept before it was measured. */
+	readonly byChance?: number | null;
+	readonly strata: readonly { readonly name: string; readonly asked: number; readonly right: number }[];
+	readonly unread: number;
+	readonly cutOff: number;
+	readonly firstTokenMs: number | null;
+	readonly readingSpeed: number | null;
+	readonly writingSpeed: number | null;
+	readonly seconds: number | null;
+	readonly writtenTokens: number | null;
+	readonly memory: number | null;
+	readonly error: string | null;
+}
+
+/**
+ * A run of Model Benchmarks: as PollisBenchmarks.jl keeps it in ~/.pollis/benchmarks/runs/<id>.json while it goes, and as
+ * Comparisons.duckdb keeps it once it has ended.
+ */
+export interface IBenchmarkRun {
+	readonly id: string;
+	readonly started: number;
+	/** When run_models! of PollisBenchmarks.jl ended it; absent for a run of the page, which the page ends. */
+	readonly ended?: number;
+	readonly pollis: string;
+	readonly benchmark: string;
+	/** The revision of the dataset on Hugging Face its questions came from. */
+	readonly revision?: string;
+	readonly settings: IBenchmarkSettings;
+	readonly sample: {
+		readonly seed: number;
+		readonly allocation: string;
+		readonly size: number;
+		readonly strata: readonly { readonly name: string; readonly population: number; readonly size: number }[];
+		readonly questions: readonly string[];
+	};
+	/** Each model, when it started and ended, the memory free before its server started and the least memory free while it answered. */
+	readonly models: readonly (IBenchmarkModel & { readonly started?: number; readonly ended?: number; readonly freeBefore?: number; readonly lowestFree?: number; readonly error?: string })[];
+	readonly figures?: readonly IBenchmarkFigures[];
+}
+
+/** An answer of a run of Model Benchmarks, as PollisBenchmarks.jl writes it in <id>.jsonl, with its timings as llama-server measures them. */
+export interface IBenchmarkAnswer {
+	readonly model: string;
+	readonly id: string;
+	readonly stratum: string;
+	readonly extracted?: string | null;
+	readonly correct?: boolean;
+	readonly text?: string;
+	readonly finish?: string;
+	readonly error?: string;
+	readonly seconds?: number;
+	readonly promptTokens?: number;
+	readonly writtenTokens?: number;
+	readonly promptMs?: number;
+	readonly readingSpeed?: number;
+	readonly writingSpeed?: number;
+	readonly tokenMs?: number;
+}
+
 /** The search of PollisDocuments, and the chat model's answer, in a process of their own (../node/askPollisMain.ts). */
 export interface IAskPollisIndex {
 	readonly onDidChat: Event<IAskPollisChatText>;
@@ -795,6 +878,18 @@ export interface IAskPollisIndex {
 	rerankRuns(): Promise<readonly IRerankRunSummary[]>;
 	loadRerankRun(id: string): Promise<IRerankRun | undefined>;
 	deleteRerankRun(id: string): Promise<void>;
+	/**
+	 * Moves the runs `ids` of Model Benchmarks from ~/.pollis/benchmarks/runs into Comparisons.duckdb, their files
+	 * removed; without `ids`, every run there that has ended: one PollisBenchmarks.jl marked ended, or one whose files
+	 * have not changed for a day.
+	 */
+	importBenchmarkRuns(ids?: readonly string[]): Promise<void>;
+	/** The runs of Model Benchmarks in Comparisons.duckdb, the latest first. */
+	benchmarkRuns(): Promise<readonly IBenchmarkRun[]>;
+	loadBenchmarkRun(id: string): Promise<IBenchmarkRun | undefined>;
+	/** The answers of the run `id` of Model Benchmarks, in the order they were written. */
+	loadBenchmarkAnswers(id: string): Promise<readonly IBenchmarkAnswer[]>;
+	deleteBenchmarkRun(id: string): Promise<void>;
 }
 
 /** How an answer ended, and the model that wrote it. */
@@ -878,4 +973,10 @@ export interface IAskPollisService {
 	rerankRuns(): Promise<readonly IRerankRunSummary[]>;
 	loadRerankRun(id: string): Promise<IRerankRun | undefined>;
 	deleteRerankRun(id: string): Promise<void>;
+	/** The runs of Model Benchmarks, as IAskPollisIndex. */
+	importBenchmarkRuns(ids?: readonly string[]): Promise<void>;
+	benchmarkRuns(): Promise<readonly IBenchmarkRun[]>;
+	loadBenchmarkRun(id: string): Promise<IBenchmarkRun | undefined>;
+	loadBenchmarkAnswers(id: string): Promise<readonly IBenchmarkAnswer[]>;
+	deleteBenchmarkRun(id: string): Promise<void>;
 }

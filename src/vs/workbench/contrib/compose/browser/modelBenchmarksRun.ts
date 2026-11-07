@@ -13,7 +13,7 @@ import { IConfigurationService } from '../../../../platform/configuration/common
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { IProductService } from '../../../../platform/product/common/productService.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
-import { ASK_CHAT_MODEL } from '../common/askPollis.js';
+import { ASK_CHAT_MODEL, IAskPollisService, IBenchmarkAnswer, IBenchmarkModel, IBenchmarkRun, IBenchmarkSettings } from '../common/askPollis.js';
 import { ICompareProgress } from './compareModelsRun.js';
 import { CompareSampler, ICompareSample, ICompareSamples } from './compareShared.js';
 
@@ -21,9 +21,10 @@ import { CompareSampler, ICompareSample, ICompareSamples } from './compareShared
 // (language-julia.pollisModelBenchmarks, model_benchmarks.jl, which runs PollisBenchmarks.jl, the package a notebook calls too): a benchmark downloaded once
 // into ~/.pollis/benchmarks/data; and a run, whose sample the package draws, stratified, with its seed, then each local
 // model chosen, one after the other and alone in memory (the chat model of Ask Pollis stopped before), answering the
-// questions of the sample, each answer graded as it comes. The run is kept in ~/.pollis/benchmarks/runs, by the package:
-// <id>.json, the benchmark, the settings, the sample and the figures of each model; <id>.jsonl, the answers. One runner
-// per window, so that a run goes on when the page is closed.
+// questions of the sample, each answer graded as it comes. The package writes the run in ~/.pollis/benchmarks/runs while
+// it goes: <id>.json, the benchmark, the settings, the sample and the figures of each model; <id>.jsonl, the answers.
+// Once it has ended, the run is moved into ~/.pollis/ask/Comparisons.duckdb (IAskPollisService.importBenchmarkRuns), and
+// so is a run of a notebook that has ended, when the page opens. One runner per window, so that a run goes on when the page is closed.
 
 /** A question of a benchmark downloaded, as PollisBenchmarks.jl keeps it in questions.jsonl. */
 export interface IBenchmarkQuestion {
@@ -56,75 +57,6 @@ export interface IBenchmarkSampleRequest {
 	readonly strata?: readonly string[];
 	readonly allocation: 'proportional' | 'equal';
 	readonly seed: number;
-}
-
-/** How the models answer: the examples shown first, worked answers or the answer alone, thinking, and the most tokens of an answer. */
-export interface IBenchmarkSettings {
-	readonly shots: number;
-	readonly reasoning: boolean;
-	readonly thinking: boolean;
-	readonly maxTokens: number;
-}
-
-export interface IBenchmarkModel {
-	readonly value: string;
-	readonly label: string;
-	readonly size?: string;
-}
-
-/** A model's figures in a run, as PollisBenchmarks.jl computes them (figures). */
-export interface IBenchmarkFigures {
-	readonly value: string;
-	readonly label: string;
-	readonly questions: number;
-	readonly failed: number;
-	readonly score: number | null;
-	readonly half: number | null;
-	readonly right: number;
-	/** The probability that answers picked at random would get as many right or more; null for a benchmark without options, absent in a run kept before it was measured. */
-	readonly byChance?: number | null;
-	readonly strata: readonly { readonly name: string; readonly asked: number; readonly right: number }[];
-	readonly unread: number;
-	readonly cutOff: number;
-	readonly firstTokenMs: number | null;
-	readonly readingSpeed: number | null;
-	readonly writingSpeed: number | null;
-	readonly seconds: number | null;
-	readonly writtenTokens: number | null;
-	readonly memory: number | null;
-	readonly error: string | null;
-}
-
-/** A run as kept in <id>.json. */
-export interface IBenchmarkRun {
-	readonly id: string;
-	readonly started: number;
-	readonly pollis: string;
-	readonly benchmark: string;
-	/** The revision of the dataset on Hugging Face its questions came from. */
-	readonly revision?: string;
-	readonly settings: IBenchmarkSettings;
-	readonly sample: {
-		readonly seed: number;
-		readonly allocation: string;
-		readonly size: number;
-		readonly strata: readonly { readonly name: string; readonly population: number; readonly size: number }[];
-		readonly questions: readonly string[];
-	};
-	readonly models: readonly (IBenchmarkModel & { readonly error?: string })[];
-	readonly figures?: readonly IBenchmarkFigures[];
-}
-
-/** An answer of a run, as kept in <id>.jsonl. */
-export interface IBenchmarkAnswer {
-	readonly model: string;
-	readonly id: string;
-	readonly stratum: string;
-	readonly extracted?: string | null;
-	readonly correct?: boolean;
-	readonly text?: string;
-	readonly finish?: string;
-	readonly error?: string;
 }
 
 /** What a task ends with, or why it could not be done. */
@@ -178,6 +110,7 @@ export class ModelBenchmarksRunner {
 	readonly onDidSample: Event<ICompareSample>;
 
 	constructor(
+		@IAskPollisService private readonly askPollisService: IAskPollisService,
 		@ICommandService private readonly commandService: ICommandService,
 		@IConfigurationService private readonly configurationService: IConfigurationService,
 		@IFileService private readonly fileService: IFileService,
@@ -308,11 +241,25 @@ export class ModelBenchmarksRunner {
 			return this.end({ error: this.errorText(answer.error ?? 'failed') });
 		}
 		const failed = Object.entries(answer.errors ?? {}).map(([value, error]) => localize('modelBenchmarks.modelFailed', "{0}: {1}", models.find(model => model.value === value)?.label ?? value, error));
+		// The run ended, or stopped: moved into Comparisons.duckdb; left in its files if it cannot be, and moved the next time the page opens
+		await this.askPollisService.importBenchmarkRuns([run]).catch(err => console.error('[pollis] could not keep the run in Comparisons.duckdb', err));
 		return this.end({ run, stopped: this.stopped, error: failed.length ? failed.join(' ') : undefined });
 	}
 
-	/** The runs kept, the latest first. */
+	/** Moves the runs that have ended, of the page or a notebook, from their files into Comparisons.duckdb. */
+	async importRuns(): Promise<void> {
+		await this.askPollisService.importBenchmarkRuns().catch(err => console.error('[pollis] could not move the runs into Comparisons.duckdb', err));
+	}
+
+	/** The runs kept, the latest first: those in Comparisons.duckdb, and those still in their files, running or not moved yet. */
 	async runs(): Promise<IBenchmarkRun[]> {
+		const kept = await this.askPollisService.benchmarkRuns().catch(() => []);
+		const going = await this.fileRuns();
+		return [...going.filter(run => !kept.some(other => other.id === run.id)), ...kept].sort((a, b) => b.started - a.started);
+	}
+
+	/** The runs in ~/.pollis/benchmarks/runs. */
+	private async fileRuns(): Promise<IBenchmarkRun[]> {
 		const folder = joinPath(await benchmarksFolder(this.pathService), 'runs');
 		let names: string[] = [];
 		try {
@@ -321,16 +268,19 @@ export class ModelBenchmarksRunner {
 			return [];
 		}
 		const runs = await Promise.all(names.map(name => this.readJson<IBenchmarkRun>(joinPath(folder, name))));
-		return runs.filter((run): run is IBenchmarkRun => !!run?.id).sort((a, b) => b.started - a.started);
+		return runs.filter((run): run is IBenchmarkRun => !!run?.id);
 	}
 
+	/** The run `id`: from its files while it runs, else from Comparisons.duckdb. */
 	async loadRun(id: string): Promise<IBenchmarkRun | undefined> {
-		return this.readJson<IBenchmarkRun>(joinPath(await benchmarksFolder(this.pathService), 'runs', `${id}.json`));
+		return await this.readJson<IBenchmarkRun>(joinPath(await benchmarksFolder(this.pathService), 'runs', `${id}.json`))
+			?? await this.askPollisService.loadBenchmarkRun(id).catch(() => undefined);
 	}
 
-	/** The answers of the run `id`; a line cut off when a run was stopped is left out. */
-	async loadAnswers(id: string): Promise<IBenchmarkAnswer[]> {
-		return this.readLines<IBenchmarkAnswer>(joinPath(await benchmarksFolder(this.pathService), 'runs', `${id}.jsonl`));
+	/** The answers of the run `id`, from its files while it runs, else from Comparisons.duckdb; a line cut off when a run was stopped is left out. */
+	async loadAnswers(id: string): Promise<readonly IBenchmarkAnswer[]> {
+		const file = joinPath(await benchmarksFolder(this.pathService), 'runs', `${id}.jsonl`);
+		return await this.fileService.exists(file) ? this.readLines<IBenchmarkAnswer>(file) : this.askPollisService.loadBenchmarkAnswers(id).catch(() => []);
 	}
 
 	async deleteRun(id: string): Promise<void> {
@@ -338,6 +288,7 @@ export class ModelBenchmarksRunner {
 		for (const name of [`${id}.json`, `${id}.jsonl`]) {
 			await this.fileService.del(joinPath(folder, name)).catch(() => undefined);
 		}
+		await this.askPollisService.deleteBenchmarkRun(id).catch(() => undefined);
 	}
 
 	/** What info.json says of `benchmark`, or nothing when it is not downloaded. */

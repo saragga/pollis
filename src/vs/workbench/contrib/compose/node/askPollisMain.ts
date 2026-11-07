@@ -14,6 +14,7 @@
 // two windows can each keep theirs, and the passages found for each question with a search stamp, which a run with the same stamp reuses.
 // Evaluate Embedding Models embeds the passages here, into the cache of embeddings ask_index.jl takes them from, and
 // searches the questions of a test set with each model's embeddings as Ask Pollis would; its runs are kept in Comparisons.duckdb too.
+// So are the runs of Model Benchmarks, once they have ended: PollisBenchmarks.jl writes a run to files while it goes, and they are moved in here.
 
 import { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
 import * as fs from 'fs';
@@ -26,14 +27,14 @@ import { ProxyChannel } from '../../../../base/parts/ipc/common/ipc.js';
 import { Server as ChildProcessServer } from '../../../../base/parts/ipc/node/ipc.cp.js';
 import { Server as UtilityProcessServer } from '../../../../base/parts/ipc/node/ipc.mp.js';
 import { isUtilityProcess } from '../../../../base/parts/sandbox/node/electronTypes.js';
-import { AskPollisSource, AskTopic, ASK_PASSAGES, ASK_SOURCE_COLLECTION, IAskPollisChatEnd, IAskPollisMessage, ICompareRun, ICompareRunSummary, IAskPollisChatRequest, IAskPollisChatText, IAskPollisEvalItem, IAskPollisFound, IAskPollisIndex, IAskPollisIndexedDocument, IAskPollisIndexRequest, IAskPollisIndexStatus, IAskPollisPanel, IAskPollisPanelShare, IAskPollisPassage, IAskPassageMatch, IAskPollisReranked, IAskPollisSearchResult, IAskPollisTimings, IAskTopicCounts, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingFound, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary, IRerankRun, IRerankRunSummary } from '../common/askPollis.js';
+import { AskPollisSource, AskTopic, ASK_PASSAGES, ASK_SOURCE_COLLECTION, IAskPollisChatEnd, IAskPollisMessage, ICompareRun, ICompareRunSummary, IAskPollisChatRequest, IAskPollisChatText, IAskPollisEvalItem, IAskPollisFound, IAskPollisIndex, IAskPollisIndexedDocument, IAskPollisIndexRequest, IAskPollisIndexStatus, IAskPollisPanel, IAskPollisPanelShare, IAskPollisPassage, IAskPassageMatch, IAskPollisReranked, IAskPollisSearchResult, IAskPollisTimings, IAskTopicCounts, IBenchmarkAnswer, IBenchmarkRun, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingFound, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary, IRerankRun, IRerankRunSummary } from '../common/askPollis.js';
 
 const DATABASE = join(os.homedir(), '.pollis', 'documents', 'PollisDocuments.duckdb');
 /** The embeddings made, by the model and the text it was given, as ask_index.jl keeps them. */
 const EMBEDDINGS = join(os.homedir(), '.pollis', 'documents', 'embeddings.duckdb');
 /** The passages embedded a request, as ask_index.jl does. */
 const BATCH = 32;
-/** The runs of Evaluate Answering Models, their questions, answers and scores. */
+/** The runs of the Evaluate pages and of Model Benchmarks. */
 const COMPARISONS = join(os.homedir(), '.pollis', 'ask', 'Comparisons.duckdb');
 /** The fts extension, which the Julia extension of Pollis unpacks here at install. */
 const FTS = join(os.homedir(), '.pollis', 'duckdb', 'fts.duckdb_extension');
@@ -302,7 +303,8 @@ const TOPIC = `CASE WHEN d.kind = 'julia' THEN 'julia' WHEN d.kind = 'document' 
  * The tables of Comparisons.duckdb: a run, the passages found for each of its questions, the answers, the judges'
  * scores and why a judge did not rate an answer; the passages found for a question with a search stamp, those of
  * the latest stamp only; a run of Evaluate Embedding Models, its questions and what each model found for them; and a
- * run of Evaluate Reranking Models, its questions and where each reranker put the passage of each.
+ * run of Evaluate Reranking Models, its questions and where each reranker put the passage of each; and a run of
+ * Model Benchmarks, its models with their figures and their answers.
  */
 const COMPARISONS_TABLES = [
 	'CREATE TABLE IF NOT EXISTS Comparisons.runs(id VARCHAR PRIMARY KEY, started BIGINT, pollis VARCHAR, models VARCHAR, judges VARCHAR, repeats INTEGER, questions INTEGER)',
@@ -329,7 +331,23 @@ const COMPARISONS_TABLES = [
 	'CREATE TABLE IF NOT EXISTS Comparisons.rerankRuns(id VARCHAR PRIMARY KEY, started BIGINT, pollis VARCHAR, models VARCHAR, questions INTEGER, found INTEGER, kept INTEGER, embedder VARCHAR)',
 	'CREATE TABLE IF NOT EXISTS Comparisons.rerankQuestions(run VARCHAR, question INTEGER, source VARCHAR, context VARCHAR, text VARCHAR, answer VARCHAR)',
 	'CREATE TABLE IF NOT EXISTS Comparisons.rerankFound(run VARCHAR, question INTEGER, model VARCHAR, place INTEGER, ms DOUBLE)',
+	// A run of Model Benchmarks: its sample's strata, as JSON, and the ids of its questions in the order drawn, as JSON
+	'CREATE TABLE IF NOT EXISTS Comparisons.benchmarkRuns(id VARCHAR PRIMARY KEY, started BIGINT, ended BIGINT, pollis VARCHAR, benchmark VARCHAR, revision VARCHAR, shots INTEGER, reasoning BOOLEAN, thinking BOOLEAN, max_tokens INTEGER, seed BIGINT, allocation VARCHAR, size INTEGER, strata VARCHAR, questions VARCHAR)',
+	// Each model of a run, in the order it ran, and the figures PollisBenchmarks.jl computed of it: its strata as JSON
+	'CREATE TABLE IF NOT EXISTS Comparisons.benchmarkModels(run VARCHAR, place INTEGER, model VARCHAR, label VARCHAR, size VARCHAR, started BIGINT, ended BIGINT, free_before BIGINT, lowest_free BIGINT, error VARCHAR, questions INTEGER, failed INTEGER, score DOUBLE, half DOUBLE, right_answers INTEGER, by_chance DOUBLE, strata VARCHAR, unread INTEGER, cut_off INTEGER, first_token_ms DOUBLE, reading_speed DOUBLE, writing_speed DOUBLE, seconds DOUBLE, written_tokens DOUBLE, memory BIGINT)',
+	// Each answer of a run, in the order it was written, with its grade and its timings
+	'CREATE TABLE IF NOT EXISTS Comparisons.benchmarkAnswers(run VARCHAR, place INTEGER, model VARCHAR, question VARCHAR, stratum VARCHAR, extracted VARCHAR, correct BOOLEAN, error VARCHAR, text VARCHAR, finish VARCHAR, seconds DOUBLE, prompt_tokens INTEGER, written_tokens INTEGER, prompt_ms DOUBLE, reading_speed DOUBLE, writing_speed DOUBLE, token_ms DOUBLE)',
 ];
+
+/** The runs of Model Benchmarks while they go, as PollisBenchmarks.jl writes them: <id>.json and <id>.jsonl. */
+const BENCHMARK_RUNS = join(os.homedir(), '.pollis', 'benchmarks', 'runs');
+/** How long the files of a run not marked ended stay unchanged before it is taken as ended: a run cut off when Pollis or its notebook quit. */
+const BENCHMARK_IDLE_MS = 24 * 60 * 60 * 1000;
+
+/** A number of a row, or null for NULL, as the figures of PollisBenchmarks.jl have it. */
+function numberOrNull(value: unknown): number | null {
+	return value === null || value === undefined ? null : Number(value);
+}
 
 /** The embedding of `input`, as DuckDB reads a list, from the llama.cpp server at `url` (its OpenAI /embeddings). */
 async function embed(url: string, input: string): Promise<string> {
@@ -1131,6 +1149,171 @@ class AskPollisIndex implements IAskPollisIndex {
 
 	async deleteRerankRun(id: string): Promise<void> {
 		await this.withComparisons(connection => this.removeRerankRun(connection, id));
+	}
+
+	/** Takes away the run `run` of Model Benchmarks from its tables. */
+	private async removeBenchmarkRun(connection: DuckDBConnection, run: string): Promise<void> {
+		for (const table of ['benchmarkRuns', 'benchmarkModels', 'benchmarkAnswers']) {
+			await connection.run(`DELETE FROM Comparisons.${table} WHERE ${table === 'benchmarkRuns' ? 'id' : 'run'} = $run`, { run });
+		}
+	}
+
+	async importBenchmarkRuns(ids?: readonly string[]): Promise<void> {
+		let names: string[];
+		try {
+			names = await fs.promises.readdir(BENCHMARK_RUNS);
+		} catch {
+			return;
+		}
+		// The runs of the folder only: an id names files there, and nothing outside it
+		const candidates = names.filter(name => name.endsWith('.json')).map(name => name.slice(0, -'.json'.length)).filter(id => !ids || ids.includes(id));
+		const runs: { run: IBenchmarkRun; answers: IBenchmarkAnswer[]; files: string[] }[] = [];
+		for (const id of candidates) {
+			const files = [join(BENCHMARK_RUNS, `${id}.json`), join(BENCHMARK_RUNS, `${id}.jsonl`)];
+			let run: IBenchmarkRun;
+			try {
+				run = JSON.parse(await fs.promises.readFile(files[0], 'utf8'));
+			} catch {
+				continue;
+			}
+			if (run.id !== id) {
+				continue;
+			}
+			// A run not marked ended may still be going, in a notebook or another window
+			if (!ids && run.ended === undefined) {
+				const changed = await Promise.all(files.map(file => fs.promises.stat(file).then(stat => stat.mtimeMs, () => 0)));
+				if (Date.now() - Math.max(...changed) < BENCHMARK_IDLE_MS) {
+					continue;
+				}
+			}
+			const answers: IBenchmarkAnswer[] = [];
+			for (const line of (await fs.promises.readFile(files[1], 'utf8').catch(() => '')).split('\n')) {
+				if (line.trim()) {
+					try {
+						answers.push(JSON.parse(line));
+					} catch {
+						// A line cut off when the run was stopped
+					}
+				}
+			}
+			runs.push({ run, answers, files });
+		}
+		if (!runs.length) {
+			return;
+		}
+		await this.withComparisons(async connection => {
+			for (const { run, answers } of runs) {
+				await connection.run('BEGIN TRANSACTION');
+				try {
+					await this.removeBenchmarkRun(connection, run.id);
+					await connection.run('INSERT INTO Comparisons.benchmarkRuns VALUES ($id, $started, $ended::BIGINT, $pollis, $benchmark, $revision::VARCHAR, $shots, $reasoning, $thinking, $maxTokens, $seed, $allocation, $size, $strata, $questions)', {
+						id: run.id, started: run.started, ended: run.ended ?? null, pollis: run.pollis ?? '', benchmark: run.benchmark, revision: run.revision ?? null,
+						shots: run.settings.shots, reasoning: run.settings.reasoning, thinking: run.settings.thinking, maxTokens: run.settings.maxTokens,
+						seed: run.sample.seed, allocation: run.sample.allocation, size: run.sample.size, strata: JSON.stringify(run.sample.strata), questions: JSON.stringify(run.sample.questions),
+					});
+					for (const [place, model] of run.models.entries()) {
+						const figures = run.figures?.find(candidate => candidate.value === model.value);
+						await connection.run('INSERT INTO Comparisons.benchmarkModels VALUES ($run, $place, $model, $label, $size::VARCHAR, $started::BIGINT, $ended::BIGINT, $freeBefore::BIGINT, $lowestFree::BIGINT, $error::VARCHAR, $questions::INTEGER, $failed::INTEGER, $score::DOUBLE, $half::DOUBLE, $right::INTEGER, $byChance::DOUBLE, $strata::VARCHAR, $unread::INTEGER, $cutOff::INTEGER, $firstTokenMs::DOUBLE, $readingSpeed::DOUBLE, $writingSpeed::DOUBLE, $seconds::DOUBLE, $writtenTokens::DOUBLE, $memory::BIGINT)', {
+							run: run.id, place: place + 1, model: model.value, label: model.label, size: model.size ?? null, started: model.started ?? null, ended: model.ended ?? null,
+							freeBefore: model.freeBefore ?? null, lowestFree: model.lowestFree ?? null, error: model.error ?? figures?.error ?? null,
+							questions: figures?.questions ?? null, failed: figures?.failed ?? null, score: figures?.score ?? null, half: figures?.half ?? null, right: figures?.right ?? null,
+							byChance: figures?.byChance ?? null, strata: figures ? JSON.stringify(figures.strata) : null, unread: figures?.unread ?? null, cutOff: figures?.cutOff ?? null,
+							firstTokenMs: figures?.firstTokenMs ?? null, readingSpeed: figures?.readingSpeed ?? null, writingSpeed: figures?.writingSpeed ?? null,
+							seconds: figures?.seconds ?? null, writtenTokens: figures?.writtenTokens ?? null, memory: figures?.memory ?? null,
+						});
+					}
+					for (const [place, answer] of answers.entries()) {
+						await connection.run('INSERT INTO Comparisons.benchmarkAnswers VALUES ($run, $place, $model, $question, $stratum, $extracted::VARCHAR, $correct::BOOLEAN, $error::VARCHAR, $text::VARCHAR, $finish::VARCHAR, $seconds::DOUBLE, $promptTokens::INTEGER, $writtenTokens::INTEGER, $promptMs::DOUBLE, $readingSpeed::DOUBLE, $writingSpeed::DOUBLE, $tokenMs::DOUBLE)', {
+							run: run.id, place: place + 1, model: answer.model, question: answer.id, stratum: answer.stratum,
+							// The answer as read: a letter, or a number for a benchmark whose answers are numbers
+							extracted: answer.extracted === null || answer.extracted === undefined ? null : String(answer.extracted),
+							correct: answer.correct ?? null, error: answer.error ?? null, text: answer.text ?? null, finish: answer.finish ?? null, seconds: answer.seconds ?? null,
+							promptTokens: answer.promptTokens ?? null, writtenTokens: answer.writtenTokens ?? null, promptMs: answer.promptMs ?? null,
+							readingSpeed: answer.readingSpeed ?? null, writingSpeed: answer.writingSpeed ?? null, tokenMs: answer.tokenMs ?? null,
+						});
+					}
+					await connection.run('COMMIT');
+				} catch (err) {
+					await connection.run('ROLLBACK');
+					throw err;
+				}
+			}
+		});
+		// The files once the run is kept in Comparisons.duckdb
+		for (const { files } of runs) {
+			for (const file of files) {
+				await fs.promises.rm(file, { force: true });
+			}
+		}
+	}
+
+	/** The runs of Model Benchmarks whose id is `id`, or all of them, the latest first, each with its models and their figures. */
+	private async readBenchmarkRuns(connection: DuckDBConnection, id?: string): Promise<IBenchmarkRun[]> {
+		const where = id === undefined ? '' : 'WHERE id = $id';
+		const values = id === undefined ? undefined : { id };
+		const runs = (await connection.runAndReadAll(`SELECT * FROM Comparisons.benchmarkRuns ${where} ORDER BY started DESC`, values)).getRowObjectsJson();
+		const models = new Map<string, Row[]>();
+		for (const model of (await connection.runAndReadAll(`SELECT * FROM Comparisons.benchmarkModels WHERE run IN (SELECT id FROM Comparisons.benchmarkRuns ${where}) ORDER BY place`, values)).getRowObjectsJson()) {
+			models.set(String(model.run), [...models.get(String(model.run)) ?? [], model]);
+		}
+		const text = (value: unknown) => value === null || value === undefined ? undefined : String(value);
+		return runs.map(row => {
+			const mine = models.get(String(row.id)) ?? [];
+			return {
+				id: String(row.id),
+				started: Number(row.started),
+				ended: optionalNumber(row.ended),
+				pollis: String(row.pollis ?? ''),
+				benchmark: String(row.benchmark),
+				revision: text(row.revision),
+				settings: { shots: Number(row.shots), reasoning: Boolean(row.reasoning), thinking: Boolean(row.thinking), maxTokens: Number(row.max_tokens) },
+				sample: { seed: Number(row.seed), allocation: String(row.allocation), size: Number(row.size), strata: JSON.parse(String(row.strata ?? '[]')), questions: JSON.parse(String(row.questions ?? '[]')) },
+				models: mine.map(model => ({
+					value: String(model.model), label: String(model.label), size: text(model.size), started: optionalNumber(model.started), ended: optionalNumber(model.ended),
+					freeBefore: optionalNumber(model.free_before), lowestFree: optionalNumber(model.lowest_free), error: text(model.error),
+				})),
+				figures: mine.filter(model => model.questions !== null).map(model => ({
+					value: String(model.model), label: String(model.label), questions: Number(model.questions), failed: Number(model.failed),
+					score: numberOrNull(model.score), half: numberOrNull(model.half), right: Number(model.right_answers), byChance: numberOrNull(model.by_chance),
+					strata: JSON.parse(String(model.strata ?? '[]')), unread: Number(model.unread), cutOff: Number(model.cut_off),
+					firstTokenMs: numberOrNull(model.first_token_ms), readingSpeed: numberOrNull(model.reading_speed), writingSpeed: numberOrNull(model.writing_speed),
+					seconds: numberOrNull(model.seconds), writtenTokens: numberOrNull(model.written_tokens), memory: numberOrNull(model.memory), error: text(model.error) ?? null,
+				})),
+			};
+		});
+	}
+
+	async benchmarkRuns(): Promise<readonly IBenchmarkRun[]> {
+		return this.withComparisons(connection => this.readBenchmarkRuns(connection));
+	}
+
+	async loadBenchmarkRun(id: string): Promise<IBenchmarkRun | undefined> {
+		return this.withComparisons(async connection => (await this.readBenchmarkRuns(connection, id))[0]);
+	}
+
+	async loadBenchmarkAnswers(id: string): Promise<readonly IBenchmarkAnswer[]> {
+		return this.withComparisons(async connection =>
+			(await connection.runAndReadAll('SELECT * FROM Comparisons.benchmarkAnswers WHERE run = $id ORDER BY place', { id })).getRowObjectsJson().map(row => ({
+				model: String(row.model),
+				id: String(row.question),
+				stratum: String(row.stratum ?? ''),
+				extracted: row.extracted === null ? null : String(row.extracted),
+				correct: row.correct === null ? undefined : Boolean(row.correct),
+				text: row.text === null ? undefined : String(row.text),
+				finish: row.finish === null ? undefined : String(row.finish),
+				error: row.error === null ? undefined : String(row.error),
+				seconds: optionalNumber(row.seconds),
+				promptTokens: optionalNumber(row.prompt_tokens),
+				writtenTokens: optionalNumber(row.written_tokens),
+				promptMs: optionalNumber(row.prompt_ms),
+				readingSpeed: optionalNumber(row.reading_speed),
+				writingSpeed: optionalNumber(row.writing_speed),
+				tokenMs: optionalNumber(row.token_ms),
+			})));
+	}
+
+	async deleteBenchmarkRun(id: string): Promise<void> {
+		await this.withComparisons(connection => this.removeBenchmarkRun(connection, id));
 	}
 
 	async foundBefore(key: string, questions: readonly string[]): Promise<readonly (readonly IAskPollisPassage[] | undefined)[]> {

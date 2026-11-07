@@ -25,10 +25,11 @@ import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaff
 import { FEWEST_ROWS, rowsChoiceScript, sortHeadingsScript, storedRows, storeRows } from '../../model/browser/webviews/webviewPager.js';
 import { MODELBENCHMARKS_METADATA } from '../../model/browser/webviews/modelBenchmarks.data.js';
 import { buildWebviewHtml, spinnerSvg } from '../../model/browser/webviews/webviewScaffold.js';
+import { IBenchmarkAnswer, IBenchmarkModel, IBenchmarkRun, IBenchmarkSettings } from '../common/askPollis.js';
 import { askAnswerScript } from './askPollisWebview.js';
 import { ICompareProgress } from './compareModelsRun.js';
 import { compareChartsHtml, compareChartsScript, compareCommonScript, compareCss, compareLocalCard, compareSharedText } from './compareShared.js';
-import { IBenchmarkAnswer, IBenchmarkEnd, IBenchmarkInfo, IBenchmarkModel, IBenchmarkQuestion, IBenchmarkRun, IBenchmarkSampleRequest, IBenchmarkSettings, ModelBenchmarksRunner } from './modelBenchmarksRun.js';
+import { IBenchmarkEnd, IBenchmarkInfo, IBenchmarkQuestion, IBenchmarkSampleRequest, ModelBenchmarksRunner } from './modelBenchmarksRun.js';
 import { IInstalledModel } from './modelsInstalledPage.js';
 
 // Model Benchmarks, from Compose > Local AI Models > Model Benchmarks... (compose.contribution.ts): the chat models
@@ -223,7 +224,7 @@ async function openModelBenchmarksPage(accessor: ServicesAccessor): Promise<void
 	/** The questions of each benchmark, by id, read once. */
 	const questions = new Map<string, Map<string, IBenchmarkQuestion>>();
 	let shown: IBenchmarkRun | undefined;
-	let shownAnswers: IBenchmarkAnswer[] = [];
+	let shownAnswers: readonly IBenchmarkAnswer[] = [];
 
 	const status = (text: string, error = false) => post({ command: 'status', text, error });
 	const sampleOf = (id: string): IStoredSample => ({ ...DEFAULT_SAMPLE, ...samples[id] });
@@ -395,6 +396,8 @@ async function openModelBenchmarksPage(accessor: ServicesAccessor): Promise<void
 			post({ command: 'settings', settings });
 			await postBenchmarks();
 			await postModels();
+			// The runs that have ended since, of a notebook or of a window closed while it ran, moved into Comparisons.duckdb
+			await run.importRuns();
 			await showRun(shown?.id ?? (await run.runs())[0]?.id);
 			post({ command: 'running', running: run.running });
 			post({ command: 'progress', progress: run.progress });
