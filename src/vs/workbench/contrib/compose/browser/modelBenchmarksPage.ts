@@ -34,7 +34,7 @@ import { IInstalledModel } from './modelsInstalledPage.js';
 
 // Model Benchmarks, from Compose > Local AI Models > Model Benchmarks... (compose.contribution.ts): the chat models
 // of this computer run on published benchmarks, on a stratified random sample of their questions. One page, in five
-// steps: 1, the benchmark, downloaded once; 2, the sample: the strata to draw from, how many questions, shared in
+// steps: 1, the benchmark, its questions made ready once; 2, the sample: the strata to draw from, how many questions, shared in
 // proportion to the strata or equally, and the seed, which draws the same sample again; 3, the models and how they
 // answer; 4, Run, which draws the sample and has each model answer its questions, one model after the other and alone
 // in memory (modelBenchmarksRun.ts, PollisBenchmarks.jl); 5, the results of a run: each model's score with its 95%
@@ -61,7 +61,6 @@ interface IBenchmarkEntry {
 	readonly strata?: string;
 	readonly answer: string;
 	readonly source: string;
-	readonly bytes: number;
 }
 
 function benchmarkEntries(): readonly IBenchmarkEntry[] {
@@ -73,7 +72,6 @@ function benchmarkEntries(): readonly IBenchmarkEntry[] {
 			strata: localize('modelBenchmarks.subject', "Subject"),
 			answer: localize('modelBenchmarks.mmluProAnswer', "The letter of the option, read from \"the answer is (X)\" as MMLU-Pro's own scripts read it."),
 			source: 'https://huggingface.co/datasets/TIGER-Lab/MMLU-Pro',
-			bytes: 4187042,
 		},
 		{
 			id: 'gsm8k',
@@ -81,7 +79,49 @@ function benchmarkEntries(): readonly IBenchmarkEntry[] {
 			measures: localize('modelBenchmarks.gsm8k', "Grade-school mathematics: word problems of two to eight steps of arithmetic, answered with a number."),
 			answer: localize('modelBenchmarks.gsm8kAnswer', "The number of \"The answer is N\", or else the last number of the answer, compared with the right one."),
 			source: 'https://huggingface.co/datasets/openai/gsm8k',
-			bytes: 2725633,
+		},
+		{
+			id: 'truthfulqa',
+			name: 'TruthfulQA',
+			measures: localize('modelBenchmarks.truthfulqa', "Truthfulness: questions that some people answer falsely, from misconceptions, in 38 categories such as health, law and finance, each with one true option."),
+			answer: localize('modelBenchmarks.truthfulqaAnswer', "The letter of the option, read from \"the answer is (X)\". The true option, first in the source, is put at a place fixed by the question, so that it is not always A."),
+			source: 'https://huggingface.co/datasets/truthfulqa/truthful_qa',
+		},
+		{
+			id: 'bbh',
+			name: 'BIG-Bench Hard',
+			measures: localize('modelBenchmarks.bbh', "Reasoning in 27 tasks of BIG-Bench, such as logical deduction, date understanding and multistep arithmetic, each with three worked examples."),
+			strata: localize('modelBenchmarks.task', "Task"),
+			answer: localize('modelBenchmarks.bbhAnswer', "The text after \"So the answer is\", matched exactly with the right one, without regard to case; an option such as (B) by its letter."),
+			source: 'https://github.com/suzgunmirac/BIG-Bench-Hard',
+		},
+		{
+			id: 'pubmedqa',
+			name: 'PubMedQA',
+			measures: localize('modelBenchmarks.pubmedqa', "Questions on medical research, each answered yes, no or maybe from the abstract of its article without its conclusion."),
+			answer: localize('modelBenchmarks.pubmedqaAnswer', "Yes, no or maybe, read from \"the answer is X\", or else from the first word of the answer."),
+			source: 'https://huggingface.co/datasets/qiaojin/PubMedQA',
+		},
+		{
+			id: 'finqa',
+			name: 'FinQA',
+			measures: localize('modelBenchmarks.finqa', "Numerical reasoning on financial reports: questions on a page of an annual report, its text and its table, answered with a number."),
+			answer: localize('modelBenchmarks.finqaAnswer', "The number of \"the answer is N\", or else the last number of the answer: right within 1% of the right one, or of the right one as a percentage; yes or no matched exactly."),
+			source: 'https://github.com/czyssrs/FinQA',
+		},
+		{
+			id: 'ifeval',
+			name: 'IFEval',
+			measures: localize('modelBenchmarks.ifeval', "Following instructions that can be checked, such as a number of words, a format, a language or a word not to use: 25 kinds, one or more in each prompt."),
+			answer: localize('modelBenchmarks.ifevalAnswer', "Right when the answer follows every instruction of its prompt, each checked by the rule of the checker of IFEval's authors."),
+			source: 'https://huggingface.co/datasets/google/IFEval',
+		},
+		{
+			id: 'multipl_e_julia',
+			name: 'MultiPL-E Julia',
+			measures: localize('modelBenchmarks.multiplE', "Writing Julia: the problems of HumanEval, each a function to complete from its docstring and signature."),
+			answer: localize('modelBenchmarks.multiplEAnswer', "The function of the answer run with its unit tests, in a Julia process of its own, for 15 seconds at most: right when they all pass. The process is not a sandbox: the code a model writes can reach the files and the network of this computer."),
+			source: 'https://huggingface.co/datasets/nuprl/MultiPL-E',
 		},
 	];
 }
@@ -346,7 +386,7 @@ async function openModelBenchmarksPage(accessor: ServicesAccessor): Promise<void
 	const ended = async (end: IBenchmarkEnd) => {
 		if (end.info) {
 			await postBenchmarks();
-			status(localize('modelBenchmarks.downloaded', "{0} downloaded: {1} questions.", entries.find(entry => entry.id === end.info!.benchmark)?.name ?? end.info.benchmark, end.info.count));
+			status(localize('modelBenchmarks.ready', "{0} is ready: {1} questions.", entries.find(entry => entry.id === end.info!.benchmark)?.name ?? end.info.benchmark, end.info.count));
 		} else if (end.run) {
 			await showRun(end.run, end.run);
 			status(end.error ?? (end.stopped ? localize('modelBenchmarks.runStopped', "Stopped: the questions answered until then are shown.") : ''), !!end.error);
@@ -359,7 +399,7 @@ async function openModelBenchmarksPage(accessor: ServicesAccessor): Promise<void
 	const startRun = () => {
 		const info = infos.get(benchmark);
 		if (!info) {
-			status(localize('modelBenchmarks.notDownloaded', "Download the benchmark first, above."), true);
+			status(localize('modelBenchmarks.notReady', "Make the benchmark ready first, above."), true);
 			return;
 		}
 		const stored = sampleOf(benchmark);
@@ -449,22 +489,21 @@ function pageHtml(rows: number, entries: readonly IBenchmarkEntry[]): string {
 		title: localize('modelBenchmarks.title', "Model Benchmarks"),
 		intro: localize('modelBenchmarks.intro', "How well do the chat models of this computer do on published benchmarks? Choose a benchmark, draw a stratified random sample of its questions, and each model chosen answers them, one after the other, alone in memory. Each answer is graded as the benchmark grades it, and each model has its score with its 95% interval, its score in each stratum, how fast it answered and the memory it took."),
 		benchmarkSection: localize('modelBenchmarks.benchmarkSection', "Benchmark"),
-		benchmarkIntro: localize('modelBenchmarks.benchmarkIntro', "Each benchmark is downloaded once from Hugging Face into {0}, its questions and the worked examples that a prompt can show first.", '{0}'),
+		benchmarkIntro: localize('modelBenchmarks.benchmarkIntro', "The questions of each benchmark come with Pollis, in PollisBenchmarks.jl, at a fixed revision of their source. They are made ready once in {0}, with the worked examples that a prompt can show first.", '{0}'),
 		benchmark: localize('modelBenchmarks.benchmark', "Benchmark"),
 		measures: localize('modelBenchmarks.measures', "What It Measures"),
 		answerRead: localize('modelBenchmarks.answerRead', "Answer Graded"),
 		strataColumn: localize('modelBenchmarks.strataColumn', "Strata"),
 		downloadedColumn: localize('modelBenchmarks.downloadedColumn', "On This Computer"),
 		notDownloaded: localize('modelBenchmarks.notDownloadedYet', "Not yet"),
-		downloadButton: localize('modelBenchmarks.downloadButton', "Download {0}", '{0}'),
-		downloadAgain: localize('modelBenchmarks.downloadAgain', "Downloaded on {0}: {1} questions.", '{0}', '{1}'),
-		downloadSize: localize('modelBenchmarks.downloadSize', "{0} MB", '{0}'),
+		downloadButton: localize('modelBenchmarks.readyButton', "Make {0} Ready", '{0}'),
+		downloadAgain: localize('modelBenchmarks.readySince', "Made ready on {0}: {1} questions.", '{0}', '{1}'),
 		sourceLink: localize('modelBenchmarks.sourceLink', "Source"),
 		noStrata: localize('modelBenchmarks.noStrata', "None"),
 		sampleSection: localize('modelBenchmarks.sampleSection', "Sample"),
 		sampleIntro: localize('modelBenchmarks.sampleIntro', "A stratified random sample: the questions of each stratum ticked are drawn at random, as many as the allocation gives it, at least one each when the sample allows. The same seed draws the same sample again, so that runs of different models or settings ask the same questions."),
 		sampleIntroSimple: localize('modelBenchmarks.sampleIntroSimple', "A simple random sample: {0} has no strata. The same seed draws the same sample again, so that runs of different models or settings ask the same questions.", '{0}'),
-		sampleNeeds: localize('modelBenchmarks.sampleNeeds', "Download the benchmark above to draw its sample."),
+		sampleNeeds: localize('modelBenchmarks.sampleNeedsReady', "Make the benchmark ready above to draw its sample."),
 		size: localize('modelBenchmarks.size', "Questions"),
 		allocation: localize('modelBenchmarks.allocation', "Allocation"),
 		equal: localize('modelBenchmarks.equal', "Equal: as Many in Each Stratum"),
@@ -495,7 +534,7 @@ function pageHtml(rows: number, entries: readonly IBenchmarkEntry[]): string {
 		run: localize('modelBenchmarks.run', "Run"),
 		runMany: localize('modelBenchmarks.runMany', "Run {0} Questions With {1} Models", '{0}', '{1}'),
 		runOneModel: localize('modelBenchmarks.runOneModel', "Run {0} Questions With 1 Model", '{0}', '{1}'),
-		runNeeds: localize('modelBenchmarks.runNeeds', "Download the benchmark, choose at least one model and a sample of one question at least."),
+		runNeeds: localize('modelBenchmarks.runNeedsReady', "Make the benchmark ready, choose at least one model and a sample of one question at least."),
 		stop: localize('modelBenchmarks.stop', "Stop"),
 		chartsHint: localize('modelBenchmarks.chartsHint', "Every 2 seconds of the run."),
 		tokensChart: localize('compareModels.tokensChart', "Tokens"),
@@ -696,7 +735,7 @@ function pageHtml(rows: number, entries: readonly IBenchmarkEntry[]): string {
 	const TEXT = ${JSON.stringify(text)};
 	const ANSWER_ONLY_TOKENS = ${ANSWER_ONLY_TOKENS};
 	const SPINNER = '${spinnerSvg}';
-	const ENTRIES = ${JSON.stringify(entries.map(entry => ({ id: entry.id, name: entry.name, strata: entry.strata, bytes: entry.bytes })))};
+	const ENTRIES = ${JSON.stringify(entries.map(entry => ({ id: entry.id, name: entry.name, strata: entry.strata })))};
 	${askAnswerScript()}
 	${rowsChoiceScript()}
 	${sortHeadingsScript()}
@@ -731,7 +770,7 @@ function pageHtml(rows: number, entries: readonly IBenchmarkEntry[]): string {
 		return benchmarks.find(item => item.id === chosenBenchmark);
 	}
 
-	// The benchmark: a click anywhere on its row chooses it; Download fetches it, or fetches it again
+	// The benchmark: a click anywhere on its row chooses it; Make Ready copies its questions into ~/.pollis/benchmarks/data
 	for (const row of document.querySelectorAll('tr.benchmark')) {
 		row.addEventListener('click', event => {
 			if (event.target.closest('a')) { return; }
@@ -751,7 +790,7 @@ function pageHtml(rows: number, entries: readonly IBenchmarkEntry[]): string {
 		const item = current();
 		document.getElementById('benchmarkChosen').textContent = entry ? entry.name : '';
 		const download = document.getElementById('download');
-		download.textContent = format(TEXT.downloadButton, entry ? entry.name : '') + ' (' + format(TEXT.downloadSize, entry ? (entry.bytes / 1e6).toFixed(1) : '-') + ')';
+		download.textContent = format(TEXT.downloadButton, entry ? entry.name : '');
 		download.disabled = running;
 		document.getElementById('download').hidden = !!(item && item.info);
 		if (item && item.info && statusId === 'setStatus' && !running) {

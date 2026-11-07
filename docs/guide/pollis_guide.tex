@@ -2004,14 +2004,14 @@ Pollis's key, and only its versions and counts are yours.
 \renewcommand{\arraystretch}{1.2}
 \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.2\linewidth}X@{}}
 \texttt{catalogue} & One row per benchmark: what it measures, its sources and the revision of each, its licence, its size in MB, how an answer is graded, whether it is built in or to download, the page that runs it and its reference.\\
-\texttt{mmlu\_pro}, \texttt{gsm8k}, \texttt{truthfulqa}, \texttt{bbh}, \texttt{ifeval}, \texttt{multipl\_e\_julia}, \texttt{bfcl}, \texttt{pubmedqa}, \texttt{finqa} & The questions of each benchmark: id, split, stratum, question, options, right answer and worked answer, and the columns of its own, such as the unit tests of MultiPL-E or the abstract of PubMedQA. The split is \texttt{test} for the questions of the benchmark and \texttt{example} for the solved questions a prompt can show before a question.\\
+\texttt{mmlu\_pro}, \texttt{gsm8k}, \texttt{truthfulqa}, \texttt{bbh}, \texttt{ifeval}, \texttt{multipl\_e\_julia}, \texttt{pubmedqa}, \texttt{finqa} & The questions of each benchmark: id, split, stratum, question, options, right answer and worked answer, and the columns of its own, such as the unit tests of MultiPL-E or the abstract of PubMedQA. The split is \texttt{test} for the questions of the benchmark and \texttt{example} for the solved questions a prompt can show before a question.\\
 \texttt{scifact}, \texttt{scidocs} & The queries and documents of each retrieval benchmark: id, split, title, text and, for a query, the ids of the documents relevant to it. The split is \texttt{test} for a query and \texttt{document} for a document.\\
 \end{tabularx}
 \end{center}
 The questions come from PollisBenchmarks.jl, each at the fixed revision of its sources and under its own licence;
 Pollis rebuilds the database when the package is updated. The benchmarks to download are listed in the catalogue, but their
 questions are not in the database, by their licence or their size: a page that runs them fetches them from their source.
-Model Benchmarks runs MMLU-Pro and GSM8K.
+Model Benchmarks runs the benchmarks of questions: MMLU-Pro, GSM8K, TruthfulQA, BIG-Bench Hard, IFEval, MultiPL-E Julia, PubMedQA and FinQA.
 
 \newpage
 \subhead{Import journal metrics}

@@ -18,7 +18,7 @@ import { ICompareProgress } from './compareModelsRun.js';
 import { CompareSampler, ICompareSample, ICompareSamples } from './compareShared.js';
 
 // What Model Benchmarks runs (modelBenchmarksPage.ts), in a hidden Julia process of the Julia extension
-// (language-julia.pollisModelBenchmarks, model_benchmarks.jl, which runs PollisBenchmarks.jl, the package a notebook calls too): a benchmark downloaded once
+// (language-julia.pollisModelBenchmarks, model_benchmarks.jl, which runs PollisBenchmarks.jl, the package a notebook calls too): a benchmark made ready once
 // into ~/.pollis/benchmarks/data; and a run, whose sample the package draws, stratified, with its seed, then each local
 // model chosen, one after the other and alone in memory (the chat model of Ask Pollis stopped before), answering the
 // questions of the sample, each answer graded as it comes. The package writes the run in ~/.pollis/benchmarks/runs while
@@ -26,7 +26,7 @@ import { CompareSampler, ICompareSample, ICompareSamples } from './compareShared
 // Once it has ended, the run is moved into ~/.pollis/ask/Comparisons.duckdb (IAskPollisService.importBenchmarkRuns), and
 // so is a run of a notebook that has ended, when the page opens. One runner per window, so that a run goes on when the page is closed.
 
-/** A question of a benchmark downloaded, as PollisBenchmarks.jl keeps it in questions.jsonl. */
+/** A question of a benchmark made ready, as PollisBenchmarks.jl keeps it in questions.jsonl. */
 export interface IBenchmarkQuestion {
 	readonly id: string;
 	readonly stratum: string;
@@ -35,17 +35,18 @@ export interface IBenchmarkQuestion {
 	readonly answer: string;
 }
 
-/** A stratum of a benchmark downloaded, and its number of questions. */
+/** A stratum of a benchmark made ready, and its number of questions. */
 export interface IBenchmarkStratum {
 	readonly name: string;
 	readonly count: number;
 }
 
-/** What info.json says of a benchmark downloaded. */
+/** What info.json says of a benchmark made ready. */
 export interface IBenchmarkInfo {
 	readonly benchmark: string;
-	/** The revision of the dataset on Hugging Face the questions come from. */
+	/** The revision of the source the questions come from. */
 	readonly revision?: string;
+	/** When the questions were made ready. */
 	readonly downloaded: string;
 	readonly count: number;
 	readonly strata: readonly IBenchmarkStratum[];
@@ -190,17 +191,17 @@ export class ModelBenchmarksRunner {
 		}
 	}
 
-	/** Downloads `benchmark` into ~/.pollis/benchmarks/data, once. */
+	/** Makes the questions of `benchmark` ready in ~/.pollis/benchmarks/data, once: from the artifact of PollisBenchmarks.jl, or from their source when it is not on this computer. */
 	async download(benchmark: string, name: string): Promise<IBenchmarkEnd> {
 		if (this._running) {
 			return { error: this.errorText('running') };
 		}
 		this._running = true;
 		this.stopped = false;
-		this.report(localize('modelBenchmarks.downloading', "Downloading {0}...", name));
+		this.report(localize('modelBenchmarks.makingReady', "Making {0} ready...", name));
 		const answer = await this.script({ task: 'download', benchmark }, [], progress => progress.status === 'installing'
 			? localize('modelBenchmarks.installing', "Installing JSON3.jl, the first time only.")
-			: localize('modelBenchmarks.downloadingStep', "Downloading {0}: step {1} of {2}...", name, progress.done + 1, progress.total));
+			: localize('modelBenchmarks.makingReadyStep', "Making {0} ready: step {1} of {2}...", name, progress.done + 1, progress.total));
 		const info = answer.lines?.find(line => line.info)?.info;
 		return this.end(info ? { info } : { error: this.errorText(answer.error ?? 'failed') });
 	}
