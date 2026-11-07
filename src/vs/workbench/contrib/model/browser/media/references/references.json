@@ -2381,6 +2381,29 @@
 			"open_access": false
 		},
 		{
+			"key": "BGSR2016a",
+			"type": "inproceedings",
+			"title": "A Full-Text Learning to Rank Dataset for Medical Information Retrieval",
+			"authors": [
+				"Boteva, Vera",
+				"Gholipour, Demian",
+				"Sokolov, Artem",
+				"Riezler, Stefan"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2016,
+			"booktitle": "Advances in Information Retrieval",
+			"publisher": "Springer International Publishing",
+			"pages": "716-722",
+			"doi": "10.1007/978-3-319-30671-1_58",
+			"openalex": "W2470818894",
+			"source": "crossref",
+			"retrieved": "2026-11-07",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "BGST2004a",
 			"type": "book",
 			"title": "Statistics of Extremes",
@@ -5366,6 +5389,40 @@
 			"open_access": false
 		},
 		{
+			"key": "CCEKS...2018a",
+			"type": "misc",
+			"title": "Think you have Solved Question Answering? Try ARC, the AI2 Reasoning Challenge",
+			"authors": [
+				"Clark, Peter",
+				"Cowhey, Isaac",
+				"Etzioni, Oren",
+				"Khot, Tushar",
+				"Sabharwal, Ashish",
+				"Schoenick, Carissa",
+				"Tafjord, Oyvind"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2018,
+			"doi": "10.48550/arXiv.1803.05457",
+			"arxiv": "1803.05457",
+			"openalex": "W2794325560",
+			"url": "https://arxiv.org/abs/1803.05457",
+			"oa_url": "https://arxiv.org/pdf/1803.05457",
+			"abstract": "We present a new question set, text corpus, and baselines assembled to encourage AI research in advanced question answering. Together, these constitute the AI2 Reasoning Challenge (ARC), which requires far more powerful knowledge and reasoning than previous challenges such as SQuAD or SNLI. The ARC question set is partitioned into a Challenge Set and an Easy Set, where the Challenge Set contains only questions answered incorrectly by both a retrieval-based algorithm and a word co-occurence algorithm. The dataset contains only natural, grade-school science questions (authored for human tests), and is the largest public-domain set of this kind (7,787 questions). We test several baselines on the Challenge Set, including leading neural models from the SQuAD and SNLI tasks, and find that none are able to significantly outperform a random baseline, reflecting the difficult nature of this task. We are also releasing the ARC Corpus, a corpus of 14M science sentences relevant to the task, and implementations of the three neural baseline models tested. Can your model perform better? We pose ARC as a challenge to the community.",
+			"abstract_source": "arxiv",
+			"keywords": [
+				"cs.AI",
+				"cs.CL",
+				"cs.IR"
+			],
+			"keywords_source": "arxiv",
+			"source": "arxiv",
+			"retrieved": "2026-11-07",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "CCHC2019a",
 			"type": "misc",
 			"title": "AntisymmetricRNN: A Dynamical System View on Recurrent Neural Networks",
@@ -5385,6 +5442,44 @@
 			"oa_url": "https://arxiv.org/pdf/1902.09689",
 			"source": "datacite",
 			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "CCSSB...2021a",
+			"type": "inproceedings",
+			"title": "FinQA: A Dataset of Numerical Reasoning over Financial Data",
+			"authors": [
+				"Chen, Zhiyu",
+				"Chen, Wenhu",
+				"Smiley, Charese",
+				"Shah, Sameena",
+				"Borova, Iana",
+				"Langdon, Dylan",
+				"Moussa, Reema",
+				"Beane, Matt",
+				"Huang, Ting-Hao",
+				"Routledge, Bryan",
+				"Wang, William Yang"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2021,
+			"booktitle": "Proceedings of the 2021 Conference on Empirical Methods in Natural Language Processing",
+			"pages": "3697-3711",
+			"doi": "10.18653/v1/2021.emnlp-main.300",
+			"arxiv": "2109.00122",
+			"openalex": "W3198243861",
+			"url": "https://arxiv.org/abs/2109.00122",
+			"oa_url": "https://aclanthology.org/2021.emnlp-main.300.pdf",
+			"abstract": "The sheer volume of financial statements makes it difficult for humans to access and analyze a business's financials. Robust numerical reasoning likewise faces unique challenges in this domain. In this work, we focus on answering deep questions over financial data, aiming to automate the analysis of a large corpus of financial documents. In contrast to existing tasks on general domain, the finance domain includes complex numerical reasoning and understanding of heterogeneous representations. To facilitate analytical progress, we propose a new large-scale dataset, FinQA, with Question-Answering pairs over Financial reports, written by financial experts. We also annotate the gold reasoning programs to ensure full explainability. We further introduce baselines and conduct comprehensive experiments in our dataset. The results demonstrate that popular, large, pre-trained models fall far short of expert humans in acquiring finance knowledge and in complex multi-step numerical reasoning on that knowledge. Our dataset -- the first of its kind -- should therefore enable significant, new community research into complex application domains. The dataset and code are publicly available\\url{https://github.com/czyssrs/FinQA}.",
+			"abstract_source": "arxiv",
+			"keywords": [
+				"cs.CL"
+			],
+			"keywords_source": "arxiv",
+			"source": "crossref",
+			"retrieved": "2026-11-07",
 			"checked": true,
 			"open_access": true
 		},
@@ -5499,6 +5594,38 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": false
+		},
+		{
+			"key": "CFBDW2020a",
+			"type": "inproceedings",
+			"title": "SPECTER: Document-level Representation Learning using Citation-informed Transformers",
+			"authors": [
+				"Cohan, Arman",
+				"Feldman, Sergey",
+				"Beltagy, Iz",
+				"Downey, Doug",
+				"Weld, Daniel"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2020,
+			"booktitle": "Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics",
+			"pages": "2270-2282",
+			"doi": "10.18653/v1/2020.acl-main.207",
+			"arxiv": "2004.07180",
+			"openalex": "W3016913119",
+			"url": "https://arxiv.org/abs/2004.07180",
+			"oa_url": "https://www.aclweb.org/anthology/2020.acl-main.207.pdf",
+			"abstract": "Representation learning is a critical ingredient for natural language processing systems. Recent Transformer language models like BERT learn powerful textual representations, but these models are targeted towards token- and sentence-level training objectives and do not leverage information on inter-document relatedness, which limits their document-level representation power. For applications on scientific documents, such as classification and recommendation, the embeddings power strong performance on end tasks. We propose SPECTER, a new method to generate document-level embedding of scientific documents based on pretraining a Transformer language model on a powerful signal of document-level relatedness: the citation graph. Unlike existing pretrained language models, SPECTER can be easily applied to downstream applications without task-specific fine-tuning. Additionally, to encourage further research on document-level models, we introduce SciDocs, a new evaluation benchmark consisting of seven document-level tasks ranging from citation prediction, to document classification and recommendation. We show that SPECTER outperforms a variety of competitive baselines on the benchmark.",
+			"abstract_source": "arxiv",
+			"keywords": [
+				"cs.CL"
+			],
+			"keywords_source": "arxiv",
+			"source": "crossref",
+			"retrieved": "2026-11-07",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "CFFC2013a",
@@ -5663,6 +5790,50 @@
 			"retrieved": "2026-10-31",
 			"checked": true,
 			"open_access": false
+		},
+		{
+			"key": "CGNNP...2023a",
+			"type": "article",
+			"title": "MultiPL-E: A Scalable and Polyglot Approach to Benchmarking Neural Code Generation",
+			"authors": [
+				"Cassano, Federico",
+				"Gouwar, John",
+				"Nguyen, Daniel",
+				"Nguyen, Sydney",
+				"Phipps-Costin, Luna",
+				"Pinckney, Donald",
+				"Yee, Ming-Ho",
+				"Zi, Yangtian",
+				"Anderson, Carolyn Jane",
+				"Feldman, Molly Q",
+				"Guha, Arjun",
+				"Greenberg, Michael",
+				"Jangda, Abhinav"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2023,
+			"journal": "IEEE Transactions on Software Engineering",
+			"volume": "49",
+			"number": "7",
+			"pages": "3675-3691",
+			"issn": "0098-5589",
+			"doi": "10.1109/tse.2023.3267446",
+			"arxiv": "2208.08227",
+			"openalex": "W4366204357",
+			"url": "https://arxiv.org/abs/2208.08227",
+			"oa_url": "https://ieeexplore.ieee.org/ielx7/32/4359463/10103177.pdf",
+			"abstract": "Large language models have demonstrated the ability to generate both natural language and programming language text. Such models open up the possibility of multi-language code generation: could code generation models generalize knowledge from one language to another? Although contemporary code generation models can generate semantically correct Python code, little is known about their abilities with other languages. We propose MultiPL-E, a system for translating unit test-driven code generation benchmarks to new languages. We create the first massively multilingual code generation benchmark by using MultiPL-E to translate two popular Python code generation benchmarks to 18 additional programming languages. We use MultiPL-E to extend the HumanEval benchmark and MBPP benchmark to 18 languages that encompass a range of programming paradigms and popularity. Using these new parallel benchmarks, we evaluate the multi-language performance of three state-of-the-art code generation models: Codex, CodeGen, and InCoder. We find that Codex matches or even exceeds its performance on Python for several other languages. The range of programming languages represented in MultiPL-E allow us to explore the impact of language frequency and language features on model performance. Finally, the MultiPL-E approach of compiling code generation benchmarks to new programming languages is both scalable and extensible, making it straightforward to evaluate new models, benchmarks, and languages.",
+			"abstract_source": "arxiv",
+			"keywords": [
+				"cs.LG",
+				"cs.PL"
+			],
+			"keywords_source": "arxiv",
+			"source": "crossref",
+			"retrieved": "2026-11-07",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "CGP2002a",
@@ -8540,6 +8711,39 @@
 			"source": "crossref",
 			"retrieved": "2026-11-06",
 			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "DLBCS...2021a",
+			"type": "inproceedings",
+			"title": "A Dataset of Information-Seeking Questions and Answers Anchored in Research Papers",
+			"authors": [
+				"Dasigi, Pradeep",
+				"Lo, Kyle",
+				"Beltagy, Iz",
+				"Cohan, Arman",
+				"Smith, Noah A.",
+				"Gardner, Matt"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2021,
+			"booktitle": "Proceedings of the 2021 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies",
+			"pages": "4599-4610",
+			"doi": "10.18653/v1/2021.naacl-main.365",
+			"arxiv": "2105.03011",
+			"openalex": "W3161820423",
+			"url": "https://arxiv.org/abs/2105.03011",
+			"oa_url": "https://aclanthology.org/2021.naacl-main.365.pdf",
+			"abstract": "Readers of academic research papers often read with the goal of answering specific questions. Question Answering systems that can answer those questions can make consumption of the content much more efficient. However, building such tools requires data that reflect the difficulty of the task arising from complex reasoning about claims made in multiple parts of a paper. In contrast, existing information-seeking question answering datasets usually contain questions about generic factoid-type information. We therefore present QASPER, a dataset of 5,049 questions over 1,585 Natural Language Processing papers. Each question is written by an NLP practitioner who read only the title and abstract of the corresponding paper, and the question seeks information present in the full text. The questions are then answered by a separate set of NLP practitioners who also provide supporting evidence to answers. We find that existing models that do well on other QA tasks do not perform well on answering these questions, underperforming humans by at least 27 F1 points when answering them from entire papers, motivating further research in document-grounded, information-seeking QA, which our dataset is designed to facilitate.",
+			"abstract_source": "arxiv",
+			"keywords": [
+				"cs.CL"
+			],
+			"keywords_source": "arxiv",
+			"source": "crossref",
+			"retrieved": "2026-11-07",
+			"checked": true,
 			"open_access": true
 		},
 		{
@@ -17055,6 +17259,40 @@
 			"open_access": false
 		},
 		{
+			"key": "IKKQS...2023a",
+			"type": "misc",
+			"title": "FinanceBench: A New Benchmark for Financial Question Answering",
+			"authors": [
+				"Islam, Pranab",
+				"Kannappan, Anand",
+				"Kiela, Douwe",
+				"Qian, Rebecca",
+				"Scherrer, Nino",
+				"Vidgen, Bertie"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2023,
+			"doi": "10.48550/arXiv.2311.11944",
+			"arxiv": "2311.11944",
+			"openalex": "W4388926382",
+			"url": "https://arxiv.org/abs/2311.11944",
+			"oa_url": "https://arxiv.org/pdf/2311.11944",
+			"abstract": "FinanceBench is a first-of-its-kind test suite for evaluating the performance of LLMs on open book financial question answering (QA). It comprises 10,231 questions about publicly traded companies, with corresponding answers and evidence strings. The questions in FinanceBench are ecologically valid and cover a diverse set of scenarios. They are intended to be clear-cut and straightforward to answer to serve as a minimum performance standard. We test 16 state of the art model configurations (including GPT-4-Turbo, Llama2 and Claude2, with vector stores and long context prompts) on a sample of 150 cases from FinanceBench, and manually review their answers (n=2,400). The cases are available open-source. We show that existing LLMs have clear limitations for financial QA. Notably, GPT-4-Turbo used with a retrieval system incorrectly answered or refused to answer 81% of questions. While augmentation techniques such as using longer context window to feed in relevant evidence improve performance, they are unrealistic for enterprise settings due to increased latency and cannot support larger financial documents. We find that all models examined exhibit weaknesses, such as hallucinations, that limit their suitability for use by enterprises.",
+			"abstract_source": "arxiv",
+			"keywords": [
+				"cs.CL",
+				"cs.AI",
+				"cs.CE",
+				"stat.ML"
+			],
+			"keywords_source": "arxiv",
+			"source": "arxiv",
+			"retrieved": "2026-11-07",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "IMCGJ...2022a",
 			"type": "misc",
 			"title": "Symbolic-Numeric Integration of Univariate Expressions Based on Sparse Regression",
@@ -17394,6 +17632,40 @@
 			"abstract_source": "author",
 			"source": "manual",
 			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "JDLCL2019a",
+			"type": "inproceedings",
+			"title": "PubMedQA: A Dataset for Biomedical Research Question Answering",
+			"authors": [
+				"Jin, Qiao",
+				"Dhingra, Bhuwan",
+				"Liu, Zhengping",
+				"Cohen, William",
+				"Lu, Xinghua"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2019,
+			"booktitle": "Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP)",
+			"pages": "2567-2577",
+			"doi": "10.18653/v1/d19-1259",
+			"arxiv": "1909.06146",
+			"openalex": "W2970482702",
+			"url": "https://arxiv.org/abs/1909.06146",
+			"oa_url": "https://www.aclweb.org/anthology/D19-1259.pdf",
+			"abstract": "We introduce PubMedQA, a novel biomedical question answering (QA) dataset collected from PubMed abstracts. The task of PubMedQA is to answer research questions with yes/no/maybe (e.g.: Do preoperative statins reduce atrial fibrillation after coronary artery bypass grafting?) using the corresponding abstracts. PubMedQA has 1k expert-annotated, 61.2k unlabeled and 211.3k artificially generated QA instances. Each PubMedQA instance is composed of (1) a question which is either an existing research article title or derived from one, (2) a context which is the corresponding abstract without its conclusion, (3) a long answer, which is the conclusion of the abstract and, presumably, answers the research question, and (4) a yes/no/maybe answer which summarizes the conclusion. PubMedQA is the first QA dataset where reasoning over biomedical research texts, especially their quantitative contents, is required to answer the questions. Our best performing model, multi-phase fine-tuning of BioBERT with long answer bag-of-word statistics as additional supervision, achieves 68.1% accuracy, compared to single human performance of 78.0% accuracy and majority-baseline of 55.2% accuracy, leaving much room for improvement. PubMedQA is publicly available at https://pubmedqa.github.io.",
+			"abstract_source": "arxiv",
+			"keywords": [
+				"cs.CL",
+				"cs.LG",
+				"q-bio.QM"
+			],
+			"keywords_source": "arxiv",
+			"source": "crossref",
+			"retrieved": "2026-11-07",
 			"checked": true,
 			"open_access": true
 		},
@@ -18960,6 +19232,45 @@
 			"oa_url": "https://doi.org/10.2139/ssrn.1254022",
 			"source": "manual",
 			"retrieved": "2026-10-31",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "KPRCP...2019a",
+			"type": "article",
+			"title": "Natural Questions: A Benchmark for Question Answering Research",
+			"authors": [
+				"Kwiatkowski, Tom",
+				"Palomaki, Jennimaria",
+				"Redfield, Olivia",
+				"Collins, Michael",
+				"Parikh, Ankur",
+				"Alberti, Chris",
+				"Epstein, Danielle",
+				"Polosukhin, Illia",
+				"Devlin, Jacob",
+				"Lee, Kenton",
+				"Toutanova, Kristina",
+				"Jones, Llion",
+				"Kelcey, Matthew",
+				"Chang, Ming-Wei",
+				"Dai, Andrew M.",
+				"Uszkoreit, Jakob",
+				"Le, Quoc",
+				"Petrov, Slav"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2019,
+			"journal": "Transactions of the Association for Computational Linguistics",
+			"volume": "7",
+			"pages": "453-466",
+			"doi": "10.1162/tacl_a_00276",
+			"openalex": "W2912924812",
+			"abstract": "We present the Natural Questions corpus, a question answering data set. Questions consist of real anonymized, aggregated queries issued to the Google search engine. An annotator is presented with a question along with a Wikipedia page from the top 5 search results, and annotates a long answer (typically a paragraph) and a short answer (one or more entities) if present on the page, or marks null if no long/short answer is present. The public release consists of 307,373 training examples with single annotations; 7,830 examples with 5-way annotations for development data; and a further 7,842 examples with 5-way annotated sequestered as test data. We present experiments validating quality of the data. We also describe analysis of 25-way annotations on 302 examples, giving insights into human variability on the annotation task. We introduce robust metrics for the purposes of evaluating question answering systems; demonstrate high human upper bounds on these metrics; and establish baseline results using competitive methods drawn from related literature.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-07",
 			"checked": true,
 			"open_access": true
 		},
@@ -20817,6 +21128,39 @@
 			"source": "datacite",
 			"retrieved": "2026-10-23",
 			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "LHE2022a",
+			"type": "inproceedings",
+			"title": "TruthfulQA: Measuring How Models Mimic Human Falsehoods",
+			"authors": [
+				"Lin, Stephanie",
+				"Hilton, Jacob",
+				"Evans, Owain"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2022,
+			"booktitle": "Proceedings of the 60th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)",
+			"pages": "3214-3252",
+			"doi": "10.18653/v1/2022.acl-long.229",
+			"arxiv": "2109.07958",
+			"openalex": "W3201174429",
+			"url": "https://arxiv.org/abs/2109.07958",
+			"oa_url": "https://aclanthology.org/2022.acl-long.229.pdf",
+			"abstract": "We propose a benchmark to measure whether a language model is truthful in generating answers to questions. The benchmark comprises 817 questions that span 38 categories, including health, law, finance and politics. We crafted questions that some humans would answer falsely due to a false belief or misconception. To perform well, models must avoid generating false answers learned from imitating human texts. We tested GPT-3, GPT-Neo/J, GPT-2 and a T5-based model. The best model was truthful on 58% of questions, while human performance was 94%. Models generated many false answers that mimic popular misconceptions and have the potential to deceive humans. The largest models were generally the least truthful. This contrasts with other NLP tasks, where performance improves with model size. However, this result is expected if false answers are learned from the training distribution. We suggest that scaling up models alone is less promising for improving truthfulness than fine-tuning using training objectives other than imitation of text from the web.",
+			"abstract_source": "arxiv",
+			"keywords": [
+				"cs.CL",
+				"cs.AI",
+				"cs.CY",
+				"cs.LG"
+			],
+			"keywords_source": "arxiv",
+			"source": "crossref",
+			"retrieved": "2026-11-07",
+			"checked": true,
 			"open_access": true
 		},
 		{
@@ -23244,6 +23588,34 @@
 			"legacy_key": "vandermaaten2008",
 			"source": "manual",
 			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "MHFDM...2018a",
+			"type": "inproceedings",
+			"title": "WWW'18 Open Challenge: Financial Opinion Mining and Question Answering",
+			"authors": [
+				"Maia, Macedo",
+				"Handschuh, Siegfried",
+				"Freitas, André",
+				"Davis, Brian",
+				"McDermott, Ross",
+				"Zarrouk, Manel",
+				"Balahur, Alexandra"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2018,
+			"booktitle": "Companion of the The Web Conference 2018 on The Web Conference 2018 - WWW '18",
+			"pages": "1941-1942",
+			"doi": "10.1145/3184558.3192301",
+			"openalex": "W2798658104",
+			"oa_url": "http://dl.acm.org/ft_gateway.cfm?id=3192301&type=pdf",
+			"abstract": "The growing maturity of Natural Language Processing (NLP) techniques and resources is dramatically changing the landscape of many application domains which are dependent on the analysis of unstructured data at scale. The finance domain, with its reliance on the interpretation of multiple unstructured and structured data sources and its demand for fast and comprehensive decision making is already emerging as a primary ground for the experimentation of NLP, Web Mining and Information Retrieval (IR) techniques for the automatic analysis of financial news and opinions online. This challenge focuses on advancing the state-of-the-art of aspect-based sentiment analysis and opinion-based Question Answering for the financial domain.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-07",
+			"checked": true,
 			"open_access": true
 		},
 		{
@@ -26614,6 +26986,34 @@
 			"open_access": true
 		},
 		{
+			"key": "PMYJS...2025a",
+			"type": "inproceedings",
+			"title": "The Berkeley Function Calling Leaderboard (BFCL): From Tool Use to Agentic Evaluation of Large Language Models",
+			"authors": [
+				"Patil, Shishir G",
+				"Mao, Huanzhi",
+				"Yan, Fanjia",
+				"Ji, Charlie Cheng-Jie",
+				"Suresh, Vishnu",
+				"Stoica, Ion",
+				"Gonzalez, Joseph E."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2025,
+			"booktitle": "Proceedings of the 42nd International Conference on Machine Learning",
+			"volume": "267",
+			"pages": "48371-48392",
+			"url": "https://proceedings.mlr.press/v267/patil25a.html",
+			"oa_url": "https://raw.githubusercontent.com/mlresearch/v267/main/assets/patil25a/patil25a.pdf",
+			"abstract": "Function calling, also called tool use, refers to an LLM’s ability to invoke external functions, APIs, or user-defined tools in response to user queries—an essential capability for agentic LLM applications. Despite its prominence, there did not exist a standard benchmark to evaluate function calling abilities, due to two reasons – the challenging nature of evaluating when a function call is valid, and the challenge of acquiring diverse, real-world functions. We present the Berkeley Function Calling Leaderboard (BFCL), a comprehensive benchmark designed to evaluate function calling capabilities in a wide range of real-world settings. The BFCL benchmark evaluates serial and parallel function calls, across various programming languages using a novel Abstract Syntax Tree (AST) evaluation method that can easily scale to thousands of functions. We construct the benchmark using a combination of expert curated, and user-contributed functions and associated prompts. Finally, BFCL benchmark evaluates the ability of models to abstain and reason in stateful multi-step agentic setting. Evaluating a wide range of models, we observe that while state-of-the-art LLMs excel at singleturn calls, memory, dynamic decision-making, and long-horizon reasoning remain open challenges. Since its preview, BFCL has become the defacto standard for evaluating function-calls, and can be accessed at gorilla.cs.berkeley.edu/leaderboard.html.",
+			"abstract_source": "pmlr",
+			"source": "pmlr",
+			"retrieved": "2026-11-07",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "PNRML2021a",
 			"type": "article",
 			"title": "Normalizing Flows for Probabilistic Modeling and Inference",
@@ -28359,6 +28759,40 @@
 			"open_access": false
 		},
 		{
+			"key": "RHSPP...2024a",
+			"type": "inproceedings",
+			"title": "GPQA: A Graduate-Level Google-Proof Q&A Benchmark",
+			"authors": [
+				"Rein, David",
+				"Hou, Betty Li",
+				"Stickland, Asa Cooper",
+				"Petty, Jackson",
+				"Pang, Richard Yuanzhe",
+				"Dirani, Julien",
+				"Michael, Julian",
+				"Bowman, Samuel R."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2024,
+			"booktitle": "First Conference on Language Modeling",
+			"arxiv": "2311.12022",
+			"openalex": "W4388926373",
+			"url": "https://openreview.net/forum?id=Ti67584b98",
+			"oa_url": "https://arxiv.org/pdf/2311.12022",
+			"abstract": "We present GPQA, a challenging dataset of 448 multiple-choice questions written by domain experts in biology, physics, and chemistry. We ensure that the questions are high-quality and extremely difficult: experts who have or are pursuing PhDs in the corresponding domains reach 65% accuracy (74% when discounting clear mistakes the experts identified in retrospect), while highly skilled non-expert validators only reach 34% accuracy, despite spending on average over 30 minutes with unrestricted access to the web (i.e., the questions are \"Google-proof\"). The questions are also difficult for state-of-the-art AI systems, with our strongest GPT-4 based baseline achieving 39% accuracy. If we are to use future AI systems to help us answer very hard questions, for example, when developing new scientific knowledge, we need to develop scalable oversight methods that enable humans to supervise their outputs, which may be difficult even if the supervisors are themselves skilled and knowledgeable. The difficulty of GPQA both for skilled non-experts and frontier AI systems should enable realistic scalable oversight experiments, which we hope can help devise ways for human experts to reliably get truthful information from AI systems that surpass human capabilities.",
+			"abstract_source": "arxiv",
+			"keywords": [
+				"cs.AI",
+				"cs.CL"
+			],
+			"keywords_source": "arxiv",
+			"source": "openreview",
+			"retrieved": "2026-11-07",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "RHW1986a",
 			"type": "article",
 			"title": "Learning representations by back-propagating errors",
@@ -28441,6 +28875,36 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": false
+		},
+		{
+			"key": "RJL2018a",
+			"type": "inproceedings",
+			"title": "Know What You Don’t Know: Unanswerable Questions for SQuAD",
+			"authors": [
+				"Rajpurkar, Pranav",
+				"Jia, Robin",
+				"Liang, Percy"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2018,
+			"booktitle": "Proceedings of the 56th Annual Meeting of the Association for Computational Linguistics (Volume 2: Short Papers)",
+			"pages": "784-789",
+			"doi": "10.18653/v1/p18-2124",
+			"arxiv": "1806.03822",
+			"openalex": "W2963323070",
+			"url": "https://arxiv.org/abs/1806.03822",
+			"oa_url": "https://www.aclweb.org/anthology/P18-2124.pdf",
+			"abstract": "Extractive reading comprehension systems can often locate the correct answer to a question in a context document, but they also tend to make unreliable guesses on questions for which the correct answer is not stated in the context. Existing datasets either focus exclusively on answerable questions, or use automatically generated unanswerable questions that are easy to identify. To address these weaknesses, we present SQuAD 2.0, the latest version of the Stanford Question Answering Dataset (SQuAD). SQuAD 2.0 combines existing SQuAD data with over 50,000 unanswerable questions written adversarially by crowdworkers to look similar to answerable ones. To do well on SQuAD 2.0, systems must not only answer questions when possible, but also determine when no answer is supported by the paragraph and abstain from answering. SQuAD 2.0 is a challenging natural language understanding task for existing models: a strong neural system that gets 86% F1 on SQuAD 1.1 achieves only 66% F1 on SQuAD 2.0.",
+			"abstract_source": "arxiv",
+			"keywords": [
+				"cs.CL"
+			],
+			"keywords_source": "arxiv",
+			"source": "crossref",
+			"retrieved": "2026-11-07",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "RJMR2020a",
@@ -32488,6 +32952,45 @@
 			"open_access": false
 		},
 		{
+			"key": "SSSGT...2023a",
+			"type": "inproceedings",
+			"title": "Challenging BIG-Bench Tasks and Whether Chain-of-Thought Can Solve Them",
+			"authors": [
+				"Suzgun, Mirac",
+				"Scales, Nathan",
+				"Schärli, Nathanael",
+				"Gehrmann, Sebastian",
+				"Tay, Yi",
+				"Chung, Hyung Won",
+				"Chowdhery, Aakanksha",
+				"Le, Quoc",
+				"Chi, Ed",
+				"Zhou, Denny",
+				"Wei, Jason"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2023,
+			"booktitle": "Findings of the Association for Computational Linguistics: ACL 2023",
+			"pages": "13003-13051",
+			"doi": "10.18653/v1/2023.findings-acl.824",
+			"arxiv": "2210.09261",
+			"openalex": "W4385571157",
+			"url": "https://arxiv.org/abs/2210.09261",
+			"oa_url": "https://aclanthology.org/2023.findings-acl.824.pdf",
+			"abstract": "BIG-Bench (Srivastava et al., 2022) is a diverse evaluation suite that focuses on tasks believed to be beyond the capabilities of current language models. Language models have already made good progress on this benchmark, with the best model in the BIG-Bench paper outperforming average reported human-rater results on 65% of the BIG-Bench tasks via few-shot prompting. But on what tasks do language models fall short of average human-rater performance, and are those tasks actually unsolvable by current language models? In this work, we focus on a suite of 23 challenging BIG-Bench tasks which we call BIG-Bench Hard (BBH). These are the task for which prior language model evaluations did not outperform the average human-rater. We find that applying chain-of-thought (CoT) prompting to BBH tasks enables PaLM to surpass the average human-rater performance on 10 of the 23 tasks, and Codex (code-davinci-002) to surpass the average human-rater performance on 17 of the 23 tasks. Since many tasks in BBH require multi-step reasoning, few-shot prompting without CoT, as done in the BIG-Bench evaluations (Srivastava et al., 2022), substantially underestimates the best performance and capabilities of language models, which is better captured via CoT prompting. As further analysis, we explore the interaction between CoT and model scale on BBH, finding that CoT enables emergent task performance on several BBH tasks with otherwise flat scaling curves.",
+			"abstract_source": "arxiv",
+			"keywords": [
+				"cs.CL",
+				"cs.AI"
+			],
+			"keywords_source": "arxiv",
+			"source": "crossref",
+			"retrieved": "2026-11-07",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "SSWAF2016a",
 			"type": "article",
 			"title": "Taking the Human Out of the Loop: A Review of Bayesian Optimization",
@@ -34360,6 +34863,33 @@
 			"open_access": false
 		},
 		{
+			"key": "TY2024a",
+			"type": "inproceedings",
+			"title": "MultiHop-RAG: Benchmarking Retrieval-Augmented Generation for Multi-Hop Queries",
+			"authors": [
+				"Tang, Yixuan",
+				"Yang, Yi"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2024,
+			"booktitle": "First Conference on Language Modeling",
+			"arxiv": "2401.15391",
+			"openalex": "W4391376072",
+			"url": "https://openreview.net/forum?id=t4eB3zYWBK",
+			"oa_url": "https://arxiv.org/pdf/2401.15391",
+			"abstract": "Retrieval-augmented generation (RAG) augments large language models (LLM) by retrieving relevant knowledge, showing promising potential in mitigating LLM hallucinations and enhancing response quality, thereby facilitating the great adoption of LLMs in practice. However, we find that existing RAG systems are inadequate in answering multi-hop queries, which require retrieving and reasoning over multiple pieces of supporting evidence. Furthermore, to our knowledge, no existing RAG benchmarking dataset focuses on multi-hop queries. In this paper, we develop a novel dataset, MultiHop-RAG, which consists of a knowledge base, a large collection of multi-hop queries, their ground-truth answers, and the associated supporting evidence. We detail the procedure of building the dataset, utilizing an English news article dataset as the underlying RAG knowledge base. We demonstrate the benchmarking utility of MultiHop-RAG in two experiments. The first experiment compares different embedding models for retrieving evidence for multi-hop queries. In the second experiment, we examine the capabilities of various state-of-the-art LLMs, including GPT-4, PaLM, and Llama2-70B, in reasoning and answering multi-hop queries given the evidence. Both experiments reveal that existing RAG methods perform unsatisfactorily in retrieving and answering multi-hop queries. We hope MultiHop-RAG will be a valuable resource for the community in developing effective RAG systems, thereby facilitating greater adoption of LLMs in practice. The MultiHop-RAG and implemented RAG system is publicly available at https://github.com/yixuantt/MultiHop-RAG/.",
+			"abstract_source": "arxiv",
+			"keywords": [
+				"cs.CL"
+			],
+			"keywords_source": "arxiv",
+			"source": "openreview",
+			"retrieved": "2026-11-07",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "TZXZJ2021a",
 			"type": "article",
 			"title": "A Coevolutionary Framework for Constrained Multiobjective Optimization Problems",
@@ -34798,6 +35328,45 @@
 			"openalex": "W2015106170",
 			"source": "crossref",
 			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "VABDH...2020a",
+			"type": "article",
+			"title": "TREC-COVID: Constructing a Pandemic Information Retrieval Test Collection",
+			"authors": [
+				"Voorhees, Ellen",
+				"Alam, Tasmeer",
+				"Bedrick, Steven",
+				"Demner-Fushman, Dina",
+				"Hersh, William R.",
+				"Lo, Kyle",
+				"Roberts, Kirk",
+				"Soboroff, Ian",
+				"Wang, Lucy Lu"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2020,
+			"journal": "ACM SIGIR Forum",
+			"volume": "54",
+			"number": "1",
+			"pages": "1-12",
+			"issn": "0163-5840",
+			"doi": "10.1145/3451964.3451965",
+			"arxiv": "2005.04474",
+			"openalex": "W3128581554",
+			"url": "https://arxiv.org/abs/2005.04474",
+			"oa_url": "https://arxiv.org/pdf/2005.04474",
+			"abstract": "TREC-COVID is a community evaluation designed to build a test collection that captures the information needs of biomedical researchers using the scientific literature during a pandemic. One of the key characteristics of pandemic search is the accelerated rate of change: the topics of interest evolve as the pandemic progresses and the scientific literature in the area explodes. The COVID-19 pandemic provides an opportunity to capture this progression as it happens. TREC-COVID, in creating a test collection around COVID-19 literature, is building infrastructure to support new research and technologies in pandemic search.",
+			"abstract_source": "arxiv",
+			"keywords": [
+				"cs.IR"
+			],
+			"keywords_source": "arxiv",
+			"source": "crossref",
+			"retrieved": "2026-11-07",
 			"checked": true,
 			"open_access": true
 		},
@@ -35867,6 +36436,40 @@
 			"oa_url": "https://arxiv.org/pdf/1804.04849",
 			"source": "datacite",
 			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "WLLWZ...2020a",
+			"type": "inproceedings",
+			"title": "Fact or Fiction: Verifying Scientific Claims",
+			"authors": [
+				"Wadden, David",
+				"Lin, Shanchuan",
+				"Lo, Kyle",
+				"Wang, Lucy Lu",
+				"van Zuylen, Madeleine",
+				"Cohan, Arman",
+				"Hajishirzi, Hannaneh"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2020,
+			"booktitle": "Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP)",
+			"pages": "7534-7550",
+			"doi": "10.18653/v1/2020.emnlp-main.609",
+			"arxiv": "2004.14974",
+			"openalex": "W3023035014",
+			"url": "https://arxiv.org/abs/2004.14974",
+			"oa_url": "https://www.aclweb.org/anthology/2020.emnlp-main.609.pdf",
+			"abstract": "We introduce scientific claim verification, a new task to select abstracts from the research literature containing evidence that SUPPORTS or REFUTES a given scientific claim, and to identify rationales justifying each decision. To study this task, we construct SciFact, a dataset of 1.4K expert-written scientific claims paired with evidence-containing abstracts annotated with labels and rationales. We develop baseline models for SciFact, and demonstrate that simple domain adaptation techniques substantially improve performance compared to models trained on Wikipedia or political news. We show that our system is able to verify claims related to COVID-19 by identifying evidence from the CORD-19 corpus. Our experiments indicate that SciFact will provide a challenging testbed for the development of new systems designed to retrieve and reason over corpora containing specialized domain knowledge. Data and code for this new task are publicly available at https://github.com/allenai/scifact. A leaderboard and COVID-19 fact-checking demo are available at https://scifact.apps.allenai.org.",
+			"abstract_source": "arxiv",
+			"keywords": [
+				"cs.CL"
+			],
+			"keywords_source": "arxiv",
+			"source": "crossref",
+			"retrieved": "2026-11-07",
 			"checked": true,
 			"open_access": true
 		},
@@ -37005,6 +37608,94 @@
 			"open_access": false
 		},
 		{
+			"key": "YQZBC...2018a",
+			"type": "inproceedings",
+			"title": "HotpotQA: A Dataset for Diverse, Explainable Multi-hop Question Answering",
+			"authors": [
+				"Yang, Zhilin",
+				"Qi, Peng",
+				"Zhang, Saizheng",
+				"Bengio, Yoshua",
+				"Cohen, William",
+				"Salakhutdinov, Ruslan",
+				"Manning, Christopher D."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2018,
+			"booktitle": "Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing",
+			"pages": "2369-2380",
+			"doi": "10.18653/v1/d18-1259",
+			"arxiv": "1809.09600",
+			"openalex": "W2889787757",
+			"url": "https://arxiv.org/abs/1809.09600",
+			"oa_url": "https://www.aclweb.org/anthology/D18-1259.pdf",
+			"abstract": "Existing question answering (QA) datasets fail to train QA systems to perform complex reasoning and provide explanations for answers. We introduce HotpotQA, a new dataset with 113k Wikipedia-based question-answer pairs with four key features: (1) the questions require finding and reasoning over multiple supporting documents to answer; (2) the questions are diverse and not constrained to any pre-existing knowledge bases or knowledge schemas; (3) we provide sentence-level supporting facts required for reasoning, allowing QA systems to reason with strong supervision and explain the predictions; (4) we offer a new type of factoid comparison questions to test QA systems' ability to extract relevant facts and perform necessary comparison. We show that HotpotQA is challenging for the latest QA systems, and the supporting facts enable models to improve performance and make explainable predictions.",
+			"abstract_source": "arxiv",
+			"keywords": [
+				"cs.CL"
+			],
+			"keywords_source": "arxiv",
+			"source": "crossref",
+			"retrieved": "2026-11-07",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "YSXSB...2024a",
+			"type": "inproceedings",
+			"title": "CRAG - Comprehensive RAG Benchmark",
+			"authors": [
+				"Yang, Xiao",
+				"Sun, Kai",
+				"Xin, Hao",
+				"Sun, Yushi",
+				"Bhalla, Nikita",
+				"Chen, Xiangsen",
+				"Choudhary, Sajal",
+				"Gui, Rongze",
+				"Jiang, Ziran",
+				"Jiang, Ziyu",
+				"Kong, Lingkun",
+				"Moran, Brian",
+				"Wang, Jiaqi",
+				"Xu, Yifan",
+				"Yan, An",
+				"Yang, Chenyu",
+				"Yuan, Eting",
+				"Zha, Hanwen",
+				"Tang, Nan",
+				"Chen, Lei",
+				"Scheffer, Nicolas",
+				"Liu, Yue",
+				"Shah, Nirav",
+				"Wanga, Rakesh",
+				"Kumar, Anuj",
+				"Yih, Wen-Tau",
+				"Dong, Xin"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2024,
+			"booktitle": "Advances in Neural Information Processing Systems 37",
+			"pages": "10470-10490",
+			"doi": "10.52202/079017-0335",
+			"arxiv": "2406.04744",
+			"openalex": "W4415799040",
+			"url": "https://arxiv.org/abs/2406.04744",
+			"oa_url": "https://arxiv.org/pdf/2406.04744",
+			"abstract": "Retrieval-Augmented Generation (RAG) has recently emerged as a promising solution to alleviate Large Language Model (LLM)'s deficiency in lack of knowledge. Existing RAG datasets, however, do not adequately represent the diverse and dynamic nature of real-world Question Answering (QA) tasks. To bridge this gap, we introduce the Comprehensive RAG Benchmark (CRAG), a factual question answering benchmark of 4,409 question-answer pairs and mock APIs to simulate web and Knowledge Graph (KG) search. CRAG is designed to encapsulate a diverse array of questions across five domains and eight question categories, reflecting varied entity popularity from popular to long-tail, and temporal dynamisms ranging from years to seconds. Our evaluation of this benchmark highlights the gap to fully trustworthy QA. Whereas most advanced LLMs achieve <=34% accuracy on CRAG, adding RAG in a straightforward manner improves the accuracy only to 44%. State-of-the-art industry RAG solutions only answer 63% of questions without any hallucination. CRAG also reveals much lower accuracy in answering questions regarding facts with higher dynamism, lower popularity, or higher complexity, suggesting future research directions. The CRAG benchmark laid the groundwork for a KDD Cup 2024 challenge and attracted thousands of participants and submissions. We commit to maintaining CRAG to serve research communities in advancing RAG solutions and general QA solutions. CRAG is available at https://github.com/facebookresearch/CRAG/.",
+			"abstract_source": "arxiv",
+			"keywords": [
+				"cs.CL"
+			],
+			"keywords_source": "arxiv",
+			"source": "crossref",
+			"retrieved": "2026-11-07",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "YZ2000a",
 			"type": "article",
 			"title": "Drift-Independent Volatility Estimation Based on High, Low, Open, and Close Prices",
@@ -37096,6 +37787,46 @@
 			"keywords_source": "arxiv",
 			"source": "manual",
 			"retrieved": "2026-10-31",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "YZYYW...2018a",
+			"type": "inproceedings",
+			"title": "Spider: A Large-Scale Human-Labeled Dataset for Complex and Cross-Domain Semantic Parsing and Text-to-SQL Task",
+			"authors": [
+				"Yu, Tao",
+				"Zhang, Rui",
+				"Yang, Kai",
+				"Yasunaga, Michihiro",
+				"Wang, Dongxu",
+				"Li, Zifan",
+				"Ma, James",
+				"Li, Irene",
+				"Yao, Qingning",
+				"Roman, Shanelle",
+				"Zhang, Zilin",
+				"Radev, Dragomir"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2018,
+			"booktitle": "Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing",
+			"pages": "3911-3921",
+			"doi": "10.18653/v1/d18-1425",
+			"arxiv": "1809.08887",
+			"openalex": "W2890431379",
+			"url": "https://arxiv.org/abs/1809.08887",
+			"oa_url": "https://www.aclweb.org/anthology/D18-1425.pdf",
+			"abstract": "We present Spider, a large-scale, complex and cross-domain semantic parsing and text-to-SQL dataset annotated by 11 college students. It consists of 10,181 questions and 5,693 unique complex SQL queries on 200 databases with multiple tables, covering 138 different domains. We define a new complex and cross-domain semantic parsing and text-to-SQL task where different complex SQL queries and databases appear in train and test sets. In this way, the task requires the model to generalize well to both new SQL queries and new database schemas. Spider is distinct from most of the previous semantic parsing tasks because they all use a single database and the exact same programs in the train set and the test set. We experiment with various state-of-the-art models and the best model achieves only 12.4% exact matching accuracy on a database split setting. This shows that Spider presents a strong challenge for future research. Our dataset and task are publicly available at https://yale-lily.github.io/spider",
+			"abstract_source": "arxiv",
+			"keywords": [
+				"cs.CL",
+				"cs.AI"
+			],
+			"keywords_source": "arxiv",
+			"source": "crossref",
+			"retrieved": "2026-11-07",
 			"checked": true,
 			"open_access": true
 		},
@@ -37417,6 +38148,41 @@
 			"oa_url": "https://arxiv.org/pdf/1611.01578",
 			"source": "datacite",
 			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "ZLMBB...2023a",
+			"type": "misc",
+			"title": "Instruction-Following Evaluation for Large Language Models",
+			"authors": [
+				"Zhou, Jeffrey",
+				"Lu, Tianjian",
+				"Mishra, Swaroop",
+				"Brahma, Siddhartha",
+				"Basu, Sujoy",
+				"Luan, Yi",
+				"Zhou, Denny",
+				"Hou, Le"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2023,
+			"doi": "10.48550/arXiv.2311.07911",
+			"arxiv": "2311.07911",
+			"openalex": "W4388718089",
+			"url": "https://arxiv.org/abs/2311.07911",
+			"oa_url": "https://arxiv.org/pdf/2311.07911",
+			"abstract": "One core capability of Large Language Models (LLMs) is to follow natural language instructions. However, the evaluation of such abilities is not standardized: Human evaluations are expensive, slow, and not objectively reproducible, while LLM-based auto-evaluation is potentially biased or limited by the ability of the evaluator LLM. To overcome these issues, we introduce Instruction-Following Eval (IFEval) for large language models. IFEval is a straightforward and easy-to-reproduce evaluation benchmark. It focuses on a set of \"verifiable instructions\" such as \"write in more than 400 words\" and \"mention the keyword of AI at least 3 times\". We identified 25 types of those verifiable instructions and constructed around 500 prompts, with each prompt containing one or more verifiable instructions. We show evaluation results of two widely available LLMs on the market. Our code and data can be found at https://github.com/google-research/google-research/tree/master/instruction_following_eval",
+			"abstract_source": "arxiv",
+			"keywords": [
+				"cs.CL",
+				"cs.AI",
+				"cs.LG"
+			],
+			"keywords_source": "arxiv",
+			"source": "arxiv",
+			"retrieved": "2026-11-07",
 			"checked": true,
 			"open_access": true
 		},
@@ -38571,6 +39337,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "BGSR2016a",
+			"count": 91,
+			"source": "crossref",
+			"date": "2026-11-07"
+		},
+		{
+			"key": "BGSR2016a",
+			"count": 109,
+			"source": "openalex",
+			"date": "2026-11-07"
+		},
+		{
 			"key": "BGST2004a",
 			"count": 1221,
 			"source": "crossref",
@@ -39615,10 +40393,28 @@
 			"date": "2026-10-30"
 		},
 		{
+			"key": "CCEKS...2018a",
+			"count": 1468,
+			"source": "openalex",
+			"date": "2026-11-07"
+		},
+		{
 			"key": "CCHC2019a",
 			"count": 132,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "CCSSB...2021a",
+			"count": 225,
+			"source": "crossref",
+			"date": "2026-11-07"
+		},
+		{
+			"key": "CCSSB...2021a",
+			"count": 317,
+			"source": "openalex",
+			"date": "2026-11-07"
 		},
 		{
 			"key": "CD2014a",
@@ -39657,6 +40453,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "CFBDW2020a",
+			"count": 365,
+			"source": "crossref",
+			"date": "2026-11-07"
+		},
+		{
+			"key": "CFBDW2020a",
+			"count": 572,
+			"source": "openalex",
+			"date": "2026-11-07"
+		},
+		{
 			"key": "CFFC2013a",
 			"count": 1566,
 			"source": "crossref",
@@ -39691,6 +40499,18 @@
 			"count": 4337,
 			"source": "openalex",
 			"date": "2026-10-31"
+		},
+		{
+			"key": "CGNNP...2023a",
+			"count": 130,
+			"source": "crossref",
+			"date": "2026-11-07"
+		},
+		{
+			"key": "CGNNP...2023a",
+			"count": 190,
+			"source": "openalex",
+			"date": "2026-11-07"
 		},
 		{
 			"key": "CGP2002a",
@@ -40627,6 +41447,18 @@
 			"count": 6,
 			"source": "openalex",
 			"date": "2026-11-06"
+		},
+		{
+			"key": "DLBCS...2021a",
+			"count": 119,
+			"source": "crossref",
+			"date": "2026-11-07"
+		},
+		{
+			"key": "DLBCS...2021a",
+			"count": 142,
+			"source": "openalex",
+			"date": "2026-11-07"
 		},
 		{
 			"key": "DLM1999a",
@@ -43509,6 +44341,12 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "IKKQS...2023a",
+			"count": 127,
+			"source": "openalex",
+			"date": "2026-11-07"
+		},
+		{
 			"key": "IS2015a",
 			"count": 27821,
 			"source": "openalex",
@@ -43591,6 +44429,18 @@
 			"count": 10127,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "JDLCL2019a",
+			"count": 605,
+			"source": "crossref",
+			"date": "2026-11-07"
+		},
+		{
+			"key": "JDLCL2019a",
+			"count": 706,
+			"source": "openalex",
+			"date": "2026-11-07"
 		},
 		{
 			"key": "JDS2011a",
@@ -44119,6 +44969,18 @@
 			"count": 267,
 			"source": "openalex",
 			"date": "2026-10-31"
+		},
+		{
+			"key": "KPRCP...2019a",
+			"count": 1158,
+			"source": "crossref",
+			"date": "2026-11-07"
+		},
+		{
+			"key": "KPRCP...2019a",
+			"count": 2085,
+			"source": "openalex",
+			"date": "2026-11-07"
 		},
 		{
 			"key": "KPSS1992a",
@@ -44779,6 +45641,18 @@
 			"count": 12517,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "LHE2022a",
+			"count": 772,
+			"source": "crossref",
+			"date": "2026-11-07"
+		},
+		{
+			"key": "LHE2022a",
+			"count": 1370,
+			"source": "openalex",
+			"date": "2026-11-07"
 		},
 		{
 			"key": "LHPHE...2015a",
@@ -45499,6 +46373,18 @@
 			"count": 4280,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "MHFDM...2018a",
+			"count": 161,
+			"source": "crossref",
+			"date": "2026-11-07"
+		},
+		{
+			"key": "MHFDM...2018a",
+			"count": 189,
+			"source": "openalex",
+			"date": "2026-11-07"
 		},
 		{
 			"key": "MJCMR2014a",
@@ -47097,6 +47983,12 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "RHSPP...2024a",
+			"count": 291,
+			"source": "openalex",
+			"date": "2026-11-07"
+		},
+		{
 			"key": "RHW1986a",
 			"count": 26267,
 			"source": "crossref",
@@ -47125,6 +48017,18 @@
 			"count": 2093,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "RJL2018a",
+			"count": 902,
+			"source": "crossref",
+			"date": "2026-11-07"
+		},
+		{
+			"key": "RJL2018a",
+			"count": 2375,
+			"source": "openalex",
+			"date": "2026-11-07"
 		},
 		{
 			"key": "RKMBS...2009a",
@@ -48363,6 +49267,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "SSSGT...2023a",
+			"count": 203,
+			"source": "crossref",
+			"date": "2026-11-07"
+		},
+		{
+			"key": "SSSGT...2023a",
+			"count": 256,
+			"source": "openalex",
+			"date": "2026-11-07"
+		},
+		{
 			"key": "SSWAF2016a",
 			"count": 5502,
 			"source": "crossref",
@@ -49053,6 +49969,12 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "TY2024a",
+			"count": 131,
+			"source": "openalex",
+			"date": "2026-11-07"
+		},
+		{
 			"key": "TZXZJ2021a",
 			"count": 730,
 			"source": "crossref",
@@ -49219,6 +50141,18 @@
 			"count": 2308,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "VABDH...2020a",
+			"count": 93,
+			"source": "crossref",
+			"date": "2026-11-07"
+		},
+		{
+			"key": "VABDH...2020a",
+			"count": 180,
+			"source": "openalex",
+			"date": "2026-11-07"
 		},
 		{
 			"key": "VB1996a",
@@ -49555,6 +50489,18 @@
 			"count": 68,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "WLLWZ...2020a",
+			"count": 239,
+			"source": "crossref",
+			"date": "2026-11-07"
+		},
+		{
+			"key": "WLLWZ...2020a",
+			"count": 437,
+			"source": "openalex",
+			"date": "2026-11-07"
 		},
 		{
 			"key": "WM1997a",
@@ -49929,6 +50875,30 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "YQZBC...2018a",
+			"count": 1129,
+			"source": "crossref",
+			"date": "2026-11-07"
+		},
+		{
+			"key": "YQZBC...2018a",
+			"count": 1843,
+			"source": "openalex",
+			"date": "2026-11-07"
+		},
+		{
+			"key": "YSXSB...2024a",
+			"count": 36,
+			"source": "crossref",
+			"date": "2026-11-07"
+		},
+		{
+			"key": "YSXSB...2024a",
+			"count": 78,
+			"source": "openalex",
+			"date": "2026-11-07"
+		},
+		{
 			"key": "YZ2000a",
 			"count": 371,
 			"source": "crossref",
@@ -49957,6 +50927,18 @@
 			"count": 607,
 			"source": "openalex",
 			"date": "2026-10-31"
+		},
+		{
+			"key": "YZYYW...2018a",
+			"count": 828,
+			"source": "crossref",
+			"date": "2026-11-07"
+		},
+		{
+			"key": "YZYYW...2018a",
+			"count": 1078,
+			"source": "openalex",
+			"date": "2026-11-07"
 		},
 		{
 			"key": "Ye2011a",
@@ -50065,6 +51047,12 @@
 			"count": 4371,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "ZLMBB...2023a",
+			"count": 415,
+			"source": "openalex",
+			"date": "2026-11-07"
 		},
 		{
 			"key": "ZMA2005a",

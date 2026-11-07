@@ -66,7 +66,7 @@ interface IBenchmarkEntry {
 function benchmarkEntries(): readonly IBenchmarkEntry[] {
 	return [
 		{
-			id: 'mmlu-pro',
+			id: 'mmlu_pro',
 			name: 'MMLU-Pro',
 			measures: localize('modelBenchmarks.mmluPro', "Knowledge and reasoning in 14 subjects, from law and economics to physics: questions with ten options, harder than those of MMLU."),
 			strata: localize('modelBenchmarks.subject', "Subject"),
@@ -106,11 +106,11 @@ function publishedScores(): readonly IPublishedScore[] {
 	const llamaSetting = localize('modelBenchmarks.llamaSetting', "Meta's model card: 8 worked examples first, the answer worked step by step; bf16");
 	const gemmaSetting = localize('modelBenchmarks.gemmaSetting', "Google's model card, for the instruction-tuned model; the card does not give the prompt, the examples, thinking or the precision");
 	return [
-		{ benchmark: 'mmlu-pro', model: 'gemma-4-e4b-it', score: 0.694, setting: gemmaSetting, source: 'https://huggingface.co/google/gemma-4-E4B-it' },
-		{ benchmark: 'mmlu-pro', model: 'qwen3.5-0.8b', thinking: false, score: 0.297, setting: qwenNoThinking, source: qwen },
-		{ benchmark: 'mmlu-pro', model: 'qwen3.5-0.8b', thinking: true, score: 0.423, setting: qwenThinking, source: qwen },
-		{ benchmark: 'mmlu-pro', model: 'qwen3.5-2b', thinking: false, score: 0.553, setting: qwenNoThinking, source: 'https://huggingface.co/Qwen/Qwen3.5-2B' },
-		{ benchmark: 'mmlu-pro', model: 'qwen3.5-2b', thinking: true, score: 0.665, setting: qwenThinking, source: 'https://huggingface.co/Qwen/Qwen3.5-2B' },
+		{ benchmark: 'mmlu_pro', model: 'gemma-4-e4b-it', score: 0.694, setting: gemmaSetting, source: 'https://huggingface.co/google/gemma-4-E4B-it' },
+		{ benchmark: 'mmlu_pro', model: 'qwen3.5-0.8b', thinking: false, score: 0.297, setting: qwenNoThinking, source: qwen },
+		{ benchmark: 'mmlu_pro', model: 'qwen3.5-0.8b', thinking: true, score: 0.423, setting: qwenThinking, source: qwen },
+		{ benchmark: 'mmlu_pro', model: 'qwen3.5-2b', thinking: false, score: 0.553, setting: qwenNoThinking, source: 'https://huggingface.co/Qwen/Qwen3.5-2B' },
+		{ benchmark: 'mmlu_pro', model: 'qwen3.5-2b', thinking: true, score: 0.665, setting: qwenThinking, source: 'https://huggingface.co/Qwen/Qwen3.5-2B' },
 		{ benchmark: 'gsm8k', model: 'llama-3.2-1b-instruct', score: 0.444, setting: llamaSetting, source: llama },
 		{ benchmark: 'gsm8k', model: 'llama-3.2-3b-instruct', score: 0.777, setting: llamaSetting, source: llama },
 	];

@@ -1342,8 +1342,7 @@ end
 
 """The columns of the table `catalogue` of PollisBenchmarks: the fields of `data/catalogue.toml`, with their type and description."""
 const BENCHMARKS_CATALOGUE = [
-    ("id", "VARCHAR", "The id of the benchmark in PollisBenchmarks.jl"),
-    ("table_name", "VARCHAR", "The table of its questions in this database, for a benchmark Built In"),
+    ("id", "VARCHAR", "The id of the benchmark in PollisBenchmarks.jl, and the name of the table of its questions in this database, for a benchmark Built In"),
     ("benchmark", "VARCHAR", "Its name"),
     ("component", "VARCHAR", "What it measures, such as Closed Book Answering, the answers of a chat model from what it learned in training alone, or Embedding, the documents an embedding model finds"),
     ("domain", "VARCHAR", "What its questions are about"),
@@ -1388,7 +1387,7 @@ const BENCHMARKS_FILES = [("test", ""), ("example", "-examples"), ("document", "
 """
 The SQL that makes PollisBenchmarks from `source` (`benchmarks_source`): the table `catalogue`, a row per entry of
 `data/catalogue.toml`; and, for each benchmark Built In, its questions, its examples and its documents, copied from the
-artifact into one table, the one named in the catalogue, the column `split` telling them apart; each table and
+artifact into one table, named by its id, the column `split` telling them apart; each table and
 column with its description, those of a benchmark's own columns from its entry.
 """
 function benchmarks_sql(source)
@@ -1405,14 +1404,14 @@ function benchmarks_sql(source)
         return round(sum(filesize, filter(isfile, files); init = 0) / 1e6; digits = 2)
     end
     for entry in entries
-        values = [quoted(name == "size_mb" ? size_mb(entry) : get(entry, name == "table_name" ? "table" : name, nothing)) for (name, _, _) in BENCHMARKS_CATALOGUE]
+        values = [quoted(name == "size_mb" ? size_mb(entry) : get(entry, name, nothing)) for (name, _, _) in BENCHMARKS_CATALOGUE]
         push!(statements, "INSERT INTO catalogue VALUES (" * join(values, ", ") * ")")
     end
     push!(statements, "COMMENT ON TABLE catalogue IS 'The benchmarks of PollisBenchmarks.jl: what each measures, its sources, revisions and licence, how an answer is graded, and whether it is built in, its questions in a table of this database. Source: PollisBenchmarks.jl. Licence: MIT'")
     append!(statements, ["COMMENT ON COLUMN catalogue.$name IS $(quoted(description))" for (name, _, description) in BENCHMARKS_CATALOGUE])
     for entry in entries
         get(entry, "availability", "") == "Built In" || continue
-        id, table = entry["id"], entry["table"]
+        id = table = entry["id"]
         parts = String[]
         for (split, suffix) in BENCHMARKS_FILES
             path = joinpath(source.folder, "$id$suffix.parquet")
