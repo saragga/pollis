@@ -6,7 +6,7 @@
 // text, or {error} with the last lines it printed. A projector (mmproj) in the model's folder is loaded with it, so that
 // the model reads the images or audio it was made for (pollisModels.ts, projectorOf). Julia asks the same
 // with the request `pollis/llamaServer` (Pollis.llama_server in Pollis.jl), from the REPL or a notebook, and stops it with
-// `pollis/stopLlamaServer` (Pollis.stop_llama_server), as Model Benchmarks does between models. There is one server
+// `pollis/stopLlamaServer` (Pollis.stop_llama_server), as Benchmark Answering Models does between models. There is one server
 // per model file and way of running it; each stops when Pollis quits, or with `language-julia.pollisStopLlamaServers`;
 // `language-julia.pollisStopLlamaServer`, with the request that started it, stops one, and answers once it has ended,
 // its memory free: Evaluate Answering Models and Evaluate Embedding Models run each local model alone.

@@ -1,4 +1,4 @@
-// POLLIS: the runs of Model Benchmarks (Compose > Local AI Models > Model Benchmarks...), in a hidden Julia process
+// POLLIS: the runs of Benchmark Answering Models (Compose > Local AI Models > Benchmark Answering Models...), in a hidden Julia process
 // of their own (scripts/terminalserver/model_benchmarks.jl), which runs PollisBenchmarks.jl, the package a notebook calls too.
 // The command `language-julia.pollisModelBenchmarks`, with {job, models?}, runs the task `job` of the script: "download"
 // a benchmark, or "start" a run, which draws its sample; with `models`, each is then run on that run, one after the
@@ -66,7 +66,7 @@ async function runScript(context: vscode.ExtensionContext, juliaExecutable: Juli
     })
     await new Promise<void>((resolve) => {
         julia.on('error', (err) => {
-            console.error('[pollis] could not run Model Benchmarks', err)
+            console.error('[pollis] could not run Benchmark Answering Models', err)
             error ??= 'failed'
             resolve()
         })

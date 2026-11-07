@@ -17,7 +17,7 @@ import { ASK_CHAT_MODEL, IAskPollisService, IBenchmarkAnswer, IBenchmarkModel, I
 import { ICompareProgress } from './compareModelsRun.js';
 import { CompareSampler, ICompareSample, ICompareSamples } from './compareShared.js';
 
-// What Model Benchmarks runs (modelBenchmarksPage.ts), in a hidden Julia process of the Julia extension
+// What Benchmark Answering Models runs (modelBenchmarksPage.ts), in a hidden Julia process of the Julia extension
 // (language-julia.pollisModelBenchmarks, model_benchmarks.jl, which runs PollisBenchmarks.jl, the package a notebook calls too): a benchmark made ready once
 // into ~/.pollis/benchmarks/data; and a run, whose sample the package draws, stratified, with its seed, then each local
 // model chosen, one after the other and alone in memory (the chat model of Ask Pollis stopped before), answering the
@@ -85,7 +85,7 @@ interface IScriptProgress {
 	readonly run?: string;
 }
 
-/** The folder of Model Benchmarks, ~/.pollis/benchmarks. */
+/** The folder of Benchmark Answering Models, ~/.pollis/benchmarks. */
 export async function benchmarksFolder(pathService: IPathService): Promise<URI> {
 	return joinPath(await pathService.userHome({ preferLocal: true }), '.pollis', 'benchmarks');
 }

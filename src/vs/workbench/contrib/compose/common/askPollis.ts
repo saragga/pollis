@@ -614,7 +614,7 @@ export function embeddingPrefixes(file: string): IEmbeddingPrefixes {
 
 /**
  * How far the embedding of the passages, or the search of the questions, of a model of Evaluate Embedding Models is;
- * or the reranking of the queries of a retrieval benchmark, by a reranker of Evaluate Reranking Models or, with none, by BM25.
+ * or the reranking of the queries of a retrieval benchmark, by a reranker of Benchmark Embedding and Reranking Models or, with none, by BM25.
  */
 export interface IEmbeddingProgress {
 	readonly model: string;
@@ -623,7 +623,7 @@ export interface IEmbeddingProgress {
 	readonly total: number;
 }
 
-/** A retrieval benchmark of PollisBenchmarks.duckdb that the Evaluate pages run: its table, and its name. */
+/** A retrieval benchmark of PollisBenchmarks.duckdb that Benchmark Embedding and Reranking Models runs: its table, and its name. */
 export interface IRetrievalBenchmark {
 	readonly id: string;
 	readonly name: string;
@@ -764,7 +764,7 @@ export interface IEmbeddingRunSummary {
 	readonly questions: number;
 	/** The passages of the index; the documents of the benchmark, for a run of one. */
 	readonly passages: number;
-	/** The retrieval benchmark whose queries were searched, its id; none for a test set of Evaluate Answering Models. */
+	/** The retrieval benchmark whose queries were searched, by Benchmark Embedding and Reranking Models, its id; none for a run of Evaluate Embedding Models. */
 	readonly benchmark?: string;
 }
 
@@ -805,7 +805,7 @@ export interface IRerankRunSummary {
 	readonly kept: number;
 	/** The embedding model that found them; none for a run of a benchmark, whose documents BM25 finds. */
 	readonly embedder: string;
-	/** The retrieval benchmark whose queries were reranked, its id; none for a test set of Evaluate Answering Models. */
+	/** The retrieval benchmark whose queries were reranked, by Benchmark Embedding and Reranking Models, its id; none for a run of Evaluate Reranking Models. */
 	readonly benchmark?: string;
 }
 
@@ -832,7 +832,7 @@ export interface IRerankRun {
 	readonly found: readonly IRerankRunFound[];
 }
 
-/** How the models of a run of Model Benchmarks answer: the examples shown first, worked answers or the answer alone, thinking, and the most tokens of an answer. */
+/** How the models of a run of Benchmark Answering Models answer: the examples shown first, worked answers or the answer alone, thinking, and the most tokens of an answer. */
 export interface IBenchmarkSettings {
 	readonly shots: number;
 	readonly reasoning: boolean;
@@ -840,14 +840,14 @@ export interface IBenchmarkSettings {
 	readonly maxTokens: number;
 }
 
-/** A model of a run of Model Benchmarks: its file or `hf:` value, its name and its size. */
+/** A model of a run of Benchmark Answering Models: its file or `hf:` value, its name and its size. */
 export interface IBenchmarkModel {
 	readonly value: string;
 	readonly label: string;
 	readonly size?: string;
 }
 
-/** A model's figures in a run of Model Benchmarks, as PollisBenchmarks.jl computes them (figures). */
+/** A model's figures in a run of Benchmark Answering Models, as PollisBenchmarks.jl computes them (figures). */
 export interface IBenchmarkFigures {
 	readonly value: string;
 	readonly label: string;
@@ -871,7 +871,7 @@ export interface IBenchmarkFigures {
 }
 
 /**
- * A run of Model Benchmarks: as PollisBenchmarks.jl keeps it in ~/.pollis/benchmarks/runs/<id>.json while it goes, and as
+ * A run of Benchmark Answering Models: as PollisBenchmarks.jl keeps it in ~/.pollis/benchmarks/runs/<id>.json while it goes, and as
  * Comparisons.duckdb keeps it once it has ended.
  */
 export interface IBenchmarkRun {
@@ -896,7 +896,7 @@ export interface IBenchmarkRun {
 	readonly figures?: readonly IBenchmarkFigures[];
 }
 
-/** An answer of a run of Model Benchmarks, as PollisBenchmarks.jl writes it in <id>.jsonl, with its timings as llama-server measures them. */
+/** An answer of a run of Benchmark Answering Models, as PollisBenchmarks.jl writes it in <id>.jsonl, with its timings as llama-server measures them. */
 export interface IBenchmarkAnswer {
 	readonly model: string;
 	readonly id: string;
@@ -979,15 +979,15 @@ export interface IAskPollisIndex {
 	loadRerankRun(id: string): Promise<IRerankRun | undefined>;
 	deleteRerankRun(id: string): Promise<void>;
 	/**
-	 * Moves the runs `ids` of Model Benchmarks from ~/.pollis/benchmarks/runs into Comparisons.duckdb, their files
+	 * Moves the runs `ids` of Benchmark Answering Models from ~/.pollis/benchmarks/runs into Comparisons.duckdb, their files
 	 * removed; without `ids`, every run there that has ended: one PollisBenchmarks.jl marked ended, or one whose files
 	 * have not changed for a day.
 	 */
 	importBenchmarkRuns(ids?: readonly string[]): Promise<void>;
-	/** The runs of Model Benchmarks in Comparisons.duckdb, the latest first. */
+	/** The runs of Benchmark Answering Models in Comparisons.duckdb, the latest first. */
 	benchmarkRuns(): Promise<readonly IBenchmarkRun[]>;
 	loadBenchmarkRun(id: string): Promise<IBenchmarkRun | undefined>;
-	/** The answers of the run `id` of Model Benchmarks, in the order they were written. */
+	/** The answers of the run `id` of Benchmark Answering Models, in the order they were written. */
 	loadBenchmarkAnswers(id: string): Promise<readonly IBenchmarkAnswer[]>;
 	deleteBenchmarkRun(id: string): Promise<void>;
 }
@@ -1063,7 +1063,7 @@ export interface IAskPollisService {
 	readonly onDidEmbed: Event<IEmbeddingProgress>;
 	embedPassages(request: IEmbeddingRequest): Promise<IEmbeddingDone>;
 	evaluateEmbedding(request: IEmbeddingEvaluation): Promise<IEmbeddingEvaluated>;
-	/** The retrieval benchmarks of PollisBenchmarks.duckdb, for Evaluate Embedding Models and Evaluate Reranking Models: as IAskPollisIndex. */
+	/** The retrieval benchmarks of PollisBenchmarks.duckdb, for Benchmark Embedding and Reranking Models: as IAskPollisIndex. */
 	retrievalQueries(benchmark: string): Promise<readonly IRetrievalQuery[] | undefined>;
 	embedRetrieval(request: IRetrievalEmbeddingRequest): Promise<IEmbeddingDone>;
 	evaluateRetrieval(request: IRetrievalEvaluation): Promise<IEmbeddingEvaluated>;
@@ -1078,7 +1078,7 @@ export interface IAskPollisService {
 	rerankRuns(): Promise<readonly IRerankRunSummary[]>;
 	loadRerankRun(id: string): Promise<IRerankRun | undefined>;
 	deleteRerankRun(id: string): Promise<void>;
-	/** The runs of Model Benchmarks, as IAskPollisIndex. */
+	/** The runs of Benchmark Answering Models, as IAskPollisIndex. */
 	importBenchmarkRuns(ids?: readonly string[]): Promise<void>;
 	benchmarkRuns(): Promise<readonly IBenchmarkRun[]>;
 	loadBenchmarkRun(id: string): Promise<IBenchmarkRun | undefined>;

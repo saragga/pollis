@@ -39,11 +39,11 @@ import './wrdsPage.js';
 import { DatabaseConnectionsService } from './databaseConnectionsService.js';
 import { JournalMetricsReader, readCsv, readXlsx, yearOfFileName } from './journalMetrics.js';
 import './journalMetricsPage.js';
-import { BuiltinDatabasesView, CONNECT_DATABASE_COMMAND_ID, DATABASES_VIEW_CONTAINER_ID, DatabaseConnectionContextMenu, DatabaseConnectionsView, DatabasesViewPaneContainer, databasesViewIdOf, UserDatabasesView, DatabaseItemConnected, DatabaseItemExpanded, DatabaseItemId, DatabaseItemInlineMenu, DatabaseItemBuiltin, DatabaseItemKind, DatabaseItemSaved, DatabaseItemWritable, DatabasesNewConnectionMenu, DISCONNECT_DATABASE_COMMAND_ID, IDatabaseItemArg, BROWSE_TABLE_COMMAND_ID, OPEN_SCHEMA_COMMAND_ID, PREVIEW_TABLE_COMMAND_ID, REFRESH_DATABASE_COMMAND_ID } from './connectionsView.js';
+import { ActivityDatabasesView, BuiltinDatabasesView, CONNECT_DATABASE_COMMAND_ID, DATABASES_VIEW_CONTAINER_ID, DatabaseConnectionContextMenu, DatabaseConnectionsView, DatabasesViewPaneContainer, databasesViewIdOf, UserDatabasesView, DatabaseItemConnected, DatabaseItemExpanded, DatabaseItemId, DatabaseItemInlineMenu, DatabaseItemBuiltin, DatabaseItemKind, DatabaseItemSaved, DatabaseItemWritable, DatabasesNewConnectionMenu, DISCONNECT_DATABASE_COMMAND_ID, IDatabaseItemArg, BROWSE_TABLE_COMMAND_ID, OPEN_SCHEMA_COMMAND_ID, PREVIEW_TABLE_COMMAND_ID, REFRESH_DATABASE_COMMAND_ID } from './connectionsView.js';
 
 registerSingleton(IDatabaseConnectionsService, DatabaseConnectionsService, InstantiationType.Delayed);
 
-// --- Databases container (secondary side bar) and its Pollis Built-In and User views
+// --- Databases container (secondary side bar) and its Pollis Built-In, Pollis Activity and User views
 
 const databasesViewIcon = registerIcon('databases-view-icon', Codicon.database, localize('databasesViewIcon', "View icon of the Databases view."));
 
@@ -58,7 +58,7 @@ const databasesViewContainer = Registry.as<IViewContainersRegistry>(ViewExtensio
 }, ViewContainerLocation.AuxiliaryBar);
 
 const viewsRegistry = Registry.as<IViewsRegistry>(ViewExtensions.ViewsRegistry);
-// Both always shown, so the container has no Views menu to hide them
+// All three always shown, so the container has no Views menu to hide them
 viewsRegistry.registerViews([{
 	id: BuiltinDatabasesView.ID,
 	name: localize2('databases.builtin', "Pollis Built-In"),
@@ -68,13 +68,21 @@ viewsRegistry.registerViews([{
 	canMoveView: true,
 	order: 1,
 }, {
+	id: ActivityDatabasesView.ID,
+	name: localize2('databases.activity', "Pollis Activity"),
+	containerIcon: databasesViewIcon,
+	ctorDescriptor: new SyncDescriptor(ActivityDatabasesView),
+	canToggleVisibility: false,
+	canMoveView: true,
+	order: 2,
+}, {
 	id: UserDatabasesView.ID,
 	name: localize2('databases.user', "User"),
 	containerIcon: databasesViewIcon,
 	ctorDescriptor: new SyncDescriptor(UserDatabasesView),
 	canToggleVisibility: false,
 	canMoveView: true,
-	order: 2,
+	order: 3,
 }], databasesViewContainer);
 
 // --- Commands

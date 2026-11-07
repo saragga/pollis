@@ -14,7 +14,9 @@
 // two windows can each keep theirs, and the passages found for each question with a search stamp, which a run with the same stamp reuses.
 // Evaluate Embedding Models embeds the passages here, into the cache of embeddings ask_index.jl takes them from, and
 // searches the questions of a test set with each model's embeddings as Ask Pollis would; its runs are kept in Comparisons.duckdb too.
-// So are the runs of Model Benchmarks, once they have ended: PollisBenchmarks.jl writes a run to files while it goes, and they are moved in here.
+// Benchmark Embedding and Reranking Models runs the retrieval benchmarks of PollisBenchmarks.duckdb here, on their own
+// documents: their runs are kept with those of the two Evaluate pages, marked with their benchmark.
+// So are the runs of Benchmark Answering Models, once they have ended: PollisBenchmarks.jl writes a run to files while it goes, and they are moved in here.
 
 import { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
 import * as fs from 'fs';
@@ -34,8 +36,14 @@ const DATABASE = join(os.homedir(), '.pollis', 'documents', 'PollisDocuments.duc
 const EMBEDDINGS = join(os.homedir(), '.pollis', 'documents', 'embeddings.duckdb');
 /** The passages embedded a request, as ask_index.jl does. */
 const BATCH = 32;
-/** The runs of the Evaluate pages and of Model Benchmarks. */
+/** The runs of the Evaluate pages and of the two Benchmarks pages. */
 const COMPARISONS = join(os.homedir(), '.pollis', 'ask', 'Comparisons.duckdb');
+/**
+ * The copy of COMPARISONS that the Databases view and the duckdb> terminal read, as the database Comparisons of the
+ * activity of Pollis: a reader of the copy never holds the file Pollis writes, which DuckDB lets no other process open
+ * while it is written.
+ */
+const COMPARISONS_COPY = join(os.homedir(), '.pollis', 'databases', 'Comparisons.duckdb');
 /** The fts extension, which the Julia extension of Pollis unpacks here at install. */
 const FTS = join(os.homedir(), '.pollis', 'duckdb', 'fts.duckdb_extension');
 /** The published benchmarks, which PollisBenchmarks.jl makes when the Julia REPL starts: of retrieval, a table of the queries and the documents of each. */
@@ -353,7 +361,7 @@ const TOPIC = `CASE WHEN d.kind = 'julia' THEN 'julia' WHEN d.kind = 'document' 
  * scores and why a judge did not rate an answer; the passages found for a question with a search stamp, those of
  * the latest stamp only; a run of Evaluate Embedding Models, its questions and what each model found for them; and a
  * run of Evaluate Reranking Models, its questions and where each reranker put the passage of each; and a run of
- * Model Benchmarks, its models with their figures and their answers.
+ * Benchmark Answering Models, its models with their figures and their answers.
  */
 const COMPARISONS_TABLES = [
 	'CREATE TABLE IF NOT EXISTS Comparisons.runs(id VARCHAR PRIMARY KEY, started BIGINT, pollis VARCHAR, models VARCHAR, judges VARCHAR, repeats INTEGER, questions INTEGER)',
@@ -389,7 +397,7 @@ const COMPARISONS_TABLES = [
 	'ALTER TABLE Comparisons.rerankFound ADD COLUMN IF NOT EXISTS ndcg DOUBLE',
 	'ALTER TABLE Comparisons.rerankFound ADD COLUMN IF NOT EXISTS recall DOUBLE',
 	'ALTER TABLE Comparisons.rerankFound ADD COLUMN IF NOT EXISTS among DOUBLE',
-	// A run of Model Benchmarks: its sample's strata, as JSON, and the ids of its questions in the order drawn, as JSON
+	// A run of Benchmark Answering Models: its sample's strata, as JSON, and the ids of its questions in the order drawn, as JSON
 	'CREATE TABLE IF NOT EXISTS Comparisons.benchmarkRuns(id VARCHAR PRIMARY KEY, started BIGINT, ended BIGINT, pollis VARCHAR, benchmark VARCHAR, revision VARCHAR, shots INTEGER, reasoning BOOLEAN, thinking BOOLEAN, max_tokens INTEGER, seed BIGINT, allocation VARCHAR, size INTEGER, strata VARCHAR, questions VARCHAR)',
 	// Each model of a run, in the order it ran, and the figures PollisBenchmarks.jl computed of it: its strata as JSON
 	'CREATE TABLE IF NOT EXISTS Comparisons.benchmarkModels(run VARCHAR, place INTEGER, model VARCHAR, label VARCHAR, size VARCHAR, started BIGINT, ended BIGINT, free_before BIGINT, lowest_free BIGINT, error VARCHAR, questions INTEGER, failed INTEGER, score DOUBLE, half DOUBLE, right_answers INTEGER, by_chance DOUBLE, strata VARCHAR, unread INTEGER, cut_off INTEGER, first_token_ms DOUBLE, reading_speed DOUBLE, writing_speed DOUBLE, seconds DOUBLE, written_tokens DOUBLE, memory BIGINT)',
@@ -397,7 +405,7 @@ const COMPARISONS_TABLES = [
 	'CREATE TABLE IF NOT EXISTS Comparisons.benchmarkAnswers(run VARCHAR, place INTEGER, model VARCHAR, question VARCHAR, stratum VARCHAR, extracted VARCHAR, correct BOOLEAN, error VARCHAR, text VARCHAR, finish VARCHAR, seconds DOUBLE, prompt_tokens INTEGER, written_tokens INTEGER, prompt_ms DOUBLE, reading_speed DOUBLE, writing_speed DOUBLE, token_ms DOUBLE)',
 ];
 
-/** The runs of Model Benchmarks while they go, as PollisBenchmarks.jl writes them: <id>.json and <id>.jsonl. */
+/** The runs of Benchmark Answering Models while they go, as PollisBenchmarks.jl writes them: <id>.json and <id>.jsonl. */
 const BENCHMARK_RUNS = join(os.homedir(), '.pollis', 'benchmarks', 'runs');
 /** How long the files of a run not marked ended stay unchanged before it is taken as ended: a run cut off when Pollis or its notebook quit. */
 const BENCHMARK_IDLE_MS = 24 * 60 * 60 * 1000;
@@ -1117,9 +1125,40 @@ class AskPollisIndex implements IAskPollisIndex {
 				await connection.run(`UPDATE Comparisons.runs SET strategy = 'base' WHERE strategy = 'classical'`);
 				return await task(connection);
 			} finally {
+				// Its changes written into the file itself, then the file let go and copied
+				await connection.run('CHECKPOINT Comparisons').catch(() => undefined);
 				await connection.run('DETACH Comparisons');
+				this.copyComparisons();
 			}
 		});
+	}
+
+	/** The modification time of Comparisons.duckdb when it was last copied; none before the first copy of this process. */
+	private comparisonsCopied: number | undefined;
+
+	/**
+	 * Copies Comparisons.duckdb to COMPARISONS_COPY when it has changed since the last copy, or has not been copied by
+	 * this process: written beside it, then renamed over it, so that a reader of the old copy keeps reading it whole.
+	 * Where the old copy cannot be replaced while it is open, as on Windows, it stays until the next change.
+	 */
+	private copyComparisons(): void {
+		try {
+			const changed = fs.statSync(COMPARISONS).mtimeMs;
+			if (changed === this.comparisonsCopied && fs.existsSync(COMPARISONS_COPY)) {
+				return;
+			}
+			fs.mkdirSync(dirname(COMPARISONS_COPY), { recursive: true });
+			const partial = `${COMPARISONS_COPY}.${process.pid}.partial`;
+			fs.copyFileSync(COMPARISONS, partial);
+			try {
+				fs.renameSync(partial, COMPARISONS_COPY);
+				this.comparisonsCopied = changed;
+			} finally {
+				fs.rmSync(partial, { force: true });
+			}
+		} catch {
+			// The runs stay in Comparisons.duckdb; the copy is made again at the next change
+		}
 	}
 
 	/** Takes away the run `run` from each table. */
@@ -1386,7 +1425,7 @@ class AskPollisIndex implements IAskPollisIndex {
 		await this.withComparisons(connection => this.removeRerankRun(connection, id));
 	}
 
-	/** Takes away the run `run` of Model Benchmarks from its tables. */
+	/** Takes away the run `run` of Benchmark Answering Models from its tables. */
 	private async removeBenchmarkRun(connection: DuckDBConnection, run: string): Promise<void> {
 		for (const table of ['benchmarkRuns', 'benchmarkModels', 'benchmarkAnswers']) {
 			await connection.run(`DELETE FROM Comparisons.${table} WHERE ${table === 'benchmarkRuns' ? 'id' : 'run'} = $run`, { run });
@@ -1482,7 +1521,7 @@ class AskPollisIndex implements IAskPollisIndex {
 		}
 	}
 
-	/** The runs of Model Benchmarks whose id is `id`, or all of them, the latest first, each with its models and their figures. */
+	/** The runs of Benchmark Answering Models whose id is `id`, or all of them, the latest first, each with its models and their figures. */
 	private async readBenchmarkRuns(connection: DuckDBConnection, id?: string): Promise<IBenchmarkRun[]> {
 		const where = id === undefined ? '' : 'WHERE id = $id';
 		const values = id === undefined ? undefined : { id };

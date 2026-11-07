@@ -15,6 +15,7 @@ import './askPollisPage.js';
 import { COMPARE_EMBEDDINGS_COMMAND_ID } from './compareEmbeddingsPage.js';
 import { COMPARE_RERANKERS_COMMAND_ID } from './compareRerankersPage.js';
 import { MODEL_BENCHMARKS_COMMAND_ID } from './modelBenchmarksPage.js';
+import { RETRIEVAL_BENCHMARKS_COMMAND_ID } from './retrievalBenchmarksPage.js';
 import { RAG_COMMAND_ID } from './ragPage.js';
 import { ANSWERING_STRATEGIES_COMMAND_ID } from './answeringStrategiesPage.js';
 import { COMPARE_MODELS_COMMAND_ID } from './compareModelsPage.js';
@@ -391,7 +392,7 @@ MenuRegistry.appendMenuItem(LocalModelsMenu, {
 // The chat models installed, run on published benchmarks, on a stratified sample of their questions (modelBenchmarksPage.ts)
 MenuRegistry.appendMenuItem(LocalModelsMenu, {
 	group: '2_compare',
-	command: { id: MODEL_BENCHMARKS_COMMAND_ID, title: localize('modelBenchmarks.menu', "Model Benchmarks...") },
+	command: { id: MODEL_BENCHMARKS_COMMAND_ID, title: localize('modelBenchmarks.menu', "Benchmark Answering Models...") },
 	order: 2,
 });
 
@@ -427,6 +428,13 @@ MenuRegistry.appendMenuItem(KnowledgeMenu, {
 	group: '2_evaluate',
 	command: { id: COMPARE_RERANKERS_COMMAND_ID, title: localize('compareRerankers.menu', "Evaluate Reranking Models...") },
 	order: 2,
+});
+
+// The embedding models and rerankers installed, run on the retrieval benchmarks of PollisBenchmarks (retrievalBenchmarksPage.ts)
+MenuRegistry.appendMenuItem(KnowledgeMenu, {
+	group: '2_evaluate',
+	command: { id: RETRIEVAL_BENCHMARKS_COMMAND_ID, title: localize('retrievalBenchmarks.menu', "Benchmark Embedding and Reranking Models...") },
+	order: 3,
 });
 
 

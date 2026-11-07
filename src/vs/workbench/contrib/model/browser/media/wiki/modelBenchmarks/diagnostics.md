@@ -17,8 +17,8 @@
 | A model's column shows an **Error** | Its server did not start, usually for lack of memory | Read the message; close other programs; choose a smaller model |
 | **Not Answered** above zero | The model's server stopped answering | Run again; a model that stops on its first three questions is not asked the rest |
 | **Seconds an Answer** is high | Long worked answers, thinking, or little free memory | The Answer Only, Thinking off, or a smaller model |
-| Download fails | No connection to Hugging Face | Check the connection and Download again |
-| The download says DuckDB is not installed | The Julia REPL has not started yet | Start the Julia REPL once, which installs DuckDB, then Download again |
+| **Make Ready** says Julia was not found | Julia is not installed, or Pollis cannot find it | Install Julia, then Make Ready again |
+| **Make Ready** says the questions are not on this computer | The questions that come with PollisBenchmarks.jl are missing | Install PollisBenchmarks.jl again, as the message says, then Make Ready again |
 
 ## When a Model's Answers Are Hard to Read
 A click on a question in **Questions** shows the question whole, the right answer, and each model's full answer with the answer read from it. Reading a few wrong answers shows whether a model reasons badly, ends in another form, or runs out of tokens.

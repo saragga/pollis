@@ -832,7 +832,15 @@ Claude Sonnet and GPT-5.5, side by side; where they agree, the figures can be tr
 For a question made from a passage, the run checks whether that passage was among the eight found. That depends on
 the embedding model, not on the chat model: \ui{Evaluate Embedding Models}, in \ui{Compose > Knowledge for AI Models}, compares
 the embedding models on your computer on the same test sets, how often and where each finds the passage, how fast,
-and in how much memory; \ui{Use for Ask Pollis} makes the one you choose the one Ask Pollis uses.
+and in how much memory; \ui{Use for Ask Pollis} makes the one you choose the one Ask Pollis uses. \ui{Evaluate Reranking
+Models} does the same for the rerankers.
+
+\subhead{Published benchmarks, and the choice for Ask Pollis}
+\ui{Benchmark Answering Models}, in \ui{Compose > Local AI Models}, runs the chat models on published sets of questions,
+such as MMLU-Pro and GSM8K, and \ui{Benchmark Embedding and Reranking Models}, in \ui{Compose > Knowledge for AI Models}, runs
+the embedding models and the rerankers on published retrieval benchmarks, SciFact and SCIDOCS, so that the results can be set
+beside those published. A published set says how a model does in general, not on Pollis's documents, so choosing the model
+for Ask Pollis stays on the Evaluate pages: only they have \ui{Use for Ask Pollis}.
 
 \begin{caution}{What leaves your computer}
 With local models only, and a local judge, nothing. With a cloud model or judge, what it answers or judges from: the

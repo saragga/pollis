@@ -829,3 +829,44 @@ export const learnMoreMessagesJs = `if (msg.command === 'paperLinks') {
 					item.classList.toggle('has-custom', customCopies[item.dataset.copyKind].indexOf(item.dataset.copyFile) >= 0);
 				});
 			}`;
+
+/**
+ * The switch between two choices, as on the Welcome page: the two names with a knob between them, on the side of the
+ * one chosen, which is in the foreground colour. `toLeft` and `toRight` name what a click on the knob does, for a
+ * screen reader. The page's script wires it with choiceSwitchJs.
+ */
+export function choiceSwitchHtml(id: string, left: string, right: string, toLeft = left, toRight = right): string {
+	return `<div class="choice-switch"><button class="choice" id="${id}-left">${left}</button><button class="switch-knob" id="${id}" data-to-left="${toLeft}" data-to-right="${toRight}"></button><button class="choice" id="${id}-right">${right}</button></div>`;
+}
+
+/** The styles of choiceSwitchHtml. */
+export const choiceSwitchCss = `.choice-switch { display: flex; align-items: center; gap: 10px; }
+		.choice-switch .choice { padding: 0; border: none; background: none; font: inherit; color: var(--vscode-descriptionForeground); cursor: pointer; }
+		.choice-switch .choice:hover, .choice-switch .choice.active { color: var(--vscode-foreground); }
+		.switch-knob { position: relative; flex-shrink: 0; width: 46px; height: 24px; padding: 0; border: 1px solid color-mix(in srgb, var(--vscode-descriptionForeground) 70%, transparent); border-radius: 12px; background: var(--vscode-input-background); box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25); cursor: pointer; transition: border-color 160ms ease; }
+		.switch-knob:hover { border-color: var(--vscode-focusBorder); }
+		.switch-knob::after { content: ''; position: absolute; top: 2px; left: 2px; width: 20px; height: 18px; border-radius: 9px; background: var(--vscode-button-background, var(--vscode-focusBorder)); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35); transition: left 160ms ease; }
+		.switch-knob.right::after { left: 22px; }
+		.switch-knob:focus-visible { outline: 1px solid var(--vscode-focusBorder); outline-offset: 2px; }
+		@media (prefers-reduced-motion: reduce) { .switch-knob, .switch-knob::after { transition: none; } }`;
+
+/**
+ * The script of choiceSwitchHtml: choiceSwitch(id, choose) calls choose(right) on a click, right true for the choice
+ * on the right, and returns show(right), which draws the switch with that choice made.
+ */
+export const choiceSwitchJs = `function choiceSwitch(id, choose) {
+		const left = document.getElementById(id + '-left');
+		const right = document.getElementById(id + '-right');
+		const knob = document.getElementById(id);
+		let onRight = false;
+		left.addEventListener('click', () => choose(false));
+		right.addEventListener('click', () => choose(true));
+		knob.addEventListener('click', () => choose(!onRight));
+		return value => {
+			onRight = value;
+			left.classList.toggle('active', !value);
+			right.classList.toggle('active', value);
+			knob.classList.toggle('right', value);
+			knob.setAttribute('aria-label', value ? knob.dataset.toLeft : knob.dataset.toRight);
+		};
+	}`;

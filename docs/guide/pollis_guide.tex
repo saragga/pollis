@@ -180,7 +180,7 @@ Questions and problems: \ui{Help > Report Issue}, or \contactemail.
 \contentsentry{Orchestration}\\
 \contentsentry{Literature Radar}\\
 \contentsentry{Snowball Search Map}\\
-\contentsentry{Built-in Databases}\\
+\contentsentry{Pollis Databases}\\
 \contentsentry{Ask Pollis}\\
 \contentsentry{Appendix: Reference Keys}\\
 \contentsentry{Appendix: Packages and Pull Requests}
@@ -241,8 +241,8 @@ give the path of the Julia program in the setting \setting{julia.executablePath}
 \newpage
 \subhead{The first start of the Julia REPL}
 When Pollis opens, the Julia REPL starts in the panel at the bottom. The first time, it installs
-DuckDB and PollisDatasets, makes the built-in databases PollisDatasets, PollisRSS (empty until
-feeds are read), PollisJournals, PollisReferences and PollisBenchmarks (Built-in Databases, page 40), and says \emph{This happens only once}. They go into an environment of Pollis's own,
+DuckDB and PollisDatasets, makes the databases of Pollis, the built-in PollisDatasets, PollisJournals, PollisReferences
+and PollisBenchmarks, and PollisRSS, of its activity, empty until feeds are read (Pollis Databases, page 40), and says \emph{This happens only once}. They go into an environment of Pollis's own,
 \texttt{\textasciitilde/.pollis/julia}, which comes after yours: your own versions of these packages are used
 first. At later starts, PollisDatasets, PollisJournals, PollisReferences, PollisRSS and PollisBenchmarks are updated from
 GitHub when there is a newer version; offline, the installed copies are kept. \ui{Check for Data Package
@@ -270,7 +270,7 @@ opens the same notes at any time. To stop the checks, set \setting{update.mode} 
 Pollis tells you things in four places, each with its own purpose:
 
 \noindent\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.2\linewidth}>{\raggedright\arraybackslash}X@{}}
-\textbf{\ui{Status}} & Whether Pollis is ready: Julia and its version, and the built-in databases, PollisDatasets, PollisRSS, PollisJournals, PollisReferences and PollisBenchmarks. Always shown; when something is missing it is a warning with its button. \\
+\textbf{\ui{Status}} & Whether Pollis is ready: Julia and its version, and the databases of Pollis, PollisDatasets, PollisRSS, PollisJournals, PollisReferences and PollisBenchmarks. Always shown; when something is missing it is a warning with its button. \\
 \textbf{\ui{Announcements}} & New releases of Julia, DBInterface, PollisDatasets and PollisTeX, until you dismiss them. Shown only when there is one. \\
 \textbf{\ui{RSS}} & The newest unread items of the feeds you follow (page 22); a camera or a microphone marks a video or a podcast, and a journal's items have the tag of its level and metrics. Its \ui{Alerts} tab shows your alerts and those that fired (page 26). \\
 \textbf{Notifications} & The bell at the bottom right: what happens while you work, such as new datasets, new content or a toolbox to reload. \\
@@ -424,9 +424,10 @@ Then query it in the Julia REPL with SQL:
 
 \subhead{The Databases view}
 \begin{itemize}
-  \item It has two sections: \ui{Pollis Built-In}, the five databases that come with Pollis, and \ui{User},
-    your own databases and those shown from the Julia REPL. \ui{New}, \ui{Refresh Schemas}, \ui{Learn More}
-    and \ui{New DuckDB Terminal} are at the top of the view, for both.
+  \item It has three sections: \ui{Pollis Built-In}, the databases that come with Pollis; \ui{Pollis Activity},
+    those Pollis records as you work; and \ui{User}, your own databases and those shown from the Julia REPL
+    (Pollis Databases, page 40). \ui{New}, \ui{Refresh Schemas}, \ui{Learn More} and \ui{New DuckDB Terminal}
+    are at the top of the view, for all three.
   \item Click a connection to connect it in the Julia REPL; \ui{Disconnect} closes it.
   \item On a table, \ui{Open in Table Viewer} shows its rows; right-click it for
     \ui{Preview Rows in Julia REPL}.
@@ -438,7 +439,7 @@ Then query it in the Julia REPL with SQL:
 
 \subhead{Three ways to use SQL}
 SQL should be at hand wherever you are working, without a second database program: all three use the
-same DuckDB engine, with its full-text search extension, \emph{fts}, and attach the five built-in databases, read-only.
+same DuckDB engine, with its full-text search extension, \emph{fts}, and attach the databases of Pollis, built in and of its activity, read-only.
 \begin{itemize}
   \item \textbf{The \texttt{duckdb>} terminal}, for SQL alone, without starting Julia: \ui{New DuckDB
     Terminal}, at the top of the Databases view (or \ui{Databases: New DuckDB Terminal} in the Command
@@ -1093,7 +1094,7 @@ Then pick the topic to list the feed under, or \ui{New Topic...}.
     only to the day you started following it: a feed cannot tell what happened before then.
   \item An item of a journal has a purple tag: the journal's level in the Norwegian register (\ui{Level 2}
     leading, \ui{Level 1} academic, \ui{Level 0} not academic), OpenAlex's 2-year mean citedness
-    (\ui{Cited 7.9}), and, once you have imported them (Built-in Databases, page 40), the SJR or Impact Factor
+    (\ui{Cited 7.9}), and, once you have imported them (Pollis Databases, page 40), the SJR or Impact Factor
     quartile and its year (\ui{SJR Q1 2025}). The pointer on the tag shows every value known, with its source
     and year: SJR and its categories, SNIP, IPP, h-index, open access. Pollis knows the journal of a catalogue
     feed, of an email alert's article, and of a feed you added, by looking up its first items once.
@@ -1128,7 +1129,7 @@ Every item Pollis reads is added to a monthly file in \texttt{\textasciitilde/.p
 stays when its feed drops it. \emph{PollisRSS} is a DuckDB database over those files, made with PollisDatasets the first time the Julia
 REPL starts (Data and Databases, page 6), and empty until feeds are read:
 \begin{enumerate}[label=\arabic*.]
-  \item In the Databases view, click \ui{PollisRSS}, under \ui{Pollis Built-In}. It connects in the Julia REPL as
+  \item In the Databases view, click \ui{PollisRSS}, under \ui{Pollis Activity}. It connects in the Julia REPL as
     \texttt{rss}, read-only.
   \item Query its four views: \texttt{items}, one row per item (feed, topic, title, link, published,
     received, summary, picture and media); \texttt{feeds}, one row per feed with its number of items;
@@ -1751,7 +1752,7 @@ its results, as you would a colleague's.
 \topic{Literature Radar}{Compose > Literature Radar}{Finding the articles that matter on a topic, bringing in references of your own, and following citations from a few works you know.}
 
 \ui{Literature Radar} asks two free, open indexes of scholarly works, OpenAlex and Semantic Scholar, and
-keeps what you choose in PollisReferences (Built-in Databases, page 40). It has four pages:
+keeps what you choose in PollisReferences (Pollis Databases, page 40). It has four pages:
 \ui{Discover Literature...}, \ui{Import References...}, \ui{Browse References...} and the
 \ui{Snowball Search Map}.
 
@@ -1809,7 +1810,7 @@ weighed on the work, not only mentioned.
 \textbf{\emph{Not found in OpenAlex}} (Import) & Its title or first author differs from OpenAlex's: correct the file, or keep it as it is. \\
 \end{trouble}
 
-\seealso{Inside a Panel, page 4.\quad Snowball Search Map, page 38.\quad Built-in Databases, page 40.}
+\seealso{Inside a Panel, page 4.\quad Snowball Search Map, page 38.\quad Pollis Databases, page 40.}
 
 
 % =====================================================================
@@ -1927,30 +1928,37 @@ found. \ui{Open...} brings a saved map back; \ui{New Search} starts again.
 \textbf{\emph{Semantic Scholar could not be reached, or is too busy just now}} & Click the dots again later. \\
 \end{trouble}
 
-\seealso{Literature Radar, page 36.\quad Built-in Databases, page 40.}
+\seealso{Literature Radar, page 36.\quad Pollis Databases, page 40.}
 
 
 % =====================================================================
-% PAGES 40–41 — BUILT-IN DATABASES
+% PAGES 40–41 — POLLIS DATABASES
 % =====================================================================
-\topic{Built-in Databases}{Databases view > PollisDatasets, PollisRSS, PollisJournals, PollisReferences, PollisBenchmarks, PollisDocuments}{The six databases that come with Pollis: what each holds, and how to add journal metrics.}
+\topic{Pollis Databases}{Databases view > Pollis Built-In · Pollis Activity}{The databases of Pollis, built in and of its activity: what each holds, and how to add journal metrics.}
 
-Pollis makes six DuckDB databases the first time the Julia REPL starts (Getting Started, page 2): five in
-\texttt{\textasciitilde/.pollis/databases}, and PollisDocuments in \texttt{\textasciitilde/.pollis/documents}, once the documents are compiled. All six are read-only: Pollis rebuilds them when what
-they come from changes, and your own tables go in a database of your own. In the Databases view they are listed
-under \ui{Pollis Built-In}; clicking one connects it in the Julia REPL. The \texttt{duckdb>} terminal, the
-\texttt{sql>} mode and \texttt{PollisDB.connect()} attach all six (Data and Databases, page 6).
+The Databases view has three groups of databases. \ui{Pollis Built-In} are the databases that come with Pollis: it
+makes them the first time the Julia REPL starts (Getting Started, page 2) and rebuilds them when what they come from
+changes, such as a new version of a data package, so they can always be made again. \ui{Pollis Activity} are those
+Pollis records as you work: the items of your feeds and the runs of the Evaluate and Benchmark pages. They cannot be
+made again, so they are the ones to back up. \ui{User} are your own. The databases of Pollis, of both groups, are
+read-only for you, in \texttt{\textasciitilde/.pollis/databases}, and PollisDocuments in
+\texttt{\textasciitilde/.pollis/documents}; your own tables go in a database of your own. Clicking one connects it in
+the Julia REPL; the \texttt{duckdb>} terminal, the \texttt{sql>} mode and \texttt{PollisDB.connect()} attach them all
+(Data and Databases, page 6).
 
 \begin{center}\small
 \renewcommand{\arraystretch}{1.25}
 \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.2\linewidth}>{\raggedright\arraybackslash}p{0.14\linewidth}X@{}}
 \textbf{Database} & \textbf{In Julia} & \textbf{What it holds}\\
+\multicolumn{3}{@{}l}{\textbf{Pollis Built-In}}\\
 PollisDatasets & \texttt{pollis} & The 69 datasets of PollisDatasets, a table each, with their descriptions.\\
-PollisRSS & \texttt{rss} & Every item of the feeds you follow, kept by month; empty until feeds are read (RSS Feeds, page 22).\\
 PollisJournals & \texttt{journals} & About 250,000 journals, conferences and book series, from OpenAlex; the Norwegian register's levels; and the journal metrics you import.\\
 PollisReferences & \texttt{references} & Every work Pollis cites, and those you save from Literature Radar (page 36) or add to a panel's \ui{Explore References}, with abstracts, keywords and dated citation counts.\\
 PollisBenchmarks & \texttt{benchmarks} & The published benchmarks of Pollis: their catalogue, with their sources, revisions and licences, and the questions of those built in.\\
 PollisDocuments & \texttt{documents} & The passages of Pollis's documents, the panel wikis, the package vignettes and the toolbox vignettes, with their embeddings, that Ask Pollis searches (page 42).\\
+\multicolumn{3}{@{}l}{\textbf{Pollis Activity}}\\
+PollisRSS & \texttt{rss} & Every item of the feeds you follow, kept by month; empty until feeds are read (RSS Feeds, page 22).\\
+Comparisons & \texttt{comparisons} & Every run of the Evaluate and Benchmark pages, with each question, answer, rating and score; empty until a page first opens.\\
 \end{tabularx}
 \end{center}
 
@@ -2011,8 +2019,24 @@ Pollis's key, and only its versions and counts are yours.
 The questions come from PollisBenchmarks.jl, each at the fixed revision of its sources and under its own licence;
 Pollis rebuilds the database when the package is updated. The benchmarks to download are listed in the catalogue, but their
 questions are not in the database, by their licence or their size: a page that runs them fetches them from their source.
-Model Benchmarks runs the benchmarks of questions: MMLU-Pro, GSM8K, TruthfulQA, BIG-Bench Hard, IFEval, MultiPL-E Julia, PubMedQA and FinQA.
-Evaluate Embedding Models and Evaluate Reranking Models run the retrieval benchmarks, SciFact and SCIDOCS.
+Benchmark Answering Models runs the benchmarks of questions: MMLU-Pro, GSM8K, TruthfulQA, BIG-Bench Hard, IFEval, MultiPL-E Julia, PubMedQA and FinQA.
+Benchmark Embedding and Reranking Models runs the retrieval benchmarks, SciFact and SCIDOCS. A published set says how a model does
+in general, not on Pollis's documents, so choosing the model for Ask Pollis stays on the Evaluate pages.
+
+\subhead{Comparisons}
+\begin{center}\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.3\linewidth}X@{}}
+\texttt{runs}, \texttt{questions}, \texttt{answers}, \texttt{scores}, \texttt{unrated} & Evaluate Answering Models: each run, its questions, each answer with its timings, each judge's ratings, and the answers a judge did not rate.\\
+\texttt{embeddingRuns}, \texttt{embeddingQuestions}, \texttt{embeddingFound} & Evaluate Embedding Models, and Benchmark Embedding and Reranking Models for its embedding models: each run, its questions, and what each model found for each, with nDCG@10 and Recall@10 for a benchmark.\\
+\texttt{rerankRuns}, \texttt{rerankQuestions}, \texttt{rerankFound} & Evaluate Reranking Models, and Benchmark Embedding and Reranking Models for its rerankers, in the same way.\\
+\texttt{benchmarkRuns}, \texttt{benchmarkModels}, \texttt{benchmarkAnswers} & Benchmark Answering Models: each run with its sample and settings, each model with its figures, and each answer with its grade and timings.\\
+\end{tabularx}
+\end{center}
+Pollis writes the runs to \texttt{\textasciitilde/.pollis/ask/Comparisons.duckdb} and copies it to
+\texttt{\textasciitilde/.pollis/databases} after each change: the Databases view connects the copy, so that reading it
+never keeps a page from saving a run. A connection shows the runs as they were when it was made; connect again for
+those made since.
 
 \newpage
 \subhead{Import journal metrics}
@@ -2189,9 +2213,18 @@ same test sets, in the same four steps. Each model embeds the passages it has no
 searches each question as Ask Pollis would: you see how often the passage it came from is among the eight found, and
 where, with words and meaning and by meaning alone, the milliseconds per question and per search, the passages a
 second, the memory, and the size of the index. \ui{Use for Ask Pollis}, under a model, makes it the one Ask Pollis
-uses. The test sets include SciFact and SCIDOCS, from PollisBenchmarks: each model searches the benchmark's own
-documents by meaning, and each query is scored by the first ten found, with nDCG@10 and Recall@10. In Evaluate Reranking
-Models, each reranker puts in its order the 100 documents BM25 finds for each query, scored the same way. Nothing leaves your computer.
+uses. \ui{Evaluate Reranking Models...} does the same for the rerankers, which put the passages found in their order.
+Nothing leaves your computer.
+
+\subhead{Benchmark Embedding and Reranking Models}
+\ui{Compose > Knowledge for AI Models > Benchmark Embedding and Reranking Models...} runs the embedding models or the
+rerankers on your computer on the retrieval benchmarks of PollisBenchmarks, SciFact and SCIDOCS, as BEIR runs them, so that
+the results can be set beside those published: on all the queries of a benchmark, or on a random sample of them for a quicker run. Each embedding model searches the benchmark's own documents by meaning;
+each reranker puts in its order the 100 documents BM25 finds for each query, beside the order of BM25 itself, as
+\ui{No Reranker}. Each query is scored by the first ten documents found, with nDCG@10 and Recall@10. A published set says
+how a model does in general, not on Pollis's documents, so choosing the model for Ask Pollis stays on the Evaluate pages:
+this page has no \ui{Use for Ask Pollis}. Benchmark Answering Models, in \ui{Compose > Local AI Models}, does the same
+for the chat models, on published sets of questions.
 
 \subhead{Settings}
 \begin{center}\small
@@ -2301,7 +2334,7 @@ entered by hand.
 \textbf{A work is in twice} & Its name was spelt two ways. Keep the older key, and correct the other's uses. \\
 \end{trouble}
 
-\seealso{Reports, page 20.\quad Built-in Databases, page 40.}
+\seealso{Reports, page 20.\quad Pollis Databases, page 40.}
 
 % =====================================================================
 % PAGE 48 — APPENDIX: PACKAGES AND PULL REQUESTS

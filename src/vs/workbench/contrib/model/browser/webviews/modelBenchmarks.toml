@@ -1,11 +1,11 @@
-# Model Benchmarks Webview Configuration
+# Benchmark Answering Models Webview Configuration
 # A page of Compose in the Time Arrow style of the scaffold, not a panel: only its Powered by and Learn More. `pageCommand`
 # is the command that opens it, which a panel's contribution file would say. The build script generates:
 # - src/vs/workbench/contrib/model/browser/webviews/modelBenchmarks.data.ts
 # Run: npm run gulp compile-toml
 
 [meta]
-title = "Model Benchmarks"
+title = "Benchmark Answering Models"
 viewType = "pollis.modelBenchmarks"
 pageCommand = "pollis.modelBenchmarks"
 
@@ -78,16 +78,34 @@ separator = true
 label = "Original Papers"
 
 [[references]]
+key = "CCSSB...2021a"
+
+[[references]]
+key = "CGNNP...2023a"
+
+[[references]]
 key = "CKBCJ...2021a"
 
 [[references]]
 key = "HBBZM...2021a"
 
 [[references]]
+key = "JDLCL2019a"
+
+[[references]]
+key = "LHE2022a"
+
+[[references]]
 key = "RRS2020a"
 
 [[references]]
+key = "SSSGT...2023a"
+
+[[references]]
 key = "WMZNC...2024a"
+
+[[references]]
+key = "ZLMBB...2023a"
 
 [[references]]
 separator = true

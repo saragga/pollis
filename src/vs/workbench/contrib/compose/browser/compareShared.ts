@@ -17,10 +17,12 @@ import { IStorageService, StorageScope, StorageTarget } from '../../../../platfo
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { FEWEST_ROWS, rowsChoiceCss, sortHeadingsCss, sortHint } from '../../model/browser/webviews/webviewPager.js';
 import { spinnerCss } from '../../model/browser/webviews/webviewScaffold.js';
-import { AskTopic, IAskPollisEvalItem, IAskPollisService, RETRIEVAL_BENCHMARKS } from '../common/askPollis.js';
+import { AskTopic, IAskPollisEvalItem, IAskPollisService } from '../common/askPollis.js';
 
-// What the two pages that evaluate models share, Evaluate Answering Models (compareModelsPage.ts, compareModelsRun.ts)
-// and Evaluate Embedding Models (compareEmbeddingsPage.ts, compareEmbeddingsRun.ts): the test sets, the Standard one
+// What the pages that evaluate models share, Evaluate Answering Models (compareModelsPage.ts, compareModelsRun.ts),
+// Evaluate Embedding Models (compareEmbeddingsPage.ts, compareEmbeddingsRun.ts) and Evaluate Reranking Models, and
+// with them the two benchmark pages, Benchmark Answering Models and Benchmark Embedding and Reranking Models, for their
+// models, charts and figures: the test sets, the Standard one
 // that Pollis ships and the user's in ~/.pollis/ask/sets; the test set a page shows, with the questions ticked; the
 // samples of a run for the charts, the memory free and what the servers of the models did; and the parts of the pages
 // that show them (the models on this computer, the test set, the charts and Model Servers).
@@ -37,18 +39,9 @@ const PANEL_FAQ_FILE: AppResourcePath = 'vs/workbench/contrib/compose/browser/me
 /** The name of the Panel FAQ test set among the test sets, which no file of the user's can have, for its slash. */
 export const PANEL_FAQ_TEST_SET = '/panelFaq';
 
-/** What the name of a retrieval benchmark of PollisBenchmarks.duckdb starts with among the test sets, its id after it, which no file of the user's can have. */
-const BENCHMARK_TEST_SET = '/benchmark/';
-
-/** The retrieval benchmark that the test set `name` is, its id; nothing for any other test set. */
-export function benchmarkOfTestSet(name: string): string | undefined {
-	const id = name.startsWith(BENCHMARK_TEST_SET) ? name.slice(BENCHMARK_TEST_SET.length) : undefined;
-	return RETRIEVAL_BENCHMARKS.some(benchmark => benchmark.id === id) ? id : undefined;
-}
-
 /** Whether the test set `name` comes with Pollis, and so cannot be changed. */
 export function isShippedTestSet(name: string): boolean {
-	return name === STANDARD_TEST_SET || name === PANEL_FAQ_TEST_SET || benchmarkOfTestSet(name) !== undefined;
+	return name === STANDARD_TEST_SET || name === PANEL_FAQ_TEST_SET;
 }
 
 /** A moment of a run, every SAMPLE_SECONDS, for the charts of the page: the memory free and the tokens used until then. */
@@ -329,16 +322,9 @@ export class CompareTestSetChoice {
 		private readonly post: (message: object) => void,
 		/** When the Panel FAQ test set is among those to choose from: the questions of the FAQ of the installed toolboxes' panels, which it holds with those of Pollis' own. */
 		private readonly panelFaq?: () => readonly IAskPollisEvalItem[],
-		/** Whether the retrieval benchmarks of PollisBenchmarks.duckdb are among them, their queries read from it. */
-		private readonly benchmarks = false,
 	) {
 		this.name = storageService.get(keys.testSet, StorageScope.APPLICATION, STANDARD_TEST_SET);
 		this.ticks = storedTicks(storageService, keys.ticked);
-	}
-
-	/** The retrieval benchmark that the test set shown is, its id; nothing for any other. */
-	get benchmark(): string | undefined {
-		return this.benchmarks ? benchmarkOfTestSet(this.name) : undefined;
 	}
 
 	/** The questions ticked in the test set `name`. */
@@ -358,21 +344,15 @@ export class CompareTestSetChoice {
 	/** Shows the test set `name`, a name among the user's sets or one that comes with Pollis, and remembers it for the next time. */
 	async choose(name: string): Promise<void> {
 		const names = await this.sets.names();
-		this.name = names.includes(name) || (this.panelFaq && name === PANEL_FAQ_TEST_SET) || (this.benchmarks && benchmarkOfTestSet(name)) ? name : STANDARD_TEST_SET;
+		this.name = names.includes(name) || (this.panelFaq && name === PANEL_FAQ_TEST_SET) ? name : STANDARD_TEST_SET;
 		this.storageService.store(this.keys.testSet, this.name, StorageScope.APPLICATION, StorageTarget.USER);
-		const benchmarks = this.benchmarks ? RETRIEVAL_BENCHMARKS.map(benchmark => ({ value: BENCHMARK_TEST_SET + benchmark.id, label: benchmark.name })) : [];
-		this.post({ command: 'sets', sets: names, panelFaq: this.panelFaq ? PANEL_FAQ_TEST_SET : undefined, benchmarks, chosen: this.name, shipped: isShippedTestSet(this.name), ticked: this.ticked() });
+		this.post({ command: 'sets', sets: names, panelFaq: this.panelFaq ? PANEL_FAQ_TEST_SET : undefined, chosen: this.name, shipped: isShippedTestSet(this.name), ticked: this.ticked() });
 		this.items = await this.read();
 		await this.postItems();
 	}
 
-	/** The questions of the test set shown, those of the installed toolboxes' panels added to Panel FAQ; the queries of a benchmark, each with its id and its relevant documents. */
+	/** The questions of the test set shown, those of the installed toolboxes' panels added to Panel FAQ. */
 	private async read(): Promise<IAskPollisEvalItem[]> {
-		const benchmark = this.benchmark;
-		if (benchmark) {
-			const queries = await this.askPollisService.retrievalQueries(benchmark).catch(() => undefined);
-			return (queries ?? []).map(query => ({ source: query.id, context: '', question: query.text, answer: '', relevant: query.relevant }));
-		}
 		const items = await this.sets.read(this.name);
 		return this.panelFaq && this.name === PANEL_FAQ_TEST_SET ? [...items, ...this.panelFaq()] : items;
 	}
@@ -384,8 +364,8 @@ export class CompareTestSetChoice {
 	}
 
 	async postItems(): Promise<void> {
-		// The topic of each question by its passage, as the documents have it now; none for a passage no longer in the documents, or when there is no index; a question of the Panel FAQ has its panel and no passage, a query of a benchmark neither
-		const matches = this.benchmark ? undefined : await this.askPollisService.matches(this.items.map(item => item.context));
+		// The topic of each question by its passage, as the documents have it now; none for a passage no longer in the documents, or when there is no index; a question of the Panel FAQ has its panel and no passage
+		const matches = await this.askPollisService.matches(this.items.map(item => item.context));
 		// The group Tick at Random spreads a draw over: a question of the Panel FAQ by its panel, any other by its topic
 		this.post({
 			command: 'items', items: this.items.map((item, index) => ({
@@ -929,18 +909,14 @@ export const compareTestSetScript = `
 		select.textContent = '';
 		select.appendChild(new Option(TEXT.standard, ''));
 		if (message.panelFaq) { select.appendChild(new Option(TEXT.panelFaq, message.panelFaq)); }
-		for (const benchmark of message.benchmarks || []) { select.appendChild(new Option(benchmark.label, benchmark.value)); }
 		for (const name of message.sets) { select.appendChild(new Option(name, name)); }
 		select.value = message.chosen;
 		standard = message.shipped;
 		ticked.clear();
 		for (const question of message.ticked) { ticked.add(question); }
-		const benchmark = (message.benchmarks || []).find(candidate => candidate.value === message.chosen);
-		document.getElementById('setHint').innerHTML = benchmark
-			? yellow(format(TEXT.benchmarkHint, benchmark.label))
-			: standard
-				? esc(message.panelFaq && message.chosen === message.panelFaq ? TEXT.panelFaqHint : TEXT.standardHint)
-				: esc(TEXT.yoursHint).replace('{0}', '<span class="yellow">' + esc('~/.pollis/ask/sets/' + message.chosen + '.json') + '</span>');
+		document.getElementById('setHint').innerHTML = standard
+			? esc(message.panelFaq && message.chosen === message.panelFaq ? TEXT.panelFaqHint : TEXT.standardHint)
+			: esc(TEXT.yoursHint).replace('{0}', '<span class="yellow">' + esc('~/.pollis/ask/sets/' + message.chosen + '.json') + '</span>');
 		testSetChanged();
 	}
 	/** The questions of the test set shown: the ticks of those no longer in it go. */

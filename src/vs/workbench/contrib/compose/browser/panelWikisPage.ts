@@ -23,6 +23,7 @@ import { IPathService } from '../../../services/path/common/pathService.js';
 import { IStorageService } from '../../../../platform/storage/common/storage.js';
 import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
 import { PANELWIKIS_METADATA } from '../../model/browser/webviews/panelWikis.data.js';
+import { choiceSwitchCss, choiceSwitchHtml, choiceSwitchJs } from '../../model/browser/webviews/scaffoldShared.js';
 import { buildWebviewHtml } from '../../model/browser/webviews/webviewScaffold.js';
 import { IPollisMenuNode, IPollisViewsService } from '../../pollisViews/common/pollisViews.js';
 import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_MINIMAL_STYLE } from './libraryPage.js';
@@ -167,6 +168,7 @@ function pageHtml(): string {
 		introHtml: text.intro,
 		extraCss: `
 ${LIBRARY_PAGE_MINIMAL_STYLE}
+	${choiceSwitchCss}
 	.libraryPage {
 	h2 { font-size: 18px; font-weight: 400; margin: 20px 0 4px 0; }
 	.hint { color: var(--vscode-descriptionForeground); margin: 0 0 8px 0; line-height: 1.4; max-width: 900px; }
@@ -175,39 +177,6 @@ ${LIBRARY_PAGE_MINIMAL_STYLE}
 	.panel-title { font-size: 14px; font-weight: 600; }
 	.filters { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin: 0 0 8px 0; }
 	.filters .search { margin: 0; }
-	/* The Written and Not Written tabs with a switch between them, as on the Welcome page; the one chosen in the foreground colour */
-	.tabs { display: flex; align-items: center; gap: 10px; }
-	.tab { padding: 0; border: none; background: none; font: inherit; color: var(--vscode-descriptionForeground); cursor: pointer; }
-	.tab:hover, .tab.active { color: var(--vscode-foreground); }
-	.tab-switch {
-		position: relative;
-		flex-shrink: 0;
-		width: 46px;
-		height: 24px;
-		padding: 0;
-		border: 1px solid color-mix(in srgb, var(--vscode-descriptionForeground) 70%, transparent);
-		border-radius: 12px;
-		background: var(--vscode-input-background);
-		box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25);
-		cursor: pointer;
-		transition: border-color 160ms ease;
-	}
-	.tab-switch:hover { border-color: var(--vscode-focusBorder); }
-	.tab-switch::after {
-		content: '';
-		position: absolute;
-		top: 2px;
-		left: 2px;
-		width: 20px;
-		height: 18px;
-		border-radius: 9px;
-		background: var(--vscode-button-background, var(--vscode-focusBorder));
-		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
-		transition: left 160ms ease;
-	}
-	.tab-switch.right::after { left: 22px; }
-	.tab-switch:focus-visible { outline: 1px solid var(--vscode-focusBorder); outline-offset: 2px; }
-	@media (prefers-reduced-motion: reduce) { .tab-switch, .tab-switch::after { transition: none; } }
 	.link.stub { color: var(--vscode-disabledForeground); }
 	}
 `,
@@ -215,11 +184,7 @@ ${LIBRARY_PAGE_MINIMAL_STYLE}
 		<div class="libraryPage">
 	<div class="filters">
 		<input class="search" id="search" type="search" placeholder="${text.search}" aria-label="${text.search}">
-		<div class="tabs">
-			<button class="tab" id="written-tab">${text.written}</button>
-			<button class="tab-switch" id="tab-switch"></button>
-			<button class="tab" id="not-written-tab">${text.notWritten}</button>
-		</div>
+		${choiceSwitchHtml('tab-switch', text.written, text.notWritten, text.showWritten, text.showNotWritten)}
 		<span class="small" id="counts"></span>
 	</div>
 	<p class="hint" id="note" hidden></p>
@@ -229,30 +194,21 @@ ${LIBRARY_PAGE_MINIMAL_STYLE}
 		pageScriptJs: `
 	const TEXT = ${JSON.stringify(text)};
 	${LIBRARY_PAGE_HELPERS}
+	${choiceSwitchJs}
 
 	let menus;
 	const search = document.getElementById('search');
-	const writtenTab = document.getElementById('written-tab');
-	const notWrittenTab = document.getElementById('not-written-tab');
-	const tabSwitch = document.getElementById('tab-switch');
 	// Whether the written wikis show, or the ones not written yet
 	let showWritten = (vscode.getState() || {}).showWritten !== false;
 
-	// The tab chosen in the foreground colour, the knob on its side
-	function showTabs() {
-		writtenTab.classList.toggle('active', showWritten);
-		notWrittenTab.classList.toggle('active', !showWritten);
-		tabSwitch.classList.toggle('right', !showWritten);
-		tabSwitch.setAttribute('aria-label', showWritten ? TEXT.showNotWritten : TEXT.showWritten);
-	}
-	showTabs();
-
-	function chooseTab(written) {
-		showWritten = written;
+	// The switch between the written wikis and those not written yet, the knob on the side of the one shown
+	const showTabs = choiceSwitch('tab-switch', notWritten => {
+		showWritten = !notWritten;
 		vscode.setState({ ...(vscode.getState() || {}), showWritten });
-		showTabs();
+		showTabs(!showWritten);
 		render();
-	}
+	});
+	showTabs(!showWritten);
 
 	// A panel's wikis, written or not as the switch says, that match the search: all of them when its menu, path or title does
 	function shownWikis(menu, panel) {
@@ -329,9 +285,6 @@ ${LIBRARY_PAGE_MINIMAL_STYLE}
 	}
 
 	search.addEventListener('input', render);
-	writtenTab.addEventListener('click', () => chooseTab(true));
-	notWrittenTab.addEventListener('click', () => chooseTab(false));
-	tabSwitch.addEventListener('click', () => chooseTab(!showWritten));
 	window.addEventListener('message', event => {
 		if (event.data.command === 'menus') {
 			menus = event.data.menus;

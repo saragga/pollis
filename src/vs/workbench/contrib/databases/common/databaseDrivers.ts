@@ -27,14 +27,28 @@ export interface IDatabaseConnectionProfile {
 	readonly variable: string;
 	/** Driver field values, keyed by {@link IDatabaseDriverField.id}. */
 	readonly options: Readonly<Record<string, string | boolean>>;
-	/** Whether this is the built-in Pollis database, which cannot be edited or deleted. */
+	/** Whether this is a database of Pollis, built in or of its activity, which cannot be edited or deleted. */
 	readonly builtin?: boolean;
+	/**
+	 * Whether this database of Pollis is of its activity: what Pollis records as you work, such as the runs of the
+	 * Evaluate and Benchmark pages or the items of the RSS feeds, rather than what comes with it. It cannot be
+	 * rebuilt, so it is the one to back up; you read it, read-only, while Pollis adds to it.
+	 */
+	readonly activity?: boolean;
+}
+
+/** The three groups of databases of the Databases view: those built into Pollis, those of its activity, and the user's. */
+export type DatabaseGroup = 'builtin' | 'activity' | 'user';
+
+/** The group of the Databases view that lists `profile`. */
+export function databaseGroupOf(profile: IDatabaseConnectionProfile | undefined): DatabaseGroup {
+	return !profile?.builtin ? 'user' : profile.activity ? 'activity' : 'builtin';
 }
 
 /** The id of the built-in Pollis database, a DuckDB file in ~/.pollis. */
 export const BUILTIN_DATABASE_ID = 'pollis';
 
-/** The id of the PollisRSS database, views over the archive of the RSS feeds in ~/.pollis/rss, also built in. */
+/** The id of the PollisRSS database, views over the archive of the RSS feeds in ~/.pollis/rss, of the activity of Pollis. */
 export const RSS_DATABASE_ID = 'pollisrss';
 
 /** The id of the PollisJournals database, the journals of OpenAlex and the metrics imported, also built in. */
@@ -48,6 +62,12 @@ export const BENCHMARKS_DATABASE_ID = 'pollisbenchmarks';
 
 /** The id of the PollisDocuments database, the passages of Pollis' documents that Ask Pollis searches, also built in. */
 export const DOCUMENTS_DATABASE_ID = 'pollisdocuments';
+
+/**
+ * The id of the Comparisons database, of the activity of Pollis: the runs of the Evaluate and Benchmark pages, read
+ * from the copy of ~/.pollis/ask/Comparisons.duckdb that Pollis makes in ~/.pollis/databases after each change.
+ */
+export const COMPARISONS_DATABASE_ID = 'polliscomparisons';
 
 /** The command of the Journal Metrics page, the sources of PollisJournals' levels and metrics, to import or remove. */
 export const JOURNAL_METRICS_COMMAND_ID = 'pollis.databases.journalMetrics';
@@ -337,14 +357,15 @@ export function generateConnectionCode(profile: IDatabaseConnectionProfile): str
  * and the built-in database first makes its file from the PollisDatasets, when they have changed (PollisRSS, its views
  * over the archive of the RSS feeds, when missing; PollisJournals, from the journals of PollisJournals.jl; PollisReferences,
  * from the references of Pollis; PollisBenchmarks, from the benchmarks of PollisBenchmarks.jl). PollisDocuments is made when the Julia REPL starts, after the documents are compiled,
- * and needs nothing here.
+ * and needs nothing here; nor does Comparisons, the copy of the runs of the Evaluate and Benchmark pages, which needs only to be there.
  */
 export function generateSessionConnectCode(profile: IDatabaseConnectionProfile, connected: boolean): string {
 	const id = juliaString(profile.id);
 	return [
 		...(connected ? [`PollisDB.disconnect(${id})`] : []),
 		...(profile.driver === 'duckdb' ? ['PollisDB.install()'] : []),
-		...(profile.builtin && profile.id !== DOCUMENTS_DATABASE_ID ? [profile.id === RSS_DATABASE_ID ? 'PollisDB.build_rss()' : profile.id === JOURNALS_DATABASE_ID ? 'PollisDB.build_journals()' : profile.id === REFERENCES_DATABASE_ID ? 'PollisDB.build_references()' : profile.id === BENCHMARKS_DATABASE_ID ? 'PollisDB.build_benchmarks()' : 'PollisDB.build()'] : []),
+		...(profile.builtin && profile.id === COMPARISONS_DATABASE_ID ? [`isfile(${juliaString(stringValue(profile, 'path'))}) || error(${juliaString(localize('comparisons.noCopy', "Comparisons has no runs yet: Pollis makes it when an Evaluate or Benchmark page first opens."))})`] : []),
+		...(profile.builtin && profile.id !== DOCUMENTS_DATABASE_ID && profile.id !== COMPARISONS_DATABASE_ID ? [profile.id === RSS_DATABASE_ID ? 'PollisDB.build_rss()' : profile.id === JOURNALS_DATABASE_ID ? 'PollisDB.build_journals()' : profile.id === REFERENCES_DATABASE_ID ? 'PollisDB.build_references()' : profile.id === BENCHMARKS_DATABASE_ID ? 'PollisDB.build_benchmarks()' : 'PollisDB.build()'] : []),
 		generateConnectionCode(profile),
 		`PollisDB.register(${id}, ${profile.variable}; name = ${juliaString(profile.name)})`,
 	].join('\n');

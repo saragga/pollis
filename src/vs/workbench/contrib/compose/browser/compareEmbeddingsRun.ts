@@ -11,7 +11,7 @@ import { IConfigurationService } from '../../../../platform/configuration/common
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { IProductService } from '../../../../platform/product/common/productService.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
-import { ASK_CHAT_MODEL, ASK_EMBEDDING_CONTEXT, IAskPollisEvalItem, IAskPollisService, IEmbeddingRun, IEmbeddingRunFound, IEmbeddingRunModel, retrievalBenchmarkName } from '../common/askPollis.js';
+import { ASK_CHAT_MODEL, ASK_EMBEDDING_CONTEXT, IAskPollisEvalItem, IAskPollisService, IEmbeddingRun, IEmbeddingRunFound, IEmbeddingRunModel } from '../common/askPollis.js';
 import { ICompareProgress } from './compareModelsRun.js';
 import { CompareSampler, CompareTestSets, ICompareSample, ICompareSamples } from './compareShared.js';
 
@@ -21,9 +21,6 @@ import { CompareSampler, CompareTestSets, ICompareSample, ICompareSamples } from
 // then the questions of the test set are searched with its embeddings as Ask Pollis would (IAskPollisService.evaluateEmbedding):
 // where each question's own passage is among those given, and among all passages by meaning only. The memory its
 // server takes is the memory free before it started less the memory free when it was done. The run is kept in Comparisons.duckdb.
-// A retrieval benchmark of PollisBenchmarks.duckdb is run the same way on its own documents, in place of the index: each
-// model embeds those it has not embedded yet, into the same cache, then searches each query among them by meaning
-// alone, and each query is scored by the documents found first (IAskPollisService.evaluateRetrieval), as BEIR scores them.
 
 /** What a run ends with, or why it could not be done. */
 export interface IEmbeddingEnd {
@@ -46,8 +43,6 @@ function evaluationError(error: string | undefined): string | undefined {
 			return localize('compareEmbeddings.notIndexed', "Ask Pollis has no index yet: it is built when the Julia REPL starts.");
 		case 'notEmbedded':
 			return localize('compareEmbeddings.notEmbedded', "No passage could be embedded with this model.");
-		case 'notBenchmarks':
-			return localize('compareEmbeddings.notBenchmarks', "~/.pollis/databases/PollisBenchmarks.duckdb could not be read: PollisBenchmarks.jl makes it when the Julia REPL starts.");
 		default:
 			return error;
 	}
@@ -120,8 +115,7 @@ export class CompareEmbeddingsRunner {
 		return Promise.resolve(this.commandService.executeCommand<number>('language-julia.pollisAvailableMemory')).catch(() => undefined);
 	}
 
-	/** Runs `items`, the questions of a test set, or the queries of the retrieval benchmark `benchmark` among its documents. */
-	async run(models: readonly IEmbeddingRunModel[], items: readonly IAskPollisEvalItem[], benchmark?: string): Promise<IEmbeddingEnd> {
+	async run(models: readonly IEmbeddingRunModel[], items: readonly IAskPollisEvalItem[]): Promise<IEmbeddingEnd> {
 		if (this._running) {
 			return { error: localize('compareEmbeddings.busy', "Wait for the run to end, or stop it.") };
 		}
@@ -141,14 +135,9 @@ export class CompareEmbeddingsRunner {
 		const found: IEmbeddingRunFound[] = [];
 		let passages = 0;
 		let current = 0;
-		const name = benchmark && retrievalBenchmarkName(benchmark);
 		const listener = this.askPollisService.onDidEmbed(e => this.report(e.phase === 'embed'
-			? name
-				? localize('compareEmbeddings.embeddingDocuments', "Embedding the documents of {0} with {1} ({2} of {3})...", name, models[current].label, current + 1, models.length)
-				: localize('compareEmbeddings.embedding', "Embedding the passages with {0} ({1} of {2})...", models[current].label, current + 1, models.length)
-			: name
-				? localize('compareEmbeddings.searchingQueries', "Searching the queries of {0} with {1} ({2} of {3})...", name, models[current].label, current + 1, models.length)
-				: localize('compareEmbeddings.searching', "Searching the questions with {0} ({1} of {2})...", models[current].label, current + 1, models.length), e.done, e.total));
+			? localize('compareEmbeddings.embedding', "Embedding the passages with {0} ({1} of {2})...", models[current].label, current + 1, models.length)
+			: localize('compareEmbeddings.searching', "Searching the questions with {0} ({1} of {2})...", models[current].label, current + 1, models.length), e.done, e.total));
 		try {
 			for (const [i, model] of models.entries()) {
 				if (this.stopped) {
@@ -164,12 +153,9 @@ export class CompareEmbeddingsRunner {
 				}
 				try {
 					this.sampler.mark('embed');
-					const request = { model: model.value, url: server.url, passagePrefix: model.passage };
-					const done = benchmark ? await this.askPollisService.embedRetrieval({ ...request, benchmark }) : await this.askPollisService.embedPassages(request);
+					const done = await this.askPollisService.embedPassages({ model: model.value, url: server.url, passagePrefix: model.passage });
 					this.sampler.mark('search');
-					const evaluated = this.stopped ? undefined : benchmark
-						? await this.askPollisService.evaluateRetrieval({ ...request, benchmark, queryPrefix: model.query, queries: items.map(item => ({ id: item.source, text: item.question, relevant: item.relevant ?? [] })) })
-						: await this.askPollisService.evaluateEmbedding({ ...request, queryPrefix: model.query, questions: items.map(item => ({ question: item.question, context: item.context })) });
+					const evaluated = this.stopped ? undefined : await this.askPollisService.evaluateEmbedding({ model: model.value, url: server.url, passagePrefix: model.passage, queryPrefix: model.query, questions: items.map(item => ({ question: item.question, context: item.context })) });
 					const after = await this.availableMemory();
 					passages = evaluated?.passages || passages;
 					evaluated?.found.forEach((result, question) => found.push({ ...result, question, model: model.value }));
@@ -190,7 +176,7 @@ export class CompareEmbeddingsRunner {
 		}
 		listener.dispose();
 		const run: IEmbeddingRun = {
-			summary: { id: generateUuid(), started, pollis: this.productService.pollisVersion ?? this.productService.version, models: measured, questions: items.length, passages, ...(benchmark ? { benchmark } : {}) },
+			summary: { id: generateUuid(), started, pollis: this.productService.pollisVersion ?? this.productService.version, models: measured, questions: items.length, passages },
 			questions: items,
 			found,
 		};

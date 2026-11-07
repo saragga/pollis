@@ -32,7 +32,7 @@ import { compareChartsHtml, compareChartsScript, compareCommonScript, compareCss
 import { IBenchmarkEnd, IBenchmarkInfo, IBenchmarkQuestion, IBenchmarkSampleRequest, ModelBenchmarksRunner } from './modelBenchmarksRun.js';
 import { IInstalledModel } from './modelsInstalledPage.js';
 
-// Model Benchmarks, from Compose > Local AI Models > Model Benchmarks... (compose.contribution.ts): the chat models
+// Benchmark Answering Models, from Compose > Local AI Models > Benchmark Answering Models... (compose.contribution.ts): the chat models
 // of this computer run on published benchmarks, on a stratified random sample of their questions. One page, in five
 // steps: 1, the benchmark, its questions made ready once; 2, the sample: the strata to draw from, how many questions, shared in
 // proportion to the strata or equally, and the seed, which draws the same sample again; 3, the models and how they
@@ -231,7 +231,7 @@ async function openModelBenchmarksPage(accessor: ServicesAccessor): Promise<void
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
 		return;
 	}
-	const title = localize('modelBenchmarks.title', "Model Benchmarks");
+	const title = localize('modelBenchmarks.title', "Benchmark Answering Models");
 	const webviewInput = webviewWorkbenchService.openWebview(
 		{
 			title,
@@ -486,7 +486,7 @@ async function openModelBenchmarksPage(accessor: ServicesAccessor): Promise<void
 function pageHtml(rows: number, entries: readonly IBenchmarkEntry[]): string {
 	const text = {
 		...compareSharedText(),
-		title: localize('modelBenchmarks.title', "Model Benchmarks"),
+		title: localize('modelBenchmarks.title', "Benchmark Answering Models"),
 		intro: localize('modelBenchmarks.intro', "How well do the chat models of this computer do on published benchmarks? Choose a benchmark, draw a stratified random sample of its questions, and each model chosen answers them, one after the other, alone in memory. Each answer is graded as the benchmark grades it, and each model has its score with its 95% interval, its score in each stratum, how fast it answered and the memory it took."),
 		benchmarkSection: localize('modelBenchmarks.benchmarkSection', "Benchmark"),
 		benchmarkIntro: localize('modelBenchmarks.benchmarkIntro', "The questions of each benchmark come with Pollis, in PollisBenchmarks.jl, at a fixed revision of their source. They are made ready once in {0}, with the worked examples that a prompt can show first.", '{0}'),
@@ -580,6 +580,7 @@ function pageHtml(rows: number, entries: readonly IBenchmarkEntry[]): string {
 		error: localize('modelBenchmarks.error', "Error"),
 		published: localize('modelBenchmarks.published', "Published"),
 		publishedHint: localize('modelBenchmarks.publishedHint', "The score the model's makers published on all the questions, with their own prompt and settings: a hover shows them, a click opens the model card"),
+		descriptive: localize('modelBenchmarks.descriptive', "Descriptive Statistics"),
 		byStratum: localize('modelBenchmarks.byStratum', "By Stratum"),
 		byStratumIntro: localize('modelBenchmarks.byStratumIntro', "The share of right answers of each model in each stratum, with the questions asked."),
 		questionsPart: localize('modelBenchmarks.questionsPart', "Questions"),
@@ -604,6 +605,7 @@ function pageHtml(rows: number, entries: readonly IBenchmarkEntry[]): string {
 	return buildWebviewHtml({
 		title: text.title,
 		introHtml: text.intro,
+		omitNextSteps: true,
 		extraCss: `
 		${compareCss}
 		tr.benchmark.chosen td.name { font-weight: 600; }
@@ -706,10 +708,13 @@ function pageHtml(rows: number, entries: readonly IBenchmarkEntry[]): string {
 	</div>
 	<p class="hint" id="runLine"></p>
 	<p class="hint" id="settingsLine"></p>
-	<table id="results" hidden>
-		<thead><tr id="resultsHead"></tr></thead>
-		<tbody id="resultsBody"></tbody>
-	</table>
+	<div id="descriptivePart" hidden>
+		<h3 class="part">${text.descriptive}</h3>
+		<table id="results">
+			<thead><tr id="resultsHead"></tr></thead>
+			<tbody id="resultsBody"></tbody>
+		</table>
+	</div>
 	<div id="strataPart" hidden>
 		<h3 class="part">${text.byStratum}</h3>
 		<p class="hint">${text.byStratumIntro}</p>
@@ -1003,7 +1008,7 @@ function pageHtml(rows: number, entries: readonly IBenchmarkEntry[]): string {
 		head.textContent = '';
 		body.textContent = '';
 		const figures = run ? [...run.figures].sort((a, b) => (b.score ?? -1) - (a.score ?? -1)) : [];
-		document.getElementById('results').hidden = !run || !figures.length;
+		document.getElementById('descriptivePart').hidden = !run || !figures.length;
 		document.getElementById('runLine').textContent = run ? format(TEXT.runLine, new Date(run.started).toLocaleString(), run.pollis, run.revision ? format(TEXT.benchmarkRevision, run.benchmark, run.revision.slice(0, 7)) : run.benchmark, run.sample.size, run.sample.seed, run.sample.allocation === 'equal' ? TEXT.equal : TEXT.proportional) : TEXT.noRuns;
 		document.getElementById('settingsLine').textContent = run ? format(TEXT.settingsLine, run.settings.shots, run.settings.reasoning ? TEXT.reasoningOn : TEXT.reasoningOff, run.settings.thinking ? TEXT.thinkingOn : TEXT.thinkingOff, run.settings.maxTokens) : '';
 		document.getElementById('deleteRun').hidden = !run;
@@ -1235,7 +1240,7 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: MODEL_BENCHMARKS_COMMAND_ID,
-			title: localize2('modelBenchmarks.action', "Model Benchmarks..."),
+			title: localize2('modelBenchmarks.action', "Benchmark Answering Models..."),
 			category: Categories.Help,
 			f1: true,
 		});

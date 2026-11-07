@@ -134,7 +134,7 @@ const REFERENCES_PACKAGE = joinpath(REFERENCES_HOME, "package.json")
 const REFERENCES_DB = joinpath(homedir(), ".pollis", "databases", "PollisReferences.duckdb")
 """The SQL that `REFERENCES_DB` was made with, and the size and time of the `pollis.json` and `REFERENCES_PACKAGE` it was made from."""
 const REFERENCES_STAMP = REFERENCES_DB * ".stamp"
-"""PollisBenchmarks.jl: the published benchmarks that Model Benchmarks runs on the chat models of this computer, and their grading."""
+"""PollisBenchmarks.jl: the published benchmarks that Benchmark Answering Models runs on the chat models of this computer, and their grading."""
 const BENCHMARKS = Base.PkgId(UUID("42886f46-29ec-4b6e-a6c6-e95103b5ec0b"), "PollisBenchmarks")
 const BENCHMARKS_URL = "https://github.com/Trumpingtons/PollisBenchmarks.jl"
 """The commit of PollisBenchmarks.jl installed, from GitHub."""
@@ -145,6 +145,12 @@ const BENCHMARKS_DB = joinpath(homedir(), ".pollis", "databases", "PollisBenchma
 const BENCHMARKS_STAMP = BENCHMARKS_DB * ".stamp"
 """The PollisDocuments database: the passages of Pollis' documents that Ask Pollis searches, made by ask_index.jl when the REPL starts."""
 const DOCUMENTS_DB = joinpath(homedir(), ".pollis", "documents", "PollisDocuments.duckdb")
+"""
+The Comparisons database, of the activity of Pollis: the runs of the Evaluate and Benchmark pages, a copy Pollis makes
+after each change of `~/.pollis/ask/Comparisons.duckdb`, which it writes, so that reading the copy never keeps it from
+saving a run.
+"""
+const COMPARISONS_DB = joinpath(homedir(), ".pollis", "databases", "Comparisons.duckdb")
 
 """The folder of the snapshots, one `<id>.<window>.json` per connection, watched by the Databases view."""
 const SESSIONS = joinpath(homedir(), ".pollis", "databases", "sessions")
@@ -496,8 +502,8 @@ end
 """Settings of every DuckDB database `connect` opens: extensions come with Pollis and are never downloaded."""
 const DUCKDB_CONFIG = ["autoinstall_known_extensions" => "false", "autoload_known_extensions" => "false"]
 
-"""The built-in databases that `connect` attaches, read-only, under their own names."""
-builtins() = filter(isfile, [DATASETS_DB, RSS_DB, JOURNALS_DB, REFERENCES_DB, BENCHMARKS_DB, DOCUMENTS_DB])
+"""The databases of Pollis, built in and of its activity, that `connect` attaches, read-only, under their own names."""
+builtins() = filter(isfile, [DATASETS_DB, RSS_DB, JOURNALS_DB, REFERENCES_DB, BENCHMARKS_DB, DOCUMENTS_DB, COMPARISONS_DB])
 
 """
     connect(path = ":memory:"; name = "DuckDB", builtins = true, fts = true, show = true)
@@ -1551,7 +1557,7 @@ end
 Install the packages built into Pollis, and the PollisDatasets, PollisJournals, PollisReferences, PollisRSS and PollisBenchmarks (`DATA_PACKAGES`),
 that no environment on the load path provides yet into `ENVIRONMENT`. The first time, it adds them; afterwards it
 keeps the PollisDatasets, PollisJournals, PollisReferences, PollisRSS and PollisBenchmarks installed there up to date with GitHub, so that new data reaches
-the built-in databases and new benchmarks reach Model Benchmarks. Pkg runs (and precompiles) only when something is missing or GitHub has a newer
+the built-in databases and new benchmarks reach Benchmark Answering Models. Pkg runs (and precompiles) only when something is missing or GitHub has a newer
 commit than the one installed; offline, the installed copy is kept. The active project is left as it was.
 Run by `install_pollisdb.jl`, outside the REPL.
 """

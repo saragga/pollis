@@ -14,7 +14,7 @@ import { ILogService } from '../../../../platform/log/common/log.js';
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { IDatabaseConnectionsService, IDatabaseSession } from '../common/databaseConnections.js';
-import { BENCHMARKS_DATABASE_ID, BUILTIN_DATABASE_ID, DatabaseConnectionTarget, DOCUMENTS_DATABASE_ID, IDatabaseConnectionProfile, JOURNALS_DATABASE_ID, REFERENCES_DATABASE_ID, RSS_DATABASE_ID } from '../common/databaseDrivers.js';
+import { BENCHMARKS_DATABASE_ID, BUILTIN_DATABASE_ID, COMPARISONS_DATABASE_ID, DatabaseConnectionTarget, DOCUMENTS_DATABASE_ID, IDatabaseConnectionProfile, JOURNALS_DATABASE_ID, REFERENCES_DATABASE_ID, RSS_DATABASE_ID } from '../common/databaseDrivers.js';
 
 const STORAGE_KEY = 'pollis.databases.connections';
 // Set by the Julia extension: the id of this window's REPL, which PollisDB writes into its snapshots.
@@ -66,6 +66,9 @@ export class DatabaseConnectionsService extends Disposable implements IDatabaseC
 		// PollisDB.build_benchmarks copies from PollisBenchmarks.jl.
 		// And PollisDocuments: the passages of Pollis' documents, which ask_index.jl of the Julia extension makes in
 		// ~/.pollis/documents when the REPL starts, and Ask Pollis searches.
+		// Of the activity of Pollis, what it records as you work: PollisRSS, and Comparisons, the runs of the Evaluate and
+		// Benchmark pages, a copy that Pollis makes after each change of ~/.pollis/ask/Comparisons.duckdb, which it writes,
+		// so that a connection to the copy never keeps Pollis from saving a run.
 		this.builtins = [{
 			id: BUILTIN_DATABASE_ID,
 			name: 'PollisDatasets',
@@ -82,6 +85,7 @@ export class DatabaseConnectionsService extends Disposable implements IDatabaseC
 			variable: 'rss',
 			options: { path: joinPath(pollisFolder, 'databases', 'PollisRSS.duckdb').fsPath, readonly: true },
 			builtin: true,
+			activity: true,
 		}, {
 			id: JOURNALS_DATABASE_ID,
 			name: 'PollisJournals',
@@ -114,6 +118,15 @@ export class DatabaseConnectionsService extends Disposable implements IDatabaseC
 			variable: 'documents',
 			options: { path: joinPath(pollisFolder, 'documents', 'PollisDocuments.duckdb').fsPath, readonly: true },
 			builtin: true,
+		}, {
+			id: COMPARISONS_DATABASE_ID,
+			name: 'Comparisons',
+			driver: 'duckdb',
+			target: 'global',
+			variable: 'comparisons',
+			options: { path: joinPath(pollisFolder, 'databases', 'Comparisons.duckdb').fsPath, readonly: true },
+			builtin: true,
+			activity: true,
 		}];
 		void this.watchSessions();
 	}

@@ -11,7 +11,7 @@ import { IConfigurationService } from '../../../../platform/configuration/common
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { IProductService } from '../../../../platform/product/common/productService.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
-import { ASK_CHAT_MODEL, ASK_EMBEDDING_MODEL, ASK_PASSAGES, ASK_RERANK_CONTEXT, ASK_RERANK_WIDER, IAskPollisEvalItem, IAskPollisFound, IAskPollisPassage, IAskPollisSearchRequest, IAskPollisService, IRerankRun, IRerankRunFound, IRerankRunModel, RETRIEVAL_CANDIDATES, RETRIEVAL_CUT, retrievalBenchmarkName } from '../common/askPollis.js';
+import { ASK_CHAT_MODEL, ASK_EMBEDDING_MODEL, ASK_PASSAGES, ASK_RERANK_CONTEXT, ASK_RERANK_WIDER, IAskPollisEvalItem, IAskPollisFound, IAskPollisPassage, IAskPollisSearchRequest, IAskPollisService, IRerankRun, IRerankRunFound, IRerankRunModel } from '../common/askPollis.js';
 import { askPollisStrategy, askStrategySearchKey } from '../common/askPollisStrategies.js';
 import { ICompareProgress } from './compareModelsRun.js';
 import { CompareSampler, CompareTestSets, ICompareSample, ICompareSamples } from './compareShared.js';
@@ -23,9 +23,6 @@ import { CompareSampler, CompareTestSets, ICompareSample, ICompareSamples } from
 // its order. Where the passage a question was made from is then shows each reranker; the order of the search, with no
 // reranker, is measured too. The memory a reranker's server takes is the memory free before it started less the memory
 // free when it was done. The run is kept in Comparisons.duckdb.
-// A retrieval benchmark of PollisBenchmarks.duckdb is run on its own documents, as BEIR reranks them: the
-// RETRIEVAL_CANDIDATES documents BM25 finds for each query, which each reranker puts in its order; each query is scored
-// by the first RETRIEVAL_CUT documents (IAskPollisService.rerankRetrieval), and the order of BM25 is scored too.
 
 /** What a run ends with, or why it could not be done. */
 export interface IRerankEnd {
@@ -114,15 +111,13 @@ export class CompareRerankersRunner {
 
 	stop(): void {
 		this.stopped = true;
-		this.askPollisService.stopEmbedding().catch(() => undefined);
 	}
 
 	private availableMemory(): Promise<number | undefined> {
 		return Promise.resolve(this.commandService.executeCommand<number>('language-julia.pollisAvailableMemory')).catch(() => undefined);
 	}
 
-	/** Runs `items`, the questions of a test set, or the queries of the retrieval benchmark `benchmark` among its documents. */
-	async run(models: readonly IRerankRunModel[], items: readonly IAskPollisEvalItem[], benchmark?: string): Promise<IRerankEnd> {
+	async run(models: readonly IRerankRunModel[], items: readonly IAskPollisEvalItem[]): Promise<IRerankEnd> {
 		if (this._running) {
 			return { error: localize('compareRerankers.busy', "Wait for the run to end, or stop it.") };
 		}
@@ -137,9 +132,6 @@ export class CompareRerankersRunner {
 		const started = Date.now();
 		await this.sampler.start();
 		this.sampler.mark('search');
-		if (benchmark) {
-			return this.runBenchmark(models, items, benchmark, started);
-		}
 
 		// The passages of each question, found once for every reranker, as Ask Pollis finds them with a reranker set;
 		// those found before with the same search stamp are taken again, as Evaluate Answering Models takes them
@@ -253,85 +245,5 @@ export class CompareRerankersRunner {
 			await this.askPollisService.saveRerankRun(run);
 		}
 		return this.end({ run, stopped: this.stopped });
-	}
-
-	/**
-	 * The queries of a retrieval benchmark: the RETRIEVAL_CANDIDATES documents BM25 finds for each, in its order, then each
-	 * reranker, one after the other and alone in memory, putting them in its own; each query scored by the first documents.
-	 */
-	private async runBenchmark(models: readonly IRerankRunModel[], items: readonly IAskPollisEvalItem[], benchmark: string, started: number): Promise<IRerankEnd> {
-		const name = retrievalBenchmarkName(benchmark);
-		const queries = items.map(item => ({ id: item.source, text: item.question, relevant: item.relevant ?? [] }));
-		let current: IRerankRunModel | undefined;
-		const finding = localize('compareRerankers.findingDocuments', "Finding the documents of the queries of {0} with BM25...", name);
-		const listener = this.askPollisService.onDidEmbed(e => {
-			if (e.phase === 'rerank') {
-				this.report(current
-					? localize('compareRerankers.rerankingQueries', "Reranking the queries of {0} with {1} ({2} of {3})...", name, current.label, models.indexOf(current) + 1, models.length)
-					: finding, e.done, e.total);
-			}
-		});
-		try {
-			// The rerankers alone in memory: the embedding model of the search and the chat model of Ask Pollis are stopped
-			await this.askPollisService.stopSearchModel();
-			await this.commandService.executeCommand('language-julia.pollisStopLlamaServer', { model: this.configurationService.getValue<string>('pollis.ask.chatModel')?.trim() || ASK_CHAT_MODEL }).catch(() => undefined);
-
-			// The order of BM25, with no reranker
-			this.report(finding);
-			const searched = await this.askPollisService.rerankRetrieval({ benchmark, queries });
-			if (!searched.found.length) {
-				return this.end(this.stopped ? { stopped: true } : { error: searched.error === 'notBenchmarks' || !searched.error ? localize('compareRerankers.notBenchmarks', "~/.pollis/databases/PollisBenchmarks.duckdb could not be read: PollisBenchmarks.jl makes it when the Julia REPL starts.") : searched.error });
-			}
-			const found: IRerankRunFound[] = searched.found.map(result => ({ question: result.query, model: NO_RERANKER, ndcg: result.ndcg, recall: result.recall, among: result.among }));
-			const measured: IRerankRunModel[] = [{ value: NO_RERANKER, label: localize('compareRerankers.noReranker', "No Reranker") }];
-
-			this.sampler.mark('rerank');
-			for (const [i, model] of models.entries()) {
-				if (this.stopped) {
-					break;
-				}
-				current = model;
-				this.report(localize('compareRerankers.starting', "Starting {0} ({1} of {2})...", model.label, i + 1, models.length));
-				const memoryBefore = await this.availableMemory();
-				const server = await Promise.resolve(this.commandService.executeCommand<ILlamaServerAnswer>('language-julia.pollisLlamaServer', { model: model.value, reranking: true, context: ASK_RERANK_CONTEXT })).catch((err): ILlamaServerAnswer => ({ error: String(err) }));
-				if (!server?.url) {
-					measured.push({ ...model, error: server?.error ?? localize('compareRerankers.notStarted', "The model could not be started.") });
-					continue;
-				}
-				try {
-					const reranked = await this.askPollisService.rerankRetrieval({ benchmark, queries, model: model.value, url: server.url });
-					found.push(...reranked.found.map(result => ({ question: result.query, model: model.value, ndcg: result.ndcg, recall: result.recall, ms: result.ms })));
-					const memoryAfter = await this.availableMemory();
-					const error = reranked.error === 'noScores' ? localize('compareRerankers.noScores', "The reranker gave no scores.") : reranked.error;
-					measured.push({ ...model, memory: memoryBefore !== undefined && memoryAfter !== undefined ? Math.max(0, memoryBefore - memoryAfter) : undefined, error });
-				} finally {
-					await this.commandService.executeCommand('language-julia.pollisStopLlamaServer', { model: model.value, reranking: true, context: ASK_RERANK_CONTEXT }).catch(() => undefined);
-				}
-			}
-
-			const run: IRerankRun = {
-				summary: {
-					id: generateUuid(),
-					started,
-					pollis: this.productService.pollisVersion ?? this.productService.version,
-					models: measured,
-					questions: items.length,
-					found: RETRIEVAL_CANDIDATES,
-					kept: RETRIEVAL_CUT,
-					embedder: '',
-					benchmark,
-				},
-				questions: items,
-				found,
-			};
-			if (found.some(result => result.model !== NO_RERANKER)) {
-				await this.askPollisService.saveRerankRun(run);
-			}
-			return this.end({ run, stopped: this.stopped });
-		} catch (err) {
-			return this.end({ error: err instanceof Error ? err.message : String(err) });
-		} finally {
-			listener.dispose();
-		}
 	}
 }

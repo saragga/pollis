@@ -1,0 +1,55 @@
+# Benchmark Embedding and Reranking Models Webview Configuration
+# A page of Compose in the Time Arrow style of the scaffold, not a panel: only its Powered by and Learn More. `pageCommand`
+# is the command that opens it, which a panel's contribution file would say. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/retrievalBenchmarks.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Benchmark Embedding and Reranking Models"
+viewType = "pollis.retrievalBenchmarks"
+pageCommand = "pollis.retrievalBenchmarks"
+
+[[packages]]
+name = "PollisBenchmarks.jl"
+github = "https://github.com/Trumpingtons/PollisBenchmarks.jl"
+
+[[wikis]]
+name = "Factsheet"
+file = "retrievalBenchmarks/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "retrievalBenchmarks/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "retrievalBenchmarks/interpretation.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+key = "MRS2008a"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "TRRSG2021a"
+
+[[references]]
+key = "WLLWZ...2020a"
+
+[[references]]
+key = "CFBDW2020a"
+
+[[references]]
+key = "JK2002a"
+
+[[references]]
+key = "RZ2009a"

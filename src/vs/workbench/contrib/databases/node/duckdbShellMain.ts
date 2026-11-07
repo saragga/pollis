@@ -17,8 +17,8 @@ import { join } from '../../../../base/common/path.js';
 const POLLIS_HOME = join(os.homedir(), '.pollis');
 /** The fts extension, which the Julia extension of Pollis unpacks here at install. */
 const FTS = join(POLLIS_HOME, 'duckdb', 'fts.duckdb_extension');
-/** The built-in databases, attached read-only under their own names. */
-const BUILTINS = [join(POLLIS_HOME, 'databases', 'PollisDatasets.duckdb'), join(POLLIS_HOME, 'databases', 'PollisRSS.duckdb'), join(POLLIS_HOME, 'databases', 'PollisJournals.duckdb'), join(POLLIS_HOME, 'databases', 'PollisReferences.duckdb'), join(POLLIS_HOME, 'databases', 'PollisBenchmarks.duckdb'), join(POLLIS_HOME, 'documents', 'PollisDocuments.duckdb')];
+/** The databases of Pollis, built in and of its activity, attached read-only under their own names; Comparisons is the copy Pollis makes of the file it writes. */
+const BUILTINS = [join(POLLIS_HOME, 'databases', 'PollisDatasets.duckdb'), join(POLLIS_HOME, 'databases', 'PollisRSS.duckdb'), join(POLLIS_HOME, 'databases', 'PollisJournals.duckdb'), join(POLLIS_HOME, 'databases', 'PollisReferences.duckdb'), join(POLLIS_HOME, 'databases', 'PollisBenchmarks.duckdb'), join(POLLIS_HOME, 'documents', 'PollisDocuments.duckdb'), join(POLLIS_HOME, 'databases', 'Comparisons.duckdb')];
 const HISTORY = join(POLLIS_HOME, 'duckdb', 'shell_history');
 const HISTORY_SIZE = 1000;
 

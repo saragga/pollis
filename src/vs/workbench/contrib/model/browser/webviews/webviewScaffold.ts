@@ -96,6 +96,8 @@ export interface WebviewParts {
 	readonly title: string;
 	/** Leave Powered by out, for a page that no Julia package powers. Default: shown. */
 	readonly omitPoweredBy?: boolean;
+	/** Leave Next Steps out, for a Time Arrow or Minimal page whose last step is its end, Learn More alone below it. Default: shown. */
+	readonly omitNextSteps?: boolean;
 	/** The Key Points. A page without them has `introHtml` instead. */
 	readonly bullets?: string;
 	/** A text in place of Key Points. */
@@ -638,7 +640,7 @@ ${parts.inputsHtml ? `\t\t<div class="scaffold-inputs" id="scaffold-inputs">\n${
 `}
 		<div class="bottom-layout">
 			<div class="left-strip">
-				${nextStepsSectionHtml(parts.nextStepsHtml ?? (noExampleCode ? notWrittenNextStepsHtml() : `					<li><button class="list-btn panel-toggle" id="btn-viz">${nextStepIcon('visualise')}Visualise</button></li>
+				${parts.omitNextSteps ? '' : nextStepsSectionHtml(parts.nextStepsHtml ?? (noExampleCode ? notWrittenNextStepsHtml() : `					<li><button class="list-btn panel-toggle" id="btn-viz">${nextStepIcon('visualise')}Visualise</button></li>
 					<li><button class="list-btn panel-toggle" id="btn-diagnose">${nextStepIcon('diagnose')}Diagnose</button></li>
 					<li><button class="list-btn panel-toggle" id="btn-predict">${nextStepIcon('predict')}Predict</button></li>
 					<li><button class="list-btn panel-toggle" id="btn-compare">${nextStepIcon('compare')}Compare</button></li>
@@ -1395,7 +1397,7 @@ ${noExampleCode ? '' : `		document.getElementById('model-group').addEventListene
 		${parts.actionsJs ?? ''}
 
 		// ── Button wiring ────────────────────────────────────────────────────
-${parts.nextStepsWiringJs ?? (noExampleCode ? notWrittenNextStepsJs() : `		document.getElementById('btn-viz').addEventListener('click', function() {
+${parts.omitNextSteps ? '' : parts.nextStepsWiringJs ?? (noExampleCode ? notWrittenNextStepsJs() : `		document.getElementById('btn-viz').addEventListener('click', function() {
 			showRightPanel(VISUALISE_ACTIONS, 'Visualise', 'btn-viz');
 		});
 		document.getElementById('btn-diagnose').addEventListener('click', function() {

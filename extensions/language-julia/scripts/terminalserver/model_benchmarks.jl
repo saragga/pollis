@@ -3,7 +3,7 @@
 #  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
 # ---------------------------------------------------------------------------------------------
 
-# The hidden Julia process of Model Benchmarks (Compose > Local Models > Model Benchmarks...), which the Julia
+# The hidden Julia process of Benchmark Answering Models (Compose > Local AI Models > Benchmark Answering Models...), which the Julia
 # extension runs (pollisModelBenchmarks.ts): it runs a task of the page with PollisBenchmarks.jl, which PollisDB
 # installs into the environment of the packages built into Pollis; a notebook calls the same functions of the package.
 

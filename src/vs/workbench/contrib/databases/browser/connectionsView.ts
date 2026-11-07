@@ -39,7 +39,7 @@ import { IExtensionService } from '../../../services/extensions/common/extension
 import { IWorkbenchLayoutService } from '../../../services/layout/browser/layoutService.js';
 import { IDatabaseColumn, IDatabaseConnectionsService, IDatabaseSchema, IDatabaseSession, IDatabaseTable } from '../common/databaseConnections.js';
 import './media/connectionsView.css';
-import { BENCHMARKS_DATABASE_ID, describeConnection, DOCUMENTS_DATABASE_ID, getDatabaseDriver, IDatabaseConnectionProfile, isInMemoryConnection, isWritableConnection, JOURNALS_DATABASE_ID, NEW_CONNECTION_COMMAND_ID, REFERENCES_DATABASE_ID, RSS_DATABASE_ID } from '../common/databaseDrivers.js';
+import { BENCHMARKS_DATABASE_ID, COMPARISONS_DATABASE_ID, databaseGroupOf, DatabaseGroup, describeConnection, DOCUMENTS_DATABASE_ID, getDatabaseDriver, IDatabaseConnectionProfile, isInMemoryConnection, isWritableConnection, JOURNALS_DATABASE_ID, NEW_CONNECTION_COMMAND_ID, REFERENCES_DATABASE_ID, RSS_DATABASE_ID } from '../common/databaseDrivers.js';
 
 /** The Databases container of the secondary side bar, with its Pollis Built-In and User views. */
 export const DATABASES_VIEW_CONTAINER_ID = 'workbench.view.pollis.databases';
@@ -188,8 +188,12 @@ class ItemRenderer implements ITreeRenderer<DatabaseItem, void, IItemTemplate> {
 				}
 				if (profile?.builtin && profile.id === RSS_DATABASE_ID) {
 					hover = session
-						? localize('connection.rss.hover.connected', "{0} (DuckDB)\nBuilt into Pollis: every item of the RSS feeds received, read-only, in {1}.\nConnected in the Julia REPL as {2}. Click to browse its views.", name, describeConnection(profile), profile.variable)
-						: localize('connection.rss.hover', "{0} (DuckDB)\nBuilt into Pollis: every item of the RSS feeds received, read-only, in {1}.\nNot connected. Click to connect in the Julia REPL as {2}.", name, describeConnection(profile), profile.variable);
+						? localize('connection.rss.hover.connected', "{0} (DuckDB)\nRecorded by Pollis: every item of the RSS feeds received, read-only, in {1}.\nConnected in the Julia REPL as {2}. Click to browse its views.", name, describeConnection(profile), profile.variable)
+						: localize('connection.rss.hover', "{0} (DuckDB)\nRecorded by Pollis: every item of the RSS feeds received, read-only, in {1}.\nNot connected. Click to connect in the Julia REPL as {2}.", name, describeConnection(profile), profile.variable);
+				} else if (profile?.builtin && profile.id === COMPARISONS_DATABASE_ID) {
+					hover = session
+						? localize('connection.comparisons.hover.connected', "{0} (DuckDB)\nRecorded by Pollis: the runs of the Evaluate and Benchmark pages, read-only, in {1}, a copy Pollis makes after each run. Connect again for the runs made since.\nConnected in the Julia REPL as {2}. Click to browse its tables.", name, describeConnection(profile), profile.variable)
+						: localize('connection.comparisons.hover', "{0} (DuckDB)\nRecorded by Pollis: the runs of the Evaluate and Benchmark pages, read-only, in {1}, a copy Pollis makes after each run.\nNot connected. Click to connect in the Julia REPL as {2}.", name, describeConnection(profile), profile.variable);
 				} else if (profile?.builtin && profile.id === JOURNALS_DATABASE_ID) {
 					hover = session
 						? localize('connection.journals.hover.connected', "{0} (DuckDB)\nBuilt into Pollis: the journals of OpenAlex and the journal metrics you imported, read-only, in {1}.\nConnected in the Julia REPL as {2}. Click to browse its tables.", name, describeConnection(profile), profile.variable)
@@ -364,13 +368,13 @@ export abstract class DatabaseConnectionsView extends ViewPane {
 		this._register(this.databaseConnectionsService.onDidChangeConnections(() => this.refresh()));
 	}
 
-	/** Whether the view lists the databases built into Pollis, rather than the user's own. */
-	protected abstract listsBuiltin(): boolean;
+	/** The group of databases the view lists: those built into Pollis, those of its activity, or the user's own. */
+	protected abstract group(): DatabaseGroup;
 
 	protected override renderBody(container: HTMLElement): void {
 		super.renderBody(container);
 		this.root = dom.append(container, dom.$('.databases-view'));
-		if (!this.listsBuiltin()) {
+		if (this.group() === 'user') {
 			this.empty = this.renderEmpty(this.root);
 		}
 		this.treeContainer = dom.append(this.root, dom.$('.databases-tree'));
@@ -524,13 +528,13 @@ export abstract class DatabaseConnectionsView extends ViewPane {
 	}
 
 	/**
-	 * The ids of the connections the view lists: the built-in databases, or the user's saved profiles
-	 * followed by the connections shown from the REPL.
+	 * The ids of the connections the view lists: the built-in databases, those of the activity of Pollis, or the user's
+	 * saved profiles followed by the connections shown from the REPL.
 	 */
 	private connectionIds(): string[] {
 		const profiles = this.databaseConnectionsService.getConnections();
-		const listed = profiles.filter(p => !!p.builtin === this.listsBuiltin()).map(p => p.id);
-		if (this.listsBuiltin()) {
+		const listed = profiles.filter(p => databaseGroupOf(p) === this.group()).map(p => p.id);
+		if (this.group() !== 'user') {
 			return listed;
 		}
 		const saved = new Set(profiles.map(p => p.id));
@@ -621,13 +625,26 @@ export abstract class DatabaseConnectionsView extends ViewPane {
 	}
 }
 
-/** The databases built into Pollis: PollisDatasets, PollisRSS, PollisJournals, PollisReferences, PollisBenchmarks and PollisDocuments. */
+/**
+ * The databases built into Pollis, which come with it and change only when Pollis rebuilds them: PollisDatasets,
+ * PollisJournals, PollisReferences, PollisBenchmarks and PollisDocuments.
+ */
 export class BuiltinDatabasesView extends DatabaseConnectionsView {
 
 	static readonly ID = 'pollis.databases.builtin';
 
-	protected override listsBuiltin(): boolean {
-		return true;
+	protected override group(): DatabaseGroup {
+		return 'builtin';
+	}
+}
+
+/** The databases of the activity of Pollis, which it records as you work: PollisRSS and Comparisons. */
+export class ActivityDatabasesView extends DatabaseConnectionsView {
+
+	static readonly ID = 'pollis.databases.activity';
+
+	protected override group(): DatabaseGroup {
+		return 'activity';
 	}
 }
 
@@ -636,12 +653,13 @@ export class UserDatabasesView extends DatabaseConnectionsView {
 
 	static readonly ID = 'pollis.databases.connections';
 
-	protected override listsBuiltin(): boolean {
-		return false;
+	protected override group(): DatabaseGroup {
+		return 'user';
 	}
 }
 
-/** The view that lists the connection of `profile`: Pollis Built-In for a built-in database, else User. */
+/** The view that lists the connection of `profile`: Pollis Built-In, Pollis Activity or User. */
 export function databasesViewIdOf(profile: IDatabaseConnectionProfile | undefined): string {
-	return profile?.builtin ? BuiltinDatabasesView.ID : UserDatabasesView.ID;
+	const group = databaseGroupOf(profile);
+	return group === 'builtin' ? BuiltinDatabasesView.ID : group === 'activity' ? ActivityDatabasesView.ID : UserDatabasesView.ID;
 }
