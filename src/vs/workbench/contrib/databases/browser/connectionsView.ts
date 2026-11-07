@@ -200,8 +200,8 @@ class ItemRenderer implements ITreeRenderer<DatabaseItem, void, IItemTemplate> {
 						: localize('connection.references.hover', "{0} (DuckDB)\nBuilt into Pollis: the references of Pollis and those you added, read-only, in {1}.\nNot connected. Click to connect in the Julia REPL as {2}.", name, describeConnection(profile), profile.variable);
 				} else if (profile?.builtin && profile.id === BENCHMARKS_DATABASE_ID) {
 					hover = session
-						? localize('connection.benchmarks.hover.connected', "{0} (DuckDB)\nBuilt into Pollis: the catalogue of the benchmarks that Pollis runs, and the questions of those built in, read-only, in {1}.\nConnected in the Julia REPL as {2}. Click to browse its tables.", name, describeConnection(profile), profile.variable)
-						: localize('connection.benchmarks.hover', "{0} (DuckDB)\nBuilt into Pollis: the catalogue of the benchmarks that Pollis runs, and the questions of those built in, read-only, in {1}.\nNot connected. Click to connect in the Julia REPL as {2}.", name, describeConnection(profile), profile.variable);
+						? localize('connection.benchmarks.hover.connected', "{0} (DuckDB)\nBuilt into Pollis: the published benchmarks of Pollis, their catalogue and the questions of those built in, read-only, in {1}.\nConnected in the Julia REPL as {2}. Click to browse its tables.", name, describeConnection(profile), profile.variable)
+						: localize('connection.benchmarks.hover', "{0} (DuckDB)\nBuilt into Pollis: the published benchmarks of Pollis, their catalogue and the questions of those built in, read-only, in {1}.\nNot connected. Click to connect in the Julia REPL as {2}.", name, describeConnection(profile), profile.variable);
 				} else if (profile?.builtin && profile.id === DOCUMENTS_DATABASE_ID) {
 					hover = session
 						? localize('connection.documents.hover.connected', "{0} (DuckDB)\nBuilt into Pollis: the passages of its documents that Ask Pollis searches, read-only, in {1}.\nConnected in the Julia REPL as {2}. Click to browse its tables.", name, describeConnection(profile), profile.variable)

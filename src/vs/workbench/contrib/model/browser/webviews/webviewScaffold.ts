@@ -425,6 +425,9 @@ export function buildWebviewHtml(parts: WebviewParts): string {
 		.methods-list { list-style: none; padding-left: 22px; margin: 5px 0; }
 		.methods-list li { margin: 2px 0; padding-left: 20px; position: relative; }
 		.methods-list li::before { content: ''; position: absolute; left: 0; top: calc(0.5lh - 4px); width: 8px; height: 8px; border-radius: 50%; background-color: var(--vscode-textLink-foreground); }
+		/* The package names of a Key Point, written <span class="yellow">, in our yellow */
+		.methods-list .yellow { color: #e8a33d; }
+		body.vscode-light .methods-list .yellow { color: #a8650d; }
 		.plot-link { color: var(--vscode-textLink-foreground); cursor: pointer; }
 		.plot-link:hover { text-decoration: underline; }
 		.decision-table { border-collapse: collapse; width: 100%; font-size: 12px; margin-top: 10px; }

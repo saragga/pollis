@@ -1343,61 +1343,94 @@ end
 """The columns of the table `catalogue` of PollisBenchmarks: the fields of `data/catalogue.toml`, with their type and description."""
 const BENCHMARKS_CATALOGUE = [
     ("id", "VARCHAR", "The id of the benchmark in PollisBenchmarks.jl"),
+    ("table_name", "VARCHAR", "The table of its questions in this database, for a benchmark Built In"),
     ("benchmark", "VARCHAR", "Its name"),
-    ("component", "VARCHAR", "What it measures: Closed Book Answering, the answers of a chat model from what it learned in training alone"),
+    ("component", "VARCHAR", "What it measures, such as Closed Book Answering, the answers of a chat model from what it learned in training alone, or Embedding, the documents an embedding model finds"),
     ("domain", "VARCHAR", "What its questions are about"),
-    ("questions", "INTEGER", "The number of its questions"),
-    ("released", "VARCHAR", "The month it was published, YYYY-MM"),
+    ("layout", "VARCHAR", "questions, questions and their answers, or retrieval, queries and the documents they search"),
+    ("availability", "VARCHAR", "Built In, its questions in a table of this database, or Download, not in this database, by its licence or its size, and fetched from its source by a page that runs it"),
+    ("questions", "INTEGER", "The number of its questions, for a benchmark Built In the rows of its table whose split is test; empty where it is not confirmed"),
+    ("documents", "INTEGER", "The number of its documents, for a benchmark that searches documents"),
+    ("size_mb", "DOUBLE", "The size of its questions in MB: for a benchmark Built In, its Parquet files in PollisBenchmarks.jl; for one to Download, the files of its source that hold them, as fetched; empty where it is not confirmed"),
+    ("released", "VARCHAR", "The month it was published, YYYY-MM, or the year"),
     ("licence", "VARCHAR", "The licence of its questions, as its source states it"),
     ("licence_url", "VARCHAR", "Where its source states its licence"),
-    ("availability", "VARCHAR", "Built In, its questions in a table of this database, or Download, fetched from its source the first time it is run"),
-    ("source", "VARCHAR", "Where its questions come from"),
-    ("revision", "VARCHAR", "The revision of its source that its questions come from, fixed so that they never change"),
+    ("source", "VARCHAR[]", "Where its questions come from: each of its sources"),
+    ("revision", "VARCHAR[]", "The revision of each of its sources, in the same order, fixed so that its questions never change"),
     ("grading", "VARCHAR", "How an answer is graded"),
-    ("page", "VARCHAR", "The page of Pollis that runs it"),
+    ("page", "VARCHAR", "The page of Pollis that runs it, when there is one"),
     ("reference", "VARCHAR", "The key of the work that published it, in the references of Pollis (PollisReferences)"),
-    ("table_name", "VARCHAR", "The table of its questions in this database, for a benchmark Built In; its examples are in the same name with _examples"),
 ]
 
-"""The columns of the tables of questions of PollisBenchmarks, and of their examples, with their descriptions."""
+"""The columns of the tables of PollisBenchmarks of layout questions, with their descriptions."""
 const BENCHMARKS_QUESTION_COLUMNS = [
-    ("id", "The id of the question in its benchmark"),
+    ("id", "The id of the question in its benchmark, unique within its split"),
+    ("split", "test, a question of the benchmark, or example, a solved question that a prompt with examples can show before it"),
     ("stratum", "The group of the question that a stratified sample draws from, such as the subject; empty for a benchmark without strata"),
     ("question", "The question, as the model is asked it"),
     ("choices", "The options of the question, in order, the first one A; empty for a question without options"),
-    ("answer", "The right answer: the letter of the right option, or the number"),
+    ("answer", "The right answer: the letter of the right option, the number or the words"),
     ("worked", "The worked answer of the source, which a prompt with examples shows; empty when the source has none"),
 ]
 
+"""The columns of the tables of PollisBenchmarks of layout retrieval, with their descriptions."""
+const BENCHMARKS_RETRIEVAL_COLUMNS = [
+    ("id", "The id of the query, or of the document, in its benchmark"),
+    ("split", "test, a query of the benchmark, or document, a document that the queries search"),
+    ("title", "The title of the document; empty for a query"),
+    ("text", "The text of the query, or of the document"),
+    ("relevant", "The ids of the documents relevant to the query, as the relevance labels of the benchmark give them; empty for a document"),
+]
+
+"""The files of the artifact of PollisBenchmarks that make the table of a benchmark, and the split of each."""
+const BENCHMARKS_FILES = [("test", ""), ("example", "-examples"), ("document", "-documents")]
+
 """
 The SQL that makes PollisBenchmarks from `source` (`benchmarks_source`): the table `catalogue`, a row per entry of
-`data/catalogue.toml`; and, for each benchmark Built In, its questions and examples, copied from the artifact into
-the tables named in the catalogue, `<table>` and `<table>_examples`; each table and column with its description.
+`data/catalogue.toml`; and, for each benchmark Built In, its questions, its examples and its documents, copied from the
+artifact into one table, the one named in the catalogue, the column `split` telling them apart; each table and
+column with its description, those of a benchmark's own columns from its entry.
 """
 function benchmarks_sql(source)
     TOML = Base.require(Base.PkgId(UUID("fa267f1f-6049-4f14-aa54-33bafae1ed76"), "TOML"))
     entries = Base.invokelatest(TOML.parsefile, source.catalogue)["benchmarks"]
-    quoted(x) = x === nothing ? "NULL" : x isa Integer ? string(x) : "'" * replace(string(x), "'" => "''") * "'"
+    quoted(x) = x === nothing ? "NULL" : x isa Real ? string(x) : x isa AbstractVector ? "[" * join(quoted.(x), ", ") * "]" :
+        "'" * replace(string(x), "'" => "''") * "'"
     statements = String[]
     push!(statements, "CREATE TABLE catalogue (" * join(["$name $type" for (name, type, _) in BENCHMARKS_CATALOGUE], ", ") * ")")
+    # The size of a benchmark Built In: its files in the artifact
+    function size_mb(entry)
+        get(entry, "availability", "") == "Built In" || return get(entry, "size_mb", nothing)
+        files = [joinpath(source.folder, entry["id"] * suffix * ".parquet") for (_, suffix) in BENCHMARKS_FILES]
+        return round(sum(filesize, filter(isfile, files); init = 0) / 1e6; digits = 2)
+    end
     for entry in entries
-        values = [quoted(get(entry, name == "table_name" ? "table" : name, nothing)) for (name, _, _) in BENCHMARKS_CATALOGUE]
+        values = [quoted(name == "size_mb" ? size_mb(entry) : get(entry, name == "table_name" ? "table" : name, nothing)) for (name, _, _) in BENCHMARKS_CATALOGUE]
         push!(statements, "INSERT INTO catalogue VALUES (" * join(values, ", ") * ")")
     end
-    push!(statements, "COMMENT ON TABLE catalogue IS 'The benchmarks of PollisBenchmarks.jl: what each measures, its source, revision and licence, and whether it is built in. Source: PollisBenchmarks.jl. Licence: MIT'")
+    push!(statements, "COMMENT ON TABLE catalogue IS 'The benchmarks of PollisBenchmarks.jl: what each measures, its sources, revisions and licence, how an answer is graded, and whether it is built in, its questions in a table of this database. Source: PollisBenchmarks.jl. Licence: MIT'")
     append!(statements, ["COMMENT ON COLUMN catalogue.$name IS $(quoted(description))" for (name, _, description) in BENCHMARKS_CATALOGUE])
     for entry in entries
         get(entry, "availability", "") == "Built In" || continue
         id, table = entry["id"], entry["table"]
-        origin = "From $(entry["source"]), revision $(entry["revision"]), converted to DuckDB. Licence: $(entry["licence"])"
-        for (suffix, file, description) in [("", "$id.parquet", "The questions of $(entry["benchmark"]): $(entry["domain"])."),
-                ("_examples", "$id-examples.parquet", "The examples of $(entry["benchmark"]), with their worked answers, which a prompt can show before a question.")]
-            name = table * suffix
-            path = replace(joinpath(source.folder, file), "\\" => "/")
-            push!(statements, "CREATE TABLE $name AS SELECT * FROM read_parquet($(quoted(path)))")
-            push!(statements, "COMMENT ON TABLE $name IS $(quoted("$description $origin"))")
-            append!(statements, ["COMMENT ON COLUMN $name.$column IS $(quoted(text))" for (column, text) in BENCHMARKS_QUESTION_COLUMNS])
+        parts = String[]
+        for (split, suffix) in BENCHMARKS_FILES
+            path = joinpath(source.folder, "$id$suffix.parquet")
+            isfile(path) || continue
+            push!(parts, "SELECT id, '$split' AS split, * EXCLUDE (id) FROM read_parquet($(quoted(replace(path, "\\" => "/"))))")
         end
+        isempty(parts) && continue
+        retrieval = get(entry, "layout", "questions") == "retrieval"
+        what = retrieval ? "The queries and documents of $(entry["benchmark"]): $(entry["domain"]). The split test holds its queries, each with the documents relevant to it; document, the documents they search." :
+            "The questions of $(entry["benchmark"]): $(entry["domain"]). The split test holds its questions; example, when it has examples, the solved questions a prompt can show before a question."
+        sources = join(["$source, revision $revision" for (source, revision) in zip(entry["source"], entry["revision"])], "; ")
+        push!(statements, "CREATE TABLE $table AS " * join(parts, " UNION ALL BY NAME "))
+        push!(statements, "COMMENT ON TABLE $table IS $(quoted("$what From $sources, converted to DuckDB. Licence: $(entry["licence"])"))")
+        own = get(entry, "columns", Dict{String, Any}())
+        common = retrieval ? BENCHMARKS_RETRIEVAL_COLUMNS : BENCHMARKS_QUESTION_COLUMNS
+        descriptions = vcat([(column, get(own, column, text)) for (column, text) in common],
+            [(column, text) for (column, text) in own if !any(c -> c[1] == column, common)])
+        append!(statements, ["COMMENT ON COLUMN $table.$column IS $(quoted(text))" for (column, text) in descriptions])
     end
     return statements
 end
@@ -1416,8 +1449,8 @@ end
     build_benchmarks(database = BENCHMARKS_DB)
 
 Make the PollisBenchmarks database when it is missing, or PollisBenchmarks.jl or the SQL of `benchmarks_sql` have
-changed since it was made: the catalogue of the benchmarks and the questions of those built in, copied from the
-package's artifact. Nothing else writes to it. Written under a temporary name and moved into place, as `build` does.
+changed since it was made: the catalogue of the benchmarks and their questions, copied from the package's
+artifact. Nothing else writes to it. Written under a temporary name and moved into place, as `build` does.
 """
 function build_benchmarks(database::AbstractString = BENCHMARKS_DB)
     benchmarks_outdated(database) || return nothing
