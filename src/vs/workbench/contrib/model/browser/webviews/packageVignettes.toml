@@ -1,0 +1,38 @@
+# Package Vignettes Webview Configuration
+# A page in the Minimal style of the scaffold, not a panel: Powered by and Learn More. `pageCommand` is the command
+# that opens it (Help > Documentation > Package Vignettes, vignettesPage.ts). The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/packageVignettes.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Package Vignettes"
+viewType = "pollis.vignettes"
+pageCommand = "pollis.documentation.vignettes"
+
+[[packages]]
+name = "PollisTeX.jl"
+github = "https://github.com/Trumpingtons/PollisTeX.jl"
+
+[[wikis]]
+name = "Factsheet"
+file = "packageVignettes/factsheet.md"
+bundled = true
+description = "What Package Vignettes lists, its columns and filters, and where the compiled vignettes go"
+
+[[wikis]]
+name = "Overview"
+file = "packageVignettes/overview.md"
+bundled = true
+description = "What a package vignette is, how to read the table, find a vignette and open it"
+
+[[wikis]]
+name = "Writing a Vignette"
+file = "packageVignettes/writing-a-vignette.md"
+bundled = true
+description = "What a vignette holds, how a method gets one, and how Package and Publish ships it with the package and the registry"
+
+[[wikis]]
+name = "Installed or Registry"
+file = "packageVignettes/installed-or-registry.md"
+bundled = true
+description = "Where each vignette comes from, which version is shown, and when a vignette is compiled again"

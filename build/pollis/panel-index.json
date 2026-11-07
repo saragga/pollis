@@ -3188,13 +3188,13 @@
 		},
 		{
 			"id": "fom",
-			"title": "First-Order Methods",
+			"title": "Stochastic Gradient Methods",
 			"source": "pollis",
 			"commands": [
 				{
 					"id": "chiara.optimise.sgm.fom",
 					"menuTitles": [
-						"First-Order Methods"
+						"Stochastic Gradient Methods"
 					]
 				}
 			],
@@ -7189,7 +7189,8 @@
 				"rsm/tutorial-04-tvtp.ipynb"
 			],
 			"packages": [
-				"MarSwitching.jl"
+				"MarSwitching.jl",
+				"MarkovRegimes.jl"
 			]
 		},
 		{
@@ -7514,44 +7515,6 @@
 				"StochasticDiffEq.jl",
 				"StatsBase.jl",
 				"Plots.jl"
-			]
-		},
-		{
-			"id": "sgm",
-			"title": "Stochastic Gradient Methods",
-			"source": "pollis",
-			"commands": [
-				{
-					"id": "chiara.optimise.sgm",
-					"menuTitles": []
-				}
-			],
-			"portable": true,
-			"defaultModel": "sgd",
-			"decisionFirstColumn": "Method",
-			"toml": "src/vs/workbench/contrib/model/browser/webviews/sgm.toml",
-			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
-			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
-			"wikis": [
-				"sgm/adagrad.md",
-				"sgm/adam.md",
-				"sgm/adamax.md",
-				"sgm/assumptions.md",
-				"sgm/decision-guide.md",
-				"sgm/diagnostics.md",
-				"sgm/factsheet.md",
-				"sgm/interpretation.md",
-				"sgm/overview.md",
-				"sgm/sgd.md"
-			],
-			"notebooks": [
-				"sgm/tutorial-01-sgd.ipynb",
-				"sgm/tutorial-02-adam.ipynb",
-				"sgm/tutorial-03-adagrad-adamax.ipynb",
-				"sgm/tutorial-04-benchmark.ipynb"
-			],
-			"packages": [
-				"Optimisers.jl"
 			]
 		},
 		{

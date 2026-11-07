@@ -25,10 +25,16 @@ import { IPathService } from '../../../services/path/common/pathService.js';
 import { parseToml, TomlValue } from '../../model/browser/common/tomlPanelData.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
-import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_STYLE } from './libraryPage.js';
+import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_MINIMAL_STYLE } from './libraryPage.js';
 import { vignettesIndex } from './newMethods.js';
 import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
-import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
+import { buildWebviewHtml } from '../../model/browser/webviews/webviewScaffold.js';
+import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
+import { PACKAGEVIGNETTES_METADATA } from '../../model/browser/webviews/packageVignettes.data.js';
+import { IOpenerService } from '../../../../platform/opener/common/opener.js';
+import { IEditorService } from '../../../services/editor/common/editorService.js';
+import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
+import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
 import { FEWEST_ROWS, rowsChoiceCss, rowsChoiceScript, sortHeadingsCss, sortHeadingsScript, sortHint, stickyHeadCss, stickyHeadScript, storedRows, storeRows } from '../../model/browser/webviews/webviewPager.js';
 import { openPdfInViewer } from '../../../common/pdfViewer.js';
 
@@ -59,6 +65,8 @@ export interface IVignette {
 	readonly author: string;
 	readonly description: string;
 	readonly citation: string;
+	/** The articles of `citation` as Authors (year), their surnames only; empty when it cannot be read so. */
+	readonly authorYear: string;
 	/** A link to read the article. */
 	readonly article: string;
 	readonly topic: string;
@@ -78,6 +86,22 @@ type VignettesMessage =
 	| { readonly command: 'link'; readonly url: string }
 	| { readonly command: 'rows'; readonly rows: number };
 
+/** One author of a citation as Package and Publish writes it: Surname, I. J. (a surname of several words, initials such as W.-C.). */
+const CITED_AUTHOR = String.raw`(?<surname>\p{Lu}[\p{L}'\u2019-]*(?: \p{Lu}[\p{L}'\u2019-]*)*), \p{Lu}\.(?:-?\p{Lu}\.)*(?: \p{Lu}\.(?:-?\p{Lu}\.)*)*`;
+const CITED_AUTHOR_UNNAMED = CITED_AUTHOR.replace('(?<surname>', '(?:');
+
+/** A cited work: its authors, then its year, as in "Carrasco, M., Hu, L. and Ploberger, W. (2014)." */
+const CITED_WORK = new RegExp(String.raw`(?<authors>${CITED_AUTHOR_UNNAMED}(?:, ${CITED_AUTHOR_UNNAMED})*(?: and ${CITED_AUTHOR_UNNAMED})?) \((?<year>\d{4})[a-z]?\)\.`, 'gu');
+
+/** The works of a citation, which may hold several, as Authors (year) with every surname: "Carrasco, Hu and Ploberger (2014); Hamilton (1989)". */
+function authorYear(citation: string): string {
+	return [...citation.matchAll(CITED_WORK)].map(work => {
+		const surnames = [...(work.groups?.authors ?? '').matchAll(new RegExp(CITED_AUTHOR, 'gu'))].map(author => author.groups?.surname ?? '');
+		const names = surnames.length > 1 ? `${surnames.slice(0, -1).join(', ')} and ${surnames[surnames.length - 1]}` : surnames[0];
+		return `${names} (${work.groups?.year})`;
+	}).join('; ');
+}
+
 /** A vignette from a table of a Vignettes.toml; the PDF as written in it. */
 function vignette(name: string, table: TomlValue): IVignette {
 	const text = (key: string) => typeof table[key] === 'string' ? table[key] as string : '';
@@ -89,6 +113,7 @@ function vignette(name: string, table: TomlValue): IVignette {
 		author: text('author'),
 		description: text('description'),
 		citation: text('citation'),
+		authorYear: authorYear(text('citation')),
 		article: text('article'),
 		topic: text('topic'),
 		license: text('license'),
@@ -282,6 +307,10 @@ async function openVignettesPage(accessor: ServicesAccessor): Promise<void> {
 	const progressService = accessor.get(IProgressService);
 	const notificationService = accessor.get(INotificationService);
 	const storageService = accessor.get(IStorageService);
+	const openerService = accessor.get(IOpenerService);
+	const editorService = accessor.get(IEditorService);
+	const notebookEditorModelResolverService = accessor.get(INotebookEditorModelResolverService);
+	const notebookKernelService = accessor.get(INotebookKernelService);
 
 	if (openPage && !openPage.isDisposed()) {
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
@@ -308,6 +337,8 @@ async function openVignettesPage(accessor: ServicesAccessor): Promise<void> {
 		openPage = undefined;
 		disposables.dispose();
 	}));
+	// Ask Pollis, Powered by and Learn More, as on every page of the scaffold
+	disposables.add(registerScaffoldPageHandlers(webviewInput, 'packageVignettes', title, PACKAGEVIGNETTES_METADATA.packageVignettes, openerService, editorService, commandService, notificationService, notebookEditorModelResolverService, notebookKernelService, fileService, pathService, storageService));
 
 	// The installed vignettes, read again when the page gets the focus back (a package installed since)
 	let installed: IVignette[] = [];
@@ -411,17 +442,15 @@ function pageHtml(rows: number): string {
 		page: localize('vignettes.page', "Page {0} of {1}"),
 		sortHint: sortHint(),
 	};
-	return `<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
-	<style>${LIBRARY_PAGE_STYLE}
-		${voiceButtonsCss}
-		${rowsChoiceCss}
-		${stickyHeadCss}
-		${sortHeadingsCss}
+	return buildWebviewHtml({
+		title: text.title,
+		introHtml: text.intro,
+		extraCss: `
+${LIBRARY_PAGE_MINIMAL_STYLE}
+${rowsChoiceCss}
+${stickyHeadCss}
+${sortHeadingsCss}
+.libraryPage {
 	[hidden] { display: none !important; }
 	.pager { display: flex; justify-content: center; align-items: center; gap: 16px; padding: 12px 8px; font-size: 12px; color: var(--vscode-descriptionForeground); }
 	.pager .link { font-size: 12px; }
@@ -436,15 +465,9 @@ function pageHtml(rows: number): string {
 	/* The article is a link, which a button centres: its heading and the dash of no article too */
 	th.article, td.article { text-align: center; }
 	.location { width: 12%; }
-	.error { color: var(--vscode-errorForeground); }</style>
-</head>
-<body>
-<div class="container">
-	<div class="title-row">
-		<h1>${text.title}</h1>
-		${voiceButtonsHtml}
-	</div>
-	<p class="subtitle">${text.intro}</p>
+	.error { color: var(--vscode-errorForeground); }
+}`,
+		bodyHtml: `<div class="libraryPage">
 	<p class="hint">${text.listIntro} <button class="link" id="refresh">${text.refresh}</button></p>
 	<div class="filters stickyBand" id="filters">
 		<input class="search" id="search" type="search" placeholder="${text.search}" aria-label="${text.search}">
@@ -459,10 +482,8 @@ function pageHtml(rows: number): string {
 		<tbody id="vignettes"></tbody>
 	</table>
 	<div class="pager" id="pager" hidden></div>
-</div>
-<script>
-	const vscode = acquireVsCodeApi();
-	${voiceButtonsScript}
+</div>`,
+		pageScriptJs: `
 	const TEXT = ${JSON.stringify(text)};
 	${LIBRARY_PAGE_HELPERS}
 	${rowsChoiceScript()}
@@ -518,14 +539,19 @@ function pageHtml(rows: number): string {
 		if (vignette.description) {
 			name.appendChild(element('p', 'description clamped', vignette.description));
 		}
+		// The article as Authors (year), its full citation on hover
 		const article = cell(row, 'article');
+		const shown = vignette.authorYear || vignette.citation;
 		if (vignette.article && vignette.citation) {
 			const citation = element('p', 'citation small');
-			citation.appendChild(link(vignette.citation, () => vscode.postMessage({ command: 'link', url: vignette.article })));
+			citation.appendChild(link(shown, () => vscode.postMessage({ command: 'link', url: vignette.article })));
+			citation.title = vignette.citation;
 			article.appendChild(citation);
 		} else {
 			// A dash when the vignette follows no article
-			article.appendChild(element('p', 'citation small', vignette.citation || '-'));
+			const citation = element('p', 'citation small', shown || '-');
+			citation.title = vignette.citation;
+			article.appendChild(citation);
 		}
 		cell(row, 'topic').appendChild(element('div', 'small', vignette.topic));
 		const packageCell = cell(row);
@@ -655,9 +681,8 @@ function pageHtml(rows: number): string {
 		render();
 	});
 	vscode.postMessage({ command: 'ready' });
-</script>
-</body>
-</html>`;
+`,
+	});
 }
 
 registerAction2(class extends Action2 {
