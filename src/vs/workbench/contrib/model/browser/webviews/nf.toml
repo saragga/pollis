@@ -401,6 +401,7 @@ loader = Flux.DataLoader(data, batchsize=64, shuffle=true)  # one sample per col
 for epoch in 1:100
     Flux.train!(loss, model, loader, opt_state)
 end
+Flux.testmode!(model)  # Flux.train! leaves dropout on: switch it off to predict
 '''
 
 [[codeBranches]]
@@ -477,6 +478,7 @@ loader = Flux.DataLoader(data, batchsize=64, shuffle=true)  # one sample per col
 for epoch in 1:100
     Flux.train!(loss, model, loader, opt_state)
 end
+Flux.testmode!(model)  # Flux.train! leaves dropout on: switch it off to predict
 '''
 
 [[codeBranches]]
@@ -555,6 +557,7 @@ loader = Flux.DataLoader(data, batchsize=64, shuffle=true)  # one sample per col
 for epoch in 1:100
     Flux.train!(loss, model, loader, opt_state)
 end
+Flux.testmode!(model)  # Flux.train! leaves dropout on: switch it off to predict
 '''
 
 [[actionGroups]]
@@ -572,6 +575,7 @@ epoch_loss() = mean(loss(model, x) for x in loader)
 history = [epoch_loss()]
 for epoch in 1:100
     Flux.train!(loss, model, loader, opt_state)
+    Flux.testmode!(model)  # the loss without dropout
     push!(history, epoch_loss())
 end
 plot(history, xlabel="epoch", ylabel="negative log-likelihood", legend=false)

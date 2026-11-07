@@ -371,6 +371,7 @@ loader = Flux.DataLoader(({{xvar}}, {{yvar}}), batchsize=32, shuffle=true)  # {{
 for epoch in 1:100
     Flux.train!(loss, model, loader, opt_state)
 end
+Flux.testmode!(model)  # Flux.train! leaves dropout on: switch it off to predict
 '''
 
 [[codeBranches]]
@@ -420,6 +421,7 @@ loader = Flux.DataLoader(({{xvar}}, {{yvar}}), batchsize=32, shuffle=true)  # {{
 for epoch in 1:100
     Flux.train!(loss, model, loader, opt_state)
 end
+Flux.testmode!(model)  # Flux.train! leaves dropout on: switch it off to predict
 '''
 
 [[codeBranches]]
@@ -508,6 +510,7 @@ loader = Flux.DataLoader(({{xvar}}, {{yvar}}), batchsize=32, shuffle=true)  # {{
 for epoch in 1:100
     Flux.train!(loss, model, loader, opt_state)
 end
+Flux.testmode!(model)  # Flux.train! leaves dropout on: switch it off to predict
 '''
 
 [[actionGroups]]
@@ -553,6 +556,7 @@ using Plots, Statistics
 {{?model!=esn}} history = Float32[]
 {{?model!=esn}} for epoch in 1:100
 {{?model!=esn}}     Flux.train!(loss, model, loader, opt_state)
+{{?model!=esn}}     Flux.testmode!(model)  # the loss without dropout
 {{?model!=esn}}     push!(history, mean(loss(model, x, y) for (x, y) in loader))
 {{?model!=esn}} end
 {{?model!=esn}} plot(history, xlabel="epoch", ylabel="MSE", yscale=:log10, legend=false)

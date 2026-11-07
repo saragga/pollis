@@ -389,6 +389,7 @@ opt_state = Flux.setup(Adam(1f-3), model)
 best_val, best_model = Inf, deepcopy(model)
 for epoch in 1:200
     Flux.train!(loss, model, [({{gvar}}, {{xvar}}, {{yvar}})], opt_state)  # full batch: the whole graph is propagated, the loss sees the training nodes only
+    Flux.testmode!(model)  # Flux.train! leaves dropout on: the validation loss and the kept model without it
     v = loss(model, {{gvar}}, {{xvar}}, {{yvar}}; idx=val_idx)
     if v < best_val  # keep the epoch with the lowest validation MSE
         global best_val, best_model = v, deepcopy(model)
@@ -451,6 +452,7 @@ opt_state = Flux.setup(Adam(1f-3), model)
 best_val, best_model = Inf, deepcopy(model)
 for epoch in 1:200
     Flux.train!(loss, model, [({{gvar}}, {{xvar}}, {{yvar}})], opt_state)  # full batch: the whole graph is propagated, the loss sees the training nodes only
+    Flux.testmode!(model)  # Flux.train! leaves dropout on: the validation loss and the kept model without it
     v = loss(model, {{gvar}}, {{xvar}}, {{yvar}}; idx=val_idx)
     if v < best_val  # keep the epoch with the lowest validation MSE
         global best_val, best_model = v, deepcopy(model)
@@ -512,6 +514,7 @@ opt_state = Flux.setup(Adam(1f-3), model)
 best_val, best_model = Inf, deepcopy(model)
 for epoch in 1:200
     Flux.train!(loss, model, [({{gvar}}, {{xvar}}, {{yvar}})], opt_state)  # full batch: the whole graph is propagated, the loss sees the training nodes only
+    Flux.testmode!(model)  # Flux.train! leaves dropout on: the validation loss and the kept model without it
     v = loss(model, {{gvar}}, {{xvar}}, {{yvar}}; idx=val_idx)
     if v < best_val  # keep the epoch with the lowest validation MSE
         global best_val, best_model = v, deepcopy(model)
@@ -549,6 +552,7 @@ opt_state = Flux.setup(Adam(1f-3), model)
 best_val, best_model = Inf, deepcopy(model)
 for epoch in 1:200
     Flux.train!(loss, model, [({{gvar}}, {{xvar}}, {{yvar}})], opt_state)  # {{gvar}}: vector of snapshots, {{xvar}}: one feature matrix per snapshot
+    Flux.testmode!(model)  # Flux.train! leaves dropout on: the validation loss and the kept model without it
     v = loss(model, {{gvar}}, {{xvar}}, {{yvar}}; idx=val_idx)
     if v < best_val  # keep the epoch with the lowest validation MSE
         global best_val, best_model = v, deepcopy(model)
@@ -603,6 +607,7 @@ m_state = Flux.setup(Adam(1f-3), m)
 train_hist, val_hist = Float32[], Float32[]
 for epoch in 1:200
     Flux.train!(loss, m, [({{gvar}}, {{xvar}}, {{yvar}})], m_state)
+    Flux.testmode!(m)  # the losses without dropout
     push!(train_hist, loss(m, {{gvar}}, {{xvar}}, {{yvar}}))
     push!(val_hist, loss(m, {{gvar}}, {{xvar}}, {{yvar}}; idx=val_idx))
 end
