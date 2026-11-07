@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 // No runtime imports: the build (build/lib/toml-to-ts.ts) runs this file directly under Node.
-import type { IModelFaq, IModelFaqItem, IScaffoldPanelData } from './model.types.js';
+import type { IModelFaq, IModelFaqItem, IModelWiki, IScaffoldPanelData } from './model.types.js';
 
 /** A table of a parsed TOML file. */
 export interface TomlValue {
@@ -415,6 +415,11 @@ export function panelCard(data: IScaffoldPanelData): string {
 	return lines.join('\n');
 }
 
+/** Whether `wiki` is a page of Learn More, bundled or online, rather than a separator between them. */
+function isWikiPage(wiki: IModelWiki): wiki is Exclude<IModelWiki, { readonly separator: true }> {
+	return (wiki as { readonly separator?: boolean }).separator !== true;
+}
+
 /**
  * The hidden questions of the FAQ of a panel, closed questions, as the Panel FAQ test set of Evaluate Answering Models
  * holds them: each asked in the panel `title` with its options in an order of their own, with the file of the wiki
@@ -423,7 +428,7 @@ export function panelCard(data: IScaffoldPanelData): string {
 export function panelFaqItems(data: TomlValue, title: string): IModelFaqItem[] {
 	const panel = tomlToPanelData(data);
 	return panelFaq(data).filter(entry => entry.hidden && entry.wrong).map(entry => {
-		const wiki = entry.wiki ? panel.wikis.find(candidate => 'name' in candidate && candidate.name === entry.wiki) : undefined;
+		const wiki = entry.wiki ? panel.wikis.filter(isWikiPage).find(candidate => candidate.name === entry.wiki) : undefined;
 		const choices = shuffledChoices([entry.answer, ...entry.wrong!], entry.question);
 		return {
 			source: `Panel FAQ, ${title}${entry.wiki ? `, ${entry.wiki}` : ''}`,
@@ -431,7 +436,7 @@ export function panelFaqItems(data: TomlValue, title: string): IModelFaqItem[] {
 			question: entry.question,
 			answer: entry.answer,
 			panel: { title, packages: panel.packages.map(pkg => pkg.name), card: panelCard(panel) },
-			...(wiki && 'bundled' in wiki && wiki.bundled ? { wikiFile: wiki.file } : {}),
+			...(wiki?.bundled ? { wikiFile: wiki.file } : {}),
 			hidden: true,
 			choices,
 			rightChoice: choices.indexOf(entry.answer),
