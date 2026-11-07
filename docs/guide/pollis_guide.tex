@@ -2012,6 +2012,7 @@ The questions come from PollisBenchmarks.jl, each at the fixed revision of its s
 Pollis rebuilds the database when the package is updated. The benchmarks to download are listed in the catalogue, but their
 questions are not in the database, by their licence or their size: a page that runs them fetches them from their source.
 Model Benchmarks runs the benchmarks of questions: MMLU-Pro, GSM8K, TruthfulQA, BIG-Bench Hard, IFEval, MultiPL-E Julia, PubMedQA and FinQA.
+Evaluate Embedding Models and Evaluate Reranking Models run the retrieval benchmarks, SciFact and SCIDOCS.
 
 \newpage
 \subhead{Import journal metrics}
@@ -2188,7 +2189,9 @@ same test sets, in the same four steps. Each model embeds the passages it has no
 searches each question as Ask Pollis would: you see how often the passage it came from is among the eight found, and
 where, with words and meaning and by meaning alone, the milliseconds per question and per search, the passages a
 second, the memory, and the size of the index. \ui{Use for Ask Pollis}, under a model, makes it the one Ask Pollis
-uses. Nothing leaves your computer.
+uses. The test sets include SciFact and SCIDOCS, from PollisBenchmarks: each model searches the benchmark's own
+documents by meaning, and each query is scored by the first ten found, with nDCG@10 and Recall@10. In Evaluate Reranking
+Models, each reranker puts in its order the 100 documents BM25 finds for each query, scored the same way. Nothing leaves your computer.
 
 \subhead{Settings}
 \begin{center}\small

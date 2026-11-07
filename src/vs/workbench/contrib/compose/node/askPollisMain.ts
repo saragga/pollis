@@ -22,12 +22,12 @@ import * as os from 'os';
 import { Sequencer } from '../../../../base/common/async.js';
 import { Emitter } from '../../../../base/common/event.js';
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
-import { join } from '../../../../base/common/path.js';
+import { dirname, join } from '../../../../base/common/path.js';
 import { ProxyChannel } from '../../../../base/parts/ipc/common/ipc.js';
 import { Server as ChildProcessServer } from '../../../../base/parts/ipc/node/ipc.cp.js';
 import { Server as UtilityProcessServer } from '../../../../base/parts/ipc/node/ipc.mp.js';
 import { isUtilityProcess } from '../../../../base/parts/sandbox/node/electronTypes.js';
-import { AskPollisSource, AskTopic, ASK_PASSAGES, ASK_SOURCE_COLLECTION, IAskPollisChatEnd, IAskPollisMessage, ICompareRun, ICompareRunSummary, IAskPollisChatRequest, IAskPollisChatText, IAskPollisEvalItem, IAskPollisFound, IAskPollisIndex, IAskPollisIndexedDocument, IAskPollisIndexRequest, IAskPollisIndexStatus, IAskPollisPanel, IAskPollisPanelShare, IAskPollisPassage, IAskPassageMatch, IAskPollisReranked, IAskPollisSearchResult, IAskPollisTimings, IAskTopicCounts, IBenchmarkAnswer, IBenchmarkRun, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingFound, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary, IRerankRun, IRerankRunSummary } from '../common/askPollis.js';
+import { AskPollisSource, AskTopic, ASK_PASSAGES, ASK_SOURCE_COLLECTION, IAskPollisChatEnd, IAskPollisMessage, ICompareRun, ICompareRunSummary, IAskPollisChatRequest, IAskPollisChatText, IAskPollisEvalItem, IAskPollisFound, IAskPollisIndex, IAskPollisIndexedDocument, IAskPollisIndexRequest, IAskPollisIndexStatus, IAskPollisPanel, IAskPollisPanelShare, IAskPollisPassage, IAskPassageMatch, IAskPollisReranked, IAskPollisSearchResult, IAskPollisTimings, IAskTopicCounts, IBenchmarkAnswer, IBenchmarkRun, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingFound, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary, IRerankRun, IRerankRunSummary, IRetrievalEmbeddingRequest, IRetrievalEvaluation, IRetrievalQuery, IRetrievalRerankDone, IRetrievalRerankRequest, IRetrievalReranked, IRetrievalScore, RETRIEVAL_BENCHMARKS, RETRIEVAL_CANDIDATES, RETRIEVAL_CUT } from '../common/askPollis.js';
 
 const DATABASE = join(os.homedir(), '.pollis', 'documents', 'PollisDocuments.duckdb');
 /** The embeddings made, by the model and the text it was given, as ask_index.jl keeps them. */
@@ -38,6 +38,10 @@ const BATCH = 32;
 const COMPARISONS = join(os.homedir(), '.pollis', 'ask', 'Comparisons.duckdb');
 /** The fts extension, which the Julia extension of Pollis unpacks here at install. */
 const FTS = join(os.homedir(), '.pollis', 'duckdb', 'fts.duckdb_extension');
+/** The published benchmarks, which PollisBenchmarks.jl makes when the Julia REPL starts: of retrieval, a table of the queries and the documents of each. */
+const BENCHMARKS = join(os.homedir(), '.pollis', 'databases', 'PollisBenchmarks.duckdb');
+/** How much of a text an embedding model or a reranker is given, in characters: about 1,000 tokens, within the context of its server. */
+const EMBEDDED_CHARACTERS = 4000;
 
 /** How many passages each search, by words and by meaning, keeps for the fusion. */
 const EACH = 20;
@@ -197,8 +201,53 @@ function searchSql(dimensions: number, count: number, vectors?: string, where = 
  * twenty thousand docstrings for each model, and its test sets have no question on them.
  */
 const INPUTS_SQL = `SELECT id, sha256($model || chr(10) || input) AS key, input FROM (
-	SELECT p.id, left(replace(replace($prefix, '{title}', CASE WHEN d.kind IN ('wiki', 'markdown') THEN p.heading ELSE concat_ws(' ' || chr(8250) || ' ', d.title, nullif(p.heading, '')) END), '{text}', p.text), 4000) AS input
+	SELECT p.id, left(replace(replace($prefix, '{title}', CASE WHEN d.kind IN ('wiki', 'markdown') THEN p.heading ELSE concat_ws(' ' || chr(8250) || ' ', d.title, nullif(p.heading, '')) END), '{text}', p.text), ${EMBEDDED_CHARACTERS}) AS input
 	FROM passages p JOIN documents d ON p.document = d.id WHERE d.kind <> 'api')`;
+
+/** The table of the retrieval benchmark `benchmark` in PollisBenchmarks.duckdb, attached as `benchmarks`; nothing for one not known. */
+function retrievalTable(benchmark: string): string | undefined {
+	return RETRIEVAL_BENCHMARKS.some(known => known.id === benchmark) ? `benchmarks.${benchmark}` : undefined;
+}
+
+/**
+ * The key in embeddings.duckdb of each document of the retrieval benchmark's `table`, and what it is given to the model
+ * $model as, with the passage prefix $prefix: its title and its text, cut as a passage of the index is.
+ */
+function retrievalInputsSql(table: string): string {
+	return `SELECT id, sha256($model || chr(10) || input) AS key, input FROM (
+		SELECT id, left(replace(replace($prefix, '{title}', title), '{text}', text), ${EMBEDDED_CHARACTERS}) AS input FROM ${table} WHERE split = 'document')`;
+}
+
+/** The table, in the memory database, of the documents of a retrieval benchmark that BM25 searches, with its fts index. */
+const RETRIEVAL_DOCUMENTS = 'retrieval_documents';
+
+/**
+ * How well `found`, the ids of the documents found in their order, ranks those of `relevant`, each of gain 1, as BEIR
+ * scores them with pytrec_eval: nDCG@10, the discounted gain of the first RETRIEVAL_CUT over the most they can have, and
+ * Recall@10, the share of the relevant documents among them.
+ */
+function retrievalScore(found: readonly string[], relevant: readonly string[]): IRetrievalScore {
+	const wanted = new Set(relevant);
+	let gain = 0;
+	let hits = 0;
+	for (const [index, id] of found.slice(0, RETRIEVAL_CUT).entries()) {
+		if (wanted.has(id)) {
+			gain += 1 / Math.log2(index + 2);
+			hits++;
+		}
+	}
+	let ideal = 0;
+	for (let index = 0; index < Math.min(wanted.size, RETRIEVAL_CUT); index++) {
+		ideal += 1 / Math.log2(index + 2);
+	}
+	return { ndcg: ideal ? gain / ideal : 0, recall: wanted.size ? hits / wanted.size : 0 };
+}
+
+/** The share of the documents of `relevant` among `found`, all of them. */
+function shareFound(found: readonly string[], relevant: readonly string[]): number {
+	const all = new Set(found);
+	return relevant.length ? relevant.filter(id => all.has(id)).length / relevant.length : 0;
+}
 
 /** A search of the index: `count` passages for `question`, from the collections nearest it, or those of `collections`. */
 interface IPassageQuery {
@@ -326,11 +375,20 @@ const COMPARISONS_TABLES = [
 	'CREATE TABLE IF NOT EXISTS Comparisons.unrated(run VARCHAR, answer VARCHAR, judge VARCHAR, error VARCHAR)',
 	'CREATE TABLE IF NOT EXISTS Comparisons.found(stamp VARCHAR, question VARCHAR, passages VARCHAR, PRIMARY KEY(stamp, question))',
 	'CREATE TABLE IF NOT EXISTS Comparisons.embeddingRuns(id VARCHAR PRIMARY KEY, started BIGINT, pollis VARCHAR, models VARCHAR, questions INTEGER, passages INTEGER)',
+	// A run of a retrieval benchmark: its id, and the nDCG@10 and Recall@10 of each query for each model
+	'ALTER TABLE Comparisons.embeddingRuns ADD COLUMN IF NOT EXISTS benchmark VARCHAR',
 	'CREATE TABLE IF NOT EXISTS Comparisons.embeddingQuestions(run VARCHAR, question INTEGER, source VARCHAR, context VARCHAR, text VARCHAR, answer VARCHAR)',
 	'CREATE TABLE IF NOT EXISTS Comparisons.embeddingFound(run VARCHAR, question INTEGER, model VARCHAR, hybrid INTEGER, meaning INTEGER, query_ms DOUBLE, search_ms DOUBLE)',
+	'ALTER TABLE Comparisons.embeddingFound ADD COLUMN IF NOT EXISTS ndcg DOUBLE',
+	'ALTER TABLE Comparisons.embeddingFound ADD COLUMN IF NOT EXISTS recall DOUBLE',
 	'CREATE TABLE IF NOT EXISTS Comparisons.rerankRuns(id VARCHAR PRIMARY KEY, started BIGINT, pollis VARCHAR, models VARCHAR, questions INTEGER, found INTEGER, kept INTEGER, embedder VARCHAR)',
+	// A run of a retrieval benchmark: its id, the nDCG@10 and Recall@10 of each query for each reranker, and the share of its relevant documents BM25 found
+	'ALTER TABLE Comparisons.rerankRuns ADD COLUMN IF NOT EXISTS benchmark VARCHAR',
 	'CREATE TABLE IF NOT EXISTS Comparisons.rerankQuestions(run VARCHAR, question INTEGER, source VARCHAR, context VARCHAR, text VARCHAR, answer VARCHAR)',
 	'CREATE TABLE IF NOT EXISTS Comparisons.rerankFound(run VARCHAR, question INTEGER, model VARCHAR, place INTEGER, ms DOUBLE)',
+	'ALTER TABLE Comparisons.rerankFound ADD COLUMN IF NOT EXISTS ndcg DOUBLE',
+	'ALTER TABLE Comparisons.rerankFound ADD COLUMN IF NOT EXISTS recall DOUBLE',
+	'ALTER TABLE Comparisons.rerankFound ADD COLUMN IF NOT EXISTS among DOUBLE',
 	// A run of Model Benchmarks: its sample's strata, as JSON, and the ids of its questions in the order drawn, as JSON
 	'CREATE TABLE IF NOT EXISTS Comparisons.benchmarkRuns(id VARCHAR PRIMARY KEY, started BIGINT, ended BIGINT, pollis VARCHAR, benchmark VARCHAR, revision VARCHAR, shots INTEGER, reasoning BOOLEAN, thinking BOOLEAN, max_tokens INTEGER, seed BIGINT, allocation VARCHAR, size INTEGER, strata VARCHAR, questions VARCHAR)',
 	// Each model of a run, in the order it ran, and the figures PollisBenchmarks.jl computed of it: its strata as JSON
@@ -597,17 +655,46 @@ class AskPollisIndex implements IAskPollisIndex {
 		return row?.panel !== null && row?.panel !== undefined && Number(row.panel) - Number(row.best) <= ROUTE_MARGIN ? share.near : share.far;
 	}
 
+	/** Runs `task` with embeddings.duckdb attached as `cache`, made the first time; within a task of the sequencer. */
+	private async inCache<T>(connection: DuckDBConnection, task: (connection: DuckDBConnection) => Promise<T>): Promise<T> {
+		fs.mkdirSync(dirname(EMBEDDINGS), { recursive: true });
+		await connection.run(`ATTACH ${sqlString(EMBEDDINGS)} AS cache`);
+		try {
+			await connection.run('CREATE TABLE IF NOT EXISTS cache.embeddings(key VARCHAR PRIMARY KEY, embedding FLOAT[])');
+			return await task(connection);
+		} finally {
+			await connection.run('DETACH cache');
+		}
+	}
+
 	/** Runs `task` with the index and embeddings.duckdb attached, the cache made the first time. */
 	private withCache<T>(task: (connection: DuckDBConnection) => Promise<T>): Promise<T | undefined> {
-		return this.withIndex(async connection => {
-			await connection.run(`ATTACH ${sqlString(EMBEDDINGS)} AS cache`);
+		return this.withIndex(connection => this.inCache(connection, task));
+	}
+
+	/** Runs `task` with PollisBenchmarks.duckdb attached read-only as `benchmarks`; nothing when it cannot be read, as while PollisBenchmarks.jl makes it. */
+	private withBenchmarks<T>(task: (connection: DuckDBConnection) => Promise<T>): Promise<T | undefined> {
+		return this.sequencer.queue(async () => {
+			if (!fs.existsSync(BENCHMARKS)) {
+				return undefined;
+			}
+			const connection = await this.connect();
 			try {
-				await connection.run('CREATE TABLE IF NOT EXISTS cache.embeddings(key VARCHAR PRIMARY KEY, embedding FLOAT[])');
+				await connection.run(`ATTACH ${sqlString(BENCHMARKS)} AS benchmarks (READ_ONLY)`);
+			} catch {
+				return undefined;
+			}
+			try {
 				return await task(connection);
 			} finally {
-				await connection.run('DETACH cache');
+				await connection.run('DETACH benchmarks');
 			}
 		});
+	}
+
+	/** Runs `query` on the memory database alone, as a task of the sequencer. */
+	private inMemory<T>(query: (connection: DuckDBConnection) => Promise<T>): Promise<T> {
+		return this.sequencer.queue(async () => query(await this.connect()));
 	}
 
 	async embedPassages(request: IEmbeddingRequest): Promise<IEmbeddingDone> {
@@ -623,15 +710,20 @@ class AskPollisIndex implements IAskPollisIndex {
 		} catch (err) {
 			return { embedded: 0, seconds: 0, error: err instanceof Error ? err.message : String(err) };
 		}
+		return this.embedMissing(request, todo);
+	}
+
+	/** Embeds `todo`, the texts embeddings.duckdb does not have, with the server of `request`, keeping each batch as it comes. */
+	private async embedMissing(request: IEmbeddingRequest, todo: readonly { key: string; input: string }[]): Promise<IEmbeddingDone> {
 		const started = Date.now();
 		let embedded = 0;
 		let error: string | undefined;
 		// Each batch kept as it comes, one request at a time: a batch that fails is asked again a passage at a time
 		const keep = async (batch: readonly { key: string; input: string }[]) => {
 			const answer = await embedAll(request.url, batch.map(item => item.input));
-			await this.withCache(connection => connection.run(`INSERT OR REPLACE INTO cache.embeddings
+			await this.sequencer.queue(async () => this.inCache(await this.connect(), connection => connection.run(`INSERT OR REPLACE INTO cache.embeddings
 				SELECT from_json($keys, '["VARCHAR"]')[e."index" + 1], e.embedding
-				FROM (SELECT unnest(from_json($answer, '{"data": [{"index": "INTEGER", "embedding": "FLOAT[]"}]}').data, recursive := true)) e`, { keys: JSON.stringify(batch.map(item => item.key)), answer }));
+				FROM (SELECT unnest(from_json($answer, '{"data": [{"index": "INTEGER", "embedding": "FLOAT[]"}]}').data, recursive := true)) e`, { keys: JSON.stringify(batch.map(item => item.key)), answer })));
 			embedded += batch.length;
 		};
 		for (let from = 0; from < todo.length && !this.embeddingStopped; from += BATCH) {
@@ -704,6 +796,147 @@ class AskPollisIndex implements IAskPollisIndex {
 			return { dimensions, passages, found };
 		} catch (err) {
 			return failed(err instanceof Error ? err.message : String(err));
+		}
+	}
+
+	async retrievalQueries(benchmark: string): Promise<readonly IRetrievalQuery[] | undefined> {
+		const table = retrievalTable(benchmark);
+		if (!table) {
+			return undefined;
+		}
+		try {
+			return await this.withBenchmarks(async connection => (await connection.runAndReadAll(`SELECT id, text, relevant FROM ${table} WHERE split = 'test' ORDER BY rowid`)).getRowObjectsJson()
+				.map(row => ({ id: String(row.id), text: String(row.text), relevant: Array.isArray(row.relevant) ? row.relevant.map(String) : [] })));
+		} catch {
+			// A PollisBenchmarks.duckdb of an older PollisBenchmarks.jl, without the table
+			return undefined;
+		}
+	}
+
+	async embedRetrieval(request: IRetrievalEmbeddingRequest): Promise<IEmbeddingDone> {
+		this.embeddingStopped = false;
+		const table = retrievalTable(request.benchmark);
+		if (!table) {
+			return { embedded: 0, seconds: 0, error: 'notBenchmarks' };
+		}
+		let todo: { key: string; input: string }[];
+		try {
+			const rows = await this.withBenchmarks(connection => this.inCache(connection, async () => (await connection.runAndReadAll(`SELECT key, any_value(input) AS input FROM (${retrievalInputsSql(table)}) WHERE key NOT IN (SELECT key FROM cache.embeddings) GROUP BY key ORDER BY min(id)`, { model: request.model, prefix: request.passagePrefix })).getRowObjectsJson()));
+			if (!rows) {
+				return { embedded: 0, seconds: 0, error: 'notBenchmarks' };
+			}
+			todo = rows.map(row => ({ key: String(row.key), input: String(row.input) }));
+		} catch (err) {
+			return { embedded: 0, seconds: 0, error: err instanceof Error ? err.message : String(err) };
+		}
+		return this.embedMissing(request, todo);
+	}
+
+	async evaluateRetrieval(request: IRetrievalEvaluation): Promise<IEmbeddingEvaluated> {
+		this.embeddingStopped = false;
+		const failed = (error: string): IEmbeddingEvaluated => ({ dimensions: 0, passages: 0, found: [], error });
+		const table = retrievalTable(request.benchmark);
+		if (!table) {
+			return failed('notBenchmarks');
+		}
+		try {
+			// The model's embeddings of the documents, from the cache, in a table of their own for the searches
+			const made = await this.withBenchmarks(connection => this.inCache(connection, async () => {
+				const parameters = { model: request.model, prefix: request.passagePrefix };
+				const inputs = retrievalInputsSql(table);
+				const dimensions = Number((await connection.runAndReadAll(`SELECT max(len(c.embedding)) AS dimensions FROM (${inputs}) i JOIN cache.embeddings c ON c.key = i.key`, parameters)).getRowObjectsJson()[0]?.dimensions ?? 0);
+				if (dimensions) {
+					await connection.run(`CREATE OR REPLACE TABLE memory.retrieval_vectors AS SELECT i.id, c.embedding::FLOAT[${dimensions}] AS embedding FROM (${inputs}) i JOIN cache.embeddings c ON c.key = i.key WHERE len(c.embedding) = ${dimensions}`, parameters);
+				}
+				const documents = Number((await connection.runAndReadAll(`SELECT count(*) AS documents FROM ${table} WHERE split = 'document'`)).getRowObjectsJson()[0]?.documents ?? 0);
+				return { dimensions, documents };
+			}));
+			if (!made) {
+				return failed('notBenchmarks');
+			}
+			if (!made.dimensions) {
+				return failed('notEmbedded');
+			}
+			const { dimensions, documents } = made;
+			const found: IEmbeddingFound[] = [];
+			try {
+				for (const [i, query] of request.queries.entries()) {
+					if (this.embeddingStopped) {
+						break;
+					}
+					const embedding = Date.now();
+					const vector = await embed(request.url, request.queryPrefix.replace('{text}', query.text));
+					const queryMs = Date.now() - embedding;
+					const search = Date.now();
+					// The nearest documents by meaning, the earlier id first on a tie
+					const ids = await this.inMemory(async connection => (await connection.runAndReadAll(`SELECT id FROM memory.retrieval_vectors ORDER BY array_cosine_distance(embedding, $vector::FLOAT[${dimensions}]), id LIMIT ${RETRIEVAL_CUT}`, { vector })).getRowObjectsJson().map(row => String(row.id)));
+					const searchMs = Date.now() - search;
+					found.push({ ...retrievalScore(ids, query.relevant), queryMs, searchMs });
+					this._onDidEmbed.fire({ model: request.model, phase: 'search', done: i + 1, total: request.queries.length });
+				}
+			} finally {
+				await this.inMemory(connection => connection.run('DROP TABLE IF EXISTS memory.retrieval_vectors'));
+			}
+			return { dimensions, passages: documents, found };
+		} catch (err) {
+			return failed(err instanceof Error ? err.message : String(err));
+		}
+	}
+
+	async rerankRetrieval(request: IRetrievalRerankRequest): Promise<IRetrievalRerankDone> {
+		this.embeddingStopped = false;
+		const table = retrievalTable(request.benchmark);
+		if (!table) {
+			return { found: [], error: 'notBenchmarks' };
+		}
+		try {
+			// The documents, with an fts index of their titles and texts, in the memory database, the default one, where the index is made
+			const indexed = await this.withBenchmarks(async connection => {
+				await connection.run(`CREATE OR REPLACE TABLE ${RETRIEVAL_DOCUMENTS} AS SELECT id, title, text FROM ${table} WHERE split = 'document'`);
+				await connection.run(`PRAGMA create_fts_index('${RETRIEVAL_DOCUMENTS}', 'id', 'title', 'text', overwrite = 1)`);
+				return true;
+			});
+			if (!indexed) {
+				return { found: [], error: 'notBenchmarks' };
+			}
+			const found: IRetrievalReranked[] = [];
+			let error: string | undefined;
+			try {
+				for (const [index, query] of request.queries.entries()) {
+					if (this.embeddingStopped) {
+						break;
+					}
+					// The documents BM25 finds for the query, the best first, the earlier id first on a tie
+					const candidates = await this.inMemory(async connection => (await connection.runAndReadAll(`SELECT id, title, text FROM (
+						SELECT id, title, text, fts_main_${RETRIEVAL_DOCUMENTS}.match_bm25(id, $query) AS score FROM ${RETRIEVAL_DOCUMENTS})
+						WHERE score IS NOT NULL ORDER BY score DESC, id LIMIT ${RETRIEVAL_CANDIDATES}`, { query: query.text })).getRowObjectsJson()
+						.map(row => ({ id: String(row.id), text: `${String(row.title ?? '')}\n${String(row.text ?? '')}`.trim().slice(0, EMBEDDED_CHARACTERS) })));
+					let order = candidates.map(candidate => candidate.id);
+					let ms: number | undefined;
+					if (request.url && candidates.length) {
+						const start = Date.now();
+						const reranked = await this.rerank(request.url, query.text, candidates.map(candidate => candidate.text));
+						ms = Date.now() - start;
+						const scores = reranked.scores;
+						if (!scores) {
+							error ??= reranked.error || 'noScores';
+							continue;
+						}
+						// In the reranker's order, the earlier of BM25 first on a tie
+						order = candidates.map((candidate, place) => ({ id: candidate.id, score: scores[place], place })).sort((a, b) => b.score - a.score || a.place - b.place).map(candidate => candidate.id);
+					}
+					found.push({ query: index, ...retrievalScore(order, query.relevant), among: shareFound(order, query.relevant), ...(ms === undefined ? {} : { ms }) });
+					this._onDidEmbed.fire({ model: request.model ?? '', phase: 'rerank', done: index + 1, total: request.queries.length });
+				}
+			} finally {
+				await this.inMemory(async connection => {
+					await connection.run(`PRAGMA drop_fts_index('${RETRIEVAL_DOCUMENTS}')`);
+					await connection.run(`DROP TABLE IF EXISTS ${RETRIEVAL_DOCUMENTS}`);
+				});
+			}
+			return { found, ...(error ? { error } : {}) };
+		} catch (err) {
+			return { found: [], error: err instanceof Error ? err.message : String(err) };
 		}
 	}
 
@@ -1026,8 +1259,8 @@ class AskPollisIndex implements IAskPollisIndex {
 			await connection.run('BEGIN TRANSACTION');
 			try {
 				await this.removeEmbeddingRun(connection, summary.id);
-				await connection.run('INSERT INTO Comparisons.embeddingRuns VALUES ($id, $started, $pollis, $models, $questions, $passages)', {
-					id: summary.id, started: summary.started, pollis: summary.pollis, models: JSON.stringify(summary.models), questions: summary.questions, passages: summary.passages,
+				await connection.run('INSERT INTO Comparisons.embeddingRuns(id, started, pollis, models, questions, passages, benchmark) VALUES ($id, $started, $pollis, $models, $questions, $passages, $benchmark::VARCHAR)', {
+					id: summary.id, started: summary.started, pollis: summary.pollis, models: JSON.stringify(summary.models), questions: summary.questions, passages: summary.passages, benchmark: summary.benchmark ?? null,
 				});
 				for (const [question, item] of run.questions.entries()) {
 					await connection.run('INSERT INTO Comparisons.embeddingQuestions VALUES ($run, $question, $source, $context, $text, $answer)', {
@@ -1035,8 +1268,8 @@ class AskPollisIndex implements IAskPollisIndex {
 					});
 				}
 				for (const found of run.found) {
-					await connection.run('INSERT INTO Comparisons.embeddingFound VALUES ($run, $question, $model, $hybrid::INTEGER, $meaning::INTEGER, $queryMs, $searchMs)', {
-						run: summary.id, question: found.question, model: found.model, hybrid: found.hybrid ?? null, meaning: found.meaning ?? null, queryMs: found.queryMs, searchMs: found.searchMs,
+					await connection.run('INSERT INTO Comparisons.embeddingFound(run, question, model, hybrid, meaning, query_ms, search_ms, ndcg, recall) VALUES ($run, $question, $model, $hybrid::INTEGER, $meaning::INTEGER, $queryMs, $searchMs, $ndcg::DOUBLE, $recall::DOUBLE)', {
+						run: summary.id, question: found.question, model: found.model, hybrid: found.hybrid ?? null, meaning: found.meaning ?? null, queryMs: found.queryMs, searchMs: found.searchMs, ndcg: found.ndcg ?? null, recall: found.recall ?? null,
 					});
 				}
 				await connection.run('COMMIT');
@@ -1055,6 +1288,7 @@ class AskPollisIndex implements IAskPollisIndex {
 			models: JSON.parse(String(row.models ?? '[]')),
 			questions: Number(row.questions),
 			passages: Number(row.passages),
+			...(typeof row.benchmark === 'string' ? { benchmark: row.benchmark } : {}),
 		};
 	}
 
@@ -1072,7 +1306,7 @@ class AskPollisIndex implements IAskPollisIndex {
 			const questions = (await connection.runAndReadAll('SELECT * FROM Comparisons.embeddingQuestions WHERE run = $id ORDER BY question', { id })).getRowObjectsJson()
 				.map(question => ({ source: String(question.source), context: String(question.context), question: String(question.text), answer: String(question.answer) }));
 			const found = (await connection.runAndReadAll('SELECT * FROM Comparisons.embeddingFound WHERE run = $id ORDER BY question', { id })).getRowObjectsJson()
-				.map(found => ({ question: Number(found.question), model: String(found.model), hybrid: optionalNumber(found.hybrid), meaning: optionalNumber(found.meaning), queryMs: Number(found.query_ms), searchMs: Number(found.search_ms) }));
+				.map(found => ({ question: Number(found.question), model: String(found.model), hybrid: optionalNumber(found.hybrid), meaning: optionalNumber(found.meaning), queryMs: Number(found.query_ms), searchMs: Number(found.search_ms), ndcg: optionalNumber(found.ndcg), recall: optionalNumber(found.recall) }));
 			return { summary: this.embeddingSummaryOf(row), questions, found };
 		});
 	}
@@ -1094,8 +1328,8 @@ class AskPollisIndex implements IAskPollisIndex {
 			await connection.run('BEGIN TRANSACTION');
 			try {
 				await this.removeRerankRun(connection, summary.id);
-				await connection.run('INSERT INTO Comparisons.rerankRuns VALUES ($id, $started, $pollis, $models, $questions, $found, $kept, $embedder)', {
-					id: summary.id, started: summary.started, pollis: summary.pollis, models: JSON.stringify(summary.models), questions: summary.questions, found: summary.found, kept: summary.kept, embedder: summary.embedder,
+				await connection.run('INSERT INTO Comparisons.rerankRuns(id, started, pollis, models, questions, found, kept, embedder, benchmark) VALUES ($id, $started, $pollis, $models, $questions, $found, $kept, $embedder, $benchmark::VARCHAR)', {
+					id: summary.id, started: summary.started, pollis: summary.pollis, models: JSON.stringify(summary.models), questions: summary.questions, found: summary.found, kept: summary.kept, embedder: summary.embedder, benchmark: summary.benchmark ?? null,
 				});
 				for (const [question, item] of run.questions.entries()) {
 					await connection.run('INSERT INTO Comparisons.rerankQuestions VALUES ($run, $question, $source, $context, $text, $answer)', {
@@ -1103,8 +1337,8 @@ class AskPollisIndex implements IAskPollisIndex {
 					});
 				}
 				for (const found of run.found) {
-					await connection.run('INSERT INTO Comparisons.rerankFound VALUES ($run, $question, $model, $place::INTEGER, $ms::DOUBLE)', {
-						run: summary.id, question: found.question, model: found.model, place: found.place ?? null, ms: found.ms ?? null,
+					await connection.run('INSERT INTO Comparisons.rerankFound(run, question, model, place, ms, ndcg, recall, among) VALUES ($run, $question, $model, $place::INTEGER, $ms::DOUBLE, $ndcg::DOUBLE, $recall::DOUBLE, $among::DOUBLE)', {
+						run: summary.id, question: found.question, model: found.model, place: found.place ?? null, ms: found.ms ?? null, ndcg: found.ndcg ?? null, recall: found.recall ?? null, among: found.among ?? null,
 					});
 				}
 				await connection.run('COMMIT');
@@ -1125,6 +1359,7 @@ class AskPollisIndex implements IAskPollisIndex {
 			found: Number(row.found),
 			kept: Number(row.kept),
 			embedder: String(row.embedder ?? ''),
+			...(typeof row.benchmark === 'string' ? { benchmark: row.benchmark } : {}),
 		};
 	}
 
@@ -1142,7 +1377,7 @@ class AskPollisIndex implements IAskPollisIndex {
 			const questions = (await connection.runAndReadAll('SELECT * FROM Comparisons.rerankQuestions WHERE run = $id ORDER BY question', { id })).getRowObjectsJson()
 				.map(question => ({ source: String(question.source), context: String(question.context), question: String(question.text), answer: String(question.answer) }));
 			const found = (await connection.runAndReadAll('SELECT * FROM Comparisons.rerankFound WHERE run = $id ORDER BY question', { id })).getRowObjectsJson()
-				.map(found => ({ question: Number(found.question), model: String(found.model), place: optionalNumber(found.place), ms: optionalNumber(found.ms) }));
+				.map(found => ({ question: Number(found.question), model: String(found.model), place: optionalNumber(found.place), ms: optionalNumber(found.ms), ndcg: optionalNumber(found.ndcg), recall: optionalNumber(found.recall), among: optionalNumber(found.among) }));
 			return { summary: this.rerankSummaryOf(row), questions, found };
 		});
 	}

@@ -469,6 +469,8 @@ export interface IAskPollisEvalItem {
 	readonly rightChoice?: number;
 	/** Why the right option is right, when the author wrote it. */
 	readonly explanation?: string;
+	/** A query of a retrieval benchmark, `source` its id: the ids of the documents relevant to it. */
+	readonly relevant?: readonly string[];
 }
 
 /**
@@ -610,12 +612,90 @@ export function embeddingPrefixes(file: string): IEmbeddingPrefixes {
 	return { passage, query: '{text}' };
 }
 
-/** How far the embedding of the passages, or the search of the questions, of a model of Evaluate Embedding Models is. */
+/**
+ * How far the embedding of the passages, or the search of the questions, of a model of Evaluate Embedding Models is;
+ * or the reranking of the queries of a retrieval benchmark, by a reranker of Evaluate Reranking Models or, with none, by BM25.
+ */
 export interface IEmbeddingProgress {
 	readonly model: string;
-	readonly phase: 'embed' | 'search';
+	readonly phase: 'embed' | 'search' | 'rerank';
 	readonly done: number;
 	readonly total: number;
+}
+
+/** A retrieval benchmark of PollisBenchmarks.duckdb that the Evaluate pages run: its table, and its name. */
+export interface IRetrievalBenchmark {
+	readonly id: string;
+	readonly name: string;
+}
+
+/** The retrieval benchmarks of PollisBenchmarks.duckdb, each a table of its queries and the documents they search. */
+export const RETRIEVAL_BENCHMARKS: readonly IRetrievalBenchmark[] = [
+	{ id: 'scifact', name: 'SciFact' },
+	{ id: 'scidocs', name: 'SCIDOCS' },
+];
+
+/** The first documents found that a query of a retrieval benchmark is scored on, as BEIR scores them: nDCG@10 and Recall@10. */
+export const RETRIEVAL_CUT = 10;
+
+/** The documents BM25 finds for each query of a retrieval benchmark, which each reranker puts in its order, as BEIR reranks them. */
+export const RETRIEVAL_CANDIDATES = 100;
+
+/** A query of a retrieval benchmark, with the ids of the documents relevant to it. */
+export interface IRetrievalQuery {
+	readonly id: string;
+	readonly text: string;
+	readonly relevant: readonly string[];
+}
+
+/**
+ * How well the documents found for a query are ranked, each relevant document of gain 1: nDCG@10, from 0 to 1, 1 when
+ * the relevant documents are the first found; and Recall@10, the share of the relevant documents among the first 10.
+ */
+export interface IRetrievalScore {
+	readonly ndcg: number;
+	readonly recall: number;
+}
+
+/** The documents of the retrieval benchmark `benchmark` to embed with the model `model`, by its server at `url`. */
+export interface IRetrievalEmbeddingRequest extends IEmbeddingRequest {
+	readonly benchmark: string;
+}
+
+/** The queries of the retrieval benchmark `benchmark` to search with the embeddings of `model`, made with its prefixes. */
+export interface IRetrievalEvaluation extends IRetrievalEmbeddingRequest {
+	readonly queryPrefix: string;
+	readonly queries: readonly IRetrievalQuery[];
+}
+
+/**
+ * The queries of the retrieval benchmark `benchmark` to rerank: the RETRIEVAL_CANDIDATES documents BM25 finds for each,
+ * put in its order by the reranker `model` at `url`; in the order of BM25 without them.
+ */
+export interface IRetrievalRerankRequest {
+	readonly benchmark: string;
+	readonly queries: readonly IRetrievalQuery[];
+	readonly model?: string;
+	readonly url?: string;
+}
+
+/** How a query of a retrieval benchmark was reranked, `query` its place among those asked; `ms`, the milliseconds the reranker took. */
+export interface IRetrievalReranked extends IRetrievalScore {
+	readonly query: number;
+	/** The share of the relevant documents among all those BM25 found: what no reranker can do better than. */
+	readonly among: number;
+	readonly ms?: number;
+}
+
+/** What rerankRetrieval gave for each query, those the reranker scored; and the first error, when it did not score them all. */
+export interface IRetrievalRerankDone {
+	readonly found: readonly IRetrievalReranked[];
+	readonly error?: string;
+}
+
+/** The name of the retrieval benchmark `id`, as its catalogue gives it; the id itself for one not known. */
+export function retrievalBenchmarkName(id: string): string {
+	return RETRIEVAL_BENCHMARKS.find(benchmark => benchmark.id === id)?.name ?? id;
 }
 
 /** The passages of the index to embed with the model `model` (its value in the settings), by its server at `url`. */
@@ -648,6 +728,9 @@ export interface IEmbeddingFound {
 	readonly meaning?: number;
 	readonly queryMs: number;
 	readonly searchMs: number;
+	/** A query of a retrieval benchmark, searched by meaning alone: how well the documents found are ranked, in place of `hybrid` and `meaning`. */
+	readonly ndcg?: number;
+	readonly recall?: number;
 }
 
 /** What evaluateEmbedding found for each question, and the size of the model's embeddings. */
@@ -679,8 +762,10 @@ export interface IEmbeddingRunSummary {
 	readonly pollis: string;
 	readonly models: readonly IEmbeddingRunModel[];
 	readonly questions: number;
-	/** The passages of the index. */
+	/** The passages of the index; the documents of the benchmark, for a run of one. */
 	readonly passages: number;
+	/** The retrieval benchmark whose queries were searched, its id; none for a test set of Evaluate Answering Models. */
+	readonly benchmark?: string;
 }
 
 /** What a model found for a question of a run. */
@@ -718,8 +803,10 @@ export interface IRerankRunSummary {
 	readonly found: number;
 	/** The passages Ask Pollis gives: the first of them in that order. */
 	readonly kept: number;
-	/** The embedding model that found them. */
+	/** The embedding model that found them; none for a run of a benchmark, whose documents BM25 finds. */
 	readonly embedder: string;
+	/** The retrieval benchmark whose queries were reranked, its id; none for a test set of Evaluate Answering Models. */
+	readonly benchmark?: string;
 }
 
 /**
@@ -731,6 +818,11 @@ export interface IRerankRunFound {
 	readonly model: string;
 	readonly place?: number;
 	readonly ms?: number;
+	/** A query of a retrieval benchmark: how well the reranker ranked the first documents, in place of `place`. */
+	readonly ndcg?: number;
+	readonly recall?: number;
+	/** For the order of BM25: the share of the relevant documents among all those it found. */
+	readonly among?: number;
 }
 
 /** A run of Evaluate Reranking Models, kept in `~/.pollis/ask/Comparisons.duckdb`. */
@@ -866,7 +958,15 @@ export interface IAskPollisIndex {
 	embedPassages(request: IEmbeddingRequest): Promise<IEmbeddingDone>;
 	/** Searches the questions with the embeddings of `request.model` in embeddings.duckdb, as Ask Pollis would with it. */
 	evaluateEmbedding(request: IEmbeddingEvaluation): Promise<IEmbeddingEvaluated>;
-	/** Stops embedPassages and evaluateEmbedding at their next batch or question. */
+	/** The queries of the retrieval benchmark `benchmark`, from PollisBenchmarks.duckdb; nothing when it cannot be read. */
+	retrievalQueries(benchmark: string): Promise<readonly IRetrievalQuery[] | undefined>;
+	/** Embeds the documents of a retrieval benchmark that embeddings.duckdb does not have with `request.model`, as embedPassages those of the index. */
+	embedRetrieval(request: IRetrievalEmbeddingRequest): Promise<IEmbeddingDone>;
+	/** Searches the queries of a retrieval benchmark among its documents by meaning, with the embeddings of `request.model` in embeddings.duckdb. */
+	evaluateRetrieval(request: IRetrievalEvaluation): Promise<IEmbeddingEvaluated>;
+	/** Finds the documents of each query of a retrieval benchmark with BM25 and has the reranker at `request.url`, if any, put them in its order. */
+	rerankRetrieval(request: IRetrievalRerankRequest): Promise<IRetrievalRerankDone>;
+	/** Stops embedPassages, evaluateEmbedding and those of a retrieval benchmark at their next batch, question or query. */
 	stopEmbedding(): Promise<void>;
 	saveEmbeddingRun(run: IEmbeddingRun): Promise<void>;
 	/** The runs of Evaluate Embedding Models, the latest first. */
@@ -963,6 +1063,11 @@ export interface IAskPollisService {
 	readonly onDidEmbed: Event<IEmbeddingProgress>;
 	embedPassages(request: IEmbeddingRequest): Promise<IEmbeddingDone>;
 	evaluateEmbedding(request: IEmbeddingEvaluation): Promise<IEmbeddingEvaluated>;
+	/** The retrieval benchmarks of PollisBenchmarks.duckdb, for Evaluate Embedding Models and Evaluate Reranking Models: as IAskPollisIndex. */
+	retrievalQueries(benchmark: string): Promise<readonly IRetrievalQuery[] | undefined>;
+	embedRetrieval(request: IRetrievalEmbeddingRequest): Promise<IEmbeddingDone>;
+	evaluateRetrieval(request: IRetrievalEvaluation): Promise<IEmbeddingEvaluated>;
+	rerankRetrieval(request: IRetrievalRerankRequest): Promise<IRetrievalRerankDone>;
 	stopEmbedding(): Promise<void>;
 	saveEmbeddingRun(run: IEmbeddingRun): Promise<void>;
 	embeddingRuns(): Promise<readonly IEmbeddingRunSummary[]>;

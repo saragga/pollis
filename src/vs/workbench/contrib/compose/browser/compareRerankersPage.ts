@@ -27,12 +27,12 @@ import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaff
 import { FEWEST_ROWS, rowsChoiceScript, sortHeadingsScript, storedRows, storeRows } from '../../model/browser/webviews/webviewPager.js';
 import { COMPARERERANKERS_METADATA } from '../../model/browser/webviews/compareRerankers.data.js';
 import { buildWebviewHtml, spinnerSvg } from '../../model/browser/webviews/webviewScaffold.js';
-import { ASK_RERANK_WIDER, IAskPollisService, IRerankRun, IRerankRunModel } from '../common/askPollis.js';
+import { ASK_PASSAGES, ASK_RERANK_WIDER, IAskPollisService, IRerankRun, IRerankRunModel, RETRIEVAL_CANDIDATES, RETRIEVAL_CUT, retrievalBenchmarkName } from '../common/askPollis.js';
 import { askAnswerCss, askAnswerScript, askModelName } from './askPollisWebview.js';
 import { COMPARE_MODELS_COMMAND_ID } from './compareModelsPage.js';
 import { ICompareProgress } from './compareModelsRun.js';
 import { CompareRerankersRunner, IRerankEnd, NO_RERANKER } from './compareRerankersRun.js';
-import { compareChartsHtml, compareChartsScript, compareCommonScript, compareCss, compareLocalCard, compareSharedText, compareTestSetHeadHtml, compareTestSetHtml, compareTestSetScript, CompareTestSetChoice } from './compareShared.js';
+import { compareChartsHtml, compareChartsScript, compareCommonScript, compareCss, compareLocalCard, compareSharedText, compareTestSetHeadHtml, compareTestSetHtml, compareTestSetScript, CompareTestSetChoice, meanInterval } from './compareShared.js';
 import { IInstalledModel } from './modelsInstalledPage.js';
 
 // Evaluate Reranking Models, from Compose > Knowledge for AI Models > Evaluate Reranking Models... (compose.contribution.ts):
@@ -42,7 +42,9 @@ import { IInstalledModel } from './modelsInstalledPage.js';
 // Pollis finds them with a reranker set, then has each reranker put them in its order (compareRerankersRun.ts); 4, the
 // results of the run shown: for each reranker, and for the order of the search with none, how often the passage a
 // question was made from is among those Ask Pollis gives, and where; how fast it reranks a question and the memory it
-// takes; Use for Ask Pollis makes it the reranker of Ask Pollis. The choices are remembered for the next time.
+// takes; Use for Ask Pollis makes it the reranker of Ask Pollis. The choices are remembered for the next time. The test
+// sets include the retrieval benchmarks of PollisBenchmarks.duckdb, SciFact and SCIDOCS: each reranker puts in its order
+// the documents BM25 finds for each query among the benchmark's own, and is scored by nDCG@10 and Recall@10, as BEIR scores them.
 
 export const COMPARE_RERANKERS_COMMAND_ID = 'pollis.compareRerankers';
 
@@ -94,13 +96,17 @@ function rerankFigures(run: IRerankRun) {
 		const found = run.found.filter(result => result.model === model.value);
 		const places = found.map(result => defined(result.place)).filter(value => value !== undefined);
 		const given = places.filter(value => value > 0 && value <= kept);
+		const ndcg = meanInterval(found.map(result => result.ndcg).filter(value => typeof value === 'number'));
 		return {
 			value: model.value,
 			label: model.label,
-			where: model.value === NO_RERANKER ? localize('compareRerankers.searchOrder', "Order of the Search") : [localize('compareRerankers.thisComputer', "This Computer"), model.size].filter(part => part).join(' · '),
+			where: model.value === NO_RERANKER ? (run.summary.benchmark ? localize('compareRerankers.bm25Order', "Order of BM25") : localize('compareRerankers.searchOrder', "Order of the Search")) : [localize('compareRerankers.thisComputer', "This Computer"), model.size].filter(part => part).join(' · '),
 			found: places.length ? given.length / places.length : undefined,
 			place: mean(given),
 			allPlace: median(places.filter(value => value > 0)),
+			ndcg: ndcg.mean,
+			ndcgHalf: ndcg.half,
+			recall: mean(found.map(result => result.recall).filter(value => typeof value === 'number')),
 			ms: mean(found.map(result => defined(result.ms)).filter(value => value !== undefined)),
 			memory: model.memory,
 			error: model.error,
@@ -155,7 +161,7 @@ async function openCompareRerankersPage(accessor: ServicesAccessor): Promise<voi
 	} catch {
 		// Kept by an older Pollis: none chosen
 	}
-	const testSet = new CompareTestSetChoice(storageService, askPollisService, run.sets, { testSet: TEST_SET_KEY, ticked: TICKED_KEY }, post);
+	const testSet = new CompareTestSetChoice(storageService, askPollisService, run.sets, { testSet: TEST_SET_KEY, ticked: TICKED_KEY }, post, undefined, true);
 	let shown: IRerankRun | undefined;
 
 	const status = (text: string, error = false) => post({ command: 'status', text, error });
@@ -163,6 +169,8 @@ async function openCompareRerankersPage(accessor: ServicesAccessor): Promise<voi
 
 	const postRun = (latest?: string) => {
 		const baseline = shown?.found.filter(result => result.model === NO_RERANKER && defined(result.place) !== undefined) ?? [];
+		// Of a benchmark, the share of the relevant documents of a query among all those BM25 found, on average
+		const among = shown?.found.filter(result => result.model === NO_RERANKER).map(result => defined(result.among)).filter(value => value !== undefined) ?? [];
 		post({
 			command: 'run',
 			run: shown && {
@@ -172,12 +180,13 @@ async function openCompareRerankersPage(accessor: ServicesAccessor): Promise<voi
 				found: shown.summary.found,
 				kept: shown.summary.kept,
 				embedder: askModelName(shown.summary.embedder),
-				among: baseline.length ? baseline.filter(result => result.place! > 0).length / baseline.length : undefined,
+				benchmark: shown.summary.benchmark && retrievalBenchmarkName(shown.summary.benchmark),
+				among: shown.summary.benchmark ? mean(among) : baseline.length ? baseline.filter(result => result.place! > 0).length / baseline.length : undefined,
 				figures: rerankFigures(shown),
 				questions: shown.questions.map((item, index) => ({
 					question: item.question,
 					source: item.source,
-					places: Object.fromEntries(shown!.found.filter(result => result.question === index).map(result => [result.model, defined(result.place)])),
+					places: Object.fromEntries(shown!.found.filter(result => result.question === index).map(result => [result.model, defined(shown!.summary.benchmark ? result.ndcg : result.place)])),
 				})),
 			},
 			current: current(),
@@ -187,7 +196,7 @@ async function openCompareRerankersPage(accessor: ServicesAccessor): Promise<voi
 
 	const postRuns = async () => {
 		const runs = await askPollisService.rerankRuns();
-		post({ command: 'runs', runs: runs.map(summary => ({ id: summary.id, started: summary.started, models: summary.models.filter(model => model.value !== NO_RERANKER).map(model => model.label), questions: summary.questions })), shown: shown?.summary.id });
+		post({ command: 'runs', runs: runs.map(summary => ({ id: summary.id, started: summary.started, models: summary.models.filter(model => model.value !== NO_RERANKER).map(model => model.label), questions: summary.questions, benchmark: summary.benchmark && retrievalBenchmarkName(summary.benchmark) })), shown: shown?.summary.id });
 	};
 
 	const showRun = async (id: string | undefined) => {
@@ -228,13 +237,16 @@ async function openCompareRerankersPage(accessor: ServicesAccessor): Promise<voi
 			return;
 		}
 		const none = value === NO_RERANKER;
+		// A run of a benchmark kept its own numbers of documents: Ask Pollis finds and gives those of its settings
+		const kept = shown.summary.benchmark ? configurationService.getValue<number>('pollis.ask.passages') || ASK_PASSAGES : shown.summary.kept;
+		const found = shown.summary.benchmark ? kept * ASK_RERANK_WIDER : shown.summary.found;
 		const { confirmed } = await dialogService.confirm({
 			message: none
 				? localize('compareRerankers.useNoneConfirm', "Use no reranker for Ask Pollis?")
 				: localize('compareRerankers.useConfirm', "Use {0} for Ask Pollis?", model.label),
 			detail: none
-				? localize('compareRerankers.useNoneDetail', "Ask Pollis then gives the first {0} passages of the search, in the order the search found them.", shown.summary.kept)
-				: localize('compareRerankers.useDetail', "Ask Pollis then finds {0} passages for each question, and {1} chooses the {2} it gives.", shown.summary.found, model.label, shown.summary.kept),
+				? localize('compareRerankers.useNoneDetail', "Ask Pollis then gives the first {0} passages of the search, in the order the search found them.", kept)
+				: localize('compareRerankers.useDetail', "Ask Pollis then finds {0} passages for each question, and {1} chooses the {2} it gives.", found, model.label, kept),
 			primaryButton: localize({ key: 'compareRerankers.useButton', comment: ['&& denotes a mnemonic'] }, "&&Use for Ask Pollis"),
 		});
 		if (!confirmed) {
@@ -251,7 +263,7 @@ async function openCompareRerankersPage(accessor: ServicesAccessor): Promise<voi
 	const startRun = (questions: readonly string[]) => {
 		const ticked = new Set(questions);
 		post({ command: 'running', running: true });
-		run.run(listed.filter(model => chosen.includes(model.value)).map(({ value, label, size }) => ({ value, label, size })), ticked.size ? testSet.items.filter(item => ticked.has(item.question)) : testSet.items).then(end => {
+		run.run(listed.filter(model => chosen.includes(model.value)).map(({ value, label, size }) => ({ value, label, size })), ticked.size ? testSet.items.filter(item => ticked.has(item.question)) : testSet.items, testSet.benchmark).then(end => {
 			// The checks before any work, which end nothing
 			if (!end.run && end.error && !run.running) {
 				status(end.error, true);
@@ -318,6 +330,7 @@ function pageHtml(rows: number): string {
 		noLocal: localize('compareRerankers.noLocal', "No reranking model on this computer yet: Compose > Local AI Models downloads them."),
 		questionsIntro: localize('compareRerankers.questionsIntro', "The test sets of Evaluate Answering Models: each question with the passage it was made from. Tick the questions to run, a click anywhere on a row ticks it; with none ticked, Run takes them all."),
 		standardHint: localize('compareRerankers.standardHint', "Standard comes with Pollis. Your own test sets are made and changed in Evaluate Answering Models."),
+		benchmarkHint: localize('compareRerankers.benchmarkHint', "{0} comes with Pollis, in ~/.pollis/databases/PollisBenchmarks.duckdb: its queries, each with the documents relevant to it. For each query, BM25 finds {1} of the benchmark's own documents, not those of Ask Pollis, and each reranker puts them in its order; each query is scored by the first {2}, as BEIR scores them.", '{0}', RETRIEVAL_CANDIDATES, RETRIEVAL_CUT),
 		changeSets: localize('compareRerankers.changeSets', "Change the Test Sets..."),
 		noItems: localize('compareRerankers.noItems', "No questions in this test set: Change the Test Sets... puts them in."),
 		runSection: localize('compareRerankers.runSection', "Run"),
@@ -337,7 +350,10 @@ function pageHtml(rows: number): string {
 		noRuns: localize('compareRerankers.noRuns', "No run yet: choose the models and the questions, then Run."),
 		runLine: localize('compareRerankers.runLine', "{0}, Pollis {1}: {2} questions, {3} passages found for each by {4}, of which Ask Pollis gives {5}.", '{0}', '{1}', '{2}', '{3}', '{4}', '{5}'),
 		amongLine: localize('compareRerankers.amongLine', "The passage a question was made from was among those found for {0} of the questions: no reranker can do better.", '{0}'),
+		runLineBenchmark: localize('compareRerankers.runLineBenchmark', "{0}, Pollis {1}: {2} queries of {3}, {4} documents found for each by BM25, of which the first {5} are scored.", '{0}', '{1}', '{2}', '{3}', '{4}', '{5}'),
+		amongLineBenchmark: localize('compareRerankers.amongLineBenchmark', "BM25 found {0} of the relevant documents of a query, on average: no reranker can do better.", '{0}'),
 		runOption: localize('compareRerankers.runOption', "{0}: {1}, {2} questions", '{0}', '{1}', '{2}'),
+		runOptionBenchmark: localize('compareRerankers.runOptionBenchmark', "{0}: {1}, {2}, {3} queries", '{0}', '{1}', '{2}', '{3}'),
 		where: localize('compareRerankers.where', "Where"),
 		found: localize('compareRerankers.found', "Found"),
 		foundHint: localize('compareRerankers.foundHint', "How often the passage a question was made from is among the passages Ask Pollis gives, the first in the reranker's order"),
@@ -345,6 +361,10 @@ function pageHtml(rows: number): string {
 		placeHint: localize('compareRerankers.placeHint', "Its place among them when it is found, on average: 1 is the first"),
 		allPlace: localize('compareRerankers.allPlace', "Place Among All Found"),
 		allPlaceHint: localize('compareRerankers.allPlaceHint', "Its place among all the passages found, in the reranker's order, the median"),
+		ndcg: localize('compareRerankers.ndcg', "nDCG@{0}", RETRIEVAL_CUT),
+		ndcgHint: localize('compareRerankers.ndcgHint', "How well the first {0} documents in the reranker's order are ranked, from 0 to 1, 1 when the relevant ones come first: the average over the queries, with its 95% interval", RETRIEVAL_CUT),
+		recall: localize('compareRerankers.recall', "Recall@{0}", RETRIEVAL_CUT),
+		recallHint: localize('compareRerankers.recallHint', "The share of the relevant documents of a query among the first {0} in the reranker's order, on average", RETRIEVAL_CUT),
 		ms: localize('compareRerankers.ms', "Reranking, ms"),
 		msHint: localize('compareRerankers.msHint', "The milliseconds to rerank the passages of a question, on average"),
 		memory: localize('compareRerankers.memory', "Memory, GB"),
@@ -354,6 +374,7 @@ function pageHtml(rows: number): string {
 		inUse: localize('compareRerankers.inUse', "In Use"),
 		questionsPart: localize('compareRerankers.questionsPart', "Questions"),
 		questionsPartIntro: localize('compareRerankers.questionsPartIntro', "Each question of this run, with the place of its passage among all the passages found, in the order of each reranker; Ask Pollis gives the first {0}. A dash when it is not among those found.", '{0}'),
+		questionsPartBenchmarkIntro: localize('compareRerankers.questionsPartBenchmarkIntro', "Each query of this run, with the nDCG@{0} of the first {0} documents in the order of each reranker: 1 when the relevant documents come first, 0 when none is among them.", RETRIEVAL_CUT),
 	};
 	return buildWebviewHtml({
 		title: text.title,
@@ -497,7 +518,7 @@ function pageHtml(rows: number): string {
 		const part = document.getElementById('questionsPart');
 		part.hidden = !run || !run.questions.length;
 		if (part.hidden) { return; }
-		document.getElementById('questionsPartIntro').textContent = format(TEXT.questionsPartIntro, run.kept);
+		document.getElementById('questionsPartIntro').textContent = run.benchmark ? TEXT.questionsPartBenchmarkIntro : format(TEXT.questionsPartIntro, run.kept);
 		const head = document.getElementById('foundHead');
 		head.textContent = '';
 		const resort = () => {
@@ -511,10 +532,11 @@ function pageHtml(rows: number): string {
 		foundPage = Math.min(foundPage, pages - 1);
 		const body = document.getElementById('foundBody');
 		body.textContent = '';
-		// By a reranker, the questions whose passage it put first, then those it put further down, then the others
+		// By a reranker, the questions whose passage it put first, then those it put further down, then the others; of a benchmark, by nDCG
 		const value = (question, column) => {
 			if (!column.startsWith('model:')) { return question[column] || ''; }
 			const found = question.places[column.slice(6)];
+			if (run.benchmark) { return found ?? -1; }
 			return found ? found : 1000000;
 		};
 		for (const question of pageOf(sortedBy(run.questions, foundSort, value), foundPage)) {
@@ -524,8 +546,8 @@ function pageHtml(rows: number): string {
 			row.appendChild(cell);
 			for (const figures of run.figures) {
 				const found = question.places[figures.value];
-				// The places among those Ask Pollis gives in bold
-				row.appendChild(element('td', 'number' + (found > 0 && found <= run.kept ? ' given' : ''), placeText(found)));
+				// The places among those Ask Pollis gives in bold; of a benchmark, the nDCG of the query
+				row.appendChild(run.benchmark ? element('td', 'number', fixed(found, 2)) : element('td', 'number' + (found > 0 && found <= run.kept ? ' given' : ''), placeText(found)));
 			}
 			body.appendChild(row);
 		}
@@ -538,14 +560,18 @@ function pageHtml(rows: number): string {
 		head.textContent = '';
 		body.textContent = '';
 		document.getElementById('results').hidden = !run;
-		document.getElementById('runLine').textContent = run ? format(TEXT.runLine, new Date(run.started).toLocaleString(), run.pollis, run.questions.length, run.found, run.embedder, run.kept) : TEXT.noRuns;
-		document.getElementById('amongLine').textContent = run && run.among !== undefined ? format(TEXT.amongLine, percent(run.among)) : '';
+		document.getElementById('runLine').textContent = !run ? TEXT.noRuns : run.benchmark
+			? format(TEXT.runLineBenchmark, new Date(run.started).toLocaleString(), run.pollis, run.questions.length, run.benchmark, run.found, run.kept)
+			: format(TEXT.runLine, new Date(run.started).toLocaleString(), run.pollis, run.questions.length, run.found, run.embedder, run.kept);
+		document.getElementById('amongLine').textContent = run && run.among !== undefined ? format(run.benchmark ? TEXT.amongLineBenchmark : TEXT.amongLine, percent(run.among)) : '';
 		document.getElementById('deleteRun').hidden = !run;
 		// A run that ends shows itself, even in a pane left closed
 		if (run) { document.getElementById('step-results').classList.remove('collapsed'); }
 		if (!run) { return; }
-		// A column for each reranker, the best first by how often it gave the passage, then by its place; a row for each figure
-		const sorted = [...run.figures].sort((a, b) => (b.found ?? -1) - (a.found ?? -1) || (a.place ?? Infinity) - (b.place ?? Infinity));
+		// A column for each reranker, the best first by how often it gave the passage, then by its place, or by its nDCG on a benchmark; a row for each figure
+		const sorted = [...run.figures].sort((a, b) => run.benchmark
+			? (b.ndcg ?? -1) - (a.ndcg ?? -1)
+			: (b.found ?? -1) - (a.found ?? -1) || (a.place ?? Infinity) - (b.place ?? Infinity));
 		head.appendChild(element('th', '', TEXT.model));
 		for (const figures of sorted) { head.appendChild(element('th', 'number', figures.label)); }
 		const line = (label, hint, value, className) => {
@@ -557,9 +583,14 @@ function pageHtml(rows: number): string {
 			body.appendChild(row);
 		};
 		line(TEXT.where, '', figures => figures.where, 'small');
-		line(TEXT.found, TEXT.foundHint, figures => percent(figures.found));
-		line(TEXT.place, TEXT.placeHint, figures => fixed(figures.place, 1));
-		line(TEXT.allPlace, TEXT.allPlaceHint, figures => fixed(figures.allPlace, 0));
+		if (run.benchmark) {
+			line(TEXT.ndcg, TEXT.ndcgHint, figures => figures.ndcg === undefined ? '-' : fixed(figures.ndcg, 3) + (figures.ndcgHalf === undefined ? '' : ' \\u00b1 ' + fixed(figures.ndcgHalf, 3)));
+			line(TEXT.recall, TEXT.recallHint, figures => percent(figures.recall));
+		} else {
+			line(TEXT.found, TEXT.foundHint, figures => percent(figures.found));
+			line(TEXT.place, TEXT.placeHint, figures => fixed(figures.place, 1));
+			line(TEXT.allPlace, TEXT.allPlaceHint, figures => fixed(figures.allPlace, 0));
+		}
 		line(TEXT.ms, TEXT.msHint, figures => fixed(figures.ms, 0));
 		line(TEXT.memory, TEXT.memoryHint, figures => figures.memory > 0 ? (figures.memory / 1024 ** 3).toFixed(1) : '-');
 		if (sorted.some(figures => figures.error)) { line(TEXT.error, '', figures => figures.error || '', 'small'); }
@@ -608,7 +639,8 @@ function pageHtml(rows: number): string {
 		} else if (message.command === 'runs') {
 			runsSelect.textContent = '';
 			for (const summary of message.runs) {
-				runsSelect.appendChild(new Option(format(TEXT.runOption, new Date(summary.started).toLocaleString(), summary.models.join(', '), summary.questions), summary.id));
+				const started = new Date(summary.started).toLocaleString();
+				runsSelect.appendChild(new Option(summary.benchmark ? format(TEXT.runOptionBenchmark, started, summary.models.join(', '), summary.benchmark, summary.questions) : format(TEXT.runOption, started, summary.models.join(', '), summary.questions), summary.id));
 			}
 			runsSelect.value = message.shown || '';
 			runsSelect.disabled = !message.runs.length;

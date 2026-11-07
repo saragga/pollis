@@ -27,12 +27,12 @@ import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaff
 import { FEWEST_ROWS, rowsChoiceScript, sortHeadingsScript, storedRows, storeRows } from '../../model/browser/webviews/webviewPager.js';
 import { COMPAREEMBEDDINGS_METADATA } from '../../model/browser/webviews/compareEmbeddings.data.js';
 import { buildWebviewHtml, spinnerSvg } from '../../model/browser/webviews/webviewScaffold.js';
-import { ASK_EMBEDDING_MODEL, ASK_PASSAGE_PREFIX, ASK_PASSAGES, ASK_QUERY_PREFIX, embeddingPrefixes, IAskPollisService, IEmbeddingRun, IEmbeddingRunModel } from '../common/askPollis.js';
+import { ASK_EMBEDDING_MODEL, ASK_PASSAGE_PREFIX, ASK_PASSAGES, ASK_QUERY_PREFIX, embeddingPrefixes, IAskPollisService, IEmbeddingRun, IEmbeddingRunModel, RETRIEVAL_CUT, retrievalBenchmarkName } from '../common/askPollis.js';
 import { askAnswerCss, askAnswerScript } from './askPollisWebview.js';
 import { CompareEmbeddingsRunner, IEmbeddingEnd } from './compareEmbeddingsRun.js';
 import { COMPARE_MODELS_COMMAND_ID } from './compareModelsPage.js';
 import { ICompareProgress } from './compareModelsRun.js';
-import { compareChartsHtml, compareChartsScript, compareCommonScript, compareCss, compareLocalCard, compareSharedText, compareTestSetHeadHtml, compareTestSetHtml, compareTestSetScript, CompareTestSetChoice } from './compareShared.js';
+import { compareChartsHtml, compareChartsScript, compareCommonScript, compareCss, compareLocalCard, compareSharedText, compareTestSetHeadHtml, compareTestSetHtml, compareTestSetScript, CompareTestSetChoice, meanInterval } from './compareShared.js';
 import { IInstalledModel } from './modelsInstalledPage.js';
 
 // Evaluate Embedding Models, from Compose > Knowledge for AI Models > Evaluate Embedding Models... (compose.contribution.ts): the
@@ -43,7 +43,9 @@ import { IInstalledModel } from './modelsInstalledPage.js';
 // (compareEmbeddingsRun.ts); 4, the results of the run shown: for each model, how often the passage a question was made
 // from is among those Ask Pollis gives, and where, with words and meaning, and by meaning alone; how fast it embeds a
 // question and searches, the memory it takes and the size of its index; Use for Ask Pollis makes it the embedding model
-// of Ask Pollis. The choices are remembered for the next time.
+// of Ask Pollis. The choices are remembered for the next time. The test sets include the retrieval benchmarks of
+// PollisBenchmarks.duckdb, SciFact and SCIDOCS, whose queries are searched among their own documents by meaning alone:
+// each model is then scored by nDCG@10 and Recall@10, as BEIR scores them.
 
 export const COMPARE_EMBEDDINGS_COMMAND_ID = 'pollis.compareEmbeddings';
 
@@ -95,6 +97,7 @@ function embeddingFigures(run: IEmbeddingRun) {
 		const hybrid = found.map(result => place(result.hybrid)).filter(value => value !== undefined);
 		const meaning = found.map(result => place(result.meaning)).filter(value => value !== undefined);
 		const hits = hybrid.filter(value => value > 0);
+		const ndcg = meanInterval(found.map(result => result.ndcg).filter(value => typeof value === 'number'));
 		return {
 			value: model.value,
 			label: model.label,
@@ -103,6 +106,9 @@ function embeddingFigures(run: IEmbeddingRun) {
 			place: mean(hits),
 			meaningFound: meaning.length ? meaning.filter(value => value <= ASK_PASSAGES).length / meaning.length : undefined,
 			meaningPlace: median(meaning),
+			ndcg: ndcg.mean,
+			ndcgHalf: ndcg.half,
+			recall: mean(found.map(result => result.recall).filter(value => typeof value === 'number')),
 			queryMs: mean(found.map(result => result.queryMs)),
 			searchMs: mean(found.map(result => result.searchMs)),
 			memory: model.memory,
@@ -171,7 +177,7 @@ async function openCompareEmbeddingsPage(accessor: ServicesAccessor): Promise<vo
 	} catch {
 		// Kept by an older Pollis: none chosen
 	}
-	const testSet = new CompareTestSetChoice(storageService, askPollisService, run.sets, { testSet: TEST_SET_KEY, ticked: TICKED_KEY }, post);
+	const testSet = new CompareTestSetChoice(storageService, askPollisService, run.sets, { testSet: TEST_SET_KEY, ticked: TICKED_KEY }, post, undefined, true);
 	let shown: IEmbeddingRun | undefined;
 
 	const status = (text: string, error = false) => post({ command: 'status', text, error });
@@ -185,11 +191,12 @@ async function openCompareEmbeddingsPage(accessor: ServicesAccessor): Promise<vo
 				started: shown.summary.started,
 				pollis: shown.summary.pollis,
 				passages: shown.summary.passages,
+				benchmark: shown.summary.benchmark && retrievalBenchmarkName(shown.summary.benchmark),
 				figures: embeddingFigures(shown),
 				questions: shown.questions.map((item, index) => ({
 					question: item.question,
 					source: item.source,
-					places: Object.fromEntries(shown!.found.filter(result => result.question === index).map(result => [result.model, { hybrid: place(result.hybrid), meaning: place(result.meaning) }])),
+					places: Object.fromEntries(shown!.found.filter(result => result.question === index).map(result => [result.model, { hybrid: place(result.hybrid), meaning: place(result.meaning), ndcg: place(result.ndcg) }])),
 				})),
 			},
 			current: current(),
@@ -199,7 +206,7 @@ async function openCompareEmbeddingsPage(accessor: ServicesAccessor): Promise<vo
 
 	const postRuns = async () => {
 		const runs = await askPollisService.embeddingRuns();
-		post({ command: 'runs', runs: runs.map(summary => ({ id: summary.id, started: summary.started, models: summary.models.map(model => model.label), questions: summary.questions })), shown: shown?.summary.id });
+		post({ command: 'runs', runs: runs.map(summary => ({ id: summary.id, started: summary.started, models: summary.models.map(model => model.label), questions: summary.questions, benchmark: summary.benchmark && retrievalBenchmarkName(summary.benchmark) })), shown: shown?.summary.id });
 	};
 
 	const showRun = async (id: string | undefined) => {
@@ -270,7 +277,7 @@ async function openCompareEmbeddingsPage(accessor: ServicesAccessor): Promise<vo
 	const startRun = (questions: readonly string[]) => {
 		const ticked = new Set(questions);
 		post({ command: 'running', running: true });
-		run.run(listed.filter(model => chosen.includes(model.value)).map(({ value, label, size, passage, query }) => ({ value, label, size, passage, query })), ticked.size ? testSet.items.filter(item => ticked.has(item.question)) : testSet.items).then(end => {
+		run.run(listed.filter(model => chosen.includes(model.value)).map(({ value, label, size, passage, query }) => ({ value, label, size, passage, query })), ticked.size ? testSet.items.filter(item => ticked.has(item.question)) : testSet.items, testSet.benchmark).then(end => {
 			// The checks before any work, which end nothing
 			if (!end.run && end.error && !run.running) {
 				status(end.error, true);
@@ -337,6 +344,7 @@ function pageHtml(rows: number): string {
 		noLocal: localize('compareEmbeddings.noLocal', "No embedding model on this computer yet: Compose > Local AI Models downloads them."),
 		questionsIntro: localize('compareEmbeddings.questionsIntro', "The test sets of Evaluate Answering Models: each question with the passage it was made from. Tick the questions to search, a click anywhere on a row ticks it; with none ticked, Run searches them all."),
 		standardHint: localize('compareEmbeddings.standardHint', "Standard comes with Pollis. Your own test sets are made and changed in Evaluate Answering Models."),
+		benchmarkHint: localize('compareEmbeddings.benchmarkHint', "{0} comes with Pollis, in ~/.pollis/databases/PollisBenchmarks.duckdb: its queries, each with the documents relevant to it. Each model searches the benchmark's own documents for them, not those of Ask Pollis, by meaning alone, and each query is scored by the first {1} documents found, as BEIR scores them. Each document is embedded once by each model, ever, as the passages are.", '{0}', RETRIEVAL_CUT),
 		changeSets: localize('compareEmbeddings.changeSets', "Change the Test Sets..."),
 		noItems: localize('compareEmbeddings.noItems', "No questions in this test set: Change the Test Sets... puts them in."),
 		runSection: localize('compareEmbeddings.runSection', "Run"),
@@ -355,7 +363,9 @@ function pageHtml(rows: number): string {
 		deleteRun: localize('compareEmbeddings.deleteRun', "Delete Run"),
 		noRuns: localize('compareEmbeddings.noRuns', "No run yet: choose the models and the questions, then Run."),
 		runLine: localize('compareEmbeddings.runLine', "{0}, Pollis {1}: {2} questions, among {3} passages.", '{0}', '{1}', '{2}', '{3}'),
+		runLineBenchmark: localize('compareEmbeddings.runLineBenchmark', "{0}, Pollis {1}: {2} queries of {3}, among its {4} documents.", '{0}', '{1}', '{2}', '{3}', '{4}'),
 		runOption: localize('compareEmbeddings.runOption', "{0}: {1}, {2} questions", '{0}', '{1}', '{2}'),
+		runOptionBenchmark: localize('compareEmbeddings.runOptionBenchmark', "{0}: {1}, {2}, {3} queries", '{0}', '{1}', '{2}', '{3}'),
 		where: localize('compareEmbeddings.where', "Where"),
 		found: localize('compareEmbeddings.found', "Found"),
 		foundHint: localize('compareEmbeddings.foundHint', "How often the passage a question was made from is among the {0} passages Ask Pollis gives, found by words and meaning together", ASK_PASSAGES),
@@ -365,10 +375,15 @@ function pageHtml(rows: number): string {
 		meaningFoundHint: localize('compareEmbeddings.meaningFoundHint', "How often it is among the first {0} passages by meaning alone", ASK_PASSAGES),
 		meaningPlace: localize('compareEmbeddings.meaningPlace', "Place by Meaning"),
 		meaningPlaceHint: localize('compareEmbeddings.meaningPlaceHint', "Its place among all the passages by meaning alone, the median"),
+		ndcg: localize('compareEmbeddings.ndcg', "nDCG@{0}", RETRIEVAL_CUT),
+		ndcgHint: localize('compareEmbeddings.ndcgHint', "How well the first {0} documents found for a query are ranked, from 0 to 1, 1 when the relevant ones are found first: the average over the queries, with its 95% interval", RETRIEVAL_CUT),
+		recall: localize('compareEmbeddings.recall', "Recall@{0}", RETRIEVAL_CUT),
+		recallHint: localize('compareEmbeddings.recallHint', "The share of the relevant documents of a query among the first {0} found, on average", RETRIEVAL_CUT),
 		queryMs: localize('compareEmbeddings.queryMs', "Question, ms"),
 		queryMsHint: localize('compareEmbeddings.queryMsHint', "The milliseconds to embed a question, on average"),
 		searchMs: localize('compareEmbeddings.searchMs', "Search, ms"),
 		searchMsHint: localize('compareEmbeddings.searchMsHint', "The milliseconds to find the passages, by words and meaning, on average"),
+		searchMsBenchmarkHint: localize('compareEmbeddings.searchMsBenchmarkHint', "The milliseconds to find the documents, by meaning, on average"),
 		perSecond: localize('compareEmbeddings.perSecond', "Passages a Second"),
 		perSecondHint: localize('compareEmbeddings.perSecondHint', "How fast it embedded the passages, when this run embedded any"),
 		memory: localize('compareEmbeddings.memory', "Memory, GB"),
@@ -376,12 +391,14 @@ function pageHtml(rows: number): string {
 		dimensions: localize('compareEmbeddings.dimensions', "Dimensions"),
 		indexSize: localize('compareEmbeddings.indexSize', "Index, MB"),
 		indexSizeHint: localize('compareEmbeddings.indexSizeHint', "The size of the embeddings of all the passages"),
+		indexSizeBenchmarkHint: localize('compareEmbeddings.indexSizeBenchmarkHint', "The size of the embeddings of all the documents"),
 		queryPrefix: localize('compareEmbeddings.queryPrefix', "Question Prefix"),
 		error: localize('compareEmbeddings.error', "Error"),
 		use: localize('compareEmbeddings.use', "Use for Ask Pollis"),
 		inUse: localize('compareEmbeddings.inUse', "In Use"),
 		questionsPart: localize('compareEmbeddings.questionsPart', "Questions"),
 		questionsPartIntro: localize('compareEmbeddings.questionsPartIntro', "Each question of this run, with the place of its passage for each model: among those Ask Pollis gives, then by meaning alone; - when it is not among them."),
+		questionsPartBenchmarkIntro: localize('compareEmbeddings.questionsPartBenchmarkIntro', "Each query of this run, with the nDCG@{0} of the documents each model found for it: 1 when the relevant documents are the first found, 0 when none is among the first {0}.", RETRIEVAL_CUT),
 		places: localize('compareEmbeddings.places', "{0} · {1}", '{0}', '{1}'),
 	};
 	return buildWebviewHtml({
@@ -433,7 +450,7 @@ function pageHtml(rows: number): string {
 	</table>
 	<div id="questionsPart" hidden>
 		<h3 class="part">${text.questionsPart}</h3>
-		<p class="hint">${text.questionsPartIntro}</p>
+		<p class="hint" id="questionsPartIntro"></p>
 		<div class="pager" id="foundPagerTop" hidden></div>
 		<table id="found">
 			<thead><tr id="foundHead"></tr></thead>
@@ -528,6 +545,7 @@ function pageHtml(rows: number): string {
 		const part = document.getElementById('questionsPart');
 		part.hidden = !run || !run.questions.length;
 		if (part.hidden) { return; }
+		document.getElementById('questionsPartIntro').textContent = run.benchmark ? TEXT.questionsPartBenchmarkIntro : TEXT.questionsPartIntro;
 		const head = document.getElementById('foundHead');
 		head.textContent = '';
 		const resort = () => {
@@ -541,10 +559,11 @@ function pageHtml(rows: number): string {
 		foundPage = Math.min(foundPage, pages - 1);
 		const body = document.getElementById('foundBody');
 		body.textContent = '';
-		// By a model, the questions whose passage it found first, then those it found further down, then the others
+		// By a model, the questions whose passage it found first, then those it found further down, then the others; of a benchmark, by nDCG
 		const value = (question, column) => {
 			if (!column.startsWith('model:')) { return question[column] || ''; }
 			const found = places(question, column.slice(6));
+			if (run.benchmark) { return found.ndcg ?? -1; }
 			return found.hybrid ? found.hybrid : 1000000 + (found.meaning ?? 1000000);
 		};
 		for (const question of pageOf(sortedBy(run.questions, foundSort, value), foundPage)) {
@@ -554,7 +573,7 @@ function pageHtml(rows: number): string {
 			row.appendChild(cell);
 			for (const figures of run.figures) {
 				const found = places(question, figures.value);
-				row.appendChild(element('td', 'number', format(TEXT.places, placeText(found.hybrid), placeText(found.meaning))));
+				row.appendChild(element('td', 'number', run.benchmark ? fixed(found.ndcg, 2) : format(TEXT.places, placeText(found.hybrid), placeText(found.meaning))));
 			}
 			body.appendChild(row);
 		}
@@ -567,13 +586,17 @@ function pageHtml(rows: number): string {
 		head.textContent = '';
 		body.textContent = '';
 		document.getElementById('results').hidden = !run;
-		document.getElementById('runLine').textContent = run ? format(TEXT.runLine, new Date(run.started).toLocaleString(), run.pollis, run.questions.length, run.passages) : TEXT.noRuns;
+		document.getElementById('runLine').textContent = !run ? TEXT.noRuns : run.benchmark
+			? format(TEXT.runLineBenchmark, new Date(run.started).toLocaleString(), run.pollis, run.questions.length, run.benchmark, run.passages)
+			: format(TEXT.runLine, new Date(run.started).toLocaleString(), run.pollis, run.questions.length, run.passages);
 		document.getElementById('deleteRun').hidden = !run;
 		// A run that ends shows itself, even in a pane left closed
 		if (run) { document.getElementById('step-results').classList.remove('collapsed'); }
 		if (!run) { return; }
-		// A column for each model, the best first by how often it found the passage, then by its place; a row for each figure
-		const sorted = [...run.figures].sort((a, b) => (b.found ?? -1) - (a.found ?? -1) || (a.place ?? Infinity) - (b.place ?? Infinity));
+		// A column for each model, the best first by how often it found the passage, then by its place, or by its nDCG on a benchmark; a row for each figure
+		const sorted = [...run.figures].sort((a, b) => run.benchmark
+			? (b.ndcg ?? -1) - (a.ndcg ?? -1)
+			: (b.found ?? -1) - (a.found ?? -1) || (a.place ?? Infinity) - (b.place ?? Infinity));
 		head.appendChild(element('th', '', TEXT.model));
 		for (const figures of sorted) { head.appendChild(element('th', 'number', figures.label)); }
 		const line = (label, hint, value, className) => {
@@ -585,16 +608,21 @@ function pageHtml(rows: number): string {
 			body.appendChild(row);
 		};
 		line(TEXT.where, '', figures => figures.where, 'small');
-		line(TEXT.found, TEXT.foundHint, figures => percent(figures.found));
-		line(TEXT.place, TEXT.placeHint, figures => fixed(figures.place, 1));
-		line(TEXT.meaningFound, TEXT.meaningFoundHint, figures => percent(figures.meaningFound));
-		line(TEXT.meaningPlace, TEXT.meaningPlaceHint, figures => fixed(figures.meaningPlace, 0));
+		if (run.benchmark) {
+			line(TEXT.ndcg, TEXT.ndcgHint, figures => figures.ndcg === undefined ? '-' : fixed(figures.ndcg, 3) + (figures.ndcgHalf === undefined ? '' : ' \\u00b1 ' + fixed(figures.ndcgHalf, 3)));
+			line(TEXT.recall, TEXT.recallHint, figures => percent(figures.recall));
+		} else {
+			line(TEXT.found, TEXT.foundHint, figures => percent(figures.found));
+			line(TEXT.place, TEXT.placeHint, figures => fixed(figures.place, 1));
+			line(TEXT.meaningFound, TEXT.meaningFoundHint, figures => percent(figures.meaningFound));
+			line(TEXT.meaningPlace, TEXT.meaningPlaceHint, figures => fixed(figures.meaningPlace, 0));
+		}
 		line(TEXT.queryMs, TEXT.queryMsHint, figures => fixed(figures.queryMs, 0));
-		line(TEXT.searchMs, TEXT.searchMsHint, figures => fixed(figures.searchMs, 0));
+		line(TEXT.searchMs, run.benchmark ? TEXT.searchMsBenchmarkHint : TEXT.searchMsHint, figures => fixed(figures.searchMs, 0));
 		line(TEXT.perSecond, TEXT.perSecondHint, figures => fixed(figures.perSecond, 0));
 		line(TEXT.memory, TEXT.memoryHint, figures => figures.memory > 0 ? (figures.memory / 1024 ** 3).toFixed(1) : '-');
 		line(TEXT.dimensions, '', figures => figures.dimensions ? String(figures.dimensions) : '-');
-		line(TEXT.indexSize, TEXT.indexSizeHint, figures => figures.indexBytes ? (figures.indexBytes / 1024 ** 2).toFixed(0) : '-');
+		line(TEXT.indexSize, run.benchmark ? TEXT.indexSizeBenchmarkHint : TEXT.indexSizeHint, figures => figures.indexBytes ? (figures.indexBytes / 1024 ** 2).toFixed(0) : '-');
 		line(TEXT.queryPrefix, '', figures => figures.query, 'small');
 		if (sorted.some(figures => figures.error)) { line(TEXT.error, '', figures => figures.error || '', 'small'); }
 		// Use for Ask Pollis: the one blue button on the best model, In Use on the model of Ask Pollis
@@ -642,7 +670,8 @@ function pageHtml(rows: number): string {
 		} else if (message.command === 'runs') {
 			runsSelect.textContent = '';
 			for (const summary of message.runs) {
-				runsSelect.appendChild(new Option(format(TEXT.runOption, new Date(summary.started).toLocaleString(), summary.models.join(', '), summary.questions), summary.id));
+				const started = new Date(summary.started).toLocaleString();
+				runsSelect.appendChild(new Option(summary.benchmark ? format(TEXT.runOptionBenchmark, started, summary.models.join(', '), summary.benchmark, summary.questions) : format(TEXT.runOption, started, summary.models.join(', '), summary.questions), summary.id));
 			}
 			runsSelect.value = message.shown || '';
 			runsSelect.disabled = !message.runs.length;
