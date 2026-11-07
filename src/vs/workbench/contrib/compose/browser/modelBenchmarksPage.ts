@@ -36,7 +36,7 @@ import { IInstalledModel } from './modelsInstalledPage.js';
 // steps: 1, the benchmark, downloaded once; 2, the sample: the strata to draw from, how many questions, shared in
 // proportion to the strata or equally, and the seed, which draws the same sample again; 3, the models and how they
 // answer; 4, Run, which draws the sample and has each model answer its questions, one model after the other and alone
-// in memory (modelBenchmarksRun.ts, model_benchmarks.jl); 5, the results of a run: each model's score with its 95%
+// in memory (modelBenchmarksRun.ts, PollisBenchmarks.jl); 5, the results of a run: each model's score with its 95%
 // interval, its score in each stratum, the answers that could not be read or were cut off, how fast it answered and
 // the memory it took, and each question with each model's answer. The choices are remembered for the next time.
 
@@ -51,7 +51,7 @@ const CHOSEN_KEY = 'pollis.modelBenchmarks.chosen';
 /** How the models answer. */
 const SETTINGS_KEY = 'pollis.modelBenchmarks.settings';
 
-/** A benchmark of the page; model_benchmarks.jl has its files, its prompts and its grading. */
+/** A benchmark of the page; PollisBenchmarks.jl has its files, its prompts and its grading. */
 interface IBenchmarkEntry {
 	readonly id: string;
 	readonly name: string;
@@ -141,7 +141,7 @@ const DEFAULT_SETTINGS: IBenchmarkSettings = { shots: 0, reasoning: true, thinki
 /** The longest question shown in the table of a run; the whole of it opens with its answers. */
 const QUESTION_SHOWN = 400;
 
-/** The longest answer, in tokens, of the answer alone without thinking, as model_benchmarks.jl sets it for such a run. */
+/** The longest answer, in tokens, of the answer alone without thinking, as PollisBenchmarks.jl sets it for such a run. */
 const ANSWER_ONLY_TOKENS = 32;
 
 type ModelBenchmarksMessage =
@@ -762,7 +762,7 @@ function pageHtml(rows: number, entries: readonly IBenchmarkEntry[]): string {
 	});
 
 	/**
-	 * The questions of each stratum for a sample of \`size\`, as model_benchmarks.jl allocates them (allocate): one each at
+	 * The questions of each stratum for a sample of \`size\`, as PollisBenchmarks.jl allocates them (allocate): one each at
 	 * least when the size allows, the rest in proportion to the populations or equally, by largest remainders, a
 	 * stratum never given more than it has.
 	 */

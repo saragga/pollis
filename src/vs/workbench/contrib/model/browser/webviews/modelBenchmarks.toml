@@ -10,6 +10,10 @@ viewType = "pollis.modelBenchmarks"
 pageCommand = "pollis.modelBenchmarks"
 
 [[packages]]
+name = "PollisBenchmarks.jl"
+github = "https://github.com/Trumpingtons/PollisBenchmarks.jl"
+
+[[packages]]
 name = "JSON3.jl"
 github = "https://github.com/quinnj/JSON3.jl"
 

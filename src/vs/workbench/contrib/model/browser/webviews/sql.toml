@@ -360,7 +360,7 @@ isdefined(Main, :PollisDB) && PollisDB.install()  # DuckDB is built into Pollis
 using DuckDB, DBInterface, Tables
 
 if !isdefined(Main, :{{con}})  # connect once, to the built-in databases, as the Databases view does
-	{{con}} = isdefined(Main, :PollisDB) ? PollisDB.connect(; name = "Pollis") : DBInterface.connect(DuckDB.DB, ":memory:")  # attaches PollisDatasets, PollisRSS, PollisJournals and PollisReferences, read-only
+	{{con}} = isdefined(Main, :PollisDB) ? PollisDB.connect(; name = "Pollis") : DBInterface.connect(DuckDB.DB, ":memory:")  # attaches PollisDatasets, PollisRSS, PollisJournals, PollisReferences and PollisBenchmarks, read-only
 end
 
 sql = raw"""
@@ -447,7 +447,7 @@ isdefined(Main, :PollisDB) && PollisDB.install()  # DuckDB is built into Pollis
 using DuckDB, DBInterface, Tables
 
 if !isdefined(Main, :{{con}})  # connect once, to the built-in databases, as the Databases view does
-	{{con}} = isdefined(Main, :PollisDB) ? PollisDB.connect(; name = "Pollis") : DBInterface.connect(DuckDB.DB, ":memory:")  # attaches PollisDatasets, PollisRSS, PollisJournals and PollisReferences, read-only
+	{{con}} = isdefined(Main, :PollisDB) ? PollisDB.connect(; name = "Pollis") : DBInterface.connect(DuckDB.DB, ":memory:")  # attaches PollisDatasets, PollisRSS, PollisJournals, PollisReferences and PollisBenchmarks, read-only
 end
 
 sql = raw"""

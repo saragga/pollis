@@ -242,9 +242,9 @@ give the path of the Julia program in the setting \setting{julia.executablePath}
 \subhead{The first start of the Julia REPL}
 When Pollis opens, the Julia REPL starts in the panel at the bottom. The first time, it installs
 DuckDB and PollisDatasets, makes the built-in databases PollisDatasets, PollisRSS (empty until
-feeds are read), PollisJournals and PollisReferences (Built-in Databases, page 40), and says \emph{This happens only once}. They go into an environment of Pollis's own,
+feeds are read), PollisJournals, PollisReferences and PollisBenchmarks (Built-in Databases, page 40), and says \emph{This happens only once}. They go into an environment of Pollis's own,
 \texttt{\textasciitilde/.pollis/julia}, which comes after yours: your own versions of these packages are used
-first. At later starts, PollisDatasets, PollisJournals, PollisReferences and PollisRSS are updated from
+first. At later starts, PollisDatasets, PollisJournals, PollisReferences, PollisRSS and PollisBenchmarks are updated from
 GitHub when there is a newer version; offline, the installed copies are kept. \ui{Check for Data Package
 Updates...}, in the Pollis menu on macOS and the Help menu on Windows and Linux, looks for a newer version at once
 and offers to install it, without a restart. The Welcome page announces a newer version, with \ui{Update Now}, and
@@ -270,7 +270,7 @@ opens the same notes at any time. To stop the checks, set \setting{update.mode} 
 Pollis tells you things in four places, each with its own purpose:
 
 \noindent\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.2\linewidth}>{\raggedright\arraybackslash}X@{}}
-\textbf{\ui{Status}} & Whether Pollis is ready: Julia and its version, and the built-in databases, PollisDatasets, PollisRSS, PollisJournals and PollisReferences. Always shown; when something is missing it is a warning with its button. \\
+\textbf{\ui{Status}} & Whether Pollis is ready: Julia and its version, and the built-in databases, PollisDatasets, PollisRSS, PollisJournals, PollisReferences and PollisBenchmarks. Always shown; when something is missing it is a warning with its button. \\
 \textbf{\ui{Announcements}} & New releases of Julia, DBInterface, PollisDatasets and PollisTeX, until you dismiss them. Shown only when there is one. \\
 \textbf{\ui{RSS}} & The newest unread items of the feeds you follow (page 22); a camera or a microphone marks a video or a podcast, and a journal's items have the tag of its level and metrics. Its \ui{Alerts} tab shows your alerts and those that fired (page 26). \\
 \textbf{Notifications} & The bell at the bottom right: what happens while you work, such as new datasets, new content or a toolbox to reload. \\
@@ -1933,13 +1933,13 @@ found. \ui{Open...} brings a saved map back; \ui{New Search} starts again.
 % =====================================================================
 % PAGES 40–41 — BUILT-IN DATABASES
 % =====================================================================
-\topic{Built-in Databases}{Databases view > PollisDatasets, PollisRSS, PollisJournals, PollisReferences, PollisDocuments}{The five databases that come with Pollis: what each holds, and how to add journal metrics.}
+\topic{Built-in Databases}{Databases view > PollisDatasets, PollisRSS, PollisJournals, PollisReferences, PollisBenchmarks, PollisDocuments}{The six databases that come with Pollis: what each holds, and how to add journal metrics.}
 
-Pollis makes five DuckDB databases the first time the Julia REPL starts (Getting Started, page 2): four in
-\texttt{\textasciitilde/.pollis/databases}, and PollisDocuments in \texttt{\textasciitilde/.pollis/documents}, once the documents are compiled. All five are read-only: Pollis rebuilds them when what
+Pollis makes six DuckDB databases the first time the Julia REPL starts (Getting Started, page 2): five in
+\texttt{\textasciitilde/.pollis/databases}, and PollisDocuments in \texttt{\textasciitilde/.pollis/documents}, once the documents are compiled. All six are read-only: Pollis rebuilds them when what
 they come from changes, and your own tables go in a database of your own. In the Databases view they are listed
 under \ui{Pollis Built-In}; clicking one connects it in the Julia REPL. The \texttt{duckdb>} terminal, the
-\texttt{sql>} mode and \texttt{PollisDB.connect()} attach all five (Data and Databases, page 6).
+\texttt{sql>} mode and \texttt{PollisDB.connect()} attach all six (Data and Databases, page 6).
 
 \begin{center}\small
 \renewcommand{\arraystretch}{1.25}
@@ -1949,6 +1949,7 @@ PollisDatasets & \texttt{pollis} & The 69 datasets of PollisDatasets, a table ea
 PollisRSS & \texttt{rss} & Every item of the feeds you follow, kept by month; empty until feeds are read (RSS Feeds, page 22).\\
 PollisJournals & \texttt{journals} & About 250,000 journals, conferences and book series, from OpenAlex; the Norwegian register's levels; and the journal metrics you import.\\
 PollisReferences & \texttt{references} & Every work Pollis cites, and those you save from Literature Radar (page 36) or add to a panel's \ui{Explore References}, with abstracts, keywords and dated citation counts.\\
+PollisBenchmarks & \texttt{benchmarks} & The catalogue of the benchmarks that Model Benchmarks runs, with their sources, revisions and licences, and the questions of those built in.\\
 PollisDocuments & \texttt{documents} & The passages of Pollis's documents, the panel wikis, the package vignettes and the toolbox vignettes, with their embeddings, that Ask Pollis searches (page 42).\\
 \end{tabularx}
 \end{center}
@@ -1997,6 +1998,19 @@ Pollis's own (\texttt{pollis\_references}, \texttt{pollis\_counts}) come from Po
 (\texttt{user\_references}, \texttt{user\_counts}, \texttt{user\_versions}) are views over your files in
 \texttt{\textasciitilde/.pollis/references}, never replaced. A work Pollis already has is not added again: it keeps
 Pollis's key, and only its versions and counts are yours.
+
+\subhead{PollisBenchmarks}
+\begin{center}\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.2\linewidth}X@{}}
+\texttt{catalogue} & One row per benchmark: what it measures, its source, the revision its questions come from, its licence, how an answer is graded, the page that runs it and its reference.\\
+\texttt{mmlu\_pro}, \texttt{gsm8k} & The questions of each benchmark built in: id, stratum, question, options, right answer and worked answer.\\
+\texttt{mmlu\_pro\_examples}, \texttt{gsm8k\_examples} & Their examples, with worked answers, which a prompt can show before a question.\\
+\end{tabularx}
+\end{center}
+The questions come from PollisBenchmarks.jl, each at the fixed revision of its source and under its own licence;
+Pollis rebuilds the database when the package is updated. The benchmarks to download are not in the database:
+Model Benchmarks fetches them from their source the first time they are run.
 
 \newpage
 \subhead{Import journal metrics}

@@ -39,7 +39,7 @@ import { IExtensionService } from '../../../services/extensions/common/extension
 import { IWorkbenchLayoutService } from '../../../services/layout/browser/layoutService.js';
 import { IDatabaseColumn, IDatabaseConnectionsService, IDatabaseSchema, IDatabaseSession, IDatabaseTable } from '../common/databaseConnections.js';
 import './media/connectionsView.css';
-import { describeConnection, DOCUMENTS_DATABASE_ID, getDatabaseDriver, IDatabaseConnectionProfile, isInMemoryConnection, isWritableConnection, JOURNALS_DATABASE_ID, NEW_CONNECTION_COMMAND_ID, REFERENCES_DATABASE_ID, RSS_DATABASE_ID } from '../common/databaseDrivers.js';
+import { BENCHMARKS_DATABASE_ID, describeConnection, DOCUMENTS_DATABASE_ID, getDatabaseDriver, IDatabaseConnectionProfile, isInMemoryConnection, isWritableConnection, JOURNALS_DATABASE_ID, NEW_CONNECTION_COMMAND_ID, REFERENCES_DATABASE_ID, RSS_DATABASE_ID } from '../common/databaseDrivers.js';
 
 /** The Databases container of the secondary side bar, with its Pollis Built-In and User views. */
 export const DATABASES_VIEW_CONTAINER_ID = 'workbench.view.pollis.databases';
@@ -198,6 +198,10 @@ class ItemRenderer implements ITreeRenderer<DatabaseItem, void, IItemTemplate> {
 					hover = session
 						? localize('connection.references.hover.connected', "{0} (DuckDB)\nBuilt into Pollis: the references of Pollis and those you added, read-only, in {1}.\nConnected in the Julia REPL as {2}. Click to browse its tables.", name, describeConnection(profile), profile.variable)
 						: localize('connection.references.hover', "{0} (DuckDB)\nBuilt into Pollis: the references of Pollis and those you added, read-only, in {1}.\nNot connected. Click to connect in the Julia REPL as {2}.", name, describeConnection(profile), profile.variable);
+				} else if (profile?.builtin && profile.id === BENCHMARKS_DATABASE_ID) {
+					hover = session
+						? localize('connection.benchmarks.hover.connected', "{0} (DuckDB)\nBuilt into Pollis: the catalogue of the benchmarks that Pollis runs, and the questions of those built in, read-only, in {1}.\nConnected in the Julia REPL as {2}. Click to browse its tables.", name, describeConnection(profile), profile.variable)
+						: localize('connection.benchmarks.hover', "{0} (DuckDB)\nBuilt into Pollis: the catalogue of the benchmarks that Pollis runs, and the questions of those built in, read-only, in {1}.\nNot connected. Click to connect in the Julia REPL as {2}.", name, describeConnection(profile), profile.variable);
 				} else if (profile?.builtin && profile.id === DOCUMENTS_DATABASE_ID) {
 					hover = session
 						? localize('connection.documents.hover.connected', "{0} (DuckDB)\nBuilt into Pollis: the passages of its documents that Ask Pollis searches, read-only, in {1}.\nConnected in the Julia REPL as {2}. Click to browse its tables.", name, describeConnection(profile), profile.variable)
@@ -617,7 +621,7 @@ export abstract class DatabaseConnectionsView extends ViewPane {
 	}
 }
 
-/** The databases built into Pollis: PollisDatasets, PollisRSS, PollisJournals, PollisReferences and PollisDocuments. */
+/** The databases built into Pollis: PollisDatasets, PollisRSS, PollisJournals, PollisReferences, PollisBenchmarks and PollisDocuments. */
 export class BuiltinDatabasesView extends DatabaseConnectionsView {
 
 	static readonly ID = 'pollis.databases.builtin';

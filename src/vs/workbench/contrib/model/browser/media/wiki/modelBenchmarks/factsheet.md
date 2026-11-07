@@ -6,7 +6,7 @@
 |---|---|
 | **Purpose** | Compare the chat models of this computer on the questions of published benchmarks, by score, speed and memory |
 | **Input** | A benchmark downloaded from Hugging Face, a sample of its questions and the chat models on this computer |
-| **Core packages** | [JSON3.jl](https://github.com/quinnj/JSON3.jl), [DuckDB.jl](https://github.com/duckdb/DuckDB.jl) |
+| **Core packages** | [PollisBenchmarks.jl](https://github.com/Trumpingtons/PollisBenchmarks.jl), [JSON3.jl](https://github.com/quinnj/JSON3.jl), [DuckDB.jl](https://github.com/duckdb/DuckDB.jl) |
 | **Local models** | Run by [llama.cpp](https://github.com/ggml-org/llama.cpp), one after the other, each alone in memory |
 | **Sample** | Stratified random sampling, with proportional or equal allocation and a seed ([Cochran (1977)](#ref-Coc1977a)) |
 | **Steps** | Benchmark, Sample, Models, Run, Results |

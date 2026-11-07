@@ -1,5 +1,5 @@
 // POLLIS: the runs of Model Benchmarks (Compose > Local AI Models > Model Benchmarks...), in a hidden Julia process
-// of their own (scripts/terminalserver/model_benchmarks.jl), which a notebook loads too (Pollis.model_benchmarks()).
+// of their own (scripts/terminalserver/model_benchmarks.jl), which runs PollisBenchmarks.jl, the package a notebook calls too.
 // The command `language-julia.pollisModelBenchmarks`, with {job, models?}, runs the task `job` of the script: "download"
 // a benchmark, or "start" a run, which draws its sample; with `models`, each is then run on that run, one after the
 // other and alone in memory: the memory free measured, its llama-server started, the script's task "model" run with the

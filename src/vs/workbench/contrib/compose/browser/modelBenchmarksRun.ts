@@ -18,14 +18,14 @@ import { ICompareProgress } from './compareModelsRun.js';
 import { CompareSampler, ICompareSample, ICompareSamples } from './compareShared.js';
 
 // What Model Benchmarks runs (modelBenchmarksPage.ts), in a hidden Julia process of the Julia extension
-// (language-julia.pollisModelBenchmarks, model_benchmarks.jl, which a notebook loads too): a benchmark downloaded once
-// into ~/.pollis/benchmarks/data; and a run, whose sample the script draws, stratified, with its seed, then each local
+// (language-julia.pollisModelBenchmarks, model_benchmarks.jl, which runs PollisBenchmarks.jl, the package a notebook calls too): a benchmark downloaded once
+// into ~/.pollis/benchmarks/data; and a run, whose sample the package draws, stratified, with its seed, then each local
 // model chosen, one after the other and alone in memory (the chat model of Ask Pollis stopped before), answering the
-// questions of the sample, each answer graded as it comes. The run is kept in ~/.pollis/benchmarks/runs, by the script:
+// questions of the sample, each answer graded as it comes. The run is kept in ~/.pollis/benchmarks/runs, by the package:
 // <id>.json, the benchmark, the settings, the sample and the figures of each model; <id>.jsonl, the answers. One runner
 // per window, so that a run goes on when the page is closed.
 
-/** A question of a benchmark downloaded, as model_benchmarks.jl keeps it in questions.jsonl. */
+/** A question of a benchmark downloaded, as PollisBenchmarks.jl keeps it in questions.jsonl. */
 export interface IBenchmarkQuestion {
 	readonly id: string;
 	readonly stratum: string;
@@ -72,7 +72,7 @@ export interface IBenchmarkModel {
 	readonly size?: string;
 }
 
-/** A model's figures in a run, as model_benchmarks.jl computes them (figures). */
+/** A model's figures in a run, as PollisBenchmarks.jl computes them (figures). */
 export interface IBenchmarkFigures {
 	readonly value: string;
 	readonly label: string;

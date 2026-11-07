@@ -134,6 +134,15 @@ const REFERENCES_PACKAGE = joinpath(REFERENCES_HOME, "package.json")
 const REFERENCES_DB = joinpath(homedir(), ".pollis", "databases", "PollisReferences.duckdb")
 """The SQL that `REFERENCES_DB` was made with, and the size and time of the `pollis.json` and `REFERENCES_PACKAGE` it was made from."""
 const REFERENCES_STAMP = REFERENCES_DB * ".stamp"
+"""PollisBenchmarks.jl: the published benchmarks that Model Benchmarks runs on the chat models of this computer, and their grading."""
+const BENCHMARKS = Base.PkgId(UUID("42886f46-29ec-4b6e-a6c6-e95103b5ec0b"), "PollisBenchmarks")
+const BENCHMARKS_URL = "https://github.com/Trumpingtons/PollisBenchmarks.jl"
+"""The commit of PollisBenchmarks.jl installed, from GitHub."""
+const BENCHMARKS_COMMIT = joinpath(ENVIRONMENT, "PollisBenchmarks.commit")
+"""The PollisBenchmarks database: the catalogue of PollisBenchmarks.jl and the questions of the benchmarks built in, made by `build_benchmarks`."""
+const BENCHMARKS_DB = joinpath(homedir(), ".pollis", "databases", "PollisBenchmarks.duckdb")
+"""The PollisBenchmarks.jl folder, its artifact and the SQL that `BENCHMARKS_DB` was made with."""
+const BENCHMARKS_STAMP = BENCHMARKS_DB * ".stamp"
 """The PollisDocuments database: the passages of Pollis' documents that Ask Pollis searches, made by ask_index.jl when the REPL starts."""
 const DOCUMENTS_DB = joinpath(homedir(), ".pollis", "documents", "PollisDocuments.duckdb")
 
@@ -488,14 +497,14 @@ end
 const DUCKDB_CONFIG = ["autoinstall_known_extensions" => "false", "autoload_known_extensions" => "false"]
 
 """The built-in databases that `connect` attaches, read-only, under their own names."""
-builtins() = filter(isfile, [DATASETS_DB, RSS_DB, JOURNALS_DB, REFERENCES_DB, DOCUMENTS_DB])
+builtins() = filter(isfile, [DATASETS_DB, RSS_DB, JOURNALS_DB, REFERENCES_DB, BENCHMARKS_DB, DOCUMENTS_DB])
 
 """
     connect(path = ":memory:"; name = "DuckDB", builtins = true, fts = true, show = true)
 
 Open the DuckDB database `path` with the engine of Pollis and return it, ready for
 `DBInterface.execute`. The built-in databases are attached read-only as `PollisDatasets`,
-`PollisRSS`, `PollisJournals`, `PollisReferences` and `PollisDocuments`, and the fts extension, full-text search, is loaded. The connection is shown in the Databases
+`PollisRSS`, `PollisJournals`, `PollisReferences`, `PollisBenchmarks` and `PollisDocuments`, and the fts extension, full-text search, is loaded. The connection is shown in the Databases
 view as `name`. DuckDB never downloads extensions here: those that Pollis brings are all there is.
 
 ```julia
@@ -1313,6 +1322,132 @@ function build_references()
     return nothing
 end
 
+"""
+The installed PollisBenchmarks.jl: its folder, its catalogue, `data/catalogue.toml`, and the folder of its artifact
+`benchmarks`, the questions of the benchmarks built in; `nothing` when it is not installed or has no artifact.
+"""
+function benchmarks_source()
+    path = Base.locate_package(BENCHMARKS)
+    path === nothing && return nothing
+    root = dirname(dirname(path))
+    toml = joinpath(root, "Artifacts.toml")
+    catalogue = joinpath(root, "data", "catalogue.toml")
+    (isfile(toml) && isfile(catalogue)) || return nothing
+    Artifacts = Base.require(Base.PkgId(UUID("56f22d72-fd6d-98f1-02f0-08ddc0907c33"), "Artifacts"))
+    hash = Base.invokelatest(Artifacts.artifact_hash, "benchmarks", toml)
+    hash === nothing && return nothing
+    folder = Base.invokelatest(Artifacts.artifact_path, hash)
+    return isdir(folder) ? (; root, folder, catalogue) : nothing
+end
+
+"""The columns of the table `catalogue` of PollisBenchmarks: the fields of `data/catalogue.toml`, with their type and description."""
+const BENCHMARKS_CATALOGUE = [
+    ("id", "VARCHAR", "The id of the benchmark in PollisBenchmarks.jl"),
+    ("benchmark", "VARCHAR", "Its name"),
+    ("component", "VARCHAR", "What it measures: Closed Book Answering, the answers of a chat model from what it learned in training alone"),
+    ("domain", "VARCHAR", "What its questions are about"),
+    ("questions", "INTEGER", "The number of its questions"),
+    ("released", "VARCHAR", "The month it was published, YYYY-MM"),
+    ("licence", "VARCHAR", "The licence of its questions, as its source states it"),
+    ("licence_url", "VARCHAR", "Where its source states its licence"),
+    ("availability", "VARCHAR", "Built In, its questions in a table of this database, or Download, fetched from its source the first time it is run"),
+    ("source", "VARCHAR", "Where its questions come from"),
+    ("revision", "VARCHAR", "The revision of its source that its questions come from, fixed so that they never change"),
+    ("grading", "VARCHAR", "How an answer is graded"),
+    ("page", "VARCHAR", "The page of Pollis that runs it"),
+    ("reference", "VARCHAR", "The key of the work that published it, in the references of Pollis (PollisReferences)"),
+    ("table_name", "VARCHAR", "The table of its questions in this database, for a benchmark Built In; its examples are in the same name with _examples"),
+]
+
+"""The columns of the tables of questions of PollisBenchmarks, and of their examples, with their descriptions."""
+const BENCHMARKS_QUESTION_COLUMNS = [
+    ("id", "The id of the question in its benchmark"),
+    ("stratum", "The group of the question that a stratified sample draws from, such as the subject; empty for a benchmark without strata"),
+    ("question", "The question, as the model is asked it"),
+    ("choices", "The options of the question, in order, the first one A; empty for a question without options"),
+    ("answer", "The right answer: the letter of the right option, or the number"),
+    ("worked", "The worked answer of the source, which a prompt with examples shows; empty when the source has none"),
+]
+
+"""
+The SQL that makes PollisBenchmarks from `source` (`benchmarks_source`): the table `catalogue`, a row per entry of
+`data/catalogue.toml`; and, for each benchmark Built In, its questions and examples, copied from the artifact into
+the tables named in the catalogue, `<table>` and `<table>_examples`; each table and column with its description.
+"""
+function benchmarks_sql(source)
+    TOML = Base.require(Base.PkgId(UUID("fa267f1f-6049-4f14-aa54-33bafae1ed76"), "TOML"))
+    entries = Base.invokelatest(TOML.parsefile, source.catalogue)["benchmarks"]
+    quoted(x) = x === nothing ? "NULL" : x isa Integer ? string(x) : "'" * replace(string(x), "'" => "''") * "'"
+    statements = String[]
+    push!(statements, "CREATE TABLE catalogue (" * join(["$name $type" for (name, type, _) in BENCHMARKS_CATALOGUE], ", ") * ")")
+    for entry in entries
+        values = [quoted(get(entry, name == "table_name" ? "table" : name, nothing)) for (name, _, _) in BENCHMARKS_CATALOGUE]
+        push!(statements, "INSERT INTO catalogue VALUES (" * join(values, ", ") * ")")
+    end
+    push!(statements, "COMMENT ON TABLE catalogue IS 'The benchmarks of PollisBenchmarks.jl: what each measures, its source, revision and licence, and whether it is built in. Source: PollisBenchmarks.jl. Licence: MIT'")
+    append!(statements, ["COMMENT ON COLUMN catalogue.$name IS $(quoted(description))" for (name, _, description) in BENCHMARKS_CATALOGUE])
+    for entry in entries
+        get(entry, "availability", "") == "Built In" || continue
+        id, table = entry["id"], entry["table"]
+        origin = "From $(entry["source"]), revision $(entry["revision"]), converted to DuckDB. Licence: $(entry["licence"])"
+        for (suffix, file, description) in [("", "$id.parquet", "The questions of $(entry["benchmark"]): $(entry["domain"])."),
+                ("_examples", "$id-examples.parquet", "The examples of $(entry["benchmark"]), with their worked answers, which a prompt can show before a question.")]
+            name = table * suffix
+            path = replace(joinpath(source.folder, file), "\\" => "/")
+            push!(statements, "CREATE TABLE $name AS SELECT * FROM read_parquet($(quoted(path)))")
+            push!(statements, "COMMENT ON TABLE $name IS $(quoted("$description $origin"))")
+            append!(statements, ["COMMENT ON COLUMN $name.$column IS $(quoted(text))" for (column, text) in BENCHMARKS_QUESTION_COLUMNS])
+        end
+    end
+    return statements
+end
+
+benchmarks_stamp(source) = source.root * "\n" * source.folder * "\n" * join(benchmarks_sql(source), ";\n")
+
+"""Whether `BENCHMARKS_DB` is missing or older than the installed PollisBenchmarks.jl or its SQL; `false` when it is not installed."""
+function benchmarks_outdated(database::AbstractString = BENCHMARKS_DB)
+    source = benchmarks_source()
+    source === nothing && return false
+    stamp = database * ".stamp"
+    return !isfile(database) || !isfile(stamp) || read(stamp, String) != benchmarks_stamp(source)
+end
+
+"""
+    build_benchmarks(database = BENCHMARKS_DB)
+
+Make the PollisBenchmarks database when it is missing, or PollisBenchmarks.jl or the SQL of `benchmarks_sql` have
+changed since it was made: the catalogue of the benchmarks and the questions of those built in, copied from the
+package's artifact. Nothing else writes to it. Written under a temporary name and moved into place, as `build` does.
+"""
+function build_benchmarks(database::AbstractString = BENCHMARKS_DB)
+    benchmarks_outdated(database) || return nothing
+    source = benchmarks_source()
+    println("Pollis: building the PollisBenchmarks database. This happens only when PollisBenchmarks.jl changes.")
+    DuckDB = get(() -> Base.require(DUCKDB), Base.loaded_modules, DUCKDB)
+    get(() -> Base.require(DBINTERFACE), Base.loaded_modules, DBINTERFACE)
+    mkpath(dirname(database))
+    tmp = "$database.$(getpid()).tmp"
+    rm(tmp; force = true)
+    try
+        Base.invokelatest() do
+            con = loaded(DBINTERFACE).connect(DuckDB.DB, tmp)
+            try
+                foreach(statement -> loaded(DBINTERFACE).execute(con, statement), benchmarks_sql(source))
+                loaded(DBINTERFACE).execute(con, "CHECKPOINT")
+            finally
+                loaded(DBINTERFACE).close!(con)
+            end
+        end
+        mv(tmp, database; force = true)
+        write(database * ".stamp", benchmarks_stamp(source))
+    catch err
+        rm(tmp; force = true)
+        isfile(database) || rethrow()
+        @warn "Pollis: could not rebuild the PollisBenchmarks database; the previous one is kept" exception = err
+    end
+    return nothing
+end
+
 """The commit at the head of the main branch of the GitHub repository `url`, or `nothing` when GitHub cannot be reached."""
 function latest_commit(url::AbstractString)
     try
@@ -1326,9 +1461,10 @@ function latest_commit(url::AbstractString)
     end
 end
 
-"""The packages of Pollis installed from GitHub, the data of the built-in databases, with the file of the commit installed."""
+"""The packages of Pollis installed from GitHub, the data of the built-in databases and PollisBenchmarks.jl, with the file of the commit installed."""
 const DATA_PACKAGES = [(pkg = DATASETS, url = DATASETS_URL, commit = DATASETS_COMMIT), (pkg = JOURNALS, url = JOURNALS_URL, commit = JOURNALS_COMMIT),
-    (pkg = REFERENCES, url = REFERENCES_URL, commit = REFERENCES_COMMIT), (pkg = RSS, url = RSS_URL, commit = RSS_COMMIT)]
+    (pkg = REFERENCES, url = REFERENCES_URL, commit = REFERENCES_COMMIT), (pkg = RSS, url = RSS_URL, commit = RSS_COMMIT),
+    (pkg = BENCHMARKS, url = BENCHMARKS_URL, commit = BENCHMARKS_COMMIT)]
 
 """
     pending()
@@ -1365,23 +1501,25 @@ end
 """
     needs_install()
 
-Whether `install()` has something to do, or a built-in database, PollisDatasets, PollisRSS, PollisJournals or
-PollisReferences, is not made yet, or PollisReferences is older than the references of Pollis. The REPL asks at start, and when it does, Pollis runs `install_pollisdb.jl` in a terminal of
+Whether `install()` has something to do, or a built-in database, PollisDatasets, PollisRSS, PollisJournals,
+PollisReferences or PollisBenchmarks, is not made yet, or PollisReferences is older than the references of Pollis, or
+PollisBenchmarks than PollisBenchmarks.jl. The REPL asks at start, and when it does, Pollis runs `install_pollisdb.jl` in a terminal of
 its own, as it installs Revise, so the REPL never waits for Pkg.
 """
 function needs_install()
     todo = pending()
     return !isempty(todo.missing_packages) || any(d -> d.missing || d.outdated, todo.data) || todo.registry_duckdb ||
-        !isfile(DATASETS_DB) || !isfile(RSS_DB) || !isfile(JOURNALS_DB) || journals_outdated() || package_data_uncopied() || references_outdated()
+        !isfile(DATASETS_DB) || !isfile(RSS_DB) || !isfile(JOURNALS_DB) || journals_outdated() || package_data_uncopied() || references_outdated() ||
+        benchmarks_outdated()
 end
 
 """
     install()
 
-Install the packages built into Pollis, and the PollisDatasets, PollisJournals, PollisReferences and PollisRSS (`DATA_PACKAGES`),
+Install the packages built into Pollis, and the PollisDatasets, PollisJournals, PollisReferences, PollisRSS and PollisBenchmarks (`DATA_PACKAGES`),
 that no environment on the load path provides yet into `ENVIRONMENT`. The first time, it adds them; afterwards it
-keeps the PollisDatasets, PollisJournals, PollisReferences and PollisRSS installed there up to date with GitHub, so that new data reaches
-the built-in databases. Pkg runs (and precompiles) only when something is missing or GitHub has a newer
+keeps the PollisDatasets, PollisJournals, PollisReferences, PollisRSS and PollisBenchmarks installed there up to date with GitHub, so that new data reaches
+the built-in databases and new benchmarks reach Model Benchmarks. Pkg runs (and precompiles) only when something is missing or GitHub has a newer
 commit than the one installed; offline, the installed copy is kept. The active project is left as it was.
 Run by `install_pollisdb.jl`, outside the REPL.
 """

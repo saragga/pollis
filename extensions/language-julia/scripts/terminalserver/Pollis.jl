@@ -83,24 +83,6 @@ function stop_llama_server(model::AbstractString; embeddings::Bool = false, thin
 	return nothing
 end
 
-"""
-    Pollis.model_benchmarks()
-
-The module of Model Benchmarks (Compose > Knowledge for Models > Model Benchmarks...), loaded the first time: the
-benchmarks downloaded, the stratified samples drawn, the chat models of this computer run and their answers
-graded, as the page does. See `?ModelBenchmarks` once loaded.
-
-```julia
-MB = Pollis.model_benchmarks()
-MB.download("gsm8k")
-```
-"""
-function model_benchmarks()
-	isdefined(Main, :ModelBenchmarks) || Base.include(Main, joinpath(@__DIR__, "model_benchmarks.jl"))
-	# Defined in a newer world than this function's when it was just included
-	return Base.invokelatest(getglobal, Main, :ModelBenchmarks)
-end
-
 const REPL_ID = Base.PkgId(Base.UUID("3fa0cd96-eef1-5676-8a61-b3b8758bbffb"), "REPL")
 
 """

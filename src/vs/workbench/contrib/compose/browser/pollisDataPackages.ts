@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 // POLLIS: the data packages Pollis installs and updates at each start of the Julia REPL (PollisDB.jl): PollisDatasets,
-// PollisJournals, PollisReferences and PollisRSS. Check for Data Package Updates..., below Check for Updates... in the
+// PollisJournals, PollisReferences, PollisRSS and PollisBenchmarks. Check for Data Package Updates..., below Check for Updates... in the
 // Pollis menu on macOS (menubar.ts) and after About in the Help menu elsewhere, asks GitHub for their latest commits
 // and offers to update those that are newer; the Welcome page announces them, and those Pollis has updated. The Julia
 // extension updates them (language-julia.pollisUpdateDataPackages, update_data_packages.jl).
@@ -49,7 +49,7 @@ const CHECK_INTERVAL = 60 * 60 * 1000;
 const SEEN_COMMITS_KEY = 'pollis.dataPackages.seen';
 
 /** The data packages, by name, with their repositories on GitHub (Trumpingtons). */
-const DATA_PACKAGES: readonly string[] = ['PollisDatasets', 'PollisJournals', 'PollisReferences', 'PollisRSS'];
+const DATA_PACKAGES: readonly string[] = ['PollisDatasets', 'PollisJournals', 'PollisReferences', 'PollisRSS', 'PollisBenchmarks'];
 
 /** A data package whose installed commit differs from another: newer on GitHub, or updated since the Welcome page saw it. */
 export interface IDataPackageChange {

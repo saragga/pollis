@@ -1296,11 +1296,11 @@ export class GettingStartedPage extends EditorPane {
 		dataPackagesCheck.schedule(0);
 		this.categoriesSlideDisposables.add(this.rssFeedsService.onDidChange(() => renderAlerts()));
 		this.categoriesSlideDisposables.add(this.journalScoresService.onDidChange(() => renderAlerts()));
-		// install_pollisdb.jl makes the four built-in databases together, PollisDatasets, PollisRSS (empty until
-		// feeds are read), PollisJournals and PollisReferences, once it has installed DuckDB, the PollisDatasets and the
-		// PollisJournals: they are ready when the four files exist.
+		// install_pollisdb.jl makes the five built-in databases together, PollisDatasets, PollisRSS (empty until
+		// feeds are read), PollisJournals, PollisReferences and PollisBenchmarks, once it has installed DuckDB and their
+		// packages: they are ready when the five files exist.
 		const databasesFolder = joinPath(this.pathService.userHome({ preferLocal: true }), '.pollis', 'databases');
-		const databases = [joinPath(databasesFolder, 'PollisDatasets.duckdb'), joinPath(databasesFolder, 'PollisRSS.duckdb'), joinPath(databasesFolder, 'PollisJournals.duckdb'), joinPath(databasesFolder, 'PollisReferences.duckdb')];
+		const databases = [joinPath(databasesFolder, 'PollisDatasets.duckdb'), joinPath(databasesFolder, 'PollisRSS.duckdb'), joinPath(databasesFolder, 'PollisJournals.duckdb'), joinPath(databasesFolder, 'PollisReferences.duckdb'), joinPath(databasesFolder, 'PollisBenchmarks.duckdb')];
 		const checkDatabase = () => Promise.all(databases.map(database => this.fileService.exists(database))).then(exist => {
 			databaseReady = exist.every(Boolean);
 			renderAlerts();
@@ -1369,9 +1369,9 @@ export class GettingStartedPage extends EditorPane {
 				? localize('pollis.statusDatabasePending', "{0} found; databases come with the first REPL", julia)
 				: localize('pollis.statusJuliaFound', "{0} found", julia);
 		const hover = allSet
-			? localize('pollis.statusAllSetHover', "{0} found, and the built-in databases PollisDatasets, PollisRSS, PollisJournals and PollisReferences ready.", julia)
+			? localize('pollis.statusAllSetHover', "{0} found, and the built-in databases PollisDatasets, PollisRSS, PollisJournals, PollisReferences and PollisBenchmarks ready.", julia)
 			: databaseReady === false
-				? localize('pollis.statusDatabasePendingHover', "{0} found. The built-in databases, PollisDatasets, PollisRSS, PollisJournals and PollisReferences, are set up the first time the Julia REPL starts.", julia)
+				? localize('pollis.statusDatabasePendingHover', "{0} found. The built-in databases, PollisDatasets, PollisRSS, PollisJournals, PollisReferences and PollisBenchmarks, are set up the first time the Julia REPL starts.", julia)
 				: text;
 		return {
 			element: $('.pollis-status.single-line', { role: 'status', 'aria-label': hover },
