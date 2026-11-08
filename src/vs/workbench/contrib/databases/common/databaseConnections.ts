@@ -53,6 +53,8 @@ export interface IDatabaseSession {
 	readonly updated: string;
 	/** The id of the Pollis window whose REPL opened the connection. */
 	readonly window?: string;
+	/** Whether it is the REPL's Shared Session, which the duckdb> terminal and the notebooks of its window attach. */
+	readonly shared?: boolean;
 	readonly schemas: readonly IDatabaseSchema[];
 	/** Why the schemas could not be read, if they could not. */
 	readonly error?: string;

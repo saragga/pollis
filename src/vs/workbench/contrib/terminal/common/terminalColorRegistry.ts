@@ -129,9 +129,10 @@ export const ansiColorMap: { [key: string]: { index: number; defaults: ColorDefa
 	},
 	'terminal.ansiYellow': {
 		index: 3,
+		// POLLIS: Pollis' yellow, as packages and paths are in its pages, in themes that do not set their own
 		defaults: {
-			light: '#949800',
-			dark: '#e5e510',
+			light: '#a8650d',
+			dark: '#e8a33d',
 			hcDark: '#cdcd00',
 			hcLight: '#949800'
 		}

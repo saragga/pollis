@@ -40,12 +40,14 @@ export class TerminalLink extends Disposable implements ILink {
 		private readonly _isHighConfidenceLink: boolean,
 		readonly label: string | undefined,
 		private readonly _type: TerminalLinkType,
+		/** POLLIS: a link of Pollis' own extensions, opened with one click: the pointer always, its own underline. */
+		private readonly _oneClick: boolean,
 		@IConfigurationService private readonly _configurationService: IConfigurationService
 	) {
 		super();
 		this.decorations = {
-			pointerCursor: false,
-			underline: this._isHighConfidenceLink
+			pointerCursor: this._oneClick,
+			underline: this._isHighConfidenceLink && !this._oneClick
 		};
 	}
 
@@ -79,7 +81,8 @@ export class TerminalLink extends Disposable implements ILink {
 
 		// Only show the tooltip and highlight for high confidence links (not word/search workspace
 		// links). Feedback was that this makes using the terminal overly noisy.
-		if (this._isHighConfidenceLink) {
+		// POLLIS: a one-click link says what it does in its words, so it has no tooltip naming the modifier.
+		if (this._isHighConfidenceLink && !this._oneClick) {
 			this._tooltipScheduler.value = new RunOnceScheduler(() => {
 				this._tooltipCallback(
 					this,
@@ -117,6 +120,9 @@ export class TerminalLink extends Disposable implements ILink {
 	}
 
 	private _enableDecorations(): void {
+		if (this._oneClick) {
+			return;
+		}
 		if (!this.decorations.pointerCursor) {
 			this.decorations.pointerCursor = true;
 		}
@@ -126,6 +132,9 @@ export class TerminalLink extends Disposable implements ILink {
 	}
 
 	private _disableDecorations(): void {
+		if (this._oneClick) {
+			return;
+		}
 		if (this.decorations.pointerCursor) {
 			this.decorations.pointerCursor = false;
 		}

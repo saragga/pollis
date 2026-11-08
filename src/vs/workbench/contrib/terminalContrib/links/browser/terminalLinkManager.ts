@@ -181,8 +181,9 @@ export class TerminalLinkManager extends DisposableStore {
 		this.add(detectorAdapter.onDidActivateLink(e => {
 			// Prevent default electron link handling so Alt+Click mode works normally
 			e.event?.preventDefault();
-			// Require correct modifier on click unless event is coming from linkQuickPick selection
-			if (e.event && !(e.event instanceof TerminalLinkQuickPickEvent) && !this._isLinkActivationModifierDown(e.event)) {
+			// Require correct modifier on click unless event is coming from linkQuickPick selection, or the link is one of
+			// Pollis' own extensions, which open with one click
+			if (e.event && !(e.event instanceof TerminalLinkQuickPickEvent) && !e.link.oneClick && !this._isLinkActivationModifierDown(e.event)) {
 				return;
 			}
 			// Just call the handler if there is no before listener

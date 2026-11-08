@@ -2880,6 +2880,8 @@ export interface ITerminalLinkDto {
 	length: number;
 	/** The descriptive label for what the link does when activated. */
 	label?: string;
+	/** POLLIS: whether the link opens with one click, without the modifier, as those of Pollis' own extensions do. */
+	oneClick?: boolean;
 }
 
 export interface ITerminalDimensionsDto {

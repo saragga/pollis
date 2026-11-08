@@ -28,7 +28,7 @@ Pollis ships the official DuckDB library (libduckdb), with the DuckDB Node API (
 
 Pollis also ships the fts extension for DuckDB, full-text search, built by DuckDB from duckdb-fts. It includes the Snowball stemmers (libstemmer, BSD-3-Clause, Copyright Martin Porter and Richard Boulton).
 
-Pollis ships the quack extension for DuckDB, its client and server, with which it serves the database of the Julia Session to its DuckDB terminal and notebooks, on this computer only, and the httpfs extension, on which quack runs; both are built by DuckDB, from duckdb-quack and duckdb-httpfs. httpfs includes OpenSSL 3.6.0 (Apache-2.0) and libcurl 8.17.0 (curl license).
+Pollis ships the quack extension for DuckDB, its client and server, with which it serves the database of the Shared Session to its DuckDB terminal and notebooks, on this computer only, and the httpfs extension, on which quack runs; both are built by DuckDB, from duckdb-quack and duckdb-httpfs. httpfs includes OpenSSL 3.6.0 (Apache-2.0) and libcurl 8.17.0 (curl license).
 
 Pollis installs Poppler_jll, the build of Poppler 25.10.0 by the Julia BinaryBuilder project, into its Julia environment: Ask Pollis reads the text of PDF documents with its `pdftotext`. Pollis runs this tool as a separate program and does not link to the Poppler libraries.
 

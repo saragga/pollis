@@ -34,6 +34,7 @@ import { compileDocumentsInBackground, pollisDBInstalled } from '../pollisDocume
 import { precompileInBackground } from '../pollisPrecompile'
 import { answerLlamaServerRequests } from '../pollisLlamaServer'
 import { POLLIS_WINDOW } from '../pollisWindow'
+import { activatePollisRepl } from './pollisTerminal'
 import { promise as fastq } from 'fastq'
 import { randomUUID } from 'crypto'
 import { promisify } from 'node:util'
@@ -140,33 +141,6 @@ function updateReplStatusBar() {
     } else {
         g_replStatusBarItem.text = '$(circle-outline) Julia REPL'
         g_replStatusBarItem.tooltip = 'Start the Julia REPL'
-    }
-    if (g_pollisStatusBarItem) {
-        g_pollisStatusBarItem.text = isConnected() ? '$(circle-filled) Pollis REPL' : '$(circle-outline) Pollis REPL'
-        g_pollisStatusBarItem.tooltip = isConnected()
-            ? 'Show the Julia REPL in pollis>, where SQL runs on the Julia Session (typed at julia>: >; back: Backspace)'
-            : 'Start the Julia REPL in pollis>, where SQL runs on the Julia Session (typed at julia>: >; back: Backspace)'
-    }
-}
-
-// POLLIS: Pollis REPL, in the status bar and the terminal's + menu: the Julia REPL in its pollis> mode. A running REPL
-// is shown and sent the keys that PollisDB binds to going to pollis> (TO_POLLIS in PollisDB.jl); a REPL started here
-// is told to go there by POLLIS_REPL_START, once its pollis> mode is set up.
-let g_pollisStatusBarItem: vscode.StatusBarItem | undefined
-let g_startInPollis = false
-const TO_POLLIS = '\u001b[68~'
-
-async function startPollisREPL(): Promise<boolean> {
-    if (g_terminal && isConnected()) {
-        g_terminal.show(false)
-        g_terminal.sendText(TO_POLLIS, false)
-        return true
-    }
-    g_startInPollis = true
-    try {
-        return await startREPL(false, true)
-    } finally {
-        g_startInPollis = false
     }
 }
 
@@ -326,9 +300,6 @@ export async function startREPL(
         JULIA_EDITOR: getEditor(),
         JULIA_VSCODE_REPL: isPersistentSession ? null : '1',
         POLLIS_WINDOW: POLLIS_WINDOW,
-    }
-    if (g_startInPollis) {
-        env['POLLIS_REPL_START'] = 'pollis'
     }
 
     if (nthreads !== undefined && nthreads !== 'auto') {
@@ -1565,17 +1536,14 @@ export function activate(
     // Status-bar Julia REPL control (start / show / restart / stop), kept in sync with REPL state.
     g_replStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 0)
     g_replStatusBarItem.command = 'language-julia.showREPLActions'
-    // POLLIS: Pollis REPL, between Julia REPL (0) and Pollis' DuckDB REPL (-1).
-    g_pollisStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -0.5)
-    g_pollisStatusBarItem.command = 'language-julia.startPollisREPL'
     updateReplStatusBar()
     g_replStatusBarItem.show()
-    g_pollisStatusBarItem.show()
+    // POLLIS: Pollis REPL, between Julia REPL (0) and Pollis' DuckDB REPL (-1); it starts the Julia REPL, in the
+    // background, when it does not run.
+    activatePollisRepl(context, () => startREPL(true, false))
     context.subscriptions.push(
         g_replStatusBarItem,
-        g_pollisStatusBarItem,
         registerCommand('language-julia.showREPLActions', showREPLActions),
-        registerCommand('language-julia.startPollisREPL', startPollisREPL),
         onInit(({ connection }) => {
             updateReplStatusBar()
             readReplThreads(connection)

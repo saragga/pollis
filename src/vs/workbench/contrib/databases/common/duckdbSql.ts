@@ -114,9 +114,12 @@ export interface IQueryHistoryEntry {
 	readonly sql: string;
 	/** When it ran, in milliseconds since 1970. */
 	readonly time: number;
-	/** The duckdb> terminal, a notebook run by DuckDB SQL (Pollis), or the pollis> mode of the Julia REPL, `sql` in its history. */
-	readonly source: 'duckdb' | 'notebook' | 'sql';
-	/** The duckdb> terminal and the notebooks record how long the query took, its rows, its error and its database. */
+	/**
+	 * The duckdb> terminal, a notebook run by DuckDB SQL (Pollis) or Julia, the Pollis REPL terminal, or the pollis> mode
+	 * of the Julia REPL, `sql` in its history.
+	 */
+	readonly source: 'duckdb' | 'notebook' | 'pollis' | 'sql';
+	/** The duckdb> and Pollis REPL terminals and the notebooks record how long the query took, its rows, its error and its database. */
 	readonly durationMs?: number;
 	/** The rows of its last result, or those its last statement changed. */
 	readonly rows?: number;
@@ -137,8 +140,8 @@ export interface IDuckDBQueryLogLine {
 	readonly rows?: number;
 	readonly error?: string;
 	readonly database?: string;
-	/** Written by the notebook kernels, DuckDB SQL (Pollis) and Julia's SQL cells; the terminal writes none. */
-	readonly source?: 'notebook';
+	/** Written by the notebook kernels, DuckDB SQL (Pollis) and Julia's SQL cells, and by the Pollis REPL terminal; duckdb> writes none. */
+	readonly source?: 'notebook' | 'pollis';
 }
 
 /** The queries of the log of the duckdb> terminal and of the notebooks; a line it cannot read is left out. */
@@ -152,7 +155,7 @@ export function parseDuckDBQueryLog(text: string): IQueryHistoryEntry[] {
 			const value = JSON.parse(line) as IDuckDBQueryLogLine;
 			const time = Date.parse(value.time);
 			if (typeof value.sql === 'string' && !isNaN(time)) {
-				entries.push({ sql: value.sql, time, source: value.source === 'notebook' ? 'notebook' : 'duckdb', durationMs: value.ms, rows: value.rows, error: value.error, database: value.database });
+				entries.push({ sql: value.sql, time, source: value.source === 'notebook' || value.source === 'pollis' ? value.source : 'duckdb', durationMs: value.ms, rows: value.rows, error: value.error, database: value.database });
 			}
 		} catch {
 			// A line cut short by a shell that stopped while writing it

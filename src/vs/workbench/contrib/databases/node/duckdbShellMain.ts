@@ -13,7 +13,7 @@ import * as fs from 'fs';
 import * as readline from 'readline';
 import { join } from '../../../../base/common/path.js';
 import { blankSql, sqlPieces } from '../common/duckdbSql.js';
-import { CHANGES, DUCKDB_OPTIONS, JULIA_DATABASE, JuliaSessionAttachment, logQuery, POLLIS_HOME, preparePollisConnection, QUIET, readShownRows, sqlString, trimQueryLog } from './duckdbPollis.js';
+import { CHANGES, DUCKDB_OPTIONS, SHARED_DATABASE, SharedSessionAttachment, logQuery, POLLIS_HOME, preparePollisConnection, QUIET, readShownRows, sqlString, trimQueryLog, withHint } from './duckdbPollis.js';
 
 const HISTORY = join(POLLIS_HOME, 'duckdb', 'shell_history');
 const HISTORY_SIZE = 1000;
@@ -96,31 +96,31 @@ const HELP = `.databases          The attached databases
 .help               This help
 .quit, .exit        Leave the shell (also Ctrl+D)
 .schema [table]     The CREATE statements of the tables, or of one
-.tables             The tables and views of every database, the Julia Session's included
+.tables             The tables and views of every database, the Shared Session's included
 .timer on|off       Show how long each query took (on)
 
 A query ends with ";"; until then, Enter starts a new line. Ctrl+C stops a running query.
 The built-in databases are attached read-only as PollisDatasets, PollisRSS, PollisJournals, PollisReferences,
-PollisBenchmarks and PollisDocuments. While the Julia REPL of this window runs, its Julia Session is attached as
-JuliaSession: SELECT * FROM JuliaSession.stock_returns reads the table stock_returns := ... made in Julia.`;
+PollisBenchmarks and PollisDocuments. While the Julia REPL of this window runs, its Shared Session is attached as
+SharedSession: SELECT * FROM SharedSession.stock_returns reads the table @share stock_returns = ... made in Julia.`;
 
 class Shell {
 
 	private timer = true;
 	private running = false;
 
-	/** The Julia Session of this window, whose id Pollis gives the terminal as POLLIS_WINDOW. */
-	private readonly julia: JuliaSessionAttachment;
+	/** The Shared Session of this window, whose id Pollis gives the terminal as POLLIS_WINDOW. */
+	private readonly shared: SharedSessionAttachment;
 
 	constructor(private readonly connection: DuckDBConnection) {
-		this.julia = new JuliaSessionAttachment(connection, process.env.POLLIS_WINDOW || undefined);
+		this.shared = new SharedSessionAttachment(connection, process.env.POLLIS_WINDOW || undefined);
 	}
 
-	/** Attach the built-in databases and the Julia Session, and load fts; returns what went wrong, if anything: the shell starts at its prompt, as the Julia REPL does. */
+	/** Attach the built-in databases and the Shared Session, and load fts; returns what went wrong, if anything: the shell starts at its prompt, as the Julia REPL does. */
 	async prepare(): Promise<string[]> {
 		const problems = await preparePollisConnection(this.connection);
-		const julia = await this.julia.sync();
-		return [...problems, ...(julia ? [julia] : [])].map(red);
+		const shared = await this.shared.sync();
+		return [...problems, ...(shared ? [shared] : [])].map(red);
 	}
 
 	interrupt(): boolean {
@@ -147,11 +147,11 @@ class Shell {
 			case '.databases':
 				return ended((await this.run('SELECT database_name AS name, path, readonly FROM duckdb_databases() WHERE NOT internal ORDER BY 1;')).succeeded);
 			case '.tables': {
-				// The tables of the Julia Session are listed by Julia: an attached quack database lists none of its own
-				await this.julia.sync();
+				// The tables of the Shared Session are listed by Julia: an attached quack database lists none of its own
+				await this.shared.sync();
 				const ofJulia = `SELECT schema_name, table_name FROM duckdb_tables() WHERE database_name = current_database() UNION ALL SELECT schema_name, view_name FROM duckdb_views() WHERE database_name = current_database() AND NOT internal`;
-				const julia = this.julia.attachedNow ? ` UNION ALL SELECT ${sqlString(JULIA_DATABASE)}, schema_name, table_name FROM quack_query_by_name(${sqlString(JULIA_DATABASE)}, ${sqlString(ofJulia)})` : '';
-				return ended((await this.run(`SELECT database, schema, name FROM (SHOW ALL TABLES)${julia} ORDER BY ALL;`)).succeeded);
+				const shared = this.shared.attachedNow ? ` UNION ALL SELECT ${sqlString(SHARED_DATABASE)}, schema_name, table_name FROM quack_query_by_name(${sqlString(SHARED_DATABASE)}, ${sqlString(ofJulia)})` : '';
+				return ended((await this.run(`SELECT database, schema, name FROM (SHOW ALL TABLES)${shared} ORDER BY ALL;`)).succeeded);
 			}
 			case '.schema':
 				return ended((await this.run(`SELECT sql FROM (SELECT database_name, table_name, sql FROM duckdb_tables() UNION ALL SELECT database_name, view_name, sql FROM duckdb_views() WHERE NOT internal)${args[0] ? ` WHERE table_name = ${sqlString(args[0])}` : ''} ORDER BY database_name, table_name;`)).succeeded);
@@ -167,9 +167,9 @@ class Shell {
 		let rows: number | undefined;
 		try {
 			// The Julia REPL may have started, restarted or stopped since the last query
-			const julia = await this.julia.sync();
-			if (julia) {
-				console.log(red(julia));
+			const shared = await this.shared.sync();
+			if (shared) {
+				console.log(red(shared));
 			}
 			const statements = await this.connection.extractStatements(sql);
 			for (let index = 0; index < statements.count; index++) {
@@ -200,7 +200,7 @@ class Shell {
 			}
 			return { succeeded: true, rows };
 		} catch (err) {
-			const error = (err as Error).message;
+			const error = withHint((err as Error).message);
 			console.log(red(error));
 			return { succeeded: false, rows, error };
 		} finally {

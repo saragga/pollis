@@ -44,7 +44,8 @@ export class TerminalExternalLinkDetector implements ITerminalLinkDetector {
 				label: link.label,
 				bufferRange,
 				type: { id: this.id },
-				activate: link.activate
+				activate: link.activate,
+				oneClick: link.oneClick
 			};
 			return l;
 		});

@@ -61,6 +61,7 @@ function sourceLabel(entry: IQueryHistoryEntry): string {
 	switch (entry.source) {
 		case 'duckdb': return 'duckdb>';
 		case 'notebook': return localize('queryHistory.notebook', "notebook");
+		case 'pollis':
 		case 'sql': return 'pollis>';
 	}
 }
@@ -72,6 +73,7 @@ function sourceSentence(entry: IQueryHistoryEntry): string {
 		case 'notebook': return entry.database
 			? localize('queryHistory.fromNotebook', "Run in the notebook {0}", entry.database)
 			: localize('queryHistory.fromUnsavedNotebook', "Run in an unsaved notebook");
+		case 'pollis': return localize('queryHistory.fromPollisRepl', "Run in the Pollis REPL terminal, on the Shared Session");
 		case 'sql': return localize('queryHistory.fromPollisMode', "Run in the pollis> mode of the Julia REPL");
 	}
 }

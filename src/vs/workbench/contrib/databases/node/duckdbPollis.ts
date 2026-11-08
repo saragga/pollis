@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 // What the duckdb> terminal (duckdbShellMain.ts) and the DuckDB SQL (Pollis) notebook kernel (duckdbNotebookMain.ts)
-// share: a connection with the databases of Pollis attached read-only and fts loaded, the Julia Session of the window
-// attached as JuliaSession, the reading of a result, and the log of queries the History view of the Databases view lists.
+// share: a connection with the databases of Pollis attached read-only and fts loaded, the Shared Session of the window
+// attached as SharedSession, the reading of a result, and the log of queries the History view of the Databases view lists.
 
 import { DuckDBConnection, DuckDBResult, DuckDBValue, StatementType } from '@duckdb/node-api';
 import * as fs from 'fs';
@@ -16,14 +16,14 @@ import { DUCKDB_QUERY_LOG, IDuckDBQueryLogLine } from '../common/duckdbSql.js';
 export const POLLIS_HOME = join(os.homedir(), '.pollis');
 /** The fts extension, which the Julia extension of Pollis unpacks here at install. */
 const FTS = join(POLLIS_HOME, 'duckdb', 'fts.duckdb_extension');
-/** The quack extension, client and server, unpacked with fts: the Julia Session is attached with it. */
+/** The quack extension, client and server, unpacked with fts: the Shared Session is attached with it. */
 const QUACK = join(POLLIS_HOME, 'duckdb', 'quack.duckdb_extension');
 /** The httpfs extension, on which quack runs: loaded before it, as DuckDB would otherwise download it. */
 const HTTPFS = join(POLLIS_HOME, 'duckdb', 'httpfs.duckdb_extension');
-/** Where PollisDB writes the address and token of each window's Julia Session, julia.<window>.json, when it serves it. */
+/** Where PollisDB writes the address and token of each window's Shared Session, julia.<window>.json, when it serves it. */
 const SERVED = join(POLLIS_HOME, 'duckdb', 'served');
-/** The name under which the Julia Session is attached. */
-export const JULIA_DATABASE = 'JuliaSession';
+/** The name under which the Shared Session is attached. */
+export const SHARED_DATABASE = 'SharedSession';
 /** The databases of Pollis, built in and of its activity, attached read-only under their own names; Comparisons is the copy Pollis makes of the file it writes. */
 const BUILTINS = [join(POLLIS_HOME, 'databases', 'PollisDatasets.duckdb'), join(POLLIS_HOME, 'databases', 'PollisRSS.duckdb'), join(POLLIS_HOME, 'databases', 'PollisJournals.duckdb'), join(POLLIS_HOME, 'databases', 'PollisReferences.duckdb'), join(POLLIS_HOME, 'databases', 'PollisBenchmarks.duckdb'), join(POLLIS_HOME, 'documents', 'PollisDocuments.duckdb'), join(POLLIS_HOME, 'databases', 'Comparisons.duckdb')];
 /** The queries the History view lists, with how each went; trimmed to LOG_SIZE when it has grown past twice as many. */
@@ -40,6 +40,17 @@ export const CHANGES = new Set<StatementType>([StatementType.INSERT, StatementTy
 
 export function sqlString(text: string): string {
 	return `'${text.replace(/'/g, `''`)}'`;
+}
+
+/**
+ * `message`, an error of DuckDB, with the way round after it where there is one: quack reads a table of the Shared
+ * Session only once in a query, so that a self-join of one fails until it is named once or copied.
+ */
+export function withHint(message: string): string {
+	if (!message.includes('Multiple streaming scans')) {
+		return message;
+	}
+	return `${message}\nA table of ${SHARED_DATABASE} is read only once in a query. Name it once, WITH t AS MATERIALIZED (SELECT * FROM ${SHARED_DATABASE}.t) SELECT ... FROM t a JOIN t b ..., or copy it first, CREATE TEMP TABLE t AS SELECT * FROM ${SHARED_DATABASE}.t, then use t.`;
 }
 
 /** Attach the databases of Pollis and load fts; returns what went wrong, if anything. */
@@ -64,18 +75,18 @@ export async function preparePollisConnection(connection: DuckDBConnection): Pro
 	return problems;
 }
 
-/** The address and token of a Julia Session, as PollisDB writes them. */
-interface IServedJuliaSession {
+/** The address and token of a Shared Session, as PollisDB writes them. */
+interface IServedSharedSession {
 	readonly uri: string;
 	readonly token: string;
 }
 
 /**
- * The Julia Session of the window `window`, the in-memory database of its Julia REPL, attached to `connection` as JuliaSession
+ * The Shared Session of the window `window`, the in-memory database of its Julia REPL, attached to `connection` as SharedSession
  * while PollisDB serves it: `sync`, before each query, attaches it once Julia has started, again when it has restarted,
  * and detaches it once it has stopped.
  */
-export class JuliaSessionAttachment {
+export class SharedSessionAttachment {
 
 	/** The text of the file last attached, or tried; undefined while there is none. */
 	private attached: string | undefined;
@@ -83,7 +94,7 @@ export class JuliaSessionAttachment {
 
 	constructor(private readonly connection: DuckDBConnection, private readonly window: string | undefined) { }
 
-	/** Whether the Julia Session is attached as JuliaSession, as of the last `sync`. */
+	/** Whether the Shared Session is attached as SharedSession, as of the last `sync`. */
 	get attachedNow(): boolean {
 		return this.isAttached;
 	}
@@ -102,16 +113,16 @@ export class JuliaSessionAttachment {
 		this.attached = text;
 		this.isAttached = false;
 		try {
-			await this.connection.run(`DETACH DATABASE IF EXISTS ${JULIA_DATABASE}`);
+			await this.connection.run(`DETACH DATABASE IF EXISTS ${SHARED_DATABASE}`);
 			if (text !== undefined && fs.existsSync(QUACK) && fs.existsSync(HTTPFS)) {
-				const served: IServedJuliaSession = JSON.parse(text);
+				const served: IServedSharedSession = JSON.parse(text);
 				await this.connection.run(`LOAD ${sqlString(HTTPFS)}`);
 				await this.connection.run(`LOAD ${sqlString(QUACK)}`);
-				await this.connection.run(`ATTACH ${sqlString(served.uri)} AS ${JULIA_DATABASE} (TOKEN ${sqlString(served.token)})`);
+				await this.connection.run(`ATTACH ${sqlString(served.uri)} AS ${SHARED_DATABASE} (TOKEN ${sqlString(served.token)})`);
 				this.isAttached = true;
 			}
 		} catch (err) {
-			return `The Julia Session could not be attached as ${JULIA_DATABASE}: ${(err as Error).message}`;
+			return `The Shared Session could not be attached as ${SHARED_DATABASE}: ${(err as Error).message}`;
 		}
 		return undefined;
 	}

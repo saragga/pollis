@@ -19,7 +19,7 @@ function notebook_runcell_request(conn, params::NotebookRunCellArguments, token)
     withpath(params.filename) do
         revise()
 
-        args = (pollis_mapexpr(VERSION >= v"1.5" ? REPL.softscope : identity), Main, code, params.filename)
+        args = VERSION >= v"1.5" ? (REPL.softscope, Main, code, params.filename) : (Main, code, params.filename)
 
         result = try
             if isready(DEBUG_SESSION[])

@@ -466,22 +466,26 @@ same DuckDB engine, with its full-text search extension, \emph{fts}, and attach 
         \texttt{length(feeds)} its number of rows, and \texttt{sql("SELECT count(*) FROM \$feeds")} queries it
         again. With \ui{DuckDB SQL (Pollis)}, \texttt{CREATE TEMP TABLE feeds AS SELECT ...} makes it instead.
     \end{itemize}
-  \item \textbf{The \texttt{pollis>} mode} of the Julia REPL, for a query in the middle of Julia work:
-    \ui{Pollis REPL}, in the status bar and in the terminal's + menu, starts or shows the Julia REPL in this mode,
-    as \texttt{>} on an empty line does; then the query, ending in \texttt{;}. The result is a Tables.jl table in
-    \texttt{ans}, ready for Julia; Backspace on an empty line goes back to \texttt{julia>}. As in an SQL cell,
+  \item \textbf{The \texttt{pollis>} mode} of the Julia REPL, for a query in the middle of Julia work: type
+    \texttt{>} on an empty line, then the query, ending in \texttt{;}. The result is a Tables.jl table in
+    \texttt{ans}, ready for Julia; Backspace on an empty line goes back to \texttt{julia>}. \ui{Pollis REPL}, in the
+    status bar and in the terminal's + menu, opens \texttt{pollis>} in a terminal of its own, beside the Julia REPL
+    and on the same Julia, which it starts if need be, so that \texttt{julia>} stays at hand; its queries reach
+    Julia's variables and the Shared Session as those of the mode do, Ctrl+C stops one, and the item is filled while
+    the terminal is open. As in an SQL cell,
     \texttt{feeds := SELECT ...} keeps the result as the table \texttt{feeds} and the Julia variable
-    \texttt{feeds}. In Julia code, \texttt{sql("SELECT ...")} runs a query on the same database, and
+    \texttt{feeds}; instead of drawing it, the terminal gives its rows and columns, and \ui{Open in Table Viewer},
+    in blue under them, opens the whole table to browse with one click. In Julia code, \texttt{sql("SELECT ...")} runs a query on the same database, and
     \texttt{sql("feeds", "SELECT ...")} keeps its result as the table \texttt{feeds}.
   \item \textbf{\texttt{db = PollisDB.connect()}}, for Julia code and scripts: a DuckDB connection in
     memory, shown in the Databases view; \texttt{PollisDB.connect("sales.duckdb")} opens a file instead.
 \end{itemize}
-A Julia table goes the other way with \texttt{:=} in Julia code: \texttt{stock\_returns := (ticker = ["AAPL"],
+A Julia table goes the other way with the macro \texttt{@share}: \texttt{@share stock\_returns = (ticker = ["AAPL"],
 returns = [0.12])} binds \texttt{stock\_returns}, as \texttt{=} would, and copies it into the database of
-\texttt{sql}, where SQL reads it by its name; \texttt{publish(table, "stock\_returns")} does the same in plain
-Julia. The Julia REPL's database is \ui{Julia Session}, under \ui{User} in the Databases view. While the REPL
+\texttt{sql}, where SQL reads it by its name; \texttt{@share stock\_returns} copies it again after a change, and
+\texttt{publish(table, "stock\_returns")} does the same as a function. The Julia REPL's database is \ui{Shared Session}, under \ui{User} in the Databases view. While the REPL
 runs, the \texttt{duckdb>} terminal, the notebooks of \ui{DuckDB SQL (Pollis)} and the SQL cells of Julia notebooks
-attach it as \texttt{JuliaSession}: \texttt{SELECT * FROM JuliaSession.stock\_returns}, and \texttt{.tables} lists its tables.
+attach it as \texttt{SharedSession}: \texttt{SELECT * FROM SharedSession.stock\_returns}, and \texttt{.tables} lists its tables.
 
 \newpage
 \subhead{Connect to your own database}

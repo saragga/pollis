@@ -54,7 +54,7 @@ export interface IExtHostTerminalService extends ExtHostTerminalServiceShape, ID
 	attachPtyToTerminal(id: number, pty: vscode.Pseudoterminal): void;
 	getDefaultShell(useAutomationShell: boolean): string;
 	getDefaultShellArgs(useAutomationShell: boolean): string[] | string;
-	registerLinkProvider(provider: vscode.TerminalLinkProvider): vscode.Disposable;
+	registerLinkProvider(provider: vscode.TerminalLinkProvider, oneClick?: boolean): vscode.Disposable;
 	registerProfileProvider(extension: IExtensionDescription, id: string, provider: vscode.TerminalProfileProvider): vscode.Disposable;
 	registerTerminalQuickFixProvider(id: string, extensionId: string, provider: vscode.TerminalQuickFixProvider): vscode.Disposable;
 	getEnvironmentVariableCollection(extension: IExtensionDescription): IEnvironmentVariableCollection;
@@ -425,7 +425,8 @@ export abstract class BaseExtHostTerminalService extends Disposable implements I
 	private readonly _lastQuickFixCommands: MutableDisposable<IDisposable> = this._register(new MutableDisposable());
 
 	private readonly _bufferer: TerminalDataBufferer;
-	private readonly _linkProviders: Set<vscode.TerminalLinkProvider> = new Set();
+	/** POLLIS: each link provider, and whether its links open with one click, as those of Pollis' own extensions do. */
+	private readonly _linkProviders: Map<vscode.TerminalLinkProvider, boolean> = new Map();
 	private readonly _completionProviders: Map<string, vscode.TerminalCompletionProvider<vscode.TerminalCompletionItem>> = new Map();
 	private readonly _profileProviders: Map<string, { provider: vscode.TerminalProfileProvider; extension: IExtensionDescription }> = new Map();
 	private readonly _quickFixProviders: Map<string, vscode.TerminalQuickFixProvider> = new Map();
@@ -885,8 +886,8 @@ export abstract class BaseExtHostTerminalService extends Disposable implements I
 		this.createTerminalFromOptions(profileOptions, options);
 	}
 
-	public registerLinkProvider(provider: vscode.TerminalLinkProvider): vscode.Disposable {
-		this._linkProviders.add(provider);
+	public registerLinkProvider(provider: vscode.TerminalLinkProvider, oneClick: boolean = false): vscode.Disposable {
+		this._linkProviders.set(provider, oneClick);
 		if (this._linkProviders.size === 1) {
 			this._proxy.$startLinkProvider();
 		}
@@ -917,7 +918,7 @@ export abstract class BaseExtHostTerminalService extends Disposable implements I
 		const context: vscode.TerminalLinkContext = { terminal: terminal.value, line };
 		const promises: vscode.ProviderResult<{ provider: vscode.TerminalLinkProvider; links: vscode.TerminalLink[] }>[] = [];
 
-		for (const provider of this._linkProviders) {
+		for (const provider of this._linkProviders.keys()) {
 			promises.push(Promises.withAsyncBody(async r => {
 				cancellationSource.token.onCancellationRequested(() => r({ provider, links: [] }));
 				const links = (await provider.provideTerminalLinks(context, cancellationSource.token)) || [];
@@ -937,11 +938,12 @@ export abstract class BaseExtHostTerminalService extends Disposable implements I
 		for (const provideResult of provideResults) {
 			if (provideResult && provideResult.links.length > 0) {
 				result.push(...provideResult.links.map(providerLink => {
-					const link = {
+					const link: ITerminalLinkDto = {
 						id: nextLinkId++,
 						startIndex: providerLink.startIndex,
 						length: providerLink.length,
-						label: providerLink.tooltip
+						label: providerLink.tooltip,
+						oneClick: this._linkProviders.get(provideResult.provider) || undefined
 					};
 					cacheLinkMap.set(link.id, {
 						provider: provideResult.provider,

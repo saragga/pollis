@@ -120,7 +120,8 @@ export class TerminalLinkDetectorAdapter extends Disposable implements ILinkProv
 			}),
 			l.type !== TerminalBuiltinLinkType.Search, // Only search is low confidence
 			l.label || this._getLabel(l.type),
-			l.type
+			l.type,
+			!!l.oneClick
 		);
 	}
 

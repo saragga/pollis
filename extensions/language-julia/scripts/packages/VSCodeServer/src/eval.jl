@@ -292,7 +292,8 @@ end
 # don't inline this so we can find it in the stacktrace
 @noinline function inlineeval(m, code, code_line, code_column, file; softscope = false)
     code = string('\n'^code_line, ' '^code_column, code)
-    return Base.invokelatest(include_string, pollis_mapexpr(softscope && VERSION >= v"1.5" ? REPL.softscope : identity), m, code, file)
+    args = softscope && VERSION >= v"1.5" ? (REPL.softscope, m, code, file) : (m, code, file)
+    return Base.invokelatest(include_string, args...)
 end
 
 """

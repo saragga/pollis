@@ -155,3 +155,12 @@
 .query-item.failed .icon {
 	color: var(--vscode-charts-red);
 }
+
+/* The hover of the Shared Session: its text, then what is attached to it, read when it shows */
+.database-hover {
+	white-space: pre-wrap;
+}
+
+.database-hover-attached {
+	margin-top: 6px;
+}

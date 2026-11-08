@@ -157,6 +157,34 @@ class ItemDelegate implements IListVirtualDelegate<DatabaseItem> {
 	}
 }
 
+/** The command of the Julia extension (pollisTerminal.ts) that says what is attached to the Shared Session. */
+const SHARED_SESSION_ATTACHED_COMMAND_ID = 'language-julia.sharedSessionAttached';
+
+/** A client of the window attached to the Shared Session, the duckdb> terminal or a notebook: its last query, and since when. */
+interface IAttachedClient {
+	readonly query: string;
+	readonly running: boolean;
+	readonly seconds: number;
+}
+
+/** What the hover of the Shared Session says of `clients`, or that the Julia REPL did not answer. */
+function describeAttached(clients: readonly IAttachedClient[] | undefined): string {
+	if (!clients) {
+		return localize('connection.shared.unknown', "What is attached could not be read from the Julia REPL.");
+	}
+	if (!clients.length) {
+		return localize('connection.shared.none', "Nothing of this window is attached to it now.");
+	}
+	const lines = [clients.length === 1
+		? localize('connection.shared.one', "Attached by 1 client: the duckdb> terminal or a notebook.")
+		: localize('connection.shared.many', "Attached by {0} clients: the duckdb> terminal and notebooks.", clients.length)];
+	for (const client of clients.filter(client => client.running)) {
+		const query = client.query.replace(/\s+/g, ' ').trim();
+		lines.push(localize('connection.shared.running', "Running for {0} s: {1}", client.seconds, query.length > 80 ? `${query.slice(0, 79)}…` : query));
+	}
+	return lines.join('\n');
+}
+
 class ItemRenderer implements ITreeRenderer<DatabaseItem, void, IItemTemplate> {
 
 	static readonly TEMPLATE_ID = 'databaseItem';
@@ -169,7 +197,21 @@ class ItemRenderer implements ITreeRenderer<DatabaseItem, void, IItemTemplate> {
 		private readonly menuService: IMenuService,
 		private readonly contextKeyService: IContextKeyService,
 		private readonly instantiationService: IInstantiationService,
+		private readonly commandService: ICommandService,
 	) { }
+
+	/**
+	 * The hover of the Shared Session: `text`, then what the window's DuckDB clients have attached to it, which the Julia
+	 * extension asks the REPL for each time the hover shows.
+	 */
+	private sharedSessionHover(text: string): HTMLElement {
+		const element = dom.$('.database-hover', undefined, text);
+		const attached = dom.append(element, dom.$('.database-hover-attached', undefined, localize('connection.shared.reading', "Reading what is attached...")));
+		this.commandService.executeCommand<readonly IAttachedClient[]>(SHARED_SESSION_ATTACHED_COMMAND_ID).then(
+			clients => attached.textContent = describeAttached(clients),
+			() => attached.textContent = describeAttached(undefined));
+		return element;
+	}
 
 	renderTemplate(container: HTMLElement): IItemTemplate {
 		const row = dom.append(container, dom.$('.database-item'));
@@ -243,6 +285,8 @@ class ItemRenderer implements ITreeRenderer<DatabaseItem, void, IItemTemplate> {
 					hover = session
 						? localize('connection.hover.connected', "{0} ({1})\n{2}\nConnected in the Julia REPL as {3}. Click to browse its tables.", name, driver, describeConnection(profile), profile.variable)
 						: localize('connection.hover', "{0} ({1})\n{2}\nNot connected. Click to connect in the Julia REPL as {3}.", name, driver, describeConnection(profile), profile.variable);
+				} else if (session?.shared) {
+					hover = localize('connection.shared.hover', "{0} (DuckDB)\nThe database of the Julia REPL, in memory: pollis>, the Pollis REPL terminal, sql and @share use it, and the duckdb> terminal and the notebooks of this window attach it as SharedSession. Its tables are lost when the Julia REPL restarts. Click to browse them.", name);
 				} else if (session) {
 					hover = localize('connection.hover.shown', "{0} ({1})\nShown with PollisDB.show in the Julia REPL. Click to browse its tables.", name, engineLabel(session.engine));
 				}
@@ -277,7 +321,10 @@ class ItemRenderer implements ITreeRenderer<DatabaseItem, void, IItemTemplate> {
 		template.icon.className = `icon ${ThemeIcon.asClassName(icon)}`;
 		template.name.textContent = name;
 		template.description.textContent = description;
-		if (hover) {
+		if (hover && item.kind === 'connection' && item.session?.shared) {
+			const text = hover;
+			template.disposables.add(this.hoverService.setupDelayedHover(template.row, () => ({ content: this.sharedSessionHover(text) })));
+		} else if (hover) {
 			const content = update
 				? new MarkdownString().appendText(hover).appendText('\n').appendText(localize('connection.updated.hover', "Updated from GitHub on {0}:", new Date(update.date).toLocaleDateString(language, { day: 'numeric', month: 'long', year: 'numeric' }))).appendText(' ').appendLink(update.url, localize('connection.whatChanged', "What Changed"))
 				: hover;
@@ -420,7 +467,7 @@ export abstract class DatabaseConnectionsView extends ViewPane {
 			'DatabaseConnections',
 			this.treeContainer,
 			new ItemDelegate(),
-			[new ItemRenderer(item => this.itemContext(item), name => this.updates.get(name), this.hoverService, this.menuService, this.contextKeyService, this.instantiationService)],
+			[new ItemRenderer(item => this.itemContext(item), name => this.updates.get(name), this.hoverService, this.menuService, this.contextKeyService, this.instantiationService, this.commandService)],
 			{
 				identityProvider: { getId: itemId },
 				supportDynamicHeights: true,

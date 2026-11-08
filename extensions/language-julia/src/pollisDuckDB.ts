@@ -62,7 +62,7 @@ async function install(appRoot: string) {
     if (!folder) {
         return
     }
-    // The extensions that come with Pollis: fts, full-text search, and quack, which serves the Julia Session's database,
+    // The extensions that come with Pollis: fts, full-text search, and quack, which serves the Shared Session's database,
     // with httpfs, on which quack runs.
     // In a development build, `npm run gulp fetch-duckdb-extensions` fetches them.
     const extensions = DUCKDB_EXTENSIONS.map(name => ({

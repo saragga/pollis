@@ -19,7 +19,7 @@ already loaded; only `build`, `connect` and `sql` load DuckDB themselves. `conne
 built-in databases attached and full-text search (fts) loaded; `sql` runs a query on such a
 connection, and is what the `pollis>` mode of the REPL (`>` at the start of a line) runs, and SQL cells of Julia notebooks
 (`cell`); it is exported, so that `sql("...")` needs no `PollisDB.` in the REPL and in notebooks. `publish`, exported
-too, copies a Julia table into that connection, which `name := table` does in Julia code (`share`). DuckDB is built into Pollis: `install()` adds it,
+too, copies a Julia table into that connection, which `@share name = table` does too. DuckDB is built into Pollis: `install()` adds it,
 once, to a Julia environment of Pollis' own (`ENVIRONMENT`), which PollisDB puts on the load path
 so that `using DuckDB` works in any project without touching its Project.toml. That DuckDB is Pollis'
 fork of DuckDB.jl (`DUCKDB_URL`), which brings no engine of its own: it loads the one Pollis ships, which
@@ -32,9 +32,10 @@ program, such as a database extension, open it read-only, side by side.
 module PollisDB
 
 using UUIDs: UUID, uuid4
-using Dates: now, UTC
+using Dates: DateTime, now, UTC
+import Sockets
 
-export sql, publish
+export sql, publish, @share
 
 const DBINTERFACE = Base.PkgId(UUID("a10d1c49-ce27-4219-8d33-6db1a4562965"), "DBInterface")
 const DUCKDB = Base.PkgId(UUID("d2f5444f-75bc-4fdf-ac35-56f514c445e1"), "DuckDB")
@@ -352,6 +353,8 @@ end
 """Write the snapshot of connection `id`, or of its introspection error. Written atomically."""
 function write_snapshot(id::AbstractString, entry::Entry)
     snapshot = Dict{String,Any}("id" => id, "name" => entry.name, "engine" => engine(entry.con), "updated" => string(now()), "pid" => getpid(), "window" => WINDOW)
+    # The Shared Session, whose hover in the Databases view says what is attached to it
+    entry.con === SQL_CONNECTION[] && (snapshot["shared"] = true)
     try
         snapshot["schemas"] = introspect(entry.con; opened = entry.opened)
     catch err
@@ -438,7 +441,7 @@ function disconnect(id::AbstractString)
     entry = pop!(CONNECTIONS, id, nothing)
     entry === nothing && return nothing
     if entry.con === SQL_CONNECTION[]
-        # The Julia Session is closed, and no longer served; the next query opens another
+        # The Shared Session is closed, and no longer served; the next query opens another
         unserve()
         SQL_CONNECTION[] = nothing
     end
@@ -637,7 +640,7 @@ function query_tables(query::AbstractString; tables...)
     end
 end
 
-"""The connection of the REPL, Julia Session in the Databases view: the `pollis>` mode, `sql` and `publish` share it."""
+"""The connection of the REPL, Shared Session in the Databases view: the `pollis>` mode, `sql` and `publish` share it."""
 const SQL_CONNECTION = Ref{Any}(nothing)
 
 """Whether this Julia is the kernel of a notebook, whose connection the Databases view does not show."""
@@ -649,14 +652,24 @@ const CHANGING = r"\b(create|drop|alter|attach|detach|insert|update|delete|copy|
 """How many queries of `sql` have changed tables: a `Table` reads its rows again when the count has moved since."""
 const GENERATION = Ref(0)
 
-"""The connection of the REPL, Julia Session, opened now if it is not yet, and served to the window's DuckDB."""
+"""The connection of the REPL, Shared Session, opened now if it is not yet, and served to the window's DuckDB."""
 function sql_connection()
-    if SQL_CONNECTION[] === nothing
-        SQL_CONNECTION[] = connect(; name = "Julia Session", show = !NOTEBOOK[])
-        NOTEBOOK[] || serve(SQL_CONNECTION[])
+    return lock(SQL_LOCK) do
+        if SQL_CONNECTION[] === nothing
+            SQL_CONNECTION[] = connect(; show = false)
+            # Shown once it is the Shared Session, so that its snapshot says so
+            NOTEBOOK[] || show(SQL_CONNECTION[]; name = "Shared Session")
+            NOTEBOOK[] || serve(SQL_CONNECTION[])
+        end
+        SQL_CONNECTION[]
     end
-    return SQL_CONNECTION[]
 end
+
+"""
+One query at a time on the Shared Session, which the REPL and the Pollis REPL terminal, on another thread, both use;
+reentrant, so that a query may run another, as `publish` runs `sql`.
+"""
+const SQL_LOCK = ReentrantLock()
 
 """The quack extension of DuckDB, its client and server, which Pollis ships with fts."""
 const QUACK = joinpath(DUCKDB_HOME, "quack.duckdb_extension")
@@ -664,16 +677,16 @@ const QUACK = joinpath(DUCKDB_HOME, "quack.duckdb_extension")
 const HTTPFS = joinpath(DUCKDB_HOME, "httpfs.duckdb_extension")
 
 """
-Where the Julia Session's database is served: its address and token, in a file only the user can read, one for each
-window, from which the duckdb> terminal and the DuckDB notebooks of the window attach it as `JuliaSession`.
+Where the Shared Session's database is served: its address and token, in a file only the user can read, one for each
+window, from which the duckdb> terminal and the DuckDB notebooks of the window attach it as `SharedSession`.
 """
 const SERVED = joinpath(DUCKDB_HOME, "served", isempty(WINDOW) ? "julia.json" : "julia.$WINDOW.json")
 
-"""The ports tried, in turn, for the Julia Session's database: quack's own, 9494, and the next ones."""
+"""The ports tried, in turn, for the Shared Session's database: quack's own, 9494, and the next ones."""
 const QUACK_PORTS = 9494:9593
 
 """
-Serve the database of `con`, the Julia Session, with quack on localhost, on the first free port of `QUACK_PORTS`, with
+Serve the database of `con`, the Shared Session, with quack on localhost, on the first free port of `QUACK_PORTS`, with
 a token made now, and write both to `SERVED`. Without quack, or without a free port, the database is not served.
 """
 function serve(con)
@@ -693,34 +706,35 @@ function serve(con)
                     false
                 end
                 served || continue
-                mkpath(dirname(SERVED))
-                temporary = "$SERVED.$(getpid()).tmp"
-                touch(temporary)
-                chmod(temporary, 0o600)
-                open(io -> json(io, Dict{String,Any}("uri" => uri, "token" => token, "pid" => getpid())), temporary, "w")
-                mv(temporary, SERVED; force = true)
+                write_private(SERVED, Dict{String,Any}("uri" => uri, "token" => token, "pid" => getpid()))
                 return nothing
             end
-            @debug "Pollis: no free port for the Julia Session's database" ports = QUACK_PORTS
+            @debug "Pollis: no free port for the Shared Session's database" ports = QUACK_PORTS
         end
     catch err
-        @debug "Pollis: the Julia Session's database is not served" exception = err
+        @debug "Pollis: the Shared Session's database is not served" exception = err
     end
     return nothing
 end
 
-"""The name under which a notebook's connection attaches the Julia Session of the window's REPL."""
-const JULIA_DATABASE = "JuliaSession"
+"""The name under which a notebook's connection attaches the Shared Session of the window's REPL."""
+const SHARED_DATABASE = "SharedSession"
 
 """
-The notebook's connection that last attached the Julia Session, or tried to, and the text of `SERVED` it read then,
+The way round the error of a query that reads a table of the attached Shared Session twice, a self-join say: quack
+reads such a table only once in a query (duckdbPollis.ts, withHint, says the same in duckdb> and DuckDB SQL notebooks).
+"""
+const STREAMING_SCANS_HINT = "A table of $SHARED_DATABASE is read only once in a query. Name it once, WITH t AS MATERIALIZED (SELECT * FROM $SHARED_DATABASE.t) SELECT ... FROM t a JOIN t b ..., or copy it first, CREATE TEMP TABLE t AS SELECT * FROM $SHARED_DATABASE.t, then use t."
+
+"""
+The notebook's connection that last attached the Shared Session, or tried to, and the text of `SERVED` it read then,
 `nothing` while there was none.
 """
 const ATTACHED = Ref{Tuple{Any,Union{Nothing,String}}}((nothing, nothing))
 
 """
-Keep `con`, the connection of a notebook, attached to the Julia Session that the window's REPL serves, as
-`JuliaSession`: attached again when `SERVED` changes, a new REPL say, and detached when it is gone. Should the attach
+Keep `con`, the connection of a notebook, attached to the Shared Session that the window's REPL serves, as
+`SharedSession`: attached again when `SERVED` changes, a new REPL say, and detached when it is gone. Should the attach
 fail, a warning says why, once for each version of `SERVED`.
 """
 function attach_session(con)
@@ -736,22 +750,236 @@ function attach_session(con)
     quoted(s) = "'" * replace(s, "'" => "''") * "'"
     try
         Base.invokelatest() do
-            DBInterface.execute(con, "DETACH DATABASE IF EXISTS $JULIA_DATABASE")
+            DBInterface.execute(con, "DETACH DATABASE IF EXISTS $SHARED_DATABASE")
             (text === nothing || !isfile(QUACK) || !isfile(HTTPFS)) && return nothing
             uri = match(r"\"uri\":\"(?<uri>[^\"]*)\"", text)
             token = match(r"\"token\":\"(?<token>[^\"]*)\"", text)
             (uri === nothing || token === nothing) && error("$SERVED holds no address and token")
             DBInterface.execute(con, "LOAD $(quoted(HTTPFS))")
             DBInterface.execute(con, "LOAD $(quoted(QUACK))")
-            DBInterface.execute(con, "ATTACH $(quoted(uri[:uri])) AS $JULIA_DATABASE (TOKEN $(quoted(token[:token])))")
+            DBInterface.execute(con, "ATTACH $(quoted(uri[:uri])) AS $SHARED_DATABASE (TOKEN $(quoted(token[:token])))")
         end
     catch err
-        @warn "The Julia Session of the REPL could not be attached as $JULIA_DATABASE: $(sprint(showerror, err))"
+        @warn "The Shared Session of the REPL could not be attached as $SHARED_DATABASE: $(sprint(showerror, err))"
     end
     return nothing
 end
 
-"""Remove `SERVED`, if this Julia wrote it: the Julia Session's database is no longer served."""
+"""Write `values` to `path` as JSON, in a file only the user can read, whole or not at all."""
+function write_private(path::AbstractString, values::AbstractDict)
+    mkpath(dirname(path))
+    temporary = "$path.$(getpid()).tmp"
+    touch(temporary)
+    chmod(temporary, 0o600)
+    open(io -> json(io, values), temporary, "w")
+    mv(temporary, path; force = true)
+    return nothing
+end
+
+"""
+Where the window's Pollis REPL terminal finds this Julia: the socket it connects to and the token it sends first, in
+a file only the user can read, which goes when Julia exits.
+"""
+const TERMINAL = joinpath(dirname(SERVED), isempty(WINDOW) ? "pollis.json" : "pollis.$WINDOW.json")
+
+"""The server of `serve_terminal`, while it listens."""
+const TERMINAL_SERVER = Ref{Any}(nothing)
+
+"""
+The socket of the Pollis REPL terminal: a named pipe on Windows; elsewhere a file beside `TERMINAL`, only the user's,
+or in the temporary folder when that path is too long for a socket.
+"""
+function terminal_socket()
+    name = isempty(WINDOW) ? "pollis.$(getpid())" : "pollis.$WINDOW"
+    Sys.iswindows() && return "\\\\.\\pipe\\$name"
+    path = joinpath(dirname(TERMINAL), "$name.sock")
+    return sizeof(path) < 100 ? path : joinpath(tempdir(), "$name.sock")
+end
+
+"""
+Listen for the Pollis REPL terminal of the window, on `terminal_socket()`, and write `TERMINAL`. Each terminal that
+connects, with the token, is served by `serve_client`, on threads of their own, so that it answers while the REPL
+runs Julia code.
+"""
+function serve_terminal()
+    TERMINAL_SERVER[] === nothing || return nothing
+    try
+        path = terminal_socket()
+        Sys.iswindows() || rm(path; force = true)
+        mkpath(dirname(TERMINAL))
+        server = Sockets.listen(path)
+        Sys.iswindows() || chmod(path, 0o600)
+        TERMINAL_SERVER[] = server
+        token = replace(string(uuid4()), "-" => "")
+        write_private(TERMINAL, Dict{String,Any}("socket" => path, "token" => token, "pid" => getpid()))
+        Threads.@spawn while isopen(server)
+            client = try
+                Sockets.accept(server)
+            catch
+                break
+            end
+            Threads.@spawn serve_client(client, token)
+        end
+    catch err
+        @debug "Pollis: the Pollis REPL terminal cannot reach this Julia" exception = err
+    end
+    return nothing
+end
+
+"""Stop listening for the Pollis REPL terminal, and remove `TERMINAL` and the socket, if this Julia made them."""
+function unserve_terminal()
+    server = TERMINAL_SERVER[]
+    server === nothing && return nothing
+    TERMINAL_SERVER[] = nothing
+    try
+        close(server)
+        isfile(TERMINAL) && occursin("\"pid\":$(getpid())", read(TERMINAL, String)) && rm(TERMINAL; force = true)
+        Sys.iswindows() || rm(terminal_socket(); force = true)
+    catch
+    end
+    return nothing
+end
+
+"""
+Serve a Pollis REPL terminal on `io`, which sends `token` first. Requests are lines, with the text they carry after
+them: `query <width> <bytes>` runs a query as the pollis> mode does, `complete <bytes>` asks whether a query ends,
+`browse <bytes>` opens a table of the Shared Session in the Table Viewer, `attached` asks what the window's DuckDB
+clients have attached to it (`attached`), and `interrupt` stops the query running.
+Answers are `<kind> <bytes>` and their text: `ready`, once the Shared Session is open; `ok` or `error`, with the
+result drawn in `width` characters or the error; `complete` or `incomplete`.
+"""
+function serve_client(io, token::AbstractString)
+    running = Ref{Any}(nothing)
+    writing = ReentrantLock()
+    reply(kind, text = "") = lock(writing) do
+        data = codeunits(text)
+        write(io, "$kind $(length(data))\n")
+        write(io, data)
+        flush(io)
+    end
+    try
+        readline(io) == "token $token" || return nothing
+        sql_connection()
+        reply("ready")
+        while isopen(io) && !eof(io)
+            header = split(readline(io))
+            isempty(header) && continue
+            if header[1] == "interrupt"
+                interrupt_terminal(running[])
+            elseif header[1] == "complete" && length(header) == 2
+                reply(complete(String(read(io, parse(Int, header[2])))) ? "complete" : "incomplete")
+            elseif header[1] == "query" && length(header) == 3
+                width = parse(Int, header[2])
+                query = String(read(io, parse(Int, header[3])))
+                # In the latest world, which knows DuckDB, loaded after this task began: its errors' showerror too
+                running[] = Threads.@spawn reply(Base.invokelatest(terminal_query, query, width)...)
+            elseif header[1] == "browse" && length(header) == 2
+                name = String(read(io, parse(Int, header[2])))
+                Threads.@spawn reply(Base.invokelatest(terminal_browse, name)...)
+            elseif header[1] == "attached"
+                Threads.@spawn reply(Base.invokelatest(attached)...)
+            end
+        end
+    catch err
+        @debug "Pollis: a Pollis REPL terminal was served until an error" exception = err
+    finally
+        close(io)
+    end
+    return nothing
+end
+
+"""
+Run `query` for the Pollis REPL terminal, as the pollis> mode runs it, and log it in the History of the Databases view
+without its `name :=`; return `("ok", the result drawn in width characters)` or `("error", the error)`.
+"""
+function terminal_query(query::AbstractString, width::Integer)
+    begun = now(UTC)
+    started = time()
+    logged = String[]
+    for statement in statements(query)
+        m = match(ASSIGNMENT, statement)
+        push!(logged, strip(m === nothing ? statement : string(m[:lead], m[:query])))
+    end
+    result = nothing
+    failure = nothing
+    try
+        result = Base.invokelatest(pollis_mode, query)
+    catch err
+        failure = error_text(err)
+    end
+    rows = result isa Result ? nrows(result.columns) : nothing
+    log_cell(join(logged, ";\n") * ";", begun, time() - started, rows, failure, ""; source = "pollis")
+    failure === nothing || return ("error", failure)
+    try
+        context = (:displaysize => (40, max(width, 20)), :color => true)
+        return ("ok", sprint(io -> Base.show(IOContext(io, context...), MIME"text/plain"(), kept(result))))
+    catch err
+        return ("error", error_text(err))
+    end
+end
+
+"""
+What is attached to the Shared Session through the quack extension, for its hover in the Databases view: `("ok", json)`
+with one entry for each client attached, the duckdb> terminal or a notebook, `query`, its last query, `running`, and
+`seconds` since it began; or `("error", the error)`. Read on a connection of its own, so that it never waits for a
+query of the REPL.
+"""
+function attached()
+    con = SQL_CONNECTION[]
+    con === nothing && return ("ok", "[]")
+    DBInterface, Tables = loaded(DBINTERFACE), loaded(TABLES)
+    try
+        rows = Base.invokelatest() do
+            own = DBInterface.connect(con)
+            try
+                Tables.columntable(DBInterface.execute(own, "SELECT query, state, query_started_at FROM quack_active_connections()"))
+            finally
+                DBInterface.close!(own)
+            end
+        end
+        clients = [Dict{String,Any}("query" => coalesce(q, ""), "running" => isequal(s, "active"),
+            "seconds" => started isa DateTime ? max(0, round(Int, (now() - started).value / 1000)) : 0)
+            for (q, s, started) in zip(rows.query, rows.state, rows.query_started_at)]
+        return ("ok", sprint(json, clients))
+    catch err
+        return ("error", error_text(err))
+    end
+end
+
+"""Open the table `name` of the Shared Session in the Table Viewer, for the link under a table that `name :=` keeps."""
+function terminal_browse(name::AbstractString)
+    try
+        lock(() -> browse(sql_connection(), identifier(name); title = name), SQL_LOCK)
+        return ("ok", "")
+    catch err
+        return ("error", error_text(err))
+    end
+end
+
+"""What went wrong, as the terminal says it."""
+error_text(err) = sprint(showerror, err)
+
+"""
+Stop `task`, the query of a Pollis REPL terminal, with DuckDB's interrupt, while it holds the Shared Session: an
+interrupt stops whatever the connection runs, so not a query of the REPL that the terminal's query waits for.
+"""
+function interrupt_terminal(task)
+    (task === nothing || istaskdone(task)) && return nothing
+    con = SQL_CONNECTION[]
+    con === nothing && return nothing
+    owner = try
+        getfield(SQL_LOCK, :locked_by)
+    catch
+        nothing
+    end
+    owner === task || return nothing
+    DuckDB = loaded(DUCKDB)
+    handle = con isa DuckDB.DB ? con.main_connection.handle : con.handle
+    Base.invokelatest(DuckDB.duckdb_interrupt, handle)
+    return nothing
+end
+
+"""Remove `SERVED`, if this Julia wrote it: the Shared Session's database is no longer served."""
 function unserve()
     try
         isfile(SERVED) && occursin("\"pid\":$(getpid())", read(SERVED, String)) && rm(SERVED; force = true)
@@ -761,7 +989,7 @@ function unserve()
 end
 
 """
-    sql(query; con = <Julia Session>)
+    sql(query; con = <Shared Session>)
 
 Run `query`, one or more statements separated by `;`, and return the result of the last one as a
 `Result`, a Tables.jl table. Without `con`, this is what the `pollis>` mode of the REPL runs (type `>` at
@@ -771,14 +999,14 @@ first query.
 function sql(query::AbstractString; con = nothing)
     if con === nothing
         con = sql_connection()
-        # In a notebook, the REPL's tables are read and written as JuliaSession.name.
+        # In a notebook, the REPL's tables are read and written as SharedSession.name.
         NOTEBOOK[] && attach_session(con)
     end
     DBInterface, Tables = loaded(DBINTERFACE), loaded(TABLES)
     DuckDB = get(() -> Base.require(DUCKDB), Base.loaded_modules, DUCKDB)
     tables_interface(Tables)
     started = time()
-    columns = Base.invokelatest() do
+    run() = Base.invokelatest() do
         result = nothing
         # DBInterface.execute runs one statement at a time; a PRAGMA such as create_fts_index runs several, which
         # only DuckDB.query can.
@@ -788,6 +1016,7 @@ function sql(query::AbstractString; con = nothing)
         end
         result === nothing ? NamedTuple() : Tables.columntable(result)
     end
+    columns = lock(run, SQL_LOCK)
     # Statements such as CREATE TABLE change what the Databases view shows, and the rows of tables.
     if occursin(CHANGING, query)
         GENERATION[] += 1
@@ -797,7 +1026,7 @@ function sql(query::AbstractString; con = nothing)
 end
 
 """
-    sql(name, query; con = <Julia Session>)
+    sql(name, query; con = <Shared Session>)
 
 Run `query`, one statement, into the table `name` of the connection's database in memory, made again if it is there,
 and return it as a `Table`: Julia reads it as a Tables.jl table, and SQL takes it by its name, in an interpolation too.
@@ -1036,7 +1265,7 @@ function query_table(table::Table, query::AbstractString)
     con = getfield(table, :con)
     name = getfield(table, :name)
     try
-        return Base.invokelatest(() -> Tables.columntable(DBInterface.execute(con, query)))
+        return lock(() -> Base.invokelatest(() -> Tables.columntable(DBInterface.execute(con, query))), SQL_LOCK)
     catch
         there = try
             literal = replace(name, "'" => "''")
@@ -1098,6 +1327,31 @@ end
 
 Base.show(io::IO, ::MIME"text/html", table::Table) = html(io, grid(table))
 
+"""
+A table that `name :=` keeps, as the pollis> mode and the Pollis REPL terminal show it: its name and size, and the
+link by which the terminal opens it in the Table Viewer, there to browse all of it.
+"""
+struct Kept
+    table::Table
+end
+
+"""What the pollis> mode shows of `result`: a table that `name :=` keeps summed up, any other result as it is."""
+kept(result) = result isa Table ? Kept(result) : result
+
+function Base.show(io::IO, ::MIME"text/plain", kept::Kept)
+    table = kept.table
+    name = getfield(table, :name)
+    n = length(keys(query_table(table, "SELECT * FROM $table LIMIT 0")))
+    color = get(io, :color, false)
+    # The name in the terminal's yellow, Pollis' yellow (terminalColorRegistry.ts); the link blue and underlined, as a
+    # link is: the terminal opens it with one click (TerminalLink, oneClick)
+    shown = color ? "\e[33m$name\e[39m" : name
+    link = color ? "\e[4;34mOpen in Table Viewer\e[24;39m" : "Open in Table Viewer"
+    print(io, "Table ", shown, ", in the Shared Session and in Julia: ", rows_text(length(table)), ", ", n == 1 ? "1 column" : "$n columns")
+    print(io, "\nBrowse ", shown, ": ", link)
+    return nothing
+end
+
 """`name :=` at the start of a statement, after blanks and comments: the statement makes the table `name`."""
 const ASSIGNMENT = r"^(?<lead>(?:\s|--[^\n]*(?:\n|$)|/\*.*?\*/)*)(?<name>[A-Za-z_][A-Za-z0-9_]*)\s*:=(?<query>.*)$"s
 
@@ -1105,8 +1359,8 @@ const ASSIGNMENT = r"^(?<lead>(?:\s|--[^\n]*(?:\n|$)|/\*.*?\*/)*)(?<name>[A-Za-z
 const QUERY_LOG = joinpath(DUCKDB_HOME, "query_log.jsonl")
 
 """Add to `QUERY_LOG` the queries of an SQL cell of the notebook `file`, begun at `begun`."""
-function log_cell(query::AbstractString, begun, seconds::Real, rows, failure, file::AbstractString)
-    line = Dict{String,Any}("sql" => query, "time" => string(begun) * "Z", "ms" => round(Int, 1000 * seconds), "source" => "notebook")
+function log_cell(query::AbstractString, begun, seconds::Real, rows, failure, file::AbstractString; source::AbstractString = "notebook")
+    line = Dict{String,Any}("sql" => query, "time" => string(begun) * "Z", "ms" => round(Int, 1000 * seconds), "source" => source)
     rows === nothing || (line["rows"] = rows)
     failure === nothing || (line["error"] = failure)
     isempty(file) || (line["database"] = file)
@@ -1125,8 +1379,8 @@ end
 Run `code`, an SQL cell of a Julia notebook, on the connection of `sql`: each statement in turn, its table shown under
 the cell. A statement that starts with `name :=`, such as `feeds := SELECT * FROM PollisRSS.feeds`, makes the
 table `feeds`, as `sql("feeds", query)` does, and binds the Julia variable `feeds` to it, a `Table`. While the
-window's Julia REPL runs, its Julia Session is attached as `JuliaSession`: `SELECT * FROM JuliaSession.stock_returns`
-reads a table made in the REPL, and `CREATE TABLE JuliaSession.results AS ...` makes one there. The cell's
+window's Julia REPL runs, its Shared Session is attached as `SharedSession`: `SELECT * FROM SharedSession.stock_returns`
+reads a table made in the REPL, and `CREATE TABLE SharedSession.results AS ...` makes one there. The cell's
 statements, without their `name :=`, are logged in the History of the Databases view, with the notebook `file`.
 """
 function cell(code::AbstractString; file::AbstractString = "")
@@ -1152,7 +1406,9 @@ function cell(code::AbstractString; file::AbstractString = "")
             end
         end
     catch err
-        log_cell(join(logged, ";\n") * ";", begun, time() - started, rows, sprint(showerror, err), file)
+        message = sprint(showerror, err)
+        log_cell(join(logged, ";\n") * ";", begun, time() - started, rows, message, file)
+        occursin("Multiple streaming scans", message) && error(message, "\n", STREAMING_SCANS_HINT)
         rethrow()
     end
     log_cell(join(logged, ";\n") * ";", begun, time() - started, rows, nothing, file)
@@ -1163,15 +1419,14 @@ end
 const INCOMING = "pollis_incoming"
 
 """
-    publish(table, name; con = <Julia Session>)
+    publish(table, name; con = <Shared Session>)
 
 Copy `table`, a Tables.jl table such as a named tuple of vectors, into the table `name` of DuckDB, made again if it is
 there, and return `table`. SQL then takes it by its name, while Julia keeps `table` as it is: a change to it reaches
-DuckDB when it is published again. In Julia code that Pollis runs, from the REPL, the editor or a notebook,
-`stock_returns := table` does the same and binds `stock_returns` to `table`.
+DuckDB when it is published again. `@share stock_returns = table` does the same and binds `stock_returns` to `table`.
 
 ```julia
-stock_returns := (ticker = ["AAPL", "MSFT"], returns = [0.12, 0.08])
+@share stock_returns = (ticker = ["AAPL", "MSFT"], returns = [0.12, 0.08])
 sql("SELECT avg(returns) FROM stock_returns")
 ```
 """
@@ -1186,30 +1441,41 @@ function publish(table, name::AbstractString; con = nothing)
     Tables = loaded(TABLES)
     Base.invokelatest(Tables.istable, table) ||
         error("PollisDB: DuckDB takes tables, such as a named tuple of vectors, and $name is a $(typeof(table)); bind other values with `=`")
-    Base.invokelatest(DuckDB.register_table, con, table, INCOMING)
-    try
-        sql(name, "SELECT * FROM $(identifier(INCOMING))"; con)
-    finally
-        Base.invokelatest(DuckDB.unregister_table, con, INCOMING)
-        # The copy refreshed the Databases view while INCOMING was there; once more, without it
-        refresh()
+    lock(SQL_LOCK) do
+        Base.invokelatest(DuckDB.register_table, con, table, INCOMING)
+        try
+            sql(name, "SELECT * FROM $(identifier(INCOMING))"; con)
+        finally
+            Base.invokelatest(DuckDB.unregister_table, con, INCOMING)
+        end
     end
+    # The copy refreshed the Databases view while INCOMING was there; once more, without it
+    refresh()
     return table
 end
 
 """
-`ast`, Julia code about to run, with each `name := table` at its top level, in `begin` blocks included, made
-`name = publish(table, "name")`. Elsewhere, in a function or a loop, `:=` is left to Julia, which refuses it.
+    @share name = table
+    @share name
+
+Copy `table`, a Tables.jl table such as a named tuple of vectors, into the table `name` of the Shared Session, and
+bind the Julia variable `name` to it, as `name = publish(table, "name")` does; `@share name` copies again the table
+that `name` holds, after a change to it. SQL then takes it by its name: the `pollis>` mode, the Pollis REPL terminal,
+`sql`, and the duckdb> terminal and the notebooks of the window as `SharedSession.name`.
+
+```julia
+@share stock_returns = (ticker = ["AAPL", "MSFT"], returns = [0.12, 0.08])
+sql("SELECT avg(returns) FROM stock_returns")
+```
 """
-function share(ast)
-    ast isa Expr || return ast
-    if ast.head === :(:=) && length(ast.args) == 2 && ast.args[1] isa Symbol
-        name = ast.args[1]
-        return Expr(:(=), name, Expr(:call, GlobalRef(@__MODULE__, :publish), ast.args[2], string(name)))
-    elseif ast.head === :toplevel || ast.head === :block
-        return Expr(ast.head, map(share, ast.args)...)
+macro share(ex)
+    if ex isa Symbol
+        return :($publish($(esc(ex)), $(string(ex))))
+    elseif Meta.isexpr(ex, :(=), 2) && ex.args[1] isa Symbol
+        name = ex.args[1]
+        return :($(esc(name)) = $publish($(esc(ex.args[2])), $(string(name))))
     end
-    return ast
+    throw(ArgumentError("@share takes `name = table` or `name`, such as `@share stock_returns = (ticker = [\"AAPL\"], returns = [0.12])`"))
 end
 
 """
@@ -1238,7 +1504,7 @@ end
 """
 Add the `pollis>` mode to the REPL: `>` at the start of a line enters it, backspace on an empty line
 leaves it. A query ends with `;`; until then, Enter starts a new line. The result is shown as a table
-and is `ans` afterwards. In the history of the REPL, the mode is named `sql`, the name its queries are recorded
+and is `ans` afterwards; a table that `name :=` keeps is summed up, with a link that opens it in the Table Viewer. In the history of the REPL, the mode is named `sql`, the name its queries are recorded
 under there.
 """
 function sql_mode(repl)
@@ -1263,7 +1529,7 @@ function sql_mode(repl)
     hp.mode_mapping[:sql] = mode
     mode.hist = hp
     mode.on_done = REPL.respond(repl, mode; suppress_on_semicolon = false) do line
-        :($pollis_mode($line))
+        :($kept($pollis_mode($line)))
     end
     _, prefix_keymap = LineEdit.setup_prefix_keymap(hp, mode)
     keymaps = Dict{Any,Any}[REPL.mode_keymap(main), prefix_keymap, LineEdit.history_keymap, LineEdit.default_keymap, LineEdit.escape_defaults]
@@ -1284,53 +1550,25 @@ function sql_mode(repl)
     end)
     main.keymap_dict = LineEdit.keymap_merge(main.keymap_dict, enter)
     # The code Pollis sends follows TO_JULIA, which takes every other mode to julia>, whose paste runs it; what is
-    # typed in that mode stays there.
+    # typed in that mode stays there. julia> binds it too, to nothing, so that none of its keys reach the line.
     to_julia = Dict{Any,Any}(TO_JULIA => function (s, args...)
         LineEdit.mode(s) === main && return nothing
         return LineEdit.transition(s, main)
     end)
     for other in repl.interface.modes
-        other isa LineEdit.Prompt && other !== main && (other.keymap_dict = LineEdit.keymap_merge(other.keymap_dict, to_julia))
+        other isa LineEdit.Prompt && (other.keymap_dict = LineEdit.keymap_merge(other.keymap_dict, to_julia))
     end
-    # Pollis REPL, in the status bar and the terminal's menu, sends TO_POLLIS to a running REPL; what is typed in the
-    # mode it leaves stays there.
-    to_pollis = Dict{Any,Any}(TO_POLLIS => function (s, args...)
-        LineEdit.mode(s) === mode && return nothing
-        return LineEdit.transition(s, mode)
-    end)
-    for other in repl.interface.modes
-        other isa LineEdit.Prompt && other !== mode && (other.keymap_dict = LineEdit.keymap_merge(other.keymap_dict, to_pollis))
-    end
-    get(ENV, "POLLIS_REPL_START", "") == "pollis" && start_in_pollis(repl, main, mode)
+    # The Pollis REPL terminal reaches this Julia through a socket of its own.
+    serve_terminal()
     return nothing
 end
 
 """
-The keys that come before the code Pollis sends to the REPL, `ESC [ 6 9 ~`, which `sql_mode` binds in every mode
-but julia> to going there. A Julia that does not bind them ignores them, as all keys `ESC [ 6` and two more.
+The keys that come before the code Pollis sends to the REPL, `ESC [ 6 9 ~`, which `sql_mode` binds in every mode:
+to going to julia>, and in julia> to nothing. A Julia that does not bind them ignores them, as all keys `ESC [ 6`
+and two more.
 """
 const TO_JULIA = "\e[69~"
-
-"""The keys by which Pollis REPL takes a running REPL to pollis>, `ESC [ 6 8 ~`, ignored as `TO_JULIA` is."""
-const TO_POLLIS = "\e[68~"
-
-"""
-Go to `mode`, pollis>, once the REPL reads keys: the REPL was started by Pollis REPL, with `POLLIS_REPL_START`
-set to `pollis`, and is still at julia>, `main`.
-"""
-function start_in_pollis(repl, main, mode)
-    delete!(ENV, "POLLIS_REPL_START")
-    hasproperty(repl, :mistate) || return nothing
-    for _ in 1:100
-        repl.mistate === nothing || break
-        sleep(0.1)
-    end
-    s = repl.mistate
-    s === nothing && return nothing
-    LineEdit = parentmodule(typeof(repl)).LineEdit
-    LineEdit.mode(s) === main && LineEdit.transition(s, mode)
-    return nothing
-end
 
 """The folder of the PollisDatasets.jl package on the load path, or `nothing`."""
 function datasets_root()
@@ -2180,6 +2418,13 @@ function prune()
             (m === nothing || !alive(parse(Int, m[:pid]))) && rm(file; force = true)
         end
     end
+    # The sockets of the Pollis REPL terminals of Julias gone
+    folder = dirname(SERVED)
+    if isdir(folder)
+        for file in readdir(folder; join = true)
+            endswith(file, ".sock") && !isfile(chop(file; tail = 5) * ".json") && rm(file; force = true)
+        end
+    end
     return nothing
 end
 
@@ -2202,6 +2447,6 @@ end
 isdefined(Base, :active_repl) ? add_sql_mode(Base.active_repl) : atreplinit(add_sql_mode)
 
 # Remove the snapshots when Julia exits, so the view does not show dead connections.
-atexit(() -> (foreach(id -> rm(snapshot_path(id); force = true), keys(CONNECTIONS)); unserve()))
+atexit(() -> (foreach(id -> rm(snapshot_path(id); force = true), keys(CONNECTIONS)); unserve(); unserve_terminal()))
 
 end # module

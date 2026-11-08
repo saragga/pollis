@@ -114,6 +114,12 @@ export interface ITerminalSimpleLink {
 	 * no registered opener for this link type.
 	 */
 	activate?(text: string): void;
+
+	/**
+	 * POLLIS: whether the link opens with one click, without the modifier, its pointer shown without it too, as the
+	 * links of Pollis' own extensions do; they bring their own underline, in their colour.
+	 */
+	oneClick?: boolean;
 }
 
 export type TerminalLinkType = TerminalBuiltinLinkType | ITerminalExternalLinkType;

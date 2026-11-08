@@ -353,8 +353,8 @@ export class JuliaKernel {
             const credentialEnv = await vscode.commands
                 .executeCommand<Record<string, string>>('pollis.credentialEnv')
                 .then(e => e ?? {}, () => ({} as Record<string, string>))
-            // POLLIS: the window's id, by which PollisDB finds the Julia Session the window's REPL serves, and
-            // attaches it to the notebook's SQL as JuliaSession.
+            // POLLIS: the window's id, by which PollisDB finds the Shared Session the window's REPL serves, and
+            // attaches it to the notebook's SQL as SharedSession.
             const env = {
                 ...process.env,
                 ...getCustomEnvironmentVariables(),

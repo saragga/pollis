@@ -35,7 +35,7 @@ const PLATFORMS: Record<string, string> = {
 
 /**
  * The extensions Pollis ships, with the checksum of each one's .gz for each platform: fts, full-text search; quack,
- * which serves the Julia Session's database to the duckdb> terminal and the notebooks; and httpfs, HTTP, on which quack
+ * which serves the Shared Session's database to the duckdb> terminal and the notebooks; and httpfs, HTTP, on which quack
  * runs, loaded before it on both sides.
  */
 const EXTENSIONS: Record<string, Record<string, string>> = {

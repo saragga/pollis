@@ -2004,7 +2004,7 @@ https://github.com/duckdb/duckdb-quack
 
 Pollis ships the quack extension for DuckDB, its client and server, built by
 DuckDB for DuckDB 1.5.6 from commit 7e80f7f of duckdb-quack. Pollis uses it to
-serve the database of the Julia Session to its DuckDB terminal and notebooks,
+serve the database of the Shared Session to its DuckDB terminal and notebooks,
 on this computer only.
 
 Copyright 2018-2025 Stichting DuckDB Foundation

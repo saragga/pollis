@@ -30,7 +30,7 @@ const DUCKDB_REPL_ACTIONS_COMMAND_ID = 'pollis.databases.duckdbReplActions';
 
 /**
  * Opens the shell on an in-memory database, or on the DuckDB file `file`, and shows it, focused unless `focus` is
- * false. The shell attaches the Julia Session of this window, whose id it is given.
+ * false. The shell attaches the Shared Session of this window, whose id it is given.
  */
 async function openDuckDBTerminal(terminalService: ITerminalService, environmentService: INativeWorkbenchEnvironmentService, contextKeyService: IContextKeyService, file: string | undefined, focus = true): Promise<ITerminalInstance> {
 	const window = contextKeyService.getContextKeyValue<string>(JULIA_POLLIS_WINDOW_KEY);
