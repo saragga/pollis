@@ -449,8 +449,8 @@ same DuckDB engine, with its full-text search extension, \emph{fts}, and attach 
   \item \textbf{The \texttt{duckdb>} terminal}, for SQL alone, without starting Julia: \ui{New DuckDB
     Terminal}, at the top of the Databases view (or \ui{Databases: New DuckDB Terminal} in the Command
     Palette). It opens an empty database in memory; \texttt{.help} lists its commands, such as
-    \texttt{.tables}, and Ctrl+C stops a long query. \ui{DuckDB REPL}, in the status bar, starts it too, and
-    once it runs names its database and offers \ui{Show REPL}, \ui{Restart REPL} and \ui{Stop REPL}.
+    \texttt{.tables}, and Ctrl+C stops a long query. \ui{DuckDB REPL}, in the status bar and in the
+    terminal's + menu, starts it too, and once it runs names its database in its tooltip and offers \ui{Show REPL}, \ui{Restart REPL} and \ui{Stop REPL}.
     An SQL file (\ui{New}, then \ui{SQL File}) runs there: Ctrl+Enter, or \ui{Run in DuckDB Terminal} in its
     title bar, runs the selection or the statement at the cursor.
   \item \textbf{A notebook}, for queries kept with their results: the SQL cells of a Jupyter notebook
@@ -466,8 +466,9 @@ same DuckDB engine, with its full-text search extension, \emph{fts}, and attach 
         \texttt{length(feeds)} its number of rows, and \texttt{sql("SELECT count(*) FROM \$feeds")} queries it
         again. With \ui{DuckDB SQL (Pollis)}, \texttt{CREATE TEMP TABLE feeds AS SELECT ...} makes it instead.
     \end{itemize}
-  \item \textbf{The \texttt{pollis>} mode} of the Julia REPL, for a query in the middle of Julia work: type
-    \texttt{>} on an empty line, then the query, ending in \texttt{;}. The result is a Tables.jl table in
+  \item \textbf{The \texttt{pollis>} mode} of the Julia REPL, for a query in the middle of Julia work:
+    \ui{Pollis REPL}, in the status bar and in the terminal's + menu, starts or shows the Julia REPL in this mode,
+    as \texttt{>} on an empty line does; then the query, ending in \texttt{;}. The result is a Tables.jl table in
     \texttt{ans}, ready for Julia; Backspace on an empty line goes back to \texttt{julia>}. As in an SQL cell,
     \texttt{feeds := SELECT ...} keeps the result as the table \texttt{feeds} and the Julia variable
     \texttt{feeds}. In Julia code, \texttt{sql("SELECT ...")} runs a query on the same database, and

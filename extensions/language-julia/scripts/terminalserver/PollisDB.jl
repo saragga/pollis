@@ -1292,6 +1292,16 @@ function sql_mode(repl)
     for other in repl.interface.modes
         other isa LineEdit.Prompt && other !== main && (other.keymap_dict = LineEdit.keymap_merge(other.keymap_dict, to_julia))
     end
+    # Pollis REPL, in the status bar and the terminal's menu, sends TO_POLLIS to a running REPL; what is typed in the
+    # mode it leaves stays there.
+    to_pollis = Dict{Any,Any}(TO_POLLIS => function (s, args...)
+        LineEdit.mode(s) === mode && return nothing
+        return LineEdit.transition(s, mode)
+    end)
+    for other in repl.interface.modes
+        other isa LineEdit.Prompt && other !== mode && (other.keymap_dict = LineEdit.keymap_merge(other.keymap_dict, to_pollis))
+    end
+    get(ENV, "POLLIS_REPL_START", "") == "pollis" && start_in_pollis(repl, main, mode)
     return nothing
 end
 
@@ -1300,6 +1310,27 @@ The keys that come before the code Pollis sends to the REPL, `ESC [ 6 9 ~`, whic
 but julia> to going there. A Julia that does not bind them ignores them, as all keys `ESC [ 6` and two more.
 """
 const TO_JULIA = "\e[69~"
+
+"""The keys by which Pollis REPL takes a running REPL to pollis>, `ESC [ 6 8 ~`, ignored as `TO_JULIA` is."""
+const TO_POLLIS = "\e[68~"
+
+"""
+Go to `mode`, pollis>, once the REPL reads keys: the REPL was started by Pollis REPL, with `POLLIS_REPL_START`
+set to `pollis`, and is still at julia>, `main`.
+"""
+function start_in_pollis(repl, main, mode)
+    delete!(ENV, "POLLIS_REPL_START")
+    hasproperty(repl, :mistate) || return nothing
+    for _ in 1:100
+        repl.mistate === nothing || break
+        sleep(0.1)
+    end
+    s = repl.mistate
+    s === nothing && return nothing
+    LineEdit = parentmodule(typeof(repl)).LineEdit
+    LineEdit.mode(s) === main && LineEdit.transition(s, mode)
+    return nothing
+end
 
 """The folder of the PollisDatasets.jl package on the load path, or `nothing`."""
 function datasets_root()

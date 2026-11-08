@@ -7,7 +7,6 @@ import { Codicon } from '../../../../base/common/codicons.js';
 import { KeyCode, KeyMod } from '../../../../base/common/keyCodes.js';
 import { Disposable, DisposableMap } from '../../../../base/common/lifecycle.js';
 import { FileAccess } from '../../../../base/common/network.js';
-import { basename } from '../../../../base/common/path.js';
 import { ICodeEditorService } from '../../../../editor/browser/services/codeEditorService.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, MenuId, MenuRegistry, registerAction2 } from '../../../../platform/actions/common/actions.js';
@@ -84,6 +83,14 @@ function databaseFileOf(instance: ITerminalInstance): string | undefined {
 	return Array.isArray(args) && args.length > 1 ? args[1] : undefined;
 }
 
+// The REPLs of Pollis in the terminal's + menu, after its profiles: Julia REPL and Pollis REPL, its pollis> mode, start
+// or show the window's Julia REPL, of the Julia extension; DuckDB REPL opens a duckdb> terminal.
+MenuRegistry.appendMenuItems([
+	{ id: MenuId.TerminalNewDropdownContext, item: { command: { id: 'language-julia.startREPL', title: localize('databases.terminalMenu.julia', "Julia REPL") }, group: '2_pollis', order: 1 } },
+	{ id: MenuId.TerminalNewDropdownContext, item: { command: { id: 'language-julia.startPollisREPL', title: localize('databases.terminalMenu.pollis', "Pollis REPL") }, group: '2_pollis', order: 2 } },
+	{ id: MenuId.TerminalNewDropdownContext, item: { command: { id: 'pollis.databases.newDuckDBTerminal', title: localize('databases.terminalMenu.duckdb', "DuckDB REPL") }, group: '2_pollis', order: 3 } },
+]);
+
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
@@ -104,7 +111,7 @@ registerAction2(class extends Action2 {
 
 /**
  * The DuckDB REPL item of the status bar, after those of the Julia REPL: it starts the duckdb> shell when none
- * is open, and otherwise names the database of the shell used last and offers to show, restart or stop it.
+ * is open, and otherwise names in its tooltip the database of the shell used last and offers to show, restart or stop it.
  */
 class DuckDBReplStatus extends Disposable implements IWorkbenchContribution {
 	static readonly ID = 'workbench.contrib.pollisDuckDBReplStatus';
@@ -175,9 +182,9 @@ class DuckDBReplStatus extends Disposable implements IWorkbenchContribution {
 			const text = localize('databases.duckdbRepl.status.idle', "DuckDB REPL");
 			return { name, text: `$(circle-outline) ${text}`, ariaLabel: text, tooltip: localize('databases.duckdbRepl.status.start', "Start the DuckDB REPL"), command: DUCKDB_REPL_ACTIONS_COMMAND_ID };
 		}
+		// The database is in the tooltip, as the Julia REPL's threads are, so that the REPLs' items stay short.
 		const file = databaseFileOf(shell);
-		const database = file ? basename(file) : localize('databases.duckdbRepl.status.memory', "memory");
-		const text = localize('databases.duckdbRepl.status.running', "DuckDB REPL · {0}", database);
+		const text = name;
 		const tooltip = file
 			? localize('databases.duckdbRepl.status.runningFileTooltip', "DuckDB REPL running on {0}: click for actions (show / restart / stop)", file)
 			: localize('databases.duckdbRepl.status.runningTooltip', "DuckDB REPL running on an in-memory database: click for actions (show / restart / stop)");

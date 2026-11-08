@@ -90,6 +90,10 @@
                 "title": "Julia: Start REPL"
             },
             {
+                "command": "language-julia.startPollisREPL",
+                "title": "Julia: Start Pollis REPL"
+            },
+            {
                 "command": "language-julia.startREPLWithVersion",
                 "title": "Julia: Start REPL with specific version"
             },

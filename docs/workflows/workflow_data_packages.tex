@@ -502,8 +502,16 @@ the \file{pollis>} mode, \file{sql()}, an SQL cell under Julia & the Julia REPL,
 The \file{pollis>} mode and \file{sql()} share the connection of the REPL, Julia Session in the Databases view, so a
 table one makes, the other sees. The Julia of a notebook has a connection of its own, which the Databases view does not
 show. Two databases in memory never see each other, a table made in the \file{duckdb>} terminal is not there in a
-notebook, with one exception: the Julia Session, which the \file{duckdb>} terminal and DuckDB SQL (Pollis) attach
-(\S\ref{sec:julia-session}).
+notebook, with one exception: the Julia Session, which the \file{duckdb>} terminal, DuckDB SQL (Pollis) and Julia
+notebooks attach (\S\ref{sec:julia-session}).
+
+Pollis REPL, in the status bar between Julia REPL and DuckDB REPL and in the terminal's + menu with both, shows the
+Julia REPL in the \file{pollis>} mode. To a running REPL, it sends keys of no other use, ESC [ 6 8 \textasciitilde, which
+PollisDB binds in every other mode to going to \file{pollis>}; a REPL it starts is given \file{POLLIS_REPL_START=pollis},
+and goes there once the mode is set up (\file{PollisDB.start_in_pollis}). The code Pollis runs in the REPL, such as
+Open in Table Viewer, comes after ESC [ 6 9 \textasciitilde, bound to going to \file{julia>}. A Julia without PollisDB
+ignores both, as it does any keys ESC [ 6 and two more. The three items keep to their names: the Julia REPL's threads
+and the database of the \file{duckdb>} terminal are in their tooltips.
 
 \subsection{From SQL to Julia: \texorpdfstring{\file{PollisDB.Table}}{PollisDB.Table}}
 In an SQL cell of a Julia notebook, and in the \file{pollis>} mode, a statement that starts with a name and \file{:=}
