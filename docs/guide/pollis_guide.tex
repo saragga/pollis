@@ -479,8 +479,8 @@ A Julia table goes the other way with \texttt{:=} in Julia code: \texttt{stock\_
 returns = [0.12])} binds \texttt{stock\_returns}, as \texttt{=} would, and copies it into the database of
 \texttt{sql}, where SQL reads it by its name; \texttt{publish(table, "stock\_returns")} does the same in plain
 Julia. The Julia REPL's database is \ui{Julia Session}, under \ui{User} in the Databases view. While the REPL
-runs, the \texttt{duckdb>} terminal and the notebooks of \ui{DuckDB SQL (Pollis)} attach it as
-\texttt{JuliaSession}: \texttt{SELECT * FROM JuliaSession.stock\_returns}, and \texttt{.tables} lists its tables.
+runs, the \texttt{duckdb>} terminal, the notebooks of \ui{DuckDB SQL (Pollis)} and the SQL cells of Julia notebooks
+attach it as \texttt{JuliaSession}: \texttt{SELECT * FROM JuliaSession.stock\_returns}, and \texttt{.tables} lists its tables.
 
 \newpage
 \subhead{Connect to your own database}

@@ -709,6 +709,48 @@ function serve(con)
     return nothing
 end
 
+"""The name under which a notebook's connection attaches the Julia Session of the window's REPL."""
+const JULIA_DATABASE = "JuliaSession"
+
+"""
+The notebook's connection that last attached the Julia Session, or tried to, and the text of `SERVED` it read then,
+`nothing` while there was none.
+"""
+const ATTACHED = Ref{Tuple{Any,Union{Nothing,String}}}((nothing, nothing))
+
+"""
+Keep `con`, the connection of a notebook, attached to the Julia Session that the window's REPL serves, as
+`JuliaSession`: attached again when `SERVED` changes, a new REPL say, and detached when it is gone. Should the attach
+fail, a warning says why, once for each version of `SERVED`.
+"""
+function attach_session(con)
+    text = try
+        isfile(SERVED) ? read(SERVED, String) : nothing
+    catch
+        nothing
+    end
+    last_con, last_text = ATTACHED[]
+    last_con === con && last_text == text && return nothing
+    ATTACHED[] = (con, text)
+    DBInterface = loaded(DBINTERFACE)
+    quoted(s) = "'" * replace(s, "'" => "''") * "'"
+    try
+        Base.invokelatest() do
+            DBInterface.execute(con, "DETACH DATABASE IF EXISTS $JULIA_DATABASE")
+            (text === nothing || !isfile(QUACK) || !isfile(HTTPFS)) && return nothing
+            uri = match(r"\"uri\":\"(?<uri>[^\"]*)\"", text)
+            token = match(r"\"token\":\"(?<token>[^\"]*)\"", text)
+            (uri === nothing || token === nothing) && error("$SERVED holds no address and token")
+            DBInterface.execute(con, "LOAD $(quoted(HTTPFS))")
+            DBInterface.execute(con, "LOAD $(quoted(QUACK))")
+            DBInterface.execute(con, "ATTACH $(quoted(uri[:uri])) AS $JULIA_DATABASE (TOKEN $(quoted(token[:token])))")
+        end
+    catch err
+        @warn "The Julia Session of the REPL could not be attached as $JULIA_DATABASE: $(sprint(showerror, err))"
+    end
+    return nothing
+end
+
 """Remove `SERVED`, if this Julia wrote it: the Julia Session's database is no longer served."""
 function unserve()
     try
@@ -727,7 +769,11 @@ the start of a line to enter it); the connection is an in-memory DuckDB from `co
 first query.
 """
 function sql(query::AbstractString; con = nothing)
-    con === nothing && (con = sql_connection())
+    if con === nothing
+        con = sql_connection()
+        # In a notebook, the REPL's tables are read and written as JuliaSession.name.
+        NOTEBOOK[] && attach_session(con)
+    end
     DBInterface, Tables = loaded(DBINTERFACE), loaded(TABLES)
     DuckDB = get(() -> Base.require(DUCKDB), Base.loaded_modules, DUCKDB)
     tables_interface(Tables)
@@ -1078,7 +1124,9 @@ end
 
 Run `code`, an SQL cell of a Julia notebook, on the connection of `sql`: each statement in turn, its table shown under
 the cell. A statement that starts with `name :=`, such as `feeds := SELECT * FROM PollisRSS.feeds`, makes the
-table `feeds`, as `sql("feeds", query)` does, and binds the Julia variable `feeds` to it, a `Table`. The cell's
+table `feeds`, as `sql("feeds", query)` does, and binds the Julia variable `feeds` to it, a `Table`. While the
+window's Julia REPL runs, its Julia Session is attached as `JuliaSession`: `SELECT * FROM JuliaSession.stock_returns`
+reads a table made in the REPL, and `CREATE TABLE JuliaSession.results AS ...` makes one there. The cell's
 statements, without their `name :=`, are logged in the History of the Databases view, with the notebook `file`.
 """
 function cell(code::AbstractString; file::AbstractString = "")
@@ -1205,7 +1253,8 @@ function sql_mode(repl)
     main = repl.interface.modes[1]
     any(m -> m isa LineEdit.Prompt && m.prompt == "pollis> ", repl.interface.modes) && return nothing
     mode = LineEdit.Prompt("pollis> ";
-        prompt_prefix = repl.options.hascolor ? Base.text_colors[:yellow] : "",
+        # The colour of julia>, bold green, as duckdb> is: a terminal's colours do not follow the theme as Pollis' yellow does.
+        prompt_prefix = repl.options.hascolor ? repl.prompt_color : "",
         prompt_suffix = "",
         sticky = true,
         on_enter = s -> complete(String(take!(copy(LineEdit.buffer(s))))))

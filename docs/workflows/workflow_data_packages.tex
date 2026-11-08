@@ -546,12 +546,15 @@ The tables of both directions are ordinary tables of the connection's database i
 whatever reads its tables sees them. When the Julia REPL opens its connection, PollisDB serves its database with
 DuckDB's quack extension, on localhost, on the first free port from 9494, with a token made then, and writes both to
 \file{~/.pollis/duckdb/served/julia.<window>.json}, which only you can read and which goes when Julia exits. Before
-each query or cell, the \file{duckdb>} terminal and the notebooks of DuckDB SQL (Pollis) read the file of their window
-and attach that database as \file{JuliaSession}, again after a restart of Julia, and detach it once Julia has stopped:
+each query or cell, the \file{duckdb>} terminal, the notebooks of DuckDB SQL (Pollis) and Julia notebooks read the file
+of their window and attach that database as \file{JuliaSession}, again after a restart of Julia, and detach it once
+Julia has stopped:
 \begin{lstlisting}
 SELECT avg(returns) FROM JuliaSession.stock_returns;
 \end{lstlisting}
-They can write to it too. An attached quack database lists none of its tables, so \file{.tables} asks Julia for them,
+They can write to it too. In a Julia notebook, PollisDB attaches it before each query of \file{sql}, the SQL cells'
+included (\file{PollisDB.attach_session}); the notebook's Julia is given the window's id, \file{POLLIS_WINDOW}, as the
+REPL is (\file{extensions/language-julia/src/pollisWindow.ts}), and its own database is not served. An attached quack database lists none of its tables, so \file{.tables} asks Julia for them,
 with \file{quack_query_by_name}. Quack runs on DuckDB's httpfs extension, which Pollis ships beside it; both are loaded
 before attaching, as DuckDB would otherwise download them.
 

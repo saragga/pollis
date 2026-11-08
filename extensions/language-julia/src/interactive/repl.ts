@@ -33,6 +33,7 @@ import { whenDuckDBReady } from '../pollisDuckDB'
 import { compileDocumentsInBackground, pollisDBInstalled } from '../pollisDocuments'
 import { precompileInBackground } from '../pollisPrecompile'
 import { answerLlamaServerRequests } from '../pollisLlamaServer'
+import { POLLIS_WINDOW } from '../pollisWindow'
 import { promise as fastq } from 'fastq'
 import { randomUUID } from 'crypto'
 import { promisify } from 'node:util'
@@ -46,9 +47,6 @@ let g_compiledProvider = null
 export const g_evalQueue = fastq(sendEvalRequest, 1)
 
 let g_terminal: vscode.Terminal = null
-// POLLIS: identifies this window's REPL to PollisDB, which names its connection snapshots with it, so that the
-// Databases view of each window shows only the connections of its own REPL.
-const POLLIS_WINDOW = randomUUID()
 
 export let g_connection: rpc.MessageConnection = undefined
 // POLLIS: counts the connections of Julia REPLs, so that the Pollis panels can tell a new REPL (a restart) from

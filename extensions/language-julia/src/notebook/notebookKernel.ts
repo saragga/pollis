@@ -22,6 +22,7 @@ import { JuliaNotebookFeature } from './notebookFeature'
 import { notifyTypeProgress, ProgressBars } from '../interactive/progress'
 import { DebugConfigTreeProvider } from '../debugger/debugConfig'
 import { answerLlamaServerRequests } from '../pollisLlamaServer'
+import { POLLIS_WINDOW } from '../pollisWindow'
 
 const notifyTypeDisplay = new NotificationType<{
     items: { mimetype: string; data: string }[]
@@ -352,10 +353,13 @@ export class JuliaKernel {
             const credentialEnv = await vscode.commands
                 .executeCommand<Record<string, string>>('pollis.credentialEnv')
                 .then(e => e ?? {}, () => ({} as Record<string, string>))
+            // POLLIS: the window's id, by which PollisDB finds the Julia Session the window's REPL serves, and
+            // attaches it to the notebook's SQL as JuliaSession.
             const env = {
                 ...process.env,
                 ...getCustomEnvironmentVariables(),
                 ...credentialEnv,
+                POLLIS_WINDOW,
             }
 
             if (nthreads === 'auto') {
