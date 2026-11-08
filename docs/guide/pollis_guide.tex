@@ -437,13 +437,13 @@ Then query it in the Julia REPL with SQL:
     \ui{Refresh Schemas}, at the top of the view, shows tables you have just created.
   \item Right-click a connection for \ui{Copy Name}, \ui{Copy Connection Code}, \ui{Edit Connection} and
     \ui{Delete Connection}, which removes only the saved connection, never the database.
-  \item \ui{History} lists the queries of the \texttt{duckdb>} terminal, with their rows, how long they took and
-    any error, and those of the \texttt{sql>} mode, the newest first; click one to \ui{Run Again},
-    \ui{Copy SQL} or \ui{Open in Editor}.
+  \item \ui{History} lists the queries of the \texttt{duckdb>} terminal and of the notebooks' SQL cells, with
+    their rows, how long they took and any error, and those of the \texttt{sql>} mode, the newest first; click
+    one to \ui{Run Again}, \ui{Copy SQL} or \ui{Open in Editor}.
 \end{itemize}
 
-\subhead{Three ways to use SQL}
-SQL should be at hand wherever you are working, without a second database program: all three use the
+\subhead{Four ways to use SQL}
+SQL should be at hand wherever you are working, without a second database program: all four use the
 same DuckDB engine, with its full-text search extension, \emph{fts}, and attach the databases of Pollis, built in and of its activity, read-only.
 \begin{itemize}
   \item \textbf{The \texttt{duckdb>} terminal}, for SQL alone, without starting Julia: \ui{New DuckDB
@@ -453,9 +453,24 @@ same DuckDB engine, with its full-text search extension, \emph{fts}, and attach 
     once it runs names its database and offers \ui{Show REPL}, \ui{Restart REPL} and \ui{Stop REPL}.
     An SQL file (\ui{New}, then \ui{SQL File}) runs there: Ctrl+Enter, or \ui{Run in DuckDB Terminal} in its
     title bar, runs the selection or the statement at the cursor.
+  \item \textbf{A notebook}, for queries kept with their results: the SQL cells of a Jupyter notebook
+    (\texttt{.ipynb}), those whose language, at the cell's bottom right, is SQL. Each result is a table, with the
+    type of each column and the number of rows.
+    \begin{itemize}
+      \item With \ui{DuckDB SQL (Pollis)}, chosen in the kernel picker, the notebook is SQL alone. Its cells share
+        one database in memory, so a table one cell creates is there for the next; \ui{Restart}, in the
+        notebook's toolbar, empties it.
+      \item With the Julia kernel, SQL cells and Julia cells run side by side, on a database of the notebook's
+        own. A statement such as \texttt{feeds := SELECT * FROM PollisRSS.feeds} makes the table
+        \texttt{feeds} and hands it to Julia: in a Julia cell, \texttt{feeds.title} is a column,
+        \texttt{length(feeds)} its number of rows, and \texttt{sql("SELECT count(*) FROM \$feeds")} queries it
+        again. With \ui{DuckDB SQL (Pollis)}, \texttt{CREATE TEMP TABLE feeds AS SELECT ...} makes it instead.
+    \end{itemize}
   \item \textbf{The \texttt{sql>} mode} of the Julia REPL, for a query in the middle of Julia work: type
     \texttt{>} on an empty line, then the query, ending in \texttt{;}. The result is a Tables.jl table in
-    \texttt{ans}, ready for Julia; Backspace on an empty line goes back to \texttt{julia>}.
+    \texttt{ans}, ready for Julia; Backspace on an empty line goes back to \texttt{julia>}. In Julia code,
+    \texttt{sql("SELECT ...")} runs a query on the same database, and \texttt{sql("feeds", "SELECT ...")}
+    keeps its result as the table \texttt{feeds}.
   \item \textbf{\texttt{db = PollisDB.connect()}}, for Julia code and scripts: a DuckDB connection in
     memory, shown in the Databases view; \texttt{PollisDB.connect("sales.duckdb")} opens a file instead.
 \end{itemize}

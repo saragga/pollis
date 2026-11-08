@@ -31,7 +31,8 @@ const notifyTypeStreamoutput = new NotificationType<{
     data: string
 }>('streamoutput')
 const requestTypeRunCell = new RequestType<
-    { filename: string; line: number; column: number; code: string },
+    // POLLIS: language, so that an SQL cell runs through PollisDB; notebook, the file its queries are logged with.
+    { filename: string; line: number; column: number; code: string; language: string; notebook: string },
     { success: boolean; error: { message: string; name: string; stack: string } },
     void
 >('notebook/runcell')
@@ -145,6 +146,8 @@ export class JuliaKernel {
                         line: 0,
                         column: 0,
                         code: this._currentExecutionRequest.cell.document.getText(),
+                        language: this._currentExecutionRequest.cell.document.languageId,
+                        notebook: this.notebook.uri.scheme === 'file' ? this.notebook.uri.fsPath : '',
                     })
 
                     if (this.stopDebugSessionAfterExecution && this.activeDebugSession) {

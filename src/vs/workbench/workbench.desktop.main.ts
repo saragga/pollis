@@ -197,6 +197,9 @@ import './contrib/memoryMonitor/electron-browser/memoryMonitor.contribution.js';
 // Pollis: the duckdb> terminal
 import './contrib/databases/electron-browser/duckdbShell.contribution.js';
 
+// Pollis: DuckDB SQL (Pollis), the kernel of SQL cells in Jupyter notebooks
+import './contrib/databases/electron-browser/duckdbNotebook.contribution.js';
+
 // Pollis: the database of the Snowball Search Map
 import './contrib/compose/electron-browser/snowballDatabaseService.js';
 import './contrib/compose/electron-browser/askPollisService.js';

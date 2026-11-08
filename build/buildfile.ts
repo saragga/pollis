@@ -28,6 +28,7 @@ export const workbenchDesktop = [
 	createModuleDescription('vs/platform/agentHost/node/diffWorkerMain'),
 	createModuleDescription('vs/workbench/api/node/extensionHostProcess'),
 	createModuleDescription('vs/workbench/contrib/databases/node/duckdbShellMain'), // Pollis: the duckdb> terminal
+	createModuleDescription('vs/workbench/contrib/databases/node/duckdbNotebookMain'), // Pollis: the DuckDB of the notebooks' SQL cells
 	createModuleDescription('vs/workbench/contrib/compose/node/snowballDatabaseMain'), // Pollis: the database of the Snowball Search Map
 	createModuleDescription('vs/workbench/contrib/compose/node/askPollisMain'), // Pollis: the search of Ask Pollis
 	createModuleDescription('vs/workbench/workbench.desktop.main'),

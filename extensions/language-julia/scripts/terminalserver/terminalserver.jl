@@ -16,6 +16,8 @@ let
     # Pollis: the bridge to the Databases view. Loads no packages; never let it block the REPL.
     try
         include("PollisDB.jl")
+        # Pollis: sql("SELECT ...") without PollisDB.; a sql of the user's own, defined first, comes first.
+        Core.eval(Main, :(using .PollisDB))
     catch err
         @debug "PollisDB not loaded" exception=err
     end

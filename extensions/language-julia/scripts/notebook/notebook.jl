@@ -9,6 +9,16 @@ catch err
     @debug "Pollis functions not loaded" exception=err
 end
 
+# Pollis: PollisDB, for sql("...") in Julia cells and for SQL cells, which it runs on a DuckDB of the notebook's own;
+# it loads no package until the first query.
+try
+    include("../terminalserver/PollisDB.jl")
+    Core.eval(Main, :(PollisDB.NOTEBOOK[] = true))
+    Core.eval(Main, :(using .PollisDB))
+catch err
+    @debug "PollisDB not loaded" exception=err
+end
+
 using InteractiveUtils
 
 let

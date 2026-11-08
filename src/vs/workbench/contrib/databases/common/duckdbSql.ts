@@ -67,6 +67,20 @@ export function sqlStatementAt(sql: string, offset: number): string | undefined 
 	return index < 0 ? undefined : `${sql.slice(pieces[index].start, pieces[index].end).trim()};`;
 }
 
+/** `name :=` at the start of a statement, after blanks and comments, which SQL cells of Julia notebooks run. */
+const ASSIGNMENT = /^(?:\s|--[^\n]*(?:\n|$)|\/\*[\s\S]*?\*\/)*(?<name>[A-Za-z_][A-Za-z0-9_]*)\s*:=/;
+
+/** The name of the first statement of `sql` that starts with `name :=`, or undefined when none does. */
+export function sqlAssignedName(sql: string): string | undefined {
+	for (const piece of sqlPieces(sql)) {
+		const name = ASSIGNMENT.exec(sql.slice(piece.start, piece.end))?.groups?.name;
+		if (name) {
+			return name;
+		}
+	}
+	return undefined;
+}
+
 /** The text sent to the duckdb> shell for `sql`: trimmed, and ended with a semicolon, so that it runs. */
 export function runnableSql(sql: string): string | undefined {
 	const text = sql.trim();
@@ -83,21 +97,21 @@ export interface IQueryHistoryEntry {
 	readonly sql: string;
 	/** When it ran, in milliseconds since 1970. */
 	readonly time: number;
-	/** The duckdb> terminal, or the sql> mode of the Julia REPL. */
-	readonly source: 'duckdb' | 'sql';
-	/** The duckdb> terminal records how long the query took, its rows, its error and its database. */
+	/** The duckdb> terminal, a notebook run by DuckDB SQL (Pollis), or the sql> mode of the Julia REPL. */
+	readonly source: 'duckdb' | 'notebook' | 'sql';
+	/** The duckdb> terminal and the notebooks record how long the query took, its rows, its error and its database. */
 	readonly durationMs?: number;
 	/** The rows of its last result, or those its last statement changed. */
 	readonly rows?: number;
 	readonly error?: string;
-	/** The DuckDB file the terminal opened; none for an in-memory database. */
+	/** The DuckDB file the terminal opened, or the notebook's file; none for the terminal's in-memory database. */
 	readonly database?: string;
 }
 
-/** The log of the duckdb> terminal, one JSON object to a line, in ~/.pollis/duckdb. */
+/** The log of the duckdb> terminal and of the notebooks, one JSON object to a line, in ~/.pollis/duckdb. */
 export const DUCKDB_QUERY_LOG = 'query_log.jsonl';
 
-/** A line of the log of the duckdb> terminal, as it writes it. */
+/** A line of the log, as the duckdb> terminal and the DuckDB SQL (Pollis) kernel write it. */
 export interface IDuckDBQueryLogLine {
 	readonly sql: string;
 	/** ISO 8601. */
@@ -106,9 +120,11 @@ export interface IDuckDBQueryLogLine {
 	readonly rows?: number;
 	readonly error?: string;
 	readonly database?: string;
+	/** Written by the notebook kernels, DuckDB SQL (Pollis) and Julia's SQL cells; the terminal writes none. */
+	readonly source?: 'notebook';
 }
 
-/** The queries of the log of the duckdb> terminal; a line it cannot read is left out. */
+/** The queries of the log of the duckdb> terminal and of the notebooks; a line it cannot read is left out. */
 export function parseDuckDBQueryLog(text: string): IQueryHistoryEntry[] {
 	const entries: IQueryHistoryEntry[] = [];
 	for (const line of text.split('\n')) {
@@ -119,7 +135,7 @@ export function parseDuckDBQueryLog(text: string): IQueryHistoryEntry[] {
 			const value = JSON.parse(line) as IDuckDBQueryLogLine;
 			const time = Date.parse(value.time);
 			if (typeof value.sql === 'string' && !isNaN(time)) {
-				entries.push({ sql: value.sql, time, source: 'duckdb', durationMs: value.ms, rows: value.rows, error: value.error, database: value.database });
+				entries.push({ sql: value.sql, time, source: value.source === 'notebook' ? 'notebook' : 'duckdb', durationMs: value.ms, rows: value.rows, error: value.error, database: value.database });
 			}
 		} catch {
 			// A line cut short by a shell that stopped while writing it

@@ -8,31 +8,18 @@
 // database, or the file it is given, with the built-in databases attached read-only, and loads the
 // fts extension, full-text search. Extensions are never downloaded: those Pollis brings are all.
 
-import { DuckDBConnection, DuckDBInstance, DuckDBValue, StatementType } from '@duckdb/node-api';
+import { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
 import * as fs from 'fs';
-import * as os from 'os';
 import * as readline from 'readline';
 import { join } from '../../../../base/common/path.js';
-import { blankSql, DUCKDB_QUERY_LOG, IDuckDBQueryLogLine, sqlPieces } from '../common/duckdbSql.js';
+import { blankSql, sqlPieces } from '../common/duckdbSql.js';
+import { CHANGES, DUCKDB_OPTIONS, logQuery, POLLIS_HOME, preparePollisConnection, QUIET, readShownRows, sqlString, trimQueryLog } from './duckdbPollis.js';
 
-const POLLIS_HOME = join(os.homedir(), '.pollis');
-/** The fts extension, which the Julia extension of Pollis unpacks here at install. */
-const FTS = join(POLLIS_HOME, 'duckdb', 'fts.duckdb_extension');
-/** The databases of Pollis, built in and of its activity, attached read-only under their own names; Comparisons is the copy Pollis makes of the file it writes. */
-const BUILTINS = [join(POLLIS_HOME, 'databases', 'PollisDatasets.duckdb'), join(POLLIS_HOME, 'databases', 'PollisRSS.duckdb'), join(POLLIS_HOME, 'databases', 'PollisJournals.duckdb'), join(POLLIS_HOME, 'databases', 'PollisReferences.duckdb'), join(POLLIS_HOME, 'databases', 'PollisBenchmarks.duckdb'), join(POLLIS_HOME, 'documents', 'PollisDocuments.duckdb'), join(POLLIS_HOME, 'databases', 'Comparisons.duckdb')];
 const HISTORY = join(POLLIS_HOME, 'duckdb', 'shell_history');
 const HISTORY_SIZE = 1000;
-/** The queries the History view of the Databases view lists, with how each went; trimmed to LOG_SIZE when it has grown past twice as many. */
-const LOG = join(POLLIS_HOME, 'duckdb', DUCKDB_QUERY_LOG);
-const LOG_SIZE = 1000;
-
 /** The rows shown of a result: the first and the last half, when there are more. */
 const SHOWN_ROWS = 40;
 const MAX_WIDTH = 40;
-
-/** Statements whose result is only a count of rows, or nothing: no table is shown for them. */
-const QUIET = new Set<StatementType>([StatementType.CREATE, StatementType.DROP, StatementType.ALTER, StatementType.ATTACH, StatementType.DETACH, StatementType.LOAD, StatementType.SET, StatementType.VARIABLE_SET, StatementType.TRANSACTION, StatementType.CREATE_FUNC, StatementType.VACUUM, StatementType.ANALYZE, StatementType.EXPORT]);
-const CHANGES = new Set<StatementType>([StatementType.INSERT, StatementType.UPDATE, StatementType.DELETE, StatementType.COPY, StatementType.MERGE_INTO]);
 
 const dim = (text: string) => `\x1b[2m${text}\x1b[0m`;
 const red = (text: string) => `\x1b[31m${text}\x1b[0m`;
@@ -65,18 +52,10 @@ interface IRunOutcome {
 	readonly error?: string;
 }
 
-function sqlString(text: string): string {
-	return `'${text.replace(/'/g, `''`)}'`;
-}
-
 /** Whether `sql` ends with a semicolon outside quotes and comments, so that it runs. */
 function complete(sql: string): boolean {
 	const last = sqlPieces(sql).at(-1)!;
 	return blankSql(sql) || blankSql(sql.slice(last.start, last.end));
-}
-
-function cell(value: DuckDBValue): string {
-	return value === null ? 'NULL' : String(value).replace(/\s/g, ' ');
 }
 
 function fit(text: string, width: number): string {
@@ -122,24 +101,7 @@ class Shell {
 
 	/** Attach the built-in databases and load fts; returns what went wrong, if anything: the shell starts at its prompt, as the Julia REPL does. */
 	async prepare(): Promise<string[]> {
-		const notes: string[] = [];
-		for (const file of BUILTINS) {
-			if (fs.existsSync(file)) {
-				try {
-					await this.connection.run(`ATTACH IF NOT EXISTS ${sqlString(file)} (READ_ONLY)`);
-				} catch (err) {
-					notes.push(red(String((err as Error).message)));
-				}
-			}
-		}
-		if (fs.existsSync(FTS)) {
-			try {
-				await this.connection.run(`LOAD ${sqlString(FTS)}`);
-			} catch (err) {
-				notes.push(red(`fts could not be loaded: ${(err as Error).message}`));
-			}
-		}
-		return notes;
+		return (await preparePollisConnection(this.connection)).map(red);
 	}
 
 	interrupt(): boolean {
@@ -195,28 +157,7 @@ class Shell {
 						console.log(dim(`(${result.rowsChanged} ${result.rowsChanged === 1 ? 'row' : 'rows'} changed${elapsed()})`));
 						continue;
 					}
-					const names = result.columnNames();
-					const first: string[][] = [];
-					let last: string[][] = [];
-					let count = 0;
-					for (let chunk = await result.fetchChunk(); chunk && chunk.rowCount; chunk = await result.fetchChunk()) {
-						for (const values of chunk.getRows()) {
-							count++;
-							if (first.length < SHOWN_ROWS / 2) {
-								first.push(values.map(cell));
-							} else {
-								last.push(values.map(cell));
-								if (last.length > SHOWN_ROWS / 2) {
-									last.shift();
-								}
-							}
-						}
-					}
-					// With no more than SHOWN_ROWS rows, all are shown without a gap.
-					if (count <= SHOWN_ROWS) {
-						first.push(...last);
-						last = [];
-					}
+					const { names, first, last, count } = await readShownRows(result, SHOWN_ROWS);
 					console.log(table(names, first, last));
 					console.log(dim(`(${count} ${count === 1 ? 'row' : 'rows'}${elapsed()})`));
 					rows = count;
@@ -263,27 +204,6 @@ function readHistory(): string[] {
 	}
 }
 
-/** Keeps the last LOG_SIZE queries of the log, once it holds twice as many. */
-function trimLog(): void {
-	try {
-		const lines = fs.readFileSync(LOG, 'utf8').split('\n').filter(Boolean);
-		if (lines.length > 2 * LOG_SIZE) {
-			fs.writeFileSync(LOG, lines.slice(-LOG_SIZE).join('\n') + '\n');
-		}
-	} catch {
-		// No log yet
-	}
-}
-
-/** Adds a query to the log, for the History view. */
-function logQuery(line: IDuckDBQueryLogLine): void {
-	try {
-		fs.appendFileSync(LOG, JSON.stringify(line) + '\n');
-	} catch {
-		// The log is a convenience.
-	}
-}
-
 function writeHistory(history: readonly string[]): void {
 	try {
 		fs.writeFileSync(HISTORY, [...history].reverse().join('\n') + '\n');
@@ -294,8 +214,8 @@ function writeHistory(history: readonly string[]): void {
 
 async function main(): Promise<void> {
 	const file = process.argv[2] || ':memory:';
-	trimLog();
-	const instance = await DuckDBInstance.create(file, { autoinstall_known_extensions: 'false', autoload_known_extensions: 'false' });
+	trimQueryLog();
+	const instance = await DuckDBInstance.create(file, DUCKDB_OPTIONS);
 	const connection = await instance.connect();
 	const shell = new Shell(connection);
 	for (const note of await shell.prepare()) {

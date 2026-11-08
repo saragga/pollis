@@ -3,11 +3,17 @@ JSONRPC.@dict_readable struct NotebookRunCellArguments <: JSONRPC.Outbound
     line::Int
     column::Int
     code::String
+    # POLLIS: "sql" for an SQL cell, which PollisDB runs; the notebook's file, which its queries are logged with.
+    language::Union{Missing,String}
+    notebook::Union{Missing,String}
 end
 
 const notebook_runcell_request_type = JSONRPC.RequestType("notebook/runcell", NotebookRunCellArguments, NamedTuple{(:success, :error),Tuple{Bool,NamedTuple{(:message, :name, :stack),Tuple{String,String,String}}}})
 
 function notebook_runcell_request(conn, params::NotebookRunCellArguments, token)
+    # POLLIS: an SQL cell runs through PollisDB, which shows the table of each statement under the cell.
+    coalesce(params.language, "julia") == "sql" && return notebook_sql_cell(params)
+
     code = string('\n'^params.line, ' '^params.column, params.code)
 
     withpath(params.filename) do
@@ -75,6 +81,28 @@ function notebook_runcell_request(conn, params::NotebookRunCellArguments, token)
 
         return (success = true, error = (message = "", name = "", stack = ""))
     end
+end
+
+# POLLIS: the SQL cells of Julia notebooks, run by PollisDB.cell, on the DuckDB of `PollisDB.sql`.
+function notebook_sql_cell(params::NotebookRunCellArguments)
+    try
+        isdefined(Main, :PollisDB) || error("PollisDB is not loaded, so this notebook's Julia cannot run SQL cells")
+        Logging.with_logger(VSCodeLogger()) do
+            Base.invokelatest() do
+                Main.PollisDB.cell(params.code; file = coalesce(params.notebook, ""))
+            end
+        end
+    catch err
+        IJuliaCore.flush_all()
+        message = try
+            Base.invokelatest(sprint, showerror, err)
+        catch
+            "Error trying to display an error."
+        end
+        return (success = false, error = (message = message, name = "SQL", stack = message))
+    end
+    IJuliaCore.flush_all()
+    return (success = true, error = (message = "", name = "", stack = ""))
 end
 
 function io_send_callback(name, data)

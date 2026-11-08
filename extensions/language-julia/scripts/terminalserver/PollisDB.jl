@@ -17,7 +17,8 @@ next REPL starts.
 The module looks up DBInterface.jl and Tables.jl among the packages the connection code has
 already loaded; only `build`, `connect` and `sql` load DuckDB themselves. `connect` opens a DuckDB with the
 built-in databases attached and full-text search (fts) loaded; `sql` runs a query on such a
-connection, and is what the `sql>` mode of the REPL (`>` at the start of a line) runs. DuckDB is built into Pollis: `install()` adds it,
+connection, and is what the `sql>` mode of the REPL (`>` at the start of a line) runs, and SQL cells of Julia notebooks
+(`cell`); it is exported, so that `sql("...")` needs no `PollisDB.` in the REPL and in notebooks. DuckDB is built into Pollis: `install()` adds it,
 once, to a Julia environment of Pollis' own (`ENVIRONMENT`), which PollisDB puts on the load path
 so that `using DuckDB` works in any project without touching its Project.toml. That DuckDB is Pollis'
 fork of DuckDB.jl (`DUCKDB_URL`), which brings no engine of its own: it loads the one Pollis ships, which
@@ -30,7 +31,9 @@ program, such as a database extension, open it read-only, side by side.
 module PollisDB
 
 using UUIDs: UUID
-using Dates: now
+using Dates: now, UTC
+
+export sql
 
 const DBINTERFACE = Base.PkgId(UUID("a10d1c49-ce27-4219-8d33-6db1a4562965"), "DBInterface")
 const DUCKDB = Base.PkgId(UUID("d2f5444f-75bc-4fdf-ac35-56f514c445e1"), "DuckDB")
@@ -629,6 +632,15 @@ end
 """The connection of the `sql>` mode, opened by its first query."""
 const SQL_CONNECTION = Ref{Any}(nothing)
 
+"""Whether this Julia is the kernel of a notebook, whose connection the Databases view does not show."""
+const NOTEBOOK = Ref(false)
+
+"""Statements that change what the Databases view shows, and the rows a `Table` holds."""
+const CHANGING = r"\b(create|drop|alter|attach|detach|insert|update|delete|copy|import)\b"i
+
+"""How many queries of `sql` have changed tables: a `Table` reads its rows again when the count has moved since."""
+const GENERATION = Ref(0)
+
 """
     sql(query; con = <the connection of the sql> mode>)
 
@@ -639,7 +651,7 @@ first query.
 """
 function sql(query::AbstractString; con = nothing)
     if con === nothing
-        SQL_CONNECTION[] === nothing && (SQL_CONNECTION[] = connect(; name = "sql> Mode"))
+        SQL_CONNECTION[] === nothing && (SQL_CONNECTION[] = connect(; name = "sql> Mode", show = !NOTEBOOK[]))
         con = SQL_CONNECTION[]
     end
     DBInterface, Tables = loaded(DBINTERFACE), loaded(TABLES)
@@ -656,10 +668,36 @@ function sql(query::AbstractString; con = nothing)
         end
         result === nothing ? NamedTuple() : Tables.columntable(result)
     end
-    # Statements such as CREATE TABLE change what the Databases view shows.
-    occursin(r"\b(create|drop|alter|attach|detach|insert|update|delete|copy|import)\b"i, query) && refresh()
+    # Statements such as CREATE TABLE change what the Databases view shows, and the rows of tables.
+    if occursin(CHANGING, query)
+        GENERATION[] += 1
+        refresh()
+    end
     return Result(columns, time() - started)
 end
+
+"""
+    sql(name, query; con = <the connection of the sql> mode>)
+
+Run `query`, one statement, into the temporary table `name`, made again if it is there, and return it as a `Table`:
+Julia reads it as a Tables.jl table, and SQL takes it by its name in an interpolation. In an SQL cell of a Julia
+notebook, `feeds := SELECT * FROM PollisRSS.feeds` does the same.
+
+```julia
+feeds = sql("feeds", "SELECT * FROM PollisRSS.feeds")
+length(feeds), feeds.title
+sql("SELECT count(*) FROM \$feeds")
+```
+"""
+function sql(name::AbstractString, query::AbstractString; con = nothing)
+    found = statements(query)
+    length(found) == 1 || error("PollisDB: a table is made from one statement, and the query of $name has $(length(found))")
+    sql("CREATE OR REPLACE TEMP TABLE $(identifier(name)) AS $(only(found))"; con)
+    return Table(name, con === nothing ? SQL_CONNECTION[] : con)
+end
+
+"""`name` quoted as an SQL identifier."""
+identifier(name::AbstractString) = "\"" * replace(name, "\"" => "\"\"") * "\""
 
 """
 The pieces of `query` between the semicolons outside quotes, dollar-quoted strings and comments,
@@ -715,6 +753,9 @@ function tables_interface(Tables::Module)
         $Tables.istable(::Type{Result}) = true
         $Tables.columnaccess(::Type{Result}) = true
         $Tables.columns(r::Result) = r.columns
+        $Tables.istable(::Type{Table}) = true
+        $Tables.columnaccess(::Type{Table}) = true
+        $Tables.columns(t::Table) = table_columns(t)
     end
     TABLES_INTERFACE[] = true
     return nothing
@@ -723,31 +764,259 @@ end
 """The rows of a `Result` that the REPL shows: the first and the last, when there are more."""
 const SHOWN_ROWS = 40
 
-function Base.show(io::IO, ::MIME"text/plain", r::Result)
-    names = collect(string.(keys(r.columns)))
-    nrows = isempty(names) ? 0 : length(first(r.columns))
-    timing = string(round(r.seconds; digits = 3), " s")
-    if isempty(names)
-        print(io, "(", timing, ")")
-        return nothing
+"""
+What a table shows: the names and types of its columns, the text of its first rows and of its last, with a gap
+between them when there are more than `SHOWN_ROWS`, its number of rows, and the line under it in a notebook.
+"""
+struct Grid
+    names::Vector{String}
+    types::Vector{String}
+    numeric::Vector{Bool}
+    first::Vector{Vector{String}}
+    last::Vector{Vector{String}}
+    count::Int
+    note::String
+end
+
+cell_text(x) = x === missing ? "NULL" : replace(string(x), r"\s" => " ")
+rows_text(n::Integer) = n == 1 ? "1 row" : "$n rows"
+seconds_text(seconds::Real) = string(round(seconds; digits = 3), " s")
+
+"""The rows `range` of the column table `columns`, each as the text of its values."""
+row_texts(columns::NamedTuple, range) = [[cell_text(col[i]) for col in values(columns)] for i in range]
+
+"""
+The grid of `columns`, a column table of `count` rows when `tail` is `nothing`; otherwise `columns` holds the first
+rows and `tail` the last. `parts` come before the number of rows in the note, `after` after it.
+"""
+function grid(columns::NamedTuple, tail, count::Integer; parts = String[], after = String[])
+    types = [nonmissingtype(eltype(col)) for col in values(columns)]
+    if tail === nothing
+        head = count <= SHOWN_ROWS ? (1:count) : (1:SHOWN_ROWS÷2)
+        first_rows = row_texts(columns, head)
+        last_rows = count <= SHOWN_ROWS ? Vector{String}[] : row_texts(columns, count-SHOWN_ROWS÷2+1:count)
+    else
+        first_rows = row_texts(columns, 1:length(Base.first(columns)))
+        last_rows = row_texts(tail, 1:length(Base.first(tail)))
     end
-    shown = nrows <= SHOWN_ROWS ? collect(1:nrows) : [1:SHOWN_ROWS÷2; nrows-SHOWN_ROWS÷2+1:nrows]
-    cell(x) = x === missing ? "NULL" : replace(string(x), r"\s" => " ")
-    cells = [[cell(col[i]) for i in shown] for col in values(r.columns)]
-    width(j) = min(40, maximum(textwidth, cells[j]; init = textwidth(names[j])))
-    widths = [width(j) for j in eachindex(names)]
-    fit(s, w) = textwidth(s) > w ? first(s, w - 1) * "…" : rpad(s, w)
+    shown = length(first_rows) + length(last_rows)
+    rows = shown < count ? "$(rows_text(count)), the first $(length(first_rows)) and the last $(length(last_rows)) shown" : rows_text(count)
+    return Grid(collect(string.(keys(columns))), [T === Union{} ? "Missing" : string(T) for T in types],
+        [T <: Real && !(T <: Bool) for T in types], first_rows, last_rows, count, join([parts; rows; after], " · "))
+end
+
+"""`grid` drawn in a box, with `footer` under it, as the REPL shows a table."""
+function draw(io::IO, g::Grid, footer::AbstractString)
+    rows = [g.first; g.last]
+    width(j) = min(40, maximum(r -> textwidth(r[j]), rows; init = textwidth(g.names[j])))
+    widths = [width(j) for j in eachindex(g.names)]
+    fit(s, w) = textwidth(s) > w ? Base.first(s, w - 1) * "…" : rpad(s, w)
     line(l, m, r) = string(l, join((repeat('─', w + 2) for w in widths), m), r)
-    row(values) = string("│ ", join((fit(values[j], widths[j]) for j in eachindex(names)), " │ "), " │")
+    row(values) = string("│ ", join((fit(values[j], widths[j]) for j in eachindex(g.names)), " │ "), " │")
     println(io, line('┌', '┬', '┐'))
-    println(io, row(names))
+    println(io, row(g.names))
     println(io, line('├', '┼', '┤'))
-    for (k, i) in enumerate(shown)
-        nrows > SHOWN_ROWS && k == SHOWN_ROWS ÷ 2 + 1 && println(io, row(fill("⋮", length(names))))
-        println(io, row([cells[j][k] for j in eachindex(names)]))
-    end
+    foreach(r -> println(io, row(r)), g.first)
+    isempty(g.last) || println(io, row(fill("⋮", length(g.names))))
+    foreach(r -> println(io, row(r)), g.last)
     println(io, line('└', '┴', '┘'))
-    print(io, "(", nrows, nrows == 1 ? " row" : " rows", ", ", timing, ")")
+    print(io, footer)
+    return nothing
+end
+
+"""The style of a table in a notebook, that of the DuckDB SQL (Pollis) kernel, in the colours of the theme."""
+const TABLE_STYLE = """<style>
+.pollis-duckdb { font-family: var(--vscode-editor-font-family, monospace); font-size: 12px; }
+.pollis-duckdb .scroll { overflow-x: auto; max-width: 100%; }
+.pollis-duckdb table { border-collapse: collapse; }
+.pollis-duckdb th { text-align: left; font-weight: 600; padding: 3px 10px; border-bottom: 1px solid var(--vscode-editorWidget-border, #8884); white-space: nowrap; vertical-align: bottom; }
+.pollis-duckdb th .type { display: block; font-weight: 400; font-size: 11px; opacity: 0.6; }
+.pollis-duckdb td { text-align: left; padding: 2px 10px; border-bottom: 1px solid var(--vscode-editorWidget-border, #8882); white-space: nowrap; max-width: 40em; overflow: hidden; text-overflow: ellipsis; }
+.pollis-duckdb td.number { text-align: right; }
+.pollis-duckdb td.null, .pollis-duckdb tr.gap td { opacity: 0.5; }
+.pollis-duckdb tr.gap td { text-align: center; }
+.pollis-duckdb .note { margin-top: 4px; opacity: 0.7; }
+</style>"""
+
+html_escape(s::AbstractString) = replace(s, '&' => "&amp;", '<' => "&lt;", '>' => "&gt;", '"' => "&quot;")
+
+"""`grid` as an HTML table, each column's type under its name, and its note under it."""
+function html(io::IO, g::Grid)
+    print(io, "<div class=\"pollis-duckdb\">", TABLE_STYLE, "<div class=\"scroll\"><table><thead><tr>")
+    for (name, type) in zip(g.names, g.types)
+        print(io, "<th>", html_escape(name), "<span class=\"type\">", html_escape(type), "</span></th>")
+    end
+    print(io, "</tr></thead><tbody>")
+    function row(values)
+        print(io, "<tr>")
+        for (j, value) in enumerate(values)
+            print(io, "<td class=\"", value == "NULL" ? "null" : g.numeric[j] ? "number" : "", "\">", html_escape(value), "</td>")
+        end
+        print(io, "</tr>")
+    end
+    foreach(row, g.first)
+    isempty(g.last) || print(io, "<tr class=\"gap\">", repeat("<td>&#8942;</td>", length(g.names)), "</tr>")
+    foreach(row, g.last)
+    print(io, "</tbody></table></div><div class=\"note\">", html_escape(g.note), "</div></div>")
+    return nothing
+end
+
+nrows(columns::NamedTuple) = isempty(columns) ? 0 : length(Base.first(columns))
+
+function Base.show(io::IO, ::MIME"text/plain", r::Result)
+    timing = seconds_text(r.seconds)
+    isempty(r.columns) && return print(io, "(", timing, ")")
+    n = nrows(r.columns)
+    return draw(io, grid(r.columns, nothing, n), string("(", rows_text(n), ", ", timing, ")"))
+end
+
+function Base.show(io::IO, ::MIME"text/html", r::Result)
+    timing = seconds_text(r.seconds)
+    isempty(r.columns) && return print(io, "<div class=\"pollis-duckdb\">", TABLE_STYLE, "<div class=\"note\">", timing, "</div></div>")
+    return html(io, grid(r.columns, nothing, nrows(r.columns); after = [timing]))
+end
+
+"""
+    Table
+
+A table of DuckDB held by its name and its connection: what `sql(name, query)` returns, and what `name := query` in an
+SQL cell of a Julia notebook binds `name` to. Julia reads it as a Tables.jl table, `table.column` being a column and
+`length(table)` its number of rows; its rows are read at their first use and again after a query that changes tables.
+Printed, it is its quoted name, so that `sql("SELECT * FROM \$table")` composes. Should the table be gone, dropped or
+closed with its connection, using it says to run again the cell that made it.
+"""
+mutable struct Table
+    const name::String
+    const con::Any
+    columns::Union{Nothing,NamedTuple}
+    generation::Int
+end
+Table(name::AbstractString, con) = Table(String(name), con, nothing, -1)
+
+"""Run `query` on the connection of `table`; should it fail because the table is gone, say to make it again."""
+function query_table(table::Table, query::AbstractString)
+    DBInterface, Tables = loaded(DBINTERFACE), loaded(TABLES)
+    con = getfield(table, :con)
+    name = getfield(table, :name)
+    try
+        return Base.invokelatest(() -> Tables.columntable(DBInterface.execute(con, query)))
+    catch
+        there = try
+            literal = replace(name, "'" => "''")
+            found = Base.invokelatest(() -> Tables.columntable(DBInterface.execute(con, "SELECT count(*) AS n FROM information_schema.tables WHERE table_name = '$literal'")))
+            Base.first(found.n) > 0
+        catch
+            false
+        end
+        there && rethrow()
+        error("PollisDB: the table $name is gone, dropped or closed with its connection; run again the cell that made it")
+    end
+end
+
+"""The columns of `table` if they are read and no query has changed tables since, or `nothing`."""
+function cached(table::Table)
+    columns = getfield(table, :columns)
+    return columns !== nothing && getfield(table, :generation) == GENERATION[] ? columns : nothing
+end
+
+"""The columns of `table`, a column table, read once and again after a query that changes tables."""
+function table_columns(table::Table)
+    columns = cached(table)
+    columns === nothing || return columns
+    generation = GENERATION[]
+    columns = query_table(table, "SELECT * FROM $table")
+    setfield!(table, :columns, columns)
+    setfield!(table, :generation, generation)
+    return columns
+end
+
+"""The number of rows of `table`: of the rows read, or counted by DuckDB."""
+function Base.length(table::Table)
+    columns = cached(table)
+    columns === nothing || return nrows(columns)
+    return Int(Base.first(query_table(table, "SELECT count(*) AS n FROM $table").n))
+end
+
+Base.getproperty(table::Table, name::Symbol) = getproperty(table_columns(table), name)
+Base.propertynames(table::Table, private::Bool = false) = keys(table_columns(table))
+Base.print(io::IO, table::Table) = print(io, identifier(getfield(table, :name)))
+Base.show(io::IO, table::Table) = print(io, "PollisDB.Table(", repr(getfield(table, :name)), ")")
+
+"""The grid of `table`, which reads only the rows it shows unless they are read already."""
+function grid(table::Table)
+    name = getfield(table, :name)
+    columns = cached(table)
+    columns === nothing || return grid(columns, nothing, nrows(columns); parts = [name])
+    n = length(table)
+    n <= SHOWN_ROWS && return grid(query_table(table, "SELECT * FROM $table"), nothing, n; parts = [name])
+    head = query_table(table, "SELECT * FROM $table LIMIT $(SHOWN_ROWS ÷ 2)")
+    tail = query_table(table, "SELECT * FROM $table OFFSET $(n - SHOWN_ROWS ÷ 2)")
+    return grid(head, tail, n; parts = [name])
+end
+
+function Base.show(io::IO, ::MIME"text/plain", table::Table)
+    g = grid(table)
+    return draw(io, g, string("(", getfield(table, :name), ", ", rows_text(g.count), ")"))
+end
+
+Base.show(io::IO, ::MIME"text/html", table::Table) = html(io, grid(table))
+
+"""`name :=` at the start of a statement, after blanks and comments: the statement makes the table `name`."""
+const ASSIGNMENT = r"^(?<lead>(?:\s|--[^\n]*(?:\n|$)|/\*.*?\*/)*)(?<name>[A-Za-z_][A-Za-z0-9_]*)\s*:=(?<query>.*)$"s
+
+"""The log of the duckdb> terminal and of the notebooks, which the History of the Databases view reads."""
+const QUERY_LOG = joinpath(DUCKDB_HOME, "query_log.jsonl")
+
+"""Add to `QUERY_LOG` the queries of an SQL cell of the notebook `file`, begun at `begun`."""
+function log_cell(query::AbstractString, begun, seconds::Real, rows, failure, file::AbstractString)
+    line = Dict{String,Any}("sql" => query, "time" => string(begun) * "Z", "ms" => round(Int, 1000 * seconds), "source" => "notebook")
+    rows === nothing || (line["rows"] = rows)
+    failure === nothing || (line["error"] = failure)
+    isempty(file) || (line["database"] = file)
+    try
+        mkpath(DUCKDB_HOME)
+        open(io -> (json(io, line); println(io)), QUERY_LOG; append = true)
+    catch err
+        @debug "Pollis: the query of an SQL cell was not logged" exception = err
+    end
+    return nothing
+end
+
+"""
+    cell(code; file = "")
+
+Run `code`, an SQL cell of a Julia notebook, on the connection of `sql`: each statement in turn, its table shown under
+the cell. A statement that starts with `name :=`, such as `feeds := SELECT * FROM PollisRSS.feeds`, makes the temporary
+table `feeds`, as `sql("feeds", query)` does, and binds the Julia variable `feeds` to it, a `Table`. The cell's
+statements, without their `name :=`, are logged in the History of the Databases view, with the notebook `file`.
+"""
+function cell(code::AbstractString; file::AbstractString = "")
+    begun = now(UTC)
+    started = time()
+    logged = String[]
+    rows = nothing
+    try
+        for statement in statements(code)
+            m = match(ASSIGNMENT, statement)
+            if m === nothing
+                push!(logged, strip(statement))
+                result = sql(statement)
+                isempty(result.columns) && continue
+                rows = nrows(result.columns)
+                Base.invokelatest(display, result)
+            else
+                push!(logged, strip(string(m[:lead], m[:query])))
+                table = sql(m[:name], m[:query])
+                Core.eval(Main, Expr(:global, Expr(:(=), Symbol(m[:name]), table)))
+                rows = length(table)
+                Base.invokelatest(display, table)
+            end
+        end
+    catch err
+        log_cell(join(logged, ";\n") * ";", begun, time() - started, rows, sprint(showerror, err), file)
+        rethrow()
+    end
+    log_cell(join(logged, ";\n") * ";", begun, time() - started, rows, nothing, file)
     return nothing
 end
 
@@ -1653,7 +1922,7 @@ end
 # After the user's environments, so that their own versions of these packages come first.
 ENVIRONMENT in LOAD_PATH || push!(LOAD_PATH, ENVIRONMENT)
 
-# The sql> mode, in the REPL of Pollis' terminal; notebooks do not load PollisDB.
+# The sql> mode, in the REPL of Pollis' terminal; a notebook has no REPL, and runs SQL cells with `cell`.
 function add_sql_mode(repl)
     @async try
         sql_mode(repl)

@@ -156,7 +156,8 @@ export class JuliaNotebookFeature {
                 : `Julia ${ver.major}.${ver.minor}.${ver.patch}`
 
             const controller = vscode.notebooks.createNotebookController(kernelId, JupyterNotebookViewType, displayName)
-            controller.supportedLanguages = ['julia', 'raw']
+            // POLLIS: SQL cells run through PollisDB, on the DuckDB of the notebook's Julia.
+            controller.supportedLanguages = ['julia', 'raw', 'sql']
             controller.supportsExecutionOrder = true
             controller.description = 'Julia VS Code extension'
             controller.detail = juliaVersion.command

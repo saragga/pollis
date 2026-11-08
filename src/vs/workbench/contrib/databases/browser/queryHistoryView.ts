@@ -54,9 +54,24 @@ class QueryDelegate implements IListVirtualDelegate<IQueryHistoryEntry> {
 	}
 }
 
-/** The prompt a query was typed at. */
+/** Where a query was run: the prompt it was typed at, or a notebook. */
 function sourceLabel(entry: IQueryHistoryEntry): string {
-	return entry.source === 'duckdb' ? 'duckdb>' : 'sql>';
+	switch (entry.source) {
+		case 'duckdb': return 'duckdb>';
+		case 'notebook': return localize('queryHistory.notebook', "notebook");
+		case 'sql': return 'sql>';
+	}
+}
+
+/** Where a query was run, as the hover says it. */
+function sourceSentence(entry: IQueryHistoryEntry): string {
+	switch (entry.source) {
+		case 'duckdb': return localize('queryHistory.fromDuckDB', "Run in the DuckDB terminal, on {0}", entry.database ?? localize('queryHistory.memory', "an in-memory database"));
+		case 'notebook': return entry.database
+			? localize('queryHistory.fromNotebook', "Run in the notebook {0}", entry.database)
+			: localize('queryHistory.fromUnsavedNotebook', "Run in an unsaved notebook");
+		case 'sql': return localize('queryHistory.fromSqlMode', "Run in the sql> mode of the Julia REPL");
+	}
 }
 
 /** How long a query took: 0.024 s. */
@@ -86,10 +101,10 @@ class QueryRenderer implements IListRenderer<IQueryHistoryEntry, IQueryTemplate>
 	renderElement(entry: IQueryHistoryEntry, _index: number, template: IQueryTemplate): void {
 		template.disposables.clear();
 		// A tick for a query that ran, a cross for one that failed; the sql> mode does not say, so a plain prompt
-		const icon = entry.error ? Codicon.error : entry.source === 'duckdb' ? Codicon.check : Codicon.terminal;
+		const icon = entry.error ? Codicon.error : entry.source !== 'sql' ? Codicon.check : Codicon.terminal;
 		template.icon.className = `icon ${ThemeIcon.asClassName(icon)}`;
 		template.row.classList.toggle('failed', !!entry.error);
-		template.row.classList.toggle('succeeded', entry.source === 'duckdb' && !entry.error);
+		template.row.classList.toggle('succeeded', entry.source !== 'sql' && !entry.error);
 		template.sql.textContent = entry.sql.replace(/\s+/g, ' ').trim();
 		const details = [sourceLabel(entry)];
 		if (entry.rows !== undefined && !entry.error) {
@@ -103,10 +118,7 @@ class QueryRenderer implements IListRenderer<IQueryHistoryEntry, IQueryTemplate>
 
 		const hover = new MarkdownString();
 		hover.appendCodeblock('sql', entry.sql);
-		const facts = [entry.source === 'duckdb'
-			? localize('queryHistory.fromDuckDB', "Run in the DuckDB terminal, on {0}", entry.database ?? localize('queryHistory.memory', "an in-memory database"))
-			: localize('queryHistory.fromSqlMode', "Run in the sql> mode of the Julia REPL"),
-		new Date(entry.time).toLocaleString()];
+		const facts = [sourceSentence(entry), new Date(entry.time).toLocaleString()];
 		if (entry.rows !== undefined && !entry.error) {
 			facts.push(rowsLabel(entry.rows));
 		}
