@@ -13,7 +13,7 @@ import * as fs from 'fs';
 import * as readline from 'readline';
 import { join } from '../../../../base/common/path.js';
 import { blankSql, sqlPieces } from '../common/duckdbSql.js';
-import { CHANGES, DUCKDB_OPTIONS, logQuery, POLLIS_HOME, preparePollisConnection, QUIET, readShownRows, sqlString, trimQueryLog } from './duckdbPollis.js';
+import { CHANGES, DUCKDB_OPTIONS, JULIA_DATABASE, JuliaSessionAttachment, logQuery, POLLIS_HOME, preparePollisConnection, QUIET, readShownRows, sqlString, trimQueryLog } from './duckdbPollis.js';
 
 const HISTORY = join(POLLIS_HOME, 'duckdb', 'shell_history');
 const HISTORY_SIZE = 1000;
@@ -62,14 +62,25 @@ function fit(text: string, width: number): string {
 	return text.length > width ? text.slice(0, width - 1) + '…' : text.padEnd(width);
 }
 
-/** The table of a result, in a box, with the first and last rows when it has more than `SHOWN_ROWS`. */
-function table(names: readonly string[], first: string[][], last: string[][]): string {
+/**
+ * The table of a result, in a box, with the first and last rows when it has more than `SHOWN_ROWS`: the columns that
+ * fit in `available` characters, the first always. `hidden` is the names of the others.
+ */
+function table(names: readonly string[], first: string[][], last: string[][], available: number): { text: string; hidden: string[] } {
 	const shown = [...first, ...last];
-	const widths = names.map((name, j) => Math.min(MAX_WIDTH, Math.max(name.length, ...shown.map(row => row[j].length))));
+	const all = names.map((name, j) => Math.min(MAX_WIDTH, Math.max(name.length, ...shown.map(row => row[j].length))));
+	// A column takes its width and three more, a border and a space before it and a space after it; the box ends with a border.
+	let count = 0;
+	let used = 1;
+	while (count < all.length && (count === 0 || used + all[count] + 3 <= available)) {
+		used += all[count] + 3;
+		count++;
+	}
+	const widths = all.slice(0, count).map(w => Math.min(w, Math.max(1, available - 4)));
 	// allow-any-unicode-next-line
 	const line = (left: string, middle: string, right: string) => left + widths.map(w => '─'.repeat(w + 2)).join(middle) + right;
 	// allow-any-unicode-next-line
-	const row = (values: readonly string[]) => '│ ' + values.map((value, j) => fit(value, widths[j])).join(' │ ') + ' │';
+	const row = (values: readonly string[]) => '│ ' + values.slice(0, count).map((value, j) => fit(value, widths[j])).join(' │ ') + ' │';
 	// allow-any-unicode-next-line
 	const lines = [line('┌', '┬', '┐'), row(names), line('├', '┼', '┤'), ...first.map(row)];
 	if (last.length) {
@@ -78,30 +89,38 @@ function table(names: readonly string[], first: string[][], last: string[][]): s
 	}
 	// allow-any-unicode-next-line
 	lines.push(line('└', '┴', '┘'));
-	return lines.join('\n');
+	return { text: lines.join('\n'), hidden: names.slice(count) };
 }
 
 const HELP = `.databases          The attached databases
 .help               This help
 .quit, .exit        Leave the shell (also Ctrl+D)
 .schema [table]     The CREATE statements of the tables, or of one
-.tables             The tables and views of every database
+.tables             The tables and views of every database, the Julia Session's included
 .timer on|off       Show how long each query took (on)
 
 A query ends with ";"; until then, Enter starts a new line. Ctrl+C stops a running query.
 The built-in databases are attached read-only as PollisDatasets, PollisRSS, PollisJournals, PollisReferences,
-PollisBenchmarks and PollisDocuments.`;
+PollisBenchmarks and PollisDocuments. While the Julia REPL of this window runs, its Julia Session is attached as
+JuliaSession: SELECT * FROM JuliaSession.stock_returns reads the table stock_returns := ... made in Julia.`;
 
 class Shell {
 
 	private timer = true;
 	private running = false;
 
-	constructor(private readonly connection: DuckDBConnection) { }
+	/** The Julia Session of this window, whose id Pollis gives the terminal as POLLIS_WINDOW. */
+	private readonly julia: JuliaSessionAttachment;
 
-	/** Attach the built-in databases and load fts; returns what went wrong, if anything: the shell starts at its prompt, as the Julia REPL does. */
+	constructor(private readonly connection: DuckDBConnection) {
+		this.julia = new JuliaSessionAttachment(connection, process.env.POLLIS_WINDOW || undefined);
+	}
+
+	/** Attach the built-in databases and the Julia Session, and load fts; returns what went wrong, if anything: the shell starts at its prompt, as the Julia REPL does. */
 	async prepare(): Promise<string[]> {
-		return (await preparePollisConnection(this.connection)).map(red);
+		const problems = await preparePollisConnection(this.connection);
+		const julia = await this.julia.sync();
+		return [...problems, ...(julia ? [julia] : [])].map(red);
 	}
 
 	interrupt(): boolean {
@@ -127,8 +146,13 @@ class Shell {
 				return 'succeeded';
 			case '.databases':
 				return ended((await this.run('SELECT database_name AS name, path, readonly FROM duckdb_databases() WHERE NOT internal ORDER BY 1;')).succeeded);
-			case '.tables':
-				return ended((await this.run('SELECT database, schema, name FROM (SHOW ALL TABLES) ORDER BY ALL;')).succeeded);
+			case '.tables': {
+				// The tables of the Julia Session are listed by Julia: an attached quack database lists none of its own
+				await this.julia.sync();
+				const ofJulia = `SELECT schema_name, table_name FROM duckdb_tables() WHERE database_name = current_database() UNION ALL SELECT schema_name, view_name FROM duckdb_views() WHERE database_name = current_database() AND NOT internal`;
+				const julia = this.julia.attachedNow ? ` UNION ALL SELECT ${sqlString(JULIA_DATABASE)}, schema_name, table_name FROM quack_query_by_name(${sqlString(JULIA_DATABASE)}, ${sqlString(ofJulia)})` : '';
+				return ended((await this.run(`SELECT database, schema, name FROM (SHOW ALL TABLES)${julia} ORDER BY ALL;`)).succeeded);
+			}
 			case '.schema':
 				return ended((await this.run(`SELECT sql FROM (SELECT database_name, table_name, sql FROM duckdb_tables() UNION ALL SELECT database_name, view_name, sql FROM duckdb_views() WHERE NOT internal)${args[0] ? ` WHERE table_name = ${sqlString(args[0])}` : ''} ORDER BY database_name, table_name;`)).succeeded);
 			default:
@@ -142,6 +166,11 @@ class Shell {
 		this.running = true;
 		let rows: number | undefined;
 		try {
+			// The Julia REPL may have started, restarted or stopped since the last query
+			const julia = await this.julia.sync();
+			if (julia) {
+				console.log(red(julia));
+			}
 			const statements = await this.connection.extractStatements(sql);
 			for (let index = 0; index < statements.count; index++) {
 				const started = Date.now();
@@ -158,8 +187,12 @@ class Shell {
 						continue;
 					}
 					const { names, first, last, count } = await readShownRows(result, SHOWN_ROWS);
-					console.log(table(names, first, last));
+					const { text, hidden } = table(names, first, last, process.stdout.columns ?? Infinity);
+					console.log(text);
 					console.log(dim(`(${count} ${count === 1 ? 'row' : 'rows'}${elapsed()})`));
+					if (hidden.length) {
+						console.log(dim(`${hidden.length === 1 ? '1 more column' : `${hidden.length} more columns`}: ${hidden.join(', ')}`));
+					}
 					rows = count;
 				} finally {
 					prepared.destroySync();

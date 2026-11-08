@@ -61,7 +61,7 @@ function sourceLabel(entry: IQueryHistoryEntry): string {
 	switch (entry.source) {
 		case 'duckdb': return 'duckdb>';
 		case 'notebook': return localize('queryHistory.notebook', "notebook");
-		case 'sql': return 'sql>';
+		case 'sql': return 'pollis>';
 	}
 }
 
@@ -72,7 +72,7 @@ function sourceSentence(entry: IQueryHistoryEntry): string {
 		case 'notebook': return entry.database
 			? localize('queryHistory.fromNotebook', "Run in the notebook {0}", entry.database)
 			: localize('queryHistory.fromUnsavedNotebook', "Run in an unsaved notebook");
-		case 'sql': return localize('queryHistory.fromSqlMode', "Run in the sql> mode of the Julia REPL");
+		case 'sql': return localize('queryHistory.fromPollisMode', "Run in the pollis> mode of the Julia REPL");
 	}
 }
 
@@ -103,7 +103,7 @@ class QueryRenderer implements IListRenderer<IQueryHistoryEntry, IQueryTemplate>
 
 	renderElement(entry: IQueryHistoryEntry, _index: number, template: IQueryTemplate): void {
 		template.disposables.clear();
-		// A tick for a query that ran, a cross for one that failed; the sql> mode does not say, so a plain prompt
+		// A tick for a query that ran, a cross for one that failed; the pollis> mode does not say, so a plain prompt
 		const icon = entry.error ? Codicon.error : entry.source !== 'sql' ? Codicon.check : Codicon.terminal;
 		template.icon.className = `icon ${ThemeIcon.asClassName(icon)}`;
 		template.row.classList.toggle('failed', !!entry.error);
@@ -142,7 +142,7 @@ class QueryRenderer implements IListRenderer<IQueryHistoryEntry, IQueryTemplate>
 
 /**
  * The History view of the Databases view: the queries run in the duckdb> terminal and in the SQL cells of notebooks,
- * from the log they keep in ~/.pollis/duckdb, and in the sql> mode of the Julia REPL, from the history of the REPL;
+ * from the log they keep in ~/.pollis/duckdb, and in the pollis> mode of the Julia REPL, from the history of the REPL;
  * the newest first.
  */
 export class QueryHistoryView extends ViewPane {
@@ -180,7 +180,7 @@ export class QueryHistoryView extends ViewPane {
 		super.renderBody(container);
 		const root = dom.append(container, dom.$('.databases-view'));
 		this.empty = dom.append(root, dom.$('.welcome-view-content.databases-empty'));
-		dom.append(this.empty, dom.$('p')).textContent = localize('queryHistory.empty', "No queries yet. The queries you run in the DuckDB terminal, in the sql> mode of the Julia REPL and in the SQL cells of notebooks show here.");
+		dom.append(this.empty, dom.$('p')).textContent = localize('queryHistory.empty', "No queries yet. The queries you run in the DuckDB terminal, in the pollis> mode of the Julia REPL and in the SQL cells of notebooks show here.");
 		const listContainer = dom.append(root, dom.$('.databases-tree'));
 		this.list = this._register(this.instantiationService.createInstance(
 			WorkbenchList<IQueryHistoryEntry>,

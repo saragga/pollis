@@ -438,7 +438,7 @@ Then query it in the Julia REPL with SQL:
   \item Right-click a connection for \ui{Copy Name}, \ui{Copy Connection Code}, \ui{Edit Connection} and
     \ui{Delete Connection}, which removes only the saved connection, never the database.
   \item \ui{History} lists the queries of the \texttt{duckdb>} terminal and of the notebooks' SQL cells, with
-    their rows, how long they took and any error, and those of the \texttt{sql>} mode, the newest first; click
+    their rows, how long they took and any error, and those of the \texttt{pollis>} mode, the newest first; click
     one to \ui{Run Again}, \ui{Copy SQL} or \ui{Open in Editor}.
 \end{itemize}
 
@@ -466,14 +466,21 @@ same DuckDB engine, with its full-text search extension, \emph{fts}, and attach 
         \texttt{length(feeds)} its number of rows, and \texttt{sql("SELECT count(*) FROM \$feeds")} queries it
         again. With \ui{DuckDB SQL (Pollis)}, \texttt{CREATE TEMP TABLE feeds AS SELECT ...} makes it instead.
     \end{itemize}
-  \item \textbf{The \texttt{sql>} mode} of the Julia REPL, for a query in the middle of Julia work: type
+  \item \textbf{The \texttt{pollis>} mode} of the Julia REPL, for a query in the middle of Julia work: type
     \texttt{>} on an empty line, then the query, ending in \texttt{;}. The result is a Tables.jl table in
-    \texttt{ans}, ready for Julia; Backspace on an empty line goes back to \texttt{julia>}. In Julia code,
-    \texttt{sql("SELECT ...")} runs a query on the same database, and \texttt{sql("feeds", "SELECT ...")}
-    keeps its result as the table \texttt{feeds}.
+    \texttt{ans}, ready for Julia; Backspace on an empty line goes back to \texttt{julia>}. As in an SQL cell,
+    \texttt{feeds := SELECT ...} keeps the result as the table \texttt{feeds} and the Julia variable
+    \texttt{feeds}. In Julia code, \texttt{sql("SELECT ...")} runs a query on the same database, and
+    \texttt{sql("feeds", "SELECT ...")} keeps its result as the table \texttt{feeds}.
   \item \textbf{\texttt{db = PollisDB.connect()}}, for Julia code and scripts: a DuckDB connection in
     memory, shown in the Databases view; \texttt{PollisDB.connect("sales.duckdb")} opens a file instead.
 \end{itemize}
+A Julia table goes the other way with \texttt{:=} in Julia code: \texttt{stock\_returns := (ticker = ["AAPL"],
+returns = [0.12])} binds \texttt{stock\_returns}, as \texttt{=} would, and copies it into the database of
+\texttt{sql}, where SQL reads it by its name; \texttt{publish(table, "stock\_returns")} does the same in plain
+Julia. The Julia REPL's database is \ui{Julia Session}, under \ui{User} in the Databases view. While the REPL
+runs, the \texttt{duckdb>} terminal and the notebooks of \ui{DuckDB SQL (Pollis)} attach it as
+\texttt{JuliaSession}: \texttt{SELECT * FROM JuliaSession.stock\_returns}, and \texttt{.tables} lists its tables.
 
 \newpage
 \subhead{Connect to your own database}
@@ -1969,7 +1976,7 @@ Pollis records as you work: the items of your feeds and the runs of the Evaluate
 made again, so they are the ones to back up. \ui{User} are your own. The databases of Pollis, of both groups, are
 read-only for you, in \texttt{\textasciitilde/.pollis/databases}, and PollisDocuments in
 \texttt{\textasciitilde/.pollis/documents}; your own tables go in a database of your own. Clicking one connects it in
-the Julia REPL; the \texttt{duckdb>} terminal, the \texttt{sql>} mode and \texttt{PollisDB.connect()} attach them all
+the Julia REPL; the \texttt{duckdb>} terminal, the \texttt{pollis>} mode and \texttt{PollisDB.connect()} attach them all
 (Data and Databases, page 6).
 
 \begin{center}\small

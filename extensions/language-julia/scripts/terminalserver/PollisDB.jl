@@ -17,8 +17,9 @@ next REPL starts.
 The module looks up DBInterface.jl and Tables.jl among the packages the connection code has
 already loaded; only `build`, `connect` and `sql` load DuckDB themselves. `connect` opens a DuckDB with the
 built-in databases attached and full-text search (fts) loaded; `sql` runs a query on such a
-connection, and is what the `sql>` mode of the REPL (`>` at the start of a line) runs, and SQL cells of Julia notebooks
-(`cell`); it is exported, so that `sql("...")` needs no `PollisDB.` in the REPL and in notebooks. DuckDB is built into Pollis: `install()` adds it,
+connection, and is what the `pollis>` mode of the REPL (`>` at the start of a line) runs, and SQL cells of Julia notebooks
+(`cell`); it is exported, so that `sql("...")` needs no `PollisDB.` in the REPL and in notebooks. `publish`, exported
+too, copies a Julia table into that connection, which `name := table` does in Julia code (`share`). DuckDB is built into Pollis: `install()` adds it,
 once, to a Julia environment of Pollis' own (`ENVIRONMENT`), which PollisDB puts on the load path
 so that `using DuckDB` works in any project without touching its Project.toml. That DuckDB is Pollis'
 fork of DuckDB.jl (`DUCKDB_URL`), which brings no engine of its own: it loads the one Pollis ships, which
@@ -30,10 +31,10 @@ program, such as a database extension, open it read-only, side by side.
 """
 module PollisDB
 
-using UUIDs: UUID
+using UUIDs: UUID, uuid4
 using Dates: now, UTC
 
-export sql
+export sql, publish
 
 const DBINTERFACE = Base.PkgId(UUID("a10d1c49-ce27-4219-8d33-6db1a4562965"), "DBInterface")
 const DUCKDB = Base.PkgId(UUID("d2f5444f-75bc-4fdf-ac35-56f514c445e1"), "DuckDB")
@@ -403,7 +404,9 @@ Re-read the schemas of every registered connection, or of one, e.g. after `CREAT
 """
 refresh() = foreach(refresh, collect(keys(CONNECTIONS)))
 function refresh(id::AbstractString)
-    haskey(CONNECTIONS, id) && write_snapshot(id, CONNECTIONS[id])
+    # In the latest world: the query that changed tables may have loaded DuckDB, whose methods the caller's world
+    # does not know yet.
+    haskey(CONNECTIONS, id) && Base.invokelatest(write_snapshot, id, CONNECTIONS[id])
     return nothing
 end
 
@@ -434,6 +437,11 @@ end
 function disconnect(id::AbstractString)
     entry = pop!(CONNECTIONS, id, nothing)
     entry === nothing && return nothing
+    if entry.con === SQL_CONNECTION[]
+        # The Julia Session is closed, and no longer served; the next query opens another
+        unserve()
+        SQL_CONNECTION[] = nothing
+    end
     try
         loaded(DBINTERFACE).close!(entry.con)
     catch
@@ -629,7 +637,7 @@ function query_tables(query::AbstractString; tables...)
     end
 end
 
-"""The connection of the `sql>` mode, opened by its first query."""
+"""The connection of the REPL, Julia Session in the Databases view: the `pollis>` mode, `sql` and `publish` share it."""
 const SQL_CONNECTION = Ref{Any}(nothing)
 
 """Whether this Julia is the kernel of a notebook, whose connection the Databases view does not show."""
@@ -641,19 +649,85 @@ const CHANGING = r"\b(create|drop|alter|attach|detach|insert|update|delete|copy|
 """How many queries of `sql` have changed tables: a `Table` reads its rows again when the count has moved since."""
 const GENERATION = Ref(0)
 
+"""The connection of the REPL, Julia Session, opened now if it is not yet, and served to the window's DuckDB."""
+function sql_connection()
+    if SQL_CONNECTION[] === nothing
+        SQL_CONNECTION[] = connect(; name = "Julia Session", show = !NOTEBOOK[])
+        NOTEBOOK[] || serve(SQL_CONNECTION[])
+    end
+    return SQL_CONNECTION[]
+end
+
+"""The quack extension of DuckDB, its client and server, which Pollis ships with fts."""
+const QUACK = joinpath(DUCKDB_HOME, "quack.duckdb_extension")
+"""The httpfs extension of DuckDB, on which quack runs: loaded before it, as DuckDB would otherwise download it."""
+const HTTPFS = joinpath(DUCKDB_HOME, "httpfs.duckdb_extension")
+
 """
-    sql(query; con = <the connection of the sql> mode>)
+Where the Julia Session's database is served: its address and token, in a file only the user can read, one for each
+window, from which the duckdb> terminal and the DuckDB notebooks of the window attach it as `JuliaSession`.
+"""
+const SERVED = joinpath(DUCKDB_HOME, "served", isempty(WINDOW) ? "julia.json" : "julia.$WINDOW.json")
+
+"""The ports tried, in turn, for the Julia Session's database: quack's own, 9494, and the next ones."""
+const QUACK_PORTS = 9494:9593
+
+"""
+Serve the database of `con`, the Julia Session, with quack on localhost, on the first free port of `QUACK_PORTS`, with
+a token made now, and write both to `SERVED`. Without quack, or without a free port, the database is not served.
+"""
+function serve(con)
+    isfile(QUACK) && isfile(HTTPFS) || return nothing
+    DBInterface = loaded(DBINTERFACE)
+    token = replace(string(uuid4()), "-" => "")
+    try
+        Base.invokelatest() do
+            DBInterface.execute(con, "LOAD '$(replace(HTTPFS, "'" => "''"))'")
+            DBInterface.execute(con, "LOAD '$(replace(QUACK, "'" => "''"))'")
+            for port in QUACK_PORTS
+                uri = "quack:localhost:$port"
+                served = try
+                    DBInterface.execute(con, "CALL quack_serve('$uri', token = '$token')")
+                    true
+                catch
+                    false
+                end
+                served || continue
+                mkpath(dirname(SERVED))
+                temporary = "$SERVED.$(getpid()).tmp"
+                touch(temporary)
+                chmod(temporary, 0o600)
+                open(io -> json(io, Dict{String,Any}("uri" => uri, "token" => token, "pid" => getpid())), temporary, "w")
+                mv(temporary, SERVED; force = true)
+                return nothing
+            end
+            @debug "Pollis: no free port for the Julia Session's database" ports = QUACK_PORTS
+        end
+    catch err
+        @debug "Pollis: the Julia Session's database is not served" exception = err
+    end
+    return nothing
+end
+
+"""Remove `SERVED`, if this Julia wrote it: the Julia Session's database is no longer served."""
+function unserve()
+    try
+        isfile(SERVED) && occursin("\"pid\":$(getpid())", read(SERVED, String)) && rm(SERVED; force = true)
+    catch
+    end
+    return nothing
+end
+
+"""
+    sql(query; con = <Julia Session>)
 
 Run `query`, one or more statements separated by `;`, and return the result of the last one as a
-`Result`, a Tables.jl table. Without `con`, this is what the `sql>` mode of the REPL runs (type `>` at
+`Result`, a Tables.jl table. Without `con`, this is what the `pollis>` mode of the REPL runs (type `>` at
 the start of a line to enter it); the connection is an in-memory DuckDB from `connect`, opened at the
 first query.
 """
 function sql(query::AbstractString; con = nothing)
-    if con === nothing
-        SQL_CONNECTION[] === nothing && (SQL_CONNECTION[] = connect(; name = "sql> Mode", show = !NOTEBOOK[]))
-        con = SQL_CONNECTION[]
-    end
+    con === nothing && (con = sql_connection())
     DBInterface, Tables = loaded(DBINTERFACE), loaded(TABLES)
     DuckDB = get(() -> Base.require(DUCKDB), Base.loaded_modules, DUCKDB)
     tables_interface(Tables)
@@ -677,11 +751,13 @@ function sql(query::AbstractString; con = nothing)
 end
 
 """
-    sql(name, query; con = <the connection of the sql> mode>)
+    sql(name, query; con = <Julia Session>)
 
-Run `query`, one statement, into the temporary table `name`, made again if it is there, and return it as a `Table`:
-Julia reads it as a Tables.jl table, and SQL takes it by its name in an interpolation. In an SQL cell of a Julia
-notebook, `feeds := SELECT * FROM PollisRSS.feeds` does the same.
+Run `query`, one statement, into the table `name` of the connection's database in memory, made again if it is there,
+and return it as a `Table`: Julia reads it as a Tables.jl table, and SQL takes it by its name, in an interpolation too.
+In an SQL cell of a Julia notebook, `feeds := SELECT * FROM PollisRSS.feeds` does the same. The table is an ordinary
+one, not a temporary one, so that whatever reads the connection's tables sees it, the Databases view among them; it
+goes with the connection, as the database in memory does.
 
 ```julia
 feeds = sql("feeds", "SELECT * FROM PollisRSS.feeds")
@@ -692,7 +768,7 @@ sql("SELECT count(*) FROM \$feeds")
 function sql(name::AbstractString, query::AbstractString; con = nothing)
     found = statements(query)
     length(found) == 1 || error("PollisDB: a table is made from one statement, and the query of $name has $(length(found))")
-    sql("CREATE OR REPLACE TEMP TABLE $(identifier(name)) AS $(only(found))"; con)
+    sql("CREATE OR REPLACE TABLE $(identifier(name)) AS $(only(found))"; con)
     return Table(name, con === nothing ? SQL_CONNECTION[] : con)
 end
 
@@ -735,7 +811,7 @@ blank(piece::AbstractString) = isempty(strip(replace(piece, r"--[^\n]*|/\*.*?\*/
 """The statements of `query`, one or more separated by semicolons."""
 statements(query::AbstractString) = filter(!blank, pieces(query))
 
-"""Whether `query` is blank or ends with a semicolon outside quotes and comments: the `sql>` mode runs it then."""
+"""Whether `query` is blank or ends with a semicolon outside quotes and comments: the `pollis>` mode runs it then."""
 complete(query::AbstractString) = blank(query) || blank(last(pieces(query)))
 
 """The result of a query of `sql`: its columns, a Tables.jl column table, and the seconds it took."""
@@ -805,14 +881,27 @@ function grid(columns::NamedTuple, tail, count::Integer; parts = String[], after
         [T <: Real && !(T <: Bool) for T in types], first_rows, last_rows, count, join([parts; rows; after], " · "))
 end
 
-"""`grid` drawn in a box, with `footer` under it, as the REPL shows a table."""
+"""
+`grid` drawn in a box, with `footer` under it, as the REPL shows a table: the columns that fit in the width of `io`,
+the others named after `footer`.
+"""
 function draw(io::IO, g::Grid, footer::AbstractString)
     rows = [g.first; g.last]
     width(j) = min(40, maximum(r -> textwidth(r[j]), rows; init = textwidth(g.names[j])))
-    widths = [width(j) for j in eachindex(g.names)]
-    fit(s, w) = textwidth(s) > w ? Base.first(s, w - 1) * "…" : rpad(s, w)
+    # A column takes its width and three more, "│ " before it and " " after it; the box ends with "│".
+    available = displaysize(io)[2] - 1
+    shown = 0
+    used = 0
+    for j in eachindex(g.names)
+        used += width(j) + 3
+        used > available && j > 1 && break
+        shown = j
+    end
+    columns = 1:shown
+    widths = [min(width(j), max(1, available - 3)) for j in columns]
+    fit(s, w) = textwidth(s) > w ? Base.first(s, max(0, w - 1)) * "…" : rpad(s, w)
     line(l, m, r) = string(l, join((repeat('─', w + 2) for w in widths), m), r)
-    row(values) = string("│ ", join((fit(values[j], widths[j]) for j in eachindex(g.names)), " │ "), " │")
+    row(values) = string("│ ", join((fit(values[j], widths[k]) for (k, j) in enumerate(columns)), " │ "), " │")
     println(io, line('┌', '┬', '┐'))
     println(io, row(g.names))
     println(io, line('├', '┼', '┤'))
@@ -821,6 +910,8 @@ function draw(io::IO, g::Grid, footer::AbstractString)
     foreach(r -> println(io, row(r)), g.last)
     println(io, line('└', '┴', '┘'))
     print(io, footer)
+    hidden = g.names[shown+1:end]
+    isempty(hidden) || print(io, "\n", length(hidden) == 1 ? "1 more column: " : "$(length(hidden)) more columns: ", join(hidden, ", "))
     return nothing
 end
 
@@ -986,7 +1077,7 @@ end
     cell(code; file = "")
 
 Run `code`, an SQL cell of a Julia notebook, on the connection of `sql`: each statement in turn, its table shown under
-the cell. A statement that starts with `name :=`, such as `feeds := SELECT * FROM PollisRSS.feeds`, makes the temporary
+the cell. A statement that starts with `name :=`, such as `feeds := SELECT * FROM PollisRSS.feeds`, makes the
 table `feeds`, as `sql("feeds", query)` does, and binds the Julia variable `feeds` to it, a `Table`. The cell's
 statements, without their `name :=`, are logged in the History of the Databases view, with the notebook `file`.
 """
@@ -1020,10 +1111,87 @@ function cell(code::AbstractString; file::AbstractString = "")
     return nothing
 end
 
+"""The name under which `publish` hands a Julia table to DuckDB, while it copies it."""
+const INCOMING = "pollis_incoming"
+
 """
-Add the `sql>` mode to the REPL: `>` at the start of a line enters it, backspace on an empty line
+    publish(table, name; con = <Julia Session>)
+
+Copy `table`, a Tables.jl table such as a named tuple of vectors, into the table `name` of DuckDB, made again if it is
+there, and return `table`. SQL then takes it by its name, while Julia keeps `table` as it is: a change to it reaches
+DuckDB when it is published again. In Julia code that Pollis runs, from the REPL, the editor or a notebook,
+`stock_returns := table` does the same and binds `stock_returns` to `table`.
+
+```julia
+stock_returns := (ticker = ["AAPL", "MSFT"], returns = [0.12, 0.08])
+sql("SELECT avg(returns) FROM stock_returns")
+```
+"""
+function publish(table, name::AbstractString; con = nothing)
+    con === nothing && (con = sql_connection())
+    if table isa Table && getfield(table, :con) === con
+        # A table of DuckDB already: copied there, without reading its rows into Julia
+        getfield(table, :name) == name || sql(name, "SELECT * FROM $table"; con)
+        return table
+    end
+    DuckDB = get(() -> Base.require(DUCKDB), Base.loaded_modules, DUCKDB)
+    Tables = loaded(TABLES)
+    Base.invokelatest(Tables.istable, table) ||
+        error("PollisDB: DuckDB takes tables, such as a named tuple of vectors, and $name is a $(typeof(table)); bind other values with `=`")
+    Base.invokelatest(DuckDB.register_table, con, table, INCOMING)
+    try
+        sql(name, "SELECT * FROM $(identifier(INCOMING))"; con)
+    finally
+        Base.invokelatest(DuckDB.unregister_table, con, INCOMING)
+        # The copy refreshed the Databases view while INCOMING was there; once more, without it
+        refresh()
+    end
+    return table
+end
+
+"""
+`ast`, Julia code about to run, with each `name := table` at its top level, in `begin` blocks included, made
+`name = publish(table, "name")`. Elsewhere, in a function or a loop, `:=` is left to Julia, which refuses it.
+"""
+function share(ast)
+    ast isa Expr || return ast
+    if ast.head === :(:=) && length(ast.args) == 2 && ast.args[1] isa Symbol
+        name = ast.args[1]
+        return Expr(:(=), name, Expr(:call, GlobalRef(@__MODULE__, :publish), ast.args[2], string(name)))
+    elseif ast.head === :toplevel || ast.head === :block
+        return Expr(ast.head, map(share, ast.args)...)
+    end
+    return ast
+end
+
+"""
+    pollis_mode(query)
+
+What the `pollis>` mode runs: `query`, one or more statements, as `sql` does, where a statement that starts with
+`name :=`, such as `feeds := SELECT * FROM PollisRSS.feeds`, makes the table `name`, as `sql(name, query)` does, and
+binds the Julia variable `name` to it, as in an SQL cell of a Julia notebook. The result is that of the last statement.
+"""
+function pollis_mode(query::AbstractString)
+    found = statements(query)
+    any(statement -> match(ASSIGNMENT, statement) !== nothing, found) || return sql(query)
+    result = nothing
+    for statement in found
+        m = match(ASSIGNMENT, statement)
+        if m === nothing
+            result = sql(statement)
+        else
+            result = sql(m[:name], m[:query])
+            Core.eval(Main, Expr(:global, Expr(:(=), Symbol(m[:name]), result)))
+        end
+    end
+    return result
+end
+
+"""
+Add the `pollis>` mode to the REPL: `>` at the start of a line enters it, backspace on an empty line
 leaves it. A query ends with `;`; until then, Enter starts a new line. The result is shown as a table
-and is `ans` afterwards.
+and is `ans` afterwards. In the history of the REPL, the mode is named `sql`, the name its queries are recorded
+under there.
 """
 function sql_mode(repl)
     REPL = parentmodule(typeof(repl))
@@ -1035,8 +1203,8 @@ function sql_mode(repl)
     end
     isdefined(repl, :interface) || return nothing
     main = repl.interface.modes[1]
-    any(m -> m isa LineEdit.Prompt && m.prompt == "sql> ", repl.interface.modes) && return nothing
-    mode = LineEdit.Prompt("sql> ";
+    any(m -> m isa LineEdit.Prompt && m.prompt == "pollis> ", repl.interface.modes) && return nothing
+    mode = LineEdit.Prompt("pollis> ";
         prompt_prefix = repl.options.hascolor ? Base.text_colors[:yellow] : "",
         prompt_suffix = "",
         sticky = true,
@@ -1046,7 +1214,7 @@ function sql_mode(repl)
     hp.mode_mapping[:sql] = mode
     mode.hist = hp
     mode.on_done = REPL.respond(repl, mode; suppress_on_semicolon = false) do line
-        :($sql($line))
+        :($pollis_mode($line))
     end
     _, prefix_keymap = LineEdit.setup_prefix_keymap(hp, mode)
     keymaps = Dict{Any,Any}[REPL.mode_keymap(main), prefix_keymap, LineEdit.history_keymap, LineEdit.default_keymap, LineEdit.escape_defaults]
@@ -1055,9 +1223,10 @@ function sql_mode(repl)
     push!(repl.interface.modes, mode)
     enter = Dict{Any,Any}('>' => function (s, args...)
         if isempty(s) || position(LineEdit.buffer(s)) == 0
+            # The text of julia> goes to pollis>; from an empty julia>, pollis> keeps what was typed there.
             buf = copy(LineEdit.buffer(s))
             return LineEdit.transition(s, mode) do
-                LineEdit.state(s, mode).input_buffer = buf
+                buf.size > 0 && (LineEdit.state(s, mode).input_buffer = buf)
             end
         end
         LineEdit.edit_insert(s, '>')
@@ -1065,8 +1234,23 @@ function sql_mode(repl)
         return nothing
     end)
     main.keymap_dict = LineEdit.keymap_merge(main.keymap_dict, enter)
+    # The code Pollis sends follows TO_JULIA, which takes every other mode to julia>, whose paste runs it; what is
+    # typed in that mode stays there.
+    to_julia = Dict{Any,Any}(TO_JULIA => function (s, args...)
+        LineEdit.mode(s) === main && return nothing
+        return LineEdit.transition(s, main)
+    end)
+    for other in repl.interface.modes
+        other isa LineEdit.Prompt && other !== main && (other.keymap_dict = LineEdit.keymap_merge(other.keymap_dict, to_julia))
+    end
     return nothing
 end
+
+"""
+The keys that come before the code Pollis sends to the REPL, `ESC [ 6 9 ~`, which `sql_mode` binds in every mode
+but julia> to going there. A Julia that does not bind them ignores them, as all keys `ESC [ 6` and two more.
+"""
+const TO_JULIA = "\e[69~"
 
 """The folder of the PollisDatasets.jl package on the load path, or `nothing`."""
 function datasets_root()
@@ -1903,13 +2087,18 @@ end
 """Whether process `pid` is running. Assumed on Windows, which has no `kill(pid, 0)`."""
 alive(pid::Integer) = Sys.iswindows() || ccall(:kill, Cint, (Cint, Cint), pid, 0) == 0
 
-"""Remove the snapshots of Julia processes that died without exiting, which left them behind."""
+"""
+Remove the snapshots, and the addresses of served databases, of Julia processes that died without exiting, which left
+them behind.
+"""
 function prune()
-    isdir(SESSIONS) || return nothing
-    for file in readdir(SESSIONS; join = true)
-        endswith(file, ".json") || continue
-        m = match(r"\"pid\":(?<pid>\d+)", read(file, String))
-        (m === nothing || !alive(parse(Int, m[:pid]))) && rm(file; force = true)
+    for folder in (SESSIONS, dirname(SERVED))
+        isdir(folder) || continue
+        for file in readdir(folder; join = true)
+            endswith(file, ".json") || continue
+            m = match(r"\"pid\":(?<pid>\d+)", read(file, String))
+            (m === nothing || !alive(parse(Int, m[:pid]))) && rm(file; force = true)
+        end
     end
     return nothing
 end
@@ -1922,17 +2111,17 @@ end
 # After the user's environments, so that their own versions of these packages come first.
 ENVIRONMENT in LOAD_PATH || push!(LOAD_PATH, ENVIRONMENT)
 
-# The sql> mode, in the REPL of Pollis' terminal; a notebook has no REPL, and runs SQL cells with `cell`.
+# The pollis> mode, in the REPL of Pollis' terminal; a notebook has no REPL, and runs SQL cells with `cell`.
 function add_sql_mode(repl)
     @async try
         sql_mode(repl)
     catch err
-        @debug "Pollis: sql> mode not added" exception = err
+        @debug "Pollis: pollis> mode not added" exception = err
     end
 end
 isdefined(Base, :active_repl) ? add_sql_mode(Base.active_repl) : atreplinit(add_sql_mode)
 
 # Remove the snapshots when Julia exits, so the view does not show dead connections.
-atexit(() -> foreach(id -> rm(snapshot_path(id); force = true), keys(CONNECTIONS)))
+atexit(() -> (foreach(id -> rm(snapshot_path(id); force = true), keys(CONNECTIONS)); unserve()))
 
 end # module

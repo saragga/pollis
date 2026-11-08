@@ -24,11 +24,15 @@ export interface IDuckDBNotebookRun {
 
 /**
  * The DuckDB of the notebooks, in a process of its own: a connection to each notebook, made at its first cell, an
- * in-memory database with the databases of Pollis attached read-only and fts loaded, as in the duckdb> terminal.
+ * in-memory database with the databases of Pollis attached read-only, fts loaded and the Julia Session of the window
+ * attached as JuliaSession, as in the duckdb> terminal.
  */
 export interface IDuckDBNotebookEngine {
-	/** Runs the statements of a cell of `notebook`; `file`, the notebook's file, goes with the query into the History view. */
-	run(notebook: string, sql: string, file: string | undefined): Promise<IDuckDBNotebookRun>;
+	/**
+	 * Runs the statements of a cell of `notebook`; `file`, the notebook's file, goes with the query into the History
+	 * view, and `window`, the id of the window's Julia REPL, says which Julia Session to attach.
+	 */
+	run(notebook: string, sql: string, file: string | undefined, window: string | undefined): Promise<IDuckDBNotebookRun>;
 	/** Stops the statement `notebook` is running. */
 	interrupt(notebook: string): Promise<void>;
 	/** Closes the connection of `notebook`; its next cell opens a new one. */

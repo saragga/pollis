@@ -15,10 +15,9 @@ import { IStorageService, StorageScope, StorageTarget } from '../../../../platfo
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { IDatabaseConnectionsService, IDatabaseSession } from '../common/databaseConnections.js';
 import { BENCHMARKS_DATABASE_ID, BUILTIN_DATABASE_ID, COMPARISONS_DATABASE_ID, DatabaseConnectionTarget, DOCUMENTS_DATABASE_ID, IDatabaseConnectionProfile, JOURNALS_DATABASE_ID, REFERENCES_DATABASE_ID, RSS_DATABASE_ID } from '../common/databaseDrivers.js';
+import { JULIA_POLLIS_WINDOW_KEY } from '../common/duckdbSql.js';
 
 const STORAGE_KEY = 'pollis.databases.connections';
-// Set by the Julia extension: the id of this window's REPL, which PollisDB writes into its snapshots.
-const JULIA_POLLIS_WINDOW_KEY = 'julia.pollisWindow';
 
 function storageScope(target: DatabaseConnectionTarget): StorageScope.PROFILE | StorageScope.WORKSPACE {
 	return target === 'global' ? StorageScope.PROFILE : StorageScope.WORKSPACE;

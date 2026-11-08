@@ -55,7 +55,7 @@ export async function switchEnvToPath(envpath: string, notifyLS: boolean) {
         }
     }
 
-    g_current_environment.text = 'Julia env: ' + (await getEnvName())
+    g_current_environment.text = 'Julia Env: ' + (await getEnvName())
 
     if (
         vscode.workspace.workspaceFolders !== undefined &&
@@ -330,9 +330,10 @@ export async function activate(
 
     context.subscriptions.push(registerCommand('language-julia.changeCurrentEnvironment', changeJuliaEnvironment))
     // Environment status bar
-    g_current_environment = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left)
+    // POLLIS: left of the Julia REPL item (priority 0), which is left of the DuckDB REPL item (-1)
+    g_current_environment = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1)
     g_current_environment.tooltip = 'Choose Julia environment'
-    g_current_environment.text = 'Julia env: [loading]'
+    g_current_environment.text = 'Julia Env: [loading]'
     g_current_environment.command = 'language-julia.changeCurrentEnvironment'
     context.subscriptions.push(g_current_environment)
     await switchEnvToPath(await getEnvPath(), false) // We don't need to notify the LS here because it will start with that env already

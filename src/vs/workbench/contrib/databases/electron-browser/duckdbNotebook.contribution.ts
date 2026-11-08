@@ -16,7 +16,7 @@ import { generateUuid } from '../../../../base/common/uuid.js';
 import { ProxyChannel } from '../../../../base/parts/ipc/common/ipc.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, MenuId, registerAction2 } from '../../../../platform/actions/common/actions.js';
-import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
+import { ContextKeyExpr, IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
 import { ExtensionIdentifier } from '../../../../platform/extensions/common/extensions.js';
 import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
 import { createDecorator, IInstantiationService, ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
@@ -31,7 +31,7 @@ import { NOTEBOOK_KERNEL } from '../../notebook/common/notebookContextKeys.js';
 import { INotebookKernel, INotebookKernelChangeEvent, INotebookKernelService, VariablesResult } from '../../notebook/common/notebookKernelService.js';
 import { INotebookService } from '../../notebook/common/notebookService.js';
 import { DUCKDB_NOTEBOOK_CHANNEL, DuckDBNotebookResult, IDuckDBNotebookEngine, IDuckDBNotebookRun } from '../common/duckdbNotebook.js';
-import { sqlAssignedName } from '../common/duckdbSql.js';
+import { JULIA_POLLIS_WINDOW_KEY, sqlAssignedName } from '../common/duckdbSql.js';
 
 /** The kernel's id, which the notebook toolbar's Restart is shown for. */
 const DUCKDB_KERNEL_ID = 'pollis.duckdbSql';
@@ -83,8 +83,8 @@ class DuckDBNotebookEngineService extends Disposable implements IDuckDBNotebookE
 		return this.engine;
 	}
 
-	async run(notebook: string, sql: string, file: string | undefined): Promise<IDuckDBNotebookRun> {
-		return (await this.get()).proxy.run(notebook, sql, file);
+	async run(notebook: string, sql: string, file: string | undefined, window: string | undefined): Promise<IDuckDBNotebookRun> {
+		return (await this.get()).proxy.run(notebook, sql, file, window);
 	}
 
 	async interrupt(notebook: string): Promise<void> {
@@ -215,6 +215,7 @@ class DuckDBNotebookKernel extends Disposable implements INotebookKernel {
 		@IDuckDBNotebookEngineService private readonly engine: IDuckDBNotebookEngineService,
 		@INotebookExecutionStateService private readonly executionStateService: INotebookExecutionStateService,
 		@INotebookService private readonly notebookService: INotebookService,
+		@IContextKeyService private readonly contextKeyService: IContextKeyService,
 	) {
 		super();
 		// A notebook closed: its connection, and its in-memory database, go with it
@@ -253,7 +254,7 @@ class DuckDBNotebookKernel extends Disposable implements INotebookKernel {
 			try {
 				run = assigned
 					? { results: [], error: localize('duckdbNotebook.assignment', "`{0} :=` hands a result to Julia and runs in Julia notebooks; here, write `CREATE TEMP TABLE {0} AS SELECT ...`", assigned) }
-					: await this.engine.run(key, sql, file);
+					: await this.engine.run(key, sql, file, this.contextKeyService.getContextKeyValue<string>(JULIA_POLLIS_WINDOW_KEY));
 			} catch (err) {
 				// The process ended under the cell
 				run = { results: [], error: String((err as Error)?.message ?? err) };

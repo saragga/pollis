@@ -13,12 +13,14 @@ import { Server as ChildProcessServer } from '../../../../base/parts/ipc/node/ip
 import { Server as UtilityProcessServer } from '../../../../base/parts/ipc/node/ipc.mp.js';
 import { isUtilityProcess } from '../../../../base/parts/sandbox/node/electronTypes.js';
 import { DUCKDB_NOTEBOOK_CHANNEL, DUCKDB_NOTEBOOK_SHOWN_ROWS, DuckDBNotebookResult, IDuckDBNotebookEngine, IDuckDBNotebookRun } from '../common/duckdbNotebook.js';
-import { CHANGES, DUCKDB_OPTIONS, logQuery, preparePollisConnection, QUIET, readShownRows, trimQueryLog } from './duckdbPollis.js';
+import { CHANGES, DUCKDB_OPTIONS, JuliaSessionAttachment, logQuery, preparePollisConnection, QUIET, readShownRows, trimQueryLog } from './duckdbPollis.js';
 
 interface INotebookConnection {
 	readonly instance: DuckDBInstance;
 	readonly connection: DuckDBConnection;
 	readonly problems: string[];
+	/** The Julia Session of the window, made with the connection, for the window of its first cell. */
+	readonly julia: JuliaSessionAttachment;
 }
 
 class DuckDBNotebookEngine implements IDuckDBNotebookEngine {
@@ -26,7 +28,7 @@ class DuckDBNotebookEngine implements IDuckDBNotebookEngine {
 	/** The connection of each notebook, by its URI: one instance each, so that their in-memory databases are apart. */
 	private readonly connections = new Map<string, Promise<INotebookConnection>>();
 
-	private connect(notebook: string): { readonly opened: Promise<INotebookConnection>; readonly isNew: boolean } {
+	private connect(notebook: string, window: string | undefined): { readonly opened: Promise<INotebookConnection>; readonly isNew: boolean } {
 		const existing = this.connections.get(notebook);
 		if (existing) {
 			return { opened: existing, isNew: false };
@@ -34,7 +36,7 @@ class DuckDBNotebookEngine implements IDuckDBNotebookEngine {
 		const opened = (async () => {
 			const instance = await DuckDBInstance.create(':memory:', DUCKDB_OPTIONS);
 			const connection = await instance.connect();
-			return { instance, connection, problems: await preparePollisConnection(connection) };
+			return { instance, connection, problems: await preparePollisConnection(connection), julia: new JuliaSessionAttachment(connection, window) };
 		})();
 		this.connections.set(notebook, opened);
 		// A connection that could not be made is tried again at the next cell
@@ -42,16 +44,19 @@ class DuckDBNotebookEngine implements IDuckDBNotebookEngine {
 		return { opened, isNew: true };
 	}
 
-	async run(notebook: string, sql: string, file: string | undefined): Promise<IDuckDBNotebookRun> {
+	async run(notebook: string, sql: string, file: string | undefined, window: string | undefined): Promise<IDuckDBNotebookRun> {
 		const begun = Date.now();
 		const results: DuckDBNotebookResult[] = [];
 		let problems: string[] | undefined;
 		let error: string | undefined;
 		try {
-			const { opened, isNew } = this.connect(notebook);
-			const { connection, problems: found } = await opened;
-			if (isNew && found.length) {
-				problems = found;
+			const { opened, isNew } = this.connect(notebook, window);
+			const { connection, problems: found, julia } = await opened;
+			// The Julia REPL may have started, restarted or stopped since the last cell
+			const attached = await julia.sync();
+			const noted = [...(isNew ? found : []), ...(attached ? [attached] : [])];
+			if (noted.length) {
+				problems = noted;
 			}
 			const statements = await connection.extractStatements(sql);
 			for (let index = 0; index < statements.count; index++) {

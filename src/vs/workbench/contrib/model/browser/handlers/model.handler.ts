@@ -216,7 +216,10 @@ export async function sendToJuliaRepl(code: string, commandService: ICommandServ
 	const started = await commandService.executeCommand<boolean>('language-julia.startREPL');
 	if (!started) { return false; }
 	// As a paste, so the REPL reads all of it before running any: typed, what is sent while a slow line runs can be lost.
-	const text = isWindows ? code + '\n' : `\u001b[200~${code}\n\u001b[201~`;
+	// Before it, the keys by which PollisDB (PollisDB.jl, TO_JULIA) takes the REPL from another mode, pollis> say, to
+	// julia>, where the paste runs; a Julia without PollisDB ignores them.
+	const toJulia = '\u001b[69~';
+	const text = isWindows ? toJulia + code + '\n' : `${toJulia}\u001b[200~${code}\n\u001b[201~`;
 	await commandService.executeCommand('workbench.action.terminal.sendSequence', { text });
 	return true;
 }

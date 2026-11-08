@@ -56,6 +56,10 @@ available under the MIT License.
 | DuckDB Node API | MIT | https://github.com/duckdb/duckdb-node-neo |
 | DuckDB.jl (Pollis fork) | MIT | https://github.com/Trumpingtons/DuckDB.jl |
 | fts extension for DuckDB | MIT | https://github.com/duckdb/duckdb-fts |
+| quack extension for DuckDB | MIT | https://github.com/duckdb/duckdb-quack |
+| httpfs extension for DuckDB | MIT | https://github.com/duckdb/duckdb-httpfs |
+| OpenSSL (in httpfs) | Apache-2.0 | https://github.com/openssl/openssl |
+| curl (in httpfs) | curl | https://github.com/curl/curl |
 | Poppler (Poppler_jll) | GPL-2.0 or GPL-3.0 | https://poppler.freedesktop.org |
 | PDF.js | Apache-2.0 | https://github.com/mozilla/pdf.js |
 

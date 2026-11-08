@@ -1,5 +1,5 @@
-// POLLIS: the DuckDB engine of Pollis, for Julia as well. Pollis ships libduckdb (with @duckdb/node-api) and the fts
-// extension, full-text search, compressed (build/pollis/duckdb.ts); at install, they are copied and unpacked into ~/.pollis/duckdb/, a
+// POLLIS: the DuckDB engine of Pollis, for Julia as well. Pollis ships libduckdb (with @duckdb/node-api) and the
+// extensions fts, full-text search, and quack, with httpfs on which it runs, compressed (build/pollis/duckdb.ts); at install, they are copied and unpacked into ~/.pollis/duckdb/, a
 // path that stays the same across updates. Julia's DuckDB.jl is Pollis' fork without DuckDB_jll
 // (Trumpingtons/DuckDB.jl), which loads the library named by JULIA_DUCKDB_LIBRARY; the path is fixed when DuckDB.jl is
 // precompiled, so it must not change.
@@ -18,14 +18,17 @@ const LIBRARY_NAME = process.platform === 'win32' ? 'duckdb.dll' : process.platf
 /** The libduckdb that Julia loads, through JULIA_DUCKDB_LIBRARY. */
 export const DUCKDB_LIBRARY = path.join(DUCKDB_HOME, LIBRARY_NAME)
 
-/** What was copied, so that it is copied again only when Pollis brings a new DuckDB or fts. */
+/** What was copied, so that it is copied again only when Pollis brings a new DuckDB or new extensions. */
 const STAMP = path.join(DUCKDB_HOME, 'pollis.stamp')
+
+/** The extensions of DuckDB that come with Pollis. */
+const DUCKDB_EXTENSIONS = ['fts', 'quack', 'httpfs']
 
 let g_ready: Promise<void> = Promise.resolve()
 
 /**
  * Sets JULIA_DUCKDB_LIBRARY for every Julia that Pollis starts (the REPL and terminals, notebooks, the install task),
- * and copies the engine and fts into ~/.pollis/duckdb/ when they are missing or older than Pollis'.
+ * and copies the engine and its extensions into ~/.pollis/duckdb/ when they are missing or older than Pollis'.
  */
 export function activate(context: vscode.ExtensionContext) {
     process.env.JULIA_DUCKDB_LIBRARY = DUCKDB_LIBRARY
@@ -59,13 +62,19 @@ async function install(appRoot: string) {
     if (!folder) {
         return
     }
-    // In a development build, `npm run gulp fetch-duckdb-fts` fetches fts.
-    const fts = firstExisting([
-        path.join(appRoot, 'duckdb', 'fts.duckdb_extension.gz'),
-        path.join(appRoot, '.build', 'duckdb', 'fts.duckdb_extension.gz'),
-    ])
+    // The extensions that come with Pollis: fts, full-text search, and quack, which serves the Julia Session's database,
+    // with httpfs, on which quack runs.
+    // In a development build, `npm run gulp fetch-duckdb-extensions` fetches them.
+    const extensions = DUCKDB_EXTENSIONS.map(name => ({
+        name,
+        file: firstExisting([
+            path.join(appRoot, 'duckdb', `${name}.duckdb_extension.gz`),
+            path.join(appRoot, '.build', 'duckdb', `${name}.duckdb_extension.gz`),
+        ]),
+    }))
     const version = JSON.parse(await fs.promises.readFile(path.join(folder, 'package.json'), 'utf8')).version
-    const stamp = `${version}\n${fts ? (await fs.promises.stat(fts)).size : 'no fts'}\n`
+    const sizes = await Promise.all(extensions.map(async e => (e.file ? `${(await fs.promises.stat(e.file)).size}` : `no ${e.name}`)))
+    const stamp = `${version}\n${sizes.join('\n')}\n`
     const installed = await fs.promises.readFile(STAMP, 'utf8').catch(() => '')
     if (installed === stamp && fs.existsSync(DUCKDB_LIBRARY)) {
         return
@@ -75,11 +84,13 @@ async function install(appRoot: string) {
     const library = `${DUCKDB_LIBRARY}.${process.pid}.tmp`
     await fs.promises.copyFile(path.join(folder, LIBRARY_NAME), library)
     await fs.promises.rename(library, DUCKDB_LIBRARY)
-    if (fts) {
-        const target = path.join(DUCKDB_HOME, 'fts.duckdb_extension')
-        const unpacked = `${target}.${process.pid}.tmp`
-        await pipeline(fs.createReadStream(fts), zlib.createGunzip(), fs.createWriteStream(unpacked))
-        await fs.promises.rename(unpacked, target)
+    for (const { name, file } of extensions) {
+        if (file) {
+            const target = path.join(DUCKDB_HOME, `${name}.duckdb_extension`)
+            const unpacked = `${target}.${process.pid}.tmp`
+            await pipeline(fs.createReadStream(file), zlib.createGunzip(), fs.createWriteStream(unpacked))
+            await fs.promises.rename(unpacked, target)
+        }
     }
     // The Lance extension that Pollis brought up to 0.2.10, 234 MB, which it no longer uses; on Windows, a Julia that
     // has it loaded keeps it until the next install.

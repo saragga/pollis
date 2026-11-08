@@ -270,13 +270,19 @@ end
 
 # don't inline this so we can find it in the stacktrace
 @noinline function repleval(m, code::String, file)
-    args = VERSION >= v"1.5" ? (REPL.softscope, m, code, file) : (m, code, file)
-    return include_string(args...)
+    return include_string(pollis_mapexpr(VERSION >= v"1.5" ? REPL.softscope : identity), m, code, file)
 end
 
 @noinline function repleval(m, code, _)
-    return Base.eval(m, code)
+    return Base.eval(m, pollis_share(code))
 end
+
+# POLLIS: `name := table` in Julia code copies the table into DuckDB, by PollisDB.share, which Pollis' REPL and
+# notebooks load into Main; without it, Julia refuses `:=` as before.
+pollis_share(ast) = isdefined(Main, :PollisDB) ? Base.invokelatest(Main.PollisDB.share, ast) : ast
+
+# POLLIS: the `mapexpr` of include_string: `f` after PollisDB.share.
+pollis_mapexpr(f) = ast -> f(pollis_share(ast))
 
 replcontext(io, limitflag) = IOContext(
     io,

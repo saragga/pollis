@@ -12,7 +12,7 @@ import { ICodeEditorService } from '../../../../editor/browser/services/codeEdit
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, MenuId, MenuRegistry, registerAction2 } from '../../../../platform/actions/common/actions.js';
 import { CommandsRegistry } from '../../../../platform/commands/common/commands.js';
-import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
+import { ContextKeyExpr, IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { KeybindingsRegistry, KeybindingWeight } from '../../../../platform/keybinding/common/keybindingsRegistry.js';
 import { IQuickInputService, IQuickPickItem } from '../../../../platform/quickinput/common/quickInput.js';
@@ -21,7 +21,7 @@ import { INativeWorkbenchEnvironmentService } from '../../../services/environmen
 import { IStatusbarEntry, IStatusbarEntryAccessor, IStatusbarService, StatusbarAlignment } from '../../../services/statusbar/browser/statusbar.js';
 import { ITerminalInstance, ITerminalService } from '../../terminal/browser/terminal.js';
 import { DATABASES_VIEW_CONTAINER_ID } from '../browser/connectionsView.js';
-import { RUN_IN_DUCKDB_TERMINAL_COMMAND_ID, runnableSql, sqlStatementAt } from '../common/duckdbSql.js';
+import { JULIA_POLLIS_WINDOW_KEY, RUN_IN_DUCKDB_TERMINAL_COMMAND_ID, runnableSql, sqlStatementAt } from '../common/duckdbSql.js';
 
 /** The duckdb> shell, which Electron runs as Node through bootstrap-fork. */
 const DUCKDB_SHELL_ENTRYPOINT = 'vs/workbench/contrib/databases/node/duckdbShellMain';
@@ -29,14 +29,18 @@ const DUCKDB_SHELL_ENTRYPOINT = 'vs/workbench/contrib/databases/node/duckdbShell
 /** The command of the status bar item: starts the shell, or offers to show, restart or stop it. */
 const DUCKDB_REPL_ACTIONS_COMMAND_ID = 'pollis.databases.duckdbReplActions';
 
-/** Opens the shell on an in-memory database, or on the DuckDB file `file`, and shows it, focused unless `focus` is false. */
-async function openDuckDBTerminal(terminalService: ITerminalService, environmentService: INativeWorkbenchEnvironmentService, file: string | undefined, focus = true): Promise<ITerminalInstance> {
+/**
+ * Opens the shell on an in-memory database, or on the DuckDB file `file`, and shows it, focused unless `focus` is
+ * false. The shell attaches the Julia Session of this window, whose id it is given.
+ */
+async function openDuckDBTerminal(terminalService: ITerminalService, environmentService: INativeWorkbenchEnvironmentService, contextKeyService: IContextKeyService, file: string | undefined, focus = true): Promise<ITerminalInstance> {
+	const window = contextKeyService.getContextKeyValue<string>(JULIA_POLLIS_WINDOW_KEY);
 	const instance = await terminalService.createTerminal({
 		config: {
 			name: localize('databases.duckdbRepl', "DuckDB REPL"),
 			executable: environmentService.execPath,
 			args: [FileAccess.asFileUri('bootstrap-fork.js').fsPath, ...(file ? [file] : [])],
-			env: { ELECTRON_RUN_AS_NODE: '1', VSCODE_ESM_ENTRYPOINT: DUCKDB_SHELL_ENTRYPOINT },
+			env: { ELECTRON_RUN_AS_NODE: '1', VSCODE_ESM_ENTRYPOINT: DUCKDB_SHELL_ENTRYPOINT, ...(window ? { POLLIS_WINDOW: window } : {}) },
 			// The icon of the button that opens it, as the Julia REPL has
 			icon: Codicon.terminal,
 			// Owned as the Julia REPL is, by the feature that opens it: the terminal shows no hint of its own
@@ -94,7 +98,7 @@ registerAction2(class extends Action2 {
 
 	/** Opens the shell on an in-memory database, or on the DuckDB file `file`. */
 	async run(accessor: ServicesAccessor, file?: string): Promise<void> {
-		await openDuckDBTerminal(accessor.get(ITerminalService), accessor.get(INativeWorkbenchEnvironmentService), typeof file === 'string' ? file : undefined);
+		await openDuckDBTerminal(accessor.get(ITerminalService), accessor.get(INativeWorkbenchEnvironmentService), accessor.get(IContextKeyService), typeof file === 'string' ? file : undefined);
 	}
 });
 
@@ -113,6 +117,7 @@ class DuckDBReplStatus extends Disposable implements IWorkbenchContribution {
 	constructor(
 		@ITerminalService private readonly terminalService: ITerminalService,
 		@INativeWorkbenchEnvironmentService private readonly environmentService: INativeWorkbenchEnvironmentService,
+		@IContextKeyService private readonly contextKeyService: IContextKeyService,
 		@IQuickInputService private readonly quickInputService: IQuickInputService,
 		@IStatusbarService statusbarService: IStatusbarService,
 		@ICodeEditorService codeEditorService: ICodeEditorService,
@@ -184,7 +189,7 @@ class DuckDBReplStatus extends Disposable implements IWorkbenchContribution {
 		if (!sql) {
 			return;
 		}
-		const shell = this.current ?? await openDuckDBTerminal(this.terminalService, this.environmentService, undefined, false);
+		const shell = this.current ?? await openDuckDBTerminal(this.terminalService, this.environmentService, this.contextKeyService, undefined, false);
 		if (shell === this.current) {
 			await showTerminal(this.terminalService, shell, false);
 		}
@@ -194,7 +199,7 @@ class DuckDBReplStatus extends Disposable implements IWorkbenchContribution {
 	private async runActions(): Promise<void> {
 		const shell = this.current;
 		if (!shell) {
-			await openDuckDBTerminal(this.terminalService, this.environmentService, undefined);
+			await openDuckDBTerminal(this.terminalService, this.environmentService, this.contextKeyService, undefined);
 			return;
 		}
 		type Action = 'show' | 'restart' | 'stop';
@@ -215,7 +220,7 @@ class DuckDBReplStatus extends Disposable implements IWorkbenchContribution {
 				// Reopened on the same database
 				const file = databaseFileOf(shell);
 				shell.dispose();
-				await openDuckDBTerminal(this.terminalService, this.environmentService, file);
+				await openDuckDBTerminal(this.terminalService, this.environmentService, this.contextKeyService, file);
 				break;
 			}
 			case 'stop':

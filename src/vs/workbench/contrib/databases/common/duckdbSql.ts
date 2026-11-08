@@ -3,6 +3,9 @@
  *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+/** Set by the Julia extension: the id of this window's Julia REPL, which PollisDB writes into the files it shares. */
+export const JULIA_POLLIS_WINDOW_KEY = 'julia.pollisWindow';
+
 /** Runs SQL in the DuckDB terminal used last, or opens one: the SQL given, else the selection or the statement at the cursor of the SQL file. */
 export const RUN_IN_DUCKDB_TERMINAL_COMMAND_ID = 'pollis.databases.runInDuckDBTerminal';
 
@@ -67,8 +70,11 @@ export function sqlStatementAt(sql: string, offset: number): string | undefined 
 	return index < 0 ? undefined : `${sql.slice(pieces[index].start, pieces[index].end).trim()};`;
 }
 
-/** `name :=` at the start of a statement, after blanks and comments, which SQL cells of Julia notebooks run. */
-const ASSIGNMENT = /^(?:\s|--[^\n]*(?:\n|$)|\/\*[\s\S]*?\*\/)*(?<name>[A-Za-z_][A-Za-z0-9_]*)\s*:=/;
+/**
+ * `name :=` at the start of a statement, after blanks and comments, which the pollis> mode of the Julia REPL and SQL
+ * cells of Julia notebooks run; `lead` is what comes before it.
+ */
+const ASSIGNMENT = /^(?<lead>(?:\s|--[^\n]*(?:\n|$)|\/\*[\s\S]*?\*\/)*)(?<name>[A-Za-z_][A-Za-z0-9_]*)\s*:=\s*/;
 
 /** The name of the first statement of `sql` that starts with `name :=`, or undefined when none does. */
 export function sqlAssignedName(sql: string): string | undefined {
@@ -79,6 +85,17 @@ export function sqlAssignedName(sql: string): string | undefined {
 		}
 	}
 	return undefined;
+}
+
+/** `sql` without the `name :=` that starts any of its statements: the SQL that ran, as the History view lists it. */
+export function withoutAssignments(sql: string): string {
+	let result = '';
+	let from = 0;
+	for (const piece of sqlPieces(sql)) {
+		result += sql.slice(from, piece.start) + sql.slice(piece.start, piece.end).replace(ASSIGNMENT, '$<lead>');
+		from = piece.end;
+	}
+	return result + sql.slice(from);
 }
 
 /** The text sent to the duckdb> shell for `sql`: trimmed, and ended with a semicolon, so that it runs. */
@@ -97,7 +114,7 @@ export interface IQueryHistoryEntry {
 	readonly sql: string;
 	/** When it ran, in milliseconds since 1970. */
 	readonly time: number;
-	/** The duckdb> terminal, a notebook run by DuckDB SQL (Pollis), or the sql> mode of the Julia REPL. */
+	/** The duckdb> terminal, a notebook run by DuckDB SQL (Pollis), or the pollis> mode of the Julia REPL, `sql` in its history. */
 	readonly source: 'duckdb' | 'notebook' | 'sql';
 	/** The duckdb> terminal and the notebooks record how long the query took, its rows, its error and its database. */
 	readonly durationMs?: number;
@@ -145,7 +162,8 @@ export function parseDuckDBQueryLog(text: string): IQueryHistoryEntry[] {
 }
 
 /**
- * The queries of the sql> mode in the history of the Julia REPL: each entry is a `# time:` line, a `# mode:` line,
+ * The queries of the pollis> mode in the history of the Julia REPL, where the mode is named `sql`, without the
+ * `name :=` of their statements: each entry is a `# time:` line, a `# mode:` line,
  * then its text, every line of it after a tab.
  */
 export function parseJuliaSqlHistory(text: string): IQueryHistoryEntry[] {
@@ -155,7 +173,7 @@ export function parseJuliaSqlHistory(text: string): IQueryHistoryEntry[] {
 	let lines: string[] = [];
 	const flush = () => {
 		if (mode === 'sql' && time !== undefined && lines.length) {
-			entries.push({ sql: lines.join('\n'), time, source: 'sql' });
+			entries.push({ sql: withoutAssignments(lines.join('\n')), time, source: 'sql' });
 		}
 		lines = [];
 	};
