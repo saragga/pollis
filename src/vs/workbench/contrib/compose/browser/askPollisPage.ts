@@ -3,7 +3,7 @@
  *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { raceCancellation, timeout } from '../../../../base/common/async.js';
+import { raceCancellation, RunOnceScheduler, timeout } from '../../../../base/common/async.js';
 import { CancellationTokenSource } from '../../../../base/common/cancellation.js';
 import { Codicon } from '../../../../base/common/codicons.js';
 import { escapeMarkdownSyntaxTokens, MarkdownString } from '../../../../base/common/htmlContent.js';
@@ -12,7 +12,7 @@ import { isDark } from '../../../../platform/theme/common/theme.js';
 import { IThemeService } from '../../../../platform/theme/common/themeService.js';
 import { Disposable, DisposableStore, MutableDisposable } from '../../../../base/common/lifecycle.js';
 import { FileAccess } from '../../../../base/common/network.js';
-import { basename } from '../../../../base/common/resources.js';
+import { basename, joinPath } from '../../../../base/common/resources.js';
 import { URI } from '../../../../base/common/uri.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Categories } from '../../../../platform/action/common/actionCommonCategories.js';
@@ -605,18 +605,25 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 	}
 }
 
-/** Active AI Models at the right of the status bar: the models of Pollis AI+ in the hover, a cloud while one answers, a click opens Set Active Models. */
+/**
+ * Active AI Models at the right of the status bar: a circle filled by a third for each of answering, embedding and
+ * reranking that has a model ready, the models of Pollis AI+ in the hover, a cloud while one answers, a click opens Set Active Models.
+ */
 class AskPollisModelStatus extends Disposable implements IWorkbenchContribution {
 
 	static readonly ID = 'workbench.contrib.askPollisModelStatus';
 
 	private readonly entry = this._register(new MutableDisposable<IStatusbarEntryAccessor>());
+	/** A model downloaded or removed is seen a little after its files have settled. */
+	private readonly modelsChanged = this._register(new RunOnceScheduler(() => this.update(), 2000));
 
 	constructor(
 		@IStatusbarService private readonly statusbarService: IStatusbarService,
 		@ICommandService private readonly commandService: ICommandService,
 		@IConfigurationService private readonly configurationService: IConfigurationService,
 		@IThemeService private readonly themeService: IThemeService,
+		@IFileService private readonly fileService: IFileService,
+		@IPathService private readonly pathService: IPathService,
 	) {
 		super();
 		this.update();
@@ -627,12 +634,36 @@ class AskPollisModelStatus extends Disposable implements IWorkbenchContribution 
 		}));
 		// The yellow of the models' names is that of the theme's kind
 		this._register(themeService.onDidColorThemeChange(() => this.update()));
+		this.watchModels();
+	}
+
+	/** Watches ~/.pollis/models, where the models of Pollis are downloaded, to count a model as soon as it is there. */
+	private async watchModels(): Promise<void> {
+		const models = joinPath(await this.pathService.userHome(), '.pollis', 'models');
+		if (this._store.isDisposed) {
+			return;
+		}
+		// Recursive, as the models lie in owner/repository folders: a correlated watcher cannot be recursive
+		this._register(this.fileService.watch(models, { recursive: true, excludes: [] }));
+		this._register(this.fileService.onDidFilesChange(e => {
+			if (e.affects(models)) {
+				this.modelsChanged.schedule();
+			}
+		}));
 	}
 
 	private async update(): Promise<void> {
 		const models = await askModels(this.commandService, this.configurationService);
-		const embedding = askModelName(this.configurationService.getValue<string>('pollis.ask.embeddingModel')?.trim() || ASK_EMBEDDING_MODEL);
+		const installed = await this.commandService.executeCommand<IInstalledModel[]>('language-julia.pollisInstalledModels').catch(() => undefined) ?? [];
+		// A model is ready when its file is on this computer, as the settings name it
+		const downloaded = (model: string, kinds: readonly (IInstalledModel['kind'])[]) => installed.some(file => kinds.includes(file.kind) && askModelName(file.file) === askModelName(model));
+		const embeddingSetting = this.configurationService.getValue<string>('pollis.ask.embeddingModel')?.trim() || ASK_EMBEDDING_MODEL;
+		const embedding = askModelName(embeddingSetting);
 		const reranker = this.configurationService.getValue<string>('pollis.ask.reranker')?.trim();
+		const answeringReady = !!models.provider || downloaded(this.configurationService.getValue<string>('pollis.ask.chatModel')?.trim() || ASK_CHAT_MODEL, ['chat', undefined]);
+		const embeddingReady = downloaded(embeddingSetting, ['embedding']);
+		const rerankerReady = !!reranker && downloaded(reranker, ['reranker']);
+		const ready = [answeringReady, embeddingReady, rerankerReady].filter(Boolean).length;
 		// Named in the hover, and in the status bar's menu that hides its entries, by its full name
 		const name = localize('askPollis.statusName', "Active Pollis AI+ Models");
 		const label = localize('askPollis.statusLabel', "Active AI Models");
@@ -640,9 +671,17 @@ class AskPollisModelStatus extends Disposable implements IWorkbenchContribution 
 		const linesWith = (model: (name: string) => string) => [
 			models.provider
 				? localize('askPollis.statusAnsweringCloud', "Answering: {0} of {1}, with your own key", model(models.model), escapeMarkdownSyntaxTokens(models.provider))
-				: localize('askPollis.statusAnsweringLocal', "Answering: {0}, on this computer", model(models.model)),
-			localize('askPollis.statusEmbedding', "Embedding: {0}", model(embedding)),
-			localize('askPollis.statusReranker', "Reranker: {0}", reranker ? model(askModelName(reranker)) : localize('askPollis.statusNoReranker', "None")),
+				: answeringReady
+					? localize('askPollis.statusAnsweringLocal', "Answering: {0}, on this computer", model(models.model))
+					: localize('askPollis.statusAnsweringMissing', "Answering: {0}, not downloaded yet", model(models.model)),
+			embeddingReady
+				? localize('askPollis.statusEmbedding', "Embedding: {0}", model(embedding))
+				: localize('askPollis.statusEmbeddingMissing', "Embedding: {0}, not downloaded yet", model(embedding)),
+			!reranker
+				? localize('askPollis.statusReranker', "Reranker: {0}", localize('askPollis.statusNoReranker', "None"))
+				: rerankerReady
+					? localize('askPollis.statusReranker', "Reranker: {0}", model(askModelName(reranker)))
+					: localize('askPollis.statusRerankerMissing', "Reranker: {0}, not downloaded yet", model(askModelName(reranker))),
 		];
 		const lines = linesWith(model => model);
 		// The Pollis yellow of the pages, #e8a33d, and #a8650d in a light theme
@@ -655,7 +694,7 @@ class AskPollisModelStatus extends Disposable implements IWorkbenchContribution 
 		tooltip.appendText(localize('askPollis.statusClick', "Click to set them."));
 		const properties: IStatusbarEntry = {
 			name,
-			text: models.provider ? `$(pollis-ai) ${label} $(cloud)` : `$(pollis-ai) ${label}`,
+			text: models.provider ? `$(pollis-ai-${ready}) ${label} $(cloud)` : `$(pollis-ai-${ready}) ${label}`,
 			ariaLabel: lines.join(', '),
 			tooltip,
 			command: MODELS_INSTALLED_COMMAND_ID,

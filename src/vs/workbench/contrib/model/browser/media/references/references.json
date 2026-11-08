@@ -8287,6 +8287,28 @@
 			"open_access": true
 		},
 		{
+			"key": "DH2026a",
+			"type": "article",
+			"title": "A Common Interface for Automatic Differentiation",
+			"authors": [
+				"Dalle, Guillaume",
+				"Hill, Adrian"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2026,
+			"journal": "Journal of Machine Learning Research",
+			"volume": "27",
+			"number": "25",
+			"pages": "1-13",
+			"openalex": "W4417084816",
+			"url": "https://www.jmlr.org/papers/v27/25-1024.html",
+			"source": "manual",
+			"retrieved": "2026-11-07",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "DHL2017a",
 			"type": "article",
 			"title": "JuMP: A Modeling Language for Mathematical Optimization",
@@ -11750,6 +11772,28 @@
 			"open_access": false
 		},
 		{
+			"key": "For1988a",
+			"type": "article",
+			"title": "Generation of finite difference formulas on arbitrarily spaced grids",
+			"authors": [
+				"Fornberg, Bengt"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1988,
+			"journal": "Mathematics of Computation",
+			"volume": "51",
+			"number": "184",
+			"pages": "699-706",
+			"issn": "1088-6842",
+			"doi": "10.1090/S0025-5718-1988-0935077-0",
+			"openalex": "W1987166016",
+			"source": "crossref",
+			"retrieved": "2026-11-07",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "Fra1961a",
 			"type": "article",
 			"title": "The QR Transformation A Unitary Analogue to the LR Transformation--Part 1",
@@ -13286,6 +13330,26 @@
 			"openalex": "W2019128548",
 			"source": "crossref",
 			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "GW2008a",
+			"type": "book",
+			"title": "Evaluating Derivatives: Principles and Techniques of Algorithmic Differentiation, Second Edition",
+			"authors": [
+				"Griewank, Andreas",
+				"Walther, Andrea"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2008,
+			"publisher": "Society for Industrial and Applied Mathematics",
+			"isbn": "9780898717761",
+			"doi": "10.1137/1.9780898717761",
+			"openalex": "W2478429860",
+			"source": "crossref",
+			"retrieved": "2026-11-07",
 			"checked": true,
 			"open_access": false
 		},
@@ -21542,6 +21606,29 @@
 			"open_access": true
 		},
 		{
+			"key": "LM1967a",
+			"type": "article",
+			"title": "Numerical Differentiation of Analytic Functions",
+			"authors": [
+				"Lyness, J. N.",
+				"Moler, C. B."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1967,
+			"journal": "SIAM Journal on Numerical Analysis",
+			"volume": "4",
+			"number": "2",
+			"pages": "202-210",
+			"issn": "0036-1429",
+			"doi": "10.1137/0704019",
+			"openalex": "W1987941491",
+			"source": "crossref",
+			"retrieved": "2026-11-07",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "LM1979a",
 			"type": "article",
 			"title": "Splitting Algorithms for the Sum of Two Nonlinear Operators",
@@ -22814,6 +22901,28 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "Lin1976a",
+			"type": "article",
+			"title": "Taylor expansion of the accumulated rounding error",
+			"authors": [
+				"Linnainmaa, Seppo"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1976,
+			"journal": "BIT",
+			"volume": "16",
+			"number": "2",
+			"pages": "146-160",
+			"issn": "0006-3835",
+			"doi": "10.1007/BF01931367",
+			"openalex": "W2018435387",
+			"source": "crossref",
+			"retrieved": "2026-11-07",
+			"checked": true,
+			"open_access": false
 		},
 		{
 			"key": "Lin2004a",
@@ -24370,6 +24479,30 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "MSA2003a",
+			"type": "article",
+			"title": "The complex-step derivative approximation",
+			"authors": [
+				"Martins, Joaquim R. R. A.",
+				"Sturdza, Peter",
+				"Alonso, Juan J."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2003,
+			"journal": "ACM Transactions on Mathematical Software",
+			"volume": "29",
+			"number": "3",
+			"pages": "245-262",
+			"issn": "0098-3500",
+			"doi": "10.1145/838250.838251",
+			"openalex": "W1969551552",
+			"source": "crossref",
+			"retrieved": "2026-11-07",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "MSW1998a",
@@ -30370,6 +30503,28 @@
 			"open_access": false
 		},
 		{
+			"key": "Ric1911a",
+			"type": "article",
+			"title": "The approximate arithmetical solution by finite differences of physical problems involving differential equations, with an application to the stresses in a masonry dam",
+			"authors": [
+				"Richardson, Lewis Fry"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1911,
+			"journal": "Philosophical Transactions of the Royal Society of London. Series A, Containing Papers of a Mathematical or Physical Character",
+			"volume": "210",
+			"number": "459-470",
+			"pages": "307-357",
+			"issn": "0264-3952",
+			"doi": "10.1098/rsta.1911.0009",
+			"openalex": "W1980266375",
+			"source": "crossref",
+			"retrieved": "2026-11-07",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "Ris1969a",
 			"type": "article",
 			"title": "The problem of integration in finite terms",
@@ -33028,6 +33183,29 @@
 			"source": "crossref",
 			"retrieved": "2026-10-23",
 			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "ST1998a",
+			"type": "article",
+			"title": "Using Complex Variables to Estimate Derivatives of Real Functions",
+			"authors": [
+				"Squire, William",
+				"Trapp, George"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1998,
+			"journal": "SIAM Review",
+			"volume": "40",
+			"number": "1",
+			"pages": "110-112",
+			"issn": "0036-1445",
+			"doi": "10.1137/S003614459631241X",
+			"openalex": "W2006962396",
+			"source": "crossref",
+			"retrieved": "2026-11-07",
+			"checked": true,
 			"open_access": true
 		},
 		{
@@ -37128,6 +37306,28 @@
 			"retrieved": "2026-10-23",
 			"checked": true,
 			"open_access": false
+		},
+		{
+			"key": "Wen1964a",
+			"type": "article",
+			"title": "A simple automatic derivative evaluation program",
+			"authors": [
+				"Wengert, R. E."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1964,
+			"journal": "Communications of the ACM",
+			"volume": "7",
+			"number": "8",
+			"pages": "463-464",
+			"issn": "0001-0782",
+			"doi": "10.1145/355586.364791",
+			"openalex": "W2058760524",
+			"source": "crossref",
+			"retrieved": "2026-11-07",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "Whe1931a",
@@ -41344,6 +41544,12 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "DH2026a",
+			"count": 6,
+			"source": "openalex",
+			"date": "2026-11-07"
+		},
+		{
 			"key": "DHL2017a",
 			"count": 1292,
 			"source": "crossref",
@@ -42526,6 +42732,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "For1988a",
+			"count": 928,
+			"source": "crossref",
+			"date": "2026-11-07"
+		},
+		{
+			"key": "For1988a",
+			"count": 1062,
+			"source": "openalex",
+			"date": "2026-11-07"
+		},
+		{
 			"key": "Fra1961a",
 			"count": 579,
 			"source": "crossref",
@@ -43004,6 +43222,18 @@
 			"count": 57,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "GW2008a",
+			"count": 1343,
+			"source": "crossref",
+			"date": "2026-11-07"
+		},
+		{
+			"key": "GW2008a",
+			"count": 1712,
+			"source": "openalex",
+			"date": "2026-11-07"
 		},
 		{
 			"key": "GW2009a",
@@ -45796,6 +46026,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "LM1967a",
+			"count": 399,
+			"source": "crossref",
+			"date": "2026-11-07"
+		},
+		{
+			"key": "LM1967a",
+			"count": 489,
+			"source": "openalex",
+			"date": "2026-11-07"
+		},
+		{
 			"key": "LM1979a",
 			"count": 1583,
 			"source": "crossref",
@@ -46178,6 +46420,18 @@
 			"count": 12376,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "Lin1976a",
+			"count": 285,
+			"source": "crossref",
+			"date": "2026-11-07"
+		},
+		{
+			"key": "Lin1976a",
+			"count": 378,
+			"source": "openalex",
+			"date": "2026-11-07"
 		},
 		{
 			"key": "Lit1988a",
@@ -46634,6 +46888,18 @@
 			"count": 3620,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "MSA2003a",
+			"count": 624,
+			"source": "crossref",
+			"date": "2026-11-07"
+		},
+		{
+			"key": "MSA2003a",
+			"count": 796,
+			"source": "openalex",
+			"date": "2026-11-07"
 		},
 		{
 			"key": "MSW1998a",
@@ -48502,6 +48768,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "Ric1911a",
+			"count": 953,
+			"source": "crossref",
+			"date": "2026-11-07"
+		},
+		{
+			"key": "Ric1911a",
+			"count": 1517,
+			"source": "openalex",
+			"date": "2026-11-07"
+		},
+		{
 			"key": "Ris1969a",
 			"count": 234,
 			"source": "crossref",
@@ -49322,6 +49600,18 @@
 			"count": 6112,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "ST1998a",
+			"count": 462,
+			"source": "crossref",
+			"date": "2026-11-07"
+		},
+		{
+			"key": "ST1998a",
+			"count": 601,
+			"source": "openalex",
+			"date": "2026-11-07"
 		},
 		{
 			"key": "STY2017a",
@@ -50744,6 +51034,18 @@
 			"count": 716,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "Wen1964a",
+			"count": 298,
+			"source": "crossref",
+			"date": "2026-11-07"
+		},
+		{
+			"key": "Wen1964a",
+			"count": 418,
+			"source": "openalex",
+			"date": "2026-11-07"
 		},
 		{
 			"key": "Whe1931a",

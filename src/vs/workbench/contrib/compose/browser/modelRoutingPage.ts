@@ -212,7 +212,7 @@ function pageHtml(): string {
 	const text = {
 		title: localize('modelRouting.title', "Model Tasks and Routing"),
 		intro: localize('modelRouting.intro', "Every agent task of the Compose menu runs on a tier: Light, Standard, Strong or one of your own. A tier is a cell of the table below: the agent of its column on the model of its row. Type a tier's name in a cell to put it there; a name that is no tier yet, such as Max, makes a new tier. A tier is in one cell only: typed in another cell, it moves there. Clear a cell to take its tier out. A dash marks a model the agent cannot run."),
-		localIntro: localize('modelRouting.localIntro', "The local models run on this computer with the {0} that comes with Pollis: free, and nothing leaves the computer. Claude Code, OpenCode and Codex can run them; an agent needs a model that can call tools, about 4B parameters or more, and Pollis gives it a context of 32k tokens.", '<span class="yellow">llama.cpp</span>'),
+		localIntro: localize('modelRouting.localIntro', "The local models run on this computer with the {0} that comes with Pollis: free, and nothing leaves the computer. {1}, {2} and {3} can run them; an agent needs a model that can call tools, about 4B parameters or more, and Pollis gives it a context of 32k tokens.", '<span class="yellow">llama.cpp</span>', '<span class="yellow">Claude Code</span>', '<span class="yellow">Codex</span>', '<span class="yellow">OpenCode</span>'),
 		models: localize('modelRouting.models', "Models"),
 		codeAgents: localize('modelRouting.codeAgents', "Code Agents"),
 		cloudModels: localize('modelRouting.cloud', "Cloud"),

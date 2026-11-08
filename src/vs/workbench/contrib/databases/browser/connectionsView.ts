@@ -10,8 +10,11 @@ import { IBaseActionViewItemOptions } from '../../../../base/browser/ui/actionba
 import { IListVirtualDelegate } from '../../../../base/browser/ui/list/list.js';
 import { IObjectTreeElement, ITreeContextMenuEvent, ITreeNode, ITreeRenderer } from '../../../../base/browser/ui/tree/tree.js';
 import { Action, IAction } from '../../../../base/common/actions.js';
+import { RunOnceScheduler } from '../../../../base/common/async.js';
 import { Codicon } from '../../../../base/common/codicons.js';
-import { DisposableStore } from '../../../../base/common/lifecycle.js';
+import { MarkdownString } from '../../../../base/common/htmlContent.js';
+import { DisposableStore, MutableDisposable } from '../../../../base/common/lifecycle.js';
+import { language } from '../../../../base/common/platform.js';
 import { ThemeIcon } from '../../../../base/common/themables.js';
 import { localize } from '../../../../nls.js';
 import { DropdownWithPrimaryActionViewItem } from '../../../../platform/actions/browser/dropdownWithPrimaryActionViewItem.js';
@@ -21,6 +24,7 @@ import { ICommandService } from '../../../../platform/commands/common/commands.j
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { IContextKeyService, RawContextKey } from '../../../../platform/contextkey/common/contextkey.js';
 import { IContextMenuService } from '../../../../platform/contextview/browser/contextView.js';
+import { IFileService } from '../../../../platform/files/common/files.js';
 import { IHoverService } from '../../../../platform/hover/browser/hover.js';
 import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
 import { IKeybindingService } from '../../../../platform/keybinding/common/keybinding.js';
@@ -37,6 +41,7 @@ import { ViewPaneContainer } from '../../../browser/parts/views/viewPaneContaine
 import { IViewDescriptorService } from '../../../common/views.js';
 import { IExtensionService } from '../../../services/extensions/common/extensions.js';
 import { IWorkbenchLayoutService } from '../../../services/layout/browser/layoutService.js';
+import { IDataPackageUpdate, JULIA_REPL_VERSION_KEY, PollisDataPackages } from '../../compose/browser/pollisDataPackages.js';
 import { IDatabaseColumn, IDatabaseConnectionsService, IDatabaseSchema, IDatabaseSession, IDatabaseTable } from '../common/databaseConnections.js';
 import './media/connectionsView.css';
 import { BENCHMARKS_DATABASE_ID, COMPARISONS_DATABASE_ID, databaseGroupOf, DatabaseGroup, describeConnection, DOCUMENTS_DATABASE_ID, getDatabaseDriver, IDatabaseConnectionProfile, isInMemoryConnection, isWritableConnection, JOURNALS_DATABASE_ID, NEW_CONNECTION_COMMAND_ID, REFERENCES_DATABASE_ID, RSS_DATABASE_ID } from '../common/databaseDrivers.js';
@@ -113,6 +118,18 @@ function engineLabel(engine: string): string {
 	return engine === 'LibPQ' ? 'PostgreSQL' : engine;
 }
 
+/** What a schema holds, its tables and its views counted apart: "4 views", "2 tables, 3 views". */
+function describeSchemaContents(tables: readonly IDatabaseTable[]): string {
+	const views = tables.filter(table => table.kind === 'view').length;
+	const count = tables.length - views;
+	const tablesText = count === 1 ? localize('schema.oneTable', "1 table") : localize('schema.tables', "{0} tables", count);
+	const viewsText = views === 1 ? localize('schema.oneView', "1 view") : localize('schema.views', "{0} views", views);
+	if (!views) {
+		return tablesText;
+	}
+	return count ? localize('schema.tablesAndViews', "{0}, {1}", tablesText, viewsText) : viewsText;
+}
+
 function connectionName(profile: IDatabaseConnectionProfile | undefined, session: IDatabaseSession | undefined): string {
 	return profile?.name ?? session?.name ?? '';
 }
@@ -147,6 +164,7 @@ class ItemRenderer implements ITreeRenderer<DatabaseItem, void, IItemTemplate> {
 
 	constructor(
 		private readonly itemContext: (item: DatabaseItem) => [string, string | boolean][],
+		private readonly updateOf: (name: string) => IDataPackageUpdate | undefined,
 		private readonly hoverService: IHoverService,
 		private readonly menuService: IMenuService,
 		private readonly contextKeyService: IContextKeyService,
@@ -171,6 +189,8 @@ class ItemRenderer implements ITreeRenderer<DatabaseItem, void, IItemTemplate> {
 		let name: string;
 		let description = '';
 		let hover: string | undefined;
+		// A built-in database whose package Pollis has updated lately: the date after its name, and in its hover
+		let update: IDataPackageUpdate | undefined;
 		template.row.classList.toggle('connected', item.kind === 'connection' && !!item.session);
 		template.row.classList.toggle('disconnected', item.kind === 'connection' && !item.session);
 		template.row.classList.toggle('builtin', item.kind === 'connection' && !!item.profile?.builtin);
@@ -185,6 +205,10 @@ class ItemRenderer implements ITreeRenderer<DatabaseItem, void, IItemTemplate> {
 				// (and, for PollisDatasets, that the database is built into Pollis).
 				if (inMemory) {
 					description = localize('connection.inMemory', "in-memory");
+				}
+				update = profile?.builtin ? this.updateOf(profile.name) : undefined;
+				if (update) {
+					description = localize('connection.updated', "Updated {0}", new Date(update.date).toLocaleDateString(language, { day: 'numeric', month: 'short' }));
 				}
 				if (profile?.builtin && profile.id === RSS_DATABASE_ID) {
 					hover = session
@@ -230,7 +254,7 @@ class ItemRenderer implements ITreeRenderer<DatabaseItem, void, IItemTemplate> {
 			case 'schema':
 				icon = Codicon.symbolNamespace;
 				name = item.schema.name;
-				description = localize('schema.tables', "{0} tables", item.schema.unread ? item.schema.tableCount ?? 0 : item.schema.tables.length);
+				description = item.schema.unread ? localize('schema.tables', "{0} tables", item.schema.tableCount ?? 0) : describeSchemaContents(item.schema.tables);
 				break;
 			case 'table':
 				icon = item.table.kind === 'view' ? Codicon.eye : Codicon.table;
@@ -254,7 +278,10 @@ class ItemRenderer implements ITreeRenderer<DatabaseItem, void, IItemTemplate> {
 		template.name.textContent = name;
 		template.description.textContent = description;
 		if (hover) {
-			template.disposables.add(this.hoverService.setupDelayedHover(template.row, { content: hover }));
+			const content = update
+				? new MarkdownString().appendText(hover).appendText('\n').appendText(localize('connection.updated.hover', "Updated from GitHub on {0}:", new Date(update.date).toLocaleDateString(language, { day: 'numeric', month: 'long', year: 'numeric' }))).appendText(' ').appendLink(update.url, localize('connection.whatChanged', "What Changed"))
+				: hover;
+			template.disposables.add(this.hoverService.setupDelayedHover(template.row, { content }));
 		}
 		template.actionBar.clear();
 		if (item.kind !== 'message') {
@@ -348,6 +375,13 @@ export abstract class DatabaseConnectionsView extends ViewPane {
 	/** The ids of the expanded items, kept across refreshes. */
 	private readonly expanded = new Set<string>();
 	private lastSize: { height: number; width: number } | undefined;
+	/** The data packages Pollis installed, and those of their databases it has updated lately, by name. */
+	private readonly dataPackages: PollisDataPackages;
+	private updates = new Map<string, IDataPackageUpdate>();
+	private readonly updatesCheck = this._register(new RunOnceScheduler(() => this.checkUpdates(), 1000));
+	/** The watcher of the commit files of the data packages, beside their environment. */
+	private readonly environmentWatcher = this._register(new MutableDisposable<DisposableStore>());
+	private watchedEnvironment: string | undefined;
 
 	constructor(
 		options: IViewPaneOptions,
@@ -363,8 +397,10 @@ export abstract class DatabaseConnectionsView extends ViewPane {
 		@IOpenerService openerService: IOpenerService,
 		@IThemeService themeService: IThemeService,
 		@IHoverService hoverService: IHoverService,
+		@IFileService private readonly fileService: IFileService,
 	) {
 		super(options, keybindingService, contextMenuService, configurationService, contextKeyService, viewDescriptorService, instantiationService, openerService, themeService, hoverService);
+		this.dataPackages = instantiationService.createInstance(PollisDataPackages);
 		this._register(this.databaseConnectionsService.onDidChangeConnections(() => this.refresh()));
 	}
 
@@ -384,7 +420,7 @@ export abstract class DatabaseConnectionsView extends ViewPane {
 			'DatabaseConnections',
 			this.treeContainer,
 			new ItemDelegate(),
-			[new ItemRenderer(item => this.itemContext(item), this.hoverService, this.menuService, this.contextKeyService, this.instantiationService)],
+			[new ItemRenderer(item => this.itemContext(item), name => this.updates.get(name), this.hoverService, this.menuService, this.contextKeyService, this.instantiationService)],
 			{
 				identityProvider: { getId: itemId },
 				supportDynamicHeights: true,
@@ -416,6 +452,38 @@ export abstract class DatabaseConnectionsView extends ViewPane {
 			}
 		}));
 		this._register(this.tree.onContextMenu(e => this.onContextMenu(e)));
+		this.refresh();
+		// The databases of the data packages, which Pollis updates at the start of the Julia REPL, are built in
+		if (this.group() !== 'user') {
+			this._register(this.contextKeyService.onDidChangeContext(e => {
+				if (e.affectsSome(new Set([JULIA_REPL_VERSION_KEY]))) {
+					this.updatesCheck.schedule();
+				}
+			}));
+			this.updatesCheck.schedule(0);
+		}
+	}
+
+	/**
+	 * Find the data packages Pollis has updated lately, watching the commit files it writes beside their environment
+	 * for the next update.
+	 */
+	private async checkUpdates(): Promise<void> {
+		const juliaVersion = this.contextKeyService.getContextKeyValue<string>(JULIA_REPL_VERSION_KEY);
+		const environment = await this.dataPackages.environment(juliaVersion);
+		if (environment?.toString() !== this.watchedEnvironment) {
+			this.watchedEnvironment = environment?.toString();
+			const store = this.environmentWatcher.value = new DisposableStore();
+			if (environment) {
+				const watcher = store.add(this.fileService.createWatcher(environment, { recursive: false, excludes: [] }));
+				store.add(watcher.onDidChange(e => {
+					if (e.rawUpdated.concat(e.rawAdded).some(file => file.path.endsWith('.commit'))) {
+						this.updatesCheck.schedule();
+					}
+				}));
+			}
+		}
+		this.updates = new Map((await this.dataPackages.updates(juliaVersion)).map(update => [update.name, update]));
 		this.refresh();
 	}
 
@@ -460,6 +528,11 @@ export abstract class DatabaseConnectionsView extends ViewPane {
 	}
 
 	private onDidToggleConnection(item: DatabaseItem & { kind: 'connection' }, expanded: boolean): void {
+		// A database opened is no longer marked updated
+		const name = item.profile?.name;
+		if (expanded && name && this.updates.delete(name)) {
+			this.dataPackages.markOpened(name);
+		}
 		if (!expanded) {
 			this.pending.delete(item.id);
 		} else if (item.session) {
@@ -528,12 +601,12 @@ export abstract class DatabaseConnectionsView extends ViewPane {
 	}
 
 	/**
-	 * The ids of the connections the view lists: the built-in databases, those of the activity of Pollis, or the user's
-	 * saved profiles followed by the connections shown from the REPL.
+	 * The ids of the connections the view lists: the built-in databases, in alphabetical order, those of the activity of
+	 * Pollis, or the user's saved profiles followed by the connections shown from the REPL.
 	 */
 	private connectionIds(): string[] {
-		const profiles = this.databaseConnectionsService.getConnections();
-		const listed = profiles.filter(p => databaseGroupOf(p) === this.group()).map(p => p.id);
+		const profiles = this.databaseConnectionsService.getConnections().filter(p => databaseGroupOf(p) === this.group());
+		const listed = (this.group() === 'builtin' ? [...profiles].sort((a, b) => a.name.localeCompare(b.name)) : profiles).map(p => p.id);
 		if (this.group() !== 'user') {
 			return listed;
 		}

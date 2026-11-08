@@ -6,7 +6,7 @@
 // POLLIS: the data packages Pollis installs and updates at each start of the Julia REPL (PollisDB.jl): PollisDatasets,
 // PollisJournals, PollisReferences, PollisRSS and PollisBenchmarks. Check for Data Package Updates..., below Check for Updates... in the
 // Pollis menu on macOS (menubar.ts) and after About in the Help menu elsewhere, asks GitHub for their latest commits
-// and offers to update those that are newer; the Welcome page announces them, and those Pollis has updated. The Julia
+// and offers to update those that are newer; the Welcome page announces them. The Julia
 // extension updates them (language-julia.pollisUpdateDataPackages, update_data_packages.jl).
 
 import { CancellationToken } from '../../../../base/common/cancellation.js';
@@ -36,7 +36,7 @@ export const UPDATE_DATA_PACKAGES_COMMAND_ID = 'pollis.updateDataPackages';
 const JULIA_UPDATE_COMMAND_ID = 'language-julia.pollisUpdateDataPackages';
 
 /** The version of Julia the REPL runs, set by the Julia extension; the environment of the data packages depends on it. */
-const JULIA_REPL_VERSION_KEY = 'julia.replVersion';
+export const JULIA_REPL_VERSION_KEY = 'julia.replVersion';
 
 /**
  * The latest commits found on GitHub, when, and the commits installed then, so that GitHub is asked at most once an
@@ -45,13 +45,18 @@ const JULIA_REPL_VERSION_KEY = 'julia.replVersion';
 const LATEST_COMMITS_KEY = 'pollis.dataPackages.latest';
 const CHECK_INTERVAL = 60 * 60 * 1000;
 
-/** The commit of each package the Welcome page last saw installed, to announce an update once. */
-const SEEN_COMMITS_KEY = 'pollis.dataPackages.seen';
+/**
+ * The commit of each data package Pollis last found installed, in which environment, and when it last changed, so
+ * that the Databases view marks the database of a package updated.
+ */
+const INSTALLED_COMMITS_KEY = 'pollis.dataPackages.installed';
+/** How long the Databases view marks a database updated, unless it is opened there sooner. */
+const UPDATE_SHOWN = 7 * 24 * 60 * 60 * 1000;
 
 /** The data packages, by name, with their repositories on GitHub (Trumpingtons). */
 const DATA_PACKAGES: readonly string[] = ['PollisDatasets', 'PollisJournals', 'PollisReferences', 'PollisRSS', 'PollisBenchmarks'];
 
-/** A data package whose installed commit differs from another: newer on GitHub, or updated since the Welcome page saw it. */
+/** A data package whose installed commit differs from the latest on GitHub. */
 export interface IDataPackageChange {
 	/** The package and the commit it reaches, which identify the announcement when it is dismissed. */
 	readonly id: string;
@@ -66,6 +71,23 @@ export interface IDataPackageChange {
 export interface IDataPackagesCheck {
 	readonly newer: readonly IDataPackageChange[];
 	readonly offline: boolean;
+}
+
+/** A data package Pollis has updated lately, whose database the Databases view marks. */
+export interface IDataPackageUpdate {
+	readonly name: string;
+	/** When Pollis found the package updated. */
+	readonly date: number;
+	/** The commits between the one installed before and the one installed now, on GitHub. */
+	readonly url: string;
+}
+
+interface IInstalledCommit {
+	readonly environment: string;
+	readonly commit: string;
+	/** The commit installed before, and when Pollis found it changed; both go once the database is opened. */
+	readonly from?: string;
+	readonly updated?: number;
 }
 
 interface ILatestCommits {
@@ -111,37 +133,51 @@ export class PollisDataPackages {
 	}
 
 	/**
-	 * The packages updated since the Welcome page last saw them; the first time, what is installed is taken as seen.
+	 * The packages Pollis has updated in the last seven days whose databases have not been opened in the Databases
+	 * view since. The first time, and in another environment, what is installed is taken as it was.
 	 */
-	async updated(juliaVersion: string | undefined): Promise<IDataPackageChange[]> {
+	async updates(juliaVersion: string | undefined): Promise<IDataPackageUpdate[]> {
+		const environment = (await this.environment(juliaVersion))?.toString() ?? '';
 		const installed = await this.installed(juliaVersion);
-		const seen = this.seen();
-		const updated: IDataPackageChange[] = [];
-		let unseen = false;
+		const stored = this.installedCommits();
+		const now = Date.now();
+		let changed = false;
 		for (const [name, commit] of installed) {
-			const before = seen[name];
-			if (!before) {
-				seen[name] = commit;
-				unseen = true;
-			} else if (before !== commit) {
-				updated.push(change(name, before, commit));
+			const before = stored[name];
+			if (before?.environment !== environment) {
+				stored[name] = { environment, commit };
+				changed = true;
+			} else if (before.commit !== commit) {
+				stored[name] = { environment, commit, from: before.commit, updated: now };
+				changed = true;
 			}
 		}
-		if (unseen) {
-			this.storageService.store(SEEN_COMMITS_KEY, JSON.stringify(seen), StorageScope.APPLICATION, StorageTarget.MACHINE);
+		if (changed) {
+			this.storageService.store(INSTALLED_COMMITS_KEY, JSON.stringify(stored), StorageScope.APPLICATION, StorageTarget.MACHINE);
 		}
-		return updated;
+		const updates: IDataPackageUpdate[] = [];
+		for (const [name, { commit, from, updated }] of Object.entries(stored)) {
+			if (installed.has(name) && from && updated !== undefined && now - updated < UPDATE_SHOWN) {
+				updates.push({ name, date: updated, url: change(name, from, commit).url });
+			}
+		}
+		return updates;
 	}
 
-	/** The announcement of an update dismissed: its commit is the one seen now. */
-	markSeen(name: string, commit: string): void {
-		this.storageService.store(SEEN_COMMITS_KEY, JSON.stringify({ ...this.seen(), [name]: commit }), StorageScope.APPLICATION, StorageTarget.MACHINE);
+	/** The database of package `name` opened in the Databases view: it is no longer marked updated. */
+	markOpened(name: string): void {
+		const stored = this.installedCommits();
+		const entry = stored[name];
+		if (entry?.updated !== undefined) {
+			stored[name] = { environment: entry.environment, commit: entry.commit };
+			this.storageService.store(INSTALLED_COMMITS_KEY, JSON.stringify(stored), StorageScope.APPLICATION, StorageTarget.MACHINE);
+		}
 	}
 
-	private seen(): Record<string, string> {
+	private installedCommits(): Record<string, IInstalledCommit> {
 		try {
-			const seen = JSON.parse(this.storageService.get(SEEN_COMMITS_KEY, StorageScope.APPLICATION, '{}'));
-			return seen && typeof seen === 'object' ? seen : {};
+			const stored = JSON.parse(this.storageService.get(INSTALLED_COMMITS_KEY, StorageScope.APPLICATION, '{}'));
+			return stored && typeof stored === 'object' ? stored : {};
 		} catch {
 			return {};
 		}
@@ -169,7 +205,7 @@ export class PollisDataPackages {
 
 	/**
 	 * The environment of the data packages, beside which their commit files are: the one for the Julia of the REPL,
-	 * else the newest. The Welcome page watches it.
+	 * else the newest. The Welcome page and the Databases view watch it.
 	 */
 	async environment(juliaVersion: string | undefined): Promise<URI | undefined> {
 		const version = juliaVersion ? /^(?<major>\d+)\.(?<minor>\d+)/.exec(juliaVersion)?.groups : undefined;

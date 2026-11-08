@@ -13,6 +13,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as readline from 'readline';
 import { join } from '../../../../base/common/path.js';
+import { blankSql, DUCKDB_QUERY_LOG, IDuckDBQueryLogLine, sqlPieces } from '../common/duckdbSql.js';
 
 const POLLIS_HOME = join(os.homedir(), '.pollis');
 /** The fts extension, which the Julia extension of Pollis unpacks here at install. */
@@ -21,6 +22,9 @@ const FTS = join(POLLIS_HOME, 'duckdb', 'fts.duckdb_extension');
 const BUILTINS = [join(POLLIS_HOME, 'databases', 'PollisDatasets.duckdb'), join(POLLIS_HOME, 'databases', 'PollisRSS.duckdb'), join(POLLIS_HOME, 'databases', 'PollisJournals.duckdb'), join(POLLIS_HOME, 'databases', 'PollisReferences.duckdb'), join(POLLIS_HOME, 'databases', 'PollisBenchmarks.duckdb'), join(POLLIS_HOME, 'documents', 'PollisDocuments.duckdb'), join(POLLIS_HOME, 'databases', 'Comparisons.duckdb')];
 const HISTORY = join(POLLIS_HOME, 'duckdb', 'shell_history');
 const HISTORY_SIZE = 1000;
+/** The queries the History view of the Databases view lists, with how each went; trimmed to LOG_SIZE when it has grown past twice as many. */
+const LOG = join(POLLIS_HOME, 'duckdb', DUCKDB_QUERY_LOG);
+const LOG_SIZE = 1000;
 
 /** The rows shown of a result: the first and the last half, when there are more. */
 const SHOWN_ROWS = 40;
@@ -54,51 +58,21 @@ function escapedCommandLine(text: string): string {
 /** How a command ended: `quit` ends the shell. */
 type CommandEnd = 'succeeded' | 'failed' | 'quit';
 
+/** How the statements of a query went: the rows of the last result, or those the last statement changed, and the error that stopped them. */
+interface IRunOutcome {
+	readonly succeeded: boolean;
+	readonly rows?: number;
+	readonly error?: string;
+}
+
 function sqlString(text: string): string {
 	return `'${text.replace(/'/g, `''`)}'`;
 }
 
-/**
- * The pieces of `sql` between the semicolons outside quotes, dollar-quoted strings and comments,
- * blank ones included: the last is what follows the last semicolon.
- */
-function pieces(sql: string): string[] {
-	const found: string[] = [];
-	let start = 0;
-	const skip = (close: string, from: number) => {
-		const at = sql.indexOf(close, from);
-		return at < 0 ? sql.length : at + close.length - 1;
-	};
-	for (let i = 0; i < sql.length; i++) {
-		const c = sql[i];
-		if (c === '\'' || c === '"') {
-			i = skip(c, i + 1);
-		} else if (sql.startsWith('--', i)) {
-			i = skip('\n', i);
-		} else if (sql.startsWith('/*', i)) {
-			i = skip('*/', i + 2);
-		} else if (c === '$') {
-			const tag = /^\$[A-Za-z_]*\$/.exec(sql.slice(i))?.[0];
-			if (tag) {
-				i = skip(tag, i + tag.length);
-			}
-		} else if (c === ';') {
-			found.push(sql.slice(start, i));
-			start = i + 1;
-		}
-	}
-	found.push(sql.slice(start));
-	return found;
-}
-
-/** Whether `sql` holds nothing but blanks and comments. */
-function blank(sql: string): boolean {
-	return sql.replace(/--[^\n]*|\/\*[\s\S]*?\*\//g, '').trim() === '';
-}
-
 /** Whether `sql` ends with a semicolon outside quotes and comments, so that it runs. */
 function complete(sql: string): boolean {
-	return blank(sql) || blank(pieces(sql).at(-1)!);
+	const last = sqlPieces(sql).at(-1)!;
+	return blankSql(sql) || blankSql(sql.slice(last.start, last.end));
 }
 
 function cell(value: DuckDBValue): string {
@@ -190,20 +164,21 @@ class Shell {
 				this.timer = args[0] !== 'off';
 				return 'succeeded';
 			case '.databases':
-				return ended(await this.run('SELECT database_name AS name, path, readonly FROM duckdb_databases() WHERE NOT internal ORDER BY 1;'));
+				return ended((await this.run('SELECT database_name AS name, path, readonly FROM duckdb_databases() WHERE NOT internal ORDER BY 1;')).succeeded);
 			case '.tables':
-				return ended(await this.run('SELECT database, schema, name FROM (SHOW ALL TABLES) ORDER BY ALL;'));
+				return ended((await this.run('SELECT database, schema, name FROM (SHOW ALL TABLES) ORDER BY ALL;')).succeeded);
 			case '.schema':
-				return ended(await this.run(`SELECT sql FROM (SELECT database_name, table_name, sql FROM duckdb_tables() UNION ALL SELECT database_name, view_name, sql FROM duckdb_views() WHERE NOT internal)${args[0] ? ` WHERE table_name = ${sqlString(args[0])}` : ''} ORDER BY database_name, table_name;`));
+				return ended((await this.run(`SELECT sql FROM (SELECT database_name, table_name, sql FROM duckdb_tables() UNION ALL SELECT database_name, view_name, sql FROM duckdb_views() WHERE NOT internal)${args[0] ? ` WHERE table_name = ${sqlString(args[0])}` : ''} ORDER BY database_name, table_name;`)).succeeded);
 			default:
 				console.log(red(`Unknown command ${name}; .help lists the commands.`));
 				return 'failed';
 		}
 	}
 
-	/** Run every statement of `sql`, showing the result of each; whether all of them ran. */
-	async run(sql: string): Promise<boolean> {
+	/** Run every statement of `sql`, showing the result of each; how they went. */
+	async run(sql: string): Promise<IRunOutcome> {
 		this.running = true;
+		let rows: number | undefined;
 		try {
 			const statements = await this.connection.extractStatements(sql);
 			for (let index = 0; index < statements.count; index++) {
@@ -216,16 +191,17 @@ class Shell {
 						continue;
 					}
 					if (CHANGES.has(result.statementType)) {
+						rows = Number(result.rowsChanged);
 						console.log(dim(`(${result.rowsChanged} ${result.rowsChanged === 1 ? 'row' : 'rows'} changed${elapsed()})`));
 						continue;
 					}
 					const names = result.columnNames();
 					const first: string[][] = [];
 					let last: string[][] = [];
-					let rows = 0;
+					let count = 0;
 					for (let chunk = await result.fetchChunk(); chunk && chunk.rowCount; chunk = await result.fetchChunk()) {
 						for (const values of chunk.getRows()) {
-							rows++;
+							count++;
 							if (first.length < SHOWN_ROWS / 2) {
 								first.push(values.map(cell));
 							} else {
@@ -237,20 +213,22 @@ class Shell {
 						}
 					}
 					// With no more than SHOWN_ROWS rows, all are shown without a gap.
-					if (rows <= SHOWN_ROWS) {
+					if (count <= SHOWN_ROWS) {
 						first.push(...last);
 						last = [];
 					}
 					console.log(table(names, first, last));
-					console.log(dim(`(${rows} ${rows === 1 ? 'row' : 'rows'}${elapsed()})`));
+					console.log(dim(`(${count} ${count === 1 ? 'row' : 'rows'}${elapsed()})`));
+					rows = count;
 				} finally {
 					prepared.destroySync();
 				}
 			}
-			return true;
+			return { succeeded: true, rows };
 		} catch (err) {
-			console.log(red((err as Error).message));
-			return false;
+			const error = (err as Error).message;
+			console.log(red(error));
+			return { succeeded: false, rows, error };
 		} finally {
 			this.running = false;
 		}
@@ -285,6 +263,27 @@ function readHistory(): string[] {
 	}
 }
 
+/** Keeps the last LOG_SIZE queries of the log, once it holds twice as many. */
+function trimLog(): void {
+	try {
+		const lines = fs.readFileSync(LOG, 'utf8').split('\n').filter(Boolean);
+		if (lines.length > 2 * LOG_SIZE) {
+			fs.writeFileSync(LOG, lines.slice(-LOG_SIZE).join('\n') + '\n');
+		}
+	} catch {
+		// No log yet
+	}
+}
+
+/** Adds a query to the log, for the History view. */
+function logQuery(line: IDuckDBQueryLogLine): void {
+	try {
+		fs.appendFileSync(LOG, JSON.stringify(line) + '\n');
+	} catch {
+		// The log is a convenience.
+	}
+}
+
 function writeHistory(history: readonly string[]): void {
 	try {
 		fs.writeFileSync(HISTORY, [...history].reverse().join('\n') + '\n');
@@ -295,6 +294,7 @@ function writeHistory(history: readonly string[]): void {
 
 async function main(): Promise<void> {
 	const file = process.argv[2] || ':memory:';
+	trimLog();
 	const instance = await DuckDBInstance.create(file, { autoinstall_known_extensions: 'false', autoload_known_extensions: 'false' });
 	const connection = await instance.connect();
 	const shell = new Shell(connection);
@@ -369,12 +369,15 @@ async function main(): Promise<void> {
 			}
 			const sql = buffer;
 			buffer = '';
-			if (blank(sql)) {
+			if (blankSql(sql)) {
 				finished();
 			} else {
 				started(sql);
 				// readline stays active, so that Ctrl+C reaches it and stops the query.
-				finished(await shell.run(sql) ? 'succeeded' : 'failed');
+				const begun = Date.now();
+				const outcome = await shell.run(sql);
+				logQuery({ sql: sql.trim(), time: new Date(begun).toISOString(), ms: Date.now() - begun, rows: outcome.rows, error: outcome.error, database: process.argv[2] || undefined });
+				finished(outcome.succeeded ? 'succeeded' : 'failed');
 			}
 		}
 		prompt();

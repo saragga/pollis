@@ -116,3 +116,26 @@
 	font-size: 11px;
 	cursor: pointer;
 }
+
+/* The History view: a query on one line, in a monospace font, with its prompt, rows, time and age after it */
+.query-item .query-sql {
+	flex-shrink: 1;
+	min-width: 40px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	font-family: var(--monaco-monospace-font);
+	font-size: 12px;
+}
+
+.query-item .description {
+	flex-shrink: 0;
+	max-width: 50%;
+}
+
+.query-item.succeeded .icon {
+	color: var(--vscode-charts-green);
+}
+
+.query-item.failed .icon {
+	color: var(--vscode-charts-red);
+}

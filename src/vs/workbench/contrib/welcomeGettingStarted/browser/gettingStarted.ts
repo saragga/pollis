@@ -174,7 +174,7 @@ export class GettingStartedPage extends EditorPane {
 
 	private readonly categoriesSlideDisposables: DisposableStore;
 	private renderAnnouncements = () => { };
-	/** Pollis: the data packages Pollis installed, announced when newer on GitHub or updated. */
+	/** Pollis: the data packages Pollis installed, announced when newer on GitHub. */
 	private readonly dataPackages: PollisDataPackages;
 	// Pollis: the Discover Pollis card, whose height the box of the Alerts and RSS tabs takes
 	private discoverCard: HTMLElement | undefined;
@@ -464,13 +464,6 @@ export class GettingStartedPage extends EditorPane {
 				// Pollis: the Julia extension updates the data packages (pollisDataPackages.ts); the alert goes once their
 				// commit files change.
 				this.commandService.executeCommand(UPDATE_DATA_PACKAGES_COMMAND_ID);
-				break;
-			}
-			case 'dismissDataUpdate': {
-				// The announcement of a data package updated, identified as name@commit
-				const [name, commit] = argument.split('@');
-				this.dataPackages.markSeen(name, commit);
-				this.renderAnnouncements();
 				break;
 			}
 			case 'setJuliaPath': {
@@ -1158,9 +1151,8 @@ export class GettingStartedPage extends EditorPane {
 		let databaseReady: boolean | undefined;
 		// Releases of Julia and of the packages Pollis relies on, newer than the ones installed.
 		let releases: IPollisRelease[] = [];
-		// The data packages Pollis installed that are newer on GitHub, and those it has updated since they were last seen.
+		// The data packages Pollis installed that are newer on GitHub.
 		let newerData: readonly IDataPackageChange[] = [];
-		let updatedData: readonly IDataPackageChange[] = [];
 		// The hover of the status line, made again with it
 		const statusHover = this.categoriesSlideDisposables.add(new MutableDisposable());
 		// The hovers of the journal tags of the feed items, made again with them
@@ -1205,8 +1197,7 @@ export class GettingStartedPage extends EditorPane {
 			const shownReleases = releases.filter(release => !dismissed.includes(release.id) && !shownNewer.some(item => item.name === release.name));
 			reset(announcements,
 				...shownReleases.map(release => this.buildReleaseAnnouncement(release)),
-				...shownNewer.map(item => this.buildNewerDataAnnouncement(item)),
-				...updatedData.map(item => this.buildUpdatedDataAnnouncement(item)));
+				...shownNewer.map(item => this.buildNewerDataAnnouncement(item)));
 			announcementsSection.style.display = announcements.childElementCount ? '' : 'none';
 			const newest = this.getNewestFeedItems();
 			const hovers = feedHovers.value = new DisposableStore();
@@ -1268,8 +1259,8 @@ export class GettingStartedPage extends EditorPane {
 			}
 		};
 		checkReleases();
-		// The data packages Pollis installed: newer ones on GitHub, and those it has updated (at the start of the Julia
-		// REPL, or with Update Now). It writes the commit installed of each beside its environment, which is watched.
+		// The data packages Pollis installed that are newer on GitHub. Pollis writes the commit installed of each beside
+		// its environment, which is watched, so an announcement goes once its package is updated.
 		const dataPackagesWatcher = this.categoriesSlideDisposables.add(new MutableDisposable<DisposableStore>());
 		let watchedEnvironment: string | undefined;
 		const checkDataPackages = async () => {
@@ -1287,9 +1278,7 @@ export class GettingStartedPage extends EditorPane {
 					}));
 				}
 			}
-			const [check, updated] = await Promise.all([this.dataPackages.check(juliaVersion, false), this.dataPackages.updated(juliaVersion)]);
-			newerData = check.newer;
-			updatedData = updated;
+			newerData = (await this.dataPackages.check(juliaVersion, false)).newer;
 			renderAlerts();
 		};
 		const dataPackagesCheck = this.categoriesSlideDisposables.add(new RunOnceScheduler(() => checkDataPackages(), 1000));
@@ -1526,21 +1515,6 @@ export class GettingStartedPage extends EditorPane {
 				),
 			),
 			$('button.pollis-alert-dismiss', { 'x-dispatch': `dismissAnnouncement:${item.id}`, 'aria-label': localize('pollis.dismissRelease', "Dismiss") }, $('span.codicon.codicon-close')),
-		);
-	}
-
-	/** Pollis: announces a data package Pollis has updated, once, until it is dismissed. */
-	private buildUpdatedDataAnnouncement(item: IDataPackageChange): HTMLElement {
-		return $('.pollis-alert.info', { role: 'status' },
-			$('span.pollis-alert-icon.codicon.codicon-check'),
-			$('.pollis-alert-body', {},
-				$('p.pollis-alert-title', {}, localize('pollis.dataUpdated', "{0} updated", item.name)),
-				$('p.pollis-alert-description', {}, localize('pollis.dataUpdatedFrom', "Pollis installed its latest data from GitHub.")),
-				$('.pollis-alert-actions', {},
-					$('button.button-link', { 'x-dispatch': `openLink:${item.url}` }, localize('pollis.whatChanged', "What Changed")),
-				),
-			),
-			$('button.pollis-alert-dismiss', { 'x-dispatch': `dismissDataUpdate:${item.id}`, 'aria-label': localize('pollis.dismissRelease', "Dismiss") }, $('span.codicon.codicon-close')),
 		);
 	}
 

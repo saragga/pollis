@@ -247,8 +247,8 @@ and PollisBenchmarks, and PollisRSS, of its activity, empty until feeds are read
 first. At later starts, PollisDatasets, PollisJournals, PollisReferences, PollisRSS and PollisBenchmarks are updated from
 GitHub when there is a newer version; offline, the installed copies are kept. \ui{Check for Data Package
 Updates...}, in the Pollis menu on macOS and the Help menu on Windows and Linux, looks for a newer version at once
-and offers to install it, without a restart. The Welcome page announces a newer version, with \ui{Update Now}, and
-a package Pollis has updated, with \ui{What Changed}.
+and offers to install it, without a restart. The Welcome page announces a newer version, with \ui{Update Now} and
+\ui{What Changed}.
 
 \subhead{The packages a panel needs}
 The \ui{Powered by:} line at the top of a panel names its Julia packages. Beside it, a tick means they
@@ -424,17 +424,22 @@ Then query it in the Julia REPL with SQL:
 
 \subhead{The Databases view}
 \begin{itemize}
-  \item It has three sections: \ui{Pollis Built-In}, the databases that come with Pollis; \ui{Pollis Activity},
-    those Pollis records as you work; and \ui{User}, your own databases and those shown from the Julia REPL
-    (Pollis Databases, page 40). \ui{New}, \ui{Refresh Schemas}, \ui{Learn More} and \ui{New DuckDB Terminal}
-    are at the top of the view, for all three.
+  \item It has four sections: \ui{Pollis Built-In}, the databases that come with Pollis; \ui{Pollis Activity},
+    those Pollis records as you work; \ui{User}, your own databases and those shown from the Julia REPL
+    (Pollis Databases, page 40); and \ui{History}, the queries you have run. \ui{New}, \ui{Refresh Schemas},
+    \ui{Learn More} and \ui{New DuckDB Terminal} are at the top of the view.
   \item Click a connection to connect it in the Julia REPL; \ui{Disconnect} closes it.
+  \item A database whose data package Pollis has updated from GitHub shows \ui{Updated} and the date after its
+    name, with \ui{What Changed} in its hover, until you open it or for seven days.
   \item On a table, \ui{Open in Table Viewer} shows its rows; right-click it for
     \ui{Preview Rows in Julia REPL}.
   \item \ui{Show Tables} and \ui{Hide Tables}, beside a connection, expand or collapse it;
     \ui{Refresh Schemas}, at the top of the view, shows tables you have just created.
   \item Right-click a connection for \ui{Copy Name}, \ui{Copy Connection Code}, \ui{Edit Connection} and
     \ui{Delete Connection}, which removes only the saved connection, never the database.
+  \item \ui{History} lists the queries of the \texttt{duckdb>} terminal, with their rows, how long they took and
+    any error, and those of the \texttt{sql>} mode, the newest first; click one to \ui{Run Again},
+    \ui{Copy SQL} or \ui{Open in Editor}.
 \end{itemize}
 
 \subhead{Three ways to use SQL}
@@ -444,7 +449,10 @@ same DuckDB engine, with its full-text search extension, \emph{fts}, and attach 
   \item \textbf{The \texttt{duckdb>} terminal}, for SQL alone, without starting Julia: \ui{New DuckDB
     Terminal}, at the top of the Databases view (or \ui{Databases: New DuckDB Terminal} in the Command
     Palette). It opens an empty database in memory; \texttt{.help} lists its commands, such as
-    \texttt{.tables}, and Ctrl+C stops a long query.
+    \texttt{.tables}, and Ctrl+C stops a long query. \ui{DuckDB REPL}, in the status bar, starts it too, and
+    once it runs names its database and offers \ui{Show REPL}, \ui{Restart REPL} and \ui{Stop REPL}.
+    An SQL file (\ui{New}, then \ui{SQL File}) runs there: Ctrl+Enter, or \ui{Run in DuckDB Terminal} in its
+    title bar, runs the selection or the statement at the cursor.
   \item \textbf{The \texttt{sql>} mode} of the Julia REPL, for a query in the middle of Julia work: type
     \texttt{>} on an empty line, then the query, ending in \texttt{;}. The result is a Tables.jl table in
     \texttt{ans}, ready for Julia; Backspace on an empty line goes back to \texttt{julia>}.

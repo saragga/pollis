@@ -39,11 +39,12 @@ import './wrdsPage.js';
 import { DatabaseConnectionsService } from './databaseConnectionsService.js';
 import { JournalMetricsReader, readCsv, readXlsx, yearOfFileName } from './journalMetrics.js';
 import './journalMetricsPage.js';
+import { QueryHistoryView } from './queryHistoryView.js';
 import { ActivityDatabasesView, BuiltinDatabasesView, CONNECT_DATABASE_COMMAND_ID, DATABASES_VIEW_CONTAINER_ID, DatabaseConnectionContextMenu, DatabaseConnectionsView, DatabasesViewPaneContainer, databasesViewIdOf, UserDatabasesView, DatabaseItemConnected, DatabaseItemExpanded, DatabaseItemId, DatabaseItemInlineMenu, DatabaseItemBuiltin, DatabaseItemKind, DatabaseItemSaved, DatabaseItemWritable, DatabasesNewConnectionMenu, DISCONNECT_DATABASE_COMMAND_ID, IDatabaseItemArg, BROWSE_TABLE_COMMAND_ID, OPEN_SCHEMA_COMMAND_ID, PREVIEW_TABLE_COMMAND_ID, REFRESH_DATABASE_COMMAND_ID } from './connectionsView.js';
 
 registerSingleton(IDatabaseConnectionsService, DatabaseConnectionsService, InstantiationType.Delayed);
 
-// --- Databases container (secondary side bar) and its Pollis Built-In, Pollis Activity and User views
+// --- Databases container (secondary side bar) and its Pollis Built-In, Pollis Activity, User and History views
 
 const databasesViewIcon = registerIcon('databases-view-icon', Codicon.database, localize('databasesViewIcon', "View icon of the Databases view."));
 
@@ -58,7 +59,7 @@ const databasesViewContainer = Registry.as<IViewContainersRegistry>(ViewExtensio
 }, ViewContainerLocation.AuxiliaryBar);
 
 const viewsRegistry = Registry.as<IViewsRegistry>(ViewExtensions.ViewsRegistry);
-// All three always shown, so the container has no Views menu to hide them
+// All four always shown, so the container has no Views menu to hide them
 viewsRegistry.registerViews([{
 	id: BuiltinDatabasesView.ID,
 	name: localize2('databases.builtin', "Pollis Built-In"),
@@ -83,7 +84,27 @@ viewsRegistry.registerViews([{
 	canToggleVisibility: false,
 	canMoveView: true,
 	order: 3,
+}, {
+	id: QueryHistoryView.ID,
+	name: localize2('databases.history', "History"),
+	containerIcon: databasesViewIcon,
+	ctorDescriptor: new SyncDescriptor(QueryHistoryView),
+	canToggleVisibility: false,
+	canMoveView: true,
+	order: 4,
 }], databasesViewContainer);
+
+// --- New File > SQL File: an untitled editor in SQL, offered the .sql suffix when first saved
+
+CommandsRegistry.registerCommand('pollis.action.newSqlFile', async accessor => {
+	await accessor.get(IEditorService).openEditor({ resource: undefined, languageId: 'sql' });
+});
+
+MenuRegistry.appendMenuItem(MenuId.NewFile, {
+	group: 'file',
+	command: { id: 'pollis.action.newSqlFile', title: localize('newSqlFile', "SQL File") },
+	order: 26,
+});
 
 // --- Commands
 

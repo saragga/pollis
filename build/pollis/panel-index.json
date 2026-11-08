@@ -446,6 +446,47 @@
 			]
 		},
 		{
+			"id": "autodiff",
+			"title": "Automatic Differentiation",
+			"source": "toolbox:pollis-toolbox-mathematical-core",
+			"commands": [
+				{
+					"id": "chiara.toolboxes.autodiff",
+					"menuTitles": [
+						"Automatic Differentiation"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "deriv",
+			"decisionFirstColumn": "Task",
+			"toml": "toolboxes/pollis-toolbox-mathematical-core/panels/autodiff.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-mathematical-core/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-mathematical-core/notebooks",
+			"wikis": [
+				"autodiff/assumptions.md",
+				"autodiff/automatic-differentiation.md",
+				"autodiff/decision-guide.md",
+				"autodiff/diagnostics.md",
+				"autodiff/factsheet.md",
+				"autodiff/interpretation.md",
+				"autodiff/overview.md"
+			],
+			"notebooks": [
+				"autodiff/tutorial-01-derivatives.ipynb",
+				"autodiff/tutorial-02-automatic-differentiation.ipynb",
+				"autodiff/tutorial-03-gradients-hessians.ipynb",
+				"autodiff/tutorial-04-jacobians-elasticities.ipynb"
+			],
+			"packages": [
+				"DifferentiationInterface.jl",
+				"ForwardDiff.jl",
+				"Enzyme.jl",
+				"Mooncake.jl",
+				"TaylorSeries.jl"
+			]
+		},
+		{
 			"id": "autoencoder",
 			"title": "Autoencoders",
 			"source": "pollis",
@@ -2178,14 +2219,13 @@
 				}
 			],
 			"portable": true,
-			"defaultModel": "deriv",
+			"defaultModel": "fd",
 			"decisionFirstColumn": "Task",
 			"toml": "toolboxes/pollis-toolbox-mathematical-core/panels/diff.toml",
 			"wikiRoot": "toolboxes/pollis-toolbox-mathematical-core/wiki",
 			"notebookRoot": "toolboxes/pollis-toolbox-mathematical-core/notebooks",
 			"wikis": [
 				"diff/assumptions.md",
-				"diff/automatic-differentiation.md",
 				"diff/decision-guide.md",
 				"diff/diagnostics.md",
 				"diff/factsheet.md",
@@ -2193,18 +2233,12 @@
 				"diff/overview.md"
 			],
 			"notebooks": [
-				"diff/tutorial-01-derivatives.ipynb",
-				"diff/tutorial-02-finite-differences.ipynb",
-				"diff/tutorial-03-automatic-differentiation.ipynb",
-				"diff/tutorial-04-gradients-hessians.ipynb",
-				"diff/tutorial-05-jacobians-elasticities.ipynb"
+				"diff/tutorial-01-finite-differences.ipynb"
 			],
 			"packages": [
-				"DifferentiationInterface.jl",
-				"ForwardDiff.jl",
-				"Enzyme.jl",
-				"Mooncake.jl",
-				"TaylorSeries.jl"
+				"FiniteDifferences.jl",
+				"Symbolics.jl",
+				"DifferentiationInterface.jl"
 			]
 		},
 		{

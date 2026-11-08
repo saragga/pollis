@@ -80,5 +80,37 @@
 		"statusBarItem.prominentForeground": "#FFFFFF",
 		"statusBarItem.remoteBackground": "#005FB8",
 		"statusBarItem.remoteForeground": "#FFFFFF"
-	}
+	},
+	// SQL, coloured as Julia is: its clauses as Julia's control keywords (if, for, end), its types as Julia's types,
+	// NULL as nothing and missing; CREATE, DROP and TABLE keep the red of function and struct
+	"tokenColors": [
+		{
+			"name": "SQL clauses",
+			"scope": [
+				"keyword.other.DML.sql",
+				"keyword.other.DML.II.sql",
+				"keyword.other.alias.sql",
+				"keyword.other.order.sql",
+				"keyword.other.data-integrity.sql",
+				"keyword.other.LUW.sql"
+			],
+			"settings": {
+				"foreground": "#AF00DB"
+			}
+		},
+		{
+			"name": "SQL types",
+			"scope": "storage.type.sql",
+			"settings": {
+				"foreground": "#267F99"
+			}
+		},
+		{
+			"name": "SQL NULL",
+			"scope": "keyword.other.DDL.create.II.sql",
+			"settings": {
+				"foreground": "#0000FF"
+			}
+		}
+	]
 }

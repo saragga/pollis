@@ -80,7 +80,7 @@ const NEW_METHODS: INotebookLibrary = {
 	base: 'vs/workbench/contrib/compose/browser/media/methods',
 	userFolder: 'methods',
 	title: localize('newMethods.title', "Methods"),
-	intro: localize('newMethods.intro', "Each method is one no Julia package has, written out with its tests: data and the results published for them, printed beside Julia's. Without data and expected results there is no new method. The methods you started and have not published yet come first, In Progress: click a title to go on with it. Then those you published, and the library: click a name to open the page of your own copy of the method, made in {0} the first time.", '<code class="pollisPath">~/.pollis/methods</code>'),
+	intro: localize('newMethods.intro', "A method here is a published method that no Julia package has, written in Julia with its tests: the data of the article and the results it reports for them, printed beside Julia's. A method needs both, data and published results, to be added. The page lists the methods in three groups. In Progress holds those you have started and not yet published: click a title to go on with one. Published by You follows, then the Library: click a name to open the page of your own copy of the method, which Pollis makes in {0} the first time you open it.", '<code class="pollisPath">~/.pollis/methods</code>'),
 	entry: localize('newMethods.entry', "Method"),
 	empty: localize('newMethods.empty', "There are no new methods yet."),
 	openFailed: (label, error) => localize('newMethods.openFailed', "Could not open the method {0}: {1}", label, error),
@@ -730,6 +730,10 @@ ${sortHeadingsScript()}
 	h2 { font-size: 16px; font-weight: 600; margin: 20px 0 6px 0; }
 	/* The packages and the files, in the yellow of the folder in the intro */
 	.file, .package, .pollisPackage { color: #e8a33d; }`;
+	// The folder in the intro, which the scaffold draws outside the libraryPage element
+	const introRules = `
+	.subtitle code.pollisPath { font-family: var(--vscode-editor-font-family); color: #e8a33d; background: var(--vscode-textPreformat-background); border-radius: 3px; padding: 0 3px; }
+	body.vscode-light .subtitle code.pollisPath { color: #a8650d; }`;
 	const lightRules = 'body.vscode-light .libraryPage .file, body.vscode-light .libraryPage .package, body.vscode-light .libraryPage .pollisPackage { color: #a8650d; }';
 	if (library.page) {
 		return buildWebviewHtml({
@@ -741,6 +745,7 @@ ${LIBRARY_PAGE_MINIMAL_STYLE}
 	.libraryPage {${rules}
 	}
 	${lightRules}
+	${introRules}
 `,
 			bodyHtml: `<div class="libraryPage">${body}</div>`,
 			pageScriptJs: script,
