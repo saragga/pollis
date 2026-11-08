@@ -8,7 +8,7 @@ The LaTeX sources of the documents in Help > Documentation. Pollis ships these s
 | `guide/pollis_guide.tex` | `pollis-guide.pdf` (The Pollis Guide) |
 | `ai-tour/pollis_ai_tour.tex` | `pollis-ai-tour.pdf` (A Tour of Pollis AI+) |
 | `ai-brochure/pollis_ai_brochure.tex` | `pollis-ai-brochure.pdf` (Pollis AI+) |
-| `workflows/workflow_data_packages.tex` | `pollis-drilldown-data-packages.pdf` (Drill-down: Data Packages) |
+| `workflows/workflow_data_packages.tex` | `pollis-drilldown-data-packages.pdf` (Drill-down: Data Packages and Databases) |
 | `workflows/workflow_literature_radar.tex` | `pollis-drilldown-literature-radar.pdf` (Drill-down: Literature Radar) |
 | `workflows/workflow_ask_pollis.tex` | `pollis-drilldown-ask-pollis.pdf` (Drill-down: Ask Pollis) |
 

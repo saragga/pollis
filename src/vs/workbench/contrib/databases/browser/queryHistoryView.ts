@@ -7,7 +7,6 @@ import * as dom from '../../../../base/browser/dom.js';
 import { IListRenderer, IListVirtualDelegate } from '../../../../base/browser/ui/list/list.js';
 import { RunOnceScheduler } from '../../../../base/common/async.js';
 import { Codicon } from '../../../../base/common/codicons.js';
-import { fromNow } from '../../../../base/common/date.js';
 import { MarkdownString } from '../../../../base/common/htmlContent.js';
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
 import { ThemeIcon } from '../../../../base/common/themables.js';
@@ -45,9 +44,12 @@ interface IQueryTemplate {
 	readonly disposables: DisposableStore;
 }
 
+/** A query takes two lines: its SQL, then where it ran, its rows and how long it took; the date is in the hover. */
+const QUERY_ROW_HEIGHT = 40;
+
 class QueryDelegate implements IListVirtualDelegate<IQueryHistoryEntry> {
 	getHeight(): number {
-		return 22;
+		return QUERY_ROW_HEIGHT;
 	}
 	getTemplateId(): string {
 		return QueryRenderer.TEMPLATE_ID;
@@ -93,8 +95,9 @@ class QueryRenderer implements IListRenderer<IQueryHistoryEntry, IQueryTemplate>
 	renderTemplate(container: HTMLElement): IQueryTemplate {
 		const row = dom.append(container, dom.$('.database-item.query-item'));
 		const icon = dom.append(row, dom.$('span.icon'));
-		const sql = dom.append(row, dom.$('span.name.query-sql'));
-		const description = dom.append(row, dom.$('span.description'));
+		const text = dom.append(row, dom.$('.query-text'));
+		const sql = dom.append(text, dom.$('span.name.query-sql'));
+		const description = dom.append(text, dom.$('span.description'));
 		return { row, icon, sql, description, disposables: new DisposableStore() };
 	}
 
@@ -113,7 +116,6 @@ class QueryRenderer implements IListRenderer<IQueryHistoryEntry, IQueryTemplate>
 		if (entry.durationMs !== undefined) {
 			details.push(durationLabel(entry.durationMs));
 		}
-		details.push(fromNow(entry.time, true));
 		template.description.textContent = details.join(' · ');
 
 		const hover = new MarkdownString();
@@ -139,8 +141,9 @@ class QueryRenderer implements IListRenderer<IQueryHistoryEntry, IQueryTemplate>
 }
 
 /**
- * The History view of the Databases view: the queries run in the duckdb> terminal, from the log it keeps in
- * ~/.pollis/duckdb, and in the sql> mode of the Julia REPL, from the history of the REPL; the newest first.
+ * The History view of the Databases view: the queries run in the duckdb> terminal and in the SQL cells of notebooks,
+ * from the log they keep in ~/.pollis/duckdb, and in the sql> mode of the Julia REPL, from the history of the REPL;
+ * the newest first.
  */
 export class QueryHistoryView extends ViewPane {
 
@@ -177,7 +180,7 @@ export class QueryHistoryView extends ViewPane {
 		super.renderBody(container);
 		const root = dom.append(container, dom.$('.databases-view'));
 		this.empty = dom.append(root, dom.$('.welcome-view-content.databases-empty'));
-		dom.append(this.empty, dom.$('p')).textContent = localize('queryHistory.empty', "No queries yet. The queries you run in the DuckDB terminal, and in the sql> mode of the Julia REPL, show here.");
+		dom.append(this.empty, dom.$('p')).textContent = localize('queryHistory.empty', "No queries yet. The queries you run in the DuckDB terminal, in the sql> mode of the Julia REPL and in the SQL cells of notebooks show here.");
 		const listContainer = dom.append(root, dom.$('.databases-tree'));
 		this.list = this._register(this.instantiationService.createInstance(
 			WorkbenchList<IQueryHistoryEntry>,

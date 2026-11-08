@@ -538,7 +538,7 @@ export const POLLIS_DOCUMENTS: Readonly<Record<string, string>> = {
 	'pollis-guide.pdf': localize('openPollisGuide', "The Pollis Guide"),
 	'pollis-ai-brochure.pdf': localize('openPollisAIPlus', "Pollis AI+"),
 	'pollis-ai-tour.pdf': localize('openTourOfPollisAIPlus', "A Tour of Pollis AI+"),
-	'pollis-drilldown-data-packages.pdf': localize('openDrillDownDataPackages', "Drill-down: Data Packages"),
+	'pollis-drilldown-data-packages.pdf': localize('openDrillDownDataPackages', "Drill-down: Data Packages and Databases"),
 	'pollis-drilldown-literature-radar.pdf': localize('openDrillDownLiteratureRadar', "Drill-down: Literature Radar"),
 	'pollis-drilldown-ask-pollis.pdf': localize('openDrillDownAskPollis', "Drill-down: Ask Pollis"),
 };
@@ -640,7 +640,7 @@ registerAction2(class extends Action2 {
 		super({
 			id: 'pollis.action.openDrillDownDataPackages',
 			title: {
-				...localize2('openDrillDownDataPackages', "Drill-down: Data Packages"),
+				...localize2('openDrillDownDataPackages', "Drill-down: Data Packages and Databases"),
 				mnemonicTitle: localize({ key: 'miDrillDownDataPackages', comment: ['&& denotes a mnemonic'] }, "Drill-down: &&Data Packages"),
 			},
 			category: Categories.Help,

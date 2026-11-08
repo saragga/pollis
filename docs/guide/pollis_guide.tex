@@ -1749,7 +1749,10 @@ and download models, and \ui{Set Active Models}: the local models on this comput
 and those in the Hugging Face cache, with their \ui{Kind} (Chat or Embedding), what each \ui{Reads}, whether
 it can call \ui{Tools}, and the tiers that use it. Pollis runs them with llama.cpp, which comes with it,
 free and private: a task on a local tier starts the model first. \ui{Evaluate Answering Models...} and
-\ui{Evaluate Embedding Models...} compare them for Ask Pollis (page 47).
+\ui{Evaluate Embedding Models...} compare them for Ask Pollis (page 47). \ui{Active AI Models}, at the right of the
+status bar, shows the models of Pollis AI+ at a glance: its circle fills by a third for each of answering, embedding
+and reranking that has a model ready, and a cloud follows it while a cloud model answers. Its hover names the three
+models, and those not downloaded yet; a click opens \ui{Set Active Models}.
 
 \begin{caution}{An agent works on your files}
 A coding agent reads and writes files, and runs commands, in its terminal. Read what it proposes, and check

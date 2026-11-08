@@ -85,8 +85,8 @@
 	min-height: 0;
 }
 
-/* The User view lists nothing: its message, in place of the tree */
-.databases-empty.hidden,
+/* A view that lists nothing: its message, in place of the tree; as specific as the rule that shows the message */
+.monaco-workbench .pane > .pane-body .databases-empty.hidden,
 .databases-tree.hidden {
 	display: none;
 }
@@ -117,10 +117,26 @@
 	cursor: pointer;
 }
 
-/* The History view: a query on one line, in a monospace font, with its prompt, rows, time and age after it */
+/* The History view: a query on two lines, its SQL in a monospace font, then where it ran, its rows and how long it took */
+.database-item.query-item {
+	align-items: flex-start;
+	padding-top: 3px;
+	box-sizing: border-box;
+}
+
+.query-item .icon {
+	margin-top: 1px;
+}
+
+.query-item .query-text {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-width: 0;
+	line-height: 17px;
+}
+
 .query-item .query-sql {
-	flex-shrink: 1;
-	min-width: 40px;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	font-family: var(--monaco-monospace-font);
@@ -128,8 +144,8 @@
 }
 
 .query-item .description {
-	flex-shrink: 0;
-	max-width: 50%;
+	white-space: nowrap;
+	font-size: 11px;
 }
 
 .query-item.succeeded .icon {

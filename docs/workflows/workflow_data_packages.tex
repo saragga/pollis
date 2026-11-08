@@ -1,5 +1,5 @@
-% Pollis drill-down: the data packages PollisDatasets.jl, PollisJournals.jl, PollisReferences.jl and PollisRSS.jl,
-% and how the user's own data lives beside them (25 October 2026).
+% Pollis drill-down: the data packages PollisDatasets.jl, PollisJournals.jl, PollisReferences.jl, PollisRSS.jl and
+% PollisBenchmarks.jl, the databases and SQL of Pollis, and how the user's own data lives beside them (8 November 2026).
 % For users who want the detail, and for whoever maintains Pollis.
 % Compile with: latexmk -pdf workflow_data_packages.tex
 \input{workflow_style}
@@ -11,7 +11,7 @@
 \usetikzlibrary{positioning,arrows.meta,fit}
 
 \fancyhf{}
-\fancyfoot[L]{\footnotesize\color{soft}\textbf{Pollis}\enspace Drill-down: data packages}
+\fancyfoot[L]{\footnotesize\color{soft}\textbf{Pollis}\enspace Drill-down: data packages and databases}
 \fancyfoot[R]{\footnotesize\color{soft}\thepage}
 
 \titleformat{\section}{\color{navy}\large\bfseries}{\color{deepamber}\thesection}{0.6em}{}
@@ -30,45 +30,44 @@
 
 \begin{document}
 
-\workflowhead[Drill-Down]{Data Packages}
-  {The data of Pollis, and yours beside it}
-  {PollisDatasets.jl, PollisJournals.jl, PollisReferences.jl and PollisRSS.jl: what each holds, how it reaches your
-   computer and becomes a database, how it is updated without a new Pollis, and how the data you add lives beside it
-   without ever being touched.}
+\workflowhead[Drill-Down]{Data Packages and Databases}
+  {The data and databases of Pollis, and yours}
+  {PollisDatasets.jl, PollisJournals.jl, PollisReferences.jl, PollisRSS.jl and PollisBenchmarks.jl: what each holds,
+   how it reaches your computer and becomes a database, how it is updated without a new Pollis, how SQL reaches the
+   databases, and how the data you add lives beside them without ever being touched.}
 
 \begin{nbox}
 {\color{amber}\bfseries Drill-down.}\enspace
-A look under the surface of what the Guide describes in \emph{Data and Databases} and \emph{Built-in Databases}. It is
-for anyone who wants to know where their data is and why it is safe, and for whoever maintains Pollis
-(\S\ref{sec:procedures} is for them). It describes the state of 25 October 2026.
+A look under the surface of what the Guide describes in \emph{Data and Databases}, with its \emph{Four ways to use
+SQL}. It is for anyone who wants to know where their data is and why it is safe, and for whoever maintains Pollis
+(\S\ref{sec:procedures} is for them). It describes the state of 8 November 2026.
 \end{nbox}
 
 \tableofcontents
 
 \section{The data layer in one table}
 
-Pollis is a program; the data it comes with is not part of it. Four Julia packages on GitHub hold that data, each
-changing on its own timetable, so a new dataset, a new month of journals, a corrected DOI or a new feed reaches you
-without a new Pollis.
+Pollis is a program; the data it comes with is not part of it. Five Julia packages on GitHub hold that data, each
+changing on its own timetable, so a new dataset, a new month of journals, a corrected DOI, a new feed or a new
+benchmark reaches you without a new Pollis.
 
-\begin{center}\small
+\begin{center}\footnotesize
 \renewcommand{\arraystretch}{1.25}
-\begin{tabularx}{\linewidth}{@{}p{0.15\linewidth}LLLL@{}}
+\begin{tabularx}{\linewidth}{@{}p{0.11\linewidth}LLLLL@{}}
 \toprule
-& \textbf{PollisDatasets.jl} & \textbf{PollisJournals.jl} & \textbf{PollisReferences.jl} & \textbf{PollisRSS.jl}\\
+& \textbf{PollisDatasets.jl} & \textbf{PollisJournals.jl} & \textbf{PollisReferences.jl} & \textbf{PollisRSS.jl} & \textbf{PollisBenchmarks.jl}\\
 \midrule
-Holds & 65 real datasets and 2 simulated, each with its source, licence and columns & 251,461 journals, conferences and series; the Norwegian register & 650 works Pollis cites, 797 dated citation counts & 519 feeds under 35 topics\\
-Form & CSV files and \file{datasets.toml} & Parquet files in a Julia artifact & one JSON file & one JSON file\\
-Changes & when a dataset is added & monthly, by a workflow & when a work is corrected or cited & when a feed is added or corrected\\
-Database & PollisDatasets & PollisJournals & PollisReferences & PollisRSS\\
-In Julia & \file{pollis} & \file{journals} & \file{references} & \file{rss}\\
-Reaches Pollis & install road & install road & install and build roads & install and build roads\\
-Licence & code MIT; each dataset its own & code MIT; data CC0 and NLOD 2.0 & MIT & MIT\\
+Holds & 65 real datasets and 2 simulated, each with its source, licence and columns & 251,461 journals, conferences and series; the Norwegian register & 650 works Pollis cites, 797 dated citation counts & 519 feeds under 35 topics & 23 published benchmarks, the questions of the 10 built in, and their grading\\
+Form & CSV files and \file{datasets.toml} & Parquet files in a Julia artifact & one JSON file & one JSON file & Parquet files in a Julia artifact, and \file{catalogue.toml}\\
+Changes & when a dataset is added & monthly, by a workflow & when a work is corrected or cited & when a feed is added or corrected & when a benchmark is added\\
+Database & PollisDatasets & PollisJournals & PollisReferences & PollisRSS & PollisBenchmarks\\
+Reaches Pollis & install road & install road & install and build roads & install and build roads & install road\\
+Licence & code MIT; each dataset its own & code MIT; data CC0 and NLOD 2.0 & MIT & MIT & code MIT; each benchmark its own\\
 \bottomrule
 \end{tabularx}
 \end{center}
 
-All four live under \file{github.com/Trumpingtons}, all are installed by URL, not from the General registry, and
+All five live under \file{github.com/Trumpingtons}, all are installed by URL, not from the General registry, and
 Pollis follows the latest \emph{commit} of their \file{main}, not version numbers (which are chosen by hand; Pollis
 does not use semver).
 
@@ -78,8 +77,9 @@ Three rules, and everything else follows from them.
 \begin{enumerate}
   \item \textbf{What a package brings is a copy that an update may replace.} Pollis never asks you to look after it.
   \item \textbf{What you do is written to files of yours that no update writes.} They are JSON Lines, appended to and
-    never rewritten: a change is a new line, and for each key \emph{the last line wins}.
-  \item \textbf{The five built-in databases are builds over both}, read-only, rebuilt when what they come from
+    never rewritten: a change is a new line, and for each key \emph{the last line wins}. The one database among them is
+    Comparisons, where Pollis keeps your runs of the Evaluate and Benchmark pages.
+  \item \textbf{The databases Pollis builds are builds over both}, read-only, rebuilt when what they come from
     changes. Deleting one loses nothing: it is made again at the next start of the Julia REPL.
 \end{enumerate}
 
@@ -95,6 +95,8 @@ the installed packages, in \file{~/.pollis/julia/environments/v1.13} & your own 
 \file{~/.pollis/journals/scores.csv} & \file{~/.pollis/references/references.jsonl}, \file{counts.jsonl}, \file{versions.jsonl}, \file{panels.jsonl}\\
 \file{~/.pollis/references/pollis.json}, \file{package.json} & \file{~/.pollis/rss/feeds.jsonl}, \file{items/*.jsonl}, \file{zotero.jsonl}, \file{episodes.jsonl}\\
 \file{~/.pollis/rss/catalogue.json} & the RSS settings: unsubscribed, removed, hidden, welcome page\\
+& \file{~/.pollis/databases/Comparisons.duckdb}, your runs of the Evaluate and Benchmark pages\\
+& \file{~/.pollis/duckdb/query_log.jsonl}, the queries the History lists (\S\ref{sec:history})\\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -106,11 +108,11 @@ the installed packages, in \file{~/.pollis/julia/environments/v1.13} & your own 
   box/.style={draw=navy, fill=pale, rounded corners=2pt, align=center, inner sep=4pt, text width=37mm},
   user/.style={box, draw=deepamber, fill=logocream},
   arr/.style={-{Stealth[length=2mm]}, navy, thick}]
-  \node[box] (repo) {\textbf{GitHub}\\PollisDatasets.jl\\PollisJournals.jl\\PollisReferences.jl\\PollisRSS.jl};
+  \node[box] (repo) {\textbf{GitHub}\\PollisDatasets.jl\\PollisJournals.jl\\PollisReferences.jl\\PollisRSS.jl\\PollisBenchmarks.jl};
   \node[box, right=of repo, yshift=15mm] (pin) {\textbf{Pollis build}\\\texttt{build/<Pkg>.commit}\\compile-toml\\(References, RSS)};
   \node[box, right=of pin] (ship) {\textbf{Shipped in Pollis}\\\texttt{references.json}\\\texttt{pollis.bib}\\\texttt{rssCatalogue.data.ts}};
   \node[box, right=of repo, yshift=-15mm] (install) {\textbf{PollisDB.jl}\\\texttt{install()} at REPL start\\copies, then builds};
-  \node[box, right=of install] (copy) {\textbf{\textasciitilde/.pollis}\\package copies\\four \texttt{.duckdb} builds};
+  \node[box, right=of install] (copy) {\textbf{\textasciitilde/.pollis}\\package copies\\five \texttt{.duckdb} builds};
   \node[box, right=of ship, yshift=-15mm, text width=26mm] (app) {\textbf{Pollis at run time}\\pages, views, SQL};
   \node[user, below=of app, yshift=-12mm, text width=26mm] (mine) {\textbf{Your files}\\\texttt{*.jsonl}, your databases};
   \draw[arr] (repo) |- node[pos=0.75, above] {pinned commit} (pin);
@@ -125,30 +127,32 @@ the installed packages, in \file{~/.pollis/julia/environments/v1.13} & your own 
 \end{center}
 
 Two roads lead from a package to you. The \emph{install road} takes the newest commit on GitHub through the Julia
-REPL, copies what Pollis's pages read, and builds the databases; all four packages take it. The \emph{build road}
+REPL, copies what Pollis's pages read, and builds the databases; all five packages take it. The \emph{build road}
 takes PollisReferences.jl and PollisRSS.jl at a commit pinned in the Pollis repository and bakes them into every
 Pollis, because the References and RSS pages must work in a Pollis without Julia, offline, or on its very first start.
-PollisDatasets and PollisJournals need no build road: they are only ever read through Julia and DuckDB. Your files
+PollisDatasets, PollisJournals and PollisBenchmarks need no build road: they are only ever read through Julia and
+DuckDB. Your files
 reach the pages directly, and reach the databases through views that read them whenever they are queried.
 
 \section{\texorpdfstring{PollisDB.jl}{PollisDB.jl}: the Julia side of Pollis}\label{sec:pollisdb}
 
-The four packages are data; what installs them, builds the databases and connects you to them is
+The five packages are data; what installs them, builds the databases and connects you to them is
 \file{PollisDB.jl}. It is not a package: it is a Julia module inside Pollis itself, in its Julia extension
 (\file{extensions/language-julia/scripts/terminalserver/PollisDB.jl}), under Pollis's licence, AGPL-3.0. Every time
 the Julia REPL starts, Pollis loads it into the REPL as \file{PollisDB}, so it is always there, in any project, without
 being added to it. It has four jobs.
 \begin{enumerate}
   \item \textbf{Keep the data packages installed and current} (\file{install()}, \file{needs_install()}): it adds
-    the four packages, and DuckDB, to an environment of Pollis's own, \file{~/.pollis/julia/environments/v1.13}, and
+    the five packages, and DuckDB, to an environment of Pollis's own, \file{~/.pollis/julia/environments/v1.13}, and
     updates them when GitHub has newer commits. That environment is on the load path, so \file{using DuckDB} or
     \file{using PollisDatasets} works in any of your projects without touching its \file{Project.toml}.
-  \item \textbf{Build the four databases} (\file{build()}, \file{build_journals()}, \file{build_references()},
-    \file{build_rss()}), and copy the data files that Pollis's pages read (\file{copy_package_data()}). The fifth,
-    PollisDocuments, the passages Ask Pollis searches, is made by the Julia extension's \file{ask_index.jl} once the
+  \item \textbf{Build the five databases} (\file{build()}, \file{build_journals()}, \file{build_references()},
+    \file{build_rss()}, \file{build_benchmarks()}), and copy the data files that Pollis's pages read
+    (\file{copy_package_data()}). The sixth, PollisDocuments, the passages Ask Pollis searches, is made by the Julia extension's \file{ask_index.jl} once the
     documents are compiled.
-  \item \textbf{Connect} (\file{connect()}, \file{sql()}, the \file{sql>} mode): a DuckDB connection with the five
-    built-in databases attached read-only, and DuckDB's full-text search extension, fts, loaded.
+  \item \textbf{Connect} (\file{connect()}, \file{sql()}, the \file{sql>} mode, the SQL cells of Julia notebooks): a
+    DuckDB connection with the seven databases of Pollis attached read-only, and DuckDB's full-text search extension,
+    fts, loaded (\S\ref{sec:sql}).
   \item \textbf{Feed the Databases view} (\file{show()}, \file{register()}): each connection handed to it is
     described, schemas, tables and columns, in a JSON file in \file{~/.pollis/databases/sessions}, which the view
     watches.
@@ -157,7 +161,7 @@ Its DuckDB is Pollis's fork of DuckDB.jl, \file{github.com/Trumpingtons/DuckDB.j
 it loads the one Pollis ships, copied to \file{~/.pollis/duckdb} with the fts extension, so every DuckDB in Pollis,
 the \file{duckdb>} terminal included, is the same engine.
 
-\section{The four packages}
+\section{The five packages}
 
 \subsection{PollisDatasets.jl: the datasets of the examples}
 \textbf{What it holds.} 65 small, real datasets and 2 simulated ones, from \file{mtcars} and \file{iris} to \file{mroz} and
@@ -301,7 +305,24 @@ are yours (\S\ref{sec:your-feeds}).
 The database is made at install, with PollisDatasets, and its stamp is the SQL of the views alone: it is rebuilt only
 when a Pollis changes them, never because items arrived.
 
-\section{The install road: from GitHub to four databases}
+\subsection{PollisBenchmarks.jl: the benchmarks of AI models}
+\textbf{What it holds.} \file{data/catalogue.toml} lists 23 published benchmarks, each with what it measures, its
+source and revision, its licence, its size, and whether it is \emph{Built In} or a \emph{Download}. The questions of
+the 10 built in are Parquet files in a Julia artifact named \file{benchmarks}: MMLU-Pro, GSM8K, TruthfulQA, BIG-Bench
+Hard, PubMedQA, FinQA, IFEval and MultiPL-E Julia, for answering models, and SciFact and SCIDOCS, for embedding models
+and rerankers. A Download, such as a benchmark under a share-alike licence, is listed with its source but brings no
+questions. The package also holds what runs a benchmark in Julia: its prompts, and how each answer is graded.
+
+\textbf{The database.} \file{PollisDB.build_benchmarks()} makes \file{PollisBenchmarks.duckdb}: the table
+\file{catalogue}, a row per benchmark, and a table per benchmark built in, named by its id, with its questions, its
+examples and, for SciFact and SCIDOCS, its documents, told apart by the column \file{split}. Every table and column
+has its description. Its stamp is the installed package and the SQL that makes it.
+
+\textbf{Who reads it.} Benchmark Answering Models, in \menupath{Compose\gt Local AI Models}, and Benchmark Embedding
+and Reranking Models, in \menupath{Compose\gt Knowledge for AI Models}. Their runs go to Comparisons, which is yours
+(\S\ref{sec:principle}).
+
+\section{The install road: from GitHub to five databases}\label{sec:install}
 
 \subsection{When it runs}
 At every start of the Julia REPL, \file{terminalserver.jl} asks \file{PollisDB.needs_install()}. It is true when a
@@ -313,10 +334,11 @@ PollisDB.install()            # add what is missing, update what GitHub has newe
 PollisDB.catalogue()          # PollisDatasets.json, for the Welcome page
 PollisDB.copy_package_data()  # package.json and catalogue.json
 PollisDB.build(); PollisDB.build_rss(); PollisDB.build_journals(); PollisDB.build_references()
+PollisDB.build_benchmarks()
 \end{lstlisting}
 
 \subsection{Installing and updating}
-\file{DATA_PACKAGES} lists the four packages, each with its GitHub URL and the file
+\file{DATA_PACKAGES} lists the five packages, each with its GitHub URL and the file
 \file{~/.pollis/julia/environments/v1.13/<Pkg>.commit} that records the commit installed. \file{pending()} asks
 GitHub for the latest commit of \file{main} (the commits API, 3-second timeout):
 \begin{itemize}
@@ -354,6 +376,7 @@ PollisJournals & a new version of the package (a new snapshot) is installed, or 
   scores (\file{journals_outdated()})\\
 PollisReferences & \file{package.json} or \file{pollis.json} changes, or a Pollis changes its views\\
 PollisRSS & a Pollis changes its views; never for new items\\
+PollisBenchmarks & a new version of the package is installed, or a Pollis changes the SQL that makes it\\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -361,9 +384,10 @@ None is rebuilt because of something you did: your data reaches them through vie
 
 \section{The build road: PollisReferences and PollisRSS inside Pollis}\label{sec:build}
 
-Only two of the four packages take this road, because only their data is read by Pollis's own pages, which must work
+Only two of the five packages take this road, because only their data is read by Pollis's own pages, which must work
 without Julia: the References pages (Browse References, Explore References, Discover Literature) and the RSS pages.
-PollisDatasets and PollisJournals are read only through Julia and DuckDB, so a Pollis without Julia has no use for them,
+PollisDatasets, PollisJournals and PollisBenchmarks are read only through Julia and DuckDB, so a Pollis without Julia
+has no use for them,
 and baking 69 datasets or 250,000 journals into every Pollis would only make it bigger. (The RSS pages' journal tags
 come from \file{scores.csv}, which the install road writes.)
 
@@ -421,10 +445,95 @@ longer has keeps its own references rather than show a panel with a missing work
 has a name and a list of feeds, and every feed a name and an address; a file missing or malformed leaves the shipped
 catalogue. A catalogue copied while Pollis is open is taken at the next start of the window.
 
-\subsection{Datasets and journals}
+\subsection{Datasets, journals and benchmarks}
 No choice to make: there is only the installed package. Before the first install has finished, the Databases view
 and the Welcome page's \menupath{Status} say that the databases are not ready yet; the journal tags of the RSS pages
 appear when \file{scores.csv} does.
+
+\section{The Databases view and SQL}\label{sec:sql}
+
+The Guide shows how to use SQL in Pollis, in \emph{Four ways to use SQL}. This section shows what is under it: which
+process runs a query, on which database, and where the queries are recorded.
+
+\subsection{The Databases view}
+It has four sections, one under the other.
+\begin{itemize}
+  \item \textbf{Pollis Built-In}: PollisBenchmarks, PollisDatasets, PollisDocuments, PollisJournals and
+    PollisReferences, in alphabetical order, read-only.
+  \item \textbf{Pollis Activity}: PollisRSS, the views over your feeds, and Comparisons, your runs of the Evaluate and
+    Benchmark pages.
+  \item \textbf{User}: your saved connections, and those the Julia REPL holds. PollisDB writes each connection of the
+    REPL, with its schemas, tables and columns, to a JSON file in \file{~/.pollis/databases/sessions}, marked with the
+    window that started the REPL, so that a window shows only the connections of its own REPL. A schema counts its
+    tables and its views apart.
+  \item \textbf{History}: the queries of the \file{duckdb>} terminal, of the SQL cells of notebooks and of the
+    \file{sql>} mode (\S\ref{sec:history}).
+\end{itemize}
+\textbf{Updated.} When the install road has updated a data package, its database shows \emph{Updated} and the date
+after its name, and its hover has \emph{What Changed}, a link to GitHub's comparison of the commit before and the
+commit now. The view reads the commits from the \file{<Pkg>.commit} files of Pollis's environment
+(\S\ref{sec:install}), watches them for the next update, and keeps the commits it last saw in Pollis's own storage.
+The mark goes when the database is opened in the view, or after seven days. In a new environment, for a new version
+of Julia, what is installed is taken as it is, unmarked.
+
+\subsection{One engine, several connections}
+Every DuckDB in Pollis is the engine that Pollis ships: Node loads it, through \file{@duckdb/node-api}, in the
+\file{duckdb>} terminal and in the notebooks of DuckDB SQL (Pollis); Julia loads it through Pollis's DuckDB.jl. Every
+connection is prepared the same way: the seven databases of Pollis Built-In and Pollis Activity attached read-only
+under their names, the fts extension loaded, and DuckDB never installing or loading an extension by itself.
+
+\begin{center}\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{@{}p{0.27\linewidth}LL@{}}
+\toprule
+\textbf{Where the query is typed} & \textbf{Where it runs} & \textbf{Its database, and how long it lasts}\\
+\midrule
+the \file{duckdb>} terminal & Pollis's own program, run as Node in a terminal & in memory, or the file it is opened
+  on; until the terminal ends, or Restart REPL\\
+an SQL cell, under DuckDB SQL (Pollis) & a utility process of the window, for all its notebooks & one in memory for
+  each notebook; until the notebook is closed, or Restart in its toolbar\\
+the \file{sql>} mode, \file{sql()}, an SQL cell under Julia & the Julia REPL, or the notebook's Julia & one in
+  memory, \file{PollisDB.SQL_CONNECTION}, opened by the first query; until Julia exits\\
+\file{PollisDB.connect(path)} & any Julia & one for each call, in memory or \file{path}; until it is closed\\
+\bottomrule
+\end{tabularx}
+\end{center}
+The \file{sql>} mode and \file{sql()} share the connection of the REPL, so a table one makes, the other sees. The
+Julia of a notebook has a connection of its own, which the Databases view does not show. Two databases in memory never
+see each other: a temporary table made in the \file{duckdb>} terminal is not there in a notebook.
+
+\subsection{From SQL to Julia: \texorpdfstring{\file{PollisDB.Table}}{PollisDB.Table}}
+In an SQL cell of a Julia notebook, a statement that starts with a name and \file{:=} hands its result to Julia:
+\begin{lstlisting}
+feeds := SELECT * FROM PollisRSS.feeds;
+\end{lstlisting}
+\file{PollisDB.cell} runs it as \texttt{\small CREATE OR REPLACE TEMP TABLE "feeds" AS SELECT ...} on the notebook's
+connection, and binds the Julia variable \file{feeds} to a \file{PollisDB.Table}: the name of the table and its
+connection, nothing more. Julia's multiple dispatch lets that one object serve both sides.
+\begin{itemize}
+  \item \textbf{To Julia}, it is a Tables.jl table: \file{feeds.title} is a column, and \file{length(feeds)} its
+    number of rows, counted by DuckDB. Its rows are read at their first use and kept; a query of \file{sql} that
+    changes tables, such as \texttt{\small INSERT} or \texttt{\small DROP}, makes every \file{Table} read its rows again.
+  \item \textbf{To SQL}, it prints as its quoted name, so that an interpolation composes a query:
+\begin{lstlisting}
+sql("SELECT count(*) FROM $feeds")    # SELECT count(*) FROM "feeds"
+\end{lstlisting}
+  \item \textbf{Shown} under a cell, it reads only the rows it shows, the first 20 and the last 20, in the style of
+    DuckDB SQL (Pollis), with the Julia type of each column.
+\end{itemize}
+In Julia code, \file{sql("feeds", query)} does what \file{feeds := query} does. A table that was dropped, or lost with
+its connection, says so when it is used, and to run again the cell that made it. DuckDB SQL (Pollis) has no Julia to
+hand a result to: there, \file{feeds :=} is refused, and \texttt{\small CREATE TEMP TABLE feeds AS} proposed in its
+place.
+
+\subsection{The record of queries: History}\label{sec:history}
+The \file{duckdb>} terminal, for each query, and both kinds of notebook, for each SQL cell, append a line to
+\file{~/.pollis/duckdb/query_log.jsonl}: the SQL, without the \file{name :=} of a Julia notebook's cell; the time;
+how long it took; the rows of its last result; the error, if it failed; the database or the notebook's file; and, for
+a notebook, \file{"source": "notebook"}. Once the log has grown past 2,000 lines, it keeps the last 1,000. The
+\file{sql>} mode needs no log of its own: the Julia REPL keeps its history in \file{~/.julia/logs/repl_history.jl},
+where its entries are marked \texttt{\small\# mode: sql}. History reads both files, watching their folders, and lists the
+newest 500 queries; a click offers Run Again, in the \file{duckdb>} terminal, Copy SQL and Open in Editor.
 
 \section{Your data beside Pollis's}\label{sec:yours}
 
@@ -442,8 +551,9 @@ tables go in a database of your own, which can sit beside them.
   \item \textbf{Fill it.} \menupath{Explore\gt Access Databases} imports a CSV, Parquet
     or JSON file and saves a query's result as a table, always into your database. From Julia, any \texttt{\small CREATE TABLE}
     on your connection.
-  \item \textbf{Use it with Pollis's.} \file{PollisDB.connect("sales.duckdb")} opens your file \emph{and attaches the five
-    built-in databases, read-only, under their names}. The \file{duckdb>} terminal and the \file{sql>} mode do the same.
+  \item \textbf{Use it with Pollis's.} \file{PollisDB.connect("sales.duckdb")} opens your file \emph{and attaches the seven
+    databases of Pollis, read-only, under their names}. The \file{duckdb>} terminal, the \file{sql>} mode and the SQL
+    cells of notebooks do the same.
     One query can then join your table to Pollis's:
 \begin{lstlisting}
 db = PollisDB.connect("mydata.duckdb")
@@ -538,9 +648,10 @@ gives each item once.
 
 \subsection{Back up, move, start again}
 To keep everything you did, keep \file{~/.pollis/references}, \file{~/.pollis/rss}, \file{~/.pollis/journals/metrics},
-\file{~/.pollis/journals/articles.jsonl} and your own databases. On another computer, put them in the same places and
-start the Julia REPL: the packages are installed, and the databases built over your files. Deleting
-\file{~/.pollis/databases} is always safe; it is made again at the next start.
+\file{~/.pollis/journals/articles.jsonl}, \file{~/.pollis/databases/Comparisons.duckdb} and your own databases. On
+another computer, put them in the same places and start the Julia REPL: the packages are installed, and the databases
+built over your files. Deleting a database that Pollis builds is always safe, as it is made again at the next start;
+Comparisons is the one that holds your runs, and is not made again.
 
 \subsection{Giving your data to everyone}
 A dataset, a feed or a correction that others would want can go into the package itself, through an issue or a pull
@@ -626,7 +737,7 @@ The install road sees only what is pushed to \file{main}.
 \toprule
 \textbf{File} & \textbf{Role}\\
 \midrule
-\file{.../terminalserver/PollisDB.jl} & \file{DATA_PACKAGES}, \file{PACKAGE_COPIES}, \file{install}, the four builds, \file{connect}, \file{sql>}\\
+\file{.../terminalserver/PollisDB.jl} & \file{DATA_PACKAGES}, \file{PACKAGE_COPIES}, \file{install}, the five builds, \file{connect}, \file{sql}, \file{Table}, \file{cell}, \file{sql>}\\
 \file{.../terminalserver/install_pollisdb.jl} & The install script\\
 \file{extensions/language-julia/src/pollisDuckDB.ts} & Runs the install; copies the shipped references to \file{pollis.json}\\
 \file{build/PollisReferences.commit}, \file{build/PollisRSS.commit} & The pinned commits\\
@@ -639,6 +750,14 @@ The install road sees only what is pushed to \file{main}.
 \file{.../monitor/browser/journalScores.ts} & \file{scores.csv} and your metrics, for the RSS tags\\
 \file{.../monitor/browser/articleLookup.ts} & \file{articles.jsonl}\\
 \file{.../databases/browser/journalMetrics.ts} & Import Journal Metrics\\
+\file{.../databases/browser/connectionsView.ts} & The Databases view: its sections, and Updated\\
+\file{.../compose/browser/pollisDataPackages.ts} & The commits installed, and the packages updated lately\\
+\file{.../databases/browser/queryHistoryView.ts} & History\\
+\file{.../databases/node/duckdbPollis.ts} & The preparation of a connection, and the query log\\
+\file{.../databases/node/duckdbShellMain.ts} & The \file{duckdb>} terminal\\
+\file{.../databases/node/duckdbNotebookMain.ts} & The DuckDB of DuckDB SQL (Pollis)\\
+\file{.../databases/electron-browser/duckdbNotebook.contribution.ts} & The kernel DuckDB SQL (Pollis)\\
+\file{.../VSCodeServer/src/serve_notebook.jl} & SQL cells of Julia notebooks, handed to \file{PollisDB.cell}\\
 \bottomrule
 \end{tabularx}
 \end{center}
