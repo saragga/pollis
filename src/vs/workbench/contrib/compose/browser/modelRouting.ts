@@ -39,7 +39,7 @@ export type BuiltinAgentTier = 'light' | 'standard' | 'strong';
 /** A tier: one of the three, or the name of one the user typed in a cell. */
 export type AgentTier = string;
 
-export type AgentTask = 'polish' | 'writeVignette' | 'prepareRegistration' | 'packageToolbox' | 'tablesFromArticle' | 'writeMethod' | 'createPanel' | 'createPanelsFromRequest';
+export type AgentTask = 'polish' | 'writeVignette' | 'prepareRegistration' | 'packageToolbox' | 'tablesFromArticle' | 'writeMethod' | 'planReplication' | 'replicateArticle' | 'explainDifferences' | 'createPanel' | 'createPanelsFromRequest';
 
 /** A tier: its name and what it is for. */
 export interface IAgentTierInfo {
@@ -73,6 +73,9 @@ export const AGENT_TASKS: readonly IAgentTaskInfo[] = [
 	{ id: 'packageToolbox', label: localize('modelRouting.packageToolbox', "Package a Toolbox"), menu: localize('modelRouting.newPanels', "New Panels and Toolboxes"), tier: 'standard', skills: ['package-toolbox'] },
 	{ id: 'tablesFromArticle', label: localize('modelRouting.tablesFromArticle', "Tables from the Article"), menu: localize('modelRouting.newMethods', "Methods"), tier: 'strong', skills: ['tables-from-article'] },
 	{ id: 'writeMethod', label: localize('modelRouting.writeMethod', "Write a Method"), menu: localize('modelRouting.newMethods', "Methods"), tier: 'strong', skills: ['write-method'] },
+	{ id: 'planReplication', label: localize('modelRouting.planReplication', "Plan a Replication"), menu: localize('modelRouting.replication', "Replication"), tier: 'standard', skills: ['plan-replication'] },
+	{ id: 'replicateArticle', label: localize('modelRouting.replicateArticle', "Replicate an Article"), menu: localize('modelRouting.replication', "Replication"), tier: 'strong', skills: ['replicate-article'] },
+	{ id: 'explainDifferences', label: localize('modelRouting.explainDifferences', "Explain the Differences"), menu: localize('modelRouting.replication', "Replication"), tier: 'standard', skills: ['explain-differences'] },
 	{ id: 'createPanel', label: localize('modelRouting.createPanel', "Create a Panel"), menu: localize('modelRouting.newPanels', "New Panels and Toolboxes"), tier: 'strong', skills: ['create-panel'] },
 	{ id: 'createPanelsFromRequest', label: localize('modelRouting.createPanelsFromRequest', "Create Panels from a Request"), menu: localize('modelRouting.newPanels', "New Panels and Toolboxes"), tier: 'strong', skills: ['create-panel'] },
 ];

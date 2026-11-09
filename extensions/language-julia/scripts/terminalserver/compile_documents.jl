@@ -24,9 +24,10 @@ const GROUPS = [
 	[("workflows/replication_flowchart.tex", "")],
 	[("tour/pollis_tour.tex", "pollis-tour.pdf"), ("guide/pollis_guide.tex", "pollis-guide.pdf")],
 	[
-		("ai-tour/pollis_ai_tour.tex", "pollis-ai-tour.pdf"),
 		("ai-brochure/pollis_ai_brochure.tex", "pollis-ai-brochure.pdf"),
+		("ai-guide/pollis_ai_guide.tex", "pollis-ai-guide.pdf"),
 		("workflows/workflow_data_packages.tex", "pollis-drilldown-data-packages.pdf"),
+		("workflows/workflow_pollis_repl.tex", "pollis-drilldown-pollis-repl.pdf"),
 		("workflows/workflow_literature_radar.tex", "pollis-drilldown-literature-radar.pdf"),
 		("workflows/workflow_ask_pollis.tex", "pollis-drilldown-ask-pollis.pdf"),
 	],

@@ -1,0 +1,52 @@
+# Replicate an Article Webview Configuration
+# A page of Compose in the Time Arrow style of the scaffold, not a panel: only its Learn More, as no Julia package powers it.
+# `pageCommand` is the command that opens it, which a panel's contribution file would say. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/replicateArticle.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Replicate an Article"
+viewType = "pollis.replicateArticle"
+pageCommand = "pollis.replication.replicateArticle"
+
+[[wikis]]
+name = "Factsheet"
+file = "replicateArticle/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "replicateArticle/overview.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Reproducibility and Replication"
+
+[[references]]
+key = "NASEM2019a"
+
+[[references]]
+key = "GFI2016a"
+
+[[references]]
+key = "Pen2011a"
+
+[[references]]
+separator = true
+label = "Replication in Economics"
+
+[[references]]
+key = "DTA1986a"
+
+[[references]]
+key = "MMH2006a"
+
+[[references]]
+key = "HAP2014a"
+
+[[references]]
+key = "Vil2020a"
+
+[[references]]
+key = "CL2022a"

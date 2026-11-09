@@ -1,0 +1,321 @@
+% Pollis drill-down: the Pollis REPL, SQL and Julia at one prompt on the Shared Session, the two bridges between them,
+% name := and @share, worked examples, and how the terminal reaches Julia (9 November 2026).
+% For users who work with both languages, and for whoever maintains Pollis.
+% Compile with: latexmk -pdf workflow_pollis_repl.tex
+\input{workflow_style}
+
+\usepackage{titlesec}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{listings}
+
+\fancyhf{}
+\fancyfoot[L]{\footnotesize\color{soft}\textbf{Pollis}\enspace Drill-down: Pollis REPL}
+\fancyfoot[R]{\footnotesize\color{soft}\thepage}
+
+\titleformat{\section}{\color{navy}\large\bfseries}{\color{deepamber}\thesection}{0.6em}{}
+\titleformat{\subsection}{\color{navy}\normalsize\bfseries}{\color{deepamber}\thesubsection}{0.5em}{}
+\titlespacing*{\section}{0pt}{12pt}{4pt}
+\titlespacing*{\subsection}{0pt}{8pt}{2pt}
+\setlength{\parskip}{4pt}
+
+\lstset{basicstyle=\ttfamily\footnotesize, columns=fullflexible, keepspaces=true, breaklines=true,
+  backgroundcolor=\color{pale}, frame=leftline, rulecolor=\color{amber}, framerule=2pt, xleftmargin=6pt,
+  framexleftmargin=6pt, aboveskip=4pt, belowskip=4pt, upquote=true, tabsize=2}
+
+\usepackage{xurl}
+\newcommand{\file}[1]{{\small\nolinkurl{#1}}}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+
+\begin{document}
+
+\workflowhead[Drill-Down]{Pollis REPL}
+  {SQL and Julia at one prompt}
+  {The Pollis REPL runs SQL on the Shared Session, the database of the Julia REPL, and Julia code on the same Julia:
+   how it tells them apart, how a table goes from one to the other and back, three worked examples, and what is under
+   the surface.}
+
+\begin{nbox}
+{\color{amber}\bfseries Drill-down.}\enspace
+A look under the surface of what the Guide describes in \emph{Data and Databases}, with its \emph{Four ways to use
+SQL}. It is for anyone who moves between SQL and Julia in one piece of work, and for whoever maintains Pollis
+(\S\ref{sec:machinery} is for them). Drill-down: Data Packages and Databases describes the databases themselves, and
+how the \file{duckdb>} terminal and the notebooks reach the Shared Session. It describes the state of 9 November 2026.
+\end{nbox}
+
+\tableofcontents
+
+\section{Three REPLs, one Julia}\label{sec:three}
+Three items in the status bar, Julia REPL, Pollis REPL and DuckDB REPL, start the three REPLs of Pollis or show them;
+the terminal's + menu offers the same three after its profiles. Each keeps to one job.
+
+\begin{center}\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{@{}p{0.15\linewidth}LL@{}}
+\toprule
+\textbf{Prompt} & \textbf{What you type} & \textbf{Where it runs, and on which database}\\
+\midrule
+\file{julia>} & Julia & the Julia REPL; \file{sql()} and \file{@share} reach the Shared Session\\
+\file{pollis>} & SQL and Julia, told apart as you type & the same Julia: SQL on the Shared Session, Julia in the
+  Julia REPL\\
+\file{duckdb>} & SQL alone, and dot commands such as \file{.tables} & Pollis's own DuckDB program, without Julia, on a
+  database of its own, which attaches the Shared Session as \file{SharedSession}\\
+\bottomrule
+\end{tabularx}
+\end{center}
+The Pollis REPL is a terminal of its own, beside the Julia REPL, so that \file{julia>} stays at hand. It runs on the
+Julia of the Julia REPL, which it starts in the background if need be, and its item in the status bar is filled while
+it is open. The Shared Session is the DuckDB of that Julia, in memory: its tables last until Julia exits, and are lost
+when the Julia REPL restarts.
+
+\section{One prompt, two languages}\label{sec:routing}
+The Pollis REPL looks at the first word of what you type, after blanks and SQL comments.
+\begin{itemize}
+  \item \textbf{SQL}, when that word starts a statement of DuckDB and a blank follows it: \texttt{\small SELECT},
+    \texttt{\small FROM}, \texttt{\small WITH}, \texttt{\small CREATE}, \texttt{\small INSERT},
+    \texttt{\small DESCRIBE}, \texttt{\small SUMMARIZE}, \texttt{\small PIVOT} and the like, in any case; or when the
+    input starts with \file{name :=}. SQL runs once it ends with \file{;}; until then, Enter starts a new line.
+  \item \textbf{Julia}, anything else, such as \file{x = 1}, \file{using Statistics} or \file{@share t}. Julia runs
+    once it is a whole expression, as at \file{julia>}: an open bracket or a \file{function} without its \file{end}
+    asks for another line.
+\end{itemize}
+A name that is both, \file{describe}, \file{values} or \file{show}, is Julia when \file{(} follows it:
+\texttt{\small DESCRIBE feeds;} is SQL, \file{describe(df)} Julia. \texttt{\small IMPORT}, \texttt{\small EXPORT} and
+\texttt{\small BEGIN} are left to Julia.
+
+SQL answers in the Pollis REPL, its result drawn to the terminal's width. Julia code runs in the Julia REPL, as Execute
+Code does: the Julia REPL shows it with its output, its prints and its result in full, and the Pollis REPL writes the
+result in one line, nothing for \file{nothing} or after a \file{;}, an error in red. Ctrl+C stops either: a query with
+DuckDB's interrupt, Julia code as Ctrl+C in the Julia REPL does.
+
+\section{The two bridges}\label{sec:bridges}
+SQL sees the tables of the Shared Session; Julia sees its variables. Two bridges join them, one each way, and both
+leave the table on both sides.
+
+\begin{center}\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{@{}p{0.36\linewidth}L@{}}
+\toprule
+\textbf{Typed} & \textbf{What it makes}\\
+\midrule
+\file{name := SELECT ...;} \hfill (SQL) & the table \file{name} of the Shared Session, and the Julia variable
+  \file{name}, a \file{PollisDB.Table}\\
+\file{@share name = table} \hfill (Julia) & the Julia variable \file{name}, as \file{=} would, and a copy of it as the
+  table \file{name}\\
+\file{@share name} \hfill (Julia) & the table \file{name} copied again, after a change in Julia\\
+\file{sql("name", "SELECT ...")} \hfill (Julia) & what \file{name := SELECT ...} makes, from Julia code\\
+\file{publish(table, "name")} \hfill (Julia) & what \file{@share} does, as a function\\
+\bottomrule
+\end{tabularx}
+\end{center}
+A Julia variable that has not been shared is not seen by SQL, and a table made by SQL without \file{:=} is not a Julia
+variable. The bridges work the same way in the SQL and Julia cells of Julia notebooks, on the notebook's own database.
+
+\subsection{From SQL to Julia: \texorpdfstring{\file{name :=}}{name :=} and \texorpdfstring{\file{PollisDB.Table}}{PollisDB.Table}}
+\begin{lstlisting}
+pollis> feeds := SELECT * FROM PollisRSS.feeds;
+\end{lstlisting}
+\file{PollisDB.pollis_query} runs it as \texttt{\small CREATE OR REPLACE TABLE "feeds" AS SELECT ...} on the Shared
+Session, and binds the Julia variable \file{feeds} to a \file{PollisDB.Table}: the name of the table and its
+connection, nothing more. Julia's multiple dispatch lets that one object serve both sides.
+\begin{itemize}
+  \item \textbf{To Julia}, it is a Tables.jl table: \file{feeds.title} is a column, and \file{length(feeds)} its
+    number of rows, counted by DuckDB. Its rows are read at their first use and kept; a query of \file{sql} that
+    changes tables, such as \texttt{\small INSERT} or \texttt{\small DROP}, makes every \file{Table} read its rows again.
+  \item \textbf{To SQL}, it prints as its quoted name, so that an interpolation composes a query:
+\begin{lstlisting}
+sql("SELECT count(*) FROM $feeds")    # SELECT count(*) FROM "feeds"
+\end{lstlisting}
+  \item \textbf{In the Pollis REPL}, it is not drawn: \file{PollisDB.Kept} says its name, in Pollis's yellow, and its
+    rows and columns, and under them \texttt{\small Browse feeds: Open in Table Viewer}, whose last words, blue and
+    underlined, open the whole table in the Table Viewer with one click.
+  \item \textbf{Under a notebook cell}, it reads only the rows it shows, the first 20 and the last 20, with the Julia
+    type of each column.
+\end{itemize}
+A table that was dropped, or lost with its connection, says so when it is used, and to run again what made it.
+
+\subsection{From Julia to SQL: \texorpdfstring{\file{@share}}{@share}}
+\begin{lstlisting}
+pollis> @share stock_returns = (ticker = ["AAPL", "MSFT"], returns = [0.12, 0.08])
+\end{lstlisting}
+\file{@share name = table} becomes \file{name = publish(table, "name")}, and \file{@share name} becomes
+\file{publish(name, "name")}. Both are plain Julia, so they run anywhere Julia does: in the Pollis REPL, at
+\file{julia>}, in code run from the editor, in notebooks, and inside functions and loops. \file{publish} registers the
+table with DuckDB, copies it into the table \file{name} of the Shared Session, and returns it unchanged: Julia keeps
+its own table, and a change to it reaches DuckDB when it is shared again. Any Tables.jl table is taken, a named tuple
+of vectors as here, a \file{PollisDB.Table}, which is copied within DuckDB, or the table of another package; a value
+that is not a table is refused, to be bound with \file{=}. A \file{missing} becomes \texttt{\small NULL}.
+
+\section{Worked examples}\label{sec:examples}
+Each example is typed at \file{pollis>}, a line or a statement at a time. The Julia lines run in the Julia REPL, which
+shows their results in full; the Pollis REPL shows them in one line. They use only Julia's standard libraries and the
+databases of Pollis.
+
+\subsection{SQL, then Julia, then SQL}
+Which topics of your feeds bring the most items? SQL takes the feeds, Julia scores them, and SQL sums the scores up.
+\begin{lstlisting}
+-- 1. SQL: the feeds, one row each, with the number of items each brought
+pollis> feeds := SELECT feed, feed_title, topic, items FROM PollisRSS.feeds;
+Table feeds, in the Shared Session and in Julia: 67 rows, 4 columns
+Browse feeds: Open in Table Viewer
+
+# 2. Julia: how far each feed is from the mean, in standard deviations
+pollis> using Statistics
+pollis> z = (feeds.items .- mean(feeds.items)) ./ std(feeds.items)
+
+# 3. Back to SQL: the scores, with the columns that identify each feed
+pollis> @share scores = (feed = feeds.feed, topic = feeds.topic, z = z)
+
+-- 4. SQL again: group, filter and join as usual
+pollis> SELECT topic, count(*) AS feeds, round(avg(z), 2) AS mean_z,
+    ...>        count(*) FILTER (WHERE z > 1) AS busy_feeds
+    ...> FROM scores GROUP BY topic ORDER BY mean_z DESC;
+
+pollis> SELECT f.feed_title, round(s.z, 2) AS z
+    ...> FROM scores s JOIN PollisRSS.feeds f USING (feed)
+    ...> WHERE s.z > 1 ORDER BY s.z DESC;
+\end{lstlisting}
+Step 1 hands the result to Julia with \file{:=}; the numbers in its summary depend on your feeds. Step 2 is ordinary
+Julia, and any package or function of yours can take its place: a z-score could be written in SQL too, and stands here
+for what Julia does better, a model, a forecast or a simulation. Step 3 hands the result back with \file{@share}, and
+step 4 reads \file{scores} by its name, beside a database of Pollis.
+
+\subsection{Julia, then SQL, then Julia}
+A Julia table of daily prices, simulated here, becomes returns in Julia; SQL subsets them and sums them up by month;
+Julia fits a trend to what SQL sends back.
+\begin{lstlisting}
+# 1. Julia: a year of daily prices for three tickers, simulated with a fixed seed
+pollis> using Random, Dates, Statistics
+pollis> Random.seed!(1);
+pollis> days = filter(d -> dayofweek(d) <= 5, Date(2025, 1, 1):Day(1):Date(2025, 12, 31));
+pollis> prices = (ticker = repeat(["ALPHA", "BETA", "GAMMA"]; inner = length(days)),
+    ...>           date = repeat(days; outer = 3),
+    ...>           price = vcat([100 .* exp.(cumsum(s .* randn(length(days)))) for s in (0.010, 0.015, 0.020)]...));
+
+# 2. Julia: the daily log returns, missing on each ticker's first day
+pollis> starts = [i == 1 || prices.ticker[i] != prices.ticker[i - 1] for i in eachindex(prices.ticker)];
+pollis> logret = [starts[i] ? missing : log(prices.price[i] / prices.price[i - 1]) for i in eachindex(prices.price)];
+
+# 3. To SQL: the returns, a DuckDB table now, where missing is NULL
+pollis> @share returns = (ticker = prices.ticker, date = prices.date, logret = logret);
+
+-- 4. SQL: the volatility of each ticker over the year
+pollis> SELECT ticker, count(*) AS days, round(stddev_samp(logret) * sqrt(252), 3) AS volatility
+    ...> FROM returns WHERE logret IS NOT NULL GROUP BY ticker ORDER BY ticker;
+
+-- 5. SQL: the second half of the year, by month, back to Julia
+pollis> monthly := SELECT ticker, month(date) AS month, stddev_samp(logret) * sqrt(252) AS volatility
+    ...> FROM returns WHERE logret IS NOT NULL AND date >= DATE '2025-07-01'
+    ...> GROUP BY ticker, month ORDER BY ticker, month;
+Table monthly, in the Shared Session and in Julia: 18 rows, 3 columns
+Browse monthly: Open in Table Viewer
+
+# 6. Julia: the trend of each ticker's monthly volatility, by least squares
+pollis> X = [ones(6) 1:6]
+pollis> trend = Dict(t => (X \ monthly.volatility[monthly.ticker .== t])[2] for t in unique(monthly.ticker))
+\end{lstlisting}
+The \file{;} at the end of a Julia line hides its result, as at \file{julia>}. Step 3 shares a table that Julia made
+from nothing; step 4 shows a result without keeping it, and step 5 keeps one, which is a Julia table again in step 6:
+\file{monthly.volatility} is a column, and \texttt{\small X \textbackslash{} y} Julia's least squares. Replace the simulated
+prices with your own table.
+
+\subsection{Your table beside the data of Pollis}
+A list of journals in Julia, by their ISSNs, meets PollisJournals in one SQL join.
+\begin{lstlisting}
+# 1. Julia: the journals you aim at, and how many papers you have sent each
+pollis> @share targets = (issn = ["0022-1082", "0304-405X", "0893-9454", "0022-1090"], submitted = [2, 1, 3, 0]);
+
+-- 2. SQL: each journal's name, publisher and impact, from PollisJournals, back to Julia
+pollis> ranked := SELECT j.title, j.publisher, j.h_index, j.mean_citedness_2yr AS citedness, t.submitted
+    ...> FROM targets t
+    ...> JOIN PollisJournals.journal_issns i ON i.issn = t.issn
+    ...> JOIN PollisJournals.journals j ON j.id = i.id
+    ...> ORDER BY j.h_index DESC;
+Table ranked, in the Shared Session and in Julia: 4 rows, 5 columns
+Browse ranked: Open in Table Viewer
+
+# 3. Julia: the journal cited most in its last two years
+pollis> ranked.title[argmax(ranked.citedness)]
+\end{lstlisting}
+\file{journal_issns} finds a journal by any of its ISSNs, print or electronic. The databases of Pollis are read-only;
+your table sits beside them in the Shared Session, and the join reads both.
+
+\section{Seeing and reaching the tables}\label{sec:seeing}
+\begin{itemize}
+  \item \textbf{Open in Table Viewer}, under a table that \file{:=} keeps, opens all of it in the Table Viewer, beside
+    the Databases view, with one click, without the modifier other links of the terminal need.
+  \item \textbf{Shared Session}, under User in the Databases view, lists the tables of the Shared Session, those of
+    both bridges among them; click it to browse them. Its hover says how many clients of the window are attached to
+    it and which of their queries are running.
+  \item \textbf{\file{SharedSession.name}}: the \file{duckdb>} terminal and the notebooks of the window attach the
+    Shared Session as \file{SharedSession}, so \texttt{\small SELECT * FROM SharedSession.scores} reads the table of
+    the first example there, and \file{.tables} lists them. A query there may name a table of \file{SharedSession}
+    once only; Drill-down: Data Packages and Databases gives the ways round.
+  \item \textbf{History}, in the Databases view, lists the queries of the Pollis REPL, as \file{pollis>}, without
+    their \file{name :=}, with their rows, how long they took and any error; Julia code is not listed.
+\end{itemize}
+
+\section{Good to know}\label{sec:know}
+\begin{itemize}
+  \item The Shared Session is in memory: its tables are lost when the Julia REPL restarts. Copy one to a file of your
+    own to keep it, \texttt{\small COPY scores TO 'scores.parquet';}, or into a database of your own.
+  \item One query runs at a time on the Shared Session; a second waits for the first. Julia code waits too, while the
+    Julia REPL runs other code.
+  \item \file{feeds := ...} again replaces the table and the Julia variable; \file{@share feeds} after a change in
+    Julia replaces the table.
+  \item The Pollis REPL and \file{julia>} share the variables of \file{Main}: a variable made in one is there in the
+    other.
+\end{itemize}
+
+\section{Under the surface}\label{sec:machinery}
+The Pollis REPL edits lines itself, with Node's readline (\file{extensions/language-julia/src/interactive/pollisTerminal.ts}),
+and sends each whole input to Julia through a socket only you can reach, a named pipe on Windows, whose address and
+token PollisDB writes to \file{~/.pollis/duckdb/served/pollis.<window>.json} when the REPL starts
+(\file{PollisDB.serve_terminal}). The requests are lines, with the text they carry after them: \file{complete} asks
+whether an input ends, \file{query} runs it, \file{browse} opens a table in the Table Viewer, \file{attached} asks what
+the window's DuckDB clients have attached, and \file{interrupt} stops the query running. Julia answers each on threads
+of its own, so that it answers while the REPL runs Julia code, and a lock keeps the Shared Session to one query at a
+time.
+
+\begin{itemize}
+  \item \textbf{SQL or Julia}: \file{PollisDB.is_sql} decides, with \file{SQL_WORDS} and \file{ASSIGNMENT}; a Julia
+    input is complete when \file{Base.parse_input_line} finds it so (\file{julia_complete}), an SQL one when it ends
+    with \file{;} outside quotes and comments (\file{complete}).
+  \item \textbf{SQL}: \file{PollisDB.terminal_query} runs it with \file{pollis_query}, logs it in
+    \file{~/.pollis/duckdb/query_log.jsonl} with \file{"source": "pollis"}, which History reads, and sends back the
+    result drawn to the terminal's width, or the error.
+  \item \textbf{Julia}: Julia answers \file{julia}, and the terminal hands the input to the Julia REPL through the
+    Julia extension's \file{executeInREPL}, as Execute Code does, without bringing the Julia REPL to the front. The
+    REPL runs it in \file{Main}; Ctrl+C runs the Julia extension's interrupt.
+  \item \textbf{The link}: Open in Table Viewer is a link of the terminal (\file{pollisTerminal.ts}, \file{browseLinks});
+    the Julia extension asks Julia for the table through the socket, so nothing is typed into the REPL. It needs one
+    click because the links of Pollis's own extensions do (\file{TerminalLink}, \file{oneClick}).
+  \item \textbf{The keys before code}: the code Pollis sends to the Julia REPL, such as that of a page's Run button,
+    comes after keys of no other use, ESC [ 6 9 \textasciitilde, which PollisDB binds in every mode of the REPL
+    (\file{repl_keys}, \file{TO_JULIA}): to going to \file{julia>} from \file{pkg>} or \file{help>}, and in
+    \file{julia>} to nothing; a Julia without PollisDB ignores them, as it does any keys ESC [ 6 and two more.
+  \item \textbf{The status bar}: the three items keep to their names; the Julia REPL's threads and the database of the
+    \file{duckdb>} terminal are in their tooltips.
+\end{itemize}
+
+\section{Where things are}
+
+\begin{center}\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{@{}p{0.47\linewidth}L@{}}
+\toprule
+\textbf{File} & \textbf{Role}\\
+\midrule
+\file{.../terminalserver/PollisDB.jl} & \file{sql}, \file{Table}, \file{Kept}, \file{publish}, \file{@share},
+  \file{pollis_query}, \file{is_sql}, \file{serve_terminal}, \file{terminal_query}, \file{repl_keys}\\
+\file{.../src/interactive/pollisTerminal.ts} & The Pollis REPL terminal, its status bar item, and the link Open in
+  Table Viewer\\
+\file{.../src/pollisReplConnection.ts} & Its connection to Julia\\
+\file{.../src/interactive/repl.ts} & \file{executeInREPL}, which runs its Julia code in the Julia REPL\\
+\file{.../terminal/browser/links/terminalLink.ts} & One-click links\\
+\file{.../databases/browser/queryHistoryView.ts} & History\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\end{document}

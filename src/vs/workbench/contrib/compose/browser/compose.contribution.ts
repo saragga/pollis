@@ -23,6 +23,7 @@ import './askPollisStrategiesService.js';
 import './askPollisSources.js';
 import { BROWSE_SKILLS_COMMAND_ID, CHOOSE_AGENT_COMMAND_ID, CREATE_PANEL_COMMAND_ID, CREATE_PANELS_FROM_REQUEST_COMMAND_ID, PACKAGE_TOOLBOX_COMMAND_ID } from './pollisAgents.js';
 import { BROWSE_METHODS_COMMAND_ID, CREATE_METHOD_COMMAND_ID } from './newMethods.js';
+import { REPLICATE_ARTICLE_COMMAND_ID } from './replicateArticle.js';
 import './codingAgentPage.js';
 import './modelRoutingPage.js';
 import './pollisContent.js';
@@ -42,7 +43,6 @@ import { EXPORT_NOTEBOOK_LATEX_COMMAND_ID, MAKE_NOTEBOOK_SLIDES_COMMAND_ID, POLI
 import './practice.js';
 import { IMPLEMENTED_COLLABORATION_COMMANDS } from './collaboration/collaboration.contribution.js';
 import { PUBLISHED_BENCHMARKS_COMMAND_ID, SEARCH_WORKFLOW_LIBRARY_COMMAND_ID } from './workflowLibrary.js';
-import { SHOW_EVENT_STUDIES_COMMAND_ID } from '../../monitor/browser/eventStudiesService.js';
 import { IMPORT_REFERENCES_COMMAND_ID, LITERATURE_RADAR_COMMAND_ID } from './literatureRadarPage.js';
 import { BROWSE_REFERENCES_COMMAND_ID } from './browseReferencesPage.js';
 import { SNOWBALL_SEARCH_COMMAND_ID } from '../common/snowballSearch.js';
@@ -58,7 +58,6 @@ const LocalModelsMenu = new MenuId('menubarAMRSubmenu');
 const KnowledgeMenu = new MenuId('menubarKnowledgeMenu');
 const ReportsMenu = new MenuId('menubarReportsMenu');
 const ReplicationMenu = new MenuId('menubarReplicationMenu');
-const REPLICATE_ARTICLE_COMMAND_ID = 'pollis.replication.replicateArticle';
 const WorkflowsMenu = new MenuId('menubarWorkflowsMenu');
 const BROWSE_WORKFLOWS_COMMAND_ID = 'pollis.workflows.browse';
 const EXTRACT_WORKFLOW_COMMAND_ID = 'pollis.workflows.extract';
@@ -197,13 +196,6 @@ MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	order: 4,
 });
 
-// The page of a method (newMethods.ts), formerly Compose > Methods > Create Methods: kept here while its five steps
-// (Article and Data, Write a Method, Write a Vignette, Prepare for Registration, Package and Publish) move one by one
-MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
-	group: '2_compose',
-	command: { id: CREATE_METHOD_COMMAND_ID, title: localize('compose.underConstruction', "Under Construction...") },
-	order: 5,
-});
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	group: '2_compose',
@@ -212,11 +204,12 @@ MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	order: 6,
 });
 
-MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
-	group: '2_compose',
+// Explore > PDF Files, below Access Files (explore.contribution.ts), with its items below
+MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
+	group: '1_explore',
 	submenu: PdfFilesMenu,
 	title: localize('compose.pdfFiles', "PDF Files"),
-	order: 7,
+	order: 5,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
@@ -453,10 +446,10 @@ MenuRegistry.appendMenuItem(ReplicationMenu, {
 /** The precondition of a menu item not built yet: never met, so the menu shows the item greyed out, as macOS does. */
 const NOT_YET_AVAILABLE = ContextKeyExpr.false();
 
-// The coding agent replicates an article: not built yet
+// A replication made from its article, step by step (replicateArticle.ts)
 MenuRegistry.appendMenuItem(ReplicationMenu, {
 	group: '1_replication',
-	command: { id: REPLICATE_ARTICLE_COMMAND_ID, title: localize('replication.replicateArticle', "Replicate a Classical Article..."), precondition: NOT_YET_AVAILABLE },
+	command: { id: REPLICATE_ARTICLE_COMMAND_ID, title: localize('replication.replicateArticle', "Replicate an Article...") },
 	order: 2,
 });
 
@@ -485,13 +478,6 @@ MenuRegistry.appendMenuItem(WorkflowsMenu, {
 	order: 3,
 });
 
-// Event studies of the filings an alert on SEC filings fires, with the minute prices around each (eventStudiesPage.ts)
-MenuRegistry.appendMenuItem(WorkflowsMenu, {
-	group: '2_eventStudies',
-	command: { id: SHOW_EVENT_STUDIES_COMMAND_ID, title: localize('workflows.eventStudies', "Event Studies...") },
-	order: 1,
-});
-
 MenuRegistry.appendMenuItem(WorkflowsMenu, {
 	group: '2_operational',
 	command: { id: BROWSE_OPERATIONAL_WORKFLOWS_COMMAND_ID, title: localize('operationalWorkflows.browse', "Browse Operational Workflows...") },
@@ -516,14 +502,20 @@ MenuRegistry.appendMenuItem(WorkflowsMenu, {
 
 
 // ==============================================================
-// SUBMENU: Methods, formerly New Methods (newMethods.ts; Browse Methods is in workflowLibrary.ts). Browse Methods lists
-// the user's methods, to go on with one, and the library. The page of a new method is Compose > Under Construction...
+// SUBMENU: Methods (newMethods.ts; Browse Methods is in workflowLibrary.ts). New Method opens the page of a new method,
+// with its five steps; Browse Methods lists the user's methods, to go on with one, and the library.
 // ==============================================================
 
 MenuRegistry.appendMenuItem(NewMethodsMenu, {
 	group: '3_browse',
-	command: { id: BROWSE_METHODS_COMMAND_ID, title: localize('newMethods.library', "Browse Methods") },
+	command: { id: CREATE_METHOD_COMMAND_ID, title: localize('newMethods.newMethod', "Create New Method") },
 	order: 1,
+});
+
+MenuRegistry.appendMenuItem(NewMethodsMenu, {
+	group: '3_browse',
+	command: { id: BROWSE_METHODS_COMMAND_ID, title: localize('newMethods.library', "Browse Methods") },
+	order: 2,
 });
 
 // ==============================================================

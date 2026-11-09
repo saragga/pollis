@@ -76,7 +76,7 @@ export class PollisReplConnection {
         return (await answer).kind === 'complete'
     }
 
-    /** Runs `text` as the pollis> mode does; the answer holds the result drawn in `width` characters, or the error. */
+    /** Runs `text` on the Shared Session (PollisDB.jl, terminal_query); the answer holds the result drawn in `width` characters, or the error. */
     async query(text: string, width: number): Promise<IPollisAnswer> {
         const data = Buffer.from(text, 'utf8')
         const answer = this.answer()

@@ -7,6 +7,7 @@ import { localize } from '../../../../../vs/nls.js';
 import { MenuRegistry, MenuId } from '../../../../platform/actions/common/actions.js';
 import { CommandsRegistry } from '../../../../platform/commands/common/commands.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
+import { SHOW_EVENT_STUDIES_COMMAND_ID } from '../../monitor/browser/eventStudiesService.js';
 
 import { NLLS_PANEL } from './commands/nlls.command.js';
 import { LM_PANEL } from './commands/lm.command.js';
@@ -363,6 +364,7 @@ CommandsRegistry.registerCommand('chiara.statistics.glm.positive', accessor => G
 
 const MWMSubmenuId = new MenuId('menubarMWMSubmenu');
 const LMSubmenuId = new MenuId('menubarLMSubmenu'); // Linear Models
+const MMSubmenuId = new MenuId('menubarMMSubmenu'); // Mixed Models
 const SASubmenuId = new MenuId('menubarSASubmenu');
 const NNSubmenuId = new MenuId('menubarNNSubmenu');
 const CLSubmenuId = new MenuId('menubarCLSubmenu');
@@ -793,8 +795,16 @@ MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
 });
 
 
+// Mixed Models: the models with random effects, after the three without them
 MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
-	group: '3_regression',
+	group: '2_regression',
+	submenu: MMSubmenuId,
+	title: localize('showStatistics.mm', 'Mixed Models'),
+	order: 4,
+});
+
+MenuRegistry.appendMenuItem(MMSubmenuId, {
+	group: '1_mm',
 	command: {
 		id: LMM_COMMAND_ID,
 		title: localize('showStatistics.lmm', 'Linear Mixed Models'),
@@ -802,8 +812,8 @@ MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
 	order: 1,
 });
 
-MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
-	group: '3_regression',
+MenuRegistry.appendMenuItem(MMSubmenuId, {
+	group: '1_mm',
 	command: {
 		id: GLMM_COMMAND_ID,
 		title: localize('showStatistics.glmm', 'Generalised Linear Mixed Models'),
@@ -811,8 +821,8 @@ MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
 	order: 2,
 });
 
-MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
-	group: '3_regression',
+MenuRegistry.appendMenuItem(MMSubmenuId, {
+	group: '1_mm',
 	command: {
 		id: NLMM_COMMAND_ID,
 		title: localize('showStatistics.nlmm', 'Nonlinear Mixed Models'),
@@ -873,6 +883,13 @@ MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
 	title: localize('showStatistics.nd', 'Nonlinear Dynamics'),
 	order: 5,
 }); // DynamicalSystems.jl
+
+// Event studies of SEC filings, FOMC releases and staggered treatments, around the time of each event (eventStudiesPage.ts)
+MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
+	group: '6_time_related',
+	command: { id: SHOW_EVENT_STUDIES_COMMAND_ID, title: localize('showStatistics.eventStudies', 'Event Studies') },
+	order: 1,
+}); // EventStudies.jl
 
 MenuRegistry.appendMenuItem(MenuId.MenubarModelMenu, {
 	group: '6_time_related',

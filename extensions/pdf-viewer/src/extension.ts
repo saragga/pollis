@@ -67,7 +67,7 @@ function shownPdf(): { readonly uri: vscode.Uri; readonly column: vscode.ViewCol
 	return undefined;
 }
 
-/** The modes of Compose > PDF Files. */
+/** The modes of Explore > PDF Files. */
 const VIEWER_MODES: readonly ViewerMode[] = ['read', 'extract', 'merge', 'crop', 'convert', 'highlight', 'text', 'image', 'draw'];
 
 /** What the workbench may ask of `pollis.pdfViewer.open`: the page to show (from 1), and an editor beside the active one. */
@@ -100,7 +100,7 @@ export function activate(context: vscode.ExtensionContext): void {
 				await openInViewer(sample);
 			}
 		}),
-		// Compose > PDF Files: the PDF shown, else the sample, as the other panels start on an example, in the viewer with the mode's tool ready; Open a PDF... in the title bar opens another
+		// Explore > PDF Files: the PDF shown, else the sample, as the other panels start on an example, in the viewer with the mode's tool ready; Open a PDF... in the title bar opens another
 		vscode.commands.registerCommand('pollis.pdfViewer.openInMode', async (mode?: string) => {
 			const viewerMode = VIEWER_MODES.find(known => known === mode) ?? 'read';
 			const shown = shownPdf();

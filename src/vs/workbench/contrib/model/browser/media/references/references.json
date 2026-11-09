@@ -54399,6 +54399,23 @@
 			]
 		},
 		{
+			"id": "replicateArticle",
+			"title": "Replicate an Article",
+			"commands": [
+				"pollis.replication.replicateArticle"
+			],
+			"keys": [
+				"NASEM2019a",
+				"GFI2016a",
+				"Pen2011a",
+				"DTA1986a",
+				"MMH2006a",
+				"HAP2014a",
+				"Vil2020a",
+				"CL2022a"
+			]
+		},
+		{
 			"id": "retrievalBenchmarks",
 			"title": "Benchmark Embedding and Reranking Models",
 			"commands": [

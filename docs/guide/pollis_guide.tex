@@ -437,8 +437,8 @@ Then query it in the Julia REPL with SQL:
     \ui{Refresh Schemas}, at the top of the view, shows tables you have just created.
   \item Right-click a connection for \ui{Copy Name}, \ui{Copy Connection Code}, \ui{Edit Connection} and
     \ui{Delete Connection}, which removes only the saved connection, never the database.
-  \item \ui{History} lists the queries of the \texttt{duckdb>} terminal and of the notebooks' SQL cells, with
-    their rows, how long they took and any error, and those of the \texttt{pollis>} mode, the newest first; click
+  \item \ui{History} lists the queries of the \texttt{duckdb>} and Pollis REPL terminals and of the notebooks' SQL
+    cells, with their rows, how long they took and any error, the newest first; click
     one to \ui{Run Again}, \ui{Copy SQL} or \ui{Open in Editor}.
 \end{itemize}
 
@@ -466,17 +466,18 @@ same DuckDB engine, with its full-text search extension, \emph{fts}, and attach 
         \texttt{length(feeds)} its number of rows, and \texttt{sql("SELECT count(*) FROM \$feeds")} queries it
         again. With \ui{DuckDB SQL (Pollis)}, \texttt{CREATE TEMP TABLE feeds AS SELECT ...} makes it instead.
     \end{itemize}
-  \item \textbf{The \texttt{pollis>} mode} of the Julia REPL, for a query in the middle of Julia work: type
-    \texttt{>} on an empty line, then the query, ending in \texttt{;}. The result is a Tables.jl table in
-    \texttt{ans}, ready for Julia; Backspace on an empty line goes back to \texttt{julia>}. \ui{Pollis REPL}, in the
-    status bar and in the terminal's + menu, opens \texttt{pollis>} in a terminal of its own, beside the Julia REPL
-    and on the same Julia, which it starts if need be, so that \texttt{julia>} stays at hand; its queries reach
-    Julia's variables and the Shared Session as those of the mode do, Ctrl+C stops one, and the item is filled while
-    the terminal is open. As in an SQL cell,
+  \item \textbf{The Pollis REPL}, for a query in the middle of Julia work: \ui{Pollis REPL}, in the status bar and in
+    the terminal's + menu, opens \texttt{pollis>} in a terminal of its own, beside the Julia REPL and on the same
+    Julia, which it starts if need be; the item is filled while the terminal is open. Type the query, ending in
+    \texttt{;}; Ctrl+C stops it. Julia code runs there too: what starts with a word of SQL, such as \texttt{SELECT},
+    \texttt{FROM} or \texttt{DESCRIBE}, or with \texttt{name :=}, is SQL, and anything else is Julia, so
+    \texttt{describe(df)} is Julia and \texttt{DESCRIBE feeds;} SQL. Julia code runs in the Julia REPL, which shows it
+    in full, and its result shows in the terminal in one line; Ctrl+C stops it too. As in an SQL cell,
     \texttt{feeds := SELECT ...} keeps the result as the table \texttt{feeds} and the Julia variable
-    \texttt{feeds}; instead of drawing it, the terminal gives its rows and columns, and \ui{Open in Table Viewer},
-    in blue under them, opens the whole table to browse with one click. In Julia code, \texttt{sql("SELECT ...")} runs a query on the same database, and
-    \texttt{sql("feeds", "SELECT ...")} keeps its result as the table \texttt{feeds}.
+    \texttt{feeds}, a Tables.jl table; instead of drawing it, the terminal gives its rows and columns, and \ui{Open in
+    Table Viewer}, in blue under them, opens the whole table to browse with one click. In Julia code,
+    \texttt{sql("SELECT ...")} runs a query on the same database, and \texttt{sql("feeds", "SELECT ...")} keeps its
+    result as the table \texttt{feeds}. Drill-down: Pollis REPL, in \ui{Help}, has worked examples.
   \item \textbf{\texttt{db = PollisDB.connect()}}, for Julia code and scripts: a DuckDB connection in
     memory, shown in the Databases view; \texttt{PollisDB.connect("sales.duckdb")} opens a file instead.
 \end{itemize}
@@ -523,7 +524,7 @@ from \texttt{PGPASSWORD} or \texttt{\textasciitilde/.pgpass}.
 \subhead{PDF Files}
 Every PDF opens in the PDF Viewer of Pollis, from the Explorer, \ui{File > Open}, \ui{Help > Documentation},
 the vignettes, \ui{Reports}, \ui{New Methods} and the sources of Ask Pollis, with its pages, outline,
-thumbnails, search, zoom and form fields. \ui{Compose > PDF Files} opens the PDF shown, else the sample of
+thumbnails, search, zoom and form fields. \ui{Explore > PDF Files} opens the PDF shown, else the sample of
 PollisDatasets, for a task: \ui{Read} (the outline, else the thumbnails), \ui{Extract Pages} (the pages
 given, such as 1-3, 7, in one new PDF, or one file per page or per range), \ui{Merge Pages}, \ui{Crop Area}
 (\ui{Select Area} on) and \ui{Convert} (that tool open in the sidebar), and the markup tools \ui{Highlight}, \ui{Add or Edit Text},
@@ -631,6 +632,7 @@ Your own things are files in \texttt{\textasciitilde/.pollis}, kept when Pollis 
 \texttt{views} & your Views\\
 \texttt{examples} & your Example Code and added tabs (Inside a Panel, page 4)\\
 \texttt{workflows} & your copies of the replications (page 14)\\
+\texttt{replications} & the replications you make (page 14)\\
 \texttt{methods}, \texttt{packages} & your new methods and their packages (page 16)\\
 \texttt{practice} & the exercises you write (the Self-Study toolbox)\\
 \texttt{rss} & the items of your RSS feeds (page 22)\\
@@ -743,8 +745,8 @@ The list of toolboxes and their files come from GitHub. Once installed, a toolbo
 \begin{minipage}[t]{0.31\linewidth}\vspace{0pt}
 \subhead{1\quad Replication}
 It starts from an article, its input data, and either the results it publishes or its authors' code,
-in any language. If a method the article uses is missing from Julia's packages, it is written first.
-Then each result is printed beside the published one. Replication, page 14.
+in any language. Each published table is computed by Julia packages, by notebook code or by a new
+method. Then each result is printed beside the published one. Replication, page 14.
 \end{minipage}\hfill
 \begin{minipage}[t]{0.31\linewidth}\vspace{0pt}
 \subhead{2\quad Methods}
@@ -760,9 +762,8 @@ replication, it runs on your own data; combined with others, its independent pro
 
 \vspace{6pt}
 \begin{note}{Not available yet}
-Replication records (the article, its data, the targets, the Julia code, whether the replication is full
-or partial, and any differences); \ui{Compose > Replication > Replicate a Classical Article...}; and
-\ui{Browse Workflows...}, \ui{Extract a Workflow...} and \ui{Combine Workflows...} in \ui{Compose > Workflows}.
+\ui{Extract a Workflow...}, in a replication's last step, and \ui{Browse Workflows...}, \ui{Extract a
+Workflow...} and \ui{Combine Workflows...} in \ui{Compose > Workflows}.
 \end{note}
 
 \vfill
@@ -778,7 +779,8 @@ or partial, and any differences); \ui{Compose > Replication > Replicate a Classi
 
 A \emph{replication} reproduces a published analysis on its own public data: a Jupyter notebook
 that follows the article section by section and prints every published value beside Julia's. It shows a
-method at work on a real question, and that Julia gets the published answer.
+method at work on a real question, and that Julia gets the published answer. Pollis comes with ten, below;
+\ui{Replicate an Article} makes your own.
 
 \subhead{The replications}
 \begin{center}\small
@@ -802,13 +804,15 @@ Long-run risks: the model and aggregate asset prices & Beeler and Campbell (2012
 \subhead{Open a replication}
 \begin{enumerate}[label=\arabic*.]
   \item Choose \ui{Compose > Replication > Browse Replications...}
-  \item The page lists the replications with their article (its DOI, or \ui{Web Page} when it has none, and \ui{Copy BibTeX}), the
-    Julia packages and datasets they use, their size, any data they download, and the date they were last
+  \item The page lists yours first, \ui{In Progress} and \ui{Done by You}: click a title to open its page.
+    The \ui{Library} follows, with each replication's article (its DOI, or \ui{Web Page} when it has none, and \ui{Copy BibTeX}), the
+    Julia packages and datasets it uses, its size, any data it downloads, and the date it was last
     updated. Click \ui{more} under a description to read it all.
-  \item Click a replication's name. The first time, Pollis makes your own copy in
+  \item Click a name in the \ui{Library}. The first time, Pollis makes your own copy in
     \texttt{\textasciitilde/.pollis/workflows}, and opens its notebook.
 \end{enumerate}
-Your copy is yours to change: later openings show it as you left it.
+Your copy is yours to change: later openings show it as you left it. \ui{Delete} and \ui{Delete Empty
+Replications} move folders of yours to the Trash.
 
 \newpage
 \subhead{Follow it}
@@ -841,6 +845,31 @@ A replication's notebook can become a LaTeX report or slides: Reports, page 20. 
 its own report template.
 \end{note}
 
+\subhead{Replicate an article}
+\ui{Compose > Replication > Replicate an Article...} opens a page of five numbered steps; click its
+title to change it. Nothing is saved until you type or add something. Each replication is a folder in
+\texttt{\textasciitilde/.pollis/replications}.
+\begin{enumerate}[label=\arabic*.]
+  \item \ui{Article and Data}: the \ui{Article Link}, the \ui{Input Tables} and the \ui{Target Tables}, as
+    for a method (Methods, page 16). Each input has a licence, the terms its provider states, and the page
+    warns of each input with none stated.
+  \item \ui{Plan}, optional: for each target, \ui{Computed By} is \ui{Julia Packages}, \ui{Notebook Code}
+    or \ui{New Method}, with a \ui{Note}. \ui{Plan with Agent} proposes a plan; \ui{Save Plan} keeps it.
+    \ui{Make a Method} starts a method from a target planned as a \ui{New Method}, and the notebook can hold
+    its code until the method is written.
+  \item \ui{Replicate}: write \ui{Instructions}, saved in \texttt{INSTRUCTIONS.md}, and click \ui{Replicate
+    with Agent}. Your coding agent writes the notebook and runs it, and \texttt{Pollis.replicate} and
+    \texttt{Pollis.compare} write each comparison to \texttt{results.csv}. \ui{Open Notebook} opens it.
+  \item \ui{Compare}: the published values Julia does not reproduce (\ui{Show every value} for all). Give
+    each a \ui{Kind}, \ui{Misprint}, \ui{Rounding}, \ui{Not Replicable} or \ui{Unexplained}, and an
+    \ui{Explanation}, then \ui{Save Explanations}; \ui{Explain with Agent} proposes them.
+  \item \ui{Record and Share}: the published values Julia reproduces, in all and table by table. The
+    replication is full when it reproduces every one, to all the decimals printed or within the noise of a
+    simulation, else partial; \ui{Status} sets it by hand, with a \ui{Reason}. \ui{Add to My Replications}
+    lists it under \ui{Done by You}.
+\end{enumerate}
+Add from Article and the three \ui{with Agent} buttons run your coding agent, on your account.
+
 \begin{trouble}
 \textbf{A cell fails: a package is not found} & Run the first code cell, \texttt{Pollis.packages(...)}, then the others in order. \\
 \textbf{A download fails} & Check the Internet connection; the source may be down for a while. Try again later. \\
@@ -848,12 +877,12 @@ its own report template.
 \end{trouble}
 
 \begin{note}{Not available yet}
-\ui{Replicate a Classical Article...} is in the menu but not built yet: it says so when chosen. So are
 \ui{Browse Workflows...}, \ui{Extract a Workflow...}, \ui{Combine Workflows...}, \ui{Create Operational Workflow...} and
-\ui{Automations...}, in \ui{Compose > Workflows}.
+\ui{Automations...}, in \ui{Compose > Workflows}, are in the menu but not built yet, nor is \ui{Extract a
+Workflow...} in a replication's \ui{Record and Share}.
 \end{note}
 
-\seealso{Reports, page 20.\quad Methods, page 16.\quad Data and Databases, page 6.}
+\seealso{Reports, page 20.\quad Methods, page 16.\quad Data and Databases, page 6.\quad Orchestration, page 34.}
 
 % =====================================================================
 % PAGES 16–17 — METHODS
@@ -866,7 +895,7 @@ are the published values, with a \emph{vignette}, its documentation, and can pub
 registry. Without data and expected results there is no new method.
 
 \subhead{Start a method}
-Choose \ui{Compose > Under Construction...}. The method's page has five numbered steps, below;
+Choose \ui{Compose > Methods > Create New Method}. The method's page has five numbered steps, below;
 its title is at the top: click it to change it. Nothing is saved until you type or add something.
 Each method is a folder in \texttt{\textasciitilde/.pollis/methods}.
 
@@ -1425,7 +1454,7 @@ The filings an alert fires can be the events of a study of how the stock moved a
 % =====================================================================
 % PAGES 28–31 — EVENT STUDIES
 % =====================================================================
-\topic{Event Studies}{Compose > Workflows > Event Studies...}{How stocks move around SEC filings, and rates, yields and stocks around the FOMC's releases, a minute at a time; and how an outcome moves when units are treated at different times.}
+\topic{Event Studies}{Model > Event Studies}{How stocks move around SEC filings, and rates, yields and stocks around the FOMC's releases, a minute at a time; and how an outcome moves when units are treated at different times.}
 
 An event study measures how something moves around events. A \emph{market event study} follows prices in
 the minutes around them: the \emph{SEC filings} an alert fires, with the minute prices of each filer's stock
@@ -1440,7 +1469,7 @@ study is a folder that a notebook analyses with EventStudies.jl.
 \begin{enumerate}[label=\arabic*.]
   \item An alert on SEC filings chooses the events: its companies, forms, 8-K items and words (Alerts,
     page 26). \ui{Add Alert...} on the page makes one.
-  \item \ui{Compose > Workflows > Event Studies...}, \ui{New Study}: a \ui{Title}, \ui{Kind} \ui{Market Event
+  \item \ui{Model > Event Studies}, \ui{New Study}: a \ui{Title}, \ui{Kind} \ui{Market Event
     Study}, \ui{Events} \ui{SEC Filings}, and the alert.
   \item \ui{Benchmark}: a Yahoo Finance symbol, \texttt{\^{}GSPC} for the S\&P 500 at first.
     \ui{Normal Return}: \ui{Market-Adjusted} takes the benchmark's return out; \ui{Market Model} takes out
@@ -1718,8 +1747,9 @@ terminal.
 
 \subhead{Agent Skills}
 A \emph{skill} is the know-how an agent reads to do a task. \ui{Compose > Agent Skills} lists them,
-downloaded in their latest version when the page opens: create-panel, package-toolbox, polish-report,
-prepare-method, references, tables-from-article, write-method and write-vignette, each with its
+downloaded in their latest version when the page opens: create-panel, explain-differences,
+package-toolbox, plan-replication, polish-report, prepare-method, references, replicate-article,
+tables-from-article, write-method and write-vignette, each with its
 \ui{Tasks} and \ui{Example Requests}. \ui{View Skill} opens it; \ui{Run with My Agent} starts it on the
 Standard tier.
 
@@ -1749,6 +1779,9 @@ Prepare for Registration & Methods & Standard & prepare-method\\
 Package a Toolbox & New Panels and Toolboxes & Standard & package-toolbox\\
 Tables from the Article & Methods & Strong & tables-from-article\\
 Write a Method & Methods & Strong & write-method\\
+Plan a Replication & Replication & Standard & plan-replication\\
+Replicate an Article & Replication & Strong & replicate-article\\
+Explain the Differences & Replication & Standard & explain-differences\\
 Create a Panel, from a Request & New Panels and Toolboxes & Strong & create-panel\\
 \end{tabular}
 \end{center}
@@ -1981,7 +2014,7 @@ Pollis records as you work: the items of your feeds and the runs of the Evaluate
 made again, so they are the ones to back up. \ui{User} are your own. The databases of Pollis, of both groups, are
 read-only for you, in \texttt{\textasciitilde/.pollis/databases}, and PollisDocuments in
 \texttt{\textasciitilde/.pollis/documents}; your own tables go in a database of your own. Clicking one connects it in
-the Julia REPL; the \texttt{duckdb>} terminal, the \texttt{pollis>} mode and \texttt{PollisDB.connect()} attach them all
+the Julia REPL; the \texttt{duckdb>} terminal, the Pollis REPL and \texttt{PollisDB.connect()} attach them all
 (Data and Databases, page 6).
 
 \begin{center}\small
@@ -2150,7 +2183,7 @@ comes from a passage of a document, and you can open that passage.
 When the documents do not answer, Ask Pollis says so, and lists the passages that came closest.
 
 \subhead{What it reads}
-The Tour, this Guide, A Tour of Pollis AI+, Pollis AI+, the drill-downs, the panel wikis that are written
+The Tour, this Guide, A Tour of Pollis AI+, The Pollis AI+ Guide, the drill-downs, the panel wikis that are written
 (not the stubs), the vignettes of the Pollis packages, and the documents and panel wikis of the toolboxes you
 installed. So a question about a toolbox's panels is answered from that toolbox's own documents, with the
 toolbox's name beside each of its sources. A toolbox's passages come when it is installed, and go when it is

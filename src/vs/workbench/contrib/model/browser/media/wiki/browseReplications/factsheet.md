@@ -9,6 +9,10 @@
 | **Actions** | Click a name to open your copy; Web Page and Copy BibTeX for the article; Open Updated Version |
 | **Your copies** | `~/.pollis/workflows`, made the first time you open each |
 | **New content** | Replications arrive between releases, marked New or Updated |
+| **Your replications** | `~/.pollis/replications`, listed under In Progress and Done by You |
+
+## The Three Lists of the Replications Page
+**In Progress** holds the replications you started with Compose > Replication > Replicate an Article and have not yet added to yours; click a title to go on with one. **Done by You** holds those added with **Add to My Replications**, in the Record and Share step of their page. **Library** holds the replications that come with Pollis; clicking a name opens your own copy of its notebook, made in `~/.pollis/workflows` the first time. With nothing started, In Progress says **None: Compose > Replication > Replicate an Article starts one.** **Delete** sends one of your replications to the trash, and **Delete Empty Replications** all those with no article, tables or results.
 
 ## When to Use Replications
 - Seeing how a whole published analysis is done in Julia, from the data to the tables.

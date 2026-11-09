@@ -9,7 +9,7 @@
 | **Columns of your methods** | Method, Article, Tables, and Delete |
 | **Columns of the library** | Method, Article, Packages, Datasets, Size, Last Updated |
 | **Your copies** | `~/.pollis/methods`, made the first time you open a method of the library |
-| **Starting one** | Compose > Under Construction... |
+| **Starting one** | Compose > Methods > Create New Method |
 
 ## When to Use Methods
 - Going on with a method you started, from its title under In Progress.

@@ -1,7 +1,8 @@
 // POLLIS: the Pollis REPL terminal, pollis> in a terminal of its own beside the Julia REPL, on the same Julia: its
-// queries run there as those of the pollis> mode do, on the Shared Session, and `name := SELECT ...` binds the Julia
+// queries run there, on the Shared Session (PollisDB.jl, pollis_query), and `name := SELECT ...` binds the Julia
 // variable `name`. The terminal edits lines itself, with Node's readline, and sends each whole query to the Julia REPL
-// (PollisReplConnection); the Pollis REPL item of the status bar is filled while it is open.
+// (PollisReplConnection); Julia code typed there runs in the Julia REPL, which shows it in full, and its result shows
+// here in one line. The Pollis REPL item of the status bar is filled while it is open.
 
 import * as fs from 'fs'
 import * as os from 'os'
@@ -47,6 +48,15 @@ function terminalText(text: string): string {
     return text.replace(/\r?\n/g, '\r\n')
 }
 
+/** What the Julia REPL gives back for Julia code: the result in one line, and whether it is an error. */
+export interface IJuliaRun {
+    readonly text: string
+    readonly error: boolean
+}
+
+/** Runs Julia code in the Julia REPL itself, as Execute Code does (repl.ts, executeInREPL). */
+type RunJulia = (code: string) => Promise<IJuliaRun>
+
 class PollisPty implements vscode.Pseudoterminal {
     private readonly writeEmitter = new vscode.EventEmitter<string>()
     readonly onDidWrite = this.writeEmitter.event
@@ -60,8 +70,10 @@ class PollisPty implements vscode.Pseudoterminal {
     private connecting: Promise<PollisReplConnection | undefined> | undefined
     private lines: string[] = []
     private running = false
+    /** Whether what runs is Julia code, in the Julia REPL, which Ctrl+C then interrupts. */
+    private runningJulia = false
 
-    constructor(private readonly startRepl: () => Promise<unknown>) {
+    constructor(private readonly startRepl: () => Promise<unknown>, private readonly runJulia: RunJulia) {
         const write = (chunk: Buffer | string, _encoding: BufferEncoding, done: () => void) => {
             this.writeEmitter.fire(terminalText(chunk.toString()))
             done()
@@ -92,11 +104,15 @@ class PollisPty implements vscode.Pseudoterminal {
             rl.prompt()
         })
         rl.on('close', () => this.closeEmitter.fire())
-        // In the terminal theme's colours: the example in cyan, as code, the keys in bold, the rest dim
+        // In the terminal theme's colours: the examples in cyan, as code, the keys in bold, the rest dim
+        const sql = 'feeds := SELECT * FROM PollisRSS.feeds;'
+        const julia = 'n = length(feeds)'
+        const column = (code: string) => `  ${cyan(code)}${' '.repeat(sql.length - code.length)}   `
         this.write([
-            `${bold('Pollis REPL')}${dim(': SQL on the Shared Session, the database of the Julia REPL.')}`,
-            `  ${cyan('feeds := SELECT * FROM PollisRSS.feeds;')}   ${dim('keeps the result as the DuckDB table')} ${cyan('feeds')}${dim(',')}`,
-            `  ${' '.repeat('feeds := SELECT * FROM PollisRSS.feeds;'.length)}   ${dim('and as the Julia variable')} ${cyan('feeds')}${dim(', a Tables.jl table.')}`,
+            `${bold('Pollis REPL')}${dim(': SQL on the Shared Session, the database of the Julia REPL, and Julia code.')}`,
+            `${column(sql)}${dim('keeps the result as the DuckDB table')} ${cyan('feeds')}${dim(',')}`,
+            `${column('')}${dim('and as the Julia variable')} ${cyan('feeds')}${dim(', a Tables.jl table.')}`,
+            `${column(julia)}${dim('runs in the Julia REPL, which shows it in full; its result shows here too.')}`,
             `${dim('End a query with')} ${bold(';')}   ${bold('Ctrl+C')} ${dim('stops a query')}   ${bold('Ctrl+D')} ${dim('closes')}`,
             '',
         ].join('\n') + '\n')
@@ -107,7 +123,11 @@ class PollisPty implements vscode.Pseudoterminal {
         if (this.running) {
             // While a query runs, Ctrl+C stops it, and the rest is dropped
             if (data.includes('\x03')) {
-                this.connection?.interrupt()
+                if (this.runningJulia) {
+                    void vscode.commands.executeCommand('language-julia.interrupt')
+                } else {
+                    this.connection?.interrupt()
+                }
             }
             return
         }
@@ -171,6 +191,24 @@ class PollisPty implements vscode.Pseudoterminal {
         }
     }
 
+    /**
+     * Runs `code`, Julia, in the Julia REPL, where it shows with its output and its result in full, and writes the
+     * result here in one line; nothing when the REPL shows none, as for `nothing` or after a `;`.
+     */
+    private async julia(code: string): Promise<void> {
+        this.runningJulia = true
+        try {
+            const result = await this.runJulia(code)
+            if (result.error) {
+                this.write(`${red(result.text)}\n${dim('In full in the Julia REPL.')}\n\n`)
+            } else if (result.text && result.text !== '✓') {
+                this.write(`${result.text}\n\n`)
+            }
+        } finally {
+            this.runningJulia = false
+        }
+    }
+
     private async line(line: string): Promise<void> {
         const rl = this.rl!
         this.lines.push(line)
@@ -193,7 +231,11 @@ class PollisPty implements vscode.Pseudoterminal {
             }
             this.lines = []
             const answer = await connection.query(text, this.output.columns)
-            this.write(answer.kind === 'ok' ? `${answer.text}\n\n` : `${red(answer.text)}\n\n`)
+            if (answer.kind === 'julia') {
+                await this.julia(text)
+            } else {
+                this.write(answer.kind === 'ok' ? `${answer.text}\n\n` : `${red(answer.text)}\n\n`)
+            }
         } catch (err) {
             this.lines = []
             this.write(red(`${(err as Error).message}\n`))
@@ -215,10 +257,9 @@ function updateItem(): void {
         return
     }
     g_item.text = g_terminal ? '$(circle-filled) Pollis REPL' : '$(circle-outline) Pollis REPL'
-    g_item.tooltip = (g_terminal
-        ? 'Pollis REPL open, on the Shared Session — click to show it'
-        : 'Open Pollis REPL: SQL on the Shared Session of the Julia REPL, which it starts if need be')
-        + '\nIn the Julia REPL, > at the start of a line goes to its own pollis> mode; Backspace on an empty line comes back.'
+    g_item.tooltip = g_terminal
+        ? 'Pollis REPL open: SQL on the Shared Session, and Julia code — click to show it'
+        : 'Open the Pollis REPL, for SQL on the Shared Session and for Julia code, beside the Julia REPL, which it starts if need be'
 }
 
 /** The line under a table that `name :=` keeps (PollisDB.jl, Kept), whose last words open it in the Table Viewer. */
@@ -279,10 +320,10 @@ async function sharedSessionAttached(): Promise<IAttachedClient[] | undefined> {
     }
 }
 
-/** The link "Open in Table Viewer", in the Pollis REPL terminal and the Julia REPL's pollis> mode. */
+/** The link "Open in Table Viewer", in the Pollis REPL terminal. */
 const browseLinks: vscode.TerminalLinkProvider<IBrowseLink> = {
     provideTerminalLinks: context => {
-        if (context.terminal !== g_terminal && !context.terminal.name.startsWith('Julia REPL')) {
+        if (context.terminal !== g_terminal) {
             return []
         }
         const match = BROWSE_LINE.exec(context.line)
@@ -296,12 +337,12 @@ const browseLinks: vscode.TerminalLinkProvider<IBrowseLink> = {
 }
 
 /** Opens the Pollis REPL terminal, or shows it; `startRepl` starts the Julia REPL, which it runs on. */
-function openPollisRepl(startRepl: () => Promise<unknown>): void {
+function openPollisRepl(startRepl: () => Promise<unknown>, runJulia: RunJulia): void {
     if (g_terminal) {
         g_terminal.show(false)
         return
     }
-    g_terminal = vscode.window.createTerminal({ name: 'Pollis REPL', pty: new PollisPty(startRepl), iconPath: new vscode.ThemeIcon('terminal') })
+    g_terminal = vscode.window.createTerminal({ name: 'Pollis REPL', pty: new PollisPty(startRepl, runJulia), iconPath: new vscode.ThemeIcon('terminal') })
     g_terminal.show(false)
     updateItem()
 }
@@ -310,14 +351,14 @@ function openPollisRepl(startRepl: () => Promise<unknown>): void {
  * The Pollis REPL item of the status bar, between Julia REPL and Pollis' DuckDB REPL, and its command, which the
  * terminal's + menu also offers.
  */
-export function activatePollisRepl(context: vscode.ExtensionContext, startRepl: () => Promise<unknown>): void {
+export function activatePollisRepl(context: vscode.ExtensionContext, startRepl: () => Promise<unknown>, runJulia: RunJulia): void {
     g_item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -0.5)
     g_item.command = 'language-julia.startPollisREPL'
     updateItem()
     g_item.show()
     context.subscriptions.push(
         g_item,
-        vscode.commands.registerCommand('language-julia.startPollisREPL', () => openPollisRepl(startRepl)),
+        vscode.commands.registerCommand('language-julia.startPollisREPL', () => openPollisRepl(startRepl, runJulia)),
         vscode.window.registerTerminalLinkProvider(browseLinks),
         vscode.commands.registerCommand('language-julia.sharedSessionAttached', sharedSessionAttached),
         vscode.window.onDidCloseTerminal(terminal => {

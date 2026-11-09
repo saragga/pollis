@@ -536,9 +536,10 @@ function registerHelpLink(link: IHelpLink): void {
 export const POLLIS_DOCUMENTS: Readonly<Record<string, string>> = {
 	'pollis-tour.pdf': localize('openTourOfPollis', "A Tour of Pollis"),
 	'pollis-guide.pdf': localize('openPollisGuide', "The Pollis Guide"),
-	'pollis-ai-brochure.pdf': localize('openPollisAIPlus', "Pollis AI+"),
-	'pollis-ai-tour.pdf': localize('openTourOfPollisAIPlus', "A Tour of Pollis AI+"),
+	'pollis-ai-brochure.pdf': localize('openTourOfPollisAIPlus', "A Tour of Pollis AI+"),
+	'pollis-ai-guide.pdf': localize('openPollisAIPlusGuide', "The Pollis AI+ Guide"),
 	'pollis-drilldown-data-packages.pdf': localize('openDrillDownDataPackages', "Drill-down: Data Packages and Databases"),
+	'pollis-drilldown-pollis-repl.pdf': localize('openDrillDownPollisRepl', "Drill-down: Pollis REPL"),
 	'pollis-drilldown-literature-radar.pdf': localize('openDrillDownLiteratureRadar', "Drill-down: Literature Radar"),
 	'pollis-drilldown-ask-pollis.pdf': localize('openDrillDownAskPollis', "Drill-down: Ask Pollis"),
 };
@@ -600,14 +601,14 @@ registerAction2(class extends Action2 {
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
-			id: 'pollis.action.openPollisAIPlus',
+			id: 'pollis.action.openTourOfPollisAIPlus',
 			title: {
-				...localize2('openPollisAIPlus', "Pollis AI+"),
-				mnemonicTitle: localize({ key: 'miPollisAIPlus', comment: ['&& denotes a mnemonic'] }, "Pollis &&AI+"),
+				...localize2('openTourOfPollisAIPlus', "A Tour of Pollis AI+"),
+				mnemonicTitle: localize({ key: 'miTourOfPollisAIPlus', comment: ['&& denotes a mnemonic'] }, "A Tour of Pollis &&AI+"),
 			},
 			category: Categories.Help,
 			f1: true,
-			menu: { id: MenubarHelpDocumentationMenu, group: '0_pollis', order: 4 }
+			menu: { id: MenubarHelpDocumentationMenu, group: '0_pollis', order: 3 }
 		});
 	}
 
@@ -619,19 +620,19 @@ registerAction2(class extends Action2 {
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
-			id: 'pollis.action.openTourOfPollisAIPlus',
+			id: 'pollis.action.openPollisAIPlusGuide',
 			title: {
-				...localize2('openTourOfPollisAIPlus', "A Tour of Pollis AI+"),
-				mnemonicTitle: localize({ key: 'miTourOfPollisAIPlus', comment: ['&& denotes a mnemonic'] }, "A Tour of Pollis AI&&+"),
+				...localize2('openPollisAIPlusGuide', "The Pollis AI+ Guide"),
+				mnemonicTitle: localize({ key: 'miPollisAIPlusGuide', comment: ['&& denotes a mnemonic'] }, "The Pollis AI&&+ Guide"),
 			},
 			category: Categories.Help,
 			f1: true,
-			menu: { id: MenubarHelpDocumentationMenu, group: '0_pollis', order: 3 }
+			menu: { id: MenubarHelpDocumentationMenu, group: '0_pollis', order: 4 }
 		});
 	}
 
 	run(accessor: ServicesAccessor): Promise<void> {
-		return openDocument(accessor, 'pollis-ai-tour.pdf');
+		return openDocument(accessor, 'pollis-ai-guide.pdf');
 	}
 });
 
@@ -657,6 +658,25 @@ registerAction2(class extends Action2 {
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
+			id: 'pollis.action.openDrillDownPollisRepl',
+			title: {
+				...localize2('openDrillDownPollisRepl', "Drill-down: Pollis REPL"),
+				mnemonicTitle: localize({ key: 'miDrillDownPollisRepl', comment: ['&& denotes a mnemonic'] }, "Drill-down: Pollis &&REPL"),
+			},
+			category: Categories.Help,
+			f1: true,
+			menu: { id: MenubarHelpDocumentationMenu, group: '0_pollis', order: 6 }
+		});
+	}
+
+	run(accessor: ServicesAccessor): Promise<void> {
+		return openDocument(accessor, 'pollis-drilldown-pollis-repl.pdf');
+	}
+});
+
+registerAction2(class extends Action2 {
+	constructor() {
+		super({
 			id: 'pollis.action.openDrillDownLiteratureRadar',
 			title: {
 				...localize2('openDrillDownLiteratureRadar', "Drill-down: Literature Radar"),
@@ -664,7 +684,7 @@ registerAction2(class extends Action2 {
 			},
 			category: Categories.Help,
 			f1: true,
-			menu: { id: MenubarHelpDocumentationMenu, group: '0_pollis', order: 6 }
+			menu: { id: MenubarHelpDocumentationMenu, group: '0_pollis', order: 7 }
 		});
 	}
 
@@ -683,7 +703,7 @@ registerAction2(class extends Action2 {
 			},
 			category: Categories.Help,
 			f1: true,
-			menu: { id: MenubarHelpDocumentationMenu, group: '0_pollis', order: 7 }
+			menu: { id: MenubarHelpDocumentationMenu, group: '0_pollis', order: 8 }
 		});
 	}
 

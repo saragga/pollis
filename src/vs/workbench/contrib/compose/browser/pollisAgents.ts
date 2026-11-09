@@ -66,6 +66,9 @@ export const PACKAGE_TOOLBOX_COMMAND_ID = 'pollis.agents.packageToolbox';
 export const WRITE_METHOD_COMMAND_ID = 'pollis.newMethods.writeMethod';
 export const PREPARE_REGISTRATION_COMMAND_ID = 'pollis.newMethods.prepareRegistration';
 export const WRITE_VIGNETTE_COMMAND_ID = 'pollis.newMethods.writeVignette';
+export const REPLICATE_WITH_AGENT_COMMAND_ID = 'pollis.replication.replicate';
+export const PLAN_REPLICATION_COMMAND_ID = 'pollis.replication.plan';
+export const EXPLAIN_DIFFERENCES_COMMAND_ID = 'pollis.replication.explain';
 export const CHOOSE_AGENT_COMMAND_ID = 'pollis.agents.chooseAgent';
 
 // The commands of Compose > Coding Agents and Agent Skills
@@ -435,6 +438,9 @@ const TASK_COMMANDS: Partial<Record<AgentTask, string>> = {
 	writeMethod: WRITE_METHOD_COMMAND_ID,
 	writeVignette: WRITE_VIGNETTE_COMMAND_ID,
 	prepareRegistration: PREPARE_REGISTRATION_COMMAND_ID,
+	planReplication: PLAN_REPLICATION_COMMAND_ID,
+	replicateArticle: REPLICATE_WITH_AGENT_COMMAND_ID,
+	explainDifferences: EXPLAIN_DIFFERENCES_COMMAND_ID,
 };
 
 /** The Compose tasks that run a skill, as the skills page lists them: those of AGENT_TASKS, a task under each of its skills. */

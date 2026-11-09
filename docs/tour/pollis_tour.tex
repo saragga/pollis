@@ -677,10 +677,11 @@ asks you to install any of them, and the lists can be hidden.}
 \begin{minipage}[t]{0.365\linewidth}\vspace{0pt}
 \begin{pbox}{Replication}
 It starts from an article, its input data, and either its published results or its authors' code,
-in any language. If a method is missing from Julia's packages, it is written first. Each result is
-printed beside the published one. A replication
-record keeps the article, its data, the targets, the Julia code, whether the replication is full or
-partial, and any differences. Find the replications in \textbf{Compose \textrightarrow{} Replication}.
+in any language. Each published table is computed by Julia packages, by code of the notebook's own or,
+when no package has the method, by a new one. Each result is printed beside the published one. A
+replication record keeps the article, its data, the targets, the plan, whether the replication is full or
+partial, and why each difference arises. \textbf{Compose \textrightarrow{} Replication \textrightarrow{}
+Replicate an Article} makes one, step by step.
 \end{pbox}
 \vspace{1mm}
 \begin{pbox}{Methods}
@@ -801,7 +802,7 @@ Run the notebook, get the PDF, keep your edits: a report or slides in one click,
   {News, journals, central banks, podcasts and searches, read for you every hour.}
 
 \begin{pbox}{RSS Feeds}
-\textbf{Explore \textrightarrow{} Monitor \textrightarrow{} RSS Feeds} gathers what you follow in one page: financial news and markets,
+\textbf{Explore \textrightarrow{} RSS \textrightarrow{} RSS Feeds} gathers what you follow in one page: financial news and markets,
 central banks, the leading journals of statistics, economics, finance and medicine, new papers on arXiv,
 medRxiv and bioRxiv, blogs on AI and Julia, podcasts and YouTube channels. Pollis reads every feed each hour, by
 topic, and the newest unread items of the feeds you choose also appear on the welcome page, under \textbf{RSS}, where a camera or a microphone marks a video or a podcast. An item opens in
@@ -937,7 +938,7 @@ already; any other task can be moved to Light under \textbf{Tasks}, in \textbf{R
 {\color{soft}\footnotesize\bfseries SOURCES}\par\vspace{1pt}
 {\color{deepamber}\bfseries[1]}\enspace The Pollis Guide, Orchestration › Model Tasks and Routing\hfill
   {\color{navy}\bfseries Open}\par
-{\color{deepamber}\bfseries[2]}\enspace A Tour of Pollis AI+, Orchestration › The tasks and their skills\hfill
+{\color{deepamber}\bfseries[2]}\enspace The Pollis AI+ Guide, Orchestration › The tasks and their skills\hfill
   {\color{navy}\bfseries Open}\par\vspace{5pt}
 {\color{soft}\footnotesize Answered by the default model, on this computer}
 \end{tcolorbox}
@@ -997,7 +998,7 @@ its title, with the same \textbf{+}.
 \begin{pbox}{What about AI?}
 \begin{minipage}[t]{0.5\linewidth}\vspace{0pt}
 AI is \textbf{off by default}, and Pollis works fully without it.
-See \textbf{Pollis AI+} for Pollis and AI working together.
+See \textbf{A Tour of Pollis AI+} for Pollis and AI working together.
 \end{minipage}\hfill
 \begin{minipage}[t]{0.46\linewidth}\vspace{0pt}
 \shot{images/shot_extensions.png}
@@ -1120,9 +1121,12 @@ of 289 open-source Julia packages.
 \mhead{Explore}{\entries{51}}
 Browse the Web\par
 Access Data Libraries\sub\par
+Access Databases\sub\par
 Access Files\sub\par
-Access Databases\par
-Monitor\sub\par
+PDF Files\sub\par
+RSS\sub\par
+Alerts\sub\par
+Media Coverage\par
 Visualise\sub\par
 Descriptive and Online Statistics\sub\par
 Detect Anomalies\sub\par
@@ -1137,10 +1141,9 @@ Distributions\sub\par
 Copulas\sub\par
 Hypothesis Testing\par
 Linear Models\sub\par
-Linear Mixed Models\par
 Generalised Linear Models\par
-Generalised Linear Mixed Models\par
-Nonlinear Regression\par
+Nonlinear Models\par
+Mixed Models\sub\par
 Penalised and Projection Regression\par
 Robust and Quantile Regression\par
 Time-Series Forecasting\par
@@ -1148,6 +1151,7 @@ State-Space Inference Methods\par
 System Identification Methods\par
 ODE Inference Methods\par
 Nonlinear Dynamics\sub\par
+Event Studies\par
 Survival Analysis\sub\par
 Bayesian Analysis\sub\par
 Decision Trees\par
@@ -1220,27 +1224,29 @@ Infinite-Dimensional Optimisation
 \end{mcol}
 \end{minipage}\hfill
 \begin{minipage}[t]{0.475\linewidth}\vspace{0pt}
-\tikz[remember picture,overlay]\coordinate(tb);\mhead{Compose}{14 entries}
+\tikz[remember picture,overlay]\coordinate(tb);\mhead{Compose}{\entries{16}}
 \begin{mcol}{0.485\linewidth}
+Knowledge for AI Models\sub\par
 Local AI Models\sub\par
 Coding Agents\par
 Agent Skills\par
+MCP Servers\par
 Orchestration\sub\par
-New Panels and Toolboxes\sub\par
-Replication\sub\par
-Methods\sub
+Literature Radar\sub\par
+New Panels and Toolboxes\sub
 \end{mcol}\hfill
 \begin{mcol}{0.485\linewidth}
+Replication\sub\par
+Methods\sub\par
 Workflows\sub\par
 Reports\sub\par
-PDF Files\sub\par
 Correctness Tests\sub\par
 Profiling\sub\par
 Compilation Lab\sub\par
 Collaboration\sub
 \end{mcol}\par\vspace{8pt}
 {\color{cream}\fontsize{8.4}{10.2}\selectfont Compose goes beyond single panels: a coding agent and its skills, local reasoning models, new methods,
-analytical and operational workflows, reports, PDFs, tests and collaboration. Toolboxes add their own menus
+analytical and operational workflows, reports, tests and collaboration. Toolboxes add their own menus
 (page 7).}
 \end{minipage}
 

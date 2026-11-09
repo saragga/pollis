@@ -19,7 +19,7 @@ The file reloads when it changes on disk, keeping the page and the zoom, so a PD
 - **Open a PDF...**: opens a PDF from the disk; also a button in the viewer's title bar.
 - **Open the Sample PDF**: opens the sample PDF of PollisDatasets.
 
-Compose > PDF Files opens the PDF shown, else the sample PDF, for a task: Read (the outline, else the thumbnails), Extract Pages (the pages given, such as 1-3, 7, in one new PDF, or one file per page or per range), Merge Pages, Crop Area (Select Area on) or Convert (that tool open in the sidebar), Highlight, Add or Edit Text, Add or Edit Images, or Draw (that markup tool on). The PDF... of Ask Pollis' + opens a PDF of yours in this viewer.
+Explore > PDF Files opens the PDF shown, else the sample PDF, for a task: Read (the outline, else the thumbnails), Extract Pages (the pages given, such as 1-3, 7, in one new PDF, or one file per page or per range), Merge Pages, Crop Area (Select Area on) or Convert (that tool open in the sidebar), Highlight, Add or Edit Text, Add or Edit Images, or Draw (that markup tool on). The PDF... of Ask Pollis' + opens a PDF of yours in this viewer.
 
 ## Third-party software
 

@@ -14,7 +14,7 @@ import * as vscode from 'vscode';
 export const PDF_VIEWER_VIEW_TYPE = 'pollis.pdfViewer';
 
 /**
- * What the viewer is opened for, from Compose > PDF Files: reading, with the outline; a tool of the sidebar open
+ * What the viewer is opened for, from Explore > PDF Files: reading, with the outline; a tool of the sidebar open
  * (Extract Pages, Merge Pages or Convert); Select Area on; or a markup tool of pdf.js ready: Highlight, Add or Edit
  * Text, Add or Edit Images, or Draw.
  */

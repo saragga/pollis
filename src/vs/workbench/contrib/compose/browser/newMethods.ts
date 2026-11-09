@@ -3,9 +3,8 @@
  *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { streamToBuffer, VSBuffer } from '../../../../base/common/buffer.js';
+import { VSBuffer } from '../../../../base/common/buffer.js';
 import { RunOnceScheduler } from '../../../../base/common/async.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
 import { toErrorMessage } from '../../../../base/common/errorMessage.js';
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
 import { FileAccess } from '../../../../base/common/network.js';
@@ -14,7 +13,6 @@ import { basename, joinPath } from '../../../../base/common/resources.js';
 import { URI } from '../../../../base/common/uri.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
-import { BrowserViewCommandId } from '../../../../platform/browserView/common/browserView.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { ConfigurationScope, Extensions as ConfigurationExtensions, IConfigurationRegistry } from '../../../../platform/configuration/common/configurationRegistry.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
@@ -23,14 +21,13 @@ import { IEnvironmentService } from '../../../../platform/environment/common/env
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { IInstantiationService, ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { INotificationService } from '../../../../platform/notification/common/notification.js';
-import { IProgressService, ProgressLocation } from '../../../../platform/progress/common/progress.js';
+import { IProgressService } from '../../../../platform/progress/common/progress.js';
 import { Registry } from '../../../../platform/registry/common/platform.js';
 import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
-import { asText, IRequestService, isSuccess } from '../../../../platform/request/common/request.js';
+import { IRequestService } from '../../../../platform/request/common/request.js';
 import { IEditorService, SIDE_GROUP } from '../../../services/editor/common/editorService.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
-import { parseToml, TomlValue } from '../../model/browser/common/tomlPanelData.js';
-import { defaultCopyFolder, isInsidePollis } from '../../pollisWorkspace/browser/pollisWorkspace.contribution.js';
+import { parseToml } from '../../model/browser/common/tomlPanelData.js';
 import { ITerminalService } from '../../terminal/browser/terminal.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
@@ -43,11 +40,12 @@ import { NEWMETHOD_METADATA } from '../../model/browser/webviews/newMethod.data.
 import { buildWebviewHtml } from '../../model/browser/webviews/webviewScaffold.js';
 import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
 import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
+import { appendToml, ARTICLE_DATA_SCRIPT, ARTICLE_DATA_STYLE, ArticleDataMessage, articleDataHtml, articleDataText, createArticleData, draftName, IArticleDataKind, IArticleDataRecord, IArticleDataServices, inputBlock, isArticleDataMessage, IStudyInput, makesFolder, openRecordArticle, readTables, setTomlValue, table, text, tomlString } from './articleAndData.js';
 
-// Compose > Under Construction..., formerly Compose > Methods > Create Methods (Browse Methods, which lists them, is in workflowLibrary.ts).
+// Compose > Methods > Create New Method (Browse Methods, which lists them, is in workflowLibrary.ts).
 // A method is a folder of ~/.pollis/methods with method.toml, its code in src/NAME.jl (module NAME),
 // the published results it must reproduce in targets/*.csv and the user's notes for a coding agent in
-// INSTRUCTIONS.md. Create Methods opens the page of a new method with no folder: the first thing typed or added makes it, named after the title, else NewMethod
+// INSTRUCTIONS.md. New Method opens the page of a new method with no folder: the first thing typed or added makes it, named after the title, else NewMethod
 // while it is still empty. Each method opens on its own page beside the article, shown in the integrated browser in an in-memory session. The article
 // and the input data are only links in method.toml: the page reads the data into memory to show it, and
 // nothing of either is written to disk, not even a cache. Only when the user asks, Save a Copy... keeps a
@@ -71,12 +69,9 @@ export const BROWSE_METHODS_COMMAND_ID = 'pollis.compose.createMethod';
 const GITHUB_OWNER_SETTING = 'pollis.newMethods.githubOwner';
 const REGISTRY_SETTING = 'pollis.newMethods.registry';
 const DEFAULT_REGISTRY = 'https://github.com/Trumpingtons/PollisRegistry';
-const DATASETS_URL = 'https://raw.githubusercontent.com/Trumpingtons/PollisDatasets.jl/main';
 const PACKAGE_SCRIPT = 'vs/workbench/contrib/compose/browser/media/methods/package.jl';
 const INSTRUCTIONS_FILE = 'INSTRUCTIONS.md';
 const VIGNETTE_INSTRUCTIONS_FILE = 'VIGNETTE.md';
-/** The rows of an input table the page shows. */
-const PREVIEW_ROWS = 10;
 
 Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).registerConfiguration({
 	id: 'pollisNewMethods',
@@ -98,55 +93,11 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).regis
 	},
 });
 
-/** The rows of a table as the page shows them. */
-interface ITableContent {
-	readonly header: readonly string[];
-	readonly rows: readonly (readonly string[])[];
-	readonly rowCount: number;
-}
-
-/** An input table: a link to the data, read into memory when shown, or a file of the method typed in. */
-interface IMethodInput {
-	/** Its variable name in the calls. */
-	readonly name: string;
-	readonly url?: string;
-	/** The path in the method folder of a table typed in, e.g. `inputs/prices.csv`. */
-	readonly file?: string;
-	readonly source?: string;
-	/** `,` (the default), `;`, `tab` or `whitespace`. */
-	readonly delim?: string;
-	/** The column names of a file without a header line. */
-	readonly columns?: readonly string[];
-	/** The line of the first row, when lines before it are not the header (the header is then left out too). */
-	readonly skipto?: number;
-	/** The number of rows to read, when the file goes on after them. */
-	readonly limit?: number;
-	/** The path of a copy the user saved, read instead of the link while it exists. */
-	readonly local?: string;
-}
-
-/** A target table: the published results, typed in as printed. */
-interface IMethodTarget extends ITableContent {
-	readonly name: string;
-	/** The path in the method folder, e.g. `targets/table1.csv`. */
-	readonly file: string;
-	readonly source?: string;
-	/** The Julia call that computes it. */
-	readonly call?: string;
-}
-
-interface IMethod {
-	readonly folder: URI;
-	readonly name: string;
+/** A method, as its page shows it: its folder and method.toml, with what Article and Data shows of it. */
+interface IMethod extends IArticleDataRecord {
 	readonly title: string;
 	/** The citations of the method's articles, its own first, then those of `[[articles]]`. */
 	readonly citation?: string;
-	/** The link to read the method's own article: its own, or its DOI's. */
-	readonly article?: string;
-	/** The path of a copy of the article the user saved, opened instead of the link while it exists. */
-	readonly articleLocal?: string;
-	readonly inputs: readonly IMethodInput[];
-	readonly targets: readonly IMethodTarget[];
 	readonly instructions: string;
 	/** The vignette's title, the method's by default. */
 	readonly vignetteTitle: string;
@@ -157,48 +108,8 @@ interface IMethod {
 	readonly vignettePdf?: string;
 }
 
-/** The fields of a line of a delimited file; with `,` or `;`, a field in double quotes may hold the delimiter and doubled quotes. */
-function fields(line: string, delim = ','): string[] {
-	if (delim === 'whitespace') {
-		return line.trim().split(/\s+/);
-	}
-	if (delim === 'tab') {
-		return line.split('\t');
-	}
-	const separator = delim === ';' ? ';' : ',';
-	const result: string[] = [];
-	for (const match of line.matchAll(new RegExp(`(?:^|${separator})(?:"(?<quoted>(?:[^"]|"")*)"|(?<plain>[^${separator}]*))`, 'g'))) {
-		result.push(match.groups!.quoted !== undefined ? match.groups!.quoted.replace(/""/g, '"') : match.groups!.plain ?? '');
-	}
-	return result;
-}
-
-/** The first rows of a delimited text, its header the first line unless the column names are given; `skipto` and `rows` (an input's `limit`) as in {@link IMethodInput}. */
-function parseTable(content: string, limit: number, delim?: string, columns?: readonly string[], skipto?: number, rows?: number): ITableContent {
-	const all = content.replace(/\r\n?/g, '\n').split('\n');
-	const lines = (skipto ? all.slice(skipto - 1) : all).filter(line => line.trim());
-	const body = (columns || skipto ? lines : lines.slice(1)).slice(0, rows);
-	return {
-		header: columns ?? fields(all.find(line => line.trim()) ?? '', delim),
-		rows: body.slice(0, limit).map(line => fields(line, delim)),
-		rowCount: body.length,
-	};
-}
-
-function count(value: unknown): number | undefined {
-	return typeof value === 'number' && Number.isInteger(value) && value > 0 ? value : undefined;
-}
-
 function methodsFolder(pathService: IPathService): URI {
 	return joinPath(pathService.userHome({ preferLocal: true }), '.pollis', 'methods');
-}
-
-function text(value: unknown): string | undefined {
-	return typeof value === 'string' && value ? value : undefined;
-}
-
-function table(value: unknown): TomlValue {
-	return value && typeof value === 'object' ? value as TomlValue : {};
 }
 
 /** Reads a method folder; undefined when it has no method.toml. */
@@ -208,35 +119,7 @@ async function readMethod(fileService: IFileService, folder: URI): Promise<IMeth
 		return undefined;
 	}
 	const toml = parseToml((await fileService.readFile(tomlFile)).value.toString());
-
-	const inputs: IMethodInput[] = [];
-	for (const [name, value] of Object.entries(table(toml.inputs))) {
-		const spec = table(value);
-		const url = text(spec.url);
-		const file = text(spec.file);
-		if (url || file) {
-			const columns = Array.isArray(spec.columns) ? spec.columns.filter((column): column is string => typeof column === 'string') : undefined;
-			inputs.push({ name, url, file, source: text(spec.source), delim: text(spec.delim), columns: columns?.length ? columns : undefined, skipto: count(spec.skipto), limit: count(spec.limit), local: text(spec.local) });
-		}
-	}
-
-	const targets: IMethodTarget[] = [];
-	const targetsFolder = joinPath(folder, 'targets');
-	for (const child of await fileService.exists(targetsFolder) ? (await fileService.resolve(targetsFolder)).children ?? [] : []) {
-		if (child.isDirectory || !child.name.endsWith('.csv')) {
-			continue;
-		}
-		const name = child.name.slice(0, -4);
-		const spec = table(table(toml.targets)[name]);
-		targets.push({
-			name,
-			file: `targets/${child.name}`,
-			source: text(spec.source),
-			call: text(spec.call),
-			...parseTable((await fileService.readFile(child.resource)).value.toString(), Number.MAX_SAFE_INTEGER),
-		});
-	}
-
+	const { inputs, targets } = await readTables(fileService, folder, toml);
 	const name = text(toml.name) ?? basename(folder);
 	const title = text(toml.title) ?? name;
 	const doi = text(toml.doi);
@@ -250,8 +133,8 @@ async function readMethod(fileService: IFileService, folder: URI): Promise<IMeth
 		citation: [toml, ...(Array.isArray(toml.articles) ? toml.articles : [])].map(article => text(table(article).citation)).filter(Boolean).join(' ') || undefined,
 		article: text(toml.article) ?? (doi ? `https://doi.org/${doi}` : undefined),
 		articleLocal: text(toml.article_local),
-		inputs: inputs.sort((a, b) => a.name.localeCompare(b.name)),
-		targets: targets.sort((a, b) => a.name.localeCompare(b.name)),
+		inputs,
+		targets,
 		instructions: await readText(joinPath(folder, INSTRUCTIONS_FILE)),
 		vignetteTitle: text(toml.vignette_title) ?? title,
 		vignetteInstructions: await readText(joinPath(folder, VIGNETTE_INSTRUCTIONS_FILE)),
@@ -274,11 +157,6 @@ async function readMethods(fileService: IFileService, pathService: IPathService)
 		}
 	}
 	return methods.sort((a, b) => a.title.localeCompare(b.title));
-}
-
-/** A TOML string. */
-function tomlString(value: string): string {
-	return `"${value.replace(/[\\"]/g, '\\$&')}"`;
 }
 
 function methodToml(name: string, title: string, article: string): string {
@@ -349,56 +227,6 @@ function moduleCode(name: string): string {
 	].join('\n');
 }
 
-/** A Julia variable name made from a file name or a link. */
-function variableName(file: string): string {
-	const name = file.replace(/[?#].*$/, '').replace(/^.*\//, '').replace(/\.\w+$/, '').replace(/\W+/g, '_').replace(/^(?=\d)/, '_');
-	return name || 'data';
-}
-
-async function appendToml(fileService: IFileService, folder: URI, block: string): Promise<void> {
-	const file = joinPath(folder, 'method.toml');
-	const content = (await fileService.readFile(file)).value.toString();
-	await fileService.writeFile(file, VSBuffer.fromString(content.replace(/\n*$/, '\n\n') + block));
-}
-
-/**
- * Sets a string value in method.toml: at the top level, or in the table `[section]`. An existing line of the
- * key is replaced; otherwise the line goes after the top level's last value, or after the table's header.
- */
-async function setTomlValue(fileService: IFileService, folder: URI, section: string | undefined, key: string, value: string): Promise<void> {
-	const file = joinPath(folder, 'method.toml');
-	const lines = (await fileService.readFile(file)).value.toString().split('\n');
-	const header = section === undefined ? -1 : lines.findIndex(line => line.trim() === `[${section}]`);
-	if (section !== undefined && header < 0) {
-		throw new Error(localize('newMethods.toml.noSection', "method.toml has no [{0}] table.", section));
-	}
-	const next = lines.findIndex((line, index) => index > header && /^\s*\[/.test(line));
-	const end = next < 0 ? lines.length : next;
-	const line = `${key} = ${tomlString(value)}`;
-	const existing = lines.findIndex((candidate, index) => index > header && index < end && new RegExp(`^\\s*${key}\\s*=`).test(candidate));
-	if (existing >= 0) {
-		lines[existing] = line;
-	} else if (section !== undefined) {
-		lines.splice(header + 1, 0, line);
-	} else {
-		let last = end - 1;
-		while (last >= 0 && !/^\s*\w+\s*=/.test(lines[last])) {
-			last--;
-		}
-		lines.splice(last + 1, 0, line);
-	}
-	await fileService.writeFile(file, VSBuffer.fromString(lines.join('\n')));
-}
-
-/** Sets the article link in method.toml. */
-function setArticle(fileService: IFileService, folder: URI, url: string): Promise<void> {
-	return setTomlValue(fileService, folder, undefined, 'article', url);
-}
-
-function validateLink(value: string): string | undefined {
-	return /^https?:\/\/\S+$/.test(value.trim()) ? undefined : localize('newMethods.link.invalid', "A link starting with https://");
-}
-
 /** Checks a package name for a method: a capital letter, then letters and digits, not used by another method. */
 async function validateName(fileService: IFileService, root: URI, value: string, current?: string): Promise<string | undefined> {
 	if (!/^[A-Z][A-Za-z0-9]*$/.test(value)) {
@@ -433,7 +261,7 @@ async function isEmptyMethod(fileService: IFileService, method: IMethod): Promis
 async function renameMethod(fileService: IFileService, pathService: IPathService, method: IMethod, name: string, title: string): Promise<URI> {
 	const root = methodsFolder(pathService);
 	let folder = method.folder;
-	await setTomlValue(fileService, folder, undefined, 'title', title || name);
+	await setTomlValue(fileService, joinPath(folder, 'method.toml'), undefined, 'title', title || name);
 	if (name !== method.name) {
 		const oldCode = joinPath(folder, 'src', `${method.name}.jl`);
 		const newCode = joinPath(folder, 'src', `${name}.jl`);
@@ -449,7 +277,7 @@ async function renameMethod(fileService: IFileService, pathService: IPathService
 				await fileService.move(source, joinPath(folder, ...to.split('/')));
 			}
 		}
-		await setTomlValue(fileService, folder, undefined, 'name', name);
+		await setTomlValue(fileService, joinPath(folder, 'method.toml'), undefined, 'name', name);
 		const target = joinPath(root, name);
 		if (basename(folder) !== name) {
 			await fileService.move(folder, target);
@@ -457,136 +285,6 @@ async function renameMethod(fileService: IFileService, pathService: IPathService
 		}
 	}
 	return folder;
-}
-
-async function download(requestService: IRequestService, url: string): Promise<string> {
-	const context = await requestService.request({ type: 'GET', url, callSite: 'newMethods.data' }, CancellationToken.None);
-	if (!isSuccess(context)) {
-		throw new Error(localize('newMethods.downloadFailed', "Reading {0} failed (server returned {1}).", url, context.res.statusCode ?? '?'));
-	}
-	return (await asText(context)) ?? '';
-}
-
-async function downloadBytes(requestService: IRequestService, url: string): Promise<VSBuffer> {
-	const context = await requestService.request({ type: 'GET', url, callSite: 'newMethods.copy' }, CancellationToken.None);
-	if (!isSuccess(context)) {
-		throw new Error(localize('newMethods.downloadFailed', "Reading {0} failed (server returned {1}).", url, context.res.statusCode ?? '?'));
-	}
-	return streamToBuffer(context.stream);
-}
-
-/** The services that saving a copy needs. */
-interface ICopyServices {
-	readonly fileService: IFileService;
-	readonly fileDialogService: IFileDialogService;
-	readonly requestService: IRequestService;
-	readonly progressService: IProgressService;
-	readonly contextService: IWorkspaceContextService;
-	readonly pathService: IPathService;
-	readonly environmentService: IEnvironmentService;
-}
-
-/**
- * Saves a copy of a link's file where the user chooses, never inside Pollis, and returns its path. The save
- * dialog starts in the data folder of an open Pollis Workspace, else in the first open folder.
- */
-async function saveCopy(services: ICopyServices, url: string, fileName: string): Promise<string | undefined> {
-	const { fileService, fileDialogService, requestService, progressService, contextService, pathService, environmentService } = services;
-	const folder = await defaultCopyFolder(contextService, fileService);
-	const target = await fileDialogService.showSaveDialog({
-		title: localize('newMethods.copy.title', "Save a Copy outside Pollis"),
-		defaultUri: folder ? joinPath(folder, fileName) : undefined,
-	});
-	if (!target) {
-		return undefined;
-	}
-	if (isInsidePollis(target, pathService, environmentService)) {
-		throw new Error(localize('newMethods.copy.insidePollis', "Copies are kept outside Pollis, e.g. in a Pollis Workspace (File > New Pollis Workspace...): choose a place outside {0}.", target.fsPath));
-	}
-	const bytes = await progressService.withProgress({ location: ProgressLocation.Notification, title: localize('newMethods.copy.progress', "Saving a copy of {0}...", url) }, () => downloadBytes(requestService, url));
-	await fileService.writeFile(target, bytes);
-	return target.fsPath;
-}
-
-/** The file name for a copy of a link. */
-function copyName(url: string, name: string, extension: string): string {
-	const last = url.replace(/[?#].*$/, '').replace(/\/+$/, '').replace(/^.*\//, '');
-	return /\.\w{1,5}$/.test(last) ? decodeURIComponent(last) : `${name}${extension}`;
-}
-
-/** The names of input and target tables, which are Julia variables. */
-const TABLE_NAME = /^[A-Za-z_]\w*$/;
-const DELIMITERS = [',', 'whitespace', 'tab', ';'];
-
-/** Throws when a table name is not a variable name or the method already has a table of that name. */
-function checkTableName(method: IMethod, name: string): void {
-	if (!TABLE_NAME.test(name)) {
-		throw new Error(localize('newMethods.table.nameInvalid', "A table's name: letters, digits and underscores, not starting with a digit."));
-	}
-	if ([...method.inputs, ...method.targets].some(table => table.name === name)) {
-		throw new Error(localize('newMethods.table.nameExists', "The method already has a table {0}.", name));
-	}
-}
-
-/** Adds an input table from a link to a delimited text file. */
-async function addInputLink(fileService: IFileService, method: IMethod, url: string, name: string, delim: string): Promise<void> {
-	const invalid = validateLink(url);
-	if (invalid) {
-		throw new Error(invalid);
-	}
-	checkTableName(method, name);
-	const separator = DELIMITERS.includes(delim) ? delim : ',';
-	await appendToml(fileService, method.folder, `[inputs.${name}]\nurl = ${tomlString(url)}\nsource = ""\n${separator === ',' ? '' : `delim = ${tomlString(separator)}\n`}`);
-}
-
-/** A dataset of PollisDatasets, as the page lists it. */
-interface IDataset {
-	readonly id: string;
-	readonly title: string;
-	readonly domain: string;
-}
-
-/** The datasets of PollisDatasets, from its catalogue. */
-async function datasetCatalogue(requestService: IRequestService): Promise<IDataset[]> {
-	const catalogue = await download(requestService, `${DATASETS_URL}/datasets.toml`);
-	const datasets: IDataset[] = [];
-	for (const match of catalogue.matchAll(/^id = "(?<id>[\w-]+)"\s*\ntitle = "(?<title>[^"]*)"\s*\ndomain = "(?<domain>[^"]*)"/gm)) {
-		datasets.push({ id: match.groups!.id, title: match.groups!.title, domain: match.groups!.domain });
-	}
-	return datasets;
-}
-
-/** Adds an input table from a dataset of PollisDatasets. */
-async function addDataset(fileService: IFileService, method: IMethod, dataset: IDataset): Promise<void> {
-	const name = variableName(dataset.id);
-	checkTableName(method, name);
-	await appendToml(fileService, method.folder, `[inputs.${name}]\nurl = ${tomlString(`${DATASETS_URL}/data/${dataset.id}.csv`)}\nsource = ${tomlString(`PollisDatasets: ${dataset.title}`)}\n`);
-}
-
-function targetBlock(name: string): string {
-	return `[targets.${name}]\nsource = ""\ncall = ""\ntolerance = 0\n`;
-}
-
-/** Adds an empty target table, to type in from the article, and opens it. */
-async function addEmptyTarget(fileService: IFileService, editorService: IEditorService, method: IMethod, name: string): Promise<void> {
-	checkTableName(method, name);
-	const file = joinPath(method.folder, 'targets', `${name}.csv`);
-	await fileService.writeFile(file, VSBuffer.fromString('label,Column 1,Column 2\nRow 1,,\nRow 2,,\n'));
-	await appendToml(fileService, method.folder, targetBlock(name));
-	await editorService.openEditor({ resource: file });
-}
-
-/** Adds target tables from CSV files the user picks, then opens method.toml for their calls. */
-async function addTargetFiles(fileService: IFileService, fileDialogService: IFileDialogService, editorService: IEditorService, folder: URI): Promise<void> {
-	const files = await fileDialogService.showOpenDialog({ canSelectMany: true, filters: [{ name: 'CSV', extensions: ['csv'] }] });
-	for (const file of files ?? []) {
-		const name = variableName(basename(file));
-		await fileService.copy(file, joinPath(folder, 'targets', `${name}.csv`), true);
-		await appendToml(fileService, folder, targetBlock(name));
-	}
-	if (files?.length) {
-		await editorService.openEditor({ resource: joinPath(folder, 'method.toml') });
-	}
 }
 
 /** Where Package and Publish makes the packages. */
@@ -651,21 +349,17 @@ async function packageMethod(accessor: ServicesAccessor, method: IMethod, action
 	await instance.sendText((isWindows ? '& ' : '') + words.map(quote).join(' '), true);
 }
 
-/** Adds an empty input table, a file of the method to type in from the article, and opens it. */
-async function addEmptyInput(fileService: IFileService, editorService: IEditorService, method: IMethod, name: string): Promise<void> {
-	checkTableName(method, name);
-	const file = `inputs/${name}.csv`;
-	await fileService.writeFile(joinPath(method.folder, 'inputs', `${name}.csv`), VSBuffer.fromString('Column 1,Column 2\n,\n,\n'));
-	await appendToml(fileService, method.folder, `[inputs.${name}]\nfile = ${tomlString(file)}\nsource = ""\n`);
-	await editorService.openEditor({ resource: joinPath(method.folder, 'inputs', `${name}.csv`) });
-}
-
-/** What Add from Article asks the coding agent: to follow the tables-from-article skill, given the tables and what they are. */
-function articlePrompt(skill: string, method: IMethod, kind: 'inputs' | 'targets', tables: string): string {
-	return kind === 'targets'
-		? localize('newMethods.fromArticle.targets', "Read the skill {0} and follow its instructions to type in the tables {1} of the article of the Pollis method in {2} as target tables.", skill, tables, method.folder.fsPath)
-		: localize('newMethods.fromArticle.inputs', "Read the skill {0} and follow its instructions to type in the tables {1} of the article of the Pollis method in {2} as input data.", skill, tables, method.folder.fsPath);
-}
+/** Article and Data of a method: its record is method.toml, and each target has the call that computes it and a tolerance. */
+const METHOD_KIND: IArticleDataKind = {
+	recordFile: 'method.toml',
+	targetFields: 'call = ""\ntolerance = 0\n',
+	licences: false,
+	tableExists: name => localize('newMethods.table.nameExists', "The method already has a table {0}.", name),
+	// What Add from Article asks the coding agent: to follow the tables-from-article skill, given the tables and what they are
+	articlePrompt: (skill, folder, kind, tables) => kind === 'targets'
+		? localize('newMethods.fromArticle.targets', "Read the skill {0} and follow its instructions to type in the tables {1} of the article of the Pollis method in {2} as target tables.", skill, tables, folder.fsPath)
+		: localize('newMethods.fromArticle.inputs', "Read the skill {0} and follow its instructions to type in the tables {1} of the article of the Pollis method in {2} as input data.", skill, tables, folder.fsPath),
+};
 
 /** The agent tasks of a method, by the command the pages send. */
 const AGENT_TASKS: { readonly [command: string]: string } = {
@@ -675,35 +369,62 @@ const AGENT_TASKS: { readonly [command: string]: string } = {
 };
 
 type MethodMessage =
-	| { readonly command: 'ready' | 'openArticle' | 'saveArticle' | 'addTargetFiles' | 'catalogue' | 'openPdf' }
+	| ArticleDataMessage
+	| { readonly command: 'ready' | 'openPdf' }
 	| { readonly command: 'writeMethod' | 'writeVignette' | 'prepareRegistration' }
 	| { readonly command: 'setTitle' | 'setVignetteTitle'; readonly title: string }
 	| { readonly command: 'setName'; readonly name: string }
-	| { readonly command: 'setArticle'; readonly url: string }
-	| { readonly command: 'addLink'; readonly url: string; readonly name: string; readonly delim: string }
-	| { readonly command: 'addDataset'; readonly id: string }
-	| { readonly command: 'addInput' | 'addTarget'; readonly name: string }
-	| { readonly command: 'fromArticle'; readonly kind: 'inputs' | 'targets'; readonly tables: string }
 	| { readonly command: 'package'; readonly action: PublishAction; readonly owner: string }
-	| { readonly command: 'saveInput'; readonly name: string }
 	| { readonly command: 'open'; readonly file: string }
 	| { readonly command: 'instructions' | 'vignetteInstructions'; readonly text: string };
 
-/** The open pages, by method folder, so a second request shows the same page. */
-const openPages = new Map<string, WebviewInput>();
+/** What a method made from a replication starts with: the replication's article and data, and the targets it is for. */
+export interface IMethodSource {
+	readonly title: string;
+	readonly citation?: string;
+	readonly doi?: string;
+	readonly article?: string;
+	/** The replication's folder, which holds its typed-in tables and its targets. */
+	readonly folder: URI;
+	readonly inputs: readonly IStudyInput[];
+	readonly targets: readonly { readonly name: string; readonly source?: string }[];
+}
 
-/** A free provisional name for a new method, after its title when it has one, else NewMethod: NewMethod, NewMethod2... */
-async function draftName(fileService: IFileService, root: URI, title = ''): Promise<string> {
-	const fromTitle = title.split(/[^A-Za-z0-9]+/).map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('');
-	const base = /^[A-Z]/.test(fromTitle) ? fromTitle : 'NewMethod';
-	const taken = new Set(((await fileService.exists(root)) ? (await fileService.resolve(root)).children ?? [] : []).map(child => child.name.toLowerCase()));
-	for (let n = 1; ; n++) {
-		const name = n === 1 ? base : `${base}${n}`;
-		if (!taken.has(name.toLowerCase())) {
-			return name;
+/**
+ * Makes a method from a replication whose plan says that no Julia package computes some of its targets: the
+ * replication's article, all its input tables and those targets, each with no call yet, and opens the method's
+ * page. Returns the method's folder name.
+ */
+export async function methodFromReplication(accessor: ServicesAccessor, source: IMethodSource): Promise<string> {
+	const fileService = accessor.get(IFileService);
+	const pathService = accessor.get(IPathService);
+	const instantiationService = accessor.get(IInstantiationService);
+	const name = await draftName(fileService, methodsFolder(pathService), source.title, 'NewMethod');
+	const folder = await newMethod(fileService, pathService, name, source.title, source.article ?? '');
+	const record = joinPath(folder, 'method.toml');
+	for (const [key, value] of [['citation', source.citation], ['doi', source.doi]] as const) {
+		if (value) {
+			await setTomlValue(fileService, record, undefined, key, value);
 		}
 	}
+	const blocks: string[] = [];
+	for (const input of source.inputs) {
+		if (input.file) {
+			await fileService.copy(joinPath(source.folder, ...input.file.split('/')), joinPath(folder, ...input.file.split('/')), true);
+		}
+		blocks.push(inputBlock(input, false));
+	}
+	for (const target of source.targets) {
+		await fileService.copy(joinPath(source.folder, 'targets', `${target.name}.csv`), joinPath(folder, 'targets', `${target.name}.csv`), true);
+		blocks.push(`[targets.${target.name}]\nsource = ${tomlString(target.source ?? '')}\n${METHOD_KIND.targetFields}`);
+	}
+	await appendToml(fileService, record, blocks.join('\n'));
+	await instantiationService.invokeFunction(openMethodPage, folder);
+	return name;
 }
+
+/** The open pages, by method folder, so a second request shows the same page. */
+const openPages = new Map<string, WebviewInput>();
 
 /**
  * Opens a method: its article in the integrated browser and, beside it, its page, the five steps of making
@@ -750,22 +471,13 @@ async function openMethodPage(accessor: ServicesAccessor, existing?: URI, step?:
 	}
 	// Until it is made, a new method is only in memory, its folder where it would go
 	let folder = existing ?? joinPath(root, 'NewMethod');
-	let method = created ? await readMethod(fileService, folder) : { folder, name: basename(folder), title: draftTitle, inputs: [], targets: [], instructions: '', vignetteTitle: draftTitle, vignetteInstructions: '' };
-	if (!method) {
+	const initial = created ? await readMethod(fileService, folder) : { folder, name: basename(folder), title: draftTitle, inputs: [], targets: [], instructions: '', vignetteTitle: draftTitle, vignetteInstructions: '' };
+	if (!initial) {
 		return;
 	}
-	// A saved copy, when the user made one and it is still there, else the link
-	const copy = async (local: string | undefined) => local && await fileService.exists(URI.file(local)) ? URI.file(local) : undefined;
-	// The saved copy in the PDF Viewer, else the article's link in the internal browser
-	const openArticle = async () => {
-		const local = await copy(method?.articleLocal);
-		if (local) {
-			await editorService.openEditor({ resource: local, options: { revealIfOpened: true } });
-		} else if (method?.article) {
-			await commandService.executeCommand(BrowserViewCommandId.Open, { url: method.article, reuseUrlFilter: method.article, ephemeral: true });
-		}
-	};
-	await openArticle();
+	let method: IMethod = initial;
+	const articleServices: IArticleDataServices = { fileService, fileDialogService, requestService, progressService, contextService, pathService, environmentService, editorService, commandService, instantiationService };
+	await openRecordArticle(articleServices, method);
 	const webviewInput = webviewWorkbenchService.openWebview(
 		{
 			title: method.title,
@@ -797,32 +509,9 @@ async function openMethodPage(accessor: ServicesAccessor, existing?: URI, step?:
 		}
 	}));
 
-	// The input tables, read into memory once for each link, or from the copy the user saved or the file typed in
-	const data = new Map<string, Promise<string>>();
-	const read = async (input: IMethodInput) => {
-		const local = input.file ? joinPath(folder, ...input.file.split('/')) : await copy(input.local);
-		return local ? (await fileService.readFile(local)).value.toString() : download(requestService, input.url ?? '');
-	};
-	const postInputs = () => {
-		for (const input of method?.inputs ?? []) {
-			// Files typed in are read each time, since they change
-			const key = `${input.url}\n${input.local ?? ''}`;
-			let content = input.file ? undefined : data.get(key);
-			if (!content) {
-				content = read(input);
-				if (!input.file) {
-					data.set(key, content);
-				}
-			}
-			content.then(
-				value => webviewInput.webview.postMessage({ command: 'input', name: input.name, table: parseTable(value, PREVIEW_ROWS, input.delim, input.columns, input.skipto, input.limit) }),
-				error => webviewInput.webview.postMessage({ command: 'input', name: input.name, error: toErrorMessage(error) })
-			);
-		}
-	};
 	const post = () => {
 		webviewInput.webview.postMessage({ command: 'method', method: method && { ...method, folder: method.folder.fsPath }, draft, untitled: method?.title === draftTitle, vignetteUntitled: method?.vignetteTitle === draftTitle, owner: configurationService.getValue<string>(GITHUB_OWNER_SETTING) || '' });
-		postInputs();
+		articleData.postInputs();
 	};
 	const reload = disposables.add(new RunOnceScheduler(async () => {
 		method = await readMethod(fileService, folder) ?? method;
@@ -840,7 +529,7 @@ async function openMethodPage(accessor: ServicesAccessor, existing?: URI, step?:
 	// Makes a new method's folder, once, named `name` or after `title`
 	let creating: Promise<void> | undefined;
 	const create = (title: string, name?: string) => creating ??= (async () => {
-		folder = await newMethod(fileService, pathService, name ?? await draftName(fileService, root, title), title || draftTitle, '');
+		folder = await newMethod(fileService, pathService, name ?? await draftName(fileService, root, title, 'NewMethod'), title || draftTitle, '');
 		method = await readMethod(fileService, folder) ?? method;
 		created = true;
 		openPages.set(folder.toString(), webviewInput);
@@ -848,16 +537,17 @@ async function openMethodPage(accessor: ServicesAccessor, existing?: URI, step?:
 	})();
 	// What a new method's folder is made for: the first thing typed or added (a Package Name makes it itself)
 	const makes = (message: MethodMessage) => {
+		if (isArticleDataMessage(message)) {
+			return makesFolder(message);
+		}
 		switch (message.command) {
 			case 'setTitle': return !!message.title.trim();
 			case 'instructions': case 'vignetteInstructions': return !!message.text.trim();
-			case 'setVignetteTitle': case 'setArticle': case 'addLink': case 'addDataset': case 'addInput': case 'addTarget': case 'addTargetFiles':
-			case 'writeMethod': case 'writeVignette': case 'prepareRegistration': case 'open': return true;
+			case 'setVignetteTitle': case 'writeMethod': case 'writeVignette': case 'prepareRegistration': case 'open': return true;
 			default: return false;
 		}
 	};
 
-	const copyServices: ICopyServices = { fileService, fileDialogService, requestService, progressService, contextService, pathService, environmentService };
 	const run = async (action: () => Promise<void>) => {
 		try {
 			await action();
@@ -874,7 +564,16 @@ async function openMethodPage(accessor: ServicesAccessor, existing?: URI, step?:
 			webviewInput.webview.postMessage({ command: 'formError', form, message: toErrorMessage(error) });
 		}
 	};
-	let datasets: Promise<IDataset[]> | undefined;
+	const articleData = createArticleData(articleServices, METHOD_KIND, {
+		webview: webviewInput.webview,
+		record: () => method,
+		reload: async () => {
+			method = await readMethod(fileService, folder) ?? method;
+			post();
+		},
+		submit,
+		run,
+	});
 
 	disposables.add(webviewInput.webview.onMessage(async (e: { message: MethodMessage }) => {
 		const message = e.message;
@@ -900,14 +599,14 @@ async function openMethodPage(accessor: ServicesAccessor, existing?: URI, step?:
 		} else if (message.command === 'setTitle') {
 			submit('title', async () => {
 				const title = message.title.trim() || current.name;
-				await setTomlValue(fileService, folder, undefined, 'title', title);
+				await setTomlValue(fileService, joinPath(folder, 'method.toml'), undefined, 'title', title);
 				webviewInput.setWebviewTitle(title);
 				method = await readMethod(fileService, folder) ?? method;
 				post();
 			});
 		} else if (message.command === 'setVignetteTitle') {
 			submit('vignetteTitle', async () => {
-				await setTomlValue(fileService, folder, undefined, 'vignette_title', message.title.trim());
+				await setTomlValue(fileService, joinPath(folder, 'method.toml'), undefined, 'vignette_title', message.title.trim());
 				method = await readMethod(fileService, folder) ?? method;
 				post();
 			});
@@ -935,84 +634,15 @@ async function openMethodPage(accessor: ServicesAccessor, existing?: URI, step?:
 					post();
 				}
 			});
-		} else if (message.command === 'setArticle') {
-			submit('article', async () => {
-				const url = message.url.trim();
-				const invalid = validateLink(url);
-				if (invalid) {
-					throw new Error(invalid);
-				}
-				await setArticle(fileService, folder, url);
-				method = await readMethod(fileService, folder) ?? method;
-				await openArticle();
-			});
-		} else if (message.command === 'addLink') {
-			submit('link', () => addInputLink(fileService, current, message.url.trim(), message.name.trim(), message.delim));
-		} else if (message.command === 'catalogue') {
-			datasets ??= datasetCatalogue(requestService);
-			datasets.then(
-				items => webviewInput.webview.postMessage({ command: 'catalogue', items }),
-				error => {
-					datasets = undefined;
-					webviewInput.webview.postMessage({ command: 'formError', form: 'datasets', message: toErrorMessage(error) });
-				}
-			);
-		} else if (message.command === 'addDataset') {
-			submit('datasets', async () => {
-				const dataset = (await datasets)?.find(candidate => candidate.id === message.id);
-				if (dataset) {
-					await addDataset(fileService, current, dataset);
-				}
-			});
-		} else if (message.command === 'addInput') {
-			submit('input', () => addEmptyInput(fileService, editorService, current, message.name.trim()));
-		} else if (message.command === 'addTarget') {
-			submit('target', () => addEmptyTarget(fileService, editorService, current, message.name.trim()));
-		} else if (message.command === 'fromArticle') {
-			const form = message.kind === 'targets' ? 'targetArticle' : 'inputArticle';
-			submit(form, async () => {
-				const tables = message.tables.trim();
-				if (!tables) {
-					throw new Error(localize('newMethods.fromArticle.noTables', "The numbers of the tables, e.g. 3.2, 5.8"));
-				}
-				if (!current.article && !current.articleLocal) {
-					throw new Error(localize('newMethods.fromArticle.noArticle', "Set the article's link first."));
-				}
-				const skill = await instantiationService.invokeFunction(skillFile, 'tables-from-article');
-				if (skill) {
-					await instantiationService.invokeFunction(startAgent, localize('newMethods.fromArticle.terminal', "Tables of {0}", current.name), articlePrompt(skill.fsPath, current, message.kind, tables), folder, 'tablesFromArticle');
-				}
-			});
-		} else if (message.command === 'addTargetFiles') {
-			run(() => addTargetFiles(fileService, fileDialogService, editorService, folder));
+		} else if (isArticleDataMessage(message)) {
+			articleData.handle(message);
 		} else if (message.command === 'package') {
 			submit('package', () => instantiationService.invokeFunction(packageMethod, current, message.action, message.owner.trim()));
-		} else if (message.command === 'openArticle') {
-			run(openArticle);
 		} else if (message.command === 'openPdf') {
 			if (current.vignettePdf) {
 				const pdf = joinPath(folder, ...current.vignettePdf.split('/'));
 				run(async () => { await editorService.openEditor({ resource: pdf, options: { revealIfOpened: true } }); });
 			}
-		} else if (message.command === 'saveArticle') {
-			run(async () => {
-				if (current.article) {
-					const local = await saveCopy(copyServices, current.article, copyName(current.article, current.name, '.pdf'));
-					if (local) {
-						await setTomlValue(fileService, folder, undefined, 'article_local', local);
-					}
-				}
-			});
-		} else if (message.command === 'saveInput') {
-			run(async () => {
-				const input = current.inputs.find(candidate => candidate.name === message.name);
-				if (input?.url) {
-					const local = await saveCopy(copyServices, input.url, copyName(input.url, input.name, '.csv'));
-					if (local) {
-						await setTomlValue(fileService, folder, `inputs.${input.name}`, 'local', local);
-					}
-				}
-			});
 		} else if (message.command === 'instructions' || message.command === 'vignetteInstructions') {
 			const file = message.command === 'instructions' ? INSTRUCTIONS_FILE : VIGNETTE_INSTRUCTIONS_FILE;
 			run(() => fileService.writeFile(joinPath(folder, file), VSBuffer.fromString(message.text)).then(() => undefined));
@@ -1025,63 +655,9 @@ async function openMethodPage(accessor: ServicesAccessor, existing?: URI, step?:
 	}));
 }
 
-
-
-/** The styles of the method page: the title and the draft's note, then the panes', kept inside them, away from Learn More and Ask Pollis. */
-const PAGE_STYLE = `
-		h1[contenteditable] { display: inline-block; min-width: 120px; padding: 0 2px; border-radius: 2px; cursor: text; }
-		h1[contenteditable]:hover { outline: 1px dashed var(--vscode-descriptionForeground); }
-		h1[contenteditable]:focus { outline: 1px solid var(--vscode-focusBorder); }
-		[hidden] { display: none !important; }
-		.link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; }
-		.link:hover { text-decoration: underline; }
-		.notice { display: block; font-size: 12px; border-left: 3px solid var(--vscode-focusBorder); padding: 6px 10px; margin: 8px 0 0 0; max-width: 1000px; }
-		.step-link .step-number { width: 16px; height: 16px; font-size: 10px; margin-right: 3px; }
+/** The styles of the method page: Article and Data's, then the buttons of Package and Publish. */
+const PAGE_STYLE = `${ARTICLE_DATA_STYLE}
 		.step-pane {
-			* { box-sizing: border-box; }
-			h2 { font-size: 15px; font-weight: 600; margin: 24px 0 8px 0; }
-			.intro, .small { color: var(--vscode-descriptionForeground); }
-			.intro { margin: 0 0 12px 0; line-height: 1.4; max-width: 900px; }
-			.small { font-size: 12px; }
-			.actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px 0; }
-			button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; padding: 4px 12px; cursor: pointer; font-size: 11px; opacity: 0.7; }
-			/* As the code buttons below a panel's Example Code: dimmed until pointed at, the blue one not */
-			button.action:not(:disabled):hover, button.action.current, button.action.primary { opacity: 1; }
-			button.action:hover { background: var(--vscode-button-secondaryHoverBackground); }
-			button.action:disabled { cursor: default; opacity: 0.6; }
-			button.primary { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
-			button.primary:hover { background: var(--vscode-button-hoverBackground); }
-			.error { color: var(--vscode-errorForeground); }
-			.form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; margin: 0 0 12px 0; padding: 10px 12px; border: 1px solid var(--vscode-widget-border); border-radius: 4px; max-width: 1000px; }
-			.form label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--vscode-descriptionForeground); }
-			.form .error { flex-basis: 100%; margin: 0; }
-			.form .error:empty { display: none; }
-			input, select { font-family: var(--vscode-font-family); font-size: 13px; padding: 4px 6px; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; }
-			input.wide { width: 420px; max-width: 100%; }
-			input:focus, select:focus { outline: 1px solid var(--vscode-focusBorder); }
-			.tabs { display: flex; flex-wrap: wrap; gap: 16px; border-bottom: 1px solid var(--vscode-widget-border); margin: 0 0 12px 0; }
-			.tab { font: inherit; font-size: 12px; background: none; border: none; border-bottom: 2px solid transparent; color: var(--vscode-descriptionForeground); padding: 4px 0; cursor: pointer; }
-			.tab.selected { color: var(--vscode-foreground); border-bottom-color: var(--vscode-focusBorder); }
-			code { font-family: var(--vscode-editor-font-family); color: var(--vscode-textPreformat-foreground); background: var(--vscode-textPreformat-background); border-radius: 3px; padding: 0 3px; }
-			.table { margin: 0 0 20px 0; }
-			.table-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px; margin: 0 0 4px 0; }
-			.table-name { font-size: 14px; font-weight: 600; }
-			.call { font-family: var(--vscode-editor-font-family); font-size: 12px; margin: 0 0 6px 0; }
-			.scroll { overflow-x: auto; }
-			table { border-collapse: collapse; }
-			th { font-size: 12px; font-weight: 600; text-align: left; padding: 3px 10px; border-bottom: 1px solid var(--vscode-widget-border); white-space: nowrap; }
-			td { padding: 3px 10px; border-bottom: 1px solid var(--vscode-widget-border); font-family: var(--vscode-editor-font-family); font-size: 12px; white-space: nowrap; }
-			td.number { text-align: right; }
-			textarea { width: 100%; max-width: 1000px; min-height: 220px; font-family: var(--vscode-editor-font-family); font-size: 13px; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); padding: 8px; resize: vertical; margin: 0 0 12px 0; }
-			textarea:focus { outline: 1px solid var(--vscode-focusBorder); }
-			.datasets { flex-basis: 100%; max-height: 320px; overflow-y: auto; }
-			.dataset { display: flex; align-items: center; gap: 12px; padding: 4px 0; border-bottom: 1px solid var(--vscode-widget-border); }
-			.dataset .grow { flex: 1; }
-			.hint { flex-basis: 100%; margin: 0; }
-			.field { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; margin: 0 0 14px 0; max-width: 1000px; }
-			.field label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--vscode-descriptionForeground); }
-			.field .error { flex-basis: 100%; margin: 0; }
-			.field .error:empty { display: none; }
 			.publish { display: flex; flex-direction: column; gap: 12px; margin: 0 0 14px 0; max-width: 900px; }
 			.publish .row { display: flex; align-items: baseline; gap: 12px; }
 			.publish button { min-width: 260px; text-align: left; }
@@ -1093,6 +669,15 @@ const PAGE_STYLE = `
  */
 function pageHtml(): string {
 	const text = {
+		...articleDataText({
+			articleIntro: localize('newMethods.page.articleIntro', "The article the method comes from. Pollis opens it in the integrated browser and keeps no copy unless you save one."),
+			inputsIntro: localize('newMethods.page.inputsIntro', "The data the method is computed from: links, read into memory with no copy kept, or tables typed in from the article. In the calls, each table is a variable named after it."),
+			targetsIntro: localize('newMethods.page.targetsIntro', "The published results the method must reproduce: every printed value becomes a test of the package."),
+			emptyInputHint: localize('newMethods.input.emptyDetail', "A table of the method, inputs/NAME.csv, opened to type in: a header line of column names, then the values"),
+			targetFilesHint: localize('newMethods.page.targetFilesHint', "CSV files of published tables, copied into the method: row labels in the first column, the values as printed"),
+			targetArticleHint: localize('newMethods.page.targetArticleHint', "Your coding agent reads the article and types the tables in as target tables, every value as printed. Check them against the article: the tests are only as right as the targets."),
+			noTargets: localize('newMethods.page.noTargets', "No target tables yet. Without data and expected results there is no new method."),
+		}),
 		intro: localize('newMethods.page.intro', "A method reproduces what an article publishes: its tables become the tests of a Julia package, which the steps below make, with the article open beside this page."),
 		// The steps
 		stepArticle: localize('newMethods.step.article', "Article and Data"),
@@ -1101,44 +686,6 @@ function pageHtml(): string {
 		stepRegister: localize('newMethods.step.register', "Prepare for Registration"),
 		stepPackage: localize('newMethods.step.package', "Package and Publish"),
 		draftHint: localize('newMethods.draft.hint', "A new method: its Package Name is set in {0}. Start with its article and tables in {1}. Nothing is saved until you type or add something, and its folder is named after its title until you give it a Package Name."),
-		// 1. Article and Data
-		article: localize('newMethods.page.article', "Article"),
-		inputs: localize('newMethods.page.inputs', "Input Tables"),
-		targets: localize('newMethods.page.targets', "Target Tables"),
-		articleIntro: localize('newMethods.page.articleIntro', "The article the method comes from. Pollis opens it in the integrated browser and keeps no copy unless you save one."),
-		articleLink: localize('newMethods.page.articleLink', "Article Link"),
-		saveCopy: localize('newMethods.page.saveCopy', "Save a Copy..."),
-		copy: localize('newMethods.page.copy', "Copy: {0} (read instead of the link while it exists)"),
-		inputsIntro: localize('newMethods.page.inputsIntro', "The data the method is computed from: links, read into memory with no copy kept, or tables typed in from the article. In the calls, each table is a variable named after it."),
-		targetsIntro: localize('newMethods.page.targetsIntro', "The published results the method must reproduce: every printed value becomes a test of the package."),
-		emptyTable: localize('newMethods.page.emptyTable', "Empty Table"),
-		addLink: localize('newMethods.page.addLink', "Add from a Link"),
-		addDatasets: localize('newMethods.page.addDatasets', "Add from PollisDatasets"),
-		addFromArticle: localize('newMethods.page.addFromArticle', "Add from Article"),
-		targetFiles: localize('newMethods.page.targetFiles', "Add from CSV Files"),
-		chooseFiles: localize('newMethods.page.chooseFiles', "Choose CSV Files..."),
-		targetFilesHint: localize('newMethods.page.targetFilesHint', "CSV files of published tables, copied into the method: row labels in the first column, the values as printed"),
-		link: localize('newMethods.page.link', "Link to the data"),
-		tableName: localize('newMethods.page.tableName', "Name of the table"),
-		tableNamePlaceholder: localize('newMethods.page.tableNamePlaceholder', "e.g. table2_5"),
-		delim: localize('newMethods.page.delim', "Columns separated by"),
-		comma: localize('newMethods.delim.comma', "Commas"),
-		whitespace: localize('newMethods.delim.whitespace', "Spaces (aligned columns)"),
-		tab: localize('newMethods.delim.tab', "Tabs"),
-		semicolon: localize('newMethods.delim.semicolon', "Semicolons"),
-		emptyInputHint: localize('newMethods.input.emptyDetail', "A table of the method, inputs/NAME.csv, opened to type in: a header line of column names, then the values"),
-		emptyTargetHint: localize('newMethods.target.emptyDetail', "Type in the published table: row labels in the first column, the values as printed"),
-		articleTables: localize('newMethods.page.articleTables', "Numbers of the tables in the article"),
-		articleTablesPlaceholder: localize('newMethods.page.articleTablesPlaceholder', "e.g. 3.2, 5.8"),
-		inputArticleHint: localize('newMethods.page.inputArticleHint', "Your coding agent reads the article and types the tables in as input tables, every value as printed. Check them against the article."),
-		targetArticleHint: localize('newMethods.page.targetArticleHint', "Your coding agent reads the article and types the tables in as target tables, every value as printed. Check them against the article: the tests are only as right as the targets."),
-		ask: localize('newMethods.page.ask', "Ask Agent"),
-		add: localize('newMethods.page.add', "Add"),
-		added: localize('newMethods.page.added', "Added"),
-		cancel: localize('newMethods.page.cancel', "Cancel"),
-		save: localize('newMethods.page.save', "Save"),
-		filter: localize('newMethods.page.filter', "Filter the datasets"),
-		loadingCatalogue: localize('newMethods.catalogue', "Getting the PollisDatasets catalogue..."),
 		// 2. Write a Method
 		title: localize('newMethods.title.label', "Title"),
 		titleHint: localize('newMethods.title.hint', "The name of the method people read."),
@@ -1162,7 +709,6 @@ function pageHtml(): string {
 		// 4. Prepare for Registration
 		packageName: localize('newMethods.name.label', "Package Name"),
 		nameHint: localize('newMethods.name.hint', "The Package Name names the method's folder, its Julia package (e.g. {0}) and the module you load with {1}. It starts with a capital letter, then only letters and digits, with no spaces; the Pollis registry asks for at least 5 characters.", '<code>PanelRandomEffects.jl</code>', '<code>using PanelRandomEffects</code>'),
-
 		registerIntro: localize('newMethods.page.registerIntro', "The Pollis registry asks for a name of at least 5 characters, a usage example and a docstring for every exported name. Your coding agent checks the method against these rules and fixes what it can."),
 		prepareRegistration: localize('newMethods.page.prepareRegistration', "Prepare for Registration"),
 		// 5. Package and Publish
@@ -1175,15 +721,6 @@ function pageHtml(): string {
 		packageRegisterDetail: localize('newMethods.package.registerDetail', "Then registers the pushed package if it meets the Pollis registry rules"),
 		owner: localize('newMethods.owner.title', "GitHub Owner"),
 		ownerHint: localize('newMethods.owner.prompt', "The GitHub user or organization the two Push buttons push to. Pushing uses the GitHub CLI (gh), signed in."),
-		// The tables
-		size: localize('newMethods.page.size', "{0} rows, {1} columns"),
-		firstRows: localize('newMethods.page.firstRows', "first {0} shown"),
-		loading: localize('newMethods.page.loading', "Reading..."),
-		noInputs: localize('newMethods.page.noInputs', "No input tables yet."),
-		noTargets: localize('newMethods.page.noTargets', "No target tables yet. Without data and expected results there is no new method."),
-		call: localize('newMethods.page.call', "Call"),
-		noCall: localize('newMethods.page.noCall', "No call yet: write it in method.toml"),
-		noSource: localize('newMethods.page.noSource', "No source yet"),
 		edit: localize('newMethods.page.edit', "Edit"),
 	};
 	return buildWebviewHtml({
@@ -1195,86 +732,7 @@ function pageHtml(): string {
 			{
 				id: 'step-article',
 				title: text.stepArticle,
-				bodyHtml: `
-		<div class="tabs">
-			<button class="tab selected" data-part="article">${text.article}</button>
-			<button class="tab" data-part="inputs">${text.inputs}</button>
-			<button class="tab" data-part="targets">${text.targets}</button>
-		</div>
-		<div class="part" id="part-article">
-			<p class="intro">${text.articleIntro}</p>
-			<div class="field">
-				<label>${text.articleLink}<input class="wide" id="articleUrl" spellcheck="false" placeholder="https://"></label>
-				<button class="action primary" data-submit="article">${text.save}</button>
-				<button class="action" id="articleCancel">${text.cancel}</button>
-				<p class="error small" id="error-article"></p>
-			</div>
-		</div>
-		<div class="part" id="part-inputs" hidden>
-			<p class="intro">${text.inputsIntro}</p>
-			<div class="actions">
-				<button class="action choice primary" data-group="inputs" data-choice="input">${text.emptyTable}</button>
-				<button class="action choice" data-group="inputs" data-choice="link">${text.addLink}</button>
-				<button class="action choice" data-group="inputs" data-choice="datasets">${text.addDatasets}</button>
-				<button class="action choice" data-group="inputs" data-choice="inputArticle">${text.addFromArticle}</button>
-			</div>
-			<div class="form" id="form-input" data-group="inputs">
-				<label>${text.tableName}<input id="inputName" spellcheck="false" placeholder="${text.tableNamePlaceholder}"></label>
-				<button class="action primary" data-submit="input">${text.add}</button>
-				<p class="small hint">${text.emptyInputHint}</p>
-				<p class="error small" id="error-input"></p>
-			</div>
-			<div class="form" id="form-link" data-group="inputs" hidden>
-				<label>${text.link}<input class="wide" id="linkUrl" spellcheck="false" placeholder="https://"></label>
-				<label>${text.tableName}<input id="linkName" spellcheck="false"></label>
-				<label>${text.delim}<select id="linkDelim">
-					<option value=",">${text.comma}</option>
-					<option value="whitespace">${text.whitespace}</option>
-					<option value="tab">${text.tab}</option>
-					<option value=";">${text.semicolon}</option>
-				</select></label>
-				<button class="action primary" data-submit="link">${text.add}</button>
-				<p class="error small" id="error-link"></p>
-			</div>
-			<div class="form" id="form-datasets" data-group="inputs" hidden>
-				<label>${text.filter}<input class="wide" id="datasetFilter" spellcheck="false"></label>
-				<p class="error small" id="error-datasets"></p>
-				<div class="datasets" id="datasets"><span class="small">${text.loadingCatalogue}</span></div>
-			</div>
-			<div class="form" id="form-inputArticle" data-group="inputs" hidden>
-				<label>${text.articleTables}<input id="inputTables" spellcheck="false" placeholder="${text.articleTablesPlaceholder}"></label>
-				<button class="action primary" data-submit="inputArticle">${text.ask}</button>
-				<p class="small hint">${text.inputArticleHint}</p>
-				<p class="error small" id="error-inputArticle"></p>
-			</div>
-			<div id="inputs"></div>
-		</div>
-		<div class="part" id="part-targets" hidden>
-			<p class="intro">${text.targetsIntro}</p>
-			<div class="actions">
-				<button class="action choice primary" data-group="targets" data-choice="target">${text.emptyTable}</button>
-				<button class="action choice" data-group="targets" data-choice="targetFiles">${text.targetFiles}</button>
-				<button class="action choice" data-group="targets" data-choice="targetArticle">${text.addFromArticle}</button>
-			</div>
-			<div class="form" id="form-target" data-group="targets">
-				<label>${text.tableName}<input id="targetName" spellcheck="false" placeholder="${text.tableNamePlaceholder}"></label>
-				<button class="action primary" data-submit="target">${text.add}</button>
-				<p class="small hint">${text.emptyTargetHint}</p>
-				<p class="error small" id="error-target"></p>
-			</div>
-			<div class="form" id="form-targetFiles" data-group="targets" hidden>
-				<button class="action primary" data-command="addTargetFiles">${text.chooseFiles}</button>
-				<p class="small hint">${text.targetFilesHint}</p>
-			</div>
-			<div class="form" id="form-targetArticle" data-group="targets" hidden>
-				<label>${text.articleTables}<input id="targetTables" spellcheck="false" placeholder="${text.articleTablesPlaceholder}"></label>
-				<button class="action primary" data-submit="targetArticle">${text.ask}</button>
-				<p class="small hint">${text.targetArticleHint}</p>
-				<p class="error small" id="error-targetArticle"></p>
-			</div>
-			<div id="targets"></div>
-		</div>
-`,
+				bodyHtml: articleDataHtml(text),
 			},
 			{
 				id: 'step-method',
@@ -1357,116 +815,21 @@ function pageHtml(): string {
 		],
 		pageScriptJs: `
 	const TEXT = ${JSON.stringify(text)};
-	const DATASETS_URL = ${JSON.stringify(DATASETS_URL)};
-	const inputBoxes = new Map();
+	const OPTIONS = { calls: true, licences: false };
+	${ARTICLE_DATA_SCRIPT}
 	let method;
 	let draft = false;
-	let catalogue;
 
-	function element(tag, className, content) {
-		const node = document.createElement(tag);
-		if (className) { node.className = className; }
-		if (content) { node.textContent = content; }
-		return node;
-	}
-
-	const value = id => document.getElementById(id).value;
-	const set = (id, text) => { document.getElementById(id).value = text; };
-
-	// What each form or field sends
-	const FORMS = {
-		article: { send: () => ({ command: 'setArticle', url: value('articleUrl') }) },
-		input: { send: () => ({ command: 'addInput', name: value('inputName') }) },
-		link: { send: () => ({ command: 'addLink', url: value('linkUrl'), name: value('linkName'), delim: value('linkDelim') }) },
-		inputArticle: { send: () => ({ command: 'fromArticle', kind: 'inputs', tables: value('inputTables') }) },
-		target: { send: () => ({ command: 'addTarget', name: value('targetName') }) },
-		targetArticle: { send: () => ({ command: 'fromArticle', kind: 'targets', tables: value('targetTables') }) },
+	// The forms of the steps after Article and Data
+	Object.assign(FORMS, {
 		title: { send: () => ({ command: 'setTitle', title: value('title') }) },
 		vignetteTitle: { send: () => ({ command: 'setVignetteTitle', title: value('vignetteTitle') }) },
 		name: { send: () => ({ command: 'setName', name: value('packageName') }) },
-	};
-
-	// The buttons of a group pick the one form shown below them, the picked button in blue
-	function choose(group, name) {
-		document.querySelectorAll('button[data-group="' + group + '"]').forEach(button => button.classList.toggle('primary', button.dataset.choice === name));
-		document.querySelectorAll('.form[data-group="' + group + '"]').forEach(form => { form.hidden = form.id !== 'form-' + name; });
-		if (name === 'datasets' && !catalogue) {
-			vscode.postMessage({ command: 'catalogue' });
-		}
-		const first = document.getElementById('form-' + name).querySelector('input');
-		if (first) { first.focus(); }
-	}
-
-	function clearForm(name) {
-		const form = document.getElementById('form-' + name);
-		if (form) {
-			form.querySelectorAll('input').forEach(input => { input.value = ''; });
-		}
-	}
-
-	// A step's pane, opened and brought into view from the draft's note or by the host
-	function openStep(name) {
-		const pane = document.getElementById('step-' + name);
-		pane.classList.remove('collapsed');
-		pane.scrollIntoView({ block: 'start' });
-	}
-
-	function select(kind, name) {
-		document.querySelectorAll('[data-' + kind + ']').forEach(tab => tab.classList.toggle('selected', tab.dataset[kind] === name));
-		document.querySelectorAll('.' + kind).forEach(section => { section.hidden = section.id !== kind + '-' + name; });
-	}
-
-	document.querySelectorAll('button[data-command]').forEach(button => {
-		button.addEventListener('click', () => vscode.postMessage({ command: button.dataset.command, file: button.dataset.file }));
 	});
-	document.querySelectorAll('button[data-choice]').forEach(button => button.addEventListener('click', () => choose(button.dataset.group, button.dataset.choice)));
-	document.getElementById('articleCancel').addEventListener('click', () => {
-		set('articleUrl', method.article || '');
-		document.getElementById('error-article').textContent = '';
-	});
-	document.querySelectorAll('button[data-submit]').forEach(button => button.addEventListener('click', () => {
-		document.getElementById('error-' + button.dataset.submit).textContent = '';
-		vscode.postMessage(FORMS[button.dataset.submit].send());
-	}));
-	document.querySelectorAll('.form input, .field input').forEach(input => input.addEventListener('keydown', e => {
-		const box = input.closest('.form, .field');
-		const submit = box.querySelector('button[data-submit]');
-		if (e.key === 'Enter' && submit) { submit.click(); }
-		if (e.key === 'Escape' && box.classList.contains('form')) { clearForm(box.id.slice('form-'.length)); }
-	}));
-	document.querySelectorAll('[data-part]').forEach(tab => tab.addEventListener('click', () => select('part', tab.dataset.part)));
 	document.querySelectorAll('button[data-publish]').forEach(button => button.addEventListener('click', () => {
 		document.getElementById('error-package').textContent = '';
 		vscode.postMessage({ command: 'package', action: button.dataset.publish, owner: value('owner') });
 	}));
-
-	// The table's name follows the link until the user types one
-	const linkName = document.getElementById('linkName');
-	document.getElementById('linkUrl').addEventListener('input', e => {
-		if (!linkName.dataset.typed) {
-			const name = e.target.value.replace(/[?#].*$/, '').replace(/^.*\\//, '').replace(/\\.\\w+$/, '').replace(/\\W+/g, '_').replace(/^(?=\\d)/, '_');
-			linkName.value = name;
-		}
-	});
-	linkName.addEventListener('input', () => { linkName.dataset.typed = linkName.value ? '1' : ''; });
-
-	// The draft's note, its steps as links that open them
-	function showDraftHint(container) {
-		container.textContent = '';
-		const steps = { '{0}': ['register', '4', TEXT.stepRegister], '{1}': ['article', '1', TEXT.stepArticle] };
-		for (const part of TEXT.draftHint.split(/({[01]})/)) {
-			const step = steps[part];
-			if (!step) {
-				container.appendChild(document.createTextNode(part));
-				continue;
-			}
-			const link = element('button', 'link step-link');
-			link.appendChild(element('span', 'step-number', step[1]));
-			link.appendChild(document.createTextNode(step[2]));
-			link.addEventListener('click', () => openStep(step[0]));
-			container.appendChild(link);
-		}
-	}
 
 	// The Package Name suggested in its field: the title without spaces, PanelRandomEffects for Panel Random Effects
 	function suggestName() {
@@ -1474,6 +837,7 @@ function pageHtml(): string {
 		document.getElementById('packageName').placeholder = TEXT.namePlaceholder.replace('{0}', /^[A-Z]/.test(name) ? name : 'PanelRandomEffects');
 	}
 	document.getElementById('title').addEventListener('input', suggestName);
+	document.querySelector('button[data-cancel="title"]').addEventListener('click', suggestName);
 
 	// The notes are saved as they are typed
 	for (const [id, command] of [['instructions', 'instructions'], ['vignetteInstructions', 'vignetteInstructions']]) {
@@ -1485,221 +849,45 @@ function pageHtml(): string {
 		});
 	}
 
-	function renderDatasets() {
-		const container = document.getElementById('datasets');
-		if (!catalogue) { return; }
-		container.textContent = '';
-		const filter = value('datasetFilter').trim().toLowerCase();
-		const used = new Set((method ? method.inputs : []).map(input => input.url));
-		for (const dataset of catalogue) {
-			if (filter && !(dataset.title + ' ' + dataset.id + ' ' + dataset.domain).toLowerCase().includes(filter)) {
-				continue;
-			}
-			const row = element('div', 'dataset');
-			const label = element('div', 'grow');
-			label.appendChild(element('div', '', dataset.title));
-			label.appendChild(element('div', 'small', dataset.id + ' \\u00b7 ' + dataset.domain));
-			row.appendChild(label);
-			const added = used.has(DATASETS_URL + '/data/' + dataset.id + '.csv');
-			const add = element('button', 'action', added ? TEXT.added : TEXT.add);
-			add.disabled = added;
-			add.addEventListener('click', () => {
-				add.disabled = true;
-				document.getElementById('error-datasets').textContent = '';
-				vscode.postMessage({ command: 'addDataset', id: dataset.id });
-			});
-			row.appendChild(add);
-			container.appendChild(row);
-		}
-	}
-	document.getElementById('datasetFilter').addEventListener('input', renderDatasets);
-
-	function grid(content) {
-		const scroll = element('div', 'scroll');
-		const table = element('table');
-		const headRow = element('tr');
-		content.header.forEach(column => headRow.appendChild(element('th', '', column)));
-		table.appendChild(headRow);
-		for (const row of content.rows) {
-			const tr = element('tr');
-			row.forEach(value => tr.appendChild(element('td', /^-?[\\d.]+(e[-+]?\\d+)?$/i.test(value.trim()) ? 'number' : '', value)));
-			table.appendChild(tr);
-		}
-		scroll.appendChild(table);
-		return scroll;
-	}
-
-	function size(content) {
-		let result = TEXT.size.replace('{0}', content.rowCount).replace('{1}', content.header.length);
-		if (content.rows.length < content.rowCount) {
-			result += ', ' + TEXT.firstRows.replace('{0}', content.rows.length);
-		}
-		return result;
-	}
-
-	function tableHead(name, source, onClick) {
-		const head = element('div', 'table-head');
-		head.appendChild(onClick ? element('button', 'link table-name', name) : element('span', 'table-name', name));
-		if (onClick) { head.firstChild.addEventListener('click', onClick); }
-		head.appendChild(element('span', 'small', source || TEXT.noSource));
-		return head;
-	}
-
-	function renderInputs(inputs) {
-		const container = document.getElementById('inputs');
-		container.textContent = '';
-		inputBoxes.clear();
-		if (!inputs.length) {
-			container.appendChild(element('p', 'small', TEXT.noInputs));
-		}
-		for (const input of inputs) {
-			const box = element('div', 'table');
-			const open = input.file ? () => vscode.postMessage({ command: 'open', file: input.file }) : undefined;
-			box.appendChild(tableHead(input.name, input.source, open));
-			box.appendChild(element('div', 'call small', input.url || input.file));
-			if (input.local) {
-				box.appendChild(element('div', 'call small', TEXT.copy.replace('{0}', input.local)));
-			}
-			if (input.url) {
-				const save = element('button', 'link small', TEXT.saveCopy);
-				save.addEventListener('click', () => vscode.postMessage({ command: 'saveInput', name: input.name }));
-				box.firstChild.appendChild(save);
-			}
-			const body = element('div', 'small', TEXT.loading);
-			box.appendChild(body);
-			container.appendChild(box);
-			inputBoxes.set(input.name, body);
-		}
-	}
-
-	function showInput(message) {
-		const body = inputBoxes.get(message.name);
-		if (!body) {
-			return;
-		}
-		body.textContent = '';
-		body.className = message.error ? 'small error' : '';
-		if (message.error) {
-			body.textContent = message.error;
-			return;
-		}
-		body.appendChild(element('div', 'small', size(message.table)));
-		body.appendChild(grid(message.table));
-	}
-
-	function renderTargets(targets) {
-		const container = document.getElementById('targets');
-		container.textContent = '';
-		if (!targets.length) {
-			container.appendChild(element('p', 'small', TEXT.noTargets));
-		}
-		for (const target of targets) {
-			const box = element('div', 'table');
-			const head = tableHead(target.name, target.source, () => vscode.postMessage({ command: 'open', file: target.file }));
-			head.appendChild(element('span', 'small', size(target)));
-			box.appendChild(head);
-			box.appendChild(element('div', target.call ? 'call' : 'call small', target.call ? TEXT.call + ': ' + target.call : TEXT.noCall));
-			box.appendChild(grid(target));
-			container.appendChild(box);
-		}
-	}
-
-	// The saved value of each field, which Cancel puts back. A field is refreshed from the method unless
-	// the user is typing in it or has typed something not saved yet, so moving between steps keeps it
-	const saved = {};
-	function refresh(id, text) {
-		saved[id] = text;
-		const field = document.getElementById(id);
-		if (document.activeElement !== field && !field.dataset.edited) { field.value = text; }
-	}
-	document.querySelectorAll('.field input').forEach(input => input.addEventListener('input', () => { input.dataset.edited = '1'; }));
-	function revert(id) {
-		const field = document.getElementById(id);
-		delete field.dataset.edited;
-		field.value = saved[id] ?? '';
-		document.getElementById('error-' + field.closest('.field').querySelector('[data-submit]').dataset.submit).textContent = '';
-	}
-	document.querySelectorAll('button[data-cancel]').forEach(button => button.addEventListener('click', () => {
-		revert(button.dataset.cancel);
-		if (button.dataset.cancel === 'title') { suggestName(); }
-	}));
-
-	// The heading is the title, edited in place: Enter saves it, Escape or leaving it puts it back
-	const heading = document.querySelector('.title-row h1');
-	heading.contentEditable = 'plaintext-only';
-	heading.spellcheck = false;
-	heading.title = TEXT.headingHint;
-	heading.addEventListener('keydown', e => {
-		if (e.key === 'Enter') {
-			e.preventDefault();
-			const title = heading.textContent.trim();
-			if (title) {
-				set('title', title);
-				delete document.getElementById('title').dataset.edited;
-				vscode.postMessage({ command: 'setTitle', title });
-				method = { ...method, title };
-			}
-			heading.blur();
-		} else if (e.key === 'Escape') {
-			heading.blur();
-		}
+	editableHeading(TEXT.headingHint, () => method ? method.title : '', title => {
+		set('title', title);
+		delete document.getElementById('title').dataset.edited;
+		vscode.postMessage({ command: 'setTitle', title });
+		method = { ...method, title };
 	});
-	heading.addEventListener('blur', () => { heading.textContent = method ? method.title : ''; });
 
 	window.addEventListener('message', event => {
 		const message = event.data;
-		if (message.command === 'input') {
-			showInput(message);
-		} else if (message.command === 'step') {
-			openStep(message.step);
-		} else if (message.command === 'catalogue') {
-			catalogue = message.items;
-			renderDatasets();
-		} else if (message.command === 'formError') {
-			document.getElementById('error-' + message.form).textContent = message.message;
-			if (message.form === 'datasets') { renderDatasets(); }
-		} else if (message.command === 'formDone') {
-			// A saved field is no longer edited; an added table empties its form for the next one
-			const submitted = document.querySelector('.field [data-submit="' + message.form + '"]');
-			if (submitted) {
-				submitted.closest('.field').querySelectorAll('input').forEach(input => { delete input.dataset.edited; });
-			}
-			if (['input', 'link', 'inputArticle', 'target', 'targetArticle'].includes(message.form)) {
-				clearForm(message.form);
-				if (message.form === 'link') { delete linkName.dataset.typed; }
-			}
-		} else if (message.command === 'method') {
-			method = message.method;
-			draft = message.draft;
-			const draftHint = document.getElementById('draftHint');
-			draftHint.hidden = !draft;
-			showDraftHint(draftHint);
-			if (document.activeElement !== heading) { heading.textContent = method.title; }
-			// 1. Article and Data
-			refresh('articleUrl', method.article || '');
-			renderInputs(method.inputs);
-			renderTargets(method.targets);
-			renderDatasets();
-			// 2. Write a Method
-			refresh('title', message.untitled ? '' : method.title);
-			refresh('instructions', method.instructions);
-			document.querySelectorAll('.open-code').forEach(button => { button.dataset.file = 'src/' + method.name + '.jl'; });
-			// 3. Write a Vignette
-			refresh('vignetteTitle', message.vignetteUntitled ? '' : method.vignetteTitle);
-			refresh('vignetteInstructions', method.vignetteInstructions);
-						const editVignette = document.getElementById('editVignette');
-			editVignette.hidden = !method.vignette;
-			editVignette.dataset.file = method.vignette || '';
-			document.getElementById('openPdf').hidden = !method.vignettePdf;
-			document.getElementById('noVignette').hidden = !!method.vignette;
-			// 4. Prepare for Registration
-			refresh('packageName', draft ? '' : method.name);
-			suggestName();
-			// 5. Package and Publish
-			const owner = document.getElementById('owner');
-			if (document.activeElement !== owner && !owner.value) {
-				owner.value = message.owner;
-			}
+		if (articleDataMessage(message) || message.command !== 'method') {
+			return;
+		}
+		method = message.method;
+		draft = message.draft;
+		const draftHint = document.getElementById('draftHint');
+		draftHint.hidden = !draft;
+		stepLinks(draftHint, TEXT.draftHint, { '{0}': ['register', '4', TEXT.stepRegister], '{1}': ['article', '1', TEXT.stepArticle] });
+		if (document.activeElement !== heading) { heading.textContent = method.title; }
+		// 1. Article and Data
+		showArticleData(method);
+		// 2. Write a Method
+		refresh('title', message.untitled ? '' : method.title);
+		refresh('instructions', method.instructions);
+		document.querySelectorAll('.open-code').forEach(button => { button.dataset.file = 'src/' + method.name + '.jl'; });
+		// 3. Write a Vignette
+		refresh('vignetteTitle', message.vignetteUntitled ? '' : method.vignetteTitle);
+		refresh('vignetteInstructions', method.vignetteInstructions);
+		const editVignette = document.getElementById('editVignette');
+		editVignette.hidden = !method.vignette;
+		editVignette.dataset.file = method.vignette || '';
+		document.getElementById('openPdf').hidden = !method.vignettePdf;
+		document.getElementById('noVignette').hidden = !!method.vignette;
+		// 4. Prepare for Registration
+		refresh('packageName', draft ? '' : method.name);
+		suggestName();
+		// 5. Package and Publish
+		const owner = document.getElementById('owner');
+		if (document.activeElement !== owner && !owner.value) {
+			owner.value = message.owner;
 		}
 	});
 	vscode.postMessage({ command: 'ready' });
@@ -1834,7 +1022,7 @@ const category = localize2('newMethods.category', "Methods");
 
 registerAction2(class extends Action2 {
 	constructor() {
-		super({ id: CREATE_METHOD_COMMAND_ID, title: localize2('newMethods.create', "Create Methods"), category, f1: true });
+		super({ id: CREATE_METHOD_COMMAND_ID, title: localize2('newMethods.create', "Create New Method"), category, f1: true });
 	}
 	run(accessor: ServicesAccessor): Promise<void> {
 		return openMethodPage(accessor);

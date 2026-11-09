@@ -83,8 +83,8 @@ function databaseFileOf(instance: ITerminalInstance): string | undefined {
 	return Array.isArray(args) && args.length > 1 ? args[1] : undefined;
 }
 
-// The REPLs of Pollis in the terminal's + menu, after its profiles: Julia REPL and Pollis REPL, its pollis> mode, start
-// or show the window's Julia REPL, of the Julia extension; DuckDB REPL opens a duckdb> terminal.
+// The REPLs of Pollis in the terminal's + menu, after its profiles: Julia REPL starts or shows the window's Julia REPL,
+// of the Julia extension, and Pollis REPL a pollis> terminal on its Julia; DuckDB REPL opens a duckdb> terminal.
 MenuRegistry.appendMenuItems([
 	{ id: MenuId.TerminalNewDropdownContext, item: { command: { id: 'language-julia.startREPL', title: localize('databases.terminalMenu.julia', "Julia REPL") }, group: '2_pollis', order: 1 } },
 	{ id: MenuId.TerminalNewDropdownContext, item: { command: { id: 'language-julia.startPollisREPL', title: localize('databases.terminalMenu.pollis', "Pollis REPL") }, group: '2_pollis', order: 2 } },

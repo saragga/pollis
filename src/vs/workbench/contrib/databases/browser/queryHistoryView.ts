@@ -31,7 +31,7 @@ import { IViewDescriptorService } from '../../../common/views.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import './media/connectionsView.css';
-import { DUCKDB_QUERY_LOG, IQueryHistoryEntry, parseDuckDBQueryLog, parseJuliaSqlHistory, RUN_IN_DUCKDB_TERMINAL_COMMAND_ID } from '../common/duckdbSql.js';
+import { DUCKDB_QUERY_LOG, IQueryHistoryEntry, parseDuckDBQueryLog, RUN_IN_DUCKDB_TERMINAL_COMMAND_ID } from '../common/duckdbSql.js';
 
 /** The queries the view lists, the newest first. */
 const SHOWN_QUERIES = 500;
@@ -61,8 +61,7 @@ function sourceLabel(entry: IQueryHistoryEntry): string {
 	switch (entry.source) {
 		case 'duckdb': return 'duckdb>';
 		case 'notebook': return localize('queryHistory.notebook', "notebook");
-		case 'pollis':
-		case 'sql': return 'pollis>';
+		case 'pollis': return 'pollis>';
 	}
 }
 
@@ -74,7 +73,6 @@ function sourceSentence(entry: IQueryHistoryEntry): string {
 			? localize('queryHistory.fromNotebook', "Run in the notebook {0}", entry.database)
 			: localize('queryHistory.fromUnsavedNotebook', "Run in an unsaved notebook");
 		case 'pollis': return localize('queryHistory.fromPollisRepl', "Run in the Pollis REPL terminal, on the Shared Session");
-		case 'sql': return localize('queryHistory.fromPollisMode', "Run in the pollis> mode of the Julia REPL");
 	}
 }
 
@@ -105,11 +103,11 @@ class QueryRenderer implements IListRenderer<IQueryHistoryEntry, IQueryTemplate>
 
 	renderElement(entry: IQueryHistoryEntry, _index: number, template: IQueryTemplate): void {
 		template.disposables.clear();
-		// A tick for a query that ran, a cross for one that failed; the pollis> mode does not say, so a plain prompt
-		const icon = entry.error ? Codicon.error : entry.source !== 'sql' ? Codicon.check : Codicon.terminal;
+		// A tick for a query that ran, a cross for one that failed
+		const icon = entry.error ? Codicon.error : Codicon.check;
 		template.icon.className = `icon ${ThemeIcon.asClassName(icon)}`;
 		template.row.classList.toggle('failed', !!entry.error);
-		template.row.classList.toggle('succeeded', entry.source !== 'sql' && !entry.error);
+		template.row.classList.toggle('succeeded', !entry.error);
 		template.sql.textContent = entry.sql.replace(/\s+/g, ' ').trim();
 		const details = [sourceLabel(entry)];
 		if (entry.rows !== undefined && !entry.error) {
@@ -143,9 +141,8 @@ class QueryRenderer implements IListRenderer<IQueryHistoryEntry, IQueryTemplate>
 }
 
 /**
- * The History view of the Databases view: the queries run in the duckdb> terminal and in the SQL cells of notebooks,
- * from the log they keep in ~/.pollis/duckdb, and in the pollis> mode of the Julia REPL, from the history of the REPL;
- * the newest first.
+ * The History view of the Databases view: the queries run in the duckdb> and Pollis REPL terminals and in the SQL
+ * cells of notebooks, from the log they keep in ~/.pollis/duckdb; the newest first.
  */
 export class QueryHistoryView extends ViewPane {
 
@@ -154,7 +151,7 @@ export class QueryHistoryView extends ViewPane {
 	private list: WorkbenchList<IQueryHistoryEntry> | undefined;
 	private empty: HTMLElement | undefined;
 	private readonly refreshScheduler = this._register(new RunOnceScheduler(() => this.refresh(), 500));
-	private files: { readonly duckdbLog: URI; readonly juliaHistory: URI } | undefined;
+	private log: URI | undefined;
 	private size: { readonly height: number; readonly width: number } | undefined;
 
 	constructor(
@@ -182,7 +179,7 @@ export class QueryHistoryView extends ViewPane {
 		super.renderBody(container);
 		const root = dom.append(container, dom.$('.databases-view'));
 		this.empty = dom.append(root, dom.$('.welcome-view-content.databases-empty'));
-		dom.append(this.empty, dom.$('p')).textContent = localize('queryHistory.empty', "No queries yet. The queries you run in the DuckDB terminal, in the pollis> mode of the Julia REPL and in the SQL cells of notebooks show here.");
+		dom.append(this.empty, dom.$('p')).textContent = localize('queryHistory.empty', "No queries yet. The queries you run in the DuckDB terminal, in the Pollis REPL terminal and in the SQL cells of notebooks show here.");
 		const listContainer = dom.append(root, dom.$('.databases-tree'));
 		this.list = this._register(this.instantiationService.createInstance(
 			WorkbenchList<IQueryHistoryEntry>,
@@ -217,25 +214,19 @@ export class QueryHistoryView extends ViewPane {
 		this.list?.layout(height - (this.empty && !this.empty.classList.contains('hidden') ? this.empty.offsetHeight : 0), width);
 	}
 
-	/** Watches the folders of the two files, which may not exist yet, and reads them again when they change. */
+	/** Watches the folder of the log, which may not exist yet, and reads it again when it changes. */
 	private async watch(): Promise<void> {
 		const home = await this.pathService.userHome();
 		if (this._store.isDisposed) {
 			return;
 		}
-		const files = this.files = {
-			duckdbLog: joinPath(home, '.pollis', 'duckdb', DUCKDB_QUERY_LOG),
-			juliaHistory: joinPath(home, '.julia', 'logs', 'repl_history.jl'),
-		};
-		for (const file of [files.duckdbLog, files.juliaHistory]) {
-			const folder = joinPath(file, '..');
-			const watcher = this._register(this.fileService.createWatcher(folder, { recursive: false, excludes: [] }));
-			this._register(watcher.onDidChange(e => {
-				if (e.contains(file, FileChangeType.ADDED, FileChangeType.UPDATED, FileChangeType.DELETED) && this.isBodyVisible()) {
-					this.refreshScheduler.schedule();
-				}
-			}));
-		}
+		const log = this.log = joinPath(home, '.pollis', 'duckdb', DUCKDB_QUERY_LOG);
+		const watcher = this._register(this.fileService.createWatcher(joinPath(log, '..'), { recursive: false, excludes: [] }));
+		this._register(watcher.onDidChange(e => {
+			if (e.contains(log, FileChangeType.ADDED, FileChangeType.UPDATED, FileChangeType.DELETED) && this.isBodyVisible()) {
+				this.refreshScheduler.schedule();
+			}
+		}));
 		this.refreshScheduler.schedule(0);
 	}
 
@@ -248,11 +239,10 @@ export class QueryHistoryView extends ViewPane {
 	}
 
 	private async refresh(): Promise<void> {
-		if (!this.files || !this.list) {
+		if (!this.log || !this.list) {
 			return;
 		}
-		const [log, history] = await Promise.all([this.read(this.files.duckdbLog), this.read(this.files.juliaHistory)]);
-		const entries = [...parseDuckDBQueryLog(log), ...parseJuliaSqlHistory(history)]
+		const entries = parseDuckDBQueryLog(await this.read(this.log))
 			.sort((a, b) => b.time - a.time)
 			.slice(0, SHOWN_QUERIES);
 		this.list.splice(0, this.list.length, entries);

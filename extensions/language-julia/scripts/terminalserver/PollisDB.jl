@@ -17,7 +17,7 @@ next REPL starts.
 The module looks up DBInterface.jl and Tables.jl among the packages the connection code has
 already loaded; only `build`, `connect` and `sql` load DuckDB themselves. `connect` opens a DuckDB with the
 built-in databases attached and full-text search (fts) loaded; `sql` runs a query on such a
-connection, and is what the `pollis>` mode of the REPL (`>` at the start of a line) runs, and SQL cells of Julia notebooks
+connection, and is what the Pollis REPL terminal runs (`pollis_query`), and SQL cells of Julia notebooks
 (`cell`); it is exported, so that `sql("...")` needs no `PollisDB.` in the REPL and in notebooks. `publish`, exported
 too, copies a Julia table into that connection, which `@share name = table` does too. DuckDB is built into Pollis: `install()` adds it,
 once, to a Julia environment of Pollis' own (`ENVIRONMENT`), which PollisDB puts on the load path
@@ -640,7 +640,7 @@ function query_tables(query::AbstractString; tables...)
     end
 end
 
-"""The connection of the REPL, Shared Session in the Databases view: the `pollis>` mode, `sql` and `publish` share it."""
+"""The connection of the REPL, Shared Session in the Databases view: the Pollis REPL terminal, `sql` and `publish` share it."""
 const SQL_CONNECTION = Ref{Any}(nothing)
 
 """Whether this Julia is the kernel of a notebook, whose connection the Databases view does not show."""
@@ -842,11 +842,12 @@ end
 
 """
 Serve a Pollis REPL terminal on `io`, which sends `token` first. Requests are lines, with the text they carry after
-them: `query <width> <bytes>` runs a query as the pollis> mode does, `complete <bytes>` asks whether a query ends,
+them: `query <width> <bytes>` runs a query (`terminal_query`), `complete <bytes>` asks whether a query ends,
 `browse <bytes>` opens a table of the Shared Session in the Table Viewer, `attached` asks what the window's DuckDB
 clients have attached to it (`attached`), and `interrupt` stops the query running.
 Answers are `<kind> <bytes>` and their text: `ready`, once the Shared Session is open; `ok` or `error`, with the
-result drawn in `width` characters or the error; `complete` or `incomplete`.
+result drawn in `width` characters or the error; `julia`, for a query that is Julia code, which the terminal hands to
+the Julia REPL; `complete` or `incomplete`.
 """
 function serve_client(io, token::AbstractString)
     running = Ref{Any}(nothing)
@@ -867,7 +868,9 @@ function serve_client(io, token::AbstractString)
             if header[1] == "interrupt"
                 interrupt_terminal(running[])
             elseif header[1] == "complete" && length(header) == 2
-                reply(complete(String(read(io, parse(Int, header[2])))) ? "complete" : "incomplete")
+                # SQL ends with `;`, Julia once it is a whole expression, as at julia>
+                text = String(read(io, parse(Int, header[2])))
+                reply((is_sql(text) ? complete(text) : julia_complete(text)) ? "complete" : "incomplete")
             elseif header[1] == "query" && length(header) == 3
                 width = parse(Int, header[2])
                 query = String(read(io, parse(Int, header[3])))
@@ -889,10 +892,13 @@ function serve_client(io, token::AbstractString)
 end
 
 """
-Run `query` for the Pollis REPL terminal, as the pollis> mode runs it, and log it in the History of the Databases view
-without its `name :=`; return `("ok", the result drawn in width characters)` or `("error", the error)`.
+Run `query` for the Pollis REPL terminal (`pollis_query`), and log it in the History of the Databases view
+without its `name :=`; return `("ok", the result drawn in width characters)` or `("error", the error)`, or
+`("julia", "")` when `query` is Julia code (`is_sql`), which runs in the Julia REPL.
 """
 function terminal_query(query::AbstractString, width::Integer)
+    # Julia code runs in the Julia REPL itself, which the terminal hands it to (pollisTerminal.ts)
+    is_sql(query) || return ("julia", "")
     begun = now(UTC)
     started = time()
     logged = String[]
@@ -903,7 +909,7 @@ function terminal_query(query::AbstractString, width::Integer)
     result = nothing
     failure = nothing
     try
-        result = Base.invokelatest(pollis_mode, query)
+        result = Base.invokelatest(pollis_query, query)
     catch err
         failure = error_text(err)
     end
@@ -992,9 +998,8 @@ end
     sql(query; con = <Shared Session>)
 
 Run `query`, one or more statements separated by `;`, and return the result of the last one as a
-`Result`, a Tables.jl table. Without `con`, this is what the `pollis>` mode of the REPL runs (type `>` at
-the start of a line to enter it); the connection is an in-memory DuckDB from `connect`, opened at the
-first query.
+`Result`, a Tables.jl table. Without `con`, it runs on the Shared Session, as the Pollis REPL terminal does;
+the connection is an in-memory DuckDB from `connect`, opened at the first query.
 """
 function sql(query::AbstractString; con = nothing)
     if con === nothing
@@ -1086,8 +1091,35 @@ blank(piece::AbstractString) = isempty(strip(replace(piece, r"--[^\n]*|/\*.*?\*/
 """The statements of `query`, one or more separated by semicolons."""
 statements(query::AbstractString) = filter(!blank, pieces(query))
 
-"""Whether `query` is blank or ends with a semicolon outside quotes and comments: the `pollis>` mode runs it then."""
+"""Whether `query` is blank or ends with a semicolon outside quotes and comments: the Pollis REPL terminal runs it then."""
 complete(query::AbstractString) = blank(query) || blank(last(pieces(query)))
+
+"""
+The words that start a statement of SQL. In the Pollis REPL terminal, input that starts with one of them and a blank, after
+blanks and comments, is SQL, as is one that starts with `name :=`; any other is Julia. A name that is both, such as
+`describe`, `values` or `show`, is Julia when `(` follows it. The History of the Databases view tells them apart in
+the same way (duckdbSql.ts, isSql).
+"""
+const SQL_WORDS = Set(["select", "with", "from", "create", "insert", "update", "delete", "drop", "alter", "copy",
+    "attach", "detach", "describe", "show", "summarize", "pivot", "unpivot", "explain", "values", "pragma", "set",
+    "reset", "table", "use", "load", "install", "checkpoint", "vacuum", "analyze", "call", "merge", "truncate",
+    "comment", "commit", "rollback"])
+
+"""The first word of `text`, after blanks and the comments of SQL, followed by a blank; `nothing` when there is none."""
+const FIRST_WORD = r"^(?:\s|--[^\n]*(?:\n|$)|/\*.*?\*/)*(?<word>[A-Za-z]+)\s"s
+
+"""Whether `text`, Julia code, is a whole expression, which julia> runs at Enter."""
+function julia_complete(text::AbstractString)
+    parsed = Base.parse_input_line(text; depwarn = false)
+    return !(parsed isa Expr && parsed.head === :incomplete)
+end
+
+"""Whether `text`, typed in the Pollis REPL terminal, is SQL rather than Julia (`SQL_WORDS`)."""
+function is_sql(text::AbstractString)
+    match(ASSIGNMENT, text) === nothing || return true
+    m = match(FIRST_WORD, text)
+    return m !== nothing && lowercase(m[:word]) in SQL_WORDS
+end
 
 """The result of a query of `sql`: its columns, a Tables.jl column table, and the seconds it took."""
 struct Result
@@ -1328,14 +1360,14 @@ end
 Base.show(io::IO, ::MIME"text/html", table::Table) = html(io, grid(table))
 
 """
-A table that `name :=` keeps, as the pollis> mode and the Pollis REPL terminal show it: its name and size, and the
+A table that `name :=` keeps, as the Pollis REPL terminal shows it: its name and size, and the
 link by which the terminal opens it in the Table Viewer, there to browse all of it.
 """
 struct Kept
     table::Table
 end
 
-"""What the pollis> mode shows of `result`: a table that `name :=` keeps summed up, any other result as it is."""
+"""What the Pollis REPL terminal shows of `result`: a table that `name :=` keeps summed up, any other result as it is."""
 kept(result) = result isa Table ? Kept(result) : result
 
 function Base.show(io::IO, ::MIME"text/plain", kept::Kept)
@@ -1460,8 +1492,7 @@ end
 
 Copy `table`, a Tables.jl table such as a named tuple of vectors, into the table `name` of the Shared Session, and
 bind the Julia variable `name` to it, as `name = publish(table, "name")` does; `@share name` copies again the table
-that `name` holds, after a change to it. SQL then takes it by its name: the `pollis>` mode, the Pollis REPL terminal,
-`sql`, and the duckdb> terminal and the notebooks of the window as `SharedSession.name`.
+that `name` holds, after a change to it. SQL then takes it by its name: the Pollis REPL terminal, `sql`, and the duckdb> terminal and the notebooks of the window as `SharedSession.name`.
 
 ```julia
 @share stock_returns = (ticker = ["AAPL", "MSFT"], returns = [0.12, 0.08])
@@ -1479,13 +1510,13 @@ macro share(ex)
 end
 
 """
-    pollis_mode(query)
+    pollis_query(query)
 
-What the `pollis>` mode runs: `query`, one or more statements, as `sql` does, where a statement that starts with
+What the Pollis REPL terminal runs: `query`, one or more statements, as `sql` does, where a statement that starts with
 `name :=`, such as `feeds := SELECT * FROM PollisRSS.feeds`, makes the table `name`, as `sql(name, query)` does, and
 binds the Julia variable `name` to it, as in an SQL cell of a Julia notebook. The result is that of the last statement.
 """
-function pollis_mode(query::AbstractString)
+function pollis_query(query::AbstractString)
     found = statements(query)
     any(statement -> match(ASSIGNMENT, statement) !== nothing, found) || return sql(query)
     result = nothing
@@ -1502,12 +1533,12 @@ function pollis_mode(query::AbstractString)
 end
 
 """
-Add the `pollis>` mode to the REPL: `>` at the start of a line enters it, backspace on an empty line
-leaves it. A query ends with `;`; until then, Enter starts a new line. The result is shown as a table
-and is `ans` afterwards; a table that `name :=` keeps is summed up, with a link that opens it in the Table Viewer. In the history of the REPL, the mode is named `sql`, the name its queries are recorded
-under there.
+Bind `TO_JULIA` in every mode of the REPL, then serve the Pollis REPL terminal (`serve_terminal`): the keys go to
+julia> from the other modes, pkg> or help>, so that the code Pollis sends runs there (model.handler.ts,
+sendToJuliaRepl); what was typed in that mode stays there. julia> binds them to nothing, so that none of them reach the
+line.
 """
-function sql_mode(repl)
+function repl_keys(repl)
     REPL = parentmodule(typeof(repl))
     LineEdit = REPL.LineEdit
     # Wait for the REPL to set up its interface, as VSCodeServer does.
@@ -1517,46 +1548,12 @@ function sql_mode(repl)
     end
     isdefined(repl, :interface) || return nothing
     main = repl.interface.modes[1]
-    any(m -> m isa LineEdit.Prompt && m.prompt == "pollis> ", repl.interface.modes) && return nothing
-    mode = LineEdit.Prompt("pollis> ";
-        # The colour of julia>, bold green, as duckdb> is: a terminal's colours do not follow the theme as Pollis' yellow does.
-        prompt_prefix = repl.options.hascolor ? repl.prompt_color : "",
-        prompt_suffix = "",
-        sticky = true,
-        on_enter = s -> complete(String(take!(copy(LineEdit.buffer(s))))))
-    mode.repl = repl
-    hp = main.hist
-    hp.mode_mapping[:sql] = mode
-    mode.hist = hp
-    mode.on_done = REPL.respond(repl, mode; suppress_on_semicolon = false) do line
-        :($kept($pollis_mode($line)))
-    end
-    _, prefix_keymap = LineEdit.setup_prefix_keymap(hp, mode)
-    keymaps = Dict{Any,Any}[REPL.mode_keymap(main), prefix_keymap, LineEdit.history_keymap, LineEdit.default_keymap, LineEdit.escape_defaults]
-    isdefined(REPL, :History) || pushfirst!(keymaps, last(LineEdit.setup_search_keymap(hp)))
-    mode.keymap_dict = LineEdit.keymap(keymaps)
-    push!(repl.interface.modes, mode)
-    enter = Dict{Any,Any}('>' => function (s, args...)
-        if isempty(s) || position(LineEdit.buffer(s)) == 0
-            # The text of julia> goes to pollis>; from an empty julia>, pollis> keeps what was typed there.
-            buf = copy(LineEdit.buffer(s))
-            return LineEdit.transition(s, mode) do
-                buf.size > 0 && (LineEdit.state(s, mode).input_buffer = buf)
-            end
-        end
-        LineEdit.edit_insert(s, '>')
-        isdefined(LineEdit, :check_show_hint) && LineEdit.check_show_hint(s)
-        return nothing
-    end)
-    main.keymap_dict = LineEdit.keymap_merge(main.keymap_dict, enter)
-    # The code Pollis sends follows TO_JULIA, which takes every other mode to julia>, whose paste runs it; what is
-    # typed in that mode stays there. julia> binds it too, to nothing, so that none of its keys reach the line.
     to_julia = Dict{Any,Any}(TO_JULIA => function (s, args...)
         LineEdit.mode(s) === main && return nothing
         return LineEdit.transition(s, main)
     end)
-    for other in repl.interface.modes
-        other isa LineEdit.Prompt && (other.keymap_dict = LineEdit.keymap_merge(other.keymap_dict, to_julia))
+    for mode in repl.interface.modes
+        mode isa LineEdit.Prompt && (mode.keymap_dict = LineEdit.keymap_merge(mode.keymap_dict, to_julia))
     end
     # The Pollis REPL terminal reaches this Julia through a socket of its own.
     serve_terminal()
@@ -1564,9 +1561,9 @@ function sql_mode(repl)
 end
 
 """
-The keys that come before the code Pollis sends to the REPL, `ESC [ 6 9 ~`, which `sql_mode` binds in every mode:
-to going to julia>, and in julia> to nothing. A Julia that does not bind them ignores them, as all keys `ESC [ 6`
-and two more.
+The keys that come before the code Pollis sends to the REPL, `ESC [ 6 9 ~`, which `repl_keys` binds in every mode: to
+going to julia>, and in julia> to nothing. A Julia that does not bind them ignores them, as all keys `ESC [ 6` and two
+more.
 """
 const TO_JULIA = "\e[69~"
 
@@ -2436,15 +2433,16 @@ end
 # After the user's environments, so that their own versions of these packages come first.
 ENVIRONMENT in LOAD_PATH || push!(LOAD_PATH, ENVIRONMENT)
 
-# The pollis> mode, in the REPL of Pollis' terminal; a notebook has no REPL, and runs SQL cells with `cell`.
-function add_sql_mode(repl)
+# The keys of the REPL of Pollis' terminal, and the Pollis REPL terminal's socket; a notebook has no REPL, and runs SQL
+# cells with `cell`.
+function setup_repl(repl)
     @async try
-        sql_mode(repl)
+        repl_keys(repl)
     catch err
-        @debug "Pollis: pollis> mode not added" exception = err
+        @debug "Pollis: the REPL's keys or the Pollis REPL terminal not set up" exception = err
     end
 end
-isdefined(Base, :active_repl) ? add_sql_mode(Base.active_repl) : atreplinit(add_sql_mode)
+isdefined(Base, :active_repl) ? setup_repl(Base.active_repl) : atreplinit(setup_repl)
 
 # Remove the snapshots when Julia exits, so the view does not show dead connections.
 atexit(() -> (foreach(id -> rm(snapshot_path(id); force = true), keys(CONNECTIONS)); unserve(); unserve_terminal()))

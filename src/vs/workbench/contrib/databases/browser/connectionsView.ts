@@ -286,7 +286,7 @@ class ItemRenderer implements ITreeRenderer<DatabaseItem, void, IItemTemplate> {
 						? localize('connection.hover.connected', "{0} ({1})\n{2}\nConnected in the Julia REPL as {3}. Click to browse its tables.", name, driver, describeConnection(profile), profile.variable)
 						: localize('connection.hover', "{0} ({1})\n{2}\nNot connected. Click to connect in the Julia REPL as {3}.", name, driver, describeConnection(profile), profile.variable);
 				} else if (session?.shared) {
-					hover = localize('connection.shared.hover', "{0} (DuckDB)\nThe database of the Julia REPL, in memory: pollis>, the Pollis REPL terminal, sql and @share use it, and the duckdb> terminal and the notebooks of this window attach it as SharedSession. Its tables are lost when the Julia REPL restarts. Click to browse them.", name);
+					hover = localize('connection.shared.hover', "{0} (DuckDB)\nThe database of the Julia REPL, in memory: the Pollis REPL terminal, sql and @share use it, and the duckdb> terminal and the notebooks of this window attach it as SharedSession. Its tables are lost when the Julia REPL restarts. Click to browse them.", name);
 				} else if (session) {
 					hover = localize('connection.hover.shown', "{0} ({1})\nShown with PollisDB.show in the Julia REPL. Click to browse its tables.", name, engineLabel(session.engine));
 				}

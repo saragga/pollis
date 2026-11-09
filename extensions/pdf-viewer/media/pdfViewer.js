@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 // Pollis in the viewer of pdf.js: its options before it starts, the PDF from the extension, saving through it, the
-// modes of Compose > PDF Files, and the tools sidebar, shown or hidden by Tools: Show | Hide: Select Area with the
+// modes of Explore > PDF Files, and the tools sidebar, shown or hidden by Tools: Show | Hide: Select Area with the
 // text, the table and the picture of an area, and the Poppler tools (poppler.js). Runs after pdf.mjs, before viewer.mjs.
 
 import { areaCells, areaText, cellsCsv, cellsTabbed, pageWords } from './cells.js';
@@ -112,7 +112,7 @@ function onInitialized() {
 	});
 }
 
-// ---- The modes of Compose > PDF Files
+// ---- The modes of Explore > PDF Files
 
 /** The markup tools of pdf.js (AnnotationEditorType), by mode: Highlight, Add or Edit Text, Add or Edit Images, and Draw. */
 const EDITOR_MODES = { highlight: 9, text: 3, image: 13, draw: 15 };

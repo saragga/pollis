@@ -1170,9 +1170,11 @@ export async function executeInREPL(
         showResultInREPL = true,
         showErrorInREPL = false,
         softscope = true,
+        // POLLIS: false for the Pollis REPL terminal, which runs Julia code here and stays in front
+        showTerminal = true,
     } = {}
 ): Promise<ReturnResult> {
-    await startREPL(true, true)
+    await startREPL(true, showTerminal)
     return await g_evalQueue.push({
         filename,
         line,
@@ -1539,8 +1541,11 @@ export function activate(
     updateReplStatusBar()
     g_replStatusBarItem.show()
     // POLLIS: Pollis REPL, between Julia REPL (0) and Pollis' DuckDB REPL (-1); it starts the Julia REPL, in the
-    // background, when it does not run.
-    activatePollisRepl(context, () => startREPL(true, false))
+    // background, when it does not run. Julia code typed in it runs here, the Julia REPL showing it in full.
+    activatePollisRepl(context, () => startREPL(true, false), async code => {
+        const result = await executeInREPL(code, { filename: 'Pollis REPL', showErrorInREPL: true, showTerminal: false })
+        return { text: result.inline, error: !!result.stackframe }
+    })
     context.subscriptions.push(
         g_replStatusBarItem,
         registerCommand('language-julia.showREPLActions', showREPLActions),

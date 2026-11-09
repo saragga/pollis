@@ -36,7 +36,7 @@ import { DEFAULT_FOMC_INSTRUMENTS, describeFomcEvent, describeInstrument, descri
 import { ICoverageItem, IMediaCoverageRequest, newsName } from './mediaCoverageService.js';
 import { SHOW_MEDIA_COVERAGE_COMMAND_ID } from './mediaCoveragePage.js';
 
-// Compose > Workflows > Event Studies..., in the Minimal style of the scaffold: a page to make an event study of the filings an alert fires (its title, the
+// Model > Event Studies, in the Minimal style of the scaffold: a page to make an event study of the filings an alert fires (its title, the
 // alert, the benchmark, the model, the event time and the periods), or of the FOMC's releases (the releases and the
 // instruments), the studies made, and, for the one chosen, the cumulative average abnormal return around its events
 // with its 95% band, drawn as the prices come in, the articles about them under it, and its events with their
@@ -2411,8 +2411,8 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: SHOW_EVENT_STUDIES_COMMAND_ID,
-			title: localize2('eventStudies.showAction', "Event Studies..."),
-			category: localize2('eventStudies.category', "Compose"),
+			title: localize2('eventStudies.showAction', "Event Studies"),
+			category: localize2('eventStudies.category', "Model"),
 			f1: true,
 		});
 	}

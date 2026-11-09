@@ -83,6 +83,108 @@ function stop_llama_server(model::AbstractString; embeddings::Bool = false, thin
 	return nothing
 end
 
+"""
+    Pollis.replicate(title, rows; results = "results.csv")
+
+Compares results with published values that are exact to the digits printed: estimates, test
+statistics, a model solved. Prints each value in full, rounded to the published precision and beside
+the published value, with the number of decimals they share ("same to 2 decimals"), "one in the last
+digit" when not even the units agree but the last printed digit is one off (14016 against 14017), or
+"DIFFERENT".
+
+Each row is `(label, value, published)`, `published` written as in the source, `"1,794.3"`, `"-.002"`
+or `"2.5e-4"`: its decimals give the published precision. The rows also go to `results`, a CSV file
+beside the notebook, replacing those of an earlier run of the same `title`; `results = nothing` writes
+none.
+
+```julia
+Pollis.replicate("Table 1, column 2", [("intercept", coef(model)[1], "5.085"), ("temperature", coef(model)[2], "-.1156")])
+```
+"""
+function replicate(title::AbstractString, rows; results::Union{AbstractString, Nothing} = "results.csv")
+	width = max(26, maximum((length(first(row)) for row in rows); init = 0) + 2)
+	println("\n", title, "\n", rpad("", width), lpad("Julia", 16), lpad("rounded", 14), lpad("published", 14))
+	records = Vector{Vector{String}}()
+	for (label, value, published) in rows
+		p, d = printed(published)
+		k = findlast(j -> round(value; digits = j) == round(p; digits = j), 0:max(d, 0))  # position in 0:d
+		# Not even the units agree: one in the last printed digit (14016 against 14017), or different
+		last = abs(round(value; digits = d) - p) <= 1.5 * 10.0^-d
+		verdict = k !== nothing ? "same to $(k - 1) decimals" : last ? "one in the last digit" : "DIFFERENT"
+		rounded = d < 0 ? string(round(Int, round(value; digits = d))) : fixed(value, d)
+		println(rpad(label, width), lpad(fixed(value, max(8, d + 2)), 16), lpad(rounded, 14), lpad(published, 14), "  ", verdict)
+		push!(records, [title, string(label), "exact", published, repr(Float64(value)), "", string(d), k === nothing ? "" : string(k - 1), "", verdict])
+	end
+	record(results, title, records)
+	return nothing
+end
+
+"""
+    Pollis.compare(title, rows; noisy = true, results = "results.csv")
+
+Compares results with published values that are themselves estimates of a random quantity:
+simulations, bootstrap or random forests, rerun with other random numbers. Prints each value with its
+standard error, rounded to the published precision and beside the published value, with "within
+noise" when the two are less than two standard errors apart, or "DIFFERENT" and how many.
+
+Each row is `(label, value, se, published)`, `se` the Monte Carlo standard error of `value`. With
+`noisy = true` the published value is taken to carry the same noise, so the difference is measured
+against `sqrt(2) * se`; with `noisy = false` the published value is exact and against `se`. The rows
+go to `results` as for `Pollis.replicate`.
+
+```julia
+Pollis.compare("Table 2, test set error (%)", [("waveform", mean(errors), std(errors) / sqrt(runs), "17.2")])
+```
+"""
+function compare(title::AbstractString, rows; noisy::Bool = true, results::Union{AbstractString, Nothing} = "results.csv")
+	width = max(16, maximum((length(first(row)) for row in rows); init = 0) + 2)
+	println("\n", title, "\n", rpad("", width), lpad("Julia", 10), lpad("se", 8), lpad("rounded", 10), lpad("published", 11))
+	records = Vector{Vector{String}}()
+	for (label, value, se, published) in rows
+		p, d = printed(published)
+		z = (value - p) / ((noisy ? sqrt(2) : 1) * se)
+		verdict = abs(z) < 2 ? "within noise" : "DIFFERENT ($(fixed(z, 1)) se)"
+		rounded = d < 0 ? string(round(Int, round(value; digits = d))) : fixed(value, d)
+		println(rpad(label, width), lpad(fixed(value, 3), 10), lpad(fixed(se, 3), 8), lpad(rounded, 10), lpad(published, 11), "  ", verdict)
+		push!(records, [title, string(label), "noise", published, repr(Float64(value)), repr(Float64(se)), string(d), "", repr(z), verdict])
+	end
+	record(results, title, records)
+	return nothing
+end
+
+"""A published value as printed, `"1,794.3"` or `"2.5e-4"`: its value, and its decimals (negative for `"2.5e4"`)."""
+function printed(published::AbstractString)
+	text = replace(strip(published), "," => "")
+	mantissa, exponent = occursin(r"[eE]", text) ? split(text, r"[eE]") : (text, "0")
+	decimals = (occursin('.', mantissa) ? length(split(mantissa, '.')[2]) : 0) - parse(Int, exponent)
+	return parse(Float64, text), decimals
+end
+
+const PRINTF = Base.PkgId(Base.UUID("de0858da-6303-5e67-8744-51eddeeeb8d7"), "Printf")
+
+"""`value` with `digits` decimals, as `@printf("%.2f")` writes it; Printf is loaded the first time."""
+function fixed(value::Real, digits::Integer)
+	Printf = Base.require(PRINTF)
+	return Base.invokelatest(Printf.format, Base.invokelatest(Printf.Format, "%.$(digits)f"), Float64(value))
+end
+
+"""The columns of results.csv, one row for each value compared."""
+const RESULT_COLUMNS = ["table", "row", "kind", "published", "julia", "se", "printed_decimals", "same_decimals", "z", "verdict"]
+
+"""Writes `records` to the CSV file `path` in place of the rows of an earlier run of `title`; warns and goes on when it cannot."""
+function record(path::Union{AbstractString, Nothing}, title::AbstractString, records)
+	path === nothing && return nothing
+	quoted(field) = occursin(r"[\",\n]", field) ? "\"" * replace(field, "\"" => "\"\"") * "\"" : field
+	try
+		kept = isfile(path) ? filter(line -> !startswith(line, quoted(title) * ","), readlines(path)[2:end]) : String[]
+		lines = [join(RESULT_COLUMNS, ","); kept; [join(quoted.(fields), ",") for fields in records]]
+		write(path, join(lines, "\n") * "\n")
+	catch error
+		@warn "The results were not written to $(abspath(path))" exception = error
+	end
+	return nothing
+end
+
 const REPL_ID = Base.PkgId(Base.UUID("3fa0cd96-eef1-5676-8a61-b3b8758bbffb"), "REPL")
 
 """

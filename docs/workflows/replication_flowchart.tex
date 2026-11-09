@@ -41,16 +41,13 @@
 \node[input, right=6mm of or] (in2) {\textbf{The article}\\Input data\\The authors' code (in any language)};
 
 \coordinate (merge) at ($(in1.south)!0.5!(in2.south) + (0,-6mm)$);
-\node[decision, below=14mm of or] (avail) {Are all its methods available in Julia packages?};
-\node[step=40mm, right=16mm of avail] (implement) {Implement the missing methods in Julia};
+\node[step=52mm, below=14mm of or] (avail) {\textbf{Plan each published table}\\[1pt]\footnotesize computed by Julia packages, by code of the notebook's own, or by a new method};
 \node[step=52mm, below=12mm of avail] (replicate) {\textbf{Replicate the article}\\[1pt]\footnotesize compare the results with the target data or the authors' code};
-\node[store, below=10mm of replicate] (records) {\textbf{Replication Records}\\[1pt]\footnotesize article, data, targets, Julia code, full or partial, differences};
+\node[store, below=10mm of replicate] (records) {\textbf{Replication Records}\\[1pt]\footnotesize article, data, targets, plan, full or partial, differences explained};
 
 \draw[flow] (in1.south) |- (merge) -- (avail.north);
 \draw[flow] (in2.south) |- (merge);
-\draw[flow] (avail.east) -- node[label, above] {No} (implement.west);
-\draw[flow] (avail.south) -- node[label, left, pos=0.3] {Yes} (replicate.north);
-\draw[flow] (implement.south) |- ($(replicate.north)+(0,5mm)$) -- (replicate.north);
+\draw[flow] (avail) -- (replicate);
 \draw[flow] (replicate) -- (records);
 
 % ---------- 2. Method Packaging ----------
@@ -62,7 +59,7 @@
 % After a replication, both next steps are optional and independent
 \coordinate (split) at ($(records.south)+(0,-36mm)$);
 \draw[optflow, -] (records.south) -- (split);
-\draw[optflow] (split) -- node[label, above, text width=17mm, align=center] {if new methods were written} (split -| package.east);
+\draw[optflow] (split) -- node[label, above, text width=17mm, align=center] {if a table needs a new method} (split -| package.east);
 \draw[optflow] (package) -- (vignette);
 \draw[optflow] (vignette) -- (publish);
 \draw[optflow] (publish) -- (packages);
@@ -82,7 +79,7 @@
 
 % ---------- Stage backgrounds ----------
 \begin{scope}[on background layer]
-	\node[stage, fit=(in1)(in2)(implement)(records), inner ysep=8mm] (s1) {};
+	\node[stage, fit=(in1)(in2)(avail)(records), inner ysep=8mm] (s1) {};
 	\node[stage, fit=(package)(packages), inner ysep=8mm] (s2) {};
 	\node[stage, fit=(extract)(workflows)(combine), inner ysep=8mm] (s3) {};
 \end{scope}

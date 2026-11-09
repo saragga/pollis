@@ -26,6 +26,7 @@ import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_MINIMAL_STYLE, LIBRARY_PAGE_STYLE } 
 import { sortHeadingsCss, sortHeadingsScript, sortHint, stickyHeadCss } from '../../model/browser/webviews/webviewPager.js';
 import { ContentKind, IDownloadedEntry, IPollisContentService } from './pollisContent.js';
 import { BROWSE_METHODS_COMMAND_ID, deleteUserMethods, openUserMethod, readMethodSummaries, userMethodsFolder } from './newMethods.js';
+import { BROWSE_REPLICATIONS_COMMAND_ID, deleteUserReplications, openUserReplication, readReplicationSummaries, userReplicationsFolder } from './replicateArticle.js';
 import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { IStorageService } from '../../../../platform/storage/common/storage.js';
@@ -37,7 +38,7 @@ import { BROWSEMETHODS_METADATA } from '../../model/browser/webviews/browseMetho
 import { BROWSEREPLICATIONS_METADATA } from '../../model/browser/webviews/browseReplications.data.js';
 import { buildWebviewHtml, voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
 
-export const SEARCH_WORKFLOW_LIBRARY_COMMAND_ID = 'chiara.statistics.wfl_sl';
+export const SEARCH_WORKFLOW_LIBRARY_COMMAND_ID = BROWSE_REPLICATIONS_COMMAND_ID;
 export const PUBLISHED_BENCHMARKS_COMMAND_ID = 'pollis.correctness.publishedBenchmarks';
 
 /** A notebook library shipped with Pollis: one folder per entry, holding its notebook and data files. */
@@ -55,10 +56,42 @@ interface INotebookLibrary {
 	readonly empty: string;
 	/** The message shown when an entry cannot be opened: `{0}` is its title, `{1}` the error. */
 	readonly openFailed: (label: string, error: string) => string;
-	/** Whether the page also lists the user's own methods, above the library (Browse Methods). */
+	/** Whether the library's entries are methods, each a folder with a method.toml, which open as the user's own (Browse Methods). */
 	readonly userMethods?: boolean;
+	/** The user's own work, listed above the library: their methods or their replications. */
+	readonly yours?: IYours;
 	/** The kind of content the library gets between releases (pollisContent.ts). */
 	readonly content?: ContentKind;
+}
+
+/** One of the user's own methods or replications, as a library page lists it. */
+interface IYourSummary {
+	/** Its folder, as a URI string. */
+	readonly id: string;
+	readonly name: string;
+	readonly title: string;
+	readonly citation?: string;
+	readonly inputs: number;
+	readonly targets: number;
+	/** No article, tables or work on it yet. */
+	readonly empty: boolean;
+	/** Listed under In Progress, else under the heading of those finished. */
+	readonly inProgress: boolean;
+}
+
+/** The user's own work that a library page lists above the library, in progress and finished. */
+interface IYours {
+	/** The heading of those finished: Published by You, Done by You. */
+	readonly finished: string;
+	/** What the page says when none is in progress. */
+	readonly none: string;
+	/** The link that deletes the empty ones: `{0}` is their number. */
+	readonly deleteEmpty: string;
+	folder(pathService: IPathService): URI;
+	read(fileService: IFileService, pathService: IPathService): Promise<IYourSummary[]>;
+	open(accessor: ServicesAccessor, id: string): Promise<void>;
+	/** Deletes one, by id, or all the empty ones, after asking. */
+	delete(accessor: ServicesAccessor, which: string | 'empty'): Promise<void>;
 }
 
 /** Compose > Replication > Browse Replications: famous analyses replicated from their articles. The folder and content key stay `workflows`, for the copies already made and the content repository. */
@@ -67,11 +100,20 @@ const WORKFLOWS: INotebookLibrary = {
 	base: 'vs/workbench/contrib/compose/browser/media/workflows',
 	userFolder: 'workflows',
 	title: localize('workflowLibrary.title', "Replications"),
-	intro: localize('workflowLibrary.intro', "Each replication reproduces a published analysis on its public data, printing every published value beside Julia's. Click a name to open your own copy of the notebook, made in {0} the first time.", '<code class="pollisPath">~/.pollis/workflows</code>'),
+	intro: localize('workflowLibrary.intro', "Each replication reproduces a published analysis on its public data, printing every published value beside Julia's. The page lists the replications in three groups. In Progress holds those you have started with Replicate an Article and not yet added to yours: click a title to go on with one. Done by You follows, then the Library: click a name to open your own copy of the notebook, made in {0} the first time.", '<code class="pollisPath">~/.pollis/workflows</code>'),
 	entry: localize('workflowLibrary.entry', "Replication"),
 	empty: localize('workflowLibrary.empty', "There are no replications yet."),
 	openFailed: (label, error) => localize('workflowLibrary.openFailed', "Could not open the replication {0}: {1}", label, error),
 	content: 'workflows',
+	yours: {
+		finished: localize('workflowLibrary.done', "Done by You"),
+		none: localize('workflowLibrary.yours.none', "None: Compose > Replication > Replicate an Article starts one."),
+		deleteEmpty: localize('workflowLibrary.yours.deleteEmpty', "Delete Empty Replications ({0})"),
+		folder: userReplicationsFolder,
+		read: readReplicationSummaries,
+		open: openUserReplication,
+		delete: deleteUserReplications,
+	},
 };
 
 /** Compose > Methods: methods no Julia package has, each tested on data against published results. */
@@ -85,6 +127,15 @@ const NEW_METHODS: INotebookLibrary = {
 	empty: localize('newMethods.empty', "There are no new methods yet."),
 	openFailed: (label, error) => localize('newMethods.openFailed', "Could not open the method {0}: {1}", label, error),
 	userMethods: true,
+	yours: {
+		finished: localize('newMethods.published', "Published by You"),
+		none: localize('newMethods.yours.none', "None: Compose > Methods > Create New Method starts one."),
+		deleteEmpty: localize('newMethods.yours.deleteEmpty', "Delete Empty Methods ({0})"),
+		folder: userMethodsFolder,
+		read: readMethodSummaries,
+		open: openUserMethod,
+		delete: deleteUserMethods,
+	},
 };
 
 /** Compose > Correctness Tests: a method's results checked against a published benchmark. */
@@ -295,8 +346,8 @@ type LibraryMessage =
 	| { readonly command: 'openUpdated'; readonly folder: string }
 	| { readonly command: 'copyBibtex'; readonly folder: string }
 	| { readonly command: 'link'; readonly url: string }
-	| { readonly command: 'openMethod'; readonly id: string }
-	| { readonly command: 'deleteMethod'; readonly id: string }
+	| { readonly command: 'openYours'; readonly id: string }
+	| { readonly command: 'deleteYours'; readonly id: string }
 	| { readonly command: 'deleteEmpty' };
 
 /** The open pages, by library, so a second request shows the same page. */
@@ -350,7 +401,7 @@ async function openLibraryPage(accessor: ServicesAccessor, library: INotebookLib
 		}));
 	};
 	let entries = await readEntries();
-	if (entries.length === 0 && !library.userMethods) {
+	if (entries.length === 0 && !library.yours) {
 		notificationService.info(library.empty);
 		return;
 	}
@@ -378,14 +429,17 @@ async function openLibraryPage(accessor: ServicesAccessor, library: INotebookLib
 		disposables.dispose();
 	}));
 
-	// The user's methods, sent again when their folder changes or the page gets the focus back
-	const sendMethods = async () => {
-		webviewInput.webview.postMessage({ command: 'methods', methods: await readMethodSummaries(fileService, pathService) });
+	// The user's own methods or replications, sent again when their folder changes or the page gets the focus back
+	const yours = library.yours;
+	const sendYours = async () => {
+		if (yours) {
+			webviewInput.webview.postMessage({ command: 'yours', yours: await yours.read(fileService, pathService) });
+		}
 	};
-	if (library.userMethods) {
-		const root = userMethodsFolder(pathService);
+	if (yours) {
+		const root = yours.folder(pathService);
 		await fileService.createFolder(root);
-		const refresh = disposables.add(new RunOnceScheduler(() => sendMethods(), 300));
+		const refresh = disposables.add(new RunOnceScheduler(() => sendYours(), 300));
 		const watcher = disposables.add(fileService.createWatcher(root, { recursive: false, excludes: [] }));
 		disposables.add(watcher.onDidChange(() => refresh.schedule()));
 		disposables.add(webviewInput.webview.onDidFocus(() => refresh.schedule()));
@@ -452,13 +506,11 @@ async function openLibraryPage(accessor: ServicesAccessor, library: INotebookLib
 		const entry = message.command === 'open' || message.command === 'openUpdated' || message.command === 'copyBibtex' ? entries.find(candidate => candidate.folder === message.folder) : undefined;
 		if (message.command === 'ready') {
 			sendEntries();
-			if (library.userMethods) {
-				sendMethods();
-			}
-		} else if (message.command === 'openMethod') {
-			instantiationService.invokeFunction(openUserMethod, message.id);
-		} else if (message.command === 'deleteMethod' || message.command === 'deleteEmpty') {
-			instantiationService.invokeFunction(deleteUserMethods, message.command === 'deleteEmpty' ? 'empty' : message.id).then(sendMethods, error => notificationService.error(toErrorMessage(error)));
+			sendYours();
+		} else if (message.command === 'openYours' && yours) {
+			instantiationService.invokeFunction(yours.open, message.id);
+		} else if ((message.command === 'deleteYours' || message.command === 'deleteEmpty') && yours) {
+			instantiationService.invokeFunction(yours.delete, message.command === 'deleteEmpty' ? 'empty' : message.id).then(sendYours, error => notificationService.error(toErrorMessage(error)));
 		} else if (message.command === 'open' && entry) {
 			openEntry(entry);
 		} else if (message.command === 'openUpdated' && entry?.copyOutdated) {
@@ -492,37 +544,37 @@ function pageHtml(library: INotebookLibrary): string {
 		more: localize('workflowLibrary.more', "more"),
 		less: localize('workflowLibrary.less', "less"),
 		inProgress: localize('newMethods.inProgress', "In Progress"),
-		published: localize('newMethods.published', "Published by You"),
+		finished: library.yours?.finished,
 		library: localize('newMethods.library.heading', "Library"),
-		noMethods: localize('newMethods.yours.none', "None: Compose > Under Construction... starts one."),
+		noYours: library.yours?.none,
 		tables: localize('newMethods.yours.tables', "Tables"),
 		tableCount: localize('newMethods.yours.tableCount', "{0} input, {1} target"),
 		delete: localize('newMethods.yours.delete', "Delete"),
-		deleteEmpty: localize('newMethods.yours.deleteEmpty', "Delete Empty Methods ({0})"),
+		deleteEmpty: library.yours?.deleteEmpty,
 		new: localize('workflowLibrary.new', "New"),
 		updatedBadge: localize('workflowLibrary.updatedBadge', "Updated"),
 		copyOutdated: localize('workflowLibrary.copyOutdated', "Your copy is older than this version."),
 		openUpdated: localize('workflowLibrary.openUpdated', "Open Updated Version"),
 	};
-	const userMethods = library.userMethods ? `
+	const yours = library.yours ? `
 	<h2>${text.inProgress}</h2>
-	<p class="small" id="noMethods" hidden>${text.noMethods}</p>
-	<table id="methodsTable" hidden>
+	<p class="small" id="noYours" hidden>${text.noYours}</p>
+	<table id="yoursTable" hidden>
 		<thead><tr><th>${library.entry}</th><th>${text.article}</th><th>${text.tables}</th><th></th></tr></thead>
-		<tbody id="methods"></tbody>
+		<tbody id="yours"></tbody>
 	</table>
 	<p><button class="link small" id="deleteEmpty" hidden></button></p>
-	<div id="publishedMethods" hidden>
-		<h2>${text.published}</h2>
+	<div id="finishedYours" hidden>
+		<h2>${text.finished}</h2>
 		<table>
 			<thead><tr><th>${library.entry}</th><th>${text.article}</th><th>${text.tables}</th><th></th></tr></thead>
-			<tbody id="published"></tbody>
+			<tbody id="finished"></tbody>
 		</table>
 	</div>
 	<h2>${text.library}</h2>` : '';
 	const heading = (column: string, label: string) => `<th class="sortable" data-sort="${column}" title="${text.sortHint}">${label}</th>`;
 	const body = `
-${userMethods}
+${yours}
 	<table class="stickyHead">
 		<thead><tr>
 			${heading('title', text.entry)}${heading('citation', text.article)}${heading('packages', text.packages)}${heading('datasets', text.datasets)}${heading('bytes', text.size)}${heading('updatedDate', text.updated)}
@@ -681,32 +733,32 @@ ${sortHeadingsScript()}
 		}
 	}
 
-	// The methods the user started: those in progress first, then those published
-	function renderMethods(methods) {
-		const inProgress = methods.filter(method => method.inProgress);
-		const published = methods.filter(method => !method.inProgress);
-		document.getElementById('noMethods').hidden = inProgress.length > 0;
-		document.getElementById('methodsTable').hidden = inProgress.length === 0;
-		document.getElementById('publishedMethods').hidden = published.length === 0;
-		renderMethodRows(document.getElementById('methods'), inProgress);
-		renderMethodRows(document.getElementById('published'), published);
-		const empty = methods.filter(method => method.empty).length;
+	// The user's own methods or replications: those in progress first, then those finished
+	function renderYours(yours) {
+		const inProgress = yours.filter(item => item.inProgress);
+		const finished = yours.filter(item => !item.inProgress);
+		document.getElementById('noYours').hidden = inProgress.length > 0;
+		document.getElementById('yoursTable').hidden = inProgress.length === 0;
+		document.getElementById('finishedYours').hidden = finished.length === 0;
+		renderYourRows(document.getElementById('yours'), inProgress);
+		renderYourRows(document.getElementById('finished'), finished);
+		const empty = yours.filter(item => item.empty).length;
 		const deleteEmpty = document.getElementById('deleteEmpty');
 		deleteEmpty.hidden = empty === 0;
 		deleteEmpty.textContent = TEXT.deleteEmpty.replace('{0}', empty);
 	}
-	function renderMethodRows(container, methods) {
+	function renderYourRows(container, yours) {
 		container.textContent = '';
-		for (const method of methods) {
+		for (const item of yours) {
 			const row = element('tr');
 			const name = cell(row, 'name');
-			const title = element('div', 'title', method.title);
-			title.addEventListener('click', () => vscode.postMessage({ command: 'openMethod', id: method.id }));
+			const title = element('div', 'title', item.title);
+			title.addEventListener('click', () => vscode.postMessage({ command: 'openYours', id: item.id }));
 			name.appendChild(title);
-			name.appendChild(element('div', 'file', method.name));
-			cell(row, 'article').appendChild(element('p', 'citation small', method.citation || TEXT.noArticle));
-			cell(row, 'nowrap').textContent = TEXT.tableCount.replace('{0}', method.inputs).replace('{1}', method.targets);
-			cell(row, 'nowrap').appendChild(link(TEXT.delete, () => vscode.postMessage({ command: 'deleteMethod', id: method.id })));
+			name.appendChild(element('div', 'file', item.name));
+			cell(row, 'article').appendChild(element('p', 'citation small', item.citation || TEXT.noArticle));
+			cell(row, 'nowrap').textContent = TEXT.tableCount.replace('{0}', item.inputs).replace('{1}', item.targets);
+			cell(row, 'nowrap').appendChild(link(TEXT.delete, () => vscode.postMessage({ command: 'deleteYours', id: item.id })));
 			container.appendChild(row);
 		}
 	}
@@ -718,8 +770,8 @@ ${sortHeadingsScript()}
 		if (event.data.command === 'entries') {
 			entries = event.data.entries;
 			render();
-		} else if (event.data.command === 'methods') {
-			renderMethods(event.data.methods);
+		} else if (event.data.command === 'yours') {
+			renderYours(event.data.yours);
 		}
 	});
 	vscode.postMessage({ command: 'ready' });

@@ -5,10 +5,10 @@
 added = "2026-10-14"
 files = ["garch.ipynb"]
 id = "garch"
-pollis = "0.2.3"
-sha256 = ["c46a872082fc1bb7d4a1a071fd88aebf707f837a49eb7369e2d8eeeadfa0e0ac"]
+pollis = "0.2.20"
+sha256 = ["70a9466174b713ccacc71489db814a632a150d52fc846a13fb15150bce8fe9a3"]
 title = "GARCH(1,1): the Fiorentini-Calzolari-Panattoni benchmark"
-updated = "2026-10-14"
+updated = "2026-11-09"
 [[benchmarks]]
 added = "2026-10-14"
 files = ["AtmWtAg.dat", "SiRstv.dat", "SmLs01.dat", "SmLs02.dat", "SmLs03.dat", "SmLs04.dat", "SmLs05.dat", "SmLs06.dat", "SmLs07.dat", "SmLs08.dat", "SmLs09.dat", "anova.ipynb"]

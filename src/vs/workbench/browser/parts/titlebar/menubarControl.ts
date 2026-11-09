@@ -83,7 +83,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarViewMenu, {
 		title: localize({ key: 'mTerminal', comment: ['&& denotes a mnemonic'] }, "&&Terminal")
 	},
 	group: '5_panel',
-	order: 1
+	order: 3 // below Debug Console (2)
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {

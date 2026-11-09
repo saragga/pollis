@@ -151,7 +151,7 @@ being added to it. It has four jobs.
     \file{build_rss()}, \file{build_benchmarks()}), and copy the data files that Pollis's pages read
     (\file{copy_package_data()}). The sixth, PollisDocuments, the passages Ask Pollis searches, is made by the Julia extension's \file{ask_index.jl} once the
     documents are compiled.
-  \item \textbf{Connect} (\file{connect()}, \file{sql()}, the \file{pollis>} mode, the SQL cells of Julia notebooks): a
+  \item \textbf{Connect} (\file{connect()}, \file{sql()}, the Pollis REPL terminal, the SQL cells of Julia notebooks): a
     DuckDB connection with the seven databases of Pollis attached read-only, and DuckDB's full-text search extension,
     fts, loaded (\S\ref{sec:sql}).
   \item \textbf{Feed the Databases view} (\file{show()}, \file{register()}): each connection handed to it is
@@ -454,7 +454,8 @@ appear when \file{scores.csv} does.
 \section{The Databases view and SQL}\label{sec:sql}
 
 The Guide shows how to use SQL in Pollis, in \emph{Four ways to use SQL}. This section shows what is under it: which
-process runs a query, on which database, and where the queries are recorded.
+process runs a query, on which database, and where the queries are recorded. The Pollis REPL, SQL and Julia at one
+prompt on the Shared Session, has a drill-down of its own, Drill-down: Pollis REPL.
 
 \subsection{The Databases view}
 It has four sections, one under the other.
@@ -467,8 +468,8 @@ It has four sections, one under the other.
     REPL, with its schemas, tables and columns, to a JSON file in \file{~/.pollis/databases/sessions}, marked with the
     window that started the REPL, so that a window shows only the connections of its own REPL. A schema counts its
     tables and its views apart.
-  \item \textbf{History}: the queries of the \file{duckdb>} terminal, of the SQL cells of notebooks and of the
-    \file{pollis>} mode (\S\ref{sec:history}).
+  \item \textbf{History}: the queries of the \file{duckdb>} and Pollis REPL terminals and of the SQL cells of
+    notebooks (\S\ref{sec:history}).
 \end{itemize}
 \textbf{Updated.} When the install road has updated a data package, its database shows \emph{Updated} and the date
 after its name, and its hover has \emph{What Changed}, a link to GitHub's comparison of the commit before and the
@@ -493,78 +494,33 @@ the \file{duckdb>} terminal & Pollis's own program, run as Node in a terminal & 
   on; until the terminal ends, or Restart REPL\\
 an SQL cell, under DuckDB SQL (Pollis) & a utility process of the window, for all its notebooks & one in memory for
   each notebook; until the notebook is closed, or Restart in its toolbar\\
-the \file{pollis>} mode, \file{sql()}, an SQL cell under Julia & the Julia REPL, or the notebook's Julia & one in
+the Pollis REPL terminal, \file{sql()}, an SQL cell under Julia & the Julia REPL, or the notebook's Julia & one in
   memory, \file{PollisDB.SQL_CONNECTION}, opened by the first query; until Julia exits\\
 \file{PollisDB.connect(path)} & any Julia & one for each call, in memory or \file{path}; until it is closed\\
 \bottomrule
 \end{tabularx}
 \end{center}
-The \file{pollis>} mode and \file{sql()} share the connection of the REPL, Shared Session in the Databases view, so a
+The Pollis REPL terminal and \file{sql()} share the connection of the REPL, Shared Session in the Databases view, so a
 table one makes, the other sees. The Julia of a notebook has a connection of its own, which the Databases view does not
 show. Two databases in memory never see each other, a table made in the \file{duckdb>} terminal is not there in a
 notebook, with one exception: the Shared Session, which the \file{duckdb>} terminal, DuckDB SQL (Pollis) and Julia
 notebooks attach (\S\ref{sec:shared-session}).
 
-Pollis REPL, in the status bar between Julia REPL and DuckDB REPL and in the terminal's + menu with both, opens
-\file{pollis>} in a terminal of its own, on the Julia of the Julia REPL, which it starts in the background if need be;
-the item is filled while the terminal is open. The terminal edits lines itself, with Node's readline
-(\file{extensions/language-julia/src/interactive/pollisTerminal.ts}), and sends each whole query to Julia, through a
-socket only you can reach, a named pipe on Windows, whose address and token PollisDB writes to
-\file{~/.pollis/duckdb/served/pollis.<window>.json} when the REPL starts (\file{PollisDB.serve_terminal}). Julia runs
-it as the \file{pollis>} mode does, on threads of its own, so that it answers while the REPL runs Julia code, and
-sends back the table drawn to the terminal's width; a lock keeps the Shared Session to one query at a time. Ctrl+C
-stops the terminal's query with DuckDB's interrupt, and its queries go to the History, as \file{pollis>}, with
-\file{"source": "pollis"}. The code Pollis runs in the Julia REPL, such as Open in Table Viewer, comes after keys of
-no other use, ESC [ 6 9 \textasciitilde, which PollisDB binds in every mode: to going to \file{julia>}, and in
-\file{julia>} to nothing; a Julia without PollisDB ignores them, as it does any keys ESC [ 6 and two more. The three items keep to their names: the
-Julia REPL's threads and the database of the \file{duckdb>} terminal are in their tooltips.
+Pollis REPL, in the status bar between Julia REPL and DuckDB REPL, opens \file{pollis>} in a terminal of its own, on
+the Julia of the Julia REPL: SQL typed there runs on the Shared Session, and Julia code in the Julia REPL. How it tells
+them apart, how it reaches Julia, and worked examples are in Drill-down: Pollis REPL.
 
-\subsection{From SQL to Julia: \texorpdfstring{\file{PollisDB.Table}}{PollisDB.Table}}
-In an SQL cell of a Julia notebook, and in the \file{pollis>} mode, a statement that starts with a name and \file{:=}
-hands its result to Julia:
-\begin{lstlisting}
-feeds := SELECT * FROM PollisRSS.feeds;
-\end{lstlisting}
-\file{PollisDB.cell}, or \file{PollisDB.pollis_mode} in the REPL, runs it as
-\texttt{\small CREATE OR REPLACE TABLE "feeds" AS SELECT ...} on its connection, and binds the Julia variable \file{feeds} to a \file{PollisDB.Table}: the name of the table and its
-connection, nothing more. Julia's multiple dispatch lets that one object serve both sides.
-\begin{itemize}
-  \item \textbf{To Julia}, it is a Tables.jl table: \file{feeds.title} is a column, and \file{length(feeds)} its
-    number of rows, counted by DuckDB. Its rows are read at their first use and kept; a query of \file{sql} that
-    changes tables, such as \texttt{\small INSERT} or \texttt{\small DROP}, makes every \file{Table} read its rows again.
-  \item \textbf{To SQL}, it prints as its quoted name, so that an interpolation composes a query:
-\begin{lstlisting}
-sql("SELECT count(*) FROM $feeds")    # SELECT count(*) FROM "feeds"
-\end{lstlisting}
-  \item \textbf{Shown} under a cell, it reads only the rows it shows, the first 20 and the last 20, in the style of
-    DuckDB SQL (Pollis), with the Julia type of each column.
-  \item \textbf{Kept} by \file{name :=} in the \file{pollis>} mode or the Pollis REPL terminal, it is not drawn:
-    \file{PollisDB.Kept} says its name, rows and columns, and under them \texttt{\small Browse feeds: Open in Table
-    Viewer}, whose last words, blue and underlined, are a link of the terminal. The link opens the whole table in the
-    Table Viewer with one click, without the modifier other links of the terminal need, as do all the links of Pollis'
-    own extensions (\file{TerminalLink}, \file{oneClick}):
-    the Julia extension asks Julia for it through the socket of the Pollis REPL terminal, so nothing is typed into the
-    REPL.
-\end{itemize}
-In Julia code, \file{sql("feeds", query)} does what \file{feeds := query} does. A table that was dropped, or lost with
-its connection, says so when it is used, and to run again the cell that made it. DuckDB SQL (Pollis) has no Julia to
-hand a result to: there, \file{feeds :=} is refused, and \texttt{\small CREATE TEMP TABLE feeds AS} proposed in its
-place.
+\subsection{SQL and Julia}
+Two bridges join the Shared Session and Julia, in the Pollis REPL and in Julia notebooks (Drill-down: Pollis REPL).
+\file{feeds := SELECT ...}, in the Pollis REPL or an SQL cell of a Julia notebook, makes the table \file{feeds} and
+binds the Julia variable \file{feeds} to a \file{PollisDB.Table}, which is a Tables.jl table to Julia and its quoted
+name to SQL; \file{sql("feeds", query)} does the same from Julia code. \file{@share name = table}, in Julia code, binds
+\file{name} and copies the table into the Shared Session, through \file{publish}. In a notebook, \file{PollisDB.cell}
+runs the SQL cells, on the notebook's own database. DuckDB SQL (Pollis) has no Julia to hand a result to: there,
+\file{feeds :=} is refused, and \texttt{\small CREATE TEMP TABLE feeds AS} proposed in its place.
 
-\subsection{From Julia to SQL, and the Shared Session in DuckDB}\label{sec:shared-session}
-In Julia code, the macro \file{@share} goes the other way: it copies a Julia table into DuckDB.
-\begin{lstlisting}
-@share stock_returns = (ticker = ["AAPL", "MSFT"], returns = [0.12, 0.08])
-\end{lstlisting}
-\file{@share name = table} becomes \file{name = publish(table, "name")}, and \file{@share name} becomes
-\file{publish(name, "name")}, which copies again the table that \file{name} holds. Both are plain Julia, so they run
-anywhere Julia does: in the REPL, in code run from the editor, in the cells of Julia notebooks, and inside functions and
-loops. \file{publish} and \file{@share}, exported with \file{sql}, register the table with DuckDB, copy it into the
-table \file{name} of the connection of \file{sql}, and return it unchanged: Julia keeps its own table, and a change to
-it reaches DuckDB when it is shared again. A value that is not a table is refused, to be bound with \file{=}. A
-\file{PollisDB.Table} is copied within DuckDB.
-
-The tables of both directions are ordinary tables of the connection's database in memory, not temporary ones, so that
+\subsection{The Shared Session in DuckDB}\label{sec:shared-session}
+The tables of both bridges are ordinary tables of the Shared Session's database in memory, not temporary ones, so that
 whatever reads its tables sees them. When the Julia REPL opens its connection, PollisDB serves its database with
 DuckDB's quack extension, on localhost, on the first free port from 9494, with a token made then, and writes both to
 \file{~/.pollis/duckdb/served/julia.<window>.json}, which only you can read and which goes when Julia exits. Before
@@ -591,13 +547,12 @@ as \file{quack_active_connections()} lists them in Julia (\file{PollisDB.attache
 Pollis REPL terminal); quack does not say which client is which.
 
 \subsection{The record of queries: History}\label{sec:history}
-The \file{duckdb>} terminal, for each query, and both kinds of notebook, for each SQL cell, append a line to
+The \file{duckdb>} and Pollis REPL terminals, for each query, and both kinds of notebook, for each SQL cell, append a line to
 \file{~/.pollis/duckdb/query_log.jsonl}: the SQL, without the \file{name :=} of a Julia notebook's cell; the time;
-how long it took; the rows of its last result; the error, if it failed; the database or the notebook's file; and, for
-a notebook, \file{"source": "notebook"}. Once the log has grown past 2,000 lines, it keeps the last 1,000. The
-\file{pollis>} mode needs no log of its own: the Julia REPL keeps its history in \file{~/.julia/logs/repl_history.jl},
-where its entries are marked \texttt{\small\# mode: sql}, and History lists them without their \file{name :=}. History reads both files, watching their folders, and lists the
-newest 500 queries; a click offers Run Again, in the \file{duckdb>} terminal, Copy SQL and Open in Editor.
+how long it took; the rows of its last result; the error, if it failed; the database or the notebook's file; and
+\file{"source": "notebook"} for a notebook, \file{"source": "pollis"} for the Pollis REPL terminal. Once the log has
+grown past 2,000 lines, it keeps the last 1,000. History reads the log, watching its folder, and lists the newest 500
+queries; a click offers Run Again, in the \file{duckdb>} terminal, Copy SQL and Open in Editor.
 
 \section{Your data beside Pollis's}\label{sec:yours}
 
@@ -616,7 +571,7 @@ tables go in a database of your own, which can sit beside them.
     or JSON file and saves a query's result as a table, always into your database. From Julia, any \texttt{\small CREATE TABLE}
     on your connection.
   \item \textbf{Use it with Pollis's.} \file{PollisDB.connect("sales.duckdb")} opens your file \emph{and attaches the seven
-    databases of Pollis, read-only, under their names}. The \file{duckdb>} terminal, the \file{pollis>} mode and the SQL
+    databases of Pollis, read-only, under their names}. The \file{duckdb>} terminal, the Pollis REPL terminal and the SQL
     cells of notebooks do the same.
     One query can then join your table to Pollis's:
 \begin{lstlisting}
@@ -801,10 +756,9 @@ The install road sees only what is pushed to \file{main}.
 \toprule
 \textbf{File} & \textbf{Role}\\
 \midrule
-\file{.../terminalserver/PollisDB.jl} & \file{DATA_PACKAGES}, \file{PACKAGE_COPIES}, \file{install}, the five builds, \file{connect}, \file{sql}, \file{Table}, \file{cell}, \file{publish}, \file{share}, \file{serve}, the \file{pollis>} mode\\
+\file{.../terminalserver/PollisDB.jl} & \file{DATA_PACKAGES}, \file{PACKAGE_COPIES}, \file{install}, the five builds, \file{connect}, \file{sql}, \file{Table}, \file{cell}, \file{publish}, \file{serve}, \file{attached}; the Pollis REPL's functions are in Drill-down: Pollis REPL\\
 \file{.../terminalserver/install_pollisdb.jl} & The install script\\
 \file{extensions/language-julia/src/pollisDuckDB.ts} & Runs the install; copies the shipped references to \file{pollis.json}\\
-\file{.../src/interactive/pollisTerminal.ts}, \file{.../src/pollisReplConnection.ts} & The Pollis REPL terminal, its status bar item, and its connection to the Julia REPL\\
 \file{build/PollisReferences.commit}, \file{build/PollisRSS.commit} & The pinned commits\\
 \file{build/lib/pollis-packages.ts} & \file{pinnedPackageFile}: clone, cache or download\\
 \file{build/lib/pollis-bib.ts} & References: \file{pollis.bib}, \file{references.json}, citation copies\\

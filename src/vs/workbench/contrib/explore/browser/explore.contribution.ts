@@ -983,7 +983,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 	group: '1_explore',
 	submenu: CONNSubmenuId,
 	title: localize('showExplore.files', 'Access Files'),
-	order: 3,
+	order: 4,
 });
 
 // Explore > Access Databases, below Access Files, in a place of its own, as Pollis keeps its own databases (the
@@ -995,7 +995,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 	group: '1_explore',
 	submenu: ADBSubmenuId,
 	title: localize('showExplore.databases', "Access Databases"),
-	order: 4,
+	order: 3,
 });
 
 MenuRegistry.appendMenuItem(ADBSubmenuId, {

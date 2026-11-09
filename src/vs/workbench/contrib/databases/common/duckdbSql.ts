@@ -70,11 +70,8 @@ export function sqlStatementAt(sql: string, offset: number): string | undefined 
 	return index < 0 ? undefined : `${sql.slice(pieces[index].start, pieces[index].end).trim()};`;
 }
 
-/**
- * `name :=` at the start of a statement, after blanks and comments, which the pollis> mode of the Julia REPL and SQL
- * cells of Julia notebooks run; `lead` is what comes before it.
- */
-const ASSIGNMENT = /^(?<lead>(?:\s|--[^\n]*(?:\n|$)|\/\*[\s\S]*?\*\/)*)(?<name>[A-Za-z_][A-Za-z0-9_]*)\s*:=\s*/;
+/** `name :=` at the start of a statement, after blanks and comments, which SQL cells of Julia notebooks run. */
+const ASSIGNMENT = /^(?:\s|--[^\n]*(?:\n|$)|\/\*[\s\S]*?\*\/)*(?<name>[A-Za-z_][A-Za-z0-9_]*)\s*:=\s*/;
 
 /** The name of the first statement of `sql` that starts with `name :=`, or undefined when none does. */
 export function sqlAssignedName(sql: string): string | undefined {
@@ -85,17 +82,6 @@ export function sqlAssignedName(sql: string): string | undefined {
 		}
 	}
 	return undefined;
-}
-
-/** `sql` without the `name :=` that starts any of its statements: the SQL that ran, as the History view lists it. */
-export function withoutAssignments(sql: string): string {
-	let result = '';
-	let from = 0;
-	for (const piece of sqlPieces(sql)) {
-		result += sql.slice(from, piece.start) + sql.slice(piece.start, piece.end).replace(ASSIGNMENT, '$<lead>');
-		from = piece.end;
-	}
-	return result + sql.slice(from);
 }
 
 /** The text sent to the duckdb> shell for `sql`: trimmed, and ended with a semicolon, so that it runs. */
@@ -114,12 +100,9 @@ export interface IQueryHistoryEntry {
 	readonly sql: string;
 	/** When it ran, in milliseconds since 1970. */
 	readonly time: number;
-	/**
-	 * The duckdb> terminal, a notebook run by DuckDB SQL (Pollis) or Julia, the Pollis REPL terminal, or the pollis> mode
-	 * of the Julia REPL, `sql` in its history.
-	 */
-	readonly source: 'duckdb' | 'notebook' | 'pollis' | 'sql';
-	/** The duckdb> and Pollis REPL terminals and the notebooks record how long the query took, its rows, its error and its database. */
+	/** The duckdb> terminal, a notebook run by DuckDB SQL (Pollis) or Julia, or the Pollis REPL terminal. */
+	readonly source: 'duckdb' | 'notebook' | 'pollis';
+	/** How long the query took. */
 	readonly durationMs?: number;
 	/** The rows of its last result, or those its last statement changed. */
 	readonly rows?: number;
@@ -161,38 +144,5 @@ export function parseDuckDBQueryLog(text: string): IQueryHistoryEntry[] {
 			// A line cut short by a shell that stopped while writing it
 		}
 	}
-	return entries;
-}
-
-/**
- * The queries of the pollis> mode in the history of the Julia REPL, where the mode is named `sql`, without the
- * `name :=` of their statements: each entry is a `# time:` line, a `# mode:` line,
- * then its text, every line of it after a tab.
- */
-export function parseJuliaSqlHistory(text: string): IQueryHistoryEntry[] {
-	const entries: IQueryHistoryEntry[] = [];
-	let time: number | undefined;
-	let mode: string | undefined;
-	let lines: string[] = [];
-	const flush = () => {
-		if (mode === 'sql' && time !== undefined && lines.length) {
-			entries.push({ sql: withoutAssignments(lines.join('\n')), time, source: 'sql' });
-		}
-		lines = [];
-	};
-	for (const line of text.split('\n')) {
-		if (line.startsWith('# time: ')) {
-			flush();
-			// `2026-11-08 02:49:34Z`, or with a zone name such as WET, which is left out
-			const stamp = /^(?<date>\d{4}-\d{2}-\d{2}) (?<clock>\d{2}:\d{2}:\d{2})(?<utc>Z)?/.exec(line.slice('# time: '.length).trim());
-			time = stamp?.groups ? Date.parse(`${stamp.groups.date}T${stamp.groups.clock}${stamp.groups.utc ?? ''}`) : undefined;
-			mode = undefined;
-		} else if (line.startsWith('# mode: ')) {
-			mode = line.slice('# mode: '.length).trim();
-		} else if (line.startsWith('\t')) {
-			lines.push(line.slice(1));
-		}
-	}
-	flush();
 	return entries;
 }
