@@ -54972,6 +54972,17 @@
 			]
 		},
 		{
+			"id": "speedUp",
+			"title": "Speed Up a Function",
+			"commands": [
+				"pollis.profiling.speedUp"
+			],
+			"keys": [
+				"CR2016a",
+				"KJ2013a"
+			]
+		},
+		{
 			"id": "spro",
 			"title": "Stochastic Programming",
 			"description": "Two-Stage · Multistage · SDDP",

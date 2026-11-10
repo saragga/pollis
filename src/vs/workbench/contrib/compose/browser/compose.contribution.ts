@@ -24,6 +24,7 @@ import './askPollisSources.js';
 import { BROWSE_SKILLS_COMMAND_ID, CHOOSE_AGENT_COMMAND_ID, CREATE_PANEL_COMMAND_ID, CREATE_PANELS_FROM_REQUEST_COMMAND_ID, PACKAGE_TOOLBOX_COMMAND_ID } from './pollisAgents.js';
 import { BROWSE_METHODS_COMMAND_ID, CREATE_METHOD_COMMAND_ID } from './newMethods.js';
 import { REPLICATE_ARTICLE_COMMAND_ID } from './replicateArticle.js';
+import { SPEED_UP_COMMAND_ID } from './speedUpPage.js';
 import './codingAgentPage.js';
 import './modelRoutingPage.js';
 import './pollisContent.js';
@@ -549,6 +550,12 @@ MenuRegistry.appendMenuItem(ComparisonsMenu, {
 	order: 2,
 });
 
+MenuRegistry.appendMenuItem(ComparisonsMenu, {
+	group: '1_own',
+	command: { id: SPEED_UP_COMMAND_ID, title: localize('profiling.speedUp', "Speed Up a Function...") },
+	order: 3,
+});
+
 // Not built yet: each item says so.
 // Orchestration: coding agents working together. Writer and Checker: one writes, another checks; Two
 // Independent Transcriptions: two agents type the same table from an article and the differences are shown;
@@ -563,7 +570,6 @@ const composeItems = [
 	{ menu: CorrectnessMenu, id: 'chiara.statistics.comp_co', title: localize('comp.co', "Check Results Across Languages..."), group: '1_check', order: 1 },
 	{ menu: CorrectnessMenu, id: 'chiara.statistics.comp_fx', title: localize('comp.fx', "Settle a Disagreement..."), group: '1_check', order: 2 },
 	{ menu: ComparisonsMenu, id: 'chiara.statistics.comp_pr', title: localize('comp.pr', "Run a Speed Race..."), group: '2_race', order: 1 },
-	{ menu: ComparisonsMenu, id: 'chiara.statistics.comp_im', title: localize('comp.im', "Speed Up a Function..."), group: '1_own', order: 3 },
 	{ menu: CompileGaloreMenu, id: 'chiara.statistics.comp_tr', title: localize('comp.tr', "Translate Julia to Rust..."), group: '1_compiled', order: 1 },
 	{ menu: ComparisonsMenu, id: 'chiara.statistics.comp_al', title: localize('comp.al', "Add a Language..."), group: '2_race', order: 2 },
 	{ menu: CompileGaloreMenu, id: 'chiara.statistics.comp_sl', title: localize('comp.sl', "Compile Julia to a Shared Library..."), group: '1_compiled', order: 2 },

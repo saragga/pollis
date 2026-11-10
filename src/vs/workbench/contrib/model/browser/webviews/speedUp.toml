@@ -1,0 +1,50 @@
+# Speed Up a Function Webview Configuration
+# A page of Compose > Profiling in the Time Arrow style of the scaffold, not a panel: only its Powered by and Learn
+# More. `pageCommand` is the command that opens it, which a panel's contribution file would say. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/speedUp.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Speed Up a Function"
+viewType = "pollis.speedUp"
+pageCommand = "pollis.profiling.speedUp"
+
+[[packages]]
+name = "BenchmarkTools.jl"
+github = "https://github.com/JuliaCI/BenchmarkTools.jl"
+
+[[packages]]
+name = "JET.jl"
+github = "https://github.com/aviatesk/JET.jl"
+
+[[wikis]]
+name = "Overview"
+file = "speedUp/overview.md"
+bundled = true
+description = "The four steps of speeding up a function, and why the result is checked before the times"
+
+[[wikis]]
+name = "Factsheet"
+file = "speedUp/factsheet.md"
+bundled = true
+description = "Steps, inputs, diagnoses, macros and the files of Speed Up with Agent at a glance"
+
+[[wikis]]
+name = "Common Ways to Speed Up Julia Code"
+file = "speedUp/common-fixes.md"
+bundled = true
+description = "Type-stable values, globals, work moved out of loops, preallocation, views, memory order, @inbounds and @simd"
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+key = "CR2016a"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "KJ2013a"
