@@ -6666,6 +6666,34 @@
 			]
 		},
 		{
+			"id": "propertyCheck",
+			"title": "Check a Property",
+			"source": "pollis",
+			"commands": [
+				{
+					"id": "pollis.correctness.propertyCheck",
+					"menuTitles": [
+						"Check a Property..."
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "invariant",
+			"decisionFirstColumn": "Kind of Property",
+			"toml": "src/vs/workbench/contrib/model/browser/webviews/propertyCheck.toml",
+			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
+			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"wikis": [
+				"propertyCheck/choosing-properties.md",
+				"propertyCheck/factsheet.md",
+				"propertyCheck/overview.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"Supposition.jl"
+			]
+		},
+		{
 			"id": "prox",
 			"title": "Nonsmooth and Proximal Optimisation",
 			"source": "pollis",

@@ -58,6 +58,7 @@ import { PKGVERSIONS_PANEL } from '../../model/browser/commands/pkgVersions.comm
 import { TIMESECTIONS_PANEL } from '../../model/browser/commands/timeSections.command.js';
 import { ADDLANGUAGE_PANEL } from '../../model/browser/commands/addLanguage.command.js';
 import { PROFILETIME_PANEL } from '../../model/browser/commands/profileTime.command.js';
+import { PROPERTYCHECK_PANEL } from '../../model/browser/commands/propertyCheck.command.js';
 
 // The Core Mathematics, Finance and Economics Toolboxes come from their extensions (toolboxes/pollis-toolbox-*, not built in:
 // installed from the Toolboxes section of the Extensions pane), see toolboxExtensions.ts
@@ -521,10 +522,20 @@ MenuRegistry.appendMenuItem(WorkflowsMenu, {
 
 
 // ==============================================================
-// Correctness Tests, Horse Races, Compile Galore
+// SUBMENU: Correctness Tests, in two groups: against known values (Published Benchmarks) and against properties (Check a Property)
+// ==============================================================
+
+CommandsRegistry.registerCommand('pollis.correctness.propertyCheck', (accessor: ServicesAccessor) => openScaffoldWebview(accessor, PROPERTYCHECK_PANEL));
+
 MenuRegistry.appendMenuItem(CorrectnessMenu, {
-	group: '0_benchmarks',
+	group: '1_known',
 	command: { id: PUBLISHED_BENCHMARKS_COMMAND_ID, title: localize('correctness.publishedBenchmarks', "Published Benchmarks") },
+	order: 1,
+});
+
+MenuRegistry.appendMenuItem(CorrectnessMenu, {
+	group: '2_properties',
+	command: { id: 'pollis.correctness.propertyCheck', title: localize('correctness.propertyCheck', "Check a Property...") },
 	order: 1,
 });
 
@@ -616,14 +627,10 @@ MenuRegistry.appendMenuItem(ComparisonsMenu, {
 // Orchestration: coding agents working together. Writer and Checker: one writes, another checks; Two
 // Independent Transcriptions: two agents type the same table from an article and the differences are shown;
 // Race: several agents do the same task and the results are compared.
-// Roadmap phase 6:
-// Correctness Tests: Julia, R and Python check one another.
 const composeItems = [
 	{ menu: OrchestrationMenu, id: 'pollis.orchestration.writerChecker', title: localize('orchestration.writerChecker', "Writer and Checker..."), group: '1_patterns', order: 1 },
 	{ menu: OrchestrationMenu, id: 'pollis.orchestration.twoTranscriptions', title: localize('orchestration.twoTranscriptions', "Two Independent Transcriptions..."), group: '1_patterns', order: 2 },
 	{ menu: OrchestrationMenu, id: 'pollis.orchestration.race', title: localize('orchestration.race', "Race..."), group: '1_patterns', order: 3 },
-	{ menu: CorrectnessMenu, id: 'chiara.statistics.comp_co', title: localize('comp.co', "Check Results Across Languages..."), group: '1_check', order: 1 },
-	{ menu: CorrectnessMenu, id: 'chiara.statistics.comp_fx', title: localize('comp.fx', "Settle a Disagreement..."), group: '1_check', order: 2 },
 	{ menu: CompileGaloreMenu, id: 'chiara.statistics.comp_tr', title: localize('comp.tr', "Translate Julia to Rust..."), group: '1_compiled', order: 1 },
 	{ menu: CompileGaloreMenu, id: 'chiara.statistics.comp_sl', title: localize('comp.sl', "Compile Julia to a Shared Library..."), group: '1_compiled', order: 2 },
 	{ menu: CompileGaloreMenu, id: 'chiara.statistics.comp_ex', title: localize('comp.ex', "Compile Julia to an Executable..."), group: '1_compiled', order: 3 },

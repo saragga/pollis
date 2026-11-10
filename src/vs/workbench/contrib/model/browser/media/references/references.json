@@ -5982,6 +5982,27 @@
 			"open_access": true
 		},
 		{
+			"key": "CH2000a",
+			"type": "inproceedings",
+			"title": "QuickCheck: a lightweight tool for random testing of Haskell programs",
+			"authors": [
+				"Claessen, Koen",
+				"Hughes, John"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2000,
+			"booktitle": "Proceedings of the Fifth ACM SIGPLAN International Conference on Functional Programming",
+			"publisher": "ACM",
+			"pages": "268-279",
+			"doi": "10.1145/351240.351266",
+			"openalex": "W4244488020",
+			"source": "crossref",
+			"retrieved": "2026-11-10",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "CHALL1989a",
 			"type": "article",
 			"title": "Epidemiological models with age structure, proportionate mixing, and cross-immunity",
@@ -22268,6 +22289,27 @@
 			"open_access": false
 		},
 		{
+			"key": "LS2017a",
+			"type": "inproceedings",
+			"title": "Targeted property-based testing",
+			"authors": [
+				"Löscher, Andreas",
+				"Sagonas, Konstantinos"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2017,
+			"booktitle": "Proceedings of the 26th ACM SIGSOFT International Symposium on Software Testing and Analysis",
+			"publisher": "ACM",
+			"pages": "46-56",
+			"doi": "10.1145/3092703.3092711",
+			"openalex": "W2734788368",
+			"source": "crossref",
+			"retrieved": "2026-11-10",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "LS2020a",
 			"type": "book",
 			"title": "Bandit Algorithms",
@@ -23751,6 +23793,30 @@
 			"abstract_source": "author",
 			"source": "crossref",
 			"retrieved": "2026-11-03",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "MH...2019a",
+			"type": "article",
+			"title": "Hypothesis: A new approach to property-based testing",
+			"authors": [
+				"MacIver, David R.",
+				"Hatfield-Dodds, Zac"
+			],
+			"author_kind": "persons",
+			"authors_complete": false,
+			"year": 2019,
+			"journal": "Journal of Open Source Software",
+			"volume": "4",
+			"number": "43",
+			"pages": "1891",
+			"issn": "2475-9066",
+			"doi": "10.21105/joss.01891",
+			"openalex": "W2990912491",
+			"oa_url": "https://joss.theoj.org/papers/10.21105/joss.01891.pdf",
+			"source": "crossref",
+			"retrieved": "2026-11-10",
 			"checked": true,
 			"open_access": true
 		},
@@ -40910,6 +40976,18 @@
 			"date": "2026-10-31"
 		},
 		{
+			"key": "CH2000a",
+			"count": 748,
+			"source": "crossref",
+			"date": "2026-11-10"
+		},
+		{
+			"key": "CH2000a",
+			"count": 870,
+			"source": "openalex",
+			"date": "2026-11-10"
+		},
+		{
 			"key": "CHALL1989a",
 			"count": 250,
 			"source": "crossref",
@@ -46340,6 +46418,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "LS2017a",
+			"count": 29,
+			"source": "crossref",
+			"date": "2026-11-10"
+		},
+		{
+			"key": "LS2017a",
+			"count": 41,
+			"source": "openalex",
+			"date": "2026-11-10"
+		},
+		{
 			"key": "LS2020a",
 			"count": 1054,
 			"source": "crossref",
@@ -46812,6 +46902,18 @@
 			"count": 99,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "MH...2019a",
+			"count": 101,
+			"source": "crossref",
+			"date": "2026-11-10"
+		},
+		{
+			"key": "MH...2019a",
+			"count": 146,
+			"source": "openalex",
+			"date": "2026-11-10"
 		},
 		{
 			"key": "MH1997a",
@@ -54467,6 +54569,16 @@
 			"keys": [
 				"GKM1982a",
 				"Gre2016a"
+			]
+		},
+		{
+			"id": "propertyCheck",
+			"title": "Check a Property",
+			"description": "Invariant · Round Trip · Simple Version · Worst Case",
+			"keys": [
+				"CH2000a",
+				"MH...2019a",
+				"LS2017a"
 			]
 		},
 		{

@@ -1,0 +1,356 @@
+# Check a Property Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/propertyCheck.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Check a Property"
+viewType = "pollis.propertyCheck"
+defaultModel = "invariant"
+decisionFirstColumn = "Kind of Property"
+
+[[packages]]
+name = "Supposition.jl"
+github = "https://github.com/Seelengrab/Supposition.jl"
+
+[requires]
+packages = ["Statistics.jl", "Distributions.jl", "Plots.jl"]
+
+[[wikis]]
+name = "Overview"
+file = "propertyCheck/overview.md"
+bundled = true
+description = "What a property is, how Supposition generates inputs and shrinks the one that fails, and how a property differs from a published benchmark"
+
+[[wikis]]
+name = "Factsheet"
+file = "propertyCheck/factsheet.md"
+bundled = true
+description = "Tabs, inputs, generators, functions, options of @check and actions at a glance"
+
+[[wikis]]
+name = "Choosing Properties to Check"
+file = "propertyCheck/choosing-properties.md"
+bundled = true
+description = "Properties a statistical function can have, tolerances for floating-point results, limits on the inputs, targeted search, and what a passing property cannot say"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "CH2000a"
+
+[[references]]
+key = "MH...2019a"
+
+[[references]]
+key = "LS2017a"
+
+[[models]]
+id = "invariant"
+label = "Invariant"
+
+[[models]]
+id = "roundtrip"
+label = "Round Trip"
+
+[[models]]
+id = "oracle"
+label = "Simple Version"
+
+[[models]]
+id = "worst"
+label = "Worst Case"
+
+[[bullets]]
+text = "Supposition tries a property, a rule that must hold for every input, on inputs it generates; when an input breaks the rule, it shrinks it to the smallest input that still breaks it"
+detail = ""
+
+[[bullets]]
+text = "Invariant: a rule true of every input, here that a variance is not negative and a median lies between the smallest and the largest value"
+detail = ""
+
+[[bullets]]
+text = "Round Trip: a function followed by its inverse gives back the input, here the quantile function of the normal distribution after its distribution function"
+detail = ""
+
+[[bullets]]
+text = "Simple Version: a function written for speed checked against a simple version taken as right, here a variance computed in one pass against var"
+detail = ""
+
+[[bullets]]
+text = "Worst Case: target! steers the inputs toward a larger error, here the relative error of the one-pass variance"
+detail = ""
+
+[[decisionRows]]
+task = "Invariant"
+context = "A rule always true"
+purpose = "When something must hold of every result, whatever the input: a sign, a bound or an order"
+
+[[decisionRows]]
+task = "Round Trip"
+context = "An inverse exists"
+purpose = "When a function has an inverse, or an encoding a decoding, and the two together must give back the input"
+
+[[decisionRows]]
+task = "Simple Version"
+context = "A trusted reference"
+purpose = "When a fast or clever function can be checked against a simple version whose results are trusted"
+
+[[decisionRows]]
+task = "Worst Case"
+context = "Size of an error"
+purpose = "When a function is approximate and the question is how large its error can be, found by a search that the error steers"
+
+[[inputs]]
+id = "examples"
+label = "Examples"
+tooltip = "The most inputs @check tries before it stops, its max_examples. It stops earlier when an input breaks the property."
+default = "10000"
+
+[[inputs]]
+id = "seed"
+label = "Seed"
+tooltip = "The seed of the random number generator that draws the inputs: the same seed draws the same inputs again."
+default = "1"
+
+[[inputs]]
+id = "size"
+label = "Longest Vector"
+tooltip = "The largest number of values in a generated vector; the smallest is 2, as the variance of one value is not defined."
+default = "50"
+models = ["invariant", "oracle", "worst"]
+
+[[inputs]]
+id = "atol"
+label = "Absolute Tolerance"
+tooltip = "How far the value given back by the round trip may be from the input, in absolute terms."
+default = "1e-8"
+models = ["roundtrip"]
+
+[[inputs]]
+id = "tol"
+label = "Relative Tolerance"
+tooltip = "How far the one-pass variance may be from var, as a share of var."
+default = "1e-8"
+models = ["oracle", "worst"]
+
+[[codeBranches]]
+model = "invariant"
+code = '''
+using Supposition, Statistics, Random
+
+# The inputs: vectors of 2 to {{size}} numbers between -1 000 000 and 1 000 000, never NaN or infinite
+gen = Data.Vectors(Data.Floats{Float64}(; infs = false, nans = false, minimum = -1.0e6, maximum = 1.0e6); min_size = 2, max_size = {{size}})
+
+# The property: for every vector, the variance is not negative and the median lies between the smallest and the largest value
+sr = @check rng=Xoshiro({{seed}}) max_examples={{examples}} function spread_and_centre(x = gen)
+    var(x) >= 0 && minimum(x) <= median(x) <= maximum(x)
+end
+# On a failure, @check prints the smallest vector it found that breaks the property
+'''
+
+[[codeBranches]]
+model = "roundtrip"
+code = '''
+using Supposition, Distributions, Random
+
+# The inputs: numbers between -5 and 5, never NaN or infinite
+gen = Data.Floats{Float64}(; infs = false, nans = false, minimum = -5.0, maximum = 5.0)
+
+# The property: the quantile function undoes the distribution function, so cdf and then quantile give back x, within an absolute tolerance
+sr = @check rng=Xoshiro({{seed}}) max_examples={{examples}} function cdf_then_quantile(x = gen)
+    back = quantile(Normal(), cdf(Normal(), x))
+    isapprox(back, x; atol = {{atol}})
+end
+# On a failure, @check prints the smallest number it found that breaks the property
+'''
+
+[[codeBranches]]
+model = "oracle"
+code = '''
+using Supposition, Statistics, Random
+
+# The function checked: the variance in one pass over the data, from the sum and the sum of squares
+function one_pass_var(x)
+    n = length(x)
+    total = sum(x)
+    (sum(abs2, x) - total^2 / n) / (n - 1)
+end
+
+# The inputs: vectors of 2 to {{size}} numbers between -1 000 000 and 1 000 000, never NaN or infinite
+gen = Data.Vectors(Data.Floats{Float64}(; infs = false, nans = false, minimum = -1.0e6, maximum = 1.0e6); min_size = 2, max_size = {{size}})
+
+# The property: the one-pass variance agrees with var of Statistics, the simple version taken as right
+sr = @check rng=Xoshiro({{seed}}) max_examples={{examples}} function agrees_with_var(x = gen)
+    isapprox(one_pass_var(x), var(x); rtol = {{tol}})
+end
+# On a failure, @check prints the smallest vector it found on which the two disagree
+'''
+
+[[codeBranches]]
+model = "worst"
+code = '''
+using Supposition, Statistics, Random
+
+# The function checked: the variance in one pass over the data, from the sum and the sum of squares
+function one_pass_var(x)
+    n = length(x)
+    total = sum(x)
+    (sum(abs2, x) - total^2 / n) / (n - 1)
+end
+
+# The inputs: vectors of 2 to {{size}} numbers between -1 000 000 and 1 000 000, never NaN or infinite
+gen = Data.Vectors(Data.Floats{Float64}(; infs = false, nans = false, minimum = -1.0e6, maximum = 1.0e6); min_size = 2, max_size = {{size}})
+
+# The property: the relative error of the one-pass variance stays within the tolerance; target! steers the next inputs toward a larger error
+sr = @check rng=Xoshiro({{seed}}) max_examples={{examples}} function largest_error(x = gen)
+    exact = var(x)
+    assume!(exact > 0)  # a vector of equal values has no relative error: it is left out, not counted against the property
+    err = abs(one_pass_var(x) - exact) / exact
+    target!(err)
+    err <= {{tol}}
+end
+# On a failure, @check prints the smallest vector it found whose error is above the tolerance
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "inputs"
+label = "Inputs Drawn by the Generator"
+desc = "A histogram of the values of 1 000 inputs drawn by the generator of the tab, to see which numbers the property is tried on"
+code = '''
+using Supposition, Plots
+
+draws = [example(gen) for _ in 1:1000]  # 1 000 inputs drawn by the generator, outside @check
+values = reduce(vcat, draws)
+histogram(values, bins = 60, legend = false, xlabel = "value", ylabel = "count", title = "Values of 1 000 inputs drawn by the generator")
+'''
+
+[[actionGroups.actions]]
+id = "lengths"
+label = "Lengths of the Vectors"
+desc = "A histogram of the lengths of 1 000 vectors drawn by the generator, from 2 to the Longest Vector"
+models = ["invariant", "oracle", "worst"]
+code = '''
+using Supposition, Plots
+
+lengths = [length(example(gen)) for _ in 1:1000]
+histogram(lengths, bins = 1.5:1:({{size}} + 0.5), legend = false, xlabel = "length", ylabel = "count", title = "Lengths of 1 000 vectors drawn by the generator")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "one-value"
+label = "A Vector of One Value"
+desc = "The variance and the median of a single value: why the generator starts at two values"
+models = ["invariant"]
+code = '''
+using Statistics
+
+x = [2.5]
+println("var([2.5])    = ", var(x))  # the sum of squares is divided by n - 1, which is 0
+println("median([2.5]) = ", median(x))
+println("var([2.5]) >= 0 is ", var(x) >= 0)
+'''
+
+[[actionGroups.actions]]
+id = "near-zero"
+label = "Inputs Near Zero"
+desc = "The round trip on numbers ever closer to zero, with the value given back and its relative error: why the property has an absolute tolerance"
+models = ["roundtrip"]
+code = '''
+using Distributions
+
+for x in [1e-2, 1e-4, 1e-8, 1e-12, 1e-16, 1e-20]
+    back = quantile(Normal(), cdf(Normal(), x))
+    println(rpad(x, 8), " gives back ", rpad(back, 24), " relative error ", abs(back - x) / x)
+end
+'''
+
+[[actionGroups.actions]]
+id = "events"
+label = "Both Values on a Failure"
+desc = "The same property with event!, which prints the one-pass variance and var beside the input that breaks it"
+models = ["oracle", "worst"]
+code = '''
+using Supposition, Statistics, Random
+
+@check rng=Xoshiro({{seed}}) max_examples={{examples}} function agrees_with_var_events(x = gen)
+    fast, simple = one_pass_var(x), var(x)
+    event!("one_pass_var", fast)  # recorded for each case and printed with the counterexample
+    event!("var", simple)
+    isapprox(fast, simple; rtol = {{tol}})
+end
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "welford"
+label = "Welford's Algorithm"
+desc = "The same property for Welford's one-pass algorithm, which updates a running mean, and the three variances of three values close together and far from zero"
+models = ["oracle", "worst"]
+code = '''
+using Supposition, Statistics, Random
+
+# Welford's one-pass variance: a running mean and a running sum of squared deviations from it
+function welford_var(x)
+    running_mean, squares = 0.0, 0.0
+    for (k, value) in enumerate(x)
+        delta = value - running_mean
+        running_mean += delta / k
+        squares += delta * (value - running_mean)
+    end
+    squares / (length(x) - 1)
+end
+
+@check rng=Xoshiro({{seed}}) max_examples={{examples}} function welford_agrees_with_var(x = gen)
+    isapprox(welford_var(x), var(x); rtol = {{tol}})
+end
+
+x = 1.0e6 .+ [0.1, 0.2, 0.3]  # three values close together and far from zero, whose variance is about 0.01
+println("one_pass_var: ", one_pass_var(x))
+println("welford_var:  ", welford_var(x))
+println("var:          ", var(x))
+'''
+
+[[actionGroups.actions]]
+id = "target"
+label = "With and Without target!"
+desc = "The same search without target!, and the number of cases each search ran before it stopped, at a counterexample or at the Examples"
+models = ["worst"]
+code = '''
+using Supposition, Statistics, Random
+
+untargeted = @check rng=Xoshiro({{seed}}) max_examples={{examples}} function largest_error_untargeted(x = gen)
+    exact = var(x)
+    assume!(exact > 0)
+    abs(one_pass_var(x) - exact) / exact <= {{tol}}
+end
+println("With target!:    ", Supposition.num_testcases(sr), " cases")
+println("Without target!: ", Supposition.num_testcases(untargeted), " cases")
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "cases"
+label = "Cases Tried"
+desc = "The number of cases the @check of the tab ran, against the Examples it was allowed: a property that passes has held on that many inputs, not on every input"
+code = '''
+using Supposition
+
+println(Supposition.num_testcases(sr), " cases run by @check, of at most {{examples}}")
+'''
