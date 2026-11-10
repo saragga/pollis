@@ -21,7 +21,7 @@
 - Learning a method by following an article you already know.
 
 ## What Replications Does Not Do
-A replication covers one article's analysis and does not weigh whether its conclusions hold. The list does not include private or restricted data, as each replication runs on public data. Writing a new method with its tests belongs to Browse Methods.
+A replication covers one article's analysis and does not weigh whether its conclusions hold. The list does not include private or restricted data, as each replication runs on public data. Writing a new method with its tests belongs to Article Methods.
 
 ## See Also
 - [Overview](overview.md) · [Copies and Updates](copies-and-updates.md)

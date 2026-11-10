@@ -1,4 +1,4 @@
-% Shared look for the Pollis New Methods documents (same fonts and colours as the brochure and the workflow handouts).
+% Shared look for the Pollis Article Methods documents (same fonts and colours as the brochure and the workflow handouts).
 \documentclass[10pt,a4paper]{article}
 
 \usepackage[a4paper,left=18mm,right=18mm,top=15mm,bottom=17mm,footskip=8mm]{geometry}
@@ -41,7 +41,7 @@
 \pagestyle{fancy}
 \fancyhf{}
 \renewcommand{\headrulewidth}{0pt}
-\fancyfoot[L]{\footnotesize\color{soft}\textbf{Pollis}\enspace New Methods\enspace·\enspace\nmtheme}
+\fancyfoot[L]{\footnotesize\color{soft}\textbf{Pollis}\enspace Article Methods\enspace·\enspace\nmtheme}
 \fancyfoot[R]{\footnotesize\color{soft}\thepage}
 \newcommand{\nmtheme}{}
 \newcommand{\nmdate}{11 October 2026}
@@ -61,7 +61,7 @@
   \thispagestyle{fancy}%
   \begin{minipage}[c]{13mm}\pollislogo{11mm}\end{minipage}%
   \begin{minipage}[c]{\dimexpr\linewidth-13mm\relax}
-    {\color{navy}\Large\bfseries Pollis}\enspace{\color{soft}New Methods}\hfill
+    {\color{navy}\Large\bfseries Pollis}\enspace{\color{soft}Article Methods}\hfill
     {\color{deepamber}\small\bfseries\MakeUppercase{#1}}
   \end{minipage}\par\vspace{7mm}
   {\color{navy}\fontsize{22}{26}\selectfont\bfseries #2}\par\vspace{4pt}
@@ -76,8 +76,8 @@
 \newcommand{\nmcite}[2]{\hyperlink{ref:#1}{\color{pblue}#2}}
 \newcommand{\nmref}[2]{\raisebox{1.1em}[0pt][0pt]{\hypertarget{ref:#1}{}}#2\par}
 \newcommand{\nmdoi}[1]{\href{https://doi.org/#1}{\color{pblue}doi:#1}}
-% Where a notebook is in Pollis: its title in Browse Methods, and its file
-\newcommand{\browse}[2]{\menupath{Compose \gt New Methods \gt Browse Methods}: \emph{#1} (\fn{#2.ipynb})}
+% Where a notebook is in Pollis: its title in Browse Article Methods, and its file
+\newcommand{\browse}[2]{\menupath{Compose \gt Replication \gt Browse Article Methods}: \emph{#1} (\fn{#2.ipynb})}
 
 % Key facts at the top: source, missing in Julia, notebook, result
 \newcommand{\factsheet}[4]{%

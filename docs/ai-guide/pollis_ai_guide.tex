@@ -480,7 +480,7 @@ cloud or local, is chosen in \ui{Model Tasks and Routing} (page 14): same harnes
 
 \subhead{Example: Create a Panel, step by step}
 \begin{enumerate}[label=\arabic*.]
-  \item Choose \ui{Compose > New Panels and Toolboxes > Create a Panel...}. Pollis opens a terminal and
+  \item Choose \ui{Compose > New Panels > Create a Panel...}. Pollis opens a terminal and
     starts your agent with a first message: \emph{``Read the skill \ldots\ and follow its instructions
     to create a new Pollis panel with me.''}
   \item The agent reads the skill (page 10) and asks you, in one message, what the panel is for, the
@@ -687,16 +687,16 @@ and its default is marked; \ui{Skills} names the skills the task reads (page 10)
 \begin{tabularx}{\linewidth}{@{}Xlll@{}}
 \textbf{Task} & \textbf{Menu} & \textbf{Runs On} & \textbf{Skills}\\\hline
 Polish with Agent & Reports & Light & \cmd{polish-report}\\
-Write a Vignette & Methods & Standard & \cmd{write-vignette}\\
-Prepare for Registration & Methods & Standard & \cmd{prepare-method}\\
-Package a Toolbox & New Panels and Toolboxes & Standard & \cmd{package-toolbox}\\
-Tables from the Article & Methods & Strong & \cmd{tables-from-article}\\
-Write a Method & Methods & Strong & \cmd{write-method}\\
+Write a Vignette & Replication & Standard & \cmd{write-vignette}\\
+Prepare for Registration & Replication & Standard & \cmd{prepare-method}\\
+Package a Toolbox & Compose & Standard & \cmd{package-toolbox}\\
+Tables from the Article & Replication & Strong & \cmd{tables-from-article}\\
+Write a Method & Replication & Strong & \cmd{write-method}\\
 Plan a Replication & Replication & Standard & \cmd{plan-replication}\\
 Replicate an Article & Replication & Strong & \cmd{replicate-article}\\
 Explain the Differences & Replication & Standard & \cmd{explain-differences}\\
-Create a Panel & New Panels and Toolboxes & Strong & \cmd{create-panel}\\
-Create Panels from a Request & New Panels and Toolboxes & Strong & \cmd{create-panel}\\
+Create a Panel & New Panels & Strong & \cmd{create-panel}\\
+Create Panels from a Request & New Panels & Strong & \cmd{create-panel}\\
 \end{tabularx}
 \end{center}
 A task may read several skills, and a skill may serve several tasks: both ways of creating panels read
@@ -887,7 +887,7 @@ Ask Pollis and its two Evaluate pages are not in Pollis yet; they come in a comi
 \end{center}
 
 \subhead{One task, from start to finish}
-You choose \ui{Compose > Methods > Create New Method} and click \ui{Write Method} beside your method.
+You choose \ui{Compose > Replication > Create Article Method...} and click \ui{Write Method} beside your method.
 Model Tasks and Routing sends the task to the \ui{Strong} tier. Pollis opens a terminal and starts the
 agent of that tier's cell, on its model, with a first message naming the write-method skill and the method's test command. The agent
 reads the skill; if the article is on arXiv, the arXiv server can fetch it; its model writes the code; its harness runs the tests

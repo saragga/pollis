@@ -1,4 +1,4 @@
-# New Method — Overview
+# New Article Method — Overview
 
 ## Reproducibility and Replication: What a Pollis Method Tests
 

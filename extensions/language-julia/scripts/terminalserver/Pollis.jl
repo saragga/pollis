@@ -84,6 +84,30 @@ function stop_llama_server(model::AbstractString; embeddings::Bool = false, thin
 end
 
 """
+    Pollis.browse(page)
+
+Opens `page` in Pollis' browser: an HTML file, such as the report of a profiler, or a link starting
+with `http://` or `https://`. Opened again, the page reloads in the same tab. Outside Pollis, prints
+where the page is.
+
+```julia
+Pollis.browse(ProfileCanvas.html_file(joinpath(mktempdir(), "flamegraph.html")))
+```
+"""
+function browse(page::AbstractString)
+	link = occursin(r"^https?://"i, page)
+	!link && !isfile(page) && error("Pollis.browse: there is no file $page.")
+	target = link ? String(page) : abspath(page)
+	server = isdefined(Main, :VSCodeServer) ? Main.VSCodeServer : nothing
+	if server === nothing || server.conn_endpoint[] === nothing
+		println("Open ", target)
+	else
+		server.JSONRPC.send_notification(server.conn_endpoint[], "pollis/browse", Dict("page" => target))
+	end
+	return nothing
+end
+
+"""
     Pollis.replicate(title, rows; results = "results.csv")
 
 Compares results with published values that are exact to the digits printed: estimates, test

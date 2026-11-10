@@ -33,7 +33,7 @@ import { INotebookEditorModelResolverService } from '../../notebook/common/noteb
 import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
-import { ARTICLE_DATA_SCRIPT, ARTICLE_DATA_STYLE, ArticleDataMessage, articleDataHtml, articleDataText, createArticleData, draftName, IArticleDataKind, IArticleDataRecord, IArticleDataServices, isArticleDataMessage, makesFolder, openRecordArticle, parseTable, readTables, replaceTomlBlocks, setTomlValue, table, text, tomlString } from './articleAndData.js';
+import { ARTICLE_DATA_SCRIPT, ARTICLE_DATA_STYLE, ArticleDataMessage, articleDataHtml, articleDataText, createArticleData, draftName, IArticleDataKind, IArticleDataRecord, IArticleDataServices, isArticleDataMessage, IStudyInput, makesFolder, openRecordArticle, parseTable, readTables, replaceTomlBlocks, setTomlValue, table, text, tomlString, withPaths } from './articleAndData.js';
 import { AgentTask } from './modelRouting.js';
 import { methodFromReplication, openUserMethod, userMethodsFolder } from './newMethods.js';
 import { EXPLAIN_DIFFERENCES_COMMAND_ID, PLAN_REPLICATION_COMMAND_ID, REPLICATE_WITH_AGENT_COMMAND_ID, skillFile, startAgent } from './pollisAgents.js';
@@ -42,18 +42,20 @@ import { EXPLAIN_DIFFERENCES_COMMAND_ID, PLAN_REPLICATION_COMMAND_ID, REPLICATE_
 // A replication is a folder of ~/.pollis/replications with replication.toml, which holds the article's link and
 // the input tables, the published results it must reproduce in targets/*.csv, and results.csv, which the
 // replication's notebook writes when it runs in the folder: Pollis.replicate and Pollis.compare put each published
-// value there beside Julia's. Its page has five steps. Article and Data is the first step of Create New Method too
+// value there beside Julia's. Its page has five steps. Article and Data is the first step of Create Article Method too
 // (articleAndData.ts). Plan says, for each target, how it is computed: by Julia packages, by code of the notebook's
-// own, or by a new method, which Make a Method starts on the New Method page with the replication's article, data and
-// that target; the plan-replication skill proposes it. A replication never needs a method to go on. Replicate hands
-// the replication to the user's coding agent, with the replicate-article skill of the Pollis Agents plugin and the
-// user's notes in INSTRUCTIONS.md: it writes the notebook, NAME.ipynb, and runs it. Compare lists the published values
-// of results.csv that Julia does not reproduce, table by table, each with the kind of its difference and an
-// explanation, typed in or proposed by the explain-differences skill. Record and Share reads results.csv too: the
-// replication is full when every published value is reproduced, to the printed decimals or within the noise of a
-// simulation, else partial, unless the user says otherwise with a reason. Add to My Replications marks it done,
-// and Browse Replications (workflowLibrary.ts) lists it under Done by You, the others under In Progress. Data may
-// be shared with a replication only if its terms allow it: the page warns of each input with no licence stated.
+// own, or by a new method, which Make an Article Method starts on the page of a new article method with the
+// replication's article, data and that target; the plan-replication skill proposes it. A replication never needs a
+// method to go on. Replicate makes the notebook, NAME.ipynb: New Notebook writes one to fill in by hand, a section for
+// each target, and Replicate with Agent hands the replication to the user's coding agent, with the replicate-article
+// skill of the Pollis Agents plugin and the user's notes in INSTRUCTIONS.md, to write it and run it. Compare reads
+// results.csv as the notebook writes it: each target table has the precision it requires, set by the user (the
+// decimals its values share with the published ones, all those printed by default, or for simulated values the most
+// standard errors they may be off, 2 by default), and the precision it achieves; each value short of it gets the kind
+// of its difference and an explanation, typed in or proposed by the explain-differences skill. Record and Share sums
+// it up. Add to My Replications marks it done, and Browse Replications (workflowLibrary.ts) lists it under Done by
+// You, the others under In Progress. Data may be shared with a replication only if its terms allow it: the page warns
+// of each input with no licence stated.
 
 export const REPLICATE_ARTICLE_COMMAND_ID = 'pollis.replication.replicateArticle';
 /** Browse Replications, registered in workflowLibrary.ts: the user's replications and those shipped with Pollis. */
@@ -64,9 +66,6 @@ const RESULTS_FILE = 'results.csv';
 const INSTRUCTIONS_FILE = 'INSTRUCTIONS.md';
 /** Pollis' Julia functions, Pollis.replicate and Pollis.compare among them, which a coding agent includes in its own Julia session. */
 const POLLIS_JL = ['extensions', 'language-julia', 'scripts', 'terminalserver', 'Pollis.jl'];
-
-/** Full: every published value reproduced; partial: some. */
-type ReplicationStatus = 'full' | 'partial';
 
 /** How a target is computed: by Julia packages, by code of the notebook's own, or by a new method. */
 type PlanWay = 'package' | 'notebook' | 'method';
@@ -79,7 +78,7 @@ interface IPlanEntry {
 	/** The Julia packages that compute it, e.g. `GLM, StatsBase`. */
 	readonly packages: string;
 	readonly note: string;
-	/** The folder name of the method Make a Method made for it, in ~/.pollis/methods. */
+	/** The folder name of the method Make an Article Method made for it, in ~/.pollis/methods. */
 	readonly method?: string;
 }
 
@@ -94,22 +93,53 @@ interface IDifference {
 	readonly explanation: string;
 }
 
+/** The default precision of a simulated value: Julia's value and the published one less than 2 standard errors apart. */
+const DEFAULT_STANDARD_ERRORS = 2;
+
+/**
+ * The precision a target table requires, in its `[targets.NAME]` table: `decimals`, how many decimals Julia's values
+ * must share with the published ones, all those printed when absent; `standard_errors`, how many standard errors a
+ * simulated value may be off, 2 when absent.
+ */
+interface IPrecision {
+	readonly target: string;
+	readonly decimals?: number;
+	readonly standardErrors?: number;
+}
+
 /** A published value of results.csv beside Julia's. */
 interface IResultRow {
 	readonly table: string;
 	readonly row: string;
+	/** Exact: compared to the digits printed (Pollis.replicate); noise: an estimate of a random quantity (Pollis.compare). */
+	readonly kind: 'exact' | 'noise';
 	readonly published: string;
 	readonly julia: string;
 	readonly se?: string;
 	readonly verdict: string;
+	/** At the precision its table requires. */
 	readonly reproduced: boolean;
+}
+
+/** A table of results.csv: its values, those at the precision it requires, and the precision it achieves. */
+interface IResultTable {
+	readonly name: string;
+	readonly kind: 'exact' | 'noise';
+	readonly values: number;
+	readonly reproduced: number;
+	/** Exact: the fewest decimals a value shares with the published one, among those that share some. */
+	readonly decimals?: number;
+	/** Exact: the values that share no decimal with the published one. */
+	readonly differing: number;
+	/** Noise: the most standard errors a value is off. */
+	readonly standardErrors?: number;
 }
 
 /** What results.csv says of the published values, in all and by table. */
 interface IResults {
 	readonly values: number;
 	readonly reproduced: number;
-	readonly tables: readonly { readonly name: string; readonly values: number; readonly reproduced: number }[];
+	readonly tables: readonly IResultTable[];
 	readonly rows: readonly IResultRow[];
 }
 
@@ -120,9 +150,8 @@ interface IReplication extends IArticleDataRecord {
 	readonly doi?: string;
 	/** Added to the user's replications: Browse Replications lists it under Done by You. */
 	readonly done: boolean;
-	/** The status the user set, with its reason; without it, the status follows from the results. */
-	readonly status?: ReplicationStatus;
-	readonly statusReason?: string;
+	/** The precision each target requires, in the targets' order. */
+	readonly precision: readonly IPrecision[];
 	readonly results?: IResults;
 	/** The notes for a coding agent, in INSTRUCTIONS.md. */
 	readonly instructions: string;
@@ -138,40 +167,58 @@ function replicationsFolder(pathService: IPathService): URI {
 }
 
 /**
- * The published values of results.csv and those reproduced: a value compared exactly is reproduced when Julia's
- * agrees with it to all its printed decimals, one compared with the noise of a simulation when it is within it.
+ * The published values of results.csv, at the precision their table requires or not, and the precision each table
+ * achieves. A value compared exactly is at it when Julia's shares the decimals required with it, all those printed
+ * unless the table requires fewer; a value compared with the noise of a simulation when the two are fewer standard
+ * errors apart than the table allows.
  */
-async function readResults(fileService: IFileService, folder: URI): Promise<IResults | undefined> {
+async function readResults(fileService: IFileService, folder: URI, precision: readonly IPrecision[]): Promise<IResults | undefined> {
 	const file = joinPath(folder, RESULTS_FILE);
 	if (!await fileService.exists(file)) {
 		return undefined;
 	}
 	const { header, rows } = parseTable((await fileService.readFile(file)).value.toString(), Number.MAX_SAFE_INTEGER);
 	const column = (name: string) => header.indexOf(name);
-	const [table, label, kind, published, julia, se, printed, same, verdict] = ['table', 'row', 'kind', 'published', 'julia', 'se', 'printed_decimals', 'same_decimals', 'verdict'].map(column);
-	if ([table, label, kind, published, julia, se, printed, same, verdict].some(index => index < 0)) {
+	const [table, label, kind, published, julia, se, printed, same, z, verdict] = ['table', 'row', 'kind', 'published', 'julia', 'se', 'printed_decimals', 'same_decimals', 'z', 'verdict'].map(column);
+	if ([table, label, kind, published, julia, se, printed, same, z, verdict].some(index => index < 0)) {
 		return undefined;
 	}
-	const tables = new Map<string, { name: string; values: number; reproduced: number }>();
+	const required = new Map(precision.map(entry => [entry.target, entry]));
+	const tables = new Map<string, { name: string; kind: 'exact' | 'noise'; values: number; reproduced: number; decimals?: number; differing: number; standardErrors?: number }>();
 	const results: IResultRow[] = [];
 	for (const row of rows) {
 		const name = row[table] ?? '';
+		const rowKind = row[kind] === 'noise' ? 'noise' : 'exact';
 		let entry = tables.get(name);
 		if (!entry) {
-			entry = { name, values: 0, reproduced: 0 };
+			entry = { name, kind: rowKind, values: 0, reproduced: 0, differing: 0 };
 			tables.set(name, entry);
 		}
 		entry.values++;
-		const reproduced = row[kind] === 'noise'
-			? row[verdict] === 'within noise'
-			: !!row[same] && Number(row[same]) >= Math.max(Number(row[printed]), 0);
+		let reproduced: boolean;
+		if (rowKind === 'noise') {
+			const off = Math.abs(Number(row[z]));
+			const valid = row[z] !== '' && Number.isFinite(off);
+			reproduced = valid && off < (required.get(name)?.standardErrors ?? DEFAULT_STANDARD_ERRORS);
+			if (valid) {
+				entry.standardErrors = Math.max(entry.standardErrors ?? 0, off);
+			}
+		} else {
+			const decimals = Math.max(Number(row[printed]) || 0, 0);
+			const shared = row[same] ? Number(row[same]) : undefined;
+			reproduced = shared !== undefined && shared >= Math.min(required.get(name)?.decimals ?? decimals, decimals);
+			if (shared === undefined) {
+				entry.differing++;
+			} else {
+				entry.decimals = Math.min(entry.decimals ?? shared, shared);
+			}
+		}
 		if (reproduced) {
 			entry.reproduced++;
 		}
-		results.push({ table: name, row: row[label] ?? '', published: row[published] ?? '', julia: row[julia] ?? '', se: row[se] || undefined, verdict: row[verdict] ?? '', reproduced });
+		results.push({ table: name, row: row[label] ?? '', kind: rowKind, published: row[published] ?? '', julia: row[julia] ?? '', se: row[se] || undefined, verdict: row[verdict] ?? '', reproduced });
 	}
-	const all = [...tables.values()];
-	return { values: results.length, reproduced: results.filter(row => row.reproduced).length, tables: all, rows: results };
+	return { values: results.length, reproduced: results.filter(row => row.reproduced).length, tables: [...tables.values()], rows: results };
 }
 
 /** Reads a replication folder; undefined when it has no replication.toml. */
@@ -184,13 +231,19 @@ async function readReplication(fileService: IFileService, folder: URI): Promise<
 	const { inputs, targets } = await readTables(fileService, folder, toml);
 	const name = text(toml.name) ?? basename(folder);
 	const doi = text(toml.doi);
-	const status = text(toml.status);
 	const instructions = joinPath(folder, INSTRUCTIONS_FILE);
 	const notebook = `${name}.ipynb`;
 	const plan = targets.map(target => {
 		const entry = table(table(toml.plan)[target.name]);
 		const way = text(entry.way);
 		return { target: target.name, way: way && PLAN_WAYS.includes(way) ? way as PlanWay : undefined, packages: text(entry.packages) ?? '', note: text(entry.note) ?? '', method: text(entry.method) };
+	});
+	// The precision each target requires: a whole number of decimals, at least 0; a number of standard errors above 0
+	const precision = targets.map(target => {
+		const entry = table(table(toml.targets)[target.name]);
+		const decimals = typeof entry.decimals === 'number' && Number.isInteger(entry.decimals) && entry.decimals >= 0 ? entry.decimals : undefined;
+		const standardErrors = typeof entry.standard_errors === 'number' && entry.standard_errors > 0 ? entry.standard_errors : undefined;
+		return { target: target.name, decimals, standardErrors };
 	});
 	const differences = (Array.isArray(toml.differences) ? toml.differences : []).map(value => table(value)).map(entry => ({
 		target: text(entry.target) ?? '',
@@ -209,9 +262,8 @@ async function readReplication(fileService: IFileService, folder: URI): Promise<
 		inputs,
 		targets,
 		done: toml.done === true,
-		status: status === 'full' || status === 'partial' ? status : undefined,
-		statusReason: text(toml.status_reason),
-		results: await readResults(fileService, folder),
+		precision,
+		results: await readResults(fileService, folder, precision),
 		instructions: await fileService.exists(instructions) ? (await fileService.readFile(instructions)).value.toString() : '',
 		notebook: await fileService.exists(joinPath(folder, notebook)) ? notebook : undefined,
 		plan,
@@ -238,7 +290,7 @@ async function readReplications(fileService: IFileService, pathService: IPathSer
 function replicationToml(name: string, title: string): string {
 	return [
 		'# A Pollis replication (Compose > Replication > Replicate an Article...). Its page shows the article and the',
-		'# tables; the replication\'s notebook, run in this folder, writes results.csv, which Record and Share reads.',
+		'# tables; the replication\'s notebook, run in this folder, writes results.csv, which Compare reads.',
 		'#',
 		'#   targets/*.csv   the published results: the row labels in the first column, the values as printed',
 		'#   inputs/*.csv    tables typed in from the article',
@@ -253,11 +305,8 @@ function replicationToml(name: string, title: string): string {
 		'doi = ""',
 		'article = ""',
 		'',
-		'# done: listed in Browse Replications under Done by You. status is "full" or "partial" when set by hand,',
-		'# status_reason saying why; when it is empty, the status follows from results.csv.',
+		'# done: listed in Browse Replications under Done by You.',
 		'done = false',
-		'status = ""',
-		'status_reason = ""',
 		'',
 		'# The input tables are links, or files in inputs/ typed in from the article: Pollis reads each link into',
 		'# memory to show it, and no copy is kept. licence is the terms the data\'s provider states: data may be',
@@ -272,7 +321,7 @@ function replicationToml(name: string, title: string): string {
 		'#   limit = 100                      the number of rows to read, when the file goes on after them',
 		'',
 		'# The plan, one table for each target: how it is computed. way is "package" (the Julia packages in',
-		'# packages), "notebook" (code of the notebook\'s own) or "method" (a new method, made by Make a Method).',
+		'# packages), "notebook" (code of the notebook\'s own) or "method" (a new method, made by Make an Article Method).',
 		'#   [plan.table3_2]',
 		'#   way = "package"',
 		'#   packages = "GLM"',
@@ -286,7 +335,12 @@ function replicationToml(name: string, title: string): string {
 		'#   kind = "misprint"',
 		'#   explanation = "Two digits swapped: the standard error of the same row gives 0.153"',
 		'',
-		'# One table for each target: where it is published.',
+		'# One table for each target: where it is published, and the precision it requires. decimals is how many',
+		'# decimals Julia\'s values must share with the published ones, all those printed when absent; standard_errors',
+		'# is how many standard errors a simulated value may be off, 2 when absent.',
+		'#   [targets.table3_2]',
+		'#   source = "Table 3, column 2, page 12"',
+		'#   decimals = 2',
 		'',
 	].join('\n');
 }
@@ -297,6 +351,80 @@ async function newReplication(fileService: IFileService, pathService: IPathServi
 	await fileService.writeFile(joinPath(folder, RECORD_FILE), VSBuffer.fromString(replicationToml(name, title)));
 	await fileService.createFolder(joinPath(folder, 'targets'));
 	return folder;
+}
+
+/** A string as Julia writes it: in double quotes, with `$` kept from interpolating. */
+function juliaString(value: string): string {
+	return JSON.stringify(value).replace(/\$/g, '\\$');
+}
+
+/** The Julia that reads an input table into memory, as a Tables.jl column table bound to its name. */
+function juliaInput(input: IStudyInput): string {
+	const delim = !input.delim || input.delim === ',' ? ''
+		: input.delim === 'tab' ? `delim = '\\t'`
+			: input.delim === 'whitespace' ? `delim = ' ', ignorerepeated = true`
+				: `delim = ${juliaString(input.delim)}`;
+	const options = [
+		delim,
+		input.columns ? `header = [${input.columns.map(juliaString).join(', ')}]` : '',
+		input.skipto ? `skipto = ${input.skipto}` : '',
+		input.limit ? `limit = ${input.limit}` : '',
+	].filter(Boolean);
+	const source = input.url ? `Downloads.download(${juliaString(input.url)}, IOBuffer())` : juliaString(input.file ?? '');
+	return `${input.name} = Tables.columntable(CSV.File(${[source, ...options].join(', ')}))`;
+}
+
+/**
+ * A notebook to write a replication in by hand, in the shape of those that come with Pollis: the packages of the
+ * plan, the input tables read into memory, then a section for each target, which reads its published values as
+ * printed and ends in the Pollis.replicate call that sets Julia's beside them in results.csv.
+ */
+function notebookFor(replication: IReplication): string {
+	const lines = (source: string) => source.split('\n').map((line, index, all) => index < all.length - 1 ? `${line}\n` : line);
+	const markdown = (source: string) => ({ cell_type: 'markdown', metadata: {}, source: lines(source) });
+	const code = (source: string) => ({ cell_type: 'code', execution_count: null, metadata: {}, outputs: [], source: lines(source) });
+	const planned = replication.plan.flatMap(entry => entry.way === 'package' ? entry.packages.split(',').map(name => name.trim().replace(/\.jl$/, '')).filter(Boolean) : []);
+	const packages = [...new Set(['CSV', 'Tables', ...planned])];
+	const downloads = replication.inputs.some(input => input.url);
+	const setup = [
+		...replication.inputs.map(juliaInput),
+		...(replication.inputs.length ? [''] : []),
+		'"""The published values of the target table `name`, as printed, by row label and column."""',
+		'function target(name)',
+		'\tfile = CSV.File(joinpath("targets", "$name.csv"); types = String)',
+		'\tcolumns = propertynames(file)',
+		'\treturn Dict((row[columns[1]], String(column)) => row[column] for row in file for column in columns[2:end] if !ismissing(row[column]))',
+		'end',
+	];
+	const cells = [
+		markdown([`# ${replication.title}`, replication.citation ?? '', localize('replicateArticle.notebook.intro', "The analysis of the article in Julia: each section computes a target table from the input data and sets each published value beside Julia's in results.csv, through Pollis.replicate, or Pollis.compare for simulated values.")].filter(Boolean).join('\n\n')),
+		code(`Pollis.packages(${packages.map(juliaString).join(', ')})\nusing ${[...packages, ...(downloads ? ['Downloads'] : [])].join(', ')}`),
+		markdown(`## ${localize('replicateArticle.notebook.setup', "Set-up")}\n\n${localize('replicateArticle.notebook.setupText', "The input tables, read into memory as Tables.jl column tables, and target, which reads the published values of a target table as printed, by row label and column.")}`),
+		code(setup.join('\n')),
+		...replication.targets.flatMap((target, index) => {
+			const note = replication.plan.find(entry => entry.target === target.name)?.note;
+			return [
+				markdown([`## ${index + 1}. ${target.name}`, target.source ?? '', note ?? ''].filter(Boolean).join('\n\n')),
+				code([
+					`published = target(${juliaString(target.name)})`,
+					`# Julia's values, by row label and column as in targets/${target.name}.csv, e.g. values[("income", "(2)")] = coef(model)[2]`,
+					'values = Dict{Tuple{String, String}, Float64}()',
+					'',
+					`Pollis.replicate(${juliaString(target.name)}, [("$row, $column", value, published[(row, column)]) for ((row, column), value) in sort(collect(values))])`,
+				].join('\n')),
+			];
+		}),
+	];
+	return `${JSON.stringify({
+		cells,
+		metadata: {
+			kernelspec: { display_name: 'Julia', language: 'julia', name: 'julia' },
+			language_info: { name: 'julia' },
+			pollis: { workflow: { updated: new Date().toISOString().slice(0, 10), article: { citation: replication.citation ?? '', doi: replication.doi ?? '' } } },
+		},
+		nbformat: 4,
+		nbformat_minor: 5,
+	}, undefined, 1)}\n`;
 }
 
 /** Whether a replication is still as it was made: no article, tables, instructions, notebook or results, and not done. */
@@ -336,7 +464,7 @@ const REPLICATION_TASKS: { readonly [command: string]: IReplicationTask } = {
 		needs: replication => !replication.results
 			? localize('replicateArticle.explain.noResults', "{0} has no results yet: Replicate writes them to results.csv.", replication.title)
 			: replication.results.reproduced === replication.results.values
-				? localize('replicateArticle.explain.none', "Julia reproduces every published value of {0}: there is no difference to explain.", replication.title)
+				? localize('replicateArticle.explain.none', "Every published value of {0} is at the precision its table requires: there is no difference to explain.", replication.title)
 				: undefined,
 		terminal: replication => localize('replicateArticle.explain.terminal', "Differences of {0}", replication.title),
 		prompt: (skill, replication, pollis) => localize('replicateArticle.explain.prompt', "Read the skill {0} and follow its instructions to explain the differences of the Pollis replication in {1} with me. Pollis' Julia functions, Pollis.replicate and Pollis.compare among them, are in {2}.", skill, replication.folder.fsPath, pollis),
@@ -387,15 +515,25 @@ const REPLICATION_KIND: IArticleDataKind = {
 		: localize('replicateArticle.fromArticle.inputs', "Read the skill {0} and follow its instructions to type in the tables {1} of the article of the Pollis replication in {2} as input data.", skill, tables, folder.fsPath),
 };
 
+/** A row of the Plan step, as the page sends it. */
+interface IPlanRow {
+	readonly target: string;
+	readonly way: string;
+	readonly packages: string;
+	readonly note: string;
+}
+
 type ReplicationMessage =
 	| ArticleDataMessage
 	| { readonly command: 'ready' | 'planWithAgent' | 'replicate' | 'explainWithAgent' }
-	| { readonly command: 'setPlan'; readonly rows: readonly { readonly target: string; readonly way: string; readonly packages: string; readonly note: string }[] }
-	| { readonly command: 'makeMethod' | 'openMethod'; readonly target: string }
+	| { readonly command: 'setPlan'; readonly rows: readonly IPlanRow[] }
+	| { readonly command: 'makeMethod'; readonly target: string; readonly rows: readonly IPlanRow[] }
+	| { readonly command: 'openMethod'; readonly target: string }
 	| { readonly command: 'setExplanations'; readonly rows: readonly { readonly target: string; readonly row: string; readonly kind: string; readonly explanation: string }[] }
 	| { readonly command: 'instructions'; readonly text: string }
 	| { readonly command: 'setTitle'; readonly title: string }
-	| { readonly command: 'setStatus'; readonly status: string; readonly reason: string }
+	| { readonly command: 'setPrecision'; readonly target: string; readonly decimals: string; readonly standardErrors: string }
+	| { readonly command: 'newNotebook' }
 	| { readonly command: 'setDone'; readonly done: boolean }
 	| { readonly command: 'open'; readonly file: string };
 
@@ -451,7 +589,7 @@ async function openReplicationPage(accessor: ServicesAccessor, existing?: URI, s
 	}
 	// Until it is made, a new replication is only in memory, its folder where it would go
 	let folder = existing ?? joinPath(root, 'NewReplication');
-	const initial: IReplication | undefined = created ? await readReplication(fileService, folder) : { folder, name: basename(folder), title: draftTitle, inputs: [], targets: [], done: false, instructions: '', plan: [], differences: [] };
+	const initial: IReplication | undefined = created ? await readReplication(fileService, folder) : { folder, name: basename(folder), title: draftTitle, inputs: [], targets: [], done: false, precision: [], instructions: '', plan: [], differences: [] };
 	if (!initial) {
 		return;
 	}
@@ -524,7 +662,7 @@ async function openReplicationPage(accessor: ServicesAccessor, existing?: URI, s
 		switch (message.command) {
 			case 'setTitle': return !!message.title.trim();
 			case 'instructions': return !!message.text.trim();
-			case 'setStatus': case 'setDone': case 'open': return true;
+			case 'setDone': case 'open': case 'newNotebook': return true;
 			default: return false;
 		}
 	};
@@ -548,6 +686,19 @@ async function openReplicationPage(accessor: ServicesAccessor, existing?: URI, s
 	const update = async () => {
 		replication = await readReplication(fileService, folder) ?? replication;
 		post();
+	};
+	// The plan of each target, as the page shows it, each method kept and a new one added; a target with nothing planned
+	// has no table
+	const writePlan = async (rows: readonly IPlanRow[], made?: { readonly target: string; readonly method: string }) => {
+		const blocks = rows.filter(row => replication.targets.some(target => target.name === row.target)).map(row => {
+			const method = made?.target === row.target ? made.method : replication.plan.find(entry => entry.target === row.target)?.method;
+			const way = PLAN_WAYS.includes(row.way) ? row.way : '';
+			return way || row.packages.trim() || row.note.trim() || method
+				? `[plan.${row.target}]\nway = ${tomlString(way)}\npackages = ${tomlString(row.packages.trim())}\nnote = ${tomlString(row.note.trim())}\n${method ? `method = ${tomlString(method)}\n` : ''}`
+				: '';
+		}).filter(Boolean);
+		await replaceTomlBlocks(fileService, recordFile(), header => header.startsWith('[plan.'), blocks.join('\n'));
+		await update();
 	};
 	const articleData = createArticleData(articleServices, REPLICATION_KIND, { webview: webviewInput.webview, record: () => replication, reload: update, submit, run });
 
@@ -577,25 +728,13 @@ async function openReplicationPage(accessor: ServicesAccessor, existing?: URI, s
 				await commandService.executeCommand(command, folder);
 			});
 		} else if (message.command === 'setPlan') {
-			submit('plan', async () => {
-				// The plan of each target, its method kept; a target with nothing planned has no table
-				const blocks = message.rows.filter(row => replication.targets.some(target => target.name === row.target)).map(row => {
-					const method = replication.plan.find(entry => entry.target === row.target)?.method;
-					const way = PLAN_WAYS.includes(row.way) ? row.way : '';
-					return way || row.packages.trim() || row.note.trim() || method
-						? `[plan.${row.target}]\nway = ${tomlString(way)}\npackages = ${tomlString(row.packages.trim())}\nnote = ${tomlString(row.note.trim())}\n${method ? `method = ${tomlString(method)}\n` : ''}`
-						: '';
-				}).filter(Boolean);
-				await replaceTomlBlocks(fileService, recordFile(), header => header.startsWith('[plan.'), blocks.join('\n'));
-				await update();
-			});
+			submit('plan', () => writePlan(message.rows));
 		} else if (message.command === 'makeMethod') {
 			run(async () => {
 				const target = replication.targets.find(candidate => candidate.name === message.target);
 				if (!target) {
 					return;
 				}
-				const entry = replication.plan.find(candidate => candidate.target === target.name);
 				const method = await instantiationService.invokeFunction(methodFromReplication, {
 					title: replication.title === draftTitle ? target.name : replication.title,
 					citation: replication.citation,
@@ -605,9 +744,8 @@ async function openReplicationPage(accessor: ServicesAccessor, existing?: URI, s
 					inputs: replication.inputs,
 					targets: [{ name: target.name, source: target.source }],
 				});
-				const block = `[plan.${target.name}]\nway = "method"\npackages = ${tomlString(entry?.packages ?? '')}\nnote = ${tomlString(entry?.note ?? '')}\nmethod = ${tomlString(method)}\n`;
-				await replaceTomlBlocks(fileService, recordFile(), header => header === `[plan.${target.name}]`, block);
-				await update();
+				// The plan as shown, the target planned as a new method, with the method made for it
+				await writePlan(message.rows.map(row => row.target === target.name ? { ...row, way: 'method' } : row), { target: target.name, method });
 			});
 		} else if (message.command === 'openMethod') {
 			run(async () => {
@@ -640,16 +778,32 @@ async function openReplicationPage(accessor: ServicesAccessor, existing?: URI, s
 				webviewInput.setWebviewTitle(title);
 				await update();
 			});
-		} else if (message.command === 'setStatus') {
-			submit('status', async () => {
-				const status = message.status === 'full' || message.status === 'partial' ? message.status : '';
-				const reason = message.reason.trim();
-				if (status && !reason) {
-					throw new Error(localize('replicateArticle.status.noReason', "Say why the replication is {0}, as the results say otherwise or say nothing yet.", status === 'full' ? localize('replicateArticle.status.fullWord', "full") : localize('replicateArticle.status.partialWord', "partial")));
+		} else if (message.command === 'setPrecision') {
+			run(async () => {
+				if (!replication.targets.some(target => target.name === message.target)) {
+					return;
 				}
-				await setTomlValue(fileService, recordFile(), undefined, 'status', status);
-				await setTomlValue(fileService, recordFile(), undefined, 'status_reason', status ? reason : '');
+				// Empty: the default, all the decimals printed, or 2 standard errors
+				const decimals = message.decimals.trim() ? Number(message.decimals) : undefined;
+				if (decimals !== undefined && !(Number.isInteger(decimals) && decimals >= 0)) {
+					throw new Error(localize('replicateArticle.precision.decimals', "The decimals required of {0} are a whole number, 0 or more, not {1}.", message.target, message.decimals));
+				}
+				const standardErrors = message.standardErrors.trim() ? Number(message.standardErrors) : undefined;
+				if (standardErrors !== undefined && !(Number.isFinite(standardErrors) && standardErrors > 0)) {
+					throw new Error(localize('replicateArticle.precision.errors', "The standard errors allowed for {0} are a number above 0, not {1}.", message.target, message.standardErrors));
+				}
+				await setTomlValue(fileService, recordFile(), `targets.${message.target}`, 'decimals', decimals);
+				await setTomlValue(fileService, recordFile(), `targets.${message.target}`, 'standard_errors', standardErrors);
 				await update();
+			});
+		} else if (message.command === 'newNotebook') {
+			run(async () => {
+				const file = joinPath(folder, `${replication.name}.ipynb`);
+				if (!await fileService.exists(file)) {
+					await fileService.writeFile(file, VSBuffer.fromString(notebookFor(replication)));
+				}
+				await update();
+				await editorService.openEditor({ resource: file });
 			});
 		} else if (message.command === 'setDone') {
 			run(async () => {
@@ -672,6 +826,8 @@ const PAGE_STYLE = `${ARTICLE_DATA_STYLE}
 			.results { margin: 0 0 14px 0; max-width: 900px; }
 			.results .total { font-weight: 600; margin: 0 0 4px 0; }
 			.results table { margin: 6px 0 0 0; }
+			.precision { margin: 0 0 16px 0; }
+			td input.number { width: 90px; }
 			.licences { margin: 0 0 14px 0; max-width: 900px; }
 			.licences ul { margin: 4px 0 0 0; padding-left: 18px; }
 			td input.wide { width: 260px; }
@@ -688,7 +844,7 @@ function pageHtml(): string {
 		...articleDataText({
 			articleIntro: localize('replicateArticle.page.articleIntro', "The article whose analysis you replicate. Pollis opens it in the integrated browser and keeps no copy unless you save one."),
 			inputsIntro: localize('replicateArticle.page.inputsIntro', "The data the article's analysis uses: links, read into memory with no copy kept, or tables typed in from the article. Each input says where its data comes from and the terms its provider states."),
-			targetsIntro: localize('replicateArticle.page.targetsIntro', "The published results the replication must reproduce, as printed: Record and Share counts how many of their values Julia gives."),
+			targetsIntro: localize('replicateArticle.page.targetsIntro', "The published results the replication must reproduce, as printed: Compare shows how closely Julia reproduces them."),
 			emptyInputHint: localize('replicateArticle.input.emptyDetail', "A table of the replication, inputs/NAME.csv, opened to type in: a header line of column names, then the values"),
 			targetFilesHint: localize('replicateArticle.page.targetFilesHint', "CSV files of published tables, copied into the replication: row labels in the first column, the values as printed"),
 			targetArticleHint: localize('replicateArticle.page.targetArticleHint', "Your coding agent reads the article and types the tables in as target tables, every value as printed. Check them against the article: the comparison is only as right as the targets."),
@@ -705,8 +861,8 @@ function pageHtml(): string {
 		stepRecord: localize('replicateArticle.step.record', "Record and Share"),
 		soon: localize('replicateArticle.soon', "Not available yet"),
 		// 2. Plan
-		planIntro: localize('replicateArticle.page.planIntro', "How each target table is computed: by Julia packages, by code of the notebook's own, or by a new method. A replication needs no method of its own when a package or a few lines of code compute the table: Make a Method is for a method no Julia package has, which others can then install and reuse."),
-		planHint: localize('replicateArticle.page.planHint', "Plan with Agent asks your coding agent to read the article and propose the plan, which you check and save. The plan is optional: Replicate works without it."),
+		planIntro: localize('replicateArticle.page.planIntro', "How each target table is computed: by Julia packages, by code of the notebook's own, or by a new article method. Each change is saved in replication.toml, and Replicate with Agent computes each table as its row says. A replication needs no method of its own when a package or a few lines of code compute the table: Make an Article Method, on a table's row, is for a method no Julia package has, which others can then install and reuse."),
+		planHint: localize('replicateArticle.page.planHint', "Plan with Agent asks your coding agent to read the article and propose the plan, which you then check here. The plan is optional: Replicate with Agent works without it."),
 		targetColumn: localize('replicateArticle.plan.target', "Target"),
 		wayColumn: localize('replicateArticle.plan.way', "Computed By"),
 		packagesColumn: localize('replicateArticle.plan.packages', "Julia Packages"),
@@ -714,33 +870,56 @@ function pageHtml(): string {
 		wayNone: localize('replicateArticle.plan.none', "Not planned"),
 		wayPackage: localize('replicateArticle.plan.package', "Julia Packages"),
 		wayNotebook: localize('replicateArticle.plan.notebook', "Notebook Code"),
-		wayMethod: localize('replicateArticle.plan.method', "New Method"),
+		wayMethod: localize('replicateArticle.plan.method', "Article Method"),
 		packagesPlaceholder: localize('replicateArticle.plan.packagesPlaceholder', "e.g. GLM, StatsBase"),
-		savePlan: localize('replicateArticle.plan.save', "Save Plan"),
 		planWithAgent: localize('replicateArticle.plan.agent', "Plan with Agent"),
-		makeMethod: localize('replicateArticle.plan.makeMethod', "Make a Method"),
+		makeMethod: localize('replicateArticle.plan.makeMethod', "Make an Article Method"),
 		openMethod: localize('replicateArticle.plan.openMethod', "Open Method {0}"),
 		planned: localize('replicateArticle.plan.planned', "{0} of {1} targets planned"),
 		noPlanTargets: localize('replicateArticle.plan.noTargets', "No target tables yet: add them in Article and Data, then plan how each is computed."),
 		// 3. Replicate
-		replicateIntro: localize('replicateArticle.page.replicateIntro', "The replication's notebook: the analysis in Julia, run on the input tables, each published value printed beside Julia's. Your coding agent writes it from the article and runs it, and it writes the comparisons to results.csv."),
+		replicateIntro: localize('replicateArticle.page.replicateIntro', "The replication's notebook: the analysis in Julia, run on the input tables, each published value set beside Julia's in results.csv. Write it yourself from New Notebook, which has a section for each target table, or have your coding agent write it and run it with Replicate with Agent."),
 		instructions: localize('replicateArticle.page.instructions', "Instructions"),
-		instructionsIntro: localize('replicateArticle.page.instructionsIntro', "Notes for a coding agent: where in the article each table is computed, the choices it leaves unsaid, what to watch for. Saved in INSTRUCTIONS.md, which the agent reads with the links and tables."),
+		instructionsIntro: localize('replicateArticle.page.instructionsIntro', "Notes for Replicate with Agent: where in the article each table is computed, the choices it leaves unsaid, what to watch for. Saved in INSTRUCTIONS.md, which the agent reads with the links and tables."),
 		instructionsPlaceholder: localize('replicateArticle.page.instructionsPlaceholder', "e.g. Table 3 uses the 1990-2005 sample of Section 4, not the full one; the standard errors are clustered by state."),
 		replicate: localize('replicateArticle.replicate', "Replicate with Agent"),
+		newNotebook: localize('replicateArticle.newNotebook', "New Notebook"),
 		openNotebook: localize('replicateArticle.openNotebook', "Open Notebook"),
-		noNotebook: localize('replicateArticle.noNotebook', "No notebook yet: Replicate with Agent asks your coding agent to write it, once the article and its target tables are in Article and Data."),
+		noNotebook: localize('replicateArticle.noNotebook', "No notebook yet: New Notebook writes one for you to fill in, and Replicate with Agent has your coding agent write it and run it."),
 		notebook: localize('replicateArticle.notebook', "Notebook: {0}"),
+		resultsSoFar: localize('replicateArticle.resultsSoFar', "So far, results.csv compares {0} published values, from {1} of {2} target tables."),
+		showInCompare: localize('replicateArticle.showInCompare', "Show in Compare"),
 		// 4. Compare
-		compareIntro: localize('replicateArticle.page.compareIntro', "The published values Julia does not reproduce, table by table, from results.csv."),
-		allReproduced: localize('replicateArticle.allReproduced', "Julia reproduces every published value."),
+		compareIntro: localize('replicateArticle.page.compareIntro', "How closely Julia reproduces each target table, from results.csv as the notebook writes it. Set the precision each table requires, saved as you change it: how many decimals its values must share with the published ones, all those printed when left empty, or, for simulated values, how many standard errors they may be off, 2 when left empty."),
+		noCompareTargets: localize('replicateArticle.compare.noTargets', "No target tables yet: add them in Article and Data."),
+		tableColumn: localize('replicateArticle.tableColumn', "Table"),
+		decimalsColumn: localize('replicateArticle.decimalsColumn', "Decimals Required"),
+		errorsColumn: localize('replicateArticle.errorsColumn', "Standard Errors Allowed"),
+		requiredColumn: localize('replicateArticle.requiredColumn', "Required"),
+		achievedColumn: localize('replicateArticle.achievedColumn', "Achieved"),
+		atColumn: localize('replicateArticle.atColumn', "At the Required Precision"),
+		allPrinted: localize('replicateArticle.allPrinted', "All printed"),
+		allDecimals: localize('replicateArticle.allDecimals', "All the decimals printed"),
+		decimalsRequired: localize('replicateArticle.decimalsRequired', "{0} decimals"),
+		decimalRequired: localize('replicateArticle.decimalRequired', "1 decimal"),
+		withinErrors: localize('replicateArticle.withinErrors', "Fewer than {0} standard errors off"),
+		decimalsAchieved: localize('replicateArticle.decimalsAchieved', "{0} decimals"),
+		decimalAchieved: localize('replicateArticle.decimalAchieved', "1 decimal"),
+		valuesDiffer: localize('replicateArticle.valuesDiffer', "{0} values share none"),
+		valueDiffers: localize('replicateArticle.valueDiffers', "1 value shares none"),
+		errorsAchieved: localize('replicateArticle.errorsAchieved', "At most {0} standard errors off"),
+		noValues: localize('replicateArticle.noValues', "No values yet"),
+		ofValues: localize('replicateArticle.ofValues', "{0} of {1} values"),
+		valuesHeading: localize('replicateArticle.valuesHeading', "Values Short of the Required Precision"),
+		valuesIntro: localize('replicateArticle.valuesIntro', "Each value short of the precision its table requires gets a kind, Misprint, Rounding, Not Replicable or Unexplained, and an explanation, saved as you change them: Unexplained is an answer too. Explain with Agent asks your coding agent to look into each and propose them, which you then check here."),
 		showAll: localize('replicateArticle.showAll', "Show every value"),
 		rowColumn: localize('replicateArticle.rowColumn', "Value"),
 		publishedColumn: localize('replicateArticle.publishedColumn', "Published"),
 		juliaColumn: localize('replicateArticle.juliaColumn', "Julia"),
 		seColumn: localize('replicateArticle.seColumn', "Standard Error"),
 		verdictColumn: localize('replicateArticle.verdictColumn', "Comparison"),
-		differing: localize('replicateArticle.differing', "{0} of {1} values not reproduced"),
+		valuesAt: localize('replicateArticle.valuesAt', "{0} of {1} values at the required precision"),
+		allAtPrecision: localize('replicateArticle.allAtPrecision', "Every published value is at the precision its table requires."),
 		kindColumn: localize('replicateArticle.kindColumn', "Kind"),
 		explanationColumn: localize('replicateArticle.explanationColumn', "Explanation"),
 		kinds: {
@@ -750,28 +929,13 @@ function pageHtml(): string {
 			'unexplained': localize('replicateArticle.kind.unexplained', "Unexplained"),
 		},
 		explanationPlaceholder: localize('replicateArticle.explanationPlaceholder', "e.g. Two digits swapped: the t statistic of the row gives 0.153"),
-		saveExplanations: localize('replicateArticle.saveExplanations', "Save Explanations"),
 		explainWithAgent: localize('replicateArticle.explain.button', "Explain with Agent"),
-		explainHint: localize('replicateArticle.explainHint', "Each difference gets a kind, Misprint, Rounding, Not Replicable or Unexplained, and why: Unexplained is an answer too. Explain with Agent asks your coding agent to look into each and propose them, which you check."),
 		explained: localize('replicateArticle.explained', "Differences: {0} explained, {1} unexplained."),
 		// 5. Record and Share
-		recordIntro: localize('replicateArticle.page.recordIntro', "The replication is full when Julia reproduces every published value: to all the decimals printed, or within the noise of a simulation. Otherwise it is partial."),
-		noResults: localize('replicateArticle.noResults', "No results yet: the replication's notebook writes them to {0} when it runs in the replication's folder, through Pollis.replicate and Pollis.compare."),
-		total: localize('replicateArticle.total', "{0} of {1} published values reproduced"),
-		tableColumn: localize('replicateArticle.tableColumn', "Table"),
-		valuesColumn: localize('replicateArticle.valuesColumn', "Values"),
-		reproducedColumn: localize('replicateArticle.reproducedColumn', "Reproduced"),
+		recordIntro: localize('replicateArticle.page.recordIntro', "What the replication shows: each target table with the precision it requires and the precision it achieves, from results.csv, and the differences explained in Compare."),
+		noResults: localize('replicateArticle.noResults', "No results yet: the notebook writes them to results.csv as it runs in the replication's folder, through Pollis.replicate and Pollis.compare."),
+		tablesAt: localize('replicateArticle.tablesAt', "{0} of {1} target tables at the required precision"),
 		openResults: localize('replicateArticle.openResults', "Open results.csv"),
-		statusLabel: localize('replicateArticle.status.label', "Status"),
-		fromResults: localize('replicateArticle.status.fromResults', "From the results ({0})"),
-		fromNoResults: localize('replicateArticle.status.fromNoResults', "From the results (none yet)"),
-		full: localize('replicateArticle.status.full', "Full"),
-		partial: localize('replicateArticle.status.partial', "Partial"),
-		reason: localize('replicateArticle.status.reason', "Reason"),
-		reasonPlaceholder: localize('replicateArticle.status.reasonPlaceholder', "e.g. Table 3 is printed with a typo in its third row"),
-		statusHint: localize('replicateArticle.status.hint', "Set the status yourself only with a reason, which is kept with it in replication.toml."),
-		statusFull: localize('replicateArticle.status.isFull', "Full replication"),
-		statusPartial: localize('replicateArticle.status.isPartial', "Partial replication"),
 		licencesHeading: localize('replicateArticle.licences', "Inputs with no licence stated"),
 		licencesHint: localize('replicateArticle.licences.hint', "Before sharing the replication, ask the owner of each one whether its data may be shared, and write the terms in its licence in replication.toml."),
 		addToMine: localize('replicateArticle.addToMine', "Add to My Replications"),
@@ -798,11 +962,10 @@ function pageHtml(): string {
 				title: text.stepPlan,
 				headHtml: '<span class="soon" id="planHead"></span>',
 				bodyHtml: `
-		<p class="intro">${text.planIntro}</p>
+		<p class="intro">${withPaths(text.planIntro)}</p>
 		<div id="plan"></div>
 		<div class="actions" id="planActions">
-			<button class="action current" data-submit="plan">${text.savePlan}</button>
-			<button class="action" data-command="planWithAgent">${text.planWithAgent}</button>
+			<button class="action current" data-command="planWithAgent">${text.planWithAgent}</button>
 		</div>
 		<p class="error small" id="error-plan"></p>
 		<p class="small">${text.planHint}</p>
@@ -812,16 +975,18 @@ function pageHtml(): string {
 				id: 'step-replicate',
 				title: text.stepReplicate,
 				bodyHtml: `
-		<p class="intro">${text.replicateIntro}</p>
-		<h2>${text.instructions}</h2>
-		<p class="intro">${text.instructionsIntro}</p>
-		<textarea id="instructions" placeholder="${text.instructionsPlaceholder}"></textarea>
+		<p class="intro">${withPaths(text.replicateIntro)}</p>
 		<div class="actions">
 			<button class="action current" data-command="replicate">${text.replicate}</button>
+			<button class="action" id="newNotebook" data-command="newNotebook" hidden>${text.newNotebook}</button>
 			<button class="action" id="openNotebook" data-command="open" hidden>${text.openNotebook}</button>
-			<button class="action" data-command="open" data-file="replication.toml">${text.editToml}</button>
+			<button class="action" data-command="open" data-file="replication.toml">${withPaths(text.editToml)}</button>
 		</div>
 		<p class="small" id="notebookState"></p>
+		<p class="small" id="resultsState"></p>
+		<h2>${text.instructions}</h2>
+		<p class="intro">${withPaths(text.instructionsIntro)}</p>
+		<textarea id="instructions" placeholder="${text.instructionsPlaceholder}"></textarea>
 `,
 			},
 			{
@@ -829,43 +994,32 @@ function pageHtml(): string {
 				title: text.stepCompare,
 				headHtml: '<span class="soon" id="compareHead"></span>',
 				bodyHtml: `
-		<p class="intro">${text.compareIntro}</p>
+		<p class="intro">${withPaths(text.compareIntro)}</p>
+		<div class="precision" id="precision"></div>
+		<h2>${text.valuesHeading}</h2>
+		<p class="intro">${text.valuesIntro}</p>
 		<p class="small"><label class="check"><input type="checkbox" id="showAll"> ${text.showAll}</label></p>
 		<div id="differences"></div>
 		<div id="explain" hidden>
 			<div class="actions">
-				<button class="action current" data-submit="explanations">${text.saveExplanations}</button>
-				<button class="action" data-command="explainWithAgent">${text.explainWithAgent}</button>
+				<button class="action current" data-command="explainWithAgent">${text.explainWithAgent}</button>
 			</div>
 			<p class="error small" id="error-explanations"></p>
-			<p class="small">${text.explainHint}</p>
 		</div>
 `,
 			},
 			{
 				id: 'step-record',
 				title: text.stepRecord,
-				headHtml: '<span class="soon" id="statusHead"></span>',
+				headHtml: '<span class="soon" id="recordHead"></span>',
 				bodyHtml: `
-		<p class="intro">${text.recordIntro}</p>
+		<p class="intro">${withPaths(text.recordIntro)}</p>
 		<div class="results" id="results"></div>
-		<div class="field">
-			<label>${text.statusLabel}<select id="status">
-				<option value="" id="statusFromResults"></option>
-				<option value="full">${text.full}</option>
-				<option value="partial">${text.partial}</option>
-			</select></label>
-			<label>${text.reason}<input class="wide" id="statusReason" placeholder="${text.reasonPlaceholder}"></label>
-			<button class="action" data-submit="status">${text.save}</button>
-			<button class="action" data-cancel="statusReason">${text.cancel}</button>
-			<p class="small hint">${text.statusHint}</p>
-			<p class="error small" id="error-status"></p>
-		</div>
 		<div class="licences warning small" id="licences" hidden></div>
 		<div class="actions">
 			<button class="action current" id="done"></button>
 			<button class="action" disabled title="${text.soon}">${text.extractWorkflow}</button>
-			<button class="action" data-command="open" data-file="replication.toml">${text.editToml}</button>
+			<button class="action" data-command="open" data-file="replication.toml">${withPaths(text.editToml)}</button>
 		</div>
 		<p class="small" id="doneHint"></p>
 `,
@@ -880,15 +1034,31 @@ function pageHtml(): string {
 	let planEdited = false;
 	let explanationsEdited = false;
 
-	// 2. Plan: a row for each target, how it is computed, saved together
-	FORMS.plan = { send: () => ({ command: 'setPlan', rows: [...document.querySelectorAll('[data-plan]')].map(row => ({
+	// 2. Plan: a row for each target, how it is computed, saved as it changes: a choice at once, typing once it pauses
+	const planRow = row => ({
 		target: row.dataset.plan,
 		way: row.querySelector('select').value,
 		packages: row.querySelector('.packages').value,
 		note: row.querySelector('.note').value,
-	})) }) };
-	document.getElementById('plan').addEventListener('input', () => { planEdited = true; });
-	document.getElementById('plan').addEventListener('change', () => { planEdited = true; });
+	});
+	let planTimer;
+	const savePlan = () => {
+		clearTimeout(planTimer);
+		vscode.postMessage({ command: 'setPlan', rows: [...document.querySelectorAll('[data-plan]')].map(planRow) });
+	};
+	document.getElementById('plan').addEventListener('input', event => {
+		planEdited = true;
+		if (event.target.tagName === 'INPUT') {
+			clearTimeout(planTimer);
+			planTimer = setTimeout(savePlan, 500);
+		}
+	});
+	document.getElementById('plan').addEventListener('change', event => {
+		planEdited = true;
+		if (event.target.tagName === 'SELECT') {
+			savePlan();
+		}
+	});
 
 	function option(select, value, label) {
 		const node = element('option', '', label);
@@ -902,10 +1072,16 @@ function pageHtml(): string {
 		const typed = new Map(planEdited ? [...container.querySelectorAll('[data-plan]')].map(row => [row.dataset.plan, {
 			way: row.querySelector('select').value, packages: row.querySelector('.packages').value, note: row.querySelector('.note').value,
 		}]) : []);
-		container.textContent = '';
 		const plan = replication.plan;
 		document.getElementById('planActions').hidden = !plan.length;
 		document.getElementById('planHead').textContent = plan.length ? TEXT.planned.replace('{0}', plan.filter(entry => entry.way).length).replace('{1}', plan.length) : '';
+		// While a field of the plan is typed in, and its tables and methods are the same, the table stays as it is
+		const shape = JSON.stringify(plan.map(entry => [entry.target, entry.method || '']));
+		if (container.dataset.shape === shape && container.contains(document.activeElement) && document.activeElement.tagName === 'INPUT') {
+			return;
+		}
+		container.dataset.shape = shape;
+		container.textContent = '';
 		if (!plan.length) {
 			container.appendChild(element('p', 'small', TEXT.noPlanTargets));
 			return;
@@ -938,18 +1114,18 @@ function pageHtml(): string {
 			const note = element('input', 'note wide');
 			note.value = shown.note;
 			row.appendChild(element('td')).appendChild(note);
-			// A new method: Make a Method starts it, then Open Method opens it
+			// A new method: Make an Article Method, on every row without one, plans the table as a new method and starts it; then
+			// Open Method opens it
 			const method = element('td');
-			const showMethod = () => {
-				method.textContent = '';
-				if (entry.method) {
-					method.appendChild(element('button', 'link small', TEXT.openMethod.replace('{0}', entry.method))).addEventListener('click', () => vscode.postMessage({ command: 'openMethod', target: entry.target }));
-				} else if (way.value === 'method') {
-					method.appendChild(element('button', 'link small', TEXT.makeMethod)).addEventListener('click', () => vscode.postMessage({ command: 'makeMethod', target: entry.target }));
-				}
-			};
-			way.addEventListener('change', showMethod);
-			showMethod();
+			if (entry.method) {
+				method.appendChild(element('button', 'link small', TEXT.openMethod.replace('{0}', entry.method))).addEventListener('click', () => vscode.postMessage({ command: 'openMethod', target: entry.target }));
+			} else {
+				method.appendChild(element('button', 'link small', TEXT.makeMethod)).addEventListener('click', () => {
+					clearTimeout(planTimer);
+					way.value = 'method';
+					vscode.postMessage({ command: 'makeMethod', target: entry.target, rows: [...document.querySelectorAll('[data-plan]')].map(planRow) });
+				});
+			}
 			row.appendChild(method);
 			table.appendChild(row);
 		}
@@ -957,21 +1133,40 @@ function pageHtml(): string {
 		container.appendChild(scroll);
 	}
 
-	// 4. Compare: the explanation of each value not reproduced, saved together
-	const differenceKey = (table, row) => table + '\n' + row;
-	FORMS.explanations = { send: () => ({ command: 'setExplanations', rows: [...document.querySelectorAll('[data-difference]')].map(row => ({
-		target: row.dataset.table,
-		row: row.dataset.row,
-		kind: row.querySelector('select').value,
-		explanation: row.querySelector('input').value,
-	})) }) };
-	document.getElementById('differences').addEventListener('input', () => { explanationsEdited = true; });
-	document.getElementById('differences').addEventListener('change', event => { if (event.target.id !== 'showAll') { explanationsEdited = true; } });
-
-	// The form of Record and Share: the status, saved with its reason
-	FORMS.status = { send: () => ({ command: 'setStatus', status: value('status'), reason: value('statusReason') }) };
-	document.getElementById('status').addEventListener('change', event => { event.target.dataset.edited = '1'; });
-	document.querySelector('button[data-cancel="statusReason"]').addEventListener('click', () => revert('status'));
+	// 4. Compare: the precision each target requires, saved as it changes, and the explanation of each value short of
+	// it, saved as it is typed
+	const differenceKey = (table, row) => table + '\\n' + row;
+	let explanationsTimer;
+	const saveExplanations = () => {
+		clearTimeout(explanationsTimer);
+		vscode.postMessage({ command: 'setExplanations', rows: [...document.querySelectorAll('[data-difference]')].map(row => ({
+			target: row.dataset.table,
+			row: row.dataset.row,
+			kind: row.querySelector('select').value,
+			explanation: row.querySelector('input').value,
+		})) });
+	};
+	const differencesPane = document.getElementById('differences');
+	differencesPane.addEventListener('input', event => {
+		if (event.target.tagName === 'INPUT') {
+			explanationsEdited = true;
+			clearTimeout(explanationsTimer);
+			explanationsTimer = setTimeout(saveExplanations, 500);
+		}
+	});
+	differencesPane.addEventListener('change', event => {
+		if (event.target.tagName === 'SELECT') {
+			explanationsEdited = true;
+			saveExplanations();
+		}
+	});
+	document.getElementById('precision').addEventListener('change', event => {
+		const row = event.target.closest('[data-precision]');
+		if (row) {
+			const field = name => row.querySelector('.' + name);
+			vscode.postMessage({ command: 'setPrecision', target: row.dataset.precision, decimals: field('decimals') ? field('decimals').value : '', standardErrors: field('errors') ? field('errors').value : '' });
+		}
+	});
 	document.getElementById('done').addEventListener('click', () => vscode.postMessage({ command: 'setDone', done: !replication.done }));
 
 	// The notes are saved as they are typed
@@ -981,45 +1176,153 @@ function pageHtml(): string {
 		clearTimeout(instructionsTimer);
 		instructionsTimer = setTimeout(() => vscode.postMessage({ command: 'instructions', text: instructions.value }), 500);
 	});
-	document.getElementById('showAll').addEventListener('change', () => renderDifferences(replication && replication.results));
+	document.getElementById('showAll').addEventListener('change', () => renderDifferences(true));
 
 	editableHeading(TEXT.headingHint, () => replication ? replication.title : '', title => {
 		vscode.postMessage({ command: 'setTitle', title });
 		replication = { ...replication, title };
 	});
 
-	// The status the results give, full when every published value is reproduced
-	const computed = results => results ? (results.reproduced === results.values ? 'full' : 'partial') : undefined;
-
 	// The note of a replication with no results.csv yet
 	function noResults(container) {
-		const parts = TEXT.noResults.split('{0}');
-		const note = element('p', 'small', parts[0]);
-		note.appendChild(element('code', '', 'results.csv'));
-		note.appendChild(document.createTextNode(parts[1] || ''));
-		container.appendChild(note);
+		container.appendChild(withPaths(element('p', 'small'), TEXT.noResults));
 	}
 
-	// The values Julia does not reproduce, or all of them, table by table
-	function renderDifferences(results) {
+	// A link that opens results.csv
+	function openResults(container) {
+		const open = withPaths(element('button', 'link small'), TEXT.openResults);
+		open.addEventListener('click', () => vscode.postMessage({ command: 'open', file: 'results.csv' }));
+		container.appendChild(open);
+	}
+
+	// The tables of the replication: its targets, then any other table of results.csv, each with what it requires and
+	// its results
+	function precisionTables() {
+		const results = replication.results;
+		const names = replication.targets.map(target => target.name);
+		const others = results ? results.tables.map(entry => entry.name).filter(name => !names.includes(name)) : [];
+		return [...names, ...others].map(name => ({
+			name,
+			target: names.includes(name),
+			required: replication.precision.find(entry => entry.target === name) || {},
+			result: results ? results.tables.find(entry => entry.name === name) : undefined,
+		}));
+	}
+
+	// What a table requires, in words
+	function requiredText(entry) {
+		if (entry.result && entry.result.kind === 'noise') {
+			return TEXT.withinErrors.replace('{0}', entry.required.standardErrors || 2);
+		}
+		const decimals = entry.required.decimals;
+		return decimals === undefined ? TEXT.allDecimals : decimals === 1 ? TEXT.decimalRequired : TEXT.decimalsRequired.replace('{0}', decimals);
+	}
+
+	// The precision a table achieves, in words: the fewest decimals its values share with the published ones, and how
+	// many share none, or the most standard errors a simulated value is off
+	function achievedText(result) {
+		if (!result) {
+			return TEXT.noValues;
+		}
+		if (result.kind === 'noise') {
+			return result.standardErrors === undefined ? TEXT.noValues : TEXT.errorsAchieved.replace('{0}', result.standardErrors.toFixed(1));
+		}
+		const parts = [];
+		if (result.decimals !== undefined) {
+			parts.push(result.decimals === 1 ? TEXT.decimalAchieved : TEXT.decimalsAchieved.replace('{0}', result.decimals));
+		}
+		if (result.differing) {
+			parts.push(result.differing === 1 ? TEXT.valueDiffers : TEXT.valuesDiffer.replace('{0}', result.differing));
+		}
+		return parts.join('; ');
+	}
+
+	// How many of a table's values are at the precision it requires
+	function atText(result) {
+		return result ? TEXT.ofValues.replace('{0}', result.reproduced).replace('{1}', result.values) : '';
+	}
+
+	// Compare: a row for each table, with the precision it requires, which a target's row sets, and achieves
+	function renderPrecision() {
+		const container = document.getElementById('precision');
+		const tables = precisionTables();
+		// While a precision is typed in, and the tables are the same, the table stays as it is
+		const shape = JSON.stringify(tables.map(entry => [entry.name, entry.result ? entry.result.kind : '']));
+		if (container.dataset.shape === shape && container.contains(document.activeElement) && document.activeElement.tagName === 'INPUT') {
+			return;
+		}
+		container.dataset.shape = shape;
+		container.textContent = '';
+		if (!tables.length) {
+			container.appendChild(element('p', 'small', TEXT.noCompareTargets));
+			return;
+		}
+		const scroll = element('div', 'scroll');
+		const table = element('table');
+		const header = element('tr');
+		[TEXT.tableColumn, TEXT.decimalsColumn, TEXT.errorsColumn, TEXT.achievedColumn, TEXT.atColumn].forEach(label => header.appendChild(element('th', '', label)));
+		table.appendChild(header);
+		for (const entry of tables) {
+			const row = element('tr');
+			if (entry.target) {
+				row.dataset.precision = entry.name;
+			}
+			row.appendChild(element('td', 'table-name', entry.name));
+			const kind = entry.result ? entry.result.kind : undefined;
+			// The decimals of exact values, the standard errors of simulated ones; both until the results say which
+			const cell = (shown, name, value, placeholder, step) => {
+				const td = element('td');
+				if (!shown) {
+					td.textContent = '-';
+				} else if (!entry.target) {
+					td.textContent = placeholder;
+				} else {
+					const input = element('input', 'number ' + name);
+					input.type = 'number';
+					input.min = '0';
+					input.step = step;
+					input.placeholder = placeholder;
+					input.value = value === undefined ? '' : String(value);
+					td.appendChild(input);
+				}
+				row.appendChild(td);
+			};
+			cell(kind !== 'noise', 'decimals', entry.required.decimals, TEXT.allPrinted, '1');
+			cell(kind !== 'exact', 'errors', entry.required.standardErrors, '2', '0.5');
+			row.appendChild(element('td', '', achievedText(entry.result)));
+			row.appendChild(element('td', 'number' + (entry.result && entry.result.reproduced < entry.result.values ? ' warning' : ''), atText(entry.result)));
+			table.appendChild(row);
+		}
+		scroll.appendChild(table);
+		container.appendChild(scroll);
+		if (replication.results) {
+			openResults(container);
+		}
+	}
+
+	// The values short of the precision their table requires, or all of them, table by table, each short one with its
+	// kind and explanation; redrawn always when asked, else not while an explanation is typed in
+	function renderDifferences(always) {
+		const results = replication.results;
 		const container = document.getElementById('differences');
+		const all = document.getElementById('showAll').checked;
+		const shape = JSON.stringify([all, results ? results.rows.map(row => [row.table, row.row, row.reproduced]) : []]);
+		if (!always && container.dataset.shape === shape && container.contains(document.activeElement) && document.activeElement.tagName === 'INPUT') {
+			return;
+		}
+		container.dataset.shape = shape;
 		const typed = new Map(explanationsEdited ? [...container.querySelectorAll('[data-difference]')].map(row => [differenceKey(row.dataset.table, row.dataset.row), {
 			kind: row.querySelector('select').value, explanation: row.querySelector('input').value,
 		}]) : []);
 		const saved = new Map(replication.differences.map(entry => [differenceKey(entry.target, entry.row), entry]));
 		container.textContent = '';
-		const head = document.getElementById('compareHead');
 		document.getElementById('explain').hidden = !results || results.reproduced === results.values;
 		if (!results) {
-			head.textContent = '';
 			noResults(container);
 			return;
 		}
-		const differing = results.values - results.reproduced;
-		head.textContent = differing ? TEXT.differing.replace('{0}', differing).replace('{1}', results.values) : TEXT.allReproduced;
-		const all = document.getElementById('showAll').checked;
-		if (!differing && !all) {
-			container.appendChild(element('p', 'small', TEXT.allReproduced));
+		if (results.reproduced === results.values && !all) {
+			container.appendChild(element('p', 'small', TEXT.allAtPrecision));
 			return;
 		}
 		const noise = results.rows.some(row => row.se);
@@ -1066,20 +1369,22 @@ function pageHtml(): string {
 			box.appendChild(scroll);
 			container.appendChild(box);
 		}
-		const open = element('button', 'link small', TEXT.openResults);
-		open.addEventListener('click', () => vscode.postMessage({ command: 'open', file: 'results.csv' }));
-		container.appendChild(open);
 	}
 
-	function renderResults(results) {
+	// Record and Share: the tables at the precision they require, the differences explained, and each table's precision
+	function renderResults() {
+		const results = replication.results;
 		const container = document.getElementById('results');
 		container.textContent = '';
 		if (!results) {
 			noResults(container);
 			return;
 		}
-		container.appendChild(element('p', 'total', TEXT.total.replace('{0}', results.reproduced).replace('{1}', results.values)));
-		// The values not reproduced whose difference has a kind other than Unexplained
+		const tables = precisionTables();
+		const at = tables.filter(entry => entry.result && entry.result.reproduced === entry.result.values).length;
+		container.appendChild(element('p', 'total', TEXT.tablesAt.replace('{0}', at).replace('{1}', tables.length)));
+		container.appendChild(element('p', 'small', TEXT.valuesAt.replace('{0}', results.reproduced).replace('{1}', results.values)));
+		// The values short of their precision whose difference has a kind other than Unexplained
 		const kinds = new Map(replication.differences.map(entry => [differenceKey(entry.target, entry.row), entry.kind]));
 		const differing = results.rows.filter(row => !row.reproduced);
 		if (differing.length) {
@@ -1088,19 +1393,18 @@ function pageHtml(): string {
 		}
 		const table = element('table');
 		const head = element('tr');
-		[TEXT.tableColumn, TEXT.valuesColumn, TEXT.reproducedColumn].forEach(label => head.appendChild(element('th', '', label)));
+		[TEXT.tableColumn, TEXT.requiredColumn, TEXT.achievedColumn, TEXT.atColumn].forEach(label => head.appendChild(element('th', '', label)));
 		table.appendChild(head);
-		for (const entry of results.tables) {
+		for (const entry of tables) {
 			const row = element('tr');
 			row.appendChild(element('td', '', entry.name));
-			row.appendChild(element('td', 'number', String(entry.values)));
-			row.appendChild(element('td', 'number' + (entry.reproduced < entry.values ? ' warning' : ''), String(entry.reproduced)));
+			row.appendChild(element('td', '', requiredText(entry)));
+			row.appendChild(element('td', '', achievedText(entry.result)));
+			row.appendChild(element('td', 'number' + (entry.result && entry.result.reproduced < entry.result.values ? ' warning' : ''), atText(entry.result)));
 			table.appendChild(row);
 		}
 		container.appendChild(table);
-		const open = element('button', 'link small', TEXT.openResults);
-		open.addEventListener('click', () => vscode.postMessage({ command: 'open', file: 'results.csv' }));
-		container.appendChild(open);
+		openResults(container);
 	}
 
 	function renderLicences(inputs) {
@@ -1112,7 +1416,7 @@ function pageHtml(): string {
 		const list = element('ul');
 		missing.forEach(input => list.appendChild(element('li', '', input.name + (input.source ? ' (' + input.source + ')' : ''))));
 		container.appendChild(list);
-		container.appendChild(element('div', '', TEXT.licencesHint));
+		container.appendChild(withPaths(element('div'), TEXT.licencesHint));
 	}
 
 	window.addEventListener('message', event => {
@@ -1131,22 +1435,33 @@ function pageHtml(): string {
 		showArticleData(replication);
 		// 2. Plan
 		renderPlan();
-		// 3. Replicate
+		// 3. Replicate: the notebook, and the results it has written so far
 		refresh('instructions', replication.instructions);
 		const openNotebook = document.getElementById('openNotebook');
 		openNotebook.hidden = !replication.notebook;
 		openNotebook.dataset.file = replication.notebook || '';
-		document.getElementById('notebookState').textContent = replication.notebook ? TEXT.notebook.replace('{0}', replication.notebook) : TEXT.noNotebook;
+		document.getElementById('newNotebook').hidden = !!replication.notebook;
+		withPaths(document.getElementById('notebookState'), replication.notebook ? TEXT.notebook.replace('{0}', replication.notebook) : TEXT.noNotebook);
+		const resultsState = document.getElementById('resultsState');
+		const results = replication.results;
+		if (results) {
+			const names = replication.targets.map(target => target.name);
+			const covered = names.filter(name => results.tables.some(entry => entry.name === name)).length;
+			withPaths(resultsState, TEXT.resultsSoFar.replace('{0}', results.values).replace('{1}', covered).replace('{2}', names.length) + ' ');
+			const show = element('button', 'link small', TEXT.showInCompare);
+			show.addEventListener('click', () => openStep('compare'));
+			resultsState.appendChild(show);
+		} else {
+			resultsState.textContent = '';
+		}
 		// 4. Compare
-		renderDifferences(replication.results);
+		renderPrecision();
+		renderDifferences(false);
+		document.getElementById('compareHead').textContent = results ? TEXT.valuesAt.replace('{0}', results.reproduced).replace('{1}', results.values) : '';
 		// 5. Record and Share
-		renderResults(replication.results);
-		const fromResults = computed(replication.results);
-		document.getElementById('statusFromResults').textContent = fromResults ? TEXT.fromResults.replace('{0}', fromResults === 'full' ? TEXT.full : TEXT.partial) : TEXT.fromNoResults;
-		refresh('status', replication.status || '');
-		refresh('statusReason', replication.statusReason || '');
-		const status = replication.status || fromResults;
-		document.getElementById('statusHead').textContent = status ? (status === 'full' ? TEXT.statusFull : TEXT.statusPartial) : '';
+		renderResults();
+		const tables = precisionTables();
+		document.getElementById('recordHead').textContent = results ? TEXT.tablesAt.replace('{0}', tables.filter(entry => entry.result && entry.result.reproduced === entry.result.values).length).replace('{1}', tables.length) : '';
 		renderLicences(replication.inputs);
 		document.getElementById('done').textContent = replication.done ? TEXT.backToProgress : TEXT.addToMine;
 		document.getElementById('doneHint').textContent = replication.done ? TEXT.doneHint : TEXT.inProgressHint;

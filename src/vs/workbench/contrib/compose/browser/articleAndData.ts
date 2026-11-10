@@ -25,7 +25,7 @@ import { defaultCopyFolder, isInsidePollis } from '../../pollisWorkspace/browser
 import { IWebview } from '../../webview/browser/webview.js';
 import { skillFile, startAgent } from './pollisAgents.js';
 
-// Article and Data, the first step of the pages that start from an article: Create New Method (newMethods.ts) and
+// Article and Data, the first step of the pages that start from an article: Create Article Method (newMethods.ts) and
 // Replicate an Article (replicateArticle.ts). A record file in the page's folder, method.toml or replication.toml,
 // holds the article's link and the tables: input tables, links read into memory with no copy kept or tables typed
 // in from the article, in `[inputs.NAME]`; target tables, the published results as printed, in targets/NAME.csv with
@@ -162,6 +162,11 @@ export async function readTables(fileService: IFileService, folder: URI, toml: T
 }
 
 /** A TOML string. */
+/** A text with its file names, such as results.csv, in Pollis' yellow. */
+export function withPaths(value: string): string {
+	return value.replace(/\b[\w./-]+\.(?:csv|toml|md|ipynb)\b/g, name => `<code class="path">${name}</code>`);
+}
+
 export function tomlString(value: string): string {
 	return `"${value.replace(/[\\"]/g, '\\$&')}"`;
 }
@@ -179,10 +184,11 @@ export async function appendToml(fileService: IFileService, file: URI, block: st
 }
 
 /**
- * Sets a string or boolean value in a record file: at the top level, or in the table `[section]`. An existing line
+ * Sets a string, boolean or number in a record file: at the top level, or in the table `[section]`. An existing line
  * of the key is replaced; otherwise the line goes after the top level's last value, or after the table's header.
+ * Undefined removes the key's line, so that its default applies.
  */
-export async function setTomlValue(fileService: IFileService, file: URI, section: string | undefined, key: string, value: string | boolean): Promise<void> {
+export async function setTomlValue(fileService: IFileService, file: URI, section: string | undefined, key: string, value: string | boolean | number | undefined): Promise<void> {
 	const lines = (await fileService.readFile(file)).value.toString().split('\n');
 	const header = section === undefined ? -1 : lines.findIndex(line => line.trim() === `[${section}]`);
 	if (section !== undefined && header < 0) {
@@ -190,8 +196,16 @@ export async function setTomlValue(fileService: IFileService, file: URI, section
 	}
 	const next = lines.findIndex((line, index) => index > header && /^\s*\[/.test(line));
 	const end = next < 0 ? lines.length : next;
-	const line = `${key} = ${typeof value === 'string' ? tomlString(value) : value}`;
 	const existing = lines.findIndex((candidate, index) => index > header && index < end && new RegExp(`^\\s*${key}\\s*=`).test(candidate));
+	// No value: the key goes, so that its default applies
+	if (value === undefined) {
+		if (existing >= 0) {
+			lines.splice(existing, 1);
+			await fileService.writeFile(file, VSBuffer.fromString(lines.join('\n')));
+		}
+		return;
+	}
+	const line = `${key} = ${typeof value === 'string' ? tomlString(value) : value}`;
 	if (existing >= 0) {
 		lines[existing] = line;
 	} else if (section !== undefined) {
@@ -664,7 +678,7 @@ export function articleDataHtml(text: ReturnType<typeof articleDataText>): strin
 			<div class="form" id="form-input" data-group="inputs">
 				<label>${text.tableName}<input id="inputName" spellcheck="false" placeholder="${text.tableNamePlaceholder}"></label>
 				<button class="action primary" data-submit="input">${text.add}</button>
-				<p class="small hint">${text.emptyInputHint}</p>
+				<p class="small hint">${withPaths(text.emptyInputHint)}</p>
 				<p class="error small" id="error-input"></p>
 			</div>
 			<div class="form" id="form-link" data-group="inputs" hidden>
@@ -757,6 +771,9 @@ export const ARTICLE_DATA_STYLE = `
 			.tab { font: inherit; font-size: 12px; background: none; border: none; border-bottom: 2px solid transparent; color: var(--vscode-descriptionForeground); padding: 4px 0; cursor: pointer; }
 			.tab.selected { color: var(--vscode-foreground); border-bottom-color: var(--vscode-focusBorder); }
 			code { font-family: var(--vscode-editor-font-family); color: var(--vscode-textPreformat-foreground); background: var(--vscode-textPreformat-background); border-radius: 3px; padding: 0 3px; }
+			code.path { color: #e8a33d; }
+			body.vscode-light code.path { color: #a8650d; }
+			button code.path { background: none; padding: 0; }
 			.table { margin: 0 0 20px 0; }
 			.table-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px; margin: 0 0 4px 0; }
 			.table-name { font-size: 14px; font-weight: 600; }
@@ -795,6 +812,15 @@ export const ARTICLE_DATA_SCRIPT = `
 		const node = document.createElement(tag);
 		if (className) { node.className = className; }
 		if (content) { node.textContent = content; }
+		return node;
+	}
+
+	// A text with its file names, such as results.csv, in Pollis' yellow
+	function withPaths(node, value) {
+		node.textContent = '';
+		value.split(/([\\w./-]+\\.(?:csv|toml|md|ipynb))\\b/).forEach((part, index) => {
+			node.appendChild(index % 2 ? element('code', 'path', part) : document.createTextNode(part));
+		});
 		return node;
 	}
 
@@ -998,7 +1024,7 @@ export const ARTICLE_DATA_SCRIPT = `
 			head.appendChild(element('span', 'small', size(target)));
 			box.appendChild(head);
 			if (OPTIONS.calls) {
-				box.appendChild(element('div', target.call ? 'call' : 'call small', target.call ? TEXT.call + ': ' + target.call : TEXT.noCall));
+				box.appendChild(target.call ? element('div', 'call', TEXT.call + ': ' + target.call) : withPaths(element('div', 'call small'), TEXT.noCall));
 			}
 			box.appendChild(grid(target));
 			container.appendChild(box);

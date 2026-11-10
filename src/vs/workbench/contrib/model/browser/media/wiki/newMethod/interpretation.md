@@ -1,4 +1,4 @@
-# New Method — Interpretation
+# New Article Method — Interpretation
 
 ## What Passing Tests Mean for a Pollis Method
 

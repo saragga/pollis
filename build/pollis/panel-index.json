@@ -63,7 +63,6 @@
 			"menubarNDSubmenu",
 			"menubarNLPSubmenu",
 			"menubarNNSubmenu",
-			"menubarNewMethodsMenu",
 			"menubarNewPanelsMenu",
 			"menubarOCSubmenu",
 			"menubarOrchestrationMenu",
@@ -6526,6 +6525,34 @@
 			]
 		},
 		{
+			"id": "profileTime",
+			"title": "Find Where the Time Goes",
+			"source": "pollis",
+			"commands": [
+				{
+					"id": "pollis.profiling.profileTime",
+					"menuTitles": [
+						"Find Where the Time Goes..."
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "flame",
+			"decisionFirstColumn": "Report",
+			"toml": "src/vs/workbench/contrib/model/browser/webviews/profileTime.toml",
+			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
+			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"wikis": [
+				"profileTime/factsheet.md",
+				"profileTime/overview.md",
+				"profileTime/reading-a-flame-graph.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"StatProfilerHTML.jl"
+			]
+		},
+		{
 			"id": "prox",
 			"title": "Nonsmooth and Proximal Optimisation",
 			"source": "pollis",
@@ -8029,6 +8056,35 @@
 			"packages": [
 				"Symbolics.jl",
 				"SymbolicNumericIntegration.jl"
+			]
+		},
+		{
+			"id": "timeFunction",
+			"title": "Time a Function",
+			"source": "pollis",
+			"commands": [
+				{
+					"id": "pollis.profiling.timeFunction",
+					"menuTitles": [
+						"Time a Function..."
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "chairmarks",
+			"decisionFirstColumn": "Way to Time",
+			"toml": "src/vs/workbench/contrib/model/browser/webviews/timeFunction.toml",
+			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
+			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"wikis": [
+				"timeFunction/benchmarking-pitfalls.md",
+				"timeFunction/factsheet.md",
+				"timeFunction/overview.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"Chairmarks.jl",
+				"BenchmarkTools.jl"
 			]
 		},
 		{

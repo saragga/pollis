@@ -32,6 +32,7 @@ import { TaskRunnerTerminal } from '../taskRunnerTerminal'
 import { whenDuckDBReady } from '../pollisDuckDB'
 import { compileDocumentsInBackground, pollisDBInstalled } from '../pollisDocuments'
 import { precompileInBackground } from '../pollisPrecompile'
+import { answerBrowseRequests } from '../pollisBrowse'
 import { answerLlamaServerRequests } from '../pollisLlamaServer'
 import { POLLIS_WINDOW } from '../pollisWindow'
 import { activatePollisRepl } from './pollisTerminal'
@@ -1405,6 +1406,7 @@ export function activate(
                 )
                 connection.onNotification(notifyTypeProgress, (progress: Progress) => g_progress.update(progress))
                 answerLlamaServerRequests(connection)
+                answerBrowseRequests(connection)
                 setContext('julia.isEvaluating', false)
                 // POLLIS: the welcome page names the version in its "Julia is ready" announcement.
                 setContext('julia.replVersion', juliaExecutable?.version ?? '')

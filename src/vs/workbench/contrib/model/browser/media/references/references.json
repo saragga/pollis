@@ -6694,6 +6694,27 @@
 			"open_access": false
 		},
 		{
+			"key": "CR2016a",
+			"type": "misc",
+			"title": "Robust benchmarking in noisy environments",
+			"authors": [
+				"Chen, Jiahao",
+				"Revels, Jarrett"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2016,
+			"publisher": "arXiv",
+			"doi": "10.48550/arXiv.1608.04295",
+			"openalex": "W2517376783",
+			"url": "https://arxiv.org/abs/1608.04295",
+			"oa_url": "https://arxiv.org/pdf/1608.04295",
+			"source": "datacite",
+			"retrieved": "2026-11-09",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "CRBD2018a",
 			"type": "misc",
 			"title": "Neural Ordinary Differential Equations",
@@ -12483,6 +12504,30 @@
 			"open_access": false
 		},
 		{
+			"key": "GKM1982a",
+			"type": "article",
+			"title": "Gprof: A call graph execution profiler",
+			"authors": [
+				"Graham, Susan L.",
+				"Kessler, Peter B.",
+				"McKusick, Marshall K."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1982,
+			"journal": "ACM SIGPLAN Notices",
+			"volume": "17",
+			"number": "6",
+			"pages": "120-126",
+			"issn": "0362-1340",
+			"doi": "10.1145/872726.806987",
+			"openalex": "W4256386389",
+			"source": "crossref",
+			"retrieved": "2026-11-09",
+			"checked": true,
+			"open_access": false
+		},
+		{
 			"key": "GL2007a",
 			"type": "article",
 			"title": "Statistical Analyses and Reproducible Research",
@@ -14125,6 +14170,28 @@
 			"retrieved": "2026-10-31",
 			"checked": true,
 			"open_access": true
+		},
+		{
+			"key": "Gre2016a",
+			"type": "article",
+			"title": "The flame graph",
+			"authors": [
+				"Gregg, Brendan"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2016,
+			"journal": "Communications of the ACM",
+			"volume": "59",
+			"number": "6",
+			"pages": "48-57",
+			"issn": "0001-0782",
+			"doi": "10.1145/2909476",
+			"openalex": "W2337381441",
+			"source": "crossref",
+			"retrieved": "2026-11-09",
+			"checked": true,
+			"open_access": false
 		},
 		{
 			"key": "Gre2018a",
@@ -18863,6 +18930,27 @@
 			"open_access": true
 		},
 		{
+			"key": "KJ2013a",
+			"type": "inproceedings",
+			"title": "Rigorous benchmarking in reasonable time",
+			"authors": [
+				"Kalibera, Tomas",
+				"Jones, Richard"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2013,
+			"booktitle": "Proceedings of the 2013 International Symposium on Memory Management",
+			"pages": "63-74",
+			"doi": "10.1145/2464157.2464160",
+			"openalex": "W2013901208",
+			"oa_url": "https://dl.acm.org/doi/pdf/10.1145/2464157.2464160",
+			"source": "crossref",
+			"retrieved": "2026-11-09",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "KKSP2017a",
 			"type": "misc",
 			"title": "Asynchronous Parallel Bayesian Optimisation via Thompson Sampling",
@@ -23443,6 +23531,28 @@
 			"openalex": "W2148929755",
 			"source": "crossref",
 			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "MDHS2009a",
+			"type": "inproceedings",
+			"title": "Producing wrong data without doing anything obviously wrong!",
+			"authors": [
+				"Mytkowicz, Todd",
+				"Diwan, Amer",
+				"Hauswirth, Matthias",
+				"Sweeney, Peter F."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2009,
+			"booktitle": "Proceedings of the 14th International Conference on Architectural Support for Programming Languages and Operating Systems",
+			"pages": "265-276",
+			"doi": "10.1145/1508244.1508275",
+			"openalex": "W2153530968",
+			"source": "crossref",
+			"retrieved": "2026-11-09",
 			"checked": true,
 			"open_access": false
 		},
@@ -41052,6 +41162,12 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "CR2016a",
+			"count": 120,
+			"source": "openalex",
+			"date": "2026-11-09"
+		},
+		{
 			"key": "CRBD2018a",
 			"count": 2093,
 			"source": "openalex",
@@ -42978,6 +43094,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "GKM1982a",
+			"count": 300,
+			"source": "crossref",
+			"date": "2026-11-09"
+		},
+		{
+			"key": "GKM1982a",
+			"count": 328,
+			"source": "openalex",
+			"date": "2026-11-09"
+		},
+		{
 			"key": "GL2007a",
 			"count": 351,
 			"source": "openalex",
@@ -43486,6 +43614,18 @@
 			"count": 498,
 			"source": "openalex",
 			"date": "2026-10-31"
+		},
+		{
+			"key": "Gre2016a",
+			"count": 83,
+			"source": "crossref",
+			"date": "2026-11-09"
+		},
+		{
+			"key": "Gre2016a",
+			"count": 103,
+			"source": "openalex",
+			"date": "2026-11-09"
 		},
 		{
 			"key": "HA1985a",
@@ -45034,6 +45174,18 @@
 			"count": 776,
 			"source": "openalex",
 			"date": "2026-11-03"
+		},
+		{
+			"key": "KJ2013a",
+			"count": 23,
+			"source": "crossref",
+			"date": "2026-11-09"
+		},
+		{
+			"key": "KJ2013a",
+			"count": 101,
+			"source": "openalex",
+			"date": "2026-11-09"
 		},
 		{
 			"key": "KKSP2017a",
@@ -46594,6 +46746,18 @@
 			"count": 3511,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "MDHS2009a",
+			"count": 201,
+			"source": "crossref",
+			"date": "2026-11-09"
+		},
+		{
+			"key": "MDHS2009a",
+			"count": 333,
+			"source": "openalex",
+			"date": "2026-11-09"
 		},
 		{
 			"key": "MDJ2006a",
@@ -51802,7 +51966,7 @@
 		},
 		{
 			"id": "browseMethods",
-			"title": "Methods",
+			"title": "Article Methods",
 			"commands": [
 				"pollis.compose.createMethod"
 			],
@@ -53959,7 +54123,7 @@
 		},
 		{
 			"id": "newMethod",
-			"title": "New Method",
+			"title": "New Article Method",
 			"commands": [
 				"pollis.newMethods.create"
 			],
@@ -54294,6 +54458,15 @@
 				"HG2014a",
 				"DKPR1987a",
 				"MRRTT1953a"
+			]
+		},
+		{
+			"id": "profileTime",
+			"title": "Find Where the Time Goes",
+			"description": "Flame Graph · Line by Line · Text Report",
+			"keys": [
+				"GKM1982a",
+				"Gre2016a"
 			]
 		},
 		{
@@ -54890,6 +55063,16 @@
 				"HNESS...2010a",
 				"HP2011a",
 				"RWVAB...2016a"
+			]
+		},
+		{
+			"id": "timeFunction",
+			"title": "Time a Function",
+			"description": "Chairmarks · BenchmarkTools · First Call",
+			"keys": [
+				"CR2016a",
+				"MDHS2009a",
+				"KJ2013a"
 			]
 		},
 		{

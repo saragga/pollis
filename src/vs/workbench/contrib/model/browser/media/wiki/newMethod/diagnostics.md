@@ -1,4 +1,4 @@
-# New Method — Diagnostics
+# New Article Method — Diagnostics
 
 ## Where the Results of a Pollis Method's Tests Appear
 

@@ -1,0 +1,369 @@
+# Time a Function Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/timeFunction.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Time a Function"
+viewType = "pollis.timeFunction"
+defaultModel = "chairmarks"
+decisionFirstColumn = "Way to Time"
+
+[[packages]]
+name = "Chairmarks.jl"
+github = "https://github.com/LilithHafner/Chairmarks.jl"
+
+[[packages]]
+name = "BenchmarkTools.jl"
+github = "https://github.com/JuliaCI/BenchmarkTools.jl"
+
+[requires]
+packages = ["Chairmarks.jl", "BenchmarkTools.jl", "Plots.jl"]
+
+[[wikis]]
+name = "Overview"
+file = "timeFunction/overview.md"
+bundled = true
+description = "What the three ways of timing measure, and why a benchmark repeats a call"
+
+[[wikis]]
+name = "Factsheet"
+file = "timeFunction/factsheet.md"
+bundled = true
+description = "Tabs, inputs, macros and actions at a glance"
+
+[[wikis]]
+name = "Benchmarking Pitfalls"
+file = "timeFunction/benchmarking-pitfalls.md"
+bundled = true
+description = "Global variables, constant folding, warm-up, noise and the setup of the computer"
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+key = "CR2016a"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "MDHS2009a"
+
+[[references]]
+key = "KJ2013a"
+
+[[models]]
+id = "chairmarks"
+label = "Chairmarks"
+
+[[models]]
+id = "benchmarktools"
+label = "BenchmarkTools"
+
+[[models]]
+id = "firstcall"
+label = "First Call"
+
+[[bullets]]
+text = "Chairmarks: @b gives the fastest sample of a call within a tenth of a second, and @be keeps every sample, with its allocations and the share of garbage collection and compilation"
+detail = ""
+
+[[bullets]]
+text = "BenchmarkTools: @benchmark gives the minimum, median, mean and maximum time, a histogram of the times and the memory estimate, and judge says whether a change made a call faster or slower"
+detail = ""
+
+[[bullets]]
+text = "First Call: the time of the first call of a function, which Julia compiles before it runs, against the time of a later call"
+detail = ""
+
+[[bullets]]
+text = "The argument is computed outside the timing: as the setup of @be, or spliced in with $ in @benchmark"
+detail = ""
+
+[[decisionRows]]
+task = "Chairmarks"
+context = "Fast summary"
+purpose = "Timing while you work: a result in a tenth of a second by default, every sample with @be"
+
+[[decisionRows]]
+task = "BenchmarkTools"
+context = "Full distribution"
+purpose = "The histogram of the times and the memory estimate; judge to compare two versions of a function"
+
+[[decisionRows]]
+task = "First Call"
+context = "Compilation included"
+purpose = "The wait the first time a function runs, which compiling it adds, apart from the time of a later call"
+
+[[inputs]]
+id = "f"
+label = "Function"
+tooltip = "The function to time, by name. The default, work, is the mean square of a vector, a simple function that allocates nothing."
+default = "work"
+
+[[inputs]]
+id = "x"
+label = "Argument"
+tooltip = "The argument the function is called with: a variable or an expression. The default, x, is a vector of 10 000 simulated values."
+default = "x"
+
+[[inputs]]
+id = "seconds"
+label = "Seconds"
+tooltip = "How long the benchmark may run, in seconds. Chairmarks stops after a tenth of a second by default and BenchmarkTools after five; longer runs give more samples."
+default = "1"
+models = ["chairmarks", "benchmarktools"]
+
+[[codeBranches]]
+model = "chairmarks"
+code = '''
+using Chairmarks, Statistics
+{{?x=x}} using Random
+
+{{?f=work}} work(v) = sum(abs2, v) / length(v)  # the function to time: the mean square of a vector. Replace it with your own function.
+{{?x=x}} Random.seed!(1)
+{{?x=x}} x = randn(10000)  # its argument, 10 000 simulated values. Replace it with your own.
+
+b = @be {{x}} {{f}} seconds={{seconds}}  # {{f}} called on {{x}} for {{seconds}} s, sample after sample; {{x}} is the setup, outside the timing. The REPL shows the minimum, median, mean and maximum time of a call, with its allocations.
+
+t = [s.time for s in b.samples];  # seconds per call, one value per sample
+println("Minimum: ", round(minimum(t) * 1e6, sigdigits = 4), " microseconds per call, the sample least delayed by other work")
+println("Median:  ", round(median(t) * 1e6, sigdigits = 4), " microseconds per call, over ", length(t), " samples")
+'''
+
+[[codeBranches]]
+model = "benchmarktools"
+code = '''
+using BenchmarkTools
+{{?x=x}} using Random
+
+{{?f=work}} work(v) = sum(abs2, v) / length(v)  # the function to time: the mean square of a vector. Replace it with your own function.
+{{?x=x}} Random.seed!(1)
+{{?x=x}} x = randn(10000)  # its argument, 10 000 simulated values. Replace it with your own.
+
+b = @benchmark {{f}}($({{x}})) seconds={{seconds}}  # $ splices the value of {{x}} in, so that looking up a global variable is not timed. The REPL shows the minimum, median, mean and maximum, a histogram of the times, and the memory estimate.
+
+println("Median: ", round(median(b).time / 1e3, sigdigits = 4), " microseconds per call, over ", length(b.times), " samples")  # BenchmarkTools gives times in nanoseconds
+'''
+
+[[codeBranches]]
+model = "firstcall"
+code = '''
+{{?x=x}} using Random
+
+{{?f=work}} work(v) = sum(abs2, v) / length(v)  # the function to time: the mean square of a vector. Replace it with your own function.
+{{?x=x}} Random.seed!(1)
+{{?x=x}} x = randn(10000)  # its argument, 10 000 simulated values. Replace it with your own.
+
+first_call = @timed {{f}}({{x}});  # the first call with an argument of this type: Julia compiles {{f}}, then runs it
+later_call = @timed {{f}}({{x}});  # the second call: it only runs
+println("First call:  ", round(first_call.time * 1e3, sigdigits = 3), " ms")
+println("Second call: ", round(later_call.time * 1e3, sigdigits = 3), " ms")
+
+# Julia 1.11 and later say how much of the first call was compiling
+if haskey(first_call, :compile_time)
+    println("Compiling in the first call: ", round(first_call.compile_time * 1e3, sigdigits = 3), " ms")
+    if first_call.compile_time == 0
+        println("Nothing was compiled: {{f}} had already run on an argument of this type. Restart the REPL to time a first call.")
+    end
+end
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "histogram"
+label = "Histogram of Times"
+desc = "The time of a call in each sample of Chairmarks, with the minimum marked: a long right tail is other work of the computer delaying some samples"
+code = '''
+using Chairmarks, Plots
+{{?x=x}} using Random
+
+{{?f=work}} work(v) = sum(abs2, v) / length(v)  # the function to time
+{{?x=x}} Random.seed!(1)
+{{?x=x}} x = randn(10000)  # its argument
+
+b = @be {{x}} {{f}} seconds={{seconds}}
+t = [s.time for s in b.samples] .* 1e6;  # microseconds per call, one value per sample
+histogram(t; bins = 50, xlabel = "Microseconds per call", ylabel = "Samples", label = "samples", title = "Time of a call, sample by sample")
+vline!([minimum(t)]; color = :red, label = "minimum")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "allocations"
+label = "Allocations"
+desc = "How many times a call allocates memory on the heap, and how many bytes: each allocation takes time, and garbage collection more later"
+code = '''
+using Chairmarks
+{{?x=x}} using Random
+
+{{?f=work}} work(v) = sum(abs2, v) / length(v)  # the function to time
+{{?x=x}} Random.seed!(1)
+{{?x=x}} x = randn(10000)  # its argument
+
+s = @b {{x}} {{f}}  # the fastest sample, with the allocations of a call
+println("Allocations per call: ", s.allocs)
+println("Bytes per call:       ", s.bytes)
+if s.allocs == 0
+    println("{{f}} allocates nothing on the heap")
+end
+'''
+
+[[actionGroups.actions]]
+id = "type-stability"
+label = "Type Stability"
+desc = "The types Julia infers for the variables of the function: a type that is not concrete, such as Any, is known only when the code runs, which slows it down"
+code = '''
+using InteractiveUtils
+{{?x=x}} using Random
+
+{{?f=work}} work(v) = sum(abs2, v) / length(v)  # the function to time
+{{?x=x}} Random.seed!(1)
+{{?x=x}} x = randn(10000)  # its argument
+
+@code_warntype {{f}}({{x}})  # types printed in red, such as Any, are not concrete
+'''
+
+[[actionGroups.actions]]
+id = "timing-stability"
+label = "Timing Stability"
+desc = "The minimum time of ten separate benchmarks of the same call: a difference between two functions smaller than this spread may be noise"
+code = '''
+using Chairmarks
+{{?x=x}} using Random
+
+{{?f=work}} work(v) = sum(abs2, v) / length(v)  # the function to time
+{{?x=x}} Random.seed!(1)
+{{?x=x}} x = randn(10000)  # its argument
+
+m = [(@b {{x}} {{f}}).time for _ in 1:10]  # the minimum of each of ten benchmarks
+println("Minimum of each benchmark, in microseconds: ", round.(m .* 1e6, sigdigits = 4))
+println("Spread between benchmarks: ", round(100 * (maximum(m) - minimum(m)) / minimum(m), digits = 1), "% of the smallest")
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "sizes"
+label = "Time Across Sizes"
+desc = "The time of a call for inputs of 100 to 1 000 000 values, on log scales, how fast it grows with the size, and the time it suggests for 10 000 000 values"
+code = '''
+using Chairmarks, Plots
+
+{{?f=work}} work(v) = sum(abs2, v) / length(v)  # the function to time
+
+n = [10^k for k in 2:6]  # sizes of the input
+t = [(@b randn(m) {{f}}).time for m in n]  # randn(m), the setup, is not timed. Replace it with an input of your own of size m.
+slope = (log(t[end]) - log(t[end - 1])) / (log(n[end]) - log(n[end - 1]))  # 1 when the time grows in proportion to the size, 2 when it grows with its square
+println("Between the two largest sizes, the time grows as n^", round(slope, digits = 2))
+println("Time this suggests for 10 000 000 values: ", round(t[end] * 10^slope * 1e3, sigdigits = 3), " ms")
+plot(n, t .* 1e6; xscale = :log10, yscale = :log10, marker = :circle, xlabel = "Size of the input", ylabel = "Microseconds per call", legend = false)
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "two-versions"
+label = "Two Versions"
+desc = "The function against a changed version of it, other: the time and the allocations of each, and the ratio of the times"
+code = '''
+using Chairmarks
+{{?x=x}} using Random
+
+{{?f=work}} work(v) = sum(abs2, v) / length(v)  # the function to time
+{{?f=work}} other(v) = sum(v .^ 2) / length(v)  # the same mean square, through a vector of the squares. Replace other with a changed version of your function.
+{{?x=x}} Random.seed!(1)
+{{?x=x}} x = randn(10000)  # its argument
+
+a = @b {{x}} {{f}}
+b = @b {{x}} other
+println("{{f}}: ", round(a.time * 1e6, sigdigits = 4), " microseconds, ", a.allocs, " allocations per call")
+println("other: ", round(b.time * 1e6, sigdigits = 4), " microseconds, ", b.allocs, " allocations per call")
+println("other takes ", round(b.time / a.time, sigdigits = 3), " times as long as {{f}}")
+'''
+
+[[actionGroups.actions]]
+id = "judge"
+label = "Judge a Change"
+desc = "BenchmarkTools' judge on the medians of the function and of a changed version of it, other: improvement, regression, or invariant when the times are within 5% of each other"
+code = '''
+using BenchmarkTools, Statistics
+{{?x=x}} using Random
+
+{{?f=work}} work(v) = sum(abs2, v) / length(v)  # the function to time
+{{?f=work}} other(v) = sum(v .^ 2) / length(v)  # the same mean square, through a vector of the squares. Replace other with a changed version of your function.
+{{?x=x}} Random.seed!(1)
+{{?x=x}} x = randn(10000)  # its argument
+
+before = @benchmark {{f}}($({{x}}));
+after = @benchmark other($({{x}}));
+judge(median(after), median(before))  # the change from {{f}} to other, in time and in memory
+'''
+
+[[actionGroups.actions]]
+id = "two-packages"
+label = "Chairmarks and BenchmarkTools"
+desc = "The minimum time of the same call by both packages, and how long each benchmark took to run"
+code = '''
+using Chairmarks, BenchmarkTools
+{{?x=x}} using Random
+
+{{?f=work}} work(v) = sum(abs2, v) / length(v)  # the function to time
+{{?x=x}} Random.seed!(1)
+{{?x=x}} x = randn(10000)  # its argument
+
+c = @timed @b {{x}} {{f}};
+t = @timed @benchmark {{f}}($({{x}}));
+println("Chairmarks:     minimum ", round(c.value.time * 1e6, sigdigits = 4), " microseconds, in a benchmark of ", round(c.time, sigdigits = 2), " s")
+println("BenchmarkTools: minimum ", round(minimum(t.value).time / 1e3, sigdigits = 4), " microseconds, in a benchmark of ", round(t.time, sigdigits = 2), " s")
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "gc-compile"
+label = "Garbage Collection and Compiling"
+desc = "The share of the time of the samples spent collecting garbage and compiling code"
+code = '''
+using Chairmarks, Statistics
+{{?x=x}} using Random
+
+{{?f=work}} work(v) = sum(abs2, v) / length(v)  # the function to time
+{{?x=x}} Random.seed!(1)
+{{?x=x}} x = randn(10000)  # its argument
+
+b = @be {{x}} {{f}} seconds={{seconds}}
+println("Time collecting garbage: ", round(100 * mean(s.gc_fraction for s in b.samples), digits = 2), "%")
+println("Time compiling:          ", round(100 * mean(s.compile_fraction for s in b.samples), digits = 2), "%")
+'''
+
+[[actionGroups.actions]]
+id = "per-element"
+label = "Time per Element"
+desc = "The minimum time of a call divided by the number of elements of the argument"
+code = '''
+using Chairmarks
+{{?x=x}} using Random
+
+{{?f=work}} work(v) = sum(abs2, v) / length(v)  # the function to time
+{{?x=x}} Random.seed!(1)
+{{?x=x}} x = randn(10000)  # its argument
+
+s = @b {{x}} {{f}}
+println(round(s.time * 1e9 / length({{x}}), sigdigits = 3), " nanoseconds per element, over ", length({{x}}), " elements")
+'''

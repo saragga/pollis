@@ -1,0 +1,341 @@
+# Find Where the Time Goes Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/profileTime.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Find Where the Time Goes"
+viewType = "pollis.profileTime"
+defaultModel = "flame"
+decisionFirstColumn = "Report"
+
+[[packages]]
+name = "StatProfilerHTML.jl"
+github = "https://github.com/tkluck/StatProfilerHTML.jl"
+
+[requires]
+packages = ["StatProfilerHTML.jl"]
+
+[[wikis]]
+name = "Overview"
+file = "profileTime/overview.md"
+bundled = true
+description = "What a sampling profiler records, and the three reports of the panel"
+
+[[wikis]]
+name = "Factsheet"
+file = "profileTime/factsheet.md"
+bundled = true
+description = "Tabs, inputs, functions and actions at a glance"
+
+[[wikis]]
+name = "Reading a Flame Graph"
+file = "profileTime/reading-a-flame-graph.md"
+bundled = true
+description = "Width, depth, colours, self time and total time"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "GKM1982a"
+
+[[references]]
+key = "Gre2016a"
+
+[[models]]
+id = "flame"
+label = "Flame Graph"
+
+[[models]]
+id = "lines"
+label = "Line by Line"
+
+[[models]]
+id = "text"
+label = "Text Report"
+
+[[bullets]]
+text = "Julia's profiler, Profile, records where the code is at regular moments while it runs: the share of these samples in a function is the share of the time spent in it"
+detail = ""
+
+[[bullets]]
+text = "Flame Graph: @profview of Pollis' Julia REPL, an interactive flame graph in a tab of Pollis, which marks calls resolved at run time and garbage collection, and links each frame to its source"
+detail = ""
+
+[[bullets]]
+text = "Line by Line: the report of StatProfilerHTML, with the samples of each line of the source files and a table of the functions"
+detail = ""
+
+[[bullets]]
+text = "Text Report: Profile.print in the REPL, as a tree of calls within calls or as a flat list of lines"
+detail = ""
+
+[[decisionRows]]
+task = "Flame Graph"
+context = "Overall picture"
+purpose = "Seeing at a glance which calls take the time, zooming into them, where runtime dispatch and garbage collection happen, and the source of each frame"
+
+[[decisionRows]]
+task = "Line by Line"
+context = "Exact lines"
+purpose = "The lines of each source file with the samples they took, and the functions sorted by their time"
+
+[[decisionRows]]
+task = "Text Report"
+context = "No browser"
+purpose = "A report in the REPL itself, to read or to copy into notes or a question"
+
+[[inputs]]
+id = "f"
+label = "Function"
+tooltip = "The function to profile, by name. The default, bootstrap_median, estimates the standard error of the median of a sample by the bootstrap: it draws resamples and takes their median, and both take time."
+default = "bootstrap_median"
+
+[[inputs]]
+id = "args"
+label = "Arguments"
+tooltip = "The arguments the function is called with, as they are written in the call. The default, x, 10000, is the simulated sample x of 1 000 values and 10 000 resamples."
+default = "x, 10000"
+
+[[inputs]]
+id = "repeats"
+label = "Repeats"
+tooltip = "How many times the call is profiled. The profiler takes a sample at short, regular intervals, so a call that takes a fraction of a second is repeated for enough samples."
+default = "5"
+
+[[inputs]]
+id = "format"
+label = "Format"
+tooltip = "Tree: each call with the calls it makes indented beneath it. Flat: one line per line of code, with its samples."
+kind = "select"
+default = "tree"
+models = ["text"]
+
+[[inputs.options]]
+value = "tree"
+label = "Tree"
+
+[[inputs.options]]
+value = "flat"
+label = "Flat"
+
+[[codeBranches]]
+model = "flame"
+code = '''
+using Profile, Statistics
+{{?f=bootstrap_median}} using Random
+
+{{?f=bootstrap_median}} function bootstrap_median(x, B)  # the standard error of the median by the bootstrap. Replace it with your own function.
+{{?f=bootstrap_median}}     est = zeros(B)
+{{?f=bootstrap_median}}     for b in 1:B
+{{?f=bootstrap_median}}         est[b] = median(rand(x, length(x)))  # a resample with replacement, then its median
+{{?f=bootstrap_median}}     end
+{{?f=bootstrap_median}}     return std(est)
+{{?f=bootstrap_median}} end
+{{?f=bootstrap_median}} Random.seed!(1)
+{{?f=bootstrap_median}} x = randn(1000)  # a simulated sample. Replace it with your own data.
+
+{{f}}({{args}})  # a first call compiles {{f}}, so that compiling is not in the profile
+@profview for _ in 1:{{repeats}}  # the call {{repeats}} times, for enough samples; @profview, of Pollis' Julia REPL, clears an earlier profile and shows the flame graph in a tab
+    {{f}}({{args}})
+end
+'''
+
+[[codeBranches]]
+model = "lines"
+code = '''
+using Profile, StatProfilerHTML, Statistics
+{{?f=bootstrap_median}} using Random
+
+{{?f=bootstrap_median}} function bootstrap_median(x, B)  # the standard error of the median by the bootstrap. Replace it with your own function.
+{{?f=bootstrap_median}}     est = zeros(B)
+{{?f=bootstrap_median}}     for b in 1:B
+{{?f=bootstrap_median}}         est[b] = median(rand(x, length(x)))  # a resample with replacement, then its median
+{{?f=bootstrap_median}}     end
+{{?f=bootstrap_median}}     return std(est)
+{{?f=bootstrap_median}} end
+{{?f=bootstrap_median}} Random.seed!(1)
+{{?f=bootstrap_median}} x = randn(1000)  # a simulated sample. Replace it with your own data.
+
+{{f}}({{args}})  # a first call compiles {{f}}, so that compiling is not in the profile
+Profile.clear()  # the samples of an earlier profile go
+Profile.@profile for _ in 1:{{repeats}}  # the call {{repeats}} times, for enough samples
+    {{f}}({{args}})
+end
+
+folder = joinpath(tempdir(), "pollis-statprof")
+statprofilehtml(path = folder)  # a page for each source file, with the samples of each line, and a table of the functions
+Pollis.browse(joinpath(folder, "index.html"))  # opened in Pollis' browser; run again, the page reloads
+'''
+
+[[codeBranches]]
+model = "text"
+code = '''
+using Profile, Statistics
+{{?f=bootstrap_median}} using Random
+
+{{?f=bootstrap_median}} function bootstrap_median(x, B)  # the standard error of the median by the bootstrap. Replace it with your own function.
+{{?f=bootstrap_median}}     est = zeros(B)
+{{?f=bootstrap_median}}     for b in 1:B
+{{?f=bootstrap_median}}         est[b] = median(rand(x, length(x)))  # a resample with replacement, then its median
+{{?f=bootstrap_median}}     end
+{{?f=bootstrap_median}}     return std(est)
+{{?f=bootstrap_median}} end
+{{?f=bootstrap_median}} Random.seed!(1)
+{{?f=bootstrap_median}} x = randn(1000)  # a simulated sample. Replace it with your own data.
+
+{{f}}({{args}})  # a first call compiles {{f}}, so that compiling is not in the profile
+Profile.clear()  # the samples of an earlier profile go
+Profile.@profile for _ in 1:{{repeats}}  # the call {{repeats}} times, for enough samples
+    {{f}}({{args}})
+end
+
+Profile.print(format = :{{format}}, mincount = 10)  # each line with its samples; mincount = 10 leaves out those with fewer
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "allocation-flame"
+label = "Allocation Flame Graph"
+desc = "A flame graph of the memory the call allocates, by @profview_allocs of Pollis' Julia REPL, which records one allocation in a hundred with its type, its size and where it was made"
+code = '''
+using Profile, Statistics
+{{?f=bootstrap_median}} using Random
+
+{{?f=bootstrap_median}} function bootstrap_median(x, B)  # the function to profile
+{{?f=bootstrap_median}}     est = zeros(B)
+{{?f=bootstrap_median}}     for b in 1:B
+{{?f=bootstrap_median}}         est[b] = median(rand(x, length(x)))
+{{?f=bootstrap_median}}     end
+{{?f=bootstrap_median}}     return std(est)
+{{?f=bootstrap_median}} end
+{{?f=bootstrap_median}} Random.seed!(1)
+{{?f=bootstrap_median}} x = randn(1000)  # a simulated sample
+
+{{f}}({{args}})  # a first call compiles {{f}}
+@profview_allocs {{f}}({{args}}) sample_rate=0.01  # one allocation in a hundred is recorded; the width of a bar is the share of the memory allocated in a function and what it calls
+'''
+
+[[actionGroups.actions]]
+id = "with-c"
+label = "Flame Graph with C Code"
+desc = "The flame graph with the frames of Julia's runtime and of the libraries in C, such as the garbage collector and BLAS, which the Flame Graph tab leaves out"
+code = '''
+using Profile, Statistics
+{{?f=bootstrap_median}} using Random
+
+{{?f=bootstrap_median}} function bootstrap_median(x, B)  # the function to profile
+{{?f=bootstrap_median}}     est = zeros(B)
+{{?f=bootstrap_median}}     for b in 1:B
+{{?f=bootstrap_median}}         est[b] = median(rand(x, length(x)))
+{{?f=bootstrap_median}}     end
+{{?f=bootstrap_median}}     return std(est)
+{{?f=bootstrap_median}} end
+{{?f=bootstrap_median}} Random.seed!(1)
+{{?f=bootstrap_median}} x = randn(1000)  # a simulated sample
+
+{{f}}({{args}})  # a first call compiles {{f}}
+Profile.clear()
+Profile.@profile for _ in 1:{{repeats}}
+    {{f}}({{args}})
+end
+view_profile(C = true)  # the flame graph of Pollis' Julia REPL; C = true keeps the frames of C code
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "type-instabilities"
+label = "Type Instabilities"
+desc = "The types Julia infers for the variables of the function: a type that is not concrete, such as Any, is known only when the code runs, and the flame graph marks the calls it causes"
+code = '''
+using InteractiveUtils, Statistics
+{{?f=bootstrap_median}} using Random
+
+{{?f=bootstrap_median}} function bootstrap_median(x, B)  # the function to profile
+{{?f=bootstrap_median}}     est = zeros(B)
+{{?f=bootstrap_median}}     for b in 1:B
+{{?f=bootstrap_median}}         est[b] = median(rand(x, length(x)))
+{{?f=bootstrap_median}}     end
+{{?f=bootstrap_median}}     return std(est)
+{{?f=bootstrap_median}} end
+{{?f=bootstrap_median}} Random.seed!(1)
+{{?f=bootstrap_median}} x = randn(1000)  # a simulated sample
+
+@code_warntype {{f}}({{args}})  # types printed in red, such as Any, are not concrete
+'''
+
+[[actionGroups.actions]]
+id = "garbage-collection"
+label = "Garbage Collection"
+desc = "The time of a call, the memory it allocates and the share of the time spent collecting garbage"
+code = '''
+using Statistics
+{{?f=bootstrap_median}} using Random
+
+{{?f=bootstrap_median}} function bootstrap_median(x, B)  # the function to profile
+{{?f=bootstrap_median}}     est = zeros(B)
+{{?f=bootstrap_median}}     for b in 1:B
+{{?f=bootstrap_median}}         est[b] = median(rand(x, length(x)))
+{{?f=bootstrap_median}}     end
+{{?f=bootstrap_median}}     return std(est)
+{{?f=bootstrap_median}} end
+{{?f=bootstrap_median}} Random.seed!(1)
+{{?f=bootstrap_median}} x = randn(1000)  # a simulated sample
+
+{{f}}({{args}})  # a first call compiles {{f}}
+r = @timed {{f}}({{args}});
+println("Time of a call:      ", round(r.time, sigdigits = 3), " s")
+println("Memory allocated:    ", round(r.bytes / 2^20, sigdigits = 3), " MiB")
+println("Collecting garbage:  ", round(100 * r.gctime / r.time, digits = 1), "% of the time")
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "before-after"
+label = "Before and After a Change"
+desc = "The line-by-line reports of the function and of a changed version of it, other, in two tabs of Pollis' browser, with the time of a call of each"
+code = '''
+using Profile, StatProfilerHTML, Statistics, Random
+
+{{?f=bootstrap_median}} function bootstrap_median(x, B)  # the function to profile
+{{?f=bootstrap_median}}     est = zeros(B)
+{{?f=bootstrap_median}}     for b in 1:B
+{{?f=bootstrap_median}}         est[b] = median(rand(x, length(x)))
+{{?f=bootstrap_median}}     end
+{{?f=bootstrap_median}}     return std(est)
+{{?f=bootstrap_median}} end
+{{?f=bootstrap_median}} function other(x, B)  # the changed version: one buffer for every resample, which median! sorts in place. Replace other with a changed version of your function.
+{{?f=bootstrap_median}}     est = zeros(B)
+{{?f=bootstrap_median}}     s = similar(x)
+{{?f=bootstrap_median}}     for b in 1:B
+{{?f=bootstrap_median}}         rand!(s, x)
+{{?f=bootstrap_median}}         est[b] = median!(s)
+{{?f=bootstrap_median}}     end
+{{?f=bootstrap_median}}     return std(est)
+{{?f=bootstrap_median}} end
+{{?f=bootstrap_median}} Random.seed!(1)
+{{?f=bootstrap_median}} x = randn(1000)  # a simulated sample
+
+for (name, g) in [("before", {{f}}), ("after", other)]
+    g({{args}})  # a first call compiles it
+    println(name, ": ", round(@elapsed(g({{args}})), sigdigits = 3), " s a call")
+    Profile.clear()
+    Profile.@profile for _ in 1:{{repeats}}
+        g({{args}})
+    end
+    folder = joinpath(tempdir(), "pollis-statprof-" * name)
+    statprofilehtml(path = folder)  # the report of each, with its own flame graph
+    Pollis.browse(joinpath(folder, "index.html"))
+end
+'''

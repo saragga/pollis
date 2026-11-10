@@ -1,6 +1,6 @@
-# Methods — Factsheet
+# Article Methods — Factsheet
 
-**Methods**, opened by Browse Methods, lists the methods no Julia package has, written out with their tests: yours in progress, those you published, and the library's.
+**Article Methods**, opened by Browse Article Methods, lists the methods no Julia package has, written out with their tests: yours in progress, those you published, and the library's.
 
 | | |
 |---|---|
@@ -9,15 +9,15 @@
 | **Columns of your methods** | Method, Article, Tables, and Delete |
 | **Columns of the library** | Method, Article, Packages, Datasets, Size, Last Updated |
 | **Your copies** | `~/.pollis/methods`, made the first time you open a method of the library |
-| **Starting one** | Compose > Methods > Create New Method |
+| **Starting one** | Compose > Replication > Create Article Method |
 
-## When to Use Methods
+## When to Use Article Methods
 - Going on with a method you started, from its title under In Progress.
 - Using a published method from the library, through your own copy of it.
-- Tidying up with Delete Empty Methods.
+- Tidying up with Delete Empty Article Methods.
 
-## What Methods Does Not Do
-The Methods page does not itself write or test a method: a click opens the method's own page, whose steps do that. A method needs data and published results to test against, so an idea without them has no place in the list.
+## What Article Methods Does Not Do
+The Article Methods page does not itself write or test a method: a click opens the method's own page, whose steps do that. A method needs data and published results to test against, so an idea without them has no place in the list.
 
 ## See Also
 - [Overview](overview.md)

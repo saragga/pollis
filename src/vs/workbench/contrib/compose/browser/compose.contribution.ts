@@ -47,6 +47,9 @@ import { IMPORT_REFERENCES_COMMAND_ID, LITERATURE_RADAR_COMMAND_ID } from './lit
 import { BROWSE_REFERENCES_COMMAND_ID } from './browseReferencesPage.js';
 import { SNOWBALL_SEARCH_COMMAND_ID } from '../common/snowballSearch.js';
 import './snowballSearchPage.js';
+import { openScaffoldWebview } from '../../model/browser/commands/scaffold.command.js';
+import { TIMEFUNCTION_PANEL } from '../../model/browser/commands/timeFunction.command.js';
+import { PROFILETIME_PANEL } from '../../model/browser/commands/profileTime.command.js';
 
 // The Core Mathematics, Finance and Economics Toolboxes come from their extensions (toolboxes/pollis-toolbox-*, not built in:
 // installed from the Toolboxes section of the Extensions pane), see toolboxExtensions.ts
@@ -64,8 +67,6 @@ const EXTRACT_WORKFLOW_COMMAND_ID = 'pollis.workflows.extract';
 const COMBINE_WORKFLOWS_COMMAND_ID = 'pollis.workflows.combine';
 const CREATE_OPERATIONAL_WORKFLOW_COMMAND_ID = 'pollis.workflows.createOperational';
 const AUTOMATIONS_COMMAND_ID = 'pollis.workflows.automations';
-// Formerly Compose > New Methods: the id stays, for the panel index and Pollis Views
-const NewMethodsMenu = new MenuId('menubarNewMethodsMenu');
 const CorrectnessMenu = new MenuId('menubarCorrectnessMenu');
 const ComparisonsMenu = new MenuId('menubarComparisonsMenu');
 const CompileGaloreMenu = new MenuId('menubarCompileGaloreMenu');
@@ -75,7 +76,7 @@ const PdfFilesMenu = new MenuId('menubarPdfFilesMenu');
 
 // ------------------- COMPOSE ------------------------
 
-// The Compose menu: Coding Agents and Agent Skills (codingAgentPage.ts, pollisAgents.ts), MCP Servers (mcpServersPage.ts), Orchestration, Local AI Models, Knowledge for AI Models, New Panels and Toolboxes, Literature (Discover Literature, Import References, Browse References), Replication, Methods, Workflows, Reports, PDF Files,
+// The Compose menu: Coding Agents and Agent Skills (codingAgentPage.ts, pollisAgents.ts), MCP Servers (mcpServersPage.ts), Orchestration, Local AI Models, Knowledge for AI Models, New Panels and Package a Toolbox, Literature (Discover Literature, Import References, Browse References), Replication, with the article methods, Workflows, Reports, PDF Files,
 // Correctness Tests, Horse Races, Compile Galore and Collaboration, which combine panels. The Toolbox Panels page (toolboxPanelsPage.ts) opens from
 // the Edit button of an installed toolbox in the Extensions pane.
 MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
@@ -133,11 +134,18 @@ MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	order: 5,
 });
 
+// New Panels and Package a Toolbox..., in a group of their own between separators
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
-	group: '2_compose',
+	group: '1_panels',
 	submenu: NewPanelsMenu,
-	title: localize('pollisNewPanels.menu', "New Panels and Toolboxes"),
+	title: localize('pollisNewPanels.menu', "New Panels"),
 	order: 1,
+});
+
+MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
+	group: '1_panels',
+	command: { id: PACKAGE_TOOLBOX_COMMAND_ID, title: localize('pollisAgents.packageToolbox', "Package a Toolbox...") },
+	order: 2,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
@@ -184,25 +192,18 @@ MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	group: '2_compose',
-	submenu: NewMethodsMenu,
-	title: localize('pollisMethods.menu', "Methods"),
-	order: 3,
+	submenu: ReportsMenu,
+	title: localize('pollisReports.menu', "Reports"),
+	order: 4,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	group: '2_compose',
 	submenu: WorkflowsMenu,
 	title: localize('pollisWorkflows.menu', 'Workflows'),
-	order: 4,
-});
-
-
-MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
-	group: '2_compose',
-	submenu: ReportsMenu,
-	title: localize('pollisReports.menu', "Reports"),
 	order: 6,
 });
+
 
 // Explore > PDF Files, below Access Files (explore.contribution.ts), with its items below
 MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
@@ -330,7 +331,8 @@ MenuRegistry.appendMenuItem(PdfFilesMenu, {
 });
 
 // ==============================================================
-// SUBMENU: New Panels and Toolboxes, the tasks a coding agent does on panels and toolboxes (pollisAgents.ts)
+// SUBMENU: New Panels, the tasks a coding agent does to write panels (pollisAgents.ts); Package a Toolbox... is in
+// the Compose menu itself, below it
 // ==============================================================
 
 MenuRegistry.appendMenuItem(NewPanelsMenu, {
@@ -343,12 +345,6 @@ MenuRegistry.appendMenuItem(NewPanelsMenu, {
 	group: '1_panels',
 	command: { id: CREATE_PANELS_FROM_REQUEST_COMMAND_ID, title: localize('pollisAgents.createPanelsFromRequest', "Create Panels from a Request...") },
 	order: 2,
-});
-
-MenuRegistry.appendMenuItem(NewPanelsMenu, {
-	group: '2_toolboxes',
-	command: { id: PACKAGE_TOOLBOX_COMMAND_ID, title: localize('pollisAgents.packageToolbox', "Package a Toolbox...") },
-	order: 1,
 });
 
 
@@ -440,7 +436,7 @@ MenuRegistry.appendMenuItem(KnowledgeMenu, {
 MenuRegistry.appendMenuItem(ReplicationMenu, {
 	group: '1_replication',
 	command: { id: SEARCH_WORKFLOW_LIBRARY_COMMAND_ID, title: localize('replication.browse', "Browse Replications...") },
-	order: 1,
+	order: 2,
 });
 
 /** The precondition of a menu item not built yet: never met, so the menu shows the item greyed out, as macOS does. */
@@ -450,6 +446,21 @@ const NOT_YET_AVAILABLE = ContextKeyExpr.false();
 MenuRegistry.appendMenuItem(ReplicationMenu, {
 	group: '1_replication',
 	command: { id: REPLICATE_ARTICLE_COMMAND_ID, title: localize('replication.replicateArticle', "Replicate an Article...") },
+	order: 1,
+});
+
+// Article methods, below a separator and in the same order, making one first: methods no Julia package has, each from an article, tested on its data against its
+// published tables (newMethods.ts; Browse Article Methods is in workflowLibrary.ts). Create Article Method opens the page
+// of a new method, with its five steps; Browse Article Methods lists the user's methods, to go on with one, and the library.
+MenuRegistry.appendMenuItem(ReplicationMenu, {
+	group: '2_methods',
+	command: { id: CREATE_METHOD_COMMAND_ID, title: localize('newMethods.newMethod', "Create Article Method...") },
+	order: 1,
+});
+
+MenuRegistry.appendMenuItem(ReplicationMenu, {
+	group: '2_methods',
+	command: { id: BROWSE_METHODS_COMMAND_ID, title: localize('newMethods.library', "Browse Article Methods...") },
 	order: 2,
 });
 
@@ -502,23 +513,6 @@ MenuRegistry.appendMenuItem(WorkflowsMenu, {
 
 
 // ==============================================================
-// SUBMENU: Methods (newMethods.ts; Browse Methods is in workflowLibrary.ts). New Method opens the page of a new method,
-// with its five steps; Browse Methods lists the user's methods, to go on with one, and the library.
-// ==============================================================
-
-MenuRegistry.appendMenuItem(NewMethodsMenu, {
-	group: '3_browse',
-	command: { id: CREATE_METHOD_COMMAND_ID, title: localize('newMethods.newMethod', "Create New Method") },
-	order: 1,
-});
-
-MenuRegistry.appendMenuItem(NewMethodsMenu, {
-	group: '3_browse',
-	command: { id: BROWSE_METHODS_COMMAND_ID, title: localize('newMethods.library', "Browse Methods") },
-	order: 2,
-});
-
-// ==============================================================
 // Correctness Tests, Horse Races, Compile Galore
 MenuRegistry.appendMenuItem(CorrectnessMenu, {
 	group: '0_benchmarks',
@@ -535,6 +529,26 @@ MenuRegistry.appendMenuItem(OrchestrationMenu, {
 	order: 1,
 });
 
+// ==============================================================
+// SUBMENU: Profiling, the time of your own code (Time a Function, Find Where the Time Goes, Speed Up a Function), then
+// the races between languages
+// ==============================================================
+
+CommandsRegistry.registerCommand('pollis.profiling.timeFunction', (accessor: ServicesAccessor) => openScaffoldWebview(accessor, TIMEFUNCTION_PANEL));
+CommandsRegistry.registerCommand('pollis.profiling.profileTime', (accessor: ServicesAccessor) => openScaffoldWebview(accessor, PROFILETIME_PANEL));
+
+MenuRegistry.appendMenuItem(ComparisonsMenu, {
+	group: '1_own',
+	command: { id: 'pollis.profiling.timeFunction', title: localize('profiling.timeFunction', "Time a Function...") },
+	order: 1,
+});
+
+MenuRegistry.appendMenuItem(ComparisonsMenu, {
+	group: '1_own',
+	command: { id: 'pollis.profiling.profileTime', title: localize('profiling.profileTime', "Find Where the Time Goes...") },
+	order: 2,
+});
+
 // Not built yet: each item says so.
 // Orchestration: coding agents working together. Writer and Checker: one writes, another checks; Two
 // Independent Transcriptions: two agents type the same table from an article and the differences are shown;
@@ -548,10 +562,10 @@ const composeItems = [
 	{ menu: OrchestrationMenu, id: 'pollis.orchestration.race', title: localize('orchestration.race', "Race..."), group: '1_patterns', order: 3 },
 	{ menu: CorrectnessMenu, id: 'chiara.statistics.comp_co', title: localize('comp.co', "Check Results Across Languages..."), group: '1_check', order: 1 },
 	{ menu: CorrectnessMenu, id: 'chiara.statistics.comp_fx', title: localize('comp.fx', "Settle a Disagreement..."), group: '1_check', order: 2 },
-	{ menu: ComparisonsMenu, id: 'chiara.statistics.comp_pr', title: localize('comp.pr', "Run a Speed Race..."), group: '1_race', order: 1 },
-	{ menu: ComparisonsMenu, id: 'chiara.statistics.comp_im', title: localize('comp.im', "Speed Up a Function..."), group: '1_race', order: 2 },
+	{ menu: ComparisonsMenu, id: 'chiara.statistics.comp_pr', title: localize('comp.pr', "Run a Speed Race..."), group: '2_race', order: 1 },
+	{ menu: ComparisonsMenu, id: 'chiara.statistics.comp_im', title: localize('comp.im', "Speed Up a Function..."), group: '1_own', order: 3 },
 	{ menu: CompileGaloreMenu, id: 'chiara.statistics.comp_tr', title: localize('comp.tr', "Translate Julia to Rust..."), group: '1_compiled', order: 1 },
-	{ menu: ComparisonsMenu, id: 'chiara.statistics.comp_al', title: localize('comp.al', "Add a Language..."), group: '2_language', order: 1 },
+	{ menu: ComparisonsMenu, id: 'chiara.statistics.comp_al', title: localize('comp.al', "Add a Language..."), group: '2_race', order: 2 },
 	{ menu: CompileGaloreMenu, id: 'chiara.statistics.comp_sl', title: localize('comp.sl', "Compile Julia to a Shared Library..."), group: '1_compiled', order: 2 },
 	{ menu: CompileGaloreMenu, id: 'chiara.statistics.comp_ex', title: localize('comp.ex', "Compile Julia to an Executable..."), group: '1_compiled', order: 3 },
 	{ menu: CompileGaloreMenu, id: 'chiara.statistics.comp_mx', title: localize('comp.mx', "Mix Julia with Compiled Code..."), group: '1_compiled', order: 4 },

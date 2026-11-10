@@ -19,7 +19,7 @@ A **Pollis replication** reproduces a published analysis on its data: every valu
 
 ## What a Pollis Replication Is Not
 
-A Pollis replication is not a Julia package and not a new method: for a method that no Julia package has, Compose > Methods > Create New Method makes one, with the article's tables as its tests. A replication is not a new study on new data either: it checks the article's own data against the article's own numbers.
+A Pollis replication is not a Julia package and not a new method: for a method that no Julia package has, Compose > Replication > Create Article Method makes one, with the article's tables as its tests. A replication is not a new study on new data either: it checks the article's own data against the article's own numbers.
 
 ## See Also
 - [Overview](overview.md)

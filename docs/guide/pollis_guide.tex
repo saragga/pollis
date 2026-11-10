@@ -169,7 +169,7 @@ Questions and problems: \ui{Help > Report Issue}, or \contactemail.
 \contentsentry{Toolboxes}\\
 \contentsentry{Replication, Methods and Workflows}\\
 \contentsentry{Replication}\\
-\contentsentry{Methods}\\
+\contentsentry{Article Methods}\\
 \contentsentry{Pollis Packages}\\
 \contentsentry{Reports}\\
 \contentsentry{RSS Feeds}\\
@@ -523,7 +523,7 @@ from \texttt{PGPASSWORD} or \texttt{\textasciitilde/.pgpass}.
 
 \subhead{PDF Files}
 Every PDF opens in the PDF Viewer of Pollis, from the Explorer, \ui{File > Open}, \ui{Help > Documentation},
-the vignettes, \ui{Reports}, \ui{New Methods} and the sources of Ask Pollis, with its pages, outline,
+the vignettes, \ui{Reports}, \ui{Article Methods} and the sources of Ask Pollis, with its pages, outline,
 thumbnails, search, zoom and form fields. \ui{Explore > PDF Files} opens the PDF shown, else the sample of
 PollisDatasets, for a task: \ui{Read} (the outline, else the thumbnails), \ui{Extract Pages} (the pages
 given, such as 1-3, 7, in one new PDF, or one file per page or per range), \ui{Merge Pages}, \ui{Crop Area}
@@ -656,7 +656,7 @@ panel. A View is not a way to stop students from opening a panel.
 % =====================================================================
 % PAGES 10–11 — TOOLBOXES
 % =====================================================================
-\topic{Toolboxes}{Extensions pane > Toolboxes · Compose > New Panels and Toolboxes}{Adding a whole field to Pollis with a toolbox extension.}
+\topic{Toolboxes}{Extensions pane > Toolboxes · Compose > Package a Toolbox}{Adding a whole field to Pollis with a toolbox extension.}
 
 A toolbox is an extension that adds a set of panels to the menus, with their wikis and notebook
 tutorials. It holds no program code: its panels are made like Pollis's own. A toolbox may cover a field, such
@@ -709,7 +709,7 @@ the toolboxes you installed, and Pollis compiles one the first time you open it.
 A teacher can package the panels of a course as one toolbox and give it to the students. This is done by
 your coding agent (Orchestration, page 34), with a skill that writes the toolbox for you.
 \begin{enumerate}[label=\arabic*.]
-  \item Choose \ui{Compose > New Panels and Toolboxes > Package a Toolbox...} The agent starts in a terminal.
+  \item Choose \ui{Compose > Package a Toolbox...} The agent starts in a terminal.
   \item Tell it which panels you want, by their menu titles, the menus they go in and their order, and the
     toolbox's name and description. It asks for what is missing.
   \item It writes a short spec, builds the toolbox and its README, and says where the \texttt{.vsix} file is.
@@ -719,7 +719,7 @@ your coding agent (Orchestration, page 34), with a skill that writes the toolbox
 To change it, edit the spec, raise its version, build again and install the new file over the old one.
 
 \subhead{New panels}
-\ui{Compose > New Panels and Toolboxes > Create a Panel...} has your coding agent write a new panel with
+\ui{Compose > New Panels > Create a Panel...} has your coding agent write a new panel with
 you. \ui{Create Panels from a Request...} writes several at once from a request file, which lists the
 toolbox and, for each panel, its topic, methods and menu. Without a request file open, it opens an
 example to fill in. New panels can then be packaged as a toolbox.
@@ -752,7 +752,7 @@ method. Then each result is printed beside the published one. Replication, page 
 \subhead{2\quad Methods}
 A method an article needed and no Julia package had becomes a documented Julia package. Its tests run
 the article's data and check the published results, within tolerances. It comes with a vignette, and can
-be published in the Pollis registry. Methods, page 16.
+be published in the Pollis registry. Article Methods, page 16.
 \end{minipage}\hfill
 \begin{minipage}[t]{0.31\linewidth}\vspace{0pt}
 \subhead{3\quad Workflows}
@@ -851,11 +851,11 @@ title to change it. Nothing is saved until you type or add something. Each repli
 \texttt{\textasciitilde/.pollis/replications}.
 \begin{enumerate}[label=\arabic*.]
   \item \ui{Article and Data}: the \ui{Article Link}, the \ui{Input Tables} and the \ui{Target Tables}, as
-    for a method (Methods, page 16). Each input has a licence, the terms its provider states, and the page
+    for a method (Article Methods, page 16). Each input has a licence, the terms its provider states, and the page
     warns of each input with none stated.
   \item \ui{Plan}, optional: for each target, \ui{Computed By} is \ui{Julia Packages}, \ui{Notebook Code}
-    or \ui{New Method}, with a \ui{Note}. \ui{Plan with Agent} proposes a plan; \ui{Save Plan} keeps it.
-    \ui{Make a Method} starts a method from a target planned as a \ui{New Method}, and the notebook can hold
+    or \ui{Article Method}, with a \ui{Note}, saved as you change it. \ui{Plan with Agent} proposes a plan.
+    \ui{Make an Article Method}, on a table's row, starts a method for that table, and the notebook can hold
     its code until the method is written.
   \item \ui{Replicate}: write \ui{Instructions}, saved in \texttt{INSTRUCTIONS.md}, and click \ui{Replicate
     with Agent}. Your coding agent writes the notebook and runs it, and \texttt{Pollis.replicate} and
@@ -882,12 +882,12 @@ Add from Article and the three \ui{with Agent} buttons run your coding agent, on
 Workflow...} in a replication's \ui{Record and Share}.
 \end{note}
 
-\seealso{Reports, page 20.\quad Methods, page 16.\quad Data and Databases, page 6.\quad Orchestration, page 34.}
+\seealso{Reports, page 20.\quad Article Methods, page 16.\quad Data and Databases, page 6.\quad Orchestration, page 34.}
 
 % =====================================================================
 % PAGES 16–17 — METHODS
 % =====================================================================
-\topic{Methods}{Compose > Methods}{Turning a new method into a tested Julia package, with its vignette.}
+\topic{Article Methods}{Compose > Replication}{Turning a new method into a tested Julia package, with its vignette.}
 
 A \emph{new method} is one no Julia package has yet, taken from an article: its data, the results the
 article publishes for them, and the code that reproduces them. Pollis makes it a Julia package whose tests
@@ -895,7 +895,7 @@ are the published values, with a \emph{vignette}, its documentation, and can pub
 registry. Without data and expected results there is no new method.
 
 \subhead{Start a method}
-Choose \ui{Compose > Methods > Create New Method}. The method's page has five numbered steps, below;
+\ui{Compose > Replication > Create Article Method...} opens the method's page, with five numbered steps, below;
 its title is at the top: click it to change it. Nothing is saved until you type or add something.
 Each method is a folder in \texttt{\textasciitilde/.pollis/methods}.
 
@@ -939,9 +939,9 @@ organization, and the GitHub CLI, \texttt{gh}, signed in; Pollis asks first: \em
 \ldots?}
 
 \subhead{Browse methods and read vignettes}
-\ui{Compose > Methods > Browse Methods} lists yours, \ui{In Progress} and \ui{Published by You},
+\ui{Compose > Replication > Browse Article Methods...} lists yours, \ui{In Progress} and \ui{Published by You},
 then the \ui{Library} of nine methods by Pollis, from arc-fs to threshold autoregression: click one to open
-your own copy. \ui{Delete} and \ui{Delete Empty Methods} move folders to the Trash. \ui{Help >
+your own copy. \ui{Delete} and \ui{Delete Empty Article Methods} move folders to the Trash. \ui{Help >
 Documentation > Package Vignettes} lists, in one table, the vignettes of the packages in the registry and of
 those on your computer, marked \ui{Installed} (they open offline); click a heading to sort by it.
 
@@ -969,7 +969,7 @@ methods, and five packages behind panels and features. All are public on GitHub,
 with or without Pollis. None is in the General registry.
 
 \subhead{The method packages}
-The nine methods of the \ui{Library} in \ui{Compose > Methods > Browse Methods} (Methods, page 16).
+The nine methods of the \ui{Library} in \ui{Compose > Replication > Browse Article Methods...} (Article Methods, page 16).
 Each is tested against the published results of the article it comes from, has a vignette, and is in the
 Pollis registry.
 
@@ -1005,7 +1005,7 @@ installed marked \ui{Installed}.
 \begin{tabularx}{\linewidth}{@{}>{\bfseries}l>{\raggedright\arraybackslash}p{0.36\linewidth}>{\raggedright\arraybackslash}X@{}}
 \textcolor{navy}{\bfseries Package} & \textcolor{navy}{\bfseries What it does} & \textcolor{navy}{\bfseries Where Pollis uses it} \\
 PollisDatasets & 69 small, well-known datasets for examples and teaching, as Tables.jl column tables &
-  The built-in database (Data and Databases, page 6), \ui{Add from PollisDatasets} in Methods, and the
+  The built-in database (Data and Databases, page 6), \ui{Add from PollisDatasets} in Article Methods, and the
   examples of panels and replications \\
 PollisTeX & Typesets LaTeX from Julia with Tectonic, downloaded on first use &
   \ui{Compose > Reports} (Reports, page 20) \\
@@ -1035,7 +1035,7 @@ The MIT licence covers PollisDatasets' code. Each dataset keeps the terms of its
 \textbf{\texttt{Pkg.add("HARE")}: the package is not found} & These five are in no registry: install with \texttt{Pkg.add(url = ...)}, as above. \\
 \end{trouble}
 
-\seealso{Methods, page 16.\quad Data and Databases, page 6.\quad Reports, page 20.}
+\seealso{Article Methods, page 16.\quad Data and Databases, page 6.\quad Reports, page 20.}
 
 % =====================================================================
 % PAGES 20–21 — REPORTS
@@ -1774,15 +1774,15 @@ Below it, \ui{Tasks} gives each task its tier, under \ui{Runs On}, and the skill
 \begin{tabular}{@{}llll@{}}
 \textbf{Task} & \textbf{Menu} & \textbf{Runs On} & \textbf{Skills}\\
 Polish with Agent & Reports & Light & polish-report\\
-Write a Vignette & Methods & Standard & write-vignette\\
-Prepare for Registration & Methods & Standard & prepare-method\\
-Package a Toolbox & New Panels and Toolboxes & Standard & package-toolbox\\
-Tables from the Article & Methods & Strong & tables-from-article\\
-Write a Method & Methods & Strong & write-method\\
+Write a Vignette & Replication & Standard & write-vignette\\
+Prepare for Registration & Replication & Standard & prepare-method\\
+Package a Toolbox & Compose & Standard & package-toolbox\\
+Tables from the Article & Replication & Strong & tables-from-article\\
+Write a Method & Replication & Strong & write-method\\
 Plan a Replication & Replication & Standard & plan-replication\\
 Replicate an Article & Replication & Strong & replicate-article\\
 Explain the Differences & Replication & Standard & explain-differences\\
-Create a Panel, from a Request & New Panels and Toolboxes & Strong & create-panel\\
+Create a Panel, from a Request & New Panels & Strong & create-panel\\
 \end{tabular}
 \end{center}
 There is no main agent: every task runs on the cell of its tier. The settings are
@@ -1814,7 +1814,7 @@ its results, as you would a colleague's.
 \ui{Orchestration} but not built yet.
 \end{note}
 
-\seealso{Toolboxes, page 10.\quad Methods, page 16.\quad Reports, page 20.}
+\seealso{Toolboxes, page 10.\quad Article Methods, page 16.\quad Reports, page 20.}
 
 
 % =====================================================================
@@ -2461,6 +2461,6 @@ Each with the date it was opened, approved by a maintainer of the package and me
 \smallskip
 LimitOrderBook.jl's was merged without a separate approval.
 
-\seealso{Pollis Packages, page 18.\quad Methods, page 16.}
+\seealso{Pollis Packages, page 18.\quad Article Methods, page 16.}
 
 \end{document}

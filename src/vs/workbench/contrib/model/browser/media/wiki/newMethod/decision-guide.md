@@ -1,4 +1,4 @@
-# New Method — Decision Guide
+# New Article Method — Decision Guide
 
 ## Choosing How to Add a Table to a Pollis Method
 

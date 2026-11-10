@@ -5,13 +5,13 @@
 | Task | Menu | Default tier |
 |---|---|---|
 | Polish with Agent | Reports | Light |
-| Write a Vignette | Methods | Standard |
-| Prepare for Registration | Methods | Standard |
-| Package a Toolbox | New Panels and Toolboxes | Standard |
-| Tables from the Article | Methods | Strong |
-| Write a Method | Methods | Strong |
-| Create a Panel | New Panels and Toolboxes | Strong |
-| Create Panels from a Request | New Panels and Toolboxes | Strong |
+| Write a Vignette | Replication | Standard |
+| Prepare for Registration | Replication | Standard |
+| Package a Toolbox | Compose | Standard |
+| Tables from the Article | Replication | Strong |
+| Write a Method | Replication | Strong |
+| Create a Panel | New Panels | Strong |
+| Create Panels from a Request | New Panels | Strong |
 
 ## Changing the Tier a Task Runs On
 The **Runs On** column of the tasks table has a list of the tiers for each task. Choosing another tier stores an override in the setting `pollis.agents.taskTiers`; choosing the default tier again removes the override. The **Skills** column names the skills the task loads, which can be read in Compose > Agent Skills. A skill started from Agent Skills, rather than from a task, runs on the Standard tier.

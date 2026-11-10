@@ -1,16 +1,16 @@
-# Methods — Overview
+# Article Methods — Overview
 
 ## Why a Method Comes With Published Results
-The Methods list holds to one rule: without data and expected results there is no new method. Computed results depend on details an article cannot state in full, so the code is part of the scholarship, as [Buckheit and Donoho (1995)](#ref-BD1995a) argued. [Peng (2011)](#ref-Pen2011a) describes reproducibility as a spectrum that starts with publishing code and data, and a test against published values takes it further, since anyone can run the test. Having data and code alone is no guarantee: [Stodden, Seiler and Ma (2018)](#ref-SSM2018a) found that a journal's policy of asking for them was not enough for its results to be reproduced.
+The Article Methods list holds to one rule: without data and expected results there is no new method. Computed results depend on details an article cannot state in full, so the code is part of the scholarship, as [Buckheit and Donoho (1995)](#ref-BD1995a) argued. [Peng (2011)](#ref-Pen2011a) describes reproducibility as a spectrum that starts with publishing code and data, and a test against published values takes it further, since anyone can run the test. Having data and code alone is no guarantee: [Stodden, Seiler and Ma (2018)](#ref-SSM2018a) found that a journal's policy of asking for them was not enough for its results to be reproduced.
 
-## The Three Lists of the Methods Page
-**In Progress** holds the methods you started and have not published; click a title to go on with it. **Published by You** holds those you published. **Library** holds the methods that come with Pollis; clicking a name makes your own copy in `~/.pollis/methods` the first time and opens the page of that copy. With nothing started, In Progress says **None: Compose > Methods > Create New Method starts one.**
+## The Three Lists of the Article Methods Page
+**In Progress** holds the methods you started and have not published; click a title to go on with it. **Published by You** holds those you published. **Library** holds the methods that come with Pollis; clicking a name makes your own copy in `~/.pollis/methods` the first time and opens the page of that copy. With nothing started, In Progress says **None: Compose > Replication > Create Article Method starts one.**
 
 ## What the Tables Column of Your Methods Counts
 The **Tables** column counts the published tables of a method as input and target: the tables holding the data it starts from, and those holding the results it must arrive at. A method's tests compare the targets with Julia's values, in line with the advice of [Sandve, Nekrutenko, Taylor and Hovig (2013)](#ref-SNTH2013a) to keep what produced each result.
 
-## Removing Methods From the Methods Page
-**Delete** moves a method's folder to the trash, with its tables, instructions and code, after asking. **Delete Empty Methods** does the same for every method with no article, tables, instructions or code, and shows how many there are.
+## Removing Methods From the Article Methods Page
+**Delete** moves a method's folder to the trash, with its tables, instructions and code, after asking. **Delete Empty Article Methods** does the same for every method with no article, tables, instructions or code, and shows how many there are.
 
 ## Why a Method Keeps Its Code, Data and Text Together
 [Donoho (2010)](#ref-Don2010a) calls error ubiquitous in scientific computing and asks for a single script that generates all the figures and tables of a paper. [Gentleman and Temple Lang (2007)](#ref-GL2007a) propose dynamic documents, which integrate code, data and text so that readers can verify an analysis and adapt it. [Wilson, Aruliah, Brown, Chue Hong, Davis, Guy, Haddock, Huff, Mitchell, Plumbley, Waugh, White and Wilson (2014)](#ref-WABHD...2014a) gather the working habits that reduce such errors, among them version control and automated tests. A method in Pollis follows these ideas in keeping its article, tables, instructions and code in one folder.

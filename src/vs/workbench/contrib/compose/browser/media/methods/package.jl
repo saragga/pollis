@@ -1,4 +1,4 @@
-# Compose > New Methods > Package and Publish: turns each method folder into a Julia package whose
+# Package and Publish, on the page of an article method: turns each method folder into a Julia package whose
 # tests are the method's target tables, computed from its input tables, and runs them. With --push
 # OWNER, a package whose tests all pass is pushed to github.com/OWNER/NAME.jl (GitHub CLI, gh). With
 # --register URL as well, a pushed package that also meets the Pollis registry rules (a name of at least
@@ -58,7 +58,7 @@ const MINIMUM_NAME = 5
 function runtests(name, method)
 	targets = get(method, "targets", Dict{String, Any}())
 	lines = [
-		"# Made by Pollis (Compose > New Methods > Package and Publish) from method.toml: change the method, not this file.",
+		"# Made by Pollis (Package and Publish, on the page of an article method) from method.toml: change the method, not this file.",
 		"using Test, CSV, Downloads, Tables, $name",
 		"",
 		"const DATA = joinpath(@__DIR__, \"data\")",
@@ -298,7 +298,7 @@ function package(packages, folder, owner)
 	# The vignette's entry, for the list of installed vignettes
 	if isfile(joinpath(root, "vignette", "$name.tex"))
 		open(joinpath(root, "vignette", "Vignette.toml"), "w") do io
-			println(io, "# The vignette of $name.jl, written by Pollis (Compose > New Methods > Package and Publish) and shown in")
+			println(io, "# The vignette of $name.jl, written by Pollis (Package and Publish, on the page of an article method) and shown in")
 			println(io, "# Help > Documentation > Package Vignettes once the package is installed.\n")
 			TOML.print(io, vignette_entry(name, method, owner === nothing ? "" : "https://github.com/$owner/$name.jl"); sorted = true)
 		end
@@ -363,7 +363,7 @@ function list_vignette(registry, name, method, owner)
 		vignettes[name] = vignette_entry(name, method, repository)
 		open(file, "w") do io
 			println(io, "# The vignettes of the packages in this registry, one table per package, written by Pollis")
-			println(io, "# (Compose > New Methods > Package and Publish) and shown in Help > Documentation > Package Vignettes.\n")
+			println(io, "# (Package and Publish, on the page of an article method) and shown in Help > Documentation > Package Vignettes.\n")
 			TOML.print(io, vignettes; sorted = true)
 		end
 		cd(clone) do
@@ -409,7 +409,7 @@ function main(args)
 				println("$name meets the Pollis registry rules.")
 			else
 				println("$name does not meet the Pollis registry rules yet:\n", join("  - " .* problems, "\n"))
-				println("Prepare for Registration, on the method's page (Compose > New Methods > Browse Methods), asks your coding agent to fix them.")
+				println("Prepare for Registration, on the method's page (Compose > Replication > Browse Article Methods), asks your coding agent to fix them.")
 			end
 			owner === nothing || publish(root, name, owner)
 			if registry !== nothing

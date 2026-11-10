@@ -5,7 +5,7 @@
 # Run: npm run gulp compile-toml
 
 [meta]
-title = "New Method"
+title = "New Article Method"
 viewType = "pollis.newMethod"
 pageCommand = "pollis.newMethods.create"
 

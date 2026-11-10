@@ -42,7 +42,7 @@ import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaff
 import { AGENTSKILLS_METADATA } from '../../model/browser/webviews/agentSkills.data.js';
 import { buildWebviewHtml } from '../../model/browser/webviews/webviewScaffold.js';
 
-// Compose > New Panels and Toolboxes and Compose > Methods hold tasks: you go there to get something
+// Compose > New Panels, Compose > Package a Toolbox... and Compose > Replication hold tasks: you go there to get something
 // done (Create a Panel, Package a Toolbox, Write a Method...), and a coding agent of your choice does it in
 // a terminal. Compose > Coding Agents lists the agents, Model Tasks and Routing the agent and model each task runs on, and Compose > Agent Skills holds the library of the skills the tasks
 // use: read them or run one with your agent; the Coding Agents page installs them in an agent. Create Panels from a Request runs Create a Panel on the request file open in the
@@ -137,7 +137,7 @@ const REQUEST_PATTERN = /^\s*(?:(?:toolbox|panel)\s*\(|\[\[panel\]\])/m;
 
 const REQUEST_TEMPLATE = [
 	'# Pollis panel request: the panels you want, one panel(...) for each. Fill it in, then choose',
-	'# Compose > New Panels and Toolboxes > Create Panels from a Request... with this file open.',
+	'# Compose > New Panels > Create Panels from a Request... with this file open.',
 	'',
 	'# The toolbox the panels go in. name: pollis-toolbox- then lower case letters, digits and hyphens.',
 	'toolbox(name = "pollis-toolbox-mycourse", displayName = "My Course", author = "Your Name")',

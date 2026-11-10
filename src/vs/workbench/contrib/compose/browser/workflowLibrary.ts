@@ -56,7 +56,7 @@ interface INotebookLibrary {
 	readonly empty: string;
 	/** The message shown when an entry cannot be opened: `{0}` is its title, `{1}` the error. */
 	readonly openFailed: (label: string, error: string) => string;
-	/** Whether the library's entries are methods, each a folder with a method.toml, which open as the user's own (Browse Methods). */
+	/** Whether the library's entries are methods, each a folder with a method.toml, which open as the user's own (Browse Article Methods). */
 	readonly userMethods?: boolean;
 	/** The user's own work, listed above the library: their methods or their replications. */
 	readonly yours?: IYours;
@@ -116,12 +116,12 @@ const WORKFLOWS: INotebookLibrary = {
 	},
 };
 
-/** Compose > Methods: methods no Julia package has, each tested on data against published results. */
+/** Compose > Replication, below Replicate an Article: methods no Julia package has, each tested on data against published results. */
 const NEW_METHODS: INotebookLibrary = {
 	page: { id: 'browseMethods', data: BROWSEMETHODS_METADATA.browseMethods },
 	base: 'vs/workbench/contrib/compose/browser/media/methods',
 	userFolder: 'methods',
-	title: localize('newMethods.title', "Methods"),
+	title: localize('newMethods.title', "Article Methods"),
 	intro: localize('newMethods.intro', "A method here is a published method that no Julia package has, written in Julia with its tests: the data of the article and the results it reports for them, printed beside Julia's. A method needs both, data and published results, to be added. The page lists the methods in three groups. In Progress holds those you have started and not yet published: click a title to go on with one. Published by You follows, then the Library: click a name to open the page of your own copy of the method, which Pollis makes in {0} the first time you open it.", '<code class="pollisPath">~/.pollis/methods</code>'),
 	entry: localize('newMethods.entry', "Method"),
 	empty: localize('newMethods.empty', "There are no new methods yet."),
@@ -129,8 +129,8 @@ const NEW_METHODS: INotebookLibrary = {
 	userMethods: true,
 	yours: {
 		finished: localize('newMethods.published', "Published by You"),
-		none: localize('newMethods.yours.none', "None: Compose > Methods > Create New Method starts one."),
-		deleteEmpty: localize('newMethods.yours.deleteEmpty', "Delete Empty Methods ({0})"),
+		none: localize('newMethods.yours.none', "None: Compose > Replication > Create Article Method starts one."),
+		deleteEmpty: localize('newMethods.yours.deleteEmpty', "Delete Empty Article Methods ({0})"),
 		folder: userMethodsFolder,
 		read: readMethodSummaries,
 		open: openUserMethod,
@@ -866,8 +866,8 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: BROWSE_METHODS_COMMAND_ID,
-			title: localize2('newMethods.open', "Browse Methods"),
-			category: localize2('newMethods.category', "Methods"),
+			title: localize2('newMethods.open', "Browse Article Methods"),
+			category: localize2('newMethods.category', "Article Methods"),
 			f1: true,
 		});
 	}

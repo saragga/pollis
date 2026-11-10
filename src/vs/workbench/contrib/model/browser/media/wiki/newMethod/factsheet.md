@@ -1,4 +1,4 @@
-# New Method — Factsheet
+# New Article Method — Factsheet
 
 A **Pollis method** is a Julia package made from a published article: the tables the article prints become the package's tests, one test for each printed value, so the code is shown to reproduce what was published.
 

@@ -1,4 +1,4 @@
-# New Method — Assumptions
+# New Article Method — Assumptions
 
 ## A Pollis Method Needs Published Data and Published Results
 

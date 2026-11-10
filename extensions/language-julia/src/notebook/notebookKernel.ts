@@ -21,6 +21,7 @@ import { generatePipeName, getCustomEnvironmentVariables, inferJuliaNumThreads }
 import { JuliaNotebookFeature } from './notebookFeature'
 import { notifyTypeProgress, ProgressBars } from '../interactive/progress'
 import { DebugConfigTreeProvider } from '../debugger/debugConfig'
+import { answerBrowseRequests } from '../pollisBrowse'
 import { answerLlamaServerRequests } from '../pollisLlamaServer'
 import { POLLIS_WINDOW } from '../pollisWindow'
 
@@ -321,6 +322,7 @@ export class JuliaKernel {
                 })
 
                 answerLlamaServerRequests(this._msgConnection)
+                answerBrowseRequests(this._msgConnection)
                 this._msgConnection.listen()
 
                 this._onConnected.fire(null)

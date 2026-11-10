@@ -40,9 +40,9 @@ import { NEWMETHOD_METADATA } from '../../model/browser/webviews/newMethod.data.
 import { buildWebviewHtml } from '../../model/browser/webviews/webviewScaffold.js';
 import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
 import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
-import { appendToml, ARTICLE_DATA_SCRIPT, ARTICLE_DATA_STYLE, ArticleDataMessage, articleDataHtml, articleDataText, createArticleData, draftName, IArticleDataKind, IArticleDataRecord, IArticleDataServices, inputBlock, isArticleDataMessage, IStudyInput, makesFolder, openRecordArticle, readTables, setTomlValue, table, text, tomlString } from './articleAndData.js';
+import { appendToml, ARTICLE_DATA_SCRIPT, ARTICLE_DATA_STYLE, ArticleDataMessage, articleDataHtml, articleDataText, createArticleData, draftName, IArticleDataKind, IArticleDataRecord, IArticleDataServices, inputBlock, isArticleDataMessage, IStudyInput, makesFolder, openRecordArticle, readTables, setTomlValue, table, text, tomlString, withPaths } from './articleAndData.js';
 
-// Compose > Methods > Create New Method (Browse Methods, which lists them, is in workflowLibrary.ts).
+// Compose > Replication > Create Article Method (Browse Article Methods, which lists them, is in workflowLibrary.ts).
 // A method is a folder of ~/.pollis/methods with method.toml, its code in src/NAME.jl (module NAME),
 // the published results it must reproduce in targets/*.csv and the user's notes for a coding agent in
 // INSTRUCTIONS.md. New Method opens the page of a new method with no folder: the first thing typed or added makes it, named after the title, else NewMethod
@@ -59,11 +59,11 @@ import { appendToml, ARTICLE_DATA_SCRIPT, ARTICLE_DATA_STYLE, ArticleDataMessage
 // docstring for every exported name). Three tasks hand a method to the user's coding agent, with the skills
 // of the Pollis Agents plugin: Write a Method... (write-method: the code that reproduces the targets), Write
 // a Vignette... (write-vignette: the method's documentation) and Prepare for Registration...
-// (prepare-method: the rules). Their commands, run without a method, open Browse Methods.
+// (prepare-method: the rules). Their commands, run without a method, open Browse Article Methods.
 
 export const CREATE_METHOD_COMMAND_ID = 'pollis.newMethods.create';
 export const PACKAGE_METHOD_COMMAND_ID = 'pollis.newMethods.package';
-/** Browse Methods, registered in workflowLibrary.ts: the user's methods and the methods shipped with Pollis. */
+/** Browse Article Methods, registered in workflowLibrary.ts: the user's methods and the methods shipped with Pollis. */
 export const BROWSE_METHODS_COMMAND_ID = 'pollis.compose.createMethod';
 
 const GITHUB_OWNER_SETTING = 'pollis.newMethods.githubOwner';
@@ -75,20 +75,20 @@ const VIGNETTE_INSTRUCTIONS_FILE = 'VIGNETTE.md';
 
 Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).registerConfiguration({
 	id: 'pollisNewMethods',
-	title: localize('newMethods.configurationTitle', "Methods"),
+	title: localize('newMethods.configurationTitle', "Article Methods"),
 	type: 'object',
 	properties: {
 		[GITHUB_OWNER_SETTING]: {
 			type: 'string',
 			default: 'Trumpingtons',
 			scope: ConfigurationScope.APPLICATION,
-			markdownDescription: localize('newMethods.githubOwner', "The GitHub user or organization that **Package and Publish** (Compose > Methods) pushes method packages to."),
+			markdownDescription: localize('newMethods.githubOwner', "The GitHub user or organization that **Package and Publish**, on the page of an article method, pushes method packages to."),
 		},
 		[REGISTRY_SETTING]: {
 			type: 'string',
 			default: DEFAULT_REGISTRY,
 			scope: ConfigurationScope.APPLICATION,
-			markdownDescription: localize('newMethods.registry', "The Julia package registry that **Package and Publish** (Compose > Methods) registers method packages in, when they meet the Pollis registry rules. Their vignettes are listed in its `Vignettes.toml`, which Help > Documentation > Package Vignettes shows."),
+			markdownDescription: localize('newMethods.registry', "The Julia package registry that **Package and Publish**, on the page of an article method, registers method packages in, when they meet the Pollis registry rules. Their vignettes are listed in its `Vignettes.toml`, which Help > Documentation > Package Vignettes shows."),
 		},
 	},
 });
@@ -161,7 +161,7 @@ async function readMethods(fileService: IFileService, pathService: IPathService)
 
 function methodToml(name: string, title: string, article: string): string {
 	return [
-		'# A Pollis method (Compose > Methods). Create Method shows the article and the tables; Package and',
+		'# A Pollis article method (Compose > Replication). Create Method shows the article and the tables; Package and',
 		`# Publish turns this folder into the Julia package ${name}.jl, its tests the target tables.`,
 		'#',
 		'#   targets/*.csv     the published results: the row labels in the first column, the values as printed',
@@ -457,7 +457,7 @@ async function openMethodPage(accessor: ServicesAccessor, existing?: URI, step?:
 	// Whether the method's folder exists: a new method has none until the first thing is typed or added
 	let created = !!existing;
 	// A draft's title until the user gives it one: its Title field shows the example instead
-	const draftTitle = localize('newMethods.draft.title', "New Method");
+	const draftTitle = localize('newMethods.draft.title', "New Article Method");
 	const root = methodsFolder(pathService);
 	if (existing) {
 		const open = openPages.get(existing.toString());
@@ -746,11 +746,11 @@ function pageHtml(): string {
 			<p class="error small" id="error-title"></p>
 		</div>
 		<h2>${text.instructions}</h2>
-		<p class="intro">${text.instructionsIntro}</p>
+		<p class="intro">${withPaths(text.instructionsIntro)}</p>
 		<textarea id="instructions" placeholder="${text.instructionsPlaceholder}"></textarea>
 		<div class="actions">
 			<button class="action primary" data-command="writeMethod">${text.writeMethod}</button>
-			<button class="action" data-command="open" data-file="method.toml">${text.editToml}</button>
+			<button class="action" data-command="open" data-file="method.toml">${withPaths(text.editToml)}</button>
 			<button class="action open-code" data-command="open">${text.openCode}</button>
 		</div>
 `,
@@ -896,7 +896,7 @@ function pageHtml(): string {
 }
 
 
-/** A method of the user's, as Browse Methods lists it. */
+/** A method of the user's, as Browse Article Methods lists it. */
 export interface IMethodSummary {
 	/** The method's folder, as a URI string. */
 	readonly id: string;
@@ -920,7 +920,7 @@ async function isPublished(fileService: IFileService, pathService: IPathService,
 	return await fileService.exists(config) && (await fileService.readFile(config)).value.toString().includes('[remote "origin"]');
 }
 
-/** The user's methods, the folders of ~/.pollis/methods with a method.toml, for Browse Methods. */
+/** The user's methods, the folders of ~/.pollis/methods with a method.toml, for Browse Article Methods. */
 export async function readMethodSummaries(fileService: IFileService, pathService: IPathService): Promise<IMethodSummary[]> {
 	return Promise.all((await readMethods(fileService, pathService)).map(async method => ({
 		id: method.folder.toString(),
@@ -946,7 +946,7 @@ export function vignettesIndex(configurationService: IConfigurationService): { r
 	return { registry, url: github && `https://raw.githubusercontent.com/${github.owner}/${github.repository}/HEAD/Vignettes.toml` };
 }
 
-/** The folder holding the user's methods, which Browse Methods watches. */
+/** The folder holding the user's methods, which Browse Article Methods watches. */
 export function userMethodsFolder(pathService: IPathService): URI {
 	return methodsFolder(pathService);
 }
@@ -976,7 +976,7 @@ export async function deleteUserMethods(accessor: ServicesAccessor, which: strin
 			}
 		}
 		message = localize('newMethods.deleteEmpty.confirm', "Delete {0} empty methods?", doomed.length);
-		detail = localize('newMethods.deleteEmpty.detail', "Methods with no article, tables, instructions or code: {0}. Their folders go to the trash.", doomed.map(method => method.name).join(', '));
+		detail = localize('newMethods.deleteEmpty.detail', "Article methods with no article, tables, instructions or code: {0}. Their folders go to the trash.", doomed.map(method => method.name).join(', '));
 	} else {
 		doomed = methods.filter(method => method.folder.toString() === which);
 		message = localize('newMethods.delete.confirm', "Delete the method {0}?", doomed[0]?.title);
@@ -999,7 +999,7 @@ export async function deleteUserMethods(accessor: ServicesAccessor, which: strin
 	}
 }
 
-/** Runs an agent task on a method, on the task's tier: from its page, with its folder; from elsewhere, Browse Methods opens to pick one. */
+/** Runs an agent task on a method, on the task's tier: from its page, with its folder; from elsewhere, Browse Article Methods opens to pick one. */
 async function runMethodTask(accessor: ServicesAccessor, folder: URI | undefined, task: AgentTask, skillFolder: string, prompt: (skill: string, method: IMethod, test: string) => string, terminal: (method: IMethod) => string): Promise<void> {
 	const fileService = accessor.get(IFileService);
 	const pathService = accessor.get(IPathService);
@@ -1018,11 +1018,11 @@ async function runMethodTask(accessor: ServicesAccessor, folder: URI | undefined
 	await instantiationService.invokeFunction(startAgent, terminal(method), prompt(skill.fsPath, method, testCommand(configurationService, pathService, method)), method.folder, task);
 }
 
-const category = localize2('newMethods.category', "Methods");
+const category = localize2('newMethods.category', "Article Methods");
 
 registerAction2(class extends Action2 {
 	constructor() {
-		super({ id: CREATE_METHOD_COMMAND_ID, title: localize2('newMethods.create', "Create New Method"), category, f1: true });
+		super({ id: CREATE_METHOD_COMMAND_ID, title: localize2('newMethods.create', "Create Article Method"), category, f1: true });
 	}
 	run(accessor: ServicesAccessor): Promise<void> {
 		return openMethodPage(accessor);
