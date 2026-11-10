@@ -1,0 +1,321 @@
+# Find Allocations Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/findAllocs.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Find Allocations"
+viewType = "pollis.findAllocs"
+defaultModel = "lines"
+decisionFirstColumn = "Report"
+
+[[packages]]
+name = "AllocCheck.jl"
+github = "https://github.com/JuliaLang/AllocCheck.jl"
+
+[[wikis]]
+name = "Overview"
+file = "findAllocs/overview.md"
+bundled = true
+description = "What an allocation is, what the allocation profiler records, and the three reports of the panel"
+
+[[wikis]]
+name = "Factsheet"
+file = "findAllocs/factsheet.md"
+bundled = true
+description = "Tabs, inputs, functions and actions at a glance"
+
+[[wikis]]
+name = "Heap, Stack and Garbage Collection"
+file = "findAllocs/heap-stack-gc.md"
+bundled = true
+description = "Why an allocation costs time, what stays off the heap, and how the sample rate and static analysis read allocations"
+
+[[models]]
+id = "lines"
+label = "By Line"
+
+[[models]]
+id = "types"
+label = "By Type"
+
+[[models]]
+id = "static"
+label = "Possible Allocations"
+
+[[bullets]]
+text = "An allocation takes memory on the heap for a new object, such as an array or a copy of a slice; Julia's garbage collector frees it later, and both cost time"
+detail = ""
+
+[[bullets]]
+text = "By Line: Julia's allocation profiler, Profile.Allocs, records the allocations of a call, and Profile.print lists the lines of code with the bytes allocated at each"
+detail = ""
+
+[[bullets]]
+text = "By Type: the same allocations grouped by the type of the object allocated, with how many and how many bytes"
+detail = ""
+
+[[bullets]]
+text = "Possible Allocations: AllocCheck reads the compiled code and lists every place it may allocate, with its line, including paths this call did not take"
+detail = ""
+
+[[decisionRows]]
+task = "By Line"
+context = "Where in the code"
+purpose = "The lines that allocate, with the bytes allocated at each line and in the functions it calls"
+
+[[decisionRows]]
+task = "By Type"
+context = "What is allocated"
+purpose = "The types of the objects allocated, such as Vector{Float64}, with their count and bytes, largest first"
+
+[[decisionRows]]
+task = "Possible Allocations"
+context = "Every possible path"
+purpose = "The places the compiled code may allocate or dispatch at run time, whether or not this call reaches them"
+
+[[inputs]]
+id = "f"
+label = "Function"
+tooltip = "The function whose allocations are found, by name. The default, rolling_mean, takes the mean of each window of w values of a series, and allocates on purpose: it copies each window and grows its result with push!."
+default = "rolling_mean"
+
+[[inputs]]
+id = "args"
+label = "Arguments"
+tooltip = "The arguments the function is called with, as they are written in the call. The default, x, 20, is a simulated series x of 10 000 values and windows of 20 values."
+default = "x, 20"
+
+[[inputs]]
+id = "rate"
+label = "Sample Rate"
+tooltip = "The share of the allocations the profiler records: 1 records all of them, and 0.01 one in a hundred, which costs less time on a call that allocates a great deal."
+default = "1"
+models = ["lines", "types"]
+
+[[codeBranches]]
+model = "lines"
+code = '''
+using Profile
+{{?f=rolling_mean}} using Random
+
+{{?f=rolling_mean}} function rolling_mean(x, w)  # the mean of each window of w values. Replace it with your own function.
+{{?f=rolling_mean}}     m = Float64[]
+{{?f=rolling_mean}}     for i in w:length(x)
+{{?f=rolling_mean}}         push!(m, sum(x[i-w+1:i]) / w)  # x[i-w+1:i] copies the window, and push! grows m
+{{?f=rolling_mean}}     end
+{{?f=rolling_mean}}     return m
+{{?f=rolling_mean}} end
+{{?f=rolling_mean}} Random.seed!(1)
+{{?f=rolling_mean}} x = randn(10000);  # a simulated series. Replace it with your own data.
+
+{{f}}({{args}});  # a first call compiles {{f}}, so that the allocations of compiling are not recorded
+Profile.Allocs.clear()  # the allocations of an earlier profile go
+Profile.Allocs.@profile sample_rate={{rate}} {{f}}({{args}});
+Profile.print(Profile.Allocs.fetch(), format = :flat, sortedby = :count)  # each line, in bytes: Count, allocated at it and in what it calls; Overhead, at the line itself
+'''
+
+[[codeBranches]]
+model = "types"
+code = '''
+using Profile
+{{?f=rolling_mean}} using Random
+
+{{?f=rolling_mean}} function rolling_mean(x, w)  # the mean of each window of w values. Replace it with your own function.
+{{?f=rolling_mean}}     m = Float64[]
+{{?f=rolling_mean}}     for i in w:length(x)
+{{?f=rolling_mean}}         push!(m, sum(x[i-w+1:i]) / w)  # x[i-w+1:i] copies the window, and push! grows m
+{{?f=rolling_mean}}     end
+{{?f=rolling_mean}}     return m
+{{?f=rolling_mean}} end
+{{?f=rolling_mean}} Random.seed!(1)
+{{?f=rolling_mean}} x = randn(10000);  # a simulated series. Replace it with your own data.
+
+{{f}}({{args}});  # a first call compiles {{f}}, so that the allocations of compiling are not recorded
+Profile.Allocs.clear()
+Profile.Allocs.@profile sample_rate={{rate}} {{f}}({{args}});
+allocs = Profile.Allocs.fetch().allocs;  # each allocation recorded: its type, its size in bytes and where it was made
+type_counts = Dict{Any,Int}(); type_bytes = Dict{Any,Int}();
+for a in allocs
+    type_counts[a.type] = get(type_counts, a.type, 0) + 1
+    type_bytes[a.type] = get(type_bytes, a.type, 0) + a.size
+end
+for T in sort(collect(keys(type_bytes)), by = T -> -type_bytes[T])  # the type with the most bytes first
+    println(rpad(string(T), 40), lpad(type_counts[T], 10), " allocations", lpad(type_bytes[T], 14), " bytes")
+end
+println("Recorded: ", length(allocs), " allocations, ", sum(a.size for a in allocs; init = 0), " bytes, at a sample rate of {{rate}}")
+'''
+
+[[codeBranches]]
+model = "static"
+code = '''
+using AllocCheck
+{{?f=rolling_mean}} using Random
+
+{{?f=rolling_mean}} function rolling_mean(x, w)  # the mean of each window of w values. Replace it with your own function.
+{{?f=rolling_mean}}     m = Float64[]
+{{?f=rolling_mean}}     for i in w:length(x)
+{{?f=rolling_mean}}         push!(m, sum(x[i-w+1:i]) / w)  # x[i-w+1:i] copies the window, and push! grows m
+{{?f=rolling_mean}}     end
+{{?f=rolling_mean}}     return m
+{{?f=rolling_mean}} end
+{{?f=rolling_mean}} Random.seed!(1)
+{{?f=rolling_mean}} x = randn(10000);  # a simulated series. Replace it with your own data.
+
+sites = check_allocs({{f}}, typeof.(({{args}},)));  # compiles {{f}} for the types of the arguments and reads its code; nothing is run
+for site in sites
+    show(stdout, site)  # an allocation, a dynamic dispatch or a runtime call that allocates, with its line and the calls that lead there
+    println()
+end
+println(length(sites), " places where {{f}} may allocate, whether or not a call reaches them")
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "allocation-flame"
+label = "Allocation Flame Graph"
+desc = "A flame graph of the memory the call allocates, by @profview_allocs of Pollis' Julia REPL, in a tab of Pollis: the width of a frame is the share of the bytes allocated in a function and in what it calls"
+code = '''
+using Profile
+{{?f=rolling_mean}} using Random
+
+{{?f=rolling_mean}} function rolling_mean(x, w)  # the function whose allocations are found
+{{?f=rolling_mean}}     m = Float64[]
+{{?f=rolling_mean}}     for i in w:length(x)
+{{?f=rolling_mean}}         push!(m, sum(x[i-w+1:i]) / w)
+{{?f=rolling_mean}}     end
+{{?f=rolling_mean}}     return m
+{{?f=rolling_mean}} end
+{{?f=rolling_mean}} Random.seed!(1)
+{{?f=rolling_mean}} x = randn(10000);  # a simulated series
+
+{{f}}({{args}});  # a first call compiles {{f}}
+@profview_allocs {{f}}({{args}}) sample_rate=1  # every allocation recorded; set a lower rate for a call that allocates a great deal
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "per-call"
+label = "Allocations per Call"
+desc = "How many times one call allocates and how many bytes, measured inside a function so that reading global variables adds nothing"
+code = '''
+{{?f=rolling_mean}} using Random
+
+{{?f=rolling_mean}} function rolling_mean(x, w)  # the function whose allocations are found
+{{?f=rolling_mean}}     m = Float64[]
+{{?f=rolling_mean}}     for i in w:length(x)
+{{?f=rolling_mean}}         push!(m, sum(x[i-w+1:i]) / w)
+{{?f=rolling_mean}}     end
+{{?f=rolling_mean}}     return m
+{{?f=rolling_mean}} end
+{{?f=rolling_mean}} Random.seed!(1)
+{{?f=rolling_mean}} x = randn(10000);  # a simulated series
+
+measure(g, args...) = (g(args...); (@allocations(g(args...)), @allocated(g(args...))))  # a first call compiles g, then one call is measured
+n, b = measure({{f}}, {{args}});
+println("Allocations per call: ", n)
+println("Bytes per call:       ", b)
+'''
+
+[[actionGroups.actions]]
+id = "dispatches"
+label = "Dynamic Dispatches"
+desc = "The calls whose method Julia chooses only while the code runs, each with its line: a dispatch often allocates, to box the values it passes, and points at a type Julia cannot infer"
+code = '''
+using AllocCheck
+{{?f=rolling_mean}} using Random
+
+{{?f=rolling_mean}} function rolling_mean(x, w)  # the function whose allocations are found
+{{?f=rolling_mean}}     m = Float64[]
+{{?f=rolling_mean}}     for i in w:length(x)
+{{?f=rolling_mean}}         push!(m, sum(x[i-w+1:i]) / w)
+{{?f=rolling_mean}}     end
+{{?f=rolling_mean}}     return m
+{{?f=rolling_mean}} end
+{{?f=rolling_mean}} Random.seed!(1)
+{{?f=rolling_mean}} x = randn(10000);  # a simulated series
+
+dispatches = filter(site -> site isa AllocCheck.DynamicDispatch, check_allocs({{f}}, typeof.(({{args}},))));
+for site in dispatches
+    show(stdout, site)
+    println()
+end
+println(length(dispatches), " dynamic dispatches in {{f}}")
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "before-after"
+label = "Before and After a Change"
+desc = "The allocations and bytes of a call of the function and of a changed version of it, other, and whether the two give the same result"
+code = '''
+{{?f=rolling_mean}} using Random
+
+{{?f=rolling_mean}} function rolling_mean(x, w)  # the function whose allocations are found
+{{?f=rolling_mean}}     m = Float64[]
+{{?f=rolling_mean}}     for i in w:length(x)
+{{?f=rolling_mean}}         push!(m, sum(x[i-w+1:i]) / w)
+{{?f=rolling_mean}}     end
+{{?f=rolling_mean}}     return m
+{{?f=rolling_mean}} end
+{{?f=rolling_mean}} function other(x, w)  # the changed version: m allocated once, at its size, and each window read as a view, without a copy. Replace other with a changed version of your function.
+{{?f=rolling_mean}}     m = zeros(length(x) - w + 1)
+{{?f=rolling_mean}}     for i in w:length(x)
+{{?f=rolling_mean}}         m[i - w + 1] = sum(@view x[i-w+1:i]) / w
+{{?f=rolling_mean}}     end
+{{?f=rolling_mean}}     return m
+{{?f=rolling_mean}} end
+{{?f=rolling_mean}} Random.seed!(1)
+{{?f=rolling_mean}} x = randn(10000);  # a simulated series
+
+measure(g, args...) = (g(args...); (@allocations(g(args...)), @allocated(g(args...))))  # a first call compiles g, then one call is measured
+for (name, g) in [("{{f}}", {{f}}), ("other", other)]
+    n, b = measure(g, {{args}})
+    println(rpad(name, 16), lpad(n, 10), " allocations", lpad(b, 14), " bytes per call")
+end
+println("Same result: ", isapprox({{f}}({{args}}), other({{args}})))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "check-no-allocations"
+label = "Check No Allocations"
+desc = "Whether a function allocates nothing: AllocCheck's @check_allocs compiles it and, at the call, raises an AllocCheckFailure that names each line that may allocate. The default checks rolling_mean!, which writes the means into an array the caller allocates once; with a function of your own, other"
+code = '''
+using AllocCheck
+{{?f=rolling_mean}} using Random
+
+{{?f=rolling_mean}} function rolling_mean!(m, x, w)  # the means written into m, which the caller allocates once, each window read as a view
+{{?f=rolling_mean}}     for i in w:length(x)
+{{?f=rolling_mean}}         m[i - w + 1] = sum(@view x[i-w+1:i]) / w
+{{?f=rolling_mean}}     end
+{{?f=rolling_mean}}     return m
+{{?f=rolling_mean}} end
+{{?f=rolling_mean}} Random.seed!(1)
+{{?f=rolling_mean}} x = randn(10000);  # a simulated series
+{{?f=rolling_mean}} m = zeros(length(x) - 20 + 1);  # the result, allocated once
+{{?f=rolling_mean}} @check_allocs checked(m, x, w) = rolling_mean!(m, x, w)  # every path of rolling_mean! is checked when checked is first called
+{{?f!=rolling_mean}} @check_allocs checked(args...) = other(args...)  # other, your changed version of {{f}}, is checked when checked is first called
+
+try
+{{?f=rolling_mean}}     checked(m, x, 20)
+{{?f!=rolling_mean}}     checked({{args}})
+    println("Nothing may allocate: AllocCheck found no place in the compiled code that allocates")
+catch err
+    err isa AllocCheckFailure || rethrow()
+    println(err)  # how many places may allocate, then each with its line
+    foreach(site -> (show(stdout, site); println()), err.errors)
+end
+'''

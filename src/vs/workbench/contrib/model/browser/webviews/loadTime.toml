@@ -1,0 +1,225 @@
+# Load and Compile Time Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/loadTime.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Load and Compile Time"
+viewType = "pollis.loadTime"
+defaultModel = "load"
+decisionFirstColumn = "Measure"
+
+[[packages]]
+name = "SnoopCompile.jl"
+github = "https://github.com/JuliaDebug/SnoopCompile.jl"
+
+[[packages]]
+name = "PrecompileTools.jl"
+github = "https://github.com/JuliaLang/PrecompileTools.jl"
+
+[requires]
+packages = ["SnoopCompileCore.jl"]
+
+[[wikis]]
+name = "Overview"
+file = "loadTime/overview.md"
+bundled = true
+description = "Where the time before code runs goes, why each measure starts a new Julia, and the three tabs of the panel"
+
+[[wikis]]
+name = "Factsheet"
+file = "loadTime/factsheet.md"
+bundled = true
+description = "Tabs, inputs, macros and actions at a glance"
+
+[[wikis]]
+name = "Precompilation and Invalidations"
+file = "loadTime/precompilation-invalidations.md"
+bundled = true
+description = "What precompiling saves, what a workload adds, and why loading a package can make compiled code invalid"
+
+[[models]]
+id = "load"
+label = "Load Time"
+
+[[models]]
+id = "first"
+label = "First Use"
+
+[[models]]
+id = "inference"
+label = "Inference Time"
+
+[[bullets]]
+text = "Before a Julia function runs for the first time, Julia loads the packages it needs and compiles it for the types of its arguments: the wait before the first result"
+detail = ""
+
+[[bullets]]
+text = "Each measure runs in a new Julia, started from the REPL with the same environment, since a package already loaded or code already compiled in the REPL would take no time"
+detail = ""
+
+[[bullets]]
+text = "Load Time: @time_imports times the loading of the package and of each package it depends on, with the share spent compiling"
+detail = ""
+
+[[bullets]]
+text = "First Use and Inference Time: @time of the first and second runs of a piece of code, and SnoopCompile's @snoop_inference, the methods whose type inference took the most time"
+detail = ""
+
+[[decisionRows]]
+task = "Load Time"
+context = "Slow using"
+purpose = "The time of using the package, split among the packages it loads, to see which of them takes it"
+
+[[decisionRows]]
+task = "First Use"
+context = "Slow first call"
+purpose = "The time of the first run of some code beside the second, and the share of the first spent compiling"
+
+[[decisionRows]]
+task = "Inference Time"
+context = "Which methods compile"
+purpose = "The methods whose type inference took the most time in the first run, as SnoopCompile records them"
+
+[[inputs]]
+id = "pkg"
+label = "Package"
+tooltip = "The package whose load and first use are timed, by name, as written after using. The default, Distributions, is a package of probability distributions with many dependencies."
+default = "Distributions"
+
+[[inputs]]
+id = "workload"
+label = "First Use"
+tooltip = "The code run once the package is loaded, on one line: what a user of the package does first. The default fits a normal distribution to 1 000 simulated values."
+default = "fit(Normal, rand(Normal(0, 1), 1000))"
+models = ["first", "inference"]
+
+[[codeBranches]]
+model = "load"
+code = '''
+{{?pkg=Distributions}} Pollis.packages("Distributions")  # installs the example's package if this Julia does not have it
+
+# A new Julia with the same environment as the REPL, where nothing is loaded yet; its output prints here
+fresh(script) = run(`$(Base.julia_cmd()) --project=$(Base.active_project()) --startup-file=no -e $script`);
+
+fresh("""
+using InteractiveUtils
+@time_imports using {{pkg}}  # each package loaded, its time in milliseconds and the share of it spent compiling
+""");
+'''
+
+[[codeBranches]]
+model = "first"
+code = '''
+{{?pkg=Distributions}} Pollis.packages("Distributions")  # installs the example's package if this Julia does not have it
+
+# A new Julia with the same environment as the REPL, where nothing is loaded or compiled yet; its output prints here
+fresh(script) = run(`$(Base.julia_cmd()) --project=$(Base.active_project()) --startup-file=no -e $script`);
+
+fresh("""
+@time using {{pkg}}  # loading the package
+@time {{workload}};  # the first run: its time, and the share of it spent compiling
+@time {{workload}};  # the second run, with the code already compiled
+""");
+'''
+
+[[codeBranches]]
+model = "inference"
+code = '''
+{{?pkg=Distributions}} Pollis.packages("Distributions")  # installs the example's package if this Julia does not have it
+
+# A new Julia with the same environment as the REPL, where nothing is compiled yet; its output prints here
+fresh(script) = run(`$(Base.julia_cmd()) --project=$(Base.active_project()) --startup-file=no -e $script`);
+
+fresh("""
+using SnoopCompileCore  # loaded first, and alone, so that it records the compiling of what follows
+using {{pkg}}
+tinf = @snoop_inference {{workload}};
+using SnoopCompile
+println("Time inferring and compiling the first run, in seconds: ", round(inclusive(tinf), digits = 3))
+println("The 10 methods whose inference took the longest, each with its own time and the time of what it called:")
+foreach(println, last(flatten(tinf), 10))  # flatten sorts by the time of each method alone, so the longest come last
+""");
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "invalidations"
+label = "Invalidations"
+desc = "The methods already compiled that loading the package makes invalid, by SnoopCompile: each tree names a method the package adds or changes, and the compiled code it invalidates, which Julia must compile again"
+code = '''
+{{?pkg=Distributions}} Pollis.packages("Distributions")
+
+fresh(script) = run(`$(Base.julia_cmd()) --project=$(Base.active_project()) --startup-file=no -e $script`);
+
+fresh("""
+using SnoopCompileCore
+invs = @snoop_invalidations using {{pkg}};
+using SnoopCompile
+println(length(uinvalidated(invs)), " compiled methods invalidated by loading {{pkg}}")
+trees = invalidation_trees(invs);  # one tree for each method that causes invalidations
+println(length(trees), " causes; the 3 that invalidate the most:")
+foreach(println, last(trees, 3))
+""");
+'''
+
+[[actionGroups.actions]]
+id = "trace-compile"
+label = "Methods Compiled at First Use"
+desc = "Each method Julia compiles while the first use runs, which the package's precompiled code did not have, printed as precompile statements by the flag --trace-compile"
+code = '''
+{{?pkg=Distributions}} Pollis.packages("Distributions")
+
+trace = tempname() * ".jl";
+run(`$(Base.julia_cmd()) --project=$(Base.active_project()) --startup-file=no --trace-compile=$trace -e "using {{pkg}}; {{workload}}"`);
+statements = readlines(trace);
+println(length(statements), " methods compiled while the package loaded and the first use ran; the first 15:")
+foreach(println, first(statements, 15))
+println("All of them are in ", trace)
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "julia-alone"
+label = "Julia Alone and with the Package"
+desc = "The time a new Julia takes to start and stop, alone, with the package loaded, and with the package loaded and the first use run, so that each step's share shows"
+code = '''
+{{?pkg=Distributions}} Pollis.packages("Distributions")
+
+fresh(script) = run(`$(Base.julia_cmd()) --project=$(Base.active_project()) --startup-file=no -e $script`);
+
+alone = @elapsed fresh("nothing");
+loaded = @elapsed fresh("using {{pkg}}");
+used = @elapsed fresh("using {{pkg}}; {{workload}}");
+println("Julia alone:                  ", round(alone, digits = 2), " s")
+println("With {{pkg}} loaded:  ", round(loaded, digits = 2), " s, of which loading ", round(loaded - alone, digits = 2), " s")
+println("And its first use:            ", round(used, digits = 2), " s, of which the first use ", round(used - loaded, digits = 2), " s")
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "workload"
+label = "Precompile Workload"
+desc = "The block of PrecompileTools that a package's author puts in its module, so that precompiling the package also compiles the first use, which then runs without compiling"
+code = '''
+println("""
+# In the module of the package, after its code: precompiling the package then runs the workload and keeps what it compiles
+using PrecompileTools: @setup_workload, @compile_workload
+
+@setup_workload begin
+    # Data the workload needs: made here, it is not kept in the package
+    @compile_workload begin
+        {{workload}}  # what a user of the package does first
+    end
+end
+""")
+'''

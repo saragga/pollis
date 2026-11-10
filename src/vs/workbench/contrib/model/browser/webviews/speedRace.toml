@@ -1,0 +1,345 @@
+# Run a Speed Race Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/speedRace.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Run a Speed Race"
+viewType = "pollis.speedRace"
+defaultModel = "loop"
+decisionFirstColumn = "Race"
+
+[[packages]]
+name = "PythonCall.jl"
+github = "https://github.com/JuliaPy/PythonCall.jl"
+
+[[packages]]
+name = "RCall.jl"
+github = "https://github.com/JuliaInterop/RCall.jl"
+
+[[packages]]
+name = "Chairmarks.jl"
+github = "https://github.com/LilithHafner/Chairmarks.jl"
+
+[requires]
+packages = ["CondaPkg.jl", "Plots.jl"]
+
+[[wikis]]
+name = "Overview"
+file = "speedRace/overview.md"
+bundled = true
+description = "What the race times, how Python and R are called from Julia, and the three races of the panel"
+
+[[wikis]]
+name = "Factsheet"
+file = "speedRace/factsheet.md"
+bundled = true
+description = "Races, inputs, timers and actions at a glance"
+
+[[wikis]]
+name = "Timing Fairly Across Languages"
+file = "speedRace/timing-fairly.md"
+bundled = true
+description = "The same data, the same result, each language's own timer, and what a race between languages can and cannot say"
+
+[[models]]
+id = "loop"
+label = "Loop"
+
+[[models]]
+id = "vector"
+label = "Vectorised"
+
+[[models]]
+id = "sort"
+label = "Sort"
+
+[[bullets]]
+text = "The same computation written in Julia, Python and R, run from Julia on the same data: Python through PythonCall, in a Python that CondaPkg installs, and R through RCall, in the R installed on the computer"
+detail = ""
+
+[[bullets]]
+text = "Each language times itself with its own timer, so that calling Python or R from Julia is not in the time: Chairmarks in Julia, timeit in Python, system.time in R, each the fastest of several timings"
+detail = ""
+
+[[bullets]]
+text = "The results are compared before the times: a race between programs that do not give the same result says nothing"
+detail = ""
+
+[[bullets]]
+text = "Loop: a loop written out over the values; Vectorised: operations on whole arrays, NumPy in Python; Sort: each language's own sort"
+detail = ""
+
+[[decisionRows]]
+task = "Loop"
+context = "Code written out"
+purpose = "The sum of squared deviations from the mean in an explicit loop, where the language itself runs each step"
+
+[[decisionRows]]
+task = "Vectorised"
+context = "Whole-array operations"
+purpose = "The same sum with operations on whole arrays, which Python and R run in compiled libraries"
+
+[[decisionRows]]
+task = "Sort"
+context = "Library routine"
+purpose = "Sorting the values with each language's own sort, compiled code in all three"
+
+[[inputs]]
+id = "n"
+label = "Values"
+tooltip = "The number of simulated values each language works on. They are made in Julia and copied to Python and R, so the three race on the same numbers."
+default = "100000"
+
+[[inputs]]
+id = "repeats"
+label = "Repeats"
+tooltip = "How many timings each language makes; the fastest is kept, the one least delayed by other work on the computer. Each timing calls the code as many times as it takes for a tenth of a second or more."
+default = "5"
+
+[[codeBranches]]
+model = "loop"
+code = '''
+using PythonCall, RCall, Chairmarks, Random
+
+Random.seed!(1)
+x = randn({{n}});  # the data, made in Julia and copied to Python and R: the three race on the same numbers
+
+# Julia: the sum of squared deviations from the mean, in a loop
+function ss_loop(x)
+    m = sum(x) / length(x)
+    s = 0.0
+    for v in x
+        s += (v - m)^2
+    end
+    return s
+end
+
+# Python: the same loop, on a Python list, timed by timeit
+python_race = """
+def race(x, repeats):
+    import timeit
+    def ss_loop(x):
+        m = sum(x) / len(x)
+        s = 0.0
+        for v in x:
+            s += (v - m) ** 2
+        return s
+    timer = timeit.Timer(lambda: ss_loop(x))
+    number, _ = timer.autorange()  # enough calls for a fifth of a second
+    return ss_loop(x), min(timer.repeat(repeat=repeats, number=number)) / number
+result, seconds = race(x, repeats)
+""";
+
+# R: the same loop, timed by system.time
+R"""
+ss_loop <- function(x) {
+  m <- sum(x) / length(x)
+  s <- 0
+  for (v in x) s <- s + (v - m)^2
+  s
+}
+time_min <- function(f, repeats) {
+  k <- 1
+  while (system.time(for (i in seq_len(k)) f())[["elapsed"]] < 0.1) k <- k * 10
+  min(replicate(repeats, system.time(for (i in seq_len(k)) f())[["elapsed"]])) / k
+}
+""";
+
+function run_race(x)  # each language's result, and its fastest time of a call in seconds
+    julia_seconds = (@b ss_loop($x)).time
+    python = pyexec(@NamedTuple{result::Float64, seconds::Float64}, python_race, Main, (x = pylist(x), repeats = {{repeats}}))
+    r = rcopy(R"list(result = ss_loop($x), seconds = time_min(function() ss_loop($x), {{repeats}}))")
+    return (results = (Julia = ss_loop(x), Python = python.result, R = r[:result]),
+            seconds = (Julia = julia_seconds, Python = python.seconds, R = r[:seconds]))
+end
+
+race = run_race(x);
+same = all(isapprox(value, race.results.Julia; rtol = 1e-8) for value in race.results)
+println(same ? "Same result in the three languages, to 8 significant digits" : "The results differ: compare race.results before the times")
+for (language, seconds) in pairs(race.seconds)
+    println(rpad(string(language), 8), lpad(round(seconds * 1e3, sigdigits = 4), 12), " ms a call", lpad(round(seconds / race.seconds.Julia, sigdigits = 3), 10), " times Julia's")
+end
+'''
+
+[[codeBranches]]
+model = "vector"
+code = '''
+using PythonCall, RCall, Chairmarks, Random
+import CondaPkg
+CondaPkg.add("numpy")  # NumPy, in the Python that CondaPkg installs for this environment; nothing is done when it is there
+
+Random.seed!(1)
+x = randn({{n}});  # the data, made in Julia and copied to Python and R: the three race on the same numbers
+
+# Julia: the sum of squared deviations from the mean, with operations on the whole vector
+ss_vector(x) = sum(abs2, x .- sum(x) / length(x))
+
+# Python: the same with NumPy, timed by timeit
+python_race = """
+def race(x, repeats):
+    import timeit
+    import numpy as np
+    x = np.array(x)  # a copy as a NumPy array
+    def ss_vector(x):
+        return np.sum((x - x.mean()) ** 2)
+    timer = timeit.Timer(lambda: ss_vector(x))
+    number, _ = timer.autorange()  # enough calls for a fifth of a second
+    return float(ss_vector(x)), min(timer.repeat(repeat=repeats, number=number)) / number
+result, seconds = race(x, repeats)
+""";
+
+# R: the same with operations on the whole vector, timed by system.time
+R"""
+ss_vector <- function(x) sum((x - mean(x))^2)
+time_min <- function(f, repeats) {
+  k <- 1
+  while (system.time(for (i in seq_len(k)) f())[["elapsed"]] < 0.1) k <- k * 10
+  min(replicate(repeats, system.time(for (i in seq_len(k)) f())[["elapsed"]])) / k
+}
+""";
+
+function run_race(x)  # each language's result, and its fastest time of a call in seconds
+    julia_seconds = (@b ss_vector($x)).time
+    python = pyexec(@NamedTuple{result::Float64, seconds::Float64}, python_race, Main, (x = x, repeats = {{repeats}}))
+    r = rcopy(R"list(result = ss_vector($x), seconds = time_min(function() ss_vector($x), {{repeats}}))")
+    return (results = (Julia = ss_vector(x), Python = python.result, R = r[:result]),
+            seconds = (Julia = julia_seconds, Python = python.seconds, R = r[:seconds]))
+end
+
+race = run_race(x);
+same = all(isapprox(value, race.results.Julia; rtol = 1e-8) for value in race.results)
+println(same ? "Same result in the three languages, to 8 significant digits" : "The results differ: compare race.results before the times")
+for (language, seconds) in pairs(race.seconds)
+    println(rpad(string(language), 8), lpad(round(seconds * 1e3, sigdigits = 4), 12), " ms a call", lpad(round(seconds / race.seconds.Julia, sigdigits = 3), 10), " times Julia's")
+end
+'''
+
+[[codeBranches]]
+model = "sort"
+code = '''
+using PythonCall, RCall, Chairmarks, Random
+import CondaPkg
+CondaPkg.add("numpy")  # NumPy, in the Python that CondaPkg installs for this environment; nothing is done when it is there
+
+Random.seed!(1)
+x = randn({{n}});  # the data, made in Julia and copied to Python and R: the three race on the same numbers
+
+# Julia: the values sorted, and the one in the middle
+sort_middle(x) = sort(x)[div(length(x), 2) + 1]
+
+# Python: the same with NumPy's sort, timed by timeit
+python_race = """
+def race(x, repeats):
+    import timeit
+    import numpy as np
+    x = np.array(x)  # a copy as a NumPy array
+    def sort_middle(x):
+        return np.sort(x)[len(x) // 2]
+    timer = timeit.Timer(lambda: sort_middle(x))
+    number, _ = timer.autorange()  # enough calls for a fifth of a second
+    return float(sort_middle(x)), min(timer.repeat(repeat=repeats, number=number)) / number
+result, seconds = race(x, repeats)
+""";
+
+# R: the same with R's sort, timed by system.time
+R"""
+sort_middle <- function(x) sort(x)[length(x) %/% 2 + 1]
+time_min <- function(f, repeats) {
+  k <- 1
+  while (system.time(for (i in seq_len(k)) f())[["elapsed"]] < 0.1) k <- k * 10
+  min(replicate(repeats, system.time(for (i in seq_len(k)) f())[["elapsed"]])) / k
+}
+""";
+
+function run_race(x)  # each language's result, and its fastest time of a call in seconds
+    julia_seconds = (@b sort_middle($x)).time
+    python = pyexec(@NamedTuple{result::Float64, seconds::Float64}, python_race, Main, (x = x, repeats = {{repeats}}))
+    r = rcopy(R"list(result = sort_middle($x), seconds = time_min(function() sort_middle($x), {{repeats}}))")
+    return (results = (Julia = sort_middle(x), Python = python.result, R = r[:result]),
+            seconds = (Julia = julia_seconds, Python = python.seconds, R = r[:seconds]))
+end
+
+race = run_race(x);
+same = all(isapprox(value, race.results.Julia; rtol = 1e-8) for value in race.results)
+println(same ? "Same result in the three languages, to 8 significant digits" : "The results differ: compare race.results before the times")
+for (language, seconds) in pairs(race.seconds)
+    println(rpad(string(language), 8), lpad(round(seconds * 1e3, sigdigits = 4), 12), " ms a call", lpad(round(seconds / race.seconds.Julia, sigdigits = 3), 10), " times Julia's")
+end
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "bars"
+label = "Bar Chart of Times"
+desc = "The fastest time of a call in each language, as bars on a log scale, where equal ratios are equal steps"
+code = '''
+using Plots
+
+languages = [string(language) for language in keys(race.seconds)]
+milliseconds = [seconds * 1e3 for seconds in race.seconds]
+bar(languages, milliseconds, yscale = :log10, ylabel = "ms a call, log scale", legend = false, title = "{{n}} values")
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "sizes"
+label = "Times Across Sizes"
+desc = "The race again on 1 000 to 1 000 000 values, each language's time against the number of values on log scales: a slope of 1 is a time in proportion to the size"
+code = '''
+using Plots
+
+sizes = [1000, 10000, 100000, 1000000]
+times = [run_race(randn(n)).seconds for n in sizes];  # the race of the tab, on new data of each size
+p = plot(xscale = :log10, yscale = :log10, xlabel = "values", ylabel = "seconds a call", legend = :topleft)
+for language in keys(times[1])
+    plot!(p, sizes, [t[language] for t in times], marker = :circle, label = string(language))
+end
+p
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "results"
+label = "Results Digit by Digit"
+desc = "The result of each language in full, and its relative difference from Julia's: different orders of floating-point operations give different last digits"
+code = '''
+for (language, value) in pairs(race.results)
+    difference = abs(value - race.results.Julia) / abs(race.results.Julia)
+    println(rpad(string(language), 8), lpad(repr(value), 24), "   relative difference from Julia: ", difference)
+end
+'''
+
+[[actionGroups.actions]]
+id = "overhead"
+label = "Timed Inside and from Julia"
+desc = "The time of a call of the R function timed inside R, beside the same call made from Julia through RCall, with the data copied into R each time: the difference is the cost of crossing between the languages, which the race leaves out"
+code = '''
+r_function = Dict("loop" => :ss_loop, "vector" => :ss_vector, "sort" => :sort_middle)["{{model}}"];  # the R function of the tab
+from_julia = (@b rcall(r_function, x)).time  # each call made from Julia: x copied into R, then the R function run
+println("R, timed inside R:    ", round(race.seconds.R * 1e3, sigdigits = 4), " ms a call")
+println("R, called from Julia: ", round(from_julia * 1e3, sigdigits = 4), " ms a call, with x copied into R each time")
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "per-element"
+label = "Time per Element"
+desc = "Each language's time divided by the number of values: nanoseconds per value, comparable across sizes and with the speed of the processor"
+code = '''
+for (language, seconds) in pairs(race.seconds)
+    println(rpad(string(language), 8), lpad(round(seconds * 1e9 / {{n}}, sigdigits = 3), 10), " nanoseconds a value")
+end
+'''

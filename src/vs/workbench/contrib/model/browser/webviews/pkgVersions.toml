@@ -1,0 +1,243 @@
+# Compare Package Versions Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/pkgVersions.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Compare Package Versions"
+viewType = "pollis.pkgVersions"
+defaultModel = "releases"
+decisionFirstColumn = "Versions"
+
+[[packages]]
+name = "AirspeedVelocity.jl"
+github = "https://github.com/MilesCranmer/AirspeedVelocity.jl"
+
+[requires]
+packages = ["Plots.jl"]
+
+[[wikis]]
+name = "Overview"
+file = "pkgVersions/overview.md"
+bundled = true
+description = "What AirspeedVelocity times, how each version runs in an environment of its own, and the two tabs of the panel"
+
+[[wikis]]
+name = "Factsheet"
+file = "pkgVersions/factsheet.md"
+bundled = true
+description = "Tabs, inputs, functions, files and actions at a glance"
+
+[[wikis]]
+name = "Reading a Comparison of Versions"
+file = "pkgVersions/reading-comparisons.md"
+bundled = true
+description = "The median and its interquartile range, the ratio column, load time, and when a difference between versions is real"
+
+[[models]]
+id = "releases"
+label = "Releases"
+
+[[models]]
+id = "local"
+label = "Local Clone"
+
+[[bullets]]
+text = "AirspeedVelocity times the same code with several versions of a package: each version is installed in a new environment, in a new Julia, and the same benchmark script runs on each"
+detail = ""
+
+[[bullets]]
+text = "Releases: versions of a registered package, by their Git tags, such as v0.34.0, fetched from the package's repository"
+detail = ""
+
+[[bullets]]
+text = "Local Clone: the branches or commits of a clone on this computer, and dirty, its files as they are now, to time a change before it is committed"
+detail = ""
+
+[[bullets]]
+text = "For each version: the median time of the code and its interquartile range, and the time to load the package, in one table; with two versions, a column gives the ratio of the first to the second"
+detail = ""
+
+[[decisionRows]]
+task = "Releases"
+context = "Published versions"
+purpose = "Whether a release of a package made the code faster or slower, and its load time, for releases chosen by their tags"
+
+[[decisionRows]]
+task = "Local Clone"
+context = "Your own changes"
+purpose = "Whether the changes in a clone of the package, committed or not, make the code faster or slower than a branch or commit"
+
+[[inputs]]
+id = "pkg"
+label = "Package"
+tooltip = "The package whose versions are compared, by name. The default, StatsBase, is the statistics package of JuliaStats."
+default = "StatsBase"
+
+[[inputs]]
+id = "revs"
+label = "Releases"
+tooltip = "The versions compared, as Git tags or branches of the package's repository, separated by commas, the one to compare against first. The defaults are the first and a later release of StatsBase 0.34."
+default = "v0.34.0, v0.34.13"
+models = ["releases"]
+
+[[inputs]]
+id = "path"
+label = "Local Clone"
+tooltip = "The folder of a clone of the package on this computer, such as one made by Pkg.develop in ~/.julia/dev."
+default = ""
+models = ["local"]
+
+[[inputs]]
+id = "localrevs"
+label = "Revisions"
+tooltip = "The branches or commits of the clone compared, separated by commas, the one to compare against first; dirty is the clone's files as they are now, committed or not."
+default = "main, dirty"
+models = ["local"]
+
+[[inputs]]
+id = "setup"
+label = "Data"
+tooltip = "The code that makes the data, run before each sample and not timed, on one line; separate several assignments with semicolons. The default makes 10 000 random integers from 1 to 10."
+default = "x = rand(1:10, 10000)"
+
+[[inputs]]
+id = "workload"
+label = "Code to Time"
+tooltip = "The code timed with each version, on one line, using the package and the data. The default counts the values of x with countmap of StatsBase."
+default = "countmap(x)"
+
+[[codeBranches]]
+model = "releases"
+code = '''
+using AirspeedVelocity, Markdown
+
+# The benchmark script, which runs with each version: the code to time, as a BenchmarkTools benchmark whose setup, not timed, makes the data
+script = joinpath(tempdir(), "pollis-airspeed-{{pkg}}.jl");
+write(script, """
+using BenchmarkTools, {{pkg}}
+const SUITE = BenchmarkGroup()
+SUITE["code"] = @benchmarkable {{workload}} setup = ({{setup}})
+""");
+
+folder = mkpath(joinpath(tempdir(), "pollis-airspeed"));  # the results, a JSON file for each version
+revs = String.(strip.(split("{{revs}}", ",")));
+benchmark("{{pkg}}", revs; script = script, output_dir = folder);  # each version installed in a new environment and timed in a new Julia: this takes minutes
+results = load_results("{{pkg}}", revs; input_dir = folder);
+display(Markdown.parse(create_table(results)))  # median ± interquartile range of each benchmark and of the load time; with two versions, the ratio of the first to the second
+'''
+
+[[codeBranches]]
+model = "local"
+code = '''
+using AirspeedVelocity, Markdown
+
+clone = expanduser("{{path}}")
+isdir(clone) || error("Set Local Clone to the folder of a clone of {{pkg}} on this computer, such as one made by Pkg.develop in ~/.julia/dev")
+
+# The benchmark script, which runs with each revision: the code to time, as a BenchmarkTools benchmark whose setup, not timed, makes the data
+script = joinpath(tempdir(), "pollis-airspeed-{{pkg}}.jl");
+write(script, """
+using BenchmarkTools, {{pkg}}
+const SUITE = BenchmarkGroup()
+SUITE["code"] = @benchmarkable {{workload}} setup = ({{setup}})
+""");
+
+folder = mkpath(joinpath(tempdir(), "pollis-airspeed"));  # the results, a JSON file for each revision
+revs = String.(strip.(split("{{localrevs}}", ",")));
+benchmark("{{pkg}}", revs; path = clone, script = script, output_dir = folder);  # each revision installed in a new environment and timed in a new Julia
+results = load_results("{{pkg}}", revs; input_dir = folder);
+display(Markdown.parse(create_table(results)))  # median ± interquartile range of each benchmark and of the load time; with two revisions, the ratio of the first to the second
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "bars"
+label = "Bar Chart per Benchmark"
+desc = "The median time of each benchmark in each version, one chart for each benchmark, with the interquartile range as an error bar"
+code = '''
+using Plots
+
+versions = collect(keys(results))
+benchmarks = collect(keys(results[first(versions)]))
+p = plot(layout = (length(benchmarks), 1), legend = false, size = (700, 260 * length(benchmarks)))
+for (i, name) in enumerate(benchmarks)
+    medians = [results[v][name]["median"] / 1e6 for v in versions]  # AirspeedVelocity gives times in nanoseconds
+    low = [haskey(results[v][name], "25") ? medians[k] - results[v][name]["25"] / 1e6 : 0.0 for (k, v) in enumerate(versions)]
+    high = [haskey(results[v][name], "75") ? results[v][name]["75"] / 1e6 - medians[k] : 0.0 for (k, v) in enumerate(versions)]
+    bar!(p[i], versions, medians, yerror = (low, high), ylabel = "ms", title = name)
+end
+p
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "registered"
+label = "Releases in the Registry"
+desc = "The versions of the package in the registries of this Julia, the latest last: the names to put in Releases, each with a v before it"
+code = '''
+using Pkg
+
+for registry in Pkg.Registry.reachable_registries()
+    for (_, entry) in registry
+        entry.name == "{{pkg}}" || continue
+        # Julia 1.13 takes the registry and the package, earlier versions the package alone
+        info = applicable(Pkg.Registry.registry_info, registry, entry) ? Pkg.Registry.registry_info(registry, entry) : Pkg.Registry.registry_info(entry)
+        versions = sort(collect(keys(info.version_info)))
+        println(registry.name, ": ", length(versions), " versions of {{pkg}}; the last 10:")
+        println(join(["v" * string(v) for v in last(versions, 10)], ", "))
+    end
+end
+'''
+
+[[actionGroups.actions]]
+id = "script"
+label = "Benchmark Script"
+desc = "The script that ran with each version, to check it or to save it as benchmark/benchmarks.jl of the package, where AirspeedVelocity looks for one when no script is given"
+code = '''
+print(read(script, String))
+println("Saved at ", script)
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "memory"
+label = "Allocations and Memory"
+desc = "The same versions side by side by the allocations and the memory of each benchmark in place of its time, with the ratio of the first to the second when two are compared"
+code = '''
+using AirspeedVelocity, Markdown
+
+display(Markdown.parse(create_table(results; key = "memory")))  # allocations and memory allocated by each benchmark in each version
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "real-change"
+label = "Is the Change Clear?"
+desc = "For each benchmark, the median of the last version as a multiple of the first, and whether their interquartile ranges overlap: ranges that overlap leave the change within the spread of the timings"
+code = '''
+versions = collect(keys(results))
+first_version, last_version = first(versions), last(versions)
+for name in keys(results[first_version])
+    a, b = results[first_version][name], results[last_version][name]
+    ratio = round(b["median"] / a["median"], sigdigits = 3)
+    if haskey(a, "75") && haskey(b, "75")
+        overlap = !(b["75"] < a["25"] || a["75"] < b["25"])
+        println(rpad(name, 24), ratio, " times the time of ", first_version, "; ", overlap ? "the interquartile ranges overlap: no clear change" : "the interquartile ranges do not overlap")
+    else
+        println(rpad(name, 24), ratio, " times the time of ", first_version)
+    end
+end
+'''

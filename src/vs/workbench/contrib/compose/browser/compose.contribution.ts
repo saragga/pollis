@@ -50,6 +50,11 @@ import { SNOWBALL_SEARCH_COMMAND_ID } from '../common/snowballSearch.js';
 import './snowballSearchPage.js';
 import { openScaffoldWebview } from '../../model/browser/commands/scaffold.command.js';
 import { TIMEFUNCTION_PANEL } from '../../model/browser/commands/timeFunction.command.js';
+import { FINDALLOCS_PANEL } from '../../model/browser/commands/findAllocs.command.js';
+import { TYPESTABILITY_PANEL } from '../../model/browser/commands/typeStability.command.js';
+import { LOADTIME_PANEL } from '../../model/browser/commands/loadTime.command.js';
+import { SPEEDRACE_PANEL } from '../../model/browser/commands/speedRace.command.js';
+import { PKGVERSIONS_PANEL } from '../../model/browser/commands/pkgVersions.command.js';
 import { PROFILETIME_PANEL } from '../../model/browser/commands/profileTime.command.js';
 
 // The Core Mathematics, Finance and Economics Toolboxes come from their extensions (toolboxes/pollis-toolbox-*, not built in:
@@ -531,12 +536,17 @@ MenuRegistry.appendMenuItem(OrchestrationMenu, {
 });
 
 // ==============================================================
-// SUBMENU: Profiling, the time of your own code (Time a Function, Find Where the Time Goes, Speed Up a Function), then
+// SUBMENU: Profiling, the time of your own code (Time a Function, Find Where the Time Goes, Find Allocations, Check Type Stability, Speed Up a Function, Load and Compile Time), then
 // the races between languages
 // ==============================================================
 
 CommandsRegistry.registerCommand('pollis.profiling.timeFunction', (accessor: ServicesAccessor) => openScaffoldWebview(accessor, TIMEFUNCTION_PANEL));
 CommandsRegistry.registerCommand('pollis.profiling.profileTime', (accessor: ServicesAccessor) => openScaffoldWebview(accessor, PROFILETIME_PANEL));
+CommandsRegistry.registerCommand('pollis.profiling.findAllocs', (accessor: ServicesAccessor) => openScaffoldWebview(accessor, FINDALLOCS_PANEL));
+CommandsRegistry.registerCommand('pollis.profiling.typeStability', (accessor: ServicesAccessor) => openScaffoldWebview(accessor, TYPESTABILITY_PANEL));
+CommandsRegistry.registerCommand('pollis.profiling.loadTime', (accessor: ServicesAccessor) => openScaffoldWebview(accessor, LOADTIME_PANEL));
+CommandsRegistry.registerCommand('pollis.profiling.speedRace', (accessor: ServicesAccessor) => openScaffoldWebview(accessor, SPEEDRACE_PANEL));
+CommandsRegistry.registerCommand('pollis.profiling.pkgVersions', (accessor: ServicesAccessor) => openScaffoldWebview(accessor, PKGVERSIONS_PANEL));
 
 MenuRegistry.appendMenuItem(ComparisonsMenu, {
 	group: '1_own',
@@ -552,8 +562,38 @@ MenuRegistry.appendMenuItem(ComparisonsMenu, {
 
 MenuRegistry.appendMenuItem(ComparisonsMenu, {
 	group: '1_own',
-	command: { id: SPEED_UP_COMMAND_ID, title: localize('profiling.speedUp', "Speed Up a Function...") },
+	command: { id: 'pollis.profiling.findAllocs', title: localize('profiling.findAllocs', "Find Allocations...") },
 	order: 3,
+});
+
+MenuRegistry.appendMenuItem(ComparisonsMenu, {
+	group: '1_own',
+	command: { id: 'pollis.profiling.typeStability', title: localize('profiling.typeStability', "Check Type Stability...") },
+	order: 4,
+});
+
+MenuRegistry.appendMenuItem(ComparisonsMenu, {
+	group: '1_own',
+	command: { id: SPEED_UP_COMMAND_ID, title: localize('profiling.speedUp', "Speed Up a Function...") },
+	order: 5,
+});
+
+MenuRegistry.appendMenuItem(ComparisonsMenu, {
+	group: '1_own',
+	command: { id: 'pollis.profiling.loadTime', title: localize('profiling.loadTime', "Load and Compile Time...") },
+	order: 6,
+});
+
+MenuRegistry.appendMenuItem(ComparisonsMenu, {
+	group: '1_own',
+	command: { id: 'pollis.profiling.pkgVersions', title: localize('profiling.pkgVersions', "Compare Package Versions...") },
+	order: 7,
+});
+
+MenuRegistry.appendMenuItem(ComparisonsMenu, {
+	group: '2_race',
+	command: { id: 'pollis.profiling.speedRace', title: localize('profiling.speedRace', "Run a Speed Race...") },
+	order: 1,
 });
 
 // Not built yet: each item says so.
@@ -569,7 +609,6 @@ const composeItems = [
 	{ menu: OrchestrationMenu, id: 'pollis.orchestration.race', title: localize('orchestration.race', "Race..."), group: '1_patterns', order: 3 },
 	{ menu: CorrectnessMenu, id: 'chiara.statistics.comp_co', title: localize('comp.co', "Check Results Across Languages..."), group: '1_check', order: 1 },
 	{ menu: CorrectnessMenu, id: 'chiara.statistics.comp_fx', title: localize('comp.fx', "Settle a Disagreement..."), group: '1_check', order: 2 },
-	{ menu: ComparisonsMenu, id: 'chiara.statistics.comp_pr', title: localize('comp.pr', "Run a Speed Race..."), group: '2_race', order: 1 },
 	{ menu: CompileGaloreMenu, id: 'chiara.statistics.comp_tr', title: localize('comp.tr', "Translate Julia to Rust..."), group: '1_compiled', order: 1 },
 	{ menu: ComparisonsMenu, id: 'chiara.statistics.comp_al', title: localize('comp.al', "Add a Language..."), group: '2_race', order: 2 },
 	{ menu: CompileGaloreMenu, id: 'chiara.statistics.comp_sl', title: localize('comp.sl', "Compile Julia to a Shared Library..."), group: '1_compiled', order: 2 },

@@ -1,0 +1,333 @@
+# Check Type Stability Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/typeStability.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Check Type Stability"
+viewType = "pollis.typeStability"
+defaultModel = "warntype"
+decisionFirstColumn = "Check"
+
+[[packages]]
+name = "JET.jl"
+github = "https://github.com/aviatesk/JET.jl"
+
+[[packages]]
+name = "DispatchDoctor.jl"
+github = "https://github.com/MilesCranmer/DispatchDoctor.jl"
+
+[[packages]]
+name = "Cthulhu.jl"
+github = "https://github.com/JuliaDebug/Cthulhu.jl"
+
+[[wikis]]
+name = "Overview"
+file = "typeStability/overview.md"
+bundled = true
+description = "What type stability is, why it matters for speed, and the three checks of the panel"
+
+[[wikis]]
+name = "Factsheet"
+file = "typeStability/factsheet.md"
+bundled = true
+description = "Tabs, inputs, macros and actions at a glance"
+
+[[wikis]]
+name = "Common Causes of Type Instability"
+file = "typeStability/common-causes.md"
+bundled = true
+description = "Global variables, results of several types, containers of abstract types, fields of abstract types and closures"
+
+[[models]]
+id = "warntype"
+label = "Inferred Types"
+
+[[models]]
+id = "jet"
+label = "Runtime Dispatches"
+
+[[models]]
+id = "stable"
+label = "Stability Check"
+
+[[bullets]]
+text = "A function is type stable when Julia can infer, from the types of its arguments, one concrete type for its result and for its variables, and compile code specialised to them"
+detail = ""
+
+[[bullets]]
+text = "Inferred Types: @code_warntype prints the type inferred for each variable and for the result, in colour where it is not concrete"
+detail = ""
+
+[[bullets]]
+text = "Runtime Dispatches: JET's @report_opt lists each call whose method Julia can only choose while the code runs, with its line and the chain of calls that leads there"
+detail = ""
+
+[[bullets]]
+text = "Stability Check: DispatchDoctor's @stable checks a function at each call and warns, or raises an error, when its result is inferred to a type that is not concrete"
+detail = ""
+
+[[decisionRows]]
+task = "Inferred Types"
+context = "Read the types"
+purpose = "The type of each variable and of the result, for one call, to see which is not concrete"
+
+[[decisionRows]]
+task = "Runtime Dispatches"
+context = "Find the calls"
+purpose = "Each call resolved at run time, in the function and in the functions it calls, with its line"
+
+[[decisionRows]]
+task = "Stability Check"
+context = "Guard a function"
+purpose = "A function that warns or fails at each call whose result is not of a concrete type, kept in the code"
+
+[[inputs]]
+id = "f"
+label = "Function"
+tooltip = "The function to check, by name. The default, share_above, gives the share of the values of x above a threshold, and is unstable on purpose: it reads a global variable that is not const, and returns nothing for an empty x."
+default = "share_above"
+
+[[inputs]]
+id = "args"
+label = "Arguments"
+tooltip = "The arguments the function is called with, as they are written in the call. The types of their values are those the checks infer for."
+default = "x"
+
+[[codeBranches]]
+model = "warntype"
+code = '''
+using InteractiveUtils
+{{?f=share_above}} using Random
+
+{{?f=share_above}} threshold = 0.5  # a global variable, not const: its type can change at any time, so Julia reads it as Any. Replace the example with your own function.
+{{?f=share_above}} function share_above(x)  # the share of the values of x above threshold
+{{?f=share_above}}     isempty(x) && return nothing  # nothing for an empty x and a Float64 otherwise: two possible types of result
+{{?f=share_above}}     n = 0
+{{?f=share_above}}     for v in x
+{{?f=share_above}}         if v > threshold  # the method of > is chosen while the code runs, since the type of threshold is not known
+{{?f=share_above}}             n += 1
+{{?f=share_above}}         end
+{{?f=share_above}}     end
+{{?f=share_above}}     return n / length(x)
+{{?f=share_above}} end
+{{?f=share_above}} Random.seed!(1)
+{{?f=share_above}} x = rand(10000);  # simulated values. Replace them with your own data.
+
+@code_warntype {{f}}({{args}})  # the types of the arguments, the variables (Locals) and the result (Body); in colour, those that are not concrete
+'''
+
+[[codeBranches]]
+model = "jet"
+code = '''
+using JET
+{{?f=share_above}} using Random
+
+{{?f=share_above}} threshold = 0.5  # a global variable, not const: its type can change at any time, so Julia reads it as Any. Replace the example with your own function.
+{{?f=share_above}} function share_above(x)  # the share of the values of x above threshold
+{{?f=share_above}}     isempty(x) && return nothing  # nothing for an empty x and a Float64 otherwise: two possible types of result
+{{?f=share_above}}     n = 0
+{{?f=share_above}}     for v in x
+{{?f=share_above}}         if v > threshold  # the method of > is chosen while the code runs, since the type of threshold is not known
+{{?f=share_above}}             n += 1
+{{?f=share_above}}         end
+{{?f=share_above}}     end
+{{?f=share_above}}     return n / length(x)
+{{?f=share_above}} end
+{{?f=share_above}} Random.seed!(1)
+{{?f=share_above}} x = rand(10000);  # simulated values. Replace them with your own data.
+
+@report_opt {{f}}({{args}})  # each runtime dispatch, with its line and the calls that lead there; No errors detected when there is none
+'''
+
+[[codeBranches]]
+model = "stable"
+code = '''
+using DispatchDoctor
+{{?f=share_above}} using Random
+
+{{?f=share_above}} threshold = 0.5  # a global variable, not const. Replace the example with your own function.
+{{?f=share_above}} @stable default_mode="warn" function stable_share_above(x)  # share_above with @stable before it: each call checks the type inferred for its result
+{{?f=share_above}}     isempty(x) && return nothing
+{{?f=share_above}}     n = 0
+{{?f=share_above}}     for v in x
+{{?f=share_above}}         if v > threshold
+{{?f=share_above}}             n += 1
+{{?f=share_above}}         end
+{{?f=share_above}}     end
+{{?f=share_above}}     return n / length(x)
+{{?f=share_above}} end
+{{?f=share_above}} Random.seed!(1)
+{{?f=share_above}} x = rand(10000);  # simulated values. Replace them with your own data.
+{{?f=share_above}} stable_share_above(x)  # a TypeInstabilityWarning first, since the result is inferred as Union{Nothing, Float64}; with default_mode="error", the call fails instead
+{{?f!=share_above}} # @stable goes before the definition of a function: write @stable default_mode="warn" before the definition of {{f}}, run it again, and each call then warns when the type of its result is not concrete.
+{{?f!=share_above}} # Until then, the type Julia infers for the result of {{f}}, which @stable checks:
+{{?f!=share_above}} result_type = only(Base.return_types({{f}}, typeof.(({{args}},))))
+{{?f!=share_above}} println("Result inferred as ", result_type, isconcretetype(result_type) ? ": concrete, so @stable would not warn" : ": not concrete, so @stable would warn")
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "flame-dispatch"
+label = "Flame Graph of Dispatches"
+desc = "The flame graph of many calls, by @profview of Pollis' Julia REPL, in a tab of Pollis: the frames of calls resolved at run time are red, so their share of the time shows"
+code = '''
+using Profile
+{{?f=share_above}} using Random
+
+{{?f=share_above}} threshold = 0.5  # a global variable, not const
+{{?f=share_above}} function share_above(x)  # the function to check
+{{?f=share_above}}     isempty(x) && return nothing
+{{?f=share_above}}     n = 0
+{{?f=share_above}}     for v in x
+{{?f=share_above}}         if v > threshold
+{{?f=share_above}}             n += 1
+{{?f=share_above}}         end
+{{?f=share_above}}     end
+{{?f=share_above}}     return n / length(x)
+{{?f=share_above}} end
+{{?f=share_above}} Random.seed!(1)
+{{?f=share_above}} x = rand(10000);  # simulated values
+
+{{f}}({{args}});  # a first call compiles {{f}}
+@profview for _ in 1:200  # the call 200 times, for enough samples
+    {{f}}({{args}})
+end
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "result-type"
+label = "Result Type"
+desc = "The type Julia infers for the result of the call, for the types of its arguments, and whether it is concrete"
+code = '''
+{{?f=share_above}} using Random
+
+{{?f=share_above}} threshold = 0.5  # a global variable, not const
+{{?f=share_above}} function share_above(x)  # the function to check
+{{?f=share_above}}     isempty(x) && return nothing
+{{?f=share_above}}     n = 0
+{{?f=share_above}}     for v in x
+{{?f=share_above}}         if v > threshold
+{{?f=share_above}}             n += 1
+{{?f=share_above}}         end
+{{?f=share_above}}     end
+{{?f=share_above}}     return n / length(x)
+{{?f=share_above}} end
+{{?f=share_above}} Random.seed!(1)
+{{?f=share_above}} x = rand(10000);  # simulated values
+
+argument_types = typeof.(({{args}},))
+result_type = only(Base.return_types({{f}}, argument_types))  # inferred, without running {{f}}
+println("Arguments:       ", argument_types)
+println("Result inferred: ", result_type, isconcretetype(result_type) ? ", a concrete type" : ", not a concrete type")
+'''
+
+[[actionGroups.actions]]
+id = "descend"
+label = "Descend with Cthulhu"
+desc = "Cthulhu's @descend in the Julia REPL: the code of the call with the types inferred, and each call in it to descend into, in turn; w highlights what is not concrete, and q leaves"
+code = '''
+using Cthulhu
+{{?f=share_above}} using Random
+
+{{?f=share_above}} threshold = 0.5  # a global variable, not const
+{{?f=share_above}} function share_above(x)  # the function to check
+{{?f=share_above}}     isempty(x) && return nothing
+{{?f=share_above}}     n = 0
+{{?f=share_above}}     for v in x
+{{?f=share_above}}         if v > threshold
+{{?f=share_above}}             n += 1
+{{?f=share_above}}         end
+{{?f=share_above}}     end
+{{?f=share_above}}     return n / length(x)
+{{?f=share_above}} end
+{{?f=share_above}} Random.seed!(1)
+{{?f=share_above}} x = rand(10000);  # simulated values
+
+# Cthulhu takes over the REPL: arrows and Enter descend into a call, w shows warnings, o optimised code, q goes back up and leaves
+@descend {{f}}({{args}})
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "before-after"
+label = "Before and After a Change"
+desc = "The result type and the runtime dispatches found by JET for the function and for a changed version of it, other, and whether the two give the same result"
+code = '''
+using JET
+{{?f=share_above}} using Random
+
+{{?f=share_above}} threshold = 0.5  # a global variable, not const
+{{?f=share_above}} function share_above(x)  # the function to check
+{{?f=share_above}}     isempty(x) && return nothing
+{{?f=share_above}}     n = 0
+{{?f=share_above}}     for v in x
+{{?f=share_above}}         if v > threshold
+{{?f=share_above}}             n += 1
+{{?f=share_above}}         end
+{{?f=share_above}}     end
+{{?f=share_above}}     return n / length(x)
+{{?f=share_above}} end
+{{?f=share_above}} const limit = 0.5  # a constant: its type is known when other is compiled
+{{?f=share_above}} function other(x)  # the changed version: the threshold a constant, and NaN for an empty x, a Float64 like every other result. Replace other with a changed version of your function.
+{{?f=share_above}}     isempty(x) && return NaN
+{{?f=share_above}}     n = 0
+{{?f=share_above}}     for v in x
+{{?f=share_above}}         if v > limit
+{{?f=share_above}}             n += 1
+{{?f=share_above}}         end
+{{?f=share_above}}     end
+{{?f=share_above}}     return n / length(x)
+{{?f=share_above}} end
+{{?f=share_above}} Random.seed!(1)
+{{?f=share_above}} x = rand(10000);  # simulated values
+
+for (name, g) in [("{{f}}", {{f}}), ("other", other)]
+    result_type = only(Base.return_types(g, typeof.(({{args}},))))
+    dispatches = length(JET.get_reports(@report_opt g({{args}})))
+    println(rpad(name, 16), "result inferred as ", result_type, ", ", dispatches, " runtime dispatches found by JET")
+end
+println("Same result: ", isequal({{f}}({{args}}), other({{args}})))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "test"
+label = "Test Type Stability"
+desc = "A test set for the package or the notebook: @inferred of Test fails when the result is of another type than the one inferred, and @test_opt of JET when it finds a runtime dispatch"
+code = '''
+using Test, JET
+{{?f=share_above}} using Random
+
+{{?f=share_above}} threshold = 0.5  # a global variable, not const
+{{?f=share_above}} function share_above(x)  # the function to check
+{{?f=share_above}}     isempty(x) && return nothing
+{{?f=share_above}}     n = 0
+{{?f=share_above}}     for v in x
+{{?f=share_above}}         if v > threshold
+{{?f=share_above}}             n += 1
+{{?f=share_above}}         end
+{{?f=share_above}}     end
+{{?f=share_above}}     return n / length(x)
+{{?f=share_above}} end
+{{?f=share_above}} Random.seed!(1)
+{{?f=share_above}} x = rand(10000);  # simulated values
+
+@testset "{{f}} is type stable" begin
+    @inferred {{f}}({{args}})  # an error when the type of the result is not the one inferred
+    @test_opt {{f}}({{args}})  # a failure for each runtime dispatch JET finds
+end
+'''

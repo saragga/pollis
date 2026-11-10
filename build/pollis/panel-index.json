@@ -3142,6 +3142,34 @@
 			"reason": "the panel ffd has its own code (illusCollapsed, illustrationLabel, illustrationOverrideJs in src/vs/workbench/contrib/model/browser/webviews/ffd.template.ts), so it cannot go in a data-only extension"
 		},
 		{
+			"id": "findAllocs",
+			"title": "Find Allocations",
+			"source": "pollis",
+			"commands": [
+				{
+					"id": "pollis.profiling.findAllocs",
+					"menuTitles": [
+						"Find Allocations..."
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "lines",
+			"decisionFirstColumn": "Report",
+			"toml": "src/vs/workbench/contrib/model/browser/webviews/findAllocs.toml",
+			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
+			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"wikis": [
+				"findAllocs/factsheet.md",
+				"findAllocs/heap-stack-gc.md",
+				"findAllocs/overview.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"AllocCheck.jl"
+			]
+		},
+		{
 			"id": "fnn",
 			"title": "Feedforward Neural Networks",
 			"source": "pollis",
@@ -4624,6 +4652,35 @@
 				"MixedModels.jl",
 				"FixedEffectModels.jl",
 				"PollisDatasets.jl"
+			]
+		},
+		{
+			"id": "loadTime",
+			"title": "Load and Compile Time",
+			"source": "pollis",
+			"commands": [
+				{
+					"id": "pollis.profiling.loadTime",
+					"menuTitles": [
+						"Load and Compile Time..."
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "load",
+			"decisionFirstColumn": "Measure",
+			"toml": "src/vs/workbench/contrib/model/browser/webviews/loadTime.toml",
+			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
+			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"wikis": [
+				"loadTime/factsheet.md",
+				"loadTime/overview.md",
+				"loadTime/precompilation-invalidations.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"SnoopCompile.jl",
+				"PrecompileTools.jl"
 			]
 		},
 		{
@@ -6435,6 +6492,34 @@
 			]
 		},
 		{
+			"id": "pkgVersions",
+			"title": "Compare Package Versions",
+			"source": "pollis",
+			"commands": [
+				{
+					"id": "pollis.profiling.pkgVersions",
+					"menuTitles": [
+						"Compare Package Versions..."
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "releases",
+			"decisionFirstColumn": "Versions",
+			"toml": "src/vs/workbench/contrib/model/browser/webviews/pkgVersions.toml",
+			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
+			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"wikis": [
+				"pkgVersions/factsheet.md",
+				"pkgVersions/overview.md",
+				"pkgVersions/reading-comparisons.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"AirspeedVelocity.jl"
+			]
+		},
+		{
 			"id": "po",
 			"title": "Portfolio Optimisation",
 			"source": "pollis",
@@ -7815,6 +7900,36 @@
 			]
 		},
 		{
+			"id": "speedRace",
+			"title": "Run a Speed Race",
+			"source": "pollis",
+			"commands": [
+				{
+					"id": "pollis.profiling.speedRace",
+					"menuTitles": [
+						"Run a Speed Race..."
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "loop",
+			"decisionFirstColumn": "Race",
+			"toml": "src/vs/workbench/contrib/model/browser/webviews/speedRace.toml",
+			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
+			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"wikis": [
+				"speedRace/factsheet.md",
+				"speedRace/overview.md",
+				"speedRace/timing-fairly.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"PythonCall.jl",
+				"RCall.jl",
+				"Chairmarks.jl"
+			]
+		},
+		{
 			"id": "spro",
 			"title": "Stochastic Programming",
 			"source": "pollis",
@@ -8366,6 +8481,36 @@
 			"packages": [
 				"Survival.jl",
 				"LSurvival.jl"
+			]
+		},
+		{
+			"id": "typeStability",
+			"title": "Check Type Stability",
+			"source": "pollis",
+			"commands": [
+				{
+					"id": "pollis.profiling.typeStability",
+					"menuTitles": [
+						"Check Type Stability..."
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "warntype",
+			"decisionFirstColumn": "Check",
+			"toml": "src/vs/workbench/contrib/model/browser/webviews/typeStability.toml",
+			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
+			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"wikis": [
+				"typeStability/common-causes.md",
+				"typeStability/factsheet.md",
+				"typeStability/overview.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"JET.jl",
+				"DispatchDoctor.jl",
+				"Cthulhu.jl"
 			]
 		},
 		{
