@@ -70,6 +70,9 @@
 \newcommand{\topicmark}[1]{\pdfbookmark[0]{#1}{bookmark:#1}\hypertarget{topic:#1}{}\label{topic:#1}}
 \newcommand{\contentsentry}[1]{{\color{deepamber}\bfseries\hyperlink{topic:#1}{\pageref*{topic:#1}}} & \hyperlink{topic:#1}{#1}}
 \newcounter{subheadmark}
+% A cross-reference: "page" and the page of a topic, or of a place marked with \pagemark, linked to it.
+\newcommand{\pg}[1]{\hyperlink{topic:#1}{page~\pageref*{topic:#1}}}
+\newcommand{\pagemark}[1]{\hypertarget{topic:#1}{}\label{topic:#1}}
 
 % A new topic: starts on the next even page, so its two pages face each other.
 % #1 title, #2 where it is in Pollis, #3 what it is for, in one sentence.
@@ -242,7 +245,7 @@ give the path of the Julia program in the setting \setting{julia.executablePath}
 \subhead{The first start of the Julia REPL}
 When Pollis opens, the Julia REPL starts in the panel at the bottom. The first time, it installs
 DuckDB and PollisDatasets, makes the databases of Pollis, the built-in PollisDatasets, PollisJournals, PollisReferences
-and PollisBenchmarks, and PollisRSS, of its activity, empty until feeds are read (Pollis Databases, page 40), and says \emph{This happens only once}. They go into an environment of Pollis's own,
+and PollisBenchmarks, and PollisRSS, of its activity, empty until feeds are read (Pollis Databases, \pg{Pollis Databases}), and says \emph{This happens only once}. They go into an environment of Pollis's own,
 \texttt{\textasciitilde/.pollis/julia}, which comes after yours: your own versions of these packages are used
 first. At later starts, PollisDatasets, PollisJournals, PollisReferences, PollisRSS and PollisBenchmarks are updated from
 GitHub when there is a newer version; offline, the installed copies are kept. \ui{Check for Data Package
@@ -272,7 +275,7 @@ Pollis tells you things in four places, each with its own purpose:
 \noindent\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.2\linewidth}>{\raggedright\arraybackslash}X@{}}
 \textbf{\ui{Status}} & Whether Pollis is ready: Julia and its version, and the databases of Pollis, PollisDatasets, PollisRSS, PollisJournals, PollisReferences and PollisBenchmarks. Always shown; when something is missing it is a warning with its button. \\
 \textbf{\ui{Announcements}} & New releases of Julia, DBInterface, PollisDatasets and PollisTeX, until you dismiss them. Shown only when there is one. \\
-\textbf{\ui{RSS}} & The newest unread items of the feeds you follow (page 22); a camera or a microphone marks a video or a podcast, and a journal's items have the tag of its level and metrics. Its \ui{Alerts} tab shows your alerts and those that fired (page 26). \\
+\textbf{\ui{RSS}} & The newest unread items of the feeds you follow (\pg{RSS Feeds}); a camera or a microphone marks a video or a podcast, and a journal's items have the tag of its level and metrics. Its \ui{Alerts} tab shows your alerts and those that fired (\pg{Alerts}). \\
 \textbf{Notifications} & The bell at the bottom right: what happens while you work, such as new datasets, new content or a toolbox to reload. \\
 \end{tabularx}
 
@@ -293,7 +296,7 @@ the first time you send code to it.
 A Mac build for Intel processors, and signed apps.
 \end{note}
 
-\seealso{Inside a Panel, page 4.\quad Data and Databases, page 6.}
+\seealso{Inside a Panel, \pg{Inside a Panel}.\quad Data and Databases, \pg{Data and Databases}.}
 
 % =====================================================================
 % PAGES 4–5 — INSIDE A PANEL
@@ -313,7 +316,7 @@ PollisDatasets, and then make your own.
 \subhead{From top to bottom}
 \begin{itemize}
   \item \textbf{The title}, and the \ui{Powered by:} line: the Julia packages the panel uses, each a link to
-    its documentation, with the tick or \ui{Install} (see Getting Started, page 2).
+    its documentation, with the tick or \ui{Install} (see Getting Started, \pg{Getting Started}).
   \item \textbf{Key Points}: what the method does and when to use it, in a few lines.
   \item \textbf{Decision Table}, in some panels: which variant to use for which data.
   \item \textbf{Illustration}, in some panels: a picture of the method or its variants.
@@ -363,13 +366,13 @@ Its examples have the same buttons, and can be edited and restored in the same w
 \begin{itemize}
   \item \ui{FAQ}, when the panel has one: open questions on the method, each with its answer and a link to the
     wiki that says more. A panel with an FAQ also has closed questions that it does not show, each with 4 to 10
-    options, the right one among them: they make the \ui{Panel FAQ} test set of Evaluate Answering Models (page 47).
+    options, the right one among them: they make the \ui{Panel FAQ} test set of Evaluate Answering Models (\pg{Evaluate Answering Models}).
   \item \ui{Local Wikis}: a reference page on the method, in Pollis.
   \item \ui{Notebook Tutorials}: notebooks that work through the method.
   \item \ui{Multimedia Tutorials}: videos and talks. \ui{Add / Edit Video} adds your own.
   \item \ui{Explore References}: the papers and books behind the method, with \ui{Open in Browser} and
     \ui{Copy BibTeX to Clipboard}. \ui{Add / Edit Reference} adds your own, from BibTeX, a link or a DOI;
-    they go into your references, in PollisReferences (page 40), and \ui{Edit} corrects a work wherever it is cited.
+    they go into your references, in PollisReferences (\pg{Pollis Databases}), and \ui{Edit} corrects a work wherever it is cited.
 \end{itemize}
 
 \begin{caution}{The example data are an example}
@@ -386,7 +389,7 @@ and check that the variables and options still suit your question.
 The microphone and speaker buttons beside the title: voice comes in a later version.
 \end{note}
 
-\seealso{Getting Started, page 2.\quad Data and Databases, page 6.\quad Customisation, page 8.}
+\seealso{Getting Started, \pg{Getting Started}.\quad Data and Databases, \pg{Data and Databases}.\quad Customisation, \pg{Customisation}.}
 
 % =====================================================================
 % PAGES 6–7 — DATA AND DATABASES
@@ -405,13 +408,13 @@ and \texttt{challenger}, each with its source and licence. In Julia:
   \item \texttt{datasetinfo("mroz")} describes one and its columns;
   \item \texttt{data = dataset("mroz")} loads one as a Tables.jl table.
 \end{itemize}
-They are installed the first time the Julia REPL starts (Getting Started, page 2). When new datasets are
+They are installed the first time the Julia REPL starts (Getting Started, \pg{Getting Started}). When new datasets are
 added, a notification says so.
 
 \subhead{The built-in database}
 The same datasets are also a DuckDB database, \emph{PollisDatasets}, one table per dataset, named after it,
 with a description of the table and of each column. It is read-only, and is rebuilt only when
-PollisDatasets changes. The Welcome page's \ui{Status} says when it is ready. Like the other built-in databases (page 40), it is a
+PollisDatasets changes. The Welcome page's \ui{Status} says when it is ready. Like the other built-in databases (\pg{Pollis Databases}), it is a
 DuckDB file.
 \begin{enumerate}[label=\arabic*.]
   \item Open the \ui{Databases} view, in the secondary side bar on the right (or choose
@@ -426,7 +429,7 @@ Then query it in the Julia REPL with SQL:
 \begin{itemize}
   \item It has four sections: \ui{Pollis Built-In}, the databases that come with Pollis; \ui{Pollis Activity},
     those Pollis records as you work; \ui{User}, your own databases and those shown from the Julia REPL
-    (Pollis Databases, page 40); and \ui{History}, the queries you have run. \ui{New}, \ui{Refresh Schemas},
+    (Pollis Databases, \pg{Pollis Databases}); and \ui{History}, the queries you have run. \ui{New}, \ui{Refresh Schemas},
     \ui{Learn More} and \ui{New DuckDB Terminal} are at the top of the view.
   \item Click a connection to connect it in the Julia REPL; \ui{Disconnect} closes it.
   \item A database whose data package Pollis has updated from GitHub shows \ui{Updated} and the date after its
@@ -556,7 +559,7 @@ make files from it; the viewer keeps the choice for the next PDF.
 The internal browser, \ui{Explore > Browse the Web}, does not show PDFs: a PDF that a page links to opens in the PDF
 Viewer. It is kept in a
 temporary folder that is emptied when Pollis quits; \ui{File > Save As...} keeps a copy. In Ask Pollis, \ui{PDF...} in the + opens a PDF of yours in the PDF Viewer (Ask Pollis,
-page 46).
+\pg{Ask Pollis}).
 
 \begin{trouble}
 \textbf{The view shows no tables} & Choose \ui{Refresh Schemas}. A new database stays empty until you create a table in the Julia REPL. \\
@@ -571,7 +574,7 @@ International Monetary Fund Datasets, World Bank Indicators and the Kenneth Fren
 \ui{Access Data Libraries}, greyed out.
 \end{note}
 
-\seealso{Getting Started, page 2.\quad Collaboration, page 32, for sharing datasets and databases.}
+\seealso{Getting Started, \pg{Getting Started}.\quad Collaboration, \pg{Collaboration}, for sharing datasets and databases.}
 
 % =====================================================================
 % PAGES 8–9 — CUSTOMISATION
@@ -630,13 +633,13 @@ Your own things are files in \texttt{\textasciitilde/.pollis}, kept when Pollis 
 \begin{center}\small
 \begin{tabular}{@{}ll@{}}
 \texttt{views} & your Views\\
-\texttt{examples} & your Example Code and added tabs (Inside a Panel, page 4)\\
-\texttt{workflows} & your copies of the replications (page 14)\\
-\texttt{replications} & the replications you make (page 14)\\
-\texttt{methods}, \texttt{packages} & your new methods and their packages (page 16)\\
+\texttt{examples} & your Example Code and added tabs (Inside a Panel, \pg{Inside a Panel})\\
+\texttt{workflows} & your copies of the replications (\pg{Replication})\\
+\texttt{replications} & the replications you make (\pg{Replication})\\
+\texttt{methods}, \texttt{packages} & your new methods and their packages (\pg{Article Methods})\\
 \texttt{practice} & the exercises you write (the Self-Study toolbox)\\
-\texttt{rss} & the items of your RSS feeds (page 22)\\
-\texttt{ask/sets} & your test sets of Evaluate Answering Models (page 47)\\
+\texttt{rss} & the items of your RSS feeds (\pg{RSS Feeds})\\
+\texttt{ask/sets} & your test sets of Evaluate Answering Models (\pg{Evaluate Answering Models})\\
 \end{tabular}
 \end{center}
 
@@ -651,7 +654,7 @@ panel. A View is not a way to stop students from opening a panel.
 \textbf{An extension is not found} & It is not on Open VSX. Look for an open alternative there. \\
 \end{trouble}
 
-\seealso{Toolboxes, page 10.\quad Inside a Panel, page 4.}
+\seealso{Toolboxes, \pg{Toolboxes}.\quad Inside a Panel, \pg{Inside a Panel}.}
 
 % =====================================================================
 % PAGES 10–11 — TOOLBOXES
@@ -707,7 +710,7 @@ the toolboxes you installed, and Pollis compiles one the first time you open it.
 
 \subhead{Make a toolbox}
 A teacher can package the panels of a course as one toolbox and give it to the students. This is done by
-your coding agent (Orchestration, page 34), with a skill that writes the toolbox for you.
+your coding agent (Orchestration, \pg{Orchestration}), with a skill that writes the toolbox for you.
 \begin{enumerate}[label=\arabic*.]
   \item Choose \ui{Compose > Package a Toolbox...} The agent starts in a terminal.
   \item Tell it which panels you want, by their menu titles, the menus they go in and their order, and the
@@ -735,7 +738,7 @@ The list of toolboxes and their files come from GitHub. Once installed, a toolbo
 \textbf{A panel cannot go in a toolbox} & Some Pollis panels have code of their own and are marked not portable; the agent says which. \\
 \end{trouble}
 
-\seealso{Customisation, page 8.\quad Orchestration, page 34.\quad Ask Pollis, page 42.}
+\seealso{Customisation, \pg{Customisation}.\quad Orchestration, \pg{Orchestration}.\quad Ask Pollis, \pg{Ask Pollis}.}
 
 % =====================================================================
 % PAGE 13 — REPLICATION, METHODS AND WORKFLOWS (OVERVIEW)
@@ -746,13 +749,13 @@ The list of toolboxes and their files come from GitHub. Once installed, a toolbo
 \subhead{1\quad Replication}
 It starts from an article, its input data, and either the results it publishes or its authors' code,
 in any language. Each published table is computed by Julia packages, by notebook code or by a new
-method. Then each result is printed beside the published one. Replication, page 14.
+method. Then each result is printed beside the published one. Replication, \pg{Replication}.
 \end{minipage}\hfill
 \begin{minipage}[t]{0.31\linewidth}\vspace{0pt}
 \subhead{2\quad Methods}
 A method an article needed and no Julia package had becomes a documented Julia package. Its tests run
 the article's data and check the published results, within tolerances. It comes with a vignette, and can
-be published in the Pollis registry. Article Methods, page 16.
+be published in the Pollis registry. Article Methods, \pg{Article Methods}.
 \end{minipage}\hfill
 \begin{minipage}[t]{0.31\linewidth}\vspace{0pt}
 \subhead{3\quad Workflows}
@@ -799,7 +802,7 @@ LSTNet: long- and short-term patterns in multivariate time series & Lai, Chang, 
 Long-run risks: the model and aggregate asset prices & Beeler and Campbell (2012)\footnotemark\\
 \end{tabular}
 \end{center}
-\footnotetext{A partial replication: only the model side is recomputed. The article's stock returns, dividends and risk-free rates come from CRSP, which is licensed, and the journal posts no data for this article, so its data columns are shown as printed, and nothing is downloaded. \href{https://cfr.ivo-welch.org/published/papers/beeler2012longrun.pdf}{The article}, from the journal's site, and \href{https://campbell.scholars.harvard.edu/sites/g/files/omnuum5881/files/campbell/files/longrunrisks_appendix100611.pdf}{the authors' appendix}, which discusses the data sources and the modelling choices.}
+\footnotetext{Only the model side is recomputed. The article's stock returns, dividends and risk-free rates come from CRSP, which is licensed, and the journal posts no data for this article, so its data columns are shown as printed, and nothing is downloaded. \href{https://cfr.ivo-welch.org/published/papers/beeler2012longrun.pdf}{The article}, from the journal's site, and \href{https://campbell.scholars.harvard.edu/sites/g/files/omnuum5881/files/campbell/files/longrunrisks_appendix100611.pdf}{the authors' appendix}, which discusses the data sources and the modelling choices.}
 
 \subhead{Open a replication}
 \begin{enumerate}[label=\arabic*.]
@@ -841,7 +844,7 @@ page says \emph{Your copy is older than this version} and offers \ui{Open Update
 is saved beside yours, with its date in the name, and your copy is kept.
 
 \begin{note}{From a replication to a report}
-A replication's notebook can become a LaTeX report or slides: Reports, page 20. The GARCH replication has
+A replication's notebook can become a LaTeX report or slides: Reports, \pg{Reports}. The GARCH replication has
 its own report template.
 \end{note}
 
@@ -851,22 +854,23 @@ title to change it. Nothing is saved until you type or add something. Each repli
 \texttt{\textasciitilde/.pollis/replications}.
 \begin{enumerate}[label=\arabic*.]
   \item \ui{Article and Data}: the \ui{Article Link}, the \ui{Input Tables} and the \ui{Target Tables}, as
-    for a method (Article Methods, page 16). Each input has a licence, the terms its provider states, and the page
+    for a method (Article Methods, \pg{Article Methods}). Each input has a licence, the terms its provider states, and the page
     warns of each input with none stated.
   \item \ui{Plan}, optional: for each target, \ui{Computed By} is \ui{Julia Packages}, \ui{Notebook Code}
-    or \ui{Article Method}, with a \ui{Note}, saved as you change it. \ui{Plan with Agent} proposes a plan.
+    or \ui{Article Method}, with a \ui{Note}, saved as you change it. \ui{Values} is \ui{Exact}, compared to
+    the digits printed, or \ui{Random}, as for a simulation, the bootstrap or a random forest, compared within
+    its Monte Carlo noise from the \ui{Runs in Julia} and the \ui{Runs in the Article}. \ui{Plan with Agent} proposes a plan.
     \ui{Make an Article Method}, on a table's row, starts a method for that table, and the notebook can hold
     its code until the method is written.
   \item \ui{Replicate}: write \ui{Instructions}, saved in \texttt{INSTRUCTIONS.md}, and click \ui{Replicate
     with Agent}. Your coding agent writes the notebook and runs it, and \texttt{Pollis.replicate} and
     \texttt{Pollis.compare} write each comparison to \texttt{results.csv}. \ui{Open Notebook} opens it.
-  \item \ui{Compare}: the published values Julia does not reproduce (\ui{Show every value} for all). Give
-    each a \ui{Kind}, \ui{Misprint}, \ui{Rounding}, \ui{Not Replicable} or \ui{Unexplained}, and an
-    \ui{Explanation}, then \ui{Save Explanations}; \ui{Explain with Agent} proposes them.
-  \item \ui{Record and Share}: the published values Julia reproduces, in all and table by table. The
-    replication is full when it reproduces every one, to all the decimals printed or within the noise of a
-    simulation, else partial; \ui{Status} sets it by hand, with a \ui{Reason}. \ui{Add to My Replications}
-    lists it under \ui{Done by You}.
+  \item \ui{Compare}: the precision each table requires, \ui{Decimals Required} or, for random values,
+    \ui{Standard Errors Allowed}, and the values short of it (\ui{Show every value} for all). Give each a
+    \ui{Kind}, \ui{Misprint}, \ui{Rounding}, \ui{Not Replicable} or \ui{Unexplained}, and an
+    \ui{Explanation}, saved as you type; \ui{Explain with Agent} proposes them.
+  \item \ui{Record and Share}: how many tables and values are at the precision they require, and how many
+    differences are explained. \ui{Add to My Replications} lists it under \ui{Done by You}.
 \end{enumerate}
 Add from Article and the three \ui{with Agent} buttons run your coding agent, on your account.
 
@@ -882,7 +886,7 @@ Add from Article and the three \ui{with Agent} buttons run your coding agent, on
 Workflow...} in a replication's \ui{Record and Share}.
 \end{note}
 
-\seealso{Reports, page 20.\quad Article Methods, page 16.\quad Data and Databases, page 6.\quad Orchestration, page 34.}
+\seealso{Reports, \pg{Reports}.\quad Article Methods, \pg{Article Methods}.\quad Data and Databases, \pg{Data and Databases}.\quad Orchestration, \pg{Orchestration}.}
 
 % =====================================================================
 % PAGES 16–17 — METHODS
@@ -904,7 +908,7 @@ Each method is a folder in \texttt{\textasciitilde/.pollis/methods}.
   \item \ui{Article}: the \ui{Article Link}. Pollis opens it in the integrated browser, and a PDF in the PDF
     Viewer, and keeps no copy;
     \ui{Save a Copy...} saves one outside Pollis, by default in the \texttt{data} folder of your Pollis
-    Workspace (Reports, page 20).
+    Workspace (Reports, \pg{Reports}).
   \item \ui{Input Tables}, the data the method is computed from: \ui{Empty Table} to type one in,
     \ui{Add from a Link}, \ui{Add from PollisDatasets}, or \ui{Add from Article}: give the numbers of the
     article's tables, such as \texttt{3.2, 5.8}, and click \ui{Ask Agent}.
@@ -956,7 +960,7 @@ account.
 \textbf{The push fails} & Sign in with \texttt{gh auth login} in a terminal, and check the GitHub Owner. \\
 \end{trouble}
 
-\seealso{Replication, page 14.\quad Orchestration, page 34.}
+\seealso{Replication, \pg{Replication}.\quad Orchestration, \pg{Orchestration}.}
 
 % =====================================================================
 % PAGES 18–19 — POLLIS PACKAGES
@@ -969,7 +973,7 @@ methods, and five packages behind panels and features. All are public on GitHub,
 with or without Pollis. None is in the General registry.
 
 \subhead{The method packages}
-The nine methods of the \ui{Library} in \ui{Compose > Replication > Browse Article Methods...} (Article Methods, page 16).
+The nine methods of the \ui{Library} in \ui{Compose > Replication > Browse Article Methods...} (Article Methods, \pg{Article Methods}).
 Each is tested against the published results of the article it comes from, has a vignette, and is in the
 Pollis registry.
 
@@ -1005,10 +1009,10 @@ installed marked \ui{Installed}.
 \begin{tabularx}{\linewidth}{@{}>{\bfseries}l>{\raggedright\arraybackslash}p{0.36\linewidth}>{\raggedright\arraybackslash}X@{}}
 \textcolor{navy}{\bfseries Package} & \textcolor{navy}{\bfseries What it does} & \textcolor{navy}{\bfseries Where Pollis uses it} \\
 PollisDatasets & 69 small, well-known datasets for examples and teaching, as Tables.jl column tables &
-  The built-in database (Data and Databases, page 6), \ui{Add from PollisDatasets} in Article Methods, and the
+  The built-in database (Data and Databases, \pg{Data and Databases}), \ui{Add from PollisDatasets} in Article Methods, and the
   examples of panels and replications \\
 PollisTeX & Typesets LaTeX from Julia with Tectonic, downloaded on first use &
-  \ui{Compose > Reports} (Reports, page 20) \\
+  \ui{Compose > Reports} (Reports, \pg{Reports}) \\
 EDGAR & Fetches SEC EDGAR filings and financial data &
   \ui{Explore > Access Data Libraries > US SEC EDGAR} \\
 HARE & Heteroskedasticity and autocorrelation estimators &
@@ -1035,7 +1039,7 @@ The MIT licence covers PollisDatasets' code. Each dataset keeps the terms of its
 \textbf{\texttt{Pkg.add("HARE")}: the package is not found} & These five are in no registry: install with \texttt{Pkg.add(url = ...)}, as above. \\
 \end{trouble}
 
-\seealso{Article Methods, page 16.\quad Data and Databases, page 6.\quad Reports, page 20.}
+\seealso{Article Methods, \pg{Article Methods}.\quad Data and Databases, \pg{Data and Databases}.\quad Reports, \pg{Reports}.}
 
 % =====================================================================
 % PAGES 20–21 — REPORTS
@@ -1055,7 +1059,7 @@ puts a \texttt{pollis.toml} file and a \texttt{data} folder in it, and opens it.
 
 \subhead{Make a report or slides}
 \begin{enumerate}[label=\arabic*.]
-  \item Open the notebook, for example your copy of a replication (page 14).
+  \item Open the notebook, for example your copy of a replication (\pg{Replication}).
   \item Choose \ui{Compose > Reports > Export Notebook as LaTeX...} for a report, or \ui{Make Slides from
     a Notebook...} for slides. The notebook's own toolbar has the same two in its \ui{Export} button:
     \ui{LaTeX Report...} and \ui{Beamer Slides...}. With no notebook open, Pollis asks you to choose one,
@@ -1094,7 +1098,7 @@ the folder has none. To start the draft again, delete the \texttt{.tex} first.
     numbers already computed. It does not run the notebook again, and it compiles the document as it
     goes: the PDF beside you reloads each time.
 \end{enumerate}
-Polish runs on the Light tier of Model Tasks and Routing (Orchestration, page 34).
+Polish runs on the Light tier of Model Tasks and Routing (Orchestration, \pg{Orchestration}).
 
 \begin{caution}{Polish costs tokens}
 The menu item with the sparkle runs your coding agent, on your account. Read the result: an agent can
@@ -1108,7 +1112,7 @@ still misplace a value, so check the numbers against the draft.
 \textbf{Polish says to open the .tex} & Open \texttt{report.tex} or \texttt{slides.tex} first, then choose \ui{Polish with Agent...} again. \\
 \end{trouble}
 
-\seealso{Replication, page 14.\quad Orchestration, page 34.}
+\seealso{Replication, \pg{Replication}.\quad Orchestration, \pg{Orchestration}.}
 
 % =====================================================================
 % PAGES 22–23 — RSS FEEDS
@@ -1158,7 +1162,7 @@ Then pick the topic to list the feed under, or \ui{New Topic...}.
     only to the day you started following it: a feed cannot tell what happened before then.
   \item An item of a journal has a purple tag: the journal's level in the Norwegian register (\ui{Level 2}
     leading, \ui{Level 1} academic, \ui{Level 0} not academic), OpenAlex's 2-year mean citedness
-    (\ui{Cited 7.9}), and, once you have imported them (Pollis Databases, page 40), the SJR or Impact Factor
+    (\ui{Cited 7.9}), and, once you have imported them (Pollis Databases, \pg{Pollis Databases}), the SJR or Impact Factor
     quartile and its year (\ui{SJR Q1 2025}). The pointer on the tag shows every value known, with its source
     and year: SJR and its categories, SNIP, IPP, h-index, open access. Pollis knows the journal of a catalogue
     feed, of an email alert's article, and of a feed you added, by looking up its first items once.
@@ -1170,7 +1174,7 @@ Then pick the topic to list the feed under, or \ui{New Topic...}.
 
 \subhead{Journal metrics}
 \ui{Explore > RSS > Journal Metrics}, \ui{More Metrics...} in \ui{Journals}, the \ui{i} next to it, or a click on a tag
-opens the \ui{Journal Metrics} page: each source's metrics, their values and meaning, and more to import (page 40).
+opens the \ui{Journal Metrics} page: each source's metrics, their values and meaning, and more to import (\pg{Pollis Databases}).
 
 \newpage
 \subhead{Zotero}
@@ -1191,7 +1195,7 @@ opens the \ui{Journal Metrics} page: each source's metrics, their values and mea
 \subhead{The PollisRSS database}
 Every item Pollis reads is added to a monthly file in \texttt{\textasciitilde/.pollis/rss/items}, so an item
 stays when its feed drops it. \emph{PollisRSS} is a DuckDB database over those files, made with PollisDatasets the first time the Julia
-REPL starts (Data and Databases, page 6), and empty until feeds are read:
+REPL starts (Data and Databases, \pg{Data and Databases}), and empty until feeds are read:
 \begin{enumerate}[label=\arabic*.]
   \item In the Databases view, click \ui{PollisRSS}, under \ui{Pollis Activity}. It connects in the Julia REPL as
     \texttt{rss}, read-only.
@@ -1227,8 +1231,8 @@ Google Alerts (\ui{Show options > Deliver to > RSS feed}) and the table-of-conte
 publishers are feeds already: paste their address in \ui{From an Address}; \ui{Search Feeds from Other Services} there shows where EBSCOhost and ProQuest give theirs.
 
 \begin{note}{Alerts on quotes, SEC filings and economic data}
-Warnings when a quote crosses a level, a company files at the SEC or a series publishes a new value are not feeds: Alerts, page 26.
-Press releases from PR Newswire, and what the news said around an event: Media Coverage, page 24.
+Warnings when a quote crosses a level, a company files at the SEC or a series publishes a new value are not feeds: Alerts, \pg{Alerts}.
+Press releases from PR Newswire, and what the news said around an event: Media Coverage, \pg{Media Coverage}.
 \end{note}
 
 \begin{trouble}
@@ -1240,7 +1244,7 @@ Press releases from PR Newswire, and what the news said around an event: Media C
 \textbf{A YouTube channel shows no videos} & YouTube's feeds are sometimes unavailable for a while: the items come at a later reading. \\
 \end{trouble}
 
-\seealso{Data and Databases, page 6.\quad Alerts, page 26.}
+\seealso{Data and Databases, \pg{Data and Databases}.\quad Alerts, \pg{Alerts}.}
 
 % =====================================================================
 % PAGES 24–25 — MEDIA COVERAGE
@@ -1300,7 +1304,7 @@ ticker as the wires do, such as \texttt{(NASDAQ: AAPL)}.
 
 \newpage
 \begin{note}{From an event study}
-Each event of an event study has a \ui{News} link (Event Studies, page 28): it opens Media Coverage from the
+Each event of an event study has a \ui{News} link (Event Studies, \pg{Event Studies}): it opens Media Coverage from the
 day before the event to the day after, with the event marked. For an FOMC release, the words are
 \texttt{"FOMC" OR "Federal Reserve"}; for a filing, the company's name, with its ticker.
 \end{note}
@@ -1325,7 +1329,7 @@ their tone.
 \textbf{No PR Newswire releases} & Only the releases out since it was ticked are kept: search a later period. \\
 \end{trouble}
 
-\seealso{RSS Feeds, page 22.\quad Event Studies, page 28.}
+\seealso{RSS Feeds, \pg{RSS Feeds}.\quad Event Studies, \pg{Event Studies}.}
 
 % =====================================================================
 % PAGES 26–27 — ALERTS
@@ -1436,7 +1440,7 @@ clear them. The welcome page has an \ui{Alerts} tab beside \ui{RSS} with the sam
 
 \begin{note}{Event studies}
 The filings an alert fires can be the events of a study of how the stock moved around them:
-\ui{Start Event Study} on the alert, or \ui{Auto Event Study} when you add it (Event Studies, page 28).
+\ui{Start Event Study} on the alert, or \ui{Auto Event Study} when you add it (Event Studies, \pg{Event Studies}).
 \end{note}
 
 \begin{trouble}
@@ -1444,12 +1448,12 @@ The filings an alert fires can be the events of a study of how the stock moved a
 \textbf{\emph{The SEC does not know \ldots, or could not be reached}} & Try the CIK instead of the ticker: some filers have no ticker in the SEC's list. Check the internet connection. \\
 \textbf{\emph{Needs your SEC contact}} & \ui{Set Contact} on the Add Alert page, under \ui{SEC Filings}: a name and an email address. \\
 \textbf{\emph{Needs your FRED key}} & \ui{Set FRED Key} on the Add Alert page, under \ui{Economic Data}. \\
-\textbf{\emph{Needs Julia}} & A statistical condition is computed in Julia: install it (Install Julia, page 2), and the alert goes on. \\
+\textbf{\emph{Needs Julia}} & A statistical condition is computed in Julia: install it (Install Julia, \pg{Getting Started}), and the alert goes on. \\
 \textbf{\emph{Julia is installing OnlineStats.jl}} & The first time only; the alert is checked again within the minute. \\
 \textbf{An alert fired late} & Quotes are delayed by up to about 20 minutes, filings are looked at every 15 minutes and series every hour; nothing is looked up while Pollis is closed. \\
 \end{trouble}
 
-\seealso{RSS Feeds, page 22.\quad Data and Databases, page 6.}
+\seealso{RSS Feeds, \pg{RSS Feeds}.\quad Data and Databases, \pg{Data and Databases}.}
 
 % =====================================================================
 % PAGES 28–31 — EVENT STUDIES
@@ -1468,7 +1472,7 @@ study is a folder that a notebook analyses with EventStudies.jl.
 \subhead{A study of SEC filings}
 \begin{enumerate}[label=\arabic*.]
   \item An alert on SEC filings chooses the events: its companies, forms, 8-K items and words (Alerts,
-    page 26). \ui{Add Alert...} on the page makes one.
+    \pg{Alerts}). \ui{Add Alert...} on the page makes one.
   \item \ui{Model > Event Studies}, \ui{New Study}: a \ui{Title}, \ui{Kind} \ui{Market Event
     Study}, \ui{Events} \ui{SEC Filings}, and the alert.
   \item \ui{Benchmark}: a Yahoo Finance symbol, \texttt{\^{}GSPC} for the S\&P 500 at first.
@@ -1488,7 +1492,7 @@ above the first time the alert fires.
 For each filing, Pollis looks for the company's release on GlobeNewswire, Business Wire, PR Newswire or
 ACCESS Newswire from a day before EDGAR accepted it to a day after: in Google News, and in PR Newswire's own
 feeds, which Pollis reads every 10 minutes while there is a study of filings and which give the time to the
-second (Media Coverage, page 24). The events show the \ui{Release}, the \ui{Accepted} time and the
+second (Media Coverage, \pg{Media Coverage}). The events show the \ui{Release}, the \ui{Accepted} time and the
 \ui{Lead} of one over the other; \ui{News} opens Media Coverage around the event.
 
 \subhead{A study of FOMC releases}
@@ -1605,7 +1609,7 @@ compare with, and the estimators leave them out.
 \textbf{\emph{The stepped wedge needs a treatment indicator}} & Under \ui{Treated}, choose \ui{Treatment Indicator} and a column that is not 0 from the time a unit is treated. \\
 \end{trouble}
 
-\seealso{Alerts, page 26.\quad Media Coverage, page 24.\quad Replication, Methods and Workflows, page 13.}
+\seealso{Alerts, \pg{Alerts}.\quad Media Coverage, \pg{Media Coverage}.\quad Replication, Methods and Workflows, \pg{Replication, Methods and Workflows}.}
 
 % =====================================================================
 % PAGES 32–33 — COLLABORATION
@@ -1716,7 +1720,7 @@ block those, set \setting{pollis.collaboration.\allowbreak signalling} to \textt
 \ui{Classroom} and \ui{Simulation Games} are in the menu but not built yet: they say so when chosen.
 \end{note}
 
-\seealso{Data and Databases, page 6.\quad Inside a Panel, page 4.}
+\seealso{Data and Databases, \pg{Data and Databases}.\quad Inside a Panel, \pg{Inside a Panel}.}
 
 % =====================================================================
 % PAGES 34–35 — ORCHESTRATION
@@ -1794,7 +1798,7 @@ and download models, and \ui{Set Active Models}: the local models on this comput
 and those in the Hugging Face cache, with their \ui{Kind} (Chat or Embedding), what each \ui{Reads}, whether
 it can call \ui{Tools}, and the tiers that use it. Pollis runs them with llama.cpp, which comes with it,
 free and private: a task on a local tier starts the model first. \ui{Evaluate Answering Models...} and
-\ui{Evaluate Embedding Models...} compare them for Ask Pollis (page 47). \ui{Active AI Models}, at the right of the
+\ui{Evaluate Embedding Models...} compare them for Ask Pollis (\pg{Evaluate Answering Models}). \ui{Active AI Models}, at the right of the
 status bar, shows the models of Pollis AI+ at a glance: its circle fills by a third for each of answering, embedding
 and reranking that has a model ready, and a cloud follows it while a cloud model answers. Its hover names the three
 models, and those not downloaded yet; a click opens \ui{Set Active Models}.
@@ -1814,7 +1818,7 @@ its results, as you would a colleague's.
 \ui{Orchestration} but not built yet.
 \end{note}
 
-\seealso{Toolboxes, page 10.\quad Article Methods, page 16.\quad Reports, page 20.}
+\seealso{Toolboxes, \pg{Toolboxes}.\quad Article Methods, \pg{Article Methods}.\quad Reports, \pg{Reports}.}
 
 
 % =====================================================================
@@ -1823,7 +1827,7 @@ its results, as you would a colleague's.
 \topic{Literature Radar}{Compose > Literature Radar}{Finding the articles that matter on a topic, bringing in references of your own, and following citations from a few works you know.}
 
 \ui{Literature Radar} asks two free, open indexes of scholarly works, OpenAlex and Semantic Scholar, and
-keeps what you choose in PollisReferences (Pollis Databases, page 40). It has four pages:
+keeps what you choose in PollisReferences (Pollis Databases, \pg{Pollis Databases}). It has four pages:
 \ui{Discover Literature...}, \ui{Import References...}, \ui{Browse References...} and the
 \ui{Snowball Search Map}.
 
@@ -1865,7 +1869,7 @@ in \ui{Add Seeds}.
 \newpage
 \subhead{Snowball Search Map}
 From a few works you know, follow the works citing them, a step at a time, until the steps bring
-little new. The map has two pages of its own (Snowball Search Map, page 38).
+little new. The map has two pages of its own (Snowball Search Map, \pg{Snowball Search Map}).
 
 \subhead{Choosing what to keep}
 Discover Literature lists the most cited, which favours older work. Sort by \ui{Last N Years} or
@@ -1881,7 +1885,7 @@ weighed on the work, not only mentioned.
 \textbf{\emph{Not found in OpenAlex}} (Import) & Its title or first author differs from OpenAlex's: correct the file, or keep it as it is. \\
 \end{trouble}
 
-\seealso{Inside a Panel, page 4.\quad Snowball Search Map, page 38.\quad Pollis Databases, page 40.}
+\seealso{Inside a Panel, \pg{Inside a Panel}.\quad Snowball Search Map, \pg{Snowball Search Map}.\quad Pollis Databases, \pg{Pollis Databases}.}
 
 
 % =====================================================================
@@ -1999,7 +2003,7 @@ found. \ui{Open...} brings a saved map back; \ui{New Search} starts again.
 \textbf{\emph{Semantic Scholar could not be reached, or is too busy just now}} & Click the dots again later. \\
 \end{trouble}
 
-\seealso{Literature Radar, page 36.\quad Pollis Databases, page 40.}
+\seealso{Literature Radar, \pg{Literature Radar}.\quad Pollis Databases, \pg{Pollis Databases}.}
 
 
 % =====================================================================
@@ -2008,14 +2012,14 @@ found. \ui{Open...} brings a saved map back; \ui{New Search} starts again.
 \topic{Pollis Databases}{Databases view > Pollis Built-In · Pollis Activity}{The databases of Pollis, built in and of its activity: what each holds, and how to add journal metrics.}
 
 The Databases view has three groups of databases. \ui{Pollis Built-In} are the databases that come with Pollis: it
-makes them the first time the Julia REPL starts (Getting Started, page 2) and rebuilds them when what they come from
+makes them the first time the Julia REPL starts (Getting Started, \pg{Getting Started}) and rebuilds them when what they come from
 changes, such as a new version of a data package, so they can always be made again. \ui{Pollis Activity} are those
 Pollis records as you work: the items of your feeds and the runs of the Evaluate and Benchmark pages. They cannot be
 made again, so they are the ones to back up. \ui{User} are your own. The databases of Pollis, of both groups, are
 read-only for you, in \texttt{\textasciitilde/.pollis/databases}, and PollisDocuments in
 \texttt{\textasciitilde/.pollis/documents}; your own tables go in a database of your own. Clicking one connects it in
 the Julia REPL; the \texttt{duckdb>} terminal, the Pollis REPL and \texttt{PollisDB.connect()} attach them all
-(Data and Databases, page 6).
+(Data and Databases, \pg{Data and Databases}).
 
 \begin{center}\small
 \renewcommand{\arraystretch}{1.25}
@@ -2024,11 +2028,11 @@ the Julia REPL; the \texttt{duckdb>} terminal, the Pollis REPL and \texttt{Polli
 \multicolumn{3}{@{}l}{\textbf{Pollis Built-In}}\\
 PollisDatasets & \texttt{pollis} & The 69 datasets of PollisDatasets, a table each, with their descriptions.\\
 PollisJournals & \texttt{journals} & About 250,000 journals, conferences and book series, from OpenAlex; the Norwegian register's levels; and the journal metrics you import.\\
-PollisReferences & \texttt{references} & Every work Pollis cites, and those you save from Literature Radar (page 36) or add to a panel's \ui{Explore References}, with abstracts, keywords and dated citation counts.\\
+PollisReferences & \texttt{references} & Every work Pollis cites, and those you save from Literature Radar (\pg{Literature Radar}) or add to a panel's \ui{Explore References}, with abstracts, keywords and dated citation counts.\\
 PollisBenchmarks & \texttt{benchmarks} & The published benchmarks of Pollis: their catalogue, with their sources, revisions and licences, and the questions of those built in.\\
-PollisDocuments & \texttt{documents} & The passages of Pollis's documents, the panel wikis, the package vignettes and the toolbox vignettes, with their embeddings, that Ask Pollis searches (page 42).\\
+PollisDocuments & \texttt{documents} & The passages of Pollis's documents, the panel wikis, the package vignettes and the toolbox vignettes, with their embeddings, that Ask Pollis searches (\pg{Ask Pollis}).\\
 \multicolumn{3}{@{}l}{\textbf{Pollis Activity}}\\
-PollisRSS & \texttt{rss} & Every item of the feeds you follow, kept by month; empty until feeds are read (RSS Feeds, page 22).\\
+PollisRSS & \texttt{rss} & Every item of the feeds you follow, kept by month; empty until feeds are read (RSS Feeds, \pg{RSS Feeds}).\\
 Comparisons & \texttt{comparisons} & Every run of the Evaluate and Benchmark pages, with each question, answer, rating and score; empty until a page first opens.\\
 \end{tabularx}
 \end{center}
@@ -2157,7 +2161,7 @@ The works you saved from Literature Radar, with their latest OpenAlex count:
 \textbf{A journal has two rows for a year} & One per source; SCImago also lists some journals twice, under an old and a new title. \\
 \end{trouble}
 
-\seealso{Data and Databases, page 6.\quad RSS Feeds, page 22.}
+\seealso{Data and Databases, \pg{Data and Databases}.\quad RSS Feeds, \pg{RSS Feeds}.}
 
 % =====================================================================
 % PAGES 42–43 — ASK POLLIS
@@ -2231,10 +2235,11 @@ The + at the start of the question adds, as a chip above it: \ui{Image}, a pictu
 \ui{File}, a text file; \ui{Dataset}, a CSV file, given as its size, its header and its first rows; and
 \ui{Database}, a DuckDB file, given as its tables and their columns. A long text is cut, and a note says so.
 \ui{PDF...} opens a PDF in the PDF Viewer, whose \ui{Select Area} sends the text, the table or a picture of an
-area of a page (Data and Databases, page 6). Every panel has an Ask Pollis of its own, with its +, at the
+area of a page (Data and Databases, \pg{Data and Databases}). Every panel has an Ask Pollis of its own, with its +, at the
 right of its title; its answer comes in the Ask Pollis pane beside the panel.
 
 \subhead{Evaluate Answering Models}
+\pagemark{Evaluate Answering Models}%
 \ui{Evaluate Answering Models}, the last item of the model's menu and in \ui{Compose > Local AI Models}, sets the models you choose against each other on the same
 questions, the same passages and the same instruction: local models of different sizes, say, against Claude
 Sonnet. The page goes in four steps: the models, the questions, \ui{Run} and the results.
@@ -2317,7 +2322,7 @@ for the chat models, on published sets of questions.
 Ask Pollis and its two Evaluate pages are not in Pollis yet; they come in a coming release.
 \end{note}
 
-\seealso{Toolboxes, page 10.\quad Orchestration, page 34.}
+\seealso{Toolboxes, \pg{Toolboxes}.\quad Orchestration, \pg{Orchestration}.}
 
 % =====================================================================
 % PAGES 44–45 — APPENDIX: REFERENCE KEYS
@@ -2405,7 +2410,7 @@ entered by hand.
 \textbf{A work is in twice} & Its name was spelt two ways. Keep the older key, and correct the other's uses. \\
 \end{trouble}
 
-\seealso{Reports, page 20.\quad Pollis Databases, page 40.}
+\seealso{Reports, \pg{Reports}.\quad Pollis Databases, \pg{Pollis Databases}.}
 
 % =====================================================================
 % PAGE 48 — APPENDIX: PACKAGES AND PULL REQUESTS
@@ -2414,7 +2419,7 @@ entered by hand.
 
 The work on Pollis also goes back to Julia's open-source packages. What Pollis needed and no package did was
 written as a package of its own, public and with the MIT licence, which anyone can use without Pollis
-(Pollis Packages, page 18). Bugs found in other authors' packages were fixed and the fixes sent to them as
+(Pollis Packages, \pg{Pollis Packages}). Bugs found in other authors' packages were fixed and the fixes sent to them as
 pull requests; until a fix is merged and released, Pollis installs a fork of the package with the fix.
 The lists are as of 28 October 2026.
 
@@ -2461,6 +2466,6 @@ Each with the date it was opened, approved by a maintainer of the package and me
 \smallskip
 LimitOrderBook.jl's was merged without a separate approval.
 
-\seealso{Pollis Packages, page 18.\quad Article Methods, page 16.}
+\seealso{Pollis Packages, \pg{Pollis Packages}.\quad Article Methods, \pg{Article Methods}.}
 
 \end{document}

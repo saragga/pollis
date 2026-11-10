@@ -43,7 +43,7 @@
 \coordinate (merge) at ($(in1.south)!0.5!(in2.south) + (0,-6mm)$);
 \node[step=52mm, below=14mm of or] (avail) {\textbf{Plan each published table}\\[1pt]\footnotesize computed by Julia packages, by code of the notebook's own, or by a new method};
 \node[step=52mm, below=12mm of avail] (replicate) {\textbf{Replicate the article}\\[1pt]\footnotesize compare the results with the target data or the authors' code};
-\node[store, below=10mm of replicate] (records) {\textbf{Replication Records}\\[1pt]\footnotesize article, data, targets, plan, full or partial, differences explained};
+\node[store, below=10mm of replicate] (records) {\textbf{Replication Records}\\[1pt]\footnotesize article, data, targets, plan, precision reached, differences explained};
 
 \draw[flow] (in1.south) |- (merge) -- (avail.north);
 \draw[flow] (in2.south) |- (merge);

@@ -6,7 +6,7 @@
 |---|---|
 | **Purpose** | Read a skill, or run it with a coding agent |
 | **Input** | The latest skills, downloaded to `~/.pollis/agents/pollis-agents/skills` when the page opens |
-| **Columns** | Skill, Tasks, Example Requests, Files, Size |
+| **Columns** | Skill, Tasks, Example Requests, Files, Size, Updated (the date the skill last changed) |
 | **Actions** | View Skill, Run with My Agent, and the links to the tasks |
 | **Runs on** | The Standard tier of Model Tasks and Routing |
 

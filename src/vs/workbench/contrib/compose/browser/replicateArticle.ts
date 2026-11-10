@@ -45,8 +45,10 @@ import { EXPLAIN_DIFFERENCES_COMMAND_ID, PLAN_REPLICATION_COMMAND_ID, REPLICATE_
 // value there beside Julia's. Its page has five steps. Article and Data is the first step of Create Article Method too
 // (articleAndData.ts). Plan says, for each target, how it is computed: by Julia packages, by code of the notebook's
 // own, or by a new method, which Make an Article Method starts on the page of a new article method with the
-// replication's article, data and that target; the plan-replication skill proposes it. A replication never needs a
-// method to go on. Replicate makes the notebook, NAME.ipynb: New Notebook writes one to fill in by hand, a section for
+// replication's article, data and that target; the plan-replication skill proposes it. The plan also says whether a
+// target's values are exact or random, changing with the random numbers (a simulated model, the bootstrap, a random
+// forest, a neural network), and for random ones how many runs Julia and the article average. A replication never
+// needs a method to go on. Replicate makes the notebook, NAME.ipynb: New Notebook writes one to fill in by hand, a section for
 // each target, and Replicate with Agent hands the replication to the user's coding agent, with the replicate-article
 // skill of the Pollis Agents plugin and the user's notes in INSTRUCTIONS.md, to write it and run it. Compare reads
 // results.csv as the notebook writes it: each target table has the precision it requires, set by the user (the
@@ -71,6 +73,16 @@ const POLLIS_JL = ['extensions', 'language-julia', 'scripts', 'terminalserver', 
 type PlanWay = 'package' | 'notebook' | 'method';
 const PLAN_WAYS: readonly string[] = ['package', 'notebook', 'method'];
 
+/**
+ * The values of a target: exact, the same on every run, compared to the digits printed (Pollis.replicate); or random,
+ * changing with the random numbers, as those of a simulation, the bootstrap, a random forest or a neural network,
+ * compared within their Monte Carlo noise (Pollis.compare).
+ */
+type PlanValues = 'exact' | 'random';
+const PLAN_VALUES: readonly string[] = ['exact', 'random'];
+/** The runs of a random target in Julia when the plan gives none. */
+const DEFAULT_RUNS = 10;
+
 /** The plan of a target, in `[plan.NAME]`. */
 interface IPlanEntry {
 	readonly target: string;
@@ -80,6 +92,11 @@ interface IPlanEntry {
 	readonly note: string;
 	/** The folder name of the method Make an Article Method made for it, in ~/.pollis/methods. */
 	readonly method?: string;
+	/** Exact when absent. */
+	readonly values?: PlanValues;
+	/** Random values: how many runs Julia averages, each with its own seed, `runs`, and how many the article's values average, `published_runs`, 1 for a single run. */
+	readonly runs?: number;
+	readonly publishedRuns?: number;
 }
 
 /** What a difference between a published value and Julia's comes from. */
@@ -236,7 +253,12 @@ async function readReplication(fileService: IFileService, folder: URI): Promise<
 	const plan = targets.map(target => {
 		const entry = table(table(toml.plan)[target.name]);
 		const way = text(entry.way);
-		return { target: target.name, way: way && PLAN_WAYS.includes(way) ? way as PlanWay : undefined, packages: text(entry.packages) ?? '', note: text(entry.note) ?? '', method: text(entry.method) };
+		const values = text(entry.values);
+		const count = (value: unknown, least: number) => typeof value === 'number' && Number.isInteger(value) && value >= least ? value : undefined;
+		return {
+			target: target.name, way: way && PLAN_WAYS.includes(way) ? way as PlanWay : undefined, packages: text(entry.packages) ?? '', note: text(entry.note) ?? '', method: text(entry.method),
+			values: values && PLAN_VALUES.includes(values) ? values as PlanValues : undefined, runs: count(entry.runs, 2), publishedRuns: count(entry.published_runs, 1),
+		};
 	});
 	// The precision each target requires: a whole number of decimals, at least 0; a number of standard errors above 0
 	const precision = targets.map(target => {
@@ -322,10 +344,20 @@ function replicationToml(name: string, title: string): string {
 		'',
 		'# The plan, one table for each target: how it is computed. way is "package" (the Julia packages in',
 		'# packages), "notebook" (code of the notebook\'s own) or "method" (a new method, made by Make an Article Method).',
+		'# values is "exact" (the same on every run, compared to the digits printed) or "random" (changing with the',
+		'# random numbers: a simulation, the bootstrap, a random forest, a neural network), compared within its Monte Carlo',
+		'# noise; runs is how many runs Julia averages, each with its own seed, and published_runs how many the article\'s',
+		'# values average, 1 for a single run.',
 		'#   [plan.table3_2]',
 		'#   way = "package"',
 		'#   packages = "GLM"',
 		'#   note = "Logit of column 2 on the regressors of Section 3"',
+		'#   [plan.table4]',
+		'#   way = "package"',
+		'#   packages = "DecisionTree"',
+		'#   values = "random"',
+		'#   runs = 20',
+		'#   published_runs = 1',
 		'',
 		'# The explanation of each published value Julia does not reproduce: its target and row as in results.csv,',
 		'# its kind ("misprint", "rounding", "not replicable" or "unexplained") and why.',
@@ -377,14 +409,16 @@ function juliaInput(input: IStudyInput): string {
 /**
  * A notebook to write a replication in by hand, in the shape of those that come with Pollis: the packages of the
  * plan, the input tables read into memory, then a section for each target, which reads its published values as
- * printed and ends in the Pollis.replicate call that sets Julia's beside them in results.csv.
+ * printed and ends in the call that sets Julia's beside them in results.csv: Pollis.replicate for exact values, and
+ * for random ones, computed on each of several seeds, Pollis.compare with the runs of Julia and of the article.
  */
 function notebookFor(replication: IReplication): string {
 	const lines = (source: string) => source.split('\n').map((line, index, all) => index < all.length - 1 ? `${line}\n` : line);
 	const markdown = (source: string) => ({ cell_type: 'markdown', metadata: {}, source: lines(source) });
 	const code = (source: string) => ({ cell_type: 'code', execution_count: null, metadata: {}, outputs: [], source: lines(source) });
 	const planned = replication.plan.flatMap(entry => entry.way === 'package' ? entry.packages.split(',').map(name => name.trim().replace(/\.jl$/, '')).filter(Boolean) : []);
-	const packages = [...new Set(['CSV', 'Tables', ...planned])];
+	const random = (name: string) => replication.plan.find(entry => entry.target === name)?.values === 'random';
+	const packages = [...new Set(['CSV', 'Tables', ...(replication.targets.some(target => random(target.name)) ? ['Statistics'] : []), ...planned])];
 	const downloads = replication.inputs.some(input => input.url);
 	const setup = [
 		...replication.inputs.map(juliaInput),
@@ -402,9 +436,25 @@ function notebookFor(replication: IReplication): string {
 		markdown(`## ${localize('replicateArticle.notebook.setup', "Set-up")}\n\n${localize('replicateArticle.notebook.setupText', "The input tables, read into memory as Tables.jl column tables, and target, which reads the published values of a target table as printed, by row label and column.")}`),
 		code(setup.join('\n')),
 		...replication.targets.flatMap((target, index) => {
-			const note = replication.plan.find(entry => entry.target === target.name)?.note;
+			const entry = replication.plan.find(candidate => candidate.target === target.name);
+			if (entry?.values === 'random') {
+				const runs = entry.runs ?? DEFAULT_RUNS;
+				const publishedRuns = entry.publishedRuns ?? 1;
+				return [
+					markdown([`## ${index + 1}. ${target.name}`, target.source ?? '', entry.note, localize('replicateArticle.notebook.random', "Random values: each run, with its own seed, gives other values, so no run gives the digits printed. Julia's value is the mean of {0} runs, compared with the published one within the Monte Carlo noise of the two, the published value being the mean of {1} runs as the plan says.", runs, publishedRuns)].filter(Boolean).join('\n\n')),
+					code([
+						`published = target(${juliaString(target.name)})`,
+						`runs = ${runs}`,
+						`# Julia's value on each run, its seed the run's number, by row label and column as in targets/${target.name}.csv,`,
+						'# e.g. draws[("waveform", "error")] = [test_error(seed) for seed in 1:runs]',
+						'draws = Dict{Tuple{String, String}, Vector{Float64}}()',
+						'',
+						`Pollis.compare(${juliaString(target.name)}, [("$row, $column", mean(values), std(values) / sqrt(length(values)), published[(row, column)]) for ((row, column), values) in sort(collect(draws))]; runs = runs, published_runs = ${publishedRuns})`,
+					].join('\n')),
+				];
+			}
 			return [
-				markdown([`## ${index + 1}. ${target.name}`, target.source ?? '', note ?? ''].filter(Boolean).join('\n\n')),
+				markdown([`## ${index + 1}. ${target.name}`, target.source ?? '', entry?.note ?? ''].filter(Boolean).join('\n\n')),
 				code([
 					`published = target(${juliaString(target.name)})`,
 					`# Julia's values, by row label and column as in targets/${target.name}.csv, e.g. values[("income", "(2)")] = coef(model)[2]`,
@@ -521,6 +571,9 @@ interface IPlanRow {
 	readonly way: string;
 	readonly packages: string;
 	readonly note: string;
+	readonly values: string;
+	readonly runs: string;
+	readonly publishedRuns: string;
 }
 
 type ReplicationMessage =
@@ -690,11 +743,26 @@ async function openReplicationPage(accessor: ServicesAccessor, existing?: URI, s
 	// The plan of each target, as the page shows it, each method kept and a new one added; a target with nothing planned
 	// has no table
 	const writePlan = async (rows: readonly IPlanRow[], made?: { readonly target: string; readonly method: string }) => {
+		// A number of runs as typed: empty for the default, else a whole number, at least `least`
+		const runsOf = (target: string, typed: string, least: number, what: string) => {
+			if (!typed.trim()) {
+				return undefined;
+			}
+			const value = Number(typed);
+			if (!Number.isInteger(value) || value < least) {
+				throw new Error(localize('replicateArticle.plan.runsError', "The {0} of {1} are a whole number, {2} or more, not {3}.", what, target, least, typed));
+			}
+			return value;
+		};
 		const blocks = rows.filter(row => replication.targets.some(target => target.name === row.target)).map(row => {
 			const method = made?.target === row.target ? made.method : replication.plan.find(entry => entry.target === row.target)?.method;
 			const way = PLAN_WAYS.includes(row.way) ? row.way : '';
-			return way || row.packages.trim() || row.note.trim() || method
+			const random = row.values === 'random';
+			const runs = random ? runsOf(row.target, row.runs, 2, localize('replicateArticle.plan.runsWhat', "runs in Julia")) : undefined;
+			const publishedRuns = random ? runsOf(row.target, row.publishedRuns, 1, localize('replicateArticle.plan.publishedRunsWhat', "runs in the article")) : undefined;
+			return way || row.packages.trim() || row.note.trim() || method || random
 				? `[plan.${row.target}]\nway = ${tomlString(way)}\npackages = ${tomlString(row.packages.trim())}\nnote = ${tomlString(row.note.trim())}\n${method ? `method = ${tomlString(method)}\n` : ''}`
+				+ (random ? `values = "random"\n${runs !== undefined ? `runs = ${runs}\n` : ''}${publishedRuns !== undefined ? `published_runs = ${publishedRuns}\n` : ''}` : '')
 				: '';
 		}).filter(Boolean);
 		await replaceTomlBlocks(fileService, recordFile(), header => header.startsWith('[plan.'), blocks.join('\n'));
@@ -867,6 +935,13 @@ function pageHtml(): string {
 		wayColumn: localize('replicateArticle.plan.way', "Computed By"),
 		packagesColumn: localize('replicateArticle.plan.packages', "Julia Packages"),
 		noteColumn: localize('replicateArticle.plan.note', "Note"),
+		planRandom: localize('replicateArticle.page.planRandom', "Values says whether a target can be reproduced to the digits printed. Exact values are the same on every run, as estimates, test statistics or a model solved, and are compared to the digits printed. Random values change with the random numbers, as those of a model simulated from its calibration, with no data, the bootstrap, a random forest or a neural network such as LSTNet: no run gives the digits printed, so Julia runs the analysis with several seeds, each run its own, and Compare counts a value as reproduced when it is within the Monte Carlo noise of Julia's value and the published one."),
+		planRuns: localize('replicateArticle.page.planRuns', "For random values, Runs in Julia is how many runs Julia averages, {0} when left empty, and Runs in the Article how many runs the article's values average, as the article says, 1 when left empty, for a single run. The noise allowed comes from both: the more runs Julia averages, the smaller its share, and the fewer runs the article averages, the noisier its values and the wider the difference allowed. New Notebook writes the runs and the comparison for each random target."),
+		valuesColumn: localize('replicateArticle.plan.values', "Values"),
+		valuesExact: localize('replicateArticle.plan.exact', "Exact"),
+		valuesRandom: localize('replicateArticle.plan.random', "Random"),
+		runsColumn: localize('replicateArticle.plan.runs', "Runs in Julia"),
+		publishedRunsColumn: localize('replicateArticle.plan.publishedRuns', "Runs in the Article"),
 		wayNone: localize('replicateArticle.plan.none', "Not planned"),
 		wayPackage: localize('replicateArticle.plan.package', "Julia Packages"),
 		wayNotebook: localize('replicateArticle.plan.notebook', "Notebook Code"),
@@ -890,7 +965,9 @@ function pageHtml(): string {
 		resultsSoFar: localize('replicateArticle.resultsSoFar', "So far, results.csv compares {0} published values, from {1} of {2} target tables."),
 		showInCompare: localize('replicateArticle.showInCompare', "Show in Compare"),
 		// 4. Compare
-		compareIntro: localize('replicateArticle.page.compareIntro', "How closely Julia reproduces each target table, from results.csv as the notebook writes it. Set the precision each table requires, saved as you change it: how many decimals its values must share with the published ones, all those printed when left empty, or, for simulated values, how many standard errors they may be off, 2 when left empty."),
+		compareIntro: localize('replicateArticle.page.compareIntro', "How closely Julia reproduces each target table, from results.csv as the notebook writes it. Set the precision each table requires, saved as you change it: how many decimals its values must share with the published ones, all those printed when left empty, or, for random values, how many standard errors they may be off, 2 when left empty."),
+		compareRandom: localize('replicateArticle.page.compareRandom', "A random value is off by the difference between Julia's value and the published one, in standard errors of that difference, which come from the Monte Carlo standard error of Julia's value and from the runs each value averages, as set in Plan: the article's value is noisy too, the more so the fewer runs it averages."),
+		plannedRandom: localize('replicateArticle.plannedRandom', "Planned as random values, but compared to the digits printed: compare them with Pollis.compare, as New Notebook writes it for a random target."),
 		noCompareTargets: localize('replicateArticle.compare.noTargets', "No target tables yet: add them in Article and Data."),
 		tableColumn: localize('replicateArticle.tableColumn', "Table"),
 		decimalsColumn: localize('replicateArticle.decimalsColumn', "Decimals Required"),
@@ -963,6 +1040,8 @@ function pageHtml(): string {
 				headHtml: '<span class="soon" id="planHead"></span>',
 				bodyHtml: `
 		<p class="intro">${withPaths(text.planIntro)}</p>
+		<p class="intro">${text.planRandom}</p>
+		<p class="intro">${text.planRuns.replace('{0}', String(DEFAULT_RUNS))}</p>
 		<div id="plan"></div>
 		<div class="actions" id="planActions">
 			<button class="action current" data-command="planWithAgent">${text.planWithAgent}</button>
@@ -995,6 +1074,7 @@ function pageHtml(): string {
 				headHtml: '<span class="soon" id="compareHead"></span>',
 				bodyHtml: `
 		<p class="intro">${withPaths(text.compareIntro)}</p>
+		<p class="intro">${text.compareRandom}</p>
 		<div class="precision" id="precision"></div>
 		<h2>${text.valuesHeading}</h2>
 		<p class="intro">${text.valuesIntro}</p>
@@ -1037,10 +1117,18 @@ function pageHtml(): string {
 	// 2. Plan: a row for each target, how it is computed, saved as it changes: a choice at once, typing once it pauses
 	const planRow = row => ({
 		target: row.dataset.plan,
-		way: row.querySelector('select').value,
+		way: row.querySelector('select.way').value,
 		packages: row.querySelector('.packages').value,
 		note: row.querySelector('.note').value,
+		values: row.querySelector('select.values').value,
+		runs: row.querySelector('.runs').value,
+		publishedRuns: row.querySelector('.published-runs').value,
 	});
+	// The runs of a row, typed in only for random values
+	const showRuns = row => {
+		const random = row.querySelector('select.values').value === 'random';
+		row.querySelectorAll('.runs, .published-runs').forEach(input => { input.disabled = !random; });
+	};
 	let planTimer;
 	const savePlan = () => {
 		clearTimeout(planTimer);
@@ -1056,6 +1144,7 @@ function pageHtml(): string {
 	document.getElementById('plan').addEventListener('change', event => {
 		planEdited = true;
 		if (event.target.tagName === 'SELECT') {
+			showRuns(event.target.closest('[data-plan]'));
 			savePlan();
 		}
 	});
@@ -1069,9 +1158,7 @@ function pageHtml(): string {
 	function renderPlan() {
 		const container = document.getElementById('plan');
 		// What the user typed and has not saved, by target, kept
-		const typed = new Map(planEdited ? [...container.querySelectorAll('[data-plan]')].map(row => [row.dataset.plan, {
-			way: row.querySelector('select').value, packages: row.querySelector('.packages').value, note: row.querySelector('.note').value,
-		}]) : []);
+		const typed = new Map(planEdited ? [...container.querySelectorAll('[data-plan]')].map(row => [row.dataset.plan, planRow(row)]) : []);
 		const plan = replication.plan;
 		document.getElementById('planActions').hidden = !plan.length;
 		document.getElementById('planHead').textContent = plan.length ? TEXT.planned.replace('{0}', plan.filter(entry => entry.way).length).replace('{1}', plan.length) : '';
@@ -1089,7 +1176,7 @@ function pageHtml(): string {
 		const scroll = element('div', 'scroll');
 		const table = element('table');
 		const header = element('tr');
-		[TEXT.targetColumn, TEXT.wayColumn, TEXT.packagesColumn, TEXT.noteColumn, ''].forEach(label => header.appendChild(element('th', '', label)));
+		[TEXT.targetColumn, TEXT.wayColumn, TEXT.packagesColumn, TEXT.valuesColumn, TEXT.runsColumn, TEXT.publishedRunsColumn, TEXT.noteColumn, ''].forEach(label => header.appendChild(element('th', '', label)));
 		table.appendChild(header);
 		for (const entry of plan) {
 			const shown = typed.get(entry.target) || entry;
@@ -1100,7 +1187,7 @@ function pageHtml(): string {
 			const target = replication.targets.find(candidate => candidate.name === entry.target);
 			name.appendChild(element('div', 'small', (target && target.source) || TEXT.noSource));
 			row.appendChild(name);
-			const way = element('select');
+			const way = element('select', 'way');
 			option(way, '', TEXT.wayNone);
 			option(way, 'package', TEXT.wayPackage);
 			option(way, 'notebook', TEXT.wayNotebook);
@@ -1111,6 +1198,23 @@ function pageHtml(): string {
 			packages.value = shown.packages;
 			packages.placeholder = TEXT.packagesPlaceholder;
 			row.appendChild(element('td')).appendChild(packages);
+			const values = element('select', 'values');
+			option(values, 'exact', TEXT.valuesExact);
+			option(values, 'random', TEXT.valuesRandom);
+			values.value = shown.values || 'exact';
+			row.appendChild(element('td')).appendChild(values);
+			// The runs, typed as they are saved: a number, or empty for the default
+			const runsInput = (name, value, placeholder) => {
+				const input = element('input', 'number ' + name);
+				input.type = 'number';
+				input.min = name === 'runs' ? '2' : '1';
+				input.step = '1';
+				input.placeholder = placeholder;
+				input.value = value === undefined || value === null ? '' : String(value);
+				row.appendChild(element('td')).appendChild(input);
+			};
+			runsInput('runs', typed.has(entry.target) ? shown.runs : entry.runs, String(${DEFAULT_RUNS}));
+			runsInput('published-runs', typed.has(entry.target) ? shown.publishedRuns : entry.publishedRuns, '1');
 			const note = element('input', 'note wide');
 			note.value = shown.note;
 			row.appendChild(element('td')).appendChild(note);
@@ -1127,6 +1231,7 @@ function pageHtml(): string {
 				});
 			}
 			row.appendChild(method);
+			showRuns(row);
 			table.appendChild(row);
 		}
 		scroll.appendChild(table);
@@ -1268,7 +1373,10 @@ function pageHtml(): string {
 				row.dataset.precision = entry.name;
 			}
 			row.appendChild(element('td', 'table-name', entry.name));
-			const kind = entry.result ? entry.result.kind : undefined;
+			// The kind of the results, else that of the plan: random values are compared with the noise of a simulation
+			const planned = replication.plan.find(candidate => candidate.target === entry.name);
+			const random = !!planned && planned.values === 'random';
+			const kind = entry.result ? entry.result.kind : random ? 'noise' : undefined;
 			// The decimals of exact values, the standard errors of simulated ones; both until the results say which
 			const cell = (shown, name, value, placeholder, step) => {
 				const td = element('td');
@@ -1289,7 +1397,10 @@ function pageHtml(): string {
 			};
 			cell(kind !== 'noise', 'decimals', entry.required.decimals, TEXT.allPrinted, '1');
 			cell(kind !== 'exact', 'errors', entry.required.standardErrors, '2', '0.5');
-			row.appendChild(element('td', '', achievedText(entry.result)));
+			const achieved = row.appendChild(element('td', '', achievedText(entry.result)));
+			if (random && kind === 'exact') {
+				achieved.appendChild(element('div', 'small warning', TEXT.plannedRandom));
+			}
 			row.appendChild(element('td', 'number' + (entry.result && entry.result.reproduced < entry.result.values ? ' warning' : ''), atText(entry.result)));
 			table.appendChild(row);
 		}

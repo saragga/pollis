@@ -427,6 +427,8 @@ interface ISkillInfo {
 	/** Its files, as paths in its folder, SKILL.md first. */
 	readonly files: readonly string[];
 	readonly size: string;
+	/** The date it last changed, `YYYY-MM-DD`, from `metadata.updated` in the front matter of its SKILL.md. */
+	readonly updated?: string;
 	/** Its folder in the downloaded plugin. */
 	readonly location: URI;
 }
@@ -461,6 +463,8 @@ async function readSkills(fileService: IFileService, folder: URI): Promise<ISkil
 		const parts = /^---\r?\n(?<frontMatter>[\s\S]*?)\r?\n---(?<body>[\s\S]*)$/.exec(text)?.groups;
 		const field = (key: string) => new RegExp(`^${key}:\\s*"?(?<value>.*?)"?\\s*$`, 'm').exec(parts?.frontMatter ?? '')?.groups?.value;
 		const [description, triggers = ''] = (field('description') ?? '').split(/\s*Triggers include\s*/);
+		// metadata.updated, indented under metadata
+		const updated = /^metadata:\s*$(?:\r?\n[ \t]+.*$)*?\r?\n[ \t]+updated:\s*"?(?<date>\d{4}-\d{2}-\d{2})"?\s*$/m.exec(parts?.frontMatter ?? '')?.groups?.date;
 
 		const files: { path: string; size: number }[] = [];
 		const walk = async (resource: URI, prefix: string): Promise<void> => {
@@ -482,6 +486,7 @@ async function readSkills(fileService: IFileService, folder: URI): Promise<ISkil
 			triggers: [...triggers.matchAll(/'(?<trigger>[^']+)'/g)].map(match => match.groups!.trigger),
 			files: files.map(entry => entry.path),
 			size: ByteSize.formatSize(files.reduce((total, entry) => total + entry.size, 0)),
+			updated,
 			location: child.resource,
 		});
 	}
@@ -501,7 +506,7 @@ let skillsPage: WebviewInput | undefined;
 /**
  * Opens the skills page, in the look of the Replications and Methods libraries: a table of the
  * skills of the latest plugin, with the Compose tasks that use each, the requests that start
- * it and its files. A skill opens in the editor, or runs with the agent of the Standard tier.
+ * it, its files and the date it last changed. A skill opens in the editor, or runs with the agent of the Standard tier.
  */
 async function browseSkills(accessor: ServicesAccessor): Promise<void> {
 	const webviewWorkbenchService = accessor.get(IWebviewWorkbenchService);
@@ -580,6 +585,7 @@ function skillsPageHtml(title: string): string {
 		requests: localize('pollisSkills.requests', "Example Requests"),
 		files: localize('pollisSkills.files', "Files"),
 		size: localize('pollisSkills.size', "Size"),
+		updated: localize('pollisSkills.updated', "Updated"),
 		view: localize('pollisSkills.view', "View Skill"),
 		run: localize('pollisSkills.run', "Run with My Agent"),
 		noTask: localize('pollisSkills.noTask', "None: run it with your agent"),
@@ -587,7 +593,7 @@ function skillsPageHtml(title: string): string {
 		more: localize('pollisSkills.more', "more"),
 		less: localize('pollisSkills.less', "less"),
 	};
-	const intro = localize('pollisSkills.intro', "A skill is the know-how a coding agent reads to do a task: the agent tasks of the Compose menu use these, and any coding agent can follow them. This is the latest version of each, downloaded when the page opens. Click a name to read its {0}, or run it with your coding agent.", '<code>SKILL.md</code>');
+	const intro = localize('pollisSkills.intro', "A skill is the know-how a coding agent reads to do a task: the agent tasks of the Compose menu use these, and any coding agent can follow them. This is the latest version of each, downloaded when the page opens, with the date it last changed. Click a name to read its {0}, or run it with your coding agent.", '<code>SKILL.md</code>');
 	const installIntro = localize('pollisSkills.installIntro', "To install the skills in your coding agent, so that it uses them in any folder, even outside Pollis:");
 	const installLink = localize('pollisSkills.installLink', "Compose > Coding Agents");
 	return buildWebviewHtml({
@@ -608,7 +614,7 @@ ${LIBRARY_PAGE_MINIMAL_STYLE}
 	<div class="install">${installIntro} <button class="link" id="codingAgent">${installLink}</button></div>
 	<table>
 		<thead><tr>
-			<th>${text.skill}</th><th>${text.tasks}</th><th>${text.requests}</th><th>${text.files}</th><th>${text.size}</th>
+			<th>${text.skill}</th><th>${text.tasks}</th><th>${text.requests}</th><th>${text.files}</th><th>${text.size}</th><th>${text.updated}</th>
 		</tr></thead>
 		<tbody id="entries"></tbody>
 	</table>
@@ -691,6 +697,8 @@ ${LIBRARY_PAGE_HELPERS}
 			requestsCell(row, skill);
 			filesCell(row, skill);
 			cell(row, 'nowrap').textContent = skill.size;
+			// The date it last changed, in the display language, as 10 Nov 2026
+			cell(row, 'nowrap').textContent = skill.updated ? new Date(skill.updated + 'T00:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '';
 			body.appendChild(row);
 		}
 	}

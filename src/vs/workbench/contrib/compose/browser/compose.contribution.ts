@@ -538,7 +538,7 @@ MenuRegistry.appendMenuItem(OrchestrationMenu, {
 });
 
 // ==============================================================
-// SUBMENU: Profiling, in three groups: your own code (Time a Function, Find Where the Time Goes, Time Sections of Code, Find Allocations,
+// SUBMENU: Profiling, in four groups: measure (Time a Function, Find Where the Time Goes, Time Sections of Code), diagnose and fix (Find Allocations,
 // Check Type Stability, Speed Up a Function), packages (Compare Package Versions, Load and Compile Time) and languages (Run a Speed Race, Add a Language)
 // ==============================================================
 
@@ -553,61 +553,61 @@ CommandsRegistry.registerCommand('pollis.profiling.timeSections', (accessor: Ser
 CommandsRegistry.registerCommand('pollis.profiling.addLanguage', (accessor: ServicesAccessor) => openScaffoldWebview(accessor, ADDLANGUAGE_PANEL));
 
 MenuRegistry.appendMenuItem(ComparisonsMenu, {
-	group: '1_own',
+	group: '1_measure',
 	command: { id: 'pollis.profiling.timeFunction', title: localize('profiling.timeFunction', "Time a Function...") },
 	order: 1,
 });
 
 MenuRegistry.appendMenuItem(ComparisonsMenu, {
-	group: '1_own',
+	group: '1_measure',
 	command: { id: 'pollis.profiling.profileTime', title: localize('profiling.profileTime', "Find Where the Time Goes...") },
 	order: 2,
 });
 
 MenuRegistry.appendMenuItem(ComparisonsMenu, {
-	group: '1_own',
+	group: '1_measure',
 	command: { id: 'pollis.profiling.timeSections', title: localize('profiling.timeSections', "Time Sections of Code...") },
 	order: 3,
 });
 
 MenuRegistry.appendMenuItem(ComparisonsMenu, {
-	group: '1_own',
+	group: '2_diagnose',
 	command: { id: 'pollis.profiling.findAllocs', title: localize('profiling.findAllocs', "Find Allocations...") },
-	order: 4,
+	order: 1,
 });
 
 MenuRegistry.appendMenuItem(ComparisonsMenu, {
-	group: '1_own',
+	group: '2_diagnose',
 	command: { id: 'pollis.profiling.typeStability', title: localize('profiling.typeStability', "Check Type Stability...") },
-	order: 5,
+	order: 2,
 });
 
 MenuRegistry.appendMenuItem(ComparisonsMenu, {
-	group: '1_own',
+	group: '2_diagnose',
 	command: { id: SPEED_UP_COMMAND_ID, title: localize('profiling.speedUp', "Speed Up a Function...") },
-	order: 6,
+	order: 3,
 });
 
 MenuRegistry.appendMenuItem(ComparisonsMenu, {
-	group: '2_packages',
+	group: '3_packages',
 	command: { id: 'pollis.profiling.pkgVersions', title: localize('profiling.pkgVersions', "Compare Package Versions...") },
 	order: 1,
 });
 
 MenuRegistry.appendMenuItem(ComparisonsMenu, {
-	group: '2_packages',
+	group: '3_packages',
 	command: { id: 'pollis.profiling.loadTime', title: localize('profiling.loadTime', "Load and Compile Time...") },
 	order: 2,
 });
 
 MenuRegistry.appendMenuItem(ComparisonsMenu, {
-	group: '3_race',
+	group: '4_race',
 	command: { id: 'pollis.profiling.speedRace', title: localize('profiling.speedRace', "Run a Speed Race...") },
 	order: 1,
 });
 
 MenuRegistry.appendMenuItem(ComparisonsMenu, {
-	group: '3_race',
+	group: '4_race',
 	command: { id: 'pollis.profiling.addLanguage', title: localize('profiling.addLanguage', "Add a Language...") },
 	order: 2,
 });

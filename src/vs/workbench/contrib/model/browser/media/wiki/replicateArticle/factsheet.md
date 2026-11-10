@@ -1,14 +1,15 @@
 # Replicate an Article — Factsheet
 
-A **Pollis replication** reproduces a published analysis on its data: every value the article prints is set beside the value Julia gives, and the replication is full when Julia gives them all.
+A **Pollis replication** reproduces a published analysis on its data: every value the article prints is set beside the value Julia gives, at the precision each published table requires.
 
 | | |
 |---|---|
 | **Purpose** | Reproduce the results an article publishes, value by value, in Julia |
-| **Input** | The article, its data as links or typed-in tables, and its published tables as targets |
+| **Input** | The article, its data as links or typed-in tables, or only the calibration of a model it simulates, and its published tables as targets |
+| **Values** | Exact, compared to the digits printed; Random, compared within their Monte Carlo noise, from the runs Julia and the article average |
 | **Steps** | Article and Data, Plan, Replicate, Compare, Record and Share |
 | **Output** | A folder of `~/.pollis/replications` with `replication.toml`, the target tables and `results.csv` |
-| **Status** | Full when every published value is reproduced, else partial |
+| **Result** | How many target tables and values are at the precision they require, and how many differences are explained |
 | **Listed in** | Compose > Replication > Browse Replications, under In Progress or Done by You |
 
 ## When to Replicate an Article
