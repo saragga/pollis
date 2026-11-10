@@ -6,7 +6,7 @@ Reproducibility and replicability mean different things across the sciences ([Go
 
 ## What a Pollis Method Holds on Disk
 
-A Pollis method is a folder of `~/.pollis/methods`, named after its Package Name. `method.toml` holds the article's link, the input tables and, for each target, where it is published and the Julia call that computes it. The code is `src/NAME.jl`, with module NAME. `targets/` holds the published tables as CSV files, and `inputs/` any tables typed in from the article. `INSTRUCTIONS.md` and `VIGNETTE.md` are notes for a coding agent, and the vignette is a LaTeX file in `vignette/`, with its PDF beside it. A new method has no folder until the first thing is typed or added.
+A Pollis method is a folder of `~/.pollis/methods`, named after its Package Name. `method.toml` holds the article's link, the input tables and, for each target, where it is published and the Julia call that computes it. The code is `src/NAME.jl`, with module NAME. `targets/` holds the published tables as CSV files, and `inputs/` any tables typed in from the article. `tests/tests.jl` holds the method's reference and property tests, and `tests/references/` the results they compare with. `INSTRUCTIONS.md` and `VIGNETTE.md` are notes for a coding agent, and the vignette is a LaTeX file in `vignette/`, with its PDF beside it. A new method has no folder until the first thing is typed or added.
 
 ## Why the Article and Its Data Are Only Links
 
@@ -18,7 +18,7 @@ The article and the input data of a Pollis method stay where they are published.
 
 ## Step 2: Write a Method
 
-**Write a Method** gives the method its title and the code that reproduces the targets. **Instructions** are notes for a coding agent, such as where in the article the estimator is defined and what to watch for, saved in `INSTRUCTIONS.md` as they are typed. **Write Method** hands the method to the agent, which reads those notes with the links and tables. **Edit method.toml** and **Open Code** open the files for editing by hand.
+**Write a Method** gives the method its title and the code that reproduces the targets. **Instructions** are notes for a coding agent, such as where in the article the estimator is defined and what to watch for, saved in `INSTRUCTIONS.md` as they are typed. **Write Method** hands the method to the agent, which reads those notes with the links and tables. Once the targets pass, the agent adds two more kinds of test. Reference tests save the method's results in full in `tests/references/` and fail when a later run gives other results, such as a digit the article did not print. Property tests try rules the results must obey, such as estimates that do not depend on the order of the rows, on inputs that Supposition generates. Compare with Saved Results and Check a Property, in Compose > Correctness Tests, show both kinds. **Edit method.toml** and **Open Code** open the files for editing by hand.
 
 ## Step 3: Write a Vignette
 
@@ -26,7 +26,7 @@ The article and the input data of a Pollis method stay where they are published.
 
 ## Step 4: Prepare for Registration
 
-**Prepare for Registration** is where a method gets its **Package Name**, which names its folder, its Julia package and its module. The name starts with a capital letter and has only letters and digits. The Pollis registry asks for three things: a name of at least 5 characters, a usage example, and a docstring for every exported name. The **Prepare for Registration** button asks the coding agent to check the method against these rules and fix what it can.
+**Prepare for Registration** is where a method gets its **Package Name**, which names its folder, its Julia package and its module. The name starts with a capital letter and has only letters and digits. The Pollis registry asks for three things: a name of at least 5 characters, a usage example, and a docstring for every exported name. The **Prepare for Registration** button asks the coding agent to check the method against these rules and fix what it can, and to add the reference and property tests a method written by hand lacks, without changing what it computes.
 
 ## Step 5: Package and Publish
 
