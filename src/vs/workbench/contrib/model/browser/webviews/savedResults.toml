@@ -1,0 +1,325 @@
+# Compare with Saved Results Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/savedResults.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Compare with Saved Results"
+viewType = "pollis.savedResults"
+defaultModel = "numbers"
+decisionFirstColumn = "What Is Saved"
+
+[[packages]]
+name = "ReferenceTests.jl"
+github = "https://github.com/JuliaTesting/ReferenceTests.jl"
+
+[requires]
+packages = ["StableRNGs.jl", "FileIO.jl", "ImageIO.jl", "Plots.jl"]
+
+[[wikis]]
+name = "Overview"
+file = "savedResults/overview.md"
+bundled = true
+description = "What a reference test is, how ReferenceTests saves, compares and updates a reference, and the four tabs of the panel"
+
+[[wikis]]
+name = "Factsheet"
+file = "savedResults/factsheet.md"
+bundled = true
+description = "Tabs, inputs, file types, comparisons, settings and actions at a glance"
+
+[[wikis]]
+name = "Reference Tests in a Package"
+file = "savedResults/references-in-a-package.md"
+bundled = true
+description = "What to save, data that stay the same across versions of Julia, tolerances, where references go in a package, and when to update them"
+
+[[models]]
+id = "numbers"
+label = "Numbers"
+
+[[models]]
+id = "text"
+label = "Printed Output"
+
+[[models]]
+id = "plot"
+label = "Plot"
+
+[[models]]
+id = "hash"
+label = "Hash"
+
+[[bullets]]
+text = "ReferenceTests saves a result once it is right, as a reference file, and compares each later result with it: a result that changes fails the test, and is saved in a temporary folder for you to look at"
+detail = ""
+
+[[bullets]]
+text = "Numbers: estimates saved in full, one to a line, and compared within a relative tolerance"
+detail = ""
+
+[[bullets]]
+text = "Printed Output: a table as it is printed, compared character by character"
+detail = ""
+
+[[bullets]]
+text = "Plot: a chart saved as an image and compared by its peak signal-to-noise ratio, which ignores small differences of drawing"
+detail = ""
+
+[[bullets]]
+text = "Hash: only the SHA-256 hash of a result, 64 characters, which changes when anything in the result changes"
+detail = ""
+
+[[decisionRows]]
+task = "Numbers"
+context = "Estimates, within a tolerance"
+purpose = "Coefficients, standard errors or any vector of numbers, saved in full so that a change in the last digits shows, and compared within a tolerance that allows for rounding"
+
+[[decisionRows]]
+task = "Printed Output"
+context = "What a reader sees"
+purpose = "A table or a summary as it is printed, rounded to the digits shown: a change that a reader would see fails"
+
+[[decisionRows]]
+task = "Plot"
+context = "A figure"
+purpose = "A chart of a result, compared as an image, so that a changed curve fails and a change of a few pixels does not"
+
+[[decisionRows]]
+task = "Hash"
+context = "Large results, exactly"
+purpose = "A large result kept as a hash of 64 characters: any change fails, but the reference cannot show what changed"
+
+[[inputs]]
+id = "n"
+label = "Observations"
+tooltip = "The number of simulated observations of the regression whose results are saved."
+default = "200"
+
+[[inputs]]
+id = "rtol"
+label = "Relative Tolerance"
+tooltip = "How far a number may be from its reference, as a share of the reference, and still pass."
+default = "1e-10"
+models = ["numbers"]
+
+[[inputs]]
+id = "psnr"
+label = "Least PSNR"
+tooltip = "The least peak signal-to-noise ratio, in decibels, at which the image passes: a higher value asks for a closer match. 25 is the default of ReferenceTests."
+default = "25"
+models = ["plot"]
+
+[[codeBranches]]
+model = "numbers"
+code = '''
+using ReferenceTests, StableRNGs, LinearAlgebra
+
+# The result checked: the coefficients of a linear regression on simulated data
+rng = StableRNG(1)  # a generator whose numbers stay the same across versions of Julia, so that the data do
+n = {{n}}
+X = [ones(n) randn(rng, n, 2)]
+y = X * [1.0, 0.5, -0.3] .+ randn(rng, n)
+beta = X \ y
+
+# The numbers in full, one to a line: a text file a person can read and git can compare line by line
+folder = joinpath(homedir(), ".pollis", "reference-tests")
+reference_file = joinpath(folder, "coefficients.txt")
+result = join(string.(beta), "\n")
+same_within(reference, actual) = isapprox(parse.(Float64, split(reference)), parse.(Float64, split(actual)); rtol = {{rtol}})
+
+# The first run saves the reference; each later run compares the numbers with it
+@test_reference reference_file result by=same_within
+'''
+
+[[codeBranches]]
+model = "text"
+code = '''
+using ReferenceTests, StableRNGs, LinearAlgebra, Printf
+
+# The result checked: the table of a linear regression on simulated data, as it is printed
+rng = StableRNG(1)  # a generator whose numbers stay the same across versions of Julia, so that the data do
+n = {{n}}
+X = [ones(n) randn(rng, n, 2)]
+y = X * [1.0, 0.5, -0.3] .+ randn(rng, n)
+
+function regression_table(X, y)
+    beta = X \ y
+    residuals = y .- X * beta
+    sigma2 = sum(abs2, residuals) / (size(X, 1) - size(X, 2))
+    se = sqrt.(diag(inv(transpose(X) * X)) .* sigma2)
+    lines = [@sprintf("%-12s %10s %10s", "", "Estimate", "Std. Error")]
+    for (name, b, s) in zip(["(Intercept)", "x1", "x2"], beta, se)
+        push!(lines, @sprintf("%-12s %10.4f %10.4f", name, b, s))
+    end
+    join(lines, "\n")
+end
+
+folder = joinpath(homedir(), ".pollis", "reference-tests")
+reference_file = joinpath(folder, "regression.txt")
+result = regression_table(X, y)
+println(result)
+
+# The first run saves the reference; each later run compares the printed table with it, character by character
+@test_reference reference_file result
+'''
+
+[[codeBranches]]
+model = "plot"
+code = '''
+using ReferenceTests, StableRNGs, Plots, FileIO
+
+# The result checked: a chart of the data and the fitted line of a regression on simulated data
+rng = StableRNG(1)  # a generator whose numbers stay the same across versions of Julia, so that the data do
+n = {{n}}
+x = randn(rng, n)
+y = 1.0 .+ 0.5 .* x .+ randn(rng, n)
+b = [ones(n) x] \ y
+p = scatter(x, y, markersize = 3, alpha = 0.6, label = "data", xlabel = "x", ylabel = "y", size = (600, 400))
+plot!(p, sort(x), b[1] .+ b[2] .* sort(x), linewidth = 2, label = "fitted line")
+
+# The chart as an image: saved as a PNG file and read back as a matrix of colours
+image_file = joinpath(tempdir(), "pollis-fitted-line.png")
+savefig(p, image_file)
+result = load(image_file)
+
+folder = joinpath(homedir(), ".pollis", "reference-tests")
+reference_file = joinpath(folder, "fitted-line.png")
+
+# The first run saves the reference; each later run passes when the peak signal-to-noise ratio is at least {{psnr}} decibels
+@test_reference reference_file result by=psnr_equality({{psnr}})
+'''
+
+[[codeBranches]]
+model = "hash"
+code = '''
+using ReferenceTests, StableRNGs, LinearAlgebra
+
+# The result checked: the coefficients of a linear regression on simulated data
+rng = StableRNG(1)  # a generator whose numbers stay the same across versions of Julia, so that the data do
+n = {{n}}
+X = [ones(n) randn(rng, n, 2)]
+y = X * [1.0, 0.5, -0.3] .+ randn(rng, n)
+beta = X \ y
+
+# A file ending in .sha256 keeps only the hash of the result as text: any change to the result changes it
+folder = joinpath(homedir(), ".pollis", "reference-tests")
+reference_file = joinpath(folder, "coefficients.sha256")
+result = beta
+
+# The first run saves the reference; each later run compares the hash of the coefficients with it
+@test_reference reference_file result
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "show-reference"
+label = "The Saved Reference"
+desc = "The reference file as it is saved, with its path: the numbers, the table, the image or the hash"
+code = '''
+using FileIO
+
+println(reference_file)
+endswith(reference_file, ".png") ? load(reference_file) : println(read(reference_file, String))
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "differences"
+label = "Differences from the Reference"
+desc = "The regression without its last observation set against the reference, coefficient by coefficient, with the relative difference of each"
+models = ["numbers"]
+code = '''
+changed = X[1:end-1, :] \ y[1:end-1]  # the same regression without its last observation
+reference = parse.(Float64, split(read(reference_file, String)))
+for (k, (r, c)) in enumerate(zip(reference, changed))
+    println("coefficient ", k, ": reference ", rpad(r, 22), " changed ", rpad(c, 22), " relative difference ", abs(c - r) / abs(r))
+end
+'''
+
+[[actionGroups.actions]]
+id = "changed-lines"
+label = "Lines That Change"
+desc = "The table of the regression without its last observation set against the reference, line by line: the lines that differ are those a reader would see change"
+models = ["text"]
+code = '''
+changed = split(regression_table(X[1:end-1, :], y[1:end-1]), "\n")
+reference = split(read(reference_file, String), "\n")
+for (r, c) in zip(reference, changed)
+    r == c ? println("  same     ", r) : (println("  saved    ", r); println("  changed  ", c))
+end
+'''
+
+[[actionGroups.actions]]
+id = "hash-change"
+label = "Hash of a Small Change"
+desc = "The hash of the coefficients beside the hash of the coefficients with the last digit of one changed: the two hashes share nothing that shows how small the change is"
+models = ["hash"]
+code = '''
+using SHA
+
+changed = copy(beta)
+changed[1] = nextfloat(changed[1])  # the next floating-point number after the intercept
+println("saved:   ", read(reference_file, String))
+println("changed: ", bytes2hex(sha256(string(changed))))
+println("intercept ", beta[1], " against ", changed[1])
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "exact-or-tolerance"
+label = "Exact and Within a Tolerance"
+desc = "The coefficients computed another way, from the normal equations, compared with the reference exactly and within the Relative Tolerance"
+models = ["numbers"]
+code = '''
+beta_normal = inv(transpose(X) * X) * (transpose(X) * y)  # the same coefficients, through the normal equations
+other = join(string.(beta_normal), "\n")
+saved = read(reference_file, String)
+println("Exactly the same text:        ", isequal(saved, other))
+println("Within a relative tolerance:  ", same_within(saved, other))
+println("Largest relative difference:  ", maximum(abs.(beta_normal .- beta) ./ abs.(beta)))
+'''
+
+[[actionGroups.actions]]
+id = "psnr-levels"
+label = "A Changed Chart at Several Thresholds"
+desc = "The chart with its markers one size larger, compared with the reference at several thresholds of the peak signal-to-noise ratio"
+models = ["plot"]
+code = '''
+using ReferenceTests, Plots, FileIO
+
+q = scatter(x, y, markersize = 4, alpha = 0.6, label = "data", xlabel = "x", ylabel = "y", size = (600, 400))
+plot!(q, sort(x), b[1] .+ b[2] .* sort(x), linewidth = 2, label = "fitted line")
+changed_file = joinpath(tempdir(), "pollis-fitted-line-changed.png")
+savefig(q, changed_file)
+changed = load(changed_file)
+saved = load(reference_file)
+for threshold in (15, 20, 25, 30, 40)
+    println("Least PSNR ", threshold, " dB: ", psnr_equality(threshold)(saved, changed) ? "passes" : "fails")
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "update"
+label = "Update the Reference"
+desc = "Replaces the reference with the result of the tab, as JULIA_REFERENCETESTS_UPDATE=true does for the failing references of a package's tests"
+code = '''
+using ReferenceTests
+
+rm(reference_file; force = true)  # with no reference, @test_reference saves the result of the tab as the new one
+@test_reference reference_file result
+println("The reference is now the result of the tab: ", reference_file)
+'''

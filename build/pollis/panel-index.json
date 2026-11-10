@@ -7562,6 +7562,34 @@
 			]
 		},
 		{
+			"id": "savedResults",
+			"title": "Compare with Saved Results",
+			"source": "pollis",
+			"commands": [
+				{
+					"id": "pollis.correctness.savedResults",
+					"menuTitles": [
+						"Compare with Saved Results..."
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "numbers",
+			"decisionFirstColumn": "What Is Saved",
+			"toml": "src/vs/workbench/contrib/model/browser/webviews/savedResults.toml",
+			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
+			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"wikis": [
+				"savedResults/factsheet.md",
+				"savedResults/overview.md",
+				"savedResults/references-in-a-package.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"ReferenceTests.jl"
+			]
+		},
+		{
 			"id": "sbi",
 			"title": "Simulation-Based Inference",
 			"source": "pollis",

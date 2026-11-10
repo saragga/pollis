@@ -59,6 +59,7 @@ import { TIMESECTIONS_PANEL } from '../../model/browser/commands/timeSections.co
 import { ADDLANGUAGE_PANEL } from '../../model/browser/commands/addLanguage.command.js';
 import { PROFILETIME_PANEL } from '../../model/browser/commands/profileTime.command.js';
 import { PROPERTYCHECK_PANEL } from '../../model/browser/commands/propertyCheck.command.js';
+import { SAVEDRESULTS_PANEL } from '../../model/browser/commands/savedResults.command.js';
 
 // The Core Mathematics, Finance and Economics Toolboxes come from their extensions (toolboxes/pollis-toolbox-*, not built in:
 // installed from the Toolboxes section of the Extensions pane), see toolboxExtensions.ts
@@ -522,15 +523,22 @@ MenuRegistry.appendMenuItem(WorkflowsMenu, {
 
 
 // ==============================================================
-// SUBMENU: Correctness Tests, in two groups: against known values (Published Benchmarks) and against properties (Check a Property)
+// SUBMENU: Correctness Tests, in two groups: against known values (Published Benchmarks, Compare with Saved Results) and against properties (Check a Property)
 // ==============================================================
 
 CommandsRegistry.registerCommand('pollis.correctness.propertyCheck', (accessor: ServicesAccessor) => openScaffoldWebview(accessor, PROPERTYCHECK_PANEL));
+CommandsRegistry.registerCommand('pollis.correctness.savedResults', (accessor: ServicesAccessor) => openScaffoldWebview(accessor, SAVEDRESULTS_PANEL));
 
 MenuRegistry.appendMenuItem(CorrectnessMenu, {
 	group: '1_known',
 	command: { id: PUBLISHED_BENCHMARKS_COMMAND_ID, title: localize('correctness.publishedBenchmarks', "Published Benchmarks") },
 	order: 1,
+});
+
+MenuRegistry.appendMenuItem(CorrectnessMenu, {
+	group: '1_known',
+	command: { id: 'pollis.correctness.savedResults', title: localize('correctness.savedResults', "Compare with Saved Results...") },
+	order: 2,
 });
 
 MenuRegistry.appendMenuItem(CorrectnessMenu, {
