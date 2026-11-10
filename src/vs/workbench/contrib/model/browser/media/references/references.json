@@ -52505,6 +52505,20 @@
 			]
 		},
 		{
+			"id": "convergenceOrder",
+			"title": "Check a Convergence Order",
+			"description": "ODE Solver · SDE Strong Order · SDE Weak Order",
+			"keys": [
+				"RN2017a",
+				"HNW1993a",
+				"KP1992a",
+				"Mar1955a",
+				"Mil1975a",
+				"Hig2001a",
+				"Ros2010a"
+			]
+		},
+		{
 			"id": "copt",
 			"title": "Constrained Optimisation",
 			"description": "SLSQP · MMA · Interior Point · Frank–Wolfe · Gradient Projection",

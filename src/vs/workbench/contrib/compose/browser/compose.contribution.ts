@@ -60,6 +60,7 @@ import { ADDLANGUAGE_PANEL } from '../../model/browser/commands/addLanguage.comm
 import { PROFILETIME_PANEL } from '../../model/browser/commands/profileTime.command.js';
 import { PROPERTYCHECK_PANEL } from '../../model/browser/commands/propertyCheck.command.js';
 import { SAVEDRESULTS_PANEL } from '../../model/browser/commands/savedResults.command.js';
+import { CONVERGENCEORDER_PANEL } from '../../model/browser/commands/convergenceOrder.command.js';
 
 // The Core Mathematics, Finance and Economics Toolboxes come from their extensions (toolboxes/pollis-toolbox-*, not built in:
 // installed from the Toolboxes section of the Extensions pane), see toolboxExtensions.ts
@@ -523,11 +524,12 @@ MenuRegistry.appendMenuItem(WorkflowsMenu, {
 
 
 // ==============================================================
-// SUBMENU: Correctness Tests, in two groups: against known values (Published Benchmarks, Compare with Saved Results) and against properties (Check a Property)
+// SUBMENU: Correctness Tests, in two groups: against known values (Published Benchmarks, Compare with Saved Results) and against properties (Check a Property, Check a Convergence Order)
 // ==============================================================
 
 CommandsRegistry.registerCommand('pollis.correctness.propertyCheck', (accessor: ServicesAccessor) => openScaffoldWebview(accessor, PROPERTYCHECK_PANEL));
 CommandsRegistry.registerCommand('pollis.correctness.savedResults', (accessor: ServicesAccessor) => openScaffoldWebview(accessor, SAVEDRESULTS_PANEL));
+CommandsRegistry.registerCommand('pollis.correctness.convergenceOrder', (accessor: ServicesAccessor) => openScaffoldWebview(accessor, CONVERGENCEORDER_PANEL));
 
 MenuRegistry.appendMenuItem(CorrectnessMenu, {
 	group: '1_known',
@@ -545,6 +547,12 @@ MenuRegistry.appendMenuItem(CorrectnessMenu, {
 	group: '2_properties',
 	command: { id: 'pollis.correctness.propertyCheck', title: localize('correctness.propertyCheck', "Check a Property...") },
 	order: 1,
+});
+
+MenuRegistry.appendMenuItem(CorrectnessMenu, {
+	group: '2_properties',
+	command: { id: 'pollis.correctness.convergenceOrder', title: localize('correctness.convergenceOrder', "Check a Convergence Order...") },
+	order: 2,
 });
 
 // ==============================================================

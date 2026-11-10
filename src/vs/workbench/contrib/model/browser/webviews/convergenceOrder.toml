@@ -1,0 +1,505 @@
+# Check a Convergence Order Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/convergenceOrder.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Check a Convergence Order"
+viewType = "pollis.convergenceOrder"
+defaultModel = "ode"
+decisionFirstColumn = "Order"
+
+[[packages]]
+name = "DiffEqDevTools.jl"
+github = "https://github.com/SciML/DiffEqDevTools.jl"
+
+[[packages]]
+name = "OrdinaryDiffEqLowOrderRK.jl"
+github = "https://github.com/SciML/OrdinaryDiffEq.jl/tree/master/lib/OrdinaryDiffEqLowOrderRK"
+
+[[packages]]
+name = "StochasticDiffEq.jl"
+github = "https://github.com/SciML/StochasticDiffEq.jl"
+
+[requires]
+packages = ["StableRNGs.jl", "Plots.jl"]
+
+[[wikis]]
+name = "Overview"
+file = "convergenceOrder/overview.md"
+bundled = true
+description = "What the order of a solver is, how DiffEqDevTools estimates it, the strong and the weak order of a solver for stochastic equations, and how an order differs from a property and a saved result"
+
+[[wikis]]
+name = "Factsheet"
+file = "convergenceOrder/factsheet.md"
+bundled = true
+description = "Tabs, solvers and their orders, inputs, functions of DiffEqDevTools and actions at a glance"
+
+[[wikis]]
+name = "Convergence Tests in a Package"
+file = "convergenceOrder/convergence-in-a-package.md"
+bundled = true
+description = "Which packages need a convergence test, a test problem with an exact solution, the same Brownian paths at every step, step sizes, paths, the allowed gap, and a scheme written by hand"
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+key = "RN2017a"
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+key = "HNW1993a"
+
+[[references]]
+key = "KP1992a"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "Mar1955a"
+
+[[references]]
+key = "Mil1975a"
+
+[[references]]
+key = "Hig2001a"
+
+[[references]]
+key = "Ros2010a"
+
+[[models]]
+id = "ode"
+label = "ODE Solver"
+
+[[models]]
+id = "strong"
+label = "SDE Strong Order"
+
+[[models]]
+id = "weak"
+label = "SDE Weak Order"
+
+[[bullets]]
+text = "A solver of order p divides its error by about 2^p when its step is halved: the order is the slope of the error against the step on log scales, and a solver whose slope falls short of its theory has a mistake, even when its results look right"
+detail = ""
+
+[[bullets]]
+text = "ODE Solver: the error at the end of exponential growth, whose exact solution is known, for Euler, Midpoint and RK4, of orders 1, 2 and 4"
+detail = ""
+
+[[bullets]]
+text = "SDE Strong Order: the mean error along each Brownian path of geometric Brownian motion, for Euler-Maruyama, Milstein and SRIW1, of strong orders 1/2, 1 and 3/2"
+detail = ""
+
+[[bullets]]
+text = "SDE Weak Order: the error in the mean of the same model, for the same solvers, of weak orders 1, 1 and 2"
+detail = ""
+
+[[decisionRows]]
+task = "ODE Solver"
+context = "Deterministic equations"
+purpose = "When a solver or a scheme written by hand steps an ordinary differential equation forward in time"
+
+[[decisionRows]]
+task = "SDE Strong Order"
+context = "Each path matters"
+purpose = "When a result follows a particular path of the noise, as in filtering or in a sensitivity along a path"
+
+[[decisionRows]]
+task = "SDE Weak Order"
+context = "Only means matter"
+purpose = "When a result is a mean over many paths, such as a price, a moment or a probability"
+
+[[inputs]]
+id = "odeSolver"
+label = "Solver"
+kind = "select"
+default = "RK4"
+models = ["ode"]
+tooltip = "The solver of OrdinaryDiffEqLowOrderRK whose order is estimated."
+
+[[inputs.options]]
+value = "Euler"
+label = "Euler, Order 1"
+
+[[inputs.options]]
+value = "Midpoint"
+label = "Midpoint, Order 2"
+
+[[inputs.options]]
+value = "RK4"
+label = "RK4, Order 4"
+
+[[inputs]]
+id = "strongSolver"
+label = "Solver"
+kind = "select"
+default = "EM"
+models = ["strong"]
+tooltip = "The solver of StochasticDiffEq whose strong order is estimated."
+
+[[inputs.options]]
+value = "EM"
+label = "Euler-Maruyama (EM), Order 1/2"
+
+[[inputs.options]]
+value = "RKMil"
+label = "Milstein (RKMil), Order 1"
+
+[[inputs.options]]
+value = "SRIW1"
+label = "SRIW1, Order 3/2"
+
+[[inputs]]
+id = "weakSolver"
+label = "Solver"
+kind = "select"
+default = "EM"
+models = ["weak"]
+tooltip = "The solver of StochasticDiffEq whose weak order is estimated."
+
+[[inputs.options]]
+value = "EM"
+label = "Euler-Maruyama (EM), Order 1"
+
+[[inputs.options]]
+value = "RKMil"
+label = "Milstein (RKMil), Order 1"
+
+[[inputs.options]]
+value = "SRIW1"
+label = "SRIW1, Order 2"
+
+[[inputs]]
+id = "dt"
+label = "Largest Step"
+default = "0.0625"
+tooltip = "The largest step size, on the interval from 0 to 1. Each further step is half the one before."
+
+[[inputs]]
+id = "steps"
+label = "Step Sizes"
+default = "6"
+tooltip = "The number of step sizes, each half the one before: 6 from 0.0625 go down to about 0.002."
+
+[[inputs]]
+id = "paths"
+label = "Paths"
+default = "1000"
+models = ["strong"]
+tooltip = "The number of Brownian paths solved at each step size, over which the error is averaged."
+
+[[inputs]]
+id = "weakPaths"
+label = "Paths"
+default = "10000"
+models = ["weak"]
+tooltip = "The number of Brownian paths solved at each step size, over which the mean is taken. A weak error is smaller than a strong one and needs more paths."
+
+[[inputs]]
+id = "seed"
+label = "Seed"
+default = "1"
+models = ["strong", "weak"]
+tooltip = "The seed of the random number generator that draws the Brownian paths: the same seed draws the same paths again."
+
+[[inputs]]
+id = "gap"
+label = "Allowed Gap"
+default = "0.2"
+tooltip = "How far the estimated order may be from the order of the theory for the test to pass."
+
+[[codeBranches]]
+model = "ode"
+code = '''
+using OrdinaryDiffEqLowOrderRK, DiffEqDevTools, Statistics, Test
+
+# The problem: exponential growth, du/dt = a u with u(0) = 1 on [0, 1], whose exact solution is u(t) = exp(a t)
+a = 1.01
+growth(u, p, t) = a * u
+exact(u0, p, t) = u0 * exp(a * t)
+prob = ODEProblem(ODEFunction(growth; analytic = exact), 1.0, (0.0, 1.0))
+
+# The step sizes: {{steps}} of them from {{dt}}, each half the one before
+dts = {{dt}} ./ 2 .^ (0:({{steps}} - 1))
+
+# The solvers of the tab, each with the order its theory gives, and the one chosen
+solvers = Dict("Euler" => (Euler(), 1.0), "Midpoint" => (Midpoint(), 2.0), "RK4" => (RK4(), 4.0))
+alg, expected = solvers["{{odeSolver}}"]
+
+# The error at t = 1 at each step size: test_convergence solves the problem at each one and compares with the exact solution
+errors_of(solver) = test_convergence(dts, prob, solver).errors[:final]
+errors = errors_of(alg)
+
+# The order: the slope of log(error) against log(step), by least squares
+fit_order(dts, errors) = cov(log.(dts), log.(errors)) / var(log.(dts))
+order = fit_order(dts, errors)
+for k in eachindex(dts)
+    println(rpad(dts[k], 24), errors[k])
+end
+println("Estimated order ", round(order; digits = 3), ", expected ", expected)
+@test abs(order - expected) <= {{gap}}
+'''
+
+[[codeBranches]]
+model = "strong"
+code = '''
+using StochasticDiffEq, DiffEqDevTools, Random, Statistics, Logging, Test
+
+# The problem: geometric Brownian motion, dX = mu X dt + sigma X dW with X(0) = 1 on [0, 1],
+# whose exact solution on each Brownian path W is X(t) = exp((mu - sigma^2 / 2) t + sigma W(t))
+mu, sigma = 2.0, 1.0
+drift(u, p, t) = mu * u
+diffusion(u, p, t) = sigma * u
+exact(u0, p, t, W) = u0 * exp((mu - sigma^2 / 2) * t + sigma * W)
+prob = SDEProblem(SDEFunction(drift, diffusion; analytic = exact), 1.0, (0.0, 1.0))
+
+# The step sizes: {{steps}} of them from {{dt}}, each half the one before
+dts = {{dt}} ./ 2 .^ (0:({{steps}} - 1))
+
+# The solvers of the tab, each with the strong order its theory gives, and the one chosen
+solvers = Dict("EM" => (EM(), 0.5), "RKMil" => (RKMil(), 1.0), "SRIW1" => (SRIW1(), 1.5))
+alg, expected = solvers["{{strongSolver}}"]
+
+# The strong error at t = 1 at each step size: the mean over the paths of |X_N - X(1)|, with X(1) on the same path
+# The paths are solved one after another, EnsembleSerial, so that the Seed alone decides them
+paths = {{paths}}
+function errors_of(solver; trajectories = paths, seed = {{seed}})
+    Random.seed!(seed)
+    sim = with_logger(NullLogger()) do  # test_convergence logs each step size; the logger keeps the output to the results
+        test_convergence(dts, prob, solver, EnsembleSerial(); trajectories, save_everystep = false)
+    end
+    sim.errors[:final]
+end
+errors = errors_of(alg)
+
+# The order: the slope of log(error) against log(step), by least squares
+fit_order(dts, errors) = cov(log.(dts), log.(errors)) / var(log.(dts))
+order = fit_order(dts, errors)
+for k in eachindex(dts)
+    println(rpad(dts[k], 24), errors[k])
+end
+println("Estimated strong order ", round(order; digits = 3), ", expected ", expected)
+@test abs(order - expected) <= {{gap}}
+'''
+
+[[codeBranches]]
+model = "weak"
+code = '''
+using StochasticDiffEq, DiffEqDevTools, Random, Statistics, Logging, Test
+
+# The problem: geometric Brownian motion, dX = mu X dt + sigma X dW with X(0) = 1 on [0, 1],
+# whose exact solution on each Brownian path W is X(t) = exp((mu - sigma^2 / 2) t + sigma W(t))
+mu, sigma = 2.0, 1.0
+drift(u, p, t) = mu * u
+diffusion(u, p, t) = sigma * u
+exact(u0, p, t, W) = u0 * exp((mu - sigma^2 / 2) * t + sigma * W)
+prob = SDEProblem(SDEFunction(drift, diffusion; analytic = exact), 1.0, (0.0, 1.0))
+
+# The step sizes: {{steps}} of them from {{dt}}, each half the one before
+dts = {{dt}} ./ 2 .^ (0:({{steps}} - 1))
+
+# The solvers of the tab, each with the weak order its theory gives, and the one chosen
+solvers = Dict("EM" => (EM(), 1.0), "RKMil" => (RKMil(), 1.0), "SRIW1" => (SRIW1(), 2.0))
+alg, expected = solvers["{{weakSolver}}"]
+
+# The weak error at t = 1 at each step size: the mean of X_N less the mean of X(1), over the same paths
+# The paths are solved one after another, EnsembleSerial, so that the Seed alone decides them
+paths = {{weakPaths}}
+function errors_of(solver; trajectories = paths, seed = {{seed}})
+    Random.seed!(seed)
+    sim = with_logger(NullLogger()) do  # test_convergence logs each step size; the logger keeps the output to the results
+        test_convergence(dts, prob, solver, EnsembleSerial(); trajectories, save_everystep = false)
+    end
+    sim.errors[:weak_final]
+end
+errors = errors_of(alg)
+
+# The order: the slope of log(error) against log(step), by least squares
+fit_order(dts, errors) = cov(log.(dts), log.(errors)) / var(log.(dts))
+order = fit_order(dts, errors)
+for k in eachindex(dts)
+    println(rpad(dts[k], 24), errors[k])
+end
+println("Estimated weak order ", round(order; digits = 3), ", expected ", expected)
+@test abs(order - expected) <= {{gap}}
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "error-plot"
+label = "Error Against Step Size"
+desc = "The errors of the tab against the step sizes on log scales, with a dashed line of the slope of the theory through the smallest step"
+code = '''
+using Plots
+
+reference = errors[end] .* (dts ./ dts[end]) .^ expected  # a line of slope expected through the last error
+plot(dts, errors; xscale = :log10, yscale = :log10, marker = :circle, label = "error", xlabel = "step", ylabel = "error", legend = :topleft)
+plot!(dts, reference; linestyle = :dash, label = "slope $(expected)", title = "Estimated order $(round(order; digits = 2))")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "halvings"
+label = "Order at Each Halving"
+desc = "The order between each two successive step sizes, log2 of the ratio of their errors, to see where the errors stop following the theory"
+code = '''
+# Each step is half the one before, so log2 of the ratio of two successive errors is the order between them
+for k in 1:(length(dts) - 1)
+    println(rpad(dts[k], 24), " to ", rpad(dts[k + 1], 24), " order ", round(log2(errors[k] / errors[k + 1]); digits = 3))
+end
+'''
+
+[[actionGroups.actions]]
+id = "too-small"
+label = "Steps Too Small"
+desc = "RK4 at fourteen step sizes from 1/8 to 1/65536: once its error comes near the rounding of floating-point numbers, it stops falling and the estimated order collapses"
+models = ["ode"]
+code = '''
+small_dts = 0.125 ./ 2 .^ (0:13)
+small_errors = test_convergence(small_dts, prob, RK4()).errors[:final]
+for k in eachindex(small_dts)
+    println(rpad(small_dts[k], 24), small_errors[k])
+end
+println("Order over all fourteen steps: ", round(fit_order(small_dts, small_errors); digits = 3))
+println("Order over the first five:     ", round(fit_order(small_dts[1:5], small_errors[1:5]); digits = 3))
+'''
+
+[[actionGroups.actions]]
+id = "few-paths"
+label = "Too Few Paths"
+desc = "The order of the solver of the tab with a hundredth of the paths, at five seeds: with too few paths, the estimate scatters around the order of the theory"
+models = ["strong", "weak"]
+code = '''
+few = max(div(paths, 100), 10)
+for seed in 1:5
+    println("Seed ", seed, ", ", few, " paths: order ", round(fit_order(dts, errors_of(alg; trajectories = few, seed)); digits = 3), ", expected ", expected)
+end
+'''
+
+[[actionGroups.actions]]
+id = "exact-mean"
+label = "Against the Exact Mean"
+desc = "The weak error against the exact mean E[X(1)] = exp(mu), in place of the mean of X(1) on the same paths, with the Monte Carlo standard error of the mean of the paths: errors smaller than it cannot be told from noise"
+models = ["weak"]
+code = '''
+exact_mean = exp(mu)  # E[X(t)] = exp(mu t) for X(0) = 1, at t = 1
+results = map(dts) do dt
+    Random.seed!({{seed}})
+    ensemble = solve(EnsembleProblem(prob), alg, EnsembleSerial(); dt, trajectories = paths, save_everystep = false)
+    ends = [path.u[end] for path in ensemble.u]  # ensemble.u holds the solved paths
+    (abs(mean(ends) - exact_mean), std(ends) / sqrt(paths))
+end
+mean_errors = first.(results)
+println(rpad("step", 24), rpad("same paths", 26), rpad("exact mean", 26), "standard error")
+for k in eachindex(dts)
+    println(rpad(dts[k], 24), rpad(errors[k], 26), rpad(mean_errors[k], 26), last(results[k]))
+end
+println("Order against the mean on the same paths: ", round(order; digits = 3))
+println("Order against the exact mean:             ", round(fit_order(dts, mean_errors); digits = 3))
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "solvers"
+label = "All the Solvers of the Tab"
+desc = "The estimated order of each solver of the tab beside the order of its theory"
+code = '''
+for name in sort(collect(keys(solvers)); by = name -> last(solvers[name]))
+    solver, theory = solvers[name]
+    println(rpad(name, 10), "estimated ", rpad(round(fit_order(dts, errors_of(solver)); digits = 3), 8), "theory ", theory)
+end
+'''
+
+[[actionGroups.actions]]
+id = "heun"
+label = "Heun Written by Hand"
+desc = "Heun's method written by hand, and the same method with a slip, its second slope taken at the start of the step: the slip leaves results close to the right ones, but halves the order"
+models = ["ode"]
+code = '''
+heun(u, t, dt) = (k1 = growth(u, nothing, t); k2 = growth(u + dt * k1, nothing, t + dt); u + dt * (k1 + k2) / 2)
+slip(u, t, dt) = (k1 = growth(u, nothing, t); k2 = growth(u, nothing, t + dt); u + dt * (k1 + k2) / 2)
+
+# The error at t = 1 of a scheme that takes steps of size dt
+function final_error(step, dt)
+    u, t = 1.0, 0.0
+    for _ in 1:round(Int, 1 / dt)
+        u = step(u, t, dt)
+        t += dt
+    end
+    abs(u - exact(1.0, nothing, 1.0))
+end
+for (name, step) in (("Heun", heun), ("Heun with the slip", slip))
+    hand_errors = [final_error(step, dt) for dt in dts]
+    println(rpad(name, 20), "error at ", dts[1], ": ", rpad(hand_errors[1], 24), "order ", round(fit_order(dts, hand_errors); digits = 3))
+end
+'''
+
+[[actionGroups.actions]]
+id = "milstein"
+label = "Milstein Written by Hand"
+desc = "Milstein's scheme written by hand, and the same scheme without its correction term, which is Euler-Maruyama, solved on the same Brownian paths at every step"
+models = ["strong"]
+code = '''
+using StableRNGs
+
+milstein(x, dt, dW) = x + mu * x * dt + sigma * x * dW + sigma^2 * x * (dW^2 - dt) / 2
+without_correction(x, dt, dW) = x + mu * x * dt + sigma * x * dW
+
+# The strong error of a scheme at each step, on the same Brownian paths: each increment of a coarse step is the sum of those of the finest step it covers
+function strong_errors(step, dts, paths, rng)
+    finest = minimum(dts)
+    n = round(Int, 1 / finest)
+    total = zeros(length(dts))
+    for _ in 1:paths
+        dW = sqrt(finest) .* randn(rng, n)
+        exact_end = exp((mu - sigma^2 / 2) + sigma * sum(dW))  # the exact solution at t = 1 on this path
+        for (j, dt) in enumerate(dts)
+            r = round(Int, dt / finest)
+            x = 1.0
+            for k in 1:div(n, r)
+                x = step(x, dt, sum(view(dW, ((k - 1) * r + 1):(k * r))))
+            end
+            total[j] += abs(x - exact_end)
+        end
+    end
+    total ./ paths
+end
+for (name, step) in (("Milstein", milstein), ("Without the correction", without_correction))
+    hand_errors = strong_errors(step, dts, paths, StableRNG({{seed}}))
+    println(rpad(name, 24), "order ", round(fit_order(dts, hand_errors); digits = 3))
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "target"
+label = "Step for a Target Error"
+desc = "The errors of the tab follow C step^order: the step size, and the number of steps on [0, 1], that this fit gives for errors of 1e-2, 1e-4 and 1e-6"
+code = '''
+C = exp(mean(log.(errors)) - order * mean(log.(dts)))  # the constant of the least-squares fit
+for target in (1e-2, 1e-4, 1e-6)
+    step = (target / C)^(1 / order)
+    println("Error ", rpad(target, 8), "step ", rpad(round(step; sigdigits = 3), 12), ceil(Int, 1 / step), " steps")
+end
+'''

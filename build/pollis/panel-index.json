@@ -1531,6 +1531,36 @@
 			]
 		},
 		{
+			"id": "convergenceOrder",
+			"title": "Check a Convergence Order",
+			"source": "pollis",
+			"commands": [
+				{
+					"id": "pollis.correctness.convergenceOrder",
+					"menuTitles": [
+						"Check a Convergence Order..."
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "ode",
+			"decisionFirstColumn": "Order",
+			"toml": "src/vs/workbench/contrib/model/browser/webviews/convergenceOrder.toml",
+			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
+			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"wikis": [
+				"convergenceOrder/convergence-in-a-package.md",
+				"convergenceOrder/factsheet.md",
+				"convergenceOrder/overview.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"DiffEqDevTools.jl",
+				"OrdinaryDiffEqLowOrderRK.jl",
+				"StochasticDiffEq.jl"
+			]
+		},
+		{
 			"id": "copt",
 			"title": "Constrained Optimisation",
 			"source": "pollis",

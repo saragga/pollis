@@ -1697,6 +1697,11 @@ that still does, and prints it.
 pass gives 0.0 where \texttt{var} gives 5.0e-5, as subtracting two large sums loses the digits of a small
 difference. \ui{Welford's Algorithm}, in its Next Steps, checks a one-pass variance without that subtraction.
 
+\ui{Check a Convergence Order...} tests a solver of a differential equation by the rate at which its error
+falls: a solver of order $p$ divides its error by about $2^p$ when its step is halved. Its tabs estimate the
+order of an \ui{ODE Solver}, and the \ui{SDE Strong Order} and \ui{SDE Weak Order} of a stochastic one;
+\texttt{@test} passes when the estimate lies within the \ui{Allowed Gap} of the theory.
+
 \begin{note}{A pass is not a proof}
 A benchmark that passes says that Julia's results are right on its problems, and a property that passes,
 that the rule held on the inputs tried. Neither says that the code is right on every input; a failure, by
