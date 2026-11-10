@@ -161,6 +161,7 @@ function boxCode(box: CodeBox, inputs: ISpeedUpInputs): string {
 		case 'diagnoseCode':
 			if (diagnosis === 'allocations') {
 				return [
+					'Pollis.packages("BenchmarkTools")  # installs BenchmarkTools if this Julia does not have it',
 					'using BenchmarkTools',
 					`allocations = @ballocations ${benchCall(fn)} samples = 1 evals = 1`,
 					`bytes = @ballocated ${benchCall(fn)} samples = 1 evals = 1`,
@@ -177,6 +178,7 @@ function boxCode(box: CodeBox, inputs: ISpeedUpInputs): string {
 				].join('\n');
 			}
 			return [
+				'Pollis.packages("JET")  # installs JET if this Julia does not have it',
 				'using JET',
 				`@code_warntype ${call}  # the variables Julia cannot give one concrete type are in colour`,
 				`@report_opt ${call}  # each call Julia can only resolve while the code runs, and where it is`,
@@ -185,6 +187,7 @@ function boxCode(box: CodeBox, inputs: ISpeedUpInputs): string {
 			return fn === EXAMPLE_FUNCTION && faster === EXAMPLE_FASTER ? EXAMPLE_FASTER_CODE : '';
 		case 'compareCode':
 			return [
+				'Pollis.packages("BenchmarkTools")  # installs BenchmarkTools if this Julia does not have it',
 				'using BenchmarkTools',
 				`before_result = ${call};`,
 				`after_result = ${faster}(${args});`,
