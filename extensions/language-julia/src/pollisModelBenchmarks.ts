@@ -32,10 +32,15 @@ async function runScript(context: vscode.ExtensionContext, juliaExecutable: Juli
     const task = path.join(os.tmpdir(), `pollis-benchmark-${process.pid}-${Date.now()}.json`)
     await fs.promises.writeFile(task, JSON.stringify(job))
     const script = path.join(context.extensionPath, 'scripts', 'terminalserver', 'model_benchmarks.jl')
+    // The credentials Pollis keeps in Secret Storage, as a notebook kernel gets them: the Hugging Face token, by which
+    // a benchmark that asks its users to accept its terms (GPQA) is downloaded. Never written to the task's file.
+    const credentialEnv = await vscode.commands
+        .executeCommand<Record<string, string>>('pollis.credentialEnv')
+        .then(env => env ?? {}, () => ({} as Record<string, string>))
     const julia = child_process.spawn(
         juliaExecutable.command,
         [...juliaExecutable.args, '--startup-file=no', '--history-file=no', script, task],
-        { env: { ...process.env, ...getPackageEnvironment() }, stdio: ['pipe', 'pipe', 'ignore'], windowsHide: true }
+        { env: { ...process.env, ...getPackageEnvironment(), ...credentialEnv }, stdio: ['pipe', 'pipe', 'ignore'], windowsHide: true }
     )
     running.process = julia
     julia.stdin.on('error', () => {

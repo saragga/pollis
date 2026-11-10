@@ -18,10 +18,15 @@ import { IPathService } from '../../../services/path/common/pathService.js';
 import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
 import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
+import { IQuickInputService } from '../../../../platform/quickinput/common/quickInput.js';
+import { ISecretStorageService } from '../../../../platform/secrets/common/secrets.js';
+import { IWebviewService } from '../../webview/browser/webview.js';
 import { IHostService } from '../../../services/host/browser/host.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
+import { createApiKeyWiring } from '../../model/browser/handlers/model.handler.js';
+import { CREDENTIALS } from '../../model/browser/common/credentials.js';
 import { FEWEST_ROWS, rowsChoiceScript, sortHeadingsScript, storedRows, storeRows } from '../../model/browser/webviews/webviewPager.js';
 import { MODELBENCHMARKS_METADATA } from '../../model/browser/webviews/modelBenchmarks.data.js';
 import { buildWebviewHtml, spinnerSvg } from '../../model/browser/webviews/webviewScaffold.js';
@@ -61,7 +66,12 @@ interface IBenchmarkEntry {
 	readonly strata?: string;
 	readonly answer: string;
 	readonly source: string;
+	/** For a benchmark downloaded from its source when it is made ready, rather than with Pollis: its size and licence. */
+	readonly download?: string;
 }
+
+/** The Hugging Face token, saved in Secret Storage, by which a benchmark that asks its users to accept its terms (GPQA) is downloaded. */
+const HUGGING_FACE_TOKEN = { label: 'Hugging Face', noun: 'token', fields: [{ ...CREDENTIALS.huggingFace, prompt: 'Hugging Face access token' }] };
 
 function benchmarkEntries(): readonly IBenchmarkEntry[] {
 	return [
@@ -72,6 +82,23 @@ function benchmarkEntries(): readonly IBenchmarkEntry[] {
 			strata: localize('modelBenchmarks.subject', "Subject"),
 			answer: localize('modelBenchmarks.mmluProAnswer', "The letter of the option, read from \"the answer is (X)\" as MMLU-Pro's own scripts read it."),
 			source: 'https://huggingface.co/datasets/TIGER-Lab/MMLU-Pro',
+		},
+		{
+			id: 'arc_challenge',
+			name: 'ARC-Challenge',
+			measures: localize('modelBenchmarks.arcChallenge', "Grade-school science: the questions of the AI2 Reasoning Challenge that simple retrieval and word co-occurrence methods fail on, with three to five options."),
+			answer: localize('modelBenchmarks.arcChallengeAnswer', "The letter of the option, read from \"the answer is (X)\", the options lettered A to E whatever their labels in the source."),
+			source: 'https://huggingface.co/datasets/allenai/ai2_arc',
+			download: localize('modelBenchmarks.arcChallengeDownload', "Downloaded from Hugging Face, 0.2 MB; CC BY-SA 4.0"),
+		},
+		{
+			id: 'gpqa',
+			name: 'GPQA',
+			measures: localize('modelBenchmarks.gpqa', "Graduate-level questions in biology, physics and chemistry, written and checked by experts, each with four options."),
+			strata: localize('modelBenchmarks.domain', "Domain"),
+			answer: localize('modelBenchmarks.gpqaAnswer', "The letter of the option, read from \"the answer is (X)\". The right answer, first in the source, is put at a place fixed by the question."),
+			source: 'https://huggingface.co/datasets/Idavidrein/gpqa',
+			download: localize('modelBenchmarks.gpqaDownload', "Downloaded from Hugging Face with your token, once you have accepted GPQA's terms on its page there, 3.2 MB; CC BY 4.0"),
 		},
 		{
 			id: 'gsm8k',
@@ -197,7 +224,9 @@ type ModelBenchmarksMessage =
 	| { readonly command: 'stop' }
 	| { readonly command: 'showRun'; readonly id: string }
 	| { readonly command: 'deleteRun'; readonly id: string }
-	| { readonly command: 'answers'; readonly question: string };
+	| { readonly command: 'answers'; readonly question: string }
+	| { readonly command: 'setApiKey' }
+	| { readonly command: 'clearApiKey' };
 
 /** The runner of the window, made the first time the page opens, so that a run goes on when the page is closed. */
 let runner: ModelBenchmarksRunner | undefined;
@@ -225,6 +254,9 @@ async function openModelBenchmarksPage(accessor: ServicesAccessor): Promise<void
 	const notebookKernelService = accessor.get(INotebookKernelService);
 	const fileService = accessor.get(IFileService);
 	const pathService = accessor.get(IPathService);
+	const secretStorageService = accessor.get(ISecretStorageService);
+	const quickInputService = accessor.get(IQuickInputService);
+	const webviewService = accessor.get(IWebviewService);
 	const run = runner ??= accessor.get(IInstantiationService).createInstance(ModelBenchmarksRunner);
 
 	if (openPage && !openPage.isDisposed()) {
@@ -250,6 +282,7 @@ async function openModelBenchmarksPage(accessor: ServicesAccessor): Promise<void
 	const post = (message: object) => webviewInput.webview.postMessage(message);
 
 	const disposables = new DisposableStore();
+	const token = createApiKeyWiring(webviewInput.webview, HUGGING_FACE_TOKEN, secretStorageService, quickInputService, webviewService);
 	disposables.add(registerScaffoldPageHandlers(webviewInput, 'modelBenchmarks', title, MODELBENCHMARKS_METADATA.modelBenchmarks, openerService, editorService, commandService, notificationService, notebookEditorModelResolverService, notebookKernelService, fileService, pathService, storageService));
 
 	let benchmark = storageService.get(BENCHMARK_KEY, StorageScope.APPLICATION, entries[0].id);
@@ -433,6 +466,7 @@ async function openModelBenchmarksPage(accessor: ServicesAccessor): Promise<void
 	disposables.add(webviewInput.webview.onMessage(async (e: { message: ModelBenchmarksMessage }) => {
 		const message = e.message;
 		if (message.command === 'ready') {
+			await token.postStatus();
 			post({ command: 'settings', settings });
 			await postBenchmarks();
 			await postModels();
@@ -442,6 +476,10 @@ async function openModelBenchmarksPage(accessor: ServicesAccessor): Promise<void
 			post({ command: 'running', running: run.running });
 			post({ command: 'progress', progress: run.progress });
 			post({ command: 'samples', samples: run.samples });
+		} else if (message.command === 'setApiKey') {
+			await token.handleSet();
+		} else if (message.command === 'clearApiKey') {
+			await token.handleClear();
 		} else if (message.command === 'chooseBenchmark' && hasKey(message, { id: true })) {
 			benchmark = message.id;
 			storageService.store(BENCHMARK_KEY, benchmark, StorageScope.APPLICATION, StorageTarget.USER);
@@ -489,7 +527,7 @@ function pageHtml(rows: number, entries: readonly IBenchmarkEntry[]): string {
 		title: localize('modelBenchmarks.title', "Benchmark Answering Models"),
 		intro: localize('modelBenchmarks.intro', "How well do the chat models of this computer do on published benchmarks? Choose a benchmark, draw a stratified random sample of its questions, and each model chosen answers them, one after the other, alone in memory. Each answer is graded as the benchmark grades it, and each model has its score with its 95% interval, its score in each stratum, how fast it answered and the memory it took."),
 		benchmarkSection: localize('modelBenchmarks.benchmarkSection', "Benchmark"),
-		benchmarkIntro: localize('modelBenchmarks.benchmarkIntro', "The questions of each benchmark come with Pollis, in PollisBenchmarks.jl, at a fixed revision of their source. They are made ready once in {0}, with the worked examples that a prompt can show first.", '{0}'),
+		benchmarkIntro: localize('modelBenchmarks.benchmarkIntro', "The questions of each benchmark come with Pollis, in PollisBenchmarks.jl, at a fixed revision of their source, except those downloaded from it, whose licence does not let Pollis ship them or which ask their users to accept terms. They are made ready once in {0}, with the worked examples that a prompt can show first.", '{0}'),
 		benchmark: localize('modelBenchmarks.benchmark', "Benchmark"),
 		measures: localize('modelBenchmarks.measures', "What It Measures"),
 		answerRead: localize('modelBenchmarks.answerRead', "Answer Graded"),
@@ -599,7 +637,7 @@ function pageHtml(rows: number, entries: readonly IBenchmarkEntry[]): string {
 				<td>${entry.measures}</td>
 				<td class="small">${entry.answer}</td>
 				<td>${entry.strata ?? text.noStrata}</td>
-				<td class="number downloaded" data-id="${entry.id}">${text.notDownloaded}</td>
+				<td class="${entry.download ? 'small' : 'number'} downloaded" data-id="${entry.id}">${entry.download ?? text.notDownloaded}</td>
 				<td><a href="${entry.source}">${text.sourceLink}</a></td>
 			</tr>`).join('');
 	return buildWebviewHtml({
@@ -740,7 +778,7 @@ function pageHtml(rows: number, entries: readonly IBenchmarkEntry[]): string {
 	const TEXT = ${JSON.stringify(text)};
 	const ANSWER_ONLY_TOKENS = ${ANSWER_ONLY_TOKENS};
 	const SPINNER = '${spinnerSvg}';
-	const ENTRIES = ${JSON.stringify(entries.map(entry => ({ id: entry.id, name: entry.name, strata: entry.strata })))};
+	const ENTRIES = ${JSON.stringify(entries.map(entry => ({ id: entry.id, name: entry.name, strata: entry.strata, download: entry.download })))};
 	${askAnswerScript()}
 	${rowsChoiceScript()}
 	${sortHeadingsScript()}
@@ -789,7 +827,8 @@ function pageHtml(rows: number, entries: readonly IBenchmarkEntry[]): string {
 			const item = benchmarks.find(candidate => candidate.id === row.dataset.id);
 			row.querySelector('input').checked = row.dataset.id === chosenBenchmark;
 			row.classList.toggle('chosen', row.dataset.id === chosenBenchmark);
-			row.querySelector('td.downloaded').textContent = item && item.info ? new Date(item.info.downloaded).toLocaleDateString() : TEXT.notDownloaded;
+			const entry = entryOf(row.dataset.id);
+			row.querySelector('td.downloaded').textContent = item && item.info ? new Date(item.info.downloaded).toLocaleDateString() : (entry && entry.download) || TEXT.notDownloaded;
 		}
 		const entry = entryOf(chosenBenchmark);
 		const item = current();
