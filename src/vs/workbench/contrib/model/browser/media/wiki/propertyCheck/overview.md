@@ -1,6 +1,6 @@
 # Check a Property: Overview
 
-What a property is, how Supposition.jl tries one on the inputs it generates and shrinks the input that breaks it, and what the four tabs of Check a Property check.
+What a property is, how Supposition.jl tries one on the inputs it generates and shrinks the input that breaks it, and what the three tabs of Check a Property check.
 
 ## What Is Property-Based Testing?
 
@@ -10,16 +10,15 @@ A test written by hand checks a function on a few inputs chosen by its author, e
 
 Supposition draws each input from a generator, such as `Data.Floats{Float64}()` for numbers or `Data.Vectors` for vectors of them, and records the random choices that made it. When an input breaks the property, Supposition shrinks it: it searches for a smaller input, made from simpler choices, that still breaks the property, and reports the smallest one it finds. [MacIver, Hatfield-Dodds and many other contributors (2019)](#ref-MH...2019a) describe the single representation of test cases on which Hypothesis builds its test-case reduction, which works with no intervention from the user, and Supposition's documentation describes its own generation and shrinking as based on the sequence of choices. A shrunk counterexample is usually easier to read than the input that first failed: a short vector of simple numbers in place of a long vector of arbitrary ones.
 
-## What Do the Four Tabs of Check a Property Check?
+## What Do the Three Tabs of Check a Property Check?
 
 | Tab | Kind of property | The example in the tab |
 |---|---|---|
 | **Invariant** | A rule true of every result | The variance is not negative and the median lies between the smallest and the largest value |
 | **Round Trip** | A function followed by its inverse gives back the input | `quantile(Normal(), cdf(Normal(), x))` gives back `x` |
-| **Simple Version** | A fast function agrees with a simple one taken as right | A variance computed in one pass agrees with `var` of Statistics |
-| **Worst Case** | An error stays within a tolerance, searched with `target!` | The relative error of the one-pass variance |
+| **Simple Version** | A fast function agrees with a simple one taken as right | A variance computed in one pass agrees with `var` of Statistics, on values near 1 000 000 |
 
-Each tab draws its inputs with a generator called `gen` and keeps the result of `@check` in `sr`, which the Next Steps use.
+Each tab draws its inputs with a generator called `gen` and keeps the result of `@check` in `sr`, which the Next Steps use. The one-pass variance of **Simple Version** subtracts two large sums to get a small difference, which loses digits when the values are far from zero and close together, as the levels of a price or of a series are: the tab draws such values, and **Welford's Algorithm**, in the Next Steps, checks a one-pass variance that avoids the subtraction.
 
 ## How Does a Property Differ from a Published Benchmark?
 
@@ -27,7 +26,7 @@ Published Benchmarks, the other entry of Compose > Correctness Tests, checks Jul
 
 ## How Does Check a Property Report a Failure?
 
-When an input breaks the property, `@check` prints `Found counterexample`, the name of the property and the shrunk input, each argument with its name and type. Values recorded with `event!` while the case ran are printed below the input, under their labels. The **Seed** of the panel fixes the random number generator passed to `@check` as `rng`, so the same seed draws the same inputs again. Supposition can also record the counterexamples it finds in a database, set by the `db` option of `@check`, and replay them when the property is checked again, so that a failure found once is not lost when the inputs change.
+When an input breaks the property, `@check` prints `Found counterexample`, the name of the property and the shrunk input, each argument with its name and type. Values recorded with `event!` while the case ran are printed below the input, under their labels. The **Seed** of the panel fixes the random number generator passed to `@check` as `rng`, so the same seed draws the same inputs again. Supposition can also record the counterexamples it finds in a database, set by the `db` option of `@check`, and replay them when the property is checked again; the panel passes `db=false`, so that the seed alone decides the inputs.
 
 ## References
 

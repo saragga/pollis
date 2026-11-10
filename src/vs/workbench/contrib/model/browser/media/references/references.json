@@ -54574,7 +54574,7 @@
 		{
 			"id": "propertyCheck",
 			"title": "Check a Property",
-			"description": "Invariant · Round Trip · Simple Version · Worst Case",
+			"description": "Invariant · Round Trip · Simple Version",
 			"keys": [
 				"CH2000a",
 				"MH...2019a",

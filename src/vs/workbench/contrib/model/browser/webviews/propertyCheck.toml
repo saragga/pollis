@@ -32,7 +32,7 @@ description = "Tabs, inputs, generators, functions, options of @check and action
 name = "Choosing Properties to Check"
 file = "propertyCheck/choosing-properties.md"
 bundled = true
-description = "Properties a statistical function can have, tolerances for floating-point results, limits on the inputs, targeted search, and what a passing property cannot say"
+description = "Properties a statistical function can have, tolerances for floating-point results, limits on the inputs, a fixed seed, targeted search, and what a passing property cannot say"
 
 [[references]]
 separator = true
@@ -59,10 +59,6 @@ label = "Round Trip"
 id = "oracle"
 label = "Simple Version"
 
-[[models]]
-id = "worst"
-label = "Worst Case"
-
 [[bullets]]
 text = "Supposition tries a property, a rule that must hold for every input, on inputs it generates; when an input breaks the rule, it shrinks it to the smallest input that still breaks it"
 detail = ""
@@ -76,11 +72,7 @@ text = "Round Trip: a function followed by its inverse gives back the input, her
 detail = ""
 
 [[bullets]]
-text = "Simple Version: a function written for speed checked against a simple version taken as right, here a variance computed in one pass against var"
-detail = ""
-
-[[bullets]]
-text = "Worst Case: target! steers the inputs toward a larger error, here the relative error of the one-pass variance"
+text = "Simple Version: a function written for speed checked against a simple version taken as right, here a variance computed in one pass against var, on values near 1 000 000"
 detail = ""
 
 [[decisionRows]]
@@ -98,11 +90,6 @@ task = "Simple Version"
 context = "A trusted reference"
 purpose = "When a fast or clever function can be checked against a simple version whose results are trusted"
 
-[[decisionRows]]
-task = "Worst Case"
-context = "Size of an error"
-purpose = "When a function is approximate and the question is how large its error can be, found by a search that the error steers"
-
 [[inputs]]
 id = "examples"
 label = "Examples"
@@ -112,7 +99,7 @@ default = "10000"
 [[inputs]]
 id = "seed"
 label = "Seed"
-tooltip = "The seed of the random number generator that draws the inputs: the same seed draws the same inputs again."
+tooltip = "The seed of the random number generator that draws the inputs: the same seed draws the same inputs again, as the panel keeps no record of earlier counterexamples (db=false)."
 default = "1"
 
 [[inputs]]
@@ -120,7 +107,7 @@ id = "size"
 label = "Longest Vector"
 tooltip = "The largest number of values in a generated vector; the smallest is 2, as the variance of one value is not defined."
 default = "50"
-models = ["invariant", "oracle", "worst"]
+models = ["invariant", "oracle"]
 
 [[inputs]]
 id = "atol"
@@ -134,7 +121,7 @@ id = "tol"
 label = "Relative Tolerance"
 tooltip = "How far the one-pass variance may be from var, as a share of var."
 default = "1e-8"
-models = ["oracle", "worst"]
+models = ["oracle"]
 
 [[codeBranches]]
 model = "invariant"
@@ -145,7 +132,7 @@ using Supposition, Statistics, Random
 gen = Data.Vectors(Data.Floats{Float64}(; infs = false, nans = false, minimum = -1.0e6, maximum = 1.0e6); min_size = 2, max_size = {{size}})
 
 # The property: for every vector, the variance is not negative and the median lies between the smallest and the largest value
-sr = @check rng=Xoshiro({{seed}}) max_examples={{examples}} function spread_and_centre(x = gen)
+sr = @check db=false rng=Xoshiro({{seed}}) max_examples={{examples}} function spread_and_centre(x = gen)
     var(x) >= 0 && minimum(x) <= median(x) <= maximum(x)
 end
 # On a failure, @check prints the smallest vector it found that breaks the property
@@ -160,7 +147,7 @@ using Supposition, Distributions, Random
 gen = Data.Floats{Float64}(; infs = false, nans = false, minimum = -5.0, maximum = 5.0)
 
 # The property: the quantile function undoes the distribution function, so cdf and then quantile give back x, within an absolute tolerance
-sr = @check rng=Xoshiro({{seed}}) max_examples={{examples}} function cdf_then_quantile(x = gen)
+sr = @check db=false rng=Xoshiro({{seed}}) max_examples={{examples}} function cdf_then_quantile(x = gen)
     back = quantile(Normal(), cdf(Normal(), x))
     isapprox(back, x; atol = {{atol}})
 end
@@ -179,40 +166,14 @@ function one_pass_var(x)
     (sum(abs2, x) - total^2 / n) / (n - 1)
 end
 
-# The inputs: vectors of 2 to {{size}} numbers between -1 000 000 and 1 000 000, never NaN or infinite
-gen = Data.Vectors(Data.Floats{Float64}(; infs = false, nans = false, minimum = -1.0e6, maximum = 1.0e6); min_size = 2, max_size = {{size}})
+# The inputs: vectors of 2 to {{size}} values near 1 000 000, from 999 000 to 1 001 000 in steps of 0.01, as the levels of a price or of a series
+gen = Data.Vectors(map(k -> 1.0e6 + k / 100, Data.Integers(-100_000, 100_000)); min_size = 2, max_size = {{size}})
 
 # The property: the one-pass variance agrees with var of Statistics, the simple version taken as right
-sr = @check rng=Xoshiro({{seed}}) max_examples={{examples}} function agrees_with_var(x = gen)
+sr = @check db=false rng=Xoshiro({{seed}}) max_examples={{examples}} function agrees_with_var(x = gen)
     isapprox(one_pass_var(x), var(x); rtol = {{tol}})
 end
 # On a failure, @check prints the smallest vector it found on which the two disagree
-'''
-
-[[codeBranches]]
-model = "worst"
-code = '''
-using Supposition, Statistics, Random
-
-# The function checked: the variance in one pass over the data, from the sum and the sum of squares
-function one_pass_var(x)
-    n = length(x)
-    total = sum(x)
-    (sum(abs2, x) - total^2 / n) / (n - 1)
-end
-
-# The inputs: vectors of 2 to {{size}} numbers between -1 000 000 and 1 000 000, never NaN or infinite
-gen = Data.Vectors(Data.Floats{Float64}(; infs = false, nans = false, minimum = -1.0e6, maximum = 1.0e6); min_size = 2, max_size = {{size}})
-
-# The property: the relative error of the one-pass variance stays within the tolerance; target! steers the next inputs toward a larger error
-sr = @check rng=Xoshiro({{seed}}) max_examples={{examples}} function largest_error(x = gen)
-    exact = var(x)
-    assume!(exact > 0)  # a vector of equal values has no relative error: it is left out, not counted against the property
-    err = abs(one_pass_var(x) - exact) / exact
-    target!(err)
-    err <= {{tol}}
-end
-# On a failure, @check prints the smallest vector it found whose error is above the tolerance
 '''
 
 [[actionGroups]]
@@ -235,7 +196,7 @@ histogram(values, bins = 60, legend = false, xlabel = "value", ylabel = "count",
 id = "lengths"
 label = "Lengths of the Vectors"
 desc = "A histogram of the lengths of 1 000 vectors drawn by the generator, from 2 to the Longest Vector"
-models = ["invariant", "oracle", "worst"]
+models = ["invariant", "oracle"]
 code = '''
 using Supposition, Plots
 
@@ -279,11 +240,11 @@ end
 id = "events"
 label = "Both Values on a Failure"
 desc = "The same property with event!, which prints the one-pass variance and var beside the input that breaks it"
-models = ["oracle", "worst"]
+models = ["oracle"]
 code = '''
 using Supposition, Statistics, Random
 
-@check rng=Xoshiro({{seed}}) max_examples={{examples}} function agrees_with_var_events(x = gen)
+@check db=false rng=Xoshiro({{seed}}) max_examples={{examples}} function agrees_with_var_events(x = gen)
     fast, simple = one_pass_var(x), var(x)
     event!("one_pass_var", fast)  # recorded for each case and printed with the counterexample
     event!("var", simple)
@@ -299,7 +260,7 @@ label = "Compare"
 id = "welford"
 label = "Welford's Algorithm"
 desc = "The same property for Welford's one-pass algorithm, which updates a running mean, and the three variances of three values close together and far from zero"
-models = ["oracle", "worst"]
+models = ["oracle"]
 code = '''
 using Supposition, Statistics, Random
 
@@ -314,7 +275,7 @@ function welford_var(x)
     squares / (length(x) - 1)
 end
 
-@check rng=Xoshiro({{seed}}) max_examples={{examples}} function welford_agrees_with_var(x = gen)
+@check db=false rng=Xoshiro({{seed}}) max_examples={{examples}} function welford_agrees_with_var(x = gen)
     isapprox(welford_var(x), var(x); rtol = {{tol}})
 end
 
@@ -324,23 +285,6 @@ println("welford_var:  ", welford_var(x))
 println("var:          ", var(x))
 '''
 
-[[actionGroups.actions]]
-id = "target"
-label = "With and Without target!"
-desc = "The same search without target!, and the number of cases each search ran before it stopped, at a counterexample or at the Examples"
-models = ["worst"]
-code = '''
-using Supposition, Statistics, Random
-
-untargeted = @check rng=Xoshiro({{seed}}) max_examples={{examples}} function largest_error_untargeted(x = gen)
-    exact = var(x)
-    assume!(exact > 0)
-    abs(one_pass_var(x) - exact) / exact <= {{tol}}
-end
-println("With target!:    ", Supposition.num_testcases(sr), " cases")
-println("Without target!: ", Supposition.num_testcases(untargeted), " cases")
-'''
-
 [[actionGroups]]
 id = "interpret"
 label = "Interpret"
@@ -348,9 +292,9 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "cases"
 label = "Cases Tried"
-desc = "The number of cases the @check of the tab ran, against the Examples it was allowed: a property that passes has held on that many inputs, not on every input"
+desc = "The number of cases the @check of the tab ran: a property that passes has held on that many inputs, not on every input; on a failure, the count can exceed the Examples"
 code = '''
 using Supposition
 
-println(Supposition.num_testcases(sr), " cases run by @check, of at most {{examples}}")
+println(Supposition.num_testcases(sr), " cases run by @check, with Examples set to {{examples}}")
 '''
