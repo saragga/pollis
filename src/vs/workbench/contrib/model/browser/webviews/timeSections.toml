@@ -1,0 +1,258 @@
+# Time Sections of Code Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/timeSections.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Time Sections of Code"
+viewType = "pollis.timeSections"
+defaultModel = "sections"
+decisionFirstColumn = "Way to Mark"
+
+[[packages]]
+name = "TimerOutputs.jl"
+github = "https://github.com/KristofferC/TimerOutputs.jl"
+
+[requires]
+packages = ["Tables.jl", "Plots.jl", "Chairmarks.jl"]
+
+[[wikis]]
+name = "Overview"
+file = "timeSections/overview.md"
+bundled = true
+description = "What TimerOutputs records for each section, the three ways of marking sections, and how to read its table"
+
+[[wikis]]
+name = "Factsheet"
+file = "timeSections/factsheet.md"
+bundled = true
+description = "Tabs, inputs, macros, functions, printing options and actions at a glance"
+
+[[wikis]]
+name = "Sections, Profiles and Benchmarks"
+file = "timeSections/sections-profiles-benchmarks.md"
+bundled = true
+description = "When to time sections, when to profile and when to benchmark, the cost of a timed section, and the first call"
+
+[[models]]
+id = "sections"
+label = "Labelled Sections"
+
+[[models]]
+id = "all"
+label = "Every Statement"
+
+[[models]]
+id = "tests"
+label = "Test Sets"
+
+[[bullets]]
+text = "TimerOutputs times the parts of a script that you mark, each with a label, and prints one table: the calls, the time and the allocations of each part, its share of the total and its average"
+detail = ""
+
+[[bullets]]
+text = "Labelled Sections: @timeit with a timer and a label around any code, sections inside sections, and the same label in a loop adding up its calls"
+detail = ""
+
+[[bullets]]
+text = "Every Statement: @timeit_all before a function times each of its statements, each a row named by its line"
+detail = ""
+
+[[bullets]]
+text = "Test Sets: @timed_testset in place of @testset times each test set, to see where the time of the tests goes"
+detail = ""
+
+[[decisionRows]]
+task = "Labelled Sections"
+context = "Parts you choose"
+purpose = "The steps of a script or a function, marked by hand with @timeit and a label, with sections inside sections"
+
+[[decisionRows]]
+task = "Every Statement"
+context = "Line by line"
+purpose = "Each statement of one function, marked by a single @timeit_all, to find the line where its time goes"
+
+[[decisionRows]]
+task = "Test Sets"
+context = "Tests of a package"
+purpose = "Each test set of a test suite, with @timed_testset, to find the slow tests"
+
+[[inputs]]
+id = "n"
+label = "Values"
+tooltip = "The number of simulated values: the rows of the regression in Labelled Sections, the length of the series in Every Statement and the values tested in Test Sets."
+default = "1000"
+
+[[inputs]]
+id = "reps"
+label = "Repetitions"
+tooltip = "How many times the analysis runs: the calls of each section add up, and the table gives their total and their average."
+default = "20"
+models = ["sections"]
+
+[[codeBranches]]
+model = "sections"
+code = '''
+using TimerOutputs, LinearAlgebra, Random
+
+# An analysis in three sections, the second with two sections inside it: each @timeit takes the timer, a label and the code
+function analysis!(to, n)
+    X, y = @timeit to "simulate" begin
+        X = [ones(n) randn(n, 3)]
+        X, X * [1.0, 0.5, -0.3, 0.2] .+ randn(n)
+    end
+    beta = @timeit to "fit" begin
+        XtX, Xty = @timeit to "cross products" (transpose(X) * X, transpose(X) * y)
+        @timeit to "solve" XtX \ Xty
+    end
+    sigma = @timeit to "summarise" begin
+        residuals = y .- X * beta
+        sqrt(sum(abs2, residuals) / (n - size(X, 2)))
+    end
+    return beta, sigma
+end
+
+Random.seed!(1)
+analysis!(TimerOutput(), {{n}})  # a first run on a timer of its own, so that compiling is left out of the table
+to = TimerOutput()
+for rep in 1:{{reps}}
+    analysis!(to, {{n}})  # the same labels on each run: their calls add up
+end
+print_timer(to)  # calls, time and allocations of each section, with the share of the total and the average
+'''
+
+[[codeBranches]]
+model = "all"
+code = '''
+using TimerOutputs, Random
+
+to = TimerOutput()
+
+# @timeit_all times the whole function and every statement in it, loops included, each a row named by its line
+@timeit_all to function moving_average(x, window)
+    n = length(x) - window + 1
+    averages = zeros(n)
+    for i in 1:n
+        averages[i] = sum(x[i:i + window - 1]) / window
+    end
+    averages
+end
+
+Random.seed!(1)
+x = randn({{n}})
+moving_average(x, 20)  # a first call, which compiles the function
+reset_timer!(to)  # clears the timings of the first call
+moving_average(x, 20)
+print_timer(to)  # each statement with its calls, time and allocations; a statement in the loop is called once for each element
+'''
+
+[[codeBranches]]
+model = "tests"
+code = '''
+using TimerOutputs, Test, Statistics, Random
+
+to = TimerOutput()
+Random.seed!(1)
+x = randn({{n}})
+
+# @timed_testset in place of @testset runs the tests as before and adds each test set to the timer as a section
+@timed_testset to "statistics" begin
+    @timed_testset to "mean" begin
+        @test isapprox(mean(x), sum(x) / length(x))
+    end
+    @timed_testset to "variance" begin
+        @test isapprox(var(x), sum(abs2, x .- mean(x)) / (length(x) - 1))
+    end
+    @timed_testset to "sort" begin
+        sorted = sort(x)
+        @test issorted(sorted)
+        @test minimum(x) == first(sorted)
+    end
+end
+print_timer(to)  # each test set with its time and allocations, compiling included as it is when the tests run
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "bars"
+label = "Bar Chart of Sections"
+desc = "The time of each section, in the order of the table, a section inside another named by its path"
+code = '''
+using Plots, Tables
+
+rows = Tables.rows(to)  # a row for each section, with its path, calls, time in nanoseconds and bytes allocated
+labels = [r.path for r in rows]
+times = [r.time_ns / 1e6 for r in rows]  # milliseconds
+bar(labels, times, orientation = :horizontal, yflip = true, legend = false, xlabel = "milliseconds", title = "Time in each section", size = (750, 140 + 26 * length(rows)))
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "untimed"
+label = "What Was Not Timed"
+desc = "The table with a row for the time and allocations outside every section, and under each section a row for the part of it outside its own sections"
+code = '''
+print_timer(to; complement = true)  # the rows ~untimed~ and ~label~ are the parts no section covers
+'''
+
+[[actionGroups.actions]]
+id = "spread"
+label = "Fastest and Slowest Calls"
+desc = "For each section: the fastest and the slowest call, the standard deviation of its calls and the time in garbage collection"
+code = '''
+print_timer(to; columns = [:ncalls, :time, :time_avg, :time_min, :time_max, :time_std, :gc_time, :allocs])
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "overhead"
+label = "With and Without the Timer"
+desc = "The time of the whole analysis with a TimerOutput and with a NoTimerOutput, whose sections compile away: the cost of timing the sections"
+models = ["sections"]
+code = '''
+using Chairmarks
+
+with_timer = @b analysis!(TimerOutput(), {{n}})
+without_timer = @b analysis!(NoTimerOutput(), {{n}})
+println("With TimerOutput:    ", round(with_timer.time * 1e6, sigdigits = 3), " microseconds")
+println("With NoTimerOutput:  ", round(without_timer.time * 1e6, sigdigits = 3), " microseconds")
+println("The timer adds ", round(100 * (with_timer.time / without_timer.time - 1), digits = 1), "% to the analysis")
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "shares"
+label = "Shares of Time and Allocations"
+desc = "For each top-level section, its share of the time beside its share of the allocations, which need not point to the same section"
+code = '''
+using Tables
+
+rows = [r for r in Tables.rows(to) if r.depth == 0]
+total_time = sum(r.time_ns for r in rows)
+total_bytes = max(sum(r.allocated_bytes for r in rows), 1)
+for r in rows
+    time_share = round(100 * r.time_ns / total_time, digits = 1)
+    bytes_share = round(100 * r.allocated_bytes / total_bytes, digits = 1)
+    println(rpad(r.section, 32), lpad(time_share, 6), "% of the time  ", lpad(bytes_share, 6), "% of the allocations")
+end
+'''
+
+[[actionGroups.actions]]
+id = "flatten"
+label = "Same Labels Added Together"
+desc = "The table with the sections of the same label added together wherever they are nested, to see the total of a step that appears in several places"
+code = '''
+print_timer(TimerOutputs.flatten(to))
+'''

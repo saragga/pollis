@@ -8203,6 +8203,34 @@
 			]
 		},
 		{
+			"id": "timeSections",
+			"title": "Time Sections of Code",
+			"source": "pollis",
+			"commands": [
+				{
+					"id": "pollis.profiling.timeSections",
+					"menuTitles": [
+						"Time Sections of Code..."
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "sections",
+			"decisionFirstColumn": "Way to Mark",
+			"toml": "src/vs/workbench/contrib/model/browser/webviews/timeSections.toml",
+			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
+			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"wikis": [
+				"timeSections/factsheet.md",
+				"timeSections/overview.md",
+				"timeSections/sections-profiles-benchmarks.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"TimerOutputs.jl"
+			]
+		},
+		{
 			"id": "trad",
 			"title": "Trading Agents",
 			"source": "pollis",

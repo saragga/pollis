@@ -55,6 +55,7 @@ import { TYPESTABILITY_PANEL } from '../../model/browser/commands/typeStability.
 import { LOADTIME_PANEL } from '../../model/browser/commands/loadTime.command.js';
 import { SPEEDRACE_PANEL } from '../../model/browser/commands/speedRace.command.js';
 import { PKGVERSIONS_PANEL } from '../../model/browser/commands/pkgVersions.command.js';
+import { TIMESECTIONS_PANEL } from '../../model/browser/commands/timeSections.command.js';
 import { PROFILETIME_PANEL } from '../../model/browser/commands/profileTime.command.js';
 
 // The Core Mathematics, Finance and Economics Toolboxes come from their extensions (toolboxes/pollis-toolbox-*, not built in:
@@ -547,6 +548,7 @@ CommandsRegistry.registerCommand('pollis.profiling.typeStability', (accessor: Se
 CommandsRegistry.registerCommand('pollis.profiling.loadTime', (accessor: ServicesAccessor) => openScaffoldWebview(accessor, LOADTIME_PANEL));
 CommandsRegistry.registerCommand('pollis.profiling.speedRace', (accessor: ServicesAccessor) => openScaffoldWebview(accessor, SPEEDRACE_PANEL));
 CommandsRegistry.registerCommand('pollis.profiling.pkgVersions', (accessor: ServicesAccessor) => openScaffoldWebview(accessor, PKGVERSIONS_PANEL));
+CommandsRegistry.registerCommand('pollis.profiling.timeSections', (accessor: ServicesAccessor) => openScaffoldWebview(accessor, TIMESECTIONS_PANEL));
 
 MenuRegistry.appendMenuItem(ComparisonsMenu, {
 	group: '1_own',
@@ -556,38 +558,44 @@ MenuRegistry.appendMenuItem(ComparisonsMenu, {
 
 MenuRegistry.appendMenuItem(ComparisonsMenu, {
 	group: '1_own',
-	command: { id: 'pollis.profiling.profileTime', title: localize('profiling.profileTime', "Find Where the Time Goes...") },
+	command: { id: 'pollis.profiling.timeSections', title: localize('profiling.timeSections', "Time Sections of Code...") },
 	order: 2,
 });
 
 MenuRegistry.appendMenuItem(ComparisonsMenu, {
 	group: '1_own',
-	command: { id: 'pollis.profiling.findAllocs', title: localize('profiling.findAllocs', "Find Allocations...") },
+	command: { id: 'pollis.profiling.profileTime', title: localize('profiling.profileTime', "Find Where the Time Goes...") },
 	order: 3,
 });
 
 MenuRegistry.appendMenuItem(ComparisonsMenu, {
 	group: '1_own',
-	command: { id: 'pollis.profiling.typeStability', title: localize('profiling.typeStability', "Check Type Stability...") },
+	command: { id: 'pollis.profiling.findAllocs', title: localize('profiling.findAllocs', "Find Allocations...") },
 	order: 4,
 });
 
 MenuRegistry.appendMenuItem(ComparisonsMenu, {
 	group: '1_own',
-	command: { id: SPEED_UP_COMMAND_ID, title: localize('profiling.speedUp', "Speed Up a Function...") },
+	command: { id: 'pollis.profiling.typeStability', title: localize('profiling.typeStability', "Check Type Stability...") },
 	order: 5,
 });
 
 MenuRegistry.appendMenuItem(ComparisonsMenu, {
 	group: '1_own',
-	command: { id: 'pollis.profiling.loadTime', title: localize('profiling.loadTime', "Load and Compile Time...") },
+	command: { id: SPEED_UP_COMMAND_ID, title: localize('profiling.speedUp', "Speed Up a Function...") },
 	order: 6,
 });
 
 MenuRegistry.appendMenuItem(ComparisonsMenu, {
 	group: '1_own',
-	command: { id: 'pollis.profiling.pkgVersions', title: localize('profiling.pkgVersions', "Compare Package Versions...") },
+	command: { id: 'pollis.profiling.loadTime', title: localize('profiling.loadTime', "Load and Compile Time...") },
 	order: 7,
+});
+
+MenuRegistry.appendMenuItem(ComparisonsMenu, {
+	group: '1_own',
+	command: { id: 'pollis.profiling.pkgVersions', title: localize('profiling.pkgVersions', "Compare Package Versions...") },
+	order: 8,
 });
 
 MenuRegistry.appendMenuItem(ComparisonsMenu, {
