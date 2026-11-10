@@ -179,6 +179,7 @@ Questions and problems: \ui{Help > Report Issue}, or \contactemail.
 \contentsentry{Media Coverage}\\
 \contentsentry{Alerts}\\
 \contentsentry{Event Studies}\\
+\contentsentry{Profiling and Correctness Tests}\\
 \contentsentry{Collaboration}\\
 \contentsentry{Orchestration}\\
 \contentsentry{Literature Radar}\\
@@ -1610,6 +1611,101 @@ compare with, and the estimators leave them out.
 \end{trouble}
 
 \seealso{Alerts, \pg{Alerts}.\quad Media Coverage, \pg{Media Coverage}.\quad Replication, Methods and Workflows, \pg{Replication, Methods and Workflows}.}
+
+% =====================================================================
+% PROFILING AND CORRECTNESS TESTS
+% =====================================================================
+\topic{Profiling and Correctness Tests}{Compose > Profiling · Compose > Correctness Tests}{Finding out how fast your Julia code is and why, and checking that its results are right.}
+
+Two menus of \ui{Compose} look at code rather than data. \ui{Profiling} measures how long code takes and
+finds the cause, in the order of the work: measure, find the cause and fix it, then compare versions of a
+package and languages. Each entry is a panel, whose tabs are the ways of doing the task (Inside a Panel,
+\pg{Inside a Panel}).
+
+\newcommand{\profilingtable}[1]{\begin{center}\small\renewcommand{\arraystretch}{1.2}%
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.27\linewidth}>{\raggedright\arraybackslash}p{0.25\linewidth}>{\raggedright\arraybackslash}X@{}}
+\textbf{Entry} & \textbf{Tabs} & \textbf{What it tells you}\\
+#1
+\end{tabularx}\end{center}}
+
+\subhead{Measure}
+\profilingtable{%
+\ui{Time a Function...} & Chairmarks, BenchmarkTools, First Call & The time and the allocations of a call, from many samples, and the first call, compiling included\\
+\ui{Find Where the Time Goes...} & Flame Graph, Line by Line, Text Report & The functions and the lines the time goes to, from Julia's profiler\\
+\ui{Time Sections of Code...} & Labelled Sections, Every Statement, Test Sets & The calls, the time and the allocations of each part of a script you mark, in one table\\}
+
+\subhead{Diagnose and Fix}
+\profilingtable{%
+\ui{Find Allocations...} & By Line, By Type, Possible Allocations & Where the code takes memory on the heap, and what a function could allocate\\
+\ui{Check Type Stability...} & Inferred Types, Runtime Dispatches, Stability Check & Whether Julia can infer one concrete type for each result and variable\\
+\ui{Speed Up a Function...} & The Function, Diagnose, Change, Compare & A function from slow to fast in four steps, the two versions checked to give the same result\\}
+In the \ui{Change} step of Speed Up a Function, \ui{Speed Up with Agent} hands the change to your coding agent,
+which explains its plan before it writes the faster version (Orchestration, \pg{Orchestration}).
+
+\subhead{Packages}
+\profilingtable{%
+\ui{Compare Package Versions...} & Releases, Local Clone & The same code timed with several versions of a package, each in a new Julia\\
+\ui{Load and Compile Time...} & Load Time, First Use, Inference Time & The wait before the first result: loading the packages, compiling and inference\\}
+
+\subhead{Languages}
+\profilingtable{%
+\ui{Run a Speed Race...} & Loop, Vectorised, Sort & The same computation in Julia, Python and R, on the same data, each timed in its own language\\
+\ui{Add a Language...} & C, Fortran, Rust & The race in a compiled language, built with the compiler on your computer and called from Julia\\}
+Add a Language joins the race of Run a Speed Race when that race ran in the session on the same values;
+otherwise it races Julia alone. Fortran, with no sort in its standard library, runs Loop and Vectorised.
+
+\begin{caution}{A time belongs to its computer}
+A time depends on the computer, on what else it runs, and on the versions of Julia and the packages. Compare
+times taken on the same computer, in the same session, and read a speed race as a result about that race,
+not about the languages.
+\end{caution}
+
+\newpage
+Fast code is worth having only when its results are right. \ui{Correctness Tests} checks them in two ways:
+against values that someone else has certified, and against rules the results must obey.
+
+\subhead{Against Known Values}
+\ui{Compose > Correctness Tests > Published Benchmarks} lists problems whose results have been certified
+by their publisher. Click a name to open your own copy of its notebook, made in
+\texttt{\textasciitilde/.pollis/correctness} the first time; the notebook checks Julia's results against the
+certified ones.
+\begin{itemize}
+  \item \ui{NIST StRD}, the Statistical Reference Datasets of the National Institute of Standards and
+    Technology: univariate summary statistics, one-way analysis of variance, linear regression and
+    nonlinear regression.
+  \item \ui{GARCH(1,1)}: the benchmark of Fiorentini, Calzolari and Panattoni.
+\end{itemize}
+
+\subhead{Against Properties}
+\ui{Check a Property...} tries a \emph{property}, a rule that must hold for every input, on inputs that the
+Supposition package generates. When an input breaks the rule, Supposition shrinks it to the smallest input
+that still does, and prints it.
+\begin{enumerate}[label=\arabic*.]
+  \item Choose a tab: \ui{Invariant}, a rule true of every result, such as a variance that is never
+    negative; \ui{Round Trip}, a function followed by its inverse giving back the input; or \ui{Simple
+    Version}, a fast function against a simple one taken as right.
+  \item Set \ui{Examples}, the most inputs tried, and \ui{Seed}: the same seed tries the same inputs again.
+  \item Run the code. \emph{Test passed} means that no input tried broke the rule; \emph{Found
+    counterexample} gives the input that did.
+\end{enumerate}
+\ui{Simple Version} ends on a counterexample: for \texttt{[999000.0, 999000.01]}, a variance computed in one
+pass gives 0.0 where \texttt{var} gives 5.0e-5, as subtracting two large sums loses the digits of a small
+difference. \ui{Welford's Algorithm}, in its Next Steps, checks a one-pass variance without that subtraction.
+
+\begin{note}{A pass is not a proof}
+A benchmark that passes says that Julia's results are right on its problems, and a property that passes,
+that the rule held on the inputs tried. Neither says that the code is right on every input; a failure, by
+contrast, gives an input you can run again.
+\end{note}
+
+\begin{trouble}
+\textbf{\emph{No GCC found}} & In Add a Language, install GCC: on macOS with Homebrew (\texttt{brew install gcc}), which also installs gfortran. \\
+\textbf{\emph{No rustc found}} & Install Rust with rustup, from rustup.rs. \\
+\textbf{\emph{\ldots\ the two programs do not compute the same thing}} & The language's result differs from Julia's, and the race is not timed until they agree. \\
+\textbf{\emph{Set Local Clone to the folder of a clone}} & In Compare Package Versions, give the folder of a clone of the package, such as one made by \texttt{Pkg.develop} in \texttt{\textasciitilde/.julia/dev}. \\
+\end{trouble}
+
+\seealso{Inside a Panel, \pg{Inside a Panel}.\quad Orchestration, \pg{Orchestration}.\quad Replication, \pg{Replication}.}
 
 % =====================================================================
 % PAGES 32–33 — COLLABORATION
