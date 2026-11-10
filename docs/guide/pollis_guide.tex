@@ -1675,6 +1675,11 @@ certified ones.
     nonlinear regression.
   \item \ui{GARCH(1,1)}: the benchmark of Fiorentini, Calzolari and Panattoni.
 \end{itemize}
+\ui{Compare with Saved Results...} keeps your own results as known values: once a result is right, the
+ReferenceTests package saves it as a reference file, in \texttt{\textasciitilde/.pollis/reference-tests},
+and each later run fails if the result has changed. Its tabs save \ui{Numbers} in full, compared within a
+tolerance, \ui{Printed Output} as you read it, a \ui{Plot} as an image, or only a \ui{Hash}. The first run
+saves the reference; run the code again to compare.
 
 \subhead{Against Properties}
 \ui{Check a Property...} tries a \emph{property}, a rule that must hold for every input, on inputs that the
