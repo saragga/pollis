@@ -42,7 +42,7 @@ A replication needs no method of its own when a Julia package, or a few lines of
 
 ## The Precision a Target Table Requires
 
-A published value is at the precision its table requires when Julia's value shares with it the decimals the table requires, all those printed by default. A table can require fewer, as when an article prints six decimals of a value its method gives to four. A random value, compared with `Pollis.compare`, is at the precision its table requires when it is fewer standard errors of the difference off than the table allows, 2 by default. The precision is saved in the `[targets.NAME]` table of `replication.toml`, as `decimals` or `standard_errors`. A value that stays short of it after the usual causes are checked, such as the sample, the degrees of freedom or the variance estimator, gets a kind and an explanation.
+A published value is at the precision its table requires when Julia's value shares with it the decimals the table requires, all those printed by default. A table can require fewer, as when an article prints six decimals of a value its method gives to four. A random value, compared with `Pollis.compare`, is at the precision its table requires when it is fewer standard errors of the difference off than the table allows, 2 by default, counting only the gap beyond half a unit of the last digit printed, as the published value is known only to its digits. The precision is saved in the `[targets.NAME]` table of `replication.toml`, as `decimals` or `standard_errors`. A value that stays short of it after the usual causes are checked, such as the sample, the degrees of freedom or the variance estimator, gets a kind and an explanation.
 
 ## Explaining the Differences of a Replication
 

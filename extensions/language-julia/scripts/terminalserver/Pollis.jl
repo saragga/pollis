@@ -150,7 +150,9 @@ Compares results with published values that are themselves estimates of a random
 simulations, bootstrap, random forests or neural networks such as LSTNet, rerun with other random
 numbers, so that no rerun gives the digits printed. Prints each value with its standard error, rounded
 to the published precision and beside the published value, with "within noise" when the two are less
-than two standard errors of their difference apart, or "DIFFERENT" and how many.
+than two standard errors of their difference apart, or "DIFFERENT" and how many. The published value is
+known only to the digits printed, so the gap counted is the one beyond half a unit of its last digit:
+Julia's 0.1849 is 0.0001 from a published 0.18.
 
 Each row is `(label, value, se, published)`: `value` the mean of Julia's runs, each with its own seed,
 and `se` its Monte Carlo standard error, the standard deviation of the runs over the square root of
@@ -162,6 +164,9 @@ their number. The standard error of the difference depends on how many runs each
 - `noisy = true`, without `published_runs`: the published value averages as many runs as Julia's,
   against `sqrt(2) * se`.
 - `noisy = false`: the published value is exact, a quantity known without noise, against `se`.
+
+`runs` and `published_runs` can also count the samples of a simulation whose value is their median, as
+the standard error of a median falls with the square root of their number as well.
 
 The rows go to `results` as for `Pollis.replicate`.
 
@@ -175,14 +180,16 @@ function compare(title::AbstractString, rows; runs::Union{Integer, Nothing} = no
 	published_runs === nothing || published_runs >= 1 || throw(ArgumentError("Pollis.compare: published_runs is 1 or more, not $published_runs"))
 	# The standard error of the difference, in units of Julia's standard error
 	scale = published_runs !== nothing ? sqrt(1 + runs / published_runs) : noisy ? sqrt(2) : 1.0
-	noise = published_runs !== nothing ? "Julia: the mean of $runs runs; published: $(published_runs == 1 ? "a single run" : "the mean of $published_runs runs")" :
+	noise = published_runs !== nothing ? "Julia: $runs runs; published: $(published_runs == 1 ? "a single run" : "$published_runs runs")" :
 		noisy ? "Julia and published: the means of as many runs" : "Julia: the mean of its runs; published: exact"
 	width = max(16, maximum((length(first(row)) for row in rows); init = 0) + 2)
 	println("\n", title, "  (", noise, ")\n", rpad("", width), lpad("Julia", 10), lpad("se", 8), lpad("rounded", 10), lpad("published", 11))
 	records = Vector{Vector{String}}()
 	for (label, value, se, published) in rows
 		p, d = printed(published)
-		z = (value - p) / (scale * se)
+		# The gap beyond the rounding of the published value, half a unit of its last printed digit
+		gap = value - p
+		z = sign(gap) * max(abs(gap) - 0.5 * 10.0^-d, 0) / (scale * se)
 		verdict = abs(z) < 2 ? "within noise" : "DIFFERENT ($(fixed(z, 1)) se)"
 		rounded = d < 0 ? string(round(Int, round(value; digits = d))) : fixed(value, d)
 		println(rpad(label, width), lpad(fixed(value, 3), 10), lpad(fixed(se, 3), 8), lpad(rounded, 10), lpad(published, 11), "  ", verdict)
