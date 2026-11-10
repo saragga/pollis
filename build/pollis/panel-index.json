@@ -247,6 +247,34 @@
 			]
 		},
 		{
+			"id": "addLanguage",
+			"title": "Add a Language",
+			"source": "pollis",
+			"commands": [
+				{
+					"id": "pollis.profiling.addLanguage",
+					"menuTitles": [
+						"Add a Language..."
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "c",
+			"decisionFirstColumn": "Language",
+			"toml": "src/vs/workbench/contrib/model/browser/webviews/addLanguage.toml",
+			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
+			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"wikis": [
+				"addLanguage/calling-compiled-code.md",
+				"addLanguage/factsheet.md",
+				"addLanguage/overview.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"Chairmarks.jl"
+			]
+		},
+		{
 			"id": "adlp",
 			"title": "AD Log-Likelihood",
 			"source": "pollis",

@@ -1,0 +1,500 @@
+# Add a Language Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/addLanguage.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Add a Language"
+viewType = "pollis.addLanguage"
+defaultModel = "c"
+decisionFirstColumn = "Language"
+
+[[packages]]
+name = "Chairmarks.jl"
+github = "https://github.com/LilithHafner/Chairmarks.jl"
+
+[requires]
+packages = ["Plots.jl"]
+
+[[wikis]]
+name = "Overview"
+file = "addLanguage/overview.md"
+bundled = true
+description = "How a compiled language joins the race of Run a Speed Race: the compiler, the shared library, the call from Julia and the check of the result"
+
+[[wikis]]
+name = "Factsheet"
+file = "addLanguage/factsheet.md"
+bundled = true
+description = "Languages, compilers, inputs, files and actions at a glance"
+
+[[wikis]]
+name = "Calling Compiled Code from Julia"
+file = "addLanguage/calling-compiled-code.md"
+bundled = true
+description = "Shared libraries, the C calling convention, ccall, optimisation levels, and what a race against compiled code shows"
+
+[[models]]
+id = "c"
+label = "C"
+
+[[models]]
+id = "fortran"
+label = "Fortran"
+
+[[models]]
+id = "rust"
+label = "Rust"
+
+[[bullets]]
+text = "Adds C, Fortran or Rust to the race of Run a Speed Race: the race is written in the language, compiled to a shared library with the compiler on the computer, and called from Julia with ccall"
+detail = ""
+
+[[bullets]]
+text = "Each language in four steps: find the compiler, build the library, call it, and check that its result agrees with Julia's before it is timed"
+detail = ""
+
+[[bullets]]
+text = "Run the tab of Run a Speed Race first, with the same race and number of values, and the language joins its race; without it, the language races Julia alone"
+detail = ""
+
+[[bullets]]
+text = "The compiled code is called from Julia without copying the data, so it is timed from Julia with Chairmarks, as Julia is"
+detail = ""
+
+[[decisionRows]]
+task = "C"
+context = "Systems language"
+purpose = "The language of most compiled libraries, built with GCC, the GNU C compiler; its sort is qsort of the C library"
+
+[[decisionRows]]
+task = "Fortran"
+context = "Array language"
+purpose = "The language of much numerical code, built with gfortran, with operations on whole arrays; it has no sort in its standard library, so it takes part in Loop and Vectorised"
+
+[[decisionRows]]
+task = "Rust"
+context = "Memory-safe language"
+purpose = "A compiled language whose compiler checks memory safety, built with rustc, with iterators and a sort in its standard library"
+
+[[inputs]]
+id = "race"
+label = "Race"
+tooltip = "The race of Run a Speed Race the language joins: Loop, Vectorised or Sort. Run that tab of Run a Speed Race first for the language to join its race."
+kind = "select"
+default = "loop"
+
+[[inputs.options]]
+value = "loop"
+label = "Loop"
+
+[[inputs.options]]
+value = "vector"
+label = "Vectorised"
+
+[[inputs.options]]
+value = "sort"
+label = "Sort"
+
+[[inputs]]
+id = "n"
+label = "Values"
+tooltip = "The number of simulated values, made in Julia with the same seed as Run a Speed Race: with the same number, the language races on the same numbers as Julia, Python and R."
+default = "100000"
+
+[[inputs]]
+id = "opt"
+label = "Optimisation"
+tooltip = "The optimisation level of the compiler: -O2 or -O3 for C and Fortran, opt-level 2 or 3 for Rust."
+kind = "select"
+default = "2"
+
+[[inputs.options]]
+value = "2"
+label = "Level 2"
+
+[[inputs.options]]
+value = "3"
+label = "Level 3"
+
+[[codeBranches]]
+model = "c"
+code = '''
+using Chairmarks, Libdl, Random
+
+Random.seed!(1)
+x = randn({{n}});  # the data of Run a Speed Race: the same seed, so the same numbers for the same number of values
+
+# Julia: the three races of Run a Speed Race
+function ss_loop(x)
+    m = sum(x) / length(x)
+    s = 0.0
+    for v in x
+        s += (v - m)^2
+    end
+    return s
+end
+ss_vector(x) = sum(abs2, x .- sum(x) / length(x))
+sort_middle(x) = sort(x)[div(length(x), 2) + 1]
+symbol = Dict("loop" => :ss_loop, "vector" => :ss_vector, "sort" => :sort_middle)["{{race}}"]
+julia_race = getfield(Main, symbol)
+
+# Toolchain: GCC, the GNU C compiler, the same on macOS, Linux and Windows. On macOS, gcc is Apple's clang under
+# another name, and the GCC of Homebrew is gcc with its version, such as gcc-15: only a compiler that says it is GCC is kept
+function find_gcc()
+    for name in ["gcc"; ["gcc-$version" for version in 20:-1:9]]
+        path = Sys.which(name)
+        path === nothing && continue
+        occursin("Free Software Foundation", read(`$path --version`, String)) && return path
+    end
+    return nothing
+end
+compiler = find_gcc()
+compiler === nothing && error("No GCC found: on macOS install it with Homebrew (brew install gcc), which also installs gfortran; on Linux install gcc; on Windows install MinGW-w64 with its gcc")
+
+# The races in C, each taking a pointer to the values and their number
+source = """
+#include <stdlib.h>
+#include <string.h>
+
+double ss_loop(const double *x, size_t n) {
+    double total = 0.0;
+    for (size_t i = 0; i < n; i++) total += x[i];
+    double m = total / n, s = 0.0;
+    for (size_t i = 0; i < n; i++) s += (x[i] - m) * (x[i] - m);
+    return s;
+}
+
+/* C has no operations on whole arrays: the Vectorised race in C is the loop */
+double ss_vector(const double *x, size_t n) { return ss_loop(x, n); }
+
+static int compare(const void *a, const void *b) {
+    double u = *(const double *)a, v = *(const double *)b;
+    return (u > v) - (u < v);
+}
+
+double sort_middle(const double *x, size_t n) {
+    double *y = malloc(n * sizeof(double));  /* a copy, sorted, as sort(x) in Julia */
+    memcpy(y, x, n * sizeof(double));
+    qsort(y, n, sizeof(double), compare);
+    double middle = y[n / 2];
+    free(y);
+    return middle;
+}
+"""
+
+# Build: a shared library, in ~/.pollis/race/c
+folder = mkpath(joinpath(homedir(), ".pollis", "race", "c"))
+source_file = joinpath(folder, "race.c")
+write(source_file, source)
+build_command(level, library) = `$compiler -O$level -shared -fPIC -o $library $source_file`
+function compile(level)
+    library = joinpath(folder, "race-O$level-$(string(hash(source), base = 16)).$(Libdl.dlext)")  # a new name for a new source: a library already loaded is not loaded again
+    isfile(library) || run(build_command(level, library))
+    return library
+end
+
+# Call: the function of the race in the library, from Julia, with the data passed as a pointer, not copied
+function compiled_function(level)
+    address = Libdl.dlsym(Libdl.dlopen(compile(level)), symbol)
+    return x -> ccall(address, Float64, (Ptr{Float64}, Csize_t), x, length(x))
+end
+compiled_race = compiled_function({{opt}})
+compiled_language = "C"
+
+# Check: the same result as Julia's before any time
+result = compiled_race(x)
+isapprox(result, julia_race(x); rtol = 1e-8) || error("C gives $result and Julia $(julia_race(x)): the two programs do not compute the same thing")
+seconds = (@b compiled_race($x)).time  # timed from Julia, as Julia is: a ccall is compiled to a call as from C
+
+# Join the race of Run a Speed Race when it raced the same values, or race Julia alone
+if @isdefined(race) && haskey(race.results, :Julia) && isapprox(race.results.Julia, julia_race(x); rtol = 1e-12)
+    race = (results = merge(race.results, (C = result,)), seconds = merge(race.seconds, (C = seconds,)))
+    println("C joins the race of Run a Speed Race")
+else
+    race = (results = (Julia = julia_race(x), C = result), seconds = (Julia = (@b julia_race($x)).time, C = seconds))
+    println("No race of Run a Speed Race on the same values in this session: C races Julia alone")
+end
+for (language, s) in pairs(race.seconds)
+    println(rpad(string(language), 8), lpad(round(s * 1e3, sigdigits = 4), 12), " ms a call", lpad(round(s / race.seconds.Julia, sigdigits = 3), 10), " times Julia's")
+end
+'''
+
+[[codeBranches]]
+model = "fortran"
+code = '''
+{{?race=sort}}error("Fortran has no sort in its standard library: Fortran takes part in the Loop and Vectorised races")
+
+using Chairmarks, Libdl, Random
+
+Random.seed!(1)
+x = randn({{n}});  # the data of Run a Speed Race: the same seed, so the same numbers for the same number of values
+
+# Julia: the three races of Run a Speed Race
+function ss_loop(x)
+    m = sum(x) / length(x)
+    s = 0.0
+    for v in x
+        s += (v - m)^2
+    end
+    return s
+end
+ss_vector(x) = sum(abs2, x .- sum(x) / length(x))
+sort_middle(x) = sort(x)[div(length(x), 2) + 1]
+symbol = Dict("loop" => :ss_loop, "vector" => :ss_vector, "sort" => :sort_middle)["{{race}}"]
+julia_race = getfield(Main, symbol)
+
+# Toolchain: a Fortran compiler on the path
+compiler = something(Sys.which("gfortran"), Some(nothing))
+compiler === nothing && error("No gfortran found: on macOS install it with Homebrew (brew install gcc); on Linux install gfortran; on Windows install MinGW-w64 with its gfortran")
+
+# The races in Fortran, with the C names and C arguments that bind(c) gives them
+source = """
+function ss_loop(x, n) result(s) bind(c, name = "ss_loop")
+    use iso_c_binding
+    integer(c_size_t), value :: n
+    real(c_double), intent(in) :: x(n)
+    real(c_double) :: s, m
+    integer(c_size_t) :: i
+    m = sum(x) / n
+    s = 0
+    do i = 1, n
+        s = s + (x(i) - m) ** 2
+    end do
+end function ss_loop
+
+! Operations on the whole array, as in NumPy and R
+function ss_vector(x, n) result(s) bind(c, name = "ss_vector")
+    use iso_c_binding
+    integer(c_size_t), value :: n
+    real(c_double), intent(in) :: x(n)
+    real(c_double) :: s
+    s = sum((x - sum(x) / n) ** 2)
+end function ss_vector
+"""
+
+# Build: a shared library, in ~/.pollis/race/fortran
+folder = mkpath(joinpath(homedir(), ".pollis", "race", "fortran"))
+source_file = joinpath(folder, "race.f90")
+write(source_file, source)
+build_command(level, library) = `$compiler -O$level -shared -fPIC -o $library $source_file`
+function compile(level)
+    library = joinpath(folder, "race-O$level-$(string(hash(source), base = 16)).$(Libdl.dlext)")  # a new name for a new source: a library already loaded is not loaded again
+    isfile(library) || run(build_command(level, library))
+    return library
+end
+
+# Call: the function of the race in the library, from Julia, with the data passed as a pointer, not copied
+function compiled_function(level)
+    address = Libdl.dlsym(Libdl.dlopen(compile(level)), symbol)
+    return x -> ccall(address, Float64, (Ptr{Float64}, Csize_t), x, length(x))
+end
+compiled_race = compiled_function({{opt}})
+compiled_language = "Fortran"
+
+# Check: the same result as Julia's before any time
+result = compiled_race(x)
+isapprox(result, julia_race(x); rtol = 1e-8) || error("Fortran gives $result and Julia $(julia_race(x)): the two programs do not compute the same thing")
+seconds = (@b compiled_race($x)).time  # timed from Julia, as Julia is: a ccall is compiled to a call as from C
+
+# Join the race of Run a Speed Race when it raced the same values, or race Julia alone
+if @isdefined(race) && haskey(race.results, :Julia) && isapprox(race.results.Julia, julia_race(x); rtol = 1e-12)
+    race = (results = merge(race.results, (Fortran = result,)), seconds = merge(race.seconds, (Fortran = seconds,)))
+    println("Fortran joins the race of Run a Speed Race")
+else
+    race = (results = (Julia = julia_race(x), Fortran = result), seconds = (Julia = (@b julia_race($x)).time, Fortran = seconds))
+    println("No race of Run a Speed Race on the same values in this session: Fortran races Julia alone")
+end
+for (language, s) in pairs(race.seconds)
+    println(rpad(string(language), 8), lpad(round(s * 1e3, sigdigits = 4), 12), " ms a call", lpad(round(s / race.seconds.Julia, sigdigits = 3), 10), " times Julia's")
+end
+'''
+
+[[codeBranches]]
+model = "rust"
+code = '''
+using Chairmarks, Libdl, Random
+
+Random.seed!(1)
+x = randn({{n}});  # the data of Run a Speed Race: the same seed, so the same numbers for the same number of values
+
+# Julia: the three races of Run a Speed Race
+function ss_loop(x)
+    m = sum(x) / length(x)
+    s = 0.0
+    for v in x
+        s += (v - m)^2
+    end
+    return s
+end
+ss_vector(x) = sum(abs2, x .- sum(x) / length(x))
+sort_middle(x) = sort(x)[div(length(x), 2) + 1]
+symbol = Dict("loop" => :ss_loop, "vector" => :ss_vector, "sort" => :sort_middle)["{{race}}"]
+julia_race = getfield(Main, symbol)
+
+# Toolchain: the Rust compiler on the path
+compiler = something(Sys.which("rustc"), Some(nothing))
+compiler === nothing && error("No rustc found: install Rust with rustup, from rustup.rs")
+
+# The races in Rust, with C names and C arguments: no_mangle keeps the name, extern "C" the calling convention
+source = """
+use std::slice;
+
+#[no_mangle]
+pub extern "C" fn ss_loop(x: *const f64, n: usize) -> f64 {
+    let x = unsafe { slice::from_raw_parts(x, n) };
+    let mut total = 0.0;
+    for v in x {
+        total += v;
+    }
+    let m = total / n as f64;
+    let mut s = 0.0;
+    for v in x {
+        s += (v - m) * (v - m);
+    }
+    s
+}
+
+// Iterators over the whole slice
+#[no_mangle]
+pub extern "C" fn ss_vector(x: *const f64, n: usize) -> f64 {
+    let x = unsafe { slice::from_raw_parts(x, n) };
+    let m = x.iter().sum::<f64>() / n as f64;
+    x.iter().map(|v| (v - m) * (v - m)).sum()
+}
+
+#[no_mangle]
+pub extern "C" fn sort_middle(x: *const f64, n: usize) -> f64 {
+    let mut y = unsafe { slice::from_raw_parts(x, n) }.to_vec();  // a copy, sorted, as sort(x) in Julia
+    y.sort_unstable_by(f64::total_cmp);
+    y[n / 2]
+}
+"""
+
+# Build: a shared library, in ~/.pollis/race/rust
+folder = mkpath(joinpath(homedir(), ".pollis", "race", "rust"))
+source_file = joinpath(folder, "race.rs")
+write(source_file, source)
+build_command(level, library) = `$compiler --edition 2021 --crate-type cdylib -C opt-level=$level -o $library $source_file`
+function compile(level)
+    library = joinpath(folder, "race-O$level-$(string(hash(source), base = 16)).$(Libdl.dlext)")  # a new name for a new source: a library already loaded is not loaded again
+    isfile(library) || run(build_command(level, library))
+    return library
+end
+
+# Call: the function of the race in the library, from Julia, with the data passed as a pointer, not copied
+function compiled_function(level)
+    address = Libdl.dlsym(Libdl.dlopen(compile(level)), symbol)
+    return x -> ccall(address, Float64, (Ptr{Float64}, Csize_t), x, length(x))
+end
+compiled_race = compiled_function({{opt}})
+compiled_language = "Rust"
+
+# Check: the same result as Julia's before any time
+result = compiled_race(x)
+isapprox(result, julia_race(x); rtol = 1e-8) || error("Rust gives $result and Julia $(julia_race(x)): the two programs do not compute the same thing")
+seconds = (@b compiled_race($x)).time  # timed from Julia, as Julia is: a ccall is compiled to a call as from C
+
+# Join the race of Run a Speed Race when it raced the same values, or race Julia alone
+if @isdefined(race) && haskey(race.results, :Julia) && isapprox(race.results.Julia, julia_race(x); rtol = 1e-12)
+    race = (results = merge(race.results, (Rust = result,)), seconds = merge(race.seconds, (Rust = seconds,)))
+    println("Rust joins the race of Run a Speed Race")
+else
+    race = (results = (Julia = julia_race(x), Rust = result), seconds = (Julia = (@b julia_race($x)).time, Rust = seconds))
+    println("No race of Run a Speed Race on the same values in this session: Rust races Julia alone")
+end
+for (language, s) in pairs(race.seconds)
+    println(rpad(string(language), 8), lpad(round(s * 1e3, sigdigits = 4), 12), " ms a call", lpad(round(s / race.seconds.Julia, sigdigits = 3), 10), " times Julia's")
+end
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "bars"
+label = "Bar Chart of Times"
+desc = "The fastest time of a call in each language of the race, as bars on a log scale, where equal ratios are equal steps"
+code = '''
+using Plots
+
+languages = [string(language) for language in keys(race.seconds)]
+milliseconds = [s * 1e3 for s in race.seconds]
+bar(languages, milliseconds, yscale = :log10, ylabel = "ms a call, log scale", legend = false, title = "{{n}} values")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "build"
+label = "Source and Build Command"
+desc = "The source the compiler built, where it is saved, the command that built the library and the version of the compiler"
+code = '''
+print(read(source_file, String))
+println("Saved at ", source_file)
+println("Built with ", build_command({{opt}}, compile({{opt}})))
+run(`$compiler --version`)
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "sizes"
+label = "Times Across Sizes"
+desc = "Julia and the compiled language on 1 000 to 1 000 000 values, the time against the number of values on log scales"
+code = '''
+using Plots
+
+sizes = [1000, 10000, 100000, 1000000]
+data = [randn(n) for n in sizes]
+julia_times = [(@b julia_race($v)).time for v in data]
+compiled_times = [(@b compiled_race($v)).time for v in data]
+plot(sizes, [julia_times compiled_times], xscale = :log10, yscale = :log10, marker = :circle, label = ["Julia" compiled_language], xlabel = "values", ylabel = "seconds a call", legend = :topleft)
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "levels"
+label = "Optimisation Levels"
+desc = "The compiled race built at optimisation levels 0 to 3, each checked and timed, beside Julia"
+code = '''
+println(rpad("Julia", 12), lpad(round((@b julia_race($x)).time * 1e3, sigdigits = 4), 12), " ms a call")
+for level in 0:3
+    f = compiled_function(level)
+    agrees = isapprox(f(x), julia_race(x); rtol = 1e-8)
+    println(rpad("level $level", 12), lpad(round((@b f($x)).time * 1e3, sigdigits = 4), 12), " ms a call", agrees ? "" : "   the result differs from Julia's")
+end
+'''
+
+[[actionGroups.actions]]
+id = "results"
+label = "Results Digit by Digit"
+desc = "The result of each language of the race in full, and its relative difference from Julia's"
+code = '''
+for (language, value) in pairs(race.results)
+    difference = abs(value - race.results.Julia) / abs(race.results.Julia)
+    println(rpad(string(language), 8), lpad(repr(value), 24), "   relative difference from Julia: ", difference)
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "per-element"
+label = "Time per Element"
+desc = "Each language's time divided by the number of values: nanoseconds per value, comparable across sizes"
+code = '''
+for (language, s) in pairs(race.seconds)
+    println(rpad(string(language), 8), lpad(round(s * 1e9 / {{n}}, sigdigits = 3), 10), " nanoseconds a value")
+end
+'''
