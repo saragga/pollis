@@ -176,6 +176,8 @@ export interface IAskPollisSearchResult {
 	readonly wordsOnly?: AskPollisWordsOnly;
 	/** What the embedding model said when it did not start. */
 	readonly error?: string;
+	/** Asked in a panel the index has no passages of, as a panel added since the index was made. */
+	readonly panelMissing?: boolean;
 }
 
 /** What the index holds, from its table built. */

@@ -190,12 +190,14 @@ async function reindexDocuments(context: vscode.ExtensionContext, executableFeat
 
 /** What ask_index.jl is run with: PollisDocuments' five arguments, and a collection's index and passage length. */
 type IndexArguments = { sources: string; model: string; prefix: string; available: string; juliaManual: string; database?: string; words?: number }
-/** How an index went: its passages and those embedded once published, or why it could not be made. */
-type IndexAnswer = { passages?: number; embedded?: number; error?: string }
+/** How an index went: its passages and those embedded once published, or why it could not be made, and the log of the script's errors. */
+type IndexAnswer = { passages?: number; embedded?: number; error?: string; log?: string }
 
 /**
  * Runs ask_index.jl in a hidden process of low priority, with the status bar's item `title`, when there is one, and
- * `onProgress` told how far it has come; the embedding server started when it asks for it.
+ * `onProgress` told how far it has come; the embedding server started when it asks for it. What the script writes on
+ * stderr goes to a log beside the index, ~/.pollis/documents/index.log for PollisDocuments, NAME.log for a collection,
+ * and a script that quits without publishing or saying why answers the error "failed".
  */
 async function runIndex(
     context: vscode.ExtensionContext,
@@ -205,14 +207,26 @@ async function runIndex(
     args: IndexArguments,
     onProgress: (progress: IndexProgress) => void
 ): Promise<IndexAnswer> {
-    const answer: IndexAnswer = {}
+    const log = args.database ? `${args.database.replace(/\.duckdb$/, '')}.log` : path.join(os.homedir(), '.pollis', 'documents', 'index.log')
+    const answer: IndexAnswer = { log }
     const script = path.join(context.extensionPath, 'scripts', 'terminalserver', 'ask_index.jl')
     const collection = args.database ? [args.database, String(args.words ?? 250)] : []
+    let logFile: number | undefined
+    try {
+        await fs.promises.mkdir(path.dirname(log), { recursive: true })
+        logFile = fs.openSync(log, 'w')
+    } catch {
+        // No log: the script's errors are left out
+    }
     const julia = child_process.spawn(
         juliaExecutable.command,
         [...juliaExecutable.args, '--startup-file=no', '--history-file=no', script, args.sources, args.model, args.prefix, args.available, args.juliaManual, ...collection],
-        { env: { ...process.env, ...env }, stdio: ['pipe', 'pipe', 'ignore'], windowsHide: true }
+        { env: { ...process.env, ...env }, stdio: ['pipe', 'pipe', logFile ?? 'ignore'], windowsHide: true }
     )
+    if (logFile !== undefined) {
+        // The process has its own copy
+        fs.closeSync(logFile)
+    }
     julia.stdin.on('error', () => {
         // The script has quit before it read the address
     })
@@ -271,7 +285,14 @@ async function runIndex(
             answer.error ??= 'failed'
             resolve()
         })
-        julia.on('close', () => resolve())
+        julia.on('close', (code, signal) => {
+            // Stopped by a crash or a signal: nothing published, and nothing said
+            if (code !== 0 && answer.error === undefined) {
+                answer.error = 'failed'
+                console.error(`[pollis] could not make the index ${args.database ?? 'PollisDocuments'} (${signal ?? `exit ${code}`}); its log is ${log}`)
+            }
+            resolve()
+        })
     })
     progress.finish()
     const index = context.subscriptions.indexOf(kill)
@@ -322,6 +343,14 @@ function indexDocuments(
             sources, model, prefix, available, juliaManual,
         }, (progress) => (g_progress = progress))
         noDuckDB = result.error === 'noDuckDB'
+        if (result.error === 'failed' && result.log) {
+            const log = result.log
+            // Ask Pollis goes on searching the last index made, which leaves out what has changed since
+            vscode.window.showWarningMessage('Pollis could not bring the index of Ask Pollis up to date, so Ask Pollis searches the last one made. Its log says why.', 'Open Log').then(
+                (choice) => choice && vscode.window.showTextDocument(vscode.Uri.file(log)),
+                () => undefined
+            )
+        }
         compiled = await compileVignettes(context, juliaExecutable, vignettes)
         if (packageApis) {
             const progress = windowProgress('Reading the Package APIs for Ask Pollis')

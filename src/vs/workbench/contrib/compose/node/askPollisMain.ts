@@ -595,7 +595,7 @@ class AskPollisIndex implements IAskPollisIndex {
 					error = err instanceof Error ? err.message : String(err);
 				}
 			}
-			const { passages, searched } = await this.findPassages(connection, status.collections, {
+			const { passages, searched, panelMissing } = await this.findPassages(connection, status.collections, {
 				question: request.question, vector, dimensions: vector ? status.dimensions : 0, count: Math.max(1, request.passages ?? ASK_PASSAGES), collections: request.collections, sources: request.sources, panel: request.panel, panelShare: request.panelShare,
 			});
 			const result: IAskPollisSearchResult = {
@@ -604,14 +604,18 @@ class AskPollisIndex implements IAskPollisIndex {
 				collections: status.collections,
 				...(vector ? {} : { wordsOnly: wordsOnly ?? (status.embedded ? 'otherModel' : 'notEmbedded') }),
 				...(error && !vector ? { error } : {}),
+				...(panelMissing ? { panelMissing } : {}),
 			};
 			return result;
 		}, request.index?.file);
 		return found ?? { passages: [], searched: [], collections: [], wordsOnly: 'notIndexed' };
 	}
 
-	/** The passages for `query`, from the collections of `all`: those named are searched, else the nearest and those almost as near, the Package APIs never among them. */
-	private async findPassages(connection: DuckDBConnection, all: readonly string[], query: IPassageQuery): Promise<{ passages: IAskPollisPassage[]; searched: string[] }> {
+	/**
+	 * The passages for `query`, from the collections of `all`: those named are searched, else the nearest and those almost
+	 * as near, the Package APIs never among them; and whether the panel asked in has no passages in the index.
+	 */
+	private async findPassages(connection: DuckDBConnection, all: readonly string[], query: IPassageQuery): Promise<{ passages: IAskPollisPassage[]; searched: string[]; panelMissing: boolean }> {
 		const { vector, dimensions, vectors } = query;
 		let searched = query.collections?.filter(name => all.includes(name)) ?? all.filter(name => name !== PACKAGE_APIS);
 		if (vector) {
@@ -626,8 +630,11 @@ class AskPollisIndex implements IAskPollisIndex {
 		// Asked in a panel: the nearest share from the panel's own passages, the rest from the collections without them
 		const source = sourcesSql(query.sources);
 		let where = `d.collection = $collection${source}`;
+		let panelMissing = false;
 		if (query.panel) {
 			const panel = panelSql(query.panel);
+			const [held] = (await connection.runAndReadAll(`SELECT EXISTS (SELECT 1 FROM passages p JOIN documents d ON p.document = d.id WHERE ${panel}) AS held`)).getRowObjectsJson();
+			panelMissing = !held?.held;
 			const share = Math.min(query.count, query.panelShare === undefined ? shares(query.count, 2)[0] : Math.ceil(query.count * await this.panelShare(connection, query, panel, searched, source)));
 			const rows = (await connection.runAndReadAll(searchSql(vector ? dimensions : 0, share, vectors, `${panel}${source}`), parameters)).getRowObjectsJson();
 			passages.push(...rows.map(passageOf));
@@ -639,7 +646,7 @@ class AskPollisIndex implements IAskPollisIndex {
 			passages.push(...rows.map(passageOf));
 		}
 		// The docstrings last: a small model given "No-U-Turn Sampler (NUTS) sampler." first may repeat that line and stop
-		return { passages: [...passages.filter(passage => passage.kind !== 'api'), ...passages.filter(passage => passage.kind === 'api')], searched };
+		return { passages: [...passages.filter(passage => passage.kind !== 'api'), ...passages.filter(passage => passage.kind === 'api')], searched, panelMissing };
 	}
 
 	/**

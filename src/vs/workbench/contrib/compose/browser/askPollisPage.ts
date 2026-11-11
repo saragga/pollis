@@ -451,10 +451,11 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 				panel: askedIn,
 			}, kept, reranker));
 			let result = await search();
-			// Before the first index, the question waits for it, with how far it has come, while the Julia extension makes it
-			while (result.wordsOnly === 'notIndexed' && current() && !source.token.isCancellationRequested) {
+			// Before the first index, the question waits for it, with how far it has come, while the Julia extension makes it;
+			// and asked in a panel the index does not have yet, until the index being made is published, before its embeddings
+			while ((result.wordsOnly === 'notIndexed' || result.panelMissing) && current() && !source.token.isCancellationRequested) {
 				const progress = await commandService.executeCommand<IIndexProgress>('language-julia.pollisAskIndexProgress').catch(() => undefined);
-				if (!progress || !current()) {
+				if (!progress || !current() || (result.wordsOnly !== 'notIndexed' && progress.stage === 'embedding')) {
 					break;
 				}
 				post({ command: 'indexing', turn: index, text: indexingText(progress) });
@@ -466,7 +467,7 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 			if (!current()) {
 				return;
 			}
-			if (source.token.isCancellationRequested && result.wordsOnly === 'notIndexed') {
+			if (source.token.isCancellationRequested && (result.wordsOnly === 'notIndexed' || result.panelMissing)) {
 				turns.push({ question, attachments, passages: [], answer: '' });
 				post({ command: 'done', turn: index, stopped: true });
 				return;
