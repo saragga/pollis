@@ -52508,6 +52508,9 @@
 			"id": "convergenceOrder",
 			"title": "Check a Convergence Order",
 			"description": "ODE Solver · SDE Strong Order · SDE Weak Order",
+			"commands": [
+				"pollis.correctness.convergenceOrder"
+			],
 			"keys": [
 				"RN2017a",
 				"HNW1993a",
@@ -54582,6 +54585,9 @@
 			"id": "profileTime",
 			"title": "Find Where the Time Goes",
 			"description": "Flame Graph · Line by Line · Text Report",
+			"commands": [
+				"pollis.profiling.profileTime"
+			],
 			"keys": [
 				"GKM1982a",
 				"Gre2016a"
@@ -54591,6 +54597,9 @@
 			"id": "propertyCheck",
 			"title": "Check a Property",
 			"description": "Invariant · Round Trip · Simple Version",
+			"commands": [
+				"pollis.correctness.propertyCheck"
+			],
 			"keys": [
 				"CH2000a",
 				"MH...2019a",
@@ -55208,6 +55217,9 @@
 			"id": "timeFunction",
 			"title": "Time a Function",
 			"description": "Chairmarks · BenchmarkTools · First Call",
+			"commands": [
+				"pollis.profiling.timeFunction"
+			],
 			"keys": [
 				"CR2016a",
 				"MDHS2009a",

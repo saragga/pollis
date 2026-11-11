@@ -108,7 +108,7 @@ interface IPanelReferences {
 }
 
 /** The contribution files that register the commands opening the panels. */
-const PANEL_CONTRIBUTIONS = ['model/browser/model.contribution.ts', 'explore/browser/explore.contribution.ts', 'simulate/browser/simulate.contribution.ts', 'optimise/browser/optimise.contribution.ts'];
+const PANEL_CONTRIBUTIONS = ['model/browser/model.contribution.ts', 'explore/browser/explore.contribution.ts', 'simulate/browser/simulate.contribution.ts', 'optimise/browser/optimise.contribution.ts', 'compose/browser/compose.contribution.ts'];
 
 /**
  * The commands that open each panel, by panel id: a command registered to open the panel imported from its
