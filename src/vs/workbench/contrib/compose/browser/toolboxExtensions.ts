@@ -245,7 +245,7 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 					title: loaded.toolbox.title,
 					version: loaded.version,
 					documents: loaded.documents,
-					panels: loaded.panels.map(({ contribution, panel, faq }) => ({
+					panels: inMenuOrder(loaded.toolbox, loaded.panels).map(({ contribution, panel, faq }) => ({
 						id: contribution.id,
 						command: contribution.command,
 						title: contribution.menuTitle ?? contribution.title,
@@ -465,6 +465,31 @@ function publishedKey(loaded: ILoadedToolbox): string {
 /** The submenu of the toolbox's menu that a panel names, if the toolbox has it. */
 function submenuOf(toolbox: IToolboxContribution, contribution: IToolboxPanelContribution): IToolboxSubmenuContribution | undefined {
 	return toolbox.submenus?.find(submenu => submenu.id === contribution.submenu);
+}
+
+/**
+ * The panels of a toolbox in the order of its menu: by group, then by order in the group, as the menus sort them;
+ * a panel in a submenu comes at the submenu's place, then at its own place in the submenu.
+ */
+function inMenuOrder<T extends { readonly contribution: IToolboxPanelContribution }>(toolbox: IToolboxContribution, panels: readonly T[]): T[] {
+	type Place = { readonly group: string; readonly order: number };
+	const places = new Map(panels.map(({ contribution }, index): [string, readonly Place[]] => {
+		const own: Place = { group: contribution.group ?? DEFAULT_PANEL_GROUP, order: contribution.order ?? index + 1 };
+		const submenu = submenuOf(toolbox, contribution);
+		return [contribution.id, submenu ? [{ group: submenu.group, order: submenu.order }, own] : [own]];
+	}));
+	const compare = (a: readonly Place[], b: readonly Place[]): number => {
+		for (let i = 0; i < Math.min(a.length, b.length); i++) {
+			if (a[i].group !== b[i].group) {
+				return a[i].group < b[i].group ? -1 : 1;
+			}
+			if (a[i].order !== b[i].order) {
+				return a[i].order - b[i].order;
+			}
+		}
+		return a.length - b.length;
+	};
+	return [...panels].sort((a, b) => compare(places.get(a.contribution.id)!, places.get(b.contribution.id)!));
 }
 
 /**
