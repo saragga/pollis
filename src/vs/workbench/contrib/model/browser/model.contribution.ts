@@ -68,7 +68,6 @@ import { EXP_PANEL } from './commands/exp.command.js';
 import { NNLS_PANEL } from './commands/nnls.command.js';
 import { TSLS_PANEL } from './commands/tsls.command.js';
 import { GMM_PANEL } from './commands/gmm.command.js';
-// Finance panels, deferred for a future Finance Toolbox: import { LRM_PANEL } from './commands/lrm.command.js';
 import { HARE_PANEL } from './commands/hare.command.js';
 import { LMAR_PANEL } from './commands/lmar.command.js';
 import { LMHAR_PANEL } from './commands/lmhar.command.js';
@@ -222,7 +221,6 @@ CommandsRegistry.registerCommand('chiara.statistics.tvm.dtsv', () => { });
 CommandsRegistry.registerCommand('chiara.statistics.tvm.taylor', () => { });
 CommandsRegistry.registerCommand('chiara.statistics.tvm.ksc', () => { });
 
-// Finance panel, deferred: CommandsRegistry.registerCommand('chiara.statistics.rmt.lrm', accessor => openScaffoldWebview(accessor, LRM_PANEL));
 
 CommandsRegistry.registerCommand('chiara.statistics.ml.logpdf', accessor => openScaffoldWebview(accessor, ADLP_PANEL));
 

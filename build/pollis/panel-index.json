@@ -4868,19 +4868,21 @@
 		{
 			"id": "lrm",
 			"title": "Loss Risk Measures",
-			"source": "pollis",
+			"source": "toolbox:pollis-toolbox-econometrics",
 			"commands": [
 				{
 					"id": "chiara.statistics.rmt.lrm",
-					"menuTitles": []
+					"menuTitles": [
+						"Loss Risk Measures"
+					]
 				}
 			],
 			"portable": true,
 			"defaultModel": "dd",
 			"decisionFirstColumn": "Measure",
-			"toml": "src/vs/workbench/contrib/model/browser/webviews/lrm.toml",
-			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
-			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"toml": "toolboxes/pollis-toolbox-econometrics/panels/lrm.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-econometrics/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-econometrics/notebooks",
 			"wikis": [
 				"lrm/assumptions.md",
 				"lrm/decision-guide.md",
@@ -4893,7 +4895,7 @@
 				"lrm/tutorial-01-quickstart.ipynb",
 				"lrm/tutorial-02-drawdown.ipynb",
 				"lrm/tutorial-03-downside.ipynb",
-				"lrm/tutorial-04-var-cvar.ipynb"
+				"lrm/tutorial-04-var-es.ipynb"
 			],
 			"packages": [
 				"Distributions.jl",
