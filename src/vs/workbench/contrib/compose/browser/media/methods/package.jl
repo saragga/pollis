@@ -349,7 +349,13 @@ function register(root, registry)
 	Pkg.add("LocalRegistry")
 	registrar = Base.require(Base.PkgId(UUID("89398ba2-070a-4b16-a995-9893c55d93cf"), "LocalRegistry"))
 	Pkg.activate(root)
-	Base.invokelatest(registrar.register, root; registry, push = true)
+	try
+		Base.invokelatest(registrar.register, root; registry, push = true)
+	catch problem
+		occursin("already been registered", sprint(showerror, problem)) || rethrow()
+		version = TOML.parsefile(joinpath(root, "Project.toml"))["version"]
+		error("version $version is in the registry already, with other content: raise version in method.toml, then Package and Publish again")
+	end
 	println("Registered in $registry. To install: using Pkg; Pkg.Registry.add(url = \"$registry\"); Pkg.add(\"$(basename(root)[1:end - 3])\")")
 end
 
