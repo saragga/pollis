@@ -82,7 +82,6 @@ import { CMPLX_PANEL } from './commands/cmplx.command.js';
 import { ABM_PANEL } from './commands/abm.command.js';
 import { ABMENS_PANEL } from './commands/abmEns.command.js';
 import { ABMVIZ_PANEL } from './commands/abmViz.command.js';
-// Finance panels, deferred for a future Finance Toolbox: import { TRAD_PANEL } from './commands/trad.command.js';
 import { NET_PANEL } from './commands/net.command.js';
 import { NETDYN_PANEL } from './commands/netdyn.command.js';
 import { NETFLOW_PANEL } from './commands/netflow.command.js';
@@ -193,7 +192,6 @@ CommandsRegistry.registerCommand('chiara.statistics.nonlin.cmplx', accessor => o
 CommandsRegistry.registerCommand('chiara.simulate.abm', accessor => openScaffoldWebview(accessor, ABM_PANEL));
 CommandsRegistry.registerCommand('chiara.simulate.abm-ens', accessor => openScaffoldWebview(accessor, ABMENS_PANEL));
 CommandsRegistry.registerCommand('chiara.simulate.abm-viz', accessor => openScaffoldWebview(accessor, ABMVIZ_PANEL));
-// Finance panel, deferred: CommandsRegistry.registerCommand('chiara.simulate.abm-ta', accessor => openScaffoldWebview(accessor, TRAD_PANEL));
 CommandsRegistry.registerCommand('chiara.simulate.net', accessor => openScaffoldWebview(accessor, NET_PANEL));
 CommandsRegistry.registerCommand('chiara.simulate.netdyn', accessor => openScaffoldWebview(accessor, NETDYN_PANEL));
 CommandsRegistry.registerCommand('chiara.simulate.netflow', accessor => openScaffoldWebview(accessor, NETFLOW_PANEL));

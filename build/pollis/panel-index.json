@@ -8317,19 +8317,21 @@
 		{
 			"id": "trad",
 			"title": "Trading Agents",
-			"source": "pollis",
+			"source": "toolbox:pollis-toolbox-econometrics",
 			"commands": [
 				{
 					"id": "chiara.simulate.abm-ta",
-					"menuTitles": []
+					"menuTitles": [
+						"Trading Agents"
+					]
 				}
 			],
 			"portable": true,
 			"defaultModel": "agents",
 			"decisionFirstColumn": "Model",
-			"toml": "src/vs/workbench/contrib/model/browser/webviews/trad.toml",
-			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
-			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"toml": "toolboxes/pollis-toolbox-econometrics/panels/trad.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-econometrics/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-econometrics/notebooks",
 			"wikis": [
 				"trad/assumptions.md",
 				"trad/decision-guide.md",
