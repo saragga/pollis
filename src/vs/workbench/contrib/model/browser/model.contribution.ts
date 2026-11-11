@@ -72,7 +72,6 @@ import { GMM_PANEL } from './commands/gmm.command.js';
 import { HARE_PANEL } from './commands/hare.command.js';
 import { LMAR_PANEL } from './commands/lmar.command.js';
 import { LMHAR_PANEL } from './commands/lmhar.command.js';
-// Finance panels, deferred for a future Finance Toolbox: import { PO_PANEL } from './commands/po.command.js';
 import { CDS_PANEL } from './commands/cds.command.js';
 import { DMAP_PANEL } from './commands/dmap.command.js';
 import { NODE_PANEL } from './commands/node.command.js';
@@ -183,7 +182,6 @@ CommandsRegistry.registerCommand('chiara.statistics.lm.hac', accessor => openSca
 CommandsRegistry.registerCommand('chiara.statistics.lm.wls', accessor => openScaffoldWebview(accessor, LM_PANEL, 'wls'));
 CommandsRegistry.registerCommand('chiara.statistics.lm.hetero', accessor => openScaffoldWebview(accessor, HARE_PANEL));
 CommandsRegistry.registerCommand('chiara.statistics.lm.ar1', accessor => openScaffoldWebview(accessor, LMAR_PANEL));
-// Finance panel, deferred: CommandsRegistry.registerCommand('chiara.statistics.eco.po', accessor => openScaffoldWebview(accessor, PO_PANEL));
 CommandsRegistry.registerCommand('chiara.statistics.nonlin.cds', accessor => openScaffoldWebview(accessor, CDS_PANEL));
 CommandsRegistry.registerCommand('chiara.statistics.nonlin.dmap', accessor => openScaffoldWebview(accessor, DMAP_PANEL));
 CommandsRegistry.registerCommand('chiara.statistics.nonlin.attr', accessor => openScaffoldWebview(accessor, ATTR_PANEL));
@@ -537,7 +535,6 @@ export const NONLIN_CHAOS_ID = 'chiara.statistics.nonlin.chaos';
 export const NONLIN_CMPLX_ID = 'chiara.statistics.nonlin.cmplx';
 
 // Econometrics
-export const ECO_PO_ID = 'chiara.statistics.eco.po';
 export const ECO_CTSVM_ID = 'chiara.statistics.eco.ctsvm';
 export const ECO_IVS_ID = 'chiara.statistics.eco.ivs';
 export const TVM_TAYLOR_ID = 'chiara.statistics.tvm.taylor';

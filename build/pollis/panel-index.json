@@ -6584,36 +6584,39 @@
 		{
 			"id": "po",
 			"title": "Portfolio Optimisation",
-			"source": "pollis",
+			"source": "toolbox:pollis-toolbox-econometrics",
 			"commands": [
 				{
 					"id": "chiara.statistics.eco.po",
-					"menuTitles": []
+					"menuTitles": [
+						"Portfolio Optimisation"
+					]
 				}
 			],
 			"portable": true,
 			"defaultModel": "mv",
 			"decisionFirstColumn": "Method",
-			"toml": "src/vs/workbench/contrib/model/browser/webviews/po.toml",
-			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
-			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"toml": "toolboxes/pollis-toolbox-econometrics/panels/po.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-econometrics/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-econometrics/notebooks",
 			"wikis": [
-				"portfolio-opt/assumptions.md",
-				"portfolio-opt/decision-guide.md",
-				"portfolio-opt/diagnostics.md",
-				"portfolio-opt/factsheet.md",
-				"portfolio-opt/herc.md",
-				"portfolio-opt/hrp.md",
-				"portfolio-opt/interpretation.md",
-				"portfolio-opt/mean-cvar.md",
-				"portfolio-opt/mean-variance.md",
-				"portfolio-opt/overview.md"
+				"po/assumptions.md",
+				"po/decision-guide.md",
+				"po/diagnostics.md",
+				"po/factsheet.md",
+				"po/herc.md",
+				"po/hrp.md",
+				"po/interpretation.md",
+				"po/mean-expected-shortfall.md",
+				"po/mean-variance.md",
+				"po/out-of-sample.md",
+				"po/overview.md"
 			],
 			"notebooks": [
-				"portfolio-opt/tutorial-01-mean-variance.ipynb",
-				"portfolio-opt/tutorial-02-mean-cvar.ipynb",
-				"portfolio-opt/tutorial-03-hrp.ipynb",
-				"portfolio-opt/tutorial-04-herc.ipynb"
+				"po/tutorial-01-mean-variance.ipynb",
+				"po/tutorial-02-mean-expected-shortfall.ipynb",
+				"po/tutorial-03-hrp.ipynb",
+				"po/tutorial-04-herc.ipynb"
 			],
 			"packages": [
 				"PortfolioOptimisers.jl",

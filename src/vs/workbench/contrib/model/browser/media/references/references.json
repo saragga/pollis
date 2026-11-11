@@ -3016,6 +3016,8 @@
 			"issn": "0015-198X",
 			"doi": "10.2469/faj.v48.n5.28",
 			"openalex": "W2138490239",
+			"abstract": "Quantitative asset allocation models have not played the important role they should in global portfolio management. A good part of the problem is that such models are difficult to use and tend to result in portfolios that are badly behaved. Consideration of the global CAPM equilibrium can significantly improve the usefulness of these models. In particular, equilibrium returns for equities, bonds and currencies provide neutral starting points for estimating the set of expected excess returns needed to drive the portfolio optimization process. This set of neutral weights can then be tilted in accordance with the investor's views. If the investor has no particular views about asset returns, he can use the neutral values given by the equilibrium model. If the investor does have one or more views about the relative performances of assets, or their absolute performances, he can adjust equilibrium values in accordance with those views. Furthermore, the investor can control how strongly a particular view influences portfolio weights, in accordance with the degree of confidence with which he holds the view.",
+			"abstract_source": "cfainstitute",
 			"keywords": [
 				"portfolio optimization",
 				"asset allocation",
@@ -17989,6 +17991,36 @@
 			"open_access": false
 		},
 		{
+			"key": "JK1981a",
+			"type": "article",
+			"title": "Performance Hypothesis Testing with the Sharpe and Treynor Measures",
+			"authors": [
+				"Jobson, J. D.",
+				"Korkie, Bob M."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1981,
+			"journal": "The Journal of Finance",
+			"volume": "36",
+			"number": "4",
+			"pages": "889-908",
+			"issn": "0022-1082",
+			"doi": "10.1111/j.1540-6261.1981.tb04891.x",
+			"openalex": "W2000564471",
+			"keywords": [
+				"Sharpe ratio",
+				"Treynor ratio",
+				"risk-adjusted performance",
+				"portfolio performance evaluation"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-11",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "JK2002a",
 			"type": "article",
 			"title": "Cumulated gain-based evaluation of IR techniques",
@@ -22615,6 +22647,41 @@
 			"legacy_key": "ledoit2004b",
 			"source": "crossref",
 			"retrieved": "2026-10-23",
+			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "LW2008a",
+			"type": "article",
+			"title": "Robust Performance Hypothesis Testing with the Sharpe Ratio",
+			"authors": [
+				"Ledoit, Oliver",
+				"Wolf, Michael"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2008,
+			"journal": "Journal of Empirical Finance",
+			"volume": "15",
+			"number": "5",
+			"pages": "850-859",
+			"issn": "0927-5398",
+			"doi": "10.1016/j.jempfin.2008.03.002",
+			"openalex": "W3121764760",
+			"oa_url": "https://uzh.ch/cmsssl/econ/dam/jcr:ffffffff-935a-b0d6-0000-00007214c2bc/jef_2008pdf.pdf",
+			"abstract": "Applied researchers often test for the difference of the Sharpe ratios of two investment strategies. A very popular tool to this end is the test of Jobson and Korkie [Jobson, J.D. and Korkie, B.M. (1981). Performance hypothesis testing with the Sharpe and Treynor measures. Journal of Finance, 36:889-908], which has been corrected by Memmel [Memmel, C. (2003). Performance hypothesis testing with the Sharpe ratio. Finance Letters, 1:21-23]. Unfortunately, this test is not valid when returns have tails heavier than the normal distribution or are of time series nature. Instead, we propose the use of robust inference methods. In particular, we suggest to construct a studentized time series bootstrap confidence interval for the difference of the Sharpe ratios and to declare the two ratios different if zero is not contained in the obtained interval. This approach has the advantage that one can simply resample from the observed data as opposed to some null-restricted data. A simulation study demonstrates the improved finite sample performance compared to existing methods. In addition, two applications to real data are provided.",
+			"abstract_source": "author",
+			"keywords": [
+				"Sharpe ratio",
+				"hypothesis testing",
+				"robust inference",
+				"heavy-tailed returns",
+				"investment strategy",
+				"finite sample properties"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-11",
 			"checked": false,
 			"open_access": true
 		},
@@ -30658,6 +30725,40 @@
 			"retrieved": "2026-11-03",
 			"checked": true,
 			"open_access": false
+		},
+		{
+			"key": "Raf2018a",
+			"type": "misc",
+			"title": "The Hierarchical Equal Risk Contribution Portfolio",
+			"authors": [
+				"Raffinot, Thomas"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2018,
+			"publisher": "SSRN",
+			"doi": "10.2139/ssrn.3237540",
+			"openalex": "W3038195334",
+			"url": "https://ssrn.com/abstract=3237540",
+			"abstract": "Building upon the fundamental notion of hierarchy, the \"Hierarchical Risk Parity\" (HRP) and the \"Hierarchical Clustering based Asset Allocation\" (HCAA), the Hierarchical Equal Risk Contribution Portfolio (HERC) aims at diversifying capital allocation and risk allocation. HERC merges and enhances the machine learning approach of HCAA and the Top-Down recursive bisection of HRP. In more detail, the modified Top-Down recursive division is based on the shape of dendrogram, follows an Equal Risk Contribution allocation and is extended to downside risk measures such as conditional value at risk (CVaR) and Conditional Drawdown at Risk (CDaR). The out-of-sample performances of hierarchical clustering based portfolios are evaluated across two empirical datasets, which differ in terms of number of assets and composition of the universe (multi-assets and individual stocks). Empirical results highlight that HERC Portfolios based on downside risk measures achieve statistically better risk-adjusted performances, especially those based on the CDaR.",
+			"abstract_source": "crossref",
+			"keywords": [
+				"hierarchical risk parity",
+				"hierarchical clustering",
+				"asset allocation",
+				"equal risk contribution",
+				"downside risk measures",
+				"conditional value at risk",
+				"recursive bisection",
+				"dendrogram",
+				"portfolio diversification",
+				"risk-adjusted performance"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-11",
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "Rag2024a",
@@ -45086,6 +45187,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "JK1981a",
+			"count": 681,
+			"source": "crossref",
+			"date": "2026-11-11"
+		},
+		{
+			"key": "JK1981a",
+			"count": 847,
+			"source": "openalex",
+			"date": "2026-11-11"
+		},
+		{
 			"key": "JK2002a",
 			"count": 3742,
 			"source": "crossref",
@@ -46638,6 +46751,18 @@
 			"count": 1276,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "LW2008a",
+			"count": 913,
+			"source": "crossref",
+			"date": "2026-11-11"
+		},
+		{
+			"key": "LW2008a",
+			"count": 996,
+			"source": "openalex",
+			"date": "2026-11-11"
 		},
 		{
 			"key": "LW2020a",
@@ -49122,6 +49247,18 @@
 			"count": 22745,
 			"source": "openalex",
 			"date": "2026-11-03"
+		},
+		{
+			"key": "Raf2018a",
+			"count": 26,
+			"source": "crossref",
+			"date": "2026-11-11"
+		},
+		{
+			"key": "Raf2018a",
+			"count": 47,
+			"source": "openalex",
+			"date": "2026-11-11"
 		},
 		{
 			"key": "Ral1994a",
@@ -54647,21 +54784,6 @@
 				"KT1987a",
 				"ZM1998a",
 				"AGK2019a"
-			]
-		},
-		{
-			"id": "po",
-			"title": "Portfolio Optimisation",
-			"description": "Mean-Variance · Mean-CVaR · HRP · HERC",
-			"keys": [
-				"Mar1991a",
-				"Ron2013a",
-				"Mar1952a",
-				"RU2000a",
-				"Pra2016a",
-				"BL1992a",
-				"DGU2009a",
-				"Lo2002a"
 			]
 		},
 		{
