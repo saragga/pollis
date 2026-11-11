@@ -517,6 +517,17 @@ code = '''
 (estimate = mean(holdout(estimate; seed=s) for s in 1:10), sample = mean(holdout(cov; seed=s) for s in 1:10))
 '''
 
+[[actionGroups.actions]]
+id = "intensity"
+label = "Shrinkage Intensity"
+desc = "The weight alpha on the target in (1 - alpha) S + alpha T that the shrinkage method chose"
+models = ["linear"]
+code = '''
+S0 = Matrix(cov(SimpleCovariance(), X))  # the sample covariance as LinearShrinkage uses it (divided by n)
+T  = Matrix(cov(LinearShrinkage({{target}}, 1.0), X))  # the target itself: alpha = 1
+(shrinkage_intensity = dot(vec(S - S0), vec(T - S0)) / sum(abs2, T - S0),)
+'''
+
 [[actionGroups]]
 id = "predict"
 label = "Predict"
@@ -556,6 +567,20 @@ code = '''
 P = inv(Symmetric(S))
 w = P * ones(p) ./ sum(P * ones(p))  # weights sum to 1
 (weights = w, variance = dot(w, S * w))
+'''
+
+[[actionGroups.actions]]
+id = "out-of-sample"
+label = "Out-of-Sample Risk"
+desc = "Over 50 random half-splits: estimate on one half, then measure the realised volatility of each minimum-variance portfolio on the other half (mean and spread across splits)"
+code = '''
+minvar(C) = (w = pinv(Matrix(C)) * ones(p); w ./ sum(w))  # pinv: a half with fewer rows than columns has a singular sample covariance
+h = div(n, 2)
+V = reduce(vcat, map(1:50) do seed
+    idx = randperm(MersenneTwister(seed), n); a, b = idx[1:h], idx[h+1:end]  # random split: assumes exchangeable rows (for a time series, prefer a rolling window)
+    [std(X[b, :] * minvar(estimate(X[a, :]))) std(X[b, :] * minvar(cov(X[a, :]))) std(X[b, :] * fill(1 / p, p))]
+end)  # splits x (this estimate, sample, equal weight)
+[(portfolio = k, mean_volatility = round(mean(V[:, j]), sigdigits=4), sd_across_splits = round(std(V[:, j]), sigdigits=2)) for (j, k) in enumerate(["this estimate", "sample", "equal weight"])]
 '''
 
 [[actionGroups]]

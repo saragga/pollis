@@ -54012,14 +54012,6 @@
 			]
 		},
 		{
-			"id": "mmn",
-			"title": "Market Microstructure Noise",
-			"keys": [
-				"GMSS2019a",
-				"GMSS2023a"
-			]
-		},
-		{
 			"id": "modelBenchmarks",
 			"title": "Benchmark Answering Models",
 			"commands": [
@@ -54752,16 +54744,6 @@
 				"NC2019a",
 				"KZ2020a",
 				"SKSPZ2022a"
-			]
-		},
-		{
-			"id": "rcme",
-			"title": "Robust Covariance Matrix Estimation",
-			"description": "Ledoit-Wolf · OAS · Nonlinear",
-			"keys": [
-				"LW2004a",
-				"CWEH2010a",
-				"LW2020a"
 			]
 		},
 		{

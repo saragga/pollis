@@ -50,7 +50,6 @@ import { CPS_PANEL } from './commands/cps.command.js';
 import { PPL_PANEL } from './commands/ppl.command.js';
 import { RXINFER_PANEL } from './commands/rxinfer.command.js';
 import { RULEBASED_PANEL } from './commands/rulebased.command.js';
-// Finance panels, deferred for a future Finance Toolbox: import { RCME_PANEL } from './commands/rcme.command.js';
 import { ENSEMBLE_PANEL } from './commands/ensemble.command.js';
 import { CLP_PANEL } from './commands/clp.command.js';
 import { CLH_PANEL } from './commands/clh.command.js';
@@ -66,7 +65,6 @@ import { CLF_PANEL } from './commands/clf.command.js';
 import { ADLP_PANEL } from './commands/adlp.command.js';
 import { SBI_PANEL } from './commands/sbi.command.js';
 import { EXP_PANEL } from './commands/exp.command.js';
-// Finance panels, deferred for a future Finance Toolbox: import { MMN_PANEL } from './commands/mmn.command.js';
 import { NNLS_PANEL } from './commands/nnls.command.js';
 import { TSLS_PANEL } from './commands/tsls.command.js';
 import { GMM_PANEL } from './commands/gmm.command.js';
@@ -227,9 +225,6 @@ CommandsRegistry.registerCommand('chiara.statistics.tvm.dtsv', () => { });
 
 CommandsRegistry.registerCommand('chiara.statistics.tvm.taylor', () => { });
 CommandsRegistry.registerCommand('chiara.statistics.tvm.ksc', () => { });
-// Finance panel, deferred: CommandsRegistry.registerCommand('chiara.statistics.eco.rcme', accessor => openScaffoldWebview(accessor, RCME_PANEL));
-
-// Finance panel, deferred: CommandsRegistry.registerCommand('chiara.statistics.eco.mmn', accessor => openScaffoldWebview(accessor, MMN_PANEL));
 
 // Finance panel, deferred: CommandsRegistry.registerCommand('chiara.statistics.rmt.lrm', accessor => openScaffoldWebview(accessor, LRM_PANEL));
 
@@ -546,8 +541,6 @@ export const NONLIN_CMPLX_ID = 'chiara.statistics.nonlin.cmplx';
 // Econometrics
 export const ECO_PO_ID = 'chiara.statistics.eco.po';
 export const ECO_CTSVM_ID = 'chiara.statistics.eco.ctsvm';
-export const ECO_RCME_ID = 'chiara.statistics.eco.rcme';
-export const ECO_MMN_ID = 'chiara.statistics.eco.mmn';
 export const ECO_IVS_ID = 'chiara.statistics.eco.ivs';
 export const TVM_TAYLOR_ID = 'chiara.statistics.tvm.taylor';
 export const TVM_KSC_ID = 'chiara.statistics.tvm.ksc';

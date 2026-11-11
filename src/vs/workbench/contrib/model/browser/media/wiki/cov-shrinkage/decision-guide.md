@@ -47,7 +47,7 @@ Set **Rank** at the number of eigenvalues standing clear of the rest on **Eigenv
 
 | Use | What to check | Note |
 |---|---|---|
-| Portfolio weights | Variance on later returns | **Minimum-Variance Weights** reports only the in-sample figure |
+| Portfolio weights | Variance on later returns | **Minimum-Variance Weights** reports only the in-sample figure; **Out-of-Sample Risk** measures it on held-out rows |
 | Outlier screening | Flags on clean data | Consider **Biweight**, as outliers should not shape the estimate |
 | Partial correlations | **Conditioning** | Smooth estimates shrink, but do not select |
 | A plug-in for a model | The model's own held-out performance | Log-likelihood may not reflect its needs |

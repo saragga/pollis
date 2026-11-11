@@ -35,6 +35,14 @@ Under **Linear** with a non-scalar target, or under **Biweight**, eigenvectors c
 
 **Minimum-Variance Weights** gives the portfolio with the lowest variance under `S`, with weights summing to 1, and it needs columns that are asset returns. Negative weights are short positions. The reported `variance` is computed under the same `S`, and so it is likely to be too low compared with what later returns show. Judge the choice of estimator by the variance on returns after the estimation period, not by this figure.
 
+## How to Read Out-of-Sample Risk
+
+**Out-of-Sample Risk** estimates the covariance on a random half of the rows and measures the realised volatility of the minimum-variance portfolio on the other half, over 50 splits, for this estimate, the sample covariance and equal weights. Lower is better, and the spread across splits shows how much of a gap is noise. The halves are drawn at random, so the rows are treated as exchangeable: for returns in time order, a rolling window measures the volatility after the estimation period instead. When a half has fewer rows than columns, the sample covariance is singular there and its weights are the minimum-norm ones.
+
+## How to Read Shrinkage Intensity
+
+**Shrinkage Intensity**, on the **Linear** tab, gives the weight alpha on the target in (1 - alpha) S + alpha T chosen by the shrinkage method. A value near 0 leaves the sample covariance almost unchanged, and a value near 1 replaces it by the target. With few rows for each column the estimated weight grows, and it falls as n grows.
+
 ## See Also
 
 - [Assumptions](assumptions.md) · [Diagnostics](diagnostics.md) · [Decision Guide](decision-guide.md)

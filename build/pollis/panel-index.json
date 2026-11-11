@@ -3902,7 +3902,8 @@
 				"hf-vol/tutorial-03-bipower.ipynb"
 			],
 			"packages": [
-				"HighFrequencyCovariance.jl"
+				"HighFrequencyCovariance.jl",
+				"TwoScalesVolatility.jl"
 			]
 		},
 		{
@@ -5271,40 +5272,6 @@
 			],
 			"packages": [
 				"MultilevelEstimators.jl"
-			]
-		},
-		{
-			"id": "mmn",
-			"title": "Market Microstructure Noise",
-			"source": "pollis",
-			"commands": [
-				{
-					"id": "chiara.statistics.eco.mmn",
-					"menuTitles": []
-				}
-			],
-			"portable": true,
-			"defaultModel": "main",
-			"decisionFirstColumn": "Model",
-			"toml": "src/vs/workbench/contrib/model/browser/webviews/mmn.toml",
-			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
-			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
-			"wikis": [
-				"mmn/assumptions.md",
-				"mmn/decision-guide.md",
-				"mmn/diagnostics.md",
-				"mmn/factsheet.md",
-				"mmn/interpretation.md",
-				"mmn/overview.md"
-			],
-			"notebooks": [
-				"mmn/tutorial-01-quickstart.ipynb",
-				"mmn/tutorial-02-prior.ipynb",
-				"mmn/tutorial-03-mcmc.ipynb",
-				"mmn/tutorial-04-posterior.ipynb"
-			],
-			"packages": [
-				"MicrostructureNoise.jl"
 			]
 		},
 		{
@@ -7077,40 +7044,6 @@
 			],
 			"packages": [
 				"QuasiMonteCarlo.jl"
-			]
-		},
-		{
-			"id": "rcme",
-			"title": "Robust Covariance Matrix Estimation",
-			"source": "pollis",
-			"commands": [
-				{
-					"id": "chiara.statistics.eco.rcme",
-					"menuTitles": []
-				}
-			],
-			"portable": true,
-			"defaultModel": "lw",
-			"decisionFirstColumn": "Model",
-			"toml": "src/vs/workbench/contrib/model/browser/webviews/rcme.toml",
-			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
-			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
-			"wikis": [
-				"rcme/assumptions.md",
-				"rcme/decision-guide.md",
-				"rcme/diagnostics.md",
-				"rcme/factsheet.md",
-				"rcme/interpretation.md",
-				"rcme/overview.md"
-			],
-			"notebooks": [
-				"rcme/tutorial-01-linear.ipynb",
-				"rcme/tutorial-02-targets.ipynb",
-				"rcme/tutorial-03-nonlinear.ipynb",
-				"rcme/tutorial-04-portfolio.ipynb"
-			],
-			"packages": [
-				"CovarianceEstimation.jl"
 			]
 		},
 		{
