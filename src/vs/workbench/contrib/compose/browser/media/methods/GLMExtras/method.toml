@@ -6,6 +6,8 @@ description = "A parametric bootstrap and exact case-deletion influence (delta b
 topic = "GLM Inference"
 license = "MIT"
 version = "0.2.0"
+updated = "2026-10-13"
+repository = "https://github.com/Trumpingtons/GLMExtras.jl"
 
 key = "DFH1989a"
 citation = "Dalal, S. R., Fowlkes, E. B. and Hoadley, B. (1989). Risk Analysis of the Space Shuttle: Pre-Challenger Prediction of Failure. Journal of the American Statistical Association 84(408), 945-957."

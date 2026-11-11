@@ -10,6 +10,7 @@
 import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { DEFAULT_RULES, normaliseCells, parseRules, RULES_TEMPLATE } from './tableRules';
 
 export const PDF_VIEWER_VIEW_TYPE = 'pollis.pdfViewer';
 
@@ -36,7 +37,21 @@ type ViewerMessage =
 	| { readonly command: 'readFile'; readonly token: number; readonly path: string }
 	| { readonly command: 'runInRepl'; readonly code: string }
 	| { readonly command: 'toolsShown'; readonly shown: boolean }
-	| { readonly command: 'colorize'; readonly token: number; readonly code: string };
+	| { readonly command: 'toolsWidth'; readonly width: number }
+	| { readonly command: 'colorize'; readonly token: number; readonly code: string }
+	| { readonly command: 'addTable'; readonly cells: readonly (readonly string[])[]; readonly page: number }
+	| { readonly command: 'normalise'; readonly token: number; readonly cells: readonly (readonly string[])[] }
+	| { readonly command: 'editRules' };
+
+/**
+ * A button of the area's table that the workbench asked for: its label, and the command it runs with `args`, the
+ * table's cells as corrected in the sidebar (`cells`, rows of strings) and the page it was taken from (`page`, from 1).
+ */
+export interface IAddTable {
+	readonly label: string;
+	readonly command: string;
+	readonly args?: Readonly<Record<string, string>>;
+}
 
 /** The command of Pollis that shows a menu of the webview as the workbench's menu (native on macOS), and gives back the chosen item's id. */
 const SHOW_MENU_COMMAND_ID = '_pollis.webview.showMenu';
@@ -52,6 +67,11 @@ const SAVE_FOLDER_KEY = 'pollis.pdfViewer.saveFolder';
 
 /** The key, in the global state, of whether the tools sidebar was last shown or hidden, for the next PDF. */
 const TOOLS_SHOWN_KEY = 'pollis.pdfViewer.toolsShown';
+/** The rules of Normalise Table, the user's and which of Pollis' are on. */
+const RULES_FILE = vscode.Uri.file(path.join(os.homedir(), '.pollis', 'pdf-table-rules.toml'));
+
+/** The width of the sidebar, in pixels, as last dragged. */
+const TOOLS_WIDTH_KEY = 'pollis.pdfViewer.toolsWidth';
 
 /** How long to wait before asking again while Julia installs Poppler_jll, the first time. */
 const INSTALL_RETRY_MS = 3000;
@@ -244,6 +264,7 @@ function viewerText(): Record<string, string> {
 		toolsTitle: vscode.l10n.t("The sidebar at the right of the pages: the area of Select Area, and the tools that read the PDF or make files from it, in Julia"),
 		showTools: vscode.l10n.t("Show the Tools"),
 		hideTools: vscode.l10n.t("Hide the Tools"),
+		resizeTools: vscode.l10n.t("Drag to Resize the Sidebar"),
 		readGroup: vscode.l10n.t("Read"),
 		makeGroup: vscode.l10n.t("Make"),
 		extractTextShort: vscode.l10n.t("The text of the pages (e.g. 1-3, 7) or the area"),
@@ -263,6 +284,19 @@ function viewerText(): Record<string, string> {
 		noText: vscode.l10n.t("There is no text in the area: the page may be a scan, or the area may hold only a picture."),
 		tableSize: vscode.l10n.t("{0} rows, {1} columns"),
 		tableShown: vscode.l10n.t("The first {0} rows are shown."),
+		editCells: vscode.l10n.t("Click a cell to correct it."),
+		editCellsAdd: vscode.l10n.t("Click a cell to correct it before adding the table."),
+		editCellsTitle: vscode.l10n.t("The corrections go into the table copied, saved or added; drawing the area again starts afresh"),
+		normalise: vscode.l10n.t("Normalise Table"),
+		normaliseTitle: vscode.l10n.t("Rewrites the values as programs read numbers: minus signs, powers of ten, thousands separators, significance stars, and the rules of your own"),
+		undoNormalise: vscode.l10n.t("Undo"),
+		undoNormaliseTitle: vscode.l10n.t("Puts back the cells as they were before Normalise Table"),
+		editRules: vscode.l10n.t("Edit Rules..."),
+		editRulesTitle: vscode.l10n.t("Opens the rules of Normalise Table, {0}: turn off a rule of Pollis or add your own", pathLabel(RULES_FILE.fsPath)),
+		normalised: vscode.l10n.t("Normalised: {0} cells changed, highlighted."),
+		normalisedNone: vscode.l10n.t("Normalised: no cell needed a change."),
+		cutPowers: vscode.l10n.t("{0} values end in × 10, flagged: the area cut off their raised exponents; draw it again with its top edge above them."),
+		notNumbers: vscode.l10n.t("{0} values are still not numbers: correct them by hand, or add a rule."),
 		gap: vscode.l10n.t("Column Gap (pt)"),
 		gapTitle: vscode.l10n.t("Words closer than this, side by side, are in the same column"),
 		rowTolerance: vscode.l10n.t("Row Tolerance (pt)"),
@@ -277,6 +311,7 @@ function viewerText(): Record<string, string> {
 		sendTextTitle: vscode.l10n.t("The text of the area, as a file in the question of Ask Pollis"),
 		sendTable: vscode.l10n.t("Table"),
 		sendTableTitle: vscode.l10n.t("The cells of the area, as a CSV file in the question of Ask Pollis"),
+		addTableTitle: vscode.l10n.t("The cells of the area, as corrected, added to the page that asked for the table"),
 		sendImage: vscode.l10n.t("Image"),
 		sendImageTitle: vscode.l10n.t("A picture of the area in the question of Ask Pollis, for a cloud model"),
 		fonts: vscode.l10n.t("Fonts"),
@@ -396,6 +431,10 @@ export class PdfViewerProvider implements vscode.CustomReadonlyEditorProvider<Pd
 	private readonly pendingPages = new Map<string, number>();
 	/** The mode to open a PDF in when its panel opens, by its URI. */
 	private readonly pendingModes = new Map<string, ViewerMode>();
+	/** The caption, such as `Table 2`, whose page to show a PDF at when its panel opens, by its URI. */
+	private readonly pendingCaptions = new Map<string, string>();
+	/** The button of the area's table that the workbench asked for, by the URI of the PDF. */
+	private readonly addTables = new Map<string, IAddTable>();
 
 	constructor(private readonly extensionUri: vscode.Uri, private readonly globalState: vscode.Memento) { }
 
@@ -431,6 +470,26 @@ export class PdfViewerProvider implements vscode.CustomReadonlyEditorProvider<Pd
 			}
 		} else {
 			this.pendingPages.set(uri.toString(), page);
+		}
+	}
+
+	/** Shows the page of a PDF where `caption` (e.g. `Table 2`) starts a line: in the panels that show it, else in the next one to open it. */
+	showCaption(uri: vscode.Uri, caption: string): void {
+		const open = this.panels.get(uri.toString());
+		if (open?.size) {
+			for (const panel of open) {
+				panel.webview.postMessage({ command: 'caption', caption });
+			}
+		} else {
+			this.pendingCaptions.set(uri.toString(), caption);
+		}
+	}
+
+	/** Gives the area's table of a PDF a button that sends it to the workbench, in every panel of the PDF. */
+	setAddTable(uri: vscode.Uri, addTable: IAddTable): void {
+		this.addTables.set(uri.toString(), addTable);
+		for (const panel of this.panels.get(uri.toString()) ?? []) {
+			panel.webview.postMessage({ command: 'addTable', label: addTable.label });
 		}
 	}
 
@@ -497,9 +556,11 @@ export class PdfViewerProvider implements vscode.CustomReadonlyEditorProvider<Pd
 				// The page and the mode asked for before the panel opened, the first time
 				const page = reload ? undefined : this.pendingPages.get(key);
 				const mode = reload ? undefined : this.pendingModes.get(key);
+				const caption = reload ? undefined : this.pendingCaptions.get(key);
 				this.pendingPages.delete(key);
 				this.pendingModes.delete(key);
-				await post({ command: 'open', data, name: baseName(document.uri), reload, page, mode });
+				this.pendingCaptions.delete(key);
+				await post({ command: 'open', data, name: baseName(document.uri), reload, page, mode, caption, addLabel: this.addTables.get(key)?.label });
 			} catch (error) {
 				if (error instanceof vscode.FileSystemError && error.code === 'FileNotFound') {
 					await this.missing(document.uri, panel);
@@ -595,6 +656,45 @@ export class PdfViewerProvider implements vscode.CustomReadonlyEditorProvider<Pd
 				case 'toolsShown':
 					await this.globalState.update(TOOLS_SHOWN_KEY, message.shown);
 					break;
+				case 'toolsWidth':
+					await this.globalState.update(TOOLS_WIDTH_KEY, Number(message.width) || undefined);
+					break;
+				case 'addTable': {
+					const addTable = this.addTables.get(key);
+					if (addTable) {
+						try {
+							await vscode.commands.executeCommand(addTable.command, { ...addTable.args, cells: message.cells, page: message.page });
+						} catch (error) {
+							vscode.window.showWarningMessage(String(error instanceof Error ? error.message : error));
+						}
+					}
+					break;
+				}
+				case 'normalise': {
+					// The rules are read each time, so that a rule just saved applies at once
+					try {
+						let text: string | undefined;
+						try {
+							text = new TextDecoder().decode(await vscode.workspace.fs.readFile(RULES_FILE));
+						} catch {
+							text = undefined;
+						}
+						const cells = Array.isArray(message.cells) ? message.cells.map(row => Array.isArray(row) ? row.map(cell => String(cell)) : []) : [];
+						await post({ command: 'normalised', token: message.token, ...normaliseCells(cells, text === undefined ? DEFAULT_RULES : parseRules(text)) });
+					} catch (error) {
+						await post({ command: 'normalised', token: message.token, error: error instanceof Error ? error.message : String(error) });
+					}
+					break;
+				}
+				case 'editRules': {
+					try {
+						await vscode.workspace.fs.stat(RULES_FILE);
+					} catch {
+						await vscode.workspace.fs.writeFile(RULES_FILE, new TextEncoder().encode(RULES_TEMPLATE));
+					}
+					await vscode.window.showTextDocument(RULES_FILE, { viewColumn: vscode.ViewColumn.Beside, preview: false });
+					break;
+				}
 				case 'menu': {
 					let chosen: string | undefined;
 					try {
@@ -727,6 +827,7 @@ export class PdfViewerProvider implements vscode.CustomReadonlyEditorProvider<Pd
 			text: viewerText(),
 			// Shown until the user hides it
 			toolsShown: this.globalState.get<boolean>(TOOLS_SHOWN_KEY, true),
+			toolsWidth: this.globalState.get<number>(TOOLS_WIDTH_KEY),
 		};
 		const n = nonce();
 		const source = webview.cspSource;

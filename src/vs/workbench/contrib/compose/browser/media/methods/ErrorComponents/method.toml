@@ -6,6 +6,8 @@ description = "Random-effects panel regressions with the variance components est
 topic = "Panel Econometrics"
 license = "MIT"
 version = "0.2.0"
+updated = "2026-10-13"
+repository = "https://github.com/Trumpingtons/ErrorComponents.jl"
 
 key = "BSJ2001a"
 citation = "Baltagi, B. H., Song, S. H. and Jung, B. C. (2001). The unbalanced nested error component regression model. Journal of Econometrics 101(2), 357-381."

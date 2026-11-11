@@ -24,7 +24,7 @@ import { INotificationService } from '../../../../platform/notification/common/n
 import { IProgressService } from '../../../../platform/progress/common/progress.js';
 import { Registry } from '../../../../platform/registry/common/platform.js';
 import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
-import { IRequestService } from '../../../../platform/request/common/request.js';
+import { IArticleDownloadService } from '../common/articleDownload.js';
 import { IEditorService, SIDE_GROUP } from '../../../services/editor/common/editorService.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { parseToml } from '../../model/browser/common/tomlPanelData.js';
@@ -40,13 +40,13 @@ import { NEWMETHOD_METADATA } from '../../model/browser/webviews/newMethod.data.
 import { buildWebviewHtml } from '../../model/browser/webviews/webviewScaffold.js';
 import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
 import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
-import { appendToml, ARTICLE_DATA_SCRIPT, ARTICLE_DATA_STYLE, ArticleDataMessage, articleDataHtml, articleDataText, createArticleData, draftName, IArticleDataKind, IArticleDataRecord, IArticleDataServices, inputBlock, isArticleDataMessage, IStudyInput, makesFolder, openRecordArticle, readTables, setTomlValue, table, text, tomlString, withPaths } from './articleAndData.js';
+import { appendToml, ARTICLE_DATA_SCRIPT, ARTICLE_DATA_STYLE, ArticleDataMessage, articleDataHtml, articleDataText, createArticleData, draftName, IArticleDataKind, IArticleDataRecord, IArticleDataServices, inputBlock, isArticleDataMessage, IStudyInput, makesFolder, readTables, setTomlValue, table, text, tomlString, withPaths } from './articleAndData.js';
 
 // Compose > Replication > Create Article Method (Browse Article Methods, which lists them, is in workflowLibrary.ts).
 // A method is a folder of ~/.pollis/methods with method.toml, its code in src/NAME.jl (module NAME),
 // the published results it must reproduce in targets/*.csv and the user's notes for a coding agent in
 // INSTRUCTIONS.md. New Method opens the page of a new method with no folder: the first thing typed or added makes it, named after the title, else NewMethod
-// while it is still empty. Each method opens on its own page beside the article, shown in the integrated browser in an in-memory session. The article
+// while it is still empty. Each method opens on its own page; its article opens from the page, in the integrated browser in an in-memory session. The article
 // and the input data are only links in method.toml: the page reads the data into memory to show it, and
 // nothing of either is written to disk, not even a cache. Only when the user asks, Save a Copy... keeps a
 // copy outside Pollis (by default in the data folder of a Pollis Workspace) and records its path as `local`;
@@ -427,21 +427,25 @@ export async function methodFromReplication(accessor: ServicesAccessor, source: 
 const openPages = new Map<string, WebviewInput>();
 
 /**
- * Opens a method: its article in the integrated browser and, beside it, its page, the five steps of making
+ * Opens a method: its page, the five steps of making
  * it: Article and Data (the input tables read into memory from their links, and the target tables), Write
  * a Method, Write a Vignette, Prepare for Registration and Package and Publish, updated as the method's
  * files change. `step` is the step to show. With no folder, it opens a new method with nothing on disk:
  * the first thing typed or added makes its folder, named after its title, else NewMethod, a provisional
  * name until the user gives it a Package Name; a draft still empty when its page closes is deleted.
  */
-async function openMethodPage(accessor: ServicesAccessor, existing?: URI, step?: string): Promise<void> {
+/**
+ * Opens the page of a method, a new one without `existing`, at its `step` when given. `saved` is the form whose
+ * save reopened the page (the Package Name, after a rename), with what it says it saved.
+ */
+async function openMethodPage(accessor: ServicesAccessor, existing?: URI, step?: string, saved?: { readonly form: string; readonly message: string }): Promise<void> {
 	const webviewWorkbenchService = accessor.get(IWebviewWorkbenchService);
 	const fileService = accessor.get(IFileService);
 	const editorService = accessor.get(IEditorService);
 	const notificationService = accessor.get(INotificationService);
 	const commandService = accessor.get(ICommandService);
 	const fileDialogService = accessor.get(IFileDialogService);
-	const requestService = accessor.get(IRequestService);
+	const requestService = accessor.get(IArticleDownloadService);
 	const progressService = accessor.get(IProgressService);
 	const contextService = accessor.get(IWorkspaceContextService);
 	const pathService = accessor.get(IPathService);
@@ -452,6 +456,7 @@ async function openMethodPage(accessor: ServicesAccessor, existing?: URI, step?:
 	const notebookEditorModelResolverService = accessor.get(INotebookEditorModelResolverService);
 	const notebookKernelService = accessor.get(INotebookKernelService);
 	const storageService = accessor.get(IStorageService);
+	const dialogService = accessor.get(IDialogService);
 
 	let draft = !existing;
 	// Whether the method's folder exists: a new method has none until the first thing is typed or added
@@ -476,8 +481,7 @@ async function openMethodPage(accessor: ServicesAccessor, existing?: URI, step?:
 		return;
 	}
 	let method: IMethod = initial;
-	const articleServices: IArticleDataServices = { fileService, fileDialogService, requestService, progressService, contextService, pathService, environmentService, editorService, commandService, instantiationService };
-	await openRecordArticle(articleServices, method);
+	const articleServices: IArticleDataServices = { fileService, fileDialogService, dialogService, requestService, progressService, contextService, pathService, environmentService, editorService, commandService, instantiationService };
 	const webviewInput = webviewWorkbenchService.openWebview(
 		{
 			title: method.title,
@@ -555,11 +559,11 @@ async function openMethodPage(accessor: ServicesAccessor, existing?: URI, step?:
 			notificationService.error(toErrorMessage(error));
 		}
 	};
-	// A form of the page: its error is shown under it, and it closes when done
-	const submit = async (form: string, action: () => Promise<void>) => {
+	// A form of the page: its error is shown under it, else what it saved, the action's message or "Saved"
+	const submit = async (form: string, action: () => Promise<string | void>) => {
 		try {
-			await action();
-			webviewInput.webview.postMessage({ command: 'formDone', form });
+			const message = await action();
+			webviewInput.webview.postMessage({ command: 'formDone', form, message });
 		} catch (error) {
 			webviewInput.webview.postMessage({ command: 'formError', form, message: toErrorMessage(error) });
 		}
@@ -573,6 +577,7 @@ async function openMethodPage(accessor: ServicesAccessor, existing?: URI, step?:
 		},
 		submit,
 		run,
+		disposables,
 	});
 
 	disposables.add(webviewInput.webview.onMessage(async (e: { message: MethodMessage }) => {
@@ -593,6 +598,9 @@ async function openMethodPage(accessor: ServicesAccessor, existing?: URI, step?:
 			post();
 			if (step) {
 				webviewInput.webview.postMessage({ command: 'step', step });
+			}
+			if (saved) {
+				webviewInput.webview.postMessage({ command: 'formDone', form: saved.form, message: saved.message });
 			}
 		} else if (message.command === 'writeMethod' || message.command === 'writeVignette' || message.command === 'prepareRegistration') {
 			commandService.executeCommand(AGENT_TASKS[message.command], folder);
@@ -617,22 +625,24 @@ async function openMethodPage(accessor: ServicesAccessor, existing?: URI, step?:
 				if (invalid) {
 					throw new Error(invalid);
 				}
+				const done = localize('newMethods.name.saved', "Saved: the method's folder, its Julia package and its module are named {0}.", name);
 				if (!created) {
 					// A new method's folder is made with its Package Name
 					await create(current.title === draftTitle ? '' : current.title, name);
 					draft = false;
 					post();
-					return;
+					return done;
 				}
 				const renamed = await renameMethod(fileService, pathService, current, name, current.title);
 				draft = false;
 				if (renamed.toString() !== folder.toString()) {
-					// The page reopens on the method's new folder
+					// The page reopens on the method's new folder, saying so
 					webviewInput.dispose();
-					await instantiationService.invokeFunction(openMethodPage, renamed, 'register');
-				} else {
-					post();
+					await instantiationService.invokeFunction(openMethodPage, renamed, 'register', { form: 'name', message: done });
+					return undefined;
 				}
+				post();
+				return done;
 			});
 		} else if (isArticleDataMessage(message)) {
 			articleData.handle(message);
@@ -645,7 +655,11 @@ async function openMethodPage(accessor: ServicesAccessor, existing?: URI, step?:
 			}
 		} else if (message.command === 'instructions' || message.command === 'vignetteInstructions') {
 			const file = message.command === 'instructions' ? INSTRUCTIONS_FILE : VIGNETTE_INSTRUCTIONS_FILE;
-			run(() => fileService.writeFile(joinPath(folder, file), VSBuffer.fromString(message.text)).then(() => undefined));
+			const notes = message.command;
+			run(async () => {
+				await fileService.writeFile(joinPath(folder, file), VSBuffer.fromString(message.text));
+				webviewInput.webview.postMessage({ command: 'notesSaved', id: notes });
+			});
 		} else if (message.command === 'open') {
 			const files = ['method.toml', `src/${current.name}.jl`, current.vignette, ...current.targets.map(target => target.file), ...current.inputs.map(input => input.file)];
 			if (files.includes(message.file)) {
@@ -660,8 +674,7 @@ const PAGE_STYLE = `${ARTICLE_DATA_STYLE}
 		.step-pane {
 			.publish { display: flex; flex-direction: column; gap: 12px; margin: 0 0 14px 0; max-width: 900px; }
 			.publish .row { display: flex; align-items: baseline; gap: 12px; }
-			.publish button { min-width: 260px; text-align: left; }
-		}`;
+			.publish button { min-width: 260px; text-align: left; }		}`;
 
 /**
  * The method page, in the Time Arrow style of the scaffold, a pane for each of its five steps: its texts come
@@ -675,10 +688,10 @@ function pageHtml(): string {
 			targetsIntro: localize('newMethods.page.targetsIntro', "The published results the method must reproduce: every printed value becomes a test of the package."),
 			emptyInputHint: localize('newMethods.input.emptyDetail', "A table of the method, inputs/NAME.csv, opened to type in: a header line of column names, then the values"),
 			targetFilesHint: localize('newMethods.page.targetFilesHint', "CSV files of published tables, copied into the method: row labels in the first column, the values as printed"),
-			targetArticleHint: localize('newMethods.page.targetArticleHint', "Your coding agent reads the article and types the tables in as target tables, every value as printed. Check them against the article: the tests are only as right as the targets."),
+			targetArticleHint: localize('newMethods.page.targetArticleHint', "Select in PDF opens the article in the PDF Viewer at the table, one at a time, with the area tool on: draw an area around it and press Table under Send to Target Tables. Ask Agent has your coding agent type the tables in instead. Check every value against the article: the tests are only as right as the targets."),
 			noTargets: localize('newMethods.page.noTargets', "No target tables yet. Without data and expected results there is no new method."),
 		}),
-		intro: localize('newMethods.page.intro', "A method reproduces what an article publishes: its tables become the tests of a Julia package, which the steps below make, with the article open beside this page."),
+		intro: localize('newMethods.page.intro', "A method reproduces what an article publishes: its tables become the tests of a Julia package, which the steps below make."),
 		// The steps
 		stepArticle: localize('newMethods.step.article', "Article and Data"),
 		stepMethod: localize('newMethods.step.method', "Write a Method"),
@@ -745,7 +758,7 @@ function pageHtml(): string {
 			<p class="small hint">${text.titleHint}</p>
 			<p class="error small" id="error-title"></p>
 		</div>
-		<h2>${text.instructions}</h2>
+		<h2 id="heading-instructions">${text.instructions}</h2>
 		<p class="intro">${withPaths(text.instructionsIntro)}</p>
 		<textarea id="instructions" placeholder="${text.instructionsPlaceholder}"></textarea>
 		<div class="actions">
@@ -766,7 +779,7 @@ function pageHtml(): string {
 			<p class="small hint">${text.vignetteTitleHint}</p>
 			<p class="error small" id="error-vignetteTitle"></p>
 		</div>
-		<h2>${text.instructions}</h2>
+		<h2 id="heading-vignetteInstructions">${text.instructions}</h2>
 		<p class="intro">${text.vignetteIntro}</p>
 		<textarea id="vignetteInstructions" placeholder="${text.vignettePlaceholder}"></textarea>
 		<div class="actions">
@@ -805,7 +818,7 @@ function pageHtml(): string {
 			<p class="small hint">${text.ownerHint}</p>
 		</div>
 		<div class="publish">
-			<div class="row"><button class="action primary" data-publish="test">${text.packageTest}</button><span class="small">${text.packageTestDetail}</span></div>
+			<div class="row"><button class="action current" data-publish="test">${text.packageTest}</button><span class="small">${text.packageTestDetail}</span></div>
 			<div class="row"><button class="action" data-publish="push">${text.packagePush}</button><span class="small">${text.packagePushDetail}</span></div>
 			<div class="row"><button class="action" data-publish="register">${text.packageRegister}</button><span class="small">${text.packageRegisterDetail}</span></div>
 		</div>
@@ -830,7 +843,6 @@ function pageHtml(): string {
 		document.getElementById('error-package').textContent = '';
 		vscode.postMessage({ command: 'package', action: button.dataset.publish, owner: value('owner') });
 	}));
-
 	// The Package Name suggested in its field: the title without spaces, PanelRandomEffects for Panel Random Effects
 	function suggestName() {
 		const name = value('title').split(/[^A-Za-z0-9]+/).map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('');
@@ -844,6 +856,7 @@ function pageHtml(): string {
 		const area = document.getElementById(id);
 		let timer;
 		area.addEventListener('input', () => {
+			showSaved(document.getElementById('heading-' + id), '');
 			clearTimeout(timer);
 			timer = setTimeout(() => vscode.postMessage({ command, text: area.value }), 500);
 		});
@@ -858,6 +871,10 @@ function pageHtml(): string {
 
 	window.addEventListener('message', event => {
 		const message = event.data;
+		if (message.command === 'notesSaved') {
+			showSaved(document.getElementById('heading-' + message.id), TEXT.saved);
+			return;
+		}
 		if (articleDataMessage(message) || message.command !== 'method') {
 			return;
 		}

@@ -668,8 +668,9 @@ as medicine, astrophysics, tourism or music, or a way of working, such as self-s
 study companion: \textbf{Self-Study: Learn and Practise}, the last below. Lifestyle toolboxes, for everyday
 tasks such as planning a trip, are coming soon. Four are published:
 \begin{itemize}
-  \item \textbf{Finance}: ARIMAX, VAR and VECM, GARCH-type and regime switching models, point
-    processes, forecasting, Bayesian asset-pricing factor models.
+  \item \textbf{Finance}: volatility from daily and intraday prices, high-frequency covariance, ARIMAX,
+    VAR and VECM, GARCH-type and regime switching models, point processes, forecasting, Bayesian
+    asset-pricing factor models.
   \item \textbf{Economics}: business cycle filters, stochastic volatility, DSGE and heterogeneous-agent
     models, continuous-time macro-finance, game theory.
   \item \textbf{Core Mathematics}: symbolic maths, linear algebra, nonlinear systems, numerical
@@ -861,7 +862,7 @@ title to change it. Nothing is saved until you type or add something. Each repli
   \item \ui{Plan}, optional: for each target, \ui{Computed By} is \ui{Julia Packages}, \ui{Notebook Code}
     or \ui{Article Method}, with a \ui{Note}, saved as you change it. \ui{Values} is \ui{Exact}, compared to
     the digits printed, or \ui{Random}, as for a simulation, the bootstrap or a random forest, compared within
-    its Monte Carlo noise from the \ui{Runs in Julia} and the \ui{Runs in the Article}. \ui{Plan with Agent} proposes a plan.
+    its Monte Carlo noise from the \ui{Runs in Julia} and the \ui{Runs in the Article}. Choose in each row, or have \ui{Ask Agent} propose a plan.
     \ui{Make an Article Method}, on a table's row, starts a method for that table, and the notebook can hold
     its code until the method is written.
   \item \ui{Replicate}: write \ui{Instructions}, saved in \texttt{INSTRUCTIONS.md}, and click \ui{Replicate
@@ -945,9 +946,10 @@ organization, and the GitHub CLI, \texttt{gh}, signed in; Pollis asks first: \em
 \ldots?}
 
 \subhead{Browse methods and read vignettes}
-\ui{Compose > Replication > Browse Article Methods...} lists yours, \ui{In Progress} and \ui{Published by You},
-then the \ui{Library} of nine methods by Pollis, from arc-fs to threshold autoregression: click one to open
-your own copy. \ui{Delete} and \ui{Delete Empty Article Methods} move folders to the Trash. \ui{Help >
+\ui{Compose > Replication > Browse Article Methods...} lists yours \ui{In
+Progress}, then the \ui{Library} of the published methods, those by Pollis, from arc-fs to two-scales realized
+volatility, and those you pushed with \ui{Package and Publish}, each with its \ui{Author}: click a heading to
+sort by it, and a method to open your own copy. \ui{Delete} and \ui{Delete Empty Article Methods} move folders to the Trash. \ui{Help >
 Documentation > Package Vignettes} lists, in one table, the vignettes of the packages in the registry and of
 those on your computer, marked \ui{Installed} (they open offline); click a heading to sort by it.
 
@@ -992,6 +994,7 @@ LSTNet & Time series forecasting & Lai, Chang, Yang and Liu's LSTNet-Skip and th
 PeriodicGARCH & Volatility & Bollerslev and Ghysels's periodic GARCH \\
 PropensityMatching & K-nearest neighbours & Dehejia and Wahba, and its replications \\
 ThresholdAR & Nonlinear dynamics & Tong and Lim's threshold autoregression \\
+TwoScalesVolatility & High-frequency volatility & Zhang, Mykland and A\"{\i}t-Sahalia's two-scales estimator on the Heston model \\
 \end{tabularx}}
 
 \subhead{Install a method package}
@@ -1022,6 +1025,8 @@ HARE & Heteroskedasticity and autocorrelation estimators &
   \ui{with Heteroskedasticity + AR(1)} \\
 RangeVol & Range-based volatility estimators &
   \ui{Extend > Finance > Measuring Volatility}, with the Finance Toolbox \\
+TwoScalesVolatility & Two-scales realized volatility and the variance of microstructure noise &
+  \ui{Extend > Finance > High-Frequency Analysis > High-Frequency Volatility}, with the Finance Toolbox \\
 \end{tabularx}}
 
 \subhead{Install one}

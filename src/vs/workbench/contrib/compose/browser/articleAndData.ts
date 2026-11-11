@@ -6,23 +6,31 @@
 import { streamToBuffer, VSBuffer } from '../../../../base/common/buffer.js';
 import { CancellationToken } from '../../../../base/common/cancellation.js';
 import { toErrorMessage } from '../../../../base/common/errorMessage.js';
-import { basename, joinPath } from '../../../../base/common/resources.js';
+import { DisposableMap, DisposableStore, MutableDisposable, toDisposable } from '../../../../base/common/lifecycle.js';
+import { Schemas } from '../../../../base/common/network.js';
+import { basename, dirname, joinPath } from '../../../../base/common/resources.js';
+import { escapeRegExpCharacters } from '../../../../base/common/strings.js';
 import { URI } from '../../../../base/common/uri.js';
+import { generateUuid } from '../../../../base/common/uuid.js';
 import { localize } from '../../../../nls.js';
 import { BrowserViewCommandId } from '../../../../platform/browserView/common/browserView.js';
-import { ICommandService } from '../../../../platform/commands/common/commands.js';
-import { IFileDialogService } from '../../../../platform/dialogs/common/dialogs.js';
+import { CommandsRegistry, ICommandService } from '../../../../platform/commands/common/commands.js';
+import { IDialogService, IFileDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 import { IEnvironmentService } from '../../../../platform/environment/common/environment.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
 import { IProgressService, ProgressLocation } from '../../../../platform/progress/common/progress.js';
-import { asText, IRequestService, isSuccess } from '../../../../platform/request/common/request.js';
+import { asText, isSuccess } from '../../../../platform/request/common/request.js';
 import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
+import { EditorsOrder } from '../../../common/editor.js';
+import { openPdfInViewer } from '../../../common/pdfViewer.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { TomlValue } from '../../model/browser/common/tomlPanelData.js';
+import { spinnerCss, spinnerSvg } from '../../model/browser/webviews/webviewScaffold.js';
 import { defaultCopyFolder, isInsidePollis } from '../../pollisWorkspace/browser/pollisWorkspace.contribution.js';
 import { IWebview } from '../../webview/browser/webview.js';
+import { IArticleDownloadService } from '../common/articleDownload.js';
 import { skillFile, startAgent } from './pollisAgents.js';
 
 // Article and Data, the first step of the pages that start from an article: Create Article Method (newMethods.ts) and
@@ -177,6 +185,31 @@ function variableName(file: string): string {
 	return name || 'data';
 }
 
+/**
+ * Removes the table `[section]` of a record file: its header and its lines down to the next table, but the
+ * comments and blank lines just before that table, which belong to it.
+ */
+async function removeTomlTable(fileService: IFileService, file: URI, section: string): Promise<void> {
+	const lines = (await fileService.readFile(file)).value.toString().split('\n');
+	const start = lines.findIndex(line => line.trim() === `[${section}]`);
+	if (start < 0) {
+		return;
+	}
+	let end = start + 1;
+	while (end < lines.length && !/^\s*\[/.test(lines[end])) {
+		end++;
+	}
+	if (end < lines.length) {
+		while (end > start + 1 && /^\s*(#.*)?$/.test(lines[end - 1])) {
+			end--;
+		}
+	}
+	// One blank line is left where the table was, not two
+	const before = start > 0 && lines[start - 1].trim() === '' ? start - 1 : start;
+	lines.splice(before, end - before);
+	await fileService.writeFile(file, VSBuffer.fromString(lines.join('\n')));
+}
+
 /** Appends a block of TOML to a record file. */
 export async function appendToml(fileService: IFileService, file: URI, block: string): Promise<void> {
 	const content = (await fileService.readFile(file)).value.toString();
@@ -258,7 +291,7 @@ export function validateLink(value: string): string | undefined {
 	return /^https?:\/\/\S+$/.test(value.trim()) ? undefined : localize('articleData.link.invalid', "A link starting with https://");
 }
 
-async function download(requestService: IRequestService, url: string): Promise<string> {
+async function download(requestService: IArticleDownloadService, url: string): Promise<string> {
 	const context = await requestService.request({ type: 'GET', url, callSite: 'articleData.data' }, CancellationToken.None);
 	if (!isSuccess(context)) {
 		throw new Error(localize('articleData.downloadFailed', "Reading {0} failed (server returned {1}).", url, context.res.statusCode ?? '?'));
@@ -266,7 +299,7 @@ async function download(requestService: IRequestService, url: string): Promise<s
 	return (await asText(context)) ?? '';
 }
 
-async function downloadBytes(requestService: IRequestService, url: string): Promise<VSBuffer> {
+async function downloadBytes(requestService: IArticleDownloadService, url: string): Promise<VSBuffer> {
 	const context = await requestService.request({ type: 'GET', url, callSite: 'articleData.copy' }, CancellationToken.None);
 	if (!isSuccess(context)) {
 		throw new Error(localize('articleData.downloadFailed', "Reading {0} failed (server returned {1}).", url, context.res.statusCode ?? '?'));
@@ -278,7 +311,9 @@ async function downloadBytes(requestService: IRequestService, url: string): Prom
 export interface IArticleDataServices {
 	readonly fileService: IFileService;
 	readonly fileDialogService: IFileDialogService;
-	readonly requestService: IRequestService;
+	readonly dialogService: IDialogService;
+	/** The downloads, from the main process: an article's server seldom allows the window's origin. */
+	readonly requestService: IArticleDownloadService;
 	readonly progressService: IProgressService;
 	readonly contextService: IWorkspaceContextService;
 	readonly pathService: IPathService;
@@ -330,7 +365,7 @@ interface IDataset {
 }
 
 /** The datasets of PollisDatasets, from its catalogue. */
-async function datasetCatalogue(requestService: IRequestService): Promise<IDataset[]> {
+async function datasetCatalogue(requestService: IArticleDownloadService): Promise<IDataset[]> {
 	const catalogue = await download(requestService, `${DATASETS_URL}/datasets.toml`);
 	const datasets: IDataset[] = [];
 	for (const block of catalogue.split(/^\[\[datasets\]\]\s*$/m).slice(1)) {
@@ -360,14 +395,49 @@ export interface IArticleDataKind {
 /** The messages of Article and Data. */
 export type ArticleDataMessage =
 	| { readonly command: 'openArticle' | 'saveArticle' | 'addTargetFiles' | 'catalogue' }
-	| { readonly command: 'setArticle'; readonly url: string }
+	| { readonly command: 'setArticle'; readonly url: string; readonly open?: boolean }
 	| { readonly command: 'addLink'; readonly url: string; readonly name: string; readonly delim: string }
 	| { readonly command: 'addDataset'; readonly id: string }
 	| { readonly command: 'addInput' | 'addTarget'; readonly name: string }
-	| { readonly command: 'fromArticle'; readonly kind: 'inputs' | 'targets'; readonly tables: string }
-	| { readonly command: 'saveInput'; readonly name: string };
+	| { readonly command: 'fromArticle' | 'fromPdf'; readonly kind: 'inputs' | 'targets'; readonly tables: string }
+	| { readonly command: 'saveInput'; readonly name: string }
+	| { readonly command: 'deleteTable'; readonly kind: 'inputs' | 'targets'; readonly name: string };
 
-const ARTICLE_DATA_COMMANDS: ReadonlySet<string> = new Set(['openArticle', 'saveArticle', 'addTargetFiles', 'catalogue', 'setArticle', 'addLink', 'addDataset', 'addInput', 'addTarget', 'fromArticle', 'saveInput']);
+const ARTICLE_DATA_COMMANDS: ReadonlySet<string> = new Set(['openArticle', 'saveArticle', 'addTargetFiles', 'catalogue', 'setArticle', 'addLink', 'addDataset', 'addInput', 'addTarget', 'fromArticle', 'fromPdf', 'saveInput', 'deleteTable']);
+
+/**
+ * The command the PDF Viewer runs when its Send to Target Tables (or Input Tables) is pressed: `{ token, csv, page }`,
+ * the token of the page that opened it, the area's table as CSV text and its page in the PDF.
+ */
+const ADD_TABLE_FROM_PDF_COMMAND_ID = '_pollis.articleData.addTableFromPdf';
+
+/** What each page that opened the PDF Viewer for a table does with it, by the token it gave the viewer. */
+const pdfRequests = new Map<string, (cells: readonly (readonly string[])[], page: number) => void>();
+
+CommandsRegistry.registerCommand(ADD_TABLE_FROM_PDF_COMMAND_ID, (_accessor, args?: { readonly token?: string; readonly cells?: readonly (readonly string[])[]; readonly page?: number }) => {
+	const add = args?.token ? pdfRequests.get(args.token) : undefined;
+	if (!add) {
+		throw new Error(localize('articleData.fromPdf.closed', "The page that asked for this table is closed: open it again and press Select in PDF."));
+	}
+	add(Array.isArray(args?.cells) ? args.cells.filter(row => Array.isArray(row)).map(row => row.map(cell => String(cell))) : [], Number(args?.page) || 0);
+});
+
+/**
+ * The CSV text of a table taken from a PDF, its cells as the PDF Viewer sent them (Normalise Table there writes the
+ * values as programs read numbers); a header line of `label`, `Column 1`... when the first row holds values, as when
+ * the area left the table's header out; cells quoted when they need it.
+ */
+function tableCsv(cells: readonly (readonly string[])[]): string {
+	const width = Math.max(0, ...cells.map(row => row.length));
+	const rows = cells.map(row => Array.from({ length: width }, (_, j) => (row[j] ?? '').trim()));
+	// A row of values starts with a digit, a sign or a point, numbers or not yet (a power of ten cut off by the area)
+	const isValue = (value: string) => /^[-+]?\.?\d/.test(value);
+	if (rows.length && rows[0].slice(1).some(isValue)) {
+		rows.unshift(['label', ...Array.from({ length: width - 1 }, (_, j) => localize('articleData.fromPdf.column', "Column {0}", j + 1))]);
+	}
+	const quoted = (value: string) => /[",\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
+	return rows.map(row => row.map(quoted).join(',')).join('\n') + '\n';
+}
 
 /** Whether a page's message is one of Article and Data's. */
 export function isArticleDataMessage(message: { readonly command: string }): message is ArticleDataMessage {
@@ -416,6 +486,8 @@ export interface IArticleDataHost {
 	submit(form: string, action: () => Promise<void>): void;
 	/** Runs an action, its error shown as a notification. */
 	run(action: () => Promise<void>): void;
+	/** The page's disposables, disposed with its webview. */
+	readonly disposables: DisposableStore;
 }
 
 /** Article and Data on a page: what the page calls to show its tables and to handle its messages. */
@@ -430,6 +502,82 @@ export function createArticleData(services: IArticleDataServices, kind: IArticle
 	const { fileService, requestService, editorService, fileDialogService, instantiationService } = services;
 	const recordFile = () => joinPath(host.record().folder, kind.recordFile);
 	const openArticle = () => openRecordArticle(services, host.record());
+	// The terminal of the coding agent last asked for tables of each kind, whose closing the page is told of
+	const agentTerminals = host.disposables.add(new DisposableMap<'inputs' | 'targets'>());
+	// The table of each kind last asked for in the PDF Viewer, which the viewer's button adds while the page is open
+	const pdfTokens = host.disposables.add(new DisposableMap<'inputs' | 'targets'>());
+	// The article downloaded for the PDF Viewer when there is no saved copy, deleted when the page closes
+	let downloaded: { readonly url: string; readonly file: URI } | undefined;
+	const temporaryArticle = host.disposables.add(new MutableDisposable());
+
+	/**
+	 * The article's PDF that the integrated browser downloaded, as it does each PDF it reaches, and the PDF Viewer
+	 * shows: an open file of the browser's folder of PDFs (pollis-pdfs-N, in the system's temporary folder) named as the
+	 * link's file, with a number when the name was taken, the most recently shown first.
+	 */
+	const browserCopy = (url: string): URI | undefined => {
+		const name = copyName(url, '', '.pdf');
+		if (!/^.+\.pdf$/i.test(name)) {
+			return undefined;
+		}
+		const sameName = new RegExp(`^${escapeRegExpCharacters(name.slice(0, -4))}( \\(\\d+\\))?\\.pdf$`, 'i');
+		return editorService.getEditors(EditorsOrder.MOST_RECENTLY_ACTIVE)
+			.map(identifier => identifier.editor.resource)
+			.find((resource): resource is URI => resource?.scheme === Schemas.file && /^pollis-pdfs-\d+$/.test(basename(dirname(resource))) && sameName.test(basename(resource)));
+	};
+
+	/** The article's PDF on the disk: the saved copy, the one the integrated browser downloaded, else the link downloaded to a temporary file. */
+	const articlePdf = async (): Promise<URI> => {
+		const record = host.record();
+		const local = await copy(record.articleLocal);
+		if (local) {
+			return local;
+		}
+		const url = record.article;
+		if (!url) {
+			throw new Error(localize('articleData.fromArticle.noArticle', "Set the article's link first."));
+		}
+		if (downloaded?.url === url && await fileService.exists(downloaded.file)) {
+			return downloaded.file;
+		}
+		const shown = browserCopy(url);
+		if (shown && await fileService.exists(shown)) {
+			return shown;
+		}
+		let bytes: VSBuffer;
+		try {
+			bytes = await services.progressService.withProgress({ location: ProgressLocation.Notification, title: localize('articleData.fromPdf.downloading', "Reading the article from {0}...", url) }, () => downloadBytes(requestService, url));
+		} catch (error) {
+			throw new Error(localize('articleData.fromPdf.downloadFailed', "The article could not be read from {0} ({1}): open it with Save and Open, then press Select in PDF again, or save a copy of the PDF.", url, toErrorMessage(error)));
+		}
+		if (bytes.slice(0, 5).toString() !== '%PDF-') {
+			throw new Error(localize('articleData.fromPdf.notPdf', "The article's link leads to a web page, not a PDF: set the link of its PDF, or use Ask Agent."));
+		}
+		const folder = joinPath(services.environmentService.cacheHome, 'pollis-articles', generateUuid());
+		const file = joinPath(folder, copyName(url, record.name, '.pdf'));
+		await fileService.writeFile(file, bytes);
+		downloaded = { url, file };
+		temporaryArticle.value = toDisposable(() => { fileService.del(folder, { recursive: true }).catch(() => undefined); });
+		return file;
+	};
+
+	/**
+	 * Writes a table taken from the PDF, as `name` of `tablesKind`, as corrected in the viewer. When the record
+	 * has the table already (taken before, or replaced), its file is written over and its source set; the rest of
+	 * its entry stays.
+	 */
+	const addFromPdf = async (tablesKind: 'inputs' | 'targets', name: string, number: string, cells: readonly (readonly string[])[], page: number, exists: boolean) => {
+		const file = joinPath(host.record().folder, tablesKind, `${name}.csv`);
+		await fileService.writeFile(file, VSBuffer.fromString(tableCsv(cells)));
+		const source = localize('articleData.fromPdf.source', "Table {0}, page {1} of the PDF (selected in the PDF Viewer)", number, page);
+		if (exists) {
+			await setTomlValue(fileService, recordFile(), `${tablesKind}.${name}`, 'source', source);
+		} else {
+			await appendToml(fileService, recordFile(), tablesKind === 'targets'
+				? `[targets.${name}]\nsource = ${tomlString(source)}\n${kind.targetFields}`
+				: `[inputs.${name}]\nfile = ${tomlString(`inputs/${name}.csv`)}\nsource = ${tomlString(source)}\n${licenceLine()}`);
+		}
+	};
 
 	// A saved copy, when the user made one and it is still there
 	const copy = async (local: string | undefined) => local && await fileService.exists(URI.file(local)) ? URI.file(local) : undefined;
@@ -485,7 +633,10 @@ export function createArticleData(services: IArticleDataServices, kind: IArticle
 				}
 				await setTomlValue(fileService, recordFile(), undefined, 'article', url);
 				await host.reload();
-				await openArticle();
+				// Save keeps the focus on the page; Save and Open opens the article too, where it takes the focus
+				if (message.open) {
+					await openArticle();
+				}
 			});
 		} else if (message.command === 'addLink') {
 			host.submit('link', async () => {
@@ -538,7 +689,8 @@ export function createArticleData(services: IArticleDataServices, kind: IArticle
 				await editorService.openEditor({ resource: file });
 			});
 		} else if (message.command === 'fromArticle') {
-			const form = message.kind === 'targets' ? 'targetArticle' : 'inputArticle';
+			const tablesKind = message.kind;
+			const form = tablesKind === 'targets' ? 'targetArticle' : 'inputArticle';
 			host.submit(form, async () => {
 				const tables = message.tables.trim();
 				if (!tables) {
@@ -547,9 +699,78 @@ export function createArticleData(services: IArticleDataServices, kind: IArticle
 				if (!record.article && !record.articleLocal) {
 					throw new Error(localize('articleData.fromArticle.noArticle', "Set the article's link first."));
 				}
+				// Without the skills or the agent, a notification says why and offers the fix
 				const skill = await instantiationService.invokeFunction(skillFile, 'tables-from-article');
-				if (skill) {
-					await instantiationService.invokeFunction(startAgent, localize('articleData.fromArticle.terminal', "Tables of {0}", record.name), kind.articlePrompt(skill.fsPath, folder, message.kind, tables), folder, 'tablesFromArticle');
+				const terminal = skill && await instantiationService.invokeFunction(startAgent, localize('articleData.fromArticle.terminal', "Tables of {0}", record.name), kind.articlePrompt(skill.fsPath, folder, tablesKind, tables), folder, 'tablesFromArticle');
+				if (!terminal) {
+					throw new Error(localize('articleData.fromArticle.notStarted', "The coding agent did not start: the notification says why."));
+				}
+				host.webview.postMessage({ command: 'awaitTables', kind: tablesKind, working: true, text: localize('articleData.agent.working', "Your coding agent is typing in table {0} of the article, in the terminal {1}. Each table appears below as soon as it is written.", tables, terminal.title) });
+				agentTerminals.set(tablesKind, terminal.onDisposed(() => host.webview.postMessage({ command: 'agentStopped', kind: tablesKind })));
+			});
+		} else if (message.command === 'fromPdf') {
+			// One table, from the article's PDF opened at it with the area tool on; the viewer's button sends it back
+			const tablesKind = message.kind;
+			host.submit(tablesKind === 'targets' ? 'targetArticle' : 'inputArticle', async () => {
+				const number = message.tables.trim();
+				if (!number) {
+					throw new Error(localize('articleData.fromArticle.noTables', "The numbers of the tables, e.g. 3.2, 5.8"));
+				}
+				if (!/^[A-Za-z0-9.]+$/.test(number)) {
+					throw new Error(localize('articleData.fromPdf.oneTable', "One table at a time from the PDF: its number, e.g. 3.2"));
+				}
+				const name = `table${number.replace(/\W/g, '_')}`;
+				const label = tablesKind === 'targets' ? localize('articleData.fromPdf.addTarget', "Send to Target Tables") : localize('articleData.fromPdf.addInput', "Send to Input Tables");
+				// A table of the same name and kind, typed in from the article, may be replaced; any other stops here
+				const record = host.record();
+				const same = (tablesKind === 'targets' ? record.targets : record.inputs).find(table => table.name === name);
+				let added = false;
+				if (same?.file === `${tablesKind}/${name}.csv`) {
+					const { confirmed } = await services.dialogService.confirm({
+						type: 'warning',
+						message: kind.tableExists(name),
+						detail: localize('articleData.fromPdf.replaceDetail', "Replace it with the table you select in the PDF? Its file is written over when you press {0} in the PDF Viewer.", label),
+						primaryButton: localize({ key: 'articleData.fromPdf.replace', comment: ['&& denotes a mnemonic'] }, "&&Replace"),
+					});
+					if (!confirmed) {
+						return;
+					}
+					added = true;
+				} else {
+					checkTableName(name);
+				}
+				const pdf = await articlePdf();
+				const token = generateUuid();
+				pdfRequests.set(token, (cells, page) => host.run(async () => {
+					await addFromPdf(tablesKind, name, number, cells, page, added);
+					added = true;
+				}));
+				pdfTokens.set(tablesKind, toDisposable(() => pdfRequests.delete(token)));
+				await openPdfInViewer(services.commandService, pdf, { caption: `Table ${number}`, mode: 'crop', toSide: true, addTable: { label, command: ADD_TABLE_FROM_PDF_COMMAND_ID, args: { token } } });
+				host.webview.postMessage({ command: 'awaitTables', kind: tablesKind, working: false, text: localize('articleData.fromPdf.waiting', "The article is open in the PDF Viewer at table {0}: draw an area around the table, correct its cells in the sidebar if they need it (Normalise Table writes powers of ten, minus signs and thousands separators as the tests read them), then press Table under {1}. To take it again, draw a new area and press Table again.", number, label) });
+			});
+		} else if (message.command === 'deleteTable') {
+			// A table and its entry, after the user agrees: its file to the trash, a link's data left where it is
+			host.run(async () => {
+				const record = host.record();
+				const table = (message.kind === 'targets' ? record.targets : record.inputs).find(candidate => candidate.name === message.name);
+				if (!table) {
+					return;
+				}
+				const { confirmed } = await services.dialogService.confirm({
+					type: 'warning',
+					message: localize('articleData.delete.confirm', "Delete the table {0}?", table.name),
+					detail: table.file
+						? localize('articleData.delete.detail', "Its file {0} goes to the trash, and its entry leaves {1}.", table.file, kind.recordFile)
+						: localize('articleData.delete.linkDetail', "Its entry leaves {0}; the data at its link stays where it is.", kind.recordFile),
+					primaryButton: localize({ key: 'articleData.delete.button', comment: ['&& denotes a mnemonic'] }, "&&Delete"),
+				});
+				if (!confirmed) {
+					return;
+				}
+				await removeTomlTable(fileService, recordFile(), `${message.kind}.${table.name}`);
+				if (table.file) {
+					await fileService.del(joinPath(record.folder, ...table.file.split('/')), { useTrash: true });
 				}
 			});
 		} else if (message.command === 'addTargetFiles') {
@@ -630,8 +851,12 @@ export function articleDataText(words: IArticleDataWords) {
 		emptyTargetHint: localize('articleData.target.emptyDetail', "Type in the published table: row labels in the first column, the values as printed"),
 		articleTables: localize('articleData.articleTables', "Numbers of the tables in the article"),
 		articleTablesPlaceholder: localize('articleData.articleTablesPlaceholder', "e.g. 3.2, 5.8"),
-		inputArticleHint: localize('articleData.inputArticleHint', "Your coding agent reads the article and types the tables in as input tables, every value as printed. Check them against the article."),
+		inputArticleHint: localize('articleData.inputArticleHint', "Select in PDF opens the article in the PDF Viewer at the table, one at a time, with the area tool on: draw an area around it and press Table under Send to Input Tables. Ask Agent has your coding agent type the tables in instead. Check every value against the article."),
 		ask: localize('articleData.ask', "Ask Agent"),
+		selectInPdf: localize('articleData.selectInPdf', "Select in PDF"),
+		saveAndOpen: localize('articleData.saveAndOpen', "Save and Open"),
+		deleteTable: localize('articleData.deleteTable', "Delete"),
+		deleteTableTitle: localize('articleData.deleteTableTitle', "Delete this table and its entry"),
 		add: localize('articleData.add', "Add"),
 		added: localize('articleData.added', "Added"),
 		cancel: localize('articleData.cancel', "Cancel"),
@@ -647,6 +872,9 @@ export function articleDataText(words: IArticleDataWords) {
 		noSource: localize('articleData.noSource', "No source yet"),
 		licence: localize('articleData.licence', "Licence: {0}"),
 		noLicence: localize('articleData.noLicence', "No licence stated: before sharing the replication, ask the data's owner whether it may be shared, and write the terms in the input's licence."),
+		saved: localize('articleData.saved', "Saved"),
+		agentAdded: localize('articleData.agent.added', "Added {0}. Check every value against the article."),
+		agentStopped: localize('articleData.agent.stopped', "The coding agent stopped without adding a table."),
 	};
 }
 
@@ -654,15 +882,16 @@ export function articleDataText(words: IArticleDataWords) {
 export function articleDataHtml(text: ReturnType<typeof articleDataText>): string {
 	return `
 		<div class="tabs">
-			<button class="tab selected" data-part="article">${text.article}</button>
-			<button class="tab" data-part="inputs">${text.inputs}</button>
-			<button class="tab" data-part="targets">${text.targets}</button>
+			<button class="tab selected" data-part="article"><span class="step-number part-number" id="mark-article" aria-hidden="true">1.1</span>${text.article}</button>
+			<button class="tab" data-part="inputs"><span class="step-number part-number" id="mark-inputs" aria-hidden="true">1.2</span>${text.inputs}</button>
+			<button class="tab" data-part="targets"><span class="step-number part-number" id="mark-targets" aria-hidden="true">1.3</span>${text.targets}</button>
 		</div>
 		<div class="part" id="part-article">
 			<p class="intro">${text.articleIntro}</p>
 			<div class="field">
 				<label>${text.articleLink}<input class="wide" id="articleUrl" spellcheck="false" placeholder="https://"></label>
 				<button class="action primary" data-submit="article">${text.save}</button>
+				<button class="action" data-submit="articleOpen" data-form="article">${text.saveAndOpen}</button>
 				<button class="action" id="articleCancel">${text.cancel}</button>
 				<p class="error small" id="error-article"></p>
 			</div>
@@ -700,10 +929,12 @@ export function articleDataHtml(text: ReturnType<typeof articleDataText>): strin
 			</div>
 			<div class="form" id="form-inputArticle" data-group="inputs" hidden>
 				<label>${text.articleTables}<input id="inputTables" spellcheck="false" placeholder="${text.articleTablesPlaceholder}"></label>
-				<button class="action primary" data-submit="inputArticle">${text.ask}</button>
+				<button class="action primary" data-submit="inputPdf" data-form="inputArticle">${text.selectInPdf}</button>
+				<button class="action" data-submit="inputArticle">${text.ask}</button>
 				<p class="small hint">${text.inputArticleHint}</p>
 				<p class="error small" id="error-inputArticle"></p>
 			</div>
+			<p class="small agent-status" id="agent-inputs" role="status" hidden></p>
 			<div id="inputs"></div>
 		</div>
 		<div class="part" id="part-targets" hidden>
@@ -725,10 +956,12 @@ export function articleDataHtml(text: ReturnType<typeof articleDataText>): strin
 			</div>
 			<div class="form" id="form-targetArticle" data-group="targets" hidden>
 				<label>${text.articleTables}<input id="targetTables" spellcheck="false" placeholder="${text.articleTablesPlaceholder}"></label>
-				<button class="action primary" data-submit="targetArticle">${text.ask}</button>
+				<button class="action primary" data-submit="targetPdf" data-form="targetArticle">${text.selectInPdf}</button>
+				<button class="action" data-submit="targetArticle">${text.ask}</button>
 				<p class="small hint">${text.targetArticleHint}</p>
 				<p class="error small" id="error-targetArticle"></p>
 			</div>
+			<p class="small agent-status" id="agent-targets" role="status" hidden></p>
 			<div id="targets"></div>
 		</div>
 `;
@@ -736,6 +969,8 @@ export function articleDataHtml(text: ReturnType<typeof articleDataText>): strin
 
 /** The styles of a page with Article and Data: the editable title and the draft's note, then the panes', kept inside them, away from Learn More and Ask Pollis. */
 export const ARTICLE_DATA_STYLE = `
+		${spinnerCss}
+		@keyframes fresh { from { background: var(--vscode-editor-findMatchHighlightBackground); } to { background: transparent; } }
 		h1[contenteditable] { display: inline-block; min-width: 120px; padding: 0 2px; border-radius: 2px; cursor: text; }
 		h1[contenteditable]:hover { outline: 1px dashed var(--vscode-descriptionForeground); }
 		h1[contenteditable]:focus { outline: 1px solid var(--vscode-focusBorder); }
@@ -754,9 +989,9 @@ export const ARTICLE_DATA_STYLE = `
 			button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; padding: 4px 12px; cursor: pointer; font-size: 11px; opacity: 0.7; }
 			/* As the code buttons below a panel's Example Code: dimmed until pointed at, the blue one not */
 			button.action:not(:disabled):hover, button.action.current, button.action.primary { opacity: 1; }
-			button.action:hover { background: var(--vscode-button-secondaryHoverBackground); }
+			button.action:not(:disabled):hover { color: var(--vscode-button-foreground); background: var(--vscode-button-hoverBackground); }
 			button.action:disabled { cursor: default; opacity: 0.6; }
-			button.primary { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+			button.primary, button.action.current { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
 			button.primary:hover { background: var(--vscode-button-hoverBackground); }
 			.error { color: var(--vscode-errorForeground); }
 			.warning { color: var(--vscode-editorWarning-foreground); }
@@ -770,13 +1005,22 @@ export const ARTICLE_DATA_STYLE = `
 			.tabs { display: flex; flex-wrap: wrap; gap: 16px; border-bottom: 1px solid var(--vscode-widget-border); margin: 0 0 12px 0; }
 			.tab { font: inherit; font-size: 12px; background: none; border: none; border-bottom: 2px solid transparent; color: var(--vscode-descriptionForeground); padding: 4px 0; cursor: pointer; }
 			.tab.selected { color: var(--vscode-foreground); border-bottom-color: var(--vscode-focusBorder); }
+			/* The tabs of Article and Data, numbered 1.1 to 1.3 on an outlined yellow, filled with a tick once each has what it needs */
+			.tab { display: inline-flex; align-items: center; gap: 2px; }
+			.step-number.part-number { width: auto; min-width: 26px; height: 16px; padding: 0 4px; border-radius: 8px; font-size: 10px; color: #e8a33d; background: transparent; box-shadow: inset 0 0 0 1px #e8a33d; }
+			body.vscode-light & .step-number.part-number { color: #a8650d; box-shadow: inset 0 0 0 1px #a8650d; }
+			.step-number.part-number.done { color: var(--vscode-editor-background); background: #e8a33d; }
+			body.vscode-light & .step-number.part-number.done { color: var(--vscode-editor-background); background: #a8650d; }
+			.step-number.part-number svg { width: 10px; height: 10px; }
 			code { font-family: var(--vscode-editor-font-family); color: var(--vscode-textPreformat-foreground); background: var(--vscode-textPreformat-background); border-radius: 3px; padding: 0 3px; }
 			code.path { color: #e8a33d; }
-			body.vscode-light code.path { color: #a8650d; }
+			body.vscode-light & code.path { color: #a8650d; }
 			button code.path { background: none; padding: 0; }
 			.table { margin: 0 0 20px 0; }
 			.table-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px; margin: 0 0 4px 0; }
 			.table-name { font-size: 14px; font-weight: 600; }
+			/* Delete stays last in a table's head, after a size that comes later */
+			.table-head .delete { order: 1; }
 			.call { font-family: var(--vscode-editor-font-family); font-size: 12px; margin: 0 0 6px 0; }
 			.scroll { overflow-x: auto; }
 			table { border-collapse: collapse; }
@@ -793,6 +1037,13 @@ export const ARTICLE_DATA_STYLE = `
 			.field label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--vscode-descriptionForeground); }
 			.field .error { flex-basis: 100%; margin: 0; }
 			.field .error:empty { display: none; }
+			/* What a Save or Ask Agent did: "Saved" beside the buttons for a few seconds, the agent's progress above the tables */
+			.saved { color: var(--vscode-testing-iconPassed, var(--vscode-charts-green)); }
+			.field .saved { flex-basis: 100%; margin: 0; }
+			.saved:empty { display: none; }
+			h2 .saved { margin-left: 10px; font-size: 12px; font-weight: normal; }
+			.agent-status { margin: 0 0 12px 0; max-width: 1000px; line-height: 1.4; }
+			.table.fresh { animation: fresh 3s ease-out; }
 		}`;
 
 /**
@@ -804,9 +1055,13 @@ export const ARTICLE_DATA_STYLE = `
  */
 export const ARTICLE_DATA_SCRIPT = `
 	const DATASETS_URL = ${JSON.stringify(DATASETS_URL)};
+	const SPINNER = ${JSON.stringify(spinnerSvg)};
+	const TICK = '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M14.431 3.323l-8.47 10-.79-.036-3.35-4.77.818-.574 2.978 4.24 8.051-9.506.763.646z"/></svg>';
 	const inputBoxes = new Map();
 	let record;
 	let catalogue;
+	// What the coding agent was last asked for, by kind of table: the tables there were then, and those it has added since
+	const agents = {};
 
 	function element(tag, className, content) {
 		const node = document.createElement(tag);
@@ -830,14 +1085,28 @@ export const ARTICLE_DATA_SCRIPT = `
 	// What each form or field sends; a page adds its own
 	const FORMS = {
 		article: { send: () => ({ command: 'setArticle', url: value('articleUrl') }) },
+		articleOpen: { send: () => ({ command: 'setArticle', url: value('articleUrl'), open: true }) },
 		input: { send: () => ({ command: 'addInput', name: value('inputName') }) },
 		link: { send: () => ({ command: 'addLink', url: value('linkUrl'), name: value('linkName'), delim: value('linkDelim') }) },
 		inputArticle: { send: () => ({ command: 'fromArticle', kind: 'inputs', tables: value('inputTables') }) },
 		target: { send: () => ({ command: 'addTarget', name: value('targetName') }) },
 		targetArticle: { send: () => ({ command: 'fromArticle', kind: 'targets', tables: value('targetTables') }) },
+		inputPdf: { send: () => ({ command: 'fromPdf', kind: 'inputs', tables: value('inputTables') }) },
+		targetPdf: { send: () => ({ command: 'fromPdf', kind: 'targets', tables: value('targetTables') }) },
 	};
 	// The forms whose inputs are emptied once done, for the next table
 	const CLEARED_FORMS = ['input', 'link', 'inputArticle', 'target', 'targetArticle'];
+
+	// One blue button in a row: the first at first, then the enabled one pointed at, which stays blue
+	document.addEventListener('mouseover', event => {
+		const button = event.target.closest && event.target.closest('.step-pane button.action');
+		if (!button || button.disabled || button.classList.contains('current')) {
+			return;
+		}
+		const row = button.closest('.publish') || button.parentElement;
+		row.querySelectorAll('button.action.primary, button.action.current').forEach(other => other.classList.remove('primary', 'current'));
+		button.classList.add('current');
+	});
 
 	// The buttons of a group pick the one form shown below them, the picked button in blue
 	function choose(group, name) {
@@ -877,8 +1146,9 @@ export const ARTICLE_DATA_SCRIPT = `
 		set('articleUrl', record.article || '');
 		document.getElementById('error-article').textContent = '';
 	});
+	// A button with data-form shares the form, and the error, of another (Select in PDF and Ask Agent)
 	document.querySelectorAll('button[data-submit]').forEach(button => button.addEventListener('click', () => {
-		document.getElementById('error-' + button.dataset.submit).textContent = '';
+		document.getElementById('error-' + (button.dataset.form || button.dataset.submit)).textContent = '';
 		vscode.postMessage(FORMS[button.dataset.submit].send());
 	}));
 	document.querySelectorAll('.form input, .field input').forEach(input => input.addEventListener('keydown', e => {
@@ -959,6 +1229,14 @@ export const ARTICLE_DATA_SCRIPT = `
 		return head;
 	}
 
+	// Delete, at the end of a table's head
+	function deleteLink(kind, name) {
+		const link = element('button', 'link small delete', TEXT.deleteTable);
+		link.title = TEXT.deleteTableTitle;
+		link.addEventListener('click', () => vscode.postMessage({ command: 'deleteTable', kind, name }));
+		return link;
+	}
+
 	// Whether an input's terms are stated: PollisDatasets writes "None stated; ..." when its provider gives none
 	const licenceStated = input => !!input.licence && !/^none stated/i.test(input.licence);
 
@@ -971,8 +1249,11 @@ export const ARTICLE_DATA_SCRIPT = `
 		}
 		for (const input of inputs) {
 			const box = element('div', 'table');
+			box.dataset.name = input.name;
 			const open = input.file ? () => vscode.postMessage({ command: 'open', file: input.file }) : undefined;
-			box.appendChild(tableHead(input.name, input.source, open));
+			const head = tableHead(input.name, input.source, open);
+			head.appendChild(deleteLink('inputs', input.name));
+			box.appendChild(head);
 			box.appendChild(element('div', 'call small', input.url || input.file));
 			if (input.local) {
 				box.appendChild(element('div', 'call small', TEXT.copy.replace('{0}', input.local)));
@@ -1020,8 +1301,10 @@ export const ARTICLE_DATA_SCRIPT = `
 		}
 		for (const target of targets) {
 			const box = element('div', 'table');
+			box.dataset.name = target.name;
 			const head = tableHead(target.name, target.source, () => vscode.postMessage({ command: 'open', file: target.file }));
 			head.appendChild(element('span', 'small', size(target)));
+			head.appendChild(deleteLink('targets', target.name));
 			box.appendChild(head);
 			if (OPTIONS.calls) {
 				box.appendChild(target.call ? element('div', 'call', TEXT.call + ': ' + target.call) : withPaths(element('div', 'call small'), TEXT.noCall));
@@ -1039,12 +1322,66 @@ export const ARTICLE_DATA_SCRIPT = `
 		const field = document.getElementById(id);
 		if (document.activeElement !== field && !field.dataset.edited) { field.value = text; }
 	}
-	document.querySelectorAll('.field input').forEach(input => input.addEventListener('input', () => { input.dataset.edited = '1'; }));
+	document.querySelectorAll('.field input').forEach(input => input.addEventListener('input', () => {
+		input.dataset.edited = '1';
+		showSaved(input.closest('.field'), '');
+	}));
 	function revert(id) {
 		const field = document.getElementById(id);
 		delete field.dataset.edited;
 		field.value = saved[id] ?? '';
 		document.getElementById('error-' + field.closest('.field').querySelector('[data-submit]').dataset.submit).textContent = '';
+		showSaved(field.closest('.field'), '');
+	}
+
+	// The note of a field or a heading saying it was saved, shown until it is edited again or saved anew; '' hides it
+	function showSaved(container, text) {
+		let note = container.querySelector('.saved');
+		if (!note) {
+			note = element(container.tagName === 'H2' ? 'span' : 'p', 'saved small');
+			note.setAttribute('role', 'status');
+			const error = container.querySelector('.error');
+			if (error) { container.insertBefore(note, error); } else { container.appendChild(note); }
+		}
+		note.textContent = text;
+	}
+
+	// The mark of a tab of Article and Data: its number until it has what it needs (a link, a table), then a tick
+	function markPart(part, number, done) {
+		const mark = document.getElementById('mark-' + part);
+		mark.classList.toggle('done', done);
+		if (done) { mark.innerHTML = TICK; } else { mark.textContent = number; }
+	}
+
+	// The coding agent's progress above the tables of a kind, with the spinner while it works
+	function showAgent(kind, text, working, warning) {
+		const status = document.getElementById('agent-' + kind);
+		status.textContent = '';
+		status.hidden = !text;
+		status.classList.toggle('warning', !!warning);
+		if (working) { status.insertAdjacentHTML('afterbegin', SPINNER); }
+		status.appendChild(document.createTextNode(text));
+	}
+
+	// The tables the coding agent has added since it was asked: named in its status, shown in their open tab, and lit up once
+	function noticeAdded(kind) {
+		const agent = agents[kind];
+		const fresh = agent ? record[kind].filter(table => !agent.known.has(table.name)) : [];
+		if (!fresh.length) {
+			return;
+		}
+		document.getElementById('step-article').classList.remove('collapsed');
+		select('part', kind);
+		for (const table of fresh) {
+			agent.known.add(table.name);
+			agent.added.push(table.name + ' (' + (table.source || TEXT.noSource) + (table.header ? ', ' + size(table) : '') + ')');
+			const box = document.querySelector('#' + kind + ' .table[data-name="' + table.name + '"]');
+			if (box) {
+				box.classList.add('fresh');
+				box.scrollIntoView({ block: 'nearest' });
+			}
+		}
+		showAgent(kind, TEXT.agentAdded.replace('{0}', agent.added.join('; ')), false, false);
 	}
 	document.querySelectorAll('button[data-cancel]').forEach(button => button.addEventListener('click', () => revert(button.dataset.cancel)));
 
@@ -1088,9 +1425,14 @@ export const ARTICLE_DATA_SCRIPT = `
 	function showArticleData(shown) {
 		record = shown;
 		refresh('articleUrl', record.article || '');
+		markPart('article', '1.1', !!(record.article || record.articleLocal));
+		markPart('inputs', '1.2', record.inputs.length > 0);
+		markPart('targets', '1.3', record.targets.length > 0);
 		renderInputs(record.inputs);
 		renderTargets(record.targets);
 		renderDatasets();
+		noticeAdded('inputs');
+		noticeAdded('targets');
 	}
 
 	// Handles a message of Article and Data, or of the page's forms; false for one of the page's own
@@ -1099,6 +1441,17 @@ export const ARTICLE_DATA_SCRIPT = `
 			showInput(message);
 		} else if (message.command === 'step') {
 			openStep(message.step);
+		} else if (message.command === 'awaitTables') {
+			// Tables asked of the coding agent or of the PDF Viewer: the status says what to expect until they come
+			agents[message.kind] = { known: new Set(record[message.kind].map(table => table.name)), added: [] };
+			showAgent(message.kind, message.text, message.working, false);
+		} else if (message.command === 'agentStopped') {
+			// The terminal closed: still waiting means nothing was added
+			const agent = agents[message.kind];
+			if (agent && !agent.added.length) {
+				showAgent(message.kind, TEXT.agentStopped, false, true);
+			}
+			delete agents[message.kind];
 		} else if (message.command === 'catalogue') {
 			catalogue = message.items;
 			renderDatasets();
@@ -1106,10 +1459,12 @@ export const ARTICLE_DATA_SCRIPT = `
 			document.getElementById('error-' + message.form).textContent = message.message;
 			if (message.form === 'datasets') { renderDatasets(); }
 		} else if (message.command === 'formDone') {
-			// A saved field is no longer edited; an added table empties its form for the next one
+			// A saved field is no longer edited, and says it was saved; an added table empties its form for the next one
 			const submitted = document.querySelector('.field [data-submit="' + message.form + '"]');
 			if (submitted) {
-				submitted.closest('.field').querySelectorAll('input').forEach(input => { delete input.dataset.edited; });
+				const field = submitted.closest('.field');
+				field.querySelectorAll('input').forEach(input => { delete input.dataset.edited; });
+				showSaved(field, message.message || TEXT.saved);
 			}
 			if (CLEARED_FORMS.includes(message.form)) {
 				clearForm(message.form);

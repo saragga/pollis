@@ -7,7 +7,7 @@
 // PDF Files, the PDF... of the + of Ask Pollis).
 
 import * as vscode from 'vscode';
-import { datasetsFileInDepot, PDF_VIEWER_VIEW_TYPE, PdfViewerProvider, ViewerMode } from './pdfViewer';
+import { datasetsFileInDepot, IAddTable, PDF_VIEWER_VIEW_TYPE, PdfViewerProvider, ViewerMode } from './pdfViewer';
 
 /** The command of the Julia extension that runs pdf_tools.jl, which gives the path of the sample PDF of PollisDatasets. */
 const PDF_SAMPLE_COMMAND_ID = 'language-julia.pollisPdfSample';
@@ -70,10 +70,16 @@ function shownPdf(): { readonly uri: vscode.Uri; readonly column: vscode.ViewCol
 /** The modes of Explore > PDF Files. */
 const VIEWER_MODES: readonly ViewerMode[] = ['read', 'extract', 'merge', 'crop', 'convert', 'highlight', 'text', 'image', 'draw'];
 
-/** What the workbench may ask of `pollis.pdfViewer.open`: the page to show (from 1), and an editor beside the active one. */
+/**
+ * What the workbench may ask of `pollis.pdfViewer.open`: the page to show (from 1), or the page of a caption such as
+ * `Table 2`; an editor beside the active one; a mode; and a button that sends the table of an area back to it.
+ */
 interface IOpenOptions {
 	readonly page?: number;
 	readonly toSide?: boolean;
+	readonly caption?: string;
+	readonly mode?: string;
+	readonly addTable?: IAddTable;
 }
 
 export function activate(context: vscode.ExtensionContext): void {
@@ -90,6 +96,16 @@ export function activate(context: vscode.ExtensionContext): void {
 			if (target) {
 				if (options?.page && options.page > 0) {
 					provider.showPage(target, Math.floor(options.page));
+				}
+				if (options?.caption) {
+					provider.showCaption(target, options.caption);
+				}
+				const mode = VIEWER_MODES.find(known => known === options?.mode);
+				if (mode) {
+					provider.showMode(target, mode);
+				}
+				if (options?.addTable) {
+					provider.setAddTable(target, options.addTable);
 				}
 				await openInViewer(target, options?.toSide);
 			}

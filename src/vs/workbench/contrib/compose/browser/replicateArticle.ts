@@ -20,7 +20,7 @@ import { IInstantiationService, ServicesAccessor } from '../../../../platform/in
 import { INotificationService } from '../../../../platform/notification/common/notification.js';
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { IProgressService } from '../../../../platform/progress/common/progress.js';
-import { IRequestService } from '../../../../platform/request/common/request.js';
+import { IArticleDownloadService } from '../common/articleDownload.js';
 import { IStorageService } from '../../../../platform/storage/common/storage.js';
 import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
 import { IEditorService, SIDE_GROUP } from '../../../services/editor/common/editorService.js';
@@ -33,7 +33,7 @@ import { INotebookEditorModelResolverService } from '../../notebook/common/noteb
 import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
-import { ARTICLE_DATA_SCRIPT, ARTICLE_DATA_STYLE, ArticleDataMessage, articleDataHtml, articleDataText, createArticleData, draftName, IArticleDataKind, IArticleDataRecord, IArticleDataServices, isArticleDataMessage, IStudyInput, makesFolder, openRecordArticle, parseTable, readTables, replaceTomlBlocks, setTomlValue, table, text, tomlString, withPaths } from './articleAndData.js';
+import { ARTICLE_DATA_SCRIPT, ARTICLE_DATA_STYLE, ArticleDataMessage, articleDataHtml, articleDataText, createArticleData, draftName, IArticleDataKind, IArticleDataRecord, IArticleDataServices, isArticleDataMessage, IStudyInput, makesFolder, parseTable, readTables, replaceTomlBlocks, setTomlValue, table, text, tomlString, withPaths } from './articleAndData.js';
 import { AgentTask } from './modelRouting.js';
 import { methodFromReplication, openUserMethod, userMethodsFolder } from './newMethods.js';
 import { EXPLAIN_DIFFERENCES_COMMAND_ID, PLAN_REPLICATION_COMMAND_ID, REPLICATE_WITH_AGENT_COMMAND_ID, skillFile, startAgent } from './pollisAgents.js';
@@ -613,7 +613,7 @@ async function openReplicationPage(accessor: ServicesAccessor, existing?: URI, s
 	const notificationService = accessor.get(INotificationService);
 	const commandService = accessor.get(ICommandService);
 	const fileDialogService = accessor.get(IFileDialogService);
-	const requestService = accessor.get(IRequestService);
+	const requestService = accessor.get(IArticleDownloadService);
 	const progressService = accessor.get(IProgressService);
 	const contextService = accessor.get(IWorkspaceContextService);
 	const pathService = accessor.get(IPathService);
@@ -623,6 +623,7 @@ async function openReplicationPage(accessor: ServicesAccessor, existing?: URI, s
 	const notebookEditorModelResolverService = accessor.get(INotebookEditorModelResolverService);
 	const notebookKernelService = accessor.get(INotebookKernelService);
 	const storageService = accessor.get(IStorageService);
+	const dialogService = accessor.get(IDialogService);
 
 	const draft = !existing;
 	// Whether the replication's folder exists: a new replication has none until the first thing is typed or added
@@ -647,8 +648,7 @@ async function openReplicationPage(accessor: ServicesAccessor, existing?: URI, s
 		return;
 	}
 	let replication: IReplication = initial;
-	const articleServices: IArticleDataServices = { fileService, fileDialogService, requestService, progressService, contextService, pathService, environmentService, editorService, commandService, instantiationService };
-	await openRecordArticle(articleServices, replication);
+	const articleServices: IArticleDataServices = { fileService, fileDialogService, dialogService, requestService, progressService, contextService, pathService, environmentService, editorService, commandService, instantiationService };
 	const webviewInput = webviewWorkbenchService.openWebview(
 		{
 			title: replication.title,
@@ -768,7 +768,7 @@ async function openReplicationPage(accessor: ServicesAccessor, existing?: URI, s
 		await replaceTomlBlocks(fileService, recordFile(), header => header.startsWith('[plan.'), blocks.join('\n'));
 		await update();
 	};
-	const articleData = createArticleData(articleServices, REPLICATION_KIND, { webview: webviewInput.webview, record: () => replication, reload: update, submit, run });
+	const articleData = createArticleData(articleServices, REPLICATION_KIND, { webview: webviewInput.webview, record: () => replication, reload: update, submit, run, disposables });
 
 	disposables.add(webviewInput.webview.onMessage(async (e: { message: ReplicationMessage }) => {
 		const message = e.message;
@@ -901,6 +901,8 @@ const PAGE_STYLE = `${ARTICLE_DATA_STYLE}
 			td input.wide { width: 260px; }
 			td select, td input { font-size: 12px; padding: 2px 4px; }
 			td .link { white-space: nowrap; }
+			.plan-options { margin: 0 0 12px 0; max-width: 900px; }
+			.plan-options .plan-heading { font-weight: 600; margin: 8px 0 2px 0; }
 		}`;
 
 /**
@@ -915,10 +917,10 @@ function pageHtml(): string {
 			targetsIntro: localize('replicateArticle.page.targetsIntro', "The published results the replication must reproduce, as printed: Compare shows how closely Julia reproduces them."),
 			emptyInputHint: localize('replicateArticle.input.emptyDetail', "A table of the replication, inputs/NAME.csv, opened to type in: a header line of column names, then the values"),
 			targetFilesHint: localize('replicateArticle.page.targetFilesHint', "CSV files of published tables, copied into the replication: row labels in the first column, the values as printed"),
-			targetArticleHint: localize('replicateArticle.page.targetArticleHint', "Your coding agent reads the article and types the tables in as target tables, every value as printed. Check them against the article: the comparison is only as right as the targets."),
+			targetArticleHint: localize('replicateArticle.page.targetArticleHint', "Select in PDF opens the article in the PDF Viewer at the table, one at a time, with the area tool on: draw an area around it and press Table under Send to Target Tables. Ask Agent has your coding agent type the tables in instead. Check every value against the article: the comparison is only as right as the targets."),
 			noTargets: localize('replicateArticle.page.noTargets', "No target tables yet: they are what the replication is compared with."),
 		}),
-		intro: localize('replicateArticle.page.intro', "A replication reproduces a published analysis on its data: every value the article prints is set beside Julia's. The steps below make one, with the article open beside this page."),
+		intro: localize('replicateArticle.page.intro', "A replication reproduces a published analysis on its data: every value the article prints is set beside Julia's. The steps below make one."),
 		headingHint: localize('replicateArticle.heading.hint', "The replication's title: click to change it, Enter saves, Escape cancels."),
 		draftHint: localize('replicateArticle.draft.hint', "A new replication: start with its article and tables in {0}. Nothing is saved until you type or add something, and its folder is named after its title."),
 		// The steps
@@ -929,14 +931,18 @@ function pageHtml(): string {
 		stepRecord: localize('replicateArticle.step.record', "Record and Share"),
 		soon: localize('replicateArticle.soon', "Not available yet"),
 		// 2. Plan
-		planIntro: localize('replicateArticle.page.planIntro', "How each target table is computed: by Julia packages, by code of the notebook's own, or by a new article method. Each change is saved in replication.toml, and Replicate with Agent computes each table as its row says. A replication needs no method of its own when a package or a few lines of code compute the table: Make an Article Method, on a table's row, is for a method no Julia package has, which others can then install and reuse."),
-		planHint: localize('replicateArticle.page.planHint', "Plan with Agent asks your coding agent to read the article and propose the plan, which you then check here. The plan is optional: Replicate with Agent works without it."),
+		planIntro: localize('replicateArticle.page.planIntro', "For each target table, choose how Julia computes it and whether its values can match the digits printed. Replicate with Agent, New Notebook and Compare follow these choices, saved in replication.toml. Optional: without a plan, the agent decides."),
+		planComputedBy: localize('replicateArticle.page.planComputedBy', "Computed By"),
+		planPackages: localize('replicateArticle.page.planPackages', "functions of registered packages, as GLM for a regression."),
+		planNotebook: localize('replicateArticle.page.planNotebook', "a few lines written in the notebook."),
+		planMethod: localize('replicateArticle.page.planMethod', "a method no package has, written as a package others can install (Make an Article Method)."),
+		planExact: localize('replicateArticle.page.planExact', "the same on every run, as estimates or test statistics: they must match the digits printed."),
+		planRandom: localize('replicateArticle.page.planRandom', "different on every run, as simulations, the bootstrap or neural networks: Julia averages several runs, and a value counts as reproduced when it is within the simulation noise. Runs in Julia ({0} when empty) and Runs in the Article (1 when empty) say how many runs each value averages."),
+		planHint: localize('replicateArticle.page.planHint', "Choose in each row, or press Ask Agent to have your coding agent read the article and propose the plan, which you then check here."),
 		targetColumn: localize('replicateArticle.plan.target', "Target"),
 		wayColumn: localize('replicateArticle.plan.way', "Computed By"),
 		packagesColumn: localize('replicateArticle.plan.packages', "Julia Packages"),
 		noteColumn: localize('replicateArticle.plan.note', "Note"),
-		planRandom: localize('replicateArticle.page.planRandom', "Values says whether a target can be reproduced to the digits printed. Exact values are the same on every run, as estimates, test statistics or a model solved, and are compared to the digits printed. Random values change with the random numbers, as those of a model simulated from its calibration, with no data, the bootstrap, a random forest or a neural network such as LSTNet: no run gives the digits printed, so Julia runs the analysis with several seeds, each run its own, and Compare counts a value as reproduced when it is within the Monte Carlo noise of Julia's value and the published one."),
-		planRuns: localize('replicateArticle.page.planRuns', "For random values, Runs in Julia is how many runs Julia averages, {0} when left empty, and Runs in the Article how many runs the article's values average, as the article says, 1 when left empty, for a single run. The noise allowed comes from both: the more runs Julia averages, the smaller its share, and the fewer runs the article averages, the noisier its values and the wider the difference allowed. New Notebook writes the runs and the comparison for each random target."),
 		valuesColumn: localize('replicateArticle.plan.values', "Values"),
 		valuesExact: localize('replicateArticle.plan.exact', "Exact"),
 		valuesRandom: localize('replicateArticle.plan.random', "Random"),
@@ -947,7 +953,7 @@ function pageHtml(): string {
 		wayNotebook: localize('replicateArticle.plan.notebook', "Notebook Code"),
 		wayMethod: localize('replicateArticle.plan.method', "Article Method"),
 		packagesPlaceholder: localize('replicateArticle.plan.packagesPlaceholder', "e.g. GLM, StatsBase"),
-		planWithAgent: localize('replicateArticle.plan.agent', "Plan with Agent"),
+		planWithAgent: localize('replicateArticle.plan.agent', "Ask Agent"),
 		makeMethod: localize('replicateArticle.plan.makeMethod', "Make an Article Method"),
 		openMethod: localize('replicateArticle.plan.openMethod', "Open Method {0}"),
 		planned: localize('replicateArticle.plan.planned', "{0} of {1} targets planned"),
@@ -1040,14 +1046,25 @@ function pageHtml(): string {
 				headHtml: '<span class="soon" id="planHead"></span>',
 				bodyHtml: `
 		<p class="intro">${withPaths(text.planIntro)}</p>
-		<p class="intro">${text.planRandom}</p>
-		<p class="intro">${text.planRuns.replace('{0}', String(DEFAULT_RUNS))}</p>
+		<div class="plan-options">
+			<p class="plan-heading">${text.planComputedBy}</p>
+			<ul class="methods-list">
+				<li><strong>${text.wayPackage}</strong>: ${text.planPackages}</li>
+				<li><strong>${text.wayNotebook}</strong>: ${text.planNotebook}</li>
+				<li><strong>${text.wayMethod}</strong>: ${text.planMethod}</li>
+			</ul>
+			<p class="plan-heading">${text.valuesColumn}</p>
+			<ul class="methods-list">
+				<li><strong>${text.valuesExact}</strong>: ${text.planExact}</li>
+				<li><strong>${text.valuesRandom}</strong>: ${text.planRandom.replace('{0}', String(DEFAULT_RUNS))}</li>
+			</ul>
+		</div>
+		<p class="small" id="planHint">${text.planHint}</p>
 		<div id="plan"></div>
 		<div class="actions" id="planActions">
 			<button class="action current" data-command="planWithAgent">${text.planWithAgent}</button>
 		</div>
 		<p class="error small" id="error-plan"></p>
-		<p class="small">${text.planHint}</p>
 `,
 			},
 			{
@@ -1161,6 +1178,7 @@ function pageHtml(): string {
 		const typed = new Map(planEdited ? [...container.querySelectorAll('[data-plan]')].map(row => [row.dataset.plan, planRow(row)]) : []);
 		const plan = replication.plan;
 		document.getElementById('planActions').hidden = !plan.length;
+		document.getElementById('planHint').hidden = !plan.length;
 		document.getElementById('planHead').textContent = plan.length ? TEXT.planned.replace('{0}', plan.filter(entry => entry.way).length).replace('{1}', plan.length) : '';
 		// While a field of the plan is typed in, and its tables and methods are the same, the table stays as it is
 		const shape = JSON.stringify(plan.map(entry => [entry.target, entry.method || '']));

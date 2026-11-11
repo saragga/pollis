@@ -6,6 +6,8 @@ description = "Propensity score methods for nonexperimental causal studies, as i
 topic = "K-Nearest Neighbours"
 license = "MIT"
 version = "0.2.0"
+updated = "2026-10-14"
+repository = "https://github.com/Trumpingtons/PropensityMatching.jl"
 
 key = "DW1999a"
 citation = "Dehejia, R. H. and Wahba, S. (1999). Causal Effects in Nonexperimental Studies: Reevaluating the Evaluation of Training Programs. Journal of the American Statistical Association 94(448), 1053-1062."

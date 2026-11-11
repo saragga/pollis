@@ -6,6 +6,8 @@ description = "Bollerslev and Ghysels's periodic GARCH(1,1), with a calendar dum
 topic = "Volatility"
 license = "MIT"
 version = "0.2.0"
+updated = "2026-10-13"
+repository = "https://github.com/Trumpingtons/PeriodicGARCH.jl"
 
 key = "BG1996a"
 citation = "Bollerslev, T. and Ghysels, E. (1996). Periodic Autoregressive Conditional Heteroscedasticity. Journal of Business & Economic Statistics 14(2), 139-151."

@@ -341,6 +341,22 @@ html body {
 	display: none;
 }
 
+/* The left edge of the sidebar, dragged to resize it: it stays at the edge while the sidebar scrolls */
+.pollisToolsSash {
+	position: fixed;
+	inset-block: var(--toolbar-height) 0;
+	inset-inline-end: calc(var(--pollis-tools-width) - 3px);
+	width: 6px;
+	cursor: ew-resize;
+	z-index: 1;
+	touch-action: none;
+}
+
+.pollisToolsSash:hover,
+.pollisToolsSash.active {
+	background: var(--vscode-sash-hoverBorder, var(--vscode-focusBorder));
+}
+
 .pollisTools h2,
 .pollisTools summary {
 	margin: 14px 0 8px;
@@ -570,9 +586,46 @@ html body {
 	cursor: pointer;
 }
 
-.pollisButton:hover {
+
+/* The cells of the area's table, which can be corrected before it is copied, saved or sent */
+.pollisEditable td {
+	cursor: text;
+}
+
+.pollisEditable td:focus {
+	outline: 1px solid var(--vscode-focusBorder);
+	outline-offset: -1px;
+	background: var(--vscode-input-background);
+}
+
+/* After Normalise Table: the cells it changed, and those it flagged as cut off by the area */
+.pollisTable td.pollisChanged {
+	background: var(--vscode-diffEditor-insertedTextBackground, color-mix(in srgb, var(--vscode-testing-iconPassed) 20%, transparent));
+}
+
+.pollisTable td.pollisFlagged {
+	background: color-mix(in srgb, var(--vscode-editorWarning-foreground) 25%, transparent);
+	outline: 1px solid var(--vscode-editorWarning-foreground);
+	outline-offset: -1px;
+}
+
+/* In each row of buttons one is blue: the first at first, then the last enabled one the pointer went onto, which
+	keeps it after the pointer leaves */
+.pollisButtons:not(.pollisTouched) > .pollisButton:first-child,
+.pollisButtons > .pollisButton.pollisCurrent {
 	color: var(--vscode-button-foreground);
 	background: var(--vscode-button-background);
+}
+
+.pollisButtons:not(.pollisTouched) > .pollisButton:first-child:hover,
+.pollisButtons > .pollisButton.pollisCurrent:hover {
+	background: var(--vscode-button-hoverBackground);
+}
+
+.pollisButtons[hidden],
+.pollisTools h3[hidden],
+.pollisButton[hidden] {
+	display: none;
 }
 
 /* The options of the Poppler tools, as many to a row as fit */

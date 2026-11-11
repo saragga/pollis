@@ -18,7 +18,7 @@ Each input table of a Pollis replication has a `licence` in `replication.toml`: 
 
 ## Step 2: Plan
 
-**Plan** says, for each target table, how it is computed, in the column **Computed By**. **Julia Packages** names the registered packages that compute it, such as GLM for a logit. **Notebook Code** is a computation short enough to write in the notebook itself. **Article Method** is for a method no Julia package has, substantial enough that others would install and reuse it. **Note** says what computes the table, with the page of the article. Each change to the plan is saved in `replication.toml` as it is made, and **Replicate with Agent** computes each table as its row says. **Plan with Agent** asks a coding agent, with the plan-replication skill, to read the article and propose one. The plan is optional, and the Replicate step works without it.
+**Plan** says, for each target table, how it is computed, in the column **Computed By**. **Julia Packages** names the registered packages that compute it, such as GLM for a logit. **Notebook Code** is a computation short enough to write in the notebook itself. **Article Method** is for a method no Julia package has, substantial enough that others would install and reuse it. **Note** says what computes the table, with the page of the article. Each choice made in a row is saved in `replication.toml` as it is made, and **Replicate with Agent** computes each table as its row says. **Ask Agent** has a coding agent, with the plan-replication skill, read the article and propose the plan instead. The plan is optional, and the Replicate step works without it.
 
 ## Exact and Random Values in a Replication
 

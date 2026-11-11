@@ -1,13 +1,13 @@
 # Article Methods — Factsheet
 
-**Article Methods**, opened by Browse Article Methods, lists the methods no Julia package has, written out with their tests: yours in progress, those you published, and the library's.
+**Article Methods**, opened by Browse Article Methods, lists the methods no Julia package has, written out with their tests: yours in progress and the library's, which holds every published method with its author.
 
 | | |
 |---|---|
 | **Purpose** | Go on with a method, open one, or remove one you no longer want |
-| **Headings** | In Progress, Published by You, Library |
+| **Headings** | In Progress, Library |
 | **Columns of your methods** | Method, Article, Tables, and Delete |
-| **Columns of the library** | Method, Article, Packages, Datasets, Size, Last Updated |
+| **Columns of the library** | Method, Author, Article, Packages, Datasets, Size, Last Updated |
 | **Your copies** | `~/.pollis/methods`, made the first time you open a method of the library |
 | **Starting one** | Compose > Replication > Create Article Method |
 

@@ -6,6 +6,8 @@ description = "Multivariate time series forecasting with LSTNet-Skip (Lai, Chang
 topic = "Time Series Forecasting"
 license = "MIT"
 version = "0.2.0"
+updated = "2026-10-15"
+repository = "https://github.com/Trumpingtons/LSTNet.jl"
 
 key = "LCYL2018a"
 citation = "Lai, G., Chang, W.-C., Yang, Y. and Liu, H. (2018). Modeling Long- and Short-Term Temporal Patterns with Deep Neural Networks. In SIGIR '18: The 41st International ACM SIGIR Conference on Research and Development in Information Retrieval, 95-104."
@@ -30,21 +32,25 @@ copy = ["crosstest/crosstest.jl", "crosstest/artificial", "crosstest/authors/ref
 packages = ["Lux", "Optimisers", "MLDataDevices", "JSON", "DelimitedFiles", "Random", "Statistics"]
 
 [inputs.electricity]
+label = "Hourly electricity consumption of 321 clients"
 url = "https://raw.githubusercontent.com/laiguokun/multivariate-time-series-data/master/electricity/electricity.txt.gz"
 header = false
 source = "Hourly electricity consumption of 321 clients, 2012-2014, from the UCI ElectricityLoadDiagrams20112014 data, as Lai et al. prepared it (laiguokun/multivariate-time-series-data). Fetched, not kept: the repository has no licence."
 
 [inputs.exchange]
+label = "Daily exchange rates of currencies from 8 countries against the USD"
 url = "https://raw.githubusercontent.com/laiguokun/multivariate-time-series-data/master/exchange_rate/exchange_rate.txt.gz"
 header = false
 source = "Daily exchange rates of Australia, Britain, Canada, Switzerland, China, Japan, New Zealand and Singapore, 1990-2016 (laiguokun/multivariate-time-series-data). Fetched, not kept: the repository has no licence."
 
 [inputs.solar]
+label = "Solar power of 137 photovoltaic plants in Alabama every 10 minutes"
 url = "https://raw.githubusercontent.com/laiguokun/multivariate-time-series-data/master/solar-energy/solar_AL.txt.gz"
 header = false
 source = "Solar power of 137 photovoltaic plants in Alabama every 10 minutes in 2006, from NREL (laiguokun/multivariate-time-series-data). Fetched, not kept: the repository has no licence."
 
 [inputs.traffic]
+label = "Hourly occupancy rates of 862 San Francisco Bay Area freeway sensors"
 url = "https://raw.githubusercontent.com/laiguokun/multivariate-time-series-data/master/traffic/traffic.txt.gz"
 header = false
 source = "Hourly occupancy rates of 862 San Francisco Bay Area freeway sensors, 2015-2016, from the California Department of Transportation's PeMS (laiguokun/multivariate-time-series-data). Fetched, not kept: the repository has no licence."

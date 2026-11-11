@@ -1,0 +1,125 @@
+# A Pollis article method (Compose > Replication). Create Method shows the article and the tables; Package and
+# Publish turns this folder into the Julia package NewMethod.jl, its tests the target tables.
+#
+#   targets/*.csv     the published results: the row labels in the first column, the values as printed
+#   src/NewMethod.jl     the code: module NewMethod
+#   INSTRUCTIONS.md   notes for a coding agent on the method
+#   VIGNETTE.md       notes for a coding agent on the vignette (vignette/NewMethod.tex)
+
+name = "TwoScalesVolatility"
+title = "Two-Scales Realized Volatility"
+vignette_title = "Two-Scales Realized Volatility"
+author = "Antonio Saragga Seabra"
+description = "The two-scales realized volatility of Zhang, Mykland and Aït-Sahalia (2005): the integrated variance of a day from prices observed every second with market microstructure noise, the average of the realized variances of K sub-grids less a multiple of the realized variance of every tick, with the small-sample adjustment; the noise variance; the optimal sparse step, sub-grid size and K; and the Monte Carlo study of their Table 2 on the Heston model."
+# The topic, e.g. "Survival Analysis", and the license: choose one, e.g. MIT, or another whose text is in a
+# LICENSE file here. Without a license nobody may reuse the package, so others cannot build on it.
+topic = "High-Frequency Volatility"
+license = "MIT"
+updated = "2026-11-11"
+repository = "https://github.com/Trumpingtons/TwoScalesVolatility.jl"
+
+# The article whose tables are the targets. article is a link to read it (its PDF or its web page):
+# Pollis opens it in the integrated browser and keeps no copy. Without it, the DOI's page opens.
+citation = "Zhang, L., Mykland, P. A. and Aït-Sahalia, Y. (2005). A tale of two time scales: determining integrated volatility with noisy high-frequency data. Journal of the American Statistical Association 100(472), 1394–1411."
+doi = "10.1198/016214505000000169"
+article = "https://www.princeton.edu/~yacine/twoscales.pdf"
+
+# The Julia packages the code uses, e.g. ["Distributions"]
+packages = ["Distributions", "Random", "Statistics"]
+
+usage = """
+using TwoScalesVolatility, Random
+
+# A day of 23,400 one-second log prices with a daily volatility of 1% and noise of 5 basis points; with tick data,
+# the log prices of a Tables.jl table instead: y = log.(ticks.price)
+y = simulate_constant_day(Xoshiro(1); volatility = 0.01, noise = 0.0005)
+n = length(y) - 1
+
+sqrt(realized_variance(y))      # every tick, the fifth-best estimator: about 0.108, ten times the true 0.01
+sqrt(noise_variance(y))         # the noise, equation (22): about 0.0005
+
+# K = c* n^(2/3), equation (10), from the noise variance and a first guess at the integrated variance from five-minute
+# returns (a day is T = 1, and a constant volatility has a quarticity of its integrated variance squared)
+first_guess = sparse_variance(y, 300)
+K = round(Int, optimal_c(1.0, noise_variance(y), first_guess^2) * n^(2 / 3))
+sqrt(two_scales_variance(y, K)) # the two-scales estimator, the first-best: about 0.0098
+sqrt(noise_variance(y, K))      # the noise, equation (65): about 0.0005
+
+# Table 2 of the article, a 9×5 matrix, on 1,000 simulated days of the Heston model of Section 7.1 (the article's 25,000
+# is the default)
+table2(; paths = 1_000)
+"""
+
+# The input tables are links too, or files in inputs/ typed in from the article: Pollis reads each link
+# into memory to show it, and the package's tests download it; no copy is kept. In the calls, each is a
+# variable named after its table here.
+#   [inputs.grunfeld]
+#   url = "https://..."              or file = "inputs/grunfeld.csv", a table typed in from the article
+#   source = "Where the data comes from"
+#   delim = ","                      the default; or ";", "tab", "whitespace"
+#   columns = ["firm", "year"]       only for a file without a header line
+#   skipto = 2                       the line of the first row, when the lines before it are not a header
+#   limit = 100                      the number of rows to read, when the file goes on after them
+
+# One table for each target: where it is published, the Julia call that computes it from the inputs
+# (Tables.jl column tables) and the units of the last printed digit it may be off by. The call returns
+# a matrix laid out like the target, without its label column.
+
+[targets.table2]
+source = "Table 2, page 1405 (typed in by a coding agent)"
+call = "table2()"
+# One unit of the last digit: the fifth-best asymptotic RMSE, sqrt(0.0117^2 + 1.787e-8) = 0.0117008, is printed
+# 1.1700e-2. The other values tested here match with no gap.
+tolerance = 1
+# Simulated values, tested within the noise of the simulation by tests/table2_noise.jl; only the values the theory
+# gives without simulation are tested here, to the digits printed.
+untested = [
+	["Small-sample bias", "Fifth-best"],
+	["Small-sample bias", "Fourth-best"],
+	["Small-sample bias", "Third-best"],
+	["Small-sample bias", "Second-best"],
+	["Small-sample bias", "First-best"],
+	["Asymptotic bias", "Third-best"],
+	["Asymptotic bias", "Second-best"],
+	["Small-sample variance", "Fifth-best"],
+	["Small-sample variance", "Fourth-best"],
+	["Small-sample variance", "Third-best"],
+	["Small-sample variance", "Second-best"],
+	["Small-sample variance", "First-best"],
+	["Asymptotic variance", "Fifth-best"],
+	["Asymptotic variance", "Fourth-best"],
+	["Asymptotic variance", "Third-best"],
+	["Asymptotic variance", "Second-best"],
+	["Asymptotic variance", "First-best"],
+	["Small-sample RMSE", "Fifth-best"],
+	["Small-sample RMSE", "Fourth-best"],
+	["Small-sample RMSE", "Third-best"],
+	["Small-sample RMSE", "Second-best"],
+	["Small-sample RMSE", "First-best"],
+	["Asymptotic RMSE", "Fourth-best"],
+	["Asymptotic RMSE", "Third-best"],
+	["Asymptotic RMSE", "Second-best"],
+	["Asymptotic RMSE", "First-best"],
+	["Small-sample relative bias", "Fifth-best"],
+	["Small-sample relative bias", "Fourth-best"],
+	["Small-sample relative bias", "Third-best"],
+	["Small-sample relative bias", "Second-best"],
+	["Small-sample relative bias", "First-best"],
+	["Small-sample relative variance", "Fifth-best"],
+	["Small-sample relative variance", "Fourth-best"],
+	["Small-sample relative variance", "Third-best"],
+	["Small-sample relative variance", "Second-best"],
+	["Small-sample relative variance", "First-best"],
+	["Small-sample relative RMSE", "Fifth-best"],
+	["Small-sample relative RMSE", "Fourth-best"],
+	["Small-sample relative RMSE", "Third-best"],
+	["Small-sample relative RMSE", "Second-best"],
+	["Small-sample relative RMSE", "First-best"],
+]
+
+# Hand-written tests: Table 2 within the noise of the simulation, the recovery of a known volatility, and rTSCov
+# of R highfrequency, optional: Pkg.test("TwoScalesVolatility"; test_args = ["rtscov"])
+[tests]
+file = "tests/tests.jl"
+copy = ["tests/table2_noise.jl", "tests/recovery.jl", "tests/rtscov.jl"]
+packages = ["Random"]

@@ -18,10 +18,18 @@ export const PDF_VIEWER_OPEN_COMMAND_ID = 'pollis.pdfViewer.open';
  */
 export const PDF_VIEWER_OPEN_IN_MODE_COMMAND_ID = 'pollis.pdfViewer.openInMode';
 
-/** How the PDF Viewer opens a PDF: at a page (from 1), and beside the active editor. */
+/**
+ * How the PDF Viewer opens a PDF: at a page (from 1), or at the page where a caption such as `Table 2` starts a line;
+ * beside the active editor; in a mode, `crop` for the area tool; and with a button for the area's table, which runs
+ * `command` with `args`, the table's cells as corrected in the viewer (`cells`, rows of strings) and its page in the
+ * PDF (`page`).
+ */
 export interface IPdfViewerOpenOptions {
 	readonly page?: number;
 	readonly toSide?: boolean;
+	readonly caption?: string;
+	readonly mode?: 'read' | 'extract' | 'merge' | 'crop' | 'convert' | 'highlight' | 'text' | 'image' | 'draw';
+	readonly addTable?: { readonly label: string; readonly command: string; readonly args?: Readonly<Record<string, string>> };
 }
 
 /** Opens a PDF on the disk in the PDF Viewer, at a page when one is given. */

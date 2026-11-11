@@ -202,6 +202,7 @@ async function openDocument(message) {
 	if (message.page) {
 		viewer.eventBus.on('pagesinit', () => showPage(message.page), { once: true });
 	}
+	setAddLabel(message.addLabel);
 	try {
 		await viewer.open({ data: message.data, filename: message.name, isEvalSupported: false, useWorkerFetch: false });
 	} catch (error) {
@@ -210,6 +211,9 @@ async function openDocument(message) {
 	}
 	poppler.documentOpened();
 	applyMode();
+	if (message.caption) {
+		await showCaption(message.caption);
+	}
 	if (area && area.page > viewer.pagesCount) {
 		clearArea();
 	} else if (area) {
@@ -224,6 +228,37 @@ function showPage(page) {
 		viewer.page = Math.min(Math.max(1, page), viewer.pagesCount);
 	} else {
 		viewer.eventBus.on('pagesinit', () => showPage(page), { once: true });
+	}
+}
+
+/**
+ * Goes to the page where a line starts with `caption`, such as `Table 2`: a caption ("Table 2." or "Table 2:") first,
+ * else a line that starts with it, else any mention; stays on the page shown when there is none.
+ */
+async function showCaption(caption) {
+	const documentProxy = app().pdfDocument;
+	const words = caption.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s*');
+	// Not followed by a digit: Table 2 is not Table 21, nor Table 2.1
+	const patterns = [
+		new RegExp('(^|\\n)\\s*' + words + '\\s*[.:](?!\\d)', 'i'),
+		new RegExp('(^|\\n)\\s*' + words + '(?![\\d.])', 'i'),
+		new RegExp(words + '(?![\\d.])', 'i'),
+	];
+	const found = [];
+	for (let n = 1; n <= documentProxy.numPages && !found[0]; n++) {
+		const items = (await (await documentProxy.getPage(n)).getTextContent()).items;
+		const text = items.map(item => item.str + (item.hasEOL ? '\n' : '')).join('');
+		patterns.forEach((pattern, i) => {
+			if (found[i] === undefined && pattern.test(text)) {
+				found[i] = n;
+			}
+		});
+	}
+	const page = found.find(n => n !== undefined);
+	// The whole page shows, so that a table at its foot is in view
+	app().pdfViewer.currentScaleValue = 'page-fit';
+	if (page) {
+		showPage(page);
 	}
 }
 
@@ -257,6 +292,12 @@ window.addEventListener('message', event => {
 		showPage(message.page);
 	} else if (message?.command === 'mode') {
 		setMode(message.mode);
+	} else if (message?.command === 'caption') {
+		showCaption(message.caption);
+	} else if (message?.command === 'addTable') {
+		setAddLabel(message.label);
+	} else if (message?.command === 'normalised') {
+		normalised(message);
 	} else if (['popplerResult', 'popplerStatus', 'fileRead', 'colorized'].includes(message?.command)) {
 		poppler.received(message);
 	} else if (message?.command === 'themeChanged') {
@@ -415,6 +456,27 @@ moreLabel.textContent = T.more;
 const tools = element('aside', 'pollisTools');
 tools.id = 'pollisTools';
 tools.hidden = true;
+
+// In each row of buttons of the sidebar, the blue moves to the enabled button the pointer goes onto, and stays there
+tools.addEventListener('mouseover', event => {
+	const target = event.target instanceof Element ? event.target.closest('.pollisButton') : null;
+	const row = target?.parentElement;
+	if (!target || target.disabled || !row?.classList.contains('pollisButtons')) {
+		return;
+	}
+	row.classList.add('pollisTouched');
+	for (const other of row.children) {
+		other.classList.toggle('pollisCurrent', other === target);
+	}
+});
+
+/** Gives the blue of a row back to its first button, as when the button that had it is hidden. */
+function resetBlue(row) {
+	row.classList.remove('pollisTouched');
+	for (const other of row.children) {
+		other.classList.remove('pollisCurrent');
+	}
+}
 document.getElementById('mainContainer').appendChild(tools);
 const popplerPage = element('div', 'pollisPage');
 
@@ -524,8 +586,63 @@ function numberInput(label, title, value) {
 const gapInput = numberInput(T.gap, T.gapTitle, 8);
 const rowToleranceInput = numberInput(T.rowTolerance, T.rowToleranceTitle, 3);
 
+// The section the workbench asked for, as Send to Target Tables on the page of a method, with its one button, Table,
+// laid out as Send to Ask Pollis: hidden until then
+const addTitle = element('h3');
+const addButton = button(T.sendTable, T.addTableTitle, () => post({ command: 'addTable', cells: result.cells, page: area.page }));
+const addActions = element('div', 'pollisButtons');
+addActions.appendChild(addButton);
+addTitle.hidden = addActions.hidden = addButton.hidden = true;
+function setAddLabel(label) {
+	if (label) {
+		addTitle.textContent = label;
+		addTitle.hidden = addActions.hidden = addButton.hidden = false;
+		renderTable();
+	}
+}
+
+// Normalise Table: the cells rewritten by the rules, in the extension; Undo puts them back
+let normaliseToken = 0;
+const normaliseButton = button(T.normalise, T.normaliseTitle, () => {
+	normaliseButton.disabled = true;
+	post({ command: 'normalise', token: ++normaliseToken, cells: result.cells });
+});
+const undoButton = button(T.undoNormalise, T.undoNormaliseTitle, () => {
+	if (result.before) {
+		result.cells = result.before;
+		result.before = undefined;
+		result.marks = undefined;
+		renderTable();
+	}
+});
+undoButton.hidden = true;
+function normalised(message) {
+	if (message.token !== normaliseToken) {
+		return;
+	}
+	normaliseButton.disabled = false;
+	if (message.error) {
+		post({ command: 'warn', text: message.error });
+		return;
+	}
+	result.before = result.cells.map(row => row.slice());
+	result.cells = message.cells;
+	result.marks = { changed: new Set(message.changed.map(([i, j]) => `${i},${j}`)), flagged: new Set(message.flagged.map(([i, j]) => `${i},${j}`)) };
+	const notes = [message.changed.length ? format(T.normalised, message.changed.length) : T.normalisedNone];
+	if (message.flagged.length) {
+		notes.push(format(T.cutPowers, message.flagged.length));
+	}
+	if (message.notNumbers) {
+		notes.push(format(T.notNumbers, message.notNumbers));
+	}
+	renderTable(notes.join(' '));
+}
+
 const areaActions = element('div', 'pollisButtons');
 areaActions.append(
+	normaliseButton,
+	undoButton,
+	button(T.editRules, T.editRulesTitle, () => post({ command: 'editRules' })),
 	button(T.copyText, undefined, () => post({ command: 'copy', text: result.text })),
 	button(T.copyTable, T.copyTableTitle, () => post({ command: 'copy', text: cellsTabbed(result.cells) })),
 	button(T.saveCsv, undefined, () => post({ command: 'saveAs', kind: 'csv', name: `${areaName()} table.csv`, data: new TextEncoder().encode(cellsCsv(result.cells) + '\n') })),
@@ -538,7 +655,7 @@ askActions.append(
 	button(T.sendTable, T.sendTableTitle, () => post({ command: 'ask', kind: 'file', name: `${areaName()} table.csv`, content: cellsCsv(result.cells) })),
 	button(T.sendImage, T.sendImageTitle, () => post({ command: 'ask', kind: 'image', name: `${areaName()} area.png`, content: result.picture.toDataURL('image/png') })),
 );
-areaBody.append(areaHeader, areaPicture, tableBox, tableNote, settings, areaActions, askTitle, askActions);
+areaBody.append(areaHeader, areaPicture, tableBox, tableNote, settings, areaActions, addTitle, addActions, askTitle, askActions);
 
 // ---- Select Area: a box dragged on a page, in points from the top left corner of the page
 
@@ -555,6 +672,39 @@ tools.appendChild(popplerPage);
 const poppler = popplerTools(popplerPage, { T, config, post, app, element, button, format, table, stem, getArea: () => area });
 showAreaSection();
 setToolsShown(!!config.toolsShown, false);
+
+/** The width of the sidebar, in pixels, kept between 240 and all but 200 pixels of the editor. */
+function setToolsWidth(width) {
+	const clamped = Math.round(Math.min(Math.max(width, 240), Math.max(240, window.innerWidth - 200)));
+	document.documentElement.style.setProperty('--pollis-tools-width', `${clamped}px`);
+	return clamped;
+}
+if (Number(config.toolsWidth) > 0) {
+	setToolsWidth(Number(config.toolsWidth));
+}
+
+// The left edge of the sidebar is dragged to make it wider or narrower; the width is kept for the next PDF
+const toolsSash = element('div', 'pollisToolsSash');
+toolsSash.title = T.resizeTools;
+tools.appendChild(toolsSash);
+toolsSash.addEventListener('pointerdown', event => {
+	event.preventDefault();
+	toolsSash.setPointerCapture(event.pointerId);
+	toolsSash.classList.add('active');
+	const right = tools.getBoundingClientRect().right;
+	let width = tools.offsetWidth;
+	const move = moveEvent => {
+		width = setToolsWidth(right - moveEvent.clientX);
+	};
+	const end = () => {
+		toolsSash.removeEventListener('pointermove', move);
+		toolsSash.classList.remove('active');
+		post({ command: 'toolsWidth', width });
+	};
+	toolsSash.addEventListener('pointermove', move);
+	toolsSash.addEventListener('pointerup', end, { once: true });
+	toolsSash.addEventListener('pointercancel', end, { once: true });
+});
 
 /** The page view of pdf.js of page `n`, from 1. */
 const pageView = n => app().pdfViewer.getPageView(n - 1);
@@ -714,22 +864,60 @@ function showTable() {
 	const rowTolerance = Number(rowToleranceInput.value) || 0;
 	result.text = areaText(result.words, area, rowTolerance);
 	result.cells = areaCells(result.words, area, Number(gapInput.value) || 0, rowTolerance);
+	result.before = undefined;
+	result.marks = undefined;
+	normaliseToken++;
+	normaliseButton.disabled = false;
+	renderTable();
+}
+
+/**
+ * Draws the cells of the area, as they are: each can be corrected, and the correction goes into the table copied,
+ * saved or sent to the page that asked for it. With a page to send it to, every row shows; otherwise the first
+ * MAX_ROWS. The cells Normalise Table changed are highlighted, and those it flagged marked; `note` says what it did.
+ */
+function renderTable(note) {
+	if (!area || !result.words) {
+		return;
+	}
 	tableBox.textContent = '';
+	if (!result.before && undoButton.classList.contains('pollisCurrent')) {
+		resetBlue(areaActions);
+	}
+	undoButton.hidden = !result.before;
 	if (!result.cells.length) {
 		tableNote.textContent = T.noText;
 		return;
 	}
-	const table = element('table', 'pollisTable');
-	for (const row of result.cells.slice(0, MAX_ROWS)) {
+	const sending = !addButton.hidden;
+	const table = element('table', 'pollisTable pollisEditable');
+	for (const [i, row] of (sending ? result.cells : result.cells.slice(0, MAX_ROWS)).entries()) {
 		const tr = element('tr');
-		for (const cell of row) {
-			tr.appendChild(element('td', '', cell));
+		for (const [j, cell] of row.entries()) {
+			const td = element('td', '', cell);
+			if (result.marks?.flagged.has(`${i},${j}`)) {
+				td.classList.add('pollisFlagged');
+			} else if (result.marks?.changed.has(`${i},${j}`)) {
+				td.classList.add('pollisChanged');
+			}
+			td.contentEditable = 'plaintext-only';
+			td.spellcheck = false;
+			td.addEventListener('input', () => { result.cells[i][j] = td.textContent ?? ''; });
+			td.addEventListener('keydown', event => {
+				if (event.key === 'Enter') {
+					event.preventDefault();
+					td.blur();
+				}
+			});
+			tr.appendChild(td);
 		}
 		table.appendChild(tr);
 	}
 	tableBox.appendChild(table);
 	const size = format(T.tableSize, result.cells.length, result.cells[0].length);
-	tableNote.textContent = result.cells.length > MAX_ROWS ? `${size}. ${format(T.tableShown, MAX_ROWS)}` : size;
+	const shown = !sending && result.cells.length > MAX_ROWS ? ` ${format(T.tableShown, MAX_ROWS)}` : '';
+	tableNote.textContent = `${size}.${shown} ${note ?? (sending ? T.editCellsAdd : T.editCells)}`;
+	tableNote.title = T.editCellsTitle;
 }
 
 /** The picture of an area, drawn by pdf.js at two pixels to a point. */

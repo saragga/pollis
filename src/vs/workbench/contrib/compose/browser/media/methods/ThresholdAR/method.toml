@@ -6,6 +6,8 @@ description = "Tong and Lim's self-exciting threshold autoregressive model with 
 topic = "Nonlinear Dynamics"
 license = "MIT"
 version = "0.2.0"
+updated = "2026-10-14"
+repository = "https://github.com/Trumpingtons/ThresholdAR.jl"
 
 key = "TL1980a"
 citation = "Tong, H. and Lim, K. S. (1980). Threshold Autoregression, Limit Cycles and Cyclical Data. Journal of the Royal Statistical Society: Series B (Methodological) 42(3), 245-268."

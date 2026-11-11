@@ -14,14 +14,17 @@
 #   julia package.jl PACKAGES_FOLDER METHOD_FOLDER... [--no-tests] [--push OWNER [--register REGISTRY_URL]]
 #
 # A method folder holds method.toml (name, title, author, description, topic, license (optional: MIT, written as
-# the package's LICENSE, or another whose text is the method folder's LICENSE; none when empty), citation, version, usage (Julia code
+# the package's LICENSE, or another whose text is the method folder's LICENSE; none when empty), citation, version,
+# updated and repository (written by --push: the date of the last push, YYYY-MM-DD, and github.com/OWNER/NAME.jl, which
+# Browse Article Methods shows), usage (Julia code
 # that shows how to call the method, for the README), packages, compat (optional: a table of version bounds of the
 # packages, such as Optim = "1, 2"; a package left out gets every version of the major version installed, such as
 # "2" for 2.3.2 or "0.25" for 0.25.1, and a standard library every 1.x), [[articles]] (the other articles whose tables are
 # targets too, when there are several: key, citation, doi, article, as for the first), and a
 # [targets.NAME] table for each target: source, call, tolerance, untested (the cells shown in the vignette but not
 # tested, each as [row label, column name]), and an [inputs.NAME] table for each input:
-# url or file, source, delim, columns, header (false for a file without a header line, its columns then
+# url or file, source, label (optional: a short name for the input, which Browse Article Methods shows in place of
+# its source; empty to leave the input out of it), delim, columns, header (false for a file without a header line, its columns then
 # Column1, Column2, ...), skipto, limit), src/NAME.jl (module NAME), targets/*.csv and inputs/*.csv. An input is
 # a link, which the tests download into memory, writing nothing to disk, or a file of the method
 # (file = "inputs/NAME.csv", typed in from the article), copied into the package's tests. A target table's first column holds the row
@@ -376,6 +379,7 @@ function list_vignette(registry, name, method, owner)
 	println("Listed the vignette of $name in $registry (Vignettes.toml).")
 end
 
+"Commits the package and pushes it to github.com/OWNER/NAME.jl; returns whether it was pushed."
 function publish(root, name, owner)
 	cd(root) do
 		isdir(".git") || run(`git init -b main`)
@@ -385,10 +389,33 @@ function publish(root, name, owner)
 			run(`git push`)
 		elseif Sys.which("gh") === nothing
 			println("GitHub CLI (gh) not found: create github.com/$owner/$name.jl and push $root by hand.")
+			return false
 		else
 			run(`gh repo create $owner/$name.jl --public --source . --remote origin --push`)
 		end
+		return true
 	end
+end
+
+"""
+Sets `updated` and `repository` in the method folder's method.toml to today, the date of the push, and the
+package's GitHub page, which the Library of Browse Article Methods shows: each in place of its line, else after
+`version`, `license` or `name`, the other lines kept as they are.
+"""
+function set_published(folder, repository)
+	file = joinpath(folder, "method.toml")
+	lines = readlines(file)
+	key(name) = findfirst(l -> startswith(l, "$name ="), lines)
+	for (name, value) in (("repository", repository), ("updated", Dates.format(Dates.today(), "yyyy-mm-dd")))
+		line = "$name = \"$value\""
+		at = key(name)
+		if at === nothing
+			insert!(lines, something(key("version"), key("license"), key("name"), 0) + 1, line)
+		else
+			lines[at] = line
+		end
+	end
+	write(file, join(lines, "\n") * "\n")
 end
 
 function main(args)
@@ -411,7 +438,7 @@ function main(args)
 				println("$name does not meet the Pollis registry rules yet:\n", join("  - " .* problems, "\n"))
 				println("Prepare for Registration, on the method's page (Compose > Replication > Browse Article Methods), asks your coding agent to fix them.")
 			end
-			owner === nothing || publish(root, name, owner)
+			owner !== nothing && publish(root, name, owner) && set_published(folder, "https://github.com/$owner/$name.jl")
 			if registry !== nothing
 				if isempty(problems)
 					register(root, registry)

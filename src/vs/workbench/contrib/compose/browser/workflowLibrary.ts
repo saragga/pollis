@@ -81,8 +81,8 @@ interface IYourSummary {
 
 /** The user's own work that a library page lists above the library, in progress and finished. */
 interface IYours {
-	/** The heading of those finished: Published by You, Done by You. */
-	readonly finished: string;
+	/** The heading of those finished, Done by You; without it, those finished are entries of the library (published methods). */
+	readonly finished?: string;
 	/** What the page says when none is in progress. */
 	readonly none: string;
 	/** The link that deletes the empty ones: `{0}` is their number. */
@@ -122,13 +122,12 @@ const NEW_METHODS: INotebookLibrary = {
 	base: 'vs/workbench/contrib/compose/browser/media/methods',
 	userFolder: 'methods',
 	title: localize('newMethods.title', "Article Methods"),
-	intro: localize('newMethods.intro', "A method here is a published method that no Julia package has, written in Julia with its tests: the data of the article and the results it reports for them, printed beside Julia's. A method needs both, data and published results, to be added. The page lists the methods in three groups. In Progress holds those you have started and not yet published: click a title to go on with one. Published by You follows, then the Library: click a name to open the page of your own copy of the method, which Pollis makes in {0} the first time you open it.", '<code class="pollisPath">~/.pollis/methods</code>'),
+	intro: localize('newMethods.intro', "A method here is a published method that no Julia package has, written in Julia with its tests: the data of the article and the results it reports for them, printed beside Julia's. A method needs both, data and published results, to be added. The page lists the methods in two groups. In Progress holds those you have started and not yet published: click a title to go on with one. The Library holds the published methods, those that come with Pollis and those pushed with Package and Publish, each with its author: click a name to open the page of your own copy of the method, which Pollis makes in {0} the first time you open it.", '<code class="pollisPath">~/.pollis/methods</code>'),
 	entry: localize('newMethods.entry', "Method"),
 	empty: localize('newMethods.empty', "There are no new methods yet."),
 	openFailed: (label, error) => localize('newMethods.openFailed', "Could not open the method {0}: {1}", label, error),
 	userMethods: true,
 	yours: {
-		finished: localize('newMethods.published', "Published by You"),
 		none: localize('newMethods.yours.none', "None: Compose > Replication > Create Article Method starts one."),
 		deleteEmpty: localize('newMethods.yours.deleteEmpty', "Delete Empty Article Methods ({0})"),
 		folder: userMethodsFolder,
@@ -169,11 +168,15 @@ interface ILibraryEntry {
 	/** The file shown under the title: the notebook, e.g. `garch.ipynb`, or a method's package code, e.g. `src/ThresholdAR.jl`. */
 	readonly file: string;
 	readonly title: string;
+	/** A method's author, from its method.toml. */
+	readonly author?: string;
+	/** The GitHub page of a method's package, from its method.toml. */
+	readonly repository?: string;
 	readonly description: string;
 	readonly article: IWorkflowMetadata['article'];
 	readonly packages: readonly string[];
-	/** The datasets by source, e.g. `PollisDatasets` with `pbc`, and what is said of how the source is read. */
-	readonly datasets: readonly { readonly source: string; readonly note?: string; readonly url?: string; readonly names: readonly string[] }[];
+	/** The datasets by source, e.g. `PollisDatasets` with `pbc`, and what is said of how the source is read; `listed` shows every name, however many. */
+	readonly datasets: readonly { readonly source: string; readonly note?: string; readonly url?: string; readonly names: readonly string[]; readonly listed?: boolean }[];
 	/** The size of the shipped files. */
 	readonly size: string;
 	/** The same in bytes, to sort by. */
@@ -227,8 +230,10 @@ async function folderSize(fileService: IFileService, folder: URI): Promise<numbe
 
 /**
  * Reads a method of the Methods library from its method.toml: its title, description, article
- * and packages, and its inputs as datasets, by the source each names before a colon. Undefined
- * when the folder has no method.toml.
+ * and packages, and its inputs as datasets: an input with a `label` as that label alone (none when
+ * empty), the others
+ * by the source each names before a colon, the names of PollisDatasets' tables all listed.
+ * Undefined when the folder has no method.toml.
  */
 async function readMethodEntry(fileService: IFileService, folder: URI): Promise<Omit<ILibraryEntry, 'folder' | 'location' | 'size' | 'bytes'> | undefined> {
 	const tomlFile = joinPath(folder, 'method.toml');
@@ -240,23 +245,35 @@ async function readMethodEntry(fileService: IFileService, folder: URI): Promise<
 	const name = text(toml.name) ?? basename(folder);
 	const citation = text(toml.citation);
 	const doi = text(toml.doi);
-	const datasets = new Map<string, { source: string; names: string[] }>();
+	const datasets = new Map<string, { source: string; names: string[]; listed: boolean }>();
 	for (const [input, value] of Object.entries(toml.inputs && typeof toml.inputs === 'object' ? toml.inputs : {})) {
-		const source = (text((value as TomlValue).source) ?? '').split(':')[0].trim();
+		// An empty label leaves the input out
+		if ((value as TomlValue).label === '') {
+			continue;
+		}
+		const label = text((value as TomlValue).label);
+		const source = label ?? (text((value as TomlValue).source) ?? '').split(':')[0].trim();
 		let group = datasets.get(source);
 		if (!group) {
-			group = { source, names: [] };
+			group = { source, names: [], listed: source === 'PollisDatasets' };
 			datasets.set(source, group);
 		}
-		group.names.push(input);
+		if (!label) {
+			group.names.push(input);
+		}
 	}
 	return {
 		file: `src/${name}.jl`,
 		title: text(toml.title) ?? name,
+		author: text(toml.author),
+		repository: text(toml.repository),
 		description: text(toml.description) ?? '',
 		article: citation ? { citation, doi, url: text(toml.article) } : undefined,
 		packages: Array.isArray(toml.packages) ? toml.packages.filter((value): value is string => typeof value === 'string') : [],
 		datasets: [...datasets.values()],
+		// The date of its last push, which Package and Publish writes
+		updated: formatDate(text(toml.updated)),
+		updatedDate: text(toml.updated),
 	};
 }
 
@@ -381,12 +398,35 @@ async function openLibraryPage(accessor: ServicesAccessor, library: INotebookLib
 	}
 
 	const userFolder = joinPath(await pathService.userHome({ preferLocal: true }), '.pollis', library.userFolder);
+	// A library without a heading for the user's finished work lists them as its own entries: the methods the user
+	// published, beside those shipped (a shipped method's copy is the shipped one, whatever its folder is called,
+	// e.g. arcfs for ArcFS)
+	const readPublished = async (shipped: readonly ILibraryEntry[]): Promise<ILibraryEntry[]> => {
+		if (!library.userMethods || !library.yours || library.yours.finished) {
+			return [];
+		}
+		const names = new Set(shipped.flatMap(entry => [entry.folder.toLowerCase(), entry.file.toLowerCase()]));
+		const published: ILibraryEntry[] = [];
+		for (const item of await library.yours.read(fileService, pathService)) {
+			const folder = URI.parse(item.id);
+			if (item.inProgress || names.has(basename(folder).toLowerCase())) {
+				continue;
+			}
+			const method = await readMethodEntry(fileService, folder);
+			if (method && !names.has(method.file.toLowerCase())) {
+				const bytes = await folderSize(fileService, folder);
+				published.push({ ...method, folder: basename(folder), location: folder, size: ByteSize.formatSize(bytes), bytes });
+			}
+		}
+		return published;
+	};
 	const readEntries = async () => {
 		const read = library.content
 			? await readLibrary(fileService, library, await contentService.downloaded(library.content), contentService.unseen(library.content))
 			: await readLibrary(fileService, library);
+		const all = [...read, ...await readPublished(read)];
 		// A user's copy older than the library's notebook: the page offers the new version beside it
-		return Promise.all(read.map(async entry => {
+		return Promise.all(all.map(async entry => {
 			const copy = joinPath(userFolder, entry.folder, entry.file);
 			if (library.userMethods || !entry.updatedDate || !await fileService.exists(copy)) {
 				return entry;
@@ -433,7 +473,13 @@ async function openLibraryPage(accessor: ServicesAccessor, library: INotebookLib
 	const yours = library.yours;
 	const sendYours = async () => {
 		if (yours) {
-			webviewInput.webview.postMessage({ command: 'yours', yours: await yours.read(fileService, pathService) });
+			// The library's entries, the user's copies of shipped ones and their published ones, are not listed again
+			// among their own, nor those finished when the library lists them
+			entries = await readEntries();
+			sendEntries();
+			const listed = new Set(entries.map(entry => entry.folder));
+			const own = (await yours.read(fileService, pathService)).filter(item => !listed.has(basename(URI.parse(item.id))) && (item.inProgress || !!yours.finished));
+			webviewInput.webview.postMessage({ command: 'yours', yours: own });
 		}
 	};
 	if (yours) {
@@ -527,6 +573,7 @@ async function openLibraryPage(accessor: ServicesAccessor, library: INotebookLib
 function pageHtml(library: INotebookLibrary): string {
 	const text = {
 		entry: library.entry,
+		author: library.userMethods ? localize('workflowLibrary.author', "Author") : undefined,
 		article: localize('workflowLibrary.article', "Article"),
 		packages: localize('workflowLibrary.packages', "Packages"),
 		datasets: localize('workflowLibrary.datasets', "Datasets"),
@@ -563,21 +610,21 @@ function pageHtml(library: INotebookLibrary): string {
 		<thead><tr><th>${library.entry}</th><th>${text.article}</th><th>${text.tables}</th><th></th></tr></thead>
 		<tbody id="yours"></tbody>
 	</table>
-	<p><button class="link small" id="deleteEmpty" hidden></button></p>
+	<p><button class="link small" id="deleteEmpty" hidden></button></p>${text.finished ? `
 	<div id="finishedYours" hidden>
 		<h2>${text.finished}</h2>
 		<table>
 			<thead><tr><th>${library.entry}</th><th>${text.article}</th><th>${text.tables}</th><th></th></tr></thead>
 			<tbody id="finished"></tbody>
 		</table>
-	</div>
+	</div>` : ''}
 	<h2>${text.library}</h2>` : '';
 	const heading = (column: string, label: string) => `<th class="sortable" data-sort="${column}" title="${text.sortHint}">${label}</th>`;
 	const body = `
 ${yours}
 	<table class="stickyHead">
 		<thead><tr>
-			${heading('title', text.entry)}${heading('citation', text.article)}${heading('packages', text.packages)}${heading('datasets', text.datasets)}${heading('bytes', text.size)}${heading('updatedDate', text.updated)}
+			${heading('title', text.entry)}${text.author ? heading('author', text.author) : ''}${heading('citation', text.article)}${heading('packages', text.packages)}${heading('datasets', text.datasets)}${heading('bytes', text.size)}${heading('updatedDate', text.updated)}
 		</tr></thead>
 		<tbody id="entries"></tbody>
 	</table>`;
@@ -601,7 +648,16 @@ ${sortHeadingsScript()}
 			title.appendChild(element('span', 'badge', entry.status === 'new' ? TEXT.new : TEXT.updatedBadge));
 		}
 		td.appendChild(title);
-		td.appendChild(element('div', 'file', entry.file));
+		// A method's package, linked to its GitHub page once published
+		if (entry.repository) {
+			const name = link(entry.file.replace(/^src\//, ''), () => vscode.postMessage({ command: 'link', url: entry.repository }));
+			name.classList.add('file');
+			const line = element('div');
+			line.appendChild(name);
+			td.appendChild(line);
+		} else {
+			td.appendChild(element('div', 'file', entry.file));
+		}
 		if (entry.copyOutdated) {
 			const note = element('div', 'small', TEXT.copyOutdated + ' ');
 			note.appendChild(link(TEXT.openUpdated, () => vscode.postMessage({ command: 'openUpdated', folder: entry.folder })));
@@ -661,7 +717,7 @@ ${sortHeadingsScript()}
 				block.appendChild(source);
 			}
 			const names = element('div', '', group.names.join(', '));
-			if (group.names.length > LISTED) {
+			if (!group.listed && group.names.length > LISTED) {
 				names.hidden = true;
 				block.appendChild(link(TEXT.count.replace('{0}', group.names.length), () => { names.hidden = !names.hidden; }));
 			}
@@ -714,6 +770,9 @@ ${sortHeadingsScript()}
 		for (const entry of [...entries].sort(compare)) {
 			const row = element('tr');
 			nameCell(row, entry);
+			if (TEXT.author) {
+				cell(row).textContent = entry.author || '';
+			}
 			articleCell(row, entry);
 			const packages = cell(row);
 			for (const name of entry.packages) {
@@ -739,9 +798,11 @@ ${sortHeadingsScript()}
 		const finished = yours.filter(item => !item.inProgress);
 		document.getElementById('noYours').hidden = inProgress.length > 0;
 		document.getElementById('yoursTable').hidden = inProgress.length === 0;
-		document.getElementById('finishedYours').hidden = finished.length === 0;
 		renderYourRows(document.getElementById('yours'), inProgress);
-		renderYourRows(document.getElementById('finished'), finished);
+		if (document.getElementById('finishedYours')) {
+			document.getElementById('finishedYours').hidden = finished.length === 0;
+			renderYourRows(document.getElementById('finished'), finished);
+		}
 		const empty = yours.filter(item => item.empty).length;
 		const deleteEmpty = document.getElementById('deleteEmpty');
 		deleteEmpty.hidden = empty === 0;
@@ -781,7 +842,7 @@ ${sortHeadingsScript()}
 	${sortHeadingsCss}
 	h2 { font-size: 16px; font-weight: 600; margin: 20px 0 6px 0; }
 	/* The packages and the files, in the yellow of the folder in the intro */
-	.file, .package, .pollisPackage { color: #e8a33d; }`;
+	.file, .link.file, .package, .pollisPackage { color: #e8a33d; }`;
 	// The folder in the intro, which the scaffold draws outside the libraryPage element
 	const introRules = `
 	.subtitle code.pollisPath { font-family: var(--vscode-editor-font-family); color: #e8a33d; background: var(--vscode-textPreformat-background); border-radius: 3px; padding: 0 3px; }
