@@ -175,8 +175,8 @@ interface ILibraryEntry {
 	readonly description: string;
 	readonly article: IWorkflowMetadata['article'];
 	readonly packages: readonly string[];
-	/** The datasets by source, e.g. `PollisDatasets` with `pbc`, and what is said of how the source is read; `listed` shows every name, however many. */
-	readonly datasets: readonly { readonly source: string; readonly note?: string; readonly url?: string; readonly names: readonly string[]; readonly listed?: boolean }[];
+	/** The datasets by source, e.g. `PollisDatasets` with `pbc`, and what is said of how the source is read. */
+	readonly datasets: readonly { readonly source: string; readonly note?: string; readonly url?: string; readonly names: readonly string[] }[];
 	/** The size of the shipped files. */
 	readonly size: string;
 	/** The same in bytes, to sort by. */
@@ -231,9 +231,8 @@ async function folderSize(fileService: IFileService, folder: URI): Promise<numbe
 /**
  * Reads a method of the Methods library from its method.toml: its title, description, article
  * and packages, and its inputs as datasets: an input with a `label` as that label alone (none when
- * empty), the others
- * by the source each names before a colon, the names of PollisDatasets' tables all listed.
- * Undefined when the folder has no method.toml.
+ * empty), the others by the source each names before a colon. Undefined when the folder has no
+ * method.toml.
  */
 async function readMethodEntry(fileService: IFileService, folder: URI): Promise<Omit<ILibraryEntry, 'folder' | 'location' | 'size' | 'bytes'> | undefined> {
 	const tomlFile = joinPath(folder, 'method.toml');
@@ -245,7 +244,7 @@ async function readMethodEntry(fileService: IFileService, folder: URI): Promise<
 	const name = text(toml.name) ?? basename(folder);
 	const citation = text(toml.citation);
 	const doi = text(toml.doi);
-	const datasets = new Map<string, { source: string; names: string[]; listed: boolean }>();
+	const datasets = new Map<string, { source: string; names: string[] }>();
 	for (const [input, value] of Object.entries(toml.inputs && typeof toml.inputs === 'object' ? toml.inputs : {})) {
 		// An empty label leaves the input out
 		if ((value as TomlValue).label === '') {
@@ -255,7 +254,7 @@ async function readMethodEntry(fileService: IFileService, folder: URI): Promise<
 		const source = label ?? (text((value as TomlValue).source) ?? '').split(':')[0].trim();
 		let group = datasets.get(source);
 		if (!group) {
-			group = { source, names: [], listed: source === 'PollisDatasets' };
+			group = { source, names: [] };
 			datasets.set(source, group);
 		}
 		if (!label) {
@@ -631,7 +630,7 @@ ${yours}
 	const script = `
 	const TEXT = ${JSON.stringify(text)};
 	/** A source with more datasets than this shows their count, and their names on request. */
-	const LISTED = 4;
+	const LISTED = 3;
 	const body = document.getElementById('entries');
 	let entries = [];
 	let sortColumn = 'title';
@@ -650,7 +649,7 @@ ${sortHeadingsScript()}
 		td.appendChild(title);
 		// A method's package, linked to its GitHub page once published
 		if (entry.repository) {
-			const name = link(entry.file.replace(/^src\//, ''), () => vscode.postMessage({ command: 'link', url: entry.repository }));
+			const name = link(entry.file.replace('src/', ''), () => vscode.postMessage({ command: 'link', url: entry.repository }));
 			name.classList.add('file');
 			const line = element('div');
 			line.appendChild(name);
@@ -717,7 +716,7 @@ ${sortHeadingsScript()}
 				block.appendChild(source);
 			}
 			const names = element('div', '', group.names.join(', '));
-			if (!group.listed && group.names.length > LISTED) {
+			if (group.names.length > LISTED) {
 				names.hidden = true;
 				block.appendChild(link(TEXT.count.replace('{0}', group.names.length), () => { names.hidden = !names.hidden; }));
 			}

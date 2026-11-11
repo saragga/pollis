@@ -184,8 +184,8 @@ function ols(y::AbstractVector{<:Real}, X::AbstractMatrix{<:Real})
 	b, sqrt.(diag(inv(A' * A)) .* (sum(abs2, e) / (length(y) - size(A, 2))))
 end
 
-# The articles' samples and specifications. Each input is a column table of one of Dehejia's files: treat, age, educ,
-# black, hisp, married, nodegree, re74 (not in LaLonde's files), re75 and re78.
+# The articles' samples and specifications. Each input is a column table of Dehejia's files, as PollisDatasets keeps
+# them: treat, age, educ, black, hisp, married, nodegree, re74 (not in LaLonde's sample, nsw), re75 and re78.
 
 columns(t, names) = NamedTuple{names}(Tuple(Float64.(Tables.getcolumn(t, n)) for n in names))
 const NAMES = (:treat, :age, :educ, :black, :hisp, :married, :nodegree, :re74, :re75, :re78)
@@ -193,6 +193,19 @@ sample(t) = columns(t, Tuple(n for n in NAMES if n in Tables.columnnames(t)))
 stack(a, b) = (a = sample(a); b = sample(b); NamedTuple{keys(a)}(Tuple(vcat(a[n], b[n]) for n in keys(a))))
 unemployed(x) = Float64.(x .== 0)
 thousands(s) = merge(s, NamedTuple{Tuple(n for n in (:re74, :re75) if n in keys(s))}(Tuple(s[n] ./ 1000 for n in (:re74, :re75) if n in keys(s))))
+
+"""
+    arm(t, treat)
+
+The rows of the column table `t` whose `treat` column equals `treat`: 1 for the treated men, 0 for the controls. The
+samples of the NSW experiment keep both in one table in PollisDatasets, `lalonde` (Dehejia and Wahba's) and `nsw`
+(LaLonde's), so `arm(lalonde, 1)` is the 185 treated men and `arm(lalonde, 0)` the 260 controls.
+"""
+function arm(t, treat)
+	names = Tuple(Tables.columnnames(t))
+	keep = Tables.getcolumn(t, :treat) .== treat
+	return NamedTuple{names}(Tuple(Tables.getcolumn(t, n)[keep] for n in names))
+end
 
 "Dehejia and Wahba's (2002) specifications, as printed in Smith and Todd's Table 3 (earnings in thousands of dollars)."
 dw2002(s, comparison) = comparison == :cps ?

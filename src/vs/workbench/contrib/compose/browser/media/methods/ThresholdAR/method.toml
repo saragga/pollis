@@ -32,6 +32,7 @@ url = "https://raw.githubusercontent.com/Trumpingtons/PollisDatasets.jl/main/dat
 source = "PollisDatasets: the number of lynx trapped in the Mackenzie River district of Canada each year from 1821 to 1934 (Elton and Nicholson, 1942)"
 
 [inputs.sunspots]
+label = ""
 url = "https://raw.githubusercontent.com/wch/r-source/7bcd838b66763d5029b5bdec668e3436c6e38017/src/library/datasets/data/sunspot.year.R"
 source = "R's sunspot.year: Wolf's yearly sunspot numbers from 1700, the values Tong and Lim used (SILSO has since revised them); the first 256, 1700 to 1955. Fetched, not kept: SILSO's licence (CC BY-NC 4.0) does not allow redistribution with Pollis"
 columns = ["sunspots", "end"]
