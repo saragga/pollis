@@ -16,6 +16,7 @@ description = "The two-scales realized volatility of Zhang, Mykland and Aït-Sah
 topic = "High-Frequency Volatility"
 license = "MIT"
 version = "0.1.1"
+data = "Simulated"
 updated = "2026-11-11"
 repository = "https://github.com/Trumpingtons/TwoScalesVolatility.jl"
 

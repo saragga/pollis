@@ -176,7 +176,11 @@ interface ILibraryEntry {
 	readonly article: IWorkflowMetadata['article'];
 	readonly packages: readonly string[];
 	/** The datasets by source, e.g. `PollisDatasets` with `pbc`, and what is said of how the source is read. */
-	readonly datasets: readonly { readonly source: string; readonly note?: string; readonly url?: string; readonly names: readonly string[] }[];
+	readonly datasets: readonly { readonly source: string; readonly note?: string; readonly url?: string; readonly names: readonly string[]; readonly described?: boolean }[];
+	/** A method's word for its data when it reads none, e.g. `Simulated`, shown in place of None. */
+	readonly data?: string;
+	/** A method's footnote on its data, shown under the table. */
+	readonly dataNote?: string;
 	/** The size of the shipped files. */
 	readonly size: string;
 	/** The same in bytes, to sort by. */
@@ -230,9 +234,10 @@ async function folderSize(fileService: IFileService, folder: URI): Promise<numbe
 
 /**
  * Reads a method of the Methods library from its method.toml: its title, description, article
- * and packages, and its inputs as datasets: an input with a `label` as that label alone (none when
- * empty), the others by the source each names before a colon. Undefined when the folder has no
- * method.toml.
+ * and packages, and its inputs as datasets: an input with a `group` listed under that heading by its
+ * label, else an input with a `label` as that label alone (none when empty), the others by the source
+ * each names before a colon; with `data` and `data_note` from its top level. Undefined when the
+ * folder has no method.toml.
  */
 async function readMethodEntry(fileService: IFileService, folder: URI): Promise<Omit<ILibraryEntry, 'folder' | 'location' | 'size' | 'bytes'> | undefined> {
 	const tomlFile = joinPath(folder, 'method.toml');
@@ -244,21 +249,26 @@ async function readMethodEntry(fileService: IFileService, folder: URI): Promise<
 	const name = text(toml.name) ?? basename(folder);
 	const citation = text(toml.citation);
 	const doi = text(toml.doi);
-	const datasets = new Map<string, { source: string; names: string[] }>();
+	const datasets = new Map<string, { source: string; names: string[]; described?: boolean }>();
 	for (const [input, value] of Object.entries(toml.inputs && typeof toml.inputs === 'object' ? toml.inputs : {})) {
 		// An empty label leaves the input out
 		if ((value as TomlValue).label === '') {
 			continue;
 		}
 		const label = text((value as TomlValue).label);
-		const source = label ?? (text((value as TomlValue).source) ?? '').split(':')[0].trim();
+		const heading = text((value as TomlValue).group);
+		const source = heading ?? label ?? (text((value as TomlValue).source) ?? '').split(':')[0].trim();
 		let group = datasets.get(source);
 		if (!group) {
 			group = { source, names: [] };
 			datasets.set(source, group);
 		}
-		if (!label) {
-			group.names.push(input);
+		if (heading || !label) {
+			group.names.push(label ?? input);
+		}
+		// Descriptions, not names: one to a line
+		if (heading && label) {
+			group.described = true;
 		}
 	}
 	return {
@@ -266,6 +276,8 @@ async function readMethodEntry(fileService: IFileService, folder: URI): Promise<
 		title: text(toml.title) ?? name,
 		author: text(toml.author),
 		repository: text(toml.repository),
+		data: text(toml.data),
+		dataNote: text(toml.data_note),
 		description: text(toml.description) ?? '',
 		article: citation ? { citation, doi, url: text(toml.article) } : undefined,
 		packages: Array.isArray(toml.packages) ? toml.packages.filter((value): value is string => typeof value === 'string') : [],
@@ -626,7 +638,8 @@ ${yours}
 			${heading('title', text.entry)}${text.author ? heading('author', text.author) : ''}${heading('citation', text.article)}${heading('packages', text.packages)}${heading('datasets', text.datasets)}${heading('bytes', text.size)}${heading('updatedDate', text.updated)}
 		</tr></thead>
 		<tbody id="entries"></tbody>
-	</table>`;
+	</table>
+	<div id="dataNotes"></div>`;
 	const script = `
 	const TEXT = ${JSON.stringify(text)};
 	/** A source with more datasets than this shows their count, and their names on request. */
@@ -702,7 +715,7 @@ ${sortHeadingsScript()}
 	function datasetsCell(row, entry) {
 		const td = cell(row);
 		if (!entry.datasets.length) {
-			td.appendChild(element('span', 'small', TEXT.noDatasets));
+			td.appendChild(element('span', 'small', entry.data || TEXT.noDatasets));
 			return;
 		}
 		// Each source on its own line, its datasets under it, then how it is read
@@ -715,7 +728,12 @@ ${sortHeadingsScript()}
 				source.classList.add('source-name');
 				block.appendChild(source);
 			}
-			const names = element('div', '', group.names.join(', '));
+			const names = element('div', '', group.described ? '' : group.names.join(', '));
+			if (group.described) {
+				for (const name of group.names) {
+					names.appendChild(element('div', '', name));
+				}
+			}
 			if (group.names.length > LISTED) {
 				names.hidden = true;
 				block.appendChild(link(TEXT.count.replace('{0}', group.names.length), () => { names.hidden = !names.hidden; }));
@@ -788,6 +806,12 @@ ${sortHeadingsScript()}
 			}
 			cell(row, 'nowrap').textContent = entry.updated || '';
 			body.appendChild(row);
+		}
+		// The methods' footnotes on their data, under the table
+		const notes = document.getElementById('dataNotes');
+		notes.textContent = '';
+		for (const entry of entries.filter(entry => entry.dataNote)) {
+			notes.appendChild(element('p', 'small', '* ' + entry.dataNote));
 		}
 	}
 

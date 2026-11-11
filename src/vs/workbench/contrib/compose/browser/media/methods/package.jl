@@ -17,14 +17,17 @@
 # the package's LICENSE, or another whose text is the method folder's LICENSE; none when empty), citation, version,
 # updated and repository (written by --push: the date of the last push, YYYY-MM-DD, and github.com/OWNER/NAME.jl, which
 # Browse Article Methods shows), usage (Julia code
-# that shows how to call the method, for the README), packages, compat (optional: a table of version bounds of the
+# that shows how to call the method, for the README), data (optional: what Browse Article Methods shows in place of
+# None for a method with no inputs, such as Simulated), data_note (optional: a footnote on the method's data, shown under
+# the Library of Browse Article Methods), packages, compat (optional: a table of version bounds of the
 # packages, such as Optim = "1, 2"; a package left out gets every version of the major version installed, such as
 # "2" for 2.3.2 or "0.25" for 0.25.1, and a standard library every 1.x), [[articles]] (the other articles whose tables are
 # targets too, when there are several: key, citation, doi, article, as for the first), and a
 # [targets.NAME] table for each target: source, call, tolerance, untested (the cells shown in the vignette but not
 # tested, each as [row label, column name]), and an [inputs.NAME] table for each input:
 # url or file, source, label (optional: a short name for the input, which Browse Article Methods shows in place of
-# its source; empty to leave the input out of it), delim, columns, header (false for a file without a header line, its columns then
+# its source; empty to leave the input out of it), group (optional: the heading Browse Article Methods lists the
+# input under, by its label), delim, columns, header (false for a file without a header line, its columns then
 # Column1, Column2, ...), skipto, limit), src/NAME.jl (module NAME), targets/*.csv and inputs/*.csv. An input is
 # a link, which the tests download into memory, writing nothing to disk, or a file of the method
 # (file = "inputs/NAME.csv", typed in from the article), copied into the package's tests. A target table's first column holds the row
