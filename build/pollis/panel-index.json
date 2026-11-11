@@ -3807,19 +3807,21 @@
 		{
 			"id": "hfcme",
 			"title": "High-Frequency Covariance Matrix Estimation",
-			"source": "pollis",
+			"source": "toolbox:pollis-toolbox-econometrics",
 			"commands": [
 				{
 					"id": "chiara.statistics.eco.hfcme",
-					"menuTitles": []
+					"menuTitles": [
+						"High-Frequency Covariance"
+					]
 				}
 			],
 			"portable": true,
 			"defaultModel": "rc",
-			"decisionFirstColumn": "Model",
-			"toml": "src/vs/workbench/contrib/model/browser/webviews/hfcme.toml",
-			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
-			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"decisionFirstColumn": "Estimator",
+			"toml": "toolboxes/pollis-toolbox-econometrics/panels/hfcme.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-econometrics/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-econometrics/notebooks",
 			"wikis": [
 				"hfcme/assumptions.md",
 				"hfcme/decision-guide.md",
@@ -3867,6 +3869,41 @@
 			],
 			"portable": false,
 			"reason": "the panel hfm has its own code (illusCollapsed, illustrationLabel, illustrationIntro, illustrationFootnote, illustrationOverrideJs, extraCss in src/vs/workbench/contrib/model/browser/webviews/hfm.template.ts), so it cannot go in a data-only extension"
+		},
+		{
+			"id": "hfvol",
+			"title": "High-Frequency Volatility",
+			"source": "toolbox:pollis-toolbox-econometrics",
+			"commands": [
+				{
+					"id": "chiara.statistics.hfvol",
+					"menuTitles": [
+						"High-Frequency Volatility"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "rv",
+			"decisionFirstColumn": "Estimator",
+			"toml": "toolboxes/pollis-toolbox-econometrics/panels/hfvol.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-econometrics/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-econometrics/notebooks",
+			"wikis": [
+				"hf-vol/bipower-variation.md",
+				"hf-vol/factsheet.md",
+				"hf-vol/intro-hf-volatility.md",
+				"hf-vol/overview.md",
+				"hf-vol/realized-volatility.md",
+				"hf-vol/two-scales-volatility.md"
+			],
+			"notebooks": [
+				"hf-vol/tutorial-01-realized.ipynb",
+				"hf-vol/tutorial-02-two-scales.ipynb",
+				"hf-vol/tutorial-03-bipower.ipynb"
+			],
+			"packages": [
+				"HighFrequencyCovariance.jl"
+			]
 		},
 		{
 			"id": "hmd",
@@ -8808,45 +8845,6 @@
 			],
 			"packages": [
 				"ARCHModels.jl"
-			]
-		},
-		{
-			"id": "vm",
-			"title": "Volatility Measurement",
-			"source": "pollis",
-			"commands": [
-				{
-					"id": "chiara.statistics.vm",
-					"menuTitles": []
-				}
-			],
-			"portable": true,
-			"defaultModel": "park",
-			"decisionFirstColumn": "Estimator",
-			"toml": "src/vs/workbench/contrib/model/browser/webviews/vm.toml",
-			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
-			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
-			"wikis": [
-				"volatility-measurement/garman-klass.md",
-				"volatility-measurement/intro-hf-finance.md",
-				"volatility-measurement/overview.md",
-				"volatility-measurement/parkinson.md",
-				"volatility-measurement/realized-volatility.md",
-				"volatility-measurement/rogers-satchell.md",
-				"volatility-measurement/two-scales-volatility.md",
-				"volatility-measurement/yang-zhang.md"
-			],
-			"notebooks": [
-				"volatility-measurement/tutorial-01-parkinson.ipynb",
-				"volatility-measurement/tutorial-02-garman-klass.ipynb",
-				"volatility-measurement/tutorial-03-rogers-satchell.ipynb",
-				"volatility-measurement/tutorial-04-yang-zhang.ipynb",
-				"volatility-measurement/tutorial-05-realized-volatility.ipynb",
-				"volatility-measurement/tutorial-06-two-scales.ipynb",
-				"volatility-measurement/tutorial-07-bipower-variation.ipynb"
-			],
-			"packages": [
-				"HighFrequencyCovariance.jl"
 			]
 		},
 		{

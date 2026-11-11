@@ -50,7 +50,6 @@ import { CPS_PANEL } from './commands/cps.command.js';
 import { PPL_PANEL } from './commands/ppl.command.js';
 import { RXINFER_PANEL } from './commands/rxinfer.command.js';
 import { RULEBASED_PANEL } from './commands/rulebased.command.js';
-// Finance panels, deferred for a future Finance Toolbox: import { HFCME_PANEL } from './commands/hfcme.command.js';
 // Finance panels, deferred for a future Finance Toolbox: import { RCME_PANEL } from './commands/rcme.command.js';
 import { ENSEMBLE_PANEL } from './commands/ensemble.command.js';
 import { CLP_PANEL } from './commands/clp.command.js';
@@ -59,7 +58,6 @@ import { MANIFOLD_PANEL } from './commands/manifold.command.js';
 import { EMBEDDING_PANEL } from './commands/embedding.command.js';
 import { AUTOENCODER_PANEL } from './commands/autoencoder.command.js';
 import { LCA_PANEL } from './commands/lca.command.js';
-// Finance panels, deferred for a future Finance Toolbox: import { VM_PANEL } from './commands/vm.command.js';
 import { RP_PANEL } from './commands/rp.command.js';
 import { HPT_PANEL } from './commands/hpt.command.js';
 import { MC_PANEL } from './commands/mc.command.js';
@@ -229,8 +227,6 @@ CommandsRegistry.registerCommand('chiara.statistics.tvm.dtsv', () => { });
 
 CommandsRegistry.registerCommand('chiara.statistics.tvm.taylor', () => { });
 CommandsRegistry.registerCommand('chiara.statistics.tvm.ksc', () => { });
-CommandsRegistry.registerCommand('chiara.statistics.vm', () => { });
-// Finance panel, deferred: CommandsRegistry.registerCommand('chiara.statistics.eco.hfcme', accessor => openScaffoldWebview(accessor, HFCME_PANEL));
 // Finance panel, deferred: CommandsRegistry.registerCommand('chiara.statistics.eco.rcme', accessor => openScaffoldWebview(accessor, RCME_PANEL));
 
 // Finance panel, deferred: CommandsRegistry.registerCommand('chiara.statistics.eco.mmn', accessor => openScaffoldWebview(accessor, MMN_PANEL));
@@ -301,8 +297,6 @@ CommandsRegistry.registerCommand('chiara.statistics.pm.lca', accessor => openSca
 CommandsRegistry.registerCommand('chiara.statistics.pm.cca', accessor => openScaffoldWebview(accessor, CCA_PANEL));
 
 CommandsRegistry.registerCommand('chiara.statistics.pm.covShrinkage', accessor => openScaffoldWebview(accessor, COVSHRINKAGE_PANEL));
-
-// Finance panel, deferred: CommandsRegistry.registerCommand('chiara.statistics.vm', accessor => openScaffoldWebview(accessor, VM_PANEL));
 
 CommandsRegistry.registerCommand('chiara.statistics.mwm.regressionPerf', accessor => openScaffoldWebview(accessor, RP_PANEL));
 
@@ -530,9 +524,6 @@ export const ARMA_COINTEGRATION_ID = 'chiara.statistics.arma.cointegration';
 // Regime Switching
 export const RS_DYNAMIC_MODELS_ID = 'chiara.statistics.rs.dynamicModels';
 
-// Volatility Measurement
-export const VM_COMMAND_ID = 'chiara.statistics.vm';
-
 // GARCH-Type Models
 export const VCM_ARCH_ID = 'chiara.statistics.vcm.arch';
 export const VCM_GARCH_ID = 'chiara.statistics.vcm.garch';
@@ -555,7 +546,6 @@ export const NONLIN_CMPLX_ID = 'chiara.statistics.nonlin.cmplx';
 // Econometrics
 export const ECO_PO_ID = 'chiara.statistics.eco.po';
 export const ECO_CTSVM_ID = 'chiara.statistics.eco.ctsvm';
-export const ECO_HFCME_ID = 'chiara.statistics.eco.hfcme';
 export const ECO_RCME_ID = 'chiara.statistics.eco.rcme';
 export const ECO_MMN_ID = 'chiara.statistics.eco.mmn';
 export const ECO_IVS_ID = 'chiara.statistics.eco.ivs';

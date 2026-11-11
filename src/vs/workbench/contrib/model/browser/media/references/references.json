@@ -2807,6 +2807,30 @@
 			"open_access": true
 		},
 		{
+			"key": "BK2022a",
+			"type": "article",
+			"title": "HighFrequencyCovariance: A Julia Package for Estimating Covariance Matrices Using High Frequency Financial Data",
+			"authors": [
+				"Baumann, Stuart",
+				"Klymak, Margaryta"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2022,
+			"journal": "Journal of Statistical Software",
+			"volume": "103",
+			"number": "14",
+			"doi": "10.18637/jss.v103.i14",
+			"openalex": "W4291811870",
+			"url": "https://doi.org/10.18637/jss.v103.i14",
+			"abstract": "High frequency data typically exhibit asynchronous trading and microstructure noise, which can bias the covariances estimated by standard estimators. While a number of specialized estimators have been proposed, they have had limited availability in open source software. HighFrequencyCovariance is the first Julia package which implements specialized estimators for volatility, correlation and covariance using high frequency financial data. It also implements complementary algorithms for matrix regularization. This paper presents the issues associated with exploiting high frequency financial data and describes the volatility, covariance and regularization algorithms that have been implemented. We then demonstrate the use of the package using foreign exchange market tick data to estimate the covariance of the exchange rates between different currencies. We also perform a Monte Carlo experiment, which shows the accuracy gains that are possible over simpler covariance estimation techniques.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-11",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "BKK2018a",
 			"type": "misc",
 			"title": "An Empirical Evaluation of Generic Convolutional and Recurrent Networks for Sequence Modeling",
@@ -3883,6 +3907,32 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": false
+		},
+		{
+			"key": "BS2006a",
+			"type": "article",
+			"title": "Econometrics of Testing for Jumps in Financial Economics Using Bipower Variation",
+			"authors": [
+				"Barndorff-Nielsen, O.E.",
+				"Shephard, N."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2006,
+			"journal": "Journal of Financial Econometrics",
+			"volume": "4",
+			"number": "1",
+			"pages": "1-30",
+			"issn": "1479-8409",
+			"doi": "10.1093/jjfinec/nbi022",
+			"openalex": "W2136215272",
+			"url": "https://doi.org/10.1093/jjfinec/nbi022",
+			"abstract": "In this article we provide an asymptotic distribution theory for some nonparametric tests of the hypothesis that asset prices have continuous sample paths. We study the behaviour of the tests using simulated data and see that certain versions of the tests have good finite sample behavior. We also apply the tests to exchange rate data and show that the null of a continuous sample path is frequently rejected. Most of the jumps the statistics identify are associated with governmental macroeconomic announcements.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-11",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "BS2014a",
@@ -39920,6 +39970,18 @@
 			"date": "2026-10-31"
 		},
 		{
+			"key": "BK2022a",
+			"count": 0,
+			"source": "crossref",
+			"date": "2026-11-11"
+		},
+		{
+			"key": "BK2022a",
+			"count": 1,
+			"source": "openalex",
+			"date": "2026-11-11"
+		},
+		{
 			"key": "BKK2018a",
 			"count": 4553,
 			"source": "openalex",
@@ -40266,6 +40328,18 @@
 			"count": 760,
 			"source": "crossref",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "BS2006a",
+			"count": 900,
+			"source": "crossref",
+			"date": "2026-11-11"
+		},
+		{
+			"key": "BS2006a",
+			"count": 1311,
+			"source": "openalex",
+			"date": "2026-11-11"
 		},
 		{
 			"key": "BS2014a",
@@ -53254,24 +53328,6 @@
 			]
 		},
 		{
-			"id": "hfcme",
-			"title": "High-Frequency Covariance Matrix Estimation",
-			"description": "Realized · Pre-averaged · Two-Scales · Realized Kernel",
-			"keys": [
-				"BHLS2011a",
-				"Zha2011a",
-				"Epp1979a",
-				"LCBP1999a",
-				"Hig2002a",
-				"BS2004c",
-				"AMZ2005a",
-				"HY2005a",
-				"ZMA2005a",
-				"CPV2013a",
-				"BHMR2014a"
-			]
-		},
-		{
 			"id": "hfds",
 			"title": "Hugging Face Datasets",
 			"commands": [
@@ -55352,20 +55408,6 @@
 			"keys": [
 				"DF1995a",
 				"DS1969a"
-			]
-		},
-		{
-			"id": "vm",
-			"title": "Volatility Measurement",
-			"description": "Parkinson · Garman-Klass · Rogers-Satchell · Yang-Zhang · Realized Volatility · Two Scales Volatility · Bipower",
-			"keys": [
-				"Par1980a",
-				"GK1980a",
-				"RS1991a",
-				"YZ2000a",
-				"AB1998a",
-				"ZMA2005a",
-				"BS2004a"
 			]
 		},
 		{
