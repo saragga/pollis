@@ -218,10 +218,10 @@ code = '''
 using DynamicalSystems, GLMakie
 
 ds = CoupledODEs(lorenz!, {{u0}}, {{p}})
-plane = (1, 0.0)  # section: u[1] = 0
-psos = poincaresos(ds, plane, {{T}})  # Poincare section points
+plane = (3, {{p}}[2] - 1)  # section: z = rho - 1, the height of the two non-trivial equilibria, crossed on every loop of either lobe
+psos = poincaresos(ds, plane, {{T}}; Ttr = 100)  # Poincare section points, after a transient of 100 time units
 
-scatter(vec(psos[:, 2]), vec(psos[:, 3]))  # plot section (y vs z)
+scatter(vec(psos[:, 1]), vec(psos[:, 2]), axis=(xlabel="x", ylabel="y"))  # plot section (x vs y)
 '''
 
 [[actionGroups]]
@@ -257,7 +257,8 @@ using DynamicalSystems
 lorenz_rule(u, p, t) = SVector(p[1] * (u[2] - u[1]), u[1] * (p[2] - u[3]) - u[2], u[1] * u[2] - p[3] * u[3])  # out-of-place form: fixedpoints rejects in-place systems
 lorenz_jac(u, p, t) = SMatrix{3,3}(-p[1], p[2] - u[3], u[2],  p[1], -1.0, u[1],  0.0, -u[1], -p[3])  # hand-coded Jacobian (column-major): fixedpoints needs one
 ds = CoupledODEs(lorenz_rule, SVector{3}({{u0}}), {{p}})  # system definition
-box = [interval(-30, 30), interval(-30, 30), interval(0, 60)]  # search box for equilibria
+xy  = max(30, 2 * sqrt({{p}}[3] * max({{p}}[2] - 1, 0)))  # wide enough for x = y = +/- sqrt(beta (rho - 1))
+box = [interval(-xy, xy), interval(-xy, xy), interval(0, max(60, 2 * {{p}}[2]))]  # search box for equilibria, sized from the parameters
 fps, eigs, stable = fixedpoints(ds, box, lorenz_jac)  # equilibria, Jacobian eigenvalues, stability
 
 for (fp, ev, st) in zip(fps, eigs, stable)
@@ -340,8 +341,10 @@ ds2 = CoupledODEs(lorenz!, u2, {{p}})
 tr1, t = trajectory(ds1, {{T}}; Dt=0.01)  # first orbit
 tr2, _ = trajectory(ds2, {{T}}; Dt=0.01)  # second orbit
 
-lines(t, vec(tr1[:, 1]), label="u1")  # first x(t)
-lines!(t, vec(tr2[:, 1]), label="u2")  # second x(t)
+fig, ax, _ = lines(t, vec(tr1[:, 1]), label="u1", axis=(xlabel="time", ylabel="x(t)"))  # first x(t)
+lines!(ax, t, vec(tr2[:, 1]), label="u2")  # second x(t)
+axislegend(ax)
+fig
 '''
 
 [[actionGroups]]
@@ -371,7 +374,7 @@ code = '''
 using DynamicalSystems, Statistics
 
 ds = CoupledODEs(lorenz!, {{u0}}, {{p}})
-tr, _ = trajectory(ds, {{T}}; Dt=0.01)  # long orbit
+tr, _ = trajectory(ds, {{T}}; Dt=0.01, Ttr=100)  # orbit on the attractor, after a transient of 100 time units
 
 println("Mean state: ",   mean.(eachcol(tr)))  # time-averaged state
 println("Std state:  ",   std.(eachcol(tr)))  # spread around mean
