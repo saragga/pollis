@@ -511,9 +511,14 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 				return;
 			}
 			const cloud = askCloudModel(configurationService.getValue<string>('pollis.ask.answerWith'));
-			// The embedding model is named only when the search used it: not with None or by words only
-			const embedded = unaided || result.wordsOnly ? undefined : askModelName(configurationService.getValue<string>('pollis.ask.embeddingModel')?.trim() || ASK_EMBEDDING_MODEL);
-			post({ command: 'starting', turn: index, model: cloud?.label ?? askModelName(configurationService.getValue<string>('pollis.ask.chatModel')?.trim() || ASK_CHAT_MODEL), cloud: !!cloud, embedded });
+			// A cloud model, or a model of this computer whose server is ready, is asked; otherwise it is started, and downloaded first when its file is not here
+			const chatModel = configurationService.getValue<string>('pollis.ask.chatModel')?.trim() || ASK_CHAT_MODEL;
+			const server = cloud ? undefined : await commandService.executeCommand<{ readonly state: string; readonly onComputer: boolean }>('language-julia.pollisLlamaServerState', { model: chatModel }).catch(() => undefined);
+			if (!current()) {
+				return;
+			}
+			const phase = cloud || server?.state === 'ready' ? 'asking' : server?.onComputer === false ? 'downloading' : 'starting';
+			post({ command: 'starting', turn: index, model: cloud?.label ?? askModelName(chatModel), phase });
 			const answer = await askPollisService.answer(before, question, result.passages, text => {
 				if (current()) {
 					turn.answer = text;
@@ -743,8 +748,8 @@ function pageHtml(language: string, writeIn: string): string {
 		strategy: localize('askPollis.strategy', "Strategy"),
 		strategyPrefix: localize('askPollis.strategyPrefix', "Strategy:"),
 		searching: localize('askPollis.searching', "Finding the passages..."),
-		starting: localize('askPollis.starting', "Starting answering model {0} on this computer. The first time, it is downloaded first.", '{0}'),
-		embeddingFinished: localize('askPollis.embeddingFinished', "Embedding model {0} finished. {1}", '{0}', '{1}'),
+		starting: localize('askPollis.starting', "Starting answering model {0} on this computer...", '{0}'),
+		downloading: localize('askPollis.downloading', "Downloading answering model {0}, then starting it on this computer...", '{0}'),
 		asking: localize('askPollis.asking', "Asking {0}...", '{0}'),
 		searched: localize('askPollis.searched', "Searched: {0}.", '{0}'),
 		stopped: localize('askPollis.stopped', "Stopped."),
@@ -1173,8 +1178,7 @@ function pageHtml(language: string, writeIn: string): string {
 			turn.status.textContent = message.text;
 			turn.status.insertAdjacentHTML('afterbegin', SPINNER);
 		} else if (message.command === 'starting') {
-			const next = (message.cloud ? TEXT.asking : TEXT.starting).replace('{0}', message.model);
-			turn.status.textContent = message.embedded ? TEXT.embeddingFinished.replace('{0}', message.embedded).replace('{1}', next) : next;
+			turn.status.textContent = (message.phase === 'asking' ? TEXT.asking : message.phase === 'downloading' ? TEXT.downloading : TEXT.starting).replace('{0}', message.model);
 			turn.status.insertAdjacentHTML('afterbegin', SPINNER);
 		} else if (message.command === 'text') {
 			turn.status.textContent = '';

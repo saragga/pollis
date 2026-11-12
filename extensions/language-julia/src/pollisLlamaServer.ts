@@ -13,7 +13,9 @@
 // What the servers print goes to the llama.cpp Output channel, with a timed line when each loads, is ready, stops or
 // does not start, and the memory free then; `language-julia.pollisLlamaServerEvents`, with {after}, answers those moments
 // after the one numbered `after` (without it, none: only the number of the last), for the Model Servers of
-// Evaluate Answering Models and Evaluate Embedding Models. Thinking is off unless asked for, whatever the model:
+// Evaluate Answering Models and Evaluate Embedding Models. `language-julia.pollisLlamaServerState`, with a request,
+// answers {state, onComputer}: whether its server is ready, loading or stopped, and whether its model file is on this
+// computer, so that Ask Pollis says whether it asks, starts or downloads the model. Thinking is off unless asked for, whatever the model:
 // on the short tasks of the panels it only costs time, and can use up the reply before any answer; a model that does
 // not think ignores it.
 
@@ -23,11 +25,11 @@ import * as net from 'net'
 import * as path from 'path'
 import * as vscode from 'vscode'
 import { MessageConnection, RequestType } from 'vscode-jsonrpc/node'
-import { availableMemory, ModelMedia, projectorOf, resolveModel } from './pollisModels'
+import { availableMemory, isModelOnComputer, ModelMedia, projectorOf, resolveModel } from './pollisModels'
 
 type ServerRequest = { model: string; embeddings?: boolean; reranking?: boolean; thinking?: boolean; context?: number }
 type ServerAnswer = { url?: string; model?: string; media?: ModelMedia[]; error?: string }
-type Server = { process?: child_process.ChildProcess; ended?: Promise<void>; readonly ready: Promise<ServerAnswer> }
+type Server = { process?: child_process.ChildProcess; ended?: Promise<void>; readonly ready: Promise<ServerAnswer>; isReady?: boolean }
 /** A moment of a server: `bytes` is the size of its model file, `free` the memory free just after, or just before it loads, in bytes. */
 type ServerEvent = { id: number; time: number; model: string; event: 'loading' | 'ready' | 'stopped' | 'failed'; bytes?: number; free?: number }
 
@@ -202,6 +204,7 @@ export function startServer(request: ServerRequest): Promise<ServerAnswer> {
         if (await whenHealthy(url, () => running)) {
             output.appendLine(`[${name}] ready at ${url}/v1`)
             record(name, 'ready')
+            entry.isReady = true
             return { url: `${url}/v1`, model: name, media: projector?.media ?? [] }
         }
         record(name, 'failed')
@@ -247,6 +250,10 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand('language-julia.pollisLlamaServer', (request: ServerRequest) => startServer(request)),
         vscode.commands.registerCommand('language-julia.pollisStopLlamaServer', (request: ServerRequest) => stopServer(request)),
         vscode.commands.registerCommand('language-julia.pollisStopLlamaServers', () => stopServers()),
+        vscode.commands.registerCommand('language-julia.pollisLlamaServerState', (request: ServerRequest) => {
+            const server = g_servers.get(serverKey(request))
+            return { state: server?.isReady ? 'ready' : server ? 'loading' : 'stopped', onComputer: isModelOnComputer(request.model) }
+        }),
         vscode.commands.registerCommand('language-julia.pollisLlamaServerEvents', (request?: { after?: number }) => ({
             last: g_lastEvent,
             events: request?.after === undefined ? [] : g_events.filter((event) => event.id > request.after!),

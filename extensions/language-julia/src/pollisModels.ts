@@ -84,6 +84,12 @@ function hubFile(value: string): { repo: string; file: string; local: string } |
     return match?.groups ? { repo: match.groups.repo, file: match.groups.file, local: path.join(MODELS_DIR, match.groups.repo, match.groups.file) } : undefined
 }
 
+/** Whether the file of a model value is on this computer: a path that exists, or an `hf:` value downloaded. */
+export function isModelOnComputer(value: string): boolean {
+    const hub = hubFile(value)
+    return fs.existsSync(hub ? hub.local : value.trim().replace(/^~(?=$|[\\/])/, os.homedir()))
+}
+
 /** The path of a model file, downloaded first when it is an `hf:` value not downloaded yet. */
 export async function resolveModel(value: string): Promise<string> {
     const hub = hubFile(value)
