@@ -9,8 +9,8 @@ viewType = "pollis.bndt"
 defaultModel = "egreedy"
 
 [[packages]]
-name = "ReinforcementLearning.jl"
-github = "https://github.com/JuliaReinforcementLearning/ReinforcementLearning.jl"
+name = "Distributions.jl"
+github = "https://github.com/JuliaStats/Distributions.jl"
 
 [requires]
 packages = ["Distributions.jl", "Plots.jl"]
@@ -141,15 +141,15 @@ label = "Thompson Sampling"
 
 [[bullets]]
 text = "epsilon-Greedy"
-detail = "with probability epsilon selects a random arm; otherwise exploits the arm with the highest estimated mean reward; simple and interpretable for stationary reward distributions (ReinforcementLearning.jl)"
+detail = "with probability epsilon selects a random arm; otherwise exploits the arm with the highest estimated mean reward; simple and interpretable for stationary reward distributions"
 
 [[bullets]]
 text = "Upper Confidence Bound (UCB)"
-detail = "selects the arm with the highest optimistic estimate; confidence bonus shrinks as an arm is pulled more; achieves sublinear regret without any prior knowledge (ReinforcementLearning.jl)"
+detail = "selects the arm with the highest optimistic estimate; confidence bonus shrinks as an arm is pulled more; achieves sublinear regret without any prior knowledge"
 
 [[bullets]]
 text = "Thompson Sampling"
-detail = "samples a reward estimate from the Beta posterior of each arm and pulls the arm with the highest sample; conjugate Bayesian update after each pull; best empirical performance in practice (ReinforcementLearning.jl)"
+detail = "samples a reward estimate from the Beta posterior of each arm and pulls the arm with the highest sample; conjugate Bayesian update after each pull; often strong empirical performance"
 
 [[decisionRows]]
 task = "epsilon-Greedy"
@@ -163,7 +163,7 @@ purpose = "Upper Confidence Bound (UCB1): pulls the arm with the highest mean pl
 
 [[decisionRows]]
 task = "Thompson Sampling"
-context = "Usually the best empirical performance; natural with prior knowledge"
+context = "Often strong empirical performance; natural with prior knowledge"
 purpose = "Samples each arm's success probability from its Beta posterior and pulls the arm with the highest draw; logarithmic regret"
 
 [[inputs]]
