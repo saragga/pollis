@@ -597,7 +597,7 @@ id = "compare"
 label = "Compare"
 
 [[actionGroups.actions]]
-id = "sac-vs-td3"
+id = "lqr-benchmark"
 label = "LQR Benchmark"
 desc = "Learned policy against the linear-quadratic regulator (discounted Riccati solution), with its force clipped to [-1, 1], from four starting positions"
 code = '''
