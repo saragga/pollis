@@ -222,7 +222,7 @@ tr, _ = trajectory(ds, {{T}}; Dt = 0.01, Ttr = 100)  # generate orbit
 
 using FractalDimensions  # correlation dimension module
 eps_vals = exp10.(range(-2, 1; length=20))  # log-spaced length scales
-D2 = grassberger_proccacia_dim(tr, eps_vals)  # Grassberger-Procaccia dimension
+D2 = grassberger_proccacia_dim(tr, eps_vals; w = estimate_delay(tr[:, 1], "mi_min"))  # Theiler window: pairs closer in time than the first minimum of the mutual information are left out
 
 println("Correlation dimension D2: ", D2)  # Lorenz ~ 2.05; a non-integer D2 suggests a strange attractor but does not by itself prove chaos (check the Lyapunov exponent)
 '''
@@ -236,7 +236,8 @@ using DynamicalSystems
 using RecurrenceAnalysis, Statistics  # recurrence analysis module
 
 threshold = {{eps}} * std({{x}})  # epsilon is a fraction of the sd of x, so the result does not depend on its units
-R = RecurrenceMatrix({{x}}, threshold)  # build recurrence matrix
+Y, _, _ = optimal_separated_de({{x}}, "afnn", "mi_min")  # delay embedding: recurrences of reconstructed states, not of single values
+R = RecurrenceMatrix(Y, threshold)  # build recurrence matrix
 
 stats = rqa(R)  # compute all RQA quantifiers
 println("RR  (recurrence rate):   ", stats[:RR])  # fraction of recurrent points
@@ -270,7 +271,8 @@ desc = "Visualise the recurrence matrix as a binary image to identify periodic a
 code = '''
 using RecurrenceAnalysis, Statistics, GLMakie
 
-R = RecurrenceMatrix({{x}}, {{eps}} * std({{x}}))  # threshold as a fraction of the sd of x  # build recurrence matrix
+Y, _, _ = optimal_separated_de({{x}}, "afnn", "mi_min")  # delay embedding: recurrences of reconstructed states, not of single values
+R = RecurrenceMatrix(Y, {{eps}} * std({{x}}))  # threshold as a fraction of the sd of x
 heatmap(Array(R), colormap=:binary)  # plot as binary image
 '''
 
@@ -284,7 +286,7 @@ using DynamicalSystems, FractalDimensions, GLMakie
 ds = Systems.lorenz([1.0, 0.0, 0.0])  # Lorenz (1963), sigma = 10, rho = 28, beta = 8/3
 tr, _ = trajectory(ds, {{T}}; Dt = 0.01, Ttr = 100)  # orbit
 eps_vals = exp10.(range(-2, 1; length=20))  # scales
-Cs = correlationsum(tr, eps_vals)  # correlation sum at each scale
+Cs = correlationsum(tr, eps_vals; w = estimate_delay(tr[:, 1], "mi_min"))  # Theiler window: pairs closer in time than the first minimum of the mutual information are left out
 
 lines(log10.(eps_vals), log10.(Cs), axis=(xlabel="log eps", ylabel="log C(eps)"))  # slope = D2
 '''
@@ -302,8 +304,8 @@ using RecurrenceAnalysis, Statistics
 
 n = length({{x}})  # series length
 threshold = {{eps}} * std({{x}})  # one threshold for both halves, a fraction of the sd of the whole series
-R1 = RecurrenceMatrix({{x}}[1:div(n,2)], threshold)  # first half
-R2 = RecurrenceMatrix({{x}}[div(n,2)+1:end], threshold)  # second half
+R1 = RecurrenceMatrix(optimal_separated_de({{x}}[1:div(n,2)], "afnn", "mi_min")[1], threshold)  # first half, delay-embedded
+R2 = RecurrenceMatrix(optimal_separated_de({{x}}[div(n,2)+1:end], "afnn", "mi_min")[1], threshold)  # second half, delay-embedded
 
 s1 = rqa(R1); s2 = rqa(R2)  # RQA on each half
 println("DET half 1: ", s1[:DET], "  half 2: ", s2[:DET])  # large difference => non-stationary
@@ -321,6 +323,7 @@ lambda_clean = lyapunov(ds, {{T}}; Ttr = 100)  # clean estimate
 
 tr, t = trajectory(ds, {{T}}; Dt = 0.01, Ttr = 100)  # generate orbit
 X = Matrix(tr)
+using Random; Random.seed!(1)  # the same noise on every run
 X_noisy = X .+ 0.01 .* std(X, dims=1) .* randn(size(X))  # measurement noise of 1% of each variable's sd
 
 ks = 0:4:100  # steps ahead; the exponent is the slope of the log divergence E(k)
@@ -383,14 +386,14 @@ desc = "Compare the Lyapunov exponent of the original data against phase-randomi
 code = '''
 using DynamicalSystems, TimeseriesSurrogates, Statistics
 
-tau = estimate_delay({{x}}, "mi_min")  # embedding delay
-d   = 3  # embedding dimension
-X   = embed({{x}}, d, tau)  # reconstruct phase space
+X, tau, _ = optimal_separated_de({{x}}, "afnn", "mi_min")  # delay and dimension chosen from the series
+d   = size(X, 2)  # embedding dimension
 
 ks = 0:20  # steps ahead
 slope(E) = cov(ks, E) / var(ks)  # exponent per sampling step, from the growth of the log divergence
 lam(Y) = slope(lyapunov_from_data(Y, ks; w=10 * tau))  # Theiler window excludes temporal neighbours
 
+using Random; Random.seed!(1)  # the same surrogates on every run
 surr = surrogenerator({{x}}, RandomFourier())  # phase-randomised surrogate generator
 surr_lambdas = [lam(embed(surr(), d, tau)) for _ in 1:19]  # 19 surrogates: a one-sided test at the 5% level
 
@@ -411,7 +414,7 @@ D_KY = kaplanyorke_dim(spectrum)  # Kaplan-Yorke dimension
 
 tr, _ = trajectory(ds, {{T}}; Dt = 0.01, Ttr = 100)  # orbit
 eps_vals = exp10.(range(-2, 1; length=20))  # scales
-D2 = grassberger_proccacia_dim(tr, eps_vals)  # correlation dimension
+D2 = grassberger_proccacia_dim(tr, eps_vals; w = estimate_delay(tr[:, 1], "mi_min"))  # Theiler window: pairs closer in time than the first minimum of the mutual information are left out
 
 println("Kaplan-Yorke D_KY: ", D_KY)  # from Lyapunov spectrum
 println("Correlation D2:    ", D2)  # from GP algorithm; should be close
