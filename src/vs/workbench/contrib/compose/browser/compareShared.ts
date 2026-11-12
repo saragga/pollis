@@ -104,7 +104,7 @@ export function isEvalItem(value: unknown): value is IAskPollisEvalItem {
 		&& typeof item.context === 'string' && typeof item.source === 'string' && !!item.question.trim();
 }
 
-/** A question of a test set with its four fields, in RAGTools.jl's order, and the panel it is asked in, if any, with the wiki that answers it, and the Context it is asked with. */
+/** A question of a test set with its four fields, in RAGTools.jl's order, and the panel it is asked in, if any, with the wiki that answers it. */
 export function evalItem(item: IAskPollisEvalItem): IAskPollisEvalItem {
 	const panel = item.panel && typeof item.panel.title === 'string' && Array.isArray(item.panel.packages)
 		? { title: item.panel.title, packages: item.panel.packages.filter(name => typeof name === 'string') }
@@ -115,7 +115,6 @@ export function evalItem(item: IAskPollisEvalItem): IAskPollisEvalItem {
 		...(panel ? { panel } : {}),
 		...(typeof item.wikiFile === 'string' && item.wikiFile ? { wikiFile: item.wikiFile } : {}),
 		...(item.hidden === true ? { hidden: true } : {}),
-		...(typeof item.questionContext === 'string' ? { questionContext: item.questionContext } : {}),
 		...(closed ? { choices: closed, rightChoice: closed.indexOf(item.answer) } : {}),
 		...(closed && typeof item.explanation === 'string' && item.explanation.trim() ? { explanation: item.explanation } : {}),
 	};

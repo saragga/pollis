@@ -2351,13 +2351,12 @@ area of a page (Data and Databases, \pg{Data and Databases}). Every panel has an
 right of its title; its answer comes in the Ask Pollis pane beside the panel.
 
 \subhead{Ask in a panel}
-A question asked at the right of a panel's title is answered in the Ask Pollis pane, beside the panel. Below the
-panel's question, \ui{Context} is a field of text that holds the panel's title; you can write anything in its place,
-such as \emph{SDE weak order}, or clear it. The question is searched after it, as \emph{Check a Convergence Order:
-What does this panel check?}, since \emph{this panel} alone says nothing of the subject. The reranker and the
-answering model are given the question alone, with nothing added. In the pane, a line above the question says \ui{Asked in} the panel,
-and the questions asked there next keep the panel and its Context until \ui{Ask Without It} or \ui{New Chat}. Two
-choices below the pane's question decide how the answer is found:
+A question asked at the right of a panel's title is answered in the Ask Pollis pane, beside the panel. The question
+is searched as you typed it, and the reranker and the answering model are given it alone, with nothing added: a
+question that names its subject, as \emph{What does Check a Convergence Order check?}, finds it better than one that
+only says \emph{this panel}. In the pane, a line above the question says \ui{Asked in} the panel, and the questions
+asked there next keep the panel until \ui{Ask Without It} or \ui{New Chat}. Two choices below the pane's question
+decide how the answer is found:
 \begin{itemize}
   \item \ui{Search In}: \ui{Auto}, the collections nearest the question, or the sources you tick.
   \item \ui{Strategy}: how many passages come from the panel's own wikis and the vignettes of its packages.
@@ -2394,9 +2393,7 @@ Sonnet. The page goes in four steps: the models, the questions, \ui{Run} and the
     the Panel FAQ, with no search, which tests the answer alone (open book answering). \ui{None}: each model is given
     no passage and answers from what it learned in training alone (closed book answering), which shows the questions a
     model answers without the documents. \ui{Repeats} asks each question
-    more than once, to show how much the answers vary. Each question is searched with a Context, as in a panel: a
-    question of the Panel FAQ with its panel's title, and one added with \ui{Add to the Test Set...} with the
-    Context it was asked with. A run keeps the Context of each question.
+    more than once, to show how much the answers vary.
   \item \ui{Run} answers them with each model, one local model at a time; its label says how many questions,
     with how many models, and its progress how much is done. Above it, a warning names the local models chosen, and the
     judges on this computer, that need more memory than is free now, which would answer slowly and slow down the computer.

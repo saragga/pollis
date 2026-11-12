@@ -71,9 +71,7 @@ import './media/pollisAiStatus.css';
 // passages are searched for and it keeps the best (pollis.ask.reranker).
 // A question asked in a panel, in the pill at the right of its title (webviewScaffold.ts), is answered in the pane,
 // beside the panel: its wikis and the vignettes of its packages give most of the passages, and the model is told the
-// panel; the questions after it keep the panel, and the Context below the panel's question, until Ask Without It or
-// New Chat. The Context, the panel's title unless the user writes another, is searched before the question; the
-// reranker and the answering model are given the question alone.
+// panel; the questions after it keep the panel until Ask Without It or New Chat. The question is searched as typed.
 
 type AskPollisMessage =
 	| { readonly command: 'ready' }
@@ -92,8 +90,6 @@ type AskPollisMessage =
 /** A question of the conversation, the passages found for it and its answer so far. */
 interface IAskedTurn {
 	readonly question: string;
-	/** The Context it was asked with. */
-	readonly context: string;
 	readonly attachments: readonly IAskPollisAttachment[];
 	readonly passages: readonly IAskPollisPassage[];
 	answer: string;
@@ -376,13 +372,10 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 		let conversation = 0;
 		// The panel the questions are asked in, and one asked before the pane was ready
 		let panel: IAskPollisPanel | undefined;
-		// The Context of the panel's question, which the questions after it keep with the panel
-		let context = '';
 		let ready = false;
 		let waiting: IAskPollisFromPanel | undefined;
 		const askFrom = (asked: IAskPollisFromPanel) => {
 			panel = asked.panel;
-			context = (asked.context ?? asked.panel.title).trim();
 			if (ready) {
 				post({ command: 'askFrom', question: asked.question, panel: asked.panel.title, attachments: asked.attachments });
 			} else {
@@ -395,7 +388,6 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 			conversation++;
 			turns = [];
 			panel = undefined;
-			context = '';
 			post({ command: 'newChat' });
 		};
 		askInView = askFrom;
@@ -425,7 +417,6 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 			const before = turns.filter(turn => turn.answer);
 			const previous = turns.at(-1)?.question;
 			const askedIn = panel;
-			const askedContext = context;
 			post({ command: 'searching', turn: index, question, attachments: attachments.map(attachment => ({ kind: attachment.kind, name: attachment.name, image: attachment.kind === 'image' ? attachment.content : undefined })) });
 			// None: nothing is searched, and the model answers from what it knows
 			const unaided = askSearchesNothing(searchIn);
@@ -441,7 +432,7 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 					looked = true;
 					answering = undefined;
 					source.dispose(true);
-					turns[index] = { question, context: askedContext, attachments, passages: [], answer: doc };
+					turns[index] = { question, attachments, passages: [], answer: doc };
 					post({ command: 'found', turn: index, searched: [], collections, note: localize('askPollis.fromRepl', "From Julia's own documentation, in the REPL."), passages: [] });
 					post({ command: 'text', turn: index, text: doc });
 					post({ command: 'done', turn: index });
@@ -458,7 +449,7 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 				collections: askSearchIn(searchIn, collections),
 				sources: askSearchSources(searchIn),
 				panel: askedIn,
-			}, askedContext, kept, reranker));
+			}, kept, reranker));
 			let result = await search();
 			// Before the first index, the question waits for it, with how far it has come, while the Julia extension makes it;
 			// and asked in a panel the index does not have yet, until the index being made is published, before its embeddings
@@ -477,7 +468,7 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 				return;
 			}
 			if (source.token.isCancellationRequested && (result.wordsOnly === 'notIndexed' || result.panelMissing)) {
-				turns.push({ question, context: askedContext, attachments, passages: [], answer: '' });
+				turns.push({ question, attachments, passages: [], answer: '' });
 				post({ command: 'done', turn: index, stopped: true });
 				return;
 			}
@@ -492,7 +483,7 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 				result = reranked.result;
 			}
 			collections = result.collections;
-			const turn: IAskedTurn = { question, context: askedContext, attachments, passages: result.passages, answer: '' };
+			const turn: IAskedTurn = { question, attachments, passages: result.passages, answer: '' };
 			turns.push(turn);
 			post({
 				command: 'found',
@@ -592,7 +583,6 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 				answering?.cancel();
 			} else if (message.command === 'leavePanel') {
 				panel = undefined;
-				context = '';
 			} else if (message.command === 'strategy') {
 				configurationService.updateValue('pollis.ask.strategy', askPollisStrategy(message.value, strategiesService.getStrategies()).id, ConfigurationTarget.USER);
 			} else if (message.command === 'open') {
@@ -600,7 +590,7 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 			} else if (message.command === 'addToTestSet') {
 				const turn = turns[message.turn];
 				if (turn?.answer) {
-					commandService.executeCommand(COMPARE_MODELS_ADD_COMMAND_ID, { question: turn.question, answer: turn.answer, passages: turn.passages, questionContext: turn.context } satisfies ICompareModelsAdd);
+					commandService.executeCommand(COMPARE_MODELS_ADD_COMMAND_ID, { question: turn.question, answer: turn.answer, passages: turn.passages } satisfies ICompareModelsAdd);
 				}
 			} else if (message.command === 'voiceLanguage') {
 				setVoiceLanguage(storageService, message.value);

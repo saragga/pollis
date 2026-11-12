@@ -29,7 +29,7 @@ import { ProxyChannel } from '../../../../base/parts/ipc/common/ipc.js';
 import { Server as ChildProcessServer } from '../../../../base/parts/ipc/node/ipc.cp.js';
 import { Server as UtilityProcessServer } from '../../../../base/parts/ipc/node/ipc.mp.js';
 import { isUtilityProcess } from '../../../../base/parts/sandbox/node/electronTypes.js';
-import { AskPollisSource, AskTopic, ASK_PASSAGES, ASK_SOURCE_COLLECTION, askEvalContext, IAskPollisChatEnd, IAskPollisMessage, ICompareRun, ICompareRunSummary, IAskPollisChatRequest, IAskPollisChatText, IAskPollisEvalItem, IAskPollisFound, IAskPollisIndex, IAskPollisIndexedDocument, IAskPollisIndexRequest, IAskPollisIndexStatus, IAskPollisPanel, IAskPollisPanelShare, IAskPollisPassage, IAskPassageMatch, IAskPollisReranked, IAskPollisSearchResult, IAskPollisTimings, IAskTopicCounts, IBenchmarkAnswer, IBenchmarkRun, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingFound, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary, IRerankRun, IRerankRunSummary, IRetrievalEmbeddingRequest, IRetrievalEvaluation, IRetrievalQuery, IRetrievalRerankDone, IRetrievalRerankRequest, IRetrievalReranked, IRetrievalScore, RETRIEVAL_BENCHMARKS, RETRIEVAL_CANDIDATES, RETRIEVAL_CUT } from '../common/askPollis.js';
+import { AskPollisSource, AskTopic, ASK_PASSAGES, ASK_SOURCE_COLLECTION, IAskPollisChatEnd, IAskPollisMessage, ICompareRun, ICompareRunSummary, IAskPollisChatRequest, IAskPollisChatText, IAskPollisEvalItem, IAskPollisFound, IAskPollisIndex, IAskPollisIndexedDocument, IAskPollisIndexRequest, IAskPollisIndexStatus, IAskPollisPanel, IAskPollisPanelShare, IAskPollisPassage, IAskPassageMatch, IAskPollisReranked, IAskPollisSearchResult, IAskPollisTimings, IAskTopicCounts, IBenchmarkAnswer, IBenchmarkRun, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingFound, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary, IRerankRun, IRerankRunSummary, IRetrievalEmbeddingRequest, IRetrievalEvaluation, IRetrievalQuery, IRetrievalRerankDone, IRetrievalRerankRequest, IRetrievalReranked, IRetrievalScore, RETRIEVAL_BENCHMARKS, RETRIEVAL_CANDIDATES, RETRIEVAL_CUT } from '../common/askPollis.js';
 
 const DATABASE = join(os.homedir(), '.pollis', 'documents', 'PollisDocuments.duckdb');
 /** The embeddings made, by the model and the text it was given, as ask_index.jl keeps them. */
@@ -378,8 +378,6 @@ const COMPARISONS_TABLES = [
 	// A closed question: its options in the order asked, as JSON, why the right one is right, and the option each answer chose
 	'ALTER TABLE Comparisons.questions ADD COLUMN IF NOT EXISTS choices VARCHAR',
 	'ALTER TABLE Comparisons.questions ADD COLUMN IF NOT EXISTS explanation VARCHAR',
-	// The Context each question was asked with: its own, or the title of its panel; none before there was a Context
-	'ALTER TABLE Comparisons.questions ADD COLUMN IF NOT EXISTS question_context VARCHAR',
 	'ALTER TABLE Comparisons.answers ADD COLUMN IF NOT EXISTS choice INTEGER',
 	'CREATE TABLE IF NOT EXISTS Comparisons.scores(run VARCHAR, answer VARCHAR, judge VARCHAR, relevance INTEGER, completeness INTEGER, clarity INTEGER, consistency INTEGER, helpfulness INTEGER, final DOUBLE, rationale VARCHAR)',
 	'CREATE TABLE IF NOT EXISTS Comparisons.unrated(run VARCHAR, answer VARCHAR, judge VARCHAR, error VARCHAR)',
@@ -1187,9 +1185,9 @@ class AskPollisIndex implements IAskPollisIndex {
 					id: summary.id, started: summary.started, pollis: summary.pollis, models: JSON.stringify(summary.models), judges: JSON.stringify(summary.judges), repeats: summary.repeats, questions: summary.questions, strategy: summary.strategy ?? null, openBook: !!summary.openBook, closedBook: !!summary.closedBook,
 				});
 				for (const question of run.questions) {
-					await connection.run('INSERT INTO Comparisons.questions (run, question, source, context, text, answer, passages, rank, choices, explanation, question_context) VALUES ($run, $question, $source, $context, $text, $answer, $passages, $rank::INTEGER, $choices::VARCHAR, $explanation::VARCHAR, $questionContext::VARCHAR)', {
+					await connection.run('INSERT INTO Comparisons.questions (run, question, source, context, text, answer, passages, rank, choices, explanation) VALUES ($run, $question, $source, $context, $text, $answer, $passages, $rank::INTEGER, $choices::VARCHAR, $explanation::VARCHAR)', {
 						run: summary.id, question: question.index, source: question.item.source, context: question.item.context, text: question.item.question, answer: question.item.answer, passages: JSON.stringify(question.passages), rank: question.rank ?? null,
-						choices: question.item.choices ? JSON.stringify(question.item.choices) : null, explanation: question.item.explanation ?? null, questionContext: askEvalContext(question.item) ?? null,
+						choices: question.item.choices ? JSON.stringify(question.item.choices) : null, explanation: question.item.explanation ?? null,
 					});
 				}
 				for (const answer of run.answers) {
@@ -1252,7 +1250,7 @@ class AskPollisIndex implements IAskPollisIndex {
 				summary: this.summaryOf(run),
 				questions: questions.map(row => ({
 					index: Number(row.question),
-					item: closedItem({ source: String(row.source ?? ''), context: String(row.context ?? ''), question: String(row.text ?? ''), answer: String(row.answer ?? ''), ...(typeof row.question_context === 'string' ? { questionContext: row.question_context } : {}) }, row.choices, row.explanation),
+					item: closedItem({ source: String(row.source ?? ''), context: String(row.context ?? ''), question: String(row.text ?? ''), answer: String(row.answer ?? '') }, row.choices, row.explanation),
 					passages: JSON.parse(String(row.passages ?? '[]')),
 					rank: optionalNumber(row.rank),
 				})),

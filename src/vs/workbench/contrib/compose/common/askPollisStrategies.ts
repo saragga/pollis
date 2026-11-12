@@ -285,26 +285,11 @@ export function askStrategyReranks(strategy: IAskPollisStrategy, reranker: strin
 	return !!reranker && !!stepOf(strategy, 'rerank');
 }
 
-/**
- * The question after its `context`, the Context below a panel's question (the panel's title, or what the user wrote in
- * its place), as it is searched: "What does this panel check?" says nothing of its subject by itself. Without a
- * context, the question alone.
- */
-export function askInContext(question: string, context: string | undefined): string {
-	const trimmed = context?.trim();
-	return trimmed ? `${trimmed}: ${question}` : question;
-}
-
-/**
- * The search that `strategy` makes of `request`, asked with `context`, `kept` passages going to the model in the end:
- * the question is searched after its context, so that its words, its embedding, the routing and the panel's share know
- * what it is about.
- */
-export function askStrategySearchRequest(strategy: IAskPollisStrategy, request: IAskPollisSearchRequest, context: string | undefined, kept: number, reranker: string | undefined): IAskPollisSearchRequest {
+/** The search that `strategy` makes of `request`, `kept` passages going to the model in the end. */
+export function askStrategySearchRequest(strategy: IAskPollisStrategy, request: IAskPollisSearchRequest, kept: number, reranker: string | undefined): IAskPollisSearchRequest {
 	const search = stepOf(strategy, 'search');
 	return {
 		...request,
-		question: askInContext(request.question, context),
 		passages: askStrategyReranks(strategy, reranker) ? kept * ASK_RERANK_WIDER : request.passages,
 		panel: search ? request.panel : undefined,
 		panelShare: search?.panelShare,

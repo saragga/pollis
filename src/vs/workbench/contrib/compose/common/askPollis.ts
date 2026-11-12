@@ -89,8 +89,6 @@ export interface IAskPollisPanelShare {
 export interface IAskPollisFromPanel {
 	readonly question: string;
 	readonly panel: IAskPollisPanel;
-	/** The Context below the panel's question: the panel's title unless the user wrote another, empty for none. */
-	readonly context?: string;
 	readonly attachments?: readonly IAskPollisAttachment[];
 }
 
@@ -463,8 +461,6 @@ export interface IAskPollisEvalItem {
 	readonly wikiFile?: string;
 	/** Whether the question is one of the FAQ the panel does not show. */
 	readonly hidden?: boolean;
-	/** The Context it is asked with, empty for none; the panel's title when not given (askEvalContext). */
-	readonly questionContext?: string;
 	/** A closed question: its options in the order they are asked, `answer` the right one, at `rightChoice`. */
 	readonly choices?: readonly string[];
 	readonly rightChoice?: number;
@@ -472,11 +468,6 @@ export interface IAskPollisEvalItem {
 	readonly explanation?: string;
 	/** A query of a retrieval benchmark, `source` its id: the ids of the documents relevant to it. */
 	readonly relevant?: readonly string[];
-}
-
-/** The Context a question of a test set is asked with: its own, or the title of the panel it is asked in, as in the pane. */
-export function askEvalContext(item: IAskPollisEvalItem): string | undefined {
-	return item.questionContext ?? item.panel?.title;
 }
 
 /**
