@@ -20,6 +20,7 @@ import { INotificationService } from '../../../../platform/notification/common/n
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
+import { IHostService } from '../../../services/host/browser/host.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
@@ -134,6 +135,7 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 	const notebookKernelService = accessor.get(INotebookKernelService);
 	const fileService = accessor.get(IFileService);
 	const pathService = accessor.get(IPathService);
+	const hostService = accessor.get(IHostService);
 
 	if (openPage && !openPage.isDisposed()) {
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
@@ -286,13 +288,43 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 		}
 	};
 
+	/** Reads the catalogue and shows it, with the covers of its books. */
+	const showCatalogue = async () => {
+		await readCatalogue();
+		await postState();
+		post({ command: 'covers', covers });
+	};
+	// Until the catalogue is read, as when PollisKnowledge.jl is installed while the page is open, it is read again
+	// each time the page or the window gets the focus
+	let reading = false;
+	const readAgain = async () => {
+		if (texts || reading) {
+			return;
+		}
+		reading = true;
+		try {
+			await showCatalogue();
+		} finally {
+			reading = false;
+		}
+	};
+	disposables.add(webviewInput.webview.onDidFocus(() => readAgain()));
+	disposables.add(hostService.onDidChangeFocus(focused => {
+		if (focused) {
+			readAgain();
+		}
+	}));
+
 	disposables.add(webviewInput.webview.onMessage(async (e: { message: KnowledgeMessage }) => {
 		const message = e.message;
 		if (message.command === 'ready') {
 			await postState();
-			await readCatalogue();
-			await postState();
-			post({ command: 'covers', covers });
+			reading = true;
+			try {
+				await showCatalogue();
+			} finally {
+				reading = false;
+			}
 		} else if (message.command === 'switch' && hasKey(message, { id: true, on: true })) {
 			await switchTexts([message.id], !!message.on);
 		} else if (message.command === 'switchShown' && hasKey(message, { ids: true, on: true }) && Array.isArray(message.ids)) {
