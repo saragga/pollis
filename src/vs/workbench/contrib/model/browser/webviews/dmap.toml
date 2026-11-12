@@ -324,8 +324,13 @@ tr, t = trajectory(ds, {{n}})  # forward iteration
 println("First steps: ", tr[1:5])  # the short-term orbit is predictable
 if all(isfinite, tr[end])
     lambda = lyapunov(ds, 10000; u0=u_new, Ttr=1000)  # maximal Lyapunov exponent
-    println("x range on the attractor: ", extrema(tr[1001:end, 1]))
-    println("Steps before an error of 1e-8 grows to 0.1: ", round(Int, log(0.1 / 1e-8) / lambda))  # predictability horizon
+    skip = min(1000, length(tr) ÷ 2)  # transient left out: 1000 steps, or half the orbit if it is shorter
+    println("x range on the attractor: ", extrema(tr[skip+1:end, 1]))
+    if lambda > 0
+        println("Steps before an error of 1e-8 grows to 0.1: ", round(Int, log(0.1 / 1e-8) / lambda))  # predictability horizon
+    else
+        println("Maximal Lyapunov exponent ", round(lambda; sigdigits = 3), ": small errors do not grow")
+    end
 else
     println("The orbit escaped to infinity")
 end
