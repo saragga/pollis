@@ -100,7 +100,7 @@ detail = "reconstructs each point as a weighted sum of its neighbours, then find
 
 [[bullets]]
 text = "Diffusion Maps"
-detail = "builds a Markov diffusion process on the data graph; embeds using eigenvectors of the diffusion operator scaled by lambdat (ManifoldLearning.jl)"
+detail = "builds a Markov diffusion process on the data graph; embeds using eigenvectors of the diffusion operator scaled by lambda^t, computed with LinearAlgebra and Distances.jl"
 
 [[decisionRows]]
 task = "ISOmap"
