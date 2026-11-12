@@ -6777,13 +6777,13 @@
 		},
 		{
 			"id": "ptp",
-			"title": "Point Processes",
+			"title": "Model Point Processes",
 			"source": "toolbox:pollis-toolbox-econometrics",
 			"commands": [
 				{
 					"id": "chiara.statistics.pp",
 					"menuTitles": [
-						"Model"
+						"Model Point Processes"
 					]
 				}
 			],
@@ -6833,13 +6833,13 @@
 		},
 		{
 			"id": "ptps",
-			"title": "Point Process Simulation",
+			"title": "Simulate Point Processes",
 			"source": "toolbox:pollis-toolbox-econometrics",
 			"commands": [
 				{
 					"id": "chiara.simulate.pp",
 					"menuTitles": [
-						"Simulate"
+						"Simulate Point Processes"
 					]
 				}
 			],
