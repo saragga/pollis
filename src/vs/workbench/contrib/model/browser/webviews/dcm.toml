@@ -496,10 +496,11 @@ scatter(X[:, 1], size(X, 2) > 1 ? X[:, 2] : zeros(size(X, 1)), zcolor=Fv[:, 1], 
 [[actionGroups.actions]]
 id = "active-constraints"
 label = "Active Constraints"
-desc = "Which inequality constraints are binding (g_i close to 0) along the front: those segments of the trade-off exist only because of that constraint"
+desc = "Which inequality constraints (g_i close to 0) and variable bounds are binding along the front: those segments of the trade-off exist only because of them"
 code = '''
 using Plots
-act(s) = (a = findall(g -> abs(g) < 1e-2, s.g); isempty(a) ? "none" : join(["g" * string(i) for i in a], ", "))
+atbound(s, j) = (w = bounds[2, j] - bounds[1, j]; s.x[j] - bounds[1, j] < 1e-3 * w ? "x" * string(j) * " at lower" : bounds[2, j] - s.x[j] < 1e-3 * w ? "x" * string(j) * " at upper" : nothing)
+act(s) = (a = vcat(["g" * string(i) for i in findall(g -> abs(g) < 1e-2, s.g)], filter(!isnothing, [atbound(s, j) for j in eachindex(s.x)])); isempty(a) ? "none" : join(a, ", "))  # binding constraints and variable bounds
 lab = act.(sols)
 display([(active = l, solutions = count(==(l), lab)) for l in unique(lab)])
 p = plot(xlabel="f1", ylabel="f2", title="Front by active constraint")
