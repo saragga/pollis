@@ -29,7 +29,7 @@ import { ProxyChannel } from '../../../../base/parts/ipc/common/ipc.js';
 import { Server as ChildProcessServer } from '../../../../base/parts/ipc/node/ipc.cp.js';
 import { Server as UtilityProcessServer } from '../../../../base/parts/ipc/node/ipc.mp.js';
 import { isUtilityProcess } from '../../../../base/parts/sandbox/node/electronTypes.js';
-import { AskPollisSource, AskTopic, ASK_NEAREST_SHARE, ASK_PASSAGES, ASK_SOURCE_COLLECTION, askShares, IAskPollisChatEnd, IAskPollisMessage, ICompareRun, ICompareRunSummary, IAskPollisChatRequest, IAskPollisChatText, IAskPollisEvalItem, IAskPollisFound, IAskPollisIndex, IAskPollisIndexedDocument, IAskPollisIndexRequest, IAskPollisIndexStatus, IAskPollisPanel, IAskPollisPanelShare, IAskPollisPassage, IAskPassageMatch, IAskPollisReranked, IAskPollisSearchResult, IAskPollisTimings, IAskTopicCounts, IBenchmarkAnswer, IBenchmarkRun, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingFound, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary, IRerankRun, IRerankRunSummary, IRetrievalEmbeddingRequest, IRetrievalEvaluation, IRetrievalQuery, IRetrievalRerankDone, IRetrievalRerankRequest, IRetrievalReranked, IRetrievalScore, RETRIEVAL_BENCHMARKS, RETRIEVAL_CANDIDATES, RETRIEVAL_CUT } from '../common/askPollis.js';
+import { AskPollisSource, AskTopic, ASK_ARTICLES, ASK_NEAREST_SHARE, ASK_PASSAGES, ASK_SOURCE_COLLECTION, askShares, IAskPollisChatEnd, IAskPollisMessage, ICompareRun, ICompareRunSummary, IAskPollisChatRequest, IAskPollisChatText, IAskPollisEvalItem, IAskPollisFound, IAskPollisIndex, IAskPollisIndexedDocument, IAskPollisIndexRequest, IAskPollisIndexStatus, IAskPollisPanel, IAskPollisPanelShare, IAskPollisPassage, IAskPassageMatch, IAskPollisReranked, IAskPollisSearchResult, IAskPollisTimings, IAskTopicCounts, IBenchmarkAnswer, IBenchmarkRun, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingFound, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary, IRerankRun, IRerankRunSummary, IRetrievalEmbeddingRequest, IRetrievalEvaluation, IRetrievalQuery, IRetrievalRerankDone, IRetrievalRerankRequest, IRetrievalReranked, IRetrievalScore, RETRIEVAL_BENCHMARKS, RETRIEVAL_CANDIDATES, RETRIEVAL_CUT } from '../common/askPollis.js';
 
 const DATABASE = join(os.homedir(), '.pollis', 'documents', 'PollisDocuments.duckdb');
 /** The folder of the indexes of the collections of Retrieval-Augmented Generation and of the Knowledge Base. */
@@ -196,11 +196,12 @@ function searchSql(dimensions: number, count: number, vectors?: string, where = 
  * The key in embeddings.duckdb of each passage and what it is given to the model $model as, with the passage prefix
  * $prefix, as ask_index.jl makes them: a wiki's headings start with its panel and its name, a Markdown file's with its
  * title; a PDF's do not have its title. The Package APIs are left out: Evaluate Embedding Models would embed some
- * twenty thousand docstrings for each model, and its test sets have no question on them.
+ * twenty thousand docstrings for each model, and its test sets have no question on them. The Articles, which Auto does
+ * not search either, are left out with them.
  */
 const INPUTS_SQL = `SELECT id, sha256($model || chr(10) || input) AS key, input FROM (
-	SELECT p.id, left(replace(replace($prefix, '{title}', CASE WHEN d.kind IN ('wiki', 'markdown') THEN p.heading ELSE concat_ws(' ' || chr(8250) || ' ', d.title, nullif(p.heading, '')) END), '{text}', p.text), ${EMBEDDED_CHARACTERS}) AS input
-	FROM passages p JOIN documents d ON p.document = d.id WHERE d.kind <> 'api')`;
+	SELECT p.id, left(replace(replace($prefix, '{title}', CASE WHEN d.kind IN ('wiki', 'markdown', 'article') THEN p.heading ELSE concat_ws(' ' || chr(8250) || ' ', d.title, nullif(p.heading, '')) END), '{text}', p.text), ${EMBEDDED_CHARACTERS}) AS input
+	FROM passages p JOIN documents d ON p.document = d.id WHERE d.kind NOT IN ('api', 'article'))`;
 
 /** The table of the retrieval benchmark `benchmark` in PollisBenchmarks.duckdb, attached as `benchmarks`; nothing for one not known. */
 function retrievalTable(benchmark: string): string | undefined {
@@ -290,10 +291,17 @@ function sourcesSql(sources: readonly AskPollisSource[] | undefined): string {
 	return ` AND (d.collection NOT IN (${collections.map(sqlString).join(', ')}) OR ${sources.map(source => `(${SOURCE_SQL[source]})`).join(' OR ')})`;
 }
 
-/** The passages of `panel`: its wikis, titled after it, and the vignettes of its packages, titled `GLM.jl`. */
+/** The passages of `panel`: its wikis, titled after it, the vignettes of its packages, titled `GLM.jl`, and the abstracts of the works it cites. */
 function panelSql(panel: IAskPollisPanel): string {
-	const wikis = `(d.kind = 'wiki' AND d.title = ${sqlString(panel.title)})`;
-	return panel.packages.length ? `(${wikis} OR (d.kind = 'vignette' AND d.title IN (${panel.packages.map(sqlString).join(', ')})))` : wikis;
+	const own = [`(d.kind = 'wiki' AND d.title = ${sqlString(panel.title)})`];
+	if (panel.packages.length) {
+		own.push(`(d.kind = 'vignette' AND d.title IN (${panel.packages.map(sqlString).join(', ')}))`);
+	}
+	// The abstracts of the works it cites, each in a file named after its key
+	if (panel.references?.length) {
+		own.push(`(d.kind = 'article' AND regexp_extract(replace(d.source, '\\', '/'), '([^/]+)\\.md$', 1) IN (${panel.references.map(sqlString).join(', ')}))`);
+	}
+	return own.length > 1 ? `(${own.join(' OR ')})` : own[0];
 }
 
 /** The columns of a passage that the searches select, with its document's. */
@@ -612,11 +620,11 @@ class AskPollisIndex implements IAskPollisIndex {
 
 	/**
 	 * The passages for `query`, from the collections of `all`: those named are searched, else the nearest and those almost
-	 * as near, the Package APIs never among them; and whether the panel asked in has no passages in the index.
+	 * as near, the Package APIs and the Articles never among them; and whether the panel asked in has no passages in the index.
 	 */
 	private async findPassages(connection: DuckDBConnection, all: readonly string[], query: IPassageQuery): Promise<{ passages: IAskPollisPassage[]; searched: string[]; panelMissing: boolean; distance?: number }> {
 		const { vector, dimensions, vectors } = query;
-		let searched = query.collections?.filter(name => all.includes(name)) ?? all.filter(name => name !== PACKAGE_APIS);
+		let searched = query.collections?.filter(name => all.includes(name)) ?? all.filter(name => name !== PACKAGE_APIS && name !== ASK_ARTICLES);
 		let distance: number | undefined;
 		if (vector) {
 			const embedding = vectors ? 'v.embedding' : 'p.embedding';
@@ -768,7 +776,7 @@ class AskPollisIndex implements IAskPollisIndex {
 				if (dimensions) {
 					await connection.run(`CREATE OR REPLACE TABLE memory.candidate AS SELECT i.id, c.embedding::FLOAT[${dimensions}] AS embedding FROM (${INPUTS_SQL}) i JOIN cache.embeddings c ON c.key = i.key WHERE len(c.embedding) = ${dimensions}`, parameters);
 				}
-				const passages = Number((await connection.runAndReadAll(`SELECT count(*) AS passages FROM passages p JOIN documents d ON p.document = d.id WHERE d.kind <> 'api'`)).getRowObjectsJson()[0]?.passages ?? 0);
+				const passages = Number((await connection.runAndReadAll(`SELECT count(*) AS passages FROM passages p JOIN documents d ON p.document = d.id WHERE d.kind NOT IN ('api', 'article')`)).getRowObjectsJson()[0]?.passages ?? 0);
 				return { dimensions, passages, collections: status?.collections ?? [] };
 			});
 			if (!made) {
@@ -1063,7 +1071,7 @@ class AskPollisIndex implements IAskPollisIndex {
 				FROM passages p WHERE length(p.text) >= ${SHORTEST_QUESTION_PASSAGE}),
 			turns AS (
 				SELECT l.id, d.kind, ${TOPIC} AS topic, row_number() OVER (PARTITION BY d.kind ORDER BY l.k, hash(l.document)) AS turn
-				FROM long l JOIN documents d ON d.id = l.document WHERE d.kind <> 'api'),
+				FROM long l JOIN documents d ON d.id = l.document WHERE d.kind NOT IN ('api', 'article')),
 			chosen AS (
 				SELECT * FROM turns
 				QUALIFY row_number() OVER (PARTITION BY topic ORDER BY turn, kind) <= CASE topic WHEN 'pollis' THEN ${count('pollis')} WHEN 'julia' THEN ${count('julia')} ELSE ${count('panels')} END)

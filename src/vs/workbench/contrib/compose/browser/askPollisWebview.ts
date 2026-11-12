@@ -8,7 +8,7 @@ import { URI } from '../../../../base/common/uri.js';
 import { localize } from '../../../../nls.js';
 import { BrowserViewCommandId } from '../../../../platform/browserView/common/browserView.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
-import { AskPollisSource, ASK_SOURCE_COLLECTION, IAskPollisPassage, IAskPollisSearchResult } from '../common/askPollis.js';
+import { AskPollisSource, ASK_ARTICLES, ASK_SOURCE_COLLECTION, IAskPollisPassage, IAskPollisSearchResult } from '../common/askPollis.js';
 import { openPdfInViewer } from '../../../common/pdfViewer.js';
 
 // What Ask Pollis and Evaluate Answering Models show of an answer alike: its Markdown with the citations as buttons, the Sources
@@ -24,8 +24,9 @@ export function askPassageView(passage: IAskPollisPassage) {
 	return {
 		kind: passage.kind,
 		title: passage.title,
-		where: passage.page === null ? passage.menu : localize('askPollis.page', "page {0}", passage.page),
-		heading: passage.heading,
+		where: passage.kind === 'article' ? localize('askPollis.abstract', "Abstract") : passage.page === null ? passage.menu : localize('askPollis.page', "page {0}", passage.page),
+		// An article's heading is its title, shown above
+		heading: passage.kind === 'article' ? '' : passage.heading,
 		toolbox: passage.toolbox,
 		text: passage.text,
 	};
@@ -38,9 +39,12 @@ function headingFragment(heading: string): string {
 	return last.trim().toLowerCase().replace(/[^\p{L}\p{N}\s_-]/gu, '').replace(/\s/g, '-');
 }
 
-/** Opens a passage in its document: the PDF at its page, the panel's wiki or a Markdown document at its heading, the Julia Manual at its section, a package's docstring on its site, a text file. */
+/** Opens a passage in its document: the PDF at its page, a work cited in its reference and abstract, the panel's wiki or a Markdown document at its heading, the Julia Manual at its section, a package's docstring on its site, a text file. */
 export function askOpenPassage(commandService: ICommandService, passage: IAskPollisPassage): void {
-	if (passage.kind === 'wiki' || passage.kind === 'markdown') {
+	if (passage.kind === 'article') {
+		// A work cited: its reference, with its address, and its abstract
+		commandService.executeCommand('markdown.showPreview', URI.file(passage.file));
+	} else if (passage.kind === 'wiki' || passage.kind === 'markdown') {
 		commandService.executeCommand('markdown.showPreview', URI.file(passage.file).with({ fragment: headingFragment(passage.heading) }));
 	} else if (passage.kind === 'text') {
 		// A text file of a collection of Retrieval-Augmented Generation, in the editor
@@ -176,6 +180,7 @@ export function askAnswerScript(): string {
 		juliaManualHint: localize('askPollis.juliaManualHint', "The Julia Manual, of the Julia that the REPL runs"),
 		juliaLibraryHint: localize('askPollis.juliaLibraryHint', "The pages of Base and the standard library, mostly docstrings, of the Julia that the REPL runs"),
 		packageApisHint: localize('askPollis.packageApisHint', "The docstrings of the packages of the panels, from their documentation sites, at the version on this computer when the site has it. Searched only when ticked, or with All Sources"),
+		articlesHint: localize('askPollis.articlesHint', "The abstracts of the works the panels cite, from PollisReferences. A question asked in a panel searches those the panel cites; the others are searched only when ticked, or with All Sources"),
 		collectionHint: localize('askPollis.collectionHint', "Searched in its own index, built in Compose > Knowledge for AI Models. Searched only when ticked, or with All Sources"),
 		noneHint: localize('askPollis.noneHint', "Nothing is searched: the model answers from what it knows, without the documents, to see what they add"),
 	};
@@ -293,7 +298,7 @@ export function askAnswerScript(): string {
 	 * APIs after the vignettes, then the Knowledge Base and the collections of Retrieval-Augmented Generation.
 	 */
 	function searchInSources(names) {
-		const hints = { juliaManual: ANSWER_TEXT.juliaManualHint, juliaLibrary: ANSWER_TEXT.juliaLibraryHint, ${JSON.stringify(PACKAGE_APIS)}: ANSWER_TEXT.packageApisHint };
+		const hints = { juliaManual: ANSWER_TEXT.juliaManualHint, juliaLibrary: ANSWER_TEXT.juliaLibraryHint, ${JSON.stringify(PACKAGE_APIS)}: ANSWER_TEXT.packageApisHint, ${JSON.stringify(ASK_ARTICLES)}: ANSWER_TEXT.articlesHint };
 		const packageApis = names.includes(${JSON.stringify(PACKAGE_APIS)}) ? [[${JSON.stringify(PACKAGE_APIS)}, ${JSON.stringify(PACKAGE_APIS)}]] : [];
 		const pollisSources = Object.entries(ANSWER_TEXT.pollisSources).flatMap(source => source[0] === 'packageVignettes' ? [source, ...packageApis] : [source]);
 		return names.flatMap(name => name === ${JSON.stringify(POLLIS)} ? pollisSources : name === ${JSON.stringify(JULIA_MANUAL)} ? Object.entries(ANSWER_TEXT.juliaSources) : name === ${JSON.stringify(PACKAGE_APIS)} ? [] : [[name, name, ANSWER_TEXT.collectionHint]]).map(([value, label, hint]) => ({ value, label, title: hints[value] ?? hint ?? '' }));

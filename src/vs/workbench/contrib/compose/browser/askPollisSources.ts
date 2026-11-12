@@ -21,8 +21,10 @@ import { IWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase 
 import { IExtensionService } from '../../../services/extensions/common/extensions.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { customCopyOverlayUri, resolveCustomCopy } from '../../model/browser/common/customCopyFileSystem.js';
+import { IReference, ReferenceLibrary, referenceVenue } from '../../model/browser/common/referenceLibrary.js';
 import { panelKeyPoints, parseToml, tomlToPanelData } from '../../model/browser/common/tomlPanelData.js';
 import { IPollisMenuNode, IPollisViewsService } from '../../pollisViews/common/pollisViews.js';
+import { ASK_ARTICLES } from '../common/askPollis.js';
 import { IToolboxPanelsService } from '../common/toolboxPanels.js';
 import { PANEL_WIKIS } from './panelWikis.data.js';
 import { toolboxDocumentPdf } from './toolboxDocumentsPage.js';
@@ -35,12 +37,14 @@ import { installedVignettes, isVignetteCompiled, IVignette, registryVignettes, v
 // and the Julia extension compiles it before the index is made. So does a Toolbox Vignette not compiled yet. When the
 // registry cannot be read, its vignettes are those it listed last. The Key Points of each panel, built in or of a
 // toolbox, are written to a file of their own in ~/.pollis/documents/key-points/, read as one of the panel's wikis.
+// The works of PollisReferences that have an abstract, the works the panels cite, are written each to a file of its
+// own in ~/.pollis/documents/articles/, named after its key, its reference and its abstract: the collection Articles.
 
 export const ASK_POLLIS_SOURCES_COMMAND_ID = 'pollis.askPollis.sources';
 
 /** A file Ask Pollis reads, as ask_index.jl takes it. */
 interface IAskPollisSource {
-	readonly kind: 'document' | 'wiki' | 'vignette';
+	readonly kind: 'document' | 'wiki' | 'vignette' | 'article';
 	/** The document's title; for a wiki or a panel's Key Points, its panel's, the wiki's own heading added by ask_index.jl; for a vignette, its package's, NAME.jl. */
 	readonly title: string;
 	/** The file's path; a PDF not compiled yet, or a wiki still "Not written yet.", is left out by ask_index.jl. */
@@ -52,6 +56,8 @@ interface IAskPollisSource {
 	readonly toolbox: string;
 	/** For a package or toolbox vignette not compiled, or a package's older than its sources: what the Julia extension compiles `file` from. */
 	readonly compile?: { readonly source: string; readonly name: string };
+	/** The collection it is part of, when not Pollis. */
+	readonly collection?: string;
 }
 
 /** The vignettes the registry listed when it was last read, for when it cannot be. */
@@ -158,6 +164,32 @@ async function askPollisSources(accessor: ServicesAccessor): Promise<IAskPollisS
 		}
 	}
 
+	// The works cited, with their abstracts, each written again only when it changes; those no longer cited removed
+	const articlesFolder = joinPath(userHome, '.pollis', 'documents', 'articles');
+	const { references } = await new ReferenceLibrary(fileService, userHome).pollis();
+	const articles = new Set<string>();
+	for (const reference of references) {
+		const text = articleText(reference);
+		if (!text) {
+			continue;
+		}
+		const file = joinPath(articlesFolder, `${reference.key}.md`);
+		try {
+			if (await readText(fileService, file) !== text) {
+				await fileService.writeFile(file, VSBuffer.fromString(text));
+			}
+			articles.add(file.path);
+			sources.push({ kind: 'article', title: reference.title, file: file.fsPath, menu: '', toolbox: '', collection: ASK_ARTICLES });
+		} catch {
+			// Not written: the other works are indexed without it
+		}
+	}
+	for (const file of await resolveChildren(fileService, articlesFolder)) {
+		if (!file.isDirectory && !articles.has(file.resource.path)) {
+			await fileService.del(file.resource).catch(() => undefined);
+		}
+	}
+
 	// The vignettes of the packages on this computer, then those of the registry for the other packages
 	const installed = await installedVignettes(fileService, pathService);
 	const read = await registryVignettes(requestService, configurationService);
@@ -184,6 +216,33 @@ async function askPollisSources(accessor: ServicesAccessor): Promise<IAskPollisS
 		}
 	}
 	return sources;
+}
+
+/** The authors as a reference names them: A; A and B; A, B and C. */
+function authorsText(authors: readonly string[]): string {
+	return authors.length <= 2 ? authors.join(' and ') : `${authors.slice(0, -1).join(', ')} and ${authors.at(-1)}`;
+}
+
+/**
+ * What Articles reads of a work: its reference, with where to find it, then its abstract; nothing for a work without
+ * an abstract.
+ */
+function articleText(reference: IReference): string | undefined {
+	const abstract = reference.abstract?.trim();
+	if (!abstract) {
+		return undefined;
+	}
+	const venue = referenceVenue(reference);
+	const issue = reference.volume ? `${reference.volume}${reference.number ? `(${reference.number})` : ''}` : '';
+	const place = [venue, issue].filter(part => part).join(' ') + (reference.pages ? `, ${reference.pages}` : '');
+	const address = reference.doi ? `https://doi.org/${reference.doi}` : reference.arxiv ? `https://arxiv.org/abs/${reference.arxiv}` : reference.url ?? reference.oa_url;
+	const cited = [
+		`${authorsText(reference.authors ?? [])}${reference.year ? ` (${reference.year})` : ''}.`,
+		`${reference.title.replace(/[.\s]+$/, '')}.`,
+		place ? `${place}.` : '',
+		address ?? '',
+	].filter(part => part).join(' ');
+	return `${cited}\n\n${abstract}\n`;
 }
 
 /** The text of `file`, `undefined` when it cannot be read. */

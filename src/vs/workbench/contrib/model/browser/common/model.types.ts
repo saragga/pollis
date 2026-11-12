@@ -226,7 +226,7 @@ export interface IModelFaqItem {
 	readonly context: string;
 	readonly question: string;
 	readonly answer: string;
-	readonly panel: { readonly title: string; readonly packages: readonly string[]; readonly card?: string };
+	readonly panel: { readonly title: string; readonly packages: readonly string[]; readonly references?: readonly string[]; readonly card?: string };
 	readonly wikiFile?: string;
 	readonly hidden?: boolean;
 	/** A closed question, a hidden one of the FAQ: its options in the order they are asked, `answer` the right one, at `rightChoice`. */

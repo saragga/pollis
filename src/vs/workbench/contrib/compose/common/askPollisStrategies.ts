@@ -307,8 +307,11 @@ export function askStrategySearchKey(strategy: IAskPollisStrategy, request: IAsk
 		: [strategy.id, JSON.stringify(request.panelShare ?? ''), request.passages ?? '', panel, request.question].join('\n');
 }
 
-/** Whether `passage` is of `panel`'s own: one of its wikis, titled after it, or the vignette of one of its packages. */
+/** Whether `passage` is of `panel`'s own: one of its wikis, titled after it, the vignette of one of its packages, or the abstract of a work it cites. */
 function isPanelPassage(passage: IAskPollisPassage, panel: IAskPollisPanel): boolean {
+	if (passage.kind === 'article') {
+		return !!panel.references?.includes(passage.file.replace(/\\/g, '/').split('/').pop()?.replace(/\.md$/, '') ?? '');
+	}
 	return passage.kind === 'wiki' ? passage.title === panel.title : passage.kind === 'vignette' && panel.packages.includes(passage.title);
 }
 

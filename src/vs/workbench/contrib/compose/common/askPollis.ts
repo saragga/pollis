@@ -86,7 +86,16 @@ export interface IAskPollisPanel {
 	readonly title: string;
 	/** The packages of its Powered by, as `GLM.jl`, the titles of their vignettes. */
 	readonly packages: readonly string[];
+	/** The keys in PollisReferences of the works it cites, whose abstracts in Articles are of the panel's own passages too. */
+	readonly references?: readonly string[];
 }
+
+/**
+ * The collection of the abstracts of the works the panels cite, from PollisReferences, one document a work, of kind
+ * `article`, its file named after the work's key (askPollisSources.ts). Auto does not search it: a panel's question
+ * searches the works the panel cites, and Search In the rest.
+ */
+export const ASK_ARTICLES = 'Articles';
 
 /**
  * The share of the passages from a panel's own that depends on the question: `near` when the panel's nearest passage is

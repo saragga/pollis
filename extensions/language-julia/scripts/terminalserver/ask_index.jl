@@ -10,7 +10,8 @@
 # in ~/.pollis/documents/vignettes. A PDF's text is read with pdftotext (Poppler_jll), a page at a time, and cut under
 # its headings with the .labels compile_documents.jl or compile_vignette.jl puts beside it, or a book's, which has
 # none, under its bookmarks, read with pdftohtml; a wiki or a Markdown file is cut at its headings, a text file at its
-# blank lines. The Julia Manual is that
+# blank lines. An article (kind article, of the collection Articles) is a work cited, its reference and its abstract
+# in a Markdown file, read as one, its passages headed by the work's title. The Julia Manual is that
 # of the Julia that runs this, which comes with it, so that a Julia updated has its own: the Manual, Base and the
 # standard library, from the search index Documenter writes beside its HTML, a section or a docstring an entry, each
 # passage with the page and anchor it is at. The Package APIs (kind api) are the files pollisPackageApis.ts writes in
@@ -691,7 +692,7 @@ function build(found, previous; progress = true)
 		# Not changed since the last index: its passages are copied below
 		if !(reuse && document in previous.documents)
 			cut = try
-				document.kind in ("wiki", "markdown") ? wiki_passages(document.source, document.title) :
+				document.kind in ("wiki", "markdown", "article") ? wiki_passages(document.source, document.title) :
 					document.kind == "text" ? text_passages(document.source) :
 					document.kind == "julia" ? manual_passages(document.source) :
 					document.kind == "api" ? api_passages(document.source) : pdf_passages(document.source)
@@ -720,14 +721,14 @@ function build(found, previous; progress = true)
 	reuse && DBInterface.execute(db, "DETACH last")
 
 	# What each passage is given to the embedding model as, and the embeddings made of it before: a wiki's headings
-	# start with its panel and its name, and a Markdown file's with its title; a PDF's do not have its title
+	# start with its panel and its name, and a Markdown file's and an article's with its title; a PDF's do not have its title
 	DBInterface.execute(db, "ATTACH $(sql(EMBEDDINGS)) AS cache")
 	DBInterface.execute(db, "CREATE TABLE IF NOT EXISTS cache.embeddings(key VARCHAR PRIMARY KEY, embedding FLOAT[])")
 	DBInterface.execute(db, """
 		CREATE TEMP TABLE inputs AS
 		SELECT id, sha256(? || chr(10) || input) AS key, input
 		FROM (
-			SELECT p.id, left(replace(replace(?, '{title}', CASE WHEN d.kind IN ('wiki', 'markdown') THEN p.heading ELSE concat_ws($(sql(ARROW)), d.title, nullif(p.heading, '')) END), '{text}', p.text), $LONGEST) AS input
+			SELECT p.id, left(replace(replace(?, '{title}', CASE WHEN d.kind IN ('wiki', 'markdown', 'article') THEN p.heading ELSE concat_ws($(sql(ARROW)), d.title, nullif(p.heading, '')) END), '{text}', p.text), $LONGEST) AS input
 			FROM passages p JOIN documents d ON p.document = d.id)""",
 		[EMBEDDER, PREFIX])
 	DBInterface.execute(db, "UPDATE passages SET embedding = c.embedding FROM inputs i, cache.embeddings c WHERE c.key = i.key AND passages.id = i.id")

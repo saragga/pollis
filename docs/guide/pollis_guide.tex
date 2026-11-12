@@ -2333,6 +2333,12 @@ have installed if the site has it, else of the stable one, and of the latest for
 takes about 40 minutes on a recent laptop, longer without a GPU; what is done is kept if you close Pollis.
 Search does not wait for them. The setting \texttt{pollis.ask.packageApis} turns them off.
 
+\subhead{Articles}
+\ui{Articles} are the abstracts of the works the panels cite, from PollisReferences, each with its authors, year,
+venue and address; a work without an abstract is left out. A question asked in a panel searches the abstracts of the
+works that panel cites with its own wikis. Otherwise \ui{Auto} leaves them out: tick \ui{Articles} in \ui{Search In},
+or choose \ui{All Sources}. \ui{Open} shows the reference and the abstract, with the link to the work.
+
 \subhead{Knowledge Base and your collections}
 \ui{Compose > Knowledge for AI Models > Knowledge Base} lists openly licensed texts a model can answer from: Dive into
 Deep Learning, Probabilistic Machine Learning: An Introduction, Algorithms for Optimization and Algorithms for Decision
@@ -2372,7 +2378,8 @@ decide how the answer is found:
 \begin{itemize}
   \item \ui{Search In}: \ui{Auto}, the collections nearest the question, or the sources you tick, the Knowledge Base
     and your own collections among them.
-  \item \ui{Strategy}: how many passages come from the panel's own wikis and the vignettes of its packages.
+  \item \ui{Strategy}: how many passages come from the panel's own wikis, the vignettes of its packages and the
+    abstracts of the works it cites.
     \ui{Base} takes 5 of the 8 passages from the panel. \ui{Panel Aware} takes 6 of the 8 when the panel's passages
     are near the question and 2 when they are not, so a question on another subject is not held to the panel. With a reranker, set in
     Set Active Models, three times as many passages are found, and the reranker orders the panel's own passages

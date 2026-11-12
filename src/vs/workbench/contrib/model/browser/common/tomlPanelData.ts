@@ -391,6 +391,15 @@ export function panelKeyPoints(data: IScaffoldPanelData): string[] {
 	return (data.bullets ?? []).map(bullet => bullet.detail?.trim() ? `${plainText(bullet.text)}: ${plainText(bullet.detail)}` : plainText(bullet.text));
 }
 
+/** The keys in PollisReferences of the works a panel cites: those of its References and the papers of its packages. */
+export function panelCitedKeys(data: IScaffoldPanelData): string[] {
+	const keys = [
+		...data.references.map(reference => (reference as { readonly key?: string }).key),
+		...data.packages.flatMap(pkg => pkg.papers.map(paper => paper.key)),
+	];
+	return [...new Set(keys.filter((key): key is string => !!key))];
+}
+
 /** Whether `wiki` is a page of Learn More, bundled or online, rather than a separator between them. */
 function isWikiPage(wiki: IModelWiki): wiki is Exclude<IModelWiki, { readonly separator: true }> {
 	return (wiki as { readonly separator?: boolean }).separator !== true;
@@ -411,7 +420,7 @@ export function panelFaqItems(data: TomlValue, title: string): IModelFaqItem[] {
 			context: '',
 			question: entry.question,
 			answer: entry.answer,
-			panel: { title, packages: panel.packages.map(pkg => pkg.name) },
+			panel: { title, packages: panel.packages.map(pkg => pkg.name), references: panelCitedKeys(panel) },
 			...(wiki?.bundled ? { wikiFile: wiki.file } : {}),
 			hidden: true,
 			choices,

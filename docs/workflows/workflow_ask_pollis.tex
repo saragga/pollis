@@ -127,6 +127,8 @@ names on hover; \textbf{All Sources}; or \textbf{None}, which searches nothing:
 the model answers from what it knows, and \emph{Answered without the documents} under its answer says so, to see what
 the documents add. Without the Julia Manual (\S\ref{sec:settings}), Pollis is the only source, and Auto searches it.
 Auto never searches the Package APIs (\S\ref{sec:apis}): only ticking \textbf{Package APIs} and \textbf{All Sources} do.
+Nor does it search \textbf{Articles}, the abstracts of the works the panels cite (\S\ref{sec:panels}), but for the works
+of the panel a question is asked in.
 
 After the sources of Pollis, \textbf{Search In} lists the \textbf{Knowledge Base} (\S\ref{sec:panels}) and each
 collection of \menupath{Compose\gt Knowledge for AI Models\gt Retrieval-Augmented Generation} whose index is built, by
@@ -802,8 +804,15 @@ After the seven of Ask Pollis itself, four more, each usable when done:
     search, not by a map of chapters to panels, which would not keep up with two hundred panels. Free texts that may
     not be shared, as An Introduction to Statistical Learning, The Elements of Statistical Learning and Convex
     Optimization, go into a collection of your own. Simulation is still without a text.
-  \item \textbf{Articles}: the works a panel cites, from PollisReferences: their abstracts at once, their full text
-    where it is open, on arXiv or PubMed Central.
+  \item \textbf{Articles}: the works the panels cite, from PollisReferences, those with an abstract, each written to
+    \file{~/.pollis/documents/articles/KEY.md}, its reference, with its DOI or address, and its abstract, and read as
+    one document of the collection Articles, its passages headed by the work's title. A panel's question carries the
+    keys of the works the panel cites, in its References and among the papers of its packages, and their abstracts
+    are of the panel's own passages, beside its Key Points, wikis and vignettes. Auto leaves Articles out, as it does
+    the Package APIs, and so do Make Questions and Evaluate Embedding Models; \textbf{Search In} ticks it.
+    \textbf{Open} shows the reference and the abstract in the Markdown preview. The full texts that are open, on
+    arXiv, PubMed Central or the publisher's site, are a step of their own: about 500 PDFs, a gigabyte or two, and tens
+    of thousands of passages to embed.
 \end{enumerate}
 
 \subsection{Still open}
