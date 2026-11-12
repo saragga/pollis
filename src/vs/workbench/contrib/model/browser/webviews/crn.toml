@@ -377,7 +377,7 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "rate-sweep"
 label = "Rate Sweep"
-desc = "Sweep the prey growth rate of the Lotka-Volterra network and record the peak predator population"
+desc = "Sweep the prey growth rate of the Lotka-Volterra network and record the peak predator population over the run, from the chosen start"
 code = '''
 using Catalyst, DifferentialEquations, GLMakie
 
@@ -466,7 +466,7 @@ axislegend(ax); display(fig)
 [[actionGroups.actions]]
 id = "network-domains"
 label = "Cross-Domain Comparison"
-desc = "Run Lotka-Volterra and the repressilator and compare their oscillation amplitudes (maximum minus minimum over the run)"
+desc = "Run Lotka-Volterra and the repressilator and compare their oscillation amplitudes (maximum minus minimum over the second half of the run)"
 code = '''
 using Catalyst, DifferentialEquations, Statistics
 
@@ -482,8 +482,9 @@ tspan   = (0.0, Float64({{T}}))
 sol_lv  = solve(ODEProblem(lv,  [:X => Float64({{u0}}), :Y => 10.0], tspan, [:a => {{k1}}, :b => 0.05, :c => {{k2}}]), Tsit5())
 sol_rep = solve(ODEProblem(rep, [:Px => Float64({{u0}}), :Py => 0.0, :Pz => 0.0], tspan, [:v => {{k1}}, :K => 1.0, :d => {{k2}}]), Tsit5())
 
-println("LV   peak X amplitude:  ", round(maximum(sol_lv[:X]) - minimum(sol_lv[:X]); digits=1))  # prey oscillation range
-println("Rep  peak Px amplitude: ", round(maximum(sol_rep[:Px]) - minimum(sol_rep[:Px]); digits=1))  # repressilator amplitude
+late(sol, s) = sol[s][sol.t .>= tspan[2] / 2]  # second half of the run: the start at u0 is left out
+println("LV   X amplitude, second half:  ", round(maximum(late(sol_lv, :X)) - minimum(late(sol_lv, :X)); digits=1))  # prey oscillation range
+println("Rep  Px amplitude, second half: ", round(maximum(late(sol_rep, :Px)) - minimum(late(sol_rep, :Px)); digits=1))  # repressilator amplitude on its limit cycle
 '''
 
 [[actionGroups]]
