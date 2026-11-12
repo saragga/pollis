@@ -287,6 +287,8 @@ export function topicLabel(topic: AskTopic | undefined): string {
 		case 'pollis': return localize('compareModels.topicPollis', "Pollis");
 		case 'julia': return localize('compareModels.topicJulia', "Julia Language");
 		case 'panels': return localize('compareModels.topicPanels', "Topic Panels");
+		case 'articles': return localize('compareModels.topicArticles', "Articles");
+		case 'packageApis': return localize('compareModels.topicPackageApis', "Package APIs");
 		default: return '';
 	}
 }

@@ -27,7 +27,7 @@ import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaff
 import { FEWEST_ROWS, rowsChoiceScript, sortHeadingsScript, storedRows, storeRows } from '../../model/browser/webviews/webviewPager.js';
 import { COMPAREEMBEDDINGS_METADATA } from '../../model/browser/webviews/compareEmbeddings.data.js';
 import { buildWebviewHtml, spinnerSvg } from '../../model/browser/webviews/webviewScaffold.js';
-import { ASK_EMBEDDING_MODEL, ASK_PASSAGE_PREFIX, ASK_PASSAGES, ASK_QUERY_PREFIX, embeddingPrefixes, IAskPollisService, IEmbeddingRun, IEmbeddingRunModel } from '../common/askPollis.js';
+import { ASK_EMBEDDING_MODEL, ASK_OPTIONAL_SOURCES, AskOptionalSource, askOptionalSources, ASK_PASSAGE_PREFIX, ASK_PASSAGES, ASK_QUERY_PREFIX, embeddingPrefixes, IAskPollisService, IEmbeddingRun, IEmbeddingRunModel } from '../common/askPollis.js';
 import { askAnswerCss, askAnswerScript } from './askPollisWebview.js';
 import { CompareEmbeddingsRunner, IEmbeddingEnd } from './compareEmbeddingsRun.js';
 import { COMPARE_MODELS_COMMAND_ID } from './compareModelsPage.js';
@@ -53,12 +53,15 @@ const CHOSEN_KEY = 'pollis.compareEmbeddings.chosen';
 const TEST_SET_KEY = 'pollis.compareEmbeddings.testSet';
 /** The questions ticked in each test set, by their text, under the set's name. */
 const TICKED_KEY = 'pollis.compareEmbeddings.ticked';
+/** The collections Auto leaves out that are embedded and searched too: the Articles, until changed. */
+const SOURCES_KEY = 'pollis.compareEmbeddings.sources';
 
 type CompareEmbeddingsMessage =
 	| { readonly command: 'ready' }
 	| { readonly command: 'choose'; readonly chosen: readonly string[] }
 	| { readonly command: 'rows'; readonly rows: number }
 	| { readonly command: 'run'; readonly questions: readonly string[] }
+	| { readonly command: 'sources'; readonly sources: readonly string[] }
 	| { readonly command: 'stop' }
 	| { readonly command: 'chooseSet'; readonly name: string }
 	| { readonly command: 'tick'; readonly questions: readonly string[] }
@@ -172,6 +175,12 @@ async function openCompareEmbeddingsPage(accessor: ServicesAccessor): Promise<vo
 		// Kept by an older Pollis: none chosen
 	}
 	const testSet = new CompareTestSetChoice(storageService, askPollisService, run.sets, { testSet: TEST_SET_KEY, ticked: TICKED_KEY }, post);
+	let sources: AskOptionalSource[] = ['articles'];
+	try {
+		sources = askOptionalSources(JSON.parse(storageService.get(SOURCES_KEY, StorageScope.APPLICATION, '["articles"]')));
+	} catch {
+		// Not a list: the Articles
+	}
 	let shown: IEmbeddingRun | undefined;
 
 	const status = (text: string, error = false) => post({ command: 'status', text, error });
@@ -185,6 +194,7 @@ async function openCompareEmbeddingsPage(accessor: ServicesAccessor): Promise<vo
 				started: shown.summary.started,
 				pollis: shown.summary.pollis,
 				passages: shown.summary.passages,
+				sources: (shown.summary.sources ?? []).map(source => ASK_OPTIONAL_SOURCES[source].collection),
 				figures: embeddingFigures(shown),
 				questions: shown.questions.map((item, index) => ({
 					question: item.question,
@@ -234,7 +244,7 @@ async function openCompareEmbeddingsPage(accessor: ServicesAccessor): Promise<vo
 				query: value === inUse && query ? query : prefixes.query,
 			};
 		});
-		post({ command: 'models', models: listed.map(({ value, label, size, bytes }) => ({ value, label, local: true, size, bytes })), chosen });
+		post({ command: 'models', models: listed.map(({ value, label, size, bytes }) => ({ value, label, local: true, size, bytes })), chosen, sources });
 	};
 
 	const ended = async (end: IEmbeddingEnd) => {
@@ -273,7 +283,7 @@ async function openCompareEmbeddingsPage(accessor: ServicesAccessor): Promise<vo
 	const startRun = (questions: readonly string[]) => {
 		const ticked = new Set(questions);
 		post({ command: 'running', running: true });
-		run.run(listed.filter(model => chosen.includes(model.value)).map(({ value, label, size, passage, query }) => ({ value, label, size, passage, query })), ticked.size ? testSet.items.filter(item => ticked.has(item.question)) : testSet.items).then(end => {
+		run.run(listed.filter(model => chosen.includes(model.value)).map(({ value, label, size, passage, query }) => ({ value, label, size, passage, query })), ticked.size ? testSet.items.filter(item => ticked.has(item.question)) : testSet.items, sources).then(end => {
 			// The checks before any work, which end nothing
 			if (!end.run && end.error && !run.running) {
 				status(end.error, true);
@@ -311,6 +321,9 @@ async function openCompareEmbeddingsPage(accessor: ServicesAccessor): Promise<vo
 			storeRows(storageService, 'compareEmbeddings', message.rows);
 		} else if (message.command === 'run' && hasKey(message, { questions: true })) {
 			startRun(message.questions);
+		} else if (message.command === 'sources' && hasKey(message, { sources: true })) {
+			sources = askOptionalSources(message.sources);
+			storageService.store(SOURCES_KEY, JSON.stringify(sources), StorageScope.APPLICATION, StorageTarget.USER);
 		} else if (message.command === 'stop') {
 			run.stop();
 		} else if (message.command === 'chooseSet' && hasKey(message, { name: true })) {
@@ -358,6 +371,13 @@ function pageHtml(rows: number): string {
 		deleteRun: localize('compareEmbeddings.deleteRun', "Delete Run"),
 		noRuns: localize('compareEmbeddings.noRuns', "No run yet: choose the models and the questions, then Run."),
 		runLine: localize('compareEmbeddings.runLine', "{0}, Pollis {1}: {2} questions, among {3} passages.", '{0}', '{1}', '{2}', '{3}'),
+		runAlso: localize('compareEmbeddings.runAlso', "With {0}.", '{0}'),
+		also: localize('compareEmbeddings.also', "Embed and Search Too"),
+		alsoHint: localize('compareEmbeddings.alsoHint', "The collections that Auto of Ask Pollis leaves out, embedded with each model and searched for every question, beside those each question is routed to"),
+		articles: localize('compareEmbeddings.articles', "Articles"),
+		articlesHint: localize('compareEmbeddings.articlesHint', "The abstracts of the works the panels cite, from PollisReferences"),
+		packageApis: localize('compareEmbeddings.packageApis', "Package APIs"),
+		packageApisHint: localize('compareEmbeddings.packageApisHint', "The docstrings of the packages of the panels: some twenty thousand passages, embedded with each model"),
 		runOption: localize('compareEmbeddings.runOption', "{0}: {1}, {2} questions", '{0}', '{1}', '{2}'),
 		where: localize('compareEmbeddings.where', "Where"),
 		found: localize('compareEmbeddings.found', "Found"),
@@ -393,6 +413,8 @@ function pageHtml(rows: number): string {
 		extraCss: `
 		${compareCss}
 		${askAnswerCss}
+		.ticks { display: flex; gap: 16px; padding: 5px 0; }
+		.ticks label { display: inline-flex; align-items: center; gap: 4px; }
 `,
 		steps: [
 			{
@@ -416,7 +438,10 @@ function pageHtml(rows: number): string {
 				title: text.runSection,
 				bodyHtml: `
 	<p class="hint">${text.runIntro}</p>
-	<div class="settings"><span class="bar"><button class="action current" id="run" disabled>${text.run}</button></span></div>
+	<div class="settings">
+		<div class="field" title="${text.alsoHint}"><span class="small">${text.also}</span><span class="ticks"><label title="${text.articlesHint}"><input type="checkbox" class="source" value="articles"> ${text.articles}</label><label title="${text.packageApisHint}"><input type="checkbox" class="source" value="packageApis"> ${text.packageApis}</label></span></div>
+		<span class="bar"><button class="action current" id="run" disabled>${text.run}</button></span>
+	</div>
 	<div class="small status" id="runStatus"></div>
 	${compareChartsHtml(text)}
 `,
@@ -501,6 +526,11 @@ function pageHtml(rows: number): string {
 		render();
 		renderFound();
 	}
+	// The collections Auto leaves out, embedded and searched too
+	const sourceBoxes = [...document.querySelectorAll('input.source')];
+	for (const box of sourceBoxes) {
+		box.addEventListener('change', () => vscode.postMessage({ command: 'sources', sources: sourceBoxes.filter(other => other.checked).map(other => other.value) }));
+	}
 	document.getElementById('run').addEventListener('click', () => {
 		statusId = 'runStatus';
 		vscode.postMessage(running ? { command: 'stop' } : { command: 'run', questions: [...ticked] });
@@ -570,7 +600,7 @@ function pageHtml(rows: number): string {
 		head.textContent = '';
 		body.textContent = '';
 		document.getElementById('results').hidden = !run;
-		document.getElementById('runLine').textContent = run ? format(TEXT.runLine, new Date(run.started).toLocaleString(), run.pollis, run.questions.length, run.passages) : TEXT.noRuns;
+		document.getElementById('runLine').textContent = run ? format(TEXT.runLine, new Date(run.started).toLocaleString(), run.pollis, run.questions.length, run.passages) + (run.sources.length ? ' ' + format(TEXT.runAlso, run.sources.join(', ')) : '') : TEXT.noRuns;
 		document.getElementById('deleteRun').hidden = !run;
 		// A run that ends shows itself, even in a pane left closed
 		if (run) { document.getElementById('step-results').classList.remove('collapsed'); }
@@ -632,6 +662,7 @@ function pageHtml(rows: number): string {
 			models = message.models;
 			renderLocal(message.chosen);
 			updateChosen();
+			for (const box of sourceBoxes) { box.checked = message.sources.includes(box.value); }
 		} else if (message.command === 'sets') {
 			showSets(message);
 		} else if (message.command === 'items') {

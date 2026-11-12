@@ -8,7 +8,7 @@ import { URI } from '../../../../base/common/uri.js';
 import { localize } from '../../../../nls.js';
 import { BrowserViewCommandId } from '../../../../platform/browserView/common/browserView.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
-import { AskPollisSource, ASK_ARTICLES, ASK_SOURCE_COLLECTION, IAskPollisPassage, IAskPollisSearchResult } from '../common/askPollis.js';
+import { AskPollisSource, ASK_ARTICLES, ASK_PACKAGE_APIS, ASK_SOURCE_COLLECTION, IAskPollisNamedIndex, IAskPollisPassage, IAskPollisSearchRequest, IAskPollisSearchResult } from '../common/askPollis.js';
 import { openPdfInViewer } from '../../../common/pdfViewer.js';
 
 // What Ask Pollis and Evaluate Answering Models show of an answer alike: its Markdown with the citations as buttons, the Sources
@@ -69,8 +69,8 @@ const SEARCH_NONE = '-';
 const POLLIS = 'Pollis';
 /** The collection of the Julia Manual, as ask_index.jl names it. */
 const JULIA_MANUAL = 'Julia Manual';
-/** The collection of the Package APIs, as pollisPackageApis.ts names it, listed among the sources of Pollis, after the vignettes. */
-const PACKAGE_APIS = 'Package APIs';
+/** The collection of the Package APIs, listed among the sources of Pollis, after the vignettes. */
+const PACKAGE_APIS = ASK_PACKAGE_APIS;
 /** The sources of Pollis and of Julia's documentation, which a Search In offers in place of the collections. */
 const SEARCH_SOURCES: Record<AskPollisSource, string> = {
 	pollisTopics: localize('askPollis.pollisTopics', "Pollis Topics"),
@@ -92,14 +92,36 @@ function isSearchSource(name: string): name is AskPollisSource {
 }
 
 /** The sources ticked in a Search In; nothing when the collections searched are searched whole. */
-export function askSearchSources(choice: readonly string[]): readonly AskPollisSource[] | undefined {
+function askSearchSources(choice: readonly string[]): readonly AskPollisSource[] | undefined {
 	const sources = choice.filter(isSearchSource);
 	return sources.length ? sources : undefined;
 }
 
 /** The collections a Search In's choice searches, of `all` those of the index; nothing for the nearest. */
-export function askSearchIn(choice: readonly string[], all: readonly string[]): readonly string[] | undefined {
+function askSearchIn(choice: readonly string[], all: readonly string[]): readonly string[] | undefined {
 	return !choice.length ? undefined : choice.includes(SEARCH_ALL) ? all : [...new Set(choice.map(name => isSearchSource(name) ? ASK_SOURCE_COLLECTION[name] : name))];
+}
+
+/**
+ * What a Search In's choice `choice` searches, as Ask Pollis searches it: of PollisDocuments, whose collections are
+ * `collections`, the collections and the sources ticked; and the indexes of `indexes` ticked, each searched on its own.
+ * Auto searches the collections nearest the question, with nothing in `collections`.
+ */
+export function askSearchWithin(choice: readonly string[], collections: readonly string[], indexes: readonly IAskPollisNamedIndex[]): Pick<IAskPollisSearchRequest, 'collections' | 'sources'> & { readonly collectionIndexes: readonly IAskPollisNamedIndex[] } {
+	const chosen = askSearchIn(choice, [...collections, ...indexes.map(index => index.name).filter(name => !collections.includes(name))]);
+	const collectionIndexes = chosen ? indexes.filter(index => chosen.includes(index.name) && !collections.includes(index.name)) : [];
+	return {
+		collections: chosen?.filter(name => !collectionIndexes.some(index => index.name === name)),
+		sources: askSearchSources(choice),
+		collectionIndexes,
+	};
+}
+
+/** A Search In's choice in words: Auto, All Sources, or the sources and collections ticked. */
+export function askSearchInLabel(choice: readonly string[]): string {
+	return !choice.length
+		? localize('askPollis.automatic', "Auto")
+		: choice.includes(SEARCH_ALL) ? localize('askPollis.all', "All Sources") : choice.map(name => isSearchSource(name) ? SEARCH_SOURCES[name] : name).join(', ');
 }
 
 /** What the page says was searched: the collections `searched`, each as the sources of it a Search In's choice ticked. */
@@ -314,6 +336,151 @@ export function askAnswerScript(): string {
 			row.classList.add('flash');
 			setTimeout(() => row.classList.remove('flash'), 1200);
 		}
+	}
+`;
+}
+
+/** The chevron of a picker. */
+export const ASK_CHEVRON = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>';
+
+/** The styles of the pickers and their menus: Search In and Strategy of Ask Pollis, Search In of Evaluate Answering Models. */
+export const askMenuCss = `
+	.anchor { position: relative; }
+	.picker { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; font: inherit; font-size: 12px; color: var(--vscode-descriptionForeground); background: transparent; border: none; border-radius: 6px; padding: 3px 6px; cursor: pointer; }
+	.picker:hover, .picker[aria-expanded="true"] { color: var(--vscode-foreground); background: var(--vscode-toolbar-hoverBackground); }
+	.picker svg { width: 10px; height: 10px; }
+	/* The menus of the pickers, upwards, or downwards when there is no room above */
+	.menu { position: absolute; bottom: 28px; z-index: 2; min-width: min(250px, calc(100vw - 8px)); max-width: calc(100vw - 8px); max-height: 60vh; overflow-y: auto; padding: 4px; color: var(--vscode-menu-foreground); background: var(--vscode-menu-background); border: 1px solid var(--vscode-menu-border, var(--vscode-widget-border)); border-radius: 8px; box-shadow: 0 4px 16px var(--vscode-widget-shadow); }
+	.menu.down { bottom: auto; top: 28px; }
+	.menu.left { left: 0; }
+	.menu .heading { font-size: 11px; color: var(--vscode-descriptionForeground); padding: 6px 8px 2px 8px; }
+	.menu .item { display: flex; align-items: baseline; gap: 8px; width: 100%; text-align: left; font: inherit; font-size: 12px; color: inherit; background: none; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; }
+	.menu .item:hover, .menu .item:focus { color: var(--vscode-menu-selectionForeground); background: var(--vscode-menu-selectionBackground); outline: none; }
+	.menu .check { width: 12px; flex: none; }
+	.menu .check.box { align-self: center; box-sizing: border-box; height: 12px; font-size: 10px; line-height: 10px; text-align: center; border: 1px solid currentColor; border-radius: 3px; }
+	.menu .label { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+	.menu .detail { font-size: 11px; opacity: 0.7; white-space: nowrap; }
+	.menu hr { border: none; border-top: 1px solid var(--vscode-menu-separatorBackground, var(--vscode-widget-border)); margin: 4px 0; }
+`;
+
+/**
+ * The script of the pickers and their menus, after askAnswerScript(): menu(), fillMenu(), and searchInPicker(), a
+ * Search In with its menu.
+ */
+export function askMenuScript(): string {
+	return `
+	/**
+	 * The menus of the pickers: each opens from its picker, upwards unless there is no room, moved sideways to stay
+	 * within the page, and closes on a choice, a click elsewhere or Escape.
+	 */
+	const menus = [];
+	function closeMenus() {
+		for (const [button, box] of menus) {
+			box.hidden = true;
+			button.setAttribute('aria-expanded', 'false');
+		}
+	}
+	function menu(button, box) {
+		menus.push([button, box]);
+		button.addEventListener('click', event => {
+			event.stopPropagation();
+			const opening = box.hidden;
+			closeMenus();
+			if (opening) {
+				box.hidden = false;
+				box.classList.toggle('down', button.getBoundingClientRect().top < box.offsetHeight + 8);
+				box.style.left = '';
+				const rect = box.getBoundingClientRect();
+				const shift = Math.max(4 - rect.left, Math.min(0, window.innerWidth - 4 - rect.right));
+				if (shift) { box.style.left = (box.offsetLeft + shift) + 'px'; }
+				button.setAttribute('aria-expanded', 'true');
+				(box.querySelector('.item .check:not(:empty)')?.parentElement ?? box.querySelector('.item'))?.focus();
+			}
+		});
+	}
+	document.addEventListener('click', closeMenus);
+	document.addEventListener('keydown', event => {
+		if (event.key === 'Escape') { closeMenus(); }
+	});
+
+	/** A menu's headings, lines and items, the chosen one checked; an item calls \`choose\` with its value, and one with \`tick\`, a box, keeps the menu open. */
+	function fillMenu(box, entries, chosen, choose) {
+		box.textContent = '';
+		for (const entry of entries) {
+			if (entry.line) {
+				box.appendChild(element('hr'));
+			} else if (entry.heading) {
+				box.appendChild(element('div', 'heading', entry.heading));
+			} else {
+				const item = element('button', 'item');
+				const ticking = entry.tick !== undefined;
+				item.setAttribute('role', ticking ? 'menuitemcheckbox' : 'menuitem');
+				if (ticking) { item.setAttribute('aria-checked', String(entry.tick)); }
+				item.append(element('span', ticking ? 'check box' : 'check', (ticking ? entry.tick : entry.value === chosen) ? '\u2713' : ''), element('span', 'label', entry.label));
+				if (entry.detail) { item.appendChild(element('span', 'detail', entry.detail)); }
+				if (entry.title) { item.title = entry.title; }
+				item.addEventListener('click', event => {
+					event.stopPropagation();
+					if (ticking) {
+						const place = [...box.children].indexOf(item);
+						choose(entry.value);
+						box.children[place]?.focus();
+					} else {
+						closeMenus();
+						choose(entry.value);
+					}
+				});
+				box.appendChild(item);
+			}
+		}
+	}
+
+	/**
+	 * A Search In on \`button\`, with its menu \`box\` and \`label\`, the choice it shows: Auto, any of the sources offered
+	 * ticked, All Sources and, with \`none\`, None. \`changed\` is called with each choice made in the menu.
+	 */
+	function searchInPicker(button, box, label, none, changed) {
+		let choice = [];
+		let offered = [];
+		menu(button, box);
+		function render() {
+			const all = choice[0] === SEARCH_ALL;
+			const nothing = choice[0] === SEARCH_NONE;
+			const ticked = offered.filter(source => all || choice.includes(source.value));
+			label.textContent = !choice.length ? ANSWER_TEXT.automatic : all ? ANSWER_TEXT.all : nothing ? ANSWER_TEXT.none : ticked.length === 1 ? ticked[0].label : ANSWER_TEXT.sourcesCount.replace('{0}', ticked.length);
+			button.title = !choice.length ? ANSWER_TEXT.automaticHint : nothing ? ANSWER_TEXT.noneHint : all ? '' : ticked.length === 1 ? ticked[0].title : ticked.map(source => source.label).join(', ');
+			fillMenu(box, [
+				{ value: SEARCH_NEAREST, label: ANSWER_TEXT.automatic, title: ANSWER_TEXT.automaticHint },
+				{ line: true },
+				...offered.map(source => ({ ...source, tick: ticked.includes(source) })),
+				{ line: true },
+				{ value: SEARCH_ALL, label: ANSWER_TEXT.all },
+				...(none ? [{ value: SEARCH_NONE, label: ANSWER_TEXT.none, title: ANSWER_TEXT.noneHint }] : []),
+			], choice.length ? choice[0] : SEARCH_NEAREST, value => {
+				if (value === SEARCH_NEAREST) {
+					choice = [];
+				} else if (value === SEARCH_ALL || value === SEARCH_NONE) {
+					choice = [value];
+				} else {
+					const values = ticked.map(source => source.value);
+					const next = values.includes(value) ? values.filter(other => other !== value) : [...values, value];
+					choice = next.length === offered.length ? [SEARCH_ALL] : next;
+				}
+				render();
+				if (changed) { changed(choice); }
+			});
+		}
+		/** The choice kept of \`value\`: what the sources offered have of it. */
+		function kept(value) {
+			return value.filter(other => other === SEARCH_ALL || (none && other === SEARCH_NONE) || offered.some(source => source.value === other));
+		}
+		return {
+			choice: () => choice,
+			/** Sets the choice, as kept before. */
+			set(value) { choice = kept(value); render(); },
+			/** Offers the sources of the collections \`names\`, as searchInSources() lists them. */
+			offer(names) { offered = searchInSources(names); choice = kept(choice); render(); },
+		};
 	}
 `;
 }

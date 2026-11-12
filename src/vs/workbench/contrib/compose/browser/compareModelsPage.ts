@@ -29,10 +29,10 @@ import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaff
 import { FEWEST_ROWS, rowsChoiceScript, sortHeadingsScript, storedRows, storeRows } from '../../model/browser/webviews/webviewPager.js';
 import { COMPAREMODELS_METADATA } from '../../model/browser/webviews/compareModels.data.js';
 import { buildWebviewHtml, spinnerSvg } from '../../model/browser/webviews/webviewScaffold.js';
-import { ASK_CLOUD_MODELS, ASK_CLOUD_PROVIDERS, ASK_LOCAL_PREFIX, askCloudModel, askPassageLabel, AskTopic, IAskPollisEvalItem, IAskPollisPassage, IAskPollisService, IAskTopicCounts, ICompareRun, ICompareRunModel } from '../common/askPollis.js';
+import { ASK_CLOUD_MODELS, ASK_CLOUD_PROVIDERS, ASK_LOCAL_PREFIX, askCloudModel, askPassageLabel, AskTopic, IAskPollisEvalItem, IAskPollisNamedIndex, IAskPollisPassage, IAskPollisService, IAskTopicCounts, ICompareRun, ICompareRunModel } from '../common/askPollis.js';
 import { ASK_DEFAULT_STRATEGY, askPollisStrategy, askStrategyLabel, IAskPollisStrategiesService } from '../common/askPollisStrategies.js';
 import { IToolboxPanelsService } from '../common/toolboxPanels.js';
-import { askAnswerCss, askAnswerScript, askOpenPassage, askPassageView } from './askPollisWebview.js';
+import { askAnswerCss, askAnswerScript, askMenuCss, askMenuScript, askOpenPassage, askPassageView, askSearchInLabel, ASK_CHEVRON } from './askPollisWebview.js';
 import { CompareModelsRunner, compareFigures, ComparePassages, ICompareEnd, ICompareProgress, isClosed, QUESTION_COUNTS, retrievalLine } from './compareModelsRun.js';
 import { compareChartsHtml, compareChartsScript, compareCommonScript, compareCss, compareLocalCard, compareSharedText, compareTestSetHeadHtml, compareTestSetHtml, compareTestSetScript, CompareTestSetChoice, evalItemsText, mergeEvalItems, parseEvalItems, STANDARD_TEST_SET, isShippedTestSet, topicLabel } from './compareShared.js';
 import { IInstalledModel } from './modelsInstalledPage.js';
@@ -65,6 +65,8 @@ const REPEATS_KEY = 'pollis.compareModels.repeats';
 const STRATEGY_KEY = 'pollis.compareModels.strategy';
 /** Where the passages of the runs come from: found (Open Library Answering), the question's own (Open Book Answering) or none (Closed Book Answering). */
 const PASSAGES_KEY = 'pollis.compareModels.passages';
+/** What Search In chose for Open Library Answering: Auto when empty. */
+const SEARCH_IN_KEY = 'pollis.compareModels.searchIn';
 const PASSAGES: readonly ComparePassages[] = ['library', 'own', 'none'];
 
 /** `value` if it is one of the passages settings, else Found in the Library. */
@@ -76,7 +78,7 @@ const COUNTS_KEY = 'pollis.compareModels.questionCounts';
 /** The most questions of a topic that Make Questions writes at a time. */
 const MOST_QUESTIONS = 200;
 /** The topics of the questions, in the order of their counts beside Make Questions... */
-const TOPICS: readonly AskTopic[] = ['pollis', 'julia', 'panels'];
+const TOPICS: readonly AskTopic[] = ['pollis', 'julia', 'panels', 'articles', 'packageApis'];
 /** The test set chosen, by its name, the Standard one being ''. */
 const TEST_SET_KEY = 'pollis.compareModels.testSet';
 /** The questions ticked in each test set, by their text, under the set's name. */
@@ -97,7 +99,7 @@ export interface ICompareModelsAdd {
 type CompareModelsMessage =
 	| { readonly command: 'ready' }
 	| { readonly command: 'choose'; readonly chosen: readonly string[] }
-	| { readonly command: 'settings'; readonly judges: readonly string[]; readonly questionsBy: string; readonly repeats: number; readonly strategy: string; readonly passages: string; readonly counts: IAskTopicCounts }
+	| { readonly command: 'settings'; readonly judges: readonly string[]; readonly questionsBy: string; readonly repeats: number; readonly strategy: string; readonly passages: string; readonly searchIn?: readonly string[]; readonly counts: IAskTopicCounts }
 	| { readonly command: 'rows'; readonly rows: number }
 	| { readonly command: 'makeQuestions' }
 	| { readonly command: 'run'; readonly questions: readonly string[] }
@@ -134,7 +136,7 @@ function storedList(storageService: IStorageService, key: string, fallback: read
 function questionCounts(value: unknown): IAskTopicCounts {
 	const given = value && typeof value === 'object' ? value as Record<string, unknown> : {};
 	const count = (topic: AskTopic) => typeof given[topic] === 'number' && Number.isFinite(given[topic]) ? Math.min(MOST_QUESTIONS, Math.max(0, Math.round(given[topic] as number))) : QUESTION_COUNTS[topic];
-	return { pollis: count('pollis'), julia: count('julia'), panels: count('panels') };
+	return Object.fromEntries(TOPICS.map(topic => [topic, count(topic)])) as Record<AskTopic, number>;
 }
 
 function storedCounts(storageService: IStorageService): IAskTopicCounts {
@@ -207,6 +209,7 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 	// Its id as stored, a strategy of a file among them, checked once the files are read
 	let strategy = strategyId ?? storageService.get(STRATEGY_KEY, StorageScope.APPLICATION, ASK_DEFAULT_STRATEGY);
 	let passages = passagesOf(storageService.get(PASSAGES_KEY, StorageScope.APPLICATION));
+	let searchIn = storedList(storageService, SEARCH_IN_KEY, []);
 	let counts = storedCounts(storageService);
 	const testSet = new CompareTestSetChoice(storageService, askPollisService, run.sets, { testSet: TEST_SET_KEY, ticked: TICKED_KEY }, post, () => toolboxPanelsService.getToolboxes().flatMap(toolbox => toolbox.panels.flatMap(panel => panel.faq)));
 	let shown: ICompareRun | undefined;
@@ -231,6 +234,7 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 				judges: shown.summary.judges,
 				repeats: shown.summary.repeats,
 				strategy: askStrategyLabel(shown.summary.strategy, strategiesService.getStrategies()),
+				searchIn: askSearchInLabel(shown.summary.searchIn ?? []),
 				openBook: !!shown.summary.openBook,
 				closedBook: !!shown.summary.closedBook,
 				figures: compareFigures(shown).map(figures => ({ ...figures, where: where(figures) })),
@@ -328,7 +332,10 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 			...installed.map(installedModel => ({ value: ASK_LOCAL_PREFIX + installedModel.file, label: installedModel.name, local: true, size: installedModel.sizeLabel, bytes: installedModel.bytes })),
 			...ASK_CLOUD_MODELS.map(cloud => ({ value: cloud.id, label: cloud.label, local: false, provider: ASK_CLOUD_PROVIDERS[cloud.provider].label })),
 		];
-		post({ command: 'models', models: listed.map(({ value, label, local, size, bytes, provider }) => ({ value, label, local, size, bytes, provider })), chosen, judges, questionsBy, repeats, strategy, passages, counts });
+		// What Search In offers: the collections of PollisDocuments, then the indexes of the Knowledge Base and of Retrieval-Augmented Generation
+		const [collections, indexes] = await Promise.all([askPollisService.collections(), askPollisService.collectionIndexes()]).catch((): [string[], IAskPollisNamedIndex[]] => [[], []]);
+		const searchable = [...collections, ...indexes.map(index => index.name).filter(name => !collections.includes(name))];
+		post({ command: 'models', models: listed.map(({ value, label, local, size, bytes, provider }) => ({ value, label, local, size, bytes, provider })), chosen, judges, questionsBy, repeats, strategy, passages, searchable, searchIn, counts });
 		await postMemory();
 	};
 
@@ -419,7 +426,7 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 		const runJudges = judges.map(model).filter(candidate => !!candidate).map(({ value, label, local, size }) => ({ value, label, local, size }));
 		const ticked = new Set(questions);
 		post({ command: 'running', running: true });
-		run.run(chosenModels(), runJudges, repeats, ticked.size ? testSet.items.filter(item => ticked.has(item.question)) : testSet.items, strategy, passages).then(end => {
+		run.run(chosenModels(), runJudges, repeats, ticked.size ? testSet.items.filter(item => ticked.has(item.question)) : testSet.items, strategy, passages, searchIn).then(end => {
 			// The checks before any work, which end nothing
 			if (!end.run && end.error && !run.running) {
 				status(end.error, true);
@@ -492,6 +499,7 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 			repeats = REPEATS.includes(message.repeats) ? message.repeats : 1;
 			strategy = askPollisStrategy(message.strategy, strategiesService.getStrategies()).id;
 			passages = passagesOf(message.passages);
+			searchIn = Array.isArray(message.searchIn) ? message.searchIn.filter(name => typeof name === 'string') : [];
 			counts = questionCounts(message.counts);
 			storageService.store(COUNTS_KEY, JSON.stringify(counts), StorageScope.APPLICATION, StorageTarget.USER);
 			storageService.store(JUDGES_KEY, JSON.stringify(judges), StorageScope.APPLICATION, StorageTarget.USER);
@@ -499,6 +507,7 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 			storageService.store(REPEATS_KEY, repeats, StorageScope.APPLICATION, StorageTarget.USER);
 			storageService.store(STRATEGY_KEY, strategy, StorageScope.APPLICATION, StorageTarget.USER);
 			storageService.store(PASSAGES_KEY, passages, StorageScope.APPLICATION, StorageTarget.USER);
+			storageService.store(SEARCH_IN_KEY, JSON.stringify(searchIn), StorageScope.APPLICATION, StorageTarget.USER);
 			await postMemory();
 		} else if (message.command === 'rows' && hasKey(message, { rows: true })) {
 			storeRows(storageService, 'compareModels', message.rows);
@@ -569,13 +578,14 @@ function pageHtml(rows: number): string {
 		none: localize('compareModels.none', "None"),
 		repeats: localize('compareModels.repeats', "Repeats"),
 		strategy: localize('compareModels.strategy', "Strategy"),
+		searchIn: localize('compareModels.searchIn', "Search In"),
 		strategyHint: localize('compareModels.strategyHint', "The answering strategy of Ask Pollis that finds the passages and asks the models, as Help > Ask Pollis does: the strategies can be compared on the same test set."),
 		passages: localize('compareModels.passages', "Passages"),
 		passagesLibrary: localize('compareModels.passagesLibrary', "Found in the Library"),
 		passagesOwn: localize('compareModels.passagesOwn', "The Question's Own Passage"),
 		passagesNone: localize('compareModels.passagesNone', "None"),
 		passagesHint: localize('compareModels.passagesHintNone', "Found in the Library: the strategy finds the passages in the documents, as Ask Pollis does, which tests the search and the answer together (Open Library Answering). The Question's Own Passage: each model is given the passage the question was made from, or the wiki of a question of the Panel FAQ, with no search, which tests the answer alone (Open Book Answering). None: each model is given no passage and answers from what it learned in training alone (Closed Book Answering), which shows the questions a model answers without the documents."),
-		runOpenLibrary: localize('compareModels.runOpenLibrary', "Open Library Answering, with the strategy {0}.", '{0}'),
+		runOpenLibrary: localize('compareModels.runOpenLibrarySearchIn', "Open Library Answering, with the strategy {0}, Search In: {1}.", '{0}', '{1}'),
 		runOpenBook: localize('compareModels.runOpenBook', "Open Book Answering: each model was given the question's own passage."),
 		runClosedBook: localize('compareModels.runClosedBook', "Closed Book Answering: each model was given no passage."),
 		repeatsHint: localize('compareModels.repeatsHint', "How many times each model answers each question: more than once shows how much its answers vary, in Spread."),
@@ -681,6 +691,11 @@ function pageHtml(rows: number): string {
 		extraCss: `
 		${compareCss}
 		${askAnswerCss}
+		${askMenuCss}
+		/* Search In, as a select of the settings */
+		#searchInButton { width: 260px; justify-content: space-between; font-size: 13px; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; padding: 4px 6px; }
+		#searchInButton:disabled { opacity: 0.5; cursor: default; }
+		#searchInLabel { overflow: hidden; text-overflow: ellipsis; }
 `,
 		steps: [
 			{
@@ -754,6 +769,7 @@ function pageHtml(rows: number): string {
 		<label class="field"><span class="small">${text.judge}</span><select id="judge"></select></label>
 		<label class="field"><span class="small">${text.secondJudge}</span><select id="secondJudge"></select></label>
 		<label class="field" title="${text.passagesHint}"><span class="small">${text.passages}</span><select id="passages"><option value="library">${text.passagesLibrary}</option><option value="own">${text.passagesOwn}</option><option value="none">${text.passagesNone}</option></select></label>
+		<div class="field"><span class="small">${text.searchIn}</span><span class="anchor"><button class="picker" id="searchInButton" aria-haspopup="menu" aria-expanded="false" aria-label="${text.searchIn}"><span id="searchInLabel"></span>${ASK_CHEVRON}</button><div class="menu left" id="searchInMenu" role="menu" hidden></div></span></div>
 		<label class="field" title="${text.strategyHint}"><span class="small">${text.strategy}</span><select id="strategy"></select></label>
 		<label class="field" title="${text.repeatsHint}"><span class="small">${text.repeats}</span><select id="repeats">${REPEATS.map(count => `<option value="${count}">${count}</option>`).join('')}</select></label>
 		<span class="bar"><button class="action current" id="run" disabled>${text.run}</button></span>
@@ -793,6 +809,7 @@ function pageHtml(rows: number): string {
 	const TEXT = ${JSON.stringify(text)};
 	const SPINNER = '${spinnerSvg}';
 	${askAnswerScript()}
+	${askMenuScript()}
 	${rowsChoiceScript()}
 	${sortHeadingsScript()}
 
@@ -822,16 +839,21 @@ function pageHtml(rows: number): string {
 		if (second.disabled) { second.value = ''; }
 	}
 
-	/** The strategy finds the passages: it has nothing to do when each model is given the question's own passage, or none. */
+	// Search In: where the strategy finds the passages, as in Ask Pollis, None aside, which Passages has
+	const searchIn = searchInPicker(document.getElementById('searchInButton'), document.getElementById('searchInMenu'), document.getElementById('searchInLabel'), false, settings);
+
+	/** The strategy finds the passages, where Search In says: they have nothing to do when each model is given the question's own passage, or none. */
 	function strategyEnabled() {
-		document.getElementById('strategy').disabled = document.getElementById('passages').value !== 'library';
+		const library = document.getElementById('passages').value === 'library';
+		document.getElementById('strategy').disabled = !library;
+		document.getElementById('searchInButton').disabled = !library;
 	}
 
 	function settings() {
 		secondJudgeEnabled();
 		const counts = Object.fromEntries(TEXT.topics.map(({ topic }) => [topic, Number(document.getElementById('count-' + topic).value) || 0]));
 		strategyEnabled();
-		vscode.postMessage({ command: 'settings', judges: [document.getElementById('judge').value, document.getElementById('secondJudge').value], questionsBy: document.getElementById('questionsBy').value, repeats: Number(document.getElementById('repeats').value), strategy: document.getElementById('strategy').value, passages: document.getElementById('passages').value, counts });
+		vscode.postMessage({ command: 'settings', judges: [document.getElementById('judge').value, document.getElementById('secondJudge').value], questionsBy: document.getElementById('questionsBy').value, repeats: Number(document.getElementById('repeats').value), strategy: document.getElementById('strategy').value, passages: document.getElementById('passages').value, searchIn: searchIn.choice(), counts });
 	}
 
 	function fillSelect(select, chosen, none) {
@@ -863,7 +885,7 @@ function pageHtml(rows: number): string {
 		if (chosenStrategy) { select.value = chosenStrategy; }
 	}
 
-	function renderModels(chosen, judges, questionsBy, repeats, strategy, passages, counts) {
+	function renderModels(chosen, judges, questionsBy, repeats, strategy, passages, searchable, chosenSearchIn, counts) {
 		renderLocal(chosen);
 		const cloud = document.getElementById('cloudBody');
 		cloud.textContent = '';
@@ -879,6 +901,8 @@ function pageHtml(rows: number): string {
 		chosenStrategy = strategy;
 		document.getElementById('strategy').value = strategy;
 		document.getElementById('passages').value = passages;
+		searchIn.offer(searchable);
+		searchIn.set(chosenSearchIn);
 		strategyEnabled();
 		for (const { topic } of TEXT.topics) { document.getElementById('count-' + topic).value = String(counts[topic]); }
 	}
@@ -1155,7 +1179,7 @@ function pageHtml(rows: number): string {
 		document.getElementById('results').hidden = !run;
 		document.getElementById('runLine').textContent = !run ? TEXT.noRuns : (run.judges.length
 			? format(run.repeats > 1 ? TEXT.runLineRepeats : TEXT.runLine, new Date(run.started).toLocaleString(), run.pollis, run.questions.length, run.judges.length > 1 ? format(TEXT.and, run.judges[0], run.judges[1]) : run.judges[0], run.repeats)
-			: format(run.repeats > 1 ? TEXT.runLineUnjudgedRepeats : TEXT.runLineUnjudged, new Date(run.started).toLocaleString(), run.pollis, run.questions.length, run.repeats)) + ' ' + (run.openBook ? TEXT.runOpenBook : run.closedBook ? TEXT.runClosedBook : format(TEXT.runOpenLibrary, run.strategy));
+			: format(run.repeats > 1 ? TEXT.runLineUnjudgedRepeats : TEXT.runLineUnjudged, new Date(run.started).toLocaleString(), run.pollis, run.questions.length, run.repeats)) + ' ' + (run.openBook ? TEXT.runOpenBook : run.closedBook ? TEXT.runClosedBook : format(TEXT.runOpenLibrary, run.strategy, run.searchIn));
 		document.getElementById('retrieval').textContent = run ? run.retrieval : '';
 		document.getElementById('deleteRun').hidden = !run;
 		// A run that ends shows itself, even in a pane left closed
@@ -1204,7 +1228,7 @@ function pageHtml(rows: number): string {
 		const message = event.data;
 		if (message.command === 'models') {
 			models = message.models;
-			renderModels(message.chosen, message.judges, message.questionsBy, message.repeats, message.strategy, message.passages, message.counts);
+			renderModels(message.chosen, message.judges, message.questionsBy, message.repeats, message.strategy, message.passages, message.searchable, message.searchIn, message.counts);
 		} else if (message.command === 'strategies') {
 			renderStrategies(message.strategies);
 		} else if (message.command === 'sets') {

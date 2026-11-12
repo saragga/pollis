@@ -16,9 +16,9 @@ import { IFileService } from '../../../../platform/files/common/files.js';
 import { IProductService } from '../../../../platform/product/common/productService.js';
 import { ISecretStorageService } from '../../../../platform/secrets/common/secrets.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
-import { ASK_CHAT_MODEL, ASK_CLOUD_PROVIDERS, ASK_LOCAL_PREFIX, ASK_PASSAGES, ASK_RERANK_CONTEXT, askCloudModel, askPassageLabel, IAskPollisAnswer, IAskPollisEvalItem, IAskPollisFound, IAskPollisPassage, IAskPollisService, IAskTopicCounts, ICompareRun, ICompareRunAnswer, ICompareRunModel, ICompareRunQuestion, ICompareRunScore, ICompareRunUnrated } from '../common/askPollis.js';
+import { ASK_CHAT_MODEL, ASK_CLOUD_PROVIDERS, ASK_LOCAL_PREFIX, ASK_PASSAGES, ASK_RERANK_CONTEXT, askCloudModel, askPassageLabel, IAskPollisAnswer, IAskPollisEvalItem, IAskPollisFound, IAskPollisNamedIndex, IAskPollisPassage, IAskPollisService, IAskTopicCounts, ICompareRun, ICompareRunAnswer, ICompareRunModel, ICompareRunQuestion, ICompareRunScore, ICompareRunUnrated } from '../common/askPollis.js';
 import { askPollisStrategy, IAskPollisStrategiesService, IAskPollisStrategy, askStrategyRerank, askStrategyReranks, askStrategySearchKey, askStrategySearchRequest } from '../common/askPollisStrategies.js';
-import { askModelName } from './askPollisWebview.js';
+import { askModelName, askSearchWithin } from './askPollisWebview.js';
 import { askFolder, CompareSampler, CompareTestSets, evalItem, ICompareSample, ICompareSamples, isEvalItem, mergeEvalItems } from './compareShared.js';
 
 // What Evaluate Answering Models runs (compareModelsPage.ts): the test sets, each a JSON array of RAGTools.jl's QAEvalItem, the
@@ -37,7 +37,7 @@ import { askFolder, CompareSampler, CompareTestSets, evalItem, ICompareSample, I
 // per window, so that a run goes on when the page is closed, and the page opened again shows how far it has come.
 
 /** How many passages of each topic Make Questions asks about, at first: the user changes them beside Make Questions... */
-export const QUESTION_COUNTS: IAskTopicCounts = { pollis: 4, julia: 2, panels: 4 };
+export const QUESTION_COUNTS: IAskTopicCounts = { pollis: 4, julia: 2, panels: 4, articles: 2, packageApis: 0 };
 
 /** What the Julia extension's command answers (pollisCompareModels.ts). */
 interface IJuliaAnswer {
@@ -349,17 +349,24 @@ export class CompareModelsRunner {
 	}
 
 	/**
-	 * Open Library Answering: the passages of each question of `items`, found by `strategy` as Ask Pollis finds them, once
-	 * for every model, and the place of each question's own passage among them; or why none were found.
+	 * Open Library Answering: the passages of each question of `items`, found by `strategy` in what the Search In
+	 * `searchIn` chose, as Ask Pollis finds them, once for every model, and the place of each question's own passage
+	 * among them; or why none were found.
 	 */
-	private async searchPassages(items: readonly IAskPollisEvalItem[], strategy: IAskPollisStrategy, token: CancellationToken): Promise<{ readonly questions: ICompareRunQuestion[]; readonly ranks: Map<number, number> } | string> {
+	private async searchPassages(items: readonly IAskPollisEvalItem[], strategy: IAskPollisStrategy, searchIn: readonly string[], token: CancellationToken): Promise<{ readonly questions: ICompareRunQuestion[]; readonly ranks: Map<number, number> } | string> {
+		const [collections, indexes] = searchIn.length
+			? await Promise.all([this.askPollisService.collections(), this.askPollisService.collectionIndexes()]).catch((): [string[], IAskPollisNamedIndex[]] => [[], []])
+			: [[], []];
+		const within = askSearchWithin(searchIn, collections, indexes);
 		// The passages of each question, found once for every model: those found before with the same search stamp are
-		// taken again, so that the embedding model loads only for the others, and every run gets the same passages
+		// taken again, so that the embedding model loads only for the others, and every run gets the same passages. The
+		// stamp is that of PollisDocuments: with the index of a collection of Retrieval-Augmented Generation ticked, the
+		// passages are found anew
 		const reranker = this.configurationService.getValue<string>('pollis.ask.reranker')?.trim();
 		const kept = this.configurationService.getValue<number>('pollis.ask.passages') || ASK_PASSAGES;
-		const requests = items.map(item => askStrategySearchRequest(strategy, { question: item.question, panel: item.panel }, kept, reranker));
+		const requests = items.map(item => askStrategySearchRequest(strategy, { question: item.question, panel: item.panel, ...within }, kept, reranker));
 		const keys = requests.map(request => askStrategySearchKey(strategy, request));
-		const stamp = await this.askPollisService.searchStamp();
+		const stamp = within.collectionIndexes.length ? undefined : await this.askPollisService.searchStamp();
 		const before = stamp ? await this.askPollisService.foundBefore(stamp.key, keys).catch(() => []) : [];
 		const reused = before.filter(passages => passages !== undefined).length;
 		if (stamp && reused) {
@@ -438,10 +445,11 @@ export class CompareModelsRunner {
 	/**
 	 * Asks every question of `items` of every model of `models`, `repeats` times, scores the answers against the right
 	 * answers and has them rated by each judge of `judges`, if any; the run is kept, as far as it came when stopped. The strategy `strategyId` of Ask Pollis finds the
-	 * passages and asks the models, as the pane does; with `passages` own each model is given the question's own passage,
-	 * with no search, and with none no passage at all; a question of the Panel FAQ is asked in its panel.
+	 * passages, in what the Search In `searchIn` chose, Auto when empty, and asks the models, as the pane does; with
+	 * `passages` own each model is given the question's own passage, with no search, and with none no passage at all; a
+	 * question of the Panel FAQ is asked in its panel.
 	 */
-	async run(models: readonly ICompareRunModel[], judges: readonly ICompareRunModel[], repeats: number, items: readonly IAskPollisEvalItem[], strategyId?: string, passages: ComparePassages = 'library'): Promise<ICompareEnd> {
+	async run(models: readonly ICompareRunModel[], judges: readonly ICompareRunModel[], repeats: number, items: readonly IAskPollisEvalItem[], strategyId?: string, passages: ComparePassages = 'library', searchIn: readonly string[] = []): Promise<ICompareEnd> {
 		if (this.source) {
 			return { error: localize('compareModels.busy', "Wait for the run to end, or stop it.") };
 		}
@@ -473,7 +481,7 @@ export class CompareModelsRunner {
 				return this.end({ error: localize('compareModels.noOwnPassages', "None of the questions has a passage of its own here: the questions of the Panel FAQ need the wikis of the panels in the index of Ask Pollis.") });
 			}
 		} else {
-			const searched = await this.searchPassages(items, strategy, token);
+			const searched = await this.searchPassages(items, strategy, searchIn, token);
 			if (typeof searched === 'string') {
 				return this.end({ error: searched });
 			}
@@ -598,7 +606,7 @@ export class CompareModelsRunner {
 				judges: judges.map(judge => judge.label),
 				repeats,
 				questions: questions.length,
-				...(passages === 'own' ? { openBook: true } : closedBook ? { closedBook } : { strategy: strategy.id }),
+				...(passages === 'own' ? { openBook: true } : closedBook ? { closedBook } : { strategy: strategy.id, ...(searchIn.length ? { searchIn } : {}) }),
 			},
 			questions: questions.map(question => ranks.has(question.index) ? { ...question, rank: ranks.get(question.index) } : question),
 			answers,

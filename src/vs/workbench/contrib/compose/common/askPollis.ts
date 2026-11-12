@@ -97,6 +97,24 @@ export interface IAskPollisPanel {
  */
 export const ASK_ARTICLES = 'Articles';
 
+/** The collection of the Package APIs, as pollisPackageApis.ts names it, which only a choice of Search In searches. */
+export const ASK_PACKAGE_APIS = 'Package APIs';
+
+/**
+ * The collections Auto leaves out, which Evaluate Embedding Models embeds and searches when they are ticked: each with
+ * its collection and the kind of its documents.
+ */
+export type AskOptionalSource = 'articles' | 'packageApis';
+export const ASK_OPTIONAL_SOURCES: Readonly<Record<AskOptionalSource, { readonly collection: string; readonly kind: string }>> = {
+	articles: { collection: ASK_ARTICLES, kind: 'article' },
+	packageApis: { collection: ASK_PACKAGE_APIS, kind: 'api' },
+};
+
+/** The sources of `value` that are AskOptionalSource, each once, in their order; the Articles when it is not a list. */
+export function askOptionalSources(value: unknown): AskOptionalSource[] {
+	return Array.isArray(value) ? (Object.keys(ASK_OPTIONAL_SOURCES) as AskOptionalSource[]).filter(source => value.includes(source)) : ['articles'];
+}
+
 /**
  * The share of the passages from a panel's own that depends on the question: `near` when the panel's nearest passage is
  * almost as near the question as the nearest of all, as near as a collection must be to be searched, else `far`; `near`
@@ -160,6 +178,8 @@ export interface IAskPollisSearchRequest {
 	readonly question: string;
 	/** The collections searched, as the switch sets them; without them the question is routed to the nearest. */
 	readonly collections?: readonly string[];
+	/** Without `collections`, collections searched for every question beside those it is routed to: those Auto leaves out that an evaluation takes in. */
+	readonly alsoCollections?: readonly string[];
 	/** The only sources searched of their collections, the other collections whole. */
 	readonly sources?: readonly AskPollisSource[];
 	/** How many passages are found. */
@@ -506,9 +526,10 @@ export interface IAskPollisEvalItem {
 
 /**
  * The topic of a question of a test set, by the document of its passage: `pollis`, Pollis' own documents; `julia`, the
- * Julia Manual; `panels`, the wikis of the panels, and the vignettes of the toolboxes.
+ * Julia Manual; `panels`, the wikis of the panels, and the vignettes of the toolboxes; `articles`, the abstracts of the
+ * works the panels cite; `packageApis`, the docstrings of the Package APIs.
  */
-export type AskTopic = 'pollis' | 'julia' | 'panels';
+export type AskTopic = 'pollis' | 'julia' | 'panels' | 'articles' | 'packageApis';
 
 /** The passage of the index a question of a test set is about now, with its text and its topic. */
 export interface IAskPassageMatch {
@@ -550,6 +571,8 @@ export interface ICompareRunSummary {
 	readonly openBook?: boolean;
 	/** Closed Book Answering: each model was given no passage, and answered from what it learned alone. */
 	readonly closedBook?: boolean;
+	/** What Search In chose for Open Library Answering, as the pane's Search In has it; Auto without it. */
+	readonly searchIn?: readonly string[];
 }
 
 /** A question of a run, with the passages found for it, the same for every model. */
@@ -734,6 +757,8 @@ export interface IEmbeddingRequest {
 	readonly model: string;
 	readonly url: string;
 	readonly passagePrefix: string;
+	/** The collections Auto leaves out whose passages are embedded and searched too. */
+	readonly sources?: readonly AskOptionalSource[];
 }
 
 /** How the embedding of the passages went: how many were embedded, those embeddings.duckdb did not have, and in how long. */
@@ -797,6 +822,8 @@ export interface IEmbeddingRunSummary {
 	readonly passages: number;
 	/** The retrieval benchmark whose queries were searched, by Benchmark Embedding and Reranking Models, its id; none for a run of Evaluate Embedding Models. */
 	readonly benchmark?: string;
+	/** The collections Auto leaves out that were embedded and searched too; none for a run before they could be. */
+	readonly sources?: readonly AskOptionalSource[];
 }
 
 /** What a model found for a question of a run. */

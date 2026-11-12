@@ -238,8 +238,9 @@ at \emph{dev} when you develop it in \file{~/.julia/dev}; the passage says which
 
 These passages are a source of their own, for when you look for a function that does something, rather than ask what
 a function does. Auto never searches them. Ticking \textbf{Package APIs} in \textbf{Search In}
-and \textbf{All Sources} do, and Open shows the docstring on its site. Evaluate Answering Models, Evaluate Embedding
-Models and Evaluate Reranking Models leave them out. They are read unless \file{pollis.ask.packageApis} is off (\S\ref{sec:settings}).
+and \textbf{All Sources} do, and Open shows the docstring on its site. Evaluate Answering Models searches them when its
+\textbf{Search In} ticks them, Make Questions writes questions from them when asked to, Evaluate Embedding Models
+embeds and searches them when \textbf{Embed and Search Too} ticks them, and Evaluate Reranking Models leaves them out. They are read unless \file{pollis.ask.packageApis} is off (\S\ref{sec:settings}).
 
 \section{Cutting into passages}\label{sec:passages}
 
@@ -469,12 +470,13 @@ such judges one after the other too.
 The \textbf{Test Set} field chooses the test set. \textbf{Standard} is the one Pollis comes with (below), which a newer
 Pollis may update and which cannot be changed. The others are yours: \textbf{Save As...} copies the test set shown
 under a name you give, and \textbf{New Set...} starts an empty one, each a file of \file{~/.pollis/ask/sets}, which
-a newer Pollis does not change; each change you make is saved as you make it, the ticks too. Its questions are listed in a table, with the topic of each (Pollis, Julia Language or Topic Panels), sorted by any column: tick the ones to ask, or none to
+a newer Pollis does not change; each change you make is saved as you make it, the ticks too. Its questions are listed in a table, with the topic of each (Pollis, Julia Language, Topic Panels, Articles or Package APIs), sorted by any column: tick the ones to ask, or none to
 ask them all. In a test set of yours, \textbf{Change This Set}, below the table, puts them in three ways:
 \begin{itemize}
   \item \textbf{Made from the documents}: \textbf{Make Questions...} takes as many passages as \textbf{Questions to make} gives for each topic,
-    \textbf{Pollis} (Pollis's own documents), \textbf{Julia Language} (the Julia Manual) and \textbf{Topic Panels} (the
-    panel wikis and the vignettes of the toolboxes), 4, 2 and 4 at first, spread over the documents, and has the model of the \textbf{By} field beside it, the default model unless you choose another, write for each a
+    \textbf{Pollis} (Pollis's own documents), \textbf{Julia Language} (the Julia Manual), \textbf{Topic Panels} (the
+    panel wikis and the vignettes of the toolboxes), \textbf{Articles} (the abstracts of the works the panels cite)
+    and \textbf{Package APIs} (the docstrings of their packages), 4, 2, 4, 2 and 0 at first, spread over the documents, and has the model of the \textbf{By} field beside it, the default model unless you choose another, write for each a
     question that only that passage answers, and the answer. This is RAGTools.jl's \file{build\_qa\_evals}. The
     questions are added to the test set, and kept.
   \item \textbf{Your own}: \textbf{Add} takes a question, its right answer and the passage that holds it, chosen among
@@ -492,6 +494,14 @@ written from the passages and reviewed question by question: 40 on Pollis's docu
 on the Julia Manual. It is read from Pollis each time, never copied, so that every computer with the same Pollis has
 the same questions and its figures can be set beside another's. Since each question keeps its passage, a question whose
 passage is no longer in the documents is shown as such.
+
+With \textbf{Passages} set to \textbf{Found in the Library}, \textbf{Search In}, beside the strategy, chooses where the
+passages are found, as Search In of Ask Pollis does: \textbf{Auto}, the collections nearest each question, any of the
+sources ticked, among them the Package APIs, the Articles, the Knowledge Base and the collections of
+Retrieval-Augmented Generation, or \textbf{All Sources}. A question made from an abstract finds its passage only when
+Articles is searched, or when it is asked in the panel that cites the work. The choice is kept with the run, and the
+line of the run says it. The passages found for a question are kept for the next run with the same search, unless a
+collection of Retrieval-Augmented Generation or the Knowledge Base is ticked, whose index may have been built again.
 
 \textbf{Run} then asks the questions ticked, or all of them, of every model chosen, \textbf{Repeats} times, once by
 default, and has each answer scored; its label says how many questions, with how many models. A run of 40 questions on
@@ -564,11 +574,13 @@ opens); 3, \textbf{Run}, with the charts of the memory free and Model Servers; 4
 
 \subsection{A run}
 Each model chosen runs alone in memory, one after the other. It first embeds the passages of the index it has not
-embedded yet, into \file{~/.pollis/documents/embeddings.duckdb}, where the index of Ask Pollis takes them from too:
+embedded yet, with those of the Articles and of the Package APIs when \textbf{Embed and Search Too} ticks them, the
+Articles at first, into \file{~/.pollis/documents/embeddings.duckdb}, where the index of Ask Pollis takes them from too:
 each passage is embedded once by each model, ever, so the first run of a model takes some minutes and the next ones
 seconds. Each passage and each question is given the model with the prefixes it was trained with, known by the model's
 file (EmbeddingGemma, nomic-embed, Qwen3-Embedding, E5, BGE, mxbai-embed, Snowflake Arctic Embed), or those of the
-settings for the model Ask Pollis uses. Then each question is searched as Ask Pollis would search it, by words and
+settings for the model Ask Pollis uses. Then each question is searched as Ask Pollis would search it, and in the
+collections ticked too, by words and
 meaning together, and among all the passages by meaning alone. No question or passage leaves the computer.
 
 \subsection{The figures}
@@ -809,7 +821,9 @@ After the seven of Ask Pollis itself, four more, each usable when done:
     one document of the collection Articles, its passages headed by the work's title. A panel's question carries the
     keys of the works the panel cites, in its References and among the papers of its packages, and their abstracts
     are of the panel's own passages, beside its Key Points, wikis and vignettes. Auto leaves Articles out, as it does
-    the Package APIs, and so do Make Questions and Evaluate Embedding Models; \textbf{Search In} ticks it.
+    the Package APIs; \textbf{Search In} ticks it, in Ask Pollis and in Evaluate Answering Models. Make Questions
+    writes questions from its abstracts, and Evaluate Embedding Models embeds and searches them unless
+    \textbf{Embed and Search Too} leaves them out.
     \textbf{Open} shows the reference and the abstract in the Markdown preview. The full texts that are open, on
     arXiv, PubMed Central or the publisher's site, are a step of their own: about 500 PDFs, a gigabyte or two, and tens
     of thousands of passages to embed.

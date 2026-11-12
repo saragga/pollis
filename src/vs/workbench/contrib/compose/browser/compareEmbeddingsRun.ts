@@ -11,7 +11,7 @@ import { IConfigurationService } from '../../../../platform/configuration/common
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { IProductService } from '../../../../platform/product/common/productService.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
-import { ASK_CHAT_MODEL, ASK_EMBEDDING_CONTEXT, IAskPollisEvalItem, IAskPollisService, IEmbeddingRun, IEmbeddingRunFound, IEmbeddingRunModel } from '../common/askPollis.js';
+import { ASK_CHAT_MODEL, ASK_EMBEDDING_CONTEXT, AskOptionalSource, IAskPollisEvalItem, IAskPollisService, IEmbeddingRun, IEmbeddingRunFound, IEmbeddingRunModel } from '../common/askPollis.js';
 import { ICompareProgress } from './compareModelsRun.js';
 import { CompareSampler, CompareTestSets, ICompareSample, ICompareSamples } from './compareShared.js';
 
@@ -115,7 +115,8 @@ export class CompareEmbeddingsRunner {
 		return Promise.resolve(this.commandService.executeCommand<number>('language-julia.pollisAvailableMemory')).catch(() => undefined);
 	}
 
-	async run(models: readonly IEmbeddingRunModel[], items: readonly IAskPollisEvalItem[]): Promise<IEmbeddingEnd> {
+	/** Embeds the passages with each model of `models`, with those of the collections Auto leaves out that `sources` names, and searches the questions of `items` with them. */
+	async run(models: readonly IEmbeddingRunModel[], items: readonly IAskPollisEvalItem[], sources: readonly AskOptionalSource[]): Promise<IEmbeddingEnd> {
 		if (this._running) {
 			return { error: localize('compareEmbeddings.busy', "Wait for the run to end, or stop it.") };
 		}
@@ -153,9 +154,9 @@ export class CompareEmbeddingsRunner {
 				}
 				try {
 					this.sampler.mark('embed');
-					const done = await this.askPollisService.embedPassages({ model: model.value, url: server.url, passagePrefix: model.passage });
+					const done = await this.askPollisService.embedPassages({ model: model.value, url: server.url, passagePrefix: model.passage, sources });
 					this.sampler.mark('search');
-					const evaluated = this.stopped ? undefined : await this.askPollisService.evaluateEmbedding({ model: model.value, url: server.url, passagePrefix: model.passage, queryPrefix: model.query, questions: items.map(item => ({ question: item.question, context: item.context })) });
+					const evaluated = this.stopped ? undefined : await this.askPollisService.evaluateEmbedding({ model: model.value, url: server.url, passagePrefix: model.passage, queryPrefix: model.query, sources, questions: items.map(item => ({ question: item.question, context: item.context })) });
 					const after = await this.availableMemory();
 					passages = evaluated?.passages || passages;
 					evaluated?.found.forEach((result, question) => found.push({ ...result, question, model: model.value }));
@@ -176,7 +177,7 @@ export class CompareEmbeddingsRunner {
 		}
 		listener.dispose();
 		const run: IEmbeddingRun = {
-			summary: { id: generateUuid(), started, pollis: this.productService.pollisVersion ?? this.productService.version, models: measured, questions: items.length, passages },
+			summary: { id: generateUuid(), started, pollis: this.productService.pollisVersion ?? this.productService.version, models: measured, questions: items.length, passages, sources },
 			questions: items,
 			found,
 		};

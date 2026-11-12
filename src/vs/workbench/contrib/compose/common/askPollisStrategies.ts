@@ -298,13 +298,17 @@ export function askStrategySearchRequest(strategy: IAskPollisStrategy, request: 
 
 /**
  * What a search found for a question, a key of the passages kept between runs of Evaluate Answering Models: the
- * question alone for the search of the default strategy without a panel.
+ * question alone for the search of the default strategy without a panel, in the collections nearest the question.
  */
 export function askStrategySearchKey(strategy: IAskPollisStrategy, request: IAskPollisSearchRequest): string {
 	const panel = request.panel ? `${request.panel.title}\n${request.panel.packages.join(',')}` : '';
-	return strategy.id === ASK_BASE_STRATEGY && !panel && request.passages === undefined
+	// What Search In chose, when not Auto
+	const within = request.collections || request.sources || request.collectionIndexes?.length
+		? JSON.stringify([request.collections ?? null, request.sources ?? [], request.collectionIndexes?.map(index => index.file) ?? []])
+		: '';
+	return strategy.id === ASK_BASE_STRATEGY && !panel && request.passages === undefined && !within
 		? request.question
-		: [strategy.id, JSON.stringify(request.panelShare ?? ''), request.passages ?? '', panel, request.question].join('\n');
+		: [strategy.id, JSON.stringify(request.panelShare ?? ''), request.passages ?? '', panel, ...(within ? [within] : []), request.question].join('\n');
 }
 
 /** Whether `passage` is of `panel`'s own: one of its wikis, titled after it, the vignette of one of its packages, or the abstract of a work it cites. */

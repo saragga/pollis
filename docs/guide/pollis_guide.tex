@@ -2337,7 +2337,7 @@ Search does not wait for them. The setting \texttt{pollis.ask.packageApis} turns
 \ui{Articles} are the abstracts of the works the panels cite, from PollisReferences, each with its authors, year,
 venue and address; a work without an abstract is left out. A question asked in a panel searches the abstracts of the
 works that panel cites with its own wikis. Otherwise \ui{Auto} leaves them out: tick \ui{Articles} in \ui{Search In},
-or choose \ui{All Sources}. \ui{Open} shows the reference and the abstract, with the link to the work.
+or choose \ui{All Sources}, in Ask Pollis and in Evaluate Answering Models. \ui{Open} shows the reference and the abstract, with the link to the work.
 
 \subhead{Knowledge Base and your collections}
 \ui{Compose > Knowledge for AI Models > Knowledge Base} lists openly licensed texts a model can answer from: Dive into
@@ -2401,7 +2401,7 @@ Sonnet. The page goes in four steps: the models, the questions, \ui{Run} and the
     which Learn More does not show; each is asked in its panel with its options, and an answer is right when it chooses
     the right option. It cannot be changed either. \ui{Save As...} copies a test set
     under a name of yours and \ui{New Set...} starts an empty one, in \texttt{\textasciitilde/.pollis/ask/sets},
-    which a newer Pollis does not change; each change is saved as you make it, the ticks too. In yours, under \ui{Change This Set}, \ui{Make Questions...} writes as many more as you give beside it for each topic, \ui{Pollis}, \ui{Julia Language} and \ui{Topic Panels} (4, 2 and 4 at first), each from a passage, with the
+    which a newer Pollis does not change; each change is saved as you make it, the ticks too. In yours, under \ui{Change This Set}, \ui{Make Questions...} writes as many more as you give beside it for each topic, \ui{Pollis}, \ui{Julia Language}, \ui{Topic Panels}, \ui{Articles} and \ui{Package APIs} (4, 2, 4, 2 and 0 at first), each from a passage, with the
     default model unless you choose another; \ui{Add} takes one of your own, as does \ui{Add to the Test Set...}
     under an answer of Ask Pollis; \ui{Import...} reads them from a file of RAGTools.jl; \ui{Delete Ticked} removes the ticked ones.
     \ui{Export...} writes any test set as a file of RAGTools.jl. \ui{Tick at Random} ticks as many as you give, spread over
@@ -2412,7 +2412,9 @@ Sonnet. The page goes in four steps: the models, the questions, \ui{Run} and the
     Question's Own Passage}: each model is given the passage the question was made from, or the wiki of a question of
     the Panel FAQ, with no search, which tests the answer alone (open book answering). \ui{None}: each model is given
     no passage and answers from what it learned in training alone (closed book answering), which shows the questions a
-    model answers without the documents. \ui{Repeats} asks each question
+    model answers without the documents. With \ui{Found in the Library}, \ui{Search In} chooses where the strategy
+    finds them, as in Ask Pollis: \ui{Auto}, any of the sources ticked, the Package APIs, the Articles, the Knowledge
+    Base and your collections among them, or \ui{All Sources}. The line of a run says what it chose. \ui{Repeats} asks each question
     more than once, to show how much the answers vary.
   \item \ui{Run} answers them with each model, one local model at a time; its label says how many questions,
     with how many models, and its progress how much is done. Above it, a warning names the local models chosen, and the
@@ -2438,7 +2440,9 @@ vary. Every run is kept, to set beside a later one.
 same test sets, in the same four steps. Each model embeds the passages it has not embedded yet, once ever, then
 searches each question as Ask Pollis would: you see how often the passage it came from is among the eight found, and
 where, with words and meaning and by meaning alone, the milliseconds per question and per search, the passages a
-second, the memory, and the size of the index. \ui{Use for Ask Pollis}, under a model, makes it the one Ask Pollis
+second, the memory, and the size of the index. \ui{Embed and Search Too} ticks the collections \ui{Auto} leaves out,
+\ui{Articles} (ticked at first) and \ui{Package APIs}, which each model then embeds and searches for every question.
+\ui{Use for Ask Pollis}, under a model, makes it the one Ask Pollis
 uses. \ui{Evaluate Reranking Models...} does the same for the rerankers, which put the passages found in their order.
 Nothing leaves your computer.
 

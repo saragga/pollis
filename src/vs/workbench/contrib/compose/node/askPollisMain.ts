@@ -29,7 +29,7 @@ import { ProxyChannel } from '../../../../base/parts/ipc/common/ipc.js';
 import { Server as ChildProcessServer } from '../../../../base/parts/ipc/node/ipc.cp.js';
 import { Server as UtilityProcessServer } from '../../../../base/parts/ipc/node/ipc.mp.js';
 import { isUtilityProcess } from '../../../../base/parts/sandbox/node/electronTypes.js';
-import { AskPollisSource, AskTopic, ASK_ARTICLES, ASK_NEAREST_SHARE, ASK_PASSAGES, ASK_SOURCE_COLLECTION, askShares, IAskPollisChatEnd, IAskPollisMessage, ICompareRun, ICompareRunSummary, IAskPollisChatRequest, IAskPollisChatText, IAskPollisEvalItem, IAskPollisFound, IAskPollisIndex, IAskPollisIndexedDocument, IAskPollisIndexRequest, IAskPollisIndexStatus, IAskPollisPanel, IAskPollisPanelShare, IAskPollisPassage, IAskPassageMatch, IAskPollisReranked, IAskPollisSearchResult, IAskPollisTimings, IAskTopicCounts, IBenchmarkAnswer, IBenchmarkRun, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingFound, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary, IRerankRun, IRerankRunSummary, IRetrievalEmbeddingRequest, IRetrievalEvaluation, IRetrievalQuery, IRetrievalRerankDone, IRetrievalRerankRequest, IRetrievalReranked, IRetrievalScore, RETRIEVAL_BENCHMARKS, RETRIEVAL_CANDIDATES, RETRIEVAL_CUT } from '../common/askPollis.js';
+import { AskOptionalSource, AskPollisSource, AskTopic, ASK_ARTICLES, ASK_NEAREST_SHARE, ASK_OPTIONAL_SOURCES, ASK_PACKAGE_APIS, ASK_PASSAGES, ASK_SOURCE_COLLECTION, askShares, IAskPollisChatEnd, IAskPollisMessage, ICompareRun, ICompareRunSummary, IAskPollisChatRequest, IAskPollisChatText, IAskPollisEvalItem, IAskPollisFound, IAskPollisIndex, IAskPollisIndexedDocument, IAskPollisIndexRequest, IAskPollisIndexStatus, IAskPollisPanel, IAskPollisPanelShare, IAskPollisPassage, IAskPassageMatch, IAskPollisReranked, IAskPollisSearchResult, IAskPollisTimings, IAskTopicCounts, IBenchmarkAnswer, IBenchmarkRun, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingFound, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary, IRerankRun, IRerankRunSummary, IRetrievalEmbeddingRequest, IRetrievalEvaluation, IRetrievalQuery, IRetrievalRerankDone, IRetrievalRerankRequest, IRetrievalReranked, IRetrievalScore, RETRIEVAL_BENCHMARKS, RETRIEVAL_CANDIDATES, RETRIEVAL_CUT } from '../common/askPollis.js';
 
 const DATABASE = join(os.homedir(), '.pollis', 'documents', 'PollisDocuments.duckdb');
 /** The folder of the indexes of the collections of Retrieval-Augmented Generation and of the Knowledge Base. */
@@ -165,6 +165,26 @@ function errorMessage(status: number, body: string): string {
 	return `${status} ${body}`;
 }
 
+/** What Search In chose, as a run keeps it, a JSON list of names; Auto, empty, when it cannot be read. */
+function storedChoice(text: string): string[] {
+	try {
+		const kept: unknown = JSON.parse(text);
+		return Array.isArray(kept) ? kept.filter(name => typeof name === 'string') : [];
+	} catch {
+		return [];
+	}
+}
+
+/** The collections Auto leaves out, as a run keeps them, a JSON list; none when it cannot be read. */
+function storedSources(text: string): AskOptionalSource[] {
+	try {
+		const kept: unknown = JSON.parse(text);
+		return Array.isArray(kept) ? (Object.keys(ASK_OPTIONAL_SOURCES) as AskOptionalSource[]).filter(source => kept.includes(source)) : [];
+	} catch {
+		return [];
+	}
+}
+
 function sqlString(text: string): string {
 	return `'${text.replace(/'/g, `''`)}'`;
 }
@@ -195,13 +215,25 @@ function searchSql(dimensions: number, count: number, vectors?: string, where = 
 /**
  * The key in embeddings.duckdb of each passage and what it is given to the model $model as, with the passage prefix
  * $prefix, as ask_index.jl makes them: a wiki's headings start with its panel and its name, a Markdown file's with its
- * title; a PDF's do not have its title. The Package APIs are left out: Evaluate Embedding Models would embed some
- * twenty thousand docstrings for each model, and its test sets have no question on them. The Articles, which Auto does
- * not search either, are left out with them.
+ * title; a PDF's do not have its title. The collections Auto leaves out are taken only when `sources` names them: the
+ * Package APIs, some twenty thousand docstrings to embed for each model, and the Articles.
  */
-const INPUTS_SQL = `SELECT id, sha256($model || chr(10) || input) AS key, input FROM (
+function inputsSql(sources: readonly AskOptionalSource[] | undefined): string {
+	return `SELECT id, sha256($model || chr(10) || input) AS key, input FROM (
 	SELECT p.id, left(replace(replace($prefix, '{title}', CASE WHEN d.kind IN ('wiki', 'markdown', 'article') THEN p.heading ELSE concat_ws(' ' || chr(8250) || ' ', d.title, nullif(p.heading, '')) END), '{text}', p.text), ${EMBEDDED_CHARACTERS}) AS input
-	FROM passages p JOIN documents d ON p.document = d.id WHERE d.kind NOT IN ('api', 'article'))`;
+	FROM passages p JOIN documents d ON p.document = d.id WHERE ${leftOutSql(sources)})`;
+}
+
+/** What keeps a passage of document `d` unless it is of a collection Auto leaves out that `sources` does not name. */
+function leftOutSql(sources: readonly AskOptionalSource[] | undefined): string {
+	const left = (Object.keys(ASK_OPTIONAL_SOURCES) as AskOptionalSource[]).filter(source => !sources?.includes(source)).map(source => sqlString(ASK_OPTIONAL_SOURCES[source].kind));
+	return left.length ? `d.kind NOT IN (${left.join(', ')})` : 'true';
+}
+
+/** The collections Auto leaves out that `sources` names. */
+function collectionsOf(sources: readonly AskOptionalSource[] | undefined): string[] {
+	return (sources ?? []).map(source => ASK_OPTIONAL_SOURCES[source].collection);
+}
 
 /** The table of the retrieval benchmark `benchmark` in PollisBenchmarks.duckdb, attached as `benchmarks`; nothing for one not known. */
 function retrievalTable(benchmark: string): string | undefined {
@@ -256,6 +288,8 @@ interface IPassageQuery {
 	readonly dimensions: number;
 	readonly count: number;
 	readonly collections?: readonly string[];
+	/** Without `collections`, those searched beside the ones the question is routed to. */
+	readonly alsoCollections?: readonly string[];
 	/** The only sources searched of their collections, the other collections whole. */
 	readonly sources?: readonly AskPollisSource[];
 	/** A table of the embeddings to search with, in place of the index's. */
@@ -266,8 +300,6 @@ interface IPassageQuery {
 	readonly panelShare?: number | IAskPollisPanelShare;
 }
 
-/** The collection of the Package APIs, as pollisPackageApis.ts names it, which only a choice of Search In searches. */
-const PACKAGE_APIS = 'Package APIs';
 
 /** The pages of Base and the standard library in Julia's documentation, by the address of a passage `p`. */
 const JULIA_LIBRARY_SQL = `regexp_matches(coalesce(p.anchor, ''), '^(base|stdlib)/')`;
@@ -351,8 +383,11 @@ function words(text: string): Set<string> {
 	return new Set(text.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? []);
 }
 
-/** The topic of a passage by its document `d`, as AskTopic: the Julia Manual, Pollis' own documents, and the rest (the wikis, the vignettes of the toolboxes). */
-const TOPIC = `CASE WHEN d.kind = 'julia' THEN 'julia' WHEN d.kind = 'document' AND coalesce(d.toolbox, '') = '' THEN 'pollis' ELSE 'panels' END`;
+/**
+ * The topic of a passage by its document `d`, as AskTopic: the Julia Manual, Pollis' own documents, the Articles, the
+ * Package APIs, and the rest (the wikis, the vignettes of the toolboxes).
+ */
+const TOPIC = `CASE WHEN d.kind = 'julia' THEN 'julia' WHEN d.kind = 'document' AND coalesce(d.toolbox, '') = '' THEN 'pollis' WHEN d.kind = 'article' THEN 'articles' WHEN d.kind = 'api' THEN 'packageApis' ELSE 'panels' END`;
 
 /**
  * The tables of Comparisons.duckdb: a run, the passages found for each of its questions, the answers, the judges'
@@ -369,6 +404,8 @@ const COMPARISONS_TABLES = [
 	'ALTER TABLE Comparisons.runs ADD COLUMN IF NOT EXISTS open_book BOOLEAN',
 	// Closed Book Answering: each model given no passage
 	'ALTER TABLE Comparisons.runs ADD COLUMN IF NOT EXISTS closed_book BOOLEAN',
+	// What Search In chose for Open Library Answering, as a JSON list; Auto when null
+	'ALTER TABLE Comparisons.runs ADD COLUMN IF NOT EXISTS search_in VARCHAR',
 	'CREATE TABLE IF NOT EXISTS Comparisons.questions(run VARCHAR, question INTEGER, source VARCHAR, context VARCHAR, text VARCHAR, answer VARCHAR, passages VARCHAR, rank INTEGER)',
 	'CREATE TABLE IF NOT EXISTS Comparisons.answers(run VARCHAR, id VARCHAR, question INTEGER, model VARCHAR, repeat INTEGER, answer VARCHAR, error VARCHAR, first_word DOUBLE, seconds DOUBLE, reading DOUBLE, writing DOUBLE, tokens_read INTEGER, tokens_written INTEGER)',
 	// The answer score of an answer, added with it: an answer before it has none
@@ -383,6 +420,7 @@ const COMPARISONS_TABLES = [
 	'CREATE TABLE IF NOT EXISTS Comparisons.embeddingRuns(id VARCHAR PRIMARY KEY, started BIGINT, pollis VARCHAR, models VARCHAR, questions INTEGER, passages INTEGER)',
 	// A run of a retrieval benchmark: its id, and the nDCG@10 and Recall@10 of each query for each model
 	'ALTER TABLE Comparisons.embeddingRuns ADD COLUMN IF NOT EXISTS benchmark VARCHAR',
+	'ALTER TABLE Comparisons.embeddingRuns ADD COLUMN IF NOT EXISTS sources VARCHAR',
 	'CREATE TABLE IF NOT EXISTS Comparisons.embeddingQuestions(run VARCHAR, question INTEGER, source VARCHAR, context VARCHAR, text VARCHAR, answer VARCHAR)',
 	'CREATE TABLE IF NOT EXISTS Comparisons.embeddingFound(run VARCHAR, question INTEGER, model VARCHAR, hybrid INTEGER, meaning INTEGER, query_ms DOUBLE, search_ms DOUBLE)',
 	'ALTER TABLE Comparisons.embeddingFound ADD COLUMN IF NOT EXISTS ndcg DOUBLE',
@@ -602,7 +640,7 @@ class AskPollisIndex implements IAskPollisIndex {
 				}
 			}
 			const { passages, searched, panelMissing, distance } = await this.findPassages(connection, status.collections, {
-				question: request.question, vector, dimensions: vector ? status.dimensions : 0, count: Math.max(1, request.passages ?? ASK_PASSAGES), collections: request.collections, sources: request.sources, panel: request.panel, panelShare: request.panelShare,
+				question: request.question, vector, dimensions: vector ? status.dimensions : 0, count: Math.max(1, request.passages ?? ASK_PASSAGES), collections: request.collections, alsoCollections: request.alsoCollections, sources: request.sources, panel: request.panel, panelShare: request.panelShare,
 			});
 			const result: IAskPollisSearchResult = {
 				passages,
@@ -624,7 +662,8 @@ class AskPollisIndex implements IAskPollisIndex {
 	 */
 	private async findPassages(connection: DuckDBConnection, all: readonly string[], query: IPassageQuery): Promise<{ passages: IAskPollisPassage[]; searched: string[]; panelMissing: boolean; distance?: number }> {
 		const { vector, dimensions, vectors } = query;
-		let searched = query.collections?.filter(name => all.includes(name)) ?? all.filter(name => name !== PACKAGE_APIS && name !== ASK_ARTICLES);
+		const also = query.collections ? [] : query.alsoCollections ?? [];
+		let searched = query.collections?.filter(name => all.includes(name)) ?? all.filter(name => (name !== ASK_PACKAGE_APIS && name !== ASK_ARTICLES) || also.includes(name));
 		let distance: number | undefined;
 		if (vector) {
 			const embedding = vectors ? 'v.embedding' : 'p.embedding';
@@ -632,7 +671,7 @@ class AskPollisIndex implements IAskPollisIndex {
 			const nearest = distances.filter(row => searched.includes(String(row.name)));
 			const best = Number(nearest[0]?.distance ?? 0);
 			distance = nearest.length ? best : undefined;
-			searched = nearest.map(row => String(row.name)).filter((name, i) => !!query.collections || Number(nearest[i].distance) - best <= ROUTE_MARGIN);
+			searched = nearest.map(row => String(row.name)).filter((name, i) => !!query.collections || also.includes(name) || Number(nearest[i].distance) - best <= ROUTE_MARGIN);
 		}
 		const parameters = { question: query.question, ...(vector ? { vector } : {}) };
 		const passages: IAskPollisPassage[] = [];
@@ -726,7 +765,7 @@ class AskPollisIndex implements IAskPollisIndex {
 		const parameters = { model: request.model, prefix: request.passagePrefix };
 		let todo: { key: string; input: string }[];
 		try {
-			const rows = await this.withCache(async connection => (await connection.runAndReadAll(`SELECT key, any_value(input) AS input FROM (${INPUTS_SQL}) WHERE key NOT IN (SELECT key FROM cache.embeddings) GROUP BY key ORDER BY min(id)`, parameters)).getRowObjectsJson());
+			const rows = await this.withCache(async connection => (await connection.runAndReadAll(`SELECT key, any_value(input) AS input FROM (${inputsSql(request.sources)}) WHERE key NOT IN (SELECT key FROM cache.embeddings) GROUP BY key ORDER BY min(id)`, parameters)).getRowObjectsJson());
 			if (!rows) {
 				return { embedded: 0, seconds: 0, error: 'notIndexed' };
 			}
@@ -772,11 +811,11 @@ class AskPollisIndex implements IAskPollisIndex {
 			const made = await this.withCache(async connection => {
 				const status = await this.readStatus(connection);
 				const parameters = { model: request.model, prefix: request.passagePrefix };
-				const dimensions = Number((await connection.runAndReadAll(`SELECT max(len(c.embedding)) AS dimensions FROM (${INPUTS_SQL}) i JOIN cache.embeddings c ON c.key = i.key`, parameters)).getRowObjectsJson()[0]?.dimensions ?? 0);
+				const dimensions = Number((await connection.runAndReadAll(`SELECT max(len(c.embedding)) AS dimensions FROM (${inputsSql(request.sources)}) i JOIN cache.embeddings c ON c.key = i.key`, parameters)).getRowObjectsJson()[0]?.dimensions ?? 0);
 				if (dimensions) {
-					await connection.run(`CREATE OR REPLACE TABLE memory.candidate AS SELECT i.id, c.embedding::FLOAT[${dimensions}] AS embedding FROM (${INPUTS_SQL}) i JOIN cache.embeddings c ON c.key = i.key WHERE len(c.embedding) = ${dimensions}`, parameters);
+					await connection.run(`CREATE OR REPLACE TABLE memory.candidate AS SELECT i.id, c.embedding::FLOAT[${dimensions}] AS embedding FROM (${inputsSql(request.sources)}) i JOIN cache.embeddings c ON c.key = i.key WHERE len(c.embedding) = ${dimensions}`, parameters);
 				}
-				const passages = Number((await connection.runAndReadAll(`SELECT count(*) AS passages FROM passages p JOIN documents d ON p.document = d.id WHERE d.kind NOT IN ('api', 'article')`)).getRowObjectsJson()[0]?.passages ?? 0);
+				const passages = Number((await connection.runAndReadAll(`SELECT count(*) AS passages FROM passages p JOIN documents d ON p.document = d.id WHERE ${leftOutSql(request.sources)}`)).getRowObjectsJson()[0]?.passages ?? 0);
 				return { dimensions, passages, collections: status?.collections ?? [] };
 			});
 			if (!made) {
@@ -798,7 +837,7 @@ class AskPollisIndex implements IAskPollisIndex {
 					const result = await this.withIndex(async connection => {
 						const context = (await this.matchPassages(connection, [item.context]))[0]?.text ?? item.context;
 						const search = Date.now();
-						const given = await this.findPassages(connection, collections, { question: item.question, vector, dimensions, count: ASK_PASSAGES, vectors: 'memory.candidate' });
+						const given = await this.findPassages(connection, collections, { question: item.question, vector, dimensions, count: ASK_PASSAGES, vectors: 'memory.candidate', alsoCollections: collectionsOf(request.sources) });
 						const searchMs = Date.now() - search;
 						// The place of the question's passage among all passages by meaning: how many are nearer the question, and 1
 						const row = (await connection.runAndReadAll(`WITH target AS (
@@ -1071,10 +1110,10 @@ class AskPollisIndex implements IAskPollisIndex {
 				FROM passages p WHERE length(p.text) >= ${SHORTEST_QUESTION_PASSAGE}),
 			turns AS (
 				SELECT l.id, d.kind, ${TOPIC} AS topic, row_number() OVER (PARTITION BY d.kind ORDER BY l.k, hash(l.document)) AS turn
-				FROM long l JOIN documents d ON d.id = l.document WHERE d.kind NOT IN ('api', 'article')),
+				FROM long l JOIN documents d ON d.id = l.document),
 			chosen AS (
 				SELECT * FROM turns
-				QUALIFY row_number() OVER (PARTITION BY topic ORDER BY turn, kind) <= CASE topic WHEN 'pollis' THEN ${count('pollis')} WHEN 'julia' THEN ${count('julia')} ELSE ${count('panels')} END)
+				QUALIFY row_number() OVER (PARTITION BY topic ORDER BY turn, kind) <= CASE topic WHEN 'pollis' THEN ${count('pollis')} WHEN 'julia' THEN ${count('julia')} WHEN 'articles' THEN ${count('articles')} WHEN 'packageApis' THEN ${count('packageApis')} ELSE ${count('panels')} END)
 			SELECT p.id, ${PASSAGE_COLUMNS}, 0 AS score
 			FROM chosen t JOIN passages p ON p.id = t.id JOIN documents d ON d.id = p.document
 			ORDER BY t.turn, t.kind`)).getRowObjectsJson());
@@ -1094,7 +1133,7 @@ class AskPollisIndex implements IAskPollisIndex {
 	 * has MATCHING_WORDS of them at least, the shorter of two as good.
 	 */
 	private async matchPassages(connection: DuckDBConnection, texts: readonly string[]): Promise<(IAskPassageMatch | undefined)[]> {
-		const read = async (where: string) => (await connection.runAndReadAll(`SELECT p.text, any_value(${TOPIC}) AS topic FROM passages p JOIN documents d ON d.id = p.document WHERE d.kind <> 'api'${where} GROUP BY p.text`))
+		const read = async (where: string) => (await connection.runAndReadAll(`SELECT p.text, any_value(${TOPIC}) AS topic FROM passages p JOIN documents d ON d.id = p.document WHERE true${where} GROUP BY p.text`))
 			.getRowObjectsJson().map(row => ({ text: String(row.text), topic: String(row.topic) as AskTopic }));
 		const found = new Map((await read(` AND p.text IN (${texts.map(sqlString).join(', ')})`)).map(match => [match.text, match]));
 		const missing = new Set(texts.filter(text => text && !found.has(text)));
@@ -1190,8 +1229,8 @@ class AskPollisIndex implements IAskPollisIndex {
 			await connection.run('BEGIN TRANSACTION');
 			try {
 				await this.removeRun(connection, summary.id);
-				await connection.run('INSERT INTO Comparisons.runs (id, started, pollis, models, judges, repeats, questions, strategy, open_book, closed_book) VALUES ($id, $started, $pollis, $models, $judges, $repeats, $questions, $strategy::VARCHAR, $openBook, $closedBook)', {
-					id: summary.id, started: summary.started, pollis: summary.pollis, models: JSON.stringify(summary.models), judges: JSON.stringify(summary.judges), repeats: summary.repeats, questions: summary.questions, strategy: summary.strategy ?? null, openBook: !!summary.openBook, closedBook: !!summary.closedBook,
+				await connection.run('INSERT INTO Comparisons.runs (id, started, pollis, models, judges, repeats, questions, strategy, open_book, closed_book, search_in) VALUES ($id, $started, $pollis, $models, $judges, $repeats, $questions, $strategy::VARCHAR, $openBook, $closedBook, $searchIn::VARCHAR)', {
+					id: summary.id, started: summary.started, pollis: summary.pollis, models: JSON.stringify(summary.models), judges: JSON.stringify(summary.judges), repeats: summary.repeats, questions: summary.questions, strategy: summary.strategy ?? null, openBook: !!summary.openBook, closedBook: !!summary.closedBook, searchIn: summary.searchIn?.length ? JSON.stringify(summary.searchIn) : null,
 				});
 				for (const question of run.questions) {
 					await connection.run('INSERT INTO Comparisons.questions (run, question, source, context, text, answer, passages, rank, choices, explanation) VALUES ($run, $question, $source, $context, $text, $answer, $passages, $rank::INTEGER, $choices::VARCHAR, $explanation::VARCHAR)', {
@@ -1236,6 +1275,7 @@ class AskPollisIndex implements IAskPollisIndex {
 			...(row.strategy ? { strategy: String(row.strategy) } : {}),
 			...(row.open_book ? { openBook: true } : {}),
 			...(row.closed_book ? { closedBook: true } : {}),
+			...(typeof row.search_in === 'string' ? { searchIn: storedChoice(row.search_in) } : {}),
 		};
 	}
 
@@ -1314,8 +1354,8 @@ class AskPollisIndex implements IAskPollisIndex {
 			await connection.run('BEGIN TRANSACTION');
 			try {
 				await this.removeEmbeddingRun(connection, summary.id);
-				await connection.run('INSERT INTO Comparisons.embeddingRuns(id, started, pollis, models, questions, passages, benchmark) VALUES ($id, $started, $pollis, $models, $questions, $passages, $benchmark::VARCHAR)', {
-					id: summary.id, started: summary.started, pollis: summary.pollis, models: JSON.stringify(summary.models), questions: summary.questions, passages: summary.passages, benchmark: summary.benchmark ?? null,
+				await connection.run('INSERT INTO Comparisons.embeddingRuns(id, started, pollis, models, questions, passages, benchmark, sources) VALUES ($id, $started, $pollis, $models, $questions, $passages, $benchmark::VARCHAR, $sources::VARCHAR)', {
+					id: summary.id, started: summary.started, pollis: summary.pollis, models: JSON.stringify(summary.models), questions: summary.questions, passages: summary.passages, benchmark: summary.benchmark ?? null, sources: summary.sources ? JSON.stringify(summary.sources) : null,
 				});
 				for (const [question, item] of run.questions.entries()) {
 					await connection.run('INSERT INTO Comparisons.embeddingQuestions VALUES ($run, $question, $source, $context, $text, $answer)', {
@@ -1344,6 +1384,7 @@ class AskPollisIndex implements IAskPollisIndex {
 			questions: Number(row.questions),
 			passages: Number(row.passages),
 			...(typeof row.benchmark === 'string' ? { benchmark: row.benchmark } : {}),
+			...(typeof row.sources === 'string' ? { sources: storedSources(row.sources) } : {}),
 		};
 	}
 

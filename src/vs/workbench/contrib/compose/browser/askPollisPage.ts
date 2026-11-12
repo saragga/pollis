@@ -46,7 +46,7 @@ import { composerSendSvg, spinnerCss, spinnerSvg, voiceSpeakerSvg } from '../../
 import { ASK_CHAT_MODEL, ASK_CLOUD_MODELS, ASK_EMBEDDING_MODEL, ASK_PASSAGE_PREFIX, ASK_PASSAGES, ASK_QUERY_PREFIX, MODELS_INSTALLED_COMMAND_ID, ASK_CLOUD_PROVIDERS, ASK_LOCAL_PREFIX, ASK_POLLIS_ANSWERS_IN_CLOUD_COMMAND_ID, ASK_POLLIS_ADD_ATTACHMENT_COMMAND_ID, ASK_POLLIS_ATTACH_COMMAND_ID, ASK_POLLIS_COMMAND_ID, ASK_THIS_COMPUTER, ASK_ATTACHED_CHARACTERS, askCloudModel, AskPollisAttachRequest, AskPollisProvider, IAskPollisAddAttachment, IAskPollisAttached, IAskPollisAttachment, IAskPollisFromPanel, IAskPollisNamedIndex, IAskPollisPanel, IAskPollisPassage, IAskPollisSearchResult, IAskPollisService } from '../common/askPollis.js';
 import { ASK_DEFAULT_STRATEGY, IAskPollisStrategiesService, askPollisStrategy, askStrategyRerank, askStrategyReranks, askStrategySearchRequest } from '../common/askPollisStrategies.js';
 import { AskAttachMessage, askAddHtml, askAttachCss, askAttachmentsHtml, askAttachScript, handleAskAttachMessage } from './askPollisAttach.js';
-import { askAnswerCss, askAnswerScript, askModelName, askNothingFound, askOpenPassage, askPassageView, askSearchedNames, askSearchesJulia, askSearchesNothing, askSearchIn, askSearchSources, askWordsOnlyNote } from './askPollisWebview.js';
+import { askAnswerCss, askAnswerScript, askModelName, askNothingFound, askOpenPassage, askPassageView, askSearchedNames, askSearchesJulia, askSearchesNothing, askSearchWithin, askWordsOnlyNote, askMenuCss, askMenuScript, ASK_CHEVRON } from './askPollisWebview.js';
 import { formatBytes, IDatasetSummary, summarizeCsv } from './collaboration/collaborationDatasets.js';
 import { isDuckDbFile, MAX_DATASET_BYTES, MAX_IMAGE_BYTES } from './collaboration/collaborationProtocol.js';
 import { COMPARE_MODELS_ADD_COMMAND_ID, ICompareModelsAdd } from './compareModelsPage.js';
@@ -452,17 +452,13 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 			if (!unaided) {
 				indexes = await askPollisService.collectionIndexes().catch(() => indexes);
 			}
-			const chosen = askSearchIn(searchIn, searchable());
-			const chosenIndexes = chosen ? indexes.filter(other => chosen.includes(other.name) && !collections.includes(other.name)) : [];
-			const pollisChosen = chosen?.filter(name => !chosenIndexes.some(other => other.name === name));
+			const within = askSearchWithin(searchIn, collections, indexes);
 			// Only one collection of Retrieval-Augmented Generation searched: the model is told it answers from that collection
-			const answeredFrom = pollisChosen?.length === 0 && chosenIndexes.length === 1 ? chosenIndexes[0].name : undefined;
+			const answeredFrom = within.collections?.length === 0 && within.collectionIndexes.length === 1 ? within.collectionIndexes[0].name : undefined;
 			const search = async (): Promise<IAskPollisSearchResult> => unaided ? { passages: [], searched: [], collections } : askPollisService.search(askStrategySearchRequest(strategy, {
 				question: searched,
-				collections: pollisChosen,
-				sources: askSearchSources(searchIn),
+				...within,
 				panel: askedIn,
-				collectionIndexes: chosenIndexes,
 			}, kept, reranker));
 			let result = await search();
 			// Before the first index, the question waits for it, with how far it has come, while the Julia extension makes it;
@@ -732,7 +728,6 @@ class AskPollisModelStatus extends Disposable implements IWorkbenchContribution 
 
 /** The pane: its texts come from here, the answers from the messages of each question. */
 function pageHtml(language: string, writeIn: string): string {
-	const CHEVRON = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>';
 	const text = {
 		intro: localize('askPollis.intro', "Ask in your own words about Pollis, Julia, or the methods behind them: how to fit a model, what a setting does, what NUTS is."),
 		introSources: localize('askPollis.introSources', "The answer comes from:"),
@@ -810,25 +805,9 @@ function pageHtml(language: string, writeIn: string): string {
 		/* Below the pill: Search In on the left, the key and the model on the right */
 		.under { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 8px; margin-top: 4px; padding: 0 4px; }
 		.under > span { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; }
-		.anchor { position: relative; }
-		.picker { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; font: inherit; font-size: 12px; color: var(--vscode-descriptionForeground); background: transparent; border: none; border-radius: 6px; padding: 3px 6px; cursor: pointer; }
-		.picker:hover, .picker[aria-expanded="true"] { color: var(--vscode-foreground); background: var(--vscode-toolbar-hoverBackground); }
-		.picker svg { width: 10px; height: 10px; }
 		/* Search In, a pill: the prefix muted, the choice in the text's color */
 		#searchInButton, #strategyButton { color: var(--vscode-foreground); border: 1px solid var(--vscode-widget-border, var(--vscode-input-border, transparent)); border-radius: 999px; padding: 2px 8px; }
 		#searchInButton .prefix, #strategyButton .prefix { color: var(--vscode-descriptionForeground); }
-		/* The menus of the pickers, upwards, or downwards when there is no room above */
-		.menu { position: absolute; bottom: 28px; z-index: 2; min-width: min(250px, calc(100vw - 8px)); max-width: calc(100vw - 8px); max-height: 60vh; overflow-y: auto; padding: 4px; color: var(--vscode-menu-foreground); background: var(--vscode-menu-background); border: 1px solid var(--vscode-menu-border, var(--vscode-widget-border)); border-radius: 8px; box-shadow: 0 4px 16px var(--vscode-widget-shadow); }
-		.menu.down { bottom: auto; top: 28px; }
-		.menu.left { left: 0; }
-		.menu .heading { font-size: 11px; color: var(--vscode-descriptionForeground); padding: 6px 8px 2px 8px; }
-		.menu .item { display: flex; align-items: baseline; gap: 8px; width: 100%; text-align: left; font: inherit; font-size: 12px; color: inherit; background: none; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; }
-		.menu .item:hover, .menu .item:focus { color: var(--vscode-menu-selectionForeground); background: var(--vscode-menu-selectionBackground); outline: none; }
-		.menu .check { width: 12px; flex: none; }
-		.menu .check.box { align-self: center; box-sizing: border-box; height: 12px; font-size: 10px; line-height: 10px; text-align: center; border: 1px solid currentColor; border-radius: 3px; }
-		.menu .label { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-		.menu .detail { font-size: 11px; opacity: 0.7; white-space: nowrap; }
-		.menu hr { border: none; border-top: 1px solid var(--vscode-menu-separatorBackground, var(--vscode-widget-border)); margin: 4px 0; }
 		.link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; }
 		.answer-actions { display: flex; align-items: center; gap: 10px; }
 		button.read { display: flex; align-items: center; justify-content: center; flex: none; width: 22px; height: 22px; padding: 0; border: none; border-radius: 4px; color: var(--vscode-descriptionForeground); background: transparent; cursor: pointer; }
@@ -839,6 +818,7 @@ function pageHtml(language: string, writeIn: string): string {
 		.turn { margin: 0 0 24px 0; padding-bottom: 16px; border-bottom: 1px solid var(--vscode-widget-border); }
 		.question { font-size: 15px; font-weight: 600; margin: 0 0 8px 0; white-space: pre-wrap; }
 		${askAnswerCss}
+		${askMenuCss}
 		.status { margin: 6px 0; }
 		${spinnerCss}
 		.error { color: var(--vscode-errorForeground); }
@@ -882,11 +862,11 @@ function pageHtml(language: string, writeIn: string): string {
 	<div class="under">
 		<span>
 			<span class="anchor">
-				<button class="picker" id="searchInButton" aria-haspopup="menu" aria-expanded="false" aria-label="${text.searchIn}"><span class="prefix">${text.searchInPrefix}</span><span id="searchInLabel"></span>${CHEVRON}</button>
+				<button class="picker" id="searchInButton" aria-haspopup="menu" aria-expanded="false" aria-label="${text.searchIn}"><span class="prefix">${text.searchInPrefix}</span><span id="searchInLabel"></span>${ASK_CHEVRON}</button>
 				<div class="menu left" id="searchInMenu" role="menu" hidden></div>
 			</span>
 			<span class="anchor">
-				<button class="picker" id="strategyButton" aria-haspopup="menu" aria-expanded="false" aria-label="${text.strategy}"><span class="prefix">${text.strategyPrefix}</span><span id="strategyLabel"></span>${CHEVRON}</button>
+				<button class="picker" id="strategyButton" aria-haspopup="menu" aria-expanded="false" aria-label="${text.strategy}"><span class="prefix">${text.strategyPrefix}</span><span id="strategyLabel"></span>${ASK_CHEVRON}</button>
 				<div class="menu left" id="strategyMenu" role="menu" hidden></div>
 			</span>
 		</span>
@@ -909,6 +889,7 @@ function pageHtml(language: string, writeIn: string): string {
 	const turns = [];
 	let answering = false;
 	${askAnswerScript()}
+	${askMenuScript()}
 
 	function renderAnswer(turn, index) {
 		turn.answerBox.innerHTML = markdown(turn.answer, turn.passages.length);
@@ -947,7 +928,7 @@ function pageHtml(language: string, writeIn: string): string {
 
 	function send(text, attached) {
 		setAnswering(true);
-		vscode.postMessage({ command: 'ask', question: text, searchIn, attachments: attached || [] });
+		vscode.postMessage({ command: 'ask', question: text, searchIn: searchIn.choice(), attachments: attached || [] });
 	}
 
 	/** The panel the questions are asked in, above the pill, or none. */
@@ -979,104 +960,9 @@ function pageHtml(language: string, writeIn: string): string {
 		if (!event.target.closest('button, textarea, .voice-menu')) { question.focus(); }
 	});
 
-	/**
-	 * The menus below the pill: each opens from its picker, upwards unless there is no room, moved sideways to stay
-	 * within the pane, and closes on a choice, a click elsewhere or Escape.
-	 */
-	const menus = [];
-	function closeMenus() {
-		for (const [button, box] of menus) {
-			box.hidden = true;
-			button.setAttribute('aria-expanded', 'false');
-		}
-	}
-	function menu(button, box) {
-		menus.push([button, box]);
-		button.addEventListener('click', event => {
-			event.stopPropagation();
-			const opening = box.hidden;
-			closeMenus();
-			if (opening) {
-				box.hidden = false;
-				box.classList.toggle('down', button.getBoundingClientRect().top < box.offsetHeight + 8);
-				box.style.left = '';
-				const rect = box.getBoundingClientRect();
-				const shift = Math.max(4 - rect.left, Math.min(0, window.innerWidth - 4 - rect.right));
-				if (shift) { box.style.left = (box.offsetLeft + shift) + 'px'; }
-				button.setAttribute('aria-expanded', 'true');
-				(box.querySelector('.item .check:not(:empty)')?.parentElement ?? box.querySelector('.item'))?.focus();
-			}
-		});
-	}
-	document.addEventListener('click', closeMenus);
-	document.addEventListener('keydown', event => {
-		if (event.key === 'Escape') { closeMenus(); }
-	});
-
-	/** A menu's headings, lines and items, the chosen one checked; an item calls \`choose\` with its value, and one with \`tick\`, a box, keeps the menu open. */
-	function fillMenu(box, entries, chosen, choose) {
-		box.textContent = '';
-		for (const entry of entries) {
-			if (entry.line) {
-				box.appendChild(element('hr'));
-			} else if (entry.heading) {
-				box.appendChild(element('div', 'heading', entry.heading));
-			} else {
-				const item = element('button', 'item');
-				const ticking = entry.tick !== undefined;
-				item.setAttribute('role', ticking ? 'menuitemcheckbox' : 'menuitem');
-				if (ticking) { item.setAttribute('aria-checked', String(entry.tick)); }
-				item.append(element('span', ticking ? 'check box' : 'check', (ticking ? entry.tick : entry.value === chosen) ? '\u2713' : ''), element('span', 'label', entry.label));
-				if (entry.detail) { item.appendChild(element('span', 'detail', entry.detail)); }
-				if (entry.title) { item.title = entry.title; }
-				item.addEventListener('click', event => {
-					event.stopPropagation();
-					if (ticking) {
-						const place = [...box.children].indexOf(item);
-						choose(entry.value);
-						box.children[place]?.focus();
-					} else {
-						closeMenus();
-						choose(entry.value);
-					}
-				});
-				box.appendChild(item);
-			}
-		}
-	}
-
 	// Search In: Auto with nothing ticked, the sources ticked, all or none, shown before the first question too
-	let searchIn = [];
-	let searchInOffered = [];
-	const searchInButton = document.getElementById('searchInButton');
-	const searchInMenu = document.getElementById('searchInMenu');
-	menu(searchInButton, searchInMenu);
-	function renderSearchIn() {
-		const all = searchIn[0] === SEARCH_ALL;
-		const none = searchIn[0] === SEARCH_NONE;
-		const ticked = searchInOffered.filter(source => all || searchIn.includes(source.value));
-		document.getElementById('searchInLabel').textContent = !searchIn.length ? ANSWER_TEXT.automatic : all ? ANSWER_TEXT.all : none ? ANSWER_TEXT.none : ticked.length === 1 ? ticked[0].label : ANSWER_TEXT.sourcesCount.replace('{0}', ticked.length);
-		searchInButton.title = !searchIn.length ? ANSWER_TEXT.automaticHint : none ? ANSWER_TEXT.noneHint : all ? '' : ticked.length === 1 ? ticked[0].title : ticked.map(source => source.label).join(', ');
-		fillMenu(searchInMenu, [
-			{ value: SEARCH_NEAREST, label: ANSWER_TEXT.automatic, title: ANSWER_TEXT.automaticHint },
-			{ line: true },
-			...searchInOffered.map(source => ({ ...source, tick: ticked.includes(source) })),
-			{ line: true },
-			{ value: SEARCH_ALL, label: ANSWER_TEXT.all },
-			{ value: SEARCH_NONE, label: ANSWER_TEXT.none, title: ANSWER_TEXT.noneHint },
-		], searchIn.length ? searchIn[0] : SEARCH_NEAREST, value => {
-			if (value === SEARCH_NEAREST) {
-				searchIn = [];
-			} else if (value === SEARCH_ALL || value === SEARCH_NONE) {
-				searchIn = [value];
-			} else {
-				const values = ticked.map(source => source.value);
-				const next = values.includes(value) ? values.filter(other => other !== value) : [...values, value];
-				searchIn = next.length === searchInOffered.length ? [SEARCH_ALL] : next;
-			}
-			renderSearchIn();
-		});
-	}
+	const searchIn = searchInPicker(document.getElementById('searchInButton'), document.getElementById('searchInMenu'), document.getElementById('searchInLabel'), true);
+	searchIn.offer([]);
 
 	// Strategy: the strategy of Ask Pollis, which the setting keeps
 	const strategyButton = document.getElementById('strategyButton');
@@ -1092,12 +978,6 @@ function pageHtml(language: string, writeIn: string): string {
 	// A citation shows its source
 	conversation.addEventListener('click', event => showSource(event, 'turn'));
 
-	const setCollections = names => {
-		searchInOffered = searchInSources(names);
-		searchIn = searchIn.filter(value => value === SEARCH_ALL || value === SEARCH_NONE || searchInOffered.some(source => source.value === value));
-		renderSearchIn();
-	};
-	setCollections([]);
 
 	/** The key indicator, as the panels have it: Set API key, or API key | change | clear. */
 	function renderKey(message) {
@@ -1125,7 +1005,7 @@ function pageHtml(language: string, writeIn: string): string {
 		const message = event.data;
 		const turn = turns[message.turn];
 		if (message.command === 'collections') {
-			setCollections(message.collections);
+			searchIn.offer(message.collections);
 		} else if (message.command === 'strategies') {
 			renderStrategies(message);
 		} else if (message.command === 'newChat') {
@@ -1177,7 +1057,7 @@ function pageHtml(language: string, writeIn: string): string {
 			return;
 		} else if (message.command === 'found') {
 			turn.passages = message.passages;
-			setCollections(message.collections);
+			searchIn.offer(message.collections);
 			turn.searched.textContent = [message.searched.length ? TEXT.searched.replace('{0}', message.searched.join(', ')) : '', message.note].filter(part => part).join(' ');
 		} else if (message.command === 'indexing') {
 			turn.status.textContent = message.text;
