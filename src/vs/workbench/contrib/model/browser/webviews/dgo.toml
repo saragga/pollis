@@ -489,11 +489,13 @@ function nl(alg; seed=1)
     optimize(opt, (lb .+ ub) ./ 2)[1]
 end
 quad() = (root, xs = analyze(f, [[lb[i], (lb[i] + ub[i]) / 2, ub[i]] for i in 1:n], lb, ub; maxevals=maxeval); value(minimum(root)))
-[(method = "DIRECT", best_value = nl(:GN_DIRECT), spread = 0.0),
- (method = "AGS", best_value = nl(:GN_AGS), spread = 0.0),
- (method = "QuadDIRECT", best_value = quad(), spread = 0.0),
- (method = "CRS2 (stochastic)", best_value = mean(nl(:GN_CRS2_LM; seed=s) for s in 1:5), spread = std([nl(:GN_CRS2_LM; seed=s) for s in 1:5])),
- (method = "ISRES (stochastic)", best_value = mean(nl(:GN_ISRES; seed=s) for s in 1:5), spread = std([nl(:GN_ISRES; seed=s) for s in 1:5]))]
+crs2  = [nl(:GN_CRS2_LM; seed=s) for s in 1:5]  # five seeds, each run once
+isres = [nl(:GN_ISRES; seed=s) for s in 1:5]
+[(method = "DIRECT", best_value = nl(:GN_DIRECT), seed_sd = missing),  # deterministic: one run, no seed spread
+ (method = "AGS", best_value = nl(:GN_AGS), seed_sd = missing),
+ (method = "QuadDIRECT", best_value = quad(), seed_sd = missing),
+ (method = "CRS2 (stochastic, mean of 5 seeds)", best_value = mean(crs2), seed_sd = std(crs2)),
+ (method = "ISRES (stochastic, mean of 5 seeds)", best_value = mean(isres), seed_sd = std(isres))]
 '''
 
 [[actionGroups.actions]]
