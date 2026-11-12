@@ -428,7 +428,7 @@ id = "compare"
 label = "Compare"
 
 [[actionGroups.actions]]
-id = "lp-relax"
+id = "merit-function"
 label = "Merit Function Reformulation"
 desc = "Solve the same problem by minimising the squared Fischer-Burmeister merit function with Ipopt, and compare with PATH"
 code = '''
