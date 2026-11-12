@@ -144,6 +144,11 @@ const BENCHMARKS = Base.PkgId(UUID("42886f46-29ec-4b6e-a6c6-e95103b5ec0b"), "Pol
 const BENCHMARKS_URL = "https://github.com/Trumpingtons/PollisBenchmarks.jl"
 """The commit of PollisBenchmarks.jl installed, from GitHub."""
 const BENCHMARKS_COMMIT = joinpath(ENVIRONMENT, "PollisBenchmarks.commit")
+"""PollisKnowledge.jl: the openly licensed texts of the Knowledge Base, which its page switches on, each downloaded when it is."""
+const KNOWLEDGE = Base.PkgId(UUID("20c90171-e345-48e2-b3f5-e1c5e5b81d48"), "PollisKnowledge")
+const KNOWLEDGE_URL = "https://github.com/Trumpingtons/PollisKnowledge.jl"
+"""The commit of PollisKnowledge.jl installed, from GitHub."""
+const KNOWLEDGE_COMMIT = joinpath(ENVIRONMENT, "PollisKnowledge.commit")
 """The PollisBenchmarks database: the catalogue of PollisBenchmarks.jl and the questions of the benchmarks built in, made by `build_benchmarks`."""
 const BENCHMARKS_DB = joinpath(homedir(), ".pollis", "databases", "PollisBenchmarks.duckdb")
 """The PollisBenchmarks.jl folder, its artifact and the SQL that `BENCHMARKS_DB` was made with."""
@@ -2267,10 +2272,10 @@ function latest_commit(url::AbstractString)
     end
 end
 
-"""The packages of Pollis installed from GitHub, the data of the built-in databases and PollisBenchmarks.jl, with the file of the commit installed."""
+"""The packages of Pollis installed from GitHub, the data of the built-in databases, PollisBenchmarks.jl and PollisKnowledge.jl, with the file of the commit installed."""
 const DATA_PACKAGES = [(pkg = DATASETS, url = DATASETS_URL, commit = DATASETS_COMMIT), (pkg = JOURNALS, url = JOURNALS_URL, commit = JOURNALS_COMMIT),
     (pkg = REFERENCES, url = REFERENCES_URL, commit = REFERENCES_COMMIT), (pkg = RSS, url = RSS_URL, commit = RSS_COMMIT),
-    (pkg = BENCHMARKS, url = BENCHMARKS_URL, commit = BENCHMARKS_COMMIT)]
+    (pkg = BENCHMARKS, url = BENCHMARKS_URL, commit = BENCHMARKS_COMMIT), (pkg = KNOWLEDGE, url = KNOWLEDGE_URL, commit = KNOWLEDGE_COMMIT)]
 
 """
     pending()
@@ -2322,9 +2327,9 @@ end
 """
     install()
 
-Install the packages built into Pollis, and the PollisDatasets, PollisJournals, PollisReferences, PollisRSS and PollisBenchmarks (`DATA_PACKAGES`),
+Install the packages built into Pollis, and the PollisDatasets, PollisJournals, PollisReferences, PollisRSS, PollisBenchmarks and PollisKnowledge (`DATA_PACKAGES`),
 that no environment on the load path provides yet into `ENVIRONMENT`. The first time, it adds them; afterwards it
-keeps the PollisDatasets, PollisJournals, PollisReferences, PollisRSS and PollisBenchmarks installed there up to date with GitHub, so that new data reaches
+keeps the PollisDatasets, PollisJournals, PollisReferences, PollisRSS, PollisBenchmarks and PollisKnowledge installed there up to date with GitHub, so that new data reaches
 the built-in databases and new benchmarks reach Benchmark Answering Models. Pkg runs (and precompiles) only when something is missing or GitHub has a newer
 commit than the one installed; offline, the installed copy is kept. The active project is left as it was.
 Run by `install_pollisdb.jl`, outside the REPL.

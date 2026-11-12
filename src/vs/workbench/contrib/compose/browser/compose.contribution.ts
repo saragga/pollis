@@ -17,6 +17,7 @@ import { COMPARE_RERANKERS_COMMAND_ID } from './compareRerankersPage.js';
 import { MODEL_BENCHMARKS_COMMAND_ID } from './modelBenchmarksPage.js';
 import { RETRIEVAL_BENCHMARKS_COMMAND_ID } from './retrievalBenchmarksPage.js';
 import { RAG_COMMAND_ID } from './ragPage.js';
+import { KNOWLEDGE_BASE_COMMAND_ID } from './knowledgeBasePage.js';
 import { ANSWERING_STRATEGIES_COMMAND_ID } from './answeringStrategiesPage.js';
 import { COMPARE_MODELS_COMMAND_ID } from './compareModelsPage.js';
 import './askPollisStrategiesService.js';
@@ -407,6 +408,13 @@ MenuRegistry.appendMenuItem(KnowledgeMenu, {
 	group: '1_knowledge',
 	command: { id: RAG_COMMAND_ID, title: localize('pollisRag.menu', "Retrieval-Augmented Generation") },
 	order: 1,
+});
+
+// The Knowledge Base, the openly licensed texts of PollisKnowledge.jl a model answers from (knowledgeBasePage.ts)
+MenuRegistry.appendMenuItem(KnowledgeMenu, {
+	group: '1_knowledge',
+	command: { id: KNOWLEDGE_BASE_COMMAND_ID, title: localize('knowledgeBase.menu', "Knowledge Base") },
+	order: 1.5,
 });
 
 // The strategies of Ask Pollis, the ways it finds the passages and answers from them (answeringStrategiesPage.ts)

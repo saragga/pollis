@@ -1,0 +1,43 @@
+# Knowledge Base Webview Configuration
+# A page of Compose in the Minimal style of the scaffold, not a panel: only its Powered by and Learn More. `pageCommand` is the command
+# that opens it, which a panel's contribution file would say. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/knowledgeBase.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Knowledge Base"
+viewType = "pollis.knowledgeBase"
+pageCommand = "pollis.knowledgeBase"
+
+[[packages]]
+name = "PollisKnowledge.jl"
+github = "https://github.com/Trumpingtons/PollisKnowledge.jl"
+
+[[packages]]
+name = "DuckDB.jl"
+github = "https://github.com/duckdb/DuckDB.jl"
+
+[[packages]]
+name = "Poppler_jll.jl"
+github = "https://github.com/JuliaBinaryWrappers/Poppler_jll.jl"
+
+[[wikis]]
+name = "Overview"
+file = "knowledgeBase/overview.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+key = "KW2027a"
+
+[[references]]
+key = "KWW2022a"
+
+[[references]]
+key = "Mur2022a"
+
+[[references]]
+key = "ZLLS2023a"

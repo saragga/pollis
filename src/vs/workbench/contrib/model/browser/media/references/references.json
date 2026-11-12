@@ -421,12 +421,12 @@
 			"issn": "0162-1459",
 			"doi": "10.1080/01621459.1993.10476321",
 			"openalex": "W2108306139",
+			"abstract": "A vast literature in statistics, biometrics, and econometrics is concerned with the analysis of binary and polychotomous response data. The classical approach fits a categorical response regression model using maximum likelihood, and inferences about the model are based on the associated asymptotic theory. The accuracy of classical confidence statements is questionable for small sample sizes. In this article, exact Bayesian methods for modeling categorical response data are developed using the idea of data augmentation. The general approach can be summarized as follows. The probit regression model for binary outcomes is seen to have an underlying normal regression structure on latent continuous data. Values of the latent data can be simulated from suitable truncated normal distributions. If the latent data are known, then the posterior distribution of the parameters can be computed using standard results for normal linear models. Draws from this posterior are used to sample new latent data, and the process is iterated with Gibbs sampling. This data augmentation approach provides a general framework for analyzing binary regression models. It leads to the same simplification achieved earlier for censored regression models. Under the proposed framework, the class of probit regression models can be enlarged by using mixtures of normal distributions to model the latent data. In this normal mixture class, one can investigate the sensitivity of the parameter estimates to the choice of “link function,” which relates the linear regression estimate to the fitted probabilities. In addition, this approach allows one to easily fit Bayesian hierarchical models. One specific model considered here reflects the belief that the vector of regression coefficients lies on a smaller dimension linear subspace. The methods can also be generalized to multinomial response models with J > 2 categories. In the ordered multinomial model, the J categories are ordered and a model is written linking the cumulative response probabilities with the linear regression structure. In the unordered multinomial model, the latent variables have a multivariate normal distribution with unknown variance-covariance matrix. For both multinomial models, the data augmentation method combined with Gibbs sampling is outlined. This approach is especially attractive for the multivariate probit model, where calculating the likelihood can be difficult.",
+			"abstract_source": "openalex",
 			"source": "crossref",
 			"retrieved": "2026-11-12",
 			"checked": true,
-			"open_access": false,
-			"abstract": "A vast literature in statistics, biometrics, and econometrics is concerned with the analysis of binary and polychotomous response data. The classical approach fits a categorical response regression model using maximum likelihood, and inferences about the model are based on the associated asymptotic theory. The accuracy of classical confidence statements is questionable for small sample sizes. In this article, exact Bayesian methods for modeling categorical response data are developed using the idea of data augmentation. The general approach can be summarized as follows. The probit regression model for binary outcomes is seen to have an underlying normal regression structure on latent continuous data. Values of the latent data can be simulated from suitable truncated normal distributions. If the latent data are known, then the posterior distribution of the parameters can be computed using standard results for normal linear models. Draws from this posterior are used to sample new latent data, and the process is iterated with Gibbs sampling. This data augmentation approach provides a general framework for analyzing binary regression models. It leads to the same simplification achieved earlier for censored regression models. Under the proposed framework, the class of probit regression models can be enlarged by using mixtures of normal distributions to model the latent data. In this normal mixture class, one can investigate the sensitivity of the parameter estimates to the choice of “link function,” which relates the linear regression estimate to the fitted probabilities. In addition, this approach allows one to easily fit Bayesian hierarchical models. One specific model considered here reflects the belief that the vector of regression coefficients lies on a smaller dimension linear subspace. The methods can also be generalized to multinomial response models with J > 2 categories. In the ordered multinomial model, the J categories are ordered and a model is written linking the cumulative response probabilities with the linear regression structure. In the unordered multinomial model, the latent variables have a multivariate normal distribution with unknown variance-covariance matrix. For both multinomial models, the data augmentation method combined with Gibbs sampling is outlined. This approach is especially attractive for the multivariate probit model, where calculating the likelihood can be difficult.",
-			"abstract_source": "openalex"
+			"open_access": false
 		},
 		{
 			"key": "AC2010a",
@@ -20095,6 +20095,54 @@
 			"open_access": true
 		},
 		{
+			"key": "KW2027a",
+			"type": "book",
+			"title": "Algorithms for Optimization",
+			"authors": [
+				"Kochenderfer, Mykel J.",
+				"Wheeler, Tim A."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2027,
+			"publisher": "MIT Press",
+			"address": "Cambridge, MA",
+			"edition": "2nd",
+			"isbn": "9780262058162",
+			"url": "https://algorithmsbook.com/optimization/",
+			"oa_url": "https://algorithmsbook.com/optimization/files/optimization.pdf",
+			"abstract": "This book provides a comprehensive introduction to optimization with a focus on practical algorithms. The book approaches optimization from an engineering perspective, where the objective is to design a system that optimizes a set of metrics subject to constraints. Readers will learn about computational approaches for a range of challenges, including searching high-dimensional spaces, handling problems where there are multiple competing objectives, and accommodating uncertainty in the metrics. Figures, examples, and exercises convey the intuition behind the mathematical approaches. The text provides concrete implementations in the Julia programming language. Topics covered include derivatives and their generalization to multiple dimensions; local descent and first- and second-order methods that inform local descent; stochastic methods, which introduce randomness into the optimization process; linear constrained optimization, when both the objective function and the constraints are linear; surrogate models, probabilistic surrogate models, and using probabilistic surrogate models to guide optimization; optimization under uncertainty; uncertainty propagation; expression optimization; and multidisciplinary design optimization. Appendixes offer an introduction to the Julia language, test functions for evaluating algorithm performance, and mathematical concepts used in the derivation and analysis of the optimization methods discussed in the text. The book can be used by advanced undergraduates and graduate students in mathematics, statistics, computer science, any engineering field, (including electrical engineering and aerospace engineering), and operations research, and as a reference for professionals.",
+			"abstract_source": "author",
+			"source": "manual",
+			"retrieved": "2026-11-12",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "KWW2022a",
+			"type": "book",
+			"title": "Algorithms for Decision Making",
+			"authors": [
+				"Kochenderfer, Mykel J.",
+				"Wheeler, Tim A.",
+				"Wray, Kyle H."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2022,
+			"publisher": "MIT Press",
+			"address": "Cambridge, MA",
+			"isbn": "9780262047012",
+			"url": "https://algorithmsbook.com/decisionmaking/",
+			"oa_url": "https://algorithmsbook.com/files/dm.pdf",
+			"abstract": "Automated decision-making systems or decision-support systems—used in applications that range from aircraft collision avoidance to breast cancer screening—must be designed to account for various sources of uncertainty while carefully balancing multiple objectives. This textbook provides a broad introduction to algorithms for decision making under uncertainty, covering the underlying mathematical problem formulations and the algorithms for solving them. The book first addresses the problem of reasoning about uncertainty and objectives in simple decisions at a single point in time, and then turns to sequential decision problems in stochastic environments where the outcomes of our actions are uncertain. It goes on to address model uncertainty, when we do not start with a known model and must learn how to act through interaction with the environment; state uncertainty, in which we do not know the current state of the environment due to imperfect perceptual information; and decision contexts involving multiple agents. The book focuses primarily on planning and reinforcement learning, although some of the techniques presented draw on elements of supervised learning and optimization. Algorithms are implemented in the Julia programming language. Figures, examples, and exercises convey the intuition behind the various approaches presented.",
+			"abstract_source": "mitpress",
+			"source": "manual",
+			"retrieved": "2026-11-12",
+			"checked": true,
+			"open_access": true
+		},
+		{
 			"key": "KY1979a",
 			"type": "incollection",
 			"title": "Chaotic behavior of multidimensional difference equations",
@@ -25790,6 +25838,28 @@
 			"source": "manual",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "Mur2022a",
+			"type": "book",
+			"title": "Probabilistic Machine Learning: An Introduction",
+			"authors": [
+				"Murphy, Kevin P."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2022,
+			"publisher": "MIT Press",
+			"address": "Cambridge, MA",
+			"isbn": "9780262046824",
+			"url": "https://probml.github.io/pml-book/book1.html",
+			"oa_url": "https://github.com/probml/pml-book/releases/latest/download/book1.pdf",
+			"abstract": "This book offers a detailed and up-to-date introduction to machine learning (including deep learning) through the unifying lens of probabilistic modeling and Bayesian decision theory. The book covers mathematical background (including linear algebra and optimization), basic supervised learning (including linear and logistic regression and deep neural networks), as well as more advanced topics (including transfer learning and unsupervised learning). End-of-chapter exercises allow students to apply what they have learned, and an appendix covers notation. Probabilistic Machine Learning grew out of the author's 2012 book, Machine Learning: A Probabilistic Perspective. More than just a simple update, this is a completely new book that reflects the dramatic developments in the field since 2012, most notably deep learning. In addition, the new book is accompanied by online Python code, using libraries such as scikit-learn, JAX, PyTorch, and Tensorflow, which can be used to reproduce nearly all the figures; this code can be run inside a web browser using cloud-based notebooks, and provides a practical complement to the theoretical topics discussed in the book. This introductory text will be followed by a sequel that covers more advanced topics, taking the same probabilistic approach.",
+			"abstract_source": "mitpress",
+			"source": "manual",
+			"retrieved": "2026-11-12",
+			"checked": true,
+			"open_access": true
 		},
 		{
 			"key": "Mut1960a",
@@ -38777,6 +38847,33 @@
 			"oa_url": "https://arxiv.org/pdf/1611.01578",
 			"source": "datacite",
 			"retrieved": "2026-11-02",
+			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "ZLLS2023a",
+			"type": "book",
+			"title": "Dive into Deep Learning",
+			"authors": [
+				"Zhang, Aston",
+				"Lipton, Zachary C.",
+				"Li, Mu",
+				"Smola, Alexander J."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2023,
+			"publisher": "Cambridge University Press",
+			"address": "Cambridge",
+			"isbn": "9781009389433",
+			"arxiv": "2106.11342",
+			"openalex": "W3176906074",
+			"url": "https://d2l.ai",
+			"oa_url": "https://d2l.ai",
+			"abstract": "This open-source book represents our attempt to make deep learning approachable, teaching readers the concepts, the context, and the code. The entire book is drafted in Jupyter notebooks, seamlessly integrating exposition figures, math, and interactive examples with self-contained code. Our goal is to offer a resource that could (i) be freely available for everyone; (ii) offer sufficient technical depth to provide a starting point on the path to actually becoming an applied machine learning scientist; (iii) include runnable code, showing readers how to solve problems in practice; (iv) allow for rapid updates, both by us and also by the community at large; (v) be complemented by a forum for interactive discussion of technical details and to answer questions.",
+			"abstract_source": "arxiv",
+			"source": "manual",
+			"retrieved": "2026-11-12",
 			"checked": true,
 			"open_access": true
 		},
@@ -51960,6 +52057,12 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "ZLLS2023a",
+			"count": 846,
+			"source": "openalex",
+			"date": "2026-11-12"
+		},
+		{
 			"key": "ZLMBB...2023a",
 			"count": 415,
 			"source": "openalex",
@@ -53799,6 +53902,19 @@
 				"BLBLK2017a",
 				"DBKYZ...2019a",
 				"Car2024a"
+			]
+		},
+		{
+			"id": "knowledgeBase",
+			"title": "Knowledge Base",
+			"commands": [
+				"pollis.knowledgeBase"
+			],
+			"keys": [
+				"KW2027a",
+				"KWW2022a",
+				"Mur2022a",
+				"ZLLS2023a"
 			]
 		},
 		{

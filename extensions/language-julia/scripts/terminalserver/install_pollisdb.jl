@@ -1,5 +1,5 @@
 # Pollis: installs DuckDB (Pollis' fork, which uses the DuckDB engine of Pollis), DBInterface, Tables, the
-# PollisDatasets, PollisJournals, PollisReferences, PollisRSS and PollisBenchmarks, keeps them up to date, copies the references of
+# PollisDatasets, PollisJournals, PollisReferences, PollisRSS, PollisBenchmarks and PollisKnowledge, keeps them up to date, copies the references of
 # PollisReferences beside those Pollis came with and the feeds of PollisRSS where Pollis reads them, and makes the five
 # built-in databases together: PollisDatasets, PollisRSS (empty until feeds are read), PollisJournals, PollisReferences
 # and PollisBenchmarks. Run by the Julia extension in a terminal of its own when the REPL reports that something is missing

@@ -17,6 +17,7 @@ import * as openpackagedirectory from './openpackagedirectory'
 import * as packagepath from './packagepath'
 import * as pollisCompareModels from './pollisCompareModels'
 import * as pollisModelBenchmarks from './pollisModelBenchmarks'
+import * as pollisKnowledgeBase from './pollisKnowledgeBase'
 import * as pollisDuckDB from './pollisDuckDB'
 import * as pollisDocuments from './pollisDocuments'
 import * as pollisHiddenJulia from './pollisHiddenJulia'
@@ -117,6 +118,8 @@ export async function activate(context: vscode.ExtensionContext) {
         // POLLIS: the evaluation of Evaluate Answering Models, with RAGTools.jl.
         pollisCompareModels.activate(context, executableFeature)
         pollisModelBenchmarks.activate(context, executableFeature)
+        // POLLIS: the texts of the Knowledge Base page, with PollisKnowledge.jl.
+        pollisKnowledgeBase.activate(context, executableFeature)
 
         t = performance.now()
         openpackagedirectory.activate(context)

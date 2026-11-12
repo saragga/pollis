@@ -54,7 +54,7 @@ const INSTALLED_COMMITS_KEY = 'pollis.dataPackages.installed';
 const UPDATE_SHOWN = 7 * 24 * 60 * 60 * 1000;
 
 /** The data packages, by name, with their repositories on GitHub (Trumpingtons). */
-const DATA_PACKAGES: readonly string[] = ['PollisDatasets', 'PollisJournals', 'PollisReferences', 'PollisRSS', 'PollisBenchmarks'];
+const DATA_PACKAGES: readonly string[] = ['PollisDatasets', 'PollisJournals', 'PollisReferences', 'PollisRSS', 'PollisBenchmarks', 'PollisKnowledge'];
 
 /** A data package whose installed commit differs from the latest on GitHub. */
 export interface IDataPackageChange {

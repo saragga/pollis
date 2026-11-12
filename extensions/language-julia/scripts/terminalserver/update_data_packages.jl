@@ -1,5 +1,5 @@
 # Pollis: the Update buttons of Check for Data Package Updates... (the Pollis menu on macOS, the Help menu elsewhere)
-# and of the Welcome page do at once what the REPL does at its start (install_pollisdb.jl): update the PollisDatasets, PollisJournals, PollisReferences, PollisRSS and PollisBenchmarks that
+# and of the Welcome page do at once what the REPL does at its start (install_pollisdb.jl): update the PollisDatasets, PollisJournals, PollisReferences, PollisRSS, PollisBenchmarks and PollisKnowledge that
 # Pollis installed, when GitHub has a newer commit, and makes the built-in databases again with their data. It also
 # updates the PollisDatasets of the PDF tools' environment (pdf_tools.jl). Run by the Julia extension in a hidden
 # process; its last line is POLLIS_DATA_PACKAGES and a JSON object: {"updated": [names], "offline": true or false}.
