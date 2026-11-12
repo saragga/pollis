@@ -134,8 +134,8 @@ id = "logr"
 label = "Logistic Regression"
 
 [[bullets]]
-text = "Automatic differentiation of log-likelihoods via DistributionsAD.jl"
-detail = "provides ChainRules.jl adjoint rules for Distributions"
+text = "DistributionsAD.jl loaded alongside Distributions.jl"
+detail = "provides ChainRules.jl rules for the AD back ends that use them; Enzyme.jl and ForwardDiff.jl differentiate the log-densities directly"
 
 [[bullets]]
 text = "Gradients from Enzyme.jl (reverse mode) or ForwardDiff.jl (forward mode)"
