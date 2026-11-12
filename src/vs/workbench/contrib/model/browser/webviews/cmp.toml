@@ -9,8 +9,8 @@ viewType = "pollis.cmp"
 defaultModel = "lcp"
 
 [[packages]]
-name = "Complementarity.jl"
-github = "https://github.com/chkwon/Complementarity.jl"
+name = "JuMP.jl"
+github = "https://github.com/jump-dev/JuMP.jl"
 
 [[packages]]
 name = "PATHSolver.jl"
@@ -380,7 +380,7 @@ atl, atu = sol.x .<= lb .+ tol, sol.x .>= ub .- tol
 [[actionGroups.actions]]
 id = "check-status"
 label = "Solver Status"
-desc = "PATH termination message and residual, and whether the Jacobian of F is positive definite at the solution (local uniqueness indicator)"
+desc = "PATH termination message and residual, and whether the Jacobian of F is positive definite at the solution (a sufficient condition for local uniqueness)"
 code = '''
 h = 1e-6
 J = reduce(hcat, [(Fop(sol.x .+ h .* [j == k ? 1.0 : 0.0 for k in 1:n]) .- sol.Fx) ./ h for j in 1:n])  # finite-difference Jacobian
