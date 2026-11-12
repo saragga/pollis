@@ -4,8 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { IntervalTimer } from '../../../../base/common/async.js';
+import { encodeBase64 } from '../../../../base/common/buffer.js';
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
-import { joinPath } from '../../../../base/common/resources.js';
+import { extname, joinPath } from '../../../../base/common/resources.js';
 import { hasKey } from '../../../../base/common/types.js';
 import { URI } from '../../../../base/common/uri.js';
 import { localize, localize2 } from '../../../../nls.js';
@@ -42,7 +43,9 @@ import { IInstalledModel } from './modelsInstalledPage.js';
 // the Julia extension (language-julia.pollisKnowledgeBase, scripts/terminalserver/knowledge_base.jl), from the release
 // of PollisKnowledge.jl that holds it; Build the Index cuts the texts switched on into passages and embeds them, as
 // Retrieval-Augmented Generation does a collection of the user's (language-julia.pollisIndexCollection), into
-// ~/.pollis/rag/knowledge-base.duckdb.
+// ~/.pollis/rag/knowledge-base.duckdb. Above the table, each published book has a card, in thanks to its authors: its
+// cover, as they show it, which comes with PollisKnowledge.jl, its title, edition, authors, publisher and year, their
+// page and the publisher's, where the printed book is sold.
 
 export const KNOWLEDGE_BASE_COMMAND_ID = 'pollis.knowledgeBase';
 
@@ -85,6 +88,10 @@ interface IKnowledgeText {
 	readonly page: string;
 	readonly size_mb: number;
 	readonly changes?: string;
+	/** The page of its publisher where the printed book is sold, for a published book. */
+	readonly hard_copy?: string;
+	/** The path of its cover, in PollisKnowledge.jl; "" for a text without one. */
+	readonly cover_file?: string;
 	downloaded: boolean;
 	documents: ITextDocument[];
 }
@@ -165,6 +172,8 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 	/** The texts downloading, and those whose download failed, with why. */
 	const downloading = new Set<string>();
 	const failed = new Map<string, string>();
+	/** The covers of the books, by their ids, as the page shows them: data URIs, which its policy allows. */
+	const covers: Record<string, string> = {};
 
 	const databaseFile = async () => joinPath(await pathService.userHome(), '.pollis', 'rag', INDEX_FILE);
 	const indexFile = async () => {
@@ -191,6 +200,15 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 		for (const id of await commandService.executeCommand<string[]>('language-julia.pollisKnowledgeBaseDownloading').catch(() => undefined) ?? []) {
 			downloading.add(id);
 		}
+		for (const text of texts ?? []) {
+			if (text.cover_file && !covers[text.id]) {
+				const file = URI.file(text.cover_file);
+				const content = await fileService.readFile(file).catch(() => undefined);
+				if (content) {
+					covers[text.id] = `data:image/${extname(file).toLowerCase() === '.png' ? 'png' : 'jpeg'};base64,${encodeBase64(content.value)}`;
+				}
+			}
+		}
 	};
 
 	/** The texts with what the page shows of them, the index and the embedding models. */
@@ -213,7 +231,7 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 			error: catalogueError,
 			texts: texts?.map(text => ({
 				id: text.id, title: text.title, type: text.type, edition: text.edition, authors: text.authors, publisher: text.publisher, year: text.year, subject: text.subject,
-				format: text.format, licence: text.licence, licenceUrl: text.licence_url, page: text.page, size: text.size_mb, changes: text.changes,
+				format: text.format, licence: text.licence, licenceUrl: text.licence_url, page: text.page, hardCopy: text.hard_copy, size: text.size_mb, changes: text.changes,
 				on: settings.on.includes(text.id), downloaded: text.downloaded, downloading: downloading.has(text.id), failed: failed.get(text.id),
 				passages: passagesOf(text),
 			})),
@@ -229,6 +247,7 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 			await postState();
 			await readCatalogue();
 			await postState();
+			post({ command: 'covers', covers });
 		} else if (message.command === 'switch' && hasKey(message, { id: true, on: true })) {
 			const text = texts?.find(t => t.id === message.id);
 			if (!text) {
@@ -265,7 +284,7 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 			} else if (document) {
 				await editorService.openEditor({ resource: URI.file(document.file) });
 			}
-		} else if (message.command === 'link' && hasKey(message, { url: true }) && texts?.some(text => text.page === message.url || text.licence_url === message.url)) {
+		} else if (message.command === 'link' && hasKey(message, { url: true }) && texts?.some(text => text.page === message.url || text.licence_url === message.url || text.hard_copy === message.url)) {
 			await commandService.executeCommand(OPEN_LINK_COMMAND_ID, message.url);
 		} else if (message.command === 'words' && hasKey(message, { words: true }) && PASSAGE_WORDS.includes(message.words)) {
 			settings.words = message.words;
@@ -318,6 +337,11 @@ function pageHtml(): string {
 		inCollection: localize('knowledgeBase.inCollection', "In the Knowledge Base"),
 		sizeMb: localize('knowledgeBase.sizeMb', "{0} MB", '{0}'),
 		authorsPage: localize('knowledgeBase.authorsPage', "Authors' Page"),
+		hardCopy: localize('knowledgeBase.hardCopy', "Hard Copy"),
+		hardCopyHint: localize('knowledgeBase.hardCopyHint', "The printed book, at its publisher, {0}", '{0}'),
+		thanks: localize('knowledgeBase.thanks', "With Thanks to Their Authors"),
+		thanksIntro: localize('knowledgeBase.thanksIntro', "These books are open because their authors made them so. Each is also a printed book, from its publisher."),
+		coverOf: localize('knowledgeBase.coverOf', "The cover of {0}", '{0}'),
 		unchanged: localize('knowledgeBase.unchanged', "The PDF of its authors, unchanged."),
 		cutPdf: localize('knowledgeBase.cutPdf', "Cut at its bookmarks into passages of about {0} words.", '{0}'),
 		cutMarkdown: localize('knowledgeBase.cutMarkdown', "One document a section, cut at its headings into passages of about {0} words.", '{0}'),
@@ -380,10 +404,19 @@ ${spinnerCss}
 	.cut { width: 17%; }
 	.switch { white-space: nowrap; }
 	.failed, .missing { color: var(--vscode-errorForeground); }
+	.books { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; margin: 8px 0 20px 0; }
+	.book { display: flex; flex-direction: column; gap: 3px; }
+	.book img { width: 100%; max-width: 180px; height: auto; border-radius: 2px; box-shadow: 0 2px 8px var(--vscode-widget-shadow); cursor: pointer; margin-bottom: 6px; }
+	.book .bookTitle { font-weight: 600; }
 	}
 `,
 		bodyHtml: `
 		<div class="libraryPage">
+	<section id="thanks" hidden>
+		<h2>${text.thanks}</h2>
+		<p class="hint">${text.thanksIntro}</p>
+		<div class="books" id="books"></div>
+	</section>
 	<div class="filters stickyBand" id="filters">
 		<input class="search" id="search" type="search" placeholder="${text.search}" aria-label="${text.search}">
 		<span class="small" id="count"></span>
@@ -423,6 +456,7 @@ ${spinnerCss}
 	${sortHeadingsScript()}
 
 	let state;
+	let covers = {};
 	let building = false;
 	let buildError;
 	let sortColumn = (vscode.getState() || {}).sortColumn || 'title';
@@ -479,7 +513,40 @@ ${spinnerCss}
 		return tr;
 	}
 
+	// A card for each book with a cover: the cover and title, which open its authors' page, its edition, authors,
+	// publisher and year, and the links to its authors' page and to the printed book at its publisher
+	function renderBooks() {
+		const books = (state && state.texts || []).filter(item => covers[item.id]);
+		const box = document.getElementById('books');
+		box.textContent = '';
+		for (const item of books) {
+			const card = element('div', 'book');
+			const cover = element('img');
+			cover.src = covers[item.id];
+			cover.alt = format(TEXT.coverOf, item.title);
+			cover.title = item.page;
+			cover.addEventListener('click', () => vscode.postMessage({ command: 'link', url: item.page }));
+			card.appendChild(cover);
+			card.appendChild(element('div', 'bookTitle', item.title));
+			card.appendChild(element('div', 'small', item.edition));
+			card.appendChild(element('div', 'small', authorsOf(item.authors)));
+			card.appendChild(element('div', 'small', item.publisher + ', ' + item.year));
+			const links = element('div', 'links');
+			links.appendChild(link(TEXT.authorsPage, () => vscode.postMessage({ command: 'link', url: item.page })));
+			if (item.hardCopy) {
+				links.appendChild(document.createTextNode(' \u00b7 '));
+				const hardCopy = link(TEXT.hardCopy, () => vscode.postMessage({ command: 'link', url: item.hardCopy }));
+				hardCopy.title = format(TEXT.hardCopyHint, item.publisher);
+				links.appendChild(hardCopy);
+			}
+			card.appendChild(links);
+			box.appendChild(card);
+		}
+		document.getElementById('thanks').hidden = !books.length;
+	}
+
 	function render() {
+		renderBooks();
 		const note = document.getElementById('note');
 		const table = document.getElementById('table');
 		if (!state.texts) {
@@ -591,6 +658,9 @@ ${spinnerCss}
 			state = message;
 			render();
 			renderIndex();
+		} else if (message.command === 'covers') {
+			covers = message.covers;
+			renderBooks();
 		} else if (message.command === 'progress') {
 			showProgress(message.progress);
 		} else if (message.command === 'built') {

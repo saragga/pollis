@@ -55,7 +55,8 @@ documents_of(PK, id) = [(; file = d.file, title = d.title, kind = d.kind) for d 
 """
 What the Julia extension runs, with the task as JSON in its argument. It writes one line of JSON on stdout: what the
 task answers, or {"error"}. The tasks:
-  - {"task": "texts"}: answers {texts}, the entries of the catalogue, each with `downloaded` and, when it is, its `documents`;
+  - {"task": "texts"}: answers {texts}, the entries of the catalogue, each with `downloaded`, `cover_file`, the path of its
+    cover or "" for none, and, when it is downloaded, its `documents`;
   - {"task": "download", "id"}: downloads the text `id`, unless it is on this computer, and answers {documents}.
 """
 function main(task_json)
@@ -74,7 +75,9 @@ function run_task(PK, task_json)
 		if task !== nothing && task[:task] == "texts"
 			texts = map(PK.catalogue()) do entry
 				downloaded = PK.downloaded(entry["id"])
-				merge(entry, Dict("downloaded" => downloaded, "documents" => downloaded ? documents_of(PK, entry["id"]) : []))
+				# The path of its cover, from a PollisKnowledge.jl that has covers
+				cover = isdefined(PK, :cover) ? PK.cover(entry["id"]) : nothing
+				merge(entry, Dict("downloaded" => downloaded, "documents" => downloaded ? documents_of(PK, entry["id"]) : [], "cover_file" => something(cover, "")))
 			end
 			say((; texts))
 		elseif task !== nothing && task[:task] == "download" && id !== nothing
