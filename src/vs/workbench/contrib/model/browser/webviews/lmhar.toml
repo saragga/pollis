@@ -208,7 +208,7 @@ desc = "Lagrange multiplier test for multiplicative heteroskedasticity in OLS re
 code = '''
 using HARE
 
-harvey_test({{X}}, {{y}})  # LM test: H0 = homoskedasticity; Z defaults to X
+harvey_test({{X}}, {{y}}; Z={{Z}})  # LM test: H0 = homoskedasticity in the variance regressors Z (X when Z is nothing)
 '''
 
 [[actionGroups.actions]]
