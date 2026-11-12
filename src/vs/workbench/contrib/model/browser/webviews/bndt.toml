@@ -491,7 +491,8 @@ desc = "Expected regret against the asymptotic lower bound sum over suboptimal a
 code = '''
 using Plots
 
-kl(p, q) = p * log(p / q) + (1 - p) * log((1 - p) / (1 - q))  # Bernoulli Kullback-Leibler divergence
+xlogy(x, y) = x == 0 ? 0.0 : x * log(y)  # 0 log 0 = 0, so arms with probability 0 or 1 are allowed
+kl(p, q) = xlogy(p, p / q) + xlogy(1 - p, (1 - p) / (1 - q))  # Bernoulli Kullback-Leibler divergence
 pb = maximum(probs)
 constant = sum((pb - p) / kl(p, pb) for p in probs if p < pb)
 plot(mean_regret(), xlabel="step", ylabel="expected cumulative regret", label="{{model}}")
