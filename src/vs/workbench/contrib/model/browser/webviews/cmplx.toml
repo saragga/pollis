@@ -157,7 +157,7 @@ detail = "quantify ordinal complexity of a time series by comparing the relative
 
 [[bullets]]
 text = "Sample Entropy"
-detail = "estimate regularity and unpredictability of a time series without self-matching of templates, robust to short and noisy data"
+detail = "estimate regularity and unpredictability of a time series without self-matching of templates"
 
 [[bullets]]
 text = "Surrogate Testing"
@@ -172,7 +172,7 @@ default = "x"
 [[inputs]]
 id = "m"
 label = "Embedding dim (m)"
-tooltip = "Order (embedding dimension) for permutation entropy and template length for sample entropy. Typical values: 3–7. Larger m captures more structure but requires longer series."
+tooltip = "Order (embedding dimension) for permutation entropy and template length for sample entropy. Typical values: 3–7 for permutation entropy and 2 for sample entropy. Larger m captures more structure but requires longer series."
 default = "5"
 
 [[inputs]]
@@ -327,7 +327,7 @@ end
 [[actionGroups.actions]]
 id = "entropy-rate"
 label = "Entropy Rate"
-desc = "Estimate the entropy rate by extrapolating sample entropy values to large m"
+desc = "Print sample entropy for increasing m, to see how it changes with the template length"
 code = '''
 using ComplexityMeasures
 
@@ -385,7 +385,7 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "complexity-summary"
 label = "Complexity Summary"
-desc = "Print a full complexity profile including permutation entropy, sample entropy, and complexity index"
+desc = "Print a full complexity profile with permutation entropy and sample entropy"
 code = '''
 using ComplexityMeasures
 
