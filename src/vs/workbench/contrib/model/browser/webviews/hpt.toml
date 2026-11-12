@@ -321,7 +321,7 @@ model  = {{learner}}()  # instantiate with defaults
 tuned = TunedModel(
     model      = model,  # 
     tuning     = Grid(resolution={{resolution}}),  # {{resolution}} values per continuous range
-    resampling = CV(nfolds={{cv}}),  # {{cv}}-fold cross-validation
+    resampling = CV(nfolds={{cv}}, shuffle=true, rng=42),  # {{cv}}-fold cross-validation
     measure    = {{measure}},  # optimisation criterion
     range      = [r1, r2],
 )
@@ -346,7 +346,7 @@ using MLJ
 {{learner}} = @load {{learner}} pkg={{pkg}} verbosity=0  # import the model type from its package
 model  = {{learner}}()  # instantiate with defaults
 
-{{?learner=DecisionTreeClassifier}} r1 = range(model, :min_purity_increase, lower=0.0, upper=0.3)  # continuous uniform: the smallest impurity gain worth a split
+{{?learner=DecisionTreeClassifier}} r1 = range(model, :min_purity_increase, lower=0.001, upper=0.3, scale=:log)  # continuous log-scale, as in Grid and Bayesian: the smallest impurity gain worth a split
 {{?learner=DecisionTreeClassifier}} r2 = range(model, :max_depth, values=[2, 3, 4, 5, 6])  # discrete: the depth of the tree
 {{?learner!=DecisionTreeClassifier}} r1 = range(model, :param1, lower=v_lo, upper=v_hi)  # continuous uniform range
 {{?learner!=DecisionTreeClassifier}} r2 = range(model, :param2, values=[v1, v2, v3])  # discrete range
@@ -355,7 +355,7 @@ tuned = TunedModel(
     model      = model,  # 
     tuning     = RandomSearch(rng=42),  # reproducible random search
     n          = {{niter}},  # {{niter}} sampled configurations
-    resampling = CV(nfolds={{cv}}),  # {{cv}}-fold cross-validation
+    resampling = CV(nfolds={{cv}}, shuffle=true, rng=42),  # {{cv}}-fold cross-validation
     measure    = {{measure}},  # optimisation criterion
     range      = [r1, r2],
 )
@@ -392,7 +392,7 @@ tuned = TunedModel(
     model      = model,  # 
     tuning     = MLJTreeParzenTuning(random_trials=10),  # 10 random draws, then Parzen-estimator guided
     n          = {{ncalls}},  # {{ncalls}} evaluated configurations
-    resampling = CV(nfolds={{cv}}),  # {{cv}}-fold cross-validation
+    resampling = CV(nfolds={{cv}}, shuffle=true, rng=42),  # {{cv}}-fold cross-validation
     measure    = {{measure}},  # optimisation criterion
     range      = space,
 )
@@ -417,7 +417,7 @@ using MLJ, Plots
 {{?learner=DecisionTreeClassifier}} r = range(model, :max_depth, lower=1, upper=10)  # hyperparameter to sweep
 {{?learner!=DecisionTreeClassifier}} r = range(model, :param1, lower=lo, upper=hi)  # hyperparameter to sweep
 curve = learning_curve(model, {{X}}, {{y}};  # 
-    range=r, resampling=CV(nfolds={{cv}}), measure={{measure}})  # 
+    range=r, resampling=CV(nfolds={{cv}}, shuffle=true, rng=42), measure={{measure}})  # 
 
 plot(curve.parameter_values, curve.measurements,  # 
     xlabel=string(r.field), ylabel=string({{measure}}), legend=false)  # tuning curve
@@ -435,7 +435,7 @@ perm  = randperm(Xoshiro(42), nrows({{X}}))  # random row order, so each subset 
 sizes = round.(Int, (0.1:0.1:1.0) .* length(perm))  # 10 % to 100 % of the training data
 scores = map(sizes) do k
     evaluate(best, {{X}}, {{y}}; rows=perm[1:k],  # 
-        resampling=CV(nfolds={{cv}}), measure={{measure}}, verbosity=0).measurement[1]
+        resampling=CV(nfolds={{cv}}, shuffle=true, rng=42), measure={{measure}}, verbosity=0).measurement[1]
 end
 
 plot(sizes, scores,  # 
