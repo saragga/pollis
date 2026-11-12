@@ -114,15 +114,15 @@ text = "Formulate optimisation problems over continuous domains: time, space, or
 detail = ""
 
 [[bullets]]
-text = "Supports ODE-constrained optimal control, integral objectives, and PDE-constrained problems"
+text = "Supports ODE-constrained optimal control with integral objectives"
 detail = ""
 
 [[bullets]]
-text = "Transcribes infinite problems to finite NLP/MIP via orthogonal collocation or trapezoid discretisation"
+text = "Transcribes the problem to a finite optimisation problem via orthogonal collocation or finite differences (backward or central)"
 detail = ""
 
 [[bullets]]
-text = "Compatible with any JuMP-supported solver: Ipopt, HiGHS, Juniper, GLPK, Mosek"
+text = "Solved through JuMP with Ipopt or HiGHS"
 detail = ""
 
 [[decisionRows]]
@@ -406,7 +406,7 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "dual-variables"
 label = "Costates"
-desc = "Duals of the dynamics constraints: the discrete costates p(t) of Pontryagin's principle, the marginal cost of a unit change in each state at each time"
+desc = "Duals of the dynamics constraints: the discrete costates p(t) of Pontryagin's principle, up to the quadrature weights and sign convention"
 code = '''
 using Plots
 
