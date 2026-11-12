@@ -9,8 +9,8 @@ viewType = "pollis.acm"
 defaultModel = "a2c"
 
 [[packages]]
-name = "ReinforcementLearning.jl"
-github = "https://github.com/JuliaReinforcementLearning/ReinforcementLearning.jl"
+name = "Flux.jl"
+github = "https://github.com/FluxML/Flux.jl"
 
 [[packages.videos]]
 title = "High Performance Computing in Julia"
@@ -146,15 +146,15 @@ label = "TD3"
 
 [[bullets]]
 text = "Advantage Actor-Critic (A2C)"
-detail = "on-policy; actor updated by the policy gradient weighted by the advantage function; variance reduced via parallel environment rollouts; supports discrete and continuous actions (ReinforcementLearning.jl)"
+detail = "on-policy; actor updated by the policy gradient weighted by the advantage function; variance reduced via parallel environment rollouts; continuous actions here"
 
 [[bullets]]
 text = "Soft Actor-Critic (SAC)"
-detail = "off-policy maximum-entropy actor-critic; twin soft Q-networks prevent value overestimation; automatic entropy temperature tuning; state-of-the-art sample efficiency on continuous control (ReinforcementLearning.jl)"
+detail = "off-policy maximum-entropy actor-critic; twin soft Q-networks prevent value overestimation; entropy temperature set by Temperature (alpha); state-of-the-art sample efficiency on continuous control"
 
 [[bullets]]
 text = "Twin Delayed Deep Deterministic Policy Gradient (TD3)"
-detail = "off-policy deterministic actor; twin critics reduce overestimation bias; delayed actor updates and target policy smoothing improve training stability (ReinforcementLearning.jl)"
+detail = "off-policy deterministic actor; twin critics reduce overestimation bias; delayed actor updates and target policy smoothing improve training stability"
 
 [[decisionRows]]
 task = "A2C"
@@ -599,7 +599,7 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "sac-vs-td3"
 label = "LQR Benchmark"
-desc = "Learned policy against the optimal linear-quadratic regulator (discounted Riccati solution, force clipped to [-1, 1]) from four starting positions"
+desc = "Learned policy against the linear-quadratic regulator (discounted Riccati solution), with its force clipped to [-1, 1], from four starting positions"
 code = '''
 using LinearAlgebra
 
