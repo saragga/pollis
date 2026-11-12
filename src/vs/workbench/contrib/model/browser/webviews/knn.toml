@@ -229,7 +229,7 @@ newRow = true
 [[inputs]]
 id = "r"
 label = "r"
-tooltip = "Search radius. All points with distance <= r from the query are returned. Default 1.0."
+tooltip = "Search radius, in standard deviations, as the features are standardised. All points with distance <= r from the query are returned. Default 1.0."
 default = "1.0"
 models = ["range"]
 newRow = true
