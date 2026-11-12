@@ -20,11 +20,11 @@ A P below 0.5 favours feasibility, while still letting some good infeasible poin
 
 ## How the Panel Uses It
 
-The tab calls `NLopt.optimize` with `:GN_ISRES`, the box as bounds and **Budget** as `maxeval`. The objective is the only function passed, so that no nonlinear constraint is active by default. The method's main advantage therefore is unused. To add one, register it in the code with `inequality_constraint!(opt, g, tol)`, where g(x) ≤ 0 is feasible. **Bounds Check** then only checks the box, so also test each constraint at the solution.
+The tab calls `NLopt.optimize` with `:GN_ISRES`, the box as bounds and **Budget** as `maxeval`. **Constraint g(x)** is registered with `inequality_constraint!(opt, g, 1e-8)`, where g(x) ≤ 0 is feasible. The result reports `constraint_value`, g at the best point: at or below 0 means feasible, and near 0 means the constraint binds. The trace follows feasible points only. **Bounds Check** checks the box alone.
 
-## What the Start at the Box Centre Means
+## What the Default Constraint Does
 
-The code starts from the centre of the box, whereas **CMA-ES** starts from a random point. For the default Rastrigin function, the centre is the global minimum itself. If the start enters the first population, then the run has the answer from its first evaluation. **Convergence Check** reveals this through `best_first_reached_at`. Use an objective with a shifted optimum before judging the method, or before reading its place in **Compare Strategies**.
+The code starts from a random point in the box, as the other tabs do. The default **Constraint g(x)**, 1 − x[1]² − x[2]² ≤ 0, keeps (x[1], x[2]) outside the unit circle. That excludes the global minimum of the default Rastrigin function at the origin, so the best value stays above 0 and the constraint binds at the answer. Enter -1 for an unconstrained run. **Compare Strategies** runs every method on the box alone, without the constraint.
 
 ## Where ISRES Is Strong and Weak
 

@@ -12,7 +12,7 @@ A Cauchy distribution has heavy tails: its variance is infinite, and large jumps
 
 ## What the Code Does
 
-The tab calls `NLopt.optimize` with `:GN_ESCH`, the box and **Budget** as `maxeval`. `NLopt.srand` sets the seed. The start is the centre of the box, which is the global minimum of the default Rastrigin function, so that a very good default result may say little about the method. **Convergence Check** shows how early the best value appeared. For a fair test, shift the optimum, for example by replacing x with x .- 1.3 in **Objective f(x)**.
+The tab calls `NLopt.optimize` with `:GN_ESCH`, the box and **Budget** as `maxeval`. `NLopt.srand` sets the seed. The start is a random point in the box, as on the other tabs. **Convergence Check** shows how early the best value appeared.
 
 ## How to Read Its Progress
 

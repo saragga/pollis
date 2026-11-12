@@ -45,7 +45,7 @@ The global minimum is 0 at the origin. A grid of local minima lies near the inte
 5. Check the answer with **Neighbourhood Check** and **Bounds Check**.
 6. Compare other methods with **Compare Strategies** and **ES vs DE**.
 
-Before comparing, shift the optimum away from the box centre, as two of the tabs start there.
+In **Compare Strategies** every method searches the box alone; the ISRES constraint is not applied there.
 
 ## References
 

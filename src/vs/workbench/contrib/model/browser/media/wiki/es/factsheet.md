@@ -24,6 +24,7 @@ All six tabs share the Next Steps, which call the `search` of the selected tab.
 | **Upper Bounds** | `fill(5.12, n)` | All | One per variable |
 | **Budget** | 20000 | All | Objective evaluations |
 | **Initial Step Size** | 0.3 | **CMA-ES**, **GCMAES** | Fraction of the widest box side |
+| **Constraint g(x)** | `1 - x[1]^2 - x[2]^2` | **ISRES** | Feasible where g(x) ≤ 0; -1 for none |
 
 ## What the Generated Code Fixes
 
@@ -32,8 +33,7 @@ All six tabs share the Next Steps, which call the `search` of the selected tab.
 | Seed of the main run | 1 |
 | Population in **CMA-ES**, **GCMAES** | 4 + ⌊3 ln d⌋, which is 8 at d = 5 |
 | Parents in **CMA-ES** | Half the population |
-| Start in **CMA-ES**, **GCMAES** | Random point in the box |
-| Start in **ISRES**, **ESCH** | Box centre |
+| Start in every tab | Random point in the box |
 | Gradient in **GCMAES** | `ForwardDiff.gradient` |
 | **Multi-Start Analysis** | 10 seeds |
 | **Budget Sensitivity** | 5% to 200% of the budget, 3 seeds each |

@@ -24,7 +24,7 @@ Stochastic global methods give no certificate of optimality. Evidence comes from
 
 ## How to Read the Status
 
-The status varies by package. `Evolutionary.jl` gives "converged" or "iteration limit" in this code. `BlackBoxOptim.jl` and `NLopt.jl` give their own reasons, and hitting the evaluation limit is normal. `best_first_reached_at` in **Convergence Check** gives when the final best first appeared. A value of 1 means that the first evaluation already had the best value, which on the default **ISRES** and **ESCH** tabs can be due to their start at the box centre. `on_a_bound` calls for a wider box.
+The status varies by package. `Evolutionary.jl` gives "converged" or "iteration limit" in this code. `BlackBoxOptim.jl` and `NLopt.jl` give their own reasons, and hitting the evaluation limit is normal. `best_first_reached_at` in **Convergence Check** gives when the final best first appeared. A value of 1 means that the first evaluation already had the best value. `on_a_bound` calls for a wider box.
 
 ## See Also
 
