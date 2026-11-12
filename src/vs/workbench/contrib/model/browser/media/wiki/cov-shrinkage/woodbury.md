@@ -4,7 +4,7 @@ The **Woodbury** tab fits a covariance made of a few strong directions on top of
 
 ## What the Woodbury Estimator Computes
 
-The model behind it is the spiked covariance of [Johnstone (2001)](#ref-Joh2001a), where a few eigenvalues stand out from a common level. The estimator keeps the top **Rank** sample eigenvectors, adjusts their eigenvalues, and represents the rest through the diagonal part. [Donoho, Gavish and Johnstone (2018)](#ref-DGJ2018a) show that the best adjustment depends on the loss function. With noise at level 1 and ell a true spike, c^2 = (1 - gamma/(ell - 1)^2) / (1 + gamma/(ell - 1)) measures how well a sample eigenvector aligns with its true direction, where gamma = p/n. For Frobenius loss, the adjusted spike is ell c^2 + (1 - c^2).
+The model behind it is the spiked covariance of [Johnstone (2001)](#ref-Joh2001a), where a few eigenvalues stand out from a common level. The estimator keeps the top **Rank** sample eigenvectors, adjusts their eigenvalues, and represents the rest through the diagonal part. [Donoho, Gavish and Johnstone (2018)](#ref-DGJ2018a) show that the best adjustment depends on the loss function. With noise at level 1 and ell a true spike, c^2 = (1 - gamma/(ell - 1)^2) / (1 + gamma/(ell - 1)) measures how well a sample eigenvector aligns with its true direction, where gamma = p/n. The formula holds for ell above 1 + sqrt(gamma), and the alignment is 0 at or below that threshold. For Frobenius loss, the adjusted spike is ell c^2 + (1 - c^2).
 
 ## How the Woodbury Tab Is Set Up
 

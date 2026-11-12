@@ -4,7 +4,7 @@ The **Biweight** tab replaces means and squared deviations with medians and smoo
 
 ## What the Biweight Midcovariance Computes
 
-For two columns x and y, with medians M_x and M_y and median absolute deviations MAD_x and MAD_y, set u_i = (x_i - M_x) / (c MAD_x) and v_i = (y_i - M_y) / (c MAD_y). The entry is n times the sum of (x_i - M_x)(1 - u_i^2)^2 (y_i - M_y)(1 - v_i^2)^2, divided by the product of the sum of (1 - u_i^2)(1 - 5 u_i^2) and the sum of (1 - v_i^2)(1 - 5 v_i^2). All sums run only over rows with |u_i| under 1 and |v_i| under 1. Values beyond c MADs get zero weight. The scale version of this idea was among the estimators studied for long-tailed samples by [Lax (1985)](#ref-Lax1985a).
+For two columns x and y, with medians M_x and M_y and median absolute deviations MAD_x and MAD_y, set u_i = (x_i - M_x) / (c MAD_x) and v_i = (y_i - M_y) / (c MAD_y). The entry is n times the sum of (x_i - M_x)(1 - u_i^2)^2 (y_i - M_y)(1 - v_i^2)^2, divided by the product of the sum of (1 - u_i^2)(1 - 5 u_i^2) and the sum of (1 - v_i^2)(1 - 5 v_i^2). The sum above the line runs over rows with both |u_i| and |v_i| under 1, and each sum below it over rows where its own u or v is under 1. Values beyond c MADs get zero weight. The scale version of this idea was among the estimators studied for long-tailed samples by [Lax (1985)](#ref-Lax1985a).
 
 ## How the Biweight Tab Is Set Up
 
