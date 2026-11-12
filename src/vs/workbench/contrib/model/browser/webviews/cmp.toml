@@ -437,16 +437,19 @@ function phi(x, Fx, i)  # Billups merit for each bound type
     lo, up = isfinite(lb[i]), isfinite(ub[i])
     lo && up ? fb(x[i] - lb[i], -fb(ub[i] - x[i], -Fx[i])) : lo ? fb(x[i] - lb[i], Fx[i]) : up ? fb(ub[i] - x[i], -Fx[i]) : Fx[i]
 end
-t = @elapsed begin
+function merit_solve()
     m = Model(Ipopt.Optimizer); set_silent(m)
     @variable(m, x[1:n], start = 1.0)
     Fx = Fop(x)
     @objective(m, Min, sum(phi(x, Fx, i)^2 for i in 1:n))
     optimize!(m)
+    value.(x)
 end
+merit_solve(); solve_cp()  # first runs compile the code, so neither timing below includes compilation
+t = @elapsed (xm = merit_solve())
 t_path = @elapsed solve_cp()
 [(method = "PATH", x = round.(sol.x, digits=4), residual = residual(sol.x), seconds = round(t_path, digits=3)),
- (method = "Fischer-Burmeister + Ipopt", x = round.(value.(x), digits=4), residual = residual(value.(x)), seconds = round(t, digits=3))]
+ (method = "Fischer-Burmeister + Ipopt", x = round.(xm, digits=4), residual = residual(xm), seconds = round(t, digits=3))]
 '''
 
 [[actionGroups]]
@@ -461,7 +464,7 @@ code = '''
 tol = 1e-6
 [(i = i, x = round(sol.x[i], digits=5), F = round(sol.Fx[i], digits=5),
   status = sol.x[i] <= lb[i] + tol ? (abs(sol.Fx[i]) <= tol ? "at lower bound, degenerate" : "at lower bound") :
-           sol.x[i] >= ub[i] - tol ? "at upper bound" : "interior, F = 0") for i in 1:n]
+           sol.x[i] >= ub[i] - tol ? (abs(sol.Fx[i]) <= tol ? "at upper bound, degenerate" : "at upper bound") : "interior, F = 0") for i in 1:n]
 '''
 
 [[actionGroups.actions]]
