@@ -375,7 +375,8 @@ code = '''
 jx = findall(i -> sol.t[i+1] == sol.t[i], 1:length(sol.t)-1)  # a jump saves the state twice at the same time
 Lambda = sum(rate(sol.u[i], nothing, sol.t[i]) * (sol.t[i+1] - sol.t[i]) for i in 1:length(sol.t)-1)  # expected count given the path
 println("Jumps observed: ", length(jx), "  Expected (integrated intensity): ", round(Lambda, digits=2))
-println("One path: the count is Poisson, so +/- 2 sqrt(", round(Lambda, digits=2), ") = +/- ", round(2 * sqrt(Lambda), digits=2), " is normal")
+{{?model!=custom}}println("One path: the count is Poisson, so +/- 2 sqrt(", round(Lambda, digits=2), ") = +/- ", round(2 * sqrt(Lambda), digits=2), " is normal")
+{{?model=custom}}println("One path: the rate depends on the state, so the count is not Poisson; a count far from the integrated intensity over many paths points to a problem")
 '''
 
 [[actionGroups]]
