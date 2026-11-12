@@ -273,15 +273,22 @@ const PANEL_ASK_HEIGHT = 120;
 /**
  * A panel's Ask Pollis, at the right of its title and Powered by, in place of the microphone and speaker of the other
  * pages: a narrow pill, the question on its first line, which wraps to the lines below as it is written, and on the
- * line under it the + at the left, and the voice tools of a chat's input box, then the arrow, at the right. It is posted
- * as `askPollis`, with what the + attached, which Ask Pollis answers beside the panel.
+ * line under it the + at the left, and the voice tools of a chat's input box, then the arrow, at the right. Below the
+ * pill, Context, the panel's `title` unless the user writes another: the question is searched after it, and the
+ * answering model is told it. It is posted as `askPollis`, with the Context and what the + attached, which Ask Pollis
+ * answers beside the panel.
  */
-export function panelAskHtml(): string {
+export function panelAskHtml(title: string): string {
 	const text = {
 		placeholder: localize('panelAsk.placeholder', "Ask Pollis"),
 		ask: localize('panelAsk.ask', "Ask: the answer comes in Ask Pollis, beside this panel"),
+		context: localize('panelAsk.context', "Context"),
+		contextPrefix: localize('panelAsk.contextPrefix', "Context:"),
+		contextPlaceholder: localize('panelAsk.contextPlaceholder', "None"),
+		contextHint: localize('panelAsk.contextHint', "Searched before the question, and told to the answering model: this panel's title unless you write another. Clear it to ask the question alone."),
 	};
-	return `<div class="panel-ask composer">
+	return `<div class="panel-ask-column">
+			<div class="panel-ask composer">
 				${askAttachmentsHtml('panel-ask-')}
 				<textarea id="panel-ask-question" rows="1" placeholder="${text.placeholder}" aria-label="${text.placeholder}"></textarea>
 				<div class="panel-ask-tools">
@@ -289,13 +296,16 @@ export function panelAskHtml(): string {
 					${composerVoiceHtml('auto', 'same')}
 					<button class="panel-ask-send" id="panel-ask-send" title="${text.ask}" aria-label="${text.ask}">${composerSendSvg}</button>
 				</div>
+			</div>
+			<label class="panel-ask-context" title="${text.contextHint}"><span class="prefix">${text.contextPrefix}</span><input id="panel-ask-context" type="text" value="${title.replace(/"/g, '&quot;')}" placeholder="${text.contextPlaceholder}" aria-label="${text.context}" spellcheck="false"></label>
 			</div>`;
 }
 
 /** The title and Powered by of a panel, with its Ask Pollis at their right: they keep to the top as the question grows. */
 export const panelAskCss = `.title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 		.title-column { flex: 1; min-width: 0; }
-		.panel-ask { flex: 0 1 300px; min-width: 200px; margin-bottom: 16px; padding: 3px 10px 6px 12px; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-focusBorder); border-radius: 14px; }
+		.panel-ask-column { flex: 0 1 300px; min-width: 200px; margin-bottom: 16px; }
+		.panel-ask { padding: 3px 10px 6px 12px; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-focusBorder); border-radius: 14px; }
 		.panel-ask:focus-within { box-shadow: 0 0 0 1px var(--vscode-focusBorder); }
 		.panel-ask textarea { display: block; box-sizing: border-box; width: 100%; resize: none; height: 30px; max-height: ${PANEL_ASK_HEIGHT}px; overflow-y: hidden; font: inherit; line-height: 1.4; padding: 6px 2px; color: inherit; background: transparent; border: none; outline: none; }
 		.panel-ask textarea::placeholder { color: var(--vscode-input-placeholderForeground); }
@@ -310,6 +320,12 @@ export const panelAskCss = `.title-row { display: flex; align-items: flex-start;
 		.panel-ask button.panel-ask-send.ready { opacity: 1; }
 		.panel-ask button.panel-ask-send:hover { background: var(--vscode-button-hoverBackground); }
 		.panel-ask button.panel-ask-send svg { width: 14px; height: 14px; }
+		/* Context, below the pill: a pill as Search In of Ask Pollis, with text in place of a choice */
+		.panel-ask-context { display: flex; align-items: center; gap: 4px; margin: 6px 4px 0 4px; font-size: 12px; border: 1px solid var(--vscode-widget-border, var(--vscode-input-border, transparent)); border-radius: 999px; padding: 2px 8px; }
+		.panel-ask-context:focus-within { border-color: var(--vscode-focusBorder); }
+		.panel-ask-context .prefix { flex: none; color: var(--vscode-descriptionForeground); }
+		.panel-ask-context input { flex: 1; min-width: 0; font: inherit; color: var(--vscode-foreground); background: transparent; border: none; outline: none; padding: 1px 0; }
+		.panel-ask-context input::placeholder { color: var(--vscode-input-placeholderForeground); }
 		${askAttachCss}
 		${composerVoiceCss}`;
 
@@ -319,6 +335,7 @@ export const panelAskScript = `${composerVoiceScript('panel-ask-question')}
 			${askAttachScript('panel-ask-question', 'panel-ask-', '.panel-ask')}
 			const question = document.getElementById('panel-ask-question');
 			const send = document.getElementById('panel-ask-send');
+			const context = document.getElementById('panel-ask-context');
 			const resize = () => {
 				question.style.height = 'auto';
 				question.style.height = Math.min(question.scrollHeight, ${PANEL_ASK_HEIGHT}) + 'px';
@@ -330,7 +347,7 @@ export const panelAskScript = `${composerVoiceScript('panel-ask-question')}
 				if (!text) { return; }
 				const attached = takeAttachments();
 				if (!attached) { return; }
-				vscode.postMessage({ command: 'askPollis', question: text, attachments: attached });
+				vscode.postMessage({ command: 'askPollis', question: text, context: context.value.trim(), attachments: attached });
 				question.value = '';
 				resize();
 			};
@@ -342,6 +359,13 @@ export const panelAskScript = `${composerVoiceScript('panel-ask-question')}
 				}
 			});
 			send.addEventListener('click', ask);
+			// Enter in Context goes on to the question
+			context.addEventListener('keydown', event => {
+				if (event.key === 'Enter' && !event.isComposing) {
+					event.preventDefault();
+					question.focus();
+				}
+			});
 			// A click anywhere in the pill but on its buttons writes in the question
 			document.querySelector('.panel-ask').addEventListener('click', event => {
 				if (!event.target.closest('button, textarea, .voice-menu')) { question.focus(); }
@@ -565,7 +589,7 @@ ${parts.extraCss ?? ''}${noExampleCode ? `		${stepsCss}
 				<h1>${parts.title}</h1>
 				<div class="powered-by"${parts.omitPoweredBy ? ' style="display: none;"' : ''}>Powered by:&nbsp;<span id="package-links"></span><span class="package-status" id="package-status"></span><span class="api-key-status" id="api-key-status"></span></div>
 			</div>
-			${panelAskHtml()}
+			${panelAskHtml(parts.title)}
 		</div>
 ${parts.bullets === undefined ? `		<p class="subtitle">${parts.introHtml ?? ''}</p>
 ` : `		<div class="section" id="sec-points">

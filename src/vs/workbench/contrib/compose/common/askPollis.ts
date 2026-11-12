@@ -91,6 +91,8 @@ export interface IAskPollisPanelShare {
 export interface IAskPollisFromPanel {
 	readonly question: string;
 	readonly panel: IAskPollisPanel;
+	/** The Context below the panel's question: the panel's title unless the user wrote another, empty for none. */
+	readonly context?: string;
 	readonly attachments?: readonly IAskPollisAttachment[];
 }
 

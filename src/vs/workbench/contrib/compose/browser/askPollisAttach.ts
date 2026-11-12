@@ -23,7 +23,7 @@ export type AskAttachMessage =
 /** The messages of a panel's Ask Pollis: its question, what the + attaches, and which model answers. */
 export type PanelAskMessage =
 	| AskAttachMessage
-	| { readonly command: 'askPollis'; readonly question: string; readonly attachments?: readonly IAskPollisAttachment[] }
+	| { readonly command: 'askPollis'; readonly question: string; readonly context?: string; readonly attachments?: readonly IAskPollisAttachment[] }
 	| { readonly command: 'askPollisModel' };
 
 /** Runs a message of the + and posts what it attached, or why not, as `attached`; PDF... attaches nothing itself. */
@@ -46,7 +46,7 @@ export async function handleAskAttachMessage(message: AskAttachMessage, webview:
 export async function handlePanelAskMessage(message: PanelAskMessage, webview: { postMessage(message: unknown): void }, commandService: ICommandService, panel: IAskPollisPanel): Promise<void> {
 	if (message.command === 'askPollis') {
 		if (message.question.trim()) {
-			await commandService.executeCommand(ASK_POLLIS_COMMAND_ID, { question: message.question.trim(), panel, attachments: message.attachments } satisfies IAskPollisFromPanel);
+			await commandService.executeCommand(ASK_POLLIS_COMMAND_ID, { question: message.question.trim(), panel, context: typeof message.context === 'string' ? message.context.trim() : undefined, attachments: message.attachments } satisfies IAskPollisFromPanel);
 		}
 	} else if (message.command === 'askPollisModel') {
 		webview.postMessage({ command: 'askPollisModel', cloud: await commandService.executeCommand<boolean>(ASK_POLLIS_ANSWERS_IN_CLOUD_COMMAND_ID) });

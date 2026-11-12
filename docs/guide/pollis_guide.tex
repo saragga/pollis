@@ -2351,17 +2351,15 @@ area of a page (Data and Databases, \pg{Data and Databases}). Every panel has an
 right of its title; its answer comes in the Ask Pollis pane beside the panel.
 
 \subhead{Ask in a panel}
-A question asked at the right of a panel's title is answered beside the panel. A line above the question says
-\ui{Asked in} the panel, and the next questions keep the panel until \ui{Ask Without It} or \ui{New Chat}. Three
-choices below the question decide how the answer is found:
+A question asked at the right of a panel's title is answered in the Ask Pollis pane, beside the panel. Below the
+panel's question, \ui{Context} is a field of text that holds the panel's title; you can write anything in its place,
+such as \emph{SDE weak order}, or clear it. The question is searched after it, as \emph{Check a Convergence Order:
+What does this panel check?}, since \emph{this panel} alone says nothing of the subject. A reranker that the strategy
+asks the question after its Context is given it too, and so is the answering model, when the Context is not the
+panel's title, which the model is told anyway. In the pane, a line above the question says \ui{Asked in} the panel,
+and the questions asked there next keep the panel and its Context until \ui{Ask Without It} or \ui{New Chat}. Two
+choices below the pane's question decide how the answer is found:
 \begin{itemize}
-  \item \ui{Context}, a field of text. It starts as the panel's title, and you can write anything in its place, such
-    as \emph{SDE weak order}, or clear it. The question is searched after it, as \emph{Check a Convergence
-    Order: What does this panel check?}, since \emph{this panel} alone says nothing of the subject. A reranker that
-    the strategy asks the question after its Context is given it too, and so is the answering model, when the
-    Context is not the panel's title, which the model is told anyway. A question from another panel puts that
-    panel's title back; \ui{Ask Without It} clears the Context unless you wrote your own, and \ui{New Chat} always
-    clears it.
   \item \ui{Search In}: \ui{Auto}, the collections nearest the question, or the sources you tick.
   \item \ui{Strategy}: how many passages come from the panel's own wikis and the vignettes of its packages, and
     what the answering model is told of the panel. \ui{Base} takes 5 of the 8 passages from the panel and tells
@@ -2399,7 +2397,7 @@ Sonnet. The page goes in four steps: the models, the questions, \ui{Run} and the
     the Panel FAQ, with no search, which tests the answer alone (open book answering). \ui{None}: each model is given
     no passage and answers from what it learned in training alone (closed book answering), which shows the questions a
     model answers without the documents. \ui{Repeats} asks each question
-    more than once, to show how much the answers vary. Each question is asked with a Context, as in Ask Pollis: a
+    more than once, to show how much the answers vary. Each question is asked with a Context, as in a panel: a
     question of the Panel FAQ with its panel's title, and one added with \ui{Add to the Test Set...} with the
     Context it was asked with. A run keeps the Context of each question.
   \item \ui{Run} answers them with each model, one local model at a time; its label says how many questions,
