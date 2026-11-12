@@ -306,7 +306,7 @@ function search(; maxeval=maxeval, lb=lb, ub=ub)
     splits = [[lb[i], (lb[i] + ub[i]) / 2, ub[i]] for i in 1:n]  # initial three split points per coordinate
     root, xs = analyze(g, splits, lb, ub; maxevals=maxeval)
     box = minimum(root)  # leaf box with the lowest value
-    (x = position(box, xs), fx = value(box), ret = :MAXEVAL_REACHED, points = pts, values = vals)
+    (x = position(box, xs), fx = value(box), ret = length(vals) >= maxeval ? :MAXEVAL_REACHED : :STOPPED_BEFORE_MAXEVAL, points = pts, values = vals)  # QuadDIRECT returns no status: read from the evaluations used
 end
 
 res = search()
