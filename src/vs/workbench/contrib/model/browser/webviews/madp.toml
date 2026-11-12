@@ -536,7 +536,7 @@ id = "compare"
 label = "Compare"
 
 [[actionGroups.actions]]
-id = "zerosum-vs-general"
+id = "local-vs-global"
 label = "Local vs Global / Pure vs Mixed"
 desc = "Dec-POMDP: JESP against the true optimum, from every tree of agent 1 with agent 2's exact best response (horizon 3 at most). Stochastic game: pure-strategy security levels against the mixed value"
 code = '''
@@ -551,7 +551,7 @@ code = '''
 '''
 
 [[actionGroups.actions]]
-id = "cooperative-vs-competitive"
+id = "against-baselines"
 label = "Against Baselines"
 desc = "Dec-POMDP: JESP against always listening, listening then opening by majority, and random trees. Stochastic game: a myopic player 1 (ignores the future) against the equilibrium player 2"
 code = '''
@@ -589,7 +589,7 @@ code = '''
 '''
 
 [[actionGroups.actions]]
-id = "price-of-anarchy"
+id = "outcome-decomposition"
 label = "Outcome Decomposition"
 desc = "Dec-POMDP: how often the team listens, opens the safe door or meets the tiger (simulated). Stochastic game: each state's value split into the immediate payoff and the discounted continuation"
 code = '''
