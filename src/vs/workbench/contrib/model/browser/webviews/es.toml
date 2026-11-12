@@ -268,6 +268,13 @@ default = "0.3"
 models = ["cmaes", "gcmaes"]
 newRow = true
 
+[[inputs]]
+id = "con"
+label = "Constraint g(x)"
+tooltip = "Julia expression in x[1], x[2], ...; a point is feasible where g(x) <= 0, and ISRES ranks feasibility against the objective. The default keeps the search outside the unit circle, which excludes the Rastrigin minimum at the origin. Enter -1 for no constraint."
+default = "1 - x[1]^2 - x[2]^2"
+models = ["isres"]
+
 [miniCharts]
 # SVG drawing functions for each model's mini-chart icon (54 x 86 box)
 
@@ -462,6 +469,7 @@ using Random, LinearAlgebra, Statistics
 
 n = {{n}}  # dimension
 f(x) = {{obj}}  # objective
+con(x) = {{con}}  # constraint: feasible where con(x) <= 0
 lb, ub = {{lb}}, {{ub}}  # search box
 budget = {{budget}}  # objective evaluations
 
@@ -479,15 +487,17 @@ function search(; budget=budget, seed=1, lb=lb, ub=ub)
     NLopt.srand(seed)
     fc, pts, vals = recorder()
     opt = Opt(:GN_ISRES, length(lb))
+    inequality_constraint!(opt, (x, g) -> con(x), 1e-8)  # stochastic ranking weighs this against f
     opt.lower_bounds, opt.upper_bounds, opt.maxeval = lb, ub, budget
     opt.min_objective = (x, g) -> fc(x)  # derivative-free: g is never requested
     fx, x, ret = NLopt.optimize(opt, lb .+ rand(MersenneTwister(seed), length(lb)) .* (ub .- lb))  # random start, as on the other tabs
-    result(x, fx, pts, vals; status = ret)
+    feasible_vals = [con(p) <= 0 ? v : Inf for (p, v) in zip(pts, vals)]
+    merge(result(x, fx, pts, vals; status = ret), (trace = accumulate(min, feasible_vals),))  # the trace follows feasible points only
 end
 
 res = search()
 x_best, f_best = res.x, res.fx
-(best_point = x_best, best_value = f_best, evaluations = res.evals, status = res.status)
+(best_point = x_best, best_value = f_best, constraint_value = con(x_best), evaluations = res.evals, status = res.status)
 '''
 
 [[codeBranches]]
