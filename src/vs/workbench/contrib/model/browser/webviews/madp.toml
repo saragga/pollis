@@ -161,7 +161,7 @@ detail = ""
 
 [[bullets]]
 text = "Dec-POMDPs are provably NEXP-hard in the general case"
-detail = "meaning the worst-case solution time grows doubly exponentially, placing them strictly harder than NP-complete problems — which limits exact backward induction to small horizons (T ≤ 5) and few agents. Practical algorithms sacrifice optimality for tractability: Joint Equilibrium-based Search for Policies (JESP) alternately optimises one agent’s policy while fixing the others; Point-Based Value Iteration (PBVI) approximates the value function over a sampled set of belief points rather than the full belief space."
+detail = "and the number of joint policies grows doubly exponentially with the horizon, which limits exact backward induction to small horizons (T ≤ 5) and few agents. Practical algorithms sacrifice optimality for tractability: Joint Equilibrium-based Search for Policies (JESP) alternately optimises one agent’s policy while fixing the others; Point-Based Value Iteration (PBVI) approximates the value function over a sampled set of belief points rather than the full belief space."
 
 [[bullets]]
 text = "Stochastic Games model self-interested agents, each with its own reward function, where the outcome for every agent depends on the joint actions of all players. The solution concept is Nash equilibrium"
