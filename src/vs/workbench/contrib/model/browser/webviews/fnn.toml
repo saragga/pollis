@@ -546,8 +546,9 @@ using Random
 n = size({{xvar}}, 2)
 idx = randperm(n)
 val, tr = idx[1:div(n, 5)], idx[div(n, 5) + 1:end]
-reinit(p) = p isa AbstractMatrix{Float32} ? Flux.glorot_uniform(size(p)...) : p isa AbstractVector{Float32} ? zero(p) : p
-model = Flux.fmap(reinit, model)  # fresh weights: the model above was trained on every sample, validation rows included
+reinit(p) = p isa BatchNorm ? BatchNorm(p.chs, p.λ) :  # fresh BatchNorm: scale 1, shift 0, running mean 0, running variance 1
+    p isa AbstractMatrix{Float32} ? Flux.glorot_uniform(size(p)...) : p isa AbstractVector{Float32} ? zero(p) : p
+model = Flux.fmap(reinit, model; exclude = p -> p isa BatchNorm || Flux.Functors.isleaf(p))  # fresh weights: the model above was trained on every sample, validation rows included
 opt_state = Flux.setup(Adam(1f-3), model)
 {{?model=mlp}} train_loader = Flux.DataLoader(({{xvar}}[:, tr], {{yvar}}[:, tr]), batchsize=64, shuffle=true)
 {{?model!=mlp}} train_loader = Flux.DataLoader({{xvar}}[:, tr], batchsize=64, shuffle=true)
