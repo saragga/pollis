@@ -28,7 +28,7 @@ export const OPEN_POLLIS_WORKSPACE_COMMAND_ID = 'pollis.workspace.open';
 const MARKER_FILE = 'pollis.toml';
 
 /** The kinds of file a Pollis Workspace has a folder for. */
-export type PollisWorkspaceFolder = 'data' | 'knowledge' | 'reports' | 'methods' | 'workflows' | 'panels' | 'changes';
+export type PollisWorkspaceFolder = 'data' | 'knowledge' | 'reports' | 'methods' | 'workflows' | 'panels' | 'toolboxes' | 'changes';
 
 /** The folder of each kind, as a new workspace names it, what its README says it holds, and its subfolders. */
 const FOLDERS: Readonly<Record<PollisWorkspaceFolder, { readonly name: string; readonly readme: string; readonly subfolders?: readonly string[] }>> = {
@@ -38,6 +38,7 @@ const FOLDERS: Readonly<Record<PollisWorkspaceFolder, { readonly name: string; r
 	methods: { name: 'methods', readme: 'Your methods, one folder each.' },
 	workflows: { name: 'workflows', readme: 'Your workflows.' },
 	panels: { name: 'panels', readme: 'Your panels.' },
+	toolboxes: { name: 'toolboxes', readme: 'The toolboxes you make to share your panels, for a course say, one folder each: its spec, which menu entries it holds and in what order, its README, and the .vsix files built from it. The toolboxes you install stay in Pollis.' },
 	changes: { name: 'changes', readme: 'Your changes to the panels, workflows, wikis and notebooks that come with Pollis and its toolboxes, one small file each.' },
 };
 
@@ -227,7 +228,7 @@ registerAction2(class extends Action2 {
 		if (!await fileService.exists(joinPath(folder, MARKER_FILE))) {
 			const { confirmed } = await dialogService.confirm({
 				message: localize('pollisWorkspace.makeIt', "Make {0} a Pollis Workspace?", basename(folder)),
-				detail: localize('pollisWorkspace.makeItDetail', "Pollis adds pollis.toml and its folders, data, knowledge, reports, methods, workflows, panels and changes, each with a README, and keeps everything the folder has."),
+				detail: localize('pollisWorkspace.makeItDetail', "Pollis adds pollis.toml and its folders, data, knowledge, reports, methods, workflows, panels, toolboxes and changes, each with a README, and keeps everything the folder has."),
 				primaryButton: localize({ key: 'pollisWorkspace.makeItButton', comment: ['&& denotes a mnemonic'] }, "&&Make It a Pollis Workspace"),
 			});
 			if (!confirmed) {
