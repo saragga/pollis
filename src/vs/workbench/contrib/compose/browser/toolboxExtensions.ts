@@ -22,7 +22,7 @@ import { ExtensionsRegistry, IExtensionPointUser } from '../../../services/exten
 import { IModelNotebook, IModelPaper, IModelWiki } from '../../model/browser/common/model.types.js';
 import { IScaffoldPanel, openScaffoldWebview } from '../../model/browser/commands/scaffold.command.js';
 import { registerExternalFolder } from '../../model/browser/common/customCopyFileSystem.js';
-import { panelFaqItems, parseToml, tomlToPanelData } from '../../model/browser/common/tomlPanelData.js';
+import { panelFaqItems, panelKeyPoints, parseToml, tomlToPanelData } from '../../model/browser/common/tomlPanelData.js';
 import { buildScaffoldHtml } from '../../model/browser/webviews/scaffoldParts.js';
 import { IAskPollisEvalItem } from '../common/askPollis.js';
 import { IToolboxDocumentInfo, IToolboxInfo, IToolboxPanelsService, IToolboxPlace, IToolboxPlacement, TOOLBOX_END_GROUP, TOOLBOX_MENU, TOOLBOX_SUBMENU_PREFIX } from '../common/toolboxPanels.js';
@@ -253,6 +253,7 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 						submenu: submenuOf(loaded.toolbox, contribution)?.title,
 						description: panel.data.models?.map(model => model.label).join(' \u00b7 ') || undefined,
 						keys: [...new Set(panel.data.references.flatMap(reference => (reference as IModelPaper).key ?? []))],
+						keyPoints: panelKeyPoints(panel.data),
 						faq,
 					})),
 					defaultPlacement: defaultPlacement(loaded),

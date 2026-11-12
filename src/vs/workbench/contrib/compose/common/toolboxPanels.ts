@@ -35,6 +35,8 @@ export interface IToolboxPanelInfo {
 	readonly description?: string;
 	/** The keys of the works its References cite. */
 	readonly keys: readonly string[];
+	/** Its Key Points as plain text, which Ask Pollis indexes with its wikis. */
+	readonly keyPoints: readonly string[];
 	/** The questions of its FAQ, the hidden ones too, as the Panel FAQ test set of Evaluate Answering Models asks them. */
 	readonly faq: readonly IAskPollisEvalItem[];
 }

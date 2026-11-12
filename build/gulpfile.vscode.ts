@@ -108,6 +108,8 @@ const vscodeResourceIncludes = [
 	'out-build/vs/workbench/contrib/model/browser/webviews/**/*.{html,css,js}',
 	'out-build/vs/workbench/contrib/model/browser/common/**/*.json',
 	'out-build/vs/workbench/contrib/model/browser/media/wiki/**/*.md',
+	// The panels' TOML files, from which Ask Pollis indexes each panel's Key Points
+	'out-build/vs/workbench/contrib/model/browser/webviews/*.toml',
 	'out-build/vs/workbench/contrib/model/browser/media/notebooks/**/*.ipynb',
 	'out-build/vs/workbench/contrib/model/browser/media/notebooks/**/*.jl',
 

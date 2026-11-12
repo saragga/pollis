@@ -4,7 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { RunOnceScheduler } from '../../../../base/common/async.js';
+import { VSBuffer } from '../../../../base/common/buffer.js';
 import { Disposable } from '../../../../base/common/lifecycle.js';
+import { FileAccess } from '../../../../base/common/network.js';
 import { joinPath } from '../../../../base/common/resources.js';
 import { hasKey } from '../../../../base/common/types.js';
 import { URI } from '../../../../base/common/uri.js';
@@ -19,6 +21,7 @@ import { IWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase 
 import { IExtensionService } from '../../../services/extensions/common/extensions.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { customCopyOverlayUri, resolveCustomCopy } from '../../model/browser/common/customCopyFileSystem.js';
+import { panelKeyPoints, parseToml, tomlToPanelData } from '../../model/browser/common/tomlPanelData.js';
 import { IPollisMenuNode, IPollisViewsService } from '../../pollisViews/common/pollisViews.js';
 import { IToolboxPanelsService } from '../common/toolboxPanels.js';
 import { PANEL_WIKIS } from './panelWikis.data.js';
@@ -30,14 +33,15 @@ import { installedVignettes, isVignetteCompiled, IVignette, registryVignettes, v
 // those of Help > Documentation > Package Vignettes, of the packages on this computer and of the others in the
 // registry: a vignette not compiled yet, or changed since in a package developed, comes with what to compile it from,
 // and the Julia extension compiles it before the index is made. So does a Toolbox Vignette not compiled yet. When the
-// registry cannot be read, its vignettes are those it listed last.
+// registry cannot be read, its vignettes are those it listed last. The Key Points of each panel, built in or of a
+// toolbox, are written to a file of their own in ~/.pollis/documents/key-points/, read as one of the panel's wikis.
 
 export const ASK_POLLIS_SOURCES_COMMAND_ID = 'pollis.askPollis.sources';
 
 /** A file Ask Pollis reads, as ask_index.jl takes it. */
 interface IAskPollisSource {
 	readonly kind: 'document' | 'wiki' | 'vignette';
-	/** The document's title; for a wiki, its panel's, the wiki's own heading added by ask_index.jl; for a vignette, its package's, NAME.jl. */
+	/** The document's title; for a wiki or a panel's Key Points, its panel's, the wiki's own heading added by ask_index.jl; for a vignette, its package's, NAME.jl. */
 	readonly title: string;
 	/** The file's path; a PDF not compiled yet, or a wiki still "Not written yet.", is left out by ask_index.jl. */
 	readonly file: string;
@@ -99,9 +103,30 @@ async function askPollisSources(accessor: ServicesAccessor): Promise<IAskPollisS
 		}
 	};
 
+	// The Key Points of a panel, written again only when they change, so the index reads them again only then
+	const keyPointsFolder = joinPath(userHome, '.pollis', 'documents', 'key-points');
+	const keyPoints = async (file: URI, title: string, menu: string, toolbox: string, points: readonly string[]) => {
+		if (!points.length) {
+			return;
+		}
+		const text = ['# Key Points', '', ...points.flatMap(point => [`- ${point}`, ''])].join('\n');
+		try {
+			if (await readText(fileService, file) !== text) {
+				await fileService.writeFile(file, VSBuffer.fromString(text));
+			}
+			sources.push({ kind: 'wiki', title, file: file.fsPath, menu, toolbox });
+		} catch {
+			// Not written: the panel's wikis are indexed without them
+		}
+	};
+
 	for (const panel of PANEL_WIKIS) {
 		const command = panel.commands.find(command => paths.has(command));
 		const menu = command !== undefined ? paths.get(command)! : '';
+		const toml = await readText(fileService, FileAccess.asFileUri(`vs/workbench/contrib/model/browser/webviews/${panel.id}.toml`));
+		if (toml !== undefined) {
+			await keyPoints(joinPath(keyPointsFolder, `${panel.id}.md`), panel.title, menu, '', panelKeyPoints(tomlToPanelData(parseToml(toml))));
+		}
 		for (const entry of panel.wikis) {
 			if (hasKey(entry, { bundled: true }) && entry.bundled) {
 				await wiki(entry.file, panel.title, menu, '');
@@ -114,6 +139,9 @@ async function askPollisSources(accessor: ServicesAccessor): Promise<IAskPollisS
 			const pdf = toolboxDocumentPdf(userHome, toolbox, document);
 			const compiled = await fileService.exists(pdf);
 			sources.push({ kind: 'document', title: document.title, file: pdf.fsPath, menu: '', toolbox: toolbox.title, ...(compiled ? {} : { compile: { source: document.folder.fsPath, name: document.name } }) });
+		}
+		for (const panel of toolbox.panels) {
+			await keyPoints(joinPath(keyPointsFolder, toolbox.id, `${panel.id}.md`), panel.panelTitle, paths.get(panel.command) ?? '', toolbox.title, panel.keyPoints);
 		}
 		// The wikis are in the extension's wiki/<folder>/, the folder named after its panel (or another name)
 		const extension = await extensionService.getExtension(toolbox.extensionId);
@@ -156,6 +184,15 @@ async function askPollisSources(accessor: ServicesAccessor): Promise<IAskPollisS
 		}
 	}
 	return sources;
+}
+
+/** The text of `file`, `undefined` when it cannot be read. */
+async function readText(fileService: IFileService, file: URI): Promise<string | undefined> {
+	try {
+		return (await fileService.readFile(file)).value.toString();
+	} catch {
+		return undefined;
+	}
 }
 
 /** The files and folders in `folder`, none when it does not exist. */

@@ -386,6 +386,11 @@ function plainText(text: string): string {
 		.replace(/\s+/g, ' ').trim();
 }
 
+/** The Key Points of a panel as plain text, each its words and, after a colon, what the panel says of them. */
+export function panelKeyPoints(data: IScaffoldPanelData): string[] {
+	return (data.bullets ?? []).map(bullet => bullet.detail?.trim() ? `${plainText(bullet.text)}: ${plainText(bullet.detail)}` : plainText(bullet.text));
+}
+
 /**
  * What a panel holds, for a model answering a question asked in it (the Panel Aware strategy of Ask Pollis): its models,
  * Key Points, decision table, inputs and packages, as plain text. Never its FAQ, whose questions test Ask Pollis.
@@ -396,7 +401,7 @@ export function panelCard(data: IScaffoldPanelData): string {
 	if (models.length > 1) {
 		lines.push(`Its models, each a tab: ${models.join('; ')}.`);
 	}
-	const bullets = (data.bullets ?? []).map(bullet => bullet.detail?.trim() ? `- ${plainText(bullet.text)}: ${plainText(bullet.detail)}` : `- ${plainText(bullet.text)}`);
+	const bullets = panelKeyPoints(data).map(point => `- ${point}`);
 	if (bullets.length) {
 		lines.push('Its Key Points:', ...bullets);
 	}
