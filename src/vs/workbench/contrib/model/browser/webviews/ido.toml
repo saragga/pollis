@@ -287,7 +287,7 @@ code = '''
 using Plots
 
 p1 = plot(ts, X, label=permutedims(["x$i" for i in 1:nx]), ylabel="state", marker=:circle, markersize=2)
-p2 = plot(ts, U, label=permutedims(["u$j" for j in 1:nu]), ylabel="control", xlabel="t", linetype=:steppost)
+p2 = plot(ts, U, label=permutedims(["u$j" for j in 1:nu]), ylabel="control", xlabel="t")  # linear between grid points, as Open-Loop Simulation and State at Time interpolate
 plot(p1, p2, layout=(2, 1), link=:x)
 '''
 
@@ -394,8 +394,9 @@ Ts = range(0.5, 2 * {{T}}, length=8)
 costs = map(Ts) do s
     m = build(T=s)
     optimize!(m)
-    has_values(m) ? objective_value(m) : NaN
+    is_solved_and_feasible(m) ? objective_value(m) : NaN  # NaN where no control reaches the target within the bounds
 end
+any(isnan, costs) && println("No feasible control for T = ", round.(Ts[isnan.(costs)], digits=3))
 plot(Ts, costs, marker=:circle, xlabel="horizon T", ylabel="optimal cost", legend=false)
 '''
 
