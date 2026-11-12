@@ -267,18 +267,26 @@ default = "y_val"
 [[codeBranches]]
 model = "platt"
 code = '''
-using GLM
+using GLM, Random
 {{?scores=scores_val}} using PollisDatasets  # curated example datasets
 
 {{?scores=scores_val}} d = dataset("sim_clf");  # simulated: 1000 held-out cases, one in five positive; datasetinfo("sim_clf") shows how they were made
 {{?scores=scores_val}} y_val = d.y .== "yes";  # true labels as Bool. Replace them with your own.
 {{?scores=scores_val}} scores_val = d.score;  # the classifier's probabilities of "yes"
 
-tbl = (score = {{scores}}, y = {{y}})  # validation scores and labels as a Tables.jl column table
+s   = clamp.(Float64.({{scores}}), 1e-6, 1 - 1e-6)  # probabilities kept off 0 and 1
+tbl = (logit_score = log.(s ./ (1 .- s)), y = {{y}})  # scores on the log-odds scale, as in Platt scaling
 
-platt = glm(@formula(y ~ score), tbl, Binomial(), LogitLink())  # logistic regression on raw scores
+halves = shuffle(MersenneTwister(1), [isodd(i) ? 1 : 2 for i in eachindex({{y}})])  # two halves: each is calibrated by a fit on the other, so every calibrated probability is out of sample
+cal_probs = zeros(length(s))
+for k in 1:2
+    fit_rows, out_rows = findall(halves .!= k), findall(halves .== k)
+    m = glm(@formula(y ~ logit_score), (logit_score = tbl.logit_score[fit_rows], y = tbl.y[fit_rows]), Binomial(), LogitLink())
+    cal_probs[out_rows] = Float64.(predict(m, (logit_score = tbl.logit_score[out_rows],)))
+end
 
-cal_probs = Float64.(predict(platt, tbl))  # calibrated probabilities (predict allows missing values; there are none)
+platt = glm(@formula(y ~ logit_score), tbl, Binomial(), LogitLink())  # final fit on every case, for new data
+calibrate(p) = Float64.(predict(platt, (logit_score = log.(clamp.(p, 1e-6, 1 - 1e-6) ./ (1 .- clamp.(p, 1e-6, 1 - 1e-6))),)))  # calibrated probabilities for new scores
 '''
 
 [[codeBranches]]
@@ -289,6 +297,8 @@ code = '''
 {{?scores=scores_val}} d = dataset("sim_clf");  # simulated: 1000 held-out cases, one in five positive; datasetinfo("sim_clf") shows how they were made
 {{?scores=scores_val}} y_val = d.y .== "yes";  # true labels as Bool. Replace them with your own.
 {{?scores=scores_val}} scores_val = d.score;  # the classifier's probabilities of "yes"
+
+using Random
 
 function pav(scores, labels)  # Pool Adjacent Violators: the least-squares non-decreasing fit of labels on scores
     idx = sortperm(scores)  # sort by score ascending
@@ -307,13 +317,28 @@ function pav(scores, labels)  # Pool Adjacent Violators: the least-squares non-d
     fitted
 end
 
-cal_probs = pav({{scores}}, {{y}})  # calibrated probabilities
+function pav_fit(scores, labels)  # the fitted step function: sorted scores and their calibrated values
+    idx = sortperm(scores)
+    (scores = scores[idx], values = pav(scores, labels)[idx])
+end
+step_at(fit, s) = fit.values[clamp(searchsortedlast(fit.scores, s), 1, length(fit.scores))]  # value of the step function at score s
+
+halves = shuffle(MersenneTwister(1), [isodd(i) ? 1 : 2 for i in eachindex({{y}})])  # two halves: each is calibrated by a fit on the other, so every calibrated probability is out of sample
+cal_probs = zeros(length({{y}}))
+for k in 1:2
+    fit_rows, out_rows = findall(halves .!= k), findall(halves .== k)
+    f = pav_fit({{scores}}[fit_rows], {{y}}[fit_rows])
+    cal_probs[out_rows] = [step_at(f, s) for s in {{scores}}[out_rows]]
+end
+
+iso = pav_fit({{scores}}, {{y}})  # final fit on every case, for new data
+calibrate(p) = [step_at(iso, s) for s in p]  # calibrated probabilities for new scores
 '''
 
 [[codeBranches]]
 model = "temperature"
 code = '''
-using Optim
+using Optim, Random
 {{?scores=scores_val}} using PollisDatasets  # curated example datasets
 
 {{?scores=scores_val}} d = dataset("sim_clf");  # simulated: 1000 held-out cases, one in five positive; datasetinfo("sim_clf") shows how they were made
@@ -322,15 +347,21 @@ using Optim
 
 logits = {{scores}}  # raw pre-sigmoid logits from the model
 
-function nll(T)  # negative log-likelihood under temperature T
-    p = 1 ./ (1 .+ exp.(-logits ./ T[1]))  # sigmoid with temperature
-    return -sum({{y}} .* log.(p .+ 1e-12) .+ (1 .- {{y}}) .* log.(1 .- p .+ 1e-12))  # 
+function nll(T, l, yy)  # negative log-likelihood of labels yy for logits l under temperature T
+    p = 1 ./ (1 .+ exp.(-l ./ T))  # sigmoid with temperature
+    return -sum(yy .* log.(p .+ 1e-12) .+ (1 .- yy) .* log.(1 .- p .+ 1e-12))
+end
+fit_T(l, yy) = exp(Optim.minimizer(optimize(th -> nll(exp(th[1]), l, yy), [0.0], LBFGS()))[1])  # optimised on log T, so T stays positive
+
+halves = shuffle(MersenneTwister(1), [isodd(i) ? 1 : 2 for i in eachindex({{y}})])  # two halves: each is calibrated by a fit on the other, so every calibrated probability is out of sample
+cal_probs = zeros(length(logits))
+for k in 1:2
+    fit_rows, out_rows = findall(halves .!= k), findall(halves .== k)
+    cal_probs[out_rows] = 1 ./ (1 .+ exp.(-logits[out_rows] ./ fit_T(logits[fit_rows], {{y}}[fit_rows])))
 end
 
-res   = optimize(nll, [1.0], LBFGS())  # optimise T on validation set
-T_opt = Optim.minimizer(res)[1]  # optimal temperature
-
-cal_probs = 1 ./ (1 .+ exp.(-logits ./ T_opt))  # calibrated probabilities
+T_opt = fit_T(logits, {{y}})  # final temperature from every case, for new data
+calibrate(l) = 1 ./ (1 .+ exp.(-l ./ T_opt))  # calibrated probabilities for new logits
 '''
 
 [[actionGroups]]
