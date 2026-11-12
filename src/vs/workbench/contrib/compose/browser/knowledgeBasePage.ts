@@ -475,7 +475,8 @@ ${spinnerCss}
 	.failed, .missing { color: var(--vscode-errorForeground); }
 	.books { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; margin: 8px 0 20px 0; }
 	.book { display: flex; flex-direction: column; gap: 3px; }
-	.book img { width: 100%; max-width: 180px; height: auto; border-radius: 2px; box-shadow: 0 2px 8px var(--vscode-widget-shadow); cursor: pointer; margin-bottom: 6px; }
+	/* Every cover the same size, 4:5, cropped from its centre */
+	.book img { width: 100%; max-width: 180px; aspect-ratio: 4 / 5; object-fit: cover; object-position: center; border-radius: 2px; box-shadow: 0 2px 8px var(--vscode-widget-shadow); cursor: pointer; margin-bottom: 6px; }
 	.book .bookTitle { font-weight: 600; }
 	}
 `,
