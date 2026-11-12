@@ -150,11 +150,11 @@ detail = "locally biased variant; gives more weight to local search within promi
 
 [[bullets]]
 text = "QuadDirect"
-detail = "quadratic interpolation within subdivisions (QuadDIRECT.jl); fewer function evaluations than standard DIRECT"
+detail = "quadratic interpolation within subdivisions (QuadDIRECT.jl)"
 
 [[bullets]]
 text = "AGS"
-detail = "adaptive global search; Lipschitz-model-based global optimisation with adaptive constant estimation"
+detail = "Lipschitz global search along a Peano space-filling curve, with adaptive estimation of the Lipschitz constant"
 
 [[decisionRows]]
 task = "DIRECT"
