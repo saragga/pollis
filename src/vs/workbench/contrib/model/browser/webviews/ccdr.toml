@@ -436,7 +436,7 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "cc-vs-dro"
 label = "CC vs DRO"
-desc = "Average true violation probability of the chance-constrained and DRO decisions across sample sizes (20 data sets each): DRO keeps its guarantee with few data"
+desc = "Average true violation probability of the chance-constrained and DRO decisions across sample sizes (20 data sets each)"
 code = '''
 using Plots
 sizes = [10, 25, 50, 100, 250, 1000]
