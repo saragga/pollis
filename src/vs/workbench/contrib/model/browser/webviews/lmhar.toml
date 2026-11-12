@@ -134,7 +134,7 @@ default = "nothing"
 [[inputs]]
 id = "method"
 label = "Method"
-tooltip = "Two-Step estimates the AR(1) and variance parameters once and then applies the corrections. Iterated repeats until beta, rho and the variance parameters converge jointly."
+tooltip = "Two-Step estimates the AR(1) and variance parameters once and then applies the corrections. Iterated repeats the steps until the estimates converge."
 kind = "select"
 default = "two_step"
 newRow = true
@@ -204,11 +204,11 @@ durbin_watson_test({{X}}, {{y}})  # on the OLS residuals; DW near 2 = no autocor
 [[actionGroups.actions]]
 id = "harvey-test"
 label = "Harvey Test"
-desc = "Likelihood-ratio test for exponential heteroskedasticity in OLS residuals"
+desc = "Lagrange multiplier test for multiplicative heteroskedasticity in OLS residuals"
 code = '''
 using HARE
 
-harvey_test({{X}}, {{y}})  # LR test: H0 = homoskedasticity; Z defaults to X
+harvey_test({{X}}, {{y}})  # LM test: H0 = homoskedasticity; Z defaults to X
 '''
 
 [[actionGroups.actions]]
