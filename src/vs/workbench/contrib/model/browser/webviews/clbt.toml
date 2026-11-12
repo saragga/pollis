@@ -312,8 +312,10 @@ bm = RAGTools.bm25(dtm, bm25_terms(q))
 bpids = first(sortperm(bm; rev = true), k)
 star(p) = p in rel ? "*" : " "
 println(rpad("Rank", 6), rpad("ColBERT (score, passage)", 30), "BM25 (score, passage)")
-for r in 1:k
-    println(rpad(r, 6), rpad(string(star(pids[r]), round(scores[r]; digits = 2), "  #", pids[r]), 30), star(bpids[r]), round(bm[bpids[r]]; digits = 2), "  #", bpids[r])
+colbert_cell(r) = r <= length(pids) ? string(star(pids[r]), round(scores[r]; digits = 2), "  #", pids[r]) : "-"  # the index may return fewer than k passages
+bm25_cell(r) = r <= length(bpids) ? string(star(bpids[r]), round(bm[bpids[r]]; digits = 2), "  #", bpids[r]) : "-"
+for r in 1:max(length(pids), length(bpids))
+    println(rpad(r, 6), rpad(colbert_cell(r), 30), bm25_cell(r))
 end
 count(iszero, bm[bpids]) > 0 && println("BM25 scores of 0 share no stemmed term with the query; their order is arbitrary")
 isempty(rel) || println("* relevant. Passages: ", join(["#" * string(p) * " " * docs[p] for p in rel], "  "))
