@@ -678,7 +678,7 @@ end
 [[actionGroups.actions]]
 id = "dimension-scaling"
 label = "Dimension Scaling"
-desc = "Best value and runtime as the dimension grows, with the population scaled to 10n (the objective must accept any length of x)"
+desc = "Best value and runtime as the dimension grows, with the population scaled to 10n and the generations fixed, so the evaluations grow in proportion to n (the objective must accept any length of x)"
 code = '''
 using Plots
 
