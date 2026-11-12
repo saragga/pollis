@@ -180,7 +180,7 @@ detail = "build a recurrence matrix from a time series and extract quantifiers s
 [[inputs]]
 id = "x"
 label = "Time series (x)"
-tooltip = "A univariate time series vector, used by Recurrence (RQA) and the data actions; the Lyapunov and fractal dimension tabs run on the Lorenz system."
+tooltip = "A univariate time series vector, used by Recurrence (RQA) and the data actions; the Lyapunov and fractal dimension tabs run on the Lorenz system. If no variable of that name is defined, the x coordinate of the Lorenz system is used."
 default = "x"
 
 [[inputs]]
@@ -199,6 +199,7 @@ default = "0.1"
 model = "lyap"
 code = '''
 using DynamicalSystems
+@isdefined({{x}}) || ({{x}} = trajectory(Systems.lorenz([1.0, 0.0, 0.0]), 100; Dt = 0.05, Ttr = 100)[1][:, 1])  # no series defined: the x coordinate of the Lorenz system, 2001 points
 
 ds = Systems.lorenz([1.0, 0.0, 0.0])  # Lorenz (1963), sigma = 10, rho = 28, beta = 8/3
 # Ttr discards the transient from (1, 0, 0), so the estimates are taken on the attractor
@@ -214,6 +215,7 @@ println("KY dimension:  ", kaplanyorke_dim(spectrum))  # Kaplan-Yorke attractor 
 model = "fracdim"
 code = '''
 using DynamicalSystems
+@isdefined({{x}}) || ({{x}} = trajectory(Systems.lorenz([1.0, 0.0, 0.0]), 100; Dt = 0.05, Ttr = 100)[1][:, 1])  # no series defined: the x coordinate of the Lorenz system, 2001 points
 
 ds = Systems.lorenz([1.0, 0.0, 0.0])  # Lorenz (1963), sigma = 10, rho = 28, beta = 8/3
 tr, _ = trajectory(ds, {{T}}; Dt = 0.01, Ttr = 100)  # generate orbit
@@ -229,6 +231,7 @@ println("Correlation dimension D2: ", D2)  # Lorenz ~ 2.05; a non-integer D2 sug
 model = "rqa"
 code = '''
 using DynamicalSystems
+@isdefined({{x}}) || ({{x}} = trajectory(Systems.lorenz([1.0, 0.0, 0.0]), 100; Dt = 0.05, Ttr = 100)[1][:, 1])  # no series defined: the x coordinate of the Lorenz system, 2001 points
 
 using RecurrenceAnalysis, Statistics  # recurrence analysis module
 
