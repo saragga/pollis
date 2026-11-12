@@ -231,7 +231,7 @@ bar(map(x->x[1], top), map(x->x[2], top), xlabel="Term", ylabel="Count", xrotati
 [[actionGroups.actions]]
 id = "tfidf-heatmap"
 label = "TF-IDF Heatmap"
-desc = "Heatmap of TF-IDF weights (documents x top terms)"
+desc = "Heatmap of TF-IDF weights (documents x terms)"
 code = '''
 using TextAnalysis, Plots
 
@@ -268,7 +268,7 @@ println("Sparsity: ", round(sparsity * 100, digits=2), "%")  # print result
 [[actionGroups.actions]]
 id = "vocab-size"
 label = "Vocabulary Report"
-desc = "Total vocabulary size and per-document statistics"
+desc = "Total vocabulary size and mean document statistics"
 code = '''
 using TextAnalysis, Statistics
 
@@ -328,7 +328,7 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "dtm-vs-tfidf"
 label = "DTM vs TF-IDF"
-desc = "Side-by-side raw counts and TF-IDF weights for top terms"
+desc = "Side-by-side raw counts and TF-IDF weights for the first 10 terms"
 code = '''
 using TextAnalysis
 
@@ -375,7 +375,7 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "top-terms-per-doc"
 label = "Top Terms Per Document"
-desc = "Highest TF-IDF terms for each document"
+desc = "Highest TF-IDF terms for the first 5 documents"
 code = '''
 using TextAnalysis
 
