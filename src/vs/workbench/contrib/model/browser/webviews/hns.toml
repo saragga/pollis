@@ -518,7 +518,7 @@ function descend(g, x)
     Optim.minimizer(r), Optim.minimum(r)
 end
 
-FRACS = [0.25, 0.5, 0.75]  # competing destroy fractions
+FRACS = unique(max(1, round(Int, f * length(lb))) / length(lb) for f in [0.25, 0.5, 0.75])  # competing destroy fractions, each removing a different number of variables
 REACT = {{react}}  # reaction factor of the weight update
 KNOB, GRID = "reaction factor", [0.0, 0.1, 0.2, 0.5, 1.0]
 
