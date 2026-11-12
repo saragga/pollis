@@ -476,7 +476,7 @@ end
 '''
 
 [[actionGroups.actions]]
-id = "nlopt-vs-quad"
+id = "deterministic-vs-stochastic"
 label = "Deterministic vs Stochastic"
 desc = "DIRECT, AGS and QuadDIRECT against two stochastic global methods (CRS2, ISRES) at the same budget; the stochastic ones over 5 seeds"
 code = '''
