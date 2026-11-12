@@ -1061,8 +1061,12 @@ a coding agent can then polish the draft into a finished document.
 Reports are written in the \texttt{reports} folder of a \emph{Pollis Workspace}: an ordinary folder for
 your own work, outside Pollis. To make one, choose \ui{File > New Pollis Workspace...}, give the folder a
 name (it starts as Pollis Workspace, in your Documents), and click \ui{Create}. Pollis makes the folder,
-puts a \texttt{pollis.toml} file and a \texttt{data} folder in it, and opens it. Next time, open that folder with
-\ui{File > Open Folder...}.
+puts a \texttt{pollis.toml} file in it and a folder for each kind of file, each with a README: \texttt{data}
+(your datasets and saved copies), \texttt{knowledge} (your books, articles and reports), \texttt{reports},
+\texttt{methods}, \texttt{workflows}, \texttt{panels} and \texttt{changes}, and opens it. Pollis looks in these
+folders first; \texttt{pollis.toml} names them, so a folder you rename is renamed there too. Next time, choose
+\ui{File > Open Pollis Workspace...}, or \ui{File > Open Recent}. Opened with it, a folder that is not a
+Pollis Workspace yet becomes one if you agree, keeping what it has.
 
 \subhead{Make a report or slides}
 \begin{enumerate}[label=\arabic*.]

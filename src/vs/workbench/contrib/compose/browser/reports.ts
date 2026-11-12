@@ -30,7 +30,7 @@ import { ITextFileService } from '../../../services/textfile/common/textfiles.js
 import { debugIconStartForeground } from '../../debug/browser/debugColors.js';
 import { CUSTOM_COPY_KINDS, resolveCustomCopy } from '../../model/browser/common/customCopyFileSystem.js';
 import { sendToJuliaRepl } from '../../model/browser/handlers/model.handler.js';
-import { findPollisWorkspace, NEW_POLLIS_WORKSPACE_COMMAND_ID } from '../../pollisWorkspace/browser/pollisWorkspace.contribution.js';
+import { findPollisWorkspace, NEW_POLLIS_WORKSPACE_COMMAND_ID, pollisWorkspaceFolder } from '../../pollisWorkspace/browser/pollisWorkspace.contribution.js';
 import { skillFile, startAgent } from './pollisAgents.js';
 
 // Compose > Reports: a notebook (a workflow, a notebook tutorial or the user's own) as a LaTeX report or
@@ -56,7 +56,6 @@ const SCRIPT = 'vs/workbench/contrib/compose/browser/media/reports/reports.jl';
 // The folder of pollis.bib, every reference in Pollis, which Tectonic searches for \bibliography{pollis}
 const LIBRARY = 'vs/workbench/contrib/model/browser/media/references';
 const WORKFLOWS = 'vs/workbench/contrib/compose/browser/media/workflows';
-const REPORTS_FOLDER = 'reports';
 /** How long an export waits for the PDF before it stops watching (a first run may install packages). */
 const EXPORT_TIMEOUT = 30 * 60 * 1000;
 /** How long Compile LaTeX waits for the PDF to change before it stops watching. */
@@ -190,7 +189,7 @@ async function makeReport(accessor: ServicesAccessor, kind: IReportKind): Promis
 		return;
 	}
 	const name = basenameOrAuthority(notebook).replace(/\.ipynb$/, '');
-	const folder = joinPath(workspace, REPORTS_FOLDER, name);
+	const folder = joinPath(await pollisWorkspaceFolder(fileService, workspace, 'reports'), name);
 	await fileService.createFolder(folder);
 	const tex = joinPath(folder, `${kind.file}.tex`);
 	const pdf = joinPath(folder, `${kind.file}.pdf`);
