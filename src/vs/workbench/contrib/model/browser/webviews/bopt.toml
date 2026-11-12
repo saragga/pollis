@@ -179,7 +179,7 @@ detail = "upper confidence bound: explores via GP uncertainty scaled by &#946;; 
 
 [[bullets]]
 text = "TS"
-detail = "Thompson sampling: optimises a random draw from the GP posterior; naturally diverse and parallelisable"
+detail = "Thompson sampling: draws the GP posterior independently at each candidate point and picks the largest draw; naturally diverse and parallelisable"
 
 [[decisionRows]]
 task = "Expected Improvement"
