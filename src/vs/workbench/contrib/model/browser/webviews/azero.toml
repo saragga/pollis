@@ -491,8 +491,8 @@ label = "vs Previous Checkpoint"
 desc = "Current network against the checkpoint from halfway through training and against the untrained network, both with tree search"
 code = '''
 k = max(1, div(niters, 2))  # halfway checkpoint
-(vs_iteration = k, result = match(mcts_player(res.net), mcts_player(res.checkpoints[k + 1]); games=40),
- vs_untrained = match(mcts_player(res.net), mcts_player(res.checkpoints[1]); games=40))
+(vs_iteration = k, result = match(mcts_player(res.net), mcts_player(res.checkpoints[k + 1]); games=40, randomstart=2),
+ vs_untrained = match(mcts_player(res.net), mcts_player(res.checkpoints[1]); games=40, randomstart=2))  # two random opening moves: up to 72 (tic-tac-toe) or 49 (Connect Four) distinct openings between two deterministic players
 '''
 
 [[actionGroups.actions]]
