@@ -165,6 +165,7 @@ result = {{method}}_sequential({{X}}, {{y}}, Z={{Z}})  # sequential FGLS: AR(1) 
 display(coeftable(result))  # coefficient table with corrected standard errors
 println(result.rho)  # estimated AR(1) coefficient rho
 println(result.gamma)  # log-variance parameters gamma: log(sigma_t^2) = gamma_0 + z_t' gamma
+{{?method=iterated}}println("Iterations: ", result.iterations, "   converged: ", result.converged)  # did the estimates settle before the iteration limit?
 '''
 
 [[codeBranches]]
@@ -185,6 +186,7 @@ result = {{method}}_joint({{X}}, {{y}}, Z={{Z}})  # joint: rho and gamma by maxi
 display(coeftable(result))  # coefficient table with corrected standard errors
 println(result.rho)  # estimated AR(1) coefficient rho
 println(result.gamma)  # log-variance parameters gamma: log(sigma_t^2) = gamma_0 + z_t' gamma
+{{?method=iterated}}println("Iterations: ", result.iterations, "   converged: ", result.converged)  # did the estimates settle before the iteration limit?
 '''
 
 [[actionGroups]]
