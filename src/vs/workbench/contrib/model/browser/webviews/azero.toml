@@ -9,8 +9,8 @@ viewType = "pollis.azero"
 defaultModel = ""
 
 [[packages]]
-name = "AlphaZero.jl"
-github = "https://github.com/jonathan-laurent/AlphaZero.jl"
+name = "Flux.jl"
+github = "https://github.com/FluxML/Flux.jl"
 
 [[packages.videos]]
 title = "High Performance Computing in Julia"
@@ -18,8 +18,8 @@ description = "An 18-video course by Jamie Mair on writing fast Julia code"
 url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
 
 [[packages]]
-name = "Setfield.jl"
-github = "https://github.com/jw3126/Setfield.jl"
+name = "Distributions.jl"
+github = "https://github.com/JuliaStats/Distributions.jl"
 
 [requires]
 packages = ["Flux.jl", "Distributions.jl", "Plots.jl"]
@@ -119,15 +119,15 @@ key = "SAHSS...2020a"
 
 [[bullets]]
 text = "Self-Play"
-detail = "the current network plays against itself to generate a game history; Monte Carlo Tree Search guides action selection and produces improved policy targets stronger than the raw network output (AlphaZero.jl)"
+detail = "the current network plays against itself to generate a game history; Monte Carlo Tree Search guides action selection and produces improved policy targets stronger than the raw network output"
 
 [[bullets]]
 text = "Monte Carlo Tree Search (MCTS)"
-detail = "at each position expands a search tree for a fixed number of simulations; visit counts are converted to a policy distribution used as the training target for the policy head (AlphaZero.jl)"
+detail = "at each position expands a search tree for a fixed number of simulations; visit counts are converted to a policy distribution used as the training target for the policy head"
 
 [[bullets]]
 text = "Network Training"
-detail = "the shared policy-value network is trained on sampled positions from the replay buffer to match the MCTS policy and the game outcome; iterated until convergence (AlphaZero.jl, Flux.jl)"
+detail = "the shared policy-value network is trained on sampled positions from the replay buffer to match the MCTS policy and the game outcome; iterated until convergence (Flux.jl)"
 
 [[models]]
 id = "alphazero"
@@ -174,7 +174,7 @@ default = "50"
 [[inputs]]
 id = "cpuct"
 label = "Exploration (c_puct)"
-tooltip = "Weight of the prior-guided exploration bonus in the PUCT selection rule Q + c_puct * P * sqrt(N) / (1 + n)."
+tooltip = "Weight of the prior-guided exploration bonus in the PUCT selection rule Q + c_puct * P * sqrt(N + 1) / (1 + n)."
 default = "1.5"
 newRow = true
 
