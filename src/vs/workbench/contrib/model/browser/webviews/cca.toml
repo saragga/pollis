@@ -360,7 +360,7 @@ end
 [[actionGroups.actions]]
 id = "held-out"
 label = "Held-Out Correlations"
-desc = "Fit on a random half and correlate the variates on the other half: a large drop signals overfitting"
+desc = "Fit on a random half and correlate the variates on the other half, beside the canonical correlations of the full data: a large drop signals overfitting"
 code = '''
 using Random
 
@@ -370,7 +370,7 @@ train = idx[1:half]
 test  = idx[half+1:end]
 mh    = fit_cc(X[train, :], Y[train, :], k)
 Ztx, Zty = mh.px(X[test, :]), mh.py(Y[test, :])
-(train = rho, test = [cor(Ztx[:, j], Zty[:, j]) for j in 1:k])
+(full_data = rho, test = [cor(Ztx[:, j], Zty[:, j]) for j in 1:k])
 '''
 
 [[actionGroups.actions]]
