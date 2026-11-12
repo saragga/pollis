@@ -6,7 +6,7 @@
 import { IntervalTimer } from '../../../../base/common/async.js';
 import { encodeBase64 } from '../../../../base/common/buffer.js';
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
-import { extname, joinPath } from '../../../../base/common/resources.js';
+import { basename, extname, joinPath, relativePath } from '../../../../base/common/resources.js';
 import { hasKey } from '../../../../base/common/types.js';
 import { URI } from '../../../../base/common/uri.js';
 import { localize, localize2 } from '../../../../nls.js';
@@ -19,6 +19,7 @@ import { ServicesAccessor } from '../../../../platform/instantiation/common/inst
 import { INotificationService } from '../../../../platform/notification/common/notification.js';
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
+import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
 import { IHostService } from '../../../services/host/browser/host.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
@@ -37,6 +38,7 @@ import { ASK_EMBEDDING_MODEL, embeddingPrefixes, IAskPollisService } from '../co
 import { compareCss, pageHelpersScript } from './compareShared.js';
 import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_MINIMAL_STYLE } from './libraryPage.js';
 import { IInstalledModel } from './modelsInstalledPage.js';
+import { findPollisWorkspace, pollisWorkspaceFolder } from '../../pollisWorkspace/browser/pollisWorkspace.contribution.js';
 
 // The Knowledge Base, from Compose > Knowledge for AI Models > Knowledge Base, in the Minimal style of the scaffold: the
 // openly licensed texts of PollisKnowledge.jl, books and other written works, in a table with each text's type,
@@ -46,7 +48,10 @@ import { IInstalledModel } from './modelsInstalledPage.js';
 // Retrieval-Augmented Generation does a collection of the user's (language-julia.pollisIndexCollection), into
 // ~/.pollis/rag/knowledge-base.duckdb. Above the table, each published book has a card, in thanks to its authors: its
 // cover, as they show it, which comes with PollisKnowledge.jl, its title, edition, authors, publisher and year, their
-// page and the publisher's, where the printed book is sold.
+// page and the publisher's, where the printed book is sold. The user's own texts, the PDF, Markdown and text files in
+// the knowledge folder of the Pollis Workspace open, are in the same table, with Yours as their source, the type of
+// their folder (books/, articles/ or reports/) and switched on until the user switches them off; the table reads the
+// folder again each time the page or the window gets the focus.
 
 export const KNOWLEDGE_BASE_COMMAND_ID = 'pollis.knowledgeBase';
 
@@ -65,16 +70,37 @@ const DEFAULT_ROWS = 40;
 
 interface IKnowledgeSettings {
 	on: string[];
+	/** The user's own texts switched off, by their paths. */
+	off: string[];
 	words: number;
 	embeddingModel: string;
 }
+
+/** The kinds of document a text can be. */
+type TextFormat = 'pdf' | 'markdown' | 'text';
 
 /** A document of a text on this computer. */
 interface ITextDocument {
 	readonly file: string;
 	readonly title: string;
-	readonly kind: 'pdf' | 'markdown';
+	readonly kind: TextFormat;
 }
+
+/** A text of the user's own, a file in the knowledge folder of the Pollis Workspace open. */
+interface IYourText {
+	/** Its path, which names it. */
+	readonly id: string;
+	readonly type: string;
+	/** Its path in the Pollis Workspace. */
+	readonly path: string;
+	readonly size: number;
+	readonly document: ITextDocument;
+}
+
+/** The files the Knowledge Base reads as the user's texts, by their extensions. */
+const YOUR_EXTENSIONS: Record<string, TextFormat> = { '.pdf': 'pdf', '.md': 'markdown', '.markdown': 'markdown', '.txt': 'text' };
+/** How deep in the knowledge folder the user's texts are looked for. */
+const YOUR_DEPTH = 4;
 
 /** A text of the catalogue of PollisKnowledge.jl, as knowledge_base.jl answers it. */
 interface IKnowledgeText {
@@ -136,6 +162,7 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 	const fileService = accessor.get(IFileService);
 	const pathService = accessor.get(IPathService);
 	const hostService = accessor.get(IHostService);
+	const contextService = accessor.get(IWorkspaceContextService);
 
 	if (openPage && !openPage.isDisposed()) {
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
@@ -165,7 +192,7 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 		disposables.dispose();
 	}));
 
-	let settings: IKnowledgeSettings = { on: [], words: DEFAULT_WORDS, embeddingModel: '' };
+	let settings: IKnowledgeSettings = { on: [], off: [], words: DEFAULT_WORDS, embeddingModel: '' };
 	try {
 		settings = { ...settings, ...JSON.parse(storageService.get(SETTINGS_KEY, StorageScope.APPLICATION, '{}')) };
 	} catch {
@@ -197,8 +224,50 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 	const progressOf = async () => commandService.executeCommand<IKnowledgeProgress | undefined>('language-julia.pollisCollectionProgress', (await databaseFile()).fsPath).catch(() => undefined);
 	const progressTimer = disposables.add(new IntervalTimer());
 	const watchProgress = () => progressTimer.cancelAndSet(async () => post({ command: 'progress', progress: await progressOf() }), 1000);
+	/** The user's own texts, in the knowledge folder of the Pollis Workspace open, by their paths. */
+	let yours: IYourText[] = [];
+	/** The type of a text of the user's, by the subfolder of the knowledge folder it is in. */
+	const yourTypes: Record<string, string> = {
+		books: localize('knowledgeBase.typeBook', "Book"),
+		articles: localize('knowledgeBase.typeArticle', "Article"),
+		reports: localize('knowledgeBase.typeReport', "Report"),
+	};
+	const otherType = localize('knowledgeBase.typeOther', "Other");
+	/** Reads the user's texts again; whether they have changed. */
+	const readYours = async () => {
+		const found: IYourText[] = [];
+		const workspace = await findPollisWorkspace(contextService, fileService);
+		const knowledge = workspace && await pollisWorkspaceFolder(fileService, workspace, 'knowledge').catch(() => undefined);
+		const visit = async (folder: URI, type: string, depth: number): Promise<void> => {
+			const stat = await fileService.resolve(folder, { resolveMetadata: true }).catch(() => undefined);
+			for (const child of stat?.children ?? []) {
+				const format = YOUR_EXTENSIONS[extname(child.resource).toLowerCase()];
+				if (child.isDirectory && depth < YOUR_DEPTH) {
+					await visit(child.resource, depth ? type : yourTypes[child.name.toLowerCase()] ?? otherType, depth + 1);
+				} else if (!child.isDirectory && format && child.name.toLowerCase() !== 'readme.md') {
+					const name = basename(child.resource);
+					found.push({
+						id: child.resource.fsPath, type, path: workspace ? relativePath(workspace, child.resource) ?? name : name,
+						size: Math.max(0.1, Math.round(child.size / 1e5) / 10),
+						document: { file: child.resource.fsPath, title: name.slice(0, name.length - extname(child.resource).length), kind: format },
+					});
+				}
+			}
+		};
+		if (knowledge) {
+			await visit(knowledge, otherType, 0);
+		}
+		found.sort((a, b) => a.path.localeCompare(b.path));
+		const changed = JSON.stringify(found) !== JSON.stringify(yours);
+		yours = found;
+		return changed;
+	};
+
 	/** The documents of the texts switched on and on this computer, which the index is built from. */
-	const documentsOn = () => (texts ?? []).filter(text => settings.on.includes(text.id) && text.downloaded).flatMap(text => text.documents);
+	const documentsOn = () => [
+		...(texts ?? []).filter(text => settings.on.includes(text.id) && text.downloaded).flatMap(text => text.documents),
+		...yours.filter(text => !settings.off.includes(text.id)).map(text => text.document),
+	];
 
 	const readCatalogue = async () => {
 		const answer = await commandService.executeCommand<{ texts?: IKnowledgeText[]; error?: string }>('language-julia.pollisKnowledgeBase', { task: 'texts' }).catch(() => undefined);
@@ -223,7 +292,7 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 		const index = await indexFile();
 		const status = index ? await askPollisService.collectionStatus(index) : undefined;
 		const indexed = index ? await askPollisService.indexedDocuments(index) ?? [] : [];
-		const passagesOf = (text: IKnowledgeText) => text.documents.reduce((sum, document) => sum + (indexed.find(d => d.file === document.file)?.passages ?? 0), 0);
+		const passagesOf = (documents: readonly ITextDocument[]) => documents.reduce((sum, document) => sum + (indexed.find(d => d.file === document.file)?.passages ?? 0), 0);
 		const files = documentsOn().map(document => document.file).sort();
 		const indexedFiles = indexed.map(document => document.file).sort();
 		const models = await embeddingModels();
@@ -236,12 +305,19 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 		post({
 			command: 'state',
 			error: catalogueError,
-			texts: texts?.map(text => ({
-				id: text.id, title: text.title, type: text.type, edition: text.edition, authors: text.authors, publisher: text.publisher, year: text.year, subject: text.subject,
-				format: text.format, licence: text.licence, licenceUrl: text.licence_url, page: text.page, hardCopy: text.hard_copy, size: text.size_mb, changes: text.changes,
-				on: settings.on.includes(text.id), downloaded: text.downloaded, downloading: downloading.has(text.id), failed: failed.get(text.id),
-				passages: passagesOf(text),
-			})),
+			reading: !texts && !catalogueError,
+			texts: texts || yours.length ? [
+				...(texts ?? []).map(text => ({
+					id: text.id, title: text.title, type: text.type, edition: text.edition, authors: text.authors, publisher: text.publisher, year: text.year, subject: text.subject,
+					format: text.format, licence: text.licence, licenceUrl: text.licence_url, page: text.page, hardCopy: text.hard_copy, size: text.size_mb, changes: text.changes,
+					on: settings.on.includes(text.id), downloaded: text.downloaded, downloading: downloading.has(text.id), failed: failed.get(text.id),
+					passages: passagesOf(text.documents),
+				})),
+				...yours.map(text => ({
+					id: text.id, title: text.document.title, type: text.type, path: text.path, authors: [], subject: '', licence: '', format: text.document.kind, size: text.size,
+					yours: true, on: !settings.off.includes(text.id), downloaded: true, passages: passagesOf([text.document]),
+				})),
+			] : undefined,
 			words: settings.words, models, model: modelOf(models), status,
 			stale: !!status?.passages && (files.length !== indexedFiles.length || files.some((file, i) => file !== indexedFiles[i])),
 			progress,
@@ -254,7 +330,18 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 	 */
 	const switchTexts = async (ids: readonly string[], on: boolean) => {
 		const chosen = (texts ?? []).filter(text => ids.includes(text.id));
+		const yoursChosen = yours.filter(text => ids.includes(text.id));
+		for (const text of yoursChosen) {
+			settings.off = settings.off.filter(id => id !== text.id);
+			if (!on) {
+				settings.off.push(text.id);
+			}
+		}
 		if (!chosen.length) {
+			if (yoursChosen.length) {
+				save();
+				await postState();
+			}
 			return;
 		}
 		for (const text of chosen) {
@@ -288,8 +375,9 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 		}
 	};
 
-	/** Reads the catalogue and shows it, with the covers of its books. */
+	/** Reads the catalogue and the user's texts and shows them, with the covers of the books. */
 	const showCatalogue = async () => {
+		await readYours();
 		await readCatalogue();
 		await postState();
 		post({ command: 'covers', covers });
@@ -308,10 +396,22 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 			reading = false;
 		}
 	};
-	disposables.add(webviewInput.webview.onDidFocus(() => readAgain()));
-	disposables.add(hostService.onDidChangeFocus(focused => {
-		if (focused) {
-			readAgain();
+	// The user's texts are read again at each focus, as files added to the knowledge folder or taken out of it
+	const readYoursAgain = async () => {
+		if (await readYours() && openPage === webviewInput) {
+			await postState();
+		}
+	};
+	const focused = () => {
+		readAgain();
+		if (texts) {
+			readYoursAgain();
+		}
+	};
+	disposables.add(webviewInput.webview.onDidFocus(focused));
+	disposables.add(hostService.onDidChangeFocus(hasFocus => {
+		if (hasFocus) {
+			focused();
 		}
 	}));
 
@@ -332,7 +432,7 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 		} else if (message.command === 'rows' && hasKey(message, { rows: true }) && isRowsChoice(message.rows)) {
 			storeRows(storageService, ROWS_PAGE, message.rows);
 		} else if (message.command === 'open' && hasKey(message, { id: true })) {
-			const document = texts?.find(t => t.id === message.id && t.downloaded)?.documents[0];
+			const document = texts?.find(t => t.id === message.id && t.downloaded)?.documents[0] ?? yours.find(t => t.id === message.id)?.document;
 			if (document?.kind === 'pdf') {
 				await openPdfInViewer(commandService, URI.file(document.file));
 			} else if (document) {
@@ -373,7 +473,7 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 function pageHtml(rows: number): string {
 	const text = {
 		title: localize('knowledgeBase.title', "Knowledge Base"),
-		intro: localize('knowledgeBase.intro', "Openly licensed texts that a model can answer from: books, lecture notes, reports and manuals. A text switched on is downloaded once, with its licence, from {0}; Build the Index then cuts the texts switched on into passages and embeds them, in {1}. Each text is shared under its own licence, named in the table.", '<span class="yellow">PollisKnowledge.jl</span>', '<span class="yellow">~/.pollis/rag</span>'),
+		intro: localize('knowledgeBase.intro', "Openly licensed texts that a model can answer from: books, lecture notes, reports and manuals. A text switched on is downloaded once, with its licence, from {0}; Build the Index then cuts the texts switched on into passages and embeds them, in {1}. Each text is shared under its own licence, named in the table. Your own texts, in the {2} folder of the Pollis Workspace open, are in the table too, with Yours as their source.", '<span class="yellow">PollisKnowledge.jl</span>', '<span class="yellow">~/.pollis/rag</span>', '<span class="yellow">knowledge</span>'),
 		search: localize('knowledgeBase.search', "Search texts"),
 		allTypes: localize('knowledgeBase.allTypes', "All Types ({0})", '{0}'),
 		typeCount: localize('knowledgeBase.typeCount', "{0} ({1})", '{0}', '{1}'),
@@ -392,6 +492,12 @@ function pageHtml(rows: number): string {
 		count: localize('knowledgeBase.count', "{0} of {1} texts switched on", '{0}', '{1}'),
 		textColumn: localize('knowledgeBase.textColumn', "Text"),
 		type: localize('knowledgeBase.type', "Type"),
+		source: localize('knowledgeBase.source', "Source"),
+		sourceHint: localize('knowledgeBase.sourceHint', "PollisKnowledge.jl, or Yours: a file in the knowledge folder of the Pollis Workspace open"),
+		yours: localize('knowledgeBase.yours', "Yours"),
+		yourFile: localize('knowledgeBase.yourFile', "Your file, unchanged."),
+		cutYourMarkdown: localize('knowledgeBase.cutYourMarkdown', "Cut at its headings into passages of about {0} words.", '{0}'),
+		cutText: localize('knowledgeBase.cutText', "Cut at its paragraphs into passages of about {0} words.", '{0}'),
 		subject: localize('knowledgeBase.subject', "Subject"),
 		licence: localize('knowledgeBase.licence', "Licence"),
 		size: localize('knowledgeBase.size', "Size"),
@@ -499,6 +605,7 @@ ${spinnerCss}
 		<thead><tr>
 			<th class="name sortable" data-sort="title" data-label="${text.textColumn}" title="${text.sortHint}">${text.textColumn}</th>
 			<th class="sortable" data-sort="type" data-label="${text.type}" title="${text.sortHint}">${text.type}</th>
+			<th class="sortable" data-sort="source" data-label="${text.source}" title="${text.sourceHint}">${text.source}</th>
 			<th class="sortable" data-sort="subject" data-label="${text.subject}" title="${text.sortHint}">${text.subject}</th>
 			<th class="sortable" data-sort="licence" data-label="${text.licence}" title="${text.sortHint}">${text.licence}</th>
 			<th class="size sortable" data-sort="size" data-label="${text.size}" title="${text.sizeHint}">${text.size}</th>
@@ -550,12 +657,18 @@ ${spinnerCss}
 		return authors.length <= 2 ? authors.join(' and ') : authors.slice(0, -1).join(', ') + ' and ' + authors[authors.length - 1];
 	}
 
-	function sortValue(item) {
-		return sortColumn === 'size' ? item.size : sortColumn === 'passages' ? item.passages : sortColumn === 'on' ? (item.on ? 1 : 0) : String(item[sortColumn] || '').toLowerCase();
+	// Where a text comes from: PollisKnowledge.jl, or the user
+	function sourceOf(item) {
+		return item.yours ? TEXT.yours : 'PollisKnowledge.jl';
 	}
 
-	// (a) the text, its edition, authors and publisher, and its authors' page, (b) its type, (c) its subject, (d) its
-	// licence, (e) its size, (f) what is kept of it, (g) how it is cut and its passages in the index, (h) its switch
+	function sortValue(item) {
+		return sortColumn === 'source' ? sourceOf(item).toLowerCase() : sortColumn === 'size' ? item.size : sortColumn === 'passages' ? item.passages : sortColumn === 'on' ? (item.on ? 1 : 0) : String(item[sortColumn] || '').toLowerCase();
+	}
+
+	// (a) the text, its edition, authors and publisher, and its authors' page, or, for a text of the user's, its path in
+	// the Pollis Workspace, (b) its type, (c) its source, (d) its subject, (e) its licence, (f) its size, (g) what is kept
+	// of it, (h) how it is cut and its passages in the index, (i) its switch
 	function row(item) {
 		const tr = element('tr');
 		const name = cell(tr, 'name');
@@ -564,17 +677,26 @@ ${spinnerCss}
 			titleLink.addEventListener('click', () => vscode.postMessage({ command: 'open', id: item.id }));
 		}
 		name.appendChild(titleLink);
-		name.appendChild(element('div', 'small', item.edition + ' \\u00b7 ' + authorsOf(item.authors) + ' \\u00b7 ' + item.publisher + ', ' + item.year));
-		const links = element('div', 'links');
-		links.appendChild(link(TEXT.authorsPage, () => vscode.postMessage({ command: 'link', url: item.page })));
-		name.appendChild(links);
+		if (item.yours) {
+			name.appendChild(element('div', 'small yellow', item.path));
+		} else {
+			name.appendChild(element('div', 'small', item.edition + ' \\u00b7 ' + authorsOf(item.authors) + ' \\u00b7 ' + item.publisher + ', ' + item.year));
+			const links = element('div', 'links');
+			links.appendChild(link(TEXT.authorsPage, () => vscode.postMessage({ command: 'link', url: item.page })));
+			name.appendChild(links);
+		}
 		cell(tr).textContent = item.type;
+		cell(tr).textContent = sourceOf(item);
 		cell(tr).textContent = item.subject;
-		cell(tr).appendChild(link(item.licence, () => vscode.postMessage({ command: 'link', url: item.licenceUrl })));
+		const licence = cell(tr);
+		if (item.licence) {
+			licence.appendChild(link(item.licence, () => vscode.postMessage({ command: 'link', url: item.licenceUrl })));
+		}
 		cell(tr, 'size').textContent = format(TEXT.sizeMb, item.size);
-		cell(tr, 'kept small').textContent = item.changes || TEXT.unchanged;
+		cell(tr, 'kept small').textContent = item.yours ? TEXT.yourFile : item.changes || TEXT.unchanged;
 		const cut = cell(tr, 'cut small');
-		cut.appendChild(element('div', '', format(item.format === 'markdown' ? TEXT.cutMarkdown : TEXT.cutPdf, state.words)));
+		const cutText = item.format === 'pdf' ? TEXT.cutPdf : item.format === 'text' ? TEXT.cutText : item.yours ? TEXT.cutYourMarkdown : TEXT.cutMarkdown;
+		cut.appendChild(element('div', '', format(cutText, state.words)));
 		if (item.passages) {
 			cut.appendChild(element('div', '', format(TEXT.inIndex, item.passages.toLocaleString())));
 		}
@@ -583,7 +705,7 @@ ${spinnerCss}
 			toggle.innerHTML = SPINNER;
 			toggle.appendChild(document.createTextNode(TEXT.downloading));
 		} else {
-			toggle.innerHTML = TEXT.switchSlot.split('SWITCH').join('switch-' + item.id);
+			toggle.innerHTML = TEXT.switchSlot.split('SWITCH').join(item.key);
 			if (item.failed) {
 				toggle.appendChild(element('div', 'small failed', format(TEXT.downloadFailed, item.failed)));
 			}
@@ -642,7 +764,7 @@ ${spinnerCss}
 	function shownTexts() {
 		const query = search.value.trim().toLowerCase();
 		const shown = state.texts.filter(item => (!types.value || item.type === types.value)
-			&& (!query || [item.title, item.type, item.subject, item.licence, item.edition, item.publisher, ...item.authors].some(field => String(field).toLowerCase().includes(query))));
+			&& (!query || [item.title, item.type, sourceOf(item), item.subject, item.licence, item.edition, item.publisher, item.path, ...item.authors].some(field => String(field || '').toLowerCase().includes(query))));
 		return shown.sort((a, b) => {
 			const x = sortValue(a), y = sortValue(b);
 			return (x < y ? -1 : x > y ? 1 : 0) * (sortDescending ? -1 : 1);
@@ -672,17 +794,25 @@ ${spinnerCss}
 		}
 	}
 
+	// Says the catalogue is being read, or why it could not be; false once it is read
+	function showCatalogueNote(note) {
+		if (state.reading) {
+			note.innerHTML = SPINNER;
+			note.appendChild(document.createTextNode(TEXT.reading));
+		} else if (state.error !== undefined) {
+			note.textContent = state.error === 'noJulia' ? TEXT.noJulia : state.error === 'notInstalled' ? TEXT.notInstalled : TEXT.failed;
+		} else {
+			return false;
+		}
+		note.hidden = false;
+		return true;
+	}
+
 	function render() {
 		const note = document.getElementById('note');
 		const table = document.getElementById('table');
 		if (!state.texts) {
-			if (state.error === undefined) {
-				note.innerHTML = SPINNER;
-				note.appendChild(document.createTextNode(TEXT.reading));
-			} else {
-				note.textContent = state.error === 'noJulia' ? TEXT.noJulia : state.error === 'notInstalled' ? TEXT.notInstalled : TEXT.failed;
-			}
-			note.hidden = false;
+			showCatalogueNote(note);
 			table.hidden = true;
 			return;
 		}
@@ -701,7 +831,7 @@ ${spinnerCss}
 		}
 		for (const item of onPage) {
 			if (!item.downloading) {
-				const show = choiceSwitch('switch-' + item.id, on => vscode.postMessage({ command: 'switch', id: item.id, on }));
+				const show = choiceSwitch(item.key, on => vscode.postMessage({ command: 'switch', id: item.id, on }));
 				show(item.on);
 			}
 		}
@@ -709,8 +839,10 @@ ${spinnerCss}
 			setSortArrow(heading, heading.dataset.label, heading.dataset.sort === sortColumn, sortDescending);
 		}
 		document.getElementById('count').textContent = format(TEXT.count, state.texts.filter(item => item.on).length, state.texts.length);
-		note.textContent = shown.length ? '' : TEXT.noMatch;
-		note.hidden = !!shown.length;
+		if (!showCatalogueNote(note)) {
+			note.textContent = shown.length ? '' : TEXT.noMatch;
+			note.hidden = !!shown.length;
+		}
 		table.hidden = !shown.length;
 		document.getElementById('onShown').disabled = !shown.some(item => !item.on && !item.downloading);
 		document.getElementById('offShown').disabled = !shown.some(item => item.on);
@@ -797,6 +929,8 @@ ${spinnerCss}
 		const message = event.data;
 		if (message.command === 'state') {
 			state = message;
+			// The switch of each text by its place, as the path of a text of the user's is no id of an element
+			(state.texts || []).forEach((item, i) => item.key = 'switch-' + i);
 			render();
 			renderIndex();
 		} else if (message.command === 'covers') {
