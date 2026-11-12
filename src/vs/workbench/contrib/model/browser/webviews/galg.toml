@@ -550,7 +550,7 @@ code = '''
 last_gain = something(findlast(diff(res.best) .< 0), 0) + 1
 (generations = length(res.best), last_improvement_generation = last_gain,
  idle_generations = length(res.best) - last_gain, final_diversity = res.diversity[end],
- premature = res.diversity[end] < 1e-6 && last_gain < 0.5 * length(res.best))
+ premature = res.diversity[end] < 0.01 * res.diversity[1] && last_gain < 0.5 * length(res.best))
 '''
 
 [[actionGroups.actions]]
@@ -591,7 +591,7 @@ id = "evaluate-new"
 label = "Evaluate New Point"
 desc = "Objective at a point of your choice (edit x_new) compared with the best one"
 code = '''
-x_new = (lb .+ ub) ./ 2  # edit: any point in the box
+x_new = lb .+ 0.25 .* (ub .- lb)  # edit: any point in the box
 (x_new = x_new, f_new = f(x_new), f_best = f_best, difference = f(x_new) - f_best, distance_to_best = norm(x_new - x_best))
 '''
 
@@ -614,15 +614,16 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "compare-de"
 label = "Compare with DE"
-desc = "The selected GA against adaptive differential evolution (BlackBoxOptim) at the same number of evaluations, over 5 seeds"
+desc = "The selected GA against adaptive differential evolution (BlackBoxOptim) with the evaluations each seed's GA run used, over 5 seeds"
 code = '''
 using BlackBoxOptim
 
-de(seed) = best_fitness(bboptimize(f; SearchRange=collect(zip(lb, ub)), NumDimensions=length(lb), Method=:adaptive_de_rand_1_bin_radiuslimited,
-                                   MaxFuncEvals=res.evals, TraceMode=:silent, RandomizeRngSeed=false, RngSeed=seed))
-map(["selected GA" => s -> search(seed=s).fx, "adaptive DE" => de]) do (name, run)
-    sec = @elapsed v = [run(s) for s in 1:5]
-    (method = name, mean_best = mean(v), worst_best = maximum(v), seconds_per_run = sec / 5)
+de(seed, evals) = best_fitness(bboptimize(f; SearchRange=collect(zip(lb, ub)), NumDimensions=length(lb), Method=:adaptive_de_rand_1_bin_radiuslimited,
+                                   MaxFuncEvals=evals, TraceMode=:silent, RandomizeRngSeed=false, RngSeed=seed))
+map(1:5) do s
+    t_ga = @elapsed r = search(seed=s)
+    t_rival = @elapsed v = de(s, r.evals)  # the evaluations of this seed's GA run, few when a compact GA stops early
+    (seed = s, evaluations = r.evals, selected_GA = r.fx, adaptive_DE = v, seconds_GA = t_ga, seconds_adaptive_DE = t_rival)
 end
 '''
 
@@ -641,21 +642,22 @@ end
 [[actionGroups.actions]]
 id = "compare-cmaes"
 label = "Compare with CMA-ES"
-desc = "The selected GA against CMA-ES (Evolutionary.jl) at the same number of evaluations, over 5 seeds"
+desc = "The selected GA against CMA-ES (Evolutionary.jl) with the evaluations each seed's GA run used, over 5 seeds"
 code = '''
 using Evolutionary
 
 d = length(lb)
-function cma(seed)
+function cma(seed, evals)
     Random.seed!(seed)
     lam = 4 + floor(Int, 3log(d))
     r = Evolutionary.optimize(f, Evolutionary.BoxConstraints(lb, ub), lb .+ rand(d) .* (ub .- lb),
-                              CMAES(mu=div(lam, 2), lambda=lam, sigma0=0.3 * maximum(ub .- lb)), Evolutionary.Options(iterations=div(res.evals, lam)))
+                              CMAES(mu=div(lam, 2), lambda=lam, sigma0=0.3 * maximum(ub .- lb)), Evolutionary.Options(iterations=div(evals, lam)))
     Evolutionary.minimum(r)
 end
-map(["selected GA" => s -> search(seed=s).fx, "CMA-ES" => cma]) do (name, run)
-    sec = @elapsed v = [run(s) for s in 1:5]
-    (method = name, mean_best = mean(v), worst_best = maximum(v), seconds_per_run = sec / 5)
+map(1:5) do s
+    t_ga = @elapsed r = search(seed=s)
+    t_rival = @elapsed v = cma(s, r.evals)  # the evaluations of this seed's GA run, few when a compact GA stops early
+    (seed = s, evaluations = r.evals, selected_GA = r.fx, CMA_ES = v, seconds_GA = t_ga, seconds_CMA_ES = t_rival)
 end
 '''
 
