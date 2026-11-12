@@ -444,14 +444,15 @@ function search(; budget=budget, seed=1, lb=lb, ub=ub)
     fc, pts, vals = recorder()
     d = length(lb)
     x0 = lb .+ rand(d) .* (ub .- lb)  # random start
-    grad(x) = ForwardDiff.gradient(f, x)  # the gradient step complements the sampled population
+    ngrad = Ref(0)  # gradient calls, each worth several evaluations of f, reported apart from evaluations
+    grad(x) = (ngrad[] += 1; ForwardDiff.gradient(f, x))  # the gradient step complements the sampled population
     x, fx, status = GCMAES.minimize((fc, grad), x0, SIGMA * maximum(ub .- lb), lb, ub; maxiter=div(budget, popsize(d)))
-    result(x, fx, pts, vals; status = status)
+    result(x, fx, pts, vals; status = status, gradient_calls = ngrad[])
 end
 
 res = search()
 x_best, f_best = res.x, res.fx
-(best_point = x_best, best_value = f_best, evaluations = res.evals, status = res.status)
+(best_point = x_best, best_value = f_best, evaluations = res.evals, gradient_calls = res.gradient_calls, status = res.status)
 '''
 
 [[codeBranches]]
@@ -480,7 +481,7 @@ function search(; budget=budget, seed=1, lb=lb, ub=ub)
     opt = Opt(:GN_ISRES, length(lb))
     opt.lower_bounds, opt.upper_bounds, opt.maxeval = lb, ub, budget
     opt.min_objective = (x, g) -> fc(x)  # derivative-free: g is never requested
-    fx, x, ret = NLopt.optimize(opt, (lb .+ ub) ./ 2)
+    fx, x, ret = NLopt.optimize(opt, lb .+ rand(MersenneTwister(seed), length(lb)) .* (ub .- lb))  # random start, as on the other tabs
     result(x, fx, pts, vals; status = ret)
 end
 
@@ -515,7 +516,7 @@ function search(; budget=budget, seed=1, lb=lb, ub=ub)
     opt = Opt(:GN_ESCH, length(lb))
     opt.lower_bounds, opt.upper_bounds, opt.maxeval = lb, ub, budget
     opt.min_objective = (x, g) -> fc(x)  # derivative-free: g is never requested
-    fx, x, ret = NLopt.optimize(opt, (lb .+ ub) ./ 2)
+    fx, x, ret = NLopt.optimize(opt, lb .+ rand(MersenneTwister(seed), length(lb)) .* (ub .- lb))  # random start, as on the other tabs
     result(x, fx, pts, vals; status = ret)
 end
 
@@ -665,17 +666,22 @@ end
 [[actionGroups.actions]]
 id = "compare-strategies"
 label = "Compare Strategies"
-desc = "CMA-ES (Evolutionary), xNES and dxNES (BlackBoxOptim), ISRES and ESCH (NLopt) at the same budget, over 3 seeds"
+desc = "CMA-ES (Evolutionary), xNES and dxNES (BlackBoxOptim), GCMAES (GCMAES.jl), ISRES and ESCH (NLopt) at the same budget, over 3 seeds"
 code = '''
-using Evolutionary, BlackBoxOptim, NLopt
+using Evolutionary, BlackBoxOptim, NLopt, GCMAES, ForwardDiff
 
 d = length(lb)
 function cma(seed)
     Random.seed!(seed)
     lam = popsize(d)
     r = Evolutionary.optimize(f, Evolutionary.BoxConstraints(lb, ub), lb .+ rand(d) .* (ub .- lb),
-                              CMAES(mu=div(lam, 2), lambda=lam, sigma0=0.3 * maximum(ub .- lb)), Evolutionary.Options(iterations=div(budget, lam)))
+                              CMAES(mu=div(lam, 2), lambda=lam, sigma0={{sigma}} * maximum(ub .- lb)), Evolutionary.Options(iterations=div(budget, lam)))
     Evolutionary.minimum(r)
+end
+function gcm(seed)
+    Random.seed!(seed)
+    x0 = lb .+ rand(d) .* (ub .- lb)
+    GCMAES.minimize((f, x -> ForwardDiff.gradient(f, x)), x0, {{sigma}} * maximum(ub .- lb), lb, ub; maxiter=div(budget, popsize(d)))[2]
 end
 nes(m) = seed -> best_fitness(bboptimize(f; SearchRange=collect(zip(lb, ub)), NumDimensions=d, Method=m, MaxFuncEvals=budget, TraceMode=:silent, RandomizeRngSeed=false, RngSeed=seed))
 function nlo(alg)
@@ -684,10 +690,10 @@ function nlo(alg)
         opt = Opt(alg, d)
         opt.lower_bounds, opt.upper_bounds, opt.maxeval = lb, ub, budget
         opt.min_objective = (x, g) -> f(x)
-        NLopt.optimize(opt, (lb .+ ub) ./ 2)[1]
+        NLopt.optimize(opt, lb .+ rand(MersenneTwister(seed), length(lb)) .* (ub .- lb))[1]
     end
 end
-runs = ["CMA-ES" => cma, "xNES" => nes(:xnes), "dxNES" => nes(:dxnes), "ISRES" => nlo(:GN_ISRES), "ESCH" => nlo(:GN_ESCH)]
+runs = ["CMA-ES" => cma, "xNES" => nes(:xnes), "dxNES" => nes(:dxnes), "GCMAES" => gcm, "ISRES" => nlo(:GN_ISRES), "ESCH" => nlo(:GN_ESCH)]
 map(runs) do (name, run)
     sec = @elapsed v = [run(s) for s in 1:3]
     (method = name, mean_best = mean(v), worst_best = maximum(v), seconds_per_run = sec / 3)
