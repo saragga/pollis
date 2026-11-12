@@ -184,11 +184,32 @@ using TextAnalysis, Languages
 crps = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus from documents
 prepare!(crps, strip_punctuation | strip_case)  # normalise text
 
-toks     = vcat([tokens(d) for d in crps]...)  # flatten all tokens
-unigrams = ngrams(NGramDocument(join(toks, " "), 1))  # unigram counts
-N        = sum(values(unigrams))  # total token count
-V        = length(unigrams)  # vocabulary size
-prob(w)  = (get(unigrams, w, 0) + {{k}}) / (N + {{k}} * V)  # Add-k smoothing
+docs  = [tokens(d) for d in crps]  # one token list per document, so no n-gram crosses a document boundary
+vocab = Set(vcat(docs...))  # training vocabulary
+V     = length(vocab) + 2  # plus </s> and <unk>, the symbol every unseen word maps to
+
+# add-k n-gram model of a given order: counts, P(word | the order - 1 words before it) and the log2-probability of a sequence
+function ngram_model(order; k = {{k}})
+    pad(ws) = [fill("<s>", order - 1); [w in vocab ? w : "<unk>" for w in ws]; "</s>"]  # boundary symbols; unseen words become <unk>
+    grams = Dict{Vector{String}, Int}()  # n-gram counts within each document
+    for d in docs
+        s = pad(d)
+        for i in order:length(s)
+            g = s[i-order+1:i]
+            grams[g] = get(grams, g, 0) + 1
+        end
+    end
+    ctx = Dict{Vector{String}, Int}()  # each context, counted over the words that follow it
+    for (g, c) in grams
+        ctx[g[1:end-1]] = get(ctx, g[1:end-1], 0) + c
+    end
+    prob(g) = (get(grams, g, 0) + k) / (get(ctx, g[1:end-1], 0) + k * V)  # k = 0 is maximum likelihood
+    logprob(ws) = (s = pad(ws); sum(log2(prob(s[i-order+1:i])) for i in order:length(s)))  # the end symbol included
+    perplexity(ws) = 2^(-logprob(ws) / (length(ws) + 1))  # per predicted token
+    (order = order, grams = grams, prob = prob, logprob = logprob, perplexity = perplexity)
+end
+
+lm = ngram_model(1)  # unigram: each word on its own
 '''
 
 [[codeBranches]]
@@ -207,10 +228,32 @@ using TextAnalysis, Languages
 crps    = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus from documents
 prepare!(crps, strip_punctuation | strip_case)  # normalise text
 
-toks     = vcat([tokens(d) for d in crps]...)  # flatten all tokens
-unigrams = ngrams(NGramDocument(join(toks, " "), 1))  # unigram counts
-bigrams  = ngrams(NGramDocument(join(toks, " "), 2))  # bigram counts
-V        = length(unigrams)  # vocabulary size
+docs  = [tokens(d) for d in crps]  # one token list per document, so no n-gram crosses a document boundary
+vocab = Set(vcat(docs...))  # training vocabulary
+V     = length(vocab) + 2  # plus </s> and <unk>, the symbol every unseen word maps to
+
+# add-k n-gram model of a given order: counts, P(word | the order - 1 words before it) and the log2-probability of a sequence
+function ngram_model(order; k = {{k}})
+    pad(ws) = [fill("<s>", order - 1); [w in vocab ? w : "<unk>" for w in ws]; "</s>"]  # boundary symbols; unseen words become <unk>
+    grams = Dict{Vector{String}, Int}()  # n-gram counts within each document
+    for d in docs
+        s = pad(d)
+        for i in order:length(s)
+            g = s[i-order+1:i]
+            grams[g] = get(grams, g, 0) + 1
+        end
+    end
+    ctx = Dict{Vector{String}, Int}()  # each context, counted over the words that follow it
+    for (g, c) in grams
+        ctx[g[1:end-1]] = get(ctx, g[1:end-1], 0) + c
+    end
+    prob(g) = (get(grams, g, 0) + k) / (get(ctx, g[1:end-1], 0) + k * V)  # k = 0 is maximum likelihood
+    logprob(ws) = (s = pad(ws); sum(log2(prob(s[i-order+1:i])) for i in order:length(s)))  # the end symbol included
+    perplexity(ws) = 2^(-logprob(ws) / (length(ws) + 1))  # per predicted token
+    (order = order, grams = grams, prob = prob, logprob = logprob, perplexity = perplexity)
+end
+
+lm = ngram_model(2)  # bigram: each word given the one before
 '''
 
 [[codeBranches]]
@@ -229,11 +272,32 @@ using TextAnalysis, Languages
 crps     = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus from documents
 prepare!(crps, strip_punctuation | strip_case)  # normalise text
 
-toks     = vcat([tokens(d) for d in crps]...)  # flatten all tokens
-unigrams = ngrams(NGramDocument(join(toks, " "), 1))  # unigram counts
-bigrams  = ngrams(NGramDocument(join(toks, " "), 2))  # bigram counts
-trigrams = ngrams(NGramDocument(join(toks, " "), 3))  # trigram counts
-V        = length(unigrams)  # vocabulary size; use backoff or interpolation for unseen trigrams
+docs  = [tokens(d) for d in crps]  # one token list per document, so no n-gram crosses a document boundary
+vocab = Set(vcat(docs...))  # training vocabulary
+V     = length(vocab) + 2  # plus </s> and <unk>, the symbol every unseen word maps to
+
+# add-k n-gram model of a given order: counts, P(word | the order - 1 words before it) and the log2-probability of a sequence
+function ngram_model(order; k = {{k}})
+    pad(ws) = [fill("<s>", order - 1); [w in vocab ? w : "<unk>" for w in ws]; "</s>"]  # boundary symbols; unseen words become <unk>
+    grams = Dict{Vector{String}, Int}()  # n-gram counts within each document
+    for d in docs
+        s = pad(d)
+        for i in order:length(s)
+            g = s[i-order+1:i]
+            grams[g] = get(grams, g, 0) + 1
+        end
+    end
+    ctx = Dict{Vector{String}, Int}()  # each context, counted over the words that follow it
+    for (g, c) in grams
+        ctx[g[1:end-1]] = get(ctx, g[1:end-1], 0) + c
+    end
+    prob(g) = (get(grams, g, 0) + k) / (get(ctx, g[1:end-1], 0) + k * V)  # k = 0 is maximum likelihood
+    logprob(ws) = (s = pad(ws); sum(log2(prob(s[i-order+1:i])) for i in order:length(s)))  # the end symbol included
+    perplexity(ws) = 2^(-logprob(ws) / (length(ws) + 1))  # per predicted token
+    (order = order, grams = grams, prob = prob, logprob = logprob, perplexity = perplexity)
+end
+
+lm = ngram_model(3)  # trigram: each word given the two before
 '''
 
 [[actionGroups]]
@@ -245,28 +309,19 @@ id = "unigram-dist"
 label = "Unigram Distribution"
 desc = "Top 10 most probable words"
 code = '''
-using TextAnalysis, Languages
-
-crps     = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
-prepare!(crps, strip_punctuation | strip_case)  # normalise
-toks     = vcat([tokens(d) for d in crps]...)  # all tokens
-unigrams = ngrams(NGramDocument(join(toks, " "), 1))  # counts
-top10    = sort(collect(unigrams), by=x->x[2], rev=true)[1:10]  # top-10 words by frequency
+counts = Dict{String, Int}()  # word counts
+for d in docs, w in d
+    counts[w] = get(counts, w, 0) + 1
+end
+top10 = first(sort(collect(counts), by=last, rev=true), 10)  # top-10 words by frequency
 '''
 
 [[actionGroups.actions]]
 id = "ngram-probs"
 label = "N-gram Probabilities"
-desc = "Probability of each n-gram in the corpus"
+desc = "Add-k probability of each n-gram of the tab's order in the corpus"
 code = '''
-using TextAnalysis, Languages
-
-crps     = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
-prepare!(crps, strip_punctuation | strip_case)  # normalise
-toks     = vcat([tokens(d) for d in crps]...)  # all tokens
-unigrams = ngrams(NGramDocument(join(toks, " "), 1))  # unigram counts
-N = sum(values(unigrams)); V = length(unigrams)  # corpus size and vocabulary
-probs = Dict(w => (cnt + {{k}}) / (N + {{k}} * V) for (w, cnt) in unigrams)  # Add-k smoothed probabilities
+probs = Dict(join(g, " ") => lm.prob(g) for g in keys(lm.grams))  # add-k P(last word | the words before it), for the n-grams of this tab's order
 '''
 
 [[actionGroups]]
@@ -278,15 +333,7 @@ id = "perplexity"
 label = "Perplexity"
 desc = "Perplexity on a held-out test corpus"
 code = '''
-using TextAnalysis, Languages, Statistics
-
-crps     = Corpus([StringDocument(d) for d in {{corpus}}])  # training corpus
-prepare!(crps, strip_punctuation | strip_case)  # normalise
-toks     = vcat([tokens(d) for d in crps]...)  # training tokens
-unigrams = ngrams(NGramDocument(join(toks, " "), 1))  # unigram counts
-N = sum(values(unigrams)); V = length(unigrams)  # size and vocabulary
-log_pp   = -mean([log2((get(unigrams, w, 0) + {{k}}) / (N + {{k}} * V)) for w in test_tokens])  # cross-entropy in bits per test token
-pp       = 2^log_pp  # perplexity: the effective number of equally likely next words
+pp = lm.perplexity(test_tokens)  # 2 to the cross-entropy in bits per test token: the effective number of equally likely next words
 '''
 
 [[actionGroups.actions]]
@@ -294,13 +341,9 @@ id = "oov-rate"
 label = "OOV Rate"
 desc = "Fraction of test tokens unseen in training"
 code = '''
-using TextAnalysis, Languages, Statistics
+using Statistics
 
-crps     = Corpus([StringDocument(d) for d in {{corpus}}])  # training corpus
-prepare!(crps, strip_punctuation | strip_case)  # normalise
-toks     = vcat([tokens(d) for d in crps]...)  # training tokens
-vocab    = Set(toks)  # training vocabulary
-oov_rate = mean(w -> !(w in vocab), test_tokens)  # fraction of OOV test tokens
+oov_rate = mean(w -> !(w in vocab), test_tokens)  # fraction of test tokens unseen in training
 '''
 
 [[actionGroups]]
@@ -312,14 +355,7 @@ id = "sentence-prob"
 label = "Sentence Probability"
 desc = "Log-probability of a new sentence"
 code = '''
-using TextAnalysis, Languages
-
-crps     = Corpus([StringDocument(d) for d in {{corpus}}])  # training corpus
-prepare!(crps, strip_punctuation | strip_case)  # normalise
-toks     = vcat([tokens(d) for d in crps]...)  # training tokens
-unigrams = ngrams(NGramDocument(join(toks, " "), 1))  # unigram counts
-N = sum(values(unigrams)); V = length(unigrams)  # size and vocabulary
-log_p    = sum(log2((get(unigrams, w, 0) + {{k}}) / (N + {{k}} * V)) for w in new_sentence)  # log-probability of sentence
+log_p = lm.logprob(new_sentence)  # log2-probability of the sentence and its end
 '''
 
 [[actionGroups.actions]]
@@ -327,14 +363,10 @@ id = "next-word"
 label = "Next Word Prediction"
 desc = "Most likely next word given context"
 code = '''
-using TextAnalysis, Languages
-
-crps     = Corpus([StringDocument(d) for d in {{corpus}}])  # training corpus
-prepare!(crps, strip_punctuation | strip_case)  # normalise
-toks     = vcat([tokens(d) for d in crps]...)  # training tokens
-bigrams  = ngrams(NGramDocument(join(toks, " "), 2))  # bigram counts for context lookup
-unigrams = ngrams(NGramDocument(join(toks, " "), 1))  # unigram counts
-next_w   = argmax(w -> get(bigrams, context * " " * w, 0) + {{k}}, collect(keys(unigrams)))  # most probable next word
+hist   = [fill("<s>", lm.order - 1); [w in vocab ? w : "<unk>" for w in String.(split(context))]]  # the context, padded, unseen words as <unk>
+c      = hist[end-lm.order+2:end]  # the last order - 1 words (none for a unigram)
+next_w = argmax(w -> lm.prob([c; w]), [collect(vocab); "</s>"])  # add-k keeps the ranking of the counts: k changes the probability, not the word
+(next_word = next_w, probability = lm.prob([c; next_w]))
 '''
 
 [[actionGroups]]
@@ -346,14 +378,7 @@ id = "compare-orders"
 label = "Compare Orders"
 desc = "Perplexity for unigram, bigram and trigram"
 code = '''
-using TextAnalysis, Languages
-
-crps     = Corpus([StringDocument(d) for d in {{corpus}}])  # training corpus
-prepare!(crps, strip_punctuation | strip_case)  # normalise
-toks     = vcat([tokens(d) for d in crps]...)  # training tokens
-unigrams = ngrams(NGramDocument(join(toks, " "), 1))  # unigram counts
-bigrams  = ngrams(NGramDocument(join(toks, " "), 2))  # bigram counts
-trigrams = ngrams(NGramDocument(join(toks, " "), 3))  # trigram counts; compare test-set perplexity across orders
+[(order = n, perplexity = ngram_model(n).perplexity(test_tokens)) for n in 1:3]  # test-set perplexity of each order, at the same k
 '''
 
 [[actionGroups.actions]]
@@ -361,17 +386,7 @@ id = "compare-smoothing"
 label = "Compare Smoothing"
 desc = "MLE vs Laplace vs Add-k perplexity"
 code = '''
-using TextAnalysis, Languages, Statistics
-
-crps     = Corpus([StringDocument(d) for d in {{corpus}}])  # training corpus
-prepare!(crps, strip_punctuation | strip_case)  # normalise
-toks     = vcat([tokens(d) for d in crps]...)  # training tokens
-unigrams = ngrams(NGramDocument(join(toks, " "), 1))  # unigram counts
-N = sum(values(unigrams)); V = length(unigrams)  # size and vocabulary
-addk_perplexity(k) = 2^(-mean(log2((get(unigrams, w, 0) + k) / (N + k * V)) for w in test_tokens))  # test-set perplexity under add-k smoothing
-pp_mle     = addk_perplexity(0)  # MLE perplexity (k=0): infinite once a test word is unseen in training
-pp_laplace = addk_perplexity(1)  # Laplace perplexity (k=1)
-pp_addk    = addk_perplexity({{k}})  # Add-k perplexity
+[(k = k, perplexity = ngram_model(lm.order; k = k).perplexity(test_tokens)) for k in (0, 1, {{k}})]  # k = 0 is maximum likelihood: infinite once a test n-gram is unseen; k = 1 is Laplace
 '''
 
 [[actionGroups]]
@@ -383,13 +398,7 @@ id = "top-ngrams"
 label = "Top N-grams"
 desc = "Most frequent n-grams in the corpus"
 code = '''
-using TextAnalysis, Languages
-
-crps     = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
-prepare!(crps, strip_punctuation | strip_case)  # normalise
-toks     = vcat([tokens(d) for d in crps]...)  # all tokens
-bigrams  = ngrams(NGramDocument(join(toks, " "), 2))  # bigram counts
-top_bg   = sort(collect(bigrams), by=x->x[2], rev=true)[1:10]  # top-10 most frequent bigrams
+top_ngrams = first(sort([join(g, " ") => c for (g, c) in lm.grams], by=last, rev=true), 10)  # the ten most frequent n-grams of this tab's order
 '''
 
 [[actionGroups.actions]]
@@ -397,13 +406,15 @@ id = "prob-ratios"
 label = "Probability Ratios"
 desc = "PMI between word pairs"
 code = '''
-using TextAnalysis, Languages
-
-crps     = Corpus([StringDocument(d) for d in {{corpus}}])  # build corpus
-prepare!(crps, strip_punctuation | strip_case)  # normalise
-toks     = vcat([tokens(d) for d in crps]...)  # all tokens
-unigrams = ngrams(NGramDocument(join(toks, " "), 1))  # unigram counts
-bigrams  = ngrams(NGramDocument(join(toks, " "), 2))  # bigram counts
-N = sum(values(unigrams))  # total tokens
-pmi(w1, w2) = log2((get(bigrams, w1 * " " * w2, 0) * N) / (get(unigrams, w1, 0) * get(unigrams, w2, 0) + 1))  # pointwise mutual information
+uni = Dict{String, Int}(); big = Dict{Tuple{String, String}, Int}()  # word and adjacent-pair counts within each document
+for d in docs
+    for w in d
+        uni[w] = get(uni, w, 0) + 1
+    end
+    for i in 1:length(d)-1
+        big[(d[i], d[i+1])] = get(big, (d[i], d[i+1]), 0) + 1
+    end
+end
+N, B = sum(values(uni)), sum(values(big))
+pmi(w1, w2) = log2((get(big, (w1, w2), 0) / B) / ((get(uni, w1, 0) / N) * (get(uni, w2, 0) / N)))  # pointwise mutual information; -Inf for a pair never adjacent
 '''
