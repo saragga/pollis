@@ -9,8 +9,8 @@ viewType = "pollis.dco"
 defaultModel = "grasp"
 
 [[packages]]
-name = "MHLib.jl"
-github = "https://github.com/ac-tuwien/MHLib.jl"
+name = "TravelingSalesmanHeuristics.jl"
+github = "https://github.com/evanfields/TravelingSalesmanHeuristics.jl"
 
 [requires]
 packages = ["TravelingSalesmanHeuristics.jl", "Plots.jl"]
