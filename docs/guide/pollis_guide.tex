@@ -718,6 +718,9 @@ your coding agent (Orchestration, \pg{Orchestration}), with a skill that writes 
   \item Tell it which panels you want, by their menu titles, the menus they go in and their order, and the
     toolbox's name and description. It asks for what is missing.
   \item It writes a short spec, builds the toolbox and its README, and says where the \texttt{.vsix} file is.
+    Each toolbox has a folder of its own, in the \texttt{toolboxes} folder of your Pollis Workspace
+    (Reports, \pg{Reports}, says how to make one), with its spec, \texttt{toolbox.toml}, its README and its \texttt{.vsix} files, in
+    \texttt{dist}.
   \item To install it, run \ui{Extensions: Install from VSIX...} in the Command Palette and choose the file.
     Your students do the same with the file you give them. Then choose its panels, as on the previous page.
 \end{enumerate}
@@ -727,7 +730,8 @@ To change it, edit the spec, raise its version, build again and install the new 
 \ui{Compose > New Panels > Create a Panel...} has your coding agent write a new panel with
 you. \ui{Create Panels from a Request...} writes several at once from a request file, which lists the
 toolbox and, for each panel, its topic, methods and menu. Without a request file open, it opens an
-example to fill in. New panels can then be packaged as a toolbox.
+example to fill in. The new panels go in the \texttt{panels} folder of your Pollis Workspace, and can then be
+packaged as a toolbox.
 
 \begin{caution}{Toolboxes need the Internet to install}
 The list of toolboxes and their files come from GitHub. Once installed, a toolbox works offline.

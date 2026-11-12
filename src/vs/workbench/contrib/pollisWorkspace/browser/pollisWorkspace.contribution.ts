@@ -37,8 +37,8 @@ const FOLDERS: Readonly<Record<PollisWorkspaceFolder, { readonly name: string; r
 	reports: { name: 'reports', readme: 'The reports and slides that Pollis writes from notebooks, one folder each.' },
 	methods: { name: 'methods', readme: 'Your methods, one folder each.' },
 	workflows: { name: 'workflows', readme: 'Your workflows.' },
-	panels: { name: 'panels', readme: 'Your panels.' },
-	toolboxes: { name: 'toolboxes', readme: 'The toolboxes you make to share your panels, for a course say, one folder each: its spec, which menu entries it holds and in what order, its README, and the .vsix files built from it. The toolboxes you install stay in Pollis.' },
+	panels: { name: 'panels', readme: 'Your panels, which Compose > New Panels writes with your coding agent, each its TOML with its wiki and notebook folders.' },
+	toolboxes: { name: 'toolboxes', readme: 'The toolboxes you make to share your panels, for a course say, which Compose > Package a Toolbox... builds with your coding agent, one folder each: its spec, toolbox.toml, which menu entries it holds and in what order, the sources of its vignette, its README, and the .vsix files built from it, in dist/. The toolboxes you install stay in Pollis.' },
 	changes: { name: 'changes', readme: 'Your changes to the panels, workflows, wikis and notebooks that come with Pollis and its toolboxes, one small file each.' },
 };
 
