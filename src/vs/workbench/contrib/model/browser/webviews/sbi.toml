@@ -132,7 +132,7 @@ text = "Amortised inference"
 detail = "training is done once; estimation at test time is a single forward pass"
 
 [[bullets]]
-text = "Supports point estimation (posterior mean, MAP) and uncertainty quantification via bootstrap or conformal intervals"
+text = "Point estimates of the posterior median, from the absolute-error loss, and uncertainty from a parametric bootstrap or from learnt posterior quantiles"
 detail = ""
 
 [[bullets]]
