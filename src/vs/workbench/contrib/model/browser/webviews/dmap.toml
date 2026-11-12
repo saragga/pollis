@@ -146,13 +146,13 @@ default = "[0.0, 0.0]"
 [[inputs]]
 id = "p"
 label = "Parameters (p)"
-tooltip = "Map parameters tuple. Henon: (a=1.4, b=0.3)."
+tooltip = "Map parameters as a vector. Henon: [a, b] = [1.4, 0.3]."
 default = "[1.4, 0.3]"
 
 [[inputs]]
 id = "n"
 label = "Iterations (n)"
-tooltip = "Number of map iterations (e.g. 1000)."
+tooltip = "Number of map iterations (e.g. 10000)."
 default = "10000"
 
 [[codeBranches]]
@@ -200,7 +200,7 @@ scatter(tr[:, 1], tr[:, 2]; markersize=1)  # phase portrait (x vs y)
 [[actionGroups.actions]]
 id = "time-series"
 label = "Time Series"
-desc = "Plot x[n] and y[n] over iteration count to inspect transients and attractors"
+desc = "Plot x[n] over iteration count to inspect transients and attractors"
 code = '''
 using DynamicalSystems, GLMakie
 
@@ -334,7 +334,7 @@ end
 [[actionGroups.actions]]
 id = "param-sweep"
 label = "Parameter Sweep"
-desc = "Iterate for each parameter value and count the distinct values the orbit visits in its last 100 steps: 1 is a fixed point, 2, 4, 8 a periodic cycle, about 100 no period (chaos)"
+desc = "Iterate the Henon map for 20 values of a from 1.0 to 1.4, with b = 0.3, and count the distinct values the orbit visits in its last 100 steps: a small count is a periodic cycle, about 100 no period (chaos)"
 code = '''
 using DynamicalSystems
 
@@ -392,7 +392,7 @@ end
 [[actionGroups.actions]]
 id = "diff-maps"
 label = "Different Maps"
-desc = "Compare Henon map vs logistic map orbits side by side"
+desc = "Compare Henon map and logistic map orbits"
 code = '''
 using DynamicalSystems
 
