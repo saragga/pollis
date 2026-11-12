@@ -143,6 +143,9 @@ key = "BKM2017a"
 [[references]]
 key = "BV2023a"
 
+[[references]]
+key = "AC1993a"
+
 [[models]]
 id = "bp"
 label = "Belief Propagation"
@@ -322,6 +325,27 @@ result = infer(  # the Probit node sends EP messages: moment matching of the til
 q_x = result.posteriors[:x][2:end]  # posterior marginals of the trend at t = 1..T
 println("Free energy: ", last(result.free_energy))
 println("Final trend: mean ", mean(q_x[end]), "  sd ", std(q_x[end]))
+
+# exact posterior draws of the final trend, to check EP against (Albert and Chib, 1993): each outcome is the sign
+# of a latent z_t ~ Normal(x_t, 1); given z the model is linear Gaussian, so the path is drawn by forward filtering, backward sampling
+function gibbs_xT(y; draws = 4000, burn = 1000, q = 0.15^2, rng = MersenneTwister(1))
+    n = length(y); x = zeros(n + 1); m = zeros(n + 1); P = zeros(n + 1); xT = Float64[]
+    for it in 1:(draws + burn)
+        z = [y[t] == 1 ? rand(rng, truncated(Normal(x[t+1], 1), 0.0, Inf)) : rand(rng, truncated(Normal(x[t+1], 1), -Inf, 0.0)) for t in 1:n]
+        m[1], P[1] = 0.0, 1.0  # prior of the initial state
+        for t in 1:n  # Kalman filter: random-walk step, then z_t with noise variance 1
+            Pp = P[t] + q; K = Pp / (Pp + 1)
+            m[t+1] = m[t] + K * (z[t] - m[t]); P[t+1] = (1 - K) * Pp
+        end
+        x[end] = m[end] + sqrt(P[end]) * randn(rng)
+        for t in n:-1:1  # backward sampling of each state given the next
+            J = P[t] / (P[t] + q)
+            x[t] = m[t] + J * (x[t+1] - m[t]) + sqrt((1 - J) * P[t]) * randn(rng)
+        end
+        it > burn && push!(xT, x[end])
+    end
+    xT
+end
 '''
 
 [[actionGroups]]
@@ -346,7 +370,7 @@ using Plots
 [[actionGroups.actions]]
 id = "posterior-dist"
 label = "Posterior Distribution"
-desc = "Densities of the final posterior marginals (EP: the trend at the last time point)"
+desc = "Densities of the final posterior marginals (EP: the trend at the last time point, against a histogram of exact Gibbs draws)"
 code = '''
 using Plots
 {{?model=bp}}g = range(mean(q_mu) - 4std(q_mu), mean(q_mu) + 4std(q_mu), length=200)
@@ -355,8 +379,10 @@ using Plots
 {{?model=vmp}}g1 = range(mean(q_mu) - 4std(q_mu), mean(q_mu) + 4std(q_mu), length=200)
 {{?model=vmp}}g2 = range(1e-3, mean(q_tau) + 4std(q_tau), length=200)
 {{?model=vmp}}plot(plot(g1, pdf.(Ref(q_mu), g1), label="q(mu)", xlabel="mu"), plot(g2, pdf.(Ref(q_tau), g2), label="q(tau)", xlabel="tau"))
-{{?model=ep}}g = range(mean(q_x[end]) - 4std(q_x[end]), mean(q_x[end]) + 4std(q_x[end]), length=200)
-{{?model=ep}}plot(g, pdf.(Ref(q_x[end]), g), label="q(x_T)", xlabel="x_T")
+{{?model=ep}}xT = gibbs_xT({{ep-data}})  # exact posterior draws of x_T
+{{?model=ep}}g = range(min(mean(q_x[end]) - 4std(q_x[end]), minimum(xT)), max(mean(q_x[end]) + 4std(q_x[end]), maximum(xT)), length=200)
+{{?model=ep}}histogram(xT, normalize=:pdf, bins=60, alpha=0.4, label="exact (Gibbs)", xlabel="x_T")
+{{?model=ep}}plot!(g, pdf.(Ref(q_x[end]), g), linewidth=2, label="q(x_T), EP")  # Gaussian by construction; the histogram shows the true shape
 '''
 
 [[actionGroups]]
@@ -430,7 +456,7 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "compare-algorithms"
 label = "Approximate vs Exact"
-desc = "How far is message passing from the exact posterior? BP: matches the closed form. VMP: the exact posterior on a grid shows that mean-field understates the variance of mu. EP: the final trend against an importance-sampling estimate"
+desc = "How far is message passing from the exact posterior? BP: matches the closed form. VMP: the exact posterior on a grid shows that mean-field understates the variance of mu. EP: the final trend against exact Gibbs draws"
 code = '''
 {{?model=bp}}println("Mean error: ", abs(mean(q_mu) - m_exact), "  variance ratio BP / exact: ", var(q_mu) / v_exact)  # 0 and 1 up to rounding
 {{?model=vmp}}mus  = range(mean(q_mu) - 6std(q_mu), mean(q_mu) + 6std(q_mu), length=400)
@@ -441,12 +467,10 @@ code = '''
 {{?model=vmp}}m_ex = sum(pm .* mus); v_ex = sum(pm .* (mus .- m_ex) .^ 2)
 {{?model=vmp}}println("E[mu]:   VMP ", mean(q_mu), "  exact ", m_ex)
 {{?model=vmp}}println("Var[mu]: VMP ", var(q_mu), "  exact ", v_ex, "  ratio ", var(q_mu) / v_ex)  # below 1: mean-field is overconfident
-{{?model=ep}}xs = [cumsum(0.15 .* randn(T)) .+ randn() for _ in 1:20000]  # paths from the prior
-{{?model=ep}}lw = [sum(yk == 1 ? logcdf(Normal(), xk) : logccdf(Normal(), xk) for (yk, xk) in zip({{ep-data}}, p)) for p in xs]  # log likelihood weights
-{{?model=ep}}w = exp.(lw .- maximum(lw)); w ./= sum(w)
-{{?model=ep}}m_is = sum(w .* last.(xs)); v_is = sum(w .* (last.(xs) .- m_is) .^ 2)
-{{?model=ep}}println("x_T: EP mean ", mean(q_x[end]), " var ", var(q_x[end]), "  |  IS mean ", m_is, " var ", v_is, "  (effective sample size ", round(1 / sum(abs2, w)), ")")
-{{?model=ep}}1 / sum(abs2, w) < 100 && println("The effective sample size is below 100: the importance-sampling reference is unreliable and the gap says little about EP.")  # prior proposals over a long path give few useful draws
+{{?model=ep}}xT = gibbs_xT({{ep-data}})  # exact posterior draws of x_T
+{{?model=ep}}m_ex, v_ex = mean(xT), var(xT)
+{{?model=ep}}println("x_T: EP mean ", mean(q_x[end]), " var ", var(q_x[end]), "  |  exact mean ", m_ex, " var ", v_ex, "  ratio EP / exact ", var(q_x[end]) / v_ex)
+{{?model=ep}}println("Skewness of x_T: exact ", round(mean(((xT .- m_ex) ./ sqrt(v_ex)) .^ 3), digits=3), ", EP 0 (a Gaussian)")
 '''
 
 [[actionGroups.actions]]

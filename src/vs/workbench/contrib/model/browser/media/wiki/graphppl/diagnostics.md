@@ -26,9 +26,9 @@ A rise under mean field points to a numerical issue or a bad rule. A failure to 
 |---|---|---|
 | **Belief Propagation** | Closed form | Error 0, ratio 1 |
 | **Variational Message Passing** | Grid over mu and tau | Variance ratio below 1 |
-| **Expectation Propagation** | Importance sampling | Depends on sample size |
+| **Expectation Propagation** | Gibbs sampling | Variance ratio near 1, skewness near 0 if the Gaussian form fits |
 
-Grids work only in low dimensions, and importance sampling from the prior degrades fast with T. Read the printed effective sample size first: a small number means that the comparison says little, since a few paths carry all the weight.
+Grids work only in low dimensions. For the probit model of **Expectation Propagation**, the reference is the data-augmentation Gibbs sampler of [Albert and Chib (1993)](#ref-AC1993a): each 0/1 outcome is the sign of a latent normal variable, and given those variables the trend is a linear Gaussian model whose whole path can be drawn exactly. Its 4000 draws of the final trend, after 1000 discarded, give the mean, variance and skewness that EP is compared with. **Posterior Distribution** draws their histogram under the EP density, so a skew that the Gaussian form cannot follow shows there.
 
 ## How to Check Priors and Fit
 
@@ -51,6 +51,8 @@ An independent result guards against mistakes in rules. On small models, a Monte
 The second row is the most common with new models. Reading the keyword arguments is a good first step, since precision and variance can easily be confused.
 
 ## References
+
+<a id="ref-AC1993a"></a>Albert, J. H. and Chib, S. (1993). Bayesian analysis of binary and polychotomous response data. *Journal of the American Statistical Association* 88(422), 669–679. [doi:10.1080/01621459.1993.10476321](https://doi.org/10.1080/01621459.1993.10476321)
 
 <a id="ref-WJ2008a"></a>Wainwright, M. J. and Jordan, M. I. (2008). Graphical models, exponential families, and variational inference. *Foundations and Trends in Machine Learning* 1(1–2), 1–305. [doi:10.1561/2200000001](https://doi.org/10.1561/2200000001)
 

@@ -38,14 +38,14 @@ The tabs do not share a model: each one defines its own, chosen to suit its algo
 | **Expectation Propagation** data | 100 outcomes from a random walk |
 | **Expectation Propagation** step | Random walk, sd 0.15 |
 | **Iteration Sensitivity** | 1, 2, 5, 10, 20 iterations |
-| **Approximate vs Exact** | Grid of 400 × 400, or 20000 sampled paths |
+| **Approximate vs Exact** | Grid of 400 × 400, or 4000 Gibbs draws after 1000 discarded |
 
 ## What Each Next Step in the Panel Shows
 
 | Action | Result |
 |---|---|
 | **Posterior Mean** | Mean by iteration, or trend with a band |
-| **Posterior Distribution** | Density of the final marginals |
+| **Posterior Distribution** | Density of the final marginals; on EP, with a histogram of exact Gibbs draws |
 | **Free Energy** | F against the exact value, or per iteration |
 | **Convergence Check** | Change over the last iteration |
 | **Prior Predictive** | Data from the priors, against the data |

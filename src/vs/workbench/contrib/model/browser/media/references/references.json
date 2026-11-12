@@ -404,6 +404,31 @@
 			"open_access": true
 		},
 		{
+			"key": "AC1993a",
+			"type": "article",
+			"title": "Bayesian Analysis of Binary and Polychotomous Response Data",
+			"authors": [
+				"Albert, James H.",
+				"Chib, Siddhartha"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1993,
+			"journal": "Journal of the American Statistical Association",
+			"volume": "88",
+			"number": "422",
+			"pages": "669-679",
+			"issn": "0162-1459",
+			"doi": "10.1080/01621459.1993.10476321",
+			"openalex": "W2108306139",
+			"source": "crossref",
+			"retrieved": "2026-11-12",
+			"checked": true,
+			"open_access": false,
+			"abstract": "A vast literature in statistics, biometrics, and econometrics is concerned with the analysis of binary and polychotomous response data. The classical approach fits a categorical response regression model using maximum likelihood, and inferences about the model are based on the associated asymptotic theory. The accuracy of classical confidence statements is questionable for small sample sizes. In this article, exact Bayesian methods for modeling categorical response data are developed using the idea of data augmentation. The general approach can be summarized as follows. The probit regression model for binary outcomes is seen to have an underlying normal regression structure on latent continuous data. Values of the latent data can be simulated from suitable truncated normal distributions. If the latent data are known, then the posterior distribution of the parameters can be computed using standard results for normal linear models. Draws from this posterior are used to sample new latent data, and the process is iterated with Gibbs sampling. This data augmentation approach provides a general framework for analyzing binary regression models. It leads to the same simplification achieved earlier for censored regression models. Under the proposed framework, the class of probit regression models can be enlarged by using mixtures of normal distributions to model the latent data. In this normal mixture class, one can investigate the sensitivity of the parameter estimates to the choice of “link function,” which relates the linear regression estimate to the fitted probabilities. In addition, this approach allows one to easily fit Bayesian hierarchical models. One specific model considered here reflects the belief that the vector of regression coefficients lies on a smaller dimension linear subspace. The methods can also be generalized to multinomial response models with J > 2 categories. In the ordered multinomial model, the J categories are ordered and a model is written linking the cumulative response probabilities with the linear regression structure. In the unordered multinomial model, the latent variables have a multivariate normal distribution with unknown variance-covariance matrix. For both multinomial models, the data augmentation method combined with Gibbs sampling is outlined. This approach is especially attractive for the multivariate probit model, where calculating the likelihood can be difficult.",
+			"abstract_source": "openalex"
+		},
+		{
 			"key": "AC2010a",
 			"type": "article",
 			"title": "A Survey of Cross-Validation Procedures for Model Selection",
@@ -39299,6 +39324,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "AC1993a",
+			"count": 2244,
+			"source": "crossref",
+			"date": "2026-11-12"
+		},
+		{
+			"key": "AC1993a",
+			"count": 3132,
+			"source": "openalex",
+			"date": "2026-11-12"
+		},
+		{
 			"key": "AC2010a",
 			"count": 3505,
 			"source": "crossref",
@@ -53493,7 +53530,8 @@
 				"LDHKP...2007a",
 				"WJ2008a",
 				"BKM2017a",
-				"BV2023a"
+				"BV2023a",
+				"AC1993a"
 			]
 		},
 		{
