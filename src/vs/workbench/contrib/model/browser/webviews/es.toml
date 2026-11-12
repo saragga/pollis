@@ -189,11 +189,11 @@ label = "ESCH"
 
 [[bullets]]
 text = "CMA-ES and GCMAES"
-detail = "covariance matrix adaptation via Evolutionary.jl"
+detail = "covariance matrix adaptation: CMA-ES via Evolutionary.jl, GCMAES via GCMAES.jl"
 
 [[bullets]]
 text = "xNES and dxNES"
-detail = "natural evolution strategies via Evolutionary.jl"
+detail = "natural evolution strategies via BlackBoxOptim.jl"
 
 [[bullets]]
 text = "ISRES and ESCH"
