@@ -245,10 +245,10 @@ give the path of the Julia program in the setting \setting{julia.executablePath}
 \newpage
 \subhead{The first start of the Julia REPL}
 When Pollis opens, the Julia REPL starts in the panel at the bottom. The first time, it installs
-DuckDB and PollisDatasets, makes the databases of Pollis, the built-in PollisDatasets, PollisJournals, PollisReferences
+DuckDB, PollisDatasets and PollisKnowledge, whose texts are downloaded only when switched on in the Knowledge Base, makes the databases of Pollis, the built-in PollisDatasets, PollisJournals, PollisReferences
 and PollisBenchmarks, and PollisRSS, of its activity, empty until feeds are read (Pollis Databases, \pg{Pollis Databases}), and says \emph{This happens only once}. They go into an environment of Pollis's own,
 \texttt{\textasciitilde/.pollis/julia}, which comes after yours: your own versions of these packages are used
-first. At later starts, PollisDatasets, PollisJournals, PollisReferences, PollisRSS and PollisBenchmarks are updated from
+first. At later starts, PollisDatasets, PollisJournals, PollisReferences, PollisRSS, PollisBenchmarks and PollisKnowledge are updated from
 GitHub when there is a newer version; offline, the installed copies are kept. \ui{Check for Data Package
 Updates...}, in the Pollis menu on macOS and the Help menu on Windows and Linux, looks for a newer version at once
 and offers to install it, without a restart. The Welcome page announces a newer version, with \ui{Update Now} and
@@ -2333,13 +2333,25 @@ have installed if the site has it, else of the stable one, and of the latest for
 takes about 40 minutes on a recent laptop, longer without a GPU; what is done is kept if you close Pollis.
 Search does not wait for them. The setting \texttt{pollis.ask.packageApis} turns them off.
 
+\subhead{Knowledge Base and your collections}
+\ui{Compose > Knowledge for AI Models > Knowledge Base} lists openly licensed texts a model can answer from: Dive into
+Deep Learning, Probabilistic Machine Learning: An Introduction, Algorithms for Optimization and Algorithms for Decision
+Making, each with its type, subject, licence, size, what is kept of it and how it is cut into passages. \ui{On}
+downloads a text once, from PollisKnowledge.jl, and \ui{Build the Index} cuts the texts switched on into passages and
+embeds them. \ui{Search In} then lists \ui{Knowledge Base}, and each collection of \ui{Compose > Knowledge for AI Models
+> Retrieval-Augmented Generation} whose index is built, after the sources of Pollis. \ui{Auto} never searches them:
+tick them, or choose \ui{All Sources}. Each is searched in its own index, with the embedding model it was built with;
+ticked with sources of Pollis, most of the passages come from the index nearest the question when their embedding
+models are the same, and from Pollis otherwise.
+
 \subhead{The model}
 The model's menu, below the box on the right, chooses the model that writes the answer: under \ui{On this computer},
 the chat models installed on your computer, the default one unless you choose another, and the one you choose is
 kept for the next time; under \ui{Cloud, with your own
 key}, Claude Haiku or Sonnet, GPT-5.4 mini or GPT-5.5, Gemini 3.8 Flash or Gemini 4 Argon. \ui{Evaluate Answering Models...}
 is the last item. The passages are always found on your
-computer; a cloud model is sent the question, the conversation and the eight passages, which are Pollis' documents, and nothing else.
+computer; a cloud model is sent the question, the conversation and the eight passages, which are Pollis' documents, or
+those of the Knowledge Base and of your collections when \ui{Search In} ticks them, and nothing else.
 
 \newpage
 \subhead{Add to a question}
@@ -2358,7 +2370,8 @@ only says \emph{this panel}. In the pane, a line above the question says \ui{Ask
 asked there next keep the panel until \ui{Ask Without It} or \ui{New Chat}. Two choices below the pane's question
 decide how the answer is found:
 \begin{itemize}
-  \item \ui{Search In}: \ui{Auto}, the collections nearest the question, or the sources you tick.
+  \item \ui{Search In}: \ui{Auto}, the collections nearest the question, or the sources you tick, the Knowledge Base
+    and your own collections among them.
   \item \ui{Strategy}: how many passages come from the panel's own wikis and the vignettes of its packages.
     \ui{Base} takes 5 of the 8 passages from the panel. \ui{Panel Aware} takes 6 of the 8 when the panel's passages
     are near the question and 2 when they are not, so a question on another subject is not held to the panel. With a reranker, set in

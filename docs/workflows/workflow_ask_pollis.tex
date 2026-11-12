@@ -111,7 +111,7 @@ icon; \menupath{Help\gt Ask Pollis} opens it. The question is written in the box
 arrow, or Enter, asks it. The answer is written as it comes, in a few paragraphs, with a number in brackets after each
 statement: \textbf{[1]}, \textbf{[2]}. Under it, \textbf{Sources} lists the passages those numbers stand for, each with
 its document, its page or its wiki and heading, and \textbf{Open}, which opens the document at that page, the panel's
-wiki at that heading, or the Julia Manual at that section, in the internal browser.
+wiki or a Markdown document at that heading, or the Julia Manual at that section, in the internal browser.
 
 Below each answer, beside \textbf{Add to the Test Set...}, a speaker, \textbf{Read Aloud}, is to read the answer
 without the citation numbers and the Sources; it is not available yet (\S\ref{sec:open}).
@@ -127,6 +127,14 @@ names on hover; \textbf{All Sources}; or \textbf{None}, which searches nothing:
 the model answers from what it knows, and \emph{Answered without the documents} under its answer says so, to see what
 the documents add. Without the Julia Manual (\S\ref{sec:settings}), Pollis is the only source, and Auto searches it.
 Auto never searches the Package APIs (\S\ref{sec:apis}): only ticking \textbf{Package APIs} and \textbf{All Sources} do.
+
+After the sources of Pollis, \textbf{Search In} lists the \textbf{Knowledge Base} (\S\ref{sec:panels}) and each
+collection of \menupath{Compose\gt Knowledge for AI Models\gt Retrieval-Augmented Generation} whose index is built, by
+its name. Each has an index of its own, in \file{~/.pollis/rag}, and is searched with the embedding model it was built
+with. Auto never searches them either. Ticked with sources of Pollis, the passages are shared as among the collections
+of Pollis (\S\ref{sec:routing}): most from the index nearest the question when their embedding models are the same, so
+that their distances can be compared, and from Pollis first otherwise; asked in a panel, Pollis comes first. A
+collection ticked alone is answered from as on its own page: the model is told the passages are of that collection.
 
 \subsection{Following up}
 Ask another question below the answer, and it is read with the conversation so far: \emph{and on Windows?} after a
@@ -749,14 +757,15 @@ word written about it, and searches what is written for that panel's topic rathe
 \midrule
 Pollis & the documents of \S\ref{sec:reads} & its wikis, and what the documents say of it\\
 Packages & the package vignettes, and the Julia Manual & the vignettes of the packages of its \textbf{Powered by}\\
-Books & open books on Statistics, Machine Learning, AI, Simulation and Optimisation & what they say of its topic,
-  found by its name and its Overview\\
+Knowledge Base & openly licensed books, lecture notes, reports and manuals, from PollisKnowledge.jl & what they
+  say of the question, when \textbf{Search In} ticks it\\
 Articles & the works the panels cite, from PollisReferences & the works it cites\\
 \bottomrule
 \end{tabularx}
 \end{center}
-Each source is a collection of PollisDocuments, beside Pollis's own, and \menupath{Help\gt Ask Pollis} searches them
-too, by routing or as \textbf{Search In} chooses. The instruction of \S\ref{sec:answer} then speaks of Pollis and the
+Packages and Articles are collections of PollisDocuments, beside Pollis's own, and \menupath{Help\gt Ask Pollis}
+searches them too, by routing or as \textbf{Search In} chooses. The Knowledge Base has an index of its own, as a
+collection of Retrieval-Augmented Generation has, and is searched when \textbf{Search In} ticks it. The instruction of \S\ref{sec:answer} then speaks of Pollis and the
 methods of its panels, not of Pollis alone, and \textbf{Sources} names the source of each passage.
 
 \subsection{The steps}
@@ -780,14 +789,19 @@ After the seven of Ask Pollis itself, four more, each usable when done:
     are not the panel's. The model is told \emph{The question is asked in the panel \ldots}, with its menu, so that
     \emph{this panel} and \emph{here} mean it. The questions after it keep the panel, until \textbf{Ask Without It}
     or \textbf{New Chat}.
-  \item \textbf{Books}: a catalogue of open books, each switched on by the user and then downloaded from its author's
-    page on this computer, never shipped with Pollis unless its licence allows. A book's topic is found by search, not
-    by a map of chapters to panels, which would not keep up with two hundred panels. A book of 600 pages is about a
-    thousand passages, some 40 seconds of embeddings on an M4 with Metal, much longer on a computer without a graphics
-    chip; so books are embedded in the background, one at a time. The candidates, each to be checked for its licence
-    and its link, as a classic paper is: OpenIntro Statistics; An Introduction to Statistical Learning; The Elements
-    of Statistical Learning; Dive into Deep Learning; Probabilistic Machine Learning; Convex Optimization; Algorithms
-    for Optimization; Algorithms for Decision Making. Simulation is still without one.
+  \item \textbf{Knowledge Base}: \menupath{Compose\gt Knowledge for AI Models\gt Knowledge Base}, the openly licensed
+    texts of PollisKnowledge.jl, in a table of each text's type, subject, licence, size, what is kept of it and how it
+    is cut into passages: Dive into Deep Learning, Probabilistic Machine Learning: An Introduction, Algorithms for
+    Optimization and Algorithms for Decision Making. Only texts whose licence lets them be shared are in it, each an
+    asset of a release of the package, downloaded the first time it is switched on, with its \file{LICENCE.md}. Dive
+    into Deep Learning is kept as its Markdown sources without its code, so that an answer from it is not led to
+    Python; the others as the PDFs of their authors. \textbf{Build the Index} cuts the texts switched on into passages
+    and embeds them, as a collection of Retrieval-Augmented Generation, into \file{~/.pollis/rag/knowledge-base.duckdb},
+    each passage once by each embedding model. A book of 600 pages is about a thousand passages, some 40 seconds of
+    embeddings on an M4 with Metal, much longer on a computer without a graphics chip. A text's topic is found by
+    search, not by a map of chapters to panels, which would not keep up with two hundred panels. Free texts that may
+    not be shared, as An Introduction to Statistical Learning, The Elements of Statistical Learning and Convex
+    Optimization, go into a collection of your own. Simulation is still without a text.
   \item \textbf{Articles}: the works a panel cites, from PollisReferences: their abstracts at once, their full text
     where it is open, on arXiv or PubMed Central.
 \end{enumerate}
