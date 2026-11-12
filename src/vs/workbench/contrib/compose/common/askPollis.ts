@@ -43,6 +43,19 @@ export interface IAskPollisReranked {
 /** How many passages go to the model, when pollis.ask.passages gives none. */
 export const ASK_PASSAGES = 8;
 
+/** The part of the passages the nearest collection gives when more than one is searched: 5 of 8. */
+export const ASK_NEAREST_SHARE = 5 / 8;
+
+/** How many passages each of `collections` gives, of `count`: all from one; else most from the first, the rest shared. */
+export function askShares(count: number, collections: number): number[] {
+	if (collections <= 1) {
+		return [count];
+	}
+	const first = Math.ceil(count * ASK_NEAREST_SHARE);
+	const rest = count - first;
+	return [first, ...Array.from({ length: collections - 1 }, (_, i) => Math.floor(rest / (collections - 1)) + (i < rest % (collections - 1) ? 1 : 0))];
+}
+
 /** Help > Ask Pollis, which a panel runs with an `IAskPollisFromPanel`. */
 export const ASK_POLLIS_COMMAND_ID = 'pollis.askPollis';
 
@@ -148,6 +161,11 @@ export interface IAskPollisSearchRequest {
 	readonly panelShare?: number | IAskPollisPanelShare;
 	/** A collection of Retrieval-Augmented Generation, searched in place of PollisDocuments. */
 	readonly index?: IAskPollisCollectionIndex;
+	/**
+	 * Collections of Retrieval-Augmented Generation searched beside PollisDocuments, each in its own index, as Search In
+	 * ticks them; PollisDocuments is then searched only when `collections` is not empty, or not given.
+	 */
+	readonly collectionIndexes?: readonly IAskPollisCollectionIndex[];
 }
 
 /** The index of a collection of Compose > Retrieval-Augmented Generation, and how a question is embedded to search it. */
@@ -155,6 +173,11 @@ export interface IAskPollisCollectionIndex {
 	readonly file: string;
 	readonly embeddingModel: string;
 	readonly queryPrefix: string;
+}
+
+/** The index of a collection, with the collection's name, as Search In lists it. */
+export interface IAskPollisNamedIndex extends IAskPollisCollectionIndex {
+	readonly name: string;
 }
 
 /** A document of an index, by its file, and how many passages it was cut into. */
@@ -176,6 +199,8 @@ export interface IAskPollisSearchResult {
 	readonly error?: string;
 	/** Asked in a panel the index has no passages of, as a panel added since the index was made. */
 	readonly panelMissing?: boolean;
+	/** The cosine distance from the question to the nearest passage of the collections searched, when searched by meaning too. */
+	readonly distance?: number;
 }
 
 /** What the index holds, from its table built. */
@@ -919,6 +944,8 @@ export interface IAskPollisIndex {
 	status(database?: string): Promise<IAskPollisIndexStatus | undefined>;
 	/** The documents of the index `database` with their number of passages; nothing when there is no index. */
 	indexedDocuments(database: string): Promise<readonly IAskPollisIndexedDocument[] | undefined>;
+	/** The files of the indexes of the collections of Retrieval-Augmented Generation and of the Knowledge Base, in ~/.pollis/rag. */
+	collectionFiles(): Promise<readonly string[]>;
 	/** The scores of `passages` for `question` by the reranker of llama-server at `url`, its /rerank. */
 	rerank(url: string, question: string, passages: readonly string[]): Promise<IAskPollisReranked>;
 	/** The cosine similarity of the two texts of each of `pairs`, by the embedding model of llama-server at `url`, its /embeddings. */
@@ -1009,6 +1036,8 @@ export interface IAskPollisService {
 	search(request: IAskPollisSearchRequest): Promise<IAskPollisSearchResult>;
 	/** What the index of a collection of Retrieval-Augmented Generation holds, as IAskPollisIndex. */
 	collectionStatus(file: string): Promise<IAskPollisIndexStatus | undefined>;
+	/** The indexes built of the collections of Retrieval-Augmented Generation and of the Knowledge Base, by their names, for a Search In. */
+	collectionIndexes(): Promise<readonly IAskPollisNamedIndex[]>;
 	indexedDocuments(file: string): Promise<readonly IAskPollisIndexedDocument[] | undefined>;
 	documentPassages(file: string, document: string, count: number): Promise<readonly IAskPollisPassage[]>;
 	/** Scores each of `passages` for `question` with the reranker `model`, a GGUF file, which it starts through the Julia extension. */

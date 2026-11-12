@@ -14,7 +14,7 @@ import { InstantiationType, registerSingleton } from '../../../../platform/insta
 import { IProductService } from '../../../../platform/product/common/productService.js';
 import { ISecretStorageService } from '../../../../platform/secrets/common/secrets.js';
 import { IUtilityProcessWorkerWorkbenchService } from '../../../services/utilityProcess/electron-browser/utilityProcessWorkerWorkbenchService.js';
-import { ASK_CHAT_MODEL, ASK_CLOUD_PROVIDERS, ASK_EMBEDDING_CONTEXT, ASK_EMBEDDING_MODEL, ASK_LOCAL_PREFIX, ASK_PASSAGES, ASK_QUERY_PREFIX, ASK_RERANK_CONTEXT, ASK_SIMILARITY_PREFIX, askCloudModel, askPollisMessages, IAskPassageMatch, IAskPollisAnswer, IAskPollisAttachment, IAskPollisChatRequest, IAskPollisFound, IAskPollisIndex, IAskPollisIndexedDocument, IAskPollisIndexStatus, IAskPollisPassage, IAskPollisReranked, IAskPollisSearchRequest, IAskPollisSearchResult, IAskPollisSearchStamp, IAskPollisService, IAskPollisTurn, IAskTopicCounts, IBenchmarkAnswer, IBenchmarkRun, ICompareRun, ICompareRunSummary, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary, IRerankRun, IRerankRunSummary, IRetrievalEmbeddingRequest, IRetrievalEvaluation, IRetrievalQuery, IRetrievalRerankDone, IRetrievalRerankRequest } from '../common/askPollis.js';
+import { ASK_CHAT_MODEL, ASK_CLOUD_PROVIDERS, ASK_EMBEDDING_CONTEXT, ASK_EMBEDDING_MODEL, ASK_LOCAL_PREFIX, ASK_PASSAGES, ASK_QUERY_PREFIX, ASK_RERANK_CONTEXT, ASK_SIMILARITY_PREFIX, askCloudModel, askPollisMessages, askShares, embeddingPrefixes, IAskPassageMatch, IAskPollisAnswer, IAskPollisAttachment, IAskPollisChatRequest, IAskPollisFound, IAskPollisIndex, IAskPollisIndexedDocument, IAskPollisIndexStatus, IAskPollisNamedIndex, IAskPollisPassage, IAskPollisReranked, IAskPollisSearchRequest, IAskPollisSearchResult, IAskPollisSearchStamp, IAskPollisService, IAskPollisTurn, IAskTopicCounts, IBenchmarkAnswer, IBenchmarkRun, ICompareRun, ICompareRunSummary, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary, IRerankRun, IRerankRunSummary, IRetrievalEmbeddingRequest, IRetrievalEvaluation, IRetrievalQuery, IRetrievalRerankDone, IRetrievalRerankRequest } from '../common/askPollis.js';
 
 /** What the command of the Julia extension that starts a llama.cpp server answers (pollisLlamaServer.ts). */
 interface ILlamaServerAnswer {
@@ -70,7 +70,68 @@ class AskPollisService extends Disposable implements IAskPollisService {
 		return (await proxy.status())?.collections ?? [];
 	}
 
+	async collectionIndexes(): Promise<readonly IAskPollisNamedIndex[]> {
+		const { proxy } = await this.get();
+		const indexes: IAskPollisNamedIndex[] = [];
+		for (const file of await proxy.collectionFiles()) {
+			// An index being built cannot be read, and is listed once it is
+			const status = await proxy.status(file);
+			if (status?.passages && status.collections.length) {
+				indexes.push({ name: status.collections[0], file, embeddingModel: status.embedder, queryPrefix: embeddingPrefixes(status.embedder).query });
+			}
+		}
+		return indexes;
+	}
+
+	/**
+	 * The passages of PollisDocuments, as `collections` chooses them, and of the collections of `collectionIndexes`, each
+	 * searched in its own index: most from the one nearest the question, when their embedding models are the same and so
+	 * their distances can be compared, else from the first; the rest shared, as among the collections of PollisDocuments.
+	 * Asked in a panel, PollisDocuments, which holds the panel's passages, comes first.
+	 */
 	async search(request: IAskPollisSearchRequest): Promise<IAskPollisSearchResult> {
+		const others = request.index ? [] : request.collectionIndexes ?? [];
+		if (!others.length) {
+			return this.searchIndex(request);
+		}
+		const count = request.passages ?? (this.configurationService.getValue<number>('pollis.ask.passages') || ASK_PASSAGES);
+		const withPollis = request.collections === undefined || request.collections.length > 0;
+		const pollisModel = this.configurationService.getValue<string>('pollis.ask.embeddingModel')?.trim() || ASK_EMBEDDING_MODEL;
+		const targets: { readonly request: IAskPollisSearchRequest; readonly model: string }[] = [
+			...(withPollis ? [{ request: { ...request, collectionIndexes: undefined, passages: count }, model: pollisModel }] : []),
+			...others.map(index => ({ request: { question: request.question, passages: count, index }, model: index.embeddingModel })),
+		];
+		const found = await Promise.all(targets.map(target => this.searchIndex(target.request)));
+		let order = targets.map((_, i) => i);
+		const comparable = found.every(result => result.distance !== undefined) && targets.every(target => target.model === targets[0].model);
+		if (comparable && !(withPollis && request.panel)) {
+			order = order.sort((a, b) => found[a].distance! - found[b].distance!);
+		}
+		const counts = askShares(count, order.length);
+		const passages: IAskPollisPassage[] = [];
+		const searched: string[] = [];
+		for (const [position, i] of order.entries()) {
+			// PollisDocuments shares among its own collections and the panel's passages, so it is searched again for fewer
+			const result = withPollis && i === 0 && counts[position] < count ? await this.searchIndex({ ...targets[0].request, passages: counts[position] }) : found[i];
+			passages.push(...result.passages.slice(0, counts[position]));
+			searched.push(...result.searched);
+		}
+		const pollis = withPollis ? found[0] : undefined;
+		const wordsOnly = pollis?.wordsOnly === 'notIndexed' && passages.length ? undefined : pollis?.wordsOnly ?? found.find(result => result.wordsOnly)?.wordsOnly;
+		const error = pollis?.error ?? found.find(result => result.error)?.error;
+		const collections = pollis?.collections ?? await this.collections();
+		return {
+			passages,
+			searched,
+			collections,
+			...(wordsOnly ? { wordsOnly } : {}),
+			...(error ? { error } : {}),
+			...(pollis?.panelMissing ? { panelMissing: true } : {}),
+		};
+	}
+
+	/** The passages of one index: PollisDocuments, or the collection of `request.index`. */
+	private async searchIndex(request: IAskPollisSearchRequest): Promise<IAskPollisSearchResult> {
 		const { proxy } = await this.get();
 		const passages = request.passages ?? (this.configurationService.getValue<number>('pollis.ask.passages') || ASK_PASSAGES);
 		const status = await proxy.status(request.index?.file);

@@ -38,10 +38,13 @@ function headingFragment(heading: string): string {
 	return last.trim().toLowerCase().replace(/[^\p{L}\p{N}\s_-]/gu, '').replace(/\s/g, '-');
 }
 
-/** Opens a passage in its document: the PDF at its page, the panel's wiki at its heading, the Julia Manual at its section, a package's docstring on its site. */
+/** Opens a passage in its document: the PDF at its page, the panel's wiki or a Markdown document at its heading, the Julia Manual at its section, a package's docstring on its site, a text file. */
 export function askOpenPassage(commandService: ICommandService, passage: IAskPollisPassage): void {
-	if (passage.kind === 'wiki') {
+	if (passage.kind === 'wiki' || passage.kind === 'markdown') {
 		commandService.executeCommand('markdown.showPreview', URI.file(passage.file).with({ fragment: headingFragment(passage.heading) }));
+	} else if (passage.kind === 'text') {
+		// A text file of a collection of Retrieval-Augmented Generation, in the editor
+		commandService.executeCommand('vscode.open', URI.file(passage.file));
 	} else if (passage.kind === 'api' && passage.anchor) {
 		commandService.executeCommand(BrowserViewCommandId.Open, passage.anchor);
 	} else if (passage.anchor) {
@@ -173,6 +176,7 @@ export function askAnswerScript(): string {
 		juliaManualHint: localize('askPollis.juliaManualHint', "The Julia Manual, of the Julia that the REPL runs"),
 		juliaLibraryHint: localize('askPollis.juliaLibraryHint', "The pages of Base and the standard library, mostly docstrings, of the Julia that the REPL runs"),
 		packageApisHint: localize('askPollis.packageApisHint', "The docstrings of the packages of the panels, from their documentation sites, at the version on this computer when the site has it. Searched only when ticked, or with All Sources"),
+		collectionHint: localize('askPollis.collectionHint', "Searched in its own index, built in Compose > Knowledge for AI Models. Searched only when ticked, or with All Sources"),
 		noneHint: localize('askPollis.noneHint', "Nothing is searched: the model answers from what it knows, without the documents, to see what they add"),
 	};
 	return `
@@ -284,12 +288,15 @@ export function askAnswerScript(): string {
 		}
 	}
 
-	/** What a Search In can tick: each collection of \`names\`, Pollis and the Julia Manual as their sources, the Package APIs after the vignettes. */
+	/**
+	 * What a Search In can tick: each collection of \`names\`, Pollis and the Julia Manual as their sources, the Package
+	 * APIs after the vignettes, then the Knowledge Base and the collections of Retrieval-Augmented Generation.
+	 */
 	function searchInSources(names) {
 		const hints = { juliaManual: ANSWER_TEXT.juliaManualHint, juliaLibrary: ANSWER_TEXT.juliaLibraryHint, ${JSON.stringify(PACKAGE_APIS)}: ANSWER_TEXT.packageApisHint };
 		const packageApis = names.includes(${JSON.stringify(PACKAGE_APIS)}) ? [[${JSON.stringify(PACKAGE_APIS)}, ${JSON.stringify(PACKAGE_APIS)}]] : [];
 		const pollisSources = Object.entries(ANSWER_TEXT.pollisSources).flatMap(source => source[0] === 'packageVignettes' ? [source, ...packageApis] : [source]);
-		return names.flatMap(name => name === ${JSON.stringify(POLLIS)} ? pollisSources : name === ${JSON.stringify(JULIA_MANUAL)} ? Object.entries(ANSWER_TEXT.juliaSources) : name === ${JSON.stringify(PACKAGE_APIS)} ? [] : [[name, name]]).map(([value, label]) => ({ value, label, title: hints[value] ?? '' }));
+		return names.flatMap(name => name === ${JSON.stringify(POLLIS)} ? pollisSources : name === ${JSON.stringify(JULIA_MANUAL)} ? Object.entries(ANSWER_TEXT.juliaSources) : name === ${JSON.stringify(PACKAGE_APIS)} ? [] : [[name, name, ANSWER_TEXT.collectionHint]]).map(([value, label, hint]) => ({ value, label, title: hints[value] ?? hint ?? '' }));
 	}
 
 	/** A click on a citation shows its source, among those of the nearest \`.\${boxClass}\` around it. */

@@ -29,9 +29,11 @@ import { ProxyChannel } from '../../../../base/parts/ipc/common/ipc.js';
 import { Server as ChildProcessServer } from '../../../../base/parts/ipc/node/ipc.cp.js';
 import { Server as UtilityProcessServer } from '../../../../base/parts/ipc/node/ipc.mp.js';
 import { isUtilityProcess } from '../../../../base/parts/sandbox/node/electronTypes.js';
-import { AskPollisSource, AskTopic, ASK_PASSAGES, ASK_SOURCE_COLLECTION, IAskPollisChatEnd, IAskPollisMessage, ICompareRun, ICompareRunSummary, IAskPollisChatRequest, IAskPollisChatText, IAskPollisEvalItem, IAskPollisFound, IAskPollisIndex, IAskPollisIndexedDocument, IAskPollisIndexRequest, IAskPollisIndexStatus, IAskPollisPanel, IAskPollisPanelShare, IAskPollisPassage, IAskPassageMatch, IAskPollisReranked, IAskPollisSearchResult, IAskPollisTimings, IAskTopicCounts, IBenchmarkAnswer, IBenchmarkRun, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingFound, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary, IRerankRun, IRerankRunSummary, IRetrievalEmbeddingRequest, IRetrievalEvaluation, IRetrievalQuery, IRetrievalRerankDone, IRetrievalRerankRequest, IRetrievalReranked, IRetrievalScore, RETRIEVAL_BENCHMARKS, RETRIEVAL_CANDIDATES, RETRIEVAL_CUT } from '../common/askPollis.js';
+import { AskPollisSource, AskTopic, ASK_NEAREST_SHARE, ASK_PASSAGES, ASK_SOURCE_COLLECTION, askShares, IAskPollisChatEnd, IAskPollisMessage, ICompareRun, ICompareRunSummary, IAskPollisChatRequest, IAskPollisChatText, IAskPollisEvalItem, IAskPollisFound, IAskPollisIndex, IAskPollisIndexedDocument, IAskPollisIndexRequest, IAskPollisIndexStatus, IAskPollisPanel, IAskPollisPanelShare, IAskPollisPassage, IAskPassageMatch, IAskPollisReranked, IAskPollisSearchResult, IAskPollisTimings, IAskTopicCounts, IBenchmarkAnswer, IBenchmarkRun, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingFound, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary, IRerankRun, IRerankRunSummary, IRetrievalEmbeddingRequest, IRetrievalEvaluation, IRetrievalQuery, IRetrievalRerankDone, IRetrievalRerankRequest, IRetrievalReranked, IRetrievalScore, RETRIEVAL_BENCHMARKS, RETRIEVAL_CANDIDATES, RETRIEVAL_CUT } from '../common/askPollis.js';
 
 const DATABASE = join(os.homedir(), '.pollis', 'documents', 'PollisDocuments.duckdb');
+/** The folder of the indexes of the collections of Retrieval-Augmented Generation and of the Knowledge Base. */
+const COLLECTIONS_FOLDER = join(os.homedir(), '.pollis', 'rag');
 /** The embeddings made, by the model and the text it was given, as ask_index.jl keeps them. */
 const EMBEDDINGS = join(os.homedir(), '.pollis', 'documents', 'embeddings.duckdb');
 /** The passages embedded a request, as ask_index.jl does. */
@@ -63,8 +65,6 @@ const K = 60;
  * of both are searched in both, and 1 of Pollis and 4 of Julia.
  */
 const ROUTE_MARGIN = 0.075;
-/** The part of the passages the nearest collection gives when more than one is searched: 5 of 8. */
-const NEAREST_SHARE = 5 / 8;
 /** How freely the chat model of this computer words its answer: low, since it is to say what the passages say. */
 const TEMPERATURE = 0.3;
 /** The longest answer of a cloud model, in tokens; it streams, so a long one cannot time out. */
@@ -169,16 +169,6 @@ function sqlString(text: string): string {
 	return `'${text.replace(/'/g, `''`)}'`;
 }
 
-/** How many passages each of `collections` gives, of `count`: all from one; else most from the first, the rest shared. */
-function shares(count: number, collections: number): number[] {
-	if (collections <= 1) {
-		return [count];
-	}
-	const first = Math.ceil(count * NEAREST_SHARE);
-	const rest = count - first;
-	return [first, ...Array.from({ length: collections - 1 }, (_, i) => Math.floor(rest / (collections - 1)) + (i < rest % (collections - 1) ? 1 : 0))];
-}
-
 /**
  * The passages of the collection $collection, or those `where` selects, that best answer $question: by its words only,
  * or with its embedding $vector too, against the index's embeddings or those of the table `vectors` (id, embedding).
@@ -271,7 +261,7 @@ interface IPassageQuery {
 	readonly vectors?: string;
 	/** The panel asked in, whose passages are the first share. */
 	readonly panel?: IAskPollisPanel;
-	/** The share of the passages from the panel's own: NEAREST_SHARE when not given. */
+	/** The share of the passages from the panel's own: ASK_NEAREST_SHARE when not given. */
 	readonly panelShare?: number | IAskPollisPanelShare;
 }
 
@@ -533,6 +523,14 @@ class AskPollisIndex implements IAskPollisIndex {
 		)).getRowObjectsJson().map(row => ({ file: String(row.file), passages: Number(row.passages) })), database);
 	}
 
+	async collectionFiles(): Promise<readonly string[]> {
+		try {
+			return (await fs.promises.readdir(COLLECTIONS_FOLDER)).filter(name => name.endsWith('.duckdb')).sort().map(name => join(COLLECTIONS_FOLDER, name));
+		} catch {
+			return [];
+		}
+	}
+
 	async rerank(url: string, question: string, passages: readonly string[]): Promise<IAskPollisReranked> {
 		try {
 			const response = await fetch(`${url}/rerank`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: question, documents: passages }) });
@@ -595,7 +593,7 @@ class AskPollisIndex implements IAskPollisIndex {
 					error = err instanceof Error ? err.message : String(err);
 				}
 			}
-			const { passages, searched, panelMissing } = await this.findPassages(connection, status.collections, {
+			const { passages, searched, panelMissing, distance } = await this.findPassages(connection, status.collections, {
 				question: request.question, vector, dimensions: vector ? status.dimensions : 0, count: Math.max(1, request.passages ?? ASK_PASSAGES), collections: request.collections, sources: request.sources, panel: request.panel, panelShare: request.panelShare,
 			});
 			const result: IAskPollisSearchResult = {
@@ -605,6 +603,7 @@ class AskPollisIndex implements IAskPollisIndex {
 				...(vector ? {} : { wordsOnly: wordsOnly ?? (status.embedded ? 'otherModel' : 'notEmbedded') }),
 				...(error && !vector ? { error } : {}),
 				...(panelMissing ? { panelMissing } : {}),
+				...(distance === undefined ? {} : { distance }),
 			};
 			return result;
 		}, request.index?.file);
@@ -615,14 +614,16 @@ class AskPollisIndex implements IAskPollisIndex {
 	 * The passages for `query`, from the collections of `all`: those named are searched, else the nearest and those almost
 	 * as near, the Package APIs never among them; and whether the panel asked in has no passages in the index.
 	 */
-	private async findPassages(connection: DuckDBConnection, all: readonly string[], query: IPassageQuery): Promise<{ passages: IAskPollisPassage[]; searched: string[]; panelMissing: boolean }> {
+	private async findPassages(connection: DuckDBConnection, all: readonly string[], query: IPassageQuery): Promise<{ passages: IAskPollisPassage[]; searched: string[]; panelMissing: boolean; distance?: number }> {
 		const { vector, dimensions, vectors } = query;
 		let searched = query.collections?.filter(name => all.includes(name)) ?? all.filter(name => name !== PACKAGE_APIS);
+		let distance: number | undefined;
 		if (vector) {
 			const embedding = vectors ? 'v.embedding' : 'p.embedding';
 			const distances = (await connection.runAndReadAll(`SELECT d.collection AS name, min(array_cosine_distance(${embedding}, $vector::FLOAT[${dimensions}])) AS distance FROM passages p JOIN documents d ON p.document = d.id${vectors ? ` JOIN ${vectors} v ON v.id = p.id` : ''} WHERE ${embedding} IS NOT NULL GROUP BY d.collection ORDER BY distance`, { vector })).getRowObjectsJson();
 			const nearest = distances.filter(row => searched.includes(String(row.name)));
 			const best = Number(nearest[0]?.distance ?? 0);
+			distance = nearest.length ? best : undefined;
 			searched = nearest.map(row => String(row.name)).filter((name, i) => !!query.collections || Number(nearest[i].distance) - best <= ROUTE_MARGIN);
 		}
 		const parameters = { question: query.question, ...(vector ? { vector } : {}) };
@@ -635,18 +636,18 @@ class AskPollisIndex implements IAskPollisIndex {
 			const panel = panelSql(query.panel);
 			const [held] = (await connection.runAndReadAll(`SELECT EXISTS (SELECT 1 FROM passages p JOIN documents d ON p.document = d.id WHERE ${panel}) AS held`)).getRowObjectsJson();
 			panelMissing = !held?.held;
-			const share = Math.min(query.count, query.panelShare === undefined ? shares(query.count, 2)[0] : Math.ceil(query.count * await this.panelShare(connection, query, panel, searched, source)));
+			const share = Math.min(query.count, query.panelShare === undefined ? askShares(query.count, 2)[0] : Math.ceil(query.count * await this.panelShare(connection, query, panel, searched, source)));
 			const rows = (await connection.runAndReadAll(searchSql(vector ? dimensions : 0, share, vectors, `${panel}${source}`), parameters)).getRowObjectsJson();
 			passages.push(...rows.map(passageOf));
 			where = `${where} AND NOT ${panel}`;
 		}
-		const counts = shares(query.count - passages.length, searched.length);
+		const counts = askShares(query.count - passages.length, searched.length);
 		for (let i = 0; i < searched.length; i++) {
 			const rows = (await connection.runAndReadAll(searchSql(vector ? dimensions : 0, counts[i], vectors, where), { ...parameters, collection: searched[i] })).getRowObjectsJson();
 			passages.push(...rows.map(passageOf));
 		}
 		// The docstrings last: a small model given "No-U-Turn Sampler (NUTS) sampler." first may repeat that line and stop
-		return { passages: [...passages.filter(passage => passage.kind !== 'api'), ...passages.filter(passage => passage.kind === 'api')], searched, panelMissing };
+		return { passages: [...passages.filter(passage => passage.kind !== 'api'), ...passages.filter(passage => passage.kind === 'api')], searched, panelMissing, distance };
 	}
 
 	/**
@@ -657,7 +658,7 @@ class AskPollisIndex implements IAskPollisIndex {
 	private async panelShare(connection: DuckDBConnection, query: IPassageQuery, panel: string, searched: readonly string[], source: string): Promise<number> {
 		const share = query.panelShare;
 		if (typeof share === 'number' || share === undefined) {
-			return share ?? NEAREST_SHARE;
+			return share ?? ASK_NEAREST_SHARE;
 		}
 		const { vector, dimensions, vectors } = query;
 		if (!vector) {

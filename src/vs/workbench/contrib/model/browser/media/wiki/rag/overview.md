@@ -29,6 +29,9 @@ Optional. An embedding is made without knowing the question; a **Reranker** read
 ## Generation
 **Answer** gives the question and the passages to the **Answering Model**, which is told to answer from them and to cite them by their numbers. A model **On This Computer** runs here; a **Cloud** model needs its key, and it is sent the passages.
 
+## Searching a Collection in Ask Pollis
+A collection whose index is built is listed by its name in **Search In** of Ask Pollis, beside the **Knowledge Base**. Ticked alone, the collection is the only thing searched, with the **Embedding Model** its index was built with, and the model is told it answers from that collection, as **Answer** tells it here. Ticked with sources of Pollis, the collection gives part of the passages. **Auto** never searches a collection. The **Answering Model**, **Reranker** and **Keep** chosen on this page stay with it: Ask Pollis answers with its own model and reranks as its strategy says.
+
 ## Common Workflow
 
 1. Make a **Collection** and **Add Files...**.

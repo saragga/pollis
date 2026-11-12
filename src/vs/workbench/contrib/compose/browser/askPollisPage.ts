@@ -43,7 +43,7 @@ import { WebviewViewPane } from '../../webviewView/browser/webviewViewPane.js';
 import { IWebviewViewService, WebviewView } from '../../webviewView/browser/webviewViewService.js';
 import { createApiKeyWiring, IApiKeyWiring } from '../../model/browser/handlers/model.handler.js';
 import { composerSendSvg, spinnerCss, spinnerSvg, voiceSpeakerSvg } from '../../model/browser/webviews/webviewScaffold.js';
-import { ASK_CHAT_MODEL, ASK_CLOUD_MODELS, ASK_EMBEDDING_MODEL, ASK_PASSAGE_PREFIX, ASK_PASSAGES, ASK_QUERY_PREFIX, MODELS_INSTALLED_COMMAND_ID, ASK_CLOUD_PROVIDERS, ASK_LOCAL_PREFIX, ASK_POLLIS_ANSWERS_IN_CLOUD_COMMAND_ID, ASK_POLLIS_ADD_ATTACHMENT_COMMAND_ID, ASK_POLLIS_ATTACH_COMMAND_ID, ASK_POLLIS_COMMAND_ID, ASK_THIS_COMPUTER, ASK_ATTACHED_CHARACTERS, askCloudModel, AskPollisAttachRequest, AskPollisProvider, IAskPollisAddAttachment, IAskPollisAttached, IAskPollisAttachment, IAskPollisFromPanel, IAskPollisPanel, IAskPollisPassage, IAskPollisSearchResult, IAskPollisService } from '../common/askPollis.js';
+import { ASK_CHAT_MODEL, ASK_CLOUD_MODELS, ASK_EMBEDDING_MODEL, ASK_PASSAGE_PREFIX, ASK_PASSAGES, ASK_QUERY_PREFIX, MODELS_INSTALLED_COMMAND_ID, ASK_CLOUD_PROVIDERS, ASK_LOCAL_PREFIX, ASK_POLLIS_ANSWERS_IN_CLOUD_COMMAND_ID, ASK_POLLIS_ADD_ATTACHMENT_COMMAND_ID, ASK_POLLIS_ATTACH_COMMAND_ID, ASK_POLLIS_COMMAND_ID, ASK_THIS_COMPUTER, ASK_ATTACHED_CHARACTERS, askCloudModel, AskPollisAttachRequest, AskPollisProvider, IAskPollisAddAttachment, IAskPollisAttached, IAskPollisAttachment, IAskPollisFromPanel, IAskPollisNamedIndex, IAskPollisPanel, IAskPollisPassage, IAskPollisSearchResult, IAskPollisService } from '../common/askPollis.js';
 import { ASK_DEFAULT_STRATEGY, IAskPollisStrategiesService, askPollisStrategy, askStrategyRerank, askStrategyReranks, askStrategySearchRequest } from '../common/askPollisStrategies.js';
 import { AskAttachMessage, askAddHtml, askAttachCss, askAttachmentsHtml, askAttachScript, handleAskAttachMessage } from './askPollisAttach.js';
 import { askAnswerCss, askAnswerScript, askModelName, askNothingFound, askOpenPassage, askPassageView, askSearchedNames, askSearchesJulia, askSearchesNothing, askSearchIn, askSearchSources, askWordsOnlyNote } from './askPollisWebview.js';
@@ -366,7 +366,11 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 		};
 
 		let turns: IAskedTurn[] = [];
+		// The collections of PollisDocuments, and the indexes of the Knowledge Base and of the collections of
+		// Retrieval-Augmented Generation, which Search In lists after them
 		let collections: readonly string[] = [];
+		let indexes: readonly IAskPollisNamedIndex[] = [];
+		const searchable = () => [...collections, ...indexes.map(index => index.name).filter(name => !collections.includes(name))];
 		let answering: CancellationTokenSource | undefined;
 		// A new conversation drops what the questions of the one before still send
 		let conversation = 0;
@@ -433,7 +437,7 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 					answering = undefined;
 					source.dispose(true);
 					turns[index] = { question, attachments, passages: [], answer: doc };
-					post({ command: 'found', turn: index, searched: [], collections, note: localize('askPollis.fromRepl', "From Julia's own documentation, in the REPL."), passages: [] });
+					post({ command: 'found', turn: index, searched: [], collections: searchable(), note: localize('askPollis.fromRepl', "From Julia's own documentation, in the REPL."), passages: [] });
 					post({ command: 'text', turn: index, text: doc });
 					post({ command: 'done', turn: index });
 				}, () => undefined);
@@ -444,11 +448,21 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 			const strategy = askPollisStrategy(configurationService.getValue<string>('pollis.ask.strategy'), strategiesService.getStrategies());
 			const reranker = unaided ? '' : configurationService.getValue<string>('pollis.ask.reranker')?.trim();
 			const kept = configurationService.getValue<number>('pollis.ask.passages') || ASK_PASSAGES;
+			// The indexes built since the last question are listed and can be searched
+			if (!unaided) {
+				indexes = await askPollisService.collectionIndexes().catch(() => indexes);
+			}
+			const chosen = askSearchIn(searchIn, searchable());
+			const chosenIndexes = chosen ? indexes.filter(other => chosen.includes(other.name) && !collections.includes(other.name)) : [];
+			const pollisChosen = chosen?.filter(name => !chosenIndexes.some(other => other.name === name));
+			// Only one collection of Retrieval-Augmented Generation searched: the model is told it answers from that collection
+			const answeredFrom = pollisChosen?.length === 0 && chosenIndexes.length === 1 ? chosenIndexes[0].name : undefined;
 			const search = async (): Promise<IAskPollisSearchResult> => unaided ? { passages: [], searched: [], collections } : askPollisService.search(askStrategySearchRequest(strategy, {
 				question: searched,
-				collections: askSearchIn(searchIn, collections),
+				collections: pollisChosen,
 				sources: askSearchSources(searchIn),
 				panel: askedIn,
+				collectionIndexes: chosenIndexes,
 			}, kept, reranker));
 			let result = await search();
 			// Before the first index, the question waits for it, with how far it has come, while the Julia extension makes it;
@@ -489,7 +503,7 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 				command: 'found',
 				turn: index,
 				searched: askSearchedNames(searchIn, result.searched),
-				collections: result.collections,
+				collections: searchable(),
 				note: unaided ? localize('askPollis.unaided', "Answered without the documents: nothing was searched.") : rerankNote ?? askWordsOnlyNote(result),
 				passages: result.passages.map(askPassageView),
 			});
@@ -515,7 +529,7 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 					turn.answer = text;
 					post({ command: 'text', turn: index, text });
 				}
-			}, source.token, undefined, attachments);
+			}, source.token, undefined, attachments, answeredFrom);
 			if (!current()) {
 				return;
 			}
@@ -571,9 +585,10 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 				postModel();
 				postStrategy();
 				// Search In lists the sources before the first question too
-				askPollisService.collections().then(names => {
+				Promise.all([askPollisService.collections(), askPollisService.collectionIndexes()]).then(([names, built]) => {
 					collections = names;
-					post({ command: 'collections', collections: names });
+					indexes = built;
+					post({ command: 'collections', collections: searchable() });
 				}, () => undefined);
 			} else if (message.command === 'ask' && message.question.trim()) {
 				ask(message.question.trim(), message.searchIn, message.attachments ?? []);

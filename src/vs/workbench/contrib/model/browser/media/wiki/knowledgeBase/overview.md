@@ -17,11 +17,14 @@ A text in PDF is read as one document, cut at its bookmarks and then into passag
 ## Building the Index of the Knowledge Base
 **Embedding Model** chooses the model that embeds the passages, by default that of Ask Pollis, and **Passage Length** their length, from 100 to 500 words. **Build the Index** reads the texts switched on, cuts and embeds them into `~/.pollis/rag/knowledge-base.duckdb`. Each passage is embedded once by each model, ever, so building again after switching another text on embeds only the new passages. The page says when the index was embedded with another model or cut to another length than the ones chosen.
 
+## Asking Ask Pollis from the Knowledge Base
+Once its index is built, the **Knowledge Base** is listed in **Search In** of Ask Pollis, after the sources of Pollis and the Julia Manual. Ticked alone, it is the only thing searched. Ticked with sources of Pollis, each is searched in its own index and gives part of the passages: most come from the index nearest the question when both were embedded with the same model, and from Pollis otherwise. **Auto** does not search the Knowledge Base; tick it, or choose **All Sources**. A passage of a PDF opens at its page in the PDF Viewer, and a passage of Dive into Deep Learning at its heading in the Markdown preview.
+
 ## Common Workflow
 1. Read the **Licence** and **As Kept** of a text, and switch it **On**.
 2. Keep the default **Passage Length**, 250 words, to begin with.
 3. Choose the **Embedding Model** and **Build the Index**.
-4. Ask Pollis a question the text answers, and follow the passages it cites.
+4. Tick **Knowledge Base** in **Search In** of Ask Pollis, ask a question the text answers, and follow the passages it cites.
 5. Switch on more texts, and **Build the Index** again.
 
 ## References
