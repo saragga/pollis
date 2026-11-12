@@ -405,9 +405,9 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "compare-dimensions"
 label = "Compare Dimensions"
-desc = "Correlation, shared variance and cumulative shared variance by dimension"
+desc = "Correlation, shared variance, and the cumulative share of the shared variance of the dimensions kept, by dimension"
 code = '''
-[(dimension = j, correlation = rho[j], shared = rho[j]^2, cumulative = sum(abs2, rho[1:j]) / sum(abs2, rho)) for j in 1:k]
+[(dimension = j, correlation = rho[j], shared = rho[j]^2, cumulative_share_of_kept = sum(abs2, rho[1:j]) / sum(abs2, rho)) for j in 1:k]  # share of the shared variance of the k dimensions kept, so it ends at 1
 '''
 
 [[actionGroups.actions]]
