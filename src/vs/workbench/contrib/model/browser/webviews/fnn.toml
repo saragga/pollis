@@ -161,7 +161,7 @@ label = "VAE"
 
 [[bullets]]
 text = "MLP"
-detail = "vanilla feedforward network; universal approximator for regression and classification"
+detail = "vanilla feedforward network; universal approximator, trained here for regression by mean squared error"
 
 [[bullets]]
 text = "Autoencoder"
@@ -174,7 +174,7 @@ detail = "Variational Autoencoder; latent generative model trained with the ELBO
 [[decisionRows]]
 task = "MLP"
 context = "Tabular inputs with a known target"
-purpose = "Flexible non-linear regression or classification"
+purpose = "Flexible non-linear regression"
 
 [[decisionRows]]
 task = "Autoencoder"
@@ -221,7 +221,7 @@ default = "3"
 [[inputs]]
 id = "output-size"
 label = "output_size"
-tooltip = "Dimensionality of the network output. Use 1 for scalar regression, N for multi-output regression or N-class softmax classification."
+tooltip = "Dimensionality of the network output. Use 1 for scalar regression and N for multi-output regression."
 default = "1"
 models = ["mlp"]
 when = "head=standard"
