@@ -27,7 +27,7 @@ A normal log-jump is the standard start of [Merton (1976)](#ref-Mer1976a), with 
 | **SDE solver** | SRIW1 | Default, adaptive and of strong order 3/2 for scalar or diagonal noise |
 | **SDE solver** | EM | Simple reference at a fixed step, useful as a check on another solver |
 | **SDE solver** | LambaEM | Adaptive at strong order 1/2, as a check on SRIW1 |
-| **SDE solver** | RKMil | Strong order 1, adaptive in the package despite its label |
+| **SDE solver** | RKMil | Strong order 1, adaptive, starting from **Step size dt** |
 | **Jump aggregator** | **Direct** | One jump channel gives **SortingDirect** nothing to sort |
 
 ## What the Jump-Diffusion Panel Does Not Decide

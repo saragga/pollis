@@ -16,7 +16,7 @@ Between jumps X follows an Itô diffusion, and all four entries of **SDE solver*
 
 ## When a Jump-Diffusion State Can Reach Zero
 
-The factor exp(J) cannot change the sign of X, and with g = s X an exact solution stays positive. A constant **Diffusion g(X,t)**, as in `0.1`, allows X to cross zero, and multiplicative jumps then act on a negative state. **With vs Without Jumps** takes the logarithm of X(T) / X0, so it raises a `DomainError` as soon as one path ends under zero when X0 is positive. In **Custom Rate**, 1 + 0.1 Z is negative only when Z is under -10, which has negligible probability.
+The factor exp(J) cannot change the sign of X, and with g = s X an exact solution stays positive. A constant **Diffusion g(X)**, as in `0.1`, allows X to cross zero, and multiplicative jumps then act on a negative state. **With vs Without Jumps** takes the logarithm of X(T) / X0, so it raises a `DomainError` as soon as one path ends under zero when X0 is positive. In **Custom Rate**, 1 + 0.1 Z is negative only when Z is under -10, which has negligible probability.
 
 ## What Solver Accuracy the Jump-Diffusion Panel Assumes
 

@@ -4,7 +4,7 @@ A jump rate that depends on the state links the timing of jumps to the path itse
 
 ## What the Custom Rate Tab Computes
 
-The tab builds `rate(U, p, t) = lambda * abs(U[1])`, with `lambda` from **Jump rate lambda**, and `affect!` multiplies the state by 1 + 0.1 Z, with Z a standard normal draw. Both go into `VariableRateJump(rate, affect!)`, placed in `JumpProblem(prob, Direct(), jump)` over an SDE problem with a one-element array state. **Drift f(X,t)** and **Diffusion g(X,t)** apply only between jumps, and no compensator is subtracted. No **Jump aggregator** appears here, as `Direct()` has no constant-rate jump to schedule.
+The tab builds `rate(U, p, t) = lambda * abs(U[1])`, with `lambda` from **Jump rate lambda**, and `affect!` multiplies the state by 1 + 0.1 Z, with Z a standard normal draw. Both go into `VariableRateJump(rate, affect!)`, placed in `JumpProblem(prob, Direct(), jump)` over an SDE problem with a one-element array state. **Drift f(X)** and **Diffusion g(X)** apply only between jumps, and no compensator is subtracted. No **Jump aggregator** appears here, as `Direct()` has no constant-rate jump to schedule.
 
 ## How a Variable-Rate Jump Is Located in Time
 

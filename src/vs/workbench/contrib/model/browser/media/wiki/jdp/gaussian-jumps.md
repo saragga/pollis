@@ -4,7 +4,7 @@ Log-normal jump sizes define the jump-diffusion of [Merton (1976)](#ref-Mer1976a
 
 ## What the Gaussian Jumps Tab Computes
 
-The tab solves dX = (mu(X) - lambda kappa X) dt + g dW + X- (exp(J) - 1) dN, with J ~ Normal(muJ, sigmaJ) drawn afresh at each jump, and N a Poisson process of rate **Jump rate lambda**. Here mu(X) is **Drift f(X,t)**, and kappa = exp(muJ + sigmaJ^2/2) - 1. The code calls the corrected drift `f` and the typed expression `mu`. The solver sees only the corrected drift between jumps, and `affect!` applies the factor exp(J) at each jump time.
+The tab solves dX = (mu(X) - lambda kappa X) dt + g dW + X- (exp(J) - 1) dN, with J ~ Normal(muJ, sigmaJ) drawn afresh at each jump, and N a Poisson process of rate **Jump rate lambda**. Here mu(X) is **Drift f(X)**, and kappa = exp(muJ + sigmaJ^2/2) - 1. The code calls the corrected drift `f` and the typed expression `mu`. The solver sees only the corrected drift between jumps, and `affect!` applies the factor exp(J) at each jump time.
 
 ## What the Merton Compensator Does to the Drift
 

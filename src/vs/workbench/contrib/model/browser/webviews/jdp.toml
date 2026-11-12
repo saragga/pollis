@@ -184,14 +184,14 @@ purpose = "Jumps arrive faster as X grows (the example uses lambda times |X|); e
 
 [[inputs]]
 id = "f"
-label = "Drift f(X,t)"
+label = "Drift f(X)"
 tooltip = "Drift as a function of X. Compound Poisson and Custom Rate: the drift of the continuous part, so the jumps add expected growth on top of it. Gaussian Jumps: the total expected growth, jumps included; the code subtracts the Merton compensator lambda*kappa*X from it. Example: 0.05*X for geometric growth, -0.1*(X-1.0) for mean-reversion."
 default = "0.05*X"
 
 [[inputs]]
 id = "g"
-label = "Diffusion g(X,t)"
-tooltip = "Continuous diffusion function g(X, p, t). Example: 0.2*X for multiplicative noise, 0.1 for additive."
+label = "Diffusion g(X)"
+tooltip = "Diffusion as a function of X. Example: 0.2*X for multiplicative noise, 0.1 for additive."
 default = "0.2*X"
 
 [[inputs]]
@@ -234,7 +234,7 @@ label = "SortingDirect"
 [[inputs]]
 id = "solver"
 label = "SDE solver"
-tooltip = "Solver for the continuous diffusion part between jump events. Adaptive solvers (SRIW1, LambaEM) choose dt automatically. Fixed-step solvers (EM, RKMil) require a dt value."
+tooltip = "Solver for the continuous diffusion part between jump events. SRIW1, LambaEM and RKMil adapt their step, and RKMil starts from the dt value. EM uses dt as its fixed step."
 kind = "select"
 default = "SRIW1"
 
@@ -252,7 +252,7 @@ label = "LambaEM (Adaptive)"
 
 [[inputs.options]]
 value = "RKMil"
-label = "RKMil (Fixed Step)"
+label = "RKMil"
 
 [[inputs]]
 id = "X0"
@@ -294,7 +294,7 @@ prob  = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))  # base SDE
 jprob = JumpProblem(prob, {{aggregator}}(), jump; jkw...)  # augment with jump process using {{aggregator}} aggregator
 alg = {{solver}}()  # SDE solver
 {{?solver=SRIW1|LambaEM}} skw = NamedTuple()  # adaptive solver: no fixed step
-{{?solver!=SRIW1|LambaEM}} skw = (dt = {{dt}},)  # fixed-step solver
+{{?solver!=SRIW1|LambaEM}} skw = (dt = {{dt}},)  # fixed step (EM) or starting step (RKMil)
 sol = solve(jprob, alg; skw...)  # solve jump-diffusion
 '''
 
@@ -319,7 +319,7 @@ prob  = SDEProblem(f, g, {{X0}}, (0.0, {{T}}))  # base SDE
 jprob = JumpProblem(prob, {{aggregator}}(), jump; jkw...)  # augment with {{aggregator}} aggregator
 alg = {{solver}}()  # SDE solver
 {{?solver=SRIW1|LambaEM}} skw = NamedTuple()  # adaptive solver: no fixed step
-{{?solver!=SRIW1|LambaEM}} skw = (dt = {{dt}},)  # fixed-step solver
+{{?solver!=SRIW1|LambaEM}} skw = (dt = {{dt}},)  # fixed step (EM) or starting step (RKMil)
 sol = solve(jprob, alg; skw...)  # solve
 '''
 
@@ -341,7 +341,7 @@ prob  = SDEProblem(f!, g!, [{{X0}}], (0.0, {{T}}))  # base SDE on a one-element 
 jprob = JumpProblem(prob, Direct(), jump)  # the rate is integrated along the path, so jump times track X(t)
 alg = {{solver}}()  # SDE solver
 {{?solver=SRIW1|LambaEM}} skw = NamedTuple()  # adaptive solver: no fixed step
-{{?solver!=SRIW1|LambaEM}} skw = (dt = {{dt}},)  # fixed-step solver
+{{?solver!=SRIW1|LambaEM}} skw = (dt = {{dt}},)  # fixed step (EM) or starting step (RKMil)
 sol = solve(jprob, alg; skw...)  # solve the state-dependent jump-diffusion
 '''
 

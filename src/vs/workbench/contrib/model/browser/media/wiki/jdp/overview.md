@@ -12,11 +12,11 @@ The equation is dX = f(X,t) dt + g(X,t) dW + X- (exp(J) - 1) dN in the **Compoun
 
 ## How the Compound Poisson Tab Works
 
-Jumps arrive at the constant **Jump rate lambda**, and each log-jump is drawn from Uniform(-a, a), where the code fixes a = 0.2. The mean relative jump is kappa = sinh(a)/a - 1, which is positive although J is symmetric. **Drift f(X,t)** applies to the continuous part alone, so jumps add expected growth of lambda kappa X on top of it. With the default a and lambda, lambda kappa is about 0.013.
+Jumps arrive at the constant **Jump rate lambda**, and each log-jump is drawn from Uniform(-a, a), where the code fixes a = 0.2. The mean relative jump is kappa = sinh(a)/a - 1, which is positive although J is symmetric. **Drift f(X)** applies to the continuous part alone, so jumps add expected growth of lambda kappa X on top of it. With the default a and lambda, lambda kappa is about 0.013.
 
 ## How the Gaussian Jumps Tab Works
 
-Each log-jump is drawn from Normal(muJ, sigmaJ), the choice of Merton, so kappa = exp(muJ + sigmaJ^2/2) - 1. The code takes **Drift f(X,t)** as the total expected growth and passes f - lambda kappa X to the solver. With muJ at its default of -0.1 and sigmaJ at 0.05, kappa is about -0.094, and at the default lambda the continuous part has a drift of about 0.238 X. Jumps then remove on average what the higher continuous drift adds.
+Each log-jump is drawn from Normal(muJ, sigmaJ), the choice of Merton, so kappa = exp(muJ + sigmaJ^2/2) - 1. The code takes **Drift f(X)** as the total expected growth and passes f - lambda kappa X to the solver. With muJ at its default of -0.1 and sigmaJ at 0.05, kappa is about -0.094, and at the default lambda the continuous part has a drift of about 0.238 X. Jumps then remove on average what the higher continuous drift adds.
 
 ## How the Custom Rate Tab Works
 

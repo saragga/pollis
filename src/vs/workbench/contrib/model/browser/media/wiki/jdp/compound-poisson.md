@@ -4,14 +4,14 @@ A compound Poisson process is a sum of random jumps counted by a Poisson process
 
 ## What the Compound Poisson Tab Computes
 
-The **Compound Poisson** tab solves dX = f dt + g dW + X- (exp(J) - 1) dN, where N is a Poisson process of constant rate **Jump rate lambda** and each J is an independent Uniform(-a, a) draw. The code writes `a = 0.2`, and no input changes it. Between jumps the chosen **SDE solver** integrates **Drift f(X,t)** and **Diffusion g(X,t)**. At each jump, `affect!` replaces X by X exp(J). The result `sol` is one path over [0, **Time span T**], saved twice at each jump time.
+The **Compound Poisson** tab solves dX = f dt + g dW + X- (exp(J) - 1) dN, where N is a Poisson process of constant rate **Jump rate lambda** and each J is an independent Uniform(-a, a) draw. The code writes `a = 0.2`, and no input changes it. Between jumps the chosen **SDE solver** integrates **Drift f(X)** and **Diffusion g(X)**. At each jump, `affect!` replaces X by X exp(J). The result `sol` is one path over [0, **Time span T**], saved twice at each jump time.
 
 ## What the Compound Poisson Tab Uses as Inputs
 
 | Input | Role in the tab | Default |
 |---|---|---|
-| **Drift f(X,t)** | Drift of the continuous part alone | `0.05*X` |
-| **Diffusion g(X,t)** | Continuous noise, read in the Itô sense | `0.2*X` |
+| **Drift f(X)** | Drift of the continuous part alone | `0.05*X` |
+| **Diffusion g(X)** | Continuous noise, read in the Itô sense | `0.2*X` |
 | **Jump rate lambda** | Expected jumps per unit of time | 2.0 |
 | **Jump aggregator** | Scheduler of jump times | **Direct** |
 | **SDE solver** | Integrator between jumps | SRIW1 |
