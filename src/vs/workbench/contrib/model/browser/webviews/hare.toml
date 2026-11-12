@@ -18,7 +18,7 @@ description = "Overview of Julia for academic and scientific computing"
 url = "https://www.youtube.com/watch?v=wPFPT-Ech2c"
 
 [requires]
-packages = ["Plots.jl", "StatsBase.jl", "HypothesisTests.jl"]
+packages = ["Plots.jl", "HypothesisTests.jl"]
 
 [[notebookSections]]
 label = ""
@@ -173,7 +173,7 @@ detail = "variance model: Var(u) = sigma² exp(z′alpha); two-step FWLS or MLE 
 
 [[bullets]]
 text = "Power"
-detail = "variance model: std(u) ∝ |z′alpha|p; two-step FWLS or MLE via HARE.jl"
+detail = "variance model: Var(u) = exp(gamma_0) × product of |z_j|^gamma_j; two-step FWLS or MLE via HARE.jl"
 
 [[bullets]]
 text = "Quadratic"
