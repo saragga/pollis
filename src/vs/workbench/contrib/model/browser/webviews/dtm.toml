@@ -218,7 +218,7 @@ prepare!(crps, strip_punctuation | strip_case | strip_stopwords)  # remove punct
 update_lexicon!(crps)  # build vocabulary
 lex  = lexicon(crps)  # term => count dictionary
 
-top  = sort(collect(lex), by=x->x[2], rev=true)[1:20]  # top 20 terms by frequency
+top  = sort(collect(lex), by=x->x[2], rev=true)[1:min(20, end)]  # top 20 terms by frequency, or all if fewer
 bar(map(x->x[1], top), map(x->x[2], top), xlabel="Term", ylabel="Count", xrotation=45, legend=false)  # bar chart
 '''
 
@@ -293,6 +293,7 @@ update_lexicon!(crps)  # build vocabulary
 m     = DocumentTermMatrix(crps)  # DTM
 
 query = StringDocument("install julia and the packages")  # new document
+prepare!(query, strip_punctuation | strip_case | strip_stopwords)  # the same preparation as the corpus, so its words match the vocabulary
 qvec  = dtv(query, lexicon(crps))  # raw count vector aligned to corpus vocabulary
 '''
 
@@ -310,6 +311,7 @@ m       = DocumentTermMatrix(crps)  # DTM
 weights = Matrix(tf_idf(m))  # TF-IDF matrix
 
 query   = StringDocument("install julia and the packages")  # query document
+prepare!(query, strip_punctuation | strip_case | strip_stopwords)  # the same preparation as the corpus, so its words match the vocabulary
 qvec    = Float64.(vec(dtv(query, lexicon(crps))))  # query count vector (dtv returns a 1 x V matrix)
 sims    = weights * qvec ./ (norm.(eachrow(weights)) .* norm(qvec) .+ 1e-10)  # cosine similarity per document
 sortperm(sims, rev=true)  # ranked document indices
@@ -334,8 +336,8 @@ m       = DocumentTermMatrix(crps)  # DTM
 raw     = dtm(m)  # raw count matrix
 weighted = Matrix(tf_idf(m))  # TF-IDF matrix
 
-println("DTM row 1:    ", raw[1, 1:10])  # first document, first 10 terms
-println("TF-IDF row 1: ", round.(weighted[1, 1:10], digits=4))  # same document, TF-IDF weights
+println("DTM row 1:    ", raw[1, 1:min(10, end)])  # first document, first 10 terms
+println("TF-IDF row 1: ", round.(weighted[1, 1:min(10, end)], digits=4))  # same document, TF-IDF weights
 '''
 
 [[actionGroups.actions]]
@@ -354,12 +356,13 @@ w_tfidf  = Matrix(tf_idf(m))  # TF-IDF matrix
 w_bm25   = Matrix(bm_25(m))  # BM25 matrix
 
 query    = StringDocument("alerts on sec filings")  # query
+prepare!(query, strip_punctuation | strip_case | strip_stopwords)  # the same preparation as the corpus, so its words match the vocabulary
 qvec     = Float64.(vec(dtv(query, lexicon(crps))))  # query vector (dtv returns a 1 x V matrix)
 rank_tf  = sortperm(w_tfidf * qvec, rev=true)  # TF-IDF ranking
 rank_bm  = sortperm(w_bm25  * qvec, rev=true)  # BM25 ranking
 
-println("TF-IDF top-5: ", rank_tf[1:5])  # compare top results
-println("BM25    top-5: ", rank_bm[1:5])  # compare top results
+println("TF-IDF top-5: ", first(rank_tf, 5))  # compare top results
+println("BM25    top-5: ", first(rank_bm, 5))  # compare top results
 '''
 
 [[actionGroups]]
@@ -381,7 +384,7 @@ weights = Matrix(tf_idf(m))  # TF-IDF matrix
 terms   = m.terms  # the DTM's own column order (the keys of lexicon(crps) come in Dict order, which does not match the columns)
 
 for d in 1:min(5, size(weights, 1))
-    idx = sortperm(weights[d, :], rev=true)[1:5]
+    idx = first(sortperm(weights[d, :], rev=true), 5)
     println("Doc ", d, ": ", terms[idx])
 end
 '''
@@ -404,7 +407,7 @@ idf   = log.(D ./ df)  # IDF vector
 terms = m.terms  # the DTM's own column order, so each IDF is paired with its term
 
 sorted = sort(collect(zip(terms, idf)), by=x->x[2], rev=true)  # terms with highest IDF first
-println(sorted[1:10])  # top 10 discriminative terms
+println(first(sorted, 10))  # top 10 discriminative terms
 '''
 
 # ── FAQ: shown in Learn More, and the Panel FAQ test set of Evaluate Answering Models (hidden = true: the test set only) ──
