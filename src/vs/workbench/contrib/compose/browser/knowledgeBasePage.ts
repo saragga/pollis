@@ -26,7 +26,7 @@ import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWork
 import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
 import { KNOWLEDGEBASE_METADATA } from '../../model/browser/webviews/knowledgeBase.data.js';
 import { choiceSwitchCss, choiceSwitchHtml, choiceSwitchJs } from '../../model/browser/webviews/scaffoldShared.js';
-import { sortHeadingsCss, sortHeadingsScript, sortHint, stickyHeadCss, stickyHeadScript } from '../../model/browser/webviews/webviewPager.js';
+import { FEWEST_ROWS, isRowsChoice, rowsChoiceCss, rowsChoiceScript, sortHeadingsCss, sortHeadingsScript, sortHint, stickyHeadCss, stickyHeadScript, storedRows, storeRows } from '../../model/browser/webviews/webviewPager.js';
 import { buildWebviewHtml, spinnerCss, spinnerSvg } from '../../model/browser/webviews/webviewScaffold.js';
 import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
 import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
@@ -58,6 +58,9 @@ const INDEX_FILE = 'knowledge-base.duckdb';
 /** The lengths a passage can have, in words, as Retrieval-Augmented Generation offers them. */
 const PASSAGE_WORDS = [100, 150, 200, 250, 300, 400, 500];
 const DEFAULT_WORDS = 250;
+/** The page's name for the rows it shows at a time, and how many it shows until the user chooses. */
+const ROWS_PAGE = 'knowledgeBase';
+const DEFAULT_ROWS = 40;
 
 interface IKnowledgeSettings {
 	on: string[];
@@ -106,6 +109,8 @@ interface IKnowledgeProgress {
 type KnowledgeMessage =
 	| { readonly command: 'ready' }
 	| { readonly command: 'switch'; readonly id: string; readonly on: boolean }
+	| { readonly command: 'switchShown'; readonly ids: readonly string[]; readonly on: boolean }
+	| { readonly command: 'rows'; readonly rows: number }
 	| { readonly command: 'open'; readonly id: string }
 	| { readonly command: 'link'; readonly url: string }
 	| { readonly command: 'words'; readonly words: number }
@@ -147,7 +152,7 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 		undefined,
 		{ group: undefined, preserveFocus: false }
 	);
-	webviewInput.webview.setHtml(pageHtml());
+	webviewInput.webview.setHtml(pageHtml(storedRows(storageService, ROWS_PAGE, DEFAULT_ROWS)));
 	openPage = webviewInput;
 	const post = (message: object) => webviewInput.webview.postMessage(message);
 
@@ -241,6 +246,46 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 		});
 	};
 
+	/**
+	 * Switches the texts `ids` on or off; those switched on and not yet on this computer are downloaded, one at a time,
+	 * and one whose download fails is switched off again, with why.
+	 */
+	const switchTexts = async (ids: readonly string[], on: boolean) => {
+		const chosen = (texts ?? []).filter(text => ids.includes(text.id));
+		if (!chosen.length) {
+			return;
+		}
+		for (const text of chosen) {
+			failed.delete(text.id);
+			settings.on = settings.on.filter(id => id !== text.id);
+			if (on) {
+				settings.on.push(text.id);
+			}
+		}
+		save();
+		const fetched = on ? chosen.filter(text => !text.downloaded && !downloading.has(text.id)) : [];
+		for (const text of fetched) {
+			downloading.add(text.id);
+		}
+		await postState();
+		for (const text of fetched) {
+			const answer = await commandService.executeCommand<{ documents?: ITextDocument[]; error?: string }>('language-julia.pollisKnowledgeBase', { task: 'download', id: text.id }).catch(() => undefined);
+			downloading.delete(text.id);
+			if (answer?.documents) {
+				text.downloaded = true;
+				text.documents = answer.documents;
+			} else {
+				failed.set(text.id, answer?.error ?? 'failed');
+				settings.on = settings.on.filter(id => id !== text.id);
+				save();
+			}
+			if (openPage !== webviewInput) {
+				return;
+			}
+			await postState();
+		}
+	};
+
 	disposables.add(webviewInput.webview.onMessage(async (e: { message: KnowledgeMessage }) => {
 		const message = e.message;
 		if (message.command === 'ready') {
@@ -249,34 +294,11 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 			await postState();
 			post({ command: 'covers', covers });
 		} else if (message.command === 'switch' && hasKey(message, { id: true, on: true })) {
-			const text = texts?.find(t => t.id === message.id);
-			if (!text) {
-				return;
-			}
-			failed.delete(text.id);
-			settings.on = settings.on.filter(id => id !== text.id);
-			if (message.on) {
-				settings.on.push(text.id);
-			}
-			save();
-			if (message.on && !text.downloaded && !downloading.has(text.id)) {
-				downloading.add(text.id);
-				await postState();
-				const answer = await commandService.executeCommand<{ documents?: ITextDocument[]; error?: string }>('language-julia.pollisKnowledgeBase', { task: 'download', id: text.id }).catch(() => undefined);
-				downloading.delete(text.id);
-				if (answer?.documents) {
-					text.downloaded = true;
-					text.documents = answer.documents;
-				} else {
-					failed.set(text.id, answer?.error ?? 'failed');
-					settings.on = settings.on.filter(id => id !== text.id);
-					save();
-				}
-				if (openPage !== webviewInput) {
-					return;
-				}
-			}
-			await postState();
+			await switchTexts([message.id], !!message.on);
+		} else if (message.command === 'switchShown' && hasKey(message, { ids: true, on: true }) && Array.isArray(message.ids)) {
+			await switchTexts(message.ids.filter(id => typeof id === 'string'), !!message.on);
+		} else if (message.command === 'rows' && hasKey(message, { rows: true }) && isRowsChoice(message.rows)) {
+			storeRows(storageService, ROWS_PAGE, message.rows);
 		} else if (message.command === 'open' && hasKey(message, { id: true })) {
 			const document = texts?.find(t => t.id === message.id && t.downloaded)?.documents[0];
 			if (document?.kind === 'pdf') {
@@ -316,11 +338,20 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 }
 
 /** The page: its texts come from here, the catalogue from the `state` message. */
-function pageHtml(): string {
+function pageHtml(rows: number): string {
 	const text = {
 		title: localize('knowledgeBase.title', "Knowledge Base"),
 		intro: localize('knowledgeBase.intro', "Openly licensed texts that a model can answer from: books, lecture notes, reports and manuals. A text switched on is downloaded once, with its licence, from {0}; Build the Index then cuts the texts switched on into passages and embeds them, in {1}. Each text is shared under its own licence, named in the table.", '<span class="yellow">PollisKnowledge.jl</span>', '<span class="yellow">~/.pollis/rag</span>'),
 		search: localize('knowledgeBase.search', "Search texts"),
+		allTypes: localize('knowledgeBase.allTypes', "All Types ({0})", '{0}'),
+		typeCount: localize('knowledgeBase.typeCount', "{0} ({1})", '{0}', '{1}'),
+		switchOnShown: localize('knowledgeBase.switchOnShown', "Switch On All Shown"),
+		switchOffShown: localize('knowledgeBase.switchOffShown', "Switch Off All Shown"),
+		switchOnShownHint: localize('knowledgeBase.switchOnShownHint', "Switch on every text the type and the search leave, on every page; those not on this computer are downloaded, one at a time"),
+		switchOffShownHint: localize('knowledgeBase.switchOffShownHint', "Switch off every text the type and the search leave, on every page"),
+		previous: localize('knowledgeBase.previous', "Previous"),
+		next: localize('knowledgeBase.next', "Next"),
+		page: localize('knowledgeBase.page', "Page {0} of {1}", '{0}', '{1}'),
 		reading: localize('knowledgeBase.reading', "Reading the catalogue of PollisKnowledge.jl..."),
 		notInstalled: localize('knowledgeBase.notInstalled', "PollisKnowledge.jl is not installed yet: start the Julia REPL, or restart it, and Pollis installs it."),
 		noJulia: localize('knowledgeBase.noJulia', "Julia was not found: the texts are downloaded with Julia."),
@@ -386,6 +417,7 @@ ${compareCss}
 ${LIBRARY_PAGE_MINIMAL_STYLE}
 ${stickyHeadCss}
 ${sortHeadingsCss}
+${rowsChoiceCss}
 ${spinnerCss}
 	${choiceSwitchCss}
 	.yellow { color: #e8a33d; }
@@ -394,7 +426,12 @@ ${spinnerCss}
 	h2 { font-size: 18px; font-weight: 400; margin: 24px 0 4px 0; }
 	.filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 8px 0; }
 	.search { width: 100%; max-width: 420px; padding: 4px 6px; font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; }
-	.search:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
+	.search:focus, .types:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
+	.types { padding: 4px 6px; font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; }
+	.bulk { display: inline-flex; gap: 12px; }
+	.link:disabled { color: var(--vscode-disabledForeground); cursor: default; text-decoration: none; }
+	.pager { display: flex; justify-content: center; align-items: center; gap: 16px; padding: 12px 8px; font-size: 12px; color: var(--vscode-descriptionForeground); }
+	.pager .link { font-size: 12px; }
 	.name { width: 28%; }
 	.title.unavailable { color: var(--vscode-foreground); cursor: default; }
 	.title.unavailable:hover { text-decoration: none; }
@@ -419,9 +456,12 @@ ${spinnerCss}
 	</section>
 	<div class="filters stickyBand" id="filters">
 		<input class="search" id="search" type="search" placeholder="${text.search}" aria-label="${text.search}">
+		<select class="types" id="types" aria-label="${text.type}"></select>
+		<span class="bulk"><button class="link" id="onShown" title="${text.switchOnShownHint}">${text.switchOnShown}</button><button class="link" id="offShown" title="${text.switchOffShownHint}">${text.switchOffShown}</button></span>
 		<span class="small" id="count"></span>
 	</div>
 	<p class="hint" id="note">${spinnerSvg}${text.reading}</p>
+	<div class="pager" id="pagerTop" hidden></div>
 	<table id="table" class="stickyHead" hidden>
 		<thead><tr>
 			<th class="name sortable" data-sort="title" data-label="${text.textColumn}" title="${text.sortHint}">${text.textColumn}</th>
@@ -435,6 +475,7 @@ ${spinnerCss}
 		</tr></thead>
 		<tbody id="rows"></tbody>
 	</table>
+	<div class="pager" id="pager" hidden></div>
 	<h2>${text.index}</h2>
 	<p class="hint">${text.indexIntro}</p>
 	<div class="row"><span class="small">${text.embeddingModel}</span> <select id="model"></select></div>
@@ -454,8 +495,12 @@ ${spinnerCss}
 	${choiceSwitchJs}
 	${stickyHeadScript()}
 	${sortHeadingsScript()}
+	${rowsChoiceScript()}
 
 	let state;
+	let rows = ${rows};
+	let page = 0;
+	const types = document.getElementById('types');
 	let covers = {};
 	let building = false;
 	let buildError;
@@ -515,8 +560,8 @@ ${spinnerCss}
 
 	// A card for each book with a cover: the cover and title, which open its authors' page, its edition, authors,
 	// publisher and year, and the links to its authors' page and to the printed book at its publisher
-	function renderBooks() {
-		const books = (state && state.texts || []).filter(item => covers[item.id]);
+	function renderBooks(shown) {
+		const books = shown.filter(item => covers[item.id]);
 		const box = document.getElementById('books');
 		box.textContent = '';
 		for (const item of books) {
@@ -545,8 +590,56 @@ ${spinnerCss}
 		document.getElementById('thanks').hidden = !books.length;
 	}
 
+	// The types of the texts, each with how many texts it has, keeping the one chosen
+	function fillTypes() {
+		const chosen = types.value;
+		const counts = new Map();
+		for (const item of state.texts) {
+			counts.set(item.type, (counts.get(item.type) || 0) + 1);
+		}
+		types.textContent = '';
+		types.appendChild(new Option(format(TEXT.allTypes, state.texts.length), ''));
+		for (const type of [...counts.keys()].sort()) {
+			types.appendChild(new Option(format(TEXT.typeCount, type, counts.get(type)), type));
+		}
+		types.value = counts.has(chosen) ? chosen : '';
+	}
+
+	// The texts the type and the search leave, in the order chosen
+	function shownTexts() {
+		const query = search.value.trim().toLowerCase();
+		const shown = state.texts.filter(item => (!types.value || item.type === types.value)
+			&& (!query || [item.title, item.type, item.subject, item.licence, item.edition, item.publisher, ...item.authors].some(field => String(field).toLowerCase().includes(query))));
+		return shown.sort((a, b) => {
+			const x = sortValue(a), y = sortValue(b);
+			return (x < y ? -1 : x > y ? 1 : 0) * (sortDescending ? -1 : 1);
+		});
+	}
+
+	// The same pager above the table and under it, with the Rows choice while there are more than the fewest rows
+	function fillPagers(shown, pages) {
+		for (const pager of [document.getElementById('pagerTop'), document.getElementById('pager')]) {
+			pager.textContent = '';
+			pager.hidden = shown <= ${FEWEST_ROWS};
+			if (pages > 1) {
+				const turn = (label, to) => {
+					const button = element('button', 'link', label);
+					button.disabled = to < 0 || to >= pages;
+					button.addEventListener('click', () => { page = to; render(); });
+					return button;
+				};
+				pager.append(turn(TEXT.previous, page - 1), element('span', '', format(TEXT.page, page + 1, pages)), turn(TEXT.next, page + 1));
+			}
+			pager.append(rowsChoice(rows, chosen => {
+				page = firstPageAfter(page, rows, chosen);
+				rows = chosen;
+				vscode.postMessage({ command: 'rows', rows });
+				render();
+			}));
+		}
+	}
+
 	function render() {
-		renderBooks();
 		const note = document.getElementById('note');
 		const table = document.getElementById('table');
 		if (!state.texts) {
@@ -560,18 +653,20 @@ ${spinnerCss}
 			table.hidden = true;
 			return;
 		}
-		const query = search.value.trim().toLowerCase();
-		const shown = state.texts.filter(item => !query || [item.title, item.type, item.subject, item.licence, item.edition, ...item.authors].some(field => field.toLowerCase().includes(query)));
-		shown.sort((a, b) => {
-			const x = sortValue(a), y = sortValue(b);
-			return (x < y ? -1 : x > y ? 1 : 0) * (sortDescending ? -1 : 1);
-		});
-		const rows = document.getElementById('rows');
-		rows.textContent = '';
-		for (const item of shown) {
-			rows.appendChild(row(item));
+		fillTypes();
+		const shown = shownTexts();
+		renderBooks(shown);
+		const size = rowsPerPage(rows, shown.length);
+		const pages = Math.max(1, Math.ceil(shown.length / size));
+		page = Math.min(page, pages - 1);
+		const onPage = shown.slice(page * size, (page + 1) * size);
+		fillPagers(shown.length, pages);
+		const body = document.getElementById('rows');
+		body.textContent = '';
+		for (const item of onPage) {
+			body.appendChild(row(item));
 		}
-		for (const item of shown) {
+		for (const item of onPage) {
 			if (!item.downloading) {
 				const show = choiceSwitch('switch-' + item.id, on => vscode.postMessage({ command: 'switch', id: item.id, on }));
 				show(item.on);
@@ -584,6 +679,8 @@ ${spinnerCss}
 		note.textContent = shown.length ? '' : TEXT.noMatch;
 		note.hidden = !!shown.length;
 		table.hidden = !shown.length;
+		document.getElementById('onShown').disabled = !shown.some(item => !item.on && !item.downloading);
+		document.getElementById('offShown').disabled = !shown.some(item => item.on);
 	}
 
 	function showProgress(progress) {
@@ -636,11 +733,22 @@ ${spinnerCss}
 		heading.addEventListener('click', () => {
 			sortDescending = heading.dataset.sort === sortColumn ? !sortDescending : false;
 			sortColumn = heading.dataset.sort;
+			page = 0;
 			vscode.setState({ ...(vscode.getState() || {}), sortColumn, sortDescending });
 			render();
 		});
 	}
-	search.addEventListener('input', () => state && render());
+	for (const filter of [search, types]) {
+		filter.addEventListener(filter === search ? 'input' : 'change', () => {
+			page = 0;
+			if (state) {
+				render();
+			}
+		});
+	}
+	for (const [id, on] of [['onShown', true], ['offShown', false]]) {
+		document.getElementById(id).addEventListener('click', () => state && state.texts && vscode.postMessage({ command: 'switchShown', ids: shownTexts().map(item => item.id), on }));
+	}
 	modelSelect.addEventListener('change', () => {
 		state.model = modelSelect.value;
 		vscode.postMessage({ command: 'model', model: modelSelect.value });
