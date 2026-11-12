@@ -56,7 +56,7 @@ import { findPollisWorkspace, OPEN_POLLIS_WORKSPACE_COMMAND_ID, pollisWorkspaceF
 // ~/.pollis/rag/knowledge-base.duckdb. Above the table, each published book has a card, in thanks to its authors: its
 // cover, as they show it, which comes with PollisKnowledge.jl, its title, edition, authors, publisher and year, their
 // page and the publisher's, where the printed book is sold. The user's own texts, the PDF, Markdown and text files in
-// the knowledge folder of the Pollis Workspace open, are in the same table, with Yours as their source, the type of
+// the knowledge folder of the Pollis Workspace open, are in the same table, with User as their source, the type of
 // their folder (books/, articles/ or reports/) and switched on until the user switches them off; the table reads the
 // folder again each time the page or the window gets the focus.
 
@@ -790,7 +790,7 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 function pageHtml(rows: number): string {
 	const text = {
 		title: localize('knowledgeBase.title', "Knowledge Base"),
-		intro: localize('knowledgeBase.intro', "Openly licensed texts that a model can answer from: books, lecture notes, reports and manuals. A text switched on is downloaded once, with its licence, from {0}; Build the Index then cuts the texts switched on into passages and embeds them, in {1}. Each text is shared under its own licence, named in the table. Your own texts, in the {2} folder of the Pollis Workspace open, are in the table too, with Yours as their source.", '<span class="yellow">PollisKnowledge.jl</span>', '<span class="yellow">~/.pollis/rag</span>', '<span class="yellow">knowledge</span>'),
+		intro: localize('knowledgeBase.intro', "Openly licensed texts that a model can answer from: books, lecture notes, reports and manuals. A text switched on is downloaded once, with its licence, from {0}; Build the Index then cuts the texts switched on into passages and embeds them, in {1}. Each text is shared under its own licence, named in the table. Your own texts, in the {2} folder of the Pollis Workspace open, are in the table too, with User as their source.", '<span class="yellow">PollisKnowledge.jl</span>', '<span class="yellow">~/.pollis/rag</span>', '<span class="yellow">knowledge</span>'),
 		search: localize('knowledgeBase.search', "Search texts"),
 		allTypes: localize('knowledgeBase.allTypes', "All Types ({0})", '{0}'),
 		typeCount: localize('knowledgeBase.typeCount', "{0} ({1})", '{0}', '{1}'),
@@ -816,8 +816,8 @@ function pageHtml(rows: number): string {
 		textColumn: localize('knowledgeBase.textColumn', "Text"),
 		type: localize('knowledgeBase.type', "Type"),
 		source: localize('knowledgeBase.source', "Source"),
-		sourceHint: localize('knowledgeBase.sourceHint', "PollisKnowledge.jl, or Yours: a file in the knowledge folder of the Pollis Workspace open"),
-		yours: localize('knowledgeBase.yours', "Yours"),
+		sourceHint: localize('knowledgeBase.sourceHint', "PollisKnowledge.jl, or User: a file of yours in the knowledge folder of the Pollis Workspace open"),
+		yours: localize('knowledgeBase.user', "User"),
 		yourFile: localize('knowledgeBase.yourFile', "Your file, unchanged."),
 		cutYourMarkdown: localize('knowledgeBase.cutYourMarkdown', "Cut at its headings into passages of about {0} words.", '{0}'),
 		cutText: localize('knowledgeBase.cutText', "Cut at its paragraphs into passages of about {0} words.", '{0}'),
