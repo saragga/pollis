@@ -155,7 +155,7 @@ detail = "success-history based adaptive F and Cr with external archive"
 
 [[bullets]]
 text = "Adaptive DE"
-detail = "self-adaptive parameters via JADE-style mechanism"
+detail = "self-adaptive parameters via the jDE mechanism"
 
 [[bullets]]
 text = "epsilonDE"
