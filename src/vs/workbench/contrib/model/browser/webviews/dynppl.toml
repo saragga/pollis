@@ -156,7 +156,7 @@ detail = "gradient-based sampler with explicit step size epsilon and leapfrog st
 
 [[bullets]]
 text = "Metropolis-Hastings"
-detail = "gradient-free random-walk MCMC; no gradient computation required; suitable for discrete or non-differentiable models"
+detail = "gradient-free Metropolis-Hastings, with proposals drawn from the prior by default; no gradient computation required; suitable for discrete or non-differentiable models"
 
 [[inputs]]
 id = "nuts-model"
@@ -378,7 +378,7 @@ desc = "Number of independent draws equivalent to the correlated chain"
 code = '''
 using MCMCChains  # chain diagnostics
 
-ess_rhat(chain)  # bulk and tail effective sample size per parameter
+ess_rhat(chain)  # effective sample size and R-hat per parameter
 '''
 
 [[actionGroups.actions]]
@@ -398,11 +398,11 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "prior-pred"
 label = "Prior Predictive"
-desc = "Sample from the prior without conditioning on data"
+desc = "Sample the parameters from their prior and summarise their ranges"
 code = '''
 using Turing, MCMCChains  # probabilistic programming and chain diagnostics
 
-prior_chain = sample(model, Prior(), 1000; chain_type=MCMCChains.Chains)  # draw 1000 samples from the prior predictive distribution
+prior_chain = sample(model, Prior(), 1000; chain_type=MCMCChains.Chains)  # draw 1000 parameter values from the prior
 summarystats(prior_chain)  # inspect prior parameter ranges
 '''
 
