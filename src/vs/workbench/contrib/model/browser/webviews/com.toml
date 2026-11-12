@@ -453,8 +453,11 @@ using Plots
 
 freq = [lexicon(crps)[t] for t in terms]
 top  = sort(first(sortperm(freq; rev = true), min(20, length(terms))))
+{{?model=raw}}heat_title = "Co-occurrence, window {{window}}"
+{{?model=ppmi}}heat_title = "PPMI, window {{window}}"
+{{?model=pmi}}heat_title = "PMI, window {{window}}"
 heatmap(terms[top], terms[top], Matrix(W[top, top]); xrotation = 60, color = :Blues,
-    title = "Co-occurrence, window {{window}}", size = (700, 600))
+    title = heat_title, size = (700, 600))
 '''
 
 [[actionGroups.actions]]
@@ -468,7 +471,7 @@ P    = Matrix(pmi_matrix(C; alpha = {{alpha}}))
 freq = [lexicon(crps)[t] for t in terms]
 top  = sort(first(sortperm(freq; rev = true), min(20, length(terms))))
 X    = P[top, :] ./ (map(norm, eachrow(P[top, :])) .+ eps())
-heatmap(terms[top], terms[top], X * transpose(X); xrotation = 60, color = :RdBu, clims = (-1, 1),
+heatmap(terms[top], terms[top], X * transpose(X); xrotation = 60, color = :Blues, clims = (0, 1),  # PPMI rows are non-negative, so their cosines lie in [0, 1]
     title = "PPMI cosine similarity", size = (700, 600))
 '''
 
@@ -496,7 +499,7 @@ code = '''
 P = pmi_matrix(C; alpha = {{alpha}})
 I, J, V = findnz(triu(C, 1))  # upper triangle: each unordered pair once, no self pairs
 for t in first(sortperm(V; rev = true), min(10, length(V)))
-    println(rpad(terms[I[t]] * " + " * terms[J[t]], 26), "count = ", round(V[t]; digits = 2), "  ppmi = ", round(P[I[t], J[t]]; digits = 3))
+    println(rpad(terms[I[t]] * " + " * terms[J[t]], 26), "count = ", round(V[t]; digits = 2), "  ppmi = ", round(P[I[t], J[t]]; digits = 3), " / ", round(P[J[t], I[t]]; digits = 3), "  (each word as the context in turn: they differ when alpha is not 1)")
 end
 '''
 
@@ -545,8 +548,8 @@ desc = "Contexts of the query word ranked by raw count and by PPMI, side by side
 code = '''
 P = pmi_matrix(C; alpha = {{alpha}})
 i = index[{{query}}]
-by_count = first(sortperm(Vector(C[i, :]); rev = true), {{k}})
-by_ppmi  = first(sortperm(Vector(P[i, :]); rev = true), {{k}})
+by_count = filter(a -> C[i, a] > 0, first(sortperm(Vector(C[i, :]); rev = true), {{k}}))  # contexts seen with the word only
+by_ppmi  = filter(b -> P[i, b] > 0, first(sortperm(Vector(P[i, :]); rev = true), {{k}}))
 println(rpad("by count", 28), "by PPMI")
 for (a, b) in zip(by_count, by_ppmi)
     println(rpad(terms[a] * " " * string(round(C[i, a]; digits = 2)), 28), terms[b], " ", round(P[i, b]; digits = 3))
@@ -572,9 +575,10 @@ desc = "Top PPMI pairs with alpha = 1 and with the chosen alpha, with the corpus
 code = '''
 cnt(t) = lexicon(crps)[t]
 for a in (1.0, {{alpha}})
-    I, J, V = findnz(triu(pmi_matrix(C; alpha = a), 1))
+    I, J, V = findnz(pmi_matrix(C; alpha = a))  # every (word, context) pair: with alpha not 1 the matrix is not symmetric
+    off = findall(I .!= J); I, J, V = I[off], J[off], V[off]  # no self pairs
     top = first(sortperm(V; rev = true), min(8, length(V)))
-    println("alpha = ", a, ": ", join([terms[I[t]] * "+" * terms[J[t]] * " (" * string(cnt(terms[I[t]])) * "," * string(cnt(terms[J[t]])) * ")" for t in top], "  "))
+    println("alpha = ", a, ": ", join([terms[I[t]] * "|" * terms[J[t]] * " (" * string(cnt(terms[I[t]])) * "," * string(cnt(terms[J[t]])) * ")" for t in top], "  "), "   (word|context)")
 end
 '''
 
