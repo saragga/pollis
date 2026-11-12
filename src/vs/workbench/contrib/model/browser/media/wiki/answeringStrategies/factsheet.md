@@ -6,7 +6,7 @@
 |---|---|
 | **Purpose** | Choose, compare, install and write the answering strategies of Ask Pollis |
 | **Steps of a strategy** | Search, Rerank (optional) and Answer, in that order |
-| **Strategies of Pollis** | Base and Panel Aware |
+| **Strategies of Pollis** | Panel Aware, the one in use unless another is chosen, and Base |
 | **Strategies of your own** | TOML files of `~/.pollis/ask/strategies/` |
 | **Catalogue** | `Trumpingtons/pollis-strategies` on GitHub |
 | **Score shown** | Panel FAQ Score, from the latest run of Evaluate Answering Models on the Panel FAQ |

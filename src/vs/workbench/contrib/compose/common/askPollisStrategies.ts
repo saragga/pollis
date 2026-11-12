@@ -73,29 +73,32 @@ export interface IAskPollisStrategy {
 	readonly file?: string;
 }
 
+/** Base, Pollis' original strategy, the one the others are compared with; a run saved before there were strategies used it. */
+export const ASK_BASE_STRATEGY = 'base';
+
 /** The strategy of Ask Pollis when the setting pollis.ask.strategy names no other. */
-export const ASK_DEFAULT_STRATEGY = 'base';
+export const ASK_DEFAULT_STRATEGY = 'panelAware';
 
 /** The strategies of Ask Pollis. */
 export const ASK_POLLIS_STRATEGIES: readonly IAskPollisStrategy[] = [
 	{
 		id: ASK_DEFAULT_STRATEGY,
-		label: localize('askPollis.strategyBase', "Base"),
-		description: localize('askPollis.strategyBaseDescription', "Asked in a panel, five of the eight passages come from the panel's wikis and the vignettes of its packages, the rest routed as without it; a reranker, when set, chooses among three times as many; the model is told the panel's name and menu."),
-		steps: [
-			{ step: 'search', panelShare: 5 / 8 },
-			{ step: 'rerank', by: 'reranker' },
-			{ step: 'answer', panel: 'named' },
-		],
-	},
-	{
-		id: 'panelAware',
 		label: localize('askPollis.strategyPanelAware', "Panel Aware"),
 		description: localize('askPollis.strategyPanelAwareDescription', "Asked in a panel, six of the eight passages come from the panel's wikis and the vignettes of its packages when they are near the question, two when they are not; a reranker, when set, is asked the question as asked in the panel; the model is told the panel's name and menu, and what the panel holds: its models, Key Points, decision table, inputs and packages."),
 		steps: [
 			{ step: 'search', panelShare: { near: 6 / 8, far: 2 / 8 } },
 			{ step: 'rerank', by: 'reranker', query: 'panel' },
 			{ step: 'answer', panel: 'card' },
+		],
+	},
+	{
+		id: ASK_BASE_STRATEGY,
+		label: localize('askPollis.strategyBase', "Base"),
+		description: localize('askPollis.strategyBaseDescription', "Asked in a panel, five of the eight passages come from the panel's wikis and the vignettes of its packages, the rest routed as without it; a reranker, when set, chooses among three times as many; the model is told the panel's name and menu."),
+		steps: [
+			{ step: 'search', panelShare: 5 / 8 },
+			{ step: 'rerank', by: 'reranker' },
+			{ step: 'answer', panel: 'named' },
 		],
 	},
 ];
@@ -145,12 +148,12 @@ export function askStrategiesEqual(a: IAskPollisStrategy, b: IAskPollisStrategy)
 
 /** The strategy `id` of `strategies`, or the default one when there is none of that id. */
 export function askPollisStrategy(id: string | undefined, strategies: readonly IAskPollisStrategy[] = ASK_POLLIS_STRATEGIES): IAskPollisStrategy {
-	return strategies.find(strategy => strategy.id === id) ?? ASK_POLLIS_STRATEGIES[0];
+	return strategies.find(strategy => strategy.id === id) ?? ASK_POLLIS_STRATEGIES.find(strategy => strategy.id === ASK_DEFAULT_STRATEGY)!;
 }
 
 /** The name of the strategy `id` of `strategies`: its id when there is none of that id any more, Base for none. */
 export function askStrategyLabel(id: string | undefined, strategies: readonly IAskPollisStrategy[]): string {
-	return id ? strategies.find(strategy => strategy.id === id)?.label ?? id : ASK_POLLIS_STRATEGIES[0].label;
+	return id ? strategies.find(strategy => strategy.id === id)?.label ?? id : ASK_POLLIS_STRATEGIES.find(strategy => strategy.id === ASK_BASE_STRATEGY)!.label;
 }
 
 // --- Strategies of files -----------------------------------------------------------------------------------------
@@ -308,7 +311,7 @@ export function askStrategySearchRequest(strategy: IAskPollisStrategy, request: 
  */
 export function askStrategySearchKey(strategy: IAskPollisStrategy, request: IAskPollisSearchRequest): string {
 	const panel = request.panel ? `${request.panel.title}\n${request.panel.packages.join(',')}` : '';
-	return strategy.id === ASK_DEFAULT_STRATEGY && !panel && request.passages === undefined
+	return strategy.id === ASK_BASE_STRATEGY && !panel && request.passages === undefined
 		? request.question
 		: [strategy.id, JSON.stringify(request.panelShare ?? ''), request.passages ?? '', panel, request.question].join('\n');
 }

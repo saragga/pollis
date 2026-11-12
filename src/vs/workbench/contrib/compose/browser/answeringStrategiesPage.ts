@@ -39,7 +39,7 @@ import { INotebookKernelService } from '../../notebook/common/notebookKernelServ
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { ASK_PASSAGES, IAskPollisService } from '../common/askPollis.js';
-import { ASK_DEFAULT_STRATEGY, ASK_POLLIS_STRATEGIES, ASK_STRATEGIES_CATALOGUE_URL, askPollisStrategy, askStrategiesEqual, askStrategyOfFile, askStrategyToml, AskPollisStrategyStep, IAskPollisStrategiesService, IAskPollisStrategy, IAskStrategyCatalogueEntry } from '../common/askPollisStrategies.js';
+import { ASK_BASE_STRATEGY, ASK_POLLIS_STRATEGIES, ASK_STRATEGIES_CATALOGUE_URL, askPollisStrategy, askStrategiesEqual, askStrategyOfFile, askStrategyToml, AskPollisStrategyStep, IAskPollisStrategiesService, IAskPollisStrategy, IAskStrategyCatalogueEntry } from '../common/askPollisStrategies.js';
 import { compareFigures } from './compareModelsRun.js';
 import { COMPARE_MODELS_STRATEGY_COMMAND_ID } from './compareModelsPage.js';
 import { compareCss, pageHelpersScript } from './compareShared.js';
@@ -278,7 +278,7 @@ async function openAnsweringStrategiesPage(accessor: ServicesAccessor): Promise<
 		const read = new Map<string, IStrategyRun[]>();
 		try {
 			for (const summary of await askPollisService.runs()) {
-				const id = summary.strategy ?? ASK_DEFAULT_STRATEGY;
+				const id = summary.strategy ?? ASK_BASE_STRATEGY;
 				const kept = read.get(id) ?? [];
 				if (kept.length >= RUNS_READ || (kept.length >= RUNS_SHOWN && kept.some(run => run.panelFaq))) {
 					continue;
@@ -449,7 +449,7 @@ async function openAnsweringStrategiesPage(accessor: ServicesAccessor): Promise<
 
 	/** The text of a pull request that proposes `strategy`: the template of the catalogue, filled in. */
 	const proposalBody = (strategy: IAskPollisStrategy, id: string): string => {
-		const base = strategiesService.getStrategies().find(candidate => candidate.id === ASK_DEFAULT_STRATEGY);
+		const base = strategiesService.getStrategies().find(candidate => candidate.id === ASK_BASE_STRATEGY);
 		const scoreLine = (of: IAskPollisStrategy) => {
 			const faq = panelFaqScore(runs.get(of.id) ?? []);
 			return `| ${of.label} | ${faq.score ?? faq.none ?? ''} | ${faq.run ?? ''} |`;
