@@ -30,7 +30,7 @@ import { ASK_RERANK_WIDER, IAskPollisPanel, IAskPollisPanelShare, IAskPollisPass
 //   panelFar = 0.25
 //
 //   # optional: the reranker of Set Active Models, when one is set, asked the question ("question", the default) or
-//   # the question as asked in the panel ("panel")
+//   # the question after its Context ("panel")
 //   [[steps]]
 //   step = "rerank"
 //   by = "reranker"
@@ -52,7 +52,8 @@ export type AskPollisStrategyStep =
 	| { readonly step: 'search'; readonly panelShare: number | IAskPollisPanelShare }
 	/**
 	 * Reranks them with the reranker of Set Active Models, when one is set, choosing among ASK_RERANK_WIDER times as many
-	 * found; `query: 'panel'` asks the reranker the question as asked in the panel, by its name.
+	 * found, the panel's own and the others each keeping their share; `query: 'panel'` asks the reranker the question
+	 * after its Context, the panel's title unless the user wrote another.
 	 */
 	| { readonly step: 'rerank'; readonly by: 'reranker'; readonly query?: 'question' | 'panel' }
 	/**
@@ -84,7 +85,7 @@ export const ASK_POLLIS_STRATEGIES: readonly IAskPollisStrategy[] = [
 	{
 		id: ASK_DEFAULT_STRATEGY,
 		label: localize('askPollis.strategyPanelAware', "Panel Aware"),
-		description: localize('askPollis.strategyPanelAwareDescription', "Asked in a panel, six of the eight passages come from the panel's wikis and the vignettes of its packages when they are near the question, two when they are not; a reranker, when set, is asked the question as asked in the panel; the model is told the panel's name and menu, and what the panel holds: its models, Key Points, decision table, inputs and packages."),
+		description: localize('askPollis.strategyPanelAwareDescription', "Asked in a panel, six of the eight passages come from the panel's wikis and the vignettes of its packages when they are near the question, two when they are not; a reranker, when set, is asked the question after its Context; the model is told the panel's name and menu, and what the panel holds: its models, Key Points, decision table, inputs and packages."),
 		steps: [
 			{ step: 'search', panelShare: { near: 6 / 8, far: 2 / 8 } },
 			{ step: 'rerank', by: 'reranker', query: 'panel' },
@@ -94,7 +95,7 @@ export const ASK_POLLIS_STRATEGIES: readonly IAskPollisStrategy[] = [
 	{
 		id: ASK_BASE_STRATEGY,
 		label: localize('askPollis.strategyBase', "Base"),
-		description: localize('askPollis.strategyBaseDescription', "Asked in a panel, five of the eight passages come from the panel's wikis and the vignettes of its packages, the rest routed as without it; a reranker, when set, chooses among three times as many; the model is told the panel's name and menu."),
+		description: localize('askPollis.strategyBaseDescription', "Asked in a panel, five of the eight passages come from the panel's wikis and the vignettes of its packages, the rest routed as without it; a reranker, when set, chooses among three times as many, keeping the panel's share; the model is told the panel's name and menu."),
 		steps: [
 			{ step: 'search', panelShare: 5 / 8 },
 			{ step: 'rerank', by: 'reranker' },
@@ -295,15 +296,25 @@ export function askStrategyReranks(strategy: IAskPollisStrategy, reranker: strin
 }
 
 /**
- * The search that `strategy` makes of `request`, `kept` passages going to the model in the end. Asked in a panel,
- * the question is searched after the panel's title, so that its words, its embedding, the routing and the panel's
- * share know what "this panel" is: "What does this panel check?" says nothing of its subject by itself.
+ * The question after its `context`, the Context below the question (the panel's title when asked in a panel, or what
+ * the user wrote in its place), as it is searched and as the reranker of Panel Aware is asked it: "What does this panel
+ * check?" says nothing of its subject by itself. Without a context, the question alone.
  */
-export function askStrategySearchRequest(strategy: IAskPollisStrategy, request: IAskPollisSearchRequest, kept: number, reranker: string | undefined): IAskPollisSearchRequest {
+export function askInContext(question: string, context: string | undefined): string {
+	const trimmed = context?.trim();
+	return trimmed ? `${trimmed}: ${question}` : question;
+}
+
+/**
+ * The search that `strategy` makes of `request`, asked with `context`, `kept` passages going to the model in the end:
+ * the question is searched after its context, so that its words, its embedding, the routing and the panel's share know
+ * what it is about.
+ */
+export function askStrategySearchRequest(strategy: IAskPollisStrategy, request: IAskPollisSearchRequest, context: string | undefined, kept: number, reranker: string | undefined): IAskPollisSearchRequest {
 	const search = stepOf(strategy, 'search');
 	return {
 		...request,
-		question: search && request.panel ? `${request.panel.title}: ${request.question}` : request.question,
+		question: askInContext(request.question, context),
 		passages: askStrategyReranks(strategy, reranker) ? kept * ASK_RERANK_WIDER : request.passages,
 		panel: search ? request.panel : undefined,
 		panelShare: search?.panelShare,
@@ -321,19 +332,36 @@ export function askStrategySearchKey(strategy: IAskPollisStrategy, request: IAsk
 		: [strategy.id, JSON.stringify(request.panelShare ?? ''), request.passages ?? '', panel, request.question].join('\n');
 }
 
-/** The passages `strategy` keeps of those found for `question`, asked in `panel`, `kept` of them, and the error of the reranker when it did not answer. */
-export async function askStrategyRerank(strategy: IAskPollisStrategy, askPollisService: IAskPollisService, reranker: string | undefined, question: string, panel: IAskPollisPanel | undefined, result: IAskPollisSearchResult, kept: number): Promise<{ readonly result: IAskPollisSearchResult; readonly failed?: string }> {
+/** Whether `passage` is of `panel`'s own: one of its wikis, titled after it, or the vignette of one of its packages. */
+function isPanelPassage(passage: IAskPollisPassage, panel: IAskPollisPanel): boolean {
+	return passage.kind === 'wiki' ? passage.title === panel.title : passage.kind === 'vignette' && panel.packages.includes(passage.title);
+}
+
+/**
+ * The passages `strategy` keeps of those found for `question`, asked in `panel` with `context`, `kept` of them, and
+ * the error of the reranker when it did not answer. Asked in a panel, the reranker orders the panel's own passages and
+ * the others apart, and each keeps the share it has of those found, the share the search gave it: a passage of
+ * another panel that answers "What does this panel check?" as well as the panel's own does not push them out.
+ */
+export async function askStrategyRerank(strategy: IAskPollisStrategy, askPollisService: IAskPollisService, reranker: string | undefined, question: string, panel: IAskPollisPanel | undefined, context: string | undefined, result: IAskPollisSearchResult, kept: number): Promise<{ readonly result: IAskPollisSearchResult; readonly failed?: string }> {
 	if (!askStrategyReranks(strategy, reranker) || !result.passages.length) {
 		return { result };
 	}
 	const found = result.passages;
-	const query = stepOf(strategy, 'rerank')?.query === 'panel' && panel ? `In the panel ${panel.title} of Pollis: ${question}` : question;
+	const query = stepOf(strategy, 'rerank')?.query === 'panel' ? askInContext(question, context) : question;
 	const reranked = await askPollisService.rerank(reranker!, query, found);
 	const scores = reranked.scores;
 	if (!scores) {
 		return { result: { ...result, passages: found.slice(0, kept) }, failed: reranked.error ?? '' };
 	}
-	const passages: IAskPollisPassage[] = found.map((_, position) => position).sort((a, b) => scores[b] - scores[a]).slice(0, kept).map(position => found[position]);
+	const best = (positions: readonly number[]) => [...positions].sort((a, b) => scores[b] - scores[a]);
+	const positions = found.map((_, position) => position);
+	const own = panel ? best(positions.filter(position => isPanelPassage(found[position], panel))) : [];
+	const others = best(positions.filter(position => !own.includes(position)));
+	// The panel's share of those kept, as of those found; when either has too few, the other gives the rest
+	const share = Math.min(own.length, Math.ceil(kept * own.length / found.length - 1e-9));
+	const fromOwn = Math.max(share, kept - others.length);
+	const passages: IAskPollisPassage[] = best([...own.slice(0, fromOwn), ...others.slice(0, kept - fromOwn)]).map(position => found[position]);
 	return { result: { ...result, passages } };
 }
 

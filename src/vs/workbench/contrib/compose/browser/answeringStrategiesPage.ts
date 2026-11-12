@@ -132,7 +132,7 @@ function summaryWords(strategy: IAskPollisStrategy): string {
 					: localize('answeringStrategies.summarySearchAdaptive', "{0} of the {1} passages come from the panel when it is near the question, {2} when it is not", passages(step.panelShare.near), String(ASK_PASSAGES), passages(step.panelShare.far));
 			case 'rerank':
 				return step.query === 'panel'
-					? localize('answeringStrategies.summaryRerankPanel', "a reranker, told the panel, chooses among them")
+					? localize('answeringStrategies.summaryRerankPanel', "a reranker, told the Context, chooses among them")
 					: localize('answeringStrategies.summaryRerank', "a reranker chooses among them");
 			case 'answer':
 				return step.panel === 'card'
@@ -154,8 +154,8 @@ function stepWords(step: AskPollisStrategyStep): string {
 				: localize('answeringStrategies.searchAdaptive', "Search: asked in a panel, {0} of the {1} passages come from the panel's wikis and the vignettes of its packages when they are near the question, {2} when they are not; the rest as asked without it.", passages(step.panelShare.near), String(ASK_PASSAGES), passages(step.panelShare.far));
 		case 'rerank':
 			return step.query === 'panel'
-				? localize('answeringStrategies.rerankPanel', "Rerank: the reranker chooses the best among three times as many passages, asked the question as asked in the panel, by its name.")
-				: localize('answeringStrategies.rerankQuestion', "Rerank: the reranker chooses the best among three times as many passages, asked the question.");
+				? localize('answeringStrategies.rerankPanel', "Rerank: the reranker chooses the best among three times as many passages, the panel's own and the others each keeping their share, asked the question after its Context.")
+				: localize('answeringStrategies.rerankQuestion', "Rerank: the reranker chooses the best among three times as many passages, the panel's own and the others each keeping their share, asked the question.");
 		case 'answer':
 			return step.panel === 'card'
 				? localize('answeringStrategies.answerCard', "Answer: the model is told the panel's name and menu, and what the panel holds: its models, Key Points, decision table, inputs and packages.")

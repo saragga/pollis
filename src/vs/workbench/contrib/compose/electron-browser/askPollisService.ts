@@ -182,7 +182,7 @@ class AskPollisService extends Disposable implements IAskPollisService {
 		}
 	}
 
-	async answer(turns: readonly IAskPollisTurn[], question: string, passages: readonly IAskPollisPassage[], onText: (text: string) => void, token: CancellationToken, answerWith?: string, panel?: IAskPollisPanel, attachments?: readonly IAskPollisAttachment[], collection?: string): Promise<IAskPollisAnswer> {
+	async answer(turns: readonly IAskPollisTurn[], question: string, passages: readonly IAskPollisPassage[], onText: (text: string) => void, token: CancellationToken, answerWith?: string, panel?: IAskPollisPanel, attachments?: readonly IAskPollisAttachment[], collection?: string, context?: string): Promise<IAskPollisAnswer> {
 		const cloud = askCloudModel(answerWith ?? this.configurationService.getValue<string>('pollis.ask.answerWith'));
 		let chat: Omit<IAskPollisChatRequest, 'id' | 'messages'>;
 		if (cloud) {
@@ -222,7 +222,7 @@ class AskPollisService extends Disposable implements IAskPollisService {
 		try {
 			// A model of this computer does not see images yet
 			const seen = (attached: readonly IAskPollisAttachment[] | undefined) => cloud ? attached : attached?.filter(attachment => attachment.kind !== 'image');
-			const end = await proxy.chat({ ...chat, id, messages: askPollisMessages(turns.map(turn => ({ ...turn, attachments: seen(turn.attachments) })), question, passages, panel, seen(attachments), collection) });
+			const end = await proxy.chat({ ...chat, id, messages: askPollisMessages(turns.map(turn => ({ ...turn, attachments: seen(turn.attachments) })), question, passages, panel, seen(attachments), collection, context) });
 			return { model: name, ...end };
 		} finally {
 			store.dispose();

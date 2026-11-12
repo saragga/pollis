@@ -71,11 +71,13 @@ import './media/pollisAiStatus.css';
 // passages are searched for and it keeps the best (pollis.ask.reranker).
 // A question asked in a panel, in the pill at the right of its title (webviewScaffold.ts), is answered in the pane,
 // beside the panel: its wikis and the vignettes of its packages give most of the passages, and the model is told the
-// panel; the questions after it keep the panel until Ask Without It or New Chat.
+// panel; the questions after it keep the panel until Ask Without It or New Chat. Context, below the question, is
+// searched before it, given to the reranker of a strategy that asks it the question after its context, and told the
+// model: the panel's title when a question comes from a panel, or what the user writes in its place.
 
 type AskPollisMessage =
 	| { readonly command: 'ready' }
-	| { readonly command: 'ask'; readonly question: string; readonly searchIn: readonly string[]; readonly attachments?: readonly IAskPollisAttachment[] }
+	| { readonly command: 'ask'; readonly question: string; readonly searchIn: readonly string[]; readonly context?: string; readonly attachments?: readonly IAskPollisAttachment[] }
 	| AskAttachMessage
 	| { readonly command: 'stop' }
 	| { readonly command: 'open'; readonly turn: number; readonly passage: number }
@@ -90,6 +92,8 @@ type AskPollisMessage =
 /** A question of the conversation, the passages found for it and its answer so far. */
 interface IAskedTurn {
 	readonly question: string;
+	/** The Context it was asked with. */
+	readonly context: string;
 	readonly attachments: readonly IAskPollisAttachment[];
 	readonly passages: readonly IAskPollisPassage[];
 	answer: string;
@@ -409,7 +413,7 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 			pendingAsk = undefined;
 		}
 
-		const ask = async (question: string, searchIn: readonly string[], attachments: readonly IAskPollisAttachment[]) => {
+		const ask = async (question: string, searchIn: readonly string[], context: string, attachments: readonly IAskPollisAttachment[]) => {
 			answering?.dispose(true);
 			const source = answering = new CancellationTokenSource();
 			const asked = conversation;
@@ -432,7 +436,7 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 					looked = true;
 					answering = undefined;
 					source.dispose(true);
-					turns[index] = { question, attachments, passages: [], answer: doc };
+					turns[index] = { question, context, attachments, passages: [], answer: doc };
 					post({ command: 'found', turn: index, searched: [], collections, note: localize('askPollis.fromRepl', "From Julia's own documentation, in the REPL."), passages: [] });
 					post({ command: 'text', turn: index, text: doc });
 					post({ command: 'done', turn: index });
@@ -449,7 +453,7 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 				collections: askSearchIn(searchIn, collections),
 				sources: askSearchSources(searchIn),
 				panel: askedIn,
-			}, kept, reranker));
+			}, context, kept, reranker));
 			let result = await search();
 			// Before the first index, the question waits for it, with how far it has come, while the Julia extension makes it;
 			// and asked in a panel the index does not have yet, until the index being made is published, before its embeddings
@@ -468,14 +472,14 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 				return;
 			}
 			if (source.token.isCancellationRequested && (result.wordsOnly === 'notIndexed' || result.panelMissing)) {
-				turns.push({ question, attachments, passages: [], answer: '' });
+				turns.push({ question, context, attachments, passages: [], answer: '' });
 				post({ command: 'done', turn: index, stopped: true });
 				return;
 			}
 			// The reranker keeps the best of what was found; if it does not answer, the search's own order stands, and the note says so
 			let rerankNote: string | undefined;
 			if (askStrategyReranks(strategy, reranker) && result.passages.length) {
-				const reranked = await askStrategyRerank(strategy, askPollisService, reranker, searched, askedIn, result, kept);
+				const reranked = await askStrategyRerank(strategy, askPollisService, reranker, searched, askedIn, context, result, kept);
 				if (!current()) {
 					return;
 				}
@@ -483,7 +487,7 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 				result = reranked.result;
 			}
 			collections = result.collections;
-			const turn: IAskedTurn = { question, attachments, passages: result.passages, answer: '' };
+			const turn: IAskedTurn = { question, context, attachments, passages: result.passages, answer: '' };
 			turns.push(turn);
 			post({
 				command: 'found',
@@ -510,7 +514,7 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 					turn.answer = text;
 					post({ command: 'text', turn: index, text });
 				}
-			}, source.token, undefined, askStrategyAnswerPanel(strategy, askedIn), attachments);
+			}, source.token, undefined, askStrategyAnswerPanel(strategy, askedIn), attachments, undefined, context);
 			if (!current()) {
 				return;
 			}
@@ -571,7 +575,7 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 					post({ command: 'collections', collections: names });
 				}, () => undefined);
 			} else if (message.command === 'ask' && message.question.trim()) {
-				ask(message.question.trim(), message.searchIn, message.attachments ?? []);
+				ask(message.question.trim(), message.searchIn, message.context?.trim() ?? '', message.attachments ?? []);
 			} else if (message.command === 'attachFile' || message.command === 'pickDataset' || message.command === 'pickDatabase' || message.command === 'openPdf') {
 				handleAskAttachMessage(message, webview, commandService);
 			} else if (message.command === 'stop') {
@@ -585,7 +589,7 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 			} else if (message.command === 'addToTestSet') {
 				const turn = turns[message.turn];
 				if (turn?.answer) {
-					commandService.executeCommand(COMPARE_MODELS_ADD_COMMAND_ID, { question: turn.question, answer: turn.answer, passages: turn.passages } satisfies ICompareModelsAdd);
+					commandService.executeCommand(COMPARE_MODELS_ADD_COMMAND_ID, { question: turn.question, answer: turn.answer, passages: turn.passages, questionContext: turn.context } satisfies ICompareModelsAdd);
 				}
 			} else if (message.command === 'voiceLanguage') {
 				setVoiceLanguage(storageService, message.value);
@@ -732,6 +736,10 @@ function pageHtml(language: string, writeIn: string): string {
 		searchInPrefix: localize('askPollis.searchInPrefix', "Search In:"),
 		strategy: localize('askPollis.strategy', "Strategy"),
 		strategyPrefix: localize('askPollis.strategyPrefix', "Strategy:"),
+		context: localize('askPollis.context', "Context"),
+		contextPrefix: localize('askPollis.contextPrefix', "Context:"),
+		contextPlaceholder: localize('askPollis.contextPlaceholder', "None"),
+		contextHint: localize('askPollis.contextHint', "Searched before the question, and told to the answering model: the panel's title when the question comes from a panel. Write another, or clear it to ask the question alone."),
 		searching: localize('askPollis.searching', "Finding the passages..."),
 		starting: localize('askPollis.starting', "Starting answering model {0} on this computer. The first time, it is downloaded first.", '{0}'),
 		embeddingFinished: localize('askPollis.embeddingFinished', "Embedding model {0} finished. {1}", '{0}', '{1}'),
@@ -797,6 +805,12 @@ function pageHtml(language: string, writeIn: string): string {
 		/* Search In, a pill: the prefix muted, the choice in the text's color */
 		#searchInButton, #strategyButton { color: var(--vscode-foreground); border: 1px solid var(--vscode-widget-border, var(--vscode-input-border, transparent)); border-radius: 999px; padding: 2px 8px; }
 		#searchInButton .prefix, #strategyButton .prefix { color: var(--vscode-descriptionForeground); }
+		/* Context, a pill as Search In, with text in place of a choice */
+		.context { display: flex; align-items: center; gap: 4px; margin: 6px 4px 0 4px; font-size: 12px; border: 1px solid var(--vscode-widget-border, var(--vscode-input-border, transparent)); border-radius: 999px; padding: 2px 8px; }
+		.context:focus-within { border-color: var(--vscode-focusBorder); }
+		.context .prefix { flex: none; color: var(--vscode-descriptionForeground); }
+		.context input { flex: 1; min-width: 0; font: inherit; color: var(--vscode-foreground); background: transparent; border: none; outline: none; padding: 1px 0; }
+		.context input::placeholder { color: var(--vscode-input-placeholderForeground); }
 		/* The menus of the pickers, upwards, or downwards when there is no room above */
 		.menu { position: absolute; bottom: 28px; z-index: 2; min-width: min(250px, calc(100vw - 8px)); max-width: calc(100vw - 8px); max-height: 60vh; overflow-y: auto; padding: 4px; color: var(--vscode-menu-foreground); background: var(--vscode-menu-background); border: 1px solid var(--vscode-menu-border, var(--vscode-widget-border)); border-radius: 8px; box-shadow: 0 4px 16px var(--vscode-widget-shadow); }
 		.menu.down { bottom: auto; top: 28px; }
@@ -859,6 +873,7 @@ function pageHtml(language: string, writeIn: string): string {
 			<button class="icon send" id="ask" title="${text.ask}" aria-label="${text.ask}">${composerSendSvg}</button>
 		</div>
 	</div>
+	<label class="context" title="${text.contextHint}"><span class="prefix">${text.contextPrefix}</span><input id="context" type="text" placeholder="${text.contextPlaceholder}" aria-label="${text.context}" spellcheck="false"></label>
 	<div class="under">
 		<span>
 			<span class="anchor">
@@ -927,15 +942,30 @@ function pageHtml(language: string, writeIn: string): string {
 
 	function send(text, attached) {
 		setAnswering(true);
-		vscode.postMessage({ command: 'ask', question: text, searchIn, attachments: attached || [] });
+		vscode.postMessage({ command: 'ask', question: text, searchIn, context: contextInput.value.trim(), attachments: attached || [] });
 	}
 
-	/** The panel the questions are asked in, above the pill, or none. */
+	/**
+	 * The panel the questions are asked in, above the pill, or none; Context becomes the title of a panel other than the
+	 * one before, and is cleared with the panel when the user has not written another.
+	 */
 	const askedIn = document.getElementById('askedIn');
+	const contextInput = document.getElementById('context');
+	let panelTitle = '';
 	function setPanel(title) {
 		askedIn.hidden = !title;
 		document.getElementById('askedInText').textContent = title ? TEXT.askedIn.replace('{0}', title) : '';
+		if (title ? title !== panelTitle : contextInput.value.trim() === panelTitle) {
+			contextInput.value = title;
+		}
+		panelTitle = title;
 	}
+	contextInput.addEventListener('keydown', event => {
+		if (event.key === 'Enter' && !event.isComposing) {
+			event.preventDefault();
+			question.focus();
+		}
+	});
 	document.getElementById('leavePanel').addEventListener('click', () => {
 		setPanel('');
 		vscode.postMessage({ command: 'leavePanel' });
@@ -1113,6 +1143,7 @@ function pageHtml(language: string, writeIn: string): string {
 			conversation.textContent = '';
 			intro.hidden = false;
 			setPanel('');
+			contextInput.value = '';
 			setAnswering(false);
 			question.focus();
 		} else if (message.command === 'focus') {

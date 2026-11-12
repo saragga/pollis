@@ -2350,6 +2350,30 @@ The + at the start of the question adds, as a chip above it: \ui{Image}, a pictu
 area of a page (Data and Databases, \pg{Data and Databases}). Every panel has an Ask Pollis of its own, with its +, at the
 right of its title; its answer comes in the Ask Pollis pane beside the panel.
 
+\subhead{Ask in a panel}
+A question asked at the right of a panel's title is answered beside the panel. A line above the question says
+\ui{Asked in} the panel, and the next questions keep the panel until \ui{Ask Without It} or \ui{New Chat}. Three
+choices below the question decide how the answer is found:
+\begin{itemize}
+  \item \ui{Context}, a field of text. It starts as the panel's title, and you can write anything in its place, such
+    as \emph{SDE weak order}, or clear it. The question is searched after it, as \emph{Check a Convergence
+    Order: What does this panel check?}, since \emph{this panel} alone says nothing of the subject. A reranker that
+    the strategy asks the question after its Context is given it too, and so is the answering model, when the
+    Context is not the panel's title, which the model is told anyway. A question from another panel puts that
+    panel's title back; \ui{Ask Without It} clears the Context unless you wrote your own, and \ui{New Chat} always
+    clears it.
+  \item \ui{Search In}: \ui{Auto}, the collections nearest the question, or the sources you tick.
+  \item \ui{Strategy}: how many passages come from the panel's own wikis and the vignettes of its packages, and
+    what the answering model is told of the panel. \ui{Base} takes 5 of the 8 passages from the panel and tells
+    the model the panel's name and menu. \ui{Panel Aware} takes 6 of the 8 when the panel's passages are near the
+    question and 2 when they are not, so a question on another subject is not held to the panel; it asks the
+    reranker the question after its Context, and tells the model what the panel holds too. With a reranker, set in
+    Set Active Models, three times as many passages are found, and the reranker orders the panel's own passages
+    and the others apart, each keeping the share the search gave it: a passage of another panel that answers
+    \emph{What does this panel check?} as well as the panel's own does not push them out.
+\end{itemize}
+\ui{Compose > Knowledge for AI Models > Answering Strategies} explains the strategies, and you can write your own.
+
 \subhead{Evaluate Answering Models}
 \pagemark{Evaluate Answering Models}%
 \ui{Evaluate Answering Models}, the last item of the model's menu and in \ui{Compose > Local AI Models}, sets the models you choose against each other on the same
@@ -2375,7 +2399,9 @@ Sonnet. The page goes in four steps: the models, the questions, \ui{Run} and the
     the Panel FAQ, with no search, which tests the answer alone (open book answering). \ui{None}: each model is given
     no passage and answers from what it learned in training alone (closed book answering), which shows the questions a
     model answers without the documents. \ui{Repeats} asks each question
-    more than once, to show how much the answers vary.
+    more than once, to show how much the answers vary. Each question is asked with a Context, as in Ask Pollis: a
+    question of the Panel FAQ with its panel's title, and one added with \ui{Add to the Test Set...} with the
+    Context it was asked with. A run keeps the Context of each question.
   \item \ui{Run} answers them with each model, one local model at a time; its label says how many questions,
     with how many models, and its progress how much is done. Above it, a warning names the local models chosen, and the
     judges on this computer, that need more memory than is free now, which would answer slowly and slow down the computer.
@@ -2420,6 +2446,7 @@ for the chat models, on published sets of questions.
 \setting{pollis.ask.answerWith} & \ui{This Computer}, or the cloud model chosen in the model's menu.\\
 \setting{pollis.ask.chatModel} & The chat model on this computer: the default one, or the one last chosen in the model's menu.\\
 \setting{pollis.ask.embeddingModel} & The model that finds passages by meaning; the default embedding model unless you change it.\\
+\setting{pollis.ask.strategy} & The answering strategy, chosen in \ui{Strategy}: \ui{Panel Aware} unless you choose another.\\
 \end{tabularx}
 \end{center}
 

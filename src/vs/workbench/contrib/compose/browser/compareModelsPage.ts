@@ -87,11 +87,12 @@ const REPEATS = [1, 2, 3, 5];
 /** What a local model needs besides its file, for its context and its work, in bytes. */
 const MODEL_MARGIN = 1.5 * 1024 ** 3;
 
-/** A question, its answer and the passages to choose from, for Add. */
+/** A question, its answer and the passages to choose from, for Add, and the Context it was asked with in the pane. */
 export interface ICompareModelsAdd {
 	readonly question: string;
 	readonly answer: string;
 	readonly passages: readonly IAskPollisPassage[];
+	readonly questionContext?: string;
 }
 
 type CompareModelsMessage =
@@ -212,6 +213,8 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 	let shown: ICompareRun | undefined;
 	// The passages Add chooses from: those an answer of Ask Pollis was written from, or those found for the question
 	let addPassages: readonly IAskPollisPassage[] = [];
+	// The Context of a question added from Ask Pollis, kept with it; none for a question written here
+	let addContext: string | undefined;
 	let pendingAdd = add;
 
 	const model = (value: string) => listed.find(candidate => candidate.value === value);
@@ -376,7 +379,10 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 	disposables.add(run.onDidEnd(end => ended(end)));
 	openPage = {
 		input: webviewInput,
-		add: next => postAdd(next.passages, { question: next.question, answer: withoutCitations(next.answer) }),
+		add: next => {
+			addContext = next.questionContext;
+			postAdd(next.passages, { question: next.question, answer: withoutCitations(next.answer) });
+		},
 		strategy: id => {
 			strategy = askPollisStrategy(id, strategiesService.getStrategies()).id;
 			storageService.store(STRATEGY_KEY, strategy, StorageScope.APPLICATION, StorageTarget.USER);
@@ -509,19 +515,21 @@ async function openCompareModelsPage(accessor: ServicesAccessor, add?: ICompareM
 		} else if (message.command === 'stop') {
 			run.stop();
 		} else if (message.command === 'findPassages' && hasKey(message, { question: true }) && message.question.trim()) {
+			addContext = undefined;
 			postAdd((await askPollisService.search({ question: message.question.trim() })).passages);
 		} else if (message.command === 'add' && hasKey(message, { passage: true })) {
 			const passage = addPassages[message.passage];
 			if (!passage || !message.question.trim() || !message.answer.trim() || !changeable()) {
 				return;
 			}
-			const next = mergeEvalItems(testSet.items, [{ source: askPassageLabel(passage), context: passage.text, question: message.question.trim(), answer: message.answer.trim() }]);
+			const next = mergeEvalItems(testSet.items, [{ source: askPassageLabel(passage), context: passage.text, question: message.question.trim(), answer: message.answer.trim(), ...(addContext !== undefined ? { questionContext: addContext } : {}) }]);
 			if (next.length === testSet.items.length) {
 				status(localize('compareModels.addKnown', "That question is already in the test set."), true);
 				return;
 			}
 			await writeItems(next);
 			addPassages = [];
+			addContext = undefined;
 			post({ command: 'added' });
 			status(localize('compareModels.addDone', "The question is added to the test set."));
 		} else if (message.command === 'delete' && hasKey(message, { questions: true }) && changeable()) {

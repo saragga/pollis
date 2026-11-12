@@ -340,17 +340,20 @@ function askPassageTexts(passages: readonly IAskPollisPassage[]): string[] {
 
 /**
  * The messages that ask a model `question`, with its `attachments`: the instruction, the panel it is asked in, if any,
- * and the passages, numbered from 1, then the conversation so far, each question with what was attached to it. Its
- * answers are given without their citations, which were to other passages. Asked from a `collection` of
- * Retrieval-Augmented Generation, the model is told the passages are from its documents.
+ * the `context` it is asked with, when it is not the panel's title, which the panel's line already gives, and the
+ * passages, numbered from 1, then the conversation so far, each question with what was attached to it. Its answers are
+ * given without their citations, which were to other passages. Asked from a `collection` of Retrieval-Augmented
+ * Generation, the model is told the passages are from its documents.
  */
-export function askPollisMessages(turns: readonly IAskPollisTurn[], question: string, passages: readonly IAskPollisPassage[], panel?: IAskPollisPanel, attachments?: readonly IAskPollisAttachment[], collection?: string): IAskPollisMessage[] {
+export function askPollisMessages(turns: readonly IAskPollisTurn[], question: string, passages: readonly IAskPollisPassage[], panel?: IAskPollisPanel, attachments?: readonly IAskPollisAttachment[], collection?: string, context?: string): IAskPollisMessage[] {
 	const texts = askPassageTexts(passages);
 	const numbered = passages.map((passage, i) => `[${i + 1}] ${askPassageLabel(passage)}\n${texts[i]}`);
 	const menu = panel && passages.find(passage => passage.kind === 'wiki' && passage.title === panel.title)?.menu;
 	// A small model told to use only the passages and cite every statement leaves out what it cannot cite: the card is a source as the passages are
 	const card = panel?.card ? `\nWhat the panel holds, a source you use as you use the passages:\n${panel.card}` : '';
-	const asked = panel ? `\nThe question is asked in the panel ${panel.title} of Pollis${menu ? ` (${menu})` : ''}: "this panel", "here" or "this method" mean it.${card}` : '';
+	const inPanel = panel ? `\nThe question is asked in the panel ${panel.title} of Pollis${menu ? ` (${menu})` : ''}: "this panel", "here" or "this method" mean it.${card}` : '';
+	const given = context?.trim();
+	const asked = `${inPanel}${given && given !== panel?.title ? `\nThe user gives the question this context: ${given}` : ''}`;
 	const before = turns.slice(-ASK_TURNS);
 	const attached = !!attachments?.length || before.some(turn => turn.attachments?.length) ? `\n${ASK_ATTACHED_INSTRUCTION}${passages.length ? ' Cite the passages for what you say about Pollis and Julia.' : ''}` : '';
 	// Without passages, Search In: None, the model answers from what it knows
@@ -467,6 +470,8 @@ export interface IAskPollisEvalItem {
 	readonly wikiFile?: string;
 	/** Whether the question is one of the FAQ the panel does not show. */
 	readonly hidden?: boolean;
+	/** The Context it is asked with, empty for none; the panel's title when not given (askEvalContext). */
+	readonly questionContext?: string;
 	/** A closed question: its options in the order they are asked, `answer` the right one, at `rightChoice`. */
 	readonly choices?: readonly string[];
 	readonly rightChoice?: number;
@@ -474,6 +479,11 @@ export interface IAskPollisEvalItem {
 	readonly explanation?: string;
 	/** A query of a retrieval benchmark, `source` its id: the ids of the documents relevant to it. */
 	readonly relevant?: readonly string[];
+}
+
+/** The Context a question of a test set is asked with: its own, or the title of the panel it is asked in, as in the pane. */
+export function askEvalContext(item: IAskPollisEvalItem): string | undefined {
+	return item.questionContext ?? item.panel?.title;
 }
 
 /**
@@ -1043,9 +1053,9 @@ export interface IAskPollisService {
 	 * `answerWith`, a cloud model's id or `local:` and a local model's file, in place of the setting; a question asked in a
 	 * panel, the `panel`, which the model is told of; what is attached to it, the `attachments`, of which a model of this
 	 * computer is not sent the images; a question asked of a collection of Retrieval-Augmented Generation, its name, the
-	 * `collection`.
+	 * `collection`; the Context the question was asked with, the `context`, which the model is told of.
 	 */
-	answer(turns: readonly IAskPollisTurn[], question: string, passages: readonly IAskPollisPassage[], onText: (text: string) => void, token: CancellationToken, answerWith?: string, panel?: IAskPollisPanel, attachments?: readonly IAskPollisAttachment[], collection?: string): Promise<IAskPollisAnswer>;
+	answer(turns: readonly IAskPollisTurn[], question: string, passages: readonly IAskPollisPassage[], onText: (text: string) => void, token: CancellationToken, answerWith?: string, panel?: IAskPollisPanel, attachments?: readonly IAskPollisAttachment[], collection?: string, context?: string): Promise<IAskPollisAnswer>;
 	/** The tables and views of the DuckDB database at `path`, with their columns, as an attachment gives them; it is opened read-only and no view is run. */
 	describeDatabase(path: string): Promise<string>;
 	/** `counts` passages of each topic spread over the documents, for the questions of a test set. */

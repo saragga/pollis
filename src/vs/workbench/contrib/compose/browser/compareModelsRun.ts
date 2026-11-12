@@ -16,7 +16,7 @@ import { IFileService } from '../../../../platform/files/common/files.js';
 import { IProductService } from '../../../../platform/product/common/productService.js';
 import { ISecretStorageService } from '../../../../platform/secrets/common/secrets.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
-import { ASK_CHAT_MODEL, ASK_CLOUD_PROVIDERS, ASK_LOCAL_PREFIX, ASK_PASSAGES, ASK_RERANK_CONTEXT, askCloudModel, askPassageLabel, IAskPollisAnswer, IAskPollisEvalItem, IAskPollisFound, IAskPollisPassage, IAskPollisService, IAskTopicCounts, ICompareRun, ICompareRunAnswer, ICompareRunModel, ICompareRunQuestion, ICompareRunScore, ICompareRunUnrated } from '../common/askPollis.js';
+import { ASK_CHAT_MODEL, ASK_CLOUD_PROVIDERS, ASK_LOCAL_PREFIX, ASK_PASSAGES, ASK_RERANK_CONTEXT, askCloudModel, askEvalContext, askPassageLabel, IAskPollisAnswer, IAskPollisEvalItem, IAskPollisFound, IAskPollisPassage, IAskPollisService, IAskTopicCounts, ICompareRun, ICompareRunAnswer, ICompareRunModel, ICompareRunQuestion, ICompareRunScore, ICompareRunUnrated } from '../common/askPollis.js';
 import { askPollisStrategy, askStrategyAnswerPanel, IAskPollisStrategiesService, IAskPollisStrategy, askStrategyRerank, askStrategyReranks, askStrategySearchKey, askStrategySearchRequest } from '../common/askPollisStrategies.js';
 import { askModelName } from './askPollisWebview.js';
 import { askFolder, CompareSampler, CompareTestSets, evalItem, ICompareSample, ICompareSamples, isEvalItem, mergeEvalItems } from './compareShared.js';
@@ -357,7 +357,7 @@ export class CompareModelsRunner {
 		// taken again, so that the embedding model loads only for the others, and every run gets the same passages
 		const reranker = this.configurationService.getValue<string>('pollis.ask.reranker')?.trim();
 		const kept = this.configurationService.getValue<number>('pollis.ask.passages') || ASK_PASSAGES;
-		const requests = items.map(item => askStrategySearchRequest(strategy, { question: item.question, panel: item.panel }, kept, reranker));
+		const requests = items.map(item => askStrategySearchRequest(strategy, { question: item.question, panel: item.panel }, askEvalContext(item), kept, reranker));
 		const keys = requests.map(request => askStrategySearchKey(strategy, request));
 		const stamp = await this.askPollisService.searchStamp();
 		const before = stamp ? await this.askPollisService.foundBefore(stamp.key, keys).catch(() => []) : [];
@@ -400,7 +400,7 @@ export class CompareModelsRunner {
 					break;
 				}
 				this.report(localize('compareModels.reranking', "Reranking the passages of question {0} of {1}...", position + 1, questions.length), position, questions.length);
-				const reranked = await askStrategyRerank(strategy, this.askPollisService, reranker, question.item.question, question.item.panel, { passages: question.passages, searched: [], collections: [] }, kept);
+				const reranked = await askStrategyRerank(strategy, this.askPollisService, reranker, question.item.question, question.item.panel, askEvalContext(question.item), { passages: question.passages, searched: [], collections: [] }, kept);
 				questions[position] = { ...question, passages: reranked.result.passages };
 			}
 			await this.commandService.executeCommand('language-julia.pollisStopLlamaServer', { model: reranker, reranking: true, context: ASK_RERANK_CONTEXT }).catch(() => undefined);
@@ -493,7 +493,7 @@ export class CompareModelsRunner {
 					const item = question.item;
 					const closed = isClosed(item);
 					const asked = closed ? closedQuestion(item) : item.question;
-					const answer = await this.askPollisService.answer([], asked, question.passages, answered => text = answered, token, model.value, askStrategyAnswerPanel(strategy, item.panel));
+					const answer = await this.askPollisService.answer([], asked, question.passages, answered => text = answered, token, model.value, askStrategyAnswerPanel(strategy, item.panel), undefined, undefined, askEvalContext(item));
 					if (token.isCancellationRequested) {
 						return;
 					}
