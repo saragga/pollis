@@ -4,7 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { IntervalTimer, RunOnceScheduler } from '../../../../base/common/async.js';
-import { encodeBase64 } from '../../../../base/common/buffer.js';
+import { encodeBase64, streamToBuffer, VSBuffer } from '../../../../base/common/buffer.js';
+import { CancellationToken } from '../../../../base/common/cancellation.js';
 import { DisposableStore, MutableDisposable } from '../../../../base/common/lifecycle.js';
 import { isLinux } from '../../../../base/common/platform.js';
 import { basename, dirname, extname, isEqual, joinPath, relativePath } from '../../../../base/common/resources.js';
@@ -21,7 +22,9 @@ import { IFileService } from '../../../../platform/files/common/files.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { INotificationService } from '../../../../platform/notification/common/notification.js';
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
+import { IProgressService, ProgressLocation } from '../../../../platform/progress/common/progress.js';
 import { IQuickInputService } from '../../../../platform/quickinput/common/quickInput.js';
+import { asJson, asText, IRequestService, isSuccess } from '../../../../platform/request/common/request.js';
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
 import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
@@ -108,6 +111,46 @@ const YOUR_DEPTH = 4;
 /** The subfolders of the knowledge folder a text of the user's is added to, one a type. */
 const YOUR_FOLDERS = ['books', 'articles', 'reports'] as const;
 
+/** A DOI, alone, after doi:, or as a link of doi.org. */
+const DOI_PATTERN = /^(?:https?:\/\/(?:dx\.)?doi\.org\/|doi:\s*)?(?<doi>10\.\d{4,9}\/\S+)$/i;
+/** An arXiv identifier, after arXiv:, or in the link of its page or of its PDF. */
+const ARXIV_PATTERN = /^(?:arxiv:\s*|(?:https?:\/\/)?(?:www\.|export\.)?arxiv\.org\/(?:abs|pdf)\/)(?<id>[^\s?#]+?)(?:\.pdf)?\/?(?:[?#]\S*)?$/i;
+/** How long a request for a text may take, in milliseconds. */
+const LINK_TIMEOUT = 60000;
+
+/** A work of OpenAlex, as much of it as finding an open copy needs. */
+interface IOpenAlexWork {
+	readonly display_name?: string | null;
+	readonly best_oa_location?: { readonly pdf_url?: string | null } | null;
+	readonly locations?: readonly { readonly pdf_url?: string | null }[];
+}
+
+/** What a link, a DOI or an arXiv identifier leads to: where its PDF may be, its page, and its title when known. */
+interface ILinkedText {
+	readonly pdf?: string;
+	readonly page: string;
+	readonly title?: string;
+}
+
+/** Whether the bytes are those of a PDF. */
+function isPdf(content: VSBuffer): boolean {
+	return content.slice(0, 1024).toString().includes('%PDF-');
+}
+
+/** The content of the meta tag `name` of a web page, as publishers give Google Scholar (citation_pdf_url, citation_title). */
+function metaContent(html: string, name: string): string | undefined {
+	for (const tag of html.match(/<meta\b[^>]*>/gi) ?? []) {
+		if (new RegExp(`\\bname\\s*=\\s*["']${name}["']`, 'i').test(tag)) {
+			const content = /\bcontent\s*=\s*(?:"(?<double>[^"]*)"|'(?<single>[^']*)')/i.exec(tag)?.groups;
+			const value = (content?.double ?? content?.single)?.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, '\'').trim();
+			if (value) {
+				return value;
+			}
+		}
+	}
+	return undefined;
+}
+
 /** A file name from a title: a colon becomes a dash, and the characters a file name cannot hold are left out. */
 function fileNameOf(title: string): string {
 	return [...title].filter(character => character >= ' ').join('')
@@ -185,6 +228,8 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 	const fileDialogService = accessor.get(IFileDialogService);
 	const dialogService = accessor.get(IDialogService);
 	const quickInputService = accessor.get(IQuickInputService);
+	const requestService = accessor.get(IRequestService);
+	const progressService = accessor.get(IProgressService);
 
 	if (openPage && !openPage.isDisposed()) {
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
@@ -356,10 +401,18 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 			}
 		}
 	};
+	/** The subfolder of the knowledge folder of the type the user chooses for `count` texts; undefined when they cancel. */
+	const chooseFolder = async (workspace: URI, count: number) => {
+		const type = await quickInputService.pick(YOUR_FOLDERS.map(folder => ({ label: yourTypes[folder], description: `knowledge/${folder}`, folder })), {
+			placeHolder: count === 1
+				? localize('knowledgeBase.typeOne', "The type of the text: the folder of the knowledge folder it goes in")
+				: localize('knowledgeBase.typeMany', "The type of the {0} texts: the folder of the knowledge folder they go in", count),
+		});
+		return type && joinPath(await pollisWorkspaceFolder(fileService, workspace, 'knowledge'), type.folder);
+	};
 	/**
-	 * Adds texts of the user's: the files they choose, from the Downloads folder first, copied into the subfolder of the
-	 * knowledge folder of the type they choose, each named by the title they write. Without a Pollis Workspace open, it
-	 * opens one.
+	 * Adds texts of the user's, from this computer or from a link, into the subfolder of the knowledge folder of the
+	 * type they choose, each named by the title they write. Without a Pollis Workspace open, it opens one.
 	 */
 	const addTexts = async () => {
 		const workspace = await findPollisWorkspace(contextService, fileService);
@@ -367,6 +420,18 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 			await commandService.executeCommand(OPEN_POLLIS_WORKSPACE_COMMAND_ID);
 			return;
 		}
+		const from = await quickInputService.pick([
+			{ label: localize('knowledgeBase.fromComputer', "From This Computer..."), description: localize('knowledgeBase.fromComputerHint', "PDF, Markdown or text files, from the Downloads folder first"), link: false },
+			{ label: localize('knowledgeBase.fromLink', "From a Link or DOI..."), description: localize('knowledgeBase.fromLinkHint', "A PDF, an article's page, a DOI or an arXiv identifier"), link: true },
+		], { placeHolder: localize('knowledgeBase.addFrom', "Where your texts come from") });
+		if (from?.link) {
+			await addFromLink(workspace);
+		} else if (from) {
+			await addFromComputer(workspace);
+		}
+	};
+	/** Adds the files the user chooses, copied, leaving them where they were. */
+	const addFromComputer = async (workspace: URI) => {
 		const files = await fileDialogService.showOpenDialog({
 			title: localize('knowledgeBase.addTitle', "Add Your Texts to the Knowledge Base"),
 			openLabel: localize({ key: 'knowledgeBase.addLabel', comment: ['&& denotes a mnemonic'] }, "&&Add"),
@@ -380,18 +445,10 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 				{ name: localize('knowledgeBase.text', "Text"), extensions: ['txt'] },
 			],
 		});
-		if (!files?.length) {
+		const folder = files?.length ? await chooseFolder(workspace, files.length) : undefined;
+		if (!files || !folder) {
 			return;
 		}
-		const type = await quickInputService.pick(YOUR_FOLDERS.map(folder => ({ label: yourTypes[folder], description: `knowledge/${folder}`, folder })), {
-			placeHolder: files.length === 1
-				? localize('knowledgeBase.typeOne', "The type of the text: the folder of the knowledge folder it goes in")
-				: localize('knowledgeBase.typeMany', "The type of the {0} texts: the folder of the knowledge folder they go in", files.length),
-		});
-		if (!type) {
-			return;
-		}
-		const folder = joinPath(await pollisWorkspaceFolder(fileService, workspace, 'knowledge'), type.folder);
 		for (const file of files) {
 			const name = basename(file);
 			const extension = extname(file);
@@ -402,6 +459,87 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 			}
 		}
 		await readYoursAgain();
+	};
+	const request = (url: string) => requestService.request({ type: 'GET', url, timeout: LINK_TIMEOUT, callSite: 'knowledgeBase.addFromLink' }, CancellationToken.None);
+	/** Where a link, a DOI or an arXiv identifier leads: an open copy from OpenAlex for a DOI, the PDF of arXiv for its identifier. */
+	const resolveLink = async (link: string): Promise<ILinkedText | undefined> => {
+		const doi = DOI_PATTERN.exec(link)?.groups?.doi;
+		if (doi) {
+			const work = await request(`https://api.openalex.org/works/doi:${encodeURI(doi)}`).then(context => isSuccess(context) ? asJson<IOpenAlexWork>(context) : null, () => null);
+			const pdf = work?.best_oa_location?.pdf_url ?? work?.locations?.find(location => location.pdf_url)?.pdf_url ?? undefined;
+			return { pdf, page: `https://doi.org/${doi}`, title: work?.display_name ?? undefined };
+		}
+		const arxiv = ARXIV_PATTERN.exec(link)?.groups?.id;
+		if (arxiv) {
+			const feed = await request(`https://export.arxiv.org/api/query?id_list=${encodeURIComponent(arxiv)}`).then(context => isSuccess(context) ? asText(context) : null, () => null) ?? '';
+			const title = /<entry>[\s\S]*?<title>(?<title>[\s\S]*?)<\/title>/.exec(feed)?.groups?.title.replace(/\s+/g, ' ').trim();
+			return { pdf: `https://arxiv.org/pdf/${arxiv}`, page: `https://arxiv.org/abs/${arxiv}`, title: title || undefined };
+		}
+		return /^https?:\/\//i.test(link) ? { pdf: link, page: link } : undefined;
+	};
+	/** The PDF at `url`, or, at a web page, at the link to its PDF the page gives; the title the page gives too. */
+	const downloadPdf = async (url: string): Promise<{ pdf?: VSBuffer; title?: string }> => {
+		const context = await request(url);
+		if (!isSuccess(context)) {
+			return {};
+		}
+		const content = await streamToBuffer(context.stream);
+		if (isPdf(content)) {
+			return { pdf: content };
+		}
+		const html = content.toString();
+		const title = metaContent(html, 'citation_title');
+		const pdfUrl = metaContent(html, 'citation_pdf_url');
+		if (!pdfUrl) {
+			return { title };
+		}
+		const linked = await request(new URL(pdfUrl, url).toString());
+		const pdf = isSuccess(linked) ? await streamToBuffer(linked.stream) : undefined;
+		return { pdf: pdf && isPdf(pdf) ? pdf : undefined, title };
+	};
+	/**
+	 * Adds the text of a link, a DOI or an arXiv identifier the user writes: its PDF downloaded, when an open copy is
+	 * found; otherwise its page opens, for the user to download it there, with their library's access when it needs one.
+	 */
+	const addFromLink = async (workspace: URI) => {
+		const link = (await quickInputService.input({
+			placeHolder: 'https://..., 10.1137/141000671, arXiv:2106.11342',
+			prompt: localize('knowledgeBase.linkPrompt', "A link to the text, to its page, its DOI or its arXiv identifier: Pollis downloads it when an open copy is found."),
+		}))?.trim();
+		if (!link) {
+			return;
+		}
+		const found = await progressService.withProgress({ location: ProgressLocation.Notification, title: localize('knowledgeBase.downloadingLink', "Downloading {0}...", link) }, async () => {
+			const linked = await resolveLink(link).catch(() => undefined);
+			const downloaded = linked?.pdf ? await downloadPdf(linked.pdf).catch(() => ({ pdf: undefined, title: undefined })) : {};
+			return { linked, pdf: downloaded.pdf, title: linked?.title ?? downloaded.title };
+		});
+		if (!found.linked) {
+			notificationService.error(localize('knowledgeBase.notALink', "{0} is not a link, a DOI or an arXiv identifier.", link));
+			return;
+		}
+		if (!found.pdf) {
+			const page = found.linked.page;
+			const { result } = await dialogService.prompt<boolean>({
+				type: Severity.Info,
+				message: localize('knowledgeBase.noOpenCopy', "No open copy of {0} could be downloaded.", found.title ?? link),
+				detail: localize('knowledgeBase.noOpenCopyDetail', "Download it from its page, with your library's access if it needs one, then add it with Add Your Texts... and From This Computer..."),
+				buttons: [{ label: localize({ key: 'knowledgeBase.openPage', comment: ['&& denotes a mnemonic'] }, "&&Open Its Page"), run: () => true }],
+				cancelButton: { label: localize('knowledgeBase.close', "Close"), run: () => false },
+			});
+			if (result) {
+				await commandService.executeCommand(OPEN_LINK_COMMAND_ID, page);
+			}
+			return;
+		}
+		const folder = await chooseFolder(workspace, 1);
+		const lastPart = decodeURIComponent(found.linked.pdf?.split(/[?#]/)[0].split('/').filter(Boolean).pop() ?? '').replace(/\.pdf$/i, '');
+		const title = folder && await askTitle(found.title ?? lastPart, found.title ?? link);
+		const target = folder && title !== undefined ? await targetFor(folder, fileNameOf(title), '.pdf') : undefined;
+		if (target) {
+			await fileService.writeFile(target, found.pdf).catch(error => notificationService.error(localize('knowledgeBase.addFailed', "{0} could not be added: {1}", basename(target), String(error?.message ?? error))));
+			await readYoursAgain();
+		}
 	};
 	/** Renames the file of a text of the user's by the title they write, in its folder. */
 	const renameText = async (id: string) => {
@@ -661,7 +799,7 @@ function pageHtml(rows: number): string {
 		switchOnShownHint: localize('knowledgeBase.switchOnShownHint', "Switch on every text the type and the search leave, on every page; those not on this computer are downloaded, one at a time"),
 		switchOffShownHint: localize('knowledgeBase.switchOffShownHint', "Switch off every text the type and the search leave, on every page"),
 		addTexts: localize('knowledgeBase.addTexts', "Add Your Texts..."),
-		addTextsHint: localize('knowledgeBase.addTextsHint', "Copy PDF, Markdown or text files of your own into the knowledge folder of the Pollis Workspace, each named by the title you write"),
+		addTextsHint: localize('knowledgeBase.addTextsHint', "Add texts of your own to the knowledge folder of the Pollis Workspace, from this computer or from a link, each named by the title you write"),
 		openWorkspace: localize('knowledgeBase.openWorkspace', "Open a Pollis Workspace to Add Your Texts..."),
 		openWorkspaceHint: localize('knowledgeBase.openWorkspaceHint', "Your own texts are the files of the knowledge folder of the Pollis Workspace open"),
 		rename: localize('knowledgeBase.rename', "Rename..."),
