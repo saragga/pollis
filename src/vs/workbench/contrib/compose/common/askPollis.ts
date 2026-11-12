@@ -349,7 +349,7 @@ export function askPollisMessages(turns: readonly IAskPollisTurn[], question: st
 	const numbered = passages.map((passage, i) => `[${i + 1}] ${askPassageLabel(passage)}\n${texts[i]}`);
 	const menu = panel && passages.find(passage => passage.kind === 'wiki' && passage.title === panel.title)?.menu;
 	// A small model told to use only the passages and cite every statement leaves out what it cannot cite: the card is a source as the passages are
-	const card = panel?.card ? `\nWhat the panel holds, a source you use as you use the passages:\n${panel.card}\nWhen the question is about the panel itself, what it does, checks or shows, answer in two or three sentences of your own that sum up what the panel does: do not copy or list its Key Points, decision table or inputs. What you take from what the panel holds needs no citation.` : '';
+	const card = panel?.card ? `\nWhat the panel holds, a source you use as you use the passages:\n${panel.card}` : '';
 	const asked = panel ? `\nThe question is asked in the panel ${panel.title} of Pollis${menu ? ` (${menu})` : ''}: "this panel", "here" or "this method" mean it.${card}` : '';
 	const before = turns.slice(-ASK_TURNS);
 	const attached = !!attachments?.length || before.some(turn => turn.attachments?.length) ? `\n${ASK_ATTACHED_INSTRUCTION}${passages.length ? ' Cite the passages for what you say about Pollis and Julia.' : ''}` : '';
