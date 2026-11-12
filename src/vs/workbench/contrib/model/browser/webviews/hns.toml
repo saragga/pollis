@@ -464,7 +464,7 @@ function descend(g, x)
 end
 
 FRAC = {{frac}}  # fraction of variables destroyed each step
-KNOB, GRID = "destroy fraction", [0.1, 0.25, 0.5, 0.75, 1.0]
+KNOB, GRID = "destroy fraction", unique(max(1, round(Int, g * length(lb))) / length(lb) for g in [0.1, 0.25, 0.5, 0.75, 1.0])  # fractions that destroy different numbers of variables
 
 # re-sample a random subset of the variables uniformly in the box
 function destroy(x, frac)
@@ -659,6 +659,7 @@ desc = "Heatmap of f over the box (first two variables; others held at the best 
 code = '''
 using Plots
 
+length(lb) >= 2 || error("Objective Landscape needs at least two variables.")
 xs = range(lb[1], ub[1], length=150); ys = range(lb[2], ub[2], length=150)
 heatmap(xs, ys, (a, b) -> f([a; b; x_best[3:end]]), xlabel="x1", ylabel="x2")
 scatter!(getindex.(res.points, 1), getindex.(res.points, 2), markersize=1.5, color=:white, alpha=0.4, label="evaluations")
