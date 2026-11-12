@@ -431,8 +431,10 @@ desc = "Run NUTS and Metropolis-Hastings on the same model and compare ESS"
 code = '''
 using Turing, MCMCChains  # probabilistic programming and chain diagnostics
 
-chain_nuts = sample(model, NUTS(500, 0.65), 1000; chain_type=MCMCChains.Chains)  # No-U-Turn Sampler
-chain_mh   = sample(model, MH(), 2000; chain_type=MCMCChains.Chains)  # Metropolis-Hastings
+{{?model=nuts}}chain_nuts = sample(model, NUTS({{nuts-adapt}}, {{nuts-accept}}), {{nuts-n}}; chain_type=MCMCChains.Chains)  # No-U-Turn Sampler, with the settings of the tab
+{{?model!=nuts}}chain_nuts = sample(model, NUTS(500, 0.65), 1000; chain_type=MCMCChains.Chains)  # No-U-Turn Sampler: 500 adaptation steps, target acceptance 0.65
+{{?model=mh}}chain_mh   = sample(model, MH(), {{mh-n}}; chain_type=MCMCChains.Chains)  # Metropolis-Hastings, with the number of draws of the tab
+{{?model!=mh}}chain_mh   = sample(model, MH(), 2000; chain_type=MCMCChains.Chains)  # Metropolis-Hastings
 
 println("NUTS:"); display(ess_rhat(chain_nuts))  # effective sample size and R-hat per parameter
 println("Metropolis-Hastings:"); display(ess_rhat(chain_mh))  # far fewer effective draws from twice as many
@@ -441,17 +443,20 @@ println("Metropolis-Hastings:"); display(ess_rhat(chain_mh))  # far fewer effect
 [[actionGroups.actions]]
 id = "prior-sensitivity"
 label = "Prior Sensitivity"
-desc = "Vary prior hyperparameters and compare posterior summaries"
+desc = "Fit the example Normal model to the data of the tab with four prior standard deviations of mu, and compare the posterior means"
 code = '''
 using Turing, MCMCChains  # probabilistic programming and chain diagnostics
 
+{{?model=nuts}}yv = {{nuts-data}}  # the data of the tab
+{{?model=hmc}}yv = {{hmc-data}}
+{{?model=mh}}yv = {{mh-data}}
 for sigma_prior in [0.5, 1.0, 2.0, 5.0]  # sweep prior standard deviation
     @model function model_v(y)
         mu    ~ Normal(0, sigma_prior)
         sigma ~ Exponential(1)
         y .~ Normal(mu, sigma)
     end
-    c = sample(model_v(y), NUTS(), 500; chain_type=MCMCChains.Chains)  # sample with current prior
+    c = sample(model_v(yv), NUTS(), 500; chain_type=MCMCChains.Chains)  # sample with current prior
     println("sigma_prior=", sigma_prior, " -> mu mean=", mean(c[:mu]))  # compare posterior means
 end
 '''
