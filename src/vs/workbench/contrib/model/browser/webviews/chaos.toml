@@ -180,13 +180,13 @@ detail = "build a recurrence matrix from a time series and extract quantifiers s
 [[inputs]]
 id = "x"
 label = "Time series (x)"
-tooltip = "A univariate time series vector. For Lyapunov and fractal dimension this can also be a trajectory matrix from trajectory(ds, T)."
+tooltip = "A univariate time series vector, used by Recurrence (RQA) and the data actions; the Lyapunov and fractal dimension tabs run on the Lorenz system."
 default = "x"
 
 [[inputs]]
 id = "T"
 label = "Integration time (T)"
-tooltip = "Total time for ODE integration or number of map iterations used to generate the trajectory before characterisation."
+tooltip = "Total time for ODE integration used to generate the trajectory before characterisation."
 default = "200"
 
 [[inputs]]
@@ -337,7 +337,7 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "predictability-horizon"
 label = "Predictability Horizon"
-desc = "Estimate how many time steps ahead the system remains predictable using the Lyapunov time"
+desc = "Estimate how far ahead, in time units, the system remains predictable using the Lyapunov time"
 code = '''
 using DynamicalSystems
 
@@ -452,7 +452,7 @@ R = RecurrenceMatrix({{x}}, {{eps}} * std({{x}}))  # threshold as a fraction of 
 s = rqa(R)  # all quantifiers
 
 println("RR:  ", s[:RR],  "  (recurrence rate; near 0 = rare recurrence)")  # density
-println("DET: ", s[:DET], "  (determinism; near 1 = predictable)")  # diagonal structure
+println("DET: ", s[:DET], "  (determinism: share of recurrence points on diagonal lines)")  # diagonal structure
 println("LAM: ", s[:LAM], "  (laminarity; near 1 = laminar phases)")  # vertical structure
 println("L:   ", s[:L],   "  (mean diagonal length)")  # avg predictability
 println("TT:  ", s[:TT],  "  (trapping time)")  # avg vertical line length
