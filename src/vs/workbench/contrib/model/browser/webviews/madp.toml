@@ -195,7 +195,7 @@ models = ["dec"]
 id = "restarts"
 label = "JESP Restarts"
 tooltip = "JESP converges to a local optimum (a Nash equilibrium of the team); several random starts find the best one more reliably."
-default = "10"
+default = "30"
 models = ["dec"]
 
 [[inputs]]
@@ -328,8 +328,10 @@ function jesp(seed; H=T, maxiter=50)  # Joint Equilibrium-based Search for Polic
     p1, p2 = rand(rng, 1:NA, nodes(H)), rand(rng, 1:NA, nodes(H))
     trace = [evaluate(p1, p2; H)]
     for it in 1:maxiter
-        p1 = best_response(1, p2; H).policy
-        p2 = best_response(2, p1; H).policy
+        r1 = best_response(1, p2; H)
+        r1.value > evaluate(p1, p2; H) + 1e-9 && (p1 = r1.policy)  # switch only for a strict gain, so a tie cannot undo the equilibrium
+        r2 = best_response(2, p1; H)
+        r2.value > evaluate(p1, p2; H) + 1e-9 && (p2 = r2.policy)
         push!(trace, evaluate(p1, p2; H))
         trace[end] <= trace[end-1] + 1e-9 && break  # no agent can improve alone: a local optimum
     end
@@ -387,7 +389,7 @@ function matrix_game(G)  # value and optimal mixed strategies of the zero-sum ma
 end
 stage(s, V; gamma=gamma) = Rw[s] .+ gamma .* [sum(P[s][a1, a2, s2] * V[s2] for s2 in 1:S) for a1 in 1:A, a2 in 1:A]  # payoff now plus discounted continuation
 
-function shapley(; gamma=gamma, tol=tol, maxiter=5000)  # Shapley value iteration
+function shapley(; gamma=gamma, tol=tol, maxiter=20000)  # 0.999 needs about 14000 iterations at tol 1e-6  # Shapley value iteration
     V = zeros(S); trace = Float64[]
     for it in 1:maxiter
         Vn = [matrix_game(stage(s, V; gamma)).value for s in 1:S]
@@ -400,7 +402,7 @@ end
 
 sh = shapley()
 eqs = [matrix_game(stage(s, sh.V)) for s in 1:S]  # stationary equilibrium strategies
-(values_player1 = round.(sh.V, digits=4), iterations = length(sh.trace),
+(values_player1 = round.(sh.V, digits=4), iterations = length(sh.trace), converged = sh.trace[end] < tol,
  strategy_player1_state1 = round.(eqs[1].x, digits=3), strategy_player2_state1 = round.(eqs[1].y, digits=3))
 '''
 
@@ -501,7 +503,8 @@ code = '''
 {{?model=sg}}    end
 {{?model=sg}}    total
 {{?model=sg}}end
-{{?model=sg}}rets = [play(1, 200) for k in 1:2000]
+{{?model=sg}}H = gamma < 1 ? ceil(Int, log(1e-6) / log(max(gamma, 1e-12))) : 200  # stages until gamma^t falls below 1e-6, so the truncation leaves out almost nothing
+{{?model=sg}}rets = [play(1, H) for k in 1:2000]
 {{?model=sg}}(mean_discounted_payoff = mean(rets), standard_error = std(rets) / sqrt(length(rets)), equilibrium_value_state1 = sh.V[1])
 '''
 
@@ -527,7 +530,7 @@ code = '''
 {{?model=dec}}end
 {{?model=dec}}central = T <= 5 ? central_value(b0, 1) : missing
 {{?model=dec}}(decentralised = best.value, centralised_pomdp = central, fully_observed = 20.0 * T,
-{{?model=dec}} cost_of_decentralisation = central === missing ? missing : central - best.value)
+{{?model=dec}} cost_of_decentralisation = central === missing ? missing : central - best.value)  # includes any shortfall of JESP from the optimal joint policy: more restarts can lower it
 {{?model=sg}}[(gamma = g, value_state1 = shapley(gamma=g).V[1]) for g in unique([0.0, 0.5, 0.8, 0.9, gamma])]
 '''
 
