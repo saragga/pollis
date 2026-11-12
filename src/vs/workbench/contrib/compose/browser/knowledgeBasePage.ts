@@ -3,10 +3,12 @@
  *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IntervalTimer } from '../../../../base/common/async.js';
+import { IntervalTimer, RunOnceScheduler } from '../../../../base/common/async.js';
 import { encodeBase64 } from '../../../../base/common/buffer.js';
-import { DisposableStore } from '../../../../base/common/lifecycle.js';
-import { basename, extname, joinPath, relativePath } from '../../../../base/common/resources.js';
+import { DisposableStore, MutableDisposable } from '../../../../base/common/lifecycle.js';
+import { isLinux } from '../../../../base/common/platform.js';
+import { basename, dirname, extname, isEqual, joinPath, relativePath } from '../../../../base/common/resources.js';
+import Severity from '../../../../base/common/severity.js';
 import { hasKey } from '../../../../base/common/types.js';
 import { URI } from '../../../../base/common/uri.js';
 import { localize, localize2 } from '../../../../nls.js';
@@ -14,10 +16,12 @@ import { Categories } from '../../../../platform/action/common/actionCommonCateg
 import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
+import { IDialogService, IFileDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { INotificationService } from '../../../../platform/notification/common/notification.js';
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
+import { IQuickInputService } from '../../../../platform/quickinput/common/quickInput.js';
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
 import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
@@ -38,7 +42,7 @@ import { ASK_EMBEDDING_MODEL, embeddingPrefixes, IAskPollisService } from '../co
 import { compareCss, pageHelpersScript } from './compareShared.js';
 import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_MINIMAL_STYLE } from './libraryPage.js';
 import { IInstalledModel } from './modelsInstalledPage.js';
-import { findPollisWorkspace, pollisWorkspaceFolder } from '../../pollisWorkspace/browser/pollisWorkspace.contribution.js';
+import { findPollisWorkspace, OPEN_POLLIS_WORKSPACE_COMMAND_ID, pollisWorkspaceFolder } from '../../pollisWorkspace/browser/pollisWorkspace.contribution.js';
 
 // The Knowledge Base, from Compose > Knowledge for AI Models > Knowledge Base, in the Minimal style of the scaffold: the
 // openly licensed texts of PollisKnowledge.jl, books and other written works, in a table with each text's type,
@@ -101,6 +105,19 @@ interface IYourText {
 const YOUR_EXTENSIONS: Record<string, TextFormat> = { '.pdf': 'pdf', '.md': 'markdown', '.markdown': 'markdown', '.txt': 'text' };
 /** How deep in the knowledge folder the user's texts are looked for. */
 const YOUR_DEPTH = 4;
+/** The subfolders of the knowledge folder a text of the user's is added to, one a type. */
+const YOUR_FOLDERS = ['books', 'articles', 'reports'] as const;
+
+/** A file name from a title: a colon becomes a dash, and the characters a file name cannot hold are left out. */
+function fileNameOf(title: string): string {
+	return [...title].filter(character => character >= ' ').join('')
+		.replace(/\s*:\s*/g, ' - ')
+		.replace(/[\\/*?"<>|]/g, '')
+		.replace(/\s+/g, ' ')
+		.trim()
+		.replace(/[. ]+$/, '')
+		.slice(0, 180);
+}
 
 /** A text of the catalogue of PollisKnowledge.jl, as knowledge_base.jl answers it. */
 interface IKnowledgeText {
@@ -142,7 +159,9 @@ type KnowledgeMessage =
 	| { readonly command: 'link'; readonly url: string }
 	| { readonly command: 'words'; readonly words: number }
 	| { readonly command: 'model'; readonly model: string }
-	| { readonly command: 'build' };
+	| { readonly command: 'build' }
+	| { readonly command: 'add' }
+	| { readonly command: 'rename'; readonly id: string };
 
 /** The open page, so a second request shows it again. */
 let openPage: WebviewInput | undefined;
@@ -163,6 +182,9 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 	const pathService = accessor.get(IPathService);
 	const hostService = accessor.get(IHostService);
 	const contextService = accessor.get(IWorkspaceContextService);
+	const fileDialogService = accessor.get(IFileDialogService);
+	const dialogService = accessor.get(IDialogService);
+	const quickInputService = accessor.get(IQuickInputService);
 
 	if (openPage && !openPage.isDisposed()) {
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
@@ -233,15 +255,40 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 		reports: localize('knowledgeBase.typeReport', "Report"),
 	};
 	const otherType = localize('knowledgeBase.typeOther', "Other");
+	/** The knowledge folder of the Pollis Workspace open, once read; undefined without one. */
+	let knowledgeFolder: URI | undefined;
+	// The knowledge folder and its subfolders are watched, each on its own (a correlated watcher sees one folder), so
+	// that a file put in them or taken out shows at once
+	const watchers = disposables.add(new MutableDisposable<DisposableStore>());
+	let watched = '';
+	const yoursChanged = disposables.add(new RunOnceScheduler(() => readYoursAgain(), 300));
+	const watch = (folders: readonly URI[]) => {
+		const key = folders.map(folder => folder.toString()).join('\n');
+		if (key === watched) {
+			return;
+		}
+		watched = key;
+		const store = new DisposableStore();
+		for (const folder of folders) {
+			const watcher = store.add(fileService.createWatcher(folder, { recursive: false, excludes: [] }));
+			store.add(watcher.onDidChange(() => yoursChanged.schedule()));
+		}
+		watchers.value = store;
+	};
 	/** Reads the user's texts again; whether they have changed. */
 	const readYours = async () => {
 		const found: IYourText[] = [];
 		const workspace = await findPollisWorkspace(contextService, fileService);
 		const knowledge = workspace && await pollisWorkspaceFolder(fileService, workspace, 'knowledge').catch(() => undefined);
+		knowledgeFolder = knowledge;
+		const folders = knowledge ? [knowledge] : [];
 		const visit = async (folder: URI, type: string, depth: number): Promise<void> => {
 			const stat = await fileService.resolve(folder, { resolveMetadata: true }).catch(() => undefined);
 			for (const child of stat?.children ?? []) {
 				const format = YOUR_EXTENSIONS[extname(child.resource).toLowerCase()];
+				if (child.isDirectory && !depth) {
+					folders.push(child.resource);
+				}
 				if (child.isDirectory && depth < YOUR_DEPTH) {
 					await visit(child.resource, depth ? type : yourTypes[child.name.toLowerCase()] ?? otherType, depth + 1);
 				} else if (!child.isDirectory && format && child.name.toLowerCase() !== 'readme.md') {
@@ -257,10 +304,137 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 		if (knowledge) {
 			await visit(knowledge, otherType, 0);
 		}
+		watch(folders);
 		found.sort((a, b) => a.path.localeCompare(b.path));
 		const changed = JSON.stringify(found) !== JSON.stringify(yours);
 		yours = found;
 		return changed;
+	};
+
+	/** The Downloads folder of this computer, where a text to add most likely is: on Linux, as its user directories name it. */
+	const downloadsFolder = async () => {
+		const home = await pathService.userHome();
+		if (isLinux) {
+			const directories = await fileService.readFile(joinPath(home, '.config', 'user-dirs.dirs')).then(content => content.value.toString(), () => '');
+			const named = /^XDG_DOWNLOAD_DIR="(?<folder>[^"]+)"/m.exec(directories)?.groups?.folder;
+			const folder = named && URI.file(named.replace(/^\$HOME/, home.fsPath));
+			if (folder && await fileService.exists(folder)) {
+				return folder;
+			}
+		}
+		const folder = joinPath(home, 'Downloads');
+		return await fileService.exists(folder) ? folder : home;
+	};
+	/** The title the user writes for the file `name`, starting from `title`; undefined when they cancel. */
+	const askTitle = (title: string, name: string) => quickInputService.input({
+		value: title,
+		prompt: localize('knowledgeBase.titlePrompt', "The title of {0}: Pollis names the file by it, and shows it in the table and in the sources of an answer.", name),
+		validateInput: async value => fileNameOf(value) ? undefined : localize('knowledgeBase.titleNeeded', "Write the title of the text."),
+	});
+	/** Where the file named `name` goes in `folder`: there, unless a file has that name and the user keeps both or skips it. */
+	const targetFor = async (folder: URI, name: string, extension: string) => {
+		const target = joinPath(folder, name + extension);
+		if (!await fileService.exists(target)) {
+			return target;
+		}
+		const { result } = await dialogService.prompt<'replace' | 'both' | undefined>({
+			type: Severity.Warning,
+			message: localize('knowledgeBase.exists', "{0} is in the knowledge folder already.", name + extension),
+			buttons: [
+				{ label: localize({ key: 'knowledgeBase.replace', comment: ['&& denotes a mnemonic'] }, "&&Replace"), run: () => 'replace' },
+				{ label: localize({ key: 'knowledgeBase.keepBoth', comment: ['&& denotes a mnemonic'] }, "&&Keep Both"), run: () => 'both' },
+			],
+			cancelButton: { label: localize('knowledgeBase.skip', "Skip"), run: () => undefined },
+		});
+		if (result !== 'both') {
+			return result === 'replace' ? target : undefined;
+		}
+		for (let number = 2; ; number++) {
+			const other = joinPath(folder, `${name} (${number})${extension}`);
+			if (!await fileService.exists(other)) {
+				return other;
+			}
+		}
+	};
+	/**
+	 * Adds texts of the user's: the files they choose, from the Downloads folder first, copied into the subfolder of the
+	 * knowledge folder of the type they choose, each named by the title they write. Without a Pollis Workspace open, it
+	 * opens one.
+	 */
+	const addTexts = async () => {
+		const workspace = await findPollisWorkspace(contextService, fileService);
+		if (!workspace) {
+			await commandService.executeCommand(OPEN_POLLIS_WORKSPACE_COMMAND_ID);
+			return;
+		}
+		const files = await fileDialogService.showOpenDialog({
+			title: localize('knowledgeBase.addTitle', "Add Your Texts to the Knowledge Base"),
+			openLabel: localize({ key: 'knowledgeBase.addLabel', comment: ['&& denotes a mnemonic'] }, "&&Add"),
+			canSelectFiles: true,
+			canSelectMany: true,
+			defaultUri: await downloadsFolder(),
+			filters: [
+				{ name: localize('knowledgeBase.documents', "Documents"), extensions: ['pdf', 'md', 'markdown', 'txt'] },
+				{ name: 'PDF', extensions: ['pdf'] },
+				{ name: 'Markdown', extensions: ['md', 'markdown'] },
+				{ name: localize('knowledgeBase.text', "Text"), extensions: ['txt'] },
+			],
+		});
+		if (!files?.length) {
+			return;
+		}
+		const type = await quickInputService.pick(YOUR_FOLDERS.map(folder => ({ label: yourTypes[folder], description: `knowledge/${folder}`, folder })), {
+			placeHolder: files.length === 1
+				? localize('knowledgeBase.typeOne', "The type of the text: the folder of the knowledge folder it goes in")
+				: localize('knowledgeBase.typeMany', "The type of the {0} texts: the folder of the knowledge folder they go in", files.length),
+		});
+		if (!type) {
+			return;
+		}
+		const folder = joinPath(await pollisWorkspaceFolder(fileService, workspace, 'knowledge'), type.folder);
+		for (const file of files) {
+			const name = basename(file);
+			const extension = extname(file);
+			const title = await askTitle(name.slice(0, name.length - extension.length), name);
+			const target = title === undefined ? undefined : await targetFor(folder, fileNameOf(title), extension);
+			if (target && !isEqual(target, file)) {
+				await fileService.copy(file, target, true).catch(error => notificationService.error(localize('knowledgeBase.addFailed', "{0} could not be added: {1}", name, String(error?.message ?? error))));
+			}
+		}
+		await readYoursAgain();
+	};
+	/** Renames the file of a text of the user's by the title they write, in its folder. */
+	const renameText = async (id: string) => {
+		const text = yours.find(candidate => candidate.id === id);
+		if (!text) {
+			return;
+		}
+		const resource = URI.file(text.document.file);
+		const title = await askTitle(text.document.title, basename(resource));
+		if (title === undefined) {
+			return;
+		}
+		const name = fileNameOf(title) + extname(resource);
+		const target = joinPath(dirname(resource), name);
+		if (isEqual(target, resource)) {
+			return;
+		}
+		// A file of that name, other than this one with its name in other capitals, is not written over
+		if (target.fsPath.toLowerCase() !== resource.fsPath.toLowerCase() && await fileService.exists(target)) {
+			notificationService.error(localize('knowledgeBase.renameExists', "{0} is in its folder already: write another title.", name));
+			return;
+		}
+		try {
+			await fileService.move(resource, target, false);
+		} catch (error) {
+			notificationService.error(localize('knowledgeBase.renameFailed', "{0} could not be renamed: {1}", basename(resource), String(error?.message ?? error)));
+			return;
+		}
+		if (settings.off.includes(id)) {
+			settings.off = settings.off.map(off => off === id ? target.fsPath : off);
+			save();
+		}
+		await readYoursAgain();
 	};
 
 	/** The documents of the texts switched on and on this computer, which the index is built from. */
@@ -306,6 +480,7 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 			command: 'state',
 			error: catalogueError,
 			reading: !texts && !catalogueError,
+			workspace: !!knowledgeFolder,
 			texts: texts || yours.length ? [
 				...(texts ?? []).map(text => ({
 					id: text.id, title: text.title, type: text.type, edition: text.edition, authors: text.authors, publisher: text.publisher, year: text.year, subject: text.subject,
@@ -447,6 +622,10 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 		} else if (message.command === 'model' && hasKey(message, { model: true })) {
 			settings.embeddingModel = message.model;
 			save();
+		} else if (message.command === 'add') {
+			await addTexts();
+		} else if (message.command === 'rename' && hasKey(message, { id: true })) {
+			await renameText(message.id);
 		} else if (message.command === 'build') {
 			const model = modelOf(await embeddingModels());
 			const documents = documentsOn();
@@ -481,6 +660,12 @@ function pageHtml(rows: number): string {
 		switchOffShown: localize('knowledgeBase.switchOffShown', "Switch Off All Shown"),
 		switchOnShownHint: localize('knowledgeBase.switchOnShownHint', "Switch on every text the type and the search leave, on every page; those not on this computer are downloaded, one at a time"),
 		switchOffShownHint: localize('knowledgeBase.switchOffShownHint', "Switch off every text the type and the search leave, on every page"),
+		addTexts: localize('knowledgeBase.addTexts', "Add Your Texts..."),
+		addTextsHint: localize('knowledgeBase.addTextsHint', "Copy PDF, Markdown or text files of your own into the knowledge folder of the Pollis Workspace, each named by the title you write"),
+		openWorkspace: localize('knowledgeBase.openWorkspace', "Open a Pollis Workspace to Add Your Texts..."),
+		openWorkspaceHint: localize('knowledgeBase.openWorkspaceHint', "Your own texts are the files of the knowledge folder of the Pollis Workspace open"),
+		rename: localize('knowledgeBase.rename', "Rename..."),
+		renameHint: localize('knowledgeBase.renameHint', "Write the title of the text: Pollis renames its file by it"),
 		previous: localize('knowledgeBase.previous', "Previous"),
 		next: localize('knowledgeBase.next', "Next"),
 		page: localize('knowledgeBase.page', "Page {0} of {1}", '{0}', '{1}'),
@@ -596,7 +781,7 @@ ${spinnerCss}
 	<div class="filters stickyBand" id="filters">
 		<input class="search" id="search" type="search" placeholder="${text.search}" aria-label="${text.search}">
 		<select class="types" id="types" aria-label="${text.type}"></select>
-		<span class="bulk"><button class="link" id="onShown" title="${text.switchOnShownHint}">${text.switchOnShown}</button><button class="link" id="offShown" title="${text.switchOffShownHint}">${text.switchOffShown}</button></span>
+		<span class="bulk"><button class="link" id="onShown" title="${text.switchOnShownHint}">${text.switchOnShown}</button><button class="link" id="offShown" title="${text.switchOffShownHint}">${text.switchOffShown}</button><button class="link" id="addTexts" hidden></button></span>
 		<span class="small" id="count"></span>
 	</div>
 	<p class="hint" id="note">${spinnerSvg}${text.reading}</p>
@@ -679,6 +864,11 @@ ${spinnerCss}
 		name.appendChild(titleLink);
 		if (item.yours) {
 			name.appendChild(element('div', 'small yellow', item.path));
+			const links = element('div', 'links');
+			const rename = link(TEXT.rename, () => vscode.postMessage({ command: 'rename', id: item.id }));
+			rename.title = TEXT.renameHint;
+			links.appendChild(rename);
+			name.appendChild(links);
 		} else {
 			name.appendChild(element('div', 'small', item.edition + ' \\u00b7 ' + authorsOf(item.authors) + ' \\u00b7 ' + item.publisher + ', ' + item.year));
 			const links = element('div', 'links');
@@ -808,9 +998,18 @@ ${spinnerCss}
 		return true;
 	}
 
+	// Add Your Texts..., or, without a Pollis Workspace open, the way to open one
+	function renderAdd() {
+		const add = document.getElementById('addTexts');
+		add.textContent = state.workspace ? TEXT.addTexts : TEXT.openWorkspace;
+		add.title = state.workspace ? TEXT.addTextsHint : TEXT.openWorkspaceHint;
+		add.hidden = false;
+	}
+
 	function render() {
 		const note = document.getElementById('note');
 		const table = document.getElementById('table');
+		renderAdd();
 		if (!state.texts) {
 			showCatalogueNote(note);
 			table.hidden = true;
@@ -914,6 +1113,7 @@ ${spinnerCss}
 	for (const [id, on] of [['onShown', true], ['offShown', false]]) {
 		document.getElementById(id).addEventListener('click', () => state && state.texts && vscode.postMessage({ command: 'switchShown', ids: shownTexts().map(item => item.id), on }));
 	}
+	document.getElementById('addTexts').addEventListener('click', () => vscode.postMessage({ command: 'add' }));
 	modelSelect.addEventListener('change', () => {
 		state.model = modelSelect.value;
 		vscode.postMessage({ command: 'model', model: modelSelect.value });
