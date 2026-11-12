@@ -317,7 +317,7 @@ println("SE:    ", round(std(final) / sqrt({{R}}); digits = 4))  # standard erro
 [[actionGroups.actions]]
 id = "burn-in"
 label = "Burn-in Detection"
-desc = "Plot ensemble mean over time and identify when trajectories stabilise to set an appropriate burn-in period"
+desc = "Plot the ensemble mean over time, with a dashed line at step 10 as a candidate burn-in, to judge when trajectories stabilise"
 code = '''
 using Agents, GLMakie, Statistics, Tables
 
