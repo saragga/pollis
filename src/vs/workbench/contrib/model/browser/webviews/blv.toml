@@ -227,6 +227,7 @@ function high_point(sense=MOI.MIN_SENSE; target=(xv, yv) -> F(xv, yv))  # joint 
     @constraint(m, Gc(xv, yv) .<= 0); @constraint(m, g(xv, yv) .<= 0)
     @objective(m, sense, target(xv, yv))
     optimize!(m)
+    is_solved_and_feasible(m) || error("Joint problem not solved: ", termination_status(m), ". Is the feasible set empty or unbounded in x or y? Bound it with the constraints.")
     (x = value(xv), y = value(yv), F = F(value(xv), value(yv)), target = objective_value(m))
 end
 xlo, xhi = high_point(MOI.MIN_SENSE; target=(xv, yv) -> xv).target, high_point(MOI.MAX_SENSE; target=(xv, yv) -> xv).target  # range of leader decisions
@@ -289,6 +290,7 @@ function high_point(sense=MOI.MIN_SENSE; target=(xv, yv) -> F(xv, yv))  # joint 
     @constraint(m, Gc(xv, yv) .<= 0); @constraint(m, g(xv, yv) .<= 0)
     @objective(m, sense, target(xv, yv))
     optimize!(m)
+    is_solved_and_feasible(m) || error("Joint problem not solved: ", termination_status(m), ". Is the feasible set empty or unbounded in x or y? Bound it with the constraints.")
     (x = value(xv), y = value(yv), F = F(value(xv), value(yv)), target = objective_value(m))
 end
 xlo, xhi = high_point(MOI.MIN_SENSE; target=(xv, yv) -> xv).target, high_point(MOI.MAX_SENSE; target=(xv, yv) -> xv).target  # range of leader decisions
