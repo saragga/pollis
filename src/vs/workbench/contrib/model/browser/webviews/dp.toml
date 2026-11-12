@@ -176,7 +176,7 @@ default = "0.95"
 [[inputs]]
 id = "N"
 label = "Demand Scenarios (N)"
-tooltip = "Number of equally likely demand values, spread evenly between 0 and 10 units, used to take the expectation in the Bellman equation."
+tooltip = "Number of equally likely demand values, spread over 0 to 10 units and rounded to whole units, used to take the expectation in the Bellman equation."
 default = "10"
 models = ["stoch"]
 
@@ -409,7 +409,7 @@ v0 = [begin
     R2, Q2 = build(d, fill(1 / n, n))
     solve(DiscreteDP(R2, Q2, beta), PFI).v[1]
 end for n in Ns]
-plot(Ns, v0, marker=:o, xscale=:log10, xlabel="Demand scenarios N", ylabel="V*(0)", legend=false, title="Cost of demand uncertainty")
+plot(Ns, v0, marker=:o, xscale=:log10, xlabel="Demand scenarios N", ylabel="V*(0)", legend=false, title="Optimal cost by number of demand scenarios")
 '''
 
 [[actionGroups]]
