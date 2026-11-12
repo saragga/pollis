@@ -154,21 +154,21 @@ default = "bert-base-uncased"
 [[inputs]]
 id = "text"
 label = "Text"
-tooltip = "Input text to encode into a dense embedding vector"
+tooltip = "Name of a Julia variable holding the text to encode into a dense embedding vector; if no such variable is defined, a demo sentence is used"
 default = "sentence"
 models = ["embed"]
 
 [[inputs]]
 id = "text1"
 label = "Text 1"
-tooltip = "First sentence for similarity comparison"
+tooltip = "Name of a Julia variable holding the first sentence to compare; if it is not defined, a demo paraphrase pair is used"
 default = "sentence1"
 models = ["similarity"]
 
 [[inputs]]
 id = "text2"
 label = "Text 2"
-tooltip = "Second sentence for similarity comparison"
+tooltip = "Name of a Julia variable holding the second sentence to compare; if it is not defined, a demo paraphrase pair is used"
 default = "sentence2"
 models = ["similarity"]
 
