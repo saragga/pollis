@@ -350,10 +350,10 @@ coop = high_point()
 ylo, yhi = high_point(MOI.MIN_SENSE; target=(xv, yv) -> yv).target, high_point(MOI.MAX_SENSE; target=(xv, yv) -> yv).target
 gx, gy = range(xlo, xhi, length=200), range(ylo - 0.5, yhi + 0.5, length=200)
 joint = [all(Gc(xv, yv) .<= 1e-9) && all(g(xv, yv) .<= 1e-9) ? 1.0 : 0.0 for yv in gy, xv in gx]
-heatmap(gx, gy, joint, c=cgrad([:white, :lightblue]), colorbar=false, xlabel="Leader x", ylabel="Follower y", title="Inducible region")
+heatmap(gx, gy, joint, c=cgrad([:white, :lightblue]), colorbar=false, xlabel="Leader x", ylabel="Follower y", title="Joint feasible set and reaction curve")
 contour!(gx, gy, [F(xv, yv) for yv in gy, xv in gx], levels=12, c=:grays, alpha=0.5, colorbar=false)
 xs = range(xlo, xhi, length=300)
-plot!(xs, [follower(xv).y for xv in xs], lw=3, c=:steelblue, label="reaction y*(x)")
+plot!(xs, [follower(xv).y for xv in xs], lw=3, c=:steelblue, label="reaction y*(x): the inducible region")
 scatter!([coop.x], [coop.y], ms=6, marker=:square, label="cooperative optimum")
 scatter!([sol.x], [sol.y], ms=6, label="Stackelberg")
 '''
