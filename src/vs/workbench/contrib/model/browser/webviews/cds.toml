@@ -187,7 +187,7 @@ label = "Visualise"
 [[actionGroups.actions]]
 id = "phase-portrait"
 label = "Phase Portrait"
-desc = "Plot the trajectory in 2D or 3D phase space to reveal attractor structure"
+desc = "Plot the trajectory projected on the x-z plane to reveal attractor structure"
 code = '''
 using DynamicalSystems, GLMakie
 
