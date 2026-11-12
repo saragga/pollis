@@ -356,7 +356,7 @@ scatter!([sol.x[1]], [sol.x[2]], ms=6, label="optimum", xlabel="x1", ylabel="x2"
 '''
 
 [[actionGroups.actions]]
-id = "ambiguity-set"
+id = "uncertainty-set"
 label = "Uncertainty Set"
 desc = "Samples of resource use xi with the boundary xi'x* = b of the optimal decision. Chance-constrained: the ellipsoid of radius z(1 - epsilon) whose worst case gives the constraint (its own probability content is lower than 1 - epsilon, about 0.74 in 2D at epsilon 0.05). DRO: the epsilon tail of samples whose CVaR, plus the Wasserstein margin, must stay within capacity"
 code = '''
