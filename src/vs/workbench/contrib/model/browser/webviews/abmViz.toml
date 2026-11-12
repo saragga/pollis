@@ -407,10 +407,9 @@ id = "colour-check"
 label = "Colour Encoding Check"
 desc = "Check that every group present has a colour and every resident is drawn, then mark unhappy residents with a cross"
 code = '''
-palette = Dict(1 => :steelblue, 2 => :darkorange)  # the colours used by groupcolor
 present = sort(unique(a.group for a in allagents(model)))
-uncoloured = setdiff(present, keys(palette))
-println("Groups present: ", present, isempty(uncoloured) ? ", all coloured" : ", no colour for " * string(uncoloured))
+colours = Dict(g => groupcolor((group = g,)) for g in present)  # the colour groupcolor gives each group present
+println("Groups present: ", present, length(unique(values(colours))) == length(present) ? ", one colour each: " : ", some share a colour: ", colours)
 println("Residents: ", nagents(model), " of ", {{side}}^2, " cells (", {{side}}^2 - nagents(model), " empty)")
 
 fig, ax, _ = abmplot(model; agent_color = groupcolor, agent_size = 12,
@@ -529,11 +528,11 @@ code = '''
 _, mdf = run!(initialize(), T; mdata = [segregation, share_happy])
 res = Tables.columntable(mdf)  # plain columns: time, segregation, share_happy
 change = res.segregation[end] - res.segregation[1]
-t90 = res.time[findfirst(s -> s - res.segregation[1] >= 0.9 * change, res.segregation)]  # 90% of the total rise
+t90 = change == 0 ? nothing : res.time[findfirst(s -> (s - res.segregation[1]) / change >= 0.9, res.segregation)]  # 90% of the total change, rise or fall
 
 println("=== Animation Summary ===")
 println("Segregation:  ", round(res.segregation[1]; digits = 2), " -> ", round(res.segregation[end]; digits = 2))
 println("Happy:        ", round(res.share_happy[1]; digits = 2), " -> ", round(res.share_happy[end]; digits = 2))
-println("90% of the change by step ", t90, " of ", T)
+println(t90 === nothing ? "Segregation did not change over the run" : "90% of the change by step " * string(t90) * " of " * string(T))
 println(res.share_happy[end] == 1 ? "Everyone is happy: nobody moves any more" : "Some residents are still moving at step " * string(T))
 '''
