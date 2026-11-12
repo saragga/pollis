@@ -190,7 +190,7 @@ function initialize_model(; threshold = 0.4, density = 0.7, seed = 1, side = 20)
 end
 
 models = [{{init}}(seed = i) for i in 1:{{R}}]  # {{R}} independent replications, one seed each
-adata  = [(:mood, mean)]  # share of happy residents, column mean_mood (0 at step 0: nobody has been checked yet)
+adata  = [(:mood, mean)]  # share of residents found happy at their cell this step, before the unhappy ones move; column mean_mood (0 at step 0: nobody has been checked yet)
 
 adf, _ = ensemblerun!(models, {{T}}; adata)  # run all replications
 data = Tables.columntable(adf)  # plain columns: time, mean_mood, ensemble
@@ -233,7 +233,7 @@ end
 
 params = Dict(:threshold => [0.2, 0.4, 0.6, 0.8],  # paramscan scans only Vector values;
               :density   => [0.5, 0.7, 0.9])      # a range would be passed as one constant
-adata  = [(:mood, mean)]  # share of happy residents, column mean_mood
+adata  = [(:mood, mean)]  # share of residents found happy at their cell this step, before the unhappy ones move; column mean_mood
 
 adf, _ = paramscan(params, {{init}}; n = {{T}}, adata)  # full factorial scan
 data = Tables.columntable(adf)  # plain columns: time, mean_mood, threshold, density
@@ -356,17 +356,18 @@ end
 [[actionGroups.actions]]
 id = "finer-grid"
 label = "Finer Parameter Grid"
-desc = "Increase the resolution of the paramscan grid to locate phase boundaries more precisely"
+desc = "Scan the threshold on a coarse and a fine grid, each point with several seeds, and locate the steepest change in the share happy"
 code = '''
 using Agents, Statistics, Tables
 
-coarse = Dict(:threshold => collect(0.0:0.2:1.0))  # coarse scan (a Vector, so paramscan scans it)
-fine   = Dict(:threshold => collect(0.0:0.05:1.0))  # fine scan
-
-for (label, grid) in [("coarse", coarse), ("fine", fine)]
+for (label, step) in [("coarse", 0.2), ("fine", 0.05)]
+    grid = Dict(:threshold => collect(0.0:step:1.0), :seed => collect(1:{{R}}))  # every threshold with {{R}} seeds (Vectors, so paramscan scans them)
     cols = Tables.columntable(first(paramscan(grid, {{init}}; n = {{T}}, adata = [(:mood, mean)])))
-    last_step = cols.mean_mood[cols.time .== {{T}}]
-    println(label, "  grid points: ", length(last_step), "  range: ", extrema(last_step))
+    last = cols.time .== {{T}}
+    ths  = sort(unique(cols.threshold[last]))
+    m    = [mean(cols.mean_mood[last .& (cols.threshold .== th)]) for th in ths]  # mean over the seeds
+    j    = argmax(abs.(diff(m)))  # the steepest change between neighbouring thresholds
+    println(label, " grid (step ", step, ", ", {{R}}, " seeds each): the share happy changes most between threshold ", ths[j], " and ", ths[j + 1])
 end
 '''
 
