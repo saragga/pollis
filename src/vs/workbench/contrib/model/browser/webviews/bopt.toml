@@ -581,11 +581,11 @@ opt = BOpt(
 r_bo    = boptimize!(opt)  # global BO search
 x_start = r_bo.observed_optimizer  # best point from BO
 
-r_local = Optim.optimize(obj, x_start, Optim.NelderMead())  # local refinement from BO result
+r_local = Optim.optimize(x -> obj(clamp.(x, lb, ub)), x_start, Optim.NelderMead())  # local refinement from BO result, every evaluation inside the box
 
 println("After BO:         f = ", r_bo.observed_optimum)  # BO result
 println("After refinement: f = ", Optim.minimum(r_local))  # refined result
-println("Refined solution:     ", Optim.minimizer(r_local))  # refined point
+println("Refined solution:     ", clamp.(Optim.minimizer(r_local), lb, ub))  # refined point, in the box
 '''
 
 [[actionGroups.actions]]
@@ -675,7 +675,7 @@ function obj(x::Vector{Float64})
 end
 
 n  = {{n}}; lb = {{lb}}; ub = {{ub}}  # dimension and bounds
-budgets = [10, 20, 50, 100, 200]  # evaluation budgets to compare (at least 5 n: the initial design)
+budgets = 5n .+ [5, 10, 25, 50, 100]  # evaluation budgets to compare, each beyond the 5n points of the initial design
 
 for T in budgets
     bests = map(1:10) do s  # 10 seeds per budget
@@ -725,7 +725,7 @@ opt = BOpt(
 r_bo   = boptimize!(opt)  # global BO search
 
 # L-BFGS from {{budget}} random starts: each start makes many function and gradient calls, far more than BO's {{budget}} evaluations
-runs = [Optim.optimize(obj, lb .+ rand(n) .* (ub - lb), Optim.LBFGS()) for _ in 1:{{budget}}]
+runs = [Optim.optimize(obj, fill(lb, n), fill(ub, n), lb .+ rand(n) .* (ub - lb), Optim.Fminbox(Optim.LBFGS())) for _ in 1:{{budget}}]  # L-BFGS kept inside the box
 r_grad = minimum(Optim.minimum.(runs))
 
 println("BO best:     ", r_bo.observed_optimum, "  (", {{budget}}, " evaluations)")  # Bayesian optimisation result
