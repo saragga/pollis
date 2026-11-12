@@ -294,11 +294,16 @@ export function askStrategyReranks(strategy: IAskPollisStrategy, reranker: strin
 	return !!reranker && !!stepOf(strategy, 'rerank');
 }
 
-/** The search that `strategy` makes of `request`, `kept` passages going to the model in the end. */
+/**
+ * The search that `strategy` makes of `request`, `kept` passages going to the model in the end. Asked in a panel,
+ * the question is searched after the panel's title, so that its words, its embedding, the routing and the panel's
+ * share know what "this panel" is: "What does this panel check?" says nothing of its subject by itself.
+ */
 export function askStrategySearchRequest(strategy: IAskPollisStrategy, request: IAskPollisSearchRequest, kept: number, reranker: string | undefined): IAskPollisSearchRequest {
 	const search = stepOf(strategy, 'search');
 	return {
 		...request,
+		question: search && request.panel ? `${request.panel.title}: ${request.question}` : request.question,
 		passages: askStrategyReranks(strategy, reranker) ? kept * ASK_RERANK_WIDER : request.passages,
 		panel: search ? request.panel : undefined,
 		panelShare: search?.panelShare,
