@@ -878,7 +878,7 @@ code = '''
 {{?model=graph}} contour!(ax, bs, gs, R0grid; levels = [1.0], color = :white, linewidth = 2)  # R0 = 1
 {{?model=graph}} Colorbar(fig[1, 2], hm)
 {{?model=graph}} display(fig)
-{{?model=graph}} println("The white line is R0 = 1: large outbreaks happen above and to the left of it")
+{{?model=graph}} println("The white line is R0 = 1: large outbreaks happen below and to the right of it")
 '''
 
 # ── FAQ: shown in Learn More, and the Panel FAQ test set of Evaluate Answering Models (hidden = true: the test set only) ──
