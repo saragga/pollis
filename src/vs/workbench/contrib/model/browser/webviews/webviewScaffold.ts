@@ -274,8 +274,7 @@ const PANEL_ASK_HEIGHT = 120;
  * A panel's Ask Pollis, at the right of its title and Powered by, in place of the microphone and speaker of the other
  * pages: a narrow pill, the question on its first line, which wraps to the lines below as it is written, and on the
  * line under it the + at the left, and the voice tools of a chat's input box, then the arrow, at the right. Below the
- * pill, Context, the panel's `title` unless the user writes another: the question is searched after it, and the
- * answering model is told it. It is posted as `askPollis`, with the Context and what the + attached, which Ask Pollis
+ * pill, Context, the panel's `title` unless the user writes another: the question is searched after it. It is posted as `askPollis`, with the Context and what the + attached, which Ask Pollis
  * answers beside the panel.
  */
 export function panelAskHtml(title: string): string {
@@ -285,7 +284,7 @@ export function panelAskHtml(title: string): string {
 		context: localize('panelAsk.context', "Context"),
 		contextPrefix: localize('panelAsk.contextPrefix', "Context:"),
 		contextPlaceholder: localize('panelAsk.contextPlaceholder', "None"),
-		contextHint: localize('panelAsk.contextHint', "Searched before the question, and told to the answering model: this panel's title unless you write another. Clear it to ask the question alone."),
+		contextHint: localize('panelAsk.contextHint', "Searched before the question: this panel's title unless you write another. Clear it to search the question alone."),
 	};
 	return `<div class="panel-ask-column">
 			<div class="panel-ask composer">

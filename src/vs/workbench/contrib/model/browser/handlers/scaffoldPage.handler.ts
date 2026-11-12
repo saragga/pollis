@@ -17,7 +17,6 @@ import { INotebookEditorModelResolverService } from '../../../notebook/common/no
 import { INotebookKernelService } from '../../../notebook/common/notebookKernelService.js';
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
 import { IScaffoldPanelData } from '../common/model.types.js';
-import { panelCard } from '../common/tomlPanelData.js';
 import { createCustomCopyWiring, createReferenceWiring, createVideoWiring, openInBrowser, openNotebookByFile, openWikiByFile } from './model.handler.js';
 import { postLearnMoreData } from './scaffold.handler.js';
 
@@ -81,7 +80,7 @@ export function registerScaffoldPageHandlers(
 			case 'pickDatabase':
 			case 'openPdf':
 				// Answered in Ask Pollis beside the page, from its wikis and its packages' vignettes first
-				await handlePanelAskMessage(msg, webviewInput.webview, commandService, { title: panelTitle, packages: data.packages.map(pkg => pkg.name), card: panelCard(data) });
+				await handlePanelAskMessage(msg, webviewInput.webview, commandService, { title: panelTitle, packages: data.packages.map(pkg => pkg.name) });
 				break;
 			case 'voiceLanguage':
 				setVoiceLanguage(storageService, msg.value);

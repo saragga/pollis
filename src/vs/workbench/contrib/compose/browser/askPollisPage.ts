@@ -44,7 +44,7 @@ import { IWebviewViewService, WebviewView } from '../../webviewView/browser/webv
 import { createApiKeyWiring, IApiKeyWiring } from '../../model/browser/handlers/model.handler.js';
 import { composerSendSvg, spinnerCss, spinnerSvg, voiceSpeakerSvg } from '../../model/browser/webviews/webviewScaffold.js';
 import { ASK_CHAT_MODEL, ASK_CLOUD_MODELS, ASK_EMBEDDING_MODEL, ASK_PASSAGE_PREFIX, ASK_PASSAGES, ASK_QUERY_PREFIX, MODELS_INSTALLED_COMMAND_ID, ASK_CLOUD_PROVIDERS, ASK_LOCAL_PREFIX, ASK_POLLIS_ANSWERS_IN_CLOUD_COMMAND_ID, ASK_POLLIS_ADD_ATTACHMENT_COMMAND_ID, ASK_POLLIS_ATTACH_COMMAND_ID, ASK_POLLIS_COMMAND_ID, ASK_THIS_COMPUTER, ASK_ATTACHED_CHARACTERS, askCloudModel, AskPollisAttachRequest, AskPollisProvider, IAskPollisAddAttachment, IAskPollisAttached, IAskPollisAttachment, IAskPollisFromPanel, IAskPollisPanel, IAskPollisPassage, IAskPollisSearchResult, IAskPollisService } from '../common/askPollis.js';
-import { ASK_DEFAULT_STRATEGY, IAskPollisStrategiesService, askPollisStrategy, askStrategyAnswerPanel, askStrategyRerank, askStrategyReranks, askStrategySearchRequest } from '../common/askPollisStrategies.js';
+import { ASK_DEFAULT_STRATEGY, IAskPollisStrategiesService, askPollisStrategy, askStrategyRerank, askStrategyReranks, askStrategySearchRequest } from '../common/askPollisStrategies.js';
 import { AskAttachMessage, askAddHtml, askAttachCss, askAttachmentsHtml, askAttachScript, handleAskAttachMessage } from './askPollisAttach.js';
 import { askAnswerCss, askAnswerScript, askModelName, askNothingFound, askOpenPassage, askPassageView, askSearchedNames, askSearchesJulia, askSearchesNothing, askSearchIn, askSearchSources, askWordsOnlyNote } from './askPollisWebview.js';
 import { formatBytes, IDatasetSummary, summarizeCsv } from './collaboration/collaborationDatasets.js';
@@ -72,8 +72,8 @@ import './media/pollisAiStatus.css';
 // A question asked in a panel, in the pill at the right of its title (webviewScaffold.ts), is answered in the pane,
 // beside the panel: its wikis and the vignettes of its packages give most of the passages, and the model is told the
 // panel; the questions after it keep the panel, and the Context below the panel's question, until Ask Without It or
-// New Chat. The Context, the panel's title unless the user writes another, is searched before the question, given to
-// the reranker of a strategy that asks it the question after its context, and told the model.
+// New Chat. The Context, the panel's title unless the user writes another, is searched before the question; the
+// reranker and the answering model are given the question alone.
 
 type AskPollisMessage =
 	| { readonly command: 'ready' }
@@ -484,7 +484,7 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 			// The reranker keeps the best of what was found; if it does not answer, the search's own order stands, and the note says so
 			let rerankNote: string | undefined;
 			if (askStrategyReranks(strategy, reranker) && result.passages.length) {
-				const reranked = await askStrategyRerank(strategy, askPollisService, reranker, searched, askedIn, askedContext, result, kept);
+				const reranked = await askStrategyRerank(strategy, askPollisService, reranker, searched, askedIn, result, kept);
 				if (!current()) {
 					return;
 				}
@@ -524,7 +524,7 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 					turn.answer = text;
 					post({ command: 'text', turn: index, text });
 				}
-			}, source.token, undefined, askStrategyAnswerPanel(strategy, askedIn), attachments, undefined, askedContext);
+			}, source.token, undefined, attachments);
 			if (!current()) {
 				return;
 			}

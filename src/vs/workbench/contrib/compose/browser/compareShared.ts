@@ -107,7 +107,7 @@ export function isEvalItem(value: unknown): value is IAskPollisEvalItem {
 /** A question of a test set with its four fields, in RAGTools.jl's order, and the panel it is asked in, if any, with the wiki that answers it, and the Context it is asked with. */
 export function evalItem(item: IAskPollisEvalItem): IAskPollisEvalItem {
 	const panel = item.panel && typeof item.panel.title === 'string' && Array.isArray(item.panel.packages)
-		? { title: item.panel.title, packages: item.panel.packages.filter(name => typeof name === 'string'), ...(typeof item.panel.card === 'string' ? { card: item.panel.card } : {}) }
+		? { title: item.panel.title, packages: item.panel.packages.filter(name => typeof name === 'string') }
 		: undefined;
 	const closed = closedChoices(item);
 	return {

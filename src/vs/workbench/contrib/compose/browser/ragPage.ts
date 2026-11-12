@@ -452,7 +452,7 @@ async function openRagPage(accessor: ServicesAccessor): Promise<void> {
 			const answer = await askPollisService.answer([], found.question, found.passages, text => {
 				written = text;
 				post({ command: 'answerText', id, text });
-			}, source.token, model.value, undefined, undefined, current.name);
+			}, source.token, model.value, undefined, current.name);
 			const stopped = source.token.isCancellationRequested;
 			if (answering === source) {
 				answering = undefined;

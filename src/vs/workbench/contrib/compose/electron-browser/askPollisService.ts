@@ -14,7 +14,7 @@ import { InstantiationType, registerSingleton } from '../../../../platform/insta
 import { IProductService } from '../../../../platform/product/common/productService.js';
 import { ISecretStorageService } from '../../../../platform/secrets/common/secrets.js';
 import { IUtilityProcessWorkerWorkbenchService } from '../../../services/utilityProcess/electron-browser/utilityProcessWorkerWorkbenchService.js';
-import { ASK_CHAT_MODEL, ASK_CLOUD_PROVIDERS, ASK_EMBEDDING_CONTEXT, ASK_EMBEDDING_MODEL, ASK_LOCAL_PREFIX, ASK_PASSAGES, ASK_QUERY_PREFIX, ASK_RERANK_CONTEXT, ASK_SIMILARITY_PREFIX, askCloudModel, askPollisMessages, IAskPassageMatch, IAskPollisAnswer, IAskPollisAttachment, IAskPollisChatRequest, IAskPollisFound, IAskPollisIndex, IAskPollisIndexedDocument, IAskPollisIndexStatus, IAskPollisPanel, IAskPollisPassage, IAskPollisReranked, IAskPollisSearchRequest, IAskPollisSearchResult, IAskPollisSearchStamp, IAskPollisService, IAskPollisTurn, IAskTopicCounts, IBenchmarkAnswer, IBenchmarkRun, ICompareRun, ICompareRunSummary, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary, IRerankRun, IRerankRunSummary, IRetrievalEmbeddingRequest, IRetrievalEvaluation, IRetrievalQuery, IRetrievalRerankDone, IRetrievalRerankRequest } from '../common/askPollis.js';
+import { ASK_CHAT_MODEL, ASK_CLOUD_PROVIDERS, ASK_EMBEDDING_CONTEXT, ASK_EMBEDDING_MODEL, ASK_LOCAL_PREFIX, ASK_PASSAGES, ASK_QUERY_PREFIX, ASK_RERANK_CONTEXT, ASK_SIMILARITY_PREFIX, askCloudModel, askPollisMessages, IAskPassageMatch, IAskPollisAnswer, IAskPollisAttachment, IAskPollisChatRequest, IAskPollisFound, IAskPollisIndex, IAskPollisIndexedDocument, IAskPollisIndexStatus, IAskPollisPassage, IAskPollisReranked, IAskPollisSearchRequest, IAskPollisSearchResult, IAskPollisSearchStamp, IAskPollisService, IAskPollisTurn, IAskTopicCounts, IBenchmarkAnswer, IBenchmarkRun, ICompareRun, ICompareRunSummary, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary, IRerankRun, IRerankRunSummary, IRetrievalEmbeddingRequest, IRetrievalEvaluation, IRetrievalQuery, IRetrievalRerankDone, IRetrievalRerankRequest } from '../common/askPollis.js';
 
 /** What the command of the Julia extension that starts a llama.cpp server answers (pollisLlamaServer.ts). */
 interface ILlamaServerAnswer {
@@ -182,7 +182,7 @@ class AskPollisService extends Disposable implements IAskPollisService {
 		}
 	}
 
-	async answer(turns: readonly IAskPollisTurn[], question: string, passages: readonly IAskPollisPassage[], onText: (text: string) => void, token: CancellationToken, answerWith?: string, panel?: IAskPollisPanel, attachments?: readonly IAskPollisAttachment[], collection?: string, context?: string): Promise<IAskPollisAnswer> {
+	async answer(turns: readonly IAskPollisTurn[], question: string, passages: readonly IAskPollisPassage[], onText: (text: string) => void, token: CancellationToken, answerWith?: string, attachments?: readonly IAskPollisAttachment[], collection?: string): Promise<IAskPollisAnswer> {
 		const cloud = askCloudModel(answerWith ?? this.configurationService.getValue<string>('pollis.ask.answerWith'));
 		let chat: Omit<IAskPollisChatRequest, 'id' | 'messages'>;
 		if (cloud) {
@@ -222,7 +222,7 @@ class AskPollisService extends Disposable implements IAskPollisService {
 		try {
 			// A model of this computer does not see images yet
 			const seen = (attached: readonly IAskPollisAttachment[] | undefined) => cloud ? attached : attached?.filter(attachment => attachment.kind !== 'image');
-			const end = await proxy.chat({ ...chat, id, messages: askPollisMessages(turns.map(turn => ({ ...turn, attachments: seen(turn.attachments) })), question, passages, panel, seen(attachments), collection, context) });
+			const end = await proxy.chat({ ...chat, id, messages: askPollisMessages(turns.map(turn => ({ ...turn, attachments: seen(turn.attachments) })), question, passages, seen(attachments), collection) });
 			return { model: name, ...end };
 		} finally {
 			store.dispose();

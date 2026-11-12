@@ -29,17 +29,14 @@ import { ASK_RERANK_WIDER, IAskPollisPanel, IAskPollisPanelShare, IAskPollisPass
 //   panelNear = 0.75
 //   panelFar = 0.25
 //
-//   # optional: the reranker of Set Active Models, when one is set, asked the question ("question", the default) or
-//   # the question after its Context ("panel")
+//   # optional: the reranker of Set Active Models, when one is set, asked the question
 //   [[steps]]
 //   step = "rerank"
 //   by = "reranker"
-//   query = "panel"
 //
-//   # required, last: what the model is told of the panel, "named", "card" or "none"
+//   # required, last: the model is given the question and the passages
 //   [[steps]]
 //   step = "answer"
-//   panel = "card"
 //
 // Comments go on lines of their own: Pollis' TOML reader takes the rest of a line as the value.
 
@@ -51,16 +48,12 @@ export type AskPollisStrategyStep =
 	 */
 	| { readonly step: 'search'; readonly panelShare: number | IAskPollisPanelShare }
 	/**
-	 * Reranks them with the reranker of Set Active Models, when one is set, choosing among ASK_RERANK_WIDER times as many
-	 * found, the panel's own and the others each keeping their share; `query: 'panel'` asks the reranker the question
-	 * after its Context, the panel's title unless the user wrote another.
+	 * Reranks them with the reranker of Set Active Models, when one is set, asked the question, choosing among
+	 * ASK_RERANK_WIDER times as many found, the panel's own and the others each keeping their share.
 	 */
-	| { readonly step: 'rerank'; readonly by: 'reranker'; readonly query?: 'question' | 'panel' }
-	/**
-	 * Asks the model: asked in a panel, `named` tells it the panel and its menu, `card` what the panel holds too (its
-	 * models, Key Points, decision table, inputs and packages), `none` nothing of the panel.
-	 */
-	| { readonly step: 'answer'; readonly panel: 'named' | 'card' | 'none' };
+	| { readonly step: 'rerank'; readonly by: 'reranker' }
+	/** Asks the model the question, with the passages. */
+	| { readonly step: 'answer' };
 
 /** A strategy of Ask Pollis: its id, which the setting pollis.ask.strategy holds, its name, and its steps in order. */
 export interface IAskPollisStrategy {
@@ -85,21 +78,21 @@ export const ASK_POLLIS_STRATEGIES: readonly IAskPollisStrategy[] = [
 	{
 		id: ASK_DEFAULT_STRATEGY,
 		label: localize('askPollis.strategyPanelAware', "Panel Aware"),
-		description: localize('askPollis.strategyPanelAwareDescription', "Asked in a panel, six of the eight passages come from the panel's wikis and the vignettes of its packages when they are near the question, two when they are not; a reranker, when set, is asked the question after its Context; the model is told the panel's name and menu, and what the panel holds: its models, Key Points, decision table, inputs and packages."),
+		description: localize('askPollis.strategyPanelAwareDescription', "Asked in a panel, six of the eight passages come from the panel's wikis and the vignettes of its packages when they are near the question, two when they are not; a reranker, when set, chooses among three times as many, keeping the panel's share."),
 		steps: [
 			{ step: 'search', panelShare: { near: 6 / 8, far: 2 / 8 } },
-			{ step: 'rerank', by: 'reranker', query: 'panel' },
-			{ step: 'answer', panel: 'card' },
+			{ step: 'rerank', by: 'reranker' },
+			{ step: 'answer' },
 		],
 	},
 	{
 		id: ASK_BASE_STRATEGY,
 		label: localize('askPollis.strategyBase', "Base"),
-		description: localize('askPollis.strategyBaseDescription', "Asked in a panel, five of the eight passages come from the panel's wikis and the vignettes of its packages, the rest routed as without it; a reranker, when set, chooses among three times as many, keeping the panel's share; the model is told the panel's name and menu."),
+		description: localize('askPollis.strategyBaseDescription', "Asked in a panel, five of the eight passages come from the panel's wikis and the vignettes of its packages, the rest routed as without it; a reranker, when set, chooses among three times as many, keeping the panel's share."),
 		steps: [
 			{ step: 'search', panelShare: 5 / 8 },
 			{ step: 'rerank', by: 'reranker' },
-			{ step: 'answer', panel: 'named' },
+			{ step: 'answer' },
 		],
 	},
 ];
@@ -133,9 +126,7 @@ export function askStrategyToml(strategy: IAskPollisStrategy, id: string, label:
 				lines.push(`panelNear = ${step.panelShare.near}`, `panelFar = ${step.panelShare.far}`);
 			}
 		} else if (step.step === 'rerank') {
-			lines.push(`by = "${step.by}"`, `query = "${step.query ?? 'question'}"`);
-		} else {
-			lines.push(`panel = "${step.panel}"`);
+			lines.push(`by = "${step.by}"`);
 		}
 	}
 	return lines.join('\n') + '\n';
@@ -221,15 +212,14 @@ function stepOfTable(table: unknown, index: number, problems: string[]): AskPoll
 			}
 			return { step, panelShare: share(table, 'panelShare', at, problems) };
 		}
+		// query of a rerank step and panel of an answer step, of files written before, are read and have no effect
 		case 'rerank':
 			problems.push(...unknownKeys(table, ['step', 'by', 'query'], at));
 			text(table, 'by', at, problems, ['reranker']);
-			return { step, by: 'reranker', query: text(table, 'query', at, problems, ['question', 'panel'], 'question') === 'panel' ? 'panel' : 'question' };
-		default: {
+			return { step, by: 'reranker' };
+		default:
 			problems.push(...unknownKeys(table, ['step', 'panel'], at));
-			const panel = text(table, 'panel', at, problems, ['named', 'card', 'none']);
-			return { step: 'answer', panel: panel === 'card' || panel === 'none' ? panel : 'named' };
-		}
+			return { step: 'answer' };
 	}
 }
 
@@ -296,9 +286,9 @@ export function askStrategyReranks(strategy: IAskPollisStrategy, reranker: strin
 }
 
 /**
- * The question after its `context`, the Context below the question (the panel's title when asked in a panel, or what
- * the user wrote in its place), as it is searched and as the reranker of Panel Aware is asked it: "What does this panel
- * check?" says nothing of its subject by itself. Without a context, the question alone.
+ * The question after its `context`, the Context below a panel's question (the panel's title, or what the user wrote in
+ * its place), as it is searched: "What does this panel check?" says nothing of its subject by itself. Without a
+ * context, the question alone.
  */
 export function askInContext(question: string, context: string | undefined): string {
 	const trimmed = context?.trim();
@@ -338,18 +328,17 @@ function isPanelPassage(passage: IAskPollisPassage, panel: IAskPollisPanel): boo
 }
 
 /**
- * The passages `strategy` keeps of those found for `question`, asked in `panel` with `context`, `kept` of them, and
+ * The passages `strategy` keeps of those found for `question`, asked in `panel`, `kept` of them, and
  * the error of the reranker when it did not answer. Asked in a panel, the reranker orders the panel's own passages and
  * the others apart, and each keeps the share it has of those found, the share the search gave it: a passage of
  * another panel that answers "What does this panel check?" as well as the panel's own does not push them out.
  */
-export async function askStrategyRerank(strategy: IAskPollisStrategy, askPollisService: IAskPollisService, reranker: string | undefined, question: string, panel: IAskPollisPanel | undefined, context: string | undefined, result: IAskPollisSearchResult, kept: number): Promise<{ readonly result: IAskPollisSearchResult; readonly failed?: string }> {
+export async function askStrategyRerank(strategy: IAskPollisStrategy, askPollisService: IAskPollisService, reranker: string | undefined, question: string, panel: IAskPollisPanel | undefined, result: IAskPollisSearchResult, kept: number): Promise<{ readonly result: IAskPollisSearchResult; readonly failed?: string }> {
 	if (!askStrategyReranks(strategy, reranker) || !result.passages.length) {
 		return { result };
 	}
 	const found = result.passages;
-	const query = stepOf(strategy, 'rerank')?.query === 'panel' ? askInContext(question, context) : question;
-	const reranked = await askPollisService.rerank(reranker!, query, found);
+	const reranked = await askPollisService.rerank(reranker!, question, found);
 	const scores = reranked.scores;
 	if (!scores) {
 		return { result: { ...result, passages: found.slice(0, kept) }, failed: reranked.error ?? '' };
@@ -363,13 +352,4 @@ export async function askStrategyRerank(strategy: IAskPollisStrategy, askPollisS
 	const fromOwn = Math.max(share, kept - others.length);
 	const passages: IAskPollisPassage[] = best([...own.slice(0, fromOwn), ...others.slice(0, kept - fromOwn)]).map(position => found[position]);
 	return { result: { ...result, passages } };
-}
-
-/** The panel `strategy` tells the model of, asked in `panel`: its card only when the strategy gives it. */
-export function askStrategyAnswerPanel(strategy: IAskPollisStrategy, panel: IAskPollisPanel | undefined): IAskPollisPanel | undefined {
-	const told = stepOf(strategy, 'answer')?.panel;
-	if (!panel || !told || told === 'none') {
-		return undefined;
-	}
-	return told === 'card' ? panel : { title: panel.title, packages: panel.packages };
 }

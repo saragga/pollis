@@ -391,35 +391,6 @@ export function panelKeyPoints(data: IScaffoldPanelData): string[] {
 	return (data.bullets ?? []).map(bullet => bullet.detail?.trim() ? `${plainText(bullet.text)}: ${plainText(bullet.detail)}` : plainText(bullet.text));
 }
 
-/**
- * What a panel holds, for a model answering a question asked in it (the Panel Aware strategy of Ask Pollis): its models,
- * Key Points, decision table, inputs and packages, as plain text. Never its FAQ, whose questions test Ask Pollis.
- */
-export function panelCard(data: IScaffoldPanelData): string {
-	const lines: string[] = [];
-	const models = (data.models ?? []).map(model => plainText(model.label));
-	if (models.length > 1) {
-		lines.push(`Its models, each a tab: ${models.join('; ')}.`);
-	}
-	const bullets = panelKeyPoints(data).map(point => `- ${point}`);
-	if (bullets.length) {
-		lines.push('Its Key Points:', ...bullets);
-	}
-	const rows = (data.decisionRows ?? []).map(row => `- ${plainText(row.task)}: ${plainText(row.context)}. ${plainText(row.purpose)}`);
-	if (rows.length) {
-		lines.push('Which to choose, as its decision table says:', ...rows);
-	}
-	const inputs = [...new Set((data.inputs ?? []).map(input => plainText(input.label)).filter(label => label))];
-	if (inputs.length) {
-		lines.push(`Its inputs, which fill in its Example Code: ${inputs.join('; ')}.`);
-	}
-	const packages = data.packages.map(pkg => pkg.name);
-	if (packages.length) {
-		lines.push(`Powered by: ${packages.join(', ')}.`);
-	}
-	return lines.join('\n');
-}
-
 /** Whether `wiki` is a page of Learn More, bundled or online, rather than a separator between them. */
 function isWikiPage(wiki: IModelWiki): wiki is Exclude<IModelWiki, { readonly separator: true }> {
 	return (wiki as { readonly separator?: boolean }).separator !== true;
@@ -440,7 +411,7 @@ export function panelFaqItems(data: TomlValue, title: string): IModelFaqItem[] {
 			context: '',
 			question: entry.question,
 			answer: entry.answer,
-			panel: { title, packages: panel.packages.map(pkg => pkg.name), card: panelCard(panel) },
+			panel: { title, packages: panel.packages.map(pkg => pkg.name) },
 			...(wiki?.bundled ? { wikiFile: wiki.file } : {}),
 			hidden: true,
 			choices,
