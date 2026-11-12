@@ -446,6 +446,7 @@ code = '''
 {{?model=ep}}w = exp.(lw .- maximum(lw)); w ./= sum(w)
 {{?model=ep}}m_is = sum(w .* last.(xs)); v_is = sum(w .* (last.(xs) .- m_is) .^ 2)
 {{?model=ep}}println("x_T: EP mean ", mean(q_x[end]), " var ", var(q_x[end]), "  |  IS mean ", m_is, " var ", v_is, "  (effective sample size ", round(1 / sum(abs2, w)), ")")
+{{?model=ep}}1 / sum(abs2, w) < 100 && println("The effective sample size is below 100: the importance-sampling reference is unreliable and the gap says little about EP.")  # prior proposals over a long path give few useful draws
 '''
 
 [[actionGroups.actions]]
