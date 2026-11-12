@@ -18,10 +18,6 @@ description = "An 18-video course by Jamie Mair on writing fast Julia code"
 url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
 
 [[packages]]
-name = "AutoEncoderToolkit.jl"
-github = "https://github.com/mrazomej/AutoEncoderToolkit.jl"
-
-[[packages]]
 name = "PollisDatasets.jl"
 github = "https://github.com/Trumpingtons/PollisDatasets.jl"
 
