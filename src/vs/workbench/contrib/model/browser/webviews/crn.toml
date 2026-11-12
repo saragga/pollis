@@ -191,19 +191,19 @@ default = "100"
 [[inputs]]
 id = "k1"
 label = "k1 (forward rate)"
-tooltip = "Primary forward reaction rate. For Chemical: substrate binding rate k1. For Genetic: transcription rate alpha. For Ecological: prey growth rate a. For Epidemic: transmission rate beta."
+tooltip = "Primary forward reaction rate. For Chemical: substrate binding rate k1. For Genetic: maximal transcription rate v. For Ecological: prey growth rate a. For Epidemic: transmission rate beta."
 default = "1.0"
 
 [[inputs]]
 id = "k2"
 label = "k2 (reverse/decay rate)"
-tooltip = "Secondary rate. For Chemical: unbinding rate k2. For Genetic: protein degradation rate gamma. For Ecological: predator death rate c. For Epidemic: recovery rate gamma."
+tooltip = "Secondary rate. For Chemical: unbinding rate k2. For Genetic: protein degradation rate d. For Ecological: predator death rate c. For Epidemic: recovery rate gamma."
 default = "0.1"
 
 [[inputs]]
 id = "u0"
 label = "u0 (initial amount)"
-tooltip = "Initial copy number or concentration of the primary species. For Chemical: initial substrate S0. For Genetic: initial mRNA level. For Ecological: initial prey population. For Epidemic: initial susceptibles."
+tooltip = "Initial copy number or concentration of the primary species. For Chemical: initial substrate S0. For Genetic: initial level of protein Px. For Ecological: initial prey population. For Epidemic: initial susceptibles."
 default = "100"
 
 [[codeBranches]]
@@ -522,8 +522,10 @@ println("Linkage classes: ", length(linkageclasses(rn)))
 println("Deficiency:      ", delta)
 println("Weakly reversible: ", wr)
 if delta == 0 && wr
-    println("Deficiency zero theorem applies: for any rates, one positive steady state per compatibility class, locally asymptotically stable, no oscillations")
+    println("Deficiency 0 and weakly reversible: under mass-action kinetics, one positive steady state per compatibility class, locally asymptotically stable, no periodic orbits; rates such as Hill functions are not mass action and fall outside the theorem")
+elseif delta == 0
+    println("Deficiency 0, not weakly reversible: under mass-action kinetics, no positive steady state and no periodic orbit through positive concentrations")
 else
-    println("Deficiency zero theorem does not apply (it needs deficiency 0 AND weak reversibility); the dynamics may oscillate or have several steady states")
+    println("Deficiency above 0: the deficiency zero theorem does not apply, and the dynamics may oscillate or have several steady states")
 end
 '''
