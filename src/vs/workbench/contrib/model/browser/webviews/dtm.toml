@@ -150,12 +150,6 @@ label = "Corpus variable"
 tooltip = "A Julia vector of strings, one per document (e.g. a Vector{String} or a TextAnalysis.jl Corpus). The default, docs, is the text of The Pollis Guide from PollisDatasets, one document per section."
 default = "docs"
 
-[[inputs]]
-id = "lexicon"
-label = "Lexicon variable"
-tooltip = "Optional pre-built lexicon (Dict{String,Int}). Leave blank to build one automatically from the corpus."
-default = "lexicon"
-
 [[codeBranches]]
 model = "dtm"
 code = '''

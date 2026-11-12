@@ -18,7 +18,6 @@ All three tabs share the same Next Steps, which build the matrices that they nee
 | Input | Default | Role |
 |---|---|---|
 | **Corpus variable** | `docs` | Vector of strings, one per document |
-| **Lexicon variable** | `lexicon` | Optional pre-built vocabulary |
 
 The default `docs` loads the `pollis_guide` dataset from `PollisDatasets`, which has 130 sections on 19 topics. Replace it with your own vector of strings, and the same code runs on your texts.
 
