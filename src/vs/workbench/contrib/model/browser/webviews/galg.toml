@@ -153,7 +153,7 @@ label = "MCCGA"
 
 [[bullets]]
 text = "Classic GA"
-detail = "selection, crossover, and mutation on fixed-length chromosomes"
+detail = "selection, crossover, and mutation on fixed-length real-valued chromosomes"
 
 [[bullets]]
 text = "Compact GA"
@@ -165,7 +165,7 @@ detail = "biased random-key encoding with elite/non-elite crossover"
 
 [[bullets]]
 text = "MCCGA"
-detail = "machine-coded compact GA; encodes real variables as integers using b bits; maintains a marginal-product histogram updated by pairwise competition"
+detail = "machine-coded compact GA; encodes real variables as integers using b bits; maintains a probability for each bit, updated by pairwise competition"
 
 [[decisionRows]]
 task = "GA"
