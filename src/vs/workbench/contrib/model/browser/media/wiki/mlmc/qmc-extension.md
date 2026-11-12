@@ -33,11 +33,7 @@ The gain is largest on levels with a smooth integrand and few important dimensio
 
 ## Which Multilevel Next Steps Measure the Effect of the Lattice
 
-`h[:dV]`, **Variance Decay**, **Level Decay Plot** and the beta of **Rates** report the variance over points, which the lattice does not shrink. **Cost Forecast** therefore describes independent sampling, not the rule in use. The lattice shows up in the estimator variance and in total cost, so read **Confidence Interval** and **Multilevel vs Single Level**. A run on each tab at one **Relative Tolerance** gives the direct comparison.
-
-## How Reliable the Interval of the MLQMC Tab Is
-
-**Confidence Interval** multiplies the standard error by 1.96 on this tab as well. With the default of 10 shifts, the sample variance has few degrees of freedom on any one level, and a Student t multiplier for one level would be 2.262. The interval tends to run a little narrow. A larger **n Shifts** reduces the difference and costs more per level.
+The gain of the lattice shows in the estimator variance and in the total cost of a run. **Confidence Interval** reports the first, from the spread across the shifts. **Multilevel vs Single Level** sets the cost of the run against a single level sampled the same way, at the same finest level and tolerance. A run on each tab at one **Relative Tolerance** and one **Problem** gives the direct comparison between independent samples and the lattice, since the levels and `sample_fn` are the same on both tabs.
 
 ## References
 

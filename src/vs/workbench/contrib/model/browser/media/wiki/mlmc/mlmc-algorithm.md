@@ -32,7 +32,7 @@ The target is V + b^2 <= eps^2, where V is the estimator variance and b the bias
 
 ## How Continuation Works in MultilevelEstimators.jl
 
-`run(estimator, tol)` does not start at the target tolerance. By default, the package runs ten tolerances from 1.3^9 times `tol` down to `tol`, and each step reuses the samples already drawn. Early, cheap steps improve the estimates of V_l and of the rates before the expensive ones are reached. The panel reads only the final entry of the history, and the total cost it prints counts all samples kept by then.
+`run(estimator, tol)` does not start at the target tolerance. By default, the package runs a decreasing sequence of ten tolerances that ends at `tol`, and each step reuses the samples already drawn. Early, cheap steps improve the estimates of V_l and of the rates before the expensive ones are reached. The panel reads only the final entry of the history, and the total cost it prints counts all samples kept by then.
 
 ## Which Panel Inputs Affect the Multilevel Algorithm
 
