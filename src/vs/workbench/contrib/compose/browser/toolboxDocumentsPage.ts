@@ -102,7 +102,7 @@ async function openToolboxDocumentsPage(accessor: ServicesAccessor): Promise<voi
 		const documents: IListedDocument[] = toolboxPanelsService.getToolboxes().flatMap(toolbox => toolbox.documents.map(document => ({
 			key: documentKey(toolbox, document),
 			title: document.title,
-			panels: toolbox.panels.map(panel => panel.submenu ? `${panel.submenu} > ${panel.title}` : panel.title),
+			panels: toolbox.panels.map(panel => panel.title),
 			toolbox: toolbox.title,
 			extensionId: toolbox.extensionId,
 			version: toolbox.version,
