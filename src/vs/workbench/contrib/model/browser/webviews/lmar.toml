@@ -169,7 +169,7 @@ detail = "cycles between rho estimation and GLS until convergence; more efficien
 
 [[bullets]]
 text = "Hildreth-Lu"
-detail = "grid search over rho ∈ (−1, 1) minimising the sum of squared residuals; robust to poor starting values"
+detail = "grid search over 200 values of rho from −0.99 to 0.99, minimising the sum of squared residuals; robust to poor starting values"
 
 [[bullets]]
 text = "Beach-MacKinnon"
@@ -188,7 +188,7 @@ purpose = "Repeats the rho and GLS steps until both settle; usually closer to th
 [[decisionRows]]
 task = "Hildreth-Lu"
 context = "Strong autocorrelation or a suspected local optimum in the iterative methods"
-purpose = "Grid search over rho in (-1, 1) for the smallest transformed residual sum of squares: a global answer"
+purpose = "Grid search over 200 values of rho from -0.99 to 0.99 for the smallest transformed residual sum of squares: the best point on the grid"
 
 [[decisionRows]]
 task = "Beach-MacKinnon"
