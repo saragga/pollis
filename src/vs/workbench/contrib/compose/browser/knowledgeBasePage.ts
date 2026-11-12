@@ -800,7 +800,7 @@ ${spinnerCss}
 			renderIndex();
 		} else if (message.command === 'covers') {
 			covers = message.covers;
-			renderBooks();
+			if (state) { render(); }
 		} else if (message.command === 'progress') {
 			showProgress(message.progress);
 		} else if (message.command === 'built') {
