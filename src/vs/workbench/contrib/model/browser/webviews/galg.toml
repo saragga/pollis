@@ -165,7 +165,7 @@ detail = "biased random-key encoding with elite/non-elite crossover"
 
 [[bullets]]
 text = "MCCGA"
-detail = "machine-coded compact GA; encodes real variables as integers using b bits; maintains a probability for each bit, updated by pairwise competition"
+detail = "machine-coded compact GA; encodes real variables as Gray-coded integers of b bits; maintains a probability for each bit, updated by pairwise competition"
 
 [[decisionRows]]
 task = "GA"
@@ -373,8 +373,8 @@ newhist() = (best = Float64[], diversity = Float64[])
 
 BITS = {{bits}}  # fixed-point bits per variable
 
-# bits (most significant first) to a point in the box
-decode(bits, lb, ub) = [lb[i] + (ub[i] - lb[i]) * evalpoly(2, reverse(bits[(i - 1) * BITS + 1:i * BITS])) / (2^BITS - 1) for i in eachindex(lb)]
+# Gray-coded bits (most significant first) to a point in the box: neighbouring grid points differ in one bit
+decode(bits, lb, ub) = [lb[i] + (ub[i] - lb[i]) * evalpoly(2, reverse(accumulate(xor, bits[(i - 1) * BITS + 1:i * BITS]))) / (2^BITS - 1) for i in eachindex(lb)]
 
 function search(; gens=budget, NP=NP, seed=1, lb=lb, ub=ub)
     Random.seed!(seed)

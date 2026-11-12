@@ -16,9 +16,9 @@ Each generation runs **Population Size** / 2 competitions, each with this form:
 
 **Bits per Variable** sets a fixed-point code. Each variable has 2^b − 1 steps across its range, which for 16 bits on the default box means steps of about 0.000156. A step this size is also a floor on accuracy. As the origin falls midway between two grid points, the closest point has each coordinate about 0.000078 away, so f cannot fall below about 6e-6 at n = 5. Raising the number of bits lowers that floor and lengthens the model.
 
-## Why the Origin Is Hard for Plain Binary
+## Why the Code Is a Gray Code
 
-The two grid values closest to the origin are 0111…1 and 1000…0, which differ in every bit. All 16 probabilities have to move together for such a small step, so that the middle of the box sits on the worst of the code's Hamming cliffs. The default optimum therefore tests this tab at its weakest point. A Gray code, in which neighbouring values differ by one bit, is the usual cure: change `decode` in the code to try it, and move the optimum off-centre for a fairer test.
+In plain binary, the two grid values closest to the origin are 0111…1 and 1000…0, which differ in every bit. All 16 probabilities would have to move together for such a small step, so the middle of the box would sit on the worst of the code's Hamming cliffs. The tab reads each variable's bits as a Gray code instead, in which neighbouring grid values differ by one bit, so a step of one grid cell changes a single probability wherever the optimum lies. The accuracy floor above still applies, as it comes from the grid and not from the code.
 
 ## How MCCGA Encodes Numbers
 

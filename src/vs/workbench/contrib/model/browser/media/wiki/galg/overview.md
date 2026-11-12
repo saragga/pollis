@@ -17,7 +17,7 @@ Only values of f are used, with no gradients. The power of the method lies in re
 | Tab | Holds | Encoding | Variation |
 |---|---|---|---|
 | **GA** | Population | Real numbers | Tournament, intermediate crossover, Gaussian mutation |
-| **Compact GA** | Probability per bit | Fixed-point bits | Pairwise competitions |
+| **Compact GA** | Probability per bit | Gray-coded fixed-point bits | Pairwise competitions |
 | **BRKGA** | Population | Random keys in [0, 1] | Elite-biased crossover, fresh mutants |
 | **MCCGA** | Probability per bit | IEEE bits of a Float32 | Pairwise competitions |
 

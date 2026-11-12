@@ -23,7 +23,7 @@
 | **Generations** | 300 | All | Rounds |
 | **Crossover Rate** | 0.9 | **GA** | Chance a child uses crossover |
 | **Mutation Rate** | 0.1 | **GA** | Chance per gene |
-| **Bits per Variable** | 16 | **Compact GA** | Fixed-point resolution |
+| **Bits per Variable** | 16 | **Compact GA** | Fixed-point resolution, Gray-coded |
 | **Elite Fraction** | 0.2 | **BRKGA** | Share kept |
 | **Mutant Fraction** | 0.15 | **BRKGA** | Share of fresh keys |
 | **Elite Inheritance** | 0.7 | **BRKGA** | Chance per key from the elite parent |
