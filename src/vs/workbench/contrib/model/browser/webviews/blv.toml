@@ -429,10 +429,12 @@ id = "kkt-vs-grid"
 label = "KKT vs Grid Search"
 desc = "Both solution methods on the same problem: leader decision, objective and run time"
 code = '''
+{{?model=kkt}}runs = [("KKT big-M $bigM", () -> solve_kkt(; bigM=bigM)), ("grid 401", () -> solve_grid()), ("grid 2001", () -> solve_grid(; npts=2001))]  # Big-M from the tab
+{{?model=grid}}runs = [("KKT big-M 100", () -> solve_kkt()), ("grid $npts", () -> solve_grid(; npts=npts)), ("grid 2001", () -> solve_grid(; npts=2001))]  # Grid Points from the tab
 [begin
     t = @elapsed r = run()
     (method = name, x = round(r.x, digits=4), y = round(r.y, digits=4), leader_objective = round(r.F, digits=4), seconds = round(t, digits=3))
-end for (name, run) in [("KKT big-M", () -> solve_kkt()), ("grid 401", () -> solve_grid()), ("grid 2001", () -> solve_grid(; npts=2001))]]
+end for (name, run) in runs]
 '''
 
 [[actionGroups]]
