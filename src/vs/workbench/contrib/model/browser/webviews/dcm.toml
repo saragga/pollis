@@ -161,7 +161,7 @@ label = "Epsilon-Dominance Archive"
 
 [[bullets]]
 text = "MOEA/D"
-detail = "decomposes MOO into scalar subproblems via weight vectors; Chebyshev or PBI aggregation"
+detail = "decomposes MOO into scalar subproblems via weight vectors; Chebyshev (Tchebycheff) aggregation"
 
 [[bullets]]
 text = "CCMO"
@@ -169,7 +169,7 @@ detail = "coevolutionary constrained MOO; helper and main populations for constr
 
 [[bullets]]
 text = "Epsilon-Dominance Archive"
-detail = "NSGA-II feeding an epsilon-box archive, the core of the Borg MOEA (without its operator adaptation and restarts)"
+detail = "NSGA-II, whose evaluated solutions then fill an epsilon-box archive, the archive at the core of the Borg MOEA (without its operator adaptation and restarts)"
 
 [[decisionRows]]
 task = "MOEA/D"
@@ -184,7 +184,7 @@ purpose = "Coevolves two populations: one solves the constrained problem, a help
 [[decisionRows]]
 task = "Epsilon-Dominance Archive"
 context = "When a bounded, well-spread set of trade-offs at a chosen resolution is wanted, as in the Borg MOEA"
-purpose = "Runs NSGA-II and feeds every feasible solution it evaluates into an epsilon-box archive (the core of Borg): at most one solution per box of size eps, so the resolution of the front is set by eps rather than by the population size"
+purpose = "Runs NSGA-II, then places every feasible solution it evaluated into an epsilon-box archive (the archive at the core of Borg): at most one solution per box of size eps, so the resolution of the front is set by eps rather than by the population size"
 
 [[inputs]]
 id = "obj"
@@ -454,7 +454,7 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "compare-algorithms"
 label = "Compare Algorithms"
-desc = "MOEA/D, CCMO and plain NSGA-II on the same problem, budget and seed: front size, hypervolume (common reference point), feasibility and run time"
+desc = "MOEA/D, CCMO and plain NSGA-II on the same problem, number of generations and seed: front size, hypervolume (common reference point), feasibility and run time"
 code = '''
 pN = 1; while binomial(pN + nobj, nobj - 1) <= {{N}}; pN += 1; end  # MOEA/D partitions giving at most N weight vectors, as for the other algorithms
 runs = [(name, @timed optimize(f, bounds, make())) for (name, make) in [("MOEA/D", () -> MOEAD_DE(gen_ref_dirs(nobj, pN); options=opts(1))), ("CCMO", () -> CCMO(NSGA2(N={{N}}); options=opts(1))), ("NSGA-II", () -> NSGA2(N={{N}}, options=opts(1)))]]
