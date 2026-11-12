@@ -186,7 +186,7 @@ detail = "large neighbourhood search; destroy & repair operators applied iterati
 
 [[bullets]]
 text = "ALNS"
-detail = "adaptive LNS; weights each destroy fraction by its historical improvement rate"
+detail = "adaptive LNS; weights each destroy fraction by a recency-weighted record of its improvements"
 
 [[bullets]]
 text = "BH"
@@ -208,7 +208,7 @@ purpose = "Iterated local search: kick the incumbent and descend again, keeping 
 
 [[decisionRows]]
 task = "LNS"
-context = "Problems where some variables can be re-optimised while others stay fixed"
+context = "Problems where part of the variables can be perturbed and the solution then re-optimised"
 purpose = "Large neighbourhood search: destroy (re-sample) a fraction of the variables, then repair by local descent"
 
 [[decisionRows]]
@@ -248,7 +248,7 @@ default = "[5.12, 5.12]"
 [[inputs]]
 id = "budget"
 label = "Budget"
-tooltip = "Maximum number of objective evaluations. Every evaluation counts, including the finite-difference gradient evaluations of the local descents."
+tooltip = "Target number of objective evaluations, checked before each local descent, so a run can pass it slightly. Every evaluation counts, including the finite-difference gradient evaluations of the local descents."
 default = "5000"
 
 [[inputs]]
@@ -286,7 +286,7 @@ newRow = true
 [[inputs]]
 id = "temp"
 label = "Temperature"
-tooltip = "Metropolis temperature: a basin that is worse by T is accepted with probability exp(-1). Roughly the height of the barriers between neighbouring minima."
+tooltip = "Metropolis temperature: a basin that is worse by T is accepted with probability exp(-1). It compares the values of the minima reached by the local descents."
 default = "1.0"
 models = ["bh"]
 
