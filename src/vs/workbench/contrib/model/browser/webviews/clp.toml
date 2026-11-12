@@ -244,7 +244,7 @@ purpose = "Dense regions become clusters; isolated points are labelled noise"
 
 [[decisionRows]]
 task = "GMM"
-context = "Elliptical clusters of different sizes; probabilities wanted"
+context = "Clusters of different sizes and of different spreads along each variable; probabilities wanted"
 purpose = "Mixture of Gaussians fitted by EM with posterior membership probabilities"
 
 [[decisionRows]]
@@ -269,7 +269,7 @@ models = ["km", "kmed", "fcm", "gmm", "spectral"]
 [[inputs]]
 id = "maxiter"
 label = "max_iter"
-tooltip = "Maximum iterations: Lloyd updates (K-Means), swap passes (K-Medoids), membership updates (Fuzzy C-Means) or EM steps (GMM). Convergence is usually reached well before the limit."
+tooltip = "Maximum iterations: Lloyd updates (K-Means), assignment and medoid update passes (K-Medoids), membership updates (Fuzzy C-Means) or EM steps (GMM). Convergence is usually reached well before the limit."
 default = "300"
 models = ["km", "kmed", "fcm", "gmm"]
 
