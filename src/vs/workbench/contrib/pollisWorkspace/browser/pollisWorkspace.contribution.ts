@@ -28,12 +28,12 @@ export const OPEN_POLLIS_WORKSPACE_COMMAND_ID = 'pollis.workspace.open';
 const MARKER_FILE = 'pollis.toml';
 
 /** The kinds of file a Pollis Workspace has a folder for. */
-export type PollisWorkspaceFolder = 'data' | 'knowledge' | 'reports' | 'methods' | 'workflows' | 'panels' | 'toolboxes' | 'changes';
+export type PollisWorkspaceFolder = 'data' | 'knowledge_base' | 'reports' | 'methods' | 'workflows' | 'panels' | 'toolboxes' | 'changes';
 
 /** The folder of each kind, as a new workspace names it, what its README says it holds, and its subfolders. */
 const FOLDERS: Readonly<Record<PollisWorkspaceFolder, { readonly name: string; readonly readme: string; readonly subfolders?: readonly string[] }>> = {
 	data: { name: 'data', readme: 'Datasets of your own, and the copies of articles and data saved with Save a Copy... (Compose > Replication) and the WRDS page.' },
-	knowledge: { name: 'knowledge', readme: 'Your own books, articles and reports, as PDF, Markdown or text files, which the Knowledge Base (Compose > Knowledge for AI Models) lists with its own texts and indexes. A text is of the type of its folder: books/, articles/ or reports/.', subfolders: ['books', 'articles', 'reports'] },
+	knowledge_base: { name: 'knowledge_base', readme: 'Your own books, articles and reports, as PDF, Markdown or text files, which the Knowledge Base (Compose > Knowledge for AI Models) lists with its own texts and indexes. A text is of the type of its folder: books/, articles/ or reports/.', subfolders: ['books', 'articles', 'reports'] },
 	reports: { name: 'reports', readme: 'The reports and slides that Pollis writes from notebooks, one folder each.' },
 	methods: { name: 'methods', readme: 'Your methods, one folder each.' },
 	workflows: { name: 'workflows', readme: 'Your workflows.' },
@@ -228,7 +228,7 @@ registerAction2(class extends Action2 {
 		if (!await fileService.exists(joinPath(folder, MARKER_FILE))) {
 			const { confirmed } = await dialogService.confirm({
 				message: localize('pollisWorkspace.makeIt', "Make {0} a Pollis Workspace?", basename(folder)),
-				detail: localize('pollisWorkspace.makeItDetail', "Pollis adds pollis.toml and its folders, data, knowledge, reports, methods, workflows, panels, toolboxes and changes, each with a README, and keeps everything the folder has."),
+				detail: localize('pollisWorkspace.makeItDetail', "Pollis adds pollis.toml and its folders, data, knowledge_base, reports, methods, workflows, panels, toolboxes and changes, each with a README, and keeps everything the folder has."),
 				primaryButton: localize({ key: 'pollisWorkspace.makeItButton', comment: ['&& denotes a mnemonic'] }, "&&Make It a Pollis Workspace"),
 			});
 			if (!confirmed) {

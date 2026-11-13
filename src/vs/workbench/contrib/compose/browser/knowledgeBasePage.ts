@@ -60,7 +60,7 @@ import { findPollisWorkspace, OPEN_POLLIS_WORKSPACE_COMMAND_ID, pollisWorkspaceF
 // ~/.pollis/rag/knowledge-base.duckdb. Above the table, each published book has a card, in thanks to its authors: its
 // cover, as they show it, which comes with PollisKnowledge.jl, its title, edition, authors, publisher and year, their
 // page and the publisher's, where the printed book is sold. The user's own texts, the PDF, Markdown and text files in
-// the knowledge folder of the Pollis Workspace open, are in the same table, with User as their source, the type of
+// the knowledge_base folder of the Pollis Workspace open, are in the same table, with User as their source, the type of
 // their folder (books/, articles/ or reports/) and switched on until the user switches them off; the table reads the
 // folder again each time the page or the window gets the focus.
 
@@ -97,7 +97,7 @@ interface ITextDocument {
 	readonly kind: TextFormat;
 }
 
-/** A text of the user's own, a file in the knowledge folder of the Pollis Workspace open. */
+/** A text of the user's own, a file in the knowledge_base folder of the Pollis Workspace open. */
 interface IYourText {
 	/** Its path, which names it. */
 	readonly id: string;
@@ -109,7 +109,7 @@ interface IYourText {
 	readonly document: ITextDocument;
 	/** The LaTeX source beside a PDF, of the same name, which its passages come from. */
 	readonly source?: string;
-	/** Its path in the knowledge folder, with forward slashes, which names its entry in catalogue.toml. */
+	/** Its path in the knowledge_base folder, with forward slashes, which names its entry in catalogue.toml. */
 	readonly key: string;
 	readonly keyWords: readonly string[];
 	/** Its classifications, each as "MSC: 68N15, 65Y05". */
@@ -128,7 +128,7 @@ interface ICatalogueEntry {
 	readonly read: boolean;
 }
 
-/** The file of the key words, subjects and subject classifications of the user's texts, in the knowledge folder. */
+/** The file of the key words, subjects and subject classifications of the user's texts, in the knowledge_base folder. */
 const CATALOGUE_FILE = 'catalogue.toml';
 /** The fields of a text of the user's the page changes. */
 type CatalogueField = 'keyWords' | 'subject' | 'classifications';
@@ -137,9 +137,9 @@ type CatalogueField = 'keyWords' | 'subject' | 'classifications';
 const YOUR_EXTENSIONS: Record<string, TextFormat> = { '.pdf': 'pdf', '.md': 'markdown', '.markdown': 'markdown', '.txt': 'text', '.tex': 'latex' };
 /** An arXiv identifier as the first page of its PDF, in its margin, or the name of its file has it: 2106.11342v4, math/0601001. */
 const ARXIV_ID = /(?:arXiv:\s*)?(?<id>\d{4}\.\d{4,5}(?:v\d+)?|[a-z-]+(?:\.[A-Z]{2})?\/\d{7}(?:v\d+)?)/;
-/** How deep in the knowledge folder the user's texts are looked for. */
+/** How deep in the knowledge_base folder the user's texts are looked for. */
 const YOUR_DEPTH = 4;
-/** The subfolders of the knowledge folder a text of the user's is added to, one a type. */
+/** The subfolders of the knowledge_base folder a text of the user's is added to, one a type. */
 const YOUR_FOLDERS = ['books', 'articles', 'reports'] as const;
 
 /** The page of the record of a book at the Library of Congress. */
@@ -339,18 +339,18 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 	const progressOf = async () => commandService.executeCommand<IKnowledgeProgress | undefined>('language-julia.pollisCollectionProgress', (await databaseFile()).fsPath).catch(() => undefined);
 	const progressTimer = disposables.add(new IntervalTimer());
 	const watchProgress = () => progressTimer.cancelAndSet(async () => post({ command: 'progress', progress: await progressOf() }), 1000);
-	/** The user's own texts, in the knowledge folder of the Pollis Workspace open, by their paths. */
+	/** The user's own texts, in the knowledge_base folder of the Pollis Workspace open, by their paths. */
 	let yours: IYourText[] = [];
-	/** The type of a text of the user's, by the subfolder of the knowledge folder it is in. */
+	/** The type of a text of the user's, by the subfolder of the knowledge_base folder it is in. */
 	const yourTypes: Record<string, string> = {
 		books: localize('knowledgeBase.typeBook', "Book"),
 		articles: localize('knowledgeBase.typeArticle', "Article"),
 		reports: localize('knowledgeBase.typeReport', "Report"),
 	};
 	const otherType = localize('knowledgeBase.typeOther', "Other");
-	/** The knowledge folder of the Pollis Workspace open, once read; undefined without one. */
+	/** The knowledge_base folder of the Pollis Workspace open, once read; undefined without one. */
 	let knowledgeFolder: URI | undefined;
-	// The knowledge folder and its subfolders are watched, each on its own (a correlated watcher sees one folder), so
+	// The knowledge_base folder and its subfolders are watched, each on its own (a correlated watcher sees one folder), so
 	// that a file put in them or taken out shows at once
 	const watchers = disposables.add(new MutableDisposable<DisposableStore>());
 	let watched = '';
@@ -368,7 +368,7 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 		}
 		watchers.value = store;
 	};
-	/** The entries of catalogue.toml, by the paths of their texts in the knowledge folder. */
+	/** The entries of catalogue.toml, by the paths of their texts in the knowledge_base folder. */
 	let catalogue = new Map<string, ICatalogueEntry>();
 	const readCatalogueFile = async (knowledge: URI) => {
 		const content = await fileService.readFile(joinPath(knowledge, CATALOGUE_FILE)).then(file => file.value.toString(), () => '');
@@ -392,7 +392,7 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 		}
 		catalogue = entries;
 	};
-	/** Writes catalogue.toml, with the entries of the texts in the knowledge folder. */
+	/** Writes catalogue.toml, with the entries of the texts in the knowledge_base folder. */
 	const writeCatalogueFile = async () => {
 		if (!knowledgeFolder) {
 			return;
@@ -424,7 +424,7 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 	const readYours = async () => {
 		const found: IYourText[] = [];
 		const workspace = await findPollisWorkspace(contextService, fileService);
-		const knowledge = workspace && await pollisWorkspaceFolder(fileService, workspace, 'knowledge').catch(() => undefined);
+		const knowledge = workspace && await pollisWorkspaceFolder(fileService, workspace, 'knowledge_base').catch(() => undefined);
 		knowledgeFolder = knowledge;
 		if (knowledge) {
 			await readCatalogueFile(knowledge);
@@ -498,7 +498,7 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 		}
 		const { result } = await dialogService.prompt<'replace' | 'both' | undefined>({
 			type: Severity.Warning,
-			message: localize('knowledgeBase.exists', "{0} is in the knowledge folder already.", name + extension),
+			message: localize('knowledgeBase.exists', "{0} is in the knowledge_base folder already.", name + extension),
 			buttons: [
 				{ label: localize({ key: 'knowledgeBase.replace', comment: ['&& denotes a mnemonic'] }, "&&Replace"), run: () => 'replace' },
 				{ label: localize({ key: 'knowledgeBase.keepBoth', comment: ['&& denotes a mnemonic'] }, "&&Keep Both"), run: () => 'both' },
@@ -515,17 +515,17 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 			}
 		}
 	};
-	/** The subfolder of the knowledge folder of the type the user chooses for `count` texts; undefined when they cancel. */
+	/** The subfolder of the knowledge_base folder of the type the user chooses for `count` texts; undefined when they cancel. */
 	const chooseFolder = async (workspace: URI, count: number) => {
-		const type = await quickInputService.pick(YOUR_FOLDERS.map(folder => ({ label: yourTypes[folder], description: `knowledge/${folder}`, folder })), {
+		const type = await quickInputService.pick(YOUR_FOLDERS.map(folder => ({ label: yourTypes[folder], description: `knowledge_base/${folder}`, folder })), {
 			placeHolder: count === 1
-				? localize('knowledgeBase.typeOne', "The type of the text: the folder of the knowledge folder it goes in")
-				: localize('knowledgeBase.typeMany', "The type of the {0} texts: the folder of the knowledge folder they go in", count),
+				? localize('knowledgeBase.typeOne', "The type of the text: the folder of the knowledge_base folder it goes in")
+				: localize('knowledgeBase.typeMany', "The type of the {0} texts: the folder of the knowledge_base folder they go in", count),
 		});
-		return type && joinPath(await pollisWorkspaceFolder(fileService, workspace, 'knowledge'), type.folder);
+		return type && joinPath(await pollisWorkspaceFolder(fileService, workspace, 'knowledge_base'), type.folder);
 	};
 	/**
-	 * Adds texts of the user's, from this computer or from a link, into the subfolder of the knowledge folder of the
+	 * Adds texts of the user's, from this computer or from a link, into the subfolder of the knowledge_base folder of the
 	 * type they choose, each named by the title they write. Without a Pollis Workspace open, it opens one.
 	 */
 	const addTexts = async () => {
@@ -567,7 +567,7 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 			const name = basename(file);
 			const extension = extname(file);
 			const title = await askTitle(name.slice(0, name.length - extension.length), name);
-			// A file in the knowledge folder already is moved there, as Rename... does, not copied beside itself; to its
+			// A file in the knowledge_base folder already is moved there, as Rename... does, not copied beside itself; to its
 			// own name, in other capitals or none, without asking about the file there, which is itself
 			const own = yours.find(text => isEqual(URI.file(text.id), file));
 			const itself = title !== undefined && joinPath(folder, fileNameOf(title) + extension).fsPath.toLowerCase() === file.fsPath.toLowerCase();
@@ -979,7 +979,7 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 			reading = false;
 		}
 	};
-	// The user's texts are read again at each focus, as files added to the knowledge folder or taken out of it
+	// The user's texts are read again at each focus, as files added to the knowledge_base folder or taken out of it
 	const readYoursAgain = async () => {
 		if (await readYours() && openPage === webviewInput) {
 			await postState();
@@ -1076,9 +1076,9 @@ function pageHtml(rows: number): string {
 		switchOnShownHint: localize('knowledgeBase.switchOnShownHint', "Switch on every text the type and the search leave, on every page; those not on this computer are downloaded, one at a time"),
 		switchOffShownHint: localize('knowledgeBase.switchOffShownHint', "Switch off every text the type and the search leave, on every page"),
 		addTexts: localize('knowledgeBase.addTexts', "Add Your Texts..."),
-		addTextsHint: localize('knowledgeBase.addTextsHint', "Add texts of your own to the knowledge folder of the Pollis Workspace, from this computer or from a link, each named by the title you write"),
+		addTextsHint: localize('knowledgeBase.addTextsHint', "Add texts of your own to the knowledge_base folder of the Pollis Workspace, from this computer or from a link, each named by the title you write"),
 		openWorkspace: localize('knowledgeBase.openWorkspace', "Open a Pollis Workspace to Add Your Texts..."),
-		openWorkspaceHint: localize('knowledgeBase.openWorkspaceHint', "Your own texts are the files of the knowledge folder of the Pollis Workspace open"),
+		openWorkspaceHint: localize('knowledgeBase.openWorkspaceHint', "Your own texts are the files of the knowledge_base folder of the Pollis Workspace open"),
 		rename: localize('knowledgeBase.rename', "Rename..."),
 		renameHint: localize('knowledgeBase.renameHint', "Write the title of the text: Pollis renames its file by it"),
 		keyWords: localize('knowledgeBase.keyWords', "Key Words"),
@@ -1100,7 +1100,7 @@ function pageHtml(rows: number): string {
 		textColumn: localize('knowledgeBase.textColumn', "Text"),
 		type: localize('knowledgeBase.type', "Type"),
 		source: localize('knowledgeBase.source', "Source"),
-		sourceHint: localize('knowledgeBase.sourceHint', "PollisKnowledge.jl, or User: a file of yours in the knowledge folder of the Pollis Workspace open"),
+		sourceHint: localize('knowledgeBase.sourceHint', "PollisKnowledge.jl, or User: a file of yours in the knowledge_base folder of the Pollis Workspace open"),
 		yours: localize('knowledgeBase.user', "User"),
 		yourFile: localize('knowledgeBase.yourFile', "Your file, unchanged."),
 		yourFileWithSource: localize('knowledgeBase.yourFileWithSource', "Your PDF, with its LaTeX source beside it, which the passages come from."),

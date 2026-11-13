@@ -1066,7 +1066,7 @@ Reports are written in the \texttt{reports} folder of a \emph{Pollis Workspace}:
 your own work, outside Pollis. To make one, choose \ui{File > New Pollis Workspace...}, give the folder a
 name (it starts as Pollis Workspace, in your Documents), and click \ui{Create}. Pollis makes the folder,
 puts a \texttt{pollis.toml} file in it and a folder for each kind of file, each with a README: \texttt{data}
-(your datasets and saved copies), \texttt{knowledge} (your books, articles and reports), \texttt{reports},
+(your datasets and saved copies), \texttt{knowledge\_base} (your books, articles and reports), \texttt{reports},
 \texttt{methods}, \texttt{workflows}, \texttt{panels}, \texttt{toolboxes} (the toolboxes you make to share your
 panels) and \texttt{changes}, and opens it. Pollis looks in these
 folders first; \texttt{pollis.toml} names them, so a folder you rename is renamed there too. Next time, choose
@@ -2353,7 +2353,7 @@ or choose \ui{All Sources}, in Ask Pollis and in Evaluate Answering Models. \ui{
 Deep Learning, Probabilistic Machine Learning: An Introduction, Algorithms for Optimization and Algorithms for Decision
 Making, each with its type, subject, licence, size, what is kept of it and how it is cut into passages. \ui{On}
 downloads a text once, from PollisKnowledge.jl, and \ui{Build the Index} cuts the texts switched on into passages and
-embeds them. Your own texts, the PDF, Markdown and text files in the \texttt{knowledge} folder of the Pollis Workspace
+embeds them. Your own texts, the PDF, Markdown and text files in the \texttt{knowledge\_base} folder of the Pollis Workspace
 open, are in the same table, with \ui{User} as their source and the type of their folder, \texttt{books},
 \texttt{articles} or \texttt{reports}, switched on until you switch them off. \ui{Add Your Texts...} copies files
 of yours there, from your Downloads folder first, or downloads one from a link, a DOI or an arXiv identifier when an
@@ -2361,7 +2361,7 @@ open copy is found, each named by the title you write, and \ui{Rename...} gives 
 text of yours another title. The key words and subject classifications an article prints on its first page, such as
 \texttt{AMS subject classifications. 68N15, 65Y05}, are read into \ui{Key Words} and \ui{Subject
 Classifications}, and \ui{Subject} names the class of the first code, Computer science (MSC 68); Pollis keeps them in
-\texttt{knowledge/catalogue.toml}, and a click on a cell changes them. A PDF with its LaTeX source beside it, a
+\texttt{knowledge\_base/catalogue.toml}, and a click on a cell changes them. A PDF with its LaTeX source beside it, a
 \texttt{.tex} file of the same name, has its passages from the source, its mathematics as written, so that a model
 reads its formulas; \ui{From a Link or DOI...} downloads the source of an arXiv article with its PDF, and \ui{Get the
 LaTeX Source} downloads it for a PDF of yours. \ui{Search In} then lists \ui{Knowledge Base}, and each collection of \ui{Compose > Knowledge for AI Models
