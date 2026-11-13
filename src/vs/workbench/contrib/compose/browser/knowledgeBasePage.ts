@@ -46,7 +46,8 @@ import { compareCss, pageHelpersScript } from './compareShared.js';
 import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_MINIMAL_STYLE } from './libraryPage.js';
 import { IInstalledModel } from './modelsInstalledPage.js';
 import { tomlString } from './articleAndData.js';
-import { classificationText, parseClassification, readClassification, subjectOf } from '../common/subjectClassifications.js';
+import { classificationText, parseClassification, readClassification, readLatexClassification, subjectOf } from '../common/subjectClassifications.js';
+import { latexSourceOf } from './latexSource.js';
 import { parseToml } from '../../model/browser/common/tomlPanelData.js';
 import { findPollisWorkspace, OPEN_POLLIS_WORKSPACE_COMMAND_ID, pollisWorkspaceFolder } from '../../pollisWorkspace/browser/pollisWorkspace.contribution.js';
 
@@ -87,7 +88,7 @@ interface IKnowledgeSettings {
 }
 
 /** The kinds of document a text can be. */
-type TextFormat = 'pdf' | 'markdown' | 'text';
+type TextFormat = 'pdf' | 'markdown' | 'text' | 'latex';
 
 /** A document of a text on this computer. */
 interface ITextDocument {
@@ -104,7 +105,10 @@ interface IYourText {
 	/** Its path in the Pollis Workspace. */
 	readonly path: string;
 	readonly size: number;
+	/** What the index reads: the file, or, for a PDF with its LaTeX source beside it, the source. */
 	readonly document: ITextDocument;
+	/** The LaTeX source beside a PDF, of the same name, which its passages come from. */
+	readonly source?: string;
 	/** Its path in the knowledge folder, with forward slashes, which names its entry in catalogue.toml. */
 	readonly key: string;
 	readonly keyWords: readonly string[];
@@ -130,7 +134,9 @@ const CATALOGUE_FILE = 'catalogue.toml';
 type CatalogueField = 'keyWords' | 'subject' | 'classifications';
 
 /** The files the Knowledge Base reads as the user's texts, by their extensions. */
-const YOUR_EXTENSIONS: Record<string, TextFormat> = { '.pdf': 'pdf', '.md': 'markdown', '.markdown': 'markdown', '.txt': 'text' };
+const YOUR_EXTENSIONS: Record<string, TextFormat> = { '.pdf': 'pdf', '.md': 'markdown', '.markdown': 'markdown', '.txt': 'text', '.tex': 'latex' };
+/** An arXiv identifier as the first page of its PDF, in its margin, or the name of its file has it: 2106.11342v4, math/0601001. */
+const ARXIV_ID = /(?:arXiv:\s*)?(?<id>\d{4}\.\d{4,5}(?:v\d+)?|[a-z-]+(?:\.[A-Z]{2})?\/\d{7}(?:v\d+)?)/;
 /** How deep in the knowledge folder the user's texts are looked for. */
 const YOUR_DEPTH = 4;
 /** The subfolders of the knowledge folder a text of the user's is added to, one a type. */
@@ -160,6 +166,8 @@ interface ILinkedText {
 	readonly pdf?: string;
 	readonly page: string;
 	readonly title?: string;
+	/** Its arXiv identifier, for its LaTeX source. */
+	readonly arxiv?: string;
 }
 
 /** Whether the bytes are those of a PDF. */
@@ -243,7 +251,8 @@ type KnowledgeMessage =
 	| { readonly command: 'build' }
 	| { readonly command: 'add' }
 	| { readonly command: 'rename'; readonly id: string }
-	| { readonly command: 'edit'; readonly id: string; readonly field: CatalogueField };
+	| { readonly command: 'edit'; readonly id: string; readonly field: CatalogueField }
+	| { readonly command: 'source'; readonly id: string };
 
 /** The open page, so a second request shows it again. */
 let openPage: WebviewInput | undefined;
@@ -423,8 +432,15 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 		const folders = knowledge ? [knowledge] : [];
 		const visit = async (folder: URI, type: string, depth: number): Promise<void> => {
 			const stat = await fileService.resolve(folder, { resolveMetadata: true }).catch(() => undefined);
-			for (const child of stat?.children ?? []) {
+			const children = stat?.children ?? [];
+			// A PDF and a LaTeX source of the same name are one text: the PDF, its passages from the source
+			const named = (file: URI, extension: string) => children.find(other => !other.isDirectory && other.name.toLowerCase() === basename(file).slice(0, -extname(file).length).toLowerCase() + extension);
+			for (const child of children) {
 				const format = YOUR_EXTENSIONS[extname(child.resource).toLowerCase()];
+				if (format === 'latex' && named(child.resource, '.pdf')) {
+					continue;
+				}
+				const source = format === 'pdf' ? named(child.resource, '.tex')?.resource : undefined;
 				if (child.isDirectory && !depth) {
 					folders.push(child.resource);
 				}
@@ -437,7 +453,8 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 					found.push({
 						id: child.resource.fsPath, type, path: workspace ? relativePath(workspace, child.resource) ?? name : name,
 						size: Math.max(0.1, Math.round(child.size / 1e5) / 10),
-						document: { file: child.resource.fsPath, title: name.slice(0, name.length - extname(child.resource).length), kind: format },
+						document: { file: (source ?? child.resource).fsPath, title: name.slice(0, name.length - extname(child.resource).length), kind: source ? 'latex' : format },
+						source: source?.fsPath,
 						key, keyWords: entry?.keyWords ?? [], classifications: entry?.classifications ?? [], subject: subjectOfEntry(entry),
 					});
 				}
@@ -552,7 +569,7 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 			const title = await askTitle(name.slice(0, name.length - extension.length), name);
 			// A file in the knowledge folder already is moved there, as Rename... does, not copied beside itself; to its
 			// own name, in other capitals or none, without asking about the file there, which is itself
-			const own = yours.find(text => isEqual(URI.file(text.document.file), file));
+			const own = yours.find(text => isEqual(URI.file(text.id), file));
 			const itself = title !== undefined && joinPath(folder, fileNameOf(title) + extension).fsPath.toLowerCase() === file.fsPath.toLowerCase();
 			const target = title === undefined ? undefined : own && itself ? joinPath(folder, fileNameOf(title) + extension) : await targetFor(folder, fileNameOf(title), extension);
 			if (target && own) {
@@ -576,7 +593,7 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 		if (arxiv) {
 			const feed = await request(`https://export.arxiv.org/api/query?id_list=${encodeURIComponent(arxiv)}`).then(context => isSuccess(context) ? asText(context) : null, () => null) ?? '';
 			const title = /<entry>[\s\S]*?<title>(?<title>[\s\S]*?)<\/title>/.exec(feed)?.groups?.title.replace(/\s+/g, ' ').trim();
-			return { pdf: `https://arxiv.org/pdf/${arxiv}`, page: `https://arxiv.org/abs/${arxiv}`, title: title || undefined };
+			return { pdf: `https://arxiv.org/pdf/${arxiv}`, page: `https://arxiv.org/abs/${arxiv}`, title: title || undefined, arxiv };
 		}
 		return /^https?:\/\//i.test(link) ? { pdf: link, page: link } : undefined;
 	};
@@ -641,8 +658,55 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 		const target = folder && title !== undefined ? await targetFor(folder, fileNameOf(title), '.pdf') : undefined;
 		if (target) {
 			await fileService.writeFile(target, found.pdf).catch(error => notificationService.error(localize('knowledgeBase.addFailed', "{0} could not be added: {1}", basename(target), String(error?.message ?? error))));
+			if (found.linked.arxiv) {
+				await addSource(target, found.linked.arxiv);
+			}
 			await readYoursAgain();
 		}
+	};
+	/** The LaTeX source of an article at arXiv, as one file; undefined when arXiv has it only as a PDF. */
+	const arxivSource = async (arxiv: string) => {
+		const context = await request(`https://arxiv.org/e-print/${arxiv}`);
+		return isSuccess(context) ? latexSourceOf(await streamToBuffer(context.stream)) : undefined;
+	};
+	/** Writes the LaTeX source of the arXiv article `arxiv` beside its PDF, by its name; whether arXiv has one. */
+	const addSource = (pdf: URI, arxiv: string) => progressService.withProgress({ location: ProgressLocation.Notification, title: localize('knowledgeBase.downloadingSource', "Downloading the LaTeX source of arXiv:{0}...", arxiv) }, async () => {
+		const source = await arxivSource(arxiv).catch(() => undefined);
+		if (source) {
+			await fileService.writeFile(joinPath(dirname(pdf), basename(pdf).slice(0, -extname(pdf).length) + '.tex'), VSBuffer.fromString(source));
+		}
+		return !!source;
+	});
+	/**
+	 * Gets the LaTeX source of a PDF of the user's from arXiv, by the identifier they confirm: the one the margin of its
+	 * first page or the name of its file has, when it has one. Its key words and classifications are read again from it
+	 * when it had none.
+	 */
+	const getSource = async (id: string) => {
+		const text = yours.find(candidate => candidate.id === id);
+		if (!text || text.source) {
+			return;
+		}
+		const firstPages = await firstPagesOf(text) ?? '';
+		const found = ARXIV_ID.exec(/arXiv:\s*\S+/.exec(firstPages)?.[0] ?? '')?.groups?.id ?? ARXIV_ID.exec(basename(URI.file(text.id)))?.groups?.id ?? '';
+		const written = (await quickInputService.input({
+			value: found,
+			placeHolder: '2106.11342',
+			prompt: localize('knowledgeBase.arxivPrompt', "The arXiv identifier of {0}: Pollis downloads its LaTeX source from arXiv, beside the PDF.", text.document.title),
+		}))?.trim();
+		const arxiv = written && (ARXIV_PATTERN.exec(written)?.groups?.id ?? ARXIV_ID.exec(written)?.groups?.id);
+		if (!arxiv) {
+			return;
+		}
+		if (!await addSource(URI.file(text.id), arxiv)) {
+			notificationService.info(localize('knowledgeBase.noSource', "arXiv has no LaTeX source of arXiv:{0}, only its PDF.", arxiv));
+			return;
+		}
+		const entry = catalogue.get(text.key);
+		if (entry && !entry.keyWords.length && !entry.classifications.length) {
+			catalogue.set(text.key, { ...entry, read: false });
+		}
+		await readYoursAgain();
 	};
 	/** Renames the file of a text of the user's by the title they write, in its folder. */
 	const renameText = async (id: string) => {
@@ -650,7 +714,7 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 		if (!text) {
 			return;
 		}
-		const resource = URI.file(text.document.file);
+		const resource = URI.file(text.id);
 		const title = await askTitle(text.document.title, basename(resource));
 		if (title === undefined) {
 			return;
@@ -672,12 +736,16 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 	 * in catalogue.toml go with it.
 	 */
 	const moveText = async (text: IYourText, target: URI, overwrite: boolean) => {
-		const resource = URI.file(text.document.file);
+		const resource = URI.file(text.id);
 		if (isEqual(target, resource)) {
 			return;
 		}
 		try {
 			await fileService.move(resource, target, overwrite);
+			// Its LaTeX source goes with it, by the same name
+			if (text.source) {
+				await fileService.move(URI.file(text.source), joinPath(dirname(target), basename(target).slice(0, -extname(target).length) + '.tex'), overwrite);
+			}
 		} catch (error) {
 			notificationService.error(localize('knowledgeBase.renameFailed', "{0} could not be renamed: {1}", basename(resource), String(error?.message ?? error)));
 			return;
@@ -698,11 +766,11 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 	};
 	/** The text of the first pages of a text of the user's; undefined while the Poppler tools are installed, or without Julia. */
 	const firstPagesOf = async (text: IYourText): Promise<string | undefined> => {
-		if (text.document.kind !== 'pdf') {
-			return fileService.readFile(URI.file(text.document.file), { length: 20000 }).then(file => file.value.toString(), () => '');
+		if (extname(URI.file(text.id)).toLowerCase() !== '.pdf') {
+			return fileService.readFile(URI.file(text.id), { length: 20000 }).then(file => file.value.toString(), () => '');
 		}
 		const answer = await commandService.executeCommand<{ code?: number; stdout?: string; error?: string }>('language-julia.pollisPoppler', {
-			op: 'run', tool: 'pdftotext', args: ['-f', '1', '-l', '2', '-enc', 'UTF-8', text.document.file, '-'],
+			op: 'run', tool: 'pdftotext', args: ['-f', '1', '-l', '2', '-enc', 'UTF-8', text.id, '-'],
 		}).catch(() => undefined);
 		return !answer || answer.error === 'installing' ? undefined : answer.code === 0 ? answer.stdout ?? '' : '';
 	};
@@ -721,7 +789,10 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 				if (firstPages === undefined || openPage !== webviewInput) {
 					break;
 				}
-				const found = readClassification(firstPages);
+				// What a LaTeX source states first, then what the first pages print
+				const latex = text.document.kind === 'latex' ? readLatexClassification(await fileService.readFile(URI.file(text.document.file)).then(file => file.value.toString(), () => '')) : undefined;
+				const printed = readClassification(firstPages);
+				const found = { keyWords: latex?.keyWords.length ? latex.keyWords : printed.keyWords, classifications: latex?.classifications.length ? latex.classifications : printed.classifications };
 				const entry = catalogue.get(text.key);
 				catalogue.set(text.key, {
 					keyWords: entry?.keyWords.length ? entry.keyWords : found.keyWords,
@@ -945,7 +1016,9 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 		} else if (message.command === 'rows' && hasKey(message, { rows: true }) && isRowsChoice(message.rows)) {
 			storeRows(storageService, ROWS_PAGE, message.rows);
 		} else if (message.command === 'open' && hasKey(message, { id: true })) {
-			const document = texts?.find(t => t.id === message.id && t.downloaded)?.documents[0] ?? yours.find(t => t.id === message.id)?.document;
+			// A text of the user's opens as its file, a PDF with its LaTeX source as the PDF
+			const own = yours.find(t => t.id === message.id);
+			const document = own ? { file: own.id, kind: extname(URI.file(own.id)).toLowerCase() === '.pdf' ? 'pdf' : own.document.kind } : texts?.find(t => t.id === message.id && t.downloaded)?.documents[0];
 			if (document?.kind === 'pdf') {
 				await openPdfInViewer(commandService, URI.file(document.file));
 			} else if (document) {
@@ -962,6 +1035,8 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 			save();
 		} else if (message.command === 'add') {
 			await addTexts();
+		} else if (message.command === 'source' && hasKey(message, { id: true })) {
+			await getSource(message.id);
 		} else if (message.command === 'rename' && hasKey(message, { id: true })) {
 			await renameText(message.id);
 		} else if (message.command === 'edit' && hasKey(message, { id: true, field: true }) && ['keyWords', 'subject', 'classifications'].includes(message.field)) {
@@ -1028,6 +1103,10 @@ function pageHtml(rows: number): string {
 		sourceHint: localize('knowledgeBase.sourceHint', "PollisKnowledge.jl, or User: a file of yours in the knowledge folder of the Pollis Workspace open"),
 		yours: localize('knowledgeBase.user', "User"),
 		yourFile: localize('knowledgeBase.yourFile', "Your file, unchanged."),
+		yourFileWithSource: localize('knowledgeBase.yourFileWithSource', "Your PDF, with its LaTeX source beside it, which the passages come from."),
+		cutLatex: localize('knowledgeBase.cutLatex', "Cut at the sections of its LaTeX source into passages of about {0} words, its mathematics as LaTeX.", '{0}'),
+		getSource: localize('knowledgeBase.getSource', "Get the LaTeX Source"),
+		getSourceHint: localize('knowledgeBase.getSourceHint', "Download its LaTeX source from arXiv, beside the PDF: its passages then come from the source, with their mathematics as written"),
 		cutYourMarkdown: localize('knowledgeBase.cutYourMarkdown', "Cut at its headings into passages of about {0} words.", '{0}'),
 		cutText: localize('knowledgeBase.cutText', "Cut at its paragraphs into passages of about {0} words.", '{0}'),
 		subject: localize('knowledgeBase.subject', "Subject"),
@@ -1222,6 +1301,12 @@ ${spinnerCss}
 			const rename = link(TEXT.rename, () => vscode.postMessage({ command: 'rename', id: item.id }));
 			rename.title = TEXT.renameHint;
 			links.appendChild(rename);
+			if (item.format === 'pdf') {
+				links.appendChild(document.createTextNode(' \\u00b7 '));
+				const source = link(TEXT.getSource, () => vscode.postMessage({ command: 'source', id: item.id }));
+				source.title = TEXT.getSourceHint;
+				links.appendChild(source);
+			}
 			name.appendChild(links);
 		} else {
 			name.appendChild(element('div', 'small', item.edition + ' \\u00b7 ' + authorsOf(item.authors) + ' \\u00b7 ' + item.publisher + ', ' + item.year));
@@ -1262,9 +1347,9 @@ ${spinnerCss}
 			licence.appendChild(link(item.licence, () => vscode.postMessage({ command: 'link', url: item.licenceUrl })));
 		}
 		cell(tr, 'size').textContent = format(TEXT.sizeMb, item.size);
-		cell(tr, 'kept small').textContent = item.yours ? TEXT.yourFile : item.changes || TEXT.unchanged;
+		cell(tr, 'kept small').textContent = item.yours ? (item.format === 'latex' && item.path.toLowerCase().endsWith('.pdf') ? TEXT.yourFileWithSource : TEXT.yourFile) : item.changes || TEXT.unchanged;
 		const cut = cell(tr, 'cut small');
-		const cutText = item.format === 'pdf' ? TEXT.cutPdf : item.format === 'text' ? TEXT.cutText : item.yours ? TEXT.cutYourMarkdown : TEXT.cutMarkdown;
+		const cutText = item.format === 'pdf' ? TEXT.cutPdf : item.format === 'text' ? TEXT.cutText : item.format === 'latex' ? TEXT.cutLatex : item.yours ? TEXT.cutYourMarkdown : TEXT.cutMarkdown;
 		cut.appendChild(element('div', '', format(cutText, state.words)));
 		if (item.passages) {
 			cut.appendChild(element('div', '', format(TEXT.inIndex, item.passages.toLocaleString())));

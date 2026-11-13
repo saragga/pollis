@@ -254,3 +254,74 @@ export function subjectOf(classifications: readonly ISubjectClassification[]): s
 	}
 	return undefined;
 }
+
+/** The arguments of each \command of a LaTeX source, in braces, braces inside them kept, with the option in brackets before. */
+function commandArguments(source: string, command: string): { option: string; argument: string }[] {
+	const found: { option: string; argument: string }[] = [];
+	const pattern = new RegExp(`\\\\${command}\\s*(?:\\[(?<option>[^\\]]*)\\])?\\s*\\{`, 'g');
+	for (let match = pattern.exec(source); match; match = pattern.exec(source)) {
+		let depth = 1;
+		let end = pattern.lastIndex;
+		for (; end < source.length && depth; end++) {
+			depth += source[end] === '{' && source[end - 1] !== '\\' ? 1 : source[end] === '}' && source[end - 1] !== '\\' ? -1 : 0;
+		}
+		found.push({ option: match.groups?.option ?? '', argument: source.slice(pattern.lastIndex, end - 1) });
+		pattern.lastIndex = end;
+	}
+	return found;
+}
+
+/** Text of LaTeX as words: its commands and braces left out, ~ a space. */
+function plainLatex(text: string): string {
+	return text.replace(/~/g, ' ').replace(/\\(?:sep|and|kwd)\b/g, ',').replace(/\\[A-Za-z]+\*?\s*/g, '').replace(/[{}]/g, '').replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * The key words and subject classifications a LaTeX source states: \keywords{...}, the keyword environments of
+ * Elsevier, IEEE and the IMS (\kwd{...}, \sep), \subjclass[2020]{Primary 60H10; Secondary 65C30}, a keyword
+ * environment of class MSC or JEL, \JEL{...} and \ccsdesc{Software and its engineering~Compilers}.
+ */
+export function readLatexClassification(source: string): ITextClassification {
+	const body = source.replace(/(?<!\\)%[^\n]*/g, '');
+	const keyWords: string[] = [];
+	const classifications: ISubjectClassification[] = [];
+	const add = (system: typeof MSC | typeof JEL, text: string) => {
+		const codes = codesOf(system, text);
+		const known = classifications.find(classification => classification.system === system);
+		if (codes.length && !known) {
+			classifications.push({ system, codes });
+		}
+	};
+	for (const { argument } of commandArguments(body, 'keywords')) {
+		keyWords.push(...keyWordsOf(plainLatex(argument)));
+	}
+	for (const match of body.matchAll(/\\begin\{(?<environment>keyword|keywords|IEEEkeywords)\}(?:\[(?<option>[^\]]*)\])?(?<content>[\s\S]*?)\\end\{\k<environment>\}/g)) {
+		const option = match.groups?.option ?? '';
+		const content = match.groups?.content ?? '';
+		if (/MSC|AMS/i.test(option)) {
+			add(MSC, content);
+		} else if (/JEL/i.test(option)) {
+			add(JEL, content);
+		} else {
+			// Elsevier's \JEL or \MSC inside the environment, after the key words
+			const [words, ...codes] = content.split(/\\(?=JEL\b|MSC\b)/);
+			keyWords.push(...keyWordsOf(plainLatex(words)));
+			for (const part of codes) {
+				add(part.startsWith('JEL') ? JEL : MSC, part.replace(/^(?:JEL|MSC)\d*/, ''));
+			}
+		}
+	}
+	for (const { argument } of commandArguments(body, 'subjclass')) {
+		add(MSC, argument);
+	}
+	for (const command of ['JEL', 'jel', 'jelclass', 'JELclass']) {
+		for (const { argument } of commandArguments(body, command)) {
+			add(JEL, argument);
+		}
+	}
+	const concepts = commandArguments(body, 'ccsdesc').map(({ argument }) => plainLatex(argument.replace(/~/g, ' \u2192 ')));
+	if (concepts.length) {
+		classifications.push({ system: ACM, codes: [...new Set(concepts)] });
+	}
+	return { keyWords: keyWordsOf(keyWords.join(', ')), classifications };
+}

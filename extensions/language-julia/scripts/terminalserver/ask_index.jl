@@ -10,7 +10,8 @@
 # in ~/.pollis/documents/vignettes. A PDF's text is read with pdftotext (Poppler_jll), a page at a time, and cut under
 # its headings with the .labels compile_documents.jl or compile_vignette.jl puts beside it, or a book's, which has
 # none, under its bookmarks, read with pdftohtml; a wiki or a Markdown file is cut at its headings, a text file at its
-# blank lines. An article (kind article, of the collection Articles) is a work cited, its reference and its abstract
+# blank lines, a LaTeX source (kind latex) at its sections, its mathematics as written, each passage at the page of its
+# section in the PDF of the same name beside it. An article (kind article, of the collection Articles) is a work cited, its reference and its abstract
 # in a Markdown file, read as one, its passages headed by the work's title. The Julia Manual is that
 # of the Julia that runs this, which comes with it, so that a Julia updated has its own: the Manual, Base and the
 # standard library, from the search index Documenter writes beside its HTML, a section or a docstring an entry, each
@@ -545,7 +546,11 @@ markdown_text(line) = replace(line, r"!?\[(?<words>[^\]]*)\]\([^)]*\)" => s"\g<w
 """The passages of a wiki, cut at its headings, `nothing` for a wiki still "Not written yet."."""
 function wiki_passages(file, title)
 	# Without the roles of Sphinx and d2lbook (:label:`sec_x`, :numref:`sec_x`, :cite:`key`, :end_tab:), which only their build resolves
-	lines = [replace(line, r"^\s*:[a-z]+:\s*$|:[a-z]+:`[^`]*`" => "") for line in readlines(file)]
+	markdown_passages([replace(line, r"^\s*:[a-z]+:\s*$|:[a-z]+:`[^`]*`" => "") for line in readlines(file)], title)
+end
+
+"""The passages of lines of Markdown, cut at their headings, `nothing` for lines that only say "Not written yet."."""
+function markdown_passages(lines, title)
 	body = filter(line -> !isempty(strip(line)) && !startswith(line, "# "), lines)
 	(isempty(body) || strip(join(body, " ")) == "Not written yet.") && return nothing
 	name = something(findfirst(line -> startswith(line, "# "), lines), 0)
@@ -606,6 +611,95 @@ function wiki_passages(file, title)
 	close_paragraph()
 	passages!(found, paragraphs, missing, heading())
 	return join_short(found)
+end
+
+"""
+The argument of a command in braces, from `i`, the index of its {: the argument, braces inside it kept, and the index
+after its }.
+"""
+function braced(text, i)
+	depth = 0
+	j = i
+	while j <= lastindex(text)
+		escaped = j > firstindex(text) && text[prevind(text, j)] == '\\'
+		if text[j] == '{' && !escaped
+			depth += 1
+		elseif text[j] == '}' && !escaped
+			depth -= 1
+			depth == 0 && return text[nextind(text, i):prevind(text, j)], nextind(text, j)
+		end
+		j = nextind(text, j)
+	end
+	return text[nextind(text, i):end], j
+end
+
+"""`text` with each command `pattern` finds, up to its {, and its argument, as `f(match, argument)` writes them."""
+function rewrite(f, text, pattern)
+	out = IOBuffer()
+	i = firstindex(text)
+	while (found = findnext(pattern, text, i)) !== nothing
+		print(out, SubString(text, i, prevind(text, first(found))))
+		argument, i = braced(text, last(found))
+		print(out, f(match(pattern, text, first(found)), argument))
+	end
+	print(out, SubString(text, i))
+	return String(take!(out))
+end
+
+"""
+The lines of a LaTeX source as Markdown: its body, from \\begin{document} to its bibliography, without its comments
+and labels, each figure, table or algorithm its captions alone; the abstract and its sections as headings, ## a
+section, ### a subsection, #### a subsubsection; its mathematics, citations and other commands as written.
+"""
+function latex_lines(source)
+	text = replace(source, r"\r\n?" => "\n", r"(?<!\\)%[^\n]*" => "")
+	start = findfirst(r"\\begin\{document\}", text)
+	start === nothing || (text = text[nextind(text, last(start)):end])
+	stop = findfirst(r"\\end\{document\}|\\begin\{thebibliography\}|\\bibliography\{|\\printbibliography", text)
+	stop === nothing || (text = text[firstindex(text):prevind(text, first(stop))])
+	text = replace(text, r"\\begin\{(?<float>figure|table|wrapfigure|algorithm)\*?\}.*?\\end\{\k<float>\*?\}"s => float -> begin
+		captions = String[]
+		rewrite(float, r"\\caption\s*(?:\[[^\]]*\])?\s*\{") do _, caption
+			push!(captions, strip(replace(caption, r"\\label\{[^{}]*\}" => "", r"\s+" => " ")))
+			""
+		end
+		"\n\n" * join(captions, "\n\n") * "\n\n"
+	end)
+	text = replace(text, r"\\begin\{abstract\}" => "\n\n## Abstract\n\n", r"\\end\{abstract\}" => "\n\n")
+	levels = Dict("section" => "##", "subsection" => "###", "subsubsection" => "####")
+	text = rewrite(text, r"\\(?<command>section|subsection|subsubsection|paragraph)\*?\s*(?:\[[^\]]*\])?\s*\{") do m, heading
+		heading = strip(replace(heading, r"\\label\{[^{}]*\}" => "", r"\s+" => " "))
+		m[:command] == "paragraph" ? "\n\n$(heading). " : "\n\n$(levels[m[:command]]) $(heading)\n\n"
+	end
+	text = replace(text, r"\\label\{[^{}]*\}|\\(?:maketitle|tableofcontents|appendix|newpage|clearpage)\b" => "")
+	# The front matter: what the title, the authors and the key words of the PDF say
+	text = rewrite((_, _) -> "", text, r"\\(?:title|author|address|affiliation|institute|email|urladdr|curraddr|thanks|date|dedicatory|keywords|subjclass|ccsdesc)\*?\s*(?:\[[^\]]*\])?\s*\{")
+	return split(text, '\n')
+end
+
+"""
+The passages of a LaTeX source, cut at its sections, its mathematics as written; each at the page of its section in
+the PDF of the same name beside it, found by its bookmarks, or at that of the section before.
+"""
+function latex_passages(file, title)
+	found = markdown_passages(latex_lines(read(file, String)), title)
+	pdf = splitext(file)[1] * ".pdf"
+	(found === nothing || !isfile(pdf)) && return found
+	pages = Dict{String, Int}()
+	for (page, headings) in bookmarks(pdf), (_, text) in headings
+		pages[heading_key(text)] = min(page, get(pages, heading_key(text), page))
+	end
+	page = 1
+	return map(found) do passage
+		for part in reverse(split(passage.heading, ARROW))
+			at = get(pages, heading_key(label_text(part)), nothing)
+			if at !== nothing
+				page = at
+				break
+			end
+		end
+		Passage(page, passage.heading, passage.text, passage.anchor)
+	end
 end
 
 """The passages of a text file: its paragraphs, which blank lines part, under no heading."""
@@ -693,6 +787,7 @@ function build(found, previous; progress = true)
 		if !(reuse && document in previous.documents)
 			cut = try
 				document.kind in ("wiki", "markdown", "article") ? wiki_passages(document.source, document.title) :
+					document.kind == "latex" ? latex_passages(document.source, document.title) :
 					document.kind == "text" ? text_passages(document.source) :
 					document.kind == "julia" ? manual_passages(document.source) :
 					document.kind == "api" ? api_passages(document.source) : pdf_passages(document.source)

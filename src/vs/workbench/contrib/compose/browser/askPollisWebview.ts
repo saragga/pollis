@@ -39,13 +39,20 @@ function headingFragment(heading: string): string {
 	return last.trim().toLowerCase().replace(/[^\p{L}\p{N}\s_-]/gu, '').replace(/\s/g, '-');
 }
 
-/** Opens a passage in its document: the PDF at its page, a work cited in its reference and abstract, the panel's wiki or a Markdown document at its heading, the Julia Manual at its section, a package's docstring on its site, a text file. */
+/** Opens a passage in its document: the PDF at its page, a LaTeX source's PDF at its page, a work cited in its reference and abstract, the panel's wiki or a Markdown document at its heading, the Julia Manual at its section, a package's docstring on its site, a text file. */
 export function askOpenPassage(commandService: ICommandService, passage: IAskPollisPassage): void {
 	if (passage.kind === 'article') {
 		// A work cited: its reference, with its address, and its abstract
 		commandService.executeCommand('markdown.showPreview', URI.file(passage.file));
 	} else if (passage.kind === 'wiki' || passage.kind === 'markdown') {
 		commandService.executeCommand('markdown.showPreview', URI.file(passage.file).with({ fragment: headingFragment(passage.heading) }));
+	} else if (passage.kind === 'latex') {
+		// A LaTeX source: the PDF beside it, of the same name, at the page of the passage's section; without one, the source
+		if (passage.page) {
+			openPdfInViewer(commandService, URI.file(passage.file.replace(/\.tex$/i, '.pdf')), { page: passage.page });
+		} else {
+			commandService.executeCommand('vscode.open', URI.file(passage.file));
+		}
 	} else if (passage.kind === 'text') {
 		// A text file of a collection of Retrieval-Augmented Generation, in the editor
 		commandService.executeCommand('vscode.open', URI.file(passage.file));
