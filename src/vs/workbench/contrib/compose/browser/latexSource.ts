@@ -102,3 +102,35 @@ export async function latexSourceOf(content: VSBuffer): Promise<string | undefin
 		.sort(([a, x], [b, y]) => a.split('/').length - b.split('/').length || y.length - x.length)[0]?.[0];
 	return main === undefined ? undefined : inline(texts, main, 0, new Set());
 }
+
+/** The text between the brace that opens at `open` in `text` and the one that closes it; undefined when it is not closed. */
+function bracedFrom(text: string, open: number): string | undefined {
+	let depth = 0;
+	for (let i = open; i < text.length; i++) {
+		if (text[i] === '\\') {
+			i++;
+		} else if (text[i] === '{') {
+			depth++;
+		} else if (text[i] === '}' && !--depth) {
+			return text.slice(open + 1, i);
+		}
+	}
+	return undefined;
+}
+
+/**
+ * The abstract of a LaTeX source, as written, its mathematics as TeX: the abstract environment, else `\abstract{...}`,
+ * without comments and labels, a blank line between its paragraphs; undefined when it has none.
+ */
+export function readLatexAbstract(source: string): string | undefined {
+	const text = source.replace(/(?<!\\)%.*$/gm, '');
+	const command = /\\abstract\s*(?=\{)/.exec(text);
+	const body = /\\begin\s*\{abstract\}(?<body>[\s\S]*?)\\end\s*\{abstract\}/.exec(text)?.groups?.body
+		?? (command ? bracedFrom(text, command.index + command[0].length) : undefined);
+	const abstract = body?.replace(/\\label\s*\{[^{}]*\}/g, '')
+		.split(/\n[ \t]*\n\s*/)
+		.map(paragraph => paragraph.replace(/\s+/g, ' ').trim())
+		.filter(paragraph => paragraph)
+		.join('\n\n');
+	return abstract || undefined;
+}

@@ -1906,6 +1906,7 @@ const REFERENCE_COLUMNS = """
     address: 'VARCHAR', edition: 'VARCHAR', volume: 'VARCHAR', number: 'VARCHAR', pages: 'VARCHAR', institution: 'VARCHAR',
     report_number: 'VARCHAR', isbn: 'VARCHAR', issn: 'VARCHAR', doi: 'VARCHAR', arxiv: 'VARCHAR', openalex: 'VARCHAR', url: 'VARCHAR',
     oa_url: 'VARCHAR', abstract: 'VARCHAR', abstract_source: 'VARCHAR', keywords: 'VARCHAR[]', keywords_source: 'VARCHAR',
+    classifications: 'VARCHAR[]', classifications_source: 'VARCHAR',
     legacy_key: 'VARCHAR', source: 'VARCHAR', retrieved: 'DATE', checked: 'BOOLEAN', open_access: 'BOOLEAN',
     pollis_key: 'VARCHAR', merged_into: 'VARCHAR', saved: 'TIMESTAMPTZ', removed: 'BOOLEAN'"""
 """The columns of a citation count: `record` is the index's id of the version counted (none for those of Pollis)."""

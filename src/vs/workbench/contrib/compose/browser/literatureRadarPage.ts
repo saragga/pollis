@@ -432,7 +432,7 @@ function semanticScholarVersion(paper: ISemanticScholarPaper, doi: string | unde
 }
 
 /** The text of an abstract OpenAlex keeps as its words with their positions. */
-function invertedText(index: Record<string, readonly number[]>): string {
+export function invertedText(index: Record<string, readonly number[]>): string {
 	const words: string[] = [];
 	for (const [word, positions] of Object.entries(index)) {
 		for (const position of positions) {

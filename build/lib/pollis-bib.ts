@@ -49,6 +49,9 @@ export interface IReference {
 	readonly abstract_source: string | null;
 	readonly keywords: string[] | null;
 	readonly keywords_source: string | null;
+	/** Each classification system with its codes, the primary first: `MSC: 68N15, 65Y05`. */
+	readonly classifications: string[] | null;
+	readonly classifications_source: string | null;
 	readonly legacy_key: string | null;
 	readonly source: string | null;
 	readonly retrieved: string | null;
@@ -84,7 +87,7 @@ export interface IPollisBib {
 export const REFERENCES_FOLDER = 'src/vs/workbench/contrib/model/browser/media/references';
 
 /** The fields of a work in their order, each null until the work's own JSON gives it: the file leaves out those not known. */
-const REFERENCE_FIELDS: readonly (keyof IReference)[] = ['key', 'type', 'title', 'authors', 'author_kind', 'authors_complete', 'year', 'released', 'journal', 'booktitle', 'editors', 'publisher', 'address', 'edition', 'volume', 'number', 'pages', 'institution', 'report_number', 'isbn', 'issn', 'doi', 'arxiv', 'openalex', 'url', 'oa_url', 'abstract', 'abstract_source', 'keywords', 'keywords_source', 'legacy_key', 'source', 'retrieved', 'checked', 'open_access'];
+const REFERENCE_FIELDS: readonly (keyof IReference)[] = ['key', 'type', 'title', 'authors', 'author_kind', 'authors_complete', 'year', 'released', 'journal', 'booktitle', 'editors', 'publisher', 'address', 'edition', 'volume', 'number', 'pages', 'institution', 'report_number', 'isbn', 'issn', 'doi', 'arxiv', 'openalex', 'url', 'oa_url', 'abstract', 'abstract_source', 'keywords', 'keywords_source', 'classifications', 'classifications_source', 'legacy_key', 'source', 'retrieved', 'checked', 'open_access'];
 
 export async function readReferencesDatabase(repoRoot: string): Promise<IReferencesDatabase> {
 	const file = JSON.parse(await pinnedPackageFile(repoRoot, { name: 'PollisReferences', file: 'references.json', clone: 'POLLIS_REFERENCES' })) as { references: Partial<IReference>[]; counts: ICount[] };

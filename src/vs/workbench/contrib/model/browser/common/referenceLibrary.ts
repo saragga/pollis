@@ -55,6 +55,9 @@ export interface IReference {
 	readonly abstract_source?: string;
 	readonly keywords?: readonly string[];
 	readonly keywords_source?: string;
+	/** Each classification system with its codes, the primary first: `MSC: 68N15, 65Y05`. */
+	readonly classifications?: readonly string[];
+	readonly classifications_source?: string;
 	/** For a work the user added, its key before (a pasted BibTeX entry's own key). */
 	readonly legacy_key?: string;
 	/** Where its fields came from: crossref, datacite, openalex, semanticscholar, literature radar, manual. */
@@ -279,7 +282,7 @@ function organisationAcronym(name: string): string {
  * initials of up to five authors' surnames, with `...` after them for more or for authors not all found (`FF1993`,
  * `BMRSK...2020`); an organisation's acronym (`IMF2020`); `U` for none.
  */
-function keyPrefix(reference: Pick<IReference, 'authors' | 'author_kind' | 'authors_complete' | 'year'>): string {
+export function keyPrefix(reference: Pick<IReference, 'authors' | 'author_kind' | 'authors_complete' | 'year'>): string {
 	const authors = reference.authors ?? [];
 	let part: string;
 	if (reference.author_kind === 'organisation' && authors.length) {
