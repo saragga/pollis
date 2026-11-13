@@ -806,3 +806,12 @@ registerHelpLink({
 	order: 2,
 	url: 'https://julia.quantecon.org'
 });
+
+registerHelpLink({
+	id: 'pollis.action.openFinancialRiskForecasting',
+	title: localize2('openFinancialRiskForecasting', "Financial Risk Forecasting"),
+	mnemonicTitle: localize({ key: 'miFinancialRiskForecasting', comment: ['&& denotes a mnemonic'] }, "&&Financial Risk Forecasting"),
+	menu: MenubarHelpNotebookCoursesMenu,
+	order: 3,
+	url: 'https://financialriskforecasting.com/notebook/'
+});
