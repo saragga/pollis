@@ -1105,7 +1105,7 @@ function pageHtml(rows: number): string {
 		yourFile: localize('knowledgeBase.yourFile', "Your file, unchanged."),
 		yourFileWithSource: localize('knowledgeBase.yourFileWithSource', "Your PDF, with its LaTeX source beside it, which the passages come from."),
 		cutLatex: localize('knowledgeBase.cutLatex', "Cut at the sections of its LaTeX source into passages of about {0} words, its mathematics as LaTeX.", '{0}'),
-		getSource: localize('knowledgeBase.getSource', "Get the LaTeX Source"),
+		getSource: localize('knowledgeBase.getSource', "LaTeX Source"),
 		getSourceHint: localize('knowledgeBase.getSourceHint', "Download its LaTeX source from arXiv, beside the PDF: its passages then come from the source, with their mathematics as written"),
 		cutYourMarkdown: localize('knowledgeBase.cutYourMarkdown', "Cut at its headings into passages of about {0} words.", '{0}'),
 		cutText: localize('knowledgeBase.cutText', "Cut at its paragraphs into passages of about {0} words.", '{0}'),
