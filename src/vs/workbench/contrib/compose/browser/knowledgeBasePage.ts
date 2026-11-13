@@ -45,6 +45,9 @@ import { ASK_EMBEDDING_MODEL, embeddingPrefixes, IAskPollisService } from '../co
 import { compareCss, pageHelpersScript } from './compareShared.js';
 import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_MINIMAL_STYLE } from './libraryPage.js';
 import { IInstalledModel } from './modelsInstalledPage.js';
+import { tomlString } from './articleAndData.js';
+import { classificationText, parseClassification, readClassification, subjectOf } from '../common/subjectClassifications.js';
+import { parseToml } from '../../model/browser/common/tomlPanelData.js';
 import { findPollisWorkspace, OPEN_POLLIS_WORKSPACE_COMMAND_ID, pollisWorkspaceFolder } from '../../pollisWorkspace/browser/pollisWorkspace.contribution.js';
 
 // The Knowledge Base, from Compose > Knowledge for AI Models > Knowledge Base, in the Minimal style of the scaffold: the
@@ -102,7 +105,29 @@ interface IYourText {
 	readonly path: string;
 	readonly size: number;
 	readonly document: ITextDocument;
+	/** Its path in the knowledge folder, with forward slashes, which names its entry in catalogue.toml. */
+	readonly key: string;
+	readonly keyWords: readonly string[];
+	/** Its classifications, each as "MSC: 68N15, 65Y05". */
+	readonly classifications: readonly string[];
+	/** Its subject: the one written for it, else the top-level class of its first code; "" without either. */
+	readonly subject: string;
 }
+
+/** The entry of a text of the user's in catalogue.toml. */
+interface ICatalogueEntry {
+	readonly keyWords: readonly string[];
+	readonly classifications: readonly string[];
+	/** The subject written for it, which the one of its first code gives way to. */
+	readonly subject?: string;
+	/** Whether its first pages were read, so that a text without key words is not read again. */
+	readonly read: boolean;
+}
+
+/** The file of the key words, subjects and subject classifications of the user's texts, in the knowledge folder. */
+const CATALOGUE_FILE = 'catalogue.toml';
+/** The fields of a text of the user's the page changes. */
+type CatalogueField = 'keyWords' | 'subject' | 'classifications';
 
 /** The files the Knowledge Base reads as the user's texts, by their extensions. */
 const YOUR_EXTENSIONS: Record<string, TextFormat> = { '.pdf': 'pdf', '.md': 'markdown', '.markdown': 'markdown', '.txt': 'text' };
@@ -204,7 +229,8 @@ type KnowledgeMessage =
 	| { readonly command: 'model'; readonly model: string }
 	| { readonly command: 'build' }
 	| { readonly command: 'add' }
-	| { readonly command: 'rename'; readonly id: string };
+	| { readonly command: 'rename'; readonly id: string }
+	| { readonly command: 'edit'; readonly id: string; readonly field: CatalogueField };
 
 /** The open page, so a second request shows it again. */
 let openPage: WebviewInput | undefined;
@@ -320,12 +346,67 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 		}
 		watchers.value = store;
 	};
+	/** The entries of catalogue.toml, by the paths of their texts in the knowledge folder. */
+	let catalogue = new Map<string, ICatalogueEntry>();
+	const readCatalogueFile = async (knowledge: URI) => {
+		const content = await fileService.readFile(joinPath(knowledge, CATALOGUE_FILE)).then(file => file.value.toString(), () => '');
+		const entries = new Map<string, ICatalogueEntry>();
+		let parsed: unknown;
+		try {
+			parsed = parseToml(content).texts;
+		} catch {
+			// A catalogue.toml that cannot be read: its texts are read from their first pages again
+		}
+		const strings = (value: unknown) => Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+		for (const entry of Array.isArray(parsed) ? parsed : []) {
+			if (entry && typeof entry === 'object' && typeof entry.file === 'string') {
+				entries.set(entry.file, {
+					keyWords: strings(entry.key_words),
+					classifications: strings(entry.classifications),
+					subject: typeof entry.subject === 'string' && entry.subject ? entry.subject : undefined,
+					read: entry.read === true,
+				});
+			}
+		}
+		catalogue = entries;
+	};
+	/** Writes catalogue.toml, with the entries of the texts in the knowledge folder. */
+	const writeCatalogueFile = async () => {
+		if (!knowledgeFolder) {
+			return;
+		}
+		const keys = new Set(yours.map(text => text.key));
+		const lines = [
+			'# The key words, subjects and subject classifications of your texts in this folder, one [[texts]] each, by its path',
+			'# here. Pollis reads them from the first pages of a text when it comes; change them here or on the Knowledge Base',
+			'# page. Without a subject, the subject of a text is the top-level class of its first code, as its system names it.',
+		];
+		for (const [file, entry] of [...catalogue].filter(([file]) => keys.has(file)).sort(([a], [b]) => a.localeCompare(b))) {
+			lines.push(
+				'',
+				'[[texts]]',
+				`file = ${tomlString(file)}`,
+				`key_words = [${entry.keyWords.map(tomlString).join(', ')}]`,
+				`classifications = [${entry.classifications.map(tomlString).join(', ')}]`,
+				...(entry.subject ? [`subject = ${tomlString(entry.subject)}`] : []),
+				`read = ${entry.read}`,
+			);
+		}
+		await fileService.writeFile(joinPath(knowledgeFolder, CATALOGUE_FILE), VSBuffer.fromString(lines.join('\n') + '\n'));
+	};
+	/** The subject of an entry: the one written for it, else the top-level class of its first code. */
+	const subjectOfEntry = (entry: ICatalogueEntry | undefined) => entry?.subject
+		?? subjectOf(entry?.classifications.flatMap(text => parseClassification(text) ?? []) ?? [])
+		?? '';
 	/** Reads the user's texts again; whether they have changed. */
 	const readYours = async () => {
 		const found: IYourText[] = [];
 		const workspace = await findPollisWorkspace(contextService, fileService);
 		const knowledge = workspace && await pollisWorkspaceFolder(fileService, workspace, 'knowledge').catch(() => undefined);
 		knowledgeFolder = knowledge;
+		if (knowledge) {
+			await readCatalogueFile(knowledge);
+		}
 		const folders = knowledge ? [knowledge] : [];
 		const visit = async (folder: URI, type: string, depth: number): Promise<void> => {
 			const stat = await fileService.resolve(folder, { resolveMetadata: true }).catch(() => undefined);
@@ -338,10 +419,13 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 					await visit(child.resource, depth ? type : yourTypes[child.name.toLowerCase()] ?? otherType, depth + 1);
 				} else if (!child.isDirectory && format && child.name.toLowerCase() !== 'readme.md') {
 					const name = basename(child.resource);
+					const key = knowledge ? relativePath(knowledge, child.resource) ?? name : name;
+					const entry = catalogue.get(key);
 					found.push({
 						id: child.resource.fsPath, type, path: workspace ? relativePath(workspace, child.resource) ?? name : name,
 						size: Math.max(0.1, Math.round(child.size / 1e5) / 10),
 						document: { file: child.resource.fsPath, title: name.slice(0, name.length - extname(child.resource).length), kind: format },
+						key, keyWords: entry?.keyWords ?? [], classifications: entry?.classifications ?? [], subject: subjectOfEntry(entry),
 					});
 				}
 			}
@@ -572,6 +656,88 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 			settings.off = settings.off.map(off => off === id ? target.fsPath : off);
 			save();
 		}
+		// Its entry in catalogue.toml goes with it
+		const entry = catalogue.get(text.key);
+		const key = knowledgeFolder && relativePath(knowledgeFolder, target);
+		if (entry && key) {
+			catalogue.delete(text.key);
+			catalogue.set(key, entry);
+			yours = yours.map(other => other === text ? { ...other, key } : other);
+			await writeCatalogueFile();
+		}
+		await readYoursAgain();
+	};
+	/** The text of the first pages of a text of the user's; undefined while the Poppler tools are installed, or without Julia. */
+	const firstPagesOf = async (text: IYourText): Promise<string | undefined> => {
+		if (text.document.kind !== 'pdf') {
+			return fileService.readFile(URI.file(text.document.file), { length: 20000 }).then(file => file.value.toString(), () => '');
+		}
+		const answer = await commandService.executeCommand<{ code?: number; stdout?: string; error?: string }>('language-julia.pollisPoppler', {
+			op: 'run', tool: 'pdftotext', args: ['-f', '1', '-l', '2', '-enc', 'UTF-8', text.document.file, '-'],
+		}).catch(() => undefined);
+		return !answer || answer.error === 'installing' ? undefined : answer.code === 0 ? answer.stdout ?? '' : '';
+	};
+	// The key words and subject classifications of the texts of the user's not read yet, read from their first pages,
+	// one text at a time, and written into catalogue.toml
+	let classifying = false;
+	const classifyNew = async () => {
+		if (classifying || !knowledgeFolder) {
+			return;
+		}
+		classifying = true;
+		try {
+			let changed = false;
+			for (const text of yours.filter(candidate => !catalogue.get(candidate.key)?.read)) {
+				const firstPages = await firstPagesOf(text);
+				if (firstPages === undefined || openPage !== webviewInput) {
+					break;
+				}
+				const found = readClassification(firstPages);
+				const entry = catalogue.get(text.key);
+				catalogue.set(text.key, {
+					keyWords: entry?.keyWords.length ? entry.keyWords : found.keyWords,
+					classifications: entry?.classifications.length ? entry.classifications : found.classifications.map(classificationText),
+					subject: entry?.subject,
+					read: true,
+				});
+				changed = true;
+			}
+			if (changed) {
+				await writeCatalogueFile();
+				await readYoursAgain();
+			}
+		} finally {
+			classifying = false;
+		}
+	};
+	/** Changes the key words, subject or subject classifications of a text of the user's, as they write them. */
+	const editText = async (id: string, field: CatalogueField) => {
+		const text = yours.find(candidate => candidate.id === id);
+		if (!text) {
+			return;
+		}
+		const entry = catalogue.get(text.key) ?? { keyWords: [], classifications: [], read: true };
+		const value = await quickInputService.input({
+			value: field === 'keyWords' ? entry.keyWords.join(', ') : field === 'classifications' ? entry.classifications.join(' | ') : text.subject,
+			prompt: field === 'keyWords'
+				? localize('knowledgeBase.editKeyWords', "The key words of {0}, between commas.", text.document.title)
+				: field === 'classifications'
+					? localize('knowledgeBase.editClassifications', "The subject classifications of {0}: each its system, a colon and its codes, the primary first, between | (MSC: 68N15, 65Y05 | JEL: G12).", text.document.title)
+					: localize('knowledgeBase.editSubject', "The subject of {0}; left empty, it is the top-level class of its first code.", text.document.title),
+		});
+		if (value === undefined) {
+			return;
+		}
+		const items = (separator: RegExp) => value.split(separator).map(item => item.trim()).filter(item => item);
+		const derived = subjectOfEntry({ ...entry, subject: undefined });
+		catalogue.set(text.key, {
+			...entry,
+			keyWords: field === 'keyWords' ? items(/\s*[,;]\s*/) : entry.keyWords,
+			classifications: field === 'classifications' ? items(/\s*\|\s*/).flatMap(item => { const parsed = parseClassification(item); return parsed ? [classificationText(parsed)] : []; }) : entry.classifications,
+			subject: field === 'subject' ? (value.trim() && value.trim() !== derived ? value.trim() : undefined) : entry.subject,
+			read: true,
+		});
+		await writeCatalogueFile();
 		await readYoursAgain();
 	};
 
@@ -627,7 +793,8 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 					passages: passagesOf(text.documents),
 				})),
 				...yours.map(text => ({
-					id: text.id, title: text.document.title, type: text.type, path: text.path, authors: [], subject: '', licence: '', format: text.document.kind, size: text.size,
+					id: text.id, title: text.document.title, type: text.type, path: text.path, authors: [], subject: text.subject, keyWords: text.keyWords, classifications: text.classifications,
+					licence: '', format: text.document.kind, size: text.size,
 					yours: true, on: !settings.off.includes(text.id), downloaded: true, passages: passagesOf([text.document]),
 				})),
 			] : undefined,
@@ -694,6 +861,7 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 		await readCatalogue();
 		await postState();
 		post({ command: 'covers', covers });
+		classifyNew();
 	};
 	// Until the catalogue is read, as when PollisKnowledge.jl is installed while the page is open, it is read again
 	// each time the page or the window gets the focus
@@ -714,6 +882,7 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 		if (await readYours() && openPage === webviewInput) {
 			await postState();
 		}
+		classifyNew();
 	};
 	const focused = () => {
 		readAgain();
@@ -764,6 +933,8 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 			await addTexts();
 		} else if (message.command === 'rename' && hasKey(message, { id: true })) {
 			await renameText(message.id);
+		} else if (message.command === 'edit' && hasKey(message, { id: true, field: true }) && ['keyWords', 'subject', 'classifications'].includes(message.field)) {
+			await editText(message.id, message.field);
 		} else if (message.command === 'build') {
 			const model = modelOf(await embeddingModels());
 			const documents = documentsOn();
@@ -804,6 +975,10 @@ function pageHtml(rows: number): string {
 		openWorkspaceHint: localize('knowledgeBase.openWorkspaceHint', "Your own texts are the files of the knowledge folder of the Pollis Workspace open"),
 		rename: localize('knowledgeBase.rename', "Rename..."),
 		renameHint: localize('knowledgeBase.renameHint', "Write the title of the text: Pollis renames its file by it"),
+		keyWords: localize('knowledgeBase.keyWords', "Key Words"),
+		classifications: localize('knowledgeBase.classifications', "Subject Classifications"),
+		classificationsHint: localize('knowledgeBase.classificationsHint', "The classification systems a text gives on its first page, each with its codes, the primary first: MSC, JEL or ACM CCS"),
+		editHint: localize('knowledgeBase.editHint', "Click to change"),
 		previous: localize('knowledgeBase.previous', "Previous"),
 		next: localize('knowledgeBase.next', "Next"),
 		page: localize('knowledgeBase.page', "Page {0} of {1}", '{0}', '{1}'),
@@ -898,8 +1073,13 @@ ${spinnerCss}
 	.title.unavailable:hover { text-decoration: none; }
 	.links { margin-top: 4px; }
 	.size { white-space: nowrap; text-align: right; }
-	.kept { width: 20%; }
-	.cut { width: 17%; }
+	.kept { width: 13%; }
+	.cut { width: 12%; }
+	.keyWords { width: 11%; }
+	.classes { width: 10%; }
+	.editable { cursor: pointer; }
+	.editable:hover { background: var(--vscode-list-hoverBackground); }
+	.classes div + div { margin-top: 2px; }
 	.switch { white-space: nowrap; }
 	.failed, .missing { color: var(--vscode-errorForeground); }
 	.books { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; margin: 8px 0 20px 0; }
@@ -930,6 +1110,8 @@ ${spinnerCss}
 			<th class="sortable" data-sort="type" data-label="${text.type}" title="${text.sortHint}">${text.type}</th>
 			<th class="sortable" data-sort="source" data-label="${text.source}" title="${text.sourceHint}">${text.source}</th>
 			<th class="sortable" data-sort="subject" data-label="${text.subject}" title="${text.sortHint}">${text.subject}</th>
+			<th class="keyWords">${text.keyWords}</th>
+			<th class="classes" title="${text.classificationsHint}">${text.classifications}</th>
 			<th class="sortable" data-sort="licence" data-label="${text.licence}" title="${text.sortHint}">${text.licence}</th>
 			<th class="size sortable" data-sort="size" data-label="${text.size}" title="${text.sizeHint}">${text.size}</th>
 			<th class="kept">${text.kept}</th>
@@ -1015,7 +1197,20 @@ ${spinnerCss}
 		}
 		cell(tr).textContent = item.type;
 		cell(tr).textContent = sourceOf(item);
-		cell(tr).textContent = item.subject;
+		const editable = (td, field) => {
+			if (item.yours) {
+				td.classList.add('editable');
+				td.title = TEXT.editHint;
+				td.addEventListener('click', () => vscode.postMessage({ command: 'edit', id: item.id, field }));
+			}
+			return td;
+		};
+		editable(cell(tr), 'subject').textContent = item.subject;
+		editable(cell(tr, 'keyWords small'), 'keyWords').textContent = (item.keyWords || []).join(', ');
+		const classes = editable(cell(tr, 'classes small'), 'classifications');
+		for (const classification of item.classifications || []) {
+			classes.appendChild(element('div', '', classification));
+		}
 		const licence = cell(tr);
 		if (item.licence) {
 			licence.appendChild(link(item.licence, () => vscode.postMessage({ command: 'link', url: item.licenceUrl })));
@@ -1092,7 +1287,7 @@ ${spinnerCss}
 	function shownTexts() {
 		const query = search.value.trim().toLowerCase();
 		const shown = state.texts.filter(item => (!types.value || item.type === types.value)
-			&& (!query || [item.title, item.type, sourceOf(item), item.subject, item.licence, item.edition, item.publisher, item.path, ...item.authors].some(field => String(field || '').toLowerCase().includes(query))));
+			&& (!query || [item.title, item.type, sourceOf(item), item.subject, item.licence, item.edition, item.publisher, item.path, ...item.authors, ...(item.keyWords || []), ...(item.classifications || [])].some(field => String(field || '').toLowerCase().includes(query))));
 		return shown.sort((a, b) => {
 			const x = sortValue(a), y = sortValue(b);
 			return (x < y ? -1 : x > y ? 1 : 0) * (sortDescending ? -1 : 1);
