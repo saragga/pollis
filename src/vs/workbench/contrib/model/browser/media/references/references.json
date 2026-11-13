@@ -1096,6 +1096,30 @@
 			"open_access": true
 		},
 		{
+			"key": "ASF2026a",
+			"type": "misc",
+			"title": "Apache Parquet Format",
+			"authors": [
+				"Apache Software Foundation"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://github.com/apache/parquet-format",
+			"abstract": "This repository contains the specification for Apache Parquet and Apache Thrift definitions to read and write Parquet metadata. Apache Parquet is an open source, column-oriented data file format designed for efficient data storage and retrieval. It provides high performance compression and encoding schemes to handle complex data in bulk and is supported in many programming languages and analytics tools.",
+			"abstract_source": "github",
+			"keywords": [
+				"apache",
+				"parquet",
+				"parquet-format"
+			],
+			"keywords_source": "github",
+			"source": "manual",
+			"retrieved": "2026-11-13",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "ASY1996a",
 			"type": "book",
 			"title": "Chaos: An Introduction to Dynamical Systems",
@@ -5269,6 +5293,35 @@
 			"url": "https://www.nicolasboumal.net/book",
 			"legacy_key": "boumal2023",
 			"source": "manual",
+			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "Bra2017a",
+			"type": "techreport",
+			"title": "The JavaScript Object Notation (JSON) Data Interchange Format",
+			"authors": [
+				"Bray, Tim"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2017,
+			"institution": "IETF RFC 8259",
+			"doi": "10.17487/RFC8259",
+			"openalex": "W4300782170",
+			"url": "https://www.rfc-editor.org/rfc/rfc8259",
+			"oa_url": "https://www.rfc-editor.org/rfc/rfc8259.pdf",
+			"abstract": "JavaScript Object Notation (JSON) is a lightweight, text-based, language-independent data interchange format. It was derived from the ECMAScript Programming Language Standard. JSON defines a small set of formatting rules for the portable representation of structured data. This document removes inconsistencies with other specifications of JSON, repairs specification errors, and offers experience-based interoperability guidance. [STANDARDS-TRACK]",
+			"abstract_source": "rfc-editor",
+			"keywords": [
+				"JavaScript Object Notation",
+				"JSON",
+				"data exchange format",
+				"data serialization"
+			],
+			"keywords_source": "openalex",
+			"source": "manual",
+			"retrieved": "2026-11-13",
 			"checked": false,
 			"open_access": true
 		},
@@ -10808,6 +10861,24 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "EM2026a",
+			"type": "misc",
+			"title": "Parquet2.jl: (another) pure Julia implementation of the parquet tabular data binary format",
+			"authors": [
+				"Expanding Man"
+			],
+			"author_kind": "unknown",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://gitlab.com/ExpandingMan/Parquet2.jl",
+			"abstract": "(another) pure Julia implementation of the parquet tabular data binary format",
+			"abstract_source": "gitlab",
+			"source": "manual",
+			"retrieved": "2026-11-13",
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "EMS2002a",
@@ -18626,6 +18697,24 @@
 			"open_access": false
 		},
 		{
+			"key": "JIOC2026a",
+			"type": "misc",
+			"title": "JSON.jl: JSON parsing and printing",
+			"authors": [
+				"JuliaIO Contributors"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://github.com/JuliaIO/JSON.jl",
+			"abstract": "JSON parsing and printing",
+			"abstract_source": "github",
+			"source": "manual",
+			"retrieved": "2026-11-13",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "JK1981a",
 			"type": "article",
 			"title": "Performance Hypothesis Testing with the Sharpe and Treynor Measures",
@@ -24734,6 +24823,42 @@
 			"open_access": true
 		},
 		{
+			"key": "MGLRS...2010a",
+			"type": "article",
+			"title": "Dremel: interactive analysis of web-scale datasets",
+			"authors": [
+				"Melnik, Sergey",
+				"Gubarev, Andrey",
+				"Long, Jing Jing",
+				"Romer, Geoffrey",
+				"Shivakumar, Shiva",
+				"Tolton, Matt",
+				"Vassilakis, Theo"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2010,
+			"journal": "Proceedings of the VLDB Endowment",
+			"volume": "3",
+			"number": "1-2",
+			"pages": "330-339",
+			"doi": "10.14778/1920841.1920886",
+			"openalex": "W2074935284",
+			"abstract": "Dremel is a scalable, interactive ad-hoc query system for analysis of read-only nested data. By combining multi-level execution trees and columnar data layout, it is capable of running aggregation queries over trillion-row tables in seconds. The system scales to thousands of CPUs and petabytes of data, and has thousands of users at Google. In this paper, we describe the architecture and implementation of Dremel, and explain how it complements MapReduce-based computing. We present a novel columnar storage representation for nested records and discuss experiments on few-thousand node instances of the system.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"nested data",
+				"columnar storage",
+				"aggregate queries",
+				"big data systems"
+			],
+			"keywords_source": "openalex",
+			"source": "openalex",
+			"retrieved": "2026-11-13",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "MGP2002a",
 			"type": "article",
 			"title": "Instability of Scale-Free Networks under Node-Breaking Avalanches",
@@ -30599,6 +30724,25 @@
 			"source": "datacite",
 			"retrieved": "2026-11-02",
 			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "RM2026a",
+			"type": "misc",
+			"title": "DuckDB.jl: The DuckDB Julia package",
+			"authors": [
+				"Raasveldt, Mark",
+				"Mühleisen, Hannes"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://github.com/duckdb/DuckDB.jl",
+			"abstract": "The DuckDB Julia package",
+			"abstract_source": "github",
+			"source": "manual",
+			"retrieved": "2026-11-13",
+			"checked": false,
 			"open_access": true
 		},
 		{
@@ -41961,6 +42105,12 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "Bra2017a",
+			"count": 438,
+			"source": "openalex",
+			"date": "2026-11-13"
+		},
+		{
 			"key": "Bre1978a",
 			"count": 1038,
 			"source": "crossref",
@@ -48267,6 +48417,12 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "MGLRS...2010a",
+			"count": 734,
+			"source": "openalex",
+			"date": "2026-11-13"
+		},
+		{
 			"key": "MH...2019a",
 			"count": 101,
 			"source": "crossref",
@@ -54007,13 +54163,15 @@
 		{
 			"id": "csv",
 			"title": "CSV Files",
-			"description": "Read · Write · Stream Rows · Chunks",
+			"description": "Read · Write · Stream Rows · Chunks · Query (DuckDB)",
 			"commands": [
 				"chiara.explore.conn.csv"
 			],
 			"keys": [
 				"Qui2023a",
 				"Qui2023c",
+				"RM2026a",
+				"RM2019a",
 				"Sha2005a"
 			]
 		},
@@ -54845,6 +55003,21 @@
 				"HK2005a",
 				"MPCSS2006a",
 				"RN2017a"
+			]
+		},
+		{
+			"id": "json",
+			"title": "JSON Files",
+			"description": "Query · Flatten · Typed Structs · Write",
+			"commands": [
+				"chiara.explore.conn.json"
+			],
+			"keys": [
+				"RM2026a",
+				"JIOC2026a",
+				"Qui2023c",
+				"RM2019a",
+				"Bra2017a"
 			]
 		},
 		{
@@ -55876,6 +56049,22 @@
 			]
 		},
 		{
+			"id": "parquet",
+			"title": "Parquet Files",
+			"description": "Query · Read · Write · Partitioned",
+			"commands": [
+				"chiara.explore.conn.parquet"
+			],
+			"keys": [
+				"RM2026a",
+				"EM2026a",
+				"Qui2023c",
+				"MGLRS...2010a",
+				"RM2019a",
+				"ASF2026a"
+			]
+		},
+		{
 			"id": "pbm",
 			"title": "Pareto-Based Multi-Objective Optimisation",
 			"description": "NSGA-II · NSGA-III · SPEA2 · SMS-EMOA",
@@ -56721,7 +56910,9 @@
 			"keys": [
 				"Tav2024a",
 				"Qui...2023a",
-				"EI2016a"
+				"EI2016a",
+				"RM2026a",
+				"RM2019a"
 			]
 		},
 		{

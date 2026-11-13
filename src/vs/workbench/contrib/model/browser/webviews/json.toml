@@ -1,0 +1,477 @@
+# JSON Files Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/json.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "JSON Files"
+viewType = "pollis.json"
+defaultModel = "query"
+
+[[packages]]
+name = "DuckDB.jl"
+github = "https://github.com/duckdb/DuckDB.jl"
+
+[[packages]]
+name = "JSON.jl"
+github = "https://github.com/JuliaIO/JSON.jl"
+
+[[packages]]
+name = "Tables.jl"
+github = "https://github.com/JuliaData/Tables.jl"
+
+# Further packages the examples use: checked by the install indicator, not listed on the Powered-by line
+[requires]
+packages = ["PollisDatasets.jl", "Plots.jl", "StatsBase.jl"]
+
+[[wikis]]
+name = "Factsheet"
+file = "json/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "json/overview.md"
+bundled = true
+
+[[wikis]]
+name = "File Format"
+file = "json/file-format.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "json/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Methods"
+
+[[wikis]]
+name = "Query"
+file = "json/query.md"
+bundled = true
+
+[[wikis]]
+name = "Flatten"
+file = "json/flatten.md"
+bundled = true
+
+[[wikis]]
+name = "Typed Structs"
+file = "json/structs.md"
+bundled = true
+
+[[wikis]]
+name = "Write"
+file = "json/write.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+key = "RM2026a"
+
+[[references]]
+key = "JIOC2026a"
+
+[[references]]
+key = "Qui2023c"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "RM2019a"
+
+[[references]]
+separator = true
+label = "Standards"
+
+[[references]]
+key = "Bra2017a"
+
+[[models]]
+id = "query"
+label = "Query"
+
+[[models]]
+id = "flatten"
+label = "Flatten"
+
+[[models]]
+id = "structs"
+label = "Typed Structs"
+
+[[models]]
+id = "write"
+label = "Write"
+
+[[bullets]]
+text = "Query"
+detail = "DuckDB reads an array of records or a JSON Lines file as a table, inferring each column's type, and runs SQL on it"
+
+[[bullets]]
+text = "Flatten"
+detail = "DuckDB turns nested objects and arrays into rows and columns with <code>unnest</code>, and picks single values with <code>->></code>"
+
+[[bullets]]
+text = "Typed Structs"
+detail = "<code>JSON.parsefile</code> reads a nested document into Julia structs you define, checking every field against its type"
+
+[[bullets]]
+text = "Write"
+detail = "DuckDB saves a table as JSON Lines or an array of records; <code>JSON.json</code> saves any Julia value"
+
+[[decisionRows]]
+task = "Query"
+context = "Records, one level"
+purpose = "Filter and summarise a file of records with SQL, even when it is larger than memory"
+
+[[decisionRows]]
+task = "Flatten"
+context = "Nested, to a table"
+purpose = "Turn an API's nested answer into rows and columns for analysis"
+
+[[decisionRows]]
+task = "Typed Structs"
+context = "Nested, kept nested"
+purpose = "Work with the document's own structure in Julia, its shape checked as it is read"
+
+[[decisionRows]]
+task = "Write"
+context = "Julia table out"
+purpose = "Save results for web services, other languages and tools that read JSON"
+
+[[inputs]]
+id = "path"
+label = "File"
+tooltip = "Path to a file of records: JSON Lines (one object per line, .jsonl or .ndjson) or one array of objects (.json), relative to the Julia working directory or absolute. With the default, data.jsonl, the example first writes the airquality example from PollisDatasets to data.jsonl, unless the working directory has a data.jsonl already."
+default = "data.jsonl"
+models = ["query"]
+
+[[inputs]]
+id = "filter"
+label = "Filter"
+tooltip = "SQL condition on the records, e.g. temp > 85 or month = 7 AND ozone IS NOT NULL."
+default = "temp > 85"
+models = ["query"]
+
+[[inputs]]
+id = "doc"
+label = "File"
+tooltip = "Path to a nested JSON document, relative to the Julia working directory or absolute. With the default, data.json, the example first writes the airquality readings nested by month to data.json, unless the working directory has a data.json already."
+default = "data.json"
+models = ["flatten", "structs"]
+
+[[inputs]]
+id = "data"
+label = "Data"
+tooltip = "Variable name of the table to write: any Tables.jl source (e.g. a named tuple of vectors). The default, data, writes the airquality example from PollisDatasets."
+default = "data"
+models = ["write"]
+
+[[inputs]]
+id = "layout"
+label = "Layout"
+tooltip = "JSON Lines: one object per line, which tools can read line by line and append to. Array of records: one array of objects. Columns: one object holding an array per column, the most compact for numbers."
+kind = "select"
+default = "lines"
+models = ["write"]
+
+[[inputs.options]]
+value = "lines"
+label = "JSON Lines"
+
+[[inputs.options]]
+value = "array"
+label = "array of records"
+
+[[inputs.options]]
+value = "columns"
+label = "columns"
+
+[[inputs]]
+id = "out"
+label = "Save To"
+tooltip = "Path of the file to write, relative to the Julia working directory or absolute. A file already there is replaced."
+default = "out.jsonl"
+models = ["write"]
+
+[[codeBranches]]
+model = "query"
+code = '''
+using DuckDB, Tables
+
+{{?path=data.jsonl}} using JSON, PollisDatasets  # curated example datasets
+{{?path=data.jsonl}} # Example file: Chambers et al. (1983), daily air quality in New York, May to September 1973, one record per line with null for 44 missing readings, written to data.jsonl in the working directory unless a data.jsonl is there already. Replace "data.jsonl" with your own file.
+{{?path=data.jsonl}} isfile("data.jsonl") || JSON.json("data.jsonl", Tables.rowtable(dataset("airquality")); jsonlines=true)
+
+con = DBInterface.connect(DuckDB.DB)  # an in-memory database: the file stays where it is
+sql = """
+SELECT *
+FROM read_json('{{path}}')
+WHERE {{filter}}
+"""
+tbl = Tables.columntable(DBInterface.execute(con, sql))  # named tuple of column vectors
+println(length(first(tbl)), " rows x ", length(tbl), " columns")
+println(Tables.schema(tbl))
+'''
+
+[[codeBranches]]
+model = "flatten"
+code = '''
+using DuckDB, Tables
+
+{{?doc=data.json}} using JSON, PollisDatasets  # curated example datasets
+{{?doc=data.json}} # Example file: the air quality readings of Chambers et al. (1983) nested by month, the way an API answers, written to data.json in the working directory unless a data.json is there already. Replace "data.json" with your own file.
+{{?doc=data.json}} if !isfile("data.json")
+{{?doc=data.json}} 	aq = dataset("airquality")
+{{?doc=data.json}} 	months = [(month = m, days = [(day = aq.day[i], ozone = aq.ozone[i], temp = aq.temp[i]) for i in eachindex(aq.month) if aq.month[i] == m]) for m in unique(aq.month)]
+{{?doc=data.json}} 	JSON.json("data.json", (source = "airquality", months = months); pretty = true)
+{{?doc=data.json}} end
+
+con = DBInterface.connect(DuckDB.DB)
+shape = Tables.columntable(DBInterface.execute(con, "DESCRIBE SELECT * FROM read_json('{{doc}}')"))
+foreach((name, type) -> println(name, " :: ", type), shape.column_name, shape.column_type)  # objects are STRUCTs, arrays end in []
+
+picked = Tables.columntable(DBInterface.execute(con, "SELECT json ->> '\$.source' AS value FROM read_json_objects('{{doc}}')"))  # one value by its path: put a path of your document in place of $.source
+println("\$.source: ", first(picked.value))
+
+sql = """
+SELECT m.month, d.day, d.ozone, d.temp
+FROM read_json('{{doc}}') AS doc,
+	unnest(doc.months) AS u(m),
+	unnest(m.days) AS v(d)
+"""
+tbl = Tables.columntable(DBInterface.execute(con, sql))  # one row per day: each unnest turns an array into rows
+println(length(first(tbl)), " rows x ", length(tbl), " columns")
+'''
+
+[[codeBranches]]
+model = "structs"
+code = '''
+using JSON, Tables
+
+{{?doc=data.json}} using PollisDatasets  # curated example datasets
+{{?doc=data.json}} # Example file: the air quality readings of Chambers et al. (1983) nested by month, the way an API answers, written to data.json in the working directory unless a data.json is there already. Replace "data.json" with your own file, and the structs with its shape.
+{{?doc=data.json}} if !isfile("data.json")
+{{?doc=data.json}} 	aq = dataset("airquality")
+{{?doc=data.json}} 	months = [(month = m, days = [(day = aq.day[i], ozone = aq.ozone[i], temp = aq.temp[i]) for i in eachindex(aq.month) if aq.month[i] == m]) for m in unique(aq.month)]
+{{?doc=data.json}} 	JSON.json("data.json", (source = "airquality", months = months); pretty = true)
+{{?doc=data.json}} end
+
+# The document's shape, as Julia types: a null becomes missing where the field allows it
+struct Day
+	day::Int
+	ozone::Union{Missing, Int}
+	temp::Int
+end
+struct Month
+	month::Int
+	days::Vector{Day}
+end
+struct Report
+	source::String
+	months::Vector{Month}
+end
+
+report = JSON.parsefile("{{doc}}", Report)  # stops with an error at the first field that does not fit
+println(report.source, ": ", length(report.months), " months, ", sum(m -> length(m.days), report.months), " days")
+tbl = Tables.columntable([(month = m.month, day = d.day, ozone = d.ozone, temp = d.temp) for m in report.months for d in m.days])  # flattened for the Next Steps
+'''
+
+[[codeBranches]]
+model = "write"
+code = '''
+using DuckDB, JSON, Tables
+
+{{?data=data}} using PollisDatasets  # curated example datasets
+{{?data=data}} # Example data: Chambers et al. (1983), daily air quality in New York, May to September 1973, with 44 missing readings. Replace data with your own table.
+{{?data=data}} data = dataset("airquality");  # datasetinfo("airquality") describes the columns
+
+tbl = Tables.columntable({{data}})  # named tuple of column vectors, from any Tables.jl source
+{{?layout!=columns}}con = DBInterface.connect(DuckDB.DB)
+{{?layout!=columns}}DuckDB.register_table(con, tbl, "tbl")  # DuckDB sees the Julia table as the view tbl, without copying it
+{{?layout=lines}}DBInterface.execute(con, "COPY tbl TO '{{out}}' (FORMAT json)")  # one object per line, missing values as null
+{{?layout=array}}DBInterface.execute(con, "COPY tbl TO '{{out}}' (FORMAT json, ARRAY true)")  # one array of objects
+{{?layout=columns}}JSON.json("{{out}}", tbl)  # one object, an array per column
+println("Wrote ", length(first(tbl)), " rows x ", length(tbl), " columns to {{out}} (", filesize("{{out}}"), " bytes)")
+'''
+
+# Next Steps action groups
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "preview-rows"
+label = "Preview Rows"
+desc = "The first 10 rows as an aligned text table"
+code = '''
+n = min(10, length(first(tbl)))
+println(join(rpad.(string.(keys(tbl)), 14)))
+for i in 1:n
+	println(join(rpad.(string.(getindex.(values(tbl), i)), 14)))
+end
+'''
+
+[[actionGroups.actions]]
+id = "column-histograms"
+label = "Column Histograms"
+desc = "Histogram of every numeric column"
+code = '''
+using Plots
+
+numeric = [n for n in keys(tbl) if nonmissingtype(eltype(tbl[n])) <: Real]
+isempty(numeric) ? println("No numeric columns") :
+	plot([histogram(collect(skipmissing(tbl[n])), title=string(n), legend=false) for n in numeric]...)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "key-check"
+label = "Key Check"
+desc = "How many records have each key: a key missing from some records, or spelt two ways, shows here"
+models = ["query"]
+code = '''
+using JSON
+
+records = JSON.parsefile("{{path}}")  # JSON Lines or an array: a vector of objects either way
+counts = Dict{String, Int}()
+for record in records, key in keys(record)
+	counts[String(key)] = get(counts, String(key), 0) + 1
+end
+for (key, n) in sort(collect(counts), by=last, rev=true)
+	println(rpad(key, 20), n, " of ", length(records), n < length(records) ? "  <- not in every record" : "")
+end
+'''
+
+[[actionGroups.actions]]
+id = "schema-check"
+label = "Schema Check"
+desc = "Type and missing count per column, flagging text columns that look like numbers or dates"
+code = '''
+for (name, c) in pairs(tbl)
+	T = nonmissingtype(eltype(c))
+	v = collect(skipmissing(c))
+	hint = ""
+	if T <: AbstractString && !isempty(v)
+		count(s -> tryparse(Float64, s) !== nothing, v) > 0.9 * length(v) && (hint = "  <- numbers written as text in the file")
+		count(s -> occursin(r"^\d{4}-\d{2}-\d{2}", s), v) > 0.9 * length(v) && (hint = "  <- dates written as text: cast with ::DATE in SQL")
+	end
+	println(rpad(name, 16), rpad(T, 14), count(ismissing, c), " missing", hint)
+end
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "round-trip"
+label = "Round-Trip Check"
+desc = "Write the table as JSON Lines and read it back: do the values and column types survive?"
+code = '''
+using DuckDB, Tables
+
+db = DBInterface.connect(DuckDB.DB)
+DuckDB.register_table(db, tbl, "tbl")
+file = tempname() * ".jsonl"
+DBInterface.execute(db, "COPY tbl TO '$file' (FORMAT json)")
+back = Tables.columntable(DBInterface.execute(db, "SELECT * FROM read_json('$file')"))
+for name in keys(tbl)
+	same = haskey(back, name) && isequal(tbl[name], back[name])
+	println(rpad(name, 16), same ? "identical" : "changed", "  ", eltype(tbl[name]), " -> ", haskey(back, name) ? eltype(back[name]) : "absent")
+end
+'''
+
+[[actionGroups.actions]]
+id = "reader-comparison"
+label = "Reader Comparison"
+desc = "Time DuckDB's read_json and JSON.jl's parsefile on the same file"
+models = ["query"]
+code = '''
+using DuckDB, JSON, Tables
+
+db = DBInterface.connect(DuckDB.DB)
+readers = [
+	"DuckDB read_json" => () -> Tables.columntable(DBInterface.execute(db, "SELECT * FROM read_json('{{path}}')")),
+	"JSON.parsefile"   => () -> JSON.parsefile("{{path}}"),
+]
+for (name, f) in readers
+	f()  # first call compiles
+	println(rpad(name, 18), round(1000 * @elapsed(f()), digits=1), " ms")
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "column-summary"
+label = "Column Summary"
+desc = "Range and median of numeric columns; distinct values and the most frequent one for the rest"
+code = '''
+using Statistics, StatsBase
+
+for (name, c) in pairs(tbl)
+	v = collect(skipmissing(c))
+	if isempty(v)
+		println(rpad(name, 16), "all missing")
+	elseif eltype(v) <: Real && !(eltype(v) <: Bool)
+		println(rpad(name, 16), "min = ", minimum(v), "  median = ", median(v), "  max = ", maximum(v))
+	else
+		top = first(sort(collect(countmap(v)), by=last, rev=true))
+		println(rpad(name, 16), length(unique(v)), " distinct, most frequent: ", first(top), " (", last(top), " times)")
+	end
+end
+'''
+
+[[actionGroups]]
+id = "export"
+label = "Export"
+
+[[actionGroups.actions]]
+id = "save-parquet"
+label = "Save as Parquet"
+desc = "Write the table to table.parquet in the working directory, compressed with zstd"
+code = '''
+using DuckDB
+
+db = DBInterface.connect(DuckDB.DB)
+DuckDB.register_table(db, tbl, "tbl")
+out = "table.parquet"
+if isfile(out)
+	println(out, " is there already: rename or move it first")
+else
+	DBInterface.execute(db, "COPY tbl TO '$out' (FORMAT parquet, COMPRESSION zstd)")
+	println("Wrote ", out)
+end
+'''
+
+[[actionGroups.actions]]
+id = "save-csv"
+label = "Save as CSV"
+desc = "Write the table to table.csv in the working directory"
+code = '''
+using DuckDB
+
+db = DBInterface.connect(DuckDB.DB)
+DuckDB.register_table(db, tbl, "tbl")
+out = "table.csv"
+if isfile(out)
+	println(out, " is there already: rename or move it first")
+else
+	DBInterface.execute(db, "COPY tbl TO '$out' (FORMAT csv, HEADER true)")
+	println("Wrote ", out)
+end
+'''

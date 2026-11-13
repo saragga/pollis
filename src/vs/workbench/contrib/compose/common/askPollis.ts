@@ -6,6 +6,7 @@
 import { CancellationToken } from '../../../../base/common/cancellation.js';
 import { Event } from '../../../../base/common/event.js';
 import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
+import { IDuckDBFunctionKind } from '../../databases/common/duckdbHelp.js';
 
 /** The embedding model of Ask Pollis when the setting pollis.ask.embeddingModel gives none; the Julia extension indexes with the same. */
 export const ASK_EMBEDDING_MODEL = 'hf:ggml-org/embeddinggemma-2-GGUF/embeddinggemma-2-Q8_0.gguf';
@@ -97,6 +98,9 @@ export interface IAskPollisPanel {
  */
 export const ASK_ARTICLES = 'Articles';
 
+/** The collection of the DuckDB Manual, the documentation of the DuckDB of Pollis, as pollisDuckDBDocs.ts names it. */
+export const ASK_DUCKDB_MANUAL = 'DuckDB Manual';
+
 /** The collection of the Package APIs, as pollisPackageApis.ts names it, which only a choice of Search In searches. */
 export const ASK_PACKAGE_APIS = 'Package APIs';
 
@@ -161,7 +165,7 @@ export interface IAskPollisPassage {
 export type AskPollisWordsOnly = 'notIndexed' | 'notEmbedded' | 'otherModel' | 'modelNotStarted';
 
 /** A source within a collection, which Search In can tick; a question is routed to the collections, never to one of these. */
-export type AskPollisSource = 'pollisTopics' | 'packageVignettes' | 'toolboxOverviews' | 'panelsWikis' | 'juliaManual' | 'juliaLibrary';
+export type AskPollisSource = 'pollisTopics' | 'packageVignettes' | 'toolboxOverviews' | 'panelsWikis' | 'juliaManual' | 'juliaLibrary' | 'duckdbManual' | 'duckdbFunctions';
 
 /** The collection each source is part of, as ask_index.jl names them. */
 export const ASK_SOURCE_COLLECTION: Record<AskPollisSource, string> = {
@@ -171,6 +175,8 @@ export const ASK_SOURCE_COLLECTION: Record<AskPollisSource, string> = {
 	panelsWikis: 'Pollis',
 	juliaManual: 'Julia Manual',
 	juliaLibrary: 'Julia Manual',
+	duckdbManual: ASK_DUCKDB_MANUAL,
+	duckdbFunctions: ASK_DUCKDB_MANUAL,
 };
 
 export interface IAskPollisSearchRequest {
@@ -994,6 +1000,8 @@ export interface IAskPollisIndex {
 	stop(id: string): Promise<void>;
 	/** As IAskPollisService. */
 	describeDatabase(path: string): Promise<string>;
+	/** As IAskPollisService. */
+	duckdbFunction(name: string): Promise<readonly IDuckDBFunctionKind[]>;
 	/** `counts` passages of each topic spread over the documents, for Make Questions: one of each document in turn, long enough to ask about. */
 	spread(counts: IAskTopicCounts): Promise<readonly IAskPollisPassage[]>;
 	/**
@@ -1106,6 +1114,8 @@ export interface IAskPollisService {
 	answer(turns: readonly IAskPollisTurn[], question: string, passages: readonly IAskPollisPassage[], onText: (text: string) => void, token: CancellationToken, answerWith?: string, attachments?: readonly IAskPollisAttachment[], collection?: string): Promise<IAskPollisAnswer>;
 	/** The tables and views of the DuckDB database at `path`, with their columns, as an attachment gives them; it is opened read-only and no view is run. */
 	describeDatabase(path: string): Promise<string>;
+	/** The help of the DuckDB function `name`, whatever its case, from DuckDB's own catalogue, as help?> in duckdb> shows it: none when DuckDB has no function of that name. */
+	duckdbFunction(name: string): Promise<readonly IDuckDBFunctionKind[]>;
 	/** `counts` passages of each topic spread over the documents, for the questions of a test set. */
 	spread(counts: IAskTopicCounts): Promise<readonly IAskPollisPassage[]>;
 	/**

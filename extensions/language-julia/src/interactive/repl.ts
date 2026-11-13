@@ -1543,7 +1543,7 @@ export function activate(
     g_replStatusBarItem.command = 'language-julia.showREPLActions'
     updateReplStatusBar()
     g_replStatusBarItem.show()
-    // POLLIS: Pollis REPL, between Julia REPL (0) and Pollis' DuckDB REPL (-1); it starts the Julia REPL, in the
+    // POLLIS: Pollis REPL, after Julia REPL (0) and Pollis' DuckDB REPL (-1); it starts the Julia REPL, in the
     // background, when it does not run. Julia code typed in it runs here, the Julia REPL showing it in full.
     activatePollisRepl(context, () => startREPL(true, false), async code => {
         const result = await executeInREPL(code, { filename: 'Pollis REPL', showErrorInREPL: true, showTerminal: false })

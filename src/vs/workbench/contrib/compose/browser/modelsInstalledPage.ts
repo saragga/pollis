@@ -27,7 +27,7 @@ import { IDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 import { MODELSINSTALLED_METADATA } from '../../model/browser/webviews/modelsInstalled.data.js';
 import { buildWebviewHtml, nextStepIcon, spinnerCss, spinnerSvg } from '../../model/browser/webviews/webviewScaffold.js';
 import { sortHeadingsCss, sortHeadingsScript, sortHint } from '../../model/browser/webviews/webviewPager.js';
-import { ASK_EMBEDDING_MODEL, embeddingPrefixes, MODELS_INSTALLED_COMMAND_ID } from '../common/askPollis.js';
+import { ASK_EMBEDDING_MODEL, ASK_LOCAL_PREFIX, embeddingPrefixes, MODELS_INSTALLED_COMMAND_ID } from '../common/askPollis.js';
 import { askModels, chooseAskModel } from './askPollisPage.js';
 import { askModelName } from './askPollisWebview.js';
 import { COMPARE_EMBEDDINGS_COMMAND_ID, useAskEmbeddingModel } from './compareEmbeddingsPage.js';
@@ -132,10 +132,13 @@ async function openModelsInstalledPage(accessor: ServicesAccessor): Promise<void
 	const notYetHere = localize('modelsInstalled.notYetHere', "downloaded when first used");
 	/** The models of a kind on this computer, and the one in use too when it is not here yet. */
 	const choices = (kind: IInstalledModel['kind'], inUse: string | undefined) => {
-		const listed = models.filter(model => model.kind === kind).map(model => ({ value: model.value ?? model.file, label: model.name, detail: model.sizeLabel ?? '' }));
+		// The model in use keeps the value of the setting, which may name it by its path or by its hf: value
+		const listed = models.filter(model => model.kind === kind).map(model => ({ value: inUse && (model.file === inUse || model.value === inUse) ? inUse : model.value ?? model.file, label: model.name, detail: model.sizeLabel ?? '' }));
 		return inUse && !listed.some(model => model.value === inUse) ? [{ value: inUse, label: askModelName(inUse), detail: notYetHere }, ...listed] : listed;
 	};
 	const embedder = () => configurationService.getValue<string>('pollis.ask.embeddingModel')?.trim() || ASK_EMBEDDING_MODEL;
+	/** Whether a model on this computer is the one a setting names, by its path or by its hf: value. */
+	const isSetTo = (model: IInstalledModel, setting: string) => model.file === setting || model.value === setting;
 	const sendState = async () => {
 		models = await commandService.executeCommand<IInstalledModel[]>('language-julia.pollisInstalledModels') ?? [];
 		const answering = await askModels(commandService, configurationService);
@@ -146,6 +149,10 @@ async function openModelsInstalledPage(accessor: ServicesAccessor): Promise<void
 				answering: { value: answering.chosen, local: answering.local, cloud: answering.cloud },
 				embedding: { value: embedder(), models: choices('embedding', embedder()) },
 				reranker: { value: reranker, models: choices('reranker', reranker), installed: models.some(model => model.kind === 'reranker') },
+				// The files of the models on this computer in use, which the table marks
+				files: models.filter(model => model.kind === 'embedding' ? isSetTo(model, embedder())
+					: model.kind === 'reranker' ? !!reranker && isSetTo(model, reranker)
+						: answering.chosen === ASK_LOCAL_PREFIX + model.file).map(model => model.file),
 			},
 			models,
 		});
@@ -267,6 +274,7 @@ function pageHtml(): string {
 		noVersions: localize('modelsInstalled.noVersions', "Its repository has no other version."),
 		projector: localize('modelsInstalled.projector', "Projector, for images or audio"),
 		versionInstalled: localize('modelsInstalled.versionInstalled', "Installed"),
+		inUse: localize('modelsInstalled.inUse', "In use"),
 		download: localize('modelsInstalled.download', "Download"),
 		downloading: localize('modelsInstalled.downloading', "Downloading..."),
 		none: localize('modelsInstalled.none', "No local model on this computer yet. A model is downloaded the first time a panel or a Model Tasks and Routing tier uses it."),
@@ -306,6 +314,9 @@ function pageHtml(): string {
 		.modelsPage tr.versions td { padding-top: 4px; }
 		.modelsPage .versions table td { border-bottom: none; padding: 3px 8px; }
 		.modelsPage .installed { color: var(--vscode-testing-iconPassed); }
+		/* The ✓ of a model in use, left of the blue line of its row, in the margin of the step */
+		.modelsPage table.local td:first-child { position: relative; }
+		.modelsPage .inUse { position: absolute; left: -18px; top: 10px; font-size: 14px; font-weight: 600; line-height: 1.4; }
 		/* llama.cpp, in the yellow of the menu paths */
 		.yellow { color: #e8a33d; }
 		body.vscode-light .yellow { color: #a8650d; }
@@ -523,6 +534,13 @@ function pageHtml(): string {
 			for (const model of inSection) {
 				const row = element('tr');
 				const name = element('td');
+				// The models answering, embedding and reranking now: a model of this computer by its file, a cloud model by its id
+				if (model.file ? state.inUse.files.includes(model.file) : state.inUse.answering.value === model.id) {
+					const mark = element('span', 'installed inUse', '✓');
+					mark.title = TEXT.inUse;
+					mark.setAttribute('aria-label', TEXT.inUse);
+					name.appendChild(mark);
+				}
 				name.appendChild(element('div', 'name', model.name));
 				name.title = model.file || model.id;
 				row.appendChild(name);

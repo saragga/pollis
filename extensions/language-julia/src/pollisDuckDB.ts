@@ -1,6 +1,8 @@
 // POLLIS: the DuckDB engine of Pollis, for Julia as well. Pollis ships libduckdb (with @duckdb/node-api) and the
 // extensions fts, full-text search, and quack, with httpfs on which it runs, compressed (build/pollis/duckdb.ts); at install, they are copied and unpacked into ~/.pollis/duckdb/, a
-// path that stays the same across updates. Julia's DuckDB.jl is Pollis' fork without DuckDB_jll
+// path that stays the same across updates. The extensions json and excel, for JSON files and Excel workbooks, are unpacked
+// where DuckDB installs its extensions, ~/.duckdb/extensions/VERSION/PLATFORM/, so that a DuckDB of that version finds them
+// installed and loads them when a query needs them: Julia's, and those of Pollis, which never download one. Julia's DuckDB.jl is Pollis' fork without DuckDB_jll
 // (Trumpingtons/DuckDB.jl), which loads the library named by JULIA_DUCKDB_LIBRARY; the path is fixed when DuckDB.jl is
 // precompiled, so it must not change.
 
@@ -21,8 +23,21 @@ export const DUCKDB_LIBRARY = path.join(DUCKDB_HOME, LIBRARY_NAME)
 /** What was copied, so that it is copied again only when Pollis brings a new DuckDB or new extensions. */
 const STAMP = path.join(DUCKDB_HOME, 'pollis.stamp')
 
-/** The extensions of DuckDB that come with Pollis. */
+/** The extensions of DuckDB that come with Pollis and are loaded by their path in ~/.pollis/duckdb/. */
 const DUCKDB_EXTENSIONS = ['fts', 'quack', 'httpfs']
+
+/** The extensions of DuckDB that come with Pollis and are unpacked where DuckDB installs its extensions. */
+const INSTALLED_EXTENSIONS = ['json', 'excel']
+
+/** DuckDB's names of the platforms, in the path of its extensions. */
+const DUCKDB_PLATFORMS: Record<string, string> = {
+    'darwin-arm64': 'osx_arm64',
+    'darwin-x64': 'osx_amd64',
+    'linux-x64': 'linux_amd64',
+    'linux-arm64': 'linux_arm64',
+    'win32-x64': 'windows_amd64',
+    'win32-arm64': 'windows_arm64',
+}
 
 let g_ready: Promise<void> = Promise.resolve()
 
@@ -43,7 +58,7 @@ export function activate(context: vscode.ExtensionContext) {
     g_ready = Promise.all([engine, references]).then(() => undefined)
 }
 
-/** Resolves once ~/.pollis/duckdb/ holds Pollis' engine and fts, and ~/.pollis/references/ its references (or a copy failed). */
+/** Resolves once ~/.pollis/duckdb/ holds Pollis' engine and its extensions, and ~/.pollis/references/ its references (or a copy failed). */
 export function whenDuckDBReady(): Promise<void> {
     return g_ready
 }
@@ -62,17 +77,23 @@ async function install(appRoot: string) {
     if (!folder) {
         return
     }
+    const version: string = JSON.parse(await fs.promises.readFile(path.join(folder, 'package.json'), 'utf8')).version
+    // Where DuckDB installs its extensions: the version of the engine (1.5.6 of @duckdb/node-api 1.5.6-r.1) and the platform.
+    const platform = DUCKDB_PLATFORMS[`${process.platform}-${process.arch}`]
+    const installedFolder = platform && path.join(os.homedir(), '.duckdb', 'extensions', `v${version.replace(/-.*$/, '')}`, platform)
     // The extensions that come with Pollis: fts, full-text search, and quack, which serves the Shared Session's database,
-    // with httpfs, on which quack runs.
+    // with httpfs, on which quack runs; json and excel, for JSON files and Excel workbooks.
     // In a development build, `npm run gulp fetch-duckdb-extensions` fetches them.
-    const extensions = DUCKDB_EXTENSIONS.map(name => ({
-        name,
+    const extensions = [
+        ...DUCKDB_EXTENSIONS.map(name => ({ name, destination: DUCKDB_HOME })),
+        ...(installedFolder ? INSTALLED_EXTENSIONS.map(name => ({ name, destination: installedFolder })) : []),
+    ].map(e => ({
+        ...e,
         file: firstExisting([
-            path.join(appRoot, 'duckdb', `${name}.duckdb_extension.gz`),
-            path.join(appRoot, '.build', 'duckdb', `${name}.duckdb_extension.gz`),
+            path.join(appRoot, 'duckdb', `${e.name}.duckdb_extension.gz`),
+            path.join(appRoot, '.build', 'duckdb', `${e.name}.duckdb_extension.gz`),
         ]),
     }))
-    const version = JSON.parse(await fs.promises.readFile(path.join(folder, 'package.json'), 'utf8')).version
     const sizes = await Promise.all(extensions.map(async e => (e.file ? `${(await fs.promises.stat(e.file)).size}` : `no ${e.name}`)))
     const stamp = `${version}\n${sizes.join('\n')}\n`
     const installed = await fs.promises.readFile(STAMP, 'utf8').catch(() => '')
@@ -84,9 +105,10 @@ async function install(appRoot: string) {
     const library = `${DUCKDB_LIBRARY}.${process.pid}.tmp`
     await fs.promises.copyFile(path.join(folder, LIBRARY_NAME), library)
     await fs.promises.rename(library, DUCKDB_LIBRARY)
-    for (const { name, file } of extensions) {
+    for (const { name, destination, file } of extensions) {
         if (file) {
-            const target = path.join(DUCKDB_HOME, `${name}.duckdb_extension`)
+            await fs.promises.mkdir(destination, { recursive: true })
+            const target = path.join(destination, `${name}.duckdb_extension`)
             const unpacked = `${target}.${process.pid}.tmp`
             await pipeline(fs.createReadStream(file), zlib.createGunzip(), fs.createWriteStream(unpacked))
             await fs.promises.rename(unpacked, target)

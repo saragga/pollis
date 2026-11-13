@@ -12,6 +12,7 @@ import { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
 import * as fs from 'fs';
 import * as readline from 'readline';
 import { join } from '../../../../base/common/path.js';
+import { DUCKDB_FUNCTION_FORMS_SQL, DUCKDB_KEYWORD_SQL, DUCKDB_NEAR_NAMES_SQL, duckdbFunctionKinds, IDuckDBFunctionForm } from '../common/duckdbHelp.js';
 import { blankSql, sqlPieces } from '../common/duckdbSql.js';
 import { CHANGES, DUCKDB_OPTIONS, SHARED_DATABASE, SharedSessionAttachment, logQuery, POLLIS_HOME, preparePollisConnection, QUIET, readShownRows, sqlString, trimQueryLog, withHint } from './duckdbPollis.js';
 
@@ -26,8 +27,23 @@ const red = (text: string) => `\x1b[31m${text}\x1b[0m`;
 /** Bold green, as the Julia REPL writes julia>: the terminal theme's green. */
 const green = (text: string) => `\x1b[1;32m${text}\x1b[0m`;
 
+/** Bold yellow, as the Julia REPL writes help?>: the terminal theme's yellow. */
+const yellow = (text: string) => `\x1b[1;33m${text}\x1b[0m`;
+const bold = (text: string) => `\x1b[1m${text}\x1b[0m`;
+
 const PROMPT = `${green('duckdb>')} `;
 const CONTINUATION = `${green('   ...>')} `;
+/** The prompt of help mode, which `?` at the start of an empty line enters, as at julia>. */
+const HELP_PROMPT = `${yellow('help?>')} `;
+/** The names of the kinds of function of duckdb_functions(). */
+const KINDS: Record<string, string> = {
+	scalar: 'Scalar function',
+	aggregate: 'Aggregate function',
+	table: 'Table function',
+	macro: 'Macro',
+	table_macro: 'Table macro',
+	pragma: 'Pragma',
+};
 
 /**
  * A sequence of VS Code's shell integration (OSC 633), as the Julia REPL writes them: the terminal then marks each
@@ -93,13 +109,15 @@ function table(names: readonly string[], first: string[][], last: string[][], av
 }
 
 const HELP = `.databases          The attached databases
-.help               This help
+.help [function]    This help, or that of a DuckDB function, as help?> shows it
 .quit, .exit        Leave the shell (also Ctrl+D)
 .schema [table]     The CREATE statements of the tables, or of one
 .tables             The tables and views of every database, the Shared Session's included
 .timer on|off       Show how long each query took (on)
 
 A query ends with ";"; until then, Enter starts a new line. Ctrl+C stops a running query.
+? at the start of an empty line turns the prompt into help?>, where the name of a DuckDB function shows its forms,
+its description and its examples; the prompt is duckdb> again after it, and Backspace on an empty line goes back.
 The built-in databases are attached read-only as PollisDatasets, PollisRSS, PollisJournals, PollisReferences,
 PollisBenchmarks and PollisDocuments. While the Julia REPL of this window runs, its Shared Session is attached as
 SharedSession: SELECT * FROM SharedSession.stock_returns reads the table @share stock_returns = ... made in Julia.`;
@@ -139,6 +157,9 @@ class Shell {
 			case '.exit':
 				return 'quit';
 			case '.help':
+				if (args.length) {
+					return this.help(args.join(' '));
+				}
 				console.log(HELP);
 				return 'succeeded';
 			case '.timer':
@@ -158,6 +179,54 @@ class Shell {
 			default:
 				console.log(red(`Unknown command ${name}; .help lists the commands.`));
 				return 'failed';
+		}
+	}
+
+	/**
+	 * Show the help of the DuckDB function `name`, as help?> shows that of a Julia name: the forms of each of its kinds,
+	 * its description and its examples, from duckdb_functions(); for a name DuckDB has no function of, the nearest names.
+	 * An empty name shows the help of the shell.
+	 */
+	async help(name: string): Promise<CommandEnd> {
+		const wanted = name.trim().replace(/[\s();]+$/, '');
+		if (!wanted) {
+			console.log(HELP);
+			return 'succeeded';
+		}
+		try {
+			const forms = (await this.connection.runAndReadAll(DUCKDB_FUNCTION_FORMS_SQL, [wanted])).getRowObjectsJson() as unknown as IDuckDBFunctionForm[];
+			if (!forms.length) {
+				const keyword = (await this.connection.runAndReadAll(DUCKDB_KEYWORD_SQL, [wanted])).getRows().length > 0;
+				const near = (await this.connection.runAndReadAll(DUCKDB_NEAR_NAMES_SQL, [wanted])).getRows().map(row => String(row[0]));
+				console.log(keyword ? `${bold(wanted)} is a keyword of SQL, not a function.` : `DuckDB has no function named ${bold(wanted)}.`);
+				if (near.length) {
+					console.log(`Perhaps you meant ${near.map(bold).join(', ')}`);
+				}
+				return keyword ? 'succeeded' : 'failed';
+			}
+			const lines: string[] = [];
+			for (const kind of duckdbFunctionKinds(forms)) {
+				lines.push(`  ${dim(KINDS[kind.type] ?? kind.type)}`, '');
+				lines.push(...kind.forms.map(form => `  ${bold(form)}`));
+				if (kind.more) {
+					lines.push(dim(`  and ${kind.more} more forms`));
+				}
+				if (kind.alias) {
+					lines.push('', `  An alias of ${bold(kind.alias)}.`);
+				}
+				if (kind.descriptions.length) {
+					lines.push('', ...kind.descriptions.map(description => `  ${description}`));
+				}
+				if (kind.examples.length) {
+					lines.push('', `  ${bold(kind.examples.length === 1 ? 'Example' : 'Examples')}`, ...kind.examples.map(example => `    ${example}`));
+				}
+				lines.push('');
+			}
+			console.log(lines.join('\n'));
+			return 'succeeded';
+		} catch (err) {
+			console.log(red((err as Error).message));
+			return 'failed';
 		}
 	}
 
@@ -257,6 +326,10 @@ async function main(): Promise<void> {
 
 	/** The lines of a query not yet ended with ";". */
 	let buffer = '';
+	/** Whether the prompt is help?>, whose line is the name of a function to look up. */
+	let helpMode = false;
+	/** Whether a line is being run, when a ? is a character like any other. */
+	let working = false;
 	const rl = readline.createInterface({
 		input: process.stdin,
 		output: process.stdout,
@@ -275,6 +348,7 @@ async function main(): Promise<void> {
 	 * that readline, which writes the prompt again as the line is edited, does not mark it again.
 	 */
 	const prompt = () => {
+		helpMode = false;
 		process.stdout.write(shellIntegration('A'));
 		rl.setPrompt(PROMPT);
 		rl.prompt();
@@ -284,6 +358,33 @@ async function main(): Promise<void> {
 	const started = (commandLine: string) => process.stdout.write(shellIntegration(`E;${escapedCommandLine(commandLine)}`) + shellIntegration('C'));
 	/** The command has ended: succeeded or failed, or with no status for an empty line or one dropped. */
 	const finished = (end?: CommandEnd) => process.stdout.write(shellIntegration(end ? `D;${end === 'failed' ? 1 : 0}` : 'D'));
+
+	/** Enters or leaves help mode on the line being typed, as `?` and Backspace do at julia>. */
+	const setHelpMode = (help: boolean) => {
+		helpMode = help;
+		rl.setPrompt(help ? HELP_PROMPT : PROMPT);
+		rl.prompt(true);
+	};
+	// Before readline takes a key: `?` on an empty line, outside a query, enters help mode, and Backspace on an empty help?> line leaves it
+	let entering = false;
+	process.stdin.prependListener('keypress', (typed: string | undefined, key: readline.Key | undefined) => {
+		if (working || buffer) {
+			return;
+		}
+		if (!helpMode && typed === '?' && rl.line === '') {
+			entering = true;
+		} else if (helpMode && key?.name === 'backspace' && rl.line === '') {
+			setHelpMode(false);
+		}
+	});
+	// After readline has put the ? in the line: the ? goes, and the prompt is help?>
+	process.stdin.on('keypress', () => {
+		if (entering) {
+			entering = false;
+			rl.write(null, { ctrl: true, name: 'u' });
+			setHelpMode(true);
+		}
+	});
 
 	rl.on('SIGINT', () => {
 		if (!shell.interrupt()) {
@@ -305,7 +406,11 @@ async function main(): Promise<void> {
 	process.stdout.write(shellIntegration('P;HasRichCommandDetection=True'));
 	prompt();
 	for await (const line of rl) {
-		if (!buffer && line.trim().startsWith('.')) {
+		working = true;
+		if (helpMode) {
+			started(`?${line.trim()}`);
+			finished(await shell.help(line));
+		} else if (!buffer && line.trim().startsWith('.')) {
 			started(line.trim());
 			const end = await shell.command(line);
 			if (end === 'quit') {
@@ -316,6 +421,7 @@ async function main(): Promise<void> {
 		} else {
 			buffer += (buffer ? '\n' : '') + line;
 			if (!complete(buffer)) {
+				working = false;
 				rl.setPrompt(CONTINUATION);
 				rl.prompt();
 				continue;
@@ -333,6 +439,7 @@ async function main(): Promise<void> {
 				finished(outcome.succeeded ? 'succeeded' : 'failed');
 			}
 		}
+		working = false;
 		prompt();
 	}
 }

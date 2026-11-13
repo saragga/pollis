@@ -5,9 +5,10 @@
 
 // DuckDB in the packaged app. The engine, libduckdb, comes with @duckdb/node-api, next to its
 // duckdb.node in node_modules.asar.unpacked/@duckdb/node-bindings-<platform>-<arch>/; its extensions fts
-// (full-text search), quack (client and server) and httpfs (HTTP, which quack needs) are downloaded from DuckDB's extension repository and shipped
-// compressed as duckdb/<name>.duckdb_extension.gz. At install, the Julia extension of Pollis copies the engine and
-// unpacks the extensions into ~/.pollis/duckdb/ (extensions/language-julia/src/pollisDuckDB.ts).
+// (full-text search), quack (client and server), httpfs (HTTP, which quack needs), json and excel (the JSON and Excel
+// formats) are downloaded from DuckDB's extension repository and shipped compressed as duckdb/<name>.duckdb_extension.gz.
+// At install, the Julia extension of Pollis copies the engine and unpacks fts, quack and httpfs into ~/.pollis/duckdb/,
+// and json and excel where DuckDB installs its extensions (extensions/language-julia/src/pollisDuckDB.ts).
 //
 // In a development build, `npm run gulp fetch-duckdb-extensions` puts them in .build/duckdb/.
 
@@ -35,8 +36,8 @@ const PLATFORMS: Record<string, string> = {
 
 /**
  * The extensions Pollis ships, with the checksum of each one's .gz for each platform: fts, full-text search; quack,
- * which serves the Shared Session's database to the duckdb> terminal and the notebooks; and httpfs, HTTP, on which quack
- * runs, loaded before it on both sides.
+ * which serves the Shared Session's database to the duckdb> terminal and the notebooks; httpfs, HTTP, on which quack
+ * runs, loaded before it on both sides; and json and excel, which read and write JSON files and Excel workbooks.
  */
 const EXTENSIONS: Record<string, Record<string, string>> = {
 	fts: {
@@ -62,6 +63,22 @@ const EXTENSIONS: Record<string, Record<string, string>> = {
 		'linux-arm64': 'b18472a0e85cbf15ca4ebbe335173f87b62a074cd0f26072d4c756205c6239d0',
 		'win32-x64': 'e23aa882afd8aa24dacb8290920fec03b5188bb60038bdf6b963035a93d989cf',
 		'win32-arm64': '7ed07527acc2dc7cc00e99b11bfd04891eb126b77cef75026f5c2ca5b32f79ac',
+	},
+	json: {
+		'darwin-arm64': '52bd359cd06faadfe84e922125c5461ee47e1321182208f3cf827178ed53133c',
+		'darwin-x64': 'b4c1dce345e5c4e5b5b21659e5116c4d668785cb7d6a5d2277f378a6268dfdd0',
+		'linux-x64': '84c89b28f204e7b8cafc3a019a6c8bff26546d8ffc854b6c5c53e2a40cac6410',
+		'linux-arm64': '24203b9f93415e6364ece00e2e3cf4ed96a2cf1a159083fca85eacea6c99abcf',
+		'win32-x64': 'b0a0c053d3c6b5296bb19e8055c48f8ae434353bd136276a8fdba28840656774',
+		'win32-arm64': 'cf5057a637b835536ac9faac7808a636c02b2281a5d2425df65b229c96e89731',
+	},
+	excel: {
+		'darwin-arm64': '327c04c3b0c850592c50637f46e4d91e280978a393bc3b889f6d555aba08240d',
+		'darwin-x64': '551bb3c1a8b8c579e9e308a74f9a70b18669461dc1789d0123931ad890172d12',
+		'linux-x64': '7a257c48b971415ac1e6a429dd1fef31f5a2a6080ce21f207aa4946a753cb0f3',
+		'linux-arm64': '7812ff6e1d73ac52fbbc5188d039dc4ceb2c44909466d6405c5abb282a17f0b2',
+		'win32-x64': '37c0c8424bb572b5b2d8f2cbf714fc72db220e30d4f131b85cbdcd7408fc9ae5',
+		'win32-arm64': '73d5a431dd8f0491e5146f4ee3bb004eb15ddbfcad8e214b88580b1f66f6a8c1',
 	},
 };
 

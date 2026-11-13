@@ -43,6 +43,8 @@ import { SQL_PANEL } from '../../model/browser/commands/sql.command.js';
 import { openHfmWebview } from '../../model/browser/commands/hfm.command.js';
 import { openKgmWebview } from '../../model/browser/commands/kgm.command.js';
 import { XLSX_PANEL } from '../../model/browser/commands/xlsx.command.js';
+import { PARQUET_PANEL } from '../../model/browser/commands/parquet.command.js';
+import { JSON_PANEL } from '../../model/browser/commands/json.command.js';
 import { YFIN_PANEL } from '../../model/browser/commands/yfin.command.js';
 import { ALPV_PANEL } from '../../model/browser/commands/alpv.command.js';
 import { FRED_PANEL } from '../../model/browser/commands/fred.command.js';
@@ -74,6 +76,8 @@ const KGM_ID  = 'chiara.explore.kgm';
 const SQL_ID = 'chiara.explore.conn.sql';
 const XLSX_ID = 'chiara.explore.conn.xlsx';
 const CSV_ID = 'chiara.explore.conn.csv';
+const PARQUET_ID = 'chiara.explore.conn.parquet';
+const JSON_ID = 'chiara.explore.conn.json';
 const YFIN_ID = 'chiara.explore.adr.yfin';
 const ALPV_ID = 'chiara.explore.adr.alpv';
 export const FRED_ID = 'chiara.explore.adr.fred';
@@ -184,6 +188,8 @@ CommandsRegistry.registerCommand(CSV_ID, (accessor: ServicesAccessor) => openSca
 CommandsRegistry.registerCommand(ASK_POLLIS_OPEN_PDF_COMMAND_ID, (accessor: ServicesAccessor) => accessor.get(ICommandService).executeCommand(PDF_VIEWER_OPEN_COMMAND_ID));
 
 CommandsRegistry.registerCommand(XLSX_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, XLSX_PANEL));
+CommandsRegistry.registerCommand(PARQUET_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, PARQUET_PANEL));
+CommandsRegistry.registerCommand(JSON_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, JSON_PANEL));
 
 CommandsRegistry.registerCommand(YFIN_ID, (accessor: ServicesAccessor) => openScaffoldWebview(accessor, YFIN_PANEL));
 
@@ -1268,6 +1274,18 @@ MenuRegistry.appendMenuItem(CONNSubmenuId, {
 	order: 2,
 });  // XLSX.jl
 
+MenuRegistry.appendMenuItem(CONNSubmenuId, {
+	group: '1_tables',
+	command: { id: PARQUET_ID, title: localize('conn.parquet', 'Parquet Files') },
+	order: 3,
+});  // DuckDB.jl + Parquet2.jl
+
+MenuRegistry.appendMenuItem(CONNSubmenuId, {
+	group: '1_tables',
+	command: { id: JSON_ID, title: localize('conn.json', 'JSON Files') },
+	order: 4,
+});  // DuckDB.jl + JSON.jl
+
 // Access Files > Life Sciences: a few of the most common formats of each family, the rest to come with the toolboxes
 // of their fields, which can add theirs to this submenu
 const LifeSciencesSubmenuId = new MenuId('menubarLifeSciencesSubmenu');
@@ -1280,12 +1298,6 @@ MenuRegistry.appendMenuItem(CONNSubmenuId, {
 
 // The formats not built yet, greyed out in their groups, after those Pollis reads
 const FORMATS_TO_COME: readonly { readonly menu: MenuId; readonly group: string; readonly first: number; readonly items: readonly { readonly id: string; readonly title: string }[] }[] = [
-	{
-		menu: CONNSubmenuId, group: '1_tables', first: 3, items: [
-			{ id: 'chiara.explore.conn.parquet', title: localize('conn.parquet', 'Parquet Files') },
-			{ id: 'chiara.explore.conn.json', title: localize('conn.json', 'JSON Files') },
-		]
-	},
 	{
 		menu: CONNSubmenuId, group: '3_maps', first: 1, items: [
 			{ id: 'chiara.explore.conn.geojson', title: localize('conn.geojson', 'GeoJSON Files') },

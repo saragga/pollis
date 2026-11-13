@@ -6,6 +6,7 @@
 import { IntervalTimer, RunOnceScheduler } from '../../../../base/common/async.js';
 import { encodeBase64, streamToBuffer, VSBuffer } from '../../../../base/common/buffer.js';
 import { CancellationToken } from '../../../../base/common/cancellation.js';
+import { Event } from '../../../../base/common/event.js';
 import { DisposableStore, MutableDisposable } from '../../../../base/common/lifecycle.js';
 import { isLinux } from '../../../../base/common/platform.js';
 import { basename, dirname, extname, isEqual, joinPath, relativePath } from '../../../../base/common/resources.js';
@@ -15,7 +16,7 @@ import { URI } from '../../../../base/common/uri.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Categories } from '../../../../platform/action/common/actionCommonCategories.js';
 import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
-import { ICommandService } from '../../../../platform/commands/common/commands.js';
+import { CommandsRegistry, ICommandService } from '../../../../platform/commands/common/commands.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { IDialogService, IFileDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
@@ -50,6 +51,7 @@ import { classificationText, parseClassification, readClassification, readLatexC
 import { latexSourceOf } from './latexSource.js';
 import { IToolboxPanelsService, IToolboxTextInfo } from '../common/toolboxPanels.js';
 import { parseToml } from '../../model/browser/common/tomlPanelData.js';
+import { IReference, ReferenceLibrary } from '../../model/browser/common/referenceLibrary.js';
 import { findPollisWorkspace, OPEN_POLLIS_WORKSPACE_COMMAND_ID, pollisWorkspaceFolder } from '../../pollisWorkspace/browser/pollisWorkspace.contribution.js';
 
 // The Knowledge Base, from Compose > Knowledge for AI Models > Knowledge Base, in the Minimal style of the scaffold: the
@@ -215,6 +217,9 @@ interface IToolboxText {
 	downloaded: boolean;
 }
 
+/** The command of the Julia extension that reads the catalogue of PollisKnowledge.jl and downloads its texts. */
+const KNOWLEDGE_BASE_JULIA_COMMAND = 'language-julia.pollisKnowledgeBase';
+
 /** The time a toolbox's text has to download. */
 const TOOLBOX_TEXT_TIMEOUT = 300_000;
 
@@ -244,6 +249,8 @@ function toolboxLicence(text: IToolboxTextInfo, source: string): string {
 /** A text of the catalogue of PollisKnowledge.jl, as knowledge_base.jl answers it. */
 interface IKnowledgeText {
 	readonly id: string;
+	/** The key of its work in PollisReferences, whose key words and classifications the table shows. */
+	readonly reference?: string;
 	readonly title: string;
 	readonly type: string;
 	readonly edition: string;
@@ -251,6 +258,8 @@ interface IKnowledgeText {
 	readonly publisher: string;
 	readonly year: number;
 	readonly subject: string;
+	/** The Julia packages it is about, which its subject names first. */
+	readonly packages?: readonly string[];
 	readonly format: 'pdf' | 'markdown';
 	readonly licence: string;
 	readonly licence_url: string;
@@ -921,8 +930,30 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 		...yours.filter(text => !settings.off.includes(text.id)).map(text => text.document),
 	];
 
+	/** The works of PollisReferences, by their keys: the key words and classifications of the texts that name them. */
+	let works = new Map<string, IReference>();
+	const readWorks = async () => {
+		const { references } = await new ReferenceLibrary(fileService, await pathService.userHome({ preferLocal: true })).pollis();
+		works = new Map(references.map(reference => [reference.key, reference]));
+	};
+	/** The key words, classifications and subject of a text: its own, else those of its work. */
+	const describedBy = (reference: string | undefined, keyWords: readonly string[], classifications: readonly string[], subject: string) => {
+		const work = reference ? works.get(reference) : undefined;
+		const codes = classifications.length ? classifications : work?.classifications ?? [];
+		return {
+			keyWords: keyWords.length ? keyWords : work?.keywords ?? [],
+			classifications: codes,
+			subject: subject || subjectOf(codes.flatMap(text => parseClassification(text) ?? [])) || '',
+		};
+	};
+
 	const readCatalogue = async () => {
-		const answer = await commandService.executeCommand<{ texts?: IKnowledgeText[]; error?: string }>('language-julia.pollisKnowledgeBase', { task: 'texts' }).catch(() => undefined);
+		// The Julia extension starts once the window has started, after a page opened with it: the catalogue is read when
+		// the extension has registered its command
+		if (!CommandsRegistry.getCommand(KNOWLEDGE_BASE_JULIA_COMMAND)) {
+			await Event.toPromise(Event.filter(CommandsRegistry.onDidRegisterCommand, id => id === KNOWLEDGE_BASE_JULIA_COMMAND), disposables);
+		}
+		const answer = await commandService.executeCommand<{ texts?: IKnowledgeText[]; error?: string }>(KNOWLEDGE_BASE_JULIA_COMMAND, { task: 'texts' }).catch(() => undefined);
 		texts = answer?.texts;
 		catalogueError = texts ? undefined : answer?.error ?? 'failed';
 		for (const id of await commandService.executeCommand<string[]>('language-julia.pollisKnowledgeBaseDownloading').catch(() => undefined) ?? []) {
@@ -962,7 +993,8 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 			texts: texts || yours.length || toolboxTexts.length ? [
 				...(texts ?? []).map(text => ({
 					id: text.id, title: text.title, type: text.type, edition: text.edition, authors: text.authors, publisher: text.publisher, year: text.year,
-					subject: text.subject_from ? `${text.subject} (${text.subject_from})` : text.subject, keyWords: [], classifications: text.classifications ?? [],
+					...describedBy(text.reference, [], text.classifications ?? [], text.subject_from ? `${text.subject} (${text.subject_from})` : text.subject),
+					packages: text.packages ?? [],
 					record: text.lccn ? libraryRecord(text.lccn) : undefined, recordEdition: text.record_edition, lccn: text.lccn,
 					format: text.format, licence: text.licence, licenceUrl: text.licence_url, page: text.page, hardCopy: text.hard_copy, size: text.size_mb, changes: text.changes,
 					on: settings.on.includes(text.id), downloaded: text.downloaded, downloading: downloading.has(text.id), failed: failed.get(text.id),
@@ -972,7 +1004,8 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 					const { id, text, source, downloaded } = toolboxText;
 					return {
 						id, title: text.title, type: text.type, edition: text.edition, authors: text.authors, publisher: text.publisher, year: text.year,
-						subject: text.subject, keyWords: text.keyWords, classifications: text.classifications,
+						...describedBy(text.reference, text.keyWords, text.classifications, text.subject),
+						packages: text.packages,
 						format: 'pdf', licence: text.licence, licenceUrl: text.licenceUrl, page: text.page, size: text.size, changes: text.changes, source,
 						on: settings.on.includes(id), downloaded, downloading: downloading.has(id), failed: failed.get(id),
 						passages: downloaded ? passagesOf([toolboxDocument(toolboxText)]) : 0,
@@ -997,7 +1030,7 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 	const switchTexts = async (ids: readonly string[], on: boolean) => {
 		// The texts of PollisKnowledge.jl, downloaded by knowledge_base.jl, and those of the toolboxes, by Pollis
 		const fetchKnowledge = async (text: IKnowledgeText) => {
-			const answer = await commandService.executeCommand<{ documents?: ITextDocument[]; error?: string }>('language-julia.pollisKnowledgeBase', { task: 'download', id: text.id }).catch(() => undefined);
+			const answer = await commandService.executeCommand<{ documents?: ITextDocument[]; error?: string }>(KNOWLEDGE_BASE_JULIA_COMMAND, { task: 'download', id: text.id }).catch(() => undefined);
 			if (answer?.documents) {
 				text.downloaded = true;
 				text.documents = answer.documents;
@@ -1055,6 +1088,7 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 	const showCatalogue = async () => {
 		await readYours();
 		await readToolboxTexts();
+		await readWorks().catch(() => undefined);
 		await readCatalogue();
 		await postState();
 		post({ command: 'covers', covers });
@@ -1284,19 +1318,28 @@ ${spinnerCss}
 	.link:disabled { color: var(--vscode-disabledForeground); cursor: default; text-decoration: none; }
 	.pager { display: flex; justify-content: center; align-items: center; gap: 16px; padding: 12px 8px; font-size: 12px; color: var(--vscode-descriptionForeground); }
 	.pager .link { font-size: 12px; }
-	.name { width: 28%; }
+	/* Eleven columns that fit the page: fixed widths, adding up to it, and words that wrap */
+	table { table-layout: fixed; }
+	td { overflow-wrap: break-word; }
+	th { white-space: normal; }
+	.name { width: 17%; }
+	.type { width: 7%; }
+	.source { width: 9%; }
+	.subject { width: 11%; }
+	.licence { width: 6%; }
 	.title.unavailable { color: var(--vscode-foreground); cursor: default; }
 	.title.unavailable:hover { text-decoration: none; }
 	.links { margin-top: 4px; }
-	.size { white-space: nowrap; text-align: right; }
-	.kept { width: 13%; }
-	.cut { width: 12%; }
+	.size { width: 5%; white-space: nowrap; text-align: right; }
+	.kept { width: 9%; }
+	.cut { width: 7%; }
 	.keyWords { width: 11%; }
 	.classes { width: 10%; }
 	.editable { cursor: pointer; }
 	.editable:hover { background: var(--vscode-list-hoverBackground); }
 	.classes div + div { margin-top: 2px; }
-	.switch { white-space: nowrap; }
+	.switch { width: 8%; }
+	td.switch .choice-switch { flex-wrap: wrap; gap: 4px 10px; }
 	.failed, .missing { color: var(--vscode-errorForeground); }
 	.books { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; margin: 8px 0 20px 0; }
 	.book { display: flex; flex-direction: column; gap: 3px; }
@@ -1323,12 +1366,12 @@ ${spinnerCss}
 	<table id="table" class="stickyHead" hidden>
 		<thead><tr>
 			<th class="name sortable" data-sort="title" data-label="${text.textColumn}" title="${text.sortHint}">${text.textColumn}</th>
-			<th class="sortable" data-sort="type" data-label="${text.type}" title="${text.sortHint}">${text.type}</th>
-			<th class="sortable" data-sort="source" data-label="${text.source}" title="${text.sourceHint}">${text.source}</th>
-			<th class="sortable" data-sort="subject" data-label="${text.subject}" title="${text.sortHint}">${text.subject}</th>
+			<th class="type sortable" data-sort="type" data-label="${text.type}" title="${text.sortHint}">${text.type}</th>
+			<th class="source sortable" data-sort="source" data-label="${text.source}" title="${text.sourceHint}">${text.source}</th>
+			<th class="subject sortable" data-sort="subject" data-label="${text.subject}" title="${text.sortHint}">${text.subject}</th>
 			<th class="keyWords">${text.keyWords}</th>
 			<th class="classes" title="${text.classificationsHint}">${text.classifications}</th>
-			<th class="sortable" data-sort="licence" data-label="${text.licence}" title="${text.sortHint}">${text.licence}</th>
+			<th class="licence sortable" data-sort="licence" data-label="${text.licence}" title="${text.sortHint}">${text.licence}</th>
 			<th class="size sortable" data-sort="size" data-label="${text.size}" title="${text.sizeHint}">${text.size}</th>
 			<th class="kept">${text.kept}</th>
 			<th class="cut sortable" data-sort="passages" data-label="${text.passages}" title="${text.passagesHint}">${text.passages}</th>
@@ -1383,8 +1426,13 @@ ${spinnerCss}
 		return item.yours ? TEXT.yours : item.source || 'PollisKnowledge.jl';
 	}
 
+	// The subject as words: the Julia packages the text is about, then its subject
+	function subjectText(item) {
+		return [(item.packages || []).join(', '), item.subject].filter(part => part).join('; ');
+	}
+
 	function sortValue(item) {
-		return sortColumn === 'source' ? sourceOf(item).toLowerCase() : sortColumn === 'size' ? item.size : sortColumn === 'passages' ? item.passages : sortColumn === 'on' ? (item.on ? 1 : 0) : String(item[sortColumn] || '').toLowerCase();
+		return sortColumn === 'source' ? sourceOf(item).toLowerCase() : sortColumn === 'subject' ? subjectText(item).toLowerCase() : sortColumn === 'size' ? item.size : sortColumn === 'passages' ? item.passages : sortColumn === 'on' ? (item.on ? 1 : 0) : String(item[sortColumn] || '').toLowerCase();
 	}
 
 	// (a) the text, its edition, authors and publisher, and its authors' page, or, for a text of the user's, its path in
@@ -1433,7 +1481,16 @@ ${spinnerCss}
 		};
 		const recordHint = item.lccn ? (item.recordEdition ? format(TEXT.fromRecordOf, item.lccn, item.recordEdition) : format(TEXT.fromRecord, item.lccn)) : '';
 		const subject = editable(cell(tr), 'subject');
-		subject.textContent = item.subject;
+		// The packages first, in yellow as every package, then the subject
+		(item.packages || []).forEach((name, i) => {
+			if (i) {
+				subject.appendChild(document.createTextNode(', '));
+			}
+			subject.appendChild(element('span', 'yellow', name));
+		});
+		if (item.subject) {
+			subject.appendChild(document.createTextNode(((item.packages || []).length ? '; ' : '') + item.subject));
+		}
 		if (recordHint) {
 			subject.title = recordHint;
 		}
@@ -1521,7 +1578,7 @@ ${spinnerCss}
 	function shownTexts() {
 		const query = search.value.trim().toLowerCase();
 		const shown = state.texts.filter(item => (!types.value || item.type === types.value)
-			&& (!query || [item.title, item.type, sourceOf(item), item.subject, item.licence, item.edition, item.publisher, item.path, ...item.authors, ...(item.keyWords || []), ...(item.classifications || [])].some(field => String(field || '').toLowerCase().includes(query))));
+			&& (!query || [item.title, item.type, sourceOf(item), item.subject, ...(item.packages || []), item.licence, item.edition, item.publisher, item.path, ...item.authors, ...(item.keyWords || []), ...(item.classifications || [])].some(field => String(field || '').toLowerCase().includes(query))));
 		return shown.sort((a, b) => {
 			const x = sortValue(a), y = sortValue(b);
 			return (x < y ? -1 : x > y ? 1 : 0) * (sortDescending ? -1 : 1);

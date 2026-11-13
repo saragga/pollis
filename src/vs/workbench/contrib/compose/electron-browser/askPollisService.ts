@@ -15,6 +15,7 @@ import { IProductService } from '../../../../platform/product/common/productServ
 import { ISecretStorageService } from '../../../../platform/secrets/common/secrets.js';
 import { IUtilityProcessWorkerWorkbenchService } from '../../../services/utilityProcess/electron-browser/utilityProcessWorkerWorkbenchService.js';
 import { ASK_CHAT_MODEL, ASK_CLOUD_PROVIDERS, ASK_EMBEDDING_CONTEXT, ASK_EMBEDDING_MODEL, ASK_LOCAL_PREFIX, ASK_PASSAGES, ASK_QUERY_PREFIX, ASK_RERANK_CONTEXT, ASK_SIMILARITY_PREFIX, askCloudModel, askPollisMessages, askShares, embeddingPrefixes, IAskPassageMatch, IAskPollisAnswer, IAskPollisAttachment, IAskPollisChatRequest, IAskPollisFound, IAskPollisIndex, IAskPollisIndexedDocument, IAskPollisIndexStatus, IAskPollisNamedIndex, IAskPollisPassage, IAskPollisReranked, IAskPollisSearchRequest, IAskPollisSearchResult, IAskPollisSearchStamp, IAskPollisService, IAskPollisTurn, IAskTopicCounts, IBenchmarkAnswer, IBenchmarkRun, ICompareRun, ICompareRunSummary, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary, IRerankRun, IRerankRunSummary, IRetrievalEmbeddingRequest, IRetrievalEvaluation, IRetrievalQuery, IRetrievalRerankDone, IRetrievalRerankRequest } from '../common/askPollis.js';
+import { IDuckDBFunctionKind } from '../../databases/common/duckdbHelp.js';
 
 /** What the command of the Julia extension that starts a llama.cpp server answers (pollisLlamaServer.ts). */
 interface ILlamaServerAnswer {
@@ -293,6 +294,11 @@ class AskPollisService extends Disposable implements IAskPollisService {
 	async describeDatabase(path: string): Promise<string> {
 		const { proxy } = await this.get();
 		return proxy.describeDatabase(path);
+	}
+
+	async duckdbFunction(name: string): Promise<readonly IDuckDBFunctionKind[]> {
+		const { proxy } = await this.get();
+		return proxy.duckdbFunction(name);
 	}
 
 	async spread(counts: IAskTopicCounts): Promise<readonly IAskPollisPassage[]> {

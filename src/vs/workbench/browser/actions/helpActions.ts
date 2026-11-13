@@ -480,7 +480,8 @@ MenuRegistry.appendMenuItem(MenuId.MenubarHelpMenu, {
 /** The Help > Documentation, Video Tutorials and Notebook Courses submenus. */
 const MenubarHelpDocumentationMenu = new MenuId('MenubarHelpDocumentationMenu');
 const MenubarHelpVideoTutorialsMenu = new MenuId('MenubarHelpVideoTutorialsMenu');
-const MenubarHelpNotebookCoursesMenu = new MenuId('MenubarHelpNotebookCoursesMenu');
+// The toolboxes add their courses to it too (toolboxExtensions.ts), whichever of the two names it first
+const MenubarHelpNotebookCoursesMenu = MenuId.for('MenubarHelpNotebookCoursesMenu');
 
 MenuRegistry.appendMenuItem(MenuId.MenubarHelpMenu, {
 	group: '2_welcome',
@@ -772,6 +773,16 @@ registerHelpLink({
 });
 
 registerHelpLink({
+	id: 'pollis.action.openDuckDBDocumentation',
+	title: localize2('openDuckDBDocumentation', "DuckDB Database Documentation"),
+	mnemonicTitle: localize({ key: 'miDuckDBDocumentation', comment: ['&& denotes a mnemonic'] }, "&&DuckDB Database"),
+	menu: MenubarHelpDocumentationMenu,
+	order: 1.5,
+	// The documentation of the DuckDB that Pollis carries (@duckdb/node-api 1.5)
+	url: 'https://duckdb.org/docs/1.5/'
+});
+
+registerHelpLink({
 	id: 'pollis.action.openJuliaVideoTutorials',
 	title: localize2('openJuliaVideoTutorials', "Julia Programming Language Video Tutorials"),
 	mnemonicTitle: localize({ key: 'miJuliaVideoTutorials', comment: ['&& denotes a mnemonic'] }, "&&Julia Programming Language"),
@@ -798,20 +809,3 @@ registerHelpLink({
 	url: 'https://computationalthinking.mit.edu'
 });
 
-registerHelpLink({
-	id: 'pollis.action.openQuantEconJulia',
-	title: localize2('openQuantEconJulia', "QuantEcon Julia Lectures (Jupyter Notebooks)"),
-	mnemonicTitle: localize({ key: 'miQuantEconJulia', comment: ['&& denotes a mnemonic'] }, "&&QuantEcon Julia Lectures (Jupyter)"),
-	menu: MenubarHelpNotebookCoursesMenu,
-	order: 2,
-	url: 'https://julia.quantecon.org'
-});
-
-registerHelpLink({
-	id: 'pollis.action.openFinancialRiskForecasting',
-	title: localize2('openFinancialRiskForecasting', "Financial Risk Forecasting"),
-	mnemonicTitle: localize({ key: 'miFinancialRiskForecasting', comment: ['&& denotes a mnemonic'] }, "&&Financial Risk Forecasting"),
-	menu: MenubarHelpNotebookCoursesMenu,
-	order: 3,
-	url: 'https://financialriskforecasting.com/notebook/'
-});

@@ -327,6 +327,18 @@
 	width: 1px;
 }
 
+/* Pollis: the active terminal of the list, the REPLs' included, marked by a line of the Pollis yellow down the left of its row */
+.monaco-workbench .pane-body.integrated-terminal .tabs-list .terminal-tabs-entry.is-active::before {
+	/* As wide as the line of the activity bar's selected view (activityaction.css) */
+	width: 2px;
+	background-color: #e8a33d;
+}
+
+.monaco-workbench.vs .pane-body.integrated-terminal .tabs-list .terminal-tabs-entry.is-active::before,
+.monaco-workbench.hc-light .pane-body.integrated-terminal .tabs-list .terminal-tabs-entry.is-active::before {
+	background-color: #a8650d;
+}
+
 .monaco-workbench .pane-body.integrated-terminal .tabs-container.has-text > .monaco-toolbar {
 	padding: 4px 7px 2px;
 	margin: 0;

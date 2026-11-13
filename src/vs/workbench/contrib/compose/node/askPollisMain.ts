@@ -6,7 +6,8 @@
 // The search of Ask Pollis, in a utility process of its own (see ../electron-browser/askPollisService.ts), on the engine
 // of the duckdb> terminal (@duckdb/node-api), with the fts extension: PollisDocuments, which ask_index.jl of the Julia
 // extension makes, is attached for each search and let go after, so that the next index can take its place, on Windows
-// too. A question is routed to the collections whose nearest passage is nearest it (Pollis, the Julia Manual), unless
+// too. A question is routed to the collections whose nearest passage is nearest it (Pollis, the Julia Manual, the
+// DuckDB Manual), unless
 // it names them; each is searched by words (BM25) and by meaning (cosine distance), the two lists merged by
 // reciprocal rank fusion; with two or more, the nearest gives most of the passages. The answer is written here too, by
 // the chat model's server or a cloud model's API, its text sent as it comes: the renderer may not reach a server of
@@ -30,6 +31,7 @@ import { Server as ChildProcessServer } from '../../../../base/parts/ipc/node/ip
 import { Server as UtilityProcessServer } from '../../../../base/parts/ipc/node/ipc.mp.js';
 import { isUtilityProcess } from '../../../../base/parts/sandbox/node/electronTypes.js';
 import { AskOptionalSource, AskPollisSource, AskTopic, ASK_ARTICLES, ASK_NEAREST_SHARE, ASK_OPTIONAL_SOURCES, ASK_PACKAGE_APIS, ASK_PASSAGES, ASK_SOURCE_COLLECTION, askShares, IAskPollisChatEnd, IAskPollisMessage, ICompareRun, ICompareRunSummary, IAskPollisChatRequest, IAskPollisChatText, IAskPollisEvalItem, IAskPollisFound, IAskPollisIndex, IAskPollisIndexedDocument, IAskPollisIndexRequest, IAskPollisIndexStatus, IAskPollisPanel, IAskPollisPanelShare, IAskPollisPassage, IAskPassageMatch, IAskPollisReranked, IAskPollisSearchResult, IAskPollisTimings, IAskTopicCounts, IBenchmarkAnswer, IBenchmarkRun, IEmbeddingDone, IEmbeddingEvaluated, IEmbeddingEvaluation, IEmbeddingFound, IEmbeddingProgress, IEmbeddingRequest, IEmbeddingRun, IEmbeddingRunSummary, IRerankRun, IRerankRunSummary, IRetrievalEmbeddingRequest, IRetrievalEvaluation, IRetrievalQuery, IRetrievalRerankDone, IRetrievalRerankRequest, IRetrievalReranked, IRetrievalScore, RETRIEVAL_BENCHMARKS, RETRIEVAL_CANDIDATES, RETRIEVAL_CUT } from '../common/askPollis.js';
+import { DUCKDB_FUNCTION_FORMS_SQL, duckdbFunctionKinds, IDuckDBFunctionForm, IDuckDBFunctionKind } from '../../databases/common/duckdbHelp.js';
 
 const DATABASE = join(os.homedir(), '.pollis', 'documents', 'PollisDocuments.duckdb');
 /** The folder of the indexes of the collections of Retrieval-Augmented Generation and of the Knowledge Base. */
@@ -304,6 +306,9 @@ interface IPassageQuery {
 /** The pages of Base and the standard library in Julia's documentation, by the address of a passage `p`. */
 const JULIA_LIBRARY_SQL = `regexp_matches(coalesce(p.anchor, ''), '^(base|stdlib)/')`;
 
+/** The pages of functions in DuckDB's documentation, by the address of a passage `p` on duckdb.org. */
+const DUCKDB_FUNCTIONS_SQL = `regexp_matches(coalesce(p.anchor, ''), '/sql/functions/')`;
+
 /** The passages of each source, by their document `d` and the passage `p`. */
 const SOURCE_SQL: Record<AskPollisSource, string> = {
 	pollisTopics: `d.kind = 'document' AND coalesce(d.toolbox, '') = ''`,
@@ -312,6 +317,8 @@ const SOURCE_SQL: Record<AskPollisSource, string> = {
 	panelsWikis: `d.kind = 'wiki'`,
 	juliaManual: `d.kind = 'julia' AND NOT ${JULIA_LIBRARY_SQL}`,
 	juliaLibrary: `d.kind = 'julia' AND ${JULIA_LIBRARY_SQL}`,
+	duckdbManual: `d.kind = 'duckdb' AND NOT ${DUCKDB_FUNCTIONS_SQL}`,
+	duckdbFunctions: `d.kind = 'duckdb' AND ${DUCKDB_FUNCTIONS_SQL}`,
 };
 
 /** What keeps a search to the sources ticked, the collections with none ticked being searched whole. */
@@ -385,9 +392,10 @@ function words(text: string): Set<string> {
 
 /**
  * The topic of a passage by its document `d`, as AskTopic: the Julia Manual, Pollis' own documents, the Articles, the
- * Package APIs, and the rest (the wikis, the vignettes of the toolboxes).
+ * Package APIs, and the rest (the wikis, the vignettes of the toolboxes); the DuckDB Manual, which Make Questions does
+ * not ask about, has its own.
  */
-const TOPIC = `CASE WHEN d.kind = 'julia' THEN 'julia' WHEN d.kind = 'document' AND coalesce(d.toolbox, '') = '' THEN 'pollis' WHEN d.kind = 'article' THEN 'articles' WHEN d.kind = 'api' THEN 'packageApis' ELSE 'panels' END`;
+const TOPIC = `CASE WHEN d.kind = 'julia' THEN 'julia' WHEN d.kind = 'duckdb' THEN 'duckdb' WHEN d.kind = 'document' AND coalesce(d.toolbox, '') = '' THEN 'pollis' WHEN d.kind = 'article' THEN 'articles' WHEN d.kind = 'api' THEN 'packageApis' ELSE 'panels' END`;
 
 /**
  * The tables of Comparisons.duckdb: a run, the passages found for each of its questions, the answers, the judges'
@@ -1007,6 +1015,15 @@ class AskPollisIndex implements IAskPollisIndex {
 		this.embeddingStopped = true;
 	}
 
+	/** A database of its own for the help of DuckDB's functions, so that it never waits for a search. */
+	private helpConnection: Promise<DuckDBConnection> | undefined;
+
+	async duckdbFunction(name: string): Promise<readonly IDuckDBFunctionKind[]> {
+		this.helpConnection ??= DuckDBInstance.create(':memory:', { autoinstall_known_extensions: 'false', autoload_known_extensions: 'false' }).then(instance => instance.connect());
+		const forms = (await (await this.helpConnection).runAndReadAll(DUCKDB_FUNCTION_FORMS_SQL, [name])).getRowObjectsJson() as unknown as IDuckDBFunctionForm[];
+		return duckdbFunctionKinds(forms);
+	}
+
 	async describeDatabase(path: string): Promise<string> {
 		return this.sequencer.queue(async () => {
 			const connection = await this.connect();
@@ -1113,7 +1130,7 @@ class AskPollisIndex implements IAskPollisIndex {
 				FROM long l JOIN documents d ON d.id = l.document),
 			chosen AS (
 				SELECT * FROM turns
-				QUALIFY row_number() OVER (PARTITION BY topic ORDER BY turn, kind) <= CASE topic WHEN 'pollis' THEN ${count('pollis')} WHEN 'julia' THEN ${count('julia')} WHEN 'articles' THEN ${count('articles')} WHEN 'packageApis' THEN ${count('packageApis')} ELSE ${count('panels')} END)
+				QUALIFY row_number() OVER (PARTITION BY topic ORDER BY turn, kind) <= CASE topic WHEN 'pollis' THEN ${count('pollis')} WHEN 'julia' THEN ${count('julia')} WHEN 'articles' THEN ${count('articles')} WHEN 'packageApis' THEN ${count('packageApis')} WHEN 'duckdb' THEN 0 ELSE ${count('panels')} END)
 			SELECT p.id, ${PASSAGE_COLUMNS}, 0 AS score
 			FROM chosen t JOIN passages p ON p.id = t.id JOIN documents d ON d.id = p.document
 			ORDER BY t.turn, t.kind`)).getRowObjectsJson());

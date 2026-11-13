@@ -535,8 +535,9 @@ function browse(con, table::AbstractString; limit::Integer = 100_000, title::Abs
     return nothing
 end
 
-"""Settings of every DuckDB database `connect` opens: extensions come with Pollis and are never downloaded."""
-const DUCKDB_CONFIG = ["autoinstall_known_extensions" => "false", "autoload_known_extensions" => "false"]
+"""Settings of every DuckDB database `connect` opens: extensions come with Pollis and are never downloaded; json and
+excel, which the Julia extension installs where DuckDB keeps its extensions, are loaded when a query needs them."""
+const DUCKDB_CONFIG = ["autoinstall_known_extensions" => "false", "autoload_known_extensions" => "true"]
 
 """The databases of Pollis, built in and of its activity, that `connect` attaches, read-only, under their own names."""
 builtins() = filter(isfile, [DATASETS_DB, RSS_DB, JOURNALS_DB, REFERENCES_DB, BENCHMARKS_DB, DOCUMENTS_DB, COMPARISONS_DB])
@@ -868,8 +869,8 @@ them: `query <width> <bytes>` runs a query (`terminal_query`), `complete <bytes>
 `browse <bytes>` opens a table of the Shared Session in the Table Viewer, `attached` asks what the window's DuckDB
 clients have attached to it (`attached`), and `interrupt` stops the query running.
 Answers are `<kind> <bytes>` and their text: `ready`, once the Shared Session is open; `ok` or `error`, with the
-result drawn in `width` characters or the error; `julia`, for a query that is Julia code, which the terminal hands to
-the Julia REPL; `complete` or `incomplete`.
+result drawn in `width` characters or the error, or the help of `?name` (`terminal_help`); `julia`, for a query that is
+Julia code, which the terminal hands to the Julia REPL; `complete` or `incomplete`.
 """
 function serve_client(io, token::AbstractString)
     running = Ref{Any}(nothing)
@@ -890,14 +891,19 @@ function serve_client(io, token::AbstractString)
             if header[1] == "interrupt"
                 interrupt_terminal(running[])
             elseif header[1] == "complete" && length(header) == 2
-                # SQL ends with `;`, Julia once it is a whole expression, as at julia>
+                # SQL ends with `;`, Julia once it is a whole expression, as at julia>, and `?name` at once
                 text = String(read(io, parse(Int, header[2])))
-                reply((is_sql(text) ? complete(text) : julia_complete(text)) ? "complete" : "incomplete")
+                whole = match(HELP, text) !== nothing || (is_sql(text) ? complete(text) : julia_complete(text))
+                reply(whole ? "complete" : "incomplete")
             elseif header[1] == "query" && length(header) == 3
                 width = parse(Int, header[2])
                 query = String(read(io, parse(Int, header[3])))
                 # In the latest world, which knows DuckDB, loaded after this task began: its errors' showerror too
                 running[] = Threads.@spawn reply(Base.invokelatest(terminal_query, query, width)...)
+            elseif header[1] == "show" && length(header) == 3
+                # The result of the Julia code the Julia REPL just ran, as julia> shows it in a terminal of that size
+                width, height = parse(Int, header[2]), parse(Int, header[3])
+                Threads.@spawn reply(Base.invokelatest(terminal_show, width, height)...)
             elseif header[1] == "browse" && length(header) == 2
                 name = String(read(io, parse(Int, header[2])))
                 Threads.@spawn reply(Base.invokelatest(terminal_browse, name)...)
@@ -919,6 +925,9 @@ without its `name :=`; return `("ok", the result drawn in width characters)` or 
 `("julia", "")` when `query` is Julia code (`is_sql`), which runs in the Julia REPL.
 """
 function terminal_query(query::AbstractString, width::Integer)
+    # `?name` shows the help of name, as help?> does at julia>
+    help = match(HELP, query)
+    help === nothing || return terminal_help(help[:line], width)
     # Julia code runs in the Julia REPL itself, which the terminal hands it to (pollisTerminal.ts)
     is_sql(query) || return ("julia", "")
     begun = now(UTC)
@@ -1404,6 +1413,47 @@ function Base.show(io::IO, ::MIME"text/plain", kept::Kept)
     print(io, "Table ", shown, ", in the Shared Session and in Julia: ", rows_text(length(table)), ", ", n == 1 ? "1 column" : "$n columns")
     print(io, "\nBrowse ", shown, ": ", link)
     return nothing
+end
+
+"""`?` at the start of the input, after blanks: the help of what follows, as at julia>."""
+const HELP = r"^\s*\?(?<line>.*)$"s
+
+"""
+The help of `line` in the Pollis REPL terminal, as help?> at julia> shows it: the names it brings to mind, then its
+docstring, drawn in `width` characters; for an empty line, the help of the help. `("ok", the help)`, or
+`("error", why)`.
+"""
+function terminal_help(line::AbstractString, width::Integer)
+    REPL = Base.REPL_MODULE_REF[]
+    REPL === Base && return ("error", "The help needs the REPL module, which the Julia REPL loads.")
+    try
+        text = sprint() do io
+            context = IOContext(io, :displaysize => (40, max(width, 20)), :color => true)
+            help = Core.eval(Main, REPL.helpmode(context, strip(line), Main))
+            Base.show(context, MIME"text/plain"(), help)
+        end
+        return ("ok", rstrip(text))
+    catch err
+        return ("error", error_text(err))
+    end
+end
+
+"""
+Show `ans`, the result of the Julia code the Pollis REPL handed to the Julia REPL, as julia> shows a result in a
+terminal `width` characters wide and `height` lines high: text/plain, limited to the screen, in colour. Return
+`("ok", the text)` or `("error", the error)`.
+"""
+function terminal_show(width::Integer, height::Integer)
+    try
+        result = getglobal(Base.MainInclude, :ans)
+        text = sprint() do io
+            context = IOContext(io, :limit => true, :module => Main, :displaysize => (max(height, 10), max(width, 20)), :color => true)
+            Base.show(context, MIME"text/plain"(), result)
+        end
+        return ("ok", text)
+    catch err
+        return ("error", error_text(err))
+    end
 end
 
 """`name :=` at the start of a statement, after blanks and comments: the statement makes the table `name`."""

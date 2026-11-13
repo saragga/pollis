@@ -46,7 +46,8 @@ how the \file{duckdb>} terminal and the notebooks reach the Shared Session. It d
 \tableofcontents
 
 \section{Three REPLs, one Julia}\label{sec:three}
-Three items in the status bar, Julia REPL, Pollis REPL and DuckDB REPL, start the three REPLs of Pollis or show them;
+Three items in the status bar, Julia REPL, DuckDB REPL and Pollis REPL, start the three REPLs of Pollis, or offer to
+show, restart or stop one that runs;
 the terminal's + menu offers the same three after its profiles. Each keeps to one job.
 
 \begin{center}\small
@@ -58,7 +59,7 @@ the terminal's + menu offers the same three after its profiles. Each keeps to on
 \file{julia>} & Julia & the Julia REPL; \file{sql()} and \file{@share} reach the Shared Session\\
 \file{pollis>} & SQL and Julia, told apart as you type & the same Julia: SQL on the Shared Session, Julia in the
   Julia REPL\\
-\file{duckdb>} & SQL alone, and dot commands such as \file{.tables} & Pollis's own DuckDB program, without Julia, on a
+\file{duckdb>} & SQL alone, dot commands such as \file{.tables}, and \file{help?>} after \file{?} & Pollis's own DuckDB program, without Julia, on a
   database of its own, which attaches the Shared Session as \file{SharedSession}\\
 \bottomrule
 \end{tabularx}
@@ -85,8 +86,10 @@ A name that is both, \file{describe}, \file{values} or \file{show}, is Julia whe
 
 SQL answers in the Pollis REPL, its result drawn to the terminal's width. Julia code runs in the Julia REPL, as Execute
 Code does: the Julia REPL shows it with its output, its prints and its result in full, and the Pollis REPL writes the
-result in one line, nothing for \file{nothing} or after a \file{;}, an error in red. Ctrl+C stops either: a query with
-DuckDB's interrupt, Julia code as Ctrl+C in the Julia REPL does.
+result as \file{julia>} shows it in a terminal of its size, an error in one line, nothing for \file{nothing} or after a \file{;}, an error in red. Ctrl+C stops either: a query with
+DuckDB's interrupt, Julia code as Ctrl+C in the Julia REPL does. \file{?name} shows the help of \file{name} in the
+Pollis REPL, drawn to its width, as \file{help?>} does at \file{julia>}: \file{?sin} its docstring, \file{?} alone the
+help of the help.
 
 \section{The two bridges}\label{sec:bridges}
 SQL sees the tables of the Shared Session; Julia sees its variables. Two bridges join them, one each way, and both
@@ -148,7 +151,7 @@ that is not a table is refused, to be bound with \file{=}. A \file{missing} beco
 
 \section{Worked examples}\label{sec:examples}
 Each example is typed at \file{pollis>}, a line or a statement at a time. The Julia lines run in the Julia REPL, which
-shows their results in full; the Pollis REPL shows them in one line. They use only Julia's standard libraries and the
+shows their results in full; the Pollis REPL shows them too, an error in one line. They use only Julia's standard libraries and the
 databases of Pollis.
 
 \subsection{SQL, then Julia, then SQL}

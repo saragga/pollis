@@ -11,7 +11,7 @@ import { IEditorSerializer, EditorExtensions, IEditorFactoryRegistry, GroupIdent
 import { EditorInput } from '../../../common/editor/editorInput.js';
 import { IEditorResolverService, RegisteredEditorPriority } from '../../../services/editor/common/editorResolverService.js';
 import { ProcessExplorerEditorInput } from './processExplorerEditorInput.js';
-import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
+import { Action2, MenuId, registerAction2 } from '../../../../platform/actions/common/actions.js';
 import { Categories } from '../../../../platform/action/common/actionCommonCategories.js';
 import { AUX_WINDOW_GROUP, IEditorService } from '../../../services/editor/common/editorService.js';
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
@@ -99,7 +99,13 @@ class OpenProcessExplorer extends Action2 {
 			title: localize2('openProcessExplorer', 'Open Process Explorer'),
 			category: Categories.Developer,
 			precondition: supported,
-			f1: true
+			f1: true,
+			// Pollis: at the end of Help, after Toggle Developer Tools (developerActions.ts)
+			menu: {
+				id: MenuId.MenubarHelpMenu,
+				group: '5_tools',
+				order: 2
+			}
 		});
 	}
 

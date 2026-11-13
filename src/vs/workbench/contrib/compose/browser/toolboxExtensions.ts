@@ -12,6 +12,7 @@ import { hasKey } from '../../../../base/common/types.js';
 import { URI } from '../../../../base/common/uri.js';
 import { MenuId, MenuRegistry } from '../../../../platform/actions/common/actions.js';
 import { CommandsRegistry, ICommandService } from '../../../../platform/commands/common/commands.js';
+import { BrowserViewCommandId } from '../../../../platform/browserView/common/browserView.js';
 import { ExtensionIdentifier } from '../../../../platform/extensions/common/extensions.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
@@ -77,6 +78,8 @@ interface IToolboxContribution {
 	readonly documents?: IToolboxDocumentContribution[];
 	/** The texts it adds to the Knowledge Base. */
 	readonly texts?: IToolboxTextContribution[];
+	/** Its notebook courses, in Help > Notebook Courses. */
+	readonly courses?: IToolboxCourseContribution[];
 }
 
 /** A vignette of a toolbox: LaTeX sources that Pollis compiles with PollisTeX the first time the document is opened. */
@@ -85,6 +88,20 @@ interface IToolboxDocumentContribution {
 	/** The main .tex file, relative to the extension folder; its .bib files and resources/ folder go beside it. */
 	readonly source: string;
 }
+
+/** A notebook course of a toolbox: a web page of notebooks, which Help > Notebook Courses opens in the internal browser. */
+interface IToolboxCourseContribution {
+	/** Its menu item. */
+	readonly title: string;
+	/** The https link to its page. */
+	readonly url: string;
+}
+
+/** Help > Notebook Courses (helpActions.ts), where the courses of the toolboxes go, among the built-in ones. */
+const NOTEBOOK_COURSES_MENU = 'MenubarHelpNotebookCoursesMenu';
+/** The group and order of the courses of the toolboxes there: after the built-in ones, by their titles. */
+const COURSES_GROUP = '1_links';
+const COURSES_ORDER = 10;
 
 /** A text a toolbox adds to the Knowledge Base, as its package.json gives it. */
 interface IToolboxTextContribution {
@@ -97,6 +114,7 @@ interface IToolboxTextContribution {
 	readonly publisher: string;
 	readonly year: number;
 	readonly subject?: string;
+	readonly packages?: string[];
 	readonly keyWords?: string[];
 	readonly classifications?: string[];
 	readonly licence: string;
@@ -195,6 +213,7 @@ const toolboxesExtensionPoint = ExtensionsRegistry.registerExtensionPoint<IToolb
 							publisher: { type: 'string', description: localize('pollisToolboxes.text.publisher', "Its publisher, or the institution it comes from.") },
 							year: { type: 'number', description: localize('pollisToolboxes.text.year', "Its year.") },
 							subject: { type: 'string', description: localize('pollisToolboxes.text.subject', "Its subject.") },
+							packages: { type: 'array', items: { type: 'string' }, description: localize('pollisToolboxes.text.packages', "The Julia packages it is about, such as Distributions.jl, which the Knowledge Base shows first in its subject.") },
 							keyWords: { type: 'array', items: { type: 'string' }, description: localize('pollisToolboxes.text.keyWords', "Its key words.") },
 							classifications: { type: 'array', items: { type: 'string' }, description: localize('pollisToolboxes.text.classifications', "Its classifications, each a system with its codes, such as JEL: G12, C58.") },
 							licence: { type: 'string', description: localize('pollisToolboxes.text.licence', "The name of its licence, such as CC BY 4.0 or MIT.") },
@@ -204,6 +223,18 @@ const toolboxesExtensionPoint = ExtensionsRegistry.registerExtensionPoint<IToolb
 							sha256: { type: 'string', description: localize('pollisToolboxes.text.sha256', "The SHA-256 of the PDF, in hexadecimal, which the download must match.") },
 							size: { type: 'number', description: localize('pollisToolboxes.text.size', "The size of the PDF, in MB.") },
 							changes: { type: 'string', description: localize('pollisToolboxes.text.changes', "What is changed of it. Without one, the PDF of its authors, unchanged.") },
+						},
+					},
+				},
+				courses: {
+					type: 'array',
+					description: localize('pollisToolboxes.courses', "The toolbox's notebook courses, listed in Help > Notebook Courses while it is installed: web pages of notebooks, which Pollis opens in its internal browser."),
+					items: {
+						type: 'object',
+						required: ['title', 'url'],
+						properties: {
+							title: { type: 'string', description: localize('pollisToolboxes.course.title', "The course's menu item, with the kind of its notebooks, such as QuantEcon Julia Lectures (Jupyter).") },
+							url: { type: 'string', description: localize('pollisToolboxes.course.url', "The https link to the course's page.") },
 						},
 					},
 				},
@@ -222,6 +253,7 @@ interface ILoadedToolbox {
 	readonly panels: readonly { readonly contribution: IToolboxPanelContribution; readonly panel: IScaffoldPanel; readonly faq: readonly IAskPollisEvalItem[] }[];
 	readonly documents: readonly IToolboxDocumentInfo[];
 	readonly texts: readonly IToolboxTextInfo[];
+	readonly courses: readonly IToolboxCourseContribution[];
 }
 
 /**
@@ -400,9 +432,17 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 						continue;
 					}
 					const strings = (value: unknown) => Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
-					texts.push({ ...text, subject: text.subject ?? '', keyWords: strings(text.keyWords), classifications: strings(text.classifications) });
+					texts.push({ ...text, subject: text.subject ?? '', packages: strings(text.packages), keyWords: strings(text.keyWords), classifications: strings(text.classifications) });
 				}
-				loaded.push({ extensionId: ExtensionIdentifier.toKey(extension.description.identifier), extensionName: extension.description.displayName ?? extension.description.name, toolbox, location, version: extension.description.version, panels, documents, texts });
+				const courses: IToolboxCourseContribution[] = [];
+				for (const course of toolbox.courses ?? []) {
+					if (typeof course.title !== 'string' || !course.title || typeof course.url !== 'string' || !course.url.startsWith('https://')) {
+						extension.collector.error(localize('pollisToolboxes.course', "Course {0} must have its title and an https link to its page.", String(course.title)));
+						continue;
+					}
+					courses.push({ title: course.title, url: course.url });
+				}
+				loaded.push({ extensionId: ExtensionIdentifier.toKey(extension.description.identifier), extensionName: extension.description.displayName ?? extension.description.name, toolbox, location, version: extension.description.version, panels, documents, texts, courses });
 			}
 		}
 		if (generation !== this.generation) {
@@ -474,6 +514,12 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 					append(MenuId.for(place.menu), { group: place.group, order: place.order, title: command.title, command });
 				}
 			}
+			// Its notebook courses, whatever the menus the user published it in
+			loaded.courses.forEach((course, index) => {
+				const command = { id: `pollis.toolboxCourse.${toolbox.id}.${index}`, title: course.title };
+				store.add(CommandsRegistry.registerCommand(command.id, accessor => accessor.get(ICommandService).executeCommand(BrowserViewCommandId.Open, course.url)));
+				append(MenuId.for(NOTEBOOK_COURSES_MENU), { group: COURSES_GROUP, order: COURSES_ORDER, title: course.title, command });
+			});
 		}
 		this.registrations.value = store;
 		this.setExtendMenu(items.some(item => item.menu === MenuId.MenubarExtendMenu.id));

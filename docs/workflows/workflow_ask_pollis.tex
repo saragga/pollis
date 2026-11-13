@@ -117,12 +117,13 @@ Below each answer, beside \textbf{Add to the Test Set...}, a speaker, \textbf{Re
 without the citation numbers and the Sources; it is not available yet (\S\ref{sec:open}).
 
 \subsection{Search In}
-A question is searched where it belongs: one on Pollis in Pollis's documents, one on Julia in the Julia Manual, one
-on both in both (\S\ref{sec:routing}). Under the answer, \emph{Searched: Pollis, Julia Manual.} says where.
+A question is searched where it belongs: one on Pollis in Pollis's documents, one on Julia in the Julia Manual, one on
+SQL in the DuckDB Manual, one on several in each of them (\S\ref{sec:routing}). Under the answer, \emph{Searched: Pollis, Julia Manual.} says where.
 \textbf{Search In}, the pill below the box on the left, changes that for the next question: \textbf{Search In:
 Auto}, the default; the sources you tick, any of \textbf{Pollis Topics}, \textbf{Package Vignettes}, \textbf{Package APIs},
-\textbf{Toolbox Overviews}, \textbf{Panels Wikis}, \textbf{Julia Manual} and \textbf{Julia Base and Standard Library}, the last two
-being one source to Auto (\S\ref{sec:manual}), the menu staying open as you tick and the pill saying how many, with their
+\textbf{Toolbox Overviews}, \textbf{Panels Wikis}, \textbf{Julia Manual} and \textbf{Julia Base and Standard Library}, which are
+one source to Auto (\S\ref{sec:manual}), and \textbf{DuckDB Manual} and \textbf{DuckDB Functions}, one source to Auto too
+(\S\ref{sec:duckdb}), the menu staying open as you tick and the pill saying how many, with their
 names on hover; \textbf{All Sources}; or \textbf{None}, which searches nothing:
 the model answers from what it knows, and \emph{Answered without the documents} under its answer says so, to see what
 the documents add. Without the Julia Manual (\S\ref{sec:settings}), Pollis is the only source, and Auto searches it.
@@ -223,6 +224,25 @@ nothing to say to a question.
 The Julia Manual is a source of its own, beside Pollis's, and is searched too unless \file{pollis.ask.juliaManual} is
 off (\S\ref{sec:settings}). A Julia installed without its documentation, as some Linux distributions do, gives no
 Julia Manual, and Ask Pollis searches Pollis's documents alone.
+
+\subsection{The DuckDB Manual}\label{sec:duckdb}
+The DuckDB Manual is the documentation of the DuckDB that Pollis carries, as duckdb.org shows it, of that DuckDB's
+version: the Markdown pages the site is made from, in its repository on GitHub, under the MIT licence of the DuckDB
+Foundation, read once at a fixed version and kept with that licence in \file{~/.pollis/documents/duckdb}. It has the
+pages on SQL, on reading and writing data, the guides, the configuration and the core extensions, and the page on DuckDB
+from Julia; the other clients' APIs, DuckDB's internals and the pages for its developers are left out, as Julia's
+developer documentation is. Its pages are cut at their headings; on the pages of functions each function is a passage
+of its own, with its description and examples, and those pages are \textbf{DuckDB Functions} in \textbf{Search In}, the others
+\textbf{DuckDB Manual}. Open shows a passage on duckdb.org, at its section. It is searched unless
+\file{pollis.ask.duckdbManual} is off (\S\ref{sec:settings}), and \menupath{Help\gt Documentation\gt DuckDB Database} opens it.
+
+\subsection{A name alone}\label{sec:name}
+A question that is a name alone, \file{sin} or \file{strftime}, is answered from the documentation of Julia and of
+DuckDB themselves, as \file{help?>} shows it in the Julia REPL and in the DuckDB REPL. The Julia REPL gives Julia's,
+while it runs and the Julia Manual is searched; DuckDB's comes from the DuckDB that Pollis carries, whatever its case,
+when the DuckDB Manual is searched: its forms, with their arguments and return types, its description and its examples. A name
+both have, such as \file{sum} or \file{round}, gets both, Julia's first. The search then stops; a name neither has, or
+an SQL keyword such as \file{SELECT}, is searched as any other question.
 
 \subsection{The Package APIs}\label{sec:apis}
 A docstring says what a function, a type or a macro does, with its signature, its arguments and often an example. Most
@@ -680,6 +700,8 @@ An answer that cites nothing & The passages did not answer the question; try the
   and ask again.\\
 No Julia Manual in \textbf{Search In} & Your Julia came without its documentation (\S\ref{sec:manual}), or
   \file{pollis.ask.juliaManual} is off.\\
+No DuckDB Manual in \textbf{Search In} & Its pages have not been downloaded yet, as without a network: the next index
+  tries again (\S\ref{sec:duckdb}); or \file{pollis.ask.duckdbManual} is off.\\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -700,6 +722,7 @@ No Julia Manual in \textbf{Search In} & Your Julia came without its documentatio
 \file{pollis.ask.passagePrefix} & What a passage is given to it as: \texttt{\small title: \{title\} \textbar{} text: \{text\}}\\
 \file{pollis.ask.passages} & How many passages go to the model: 8\\
 \file{pollis.ask.juliaManual} & Whether the Julia Manual is searched too: on\\
+\file{pollis.ask.duckdbManual} & Whether the DuckDB Manual is searched too: on\\
 \file{pollis.ask.packageApis} & Whether the Package APIs are read, for \textbf{Search In}: on\\
 \bottomrule
 \end{tabularx}

@@ -1,0 +1,468 @@
+# Parquet Files Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/parquet.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Parquet Files"
+viewType = "pollis.parquet"
+defaultModel = "query"
+
+[[packages]]
+name = "DuckDB.jl"
+github = "https://github.com/duckdb/DuckDB.jl"
+
+[[packages]]
+name = "Parquet2.jl"
+github = "https://gitlab.com/ExpandingMan/Parquet2.jl"
+
+[[packages]]
+name = "Tables.jl"
+github = "https://github.com/JuliaData/Tables.jl"
+
+# Further packages the examples use: checked by the install indicator, not listed on the Powered-by line
+[requires]
+packages = ["PollisDatasets.jl", "Plots.jl", "StatsBase.jl"]
+
+[[wikis]]
+name = "Factsheet"
+file = "parquet/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "parquet/overview.md"
+bundled = true
+
+[[wikis]]
+name = "File Format"
+file = "parquet/file-format.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "parquet/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Methods"
+
+[[wikis]]
+name = "Query"
+file = "parquet/query.md"
+bundled = true
+
+[[wikis]]
+name = "Read"
+file = "parquet/read.md"
+bundled = true
+
+[[wikis]]
+name = "Write"
+file = "parquet/write.md"
+bundled = true
+
+[[wikis]]
+name = "Partitioned"
+file = "parquet/partitioned.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+key = "RM2026a"
+
+[[references]]
+key = "EM2026a"
+
+[[references]]
+key = "Qui2023c"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "MGLRS...2010a"
+
+[[references]]
+key = "RM2019a"
+
+[[references]]
+separator = true
+label = "Standards"
+
+[[references]]
+key = "ASF2026a"
+
+[[models]]
+id = "query"
+label = "Query"
+
+[[models]]
+id = "read"
+label = "Read"
+
+[[models]]
+id = "write"
+label = "Write"
+
+[[models]]
+id = "partitioned"
+label = "Partitioned"
+
+[[bullets]]
+text = "Query"
+detail = "DuckDB runs SQL on the file itself, reading only the columns the query names and skipping the row groups its filter rules out"
+
+[[bullets]]
+text = "Read"
+detail = "<code>Parquet2.Dataset</code> opens the file as a Tables.jl table in Julia, its columns loaded when they are used"
+
+[[bullets]]
+text = "Write"
+detail = "DuckDB saves any Tables.jl source as Parquet with <code>COPY ... TO</code>, column types kept and each column compressed"
+
+[[bullets]]
+text = "Partitioned"
+detail = "DuckDB splits a table into one folder per value of a column, and reads only the folders a filter needs"
+
+[[decisionRows]]
+task = "Query"
+context = "Part of the file"
+purpose = "Select, filter and summarise with SQL before anything reaches Julia, even on files larger than memory"
+
+[[decisionRows]]
+task = "Read"
+context = "Whole table in Julia"
+purpose = "Load every column as Julia vectors, without SQL"
+
+[[decisionRows]]
+task = "Write"
+context = "Julia table out"
+purpose = "Save results compactly, with their types, for any tool that reads Parquet"
+
+[[decisionRows]]
+task = "Partitioned"
+context = "Many files"
+purpose = "Split a large table by a column, so that a filter on it reads only some files"
+
+[[inputs]]
+id = "path"
+label = "File"
+tooltip = "Path to the Parquet file, relative to the Julia working directory or absolute. With the default, data.parquet, the example first writes the airquality example from PollisDatasets to data.parquet, unless the working directory has a data.parquet already."
+default = "data.parquet"
+
+[[inputs]]
+id = "columns"
+label = "Columns"
+tooltip = "Columns to read, separated by commas, or * for all of them. Only these columns are read from the file."
+default = "month, day, ozone, temp"
+models = ["query"]
+
+[[inputs]]
+id = "filter"
+label = "Filter"
+tooltip = "SQL condition on the rows, e.g. temp > 85 or month = 7 AND ozone IS NOT NULL. Row groups whose minimum and maximum rule the condition out are skipped."
+default = "temp > 85"
+models = ["query"]
+
+[[inputs]]
+id = "data"
+label = "Data"
+tooltip = "Variable name of the table to write: any Tables.jl source (e.g. a named tuple of vectors). The default, data, writes the airquality example from PollisDatasets."
+default = "data"
+models = ["write"]
+
+[[inputs]]
+id = "partition"
+label = "Partition By"
+tooltip = "Column whose values name the folders, e.g. month gives month=5, month=6, ... Choose a column with few distinct values."
+default = "month"
+models = ["partitioned"]
+
+[[inputs]]
+id = "folder"
+label = "Folder"
+tooltip = "Folder the partitioned files are written to, relative to the Julia working directory or absolute. Files already there are kept."
+default = "data_by_month"
+models = ["partitioned"]
+
+[[inputs]]
+id = "where"
+label = "Filter"
+tooltip = "SQL condition on the rows. A condition on the partition column, e.g. month = 7, reads only the matching folders."
+default = "month = 7"
+models = ["partitioned"]
+
+[[inputs]]
+id = "compression"
+label = "Compression"
+tooltip = "Codec each column is compressed with. zstd gives small files that are fast to read; snappy is faster to write and a little larger; gzip is the most widely read by older tools."
+kind = "select"
+default = "zstd"
+models = ["write", "partitioned"]
+
+[[inputs.options]]
+value = "zstd"
+label = "zstd"
+
+[[inputs.options]]
+value = "snappy"
+label = "snappy"
+
+[[inputs.options]]
+value = "gzip"
+label = "gzip"
+
+[[inputs.options]]
+value = "uncompressed"
+label = "none"
+
+[[codeBranches]]
+model = "query"
+code = '''
+using DuckDB, Tables
+
+con = DBInterface.connect(DuckDB.DB)  # an in-memory database: the file stays where it is
+{{?path=data.parquet}} using PollisDatasets  # curated example datasets
+{{?path=data.parquet}} # Example file: Chambers et al. (1983), daily air quality in New York, May to September 1973, with 37 missing ozone readings, written to data.parquet in the working directory unless a data.parquet is there already. Replace "data.parquet" with your own file.
+{{?path=data.parquet}} if !isfile("data.parquet")
+{{?path=data.parquet}} 	DuckDB.register_table(con, dataset("airquality"), "airquality")
+{{?path=data.parquet}} 	DBInterface.execute(con, "COPY airquality TO 'data.parquet' (FORMAT parquet)")
+{{?path=data.parquet}} end
+
+sql = """
+SELECT {{columns}}
+FROM read_parquet('{{path}}')
+WHERE {{filter}}
+"""
+tbl = Tables.columntable(DBInterface.execute(con, sql))  # named tuple of column vectors
+println(length(first(tbl)), " rows x ", length(tbl), " columns")
+println(Tables.schema(tbl))
+'''
+
+[[codeBranches]]
+model = "read"
+code = '''
+using Parquet2, Tables
+
+{{?path=data.parquet}} using PollisDatasets  # curated example datasets
+{{?path=data.parquet}} # Example file: Chambers et al. (1983), daily air quality in New York, May to September 1973, with 37 missing ozone readings, written to data.parquet in the working directory unless a data.parquet is there already. Replace "data.parquet" with your own file.
+{{?path=data.parquet}} isfile("data.parquet") || Parquet2.writefile("data.parquet", dataset("airquality"))
+
+ds = Parquet2.Dataset("{{path}}")  # reads the footer only: the schema and the row groups
+println(Tables.schema(ds))
+tbl = Tables.columntable(ds)  # named tuple of column vectors: every column is read now
+println(length(first(tbl)), " rows x ", length(tbl), " columns")
+'''
+
+[[codeBranches]]
+model = "write"
+code = '''
+using DuckDB, Tables
+
+{{?data=data}} using PollisDatasets  # curated example datasets
+{{?data=data}} # Example data: Chambers et al. (1983), daily air quality in New York, May to September 1973, with 37 missing ozone readings. Replace data with your own table.
+{{?data=data}} data = dataset("airquality");  # datasetinfo("airquality") describes the columns
+
+con = DBInterface.connect(DuckDB.DB)
+tbl = Tables.columntable({{data}})  # named tuple of column vectors, from any Tables.jl source
+DuckDB.register_table(con, tbl, "tbl")  # DuckDB sees the Julia table as the view tbl, without copying it
+DBInterface.execute(con, "COPY tbl TO '{{path}}' (FORMAT parquet, COMPRESSION {{compression}})")
+println("Wrote ", length(first(tbl)), " rows x ", length(tbl), " columns to {{path}} (", filesize("{{path}}"), " bytes)")
+'''
+
+[[codeBranches]]
+model = "partitioned"
+code = '''
+using DuckDB, Tables
+
+con = DBInterface.connect(DuckDB.DB)
+{{?path=data.parquet}} using PollisDatasets  # curated example datasets
+{{?path=data.parquet}} # Example file: Chambers et al. (1983), daily air quality in New York, May to September 1973, with 37 missing ozone readings, written to data.parquet in the working directory unless a data.parquet is there already. Replace "data.parquet" with your own file.
+{{?path=data.parquet}} if !isfile("data.parquet")
+{{?path=data.parquet}} 	DuckDB.register_table(con, dataset("airquality"), "airquality")
+{{?path=data.parquet}} 	DBInterface.execute(con, "COPY airquality TO 'data.parquet' (FORMAT parquet)")
+{{?path=data.parquet}} end
+
+DBInterface.execute(con, """
+COPY (SELECT * FROM read_parquet('{{path}}'))
+TO '{{folder}}' (FORMAT parquet, PARTITION_BY ({{partition}}), OVERWRITE_OR_IGNORE, COMPRESSION {{compression}})
+""")
+println("Folders: ", join(readdir("{{folder}}"), ", "))  # one folder per value, named column=value
+
+sql = """
+SELECT *
+FROM read_parquet('{{folder}}/**/*.parquet', hive_partitioning = true)
+WHERE {{where}}
+"""
+tbl = Tables.columntable(DBInterface.execute(con, sql))  # the partition column comes back from the folder names
+println(length(first(tbl)), " rows x ", length(tbl), " columns")
+'''
+
+# Next Steps action groups
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "preview-rows"
+label = "Preview Rows"
+desc = "The first 10 rows as an aligned text table"
+code = '''
+n = min(10, length(first(tbl)))
+println(join(rpad.(string.(keys(tbl)), 14)))
+for i in 1:n
+	println(join(rpad.(string.(getindex.(values(tbl), i)), 14)))
+end
+'''
+
+[[actionGroups.actions]]
+id = "column-histograms"
+label = "Column Histograms"
+desc = "Histogram of every numeric column"
+code = '''
+using Plots
+
+numeric = [n for n in keys(tbl) if nonmissingtype(eltype(tbl[n])) <: Real]
+isempty(numeric) ? println("No numeric columns") :
+	plot([histogram(collect(skipmissing(tbl[n])), title=string(n), legend=false) for n in numeric]...)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "parquet-schema"
+label = "File Schema"
+desc = "Each column as the file records it: how it is stored, what the values mean (a date, a text, a decimal) and whether missing values are allowed"
+code = '''
+using DuckDB, Tables
+
+db = DBInterface.connect(DuckDB.DB)
+schema = Tables.columntable(DBInterface.execute(db, "SELECT name, type, converted_type, repetition_type FROM parquet_schema('{{path}}') WHERE num_children IS NULL"))
+println(rpad("column", 16), rpad("stored as", 14), rpad("meaning", 18), "missing values")
+for i in eachindex(schema.name)
+	println(rpad(schema.name[i], 16), rpad(coalesce(schema.type[i], ""), 14), rpad(coalesce(schema.converted_type[i], ""), 18), schema.repetition_type[i] == "REQUIRED" ? "never" : "allowed")
+end
+'''
+
+[[actionGroups.actions]]
+id = "parquet-metadata"
+label = "Row Groups"
+desc = "The file's row groups, and each column's codec, size on disk and size uncompressed"
+code = '''
+using DuckDB, Tables
+
+db = DBInterface.connect(DuckDB.DB)
+meta = Tables.columntable(DBInterface.execute(db, """
+SELECT path_in_schema AS column, compression, sum(total_compressed_size) AS stored, sum(total_uncompressed_size) AS raw, count(*) AS row_groups
+FROM parquet_metadata('{{path}}')
+GROUP BY ALL ORDER BY stored DESC
+"""))
+println(rpad("column", 16), rpad("codec", 14), rpad("stored", 10), rpad("raw", 10), "row groups")
+for i in eachindex(meta.column)
+	println(rpad(meta.column[i], 16), rpad(meta.compression[i], 14), rpad(meta.stored[i], 10), rpad(meta.raw[i], 10), meta.row_groups[i])
+end
+'''
+
+[[actionGroups.actions]]
+id = "query-plan"
+label = "Query Plan"
+desc = "How DuckDB runs the query: the Parquet scan should list only the columns named and the filter pushed into it"
+models = ["query", "partitioned"]
+code = '''
+using DuckDB, Tables
+
+plan = Tables.columntable(DBInterface.execute(con, "EXPLAIN " * sql))
+println(plan.explain_value[1])
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "parquet-vs-csv"
+label = "Parquet Against CSV"
+desc = "The same table saved as Parquet and as CSV: size on disk and time for DuckDB to read each"
+code = '''
+using DuckDB, Tables
+
+db = DBInterface.connect(DuckDB.DB)
+DuckDB.register_table(db, tbl, "tbl")
+dir = mktempdir()
+files = ["Parquet" => joinpath(dir, "tbl.parquet"), "CSV" => joinpath(dir, "tbl.csv")]
+DBInterface.execute(db, "COPY tbl TO '$(files[1][2])' (FORMAT parquet, COMPRESSION zstd)")
+DBInterface.execute(db, "COPY tbl TO '$(files[2][2])' (FORMAT csv)")
+for (name, file) in files
+	read_all() = DBInterface.execute(db, "SELECT count(*) FROM '$file'")
+	read_all()  # first call compiles
+	println(rpad(name, 10), rpad(string(filesize(file), " bytes"), 16), round(1000 * @elapsed(read_all()), digits=2), " ms")
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "column-summary"
+label = "Column Summary"
+desc = "DuckDB's SUMMARIZE: type, minimum, maximum, distinct values, mean and share missing of every column"
+code = '''
+using DuckDB, Tables
+
+db = DBInterface.connect(DuckDB.DB)
+DuckDB.register_table(db, tbl, "tbl")
+s = Tables.columntable(DBInterface.execute(db, "SUMMARIZE tbl"))
+println(rpad("column", 16), rpad("type", 12), rpad("min", 12), rpad("max", 12), rpad("distinct", 10), rpad("mean", 12), "missing %")
+for i in eachindex(s.column_name)
+	println(rpad(s.column_name[i], 16), rpad(s.column_type[i], 12), rpad(coalesce(s.min[i], ""), 12), rpad(coalesce(s.max[i], ""), 12), rpad(s.approx_unique[i], 10), rpad(first(coalesce(s.avg[i], ""), 10), 12), s.null_percentage[i])
+end
+'''
+
+[[actionGroups]]
+id = "export"
+label = "Export"
+
+[[actionGroups.actions]]
+id = "save-csv"
+label = "Save as CSV"
+desc = "Write the table to a .csv file next to the Parquet file"
+code = '''
+using DuckDB
+
+db = DBInterface.connect(DuckDB.DB)
+DuckDB.register_table(db, tbl, "tbl")
+out = first(splitext("{{path}}")) * ".csv"
+if isfile(out)
+	println(out, " is there already: rename or move it first")
+else
+	DBInterface.execute(db, "COPY tbl TO '$out' (FORMAT csv, HEADER true)")
+	println("Wrote ", out)
+end
+'''
+
+[[actionGroups.actions]]
+id = "save-jsonl"
+label = "Save as JSON Lines"
+desc = "Write the table to a .jsonl file next to the Parquet file, one record per line"
+code = '''
+using DuckDB
+
+db = DBInterface.connect(DuckDB.DB)
+DuckDB.register_table(db, tbl, "tbl")
+out = first(splitext("{{path}}")) * ".jsonl"
+if isfile(out)
+	println(out, " is there already: rename or move it first")
+else
+	DBInterface.execute(db, "COPY tbl TO '$out' (FORMAT json)")
+	println("Wrote ", out)
+end
+'''

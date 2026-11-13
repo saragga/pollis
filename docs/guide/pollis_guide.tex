@@ -453,7 +453,9 @@ same DuckDB engine, with its full-text search extension, \emph{fts}, and attach 
   \item \textbf{The \texttt{duckdb>} terminal}, for SQL alone, without starting Julia: \ui{New DuckDB
     Terminal}, at the top of the Databases view (or \ui{Databases: New DuckDB Terminal} in the Command
     Palette). It opens an empty database in memory; \texttt{.help} lists its commands, such as
-    \texttt{.tables}, and Ctrl+C stops a long query. \ui{DuckDB REPL}, in the status bar and in the
+    \texttt{.tables}, and Ctrl+C stops a long query. \texttt{?} at the start of an empty line turns the prompt into
+    \texttt{help?>}, as at \texttt{julia>}: the name of a DuckDB function there shows its forms, its description and
+    its examples, as \texttt{.help name} does. \ui{DuckDB REPL}, in the status bar and in the
     terminal's + menu, starts it too, and once it runs names its database in its tooltip and offers \ui{Show REPL}, \ui{Restart REPL} and \ui{Stop REPL}.
     An SQL file (\ui{New}, then \ui{SQL File}) runs there: Ctrl+Enter, or \ui{Run in DuckDB Terminal} in its
     title bar, runs the selection or the statement at the cursor.
@@ -476,7 +478,8 @@ same DuckDB engine, with its full-text search extension, \emph{fts}, and attach 
     \texttt{;}; Ctrl+C stops it. Julia code runs there too: what starts with a word of SQL, such as \texttt{SELECT},
     \texttt{FROM} or \texttt{DESCRIBE}, or with \texttt{name :=}, is SQL, and anything else is Julia, so
     \texttt{describe(df)} is Julia and \texttt{DESCRIBE feeds;} SQL. Julia code runs in the Julia REPL, which shows it
-    in full, and its result shows in the terminal in one line; Ctrl+C stops it too. As in an SQL cell,
+    in full, and its result shows in the terminal too, an error in one line; Ctrl+C stops it too. \texttt{?name} shows the help of
+    \texttt{name} there, as at \texttt{julia>}. As in an SQL cell,
     \texttt{feeds := SELECT ...} keeps the result as the table \texttt{feeds} and the Julia variable
     \texttt{feeds}, a Tables.jl table; instead of drawing it, the terminal gives its rows and columns, and \ui{Open in
     Table Viewer}, in blue under them, opens the whole table to browse with one click. In Julia code,
@@ -709,6 +712,8 @@ To change them later, choose \ui{Edit} on the toolbox in the \ui{Installed} sect
 Panels...} in the Command Palette (\ui{Compose: Toolbox Panels...}). To remove a toolbox, choose \ui{Uninstall} on it in the same section.
 A toolbox can bring its own vignette, a brief overview of what its menu items and panels are for: \ui{Help > Documentation > Toolbox Vignettes} lists those of
 the toolboxes you installed, and Pollis compiles one the first time you open it.
+A toolbox can also bring notebook courses of its field to \ui{Help > Notebook Courses}: the Finance Toolbox brings
+Financial Risk Forecasting, and the Economics Toolbox the QuantEcon Julia Lectures.
 
 \subhead{Make a toolbox}
 A teacher can package the panels of a course as one toolbox and give it to the students. This is done by
@@ -1920,8 +1925,9 @@ and those in the Hugging Face cache, with their \ui{Kind} (Chat or Embedding), w
 it can call \ui{Tools}, and the tiers that use it. Pollis runs them with llama.cpp, which comes with it,
 free and private: a task on a local tier starts the model first. \ui{Evaluate Answering Models...} and
 \ui{Evaluate Embedding Models...} compare them for Ask Pollis (\pg{Evaluate Answering Models}). \ui{Active AI Models}, at the right of the
-status bar, shows the models of Pollis AI+ at a glance: its circle fills by a third for each of answering, embedding
-and reranking that has a model ready, and a cloud follows it while a cloud model answers. Its hover names the three
+status bar, shows the models of Pollis AI+ at a glance: of its three bars, answering at the top, reranking in the
+middle and embedding at the bottom, each is filled when that model is ready and outlined when it is not, and a cloud
+follows them while a cloud model answers. Its hover names the three
 models, and those not downloaded yet; a click opens \ui{Set Active Models}.
 
 \begin{caution}{An agent works on your files}

@@ -30,8 +30,12 @@ const BUILTINS = [join(POLLIS_HOME, 'databases', 'PollisDatasets.duckdb'), join(
 const LOG = join(POLLIS_HOME, 'duckdb', DUCKDB_QUERY_LOG);
 const LOG_SIZE = 1000;
 
-/** The options of a DuckDB instance of Pollis: extensions are never downloaded, those Pollis brings are all. */
-export const DUCKDB_OPTIONS = { autoinstall_known_extensions: 'false', autoload_known_extensions: 'false' };
+/**
+ * The options of a DuckDB instance of Pollis: extensions are never downloaded, those Pollis brings are all. Those it
+ * installs where DuckDB keeps its extensions, json and excel (extensions/language-julia/src/pollisDuckDB.ts), are loaded
+ * when a query needs them.
+ */
+export const DUCKDB_OPTIONS = { autoinstall_known_extensions: 'false', autoload_known_extensions: 'true' };
 
 /** Statements whose result is only a count of rows, or nothing: no table is shown for them. */
 export const QUIET = new Set<StatementType>([StatementType.CREATE, StatementType.DROP, StatementType.ALTER, StatementType.ATTACH, StatementType.DETACH, StatementType.LOAD, StatementType.SET, StatementType.VARIABLE_SET, StatementType.TRANSACTION, StatementType.CREATE_FUNC, StatementType.VACUUM, StatementType.ANALYZE, StatementType.EXPORT]);

@@ -84,11 +84,11 @@ function databaseFileOf(instance: ITerminalInstance): string | undefined {
 }
 
 // The REPLs of Pollis in the terminal's + menu, after its profiles: Julia REPL starts or shows the window's Julia REPL,
-// of the Julia extension, and Pollis REPL a pollis> terminal on its Julia; DuckDB REPL opens a duckdb> terminal.
+// of the Julia extension, DuckDB REPL opens a duckdb> terminal, and Pollis REPL a pollis> terminal on its Julia.
 MenuRegistry.appendMenuItems([
 	{ id: MenuId.TerminalNewDropdownContext, item: { command: { id: 'language-julia.startREPL', title: localize('databases.terminalMenu.julia', "Julia REPL") }, group: '2_pollis', order: 1 } },
-	{ id: MenuId.TerminalNewDropdownContext, item: { command: { id: 'language-julia.startPollisREPL', title: localize('databases.terminalMenu.pollis', "Pollis REPL") }, group: '2_pollis', order: 2 } },
-	{ id: MenuId.TerminalNewDropdownContext, item: { command: { id: 'pollis.databases.newDuckDBTerminal', title: localize('databases.terminalMenu.duckdb', "DuckDB REPL") }, group: '2_pollis', order: 3 } },
+	{ id: MenuId.TerminalNewDropdownContext, item: { command: { id: 'language-julia.startPollisREPL', title: localize('databases.terminalMenu.pollis', "Pollis REPL") }, group: '2_pollis', order: 3 } },
+	{ id: MenuId.TerminalNewDropdownContext, item: { command: { id: 'pollis.databases.newDuckDBTerminal', title: localize('databases.terminalMenu.duckdb', "DuckDB REPL") }, group: '2_pollis', order: 2 } },
 ]);
 
 registerAction2(class extends Action2 {
@@ -110,7 +110,7 @@ registerAction2(class extends Action2 {
 });
 
 /**
- * The DuckDB REPL item of the status bar, after those of the Julia REPL: it starts the duckdb> shell when none
+ * The DuckDB REPL item of the status bar, between Julia REPL and Pollis REPL: it starts the duckdb> shell when none
  * is open, and otherwise names in its tooltip the database of the shell used last and offers to show, restart or stop it.
  */
 class DuckDBReplStatus extends Disposable implements IWorkbenchContribution {

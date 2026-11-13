@@ -68,6 +68,8 @@ export interface IToolboxTextInfo {
 	readonly publisher: string;
 	readonly year: number;
 	readonly subject: string;
+	/** The Julia packages it is about, which its subject names first. */
+	readonly packages: readonly string[];
 	readonly keyWords: readonly string[];
 	/** Its classifications, each as "JEL: G12, C58". */
 	readonly classifications: readonly string[];

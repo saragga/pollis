@@ -84,6 +84,13 @@ export class PollisReplConnection {
         return answer
     }
 
+    /** The result of the Julia code the Julia REPL ran last, as julia> shows it in a terminal of `width` by `height` (PollisDB.jl, terminal_show). */
+    async show(width: number, height: number): Promise<IPollisAnswer> {
+        const answer = this.answer()
+        this.socket.write(`show ${width} ${height}\n`)
+        return answer
+    }
+
     /** Opens the table `name` of the Shared Session in the Table Viewer; the answer is `ok`, or `error` and the error. */
     async browse(name: string): Promise<IPollisAnswer> {
         const data = Buffer.from(name, 'utf8')

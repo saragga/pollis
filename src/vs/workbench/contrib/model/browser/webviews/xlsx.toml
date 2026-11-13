@@ -6,13 +6,17 @@
 title = "Excel Workbook"
 viewType = "pollis.xlsx"
 defaultModel = "write"
-models = ["write", "read", "formula"]
+models = ["write", "read", "formula", "duckdb"]
 illusCollapsed = true
 illustrationText = "Excel file reader and writer for the Julia language."
 
 [[packages]]
 name = "XLSX.jl"
 github = "https://github.com/felipenoris/XLSX.jl"
+
+[[packages]]
+name = "DuckDB.jl"
+github = "https://github.com/duckdb/DuckDB.jl"
 
 [[packages]]
 name = "Tables.jl"
@@ -75,6 +79,12 @@ file = "xlsx/interpretation.md"
 bundled = true
 description = "Understanding workbook structure: sheets, cells, ranges, and named regions"
 
+[[wikis]]
+name = "Query (DuckDB)"
+file = "xlsx/duckdb.md"
+bundled = true
+description = "SQL on a sheet with DuckDB's excel extension, and query results saved as a workbook"
+
 [[references]]
 key = "Tav2024a"
 
@@ -83,6 +93,12 @@ key = "Qui...2023a"
 
 [[references]]
 key = "EI2016a"
+
+[[references]]
+key = "RM2026a"
+
+[[references]]
+key = "RM2019a"
 
 [[bullets]]
 text = "Read"
@@ -99,6 +115,10 @@ detail = "embed Excel formulas, defined names, and rich text (AnnotatedStrings) 
 [[bullets]]
 text = "Format"
 detail = "apply fonts, fills, borders, alignment, conditional formatting, and merged cells"
+
+[[bullets]]
+text = "Query (DuckDB)"
+detail = "DuckDB's excel extension reads a sheet as a table with <code>read_xlsx</code> and runs SQL on it; XLSX.jl saves the result as a workbook"
 
 [[decisionRows]]
 task = "Read"
@@ -120,41 +140,10 @@ task = "Formula"
 context = "Excel logic"
 purpose = "Embed formulas or defined names for downstream Excel users"
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon
-
-[miniCharts.write]
-# Rectangle with filled rows
-svg = '''
-var s = '<rect x="4" y="8" width="46" height="68" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
-s += '<rect x="10" y="18" width="34" height="10" rx="1" fill="currentColor" opacity="0.25"/>';
-s += '<rect x="10" y="32" width="34" height="10" rx="1" fill="currentColor" opacity="0.15"/>';
-s += '<rect x="10" y="46" width="34" height="10" rx="1" fill="currentColor" opacity="0.15"/>';
-s += '<text x="27" y="70" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Write</text>';
-return s;
-'''
-
-[miniCharts.read]
-# Rectangle with grid lines
-svg = '''
-var s = '<rect x="4" y="8" width="46" height="68" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
-s += '<line x1="4" y1="22" x2="50" y2="22" stroke="currentColor" stroke-width="0.5" opacity="0.4"/>';
-s += '<line x1="4" y1="36" x2="50" y2="36" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>';
-s += '<line x1="4" y1="50" x2="50" y2="50" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>';
-s += '<line x1="20" y1="8" x2="20" y2="76" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>';
-s += '<text x="27" y="56" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Read</text>';
-return s;
-'''
-
-[miniCharts.formula]
-# Formula symbols
-svg = '''
-var s = '<rect x="4" y="8" width="46" height="68" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
-s += '<text x="10" y="28" font-size="9" fill="currentColor" opacity="0.6">=SUM</text>';
-s += '<text x="10" y="42" font-size="9" fill="currentColor" opacity="0.4">=IF</text>';
-s += '<text x="10" y="56" font-size="9" fill="currentColor" opacity="0.4">=AVG</text>';
-return s;
-'''
+[[decisionRows]]
+task = "Query (DuckDB)"
+context = "Tables, not cells"
+purpose = "Filter, join or summarise a sheet's table with SQL, without loading the workbook into Julia"
 
 [[codeBranches]]
 model = "read"
@@ -228,6 +217,35 @@ mktempdir() do dir
 	println("Reading the file back in Julia before it has been recalculated and saved gives no values for D1:D3.")
 end
 """
+
+[[codeBranches]]
+model = "duckdb"
+code = '''
+using DuckDB, Tables, XLSX
+using PollisDatasets  # curated example datasets
+
+con = DBInterface.connect(DuckDB.DB)
+DBInterface.execute(con, "INSTALL excel")  # DuckDB's excel extension, downloaded the first time
+DBInterface.execute(con, "LOAD excel")
+
+mktempdir() do dir
+	path = joinpath(dir, "airquality.xlsx")
+	# Example workbook: Chambers et al. (1983), daily air quality in New York, May to September 1973. Replace path with your own workbook.
+	XLSX.writetable(path, dataset("airquality"); sheetname = "readings")
+
+	summary = Tables.columntable(DBInterface.execute(con, """
+	SELECT month::INTEGER AS month, round(avg(temp), 1) AS mean_temp, count(ozone) AS ozone_readings
+	FROM read_xlsx('$path', sheet = 'readings')
+	GROUP BY ALL ORDER BY month
+	"""))  # numbers come back as DOUBLE: cast them where an integer is meant
+	println(summary)
+
+	hot = Tables.columntable(DBInterface.execute(con, "SELECT * FROM read_xlsx('$path', sheet = 'readings') WHERE temp > 85"))
+	out = joinpath(dir, "hot_days.xlsx")
+	XLSX.writetable(out, hot; sheetname = "hot days")  # the query's result, saved as a workbook by XLSX.jl
+	println("Written: ", out, ", ", length(first(hot)), " rows")
+end
+'''
 
 # Next Steps action groups
 [[actionGroups]]

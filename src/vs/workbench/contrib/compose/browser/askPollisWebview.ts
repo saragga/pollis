@@ -8,7 +8,7 @@ import { URI } from '../../../../base/common/uri.js';
 import { localize } from '../../../../nls.js';
 import { BrowserViewCommandId } from '../../../../platform/browserView/common/browserView.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
-import { AskPollisSource, ASK_ARTICLES, ASK_PACKAGE_APIS, ASK_SOURCE_COLLECTION, IAskPollisNamedIndex, IAskPollisPassage, IAskPollisSearchRequest, IAskPollisSearchResult } from '../common/askPollis.js';
+import { AskPollisSource, ASK_ARTICLES, ASK_DUCKDB_MANUAL, ASK_PACKAGE_APIS, ASK_SOURCE_COLLECTION, IAskPollisNamedIndex, IAskPollisPassage, IAskPollisSearchRequest, IAskPollisSearchResult } from '../common/askPollis.js';
 import { openPdfInViewer } from '../../../common/pdfViewer.js';
 
 // What Ask Pollis and Evaluate Answering Models show of an answer alike: its Markdown with the citations as buttons, the Sources
@@ -56,7 +56,7 @@ export function askOpenPassage(commandService: ICommandService, passage: IAskPol
 	} else if (passage.kind === 'text') {
 		// A text file of a collection of Retrieval-Augmented Generation, in the editor
 		commandService.executeCommand('vscode.open', URI.file(passage.file));
-	} else if (passage.kind === 'api' && passage.anchor) {
+	} else if ((passage.kind === 'api' || passage.kind === 'duckdb') && passage.anchor) {
 		commandService.executeCommand(BrowserViewCommandId.Open, passage.anchor);
 	} else if (passage.anchor) {
 		// The Julia Manual, in the HTML that comes with Julia, at the section or the docstring
@@ -76,9 +76,11 @@ const SEARCH_NONE = '-';
 const POLLIS = 'Pollis';
 /** The collection of the Julia Manual, as ask_index.jl names it. */
 const JULIA_MANUAL = 'Julia Manual';
+/** The collection of the DuckDB Manual, as ask_index.jl names it. */
+const DUCKDB_MANUAL = ASK_DUCKDB_MANUAL;
 /** The collection of the Package APIs, listed among the sources of Pollis, after the vignettes. */
 const PACKAGE_APIS = ASK_PACKAGE_APIS;
-/** The sources of Pollis and of Julia's documentation, which a Search In offers in place of the collections. */
+/** The sources of Pollis and of Julia's and DuckDB's documentation, which a Search In offers in place of the collections. */
 const SEARCH_SOURCES: Record<AskPollisSource, string> = {
 	pollisTopics: localize('askPollis.pollisTopics', "Pollis Topics"),
 	packageVignettes: localize('askPollis.packageVignettes', "Package Vignettes"),
@@ -86,6 +88,8 @@ const SEARCH_SOURCES: Record<AskPollisSource, string> = {
 	panelsWikis: localize('askPollis.panelsWikis', "Panels Wikis"),
 	juliaManual: localize('askPollis.juliaManual', "Julia Manual"),
 	juliaLibrary: localize('askPollis.juliaLibrary', "Julia Base and Standard Library"),
+	duckdbManual: localize('askPollis.duckdbManual', "DuckDB Manual"),
+	duckdbFunctions: localize('askPollis.duckdbFunctions', "DuckDB Functions"),
 };
 
 /** The sources of `collection` a Search In offers, by their names. */
@@ -150,6 +154,11 @@ export function askSearchesJulia(choice: readonly string[]): boolean {
 	return !askSearchesNothing(choice) && (!choice.length || choice.includes(SEARCH_ALL) || !!askSearchIn(choice, [])?.includes(JULIA_MANUAL));
 }
 
+/** Whether a Search In's choice may search DuckDB's documentation: Auto, All Sources, or the DuckDB Manual or one of its sources ticked. */
+export function askSearchesDuckDB(choice: readonly string[]): boolean {
+	return !askSearchesNothing(choice) && (!choice.length || choice.includes(SEARCH_ALL) || !!askSearchIn(choice, [])?.includes(DUCKDB_MANUAL));
+}
+
 /** Why the question was searched by its words only, for the page; nothing when it was searched by meaning too. */
 export function askWordsOnlyNote(result: IAskPollisSearchResult): string {
 	switch (result.wordsOnly) {
@@ -177,6 +186,10 @@ export const askAnswerCss = `
 	.answer p { margin: 0 0 10px 0; }
 	.answer ul, .answer ol { margin: 0 0 10px 0; padding-left: 22px; }
 	.answer code { font-family: var(--vscode-editor-font-family); font-size: 12px; background: var(--vscode-textCodeBlock-background); padding: 1px 4px; border-radius: 3px; }
+	/* The signatures of a name's help in the Pollis yellow, as the packages and paths of the pages */
+	.answer pre.signature { color: #e8a33d; }
+	body.vscode-light .answer pre.signature, body.vscode-high-contrast-light .answer pre.signature { color: #a8650d; }
+	.answer .section { text-align: center; font-weight: 600; padding: 6px 0; margin: 14px 0 10px 0; border-top: 1px solid var(--vscode-widget-border, var(--vscode-panel-border)); border-bottom: 1px solid var(--vscode-widget-border, var(--vscode-panel-border)); }
 	.answer pre { font-family: var(--vscode-editor-font-family); font-size: 12px; background: var(--vscode-textCodeBlock-background); padding: 8px; border-radius: 3px; overflow-x: auto; }
 	button.cite { font: inherit; font-size: 11px; font-weight: 600; color: var(--vscode-textLink-foreground); background: none; border: none; padding: 0 1px; cursor: pointer; }
 	button.cite:hover { text-decoration: underline; }
@@ -200,14 +213,17 @@ export function askAnswerScript(): string {
 		open: localize('askPollis.open', "Open"),
 		fromToolbox: localize('askPollis.fromToolbox', "{0} toolbox", '{0}'),
 		automatic: localize('askPollis.automatic', "Auto"),
-		automaticHint: localize('askPollis.automaticHint', "Pollis' own documents, the Julia Manual, or both, depending on what the question is about"),
+		automaticHint: localize('askPollis.automaticHint', "Pollis' own documents, the Julia Manual, the DuckDB Manual, or several, depending on what the question is about"),
 		pollisSources: searchSourcesOf(POLLIS),
 		juliaSources: searchSourcesOf(JULIA_MANUAL),
+		duckdbSources: searchSourcesOf(DUCKDB_MANUAL),
 		all: localize('askPollis.all', "All Sources"),
 		none: localize('askPollis.none', "None"),
 		sourcesCount: localize('askPollis.sourcesCount', "{0} Sources", '{0}'),
 		juliaManualHint: localize('askPollis.juliaManualHint', "The Julia Manual, of the Julia that the REPL runs"),
 		juliaLibraryHint: localize('askPollis.juliaLibraryHint', "The pages of Base and the standard library, mostly docstrings, of the Julia that the REPL runs"),
+		duckdbManualHint: localize('askPollis.duckdbManualHint', "The DuckDB Manual, from duckdb.org, of the DuckDB that Pollis carries"),
+		duckdbFunctionsHint: localize('askPollis.duckdbFunctionsHint', "The pages of DuckDB's functions, each function with its description and examples, of the DuckDB that Pollis carries"),
 		packageApisHint: localize('askPollis.packageApisHint', "The docstrings of the packages of the panels, from their documentation sites, at the version on this computer when the site has it. Searched only when ticked, or with All Sources"),
 		articlesHint: localize('askPollis.articlesHint', "The abstracts of the works the panels cite, from PollisReferences. A question asked in a panel searches those the panel cites; the others are searched only when ticked, or with All Sources"),
 		collectionHint: localize('askPollis.collectionHint', "Searched in its own index, built in Compose > Knowledge for AI Models. Searched only when ticked, or with All Sources"),
@@ -247,6 +263,9 @@ export function askAnswerScript(): string {
 		const html = [];
 		let list;
 		let code;
+		// The language of the code block: signature, the signatures of a name's help, in the Pollis yellow; the others coloured as the editor colours them (colorCode)
+		let language = '';
+		const block = () => (language === 'signature' ? '<pre class="signature">' : '<pre class="code" data-lang="' + language + '">') + code.join('\\n') + '</pre>';
 		let paragraph = [];
 		const flush = () => {
 			if (paragraph.length) { html.push('<p>' + paragraph.map(line => inline(line, count)).join('<br>') + '</p>'); paragraph = []; }
@@ -254,7 +273,7 @@ export function askAnswerScript(): string {
 		};
 		for (const raw of esc(source).split('\\n')) {
 			if (code) {
-				if (raw.trim().startsWith('\`\`\`')) { html.push('<pre>' + code.join('\\n') + '</pre>'); code = undefined; } else { code.push(raw); }
+				if (raw.trim().startsWith('\`\`\`')) { html.push(block()); code = undefined; } else { code.push(raw); }
 				continue;
 			}
 			const line = raw.trim();
@@ -262,6 +281,7 @@ export function askAnswerScript(): string {
 			if (line.startsWith('\`\`\`')) {
 				flush();
 				code = [];
+				language = line.slice(3).trim().toLowerCase();
 			} else if (!line) {
 				flush();
 			} else if (item) {
@@ -280,8 +300,15 @@ export function askAnswerScript(): string {
 				paragraph.push(line);
 			}
 		}
-		if (code) { html.push('<pre>' + code.join('\\n') + '</pre>'); }
+		if (code) { html.push(block()); }
 		flush();
+		// A bold line alone between two rules is the title of a section, centred between them
+		const strong = (part) => part && part.startsWith('<p><strong>') && part.endsWith('</strong></p>') && part.indexOf('<strong>', 4) < 0 && part.indexOf('<br>') < 0;
+		for (let i = 0; i + 2 < html.length; i++) {
+			if (html[i] === '<hr>' && html[i + 2] === '<hr>' && strong(html[i + 1])) {
+				html.splice(i, 3, '<div class="section">' + html[i + 1].slice('<p><strong>'.length, -'</strong></p>'.length) + '</div>');
+			}
+		}
 		return html.join('');
 	}
 
@@ -323,14 +350,14 @@ export function askAnswerScript(): string {
 	}
 
 	/**
-	 * What a Search In can tick: each collection of \`names\`, Pollis and the Julia Manual as their sources, the Package
+	 * What a Search In can tick: each collection of \`names\`, Pollis, the Julia Manual and the DuckDB Manual as their sources, the Package
 	 * APIs after the vignettes, then the Knowledge Base and the collections of Retrieval-Augmented Generation.
 	 */
 	function searchInSources(names) {
-		const hints = { juliaManual: ANSWER_TEXT.juliaManualHint, juliaLibrary: ANSWER_TEXT.juliaLibraryHint, ${JSON.stringify(PACKAGE_APIS)}: ANSWER_TEXT.packageApisHint, ${JSON.stringify(ASK_ARTICLES)}: ANSWER_TEXT.articlesHint };
+		const hints = { juliaManual: ANSWER_TEXT.juliaManualHint, juliaLibrary: ANSWER_TEXT.juliaLibraryHint, duckdbManual: ANSWER_TEXT.duckdbManualHint, duckdbFunctions: ANSWER_TEXT.duckdbFunctionsHint, ${JSON.stringify(PACKAGE_APIS)}: ANSWER_TEXT.packageApisHint, ${JSON.stringify(ASK_ARTICLES)}: ANSWER_TEXT.articlesHint };
 		const packageApis = names.includes(${JSON.stringify(PACKAGE_APIS)}) ? [[${JSON.stringify(PACKAGE_APIS)}, ${JSON.stringify(PACKAGE_APIS)}]] : [];
 		const pollisSources = Object.entries(ANSWER_TEXT.pollisSources).flatMap(source => source[0] === 'packageVignettes' ? [source, ...packageApis] : [source]);
-		return names.flatMap(name => name === ${JSON.stringify(POLLIS)} ? pollisSources : name === ${JSON.stringify(JULIA_MANUAL)} ? Object.entries(ANSWER_TEXT.juliaSources) : name === ${JSON.stringify(PACKAGE_APIS)} ? [] : [[name, name, ANSWER_TEXT.collectionHint]]).map(([value, label, hint]) => ({ value, label, title: hints[value] ?? hint ?? '' }));
+		return names.flatMap(name => name === ${JSON.stringify(POLLIS)} ? pollisSources : name === ${JSON.stringify(JULIA_MANUAL)} ? Object.entries(ANSWER_TEXT.juliaSources) : name === ${JSON.stringify(DUCKDB_MANUAL)} ? Object.entries(ANSWER_TEXT.duckdbSources) : name === ${JSON.stringify(PACKAGE_APIS)} ? [] : [[name, name, ANSWER_TEXT.collectionHint]]).map(([value, label, hint]) => ({ value, label, title: hints[value] ?? hint ?? '' }));
 	}
 
 	/** A click on a citation shows its source, among those of the nearest \`.\${boxClass}\` around it. */

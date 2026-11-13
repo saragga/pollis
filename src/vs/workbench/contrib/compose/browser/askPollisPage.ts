@@ -6,10 +6,15 @@
 import { raceCancellation, RunOnceScheduler, timeout } from '../../../../base/common/async.js';
 import { CancellationTokenSource } from '../../../../base/common/cancellation.js';
 import { Codicon } from '../../../../base/common/codicons.js';
+import { Event } from '../../../../base/common/event.js';
 import { escapeMarkdownSyntaxTokens, MarkdownString } from '../../../../base/common/htmlContent.js';
 import { escape } from '../../../../base/common/strings.js';
 import { isDark } from '../../../../platform/theme/common/theme.js';
 import { IThemeService } from '../../../../platform/theme/common/themeService.js';
+import { TokenizationRegistry } from '../../../../editor/common/languages.js';
+import { ILanguageService } from '../../../../editor/common/languages/language.js';
+import { generateTokensCSSForColorMap } from '../../../../editor/common/languages/supports/tokenization.js';
+import { tokenizeToString } from '../../../../editor/common/languages/textToHtmlTokenizer.js';
 import { Disposable, DisposableStore, MutableDisposable } from '../../../../base/common/lifecycle.js';
 import { FileAccess } from '../../../../base/common/network.js';
 import { basename, joinPath } from '../../../../base/common/resources.js';
@@ -42,16 +47,17 @@ import { IWebviewService } from '../../webview/browser/webview.js';
 import { WebviewViewPane } from '../../webviewView/browser/webviewViewPane.js';
 import { IWebviewViewService, WebviewView } from '../../webviewView/browser/webviewViewService.js';
 import { createApiKeyWiring, IApiKeyWiring } from '../../model/browser/handlers/model.handler.js';
-import { composerSendSvg, spinnerCss, spinnerSvg, voiceSpeakerSvg } from '../../model/browser/webviews/webviewScaffold.js';
+import { colorizeBracketsJs, composerSendSvg, spinnerCss, spinnerSvg, voiceSpeakerSvg } from '../../model/browser/webviews/webviewScaffold.js';
 import { ASK_CHAT_MODEL, ASK_CLOUD_MODELS, ASK_EMBEDDING_MODEL, ASK_PASSAGE_PREFIX, ASK_PASSAGES, ASK_QUERY_PREFIX, MODELS_INSTALLED_COMMAND_ID, ASK_CLOUD_PROVIDERS, ASK_LOCAL_PREFIX, ASK_POLLIS_ANSWERS_IN_CLOUD_COMMAND_ID, ASK_POLLIS_ADD_ATTACHMENT_COMMAND_ID, ASK_POLLIS_ATTACH_COMMAND_ID, ASK_POLLIS_COMMAND_ID, ASK_THIS_COMPUTER, ASK_ATTACHED_CHARACTERS, askCloudModel, AskPollisAttachRequest, AskPollisProvider, IAskPollisAddAttachment, IAskPollisAttached, IAskPollisAttachment, IAskPollisFromPanel, IAskPollisNamedIndex, IAskPollisPanel, IAskPollisPassage, IAskPollisSearchResult, IAskPollisService } from '../common/askPollis.js';
 import { ASK_DEFAULT_STRATEGY, IAskPollisStrategiesService, askPollisStrategy, askStrategyRerank, askStrategyReranks, askStrategySearchRequest } from '../common/askPollisStrategies.js';
 import { AskAttachMessage, askAddHtml, askAttachCss, askAttachmentsHtml, askAttachScript, handleAskAttachMessage } from './askPollisAttach.js';
-import { askAnswerCss, askAnswerScript, askModelName, askNothingFound, askOpenPassage, askPassageView, askSearchedNames, askSearchesJulia, askSearchesNothing, askSearchWithin, askWordsOnlyNote, askMenuCss, askMenuScript, ASK_CHEVRON } from './askPollisWebview.js';
+import { askAnswerCss, askAnswerScript, askModelName, askNothingFound, askOpenPassage, askPassageView, askSearchedNames, askSearchesDuckDB, askSearchesJulia, askSearchesNothing, askSearchWithin, askWordsOnlyNote, askMenuCss, askMenuScript, ASK_CHEVRON } from './askPollisWebview.js';
 import { formatBytes, IDatasetSummary, summarizeCsv } from './collaboration/collaborationDatasets.js';
 import { isDuckDbFile, MAX_DATASET_BYTES, MAX_IMAGE_BYTES } from './collaboration/collaborationProtocol.js';
 import { COMPARE_MODELS_ADD_COMMAND_ID, ICompareModelsAdd } from './compareModelsPage.js';
 import { composerVoiceCss, composerVoiceHtml, composerVoiceScript, getVoiceLanguage, getVoiceWriteIn, setVoiceLanguage, setVoiceWriteIn } from './composerVoice.js';
 import { IInstalledModel } from './modelsInstalledPage.js';
+import { duckdbFunctionName, IDuckDBFunctionKind } from '../../databases/common/duckdbHelp.js';
 import './media/pollisAiStatus.css';
 
 // Help > Ask Pollis: a question in your own words, answered from Pollis' own documents and Julia's, in the Ask
@@ -85,7 +91,8 @@ type AskPollisMessage =
 	| { readonly command: 'voiceLanguage'; readonly value: string }
 	| { readonly command: 'voiceWriteIn'; readonly value: string }
 	| { readonly command: 'leavePanel' }
-	| { readonly command: 'strategy'; readonly value: string };
+	| { readonly command: 'strategy'; readonly value: string }
+	| { readonly command: 'colorize'; readonly language: string; readonly code: string };
 
 /** A question of the conversation, the passages found for it and its answer so far. */
 interface IAskedTurn {
@@ -327,6 +334,8 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 		@IWebviewService private readonly webviewService: IWebviewService,
 		@IStorageService private readonly storageService: IStorageService,
 		@IAskPollisStrategiesService private readonly strategiesService: IAskPollisStrategiesService,
+		@ILanguageService private readonly languageService: ILanguageService,
+		@IThemeService private readonly themeService: IThemeService,
 	) {
 		super();
 		this._register(webviewViewService.register(ASK_POLLIS_VIEW_ID, {
@@ -343,6 +352,16 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 
 		const disposables = this.conversation.value = new DisposableStore();
 		const post = (message: object) => webview.postMessage(message);
+		// The code of the answers coloured as the editor colours it, in the theme's colours, as the Example Code of the panels
+		const colorize = async (language: string, code: string) => {
+			if (!this.languageService.isRegisteredLanguageId(language)) {
+				return;
+			}
+			const html = await tokenizeToString(this.languageService, code, language);
+			const colorMap = TokenizationRegistry.getColorMap();
+			post({ command: 'colorized', language, code, html, css: colorMap ? generateTokensCSSForColorMap(colorMap) : '' });
+		};
+		disposables.add(this.themeService.onDidColorThemeChange(() => post({ command: 'recolor' })));
 		// The key indicator below the question, of the chosen cloud model's provider
 		const keys: { [provider in Exclude<AskPollisProvider, 'local'>]: IApiKeyWiring } = {
 			anthropic: createApiKeyWiring(webview, { label: ASK_CLOUD_PROVIDERS.anthropic.label, fields: [{ secretKey: ASK_CLOUD_PROVIDERS.anthropic.secretKey, envVar: ASK_CLOUD_PROVIDERS.anthropic.envVar, prompt: localize('askPollis.anthropicKey', "Anthropic API key") }] }, this.secretStorageService, this.quickInputService, this.webviewService),
@@ -424,23 +443,36 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 			post({ command: 'searching', turn: index, question, attachments: attachments.map(attachment => ({ kind: attachment.kind, name: attachment.name, image: attachment.kind === 'image' ? attachment.content : undefined })) });
 			// None: nothing is searched, and the model answers from what it knows
 			const unaided = askSearchesNothing(searchIn);
-			// Beside the search, the name looked up in the REPL: Julia's documentation of it is the answer, and whatever the
-			// search has come to stops; with none, nothing is shown and the search goes on
+			// Beside the search, the name looked up in the Julia REPL and among DuckDB's functions: their own documentation of it
+			// is the answer, both when both have it, and whatever the search has come to stops; with none, the search goes on
 			let looked = false;
 			const current = () => asked === conversation && !looked;
-			if (!attachments.length && askSearchesJulia(searchIn)) {
-				commandService.executeCommand<string | undefined>('language-julia.pollisDocOfName', question).then(doc => {
-					if (!doc || asked !== conversation || answering !== source || source.token.isCancellationRequested) {
+			const duckdbName = !attachments.length && askSearchesDuckDB(searchIn) ? duckdbFunctionName(question) : undefined;
+			if (!attachments.length && (askSearchesJulia(searchIn) || duckdbName)) {
+				Promise.all([
+					askSearchesJulia(searchIn) ? commandService.executeCommand<string | undefined>('language-julia.pollisDocOfName', question).catch(() => undefined) : undefined,
+					duckdbName ? askPollisService.duckdbFunction(duckdbName).catch(() => []) : [],
+				]).then(([julia, duckdb]) => {
+					if ((!julia && !duckdb.length) || asked !== conversation || answering !== source || source.token.isCancellationRequested) {
 						return;
 					}
 					looked = true;
 					answering = undefined;
 					source.dispose(true);
+					const ofDuckDB = duckdb.length ? duckdbHelpMarkdown(duckdb) : undefined;
+					// The signatures of Julia's help are the code that starts each of its docstrings
+					const ofJulia = julia?.replace(/(^|\n---\n\n)```julia\n/g, '$1```signature\n');
+					// Both: each under its title, which a rule above and below it centre (askPollisWebview.ts, markdown)
+					const doc = ofJulia && ofDuckDB ? `---\n\n**Julia**\n\n---\n\n${ofJulia}\n\n---\n\n**DuckDB**\n\n---\n\n${ofDuckDB}` : ofJulia || ofDuckDB!;
+					const note = julia && ofDuckDB ? localize('askPollis.fromReplAndDuckDB', "From Julia's own documentation, in the REPL, and from DuckDB's.")
+						: julia ? localize('askPollis.fromRepl', "From Julia's own documentation, in the REPL.")
+							: localize('askPollis.fromDuckDB', "From DuckDB's own documentation.");
 					turns[index] = { question, attachments, passages: [], answer: doc };
-					post({ command: 'found', turn: index, searched: [], collections: searchable(), note: localize('askPollis.fromRepl', "From Julia's own documentation, in the REPL."), passages: [] });
+					// Where the answer comes from, at once below the question
+					post({ command: 'found', turn: index, searched: [], collections: searchable(), note, passages: [], first: true });
 					post({ command: 'text', turn: index, text: doc });
 					post({ command: 'done', turn: index });
-				}, () => undefined);
+				});
 			}
 			const searched = previous ? `${previous}\n${question}` : question;
 			// The answering strategy takes its steps: the search, the reranking and how the model is asked
@@ -598,6 +630,8 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 				configurationService.updateValue('pollis.ask.strategy', askPollisStrategy(message.value, strategiesService.getStrategies()).id, ConfigurationTarget.USER);
 			} else if (message.command === 'open') {
 				open(message);
+			} else if (message.command === 'colorize') {
+				colorize(message.language, message.code);
 			} else if (message.command === 'addToTestSet') {
 				const turn = turns[message.turn];
 				if (turn?.answer) {
@@ -623,8 +657,36 @@ class AskPollisView extends Disposable implements IWorkbenchContribution {
 }
 
 /**
- * Active AI Models at the right of the status bar: a circle filled by a third for each of answering, embedding and
- * reranking that has a model ready, the models of Pollis AI+ in the hover, a cloud while one answers, a click opens Set Active Models.
+ * The help of a DuckDB function as an answer of Ask Pollis, in Markdown: for each of its kinds, its forms, the function
+ * it is another name of, its description and its examples, as help?> in duckdb> shows them.
+ */
+function duckdbHelpMarkdown(kinds: readonly IDuckDBFunctionKind[]): string {
+	const kindNames: Record<string, string> = {
+		scalar: localize('askPollis.duckdbScalar', "Scalar function"),
+		aggregate: localize('askPollis.duckdbAggregate', "Aggregate function"),
+		table: localize('askPollis.duckdbTable', "Table function"),
+		macro: localize('askPollis.duckdbMacro', "Macro"),
+		table_macro: localize('askPollis.duckdbTableMacro', "Table macro"),
+		pragma: localize('askPollis.duckdbPragma', "Pragma"),
+	};
+	const code = (lines: readonly string[], language = 'sql') => ['```' + language, ...lines, '```'].join('\n');
+	return kinds.map(kind => [
+		`**${kindNames[kind.type] ?? kind.type}**`,
+		code(kind.forms, 'signature'),
+		...(kind.more ? [localize('askPollis.duckdbMoreForms', "And {0} more forms.", kind.more)] : []),
+		...(kind.alias ? [localize('askPollis.duckdbAlias', "An alias of {0}.", `\`${kind.alias}\``)] : []),
+		...kind.descriptions,
+		...(kind.examples.length ? [`**${kind.examples.length === 1 ? localize('askPollis.duckdbExample', "Example") : localize('askPollis.duckdbExamples', "Examples")}**`, code(kind.examples)] : []),
+	].join('\n\n')).join('\n\n');
+}
+
+/** The command of the Julia extension that answers the models on this computer. */
+const INSTALLED_MODELS_COMMAND = 'language-julia.pollisInstalledModels';
+
+/**
+ * Active AI Models at the right of the status bar: three slim bars, answering at the top, reranking in the middle and
+ * embedding at the bottom, each filled when that model is ready and outlined when it is not; the models of Pollis AI+
+ * in the hover, a cloud while one answers, a click opens Set Active Models.
  */
 class AskPollisModelStatus extends Disposable implements IWorkbenchContribution {
 
@@ -644,6 +706,10 @@ class AskPollisModelStatus extends Disposable implements IWorkbenchContribution 
 	) {
 		super();
 		this.update();
+		// The Julia extension answers which models are on this computer once it has started, after the status bar is drawn
+		if (!CommandsRegistry.getCommand(INSTALLED_MODELS_COMMAND)) {
+			this._register(Event.once(Event.filter(CommandsRegistry.onDidRegisterCommand, id => id === INSTALLED_MODELS_COMMAND))(() => this.update()));
+		}
 		this._register(configurationService.onDidChangeConfiguration(e => {
 			if (affectsAskModel(e) || e.affectsConfiguration('pollis.ask.embeddingModel') || e.affectsConfiguration('pollis.ask.reranker')) {
 				this.update();
@@ -671,7 +737,7 @@ class AskPollisModelStatus extends Disposable implements IWorkbenchContribution 
 
 	private async update(): Promise<void> {
 		const models = await askModels(this.commandService, this.configurationService);
-		const installed = await this.commandService.executeCommand<IInstalledModel[]>('language-julia.pollisInstalledModels').catch(() => undefined) ?? [];
+		const installed = await this.commandService.executeCommand<IInstalledModel[]>(INSTALLED_MODELS_COMMAND).catch(() => undefined) ?? [];
 		// A model is ready when its file is on this computer, as the settings name it
 		const downloaded = (model: string, kinds: readonly (IInstalledModel['kind'])[]) => installed.some(file => kinds.includes(file.kind) && askModelName(file.file) === askModelName(model));
 		const embeddingSetting = this.configurationService.getValue<string>('pollis.ask.embeddingModel')?.trim() || ASK_EMBEDDING_MODEL;
@@ -680,7 +746,8 @@ class AskPollisModelStatus extends Disposable implements IWorkbenchContribution 
 		const answeringReady = !!models.provider || downloaded(this.configurationService.getValue<string>('pollis.ask.chatModel')?.trim() || ASK_CHAT_MODEL, ['chat', undefined]);
 		const embeddingReady = downloaded(embeddingSetting, ['embedding']);
 		const rerankerReady = !!reranker && downloaded(reranker, ['reranker']);
-		const ready = [answeringReady, embeddingReady, rerankerReady].filter(Boolean).length;
+		// The bars, top to bottom: answering, reranking, embedding (pollisAiStatus.css)
+		const bars = [answeringReady, rerankerReady, embeddingReady].map(ready => ready ? '1' : '0').join('');
 		// Named in the hover, and in the status bar's menu that hides its entries, by its full name
 		const name = localize('askPollis.statusName', "Active Pollis AI+ Models");
 		const label = localize('askPollis.statusLabel', "Active AI Models");
@@ -689,7 +756,7 @@ class AskPollisModelStatus extends Disposable implements IWorkbenchContribution 
 			models.provider
 				? localize('askPollis.statusAnsweringCloud', "Answering: {0} of {1}, with your own key", model(models.model), escapeMarkdownSyntaxTokens(models.provider))
 				: answeringReady
-					? localize('askPollis.statusAnsweringLocal', "Answering: {0}, on this computer", model(models.model))
+					? localize('askPollis.statusAnsweringLocal', "Answering: {0}, local", model(models.model))
 					: localize('askPollis.statusAnsweringMissing', "Answering: {0}, not downloaded yet", model(models.model)),
 			embeddingReady
 				? localize('askPollis.statusEmbedding', "Embedding: {0}", model(embedding))
@@ -711,7 +778,7 @@ class AskPollisModelStatus extends Disposable implements IWorkbenchContribution 
 		tooltip.appendText(localize('askPollis.statusClick', "Click to set them."));
 		const properties: IStatusbarEntry = {
 			name,
-			text: models.provider ? `$(pollis-ai-${ready}) ${label} $(cloud)` : `$(pollis-ai-${ready}) ${label}`,
+			text: models.provider ? `$(pollis-ai-${bars}) ${label} $(cloud)` : `$(pollis-ai-${bars}) ${label}`,
 			ariaLabel: lines.join(', '),
 			tooltip,
 			command: MODELS_INSTALLED_COMMAND_ID,
@@ -765,6 +832,7 @@ function pageHtml(language: string, writeIn: string): string {
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; script-src 'unsafe-inline';">
+	<style id="mtk-theme"></style>
 	<style>
 		${composerVoiceCss}
 		* { box-sizing: border-box; }
@@ -817,6 +885,7 @@ function pageHtml(language: string, writeIn: string): string {
 		.asked-in { margin-top: 8px; padding: 0 4px; }
 		.turn { margin: 0 0 24px 0; padding-bottom: 16px; border-bottom: 1px solid var(--vscode-widget-border); }
 		.question { font-size: 15px; font-weight: 600; margin: 0 0 8px 0; white-space: pre-wrap; }
+		.turn .small.first { margin: -4px 0 8px 0; }
 		${askAnswerCss}
 		${askMenuCss}
 		.status { margin: 6px 0; }
@@ -891,8 +960,37 @@ function pageHtml(language: string, writeIn: string): string {
 	${askAnswerScript()}
 	${askMenuScript()}
 
+	${colorizeBracketsJs}
+
+	// The code of the answers coloured as the editor colours it, by its language and text, once the answer is finished
+	const colored = new Map();
+	const requested = new Set();
+	const CODE_LANGUAGES = { '': 'julia', jl: 'julia', jldoctest: 'julia', 'julia-repl': 'julia', duckdb: 'sql', py: 'python', sh: 'shellscript', bash: 'shellscript' };
+	function colorCode(box) {
+		for (const pre of box.querySelectorAll('pre.code')) {
+			const given = pre.dataset.lang || '';
+			const language = CODE_LANGUAGES[given] || given;
+			// Its text as written, which the coloured HTML may not keep space for space
+			const code = pre.dataset.code ?? (pre.dataset.code = pre.textContent);
+			const key = language + '\\n' + code;
+			if (colored.has(key)) {
+				pre.innerHTML = colored.get(key);
+				colorizeBrackets(pre, language === 'sql' ? '--' : '#');
+			} else if (!requested.has(key)) {
+				requested.add(key);
+				vscode.postMessage({ command: 'colorize', language, code });
+			}
+		}
+	}
+	function colorAnswers() {
+		for (const turn of turns) {
+			if (turn && turn.done) { colorCode(turn.answerBox); }
+		}
+	}
+
 	function renderAnswer(turn, index) {
 		turn.answerBox.innerHTML = markdown(turn.answer, turn.passages.length);
+		if (turn.done) { colorCode(turn.answerBox); }
 		renderSources(turn.sources, turn.passages, turn.answer, turn.done, passage => vscode.postMessage({ command: 'open', turn: index, passage }));
 	}
 
@@ -1031,6 +1129,14 @@ function pageHtml(language: string, writeIn: string): string {
 			onAttached(message);
 		} else if (message.command === 'apiKeyStatus') {
 			renderKey(message);
+		} else if (message.command === 'colorized') {
+			document.getElementById('mtk-theme').textContent = message.css;
+			colored.set(message.language + '\\n' + message.code, message.html);
+			colorAnswers();
+		} else if (message.command === 'recolor') {
+			colored.clear();
+			requested.clear();
+			colorAnswers();
 		} else if (message.command === 'searching') {
 			const box = element('div', 'turn');
 			box.appendChild(element('div', 'question', message.question));
@@ -1059,6 +1165,10 @@ function pageHtml(language: string, writeIn: string): string {
 			turn.passages = message.passages;
 			searchIn.offer(message.collections);
 			turn.searched.textContent = [message.searched.length ? TEXT.searched.replace('{0}', message.searched.join(', ')) : '', message.note].filter(part => part).join(' ');
+			if (message.first) {
+				turn.box.insertBefore(turn.searched, turn.status);
+				turn.searched.classList.add('first');
+			}
 		} else if (message.command === 'indexing') {
 			turn.status.textContent = message.text;
 			turn.status.insertAdjacentHTML('afterbegin', SPINNER);
@@ -1158,6 +1268,12 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).regis
 			default: true,
 			scope: ConfigurationScope.APPLICATION,
 			markdownDescription: localize('askPollis.juliaManualSetting', "Whether **Help > Ask Pollis** searches the Julia Manual too, besides Pollis' own documents: the Manual, Base and the standard library, from the documentation that comes with the Julia that Pollis runs, so that a Julia updated brings its own. Its passages are indexed in the background, and Open shows each in that documentation."),
+		},
+		'pollis.ask.duckdbManual': {
+			type: 'boolean',
+			default: true,
+			scope: ConfigurationScope.APPLICATION,
+			markdownDescription: localize('askPollis.duckdbManualSetting', "Whether **Help > Ask Pollis** searches the DuckDB Manual too: the documentation of the DuckDB that Pollis carries, from duckdb.org, its function pages a source of their own, DuckDB Functions. Its pages are downloaded once, at the version of that DuckDB, and indexed in the background; Open shows each passage on duckdb.org."),
 		},
 		'pollis.ask.packageApis': {
 			type: 'boolean',

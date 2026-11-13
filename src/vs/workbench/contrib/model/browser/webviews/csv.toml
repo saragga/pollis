@@ -18,6 +18,10 @@ description = "An 18-video course by Jamie Mair on writing fast Julia code"
 url = "https://www.youtube.com/playlist?list=PLUAq6xQKFgGr39PiyrPk_C9dhBKvWcjUA"
 
 [[packages]]
+name = "DuckDB.jl"
+github = "https://github.com/duckdb/DuckDB.jl"
+
+[[packages]]
 name = "Tables.jl"
 github = "https://github.com/JuliaData/Tables.jl"
 
@@ -100,6 +104,11 @@ name = "Chunks"
 file = "csv/chunks.md"
 bundled = true
 
+[[wikis]]
+name = "Query (DuckDB)"
+file = "csv/duckdb.md"
+bundled = true
+
 [[references]]
 separator = true
 label = "Software"
@@ -109,6 +118,16 @@ key = "Qui2023a"
 
 [[references]]
 key = "Qui2023c"
+
+[[references]]
+key = "RM2026a"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "RM2019a"
 
 [[references]]
 separator = true
@@ -133,6 +152,10 @@ label = "Stream Rows"
 id = "chunks"
 label = "Chunks"
 
+[[models]]
+id = "duckdb"
+label = "Query (DuckDB)"
+
 [[bullets]]
 text = "Read"
 detail = "<code>CSV.File</code> parses the whole file into typed columns in memory, inferring each column type and using several threads on large files"
@@ -148,6 +171,10 @@ detail = "<code>CSV.Rows</code> iterates one row at a time with a reused buffer,
 [[bullets]]
 text = "Chunks"
 detail = "<code>CSV.Chunks</code> splits the file into byte ranges and parses them one at a time, for files too large to hold in memory at once"
+
+[[bullets]]
+text = "Query (DuckDB)"
+detail = "DuckDB runs SQL on the file itself with <code>read_csv</code>, so only the rows and columns the query keeps reach Julia"
 
 [[decisionRows]]
 task = "Read"
@@ -168,6 +195,11 @@ purpose = "One pass over every row: counting, filtering, running totals"
 task = "Chunks"
 context = "Larger than memory"
 purpose = "Process typed column blocks one at a time, then combine the results"
+
+[[decisionRows]]
+task = "Query (DuckDB)"
+context = "Filter before loading"
+purpose = "Select, filter, join or summarise with SQL, even on files larger than memory"
 
 [[inputs]]
 id = "path"
@@ -215,7 +247,7 @@ label = "Header"
 tooltip = "Row holding the column names. With none, columns are named Column1, Column2, ... and the first row is data."
 kind = "select"
 default = "1"
-models = ["read", "rows", "chunks"]
+models = ["read", "rows", "chunks", "duckdb"]
 
 [[inputs.options]]
 value = "1"
@@ -230,7 +262,7 @@ id = "missingstring"
 label = "Missing Strings"
 tooltip = "Comma-separated list of quoted strings that are read as missing, e.g. \"\", \"NA\", \"NULL\"."
 default = '"", "NA"'
-models = ["read", "rows", "chunks"]
+models = ["read", "rows", "chunks", "duckdb"]
 
 [[inputs]]
 id = "decimal"
@@ -238,7 +270,7 @@ label = "Decimal Mark"
 tooltip = "Character separating the integer and fractional parts of numbers. A comma decimal mark needs a delimiter other than comma, usually semicolon."
 kind = "select"
 default = "."
-models = ["read", "chunks"]
+models = ["read", "chunks", "duckdb"]
 newRow = true
 
 [[inputs.options]]
@@ -263,60 +295,12 @@ tooltip = "Number of byte ranges the file is split into. More chunks = less memo
 default = "4"
 models = ["chunks"]
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.read]
-# Text file flowing into a grid of typed columns
-svg = '''
-var s = '<rect x="6" y="6" width="42" height="24" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>';
-s += '<text x="27" y="21" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">a,b,c</text>';
-s += '<line x1="27" y1="32" x2="27" y2="42" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
-s += '<path d="M23 39 L27 44 L31 39" fill="none" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
-s += '<rect x="6" y="48" width="42" height="32" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>';
-s += '<rect x="9" y="51" width="10" height="26" fill="currentColor" opacity="0.25"/>';
-s += '<rect x="22" y="51" width="10" height="26" fill="currentColor" opacity="0.15"/>';
-s += '<rect x="35" y="51" width="10" height="26" fill="currentColor" opacity="0.25"/>';
-return s;
-'''
-
-[miniCharts.write]
-# Grid of columns flowing into a text file
-svg = '''
-var s = '<rect x="6" y="6" width="42" height="32" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>';
-s += '<rect x="9" y="9" width="10" height="26" fill="currentColor" opacity="0.25"/>';
-s += '<rect x="22" y="9" width="10" height="26" fill="currentColor" opacity="0.15"/>';
-s += '<rect x="35" y="9" width="10" height="26" fill="currentColor" opacity="0.25"/>';
-s += '<line x1="27" y1="40" x2="27" y2="50" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
-s += '<path d="M23 47 L27 52 L31 47" fill="none" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
-s += '<rect x="6" y="56" width="42" height="24" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>';
-s += '<text x="27" y="71" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">a,b,c</text>';
-return s;
-'''
-
-[miniCharts.rows]
-# One highlighted row passing through at a time
-svg = '''
-var s = '<rect x="6" y="6" width="42" height="74" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>';
-for (var i = 0; i < 8; i++) {
-	var y = 12 + i * 8.5;
-	s += '<rect x="10" y="' + y + '" width="34" height="5" rx="1" fill="currentColor" opacity="' + (i === 3 ? 0.6 : 0.12) + '"/>';
-}
-s += '<path d="M2 29.5 L6 32.5 L2 35.5" fill="currentColor" opacity="0.6"/>';
-return s;
-'''
-
-[miniCharts.chunks]
-# File split into separate blocks
-svg = '''
-var s = '';
-for (var i = 0; i < 4; i++) {
-	var y = 6 + i * 19;
-	s += '<rect x="6" y="' + y + '" width="42" height="15" rx="2" fill="currentColor" opacity="' + (0.1 + i * 0.07) + '" stroke="currentColor" stroke-width="0.8" stroke-opacity="0.5"/>';
-	s += '<text x="27" y="' + (y + 10.5) + '" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">' + (i + 1) + '</text>';
-}
-return s;
-'''
+[[inputs]]
+id = "filter"
+label = "Filter"
+tooltip = "SQL condition on the rows, e.g. temp > 85 or month = 7 AND ozone IS NOT NULL. Without a header row, the columns are named column0, column1, ..."
+default = "temp > 85"
+models = ["duckdb"]
 
 [[codeBranches]]
 model = "read"
@@ -405,6 +389,31 @@ println("Chunks: ", length(sizes), ", rows per chunk: ", sizes, ", total: ", sum
 tbl = Tables.columntable(first(chunks))  # the first chunk, for the Next Steps
 '''
 
+[[codeBranches]]
+model = "duckdb"
+code = '''
+using DuckDB, Tables
+
+{{?path=data.csv}} using CSV, PollisDatasets  # curated example datasets
+{{?path=data.csv}} # Example file: Chambers et al. (1983), daily air quality in New York, May to September 1973, with empty fields for 44 missing readings, written to data.csv in the working directory unless a data.csv is there already. Replace "data.csv" with your own file.
+{{?path=data.csv}} isfile("data.csv") || CSV.write("data.csv", dataset("airquality"))
+
+con = DBInterface.connect(DuckDB.DB)  # an in-memory database: the file stays where it is
+nulls = join(("'" * s * "'" for s in [{{missingstring}}]), ", ")  # the missing strings, in SQL
+sql = """
+SELECT *
+FROM read_csv('{{path}}',
+{{?delim!=auto}}	delim = '{{delim}}',
+{{?header=false}}	header = false,
+	decimal_separator = '{{decimal}}',
+	nullstr = [$nulls])
+WHERE {{filter}}
+"""
+tbl = Tables.columntable(DBInterface.execute(con, sql))  # named tuple of column vectors
+println(length(first(tbl)), " rows x ", length(tbl), " columns")
+println(Tables.schema(tbl))
+'''
+
 # Next Steps action groups
 [[actionGroups]]
 id = "visualise"
@@ -459,6 +468,7 @@ end
 id = "row-count-check"
 label = "Row Count Check"
 desc = "Lines in the file against rows parsed: a gap points to blank lines, quoted line breaks or footers"
+models = ["read", "write", "rows", "chunks"]
 code = '''
 using CSV
 
@@ -473,6 +483,7 @@ println(lines - parsed == header ? "One line per row, as expected" : "Difference
 id = "strict-parse"
 label = "Strict Parse"
 desc = "Parse again with strict=true, stopping at the first value that does not fit its column type"
+models = ["read", "write", "rows", "chunks"]
 code = '''
 using CSV
 
@@ -506,6 +517,7 @@ end
 id = "reader-comparison"
 label = "Reader Comparison"
 desc = "Time CSV.File, CSV.Rows and CSV.Chunks on the same file"
+models = ["read", "write", "rows", "chunks"]
 code = '''
 using CSV
 
@@ -569,6 +581,7 @@ println("Wrote ", out)
 id = "save-gz"
 label = "Save Compressed"
 desc = "Stream the file row by row into a gzip-compressed copy"
+models = ["read", "write", "rows", "chunks"]
 code = '''
 using CSV
 

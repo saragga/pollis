@@ -15,7 +15,9 @@
 # in a Markdown file, read as one, its passages headed by the work's title. The Julia Manual is that
 # of the Julia that runs this, which comes with it, so that a Julia updated has its own: the Manual, Base and the
 # standard library, from the search index Documenter writes beside its HTML, a section or a docstring an entry, each
-# passage with the page and anchor it is at. The Package APIs (kind api) are the files pollisPackageApis.ts writes in
+# passage with the page and anchor it is at. The DuckDB Manual (kind duckdb) is the Markdown of duckdb.org that
+# pollisDuckDBDocs.ts keeps in ~/.pollis/documents/duckdb, cut at its headings as a wiki, each passage with the address
+# of its section on duckdb.org. The Package APIs (kind api) are the files pollisPackageApis.ts writes in
 # ~/.pollis/documents/apis, added to the list by pollisDocuments.ts: a docstring a passage, whole, with its code and
 # formulas, and the address it is at. The others are cut into passages of about 250 words, at paragraphs, each carrying
 # the last sentence of the one before, when it is short. The passages of a document that has not changed since the last
@@ -56,6 +58,8 @@ found for questions that are not about it. The text before it, how to type a cha
 """
 const UNICODE_TABLE = r"^(?:Code point\(s\)|U\+[0-9A-F]{4,})"
 const OUTPUT = joinpath(homedir(), ".pollis", "documents")
+"""The pages of the DuckDB Manual, by their addresses under duckdb.org/docs (pollisDuckDBDocs.ts)."""
+const DUCKDB_DOCS = joinpath(OUTPUT, "duckdb")
 """The index made: PollisDocuments, or that of a collection."""
 const DATABASE = length(ARGS) >= 6 ? abspath(ARGS[6]) : joinpath(OUTPUT, "PollisDocuments.duckdb")
 const PARTIAL = DATABASE * ".partial"
@@ -540,8 +544,11 @@ function join_short(found)
 	return joined
 end
 
-"""Markdown as text: links and images by their words, without emphasis or the backquotes of code."""
-markdown_text(line) = replace(line, r"!?\[(?<words>[^\]]*)\]\([^)]*\)" => s"\g<words>", r"\*\*|__|`" => "")
+"""
+Markdown as text: links and images by their words, without emphasis; code keeps its backquotes, by which Ask Pollis
+shows it as code, unless `code` is false, as in a heading.
+"""
+markdown_text(line; code = true) = replace(line, r"!?\[(?<words>[^\]]*)\]\([^)]*\)" => s"\g<words>", (code ? r"\*\*|__" : r"\*\*|__|`") => "")
 
 """The passages of a wiki, cut at its headings, `nothing` for a wiki still "Not written yet."."""
 function wiki_passages(file, title)
@@ -549,8 +556,11 @@ function wiki_passages(file, title)
 	markdown_passages([replace(line, r"^\s*:[a-z]+:\s*$|:[a-z]+:`[^`]*`" => "") for line in readlines(file)], title)
 end
 
-"""The passages of lines of Markdown, cut at their headings, `nothing` for lines that only say "Not written yet."."""
-function markdown_passages(lines, title)
+"""
+The passages of lines of Markdown, cut at their headings, `nothing` for lines that only say "Not written yet."; the short
+ones joined with the next under the headings they share, unless `joining` is false.
+"""
+function markdown_passages(lines, title; joining = true)
 	body = filter(line -> !isempty(strip(line)) && !startswith(line, "# "), lines)
 	(isempty(body) || strip(join(body, " ")) == "Not written yet.") && return nothing
 	name = something(findfirst(line -> startswith(line, "# "), lines), 0)
@@ -578,7 +588,7 @@ function markdown_passages(lines, title)
 				continue
 			end
 			# The panel and the wiki are the first two headings, ## the third
-			open_heading!(open_headings, length(m[:hashes]) + 1, strip(markdown_text(m[:text])))
+			open_heading!(open_headings, length(m[:hashes]) + 1, strip(markdown_text(m[:text]; code = false)))
 		elseif startswith(line, "```")
 			# A code block stays whole, with the paragraph that introduces it
 			block = [line]
@@ -610,7 +620,7 @@ function markdown_passages(lines, title)
 	end
 	close_paragraph()
 	passages!(found, paragraphs, missing, heading())
-	return join_short(found)
+	return joining ? join_short(found) : found
 end
 
 """
@@ -720,6 +730,39 @@ function api_passages(file)
 end
 
 """
+A page of the DuckDB Manual as Markdown alone, under its title: without its front matter, the Liquid of the site's
+templates, its HTML and the attributes kramdown gives code; a table of two columns whose first is bold, as a function's
+Description, Example and Result, as lines of a paragraph.
+"""
+function duckdb_lines(file, title)
+	text = replace(read(file, String), r"\A---\r?\n.*?\r?\n---\r?\n"s => "", r"<!--.*?-->"s => "", r"\{%.*?%\}"s => "", r"\{\{.*?\}\}"s => "", r"\{:[^}]*\}" => "")
+	lines = ["# $title"]
+	for line in split(text, '\n')
+		occursin(r"^\s*<[^>]+>(?:\s*</[^>]+>)?\s*$", line) && continue
+		m = match(r"^\|\s*\*\*(?<label>[^*|]+)\*\*\s*\|\s*(?<value>.*?)\s*\|\s*$", line)
+		push!(lines, m === nothing ? rstrip(line) : "$(m[:label]): $(m[:value])")
+	end
+	return lines
+end
+
+"""The id duckdb.org gives a heading, as kramdown makes it: in lower case, its letters, digits, underscores, hyphens and spaces alone, each space a hyphen."""
+duckdb_id(heading) = replace(replace(lowercase(heading), r"[^a-z0-9_\- ]" => ""), ' ' => '-')
+
+"""
+The passages of a page of the DuckDB Manual, cut at its headings, each with the address of its section on duckdb.org;
+on the pages of functions, each function a passage of its own, as a docstring is in the Julia Manual.
+"""
+function duckdb_passages(file, title)
+	page = replace(relpath(file, DUCKDB_DOCS), '\\' => '/', r"\.md$" => "", r"(?:^|/)index$" => "")
+	url = "https://duckdb.org/docs/$page"
+	found = something(markdown_passages(duckdb_lines(file, title), ""; joining = !occursin("/sql/functions/", "/$page")), Passage[])
+	return map(found) do passage
+		headings = split(passage.heading, ARROW)
+		Passage(passage.page, passage.heading, passage.text, length(headings) > 1 ? "$url#$(duckdb_id(headings[end]))" : url)
+	end
+end
+
+"""
 The passages of the Julia Manual, from its search index: an entry, a section or a docstring, under its page and title,
 cut at its paragraphs; the short ones joined as a wiki's, within their page.
 """
@@ -790,6 +833,7 @@ function build(found, previous; progress = true)
 					document.kind == "latex" ? latex_passages(document.source, document.title) :
 					document.kind == "text" ? text_passages(document.source) :
 					document.kind == "julia" ? manual_passages(document.source) :
+					document.kind == "duckdb" ? duckdb_passages(document.source, document.title) :
 					document.kind == "api" ? api_passages(document.source) : pdf_passages(document.source)
 			catch
 				nothing

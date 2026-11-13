@@ -243,7 +243,7 @@
 				"acm/tutorial-03-td3.ipynb"
 			],
 			"packages": [
-				"ReinforcementLearning.jl"
+				"Flux.jl"
 			]
 		},
 		{
@@ -544,7 +544,6 @@
 			],
 			"packages": [
 				"Flux.jl",
-				"AutoEncoderToolkit.jl",
 				"PollisDatasets.jl"
 			]
 		},
@@ -616,8 +615,8 @@
 				"azero/tutorial-03-tictactoe.ipynb"
 			],
 			"packages": [
-				"AlphaZero.jl",
-				"Setfield.jl"
+				"Flux.jl",
+				"Distributions.jl"
 			]
 		},
 		{
@@ -842,7 +841,7 @@
 				"bandit/tutorial-03-thompson.ipynb"
 			],
 			"packages": [
-				"ReinforcementLearning.jl"
+				"Distributions.jl"
 			]
 		},
 		{
@@ -1415,7 +1414,7 @@
 				"cmp/tutorial-03-mcp.ipynb"
 			],
 			"packages": [
-				"Complementarity.jl",
+				"JuMP.jl",
 				"PATHSolver.jl"
 			]
 		},
@@ -1797,6 +1796,7 @@
 				"csv/chunks.md",
 				"csv/decision-guide.md",
 				"csv/diagnostics.md",
+				"csv/duckdb.md",
 				"csv/factsheet.md",
 				"csv/file-format.md",
 				"csv/interpretation.md",
@@ -1812,6 +1812,7 @@
 			],
 			"packages": [
 				"CSV.jl",
+				"DuckDB.jl",
 				"Tables.jl"
 			]
 		},
@@ -2112,7 +2113,7 @@
 				"dco/tutorial-03-vns.ipynb"
 			],
 			"packages": [
-				"MHLib.jl"
+				"TravelingSalesmanHeuristics.jl"
 			]
 		},
 		{
@@ -4254,6 +4255,40 @@
 			]
 		},
 		{
+			"id": "json",
+			"title": "JSON Files",
+			"source": "pollis",
+			"commands": [
+				{
+					"id": "chiara.explore.conn.json",
+					"menuTitles": [
+						"JSON Files"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "query",
+			"toml": "src/vs/workbench/contrib/model/browser/webviews/json.toml",
+			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
+			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"wikis": [
+				"json/decision-guide.md",
+				"json/factsheet.md",
+				"json/file-format.md",
+				"json/flatten.md",
+				"json/overview.md",
+				"json/query.md",
+				"json/structs.md",
+				"json/write.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"DuckDB.jl",
+				"JSON.jl",
+				"Tables.jl"
+			]
+		},
+		{
 			"id": "kgds",
 			"title": "Kaggle Datasets",
 			"source": "pollis",
@@ -4873,7 +4908,7 @@
 				{
 					"id": "chiara.statistics.rmt.lrm",
 					"menuTitles": [
-						"Loss Risk Measures"
+						"Measuring Loss Risk"
 					]
 				}
 			],
@@ -6425,6 +6460,40 @@
 			],
 			"packages": [
 				"Optim.jl"
+			]
+		},
+		{
+			"id": "parquet",
+			"title": "Parquet Files",
+			"source": "pollis",
+			"commands": [
+				{
+					"id": "chiara.explore.conn.parquet",
+					"menuTitles": [
+						"Parquet Files"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "query",
+			"toml": "src/vs/workbench/contrib/model/browser/webviews/parquet.toml",
+			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
+			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"wikis": [
+				"parquet/decision-guide.md",
+				"parquet/factsheet.md",
+				"parquet/file-format.md",
+				"parquet/overview.md",
+				"parquet/partitioned.md",
+				"parquet/query.md",
+				"parquet/read.md",
+				"parquet/write.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"DuckDB.jl",
+				"Parquet2.jl",
+				"Tables.jl"
 			]
 		},
 		{

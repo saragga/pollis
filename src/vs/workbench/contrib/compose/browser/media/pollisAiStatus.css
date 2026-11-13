@@ -3,9 +3,11 @@
  *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-/* Active AI Models in the status bar (askPollisPage.ts): a circle filled by thirds, one for each of answering,
-   embedding and reranking that has a model ready, written there as $(pollis-ai-0) to $(pollis-ai-3). Each is
-   a mask, so that it takes the colour of the bar's text, in the 16px box of the bar's other icons. */
+/* Active AI Models in the status bar (askPollisPage.ts): three slim bars, answering at the top, reranking in the
+   middle and embedding at the bottom, each filled when that model is ready and outlined when it is not, written
+   there as $(pollis-ai-ARE), A, R and E each 1 for filled and 0 for outlined, from $(pollis-ai-000) to
+   $(pollis-ai-111). Each is a mask, so that it takes the colour of the bar's text, in the 16px box of the bar's
+   other icons. */
 .statusbar-item .codicon[class*='codicon-pollis-ai-'] {
 	display: inline-flex;
 	align-items: center;
@@ -19,26 +21,50 @@
 	background-color: currentColor;
 }
 
-/* No model: the ring alone, r 6.75 with a stroke of 1.5 */
-.statusbar-item .codicon.codicon-pollis-ai-0::before {
-	-webkit-mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxNiAxNic+PGNpcmNsZSBjeD0nOCcgY3k9JzgnIHI9JzYuNzUnIGZpbGw9J25vbmUnIHN0cm9rZT0nYmxhY2snIHN0cm9rZS13aWR0aD0nMS41Jy8+PC9zdmc+") center / contain no-repeat;
-	mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxNiAxNic+PGNpcmNsZSBjeD0nOCcgY3k9JzgnIHI9JzYuNzUnIGZpbGw9J25vbmUnIHN0cm9rZT0nYmxhY2snIHN0cm9rZS13aWR0aD0nMS41Jy8+PC9zdmc+") center / contain no-repeat;
+/* Answering outlined, reranking outlined, embedding outlined */
+.statusbar-item .codicon.codicon-pollis-ai-000::before {
+	-webkit-mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxNiAxNic+PHJlY3QgeD0nMi41JyB5PScxLjI1JyB3aWR0aD0nMTEnIGhlaWdodD0nMi41JyByeD0nMC43NScgZmlsbD0nbm9uZScgc3Ryb2tlPSdibGFjaycgc3Ryb2tlLXdpZHRoPScxJy8+PHJlY3QgeD0nMi41JyB5PSc2Ljc1JyB3aWR0aD0nMTEnIGhlaWdodD0nMi41JyByeD0nMC43NScgZmlsbD0nbm9uZScgc3Ryb2tlPSdibGFjaycgc3Ryb2tlLXdpZHRoPScxJy8+PHJlY3QgeD0nMi41JyB5PScxMi4yNScgd2lkdGg9JzExJyBoZWlnaHQ9JzIuNScgcng9JzAuNzUnIGZpbGw9J25vbmUnIHN0cm9rZT0nYmxhY2snIHN0cm9rZS13aWR0aD0nMScvPjwvc3ZnPg==") center / contain no-repeat;
+	mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxNiAxNic+PHJlY3QgeD0nMi41JyB5PScxLjI1JyB3aWR0aD0nMTEnIGhlaWdodD0nMi41JyByeD0nMC43NScgZmlsbD0nbm9uZScgc3Ryb2tlPSdibGFjaycgc3Ryb2tlLXdpZHRoPScxJy8+PHJlY3QgeD0nMi41JyB5PSc2Ljc1JyB3aWR0aD0nMTEnIGhlaWdodD0nMi41JyByeD0nMC43NScgZmlsbD0nbm9uZScgc3Ryb2tlPSdibGFjaycgc3Ryb2tlLXdpZHRoPScxJy8+PHJlY3QgeD0nMi41JyB5PScxMi4yNScgd2lkdGg9JzExJyBoZWlnaHQ9JzIuNScgcng9JzAuNzUnIGZpbGw9J25vbmUnIHN0cm9rZT0nYmxhY2snIHN0cm9rZS13aWR0aD0nMScvPjwvc3ZnPg==") center / contain no-repeat;
 }
 
-/* One: the ring and a third, clockwise from the top */
-.statusbar-item .codicon.codicon-pollis-ai-1::before {
-	-webkit-mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxNiAxNic+PGNpcmNsZSBjeD0nOCcgY3k9JzgnIHI9JzYuNzUnIGZpbGw9J25vbmUnIHN0cm9rZT0nYmxhY2snIHN0cm9rZS13aWR0aD0nMS41Jy8+PHBhdGggZD0nTTggOCBMOCAxLjUgQTYuNSA2LjUgMCAwIDEgMTMuNjMgMTEuMjUgWicvPjwvc3ZnPg==") center / contain no-repeat;
-	mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxNiAxNic+PGNpcmNsZSBjeD0nOCcgY3k9JzgnIHI9JzYuNzUnIGZpbGw9J25vbmUnIHN0cm9rZT0nYmxhY2snIHN0cm9rZS13aWR0aD0nMS41Jy8+PHBhdGggZD0nTTggOCBMOCAxLjUgQTYuNSA2LjUgMCAwIDEgMTMuNjMgMTEuMjUgWicvPjwvc3ZnPg==") center / contain no-repeat;
+/* Answering outlined, reranking outlined, embedding filled */
+.statusbar-item .codicon.codicon-pollis-ai-001::before {
+	-webkit-mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxNiAxNic+PHJlY3QgeD0nMi41JyB5PScxLjI1JyB3aWR0aD0nMTEnIGhlaWdodD0nMi41JyByeD0nMC43NScgZmlsbD0nbm9uZScgc3Ryb2tlPSdibGFjaycgc3Ryb2tlLXdpZHRoPScxJy8+PHJlY3QgeD0nMi41JyB5PSc2Ljc1JyB3aWR0aD0nMTEnIGhlaWdodD0nMi41JyByeD0nMC43NScgZmlsbD0nbm9uZScgc3Ryb2tlPSdibGFjaycgc3Ryb2tlLXdpZHRoPScxJy8+PHJlY3QgeD0nMicgeT0nMTEuNzUnIHdpZHRoPScxMicgaGVpZ2h0PSczLjUnIHJ4PScxJy8+PC9zdmc+") center / contain no-repeat;
+	mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxNiAxNic+PHJlY3QgeD0nMi41JyB5PScxLjI1JyB3aWR0aD0nMTEnIGhlaWdodD0nMi41JyByeD0nMC43NScgZmlsbD0nbm9uZScgc3Ryb2tlPSdibGFjaycgc3Ryb2tlLXdpZHRoPScxJy8+PHJlY3QgeD0nMi41JyB5PSc2Ljc1JyB3aWR0aD0nMTEnIGhlaWdodD0nMi41JyByeD0nMC43NScgZmlsbD0nbm9uZScgc3Ryb2tlPSdibGFjaycgc3Ryb2tlLXdpZHRoPScxJy8+PHJlY3QgeD0nMicgeT0nMTEuNzUnIHdpZHRoPScxMicgaGVpZ2h0PSczLjUnIHJ4PScxJy8+PC9zdmc+") center / contain no-repeat;
 }
 
-/* Two: the ring and two thirds */
-.statusbar-item .codicon.codicon-pollis-ai-2::before {
-	-webkit-mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxNiAxNic+PGNpcmNsZSBjeD0nOCcgY3k9JzgnIHI9JzYuNzUnIGZpbGw9J25vbmUnIHN0cm9rZT0nYmxhY2snIHN0cm9rZS13aWR0aD0nMS41Jy8+PHBhdGggZD0nTTggOCBMOCAxLjUgQTYuNSA2LjUgMCAxIDEgMi4zNyAxMS4yNSBaJy8+PC9zdmc+") center / contain no-repeat;
-	mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxNiAxNic+PGNpcmNsZSBjeD0nOCcgY3k9JzgnIHI9JzYuNzUnIGZpbGw9J25vbmUnIHN0cm9rZT0nYmxhY2snIHN0cm9rZS13aWR0aD0nMS41Jy8+PHBhdGggZD0nTTggOCBMOCAxLjUgQTYuNSA2LjUgMCAxIDEgMi4zNyAxMS4yNSBaJy8+PC9zdmc+") center / contain no-repeat;
+/* Answering outlined, reranking filled, embedding outlined */
+.statusbar-item .codicon.codicon-pollis-ai-010::before {
+	-webkit-mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxNiAxNic+PHJlY3QgeD0nMi41JyB5PScxLjI1JyB3aWR0aD0nMTEnIGhlaWdodD0nMi41JyByeD0nMC43NScgZmlsbD0nbm9uZScgc3Ryb2tlPSdibGFjaycgc3Ryb2tlLXdpZHRoPScxJy8+PHJlY3QgeD0nMicgeT0nNi4yNScgd2lkdGg9JzEyJyBoZWlnaHQ9JzMuNScgcng9JzEnLz48cmVjdCB4PScyLjUnIHk9JzEyLjI1JyB3aWR0aD0nMTEnIGhlaWdodD0nMi41JyByeD0nMC43NScgZmlsbD0nbm9uZScgc3Ryb2tlPSdibGFjaycgc3Ryb2tlLXdpZHRoPScxJy8+PC9zdmc+") center / contain no-repeat;
+	mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxNiAxNic+PHJlY3QgeD0nMi41JyB5PScxLjI1JyB3aWR0aD0nMTEnIGhlaWdodD0nMi41JyByeD0nMC43NScgZmlsbD0nbm9uZScgc3Ryb2tlPSdibGFjaycgc3Ryb2tlLXdpZHRoPScxJy8+PHJlY3QgeD0nMicgeT0nNi4yNScgd2lkdGg9JzEyJyBoZWlnaHQ9JzMuNScgcng9JzEnLz48cmVjdCB4PScyLjUnIHk9JzEyLjI1JyB3aWR0aD0nMTEnIGhlaWdodD0nMi41JyByeD0nMC43NScgZmlsbD0nbm9uZScgc3Ryb2tlPSdibGFjaycgc3Ryb2tlLXdpZHRoPScxJy8+PC9zdmc+") center / contain no-repeat;
 }
 
-/* All three: the full disc, r 7.5 */
-.statusbar-item .codicon.codicon-pollis-ai-3::before {
-	-webkit-mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxNiAxNic+PGNpcmNsZSBjeD0nOCcgY3k9JzgnIHI9JzcuNScvPjwvc3ZnPg==") center / contain no-repeat;
-	mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxNiAxNic+PGNpcmNsZSBjeD0nOCcgY3k9JzgnIHI9JzcuNScvPjwvc3ZnPg==") center / contain no-repeat;
+/* Answering outlined, reranking filled, embedding filled */
+.statusbar-item .codicon.codicon-pollis-ai-011::before {
+	-webkit-mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxNiAxNic+PHJlY3QgeD0nMi41JyB5PScxLjI1JyB3aWR0aD0nMTEnIGhlaWdodD0nMi41JyByeD0nMC43NScgZmlsbD0nbm9uZScgc3Ryb2tlPSdibGFjaycgc3Ryb2tlLXdpZHRoPScxJy8+PHJlY3QgeD0nMicgeT0nNi4yNScgd2lkdGg9JzEyJyBoZWlnaHQ9JzMuNScgcng9JzEnLz48cmVjdCB4PScyJyB5PScxMS43NScgd2lkdGg9JzEyJyBoZWlnaHQ9JzMuNScgcng9JzEnLz48L3N2Zz4=") center / contain no-repeat;
+	mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxNiAxNic+PHJlY3QgeD0nMi41JyB5PScxLjI1JyB3aWR0aD0nMTEnIGhlaWdodD0nMi41JyByeD0nMC43NScgZmlsbD0nbm9uZScgc3Ryb2tlPSdibGFjaycgc3Ryb2tlLXdpZHRoPScxJy8+PHJlY3QgeD0nMicgeT0nNi4yNScgd2lkdGg9JzEyJyBoZWlnaHQ9JzMuNScgcng9JzEnLz48cmVjdCB4PScyJyB5PScxMS43NScgd2lkdGg9JzEyJyBoZWlnaHQ9JzMuNScgcng9JzEnLz48L3N2Zz4=") center / contain no-repeat;
+}
+
+/* Answering filled, reranking outlined, embedding outlined */
+.statusbar-item .codicon.codicon-pollis-ai-100::before {
+	-webkit-mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxNiAxNic+PHJlY3QgeD0nMicgeT0nMC43NScgd2lkdGg9JzEyJyBoZWlnaHQ9JzMuNScgcng9JzEnLz48cmVjdCB4PScyLjUnIHk9JzYuNzUnIHdpZHRoPScxMScgaGVpZ2h0PScyLjUnIHJ4PScwLjc1JyBmaWxsPSdub25lJyBzdHJva2U9J2JsYWNrJyBzdHJva2Utd2lkdGg9JzEnLz48cmVjdCB4PScyLjUnIHk9JzEyLjI1JyB3aWR0aD0nMTEnIGhlaWdodD0nMi41JyByeD0nMC43NScgZmlsbD0nbm9uZScgc3Ryb2tlPSdibGFjaycgc3Ryb2tlLXdpZHRoPScxJy8+PC9zdmc+") center / contain no-repeat;
+	mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxNiAxNic+PHJlY3QgeD0nMicgeT0nMC43NScgd2lkdGg9JzEyJyBoZWlnaHQ9JzMuNScgcng9JzEnLz48cmVjdCB4PScyLjUnIHk9JzYuNzUnIHdpZHRoPScxMScgaGVpZ2h0PScyLjUnIHJ4PScwLjc1JyBmaWxsPSdub25lJyBzdHJva2U9J2JsYWNrJyBzdHJva2Utd2lkdGg9JzEnLz48cmVjdCB4PScyLjUnIHk9JzEyLjI1JyB3aWR0aD0nMTEnIGhlaWdodD0nMi41JyByeD0nMC43NScgZmlsbD0nbm9uZScgc3Ryb2tlPSdibGFjaycgc3Ryb2tlLXdpZHRoPScxJy8+PC9zdmc+") center / contain no-repeat;
+}
+
+/* Answering filled, reranking outlined, embedding filled */
+.statusbar-item .codicon.codicon-pollis-ai-101::before {
+	-webkit-mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxNiAxNic+PHJlY3QgeD0nMicgeT0nMC43NScgd2lkdGg9JzEyJyBoZWlnaHQ9JzMuNScgcng9JzEnLz48cmVjdCB4PScyLjUnIHk9JzYuNzUnIHdpZHRoPScxMScgaGVpZ2h0PScyLjUnIHJ4PScwLjc1JyBmaWxsPSdub25lJyBzdHJva2U9J2JsYWNrJyBzdHJva2Utd2lkdGg9JzEnLz48cmVjdCB4PScyJyB5PScxMS43NScgd2lkdGg9JzEyJyBoZWlnaHQ9JzMuNScgcng9JzEnLz48L3N2Zz4=") center / contain no-repeat;
+	mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxNiAxNic+PHJlY3QgeD0nMicgeT0nMC43NScgd2lkdGg9JzEyJyBoZWlnaHQ9JzMuNScgcng9JzEnLz48cmVjdCB4PScyLjUnIHk9JzYuNzUnIHdpZHRoPScxMScgaGVpZ2h0PScyLjUnIHJ4PScwLjc1JyBmaWxsPSdub25lJyBzdHJva2U9J2JsYWNrJyBzdHJva2Utd2lkdGg9JzEnLz48cmVjdCB4PScyJyB5PScxMS43NScgd2lkdGg9JzEyJyBoZWlnaHQ9JzMuNScgcng9JzEnLz48L3N2Zz4=") center / contain no-repeat;
+}
+
+/* Answering filled, reranking filled, embedding outlined */
+.statusbar-item .codicon.codicon-pollis-ai-110::before {
+	-webkit-mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxNiAxNic+PHJlY3QgeD0nMicgeT0nMC43NScgd2lkdGg9JzEyJyBoZWlnaHQ9JzMuNScgcng9JzEnLz48cmVjdCB4PScyJyB5PSc2LjI1JyB3aWR0aD0nMTInIGhlaWdodD0nMy41JyByeD0nMScvPjxyZWN0IHg9JzIuNScgeT0nMTIuMjUnIHdpZHRoPScxMScgaGVpZ2h0PScyLjUnIHJ4PScwLjc1JyBmaWxsPSdub25lJyBzdHJva2U9J2JsYWNrJyBzdHJva2Utd2lkdGg9JzEnLz48L3N2Zz4=") center / contain no-repeat;
+	mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxNiAxNic+PHJlY3QgeD0nMicgeT0nMC43NScgd2lkdGg9JzEyJyBoZWlnaHQ9JzMuNScgcng9JzEnLz48cmVjdCB4PScyJyB5PSc2LjI1JyB3aWR0aD0nMTInIGhlaWdodD0nMy41JyByeD0nMScvPjxyZWN0IHg9JzIuNScgeT0nMTIuMjUnIHdpZHRoPScxMScgaGVpZ2h0PScyLjUnIHJ4PScwLjc1JyBmaWxsPSdub25lJyBzdHJva2U9J2JsYWNrJyBzdHJva2Utd2lkdGg9JzEnLz48L3N2Zz4=") center / contain no-repeat;
+}
+
+/* Answering filled, reranking filled, embedding filled */
+.statusbar-item .codicon.codicon-pollis-ai-111::before {
+	-webkit-mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxNiAxNic+PHJlY3QgeD0nMicgeT0nMC43NScgd2lkdGg9JzEyJyBoZWlnaHQ9JzMuNScgcng9JzEnLz48cmVjdCB4PScyJyB5PSc2LjI1JyB3aWR0aD0nMTInIGhlaWdodD0nMy41JyByeD0nMScvPjxyZWN0IHg9JzInIHk9JzExLjc1JyB3aWR0aD0nMTInIGhlaWdodD0nMy41JyByeD0nMScvPjwvc3ZnPg==") center / contain no-repeat;
+	mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxNiAxNic+PHJlY3QgeD0nMicgeT0nMC43NScgd2lkdGg9JzEyJyBoZWlnaHQ9JzMuNScgcng9JzEnLz48cmVjdCB4PScyJyB5PSc2LjI1JyB3aWR0aD0nMTInIGhlaWdodD0nMy41JyByeD0nMScvPjxyZWN0IHg9JzInIHk9JzExLjc1JyB3aWR0aD0nMTInIGhlaWdodD0nMy41JyByeD0nMScvPjwvc3ZnPg==") center / contain no-repeat;
 }

@@ -19,6 +19,8 @@
 // compiled is not tried again in this session.
 // The Package APIs, unless pollis.ask.packageApis is off, come after them: the docstrings of the packages of the panels,
 // read from their documentation sites (pollisPackageApis.ts), one package at a time, and the index is then made again.
+// The DuckDB Manual, unless pollis.ask.duckdbManual is off, comes last: the documentation of the DuckDB of Pollis, read
+// once from the repository of duckdb.org (pollisDuckDBDocs.ts), and the index is then made again.
 // The Julia Manual is that of the Julia the index is made with, the REPL's: when the REPL starts again with another
 // version of Julia, the index is made again, with that version's Manual; and when pollis.ask.juliaManual changes.
 // At Pollis' first start the REPL installs DuckDB.jl while the index is made, which then cannot be: it is made again
@@ -46,6 +48,7 @@ import { getPackageEnvironment } from './interactive/repl'
 import { whenDuckDBReady } from './pollisDuckDB'
 import { startServer } from './pollisLlamaServer'
 import { valueFile } from './pollisModels'
+import { duckdbDocSources, updateDuckDBDocs } from './pollisDuckDBDocs'
 import { packageApiSources, updatePackageApis } from './pollisPackageApis'
 
 let g_started = false
@@ -193,6 +196,61 @@ type IndexArguments = { sources: string; model: string; prefix: string; availabl
 /** How an index went: its passages and those embedded once published, or why it could not be made, and the log of the script's errors. */
 type IndexAnswer = { passages?: number; embedded?: number; error?: string; log?: string }
 
+/** The index processes this window has started, which are never stopped as left behind. */
+const g_indexProcesses = new Set<number>()
+
+/**
+ * Stops the index run that `pidFile` names when it was left behind: still running, though the window that started it
+ * is gone (a Pollis that quit, or extensions restarted while it ran), as it holds the files of the index and stops any
+ * new run from opening them. Only a process of this boot, of ask_index.jl where the system can say, is stopped.
+ */
+async function stopLeftBehind(pidFile: string): Promise<void> {
+    let pid: number
+    try {
+        const written = JSON.parse(await fs.promises.readFile(pidFile, 'utf8')) as { pid: unknown; started: unknown }
+        if (typeof written.pid !== 'number' || typeof written.started !== 'number' || written.started < Date.now() - os.uptime() * 1000) {
+            return
+        }
+        pid = written.pid
+    } catch {
+        return
+    }
+    const alive = () => {
+        try {
+            process.kill(pid, 0)
+            return true
+        } catch {
+            return false
+        }
+    }
+    if (g_indexProcesses.has(pid) || !alive()) {
+        return
+    }
+    if (process.platform !== 'win32') {
+        const command = await new Promise<string>((resolve) => child_process.execFile('ps', ['-o', 'command=', '-p', String(pid)], (error, stdout) => resolve(error ? '' : stdout)))
+        if (!command.includes('ask_index.jl')) {
+            return
+        }
+    }
+    console.warn(`[pollis] stopping the index run ${pid} left behind by an earlier window`)
+    try {
+        process.kill(pid)
+    } catch {
+        return
+    }
+    // A run stuck in the database may not quit when asked
+    for (let i = 0; i < 50 && alive(); i++) {
+        await new Promise((resolve) => setTimeout(resolve, 100))
+    }
+    if (alive()) {
+        try {
+            process.kill(pid, 'SIGKILL')
+        } catch {
+            // It has quit
+        }
+    }
+}
+
 /**
  * Runs ask_index.jl in a hidden process of low priority, with the status bar's item `title`, when there is one, and
  * `onProgress` told how far it has come; the embedding server started when it asks for it. What the script writes on
@@ -211,6 +269,9 @@ async function runIndex(
     const answer: IndexAnswer = { log }
     const script = path.join(context.extensionPath, 'scripts', 'terminalserver', 'ask_index.jl')
     const collection = args.database ? [args.database, String(args.words ?? 250)] : []
+    // The process of the run, beside its log, so that a run left behind by an earlier window can be stopped
+    const pidFile = log.replace(/\.log$/, '.pid')
+    await stopLeftBehind(pidFile)
     let logFile: number | undefined
     try {
         await fs.promises.mkdir(path.dirname(log), { recursive: true })
@@ -236,6 +297,18 @@ async function runIndex(
         }
     } catch {
         // The process has quit already, or the system does not allow it.
+    }
+    const pid = julia.pid
+    if (pid !== undefined) {
+        g_indexProcesses.add(pid)
+        fs.promises.writeFile(pidFile, JSON.stringify({ pid, started: Date.now() })).catch(() => undefined)
+        julia.on('close', () => {
+            g_indexProcesses.delete(pid)
+            fs.promises.readFile(pidFile, 'utf8').then(
+                (text) => JSON.parse(text).pid === pid && fs.promises.rm(pidFile, { force: true }),
+                () => undefined
+            ).catch(() => undefined)
+        })
     }
     const kill = { dispose: () => julia.kill() }
     context.subscriptions.push(kill)
@@ -317,17 +390,20 @@ function indexDocuments(
     let noDuckDB = false
     let compiled = false
     let packageApisChanged = false
+    let duckdbChanged = false
     g_indexing = (async () => {
         const sources = path.join(os.homedir(), '.pollis', 'documents', 'sources.json')
         const settings = vscode.workspace.getConfiguration('pollis.ask')
         const packageApis = settings.get<boolean>('packageApis') !== false
+        const duckdbManual = settings.get<boolean>('duckdbManual') !== false
         let vignettes: AskSource[] = []
         try {
             const list = await vscode.commands.executeCommand<AskSource[]>('pollis.askPollis.sources')
             vignettes = list.filter((source) => source.compile && !g_vignettesFailed.has(source.file))
             const apis = packageApis ? await packageApiSources(context.extensionPath) : []
+            const duckdb = duckdbManual ? await duckdbDocSources() : []
             await fs.promises.mkdir(path.dirname(sources), { recursive: true })
-            await fs.promises.writeFile(sources, JSON.stringify([...list.map((source) => ({ ...source, compile: undefined })), ...apis]))
+            await fs.promises.writeFile(sources, JSON.stringify([...list.map((source) => ({ ...source, compile: undefined })), ...apis, ...duckdb]))
         } catch (err) {
             console.error('[pollis] could not list the documents for Ask Pollis', err)
             return
@@ -357,11 +433,20 @@ function indexDocuments(
             packageApisChanged = await updatePackageApis(context.extensionPath, (done, total) => progress.report(`${done} of ${total}`))
             progress.finish()
         }
+        if (duckdbManual) {
+            const progress = windowProgress('Reading the DuckDB Manual for Ask Pollis')
+            try {
+                duckdbChanged = await updateDuckDBDocs((done, total) => progress.report(`${done} of ${total}`))
+            } catch (err) {
+                console.error('[pollis] could not read the DuckDB Manual', err)
+            }
+            progress.finish()
+        }
     })().finally(() => {
         g_indexing = undefined
         g_progress = undefined
-        if ((compiled || packageApisChanged) && !noDuckDB) {
-            // The vignettes compiled and the Package APIs read after the index, read in the next
+        if ((compiled || packageApisChanged || duckdbChanged) && !noDuckDB) {
+            // The vignettes compiled, and the Package APIs and the DuckDB Manual read, after the index, read in the next
             g_indexAgain = true
         }
         if (noDuckDB && g_duckDBInstalled) {
@@ -559,7 +644,7 @@ export function activate(context: vscode.ExtensionContext, executableFeature: Ex
             compileVignette(context, executableFeature, request)
         ),
         vscode.workspace.onDidChangeConfiguration((e) => {
-            if (e.affectsConfiguration('pollis.ask.juliaManual') || e.affectsConfiguration('pollis.ask.packageApis')) {
+            if (e.affectsConfiguration('pollis.ask.juliaManual') || e.affectsConfiguration('pollis.ask.packageApis') || e.affectsConfiguration('pollis.ask.duckdbManual')) {
                 reindexDocuments(context, executableFeature)
             }
         })
