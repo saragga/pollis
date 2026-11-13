@@ -21206,6 +21206,29 @@
 			"open_access": true
 		},
 		{
+			"key": "Kel...2026a",
+			"type": "misc",
+			"title": "StaticTools.jl: Enabling StaticCompiler.jl-based compilation of (some) Julia code to standalone native binaries by avoiding GC allocations and llvmcall-ing all the things!",
+			"authors": [
+				"Keller, C. Brenhin"
+			],
+			"author_kind": "persons",
+			"authors_complete": false,
+			"year": 2026,
+			"url": "https://github.com/brenhinkeller/StaticTools.jl",
+			"abstract": "Enabling StaticCompiler.jl-based compilation of (some) Julia code to standalone native binaries by avoiding GC allocations and llvmcall-ing all the things!",
+			"abstract_source": "github",
+			"keywords": [
+				"julia",
+				"static-compilation"
+			],
+			"keywords_source": "github",
+			"source": "manual",
+			"retrieved": "2026-11-13",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "Kel2003a",
 			"type": "book",
 			"title": "Solving Nonlinear Equations with Newton's Method",
@@ -54110,6 +54133,22 @@
 				"MRS2008a",
 				"NC2019a",
 				"Voo1999a"
+			]
+		},
+		{
+			"id": "compileExe",
+			"title": "Compile Julia to an Executable",
+			"description": "JuliaC · PackageCompiler · StaticCompiler",
+			"commands": [
+				"pollis.compilation.executable"
+			],
+			"keys": [
+				"JLC2026a",
+				"JLC2026b",
+				"Sho2026a",
+				"Kel...2026a",
+				"Jul1918a",
+				"Man1980a"
 			]
 		},
 		{

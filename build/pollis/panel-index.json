@@ -1530,6 +1530,40 @@
 			]
 		},
 		{
+			"id": "compileExe",
+			"title": "Compile Julia to an Executable",
+			"source": "pollis",
+			"commands": [
+				{
+					"id": "pollis.compilation.executable",
+					"menuTitles": [
+						"Compile Julia to an Executable..."
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "juliac",
+			"decisionFirstColumn": "Tool",
+			"toml": "src/vs/workbench/contrib/model/browser/webviews/compileExe.toml",
+			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
+			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"wikis": [
+				"compileExe/entry-points.md",
+				"compileExe/factsheet.md",
+				"compileExe/overview.md",
+				"compileExe/shipping.md",
+				"compileExe/startup.md",
+				"compileExe/staticcompiler.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"JuliaC.jl",
+				"PackageCompiler.jl",
+				"StaticCompiler.jl",
+				"StaticTools.jl"
+			]
+		},
+		{
 			"id": "convergenceOrder",
 			"title": "Check a Convergence Order",
 			"source": "pollis",

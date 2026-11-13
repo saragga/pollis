@@ -1,0 +1,648 @@
+# Compile Julia to an Executable Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/compileExe.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Compile Julia to an Executable"
+viewType = "pollis.compileExe"
+defaultModel = "juliac"
+decisionFirstColumn = "Tool"
+
+[[packages]]
+name = "JuliaC.jl"
+github = "https://github.com/JuliaLang/JuliaC.jl"
+
+[[packages]]
+name = "PackageCompiler.jl"
+github = "https://github.com/JuliaLang/PackageCompiler.jl"
+
+[[packages]]
+name = "StaticCompiler.jl"
+github = "https://github.com/tshort/StaticCompiler.jl"
+
+[[packages]]
+name = "StaticTools.jl"
+github = "https://github.com/brenhinkeller/StaticTools.jl"
+
+[requires]
+packages = ["Plots.jl"]
+
+[[wikis]]
+name = "Overview"
+file = "compileExe/overview.md"
+bundled = true
+description = "Three tools that compile the same Julia program to an executable, the program's command line and output, and the check against Julia pixel by pixel"
+
+[[wikis]]
+name = "Factsheet"
+file = "compileExe/factsheet.md"
+bundled = true
+description = "Tools, requirements, build calls, entry points, inputs, files, names and actions at a glance"
+
+[[wikis]]
+name = "Entry Points and Arguments"
+file = "compileExe/entry-points.md"
+bundled = true
+description = "Where each program starts: @main of juliac and of julia scripts, julia_main of PackageCompiler, main(argc, argv) of StaticCompiler, and how each reads its command line"
+
+[[wikis]]
+name = "Start-Up Time"
+file = "compileExe/startup.md"
+bundled = true
+description = "What happens between starting a program and its first result, for a compiled program and for julia running a script, and how the page times it"
+
+[[wikis]]
+name = "Writing for StaticCompiler"
+file = "compileExe/staticcompiler.md"
+bundled = true
+description = "A program with no Julia runtime: memory by hand with MallocArray, strings on the stack with StaticString, files and printing through the C library, and conversions that cannot throw"
+
+[[wikis]]
+name = "Shipping an Executable"
+file = "compileExe/shipping.md"
+bundled = true
+description = "The folder each tool makes, what it holds, how the program finds its libraries, and what it needs on another computer"
+
+[[models]]
+id = "juliac"
+label = "JuliaC"
+
+[[models]]
+id = "packagecompiler"
+label = "PackageCompiler"
+
+[[models]]
+id = "staticcompiler"
+label = "StaticCompiler"
+
+[[bullets]]
+text = "The same Julia program, which computes the count of every pixel with fill_counts, compiled to an executable by three tools: juliac of JuliaC.jl, PackageCompiler and StaticCompiler"
+detail = ""
+
+[[bullets]]
+text = "Two examples in every tab: the Mandelbrot set, and the Julia set of a point c, each the number of iterations of z^2 + c before |z| passes 2, for each pixel"
+detail = ""
+
+[[bullets]]
+text = "The program reads the inputs from its command line, writes the counts to a file and prints the pixels inside; Julia compares the counts with its own, pixel by pixel"
+detail = ""
+
+[[bullets]]
+text = "Start-Up and Run Time sets each program beside julia running the same code as a script, which has to compile it before it runs"
+detail = ""
+
+[[decisionRows]]
+task = "JuliaC"
+context = "Trimmed runtime"
+purpose = "juliac --output-exe --trim=safe compiles a program that starts at @main, with only the code it reaches, into a folder with the Julia libraries it needs; Julia 1.12 or later"
+
+[[decisionRows]]
+task = "PackageCompiler"
+context = "Whole runtime"
+purpose = "create_app compiles a package that has julia_main into an app folder with a whole system image; any Julia code, even code compiled while the program runs, but large and slow to build"
+
+[[decisionRows]]
+task = "StaticCompiler"
+context = "No runtime"
+purpose = "compile_executable compiles main(argc, argv), written with StaticTools, into one small file with no Julia runtime; only for code that manages its memory by hand and throws no errors (experimental)"
+
+[[inputs]]
+id = "example"
+label = "Example"
+tooltip = "The Mandelbrot set starts z at 0 and puts c at the pixel; the Julia set of c starts z at the pixel and keeps c fixed."
+kind = "tabs"
+default = "mandelbrot"
+
+[[inputs.options]]
+value = "mandelbrot"
+label = "Mandelbrot Set"
+
+[[inputs.options]]
+value = "julia"
+label = "Julia Set"
+
+[[inputs]]
+id = "width"
+label = "Pixels Across"
+tooltip = "The number of pixels across the picture; the number down follows from the shape of the region drawn, with square pixels."
+default = "800"
+
+[[inputs]]
+id = "maxiter"
+label = "Iterations"
+tooltip = "The most iterations of z^2 + c for a pixel; a pixel that has not escaped by then counts as inside the set."
+default = "256"
+
+[[inputs]]
+id = "cre"
+label = "Real Part of c"
+tooltip = "The real part of the fixed point c of the Julia set. The Mandelbrot set does not use it."
+default = "-0.8"
+
+[[inputs]]
+id = "cim"
+label = "Imaginary Part of c"
+tooltip = "The imaginary part of the fixed point c of the Julia set. The Mandelbrot set does not use it."
+default = "0.156"
+
+[[codeBranches]]
+model = "juliac"
+code = '''
+import Pkg
+
+# The example: the Mandelbrot set, or the Julia set of c, on a grid of pixels
+julia_set = "{{example}}" == "julia"
+c = complex({{cre}}, {{cim}})  # the fixed point of the Julia set; the Mandelbrot set does not use it
+x0, x1, y0, y1 = julia_set ? (-1.6, 1.6, -1.0, 1.0) : (-2.2, 0.8, -1.2, 1.2)
+width = {{width}}
+height = round(Int, width * (y1 - y0) / (x1 - x0))
+spacing = (x1 - x0) / (width - 1)  # the distance between two pixels, across and down
+maxiter = Int32({{maxiter}})
+
+# The Julia code that computes the counts: the iterations of z^2 + c before |z| passes 2 for one pixel, and
+# fill_counts, which writes the count of every pixel into memory it is given, column by column, and returns the
+# number inside. Only native types in and out, no allocation, no error thrown: code that every tool can compile
+kernel_code = """
+function escape_time(zr, zi, cr, ci, maxiter::Int32)
+    k = zero(maxiter)
+    while k < maxiter
+        zr2 = zr * zr
+        zi2 = zi * zi
+        zr2 + zi2 > 4.0 && return k
+        zi = 2.0 * zr * zi + ci
+        zr = zr2 - zi2 + cr
+        k += one(maxiter)
+    end
+    return maxiter
+end
+
+function fill_counts(counts::Ptr{Int32}, height::Int64, width::Int64, x0::Float64, y0::Float64, spacing::Float64,
+                     julia_set::Int32, cr::Float64, ci::Float64, maxiter::Int32)::Int64
+    inside = 0
+    for j in 1:width, i in 1:height
+        x = x0 + (j - 1) * spacing
+        y = y0 + (i - 1) * spacing
+        steps = julia_set != 0 ? escape_time(x, y, cr, ci, maxiter) : escape_time(0.0, 0.0, x, y, maxiter)
+        unsafe_store!(counts, steps, i + (j - 1) * height)
+        inside += steps == maxiter
+    end
+    return inside
+end
+"""
+
+# Julia: the same code in this session, filling a Julia matrix through its pointer; GC.@preserve keeps the matrix
+# alive while its pointer is in use
+include_string(Main, kernel_code)
+julia_counts = Matrix{Int32}(undef, height, width)
+julia_inside = GC.@preserve julia_counts fill_counts(pointer(julia_counts), height, width, x0, y0, spacing, Int32(julia_set), real(c), imag(c), maxiter)
+
+# The program around fill_counts: it reads the inputs from its command line, fills memory of its own, writes the
+# counts to a file and prints the number of pixels inside. It prints to Core.stdout, which a trimmed program keeps
+program_code = """
+function fractal(args::Vector{String})::Cint
+    if length(args) != 10
+        println(Core.stderr, "usage: fractal counts.bin height width x0 y0 spacing julia_set cr ci maxiter")
+        return 1
+    end
+    height = parse(Int64, args[2])
+    width = parse(Int64, args[3])
+    counts = Vector{Int32}(undef, height * width)
+    inside = GC.@preserve counts fill_counts(pointer(counts), height, width, parse(Float64, args[4]), parse(Float64, args[5]),
+                                             parse(Float64, args[6]), parse(Int32, args[7]), parse(Float64, args[8]),
+                                             parse(Float64, args[9]), parse(Int32, args[10]))
+    write(args[1], counts)
+    println(Core.stdout, inside)
+    return 0
+end
+"""
+
+# The whole program as a Julia script: the function marked @main is where it starts, with the arguments of the
+# command line, both for juliac and for julia running the script
+script_code = kernel_code * program_code * """
+function @main(args::Vector{String})::Cint
+    return fractal(args)
+end
+"""
+
+# Toolchain: Julia 1.12 or later and the app juliac of JuliaC.jl, which links the program with the C compiler on the
+# path (cc, gcc or clang; MinGW-w64 on Windows)
+VERSION >= v"1.12" || error("juliac needs Julia 1.12 or later: this session runs Julia $VERSION")
+juliac_app = joinpath(first(DEPOT_PATH), "bin", Sys.iswindows() ? "juliac.bat" : "juliac")
+isfile(juliac_app) || Pkg.Apps.add("JuliaC")  # installs juliac in ~/.julia/bin, in an environment of its own
+
+# Build: the program in ~/.pollis/executable/juliac, a new folder for a new source or Julia version. --trim=safe keeps
+# only the code @main reaches; --bundle gathers the program in bundle/bin and the Julia libraries it needs in
+# bundle/lib. An empty project, so that juliac compiles the file alone and not the active environment
+folder = mkpath(joinpath(homedir(), ".pollis", "executable", "juliac", string(hash((script_code, VERSION)), base = 16)))
+script_file = joinpath(folder, "fractal.jl")
+write(script_file, script_code)
+isfile(joinpath(folder, "Project.toml")) || write(joinpath(folder, "Project.toml"), "")
+shipped_folder = joinpath(folder, "bundle")
+program = joinpath(shipped_folder, "bin", "fractal" * (Sys.iswindows() ? ".exe" : ""))
+built_with = `$juliac_app --output-exe fractal --bundle $shipped_folder --project $folder --trim=safe --experimental $script_file`
+build_seconds = isfile(program) ? nothing : @elapsed run(built_with)
+source_file = script_file
+
+# Run: the inputs as arguments, the numbers as repr writes them, which the program reads back to the same Float64
+counts_file = joinpath(folder, "counts.bin")
+arguments = [counts_file, string(height), string(width), repr(x0), repr(y0), repr(spacing), string(Int(julia_set)), repr(real(c)), repr(imag(c)), string(maxiter)]
+command = `$program $arguments`
+compiled_inside = parse(Int, readchomp(command))
+compiled_counts = read!(counts_file, Matrix{Int32}(undef, height, width))
+tool = "JuliaC"
+
+# Julia running the same program as a script, with the same arguments, for Start-Up and Run Time
+script_command = `$(Base.julia_cmd()) --startup-file=no $script_file $arguments`
+
+# The programs of this session, tool by tool, for Compare
+programs = @isdefined(programs) ? programs : Dict{String, Any}()
+programs[tool] = (seconds = something(build_seconds, get(programs, tool, (seconds = NaN,)).seconds), bytes = filesize(program), folder = shipped_folder, command = command)
+
+# Check: the count of every pixel, the program against Julia
+differ = count(compiled_counts .!= julia_counts)
+println(differ == 0 ? "The program of juliac and Julia give the same count at all $(length(julia_counts)) pixels" : "The program of juliac and Julia differ at $differ of $(length(julia_counts)) pixels")
+println("Pixels inside: $compiled_inside from the program, $julia_inside from Julia")
+'''
+
+[[codeBranches]]
+model = "packagecompiler"
+code = '''
+using PackageCompiler
+import Pkg
+
+# The example: the Mandelbrot set, or the Julia set of c, on a grid of pixels
+julia_set = "{{example}}" == "julia"
+c = complex({{cre}}, {{cim}})  # the fixed point of the Julia set; the Mandelbrot set does not use it
+x0, x1, y0, y1 = julia_set ? (-1.6, 1.6, -1.0, 1.0) : (-2.2, 0.8, -1.2, 1.2)
+width = {{width}}
+height = round(Int, width * (y1 - y0) / (x1 - x0))
+spacing = (x1 - x0) / (width - 1)  # the distance between two pixels, across and down
+maxiter = Int32({{maxiter}})
+
+# The Julia code that computes the counts: the iterations of z^2 + c before |z| passes 2 for one pixel, and
+# fill_counts, which writes the count of every pixel into memory it is given, column by column, and returns the
+# number inside. Only native types in and out, no allocation, no error thrown: code that every tool can compile
+kernel_code = """
+function escape_time(zr, zi, cr, ci, maxiter::Int32)
+    k = zero(maxiter)
+    while k < maxiter
+        zr2 = zr * zr
+        zi2 = zi * zi
+        zr2 + zi2 > 4.0 && return k
+        zi = 2.0 * zr * zi + ci
+        zr = zr2 - zi2 + cr
+        k += one(maxiter)
+    end
+    return maxiter
+end
+
+function fill_counts(counts::Ptr{Int32}, height::Int64, width::Int64, x0::Float64, y0::Float64, spacing::Float64,
+                     julia_set::Int32, cr::Float64, ci::Float64, maxiter::Int32)::Int64
+    inside = 0
+    for j in 1:width, i in 1:height
+        x = x0 + (j - 1) * spacing
+        y = y0 + (i - 1) * spacing
+        steps = julia_set != 0 ? escape_time(x, y, cr, ci, maxiter) : escape_time(0.0, 0.0, x, y, maxiter)
+        unsafe_store!(counts, steps, i + (j - 1) * height)
+        inside += steps == maxiter
+    end
+    return inside
+end
+"""
+
+# Julia: the same code in this session, filling a Julia matrix through its pointer; GC.@preserve keeps the matrix
+# alive while its pointer is in use
+include_string(Main, kernel_code)
+julia_counts = Matrix{Int32}(undef, height, width)
+julia_inside = GC.@preserve julia_counts fill_counts(pointer(julia_counts), height, width, x0, y0, spacing, Int32(julia_set), real(c), imag(c), maxiter)
+
+# The program around fill_counts: it reads the inputs from its command line, fills memory of its own, writes the
+# counts to a file and prints the number of pixels inside. It prints to Core.stdout, which a trimmed program keeps
+program_code = """
+function fractal(args::Vector{String})::Cint
+    if length(args) != 10
+        println(Core.stderr, "usage: fractal counts.bin height width x0 y0 spacing julia_set cr ci maxiter")
+        return 1
+    end
+    height = parse(Int64, args[2])
+    width = parse(Int64, args[3])
+    counts = Vector{Int32}(undef, height * width)
+    inside = GC.@preserve counts fill_counts(pointer(counts), height, width, parse(Float64, args[4]), parse(Float64, args[5]),
+                                             parse(Float64, args[6]), parse(Int32, args[7]), parse(Float64, args[8]),
+                                             parse(Float64, args[9]), parse(Int32, args[10]))
+    write(args[1], counts)
+    println(Core.stdout, inside)
+    return 0
+end
+"""
+
+# The whole program as a Julia script, started at the function marked @main, for julia to run beside the app
+script_code = kernel_code * program_code * """
+function @main(args::Vector{String})::Cint
+    return fractal(args)
+end
+"""
+
+# Build: PackageCompiler compiles a package, here Fractal, written to ~/.pollis/executable/packagecompiler, into an
+# app: the program in app/bin, beside a whole system image and the Julia runtime. The program starts at julia_main,
+# which reads the command line from ARGS. It needs a C compiler on the path, and takes several minutes, the first
+# time only
+package_code = "module Fractal\n\n" * kernel_code * program_code * "\njulia_main()::Cint = fractal(ARGS)\n\nend\n"
+folder = mkpath(joinpath(homedir(), ".pollis", "executable", "packagecompiler", string(hash((package_code, script_code, VERSION)), base = 16)))
+package = joinpath(folder, "Fractal")
+shipped_folder = joinpath(folder, "app")
+program = joinpath(shipped_folder, "bin", "fractal" * (Sys.iswindows() ? ".exe" : ""))
+source_file = joinpath(package, "src", "Fractal.jl")
+script_file = joinpath(folder, "fractal.jl")
+write(script_file, script_code)
+built_with = "create_app(\"$package\", \"$shipped_folder\"; executables = [\"fractal\" => \"julia_main\"], filter_stdlibs = true, force = true)"
+build_seconds = if isfile(program)
+    nothing
+else
+    mkpath(dirname(source_file))
+    write(joinpath(package, "Project.toml"), "name = \"Fractal\"\nuuid = \"722f75a4-b007-4460-b744-5cac965dea2b\"\n")
+    write(source_file, package_code)
+    previous = Base.active_project()
+    Pkg.activate(package)
+    Pkg.resolve()  # the package's Manifest.toml, which create_app expects
+    Pkg.activate(previous)
+    @elapsed create_app(package, shipped_folder; executables = ["fractal" => "julia_main"], filter_stdlibs = true, force = true)
+end
+
+# Run: the inputs as arguments, the numbers as repr writes them, which the program reads back to the same Float64
+counts_file = joinpath(folder, "counts.bin")
+arguments = [counts_file, string(height), string(width), repr(x0), repr(y0), repr(spacing), string(Int(julia_set)), repr(real(c)), repr(imag(c)), string(maxiter)]
+command = `$program $arguments`
+compiled_inside = parse(Int, readchomp(command))
+compiled_counts = read!(counts_file, Matrix{Int32}(undef, height, width))
+tool = "PackageCompiler"
+
+# Julia running the same program as a script, with the same arguments, for Start-Up and Run Time
+script_command = `$(Base.julia_cmd()) --startup-file=no $script_file $arguments`
+
+# The programs of this session, tool by tool, for Compare
+programs = @isdefined(programs) ? programs : Dict{String, Any}()
+programs[tool] = (seconds = something(build_seconds, get(programs, tool, (seconds = NaN,)).seconds), bytes = filesize(program), folder = shipped_folder, command = command)
+
+# Check: the count of every pixel, the program against Julia
+differ = count(compiled_counts .!= julia_counts)
+println(differ == 0 ? "The program of PackageCompiler and Julia give the same count at all $(length(julia_counts)) pixels" : "The program of PackageCompiler and Julia differ at $differ of $(length(julia_counts)) pixels")
+println("Pixels inside: $compiled_inside from the program, $julia_inside from Julia")
+'''
+
+[[codeBranches]]
+model = "staticcompiler"
+code = '''
+using StaticCompiler, StaticTools
+
+# The example: the Mandelbrot set, or the Julia set of c, on a grid of pixels
+julia_set = "{{example}}" == "julia"
+c = complex({{cre}}, {{cim}})  # the fixed point of the Julia set; the Mandelbrot set does not use it
+x0, x1, y0, y1 = julia_set ? (-1.6, 1.6, -1.0, 1.0) : (-2.2, 0.8, -1.2, 1.2)
+width = {{width}}
+height = round(Int, width * (y1 - y0) / (x1 - x0))
+spacing = (x1 - x0) / (width - 1)  # the distance between two pixels, across and down
+maxiter = Int32({{maxiter}})
+
+# The Julia code that computes the counts: the iterations of z^2 + c before |z| passes 2 for one pixel, and
+# fill_counts, which writes the count of every pixel into memory it is given, column by column, and returns the
+# number inside. Only native types in and out, no allocation, no error thrown: code that every tool can compile
+kernel_code = """
+function escape_time(zr, zi, cr, ci, maxiter::Int32)
+    k = zero(maxiter)
+    while k < maxiter
+        zr2 = zr * zr
+        zi2 = zi * zi
+        zr2 + zi2 > 4.0 && return k
+        zi = 2.0 * zr * zi + ci
+        zr = zr2 - zi2 + cr
+        k += one(maxiter)
+    end
+    return maxiter
+end
+
+function fill_counts(counts::Ptr{Int32}, height::Int64, width::Int64, x0::Float64, y0::Float64, spacing::Float64,
+                     julia_set::Int32, cr::Float64, ci::Float64, maxiter::Int32)::Int64
+    inside = 0
+    for j in 1:width, i in 1:height
+        x = x0 + (j - 1) * spacing
+        y = y0 + (i - 1) * spacing
+        steps = julia_set != 0 ? escape_time(x, y, cr, ci, maxiter) : escape_time(0.0, 0.0, x, y, maxiter)
+        unsafe_store!(counts, steps, i + (j - 1) * height)
+        inside += steps == maxiter
+    end
+    return inside
+end
+"""
+
+# Julia: the same code in this session, filling a Julia matrix through its pointer; GC.@preserve keeps the matrix
+# alive while its pointer is in use
+include_string(Main, kernel_code)
+julia_counts = Matrix{Int32}(undef, height, width)
+julia_inside = GC.@preserve julia_counts fill_counts(pointer(julia_counts), height, width, x0, y0, spacing, Int32(julia_set), real(c), imag(c), maxiter)
+
+# The program with no Julia runtime, written with StaticTools: argc and argv as C gives them (argv[1] is the program,
+# so the first argument is at 2), memory taken with MallocArray and given back with free, the file written and the
+# number printed through the C library. % Int32 truncates where Int32() could throw, and nothing here may throw
+static_code = """
+function static_main(argc::Int64, argv::Ptr{Ptr{UInt8}})
+    argc == 11 || return 1
+    height = argparse(Int64, argv, 3)
+    width = argparse(Int64, argv, 4)
+    counts = MallocArray{Int32}(undef, height, width)
+    inside = fill_counts(pointer(counts), height, width, argparse(Float64, argv, 5), argparse(Float64, argv, 6),
+                         argparse(Float64, argv, 7), argparse(Int64, argv, 8) % Int32, argparse(Float64, argv, 9),
+                         argparse(Float64, argv, 10), argparse(Int64, argv, 11) % Int32)
+    file = fopen(MallocString(argv, 2), c"wb")
+    fwrite(file, counts)
+    fclose(file)
+    free(counts)
+    printf(c"%lld\\n", inside)
+    return 0
+end
+"""
+include_string(Main, static_code)
+
+# The same program for julia as a script, started at the function marked @main, for julia to run beside the program
+program_code = """
+function fractal(args::Vector{String})::Cint
+    if length(args) != 10
+        println(Core.stderr, "usage: fractal counts.bin height width x0 y0 spacing julia_set cr ci maxiter")
+        return 1
+    end
+    height = parse(Int64, args[2])
+    width = parse(Int64, args[3])
+    counts = Vector{Int32}(undef, height * width)
+    inside = GC.@preserve counts fill_counts(pointer(counts), height, width, parse(Float64, args[4]), parse(Float64, args[5]),
+                                             parse(Float64, args[6]), parse(Int32, args[7]), parse(Float64, args[8]),
+                                             parse(Float64, args[9]), parse(Int32, args[10]))
+    write(args[1], counts)
+    println(Core.stdout, inside)
+    return 0
+end
+"""
+script_code = kernel_code * program_code * """
+function @main(args::Vector{String})::Cint
+    return fractal(args)
+end
+"""
+
+# Build: StaticCompiler compiles static_main of this session, with the clang and lld it brings, into one file in
+# ~/.pollis/executable/staticcompiler, a new folder for a new source or Julia version
+folder = mkpath(joinpath(homedir(), ".pollis", "executable", "staticcompiler", string(hash((kernel_code, static_code, script_code, VERSION)), base = 16)))
+source_file = joinpath(folder, "static_main.jl")
+write(source_file, kernel_code * static_code)
+script_file = joinpath(folder, "fractal.jl")
+write(script_file, script_code)
+shipped_folder = mkpath(joinpath(folder, "bin"))
+program = joinpath(shipped_folder, "fractal")
+built_with = "compile_executable(static_main, (Int64, Ptr{Ptr{UInt8}}), \"$shipped_folder\"; filename = \"fractal\")"
+build_seconds = isfile(program) ? nothing : @elapsed compile_executable(static_main, (Int64, Ptr{Ptr{UInt8}}), shipped_folder; filename = "fractal")
+
+# Run: the inputs as arguments, the numbers as repr writes them, which the program reads back to the same Float64
+counts_file = joinpath(folder, "counts.bin")
+arguments = [counts_file, string(height), string(width), repr(x0), repr(y0), repr(spacing), string(Int(julia_set)), repr(real(c)), repr(imag(c)), string(maxiter)]
+command = `$program $arguments`
+compiled_inside = parse(Int, readchomp(command))
+compiled_counts = read!(counts_file, Matrix{Int32}(undef, height, width))
+tool = "StaticCompiler"
+
+# Julia running the same program as a script, with the same arguments, for Start-Up and Run Time
+script_command = `$(Base.julia_cmd()) --startup-file=no $script_file $arguments`
+
+# The programs of this session, tool by tool, for Compare
+programs = @isdefined(programs) ? programs : Dict{String, Any}()
+programs[tool] = (seconds = something(build_seconds, get(programs, tool, (seconds = NaN,)).seconds), bytes = filesize(program), folder = shipped_folder, command = command)
+
+# Check: the count of every pixel, the program against Julia
+differ = count(compiled_counts .!= julia_counts)
+println(differ == 0 ? "The program of StaticCompiler and Julia give the same count at all $(length(julia_counts)) pixels" : "The program of StaticCompiler and Julia differ at $differ of $(length(julia_counts)) pixels")
+println("Pixels inside: $compiled_inside from the program, $julia_inside from Julia")
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "picture"
+label = "Picture of the Set"
+desc = "The counts the program wrote, as a picture on a log scale, with the real part across and the imaginary part down"
+code = '''
+using Plots
+
+xs = x0 .+ (0:width - 1) .* spacing
+ys = y0 .+ (0:height - 1) .* spacing
+heatmap(xs, ys, log1p.(compiled_counts), aspect_ratio = :equal, colorbar = false, xlabel = "real part", ylabel = "imaginary part", title = julia_set ? "Julia set of c = $c" : "Mandelbrot set", size = (700, 560))
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "build"
+label = "Source and Build Command"
+desc = "The Julia source the tool compiled, the call that built the program, and the command that runs it"
+code = '''
+print(read(source_file, String))
+println("Saved at ", source_file)
+println("Built with ", built_with)
+println("Run with ", command)
+'''
+
+[[actionGroups.actions]]
+id = "contents"
+label = "Program Contents"
+desc = "The size of the program and of the folder it comes in, and the libraries it needs when it runs"
+code = '''
+shipped_bytes = sum((lstat(joinpath(root, file)).size for (root, _, files) in walkdir(shipped_folder) for file in files); init = 0)
+shipped_files = sum((length(files) for (_, _, files) in walkdir(shipped_folder)); init = 0)
+println("The program: ", program, ", ", round(filesize(program) / 2^20, digits = 2), " MiB")
+println("Its folder: ", shipped_folder, ", ", shipped_files, " files, ", round(shipped_bytes / 2^20, digits = 2), " MiB in all")
+
+# The libraries it needs when it runs
+if Sys.isapple()
+    run(`otool -L $program`)
+elseif Sys.islinux()
+    run(`ldd $program`)
+else
+    println("On Windows, objdump -p of MinGW-w64 lists the DLLs a program needs, under DLL Name")
+end
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "sizes"
+label = "Sizes and Build Times"
+desc = "Each tool whose tab was run in this session, with the time its build took, the size of its program and the size of the folder that goes with it"
+code = '''
+bytes_under(path) = sum((lstat(joinpath(root, file)).size for (root, _, files) in walkdir(path) for file in files); init = 0)
+mebibytes(bytes) = string(round(bytes / 2^20, digits = 2), " MiB")
+println(rpad("Tool", 18), lpad("Build", 12), lpad("Program", 14), lpad("Folder", 14))
+for (name, build) in sort!(collect(programs), by = first)
+    seconds = isnan(build.seconds) ? "earlier" : string(round(build.seconds, digits = 1), " s")
+    println(rpad(name, 18), lpad(seconds, 12), lpad(mebibytes(build.bytes), 14), lpad(mebibytes(bytes_under(build.folder)), 14))
+end
+length(programs) == 1 && println("Run another tab of the page to compare its tool with this one")
+'''
+
+[[actionGroups.actions]]
+id = "times"
+label = "Start-Up and Run Time"
+desc = "Each tool's program run five times, the fastest kept, from start to end; beside it, julia running the same program as a script, and fill_counts alone in this session"
+code = '''
+fastest_of_five(command) = minimum(@elapsed(read(command)) for _ in 1:5)
+for (name, build) in sort!(collect(programs), by = first)
+    println(rpad(name, 18), lpad(round(fastest_of_five(build.command) * 1e3, sigdigits = 4), 10), " ms, the whole program")
+end
+println(rpad("julia", 18), lpad(round(fastest_of_five(script_command) * 1e3, sigdigits = 4), 10), " ms, julia running fractal.jl as a script")
+session_counts = similar(julia_counts)
+fill_seconds = minimum(@elapsed(GC.@preserve session_counts fill_counts(pointer(session_counts), height, width, x0, y0, spacing, Int32(julia_set), real(c), imag(c), maxiter)) for _ in 1:5)
+println(rpad("Julia", 18), lpad(round(fill_seconds * 1e3, sigdigits = 4), 10), " ms, fill_counts alone in this session")
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "inside"
+label = "Share of Pixels Inside"
+desc = "The share of pixels that did not escape in the iterations allowed, as the program counted them, and the area they cover in the region drawn"
+code = '''
+share = compiled_inside / length(compiled_counts)
+region = (x1 - x0) * (y1 - y0)
+println(round(100 * share, digits = 2), "% of the pixels did not escape in ", maxiter, " iterations")
+println("They cover ", round(share * region, sigdigits = 4), " of the ", region, " of the region drawn")
+'''
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+key = "JLC2026a"
+
+[[references]]
+key = "JLC2026b"
+
+[[references]]
+key = "Sho2026a"
+
+[[references]]
+key = "Kel...2026a"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "Jul1918a"
+
+[[references]]
+key = "Man1980a"
