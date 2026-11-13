@@ -1511,6 +1511,7 @@ export function activate(
         registerCommand('language-julia.restartREPL', restartREPL),
         registerCommand('language-julia.replSession', async () => isConnected() ? g_replSession : 0),
         registerCommand('language-julia.pollisUpdateDataPackages', updateDataPackages),
+        registerCommand('language-julia.pollisBuildReferences', buildReferences),
         registerCommand('language-julia.disconnectREPL', disconnectREPL),
         registerCommand('language-julia.selectBlock', selectJuliaBlock),
         registerCommand('language-julia.executeCodeBlockOrSelection', evaluateBlockOrSelection),
@@ -1737,6 +1738,38 @@ async function updateDataPackages(): Promise<DataPackagesAnswer> {
     } catch (err) {
         const stderr = (err as { stderr?: string }).stderr
         return { error: 'failed', detail: stderr?.trim().split(/\r?\n/).pop() ?? String(err) }
+    } finally {
+        g_installingPollisDB = false
+    }
+}
+
+// POLLIS: Build the PollisReferences database again, for the workbench when a window opens a Pollis Workspace whose
+// references its views do not read yet: build_references.jl in a hidden process; never while an install runs, which
+// builds it too. Whether it ran.
+async function buildReferences(): Promise<boolean> {
+    if (g_installingPollisDB) {
+        return false
+    }
+    let juliaExecutable: JuliaExecutable
+    try {
+        juliaExecutable = await g_ExecutableFeature.getExecutable()
+    } catch {
+        return false
+    }
+    g_installingPollisDB = true
+    try {
+        await whenDuckDBReady()
+        const script = path.join(g_context.extensionPath, 'scripts', 'terminalserver', 'build_references.jl')
+        await promisify(child_process.execFile)(juliaExecutable.command, [
+            ...juliaExecutable.args,
+            '--startup-file=no',
+            '--history-file=no',
+            script,
+        ], { env: { ...process.env, ...getCustomEnvironmentVariables() }, windowsHide: true })
+        return true
+    } catch (err) {
+        console.error('[pollis] The PollisReferences database could not be built again', err)
+        return false
     } finally {
         g_installingPollisDB = false
     }

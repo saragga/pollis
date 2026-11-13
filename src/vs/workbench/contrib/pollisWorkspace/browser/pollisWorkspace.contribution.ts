@@ -33,7 +33,7 @@ export type PollisWorkspaceFolder = 'data' | 'knowledge_base' | 'reports' | 'met
 /** The folder of each kind, as a new workspace names it, what its README says it holds, and its subfolders. */
 const FOLDERS: Readonly<Record<PollisWorkspaceFolder, { readonly name: string; readonly readme: string; readonly subfolders?: readonly string[] }>> = {
 	data: { name: 'data', readme: 'Datasets of your own, and the copies of articles and data saved with Save a Copy... (Compose > Replication) and the WRDS page.' },
-	knowledge_base: { name: 'knowledge_base', readme: 'Your own books, articles and reports, as PDF, Markdown or text files, which the Knowledge Base (Compose > Knowledge for AI Models) lists with its own texts and indexes. A text is of the type of its folder: books/, articles/ or reports/.', subfolders: ['books', 'articles', 'reports'] },
+	knowledge_base: { name: 'knowledge_base', readme: 'Your own books, articles and reports, as PDF, Markdown or text files, which the Knowledge Base (Compose > Knowledge for AI Models) lists with its own texts and indexes. A text is of the type of its folder: books/, articles/ or reports/. Your references, the works you save or add in Pollis with your corrections, citation counts and abstracts, are in references/.', subfolders: ['books', 'articles', 'reports'] },
 	reports: { name: 'reports', readme: 'The reports and slides that Pollis writes from notebooks, one folder each.' },
 	methods: { name: 'methods', readme: 'Your methods, one folder each.' },
 	workflows: { name: 'workflows', readme: 'Your workflows.' },

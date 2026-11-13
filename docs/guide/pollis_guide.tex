@@ -1066,7 +1066,7 @@ Reports are written in the \texttt{reports} folder of a \emph{Pollis Workspace}:
 your own work, outside Pollis. To make one, choose \ui{File > New Pollis Workspace...}, give the folder a
 name (it starts as Pollis Workspace, in your Documents), and click \ui{Create}. Pollis makes the folder,
 puts a \texttt{pollis.toml} file in it and a folder for each kind of file, each with a README: \texttt{data}
-(your datasets and saved copies), \texttt{knowledge\_base} (your books, articles and reports), \texttt{reports},
+(your datasets and saved copies), \texttt{knowledge\_base} (your books, articles and reports, and your references), \texttt{reports},
 \texttt{methods}, \texttt{workflows}, \texttt{panels}, \texttt{toolboxes} (the toolboxes you make to share your
 panels) and \texttt{changes}, and opens it. Pollis looks in these
 folders first; \texttt{pollis.toml} names them, so a folder you rename is renamed there too. Next time, choose
@@ -2200,8 +2200,11 @@ and \texttt{articles} are views over your own files in \texttt{\textasciitilde/.
 \end{center}
 Pollis's own (\texttt{pollis\_references}, \texttt{pollis\_counts}) come from PollisReferences.jl and are replaced at each update. Yours
 (\texttt{user\_references}, \texttt{user\_counts}, \texttt{user\_versions}) are views over your files in
-\texttt{\textasciitilde/.pollis/references}, never replaced. A work Pollis already has is not added again: it keeps
-Pollis's key, and only its versions and counts are yours.
+\texttt{knowledge\_base/references} of your Pollis Workspace, never replaced: those of the workspace last opened,
+as a window that opens one makes the database read its folder. A work Pollis already has is not added again: it keeps
+Pollis's key, and only its versions and counts are yours. A work you save or correct is written in the workspace of
+the window, and a window without one asks you to open one. Your references kept in
+\texttt{\textasciitilde/.pollis/references} before are moved into the workspace when you agree.
 
 \subhead{PollisBenchmarks}
 \begin{center}\small

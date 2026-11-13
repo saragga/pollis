@@ -39,6 +39,7 @@ import { registerNewJuliaFileCommand } from './commands/juliaFile.command.js';
 import './juliaNotebookKernel.contribution.js';
 import './credentialEnvironment.contribution.js';
 import './customCopyFileSystem.contribution.js';
+import './userReferences.contribution.js';
 import { CNN_PANEL } from './commands/cnn.command.js';
 import { GNN_PANEL } from './commands/gnn.command.js';
 import { TRANSFORMER_PANEL } from './commands/transformer.command.js';

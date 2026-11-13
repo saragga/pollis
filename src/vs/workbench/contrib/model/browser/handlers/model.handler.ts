@@ -25,7 +25,7 @@ import { customCopyOverlayUri, customCopyUri, CustomCopyKind } from '../common/c
 import { ISecretStorageService } from '../../../../../platform/secrets/common/secrets.js';
 import { IWebviewService } from '../../../webview/browser/webview.js';
 import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
-import { IReference, ReferenceLibrary, referenceBibTeX, referenceOfBibTeX, referencePaper, referencesFolderOf } from '../common/referenceLibrary.js';
+import { IReference, NoPollisWorkspaceError, ReferenceLibrary, referenceBibTeX, referenceOfBibTeX, referencePaper, referencesFolderOf } from '../common/referenceLibrary.js';
 import { normaliseBibText, parseBibTeX } from '../common/referenceImport.js';
 
 /**
@@ -681,8 +681,8 @@ const bibMigrations = new Map<string, Promise<void>>();
  * of the user's. Edit corrects a work everywhere it is cited, keeping its key; Restore Default drops the correction.
  * Add finds the work in References and only adds it to the panel, or else makes it one of the user's, with a key in
  * Pollis' convention. Remove hides one of the panel's own (Restore brings it back) or takes an added one off the
- * panel; the work stays in References. What the panel shows is kept in ~/.pollis/references/panels.jsonl. A panel's
- * former `<panel>.bib` file is read into References once, then renamed `<panel>.bib.migrated`.
+ * panel; the work stays in References. What the panel shows is kept in panels.jsonl of the user's references. A panel's
+ * former `<panel>.bib` file, in ~/.pollis/references, is read into References once, then renamed `<panel>.bib.migrated`.
  */
 export function createReferenceWiring(
 	webview: { postMessage(message: unknown): void; readonly onMessage: Event<{ readonly message: IReferenceMessage }> },
@@ -734,10 +734,16 @@ export function createReferenceWiring(
 	const postReferences = async (): Promise<void> => {
 		let items: IReferenceItem[] = [];
 		try {
-			await migrateBib();
+			// Read in once a Pollis Workspace is open, where the user's references are written
+			await migrateBib().catch(error => {
+				bibMigrations.delete(panelId);
+				if (!(error instanceof NoPollisWorkspaceError)) {
+					throw error;
+				}
+			});
 			items = await listItems();
 		} catch (error) {
-			notificationService.error(localize('pollis.references.readFailed', "Could not read your references in {0}: {1}", folder.fsPath, String(error)));
+			notificationService.error(localize('pollis.references.readFailed', "Could not read your references in {0}: {1}", (await library.folder()).fsPath, String(error)));
 		}
 		webview.postMessage({ command: 'references', references: items });
 	};
@@ -905,10 +911,16 @@ export function createReferenceWiring(
 					break;
 			}
 		} catch (error) {
-			if (msg.command === 'saveReference') {
-				webview.postMessage({ command: 'referenceSaveFailed', message: localize('pollis.references.writeFailed', "Could not save the reference in {0}: {1}", folder.fsPath, String(error)) });
+			const where = (await library.folder()).fsPath;
+			if (error instanceof NoPollisWorkspaceError) {
+				// The notification asking for a Pollis Workspace says why
+				if (msg.command === 'saveReference') {
+					webview.postMessage({ command: 'referenceSaveFailed', message: localize('pollis.references.noWorkspace', "Open a Pollis Workspace to save your references.") });
+				}
+			} else if (msg.command === 'saveReference') {
+				webview.postMessage({ command: 'referenceSaveFailed', message: localize('pollis.references.writeFailed', "Could not save the reference in {0}: {1}", where, String(error)) });
 			} else {
-				notificationService.error(localize('pollis.references.updateFailed', "Could not update your references in {0}: {1}", folder.fsPath, String(error)));
+				notificationService.error(localize('pollis.references.updateFailed', "Could not update your references in {0}: {1}", where, String(error)));
 			}
 		}
 	}));

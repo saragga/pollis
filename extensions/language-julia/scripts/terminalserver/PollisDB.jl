@@ -119,11 +119,28 @@ const JOURNALS_DB = joinpath(homedir(), ".pollis", "databases", "PollisJournals.
 const JOURNALS_STAMP = JOURNALS_DB * ".stamp"
 
 """
-The references of Pollis and of the user: `pollis.json`, those that come with Pollis, which the Julia extension copies
-there from each new Pollis; and what the user adds, a line of JSON each, which Pollis appends to (the last line of a row wins):
-`references.jsonl`, `counts.jsonl`, `versions.jsonl` and `panels.jsonl`.
+The references of Pollis: `pollis.json`, those that come with Pollis, which the Julia extension copies there from each
+new Pollis, and `package.json`, those of PollisReferences.jl.
 """
 const REFERENCES_HOME = joinpath(homedir(), ".pollis", "references")
+"""
+The file that names the folder of the user's references, `knowledge_base/references` of the Pollis Workspace last
+opened, which Pollis writes when a window opens one.
+"""
+const REFERENCES_WORKSPACE = joinpath(REFERENCES_HOME, "workspace.txt")
+
+"""
+The folder of what the user adds, a line of JSON each, which Pollis appends to (the last line of a row wins):
+`references.jsonl`, `counts.jsonl`, `versions.jsonl` and `panels.jsonl`. It is the folder `REFERENCES_WORKSPACE`
+names, else, before a Pollis Workspace is opened, `REFERENCES_HOME`.
+"""
+function user_references_home()
+    if isfile(REFERENCES_WORKSPACE)
+        folder = strip(read(REFERENCES_WORKSPACE, String))
+        isdir(folder) && return folder
+    end
+    return REFERENCES_HOME
+end
 """PollisReferences.jl: the references of Pollis and their counts, which may be newer than those this Pollis came with."""
 const REFERENCES = Base.PkgId(UUID("16fe3122-f013-44bd-a8ad-a8555e1fbab1"), "PollisReferences")
 const REFERENCES_URL = "https://github.com/Trumpingtons/PollisReferences.jl"
@@ -135,7 +152,7 @@ the references of `pollis.json` when they have every key its panels cite, so tha
 a new Pollis. The References pages of Pollis read it too.
 """
 const REFERENCES_PACKAGE = joinpath(REFERENCES_HOME, "package.json")
-"""The PollisReferences database: the references of Pollis as tables and the user's as views over `REFERENCES_HOME`, made by `build_references`."""
+"""The PollisReferences database: the references of Pollis as tables and the user's as views over `user_references_home()`, made by `build_references`."""
 const REFERENCES_DB = joinpath(homedir(), ".pollis", "databases", "PollisReferences.duckdb")
 """The SQL that `REFERENCES_DB` was made with, and the size and time of the `pollis.json` and `REFERENCES_PACKAGE` it was made from."""
 const REFERENCES_STAMP = REFERENCES_DB * ".stamp"
@@ -1904,12 +1921,13 @@ const PANEL_COLUMNS = "panel: 'VARCHAR', key: 'VARCHAR', shown: 'BOOLEAN', chang
 
 """
 The SQL statements of PollisReferences. The references of Pollis, from `pollis.json`, are tables, replaced when Pollis
-brings new ones; the user's are views over the JSON Lines files of `REFERENCES_HOME`, the last line of each row winning,
+brings new ones; the user's are views over the JSON Lines files of `user_references_home()`, the last line of each row winning,
 so they always show what Pollis has appended. `all_references` has each work once: a user's row whose key is a reference
 of Pollis corrects it, and one with a `pollis_key` (a work the user had before Pollis brought it) gives way to Pollis'.
 """
 function references_sql(source::AbstractString = joinpath(REFERENCES_HOME, "pollis.json"))
-    file(name) = replace(joinpath(REFERENCES_HOME, name), "\\" => "/", "'" => "''")
+    home = user_references_home()
+    file(name) = replace(joinpath(home, name), "\\" => "/", "'" => "''")
     lines(name, columns) = "read_json('$(file(name))', format = 'newline_delimited', ignore_errors = true, columns = {$columns})"
     # Each row with its line, so that the last line of a row wins, as the files are appended to
     numbered(name, columns) = "(SELECT *, row_number() OVER () AS line FROM $(lines(name, columns)))"
@@ -2065,8 +2083,9 @@ end
 
 Make the PollisReferences database `REFERENCES_DB` when it is missing, or the references of Pollis (`pollis.json`
 in `REFERENCES_HOME`, which the Julia extension copies from each Pollis, and `REFERENCES_PACKAGE`, from PollisReferences.jl,
-taken instead when it has every key the panels cite) or the SQL of `references_sql` have changed since it was made.
-The references of Pollis are replaced; the user's, in the JSON Lines files beside them, are
+taken instead when it has every key the panels cite) or the SQL of `references_sql`, with the folder of the user's
+references, have changed since it was made. The references of Pollis are replaced; the user's, in the JSON Lines files
+of `user_references_home()`, are
 never touched: the views read them whenever they are queried. Written under a temporary name and moved into place,
 as `build` does.
 """
@@ -2074,7 +2093,7 @@ function build_references()
     references_outdated() || return nothing
     stamp = references_stamp()
     # The views need files to read before the user adds anything
-    foreach(name -> (file = joinpath(REFERENCES_HOME, name); isfile(file) || touch(file)), ["references.jsonl", "counts.jsonl", "versions.jsonl", "panels.jsonl"])
+    foreach(name -> (file = joinpath(user_references_home(), name); isfile(file) || touch(file)), ["references.jsonl", "counts.jsonl", "versions.jsonl", "panels.jsonl"])
     DuckDB = get(() -> Base.require(DUCKDB), Base.loaded_modules, DUCKDB)
     get(() -> Base.require(DBINTERFACE), Base.loaded_modules, DBINTERFACE)
     mkpath(dirname(REFERENCES_DB))

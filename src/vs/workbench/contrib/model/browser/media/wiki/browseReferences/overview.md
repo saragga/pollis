@@ -9,6 +9,9 @@ The **Source** of each work in Browse References says where it came from, and th
 | Corrected | A built-in work, as you corrected it |
 | Built-in | A work that comes with Pollis |
 
+## Where Your References Are Kept
+Your references, the works you save from Discover Literature or add to a panel's References, your corrections of the works of Pollis, their records and citation counts, are kept in the `knowledge_base/references` folder of the Pollis Workspace open, as lines of JSON: `references.jsonl`, `counts.jsonl`, `versions.jsonl` and `panels.jsonl`, the last line of a work winning. They go with the workspace, and each workspace has its own. The `user_references` and `all_references` tables of the PollisReferences database read the workspace last opened: a window that opens one makes the database read its folder. A window without a Pollis Workspace shows the references of the last one and saves none: it asks you to open a workspace. References kept in `~/.pollis/references` before are moved into the workspace, with their records and counts, when you agree.
+
 ## What Remove and Undo Correction Do in Browse References
 **Remove** deletes a work of yours from your references, with its records and citation counts, and takes it off the panels you added it to. **Undo Correction** goes back to the work as Pollis has it, wherever it is cited. Your saved works and corrections live in `~/.pollis/references`, apart from the built-in library, so an update of Pollis leaves them as they are.
 

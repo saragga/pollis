@@ -4,11 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 // Pollis: the references of Pollis and of the user. Those of Pollis come with it (media/references/references.json, made
-// from references.duckdb by compile-toml); the user's are lines of JSON in ~/.pollis/references/, appended to, the last
-// line of a row winning: references.jsonl (the works the user saved or added, and corrections of Pollis' works, by key),
+// from references.duckdb by compile-toml); the user's are lines of JSON in knowledge_base/references/ of the Pollis
+// Workspace open, appended to, the last line of a row winning: references.jsonl (the works the user saved or added, and corrections of Pollis' works, by key),
 // counts.jsonl (citation counts, dated), versions.jsonl (the records of a work in an index: the article, a preprint...)
 // and panels.jsonl (what the user added to or hid from the References of a panel). PollisDB.build_references makes the
-// PollisReferences database of them: pollis_* tables, user_* views and all_references, which this module mirrors.
+// PollisReferences database of them: pollis_* tables, user_* views and all_references, which this module mirrors. Its
+// views read the folder of the Pollis Workspace last opened, which ~/.pollis/references/workspace.txt names
+// (userReferences.contribution.ts writes it); a window without a Pollis Workspace reads that folder too, and writes
+// nothing.
 
 import { VSBuffer } from '../../../../../base/common/buffer.js';
 import { FileAccess } from '../../../../../base/common/network.js';
@@ -147,9 +150,35 @@ const POLLIS_REFERENCES = 'vs/workbench/contrib/model/browser/media/references/r
 
 let pollisReferences: Promise<IPollisReferences> | undefined;
 
-/** ~/.pollis/references, in the home folder `userHome`. */
+/** ~/.pollis/references, in the home folder `userHome`: the references of Pollis, as installed, and the file that names the folder of the user's. */
 export function referencesFolderOf(userHome: URI): URI {
 	return joinPath(userHome, '.pollis', 'references');
+}
+
+/** The file of ~/.pollis/references that names the folder of the user's references of the Pollis Workspace last opened. */
+export const WORKSPACE_POINTER = 'workspace.txt';
+
+/** The files of the user's references. */
+export const USER_REFERENCE_FILES = ['references.jsonl', 'counts.jsonl', 'versions.jsonl', 'panels.jsonl'];
+
+/** A write to the user's references in a window without a Pollis Workspace, where they are kept. */
+export class NoPollisWorkspaceError extends Error {
+	constructor() {
+		super('No Pollis Workspace is open');
+	}
+}
+
+/** What this window's Pollis Workspace gives the library: the folder of the user's references in it, and what to do when there is none. */
+interface IWorkspaceReferences {
+	readonly folder: Promise<URI | undefined>;
+	readonly askForWorkspace: () => void;
+}
+
+let workspaceReferences: IWorkspaceReferences | undefined;
+
+/** Sets the folder of the user's references in this window's Pollis Workspace, as userReferences.contribution.ts finds it. */
+export function setWorkspaceReferences(references: IWorkspaceReferences): void {
+	workspaceReferences = references;
 }
 
 /** The rows of a JSON Lines `text`, a line cut short skipped. */
@@ -412,13 +441,32 @@ function compact<T extends object>(row: T): T {
  */
 export class ReferenceLibrary {
 
-	private readonly folder: URI;
+	/** ~/.pollis/references. */
+	private readonly home: URI;
 
 	constructor(
 		private readonly fileService: IFileService,
 		userHome: URI,
 	) {
-		this.folder = referencesFolderOf(userHome);
+		this.home = referencesFolderOf(userHome);
+	}
+
+	/**
+	 * The folder of the user's references, and whether it may be written: that of this window's Pollis Workspace, else
+	 * the folder of the one last opened, as the database reads, else ~/.pollis/references, neither written.
+	 */
+	private async userFolder(): Promise<{ readonly folder: URI; readonly writable: boolean }> {
+		const own = await workspaceReferences?.folder.catch(() => undefined);
+		if (own) {
+			return { folder: own, writable: true };
+		}
+		const named = (await this.fileService.readFile(joinPath(this.home, WORKSPACE_POINTER)).then(content => content.value.toString().trim(), () => ''));
+		return { folder: named ? URI.file(named) : this.home, writable: false };
+	}
+
+	/** The folder of the user's references, as the messages of a page name it. */
+	async folder(): Promise<URI> {
+		return (await this.userFolder()).folder;
 	}
 
 	/**
@@ -433,7 +481,7 @@ export class ReferenceLibrary {
 				const panels: IPollisPanel[] = shipped.panels ?? [];
 				let { references = [], counts = [] }: { references?: IReference[]; counts?: ICitationCount[] } = shipped;
 				try {
-					const latest = JSON.parse((await this.fileService.readFile(joinPath(this.folder, 'package.json'))).value.toString());
+					const latest = JSON.parse((await this.fileService.readFile(joinPath(this.home, 'package.json'))).value.toString());
 					const keys = new Set((latest.references ?? []).map((reference: IReference) => reference.key));
 					if (keys.size && panels.every(panel => panel.keys.every(key => keys.has(key)))) {
 						({ references, counts = [] } = latest);
@@ -452,17 +500,23 @@ export class ReferenceLibrary {
 
 	private async readLines<T>(name: string): Promise<T[]> {
 		try {
-			return parseLines<T>((await this.fileService.readFile(joinPath(this.folder, name))).value.toString());
+			return parseLines<T>((await this.fileService.readFile(joinPath((await this.userFolder()).folder, name))).value.toString());
 		} catch {
 			// No file yet
 			return [];
 		}
 	}
 
+	/** Appends `rows` to the file `name` of the user's references; without a Pollis Workspace, asks for one and throws `NoPollisWorkspaceError`. */
 	private async append(name: string, rows: readonly object[]): Promise<void> {
 		if (rows.length) {
+			const { folder, writable } = await this.userFolder();
+			if (!writable) {
+				workspaceReferences?.askForWorkspace();
+				throw new NoPollisWorkspaceError();
+			}
 			const text = rows.map(row => JSON.stringify(compact(row)) + '\n').join('');
-			await this.fileService.writeFile(joinPath(this.folder, name), VSBuffer.fromString(text), { append: true });
+			await this.fileService.writeFile(joinPath(folder, name), VSBuffer.fromString(text), { append: true });
 		}
 	}
 
@@ -511,7 +565,10 @@ export class ReferenceLibrary {
 			}
 		}
 		if (found.length) {
-			await this.append('references.jsonl', found);
+			// Written where the user's references may be written; else known for this reading only
+			if ((await this.userFolder()).writable) {
+				await this.append('references.jsonl', found);
+			}
 			for (const reference of found) {
 				user.set(reference.key, reference);
 			}

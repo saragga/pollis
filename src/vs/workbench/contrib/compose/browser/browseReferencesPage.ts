@@ -14,7 +14,7 @@ import { IStorageService } from '../../../../platform/storage/common/storage.js'
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
-import { ICitationCount, ReferenceLibrary, referenceVenue } from '../../model/browser/common/referenceLibrary.js';
+import { ICitationCount, NoPollisWorkspaceError, ReferenceLibrary, referenceVenue } from '../../model/browser/common/referenceLibrary.js';
 import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
 import { FEWEST_ROWS, rowsChoiceCss, rowsChoiceScript, sortHeadingsCss, sortHeadingsScript, sortHint, stickyHeadCss, stickyHeadScript, storedRows, storeRows } from '../../model/browser/webviews/webviewPager.js';
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
@@ -196,7 +196,17 @@ async function openBrowseReferences(accessor: ServicesAccessor, keys: readonly s
 	};
 
 	disposables.add(webviewInput.webview.onMessage(async (e: { message: BrowseMessage }) => {
-		const message = e.message;
+		try {
+			await handle(e.message);
+		} catch (error) {
+			// Without a Pollis Workspace, the notification asking for one says why
+			if (!(error instanceof NoPollisWorkspaceError)) {
+				notificationService.error(localize('browseReferences.changeFailed', "Could not change your references in {0}: {1}", (await library.folder()).fsPath, String(error)));
+			}
+		}
+	}));
+
+	const handle = async (message: BrowseMessage) => {
 		switch (message.command) {
 			case 'ready':
 				await postWorks();
@@ -243,7 +253,7 @@ async function openBrowseReferences(accessor: ServicesAccessor, keys: readonly s
 				}
 				break;
 		}
-	}));
+	};
 }
 
 function pageHtml(rows: number): string {

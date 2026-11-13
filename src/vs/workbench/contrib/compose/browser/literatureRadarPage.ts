@@ -28,7 +28,7 @@ import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { API_PROVIDERS, ProviderRequests } from '../../model/browser/common/apiProviders.js';
 import { readReferences, ReferenceFormat } from '../../model/browser/common/referenceImport.js';
-import { findReference, ICitationCount, IReference, IReferenceVersion, nameAsReference, ReferenceLibrary, referenceBibTeX } from '../../model/browser/common/referenceLibrary.js';
+import { findReference, ICitationCount, IReference, IReferenceVersion, nameAsReference, NoPollisWorkspaceError, referenceBibTeX, ReferenceLibrary } from '../../model/browser/common/referenceLibrary.js';
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
 import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
@@ -50,7 +50,7 @@ import { BROWSE_REFERENCES_COMMAND_ID } from './browseReferencesPage.js';
 // preprint and its article, are each a row of their own, grouped under the most cited, their counts never added up. OpenAlex has each article's citation percentile
 // against its field and year and its journal's 2-year mean citedness; Semantic Scholar has its influential citations,
 // those that build on the article. The Norwegian level and the SJR quartile the user imported come from PollisJournals.
-// The articles the user picks are kept, and saved to the user's References (~/.pollis/references) with their versions
+// The articles the user picks are kept, and saved to the user's References (knowledge_base/references of the Pollis Workspace) with their versions
 // and citation counts, for a replication among other uses.
 // Compose > Literature Radar > Import References: the same page for references the user brings, as BibTeX (or BibLaTeX),
 // RIS, CSL-JSON or a list of DOIs, looked up in the two indexes, by DOI or else by title, or kept as the file has them;
@@ -843,8 +843,13 @@ function openLiteratureRadar(accessor: ServicesAccessor, mode: PageMode): void {
 				}
 				await library.addVersions(versions);
 				await library.addCounts(counts);
-			} catch {
+			} catch (error) {
 				failed++;
+				// Without a Pollis Workspace, none of the others can be saved either
+				if (error instanceof NoPollisWorkspaceError) {
+					failed += articles.length - index - 1;
+					break;
+				}
 			}
 		}
 		webviewInput.webview.postMessage({ command: 'saved', saved: await getSaved(), failed });
