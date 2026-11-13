@@ -132,17 +132,20 @@
 			"abstract": "We present the Julia package Manifolds.jl , providing a fast and easy-to-use library of Riemannian manifolds and Lie groups. This package enables working with data defined on a Riemannian manifold, such as the circle, the sphere, symmetric positive definite matrices, or one of the models for hyperbolic spaces. We introduce a common interface, available in ManifoldsBase.jl , with which new manifolds, applications, and algorithms can be implemented. We demonstrate the utility of Manifolds.jl using Bézier splines, an optimization task on manifolds, and principal component analysis on nonlinear data. In a benchmark, Manifolds.jl outperforms all comparable packages for low-dimensional manifolds in speed; over Python and Matlab packages, the improvement is often several orders of magnitude, while over C/C++ packages, the improvement is two-fold. For high-dimensional manifolds, it outperforms all packages except for Tensorflow-Riemopt, which is specifically tailored for high-dimensional manifolds.",
 			"abstract_source": "openalex",
 			"keywords": [
-				"Riemannian manifolds",
-				"Lie groups",
+				"Riemannian manifold",
+				"Lie group",
+				"nonlinear spaces",
+				"exponential map",
+				"logarithmic map",
 				"Julia",
-				"symmetric positive definite matrices",
-				"hyperbolic space",
-				"Bezier splines",
-				"manifold optimization",
-				"principal component analysis",
-				"software benchmarking"
+				"scientific computing",
+				"optimization on manifolds"
 			],
-			"keywords_source": "openalex",
+			"keywords_source": "pdf",
+			"classifications": [
+				"ACM CCS: Software and its engineering → Software libraries and repositories; Mathematics of computing → Mathematical software performance"
+			],
+			"classifications_source": "pdf",
 			"legacy_key": "axen2023",
 			"source": "crossref",
 			"retrieved": "2026-10-23",
@@ -638,6 +641,14 @@
 			"number": "4",
 			"doi": "10.18637/jss.v104.i04",
 			"openalex": "W4312977016",
+			"keywords": [
+				"epidemic",
+				"individual level models",
+				"transmission networks",
+				"Bayesian",
+				"Julia"
+			],
+			"keywords_source": "pdf",
 			"source": "crossref",
 			"retrieved": "2026-11-02",
 			"checked": true,
@@ -1819,6 +1830,47 @@
 			"open_access": true
 		},
 		{
+			"key": "BCCKS...2018a",
+			"type": "article",
+			"title": "Julia: dynamism and performance reconciled by design",
+			"authors": [
+				"Bezanson, Jeff",
+				"Chen, Jiahao",
+				"Chung, Benjamin",
+				"Karpinski, Stefan",
+				"Shah, Viral B.",
+				"Vitek, Jan",
+				"Zoubritzky, Lionel"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2018,
+			"journal": "Proceedings of the ACM on Programming Languages",
+			"volume": "2",
+			"number": "OOPSLA",
+			"pages": "1-23",
+			"issn": "2475-1421",
+			"doi": "10.1145/3276490",
+			"openalex": "W2898321943",
+			"oa_url": "https://dl.acm.org/doi/pdf/10.1145/3276490",
+			"abstract": "Julia is a programming language for the scientific community that combines features of productivity languages, such as Python or MATLAB, with characteristics of performance-oriented languages, such as C++ or Fortran. Julia's productivity features include: dynamic typing, automatic memory management, rich type annotations, and multiple dispatch. At the same time, Julia allows programmers to control memory layout and leverages a specializing just-in-time compiler to eliminate much of the overhead of those features. This paper details the design choices made by the creators of Julia and reflects on the implications of those choices for performance and usability.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"multiple dispatch",
+				"just-in-time compilation",
+				"dynamic languages"
+			],
+			"keywords_source": "pdf",
+			"classifications": [
+				"ACM CCS: Software and its engineering → Language features; General programming languages; Just-in-time compilers; Multiparadigm languages"
+			],
+			"classifications_source": "pdf",
+			"source": "crossref",
+			"retrieved": "2026-11-13",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "BCDMM...2025a",
 			"type": "article",
 			"title": "Small-coupling dynamic cavity: A Bayesian mean-field framework for epidemic inference",
@@ -1937,6 +1989,73 @@
 			"open_access": false
 		},
 		{
+			"key": "BDHHK...2025a",
+			"type": "article",
+			"title": "Improved algorithms and novel applications of the FrankWolfe.jl library",
+			"authors": [
+				"Besançon, Mathieu",
+				"Designolle, Sébastien",
+				"Halbey, Jannis",
+				"Hendrych, Deborah",
+				"Kuzinowicz, Dominik",
+				"Pokutta, Sebastian",
+				"Troppens, Hannah",
+				"Herrmannsdoerfer, Daniel Viladrich",
+				"Wirth, Elias"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2025,
+			"journal": "ACM Transactions on Mathematical Software",
+			"volume": "51",
+			"number": "4",
+			"pages": "1-33",
+			"doi": "10.1145/3765626",
+			"arxiv": "2501.14613",
+			"openalex": "W4413943347",
+			"url": "https://arxiv.org/abs/2501.14613",
+			"oa_url": "https://dl.acm.org/doi/pdf/10.1145/3765626",
+			"abstract": "Frank-Wolfe (FW) algorithms have emerged as an essential class of methods for constrained optimization, especially on large-scale problems. In this paper, we summarize the algorithmic design choices and progress made in the last years of the development of FrankWolfe.jl, a Julia package gathering high-performance implementations of state-of-the-art FW variants. We review key use cases of the library in the recent literature, which match its original dual purpose: first, becoming the de-facto toolbox for practitioners applying FW methods to their problem, and second, offering a modular ecosystem to algorithm designers who experiment with their own variants and implementations of algorithmic blocks. Finally, we demonstrate the performance of several FW variants on important problem classes in several experiments, which we curated in a separate repository for continuous benchmarking.",
+			"abstract_source": "arxiv",
+			"keywords": [
+				"math.OC",
+				"cs.MS"
+			],
+			"keywords_source": "arxiv",
+			"source": "arxiv",
+			"retrieved": "2026-11-13",
+			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "BDM2026a",
+			"type": "article",
+			"title": "LikelihoodProfiler.jl: Unified profile-likelihood workflows for identifiability and confidence intervals",
+			"authors": [
+				"Borisov, Ivan",
+				"Demin, Aleksander",
+				"Metelkin, Evgeny"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2026,
+			"journal": "Journal of Open Source Software",
+			"volume": "11",
+			"number": "117",
+			"pages": "9501",
+			"issn": "2475-9066",
+			"doi": "10.21105/joss.09501",
+			"openalex": "W7124997462",
+			"url": "https://doi.org/10.21105/joss.09501",
+			"oa_url": "https://joss.theoj.org/papers/10.21105/joss.09501.pdf",
+			"abstract": "Borisov et al., (2026). LikelihoodProfiler.jl: Unified profile-likelihood workflows for identifiability and confidence intervals. Journal of Open Source Software, 11(117), 9501, https://doi.org/10.21105/joss.09501",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-13",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "BEF1984a",
 			"type": "article",
 			"title": "FCM: The fuzzy c-means clustering algorithm",
@@ -1994,6 +2113,42 @@
 			"legacy_key": "bezanson2017",
 			"source": "crossref",
 			"retrieved": "2026-10-23",
+			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "BEPV2022a",
+			"type": "article",
+			"title": "ReactiveMP.jl: A Julia package for reactive variational Bayesian inference",
+			"authors": [
+				"Bagaev, Dmitry",
+				"van Erp, Bart",
+				"Podusenko, Albert",
+				"de Vries, Bert"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2022,
+			"journal": "Software Impacts",
+			"volume": "12",
+			"pages": "100299",
+			"issn": "2665-9638",
+			"doi": "10.1016/j.simpa.2022.100299",
+			"openalex": "W4229044386",
+			"oa_url": "http://www.softwareimpacts.com/article/S2665963822000422/pdf",
+			"abstract": "Variational Bayesian (VB) inference has become an increasingly popular method for approximating exact Bayesian inference in model-based machine learning. The VB approach provides a way to trade off accuracy versus computational complexity and scales better to large-dimensional inference problems than sampling solutions. The Julia package ReactiveMP.jl implements and automates reactive VB inference by minimization of a constrained Bethe Free Energy functional through message passing on a factor graph representation of a probabilistic model. Moreover, through support for specification of explicit constraints on the Free Energy functional, ReactiveMP.jl allows for comparative analysis of different variational cost function proposals.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"Factor graphs",
+				"Free energy optimization",
+				"Graphical models",
+				"Message passing",
+				"Reactive programming",
+				"Variational Bayesian inference"
+			],
+			"keywords_source": "pdf",
+			"source": "crossref",
+			"retrieved": "2026-11-13",
 			"checked": false,
 			"open_access": true
 		},
@@ -3541,6 +3696,40 @@
 			"open_access": false
 		},
 		{
+			"key": "BP2023a",
+			"type": "article",
+			"title": "ARCHModels.jl: Estimating ARCH Models in Julia",
+			"authors": [
+				"Broda, Simon A.",
+				"Paolella, Marc S."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2023,
+			"journal": "Journal of Statistical Software",
+			"volume": "107",
+			"number": "5",
+			"issn": "1548-7660",
+			"doi": "10.18637/jss.v107.i05",
+			"openalex": "W4386990111",
+			"oa_url": "https://www.jstatsoft.org/index.php/jss/article/download/v107i05/4498",
+			"abstract": "This paper introduces ARCHModels.jl, a package for the Julia programming language that implements a number of univariate and multivariate autoregressive conditional heteroskedasticity models. This model class is the workhorse tool for modeling the conditional volatility of financial assets. The distinguishing feature of these models is that they model the latent volatility as a (deterministic) function of past returns and volatilities. This recursive structure results in loop-heavy code which, due to its just-in-time compiler, Julia is well-equipped to handle. As such, the entire package is written in Julia, without any binary dependencies. We benchmark the performance of ARCHModels.jl against popular implementations in MATLAB, R, and Python, and illustrate its use in a detailed case study.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"ARCH",
+				"GARCH",
+				"CCC",
+				"DCC",
+				"Value at Risk",
+				"Julia"
+			],
+			"keywords_source": "pdf",
+			"source": "crossref",
+			"retrieved": "2026-11-13",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "BPAAB...2021a",
 			"type": "article",
 			"title": "Distributions.jl: Definition and Modeling of Probability Distributions in the JuliaStats Ecosystem",
@@ -3566,13 +3755,17 @@
 			"abstract": "Random variables and their distributions are a central part in many areas of statistical methods. The Distributions.jl package provides Julia users and developers tools for working with probability distributions, leveraging Julia features for their intuitive and flexible manipulation, while remaining highly efficient through zero-cost abstractions.",
 			"abstract_source": "openalex",
 			"keywords": [
-				"probability distributions",
-				"random variables",
 				"Julia",
-				"statistical software",
-				"distribution modeling"
+				"distributions",
+				"modeling",
+				"interface",
+				"mixture",
+				"KDE",
+				"sampling",
+				"probabilistic programming",
+				"inference"
 			],
-			"keywords_source": "openalex",
+			"keywords_source": "pdf",
 			"legacy_key": "besancon2021",
 			"source": "crossref",
 			"retrieved": "2026-10-23",
@@ -3984,6 +4177,33 @@
 			"open_access": false
 		},
 		{
+			"key": "BS2019a",
+			"type": "article",
+			"title": "TaylorSeries.jl: Taylor expansions in one and several variables in Julia",
+			"authors": [
+				"Benet, Luis",
+				"Sanders, David"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2019,
+			"journal": "Journal of Open Source Software",
+			"volume": "4",
+			"number": "36",
+			"pages": "1043",
+			"issn": "2475-9066",
+			"doi": "10.21105/joss.01043",
+			"openalex": "W2926904043",
+			"url": "https://doi.org/10.21105/joss.01043",
+			"oa_url": "https://joss.theoj.org/papers/10.21105/joss.01043.pdf",
+			"abstract": "The purpose of the TaylorSeries.jlpackage is to provide a framework to exploit Taylor polynomials in one and several variables in the Julia programming language (Bezanson, Edelman, Karpinski, & Shah, 2017).It can be thought of as providing a primitive CAS (computer algebra system), which works numerically and not symbolically.The package allows the user to define dense polynomials p(x) of one variable and p(x) of several variables with a specified maximum degree, and perform operations on them, including powers and composition, as well as series expansions for elementary functions of polynomials, for example exp[p(x)], where techniques of automatic differentiation are used (Haro, Canadell, Figueras, Luque, & Mondelo, 2016;Tucker, 2011).Differentiation and integration are also implemented.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-13",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "BS2023a",
 			"type": "article",
 			"title": "An Alternative Explanation for the “Fed Information Effect”",
@@ -4161,6 +4381,33 @@
 			"open_access": true
 		},
 		{
+			"key": "BV2020a",
+			"type": "article",
+			"title": "Gridap: An extensible Finite Element toolbox in Julia",
+			"authors": [
+				"Badia, Santiago",
+				"Verdugo, Francesc"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2020,
+			"journal": "Journal of Open Source Software",
+			"volume": "5",
+			"number": "52",
+			"pages": "2520",
+			"issn": "2475-9066",
+			"doi": "10.21105/joss.02520",
+			"openalex": "W3080566926",
+			"url": "https://doi.org/10.21105/joss.02520",
+			"oa_url": "https://joss.theoj.org/papers/10.21105/joss.02520.pdf",
+			"abstract": "Gridap is a new Finite Element (FE) framework, exclusively written in the Julia programming language, for the numerical simulation of a wide range of mathematical models governed by partial differential equations (PDEs).The library provides a feature-rich set of discretization techniques, including continuous and discontinuous FE methods with Lagrangian, Raviart-Thomas, or Nédélec interpolations, and supports a wide range of problem types including linear, nonlinear, single-field, and multi-field PDEs (see (Badia, Martín, & Principe, 2018, Section 3) for a detailed presentation of the mathematical abstractions behind the implementation of these FE methods).Gridap is designed to help application experts to easily simulate real-world problems, to help researchers improve productivity when developing new FE-related techniques, and also for its usage in numerical PDE courses.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-13",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "BV2022a",
 			"type": "article",
 			"title": "ReactiveMP.jl: A Julia Package for Reactive Message Passing-based Bayesian Inference",
@@ -4213,6 +4460,14 @@
 			"oa_url": "https://downloads.hindawi.com/journals/sp/2023/6601690.pdf",
 			"abstract": "We introduce reactive message passing (RMP) as a framework for executing schedule-free, scalable, and, potentially, more robust message passing-based inference in a factor graph representation of a probabilistic model. RMP is based on the reactive programming style, which only describes how nodes in a factor graph react to changes in connected nodes. We recognize reactive programming as the suitable programming abstraction for message passing-based methods that improve robustness, scalability, and execution time of the inference procedure and are useful for all future implementations of message passing methods. We also present our own implementation ReactiveMP.jl, which is a Julia package for realizing RMP through minimization of a constrained Bethe free energy. By user-defined specification of local form and factorization constraints on the variational posterior distribution, ReactiveMP.jl executes hybrid message passing algorithms including belief propagation, variational message passing, expectation propagation, and expectation maximization update rules. Experimental results demonstrate the great performance of our RMP implementation compared to other Julia packages for Bayesian inference across a range of probabilistic models. In particular, we show that the RMP framework is capable of performing Bayesian inference for large-scale probabilistic state-space models with hundreds of thousands of random variables on a standard laptop computer.",
 			"abstract_source": "openalex",
+			"keywords": [
+				"Bayesian Inference",
+				"Factor Graphs",
+				"Message Passing",
+				"Reactive Programming",
+				"Variational Inference"
+			],
+			"keywords_source": "pdf",
 			"legacy_key": "bagaev2023a",
 			"source": "crossref",
 			"retrieved": "2026-10-23",
@@ -6354,6 +6609,33 @@
 			"open_access": true
 		},
 		{
+			"key": "CKV2021a",
+			"type": "article",
+			"title": "Conic optimization with spectral functions on Euclidean Jordan algebras",
+			"authors": [
+				"Coey, Chris",
+				"Kapelevich, Lea",
+				"Vielma, Juan Pablo"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2021,
+			"arxiv": "2103.04104",
+			"openalex": "W3210990630",
+			"url": "https://arxiv.org/abs/2103.04104",
+			"oa_url": "https://arxiv.org/pdf/2103.04104",
+			"abstract": "Spectral functions on Euclidean Jordan algebras arise frequently in convex models. Despite the success of primal-dual conic interior point solvers, there has been little work on enabling direct support for spectral cones, i.e. proper nonsymmetric cones defined from epigraphs and perspectives of spectral functions. We propose simple logarithmically homogeneous barriers for spectral cones and we derive efficient, numerically stable procedures for evaluating barrier oracles such as inverse Hessian operators. For two useful classes of spectral cones - the root-determinant cones and the matrix monotone derivative cones - we show that the barriers are self-concordant, with nearly optimal parameters. We implement these cones and oracles in our open source solver Hypatia, and we write simple, natural formulations for four applied problems. Our computational benchmarks demonstrate that Hypatia often solves the natural formulations more efficiently than advanced solvers such as MOSEK 9 solve equivalent extended formulations written using only the cones these solvers support.",
+			"abstract_source": "arxiv",
+			"keywords": [
+				"math.OC"
+			],
+			"keywords_source": "arxiv",
+			"source": "arxiv",
+			"retrieved": "2026-11-13",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "CKV2022a",
 			"type": "article",
 			"title": "Solving Natural Conic Formulations with Hypatia.jl",
@@ -6387,6 +6669,44 @@
 			"legacy_key": "coey2022",
 			"source": "crossref",
 			"retrieved": "2026-10-23",
+			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "CKV2023a",
+			"type": "article",
+			"title": "Performance enhancements for a generic conic interior point algorithm",
+			"authors": [
+				"Coey, Chris",
+				"Kapelevich, Lea",
+				"Vielma, Juan Pablo"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2023,
+			"journal": "Mathematical Programming Computation",
+			"volume": "15",
+			"number": "1",
+			"pages": "53-101",
+			"issn": "1867-2949",
+			"doi": "10.1007/s12532-022-00226-0",
+			"openalex": "W3181648109",
+			"oa_url": "https://link.springer.com/content/pdf/10.1007/s12532-022-00226-0.pdf",
+			"abstract": "Abstract In recent work, we provide computational arguments for expanding the class of proper cones recognized by conic optimization solvers, to permit simpler, smaller, more natural conic formulations. We define an exotic cone as a proper cone for which we can implement a small set of tractable (i.e. fast, numerically stable, analytic) oracles for a logarithmically homogeneous self-concordant barrier for the cone or for its dual cone. Our extensible, open-source conic interior point solver, Hypatia, allows modeling and solving any conic problem over a Cartesian product of exotic cones. In this paper, we introduce Hypatia’s interior point algorithm, which generalizes that of Skajaa and Ye (Math. Program. 150(2):391–422, 2015) by handling exotic cones without tractable primal oracles. To improve iteration count and solve time in practice, we propose four enhancements to the interior point stepping procedure of Skajaa and Ye: (1) loosening the central path proximity conditions, (2) adjusting the directions using a third order directional derivative barrier oracle, (3) performing a backtracking search on a curve, and (4) combining the prediction and centering directions. We implement 23 useful exotic cones in Hypatia. We summarize the complexity of computing oracles for these cones and show that our new third order oracle is not a bottleneck. From 37 applied examples, we generate a diverse benchmark set of 379 problems. Our computational testing shows that each stepping enhancement improves Hypatia’s iteration count and solve time. Altogether, the enhancements reduce the geometric means of iteration count and solve time by over 80% and 70% respectively.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"Conic optimization",
+				"Logarithmically homogeneous self-concordant barrier functions",
+				"Higher-order derivatives",
+				"Interior point methods"
+			],
+			"keywords_source": "pdf",
+			"classifications": [
+				"MSC: 90-08, 90C25, 90C51"
+			],
+			"classifications_source": "pdf",
+			"source": "crossref",
+			"retrieved": "2026-11-13",
 			"checked": false,
 			"open_access": true
 		},
@@ -7003,6 +7323,33 @@
 			"source": "crossref",
 			"retrieved": "2026-11-02",
 			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "CSRBB2023a",
+			"type": "article",
+			"title": "Plots.jl – A User Extendable Plotting API for the Julia Programming Language",
+			"authors": [
+				"Christ, Simon",
+				"Schwabeneder, Daniel",
+				"Rackauckas, Christopher",
+				"Borregaard, Michael Krabbe",
+				"Breloff, Thomas"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2023,
+			"journal": "Journal of Open Research Software",
+			"volume": "11",
+			"pages": "5",
+			"issn": "2049-9647",
+			"doi": "10.5334/jors.431",
+			"openalex": "W4320736487",
+			"abstract": "There are many excellent plotting libraries. Each excels at a specific use case: one is particularly suited for creating printable 2D figures for publication, another for generating interactive 3D graphics, while a third may have excellent LATEX integration or be ideal for creating dashboards on the web. The aim of Plots.jl is to enable the user to use the same syntax to interact with a range of different plotting libraries, making it possible to change the library that does the actual plotting (the backend) without needing to touch the code that creates the content – and without having to learn multiple application programming interfaces (API). This is achieved by separating the specification of the plot from the implementation of the graphical backend. This plot specification is extendable by a recipe system that allows package authors and users to create new types of plots, as well as to specify how to plot any type of object (e.g. a statistical model, a map, a phylogenetic tree or the solution to a system of differential equations) without depending on the Plots.jl package. This design supports a modular ecosystem structure for plotting and yields a high code reuse potential across the entire Julia package ecosystem. Plots.jl is publicly available at https://github.com/JuliaPlots/Plots.jl.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-13",
+			"checked": false,
 			"open_access": true
 		},
 		{
@@ -8446,6 +8793,32 @@
 			"open_access": true
 		},
 		{
+			"key": "DH2025a",
+			"type": "article",
+			"title": "ComplexityMeasures.jl: Scalable software to unify and accelerate entropy and complexity timeseries analysis",
+			"authors": [
+				"Datseris, George",
+				"Haaga, Kristian Agasøster"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2025,
+			"journal": "PLOS One",
+			"volume": "20",
+			"number": "6",
+			"pages": "e0324431",
+			"issn": "1932-6203",
+			"doi": "10.1371/journal.pone.0324431",
+			"openalex": "W4399511125",
+			"oa_url": "https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0324431&type=printable",
+			"abstract": "In the nonlinear timeseries analysis literature, countless quantities have been presented as new \"entropy\" or \"complexity\" measures, often with similar roles. The ever-increasing pool of such measures makes creating a sustainable and all-encompassing software for them difficult both conceptually and pragmatically. Such a software however would be an important tool that can aid researchers make an informed decision of which measure to use and for which application, as well as accelerate novel research. Here we present ComplexityMeasures.jl, an easily extendable and highly performant open-source software that implements a vast selection of complexity measures. The software provides 1638 measures with 3,841 lines of source code, averaging only 2.3 lines of code per exported quantity (version 3.7). This is made possible by its mathematically rigorous composable design. In this paper we discuss the software design and demonstrate how it can accelerate complexity-related research in the future. We carefully compare it with alternative software and conclude that ComplexityMeasures.jl outclasses the alternatives in several objective aspects of comparison, such as computational performance, overall amount of measures, reliability, and extendability. ComplexityMeasures.jl is also a component of the DynamicalSystems.jl library for nonlinear dynamics and nonlinear timeseries analysis and follows open source development practices for creating a sustainable community of developers and contributors.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-13",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "DH2026a",
 			"type": "article",
 			"title": "A Common Interface for Automatic Differentiation",
@@ -9166,6 +9539,36 @@
 			"open_access": false
 		},
 		{
+			"key": "DPR2026a",
+			"type": "article",
+			"title": "Observable functions of rational ODE models and how to find them",
+			"authors": [
+				"Demin, Alexander",
+				"Pogudin, Gleb",
+				"Rackauckas, Christopher"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2026,
+			"arxiv": "2609.06134",
+			"openalex": "W7212026959",
+			"url": "https://arxiv.org/abs/2609.06134",
+			"oa_url": "https://arxiv.org/pdf/2609.06134",
+			"abstract": "Consider a parametric ODE control model. A function of the states and parameters is called observable if its value can in principle be reconstructed from input-output data. The observable functions form a field, called the observation field, represented naturally by a set of generators. Even when the model is not fully observable, this field captures the information still accessible from input-output data. We present an algorithm for computing a concise generating set for the observation field of a model with rational dynamics. The algorithm relies on two new results: one allows observable functions to be extracted from the coefficients of repeated Lie derivatives of the outputs, while the other reduces the required orders of differentiation by exploiting identifiable parameter combinations. We implement the resulting algorithm in StructuralIdentifiability$.$jl (https://github.com/SciML/StructuralIdentifiability.jl). For computational efficiency, we employ recent techniques for differential elimination and rational function field simplification. Using models from epidemiology, chemical kinetics, and cancer modeling, we show that the algorithm produces generators with domain-specific interpretations that can inform model analysis and development.",
+			"abstract_source": "arxiv",
+			"keywords": [
+				"math.DS",
+				"cs.MS",
+				"cs.SC",
+				"eess.SY"
+			],
+			"keywords_source": "arxiv",
+			"source": "arxiv",
+			"retrieved": "2026-11-13",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "DRH2000a",
 			"type": "article",
 			"title": "How to make a Hill plot",
@@ -9398,15 +9801,17 @@
 			"abstract": "Agent-based modeling is a simulation method in which autonomous agents interact with their environment and one another, given a predefined set of rules. It is an integral method for modeling and simulating complex systems, such as socio-economic problems. Since agent-based models are not described by simple and concise mathematical equations, the code that generates them is typically complicated, large, and slow. Here we present Agents.jl, a Julia-based software that provides an ABM analysis platform with minimal code complexity. We compare our software with some of the most popular ABM software in other programming languages. We find that Agents.jl is not only the most performant but also the least complicated software, providing the same (and sometimes more) features as the competitors with less input required from the user. Agents.jl also integrates excellently with the entire Julia ecosystem, including interactive applications, differential equations, parameter optimization, and so on. This removes any “extensions library” requirement from Agents.jl, which is paramount in many other tools.",
 			"abstract_source": "openalex",
 			"keywords": [
-				"agent-based modeling",
+				"Agent-based modeling",
+				"ABM",
+				"software",
+				"framework",
 				"Julia",
-				"computational performance",
-				"code complexity",
-				"complex systems",
-				"socio-economic modeling",
-				"software comparison"
+				"NetLogo",
+				"Mesa",
+				"MASON",
+				"complex systems"
 			],
-			"keywords_source": "openalex",
+			"keywords_source": "pdf",
 			"legacy_key": "datseris2022a",
 			"source": "crossref",
 			"retrieved": "2026-10-23",
@@ -12211,6 +12616,17 @@
 			"oa_url": "https://link.springer.com/content/pdf/10.1007/s10957-021-01896-x.pdf",
 			"abstract": "Abstract This paper describes the conic operator splitting method (COSMO) solver, an operator splitting algorithm and associated software package for convex optimisation problems with quadratic objective function and conic constraints. At each step, the algorithm alternates between solving a quasi-definite linear system with a constant coefficient matrix and a projection onto convex sets. The low per-iteration computational cost makes the method particularly efficient for large problems, e.g. semidefinite programs that arise in portfolio optimisation, graph theory, and robust control. Moreover, the solver uses chordal decomposition techniques and a new clique merging algorithm to effectively exploit sparsity in large, structured semidefinite programs. Numerical comparisons with other state-of-the-art solvers for a variety of benchmark problems show the effectiveness of our approach. Our Julia implementation is open source, designed to be extended and customised by the user, and is integrated into the Julia optimisation ecosystem.",
 			"abstract_source": "openalex",
+			"keywords": [
+				"Conic programming",
+				"ADMM",
+				"Chordal decomposition",
+				"Clique merging"
+			],
+			"keywords_source": "pdf",
+			"classifications": [
+				"MSC: 49J53, 49K99"
+			],
+			"classifications_source": "pdf",
 			"legacy_key": "garstka2021",
 			"source": "crossref",
 			"retrieved": "2026-10-23",
@@ -12791,7 +13207,7 @@
 				"Gowda, Shashi",
 				"Ma, Yingbo",
 				"Cheli, Alessandro",
-				"Gwóźzdź, Maja",
+				"Gwóźdź, Maja",
 				"Shah, Viral B.",
 				"Edelman, Alan",
 				"Rackauckas, Christopher"
@@ -12838,6 +13254,44 @@
 			"source": "manual",
 			"retrieved": "2026-10-31",
 			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "GMPCT...2020a",
+			"type": "article",
+			"title": "Julia language in machine learning: Algorithms, applications, and open issues",
+			"authors": [
+				"Gao, Kaifeng",
+				"Mei, Gang",
+				"Piccialli, Francesco",
+				"Cuomo, Salvatore",
+				"Tu, Jingzhi",
+				"Huo, Zenan"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2020,
+			"journal": "Computer Science Review",
+			"volume": "37",
+			"pages": "100254",
+			"issn": "1574-0137",
+			"doi": "10.1016/j.cosrev.2020.100254",
+			"openalex": "W3025833400",
+			"oa_url": "https://www.sciencedirect.com/science/article/pii/S157401372030071X/pdf",
+			"abstract": "Machine learning is driving development across many fields in science and engineering. A simple and efficient programming language could accelerate applications of machine learning in various fields. Currently, the programming languages most commonly used to develop machine learning algorithms include Python, MATLAB, and C/C ++. However, none of these languages well balance both efficiency and simplicity. The Julia language is a fast, easy-to-use, and open-source programming language that was originally designed for high-performance computing, which can well balance the efficiency and simplicity. This paper summarizes the related research work and developments in the applications of the Julia language in machine learning. It first surveys the popular machine learning algorithms that are developed in the Julia language. Then, it investigates applications of the machine learning algorithms implemented with the Julia language. Finally, it discusses the open issues and the potential future directions that arise in the use of the Julia language in machine learning.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"Julia language",
+				"Machine learning",
+				"Supervised learning",
+				"Unsupervised learning",
+				"Deep learning",
+				"Artificial neural networks"
+			],
+			"keywords_source": "pdf",
+			"source": "crossref",
+			"retrieved": "2026-11-13",
+			"checked": false,
 			"open_access": true
 		},
 		{
@@ -13452,6 +13906,15 @@
 			"arxiv": "2411.09764",
 			"url": "https://arxiv.org/abs/2411.09764",
 			"oa_url": "https://arxiv.org/pdf/2411.09764",
+			"keywords": [
+				"Advanced Process Control",
+				"State Estimation",
+				"Kalman Filter",
+				"Moving Horizon Estimation",
+				"Computer-Aided Control Systems Design",
+				"Julia Programming Language"
+			],
+			"keywords_source": "pdf",
 			"source": "arxiv",
 			"retrieved": "2026-11-03",
 			"checked": true,
@@ -13967,6 +14430,11 @@
 			"oa_url": "https://arxiv.org/pdf/1610.08716",
 			"abstract": "Many uncertainty propagation software exist, written in different programming languages, but not all of them are able to handle functional correlation between quantities. In this paper we review one strategy to deal with uncertainty propagation of quantities that are functionally correlated, and introduce a new software offering this feature: the Julia package Measurements.jl. It supports real and complex numbers with uncertainty, arbitrary-precision calculations, mathematical and linear algebra operations with matrices and arrays.",
 			"abstract_source": "author",
+			"keywords": [
+				"methods: data analysis",
+				"methods: numerical"
+			],
+			"keywords_source": "pdf",
 			"source": "arxiv",
 			"retrieved": "2026-11-03",
 			"checked": true,
@@ -14604,6 +15072,14 @@
 			"arxiv": "2606.24427",
 			"url": "https://arxiv.org/abs/2606.24427",
 			"oa_url": "https://arxiv.org/pdf/2606.24427",
+			"keywords": [
+				"nonlinear mixed-effects models",
+				"longitudinal data analysis",
+				"scientific machine learning",
+				"normalizing flows",
+				"Julia"
+			],
+			"keywords_source": "pdf",
 			"source": "arxiv",
 			"retrieved": "2026-11-03",
 			"checked": true,
@@ -14645,6 +15121,34 @@
 			"open_access": true
 		},
 		{
+			"key": "HBH2023a",
+			"type": "article",
+			"title": "SIRUS.jl: Interpretable Machine Learning via Rule Extraction",
+			"authors": [
+				"Huijzer, Rik",
+				"Blaauw, Frank",
+				"den Hartigh, Ruud J. R."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2023,
+			"journal": "Journal of Open Source Software",
+			"volume": "8",
+			"number": "90",
+			"pages": "5786",
+			"issn": "2475-9066",
+			"doi": "10.21105/joss.05786",
+			"openalex": "W4387573596",
+			"url": "https://doi.org/10.21105/joss.05786",
+			"oa_url": "https://joss.theoj.org/papers/10.21105/joss.05786.pdf",
+			"abstract": "SIRUS.jl 1 is an implementation of the original Stable and Interpretable RUle Sets (SIRUS) algorithm in the Julia programming language (Bezanson et al., 2017).The SIRUS algorithm is a fully interpretable version of random forests, that is, it reduces thousands of trees in the forest to a much lower number of interpretable rules (e.g., 10 or 20).With our Julia implementation, we aimed to reproduce the original C++ and R implementation in a high-level language to verify the algorithm as well as making the code easier to read.We show that the model performs well on classification tasks while retaining interpretability and stability.Furthermore, we made the code available under the permissive MIT license.In turn, this allows others to research the algorithm further or easily port it to production systems.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-13",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "HC2002a",
 			"type": "article",
 			"title": "titanic3: Titanic Passenger Data",
@@ -14659,6 +15163,31 @@
 			"url": "https://hbiostat.org/data/",
 			"legacy_key": "harrell2002",
 			"source": "manual",
+			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "HD2022a",
+			"type": "article",
+			"title": "TimeseriesSurrogates.jl: a Julia package for generating surrogate data",
+			"authors": [
+				"Haaga, Kristian Agasøster",
+				"Datseris, George"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2022,
+			"journal": "Journal of Open Source Software",
+			"volume": "7",
+			"number": "77",
+			"pages": "4414",
+			"issn": "2475-9066",
+			"doi": "10.21105/joss.04414",
+			"openalex": "W4295886547",
+			"url": "https://doi.org/10.21105/joss.04414",
+			"oa_url": "https://joss.theoj.org/papers/10.21105/joss.04414.pdf",
+			"source": "crossref",
+			"retrieved": "2026-11-13",
 			"checked": false,
 			"open_access": true
 		},
@@ -17505,6 +18034,40 @@
 			"open_access": false
 		},
 		{
+			"key": "IGR2024a",
+			"type": "inproceedings",
+			"title": "Hybrid Symbolic-Numeric and Numerically-Assisted Symbolic Integration",
+			"authors": [
+				"Iravanian, Shahriar",
+				"Gowda, Shashi",
+				"Rackauckas, Christopher"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2024,
+			"booktitle": "Proceedings of the 2024 International Symposium on Symbolic and Algebraic Computation",
+			"publisher": "ACM",
+			"pages": "410-418",
+			"doi": "10.1145/3666000.3669714",
+			"openalex": "W4400648864",
+			"abstract": "Most computer algebra systems (CAS) support symbolic integration using either algebraic or heuristic methods. This paper presents HYINT, a hybrid (symbolic-numeric) method to calculate the indefinite integrals of univariate expressions. Like the Risch-Norman algorithm, the symbolic part of HYINT generates an ansatz constituted of multiple candidate terms generated in parallel. The ansatz generator uses a combination of table lookup of integration rules and algebraic manipulations. The numeric part filters the candidate terms over the complex field and applies sparse regression, a component of the Sparse Identification of Nonlinear Dynamics (SINDy) technique, to find the coefficients of the terms in the ansatz. HYINT covers a larger range of potential integrals compared to the Risch-Norman algorithm. Moreover, the form of the final integral is similar to the integrand and consistent with what the users expect. The primary motivation for this work is to add symbolic integration functionality to a modern CAS (the symbolic manipulation packages of SciML, the Scientific Machine Learning ecosystem of the Julia programming language), which is designed for numerical and machine learning applications. We show that this system can solve many common integration problems using only a few dozen basic integration rules. We also discuss numerically-assisted symbolic integration, where HYINT acts as an ansatz generator for other symbolic integration packages.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"symbolic integration",
+				"symbolic-numeric computation",
+				"sparse regression"
+			],
+			"keywords_source": "pdf",
+			"classifications": [
+				"ACM CCS: Computing methodologies → Symbolic calculus algorithms; Hybrid symbolic-numeric methods; Algebraic algorithms"
+			],
+			"classifications_source": "pdf",
+			"source": "crossref",
+			"retrieved": "2026-11-13",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "IISN2018a",
 			"type": "article",
 			"title": "How to Specify a Reference Point in Hypervolume Calculation for Fair Performance Comparison",
@@ -17988,6 +18551,16 @@
 			"oa_url": "https://doi.org/10.18637/jss.v109.i06",
 			"abstract": "The Extremes.jl package provides exhaustive, high-performance functions by leveraging the multiple-dispatch capabilities in Julia for the analysis of extreme values. In particular, the package implements statistical models for both block maxima and peaks-over-threshold methods, along with several methods for the generalized extreme value and generalized Pareto distributions used in extreme value theory. Additionally, the package oﬀers various parameter estimation methods, such as probability-weighted moments, maximum likelihood, and Bayesian estimation. It also includes tools for handling dependence in excesses over a threshold and methods for managing nonstationary models. Inference for extreme quantiles is available for both stationary and nonstationary models, along with diagnostic ﬁgures to assess the goodness of ﬁt of the model to the data.",
 			"abstract_source": "openalex",
+			"keywords": [
+				"extreme value analysis",
+				"generalized extreme value distribution",
+				"generalized Pareto distribution",
+				"block maxima",
+				"peaks-over-threshold",
+				"nonstationary extremes",
+				"Julia"
+			],
+			"keywords_source": "pdf",
 			"legacy_key": "jalbert2024",
 			"source": "crossref",
 			"retrieved": "2026-10-23",
@@ -20113,6 +20686,10 @@
 			"oa_url": "https://algorithmsbook.com/optimization/files/optimization.pdf",
 			"abstract": "This book provides a comprehensive introduction to optimization with a focus on practical algorithms. The book approaches optimization from an engineering perspective, where the objective is to design a system that optimizes a set of metrics subject to constraints. Readers will learn about computational approaches for a range of challenges, including searching high-dimensional spaces, handling problems where there are multiple competing objectives, and accommodating uncertainty in the metrics. Figures, examples, and exercises convey the intuition behind the mathematical approaches. The text provides concrete implementations in the Julia programming language. Topics covered include derivatives and their generalization to multiple dimensions; local descent and first- and second-order methods that inform local descent; stochastic methods, which introduce randomness into the optimization process; linear constrained optimization, when both the objective function and the constraints are linear; surrogate models, probabilistic surrogate models, and using probabilistic surrogate models to guide optimization; optimization under uncertainty; uncertainty propagation; expression optimization; and multidisciplinary design optimization. Appendixes offer an introduction to the Julia language, test functions for evaluating algorithm performance, and mathematical concepts used in the derivation and analysis of the optimization methods discussed in the text. The book can be used by advanced undergraduates and graduate students in mathematics, statistics, computer science, any engineering field, (including electrical engineering and aerospace engineering), and operations research, and as a reference for professionals.",
 			"abstract_source": "author",
+			"classifications": [
+				"LCC: QA9.58 .K65425 2019"
+			],
+			"classifications_source": "loc",
 			"source": "manual",
 			"retrieved": "2026-11-12",
 			"checked": true,
@@ -20137,6 +20714,10 @@
 			"oa_url": "https://algorithmsbook.com/files/dm.pdf",
 			"abstract": "Automated decision-making systems or decision-support systems—used in applications that range from aircraft collision avoidance to breast cancer screening—must be designed to account for various sources of uncertainty while carefully balancing multiple objectives. This textbook provides a broad introduction to algorithms for decision making under uncertainty, covering the underlying mathematical problem formulations and the algorithms for solving them. The book first addresses the problem of reasoning about uncertainty and objectives in simple decisions at a single point in time, and then turns to sequential decision problems in stochastic environments where the outcomes of our actions are uncertain. It goes on to address model uncertainty, when we do not start with a known model and must learn how to act through interaction with the environment; state uncertainty, in which we do not know the current state of the environment due to imperfect perceptual information; and decision contexts involving multiple agents. The book focuses primarily on planning and reinforcement learning, although some of the techniques presented draw on elements of supervised learning and optimization. Algorithms are implemented in the Julia programming language. Figures, examples, and exercises convey the intuition behind the various approaches presented.",
 			"abstract_source": "mitpress",
+			"classifications": [
+				"LCC: T58.62 .K666 2022"
+			],
+			"classifications_source": "loc",
 			"source": "manual",
 			"retrieved": "2026-11-12",
 			"checked": true,
@@ -20633,6 +21214,32 @@
 			"source": "manual",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "Koc2023a",
+			"type": "article",
+			"title": "MacroModelling.jl: A Julia package for developing and solving dynamic stochastic general equilibrium models",
+			"authors": [
+				"Kockerols, Thore"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2023,
+			"journal": "Journal of Open Source Software",
+			"volume": "8",
+			"number": "89",
+			"pages": "5598",
+			"issn": "2475-9066",
+			"doi": "10.21105/joss.05598",
+			"openalex": "W4387011503",
+			"url": "https://doi.org/10.21105/joss.05598",
+			"oa_url": "https://joss.theoj.org/papers/10.21105/joss.05598.pdf",
+			"abstract": "Kockerols, T., (2023). MacroModelling.jl: A Julia package for developing and solving dynamic stochastic general equilibrium models. Journal of Open Source Software, 8(89), 5598, https://doi.org/10.21105/joss.05598",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-13",
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "Koe1981a",
@@ -21611,6 +22218,33 @@
 			"open_access": true
 		},
 		{
+			"key": "LJ2024a",
+			"type": "article",
+			"title": "Copulas.jl: A fully Distributions.jl-compliant copula package",
+			"authors": [
+				"Laverny, Oskar",
+				"Jimenez, Santiago"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2024,
+			"journal": "Journal of Open Source Software",
+			"volume": "9",
+			"number": "94",
+			"pages": "6189",
+			"issn": "2475-9066",
+			"doi": "10.21105/joss.06189",
+			"openalex": "W4392294019",
+			"url": "https://doi.org/10.21105/joss.06189",
+			"oa_url": "https://joss.theoj.org/papers/10.21105/joss.06189.pdf",
+			"abstract": "Copulas are functions that describe dependence structures of random vectors, without describing their univariate marginals.In statistics, the separation is sometimes useful, the quality and/or quantity of available information on these two objects might differ.This separation can be formally stated through Sklar's theorem:",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-13",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "LK1973a",
 			"type": "article",
 			"title": "An Effective Heuristic Algorithm for the Traveling-Salesman Problem",
@@ -22550,6 +23184,39 @@
 			"source": "crossref",
 			"retrieved": "2026-11-02",
 			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "LSTC2025a",
+			"type": "article",
+			"title": "A Tutorial on Structural Identifiability of Epidemic Models Using StructuralIdentifiability.jl",
+			"authors": [
+				"Liyanage, Yuganthi R.",
+				"Saucedo, Omar",
+				"Tuncer, Necibe",
+				"Chowell, Gerardo"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2025,
+			"arxiv": "2505.10517",
+			"openalex": "W4411346546",
+			"url": "https://arxiv.org/abs/2505.10517",
+			"oa_url": "https://link.springer.com/content/pdf/10.1007/s11538-026-01648-w.pdf",
+			"abstract": "Structural identifiability is the theoretical ability to uniquely recover model parameters from ideal, noise-free data and is a prerequisite for reliable parameter estimation in epidemic modeling. Despite its importance for calibration and inference, structural identifiability analysis remains underused and inconsistently applied in infectious disease modeling. This paper presents a user-oriented methodological tutorial demonstrating how global structural identifiability analysis can be systematically integrated into epidemic modeling workflows. We provide a reproducible framework for conducting structural identifiability analysis of ordinary differential equation models using the Julia package StructuralIdentifiability.jl. The workflow is illustrated across commonly used epidemic models, including SEIR variants with asymptomatic and presymptomatic transmission, vector-borne disease models, and systems incorporating hospitalization and disease-induced mortality. We also introduce a visual communication strategy that embeds identifiability results directly into compartmental diagrams, facilitating interpretation and interdisciplinary communication. Our results show that identifiability depends critically on model structure, the choice of observed variables, and assumptions about initial conditions, and that identifiable parameter combinations may exist even when individual parameters are not globally identifiable. Emphasizing transparent implementation, interpretation, and communication, this work provides practical guidance and comparative insights across model classes. The tutorial is designed as both a reference and a teaching resource for researchers and educators seeking to incorporate structural identifiability analysis into epidemic model development. All code and annotated diagrams are publicly available to ensure reproducibility and reuse.",
+			"abstract_source": "arxiv",
+			"keywords": [
+				"Structural identifiability",
+				"Practical identifiability",
+				"Epidemic modeling",
+				"Parameter estimation",
+				"StructuralIdentifiability.jl",
+				"DAISY"
+			],
+			"keywords_source": "pdf",
+			"source": "arxiv",
+			"retrieved": "2026-11-13",
+			"checked": false,
 			"open_access": true
 		},
 		{
@@ -23685,6 +24352,13 @@
 			"url": "https://github.com/OutlierDetectionJL/OutlierDetection.jl",
 			"abstract": "Fast, scalable and flexible Outlier Detection with Julia",
 			"abstract_source": "github",
+			"keywords": [
+				"outlier detection",
+				"anomaly detection",
+				"machine learning",
+				"Julia"
+			],
+			"keywords_source": "pdf",
 			"legacy_key": "muhr2022",
 			"source": "manual",
 			"checked": false,
@@ -23987,17 +24661,15 @@
 			"abstract_source": "openalex",
 			"keywords": [
 				"equation-based modeling",
-				"graph transformation",
-				"differential-algebraic equations",
-				"automatic parallelization",
-				"index reduction",
-				"surrogate models",
-				"data-driven model reduction",
-				"acausal modeling",
-				"Modelica",
-				"HVAC systems"
+				"acausal",
+				"composable abstractions",
+				"model order reduction"
 			],
-			"keywords_source": "openalex",
+			"keywords_source": "pdf",
+			"classifications": [
+				"MSC: 34-04, 65L80, 68-04, 68U01"
+			],
+			"classifications_source": "pdf",
 			"legacy_key": "ma2021",
 			"source": "datacite",
 			"retrieved": "2026-10-23",
@@ -24551,6 +25223,33 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": false
+		},
+		{
+			"key": "MO2023a",
+			"type": "article",
+			"title": "Krylov.jl: A Julia basket of hand-picked Krylov methods",
+			"authors": [
+				"Montoison, Alexis",
+				"Orban, Dominique"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2023,
+			"journal": "Journal of Open Source Software",
+			"volume": "8",
+			"number": "89",
+			"pages": "5187",
+			"issn": "2475-9066",
+			"doi": "10.21105/joss.05187",
+			"openalex": "W4387047368",
+			"url": "https://doi.org/10.21105/joss.05187",
+			"oa_url": "https://joss.theoj.org/papers/10.21105/joss.05187.pdf",
+			"abstract": "Krylov.jl is a Julia (Bezanson et al., 2017) package that implements a collection of Krylov processes and methods for solving a variety of linear problems: Square systems Linear least-squares problems Linear least-norm problems 𝐴𝑥 = 𝑏 min ‖𝑏 -𝐴𝑥‖ min ‖𝑥‖ subject to 𝐴𝑥 = 𝑏 Adjoint systems Saddle-point and Hermitian quasi-definite systems Generalized saddle-point and non-Hermitian partitioned systems",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-13",
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "MP1967a",
@@ -25367,10 +26066,12 @@
 			"abstract": "Recurrent neural networks (RNNs) are a cornerstone of sequence modeling across various scientific and industrial applications. Owing to their versatility, numerous RNN variants have been proposed over the past decade, aiming to improve the modeling of long-term dependencies and to address challenges such as vanishing and exploding gradients. However, no central library is available to test these variations, and reimplementing diverse architectures can be time-consuming and error-prone, limiting reproducibility and exploration. Here, we introduce three open-source libraries in Julia and Python that centralize numerous recurrent cell implementations and higher-level recurrent architectures. torchrecurrent, RecurrentLayers.jl, and LuxRecurrentLayers.jl offer a consistent framework for constructing and extending RNN models, providing built-in mechanisms for customization and experimentation. All packages are available under the MIT license and actively maintained on GitHub.",
 			"abstract_source": "arxiv",
 			"keywords": [
-				"cs.LG",
-				"cs.SE"
+				"Recurrent neural networks",
+				"recurrent layers",
+				"PyTorch",
+				"Julia"
 			],
-			"keywords_source": "arxiv",
+			"keywords_source": "pdf",
 			"legacy_key": "martinuzzi2025",
 			"source": "arxiv",
 			"retrieved": "2026-11-02",
@@ -25856,6 +26557,10 @@
 			"oa_url": "https://github.com/probml/pml-book/releases/latest/download/book1.pdf",
 			"abstract": "This book offers a detailed and up-to-date introduction to machine learning (including deep learning) through the unifying lens of probabilistic modeling and Bayesian decision theory. The book covers mathematical background (including linear algebra and optimization), basic supervised learning (including linear and logistic regression and deep neural networks), as well as more advanced topics (including transfer learning and unsupervised learning). End-of-chapter exercises allow students to apply what they have learned, and an appendix covers notation. Probabilistic Machine Learning grew out of the author's 2012 book, Machine Learning: A Probabilistic Perspective. More than just a simple update, this is a completely new book that reflects the dramatic developments in the field since 2012, most notably deep learning. In addition, the new book is accompanied by online Python code, using libraries such as scikit-learn, JAX, PyTorch, and Tensorflow, which can be used to reproduce nearly all the figures; this code can be run inside a web browser using cloud-based notebooks, and provides a practical complement to the theoretical topics discussed in the book. This introductory text will be followed by a sequel that covers more advanced topics, taking the same probabilistic approach.",
 			"abstract_source": "mitpress",
+			"classifications": [
+				"LCC: Q325.5 .M872 2022"
+			],
+			"classifications_source": "loc",
 			"source": "manual",
 			"retrieved": "2026-11-12",
 			"checked": true,
@@ -25912,6 +26617,45 @@
 			"source": "crossref",
 			"retrieved": "2026-10-30",
 			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "NBPCB...2018a",
+			"type": "article",
+			"title": "Julia subtyping: a rational reconstruction",
+			"authors": [
+				"Zappa Nardelli, Francesco",
+				"Belyakova, Julia",
+				"Pelenitsyn, Artem",
+				"Chung, Benjamin",
+				"Bezanson, Jeff",
+				"Vitek, Jan"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2018,
+			"journal": "Proceedings of the ACM on Programming Languages",
+			"volume": "2",
+			"number": "OOPSLA",
+			"pages": "1-27",
+			"issn": "2475-1421",
+			"doi": "10.1145/3276483",
+			"openalex": "W2893611774",
+			"oa_url": "https://dl.acm.org/doi/pdf/10.1145/3276483",
+			"abstract": "Programming languages that support multiple dispatch rely on an expressive notion of subtyping to specify method applicability. In these languages, type annotations on method declarations are used to select, out of a potentially large set of methods, the one that is most appropriate for a particular tuple of arguments. Julia is a language for scientific computing built around multiple dispatch and an expressive subtyping relation. This paper provides the first formal definition of Julia's subtype relation and motivates its design. We validate our specification empirically with an implementation of our definition that we compare against the existing Julia implementation on a collection of real-world programs. Our subtype implementation differs on 122 subtype tests out of 6,014,476. The first 120 differences are due to a bug in Julia that was fixed once reported; the remaining 2 are under discussion.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"Multiple Dispatch",
+				"Subtyping"
+			],
+			"keywords_source": "pdf",
+			"classifications": [
+				"ACM CCS: Software and its engineering → Data types and structures; Semantics"
+			],
+			"classifications_source": "pdf",
+			"source": "crossref",
+			"retrieved": "2026-11-13",
+			"checked": false,
 			"open_access": true
 		},
 		{
@@ -27447,6 +28191,18 @@
 			"year": 2024,
 			"arxiv": "2403.16341",
 			"url": "https://arxiv.org/abs/2403.16341",
+			"keywords": [
+				"Nonlinear Systems",
+				"Root Finding",
+				"Sparsity Detection",
+				"Automatic Differentiation",
+				"JuliaLang"
+			],
+			"keywords_source": "pdf",
+			"classifications": [
+				"ACM CCS: Mathematics of computing → Solvers; Mathematical software performance; Nonlinear equations"
+			],
+			"classifications_source": "pdf",
 			"legacy_key": "PHLLUSQER2024a",
 			"source": "arxiv",
 			"retrieved": "2026-11-02",
@@ -28031,6 +28787,14 @@
 			"openalex": "W3175569467",
 			"url": "https://par.nsf.gov/servlets/purl/10388096",
 			"oa_url": "https://doi.org/10.1016/j.compchemeng.2021.107567",
+			"keywords": [
+				"infinite-dimensional",
+				"optimization",
+				"measures",
+				"space-time",
+				"random"
+			],
+			"keywords_source": "pdf",
 			"legacy_key": "pulsipher2022",
 			"source": "crossref",
 			"retrieved": "2026-10-23",
@@ -29903,23 +30667,15 @@
 			"abstract_source": "openalex",
 			"keywords": [
 				"Julia",
-				"differential equation solvers",
 				"ordinary differential equations",
 				"stochastic differential equations",
-				"delay differential equations",
-				"hybrid differential equations",
-				"jump diffusion",
-				"stochastic partial differential equations",
-				"Gillespie algorithm",
-				"Markov chain simulation",
+				"partial differential equations",
 				"multiple dispatch",
 				"metaprogramming",
-				"high-precision arithmetic",
-				"physical units",
-				"Jacobian computation",
-				"parallel computing"
+				"high-precision",
+				"multithreading"
 			],
-			"keywords_source": "openalex",
+			"keywords_source": "pdf",
 			"legacy_key": "rackauckas2017",
 			"source": "crossref",
 			"retrieved": "2026-10-23",
@@ -36081,6 +36837,39 @@
 			"open_access": false
 		},
 		{
+			"key": "VB2022a",
+			"type": "article",
+			"title": "The software design of Gridap: A Finite Element package based on the Julia JIT compiler",
+			"authors": [
+				"Verdugo, Francesc",
+				"Badia, Santiago"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2022,
+			"journal": "Computer Physics Communications",
+			"volume": "276",
+			"pages": "108341",
+			"issn": "0010-4655",
+			"doi": "10.1016/j.cpc.2022.108341",
+			"arxiv": "2109.12818",
+			"openalex": "W3203610579",
+			"oa_url": "https://arxiv.org/pdf/2109.12818",
+			"abstract": "We present the software design of Gridap, a novel finite element library written exclusively in the Julia programming language, which is being used by several research groups world-wide to simulate complex physical phenomena such as magnetohydrodynamics, photonics, weather modeling, non-linear solid mechanics, and fluid-structure interaction problems. The library provides a feature-rich set of discretization techniques for the numerical approximation of a wide range of PDEs, including linear, nonlinear, single-field, and multi-field equations. An expressive API allows users to define PDEs in weak form by a syntax close to the mathematical notation. While this is also available in previous codes, the main novelty of Gridap is that it implements this API without introducing a DSL plus a compiler of variational forms. Instead, it leverages the Julia just-in-time compiler to build efficient code, specialized for the concrete problem at hand. As a result, there is no need to use different languages for the computational back-end and the user front-end anymore, thus eliminating the so-called two-language problem. Gridap also provides a low-level API that is modular and extensible via the multiple-dispatch paradigm of Julia and provides easy access to the main building blocks of the library. The main contribution of this paper is the detailed presentation of the novel software abstractions behind the Gridap design that leverages the new software possibilities provided by the Julia language. The second main contribution of the article is a performance comparison against FEniCS. We measure CPU times needed to assemble discrete systems of linear equations for different problem types and show that the performance of Gridap is comparable to FEniCS, demonstrating that the new software design does not compromise performance. Gridap is freely available at Github and distributed under an MIT license.",
+			"abstract_source": "arxiv",
+			"keywords": [
+				"Mathematical Software",
+				"Finite Elements",
+				"Partial Differential Equations",
+				"Julia Programming Language"
+			],
+			"keywords_source": "pdf",
+			"source": "crossref",
+			"retrieved": "2026-11-13",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "VCBCS1995a",
 			"type": "article",
 			"title": "Novel type of phase transition in a system of self-driven particles",
@@ -37453,6 +38242,32 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "WS2022a",
+			"type": "article",
+			"title": "EAGO.jl: easy advanced global optimization in Julia",
+			"authors": [
+				"Wilhelm, Matthew E.",
+				"Stuber, Matthew D."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2022,
+			"journal": "Optimization Methods and Software",
+			"volume": "37",
+			"number": "2",
+			"pages": "425-450",
+			"issn": "1055-6788",
+			"doi": "10.1080/10556788.2020.1786566",
+			"openalex": "W3048483007",
+			"oa_url": "https://figshare.com/articles/journal_contribution/EAGO_jl_easy_advanced_global_optimization_in_Julia/12849410",
+			"abstract": "An extensible open-source deterministic global optimizer (EAGO) programmed entirely in the Julia language is presented. EAGO was developed to serve the need for supporting higher-complexity user-defined functions (e.g. functions defined implicitly via algorithms) within optimization models. EAGO embeds a first-of-its-kind implementation of McCormick arithmetic in an Evaluator structure allowing for the construction of convex/concave relaxations using a combination of source code transformation, multiple dispatch, and context-specific approaches. Utilities are included to parse user-defined functions into a directed acyclic graph representation and perform symbolic transformations enabling dramatically improved solution speed. EAGO is compatible with a wide variety of local optimizers, the most exhaustive library of transcendental functions, and allows for easy accessibility through the JuMP modelling language. Together with Julia's minimalist syntax and competitive speed, these powerful features make EAGO a versatile research platform enabling easy construction of novel meta-solvers, incorporation and utilization of new relaxations, and extension to advanced problem formulations encountered in engineering and operations research (e.g. multilevel problems, user-defined functions). The applicability and flexibility of this novel software is demonstrated on a diverse set of examples. Lastly, EAGO is demonstrated to perform comparably to state-of-the-art commercial optimizers on a benchmarking test set.",
+			"abstract_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-13",
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "WSE2001a",
@@ -38872,6 +39687,10 @@
 			"oa_url": "https://d2l.ai",
 			"abstract": "This open-source book represents our attempt to make deep learning approachable, teaching readers the concepts, the context, and the code. The entire book is drafted in Jupyter notebooks, seamlessly integrating exposition figures, math, and interactive examples with self-contained code. Our goal is to offer a resource that could (i) be freely available for everyone; (ii) offer sufficient technical depth to provide a starting point on the path to actually becoming an applied machine learning scientist; (iii) include runnable code, showing readers how to solve problems in practice; (iv) allow for rapid updates, both by us and also by the community at large; (v) be complemented by a forum for interactive discussion of technical details and to answer questions.",
 			"abstract_source": "arxiv",
+			"classifications": [
+				"LCC: Q325.73 .Z43 2023"
+			],
+			"classifications_source": "loc",
 			"source": "manual",
 			"retrieved": "2026-11-12",
 			"checked": true,
@@ -39057,6 +39876,38 @@
 			"source": "datacite",
 			"retrieved": "2026-11-02",
 			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "ZSTME...2025a",
+			"type": "article",
+			"title": "Efficient Symbolic Computation via Hash Consing",
+			"authors": [
+				"Zhu, Bowen",
+				"Sabharwal, Aayush",
+				"Tan, Songchen",
+				"Ma, Yingbo",
+				"Edelman, Alan",
+				"Rackauckas, Christopher"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2025,
+			"arxiv": "2509.20534",
+			"openalex": "W4416829993",
+			"url": "https://arxiv.org/abs/2509.20534",
+			"oa_url": "https://arxiv.org/pdf/2509.20534",
+			"abstract": "Symbolic computation systems suffer from memory inefficiencies due to redundant storage of structurally identical subexpressions, commonly known as expression swell, which degrades performance in both classical computer algebra and emerging AI-driven mathematical reasoning tools. In this paper, we present the first integration of hash consing into JuliaSymbolics, a high-performance symbolic toolkit in Julia, by employing a global weak-reference hash table that canonicalizes expressions and eliminates duplication. This approach reduces memory consumption and accelerates key operations such as differentiation, simplification, and code generation, while seamlessly integrating with Julia's metaprogramming and just-in-time compilation infrastructure. Benchmark evaluations across different computational domains reveal substantial improvements: symbolic computations are accelerated by up to 3.2 times, memory usage is reduced by up to 2 times, code generation is up to 5 times faster, function compilation up to 10 times faster, and numerical evaluation up to 100 times faster for larger models. While certain workloads with fewer duplicate unknown-variable expressions show more modest gains or even slight overhead in initial computation stages, downstream processing consistently benefits significantly. These findings underscore the importance of hash consing in scaling symbolic computation and pave the way for future work integrating hash consing with e-graphs for enhanced equivalence-aware expression sharing in AI-driven pipelines.",
+			"abstract_source": "arxiv",
+			"keywords": [
+				"cs.PL",
+				"cs.MS",
+				"cs.SC"
+			],
+			"keywords_source": "arxiv",
+			"source": "arxiv",
+			"retrieved": "2026-11-13",
+			"checked": false,
 			"open_access": true
 		},
 		{
