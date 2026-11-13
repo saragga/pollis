@@ -14610,6 +14610,41 @@
 			"open_access": false
 		},
 		{
+			"key": "Gol1991a",
+			"type": "article",
+			"title": "What every computer scientist should know about floating-point arithmetic",
+			"authors": [
+				"Goldberg, David"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1991,
+			"journal": "ACM Computing Surveys",
+			"volume": "23",
+			"number": "1",
+			"pages": "5-48",
+			"issn": "0360-0300",
+			"doi": "10.1145/103162.103163",
+			"openalex": "W2169004268",
+			"abstract": "Floating-point arithmetic is considered as esoteric subject by many people. This is rather surprising, because floating-point is ubiquitous in computer systems: Almost every language has a floating-point datatype; computers from PCs to supercomputers have floating-point accelerators; most compilers will be called upon to compile floating-point algorithms from time to time; and virtually every operating system must respond to floating-point exceptions such as overflow. This paper presents a tutorial on the aspects of floating-point that have a direct impact on designers of computer systems. It begins with background on floating-point representation and rounding error, continues with a discussion of the IEEE floating point standard, and concludes with examples of how computer system builders can better support floating point.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"floating-point arithmetic",
+				"floating-point representation",
+				"rounding errors",
+				"IEEE floating-point standard",
+				"floating-point hardware",
+				"floating-point exceptions",
+				"overflow",
+				"computer system design"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-13",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "Goo1953a",
 			"type": "article",
 			"title": "The Population Frequencies of Species and the Estimation of Population Parameters",
@@ -19324,6 +19359,28 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": false
+		},
+		{
+			"key": "Jul1918a",
+			"type": "article",
+			"title": "Mémoire sur l'itération des fonctions rationnelles",
+			"authors": [
+				"Julia, Gaston"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1918,
+			"journal": "Journal de Mathématiques Pures et Appliquées",
+			"volume": "1",
+			"pages": "47-245",
+			"issn": "1776-3371",
+			"openalex": "W2529003330",
+			"url": "http://www.numdam.org/item/JMPA_1918_8_1__47_0/",
+			"oa_url": "https://www.numdam.org/item/JMPA_1918_8_1__47_0.pdf",
+			"source": "numdam",
+			"retrieved": "2026-11-13",
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "KA2006a",
@@ -25923,6 +25980,36 @@
 			"journal": "Pearson Education",
 			"legacy_key": "maciejowski2002",
 			"source": "manual",
+			"checked": false,
+			"open_access": false
+		},
+		{
+			"key": "Man1980a",
+			"type": "article",
+			"title": "Fractal aspects of the iteration of z → λz(1 − z) for complex λ and z",
+			"authors": [
+				"Mandelbrot, Benoit B."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1980,
+			"journal": "Annals of the New York Academy of Sciences",
+			"volume": "357",
+			"number": "1",
+			"pages": "249-259",
+			"issn": "0077-8923",
+			"doi": "10.1111/j.1749-6632.1980.tb29690.x",
+			"openalex": "W2082013839",
+			"keywords": [
+				"fractals",
+				"iteration",
+				"complex iteration",
+				"logistic map",
+				"complex dynamics"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-13",
 			"checked": false,
 			"open_access": false
 		},
@@ -44856,6 +44943,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "Gol1991a",
+			"count": 1306,
+			"source": "crossref",
+			"date": "2026-11-13"
+		},
+		{
+			"key": "Gol1991a",
+			"count": 1880,
+			"source": "openalex",
+			"date": "2026-11-13"
+		},
+		{
 			"key": "Goo1953a",
 			"count": 2240,
 			"source": "crossref",
@@ -46396,6 +46495,12 @@
 			"count": 868,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "Jul1918a",
+			"count": 353,
+			"source": "openalex",
+			"date": "2026-11-13"
 		},
 		{
 			"key": "KA2006a",
@@ -48508,6 +48613,18 @@
 			"count": 1904,
 			"source": "openalex",
 			"date": "2026-10-30"
+		},
+		{
+			"key": "Man1980a",
+			"count": 236,
+			"source": "crossref",
+			"date": "2026-11-13"
+		},
+		{
+			"key": "Man1980a",
+			"count": 271,
+			"source": "openalex",
+			"date": "2026-11-13"
 		},
 		{
 			"key": "Mar1952a",
@@ -55187,6 +55304,19 @@
 			"keys": [
 				"FP2009a",
 				"Tet2007a"
+			]
+		},
+		{
+			"id": "mixCompiled",
+			"title": "Mix Julia with Compiled Code",
+			"description": "Call C · Call Fortran · Call C++ · Julia Callback · Julia from C",
+			"commands": [
+				"pollis.compilation.mix"
+			],
+			"keys": [
+				"Jul1918a",
+				"Man1980a",
+				"Gol1991a"
 			]
 		},
 		{

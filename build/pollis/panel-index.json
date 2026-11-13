@@ -5239,6 +5239,36 @@
 			]
 		},
 		{
+			"id": "mixCompiled",
+			"title": "Mix Julia with Compiled Code",
+			"source": "pollis",
+			"commands": [
+				{
+					"id": "pollis.compilation.mix",
+					"menuTitles": [
+						"Mix Julia with Compiled Code..."
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "c",
+			"decisionFirstColumn": "Crossing",
+			"toml": "src/vs/workbench/contrib/model/browser/webviews/mixCompiled.toml",
+			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
+			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"wikis": [
+				"mixCompiled/callbacks-and-embedding.md",
+				"mixCompiled/factsheet.md",
+				"mixCompiled/memory-across-the-boundary.md",
+				"mixCompiled/overview.md",
+				"mixCompiled/same-result-across-compilers.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"Chairmarks.jl"
+			]
+		},
+		{
 			"id": "mlmc",
 			"title": "Multilevel Monte Carlo",
 			"source": "pollis",

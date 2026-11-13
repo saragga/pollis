@@ -1,0 +1,814 @@
+# Mix Julia with Compiled Code Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/mixCompiled.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Mix Julia with Compiled Code"
+viewType = "pollis.mixCompiled"
+defaultModel = "c"
+decisionFirstColumn = "Crossing"
+
+[[packages]]
+name = "Chairmarks.jl"
+github = "https://github.com/LilithHafner/Chairmarks.jl"
+
+[requires]
+packages = ["Plots.jl"]
+
+[[wikis]]
+name = "Overview"
+file = "mixCompiled/overview.md"
+bundled = true
+description = "The five ways across between Julia and compiled code, the two examples, and the check that every pixel gets the same count"
+
+[[wikis]]
+name = "Factsheet"
+file = "mixCompiled/factsheet.md"
+bundled = true
+description = "Tabs, compilers, types across the boundary, inputs, files, names and actions at a glance"
+
+[[wikis]]
+name = "Memory Across the Boundary"
+file = "mixCompiled/memory-across-the-boundary.md"
+bundled = true
+description = "Pointers to Julia arrays, the order of a matrix in memory, complex numbers by value and by pointer, and who owns and frees the memory"
+
+[[wikis]]
+name = "Callbacks and Embedding"
+file = "mixCompiled/callbacks-and-embedding.md"
+bundled = true
+description = "A Julia function called from C through @cfunction, and a C program that starts Julia, includes a file and calls a function"
+
+[[wikis]]
+name = "The Same Result Across Compilers"
+file = "mixCompiled/same-result-across-compilers.md"
+bundled = true
+description = "Why counts of iterations can be checked exactly, fused multiply-add, -ffp-contract, and writing the arithmetic the same in every language"
+
+[[models]]
+id = "c"
+label = "Call C"
+
+[[models]]
+id = "fortran"
+label = "Call Fortran"
+
+[[models]]
+id = "cpp"
+label = "Call C++"
+
+[[models]]
+id = "callback"
+label = "Julia Callback"
+
+[[models]]
+id = "embed"
+label = "Julia from C"
+
+[[bullets]]
+text = "Five ways across between Julia and compiled code: Julia calls C, Fortran or C++; C calls back a Julia function; a C program starts Julia and calls it"
+detail = ""
+
+[[bullets]]
+text = "Two examples in every tab: the Mandelbrot set, and the Julia set of a point c, each the number of iterations of z^2 + c before |z| passes 2, for each pixel"
+detail = ""
+
+[[bullets]]
+text = "The compiled code fills a Julia matrix of counts through a pointer, with nothing copied, and the counts are checked against Julia's pixel by pixel"
+detail = ""
+
+[[bullets]]
+text = "The arithmetic is written the same in every language and built with -ffp-contract=off, so the counts can agree exactly"
+detail = ""
+
+[[decisionRows]]
+task = "Call C"
+context = "Plain functions"
+purpose = "The simplest crossing: a C function with C types, called with @ccall, filling a Julia matrix through a pointer to its first element"
+
+[[decisionRows]]
+task = "Call Fortran"
+context = "Numerical libraries"
+purpose = "A Fortran subroutine with bind(c) and iso_c_binding, which stores a matrix column by column as Julia does and takes c as a complex number by value"
+
+[[decisionRows]]
+task = "Call C++"
+context = "C++ libraries"
+purpose = "C++ behind extern \"C\", which keeps the name as written; c crosses as a std::complex<double>, by pointer, since std::complex is not a C type"
+
+[[decisionRows]]
+task = "Julia Callback"
+context = "Julia inside a loop"
+purpose = "The loop over the pixels in C, calling a Julia function for each pixel through a pointer that @cfunction makes"
+
+[[decisionRows]]
+task = "Julia from C"
+context = "Julia inside a program"
+purpose = "A C program that starts Julia, includes a Julia file and calls a function of it, which fills memory the program owns"
+
+[[inputs]]
+id = "example"
+label = "Example"
+tooltip = "The Mandelbrot set starts z at 0 and puts c at the pixel; the Julia set of c starts z at the pixel and keeps c fixed."
+kind = "tabs"
+default = "mandelbrot"
+
+[[inputs.options]]
+value = "mandelbrot"
+label = "Mandelbrot Set"
+
+[[inputs.options]]
+value = "julia"
+label = "Julia Set"
+
+[[inputs]]
+id = "width"
+label = "Pixels Across"
+tooltip = "The number of pixels across the picture; the number down follows from the shape of the region drawn, with square pixels."
+default = "800"
+
+[[inputs]]
+id = "maxiter"
+label = "Iterations"
+tooltip = "The most iterations of z^2 + c for a pixel; a pixel that has not escaped by then counts as inside the set."
+default = "256"
+
+[[inputs]]
+id = "cre"
+label = "Real Part of c"
+tooltip = "The real part of the fixed point c of the Julia set. The Mandelbrot set does not use it."
+default = "-0.8"
+
+[[inputs]]
+id = "cim"
+label = "Imaginary Part of c"
+tooltip = "The imaginary part of the fixed point c of the Julia set. The Mandelbrot set does not use it."
+default = "0.156"
+
+[[codeBranches]]
+model = "c"
+code = '''
+using Libdl
+
+# The example: the Mandelbrot set, or the Julia set of c, on a grid of pixels
+julia_set = "{{example}}" == "julia"
+c = complex({{cre}}, {{cim}})  # the fixed point of the Julia set; the Mandelbrot set does not use it
+x0, x1, y0, y1 = julia_set ? (-1.6, 1.6, -1.0, 1.0) : (-2.2, 0.8, -1.2, 1.2)
+width = {{width}}
+height = round(Int, width * (y1 - y0) / (x1 - x0))
+spacing = (x1 - x0) / (width - 1)  # the distance between two pixels, across and down
+maxiter = Int32({{maxiter}})
+
+# Julia: the iterations of z^2 + c before |z| passes 2, written with real numbers so that every language makes the
+# same operations in the same order; zr2 + zi2 > 4 is abs2(z) > 4, with no square root
+function escape_time(zr, zi, cr, ci, maxiter)
+    for k in 0:maxiter - 1
+        zr2 = zr * zr
+        zi2 = zi * zi
+        zr2 + zi2 > 4.0 && return Int32(k)
+        zi = 2.0 * zr * zi + ci
+        zr = zr2 - zi2 + cr
+    end
+    return maxiter
+end
+
+# The count of each pixel, column by column, as Julia stores a matrix: row i is the height y, column j the width x
+function fill_counts!(counts, x0, y0, spacing, julia_set, cr, ci, maxiter)
+    height, width = size(counts)
+    for j in 1:width, i in 1:height
+        x = x0 + (j - 1) * spacing
+        y = y0 + (i - 1) * spacing
+        counts[i, j] = julia_set ? escape_time(x, y, cr, ci, maxiter) : escape_time(0.0, 0.0, x, y, maxiter)
+    end
+    return counts
+end
+julia_counts = fill_counts!(Matrix{Int32}(undef, height, width), x0, y0, spacing, julia_set, real(c), imag(c), maxiter)
+
+# Toolchain: the C compiler on the path, clang or GCC
+function find_compiler(names)
+    for name in names
+        path = Sys.which(name)
+        path === nothing || return path
+    end
+    return nothing
+end
+compiler = find_compiler(["cc", "gcc", "clang"])
+compiler === nothing && error("No C compiler found: on macOS install the Command Line Tools (xcode-select --install); on Linux install gcc; on Windows install MinGW-w64 with its gcc")
+
+# The same lines in C. The matrix arrives as a pointer to its first value: pixel (i, j) is counts[i + j * height]
+source = """
+#include <stdint.h>
+
+static int32_t escape_time(double zr, double zi, double cr, double ci, int32_t maxiter) {
+    for (int32_t k = 0; k < maxiter; k++) {
+        double zr2 = zr * zr;
+        double zi2 = zi * zi;
+        if (zr2 + zi2 > 4.0) return k;
+        zi = 2.0 * zr * zi + ci;
+        zr = zr2 - zi2 + cr;
+    }
+    return maxiter;
+}
+
+void fill_counts(int32_t *counts, int64_t height, int64_t width, double x0, double y0, double spacing,
+                 int32_t julia_set, double cr, double ci, int32_t maxiter) {
+    for (int64_t j = 0; j < width; j++) {
+        for (int64_t i = 0; i < height; i++) {
+            double x = x0 + (double)j * spacing;
+            double y = y0 + (double)i * spacing;
+            counts[i + j * height] = julia_set ? escape_time(x, y, cr, ci, maxiter) : escape_time(0.0, 0.0, x, y, maxiter);
+        }
+    }
+}
+"""
+
+# Build: a shared library in ~/.pollis/mix/c. -ffp-contract=off keeps a * b + c as a product rounded, then a sum
+# rounded, as Julia computes it; fast lets the compiler fuse them into one instruction, rounded once
+folder = mkpath(joinpath(homedir(), ".pollis", "mix", "c"))
+source_file = joinpath(folder, "fractal.c")
+write(source_file, source)
+fma_flags(contract) = contract == "fast" && Sys.ARCH === :x86_64 ? ["-mfma"] : String[]  # x86-64 has fused instructions only when told
+build_command(contract, library) = `$compiler -O2 -shared -fPIC -ffp-contract=$contract $(fma_flags(contract)) -o $library $source_file`
+function build(contract)
+    library = joinpath(folder, "fractal-$contract-$(string(hash(source), base = 16)).$(Libdl.dlext)")  # a new name for a new source: a library already loaded is not loaded again
+    isfile(library) || run(build_command(contract, library))
+    return library
+end
+built_with = build_command("off", build("off"))
+
+# Call: the C function fills a Julia matrix through a pointer to its first value, nothing copied
+function compiled_fill(contract)
+    address = Libdl.dlsym(Libdl.dlopen(build(contract)), :fill_counts)
+    return counts -> @ccall $address(counts::Ptr{Int32}, size(counts, 1)::Int64, size(counts, 2)::Int64, x0::Float64, y0::Float64, spacing::Float64, julia_set::Int32, real(c)::Float64, imag(c)::Float64, maxiter::Int32)::Cvoid
+end
+fill_compiled! = compiled_fill("off")
+compiled_counts = Matrix{Int32}(undef, height, width)
+fill_compiled!(compiled_counts)
+language = "C"
+
+# Check: the count of every pixel, C against Julia
+differ = count(compiled_counts .!= julia_counts)
+println(differ == 0 ? "C and Julia give the same count at all $(length(julia_counts)) pixels" : "C and Julia differ at $differ of $(length(julia_counts)) pixels")
+'''
+
+[[codeBranches]]
+model = "fortran"
+code = '''
+using Libdl
+
+# The example: the Mandelbrot set, or the Julia set of c, on a grid of pixels
+julia_set = "{{example}}" == "julia"
+c = complex({{cre}}, {{cim}})  # the fixed point of the Julia set; the Mandelbrot set does not use it
+x0, x1, y0, y1 = julia_set ? (-1.6, 1.6, -1.0, 1.0) : (-2.2, 0.8, -1.2, 1.2)
+width = {{width}}
+height = round(Int, width * (y1 - y0) / (x1 - x0))
+spacing = (x1 - x0) / (width - 1)  # the distance between two pixels, across and down
+maxiter = Int32({{maxiter}})
+
+# Julia: the iterations of z^2 + c before |z| passes 2, written with real numbers so that every language makes the
+# same operations in the same order; zr2 + zi2 > 4 is abs2(z) > 4, with no square root
+function escape_time(zr, zi, cr, ci, maxiter)
+    for k in 0:maxiter - 1
+        zr2 = zr * zr
+        zi2 = zi * zi
+        zr2 + zi2 > 4.0 && return Int32(k)
+        zi = 2.0 * zr * zi + ci
+        zr = zr2 - zi2 + cr
+    end
+    return maxiter
+end
+
+# The count of each pixel, column by column, as Julia stores a matrix: row i is the height y, column j the width x
+function fill_counts!(counts, x0, y0, spacing, julia_set, cr, ci, maxiter)
+    height, width = size(counts)
+    for j in 1:width, i in 1:height
+        x = x0 + (j - 1) * spacing
+        y = y0 + (i - 1) * spacing
+        counts[i, j] = julia_set ? escape_time(x, y, cr, ci, maxiter) : escape_time(0.0, 0.0, x, y, maxiter)
+    end
+    return counts
+end
+julia_counts = fill_counts!(Matrix{Int32}(undef, height, width), x0, y0, spacing, julia_set, real(c), imag(c), maxiter)
+
+# Toolchain: gfortran on the path
+compiler = something(Sys.which("gfortran"), Some(nothing))
+compiler === nothing && error("No gfortran found: on macOS install it with Homebrew (brew install gcc); on Linux install gfortran; on Windows install MinGW-w64 with its gfortran")
+
+# The same lines in Fortran. bind(c) gives the subroutine a C name and C arguments; Fortran keeps a matrix column by
+# column, as Julia does, so counts(i, j) is the pixel counts[i, j] of Julia. c arrives as a complex number, by value
+source = """
+module fractal
+    use iso_c_binding
+    implicit none
+contains
+    pure function escape_time(zr0, zi0, cr, ci, maxiter) result(k)
+        real(c_double), intent(in) :: zr0, zi0, cr, ci
+        integer(c_int32_t), intent(in) :: maxiter
+        integer(c_int32_t) :: k
+        real(c_double) :: zr, zi, zr2, zi2
+        zr = zr0
+        zi = zi0
+        do k = 0, maxiter - 1
+            zr2 = zr * zr
+            zi2 = zi * zi
+            if (zr2 + zi2 > 4.0_c_double) return
+            zi = 2.0_c_double * zr * zi + ci
+            zr = zr2 - zi2 + cr
+        end do
+        k = maxiter
+    end function escape_time
+
+    subroutine fill_counts(counts, height, width, x0, y0, spacing, julia_set, c, maxiter) bind(c, name = "fill_counts")
+        integer(c_int64_t), value :: height, width
+        integer(c_int32_t), intent(out) :: counts(height, width)
+        real(c_double), value :: x0, y0, spacing
+        integer(c_int32_t), value :: julia_set, maxiter
+        complex(c_double_complex), value :: c
+        integer(c_int64_t) :: i, j
+        real(c_double) :: x, y
+        do j = 1, width
+            do i = 1, height
+                x = x0 + real(j - 1, c_double) * spacing
+                y = y0 + real(i - 1, c_double) * spacing
+                if (julia_set /= 0) then
+                    counts(i, j) = escape_time(x, y, real(c), aimag(c), maxiter)
+                else
+                    counts(i, j) = escape_time(0.0_c_double, 0.0_c_double, x, y, maxiter)
+                end if
+            end do
+        end do
+    end subroutine fill_counts
+end module fractal
+"""
+
+# Build: a shared library in ~/.pollis/mix/fortran, with the module file there too (-J). -ffp-contract=off keeps
+# a * b + c as a product rounded, then a sum rounded, as Julia computes it; fast lets gfortran fuse them
+folder = mkpath(joinpath(homedir(), ".pollis", "mix", "fortran"))
+source_file = joinpath(folder, "fractal.f90")
+write(source_file, source)
+fma_flags(contract) = contract == "fast" && Sys.ARCH === :x86_64 ? ["-mfma"] : String[]  # x86-64 has fused instructions only when told
+build_command(contract, library) = `$compiler -O2 -shared -fPIC -ffp-contract=$contract $(fma_flags(contract)) -J$folder -o $library $source_file`
+function build(contract)
+    library = joinpath(folder, "fractal-$contract-$(string(hash(source), base = 16)).$(Libdl.dlext)")  # a new name for a new source: a library already loaded is not loaded again
+    isfile(library) || run(build_command(contract, library))
+    return library
+end
+built_with = build_command("off", build("off"))
+
+# Call: ComplexF64 of Julia is complex(c_double_complex) of Fortran, so c crosses by value as one argument
+function compiled_fill(contract)
+    address = Libdl.dlsym(Libdl.dlopen(build(contract)), :fill_counts)
+    return counts -> @ccall $address(counts::Ptr{Int32}, size(counts, 1)::Int64, size(counts, 2)::Int64, x0::Float64, y0::Float64, spacing::Float64, julia_set::Int32, c::ComplexF64, maxiter::Int32)::Cvoid
+end
+fill_compiled! = compiled_fill("off")
+compiled_counts = Matrix{Int32}(undef, height, width)
+fill_compiled!(compiled_counts)
+language = "Fortran"
+
+# Check: the count of every pixel, Fortran against Julia
+differ = count(compiled_counts .!= julia_counts)
+println(differ == 0 ? "Fortran and Julia give the same count at all $(length(julia_counts)) pixels" : "Fortran and Julia differ at $differ of $(length(julia_counts)) pixels")
+'''
+
+[[codeBranches]]
+model = "cpp"
+code = '''
+using Libdl
+
+# The example: the Mandelbrot set, or the Julia set of c, on a grid of pixels
+julia_set = "{{example}}" == "julia"
+c = complex({{cre}}, {{cim}})  # the fixed point of the Julia set; the Mandelbrot set does not use it
+x0, x1, y0, y1 = julia_set ? (-1.6, 1.6, -1.0, 1.0) : (-2.2, 0.8, -1.2, 1.2)
+width = {{width}}
+height = round(Int, width * (y1 - y0) / (x1 - x0))
+spacing = (x1 - x0) / (width - 1)  # the distance between two pixels, across and down
+maxiter = Int32({{maxiter}})
+
+# Julia: the iterations of z^2 + c before |z| passes 2, written with real numbers so that every language makes the
+# same operations in the same order; zr2 + zi2 > 4 is abs2(z) > 4, with no square root
+function escape_time(zr, zi, cr, ci, maxiter)
+    for k in 0:maxiter - 1
+        zr2 = zr * zr
+        zi2 = zi * zi
+        zr2 + zi2 > 4.0 && return Int32(k)
+        zi = 2.0 * zr * zi + ci
+        zr = zr2 - zi2 + cr
+    end
+    return maxiter
+end
+
+# The count of each pixel, column by column, as Julia stores a matrix: row i is the height y, column j the width x
+function fill_counts!(counts, x0, y0, spacing, julia_set, cr, ci, maxiter)
+    height, width = size(counts)
+    for j in 1:width, i in 1:height
+        x = x0 + (j - 1) * spacing
+        y = y0 + (i - 1) * spacing
+        counts[i, j] = julia_set ? escape_time(x, y, cr, ci, maxiter) : escape_time(0.0, 0.0, x, y, maxiter)
+    end
+    return counts
+end
+julia_counts = fill_counts!(Matrix{Int32}(undef, height, width), x0, y0, spacing, julia_set, real(c), imag(c), maxiter)
+
+# Toolchain: the C++ compiler on the path, clang++ or g++
+function find_compiler(names)
+    for name in names
+        path = Sys.which(name)
+        path === nothing || return path
+    end
+    return nothing
+end
+compiler = find_compiler(["c++", "g++", "clang++"])
+compiler === nothing && error("No C++ compiler found: on macOS install the Command Line Tools (xcode-select --install); on Linux install g++; on Windows install MinGW-w64 with its g++")
+
+# The same lines in C++. extern "C" keeps the name fill_counts as written: without it, C++ would export a name made
+# from the name and the types of the arguments, a mangled name. std::complex<double> holds the real part, then the
+# imaginary, as ComplexF64 does, but it is not a C type, so c crosses by pointer
+source = """
+#include <complex>
+#include <cstdint>
+
+static std::int32_t escape_time(double zr, double zi, double cr, double ci, std::int32_t maxiter) {
+    for (std::int32_t k = 0; k < maxiter; k++) {
+        double zr2 = zr * zr;
+        double zi2 = zi * zi;
+        if (zr2 + zi2 > 4.0) return k;
+        zi = 2.0 * zr * zi + ci;
+        zr = zr2 - zi2 + cr;
+    }
+    return maxiter;
+}
+
+extern "C" void fill_counts(std::int32_t *counts, std::int64_t height, std::int64_t width, double x0, double y0,
+                            double spacing, std::int32_t julia_set, const std::complex<double> *c, std::int32_t maxiter) {
+    const double cr = c->real(), ci = c->imag();
+    for (std::int64_t j = 0; j < width; j++) {
+        for (std::int64_t i = 0; i < height; i++) {
+            double x = x0 + static_cast<double>(j) * spacing;
+            double y = y0 + static_cast<double>(i) * spacing;
+            counts[i + j * height] = julia_set ? escape_time(x, y, cr, ci, maxiter) : escape_time(0.0, 0.0, x, y, maxiter);
+        }
+    }
+}
+"""
+
+# Build: a shared library in ~/.pollis/mix/cpp. -ffp-contract=off keeps a * b + c as a product rounded, then a sum
+# rounded, as Julia computes it; fast lets the compiler fuse them into one instruction, rounded once
+folder = mkpath(joinpath(homedir(), ".pollis", "mix", "cpp"))
+source_file = joinpath(folder, "fractal.cpp")
+write(source_file, source)
+fma_flags(contract) = contract == "fast" && Sys.ARCH === :x86_64 ? ["-mfma"] : String[]  # x86-64 has fused instructions only when told
+build_command(contract, library) = `$compiler -std=c++17 -O2 -shared -fPIC -ffp-contract=$contract $(fma_flags(contract)) -o $library $source_file`
+function build(contract)
+    library = joinpath(folder, "fractal-$contract-$(string(hash(source), base = 16)).$(Libdl.dlext)")  # a new name for a new source: a library already loaded is not loaded again
+    isfile(library) || run(build_command(contract, library))
+    return library
+end
+built_with = build_command("off", build("off"))
+
+# Call: Ref{ComplexF64} passes the address of a copy of c that Julia keeps alive during the call
+function compiled_fill(contract)
+    address = Libdl.dlsym(Libdl.dlopen(build(contract)), :fill_counts)
+    return counts -> @ccall $address(counts::Ptr{Int32}, size(counts, 1)::Int64, size(counts, 2)::Int64, x0::Float64, y0::Float64, spacing::Float64, julia_set::Int32, c::Ref{ComplexF64}, maxiter::Int32)::Cvoid
+end
+fill_compiled! = compiled_fill("off")
+compiled_counts = Matrix{Int32}(undef, height, width)
+fill_compiled!(compiled_counts)
+language = "C++"
+
+# Check: the count of every pixel, C++ against Julia
+differ = count(compiled_counts .!= julia_counts)
+println(differ == 0 ? "C++ and Julia give the same count at all $(length(julia_counts)) pixels" : "C++ and Julia differ at $differ of $(length(julia_counts)) pixels")
+'''
+
+[[codeBranches]]
+model = "callback"
+code = '''
+using Libdl
+
+# The example: the Mandelbrot set, or the Julia set of c, on a grid of pixels
+julia_set = "{{example}}" == "julia"
+c = complex({{cre}}, {{cim}})  # the fixed point of the Julia set; the Mandelbrot set does not use it
+x0, x1, y0, y1 = julia_set ? (-1.6, 1.6, -1.0, 1.0) : (-2.2, 0.8, -1.2, 1.2)
+width = {{width}}
+height = round(Int, width * (y1 - y0) / (x1 - x0))
+spacing = (x1 - x0) / (width - 1)  # the distance between two pixels, across and down
+maxiter = Int32({{maxiter}})
+
+# Julia: the iterations of z^2 + c before |z| passes 2, written with real numbers so that every language makes the
+# same operations in the same order; zr2 + zi2 > 4 is abs2(z) > 4, with no square root
+function escape_time(zr, zi, cr, ci, maxiter)
+    for k in 0:maxiter - 1
+        zr2 = zr * zr
+        zi2 = zi * zi
+        zr2 + zi2 > 4.0 && return Int32(k)
+        zi = 2.0 * zr * zi + ci
+        zr = zr2 - zi2 + cr
+    end
+    return maxiter
+end
+
+# The count of each pixel, column by column, as Julia stores a matrix: row i is the height y, column j the width x
+function fill_counts!(counts, x0, y0, spacing, julia_set, cr, ci, maxiter)
+    height, width = size(counts)
+    for j in 1:width, i in 1:height
+        x = x0 + (j - 1) * spacing
+        y = y0 + (i - 1) * spacing
+        counts[i, j] = julia_set ? escape_time(x, y, cr, ci, maxiter) : escape_time(0.0, 0.0, x, y, maxiter)
+    end
+    return counts
+end
+julia_counts = fill_counts!(Matrix{Int32}(undef, height, width), x0, y0, spacing, julia_set, real(c), imag(c), maxiter)
+
+# Toolchain: the C compiler on the path, clang or GCC
+function find_compiler(names)
+    for name in names
+        path = Sys.which(name)
+        path === nothing || return path
+    end
+    return nothing
+end
+compiler = find_compiler(["cc", "gcc", "clang"])
+compiler === nothing && error("No C compiler found: on macOS install the Command Line Tools (xcode-select --install); on Linux install gcc; on Windows install MinGW-w64 with its gcc")
+
+# The loop over the pixels in C, which calls a function it is given for each pixel: here, escape_time of Julia
+source = """
+#include <stdint.h>
+
+typedef int32_t (*escape_function)(double zr, double zi, double cr, double ci, int32_t maxiter);
+
+void fill_counts(int32_t *counts, int64_t height, int64_t width, double x0, double y0, double spacing,
+                 int32_t julia_set, double cr, double ci, int32_t maxiter, escape_function escape) {
+    for (int64_t j = 0; j < width; j++) {
+        for (int64_t i = 0; i < height; i++) {
+            double x = x0 + (double)j * spacing;
+            double y = y0 + (double)i * spacing;
+            counts[i + j * height] = julia_set ? escape(x, y, cr, ci, maxiter) : escape(0.0, 0.0, x, y, maxiter);
+        }
+    }
+}
+"""
+
+# Build: a shared library in ~/.pollis/mix/callback. -ffp-contract=off keeps x0 + j * spacing a product rounded, then
+# a sum rounded, as Julia computes it; fast lets the compiler fuse them into one instruction, rounded once
+folder = mkpath(joinpath(homedir(), ".pollis", "mix", "callback"))
+source_file = joinpath(folder, "fractal.c")
+write(source_file, source)
+fma_flags(contract) = contract == "fast" && Sys.ARCH === :x86_64 ? ["-mfma"] : String[]  # x86-64 has fused instructions only when told
+build_command(contract, library) = `$compiler -O2 -shared -fPIC -ffp-contract=$contract $(fma_flags(contract)) -o $library $source_file`
+function build(contract)
+    library = joinpath(folder, "fractal-$contract-$(string(hash(source), base = 16)).$(Libdl.dlext)")  # a new name for a new source: a library already loaded is not loaded again
+    isfile(library) || run(build_command(contract, library))
+    return library
+end
+built_with = build_command("off", build("off"))
+
+# The callback: @cfunction compiles escape_time for these C types and gives the address C calls. c comes in as
+# arguments, so no closure is needed: @cfunction with $ closes over a value, but its result must then be kept alive
+escape_pointer = @cfunction(escape_time, Int32, (Float64, Float64, Float64, Float64, Int32))
+
+# Call: C fills the Julia matrix, calling back into Julia once for each pixel
+function compiled_fill(contract)
+    address = Libdl.dlsym(Libdl.dlopen(build(contract)), :fill_counts)
+    return counts -> @ccall $address(counts::Ptr{Int32}, size(counts, 1)::Int64, size(counts, 2)::Int64, x0::Float64, y0::Float64, spacing::Float64, julia_set::Int32, real(c)::Float64, imag(c)::Float64, maxiter::Int32, escape_pointer::Ptr{Cvoid})::Cvoid
+end
+fill_compiled! = compiled_fill("off")
+compiled_counts = Matrix{Int32}(undef, height, width)
+fill_compiled!(compiled_counts)
+language = "C calling Julia"
+
+# Check: the count of every pixel, the C loop with the Julia callback against Julia alone
+differ = count(compiled_counts .!= julia_counts)
+println(differ == 0 ? "The C loop calling Julia and Julia alone give the same count at all $(length(julia_counts)) pixels" : "The C loop calling Julia and Julia alone differ at $differ of $(length(julia_counts)) pixels")
+'''
+
+[[codeBranches]]
+model = "embed"
+code = '''
+# The example: the Mandelbrot set, or the Julia set of c, on a grid of pixels
+julia_set = "{{example}}" == "julia"
+c = complex({{cre}}, {{cim}})  # the fixed point of the Julia set; the Mandelbrot set does not use it
+x0, x1, y0, y1 = julia_set ? (-1.6, 1.6, -1.0, 1.0) : (-2.2, 0.8, -1.2, 1.2)
+width = {{width}}
+height = round(Int, width * (y1 - y0) / (x1 - x0))
+spacing = (x1 - x0) / (width - 1)  # the distance between two pixels, across and down
+maxiter = Int32({{maxiter}})
+
+# The Julia file that this session and the C program both include, in ~/.pollis/mix/embed
+folder = mkpath(joinpath(homedir(), ".pollis", "mix", "embed"))
+julia_file = joinpath(folder, "fractal.jl")
+write(julia_file, """
+# The iterations of z^2 + c before |z| passes 2, written with real numbers; zr2 + zi2 > 4 is abs2(z) > 4
+function escape_time(zr, zi, cr, ci, maxiter)
+    for k in 0:maxiter - 1
+        zr2 = zr * zr
+        zi2 = zi * zi
+        zr2 + zi2 > 4.0 && return Int32(k)
+        zi = 2.0 * zr * zi + ci
+        zr = zr2 - zi2 + cr
+    end
+    return maxiter
+end
+
+# The count of each pixel, column by column, as Julia stores a matrix: row i is the height y, column j the width x
+function fill_counts!(counts, x0, y0, spacing, julia_set, cr, ci, maxiter)
+    height, width = size(counts)
+    for j in 1:width, i in 1:height
+        x = x0 + (j - 1) * spacing
+        y = y0 + (i - 1) * spacing
+        counts[i, j] = julia_set ? escape_time(x, y, cr, ci, maxiter) : escape_time(0.0, 0.0, x, y, maxiter)
+    end
+    return counts
+end
+
+# For the C program: the counts go to memory the program owns, seen from Julia as a matrix without a copy
+function fill_counts_at(address::Ptr{Cvoid}, height, width, x0, y0, spacing, julia_set, cr, ci, maxiter)
+    counts = unsafe_wrap(Array, Ptr{Int32}(address), (height, width))
+    fill_counts!(counts, x0, y0, spacing, julia_set, cr, ci, maxiter)
+    return nothing
+end
+""")
+include(julia_file)
+julia_counts = fill_counts!(Matrix{Int32}(undef, height, width), x0, y0, spacing, julia_set, real(c), imag(c), maxiter)
+
+# Toolchain: the C compiler on the path, clang or GCC, and the flags of this Julia from julia-config.jl
+function find_compiler(names)
+    for name in names
+        path = Sys.which(name)
+        path === nothing || return path
+    end
+    return nothing
+end
+compiler = find_compiler(["cc", "gcc", "clang"])
+compiler === nothing && error("No C compiler found: on macOS install the Command Line Tools (xcode-select --install); on Linux install gcc; on Windows install MinGW-w64 with its gcc")
+config = joinpath(Sys.BINDIR, Base.DATAROOTDIR, "julia", "julia-config.jl")
+julia_flags = Base.shell_split(readchomp(`$(Base.julia_cmd()) $config --allflags`))  # the header folder, libjulia and where to find it
+
+# The C program: starts Julia, includes the file, calls fill_counts_at on its own memory and writes the counts to a file
+source = """
+#include <julia.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+JULIA_DEFINE_FAST_TLS
+
+int main(int argc, char *argv[]) {
+    if (argc != 12) {
+        fprintf(stderr, "usage: fractal file.jl counts.bin height width x0 y0 spacing julia_set cr ci maxiter\\n");
+        return 1;
+    }
+    int64_t height = atoll(argv[3]), width = atoll(argv[4]);
+    int32_t *counts = malloc(height * width * sizeof(int32_t));
+
+    jl_init();
+    jl_call1(jl_get_function(jl_main_module, "include"), jl_cstr_to_string(argv[1]));
+    if (jl_exception_occurred()) {
+        fprintf(stderr, "include failed: %s\\n", jl_typeof_str(jl_exception_occurred()));
+        jl_atexit_hook(1);
+        return 1;
+    }
+
+    jl_function_t *fill = jl_get_function(jl_main_module, "fill_counts_at");
+    jl_value_t **args;
+    JL_GC_PUSHARGS(args, 10);
+    args[0] = jl_box_voidpointer(counts);
+    args[1] = jl_box_int64(height);
+    args[2] = jl_box_int64(width);
+    args[3] = jl_box_float64(strtod(argv[5], NULL));
+    args[4] = jl_box_float64(strtod(argv[6], NULL));
+    args[5] = jl_box_float64(strtod(argv[7], NULL));
+    args[6] = jl_box_bool(atoi(argv[8]));
+    args[7] = jl_box_float64(strtod(argv[9], NULL));
+    args[8] = jl_box_float64(strtod(argv[10], NULL));
+    args[9] = jl_box_int32(atoi(argv[11]));
+    jl_call(fill, args, 10);
+    JL_GC_POP();
+    if (jl_exception_occurred()) {
+        fprintf(stderr, "fill_counts_at failed: %s\\n", jl_typeof_str(jl_exception_occurred()));
+        jl_atexit_hook(1);
+        return 1;
+    }
+
+    FILE *out = fopen(argv[2], "wb");
+    fwrite(counts, sizeof(int32_t), height * width, out);
+    fclose(out);
+    free(counts);
+    jl_atexit_hook(0);
+    return 0;
+}
+"""
+
+# Build: the program in ~/.pollis/mix/embed, compiled and linked against libjulia
+source_file = joinpath(folder, "fractal.c")
+write(source_file, source)
+program = joinpath(folder, "fractal-$(string(hash(source), base = 16))" * (Sys.iswindows() ? ".exe" : ""))
+built_with = `$compiler $source_file -o $program $julia_flags`
+isfile(program) || run(built_with)
+
+# Run: the numbers as repr writes them, which strtod reads back to the same Float64. On Windows the program finds
+# libjulia on the path
+counts_file = joinpath(folder, "counts.bin")
+command = `$program $julia_file $counts_file $height $width $(repr(x0)) $(repr(y0)) $(repr(spacing)) $(Int(julia_set)) $(repr(real(c))) $(repr(imag(c))) $maxiter`
+command = Sys.iswindows() ? addenv(command, "PATH" => Sys.BINDIR * ";" * get(ENV, "PATH", "")) : command
+run(command)
+compiled_counts = read!(counts_file, Matrix{Int32}(undef, height, width))
+language = "C starting Julia"
+
+# Check: the count of every pixel, the program's Julia against this session's
+differ = count(compiled_counts .!= julia_counts)
+println(differ == 0 ? "The program and this session give the same count at all $(length(julia_counts)) pixels" : "The program and this session differ at $differ of $(length(julia_counts)) pixels")
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "picture"
+label = "Picture of the Set"
+desc = "The counts of the compiled code as a picture, on a log scale, with the real part across and the imaginary part down"
+code = '''
+using Plots
+
+xs = x0 .+ (0:width - 1) .* spacing
+ys = y0 .+ (0:height - 1) .* spacing
+heatmap(xs, ys, log1p.(compiled_counts), aspect_ratio = :equal, colorbar = false, xlabel = "real part", ylabel = "imaginary part", title = julia_set ? "Julia set of c = $c" : "Mandelbrot set", size = (700, 560))
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "build"
+label = "Source and Build Command"
+desc = "The source the compiler built, where it is saved, the command that built it and the version of the compiler"
+code = '''
+print(read(source_file, String))
+println("Saved at ", source_file)
+@isdefined(julia_file) && println("The Julia file the program includes: ", julia_file)
+println("Built with ", built_with)
+run(`$compiler --version`)
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "times"
+label = "Julia and Compiled Times"
+desc = "The time to fill all the pixels, in Julia alone and through the compiled code, each the fastest of several timings"
+models = ["c", "fortran", "cpp", "callback"]
+code = '''
+using Chairmarks
+
+counts = similar(julia_counts)
+julia_seconds = (@b fill_counts!($counts, $x0, $y0, $spacing, $julia_set, $(real(c)), $(imag(c)), $maxiter)).time
+compiled_seconds = (@b fill_compiled!($counts)).time
+println(rpad("Julia", 18), lpad(round(julia_seconds * 1e3, sigdigits = 4), 10), " ms")
+println(rpad(language, 18), lpad(round(compiled_seconds * 1e3, sigdigits = 4), 10), " ms   ", round(compiled_seconds / julia_seconds, sigdigits = 3), " times Julia's")
+'''
+
+[[actionGroups.actions]]
+id = "fused"
+label = "Fused and Not Fused"
+desc = "The compiled code built again with -ffp-contract=fast, which fuses a multiply and an add, and the pixels whose count then differs from Julia's"
+models = ["c", "fortran", "cpp", "callback"]
+code = '''
+fill_fused! = compiled_fill("fast")
+fused_counts = Matrix{Int32}(undef, height, width)
+fill_fused!(fused_counts)
+println("Built with -ffp-contract=off:  ", count(compiled_counts .!= julia_counts), " of ", length(julia_counts), " pixels differ from Julia's")
+println("Built with -ffp-contract=fast: ", count(fused_counts .!= julia_counts), " of ", length(julia_counts), " pixels differ from Julia's")
+println("Built with ", build_command("fast", build("fast")))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "inside"
+label = "Share of Pixels Inside"
+desc = "The share of pixels that did not escape in the iterations allowed, and the area they cover in the region drawn"
+code = '''
+inside = count(==(maxiter), compiled_counts)
+share = inside / length(compiled_counts)
+region = (x1 - x0) * (y1 - y0)
+println(round(100 * share, digits = 2), "% of the pixels did not escape in ", maxiter, " iterations")
+println("They cover ", round(share * region, sigdigits = 4), " of the ", region, " of the region drawn")
+'''
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "Jul1918a"
+
+[[references]]
+key = "Man1980a"
+
+[[references]]
+key = "Gol1991a"
