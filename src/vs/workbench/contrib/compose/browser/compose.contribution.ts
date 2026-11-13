@@ -26,6 +26,7 @@ import { BROWSE_SKILLS_COMMAND_ID, CHOOSE_AGENT_COMMAND_ID, CREATE_PANEL_COMMAND
 import { BROWSE_METHODS_COMMAND_ID, CREATE_METHOD_COMMAND_ID } from './newMethods.js';
 import { REPLICATE_ARTICLE_COMMAND_ID } from './replicateArticle.js';
 import { SPEED_UP_COMMAND_ID } from './speedUpPage.js';
+import { TRANSLATE_RUST_COMMAND_ID } from './translateRustPage.js';
 import './codingAgentPage.js';
 import './modelRoutingPage.js';
 import './pollisContent.js';
@@ -651,7 +652,7 @@ MenuRegistry.appendMenuItem(ComparisonsMenu, {
 });
 
 // Compilation Lab, in two groups: Compile Julia (1_compile: a shared library, an executable) and Other Languages
-// (2_languages: Julia mixed with compiled code, Julia translated to Rust). The items not built yet are in composeItems below
+// (2_languages: Julia mixed with compiled code, Julia translated to Rust).
 CommandsRegistry.registerCommand('pollis.compilation.sharedLibrary', (accessor: ServicesAccessor) => openScaffoldWebview(accessor, SHAREDLIB_PANEL));
 CommandsRegistry.registerCommand('pollis.compilation.executable', (accessor: ServicesAccessor) => openScaffoldWebview(accessor, COMPILEEXE_PANEL));
 CommandsRegistry.registerCommand('pollis.compilation.mix', (accessor: ServicesAccessor) => openScaffoldWebview(accessor, MIXCOMPILED_PANEL));
@@ -674,6 +675,12 @@ MenuRegistry.appendMenuItem(CompileGaloreMenu, {
 	order: 1,
 });
 
+MenuRegistry.appendMenuItem(CompileGaloreMenu, {
+	group: '2_languages',
+	command: { id: TRANSLATE_RUST_COMMAND_ID, title: localize('compilation.translateRust', "Translate Julia to Rust...") },
+	order: 2,
+});
+
 // Not built yet: each item says so.
 // Orchestration: coding agents working together. Writer and Checker: one writes, another checks; Two
 // Independent Transcriptions: two agents type the same table from an article and the differences are shown;
@@ -682,7 +689,6 @@ const composeItems = [
 	{ menu: OrchestrationMenu, id: 'pollis.orchestration.writerChecker', title: localize('orchestration.writerChecker', "Writer and Checker..."), group: '1_patterns', order: 1 },
 	{ menu: OrchestrationMenu, id: 'pollis.orchestration.twoTranscriptions', title: localize('orchestration.twoTranscriptions', "Two Independent Transcriptions..."), group: '1_patterns', order: 2 },
 	{ menu: OrchestrationMenu, id: 'pollis.orchestration.race', title: localize('orchestration.race', "Race..."), group: '1_patterns', order: 3 },
-	{ menu: CompileGaloreMenu, id: 'chiara.statistics.comp_tr', title: localize('comp.tr', "Translate Julia to Rust..."), group: '2_languages', order: 2 },
 ];
 
 // Reports: a notebook (a workflow, a notebook tutorial or the user's own) as a LaTeX report or as slides, see reports.ts

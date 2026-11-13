@@ -1,0 +1,64 @@
+# Translate Julia to Rust Webview Configuration
+# A page of Compose > Compilation Lab in the Time Arrow style of the scaffold, not a panel: only its Powered by and
+# Learn More. `pageCommand` is the command that opens it, which a panel's contribution file would say. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/translateRust.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Translate Julia to Rust"
+viewType = "pollis.translateRust"
+pageCommand = "pollis.compilation.translateRust"
+
+[[packages]]
+name = "BenchmarkTools.jl"
+github = "https://github.com/JuliaCI/BenchmarkTools.jl"
+
+[[wikis]]
+name = "Overview"
+file = "translateRust/overview.md"
+bundled = true
+description = "The four steps of translating a Julia function to Rust, the two parts of a Rust version that Julia calls, and why the result is checked before the times"
+
+[[wikis]]
+name = "Factsheet"
+file = "translateRust/factsheet.md"
+bundled = true
+description = "Steps, inputs, files, types across the boundary, requirements and the files of Translate with Agent at a glance"
+
+[[wikis]]
+name = "From Julia to Rust"
+file = "translateRust/julia-to-rust.md"
+bundled = true
+description = "How the parts of a Julia function become Rust: types of fixed size, counting from 0, column order, slices over Julia's memory, and what does not translate as it is"
+
+[[wikis]]
+name = "Calling Rust from Julia"
+file = "translateRust/calling-rust.md"
+bundled = true
+description = "A crate built as a C dynamic library, no_mangle and extern \"C\", @ccall, the memory Julia owns, panics, and a library that stays open in a session"
+
+[[wikis]]
+name = "The Same Result in Rust"
+file = "translateRust/same-result.md"
+bundled = true
+description = "Why the counts agree to the last bit: the same operations in the same order, no fused multiply-add, integer overflow, and the checks of Compare"
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+key = "KN2023a"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "MK2014a"
+
+[[references]]
+key = "Jul1918a"
+
+[[references]]
+key = "Man1980a"

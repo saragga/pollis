@@ -98,7 +98,7 @@ type SpeedUpMessage =
 	| { readonly command: 'agent'; readonly inputs: ISpeedUpInputs };
 
 /** A function's name, as a call writes it: a name, or names joined by dots, Module.f. */
-function isFunctionName(name: string): boolean {
+export function isFunctionName(name: string): boolean {
 	return /^[A-Za-z_][A-Za-z0-9_!]*(?:\.[A-Za-z_][A-Za-z0-9_!]*)*$/.test(name);
 }
 
@@ -186,22 +186,31 @@ function boxCode(box: CodeBox, inputs: ISpeedUpInputs): string {
 		case 'changeCode':
 			return fn === EXAMPLE_FUNCTION && faster === EXAMPLE_FASTER ? EXAMPLE_FASTER_CODE : '';
 		case 'compareCode':
-			return [
-				'Pollis.packages("BenchmarkTools")  # installs BenchmarkTools if this Julia does not have it',
-				'using BenchmarkTools',
-				`before_result = ${call};`,
-				`after_result = ${faster}(${args});`,
-				'same = isequal(before_result, after_result) || (applicable(isapprox, before_result, after_result) && isapprox(before_result, after_result))',
-				`println(same ? "Same result from ${fn} and ${faster}" : "Different results: compare before_result, from ${fn}, with after_result, from ${faster}, before the times")`,
-				`before_times = @benchmark ${benchCall(fn)} seconds = 1;`,
-				`after_times = @benchmark ${benchCall(faster)} seconds = 1;`,
-				'# BenchmarkTools gives times in nanoseconds',
-				`println("${fn}: ", round(minimum(before_times).time / 1e3, sigdigits = 4), " microseconds, ", before_times.allocs, " allocations per call")`,
-				`println("${faster}: ", round(minimum(after_times).time / 1e3, sigdigits = 4), " microseconds, ", after_times.allocs, " allocations per call")`,
-				`println("${faster} is ", round(minimum(before_times).time / minimum(after_times).time, sigdigits = 3), " times as fast as ${fn}")`,
-				'judge(median(after_times), median(before_times))  # improvement, regression, or invariant when the medians are within 5% of each other',
-			].join('\n');
+			return compareCode(fn, args, faster);
 	}
+}
+
+/**
+ * The Julia code that compares a function `fn` with another version of it, `other`, called with the same arguments:
+ * the same result first, to rounding, then the times of the two with BenchmarkTools. Translate Julia to Rust uses it too.
+ */
+export function compareCode(fn: string, args: string, other: string): string {
+	const benchCall = (name: string) => `${name}(${interpolated(args)})`;
+	return [
+		'Pollis.packages("BenchmarkTools")  # installs BenchmarkTools if this Julia does not have it',
+		'using BenchmarkTools',
+		`before_result = ${fn}(${args});`,
+		`after_result = ${other}(${args});`,
+		'same = isequal(before_result, after_result) || (applicable(isapprox, before_result, after_result) && isapprox(before_result, after_result))',
+		`println(same ? "Same result from ${fn} and ${other}" : "Different results: compare before_result, from ${fn}, with after_result, from ${other}, before the times")`,
+		`before_times = @benchmark ${benchCall(fn)} seconds = 1;`,
+		`after_times = @benchmark ${benchCall(other)} seconds = 1;`,
+		'# BenchmarkTools gives times in nanoseconds',
+		`println("${fn}: ", round(minimum(before_times).time / 1e3, sigdigits = 4), " microseconds, ", before_times.allocs, " allocations per call")`,
+		`println("${other}: ", round(minimum(after_times).time / 1e3, sigdigits = 4), " microseconds, ", after_times.allocs, " allocations per call")`,
+		`println("${other} is ", round(minimum(before_times).time / minimum(after_times).time, sigdigits = 3), " times as fast as ${fn}")`,
+		'judge(median(after_times), median(before_times))  # improvement, regression, or invariant when the medians are within 5% of each other',
+	].join('\n');
 }
 
 /** The page, when it is open. */

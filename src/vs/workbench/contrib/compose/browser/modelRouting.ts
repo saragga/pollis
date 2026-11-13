@@ -39,7 +39,7 @@ export type BuiltinAgentTier = 'light' | 'standard' | 'strong';
 /** A tier: one of the three, or the name of one the user typed in a cell. */
 export type AgentTier = string;
 
-export type AgentTask = 'polish' | 'writeVignette' | 'prepareRegistration' | 'packageToolbox' | 'tablesFromArticle' | 'writeMethod' | 'planReplication' | 'replicateArticle' | 'explainDifferences' | 'createPanel' | 'createPanelsFromRequest' | 'speedUp';
+export type AgentTask = 'polish' | 'writeVignette' | 'prepareRegistration' | 'packageToolbox' | 'tablesFromArticle' | 'writeMethod' | 'planReplication' | 'replicateArticle' | 'explainDifferences' | 'createPanel' | 'createPanelsFromRequest' | 'speedUp' | 'translateRust';
 
 /** A tier: its name and what it is for. */
 export interface IAgentTierInfo {
@@ -79,6 +79,7 @@ export const AGENT_TASKS: readonly IAgentTaskInfo[] = [
 	{ id: 'createPanel', label: localize('modelRouting.createPanel', "Create a Panel"), menu: localize('modelRouting.newPanels', "New Panels"), tier: 'strong', skills: ['create-panel'] },
 	{ id: 'createPanelsFromRequest', label: localize('modelRouting.createPanelsFromRequest', "Create Panels from a Request"), menu: localize('modelRouting.newPanels', "New Panels"), tier: 'strong', skills: ['create-panel'] },
 	{ id: 'speedUp', label: localize('modelRouting.speedUp', "Speed Up a Function"), menu: localize('modelRouting.profiling', "Profiling"), tier: 'standard', skills: ['speed-up-function'] },
+	{ id: 'translateRust', label: localize('modelRouting.translateRust', "Translate Julia to Rust"), menu: localize('modelRouting.compilationLab', "Compilation Lab"), tier: 'strong', skills: ['translate-to-rust'] },
 ];
 
 /** The tier a run with no task is on: a skill started from Compose > Agent Skills. */
