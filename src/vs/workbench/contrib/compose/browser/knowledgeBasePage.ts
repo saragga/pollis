@@ -136,6 +136,11 @@ const YOUR_DEPTH = 4;
 /** The subfolders of the knowledge folder a text of the user's is added to, one a type. */
 const YOUR_FOLDERS = ['books', 'articles', 'reports'] as const;
 
+/** The page of the record of a book at the Library of Congress. */
+function libraryRecord(lccn: string): string {
+	return `https://lccn.loc.gov/${encodeURIComponent(lccn)}`;
+}
+
 /** A DOI, alone, after doi:, or as a link of doi.org. */
 const DOI_PATTERN = /^(?:https?:\/\/(?:dx\.)?doi\.org\/|doi:\s*)?(?<doi>10\.\d{4,9}\/\S+)$/i;
 /** An arXiv identifier, after arXiv:, or in the link of its page or of its PDF. */
@@ -205,6 +210,14 @@ interface IKnowledgeText {
 	readonly changes?: string;
 	/** The page of its publisher where the printed book is sold, for a published book. */
 	readonly hard_copy?: string;
+	/** The system its subject comes from, LCSH for the subject headings of the Library of Congress. */
+	readonly subject_from?: string;
+	/** Its classifications, each as "LCC: Q325.5 .M872 2022". */
+	readonly classifications?: readonly string[];
+	/** The number of its record at the Library of Congress. */
+	readonly lccn?: string;
+	/** The edition of that record, when it is not that of the text. */
+	readonly record_edition?: string;
 	/** The path of its cover, in PollisKnowledge.jl; "" for a text without one. */
 	readonly cover_file?: string;
 	downloaded: boolean;
@@ -787,7 +800,9 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 			workspace: !!knowledgeFolder,
 			texts: texts || yours.length ? [
 				...(texts ?? []).map(text => ({
-					id: text.id, title: text.title, type: text.type, edition: text.edition, authors: text.authors, publisher: text.publisher, year: text.year, subject: text.subject,
+					id: text.id, title: text.title, type: text.type, edition: text.edition, authors: text.authors, publisher: text.publisher, year: text.year,
+					subject: text.subject_from ? `${text.subject} (${text.subject_from})` : text.subject, keyWords: [], classifications: text.classifications ?? [],
+					record: text.lccn ? libraryRecord(text.lccn) : undefined, recordEdition: text.record_edition, lccn: text.lccn,
 					format: text.format, licence: text.licence, licenceUrl: text.licence_url, page: text.page, hardCopy: text.hard_copy, size: text.size_mb, changes: text.changes,
 					on: settings.on.includes(text.id), downloaded: text.downloaded, downloading: downloading.has(text.id), failed: failed.get(text.id),
 					passages: passagesOf(text.documents),
@@ -920,7 +935,7 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 			} else if (document) {
 				await editorService.openEditor({ resource: URI.file(document.file) });
 			}
-		} else if (message.command === 'link' && hasKey(message, { url: true }) && texts?.some(text => text.page === message.url || text.licence_url === message.url || text.hard_copy === message.url)) {
+		} else if (message.command === 'link' && hasKey(message, { url: true }) && texts?.some(text => text.page === message.url || text.licence_url === message.url || text.hard_copy === message.url || (!!text.lccn && libraryRecord(text.lccn) === message.url))) {
 			await commandService.executeCommand(OPEN_LINK_COMMAND_ID, message.url);
 		} else if (message.command === 'words' && hasKey(message, { words: true }) && PASSAGE_WORDS.includes(message.words)) {
 			settings.words = message.words;
@@ -979,6 +994,9 @@ function pageHtml(rows: number): string {
 		classifications: localize('knowledgeBase.classifications', "Subject Classifications"),
 		classificationsHint: localize('knowledgeBase.classificationsHint', "The classification systems a text gives on its first page, each with its codes, the primary first: MSC, JEL or ACM CCS"),
 		editHint: localize('knowledgeBase.editHint', "Click to change"),
+		libraryRecord: localize('knowledgeBase.libraryRecord', "Library of Congress Record"),
+		fromRecord: localize('knowledgeBase.fromRecord', "From its record at the Library of Congress, LCCN {0}", '{0}'),
+		fromRecordOf: localize('knowledgeBase.fromRecordOf', "From the record of its {1} at the Library of Congress, LCCN {0}", '{0}', '{1}'),
 		previous: localize('knowledgeBase.previous', "Previous"),
 		next: localize('knowledgeBase.next', "Next"),
 		page: localize('knowledgeBase.page', "Page {0} of {1}", '{0}', '{1}'),
@@ -1193,6 +1211,10 @@ ${spinnerCss}
 			name.appendChild(element('div', 'small', item.edition + ' \\u00b7 ' + authorsOf(item.authors) + ' \\u00b7 ' + item.publisher + ', ' + item.year));
 			const links = element('div', 'links');
 			links.appendChild(link(TEXT.authorsPage, () => vscode.postMessage({ command: 'link', url: item.page })));
+			if (item.record) {
+				links.appendChild(document.createTextNode(' \\u00b7 '));
+				links.appendChild(link(TEXT.libraryRecord, () => vscode.postMessage({ command: 'link', url: item.record })));
+			}
 			name.appendChild(links);
 		}
 		cell(tr).textContent = item.type;
@@ -1205,9 +1227,17 @@ ${spinnerCss}
 			}
 			return td;
 		};
-		editable(cell(tr), 'subject').textContent = item.subject;
+		const recordHint = item.lccn ? (item.recordEdition ? format(TEXT.fromRecordOf, item.lccn, item.recordEdition) : format(TEXT.fromRecord, item.lccn)) : '';
+		const subject = editable(cell(tr), 'subject');
+		subject.textContent = item.subject;
+		if (recordHint) {
+			subject.title = recordHint;
+		}
 		editable(cell(tr, 'keyWords small'), 'keyWords').textContent = (item.keyWords || []).join(', ');
 		const classes = editable(cell(tr, 'classes small'), 'classifications');
+		if (recordHint) {
+			classes.title = recordHint;
+		}
 		for (const classification of item.classifications || []) {
 			classes.appendChild(element('div', '', classification));
 		}
