@@ -550,8 +550,14 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 			const name = basename(file);
 			const extension = extname(file);
 			const title = await askTitle(name.slice(0, name.length - extension.length), name);
-			const target = title === undefined ? undefined : await targetFor(folder, fileNameOf(title), extension);
-			if (target && !isEqual(target, file)) {
+			// A file in the knowledge folder already is moved there, as Rename... does, not copied beside itself; to its
+			// own name, in other capitals or none, without asking about the file there, which is itself
+			const own = yours.find(text => isEqual(URI.file(text.document.file), file));
+			const itself = title !== undefined && joinPath(folder, fileNameOf(title) + extension).fsPath.toLowerCase() === file.fsPath.toLowerCase();
+			const target = title === undefined ? undefined : own && itself ? joinPath(folder, fileNameOf(title) + extension) : await targetFor(folder, fileNameOf(title), extension);
+			if (target && own) {
+				await moveText(own, target, true);
+			} else if (target && !isEqual(target, file)) {
 				await fileService.copy(file, target, true).catch(error => notificationService.error(localize('knowledgeBase.addFailed', "{0} could not be added: {1}", name, String(error?.message ?? error))));
 			}
 		}
@@ -659,17 +665,27 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 			notificationService.error(localize('knowledgeBase.renameExists', "{0} is in its folder already: write another title.", name));
 			return;
 		}
+		await moveText(text, target, false);
+	};
+	/**
+	 * Moves the file of a text of the user's to `target`, over a file there when `overwrite`; its switch and its entry
+	 * in catalogue.toml go with it.
+	 */
+	const moveText = async (text: IYourText, target: URI, overwrite: boolean) => {
+		const resource = URI.file(text.document.file);
+		if (isEqual(target, resource)) {
+			return;
+		}
 		try {
-			await fileService.move(resource, target, false);
+			await fileService.move(resource, target, overwrite);
 		} catch (error) {
 			notificationService.error(localize('knowledgeBase.renameFailed', "{0} could not be renamed: {1}", basename(resource), String(error?.message ?? error)));
 			return;
 		}
-		if (settings.off.includes(id)) {
-			settings.off = settings.off.map(off => off === id ? target.fsPath : off);
+		if (settings.off.includes(text.id)) {
+			settings.off = settings.off.map(off => off === text.id ? target.fsPath : off);
 			save();
 		}
-		// Its entry in catalogue.toml goes with it
 		const entry = catalogue.get(text.key);
 		const key = knowledgeFolder && relativePath(knowledgeFolder, target);
 		if (entry && key) {
