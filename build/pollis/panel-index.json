@@ -7884,6 +7884,39 @@
 			]
 		},
 		{
+			"id": "sharedLib",
+			"title": "Compile Julia to a Shared Library",
+			"source": "pollis",
+			"commands": [
+				{
+					"id": "pollis.compilation.sharedLibrary",
+					"menuTitles": [
+						"Compile Julia to a Shared Library..."
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "juliac",
+			"decisionFirstColumn": "Tool",
+			"toml": "src/vs/workbench/contrib/model/browser/webviews/sharedLib.toml",
+			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
+			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"wikis": [
+				"sharedLib/factsheet.md",
+				"sharedLib/overview.md",
+				"sharedLib/runtimes.md",
+				"sharedLib/shipping.md",
+				"sharedLib/trimming.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"JuliaC.jl",
+				"PackageCompiler.jl",
+				"StaticCompiler.jl",
+				"Chairmarks.jl"
+			]
+		},
+		{
 			"id": "si",
 			"title": "System Identification Methods",
 			"source": "pollis",

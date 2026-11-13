@@ -18826,6 +18826,47 @@
 			"open_access": true
 		},
 		{
+			"key": "JLC2026a",
+			"type": "misc",
+			"title": "JuliaC.jl: CLI app for compiling and bundling julia binaries, especially trimmed ones",
+			"authors": [
+				"JuliaLang Contributors"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://github.com/JuliaLang/JuliaC.jl",
+			"abstract": "CLI app for compiling and bundling julia binaries, especially trimmed ones",
+			"abstract_source": "github",
+			"source": "manual",
+			"retrieved": "2026-11-13",
+			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "JLC2026b",
+			"type": "misc",
+			"title": "PackageCompiler.jl: Compile your Julia Package",
+			"authors": [
+				"JuliaLang Contributors"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://github.com/JuliaLang/PackageCompiler.jl",
+			"abstract": "Compile your Julia Package",
+			"abstract_source": "github",
+			"keywords": [
+				"julia",
+				"packagecompiler"
+			],
+			"keywords_source": "github",
+			"source": "manual",
+			"retrieved": "2026-11-13",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "JM2024a",
 			"type": "book",
 			"title": "Speech and Language Processing",
@@ -35379,6 +35420,24 @@
 			"url": "https://www.rfc-editor.org/rfc/rfc4180",
 			"legacy_key": "shafranovich2005",
 			"source": "manual",
+			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "Sho2026a",
+			"type": "misc",
+			"title": "StaticCompiler.jl: Compiles Julia code to a standalone library (experimental)",
+			"authors": [
+				"Short, Tom"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://github.com/tshort/StaticCompiler.jl",
+			"abstract": "Compiles Julia code to a standalone library (experimental)",
+			"abstract_source": "github",
+			"source": "manual",
+			"retrieved": "2026-11-13",
 			"checked": false,
 			"open_access": true
 		},
@@ -56540,6 +56599,21 @@
 				"RN2017a",
 				"Oks1998a",
 				"SS2019a"
+			]
+		},
+		{
+			"id": "sharedLib",
+			"title": "Compile Julia to a Shared Library",
+			"description": "JuliaC · PackageCompiler · StaticCompiler",
+			"commands": [
+				"pollis.compilation.sharedLibrary"
+			],
+			"keys": [
+				"JLC2026a",
+				"JLC2026b",
+				"Sho2026a",
+				"Jul1918a",
+				"Man1980a"
 			]
 		},
 		{
