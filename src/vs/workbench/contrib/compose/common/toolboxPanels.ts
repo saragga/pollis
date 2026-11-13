@@ -50,6 +50,41 @@ export interface IToolboxDocumentInfo {
 	readonly name: string;
 }
 
+/**
+ * A text an installed toolbox adds to the Knowledge Base: a PDF its authors share under an open licence, which Pollis
+ * downloads from where they keep it, at a fixed version, the first time the user switches it on.
+ */
+export interface IToolboxTextInfo {
+	/** Its id in the toolbox: letters, digits and underscores. */
+	readonly id: string;
+	/** The key of its work in PollisReferences, if it has one. */
+	readonly reference?: string;
+	readonly title: string;
+	/** Its type, as the type menu of the Knowledge Base lists it: Book, Lecture Notes, Article... */
+	readonly type: string;
+	readonly edition: string;
+	/** Its authors, as "First Last". */
+	readonly authors: readonly string[];
+	readonly publisher: string;
+	readonly year: number;
+	readonly subject: string;
+	readonly keyWords: readonly string[];
+	/** Its classifications, each as "JEL: G12, C58". */
+	readonly classifications: readonly string[];
+	readonly licence: string;
+	readonly licenceUrl: string;
+	/** The page of the text on its authors' site. */
+	readonly page: string;
+	/** The PDF, at a fixed version, which Pollis downloads. */
+	readonly download: string;
+	/** The SHA-256 of that PDF, in hexadecimal, which the download must match. */
+	readonly sha256: string;
+	/** Its size, in MB. */
+	readonly size: number;
+	/** What is changed of it; without one, the PDF of its authors, unchanged. */
+	readonly changes?: string;
+}
+
 /** A place in the menus: a menu, and the group and order in it that set the position. */
 export interface IToolboxPlace {
 	/** A menu id, or {@link TOOLBOX_MENU} for a panel in its toolbox's own menu. */
@@ -72,10 +107,14 @@ export interface IToolboxInfo {
 	readonly extensionId: string;
 	readonly id: string;
 	readonly title: string;
+	/** The extension's name as the user sees it, such as Finance Toolbox. */
+	readonly extensionName: string;
 	/** The extension's version. */
 	readonly version: string;
 	readonly panels: readonly IToolboxPanelInfo[];
 	readonly documents: readonly IToolboxDocumentInfo[];
+	/** The texts it adds to the Knowledge Base. */
+	readonly texts: readonly IToolboxTextInfo[];
 	/** The default places: the toolbox's menu at the end of Extend, with every panel in. */
 	readonly defaultPlacement: IToolboxPlacement;
 	/** The places the toolbox is in: the ones the user published, else the default ones. */

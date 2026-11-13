@@ -48,6 +48,7 @@ import { IInstalledModel } from './modelsInstalledPage.js';
 import { tomlString } from './articleAndData.js';
 import { classificationText, parseClassification, readClassification, readLatexClassification, subjectOf } from '../common/subjectClassifications.js';
 import { latexSourceOf } from './latexSource.js';
+import { IToolboxPanelsService, IToolboxTextInfo } from '../common/toolboxPanels.js';
 import { parseToml } from '../../model/browser/common/tomlPanelData.js';
 import { findPollisWorkspace, OPEN_POLLIS_WORKSPACE_COMMAND_ID, pollisWorkspaceFolder } from '../../pollisWorkspace/browser/pollisWorkspace.contribution.js';
 
@@ -62,7 +63,9 @@ import { findPollisWorkspace, OPEN_POLLIS_WORKSPACE_COMMAND_ID, pollisWorkspaceF
 // page and the publisher's, where the printed book is sold. The user's own texts, the PDF, Markdown and text files in
 // the knowledge_base folder of the Pollis Workspace open, are in the same table, with User as their source, the type of
 // their folder (books/, articles/ or reports/) and switched on until the user switches them off; the table reads the
-// folder again each time the page or the window gets the focus.
+// folder again each time the page or the window gets the focus. A toolbox installed adds the texts its package.json
+// lists (IToolboxTextInfo), with the toolbox as their source: Pollis downloads the PDF of one switched on from where its
+// authors keep it, at a fixed version, checks it by its SHA-256, and keeps it in ~/.pollis/knowledge/toolboxes.
 
 export const KNOWLEDGE_BASE_COMMAND_ID = 'pollis.knowledgeBase';
 
@@ -200,6 +203,44 @@ function fileNameOf(title: string): string {
 		.slice(0, 180);
 }
 
+/** A text a toolbox installed adds, with where Pollis keeps it. */
+interface IToolboxText {
+	/** Its id in the page: the extension's id and its own, as `<extension id>/<id>`. */
+	readonly id: string;
+	readonly text: IToolboxTextInfo;
+	/** The toolbox's name, its source in the table. */
+	readonly source: string;
+	/** The PDF as Pollis keeps it, in ~/.pollis/knowledge/toolboxes/<extension id>/<id>. */
+	readonly file: URI;
+	downloaded: boolean;
+}
+
+/** The time a toolbox's text has to download. */
+const TOOLBOX_TEXT_TIMEOUT = 300_000;
+
+/** The SHA-256 of `content`, in hexadecimal. */
+async function sha256Of(content: VSBuffer): Promise<string> {
+	const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', content.buffer as Uint8Array<ArrayBuffer>));
+	return [...digest].map(byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
+/** The LICENCE.md kept beside a toolbox's text: what it is, where it comes from, its licence and what is changed. */
+function toolboxLicence(text: IToolboxTextInfo, source: string): string {
+	return [
+		`# ${text.title}`,
+		'',
+		`${text.authors.join(', ')}. ${text.edition}. ${text.publisher}, ${text.year}.`,
+		'',
+		`- Page: ${text.page}`,
+		`- Downloaded from: ${text.download}`,
+		`- SHA-256: ${text.sha256}`,
+		`- Licence: ${text.licence}, ${text.licenceUrl}`,
+		`- Changes: ${text.changes ?? 'none; the PDF of its authors, unchanged.'}`,
+		`- Listed by: ${source}`,
+		'',
+	].join('\n');
+}
+
 /** A text of the catalogue of PollisKnowledge.jl, as knowledge_base.jl answers it. */
 interface IKnowledgeText {
 	readonly id: string;
@@ -278,6 +319,7 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 	const quickInputService = accessor.get(IQuickInputService);
 	const requestService = accessor.get(IRequestService);
 	const progressService = accessor.get(IProgressService);
+	const toolboxPanelsService = accessor.get(IToolboxPanelsService);
 
 	if (openPage && !openPage.isDisposed()) {
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
@@ -841,9 +883,41 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 		await readYoursAgain();
 	};
 
+	/** The texts of the toolboxes installed, and whether each is on this computer. */
+	let toolboxTexts: IToolboxText[] = [];
+	const readToolboxTexts = async () => {
+		const folder = joinPath(await pathService.userHome(), '.pollis', 'knowledge', 'toolboxes');
+		const found: IToolboxText[] = [];
+		for (const toolbox of toolboxPanelsService.getToolboxes()) {
+			for (const text of toolbox.texts) {
+				const file = joinPath(folder, toolbox.extensionId, text.id, `${text.id}.pdf`);
+				found.push({ id: `${toolbox.extensionId}/${text.id}`, text, source: toolbox.extensionName, file, downloaded: await fileService.exists(file) });
+			}
+		}
+		toolboxTexts = found;
+	};
+	/** The document of a toolbox's text, which the index reads and the page opens. */
+	const toolboxDocument = (text: IToolboxText): ITextDocument => ({ file: text.file.fsPath, title: text.text.title, kind: 'pdf' });
+	/** Downloads the PDF of a toolbox's text, checks it by its SHA-256 and keeps it with its LICENCE.md; why it could not, else undefined. */
+	const downloadToolboxText = async (text: IToolboxText): Promise<string | undefined> => {
+		const context = await requestService.request({ type: 'GET', url: text.text.download, timeout: TOOLBOX_TEXT_TIMEOUT, callSite: 'knowledgeBase.toolboxText' }, CancellationToken.None).catch(() => undefined);
+		if (!context || !isSuccess(context)) {
+			return localize('knowledgeBase.toolboxTextUnreachable', "{0} could not be reached", text.text.download);
+		}
+		const content = await streamToBuffer(context.stream);
+		if (!isPdf(content) || await sha256Of(content) !== text.text.sha256) {
+			return localize('knowledgeBase.toolboxTextChanged', "the file downloaded is not the PDF {0} lists", text.source);
+		}
+		await fileService.writeFile(text.file, content);
+		await fileService.writeFile(joinPath(dirname(text.file), 'LICENCE.md'), VSBuffer.fromString(toolboxLicence(text.text, text.source)));
+		text.downloaded = true;
+		return undefined;
+	};
+
 	/** The documents of the texts switched on and on this computer, which the index is built from. */
 	const documentsOn = () => [
 		...(texts ?? []).filter(text => settings.on.includes(text.id) && text.downloaded).flatMap(text => text.documents),
+		...toolboxTexts.filter(text => settings.on.includes(text.id) && text.downloaded).map(toolboxDocument),
 		...yours.filter(text => !settings.off.includes(text.id)).map(text => text.document),
 	];
 
@@ -885,7 +959,7 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 			error: catalogueError,
 			reading: !texts && !catalogueError,
 			workspace: !!knowledgeFolder,
-			texts: texts || yours.length ? [
+			texts: texts || yours.length || toolboxTexts.length ? [
 				...(texts ?? []).map(text => ({
 					id: text.id, title: text.title, type: text.type, edition: text.edition, authors: text.authors, publisher: text.publisher, year: text.year,
 					subject: text.subject_from ? `${text.subject} (${text.subject_from})` : text.subject, keyWords: [], classifications: text.classifications ?? [],
@@ -894,6 +968,16 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 					on: settings.on.includes(text.id), downloaded: text.downloaded, downloading: downloading.has(text.id), failed: failed.get(text.id),
 					passages: passagesOf(text.documents),
 				})),
+				...toolboxTexts.map(toolboxText => {
+					const { id, text, source, downloaded } = toolboxText;
+					return {
+						id, title: text.title, type: text.type, edition: text.edition, authors: text.authors, publisher: text.publisher, year: text.year,
+						subject: text.subject, keyWords: text.keyWords, classifications: text.classifications,
+						format: 'pdf', licence: text.licence, licenceUrl: text.licenceUrl, page: text.page, size: text.size, changes: text.changes, source,
+						on: settings.on.includes(id), downloaded, downloading: downloading.has(id), failed: failed.get(id),
+						passages: downloaded ? passagesOf([toolboxDocument(toolboxText)]) : 0,
+					};
+				}),
 				...yours.map(text => ({
 					id: text.id, title: text.document.title, type: text.type, path: text.path, authors: [], subject: text.subject, keyWords: text.keyWords, classifications: text.classifications,
 					licence: '', format: text.document.kind, size: text.size,
@@ -911,7 +995,20 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 	 * and one whose download fails is switched off again, with why.
 	 */
 	const switchTexts = async (ids: readonly string[], on: boolean) => {
-		const chosen = (texts ?? []).filter(text => ids.includes(text.id));
+		// The texts of PollisKnowledge.jl, downloaded by knowledge_base.jl, and those of the toolboxes, by Pollis
+		const fetchKnowledge = async (text: IKnowledgeText) => {
+			const answer = await commandService.executeCommand<{ documents?: ITextDocument[]; error?: string }>('language-julia.pollisKnowledgeBase', { task: 'download', id: text.id }).catch(() => undefined);
+			if (answer?.documents) {
+				text.downloaded = true;
+				text.documents = answer.documents;
+				return undefined;
+			}
+			return answer?.error ?? 'failed';
+		};
+		const chosen = [
+			...(texts ?? []).filter(text => ids.includes(text.id)).map(text => ({ id: text.id, downloaded: () => text.downloaded, fetch: () => fetchKnowledge(text) })),
+			...toolboxTexts.filter(text => ids.includes(text.id)).map(text => ({ id: text.id, downloaded: () => text.downloaded, fetch: () => downloadToolboxText(text).catch(() => 'failed') })),
+		];
 		const yoursChosen = yours.filter(text => ids.includes(text.id));
 		for (const text of yoursChosen) {
 			settings.off = settings.off.filter(id => id !== text.id);
@@ -934,19 +1031,16 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 			}
 		}
 		save();
-		const fetched = on ? chosen.filter(text => !text.downloaded && !downloading.has(text.id)) : [];
+		const fetched = on ? chosen.filter(text => !text.downloaded() && !downloading.has(text.id)) : [];
 		for (const text of fetched) {
 			downloading.add(text.id);
 		}
 		await postState();
 		for (const text of fetched) {
-			const answer = await commandService.executeCommand<{ documents?: ITextDocument[]; error?: string }>('language-julia.pollisKnowledgeBase', { task: 'download', id: text.id }).catch(() => undefined);
+			const error = await text.fetch();
 			downloading.delete(text.id);
-			if (answer?.documents) {
-				text.downloaded = true;
-				text.documents = answer.documents;
-			} else {
-				failed.set(text.id, answer?.error ?? 'failed');
+			if (error) {
+				failed.set(text.id, error);
 				settings.on = settings.on.filter(id => id !== text.id);
 				save();
 			}
@@ -960,6 +1054,7 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 	/** Reads the catalogue and the user's texts and shows them, with the covers of the books. */
 	const showCatalogue = async () => {
 		await readYours();
+		await readToolboxTexts();
 		await readCatalogue();
 		await postState();
 		post({ command: 'covers', covers });
@@ -993,6 +1088,13 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 		}
 	};
 	disposables.add(webviewInput.webview.onDidFocus(focused));
+	// A toolbox installed or uninstalled adds its texts or takes them out
+	disposables.add(toolboxPanelsService.onDidChange(async () => {
+		await readToolboxTexts();
+		if (openPage === webviewInput) {
+			await postState();
+		}
+	}));
 	disposables.add(hostService.onDidChangeFocus(hasFocus => {
 		if (hasFocus) {
 			focused();
@@ -1018,13 +1120,14 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 		} else if (message.command === 'open' && hasKey(message, { id: true })) {
 			// A text of the user's opens as its file, a PDF with its LaTeX source as the PDF
 			const own = yours.find(t => t.id === message.id);
-			const document = own ? { file: own.id, kind: extname(URI.file(own.id)).toLowerCase() === '.pdf' ? 'pdf' : own.document.kind } : texts?.find(t => t.id === message.id && t.downloaded)?.documents[0];
+			const toolboxText = toolboxTexts.find(t => t.id === message.id && t.downloaded);
+			const document = own ? { file: own.id, kind: extname(URI.file(own.id)).toLowerCase() === '.pdf' ? 'pdf' : own.document.kind } : toolboxText ? toolboxDocument(toolboxText) : texts?.find(t => t.id === message.id && t.downloaded)?.documents[0];
 			if (document?.kind === 'pdf') {
 				await openPdfInViewer(commandService, URI.file(document.file));
 			} else if (document) {
 				await editorService.openEditor({ resource: URI.file(document.file) });
 			}
-		} else if (message.command === 'link' && hasKey(message, { url: true }) && texts?.some(text => text.page === message.url || text.licence_url === message.url || text.hard_copy === message.url || (!!text.lccn && libraryRecord(text.lccn) === message.url))) {
+		} else if (message.command === 'link' && hasKey(message, { url: true }) && (texts?.some(text => text.page === message.url || text.licence_url === message.url || text.hard_copy === message.url || (!!text.lccn && libraryRecord(text.lccn) === message.url)) || toolboxTexts.some(({ text }) => text.page === message.url || text.licenceUrl === message.url))) {
 			await commandService.executeCommand(OPEN_LINK_COMMAND_ID, message.url);
 		} else if (message.command === 'words' && hasKey(message, { words: true }) && PASSAGE_WORDS.includes(message.words)) {
 			settings.words = message.words;
@@ -1067,7 +1170,7 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 function pageHtml(rows: number): string {
 	const text = {
 		title: localize('knowledgeBase.title', "Knowledge Base"),
-		intro: localize('knowledgeBase.intro', "Openly licensed texts that a model can answer from: books, lecture notes, reports and manuals. A text switched on is downloaded once, with its licence, from {0}; Build the Index then cuts the texts switched on into passages and embeds them, in {1}. Each text is shared under its own licence, named in the table. Your own texts, in the {2} folder of the Pollis Workspace open, are in the table too, with User as their source.", '<span class="yellow">PollisKnowledge.jl</span>', '<span class="yellow">~/.pollis/rag</span>', '<span class="yellow">knowledge</span>'),
+		intro: localize('knowledgeBase.intro', "Openly licensed texts that a model can answer from: books, lecture notes, reports and manuals. A text switched on is downloaded once, with its licence, from {0}, or, for a text a toolbox adds, from its authors' site; Build the Index then cuts the texts switched on into passages and embeds them, in {1}. Each text is shared under its own licence, named in the table. Your own texts, in the {2} folder of the Pollis Workspace open, are in the table too, with User as their source.", '<span class="yellow">PollisKnowledge.jl</span>', '<span class="yellow">~/.pollis/rag</span>', '<span class="yellow">knowledge_base</span>'),
 		search: localize('knowledgeBase.search', "Search texts"),
 		allTypes: localize('knowledgeBase.allTypes', "All Types ({0})", '{0}'),
 		typeCount: localize('knowledgeBase.typeCount', "{0} ({1})", '{0}', '{1}'),
@@ -1100,7 +1203,7 @@ function pageHtml(rows: number): string {
 		textColumn: localize('knowledgeBase.textColumn', "Text"),
 		type: localize('knowledgeBase.type', "Type"),
 		source: localize('knowledgeBase.source', "Source"),
-		sourceHint: localize('knowledgeBase.sourceHint', "PollisKnowledge.jl, or User: a file of yours in the knowledge_base folder of the Pollis Workspace open"),
+		sourceHint: localize('knowledgeBase.sourceHint', "PollisKnowledge.jl, a toolbox installed, such as Finance Toolbox, or User: a file of yours in the knowledge_base folder of the Pollis Workspace open"),
 		yours: localize('knowledgeBase.user', "User"),
 		yourFile: localize('knowledgeBase.yourFile', "Your file, unchanged."),
 		yourFileWithSource: localize('knowledgeBase.yourFileWithSource', "Your PDF, with its LaTeX source beside it, which the passages come from."),
@@ -1275,9 +1378,9 @@ ${spinnerCss}
 		return authors.length <= 2 ? authors.join(' and ') : authors.slice(0, -1).join(', ') + ' and ' + authors[authors.length - 1];
 	}
 
-	// Where a text comes from: PollisKnowledge.jl, or the user
+	// Where a text comes from: PollisKnowledge.jl, a toolbox, or the user
 	function sourceOf(item) {
-		return item.yours ? TEXT.yours : 'PollisKnowledge.jl';
+		return item.yours ? TEXT.yours : item.source || 'PollisKnowledge.jl';
 	}
 
 	function sortValue(item) {

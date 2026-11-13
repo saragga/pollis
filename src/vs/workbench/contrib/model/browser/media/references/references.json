@@ -35477,6 +35477,24 @@
 			"open_access": false
 		},
 		{
+			"key": "Sod2023a",
+			"type": "misc",
+			"title": "Lecture Notes in Empirical Asset Pricing (PhD)",
+			"authors": [
+				"Söderlind, Paul"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2023,
+			"publisher": "University of St. Gallen",
+			"url": "https://github.com/PaulSoderlind/EmpiricalFinancePhD",
+			"oa_url": "https://raw.githubusercontent.com/PaulSoderlind/EmpiricalFinancePhD/6e41df601c06c13ae097264a6604f51334d44fac/EmpFinPhDAll.pdf",
+			"source": "manual",
+			"retrieved": "2026-11-13",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "Soy1973a",
 			"type": "article",
 			"title": "Convex Programming with Set-Inclusive Constraints and Applications to Inexact Linear Programming",

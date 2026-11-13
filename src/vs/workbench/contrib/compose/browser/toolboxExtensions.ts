@@ -25,7 +25,7 @@ import { registerExternalFolder } from '../../model/browser/common/customCopyFil
 import { panelFaqItems, panelKeyPoints, parseToml, tomlToPanelData } from '../../model/browser/common/tomlPanelData.js';
 import { buildScaffoldHtml } from '../../model/browser/webviews/scaffoldParts.js';
 import { IAskPollisEvalItem } from '../common/askPollis.js';
-import { IToolboxDocumentInfo, IToolboxInfo, IToolboxPanelsService, IToolboxPlace, IToolboxPlacement, TOOLBOX_END_GROUP, TOOLBOX_MENU, TOOLBOX_SUBMENU_PREFIX } from '../common/toolboxPanels.js';
+import { IToolboxDocumentInfo, IToolboxInfo, IToolboxTextInfo, IToolboxPanelsService, IToolboxPlace, IToolboxPlacement, TOOLBOX_END_GROUP, TOOLBOX_MENU, TOOLBOX_SUBMENU_PREFIX } from '../common/toolboxPanels.js';
 
 /** A panel of a toolbox contributed by an extension. */
 interface IToolboxPanelContribution {
@@ -75,6 +75,8 @@ interface IToolboxContribution {
 	readonly panels: IToolboxPanelContribution[];
 	/** Its vignettes, in Help > Documentation > Toolbox Vignettes. */
 	readonly documents?: IToolboxDocumentContribution[];
+	/** The texts it adds to the Knowledge Base. */
+	readonly texts?: IToolboxTextContribution[];
 }
 
 /** A vignette of a toolbox: LaTeX sources that Pollis compiles with PollisTeX the first time the document is opened. */
@@ -82,6 +84,41 @@ interface IToolboxDocumentContribution {
 	readonly title: string;
 	/** The main .tex file, relative to the extension folder; its .bib files and resources/ folder go beside it. */
 	readonly source: string;
+}
+
+/** A text a toolbox adds to the Knowledge Base, as its package.json gives it. */
+interface IToolboxTextContribution {
+	readonly id: string;
+	readonly reference?: string;
+	readonly title: string;
+	readonly type: string;
+	readonly edition: string;
+	readonly authors: string[];
+	readonly publisher: string;
+	readonly year: number;
+	readonly subject?: string;
+	readonly keyWords?: string[];
+	readonly classifications?: string[];
+	readonly licence: string;
+	readonly licenceUrl: string;
+	readonly page: string;
+	readonly download: string;
+	readonly sha256: string;
+	readonly size: number;
+	readonly changes?: string;
+}
+
+/** The fields of a text a toolbox must give, each a string but the authors, the year and the size. */
+const TEXT_STRINGS = ['id', 'title', 'type', 'edition', 'publisher', 'licence', 'licenceUrl', 'page', 'download', 'sha256'] as const;
+
+/** Whether a text of a toolbox gives every field it must, as it must: an https download with its SHA-256. */
+function isToolboxText(text: IToolboxTextContribution): boolean {
+	return TEXT_STRINGS.every(field => typeof text[field] === 'string' && text[field])
+		&& /^[a-z0-9_]+$/.test(text.id)
+		&& /^[0-9a-f]{64}$/.test(text.sha256)
+		&& [text.download, text.page, text.licenceUrl].every(url => url.startsWith('https://'))
+		&& Array.isArray(text.authors) && text.authors.every(author => typeof author === 'string')
+		&& Number.isInteger(text.year) && typeof text.size === 'number' && text.size > 0;
 }
 
 const toolboxesExtensionPoint = ExtensionsRegistry.registerExtensionPoint<IToolboxContribution[]>({
@@ -142,6 +179,34 @@ const toolboxesExtensionPoint = ExtensionsRegistry.registerExtensionPoint<IToolb
 						},
 					},
 				},
+				texts: {
+					type: 'array',
+					description: localize('pollisToolboxes.texts', "The texts the toolbox adds to the Knowledge Base: PDFs their authors share under an open licence, which Pollis downloads from where they keep them, at a fixed version, the first time the user switches one on."),
+					items: {
+						type: 'object',
+						required: ['id', 'title', 'type', 'edition', 'authors', 'publisher', 'year', 'licence', 'licenceUrl', 'page', 'download', 'sha256', 'size'],
+						properties: {
+							id: { type: 'string', description: localize('pollisToolboxes.text.id', "The text's id in the toolbox: lower-case letters, digits and underscores.") },
+							reference: { type: 'string', description: localize('pollisToolboxes.text.reference', "The key of its work in PollisReferences.") },
+							title: { type: 'string', description: localize('pollisToolboxes.text.title', "The text's title.") },
+							type: { type: 'string', description: localize('pollisToolboxes.text.type', "Its type, such as Book, Lecture Notes or Article.") },
+							edition: { type: 'string', description: localize('pollisToolboxes.text.edition', "Its edition or version, such as the date its authors give it.") },
+							authors: { type: 'array', items: { type: 'string' }, description: localize('pollisToolboxes.text.authors', "Its authors, as First Last.") },
+							publisher: { type: 'string', description: localize('pollisToolboxes.text.publisher', "Its publisher, or the institution it comes from.") },
+							year: { type: 'number', description: localize('pollisToolboxes.text.year', "Its year.") },
+							subject: { type: 'string', description: localize('pollisToolboxes.text.subject', "Its subject.") },
+							keyWords: { type: 'array', items: { type: 'string' }, description: localize('pollisToolboxes.text.keyWords', "Its key words.") },
+							classifications: { type: 'array', items: { type: 'string' }, description: localize('pollisToolboxes.text.classifications', "Its classifications, each a system with its codes, such as JEL: G12, C58.") },
+							licence: { type: 'string', description: localize('pollisToolboxes.text.licence', "The name of its licence, such as CC BY 4.0 or MIT.") },
+							licenceUrl: { type: 'string', description: localize('pollisToolboxes.text.licenceUrl', "The https link to the text of its licence.") },
+							page: { type: 'string', description: localize('pollisToolboxes.text.page', "The https link to its page on its authors' site.") },
+							download: { type: 'string', description: localize('pollisToolboxes.text.download', "The https link to the PDF, at a fixed version, such as a file of a GitHub repository at a commit.") },
+							sha256: { type: 'string', description: localize('pollisToolboxes.text.sha256', "The SHA-256 of the PDF, in hexadecimal, which the download must match.") },
+							size: { type: 'number', description: localize('pollisToolboxes.text.size', "The size of the PDF, in MB.") },
+							changes: { type: 'string', description: localize('pollisToolboxes.text.changes', "What is changed of it. Without one, the PDF of its authors, unchanged.") },
+						},
+					},
+				},
 			},
 		},
 	},
@@ -150,11 +215,13 @@ const toolboxesExtensionPoint = ExtensionsRegistry.registerExtensionPoint<IToolb
 /** An installed toolbox, with the panels that could be read. */
 interface ILoadedToolbox {
 	readonly extensionId: string;
+	readonly extensionName: string;
 	readonly toolbox: IToolboxContribution;
 	readonly location: URI;
 	readonly version: string;
 	readonly panels: readonly { readonly contribution: IToolboxPanelContribution; readonly panel: IScaffoldPanel; readonly faq: readonly IAskPollisEvalItem[] }[];
 	readonly documents: readonly IToolboxDocumentInfo[];
+	readonly texts: readonly IToolboxTextInfo[];
 }
 
 /**
@@ -243,8 +310,10 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 					extensionId: loaded.extensionId,
 					id: loaded.toolbox.id,
 					title: loaded.toolbox.title,
+					extensionName: loaded.extensionName,
 					version: loaded.version,
 					documents: loaded.documents,
+					texts: loaded.texts,
 					panels: inMenuOrder(loaded.toolbox, loaded.panels).map(({ contribution, panel, faq }) => ({
 						id: contribution.id,
 						command: contribution.command,
@@ -324,7 +393,16 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 					}
 					documents.push({ title: document.title, folder: dirname(source), name: basename(source).slice(0, -'.tex'.length) });
 				}
-				loaded.push({ extensionId: ExtensionIdentifier.toKey(extension.description.identifier), toolbox, location, version: extension.description.version, panels, documents });
+				const texts: IToolboxTextInfo[] = [];
+				for (const text of toolbox.texts ?? []) {
+					if (!isToolboxText(text) || texts.some(other => other.id === text.id)) {
+						extension.collector.error(localize('pollisToolboxes.text', "Text {0} must have a unique id of lower-case letters, digits and underscores, its title, type, edition, authors, publisher, year, licence and size, and https links to its page, its licence and its PDF, with the PDF's SHA-256.", String(text.id)));
+						continue;
+					}
+					const strings = (value: unknown) => Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+					texts.push({ ...text, subject: text.subject ?? '', keyWords: strings(text.keyWords), classifications: strings(text.classifications) });
+				}
+				loaded.push({ extensionId: ExtensionIdentifier.toKey(extension.description.identifier), extensionName: extension.description.displayName ?? extension.description.name, toolbox, location, version: extension.description.version, panels, documents, texts });
 			}
 		}
 		if (generation !== this.generation) {
