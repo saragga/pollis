@@ -1,6 +1,6 @@
 # Write
 
-The **Write** tab of the JSON Files panel saves a Julia table as JSON in one of three layouts: JSON Lines and an array of records with DuckDB's `COPY`, and an object of columns with JSON.jl.
+The **Write** tab of the JSON Files panel saves a Julia table as JSON with DuckDB's `COPY`, in one of three layouts: JSON Lines, an array of records, or an object of columns.
 
 ## How Do I Write a Julia Table as JSON Lines?
 
@@ -13,11 +13,11 @@ DBInterface.execute(con, "COPY tbl TO 'out.jsonl' (FORMAT json)")               
 DBInterface.execute(con, "COPY tbl TO 'out.json' (FORMAT json, ARRAY true)")    # one array
 ```
 
-`COPY ... TO` with `FORMAT json` writes one object per row, with the column names as keys and `null` for missing values; `ARRAY true` wraps the objects in one array. A query in place of `tbl`, such as `(SELECT month, temp FROM tbl)`, saves part of the table.
+`COPY ... TO` with `FORMAT json` writes one object per row, with the column names as keys and `null` for missing values; `ARRAY true` wraps the objects in one array. `COPY (SELECT list(COLUMNS(*)) FROM tbl) TO 'out.json' (FORMAT json)` writes the **columns** layout: one object with an array per column. A query in place of `tbl`, such as `(SELECT month, temp FROM tbl)`, saves part of the table.
 
 ## How Do I Write Any Julia Value as JSON with JSON.jl?
 
-`JSON.json(x)` returns the JSON text of a value, and `JSON.json(path, x)` writes it to a file. Named tuples and structs become objects, vectors become arrays, `missing` and `nothing` become `null`. A named tuple of column vectors, such as `tbl`, becomes one object with an array per column, the **columns** layout of the tab. `pretty = true` indents the text for reading, and `jsonlines = true` writes a vector one element per line.
+`JSON.json(x)` returns the JSON text of a value, and from JSON.jl 1.0, `JSON.json(path, x)` writes it to a file. Named tuples and structs become objects, vectors become arrays, `missing` and `nothing` become `null`. A named tuple of column vectors, such as `tbl`, becomes one object with an array per column. `pretty = true` indents the text for reading, and `jsonlines = true` writes a vector one element per line, both from JSON.jl 1.0.
 
 ## What Do Dates and Special Numbers Become in Written JSON?
 

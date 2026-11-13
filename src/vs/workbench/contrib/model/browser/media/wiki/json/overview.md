@@ -1,6 +1,6 @@
 # Overview
 
-The JSON Files panel has four tabs. Two use DuckDB ([Raasveldt and Mühleisen (2019)](#ref-RM2019a)) through DuckDB.jl, one uses JSON.jl, and the **Write** tab uses either, depending on the layout of the file. Every tab ends with `tbl`, a named tuple of column vectors, which the Next Steps use.
+The JSON Files panel has four tabs. Three use DuckDB ([Raasveldt and Mühleisen (2019)](#ref-RM2019a)) through DuckDB.jl, and the **Typed Structs** tab uses JSON.jl. Every tab ends with `tbl`, a named tuple of column vectors, which the Next Steps use.
 
 ## Which Tab of the JSON Files Panel Does What?
 
@@ -9,7 +9,7 @@ The JSON Files panel has four tabs. Two use DuckDB ([Raasveldt and Mühleisen (2
 | **Query** | DuckDB.jl | Reads a file of records, JSON Lines or an array of objects, as a table, and runs SQL on it |
 | **Flatten** | DuckDB.jl | Turns a nested document into rows and columns with `unnest`, and picks single values by their path |
 | **Typed Structs** | JSON.jl | Reads a nested document into Julia structs that describe its shape |
-| **Write** | DuckDB.jl, JSON.jl | Saves a Julia table as JSON Lines, as an array of records, or as arrays per column |
+| **Write** | DuckDB.jl | Saves a Julia table as JSON Lines, as an array of records, or as arrays per column |
 
 ## Why Does the JSON Files Panel Use DuckDB for Records?
 

@@ -125,7 +125,7 @@ detail = "<code>JSON.parsefile</code> reads a nested document into Julia structs
 
 [[bullets]]
 text = "Write"
-detail = "DuckDB saves a table as JSON Lines or an array of records; <code>JSON.json</code> saves any Julia value"
+detail = "DuckDB saves a table as JSON Lines, as an array of records, or as one array per column"
 
 [[decisionRows]]
 task = "Query"
@@ -207,11 +207,14 @@ model = "query"
 code = '''
 using DuckDB, Tables
 
-{{?path=data.jsonl}} using JSON, PollisDatasets  # curated example datasets
-{{?path=data.jsonl}} # Example file: Chambers et al. (1983), daily air quality in New York, May to September 1973, one record per line with null for 44 missing readings, written to data.jsonl in the working directory unless a data.jsonl is there already. Replace "data.jsonl" with your own file.
-{{?path=data.jsonl}} isfile("data.jsonl") || JSON.json("data.jsonl", Tables.rowtable(dataset("airquality")); jsonlines=true)
-
 con = DBInterface.connect(DuckDB.DB)  # an in-memory database: the file stays where it is
+{{?path=data.jsonl}} using PollisDatasets  # curated example datasets
+{{?path=data.jsonl}} # Example file: Chambers et al. (1983), daily air quality in New York, May to September 1973, one record per line with null for 44 missing readings, written to data.jsonl in the working directory unless a data.jsonl is there already. Replace "data.jsonl" with your own file.
+{{?path=data.jsonl}} if !isfile("data.jsonl")
+{{?path=data.jsonl}} 	DuckDB.register_table(con, dataset("airquality"), "airquality")
+{{?path=data.jsonl}} 	DBInterface.execute(con, "COPY airquality TO 'data.jsonl' (FORMAT json)")
+{{?path=data.jsonl}} end
+
 sql = """
 SELECT *
 FROM read_json('{{path}}')
@@ -227,15 +230,19 @@ model = "flatten"
 code = '''
 using DuckDB, Tables
 
-{{?doc=data.json}} using JSON, PollisDatasets  # curated example datasets
+con = DBInterface.connect(DuckDB.DB)
+{{?doc=data.json}} using PollisDatasets  # curated example datasets
 {{?doc=data.json}} # Example file: the air quality readings of Chambers et al. (1983) nested by month, the way an API answers, written to data.json in the working directory unless a data.json is there already. Replace "data.json" with your own file.
 {{?doc=data.json}} if !isfile("data.json")
-{{?doc=data.json}} 	aq = dataset("airquality")
-{{?doc=data.json}} 	months = [(month = m, days = [(day = aq.day[i], ozone = aq.ozone[i], temp = aq.temp[i]) for i in eachindex(aq.month) if aq.month[i] == m]) for m in unique(aq.month)]
-{{?doc=data.json}} 	JSON.json("data.json", (source = "airquality", months = months); pretty = true)
+{{?doc=data.json}} 	DuckDB.register_table(con, dataset("airquality"), "airquality")
+{{?doc=data.json}} 	DBInterface.execute(con, """
+{{?doc=data.json}} 	COPY (
+{{?doc=data.json}} 		SELECT 'airquality' AS source, list({month: month, days: days} ORDER BY month) AS months
+{{?doc=data.json}} 		FROM (SELECT month, list({day: day, ozone: ozone, temp: temp} ORDER BY day) AS days FROM airquality GROUP BY month)
+{{?doc=data.json}} 	) TO 'data.json' (FORMAT json)
+{{?doc=data.json}} 	""")
 {{?doc=data.json}} end
 
-con = DBInterface.connect(DuckDB.DB)
 shape = Tables.columntable(DBInterface.execute(con, "DESCRIBE SELECT * FROM read_json('{{doc}}')"))
 foreach((name, type) -> println(name, " :: ", type), shape.column_name, shape.column_type)  # objects are STRUCTs, arrays end in []
 
@@ -257,12 +264,18 @@ model = "structs"
 code = '''
 using JSON, Tables
 
-{{?doc=data.json}} using PollisDatasets  # curated example datasets
+pkgversion(JSON) >= v"1" || error("Typed Structs needs JSON.jl 1.0 or later, and this environment has JSON.jl $(pkgversion(JSON)): `] status --outdated JSON` names the package that holds it back.")
+{{?doc=data.json}} using DuckDB, PollisDatasets  # curated example datasets
 {{?doc=data.json}} # Example file: the air quality readings of Chambers et al. (1983) nested by month, the way an API answers, written to data.json in the working directory unless a data.json is there already. Replace "data.json" with your own file, and the structs with its shape.
+{{?doc=data.json}} con = DBInterface.connect(DuckDB.DB)
 {{?doc=data.json}} if !isfile("data.json")
-{{?doc=data.json}} 	aq = dataset("airquality")
-{{?doc=data.json}} 	months = [(month = m, days = [(day = aq.day[i], ozone = aq.ozone[i], temp = aq.temp[i]) for i in eachindex(aq.month) if aq.month[i] == m]) for m in unique(aq.month)]
-{{?doc=data.json}} 	JSON.json("data.json", (source = "airquality", months = months); pretty = true)
+{{?doc=data.json}} 	DuckDB.register_table(con, dataset("airquality"), "airquality")
+{{?doc=data.json}} 	DBInterface.execute(con, """
+{{?doc=data.json}} 	COPY (
+{{?doc=data.json}} 		SELECT 'airquality' AS source, list({month: month, days: days} ORDER BY month) AS months
+{{?doc=data.json}} 		FROM (SELECT month, list({day: day, ozone: ozone, temp: temp} ORDER BY day) AS days FROM airquality GROUP BY month)
+{{?doc=data.json}} 	) TO 'data.json' (FORMAT json)
+{{?doc=data.json}} 	""")
 {{?doc=data.json}} end
 
 # The document's shape, as Julia types: a null becomes missing where the field allows it
@@ -288,18 +301,18 @@ tbl = Tables.columntable([(month = m.month, day = d.day, ozone = d.ozone, temp =
 [[codeBranches]]
 model = "write"
 code = '''
-using DuckDB, JSON, Tables
+using DuckDB, Tables
 
 {{?data=data}} using PollisDatasets  # curated example datasets
 {{?data=data}} # Example data: Chambers et al. (1983), daily air quality in New York, May to September 1973, with 44 missing readings. Replace data with your own table.
 {{?data=data}} data = dataset("airquality");  # datasetinfo("airquality") describes the columns
 
 tbl = Tables.columntable({{data}})  # named tuple of column vectors, from any Tables.jl source
-{{?layout!=columns}}con = DBInterface.connect(DuckDB.DB)
-{{?layout!=columns}}DuckDB.register_table(con, tbl, "tbl")  # DuckDB sees the Julia table as the view tbl, without copying it
+con = DBInterface.connect(DuckDB.DB)
+DuckDB.register_table(con, tbl, "tbl")  # DuckDB sees the Julia table as the view tbl, without copying it
 {{?layout=lines}}DBInterface.execute(con, "COPY tbl TO '{{out}}' (FORMAT json)")  # one object per line, missing values as null
 {{?layout=array}}DBInterface.execute(con, "COPY tbl TO '{{out}}' (FORMAT json, ARRAY true)")  # one array of objects
-{{?layout=columns}}JSON.json("{{out}}", tbl)  # one object, an array per column
+{{?layout=columns}}DBInterface.execute(con, "COPY (SELECT list(COLUMNS(*)) FROM tbl) TO '{{out}}' (FORMAT json)")  # one object, an array per column
 println("Wrote ", length(first(tbl)), " rows x ", length(tbl), " columns to {{out}} (", filesize("{{out}}"), " bytes)")
 '''
 
@@ -342,15 +355,16 @@ label = "Key Check"
 desc = "How many records have each key: a key missing from some records, or spelt two ways, shows here"
 models = ["query"]
 code = '''
-using JSON
+using DuckDB, Tables
 
-records = JSON.parsefile("{{path}}")  # JSON Lines or an array: a vector of objects either way
-counts = Dict{String, Int}()
-for record in records, key in keys(record)
-	counts[String(key)] = get(counts, String(key), 0) + 1
-end
-for (key, n) in sort(collect(counts), by=last, rev=true)
-	println(rpad(key, 20), n, " of ", length(records), n < length(records) ? "  <- not in every record" : "")
+db = DBInterface.connect(DuckDB.DB)
+keycounts = Tables.columntable(DBInterface.execute(db, """
+SELECT key, count(*) AS records, (SELECT count(*) FROM read_json_objects('{{path}}')) AS total
+FROM (SELECT unnest(json_keys(json)) AS key FROM read_json_objects('{{path}}'))
+GROUP BY key ORDER BY records DESC
+"""))
+for (key, n, total) in zip(keycounts.key, keycounts.records, keycounts.total)
+	println(rpad(key, 20), n, " of ", total, n < total ? "  <- not in every record" : "")
 end
 '''
 
@@ -396,7 +410,7 @@ end
 [[actionGroups.actions]]
 id = "reader-comparison"
 label = "Reader Comparison"
-desc = "Time DuckDB's read_json and JSON.jl's parsefile on the same file"
+desc = "Time DuckDB's read_json and JSON.jl's parse on the same file"
 models = ["query"]
 code = '''
 using DuckDB, JSON, Tables
@@ -404,7 +418,7 @@ using DuckDB, JSON, Tables
 db = DBInterface.connect(DuckDB.DB)
 readers = [
 	"DuckDB read_json" => () -> Tables.columntable(DBInterface.execute(db, "SELECT * FROM read_json('{{path}}')")),
-	"JSON.parsefile"   => () -> JSON.parsefile("{{path}}"),
+	"JSON.parse"       => () -> occursin(r"\.(jsonl|ndjson)$", "{{path}}") ? [JSON.parse(line) for line in eachline("{{path}}") if !isempty(strip(line))] : JSON.parse(read("{{path}}", String)),
 ]
 for (name, f) in readers
 	f()  # first call compiles

@@ -11,9 +11,5 @@ export function getXlsxHtml(metadata: IXlsxMetadata): string {
 		title: 'Excel Workbook',
 		defaultModel: 'write',
 		decisionFirstColumn: 'Task',
-		illusCollapsed: true,
-		illustrationLabel: 'Illustration',
-		illustrationOverrideJs: `			body.innerHTML = '<div style="text-align:center;padding:24px 0;font-size:13px;color:var(--vscode-descriptionForeground);">Excel file reader and writer for the Julia language.</div>';
-			return;`,
 	});
 }

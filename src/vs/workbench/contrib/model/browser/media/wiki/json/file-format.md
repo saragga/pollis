@@ -17,7 +17,7 @@ An object's names are strings; the order of the names carries no meaning, and th
 
 ## What Is JSON Lines?
 
-JSON Lines, also called newline-delimited JSON (NDJSON), puts one JSON value per line, usually one object per record, in a file ending in `.jsonl` or `.ndjson`. A program can read the file one line at a time, append a record without rewriting the file, and split the file anywhere between lines. Logs, exports of document databases and many machine learning datasets use JSON Lines. JSON.jl's `JSON.parsefile` recognises the two endings and returns a vector of the records; DuckDB's `read_json` detects the layout by itself.
+JSON Lines, also called newline-delimited JSON (NDJSON), puts one JSON value per line, usually one object per record, in a file ending in `.jsonl` or `.ndjson`. A program can read the file one line at a time, append a record without rewriting the file, and split the file anywhere between lines. Logs, exports of document databases and many machine learning datasets use JSON Lines. JSON.jl's `JSON.parsefile`, from version 1.0, recognises the two endings and returns a vector of the records; DuckDB's `read_json` detects the layout by itself.
 
 ## What Does JSON Leave Out?
 

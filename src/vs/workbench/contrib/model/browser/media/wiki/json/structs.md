@@ -19,7 +19,7 @@ end
 months = JSON.parse(text, Vector{Month})   # or JSON.parsefile(path, T)
 ```
 
-A struct field takes the value of the key of the same name, and a field whose type is a struct or a vector of structs reads the object or array below it. The order of the keys in the file does not matter.
+A struct field takes the value of the key of the same name, and a field whose type is a struct or a vector of structs reads the object or array below it. The order of the keys in the file does not matter. Typed parsing needs JSON.jl 1.0 or later; where another package holds JSON.jl at 0.21, as Gadfly does, the tab says so, and `] status --outdated JSON` names that package.
 
 ## What Happens to null and to Missing Keys in Typed Parsing?
 

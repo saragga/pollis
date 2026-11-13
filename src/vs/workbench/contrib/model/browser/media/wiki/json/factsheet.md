@@ -7,7 +7,7 @@
 | **Purpose** | Query, flatten, read into Julia types, and write JSON files |
 | **Input** | A `.json` document, or a `.jsonl` file of records; for writing, any Tables.jl source |
 | **Core packages** | [DuckDB.jl](https://github.com/duckdb/DuckDB.jl), [JSON.jl](https://github.com/JuliaIO/JSON.jl), [Tables.jl](https://github.com/JuliaData/Tables.jl) |
-| **Tabs** | Query (DuckDB), Flatten (DuckDB), Typed Structs (JSON.jl), Write (DuckDB and JSON.jl) |
+| **Tabs** | Query (DuckDB), Flatten (DuckDB), Typed Structs (JSON.jl 1.0 or later), Write (DuckDB) |
 | **Output** | A named tuple of column vectors; Julia structs; a JSON file |
 | **Key choices** | Records or nested document, SQL or Julia types, layout of the file written |
 

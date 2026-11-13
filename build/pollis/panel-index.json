@@ -8969,6 +8969,7 @@
 		},
 		{
 			"id": "xlsx",
+			"title": "Excel Workbook",
 			"source": "pollis",
 			"commands": [
 				{
@@ -8978,8 +8979,31 @@
 					]
 				}
 			],
-			"portable": false,
-			"reason": "the panel xlsx has its own code (illusCollapsed, illustrationLabel, illustrationOverrideJs in src/vs/workbench/contrib/model/browser/webviews/xlsx.template.ts), so it cannot go in a data-only extension"
+			"portable": true,
+			"defaultModel": "write",
+			"decisionFirstColumn": "Task",
+			"toml": "src/vs/workbench/contrib/model/browser/webviews/xlsx.toml",
+			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
+			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"wikis": [
+				"xlsx/constraints.md",
+				"xlsx/diagnostics.md",
+				"xlsx/duckdb.md",
+				"xlsx/factsheet.md",
+				"xlsx/interpretation.md",
+				"xlsx/overview.md"
+			],
+			"notebooks": [
+				"xlsx/tutorial-01-read.ipynb",
+				"xlsx/tutorial-02-write.ipynb",
+				"xlsx/tutorial-03-formula.ipynb",
+				"xlsx/tutorial-04-cond.ipynb"
+			],
+			"packages": [
+				"XLSX.jl",
+				"DuckDB.jl",
+				"Tables.jl"
+			]
 		},
 		{
 			"id": "yfin",
