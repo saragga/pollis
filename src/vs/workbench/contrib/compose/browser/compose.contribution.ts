@@ -242,21 +242,21 @@ MenuRegistry.appendMenuItem(MenuId.MenubarExploreMenu, {
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
-	group: '3_compose',
+	group: '5_compose',
 	submenu: CorrectnessMenu,
 	title: localize('pollisCorrectness.menu', "Correctness Tests"),
 	order: 1,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
-	group: '3_compose',
+	group: '5_compose',
 	submenu: ComparisonsMenu,
 	title: localize('pollisComparison.menu', 'Profiling'),
 	order: 2,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
-	group: '3_compose',
+	group: '5_compose',
 	submenu: CompileGaloreMenu,
 	title: localize('pollisCompileGalore.menu', "Compilation Lab"),
 	order: 3,
