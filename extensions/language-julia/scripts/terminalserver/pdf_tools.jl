@@ -18,13 +18,16 @@
 import Pkg
 
 const ENVIRONMENT = joinpath(homedir(), ".pollis", "pdf", "julia", "v$(VERSION.major).$(VERSION.minor)")
-const DATASETS_URL = "https://github.com/Trumpingtons/PollisDatasets.jl"
+include(joinpath(@__DIR__, "pollis_registry.jl"))
 Pkg.activate(ENVIRONMENT; io = devnull)
 installed = Set(info.name for info in values(Pkg.dependencies()) if info.is_direct_dep)
 if !all(name -> name in installed, ("JSON3", "PollisDatasets", "Poppler_jll"))
     println("{\"status\":\"installing\"}")
     flush(stdout)
-    "PollisDatasets" in installed || Pkg.add(url = DATASETS_URL; io = devnull)
+    if !("PollisDatasets" in installed)
+        add_pollis_registry(Pkg; io = devnull)
+        Pkg.add("PollisDatasets"; io = devnull)
+    end
     "JSON3" in installed || Pkg.add("JSON3"; io = devnull)
     "Poppler_jll" in installed || Pkg.add("Poppler_jll"; io = devnull)
 end

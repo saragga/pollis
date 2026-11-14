@@ -15,6 +15,7 @@
 # "document"} as each document is ready, {"failed"} for one that is not, its log beside where the PDF would be. Beside
 # each PDF goes its .labels, the page of each of its headings, which ask_index.jl cuts the document by.
 import Pkg
+include(joinpath(@__DIR__, "pollis_registry.jl"))
 
 const SOURCES = abspath(ARGS[1])
 const OUTPUT = joinpath(homedir(), ".pollis", "documents")
@@ -48,7 +49,8 @@ sources() = sort!([relpath(joinpath(dir, file), SOURCES) for (dir, _, files) in 
 Pkg.activate(ENVIRONMENT; io = devnull)
 if !any(info -> info.name == "PollisTeX" && info.is_direct_dep, values(Pkg.dependencies()))
 	say("{\"status\":\"installing\"}")
-	Pkg.add(url = "https://github.com/Trumpingtons/PollisTeX.jl"; io = devnull)
+	add_pollis_registry(Pkg; io = devnull)
+	Pkg.add("PollisTeX"; io = devnull)
 end
 
 using PollisTeX, SHA

@@ -17,6 +17,7 @@
 # PollisTeX the first time; the user's environments are never touched. It writes a line of JSON on stdout as it goes:
 # {"status": "installing"} while it installs PollisTeX, then {"pdf"} once the PDF is ready, or {"error"}.
 import Pkg, Downloads
+include(joinpath(@__DIR__, "pollis_registry.jl"))
 
 const SOURCE = ARGS[1]
 const NAME = ARGS[2]
@@ -66,7 +67,8 @@ try
 	Pkg.activate(ENVIRONMENT; io = devnull)
 	if !any(info -> info.name == "PollisTeX" && info.is_direct_dep, values(Pkg.dependencies()))
 		say("{\"status\":\"installing\"}")
-		Pkg.add(url = "https://github.com/Trumpingtons/PollisTeX.jl"; io = devnull)
+		add_pollis_registry(Pkg; io = devnull)
+		Pkg.add("PollisTeX"; io = devnull)
 	end
 	tectonic = Base.invokelatest(Base.require(Main, :PollisTeX).tectonic)
 	mktempdir() do build

@@ -5,9 +5,11 @@ The core recipe: fetch JSON from `data.sec.gov` with the **mandatory `User-Agent
 ## The Package
 
 ```julia
-import Pkg; Pkg.add(url = "https://github.com/Trumpingtons/EDGAR.jl")
+Pollis.packages("EDGAR")
 using EDGAR
 ```
+
+EDGAR.jl is in the Pollis registry, which `Pollis.packages` adds when needed. Outside Pollis, add the registry once with `pkg> registry add https://github.com/Trumpingtons/PollisRegistry`, then the package with `pkg> add EDGAR`.
 
 - **EDGAR.jl** — wraps `HTTP.jl` + `JSON3.jl`, sends the mandatory `User-Agent`, caches responses, and returns the parsed JSON as a lazy, dot-accessible object. One function per endpoint: `fetch_submissions`, `company_facts`, `company_concept`, `xbrl_frames`, `full_text_search`, `cik_for_ticker`.
 

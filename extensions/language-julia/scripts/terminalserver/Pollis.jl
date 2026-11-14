@@ -13,11 +13,8 @@ const ENVIRONMENT = joinpath(homedir(), ".pollis", "julia", "environments", "v$(
 # After the user's environments, so that their own versions of these packages come first.
 ENVIRONMENT in LOAD_PATH || push!(LOAD_PATH, ENVIRONMENT)
 
-"""Pollis's own packages that are not in the General registry, so a bare name is enough."""
-const LINKS = Dict(
-	"PollisDatasets" => "https://github.com/Trumpingtons/PollisDatasets.jl",
-	"PollisTeX" => "https://github.com/Trumpingtons/PollisTeX.jl",
-)
+# The Pollis registry, of Pollis's own packages (PollisDatasets, PollisTeX, EDGAR, HARE, the article methods and others), so a bare name is enough.
+include(joinpath(@__DIR__, "pollis_registry.jl"))
 
 """
     Pollis.packages(names...; forks = ())
@@ -25,17 +22,18 @@ const LINKS = Dict(
 Step 0 of every workflow, notebook and Code Example: install whichever of the named packages the
 active environment cannot load, and do nothing when all are there.
 
-A name is a string, `"Plots"`. A package that may not be in the registries is given with its link,
-`"EDGAR" => "https://github.com/Trumpingtons/EDGAR.jl"`: added by name if a reachable registry has it,
-from the link otherwise. A name in `forks` is always added from its link, since the registered
-version may be the one present; it is re-added whenever anything is missing.
+A name is a string, `"Plots"` or `"PollisDatasets"`: added by name from General or from the Pollis
+registry, which is added first when a name is in no registry reachable yet. A package in no registry
+is given with its link, `"Name" => "https://github.com/owner/Name.jl"`: added by name if a reachable
+registry has it, from the link otherwise. A name in `forks` is always added from its link, since the
+registered version may be the one present; it is re-added whenever anything is missing.
 
 ```julia
 Pollis.packages("ARCHModels", "Plots", "PollisDatasets")
 ```
 """
 function packages(names::Union{AbstractString, Pair{<:AbstractString, <:AbstractString}}...; forks = ())
-	wanted = [name isa Pair ? (String(first(name)), String(last(name))) : (String(name), get(LINKS, name, "")) for name in names]
+	wanted = [name isa Pair ? (String(first(name)), String(last(name))) : (String(name), "") for name in names]
 	missing_packages = filter(((name, _),) -> Base.identify_package(name) === nothing, wanted)
 	isempty(missing_packages) && return nothing
 	to_add = unique([missing_packages; filter(((name, _),) -> name in forks, wanted)])
@@ -44,10 +42,13 @@ function packages(names::Union{AbstractString, Pair{<:AbstractString, <:Abstract
 	return nothing
 end
 
-"""Adds each `(name, link)`: by name if a reachable registry has it and it is not a fork, from its link otherwise."""
+"""
+Adds each `(name, link)`: by name if a reachable registry has it and it is not a fork, from its link otherwise.
+The Pollis registry is added first when a name that is not a fork is in no registry reachable yet.
+"""
 function add(Pkg::Module, to_add, forks)
-	registries = Pkg.Registry.reachable_registries()
-	registered(name) = any(registry -> !isempty(Pkg.Registry.uuids_from_name(registry, name)), registries)
+	registered(name) = any(registry -> !isempty(Pkg.Registry.uuids_from_name(registry, name)), Pkg.Registry.reachable_registries())
+	any(((name, _),) -> !(name in forks) && !registered(name), to_add) && add_pollis_registry(Pkg)
 	Pkg.add([!(name in forks) && (isempty(link) || registered(name)) ? Pkg.PackageSpec(name = name) : Pkg.PackageSpec(url = link) for (name, link) in to_add])
 end
 
