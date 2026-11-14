@@ -543,6 +543,7 @@ export const POLLIS_DOCUMENTS: Readonly<Record<string, string>> = {
 	'pollis-drilldown-pollis-repl.pdf': localize('openDrillDownPollisRepl', "Drill-down: Pollis REPL"),
 	'pollis-drilldown-literature-radar.pdf': localize('openDrillDownLiteratureRadar', "Drill-down: Literature Radar"),
 	'pollis-drilldown-ask-pollis.pdf': localize('openDrillDownAskPollis', "Drill-down: Ask Pollis"),
+	'pollis-drilldown-orchestration.pdf': localize('openDrillDownOrchestration', "Drill-down: Orchestration"),
 };
 
 /**
@@ -710,6 +711,25 @@ registerAction2(class extends Action2 {
 
 	run(accessor: ServicesAccessor): Promise<void> {
 		return openDocument(accessor, 'pollis-drilldown-ask-pollis.pdf');
+	}
+});
+
+registerAction2(class extends Action2 {
+	constructor() {
+		super({
+			id: 'pollis.action.openDrillDownOrchestration',
+			title: {
+				...localize2('openDrillDownOrchestration', "Drill-down: Orchestration"),
+				mnemonicTitle: localize({ key: 'miDrillDownOrchestration', comment: ['&& denotes a mnemonic'] }, "Drill-down: &&Orchestration"),
+			},
+			category: Categories.Help,
+			f1: true,
+			menu: { id: MenubarHelpDocumentationMenu, group: '0_pollis', order: 9 }
+		});
+	}
+
+	run(accessor: ServicesAccessor): Promise<void> {
+		return openDocument(accessor, 'pollis-drilldown-orchestration.pdf');
 	}
 });
 

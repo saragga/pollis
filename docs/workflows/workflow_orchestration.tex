@@ -1,0 +1,347 @@
+% Pollis drill-down: Compose > Orchestration, coding agents and the models they run on (Model Tasks and Routing, local
+% models through llama.cpp, what happens when a task starts), and the pages where agents work together on research
+% (14 November 2026). For users who want the detail, and for whoever maintains Pollis.
+% Compile with: latexmk -pdf workflow_orchestration.tex
+\input{workflow_style}
+
+\usepackage{titlesec}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{listings}
+
+\fancyhf{}
+\fancyfoot[L]{\footnotesize\color{soft}\textbf{Pollis}\enspace Drill-down: Orchestration}
+\fancyfoot[R]{\footnotesize\color{soft}\thepage}
+
+\titleformat{\section}{\color{navy}\large\bfseries}{\color{deepamber}\thesection}{0.6em}{}
+\titleformat{\subsection}{\color{navy}\normalsize\bfseries}{\color{deepamber}\thesubsection}{0.5em}{}
+\titlespacing*{\section}{0pt}{12pt}{4pt}
+\titlespacing*{\subsection}{0pt}{8pt}{2pt}
+\setlength{\parskip}{4pt}
+
+\lstset{basicstyle=\ttfamily\footnotesize, columns=fullflexible, keepspaces=true, breaklines=true,
+  backgroundcolor=\color{pale}, frame=leftline, rulecolor=\color{amber}, framerule=2pt, xleftmargin=6pt,
+  framexleftmargin=6pt, aboveskip=4pt, belowskip=4pt, upquote=true, tabsize=2}
+
+\usepackage{xurl}
+\newcommand{\file}[1]{{\small\nolinkurl{#1}}}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+\newcommand{\ui}[1]{\textbf{#1}}
+\newcommand{\setting}[1]{\file{#1}}
+% Code with spaces in it, such as a command line, which \file would run together
+\newcommand{\code}[1]{\texttt{\small #1}}
+% A menu path at the start of a table cell
+\newcommand{\cellpath}[1]{\leavevmode\menupath{#1}}
+
+\begin{document}
+
+\workflowhead[Drill-Down]{Orchestration}
+  {Coding agents and their models}
+  {Which agent and which model run each task of the Compose menu, how a local model takes the place of a cloud one,
+   what happens when a task starts, and the pages where several agents work on one piece of research.}
+
+\begin{nbox}
+{\color{amber}\bfseries Drill-down.}\enspace
+A look under the surface of what the Guide describes in \emph{Orchestration}. It is for anyone who wants to choose
+the models of their tasks with care, run them on models of their own computer, or know what the research pages of
+\textbf{Compose \gt Orchestration} will do; \S\ref{sec:machinery} is for whoever maintains Pollis. It describes the
+state of 14 November 2026.
+\end{nbox}
+
+\tableofcontents
+
+\section{What Orchestration is}\label{sec:what}
+A \emph{coding agent} is a program that writes code and documents in a terminal, on a language model of a provider's
+cloud or of your own computer. Pollis gives agents the tasks of the \menupath{Compose} menu that need one: creating
+panels, packaging toolboxes, writing methods and vignettes, replicating articles, polishing reports. Orchestration
+decides which agent, on which model, does each task, and lets several agents work on one piece of research.
+
+\begin{center}\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{@{}p{0.36\linewidth}L@{}}
+\toprule
+\textbf{Menu item} & \textbf{What it is for}\\
+\midrule
+\cellpath{Compose \gt Coding Agents} & The agents: Claude Code, Codex, OpenCode and your own, whether each is on this
+  computer, and the Pollis skills installed in them\\
+\cellpath{Compose \gt Agent Skills} & The skills: the know-how an agent reads to do a task\\
+\cellpath{Compose \gt Orchestration \gt Model Tasks and Routing} & Which agent, on which model, runs each task\\
+\cellpath{Compose \gt Local AI Models} & The models of your own computer, which a task can run on\\
+\cellpath{Compose \gt Orchestration}, the research pages & Several agents on one question: Many Analysts,
+  Specification Curve, Forecasting Competition, Referee Report, Systematic Review (\S\ref{sec:research})\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{Agents, skills and tasks}\label{sec:tasks}
+Pollis knows three agents, Claude Code (\file{claude}), Codex (\file{codex}) and OpenCode (\code{opencode -{}-prompt}),
+and any you add under \ui{Other Agents} on the Coding Agents page: a name and a command line, with \texttt{\small\{prompt\}}
+where the first message goes. Without \texttt{\small\{prompt\}}, Pollis copies the first message to the clipboard, to paste
+into the agent.
+
+A \emph{task} is a menu item that starts an agent. Each has a \emph{tier}, the agent and model it runs on, and the
+skills it reads. A tier is set for each task; the defaults are these.
+
+\begin{center}\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{@{}p{0.31\linewidth}p{0.17\linewidth}p{0.12\linewidth}L@{}}
+\toprule
+\textbf{Task} & \textbf{Menu} & \textbf{Tier} & \textbf{Skill}\\
+\midrule
+Polish with Agent & Reports & Light & polish-report\\
+Write a Vignette & Replication & Standard & write-vignette\\
+Prepare for Registration & Replication & Standard & prepare-method\\
+Package a Toolbox & Compose & Standard & package-toolbox\\
+Plan a Replication & Replication & Standard & plan-replication\\
+Explain the Differences & Replication & Standard & explain-differences\\
+Speed Up a Function & Profiling & Standard & speed-up-function\\
+Tables from the Article & Replication & Strong & tables-from-article\\
+Write a Method & Replication & Strong & write-method\\
+Replicate an Article & Replication & Strong & replicate-article\\
+Create a Panel & New Panels & Strong & create-panel\\
+Create Panels from a Request & New Panels & Strong & create-panel\\
+Translate Julia to Rust & Compilation Lab & Strong & translate-to-rust\\
+\bottomrule
+\end{tabularx}
+\end{center}
+A skill started from \menupath{Compose \gt Agent Skills} with \ui{Run with My Agent} is no task of the table, and runs
+on the Standard tier.
+
+\section{Tiers and cells}\label{sec:tiers}
+Not every task needs the strongest model, and a task that reads numbers off a page or writes a method should not get
+the cheapest. Three tiers come with Pollis:
+\begin{itemize}
+  \item \textbf{Light}: small tasks, on a fast, cheap or local model.
+  \item \textbf{Standard}: everyday tasks.
+  \item \textbf{Strong}: hard tasks, where a mistake costs most.
+\end{itemize}
+
+\subsection{The table of agents and models}
+\menupath{Compose \gt Orchestration \gt Model Tasks and Routing} is a table. Its columns are the agents, and its rows
+are the models: the cloud models, then the local models of this computer. A tier is a cell: type its name in a cell,
+and the tier is that agent on that model. A tier is in one cell at most; a name of your own, such as \ui{Max}, makes
+a new tier, which lasts while it is in a cell. A dash marks a model the agent cannot run. Until you change them, Light,
+Standard and Strong are Claude Code on Claude Haiku, Sonnet and Opus.
+
+\subsection{The cloud models}
+Each cloud model is a row with, for each agent that runs it, the arguments that choose it. Pollis puts them after the
+agent's program, so a tier's command line is the agent's, with the model chosen.
+
+\begin{center}\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{@{}p{0.22\linewidth}p{0.2\linewidth}p{0.17\linewidth}L@{}}
+\toprule
+\textbf{Model} & \textbf{Claude Code} & \textbf{Codex} & \textbf{OpenCode}\\
+\midrule
+Claude Haiku & \code{-{}-model haiku} & --- & \code{-{}-model anthropic/claude-haiku-5-5}\\
+Claude Sonnet & \code{-{}-model sonnet} & --- & \code{-{}-model anthropic/claude-sonnet-5-5}\\
+Claude Opus & \code{-{}-model opus} & --- & \code{-{}-model anthropic/claude-opus-5-5}\\
+GPT-5.5 & --- & \code{-m gpt-5.5} & \code{-{}-model openai/gpt-5.5}\\
+GPT-5.4 & --- & \code{-m gpt-5.4} & \code{-{}-model openai/gpt-5.4}\\
+GPT-5.4 mini & --- & \code{-m gpt-5.4-mini} & \code{-{}-model openai/gpt-5.4-mini}\\
+GPT-5.3 Codex & --- & \code{-m gpt-5.3-codex} & \code{-{}-model openai/gpt-5.3-codex}\\
+Gemini 4 Argon & --- & --- & \code{-{}-model google/gemini-4-argon}\\
+Gemini 3.8 Flash & --- & --- & \code{-{}-model google/gemini-3.8-flash}\\
+Gemini 3.5 Flash-Lite & --- & --- & \code{-{}-model google/gemini-3.5-flash-lite}\\
+\bottomrule
+\end{tabularx}
+\end{center}
+The rows are the setting \setting{pollis.agents.cloudModels}: a model of your own is a row with its name and the
+arguments of each agent, and an agent with none for a model cannot run it. Claude Code's \file{haiku}, \file{sonnet} and
+\file{opus} are its names for the latest model of each kind.
+
+\subsection{Choosing the tier of a task}
+Below the table, \ui{Tasks} lists each task with its menu, its tier under \ui{Runs On}, and its skills. Choosing
+another tier for a task overrides its default; a tier that leaves the table stops being an override, and the task goes
+back to its default. Three settings keep it all:
+
+\begin{center}\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{@{}p{0.33\linewidth}L@{}}
+\toprule
+\textbf{Setting} & \textbf{What it holds}\\
+\midrule
+\file{pollis.agents.tierCells} & The cell of each tier: its \file{agent}, by name, and its \file{model},
+  \file{cloud:} and a cloud model's name, or \file{local:} and a model file\\
+\file{pollis.agents.cloudModels} & The cloud models of the rows, each with its arguments for each agent\\
+\file{pollis.agents.taskTiers} & The tier of each task that is not on its default\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{Local models}\label{sec:local}
+A tier on a local model runs its agent on a model of this computer: free, private, and without a network. Pollis
+serves the model with llama.cpp's \file{llama-server}, which comes with it, and points the agent at the server.
+Claude Code, Codex and OpenCode can do this; an agent of your own cannot.
+
+\begin{center}\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{@{}p{0.17\linewidth}L@{}}
+\toprule
+\textbf{Agent} & \textbf{How it reaches the local model}\\
+\midrule
+Claude Code & Through the server's Anthropic API: \file{ANTHROPIC_BASE_URL} is the server, and the Opus, Sonnet and
+  Haiku models are all the local model\\
+OpenCode & Through the server's OpenAI API, as a provider \file{pollis-llamacpp} that \file{OPENCODE_CONFIG_CONTENT}
+  describes\\
+Codex & Through the server's OpenAI API, as the provider \file{pollis-llamacpp}, given with \code{-c} arguments\\
+\bottomrule
+\end{tabularx}
+\end{center}
+The agent's own choice of model, \code{-{}-model} or \code{-m}, is dropped, so the local model is the one used. The
+model gets a context of 32,768 tokens, because an agent's instructions and tools alone take about 20,000. A server
+already running for the model is used again.
+
+\menupath{Compose \gt Local AI Models \gt Set Active Models} lists the local models: those on this computer, those
+Pollis downloaded and those in the Hugging Face cache, with their kind, what each reads, whether it can call tools, and
+the tiers that use it. An agent needs a chat model that can call tools.
+
+\section{When a task starts}\label{sec:start}
+\begin{enumerate}
+  \item \textbf{The tier.} The task's tier, from \ui{Tasks}, and the cell of that tier, from the table. A tier in no
+    cell stops here, with a notification that offers to open Model Tasks and Routing.
+  \item \textbf{The agent.} The agent's program is looked for on this computer, as a terminal would find it. An agent
+    that is not there stops here, with its install page.
+  \item \textbf{The model.} A cloud model's arguments go after the program. A local model is started first, with a
+    notification while llama.cpp loads it.
+  \item \textbf{The terminal.} A terminal named \ui{Pollis Agents:} with the task and its tier, such as
+    \ui{Pollis Agents: Write a Method (Strong)}, starts the agent in the task's folder, else in the workspace's first
+    folder, else in your home folder.
+  \item \textbf{The first message.} It points the agent at the skill and says what to do it on. It goes in the place of
+    \texttt{\small\{prompt\}}, or into the clipboard.
+\end{enumerate}
+From then on you talk to the agent in its terminal. A coding agent reads and writes files and runs commands: read what
+it proposes, and check its results, as you would a colleague's.
+
+\section{Agents working together on research}\label{sec:research}
+Some practices of empirical research need several people working on their own: many teams analysing the same data,
+referees in different roles, two reviewers reading the same studies. One researcher alone usually cannot follow them;
+with coding agents, one researcher can. Five pages of \menupath{Compose \gt Orchestration} are built on such
+practices. They are in the menu, but not available yet.
+
+\begin{center}\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{@{}p{0.23\linewidth}LL@{}}
+\toprule
+\textbf{Page} & \textbf{What the agents do} & \textbf{The practice it follows}\\
+\midrule
+Many Analysts & Answer the same question on the same data, each on its own; Pollis shows how far their estimates
+  spread & Many-analysts studies in psychology, economics and finance\\
+Specification Curve & List the defensible choices in an analysis; Pollis runs every combination and shows the
+  estimates in order & Specification curve analysis\\
+Forecasting Competition & Each builds a forecasting model; the models are scored on data none of them saw, then
+  combined & The M forecasting competitions, and the combination of forecasts\\
+Referee Report & Referees in different roles read a draft paper, and an editor merges their reports & Peer review\\
+Systematic Review & Two screen the studies and extract their results, each on its own; you settle where they
+  differ, and Pollis runs the meta-analysis & Two independent reviewers\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Why several agents, and why different models}
+Two analysts who make the same choices teach nothing about the choices. Agents on one model tend to choose alike, as
+one person would on two days; agents on different models, from different providers, do not share all their habits.
+Each research page lets you choose the agent and model of every participant, from the cells of Model Tasks and Routing,
+and says so when the same one is chosen twice.
+
+\subsection{Many Analysts}
+Several agents get the same research question and the same dataset, and each analyses it on its own: its own
+specification, its own controls, its own standard errors. Pollis gathers the estimates and shows how far they spread.
+
+Different teams given the same data and the same question reach different answers, through the choices each makes.
+Studies of many teams have shown it in psychology, \emph{Many Analysts, One Data Set} (2018); in economics, \emph{The
+Influence of Hidden Researcher Decisions in Applied Microeconomics} (2021); and in finance, \emph{Nonstandard Errors}
+(2024), with 164 teams, which found the spread across teams as large as the standard error each team reports, and
+called it the \emph{nonstandard error}. A researcher cannot repeat such a study alone. The page uses what Pollis
+already has: its datasets, the Julia packages, and the checking of results against the numbers reported.
+
+The page will take four steps:
+\begin{enumerate}
+  \item \textbf{Question and Data.} The question in plain words; the data, a dataset of PollisDatasets or a file of your
+    own; and the estimate every analyst must report, with its unit, such as \emph{the effect on 1978 earnings, in
+    dollars}, so that the answers can be compared. The example is LaLonde's job training data: the experiment, and the
+    comparison groups drawn from two surveys, whose estimates of the same effect spread widely.
+  \item \textbf{Analysts.} From 3 to 12, each an agent on a model.
+  \item \textbf{Runs.} All at once and unattended, each in a folder of its own, seeing only the question, the data and
+    its folder. An analyst edits files without asking, inside its folder only.
+  \item \textbf{Results.} Each estimate with its interval, in order; the median, the interquartile range and the
+    nonstandard error, the standard deviation of the estimates across analysts, beside the median standard error the
+    analysts report; and a table of each analyst's choices, which shows which choices move the estimate.
+\end{enumerate}
+Each analyst writes three files: \file{analysis.jl}, the whole analysis in Julia, from the data to the estimate;
+\file{result.toml}, the estimate, its standard error, its interval and the number of observations, with the choices in
+a few words each; and \file{REPORT.md}, the reasons for the choices. Pollis runs every \file{analysis.jl} again itself,
+and marks an analysis whose result differs from the one it reports.
+
+\subsection{Specification Curve}
+Agents list the defensible choices in an analysis, such as which controls to include, which observations to drop and
+which estimator to use. Pollis runs every combination of them and plots the estimates in order, with the choices of
+each marked beneath it. This is the specification curve analysis of Simonsohn, Simmons and Nelson (2020). Where Many
+Analysts shows the choices that independent analysts happen to make, the specification curve shows all of them, one
+by one.
+
+\subsection{Forecasting Competition}
+Each agent builds a forecasting model for the same series. Pollis keeps the last part of the series from all of
+them, scores every model on it, and then combines the forecasts. This follows the M competitions of forecasting
+methods, and Bates and Granger (1969) on combining forecasts: a combination often forecasts better than each of the
+models in it. In finance and economics, where a forecast is judged by the data that come after it, the page shows
+which approach wins on the series at hand, and by how much.
+
+\subsection{Referee Report}
+Agents in different roles each read a draft paper:
+\begin{itemize}
+  \item an \textbf{econometrician}, on identification and inference;
+  \item a \textbf{field expert}, on the literature;
+  \item a \textbf{replicator}, who runs the paper's code again.
+\end{itemize}
+An \textbf{editor} agent then merges their notes into one report, with the points ranked by how much they matter.
+It gives a report before submission, when changes are still cheap. The Knowledge Base and the references of Pollis
+give the field expert sources to check the paper's claims against.
+
+\subsection{Systematic Review}
+This follows the standard of systematic reviews, two reviewers working independently:
+\begin{itemize}
+  \item two agents screen the abstracts against your criteria for including a study;
+  \item two agents extract the effect sizes from the studies that pass;
+  \item Pollis shows where they disagree, you decide, and Pollis then runs the meta-analysis.
+\end{itemize}
+The studies come from the references database and Literature Radar, which find and keep them.
+
+\section{Under the surface}\label{sec:machinery}
+\begin{itemize}
+  \item \textbf{One module for the tiers.} \file{modelRouting.ts} holds the tasks, the tiers, the cloud models and the
+    settings, and answers which command line a tier runs (\file{tierRun}). It imports no other module of Compose, so
+    that every task can import it without a cycle: the agents are passed to it.
+  \item \textbf{One function starts every task.} \file{startAgent} (\file{pollisAgents.ts}) takes the task's title,
+    its first message, its folder and the task, finds the tier and its cell, looks for the program
+    (\file{findProgram}), starts a local model when the cell has one, and opens the terminal with
+    \file{waitOnExit}, so that what the agent last wrote stays on screen when it exits.
+  \item \textbf{Local models.} \file{localModelLaunch} asks the Julia extension's command
+    \file{language-julia.pollisLlamaServer} (\file{pollisLlamaServer.ts}) for a server of the model, and turns its
+    address into the environment or the arguments of the agent.
+  \item \textbf{The page.} \file{modelRoutingPage.ts} draws the table and the tasks, and writes the three settings.
+  \item \textbf{The research pages.} They are greyed out in \file{compose.contribution.ts} until each is built. They
+    will share one runner: unattended runs that end by themselves, an agent on a cell the page chooses, and one folder
+    for each participant.
+\end{itemize}
+
+\section{Where things are}
+
+\begin{center}\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{@{}p{0.47\linewidth}L@{}}
+\toprule
+\textbf{File} & \textbf{Role}\\
+\midrule
+\file{.../compose/browser/modelRouting.ts} & The tasks, the tiers, the cloud models, the settings, \file{tierRun},
+  \file{localModelLaunch}\\
+\file{.../compose/browser/modelRoutingPage.ts} & The page Model Tasks and Routing\\
+\file{.../compose/browser/pollisAgents.ts} & The agents, the skills, \file{startAgent}\\
+\file{.../compose/browser/codingAgentPage.ts} & The page Coding Agents\\
+\file{.../language-julia/src/pollisLlamaServer.ts} & llama.cpp's server for local models\\
+\file{.../compose/browser/compose.contribution.ts} & The Orchestration menu\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\end{document}

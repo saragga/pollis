@@ -682,13 +682,18 @@ MenuRegistry.appendMenuItem(CompileGaloreMenu, {
 });
 
 // Not built yet: each item says so.
-// Orchestration: coding agents working together. Writer and Checker: one writes, another checks; Two
-// Independent Transcriptions: two agents type the same table from an article and the differences are shown;
-// Race: several agents do the same task and the results are compared.
+// Orchestration: coding agents working together on research. Analyses: Many Analysts (several agents answer the
+// same question on the same data, each on its own, and the spread of their estimates is shown), Specification
+// Curve (every combination of defensible choices, its estimates in order), Forecasting Competition (each agent
+// builds a forecasting model, scored on data none of them saw, then combined). Papers: Referee Report (referees
+// in different roles read a draft, an editor merges their reports), Systematic Review (two agents screen and
+// extract each study on their own, the differences settled by the user, then a meta-analysis).
 const composeItems = [
-	{ menu: OrchestrationMenu, id: 'pollis.orchestration.writerChecker', title: localize('orchestration.writerChecker', "Writer and Checker..."), group: '1_patterns', order: 1 },
-	{ menu: OrchestrationMenu, id: 'pollis.orchestration.twoTranscriptions', title: localize('orchestration.twoTranscriptions', "Two Independent Transcriptions..."), group: '1_patterns', order: 2 },
-	{ menu: OrchestrationMenu, id: 'pollis.orchestration.race', title: localize('orchestration.race', "Race..."), group: '1_patterns', order: 3 },
+	{ menu: OrchestrationMenu, id: 'pollis.orchestration.manyAnalysts', title: localize('orchestration.manyAnalysts', "Many Analysts..."), group: '1_analyses', order: 1 },
+	{ menu: OrchestrationMenu, id: 'pollis.orchestration.specificationCurve', title: localize('orchestration.specificationCurve', "Specification Curve..."), group: '1_analyses', order: 2 },
+	{ menu: OrchestrationMenu, id: 'pollis.orchestration.forecastingCompetition', title: localize('orchestration.forecastingCompetition', "Forecasting Competition..."), group: '1_analyses', order: 3 },
+	{ menu: OrchestrationMenu, id: 'pollis.orchestration.refereeReport', title: localize('orchestration.refereeReport', "Referee Report..."), group: '2_papers', order: 1 },
+	{ menu: OrchestrationMenu, id: 'pollis.orchestration.systematicReview', title: localize('orchestration.systematicReview', "Systematic Review..."), group: '2_papers', order: 2 },
 ];
 
 // Reports: a notebook (a workflow, a notebook tutorial or the user's own) as a LaTeX report or as slides, see reports.ts

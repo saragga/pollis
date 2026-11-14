@@ -712,22 +712,25 @@ whose tier is in no cell cannot run, and the table says so.
     strongest model.
 \end{itemize}
 
-\subhead{Agents that check each other}
-A model's mistakes are not random: run the same model twice and it may make the same mistake twice. Two
-\emph{different} models, or one model and a published value, do not share their blind spots. This is the
-idea behind double data entry, where two people type the same form and every difference is looked at.
-Three patterns in \ui{Compose > Orchestration} are built on it:
+\subhead{Agents that work on research together}
+Some research practices need several people working on their own: many teams analysing the same data,
+referees in different roles, two reviewers screening the same studies. Agents make them possible for one
+researcher. Five pages in \ui{Compose > Orchestration} are built on such practices:
 \begin{pairs}[0.36]
-Writer and Checker... & one agent writes; another checks the work.\\
-Two Independent Transcriptions... & two agents copy the same tables from an article, each on its own;
-  where they differ, you decide.\\
-Race... & several agents do the same task, and you compare what they produce.\\
+Many Analysts... & several agents answer the same question on the same data, each on its own, and Pollis
+  shows how far their estimates spread.\\
+Specification Curve... & every combination of defensible choices in an analysis is run, and the
+  estimates are shown in order.\\
+Forecasting Competition... & each agent builds a forecasting model; the models are scored on data none
+  of them saw, then combined.\\
+Referee Report... & referees in different roles read a draft paper, and an editor merges their reports.\\
+Systematic Review... & two agents screen the studies and extract their results, each on its own; where
+  they differ, you decide, and Pollis runs the meta-analysis.\\
 \end{pairs}
 
 \begin{note}{Not available yet}
-\ui{Writer and Checker...}, \ui{Two Independent Transcriptions...} and \ui{Race...} are in the
-\ui{Orchestration} menu but not built yet. Today, Pollis' checks are the tests from published values and
-the panel validator.
+\ui{Many Analysts...}, \ui{Specification Curve...}, \ui{Forecasting Competition...}, \ui{Referee
+Report...} and \ui{Systematic Review...} are in the \ui{Orchestration} menu but not built yet.
 \end{note}
 
 \seealso{Language Models, page 2.\quad Coding Agents and Harnesses, page 8.}
