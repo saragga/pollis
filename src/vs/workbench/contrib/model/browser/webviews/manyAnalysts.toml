@@ -1,0 +1,70 @@
+# Many Analysts Webview Configuration
+# A page of Compose > Orchestration in the Time Arrow style of the scaffold, not a panel: only its Powered by and
+# Learn More. `pageCommand` is the command that opens it, which a panel's contribution file would say. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/manyAnalysts.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Many Analysts"
+viewType = "pollis.manyAnalysts"
+pageCommand = "pollis.orchestration.manyAnalysts"
+
+[[packages]]
+name = "PollisDatasets.jl"
+github = "https://github.com/Trumpingtons/PollisDatasets.jl"
+
+[[wikis]]
+name = "Overview"
+file = "manyAnalysts/overview.md"
+bundled = true
+description = "What a many-analysts study is, the four steps of the page, what each analyst does on its own, and how Pollis checks and compares the answers"
+
+[[wikis]]
+name = "Factsheet"
+file = "manyAnalysts/factsheet.md"
+bundled = true
+description = "Steps, inputs, the agents that run unattended, the files of a study and of each analyst, the figures of Results and the requirements at a glance"
+
+[[wikis]]
+name = "Nonstandard Errors"
+file = "manyAnalysts/nonstandard-errors.md"
+bundled = true
+description = "The spread of estimates across analysts, the nonstandard error, how it compares with the standard error, and what the published many-analysts studies found"
+
+[[wikis]]
+name = "Choosing the Analysts"
+file = "manyAnalysts/choosing-analysts.md"
+bundled = true
+description = "Agents and models as analysts: why one model several times spreads less, how many analysts a study needs, local models, and the cost of a study"
+
+[[wikis]]
+name = "Writing the Question"
+file = "manyAnalysts/writing-question.md"
+bundled = true
+description = "A question and an estimate every analyst can answer the same way: the unit, the population, the interval, the data's description, and the LaLonde example"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "SUMAA...2018a"
+
+[[references]]
+key = "HABBB...2021a"
+
+[[references]]
+key = "BRWNA...2022a"
+
+[[references]]
+key = "MDHHJ...2024a"
+
+[[references]]
+separator = true
+label = "The Example"
+
+[[references]]
+key = "LaL1986a"
+
+[[references]]
+key = "DW1999a"

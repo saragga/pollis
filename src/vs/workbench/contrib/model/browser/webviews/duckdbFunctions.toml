@@ -1,0 +1,540 @@
+# Julia Functions in DuckDB Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/duckdbFunctions.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Julia Functions in DuckDB"
+viewType = "pollis.duckdbFunctions"
+defaultModel = "julia"
+decisionFirstColumn = "Way"
+
+[[packages]]
+name = "DuckDB.jl"
+github = "https://github.com/duckdb/DuckDB.jl"
+
+[[packages]]
+name = "Tables.jl"
+github = "https://github.com/JuliaData/Tables.jl"
+
+[requires]
+packages = ["Plots.jl"]
+
+[[wikis]]
+name = "Overview"
+file = "duckdbFunctions/overview.md"
+bundled = true
+description = "A Julia function called from SQL in two ways, registered from the Julia session or compiled into a DuckDB extension, and the check against Julia pixel by pixel"
+
+[[wikis]]
+name = "Factsheet"
+file = "duckdbFunctions/factsheet.md"
+bundled = true
+description = "Ways, requirements, inputs, files, types across the boundary and actions at a glance"
+
+[[wikis]]
+name = "How DuckDB Calls a Scalar Function"
+file = "duckdbFunctions/scalar-functions.md"
+bundled = true
+description = "Chunks of rows, vectors, NULL, threads, and why a function called once per chunk is fast"
+
+[[wikis]]
+name = "Julia Functions Registered in a Database"
+file = "duckdbFunctions/julia-functions.md"
+bundled = true
+description = "@create_scalar_function, the types it maps, errors in the function, and how long a registered function lives"
+
+[[wikis]]
+name = "Writing a DuckDB Extension in Rust"
+file = "duckdbFunctions/rust-extensions.md"
+bundled = true
+description = "duckdb-neo and the C API version 2, the entry point, the signature, the metadata at the end of the file, and unsigned extensions"
+
+[[models]]
+id = "julia"
+label = "Julia Function"
+
+[[models]]
+id = "rust"
+label = "Rust Extension"
+
+[[bullets]]
+text = "A Julia function, escape_time, called from SQL in two ways: registered in the database from the Julia session, or compiled from Rust into a DuckDB extension"
+detail = ""
+
+[[bullets]]
+text = "Two examples in every tab: the Mandelbrot set, and the Julia set of a point c, each the number of iterations of z^2 + c before |z| passes 2, for each pixel"
+detail = ""
+
+[[bullets]]
+text = "DuckDB holds a table of pixels, one row each, and computes the count of every pixel in one query; Julia compares the counts with its own, pixel by pixel"
+detail = ""
+
+[[bullets]]
+text = "A function registered from Julia lives as long as the session; an extension is a file that any DuckDB of the same version and platform can load"
+detail = ""
+
+[[decisionRows]]
+task = "Julia Function"
+context = "This Julia session"
+purpose = "DuckDB.@create_scalar_function registers a Julia function in a database opened from Julia; nothing to build, and any Julia code, but the function lives only as long as the session and only that database can call it"
+
+[[decisionRows]]
+task = "Rust Extension"
+context = "Any DuckDB 2.0.0"
+purpose = "A Rust crate written with duckdb-neo compiles to a .duckdb_extension file that any DuckDB 2.0.0 on the same platform can load, from Julia, Python, Node or the command line; needs Rust, and a new build for each version of DuckDB"
+
+[[inputs]]
+id = "example"
+label = "Example"
+tooltip = "The Mandelbrot set starts z at 0 and puts c at the pixel; the Julia set of c starts z at the pixel and keeps c fixed."
+kind = "tabs"
+default = "mandelbrot"
+
+[[inputs.options]]
+value = "mandelbrot"
+label = "Mandelbrot Set"
+
+[[inputs.options]]
+value = "julia"
+label = "Julia Set"
+
+[[inputs]]
+id = "width"
+label = "Pixels Across"
+tooltip = "The number of pixels across the picture; the number down follows from the shape of the region drawn, with square pixels. The table of pixels has one row for each."
+default = "800"
+
+[[inputs]]
+id = "maxiter"
+label = "Iterations"
+tooltip = "The most iterations of z^2 + c for a pixel; a pixel that has not escaped by then counts as inside the set."
+default = "256"
+
+[[inputs]]
+id = "cre"
+label = "Real Part of c"
+tooltip = "The real part of the fixed point c of the Julia set. The Mandelbrot set does not use it."
+default = "-0.8"
+
+[[inputs]]
+id = "cim"
+label = "Imaginary Part of c"
+tooltip = "The imaginary part of the fixed point c of the Julia set. The Mandelbrot set does not use it."
+default = "0.156"
+
+[[inputs]]
+id = "folder"
+label = "Folder"
+tooltip = "Where the extension is built: its Rust crate in fractal/ and the file DuckDB loads, fractal.duckdb_extension, in programs/duckdb_extensions of the open Pollis Workspace, otherwise in Pollis's own folder. It is built again when its source or the version of DuckDB changes."
+default = "~/.pollis/programs/duckdb_extensions"
+folder = "programs/duckdb_extensions"
+models = ["rust"]
+newRow = true
+
+[[codeBranches]]
+model = "julia"
+code = '''
+using DuckDB, Tables
+
+# The example: the Mandelbrot set, or the Julia set of c, on a grid of pixels
+julia_set = "{{example}}" == "julia"
+c = complex({{cre}}, {{cim}})  # the fixed point of the Julia set; the Mandelbrot set does not use it
+x0, x1, y0, y1 = julia_set ? (-1.6, 1.6, -1.0, 1.0) : (-2.2, 0.8, -1.2, 1.2)
+width = {{width}}
+height = round(Int, width * (y1 - y0) / (x1 - x0))
+spacing = (x1 - x0) / (width - 1)  # the distance between two pixels, across and down
+maxiter = Int32({{maxiter}})
+
+# The function DuckDB will call: the iterations of z^2 + c before |z| passes 2, z starting at zr + zi i
+function escape_time(zr, zi, cr, ci, maxiter::Int32)
+    k = zero(maxiter)
+    while k < maxiter
+        zr2 = zr * zr
+        zi2 = zi * zi
+        zr2 + zi2 > 4.0 && return k
+        zi = 2.0 * zr * zi + ci
+        zr = zr2 - zi2 + cr
+        k += one(maxiter)
+    end
+    return maxiter
+end
+
+# Julia: the count of every pixel in this session, for the check
+pixel_count(x, y) = julia_set ? escape_time(x, y, real(c), imag(c), maxiter) : escape_time(0.0, 0.0, x, y, maxiter)
+julia_counts = [pixel_count(x0 + (j - 1) * spacing, y0 + (i - 1) * spacing) for i in 1:height, j in 1:width]
+
+# DuckDB: a database in memory with a table of pixels, one row each, their coordinates computed as Julia computes
+# them. A number goes into SQL as text cast to DOUBLE, which DuckDB reads back to the same Float64
+sql_double(x) = "'$(repr(Float64(x)))'::DOUBLE"
+db = DuckDB.DB()
+DBInterface.execute(db, """
+CREATE TABLE pixels AS
+SELECT i, j, $(sql_double(x0)) + (j - 1) * $(sql_double(spacing)) AS x, $(sql_double(y0)) + (i - 1) * $(sql_double(spacing)) AS y
+FROM range(1, $(height + 1)) AS down(i) CROSS JOIN range(1, $(width + 1)) AS across(j)
+""")
+
+# The Julia function registered in the database under its own name, with a type for each argument and for the
+# result, which DuckDB checks the arguments of every call against
+escape_time_function = DuckDB.@create_scalar_function escape_time(zr::Float64, zi::Float64, cr::Float64, ci::Float64, maxiter::Int32)::Int32
+DuckDB.register_scalar_function(db, escape_time_function)
+
+# The query: for the Mandelbrot set z starts at 0 and c is the pixel; for the Julia set z starts at the pixel
+arguments = julia_set ? "x, y, $(sql_double(real(c))), $(sql_double(imag(c)))" : "0.0::DOUBLE, 0.0::DOUBLE, x, y"
+query = "SELECT i, j, escape_time($arguments, $maxiter::INTEGER) AS steps FROM pixels"
+seconds = @elapsed result = Tables.columntable(DBInterface.execute(db, query))
+duckdb_counts = zeros(Int32, height, width)
+for (i, j, steps) in zip(result.i, result.j, result.steps)
+    duckdb_counts[i, j] = steps
+end
+way = "Julia Function"
+
+# The databases of this session, way by way, for Compare
+ways = @isdefined(ways) ? ways : Dict{String, Any}()
+ways[way] = (db = db, query = query)
+
+# Check: the count of every pixel, DuckDB against Julia
+differ = count(duckdb_counts .!= julia_counts)
+println(differ == 0 ? "DuckDB, calling the Julia function, and Julia give the same count at all $(length(julia_counts)) pixels" : "DuckDB, calling the Julia function, and Julia differ at $differ of $(length(julia_counts)) pixels")
+println("The query, in ", round(seconds, digits = 3), " s: ", query)
+'''
+
+[[codeBranches]]
+model = "rust"
+code = '''
+using DuckDB, Tables, Libdl
+
+# The example: the Mandelbrot set, or the Julia set of c, on a grid of pixels
+julia_set = "{{example}}" == "julia"
+c = complex({{cre}}, {{cim}})  # the fixed point of the Julia set; the Mandelbrot set does not use it
+x0, x1, y0, y1 = julia_set ? (-1.6, 1.6, -1.0, 1.0) : (-2.2, 0.8, -1.2, 1.2)
+width = {{width}}
+height = round(Int, width * (y1 - y0) / (x1 - x0))
+spacing = (x1 - x0) / (width - 1)  # the distance between two pixels, across and down
+maxiter = Int32({{maxiter}})
+
+# Julia: the iterations of z^2 + c before |z| passes 2, z starting at zr + zi i, and the count of every pixel in this
+# session, for the check
+function escape_time(zr, zi, cr, ci, maxiter::Int32)
+    k = zero(maxiter)
+    while k < maxiter
+        zr2 = zr * zr
+        zi2 = zi * zi
+        zr2 + zi2 > 4.0 && return k
+        zi = 2.0 * zr * zi + ci
+        zr = zr2 - zi2 + cr
+        k += one(maxiter)
+    end
+    return maxiter
+end
+pixel_count(x, y) = julia_set ? escape_time(x, y, real(c), imag(c), maxiter) : escape_time(0.0, 0.0, x, y, maxiter)
+julia_counts = [pixel_count(x0 + (j - 1) * spacing, y0 + (i - 1) * spacing) for i in 1:height, j in 1:width]
+
+# The extension's crate. duckdb-neo is the Rust crate for the C API version 2 of DuckDB, and its version 0.20000.2
+# is the one for DuckDB 2.0.0; crate-type cdylib makes a library that DuckDB can open
+cargo_toml = """
+[package]
+name = "fractal"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+duckdb-neo = { version = "=0.20000.2", features = ["build-extension"] }
+
+[profile.release]
+lto = true
+strip = true
+"""
+
+# The function in Rust, in the same operations and order as in Julia, and the entry point DuckDB calls when it loads
+# the extension, fractal_init_c_api_v2, which registers escape_time with its signature
+lib_rs = """
+//! fractal: a DuckDB extension with one scalar function, escape_time(zr, zi, cr, ci, maxiter), the number of
+//! iterations of z^2 + c before |z| passes 2, z starting at zr + zi i.
+
+use duckdb_neo::{
+    DuckDBType, Result, connection::Context, data_chunk::VectorCollection, duckdb_entrypoint_c_api_v2,
+    extension::Extension,
+    scalar::{ScalarCallbacks, ScalarFunctionBuilder},
+    signature::{FunctionParameter, SignatureBuilder},
+    vector::{Unknown, Vector},
+};
+
+fn escape_time(mut zr: f64, mut zi: f64, cr: f64, ci: f64, maxiter: i32) -> i32 {
+    let mut k = 0;
+    while k < maxiter {
+        let zr2 = zr * zr;
+        let zi2 = zi * zi;
+        if zr2 + zi2 > 4.0 {
+            return k;
+        }
+        zi = 2.0 * zr * zi + ci;
+        zr = zr2 - zi2 + cr;
+        k += 1;
+    }
+    maxiter
+}
+
+struct EscapeTime;
+
+impl ScalarCallbacks for EscapeTime {
+    type BindData = ();
+    type InitData = ();
+
+    /// Runs once for each chunk of rows, on as many threads as DuckDB uses; a NULL argument gives NULL.
+    fn exec(
+        &self,
+        _context: &Context,
+        _bind_data: Option<&Self::BindData>,
+        _init_data: Option<&mut Self::InitData>,
+        vectors: &mut VectorCollection,
+        output: Vector<'_, Unknown>,
+    ) -> Result<()> {
+        let rows = vectors.row_count()?;
+        let mut output = output.cast::<i32>()?;
+        output.set_size(rows)?;
+        let zr = vectors.get_vector_at::<f64>(0)?.reader()?;
+        let zi = vectors.get_vector_at::<f64>(1)?.reader()?;
+        let cr = vectors.get_vector_at::<f64>(2)?.reader()?;
+        let ci = vectors.get_vector_at::<f64>(3)?.reader()?;
+        let maxiter = vectors.get_vector_at::<i32>(4)?.reader()?;
+        let mut counts = output.writer()?;
+        for row in 0..rows {
+            match (zr.get(row)?, zi.get(row)?, cr.get(row)?, ci.get(row)?, maxiter.get(row)?) {
+                (Some(&zr), Some(&zi), Some(&cr), Some(&ci), Some(&maxiter)) => {
+                    counts.set(row, &escape_time(zr, zi, cr, ci, maxiter))?
+                }
+                _ => counts.set_null(row)?,
+            }
+        }
+        Ok(())
+    }
+}
+
+#[duckdb_entrypoint_c_api_v2(extension_name = "fractal", api_version = "2.0.0")]
+pub fn entrypoint(extension: &Extension) -> Result<()> {
+    ScalarFunctionBuilder::new(
+        "escape_time",
+        SignatureBuilder::new()
+            .param(FunctionParameter::new::<f64>("zr"))
+            .param(FunctionParameter::new::<f64>("zi"))
+            .param(FunctionParameter::new::<f64>("cr"))
+            .param(FunctionParameter::new::<f64>("ci"))
+            .param(FunctionParameter::new::<i32>("maxiter"))
+            .return_type(i32::logical_type(extension)?),
+        EscapeTime,
+    )
+    .register(extension)
+}
+"""
+
+# Toolchain: cargo, from the path, else where rustup installs it
+cargo = something(Sys.which("cargo"), joinpath(homedir(), ".cargo", "bin", Sys.iswindows() ? "cargo.exe" : "cargo"))
+isfile(cargo) || error("cargo not found: install Rust with rustup, from rustup.rs, and run the tab again")
+
+# DuckDB: a database in memory that may load extensions DuckDB has not signed, which is set when it opens. Its
+# version and platform go into the extension's metadata; duckdb-neo 0.20000.2 is for DuckDB 2.0.0 alone
+db = DuckDB.DB(":memory:"; config = ["allow_unsigned_extensions" => "true"])
+engine = only(Tables.rowtable(DBInterface.execute(db, "SELECT library_version AS version, (SELECT platform FROM pragma_platform()) AS platform FROM pragma_version()")))
+engine.version == "v2.0.0" || error("The extension is written with duckdb-neo 0.20000.2, for DuckDB v2.0.0, and this DuckDB is $(engine.version)")
+
+# Build: the crate in fractal/ of the folder, compiled by cargo, the first time with duckdb-neo downloaded; then the
+# metadata DuckDB reads at the end of the file before it loads it. Built again when the sources, or the version or
+# platform of DuckDB, change, as built_from.txt records
+folder = mkpath(expanduser(raw"{{folder}}"))
+crate = joinpath(folder, "fractal")
+mkpath(joinpath(crate, "src"))
+write(joinpath(crate, "Cargo.toml"), cargo_toml)
+write(joinpath(crate, "src", "lib.rs"), lib_rs)
+library = joinpath(crate, "target", "release", Sys.iswindows() ? "fractal.dll" : "libfractal.$(Libdl.dlext)")
+extension = joinpath(folder, "fractal.duckdb_extension")
+built_with = `$cargo build --release`
+
+# The metadata: a header of 22 bytes, eight fields of 32 bytes, each text padded with zeros (three unused, the ABI,
+# the extension's version, DuckDB's version, the platform, and 4, which marks a DuckDB extension), then 256 bytes
+# left for a signature. C_STRUCT_UNSTABLE says the extension uses the C API of one version of DuckDB only
+padded(text) = vcat(Vector{UInt8}(codeunits(text)), zeros(UInt8, 32 - ncodeunits(text)))
+metadata = vcat(UInt8[0, 147, 4, 16], Vector{UInt8}(codeunits("duckdb_signature")), UInt8[128, 4],
+    padded(""), padded(""), padded(""), padded("C_STRUCT_UNSTABLE"), padded("0.1.0"), padded(engine.version), padded(engine.platform), padded("4"),
+    zeros(UInt8, 256))
+
+built_from = string("DuckDB ", engine.version, " ", engine.platform, "\n\n", cargo_toml, "\n", lib_rs)
+built_from_file = joinpath(crate, "built_from.txt")
+build_seconds = if isfile(extension) && isfile(built_from_file) && read(built_from_file, String) == built_from
+    nothing
+else
+    seconds = @elapsed run(Cmd(built_with, dir = crate))
+    write(extension, vcat(read(library), metadata))
+    write(built_from_file, built_from)
+    seconds
+end
+
+# Load: DuckDB reads the metadata, opens the library and calls its entry point, which registers escape_time
+DBInterface.execute(db, "LOAD '$(replace(extension, "'" => "''"))'")
+
+# A table of pixels, one row each, their coordinates computed as Julia computes them. A number goes into SQL as text
+# cast to DOUBLE, which DuckDB reads back to the same Float64
+sql_double(x) = "'$(repr(Float64(x)))'::DOUBLE"
+DBInterface.execute(db, """
+CREATE TABLE pixels AS
+SELECT i, j, $(sql_double(x0)) + (j - 1) * $(sql_double(spacing)) AS x, $(sql_double(y0)) + (i - 1) * $(sql_double(spacing)) AS y
+FROM range(1, $(height + 1)) AS down(i) CROSS JOIN range(1, $(width + 1)) AS across(j)
+""")
+
+# The query: for the Mandelbrot set z starts at 0 and c is the pixel; for the Julia set z starts at the pixel
+arguments = julia_set ? "x, y, $(sql_double(real(c))), $(sql_double(imag(c)))" : "0.0::DOUBLE, 0.0::DOUBLE, x, y"
+query = "SELECT i, j, escape_time($arguments, $maxiter::INTEGER) AS steps FROM pixels"
+seconds = @elapsed result = Tables.columntable(DBInterface.execute(db, query))
+duckdb_counts = zeros(Int32, height, width)
+for (i, j, steps) in zip(result.i, result.j, result.steps)
+    duckdb_counts[i, j] = steps
+end
+way = "Rust Extension"
+
+# The databases of this session, way by way, for Compare
+ways = @isdefined(ways) ? ways : Dict{String, Any}()
+ways[way] = (db = db, query = query)
+
+# Check: the count of every pixel, DuckDB against Julia
+differ = count(duckdb_counts .!= julia_counts)
+println(differ == 0 ? "DuckDB, calling the Rust extension, and Julia give the same count at all $(length(julia_counts)) pixels" : "DuckDB, calling the Rust extension, and Julia differ at $differ of $(length(julia_counts)) pixels")
+println(build_seconds === nothing ? "The extension was built before, from the same sources" : "The extension built in $(round(build_seconds, digits = 1)) s")
+println("The query, in ", round(seconds, digits = 3), " s: ", query)
+println("The extension: ", extension)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "picture"
+label = "Picture of the Set"
+desc = "The counts DuckDB computed, as a picture on a log scale, with the real part across and the imaginary part down"
+code = '''
+using Plots
+
+xs = x0 .+ (0:width - 1) .* spacing
+ys = y0 .+ (0:height - 1) .* spacing
+heatmap(xs, ys, log1p.(duckdb_counts), aspect_ratio = :equal, colorbar = false, xlabel = "real part", ylabel = "imaginary part", title = julia_set ? "Julia set of c = $c" : "Mandelbrot set", size = (700, 560))
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "catalogue"
+label = "The Function in DuckDB"
+desc = "escape_time as DuckDB lists it among its functions, with its parameters and their types, and for the extension, the extension DuckDB loaded"
+code = '''
+for row in Tables.rowtable(DBInterface.execute(db, "SELECT function_name, function_type, parameters, parameter_types, return_type FROM duckdb_functions() WHERE function_name = 'escape_time'"))
+    println("A ", row.function_type, " function: ", row.function_name, "(", join(string.(row.parameters, " ", row.parameter_types), ", "), ") -> ", row.return_type)
+end
+if way == "Rust Extension"
+    for row in Tables.rowtable(DBInterface.execute(db, "SELECT extension_name, loaded, extension_version, install_mode FROM duckdb_extensions() WHERE extension_name = 'fractal'"))
+        println("The extension ", row.extension_name, ", version ", row.extension_version, ": ", row.loaded ? "loaded" : "not loaded", row.install_mode == "NOT_INSTALLED" ? ", from its file" : ", installed")
+    end
+end
+'''
+
+[[actionGroups.actions]]
+id = "plan"
+label = "Query Plan"
+desc = "The plan DuckDB ran the query with, from EXPLAIN ANALYZE: the scan of the pixels, the projection that calls escape_time, the rows and the time of each step"
+code = '''
+plan = Tables.columntable(DBInterface.execute(db, "EXPLAIN ANALYZE " * query))
+println(only(plan.explain_value))
+'''
+
+[[actionGroups.actions]]
+id = "source"
+label = "Source and Build Command"
+desc = "The extension's Cargo.toml and src/lib.rs, where they are, and the command that built them"
+models = ["rust"]
+code = '''
+print(read(joinpath(crate, "Cargo.toml"), String))
+print(read(joinpath(crate, "src", "lib.rs"), String))
+println("Saved in ", crate)
+println("Built with ", built_with, " in that folder")
+println("The extension, with its metadata: ", extension, ", ", round(filesize(extension) / 2^10, digits = 1), " KiB")
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "times"
+label = "Query Times"
+desc = "The query of each way run in this session, five times each with the fastest kept, beside the same counts computed in Julia alone"
+code = '''
+for (name, w) in sort!(collect(ways), by = first)
+    query_seconds = minimum(@elapsed(Tables.columntable(DBInterface.execute(w.db, w.query))) for _ in 1:5)
+    println(rpad(name, 18), lpad(round(query_seconds * 1e3, sigdigits = 4), 10), " ms for the query")
+end
+julia_seconds = minimum(@elapsed([pixel_count(x0 + (j - 1) * spacing, y0 + (i - 1) * spacing) for i in 1:height, j in 1:width]) for _ in 1:5)
+println(rpad("Julia", 18), lpad(round(julia_seconds * 1e3, sigdigits = 4), 10), " ms for the counts in Julia alone")
+length(ways) == 1 && println("Run the other tab of the page to compare its way with this one")
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "inside"
+label = "Pixels Inside, Counted in SQL"
+desc = "The share of pixels that did not escape, and the pixels grouped by how fast they escaped, each computed by DuckDB from the function's results"
+code = '''
+inside = only(Tables.rowtable(DBInterface.execute(db, "SELECT count(*) FILTER (WHERE steps = $maxiter) AS inside, count(*) AS pixels FROM ($query)")))
+println(round(100 * inside.inside / inside.pixels, digits = 2), "% of the ", inside.pixels, " pixels did not escape in ", maxiter, " iterations")
+
+# Pixels by the iterations they took to escape, in bands that double in width: 1 to 2, 3 to 6, 7 to 14, ...
+bands = Tables.columntable(DBInterface.execute(db, """
+SELECT floor(log2(steps + 1))::INTEGER AS band, min(steps) AS fewest, max(steps) AS most, count(*) AS pixels
+FROM ($query) WHERE steps < $maxiter GROUP BY band ORDER BY band
+"""))
+for (fewest, most, pixels) in zip(bands.fewest, bands.most, bands.pixels)
+    println(lpad("$fewest to $most", 14), " iterations: ", pixels, " pixels")
+end
+'''
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+key = "RM2026a"
+
+[[references]]
+key = "Qui2023c"
+
+[[references]]
+key = "DDBL2026a"
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+key = "KN2023a"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "RM2019a"
+
+[[references]]
+key = "BZN2005a"
+
+[[references]]
+key = "Jul1918a"
+
+[[references]]
+key = "Man1980a"

@@ -7,7 +7,7 @@ import { VSBuffer } from '../../../../base/common/buffer.js';
 import { CancellationToken } from '../../../../base/common/cancellation.js';
 import { toErrorMessage } from '../../../../base/common/errorMessage.js';
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
-import { Schemas } from '../../../../base/common/network.js';
+import { FileAccess, Schemas } from '../../../../base/common/network.js';
 import { join } from '../../../../base/common/path.js';
 import { IProcessEnvironment, isWindows } from '../../../../base/common/platform.js';
 import { dirname, joinPath } from '../../../../base/common/resources.js';
@@ -34,7 +34,7 @@ import { ITerminalInstance, ITerminalInstanceService, ITerminalService } from '.
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_MINIMAL_STYLE } from './libraryPage.js';
-import { AGENT_TASKS, AgentTask, agentTiers, DEFAULT_TIER, localModelLaunch, MODEL_ROUTING_COMMAND_ID, modelName, taskTier, tierRun } from './modelRouting.js';
+import { AGENT_TASKS, AgentTask, agentTiers, DEFAULT_TIER, ICellRun, localModelLaunch, MODEL_ROUTING_COMMAND_ID, modelName, taskTier, tierRun } from './modelRouting.js';
 import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
 import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
 import { IStorageService } from '../../../../platform/storage/common/storage.js';
@@ -309,7 +309,6 @@ export async function startAgent(accessor: ServicesAccessor, title: string, prom
 	const progressService = accessor.get(IProgressService);
 
 	// The task runs on its tier, a skill with no task on the Standard tier: the agent and model of the tier's cell
-	const environment = await terminalEnvironment(terminalInstanceService);
 	const agents = codingAgents(configurationService);
 	const tierId = task ? taskTier(configurationService, task) : DEFAULT_TIER;
 	const tier = agentTiers(configurationService).find(info => info.id === tierId)!;
@@ -319,11 +318,14 @@ export async function startAgent(accessor: ServicesAccessor, title: string, prom
 		notificationService.prompt(Severity.Info, localize('pollisAgents.noCell', "{0} runs on the {1} tier, which is in no cell of Model Tasks and Routing: put it in one, then run {0} again.", title, tier.label), [openRouting]);
 		return undefined;
 	}
-	const name = localize('pollisAgents.tierTitle', "{0} ({1})", title, tier.label);
-	const model = routed.model;
-	const [program, ...args] = commandWords(routed.command);
-	const executable = await findProgram(program, environment, fileService);
-	if (!executable) {
+	const launched = await launchAgent({ terminalService, terminalInstanceService, fileService, commandService, progressService, workspaceContextService, pathService }, {
+		name: localize('pollisAgents.terminalName', "Pollis Agents: {0}", localize('pollisAgents.tierTitle', "{0} ({1})", title, tier.label)),
+		run: routed,
+		prompt,
+		cwd,
+		focus: true,
+	});
+	if (launched === 'missing') {
 		const agent = agents.find(agent => agent.label === routed.agent);
 		notificationService.prompt(Severity.Error, localize('pollisAgents.missing', "The {0} tier runs the coding agent '{1}', which was not found on this computer. Install it, or put the tier in another agent's column.", tier.label, routed.agent), [
 			...(agent?.url ? [{ label: localize('pollisAgents.install', "Open Install Page"), run: () => openerService.open(URI.parse(agent.url)) }] : []),
@@ -331,42 +333,87 @@ export async function startAgent(accessor: ServicesAccessor, title: string, prom
 		]);
 		return undefined;
 	}
+	if (typeof launched === 'string') {
+		notificationService.error(launched);
+		return undefined;
+	}
+	if (!commandWords(routed.command).includes(PROMPT_PLACEHOLDER)) {
+		await clipboardService.writeText(prompt);
+		notificationService.info(localize('pollisAgents.paste', "The first message for the agent is in the clipboard: paste it into the agent to start."));
+	}
+	return launched;
+}
+
+/** The services launchAgent needs, taken by its callers from their accessor when they start. */
+export interface IAgentLaunchServices {
+	readonly terminalService: ITerminalService;
+	readonly terminalInstanceService: ITerminalInstanceService;
+	readonly fileService: IFileService;
+	readonly commandService: ICommandService;
+	readonly progressService: IProgressService;
+	readonly workspaceContextService: IWorkspaceContextService;
+	readonly pathService: IPathService;
+}
+
+/** A run of an agent in a terminal. */
+export interface IAgentLaunch {
+	/** The terminal's name. */
+	readonly name: string;
+	/** The agent's command line, with `{prompt}` where the first message goes, and its local model, if any (cellRun). */
+	readonly run: ICellRun;
+	readonly prompt: string;
+	/** The folder it starts in, else the first workspace folder, else the home folder. */
+	readonly cwd?: URI;
+	/** Whether its terminal is shown and takes the focus. */
+	readonly focus: boolean;
+}
+
+/**
+ * Starts the command line of a cell in a terminal that stays open when it ends, on its local model, if it has
+ * one, served by llama.cpp. Returns the terminal; 'missing' when its program is not on this computer; else why
+ * it did not start, as a message.
+ */
+export async function launchAgent(services: IAgentLaunchServices, launch: IAgentLaunch): Promise<ITerminalInstance | 'missing' | string> {
+	const { terminalService, terminalInstanceService, fileService, commandService, progressService, workspaceContextService, pathService } = services;
+	const environment = await terminalEnvironment(terminalInstanceService);
+	const [program, ...args] = commandWords(launch.run.command);
+	const executable = await findProgram(program, environment, fileService);
+	if (!executable) {
+		return 'missing';
+	}
 
 	let launchArgs = args;
 	let env: Record<string, string> | undefined;
+	const model = launch.run.model;
 	if (model) {
 		const local = await progressService.withProgress(
 			{ location: ProgressLocation.Notification, title: localize('pollisAgents.startingModel', "Starting {0} with llama.cpp", modelName(model)) },
 			() => localModelLaunch(commandService, program, args, model)
 		);
 		if (typeof local === 'string') {
-			notificationService.error(local);
-			return undefined;
+			return local;
 		}
 		launchArgs = local.args;
 		env = local.env;
 	}
 
-	const hasPlaceholder = launchArgs.includes(PROMPT_PLACEHOLDER);
-	const agentArgs = launchArgs.map(arg => arg === PROMPT_PLACEHOLDER ? prompt : arg);
+	const agentArgs = launchArgs.map(arg => arg === PROMPT_PLACEHOLDER ? launch.prompt : arg);
 	// A Windows batch file (an npm-installed agent) runs through the command interpreter
 	const batch = isWindows && /\.(cmd|bat)$/i.test(executable);
 	const instance = await terminalService.createTerminal({
 		config: {
-			name: localize('pollisAgents.terminalName', "Pollis Agents: {0}", name),
+			name: launch.name,
 			executable: batch ? (environment['ComSpec'] ?? 'cmd.exe') : executable,
 			args: batch ? ['/d', '/c', executable, ...agentArgs] : agentArgs,
-			cwd: cwd ?? workspaceContextService.getWorkspace().folders.find(folder => folder.uri.scheme === Schemas.file)?.uri ?? pathService.userHome({ preferLocal: true }),
+			cwd: launch.cwd ?? workspaceContextService.getWorkspace().folders.find(folder => folder.uri.scheme === Schemas.file)?.uri ?? pathService.userHome({ preferLocal: true }),
 			env,
 			waitOnExit: true,
 		},
 	});
-	terminalService.setActiveInstance(instance);
-	await terminalService.revealTerminal(instance);
-	await instance.focusWhenReady(true);
-	if (!hasPlaceholder) {
-		await clipboardService.writeText(prompt);
-		notificationService.info(localize('pollisAgents.paste', "The first message for the agent is in the clipboard: paste it into the agent to start."));
+	if (launch.focus) {
+		terminalService.setActiveInstance(instance);
+		await terminalService.revealTerminal(instance);
+		await instance.focusWhenReady(true);
 	}
 	return instance;
 }
@@ -403,6 +450,11 @@ async function runSkill(accessor: ServicesAccessor, skill: IPollisSkill): Promis
 	const skillFile = joinPath(pluginFolder(pathService), 'skills', skill.folder, 'SKILL.md');
 	const prompt = skill.prompt(skillFile.fsPath, requestFile?.fsPath ?? '');
 	await instantiationService.invokeFunction(startAgent, skill.title, prompt, requestFile && dirname(requestFile), skill.task);
+}
+
+/** The path of Pollis.jl, Pollis' Julia functions, which a coding agent's Julia loads with `julia -L` to have Pollis's packages, as the REPL has them. */
+export function pollisJlPath(): string {
+	return joinPath(dirname(FileAccess.asFileUri('')), 'extensions', 'language-julia', 'scripts', 'terminalserver', 'Pollis.jl').fsPath;
 }
 
 /** The SKILL.md of a skill of the latest plugin, downloaded first; undefined when there is no copy at all. */

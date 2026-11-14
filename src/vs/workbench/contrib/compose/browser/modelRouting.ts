@@ -264,21 +264,40 @@ export function cellAvailable(agent: IAgentCommand, model: string, clouds: reado
 }
 
 /**
- * The command line and local model a tier runs: its agent's command line, with the arguments of its cloud model
- * after the program, or its local model. Undefined when the tier is in no cell, or its agent or model is no more.
+ * The command line and local model a tier runs: those of its cell (cellRun). Undefined when the tier is in no
+ * cell, or its agent or model is no more.
  */
-export function tierRun(configurationService: IConfigurationService, tier: AgentTier, agents: readonly IAgentCommand[]): { readonly agent: string; readonly command: string; readonly model: string } | undefined {
+export function tierRun(configurationService: IConfigurationService, tier: AgentTier, agents: readonly IAgentCommand[]): ICellRun | undefined {
 	const cell = tierCells(configurationService)[tier];
-	const agent = cell && agents.find(candidate => candidate.label === cell.agent);
+	return cell && cellRun(configurationService, cell, agents);
+}
+
+/** Where the arguments of a cloud model go in a command line that has a subcommand, such as `codex exec {model} {prompt}`. */
+export const MODEL_PLACEHOLDER = '{model}';
+
+/** What a cell runs: its agent, its command line and, for a local model, the model's file, else ''. */
+export interface ICellRun {
+	readonly agent: string;
+	readonly command: string;
+	readonly model: string;
+}
+
+/**
+ * The command line and local model of a cell, its agent's command line taken from `agents`: with the arguments of
+ * its cloud model at `{model}`, or after the program when there is no `{model}`. Undefined when its agent or model
+ * is no more, or the agent cannot run the model.
+ */
+export function cellRun(configurationService: IConfigurationService, cell: ITierCell, agents: readonly IAgentCommand[]): ICellRun | undefined {
+	const agent = agents.find(candidate => candidate.label === cell.agent);
 	const clouds = cloudModels(configurationService);
-	if (!cell || !agent || !cellAvailable(agent, cell.model, clouds)) {
+	if (!agent || !cellAvailable(agent, cell.model, clouds)) {
 		return undefined;
 	}
-	if (cell.model.startsWith(CLOUD_PREFIX)) {
-		const args = clouds.find(cloud => cloud.name === cell.model.slice(CLOUD_PREFIX.length))!.agents[agent.label].trim();
-		return { agent: agent.label, command: agent.command.replace(/^\s*("[^"]*"|\S+)/, `$1 ${args}`), model: '' };
-	}
-	return { agent: agent.label, command: agent.command, model: cell.model.startsWith(LOCAL_PREFIX) ? cell.model.slice(LOCAL_PREFIX.length) : '' };
+	const args = cell.model.startsWith(CLOUD_PREFIX) ? clouds.find(cloud => cloud.name === cell.model.slice(CLOUD_PREFIX.length))!.agents[agent.label].trim() : '';
+	const command = agent.command.includes(MODEL_PLACEHOLDER)
+		? agent.command.replace(/\s*\{model\}/, args ? ` ${args}` : '')
+		: args ? agent.command.replace(/^\s*("[^"]*"|\S+)/, `$1 ${args}`) : agent.command;
+	return { agent: agent.label, command, model: cell.model.startsWith(LOCAL_PREFIX) ? cell.model.slice(LOCAL_PREFIX.length) : '' };
 }
 
 /** The context Pollis gives a local model for an agent, in tokens: an agent's instructions and tools alone take about 20k. */
@@ -344,15 +363,18 @@ export async function localModelLaunch(commandService: ICommandService, program:
 		};
 		return { args: rest, env: { OPENCODE_CONFIG_CONTENT: JSON.stringify(config) } };
 	}
-	// Codex reads each -c value as TOML, and as a plain string when it is not TOML, so none needs quotes
+	// Codex reads each -c value as TOML, and as a plain string when it is not TOML, so none needs quotes; a run
+	// that ends by itself, `codex exec`, takes them after its subcommand
+	const subcommand = rest[0] === 'exec' ? rest.slice(0, 1) : [];
 	return {
 		args: [
+			...subcommand,
 			'-c', `model_provider=${LOCAL_PROVIDER}`,
 			'-c', `model_providers.${LOCAL_PROVIDER}.name=llama.cpp`,
 			'-c', `model_providers.${LOCAL_PROVIDER}.base_url=${url}`,
 			'-c', `model_providers.${LOCAL_PROVIDER}.wire_api=responses`,
 			'--model', name,
-			...rest,
+			...rest.slice(subcommand.length),
 		],
 		env: {},
 	};

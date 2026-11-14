@@ -28,7 +28,7 @@ export const OPEN_POLLIS_WORKSPACE_COMMAND_ID = 'pollis.workspace.open';
 const MARKER_FILE = 'pollis.toml';
 
 /** The kinds of file a Pollis Workspace has a folder for. */
-export type PollisWorkspaceFolder = 'data' | 'knowledge_base' | 'reports' | 'methods' | 'workflows' | 'panels' | 'toolboxes' | 'programs' | 'changes';
+export type PollisWorkspaceFolder = 'data' | 'knowledge_base' | 'reports' | 'methods' | 'workflows' | 'panels' | 'toolboxes' | 'programs' | 'orchestration' | 'changes';
 
 /** The folder of each kind, as a new workspace names it, what its README says it holds, and its subfolders. */
 const FOLDERS: Readonly<Record<PollisWorkspaceFolder, { readonly name: string; readonly readme: string; readonly subfolders?: readonly string[] }>> = {
@@ -39,7 +39,8 @@ const FOLDERS: Readonly<Record<PollisWorkspaceFolder, { readonly name: string; r
 	workflows: { name: 'workflows', readme: 'Your workflows.' },
 	panels: { name: 'panels', readme: 'Your panels, which Compose > New Panels writes with your coding agent, each its TOML with its wiki and notebook folders.' },
 	toolboxes: { name: 'toolboxes', readme: 'The toolboxes you make to share your panels, for a course say, which Compose > Package a Toolbox... builds with your coding agent, one folder each: its spec, toolbox.toml, which menu entries it holds and in what order, the sources of its vignette, its README, and the .vsix files built from it, in dist/. The toolboxes you install stay in Pollis.' },
-	programs: { name: 'programs', readme: 'The programs and libraries compiled from your Julia code on the pages of Compose > Compilation Lab: executables in executables/ and shared libraries in shared_libraries/, one folder for each tool that compiled them, and Rust crates in rust/.', subfolders: ['executables', 'shared_libraries', 'rust'] },
+	programs: { name: 'programs', readme: 'The programs and libraries compiled from your Julia code on the pages of Compose > Compilation Lab: executables in executables/ and shared libraries in shared_libraries/, one folder for each tool that compiled them, Rust crates in rust/, and DuckDB extensions in duckdb_extensions/.', subfolders: ['executables', 'shared_libraries', 'rust', 'duckdb_extensions'] },
+	orchestration: { name: 'orchestration', readme: 'The studies of Compose > Orchestration, where coding agents work on research together, one folder each: those of Many Analysts in many-analysts/, each with its question, its data, a folder for each analyst and the results.', subfolders: ['many-analysts'] },
 	changes: { name: 'changes', readme: 'Your changes to the panels, workflows, wikis and notebooks that come with Pollis and its toolboxes, one small file each.' },
 };
 

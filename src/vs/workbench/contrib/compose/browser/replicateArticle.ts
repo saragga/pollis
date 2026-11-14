@@ -7,8 +7,7 @@ import { VSBuffer } from '../../../../base/common/buffer.js';
 import { RunOnceScheduler } from '../../../../base/common/async.js';
 import { toErrorMessage } from '../../../../base/common/errorMessage.js';
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
-import { FileAccess } from '../../../../base/common/network.js';
-import { basename, dirname, joinPath } from '../../../../base/common/resources.js';
+import { basename, joinPath } from '../../../../base/common/resources.js';
 import { URI } from '../../../../base/common/uri.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
@@ -36,7 +35,7 @@ import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWork
 import { ARTICLE_DATA_SCRIPT, ARTICLE_DATA_STYLE, ArticleDataMessage, articleDataHtml, articleDataText, createArticleData, draftName, IArticleDataKind, IArticleDataRecord, IArticleDataServices, isArticleDataMessage, IStudyInput, makesFolder, parseTable, readTables, replaceTomlBlocks, setTomlValue, table, text, tomlString, withPaths } from './articleAndData.js';
 import { AgentTask } from './modelRouting.js';
 import { methodFromReplication, openUserMethod, userMethodsFolder } from './newMethods.js';
-import { EXPLAIN_DIFFERENCES_COMMAND_ID, PLAN_REPLICATION_COMMAND_ID, REPLICATE_WITH_AGENT_COMMAND_ID, skillFile, startAgent } from './pollisAgents.js';
+import { EXPLAIN_DIFFERENCES_COMMAND_ID, PLAN_REPLICATION_COMMAND_ID, pollisJlPath, REPLICATE_WITH_AGENT_COMMAND_ID, skillFile, startAgent } from './pollisAgents.js';
 
 // Compose > Replication > Replicate an Article...: a replication of a published analysis, made from its article.
 // A replication is a folder of ~/.pollis/replications with replication.toml, which holds the article's link and
@@ -66,8 +65,6 @@ export const BROWSE_REPLICATIONS_COMMAND_ID = 'chiara.statistics.wfl_sl';
 const RECORD_FILE = 'replication.toml';
 const RESULTS_FILE = 'results.csv';
 const INSTRUCTIONS_FILE = 'INSTRUCTIONS.md';
-/** Pollis' Julia functions, Pollis.replicate and Pollis.compare among them, which a coding agent includes in its own Julia session. */
-const POLLIS_JL = ['extensions', 'language-julia', 'scripts', 'terminalserver', 'Pollis.jl'];
 
 /** How a target is computed: by Julia packages, by code of the notebook's own, or by a new method. */
 type PlanWay = 'package' | 'notebook' | 'method';
@@ -550,8 +547,7 @@ async function runReplicationTask(accessor: ServicesAccessor, command: string, f
 	if (!skill) {
 		return;
 	}
-	const pollis = joinPath(dirname(FileAccess.asFileUri('')), ...POLLIS_JL).fsPath;
-	await instantiationService.invokeFunction(startAgent, task.terminal(replication), task.prompt(skill.fsPath, replication, pollis), replication.folder, task.task);
+	await instantiationService.invokeFunction(startAgent, task.terminal(replication), task.prompt(skill.fsPath, replication, pollisJlPath()), replication.folder, task.task);
 }
 
 /** Article and Data of a replication: its record is replication.toml, its targets only say where they are published, and its inputs have a licence. */

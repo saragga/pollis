@@ -2733,6 +2733,37 @@
 			]
 		},
 		{
+			"id": "duckdbFunctions",
+			"title": "Julia Functions in DuckDB",
+			"source": "pollis",
+			"commands": [
+				{
+					"id": "pollis.compilation.duckdbFunctions",
+					"menuTitles": [
+						"Julia Functions in DuckDB..."
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "julia",
+			"decisionFirstColumn": "Way",
+			"toml": "src/vs/workbench/contrib/model/browser/webviews/duckdbFunctions.toml",
+			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
+			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"wikis": [
+				"duckdbFunctions/factsheet.md",
+				"duckdbFunctions/julia-functions.md",
+				"duckdbFunctions/overview.md",
+				"duckdbFunctions/rust-extensions.md",
+				"duckdbFunctions/scalar-functions.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"DuckDB.jl",
+				"Tables.jl"
+			]
+		},
+		{
 			"id": "dynppl",
 			"title": "Probabilistic Programming with Turing.jl",
 			"source": "pollis",

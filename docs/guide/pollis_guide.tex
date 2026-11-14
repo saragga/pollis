@@ -484,7 +484,7 @@ same DuckDB engine, with its full-text search extension, \emph{fts}, and attach 
     \texttt{feeds}, a Tables.jl table; instead of drawing it, the terminal gives its rows and columns, and \ui{Open in
     Table Viewer}, in blue under them, opens the whole table to browse with one click. In Julia code,
     \texttt{sql("SELECT ...")} runs a query on the same database, and \texttt{sql("feeds", "SELECT ...")} keeps its
-    result as the table \texttt{feeds}. Drill-down: Pollis REPL, in \ui{Help}, has worked examples.
+    result as the table \texttt{feeds}. Drill-down: Pollis REPL, in \ui{Help > Documentation > Drill-downs}, has worked examples.
   \item \textbf{\texttt{db = PollisDB.connect()}}, for Julia code and scripts: a DuckDB connection in
     memory, shown in the Databases view; \texttt{PollisDB.connect("sales.duckdb")} opens a file instead.
 \end{itemize}
@@ -1930,6 +1930,16 @@ middle and embedding at the bottom, each is filled when that model is ready and 
 follows them while a cloud model answers. Its hover names the three
 models, and those not downloaded yet; a click opens \ui{Set Active Models}.
 
+\subhead{Many Analysts}
+\ui{Compose > Orchestration > Many Analysts...} gives the same question and the same data to several coding
+agents, each of which answers it on its own, in a folder of its own. In \ui{Question and Data}, set the data,
+LaLonde's job training data or a file of your own, the \ui{Question}, and the \ui{Estimate to Report}, which
+every analyst must give in the same unit. In \ui{Analysts}, choose from 3 to 12 analysts, each an agent on a
+model: different models give a fairer spread. \ui{Start the Analysts} starts them all at once, unattended. Once
+they are done, \ui{Check and Collect} runs each analysis again in the Julia REPL, and \ui{Results} shows the
+estimates in order, their spread, the nonstandard error beside the median standard error, and each analyst's
+choices.
+
 \begin{caution}{An agent works on your files}
 A coding agent reads and writes files, and runs commands, in its terminal. Read what it proposes, and check
 its results, as you would a colleague's.
@@ -1941,8 +1951,8 @@ its results, as you would a colleague's.
 \end{trouble}
 
 \begin{note}{Not available yet}
-\ui{Many Analysts...}, \ui{Specification Curve...}, \ui{Forecasting Competition...}, \ui{Referee
-Report...} and \ui{Systematic Review...} are in \ui{Orchestration} but not built yet.
+\ui{Specification Curve...}, \ui{Forecasting Competition...}, \ui{Referee Report...} and \ui{Systematic
+Review...} are in \ui{Orchestration} but not built yet.
 \end{note}
 
 \seealso{Toolboxes, \pg{Toolboxes}.\quad Article Methods, \pg{Article Methods}.\quad Reports, \pg{Reports}.}

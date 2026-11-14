@@ -27,6 +27,7 @@ import { BROWSE_METHODS_COMMAND_ID, CREATE_METHOD_COMMAND_ID } from './newMethod
 import { REPLICATE_ARTICLE_COMMAND_ID } from './replicateArticle.js';
 import { SPEED_UP_COMMAND_ID } from './speedUpPage.js';
 import { TRANSLATE_RUST_COMMAND_ID } from './translateRustPage.js';
+import { MANY_ANALYSTS_COMMAND_ID } from './manyAnalystsPage.js';
 import './codingAgentPage.js';
 import './modelRoutingPage.js';
 import './pollisContent.js';
@@ -66,6 +67,7 @@ import { CONVERGENCEORDER_PANEL } from '../../model/browser/commands/convergence
 import { MIXCOMPILED_PANEL } from '../../model/browser/commands/mixCompiled.command.js';
 import { SHAREDLIB_PANEL } from '../../model/browser/commands/sharedLib.command.js';
 import { COMPILEEXE_PANEL } from '../../model/browser/commands/compileExe.command.js';
+import { DUCKDBFUNCTIONS_PANEL } from '../../model/browser/commands/duckdbFunctions.command.js';
 
 // The Core Mathematics, Finance and Economics Toolboxes come from their extensions (toolboxes/pollis-toolbox-*, not built in:
 // installed from the Toolboxes section of the Extensions pane), see toolboxExtensions.ts
@@ -576,6 +578,14 @@ MenuRegistry.appendMenuItem(OrchestrationMenu, {
 	order: 1,
 });
 
+// Many Analysts: several coding agents answer the same question on the same data, each on its own, and the page
+// shows the spread of their estimates, see manyAnalystsPage.ts
+MenuRegistry.appendMenuItem(OrchestrationMenu, {
+	group: '1_analyses',
+	command: { id: MANY_ANALYSTS_COMMAND_ID, title: localize('orchestration.manyAnalysts', "Many Analysts...") },
+	order: 1,
+});
+
 // ==============================================================
 // SUBMENU: Profiling, in four groups: measure (Time a Function, Find Where the Time Goes, Time Sections of Code), diagnose and fix (Find Allocations,
 // Check Type Stability, Speed Up a Function), packages (Compare Package Versions, Load and Compile Time) and languages (Run a Speed Race, Add a Language)
@@ -652,10 +662,12 @@ MenuRegistry.appendMenuItem(ComparisonsMenu, {
 });
 
 // Compilation Lab, in two groups: Compile Julia (1_compile: a shared library, an executable) and Other Languages
-// (2_languages: Julia mixed with compiled code, Julia translated to Rust).
+// (2_languages: Julia mixed with compiled code, Julia translated to Rust, Julia functions in DuckDB). The third item
+// of Compile Julia, not built yet, is in composeItems below.
 CommandsRegistry.registerCommand('pollis.compilation.sharedLibrary', (accessor: ServicesAccessor) => openScaffoldWebview(accessor, SHAREDLIB_PANEL));
 CommandsRegistry.registerCommand('pollis.compilation.executable', (accessor: ServicesAccessor) => openScaffoldWebview(accessor, COMPILEEXE_PANEL));
 CommandsRegistry.registerCommand('pollis.compilation.mix', (accessor: ServicesAccessor) => openScaffoldWebview(accessor, MIXCOMPILED_PANEL));
+CommandsRegistry.registerCommand('pollis.compilation.duckdbFunctions', (accessor: ServicesAccessor) => openScaffoldWebview(accessor, DUCKDBFUNCTIONS_PANEL));
 
 MenuRegistry.appendMenuItem(CompileGaloreMenu, {
 	group: '1_compile',
@@ -681,15 +693,22 @@ MenuRegistry.appendMenuItem(CompileGaloreMenu, {
 	order: 2,
 });
 
+MenuRegistry.appendMenuItem(CompileGaloreMenu, {
+	group: '2_languages',
+	command: { id: 'pollis.compilation.duckdbFunctions', title: localize('compilation.duckdbFunctions', "Julia Functions in DuckDB...") },
+	order: 3,
+});
+
 // Not built yet: each item says so.
-// Orchestration: coding agents working together on research. Analyses: Many Analysts (several agents answer the
-// same question on the same data, each on its own, and the spread of their estimates is shown), Specification
+// Orchestration: coding agents working together on research. Analyses, after Many Analysts: Specification
 // Curve (every combination of defensible choices, its estimates in order), Forecasting Competition (each agent
 // builds a forecasting model, scored on data none of them saw, then combined). Papers: Referee Report (referees
 // in different roles read a draft, an editor merges their reports), Systematic Review (two agents screen and
 // extract each study on their own, the differences settled by the user, then a meta-analysis).
+// Compilation Lab: Compile Julia to WebAssembly (the fractal drawn live in the page, through Rust or
+// WebAssemblyCompiler.jl), third of Compile Julia.
 const composeItems = [
-	{ menu: OrchestrationMenu, id: 'pollis.orchestration.manyAnalysts', title: localize('orchestration.manyAnalysts', "Many Analysts..."), group: '1_analyses', order: 1 },
+	{ menu: CompileGaloreMenu, id: 'pollis.compilation.webAssembly', title: localize('compilation.webAssembly', "Compile Julia to WebAssembly..."), group: '1_compile', order: 3 },
 	{ menu: OrchestrationMenu, id: 'pollis.orchestration.specificationCurve', title: localize('orchestration.specificationCurve', "Specification Curve..."), group: '1_analyses', order: 2 },
 	{ menu: OrchestrationMenu, id: 'pollis.orchestration.forecastingCompetition', title: localize('orchestration.forecastingCompetition', "Forecasting Competition..."), group: '1_analyses', order: 3 },
 	{ menu: OrchestrationMenu, id: 'pollis.orchestration.refereeReport', title: localize('orchestration.refereeReport', "Referee Report..."), group: '2_papers', order: 1 },
