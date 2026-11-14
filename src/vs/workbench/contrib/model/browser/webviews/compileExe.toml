@@ -168,9 +168,10 @@ height = round(Int, width * (y1 - y0) / (x1 - x0))
 spacing = (x1 - x0) / (width - 1)  # the distance between two pixels, across and down
 maxiter = Int32({{maxiter}})
 
-# The Julia code that computes the counts: the iterations of z^2 + c before |z| passes 2 for one pixel, and
+# The Julia code that computes the counts and draws them: the iterations of z^2 + c before |z| passes 2 for one pixel;
 # fill_counts, which writes the count of every pixel into memory it is given, column by column, and returns the
-# number inside. Only native types in and out, no allocation, no error thrown: code that every tool can compile
+# number inside; and fill_picture, which writes the picture of the counts as a BMP file into memory it is given. Only
+# native types in and out, no allocation, no error thrown: code that every tool can compile
 kernel_code = """
 function escape_time(zr, zi, cr, ci, maxiter::Int32)
     k = zero(maxiter)
@@ -197,6 +198,63 @@ function fill_counts(counts::Ptr{Int32}, height::Int64, width::Int64, x0::Float6
     end
     return inside
 end
+
+# The size of the picture as a BMP file: a header of 54 bytes, then each row of pixels, 3 bytes each, padded to a
+# multiple of 4 bytes
+picture_bytes(height::Int64, width::Int64) = 54 + ((3 * width + 3) & ~3) * height
+
+# The colour of a pixel from its count k: black inside the set; outside, s = k / (k + 8) runs from 0, for a pixel that
+# escapes at once, towards 1 near the set, through blue, green and yellow to red
+function pixel_colour(k::Int32, maxiter::Int32)
+    k == maxiter && return (0x00, 0x00, 0x00)
+    s = k / (k + 8.0)
+    t = 1.0 - s
+    red = unsafe_trunc(UInt8, 255.0 * 9.0 * t * s * s * s)
+    green = unsafe_trunc(UInt8, 255.0 * 15.0 * t * t * s * s)
+    blue = unsafe_trunc(UInt8, 255.0 * 8.5 * t * t * t * s)
+    return (red, green, blue)
+end
+
+# Writes value into the picture as count bytes from byte at on, the lowest byte first
+function store_bytes!(picture::Ptr{UInt8}, at::Int64, value::Int64, count::Int64)
+    for b in 0:count - 1
+        unsafe_store!(picture, (value >> (8 * b)) % UInt8, at + b)
+    end
+end
+
+# Writes the picture into memory of picture_bytes(height, width) bytes: the header, then the rows from the bottom up,
+# so that the imaginary part grows upwards, each pixel blue, green and red
+function fill_picture(picture::Ptr{UInt8}, counts::Ptr{Int32}, height::Int64, width::Int64, maxiter::Int32)::Int64
+    row_bytes = (3 * width + 3) & ~3
+    unsafe_store!(picture, 0x42, 1)  # B
+    unsafe_store!(picture, 0x4d, 2)  # M
+    store_bytes!(picture, 3, picture_bytes(height, width), 4)  # the size of the file
+    store_bytes!(picture, 7, 0, 4)  # reserved
+    store_bytes!(picture, 11, 54, 4)  # where the pixels start
+    store_bytes!(picture, 15, 40, 4)  # the size of the rest of the header
+    store_bytes!(picture, 19, width, 4)
+    store_bytes!(picture, 23, height, 4)  # positive: the rows from the bottom up
+    store_bytes!(picture, 27, 1, 2)  # one plane
+    store_bytes!(picture, 29, 24, 2)  # 24 bits a pixel
+    store_bytes!(picture, 31, 0, 4)  # no compression
+    store_bytes!(picture, 35, row_bytes * height, 4)  # the size of the pixels
+    store_bytes!(picture, 39, 2835, 4)  # 72 pixels an inch across, as pixels a metre
+    store_bytes!(picture, 43, 2835, 4)  # and down
+    store_bytes!(picture, 47, 0, 8)  # no palette
+    for i in 1:height
+        row = 54 + (i - 1) * row_bytes
+        for j in 1:width
+            red, green, blue = pixel_colour(unsafe_load(counts, i + (j - 1) * height), maxiter)
+            unsafe_store!(picture, blue, row + 3 * j - 2)
+            unsafe_store!(picture, green, row + 3 * j - 1)
+            unsafe_store!(picture, red, row + 3 * j)
+        end
+        for p in 3 * width + 1:row_bytes
+            unsafe_store!(picture, 0x00, row + p)  # the padding
+        end
+    end
+    return picture_bytes(height, width)
+end
 """
 
 # Julia: the same code in this session, filling a Julia matrix through its pointer; GC.@preserve keeps the matrix
@@ -204,22 +262,45 @@ end
 include_string(Main, kernel_code)
 julia_counts = Matrix{Int32}(undef, height, width)
 julia_inside = GC.@preserve julia_counts fill_counts(pointer(julia_counts), height, width, x0, y0, spacing, Int32(julia_set), real(c), imag(c), maxiter)
+julia_picture = Vector{UInt8}(undef, picture_bytes(height, width))
+GC.@preserve julia_picture julia_counts fill_picture(pointer(julia_picture), pointer(julia_counts), height, width, maxiter)
 
-# The program around fill_counts: it reads the inputs from its command line, fills memory of its own, writes the
-# counts to a file and prints the number of pixels inside. It prints to Core.stdout, which a trimmed program keeps
+# The program around fill_counts and fill_picture: it reads the inputs from its command line, fills memory of its own,
+# writes the picture and the counts to files and prints the number of pixels inside. Started with no arguments, as by
+# a double-click, it draws the Mandelbrot set with the page's defaults into fractal.bmp, in the folder it starts in,
+# and opens the picture with the system's viewer through system of the C library. It prints to Core.stdout, which a
+# trimmed program keeps
 program_code = """
+function draw(picture_file::String, counts_file::String, height::Int64, width::Int64, x0::Float64, y0::Float64,
+              spacing::Float64, julia_set::Int32, cr::Float64, ci::Float64, maxiter::Int32)::Int64
+    counts = Vector{Int32}(undef, height * width)
+    picture = Vector{UInt8}(undef, picture_bytes(height, width))
+    inside = GC.@preserve counts picture begin
+        inside = fill_counts(pointer(counts), height, width, x0, y0, spacing, julia_set, cr, ci, maxiter)
+        fill_picture(pointer(picture), pointer(counts), height, width, maxiter)
+        inside
+    end
+    isempty(counts_file) || write(counts_file, counts)
+    write(picture_file, picture)
+    return inside
+end
+
 function fractal(args::Vector{String})::Cint
-    if length(args) != 10
-        println(Core.stderr, "usage: fractal counts.bin height width x0 y0 spacing julia_set cr ci maxiter")
+    if isempty(args)
+        inside = draw("fractal.bmp", "", 640, 800, -2.2, -1.2, 3.0 / 799, Int32(0), 0.0, 0.0, Int32(256))
+        println(Core.stdout, "The Mandelbrot set, 800 x 640 pixels, 256 iterations: ", inside, " pixels inside")
+        println(Core.stdout, "The picture: fractal.bmp, in the folder the program started in")
+        command = Sys.isapple() ? "open fractal.bmp" : Sys.iswindows() ? "start fractal.bmp" : "xdg-open fractal.bmp"
+        @ccall system(command::Cstring)::Cint
+        return 0
+    end
+    if length(args) != 11
+        println(Core.stderr, "usage: fractal picture.bmp counts.bin height width x0 y0 spacing julia_set cr ci maxiter")
         return 1
     end
-    height = parse(Int64, args[2])
-    width = parse(Int64, args[3])
-    counts = Vector{Int32}(undef, height * width)
-    inside = GC.@preserve counts fill_counts(pointer(counts), height, width, parse(Float64, args[4]), parse(Float64, args[5]),
-                                             parse(Float64, args[6]), parse(Int32, args[7]), parse(Float64, args[8]),
-                                             parse(Float64, args[9]), parse(Int32, args[10]))
-    write(args[1], counts)
+    inside = draw(args[1], args[2], parse(Int64, args[3]), parse(Int64, args[4]), parse(Float64, args[5]),
+                  parse(Float64, args[6]), parse(Float64, args[7]), parse(Int32, args[8]), parse(Float64, args[9]),
+                  parse(Float64, args[10]), parse(Int32, args[11]))
     println(Core.stdout, inside)
     return 0
 end
@@ -262,9 +343,11 @@ else
 end
 source_file = script_file
 
-# Run: the inputs as arguments, the numbers as repr writes them, which the program reads back to the same Float64
+# Run: the files to write and the inputs as arguments, the numbers as repr writes them, which the program reads back
+# to the same Float64
 counts_file = joinpath(folder, "counts.bin")
-arguments = [counts_file, string(height), string(width), repr(x0), repr(y0), repr(spacing), string(Int(julia_set)), repr(real(c)), repr(imag(c)), string(maxiter)]
+picture_file = joinpath(folder, "fractal.bmp")
+arguments = [picture_file, counts_file, string(height), string(width), repr(x0), repr(y0), repr(spacing), string(Int(julia_set)), repr(real(c)), repr(imag(c)), string(maxiter)]
 command = `$program $arguments`
 compiled_inside = parse(Int, readchomp(command))
 compiled_counts = read!(counts_file, Matrix{Int32}(undef, height, width))
@@ -281,6 +364,8 @@ programs[tool] = (seconds = something(build_seconds, get(programs, tool, (second
 differ = count(compiled_counts .!= julia_counts)
 println(differ == 0 ? "The program of juliac and Julia give the same count at all $(length(julia_counts)) pixels" : "The program of juliac and Julia differ at $differ of $(length(julia_counts)) pixels")
 println("Pixels inside: $compiled_inside from the program, $julia_inside from Julia")
+println(read(picture_file) == julia_picture ? "The picture is the same as Julia's, byte for byte" : "The picture differs from Julia's")
+println("The picture: ", picture_file)
 println("The program: ", program)
 println("Run it with: ", command)
 '''
@@ -300,9 +385,10 @@ height = round(Int, width * (y1 - y0) / (x1 - x0))
 spacing = (x1 - x0) / (width - 1)  # the distance between two pixels, across and down
 maxiter = Int32({{maxiter}})
 
-# The Julia code that computes the counts: the iterations of z^2 + c before |z| passes 2 for one pixel, and
+# The Julia code that computes the counts and draws them: the iterations of z^2 + c before |z| passes 2 for one pixel;
 # fill_counts, which writes the count of every pixel into memory it is given, column by column, and returns the
-# number inside. Only native types in and out, no allocation, no error thrown: code that every tool can compile
+# number inside; and fill_picture, which writes the picture of the counts as a BMP file into memory it is given. Only
+# native types in and out, no allocation, no error thrown: code that every tool can compile
 kernel_code = """
 function escape_time(zr, zi, cr, ci, maxiter::Int32)
     k = zero(maxiter)
@@ -329,6 +415,63 @@ function fill_counts(counts::Ptr{Int32}, height::Int64, width::Int64, x0::Float6
     end
     return inside
 end
+
+# The size of the picture as a BMP file: a header of 54 bytes, then each row of pixels, 3 bytes each, padded to a
+# multiple of 4 bytes
+picture_bytes(height::Int64, width::Int64) = 54 + ((3 * width + 3) & ~3) * height
+
+# The colour of a pixel from its count k: black inside the set; outside, s = k / (k + 8) runs from 0, for a pixel that
+# escapes at once, towards 1 near the set, through blue, green and yellow to red
+function pixel_colour(k::Int32, maxiter::Int32)
+    k == maxiter && return (0x00, 0x00, 0x00)
+    s = k / (k + 8.0)
+    t = 1.0 - s
+    red = unsafe_trunc(UInt8, 255.0 * 9.0 * t * s * s * s)
+    green = unsafe_trunc(UInt8, 255.0 * 15.0 * t * t * s * s)
+    blue = unsafe_trunc(UInt8, 255.0 * 8.5 * t * t * t * s)
+    return (red, green, blue)
+end
+
+# Writes value into the picture as count bytes from byte at on, the lowest byte first
+function store_bytes!(picture::Ptr{UInt8}, at::Int64, value::Int64, count::Int64)
+    for b in 0:count - 1
+        unsafe_store!(picture, (value >> (8 * b)) % UInt8, at + b)
+    end
+end
+
+# Writes the picture into memory of picture_bytes(height, width) bytes: the header, then the rows from the bottom up,
+# so that the imaginary part grows upwards, each pixel blue, green and red
+function fill_picture(picture::Ptr{UInt8}, counts::Ptr{Int32}, height::Int64, width::Int64, maxiter::Int32)::Int64
+    row_bytes = (3 * width + 3) & ~3
+    unsafe_store!(picture, 0x42, 1)  # B
+    unsafe_store!(picture, 0x4d, 2)  # M
+    store_bytes!(picture, 3, picture_bytes(height, width), 4)  # the size of the file
+    store_bytes!(picture, 7, 0, 4)  # reserved
+    store_bytes!(picture, 11, 54, 4)  # where the pixels start
+    store_bytes!(picture, 15, 40, 4)  # the size of the rest of the header
+    store_bytes!(picture, 19, width, 4)
+    store_bytes!(picture, 23, height, 4)  # positive: the rows from the bottom up
+    store_bytes!(picture, 27, 1, 2)  # one plane
+    store_bytes!(picture, 29, 24, 2)  # 24 bits a pixel
+    store_bytes!(picture, 31, 0, 4)  # no compression
+    store_bytes!(picture, 35, row_bytes * height, 4)  # the size of the pixels
+    store_bytes!(picture, 39, 2835, 4)  # 72 pixels an inch across, as pixels a metre
+    store_bytes!(picture, 43, 2835, 4)  # and down
+    store_bytes!(picture, 47, 0, 8)  # no palette
+    for i in 1:height
+        row = 54 + (i - 1) * row_bytes
+        for j in 1:width
+            red, green, blue = pixel_colour(unsafe_load(counts, i + (j - 1) * height), maxiter)
+            unsafe_store!(picture, blue, row + 3 * j - 2)
+            unsafe_store!(picture, green, row + 3 * j - 1)
+            unsafe_store!(picture, red, row + 3 * j)
+        end
+        for p in 3 * width + 1:row_bytes
+            unsafe_store!(picture, 0x00, row + p)  # the padding
+        end
+    end
+    return picture_bytes(height, width)
+end
 """
 
 # Julia: the same code in this session, filling a Julia matrix through its pointer; GC.@preserve keeps the matrix
@@ -336,22 +479,45 @@ end
 include_string(Main, kernel_code)
 julia_counts = Matrix{Int32}(undef, height, width)
 julia_inside = GC.@preserve julia_counts fill_counts(pointer(julia_counts), height, width, x0, y0, spacing, Int32(julia_set), real(c), imag(c), maxiter)
+julia_picture = Vector{UInt8}(undef, picture_bytes(height, width))
+GC.@preserve julia_picture julia_counts fill_picture(pointer(julia_picture), pointer(julia_counts), height, width, maxiter)
 
-# The program around fill_counts: it reads the inputs from its command line, fills memory of its own, writes the
-# counts to a file and prints the number of pixels inside. It prints to Core.stdout, which a trimmed program keeps
+# The program around fill_counts and fill_picture: it reads the inputs from its command line, fills memory of its own,
+# writes the picture and the counts to files and prints the number of pixels inside. Started with no arguments, as by
+# a double-click, it draws the Mandelbrot set with the page's defaults into fractal.bmp, in the folder it starts in,
+# and opens the picture with the system's viewer through system of the C library. It prints to Core.stdout, which a
+# trimmed program keeps
 program_code = """
+function draw(picture_file::String, counts_file::String, height::Int64, width::Int64, x0::Float64, y0::Float64,
+              spacing::Float64, julia_set::Int32, cr::Float64, ci::Float64, maxiter::Int32)::Int64
+    counts = Vector{Int32}(undef, height * width)
+    picture = Vector{UInt8}(undef, picture_bytes(height, width))
+    inside = GC.@preserve counts picture begin
+        inside = fill_counts(pointer(counts), height, width, x0, y0, spacing, julia_set, cr, ci, maxiter)
+        fill_picture(pointer(picture), pointer(counts), height, width, maxiter)
+        inside
+    end
+    isempty(counts_file) || write(counts_file, counts)
+    write(picture_file, picture)
+    return inside
+end
+
 function fractal(args::Vector{String})::Cint
-    if length(args) != 10
-        println(Core.stderr, "usage: fractal counts.bin height width x0 y0 spacing julia_set cr ci maxiter")
+    if isempty(args)
+        inside = draw("fractal.bmp", "", 640, 800, -2.2, -1.2, 3.0 / 799, Int32(0), 0.0, 0.0, Int32(256))
+        println(Core.stdout, "The Mandelbrot set, 800 x 640 pixels, 256 iterations: ", inside, " pixels inside")
+        println(Core.stdout, "The picture: fractal.bmp, in the folder the program started in")
+        command = Sys.isapple() ? "open fractal.bmp" : Sys.iswindows() ? "start fractal.bmp" : "xdg-open fractal.bmp"
+        @ccall system(command::Cstring)::Cint
+        return 0
+    end
+    if length(args) != 11
+        println(Core.stderr, "usage: fractal picture.bmp counts.bin height width x0 y0 spacing julia_set cr ci maxiter")
         return 1
     end
-    height = parse(Int64, args[2])
-    width = parse(Int64, args[3])
-    counts = Vector{Int32}(undef, height * width)
-    inside = GC.@preserve counts fill_counts(pointer(counts), height, width, parse(Float64, args[4]), parse(Float64, args[5]),
-                                             parse(Float64, args[6]), parse(Int32, args[7]), parse(Float64, args[8]),
-                                             parse(Float64, args[9]), parse(Int32, args[10]))
-    write(args[1], counts)
+    inside = draw(args[1], args[2], parse(Int64, args[3]), parse(Int64, args[4]), parse(Float64, args[5]),
+                  parse(Float64, args[6]), parse(Float64, args[7]), parse(Int32, args[8]), parse(Float64, args[9]),
+                  parse(Float64, args[10]), parse(Int32, args[11]))
     println(Core.stdout, inside)
     return 0
 end
@@ -394,9 +560,11 @@ else
     seconds
 end
 
-# Run: the inputs as arguments, the numbers as repr writes them, which the program reads back to the same Float64
+# Run: the files to write and the inputs as arguments, the numbers as repr writes them, which the program reads back
+# to the same Float64
 counts_file = joinpath(folder, "counts.bin")
-arguments = [counts_file, string(height), string(width), repr(x0), repr(y0), repr(spacing), string(Int(julia_set)), repr(real(c)), repr(imag(c)), string(maxiter)]
+picture_file = joinpath(folder, "fractal.bmp")
+arguments = [picture_file, counts_file, string(height), string(width), repr(x0), repr(y0), repr(spacing), string(Int(julia_set)), repr(real(c)), repr(imag(c)), string(maxiter)]
 command = `$program $arguments`
 compiled_inside = parse(Int, readchomp(command))
 compiled_counts = read!(counts_file, Matrix{Int32}(undef, height, width))
@@ -413,6 +581,8 @@ programs[tool] = (seconds = something(build_seconds, get(programs, tool, (second
 differ = count(compiled_counts .!= julia_counts)
 println(differ == 0 ? "The program of PackageCompiler and Julia give the same count at all $(length(julia_counts)) pixels" : "The program of PackageCompiler and Julia differ at $differ of $(length(julia_counts)) pixels")
 println("Pixels inside: $compiled_inside from the program, $julia_inside from Julia")
+println(read(picture_file) == julia_picture ? "The picture is the same as Julia's, byte for byte" : "The picture differs from Julia's")
+println("The picture: ", picture_file)
 println("The program: ", program)
 println("Run it with: ", command)
 '''
@@ -431,9 +601,10 @@ height = round(Int, width * (y1 - y0) / (x1 - x0))
 spacing = (x1 - x0) / (width - 1)  # the distance between two pixels, across and down
 maxiter = Int32({{maxiter}})
 
-# The Julia code that computes the counts: the iterations of z^2 + c before |z| passes 2 for one pixel, and
+# The Julia code that computes the counts and draws them: the iterations of z^2 + c before |z| passes 2 for one pixel;
 # fill_counts, which writes the count of every pixel into memory it is given, column by column, and returns the
-# number inside. Only native types in and out, no allocation, no error thrown: code that every tool can compile
+# number inside; and fill_picture, which writes the picture of the counts as a BMP file into memory it is given. Only
+# native types in and out, no allocation, no error thrown: code that every tool can compile
 kernel_code = """
 function escape_time(zr, zi, cr, ci, maxiter::Int32)
     k = zero(maxiter)
@@ -460,6 +631,63 @@ function fill_counts(counts::Ptr{Int32}, height::Int64, width::Int64, x0::Float6
     end
     return inside
 end
+
+# The size of the picture as a BMP file: a header of 54 bytes, then each row of pixels, 3 bytes each, padded to a
+# multiple of 4 bytes
+picture_bytes(height::Int64, width::Int64) = 54 + ((3 * width + 3) & ~3) * height
+
+# The colour of a pixel from its count k: black inside the set; outside, s = k / (k + 8) runs from 0, for a pixel that
+# escapes at once, towards 1 near the set, through blue, green and yellow to red
+function pixel_colour(k::Int32, maxiter::Int32)
+    k == maxiter && return (0x00, 0x00, 0x00)
+    s = k / (k + 8.0)
+    t = 1.0 - s
+    red = unsafe_trunc(UInt8, 255.0 * 9.0 * t * s * s * s)
+    green = unsafe_trunc(UInt8, 255.0 * 15.0 * t * t * s * s)
+    blue = unsafe_trunc(UInt8, 255.0 * 8.5 * t * t * t * s)
+    return (red, green, blue)
+end
+
+# Writes value into the picture as count bytes from byte at on, the lowest byte first
+function store_bytes!(picture::Ptr{UInt8}, at::Int64, value::Int64, count::Int64)
+    for b in 0:count - 1
+        unsafe_store!(picture, (value >> (8 * b)) % UInt8, at + b)
+    end
+end
+
+# Writes the picture into memory of picture_bytes(height, width) bytes: the header, then the rows from the bottom up,
+# so that the imaginary part grows upwards, each pixel blue, green and red
+function fill_picture(picture::Ptr{UInt8}, counts::Ptr{Int32}, height::Int64, width::Int64, maxiter::Int32)::Int64
+    row_bytes = (3 * width + 3) & ~3
+    unsafe_store!(picture, 0x42, 1)  # B
+    unsafe_store!(picture, 0x4d, 2)  # M
+    store_bytes!(picture, 3, picture_bytes(height, width), 4)  # the size of the file
+    store_bytes!(picture, 7, 0, 4)  # reserved
+    store_bytes!(picture, 11, 54, 4)  # where the pixels start
+    store_bytes!(picture, 15, 40, 4)  # the size of the rest of the header
+    store_bytes!(picture, 19, width, 4)
+    store_bytes!(picture, 23, height, 4)  # positive: the rows from the bottom up
+    store_bytes!(picture, 27, 1, 2)  # one plane
+    store_bytes!(picture, 29, 24, 2)  # 24 bits a pixel
+    store_bytes!(picture, 31, 0, 4)  # no compression
+    store_bytes!(picture, 35, row_bytes * height, 4)  # the size of the pixels
+    store_bytes!(picture, 39, 2835, 4)  # 72 pixels an inch across, as pixels a metre
+    store_bytes!(picture, 43, 2835, 4)  # and down
+    store_bytes!(picture, 47, 0, 8)  # no palette
+    for i in 1:height
+        row = 54 + (i - 1) * row_bytes
+        for j in 1:width
+            red, green, blue = pixel_colour(unsafe_load(counts, i + (j - 1) * height), maxiter)
+            unsafe_store!(picture, blue, row + 3 * j - 2)
+            unsafe_store!(picture, green, row + 3 * j - 1)
+            unsafe_store!(picture, red, row + 3 * j)
+        end
+        for p in 3 * width + 1:row_bytes
+            unsafe_store!(picture, 0x00, row + p)  # the padding
+        end
+    end
+    return picture_bytes(height, width)
+end
 """
 
 # Julia: the same code in this session, filling a Julia matrix through its pointer; GC.@preserve keeps the matrix
@@ -467,23 +695,52 @@ end
 include_string(Main, kernel_code)
 julia_counts = Matrix{Int32}(undef, height, width)
 julia_inside = GC.@preserve julia_counts fill_counts(pointer(julia_counts), height, width, x0, y0, spacing, Int32(julia_set), real(c), imag(c), maxiter)
+julia_picture = Vector{UInt8}(undef, picture_bytes(height, width))
+GC.@preserve julia_picture julia_counts fill_picture(pointer(julia_picture), pointer(julia_counts), height, width, maxiter)
 
 # The program with no Julia runtime, written with StaticTools: argc and argv as C gives them (argv[1] is the program,
-# so the first argument is at 2), memory taken with MallocArray and given back with free, the file written and the
-# number printed through the C library. % Int32 truncates where Int32() could throw, and nothing here may throw
+# so the first argument is at 2), memory taken with MallocArray and given back with free, the files written and the
+# text printed through the C library. Started with no arguments, as by a double-click, it draws the Mandelbrot set with
+# the page's defaults into fractal.bmp and opens it with system of the C library, called with @symbolcall as
+# StaticTools calls the C library. % Int32 truncates where Int32() could throw, and nothing here may throw
 static_code = """
-function static_main(argc::Int64, argv::Ptr{Ptr{UInt8}})
-    argc == 11 || return 1
-    height = argparse(Int64, argv, 3)
-    width = argparse(Int64, argv, 4)
+function draw_static(picture_name, counts_name, write_counts::Bool, height::Int64, width::Int64, x0::Float64,
+                     y0::Float64, spacing::Float64, julia_set::Int32, cr::Float64, ci::Float64, maxiter::Int32)::Int64
     counts = MallocArray{Int32}(undef, height, width)
-    inside = fill_counts(pointer(counts), height, width, argparse(Float64, argv, 5), argparse(Float64, argv, 6),
-                         argparse(Float64, argv, 7), argparse(Int64, argv, 8) % Int32, argparse(Float64, argv, 9),
-                         argparse(Float64, argv, 10), argparse(Int64, argv, 11) % Int32)
-    file = fopen(MallocString(argv, 2), c"wb")
-    fwrite(file, counts)
+    picture = MallocArray{UInt8}(undef, picture_bytes(height, width))
+    inside = fill_counts(pointer(counts), height, width, x0, y0, spacing, julia_set, cr, ci, maxiter)
+    fill_picture(pointer(picture), pointer(counts), height, width, maxiter)
+    if write_counts
+        file = fopen(counts_name, c"wb")
+        fwrite(file, counts)
+        fclose(file)
+    end
+    file = fopen(picture_name, c"wb")
+    fwrite(file, picture)
     fclose(file)
+    free(picture)
     free(counts)
+    return inside
+end
+
+shell(command) = GC.@preserve command @symbolcall system(pointer(command)::Ptr{UInt8})::Int32
+
+function static_main(argc::Int64, argv::Ptr{Ptr{UInt8}})
+    if argc == 1
+        inside = draw_static(c"fractal.bmp", c"", false, 640, 800, -2.2, -1.2, 3.0 / 799, Int32(0), 0.0, 0.0, Int32(256))
+        printf(c"The Mandelbrot set, 800 x 640 pixels, 256 iterations: %lld pixels inside\\n", inside)
+        printf(c"The picture: fractal.bmp, in the folder the program started in\\n")
+        Sys.isapple() ? shell(c"open fractal.bmp") : Sys.iswindows() ? shell(c"start fractal.bmp") : shell(c"xdg-open fractal.bmp")
+        return 0
+    end
+    if argc != 12
+        printf(stderrp(), c"usage: fractal picture.bmp counts.bin height width x0 y0 spacing julia_set cr ci maxiter\\n")
+        return 1
+    end
+    inside = draw_static(MallocString(argv, 2), MallocString(argv, 3), true, argparse(Int64, argv, 4),
+                         argparse(Int64, argv, 5), argparse(Float64, argv, 6), argparse(Float64, argv, 7),
+                         argparse(Float64, argv, 8), argparse(Int64, argv, 9) % Int32, argparse(Float64, argv, 10),
+                         argparse(Float64, argv, 11), argparse(Int64, argv, 12) % Int32)
     printf(c"%lld\\n", inside)
     return 0
 end
@@ -492,18 +749,36 @@ include_string(Main, static_code)
 
 # The same program for julia as a script, started at the function marked @main, for julia to run beside the program
 program_code = """
+function draw(picture_file::String, counts_file::String, height::Int64, width::Int64, x0::Float64, y0::Float64,
+              spacing::Float64, julia_set::Int32, cr::Float64, ci::Float64, maxiter::Int32)::Int64
+    counts = Vector{Int32}(undef, height * width)
+    picture = Vector{UInt8}(undef, picture_bytes(height, width))
+    inside = GC.@preserve counts picture begin
+        inside = fill_counts(pointer(counts), height, width, x0, y0, spacing, julia_set, cr, ci, maxiter)
+        fill_picture(pointer(picture), pointer(counts), height, width, maxiter)
+        inside
+    end
+    isempty(counts_file) || write(counts_file, counts)
+    write(picture_file, picture)
+    return inside
+end
+
 function fractal(args::Vector{String})::Cint
-    if length(args) != 10
-        println(Core.stderr, "usage: fractal counts.bin height width x0 y0 spacing julia_set cr ci maxiter")
+    if isempty(args)
+        inside = draw("fractal.bmp", "", 640, 800, -2.2, -1.2, 3.0 / 799, Int32(0), 0.0, 0.0, Int32(256))
+        println(Core.stdout, "The Mandelbrot set, 800 x 640 pixels, 256 iterations: ", inside, " pixels inside")
+        println(Core.stdout, "The picture: fractal.bmp, in the folder the program started in")
+        command = Sys.isapple() ? "open fractal.bmp" : Sys.iswindows() ? "start fractal.bmp" : "xdg-open fractal.bmp"
+        @ccall system(command::Cstring)::Cint
+        return 0
+    end
+    if length(args) != 11
+        println(Core.stderr, "usage: fractal picture.bmp counts.bin height width x0 y0 spacing julia_set cr ci maxiter")
         return 1
     end
-    height = parse(Int64, args[2])
-    width = parse(Int64, args[3])
-    counts = Vector{Int32}(undef, height * width)
-    inside = GC.@preserve counts fill_counts(pointer(counts), height, width, parse(Float64, args[4]), parse(Float64, args[5]),
-                                             parse(Float64, args[6]), parse(Int32, args[7]), parse(Float64, args[8]),
-                                             parse(Float64, args[9]), parse(Int32, args[10]))
-    write(args[1], counts)
+    inside = draw(args[1], args[2], parse(Int64, args[3]), parse(Int64, args[4]), parse(Float64, args[5]),
+                  parse(Float64, args[6]), parse(Float64, args[7]), parse(Int32, args[8]), parse(Float64, args[9]),
+                  parse(Float64, args[10]), parse(Int32, args[11]))
     println(Core.stdout, inside)
     return 0
 end
@@ -534,9 +809,11 @@ else
     seconds
 end
 
-# Run: the inputs as arguments, the numbers as repr writes them, which the program reads back to the same Float64
+# Run: the files to write and the inputs as arguments, the numbers as repr writes them, which the program reads back
+# to the same Float64
 counts_file = joinpath(folder, "counts.bin")
-arguments = [counts_file, string(height), string(width), repr(x0), repr(y0), repr(spacing), string(Int(julia_set)), repr(real(c)), repr(imag(c)), string(maxiter)]
+picture_file = joinpath(folder, "fractal.bmp")
+arguments = [picture_file, counts_file, string(height), string(width), repr(x0), repr(y0), repr(spacing), string(Int(julia_set)), repr(real(c)), repr(imag(c)), string(maxiter)]
 command = `$program $arguments`
 compiled_inside = parse(Int, readchomp(command))
 compiled_counts = read!(counts_file, Matrix{Int32}(undef, height, width))
@@ -553,6 +830,8 @@ programs[tool] = (seconds = something(build_seconds, get(programs, tool, (second
 differ = count(compiled_counts .!= julia_counts)
 println(differ == 0 ? "The program of StaticCompiler and Julia give the same count at all $(length(julia_counts)) pixels" : "The program of StaticCompiler and Julia differ at $differ of $(length(julia_counts)) pixels")
 println("Pixels inside: $compiled_inside from the program, $julia_inside from Julia")
+println(read(picture_file) == julia_picture ? "The picture is the same as Julia's, byte for byte" : "The picture differs from Julia's")
+println("The picture: ", picture_file)
 println("The program: ", program)
 println("Run it with: ", command)
 '''
@@ -564,13 +843,20 @@ label = "Visualise"
 [[actionGroups.actions]]
 id = "picture"
 label = "Picture of the Set"
-desc = "The counts the program wrote, as a picture on a log scale, with the real part across and the imaginary part down"
+desc = "The picture the program drew, fractal.bmp, read back into Julia: black inside the set, and outside a colour from how fast each pixel escapes"
 code = '''
 using Plots
 
-xs = x0 .+ (0:width - 1) .* spacing
-ys = y0 .+ (0:height - 1) .* spacing
-heatmap(xs, ys, log1p.(compiled_counts), aspect_ratio = :equal, colorbar = false, xlabel = "real part", ylabel = "imaginary part", title = julia_set ? "Julia set of c = $c" : "Mandelbrot set", size = (700, 560))
+# The BMP file: 54 bytes of header, then the rows from the bottom up, each pixel blue, green and red, each row padded
+# to a multiple of 4 bytes. The image's first row is the file's last, the top of the picture
+bytes = read(picture_file)
+row_bytes = (3 * width + 3) & ~3
+function pixel(i, j)
+    at = 54 + (i - 1) * row_bytes + 3 * j
+    return RGB(bytes[at] / 255, bytes[at - 1] / 255, bytes[at - 2] / 255)
+end
+picture = [pixel(i, j) for i in height:-1:1, j in 1:width]
+plot(picture, aspect_ratio = :equal, axis = nothing, border = :none, title = julia_set ? "Julia set of c = $c" : "Mandelbrot set", size = (700, 560))
 '''
 
 [[actionGroups]]

@@ -16,7 +16,7 @@ A compiled program has all its code compiled when it starts, so what remains is 
 
 ## How Does Start-Up and Run Time Measure It?
 
-**Start-Up and Run Time** runs each tool's program five times with the same arguments, measures each run from the start of the process to its end, and keeps the fastest. It does the same with `julia --startup-file=no fractal.jl`, and times `fill_counts` alone in the Julia session, five times, the fastest kept. All three kinds of time include filling the same pixels, and the programs and the script also write `counts.bin` and print one line. The time of `fill_counts` in the session has no start-up at all, as the function was compiled when the tab ran, so the difference between a program's time and that of `fill_counts` is close to what the program spends starting and writing its file.
+**Start-Up and Run Time** runs each tool's program five times with the same arguments, measures each run from the start of the process to its end, and keeps the fastest. It does the same with `julia --startup-file=no fractal.jl`, and times `fill_counts` alone in the Julia session, five times, the fastest kept. All three kinds of time include filling the same pixels, and the programs and the script also draw the picture, write `fractal.bmp` and `counts.bin`, and print one line. The time of `fill_counts` in the session has no start-up at all, as the function was compiled when the tab ran, so the difference between a program's time and that of `fill_counts` is close to what the program spends starting and writing its file.
 
 ## Why Does Start-Up and Run Time Keep the Fastest of Five Runs?
 

@@ -39,15 +39,15 @@ A C compiler is `cc`, `gcc` or `clang` on macOS and Linux (the Command Line Tool
 | **Imaginary Part of c** | 0.156 | The imaginary part of c, for the Julia set only |
 | **Folder** | `programs/executables` of the open Pollis Workspace, else `~/.pollis/programs/executables` | Where the programs are built, in a folder for each tool; **Choose...** picks another |
 
-The program receives them as its arguments: `counts.bin height width x0 y0 spacing julia_set cr ci maxiter`.
+The program receives them as its arguments, after the files it writes: `picture.bmp counts.bin height width x0 y0 spacing julia_set cr ci maxiter`. With no arguments it draws the Mandelbrot set, 800 by 640 pixels with 256 iterations, into `fractal.bmp` in the folder it starts in, and opens it.
 
 ## Files Written by Compile Julia to an Executable
 
 | Tab | Folder in **Folder** | Files |
 |---|---|---|
-| **JuliaC** | `juliac` | `fractal.jl`, `Project.toml`, `bundle/` (the program in `bin`, the Julia libraries in `lib`), `counts.bin` |
-| **PackageCompiler** | `packagecompiler` | `Fractal/` (the package), `app/` (the program in `bin`, with the runtime and the system image), `fractal.jl`, `counts.bin` |
-| **StaticCompiler** | `staticcompiler` | `static_main.jl`, `fractal.jl`, `bin/fractal`, `counts.bin` |
+| **JuliaC** | `juliac` | `fractal.jl`, `Project.toml`, `bundle/` (the program in `bin`, the Julia libraries in `lib`), `fractal.bmp`, `counts.bin` |
+| **PackageCompiler** | `packagecompiler` | `Fractal/` (the package), `app/` (the program in `bin`, with the runtime and the system image), `fractal.jl`, `fractal.bmp`, `counts.bin` |
+| **StaticCompiler** | `staticcompiler` | `static_main.jl`, `fractal.jl`, `bin/fractal`, `fractal.bmp`, `counts.bin` |
 
 Each folder also holds `built_from.txt`, the Julia version and the source the program was built from: a program is built again only when one of them changes. `fractal.jl` is the program as a Julia script, which **Start-Up and Run Time** runs with julia.
 
@@ -68,7 +68,7 @@ Each folder also holds `built_from.txt`, the Julia version and the source the pr
 
 | Group | Action | Output |
 |---|---|---|
-| Visualise | **Picture of the Set** | The program's counts as a heatmap on a log scale |
+| Visualise | **Picture of the Set** | The picture the program drew, `fractal.bmp`, read back and shown |
 | Diagnose | **Source and Build Command** | The Julia source, the build call and the command that runs the program |
 | Diagnose | **Program Contents** | Sizes of the program and its folder, and the libraries needed at run time |
 | Compare | **Sizes and Build Times** | Each tool run in the session, its build time, program size and folder size |
