@@ -27,6 +27,7 @@ import { BROWSE_METHODS_COMMAND_ID, CREATE_METHOD_COMMAND_ID } from './newMethod
 import { REPLICATE_ARTICLE_COMMAND_ID } from './replicateArticle.js';
 import { SPEED_UP_COMMAND_ID } from './speedUpPage.js';
 import { TRANSLATE_RUST_COMMAND_ID } from './translateRustPage.js';
+import { WEB_ASSEMBLY_COMMAND_ID } from './webAssemblyPage.js';
 import { MANY_ANALYSTS_COMMAND_ID } from './manyAnalystsPage.js';
 import './codingAgentPage.js';
 import './modelRoutingPage.js';
@@ -661,9 +662,8 @@ MenuRegistry.appendMenuItem(ComparisonsMenu, {
 	order: 2,
 });
 
-// Compilation Lab, in two groups: Compile Julia (1_compile: a shared library, an executable) and Other Languages
-// (2_languages: Julia mixed with compiled code, Julia translated to Rust, Julia functions in DuckDB). The third item
-// of Compile Julia, not built yet, is in composeItems below.
+// Compilation Lab, in two groups: Compile Julia (1_compile: a shared library, an executable, WebAssembly) and Other
+// Languages (2_languages: Julia mixed with compiled code, Julia translated to Rust, Julia functions in DuckDB).
 CommandsRegistry.registerCommand('pollis.compilation.sharedLibrary', (accessor: ServicesAccessor) => openScaffoldWebview(accessor, SHAREDLIB_PANEL));
 CommandsRegistry.registerCommand('pollis.compilation.executable', (accessor: ServicesAccessor) => openScaffoldWebview(accessor, COMPILEEXE_PANEL));
 CommandsRegistry.registerCommand('pollis.compilation.mix', (accessor: ServicesAccessor) => openScaffoldWebview(accessor, MIXCOMPILED_PANEL));
@@ -679,6 +679,12 @@ MenuRegistry.appendMenuItem(CompileGaloreMenu, {
 	group: '1_compile',
 	command: { id: 'pollis.compilation.executable', title: localize('compilation.executable', "Compile Julia to an Executable...") },
 	order: 2,
+});
+
+MenuRegistry.appendMenuItem(CompileGaloreMenu, {
+	group: '1_compile',
+	command: { id: WEB_ASSEMBLY_COMMAND_ID, title: localize('compilation.webAssembly', "Compile Julia to WebAssembly...") },
+	order: 3,
 });
 
 MenuRegistry.appendMenuItem(CompileGaloreMenu, {
@@ -705,10 +711,7 @@ MenuRegistry.appendMenuItem(CompileGaloreMenu, {
 // builds a forecasting model, scored on data none of them saw, then combined). Papers: Referee Report (referees
 // in different roles read a draft, an editor merges their reports), Systematic Review (two agents screen and
 // extract each study on their own, the differences settled by the user, then a meta-analysis).
-// Compilation Lab: Compile Julia to WebAssembly (the fractal drawn live in the page, through Rust or
-// WebAssemblyCompiler.jl), third of Compile Julia.
 const composeItems = [
-	{ menu: CompileGaloreMenu, id: 'pollis.compilation.webAssembly', title: localize('compilation.webAssembly', "Compile Julia to WebAssembly..."), group: '1_compile', order: 3 },
 	{ menu: OrchestrationMenu, id: 'pollis.orchestration.specificationCurve', title: localize('orchestration.specificationCurve', "Specification Curve..."), group: '1_analyses', order: 2 },
 	{ menu: OrchestrationMenu, id: 'pollis.orchestration.forecastingCompetition', title: localize('orchestration.forecastingCompetition', "Forecasting Competition..."), group: '1_analyses', order: 3 },
 	{ menu: OrchestrationMenu, id: 'pollis.orchestration.refereeReport', title: localize('orchestration.refereeReport', "Referee Report..."), group: '2_papers', order: 1 },

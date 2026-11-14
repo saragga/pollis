@@ -50,7 +50,7 @@ description = "What --trim=safe keeps and removes, the code it cannot compile, a
 name = "Libraries with and without a Runtime"
 file = "sharedLib/runtimes.md"
 bundled = true
-description = "The Julia runtime inside a library of juliac or PackageCompiler, init_julia and shutdown_julia, and the libraries of StaticCompiler that have none"
+description = "The Julia runtime inside a library of juliac or PackageCompiler, init_julia and shutdown_julia, the libraries of StaticCompiler that have none, and how Python and R call a library"
 
 [[wikis]]
 name = "Shipping a Library"
@@ -431,13 +431,14 @@ else
 end
 shipped_folder = destination
 
-# The calling program, compiled with INIT_JULIA and linked against the library, with its folder recorded (rpath)
+# The calling program, compiled with INIT_JULIA and linked against the library, with its folder recorded (rpath), and
+# the folder julia in it, where the library finds the Julia runtime on macOS
 caller_file = joinpath(folder, "caller.c")
 write(caller_file, caller_source)
 caller = joinpath(folder, "caller" * (Sys.iswindows() ? ".exe" : ""))
-rpath = Sys.iswindows() ? String[] : ["-Wl,-rpath,$(dirname(library))"]
+rpath = Sys.iswindows() ? String[] : ["-Wl,-rpath,$(dirname(library))", "-Wl,-rpath,$(joinpath(dirname(library), "julia"))"]
 caller_built_with = `$compiler -DINIT_JULIA $caller_file -o $caller $library $rpath`
-build_seconds === nothing && isfile(caller) || run(caller_built_with)  # built again with the library
+run(caller_built_with)  # built each time, in a second, so that it always has these rpaths
 
 # Run: the numbers as repr writes them, which strtod reads back to the same Float64. On Windows the program finds the
 # library and the libraries beside it on the path
@@ -699,6 +700,142 @@ end
 counts = similar(julia_counts)
 julia_seconds = (@b GC.@preserve counts fill_counts(pointer(counts), height, width, x0, y0, spacing, Int32(julia_set), real(c), imag(c), maxiter)).time
 println(rpad("Julia", 18), lpad(round(julia_seconds * 1e3, sigdigits = 4), 10), " ms for fill_counts alone, in this session")
+'''
+
+[[actionGroups.actions]]
+id = "python"
+label = "Call the Library from Python"
+desc = "Python calls fill_counts of the same library with ctypes, of its standard library, into memory of its own; its counts are checked against Julia's"
+code = '''
+# Python, from the path
+python = something(Sys.which("python3"), Sys.which("python"), Some(nothing))
+python === nothing && error("Python not found: install Python 3, from python.org or with your package manager, and run this again")
+
+# The script: ctypes opens the library and converts each Python number to the C type of fill_counts. Python reads
+# the decimal numbers that repr writes back to the same Float64
+python_script = joinpath(folder, "call_from_python.py")
+write(python_script, """
+import ctypes, os, sys
+
+library, counts_file = sys.argv[1], sys.argv[2]
+height, width = int(sys.argv[3]), int(sys.argv[4])
+x0, y0, spacing, cr, ci = (float(value) for value in sys.argv[5:10])
+julia_set, maxiter = int(sys.argv[10]), int(sys.argv[11])
+
+# A library of PackageCompiler finds the Julia runtime, in the folder julia beside it, through the rpath of the
+# program that loads it on macOS, which Python does not have: Python loads the runtime first
+runtime = os.path.join(os.path.dirname(library), "julia", "libjulia-internal.dylib")
+if sys.platform == "darwin" and os.path.isfile(runtime):
+    ctypes.CDLL(runtime, mode=ctypes.RTLD_GLOBAL)
+
+fractal = ctypes.CDLL(library)
+fractal.fill_counts.argtypes = [ctypes.POINTER(ctypes.c_int32), ctypes.c_int64, ctypes.c_int64, ctypes.c_double,
+                                ctypes.c_double, ctypes.c_double, ctypes.c_int32, ctypes.c_double, ctypes.c_double,
+                                ctypes.c_int32]
+fractal.fill_counts.restype = ctypes.c_int64
+
+# A library of PackageCompiler starts its Julia runtime first, as its C program does
+if hasattr(fractal, "init_julia"):
+    fractal.init_julia(1, (ctypes.c_char_p * 1)(sys.executable.encode()))
+
+# Memory of Python's own for the counts, which the library fills
+counts = (ctypes.c_int32 * (height * width))()
+inside = fractal.fill_counts(counts, height, width, x0, y0, spacing, julia_set, cr, ci, maxiter)
+with open(counts_file, "wb") as out:
+    out.write(bytes(counts))
+print(inside)
+""")
+
+# Run, with the same arguments as the C program; on Windows the library and what it needs are found on the path
+python_counts_file = joinpath(folder, "counts_python.bin")
+python_command = `$python $python_script $library $python_counts_file $height $width $(repr(x0)) $(repr(y0)) $(repr(spacing)) $(repr(real(c))) $(repr(imag(c))) $(Int(julia_set)) $maxiter`
+python_command = Sys.iswindows() ? addenv(python_command, "PATH" => dirname(library) * ";" * Sys.BINDIR * ";" * get(ENV, "PATH", "")) : python_command
+python_inside = parse(Int, readchomp(python_command))
+python_counts = read!(python_counts_file, Matrix{Int32}(undef, height, width))
+
+# Check: the counts Python got from the library, against Julia
+python_differ = count(python_counts .!= julia_counts)
+println(python_differ == 0 ? "Python, through the library of $tool, and Julia give the same count at all $(length(julia_counts)) pixels" : "Python, through the library of $tool, and Julia differ at $python_differ of $(length(julia_counts)) pixels")
+println("Pixels inside: $python_inside from Python, $julia_inside from Julia")
+println("The Python script: ", python_script)
+'''
+
+[[actionGroups.actions]]
+id = "r"
+label = "Call the Library from R"
+desc = "R calls fill_counts of the same library through a wrapper of a few lines of C, which R CMD SHLIB builds for .C; its counts are checked against Julia's"
+code = '''
+# R, from the path, and R CMD SHLIB beside Rscript
+rscript = Sys.which("Rscript")
+rscript === nothing && error("R not found: install R, from cran.r-project.org, and run this again")
+r_program = joinpath(dirname(rscript), Sys.iswindows() ? "R.exe" : "R")
+
+# The wrapper: .C of R passes every argument as a pointer to its vector, integers as int and numbers as double, so a
+# function of a few lines takes them as R gives them and calls fill_counts. A library of PackageCompiler also needs
+# its Julia runtime started (INIT_JULIA)
+wrapper_source = joinpath(folder, "fractal_r.c")
+write(wrapper_source, """
+#include <stddef.h>
+#include <stdint.h>
+
+int64_t fill_counts(int32_t *counts, int64_t height, int64_t width, double x0, double y0, double spacing,
+                    int32_t julia_set, double cr, double ci, int32_t maxiter);
+
+void fill_counts_r(int *counts, int *height, int *width, double *numbers, int *julia_set, int *maxiter, double *inside) {
+    *inside = (double)fill_counts(counts, *height, *width, numbers[0], numbers[1], numbers[2], *julia_set, numbers[3],
+                                  numbers[4], *maxiter);
+}
+
+#ifdef INIT_JULIA
+void init_julia(int argc, char *argv[]);
+void start_julia_r(void) {
+    char *argv[] = {"R", NULL};
+    init_julia(1, argv);
+}
+#endif
+""")
+
+# Built by R CMD SHLIB with R's own C compiler, linked against the library, with its folder recorded (rpath), and the
+# folder julia in it, where a library of PackageCompiler finds the Julia runtime on macOS
+wrapper = joinpath(folder, "fractal_r" * (Sys.iswindows() ? ".dll" : ".so"))
+start_julia = tool == "PackageCompiler"
+link_flags = Sys.iswindows() ? library : "$library -Wl,-rpath,$(dirname(library)) -Wl,-rpath,$(joinpath(dirname(library), "julia"))"
+shlib_command = addenv(Cmd(`$r_program CMD SHLIB -o $wrapper $wrapper_source`, dir = folder), "PKG_LIBS" => link_flags, "PKG_CPPFLAGS" => start_julia ? "-DINIT_JULIA" : "")
+run(shlib_command)
+
+# The script. R turns a decimal number into one of the nearest binary numbers, not always the nearest, so x0, y0,
+# spacing and c reach it as 64-bit numbers in a file, which readBin reads exactly
+numbers_file = joinpath(folder, "numbers_r.bin")
+write(numbers_file, [x0, y0, spacing, real(c), imag(c)])
+r_script = joinpath(folder, "call_from_r.R")
+write(r_script, """
+args <- commandArgs(trailingOnly = TRUE)
+height <- as.integer(args[4])
+width <- as.integer(args[5])
+numbers <- readBin(args[3], "double", n = 5, size = 8)
+
+dyn.load(args[1])
+if (args[8] == "true") invisible(.C("start_julia_r"))
+
+# Memory of R's own for the counts, an integer vector, which the library fills
+result <- .C("fill_counts_r", counts = integer(height * width), height, width, numbers, as.integer(args[6]),
+             as.integer(args[7]), inside = numeric(1))
+writeBin(result\$counts, args[2], size = 4)
+cat(sprintf("%.0f\\n", result\$inside))
+""")
+
+# Run; on Windows the library and what it needs are found on the path
+r_counts_file = joinpath(folder, "counts_r.bin")
+r_command = `$rscript $r_script $wrapper $r_counts_file $numbers_file $height $width $(Int(julia_set)) $maxiter $start_julia`
+r_command = Sys.iswindows() ? addenv(r_command, "PATH" => dirname(library) * ";" * Sys.BINDIR * ";" * get(ENV, "PATH", "")) : r_command
+r_inside = parse(Int, readchomp(r_command))
+r_counts = read!(r_counts_file, Matrix{Int32}(undef, height, width))
+
+# Check: the counts R got from the library, against Julia
+r_differ = count(r_counts .!= julia_counts)
+println(r_differ == 0 ? "R, through the library of $tool, and Julia give the same count at all $(length(julia_counts)) pixels" : "R, through the library of $tool, and Julia differ at $r_differ of $(length(julia_counts)) pixels")
+println("Pixels inside: $r_inside from R, $julia_inside from Julia")
+println("The R script: ", r_script)
 '''
 
 [[actionGroups]]

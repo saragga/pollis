@@ -20,7 +20,7 @@ The tools, requirements, build calls, inputs, files, names and actions of Compil
 | **PackageCompiler** | Nothing | PackageCompiler.jl in the environment, and a C compiler |
 | **StaticCompiler** | Nothing | StaticCompiler.jl in the environment, and a C compiler |
 
-The C compiler (`cc`, `gcc` or `clang`) builds the calling program in every tab: the Command Line Tools on macOS (`xcode-select --install`), the `gcc` package on Linux, MinGW-w64 on Windows.
+The C compiler (`cc`, `gcc` or `clang`) builds the calling program in every tab: the Command Line Tools on macOS (`xcode-select --install`), the `gcc` package on Linux, MinGW-w64 on Windows. **Call the Library from Python** needs Python 3, as `python3` or `python` on the path, and nothing beyond its standard library; **Call the Library from R** needs R, with `Rscript` on the path, whose `R CMD SHLIB` builds the wrapper with the C compiler R was set up with.
 
 ## Inputs of Compile Julia to a Shared Library
 
@@ -42,6 +42,8 @@ The inputs reach the library as arguments of the calling program, so changing th
 | **JuliaC** | `juliac` | `fractal.jl`, `Project.toml`, `libfractal.<ext>`, `caller.c`, `caller`, `counts.bin` |
 | **PackageCompiler** | `packagecompiler` | `Fractal/` (the package), `build/` (the library in `lib`, or `bin` on Windows, beside the Julia runtime), `caller.c`, `caller`, `counts.bin` |
 | **StaticCompiler** | `staticcompiler` | `fractal.jl`, `libfractal.<ext>`, `caller.c`, `caller`, `counts.bin` |
+
+**Call the Library from Python** adds `call_from_python.py` and `counts_python.bin` to the folder of the tab; **Call the Library from R** adds `fractal_r.c`, the wrapper `fractal_r.so` (`fractal_r.dll` on Windows), `call_from_r.R`, `numbers_r.bin` and `counts_r.bin`.
 
 Each folder also holds `built_from.txt`, the Julia version, the Julia source and the C program the library was built from: the library and its calling program are built again only when one of them changes.
 
@@ -66,6 +68,8 @@ Each folder also holds `built_from.txt`, the Julia version, the Julia source and
 | Diagnose | **Library Contents** | Sizes, the libraries needed at run time, and the library's own exported functions |
 | Compare | **Sizes and Build Times** | Each tool run in the session, its build time and library size |
 | Compare | **Start-Up and Call Time** | Each tool's program, run whole, beside `fill_counts` alone in the session |
+| Compare | **Call the Library from Python** | The counts Python gets from the same library through `ctypes`, against Julia's |
+| Compare | **Call the Library from R** | The counts R gets from the same library through a C wrapper for `.C`, against Julia's |
 | Interpret | **Share of Pixels Inside** | The share of pixels that did not escape, and their area |
 
 ## See Also

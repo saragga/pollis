@@ -49,7 +49,7 @@ The program receives them as its arguments, after the files it writes: `picture.
 | **PackageCompiler** | `packagecompiler` | `Fractal/` (the package), `app/` (the program in `bin`, with the runtime and the system image), `fractal.jl`, `fractal.bmp`, `counts.bin` |
 | **StaticCompiler** | `staticcompiler` | `static_main.jl`, `fractal.jl`, `bin/fractal`, `fractal.bmp`, `counts.bin` |
 
-Each folder also holds `built_from.txt`, the Julia version and the source the program was built from: a program is built again only when one of them changes. `fractal.jl` is the program as a Julia script, which **Start-Up and Run Time** runs with julia.
+Each folder also holds `built_from.txt`, the Julia version and the source the program was built from: a program is built again only when one of them changes. `fractal.jl` is the program as a Julia script, which **Start-Up and Run Time** runs with julia. **Use All the Cores** builds its program in `threads/` of the tool's folder, with `counts.bin` of its own. **Write a PNG with a Package** builds its program in `png/`, with PNGFiles.jl, ColorTypes.jl and FixedPointNumbers.jl in the project or package there, and writes `fractal.png`. **Julia Sets Along a Circle** builds its program in `frames/` and writes its frames, `frame_001.bmp` and on, in `frames/pictures`. **Options with Names** builds its program in `options/` and writes `options.bmp` there.
 
 ## Names Set by the Code of Compile Julia to an Executable
 
@@ -70,10 +70,14 @@ Each folder also holds `built_from.txt`, the Julia version and the source the pr
 |---|---|---|
 | Visualise | **Picture of the Set** | The picture the program drew, `fractal.bmp`, read back and shown |
 | Visualise | **Run the Program in Pollis** | The program run with one argument, `own_picture.bmp`: its lines in the Julia REPL, its picture in the plot pane |
+| Visualise | **Julia Sets Along a Circle** | The program again, writing a frame for each c on a circle in `frames/pictures` of the tool's folder, timed beside the same frames in this session, and shown as an animated GIF, `frames/julia_sets.gif` |
 | Diagnose | **Source and Build Command** | The Julia source, the build call and the command that runs the program |
 | Diagnose | **Program Contents** | Sizes of the program and its folder, and the libraries needed at run time |
+| Diagnose | **Options with Names** | The program again, reading `--example`, `--width`, `--iterations`, `--cr`, `--ci` and `--picture` in any order, each with a default, in `options/` of the tool's folder; run with the page's inputs and with a misspelt option |
 | Compare | **Sizes and Build Times** | Each tool run in the session, its build time, program size and folder size |
 | Compare | **Start-Up and Run Time** | Each program run whole, beside julia running the script and `fill_counts` alone |
+| Compare | **Use All the Cores** | The program again with `Threads.@threads` over the columns, in `threads/` of the tool's folder, run with `JULIA_NUM_THREADS` set to 1 and to the cores of the computer; JuliaC and PackageCompiler only |
+| Compare | **Write a PNG with a Package** | The program again, writing a PNG with PNGFiles.jl, in `png/` of the tool's folder; the PNG beside the page's BMP, in size and pixel by pixel; JuliaC and PackageCompiler only |
 | Interpret | **Share of Pixels Inside** | The share of pixels that did not escape, and their area |
 
 ## See Also

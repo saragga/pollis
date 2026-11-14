@@ -1,0 +1,77 @@
+# Compile Julia to WebAssembly Webview Configuration
+# A page of Compose > Compilation Lab in the Time Arrow style of the scaffold, not a panel: only its Powered by and
+# Learn More. `pageCommand` is the command that opens it, which a panel's contribution file would say. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/webAssembly.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Compile Julia to WebAssembly"
+viewType = "pollis.webAssembly"
+pageCommand = "pollis.compilation.webAssembly"
+
+[[packages]]
+name = "WebAssemblyCompiler.jl"
+github = "https://github.com/tshort/WebAssemblyCompiler.jl"
+
+[[wikis]]
+name = "Overview"
+file = "webAssembly/overview.md"
+bundled = true
+description = "The four steps of the page, the two ways from Julia to WebAssembly, and why the module is checked against Julia before it draws"
+
+[[wikis]]
+name = "Factsheet"
+file = "webAssembly/factsheet.md"
+bundled = true
+description = "Steps, inputs, folders and files, the functions each module exports, requirements and times at a glance"
+
+[[wikis]]
+name = "What Is WebAssembly"
+file = "webAssembly/webassembly.md"
+bundled = true
+description = "A module of functions in a portable binary format: its types, its linear memory, its sandbox, how a page compiles and calls it, and why its numbers agree with Julia's"
+
+[[wikis]]
+name = "Compiling Rust to WebAssembly"
+file = "webAssembly/rust-to-webassembly.md"
+bundled = true
+description = "The target wasm32-unknown-unknown, a cdylib crate whose exported functions the page calls, memory shared with JavaScript, and one call per picture"
+
+[[wikis]]
+name = "WebAssemblyCompiler.jl"
+file = "webAssembly/webassemblycompiler.md"
+bundled = true
+description = "How WebAssemblyCompiler.jl compiles a Julia function through Binaryen, what it can compile, why it runs on Julia 1.10, and one call per pixel"
+
+[[wikis]]
+name = "Running WebAssembly in the Page"
+file = "webAssembly/live-view.md"
+bundled = true
+description = "How the page loads a module, computes the counts, colours the picture, zooms and moves it, what the time of a picture measures, and what The Same in JavaScript compares"
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+key = "Sho2026b"
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+key = "KN2023a"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "HRSTH...2017a"
+
+[[references]]
+key = "Jul1918a"
+
+[[references]]
+key = "Man1980a"

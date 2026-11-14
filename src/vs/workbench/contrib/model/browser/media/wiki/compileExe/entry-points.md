@@ -26,6 +26,10 @@ The numbers reach the program as text, and the counts can only match Julia's if 
 
 Each program reports in three ways: the picture, a BMP file, which the session compares byte for byte with its own; the counts in a file, `counts.bin`, written as 32-bit integers column by column, which the session reads back with `read!` into a matrix of the same shape; and the number of pixels inside, printed as one line, which the session reads with `readchomp`. The programs of juliac and PackageCompiler print with `println(Core.stdout, inside)`: the Julia documentation on trimming advises `Core.stdout` over `stdout` in code that is to be trimmed. The program of StaticCompiler prints with `printf(c"%lld\n", inside)` of StaticTools, where `%lld` is the C format for a 64-bit integer.
 
+## How Does Options with Names Read Its Command Line?
+
+**Options with Names**, in Next Steps, builds a program that reads options with names, `--example`, `--width`, `--iterations`, `--cr`, `--ci` and `--picture`, each followed by its value, in any order, and keeps a default for each option left out. The program for juliac and PackageCompiler compares each argument with the names as Julia strings and reads the numbers with `tryparse`, so that an option it does not know, or a value it cannot read, prints what it did not understand and the options it takes, and ends the program with status 1. The program for StaticCompiler has no Julia strings: each argument is a `MallocString` on `argv`, compared with `==` to a `StaticString` such as `c"--width"`, and `argparse` reads a value that is not a number as 0, with no error, since nothing in it may throw. Its default name for the picture is a `MallocString` as well, because a `StaticString` passed to a function that writes the file would need memory that Julia's garbage collector manages.
+
 ## See Also
 
 - [Overview](overview.md) · [Factsheet](factsheet.md) · [Start-Up Time](startup.md) · [Writing for StaticCompiler](staticcompiler.md) · [Shipping an Executable](shipping.md)

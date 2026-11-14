@@ -26,7 +26,7 @@ name = "StaticTools.jl"
 github = "https://github.com/brenhinkeller/StaticTools.jl"
 
 [requires]
-packages = ["Plots.jl"]
+packages = ["Plots.jl", "PNGFiles.jl"]
 
 [[wikis]]
 name = "Overview"
@@ -325,27 +325,41 @@ VERSION >= v"1.12" || error("juliac needs Julia 1.12 or later: this session runs
 juliac_app = joinpath(first(DEPOT_PATH), "bin", Sys.iswindows() ? "juliac.bat" : "juliac")
 isfile(juliac_app) || Pkg.Apps.add("JuliaC")  # installs juliac in ~/.julia/bin, in an environment of its own
 
-# Build: the program in juliac/ of the folder, built again when its source or the Julia version changes, as
-# built_from.txt records. --trim=safe keeps only the code @main reaches; --bundle gathers the program in bundle/bin and
-# the Julia libraries it needs in bundle/lib. An empty project, so that juliac compiles the file alone and not the
-# active environment
-folder = mkpath(joinpath(expanduser(raw"{{folder}}"), "juliac"))
-script_file = joinpath(folder, "fractal.jl")
-write(script_file, script_code)
-isfile(joinpath(folder, "Project.toml")) || write(joinpath(folder, "Project.toml"), "")
-shipped_folder = joinpath(folder, "bundle")
-program = joinpath(shipped_folder, "bin", "fractal" * (Sys.iswindows() ? ".exe" : ""))
-built_with = `$juliac_app --output-exe fractal --bundle $shipped_folder --project $folder --trim=safe --experimental $script_file`
-built_from = string("Julia ", VERSION, "\n\n", script_code)
-built_from_file = joinpath(folder, "built_from.txt")
-build_seconds = if isfile(program) && isfile(built_from_file) && read(built_from_file, String) == built_from
-    nothing
-else
+# Build: a program from Julia code that defines fractal(args), started at the function marked @main that calls it, in a
+# folder of its own, built again when the code, its packages or the Julia version change, as built_from.txt records. --trim=safe keeps only the code @main reaches; --bundle gathers the
+# program in bundle/bin and the Julia libraries it needs in bundle/lib. The project of the folder holds the packages the
+# script uses, none here, so that juliac compiles the file alone and not the active environment. The Next Steps that
+# add to the program build theirs with build_program too
+function build_program(build_folder, code; packages = String[], trim = "safe")
+    mkpath(build_folder)
+    script = code * "\nfunction @main(args::Vector{String})::Cint\n    return fractal(args)\nend\n"
+    script_file = joinpath(build_folder, "fractal.jl")
+    write(script_file, script)
+    shipped_folder = joinpath(build_folder, "bundle")
+    program = joinpath(shipped_folder, "bin", "fractal" * (Sys.iswindows() ? ".exe" : ""))
+    built_with = `$juliac_app --output-exe fractal --bundle $shipped_folder --project $build_folder --trim=$trim --experimental $script_file`
+    built_from = string("Julia ", VERSION, "\n", join(packages, " "), "\n", trim, "\n\n", script)
+    built_from_file = joinpath(build_folder, "built_from.txt")
+    if isfile(program) && isfile(built_from_file) && read(built_from_file, String) == built_from
+        return (; program, shipped_folder, script_file, built_with, seconds = nothing)
+    end
+    write(joinpath(build_folder, "Project.toml"), "")
+    if !isempty(packages)
+        previous = Base.active_project()
+        Pkg.activate(build_folder)
+        Pkg.add(packages)
+        Pkg.activate(previous)
+    end
     rm(shipped_folder; force = true, recursive = true)
     seconds = @elapsed run(built_with)
     write(built_from_file, built_from)
-    seconds
+    return (; program, shipped_folder, script_file, built_with, seconds)
 end
+
+# The program of the page, in juliac/ of the folder
+folder = mkpath(joinpath(expanduser(raw"{{folder}}"), "juliac"))
+(; program, shipped_folder, script_file, built_with) = build = build_program(folder, kernel_code * program_code)
+build_seconds = build.seconds
 source_file = script_file
 
 # Run: the files to write and the inputs as arguments, the numbers as repr writes them, which the program reads back
@@ -540,35 +554,41 @@ function @main(args::Vector{String})::Cint
 end
 """
 
-# Build: PackageCompiler compiles a package, here Fractal, written to packagecompiler/ of the folder, into an app: the
-# program in app/bin, beside a whole system image and the Julia runtime. The program starts at julia_main, which reads
-# the command line from ARGS. It needs a C compiler on the path, and takes several minutes, again only when the source
-# or the Julia version changes, as built_from.txt records
-package_code = "module Fractal\n\n" * kernel_code * program_code * "\njulia_main()::Cint = fractal(ARGS)\n\nend\n"
-folder = mkpath(joinpath(expanduser(raw"{{folder}}"), "packagecompiler"))
-package = joinpath(folder, "Fractal")
-shipped_folder = joinpath(folder, "app")
-program = joinpath(shipped_folder, "bin", "fractal" * (Sys.iswindows() ? ".exe" : ""))
-source_file = joinpath(package, "src", "Fractal.jl")
-script_file = joinpath(folder, "fractal.jl")
-write(script_file, script_code)
-built_with = "create_app(\"$package\", \"$shipped_folder\"; executables = [\"fractal\" => \"julia_main\"], filter_stdlibs = true, force = true)"
-built_from = string("Julia ", VERSION, "\n\n", package_code)
-built_from_file = joinpath(folder, "built_from.txt")
-build_seconds = if isfile(program) && isfile(built_from_file) && read(built_from_file, String) == built_from
-    nothing
-else
+# Build: PackageCompiler compiles a package, here Fractal, written to a folder of its own, into an app: the program in
+# app/bin, beside a whole system image and the Julia runtime. The program starts at julia_main, which reads the command
+# line from ARGS and calls fractal. It needs a C compiler on the path, and takes several minutes, again only when the
+# code, its packages or the Julia version change, as built_from.txt records. The Next Steps that add to the program
+# build theirs with build_program too
+function build_program(build_folder, code; packages = String[])
+    package = joinpath(build_folder, "Fractal")
+    shipped_folder = joinpath(build_folder, "app")
+    program = joinpath(shipped_folder, "bin", "fractal" * (Sys.iswindows() ? ".exe" : ""))
+    source_file = joinpath(package, "src", "Fractal.jl")
+    package_code = "module Fractal\n\n" * code * "\njulia_main()::Cint = fractal(ARGS)\n\nend\n"
+    built_with = "create_app(\"$package\", \"$shipped_folder\"; executables = [\"fractal\" => \"julia_main\"], filter_stdlibs = true, force = true)"
+    built_from = string("Julia ", VERSION, "\n", join(packages, " "), "\n\n", package_code)
+    built_from_file = joinpath(build_folder, "built_from.txt")
+    if isfile(program) && isfile(built_from_file) && read(built_from_file, String) == built_from
+        return (; program, shipped_folder, source_file, built_with, seconds = nothing)
+    end
     mkpath(dirname(source_file))
     write(joinpath(package, "Project.toml"), "name = \"Fractal\"\nuuid = \"722f75a4-b007-4460-b744-5cac965dea2b\"\n")
     write(source_file, package_code)
     previous = Base.active_project()
     Pkg.activate(package)
-    Pkg.resolve()  # the package's Manifest.toml, which create_app expects
+    isempty(packages) ? Pkg.resolve() : Pkg.add(packages)  # the package's Manifest.toml, which create_app expects
     Pkg.activate(previous)
     seconds = @elapsed create_app(package, shipped_folder; executables = ["fractal" => "julia_main"], filter_stdlibs = true, force = true)
     write(built_from_file, built_from)
-    seconds
+    return (; program, shipped_folder, source_file, built_with, seconds)
 end
+
+# The program of the page, in packagecompiler/ of the folder, and the same program as a script for julia
+folder = mkpath(joinpath(expanduser(raw"{{folder}}"), "packagecompiler"))
+(; program, shipped_folder, source_file, built_with) = build = build_program(folder, kernel_code * program_code)
+build_seconds = build.seconds
+script_file = joinpath(folder, "fractal.jl")
+write(script_file, script_code)
 
 # Run: the files to write and the inputs as arguments, the numbers as repr writes them, which the program reads back
 # to the same Float64
@@ -713,7 +733,9 @@ GC.@preserve julia_picture julia_counts fill_picture(pointer(julia_picture), poi
 # text printed through the C library. Started with no arguments, as by a double-click, it draws the Mandelbrot set with
 # the page's defaults into fractal.bmp and opens it with system of the C library, called with @symbolcall as
 # StaticTools calls the C library; with one argument, it draws the same into the file named and opens nothing.
-# % Int32 truncates where Int32() could throw, and nothing here may throw
+# % Int32 truncates where Int32() could throw, and nothing here may throw. The names of the files reach draw_static as
+# MallocStrings, on argv or taken with m"": a StaticString such as c"fractal.bmp" passed to it would have to be kept
+# in memory that Julia's garbage collector manages, which a program with no runtime does not have
 static_code = """
 function draw_static(picture_name, counts_name, write_counts::Bool, height::Int64, width::Int64, x0::Float64,
                      y0::Float64, spacing::Float64, julia_set::Int32, cr::Float64, ci::Float64, maxiter::Int32)::Int64
@@ -738,14 +760,16 @@ shell(command) = GC.@preserve command @symbolcall system(pointer(command)::Ptr{U
 
 function static_main(argc::Int64, argv::Ptr{Ptr{UInt8}})
     if argc == 1
-        inside = draw_static(c"fractal.bmp", c"", false, 640, 800, -2.2, -1.2, 3.0 / 799, Int32(0), 0.0, 0.0, Int32(256))
+        name = m"fractal.bmp"
+        inside = draw_static(name, name, false, 640, 800, -2.2, -1.2, 3.0 / 799, Int32(0), 0.0, 0.0, Int32(256))
+        free(name)
         printf(c"The Mandelbrot set, 800 x 640 pixels, 256 iterations: %lld pixels inside\\n", inside)
         printf(c"The picture: fractal.bmp, in the folder the program started in\\n")
         Sys.isapple() ? shell(c"open fractal.bmp") : Sys.iswindows() ? shell(c"start fractal.bmp") : shell(c"xdg-open fractal.bmp")
         return 0
     end
     if argc == 2
-        inside = draw_static(MallocString(argv, 2), c"", false, 640, 800, -2.2, -1.2, 3.0 / 799, Int32(0), 0.0, 0.0, Int32(256))
+        inside = draw_static(MallocString(argv, 2), MallocString(argv, 2), false, 640, 800, -2.2, -1.2, 3.0 / 799, Int32(0), 0.0, 0.0, Int32(256))
         printf(c"The Mandelbrot set, 800 x 640 pixels, 256 iterations: %lld pixels inside\\n", inside)
         printf(c"The picture: ")
         puts(MallocString(argv, 2))  # puts and not printf, which would read a % in the name as a format
@@ -812,25 +836,31 @@ function @main(args::Vector{String})::Cint
 end
 """
 
-# Build: StaticCompiler compiles static_main of this session, with the clang and lld it brings, into one file in
-# staticcompiler/ of the folder, built again when its source or the Julia version changes, as built_from.txt records
+# Build: StaticCompiler compiles a function of this session that takes argc and argv, with the clang and lld it
+# brings, into one file in a folder of its own, built again when its source or the Julia version changes, as
+# built_from.txt records. The Next Steps that add to the program build theirs with build_program too
+function build_program(build_folder, main_function, source)
+    source_file = joinpath(mkpath(build_folder), "static_main.jl")
+    write(source_file, source)
+    shipped_folder = mkpath(joinpath(build_folder, "bin"))
+    program = joinpath(shipped_folder, "fractal")
+    built_with = "compile_executable($(nameof(main_function)), (Int64, Ptr{Ptr{UInt8}}), \"$shipped_folder\"; filename = \"fractal\")"
+    built_from = string("Julia ", VERSION, "\n\n", source)
+    built_from_file = joinpath(build_folder, "built_from.txt")
+    if isfile(program) && isfile(built_from_file) && read(built_from_file, String) == built_from
+        return (; program, shipped_folder, source_file, built_with, seconds = nothing)
+    end
+    seconds = @elapsed compile_executable(main_function, (Int64, Ptr{Ptr{UInt8}}), shipped_folder; filename = "fractal")
+    write(built_from_file, built_from)
+    return (; program, shipped_folder, source_file, built_with, seconds)
+end
+
+# The program of the page, static_main, in staticcompiler/ of the folder, and the same program as a script for julia
 folder = mkpath(joinpath(expanduser(raw"{{folder}}"), "staticcompiler"))
-source_file = joinpath(folder, "static_main.jl")
-write(source_file, kernel_code * static_code)
+(; program, shipped_folder, source_file, built_with) = build = build_program(folder, static_main, kernel_code * static_code)
+build_seconds = build.seconds
 script_file = joinpath(folder, "fractal.jl")
 write(script_file, script_code)
-shipped_folder = mkpath(joinpath(folder, "bin"))
-program = joinpath(shipped_folder, "fractal")
-built_with = "compile_executable(static_main, (Int64, Ptr{Ptr{UInt8}}), \"$shipped_folder\"; filename = \"fractal\")"
-built_from = string("Julia ", VERSION, "\n\n", kernel_code, static_code)
-built_from_file = joinpath(folder, "built_from.txt")
-build_seconds = if isfile(program) && isfile(built_from_file) && read(built_from_file, String) == built_from
-    nothing
-else
-    seconds = @elapsed compile_executable(static_main, (Int64, Ptr{Ptr{UInt8}}), shipped_folder; filename = "fractal")
-    write(built_from_file, built_from)
-    seconds
-end
 
 # Run: the files to write and the inputs as arguments, the numbers as repr writes them, which the program reads back
 # to the same Float64
@@ -908,6 +938,189 @@ end
 plot([own_pixel(i, j) for i in own_height:-1:1, j in 1:own_width], aspect_ratio = :equal, axis = nothing, border = :none, title = "Mandelbrot set, drawn by the program alone", size = (700, 560))
 '''
 
+[[actionGroups.actions]]
+id = "frames"
+label = "Julia Sets Along a Circle"
+desc = "The program again, drawing the Julia set of each c on a circle in frames, built with the tab's tool, timed beside the same frames in this session, and shown as an animated GIF"
+models = ["juliac", "packagecompiler"]
+code = '''
+using Plots
+
+# The Julia sets of c on a circle of radius 0.7885 around 0, in frames: from one frame to the next, c is multiplied by
+# w = cos(2 pi / frames) + i sin(2 pi / frames), which turns it by a frame's share of the circle. w is computed here
+# and given to the program, so that the program and this session compute the same c at every frame
+frames = 36
+w = cis(2pi / frames)
+c_start = complex(0.7885, 0.0)
+jx0, jx1, jy0, jy1 = -1.6, 1.6, -1.0, 1.0
+jheight = round(Int, width * (jy1 - jy0) / (jx1 - jx0))
+jspacing = (jx1 - jx0) / (width - 1)
+
+# The program: the number of frames and the inputs as arguments, c at the first frame and w; it writes each frame as a
+# BMP file in the folder it starts in
+frames_code = """
+function fractal(args::Vector{String})::Cint
+    if length(args) != 11
+        println(Core.stderr, "usage: fractal frames height width x0 y0 spacing cr ci wr wi maxiter")
+        return 1
+    end
+    frames, height, width = parse(Int64, args[1]), parse(Int64, args[2]), parse(Int64, args[3])
+    x0, y0, spacing = parse(Float64, args[4]), parse(Float64, args[5]), parse(Float64, args[6])
+    cr, ci, wr, wi = parse(Float64, args[7]), parse(Float64, args[8]), parse(Float64, args[9]), parse(Float64, args[10])
+    maxiter = parse(Int32, args[11])
+    counts = Vector{Int32}(undef, height * width)
+    picture = Vector{UInt8}(undef, picture_bytes(height, width))
+    for f in 1:frames
+        GC.@preserve counts picture begin
+            fill_counts(pointer(counts), height, width, x0, y0, spacing, Int32(1), cr, ci, maxiter)
+            fill_picture(pointer(picture), pointer(counts), height, width, maxiter)
+        end
+        write(string("frame_", f ÷ 100 % 10, f ÷ 10 % 10, f % 10, ".bmp"), picture)  # lpad, which trimming refuses, would do the same
+        cr, ci = cr * wr - ci * wi, cr * wi + ci * wr
+    end
+    println(Core.stdout, frames)
+    return 0
+end
+"""
+
+# Built with the tab's tool in frames/ of its folder
+frames_build = build_program(joinpath(folder, "frames"), kernel_code * frames_code)
+
+# Run in frames/pictures of the tab's folder, where it writes frame_001.bmp, frame_002.bmp and so on, then timed from
+# start to end in a second run, as the first run of a new program can take longer while the system checks it
+pictures_folder = mkpath(joinpath(folder, "frames", "pictures"))
+frames_command = Cmd(`$(frames_build.program) $frames $jheight $width $(repr(jx0)) $(repr(jy0)) $(repr(jspacing)) $(repr(real(c_start))) $(repr(imag(c_start))) $(repr(real(w))) $(repr(imag(w))) $maxiter`; dir = pictures_folder)
+run(frames_command)
+program_seconds = @elapsed run(frames_command)
+frame_file(f) = joinpath(pictures_folder, string("frame_", lpad(f, 3, '0'), ".bmp"))
+
+# The same frames in this session, with fill_counts and fill_picture already compiled, each checked against the
+# program's byte for byte
+frame_counts = Vector{Int32}(undef, jheight * width)
+frame_picture = Vector{UInt8}(undef, picture_bytes(jheight, width))
+frames_differ = 0
+c_frame = c_start
+session_seconds = @elapsed for f in 1:frames
+    GC.@preserve frame_counts frame_picture begin
+        fill_counts(pointer(frame_counts), jheight, width, jx0, jy0, jspacing, Int32(1), real(c_frame), imag(c_frame), maxiter)
+        fill_picture(pointer(frame_picture), pointer(frame_counts), jheight, width, maxiter)
+    end
+    global frames_differ += read(frame_file(f)) != frame_picture
+    global c_frame = complex(real(c_frame) * real(w) - imag(c_frame) * imag(w), real(c_frame) * imag(w) + imag(c_frame) * real(w))
+end
+println(frames_differ == 0 ? "All $frames frames are the same as Julia's, byte for byte" : "$frames_differ of $frames frames differ from Julia's")
+println("The program: ", round(program_seconds, digits = 2), " s for $frames frames, its start-up included")
+println("This session: ", round(session_seconds, digits = 2), " s for the same frames")
+
+# The frames as an animated GIF, read back from their BMP files
+function frame_pixels(file)
+    bytes = read(file)
+    row_bytes = (3 * width + 3) & ~3
+    at(i, j) = 54 + (i - 1) * row_bytes + 3 * j
+    return [RGB(bytes[at(i, j)] / 255, bytes[at(i, j) - 1] / 255, bytes[at(i, j) - 2] / 255) for i in jheight:-1:1, j in 1:width]
+end
+animation = @animate for f in 1:frames
+    plot(frame_pixels(frame_file(f)), aspect_ratio = :equal, axis = nothing, border = :none, size = (640, 420))
+end
+gif(animation, joinpath(folder, "frames", "julia_sets.gif"), fps = 12)
+'''
+
+[[actionGroups.actions]]
+id = "framesstatic"
+label = "Julia Sets Along a Circle"
+desc = "The program again, drawing the Julia set of each c on a circle in frames, built with StaticCompiler, timed beside the same frames in this session, and shown as an animated GIF"
+models = ["staticcompiler"]
+code = '''
+using Plots
+
+# The Julia sets of c on a circle of radius 0.7885 around 0, in frames: from one frame to the next, c is multiplied by
+# w = cos(2 pi / frames) + i sin(2 pi / frames), which turns it by a frame's share of the circle. w is computed here
+# and given to the program, so that the program and this session compute the same c at every frame
+frames = 36
+w = cis(2pi / frames)
+c_start = complex(0.7885, 0.0)
+jx0, jx1, jy0, jy1 = -1.6, 1.6, -1.0, 1.0
+jheight = round(Int, width * (jy1 - jy0) / (jx1 - jx0))
+jspacing = (jx1 - jx0) / (width - 1)
+
+# The program: argc and argv as C gives them, the number of frames and the inputs, c at the first frame and w; it
+# writes each frame as a BMP file in the folder it starts in, its name a MallocString whose three digits it sets
+frames_static = """
+function frames_main(argc::Int64, argv::Ptr{Ptr{UInt8}})
+    if argc != 12
+        printf(stderrp(), c"usage: fractal frames height width x0 y0 spacing cr ci wr wi maxiter\\n")
+        return 1
+    end
+    frames, height, width = argparse(Int64, argv, 2), argparse(Int64, argv, 3), argparse(Int64, argv, 4)
+    x0, y0, spacing = argparse(Float64, argv, 5), argparse(Float64, argv, 6), argparse(Float64, argv, 7)
+    cr, ci = argparse(Float64, argv, 8), argparse(Float64, argv, 9)
+    wr, wi = argparse(Float64, argv, 10), argparse(Float64, argv, 11)
+    maxiter = argparse(Int64, argv, 12) % Int32
+    counts = MallocArray{Int32}(undef, height, width)
+    picture = MallocArray{UInt8}(undef, picture_bytes(height, width))
+    name = m"frame_000.bmp"
+    for f in 1:frames
+        fill_counts(pointer(counts), height, width, x0, y0, spacing, Int32(1), cr, ci, maxiter)
+        fill_picture(pointer(picture), pointer(counts), height, width, maxiter)
+        unsafe_store!(pointer(name), UInt8('0') + (f ÷ 100 % 10) % UInt8, 7)
+        unsafe_store!(pointer(name), UInt8('0') + (f ÷ 10 % 10) % UInt8, 8)
+        unsafe_store!(pointer(name), UInt8('0') + (f % 10) % UInt8, 9)
+        file = fopen(name, c"wb")
+        fwrite(file, picture)
+        fclose(file)
+        cr, ci = cr * wr - ci * wi, cr * wi + ci * wr
+    end
+    free(name)
+    free(picture)
+    free(counts)
+    printf(c"%lld\\n", frames)
+    return 0
+end
+"""
+
+# Built with StaticCompiler in frames/ of its folder
+include_string(Main, frames_static)
+frames_build = build_program(joinpath(folder, "frames"), frames_main, kernel_code * frames_static)
+
+# Run in frames/pictures of the tab's folder, where it writes frame_001.bmp, frame_002.bmp and so on, then timed from
+# start to end in a second run, as the first run of a new program can take longer while the system checks it
+pictures_folder = mkpath(joinpath(folder, "frames", "pictures"))
+frames_command = Cmd(`$(frames_build.program) $frames $jheight $width $(repr(jx0)) $(repr(jy0)) $(repr(jspacing)) $(repr(real(c_start))) $(repr(imag(c_start))) $(repr(real(w))) $(repr(imag(w))) $maxiter`; dir = pictures_folder)
+run(frames_command)
+program_seconds = @elapsed run(frames_command)
+frame_file(f) = joinpath(pictures_folder, string("frame_", lpad(f, 3, '0'), ".bmp"))
+
+# The same frames in this session, with fill_counts and fill_picture already compiled, each checked against the
+# program's byte for byte
+frame_counts = Vector{Int32}(undef, jheight * width)
+frame_picture = Vector{UInt8}(undef, picture_bytes(jheight, width))
+frames_differ = 0
+c_frame = c_start
+session_seconds = @elapsed for f in 1:frames
+    GC.@preserve frame_counts frame_picture begin
+        fill_counts(pointer(frame_counts), jheight, width, jx0, jy0, jspacing, Int32(1), real(c_frame), imag(c_frame), maxiter)
+        fill_picture(pointer(frame_picture), pointer(frame_counts), jheight, width, maxiter)
+    end
+    global frames_differ += read(frame_file(f)) != frame_picture
+    global c_frame = complex(real(c_frame) * real(w) - imag(c_frame) * imag(w), real(c_frame) * imag(w) + imag(c_frame) * real(w))
+end
+println(frames_differ == 0 ? "All $frames frames are the same as Julia's, byte for byte" : "$frames_differ of $frames frames differ from Julia's")
+println("The program: ", round(program_seconds, digits = 2), " s for $frames frames, its start-up included")
+println("This session: ", round(session_seconds, digits = 2), " s for the same frames")
+
+# The frames as an animated GIF, read back from their BMP files
+function frame_pixels(file)
+    bytes = read(file)
+    row_bytes = (3 * width + 3) & ~3
+    at(i, j) = 54 + (i - 1) * row_bytes + 3 * j
+    return [RGB(bytes[at(i, j)] / 255, bytes[at(i, j) - 1] / 255, bytes[at(i, j) - 2] / 255) for i in jheight:-1:1, j in 1:width]
+end
+animation = @animate for f in 1:frames
+    plot(frame_pixels(frame_file(f)), aspect_ratio = :equal, axis = nothing, border = :none, size = (640, 420))
+end
+gif(animation, joinpath(folder, "frames", "julia_sets.gif"), fps = 12)
+'''
+
 [[actionGroups]]
 id = "diagnose"
 label = "Diagnose"
@@ -943,6 +1156,164 @@ else
 end
 '''
 
+[[actionGroups.actions]]
+id = "options"
+label = "Options with Names"
+desc = "The program again, reading options with names, such as --width 1200 --iterations 500, in any order and each with a default, built with the tab's tool and run with the page's inputs and with a misspelt option"
+models = ["juliac", "packagecompiler"]
+code = '''
+# The program with options: --example, --width, --iterations, --cr, --ci and --picture, each followed by its value, in
+# any order, each with a default; an option it does not know, or a value it cannot read, ends it with status 1
+options_code = """
+function options_error(message::String, what::String)::Cint
+    println(Core.stderr, message, what)
+    println(Core.stderr, "options: --example mandelbrot|julia --width n --iterations n --cr x --ci y --picture file.bmp")
+    return 1
+end
+
+function fractal(args::Vector{String})::Cint
+    julia_set, width, maxiter, cr, ci, picture_file = false, 800, Int32(256), -0.8, 0.156, "fractal.bmp"
+    for i in 1:2:length(args)
+        name = args[i]
+        i == length(args) && return options_error("no value after ", name)
+        value = args[i + 1]
+        if name == "--example" && (value == "mandelbrot" || value == "julia")
+            julia_set = value == "julia"
+        elseif name == "--width" && tryparse(Int64, value) !== nothing
+            width = parse(Int64, value)
+        elseif name == "--iterations" && tryparse(Int32, value) !== nothing
+            maxiter = parse(Int32, value)
+        elseif name == "--cr" && tryparse(Float64, value) !== nothing
+            cr = parse(Float64, value)
+        elseif name == "--ci" && tryparse(Float64, value) !== nothing
+            ci = parse(Float64, value)
+        elseif name == "--picture"
+            picture_file = value
+        else
+            return options_error("unknown option or value: ", name * " " * value)
+        end
+    end
+    x0, x1, y0, y1 = julia_set ? (-1.6, 1.6, -1.0, 1.0) : (-2.2, 0.8, -1.2, 1.2)
+    height = round(Int, width * (y1 - y0) / (x1 - x0))
+    spacing = (x1 - x0) / (width - 1)
+    counts = Vector{Int32}(undef, height * width)
+    picture = Vector{UInt8}(undef, picture_bytes(height, width))
+    inside = GC.@preserve counts picture begin
+        inside = fill_counts(pointer(counts), height, width, x0, y0, spacing, Int32(julia_set), cr, ci, maxiter)
+        fill_picture(pointer(picture), pointer(counts), height, width, maxiter)
+        inside
+    end
+    write(picture_file, picture)
+    println(Core.stdout, width, " x ", height, " pixels, ", maxiter, " iterations: ", inside, " pixels inside")
+    return 0
+end
+"""
+
+# Built with the tab's tool in options/ of its folder
+options_build = build_program(joinpath(folder, "options"), kernel_code * options_code)
+
+# The page's inputs as named options, in an order of their own; an option left out keeps the program's default
+options_file = joinpath(folder, "options", "options.bmp")
+named = ["--picture", options_file, "--iterations", string(maxiter), "--width", string(width), "--example", julia_set ? "julia" : "mandelbrot"]
+julia_set && append!(named, ["--cr", repr(real(c)), "--ci", repr(imag(c))])
+run(`$(options_build.program) $named`)
+println(read(options_file) == julia_picture ? "The picture is the same as Julia's, byte for byte" : "The picture differs from Julia's")
+
+# A misspelt option: the program says what it did not understand, lists its options and ends with status 1
+misspelt = run(ignorestatus(`$(options_build.program) --widht 600`))
+println("Status of the program with --widht: ", misspelt.exitcode)
+'''
+
+[[actionGroups.actions]]
+id = "optionsstatic"
+label = "Options with Names"
+desc = "The program again, reading options with names, such as --width 1200 --iterations 500, in any order and each with a default, compared with StaticTools, built with StaticCompiler and run with the page's inputs and with a misspelt option"
+models = ["staticcompiler"]
+code = '''
+# The program with options: --example, --width, --iterations, --cr, --ci and --picture, each followed by its value, in
+# any order, each with a default. Each argument is a MallocString on argv, compared with == to a StaticString such
+# as c"--width"; an option it does not know ends it with status 1. argparse reads a value that is not a number as 0,
+# with no error, as nothing here may throw. The default name of the picture is a MallocString too: a StaticString
+# passed to draw_named would have to be kept in memory managed by Julia, which a program with no runtime does not have
+options_static = """
+function draw_named(name, height::Int64, width::Int64, x0::Float64, y0::Float64, spacing::Float64, julia_set::Int32,
+                    cr::Float64, ci::Float64, maxiter::Int32)::Int64
+    counts = MallocArray{Int32}(undef, height, width)
+    picture = MallocArray{UInt8}(undef, picture_bytes(height, width))
+    inside = fill_counts(pointer(counts), height, width, x0, y0, spacing, julia_set, cr, ci, maxiter)
+    fill_picture(pointer(picture), pointer(counts), height, width, maxiter)
+    file = fopen(name, c"wb")
+    fwrite(file, picture)
+    fclose(file)
+    free(picture)
+    free(counts)
+    return inside
+end
+
+function options_main(argc::Int64, argv::Ptr{Ptr{UInt8}})
+    julia_set, width, maxiter, cr, ci, picture_at = Int32(0), 800, Int32(256), -0.8, 0.156, 0
+    i = 2
+    while i <= argc
+        name = MallocString(argv, i)
+        if i == argc
+            printf(stderrp(), c"no value after ")
+            puts(stderrp(), name)
+            return 1
+        end
+        value = MallocString(argv, i + 1)
+        if name == c"--example" && value == c"julia"
+            julia_set = Int32(1)
+        elseif name == c"--example" && value == c"mandelbrot"
+            julia_set = Int32(0)
+        elseif name == c"--width"
+            width = argparse(Int64, argv, i + 1)
+        elseif name == c"--iterations"
+            maxiter = argparse(Int64, argv, i + 1) % Int32
+        elseif name == c"--cr"
+            cr = argparse(Float64, argv, i + 1)
+        elseif name == c"--ci"
+            ci = argparse(Float64, argv, i + 1)
+        elseif name == c"--picture"
+            picture_at = i + 1
+        else
+            printf(stderrp(), c"unknown option or value: ")
+            puts(stderrp(), name)
+            printf(stderrp(), c"options: --example mandelbrot|julia --width n --iterations n --cr x --ci y --picture file.bmp\\n")
+            return 1
+        end
+        i += 2
+    end
+    x0, x1, y0, y1 = julia_set != 0 ? (-1.6, 1.6, -1.0, 1.0) : (-2.2, 0.8, -1.2, 1.2)
+    height = unsafe_trunc(Int64, round(width * (y1 - y0) / (x1 - x0)))  # round(Int, ...) could throw
+    spacing = (x1 - x0) / (width - 1)
+    if picture_at == 0
+        default_name = m"fractal.bmp"
+        inside = draw_named(default_name, height, width, x0, y0, spacing, julia_set, cr, ci, maxiter)
+        free(default_name)
+    else
+        inside = draw_named(MallocString(argv, picture_at), height, width, x0, y0, spacing, julia_set, cr, ci, maxiter)
+    end
+    printf(c"%lld x %lld pixels, %d iterations: %lld pixels inside\\n", width, height, maxiter, inside)
+    return 0
+end
+"""
+
+# Built with StaticCompiler in options/ of its folder
+include_string(Main, options_static)
+options_build = build_program(joinpath(folder, "options"), options_main, kernel_code * options_static)
+
+# The page's inputs as named options, in an order of their own; an option left out keeps the program's default
+options_file = joinpath(folder, "options", "options.bmp")
+named = ["--picture", options_file, "--iterations", string(maxiter), "--width", string(width), "--example", julia_set ? "julia" : "mandelbrot"]
+julia_set && append!(named, ["--cr", repr(real(c)), "--ci", repr(imag(c))])
+run(`$(options_build.program) $named`)
+println(read(options_file) == julia_picture ? "The picture is the same as Julia's, byte for byte" : "The picture differs from Julia's")
+
+# A misspelt option: the program says what it did not understand, lists its options and ends with status 1
+misspelt = run(ignorestatus(`$(options_build.program) --widht 600`))
+println("Status of the program with --widht: ", misspelt.exitcode)
+'''
+
 [[actionGroups]]
 id = "compare"
 label = "Compare"
@@ -975,6 +1346,138 @@ println(rpad("julia", 18), lpad(round(fastest_of_five(script_command) * 1e3, sig
 session_counts = similar(julia_counts)
 fill_seconds = minimum(@elapsed(GC.@preserve session_counts fill_counts(pointer(session_counts), height, width, x0, y0, spacing, Int32(julia_set), real(c), imag(c), maxiter)) for _ in 1:5)
 println(rpad("Julia", 18), lpad(round(fill_seconds * 1e3, sigdigits = 4), 10), " ms, fill_counts alone in this session")
+'''
+
+[[actionGroups.actions]]
+id = "threads"
+label = "Use All the Cores"
+desc = "The program again, its columns shared among threads with Threads.@threads, built with the tab's tool and run with one thread and with one for each core, each the fastest of three runs, its counts checked against Julia's"
+models = ["juliac", "packagecompiler"]
+code = '''
+# fill_counts with its columns shared among the threads the program starts with: each column is written by one thread,
+# and the pixels inside are counted after, from the counts, so that no two threads add to the same number
+threads_code = """
+function fill_counts_threads(counts::Ptr{Int32}, height::Int64, width::Int64, x0::Float64, y0::Float64, spacing::Float64,
+                             julia_set::Int32, cr::Float64, ci::Float64, maxiter::Int32)::Int64
+    Threads.@threads for j in 1:width
+        for i in 1:height
+            x = x0 + (j - 1) * spacing
+            y = y0 + (i - 1) * spacing
+            steps = julia_set != 0 ? escape_time(x, y, cr, ci, maxiter) : escape_time(0.0, 0.0, x, y, maxiter)
+            unsafe_store!(counts, steps, i + (j - 1) * height)
+        end
+    end
+    inside = 0
+    for p in 1:height * width
+        inside += unsafe_load(counts, p) == maxiter
+    end
+    return inside
+end
+
+# The program: the file of the counts and the inputs as arguments, in the order of the page's program without the
+# picture; it prints the pixels inside and the number of threads it ran on
+function fractal(args::Vector{String})::Cint
+    if length(args) != 10
+        println(Core.stderr, "usage: fractal counts.bin height width x0 y0 spacing julia_set cr ci maxiter")
+        return 1
+    end
+    height, width = parse(Int64, args[2]), parse(Int64, args[3])
+    counts = Vector{Int32}(undef, height * width)
+    inside = GC.@preserve counts fill_counts_threads(pointer(counts), height, width, parse(Float64, args[4]),
+                                                     parse(Float64, args[5]), parse(Float64, args[6]), parse(Int32, args[7]),
+                                                     parse(Float64, args[8]), parse(Float64, args[9]), parse(Int32, args[10]))
+    write(args[1], counts)
+    println(Core.stdout, inside, " ", Threads.nthreads())
+    return 0
+end
+"""
+
+# Built with the tab's tool in threads/ of its folder
+threads = build_program(joinpath(folder, "threads"), kernel_code * threads_code)
+threads_counts_file = joinpath(folder, "threads", "counts.bin")
+threads_command = `$(threads.program) $threads_counts_file $height $width $(repr(x0)) $(repr(y0)) $(repr(spacing)) $(Int(julia_set)) $(repr(real(c))) $(repr(imag(c))) $maxiter`
+
+# The program starts as many threads as JULIA_NUM_THREADS says, as julia does; an option of its command line would be
+# one of its own arguments. Each run once, its counts checked, then three times, the fastest kept, from start to end
+runs = map(unique([1, Sys.CPU_THREADS])) do threads_asked
+    run_with = addenv(threads_command, "JULIA_NUM_THREADS" => string(threads_asked))
+    ran_on = parse(Int, last(split(readchomp(run_with))))
+    differ = count(read!(threads_counts_file, Matrix{Int32}(undef, height, width)) .!= julia_counts)
+    seconds = minimum(@elapsed(read(run_with)) for _ in 1:3)
+    (; ran_on, seconds, differ)
+end
+println(rpad("Threads", 10), lpad("Time", 14), lpad("Speed-up", 12), lpad("Pixels that differ", 22))
+for r in runs
+    println(rpad(r.ran_on, 10), lpad(string(round(r.seconds * 1e3, sigdigits = 4), " ms"), 14), lpad(string(round(first(runs).seconds / r.seconds, digits = 2), "x"), 12), lpad(r.differ, 22))
+end
+println("The time of each run includes the program's start-up; ", Sys.CPU_THREADS, " threads, one for each core this computer reports")
+'''
+
+[[actionGroups.actions]]
+id = "png"
+label = "Write a PNG with a Package"
+desc = "The program again, writing its picture as a PNG with the package PNGFiles.jl, built with the tab's tool: the PNG beside the page's BMP, in size and pixel by pixel"
+models = ["juliac", "packagecompiler"]
+code = '''
+using PNGFiles
+
+# The program with a package: PNGFiles.jl writes the picture through libpng, with ColorTypes.jl and
+# FixedPointNumbers.jl for its colours, which the tool compiles into the program
+png_packages = ["PNGFiles", "ColorTypes", "FixedPointNumbers"]
+png_code = """
+using PNGFiles, ColorTypes, FixedPointNumbers
+
+# The picture as a matrix of colours, its top row first, each colour made from its three bytes with reinterpret, which
+# cannot fail; RGB made from numbers would check that each is between 0 and 1, and could throw
+function png_picture(counts::Vector{Int32}, height::Int64, width::Int64, maxiter::Int32)
+    picture = Matrix{RGB{N0f8}}(undef, height, width)
+    for j in 1:width, i in 1:height
+        red, green, blue = pixel_colour(counts[i + (j - 1) * height], maxiter)
+        picture[height + 1 - i, j] = RGB{N0f8}(reinterpret(N0f8, red), reinterpret(N0f8, green), reinterpret(N0f8, blue))
+    end
+    return picture
+end
+
+# The program: the PNG to write and the inputs as arguments, in the order of the page's program without the counts
+function fractal(args::Vector{String})::Cint
+    if length(args) != 10
+        println(Core.stderr, "usage: fractal picture.png height width x0 y0 spacing julia_set cr ci maxiter")
+        return 1
+    end
+    height, width, maxiter = parse(Int64, args[2]), parse(Int64, args[3]), parse(Int32, args[10])
+    counts = Vector{Int32}(undef, height * width)
+    inside = GC.@preserve counts fill_counts(pointer(counts), height, width, parse(Float64, args[4]), parse(Float64, args[5]),
+                                             parse(Float64, args[6]), parse(Int32, args[7]), parse(Float64, args[8]),
+                                             parse(Float64, args[9]), maxiter)
+    PNGFiles.save(args[1], png_picture(counts, height, width, maxiter))
+    println(Core.stdout, inside)
+    return 0
+end
+"""
+
+# Built with the tab's tool in png/ of its folder, the packages added to its project
+{{?model=juliac}}# --trim=safe refuses PNGFiles: libpng calls back into Julia to write to an IO whose type trimming cannot know, and
+{{?model=juliac}}# the verifier reports those calls as unresolved. --trim=unsafe-warn still lists them, then builds the program all the
+{{?model=juliac}}# same; at run time the IO is a file, which the trimmed program kept
+{{?model=juliac}}png = build_program(joinpath(folder, "png"), kernel_code * png_code; packages = png_packages, trim = "unsafe-warn")
+{{?model=packagecompiler}}# PackageCompiler compiles the packages whole, with the rest of the runtime, so the program needs nothing more
+{{?model=packagecompiler}}png = build_program(joinpath(folder, "png"), kernel_code * png_code; packages = png_packages)
+png_file = joinpath(folder, "png", "fractal.png")
+run(`$(png.program) $png_file $height $width $(repr(x0)) $(repr(y0)) $(repr(spacing)) $(Int(julia_set)) $(repr(real(c))) $(repr(imag(c))) $maxiter`)
+
+# The PNG read back with PNGFiles, each colour against the bytes of Julia's BMP: its rows from the bottom up, each
+# pixel blue, green and red
+png_picture = PNGFiles.load(png_file)
+row_bytes = (3 * width + 3) & ~3
+bmp_colour(i, j) = (julia_picture[54 + (i - 1) * row_bytes + 3 * j], julia_picture[53 + (i - 1) * row_bytes + 3 * j], julia_picture[52 + (i - 1) * row_bytes + 3 * j])
+png_colour(i, j) = reinterpret.(UInt8, (png_picture[height + 1 - i, j].r, png_picture[height + 1 - i, j].g, png_picture[height + 1 - i, j].b))
+png_differ = count(png_colour(i, j) != bmp_colour(i, j) for i in 1:height, j in 1:width)
+println(png_differ == 0 ? "The PNG and Julia's BMP have the same colour at all $(height * width) pixels" : "The PNG and Julia's BMP differ at $png_differ of $(height * width) pixels")
+println(rpad("BMP", 6), lpad(round(filesize(picture_file) / 2^10, digits = 1), 10), " KiB, ", picture_file)
+println(rpad("PNG", 6), lpad(round(filesize(png_file) / 2^10, digits = 1), 10), " KiB, ", png_file)
+# The folder each program comes in, with the libraries it needs: an app's program is a small launcher of the code there
+folder_mebibytes(path) = round(sum((lstat(joinpath(root, file)).size for (root, _, files) in walkdir(path) for file in files); init = 0) / 2^20, digits = 2)
+println("The folder of the program with PNGFiles: ", folder_mebibytes(png.shipped_folder), " MiB, against ", folder_mebibytes(shipped_folder), " MiB without it")
 '''
 
 [[actionGroups]]

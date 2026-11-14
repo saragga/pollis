@@ -36,6 +36,7 @@ import { findPollisWorkspace, pollisWorkspaceFolderPath } from '../../pollisWork
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { compareCss } from './compareShared.js';
+import { FractalExample, fractalExampleCode } from './fractalExample.js';
 import { skillFile, startAgent, TRANSLATE_WITH_AGENT_COMMAND_ID } from './pollisAgents.js';
 import { compareCode, isFunctionName } from './speedUpPage.js';
 
@@ -47,7 +48,7 @@ import { compareCode, isFunctionName } from './speedUpPage.js';
 
 export const TRANSLATE_RUST_COMMAND_ID = 'pollis.compilation.translateRust';
 
-type Example = 'mandelbrot' | 'julia';
+type Example = FractalExample;
 
 /** The function, the call and the Rust version of the example. */
 const EXAMPLE_FUNCTION = 'fractal_counts';
@@ -56,40 +57,7 @@ const EXAMPLE_RUST = 'fractal_counts_rust';
 
 /** The data and the Julia function of the example, which step 1 runs and Translate with Agent saves to a file. */
 function exampleCode(example: Example): string {
-	const julia = example === 'julia';
-	return `# The example: ${julia ? 'the Julia set of c' : 'the Mandelbrot set'}, on a grid of 800 pixels across
-julia_set = ${julia}
-c = complex(-0.8, 0.156)  # the fixed point of the Julia set; the Mandelbrot set does not use it
-x0, x1, y0, y1 = ${julia ? '-1.6, 1.6, -1.0, 1.0' : '-2.2, 0.8, -1.2, 1.2'}
-width = 800
-height = round(Int, width * (y1 - y0) / (x1 - x0))
-spacing = (x1 - x0) / (width - 1)  # the distance between two pixels, across and down
-maxiter = Int32(256)
-
-# The iterations of z^2 + c before |z| passes 2, for one pixel, written with real numbers
-function escape_time(zr, zi, cr, ci, maxiter::Int32)
-	k = zero(maxiter)
-	while k < maxiter
-		zr2 = zr * zr
-		zi2 = zi * zi
-		zr2 + zi2 > 4.0 && return k
-		zi = 2.0 * zr * zi + ci
-		zr = zr2 - zi2 + cr
-		k += one(maxiter)
-	end
-	return maxiter
-end
-
-# The count of every pixel, as a matrix: the imaginary part down the rows, the real part across the columns
-function fractal_counts(x0, y0, spacing, height, width, julia_set, c, maxiter)
-	counts = Matrix{Int32}(undef, height, width)
-	for j in 1:width, i in 1:height
-		x = x0 + (j - 1) * spacing
-		y = y0 + (i - 1) * spacing
-		counts[i, j] = julia_set ? escape_time(x, y, real(c), imag(c), maxiter) : escape_time(0.0, 0.0, x, y, maxiter)
-	end
-	return counts
-end`;
+	return fractalExampleCode(example);
 }
 
 /**

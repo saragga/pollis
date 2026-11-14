@@ -1,5 +1,5 @@
 % Pollis drill-down: Compose > Compilation Lab, Julia beside compiled code: the shared example of every page, the
-% pages one by one (Mix, Shared Library, Executable, Translate to Rust, Julia Functions in DuckDB), where the programs
+% pages one by one (Mix, Shared Library, Executable, WebAssembly, Translate to Rust, Julia Functions in DuckDB), where the programs
 % go, what each page needs, and how the pages are made (14 November 2026). For users who want the detail, and for
 % whoever maintains Pollis.
 % Compile with: latexmk -pdf workflow_compilation_lab.tex
@@ -37,8 +37,8 @@
 
 \workflowhead[Drill-Down]{Compilation Lab}
   {Julia beside compiled code}
-  {How Julia calls compiled code and is called by it, how a Julia function becomes a library, a program or a DuckDB
-   function, and how every page checks the result against Julia, pixel by pixel.}
+  {How Julia calls compiled code and is called by it, how a Julia function becomes a library, a program, a DuckDB
+   function or WebAssembly, and how every page checks the result against Julia, pixel by pixel.}
 
 \begin{nbox}
 {\color{amber}\bfseries Drill-down.}\enspace
@@ -53,7 +53,7 @@ agreement; \S\ref{sec:machinery} is for whoever maintains Pollis. It describes t
 Julia compiles every function before it runs it, through LLVM, the compiler framework of \dcite{LA2004a}{Lattner and
 Adve (2004)}, but the result lives inside the Julia session. Compilation Lab is
 about the boundary: Julia calling code that other compilers made, other programs calling Julia, and a Julia function
-taken out of the session as a library, a program or a function of a database. Its pages are in two groups.
+taken out of the session as a library, a program, a function of a database or a module a web page runs. Its pages are in two groups.
 
 \begin{center}\small
 \renewcommand{\arraystretch}{1.25}
@@ -66,7 +66,8 @@ taken out of the session as a library, a program or a function of a database. It
   tools, called from a C program (\S\ref{sec:shared})\\
 \cellpath{Compile Julia to an Executable} & Panel & One Julia program compiled into an executable by three tools
   (\S\ref{sec:exe})\\
-\cellpath{Compile Julia to WebAssembly} & --- & Not built yet (\S\ref{sec:wasm})\\
+\cellpath{Compile Julia to WebAssembly} & Steps & One Julia function compiled to WebAssembly in two ways, checked and
+  drawn live in the page (\S\ref{sec:wasm})\\
 \multicolumn{3}{@{}l}{\emph{Other Languages}}\\
 \cellpath{Mix Julia with Compiled Code} & Panel & Julia calls C, Fortran and C++; C calls Julia
   (\S\ref{sec:mix})\\
@@ -149,7 +150,7 @@ change makes a new library rather than one the session already holds open. Next 
 \section{Compile Julia to a Shared Library}\label{sec:shared}
 One Julia function, \file{fill_counts}, compiled into a library by three tools: JuliaC.jl,
 \dcite{JLC2026a}{JuliaLang Contributors (2026a)}, PackageCompiler.jl, \dcite{JLC2026b}{JuliaLang Contributors
-(2026b)}, and StaticCompiler.jl, \dcite{Sho2026a}{Short (2026)}. It takes only native types, returns
+(2026b)}, and StaticCompiler.jl, \dcite{Sho2026a}{Short (2026a)}. It takes only native types, returns
 an \file{Int64} (the pixels inside), allocates nothing and throws no error, so that every tool can compile it.
 
 \begin{center}\small
@@ -169,7 +170,10 @@ A small C program, \file{caller.c}, is linked against the library, with the libr
 fills memory of its own, writes the counts to \file{counts.bin} and prints the pixels inside; Julia reads the file back
 and compares. The library is called from its own process, not from the Julia session, because a library with a Julia
 runtime is made for programs that are not Julia. Next Steps: \ui{Picture of the Set}, \ui{Source and Build Command},
-\ui{Library Contents}, \ui{Sizes and Build Times}, \ui{Start-Up and Call Time}, \ui{Share of Pixels Inside}.
+\ui{Library Contents}, \ui{Sizes and Build Times}, \ui{Start-Up and Call Time}, \ui{Call the Library from Python},
+\ui{Call the Library from R}, \ui{Share of Pixels Inside}. Python calls the library with \file{ctypes}, of its
+standard library; R, whose \code{.C} passes every argument as a pointer, through a wrapper of a few lines of C that
+\code{R CMD SHLIB} builds. Both check their counts against Julia's.
 
 \section{Compile Julia to an Executable}\label{sec:exe}
 One Julia program compiled into an executable by the same three tools: juliac (\code{-{}-output-exe -{}-bundle
@@ -198,6 +202,18 @@ The tab checks the counts against Julia's and the picture byte for byte against 
 its picture shows in the plot pane. \ui{Start-Up and Run Time} sets each program beside \file{julia} running the same
 code as a script, which has to compile it first. The other Next Steps are \ui{Picture of the Set}, \ui{Source and
 Build Command}, \ui{Program Contents}, \ui{Sizes and Build Times} and \ui{Share of Pixels Inside}.
+
+Four Next Steps build the program again with the tab's tool, each in a folder of its own, through
+\code{build\_program}, which each tab defines for its own build. \ui{Julia Sets Along a Circle} draws the Julia set of
+$c$ in frames as $c$ turns around a circle, multiplied at each frame by a number $w$ that Julia passes on the command
+line, and times the program beside the same frames in the session. \ui{Options with Names} reads \code{--width},
+\code{--iterations} and the other inputs by name, in any order: with Julia strings and \code{tryparse} for juliac and
+PackageCompiler, and with \code{MallocString} and \code{argparse} of StaticTools for StaticCompiler. \ui{Use All the
+Cores} shares the columns among threads with \code{Threads.@threads}, the program starting as many as
+\code{JULIA\_NUM\_THREADS} asks for. \ui{Write a PNG with a Package} writes the picture with PNGFiles.jl: PackageCompiler
+compiles the package whole, while juliac builds it only with \code{--trim=unsafe-warn}, as libpng calls back into Julia
+through calls that \code{--trim=safe} cannot resolve. The last two are in the JuliaC and PackageCompiler tabs only, as
+a program of StaticCompiler has neither threads nor the memory that PNGFiles needs.
 
 \section{Translate Julia to Rust}\label{sec:rust}
 A page of four steps that turns a Julia function into Rust, \dcite{MK2014a}{Matsakis and Klock (2014)}, called back
@@ -249,10 +265,38 @@ which cannot be set later. In Pollis, \code{using DuckDB} runs on the engine Pol
 Times}, \ui{Pixels Inside, Counted in SQL}.
 
 \section{Compile Julia to WebAssembly}\label{sec:wasm}
-In the menu, but not available yet. The page will draw the set live in the page, with the function compiled to
-WebAssembly through Rust or through WebAssemblyCompiler.jl, which is experimental. WebAssembly is the code a web page
-runs beside JavaScript, designed by engineers of the four major browser makers, \dcite{HRSTH...2017a}{Haas and 8
-coauthors (2017)}.
+A page of four steps that compiles \file{escape_time}, the function of one pixel, to WebAssembly, the code a web page
+runs beside JavaScript, designed by engineers of the four major browser makers, \dcite{HRSTH...2017a}{Haas, Rossberg,
+Schuff, Titzer, Holman, Gohman, Wagner, Zakai and Bastien (2017)}, and then runs the module in the page itself.
+\begin{enumerate}
+  \item \textbf{The Function.} The example in the Julia REPL, and its counts from \file{fractal_counts}.
+  \item \textbf{Compile.} The module \file{fractal.wasm}, in one of the two ways below.
+  \item \textbf{Check.} The page runs the module on the example and Pollis saves its counts as \file{counts.bin};
+    Julia reads them back and prints the number of pixels that differ from the counts of step 1.
+  \item \textbf{Live View.} The page draws the set with the module, again at each turn of the mouse wheel, which zooms
+    where the pointer is, and at each drag, which moves the picture, with the time each picture took.
+\end{enumerate}
+\begin{center}\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.2\linewidth}LL@{}}
+\toprule
+\textbf{Way} & \textbf{How the module is made} & \textbf{What it exports}\\
+\midrule
+Through Rust & \file{escape_time} translated to Rust beside \file{fill_counts}, the loop over the pixels, and built
+  with \code{cargo build -{}-release -{}-target wasm32-unknown-unknown}; the code adds the target with rustup the first
+  time & \file{escape_time}, \file{fill_counts}, \file{alloc_counts}, \file{free_counts} and \file{memory}: one call
+  for a whole picture\\
+With WebAssemblyCompiler.jl & The Julia function of step 1 itself, compiled through Binaryen by WebAssemblyCompiler.jl,
+  \dcite{Sho2026b}{Short (2026b)}, in a Julia 1.10 that the code starts through juliaup, \code{julia +1.10}, since the
+  package does not install on Julia 1.12 or later & \file{escape_time} alone: one call for each pixel, from a loop in
+  JavaScript\\
+\bottomrule
+\end{tabularx}
+\end{center}
+WebAssembly computes with the same 64-bit numbers as Julia and has no fused multiply-add for single numbers, so both
+modules give Julia's count at every pixel. The page reads no file itself: Pollis sends it the bytes of the module at
+each Check and each Draw, so a new build is the one that runs. Next Step: \ui{The Same in JavaScript}, the function
+and the loop over the pixels written in JavaScript, timed in the page beside each module built.
 
 \section{Where the programs go}\label{sec:folders}
 The pages that build a program, a library or an extension have a \ui{Folder} field with \ui{Choose...}. Its default is
@@ -271,13 +315,17 @@ Compile Julia to an Executable & \file{programs/executables} & \file{juliac}, \f
 Translate Julia to Rust & \file{programs/rust} & \file{fractal}, the crate\\
 Julia Functions in DuckDB & \file{programs/duckdb_extensions} & \file{fractal}, the crate, and
   \file{fractal.duckdb_extension}\\
+Compile Julia to WebAssembly & \file{programs/webassembly} & \file{rust}, with the crate \file{fractal} and
+  \file{fractal.wasm}; \file{webassemblycompiler}, with \file{compile.jl}, its project and \file{fractal.wasm}\\
 Mix Julia with Compiled Code & \file{~/.pollis/mix} & One folder for each tab; no Folder field\\
 \bottomrule
 \end{tabularx}
 \end{center}
-Each build folder holds \file{built_from.txt}: the Julia version, or the version and platform of DuckDB, and the
-sources the build was made from. A tab builds again only when it differs, so a second run of a tab takes seconds
-even where the first build took minutes. Each tab ends by printing where its program, library or extension is.
+The build folders of Shared Library, Executable, Julia Functions in DuckDB and WebAssemblyCompiler.jl hold
+\file{built_from.txt}: the Julia version, or the version and platform of DuckDB, and the sources the build was made
+from. They build again only when it differs, so a second run takes seconds even where the first build took minutes;
+cargo, for the other Rust crates, builds again only what changed. Each page ends by printing where its program,
+library, extension or module is.
 
 \section{What each page needs}\label{sec:needs}
 \begin{center}\small
@@ -293,8 +341,12 @@ A C compiler: the Command Line Tools on macOS (\code{xcode-select -{}-install}),
 Julia 1.12 or later & JuliaC, which the code installs with \file{Pkg.Apps.add("JuliaC")}\\
 PackageCompiler.jl, StaticCompiler.jl, StaticTools.jl & The tabs of those tools\\
 Rust 1.85 or later, with cargo, from rustup & Translate Julia to Rust; Julia Functions in DuckDB, Rust Extension,
-  whose first build also downloads duckdb-neo\\
+  whose first build also downloads duckdb-neo; Compile Julia to WebAssembly, Through Rust, whose code adds the target
+  \file{wasm32-unknown-unknown}\\
+Julia 1.10, through juliaup (\code{juliaup add 1.10}) & Compile Julia to WebAssembly, With WebAssemblyCompiler.jl,
+  which the code installs once in a project of its own\\
 DuckDB.jl and Tables.jl & Julia Functions in DuckDB\\
+Python 3; R, with \file{Rscript} & Shared Library, Call the Library from Python and Call the Library from R\\
 A coding agent & Translate with Agent\\
 \bottomrule
 \end{tabularx}
@@ -307,8 +359,14 @@ A missing compiler stops the tab with a message that says how to install it.
     scaffold: each is a TOML file (\file{mixCompiled}, \file{sharedLib}, \file{compileExe}, \file{duckdbFunctions})
     that \code{npm run gulp compile-toml} turns into the data the shared panel code draws. Their wikis are in
     \file{media/wiki/<id>}.
-  \item \textbf{One page of steps.} Translate Julia to Rust is \file{translateRustPage.ts}, a page of the Time Arrow
-    style, with its own messages; Compare shares its code with Speed Up a Function.
+  \item \textbf{Two pages of steps.} Translate Julia to Rust (\file{translateRustPage.ts}) and Compile Julia to
+    WebAssembly (\file{webAssemblyPage.ts}) are pages of the Time Arrow style, with their own messages, and take the
+    example's Julia code from \file{fractalExample.ts}. Compare of Translate Julia to Rust shares its code with Speed Up
+    a Function.
+  \item \textbf{WebAssembly in a page.} The page of Compile Julia to WebAssembly is built with the option
+    \file{allowWebAssembly} of \file{buildWebviewHtml}, which adds \code{\textquotesingle wasm-unsafe-eval\textquotesingle} to its
+    Content-Security-Policy, so that its script can compile a module with \file{WebAssembly.instantiate}. The bytes of
+    the module and the counts of Check cross between the page and Pollis as typed arrays in its messages.
   \item \textbf{The Folder field.} An input of a panel's TOML with \code{folder = "programs/executables"} gets the
     \ui{Choose...} button, which opens the folder picker. The panel's handler posts the folder of the open workspace as
     the input's default (\file{setInputDefault}), from \file{pollisWorkspaceFolderPath}, which names a folder without
@@ -333,6 +391,8 @@ A missing compiler stops the tab with a message that says how to install it.
 \file{.../model/browser/webviews/compileExe.toml} & Compile Julia to an Executable\\
 \file{.../model/browser/webviews/duckdbFunctions.toml} & Julia Functions in DuckDB\\
 \file{.../compose/browser/translateRustPage.ts} & Translate Julia to Rust\\
+\file{.../compose/browser/webAssemblyPage.ts} & Compile Julia to WebAssembly\\
+\file{.../compose/browser/fractalExample.ts} & The example's Julia code, for both pages of steps\\
 \file{.../compose/browser/compose.contribution.ts} & The Compilation Lab menu\\
 \file{.../model/browser/handlers/scaffold.handler.ts} & The Folder field's picker and default\\
 \file{.../pollisWorkspace/browser/pollisWorkspace.contribution.ts} & The workspace folder \file{programs}\\
@@ -353,6 +413,7 @@ A missing compiler stops the tab with a message that says how to install it.
 \dref{LA2004a}{Lattner, C. and Adve, V. (2004). LLVM: A Compilation Framework for Lifelong Program Analysis and Transformation. In \emph{International Symposium on Code Generation and Optimization (CGO 2004)}, 75--86. IEEE. \ddoi{10.1109/CGO.2004.1281665}}
 \dref{Man1980a}{Mandelbrot, B.\,B. (1980). Fractal aspects of the iteration of $z \to \lambda z(1 - z)$ for complex $\lambda$ and $z$. \emph{Annals of the New York Academy of Sciences} 357(1), 249--259. \ddoi{10.1111/j.1749-6632.1980.tb29690.x}}
 \dref{MK2014a}{Matsakis, N.\,D. and Klock, F.\,S. (2014). The Rust language. \emph{ACM SIGAda Ada Letters} 34(3), 103--104. \ddoi{10.1145/2692956.2663188}}
-\dref{Sho2026a}{Short, T. (2026). StaticCompiler.jl: Compiles Julia code to a standalone library (experimental). \url{https://github.com/tshort/StaticCompiler.jl}}
+\dref{Sho2026a}{Short, T. (2026a). StaticCompiler.jl: Compiles Julia code to a standalone library (experimental). \url{https://github.com/tshort/StaticCompiler.jl}}
+\dref{Sho2026b}{Short, T. (2026b). WebAssemblyCompiler.jl: Create WebAssembly with Julia. \url{https://github.com/tshort/WebAssemblyCompiler.jl}}
 
 \end{document}

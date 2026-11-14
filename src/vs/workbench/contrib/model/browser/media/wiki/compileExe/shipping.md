@@ -22,6 +22,10 @@ The program runs only on processors that have the instructions it was compiled w
 
 PackageCompiler's documentation notes that an app carries no source code, but that some of it can still be read back. Julia records the file and line of each method it compiles, so the absolute paths of the build computer, including the folder of the package, appear among the strings of the system image. The app folder also holds a `julia` program that starts with the app's system image, there so that the app can start new Julia processes for distributed computing; anyone can start it, list the names of the package's functions and globals, and read the lowered code of its methods. The preferences active while building are kept in `share/julia/LocalPreferences.toml`; when they may hold something confidential, the documentation suggests deleting the file before the app is distributed, or passing `include_preferences = false` to `create_app`.
 
+## Can a Compiled Program Use a Julia Package?
+
+**Write a PNG with a Package**, in Next Steps, builds the program again with PNGFiles.jl, which writes the picture as a PNG through libpng, with ColorTypes.jl and FixedPointNumbers.jl for its colours; the packages go into the project of `png/` for juliac and into the package Fractal for PackageCompiler. PackageCompiler compiles the packages whole, with the rest of the Julia runtime, so a package that works in a session works in the app. juliac keeps only the code that `@main` reaches, and `--trim=safe` refuses calls whose target it cannot know when it compiles: libpng calls back into Julia to write to an `IO` whose type trimming cannot see, so the verifier reports those calls as unresolved. `--trim=unsafe-warn` still lists them and builds the program all the same, which runs, as the `IO` is a file at run time. A program of StaticCompiler cannot use PNGFiles at all, since the package keeps its data in memory that Julia's garbage collector manages.
+
 ## See Also
 
 - [Overview](overview.md) · [Factsheet](factsheet.md) · [Entry Points and Arguments](entry-points.md) · [Start-Up Time](startup.md) · [Writing for StaticCompiler](staticcompiler.md)
