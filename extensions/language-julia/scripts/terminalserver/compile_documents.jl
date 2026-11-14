@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Antonio Saragga Seabra
+# SPDX-License-Identifier: MIT
+
 # Pollis: compiles, at the start of a session, the documents of Help > Documentation from their LaTeX sources (docs/
 # of Pollis), with the XeTeX of Tectonic that PollisTeX.jl installs. Run by the Julia extension in a hidden process of
 # low priority (pollisDocuments.ts), with the folder of the sources as its argument; the PDFs go to ~/.pollis/documents,
@@ -31,6 +34,7 @@ const GROUPS = [
 		("workflows/workflow_literature_radar.tex", "pollis-drilldown-literature-radar.pdf"),
 		("workflows/workflow_ask_pollis.tex", "pollis-drilldown-ask-pollis.pdf"),
 		("workflows/workflow_orchestration.tex", "pollis-drilldown-orchestration.pdf"),
+		("workflows/workflow_compilation_lab.tex", "pollis-drilldown-compilation-lab.pdf"),
 	],
 ]
 const DOCUMENTS = [name for group in GROUPS for (_, name) in group if !isempty(name)]

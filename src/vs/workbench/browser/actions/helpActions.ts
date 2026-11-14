@@ -477,8 +477,9 @@ MenuRegistry.appendMenuItem(MenuId.MenubarHelpMenu, {
 	order: 1
 });
 
-/** The Help > Documentation, Video Tutorials and Notebook Courses submenus. */
+/** The Help > Documentation, Video Tutorials and Notebook Courses submenus, and Documentation's Drill-downs. */
 const MenubarHelpDocumentationMenu = new MenuId('MenubarHelpDocumentationMenu');
+const MenubarHelpDrillDownsMenu = new MenuId('MenubarHelpDrillDownsMenu');
 const MenubarHelpVideoTutorialsMenu = new MenuId('MenubarHelpVideoTutorialsMenu');
 // The toolboxes add their courses to it too (toolboxExtensions.ts), whichever of the two names it first
 const MenubarHelpNotebookCoursesMenu = MenuId.for('MenubarHelpNotebookCoursesMenu');
@@ -488,6 +489,14 @@ MenuRegistry.appendMenuItem(MenuId.MenubarHelpMenu, {
 	title: localize({ key: 'miDocumentationMenu', comment: ['&& denotes a mnemonic'] }, "&&Documentation"),
 	submenu: MenubarHelpDocumentationMenu,
 	order: 2
+});
+
+// The drill-downs, by their names alone; the Command Palette names each "Drill-down: ..."
+MenuRegistry.appendMenuItem(MenubarHelpDocumentationMenu, {
+	group: '0_pollis',
+	title: localize({ key: 'miDrillDownsMenu', comment: ['&& denotes a mnemonic'] }, "D&&rill-downs"),
+	submenu: MenubarHelpDrillDownsMenu,
+	order: 5
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarHelpMenu, {
@@ -544,6 +553,7 @@ export const POLLIS_DOCUMENTS: Readonly<Record<string, string>> = {
 	'pollis-drilldown-literature-radar.pdf': localize('openDrillDownLiteratureRadar', "Drill-down: Literature Radar"),
 	'pollis-drilldown-ask-pollis.pdf': localize('openDrillDownAskPollis', "Drill-down: Ask Pollis"),
 	'pollis-drilldown-orchestration.pdf': localize('openDrillDownOrchestration', "Drill-down: Orchestration"),
+	'pollis-drilldown-compilation-lab.pdf': localize('openDrillDownCompilationLab', "Drill-down: Compilation Lab"),
 };
 
 /**
@@ -644,11 +654,11 @@ registerAction2(class extends Action2 {
 			id: 'pollis.action.openDrillDownDataPackages',
 			title: {
 				...localize2('openDrillDownDataPackages', "Drill-down: Data Packages and Databases"),
-				mnemonicTitle: localize({ key: 'miDrillDownDataPackages', comment: ['&& denotes a mnemonic'] }, "Drill-down: &&Data Packages"),
+				mnemonicTitle: localize({ key: 'miDrillDownDataPackages', comment: ['&& denotes a mnemonic'] }, "&&Data Packages"),
 			},
 			category: Categories.Help,
 			f1: true,
-			menu: { id: MenubarHelpDocumentationMenu, group: '0_pollis', order: 5 }
+			menu: { id: MenubarHelpDrillDownsMenu, group: '1_drilldowns', order: 1 }
 		});
 	}
 
@@ -663,11 +673,11 @@ registerAction2(class extends Action2 {
 			id: 'pollis.action.openDrillDownPollisRepl',
 			title: {
 				...localize2('openDrillDownPollisRepl', "Drill-down: Pollis REPL"),
-				mnemonicTitle: localize({ key: 'miDrillDownPollisRepl', comment: ['&& denotes a mnemonic'] }, "Drill-down: Pollis &&REPL"),
+				mnemonicTitle: localize({ key: 'miDrillDownPollisRepl', comment: ['&& denotes a mnemonic'] }, "Pollis &&REPL"),
 			},
 			category: Categories.Help,
 			f1: true,
-			menu: { id: MenubarHelpDocumentationMenu, group: '0_pollis', order: 6 }
+			menu: { id: MenubarHelpDrillDownsMenu, group: '1_drilldowns', order: 2 }
 		});
 	}
 
@@ -682,11 +692,11 @@ registerAction2(class extends Action2 {
 			id: 'pollis.action.openDrillDownLiteratureRadar',
 			title: {
 				...localize2('openDrillDownLiteratureRadar', "Drill-down: Literature Radar"),
-				mnemonicTitle: localize({ key: 'miDrillDownLiteratureRadar', comment: ['&& denotes a mnemonic'] }, "Drill-down: &&Literature Radar"),
+				mnemonicTitle: localize({ key: 'miDrillDownLiteratureRadar', comment: ['&& denotes a mnemonic'] }, "&&Literature Radar"),
 			},
 			category: Categories.Help,
 			f1: true,
-			menu: { id: MenubarHelpDocumentationMenu, group: '0_pollis', order: 7 }
+			menu: { id: MenubarHelpDrillDownsMenu, group: '1_drilldowns', order: 3 }
 		});
 	}
 
@@ -701,11 +711,11 @@ registerAction2(class extends Action2 {
 			id: 'pollis.action.openDrillDownAskPollis',
 			title: {
 				...localize2('openDrillDownAskPollis', "Drill-down: Ask Pollis"),
-				mnemonicTitle: localize({ key: 'miDrillDownAskPollis', comment: ['&& denotes a mnemonic'] }, "Drill-down: Ask &&Pollis"),
+				mnemonicTitle: localize({ key: 'miDrillDownAskPollis', comment: ['&& denotes a mnemonic'] }, "Ask &&Pollis"),
 			},
 			category: Categories.Help,
 			f1: true,
-			menu: { id: MenubarHelpDocumentationMenu, group: '0_pollis', order: 8 }
+			menu: { id: MenubarHelpDrillDownsMenu, group: '1_drilldowns', order: 4 }
 		});
 	}
 
@@ -720,16 +730,35 @@ registerAction2(class extends Action2 {
 			id: 'pollis.action.openDrillDownOrchestration',
 			title: {
 				...localize2('openDrillDownOrchestration', "Drill-down: Orchestration"),
-				mnemonicTitle: localize({ key: 'miDrillDownOrchestration', comment: ['&& denotes a mnemonic'] }, "Drill-down: &&Orchestration"),
+				mnemonicTitle: localize({ key: 'miDrillDownOrchestration', comment: ['&& denotes a mnemonic'] }, "&&Orchestration"),
 			},
 			category: Categories.Help,
 			f1: true,
-			menu: { id: MenubarHelpDocumentationMenu, group: '0_pollis', order: 9 }
+			menu: { id: MenubarHelpDrillDownsMenu, group: '1_drilldowns', order: 5 }
 		});
 	}
 
 	run(accessor: ServicesAccessor): Promise<void> {
 		return openDocument(accessor, 'pollis-drilldown-orchestration.pdf');
+	}
+});
+
+registerAction2(class extends Action2 {
+	constructor() {
+		super({
+			id: 'pollis.action.openDrillDownCompilationLab',
+			title: {
+				...localize2('openDrillDownCompilationLab', "Drill-down: Compilation Lab"),
+				mnemonicTitle: localize({ key: 'miDrillDownCompilationLab', comment: ['&& denotes a mnemonic'] }, "&&Compilation Lab"),
+			},
+			category: Categories.Help,
+			f1: true,
+			menu: { id: MenubarHelpDrillDownsMenu, group: '1_drilldowns', order: 6 }
+		});
+	}
+
+	run(accessor: ServicesAccessor): Promise<void> {
+		return openDocument(accessor, 'pollis-drilldown-compilation-lab.pdf');
 	}
 });
 

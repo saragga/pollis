@@ -104,5 +104,11 @@
 % A Next Steps item inside the bottom boxes
 \newcommand{\nsitem}[2]{\item[\color{deepamber}\faChevronRight] \textbf{#1}: #2}
 
+% Citations: \dcite{key}{Breiman (2001)} links to its entry \dref{key}{...} in the References, keyed as in pollis.bib
+\newcommand{\dcite}[2]{\hyperlink{ref:#1}{\color{pblue}#2}}
+\newcommand{\dref}[2]{\raisebox{1.1em}[0pt][0pt]{\hypertarget{ref:#1}{}}#2\par}
+\newcommand{\ddoi}[1]{\href{https://doi.org/#1}{\color{pblue}doi:#1}}
+\newcommand{\references}{\section*{References}\addcontentsline{toc}{section}{References}\footnotesize\raggedright\setlength{\parskip}{3pt}}
+
 % The page of each heading, for Ask Pollis
 \input{../ask_labels}

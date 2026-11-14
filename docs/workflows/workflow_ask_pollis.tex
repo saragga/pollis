@@ -54,6 +54,12 @@ does, what a panel computes, how a Julia function or construct works. It answers
 from the Julia Manual that comes with the Julia Pollis runs, and every answer names the passages it rests on, so that
 you can open them and check.
 
+Answering this way, a language model writing from passages found for the question rather than from what it learned
+alone, is \emph{retrieval-augmented generation}. \dcite{LPPPK...2020a}{Lewis and 11 coauthors (2020)} named it, and
+found that a model given passages from Wikipedia wrote more specific and more factual answers than the same kind of
+model without them. Ask Pollis follows the idea with its own documents in place of Wikipedia, and keeps the passages
+beside the answer, so that each statement can be traced to one.
+
 \begin{center}\small
 \renewcommand{\arraystretch}{1.25}
 \begin{tabularx}{\linewidth}{@{}p{0.27\linewidth}L@{}}
@@ -339,9 +345,12 @@ Ask Pollis uses hybrid search: BM25 keyword search and embedding-based semantic 
 Rank Fusion into the top 8 passages, all on PollisDocuments.duckdb. Each question is searched twice:
 \begin{itemize}
   \item \textbf{By words}: BM25, through the fts index, scores the passages that contain the question's words, the
-    rarer a word in the documents, the more it counts. It is what finds an exact name:
+    rarer a word in the documents, the more it counts. BM25 comes from the probabilistic relevance framework of
+    information retrieval, which \dcite{RZ2009a}{Robertson and Zaragoza (2009)} set out. It is what finds an exact name:
     \file{pollis.agents.tierCells}, \emph{Snowball Search Map}, \emph{Install Skills}.
-  \item \textbf{By meaning}: the question's embedding is compared with every passage's by cosine distance. It is what
+  \item \textbf{By meaning}: the question's embedding is compared with every passage's by cosine distance, as
+    with the sentence embeddings of \dcite{RG2019a}{Reimers and Gurevych (2019)}, made so that texts can be
+    compared by cosine similarity. It is what
     finds the passage that answers \emph{how do I make a cheap model do the small jobs?}, which has none of its words:
     it speaks of the Light tier of Model Tasks and Routing.
 \end{itemize}
@@ -350,7 +359,10 @@ Each search keeps its best 20 passages.
 \subsection{One list}
 The two lists are merged by \emph{reciprocal rank fusion}: each passage scores $1/(60 + r)$ for its rank $r$ in each
 list it is in, and the scores are added. A passage high in both comes first; a passage first in one list only still
-does well. The ranks are used, not the scores, because a BM25 score and a cosine distance are not on the same scale. In
+does well. The ranks are used, not the scores, because a BM25 score and a cosine distance are not on the same scale. The
+method and its constant 60 are those of \dcite{CCB2009a}{Cormack, Clarke and Büttcher (2009)}, who found the
+fusion of several systems' rankings better than any of the systems alone, and better than Condorcet Fuse, the
+standard way to merge rankings then. In
 one query:
 
 \begin{lstlisting}[language=SQL]
@@ -570,7 +582,9 @@ complete, clear and helpful it is, and how consistent with the passages, the fiv
 \file{run\_qa\_evals}. It rates against the passages, not against the answer written with the question: an answer that
 says what the passages say, in other words, scores as well. The judge is the model of the \textbf{Judge} field, the default model
 unless you choose another: any chat model, on this computer or in the cloud, Claude Opus among them; a small local
-model judges poorly. A judge may favour models of its own family, Claude those of Claude, so a run can be scored by two
+model judges poorly. A judge may favour models of its own family, Claude those of Claude: \dcite{ZCSZW...2023a}{Zheng and 12 coauthors
+(2023)} found a strong model judge agreeing with people over 80\% of the time, as often as two people agree, but
+also biased by the order of the answers, by their length and towards its own answers. So a run can be scored by two
 judges, the second chosen in \textbf{Second Judge}, say Claude Sonnet and GPT-5.5, each in a column of its own.
 
 \subsection{The passages found, and the embedding models}
@@ -875,7 +889,7 @@ After the seven of Ask Pollis itself, four more, each usable when done:
     by their scores (\S\ref{sec:compare}); and PromptingTools.jl, which RAGTools.jl calls the models with. Both are
     Pollis's forks, which run on Julia 1.13, as in LLM Text Analysis. RAGTools.jl also has a \emph{reranker}, a second
     model that reads the question with each of the best twenty passages and chooses the eight again, better, at the
-    cost of some seconds. RAGTools.jl could come into Ask Pollis later, for reranking.
+    cost of some seconds, as \dcite{NC2019a}{Nogueira and Cho (2019)} did with BERT. RAGTools.jl could come into Ask Pollis later, for reranking.
   \item \textbf{Test sets in English}: the questions made from the documents are in English, as the documents are; a
     test set in another language would show how well each model answers in it.
   \item \textbf{The routing margin}: 0.075 (\S\ref{sec:routing}) was checked on 38 questions. A test set of Compare
@@ -903,5 +917,13 @@ After the seven of Ask Pollis itself, four more, each usable when done:
   \item \textbf{Vignettes offline}: the vignettes of the registry are compiled from GitHub, so a computer without the
     Internet reads only those compiled before.
 \end{itemize}
+
+\references
+\dref{CCB2009a}{Cormack, G.\,V., Clarke, C.\,L.\,A. and Büttcher, S. (2009). Reciprocal Rank Fusion Outperforms Condorcet and Individual Rank Learning Methods. In \emph{Proceedings of the 32nd International ACM SIGIR Conference on Research and Development in Information Retrieval}, 758--759. \ddoi{10.1145/1571941.1572114}}
+\dref{LPPPK...2020a}{Lewis, P., Perez, E., Piktus, A., Petroni, F., Karpukhin, V., Goyal, N., Kuttler, H., Lewis, M., Yih, W.-t., Rocktaschel, T., Riedel, S. and Kiela, D. (2020). Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. In \emph{NeurIPS}. \url{https://arxiv.org/abs/2005.11401}}
+\dref{NC2019a}{Nogueira, R. and Cho, K. (2019). Passage Re-ranking with BERT. arXiv:1901.04085. \ddoi{10.48550/arXiv.1901.04085}}
+\dref{RG2019a}{Reimers, N. and Gurevych, I. (2019). Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks. In \emph{EMNLP}. \url{https://arxiv.org/abs/1908.10084}}
+\dref{RZ2009a}{Robertson, S. and Zaragoza, H. (2009). The Probabilistic Relevance Framework: BM25 and Beyond. \emph{Foundations and Trends in Information Retrieval} 4(1-2), 1--174. \ddoi{10.1561/1500000019}}
+\dref{ZCSZW...2023a}{Zheng, L., Chiang, W.-L., Sheng, Y., Zhuang, S., Wu, Z., Zhuang, Y., Lin, Z., Li, Z., Li, D., Xing, E.\,P., Zhang, H., Gonzalez, J.\,E. and Stoica, I. (2023). Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena. In \emph{Advances in Neural Information Processing Systems 36}, 46595--46623. \ddoi{10.52202/075280-2020}}
 
 \end{document}

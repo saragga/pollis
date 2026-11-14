@@ -139,7 +139,7 @@ reach the pages directly, and reach the databases through views that read them w
 
 The five packages are data; what installs them, builds the databases and connects you to them is
 \file{PollisDB.jl}. It is not a package: it is a Julia module inside Pollis itself, in its Julia extension
-(\file{extensions/language-julia/scripts/terminalserver/PollisDB.jl}), under Pollis's licence, AGPL-3.0. Every time
+(\file{extensions/language-julia/scripts/terminalserver/PollisDB.jl}), under the MIT License, as all the Julia code of Pollis is. Every time
 the Julia REPL starts, Pollis loads it into the REPL as \file{PollisDB}, so it is always there, in any project, without
 being added to it. It has four jobs.
 \begin{enumerate}
@@ -160,7 +160,9 @@ being added to it. It has four jobs.
 \end{enumerate}
 Its DuckDB is Pollis's fork of DuckDB.jl, \file{github.com/Trumpingtons/DuckDB.jl}, which brings no engine of its own:
 it loads the one Pollis ships, copied to \file{~/.pollis/duckdb} with the extensions fts, quack and httpfs, so every DuckDB in Pollis,
-the \file{duckdb>} terminal included, is the same engine.
+the \file{duckdb>} terminal included, is the same engine. DuckDB, \dcite{RM2019a}{Raasveldt and Mühleisen (2019)},
+is a database for analytical queries that runs inside another program, as SQLite does for transactions, with no
+server to install.
 
 \section{The five packages}
 
@@ -207,7 +209,9 @@ the id and title of every dataset. The Welcome page compares it with the ids you
 names the new ones, with \menupath{Open Databases View}.
 
 \subsection{PollisJournals.jl: every journal, and the Norwegian register}
-\textbf{What it holds.} Two Parquet files in a Julia \emph{artifact} named \file{journals}, not in the repository:
+\textbf{What it holds.} Two Parquet files in a Julia \emph{artifact} named \file{journals}, not in the repository. The
+first comes from OpenAlex, the open index of scholarly works that \dcite{PPO2022a}{Priem, Piwowar and Orr (2022)}
+describe, made to replace the discontinued Microsoft Academic Graph:
 \begin{itemize}
   \item \file{journals.parquet}: every source in OpenAlex with at least one work, 251,461 in the snapshot of
     2026-10-14 (203,247 journals, and repositories, conferences, book series and ebook platforms), with ISSNs,
@@ -791,5 +795,9 @@ The install road sees only what is pushed to \file{main}.
   \item \textbf{Default feeds}: the rules for choosing them are still to be decided.
   \item \textbf{Catalogue notes}: kept as ids, but displayed by no page.
 \end{itemize}
+
+\references
+\dref{PPO2022a}{Priem, J., Piwowar, H. and Orr, R. (2022). OpenAlex: A fully-open index of scholarly works, authors, venues, institutions, and concepts. arXiv:2205.01833. \url{https://arxiv.org/abs/2205.01833}}
+\dref{RM2019a}{Raasveldt, M. and Mühleisen, H. (2019). DuckDB: an Embeddable Analytical Database. In \emph{Proceedings of the 2019 International Conference on Management of Data (SIGMOD)}, 1981--1984. \ddoi{10.1145/3299869.3320212}}
 
 \end{document}

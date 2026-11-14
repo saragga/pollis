@@ -67,7 +67,9 @@ the terminal's + menu offers the same three after its profiles. Each keeps to on
 The Pollis REPL is a terminal of its own, beside the Julia REPL, so that \file{julia>} stays at hand. It runs on the
 Julia of the Julia REPL, which it starts in the background if need be, and its item in the status bar is filled while
 it is open. The Shared Session is the DuckDB of that Julia, in memory: its tables last until Julia exits, and are lost
-when the Julia REPL restarts.
+when the Julia REPL restarts. DuckDB, \dcite{RM2019a}{Raasveldt and Mühleisen (2019)}, is a database for analytical
+queries that runs inside the program that uses it, with no server: here inside Julia, and inside the \file{duckdb>}
+program.
 
 \section{One prompt, two languages}\label{sec:routing}
 The Pollis REPL looks at the first word of what you type, after blanks and SQL comments.
@@ -320,5 +322,8 @@ time.
 \bottomrule
 \end{tabularx}
 \end{center}
+
+\references
+\dref{RM2019a}{Raasveldt, M. and Mühleisen, H. (2019). DuckDB: an Embeddable Analytical Database. In \emph{Proceedings of the 2019 International Conference on Management of Data (SIGMOD)}, 1981--1984. \ddoi{10.1145/3299869.3320212}}
 
 \end{document}

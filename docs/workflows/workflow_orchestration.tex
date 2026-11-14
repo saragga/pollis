@@ -115,6 +115,10 @@ the cheapest. Three tiers come with Pollis:
   \item \textbf{Standard}: everyday tasks.
   \item \textbf{Strong}: hard tasks, where a mistake costs most.
 \end{itemize}
+Matching the model to the work is how \dcite{CZZ2023a}{Chen, Zaharia and Zou (2023)} cut the cost of language models:
+FrugalGPT learns which models to ask, cheapest first, for each query, and matched the best single model with up to
+98\% less cost. The tiers are a fixed form of the same idea: the model is chosen once for each task, by you, not for
+each request.
 
 \subsection{The table of agents and models}
 \menupath{Compose \gt Orchestration \gt Model Tasks and Routing} is a table. Its columns are the agents, and its rows
@@ -249,42 +253,62 @@ Several agents get the same research question and the same dataset, and each ana
 specification, its own controls, its own standard errors. Pollis gathers the estimates and shows how far they spread.
 
 Different teams given the same data and the same question reach different answers, through the choices each makes.
-Studies of many teams have shown it in psychology, \emph{Many Analysts, One Data Set} (2018); in economics, \emph{The
-Influence of Hidden Researcher Decisions in Applied Microeconomics} (2021); and in finance, \emph{Nonstandard Errors}
-(2024), with 164 teams, which found the spread across teams as large as the standard error each team reports, and
-called it the \emph{nonstandard error}. A researcher cannot repeat such a study alone. The page uses what Pollis
+Studies of many teams have shown it: in psychology, \dcite{SUMAA...2018a}{Silberzahn and 64 coauthors (2018)}, where
+20 of 29 teams found a significant effect and 9 did not; in economics, \dcite{HABBB...2021a}{Huntington-Klein and 11
+coauthors (2021)}, where no two replicators of the same study reported the same sample size; in sociology,
+\dcite{BRWNA...2022a}{Breznau and 165 coauthors (2022)}, with 73 teams; and in finance, \dcite{MDHHJ...2024a}{Menkveld
+and 342 coauthors (2024)}, with 164 teams, which found the spread across teams sizable and called it the
+\emph{nonstandard error}. A researcher cannot repeat such a study alone. The page uses what Pollis
 already has: its datasets, the Julia packages, and the checking of results against the numbers reported.
 
-The page will take four steps:
+The page has four steps:
 \begin{enumerate}
-  \item \textbf{Question and Data.} The question in plain words; the data, a dataset of PollisDatasets or a file of your
-    own; and the estimate every analyst must report, with its unit, such as \emph{the effect on 1978 earnings, in
-    dollars}, so that the answers can be compared. The example is LaLonde's job training data: the experiment, and the
-    comparison groups drawn from two surveys, whose estimates of the same effect spread widely.
-  \item \textbf{Analysts.} From 3 to 12, each an agent on a model.
-  \item \textbf{Runs.} All at once and unattended, each in a folder of its own, seeing only the question, the data and
-    its folder. An analyst edits files without asking, inside its folder only.
-  \item \textbf{Results.} Each estimate with its interval, in order; the median, the interquartile range and the
-    nonstandard error, the standard deviation of the estimates across analysts, beside the median standard error the
-    analysts report; and a table of each analyst's choices, which shows which choices move the estimate.
+  \item \textbf{Question and Data.} The study's name, which is its folder's; the data, LaLonde's job training data
+    from PollisDatasets or a file of your own with what its columns are; the question in plain words; and the
+    estimate every analyst must report, with its unit, such as \emph{the effect on 1978 earnings, in dollars}, so
+    that the answers can be compared. The example's data are the experiment and the comparison groups drawn from
+    two surveys: \dcite{LaL1986a}{LaLonde (1986)} found that nonexperimental methods on those groups gave a large
+    range of effects, and \dcite{DW1999a}{Dehejia and Wahba (1999)} found propensity score estimates on them much
+    closer to the experiment. \ui{Open a Study} reopens an earlier one.
+  \item \textbf{Analysts.} From 3 to 12, each an agent on a model, from the cells of Model Tasks and Routing that
+    can run unattended: Claude Code, Codex and OpenCode, on the cloud models they have arguments for and the local
+    chat models that call tools.
+  \item \textbf{Runs.} \ui{Start the Analysts} starts them all at once and unattended, each in a terminal and a
+    folder of its own, seeing only the question, the data and its folder; the page shows each one's status and
+    time. Claude Code runs as \code{claude -p -{}-permission-mode acceptEdits -{}-allowedTools "Bash(julia *)"}, so it
+    edits files without asking, inside its folder only, and runs no command but Julia; Codex runs as
+    \code{codex exec -s workspace-write}, OpenCode as \code{opencode run}.
+  \item \textbf{Results.} \ui{Check and Collect} runs every analysis again; then each estimate with its interval,
+    in order; the median, the interquartile range and the nonstandard error, the standard deviation of the
+    estimates across analysts, beside the median standard error the analysts report; and a table of each analyst's
+    choices, which shows which choices move the estimate.
 \end{enumerate}
-Each analyst writes three files: \file{analysis.jl}, the whole analysis in Julia, from the data to the estimate;
-\file{result.toml}, the estimate, its standard error, its interval and the number of observations, with the choices in
-a few words each; and \file{REPORT.md}, the reasons for the choices. Pollis runs every \file{analysis.jl} again itself,
-and marks an analysis whose result differs from the one it reports.
+Each analyst starts with two files, the skill analyse-independently as \file{SKILL.md} and its task as
+\file{TASK.md}, and writes four: \file{analysis.jl}, the whole analysis in Julia, from the data to the estimate,
+which writes \file{estimate.toml}, the estimate, its standard error, its interval and the number of observations;
+\file{choices.toml}, its sample, outcome, controls, estimator and standard errors, in a few words each; and
+\file{REPORT.md}, the reasons for the choices. \ui{Check and Collect} runs every \file{analysis.jl} again in the
+Julia REPL, in a new Julia process and an empty folder with only the data, marks an analysis whose estimate differs
+from the one it reports, and gathers everything into \file{results.json}. A study is a folder of
+\file{orchestration/many-analysts} in the Pollis Workspace.
 
 \subsection{Specification Curve}
 Agents list the defensible choices in an analysis, such as which controls to include, which observations to drop and
 which estimator to use. Pollis runs every combination of them and plots the estimates in order, with the choices of
-each marked beneath it. This is the specification curve analysis of Simonsohn, Simmons and Nelson (2020). Where Many
-Analysts shows the choices that independent analysts happen to make, the specification curve shows all of them, one
-by one.
+each marked beneath it. This is the specification curve analysis of \dcite{SSN2020a}{Simonsohn, Simmons and Nelson
+(2020)}: the set of specifications that are justified by theory, statistically valid and not redundant, their results
+shown in a figure, and a joint test across all of them. \dcite{STGV2016a}{Steegen, Tuerlinckx, Gelman and Vanpaemel
+(2016)} proposed the same for the choices made in building the dataset, which they called a \emph{multiverse
+analysis}. Where Many Analysts shows the choices that independent analysts happen to make, the specification curve
+shows all of them, one by one.
 
 \subsection{Forecasting Competition}
 Each agent builds a forecasting model for the same series. Pollis keeps the last part of the series from all of
 them, scores every model on it, and then combines the forecasts. This follows the M competitions of forecasting
-methods, and Bates and Granger (1969) on combining forecasts: a combination often forecasts better than each of the
-models in it. In finance and economics, where a forecast is judged by the data that come after it, the page shows
+methods, and \dcite{BG1969a}{Bates and Granger (1969)} on combining forecasts: a combination often forecasts better
+than each of the models in it. In the M4 competition, \dcite{MSA2018a}{Makridakis, Spiliotis and Assimakopoulos
+(2018)} found that 12 of the 17 most accurate methods were combinations of mostly statistical methods, and that none
+of the six pure machine learning methods beat the combination benchmark. In finance and economics, where a forecast is judged by the data that come after it, the page shows
 which approach wins on the series at hand, and by how much.
 
 \subsection{Referee Report}
@@ -295,15 +319,23 @@ Agents in different roles each read a draft paper:
   \item a \textbf{replicator}, who runs the paper's code again.
 \end{itemize}
 An \textbf{editor} agent then merges their notes into one report, with the points ranked by how much they matter.
-It gives a report before submission, when changes are still cheap. The Knowledge Base and the references of Pollis
+It gives a report before submission, when changes are still cheap. Comments of a language model on a paper are not
+the same as a referee's, but they overlap: \dcite{LZCWD...2024a}{Liang and 11 coauthors (2024)} found the points
+raised by GPT-4 and by a human reviewer to overlap about as much as those of two human reviewers (30.85\% against
+28.58\% for papers of \emph{Nature} journals), and more than half of 308 researchers found its comments on their own
+papers helpful. Human review stays the foundation; the agents' report is for the earlier drafts. The Knowledge Base and the references of Pollis
 give the field expert sources to check the paper's claims against.
 
 \subsection{Systematic Review}
-This follows the standard of systematic reviews, two reviewers working independently:
+This follows the practice of systematic reviews, two reviewers working independently. When
+\dcite{BHVTK2006a}{Buscemi, Hartling, Vandermeer, Tjosvold and Klassen (2006)} compared extraction by one reviewer with extraction
+checked by a second, the reviewers randomised to their roles, a single extraction made 21.7\% more errors, while
+taking 36.1\% less time:
 \begin{itemize}
   \item two agents screen the abstracts against your criteria for including a study;
   \item two agents extract the effect sizes from the studies that pass;
-  \item Pollis shows where they disagree, you decide, and Pollis then runs the meta-analysis.
+  \item Pollis shows where they disagree, you decide, and Pollis then runs the meta-analysis, such as the random
+    effects model of \dcite{DL1986a}{DerSimonian and Laird (1986)}, which lets the effect differ from study to study.
 \end{itemize}
 The studies come from the references database and Literature Radar, which find and keep them.
 
@@ -320,9 +352,10 @@ The studies come from the references database and Literature Radar, which find a
     \file{language-julia.pollisLlamaServer} (\file{pollisLlamaServer.ts}) for a server of the model, and turns its
     address into the environment or the arguments of the agent.
   \item \textbf{The page.} \file{modelRoutingPage.ts} draws the table and the tasks, and writes the three settings.
-  \item \textbf{The research pages.} They are greyed out in \file{compose.contribution.ts} until each is built. They
-    will share one runner: unattended runs that end by themselves, an agent on a cell the page chooses, and one folder
-    for each participant.
+  \item \textbf{The research pages.} They share one runner, \file{orchestration.ts}: the command lines of unattended
+    runs, which end by themselves; the cells a page offers; and the folder of its studies. \file{launchAgent}
+    (\file{pollisAgents.ts}) starts a cell, the part of \file{startAgent} after the tier is found. Many Analysts is
+    \file{manyAnalystsPage.ts}; the others are greyed out in \file{compose.contribution.ts} until each is built.
 \end{itemize}
 
 \section{Where things are}
@@ -336,12 +369,30 @@ The studies come from the references database and Literature Radar, which find a
 \file{.../compose/browser/modelRouting.ts} & The tasks, the tiers, the cloud models, the settings, \file{tierRun},
   \file{localModelLaunch}\\
 \file{.../compose/browser/modelRoutingPage.ts} & The page Model Tasks and Routing\\
-\file{.../compose/browser/pollisAgents.ts} & The agents, the skills, \file{startAgent}\\
+\file{.../compose/browser/pollisAgents.ts} & The agents, the skills, \file{startAgent}, \file{launchAgent}\\
+\file{.../compose/browser/orchestration.ts} & Unattended runs, the cells they offer, the folders of studies\\
+\file{.../compose/browser/manyAnalystsPage.ts} & The page Many Analysts\\
 \file{.../compose/browser/codingAgentPage.ts} & The page Coding Agents\\
 \file{.../language-julia/src/pollisLlamaServer.ts} & llama.cpp's server for local models\\
 \file{.../compose/browser/compose.contribution.ts} & The Orchestration menu\\
 \bottomrule
 \end{tabularx}
 \end{center}
+
+\references
+\dref{BG1969a}{Bates, J.\,M. and Granger, C.\,W.\,J. (1969). The Combination of Forecasts. \emph{Journal of the Operational Research Society} 20(4), 451--468. \ddoi{10.1057/jors.1969.103}}
+\dref{BRWNA...2022a}{Breznau, N., Rinke, E.\,M., Wuttke, A., Nguyen, H.\,H.\,V., Adem, M., Adriaans, J., Alvarez-Benjumea, A., Andersen, H.\,K., Auer, D., Azevedo, F., Bahnsen, O., Balzer, D., Bauer, G., Bauer, P.\,C., Baumann, M., Baute, S., Benoit, V., Bernauer, J., Berning, C., Berthold, A., Bethke, F.\,S., Biegert, T., Blinzler, K., Blumenberg, J.\,N., Bobzien, L., Bohman, A., Bol, T., Bostic, A., Brzozowska, Z., Burgdorf, K., Burger, K., Busch, K.\,B., Carlos-Castillo, J., Chan, N., Christmann, P., Connelly, R., Czymara, C.\,S., Damian, E., Ecker, A., Edelmann, A., Eger, M.\,A., Ellerbrock, S., Forke, A., Forster, A., Gaasendam, C., Gavras, K., Gayle, V., Gessler, T., Gnambs, T., Godefroidt, A., Grömping, M., Groß, M., Gruber, S., Gummer, T., Hadjar, A., Heisig, J.\,P., Hellmeier, S., Heyne, S., Hirsch, M., Hjerm, M., Hochman, O., Hövermann, A., Hunger, S., Hunkler, C., Huth, N., Ignácz, Z.\,S., Jacobs, L., Jacobsen, J., Jaeger, B., Jungkunz, S., Jungmann, N., Kauff, M., Kleinert, M., Klinger, J., Kolb, J.-P., Kołczyńska, M., Kuk, J., Kunißen, K., Kurti Sinatra, D., Langenkamp, A., Lersch, P.\,M., Löbel, L.-M., Lutscher, P., Mader, M., Madia, J.\,E., Malancu, N., Maldonado, L., Marahrens, H., Martin, N., Martinez, P., Mayerl, J., Mayorga, O.\,J., McManus, P., McWagner, K., Meeusen, C., Meierrieks, D., Mellon, J., Merhout, F., Merk, S., Meyer, D., Micheli, L., Mijs, J., Moya, C., Neunhoeffer, M., Nüst, D., Nygård, O., Ochsenfeld, F., Otte, G., Pechenkina, A.\,O., Prosser, C., Raes, L., Ralston, K., Ramos, M.\,R., Roets, A., Rogers, J., Ropers, G., Samuel, R., Sand, G., Schachter, A., Schaeffer, M., Schieferdecker, D., Schlueter, E., Schmidt, R., Schmidt, K.\,M., Schmidt-Catran, A., Schmiedeberg, C., Schneider, J., Schoonvelde, M., Schulte-Cloos, J., Schumann, S., Schunck, R., Schupp, J., Seuring, J., Silber, H., Sleegers, W., Sonntag, N., Staudt, A., Steiber, N., Steiner, N., Sternberg, S., Stiers, D., Stojmenovska, D., Storz, N., Striessnig, E., Stroppe, A.-K., Teltemann, J., Tibajev, A., Tung, B., Vagni, G., Van Assche, J., van der Linden, M., van der Noll, J., Van Hootegem, A., Vogtenhuber, S., Voicu, B., Wagemans, F., Wehl, N., Werner, H., Wiernik, B.\,M., Winter, F., Wolf, C., Yamada, Y., Zhang, N., Ziller, C., Zins, S. and Żółtak, T. (2022). Observing Many Researchers Using the Same Data and Hypothesis Reveals a Hidden Universe of Uncertainty. \emph{Proceedings of the National Academy of Sciences} 119(44), e2203150119. \ddoi{10.1073/pnas.2203150119}}
+\dref{BHVTK2006a}{Buscemi, N., Hartling, L., Vandermeer, B., Tjosvold, L. and Klassen, T.\,P. (2006). Single Data Extraction Generated More Errors than Double Data Extraction in Systematic Reviews. \emph{Journal of Clinical Epidemiology} 59(7), 697--703. \ddoi{10.1016/j.jclinepi.2005.11.010}}
+\dref{CZZ2023a}{Chen, L., Zaharia, M. and Zou, J. (2023). FrugalGPT: How to Use Large Language Models While Reducing Cost and Improving Performance. arXiv:2305.05176. \url{https://arxiv.org/abs/2305.05176}}
+\dref{DW1999a}{Dehejia, R.\,H. and Wahba, S. (1999). Causal Effects in Nonexperimental Studies: Reevaluating the Evaluation of Training Programs. \emph{Journal of the American Statistical Association} 94(448), 1053--1062. \ddoi{10.1080/01621459.1999.10473858}}
+\dref{DL1986a}{DerSimonian, R. and Laird, N. (1986). Meta-Analysis in Clinical Trials. \emph{Controlled Clinical Trials} 7(3), 177--188. \ddoi{10.1016/0197-2456(86)90046-2}}
+\dref{HABBB...2021a}{Huntington-Klein, N., Arenas, A., Beam, E., Bertoni, M., Bloem, J.\,R., Burli, P., Chen, N., Grieco, P., Ekpe, G., Pugatch, T., Saavedra, M. and Stopnitzky, Y. (2021). The Influence of Hidden Researcher Decisions in Applied Microeconomics. \emph{Economic Inquiry} 59(3), 944--960. \ddoi{10.1111/ecin.12992}}
+\dref{LaL1986a}{LaLonde, R.\,J. (1986). Evaluating the Econometric Evaluations of Training Programs with Experimental Data. \emph{American Economic Review} 76(4), 604--620. \url{https://www.jstor.org/stable/1806062}}
+\dref{LZCWD...2024a}{Liang, W., Zhang, Y., Cao, H., Wang, B., Ding, D.\,Y., Yang, X., Vodrahalli, K., He, S., Smith, D.\,S., Yin, Y., McFarland, D.\,A. and Zou, J. (2024). Can Large Language Models Provide Useful Feedback on Research Papers? A Large-Scale Empirical Analysis. \emph{NEJM AI} 1(8), AIoa2400196. \ddoi{10.1056/AIoa2400196}}
+\dref{MSA2018a}{Makridakis, S., Spiliotis, E. and Assimakopoulos, V. (2018). The M4 Competition: Results, Findings, Conclusion and Way Forward. \emph{International Journal of Forecasting} 34(4), 802--808. \ddoi{10.1016/j.ijforecast.2018.06.001}}
+\dref{MDHHJ...2024a}{Menkveld, A.\,J., Dreber, A., Holzmeister, F., Huber, J., Johannesson, M., Kirchler, M., NEUSÜß, S., Razen, M., Weitzel, U., Abad-Díaz, D., Abudy, M. (., Adrian, T., Ait-Sahalia, Y., Akmansoy, O., Alcock, J.\,T., Alexeev, V., Aloosh, A., Amato, L., Amaya, D., Angel, J.\,J., Avetikian, A.\,T., Bach, A., Baidoo, E., Bakalli, G., Bao, L., Barbon, A., Bashchenko, O., Bindra, P.\,C., Bjønnes, G.\,H., Black, J.\,R., Black, B.\,S., Bogoev, D., Bohórquez Correa, S., Bondarenko, O., Bos, C.\,S., Bosch-Rosa, C., Bouri, E., Brownlees, C., Calamia, A., Cao, V.\,N., Capelle-Blancard, G., Capera Romero, L.\,M., Caporin, M., Carrion, A., Caskurlu, T., Chakrabarty, B., Chen, J., Chernov, M., Cheung, W., Chincarini, L.\,B., Chordia, T., Chow, S.-C., Clapham, B., Colliard, J.-E., Comerton-Forde, C., Curran, E., Dao, T., Dare, W., Davies, R.\,J., Blasis, R.\,D., De Nard, G.\,F., Declerck, F., Deev, O., Degryse, H., Deku, S.\,Y., Desagre, C., Dijk, M.\,A. v., Dim, C., Dimpfl, T., Dong, Y.\,J., Drummond, P.\,A., Dudda, T., Duevski, T., Dumitrescu, A., Dyakov, T., Dyhrberg, A.\,H., Dzieliński, M., Eksi, A., Kalak, I.\,E., Ellen, S. t., Eugster, N., Evans, M.\,D.\,D., Farrell, M., Felez-Vinas, E., Ferrara, G., Ferrouhi, E.\,M., Flori, A., Fluharty-Jaidee, J.\,T., Foley, S.\,D.\,V., Fong, K.\,Y.\,L., Foucault, T., Franus, T., Franzoni, F., Frijns, B., Frömmel, M., Fu, S.\,M., Füllbrunn, S.\,C., Gan, B., Gao, G., Gehrig, T.\,P., Gemayel, R., Gerritsen, D., Gil-Bazo, J., Gilder, D., Glosten, L.\,R., Gomez, T., Gorbenko, A., Grammig, J., Grégoire, V., Güçbilmez, U., Hagströmer, B., Hambuckers, J., Hapnes, E., Harris, J.\,H., Harris, L., Hartmann, S., Hasse, J.-B., Hautsch, N., He, X.-Z. (., Heath, D., Hediger, S., Hendershott, T., Hibbert, A.\,M., Hjalmarsson, E., Hoelscher, S.\,A., Hoffmann, P., Holden, C.\,W., Horenstein, A.\,R., Huang, W., Huang, D., Hurlin, C., Ilczuk, K., Ivashchenko, A., Iyer, S.\,R., Jahanshahloo, H., Jalkh, N., Jones, C.\,M., Jurkatis, S., Jylhä, P., Kaeck, A.\,T., Kaiser, G., Karam, A., Karmaziene, E., Kassner, B., Kaustia, M., Kazak, E., Kearney, F., Kervel, V. v., Khan, S.\,A., Khomyn, M.\,K., Klein, T., Klein, O., Klos, A., Koetter, M., Kolokolov, A., Korajczyk, R.\,A., Kozhan, R., Krahnen, J.\,P., Kuhle, P., Kwan, A., Lajaunie, Q., Lam, F.\,Y.\,E.\,C., Lambert, M., Langlois, H., Lausen, J., Lauter, T., Leippold, M., Levin, V., Li, Y., Li, H., Liew, C.\,Y., Lindner, T., Linton, O., Liu, J., Liu, A., Llorente, G., Lof, M., Lohr, A., Longstaff, F., Lopez-Lira, A., Mankad, S., Mano, N., Marchal, A., Martineau, C., Mazzola, F., Meloso, D., Mi, M.\,G., Mihet, R., Mohan, V., Moinas, S., Moore, D., Mu, L., Muravyev, D., Murphy, D., Neszveda, G., Neumeier, C., Nielsson, U., Nimalendran, M., Nolte, S., Norden, L.\,L., O'Neill, P., Obaid, K., Ødegaard, B.\,A., Östberg, P., Pagnotta, E., Painter, M., Palan, S., Palit, I.\,J., Park, A., Pascual, R., Pasquariello, P., Pastor, L., Patel, V., Patton, A.\,J., Pearson, N.\,D., Pelizzon, L., Pelli, M., Pelster, M., Pérignon, C., Pfiffer, C., Philip, R., Plíhal, T., Prakash, P., Press, O.-A., Prodromou, T., Prokopczuk, M., Putnins, T., Qian, Y., Raizada, G., Rakowski, D., Ranaldo, A., Regis, L., Reitz, S., Renault, T., Renjie, R.\,W., Reno, R., Riddiough, S.\,J., Rinne, K., Rintamäki, P., Riordan, R., Rittmannsberger, T., Rodríguez Longarela, I., Roesch, D., Rognone, L., Roseman, B., Roşu, I., Roy, S., Rudolf, N., Rush, S.\,R., Rzayev, K., Rzeźnik, A.\,A., Sanford, A., Sankaran, H., Sarkar, A., Sarno, L., Scaillet, O., Scharnowski, S., Schenk-Hoppé, K.\,R., Schertler, A., Schneider, M., Schroeder, F., Schürhoff, N., Schuster, P., Schwarz, M.\,A., Seasholes, M.\,S., Seeger, N.\,J., Shachar, O., Shkilko, A., Shui, J., Sikic, M., Simion, G., Smales, L.\,A., Söderlind, P., Sojli, E., Sokolov, K., Sönksen, J., Spokeviciute, L., Stefanova, D., Subrahmanyam, M.\,G., Szaszi, B., Talavera, O., Tang, Y., Taylor, N., Tham, W.\,W., Theissen, E., Thimme, J., Tonks, I., Tran, H., Trapin, L., Trolle, A.\,B., Vaduva, M.\,A., Valente, G., Ness, R.\,A.\,V., Vasquez, A., Verousis, T., Verwijmeren, P., Vilhelmsson, A., Vilkov, G., Vladimirov, V., Vogel, S., Voigt, S., Wagner, W., Walther, T., Weiss, P., Wel, M. v. d., Werner, I.\,M., Westerholm, P.\,J., Westheide, C., Wika, H.\,C., Wipplinger, E., Wolf, M., Wolff, C.\,C.\,P., Wolk, L., Wong, W.-K., Wrampelmeyer, J., Wu, Z.-X., Xia, S., Xiu, D., Xu, K., Xu, C., Yadav, P.\,K., Yagüe, J., Yan, C., Yang, A., Yoo, W., Yu, W., Yu, Y., Yu, S., Yueshen, B.\,Z., Yuferova, D., Zamojski, M., Zareei, A., Zeisberger, S.\,M., Zhang, L., Zhang, S.\,S., Zhang, X., Zhao, L., Zhong, Z., Zhou, Z.\,I., Zhou, C., Zhu, X.\,S., Zoican, M. and Zwinkels, R. (2024). Nonstandard Errors. \emph{Journal of Finance} 79(3), 2339--2390. \ddoi{10.1111/jofi.13337}}
+\dref{SUMAA...2018a}{Silberzahn, R., Uhlmann, E.\,L., Martin, D.\,P., Anselmi, P., Aust, F., Awtrey, E., Bahník, Š., Bai, F., Bannard, C., Bonnier, E., Carlsson, R., Cheung, F., Christensen, G., Clay, R., Craig, M.\,A., Dalla Rosa, A., Dam, L., Evans, M.\,H., Flores Cervantes, I., Fong, N., Gamez-Djokic, M., Glenz, A., Gordon-McKeon, S., Heaton, T.\,J., Hederos, K., Heene, M., Hofelich Mohr, A.\,J., Högden, F., Hui, K., Johannesson, M., Kalodimos, J., Kaszubowski, E., Kennedy, D.\,M., Lei, R., Lindsay, T.\,A., Liverani, S., Madan, C.\,R., Molden, D., Molleman, E., Morey, R.\,D., Mulder, L.\,B., Nijstad, B.\,R., Pope, N.\,G., Pope, B., Prenoveau, J.\,M., Rink, F., Robusto, E., Roderique, H., Sandberg, A., Schlüter, E., Schönbrodt, F.\,D., Sherman, M.\,F., Sommer, S.\,A., Sotak, K., Spain, S., Spörlein, C., Stafford, T., Stefanutti, L., Tauber, S., Ullrich, J., Vianello, M., Wagenmakers, E.-J., Witkowiak, M., Yoon, S. and Nosek, B.\,A. (2018). Many Analysts, One Data Set: Making Transparent How Variations in Analytic Choices Affect Results. \emph{Advances in Methods and Practices in Psychological Science} 1(3), 337--356. \ddoi{10.1177/2515245917747646}}
+\dref{SSN2020a}{Simonsohn, U., Simmons, J.\,P. and Nelson, L.\,D. (2020). Specification Curve Analysis. \emph{Nature Human Behaviour} 4(11), 1208--1214. \ddoi{10.1038/s41562-020-0912-z}}
+\dref{STGV2016a}{Steegen, S., Tuerlinckx, F., Gelman, A. and Vanpaemel, W. (2016). Increasing Transparency Through a Multiverse Analysis. \emph{Perspectives on Psychological Science} 11(5), 702--712. \ddoi{10.1177/1745691616658637}}
 
 \end{document}

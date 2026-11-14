@@ -1,0 +1,358 @@
+% Pollis drill-down: Compose > Compilation Lab, Julia beside compiled code: the shared example of every page, the
+% pages one by one (Mix, Shared Library, Executable, Translate to Rust, Julia Functions in DuckDB), where the programs
+% go, what each page needs, and how the pages are made (14 November 2026). For users who want the detail, and for
+% whoever maintains Pollis.
+% Compile with: latexmk -pdf workflow_compilation_lab.tex
+\input{workflow_style}
+
+\usepackage{titlesec}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{listings}
+
+\fancyhf{}
+\fancyfoot[L]{\footnotesize\color{soft}\textbf{Pollis}\enspace Drill-down: Compilation Lab}
+\fancyfoot[R]{\footnotesize\color{soft}\thepage}
+
+\titleformat{\section}{\color{navy}\large\bfseries}{\color{deepamber}\thesection}{0.6em}{}
+\titleformat{\subsection}{\color{navy}\normalsize\bfseries}{\color{deepamber}\thesubsection}{0.5em}{}
+\titlespacing*{\section}{0pt}{12pt}{4pt}
+\titlespacing*{\subsection}{0pt}{8pt}{2pt}
+\setlength{\parskip}{4pt}
+
+\lstset{basicstyle=\ttfamily\footnotesize, columns=fullflexible, keepspaces=true, breaklines=true,
+  backgroundcolor=\color{pale}, frame=leftline, rulecolor=\color{amber}, framerule=2pt, xleftmargin=6pt,
+  framexleftmargin=6pt, aboveskip=4pt, belowskip=4pt, upquote=true, tabsize=2}
+
+\usepackage{xurl}
+\newcommand{\file}[1]{{\small\nolinkurl{#1}}}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+\newcommand{\ui}[1]{\textbf{#1}}
+% Code with spaces in it, such as a command line, which \file would run together
+\newcommand{\code}[1]{\texttt{\small #1}}
+% A menu path at the start of a table cell
+\newcommand{\cellpath}[1]{\leavevmode\menupath{#1}}
+
+\begin{document}
+
+\workflowhead[Drill-Down]{Compilation Lab}
+  {Julia beside compiled code}
+  {How Julia calls compiled code and is called by it, how a Julia function becomes a library, a program or a DuckDB
+   function, and how every page checks the result against Julia, pixel by pixel.}
+
+\begin{nbox}
+{\color{amber}\bfseries Drill-down.}\enspace
+A look under the surface of the pages of \textbf{Compose \gt Compilation Lab}. It is for anyone who wants to know
+what each page builds, where it puts it, what it needs on the computer, and why its check can demand exact
+agreement; \S\ref{sec:machinery} is for whoever maintains Pollis. It describes the state of 14 November 2026.
+\end{nbox}
+
+\tableofcontents
+
+\section{What Compilation Lab is}\label{sec:what}
+Julia compiles every function before it runs it, through LLVM, the compiler framework of \dcite{LA2004a}{Lattner and
+Adve (2004)}, but the result lives inside the Julia session. Compilation Lab is
+about the boundary: Julia calling code that other compilers made, other programs calling Julia, and a Julia function
+taken out of the session as a library, a program or a function of a database. Its pages are in two groups.
+
+\begin{center}\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{@{}p{0.36\linewidth}p{0.14\linewidth}L@{}}
+\toprule
+\textbf{Menu item} & \textbf{Style} & \textbf{What it does}\\
+\midrule
+\multicolumn{3}{@{}l}{\emph{Compile Julia}}\\
+\cellpath{Compile Julia to a Shared Library} & Panel & One Julia function compiled into a library by three
+  tools, called from a C program (\S\ref{sec:shared})\\
+\cellpath{Compile Julia to an Executable} & Panel & One Julia program compiled into an executable by three tools
+  (\S\ref{sec:exe})\\
+\cellpath{Compile Julia to WebAssembly} & --- & Not built yet (\S\ref{sec:wasm})\\
+\multicolumn{3}{@{}l}{\emph{Other Languages}}\\
+\cellpath{Mix Julia with Compiled Code} & Panel & Julia calls C, Fortran and C++; C calls Julia
+  (\S\ref{sec:mix})\\
+\cellpath{Translate Julia to Rust} & Steps & A Julia function translated into Rust, built and compared
+  (\S\ref{sec:rust})\\
+\cellpath{Julia Functions in DuckDB} & Panel & A Julia function called from SQL, from the session or as an extension
+  (\S\ref{sec:duckdb})\\
+\bottomrule
+\end{tabularx}
+\end{center}
+A \emph{panel} has tabs, inputs, Example Code and Next Steps, like the method panels of Pollis; a page of
+\emph{steps} takes you through numbered steps, one after the other. Every page runs its code in the Julia REPL.
+
+\section{One example on every page}\label{sec:example}
+Every page computes the same thing, so that the pages can be read side by side and each result checked against the
+same Julia function: the number of iterations of $z \mapsto z^2 + c$ before $|z|$ passes 2, for each pixel of a
+picture, or the most iterations allowed when it never does. Two sets come from it.
+\begin{itemize}
+  \item \textbf{The Mandelbrot set}: $z$ starts at 0 and $c$ is the pixel, over the region from $-2.2$ to $0.8$
+    across and from $-1.2$ to $1.2$ down.
+  \item \textbf{The Julia set of $c$}: $z$ starts at the pixel and $c$ is fixed, $-0.8 + 0.156i$ unless you change
+    it, over the region from $-1.6$ to $1.6$ across and from $-1$ to $1$ down.
+\end{itemize}
+The inputs are the same on every page: \ui{Example}, \ui{Pixels Across} (800), \ui{Iterations} (256), \ui{Real Part
+of c} and \ui{Imaginary Part of c}. The pixels down follow from the region, with square pixels.
+
+The sets of $z \mapsto z^2 + c$ that start at the pixel bear the name of \dcite{Jul1918a}{Julia (1918)}, who studied
+the iteration of rational functions. \dcite{Man1980a}{Mandelbrot (1980)} drew the set of the values of the parameter
+for the map $z \mapsto \lambda z(1 - z)$, which a change of variable turns into $z^2 + c$; the set of the $c$ whose
+iteration from 0 stays bounded now bears his name.
+
+\subsection{Why the check can be exact}
+The iteration is written with real numbers, the same operations in the same order in every language:
+\begin{lstlisting}
+zr2 = zr * zr;  zi2 = zi * zi
+zr2 + zi2 > 4.0 && return k
+zi = 2.0 * zr * zi + ci;  zr = zr2 - zi2 + cr
+\end{lstlisting}
+Julia's \file{Float64}, C's \file{double}, Fortran's \file{real(c_double)}, Rust's \file{f64} and DuckDB's
+\file{DOUBLE} are the same IEEE 754 number, and each operation rounds in the same way everywhere; \dcite{Gol1991a}{Goldberg
+(1991)} explains how. Two things could
+still change a result, and each page rules them out.
+\begin{itemize}
+  \item \textbf{Fused multiply-add.} A compiler may compute \code{a * b + c} with one rounding instead of two. C, C++
+    and Fortran are built with \code{-ffp-contract=off}, which forbids it; Julia and Rust never fuse unless the code
+    asks. The Next Step \ui{Fused and Not Fused} of Mix builds the code again with fusing allowed and shows the pixels
+    that change.
+  \item \textbf{Numbers passed as text.} A number written on a command line or in SQL is written with Julia's
+    \file{repr}, the shortest decimal that reads back to the same \file{Float64}; C reads it with \file{strtod}, DuckDB
+    as text cast to \file{DOUBLE}.
+\end{itemize}
+The count of every pixel, an \file{Int32}, must then agree exactly with Julia's, and every page prints the number of
+pixels that differ, expected to be zero.
+
+\section{Mix Julia with Compiled Code}\label{sec:mix}
+Five ways across the boundary, one to a tab. In each, the compiled code fills a Julia matrix of counts through a
+pointer to its first element, with nothing copied.
+
+\begin{center}\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{@{}p{0.17\linewidth}p{0.25\linewidth}L@{}}
+\toprule
+\textbf{Tab} & \textbf{Compiler} & \textbf{What crosses}\\
+\midrule
+Call C & \file{cc}, \file{gcc} or \file{clang} & A C function called with \file{@ccall}\\
+Call Fortran & \file{gfortran} & A subroutine with \file{bind(c)}; $c$ crosses as a complex number by value\\
+Call C++ & \file{c++}, \file{g++} or \file{clang++} & Code behind \file{extern "C"}; $c$ crosses as a
+  \file{std::complex<double>}, by pointer\\
+Julia Callback & \file{cc}, \file{gcc} or \file{clang} & The loop in C, calling a Julia function for each pixel through
+  a pointer that \file{@cfunction} makes\\
+Julia from C & \file{cc}, \file{gcc} or \file{clang} & A C program that starts Julia, includes a Julia file and calls
+  a function of it, with the flags of \file{julia-config.jl}\\
+\bottomrule
+\end{tabularx}
+\end{center}
+Each tab builds in \file{~/.pollis/mix/<tab>}, under a name that carries a hash of the source and the flags, so a
+change makes a new library rather than one the session already holds open. Next Steps: \ui{Picture of the Set},
+\ui{Source and Build Command}, \ui{Julia and Compiled Times}, \ui{Fused and Not Fused}, \ui{Share of Pixels Inside}.
+
+\section{Compile Julia to a Shared Library}\label{sec:shared}
+One Julia function, \file{fill_counts}, compiled into a library by three tools: JuliaC.jl,
+\dcite{JLC2026a}{JuliaLang Contributors (2026a)}, PackageCompiler.jl, \dcite{JLC2026b}{JuliaLang Contributors
+(2026b)}, and StaticCompiler.jl, \dcite{Sho2026a}{Short (2026)}. It takes only native types, returns
+an \file{Int64} (the pixels inside), allocates nothing and throws no error, so that every tool can compile it.
+
+\begin{center}\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{@{}p{0.2\linewidth}p{0.2\linewidth}L@{}}
+\toprule
+\textbf{Tab} & \textbf{Runtime in the library} & \textbf{Build}\\
+\midrule
+JuliaC & Trimmed & \code{juliac -{}-output-lib -{}-compile-ccallable -{}-trim=safe}; Julia 1.12 or later\\
+PackageCompiler & Whole, with a system image & \file{create_library} on a small package, Fractal; the calling program
+  starts the runtime with \file{init_julia}\\
+StaticCompiler & None & \file{compile_shlib} on the function of the session; only for code that never allocates\\
+\bottomrule
+\end{tabularx}
+\end{center}
+A small C program, \file{caller.c}, is linked against the library, with the library's folder recorded (rpath). It
+fills memory of its own, writes the counts to \file{counts.bin} and prints the pixels inside; Julia reads the file back
+and compares. The library is called from its own process, not from the Julia session, because a library with a Julia
+runtime is made for programs that are not Julia. Next Steps: \ui{Picture of the Set}, \ui{Source and Build Command},
+\ui{Library Contents}, \ui{Sizes and Build Times}, \ui{Start-Up and Call Time}, \ui{Share of Pixels Inside}.
+
+\section{Compile Julia to an Executable}\label{sec:exe}
+One Julia program compiled into an executable by the same three tools: juliac (\code{-{}-output-exe -{}-bundle
+-{}-trim=safe}, starting at \file{@main}), PackageCompiler (\file{create_app}, starting at \file{julia_main}) and
+StaticCompiler (\file{compile_executable} of \file{static_main}, written with StaticTools, \dcite{Kel...2026a}{Keller and contributors (2026)}, with no runtime).
+
+\subsection{The program}
+The program draws the picture itself, as a BMP file: black inside the set, and outside a colour from how fast each
+pixel escapes. It can be started in three ways.
+\begin{center}\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{@{}p{0.44\linewidth}L@{}}
+\toprule
+\textbf{Command} & \textbf{What it does}\\
+\midrule
+\code{fractal}, or a double-click & The Mandelbrot set with the page's defaults, into \file{fractal.bmp} in the folder
+  it starts in, then opened (\file{open}, \file{start} or \file{xdg-open})\\
+\code{fractal picture.bmp} & The same picture into the file named, opening nothing\\
+\code{fractal picture.bmp counts.bin} and nine numbers & The page's set and inputs: height, width, the corner, the
+  spacing, the set, $c$ and the iterations; the counts also go to \file{counts.bin}\\
+\bottomrule
+\end{tabularx}
+\end{center}
+The tab checks the counts against Julia's and the picture byte for byte against the one Julia draws in the session.
+\ui{Run the Program in Pollis} runs the program from the REPL with one argument, so its lines print in the REPL and
+its picture shows in the plot pane. \ui{Start-Up and Run Time} sets each program beside \file{julia} running the same
+code as a script, which has to compile it first. The other Next Steps are \ui{Picture of the Set}, \ui{Source and
+Build Command}, \ui{Program Contents}, \ui{Sizes and Build Times} and \ui{Share of Pixels Inside}.
+
+\section{Translate Julia to Rust}\label{sec:rust}
+A page of four steps that turns a Julia function into Rust, \dcite{MK2014a}{Matsakis and Klock (2014)}, called back
+from Julia with \file{@ccall}. The Rust project's book, \dcite{KN2023a}{Klabnik and Nichols (2023)}, is its guide to
+the language. The original
+is never changed. Its example is \file{fractal_counts}, which returns the count of every pixel as a
+\code{Matrix\{Int32\}}.
+\begin{enumerate}
+  \item \textbf{The Function.} The function to translate, by name, and its call; the example, or one of your own.
+  \item \textbf{Translate.} For the example, the crate written out: \file{Cargo.toml} (edition 2024, a
+    \file{cdylib}) and \file{src/lib.rs}, whose \file{fill_counts} writes into the matrix Julia allocates, and the Julia
+    function \file{fractal_counts_rust} that calls it. For a function of your own, \ui{Translate with Agent} starts the
+    coding agent with the skill translate-to-rust, as the task Translate Julia to Rust of Model Tasks and Routing, on
+    the Strong tier by default.
+  \item \textbf{Build.} \code{cargo build -{}-release} of the crate in \ui{Folder}, or the Julia file the agent wrote.
+  \item \textbf{Compare.} The two versions checked to give the same result, then timed with BenchmarkTools, with the
+    verdict of \file{judge}.
+\end{enumerate}
+
+\section{Julia Functions in DuckDB}\label{sec:duckdb}
+The function of one pixel, \file{escape_time(zr, zi, cr, ci, maxiter)}, called from SQL. Each tab opens a DuckDB
+database in memory with a table \file{pixels}, one row for each pixel and its coordinates, and one query computes
+every count:
+\begin{lstlisting}
+SELECT i, j, escape_time(0.0::DOUBLE, 0.0::DOUBLE, x, y, 256::INTEGER) AS steps FROM pixels
+\end{lstlisting}
+\begin{center}\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{@{}p{0.17\linewidth}LL@{}}
+\toprule
+\textbf{Tab} & \textbf{How DuckDB gets the function} & \textbf{Who can call it}\\
+\midrule
+Julia Function & \file{DuckDB.@create_scalar_function} and \file{DuckDB.register_scalar_function}, from the session &
+  That database, while the session lasts\\
+Rust Extension & A crate written with duckdb-neo,
+  \dcite{DDBL2026a}{DuckDB Labs and contributors (2026)}, for DuckDB's C API version 2, built by cargo; Julia appends the 512
+  bytes of metadata DuckDB checks; \code{LOAD} reads the file & Any DuckDB 2.0.0 on the same platform that allows
+  unsigned extensions\\
+\bottomrule
+\end{tabularx}
+\end{center}
+DuckDB calls a scalar function once for each chunk of up to 2048 rows, not once per row, so a function from Julia or
+from an extension runs at about the speed of its own language. Working on vectors of values rather than one row at a
+time is the vectorised execution of MonetDB/X100, \dcite{BZN2005a}{Boncz, Żukowski and Nes (2005)}, which DuckDB
+follows. An extension made this way loads in one version of
+DuckDB only, the one written in its metadata, and needs a database opened with \file{allow_unsigned_extensions},
+which cannot be set later. In Pollis, \code{using DuckDB} runs on the engine Pollis ships, DuckDB 2.0.0. Next Steps:
+\ui{Picture of the Set}, \ui{The Function in DuckDB}, \ui{Query Plan}, \ui{Source and Build Command}, \ui{Query
+Times}, \ui{Pixels Inside, Counted in SQL}.
+
+\section{Compile Julia to WebAssembly}\label{sec:wasm}
+In the menu, but not available yet. The page will draw the set live in the page, with the function compiled to
+WebAssembly through Rust or through WebAssemblyCompiler.jl, which is experimental. WebAssembly is the code a web page
+runs beside JavaScript, designed by engineers of the four major browser makers, \dcite{HRSTH...2017a}{Haas and 8
+coauthors (2017)}.
+
+\section{Where the programs go}\label{sec:folders}
+The pages that build a program, a library or an extension have a \ui{Folder} field with \ui{Choose...}. Its default is
+a folder of \file{programs} in the open Pollis Workspace, else the same folder in \file{~/.pollis/programs}.
+
+\begin{center}\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{@{}p{0.34\linewidth}p{0.3\linewidth}L@{}}
+\toprule
+\textbf{Page} & \textbf{Folder} & \textbf{Inside it}\\
+\midrule
+Compile Julia to a Shared Library & \file{programs/shared_libraries} & \file{juliac}, \file{packagecompiler},
+  \file{staticcompiler}\\
+Compile Julia to an Executable & \file{programs/executables} & \file{juliac}, \file{packagecompiler},
+  \file{staticcompiler}\\
+Translate Julia to Rust & \file{programs/rust} & \file{fractal}, the crate\\
+Julia Functions in DuckDB & \file{programs/duckdb_extensions} & \file{fractal}, the crate, and
+  \file{fractal.duckdb_extension}\\
+Mix Julia with Compiled Code & \file{~/.pollis/mix} & One folder for each tab; no Folder field\\
+\bottomrule
+\end{tabularx}
+\end{center}
+Each build folder holds \file{built_from.txt}: the Julia version, or the version and platform of DuckDB, and the
+sources the build was made from. A tab builds again only when it differs, so a second run of a tab takes seconds
+even where the first build took minutes. Each tab ends by printing where its program, library or extension is.
+
+\section{What each page needs}\label{sec:needs}
+\begin{center}\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{@{}p{0.3\linewidth}L@{}}
+\toprule
+\textbf{Need} & \textbf{For}\\
+\midrule
+A C compiler: the Command Line Tools on macOS (\code{xcode-select -{}-install}), \file{gcc} on Linux, MinGW-w64 on
+  Windows & Mix (C, C++, Callback, Julia from C); Shared Library (the calling program, and PackageCompiler); Executable
+  (JuliaC and PackageCompiler)\\
+\file{gfortran} & Mix, Call Fortran\\
+Julia 1.12 or later & JuliaC, which the code installs with \file{Pkg.Apps.add("JuliaC")}\\
+PackageCompiler.jl, StaticCompiler.jl, StaticTools.jl & The tabs of those tools\\
+Rust 1.85 or later, with cargo, from rustup & Translate Julia to Rust; Julia Functions in DuckDB, Rust Extension,
+  whose first build also downloads duckdb-neo\\
+DuckDB.jl and Tables.jl & Julia Functions in DuckDB\\
+A coding agent & Translate with Agent\\
+\bottomrule
+\end{tabularx}
+\end{center}
+A missing compiler stops the tab with a message that says how to install it.
+
+\section{Under the surface}\label{sec:machinery}
+\begin{itemize}
+  \item \textbf{Panels from TOML.} Mix, Shared Library, Executable and Julia Functions in DuckDB are panels of the
+    scaffold: each is a TOML file (\file{mixCompiled}, \file{sharedLib}, \file{compileExe}, \file{duckdbFunctions})
+    that \code{npm run gulp compile-toml} turns into the data the shared panel code draws. Their wikis are in
+    \file{media/wiki/<id>}.
+  \item \textbf{One page of steps.} Translate Julia to Rust is \file{translateRustPage.ts}, a page of the Time Arrow
+    style, with its own messages; Compare shares its code with Speed Up a Function.
+  \item \textbf{The Folder field.} An input of a panel's TOML with \code{folder = "programs/executables"} gets the
+    \ui{Choose...} button, which opens the folder picker. The panel's handler posts the folder of the open workspace as
+    the input's default (\file{setInputDefault}), from \file{pollisWorkspaceFolderPath}, which names a folder without
+    making it. The code reads it as \file{expanduser(raw"...")}.
+  \item \textbf{Names shared across tabs.} Each panel keeps what its tabs built in one dictionary of the session,
+    \file{builds} (Shared Library), \file{programs} (Executable) or \file{ways} (DuckDB), so that a Compare action can
+    set the tabs run in the session side by side.
+  \item \textbf{The agent task.} Translate with Agent is the task \file{translateRust} of \file{modelRouting.ts}, with
+    the skill translate-to-rust of Pollis Agents.
+\end{itemize}
+
+\section{Where things are}
+
+\begin{center}\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{@{}p{0.5\linewidth}L@{}}
+\toprule
+\textbf{File} & \textbf{Role}\\
+\midrule
+\file{.../model/browser/webviews/mixCompiled.toml} & Mix Julia with Compiled Code\\
+\file{.../model/browser/webviews/sharedLib.toml} & Compile Julia to a Shared Library\\
+\file{.../model/browser/webviews/compileExe.toml} & Compile Julia to an Executable\\
+\file{.../model/browser/webviews/duckdbFunctions.toml} & Julia Functions in DuckDB\\
+\file{.../compose/browser/translateRustPage.ts} & Translate Julia to Rust\\
+\file{.../compose/browser/compose.contribution.ts} & The Compilation Lab menu\\
+\file{.../model/browser/handlers/scaffold.handler.ts} & The Folder field's picker and default\\
+\file{.../pollisWorkspace/browser/pollisWorkspace.contribution.ts} & The workspace folder \file{programs}\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\references
+\dref{BZN2005a}{Boncz, P.\,A., Żukowski, M. and Nes, N.\,J. (2005). MonetDB/X100: Hyper-Pipelining Query Execution. In \emph{Proceedings of the Second Biennial Conference on Innovative Data Systems Research (CIDR)}, 225--237.}
+\dref{DDBL2026a}{DuckDB Labs and contributors (2026). duckdb-neo: Ergonomic wrapper for DuckDB's v2 C API (beta). \url{https://github.com/duckdb/duckdb-rs}}
+\dref{Gol1991a}{Goldberg, D. (1991). What every computer scientist should know about floating-point arithmetic. \emph{ACM Computing Surveys} 23(1), 5--48. \ddoi{10.1145/103162.103163}}
+\dref{HRSTH...2017a}{Haas, A., Rossberg, A., Schuff, D.\,L., Titzer, B.\,L., Holman, M., Gohman, D., Wagner, L., Zakai, A. and Bastien, J.\,F. (2017). Bringing the Web up to Speed with WebAssembly. In \emph{Proceedings of the 38th ACM SIGPLAN Conference on Programming Language Design and Implementation (PLDI 2017)}, 185--200. ACM. \ddoi{10.1145/3062341.3062363}}
+\dref{Jul1918a}{Julia, G. (1918). Mémoire sur l'itération des fonctions rationnelles. \emph{Journal de Mathématiques Pures et Appliquées} 1, 47--245. \url{http://www.numdam.org/item/JMPA_1918_8_1__47_0/}}
+\dref{JLC2026a}{JuliaLang Contributors (2026a). JuliaC.jl: CLI app for compiling and bundling julia binaries, especially trimmed ones. \url{https://github.com/JuliaLang/JuliaC.jl}}
+\dref{JLC2026b}{JuliaLang Contributors (2026b). PackageCompiler.jl: Compile your Julia Package. \url{https://github.com/JuliaLang/PackageCompiler.jl}}
+\dref{Kel...2026a}{Keller, C.\,B. and contributors (2026). StaticTools.jl: Enabling StaticCompiler.jl-based compilation of (some) Julia code to standalone native binaries by avoiding GC allocations and llvmcall-ing all the things! \url{https://github.com/brenhinkeller/StaticTools.jl}}
+\dref{KN2023a}{Klabnik, S. and Nichols, C. (2023). The Rust Programming Language. No Starch Press. \url{https://doc.rust-lang.org/book/}}
+\dref{LA2004a}{Lattner, C. and Adve, V. (2004). LLVM: A Compilation Framework for Lifelong Program Analysis and Transformation. In \emph{International Symposium on Code Generation and Optimization (CGO 2004)}, 75--86. IEEE. \ddoi{10.1109/CGO.2004.1281665}}
+\dref{Man1980a}{Mandelbrot, B.\,B. (1980). Fractal aspects of the iteration of $z \to \lambda z(1 - z)$ for complex $\lambda$ and $z$. \emph{Annals of the New York Academy of Sciences} 357(1), 249--259. \ddoi{10.1111/j.1749-6632.1980.tb29690.x}}
+\dref{MK2014a}{Matsakis, N.\,D. and Klock, F.\,S. (2014). The Rust language. \emph{ACM SIGAda Ada Letters} 34(3), 103--104. \ddoi{10.1145/2692956.2663188}}
+\dref{Sho2026a}{Short, T. (2026). StaticCompiler.jl: Compiles Julia code to a standalone library (experimental). \url{https://github.com/tshort/StaticCompiler.jl}}
+
+\end{document}

@@ -100,7 +100,8 @@ of Discover Literature you have not saved.
 \section{The two indexes}\label{sec:indexes}
 
 \subsection{OpenAlex}
-A free, open catalogue of scholarly works, the successor of Microsoft Academic Graph. Pollis asks it for most things:
+A free, open catalogue of scholarly works, the successor of Microsoft Academic Graph, which
+\dcite{PPO2022a}{Priem, Piwowar and Orr (2022)} describe. Pollis asks it for most things:
 each work's record, its citation count, the counts of the last ten years, its field-weighted citation impact (FWCI), its
 citation percentile against works of the same field and year, its journal's 2-year mean citedness, the works it cites
 and the works citing it, and an abstract.
@@ -111,8 +112,10 @@ page says so and the search stops; it is not retried.
 
 \subsection{Semantic Scholar}
 The Allen Institute for AI's index. Pollis asks it for its own citation count, its \emph{influential} citations (those
-that build on a work, not only mention it), its recommendations of related works, and, for a citation, the sentences
-that make it and why: background, method or result.
+that build on a work, not only mention it, which \dcite{VHE2015a}{Valenzuela, Ha and Etzioni (2015)} set out to tell
+apart), its recommendations of related works, and, for a citation, the sentences
+that make it and why: background, method or result, the intents of the classifier of \dcite{CAZC2019a}{Cohan, Ammar,
+van Zuylen and Cady (2019)}.
 
 \textbf{Rate.} Without a key, Semantic Scholar answers at a shared rate and is often busy; a key of your own has a rate of
 its own. When it is busy, Discover Literature retries the search in the background and shows the OpenAlex rows meanwhile.
@@ -255,8 +258,12 @@ Correction removes it.
 \section{Snowball Search Map}\label{sec:snowball}
 
 Snowballing is the oldest way through a literature: from a few works you trust, the \emph{seeds}, follow the works that
-cite them (forward) and the works they cite (backward), and keep the works many seeds lead to. The map does that with the
-indexes and keeps a record of every step.
+cite them (forward) and the works they cite (backward), and keep the works many seeds lead to.
+\dcite{Woh2014a}{Wohlin (2014)} wrote its guidelines for systematic literature studies: forward and backward in
+iterations, from a start set, until no new works are found. The map does that with the indexes and keeps a record of
+every step. A search in Discover Literature for the seeds, then snowballing from them, is the hybrid strategy of
+\dcite{WKFM2022a}{Wohlin, Kalinowski, Romero Felizardo and Mendes (2022)}, which found 30\% more of the relevant
+studies than the database search of the review it replicated.
 
 \subsection{Seeds}
 Seeds come from Discover Literature (Snowball Search\dots), saved there or not, or from \textbf{Add Seeds}, which finds
@@ -288,6 +295,12 @@ tied to by Cited By or Cites, then by its citations; a work you excluded comes a
 the first 20. The \textbf{From} column names the lists a work is in; \textbf{Show} narrows the pool to All, one list, New
 Since Last Step, or Candidates (the works of the top that are neither seeds nor excluded). \textbf{Seed} makes a work of
 the pool a seed; \textbf{Exclude} keeps it out of the top, \textbf{Include} lets it back.
+
+\textbf{Links} rests on two old measures of how works are related. A work that several seeds cite is a reference
+they share, which is bibliographic coupling, \dcite{Kes1963a}{Kessler (1963)}: the more references two works share,
+the closer they are. A work that cites several seeds cites them together, which is co-citation,
+\dcite{Sma1973a}{Small (1973)}: the more often two works are cited together, the closer they are. Links counts the
+seeds a work is tied to in either way.
 
 A line under the pool tells where the search stands: \emph{\{n\} works from L1--L2, the last step added \{k\}, \{j\} of
 them in the top 20}.
@@ -400,5 +413,14 @@ data: clearing them loses nothing saved.
   \item \textbf{Saturation is of the top}: a round that changes nothing in the top 20 saturates the search, even when it
     adds works further down.
 \end{itemize}
+
+\references
+\dref{CAZC2019a}{Cohan, A., Ammar, W., van Zuylen, M. and Cady, F. (2019). Structural Scaffolds for Citation Intent Classification in Scientific Publications. In \emph{Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies, Volume 1 (Long and Short Papers)}, 3586--3596. \ddoi{10.18653/v1/n19-1361}}
+\dref{Kes1963a}{Kessler, M.\,M. (1963). Bibliographic coupling between scientific papers. \emph{American Documentation} 14(1), 10--25. \ddoi{10.1002/asi.5090140103}}
+\dref{PPO2022a}{Priem, J., Piwowar, H. and Orr, R. (2022). OpenAlex: A fully-open index of scholarly works, authors, venues, institutions, and concepts. arXiv:2205.01833. \url{https://arxiv.org/abs/2205.01833}}
+\dref{Sma1973a}{Small, H. (1973). Co-citation in the scientific literature: A new measure of the relationship between two documents. \emph{Journal of the American Society for Information Science} 24(4), 265--269. \ddoi{10.1002/asi.4630240406}}
+\dref{VHE2015a}{Valenzuela, M., Ha, V. and Etzioni, O. (2015). Identifying Meaningful Citations. In \emph{AAAI Workshop on Scholarly Big Data}. \url{https://aaai.org/ocs/index.php/WS/AAAIW15/paper/view/10185}}
+\dref{Woh2014a}{Wohlin, C. (2014). Guidelines for snowballing in systematic literature studies and a replication in software engineering. In \emph{Proceedings of the 18th International Conference on Evaluation and Assessment in Software Engineering}, 1--10. \ddoi{10.1145/2601248.2601268}}
+\dref{WKFM2022a}{Wohlin, C., Kalinowski, M., Romero Felizardo, K. and Mendes, E. (2022). Successful combination of database search and snowballing for identification of primary studies in systematic literature studies. \emph{Information and Software Technology} 147, 106908. \ddoi{10.1016/j.infsof.2022.106908}}
 
 \end{document}
