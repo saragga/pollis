@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Antonio Saragga Seabra
+# SPDX-License-Identifier: MIT
+
 # Package and Publish, on the page of an article method: turns each method folder into a Julia package whose
 # tests are the method's target tables, computed from its input tables, and runs them. With --push
 # OWNER, a package whose tests all pass is pushed to github.com/OWNER/NAME.jl (GitHub CLI, gh). With

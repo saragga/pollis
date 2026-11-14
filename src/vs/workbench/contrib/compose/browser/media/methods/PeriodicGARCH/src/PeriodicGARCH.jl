@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Antonio Saragga Seabra
+# SPDX-License-Identifier: MIT
+
 module PeriodicGARCH
 
 using Optim, ADTypes, ForwardDiff, LinearAlgebra, Statistics, Tables

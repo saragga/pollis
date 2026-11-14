@@ -88,6 +88,11 @@ Pollis is licensed under the [GNU Affero General Public License v3.0](LICENSE.tx
 use, study, share and modify it. If you distribute a modified version, or let others use one over a
 network, you must make its source code available under the same licence.
 
+**The Julia code is MIT.** The Julia files written for Pollis and its notebooks are under the MIT
+License, as most Julia packages are. The panels themselves stay under the AGPL, but the Julia code
+they show, in Example Code and Next Steps, may also be used under the MIT License, so the code you
+copy into your own work carries no AGPL conditions. See [`LICENSE.txt`](LICENSE.txt).
+
 **Extensions are exempt.** An additional permission in [`LICENSE.txt`](LICENSE.txt) lets you
 distribute extensions for Pollis under any licence, including a proprietary one, as long as they
 interact with Pollis only through the extension API.

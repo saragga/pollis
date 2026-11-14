@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Antonio Saragga Seabra
+# SPDX-License-Identifier: MIT
+
 module ForestOOB
 
 using DecisionTree, StatsBase, Random, Statistics, Tables

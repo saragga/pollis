@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Antonio Saragga Seabra
+# SPDX-License-Identifier: MIT
+
 # The cross-tests against Lai et al.'s code, on the artificial datasets of artificial/ and the results of their code in
 # authors/reference.json (written by authors/export.py):
 #

@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Antonio Saragga Seabra
+# SPDX-License-Identifier: MIT
+
 # Pollis: the evaluation of Evaluate Answering Models, with RAGTools.jl and PromptingTools.jl, which RAGTools.jl calls the models
 # with (Pollis' forks, which run on Julia 1.13, as in LLM Text Analysis). Run by the Julia extension in a hidden process
 # (pollisCompareModels.ts) with one argument, a JSON file of the task, and on stdin one line of JSON: the keys of the

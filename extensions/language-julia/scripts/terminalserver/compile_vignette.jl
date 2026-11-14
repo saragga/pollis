@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Antonio Saragga Seabra
+# SPDX-License-Identifier: MIT
+
 # Pollis: compiles the vignette of a package, for Help > Documentation > Packages, with the XeTeX of Tectonic
 # that PollisTeX.jl installs. Run by the Julia extension in a hidden process of low priority (pollisDocuments.ts):
 #

@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Antonio Saragga Seabra
+# SPDX-License-Identifier: MIT
+
 # The template of the volatility workflow's report: Pollis copies report.tex, references.bib and this file to the
 # report folder and runs this file there, in the notebook's folder, to write the figures and tables report.tex uses.
 # It runs the notebook's cells in order; the only additions save figures (figures/) and tables (tables/) by absolute path.

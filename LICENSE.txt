@@ -13,6 +13,11 @@ details.
 The complete source code of Pollis is available at
 https://github.com/saragga/pollis
 
+The Julia code and the notebooks written for Pollis are licensed under the MIT
+License instead (see JULIA CODE AND NOTEBOOKS below). The Julia code shown in
+the panels may also be used under the MIT License (see CODE IN THE PANELS
+below).
+
 
 -------------------------------------------------------------------------------
 ADDITIONAL PERMISSION UNDER GNU AGPL VERSION 3 SECTION 7: EXTENSIONS
@@ -37,6 +42,71 @@ source code; these remain under the GNU Affero General Public License.
 
 If you modify Pollis, you may extend this exception to your version, but you
 are not obliged to do so. If you do not wish to do so, delete this exception
+statement from your version.
+
+
+-------------------------------------------------------------------------------
+JULIA CODE AND NOTEBOOKS (MIT LICENSE)
+-------------------------------------------------------------------------------
+
+The following parts of Pollis are licensed under the MIT License below, and
+not under the GNU Affero General Public License:
+
+  - the Julia files (.jl) written for Pollis, each of which says so at its top
+    with the line "SPDX-License-Identifier: MIT";
+  - the notebooks of Pollis (.ipynb files, and Pluto notebooks), in the
+    folders media/notebooks/, src/vs/workbench/contrib/model/browser/media/
+    and src/vs/workbench/contrib/compose/browser/media/.
+
+Julia files that come from elsewhere keep their own licences: the packages in
+extensions/language-julia/scripts/packages/ and
+extensions/language-julia/scripts/packages-old/, each under the licence in its
+folder, and the files of the Julia extension for VS Code (julia-vscode), under
+the MIT License in extensions/language-julia/LICENSE.
+
+MIT License
+
+Copyright (c) 2026 Antonio Saragga Seabra
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+-------------------------------------------------------------------------------
+ADDITIONAL PERMISSION UNDER GNU AGPL VERSION 3 SECTION 7: CODE IN THE PANELS
+-------------------------------------------------------------------------------
+
+The panels of Pollis are defined by the .toml files in
+src/vs/workbench/contrib/model/browser/webviews/, which remain under the GNU
+Affero General Public License.
+
+As an additional permission, the copyright holder of Pollis gives you
+permission to use, copy, modify and distribute the Julia code shown in the
+panels of Pollis, in Example Code and in Next Steps, under the MIT License
+above (JULIA CODE AND NOTEBOOKS), without the conditions of the GNU Affero
+General Public License.
+
+This permission covers that Julia code only. It does not cover the rest of the
+panels: their text, tables, inputs, structure and the way they are put
+together, which remain under the GNU Affero General Public License.
+
+If you modify Pollis, you may extend this permission to your version, but you
+are not obliged to do so. If you do not wish to do so, delete this permission
 statement from your version.
 
 

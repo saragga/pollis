@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Antonio Saragga Seabra
+# SPDX-License-Identifier: MIT
+
 # The Julia side of the step-by-step trace of cross-test D: replays the case that trace.py traced, and at every step
 # compares the convolution's pre-activations that PyTorch had within 1e-4 of zero (a ReLU input on the other side of
 # zero in Julia is a flip) and the weights after the step. Needs what ../crosstest.jl needs, and crosstest.jl itself.

@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Antonio Saragga Seabra
+# SPDX-License-Identifier: MIT
+
 # Table 2 of Zhang, Mykland and Aït-Sahalia (2005) within the noise of the simulation. The article's values come from
 # one run of 25,000 simulated days, these from another, so neither gives the other's digits. Each value is compared as
 # Pollis.compare compares random values: the gap beyond the rounding of the printed value, half a unit of its last

@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Antonio Saragga Seabra
+# SPDX-License-Identifier: MIT
+
 # Pollis: the results of the event studies, computed by EventStudies.jl, for the Event Studies page. Run by the
 # Julia extension in a hidden process (pollisHiddenJulia.ts), in its own environment, ~/.pollis/event-studies/julia/vX.Y,
 # which it makes with EventStudies, from the Pollis registry, and JSON3 the first time, and updates when the

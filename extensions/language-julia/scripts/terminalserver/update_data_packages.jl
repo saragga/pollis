@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Antonio Saragga Seabra
+# SPDX-License-Identifier: MIT
+
 # Pollis: the Update buttons of Check for Data Package Updates... (the Pollis menu on macOS, the Help menu elsewhere)
 # and of the Welcome page do at once what the REPL does at its start (install_pollisdb.jl): update the PollisDatasets, PollisJournals, PollisReferences, PollisRSS, PollisBenchmarks and PollisKnowledge that
 # Pollis installed, when GitHub has a newer commit, and makes the built-in databases again with their data. It also

@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Antonio Saragga Seabra
+# SPDX-License-Identifier: MIT
+
 # Pollis: functions every Pollis Julia session has, the REPL (terminalserver.jl) and the notebook
 # kernel (notebook.jl) alike. Loads no packages until one of them is called.
 module Pollis

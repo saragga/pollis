@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Antonio Saragga Seabra
+# SPDX-License-Identifier: MIT
+
 # The artificial datasets of the cross-tests against Lai et al.'s code: comma-separated, no header, one column per
 # series, as their `utils.py` reads them. Run once with `julia artificial.jl`; the files are kept in `artificial/`.
 

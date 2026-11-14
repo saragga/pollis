@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Antonio Saragga Seabra
+# SPDX-License-Identifier: MIT
+
 module ErrorComponents
 
 using LinearAlgebra, Statistics, Tables

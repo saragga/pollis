@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Antonio Saragga Seabra
+# SPDX-License-Identifier: MIT
+
 # The content list of Pollis: the analytical workflows and the published benchmarks (vignettes come with their
 # packages), with the dates each was added and last updated, the oldest Pollis version that can use it, and its
 # files with their SHA-256. Writes src/vs/workbench/contrib/compose/browser/media/content.toml, the list Pollis ships,

@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Antonio Saragga Seabra
+# SPDX-License-Identifier: MIT
+
 # Pollis: installs DuckDB (Pollis' fork, which uses the DuckDB engine of Pollis), DBInterface, Tables, the
 # PollisDatasets, PollisJournals, PollisReferences, PollisRSS, PollisBenchmarks and PollisKnowledge, keeps them up to date, copies the references of
 # PollisReferences beside those Pollis came with and the feeds of PollisRSS where Pollis reads them, and makes the five

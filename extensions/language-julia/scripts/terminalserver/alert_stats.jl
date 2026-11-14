@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Antonio Saragga Seabra
+# SPDX-License-Identifier: MIT
+
 # Pollis: the statistics of the alerts on statistical conditions (an unusual move, leaving a band, beyond a quantile,
 # a new high or low), computed by OnlineStats.jl. Run by the Julia extension in a hidden process (pollisAlertStats.ts),
 # in its own environment, ~/.pollis/alerts/julia/vX.Y, which it makes with OnlineStats and JSON3 the first time; the

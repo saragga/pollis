@@ -1,3 +1,8 @@
+# Copyright (c) 2026 Antonio Saragga Seabra
+# Translated from the LSTNet code of Lai, Yang and Yoo, Copyright (c) 2019 Guokun Lai, Yiming Yang, Shinjae Yoo,
+# under the MIT License (github.com/laiguokun/LSTNet)
+# SPDX-License-Identifier: MIT
+
 # LSTNet-Skip, translated from Lai et al.'s code (models/LSTNet.py, main.py, Optim.py, utils.py; commit 093c4dc) into
 # Lux. It trains on the GPU that `gpu_device()` finds (CUDA, AMDGPU, Metal or oneAPI, when its package is loaded), with
 # Zygote, or on the CPU, with Enzyme

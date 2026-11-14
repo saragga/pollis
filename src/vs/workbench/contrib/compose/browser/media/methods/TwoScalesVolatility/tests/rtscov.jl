@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Antonio Saragga Seabra
+# SPDX-License-Identifier: MIT
+
 # The two-scales estimator against rTSCov of the R package highfrequency, an independent implementation of equation
 # (64) with J = 1: on days with a known volatility and noise of 5 to 20 basis points, the two agree within 1e-5 of
 # their value. They differ by a few millionths because highfrequency counts the n + 1 prices where the article

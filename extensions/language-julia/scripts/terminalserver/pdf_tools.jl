@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Antonio Saragga Seabra
+# SPDX-License-Identifier: MIT
+
 # Pollis: the Poppler tools of the PDF Viewer, and the path of the sample PDF of PollisDatasets for its Test PDF. Run
 # by the Julia extension in a hidden process (pollisHiddenJulia.ts), in its own environment, ~/.pollis/pdf/julia/vX.Y,
 # which it makes with JSON3, PollisDatasets and Poppler_jll the first time; the user's environments are never touched.

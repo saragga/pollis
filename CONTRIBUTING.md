@@ -78,10 +78,12 @@ verified it. Opening a pull request means you accept the Contributor Licence Agr
 
 ## Contributor Licence Agreement
 
-Pollis is licensed to everyone under the [GNU Affero General Public License v3.0 or
-later](LICENSE.txt). Contributions are accepted under a broader grant, so that the maintainer can also
+Pollis is licensed to everyone under the [GNU Affero General Public License v3.0](LICENSE.txt),
+version 3 only. Contributions are accepted under a broader grant, so that the maintainer can also
 distribute course-specific builds of Pollis to students, and keep the option of offering Pollis under
-other licence terms in the future. You keep the copyright of what you write.
+other licence terms in the future. You keep the copyright of what you write. The Julia code and the
+notebooks of Pollis are distributed under the MIT License instead (see [`LICENSE.txt`](LICENSE.txt)),
+so a contribution of Julia code or of a notebook is distributed under the MIT License too.
 
 By submitting a contribution (code, documentation, or any other material) to Pollis, you agree to the
 following:

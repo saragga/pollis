@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Antonio Saragga Seabra
+# SPDX-License-Identifier: MIT
+
 # Pollis: compiles, at the start of a session, the packages that Julia would otherwise compile the first time they
 # are loaded: after an update of Julia, or of packages outside Pollis. Run by the Julia extension in a hidden process
 # of low priority (pollisPrecompile.ts), with the project and the flags of the REPL, which share its caches. It

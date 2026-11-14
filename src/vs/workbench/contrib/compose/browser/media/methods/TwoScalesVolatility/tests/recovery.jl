@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Antonio Saragga Seabra
+# SPDX-License-Identifier: MIT
+
 # Recovery: days with a known constant volatility of 1% a day and noise of 0 to 20 basis points. The mean two-scales
 # estimate must be within 3 standard errors of what the estimator gives on average, the integrated variance times
 # 1 - K / (n + 1) (its sub-grids leave out ticks at the ends of the day), and within 2% of the integrated variance

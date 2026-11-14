@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------------------------------------
 #  Copyright (c) 2026 Antonio Saragga Seabra
-#  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
+#  SPDX-License-Identifier: MIT
 # ---------------------------------------------------------------------------------------------
 
 # The hidden Julia process of Benchmark Answering Models (Compose > Local AI Models > Benchmark Answering Models...), which the Julia

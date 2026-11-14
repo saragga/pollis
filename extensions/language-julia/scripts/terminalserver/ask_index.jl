@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Antonio Saragga Seabra
+# SPDX-License-Identifier: MIT
+
 # Pollis: makes PollisDocuments, ~/.pollis/documents/PollisDocuments.duckdb, the passages of Pollis' documents that Ask
 # Pollis searches, or the index of a collection of Retrieval-Augmented Generation. Run by the Julia extension in a hidden
 # process of low priority (pollisDocuments.ts), after the documents are compiled, with five arguments, and two more for
