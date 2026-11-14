@@ -3,19 +3,22 @@
  *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { VSBuffer } from '../../../../base/common/buffer.js';
+import { DisposableStore } from '../../../../base/common/lifecycle.js';
 import { basename, joinPath } from '../../../../base/common/resources.js';
 import { URI } from '../../../../base/common/uri.js';
 import { localize } from '../../../../nls.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
+import { INotificationService } from '../../../../platform/notification/common/notification.js';
 import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
-import { ITerminalInstanceService } from '../../terminal/browser/terminal.js';
+import { ITerminalInstance, ITerminalInstanceService } from '../../terminal/browser/terminal.js';
 import { findPollisWorkspace, pollisWorkspaceFolderPath } from '../../pollisWorkspace/browser/pollisWorkspace.contribution.js';
 import { cellAvailable, CLOUD_PREFIX, cloudModels, IAgentCommand, ICellRun, cellRun, LOCAL_PREFIX } from './modelRouting.js';
 import { IInstalledModel } from './modelsInstalledPage.js';
-import { CODING_AGENTS, commandWords, findProgram, terminalEnvironment } from './pollisAgents.js';
+import { CODING_AGENTS, commandWords, findProgram, IAgentLaunchServices, launchAgent, terminalEnvironment } from './pollisAgents.js';
 
 // What the pages of Compose > Orchestration share, where several coding agents work on the same research at once
 // (Many Analysts, in manyAnalystsPage.ts): the command lines that run an agent to the end with no one to answer
@@ -104,6 +107,103 @@ export function freeStudyName(base: string, taken: readonly string[]): string {
 		name = `${base}-${index}`;
 	}
 	return name;
+}
+
+/** A run of an agent of a study, while Pollis runs: its terminal, when it started and ended, and its exit code. */
+export interface IStudyAgentRun {
+	readonly terminal: ITerminalInstance;
+	readonly started: number;
+	ended?: number;
+	exitCode?: number;
+}
+
+/**
+ * The runs of the agents of a page's studies since Pollis started, by study folder and by the agent's folder in it
+ * (`analyst-1`, `proposer-2`, `coder`...), and what to call when one ends, set by the page while it is open.
+ */
+export class StudyRuns {
+	private readonly runs = new Map<string, Map<string, IStudyAgentRun>>();
+	onEnded: (() => void) | undefined;
+
+	get(study: URI, key: string): IStudyAgentRun | undefined {
+		return this.runs.get(study.toString())?.get(key);
+	}
+
+	/** Follows the run of an agent until its terminal closes. */
+	follow(study: URI, key: string, terminal: ITerminalInstance): void {
+		let studyRuns = this.runs.get(study.toString());
+		if (!studyRuns) {
+			studyRuns = new Map();
+			this.runs.set(study.toString(), studyRuns);
+		}
+		const run: IStudyAgentRun = { terminal, started: Date.now() };
+		studyRuns.set(key, run);
+		const store = new DisposableStore();
+		store.add(terminal.onExit(exit => {
+			run.ended = Date.now();
+			run.exitCode = typeof exit === 'number' ? exit : undefined;
+			this.onEnded?.();
+		}));
+		store.add(terminal.onDisposed(() => {
+			run.ended ??= Date.now();
+			store.dispose();
+			this.onEnded?.();
+		}));
+	}
+
+	/**
+	 * An agent's status, as the pages show it: running while its terminal runs; done once `doneFile` is in its folder;
+	 * failed when its run ended without it; ended when it ran before Pollis started and left no `doneFile`; waiting
+	 * before its TASK.md is written.
+	 */
+	async state(fileService: IFileService, study: URI, key: string, label: string, doneFile: string) {
+		const folder = joinPath(study, key);
+		const [started, done] = await Promise.all([fileService.exists(joinPath(folder, 'TASK.md')), fileService.exists(joinPath(folder, doneFile))]);
+		const run = this.get(study, key);
+		const status = run && run.ended === undefined ? 'running'
+			: done ? 'done'
+				: run ? 'failed'
+					: started ? 'ended' : 'waiting';
+		return { key, label, status, started: run?.started, ended: run?.ended, exitCode: run?.exitCode, hasFile: done, hasTerminal: !!run && !run.terminal.isDisposed };
+	}
+}
+
+/** What a page gives startStudyAgent: the agent's folder in the study, its cell, skill and task, and its terminal. */
+export interface IStudyAgentStart {
+	readonly study: URI;
+	/** The agent's folder in the study, such as `analyst-1`. */
+	readonly key: string;
+	readonly cell: { readonly agent: string; readonly model: string; readonly label: string };
+	readonly skill: URI;
+	readonly task: string;
+	/** A folder of the study the agent gets a copy of, as `data/`, when there is one. */
+	readonly data?: URI;
+	readonly terminalName: string;
+	readonly focus: boolean;
+}
+
+/**
+ * Starts an agent of a study in its folder, with the skill as SKILL.md, its task as TASK.md and a copy of the data,
+ * unattended, and follows its run in `runs`; says why in a notification when it cannot start.
+ */
+export async function startStudyAgent(launchServices: IAgentLaunchServices, configurationService: IConfigurationService, notificationService: INotificationService, runs: StudyRuns, start: IStudyAgentStart): Promise<void> {
+	const { fileService } = launchServices;
+	const folder = joinPath(start.study, start.key);
+	await fileService.copy(start.skill, joinPath(folder, 'SKILL.md'), true);
+	await fileService.writeFile(joinPath(folder, 'TASK.md'), VSBuffer.fromString(start.task));
+	if (start.data && await fileService.exists(start.data)) {
+		await fileService.copy(start.data, joinPath(folder, 'data'), true);
+	}
+	const run = unattendedRun(configurationService, start.cell);
+	const prompt = localize('orchestration.prompt', "Read SKILL.md and TASK.md in this folder and follow them, without asking me anything.");
+	const launched = run ? await launchAgent(launchServices, { name: start.terminalName, run, prompt, cwd: folder, focus: start.focus }) : 'missing';
+	if (typeof launched === 'string') {
+		notificationService.error(launched === 'missing'
+			? localize('orchestration.missing', "{0} did not start: it cannot be run on this computer.", start.cell.label)
+			: localize('orchestration.failed', "{0} did not start: {1}", start.cell.label, launched));
+		return;
+	}
+	runs.follow(start.study, start.key, launched);
 }
 
 /**
@@ -238,6 +338,8 @@ export const orchestrationCss = `
 		.status-running { color: var(--vscode-textLink-foreground); }
 		.status-failed, .status-ended { color: var(--vscode-errorForeground); }
 		.links .link + .link { margin-left: 10px; }
+		.bar > button.action:not(:disabled):hover { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
+		.bar > button.action.current:not(:disabled):hover { outline: none; background: var(--vscode-button-hoverBackground); }
 `;
 
 /**

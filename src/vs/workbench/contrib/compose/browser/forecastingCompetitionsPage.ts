@@ -55,14 +55,14 @@ const RESULTS_FILE = 'results.json';
 const FORECASTS_FILE = 'forecasts.csv';
 
 /** A frequency of a competition: its name in PollisCompetitions, its number of series and its horizon. */
-interface IFrequency {
+export interface IFrequency {
 	readonly name: string;
 	readonly series: number;
 	readonly horizon: number;
 }
 
 /** A competition the page holds, with the facts step 1 shows. */
-interface ICompetition {
+export interface ICompetition {
 	readonly id: string;
 	readonly name: string;
 	readonly frequencies: readonly IFrequency[];
@@ -80,7 +80,7 @@ interface ICompetition {
 	readonly wholeNote?: string;
 }
 
-const COMPETITIONS: readonly ICompetition[] = [
+export const COMPETITIONS: readonly ICompetition[] = [
 	{
 		id: 'm1', name: 'M1 (1982)', sampling: true, ranked: false, method: 'forecast',
 		frequencies: [{ name: 'Yearly', series: 181, horizon: 6 }, { name: 'Quarterly', series: 203, horizon: 8 }, { name: 'Monthly', series: 617, horizon: 18 }],

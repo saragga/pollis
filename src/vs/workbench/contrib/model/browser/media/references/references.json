@@ -55343,6 +55343,20 @@
 			]
 		},
 		{
+			"id": "agentForecasting",
+			"title": "Agents' Forecasting Competition",
+			"commands": [
+				"pollis.orchestration.forecastingCompetition"
+			],
+			"keys": [
+				"BG1969a",
+				"MACFH...1982a",
+				"MH2000a",
+				"MSA2018a",
+				"MSA2020a"
+			]
+		},
+		{
 			"id": "agentSkills",
 			"title": "Agent Skills",
 			"commands": [

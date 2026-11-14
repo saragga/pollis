@@ -68,7 +68,7 @@ decides which agent, on which model, does each task, and lets several agents wor
 \cellpath{Compose \gt Orchestration \gt Model Tasks and Routing} & Which agent, on which model, runs each task\\
 \cellpath{Compose \gt Local AI Models} & The models of your own computer, which a task can run on\\
 \cellpath{Compose \gt Orchestration}, the research pages & Several agents on one question: Many Analysts,
-  Specification Curve, Forecasting Competition, Referee Report, Systematic Review (\S\ref{sec:research})\\
+  Specification Curve, Agents' Forecasting Competition, Referee Report, Systematic Review (\S\ref{sec:research})\\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -233,7 +233,7 @@ Many Analysts & Answer the same question on the same data, each on its own; Poll
   spread & Many-analysts studies in psychology, economics and finance\\
 Specification Curve & List the defensible choices in an analysis; Pollis runs every combination and shows the
   estimates in order & Specification curve analysis\\
-Forecasting Competition & Each builds a forecasting model; the models are scored on data none of them saw, then
+Agents' Forecasting Competition & Each builds a forecasting model; the models are scored on data none of them saw, then
   combined & The M forecasting competitions, and the combination of forecasts\\
 Referee Report & Referees in different roles read a draft paper, and an editor merges their reports & Peer review\\
 Systematic Review & Two screen the studies and extract their results, each on its own; you settle where they
@@ -330,7 +330,7 @@ The page has five steps:
 A study is a folder of \file{orchestration/specification-curve} in the Pollis Workspace. No agent runs the curve or
 the test: both cost nothing but time.
 
-\subsection{Forecasting Competition}
+\subsection{Agents' Forecasting Competition}
 Each agent builds a forecasting model for the same series. Pollis keeps the last part of the series from all of
 them, scores every model on it, and then combines the forecasts. This follows the M competitions of forecasting
 methods, and \dcite{BG1969a}{Bates and Granger (1969)} on combining forecasts: a combination often forecasts better
@@ -338,6 +338,24 @@ than each of the models in it. In the M4 competition, \dcite{MSA2018a}{Makridaki
 (2018)} found that 12 of the 17 most accurate methods were combinations of mostly statistical methods, and that none
 of the six pure machine learning methods beat the combination benchmark. In finance and economics, where a forecast is judged by the data that come after it, the page shows
 which approach wins on the series at hand, and by how much.
+
+The page has four steps:
+\begin{enumerate}
+  \item \textbf{Competition.} M1, M3 or M4 of PollisCompetitions.jl, one frequency, and all its series or a sample
+    drawn with a seed. \ui{Prepare the Series} writes into the study's \file{data/series.csv} only the values the
+    competition's forecasters saw; the values held back stay with PollisCompetitions.jl.
+  \item \textbf{Agents.} From 2 to 8, each an agent on a model, as in Many Analysts.
+  \item \textbf{Runs.} Each agent, with the skill forecast-independently and a copy of the series, writes
+    \file{method.jl}, a function \code{forecast(y, h, period)} that returns \code{h} forecasts of a series, checks
+    it on every series with \file{check.jl}, which Pollis writes, and gives its reasons in \file{REPORT.md}.
+  \item \textbf{Scores.} \file{score.jl} runs every method in a new Julia process, on every thread, and scores the
+    forecasts by sMAPE, MASE and OWA, as the organisers did; then the mean and the median of the forecasts of the
+    agents whose methods forecast every series, and the benchmarks on the same series, the eight of M4 or Naive2.
+    On all the series of a frequency of M4, each is also placed among the published entries.
+\end{enumerate}
+The rules of the skill keep each agent in its folder and away from the held-out values; they are instructions, so
+reading each \file{method.jl} is the check. A study is a folder of \file{orchestration/forecasting-competition} in
+the Pollis Workspace.
 
 \subsection{Referee Report}
 Agents in different roles each read a draft paper:
@@ -385,7 +403,8 @@ The studies come from the references database and Literature Radar, which find a
     (\file{pollisAgents.ts}) starts a cell, the part of \file{startAgent} after the tier is found. It also holds what
     the pages share: the step Question and Data, the example's texts, the script helpers of the page and
     \file{JULIA\_TO\_JSON}, the JSON writer of the Julia code they run. Many Analysts is \file{manyAnalystsPage.ts},
-    Specification Curve \file{specificationCurvePage.ts}; the others are greyed out in \file{compose.contribution.ts}
+    Specification Curve \file{specificationCurvePage.ts}, Agents' Forecasting Competition \file{agentForecastingPage.ts};
+    the agents of a study start with \file{startStudyAgent} and are followed by \file{StudyRuns}; the others are greyed out in \file{compose.contribution.ts}
     until each is built.
 \end{itemize}
 

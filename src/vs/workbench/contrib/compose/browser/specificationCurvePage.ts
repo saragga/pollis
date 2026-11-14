@@ -32,12 +32,12 @@ import { SPECIFICATIONCURVE_METADATA } from '../../model/browser/webviews/specif
 import { buildWebviewHtml } from '../../model/browser/webviews/webviewScaffold.js';
 import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
 import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
-import { ITerminalInstance, ITerminalInstanceService, ITerminalService } from '../../terminal/browser/terminal.js';
+import { ITerminalInstanceService, ITerminalService } from '../../terminal/browser/terminal.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { compareCss } from './compareShared.js';
-import { DataKind, EXAMPLE_DATASETS, freeStudyName, IOrchestrationCell, JULIA_TO_JSON, orchestrationCss, orchestrationPageJs, quantile, studiesFolder, studyDataText, studyStepHtml, studyStepText, tomlString, unattendedCells, unattendedRun, validStudyName } from './orchestration.js';
-import { launchAgent, pollisJlPath, skillFile } from './pollisAgents.js';
+import { DataKind, EXAMPLE_DATASETS, freeStudyName, IOrchestrationCell, JULIA_TO_JSON, orchestrationCss, orchestrationPageJs, quantile, studiesFolder, studyDataText, studyStepHtml, studyStepText, startStudyAgent, StudyRuns, tomlString, unattendedCells, validStudyName } from './orchestration.js';
+import { pollisJlPath, skillFile } from './pollisAgents.js';
 
 // Specification Curve, from Compose > Orchestration (compose.contribution.ts), after Simonsohn, Simmons and Nelson
 // (2020): every defensible way of answering a question on the data, each one option of each decision, is run, and
@@ -122,19 +122,8 @@ interface IDecision {
 	readonly options: IOption[];
 }
 
-/** A run of an agent, while its terminal is there. */
-interface IAgentRun {
-	readonly terminal: ITerminalInstance;
-	readonly started: number;
-	ended?: number;
-	exitCode?: number;
-}
-
-/** The runs of every study started since Pollis started, by study folder and by agent: `proposer-1`... and `coder`. */
-const runs = new Map<string, Map<string, IAgentRun>>();
-
-/** Called when a run ends, to draw the page again, while it is open. */
-let onRunEnded: (() => void) | undefined;
+/** The runs of the agents of every study started since Pollis started. */
+const runs = new StudyRuns();
 
 type SpecificationCurveMessage =
 	| { readonly command: 'ready' }
@@ -612,7 +601,7 @@ async function openSpecificationCurvePage(accessor: ServicesAccessor): Promise<v
 	let current: IStudy | undefined;
 	const watcher = disposables.add(new MutableDisposable<DisposableStore>());
 	const refresh = disposables.add(new RunOnceScheduler(() => sendState(), 300));
-	onRunEnded = () => refresh.schedule();
+	runs.onEnded = () => refresh.schedule();
 
 	const watch = (study: IStudy | undefined) => {
 		current = study;
@@ -628,17 +617,7 @@ async function openSpecificationCurvePage(accessor: ServicesAccessor): Promise<v
 		watcher.value = store;
 	};
 
-	/** An agent's status: from its run while its terminal is there, else from the file it writes when it is done. */
-	const agentState = async (study: IStudy, key: string, entry: IAgentEntry, doneFile: string) => {
-		const folder = joinPath(study.folder, key);
-		const [started, done] = await Promise.all([fileService.exists(joinPath(folder, 'TASK.md')), fileService.exists(joinPath(folder, doneFile))]);
-		const run = runs.get(study.folder.toString())?.get(key);
-		const status = run && run.ended === undefined ? 'running'
-			: done ? 'done'
-				: run ? 'failed'
-					: started ? 'ended' : 'waiting';
-		return { key, label: entry.label, status, started: run?.started, ended: run?.ended, exitCode: run?.exitCode, hasFile: done, hasTerminal: !!run && !run.terminal.isDisposed };
-	};
+	const agentState = (study: IStudy, key: string, entry: IAgentEntry, doneFile: string) => runs.state(fileService, study.folder, key, entry.label, doneFile);
 
 	/** The decisions proposed: merged from the proposers' decisions.toml, or those taken from a Many Analysts study. */
 	const proposals = async (study: IStudy): Promise<IDecision[]> => {
@@ -795,42 +774,9 @@ async function openSpecificationCurvePage(accessor: ServicesAccessor): Promise<v
 		return undefined;
 	};
 
-	/** Starts an agent in its folder of the study, with its skill and task, and follows its run. */
-	const startAgent = async (study: IStudy, key: string, entry: IAgentEntry, skill: URI, task: string, focus: boolean, terminalName: string) => {
-		const folder = joinPath(study.folder, key);
-		await fileService.copy(skill, joinPath(folder, 'SKILL.md'), true);
-		await fileService.writeFile(joinPath(folder, 'TASK.md'), VSBuffer.fromString(task));
-		if (study.data === 'file' && await fileService.exists(joinPath(study.folder, 'data'))) {
-			await fileService.copy(joinPath(study.folder, 'data'), joinPath(folder, 'data'), true);
-		}
-		const run = unattendedRun(configurationService, entry);
-		const prompt = localize('specificationCurve.prompt', "Read SKILL.md and TASK.md in this folder and follow them, without asking me anything.");
-		const launched = run ? await launchAgent(launchServices, { name: terminalName, run, prompt, cwd: folder, focus }) : 'missing';
-		if (typeof launched === 'string') {
-			notificationService.error(launched === 'missing'
-				? localize('specificationCurve.missing', "{0} did not start: it cannot be run on this computer.", entry.label)
-				: localize('specificationCurve.failed', "{0} did not start: {1}", entry.label, launched));
-			return;
-		}
-		let studyRuns = runs.get(study.folder.toString());
-		if (!studyRuns) {
-			studyRuns = new Map();
-			runs.set(study.folder.toString(), studyRuns);
-		}
-		const agentRun: IAgentRun = { terminal: launched, started: Date.now() };
-		studyRuns.set(key, agentRun);
-		const runStore = new DisposableStore();
-		runStore.add(launched.onExit(exit => {
-			agentRun.ended = Date.now();
-			agentRun.exitCode = typeof exit === 'number' ? exit : undefined;
-			onRunEnded?.();
-		}));
-		runStore.add(launched.onDisposed(() => {
-			agentRun.ended ??= Date.now();
-			runStore.dispose();
-			onRunEnded?.();
-		}));
-	};
+	/** Starts an agent in its folder of the study, with its skill, its task and a copy of the study's data. */
+	const startAgent = (study: IStudy, key: string, entry: IAgentEntry, skill: URI, task: string, focus: boolean, terminalName: string) =>
+		startStudyAgent(launchServices, configurationService, notificationService, runs, { study: study.folder, key, cell: entry, skill, task, data: study.data === 'file' ? joinPath(study.folder, 'data') : undefined, terminalName, focus });
 
 	/** Writes the study's folder, then starts the agents that propose the choices, or takes those of a Many Analysts study. */
 	const propose = async (inputs: IStudyInputs) => {
@@ -932,7 +878,7 @@ async function openSpecificationCurvePage(accessor: ServicesAccessor): Promise<v
 			return;
 		}
 		if (what === 'terminal') {
-			const run = runs.get(current.folder.toString())?.get(agent);
+			const run = runs.get(current.folder, agent);
 			if (run && !run.terminal.isDisposed) {
 				terminalService.setActiveInstance(run.terminal);
 				await terminalService.revealTerminal(run.terminal);
@@ -944,7 +890,7 @@ async function openSpecificationCurvePage(accessor: ServicesAccessor): Promise<v
 
 	disposables.add(webviewInput.webview.onDidDispose(() => {
 		openPage = undefined;
-		onRunEnded = undefined;
+		runs.onEnded = undefined;
 		disposables.dispose();
 	}));
 	disposables.add(webviewInput.webview.onMessage(async (e: { message: SpecificationCurveMessage }) => {

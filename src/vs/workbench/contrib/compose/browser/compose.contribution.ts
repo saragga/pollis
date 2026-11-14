@@ -30,6 +30,7 @@ import { TRANSLATE_RUST_COMMAND_ID } from './translateRustPage.js';
 import { WEB_ASSEMBLY_COMMAND_ID } from './webAssemblyPage.js';
 import { MANY_ANALYSTS_COMMAND_ID } from './manyAnalystsPage.js';
 import { SPECIFICATION_CURVE_COMMAND_ID } from './specificationCurvePage.js';
+import { AGENT_FORECASTING_COMMAND_ID } from './agentForecastingPage.js';
 import './codingAgentPage.js';
 import './modelRoutingPage.js';
 import './pollisContent.js';
@@ -605,6 +606,15 @@ MenuRegistry.appendMenuItem(OrchestrationMenu, {
 	order: 2,
 });
 
+// Agents' Forecasting Competition: several coding agents each write a forecasting method for the same series of an M
+// competition; Pollis scores every method on the values held back, with the mean and the median of their
+// forecasts, see agentForecastingPage.ts
+MenuRegistry.appendMenuItem(OrchestrationMenu, {
+	group: '1_analyses',
+	command: { id: AGENT_FORECASTING_COMMAND_ID, title: localize('orchestration.forecastingCompetition', "Agents' Forecasting Competition...") },
+	order: 3,
+});
+
 // ==============================================================
 // SUBMENU: Profiling, in four groups: measure (Time a Function, Find Where the Time Goes, Time Sections of Code), diagnose and fix (Find Allocations,
 // Check Type Stability, Speed Up a Function), packages (Compare Package Versions, Load and Compile Time) and languages (Run a Speed Race, Add a Language)
@@ -724,13 +734,11 @@ MenuRegistry.appendMenuItem(CompileGaloreMenu, {
 });
 
 // Not built yet: each item says so.
-// Orchestration: coding agents working together on research. Analyses, after Many Analysts and Specification
-// Curve: Forecasting Competition (each agent builds a forecasting model, scored on data none of them saw, then
-// combined). Papers: Referee Report (referees
+// Orchestration: coding agents working together on research. Papers, after the analyses (Many Analysts,
+// Specification Curve and Agents' Forecasting Competition): Referee Report (referees
 // in different roles read a draft, an editor merges their reports), Systematic Review (two agents screen and
 // extract each study on their own, the differences settled by the user, then a meta-analysis).
 const composeItems = [
-	{ menu: OrchestrationMenu, id: 'pollis.orchestration.forecastingCompetition', title: localize('orchestration.forecastingCompetition', "Forecasting Competition..."), group: '1_analyses', order: 3 },
 	{ menu: OrchestrationMenu, id: 'pollis.orchestration.refereeReport', title: localize('orchestration.refereeReport', "Referee Report..."), group: '2_papers', order: 1 },
 	{ menu: OrchestrationMenu, id: 'pollis.orchestration.systematicReview', title: localize('orchestration.systematicReview', "Systematic Review..."), group: '2_papers', order: 2 },
 ];

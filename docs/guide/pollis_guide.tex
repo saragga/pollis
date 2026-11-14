@@ -2141,6 +2141,15 @@ the Julia REPL and draws the estimates in order, the options of each beneath the
 \ui{Run the Test}, in \ui{Inference Under the Null}, resamples data with the effect taken out, and gives the
 p-values of the curve's median estimate, its share of significant estimates and Stouffer's Z.
 
+\subhead{Agents' Forecasting Competition}
+\ui{Compose > Orchestration > Agents' Forecasting Competition...} gives the same series of M1, M3 or M4 to several coding
+agents, each of which writes its own forecasting method. In \ui{Competition}, choose the competition, a frequency
+and a number of series, or 0 for all of them; \ui{Prepare the Series} writes the values the forecasters saw into the
+study, never the values held back. In \ui{Agents}, choose from 2 to 8 agents; \ui{Start the Agents} starts them
+all at once, and each writes \file{method.jl}, a function \code{forecast(y, h, period)}. \ui{Score the Methods}
+runs every method in the Julia REPL and ranks them by sMAPE, MASE and OWA, beside the mean and the median of the
+agents' forecasts and the competition's benchmarks; on all the series of a frequency of M4, also among the entries.
+
 \begin{caution}{An agent works on your files}
 A coding agent reads and writes files, and runs commands, in its terminal. Read what it proposes, and check
 its results, as you would a colleague's.
@@ -2152,8 +2161,7 @@ its results, as you would a colleague's.
 \end{trouble}
 
 \begin{note}{Not available yet}
-\ui{Forecasting Competition...}, \ui{Referee Report...} and \ui{Systematic Review...} are in
-\ui{Orchestration} but not built yet.
+\ui{Referee Report...} and \ui{Systematic Review...} are in \ui{Orchestration} but not built yet.
 \end{note}
 
 \seealso{Toolboxes, \pg{Toolboxes}.\quad Article Methods, \pg{Article Methods}.\quad Reports, \pg{Reports}.}
