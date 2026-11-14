@@ -1113,12 +1113,11 @@ EventStudies & Event studies: intraday studies of SEC filings and of FOMC releas
 \end{tabularx}}
 
 \subhead{Install one}
-Pollis installs these packages by itself when a panel, a replication or a report needs them.
-PollisCompetitions and EventStudies are in the Pollis registry: add them by name, as the method packages.
-To install one of the other four yourself, give its GitHub address, in the Julia REPL:
+Pollis installs these packages by itself when a panel, a replication or a report needs them. All six are
+in the Pollis registry: to install one yourself, add it by name, as the method packages:
 
 \smallskip
-{\small\texttt{import Pkg; Pkg.add(url = "https://github.com/Trumpingtons/HARE.jl")}}
+{\small\texttt{pkg> add HARE}}
 
 \begin{note}{The datasets' own terms}
 The MIT licence covers PollisDatasets' code. Each dataset keeps the terms of its provider:
@@ -1127,7 +1126,6 @@ The MIT licence covers PollisDatasets' code. Each dataset keeps the terms of its
 
 \begin{trouble}
 \textbf{\texttt{add ThresholdAR}: the package is not found} & Add the Pollis registry first, as above. \\
-\textbf{\texttt{Pkg.add("HARE")}: the package is not found} & These four are in no registry: install with \texttt{Pkg.add(url = ...)}, as above. \\
 \end{trouble}
 
 \seealso{Article Methods, \pg{Article Methods}.\quad Data and Databases, \pg{Data and Databases}.\quad Reports, \pg{Reports}.}

@@ -299,7 +299,8 @@ function titleOf(title: string | ICommandActionTitle): string {
 	return (typeof title === 'string' ? title : title.value).replace(/&&/g, '');
 }
 
-/** Menu bar order: by group, then order, as the menu service sorts them. */
+/** Menu bar order: by group, then order, then title, as the menu service sorts them. */
 function sortMenuItems(items: (IMenuItem | ISubmenuItem)[]): (IMenuItem | ISubmenuItem)[] {
-	return [...items].sort((a, b) => (a.group ?? '').localeCompare(b.group ?? '') || (a.order ?? 0) - (b.order ?? 0));
+	const title = (item: IMenuItem | ISubmenuItem) => titleOf(isIMenuItem(item) ? item.command.title : item.title);
+	return [...items].sort((a, b) => (a.group ?? '').localeCompare(b.group ?? '') || (a.order ?? 0) - (b.order ?? 0) || title(a).localeCompare(title(b)));
 }

@@ -69,7 +69,7 @@ interface IToolboxContribution {
 	readonly title: string;
 	/** Put the panels straight into Extend instead of into a submenu of their own. */
 	readonly inline?: boolean;
-	/** The order among the toolboxes at the end of Extend. */
+	/** Not used for its place in Extend, where the toolboxes are in alphabetical order. */
 	readonly order?: number;
 	/** The submenus of its menu. */
 	readonly submenus?: IToolboxSubmenuContribution[];
@@ -618,7 +618,7 @@ function inMenuOrder<T extends { readonly contribution: IToolboxPanelContributio
 }
 
 /**
- * The default places of a toolbox: its menu at the end of Extend, with every panel in it in the group
+ * The default places of a toolbox: its menu at the end of Extend, among the toolboxes in alphabetical order, with every panel in it in the group
  * and order of the manifest, or every panel straight into Extend when the toolbox is inline.
  */
 function defaultPlacement(loaded: ILoadedToolbox): IToolboxPlacement {
@@ -632,7 +632,8 @@ function defaultPlacement(loaded: ILoadedToolbox): IToolboxPlacement {
 			: { menu: TOOLBOX_MENU, group: contribution.group ?? DEFAULT_PANEL_GROUP, order };
 	});
 	return {
-		menu: toolbox.inline ? undefined : { menu: extend, group: TOOLBOX_END_GROUP, order: toolbox.order ?? 0 },
+		// The toolboxes all have the same order, so that the menu sorts them by title, alphabetically
+		menu: toolbox.inline ? undefined : { menu: extend, group: TOOLBOX_END_GROUP, order: 0 },
 		panels,
 	};
 }
@@ -664,7 +665,7 @@ function placementOf(loaded: ILoadedToolbox, entry: IStoredPlacement | Record<st
 			panels[contribution.id] = defaults.panels[contribution.id];
 		}
 	});
-	return { menu: stored.menu === undefined ? undefined : placeOf(stored.menu, defaults.menu, loaded.toolbox.order ?? 0), panels };
+	return { menu: stored.menu === undefined ? undefined : placeOf(stored.menu, defaults.menu, 0), panels };
 }
 
 function isStoredPlacement(entry: IStoredPlacement | Record<string, string>): entry is IStoredPlacement {
