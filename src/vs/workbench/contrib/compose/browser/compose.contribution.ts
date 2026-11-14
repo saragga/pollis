@@ -765,18 +765,19 @@ for (const item of composeItems) {
 const CollaborationClassroomMenu = new MenuId('menubarCollaborationClassroomMenu');
 const CollaborationGamesMenu = new MenuId('menubarCollaborationGamesMenu');
 
-MenuRegistry.appendMenuItem(CollaborationMenu, {
-	group: '4_groups',
+// Classroom and Simulation Games sit below Collaboration in the Compose menu, on the same session layer
+MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
+	group: '4_compose',
 	submenu: CollaborationClassroomMenu,
 	title: localize('collaboration.classroom', "Classroom"),
-	order: 1,
+	order: 2,
 });
 
-MenuRegistry.appendMenuItem(CollaborationMenu, {
-	group: '4_groups',
+MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
+	group: '4_compose',
 	submenu: CollaborationGamesMenu,
 	title: localize('collaboration.games', "Simulation Games"),
-	order: 2,
+	order: 3,
 });
 
 const collaborationItems = [

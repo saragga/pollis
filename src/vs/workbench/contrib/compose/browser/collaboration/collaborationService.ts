@@ -1672,7 +1672,7 @@ export class CollaborationService extends Disposable implements ICollaborationSe
 			return undefined;
 		}
 		if (!session.isClass || session.role !== 'host') {
-			this.notificationService.info(localize('collaboration.groupsForTutor', "Breakout groups are for the tutor of a class: start one with Compose > Collaboration > Classroom > Start Class Session...."));
+			this.notificationService.info(localize('collaboration.groupsForTutor', "Breakout groups are for the tutor of a class: start one with Compose > Classroom > Start Class Session...."));
 			return undefined;
 		}
 		return session;
