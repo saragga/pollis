@@ -17,6 +17,10 @@ name = "JSON.jl"
 github = "https://github.com/JuliaIO/JSON.jl"
 
 [[packages]]
+name = "StructUtils.jl"
+github = "https://github.com/JuliaServices/StructUtils.jl"
+
+[[packages]]
 name = "Tables.jl"
 github = "https://github.com/JuliaData/Tables.jl"
 
@@ -79,6 +83,9 @@ key = "RM2026a"
 key = "JIOC2026a"
 
 [[references]]
+key = "Qui...2026a"
+
+[[references]]
 key = "Qui2023c"
 
 [[references]]
@@ -121,7 +128,7 @@ detail = "DuckDB turns nested objects and arrays into rows and columns with <cod
 
 [[bullets]]
 text = "Typed Structs"
-detail = "<code>JSON.parsefile</code> reads a nested document into Julia structs you define, checking every field against its type"
+detail = "<code>JSON.parsefile</code> reads a nested document, and <code>StructUtils.make</code> turns it into Julia structs you define, checking every field against its type"
 
 [[bullets]]
 text = "Write"
@@ -262,9 +269,8 @@ println(length(first(tbl)), " rows x ", length(tbl), " columns")
 [[codeBranches]]
 model = "structs"
 code = '''
-using JSON, Tables
+using JSON, StructUtils, Tables
 
-pkgversion(JSON) >= v"1" || error("Typed Structs needs JSON.jl 1.0 or later, and this environment has JSON.jl $(pkgversion(JSON)): `] status --outdated JSON` names the package that holds it back.")
 {{?doc=data.json}} using DuckDB, PollisDatasets  # curated example datasets
 {{?doc=data.json}} # Example file: the air quality readings of Chambers et al. (1983) nested by month, the way an API answers, written to data.json in the working directory unless a data.json is there already. Replace "data.json" with your own file, and the structs with its shape.
 {{?doc=data.json}} con = DBInterface.connect(DuckDB.DB)
@@ -293,7 +299,7 @@ struct Report
 	months::Vector{Month}
 end
 
-report = JSON.parsefile("{{doc}}", Report)  # stops with an error at the first field that does not fit
+report = StructUtils.make(Report, JSON.parsefile("{{doc}}"))  # stops with an error at the first field that does not fit
 println(report.source, ": ", length(report.months), " months, ", sum(m -> length(m.days), report.months), " days")
 tbl = Tables.columntable([(month = m.month, day = d.day, ozone = d.ozone, temp = d.temp) for m in report.months for d in m.days])  # flattened for the Next Steps
 '''

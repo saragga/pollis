@@ -30132,6 +30132,24 @@
 			"open_access": true
 		},
 		{
+			"key": "Qui...2026a",
+			"type": "misc",
+			"title": "StructUtils.jl: Macros to enhance struct definitions and tools to convert between different data representations",
+			"authors": [
+				"Quinn, Jacob"
+			],
+			"author_kind": "persons",
+			"authors_complete": false,
+			"year": 2026,
+			"url": "https://github.com/JuliaServices/StructUtils.jl",
+			"abstract": "StructUtils.jl provides macros to enhance struct definitions and tools to convert between different data representations.",
+			"abstract_source": "github",
+			"source": "manual",
+			"retrieved": "2026-11-13",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "Qui2023a",
 			"type": "misc",
 			"title": "CSV.jl: Utility library for working with CSV and other delimited files",
@@ -55184,6 +55202,7 @@
 			"keys": [
 				"RM2026a",
 				"JIOC2026a",
+				"Qui...2026a",
 				"Qui2023c",
 				"RM2019a",
 				"Bra2017a"

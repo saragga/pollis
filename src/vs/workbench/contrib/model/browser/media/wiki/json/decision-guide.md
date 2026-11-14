@@ -7,12 +7,12 @@
 | A file of records with the same keys, JSON Lines or an array | **Query** | DuckDB reads the records as a table and filters them with SQL |
 | A file of records larger than memory | **Query** | DuckDB reads the file in pieces and keeps only what the query needs |
 | A nested answer to be analysed as a table | **Flatten** | `unnest` turns each array into rows, in one SQL statement |
-| A nested answer whose structure the code works with | **Typed Structs** | JSON.jl reads the document into structs and stops at the first field that does not fit |
+| A nested answer whose structure the code works with | **Typed Structs** | StructUtils.jl builds structs from the document and stops at the first field that does not fit |
 | A table to be saved for a web service or another language | **Write** | JSON Lines or an array of records, as the receiving side expects |
 
 ## Should Nested JSON Be Flattened or Read into Structs?
 
-Flatten the document with DuckDB when the next step is a table: a plot, a regression, a join with other data. Read the document into Julia structs with JSON.jl when the code follows its structure, for example a function that takes one `Month` at a time, or when a document of the wrong shape should be refused at once rather than produce empty columns. The **Typed Structs** tab ends with a flattened table too, so both tabs can feed the same Next Steps.
+Flatten the document with DuckDB when the next step is a table: a plot, a regression, a join with other data. Read the document into Julia structs with JSON.jl and StructUtils.jl when the code follows its structure, for example a function that takes one `Month` at a time, or when a document of the wrong shape should be refused at once rather than produce empty columns. The **Typed Structs** tab ends with a flattened table too, so both tabs can feed the same Next Steps.
 
 ## Which Layout Should a Written JSON File Have?
 

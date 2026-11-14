@@ -4319,6 +4319,7 @@
 			"packages": [
 				"DuckDB.jl",
 				"JSON.jl",
+				"StructUtils.jl",
 				"Tables.jl"
 			]
 		},

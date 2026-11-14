@@ -6,7 +6,7 @@ JSON is defined by IETF RFC 8259 ([Bray (2017)](#ref-Bra2017a)). A JSON text is 
 
 | JSON value | Written as | Julia value (JSON.jl) | DuckDB type |
 |---|---|---|---|
-| Object | `{"name": value, ...}` | `JSON.Object`, or a struct | `STRUCT`, or `JSON` when keys vary |
+| Object | `{"name": value, ...}` | a dictionary, or a struct | `STRUCT`, or `JSON` when keys vary |
 | Array | `[value, ...]` | `Vector`, or a typed vector | a list, such as `BIGINT[]` |
 | String | `"text"` in UTF-8 | `String` | `VARCHAR` |
 | Number | `42`, `-1.5`, `6.02e23` | `Int64` or `Float64` | `BIGINT` or `DOUBLE` |

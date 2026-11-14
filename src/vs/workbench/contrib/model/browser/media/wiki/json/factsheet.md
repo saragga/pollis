@@ -1,13 +1,13 @@
 # JSON Files — Factsheet
 
-**JSON** (JavaScript Object Notation) is a text format for structured data: objects of named values, arrays, strings, numbers, `true`, `false` and `null`, nested to any depth ([Bray (2017)](#ref-Bra2017a)). Web services answer in JSON, and many datasets come as JSON Lines, one record per line. The JSON Files panel reads and writes both from Julia, with DuckDB (through DuckDB.jl) and with JSON.jl.
+**JSON** (JavaScript Object Notation) is a text format for structured data: objects of named values, arrays, strings, numbers, `true`, `false` and `null`, nested to any depth ([Bray (2017)](#ref-Bra2017a)). Web services answer in JSON, and many datasets come as JSON Lines, one record per line. The JSON Files panel reads and writes both from Julia, with DuckDB (through DuckDB.jl), and with JSON.jl and StructUtils.jl.
 
 | Item | JSON Files panel |
 |---|---|
 | **Purpose** | Query, flatten, read into Julia types, and write JSON files |
 | **Input** | A `.json` document, or a `.jsonl` file of records; for writing, any Tables.jl source |
-| **Core packages** | [DuckDB.jl](https://github.com/duckdb/DuckDB.jl), [JSON.jl](https://github.com/JuliaIO/JSON.jl), [Tables.jl](https://github.com/JuliaData/Tables.jl) |
-| **Tabs** | Query (DuckDB), Flatten (DuckDB), Typed Structs (JSON.jl 1.0 or later), Write (DuckDB) |
+| **Core packages** | [DuckDB.jl](https://github.com/duckdb/DuckDB.jl), [JSON.jl](https://github.com/JuliaIO/JSON.jl), [StructUtils.jl](https://github.com/JuliaServices/StructUtils.jl), [Tables.jl](https://github.com/JuliaData/Tables.jl) |
+| **Tabs** | Query (DuckDB), Flatten (DuckDB), Typed Structs (JSON.jl and StructUtils.jl), Write (DuckDB) |
 | **Output** | A named tuple of column vectors; Julia structs; a JSON file |
 | **Key choices** | Records or nested document, SQL or Julia types, layout of the file written |
 
