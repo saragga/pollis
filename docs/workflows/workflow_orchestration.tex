@@ -302,6 +302,34 @@ shown in a figure, and a joint test across all of them. \dcite{STGV2016a}{Steege
 analysis}. Where Many Analysts shows the choices that independent analysts happen to make, the specification curve
 shows all of them, one by one.
 
+The page has five steps:
+\begin{enumerate}
+  \item \textbf{Question and Data.} As in Many Analysts: the study's name, the data, the question and the
+    estimate every specification must give, in one unit.
+  \item \textbf{The Choices.} From 2 to 4 agents, each on its own and with the skill propose-specifications, look
+    at the data and write \file{decisions.toml}: the decisions an analyst faces, the options of each, and a reason
+    for each option. The page merges their lists by id, with the agents that proposed each option. Or the choices
+    come from a Many Analysts study: its analysts' samples, controls and estimators become the options of three
+    decisions, and its question and data are taken with them. The outcome and the standard errors are never
+    decisions, as every specification must give the same estimate in the same unit, each with its own standard
+    error. You untick the options you would not defend; at most 2\,000 specifications.
+  \item \textbf{The Code.} One agent, with the skill write-specification-code, writes \file{specification.jl}:
+    \code{specification\_data(spec)}, a specification's rows as columns, with the outcome \code{y} and the variable
+    \code{d} whose effect is estimated, and \code{estimate(rows, spec)}, its estimate and standard error. It checks
+    them on every specification with \file{curve.jl}, which Pollis writes, until none fails.
+  \item \textbf{The Curve.} \file{curve.jl} runs every specification in a new Julia process, on every thread, into
+    \file{curve.json}; the page draws the estimates in order with their intervals, the grid of options beneath them,
+    the median, the spread and the shares significant on each side, and for each option the median of its
+    specifications.
+  \item \textbf{Inference Under the Null.} For each specification, the effect it estimates is taken out of the
+    outcome; the rows are resampled, within the treated and the untreated, and every specification runs again on
+    each resample. The p-value of each of three statistics, the median estimate, the share significant on the
+    median's side and Stouffer's Z, is the share of resamples at least as extreme as the curve observed. This is
+    Pollis's own procedure for the third step, joint inference.
+\end{enumerate}
+A study is a folder of \file{orchestration/specification-curve} in the Pollis Workspace. No agent runs the curve or
+the test: both cost nothing but time.
+
 \subsection{Forecasting Competition}
 Each agent builds a forecasting model for the same series. Pollis keeps the last part of the series from all of
 them, scores every model on it, and then combines the forecasts. This follows the M competitions of forecasting
@@ -354,8 +382,11 @@ The studies come from the references database and Literature Radar, which find a
   \item \textbf{The page.} \file{modelRoutingPage.ts} draws the table and the tasks, and writes the three settings.
   \item \textbf{The research pages.} They share one runner, \file{orchestration.ts}: the command lines of unattended
     runs, which end by themselves; the cells a page offers; and the folder of its studies. \file{launchAgent}
-    (\file{pollisAgents.ts}) starts a cell, the part of \file{startAgent} after the tier is found. Many Analysts is
-    \file{manyAnalystsPage.ts}; the others are greyed out in \file{compose.contribution.ts} until each is built.
+    (\file{pollisAgents.ts}) starts a cell, the part of \file{startAgent} after the tier is found. It also holds what
+    the pages share: the step Question and Data, the example's texts, the script helpers of the page and
+    \file{JULIA\_TO\_JSON}, the JSON writer of the Julia code they run. Many Analysts is \file{manyAnalystsPage.ts},
+    Specification Curve \file{specificationCurvePage.ts}; the others are greyed out in \file{compose.contribution.ts}
+    until each is built.
 \end{itemize}
 
 \section{Where things are}

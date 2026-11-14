@@ -3,7 +3,7 @@
  *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { joinPath } from '../../../../base/common/resources.js';
+import { basename, joinPath } from '../../../../base/common/resources.js';
 import { URI } from '../../../../base/common/uri.js';
 import { localize } from '../../../../nls.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
@@ -105,3 +105,182 @@ export function freeStudyName(base: string, taken: readonly string[]): string {
 	}
 	return name;
 }
+
+/**
+ * Julia functions that write a value as JSON with no package: `escaped(s)` and `to_json(x)`, for nothing, Bool,
+ * numbers (null when not finite), strings, dictionaries and vectors. A page's Julia code puts them in its own scope.
+ */
+export const JULIA_TO_JSON = String.raw`	escaped(s) = join(c == '"' ? "\\\"" : c == '\\' ? "\\\\" : c < ' ' ? "\\u" * string(UInt16(c), base = 16, pad = 4) : string(c) for c in s)
+	function to_json(x)
+		x === nothing && return "null"
+		x isa Bool && return string(x)
+		x isa Integer && return string(x)
+		x isa Real && return isfinite(x) ? repr(Float64(x)) : "null"
+		x isa AbstractString && return "\"" * escaped(x) * "\""
+		x isa AbstractDict && return "{" * join([to_json(string(k)) * ":" * to_json(v) for (k, v) in x], ",") * "}"
+		x isa AbstractVector && return "[" * join(map(to_json, x), ",") * "]"
+		x isa NamedTuple && return to_json(Dict(string(k) => v for (k, v) in pairs(x)))
+		return to_json(string(x))
+	end`;
+
+/** Where a study's data come from: the example, LaLonde's job training data, or a file of the user's own. */
+export type DataKind = 'example' | 'file';
+
+/** The datasets of PollisDatasets of the example: the NSW experiment and LaLonde's six comparison groups. */
+export const EXAMPLE_DATASETS = ['nsw', 'cps1', 'cps2', 'cps3', 'psid1', 'psid2', 'psid3'];
+
+/** The question of the example, as a page first shows it. */
+export function exampleQuestion(): string {
+	return localize('manyAnalysts.exampleQuestion', "What is the effect of the National Supported Work job training programme on the earnings of the men who took part, in 1978?");
+}
+
+/** The estimate of the example, as a page first shows it. */
+export function exampleEstimate(): string {
+	return localize('manyAnalysts.exampleEstimate', "The average effect of the programme on the earnings of the men who took part (the average treatment effect on the treated), in 1978 dollars, with its standard error and 95% confidence interval.");
+}
+
+/** What the example's data are, as HTML under the choice of data. */
+export function exampleDataHint(): string {
+	return localize('manyAnalysts.exampleHint', "The National Supported Work (NSW) experiment, a job training programme that assigned men at random, with the earnings of its treated and control men ({0}), and six groups of men from two surveys ({1}), which LaLonde (1986) set in place of the experiment's controls to see whether nonexperimental methods find the experiment's effect. Each analyst loads them from PollisDatasets.", '<code>nsw</code>', '<code>cps1</code>&ndash;<code>cps3</code>, <code>psid1</code>&ndash;<code>psid3</code>');
+}
+
+/** The data of a study, as an agent's TASK.md describes them: how to load the example's datasets, or the file of the agent's folder. */
+export function studyDataText(study: { readonly data: DataKind; readonly file: string; readonly description: string }): string {
+	return study.data === 'example'
+		? localize('manyAnalysts.task.exampleData', "The datasets {0} of PollisDatasets: LaLonde's data of the National Supported Work (NSW) experiment, a job training programme, and six nonexperimental comparison groups from the Current Population Survey (CPS) and the Panel Study of Income Dynamics (PSID). Load each with `using PollisDatasets; d = dataset(\"nsw\")`, a table whose columns are `d.treat`, `d.age`..., and read what its columns are with `datasetinfo(\"nsw\")`.", EXAMPLE_DATASETS.map(id => `\`${id}\``).join(', '))
+		: localize('manyAnalysts.task.fileData', "The file `data/{0}` of this folder. {1}", basename(URI.file(study.file)), study.description);
+}
+
+/** A TOML string: JSON's escapes are TOML's. */
+export function tomlString(value: string): string {
+	return JSON.stringify(value);
+}
+
+/** The quantile `p` of sorted numbers, interpolated between the two nearest (type 7 of Hyndman and Fan). */
+export function quantile(sorted: readonly number[], p: number): number {
+	const position = (sorted.length - 1) * p;
+	const below = Math.floor(position);
+	const above = Math.min(below + 1, sorted.length - 1);
+	return sorted[below] + (position - below) * (sorted[above] - sorted[below]);
+}
+
+/** The texts of step 1 of an orchestration page, Question and Data. */
+export function studyStepText() {
+	return {
+		study: localize('manyAnalysts.study', "Study"),
+		studyTooltip: localize('manyAnalysts.studyTooltip', "The name of the study's folder"),
+		earlierNone: localize('manyAnalysts.earlierNone', "Earlier studies..."),
+		newStudy: localize('manyAnalysts.newStudy', "New Study"),
+		studyFolder: localize('manyAnalysts.studyFolder', "Each study is a folder in {0}.", '<span class="yellow" id="root"></span>'),
+		data: localize('manyAnalysts.data', "Data"),
+		example: localize('manyAnalysts.example', "LaLonde's Job Training"),
+		ownFile: localize('manyAnalysts.ownFile', "A File of Your Own"),
+		exampleHint: exampleDataHint(),
+		file: localize('manyAnalysts.file', "File"),
+		choose: localize('manyAnalysts.choose', "Choose..."),
+		description: localize('manyAnalysts.description', "What the Columns Are"),
+		descriptionPlaceholder: localize('manyAnalysts.descriptionPlaceholder', "One line for each column: its name, what it measures and its unit"),
+		fileHint: localize('manyAnalysts.fileHint', "The file is copied into the study's folder, and each agent gets a copy of its own, with what the columns are."),
+		question: localize('manyAnalysts.question', "Question"),
+		questionHint: localize('manyAnalysts.questionHint', "In plain words, as you would ask a colleague."),
+		exampleQuestion: exampleQuestion(),
+		estimate: localize('manyAnalysts.estimate', "Estimate to Report"),
+		estimateHint: localize('manyAnalysts.estimateHint', "What every analysis must report, and its unit: without a common estimate the answers cannot be compared."),
+		exampleEstimate: exampleEstimate(),
+		between: localize('manyAnalysts.between', "{0} to {1}"),
+	};
+}
+
+/** Step 1 of an orchestration page: the study's name and folder, its data, the question and the estimate to report. */
+export function studyStepHtml(text: ReturnType<typeof studyStepText>): string {
+	return `
+		<div class="row">
+			<span class="small" title="${text.studyTooltip}">${text.study}</span> <input type="text" id="name" spellcheck="false">
+			<select id="earlier"><option value="">${text.earlierNone}</option></select>
+			<button class="link" id="newStudy" hidden>${text.newStudy}</button>
+		</div>
+		<p class="small">${text.studyFolder}</p>
+		<div class="row choices"><span class="small">${text.data}</span>
+			<label><input type="radio" name="data" value="example" checked> ${text.example}</label>
+			<label><input type="radio" name="data" value="file"> ${text.ownFile}</label>
+		</div>
+		<p class="hint" id="exampleHint">${text.exampleHint}</p>
+		<div id="fileFields" hidden>
+			<div class="row"><span class="small">${text.file}</span> <input type="text" id="file" spellcheck="false"> <button class="action" id="chooseFile">${text.choose}</button></div>
+			<label class="small field-label" for="description">${text.description}</label>
+			<textarea id="description" class="ma-text" rows="4" placeholder="${text.descriptionPlaceholder}"></textarea>
+			<p class="hint">${text.fileHint}</p>
+		</div>
+		<label class="small field-label" for="question">${text.question}</label>
+		<textarea id="question" class="ma-text" rows="2"></textarea>
+		<p class="hint">${text.questionHint}</p>
+		<label class="small field-label" for="estimate">${text.estimate}</label>
+		<textarea id="estimate" class="ma-text" rows="2"></textarea>
+		<p class="hint">${text.estimateHint}</p>
+`;
+}
+
+/** The styles the orchestration pages share: their fields, the agents' grid, tables, figures and the status of a run. */
+export const orchestrationCss = `
+		input[type=text] { font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-panel-border)); border-radius: 2px; padding: 3px 6px; min-width: 18em; }
+		input[type=text]:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
+		#file { min-width: 32em; }
+		.field-label { display: block; margin: 12px 0 4px 0; }
+		.ma-text { max-width: 900px; }
+		.choices label { margin-right: 16px; }
+		.analysts { display: grid; grid-template-columns: max-content minmax(0, 360px); gap: 6px 12px; align-items: center; margin-top: 8px; }
+		.analysts select { width: 100%; }
+		table.ma { width: auto; max-width: 100%; }
+		table.ma td.choice { max-width: 220px; }
+		.ma-figures { display: flex; flex-wrap: wrap; gap: 8px 32px; margin: 8px 0; }
+		.ma-note { color: var(--vscode-descriptionForeground); max-width: 80ch; }
+		.ma-figure .value { font-size: 18px; font-variant-numeric: tabular-nums; }
+		.status-running { color: var(--vscode-textLink-foreground); }
+		.status-failed, .status-ended { color: var(--vscode-errorForeground); }
+		.links .link + .link { margin-left: 10px; }
+`;
+
+/**
+ * Functions the scripts of the orchestration pages share, which need `TEXT.between`: escapeHtml, format and interval
+ * for numbers, cellKey for an agent and model as an option's value, dataKind and drawData for step 1, and elapsed
+ * for the time of a run.
+ */
+export const orchestrationPageJs = `
+	function escapeHtml(value) {
+		return String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+	}
+	function format(x) {
+		if (typeof x !== 'number' || !isFinite(x)) {
+			return '';
+		}
+		// The digits with a point for decimals, the thousands apart by a narrow no-break space, as a comma is the decimal
+		// separator in many countries, and a minus sign, which a dash between two numbers cannot be taken for
+		const rounded = Math.abs(x) >= 1000 ? Math.round(x) : Number(x.toPrecision(4));
+		const [whole, fraction] = Math.abs(rounded).toLocaleString('en-US', { useGrouping: false, maximumFractionDigits: 6 }).split('.');
+		return (rounded < 0 ? '\\u2212' : '') + whole.replace(/\\B(?=(\\d{3})+(?!\\d))/g, '\\u202F') + (fraction ? '.' + fraction : '');
+	}
+	/** Two numbers as an interval, "a to b": a dash between them would read as a minus sign. */
+	function interval(low, high) {
+		return TEXT.between.replace('{0}', format(low)).replace('{1}', format(high));
+	}
+	/** The key of an agent and model, as the value of an option: a character that HTML keeps in an attribute separates them. */
+	function cellKey(cell) {
+		return encodeURIComponent(cell.agent) + '/' + encodeURIComponent(cell.model);
+	}
+	function dataKind() {
+		const radio = document.querySelector('input[name=data]:checked');
+		return radio ? radio.value : 'example';
+	}
+	function drawData() {
+		const kind = dataKind();
+		document.getElementById('exampleHint').hidden = kind !== 'example';
+		document.getElementById('fileFields').hidden = kind !== 'file';
+	}
+	function elapsed(run) {
+		if (!run.started) {
+			return '';
+		}
+		const seconds = Math.round(((run.ended || Date.now()) - run.started) / 1000);
+		return Math.floor(seconds / 60) + ':' + String(seconds % 60).padStart(2, '0');
+	}
+`;

@@ -56627,6 +56627,25 @@
 			]
 		},
 		{
+			"id": "forecastingCompetitions",
+			"title": "Forecasting Competitions",
+			"commands": [
+				"pollis.competitions.forecastingCompetitions"
+			],
+			"keys": [
+				"MACFH...1982a",
+				"MH2000a",
+				"MSA2020a",
+				"MSA2022a",
+				"MSA2022b",
+				"MSHPS...2025a",
+				"HK2006a",
+				"AN2000a",
+				"HK2008a",
+				"GBWHM2021a"
+			]
+		},
+		{
 			"id": "fred",
 			"title": "Federal Reserve Economic Data",
 			"commands": [
@@ -58638,6 +58657,20 @@
 				"WB2006a",
 				"MS1983a",
 				"Nas2000a"
+			]
+		},
+		{
+			"id": "specificationCurve",
+			"title": "Specification Curve",
+			"commands": [
+				"pollis.orchestration.specificationCurve"
+			],
+			"keys": [
+				"SSN2020a",
+				"STGV2016a",
+				"MDHHJ...2024a",
+				"LaL1986a",
+				"DW1999a"
 			]
 		},
 		{

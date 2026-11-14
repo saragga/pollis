@@ -2129,6 +2129,18 @@ they are done, \ui{Check and Collect} runs each analysis again in the Julia REPL
 estimates in order, their spread, the nonstandard error beside the median standard error, and each analyst's
 choices.
 
+\subhead{Specification Curve}
+\ui{Compose > Orchestration > Specification Curve...} runs every defensible way of answering a question on the
+same data. \ui{Question and Data} is set as in Many Analysts. In \ui{The Choices}, from 2 to 4 agents each list,
+on their own, the decisions an analyst faces and the options of each (\ui{Ask the Agents}); or \ui{Take the
+Study's Choices} takes the samples, controls and estimators of the analysts of a Many Analysts study. Untick the
+options you would not defend: each specification is one option of each decision, up to 2\,000. In \ui{The Code},
+\ui{Write the Code} has one agent write \file{specification.jl}, which gives each specification's rows and its
+estimate, and check it on every specification. \ui{Run Every Specification}, in \ui{The Curve}, runs them all in
+the Julia REPL and draws the estimates in order, the options of each beneath them, and \ui{Which Choices Matter}.
+\ui{Run the Test}, in \ui{Inference Under the Null}, resamples data with the effect taken out, and gives the
+p-values of the curve's median estimate, its share of significant estimates and Stouffer's Z.
+
 \begin{caution}{An agent works on your files}
 A coding agent reads and writes files, and runs commands, in its terminal. Read what it proposes, and check
 its results, as you would a colleague's.
@@ -2140,8 +2152,8 @@ its results, as you would a colleague's.
 \end{trouble}
 
 \begin{note}{Not available yet}
-\ui{Specification Curve...}, \ui{Forecasting Competition...}, \ui{Referee Report...} and \ui{Systematic
-Review...} are in \ui{Orchestration} but not built yet.
+\ui{Forecasting Competition...}, \ui{Referee Report...} and \ui{Systematic Review...} are in
+\ui{Orchestration} but not built yet.
 \end{note}
 
 \seealso{Toolboxes, \pg{Toolboxes}.\quad Article Methods, \pg{Article Methods}.\quad Reports, \pg{Reports}.}

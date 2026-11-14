@@ -1,0 +1,67 @@
+# Specification Curve Webview Configuration
+# A page of Compose > Orchestration in the Time Arrow style of the scaffold, not a panel: only its Powered by and
+# Learn More. `pageCommand` is the command that opens it, which a panel's contribution file would say. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/specificationCurve.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Specification Curve"
+viewType = "pollis.specificationCurve"
+pageCommand = "pollis.orchestration.specificationCurve"
+
+[[packages]]
+name = "PollisDatasets.jl"
+github = "https://github.com/Trumpingtons/PollisDatasets.jl"
+
+[[wikis]]
+name = "Overview"
+file = "specificationCurve/overview.md"
+bundled = true
+description = "What a specification curve is, the five steps of the page, what the agents do and what Pollis computes in Julia"
+
+[[wikis]]
+name = "Factsheet"
+file = "specificationCurve/factsheet.md"
+bundled = true
+description = "Steps, inputs, the files of a study, the functions specification.jl defines, the figures of the curve and the test, and the requirements at a glance"
+
+[[wikis]]
+name = "Choosing the Specifications"
+file = "specificationCurve/choosing-specifications.md"
+bundled = true
+description = "Decisions and options, what makes an option defensible, why the outcome's unit stays fixed, merging the agents' proposals, and taking the choices of a Many Analysts study"
+
+[[wikis]]
+name = "Reading the Curve"
+file = "specificationCurve/reading-curve.md"
+bundled = true
+description = "The sorted estimates, their intervals, the grid of choices under them, and the table of which choices matter"
+
+[[wikis]]
+name = "Inference Under the Null"
+file = "specificationCurve/inference-null.md"
+bundled = true
+description = "The joint test: the effect set to zero, the resampling, the three statistics and their p-values, the number of draws and the seed"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "SSN2020a"
+
+[[references]]
+key = "STGV2016a"
+
+[[references]]
+key = "MDHHJ...2024a"
+
+[[references]]
+separator = true
+label = "The Example"
+
+[[references]]
+key = "LaL1986a"
+
+[[references]]
+key = "DW1999a"

@@ -36,7 +36,7 @@ import { ITerminalInstance, ITerminalInstanceService, ITerminalService } from '.
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { compareCss } from './compareShared.js';
-import { freeStudyName, IOrchestrationCell, studiesFolder, unattendedCells, unattendedRun, validStudyName } from './orchestration.js';
+import { DataKind, EXAMPLE_DATASETS, freeStudyName, IOrchestrationCell, JULIA_TO_JSON, orchestrationCss, orchestrationPageJs, quantile, studiesFolder, studyDataText, studyStepHtml, studyStepText, tomlString, unattendedCells, unattendedRun, validStudyName } from './orchestration.js';
 import { launchAgent, pollisJlPath, skillFile } from './pollisAgents.js';
 
 // Many Analysts, from Compose > Orchestration (compose.contribution.ts): several coding agents get the same question
@@ -59,16 +59,11 @@ const MIN_ANALYSTS = 3;
 const MAX_ANALYSTS = 12;
 const DEFAULT_ANALYSTS = 5;
 
-/** The datasets of PollisDatasets of the example: the NSW experiment and LaLonde's six comparison groups. */
-const EXAMPLE_DATASETS = ['nsw', 'cps1', 'cps2', 'cps3', 'psid1', 'psid2', 'psid3'];
-
 /** The number fields of estimate.toml, which analysis.jl writes. */
 const ESTIMATE_FIELDS = ['estimate', 'std_error', 'ci_low', 'ci_high', 'n'] as const;
 
 /** The kinds of choice of choices.toml, which the analyst writes. */
 const CHOICE_FIELDS = ['sample', 'outcome', 'controls', 'estimator', 'standard_errors'] as const;
-
-type DataKind = 'example' | 'file';
 
 /** What the user sets in steps 1 and 2. */
 interface IStudyInputs {
@@ -142,11 +137,6 @@ function checkedInputs(value: unknown): IStudyInputs | undefined {
 	return { name: name.trim(), question: question.trim(), estimate: estimate.trim(), data, file: file.trim(), description: description.trim(), analysts: analysts.map(analyst => ({ agent: analyst.agent, model: analyst.model })) };
 }
 
-/** A TOML string: JSON's escapes are TOML's. */
-function tomlString(value: string): string {
-	return JSON.stringify(value);
-}
-
 function studyToml(study: IStudy): string {
 	const lines = [
 		'# Many Analysts: a study of Compose > Orchestration in Pollis',
@@ -178,9 +168,6 @@ async function readStudy(fileService: IFileService, folder: URI): Promise<IStudy
 
 /** The study's task, as each analyst reads it in TASK.md. */
 function taskText(study: IStudy, analysts: number): string {
-	const data = study.data === 'example'
-		? localize('manyAnalysts.task.exampleData', "The datasets {0} of PollisDatasets: LaLonde's data of the National Supported Work (NSW) experiment, a job training programme, and six nonexperimental comparison groups from the Current Population Survey (CPS) and the Panel Study of Income Dynamics (PSID). Load each with `using PollisDatasets; d = dataset(\"nsw\")`, a table whose columns are `d.treat`, `d.age`..., and read what its columns are with `datasetinfo(\"nsw\")`.", EXAMPLE_DATASETS.map(id => `\`${id}\``).join(', '))
-		: localize('manyAnalysts.task.fileData', "The file `data/{0}` of this folder. {1}", basename(URI.file(study.file)), study.description);
 	return [
 		localize('manyAnalysts.task.title', "# Your Task"),
 		'',
@@ -196,7 +183,7 @@ function taskText(study: IStudy, analysts: number): string {
 		'',
 		localize('manyAnalysts.task.data', "## The Data"),
 		'',
-		data,
+		studyDataText(study),
 		'',
 		localize('manyAnalysts.task.julia', "## Running Julia"),
 		'',
@@ -260,14 +247,6 @@ function sameEstimate(a: IEstimate, b: IEstimate): boolean {
 	return a.n === b.n && close(a.estimate, b.estimate) && close(a.std_error, b.std_error) && close(a.ci_low, b.ci_low) && close(a.ci_high, b.ci_high);
 }
 
-/** The quantile `p` of sorted numbers, interpolated between the two nearest (type 7 of Hyndman and Fan). */
-function quantile(sorted: readonly number[], p: number): number {
-	const position = (sorted.length - 1) * p;
-	const below = Math.floor(position);
-	const above = Math.min(below + 1, sorted.length - 1);
-	return sorted[below] + (position - below) * (sorted[above] - sorted[below]);
-}
-
 /**
  * The Julia code that runs each analyst's analysis.jl again, in a new Julia process, in an empty folder with only
  * the study's data, and collects into results.json what each analyst reported, what the rerun gave and its choices.
@@ -278,17 +257,7 @@ function collectCode(study: IStudy, analysts: number): string {
 import TOML
 let study = raw"${study.folder.fsPath}", pollis = raw"${pollisJlPath()}", analysts = ${analysts}, copy_data = ${study.data === 'file'}
 	read_toml(file) = isfile(file) ? (try TOML.parsefile(file) catch; nothing end) : nothing
-	escaped(s) = join(c == '"' ? "\\\"" : c == '\\' ? "\\\\" : c < ' ' ? "\\u" * string(UInt16(c), base = 16, pad = 4) : string(c) for c in s)
-	function to_json(x)
-		x === nothing && return "null"
-		x isa Bool && return string(x)
-		x isa Integer && return string(x)
-		x isa Real && return isfinite(x) ? repr(Float64(x)) : "null"
-		x isa AbstractString && return "\"" * escaped(x) * "\""
-		x isa AbstractDict && return "{" * join([to_json(string(k)) * ":" * to_json(v) for (k, v) in x], ",") * "}"
-		x isa AbstractVector && return "[" * join(map(to_json, x), ",") * "]"
-		return to_json(string(x))
-	end
+${JULIA_TO_JSON}
 	results = Dict{String, Any}[]
 	for k in 1:analysts
 		folder = joinpath(study, "analyst-$k")
@@ -634,29 +603,9 @@ async function openManyAnalystsPage(accessor: ServicesAccessor): Promise<void> {
 
 function pageHtml(): string {
 	const text = {
+		...studyStepText(),
 		intro: localize('manyAnalysts.intro', "Many Analysts gives the same question and the same data to several coding agents, each of which answers it on its own, in a folder of its own, as a researcher would. Different teams given the same data reach different answers, through the sample, the controls, the estimator and the standard errors each chooses; Many Analysts shows how far the estimates spread, and which choices move them. The example asks for the effect of a job training programme on earnings, with LaLonde's data."),
 		questionAndData: localize('manyAnalysts.questionAndData', "Question and Data"),
-		study: localize('manyAnalysts.study', "Study"),
-		studyTooltip: localize('manyAnalysts.studyTooltip', "The name of the study's folder"),
-		earlier: localize('manyAnalysts.earlier', "Open a Study"),
-		earlierNone: localize('manyAnalysts.earlierNone', "Earlier studies..."),
-		newStudy: localize('manyAnalysts.newStudy', "New Study"),
-		studyFolder: localize('manyAnalysts.studyFolder', "Each study is a folder in {0}.", '<span class="yellow" id="root"></span>'),
-		data: localize('manyAnalysts.data', "Data"),
-		example: localize('manyAnalysts.example', "LaLonde's Job Training"),
-		ownFile: localize('manyAnalysts.ownFile', "A File of Your Own"),
-		exampleHint: localize('manyAnalysts.exampleHint', "The National Supported Work (NSW) experiment, a job training programme that assigned men at random, with the earnings of its treated and control men ({0}), and six groups of men from two surveys ({1}), which LaLonde (1986) set in place of the experiment's controls to see whether nonexperimental methods find the experiment's effect. Each analyst loads them from PollisDatasets.", '<code>nsw</code>', '<code>cps1</code>&ndash;<code>cps3</code>, <code>psid1</code>&ndash;<code>psid3</code>'),
-		file: localize('manyAnalysts.file', "File"),
-		choose: localize('manyAnalysts.choose', "Choose..."),
-		description: localize('manyAnalysts.description', "What the Columns Are"),
-		descriptionPlaceholder: localize('manyAnalysts.descriptionPlaceholder', "One line for each column: its name, what it measures and its unit"),
-		fileHint: localize('manyAnalysts.fileHint', "The file is copied into the study's folder, and each analyst gets a copy of its own, with what the columns are."),
-		question: localize('manyAnalysts.question', "Question"),
-		questionHint: localize('manyAnalysts.questionHint', "In plain words, as you would ask a colleague."),
-		exampleQuestion: localize('manyAnalysts.exampleQuestion', "What is the effect of the National Supported Work job training programme on the earnings of the men who took part, in 1978?"),
-		estimate: localize('manyAnalysts.estimate', "Estimate to Report"),
-		estimateHint: localize('manyAnalysts.estimateHint', "What every analyst must report, and its unit: without a common estimate the answers cannot be compared."),
-		exampleEstimate: localize('manyAnalysts.exampleEstimate', "The average effect of the programme on the earnings of the men who took part (the average treatment effect on the treated), in 1978 dollars, with its standard error and 95% confidence interval."),
 		analysts: localize('manyAnalysts.analysts', "Analysts"),
 		howMany: localize('manyAnalysts.howMany', "How Many"),
 		analyst: localize('manyAnalysts.analyst', "Analyst {0}"),
@@ -690,7 +639,6 @@ function pageHtml(): string {
 		spread: localize('manyAnalysts.spread', "The Spread"),
 		median: localize('manyAnalysts.median', "Median Estimate"),
 		iqr: localize('manyAnalysts.iqr', "Interquartile Range (Q1 to Q3)"),
-		between: localize('manyAnalysts.between', "{0} to {1}"),
 		range: localize('manyAnalysts.range', "Range"),
 		nse: localize('manyAnalysts.nse', "Nonstandard Error*"),
 		nseNote: localize('manyAnalysts.nseNote', "* The standard deviation of the analysts' estimates: the uncertainty that comes from the analysts' choices, as the standard error measures the uncertainty that comes from the data. The term comes from Menkveld and 342 coauthors (2024), \"Nonstandard Errors\", in the Journal of Finance. They gave 164 research teams the same hypotheses to test on the same data, and found the spread across the teams sizable, and larger than the teams themselves expected."),
@@ -726,20 +674,8 @@ function pageHtml(): string {
 		omitPoweredBy: !MANYANALYSTS_METADATA.manyAnalysts.packages.length,
 		extraCss: `
 		${compareCss}
+		${orchestrationCss}
 		.missing { color: var(--vscode-errorForeground); }
-		input[type=text] { font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-panel-border)); border-radius: 2px; padding: 3px 6px; min-width: 18em; }
-		input[type=text]:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
-		#file { min-width: 32em; }
-		.field-label { display: block; margin: 12px 0 4px 0; }
-		.ma-text { max-width: 900px; }
-		.choices label { margin-right: 16px; }
-		.analysts { display: grid; grid-template-columns: max-content minmax(0, 360px); gap: 6px 12px; align-items: center; margin-top: 8px; }
-		.analysts select { width: 100%; }
-		table.ma { width: auto; max-width: 100%; }
-		table.ma td.choice { max-width: 220px; }
-		.ma-figures { display: flex; flex-wrap: wrap; gap: 8px 32px; margin: 8px 0; }
-		.ma-note { color: var(--vscode-descriptionForeground); max-width: 80ch; }
-		.ma-figure .value { font-size: 18px; font-variant-numeric: tabular-nums; }
 		.ma-plot { max-width: 900px; margin: 8px 0 16px 0; }
 		.ma-plot text { fill: var(--vscode-foreground); font-size: 11px; font-family: var(--vscode-font-family); }
 		.ma-plot .axis { stroke: var(--vscode-widget-border); }
@@ -749,39 +685,12 @@ function pageHtml(): string {
 		.ma-plot .point { fill: var(--vscode-foreground); }
 		.ma-plot .off .interval { stroke: var(--vscode-errorForeground); }
 		.ma-plot .off .point { fill: var(--vscode-errorForeground); }
-		.status-running { color: var(--vscode-textLink-foreground); }
-		.status-failed, .status-ended { color: var(--vscode-errorForeground); }
-		.links .link + .link { margin-left: 10px; }
 `,
 		steps: [
 			{
 				id: 'step-question',
 				title: text.questionAndData,
-				bodyHtml: `
-		<div class="row">
-			<span class="small" title="${text.studyTooltip}">${text.study}</span> <input type="text" id="name" spellcheck="false">
-			<select id="earlier"><option value="">${text.earlierNone}</option></select>
-			<button class="link" id="newStudy" hidden>${text.newStudy}</button>
-		</div>
-		<p class="small">${text.studyFolder}</p>
-		<div class="row choices"><span class="small">${text.data}</span>
-			<label><input type="radio" name="data" value="example" checked> ${text.example}</label>
-			<label><input type="radio" name="data" value="file"> ${text.ownFile}</label>
-		</div>
-		<p class="hint" id="exampleHint">${text.exampleHint}</p>
-		<div id="fileFields" hidden>
-			<div class="row"><span class="small">${text.file}</span> <input type="text" id="file" spellcheck="false"> <button class="action" id="chooseFile">${text.choose}</button></div>
-			<label class="small field-label" for="description">${text.description}</label>
-			<textarea id="description" class="ma-text" rows="4" placeholder="${text.descriptionPlaceholder}"></textarea>
-			<p class="hint">${text.fileHint}</p>
-		</div>
-		<label class="small field-label" for="question">${text.question}</label>
-		<textarea id="question" class="ma-text" rows="2"></textarea>
-		<p class="hint">${text.questionHint}</p>
-		<label class="small field-label" for="estimate">${text.estimate}</label>
-		<textarea id="estimate" class="ma-text" rows="2"></textarea>
-		<p class="hint">${text.estimateHint}</p>
-`,
+				bodyHtml: studyStepHtml(text),
 			},
 			{
 				id: 'step-analysts',
@@ -847,31 +756,7 @@ function pageHtml(): string {
 	let chosen = [];
 	let timer = undefined;
 
-	function escapeHtml(value) {
-		return String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-	}
-	/** Two numbers as an interval, "a to b": a dash between them would read as a minus sign. */
-	function interval(low, high) {
-		return TEXT.between.replace('{0}', format(low)).replace('{1}', format(high));
-	}
-	function format(x) {
-		if (typeof x !== 'number' || !isFinite(x)) {
-			return '';
-		}
-		// The digits with a point for decimals, the thousands apart by a narrow no-break space, as a comma is the decimal
-		// separator in many countries, and a minus sign, which a dash between two numbers cannot be taken for
-		const rounded = Math.abs(x) >= 1000 ? Math.round(x) : Number(x.toPrecision(4));
-		const [whole, fraction] = Math.abs(rounded).toLocaleString('en-US', { useGrouping: false, maximumFractionDigits: 6 }).split('.');
-		return (rounded < 0 ? '\\u2212' : '') + whole.replace(/\\B(?=(\\d{3})+(?!\\d))/g, '\\u202F') + (fraction ? '.' + fraction : '');
-	}
-	/** The key of an agent and model, as the value of an option: a character that HTML keeps in an attribute separates them. */
-	function cellKey(cell) {
-		return encodeURIComponent(cell.agent) + '/' + encodeURIComponent(cell.model);
-	}
-	function dataKind() {
-		const radio = document.querySelector('input[name=data]:checked');
-		return radio ? radio.value : 'example';
-	}
+${orchestrationPageJs}
 	function locked() {
 		return !!(state && state.study);
 	}
@@ -913,11 +798,6 @@ function pageHtml(): string {
 		warning.hidden = !repeated || locked();
 		warning.textContent = TEXT.repeated.replace('{0}', repeated);
 	}
-	function drawData() {
-		const kind = dataKind();
-		document.getElementById('exampleHint').hidden = kind !== 'example';
-		document.getElementById('fileFields').hidden = kind !== 'file';
-	}
 
 	function inputs() {
 		const n = Number(count.value);
@@ -925,13 +805,6 @@ function pageHtml(): string {
 		return { name: nameInput.value.trim() || nameInput.placeholder, question: question.value, estimate: estimate.value, data: dataKind(), file: fileInput.value, description: description.value, analysts };
 	}
 
-	function elapsed(run) {
-		if (!run.started) {
-			return '';
-		}
-		const seconds = Math.round(((run.ended || Date.now()) - run.started) / 1000);
-		return Math.floor(seconds / 60) + ':' + String(seconds % 60).padStart(2, '0');
-	}
 	function link(label, analyst, what) {
 		return '<button class="link" data-analyst="' + analyst + '" data-what="' + what + '">' + escapeHtml(label) + '</button>';
 	}
