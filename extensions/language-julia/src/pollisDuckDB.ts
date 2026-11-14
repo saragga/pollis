@@ -78,7 +78,7 @@ async function install(appRoot: string) {
         return
     }
     const version: string = JSON.parse(await fs.promises.readFile(path.join(folder, 'package.json'), 'utf8')).version
-    // Where DuckDB installs its extensions: the version of the engine (1.5.6 of @duckdb/node-api 1.5.6-r.1) and the platform.
+    // Where DuckDB installs its extensions: the version of the engine (2.0.0 of @duckdb/node-api 2.0.0-r.1) and the platform.
     const platform = DUCKDB_PLATFORMS[`${process.platform}-${process.arch}`]
     const installedFolder = platform && path.join(os.homedir(), '.duckdb', 'extensions', `v${version.replace(/-.*$/, '')}`, platform)
     // The extensions that come with Pollis: fts, full-text search, and quack, which serves the Shared Session's database,

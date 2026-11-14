@@ -16,9 +16,9 @@ import * as os from 'os'
 import * as path from 'path'
 
 /** The version of the DuckDB of Pollis (@duckdb/node-api and DuckDB.jl), whose documentation is read. */
-const VERSION = '1.5'
+const VERSION = '2.0'
 /** The commit of duckdb/duckdb-web the pages are read at. */
-const COMMIT = '17c0a8806a70d47539b61ff01c28a9a34f54829d'
+const COMMIT = 'b421c300096722cf2be64d37a35cc5520a3ceb75'
 /** The collection of the DuckDB Manual, as Ask Pollis names it (askPollisMain.ts, askPollisWebview.ts). */
 const COLLECTION = 'DuckDB Manual'
 /** Where the pages are kept, as ask_index.jl finds them: their paths there are their addresses on duckdb.org. */

@@ -1216,14 +1216,14 @@ SOFTWARE.
 
 ---------------------------------------------------------
 
-DuckDB 1.5.6 - MIT
+DuckDB 2.0.0 - MIT
 https://github.com/duckdb/duckdb
 
 Pollis ships the official libduckdb library. DuckDB includes third-party
 libraries under their own licenses (MIT, BSD, Apache-2.0 and others), listed
 with their license texts in the third_party folder of its source.
 
-Copyright 2018-2025 Stichting DuckDB Foundation
+Copyright 2018-2026 Stichting DuckDB Foundation
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -1245,10 +1245,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ---------------------------------------------------------
 
-@duckdb/node-api 1.5.6-r.1 - MIT
+@duckdb/node-api 2.0.0-r.1 - MIT
 https://github.com/duckdb/duckdb-node-neo
 
-Together with @duckdb/node-bindings 1.5.6-r.1, which provides duckdb.node and
+Together with @duckdb/node-bindings 2.0.0-r.1, which provides duckdb.node and
 the libduckdb library above.
 
 Copyright 2018-2025 Stichting DuckDB Foundation
@@ -1304,7 +1304,7 @@ SOFTWARE.
 
 ---------------------------------------------------------
 
-DuckDB.jl 1.5.5 - MIT
+DuckDB.jl 2.0.0 - MIT
 https://github.com/Trumpingtons/DuckDB.jl
 
 Pollis installs this fork of duckdb/DuckDB.jl
@@ -1970,11 +1970,11 @@ from p2p-live-share, which is licensed under the MIT License:
 
 ---------------------------------------------------------
 
-duckdb/duckdb-fts 6814ec9 - MIT
+duckdb/duckdb-fts 2266e67 - MIT
 https://github.com/duckdb/duckdb-fts
 
 Pollis ships the fts extension for DuckDB, full-text search, built by DuckDB
-for DuckDB 1.5.6 from commit 6814ec9 of duckdb-fts. It includes the Snowball
+for DuckDB 2.0.0 from commit 2266e67 of duckdb-fts. It includes the Snowball
 stemmers (libstemmer, BSD-3-Clause, Copyright Martin Porter and Richard Boulton).
 
 Copyright 2018-2025 Stichting DuckDB Foundation
@@ -1999,11 +1999,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ---------------------------------------------------------
 
-duckdb/duckdb-quack 7e80f7f - MIT
+duckdb/duckdb-quack f96420e - MIT
 https://github.com/duckdb/duckdb-quack
 
 Pollis ships the quack extension for DuckDB, its client and server, built by
-DuckDB for DuckDB 1.5.6 from commit 7e80f7f of duckdb-quack. Pollis uses it to
+DuckDB for DuckDB 2.0.0 from commit f96420e of duckdb-quack. Pollis uses it to
 serve the database of the Shared Session to its DuckDB terminal and notebooks,
 on this computer only.
 
@@ -2029,12 +2029,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ---------------------------------------------------------
 
-duckdb/duckdb-httpfs 4bc690d - MIT
+duckdb/duckdb-httpfs 77392a7 - MIT
 https://github.com/duckdb/duckdb-httpfs
 
 Pollis ships the httpfs extension for DuckDB, on which quack runs, built by
-DuckDB for DuckDB 1.5.6 from commit 4bc690d of duckdb-httpfs. It includes
-OpenSSL 3.6.0 and libcurl 8.17.0, whose notices follow.
+DuckDB for DuckDB 2.0.0 from commit 77392a7 of duckdb-httpfs. It includes
+OpenSSL 3.6.0 and libcurl 8.21.0, whose notices follow.
 
 Copyright 2018-2025 Stichting DuckDB Foundation
 
@@ -2248,14 +2248,14 @@ All rights reserved.
 
 ---------------------------------------------------------
 
-curl 8.17.0 - curl
+curl 8.21.0 - curl
 https://github.com/curl/curl
 
 libcurl, included in the httpfs extension for DuckDB.
 
 COPYRIGHT AND PERMISSION NOTICE
 
-Copyright (c) 1996 - 2025, Daniel Stenberg, <daniel@haxx.se>, and many
+Copyright (c) 1996 - 2026, Daniel Stenberg, <daniel@haxx.se>, and many
 contributors, see the THANKS file.
 
 All rights reserved.

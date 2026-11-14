@@ -778,8 +778,8 @@ registerHelpLink({
 	mnemonicTitle: localize({ key: 'miDuckDBDocumentation', comment: ['&& denotes a mnemonic'] }, "&&DuckDB Database"),
 	menu: MenubarHelpDocumentationMenu,
 	order: 1.5,
-	// The documentation of the DuckDB that Pollis carries (@duckdb/node-api 1.5)
-	url: 'https://duckdb.org/docs/1.5/'
+	// The documentation of the DuckDB that Pollis carries (@duckdb/node-api 2.0)
+	url: 'https://duckdb.org/docs/2.0/'
 });
 
 registerHelpLink({
