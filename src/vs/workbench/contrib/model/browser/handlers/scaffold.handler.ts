@@ -34,6 +34,16 @@ import { localize } from '../../../../../nls.js';
 import { IStorageService } from '../../../../../platform/storage/common/storage.js';
 import { handlePanelAskMessage, PanelAskMessage } from '../../../compose/browser/askPollisAttach.js';
 import { getVoiceLanguage, getVoiceWriteIn, setVoiceLanguage, setVoiceWriteIn } from '../../../compose/browser/composerVoice.js';
+import { IFileDialogService } from '../../../../../platform/dialogs/common/dialogs.js';
+import { joinPath } from '../../../../../base/common/resources.js';
+import { URI } from '../../../../../base/common/uri.js';
+import { findPollisWorkspace, PollisWorkspaceFolder, pollisWorkspaceFolderPath } from '../../../pollisWorkspace/browser/pollisWorkspace.contribution.js';
+
+/** The folder a path written in a folder input names: `~` is the home folder, as Julia's expanduser reads it. */
+export function folderUri(path: string, home: URI): URI {
+	const value = path.trim();
+	return !value || value === '~' ? home : value.startsWith('~/') ? joinPath(home, value.slice(2)) : URI.file(value);
+}
 
 /** Messages a scaffold panel sends that are not handled by the shared wirings of model.handler.ts. */
 type ScaffoldWebviewMessage =
@@ -45,6 +55,7 @@ type ScaffoldWebviewMessage =
 	| { command: 'installPackages' }
 	| { command: 'addAlert'; symbol: string; kind: 'quote' | 'filings' | 'fred' | 'ecb' | 'imf' | 'worldBank' }
 	| { command: 'chooseModelFile'; input: string; kind: 'chat' | 'embedding'; value: string }
+	| { command: 'chooseFolder'; input: string; value: string }
 	| { command: 'setApiKey' }
 	| { command: 'clearApiKey' }
 	| PanelAskMessage
@@ -104,6 +115,7 @@ export function registerScaffoldWebviewHandlers(
 	secretStorageService: ISecretStorageService,
 	webviewService: IWebviewService,
 	storageService: IStorageService,
+	fileDialogService: IFileDialogService,
 	apiKeyProvider: IApiKeyProvider | undefined,
 ): DisposableStore {
 	const disposables = new DisposableStore();
@@ -123,6 +135,19 @@ export function registerScaffoldWebviewHandlers(
 	createCustomCopyWiring(webviewInput.webview, disposables, data.wikis, data.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, panelId, data.references, fileService, pathService, commandService, notificationService);
 	createVideoWiring(webviewInput.webview, disposables, panelId, data.packages, fileService, pathService, commandService, notificationService);
+	// The folder inputs' defaults in the open Pollis Workspace, as programs/executables; without one, the TOML's default
+	const postFolderDefaults = async (): Promise<void> => {
+		const folderInputs = (data.inputs ?? []).filter(input => input.folder);
+		const workspace = folderInputs.length ? await findPollisWorkspace(workspaceContextService, fileService) : undefined;
+		if (!workspace) {
+			return;
+		}
+		for (const input of folderInputs) {
+			const [kind, ...rest] = input.folder!.split('/');
+			const folder = joinPath(await pollisWorkspaceFolderPath(fileService, workspace, kind as PollisWorkspaceFolder), ...rest);
+			webviewInput.webview.postMessage({ command: 'setInputDefault', input: input.id, value: folder.fsPath });
+		}
+	};
 	const apiKey = apiKeyProvider ? createApiKeyWiring(webviewInput.webview, apiKeyProvider, secretStorageService, quickInputService, webviewService) : undefined;
 
 	setTimeout(() => {
@@ -135,6 +160,7 @@ export function registerScaffoldWebviewHandlers(
 		webviewInput.webview.postMessage({ command: 'voiceWriteIn', value: getVoiceWriteIn(storageService) });
 		void pkgStatus.postStatus();
 		void apiKey?.postStatus();
+		void postFolderDefaults();
 	}, 0);
 
 	disposables.add(webviewInput.webview.onDidDispose(() => disposables.dispose()));
@@ -206,6 +232,22 @@ export function registerScaffoldWebviewHandlers(
 				}
 				if (value) {
 					webviewInput.webview.postMessage({ command: 'setInputValue', input: msg.input, value });
+				}
+				break;
+			}
+			case 'chooseFolder': {
+				// Opened at the folder of the input when it exists, otherwise at the home folder
+				const home = await pathService.userHome({ preferLocal: true });
+				const current = folderUri(msg.value, home);
+				const picked = await fileDialogService.showOpenDialog({
+					title: localize('scaffold.chooseFolder', "Choose the Folder"),
+					canSelectFiles: false,
+					canSelectFolders: true,
+					canSelectMany: false,
+					defaultUri: await fileService.exists(current) ? current : home,
+				});
+				if (picked?.[0]) {
+					webviewInput.webview.postMessage({ command: 'setInputValue', input: msg.input, value: picked[0].fsPath });
 				}
 				break;
 			}

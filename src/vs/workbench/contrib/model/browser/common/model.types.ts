@@ -209,6 +209,12 @@ export interface IModelInput {
 	 * or embedding models on this computer and on Hugging Face. Its value is a path or `hf:owner/repo/file.gguf`.
 	 */
 	readonly modelFile?: 'chat' | 'embedding';
+	/**
+	 * A text input for a folder, with Choose... beside it, which opens the folder picker. When a Pollis Workspace is
+	 * open, its default is this path in the workspace, whose first part is the kind of folder, as `programs/executables`;
+	 * otherwise it is `default`. The code reads it as `expanduser(raw"{{id}}")`.
+	 */
+	readonly folder?: string;
 }
 
 /**

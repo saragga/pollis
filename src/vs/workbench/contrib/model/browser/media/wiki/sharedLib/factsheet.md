@@ -31,18 +31,19 @@ The C compiler (`cc`, `gcc` or `clang`) builds the calling program in every tab:
 | **Iterations** | 256 | The most iterations of a pixel; a pixel that has not escaped counts as inside |
 | **Real Part of c** | -0.8 | The real part of c, for the Julia set only |
 | **Imaginary Part of c** | 0.156 | The imaginary part of c, for the Julia set only |
+| **Folder** | `programs/shared_libraries` of the open Pollis Workspace, else `~/.pollis/programs/shared_libraries` | Where the libraries and their calling programs are built, in a folder for each tool; **Choose...** picks another |
 
 The inputs reach the library as arguments of the calling program, so changing them needs no new build.
 
 ## Files Written by Compile Julia to a Shared Library
 
-| Tab | Folder in `~/.pollis/sharedlib` | Files |
+| Tab | Folder in **Folder** | Files |
 |---|---|---|
-| **JuliaC** | `juliac/<hash>` | `fractal.jl`, `Project.toml`, `libfractal.<ext>`, `caller.c`, `caller`, `counts.bin` |
-| **PackageCompiler** | `packagecompiler/<hash>` | `Fractal/` (the package), `build/` (the library in `lib`, or `bin` on Windows, beside the Julia runtime), `caller.c`, `caller`, `counts.bin` |
-| **StaticCompiler** | `staticcompiler/<hash>` | `fractal.jl`, `libfractal.<ext>`, `caller.c`, `caller`, `counts.bin` |
+| **JuliaC** | `juliac` | `fractal.jl`, `Project.toml`, `libfractal.<ext>`, `caller.c`, `caller`, `counts.bin` |
+| **PackageCompiler** | `packagecompiler` | `Fractal/` (the package), `build/` (the library in `lib`, or `bin` on Windows, beside the Julia runtime), `caller.c`, `caller`, `counts.bin` |
+| **StaticCompiler** | `staticcompiler` | `fractal.jl`, `libfractal.<ext>`, `caller.c`, `caller`, `counts.bin` |
 
-`<hash>` changes with the Julia source, the C program and the Julia version, so a library is rebuilt only when one of them changes.
+Each folder also holds `built_from.txt`, the Julia version, the Julia source and the C program the library was built from: the library and its calling program are built again only when one of them changes.
 
 ## Names Set by the Code of Compile Julia to a Shared Library
 

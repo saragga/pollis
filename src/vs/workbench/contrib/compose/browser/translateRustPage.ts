@@ -15,20 +15,24 @@ import { tokenizeToString } from '../../../../editor/common/languages/textToHtml
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
+import { IFileDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { IInstantiationService, ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { INotificationService } from '../../../../platform/notification/common/notification.js';
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { IStorageService } from '../../../../platform/storage/common/storage.js';
 import { IThemeService } from '../../../../platform/theme/common/themeService.js';
+import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { sendToJuliaRepl } from '../../model/browser/handlers/model.handler.js';
+import { folderUri } from '../../model/browser/handlers/scaffold.handler.js';
 import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
 import { TRANSLATERUST_METADATA } from '../../model/browser/webviews/translateRust.data.js';
 import { buildWebviewHtml, colorizeBracketsJs } from '../../model/browser/webviews/webviewScaffold.js';
 import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
 import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
+import { findPollisWorkspace, pollisWorkspaceFolderPath } from '../../pollisWorkspace/browser/pollisWorkspace.contribution.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { compareCss } from './compareShared.js';
@@ -88,8 +92,19 @@ function fractal_counts(x0, y0, spacing, height, width, julia_set, c, maxiter)
 end`;
 }
 
-/** The crate of the example, which step 2 shows and Build writes to ~/.pollis/rust/fractal. */
-const CRATE_FOLDER = ['.pollis', 'rust', 'fractal'];
+/**
+ * The folder of Build by default: programs/rust of the open Pollis Workspace, otherwise ~/.pollis/programs/rust. The
+ * example's crate goes in its folder fractal, and Translate with Agent saves the example there for the agent.
+ */
+async function defaultFolder(contextService: IWorkspaceContextService, fileService: IFileService, pathService: IPathService): Promise<URI> {
+	const workspace = await findPollisWorkspace(contextService, fileService);
+	return workspace
+		? joinPath(await pollisWorkspaceFolderPath(fileService, workspace, 'programs'), 'rust')
+		: joinPath(await pathService.userHome({ preferLocal: true }), '.pollis', 'programs', 'rust');
+}
+
+/** The crate of the example, which step 2 shows and Build writes to the folder fractal of the folder of Build. */
+const CRATE_NAME = 'fractal';
 const CARGO_TOML = `[package]
 name = "fractal"
 version = "0.1.0"
@@ -144,11 +159,12 @@ pub unsafe extern "C" fn fill_counts(counts: *mut i32, height: i64, width: i64, 
 }
 `;
 
-/** The Julia function that calls the example's crate, with the arguments and the result of fractal_counts. */
-const EXAMPLE_WRAPPER = `using Libdl
+/** The Julia function that calls the example's crate, in `folder`, with the arguments and the result of fractal_counts. */
+function exampleWrapper(folder: string): string {
+	return `using Libdl
 
 # The library cargo built, as the system names it: libfractal.dylib on macOS, libfractal.so on Linux, fractal.dll on Windows
-const fractal_library = joinpath(homedir(), ".pollis", "rust", "fractal", "target", "release", (Sys.iswindows() ? "" : "lib") * "fractal." * Libdl.dlext)
+const fractal_library = joinpath(expanduser(raw"${folder}"), "${CRATE_NAME}", "target", "release", (Sys.iswindows() ? "" : "lib") * "fractal." * Libdl.dlext)
 
 # The same arguments and the same result as fractal_counts: Julia allocates the matrix and passes its pointer, which
 # @ccall keeps valid during the call; c crosses as its real and imaginary parts, julia_set as a 32-bit integer
@@ -159,9 +175,7 @@ function fractal_counts_rust(x0, y0, spacing, height, width, julia_set, c, maxit
 		maxiter::Int32)::Cvoid
 	return counts
 end`;
-
-/** Where Translate with Agent saves the example, for the agent to read, in ~/.pollis. */
-const EXAMPLE_FOLDER = ['.pollis', 'rust'];
+}
 
 /** The code boxes of the page, by the id of their element, with the language that colours each. */
 type CodeBox = 'defineCode' | 'cargoCode' | 'rustCode' | 'wrapperCode' | 'buildCode' | 'compareCode';
@@ -178,27 +192,34 @@ interface ITranslateRustInputs {
 	readonly function: string;
 	readonly arguments: string;
 	readonly rust: string;
+	/** The folder of Build, for the example's crate. */
+	readonly folder: string;
 }
 
 type TranslateRustMessage =
 	| { readonly command: 'ready' }
 	| { readonly command: 'draft'; readonly inputs: ITranslateRustInputs }
 	| { readonly command: 'run'; readonly box: RunBox; readonly inputs: ITranslateRustInputs }
-	| { readonly command: 'agent'; readonly inputs: ITranslateRustInputs };
+	| { readonly command: 'agent'; readonly inputs: ITranslateRustInputs }
+	| { readonly command: 'chooseFolder'; readonly value: string };
 
-/** The inputs trimmed, with their checks: the names must be names, different, and the arguments fit on one line. */
-function checked(inputs: ITranslateRustInputs): { readonly example: Example; readonly fn: string; readonly args: string; readonly rust: string; readonly valid: boolean; readonly rustValid: boolean; readonly isExample: boolean } {
+/**
+ * The inputs trimmed, with their checks: the names must be names, different, and the arguments fit on one line; the
+ * folder, which the Julia code writes as a raw string, must have no quotation mark and fit on one line.
+ */
+function checked(inputs: ITranslateRustInputs): { readonly example: Example; readonly fn: string; readonly args: string; readonly rust: string; readonly folder: string; readonly valid: boolean; readonly rustValid: boolean; readonly folderValid: boolean; readonly isExample: boolean } {
 	const fn = inputs.function.trim();
 	const args = inputs.arguments.trim();
 	const rust = inputs.rust.trim();
+	const folder = (inputs.folder ?? '').trim();
 	const example = inputs.example === 'julia' ? 'julia' : 'mandelbrot';
 	const valid = isFunctionName(fn) && !/[\r\n]/.test(args);
-	return { example, fn, args, rust, valid, rustValid: valid && isFunctionName(rust) && rust !== fn, isExample: fn === EXAMPLE_FUNCTION && rust === EXAMPLE_RUST };
+	return { example, fn, args, rust, folder, valid, rustValid: valid && isFunctionName(rust) && rust !== fn, folderValid: !!folder && !/["\r\n]/.test(folder), isExample: fn === EXAMPLE_FUNCTION && rust === EXAMPLE_RUST };
 }
 
 /** The code of each box, for the inputs. */
 function boxCode(box: CodeBox, inputs: ITranslateRustInputs): string {
-	const { example, fn, args, rust, isExample } = checked(inputs);
+	const { example, fn, args, rust, folder, isExample } = checked(inputs);
 	const call = `${fn}(${args})`;
 	switch (box) {
 		case 'defineCode':
@@ -210,11 +231,11 @@ function boxCode(box: CodeBox, inputs: ITranslateRustInputs): string {
 		case 'rustCode':
 			return isExample ? LIB_RS : '';
 		case 'wrapperCode':
-			return isExample ? EXAMPLE_WRAPPER : '';
+			return isExample ? exampleWrapper(folder) : '';
 		case 'buildCode':
 			return isExample ? [
-				'# The crate of step 2, which Pollis has written to ~/.pollis/rust/fractal: Cargo.toml and src/lib.rs',
-				'crate = joinpath(homedir(), ".pollis", "rust", "fractal")',
+				'# The crate of step 2, which Pollis has written to the folder fractal of the folder above: Cargo.toml and src/lib.rs',
+				`crate = joinpath(expanduser(raw"${folder}"), "${CRATE_NAME}")`,
 				'',
 				'# cargo, from the path, else where rustup installs it',
 				'cargo = something(Sys.which("cargo"), joinpath(homedir(), ".cargo", "bin", Sys.iswindows() ? "cargo.exe" : "cargo"))',
@@ -224,7 +245,7 @@ function boxCode(box: CodeBox, inputs: ITranslateRustInputs): string {
 				'# when opened: after a change to src/lib.rs, start a new Julia session to call the new build',
 				'run(Cmd(`$cargo build --release`, dir = crate))',
 				'',
-				EXAMPLE_WRAPPER,
+				exampleWrapper(folder),
 			].join('\n') : `include("${rust}.jl")  # the Julia function the agent wrote beside ${fn}'s file, which builds its crate when the library is missing; its path from the folder of the Julia REPL`;
 		case 'compareCode':
 			return compareCode(fn, args, rust);
@@ -247,6 +268,8 @@ async function openTranslateRustPage(accessor: ServicesAccessor): Promise<void> 
 	const storageService = accessor.get(IStorageService);
 	const languageService = accessor.get(ILanguageService);
 	const themeService = accessor.get(IThemeService);
+	const contextService = accessor.get(IWorkspaceContextService);
+	const fileDialogService = accessor.get(IFileDialogService);
 
 	if (openPage && !openPage.isDisposed()) {
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
@@ -308,18 +331,19 @@ async function openTranslateRustPage(accessor: ServicesAccessor): Promise<void> 
 	disposables.add(webviewInput.webview.onMessage(async (e: { message: TranslateRustMessage }) => {
 		const message = e.message;
 		if (message.command === 'ready') {
-			post({ command: 'state', inputs: { example: 'mandelbrot', function: EXAMPLE_FUNCTION, arguments: EXAMPLE_ARGUMENTS, rust: EXAMPLE_RUST } });
+			const folder = (await defaultFolder(contextService, fileService, pathService)).fsPath;
+			post({ command: 'state', inputs: { example: 'mandelbrot', function: EXAMPLE_FUNCTION, arguments: EXAMPLE_ARGUMENTS, rust: EXAMPLE_RUST, folder } });
 		} else if (message.command === 'draft' && hasKey(message, { inputs: true })) {
 			postCodes(message.inputs);
 		} else if (message.command === 'run' && hasKey(message, { box: true, inputs: true }) && RUN_BOXES.includes(message.box)) {
 			const inputs = checked(message.inputs);
 			const code = boxCode(message.box, message.inputs);
-			if (!inputs.valid || !code || (message.box !== 'defineCode' && !inputs.rustValid)) {
+			if (!inputs.valid || !code || (message.box !== 'defineCode' && !inputs.rustValid) || (message.box === 'buildCode' && inputs.isExample && !inputs.folderValid)) {
 				return;
 			}
 			if (message.box === 'buildCode' && inputs.isExample) {
 				// The crate of step 2, written before cargo builds it
-				const crate = joinPath(await pathService.userHome({ preferLocal: true }), ...CRATE_FOLDER);
+				const crate = joinPath(folderUri(inputs.folder, await pathService.userHome({ preferLocal: true })), CRATE_NAME);
 				await fileService.writeFile(joinPath(crate, 'Cargo.toml'), VSBuffer.fromString(CARGO_TOML));
 				await fileService.writeFile(joinPath(crate, 'src', 'lib.rs'), VSBuffer.fromString(LIB_RS));
 			}
@@ -327,6 +351,20 @@ async function openTranslateRustPage(accessor: ServicesAccessor): Promise<void> 
 			post({ command: 'sent', box: message.box });
 		} else if (message.command === 'agent' && hasKey(message, { inputs: true })) {
 			await commandService.executeCommand(TRANSLATE_WITH_AGENT_COMMAND_ID, message.inputs);
+		} else if (message.command === 'chooseFolder' && hasKey(message, { value: true })) {
+			// Opened at the folder of the field when it exists, otherwise at the home folder
+			const home = await pathService.userHome({ preferLocal: true });
+			const current = folderUri(message.value, home);
+			const picked = await fileDialogService.showOpenDialog({
+				title: localize('translateRust.chooseFolder', "Choose the Folder"),
+				canSelectFiles: false,
+				canSelectFolders: true,
+				canSelectMany: false,
+				defaultUri: await fileService.exists(current) ? current : home,
+			});
+			if (picked?.[0]) {
+				post({ command: 'folder', value: picked[0].fsPath });
+			}
 		}
 	}));
 }
@@ -334,7 +372,7 @@ async function openTranslateRustPage(accessor: ServicesAccessor): Promise<void> 
 /**
  * Hands the function of the page to the user's coding agent, with the translate-to-rust skill: the agent finds it,
  * proposes how to translate it and, once the user agrees, writes a Rust crate and the Julia function that calls it
- * beside the function's file. The example has no file of its own, so it is saved to ~/.pollis/rust first. From
+ * beside the function's file. The example has no file of its own, so it is saved to the folder of Build first. From
  * elsewhere than the page, with no inputs, the page opens.
  */
 async function translateWithAgent(accessor: ServicesAccessor, inputs?: ITranslateRustInputs): Promise<void> {
@@ -342,6 +380,7 @@ async function translateWithAgent(accessor: ServicesAccessor, inputs?: ITranslat
 	const pathService = accessor.get(IPathService);
 	const instantiationService = accessor.get(IInstantiationService);
 	const commandService = accessor.get(ICommandService);
+	const contextService = accessor.get(IWorkspaceContextService);
 	const input = inputs && hasKey(inputs, { example: true, function: true, arguments: true, rust: true }) ? checked(inputs) : undefined;
 	if (!input) {
 		await commandService.executeCommand(TRANSLATE_RUST_COMMAND_ID);
@@ -358,7 +397,7 @@ async function translateWithAgent(accessor: ServicesAccessor, inputs?: ITranslat
 	let folder: URI | undefined;
 	let prompt: string;
 	if (input.fn === EXAMPLE_FUNCTION) {
-		folder = joinPath(await pathService.userHome({ preferLocal: true }), ...EXAMPLE_FOLDER);
+		folder = input.folderValid ? folderUri(input.folder, await pathService.userHome({ preferLocal: true })) : await defaultFolder(contextService, fileService, pathService);
 		const file = joinPath(folder, `${EXAMPLE_FUNCTION}.jl`);
 		await fileService.writeFile(file, VSBuffer.fromString(`${exampleCode(input.example)}\n`));
 		prompt = localize('translateRust.agent.examplePrompt', "Read the skill {0} and follow its instructions to translate the Julia function {1} to Rust with me, defined in {2}. It is called as {3}, and the Julia function that calls its Rust version is to be named {4}.", skill.fsPath, input.fn, file.fsPath, call, input.rust);
@@ -403,10 +442,14 @@ function pageHtml(): string {
 		exampleTranslate: localize('translateRust.exampleTranslate', "The example's Rust version, below: the crate, then the Julia function that calls it."),
 		ownTranslate: localize('translateRust.ownTranslate', "Write the Rust version yourself, or ask your coding agent for it with Translate with Agent."),
 		agentHint: localize('translateRust.agentHint', "Translate with Agent asks your coding agent to find the function and explain its plan: the type each argument takes in Rust, the memory Julia keeps, and what does not translate as it is. Once you agree, it writes a Rust crate and the Julia function that calls it in new files beside the function's, builds the crate, and checks that the two give the same result; the function's own file is not changed. Steps 3 and 4 then build and compare."),
-		agentExampleHint: localize('translateRust.agentExampleHint', "For the example, Pollis first saves it to {0}, for the agent to read.", '<span class="yellow">~/.pollis/rust/fractal_counts.jl</span>'),
+		agentExampleHint: localize('translateRust.agentExampleHint', "For the example, Pollis first saves it as {0} in the folder of step 3, for the agent to read.", `<span class="yellow">${EXAMPLE_FUNCTION}.jl</span>`),
 		agent: localize('translateRust.agent', "Translate with Agent"),
 		build: localize('translateRust.build', "Build"),
-		buildExample: localize('translateRust.buildExample', "Build writes the crate of step 2 to {0}, compiles it with {1}, and defines the Julia function that calls it. It needs Rust 1.85 or later, installed with rustup.", '<span class="yellow">~/.pollis/rust/fractal</span>', '<code>cargo build --release</code>'),
+		buildExample: localize('translateRust.buildExample', "Build writes the crate of step 2 to the folder {0} of the folder below, compiles it with {1}, and defines the Julia function that calls it. It needs Rust 1.85 or later, installed with rustup.", `<span class="yellow">${CRATE_NAME}</span>`, '<code>cargo build --release</code>'),
+		folder: localize('translateRust.folder', "Folder"),
+		folderTooltip: localize('translateRust.folderTooltip', "programs/rust of the open Pollis Workspace, otherwise in Pollis's own folder"),
+		choose: localize('translateRust.choose', "Choose..."),
+		needFolder: localize('translateRust.needFolder', "The folder must be a path on one line, with no quotation mark."),
 		buildOwn: localize('translateRust.buildOwn', "Build includes the Julia function that calls your Rust version, from the file the agent wrote beside your function's, which builds its crate with cargo when the library is missing."),
 		compare: localize('translateRust.compare', "Compare"),
 		compareIntro: localize('translateRust.compareIntro', "Compare checks first that the two versions give the same result: for the example, the same count at every pixel. BenchmarkTools then times each for a second, and gives the minimum time and the allocations of a call, how many times as fast the Rust version is, and the verdict of judge on the medians: improvement, regression, or invariant when they are within 5% of each other."),
@@ -430,6 +473,7 @@ function pageHtml(): string {
 		input[type=text]:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
 		/* The fields to fill in: their border always in the blue of a focused field, as the Ask Pollis box's is */
 		#function, #arguments, #rust { border-color: var(--vscode-focusBorder); }
+		#folder { min-width: 32em; }
 		input::placeholder { color: var(--vscode-input-placeholderForeground); }
 		.rust-code { margin: 6px 0 0; padding: 10px 12px; background: var(--vscode-textCodeBlock-background); border-radius: 3px; font-family: var(--vscode-editor-font-family); font-size: var(--vscode-editor-font-size); white-space: pre; overflow-x: auto; tab-size: 4; max-width: 900px; }
 		.choices label { margin-right: 16px; }
@@ -472,6 +516,7 @@ function pageHtml(): string {
 				title: text.build,
 				bodyHtml: `
 		<p class="hint" id="buildHint"></p>
+		<div class="row" id="folderRow"><span class="small" title="${text.folderTooltip}">${text.folder}</span> <input type="text" id="folder" spellcheck="false"> <button class="action" id="chooseFolder">${text.choose}</button></div>
 		${codeBlock('buildCode', text.code, runButton('buildCode'))}
 `,
 			},
@@ -494,20 +539,22 @@ function pageHtml(): string {
 	const functionInput = document.getElementById('function');
 	const argumentsInput = document.getElementById('arguments');
 	const rustInput = document.getElementById('rust');
+	const folderInput = document.getElementById('folder');
 	const NAME = /^[A-Za-z_][A-Za-z0-9_!]*(?:\\.[A-Za-z_][A-Za-z0-9_!]*)*$/;
 
 	function inputs() {
 		const checkedRadio = document.querySelector('input[name=example]:checked');
-		return { example: checkedRadio ? checkedRadio.value : 'mandelbrot', function: functionInput.value, arguments: argumentsInput.value, rust: rustInput.value };
+		return { example: checkedRadio ? checkedRadio.value : 'mandelbrot', function: functionInput.value, arguments: argumentsInput.value, rust: rustInput.value, folder: folderInput.value.trim() || folderInput.placeholder };
 	}
 	function validity() {
 		const fn = functionInput.value.trim();
 		const rust = rustInput.value.trim();
 		const valid = NAME.test(fn) && !/[\\r\\n]/.test(argumentsInput.value);
-		return { fn, rust, valid, rustValid: valid && NAME.test(rust) && rust !== fn };
+		const folder = folderInput.value.trim() || folderInput.placeholder;
+		return { fn, rust, valid, rustValid: valid && NAME.test(rust) && rust !== fn, folderValid: !!folder && !/["\\r\\n]/.test(folder) };
 	}
 	function render() {
-		const { fn, rust, valid, rustValid } = validity();
+		const { fn, rust, valid, rustValid, folderValid } = validity();
 		const example = fn === EXAMPLE_FUNCTION;
 		const exampleTranslation = example && rust === EXAMPLE_RUST;
 		document.getElementById('exampleChoice').hidden = !example;
@@ -516,8 +563,9 @@ function pageHtml(): string {
 		document.getElementById('agentExampleHint').hidden = !example;
 		document.getElementById('exampleTranslation').hidden = !exampleTranslation;
 		document.getElementById('buildHint').innerHTML = exampleTranslation ? TEXT.buildExample : TEXT.buildOwn;
+		document.getElementById('folderRow').hidden = !example;
 		document.getElementById('defineCodeRun').disabled = !valid;
-		document.getElementById('buildCodeRun').disabled = !rustValid;
+		document.getElementById('buildCodeRun').disabled = !rustValid || (exampleTranslation && !folderValid);
 		document.getElementById('compareCodeRun').disabled = !rustValid;
 		document.getElementById('agent').disabled = !rustValid;
 		const defineStatus = document.getElementById('defineCodeStatus');
@@ -527,6 +575,14 @@ function pageHtml(): string {
 		} else if (defineStatus.classList.contains('missing')) {
 			defineStatus.textContent = '';
 			defineStatus.classList.remove('missing');
+		}
+		const buildStatus = document.getElementById('buildCodeStatus');
+		if (example && !folderValid) {
+			buildStatus.textContent = TEXT.needFolder;
+			buildStatus.classList.add('missing');
+		} else if (buildStatus.classList.contains('missing')) {
+			buildStatus.textContent = '';
+			buildStatus.classList.remove('missing');
 		}
 		const compareStatus = document.getElementById('compareCodeStatus');
 		if (valid && !rustValid) {
@@ -547,7 +603,7 @@ function pageHtml(): string {
 		}
 		vscode.postMessage({ command: 'draft', inputs: inputs() });
 	}
-	for (const input of [functionInput, argumentsInput, rustInput]) {
+	for (const input of [functionInput, argumentsInput, rustInput, folderInput]) {
 		input.addEventListener('input', sendDraft);
 	}
 	for (const radio of document.querySelectorAll('input[name=example]')) {
@@ -557,6 +613,7 @@ function pageHtml(): string {
 		document.getElementById(box + 'Run').addEventListener('click', () => vscode.postMessage({ command: 'run', box, inputs: inputs() }));
 	}
 	document.getElementById('agent').addEventListener('click', () => vscode.postMessage({ command: 'agent', inputs: inputs() }));
+	document.getElementById('chooseFolder').addEventListener('click', () => vscode.postMessage({ command: 'chooseFolder', value: inputs().folder }));
 
 	window.addEventListener('message', event => {
 		const message = event.data;
@@ -564,6 +621,8 @@ function pageHtml(): string {
 			functionInput.value = message.inputs.function;
 			argumentsInput.value = message.inputs.arguments;
 			rustInput.value = message.inputs.rust;
+			folderInput.value = '';
+			folderInput.placeholder = message.inputs.folder;
 			for (const radio of document.querySelectorAll('input[name=example]')) {
 				radio.checked = radio.value === message.inputs.example;
 			}
@@ -573,6 +632,9 @@ function pageHtml(): string {
 			const box = document.getElementById(message.box);
 			box.innerHTML = message.html;
 			colorizeBrackets(box, '#');
+		} else if (message.command === 'folder') {
+			folderInput.value = message.value;
+			sendDraft();
 		} else if (message.command === 'sent') {
 			const status = document.getElementById(message.box + 'Status');
 			status.classList.remove('missing');

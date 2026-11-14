@@ -146,6 +146,14 @@ label = "Imaginary Part of c"
 tooltip = "The imaginary part of the fixed point c of the Julia set. The Mandelbrot set does not use it."
 default = "0.156"
 
+[[inputs]]
+id = "folder"
+label = "Folder"
+tooltip = "Where the programs are built, in a folder for each tool: programs/executables of the open Pollis Workspace, otherwise in Pollis's own folder. A program is built again when its source or the Julia version changes."
+default = "~/.pollis/programs/executables"
+folder = "programs/executables"
+newRow = true
+
 [[codeBranches]]
 model = "juliac"
 code = '''
@@ -231,17 +239,27 @@ VERSION >= v"1.12" || error("juliac needs Julia 1.12 or later: this session runs
 juliac_app = joinpath(first(DEPOT_PATH), "bin", Sys.iswindows() ? "juliac.bat" : "juliac")
 isfile(juliac_app) || Pkg.Apps.add("JuliaC")  # installs juliac in ~/.julia/bin, in an environment of its own
 
-# Build: the program in ~/.pollis/executable/juliac, a new folder for a new source or Julia version. --trim=safe keeps
-# only the code @main reaches; --bundle gathers the program in bundle/bin and the Julia libraries it needs in
-# bundle/lib. An empty project, so that juliac compiles the file alone and not the active environment
-folder = mkpath(joinpath(homedir(), ".pollis", "executable", "juliac", string(hash((script_code, VERSION)), base = 16)))
+# Build: the program in juliac/ of the folder, built again when its source or the Julia version changes, as
+# built_from.txt records. --trim=safe keeps only the code @main reaches; --bundle gathers the program in bundle/bin and
+# the Julia libraries it needs in bundle/lib. An empty project, so that juliac compiles the file alone and not the
+# active environment
+folder = mkpath(joinpath(expanduser(raw"{{folder}}"), "juliac"))
 script_file = joinpath(folder, "fractal.jl")
 write(script_file, script_code)
 isfile(joinpath(folder, "Project.toml")) || write(joinpath(folder, "Project.toml"), "")
 shipped_folder = joinpath(folder, "bundle")
 program = joinpath(shipped_folder, "bin", "fractal" * (Sys.iswindows() ? ".exe" : ""))
 built_with = `$juliac_app --output-exe fractal --bundle $shipped_folder --project $folder --trim=safe --experimental $script_file`
-build_seconds = isfile(program) ? nothing : @elapsed run(built_with)
+built_from = string("Julia ", VERSION, "\n\n", script_code)
+built_from_file = joinpath(folder, "built_from.txt")
+build_seconds = if isfile(program) && isfile(built_from_file) && read(built_from_file, String) == built_from
+    nothing
+else
+    rm(shipped_folder; force = true, recursive = true)
+    seconds = @elapsed run(built_with)
+    write(built_from_file, built_from)
+    seconds
+end
 source_file = script_file
 
 # Run: the inputs as arguments, the numbers as repr writes them, which the program reads back to the same Float64
@@ -263,6 +281,8 @@ programs[tool] = (seconds = something(build_seconds, get(programs, tool, (second
 differ = count(compiled_counts .!= julia_counts)
 println(differ == 0 ? "The program of juliac and Julia give the same count at all $(length(julia_counts)) pixels" : "The program of juliac and Julia differ at $differ of $(length(julia_counts)) pixels")
 println("Pixels inside: $compiled_inside from the program, $julia_inside from Julia")
+println("The program: ", program)
+println("Run it with: ", command)
 '''
 
 [[codeBranches]]
@@ -344,12 +364,12 @@ function @main(args::Vector{String})::Cint
 end
 """
 
-# Build: PackageCompiler compiles a package, here Fractal, written to ~/.pollis/executable/packagecompiler, into an
-# app: the program in app/bin, beside a whole system image and the Julia runtime. The program starts at julia_main,
-# which reads the command line from ARGS. It needs a C compiler on the path, and takes several minutes, the first
-# time only
+# Build: PackageCompiler compiles a package, here Fractal, written to packagecompiler/ of the folder, into an app: the
+# program in app/bin, beside a whole system image and the Julia runtime. The program starts at julia_main, which reads
+# the command line from ARGS. It needs a C compiler on the path, and takes several minutes, again only when the source
+# or the Julia version changes, as built_from.txt records
 package_code = "module Fractal\n\n" * kernel_code * program_code * "\njulia_main()::Cint = fractal(ARGS)\n\nend\n"
-folder = mkpath(joinpath(homedir(), ".pollis", "executable", "packagecompiler", string(hash((package_code, script_code, VERSION)), base = 16)))
+folder = mkpath(joinpath(expanduser(raw"{{folder}}"), "packagecompiler"))
 package = joinpath(folder, "Fractal")
 shipped_folder = joinpath(folder, "app")
 program = joinpath(shipped_folder, "bin", "fractal" * (Sys.iswindows() ? ".exe" : ""))
@@ -357,7 +377,9 @@ source_file = joinpath(package, "src", "Fractal.jl")
 script_file = joinpath(folder, "fractal.jl")
 write(script_file, script_code)
 built_with = "create_app(\"$package\", \"$shipped_folder\"; executables = [\"fractal\" => \"julia_main\"], filter_stdlibs = true, force = true)"
-build_seconds = if isfile(program)
+built_from = string("Julia ", VERSION, "\n\n", package_code)
+built_from_file = joinpath(folder, "built_from.txt")
+build_seconds = if isfile(program) && isfile(built_from_file) && read(built_from_file, String) == built_from
     nothing
 else
     mkpath(dirname(source_file))
@@ -367,7 +389,9 @@ else
     Pkg.activate(package)
     Pkg.resolve()  # the package's Manifest.toml, which create_app expects
     Pkg.activate(previous)
-    @elapsed create_app(package, shipped_folder; executables = ["fractal" => "julia_main"], filter_stdlibs = true, force = true)
+    seconds = @elapsed create_app(package, shipped_folder; executables = ["fractal" => "julia_main"], filter_stdlibs = true, force = true)
+    write(built_from_file, built_from)
+    seconds
 end
 
 # Run: the inputs as arguments, the numbers as repr writes them, which the program reads back to the same Float64
@@ -389,6 +413,8 @@ programs[tool] = (seconds = something(build_seconds, get(programs, tool, (second
 differ = count(compiled_counts .!= julia_counts)
 println(differ == 0 ? "The program of PackageCompiler and Julia give the same count at all $(length(julia_counts)) pixels" : "The program of PackageCompiler and Julia differ at $differ of $(length(julia_counts)) pixels")
 println("Pixels inside: $compiled_inside from the program, $julia_inside from Julia")
+println("The program: ", program)
+println("Run it with: ", command)
 '''
 
 [[codeBranches]]
@@ -489,8 +515,8 @@ end
 """
 
 # Build: StaticCompiler compiles static_main of this session, with the clang and lld it brings, into one file in
-# ~/.pollis/executable/staticcompiler, a new folder for a new source or Julia version
-folder = mkpath(joinpath(homedir(), ".pollis", "executable", "staticcompiler", string(hash((kernel_code, static_code, script_code, VERSION)), base = 16)))
+# staticcompiler/ of the folder, built again when its source or the Julia version changes, as built_from.txt records
+folder = mkpath(joinpath(expanduser(raw"{{folder}}"), "staticcompiler"))
 source_file = joinpath(folder, "static_main.jl")
 write(source_file, kernel_code * static_code)
 script_file = joinpath(folder, "fractal.jl")
@@ -498,7 +524,15 @@ write(script_file, script_code)
 shipped_folder = mkpath(joinpath(folder, "bin"))
 program = joinpath(shipped_folder, "fractal")
 built_with = "compile_executable(static_main, (Int64, Ptr{Ptr{UInt8}}), \"$shipped_folder\"; filename = \"fractal\")"
-build_seconds = isfile(program) ? nothing : @elapsed compile_executable(static_main, (Int64, Ptr{Ptr{UInt8}}), shipped_folder; filename = "fractal")
+built_from = string("Julia ", VERSION, "\n\n", kernel_code, static_code)
+built_from_file = joinpath(folder, "built_from.txt")
+build_seconds = if isfile(program) && isfile(built_from_file) && read(built_from_file, String) == built_from
+    nothing
+else
+    seconds = @elapsed compile_executable(static_main, (Int64, Ptr{Ptr{UInt8}}), shipped_folder; filename = "fractal")
+    write(built_from_file, built_from)
+    seconds
+end
 
 # Run: the inputs as arguments, the numbers as repr writes them, which the program reads back to the same Float64
 counts_file = joinpath(folder, "counts.bin")
@@ -519,6 +553,8 @@ programs[tool] = (seconds = something(build_seconds, get(programs, tool, (second
 differ = count(compiled_counts .!= julia_counts)
 println(differ == 0 ? "The program of StaticCompiler and Julia give the same count at all $(length(julia_counts)) pixels" : "The program of StaticCompiler and Julia differ at $differ of $(length(julia_counts)) pixels")
 println("Pixels inside: $compiled_inside from the program, $julia_inside from Julia")
+println("The program: ", program)
+println("Run it with: ", command)
 '''
 
 [[actionGroups]]

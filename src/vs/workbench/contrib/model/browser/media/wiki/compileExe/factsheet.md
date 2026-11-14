@@ -37,18 +37,19 @@ A C compiler is `cc`, `gcc` or `clang` on macOS and Linux (the Command Line Tool
 | **Iterations** | 256 | The most iterations of a pixel; a pixel that has not escaped counts as inside |
 | **Real Part of c** | -0.8 | The real part of c, for the Julia set only |
 | **Imaginary Part of c** | 0.156 | The imaginary part of c, for the Julia set only |
+| **Folder** | `programs/executables` of the open Pollis Workspace, else `~/.pollis/programs/executables` | Where the programs are built, in a folder for each tool; **Choose...** picks another |
 
 The program receives them as its arguments: `counts.bin height width x0 y0 spacing julia_set cr ci maxiter`.
 
 ## Files Written by Compile Julia to an Executable
 
-| Tab | Folder in `~/.pollis/executable` | Files |
+| Tab | Folder in **Folder** | Files |
 |---|---|---|
-| **JuliaC** | `juliac/<hash>` | `fractal.jl`, `Project.toml`, `bundle/` (the program in `bin`, the Julia libraries in `lib`), `counts.bin` |
-| **PackageCompiler** | `packagecompiler/<hash>` | `Fractal/` (the package), `app/` (the program in `bin`, with the runtime and the system image), `fractal.jl`, `counts.bin` |
-| **StaticCompiler** | `staticcompiler/<hash>` | `static_main.jl`, `fractal.jl`, `bin/fractal`, `counts.bin` |
+| **JuliaC** | `juliac` | `fractal.jl`, `Project.toml`, `bundle/` (the program in `bin`, the Julia libraries in `lib`), `counts.bin` |
+| **PackageCompiler** | `packagecompiler` | `Fractal/` (the package), `app/` (the program in `bin`, with the runtime and the system image), `fractal.jl`, `counts.bin` |
+| **StaticCompiler** | `staticcompiler` | `static_main.jl`, `fractal.jl`, `bin/fractal`, `counts.bin` |
 
-`<hash>` changes with the source and the Julia version, so a program is rebuilt only when one of them changes. `fractal.jl` is the program as a Julia script, which **Start-Up and Run Time** runs with julia.
+Each folder also holds `built_from.txt`, the Julia version and the source the program was built from: a program is built again only when one of them changes. `fractal.jl` is the program as a Julia script, which **Start-Up and Run Time** runs with julia.
 
 ## Names Set by the Code of Compile Julia to an Executable
 

@@ -28,7 +28,7 @@ export const OPEN_POLLIS_WORKSPACE_COMMAND_ID = 'pollis.workspace.open';
 const MARKER_FILE = 'pollis.toml';
 
 /** The kinds of file a Pollis Workspace has a folder for. */
-export type PollisWorkspaceFolder = 'data' | 'knowledge_base' | 'reports' | 'methods' | 'workflows' | 'panels' | 'toolboxes' | 'changes';
+export type PollisWorkspaceFolder = 'data' | 'knowledge_base' | 'reports' | 'methods' | 'workflows' | 'panels' | 'toolboxes' | 'programs' | 'changes';
 
 /** The folder of each kind, as a new workspace names it, what its README says it holds, and its subfolders. */
 const FOLDERS: Readonly<Record<PollisWorkspaceFolder, { readonly name: string; readonly readme: string; readonly subfolders?: readonly string[] }>> = {
@@ -39,6 +39,7 @@ const FOLDERS: Readonly<Record<PollisWorkspaceFolder, { readonly name: string; r
 	workflows: { name: 'workflows', readme: 'Your workflows.' },
 	panels: { name: 'panels', readme: 'Your panels, which Compose > New Panels writes with your coding agent, each its TOML with its wiki and notebook folders.' },
 	toolboxes: { name: 'toolboxes', readme: 'The toolboxes you make to share your panels, for a course say, which Compose > Package a Toolbox... builds with your coding agent, one folder each: its spec, toolbox.toml, which menu entries it holds and in what order, the sources of its vignette, its README, and the .vsix files built from it, in dist/. The toolboxes you install stay in Pollis.' },
+	programs: { name: 'programs', readme: 'The programs and libraries compiled from your Julia code on the pages of Compose > Compilation Lab: executables in executables/ and shared libraries in shared_libraries/, one folder for each tool that compiled them, and Rust crates in rust/.', subfolders: ['executables', 'shared_libraries', 'rust'] },
 	changes: { name: 'changes', readme: 'Your changes to the panels, workflows, wikis and notebooks that come with Pollis and its toolboxes, one small file each.' },
 };
 
@@ -77,12 +78,17 @@ export async function findPollisWorkspace(contextService: IWorkspaceContextServi
  * names it; made, with its README, the first time it is needed in a workspace that does not have it.
  */
 export async function pollisWorkspaceFolder(fileService: IFileService, workspace: URI, kind: PollisWorkspaceFolder): Promise<URI> {
-	const toml = await fileService.readFile(joinPath(workspace, MARKER_FILE)).then(content => content.value.toString(), () => '');
-	const folder = joinPath(workspace, namedFolders(toml)[kind] ?? FOLDERS[kind].name);
+	const folder = await pollisWorkspaceFolderPath(fileService, workspace, kind);
 	if (!await fileService.exists(folder)) {
 		await makeFolder(fileService, folder, kind);
 	}
 	return folder;
+}
+
+/** Where the folder of `kind` is in the Pollis Workspace `workspace`, as its pollis.toml names it, without making it. */
+export async function pollisWorkspaceFolderPath(fileService: IFileService, workspace: URI, kind: PollisWorkspaceFolder): Promise<URI> {
+	const toml = await fileService.readFile(joinPath(workspace, MARKER_FILE)).then(content => content.value.toString(), () => '');
+	return joinPath(workspace, namedFolders(toml)[kind] ?? FOLDERS[kind].name);
 }
 
 /** Where a saved copy goes by default: the data folder of an open Pollis Workspace, else the first open folder. */
@@ -228,7 +234,7 @@ registerAction2(class extends Action2 {
 		if (!await fileService.exists(joinPath(folder, MARKER_FILE))) {
 			const { confirmed } = await dialogService.confirm({
 				message: localize('pollisWorkspace.makeIt', "Make {0} a Pollis Workspace?", basename(folder)),
-				detail: localize('pollisWorkspace.makeItDetail', "Pollis adds pollis.toml and its folders, data, knowledge_base, reports, methods, workflows, panels, toolboxes and changes, each with a README, and keeps everything the folder has."),
+				detail: localize('pollisWorkspace.makeItDetail', "Pollis adds pollis.toml and its folders, data, knowledge_base, reports, methods, workflows, panels, toolboxes, programs and changes, each with a README, and keeps everything the folder has."),
 				primaryButton: localize({ key: 'pollisWorkspace.makeItButton', comment: ['&& denotes a mnemonic'] }, "&&Make It a Pollis Workspace"),
 			});
 			if (!confirmed) {

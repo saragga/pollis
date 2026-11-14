@@ -19,6 +19,7 @@ The steps, inputs, files, types, requirements and agent task of Translate Julia 
 | **Arguments** | The Function | x0, y0, spacing, height, width, julia_set, c, maxiter | The arguments of the call, as written in it, on one line |
 | **Example** | The Function | Mandelbrot Set | The Mandelbrot set, or the Julia set of c = -0.8 + 0.156i; shown only for the example |
 | **Rust Version** | Translate | fractal_counts_rust | The name of the Julia function that calls the Rust version, other than the function's |
+| **Folder** | Build | `programs/rust` of the open Pollis Workspace, else `~/.pollis/programs/rust` | Where the example's crate is built, and where Translate with Agent saves the example; **Choose...** picks another; shown only for the example |
 
 The example's crate is shown in Translate only while the function and the Rust version have the example's names; **Build**, **Compare** and **Translate with Agent** are off while the Rust version has no name of its own.
 
@@ -26,10 +27,10 @@ The example's crate is shown in Translate only while the function and the Rust v
 
 | File | Written by | What it holds |
 |---|---|---|
-| `~/.pollis/rust/fractal/Cargo.toml` | Build, for the example | The crate's name, its edition, 2024, and `crate-type = ["cdylib"]` |
-| `~/.pollis/rust/fractal/src/lib.rs` | Build, for the example | `escape_time` and `fill_counts`, the function Julia calls |
-| `~/.pollis/rust/fractal/target/release/` | cargo | The library: `libfractal.dylib` on macOS, `libfractal.so` on Linux, `fractal.dll` on Windows |
-| `~/.pollis/rust/fractal_counts.jl` | Translate with Agent, for the example | The example's Julia code, for the agent to read |
+| `fractal/Cargo.toml` in **Folder** | Build, for the example | The crate's name, its edition, 2024, and `crate-type = ["cdylib"]` |
+| `fractal/src/lib.rs` in **Folder** | Build, for the example | `escape_time` and `fill_counts`, the function Julia calls |
+| `fractal/target/release/` in **Folder** | cargo | The library: `libfractal.dylib` on macOS, `libfractal.so` on Linux, `fractal.dll` on Windows |
+| `fractal_counts.jl` in **Folder** | Translate with Agent, for the example | The example's Julia code, for the agent to read |
 | `<name>/` and `<name>.jl` beside the function's file | The agent | The crate of a function of your own, and the Julia function that calls it, under the name of the Rust version |
 
 ## Types Across the Boundary in Translate Julia to Rust

@@ -20,7 +20,7 @@ Trimming expects concrete entry points: functions whose argument and result type
 
 ## What Changes Between Versions of Julia?
 
-Trimming is new in Julia 1.12 and marked experimental, which is why the **JuliaC** tab passes `--experimental`. The Julia developer documentation says that some changes to Base that make more programs trimmable would break other code, so they are applied only when trimming is asked for, through the build script that juliac runs. It also says that a program that trims with one version of Julia is not guaranteed to trim with every later version, although such breakage is expected to be rare, and it recommends continuous integration that builds the trimmed program and tests it. A library of the **JuliaC** tab is rebuilt in a new folder for each new Julia version, as the folder's name includes it.
+Trimming is new in Julia 1.12 and marked experimental, which is why the **JuliaC** tab passes `--experimental`. The Julia developer documentation says that some changes to Base that make more programs trimmable would break other code, so they are applied only when trimming is asked for, through the build script that juliac runs. It also says that a program that trims with one version of Julia is not guaranteed to trim with every later version, although such breakage is expected to be rare, and it recommends continuous integration that builds the trimmed program and tests it. A library of the **JuliaC** tab is built again for each new Julia version, which its `built_from.txt` records.
 
 ## See Also
 

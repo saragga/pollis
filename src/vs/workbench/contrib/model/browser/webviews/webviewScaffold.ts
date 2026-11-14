@@ -1151,6 +1151,12 @@ ${noExampleCode ? '' : `		document.getElementById('model-group').addEventListene
 				vscode.postMessage({ command: 'chooseModelFile', input: button.dataset.input, kind: button.dataset.modelKind, value: inputRaw(button.dataset.input) });
 			});
 		});
+		// Choose... beside a folder input: the folder picker answers with setInputValue
+		document.querySelectorAll('.choose-folder-btn').forEach(function(button) {
+			button.addEventListener('click', function() {
+				vscode.postMessage({ command: 'chooseFolder', input: button.dataset.input, value: inputRaw(button.dataset.input) });
+			});
+		});
 		document.querySelectorAll('.scaffold-inputs select.form-input').forEach(function(select) {
 			select.addEventListener('mousedown', function(e) {
 				e.preventDefault();
@@ -1588,6 +1594,11 @@ ${noExampleCode ? '' : `		document.getElementById('btn-copy').addEventListener('
 			if (msg.command === 'setInputValue') {
 				var field = document.getElementById('in-' + msg.input);
 				if (field) { field.value = msg.value; onInputsChanged(); }
+			}
+			// A default known only once the panel is open, as the folder of the open Pollis Workspace
+			if (msg.command === 'setInputDefault') {
+				var defaultField = document.getElementById('in-' + msg.input);
+				if (defaultField) { defaultField.placeholder = msg.value; defaultField.dataset.default = msg.value; onInputsChanged(); }
 			}
 		});
 
