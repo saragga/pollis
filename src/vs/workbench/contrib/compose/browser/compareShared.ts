@@ -457,8 +457,13 @@ export const compareCss = `
 		.row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
 		.row .grow { flex: 1; }
 		.bar { display: flex; gap: 8px; align-items: center; }
-		button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; border-radius: 2px; padding: 4px 12px; cursor: pointer; }
-		.bar > button.action.current { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		/* The panels' buttons, .code-action-btn of webviewScaffold.ts; the blue one is its .primary. */
+		button.action { background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 4px; padding: 4px 10px; font-size: 11px; cursor: pointer; opacity: 0.7; white-space: nowrap; }
+		button.action:hover { opacity: 1; }
+		button.action:not(:disabled):hover, button.action:not(:disabled):focus-visible { color: var(--vscode-button-foreground); background: var(--vscode-button-background); opacity: 1; }
+		button.action:disabled { opacity: 0.35; cursor: default; }
+		.bar > button.action.current { background: var(--vscode-button-background); color: var(--vscode-button-foreground); opacity: 1; }
+		.bar > button.action.current:hover { background: var(--vscode-button-hoverBackground); }
 		button:disabled { opacity: 0.5; cursor: default; }
 		.link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; }
 		.link:hover { text-decoration: underline; }

@@ -338,8 +338,6 @@ export const orchestrationCss = `
 		.status-running { color: var(--vscode-textLink-foreground); }
 		.status-failed, .status-ended { color: var(--vscode-errorForeground); }
 		.links .link + .link { margin-left: 10px; }
-		.bar > button.action:not(:disabled):hover { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
-		.bar > button.action.current:not(:disabled):hover { outline: none; background: var(--vscode-button-hoverBackground); }
 `;
 
 /**
