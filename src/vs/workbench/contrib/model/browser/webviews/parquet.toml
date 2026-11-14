@@ -151,9 +151,16 @@ context = "Many files"
 purpose = "Split a large table by a column, so that a filter on it reads only some files"
 
 [[inputs]]
+id = "folder"
+label = "Folder"
+tooltip = "Folder of the files: data/examples of the open Pollis Workspace, otherwise in Pollis's own folder. Choose... picks another. A file given by an absolute path is read where it is."
+default = "~/.pollis/data/examples"
+folder = "data/examples"
+
+[[inputs]]
 id = "path"
 label = "File"
-tooltip = "Path to the Parquet file, relative to the Julia working directory or absolute. With the default, data.parquet, the example first writes the airquality example from PollisDatasets to data.parquet, unless the working directory has a data.parquet already."
+tooltip = "The Parquet file, in the folder above, or an absolute path. With the default, data.parquet, the example first writes the airquality example from PollisDatasets to data.parquet, unless the folder has a data.parquet already."
 default = "data.parquet"
 
 [[inputs]]
@@ -185,9 +192,9 @@ default = "month"
 models = ["partitioned"]
 
 [[inputs]]
-id = "folder"
-label = "Folder"
-tooltip = "Folder the partitioned files are written to, relative to the Julia working directory or absolute. Files already there are kept."
+id = "partitions"
+label = "Partition Folder"
+tooltip = "Folder the partitioned files are written to, in the folder above, or an absolute path. Files already there are kept."
 default = "data_by_month"
 models = ["partitioned"]
 
@@ -228,16 +235,18 @@ code = '''
 using DuckDB, Tables
 
 con = DBInterface.connect(DuckDB.DB)  # an in-memory database: the file stays where it is
+folder = mkpath(expanduser(raw"{{folder}}"))  # the folder of the files: Choose... picks another
+path = joinpath(folder, "{{path}}")  # an absolute path is kept as it is
 {{?path=data.parquet}} using PollisDatasets  # curated example datasets
-{{?path=data.parquet}} # Example file: Chambers et al. (1983), daily air quality in New York, May to September 1973, with 37 missing ozone readings, written to data.parquet in the working directory unless a data.parquet is there already. Replace "data.parquet" with your own file.
-{{?path=data.parquet}} if !isfile("data.parquet")
+{{?path=data.parquet}} # Example file: Chambers et al. (1983), daily air quality in New York, May to September 1973, with 37 missing ozone readings, written to data.parquet in the folder unless a data.parquet is there already. Replace "data.parquet" with your own file.
+{{?path=data.parquet}} if !isfile(path)
 {{?path=data.parquet}} 	DuckDB.register_table(con, dataset("airquality"), "airquality")
-{{?path=data.parquet}} 	DBInterface.execute(con, "COPY airquality TO 'data.parquet' (FORMAT parquet)")
+{{?path=data.parquet}} 	DBInterface.execute(con, "COPY airquality TO '$(path)' (FORMAT parquet)")
 {{?path=data.parquet}} end
 
 sql = """
 SELECT {{columns}}
-FROM read_parquet('{{path}}')
+FROM read_parquet('$(path)')
 WHERE {{filter}}
 """
 tbl = Tables.columntable(DBInterface.execute(con, sql))  # named tuple of column vectors
@@ -250,11 +259,13 @@ model = "read"
 code = '''
 using Parquet2, Tables
 
+folder = mkpath(expanduser(raw"{{folder}}"))  # the folder of the files: Choose... picks another
+path = joinpath(folder, "{{path}}")  # an absolute path is kept as it is
 {{?path=data.parquet}} using PollisDatasets  # curated example datasets
-{{?path=data.parquet}} # Example file: Chambers et al. (1983), daily air quality in New York, May to September 1973, with 37 missing ozone readings, written to data.parquet in the working directory unless a data.parquet is there already. Replace "data.parquet" with your own file.
-{{?path=data.parquet}} isfile("data.parquet") || Parquet2.writefile("data.parquet", dataset("airquality"))
+{{?path=data.parquet}} # Example file: Chambers et al. (1983), daily air quality in New York, May to September 1973, with 37 missing ozone readings, written to data.parquet in the folder unless a data.parquet is there already. Replace "data.parquet" with your own file.
+{{?path=data.parquet}} isfile(path) || Parquet2.writefile(path, dataset("airquality"))
 
-ds = Parquet2.Dataset("{{path}}")  # reads the footer only: the schema and the row groups
+ds = Parquet2.Dataset(path)  # reads the footer only: the schema and the row groups
 println(Tables.schema(ds))
 tbl = Tables.columntable(ds)  # named tuple of column vectors: every column is read now
 println(length(first(tbl)), " rows x ", length(tbl), " columns")
@@ -269,11 +280,13 @@ using DuckDB, Tables
 {{?data=data}} # Example data: Chambers et al. (1983), daily air quality in New York, May to September 1973, with 37 missing ozone readings. Replace data with your own table.
 {{?data=data}} data = dataset("airquality");  # datasetinfo("airquality") describes the columns
 
+folder = mkpath(expanduser(raw"{{folder}}"))  # the folder of the files: Choose... picks another
+path = joinpath(folder, "{{path}}")  # an absolute path is kept as it is
 con = DBInterface.connect(DuckDB.DB)
 tbl = Tables.columntable({{data}})  # named tuple of column vectors, from any Tables.jl source
 DuckDB.register_table(con, tbl, "tbl")  # DuckDB sees the Julia table as the view tbl, without copying it
-DBInterface.execute(con, "COPY tbl TO '{{path}}' (FORMAT parquet, COMPRESSION {{compression}})")
-println("Wrote ", length(first(tbl)), " rows x ", length(tbl), " columns to {{path}} (", filesize("{{path}}"), " bytes)")
+DBInterface.execute(con, "COPY tbl TO '$(path)' (FORMAT parquet, COMPRESSION {{compression}})")
+println("Wrote ", length(first(tbl)), " rows x ", length(tbl), " columns to ", path, " (", filesize(path), " bytes)")
 '''
 
 [[codeBranches]]
@@ -282,22 +295,25 @@ code = '''
 using DuckDB, Tables
 
 con = DBInterface.connect(DuckDB.DB)
+folder = mkpath(expanduser(raw"{{folder}}"))  # the folder of the files: Choose... picks another
+path = joinpath(folder, "{{path}}")  # an absolute path is kept as it is
+partitions = joinpath(folder, "{{partitions}}")
 {{?path=data.parquet}} using PollisDatasets  # curated example datasets
-{{?path=data.parquet}} # Example file: Chambers et al. (1983), daily air quality in New York, May to September 1973, with 37 missing ozone readings, written to data.parquet in the working directory unless a data.parquet is there already. Replace "data.parquet" with your own file.
-{{?path=data.parquet}} if !isfile("data.parquet")
+{{?path=data.parquet}} # Example file: Chambers et al. (1983), daily air quality in New York, May to September 1973, with 37 missing ozone readings, written to data.parquet in the folder unless a data.parquet is there already. Replace "data.parquet" with your own file.
+{{?path=data.parquet}} if !isfile(path)
 {{?path=data.parquet}} 	DuckDB.register_table(con, dataset("airquality"), "airquality")
-{{?path=data.parquet}} 	DBInterface.execute(con, "COPY airquality TO 'data.parquet' (FORMAT parquet)")
+{{?path=data.parquet}} 	DBInterface.execute(con, "COPY airquality TO '$(path)' (FORMAT parquet)")
 {{?path=data.parquet}} end
 
 DBInterface.execute(con, """
-COPY (SELECT * FROM read_parquet('{{path}}'))
-TO '{{folder}}' (FORMAT parquet, PARTITION_BY ({{partition}}), OVERWRITE_OR_IGNORE, COMPRESSION {{compression}})
+COPY (SELECT * FROM read_parquet('$(path)'))
+TO '$(partitions)' (FORMAT parquet, PARTITION_BY ({{partition}}), OVERWRITE_OR_IGNORE, COMPRESSION {{compression}})
 """)
-println("Folders: ", join(readdir("{{folder}}"), ", "))  # one folder per value, named column=value
+println("Folders: ", join(readdir(partitions), ", "))  # one folder per value, named column=value
 
 sql = """
 SELECT *
-FROM read_parquet('{{folder}}/**/*.parquet', hive_partitioning = true)
+FROM read_parquet('$(partitions)/**/*.parquet', hive_partitioning = true)
 WHERE {{where}}
 """
 tbl = Tables.columntable(DBInterface.execute(con, sql))  # the partition column comes back from the folder names
@@ -345,7 +361,7 @@ code = '''
 using DuckDB, Tables
 
 db = DBInterface.connect(DuckDB.DB)
-schema = Tables.columntable(DBInterface.execute(db, "SELECT name, type, converted_type, repetition_type FROM parquet_schema('{{path}}') WHERE num_children IS NULL"))
+schema = Tables.columntable(DBInterface.execute(db, "SELECT name, type, converted_type, repetition_type FROM parquet_schema('$(path)') WHERE num_children IS NULL"))
 println(rpad("column", 16), rpad("stored as", 14), rpad("meaning", 18), "missing values")
 for i in eachindex(schema.name)
 	println(rpad(schema.name[i], 16), rpad(coalesce(schema.type[i], ""), 14), rpad(coalesce(schema.converted_type[i], ""), 18), schema.repetition_type[i] == "REQUIRED" ? "never" : "allowed")
@@ -362,7 +378,7 @@ using DuckDB, Tables
 db = DBInterface.connect(DuckDB.DB)
 meta = Tables.columntable(DBInterface.execute(db, """
 SELECT path_in_schema AS column, compression, sum(total_compressed_size) AS stored, sum(total_uncompressed_size) AS raw, count(*) AS row_groups
-FROM parquet_metadata('{{path}}')
+FROM parquet_metadata('$(path)')
 GROUP BY ALL ORDER BY stored DESC
 """))
 println(rpad("column", 16), rpad("codec", 14), rpad("stored", 10), rpad("raw", 10), "row groups")
@@ -440,7 +456,7 @@ using DuckDB
 
 db = DBInterface.connect(DuckDB.DB)
 DuckDB.register_table(db, tbl, "tbl")
-out = first(splitext("{{path}}")) * ".csv"
+out = first(splitext(path)) * ".csv"
 if isfile(out)
 	println(out, " is there already: rename or move it first")
 else
@@ -458,7 +474,7 @@ using DuckDB
 
 db = DBInterface.connect(DuckDB.DB)
 DuckDB.register_table(db, tbl, "tbl")
-out = first(splitext("{{path}}")) * ".jsonl"
+out = first(splitext(path)) * ".jsonl"
 if isfile(out)
 	println(out, " is there already: rename or move it first")
 else

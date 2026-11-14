@@ -31,6 +31,7 @@
 **/src/**/dompurify.js
 **/src/**/marked.js
 **/src/vs/workbench/contrib/compose/browser/media/collaboration/trystero-*.js
+**/src/vs/workbench/contrib/compose/browser/media/collaboration/yjs.js
 **/src/**/semver.js
 **/src/typings/**/*.d.ts
 **/src/vs/*/**/*.d.ts

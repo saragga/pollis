@@ -18,6 +18,15 @@ export const PROTOCOL_VERSION = 1;
 /** The most participants in a session, the host included; an invited agent does not count. */
 export const MAX_PARTICIPANTS = 5;
 
+/** The seats of a class (Classroom): the most students in it, the tutor aside. */
+export const CLASS_SEATS = 30;
+
+/** The longest answer of an agent in the chat, in characters. */
+export const MAX_AGENT_ANSWER = 20_000;
+
+/** The most files an agent shares with one answer. */
+export const MAX_AGENT_FILES = 5;
+
 /** The largest image in the chat, in bytes; larger ones are downscaled, or refused. */
 export const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 
@@ -39,8 +48,11 @@ export const MAX_RECEIVE_BYTES = 8 * 1024 * 1024;
 /** How the participants are introduced to each other: free public nostr relays, or public mqtt brokers. */
 export type SignallingStrategy = 'nostr' | 'mqtt';
 
-/** The way of working, fixed when the session starts. Same Page comes later. */
-export type SessionMode = 'sideBySide';
+/**
+ * The way of working, fixed when the session starts: each in their own editor, editing the host's folder together, or
+ * a class, where each student is connected to the tutor (the host) only.
+ */
+export type SessionMode = 'sideBySide' | 'samePage' | 'class';
 
 export type ParticipantRole = 'host' | 'guest';
 
@@ -54,8 +66,24 @@ export interface IHelloPayload {
 	/** The language the participant reads the chat in, for translation later. */
 	readonly language: string;
 	readonly mode: SessionMode;
-	/** Only from the host: whether the newcomer may stay; false when the session is full. */
+	/** Only from the host of a Same Page session: the name of the folder it shares. */
+	readonly folder?: string;
+	/** Only from the host: whether the newcomer may stay; false when the session is full or locked. */
 	readonly admitted?: boolean;
+	/** Only from the host, when the newcomer may not stay: why. In a class, 'seatTaken' sends them to a free seat. */
+	readonly refused?: 'full' | 'locked' | 'seatTaken';
+	/** With 'seatTaken': the seats still free. */
+	readonly freeSeats?: readonly number[];
+}
+
+/** The host's settings of the session (Session Settings), sent to everyone when they change and to each newcomer. */
+export interface ISettingsPayload {
+	/** Whether the session is locked: nobody new is admitted, even with the invitation. */
+	readonly locked: boolean;
+	/** In a Same Page session, the participants who may only watch the files, by Trystero id; the others may edit them. */
+	readonly watching: readonly string[];
+	/** In a class, whether every message goes to the whole class; otherwise a student's goes to the tutor only. */
+	readonly classChat?: boolean;
 }
 
 export interface IChatPayload {
@@ -63,6 +91,10 @@ export interface IChatPayload {
 	readonly text: string;
 	/** A data URL of an image, at most MAX_IMAGE_BYTES once decoded. */
 	readonly image?: string;
+	/** When the message is the answer of an agent the sender invited (Invite an Agent): the agent's id. */
+	readonly agent?: string;
+	/** Only from the tutor of a class: a student's message passed on to the class, with the student's name. */
+	readonly from?: string;
 }
 
 /** A snapshot of an editor (Share My Editor): its text, or a notebook without its outputs. Sharing again replaces it. */
@@ -76,6 +108,36 @@ export interface IEditorSharedPayload {
 	readonly languageId?: string;
 	/** Whether the text is a Pluto notebook, which Copy and Compare match with a Pluto page of the receiver's. */
 	readonly pluto?: boolean;
+	/** When the snapshot is a file an agent the sender invited wrote in its answer: the agent's id. */
+	readonly agent?: string;
+	/** Only from the tutor of a class: a student's snapshot shown to the class (Show to the Class), or passed on within their breakout group, with the student's name. */
+	readonly from?: string;
+	/** Only from the tutor, with from: the breakout group within which the student's snapshot was passed on. */
+	readonly group?: number;
+}
+
+/**
+ * In a class, the breakout group a student is in (Split into Breakout Groups), sent by the tutor to each student in a
+ * group when the groups start or change, when the tutor visits or leaves the group, and when everyone is brought back.
+ */
+export interface IGroupPayload {
+	/** The group's number, from 1; none when everyone is back in the class. */
+	readonly group?: number;
+	/** The names of the others in the group. */
+	readonly members?: readonly string[];
+	/** Whether the tutor is visiting the group, so that the tutor's messages go to it alone. */
+	readonly visiting?: boolean;
+}
+
+/**
+ * An agent a participant invited (Invite an Agent): it runs on their computer, and they send its answers. Sent to
+ * everyone when it joins, starts or stops answering, and leaves, and to each newcomer.
+ */
+export interface IAgentPayload {
+	readonly id: string;
+	/** Its name, by which a message starting with @ and the name asks it something. */
+	readonly name: string;
+	readonly state: 'present' | 'answering' | 'left';
 }
 
 /** A dataset (Share Dataset): a CSV file, or a Julia table written out as CSV. Plain text only, never a Julia object. */
@@ -85,6 +147,8 @@ export interface IDatasetSharedPayload {
 	readonly fileName: string;
 	/** The CSV text, at most MAX_DATASET_BYTES. */
 	readonly content: string;
+	/** Only from the tutor of a class: a student's dataset passed on within their breakout group, with the student's name. */
+	readonly from?: string;
 }
 
 /** A file shared in the chat (Add > File), kept as bytes and never opened or run, the receiver can only save it;
@@ -95,6 +159,61 @@ export interface IFileSharedPayload {
 	readonly fileName: string;
 	/** The bytes in base64, at most MAX_FILE_BYTES once decoded. */
 	readonly content: string;
+	/** Only from the tutor of a class: a student's file passed on within their breakout group, with the student's name. */
+	readonly from?: string;
+}
+
+// Same Page: the host shares one folder, whose files the others list and open through requests to the host. Each file
+// open in a session is a Yjs document on the host, which passes every change to the participants who have it open.
+// Paths are relative to the shared folder, with / between their parts.
+
+/** What a participant asks of the host: a folder's entries, a path's kind, or to open, close or save a file. */
+export type FileRequestOp = 'list' | 'stat' | 'open' | 'close' | 'save';
+
+export interface IFileRequestPayload {
+	readonly id: number;
+	readonly op: FileRequestOp;
+	readonly path: string;
+}
+
+/** Why the host refused a request. */
+export type FileRequestError = 'notFound' | 'notAllowed' | 'tooLarge' | 'binary' | 'failed';
+
+export interface IFolderEntry {
+	readonly name: string;
+	readonly folder: boolean;
+}
+
+export interface IFileResponsePayload {
+	readonly id: number;
+	readonly error?: FileRequestError;
+	/** For list: the folder's entries, folders first. */
+	readonly entries?: readonly IFolderEntry[];
+	/** For stat: whether the path is a folder, and its size and time of change. */
+	readonly folder?: boolean;
+	readonly size?: number;
+	readonly mtime?: number;
+	/** For open: the Yjs document of the file, in base64. */
+	readonly state?: string;
+}
+
+/** A change to a file open in the session: a Yjs update, in base64. */
+export interface ITextUpdatePayload {
+	readonly path: string;
+	readonly update: string;
+}
+
+/** The host saved a file; `hash` is that of the text saved, so that a participant whose text is the same marks it saved. */
+export interface ITextSavedPayload {
+	readonly path: string;
+	readonly hash: number;
+}
+
+/** Where a participant's cursor is: the file, and the two ends of the selection as Yjs relative positions in base64. */
+export interface ICursorPayload {
+	readonly path?: string;
+	readonly anchor?: string;
+	readonly head?: string;
 }
 
 /** Sent on leaving; from the host it ends the session. */
@@ -117,7 +236,16 @@ export type Envelope =
 	| IEnvelopeBase<'datasetShared', IDatasetSharedPayload>
 	| IEnvelopeBase<'fileShared', IFileSharedPayload>
 	| IEnvelopeBase<'databaseShared', IFileSharedPayload>
-	| IEnvelopeBase<'bye', IByePayload>;
+	| IEnvelopeBase<'bye', IByePayload>
+	| IEnvelopeBase<'settings', ISettingsPayload>
+	| IEnvelopeBase<'agent', IAgentPayload>
+	| IEnvelopeBase<'group', IGroupPayload>
+	| IEnvelopeBase<'fileRequest', IFileRequestPayload>
+	| IEnvelopeBase<'fileResponse', IFileResponsePayload>
+	| IEnvelopeBase<'textUpdate', ITextUpdatePayload>
+	| IEnvelopeBase<'textSaved', ITextSavedPayload>
+	| IEnvelopeBase<'filesChanged', Record<string, never>>
+	| IEnvelopeBase<'cursor', ICursorPayload>;
 
 export type EnvelopeType = Envelope['type'];
 
@@ -127,6 +255,8 @@ export function envelope<E extends Envelope>(type: E['type'], payload: E['payloa
 	return result as E;
 }
 
+const ENVELOPE_TYPES: ReadonlySet<string> = new Set<EnvelopeType>(['hello', 'chat', 'editorShared', 'datasetShared', 'fileShared', 'databaseShared', 'bye', 'settings', 'agent', 'group', 'fileRequest', 'fileResponse', 'textUpdate', 'textSaved', 'filesChanged', 'cursor']);
+
 /** Whether something received is an envelope this copy understands. */
 export function isEnvelope(value: unknown): value is Envelope {
 	if (!value || typeof value !== 'object') {
@@ -134,7 +264,7 @@ export function isEnvelope(value: unknown): value is Envelope {
 	}
 	const candidate = value as Partial<Envelope>;
 	return candidate.v === PROTOCOL_VERSION
-		&& (candidate.type === 'hello' || candidate.type === 'chat' || candidate.type === 'editorShared' || candidate.type === 'datasetShared' || candidate.type === 'fileShared' || candidate.type === 'databaseShared' || candidate.type === 'bye')
+		&& !!candidate.type && ENVELOPE_TYPES.has(candidate.type)
 		&& typeof candidate.channel === 'string'
 		&& !!candidate.payload && typeof candidate.payload === 'object';
 }
@@ -168,24 +298,26 @@ export function imageBytes(dataUrl: string): number {
 // which encrypts the connection setup, so the introducing servers never see it.
 
 const CODE_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
-const CODE_PATTERN = /(?<code>[0-9A-Za-z]{5}(?:-[0-9A-Za-z]{5}){3})(?<mqtt>@mqtt)?/;
+const CODE_PATTERN = /(?<code>[0-9A-Za-z]{5}(?:-[0-9A-Za-z]{5}){3})(?<flags>(?:@(?:mqtt|class))*)/;
 
 export interface ISessionCode {
 	/** The code as shown, in groups of five. */
 	readonly code: string;
 	readonly strategy: SignallingStrategy;
+	/** Whether the code is that of a class, whose students join a seat each rather than the session's one room. */
+	readonly kind: 'session' | 'class';
 }
 
 /** A new random session code. */
-export function newSessionCode(strategy: SignallingStrategy): ISessionCode {
+export function newSessionCode(strategy: SignallingStrategy, kind: ISessionCode['kind'] = 'session'): ISessionCode {
 	const bytes = crypto.getRandomValues(new Uint8Array(20));
 	const characters = Array.from(bytes, byte => CODE_ALPHABET[byte % 32]).join('');
-	return { code: characters.match(/.{5}/g)!.join('-'), strategy };
+	return { code: characters.match(/.{5}/g)!.join('-'), strategy, kind };
 }
 
-/** The code written as text, with the introduction servers when they are not the default. */
+/** The code written as text, with the introduction servers when they are not the default, and whether it is a class's. */
 export function formatSessionCode(code: ISessionCode): string {
-	return code.strategy === 'mqtt' ? `${code.code}@mqtt` : code.code;
+	return code.code + (code.strategy === 'mqtt' ? '@mqtt' : '') + (code.kind === 'class' ? '@class' : '');
 }
 
 /** The session code in a code typed or pasted, or in a whole invitation; undefined when there is none. */
@@ -199,11 +331,21 @@ export function parseSessionCode(text: string): ISessionCode | undefined {
 	if (/[U]/.test(code)) {
 		return undefined;
 	}
-	return { code, strategy: match.groups.mqtt ? 'mqtt' : 'nostr' };
+	const flags = match.groups.flags ?? '';
+	return { code, strategy: flags.includes('@mqtt') ? 'mqtt' : 'nostr', kind: flags.includes('@class') ? 'class' : 'session' };
 }
 
 /** The Trystero room of a session: a hash of its code, so the room name does not reveal the code. */
 export async function roomIdOf(code: ISessionCode): Promise<string> {
-	const digest = await crypto.subtle.digest('SHA-256', VSBuffer.fromString(`pollis-session:${code.code}`).buffer);
+	return sha256Hex(`pollis-session:${code.code}`);
+}
+
+/** The Trystero room of a seat of a class, where one student meets the tutor. */
+export async function seatRoomIdOf(code: ISessionCode, seat: number): Promise<string> {
+	return sha256Hex(`pollis-session:${code.code}:seat:${seat}`);
+}
+
+async function sha256Hex(text: string): Promise<string> {
+	const digest = await crypto.subtle.digest('SHA-256', VSBuffer.fromString(text).buffer);
 	return encodeHex(VSBuffer.wrap(new Uint8Array(digest)));
 }

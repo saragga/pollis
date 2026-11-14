@@ -94,7 +94,7 @@ interface IYours {
 	delete(accessor: ServicesAccessor, which: string | 'empty'): Promise<void>;
 }
 
-/** Compose > Replication > Browse Replications: famous analyses replicated from their articles. The folder and content key stay `workflows`, for the copies already made and the content repository. */
+/** Compose > Article Replication > Browse Replications: famous analyses replicated from their articles. The folder and content key stay `workflows`, for the copies already made and the content repository. */
 const WORKFLOWS: INotebookLibrary = {
 	page: { id: 'browseReplications', data: BROWSEREPLICATIONS_METADATA.browseReplications },
 	base: 'vs/workbench/contrib/compose/browser/media/workflows',
@@ -107,7 +107,7 @@ const WORKFLOWS: INotebookLibrary = {
 	content: 'workflows',
 	yours: {
 		finished: localize('workflowLibrary.done', "Done by You"),
-		none: localize('workflowLibrary.yours.none', "None: Compose > Replication > Replicate an Article starts one."),
+		none: localize('workflowLibrary.yours.none', "None: Compose > Article Replication > Replicate an Article starts one."),
 		deleteEmpty: localize('workflowLibrary.yours.deleteEmpty', "Delete Empty Replications ({0})"),
 		folder: userReplicationsFolder,
 		read: readReplicationSummaries,
@@ -116,7 +116,7 @@ const WORKFLOWS: INotebookLibrary = {
 	},
 };
 
-/** Compose > Replication, below Replicate an Article: methods no Julia package has, each tested on data against published results. */
+/** Compose > Article Replication, below Replicate an Article: methods no Julia package has, each tested on data against published results. */
 const NEW_METHODS: INotebookLibrary = {
 	page: { id: 'browseMethods', data: BROWSEMETHODS_METADATA.browseMethods },
 	base: 'vs/workbench/contrib/compose/browser/media/methods',
@@ -128,7 +128,7 @@ const NEW_METHODS: INotebookLibrary = {
 	openFailed: (label, error) => localize('newMethods.openFailed', "Could not open the method {0}: {1}", label, error),
 	userMethods: true,
 	yours: {
-		none: localize('newMethods.yours.none', "None: Compose > Replication > Create Article Method starts one."),
+		none: localize('newMethods.yours.none', "None: Compose > Article Replication > Create Article Method starts one."),
 		deleteEmpty: localize('newMethods.yours.deleteEmpty', "Delete Empty Article Methods ({0})"),
 		folder: userMethodsFolder,
 		read: readMethodSummaries,

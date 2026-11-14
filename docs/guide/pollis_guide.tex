@@ -790,7 +790,7 @@ Workflow...} and \ui{Combine Workflows...} in \ui{Compose > Workflows}.
 % =====================================================================
 % PAGES 14–15 — REPLICATION
 % =====================================================================
-\topic{Replication}{Compose > Replication}{Replaying a classic paper from its own data, step by step.}
+\topic{Replication}{Compose > Article Replication}{Replaying a classic paper from its own data, step by step.}
 
 A \emph{replication} reproduces a published analysis on its own public data: a Jupyter notebook
 that follows the article section by section and prints every published value beside Julia's. It shows a
@@ -818,7 +818,7 @@ Long-run risks: the model and aggregate asset prices & Beeler and Campbell (2012
 
 \subhead{Open a replication}
 \begin{enumerate}[label=\arabic*.]
-  \item Choose \ui{Compose > Replication > Browse Replications...}
+  \item Choose \ui{Compose > Article Replication > Browse Replications...}
   \item The page lists yours first, \ui{In Progress} and \ui{Done by You}: click a title to open its page.
     The \ui{Library} follows, with each replication's article (its DOI, or \ui{Web Page} when it has none, and \ui{Copy BibTeX}), the
     Julia packages and datasets it uses, its size, any data it downloads, and the date it was last
@@ -862,7 +862,7 @@ its own report template.
 \end{note}
 
 \subhead{Replicate an article}
-\ui{Compose > Replication > Replicate an Article...} opens a page of five numbered steps; click its
+\ui{Compose > Article Replication > Replicate an Article...} opens a page of five numbered steps; click its
 title to change it. Nothing is saved until you type or add something. Each replication is a folder in
 \texttt{\textasciitilde/.pollis/replications}.
 \begin{enumerate}[label=\arabic*.]
@@ -904,7 +904,7 @@ Workflow...} in a replication's \ui{Record and Share}.
 % =====================================================================
 % PAGES 16–17 — METHODS
 % =====================================================================
-\topic{Article Methods}{Compose > Replication}{Turning a new method into a tested Julia package, with its vignette.}
+\topic{Article Methods}{Compose > Article Replication}{Turning a new method into a tested Julia package, with its vignette.}
 
 A \emph{new method} is one no Julia package has yet, taken from an article: its data, the results the
 article publishes for them, and the code that reproduces them. Pollis makes it a Julia package whose tests
@@ -912,7 +912,7 @@ are the published values, with a \emph{vignette}, its documentation, and can pub
 registry. Without data and expected results there is no new method.
 
 \subhead{Start a method}
-\ui{Compose > Replication > Create Article Method...} opens the method's page, with five numbered steps, below;
+\ui{Compose > Article Replication > Create Article Method...} opens the method's page, with five numbered steps, below;
 its title is at the top: click it to change it. Nothing is saved until you type or add something.
 Each method is a folder in \texttt{\textasciitilde/.pollis/methods}.
 
@@ -956,7 +956,7 @@ organization, and the GitHub CLI, \texttt{gh}, signed in; Pollis asks first: \em
 \ldots?}
 
 \subhead{Browse methods and read vignettes}
-\ui{Compose > Replication > Browse Article Methods...} lists yours \ui{In
+\ui{Compose > Article Replication > Browse Article Methods...} lists yours \ui{In
 Progress}, then the \ui{Library} of the published methods, those by Pollis, from arc-fs to two-scales realized
 volatility, and those you pushed with \ui{Package and Publish}, each with its \ui{Author}: click a heading to
 sort by it, and a method to open your own copy. \ui{Delete} and \ui{Delete Empty Article Methods} move folders to the Trash. \ui{Help >
@@ -987,7 +987,7 @@ methods, and five packages behind panels and features. All are public on GitHub,
 with or without Pollis. None is in the General registry.
 
 \subhead{The method packages}
-The nine methods of the \ui{Library} in \ui{Compose > Replication > Browse Article Methods...} (Article Methods, \pg{Article Methods}).
+The nine methods of the \ui{Library} in \ui{Compose > Article Replication > Browse Article Methods...} (Article Methods, \pg{Article Methods}).
 Each is tested against the published results of the article it comes from, has a vignette, and is in the
 Pollis registry.
 
@@ -1823,11 +1823,13 @@ JuliaC itself the first time it runs.
 % =====================================================================
 % PAGES 32–33 — COLLABORATION
 % =====================================================================
-\topic{Collaboration}{Compose > Collaboration}{Working with others at their own computers: a chat, and sharing code, datasets, files and databases.}
+\topic{Collaboration}{Compose > Collaboration}{Working with others at their own computers: a chat, sharing code, datasets, files and databases, and editing files together.}
 
 A session connects up to five people, each at their own copy of Pollis: two colleagues, a student and a
-tutor, or a small team. Everyone keeps their own editors and notebooks; in the chat you talk, and you
-share what you choose, when you choose. Nobody can change anything on anyone else's computer.
+tutor, or a small team. In a \emph{Side by Side} session everyone keeps their own editors and notebooks; in
+the chat you talk, and you share what you choose, when you choose. In a \emph{Same Page} session everyone
+edits the files of one folder of the host's together (\ui{Edit together}, below). Nobody can run anything on
+anyone else's computer.
 
 \subhead{What you need}
 \begin{itemize}
@@ -1865,6 +1867,27 @@ the message: larger images are reduced to fit the limit of 2 MB. The \ui{+} butt
   \item \ui{Database}: a DuckDB database up to 5 MB (see the next page).
 \end{itemize}
 \ui{Show Participants} lists who is in the session and whether each connection is direct or through a relay.
+
+\subhead{Edit together}
+\begin{enumerate}[label=\arabic*.]
+  \item The host chooses \ui{Compose > Collaboration > Start Same Page Session...}, picks the folder to share,
+    one of the workspace's or another (\ui{Choose a Folder...}), and confirms. The others join as for any session.
+  \item Beside the messages, the chat lists the files of the folder. Click one to open it: the host gets their
+    own file, and the others get it in their own window, beside their own folder.
+  \item Type as usual. The others' changes appear as they make them, and each person's cursor shows in a
+    colour, with their name. \ui{Undo} undoes only your own changes. \ui{Save}, on any computer, writes the file
+    to the host's disk.
+\end{enumerate}
+The others can edit text files of up to 2 MB, but not create, rename or delete files, and each runs code in
+their own Julia session. Notebooks are not edited together yet: share them with \ui{Share My Editor}.
+
+\subhead{Ask an agent}
+Any participant can choose \ui{Compose > Collaboration > Invite an Agent...}: a coding agent of Model Tasks and
+Routing (Claude Code, Codex or OpenCode, on a cloud or a local model) joins under the name they give it, shown as
+\emph{Gemma (invited by Ana)}. Anyone asks it something by starting a message with \texttt{@Gemma}: it answers in
+the chat, and a file it writes reaches everyone as a snapshot, with \ui{Compare with Mine}. It runs on the inviter's
+computer, at their cost (nothing on a local model), reads only the chat and what was shared, in a folder of its own
+deleted when it leaves, and cannot open other files or reach the Internet. \ui{Invite an Agent...} again removes it.
 
 \vfill
 \begin{caution}{The invitation is the key}
@@ -1904,10 +1927,24 @@ connection, or run \texttt{CHECKPOINT}, before sharing. And attach only database
 a database can hold views that read files on the computer where they are queried.
 \end{caution}
 
+\subhead{Session settings}
+In \ui{Compose > Collaboration > Session Settings...} the host ticks \ui{Lock the Session} so that nobody else can
+join, even with the invitation; someone whose connection dropped can still come back. In a Same Page session,
+everyone can edit on joining: the host unticks a participant to let them only \emph{watch}, with the files
+read-only for them while they still see every change. The chat says each change and marks the watchers.
+
+\subhead{A class}
+The tutor starts one with \ui{Compose > Collaboration > Classroom > Start Class Session...}; up to 30 students join
+with \ui{Join Session...}, each connected to the tutor only, who passes on what they write and share.
+\ui{Show to the Class} shows a student's snapshot to the others; \ui{Class Chat}, in \ui{Session Settings...}, lets
+everyone see every message. \ui{Split into Breakout Groups...} makes groups at random, which the tutor can change;
+the tutor sees them all, speaks to one with \ui{Visit a Group...}, and ends them with \ui{Bring Everyone Back}.
+
 \subhead{Leave or end the session}
 \ui{Leave Session}, at the top of the chat or in \ui{Compose > Collaboration}, leaves the session. When the host
 leaves, the session ends for everyone. If the host's connection drops, the others wait a minute for it to come back.
-After the session the chat stays open, to be read, until you close it.
+After the session the chat stays open, to be read, until you close it. The host's files open in a Same Page
+session can then no longer be saved: \ui{Save As...} keeps a copy.
 
 \subhead{How you are connected}
 Free public servers introduce the participants to each other; after that each pair connects directly.
@@ -1919,15 +1956,12 @@ block those, set \setting{pollis.collaboration.\allowbreak signalling} to \textt
 \textbf{``Could not reach the session''} & Check the code, and that the host is still in the session. Then run \ui{Test Connection...} on both computers. \\
 \textbf{Test Connection: no introduction server reachable} & The network blocks Pollis (often a firewall or proxy): try another network, such as a phone's hotspot. \\
 \textbf{Test Connection: nostr blocked, MQTT reachable} & The host sets \setting{pollis.collaboration.signalling} to \texttt{mqtt} and starts a new session. \\
-\textbf{Two people never connect} & Both networks may block direct connections, which need the relay that is not set up yet: one of them tries another network. \\
+\textbf{Two people never connect} & Both networks may block direct connections: one of them tries another network. \\
 \textbf{``The session is full''} & A session has at most five participants, the host included. \\
+\textbf{``... has locked the session''} & Ask the host to untick \ui{Lock the Session} in \ui{Session Settings...}, then join again. \\
 \textbf{A file, dataset or database is refused} & It is over 5 MB, or not what it says it is: send it the usual way. \\
 \end{trouble}
 
-\begin{note}{Not available yet}
-\ui{Start Same Page Session...} (editing together), \ui{Invite an Agent...}, \ui{Session Settings...},
-\ui{Classroom} and \ui{Simulation Games} are in the menu but not built yet: they say so when chosen.
-\end{note}
 
 \seealso{Data and Databases, \pg{Data and Databases}.\quad Inside a Panel, \pg{Inside a Panel}.}
 

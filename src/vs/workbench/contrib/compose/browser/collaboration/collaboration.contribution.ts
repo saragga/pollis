@@ -17,16 +17,23 @@ import { CollaborationEditorBars, IN_SESSION } from './collaborationEditorBar.js
 import { CollaborationService, ICollaborationService, SIGNALLING_SETTING } from './collaborationService.js';
 import './testConnection.js';
 
-// Compose > Collaboration: starting, joining and leaving a session, the chat, Test Connection, Share My Editor and Share Dataset.
+// Compose > Collaboration: starting (Side by Side or Same Page), joining and leaving a session, the chat, Test Connection, Share My Editor and Share Dataset.
 // The menu items are in compose.contribution.ts; these are the commands behind them.
 
 /** The Collaboration commands built so far; compose.contribution.ts shows the others greyed out in the menu. */
 export const IMPLEMENTED_COLLABORATION_COMMANDS: ReadonlySet<string> = new Set([
 	'pollis.collaboration.startSideBySide',
+	'pollis.collaboration.startSamePage',
 	'pollis.collaboration.joinSession',
 	'pollis.collaboration.leaveSession',
 	'pollis.collaboration.invitePeople',
 	'pollis.collaboration.showParticipants',
+	'pollis.collaboration.sessionSettings',
+	'pollis.collaboration.inviteAgent',
+	'pollis.collaboration.startClass',
+	'pollis.collaboration.breakoutGroups',
+	'pollis.collaboration.visitGroup',
+	'pollis.collaboration.bringEveryoneBack',
 	'pollis.collaboration.openChat',
 	'pollis.collaboration.testConnection',
 ]);
@@ -68,10 +75,17 @@ function registerCollaborationCommand(id: string, title: ReturnType<typeof local
 }
 
 registerCollaborationCommand('pollis.collaboration.startSideBySide', localize2('collaboration.startSideBySideCommand', "Start Side by Side Session..."), service => service.startSession());
+registerCollaborationCommand('pollis.collaboration.startSamePage', localize2('collaboration.startSamePageCommand', "Start Same Page Session..."), service => service.startSamePageSession());
 registerCollaborationCommand('pollis.collaboration.joinSession', localize2('collaboration.joinSessionCommand', "Join Session..."), service => service.joinSession());
 registerCollaborationCommand('pollis.collaboration.leaveSession', localize2('collaboration.leaveSessionCommand', "Leave Session"), service => service.leaveSession());
 registerCollaborationCommand('pollis.collaboration.invitePeople', localize2('collaboration.invitePeopleCommand', "Invite People..."), service => service.copyInvitation());
 registerCollaborationCommand('pollis.collaboration.showParticipants', localize2('collaboration.showParticipantsCommand', "Show Participants"), service => service.showParticipants());
+registerCollaborationCommand('pollis.collaboration.startClass', localize2('collaboration.startClassCommand', "Start Class Session..."), service => service.startClassSession());
+registerCollaborationCommand('pollis.collaboration.breakoutGroups', localize2('collaboration.breakoutGroupsCommand', "Split into Breakout Groups..."), service => service.breakoutGroups());
+registerCollaborationCommand('pollis.collaboration.visitGroup', localize2('collaboration.visitGroupCommand', "Visit a Group..."), service => service.visitGroup());
+registerCollaborationCommand('pollis.collaboration.bringEveryoneBack', localize2('collaboration.bringEveryoneBackCommand', "Bring Everyone Back"), service => service.bringEveryoneBack());
+registerCollaborationCommand('pollis.collaboration.inviteAgent', localize2('collaboration.inviteAgentCommand', "Invite an Agent..."), service => service.inviteAgent());
+registerCollaborationCommand('pollis.collaboration.sessionSettings', localize2('collaboration.sessionSettingsCommand', "Session Settings..."), service => service.sessionSettings());
 registerCollaborationCommand('pollis.collaboration.openChat', localize2('collaboration.openChatCommand', "Open Chat"), service => service.openChat());
 
 // Share Dataset: on a CSV file in the Explorer, and called by the Julia table viewer with the table as CSV text

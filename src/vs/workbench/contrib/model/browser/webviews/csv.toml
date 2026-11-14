@@ -202,9 +202,16 @@ context = "Filter before loading"
 purpose = "Select, filter, join or summarise with SQL, even on files larger than memory"
 
 [[inputs]]
+id = "folder"
+label = "Folder"
+tooltip = "Folder of the files: data/examples of the open Pollis Workspace, otherwise in Pollis's own folder. Choose... picks another. A file given by an absolute path is read where it is."
+default = "~/.pollis/data/examples"
+folder = "data/examples"
+
+[[inputs]]
 id = "path"
 label = "File"
-tooltip = "Path to the delimited file, relative to the Julia working directory or absolute. Files ending in .gz are decompressed automatically when reading. With the default, data.csv, reading first writes the airquality example from PollisDatasets to data.csv, unless the working directory has a data.csv already."
+tooltip = "The delimited file, in the folder above, or an absolute path. Files ending in .gz are decompressed automatically when reading. With the default, data.csv, reading first writes the airquality example from PollisDatasets to data.csv, unless the folder has a data.csv already."
 default = "data.csv"
 
 [[inputs]]
@@ -307,9 +314,11 @@ model = "read"
 code = '''
 using CSV, Tables
 
+folder = mkpath(expanduser(raw"{{folder}}"))  # the folder of the files: Choose... picks another
+path = joinpath(folder, "{{path}}")  # an absolute path is kept as it is
 {{?path=data.csv}} using PollisDatasets  # curated example datasets
-{{?path=data.csv}} # Example file: Chambers et al. (1983), daily air quality in New York, May to September 1973, with empty fields for 44 missing readings, written to data.csv in the working directory unless a data.csv is there already. Replace "data.csv" with your own file.
-{{?path=data.csv}} isfile("data.csv") || CSV.write("data.csv", dataset("airquality"))
+{{?path=data.csv}} # Example file: Chambers et al. (1983), daily air quality in New York, May to September 1973, with empty fields for 44 missing readings, written to data.csv in the folder unless a data.csv is there already. Replace "data.csv" with your own file.
+{{?path=data.csv}} isfile(path) || CSV.write(path, dataset("airquality"))
 
 opts = (
 {{?delim!=auto}}	delim = '{{delim}}',
@@ -318,7 +327,7 @@ opts = (
 	decimal = '{{decimal}}',
 	dateformat = "{{dateformat}}",
 )
-file = CSV.File("{{path}}"; opts...)
+file = CSV.File(path; opts...)
 tbl = Tables.columntable(file)  # named tuple of column vectors
 println(length(file), " rows x ", length(tbl), " columns")
 println(Tables.schema(file))
@@ -335,9 +344,11 @@ using CSV, Tables
 
 {{?delim=auto}}opts = (;)  # CSV.write uses commas by default
 {{?delim!=auto}}opts = (delim = '{{delim}}',)
+folder = mkpath(expanduser(raw"{{folder}}"))  # the folder of the files: Choose... picks another
+path = joinpath(folder, "{{path}}")  # an absolute path is kept as it is
 tbl = Tables.columntable({{data}})  # named tuple of column vectors, from any Tables.jl source
-CSV.write("{{path}}", tbl; opts...)  # missing values are written as empty fields
-println("Wrote ", length(first(tbl)), " rows x ", length(tbl), " columns to {{path}} (", filesize("{{path}}"), " bytes)")
+CSV.write(path, tbl; opts...)  # missing values are written as empty fields
+println("Wrote ", length(first(tbl)), " rows x ", length(tbl), " columns to ", path, " (", filesize(path), " bytes)")
 '''
 
 [[codeBranches]]
@@ -345,22 +356,24 @@ model = "rows"
 code = '''
 using CSV, Tables
 
+folder = mkpath(expanduser(raw"{{folder}}"))  # the folder of the files: Choose... picks another
+path = joinpath(folder, "{{path}}")  # an absolute path is kept as it is
 {{?path=data.csv}} using PollisDatasets  # curated example datasets
-{{?path=data.csv}} # Example file: Chambers et al. (1983), daily air quality in New York, May to September 1973, with empty fields for 44 missing readings, written to data.csv in the working directory unless a data.csv is there already. Replace "data.csv" with your own file.
-{{?path=data.csv}} isfile("data.csv") || CSV.write("data.csv", dataset("airquality"))
+{{?path=data.csv}} # Example file: Chambers et al. (1983), daily air quality in New York, May to September 1973, with empty fields for 44 missing readings, written to data.csv in the folder unless a data.csv is there already. Replace "data.csv" with your own file.
+{{?path=data.csv}} isfile(path) || CSV.write(path, dataset("airquality"))
 
 opts = (
 {{?delim!=auto}}	delim = '{{delim}}',
 	header = {{header}},
 	missingstring = [{{missingstring}}],
 )
-rows = CSV.Rows("{{path}}"; opts..., reusebuffer=true)  # untyped: every value is a string or missing
+rows = CSV.Rows(path; opts..., reusebuffer=true)  # untyped: every value is a string or missing
 for (i, row) in enumerate(rows)
 	i > 5 && break
 	println(join((string(coalesce(Tables.getcolumn(row, j), "missing")) for j in 1:length(Tables.columnnames(row))), " | "))
 end
 println("Rows: ", count(_ -> true, rows))  # one pass in constant memory
-tbl = Tables.columntable(CSV.File("{{path}}"; opts..., limit=1000))  # typed sample of the first 1000 rows, for the Next Steps
+tbl = Tables.columntable(CSV.File(path; opts..., limit=1000))  # typed sample of the first 1000 rows, for the Next Steps
 '''
 
 [[codeBranches]]
@@ -368,9 +381,11 @@ model = "chunks"
 code = '''
 using CSV, Tables
 
+folder = mkpath(expanduser(raw"{{folder}}"))  # the folder of the files: Choose... picks another
+path = joinpath(folder, "{{path}}")  # an absolute path is kept as it is
 {{?path=data.csv}} using PollisDatasets  # curated example datasets
-{{?path=data.csv}} # Example file: Chambers et al. (1983), daily air quality in New York, May to September 1973, with empty fields for 44 missing readings, written to data.csv in the working directory unless a data.csv is there already. Replace "data.csv" with your own file.
-{{?path=data.csv}} isfile("data.csv") || CSV.write("data.csv", dataset("airquality"))
+{{?path=data.csv}} # Example file: Chambers et al. (1983), daily air quality in New York, May to September 1973, with empty fields for 44 missing readings, written to data.csv in the folder unless a data.csv is there already. Replace "data.csv" with your own file.
+{{?path=data.csv}} isfile(path) || CSV.write(path, dataset("airquality"))
 
 opts = (
 {{?delim!=auto}}	delim = '{{delim}}',
@@ -380,9 +395,9 @@ opts = (
 	dateformat = "{{dateformat}}",
 )
 chunks = try
-	CSV.Chunks("{{path}}"; opts..., ntasks={{ntasks}})  # each chunk is a typed CSV.File
+	CSV.Chunks(path; opts..., ntasks={{ntasks}})  # each chunk is a typed CSV.File
 catch  # too few rows to split
-	[CSV.File("{{path}}"; opts...)]
+	[CSV.File(path; opts...)]
 end
 sizes = [length(chunk) for chunk in chunks]  # replace length with your per-chunk computation, then combine
 println("Chunks: ", length(sizes), ", rows per chunk: ", sizes, ", total: ", sum(sizes))
@@ -394,15 +409,17 @@ model = "duckdb"
 code = '''
 using DuckDB, Tables
 
+folder = mkpath(expanduser(raw"{{folder}}"))  # the folder of the files: Choose... picks another
+path = joinpath(folder, "{{path}}")  # an absolute path is kept as it is
 {{?path=data.csv}} using CSV, PollisDatasets  # curated example datasets
-{{?path=data.csv}} # Example file: Chambers et al. (1983), daily air quality in New York, May to September 1973, with empty fields for 44 missing readings, written to data.csv in the working directory unless a data.csv is there already. Replace "data.csv" with your own file.
-{{?path=data.csv}} isfile("data.csv") || CSV.write("data.csv", dataset("airquality"))
+{{?path=data.csv}} # Example file: Chambers et al. (1983), daily air quality in New York, May to September 1973, with empty fields for 44 missing readings, written to data.csv in the folder unless a data.csv is there already. Replace "data.csv" with your own file.
+{{?path=data.csv}} isfile(path) || CSV.write(path, dataset("airquality"))
 
 con = DBInterface.connect(DuckDB.DB)  # an in-memory database: the file stays where it is
 nulls = join(("'" * s * "'" for s in [{{missingstring}}]), ", ")  # the missing strings, in SQL
 sql = """
 SELECT *
-FROM read_csv('{{path}}',
+FROM read_csv('$(path)',
 {{?delim!=auto}}	delim = '{{delim}}',
 {{?header=false}}	header = false,
 	decimal_separator = '{{decimal}}',
@@ -472,8 +489,8 @@ models = ["read", "write", "rows", "chunks"]
 code = '''
 using CSV
 
-lines  = countlines("{{path}}")
-parsed = length(CSV.File("{{path}}"; opts...))
+lines  = countlines(path)
+parsed = length(CSV.File(path; opts...))
 header = get(opts, :header, 1) === false ? 0 : 1  # header lines expected on top of the data rows
 println("Lines in file: ", lines, ", rows parsed: ", parsed, ", header lines: ", header)
 println(lines - parsed == header ? "One line per row, as expected" : "Difference of " * string(lines - parsed - header) * ": look for blank lines, quoted line breaks, comments or footers")
@@ -488,7 +505,7 @@ code = '''
 using CSV
 
 try
-	CSV.File("{{path}}"; opts..., strict=true)
+	CSV.File(path; opts..., strict=true)
 	println("Every value parsed cleanly with the inferred column types")
 catch err
 	println("First problem: ", sprint(showerror, err))
@@ -522,9 +539,9 @@ code = '''
 using CSV
 
 readers = [
-	"CSV.File"   => () -> CSV.File("{{path}}"; opts...),
-	"CSV.Rows"   => () -> count(_ -> true, CSV.Rows("{{path}}"; opts..., reusebuffer=true)),
-	"CSV.Chunks" => () -> sum(length, CSV.Chunks("{{path}}"; opts..., ntasks=4)),
+	"CSV.File"   => () -> CSV.File(path; opts...),
+	"CSV.Rows"   => () -> count(_ -> true, CSV.Rows(path; opts..., reusebuffer=true)),
+	"CSV.Chunks" => () -> sum(length, CSV.Chunks(path; opts..., ntasks=4)),
 ]
 for (name, f) in readers
 	try
@@ -572,7 +589,7 @@ desc = "Write the table to an .xlsx file next to the CSV"
 code = '''
 using XLSX
 
-out = first(splitext("{{path}}")) * ".xlsx"
+out = first(splitext(path)) * ".xlsx"
 XLSX.writetable(out, tbl; overwrite=true)
 println("Wrote ", out)
 '''
@@ -585,7 +602,7 @@ models = ["read", "write", "rows", "chunks"]
 code = '''
 using CSV
 
-out = "{{path}}.gz"
-CSV.write(out, CSV.Rows("{{path}}"; opts..., reusebuffer=true); compress=true)
-println("Wrote ", out, " (", round(100 * filesize(out) / filesize("{{path}}"), digits=1), "% of the original size)")
+out = path * ".gz"
+CSV.write(out, CSV.Rows(path; opts..., reusebuffer=true); compress=true)
+println("Wrote ", out, " (", round(100 * filesize(out) / filesize(path), digits=1), "% of the original size)")
 '''

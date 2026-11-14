@@ -43,6 +43,28 @@
 			},
 			"license": "MIT",
 			"developmentDependency": false
+		},
+		{
+			"component": {
+				"type": "npm",
+				"npm": {
+					"name": "yjs",
+					"version": "13.6.33"
+				}
+			},
+			"license": "MIT",
+			"developmentDependency": false
+		},
+		{
+			"component": {
+				"type": "npm",
+				"npm": {
+					"name": "lib0",
+					"version": "0.2.120"
+				}
+			},
+			"license": "MIT",
+			"developmentDependency": false
 		}
 	],
 	"version": 1

@@ -194,16 +194,24 @@ default = "mydb"
 models = ["import", "save"]
 
 [[inputs]]
+id = "folder"
+label = "Folder"
+tooltip = "Folder of the files: data/examples of the open Pollis Workspace, otherwise in Pollis's own folder. Choose... picks another. A file given by an absolute path is read where it is."
+default = "~/.pollis/data/examples"
+folder = "data/examples"
+models = ["import", "save", "export"]
+
+[[inputs]]
 id = "database"
 label = "Database"
-tooltip = "Your own DuckDB database file, relative to the Julia working directory or absolute. It is created if it does not exist yet."
+tooltip = "Your own DuckDB database file, in the folder above, or an absolute path. It is created if it does not exist yet."
 default = "mydata.duckdb"
 models = ["import", "save"]
 
 [[inputs]]
 id = "file"
 label = "File"
-tooltip = "Path of the file to import, relative to the Julia working directory or absolute. Compressed files ending in .gz are read directly. With the default, data.csv, the code first writes the airquality example from PollisDatasets to data.csv, unless the working directory has a data.csv already."
+tooltip = "The file to import, in the folder above, or an absolute path. Compressed files ending in .gz are read directly. With the default, data.csv, the code first writes the airquality example from PollisDatasets to data.csv, unless the folder has a data.csv already."
 default = "data.csv"
 models = ["import"]
 
@@ -260,7 +268,7 @@ label = "append"
 [[inputs]]
 id = "out"
 label = "Output File"
-tooltip = "Path of the file to write, relative to the Julia working directory or absolute. An existing file is overwritten."
+tooltip = "The file to write, in the folder above, or an absolute path. An existing file is overwritten."
 default = "result.parquet"
 models = ["export"]
 
@@ -386,17 +394,20 @@ if isdefined(Main, :{{owncon}})  # running it again: close the earlier connectio
 	isdefined(Main, :PollisDB) ? PollisDB.disconnect({{owncon}}) : DBInterface.close!({{owncon}})
 end
 
+folder = mkpath(expanduser(raw"{{folder}}"))  # the folder of the files: Choose... picks another
+database = joinpath(folder, "{{database}}")  # an absolute path is kept as it is
+file = joinpath(folder, "{{file}}")
 {{?file=data.csv}} using CSV, PollisDatasets  # curated example datasets
-{{?file=data.csv}} # Example file: Chambers et al. (1983), daily air quality in New York, May to September 1973, written to data.csv in the working directory unless a data.csv is there already. Replace "data.csv" with your own file.
-{{?file=data.csv}} isfile("data.csv") || CSV.write("data.csv", dataset("airquality"))
+{{?file=data.csv}} # Example file: Chambers et al. (1983), daily air quality in New York, May to September 1973, written to data.csv in the folder unless a data.csv is there already. Replace "data.csv" with your own file.
+{{?file=data.csv}} isfile(file) || CSV.write(file, dataset("airquality"))
 
-{{owncon}} = DBInterface.connect(DuckDB.DB, "{{database}}")  # creates the file if it does not exist
-{{?mode=replace}}DBInterface.execute({{owncon}}, "CREATE OR REPLACE TABLE {{table}} AS SELECT * FROM {{reader}}('{{file}}')")
-{{?mode=append}}DBInterface.execute({{owncon}}, "INSERT INTO {{table}} SELECT * FROM {{reader}}('{{file}}')")
-DBInterface.close!({{owncon}})  # the table is saved in {{database}}
+{{owncon}} = DBInterface.connect(DuckDB.DB, database)  # creates the file if it does not exist
+{{?mode=replace}}DBInterface.execute({{owncon}}, "CREATE OR REPLACE TABLE {{table}} AS SELECT * FROM {{reader}}('$(file)')")
+{{?mode=append}}DBInterface.execute({{owncon}}, "INSERT INTO {{table}} SELECT * FROM {{reader}}('$(file)')")
+DBInterface.close!({{owncon}})  # the table is saved in the file database
 
 # Later, in this session or another: open the database again, to add a second table or query it
-{{owncon}} = DBInterface.connect(DuckDB.DB, "{{database}}")
+{{owncon}} = DBInterface.connect(DuckDB.DB, database)
 isdefined(Main, :PollisDB) && PollisDB.show({{owncon}}; name = "{{database}}")  # browse it in the Databases view
 connection = {{owncon}}  # the connection, for the Next Steps
 relation = "{{table}}"
@@ -422,16 +433,18 @@ end
 {{?data=tbl}} using PollisDatasets  # curated example datasets
 {{?data=tbl}} # Example data: Chambers et al. (1983), daily air quality in New York, May to September 1973, with 44 missing readings. Replace tbl with your own table.
 {{?data=tbl}} tbl = dataset("airquality");  # datasetinfo("airquality") describes the columns
+folder = mkpath(expanduser(raw"{{folder}}"))  # the folder of the files: Choose... picks another
+database = joinpath(folder, "{{database}}")  # an absolute path is kept as it is
 
-{{owncon}} = DBInterface.connect(DuckDB.DB, "{{database}}")  # creates the file if it does not exist
+{{owncon}} = DBInterface.connect(DuckDB.DB, database)  # creates the file if it does not exist
 DuckDB.register_table({{owncon}}, Tables.columntable({{data}}), "julia_data")  # a view of the Julia columns, not a copy
 {{?mode=replace}}DBInterface.execute({{owncon}}, "CREATE OR REPLACE TABLE {{table}} AS SELECT * FROM julia_data")
 {{?mode=append}}DBInterface.execute({{owncon}}, "INSERT INTO {{table}} SELECT * FROM julia_data")
 DuckDB.unregister_table({{owncon}}, "julia_data")
-DBInterface.close!({{owncon}})  # the table is saved in {{database}}
+DBInterface.close!({{owncon}})  # the table is saved in the file database
 
 # Later, in this session or another: open the database again, to add a second table or query it
-{{owncon}} = DBInterface.connect(DuckDB.DB, "{{database}}")
+{{owncon}} = DBInterface.connect(DuckDB.DB, database)
 isdefined(Main, :PollisDB) && PollisDB.show({{owncon}}; name = "{{database}}")  # browse it in the Databases view
 connection = {{owncon}}  # the connection, for the Next Steps
 relation = "{{table}}"
@@ -450,14 +463,16 @@ if !isdefined(Main, :{{con}})  # connect once, to the built-in databases, as the
 	{{con}} = isdefined(Main, :PollisDB) ? PollisDB.connect(; name = "Pollis") : DBInterface.connect(DuckDB.DB, ":memory:")  # attaches PollisDatasets, PollisRSS, PollisJournals, PollisReferences and PollisBenchmarks, read-only
 end
 
+folder = mkpath(expanduser(raw"{{folder}}"))  # the folder of the files: Choose... picks another
+out = joinpath(folder, "{{out}}")  # an absolute path is kept as it is
 sql = raw"""
 {{sql}}
 """
-DBInterface.execute({{con}}, "COPY (" * rstrip(strip(sql), ';') * ") TO '{{out}}' (FORMAT {{format}})")
+DBInterface.execute({{con}}, "COPY (" * rstrip(strip(sql), ';') * ") TO '$(out)' (FORMAT {{format}})")
 connection = {{con}}  # the connection, for the Next Steps
-relation = "'{{out}}'"  # DuckDB reads the file back, for the Next Steps
+relation = "'$(out)'"  # DuckDB reads the file back, for the Next Steps
 tbl = Tables.columntable(DBInterface.execute({{con}}, "SELECT * FROM $relation LIMIT 1000"))
-println("Wrote {{out}} (", filesize("{{out}}"), " bytes, ", length(tbl), " columns)")
+println("Wrote ", out, " (", filesize(out), " bytes, ", length(tbl), " columns)")
 '''
 
 # Next Steps action groups

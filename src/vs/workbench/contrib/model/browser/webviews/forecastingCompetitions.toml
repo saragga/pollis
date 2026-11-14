@@ -1,0 +1,88 @@
+# Forecasting Competitions Webview Configuration
+# A page of Compose > Competitions in the Time Arrow style of the scaffold, not a panel: only its Powered by and
+# Learn More. `pageCommand` is the command that opens it, which a panel's contribution file would say. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/forecastingCompetitions.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Forecasting Competitions"
+viewType = "pollis.forecastingCompetitions"
+pageCommand = "pollis.competitions.forecastingCompetitions"
+
+[[packages]]
+name = "PollisCompetitions.jl"
+github = "https://github.com/Trumpingtons/PollisCompetitions.jl"
+
+[[wikis]]
+name = "Overview"
+file = "forecastingCompetitions/overview.md"
+bundled = true
+description = "What the page does, its four steps, the competitions it holds, and how a method of your own is run, scored and ranked"
+
+[[wikis]]
+name = "Factsheet"
+file = "forecastingCompetitions/factsheet.md"
+bundled = true
+description = "The competitions, their series, frequencies, horizons and measures, the files of a run and the requirements at a glance"
+
+[[wikis]]
+name = "The M Competitions"
+file = "forecastingCompetitions/m-competitions.md"
+bundled = true
+description = "M1, M3, M4 and M5: their series, their entries, and what each found about simple and complex forecasting methods"
+
+[[wikis]]
+name = "The Error Measures"
+file = "forecastingCompetitions/error-measures.md"
+bundled = true
+description = "sMAPE, MASE and OWA of M1, M3 and M4, and the WRMSSE of M5: what each measures, how it is scaled, and how the totals are taken"
+
+[[wikis]]
+name = "Scoring a Method"
+file = "forecastingCompetitions/scoring-method.md"
+bundled = true
+description = "Writing the forecast function, the benchmarks it is scored beside, when a method is ranked among the entries, and samples of series"
+
+[[wikis]]
+name = "Licences and Downloads"
+file = "forecastingCompetitions/licences-downloads.md"
+bundled = true
+description = "Where each competition's data come from, their licences, the checks of every download, and the sizes of the data and of the entries' forecasts"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "MACFH...1982a"
+
+[[references]]
+key = "MH2000a"
+
+[[references]]
+key = "MSA2020a"
+
+[[references]]
+key = "MSA2022a"
+
+[[references]]
+key = "MSA2022b"
+
+[[references]]
+key = "MSHPS...2025a"
+
+[[references]]
+key = "HK2006a"
+
+[[references]]
+key = "AN2000a"
+
+[[references]]
+separator = true
+label = "Software and Data"
+
+[[references]]
+key = "HK2008a"
+
+[[references]]
+key = "GBWHM2021a"

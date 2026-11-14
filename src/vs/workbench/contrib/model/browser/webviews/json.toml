@@ -155,9 +155,16 @@ context = "Julia table out"
 purpose = "Save results for web services, other languages and tools that read JSON"
 
 [[inputs]]
+id = "folder"
+label = "Folder"
+tooltip = "Folder of the files: data/examples of the open Pollis Workspace, otherwise in Pollis's own folder. Choose... picks another. A file given by an absolute path is read where it is."
+default = "~/.pollis/data/examples"
+folder = "data/examples"
+
+[[inputs]]
 id = "path"
 label = "File"
-tooltip = "Path to a file of records: JSON Lines (one object per line, .jsonl or .ndjson) or one array of objects (.json), relative to the Julia working directory or absolute. With the default, data.jsonl, the example first writes the airquality example from PollisDatasets to data.jsonl, unless the working directory has a data.jsonl already."
+tooltip = "A file of records: JSON Lines (one object per line, .jsonl or .ndjson) or one array of objects (.json), in the folder above, or an absolute path. With the default, data.jsonl, the example first writes the airquality example from PollisDatasets to data.jsonl, unless the folder has a data.jsonl already."
 default = "data.jsonl"
 models = ["query"]
 
@@ -171,7 +178,7 @@ models = ["query"]
 [[inputs]]
 id = "doc"
 label = "File"
-tooltip = "Path to a nested JSON document, relative to the Julia working directory or absolute. With the default, data.json, the example first writes the airquality readings nested by month to data.json, unless the working directory has a data.json already."
+tooltip = "A nested JSON document, in the folder above, or an absolute path. With the default, data.json, the example first writes the airquality readings nested by month to data.json, unless the folder has a data.json already."
 default = "data.json"
 models = ["flatten", "structs"]
 
@@ -205,7 +212,7 @@ label = "columns"
 [[inputs]]
 id = "out"
 label = "Save To"
-tooltip = "Path of the file to write, relative to the Julia working directory or absolute. A file already there is replaced."
+tooltip = "The file to write, in the folder above, or an absolute path. A file already there is replaced."
 default = "out.jsonl"
 models = ["write"]
 
@@ -215,16 +222,18 @@ code = '''
 using DuckDB, Tables
 
 con = DBInterface.connect(DuckDB.DB)  # an in-memory database: the file stays where it is
+folder = mkpath(expanduser(raw"{{folder}}"))  # the folder of the files: Choose... picks another
+path = joinpath(folder, "{{path}}")  # an absolute path is kept as it is
 {{?path=data.jsonl}} using PollisDatasets  # curated example datasets
-{{?path=data.jsonl}} # Example file: Chambers et al. (1983), daily air quality in New York, May to September 1973, one record per line with null for 44 missing readings, written to data.jsonl in the working directory unless a data.jsonl is there already. Replace "data.jsonl" with your own file.
-{{?path=data.jsonl}} if !isfile("data.jsonl")
+{{?path=data.jsonl}} # Example file: Chambers et al. (1983), daily air quality in New York, May to September 1973, one record per line with null for 44 missing readings, written to data.jsonl in the folder unless a data.jsonl is there already. Replace "data.jsonl" with your own file.
+{{?path=data.jsonl}} if !isfile(path)
 {{?path=data.jsonl}} 	DuckDB.register_table(con, dataset("airquality"), "airquality")
-{{?path=data.jsonl}} 	DBInterface.execute(con, "COPY airquality TO 'data.jsonl' (FORMAT json)")
+{{?path=data.jsonl}} 	DBInterface.execute(con, "COPY airquality TO '$(path)' (FORMAT json)")
 {{?path=data.jsonl}} end
 
 sql = """
 SELECT *
-FROM read_json('{{path}}')
+FROM read_json('$(path)')
 WHERE {{filter}}
 """
 tbl = Tables.columntable(DBInterface.execute(con, sql))  # named tuple of column vectors
@@ -238,27 +247,29 @@ code = '''
 using DuckDB, Tables
 
 con = DBInterface.connect(DuckDB.DB)
+folder = mkpath(expanduser(raw"{{folder}}"))  # the folder of the files: Choose... picks another
+document = joinpath(folder, "{{doc}}")  # an absolute path is kept as it is
 {{?doc=data.json}} using PollisDatasets  # curated example datasets
-{{?doc=data.json}} # Example file: the air quality readings of Chambers et al. (1983) nested by month, the way an API answers, written to data.json in the working directory unless a data.json is there already. Replace "data.json" with your own file.
-{{?doc=data.json}} if !isfile("data.json")
+{{?doc=data.json}} # Example file: the air quality readings of Chambers et al. (1983) nested by month, the way an API answers, written to data.json in the folder unless a data.json is there already. Replace "data.json" with your own file.
+{{?doc=data.json}} if !isfile(document)
 {{?doc=data.json}} 	DuckDB.register_table(con, dataset("airquality"), "airquality")
 {{?doc=data.json}} 	DBInterface.execute(con, """
 {{?doc=data.json}} 	COPY (
 {{?doc=data.json}} 		SELECT 'airquality' AS source, list({month: month, days: days} ORDER BY month) AS months
 {{?doc=data.json}} 		FROM (SELECT month, list({day: day, ozone: ozone, temp: temp} ORDER BY day) AS days FROM airquality GROUP BY month)
-{{?doc=data.json}} 	) TO 'data.json' (FORMAT json)
+{{?doc=data.json}} 	) TO '$(document)' (FORMAT json)
 {{?doc=data.json}} 	""")
 {{?doc=data.json}} end
 
-shape = Tables.columntable(DBInterface.execute(con, "DESCRIBE SELECT * FROM read_json('{{doc}}')"))
+shape = Tables.columntable(DBInterface.execute(con, "DESCRIBE SELECT * FROM read_json('$(document)')"))
 foreach((name, type) -> println(name, " :: ", type), shape.column_name, shape.column_type)  # objects are STRUCTs, arrays end in []
 
-picked = Tables.columntable(DBInterface.execute(con, "SELECT json ->> '\$.source' AS value FROM read_json_objects('{{doc}}')"))  # one value by its path: put a path of your document in place of $.source
+picked = Tables.columntable(DBInterface.execute(con, "SELECT json ->> '\$.source' AS value FROM read_json_objects('$(document)')"))  # one value by its path: put a path of your document in place of $.source
 println("\$.source: ", first(picked.value))
 
 sql = """
 SELECT m.month, d.day, d.ozone, d.temp
-FROM read_json('{{doc}}') AS doc,
+FROM read_json('$(document)') AS doc,
 	unnest(doc.months) AS u(m),
 	unnest(m.days) AS v(d)
 """
@@ -271,16 +282,18 @@ model = "structs"
 code = '''
 using JSON, StructUtils, Tables
 
+folder = mkpath(expanduser(raw"{{folder}}"))  # the folder of the files: Choose... picks another
+document = joinpath(folder, "{{doc}}")  # an absolute path is kept as it is
 {{?doc=data.json}} using DuckDB, PollisDatasets  # curated example datasets
-{{?doc=data.json}} # Example file: the air quality readings of Chambers et al. (1983) nested by month, the way an API answers, written to data.json in the working directory unless a data.json is there already. Replace "data.json" with your own file, and the structs with its shape.
+{{?doc=data.json}} # Example file: the air quality readings of Chambers et al. (1983) nested by month, the way an API answers, written to data.json in the folder unless a data.json is there already. Replace "data.json" with your own file, and the structs with its shape.
 {{?doc=data.json}} con = DBInterface.connect(DuckDB.DB)
-{{?doc=data.json}} if !isfile("data.json")
+{{?doc=data.json}} if !isfile(document)
 {{?doc=data.json}} 	DuckDB.register_table(con, dataset("airquality"), "airquality")
 {{?doc=data.json}} 	DBInterface.execute(con, """
 {{?doc=data.json}} 	COPY (
 {{?doc=data.json}} 		SELECT 'airquality' AS source, list({month: month, days: days} ORDER BY month) AS months
 {{?doc=data.json}} 		FROM (SELECT month, list({day: day, ozone: ozone, temp: temp} ORDER BY day) AS days FROM airquality GROUP BY month)
-{{?doc=data.json}} 	) TO 'data.json' (FORMAT json)
+{{?doc=data.json}} 	) TO '$(document)' (FORMAT json)
 {{?doc=data.json}} 	""")
 {{?doc=data.json}} end
 
@@ -299,7 +312,7 @@ struct Report
 	months::Vector{Month}
 end
 
-report = StructUtils.make(Report, JSON.parsefile("{{doc}}"))  # stops with an error at the first field that does not fit
+report = StructUtils.make(Report, JSON.parsefile(document))  # stops with an error at the first field that does not fit
 println(report.source, ": ", length(report.months), " months, ", sum(m -> length(m.days), report.months), " days")
 tbl = Tables.columntable([(month = m.month, day = d.day, ozone = d.ozone, temp = d.temp) for m in report.months for d in m.days])  # flattened for the Next Steps
 '''
@@ -313,13 +326,15 @@ using DuckDB, Tables
 {{?data=data}} # Example data: Chambers et al. (1983), daily air quality in New York, May to September 1973, with 44 missing readings. Replace data with your own table.
 {{?data=data}} data = dataset("airquality");  # datasetinfo("airquality") describes the columns
 
+folder = mkpath(expanduser(raw"{{folder}}"))  # the folder of the files: Choose... picks another
+out = joinpath(folder, "{{out}}")  # an absolute path is kept as it is
 tbl = Tables.columntable({{data}})  # named tuple of column vectors, from any Tables.jl source
 con = DBInterface.connect(DuckDB.DB)
 DuckDB.register_table(con, tbl, "tbl")  # DuckDB sees the Julia table as the view tbl, without copying it
-{{?layout=lines}}DBInterface.execute(con, "COPY tbl TO '{{out}}' (FORMAT json)")  # one object per line, missing values as null
-{{?layout=array}}DBInterface.execute(con, "COPY tbl TO '{{out}}' (FORMAT json, ARRAY true)")  # one array of objects
-{{?layout=columns}}DBInterface.execute(con, "COPY (SELECT list(COLUMNS(*)) FROM tbl) TO '{{out}}' (FORMAT json)")  # one object, an array per column
-println("Wrote ", length(first(tbl)), " rows x ", length(tbl), " columns to {{out}} (", filesize("{{out}}"), " bytes)")
+{{?layout=lines}}DBInterface.execute(con, "COPY tbl TO '$(out)' (FORMAT json)")  # one object per line, missing values as null
+{{?layout=array}}DBInterface.execute(con, "COPY tbl TO '$(out)' (FORMAT json, ARRAY true)")  # one array of objects
+{{?layout=columns}}DBInterface.execute(con, "COPY (SELECT list(COLUMNS(*)) FROM tbl) TO '$(out)' (FORMAT json)")  # one object, an array per column
+println("Wrote ", length(first(tbl)), " rows x ", length(tbl), " columns to ", out, " (", filesize(out), " bytes)")
 '''
 
 # Next Steps action groups
@@ -365,8 +380,8 @@ using DuckDB, Tables
 
 db = DBInterface.connect(DuckDB.DB)
 keycounts = Tables.columntable(DBInterface.execute(db, """
-SELECT key, count(*) AS records, (SELECT count(*) FROM read_json_objects('{{path}}')) AS total
-FROM (SELECT unnest(json_keys(json)) AS key FROM read_json_objects('{{path}}'))
+SELECT key, count(*) AS records, (SELECT count(*) FROM read_json_objects('$(path)')) AS total
+FROM (SELECT unnest(json_keys(json)) AS key FROM read_json_objects('$(path)'))
 GROUP BY key ORDER BY records DESC
 """))
 for (key, n, total) in zip(keycounts.key, keycounts.records, keycounts.total)
@@ -423,8 +438,8 @@ using DuckDB, JSON, Tables
 
 db = DBInterface.connect(DuckDB.DB)
 readers = [
-	"DuckDB read_json" => () -> Tables.columntable(DBInterface.execute(db, "SELECT * FROM read_json('{{path}}')")),
-	"JSON.parse"       => () -> occursin(r"\.(jsonl|ndjson)$", "{{path}}") ? [JSON.parse(line) for line in eachline("{{path}}") if !isempty(strip(line))] : JSON.parse(read("{{path}}", String)),
+	"DuckDB read_json" => () -> Tables.columntable(DBInterface.execute(db, "SELECT * FROM read_json('$(path)')")),
+	"JSON.parse"       => () -> occursin(r"\.(jsonl|ndjson)$", path) ? [JSON.parse(line) for line in eachline(path) if !isempty(strip(line))] : JSON.parse(read(path, String)),
 ]
 for (name, f) in readers
 	f()  # first call compiles
@@ -463,13 +478,13 @@ label = "Export"
 [[actionGroups.actions]]
 id = "save-parquet"
 label = "Save as Parquet"
-desc = "Write the table to table.parquet in the working directory, compressed with zstd"
+desc = "Write the table to table.parquet in the Folder, compressed with zstd"
 code = '''
 using DuckDB
 
 db = DBInterface.connect(DuckDB.DB)
 DuckDB.register_table(db, tbl, "tbl")
-out = "table.parquet"
+out = joinpath(folder, "table.parquet")
 if isfile(out)
 	println(out, " is there already: rename or move it first")
 else
@@ -481,13 +496,13 @@ end
 [[actionGroups.actions]]
 id = "save-csv"
 label = "Save as CSV"
-desc = "Write the table to table.csv in the working directory"
+desc = "Write the table to table.csv in the Folder"
 code = '''
 using DuckDB
 
 db = DBInterface.connect(DuckDB.DB)
 DuckDB.register_table(db, tbl, "tbl")
-out = "table.csv"
+out = joinpath(folder, "table.csv")
 if isfile(out)
 	println(out, " is there already: rename or move it first")
 else

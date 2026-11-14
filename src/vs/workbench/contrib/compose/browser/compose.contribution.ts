@@ -52,6 +52,7 @@ import { IMPORT_REFERENCES_COMMAND_ID, LITERATURE_RADAR_COMMAND_ID } from './lit
 import { BROWSE_REFERENCES_COMMAND_ID } from './browseReferencesPage.js';
 import { SNOWBALL_SEARCH_COMMAND_ID } from '../common/snowballSearch.js';
 import './snowballSearchPage.js';
+import { FORECASTING_COMPETITIONS_COMMAND_ID } from './forecastingCompetitionsPage.js';
 import { openScaffoldWebview } from '../../model/browser/commands/scaffold.command.js';
 import { TIMEFUNCTION_PANEL } from '../../model/browser/commands/timeFunction.command.js';
 import { FINDALLOCS_PANEL } from '../../model/browser/commands/findAllocs.command.js';
@@ -95,7 +96,7 @@ const PdfFilesMenu = new MenuId('menubarPdfFilesMenu');
 
 // ------------------- COMPOSE ------------------------
 
-// The Compose menu: Coding Agents and Agent Skills (codingAgentPage.ts, pollisAgents.ts), MCP Servers (mcpServersPage.ts), Orchestration, Local AI Models, Knowledge for AI Models, New Panels and Package a Toolbox, Literature (Discover Literature, Import References, Browse References), Replication, with the article methods, Workflows, Reports, PDF Files,
+// The Compose menu: Coding Agents and Agent Skills (codingAgentPage.ts, pollisAgents.ts), MCP Servers (mcpServersPage.ts), Orchestration, Local AI Models, Knowledge for AI Models, New Panels and Package a Toolbox, Literature (Discover Literature, Import References, Browse References), Article Replication, with the article methods, Forecasting Competitions, Workflows, Reports, PDF Files,
 // Correctness Tests, Horse Races, Compile Galore and Collaboration, which combine panels. The Toolbox Panels page (toolboxPanelsPage.ts) opens from
 // the Edit button of an installed toolbox in the Extensions pane.
 MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
@@ -205,8 +206,16 @@ MenuRegistry.appendMenuItem(LiteratureMenu, {
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	group: '2_compose',
 	submenu: ReplicationMenu,
-	title: localize('pollisReplication.menu', "Replication"),
+	title: localize('pollisReplication.menu', "Article Replication"),
 	order: 2,
+});
+
+// A forecasting method of the user's own, run on the series of M1, M3, M4, M5 Accuracy or M6, scored as the
+// organisers scored the entries and ranked among them (forecastingCompetitionsPage.ts)
+MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
+	group: '2_compose',
+	command: { id: FORECASTING_COMPETITIONS_COMMAND_ID, title: localize('competitions.forecasting', "Forecasting Competitions...") },
+	order: 3,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {

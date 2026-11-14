@@ -29,7 +29,7 @@ import { IPathService } from '../../../services/path/common/pathService.js';
 import { sendToJuliaRepl } from '../../model/browser/handlers/model.handler.js';
 import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
 import { WRDS_METADATA } from '../../model/browser/webviews/wrds.data.js';
-import { buildWebviewHtml, colorizeBracketsJs, spinnerSvg } from '../../model/browser/webviews/webviewScaffold.js';
+import { buildWebviewHtml, codeEditorCss, codeEditorHtml, codeEditorJs, colorizeBracketsJs, spinnerSvg } from '../../model/browser/webviews/webviewScaffold.js';
 import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
 import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
@@ -451,12 +451,7 @@ function pageHtml(): string {
 		input[type=date]::-webkit-calendar-picker-indicator { opacity: 1; cursor: pointer; }
 		input[type=date], select, textarea { font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-panel-border)); border-radius: 2px; padding: 3px 6px; }
 		/* The SQL box: a transparent text box over its text coloured as the editor colours SQL, the two scrolled together */
-		.wrds-sql-box { position: relative; max-width: 900px; }
-		textarea.wrds-sql, .wrds-sql-colors { box-sizing: border-box; font-family: var(--vscode-editor-font-family); font-size: var(--vscode-editor-font-size); line-height: 1.4; tab-size: 4; white-space: pre; overflow-wrap: normal; padding: 3px 6px; border: 1px solid transparent; border-radius: 2px; }
-		textarea.wrds-sql { position: relative; z-index: 1; display: block; width: 100%; overflow: auto; resize: vertical; color: transparent; background: transparent; caret-color: var(--vscode-input-foreground); border-color: var(--vscode-input-border, var(--vscode-panel-border)); }
-		textarea.wrds-sql::selection { color: transparent; background: var(--vscode-editor-selectionBackground); }
-		.wrds-sql-colors { position: absolute; inset: 0; margin: 0; overflow: hidden; pointer-events: none; color: var(--vscode-input-foreground); background: var(--vscode-input-background); }
-		.wrds-sql-colors .monaco-tokenized-source { white-space: pre; }
+		${codeEditorCss}
 		.wrds-columns { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 2px 16px; max-width: 900px; max-height: 240px; overflow-y: auto; margin: 4px 0 8px; }
 		.wrds-columns label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 		.wrds-columns .type { color: var(--vscode-descriptionForeground); }
@@ -521,10 +516,7 @@ function pageHtml(): string {
 			<span class="small">${text.to}</span> <input type="date" id="end">
 		</div>
 		<h3 class="part">${text.sql}</h3>
-		<div class="wrds-sql-box">
-			<pre class="wrds-sql-colors" id="sqlColors" aria-hidden="true"></pre>
-			<textarea class="wrds-sql" id="sql" rows="14" spellcheck="false" wrap="off"></textarea>
-		</div>
+		${codeEditorHtml('sql', 14)}
 `,
 			},
 			{
@@ -591,6 +583,7 @@ function pageHtml(): string {
 		],
 		pageScriptJs: `
 	${colorizeBracketsJs}
+	${codeEditorJs}
 	const TEXT = ${JSON.stringify(text)};
 	const SPINNER = ${JSON.stringify(spinnerSvg)};
 	const userInput = document.getElementById('user');
@@ -768,19 +761,8 @@ function pageHtml(): string {
 		compose();
 	});
 	dateColumnSelect.addEventListener('change', () => { renderSource(); compose(); });
-	const sqlColors = document.getElementById('sqlColors');
-	/** The SQL box's text, uncoloured, until its colours come: what is typed shows at once. */
-	function showSqlText() {
-		sqlColors.textContent = sqlArea.value + '\\n';
-		syncSqlScroll();
-	}
-	function syncSqlScroll() {
-		sqlColors.scrollTop = sqlArea.scrollTop;
-		sqlColors.scrollLeft = sqlArea.scrollLeft;
-	}
-	sqlArea.addEventListener('scroll', syncSqlScroll);
 	sqlArea.addEventListener('input', () => {
-		showSqlText();
+		showEditorText('sql');
 		sendExtractDraft();
 	});
 
@@ -895,24 +877,18 @@ function pageHtml(): string {
 		const message = event.data;
 		if (message.command === 'state') {
 			render(message);
+		} else if (message.command === 'colorizedCode' && message.box === 'sqlColors') {
+			showEditorColors('sql', message, '--');
 		} else if (message.command === 'colorizedCode') {
-			if (message.box === 'sqlColors' && message.text !== sqlArea.value) {
-				return;
-			}
 			document.getElementById('mtk-theme').textContent = message.css;
 			const box = document.getElementById(message.box);
 			box.innerHTML = message.html;
-			colorizeBrackets(box, message.box === 'sqlColors' ? '--' : '#');
-			if (message.box === 'sqlColors') {
-				// A last empty line, as the text box has, so the two scroll alike
-				box.append(document.createElement('br'));
-				syncSqlScroll();
-			}
+			colorizeBrackets(box, '#');
 		} else if (message.command === 'libraries') {
 			renderLibraries(message);
 		} else if (message.command === 'sql') {
 			sqlArea.value = message.sql;
-			showSqlText();
+			showEditorText('sql');
 			suggestVariable();
 			sendExtractDraft();
 		} else if (message.command === 'file') {

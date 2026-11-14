@@ -87,6 +87,25 @@ export function nextStepIcon(groupId: string): string {
 }
 
 /**
+ * For `nextStepsWiringJs` of a Time Arrow or Minimal page: `openPageStep(button, id, title, event)` opens the panel on
+ * the right as the scaffold opens its own, with the title and an empty `<div id="id">`, closes it when the button's
+ * panel is open already, and dispatches the window event `event`, on which the page's own script fills the panel.
+ */
+export const openPageStepJs = `		function openPageStep(button, id, title, event) {
+			if (currentPanelId === button.id) { hideRightPanel(); return; }
+			currentPanelId = button.id;
+			document.querySelectorAll('.panel-toggle').forEach(function(b) { b.classList.remove('panel-active'); });
+			button.classList.add('panel-active');
+			rightPanel.innerHTML = '<div class="panel-header">'
+				+ '<span class="right-panel-title">' + esc(title) + '</span>'
+				+ '<button class="panel-close" id="btn-panel-close">&#xd7;</button>'
+				+ '</div><div id="' + id + '"></div>';
+			document.getElementById('btn-panel-close').addEventListener('click', hideRightPanel);
+			rightPanel.style.display = 'block';
+			window.dispatchEvent(new Event(event));
+		}`;
+
+/**
  * What a page of the scaffold has. It has one of three styles: Classical, with Example Code; Time Arrow, when `steps`
  * is given, whose numbered panes take the place of Example Code; and Minimal, when `bodyHtml` is given, which takes the
  * place of Example Code as it is. Title, Powered by, Ask Pollis, Next Steps and Learn More are the same in all three; the
@@ -181,6 +200,57 @@ export interface WebviewParts {
 	/** Extra JS appended at the end of the main script block (e.g. message handlers for custom panels). */
 	readonly extraJs?: string;
 }
+
+/**
+ * A code box to type in, coloured as the editor colours its language: a transparent text box `id` over a copy of its
+ * text, `id + 'Colors'`, which the page colours with what `tokenizeToString` gives, the two scrolled together.
+ * `codeEditorHtml` writes the two, `codeEditorCss` styles them, and `codeEditorJs` (which needs `colorizeBracketsJs`)
+ * gives the page's script `showEditorText(id)`, the text uncoloured until its colours come, and
+ * `showEditorColors(id, message, commentStart)`, which colours it from a message of `html`, the theme's `css` and the
+ * `text` coloured, dropped when the text has changed since.
+ */
+export function codeEditorHtml(id: string, rows: number): string {
+	return `<div class="code-editor-box">
+			<pre class="code-editor-colors" id="${id}Colors" aria-hidden="true"></pre>
+			<textarea class="code-editor" id="${id}" rows="${rows}" spellcheck="false" wrap="off"></textarea>
+		</div>`;
+}
+
+/** The styles of `codeEditorHtml`. */
+export const codeEditorCss = `.code-editor-box { position: relative; max-width: 900px; }
+		textarea.code-editor, .code-editor-colors { box-sizing: border-box; font-family: var(--vscode-editor-font-family); font-size: var(--vscode-editor-font-size); line-height: 1.4; tab-size: 4; white-space: pre; overflow-wrap: normal; padding: 3px 6px; border: 1px solid transparent; border-radius: 2px; }
+		textarea.code-editor { position: relative; z-index: 1; display: block; width: 100%; overflow: auto; resize: vertical; color: transparent; background: transparent; caret-color: var(--vscode-input-foreground); border-color: var(--vscode-input-border, var(--vscode-panel-border)); }
+		textarea.code-editor::selection { color: transparent; background: var(--vscode-editor-selectionBackground); }
+		.code-editor-colors { position: absolute; inset: 0; margin: 0; overflow: hidden; pointer-events: none; color: var(--vscode-input-foreground); background: var(--vscode-input-background); }
+		.code-editor-colors .monaco-tokenized-source { white-space: pre; }`;
+
+/** The script of `codeEditorHtml`: see there. A box's copy follows its scrolling once `showEditorText` has run on it. */
+export const codeEditorJs = `function syncEditorScroll(id) {
+		const area = document.getElementById(id), colors = document.getElementById(id + 'Colors');
+		colors.scrollTop = area.scrollTop;
+		colors.scrollLeft = area.scrollLeft;
+	}
+	function showEditorText(id) {
+		const area = document.getElementById(id);
+		if (!area.dataset.scrollSynced) {
+			area.dataset.scrollSynced = 'true';
+			area.addEventListener('scroll', () => syncEditorScroll(id));
+		}
+		document.getElementById(id + 'Colors').textContent = area.value + '\\n';
+		syncEditorScroll(id);
+	}
+	function showEditorColors(id, message, commentStart) {
+		if (message.text !== document.getElementById(id).value) {
+			return;
+		}
+		const colors = document.getElementById(id + 'Colors');
+		document.getElementById('mtk-theme').textContent = message.css;
+		colors.innerHTML = message.html;
+		colorizeBrackets(colors, commentStart);
+		// A last empty line, as the text box has, so the two scroll alike
+		colors.append(document.createElement('br'));
+		syncEditorScroll(id);
+	}`;
 
 /**
  * The script function `colorizeBrackets(root, commentStart)` of the code boxes: colours the brackets of code

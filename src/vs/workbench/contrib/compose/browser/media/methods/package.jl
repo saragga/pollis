@@ -448,7 +448,7 @@ function main(args)
 				println("$name meets the Pollis registry rules.")
 			else
 				println("$name does not meet the Pollis registry rules yet:\n", join("  - " .* problems, "\n"))
-				println("Prepare for Registration, on the method's page (Compose > Replication > Browse Article Methods), asks your coding agent to fix them.")
+				println("Prepare for Registration, on the method's page (Compose > Article Replication > Browse Article Methods), asks your coding agent to fix them.")
 			end
 			owner !== nothing && publish(root, name, owner) && set_published(folder, "https://github.com/$owner/$name.jl")
 			if registry !== nothing

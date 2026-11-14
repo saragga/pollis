@@ -10,7 +10,7 @@ import { composerSendSvg } from '../../../model/browser/webviews/webviewScaffold
 import { composerAddCss, composerAddHtml, composerAddScript } from '../composerAdd.js';
 import { composerVoiceCss, composerVoiceHtml, composerVoiceScript } from '../composerVoice.js';
 import { IWirePacket } from './collaborationTransport.js';
-import { MAX_FILE_BYTES, MAX_IMAGE_BYTES, MAX_RECEIVE_BYTES, PROGRESS_THRESHOLD_BYTES, SignallingStrategy } from './collaborationProtocol.js';
+import { IFolderEntry, MAX_FILE_BYTES, MAX_IMAGE_BYTES, MAX_RECEIVE_BYTES, PROGRESS_THRESHOLD_BYTES, SignallingStrategy } from './collaborationProtocol.js';
 
 // The Collaboration chat page. As in p2p-live-share (whose chat it adapts: messages with images pasted or
 // dragged in), the page holds the Trystero room, so the connection lives as long as the chat; the session
@@ -63,6 +63,11 @@ export interface IChatParticipant {
 	readonly name: string;
 	readonly host: boolean;
 	readonly you: boolean;
+	/** In a Same Page session, whether the host lets the participant only watch the files (Session Settings). */
+	readonly watching: boolean;
+	/** Whether this is an agent a participant invited, and whether it is answering now. */
+	readonly agent: boolean;
+	readonly answering: boolean;
 }
 
 /** A participant's connection, as WebRTC reports it. */
@@ -78,20 +83,27 @@ export interface IPeerConnectionStats {
 
 /** From the workbench to the page. */
 export type ChatPageMessage =
-	| { readonly command: 'join'; readonly bundleUrl: string; readonly appId: string; readonly roomId: string; readonly password: string }
+	/** Joins a room; `key` names it, as several can be joined at once (the seats of a class). */
+	| { readonly command: 'join'; readonly bundleUrl: string; readonly appId: string; readonly roomId: string; readonly password: string; readonly key: string }
 	| { readonly command: 'send'; readonly id: number; readonly peerId: string; readonly packet: IWirePacket }
-	| { readonly command: 'leave' }
+	/** Leaves one room, or, with no key, all of them. */
+	| { readonly command: 'leave'; readonly key?: string }
 	| { readonly command: 'show'; readonly entry: IChatEntry }
 	| { readonly command: 'participants'; readonly participants: readonly IChatParticipant[] }
 	| { readonly command: 'session'; readonly code: string; readonly status: string; readonly ended: boolean }
-	| { readonly command: 'stats'; readonly id: number };
+	| { readonly command: 'stats'; readonly id: number }
+	| { readonly command: 'filesPanel'; readonly folder: string }
+	| { readonly command: 'folder'; readonly path: string; readonly entries: readonly IFolderEntry[]; readonly error?: string }
+	| { readonly command: 'filesChanged' }
+	| { readonly command: 'filesClosed' };
 
 /** From the page to the workbench. */
 export type ChatWorkbenchMessage =
 	| { readonly command: 'ready' }
 	| { readonly command: 'joined'; readonly selfId: string }
 	| { readonly command: 'joinError'; readonly error: string }
-	| { readonly command: 'peerJoin'; readonly peerId: string }
+	/** Someone was met in a room, `key`; a peer is in one room at a time, the last where it was met. */
+	| { readonly command: 'peerJoin'; readonly peerId: string; readonly key: string }
 	| { readonly command: 'peerLeave'; readonly peerId: string }
 	| { readonly command: 'packet'; readonly peerId: string; readonly packet: IWirePacket }
 	| { readonly command: 'sent'; readonly id: number; readonly error?: string }
@@ -107,7 +119,9 @@ export type ChatWorkbenchMessage =
 	| { readonly command: 'sendFile'; readonly fileName: string; readonly content: string }
 	| { readonly command: 'file'; readonly id: string; readonly action: 'save' | 'attach' }
 	| { readonly command: 'voiceLanguage'; readonly value: string }
-	| { readonly command: 'voiceWriteIn'; readonly value: string };
+	| { readonly command: 'voiceWriteIn'; readonly value: string }
+	| { readonly command: 'listFolder'; readonly path: string }
+	| { readonly command: 'openFile'; readonly path: string };
 
 /** The chat page: its texts come from here, the session from the workbench's messages; `language` is that of dictation. */
 export function chatPageHtml(language: string, writeIn: string): string {
@@ -116,6 +130,9 @@ export function chatPageHtml(language: string, writeIn: string): string {
 		participants: localize('collaborationChat.participants', "Participants:"),
 		host: localize('collaborationChat.host', "host"),
 		you: localize('collaborationChat.you', "you"),
+		watching: localize('collaborationChat.watching', "watching"),
+		agent: localize('collaborationChat.agent', "agent"),
+		answering: localize('collaborationChat.answering', "answering..."),
 		copyInvitation: localize('collaborationChat.copyInvitation', "Copy Invitation"),
 		copied: localize('collaborationChat.copied', "Copied"),
 		testConnection: localize('collaborationChat.testConnection', "Test Connection"),
@@ -146,6 +163,9 @@ export function chatPageHtml(language: string, writeIn: string): string {
 		loadDataset: localize('collaborationChat.loadDataset', "Load into My Julia Session"),
 		formulas: localize('collaborationChat.formulas', "Some cells start with =, +, - or @: a spreadsheet may read them as formulas, so check them before opening this file in one."),
 		ended: localize('collaborationChat.ended', "The session has ended. Start or join another from Compose > Collaboration."),
+		filesOf: localize('collaborationChat.filesOf', "Files of {0}", '{0}'),
+		filesHint: localize('collaborationChat.filesHint', "Click a file to edit it with the others."),
+		filesEmpty: localize('collaborationChat.filesEmpty', "No files."),
 	};
 	const csp = `default-src 'none'; style-src 'unsafe-inline'; img-src data: blob:; connect-src wss: https:; script-src ${webviewGenericCspSource} 'unsafe-inline';`;
 	return `<!DOCTYPE html>
@@ -165,7 +185,19 @@ export function chatPageHtml(language: string, writeIn: string): string {
 		.code { font-family: var(--vscode-editor-font-family); font-size: 12px; color: var(--vscode-descriptionForeground); }
 		.status { padding: 4px 12px; color: var(--vscode-descriptionForeground); font-style: italic; }
 		.status:empty { display: none; }
-		#messages { flex: 1; overflow-y: auto; padding: 8px 12px; }
+		.main { flex: 1; display: flex; min-height: 0; }
+		#messages { flex: 1; min-width: 0; overflow-y: auto; padding: 8px 12px; }
+		/* Same Page: the files of the shared folder, beside the messages */
+		#files { width: 240px; flex: none; overflow: auto; padding: 6px 0; border-right: 1px solid var(--vscode-widget-border); }
+		#files[hidden] { display: none; }
+		#files .title { padding: 0 10px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+		#files .hint, #files .empty { padding: 0 10px 4px 10px; font-size: 11px; color: var(--vscode-descriptionForeground); }
+		#files .node { display: flex; align-items: center; gap: 4px; padding-top: 1px; padding-bottom: 1px; padding-right: 8px; cursor: pointer; white-space: nowrap; }
+		#files .node:hover { background: var(--vscode-list-hoverBackground); }
+		#files .twisty { width: 12px; flex: none; color: var(--vscode-descriptionForeground); }
+		#files .twisty.closed::before { content: '\\25B8'; }
+		#files .twisty.open::before { content: '\\25BE'; }
+		#files .name { overflow: hidden; text-overflow: ellipsis; }
 		.entry { margin: 0 0 8px 0; line-height: 1.4; }
 		.entry .meta { font-size: 11px; color: var(--vscode-descriptionForeground); }
 		.entry .meta b { color: var(--vscode-foreground); font-weight: 600; margin-right: 6px; }
@@ -224,7 +256,14 @@ export function chatPageHtml(language: string, writeIn: string): string {
 		<button id="leave">${text.leave}</button>
 	</header>
 	<div class="status" id="status"></div>
-	<div id="messages"></div>
+	<div class="main">
+		<aside id="files" hidden>
+			<div class="title" id="filesTitle"></div>
+			<div class="hint">${text.filesHint}</div>
+			<div id="tree"></div>
+		</aside>
+		<div id="messages"></div>
+	</div>
 	<div id="progress"></div>
 	<footer>
 		<div class="composer">
@@ -250,19 +289,25 @@ export function chatPageHtml(language: string, writeIn: string): string {
 
 	// ---- The Trystero room: joined, sent to and left as the workbench asks ----
 
-	let room, packets, ended = false;
+	// The rooms joined, by key: the session's one room, or the seats of a class; and the room of each peer met
+	const rooms = new Map(), peerRooms = new Map();
+	let ended = false, joinedPosted = false;
 	const names = new Map();
 
 	async function join(message) {
 		const trystero = await import(message.bundleUrl);
-		room = trystero.joinRoom({
+		const key = message.key;
+		if (rooms.has(key)) {
+			return;
+		}
+		const room = trystero.joinRoom({
 			appId: message.appId,
 			password: message.password,
 			maxReceiveBytes: MAX_RECEIVE_BYTES,
 		}, message.roomId, {
 			onJoinError: details => vscode.postMessage({ command: 'joinError', error: details.error }),
 		});
-		packets = room.makeAction('pollis', {
+		const packets = room.makeAction('pollis', {
 			onReceive: context => {
 				if (context.byteLength > MAX_RECEIVE_BYTES) {
 					return false;
@@ -278,12 +323,38 @@ export function chatPageHtml(language: string, writeIn: string): string {
 				vscode.postMessage({ command: 'packet', peerId: context.peerId, packet });
 			},
 		});
-		room.onPeerJoin = peerId => vscode.postMessage({ command: 'peerJoin', peerId });
+		room.onPeerJoin = peerId => {
+			peerRooms.set(peerId, key);
+			vscode.postMessage({ command: 'peerJoin', peerId, key });
+		};
 		room.onPeerLeave = peerId => {
+			// A peer met since in another room has not left
+			if (peerRooms.get(peerId) !== key) {
+				return;
+			}
+			peerRooms.delete(peerId);
 			removeBar('in:' + peerId);
 			vscode.postMessage({ command: 'peerLeave', peerId });
 		};
-		vscode.postMessage({ command: 'joined', selfId: trystero.selfId });
+		rooms.set(key, { room, packets });
+		if (!joinedPosted) {
+			joinedPosted = true;
+			vscode.postMessage({ command: 'joined', selfId: trystero.selfId });
+		}
+	}
+
+	function leaveRoom(key) {
+		const entry = rooms.get(key);
+		if (!entry) {
+			return;
+		}
+		rooms.delete(key);
+		for (const [peerId, roomKey] of [...peerRooms]) {
+			if (roomKey === key) {
+				peerRooms.delete(peerId);
+			}
+		}
+		entry.room.leave();
 	}
 
 	async function send(message) {
@@ -293,7 +364,11 @@ export function chatPageHtml(language: string, writeIn: string): string {
 			progressBar(key, TEXT.sending, message.peerId, size);
 		}
 		try {
-			await packets.send(message.packet, {
+			const entry = rooms.get(peerRooms.get(message.peerId));
+			if (!entry) {
+				throw new Error('not connected to ' + message.peerId);
+			}
+			await entry.packets.send(message.packet, {
 				target: message.peerId,
 				onProgress: size > PROGRESS_THRESHOLD_BYTES ? progress => updateBar(key, progress) : undefined,
 			});
@@ -308,7 +383,8 @@ export function chatPageHtml(language: string, writeIn: string): string {
 	// Which connection each participant is on: the candidate pair in use, and its round trip
 	async function stats(id) {
 		const peers = [];
-		for (const [peerId, connection] of Object.entries(room ? room.getPeers() : {})) {
+		const connections = [...rooms.entries()].flatMap(([key, entry]) => Object.entries(entry.room.getPeers()).filter(([peerId]) => peerRooms.get(peerId) === key));
+		for (const [peerId, connection] of connections) {
 			const report = new Map();
 			(await connection.getStats()).forEach(entry => report.set(entry.id, entry));
 			let pair;
@@ -476,7 +552,7 @@ export function chatPageHtml(language: string, writeIn: string): string {
 			const person = document.createElement('span');
 			person.className = 'person';
 			person.textContent = participant.name;
-			const roles = [participant.host ? TEXT.host : '', participant.you ? TEXT.you : ''].filter(Boolean);
+			const roles = [participant.host ? TEXT.host : '', participant.you ? TEXT.you : '', participant.watching ? TEXT.watching : '', participant.agent ? TEXT.agent : '', participant.answering ? TEXT.answering : ''].filter(Boolean);
 			if (roles.length) {
 				const role = document.createElement('span');
 				role.className = 'role';
@@ -561,8 +637,9 @@ export function chatPageHtml(language: string, writeIn: string): string {
 			case 'join': join(message).catch(error => vscode.postMessage({ command: 'joinError', error: String(error) })); break;
 			case 'send': send(message); break;
 			case 'leave':
-				room?.leave();
-				room = undefined;
+				for (const key of message.key ? [message.key] : [...rooms.keys()]) {
+					leaveRoom(key);
+				}
 				break;
 			case 'show': show(message.entry); break;
 			case 'participants':
@@ -585,8 +662,74 @@ export function chatPageHtml(language: string, writeIn: string): string {
 				input.disabled = ended;
 				break;
 			case 'stats': stats(message.id); break;
+			case 'filesPanel':
+				expanded.clear();
+				folderElements.clear();
+				$('filesTitle').textContent = TEXT.filesOf.replace('{0}', message.folder);
+				$('files').hidden = false;
+				vscode.postMessage({ command: 'listFolder', path: '' });
+				break;
+			case 'folder': showFolder(message.path, message.entries, message.error); break;
+			case 'filesChanged': vscode.postMessage({ command: 'listFolder', path: '' }); break;
+			case 'filesClosed': $('files').hidden = true; break;
 		}
 	});
+
+	// ---- Same Page: the files of the shared folder, listed as the workbench answers ----
+
+	const expanded = new Set();
+	const folderElements = new Map();
+
+	function showFolder(path, entries, error) {
+		const container = path === '' ? $('tree') : folderElements.get(path);
+		if (!container) {
+			return;
+		}
+		container.replaceChildren();
+		if (error || !entries.length) {
+			const note = document.createElement('div');
+			note.className = 'empty';
+			note.textContent = error || TEXT.filesEmpty;
+			container.append(note);
+			return;
+		}
+		const depth = path === '' ? 0 : path.split('/').length;
+		for (const entry of entries) {
+			const child = path === '' ? entry.name : path + '/' + entry.name;
+			const row = document.createElement('div');
+			row.className = 'node';
+			row.style.paddingLeft = (10 + depth * 12) + 'px';
+			row.title = child;
+			const twisty = document.createElement('span');
+			twisty.className = 'twisty' + (entry.folder ? (expanded.has(child) ? ' open' : ' closed') : '');
+			const name = document.createElement('span');
+			name.className = 'name';
+			name.textContent = entry.name;
+			row.append(twisty, name);
+			container.append(row);
+			if (!entry.folder) {
+				row.addEventListener('click', () => vscode.postMessage({ command: 'openFile', path: child }));
+				continue;
+			}
+			const children = document.createElement('div');
+			container.append(children);
+			folderElements.set(child, children);
+			row.addEventListener('click', () => {
+				if (expanded.has(child)) {
+					expanded.delete(child);
+					children.replaceChildren();
+					twisty.className = 'twisty closed';
+				} else {
+					expanded.add(child);
+					twisty.className = 'twisty open';
+					vscode.postMessage({ command: 'listFolder', path: child });
+				}
+			});
+			if (expanded.has(child)) {
+				vscode.postMessage({ command: 'listFolder', path: child });
+			}
+		}
+	}
 	vscode.postMessage({ command: 'ready' });
 	input.focus();
 </script>

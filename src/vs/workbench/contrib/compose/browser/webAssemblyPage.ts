@@ -29,7 +29,7 @@ import { sendToJuliaRepl } from '../../model/browser/handlers/model.handler.js';
 import { folderUri } from '../../model/browser/handlers/scaffold.handler.js';
 import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
 import { WEBASSEMBLY_METADATA } from '../../model/browser/webviews/webAssembly.data.js';
-import { buildWebviewHtml, colorizeBracketsJs, nextStepIcon } from '../../model/browser/webviews/webviewScaffold.js';
+import { buildWebviewHtml, colorizeBracketsJs, nextStepIcon, openPageStepJs } from '../../model/browser/webviews/webviewScaffold.js';
 import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
 import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
 import { findPollisWorkspace, pollisWorkspaceFolderPath } from '../../pollisWorkspace/browser/pollisWorkspace.contribution.js';
@@ -772,19 +772,7 @@ function pageHtml(): string {
 		nextStepsHtml: `					<li><button class="list-btn panel-toggle" id="btn-javascript">${nextStepIcon('compare')}${text.javascript}</button></li>
 					<li><button class="list-btn panel-toggle" id="btn-ways">${nextStepIcon('compare')}${text.ways3}</button></li>`,
 		// The panels on the right, opened as the scaffold opens its own, which the page's script then fills
-		nextStepsWiringJs: `		function openPageStep(button, id, title, event) {
-			if (currentPanelId === button.id) { hideRightPanel(); return; }
-			currentPanelId = button.id;
-			document.querySelectorAll('.panel-toggle').forEach(function(b) { b.classList.remove('panel-active'); });
-			button.classList.add('panel-active');
-			rightPanel.innerHTML = '<div class="panel-header">'
-				+ '<span class="right-panel-title">' + esc(title) + '</span>'
-				+ '<button class="panel-close" id="btn-panel-close">&#xd7;</button>'
-				+ '</div><div id="' + id + '"></div>';
-			document.getElementById('btn-panel-close').addEventListener('click', hideRightPanel);
-			rightPanel.style.display = 'block';
-			window.dispatchEvent(new Event(event));
-		}
+		nextStepsWiringJs: `${openPageStepJs}
 		document.getElementById('btn-javascript').addEventListener('click', function() {
 			openPageStep(this, 'javascriptStep', ${JSON.stringify(text.javascript)}, 'pollis-javascript-step');
 		});

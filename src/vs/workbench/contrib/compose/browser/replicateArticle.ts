@@ -37,7 +37,7 @@ import { AgentTask } from './modelRouting.js';
 import { methodFromReplication, openUserMethod, userMethodsFolder } from './newMethods.js';
 import { EXPLAIN_DIFFERENCES_COMMAND_ID, PLAN_REPLICATION_COMMAND_ID, pollisJlPath, REPLICATE_WITH_AGENT_COMMAND_ID, skillFile, startAgent } from './pollisAgents.js';
 
-// Compose > Replication > Replicate an Article...: a replication of a published analysis, made from its article.
+// Compose > Article Replication > Replicate an Article...: a replication of a published analysis, made from its article.
 // A replication is a folder of ~/.pollis/replications with replication.toml, which holds the article's link and
 // the input tables, the published results it must reproduce in targets/*.csv, and results.csv, which the
 // replication's notebook writes when it runs in the folder: Pollis.replicate and Pollis.compare put each published
@@ -308,7 +308,7 @@ async function readReplications(fileService: IFileService, pathService: IPathSer
 
 function replicationToml(name: string, title: string): string {
 	return [
-		'# A Pollis replication (Compose > Replication > Replicate an Article...). Its page shows the article and the',
+		'# A Pollis replication (Compose > Article Replication > Replicate an Article...). Its page shows the article and the',
 		'# tables; the replication\'s notebook, run in this folder, writes results.csv, which Compare reads.',
 		'#',
 		'#   targets/*.csv   the published results: the row labels in the first column, the values as printed',
@@ -1670,7 +1670,7 @@ export async function deleteUserReplications(accessor: ServicesAccessor, which: 
 
 registerAction2(class extends Action2 {
 	constructor() {
-		super({ id: REPLICATE_ARTICLE_COMMAND_ID, title: localize2('replicateArticle.open', "Replicate an Article..."), category: localize2('replication.category', "Replication"), f1: true });
+		super({ id: REPLICATE_ARTICLE_COMMAND_ID, title: localize2('replicateArticle.open', "Replicate an Article..."), category: localize2('replication.category', "Article Replication"), f1: true });
 	}
 	run(accessor: ServicesAccessor): Promise<void> {
 		return openReplicationPage(accessor);
@@ -1684,7 +1684,7 @@ for (const [id, title] of [
 ] as const) {
 	registerAction2(class extends Action2 {
 		constructor() {
-			super({ id, title, category: localize2('replication.category', "Replication"), f1: true });
+			super({ id, title, category: localize2('replication.category', "Article Replication"), f1: true });
 		}
 		run(accessor: ServicesAccessor, folder?: URI): Promise<void> {
 			return runReplicationTask(accessor, id, folder);

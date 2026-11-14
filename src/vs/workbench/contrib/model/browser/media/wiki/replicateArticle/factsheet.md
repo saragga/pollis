@@ -10,7 +10,7 @@ A **Pollis replication** reproduces a published analysis on its data: every valu
 | **Steps** | Article and Data, Plan, Replicate, Compare, Record and Share |
 | **Output** | A folder of `~/.pollis/replications` with `replication.toml`, the target tables and `results.csv` |
 | **Result** | How many target tables and values are at the precision they require, and how many differences are explained |
-| **Listed in** | Compose > Replication > Browse Replications, under In Progress or Done by You |
+| **Listed in** | Compose > Article Replication > Browse Replications, under In Progress or Done by You |
 
 ## When to Replicate an Article
 
@@ -20,7 +20,7 @@ A **Pollis replication** reproduces a published analysis on its data: every valu
 
 ## What a Pollis Replication Is Not
 
-A Pollis replication is not a Julia package and not a new method: for a method that no Julia package has, Compose > Replication > Create Article Method makes one, with the article's tables as its tests. A replication is not a new study on new data either: it checks the article's own data against the article's own numbers.
+A Pollis replication is not a Julia package and not a new method: for a method that no Julia package has, Compose > Article Replication > Create Article Method makes one, with the article's tables as its tests. A replication is not a new study on new data either: it checks the article's own data against the article's own numbers.
 
 ## See Also
 - [Overview](overview.md)

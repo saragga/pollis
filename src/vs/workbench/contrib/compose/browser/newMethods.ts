@@ -42,7 +42,7 @@ import { INotebookEditorModelResolverService } from '../../notebook/common/noteb
 import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
 import { appendToml, ARTICLE_DATA_SCRIPT, ARTICLE_DATA_STYLE, ArticleDataMessage, articleDataHtml, articleDataText, createArticleData, draftName, IArticleDataKind, IArticleDataRecord, IArticleDataServices, inputBlock, isArticleDataMessage, IStudyInput, makesFolder, readTables, setTomlValue, table, text, tomlString, withPaths } from './articleAndData.js';
 
-// Compose > Replication > Create Article Method (Browse Article Methods, which lists them, is in workflowLibrary.ts).
+// Compose > Article Replication > Create Article Method (Browse Article Methods, which lists them, is in workflowLibrary.ts).
 // A method is a folder of ~/.pollis/methods with method.toml, its code in src/NAME.jl (module NAME),
 // the published results it must reproduce in targets/*.csv and the user's notes for a coding agent in
 // INSTRUCTIONS.md. New Method opens the page of a new method with no folder: the first thing typed or added makes it, named after the title, else NewMethod
@@ -161,7 +161,7 @@ async function readMethods(fileService: IFileService, pathService: IPathService)
 
 function methodToml(name: string, title: string, article: string): string {
 	return [
-		'# A Pollis article method (Compose > Replication). Create Method shows the article and the tables; Package and',
+		'# A Pollis article method (Compose > Article Replication). Create Method shows the article and the tables; Package and',
 		`# Publish turns this folder into the Julia package ${name}.jl, its tests the target tables.`,
 		'#',
 		'#   targets/*.csv     the published results: the row labels in the first column, the values as printed',

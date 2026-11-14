@@ -15,7 +15,7 @@ import { EXPORT_NOTEBOOK_LATEX_COMMAND_ID, MAKE_NOTEBOOK_SLIDES_COMMAND_ID, POLI
 import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
 
 // Compose > Workflows > Browse Operational Workflows: the workflows that do a job on the user's own work
-// (a notebook made into a report, say), where a replication (Compose > Replication) reproduces an analysis. Each one is
+// (a notebook made into a report, say), where a replication (Compose > Article Replication) reproduces an analysis. Each one is
 // a Pollis command; the page says what it does and runs it.
 
 export const BROWSE_OPERATIONAL_WORKFLOWS_COMMAND_ID = 'pollis.workflows.browseOperational';

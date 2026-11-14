@@ -78,6 +78,9 @@ class GroupBar extends Disposable {
 			append(this.node, $('span')).textContent = localize('collaboration.sharedBy', "Shared by {0} at {1}", snapshot.sharer, time);
 			this.addButton(localize('collaboration.copyToMyEditor', "Copy to My Editor"), false, () => this.collaborationService.copyToMyEditor(resource));
 			this.addButton(localize('collaboration.compareWithMine', "Compare with Mine"), true, () => this.collaborationService.compareWithMine(resource));
+			if (this.collaborationService.canShowToClass(resource)) {
+				this.addButton(localize('collaboration.showToClass', "Show to the Class"), true, () => this.collaborationService.showToClass(resource));
+			}
 		} else if (shareableKind(editor) === 'text' || shareableKind(editor) === 'notebook') {
 			this.addButton(localize('collaboration.shareMyEditor', "Share My Editor"), false, () => this.collaborationService.shareEditor(editor));
 		} else {

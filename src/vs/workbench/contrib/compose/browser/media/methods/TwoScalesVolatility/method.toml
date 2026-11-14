@@ -1,4 +1,4 @@
-# A Pollis article method (Compose > Replication). Create Method shows the article and the tables; Package and
+# A Pollis article method (Compose > Article Replication). Create Method shows the article and the tables; Package and
 # Publish turns this folder into the Julia package NewMethod.jl, its tests the target tables.
 #
 #   targets/*.csv     the published results: the row labels in the first column, the values as printed
