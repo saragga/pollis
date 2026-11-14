@@ -66,7 +66,7 @@ taken out of the session as a library, a program, a function of a database or a 
   tools, called from a C program (\S\ref{sec:shared})\\
 \cellpath{Compile Julia to an Executable} & Panel & One Julia program compiled into an executable by three tools
   (\S\ref{sec:exe})\\
-\cellpath{Compile Julia to WebAssembly} & Steps & One Julia function compiled to WebAssembly in two ways, checked and
+\cellpath{Compile Julia to WebAssembly} & Steps & One Julia function compiled to WebAssembly in three ways, checked and
   drawn live in the page (\S\ref{sec:wasm})\\
 \multicolumn{3}{@{}l}{\emph{Other Languages}}\\
 \cellpath{Mix Julia with Compiled Code} & Panel & Julia calls C, Fortran and C++; C calls Julia
@@ -270,7 +270,7 @@ runs beside JavaScript, designed by engineers of the four major browser makers, 
 Schuff, Titzer, Holman, Gohman, Wagner, Zakai and Bastien (2017)}, and then runs the module in the page itself.
 \begin{enumerate}
   \item \textbf{The Function.} The example in the Julia REPL, and its counts from \file{fractal_counts}.
-  \item \textbf{Compile.} The module \file{fractal.wasm}, in one of the two ways below.
+  \item \textbf{Compile.} The module \file{fractal.wasm}, in one of the three ways below.
   \item \textbf{Check.} The page runs the module on the example and Pollis saves its counts as \file{counts.bin};
     Julia reads them back and prints the number of pixels that differ from the counts of step 1.
   \item \textbf{Live View.} The page draws the set with the module, again at each turn of the mouse wheel, which zooms
@@ -286,6 +286,10 @@ Through Rust & \file{escape_time} translated to Rust beside \file{fill_counts}, 
   with \code{cargo build -{}-release -{}-target wasm32-unknown-unknown}; the code adds the target with rustup the first
   time & \file{escape_time}, \file{fill_counts}, \file{alloc_counts}, \file{free_counts} and \file{memory}: one call
   for a whole picture\\
+Through C & The same function and loop translated to C, compiled by clang for \file{wasm32-unknown-unknown} and linked
+  by wasm-ld, both parts of LLVM, \dcite{LA2004a}{Lattner and Adve (2004)}, from the Julia packages Clang\_jll and
+  LLD\_jll, which the code installs once in a project of its own; no C library, so \file{alloc_counts} takes its room
+  after \file{__heap_base} & The same as Through Rust, in a smaller module\\
 With WebAssemblyCompiler.jl & The Julia function of step 1 itself, compiled through Binaryen by WebAssemblyCompiler.jl,
   \dcite{Sho2026b}{Short (2026b)}, in a Julia 1.10 that the code starts through juliaup, \code{julia +1.10}, since the
   package does not install on Julia 1.12 or later & \file{escape_time} alone: one call for each pixel, from a loop in
@@ -293,10 +297,11 @@ With WebAssemblyCompiler.jl & The Julia function of step 1 itself, compiled thro
 \bottomrule
 \end{tabularx}
 \end{center}
-WebAssembly computes with the same 64-bit numbers as Julia and has no fused multiply-add for single numbers, so both
-modules give Julia's count at every pixel. The page reads no file itself: Pollis sends it the bytes of the module at
-each Check and each Draw, so a new build is the one that runs. Next Step: \ui{The Same in JavaScript}, the function
-and the loop over the pixels written in JavaScript, timed in the page beside each module built.
+WebAssembly computes with the same 64-bit numbers as Julia and has no fused multiply-add for single numbers, and the C way is
+compiled with \code{-ffp-contract=off}, so all three modules give Julia's count at every pixel. The page reads no file itself: Pollis sends it the bytes of the module at
+each Check and each Draw, so a new build is the one that runs. Next Steps: \ui{The Same in JavaScript}, the function
+and the loop over the pixels written in JavaScript, timed in the page beside each module built; \ui{Compare the Ways},
+the three modules side by side, with what each way needs, the size of its module, its fastest time and its calls.
 
 \section{Where the programs go}\label{sec:folders}
 The pages that build a program, a library or an extension have a \ui{Folder} field with \ui{Choose...}. Its default is
@@ -316,7 +321,8 @@ Translate Julia to Rust & \file{programs/rust} & \file{fractal}, the crate\\
 Julia Functions in DuckDB & \file{programs/duckdb_extensions} & \file{fractal}, the crate, and
   \file{fractal.duckdb_extension}\\
 Compile Julia to WebAssembly & \file{programs/webassembly} & \file{rust}, with the crate \file{fractal} and
-  \file{fractal.wasm}; \file{webassemblycompiler}, with \file{compile.jl}, its project and \file{fractal.wasm}\\
+  \file{fractal.wasm}; \file{c}, with \file{fractal.c}, \file{build.jl}, its project and \file{fractal.wasm};
+  \file{webassemblycompiler}, with \file{compile.jl}, its project and \file{fractal.wasm}\\
 Mix Julia with Compiled Code & \file{~/.pollis/mix} & One folder for each tab; no Folder field\\
 \bottomrule
 \end{tabularx}
@@ -343,6 +349,8 @@ PackageCompiler.jl, StaticCompiler.jl, StaticTools.jl & The tabs of those tools\
 Rust 1.85 or later, with cargo, from rustup & Translate Julia to Rust; Julia Functions in DuckDB, Rust Extension,
   whose first build also downloads duckdb-neo; Compile Julia to WebAssembly, Through Rust, whose code adds the target
   \file{wasm32-unknown-unknown}\\
+Clang\_jll and LLD\_jll & Compile Julia to WebAssembly, Through C, which the code installs once in a project of
+  its own\\
 Julia 1.10, through juliaup (\code{juliaup add 1.10}) & Compile Julia to WebAssembly, With WebAssemblyCompiler.jl,
   which the code installs once in a project of its own\\
 DuckDB.jl and Tables.jl & Julia Functions in DuckDB\\

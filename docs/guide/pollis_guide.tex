@@ -180,6 +180,7 @@ Questions and problems: \ui{Help > Report Issue}, or \contactemail.
 \contentsentry{Alerts}\\
 \contentsentry{Event Studies}\\
 \contentsentry{Profiling and Correctness Tests}\\
+\contentsentry{Compilation Lab}\\
 \contentsentry{Collaboration}\\
 \contentsentry{Orchestration}\\
 \contentsentry{Literature Radar}\\
@@ -1736,6 +1737,88 @@ contrast, gives an input you can run again.
 \end{trouble}
 
 \seealso{Inside a Panel, \pg{Inside a Panel}.\quad Orchestration, \pg{Orchestration}.\quad Replication, \pg{Replication}.}
+
+% =====================================================================
+% COMPILATION LAB
+% =====================================================================
+\topic{Compilation Lab}{Compose > Compilation Lab}{Julia code taken beyond Julia: into a library, a program, a web page, another language or a database, and checked against Julia each time.}
+
+Compilation Lab compiles a Julia function for use outside Julia, or calls compiled code from Julia. Every
+entry has the same example: the number of iterations at each pixel of the Mandelbrot set or of the Julia set
+of c. Each one checks that the count at every pixel is Julia's before it times anything, so a faster version
+is known to compute the same thing. Programs and libraries go in the \texttt{programs} folder of the open
+Pollis Workspace (\pg{Reports}); \ui{Choose...}, beside \ui{Folder}, picks another.
+
+\newcommand{\compilationtable}[1]{\begin{center}\small\renewcommand{\arraystretch}{1.2}%
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.27\linewidth}>{\raggedright\arraybackslash}p{0.25\linewidth}>{\raggedright\arraybackslash}X@{}}
+\textbf{Entry} & \textbf{Tabs or steps} & \textbf{What you get}\\
+#1
+\end{tabularx}\end{center}}
+
+\subhead{Compile Julia}
+\compilationtable{%
+\ui{Compile Julia to a Shared Library...} & JuliaC, PackageCompiler, StaticCompiler & A library that a C program calls, checked against Julia; Python and R call the same library in Next Steps\\
+\ui{Compile Julia to an Executable...} & JuliaC, PackageCompiler, StaticCompiler & A program that draws the picture by itself, from a terminal or a double-click, timed against \texttt{julia} running the same script\\
+\ui{Compile Julia to WebAssembly...} & The Function, Compile, Check, Live View & A module that runs in the page, checked against Julia, then drawing the set live as you zoom with the mouse wheel and drag\\}
+
+\subhead{Other Languages}
+\compilationtable{%
+\ui{Mix Julia with Compiled Code...} & Call C, Call Fortran, Call C++, Julia Callback, Julia from C & Julia calling compiled code with \texttt{@ccall}, a compiled loop calling back into Julia, and a C program calling Julia\\
+\ui{Translate Julia to Rust...} & The Function, Translate, Build, Compare & The function written in Rust, built with cargo and called from Julia; \ui{Translate with Agent} hands your own function to your coding agent\\
+\ui{Julia Functions in DuckDB...} & Julia Function, Rust Extension & The function inside SQL queries: registered from the Julia session, or compiled into a DuckDB extension\\}
+
+\subhead{Three tools for libraries and programs}
+The tabs of Shared Library and Executable are three ways to compile the same Julia code. \ui{JuliaC}, the
+default, needs Julia 1.12 or later; it trims the result to the code it reaches, which keeps it small and quick
+to start, but it refuses calls it cannot resolve when it compiles. \ui{PackageCompiler} keeps the whole Julia
+runtime, so anything that runs in a session runs, in a much larger folder. \ui{StaticCompiler} writes a single
+file with no Julia runtime, as a C compiler would, for code that never needs Julia's garbage collector.
+\ui{Sizes and Build Times} and \ui{Start-Up and Run Time} (\ui{Start-Up and Call Time} for a library) set the
+tools side by side.
+
+\newpage
+\subhead{Three ways to WebAssembly}
+\ui{Through Rust} translates the function to Rust and builds it with cargo. \ui{Through C} translates it to C
+and builds it with clang and wasm-ld, which come as Julia packages, so nothing else is installed. \ui{With
+WebAssemblyCompiler.jl} compiles the Julia function itself, in a Julia 1.10 that the code starts through
+juliaup. In Next Steps, \ui{The Same in JavaScript} times the function written in JavaScript beside each
+module, and \ui{Compare the Ways} sets the three modules side by side: what each needs, its size, its fastest
+time, its calls into WebAssembly and the pixels where its counts differ, expected to be none.
+
+\subhead{Next Steps to try}
+\begin{itemize}
+  \item \ui{Julia Sets Along a Circle} (Executable): a program draws the Julia set of c as c turns round a
+    circle, frame after frame, shown as an animated picture.
+  \item \ui{Use All the Cores} and \ui{Write a PNG with a Package} (Executable, JuliaC and PackageCompiler):
+    the program on several threads, and a program that uses a Julia package.
+  \item \ui{Options with Names} (Executable): a command line such as \texttt{-{}-width 800}, in any order.
+  \item \ui{Call the Library from Python} and \ui{Call the Library from R} (Shared Library).
+  \item \ui{Fused and Not Fused} (Mix): the compiled code built again so that it fuses a multiplication and
+    an addition, and the pixels whose count then differs from Julia's.
+  \item \ui{Query Plan} and \ui{Query Times} (Julia Functions in DuckDB).
+\end{itemize}
+
+\begin{note}{The same answer, pixel by pixel}
+Every entry compares whole numbers, the count at each pixel, rather than pictures that look alike. Near the
+edge of the set a different last bit in one multiplication changes a count, so the compiled code performs
+Julia's operations in the same order and never fuses a multiplication and an addition, which Julia does not
+do unless asked.
+\end{note}
+
+\subhead{What you need}
+\begin{itemize}
+  \item A C compiler, for Mix, the calling program of Shared Library and the JuliaC and PackageCompiler tabs of
+    Executable: the Command Line Tools on macOS (\texttt{xcode-select -{}-install}), \texttt{gcc} on Linux,
+    MinGW-w64 on Windows; and \texttt{gfortran} for Call Fortran.
+  \item Rust, with cargo, from rustup.rs, for Translate Julia to Rust, the Rust Extension of Julia Functions in
+    DuckDB and WebAssembly Through Rust.
+  \item Julia 1.10 through juliaup (\texttt{juliaup add 1.10}) for WebAssembly With WebAssemblyCompiler.jl.
+  \item Python 3 and R, only for the Next Steps that call the library from them.
+\end{itemize}
+An entry asks to install the Julia packages it needs when it opens; the code of the JuliaC tabs installs
+JuliaC itself the first time it runs.
+
+\seealso{Profiling and Correctness Tests, \pg{Profiling and Correctness Tests}.\quad Orchestration, \pg{Orchestration}.\quad \ui{Help > Documentation > Drill-downs > Compilation Lab}, for how each entry works.}
 
 % =====================================================================
 % PAGES 32–33 — COLLABORATION

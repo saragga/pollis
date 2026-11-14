@@ -4,11 +4,11 @@ Compile Julia to WebAssembly takes the function of one pixel of the Mandelbrot s
 
 ## What Are the Four Steps of Compile Julia to WebAssembly?
 
-**The Function** defines the example in the Julia REPL, its region, its size and its most iterations, with `escape_time`, the function of one pixel, and `fractal_counts`, and computes the count of every pixel. **Compile** turns the function into a WebAssembly module in one of two ways, **Through Rust** or **With WebAssemblyCompiler.jl**, in the **Folder** chosen, `programs/webassembly` of the open Pollis Workspace by default. **Check** runs the module in the page on the example, saves its counts, and sends Julia code that compares them with the counts of step 1. **Live View** draws the example with the module, computed again in the page each time the mouse wheel zooms or a drag moves the picture, and gives the time each picture took.
+**The Function** defines the example in the Julia REPL, its region, its size and its most iterations, with `escape_time`, the function of one pixel, and `fractal_counts`, and computes the count of every pixel. **Compile** turns the function into a WebAssembly module in one of three ways, **Through Rust**, **Through C** or **With WebAssemblyCompiler.jl**, in the **Folder** chosen, `programs/webassembly` of the open Pollis Workspace by default. **Check** runs the module in the page on the example, saves its counts, and sends Julia code that compares them with the counts of step 1. **Live View** draws the example with the module, computed again in the page each time the mouse wheel zooms or a drag moves the picture, and gives the time each picture took.
 
-## What Are the Two Ways from Julia to WebAssembly in Compilation Lab?
+## What Are the Three Ways from Julia to WebAssembly in Compilation Lab?
 
-**Through Rust** translates `escape_time` to Rust, beside a loop over the pixels of a picture, and builds the crate with cargo for the target `wasm32-unknown-unknown`: the Julia function becomes WebAssembly by way of another language, as on the page Translate Julia to Rust. **With WebAssemblyCompiler.jl** compiles the Julia function of step 1 itself, unchanged, from the code Julia infers for it. The package is experimental and does not install on Julia 1.12 or later, so the code of Compile starts a Julia 1.10 beside the session through juliaup. The two modules export the same `escape_time`; the Rust one also exports `fill_counts`, which computes a whole picture in one call.
+**Through Rust** translates `escape_time` to Rust, beside a loop over the pixels of a picture, and builds the crate with cargo for the target `wasm32-unknown-unknown`: the Julia function becomes WebAssembly by way of another language, as on the page Translate Julia to Rust. **Through C** translates the same function and loop to C, and compiles them with clang and wasm-ld, which the Julia packages Clang_jll and LLD_jll install, so it needs nothing beyond Julia. **With WebAssemblyCompiler.jl** compiles the Julia function of step 1 itself, unchanged, from the code Julia infers for it. The package is experimental and does not install on Julia 1.12 or later, so the code of Compile starts a Julia 1.10 beside the session through juliaup. The three modules export the same `escape_time`; the Rust and C ones also export `fill_counts`, which computes a whole picture in one call. **Compare the Ways**, in Next Steps, sets the three side by side.
 
 ## What Does the Example of Compile Julia to WebAssembly Compute?
 
@@ -16,7 +16,7 @@ The count of a pixel is the number of iterations of z → z^2 + c before |z| pas
 
 ## Why Does Compile Julia to WebAssembly Check the Module Before It Draws?
 
-A picture that looks like the Mandelbrot set can still be wrong at thousands of pixels near its edge, where a small change in the arithmetic changes the count. Check therefore asks for agreement at every pixel: the page computes the counts with the module, Pollis saves them as `counts.bin` in the folder of the way, and Julia reads them back and prints how many pixels differ from the counts of step 1. Both ways perform the same operations as Julia in the same order, on the same 64-bit numbers, so the answer expected is zero. Live View then draws with a module whose counts are known to be Julia's.
+A picture that looks like the Mandelbrot set can still be wrong at thousands of pixels near its edge, where a small change in the arithmetic changes the count. Check therefore asks for agreement at every pixel: the page computes the counts with the module, Pollis saves them as `counts.bin` in the folder of the way, and Julia reads them back and prints how many pixels differ from the counts of step 1. All three ways perform the same operations as Julia in the same order, on the same 64-bit numbers, so the answer expected is zero. Live View then draws with a module whose counts are known to be Julia's.
 
 ## References
 
@@ -26,4 +26,4 @@ A picture that looks like the Mandelbrot set can still be wrong at thousands of 
 
 ## See Also
 
-- [Factsheet](factsheet.md) · [What Is WebAssembly](webassembly.md) · [Compiling Rust to WebAssembly](rust-to-webassembly.md) · [WebAssemblyCompiler.jl](webassemblycompiler.md) · [Running WebAssembly in the Page](live-view.md)
+- [Factsheet](factsheet.md) · [What Is WebAssembly](webassembly.md) · [Compiling Rust to WebAssembly](rust-to-webassembly.md) · [Compiling C to WebAssembly](c-to-webassembly.md) · [WebAssemblyCompiler.jl](webassemblycompiler.md) · [Running WebAssembly in the Page](live-view.md)

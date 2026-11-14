@@ -24,4 +24,4 @@ The page cannot pass a JavaScript array to a WebAssembly function: the function 
 
 ## See Also
 
-- [Overview](overview.md) · [Factsheet](factsheet.md) · [What Is WebAssembly](webassembly.md) · [WebAssemblyCompiler.jl](webassemblycompiler.md) · [Running WebAssembly in the Page](live-view.md)
+- [Overview](overview.md) · [Factsheet](factsheet.md) · [What Is WebAssembly](webassembly.md) · [Compiling C to WebAssembly](c-to-webassembly.md) · [WebAssemblyCompiler.jl](webassemblycompiler.md) · [Running WebAssembly in the Page](live-view.md)

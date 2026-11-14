@@ -550,6 +550,8 @@ explain-differences & Propose why each value Julia does not reproduce differs: a
   replicable, or unexplained.\\
 references & Cite as Author (year), with all authors written out, each linked to its entry in the
   references, from the Pollis library, with its DOI.\\
+translate-to-rust & Translate a Julia function to Rust: explain the plan first, then write a new crate
+  beside the function, build it, and check that both versions give the same result before timing them.\\
 \end{pairs}
 
 \subhead{Examples}
@@ -697,6 +699,8 @@ Replicate an Article & Replication & Strong & \cmd{replicate-article}\\
 Explain the Differences & Replication & Standard & \cmd{explain-differences}\\
 Create a Panel & New Panels & Strong & \cmd{create-panel}\\
 Create Panels from a Request & New Panels & Strong & \cmd{create-panel}\\
+Speed Up a Function & Profiling & Standard & \cmd{speed-up-function}\\
+Translate Julia to Rust & Compilation Lab & Strong & \cmd{translate-to-rust}\\
 \end{tabularx}
 \end{center}
 A task may read several skills, and a skill may serve several tasks: both ways of creating panels read

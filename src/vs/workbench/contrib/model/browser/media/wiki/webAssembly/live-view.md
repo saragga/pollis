@@ -16,12 +16,16 @@ The view is the corner of the picture at its bottom left and the distance betwee
 
 ## What Does the Time of a Picture in Live View Measure?
 
-The time printed under the picture is that of computing the counts with the module, from the first call to the last, without colouring and drawing the picture. It says how the module computed them: one call of `fill_counts` for the whole picture, for the Rust module, or one call of `escape_time` for each pixel, for the module of WebAssemblyCompiler.jl. The time grows with the pixels inside the set, each of which runs all the iterations, so a view deep inside the set takes longer than one far outside it. The first pictures after a module is loaded can take longer than the next ones, while the browser recompiles the functions that run often with its optimising compiler.
+The time printed under the picture is that of computing the counts with the module, from the first call to the last, without colouring and drawing the picture. It says how the module computed them: one call of `fill_counts` for the whole picture, for the Rust and C modules, or one call of `escape_time` for each pixel, for the module of WebAssemblyCompiler.jl. The time grows with the pixels inside the set, each of which runs all the iterations, so a view deep inside the set takes longer than one far outside it. The first pictures after a module is loaded can take longer than the next ones, while the browser recompiles the functions that run often with its optimising compiler.
 
 ## What Does The Same in JavaScript Compare?
 
 **The Same in JavaScript**, in Next Steps, writes `escape_time` and the loop over the pixels in JavaScript, with the operations of the Julia function in the same order, and runs them in the page beside each module that Compile has built, on the example of step 1. Each runs once to warm it up, then five times, and the table keeps the fastest time, the calls it made into WebAssembly, its speed-up over JavaScript, and the pixels where its counts differ from those of JavaScript, expected to be none. JavaScript numbers are 64-bit floating-point numbers and the engine does not fuse a multiplication and an addition, so the comparison is between the same computations. The browser compiles JavaScript that runs often, such as this loop, to machine code too, so the speed-up of WebAssembly on a loop of numbers can be small.
 
+## What Does Compare the Ways Set Side by Side?
+
+**Compare the Ways**, in Next Steps, runs in the page each module that Compile has built, Through Rust, Through C and With WebAssemblyCompiler.jl, on the example of step 1, and sets them in one table. For each way it gives the language the function was written in before it reached WebAssembly, what the way needs installed, the size of the module in bytes, the fastest of five runs after one to warm up, the calls the page made into WebAssembly, and the pixels where the counts differ from those of the same loop in JavaScript, expected to be none for all three. A way whose module is not built yet is listed as such. The table shows what each way costs to set up and to ship beside what it gives at run time: the Rust and C modules compute a picture in one call, and the module of WebAssemblyCompiler.jl in one call for each pixel.
+
 ## See Also
 
-- [Overview](overview.md) · [Factsheet](factsheet.md) · [What Is WebAssembly](webassembly.md) · [Compiling Rust to WebAssembly](rust-to-webassembly.md) · [WebAssemblyCompiler.jl](webassemblycompiler.md)
+- [Overview](overview.md) · [Factsheet](factsheet.md) · [What Is WebAssembly](webassembly.md) · [Compiling Rust to WebAssembly](rust-to-webassembly.md) · [Compiling C to WebAssembly](c-to-webassembly.md) · [WebAssemblyCompiler.jl](webassemblycompiler.md)

@@ -41,16 +41,18 @@ import { ESCAPE_TIME_JULIA, FRACTAL_REGIONS, FractalExample, fractalExampleCode 
 // Compile Julia to WebAssembly, from Compose > Compilation Lab (compose.contribution.ts). A page of the scaffold in the
 // Time Arrow style, in four steps: 1, The Function, the example (the Mandelbrot set or the Julia set of c) and its
 // counts in Julia; 2, Compile, the function of one pixel compiled to a WebAssembly module through Rust (cargo, target
-// wasm32-unknown-unknown) or with WebAssemblyCompiler.jl (in a Julia 1.10 started through juliaup, as the package does
-// not install on Julia 1.12 or later); 3, Check, the page runs the module on the example and Julia compares every count with step 1's; 4, Live View,
+// wasm32-unknown-unknown), through C (clang and wasm-ld of the Julia packages Clang_jll and LLD_jll) or with
+// WebAssemblyCompiler.jl (in a Julia 1.10 started through juliaup, as the package does not install on Julia 1.12 or
+// later); 3, Check, the page runs the module on the example and Julia compares every count with step 1's; 4, Live View,
 // the page draws the set with the module, zoomed with the mouse wheel and moved by dragging. Next Steps: The Same in
-// JavaScript, the function written in JavaScript and timed beside the modules, in the page.
+// JavaScript, the function written in JavaScript and timed beside the modules, and Compare the Ways, the three modules
+// side by side, both in the page.
 
 export const WEB_ASSEMBLY_COMMAND_ID = 'pollis.compilation.webAssembly';
 
-/** The two ways to a module, each also the name of its folder in the folder of Compile. */
-type Way = 'rust' | 'webassemblycompiler';
-const WAYS: readonly Way[] = ['rust', 'webassemblycompiler'];
+/** The three ways to a module, each also the name of its folder in the folder of Compile. */
+type Way = 'rust' | 'c' | 'webassemblycompiler';
+const WAYS: readonly Way[] = ['rust', 'c', 'webassemblycompiler'];
 
 /** The module of each way is fractal.wasm in its folder; the counts of Check go beside it. */
 const MODULE_FILE = 'fractal.wasm';
@@ -139,6 +141,94 @@ pub unsafe extern "C" fn fill_counts(counts: *mut i32, height: i32, width: i32, 
 }
 `;
 
+/** The source of the C way, which Compile writes to c of the folder of Compile, with the same exports as the crate's. */
+const FRACTAL_C = `// The function of one pixel and the loop over the pixels of a picture, compiled to WebAssembly for the page Compile
+// Julia to WebAssembly, which runs the module in the page. There is no C library in the module, only what is here
+
+// The iterations of z^2 + c before |z| passes 2, with the operations of escape_time in Julia, in the same order.
+// WebAssembly has no fused multiply-add for single numbers, so the counts agree with Julia's to the last bit
+static int iterate(double zr, double zi, double cr, double ci, int maxiter) {
+	int k = 0;
+	while (k < maxiter) {
+		double zr2 = zr * zr;
+		double zi2 = zi * zi;
+		if (zr2 + zi2 > 4.0) {
+			return k;
+		}
+		zi = 2.0 * zr * zi + ci;
+		zr = zr2 - zi2 + cr;
+		k += 1;
+	}
+	return maxiter;
+}
+
+// escape_time of Julia for one pixel. export_name puts the function in the module's exports under that name
+__attribute__((export_name("escape_time")))
+int escape_time(double zr, double zi, double cr, double ci, int maxiter) {
+	return iterate(zr, zi, cr, ci, maxiter);
+}
+
+// Where the module's own data ends, which the linker gives, and the end of the memory in use after it
+extern unsigned char __heap_base;
+static unsigned long heap_end = 0;
+
+// Room for n counts at the end of the memory in use, which the page reads through the export memory; the memory grows
+// by pages of 64 KiB when it is too small. Kept until free_counts
+__attribute__((export_name("alloc_counts")))
+int *alloc_counts(int n) {
+	if (heap_end == 0) {
+		heap_end = (unsigned long)&__heap_base;
+	}
+	unsigned long start = (heap_end + 15) & ~15ul;
+	unsigned long end = start + 4ul * (unsigned long)n;
+	unsigned long size = __builtin_wasm_memory_size(0) * 65536ul;
+	if (end > size && __builtin_wasm_memory_grow(0, (end - size + 65535) / 65536) == (unsigned long)-1) {
+		return 0;
+	}
+	heap_end = end;
+	return (int *)start;
+}
+
+// Gives back the room of alloc_counts, when it is the last room taken, as the page gives back each before the next
+__attribute__((export_name("free_counts")))
+void free_counts(int *counts, int n) {
+	if ((unsigned long)(counts + n) == heap_end) {
+		heap_end = (unsigned long)counts;
+	}
+}
+
+// The count of every pixel, row after row from the bottom of the picture: pixel (i, j), counted from 0, is at
+// i * width + j. c arrives as its real and imaginary parts, julia_set as 1 for the Julia set and 0 for the Mandelbrot set
+__attribute__((export_name("fill_counts")))
+void fill_counts(int *counts, int height, int width, double x0, double y0, double spacing, int julia_set, double cr,
+		double ci, int maxiter) {
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+			double x = x0 + j * spacing;
+			double y = y0 + i * spacing;
+			counts[i * width + j] = julia_set != 0 ? iterate(x, y, cr, ci, maxiter) : iterate(0.0, 0.0, x, y, maxiter);
+		}
+	}
+}
+`;
+
+/** The script of the C way, which Compile writes to c of the folder of Compile beside fractal.c. */
+const BUILD_JL = `# Run by Julia in the project of this folder, as Compile starts it: clang compiles fractal.c to WebAssembly and wasm-ld
+# links it into a module, both from the Julia packages Clang_jll and LLD_jll, so that nothing else is installed
+using Clang_jll, LLD_jll
+
+source = joinpath(@__DIR__, "fractal.c")
+object = joinpath(@__DIR__, "fractal.o")
+
+# WebAssembly with no operating system around it and no C library; -ffp-contract=off keeps each multiplication and
+# addition apart, as Julia does
+run(\`$(clang()) --target=wasm32-unknown-unknown -O3 -ffreestanding -nostdlib -ffp-contract=off -c $source -o $object\`)
+
+# The module ${MODULE_FILE}: no entry point, as the page calls the functions it exports, and no names of the functions
+# inside it, which the exports do not need. lld is wasm-ld with -flavor wasm
+run(\`$(lld()) -flavor wasm --no-entry --strip-all $object -o $(joinpath(@__DIR__, "${MODULE_FILE}"))\`)
+`;
+
 /** The script of the WebAssemblyCompiler.jl way, which Compile writes to webassemblycompiler of the folder of Compile. */
 const COMPILE_JL = `# Run by Julia 1.10 in the project of this folder, as Compile starts it: WebAssemblyCompiler.jl compiles the function
 # of one pixel to a WebAssembly module
@@ -194,9 +284,9 @@ async function defaultFolder(contextService: IWorkspaceContextService, fileServi
 }
 
 /** The code boxes of the page, by the id of their element, with the language that colours each. */
-type CodeBox = 'defineCode' | 'cargoCode' | 'rustCode' | 'scriptCode' | 'compileCode' | 'checkCode' | 'javascriptCode';
-const CODE_BOXES: readonly CodeBox[] = ['defineCode', 'cargoCode', 'rustCode', 'scriptCode', 'compileCode', 'checkCode', 'javascriptCode'];
-const BOX_LANGUAGES: Record<CodeBox, string> = { defineCode: 'julia', cargoCode: 'ini', rustCode: 'rust', scriptCode: 'julia', compileCode: 'julia', checkCode: 'julia', javascriptCode: 'javascript' };
+type CodeBox = 'defineCode' | 'cargoCode' | 'rustCode' | 'cCode' | 'buildCode' | 'scriptCode' | 'compileCode' | 'checkCode' | 'javascriptCode';
+const CODE_BOXES: readonly CodeBox[] = ['defineCode', 'cargoCode', 'rustCode', 'cCode', 'buildCode', 'scriptCode', 'compileCode', 'checkCode', 'javascriptCode'];
+const BOX_LANGUAGES: Record<CodeBox, string> = { defineCode: 'julia', cargoCode: 'ini', rustCode: 'rust', cCode: 'c', buildCode: 'julia', scriptCode: 'julia', compileCode: 'julia', checkCode: 'julia', javascriptCode: 'javascript' };
 
 /** The code boxes with a Run button, whose code goes to the Julia REPL. Check's code goes once the page has its counts. */
 type RunBox = 'defineCode' | 'compileCode';
@@ -218,7 +308,7 @@ type WebAssemblyMessage =
 	| { readonly command: 'ready' }
 	| { readonly command: 'draft'; readonly inputs: IWebAssemblyInputs }
 	| { readonly command: 'run'; readonly box: RunBox; readonly inputs: IWebAssemblyInputs }
-	| { readonly command: 'load'; readonly way: Way; readonly folder: string; readonly purpose: 'check' | 'live' | 'javascript' }
+	| { readonly command: 'load'; readonly way: Way; readonly folder: string; readonly purpose: 'check' | 'live' | 'timing' }
 	| { readonly command: 'counts'; readonly inputs: IWebAssemblyInputs; readonly bytes: Uint8Array }
 	| { readonly command: 'chooseFolder'; readonly value: string };
 
@@ -231,7 +321,7 @@ const DECIMAL = /^-?\d+(\.\d+)?$/;
  */
 function checked(inputs: IWebAssemblyInputs) {
 	const example: FractalExample = inputs.example === 'julia' ? 'julia' : 'mandelbrot';
-	const way: Way = inputs.way === 'webassemblycompiler' ? 'webassemblycompiler' : 'rust';
+	const way: Way = WAYS.includes(inputs.way) ? inputs.way : 'rust';
 	const width = (inputs.width ?? '').trim();
 	const maxiter = (inputs.maxiter ?? '').trim();
 	const cre = (inputs.cre ?? '').trim();
@@ -244,7 +334,7 @@ function checked(inputs: IWebAssemblyInputs) {
 
 /** The name of a way, as the page and the code's comments write it. */
 function wayName(way: Way): string {
-	return way === 'rust' ? 'Rust' : 'WebAssemblyCompiler.jl';
+	return way === 'rust' ? 'Rust' : way === 'c' ? 'C' : 'WebAssemblyCompiler.jl';
 }
 
 /** The Julia code of Compile for the way of the inputs. */
@@ -271,6 +361,22 @@ seconds = @elapsed run(Cmd(\`$cargo build --release --target $target\`, dir = cr
 # The module, copied to rust/${MODULE_FILE}, where Check and Live View read it
 wasm = joinpath(dirname(crate), "${MODULE_FILE}")
 cp(joinpath(crate, "target", target, "release", "${MODULE_FILE}"), wasm, force = true)
+println("Built in ", round(seconds, digits = 1), " s: ", wasm, ", ", filesize(wasm), " bytes")`;
+	}
+	if (way === 'c') {
+		return `# The project of the C way, with fractal.c and build.jl above, which Pollis has written there
+project = joinpath(expanduser(raw"${folder}"), "c")
+wasm = joinpath(project, "${MODULE_FILE}")
+
+# Clang_jll and LLD_jll in that project, installed once: clang and wasm-ld as Julia packages, for this Julia
+julia = Base.julia_cmd()
+if !isfile(joinpath(project, "Manifest.toml"))
+	println("Installing Clang_jll and LLD_jll, once")
+	run(\`$julia --project=$project -e 'import Pkg; Pkg.add(["Clang_jll", "LLD_jll"])'\`)
+end
+
+# Compiled and linked by build.jl, in a Julia of its own with that project, in a second or two
+seconds = @elapsed run(\`$julia --project=$project $(joinpath(project, "build.jl"))\`)
 println("Built in ", round(seconds, digits = 1), " s: ", wasm, ", ", filesize(wasm), " bytes")`;
 	}
 	return `# The project of WebAssemblyCompiler.jl, with compile.jl above, which Pollis has written there
@@ -333,6 +439,10 @@ function boxCode(box: CodeBox, inputs: IWebAssemblyInputs): string {
 			return way === 'rust' ? CARGO_TOML : '';
 		case 'rustCode':
 			return way === 'rust' ? LIB_RS : '';
+		case 'cCode':
+			return way === 'c' ? FRACTAL_C : '';
+		case 'buildCode':
+			return way === 'c' ? BUILD_JL : '';
 		case 'scriptCode':
 			return way === 'webassemblycompiler' ? COMPILE_JL : '';
 		case 'compileCode':
@@ -441,6 +551,9 @@ async function openWebAssemblyPage(accessor: ServicesAccessor): Promise<void> {
 				if (inputs.way === 'rust') {
 					await fileService.writeFile(joinPath(folder, CRATE_NAME, 'Cargo.toml'), VSBuffer.fromString(CARGO_TOML));
 					await fileService.writeFile(joinPath(folder, CRATE_NAME, 'src', 'lib.rs'), VSBuffer.fromString(LIB_RS));
+				} else if (inputs.way === 'c') {
+					await fileService.writeFile(joinPath(folder, 'fractal.c'), VSBuffer.fromString(FRACTAL_C));
+					await fileService.writeFile(joinPath(folder, 'build.jl'), VSBuffer.fromString(BUILD_JL));
 				} else {
 					await fileService.writeFile(joinPath(folder, 'compile.jl'), VSBuffer.fromString(COMPILE_JL));
 				}
@@ -485,7 +598,7 @@ async function openWebAssemblyPage(accessor: ServicesAccessor): Promise<void> {
 function pageHtml(): string {
 	const text = {
 		title: localize('webAssembly.title', "Compile Julia to WebAssembly"),
-		intro: localize('webAssembly.intro', "Compile Julia to WebAssembly takes the function of one pixel of the Mandelbrot set or of the Julia set of c to WebAssembly, the code a web page runs, in two ways: through Rust, built by cargo, or with WebAssemblyCompiler.jl, which compiles the Julia function itself. The page then runs the module: it checks the count of every pixel against Julia's, and draws the set live, to zoom into with the mouse wheel and move by dragging."),
+		intro: localize('webAssembly.intro', "Compile Julia to WebAssembly takes the function of one pixel of the Mandelbrot set or of the Julia set of c to WebAssembly, the code a web page runs, in three ways: through Rust, built by cargo; through C, built by clang and wasm-ld of Julia packages; or with WebAssemblyCompiler.jl, which compiles the Julia function itself. The page then runs the module: it checks the count of every pixel against Julia's, and draws the set live, to zoom into with the mouse wheel and move by dragging."),
 		function: localize('webAssembly.function', "The Function"),
 		example: localize('webAssembly.example', "Example"),
 		examples: {
@@ -505,9 +618,11 @@ function pageHtml(): string {
 		way: localize('webAssembly.way', "Way"),
 		ways: {
 			rust: localize('webAssembly.way.rust', "Through Rust"),
+			c: localize('webAssembly.way.c', "Through C"),
 			webassemblycompiler: localize('webAssembly.way.webassemblycompiler', "With WebAssemblyCompiler.jl"),
 		},
 		rustHint: localize('webAssembly.rustHint', "The function translated to Rust, with the loop over the pixels of a picture, built by {0} for the target {1}, which the code adds to Rust the first time. It needs Rust 1.85 or later, installed with rustup.", '<code>cargo</code>', '<code>wasm32-unknown-unknown</code>'),
+		cHint: localize('webAssembly.cHint', "The function translated to C, with the loop over the pixels of a picture and room for its counts, compiled by clang for the target {0} and linked by wasm-ld, both from the Julia packages {1} and {2}, which the code installs the first time in a project of its folder. Nothing else needs installing: the module has no C library.", '<code>wasm32-unknown-unknown</code>', '<code>Clang_jll</code>', '<code>LLD_jll</code>'),
 		compilerHint: localize('webAssembly.compilerHint', "WebAssemblyCompiler.jl compiles the Julia function of step 1 itself. It does not install on Julia 1.12 or later, so the code starts a Julia 1.10 beside this session through juliaup, with a project of its own where it installs the package the first time. Add Julia 1.10 with {0} if it is missing.", '<code>juliaup add 1.10</code>'),
 		folder: localize('webAssembly.folder', "Folder"),
 		folderTooltip: localize('webAssembly.folderTooltip', "programs/webassembly of the open Pollis Workspace, otherwise in Pollis's own folder"),
@@ -516,6 +631,8 @@ function pageHtml(): string {
 		cargo: localize('webAssembly.cargo', "Cargo.toml"),
 		rustSource: localize('webAssembly.rustSource', "src/lib.rs"),
 		script: localize('webAssembly.script', "compile.jl"),
+		cSource: localize('webAssembly.cSource', "fractal.c"),
+		buildScript: localize('webAssembly.buildScript', "build.jl"),
 		check: localize('webAssembly.check', "Check"),
 		checkIntro: localize('webAssembly.checkIntro', "Check runs the module of the way chosen in step 2 in this page, on the example of step 1, and saves its counts; the Julia code below then compares them with the counts of step 1, pixel by pixel. The two must agree at every pixel."),
 		checkRun: localize('webAssembly.checkRun', "Run in the Page and Check"),
@@ -543,6 +660,24 @@ function pageHtml(): string {
 		plainJavaScript: localize('webAssembly.plainJavaScript', "JavaScript"),
 		noCalls: localize('webAssembly.noCalls', "none: JavaScript throughout"),
 		notBuilt: localize('webAssembly.notBuilt', "not built yet: run Compile, in step 2"),
+		ways3: localize('webAssembly.ways3', "Compare the Ways"),
+		waysIntro: localize('webAssembly.waysIntro', "The modules of the three ways that Compile has built, side by side, each run in this page on the example of step 1: how the function reached WebAssembly, what the way needs, the size of the module, the fastest of five runs after one to warm up, the calls into WebAssembly, and the pixels where its counts differ from those of the same loop in JavaScript, expected to be none."),
+		waysRun: localize('webAssembly.waysRun', "Run and Compare"),
+		way3: localize('webAssembly.way3', "Way"),
+		writtenIn: localize('webAssembly.writtenIn', "Written In"),
+		needs: localize('webAssembly.needs', "What It Needs"),
+		size: localize('webAssembly.size', "Module Size"),
+		bytes: localize('webAssembly.bytes', "{0} bytes"),
+		written: {
+			rust: localize('webAssembly.written.rust', "Rust, translated by hand"),
+			c: localize('webAssembly.written.c', "C, translated by hand"),
+			webassemblycompiler: localize('webAssembly.written.webassemblycompiler', "Julia, the function of step 1"),
+		},
+		needed: {
+			rust: localize('webAssembly.needed.rust', "Rust, with rustup and cargo"),
+			c: localize('webAssembly.needed.c', "The Julia packages Clang_jll and LLD_jll"),
+			webassemblycompiler: localize('webAssembly.needed.webassemblycompiler', "Julia 1.10 and WebAssemblyCompiler.jl"),
+		},
 	};
 	const radios = <T extends string>(name: string, values: readonly T[], labels: Record<T, string>) => values
 		.map((value, index) => `<label><input type="radio" name="${name}" value="${value}"${index === 0 ? ' checked' : ''}> ${labels[value]}</label>`).join('');
@@ -569,7 +704,7 @@ function pageHtml(): string {
 		.choices label { margin-right: 16px; }
 		#liveCanvas { display: block; margin: 8px 0 4px; max-width: 100%; border-radius: 3px; background: var(--vscode-textCodeBlock-background); cursor: grab; }
 		#liveCanvas.dragging { cursor: grabbing; }
-		#javascriptStep { padding: 0 12px 12px; }
+		#javascriptStep, #waysStep { padding: 0 12px 12px; }
 		#javascriptStep .wasm-code { max-width: none; }
 		.timing-table { border-collapse: collapse; margin-top: 8px; }
 		.timing-table th, .timing-table td { text-align: left; padding: 3px 12px 3px 0; border-bottom: 1px solid var(--vscode-panel-border); vertical-align: top; }
@@ -602,6 +737,10 @@ function pageHtml(): string {
 			${codeBlock('cargoCode', text.cargo, '')}
 			${codeBlock('rustCode', text.rustSource, '')}
 		</div>
+		<div id="cSources">
+			${codeBlock('cCode', text.cSource, '')}
+			${codeBlock('buildCode', text.buildScript, '')}
+		</div>
 		<div id="compilerSources">
 			${codeBlock('scriptCode', text.script, '')}
 		</div>
@@ -630,20 +769,27 @@ function pageHtml(): string {
 `,
 			},
 		],
-		nextStepsHtml: `					<li><button class="list-btn panel-toggle" id="btn-javascript">${nextStepIcon('compare')}${text.javascript}</button></li>`,
-		// The panel on the right, opened as the scaffold opens its own, which the page's script then fills
-		nextStepsWiringJs: `		document.getElementById('btn-javascript').addEventListener('click', function() {
-			if (currentPanelId === 'btn-javascript') { hideRightPanel(); return; }
-			currentPanelId = 'btn-javascript';
+		nextStepsHtml: `					<li><button class="list-btn panel-toggle" id="btn-javascript">${nextStepIcon('compare')}${text.javascript}</button></li>
+					<li><button class="list-btn panel-toggle" id="btn-ways">${nextStepIcon('compare')}${text.ways3}</button></li>`,
+		// The panels on the right, opened as the scaffold opens its own, which the page's script then fills
+		nextStepsWiringJs: `		function openPageStep(button, id, title, event) {
+			if (currentPanelId === button.id) { hideRightPanel(); return; }
+			currentPanelId = button.id;
 			document.querySelectorAll('.panel-toggle').forEach(function(b) { b.classList.remove('panel-active'); });
-			this.classList.add('panel-active');
+			button.classList.add('panel-active');
 			rightPanel.innerHTML = '<div class="panel-header">'
-				+ '<span class="right-panel-title">' + esc(${JSON.stringify(text.javascript)}) + '</span>'
+				+ '<span class="right-panel-title">' + esc(title) + '</span>'
 				+ '<button class="panel-close" id="btn-panel-close">&#xd7;</button>'
-				+ '</div><div id="javascriptStep"></div>';
+				+ '</div><div id="' + id + '"></div>';
 			document.getElementById('btn-panel-close').addEventListener('click', hideRightPanel);
 			rightPanel.style.display = 'block';
-			window.dispatchEvent(new Event('pollis-javascript-step'));
+			window.dispatchEvent(new Event(event));
+		}
+		document.getElementById('btn-javascript').addEventListener('click', function() {
+			openPageStep(this, 'javascriptStep', ${JSON.stringify(text.javascript)}, 'pollis-javascript-step');
+		});
+		document.getElementById('btn-ways').addEventListener('click', function() {
+			openPageStep(this, 'waysStep', ${JSON.stringify(text.ways3)}, 'pollis-ways-step');
 		});`,
 		pageScriptJs: `
 	${colorizeBracketsJs}
@@ -697,9 +843,10 @@ function pageHtml(): string {
 		const { valid, folderValid } = validity();
 		const way = checkedValue('way', 'rust');
 		document.getElementById('cFields').hidden = checkedValue('example', 'mandelbrot') !== 'julia';
-		document.getElementById('compileHint').innerHTML = way === 'rust' ? TEXT.rustHint : TEXT.compilerHint;
+		document.getElementById('compileHint').innerHTML = way === 'rust' ? TEXT.rustHint : way === 'c' ? TEXT.cHint : TEXT.compilerHint;
 		document.getElementById('rustSources').hidden = way !== 'rust';
-		document.getElementById('compilerSources').hidden = way === 'rust';
+		document.getElementById('cSources').hidden = way !== 'c';
+		document.getElementById('compilerSources').hidden = way !== 'webassemblycompiler';
 		document.getElementById('defineCodeRun').disabled = !valid;
 		document.getElementById('compileCodeRun').disabled = !folderValid;
 		document.getElementById('checkRun').disabled = !valid || !folderValid;
@@ -760,7 +907,7 @@ function pageHtml(): string {
 		vscode.postMessage({ command: 'load', way: checkedValue('way', 'rust'), folder: inputs().folder, purpose });
 	}
 	// The counts of a grid into out, row after row from the bottom: with one call of fill_counts when the module has it
-	// (the Rust way), otherwise with one call of escape_time for each pixel (WebAssemblyCompiler.jl)
+	// (the Rust and C ways), otherwise with one call of escape_time for each pixel (WebAssemblyCompiler.jl)
 	function compute(module, g, out) {
 		const e = module.exports;
 		const n = g.width * g.height;
@@ -930,44 +1077,54 @@ function pageHtml(): string {
 		schedule();
 	});
 
-	// The Same in JavaScript: the function in JavaScript, run here, and both modules, each timed on step 1's grid
+	// The Same in JavaScript and Compare the Ways: the function in JavaScript, run here, and the modules of the three
+	// ways, each timed on step 1's grid
 	${JAVASCRIPT_CODE}
 	const codeHtml = {};
+	const WAYS = ${JSON.stringify(WAYS)};
 	const WAY_NAMES = ${JSON.stringify(text.ways)};
-	let javascriptModules;
-	window.addEventListener('pollis-javascript-step', () => {
-		const step = document.getElementById('javascriptStep');
-		step.innerHTML = '<div class="panel-code-desc"></div><pre class="wasm-code" id="javascriptCode"></pre>'
-			+ '<div class="settings"><span class="bar"><button class="action current" id="javascriptRun"></button></span></div>'
-			+ '<div class="small status" id="javascriptStatus"></div><div id="javascriptResults"></div>';
-		step.querySelector('.panel-code-desc').textContent = TEXT.javascriptIntro;
-		const box = document.getElementById('javascriptCode');
-		box.innerHTML = codeHtml.javascriptCode || '';
-		colorizeBrackets(box, '#');
-		const run = document.getElementById('javascriptRun');
-		run.textContent = TEXT.javascriptRun;
+	// The modules being read for a timing, by way, and the timing they are for: 'javascript' or 'ways'
+	let timingModules;
+	let timingKind;
+	// The step in the panel on the right: its text, the code in JavaScript for The Same in JavaScript, a button, a status
+	// line and the results
+	function fillStep(step, intro, withCode, label, kind) {
+		step.innerHTML = '<div class="panel-code-desc"></div>' + (withCode ? '<pre class="wasm-code" id="javascriptCode"></pre>' : '')
+			+ '<div class="settings"><span class="bar"><button class="action current" id="timingRun"></button></span></div>'
+			+ '<div class="small status" id="timingStatus"></div><div id="timingResults"></div>';
+		step.querySelector('.panel-code-desc').textContent = intro;
+		if (withCode) {
+			const box = document.getElementById('javascriptCode');
+			box.innerHTML = codeHtml.javascriptCode || '';
+			colorizeBrackets(box, '#');
+		}
+		const run = document.getElementById('timingRun');
+		run.textContent = label;
 		run.disabled = !validity().valid || !validity().folderValid;
 		run.addEventListener('click', () => {
 			run.disabled = true;
-			document.getElementById('javascriptResults').innerHTML = '';
-			setStatus(document.getElementById('javascriptStatus'), '', false);
-			document.getElementById('javascriptStatus').textContent = TEXT.timing;
-			// Both modules, read again: each arrives, or is missing, before the timing starts
-			javascriptModules = {};
-			for (const way of ['rust', 'webassemblycompiler']) {
-				vscode.postMessage({ command: 'load', way, folder: inputs().folder, purpose: 'javascript' });
+			document.getElementById('timingResults').innerHTML = '';
+			setStatus(document.getElementById('timingStatus'), '', false);
+			document.getElementById('timingStatus').textContent = TEXT.timing;
+			// The modules of all the ways, read again: each arrives, or is missing, before the timing starts
+			timingKind = kind;
+			timingModules = {};
+			for (const way of WAYS) {
+				vscode.postMessage({ command: 'load', way, folder: inputs().folder, purpose: 'timing' });
 			}
 		});
-	});
-	function javascriptModuleArrived(way, bytes) {
-		if (!javascriptModules) {
+	}
+	window.addEventListener('pollis-javascript-step', () => fillStep(document.getElementById('javascriptStep'), TEXT.javascriptIntro, true, TEXT.javascriptRun, 'javascript'));
+	window.addEventListener('pollis-ways-step', () => fillStep(document.getElementById('waysStep'), TEXT.waysIntro, false, TEXT.waysRun, 'ways'));
+	function timingModuleArrived(way, bytes) {
+		if (!timingModules) {
 			return;
 		}
 		const done = instance => {
-			javascriptModules[way] = instance ? { exports: instance.exports, pointer: 0, size: 0 } : null;
-			if (Object.keys(javascriptModules).length === 2) {
+			timingModules[way] = instance ? { exports: instance.exports, pointer: 0, size: 0, bytes: bytes.byteLength } : null;
+			if (Object.keys(timingModules).length === WAYS.length) {
 				// A moment for the page to show that timing has started
-				setTimeout(timeAll, 20);
+				setTimeout(timingKind === 'ways' ? compareWays : timeAll, 20);
 			}
 		};
 		if (bytes) {
@@ -988,32 +1145,20 @@ function pageHtml(): string {
 		}
 		return { ms: best, how, counts };
 	}
-	function timeAll() {
-		const g = grid();
-		const n = g.width * g.height;
-		const plain = fastest(counts => {
-			fillCounts(counts, g.height, g.width, g.x0, g.y0, g.spacing, g.julia, g.cr, g.ci, g.maxiter);
-			return TEXT.noCalls;
-		}, n);
-		const rows = [[TEXT.plainJavaScript, plain.ms.toFixed(1) + ' ms', TEXT.noCalls, '1.00\u00d7', '']];
-		for (const way of ['rust', 'webassemblycompiler']) {
-			const module = javascriptModules[way];
-			const name = 'WebAssembly, ' + WAY_NAMES[way];
-			if (!module) {
-				rows.push([name, '', TEXT.notBuilt, '', '']);
-				continue;
-			}
-			const timed = fastest(counts => compute(module, g, counts), n);
-			let differ = 0;
-			for (let p = 0; p < n; p++) {
-				differ += timed.counts[p] !== plain.counts[p] ? 1 : 0;
-			}
-			rows.push([name, timed.ms.toFixed(1) + ' ms', timed.how, (plain.ms / timed.ms).toFixed(2) + '\u00d7', differ.toLocaleString()]);
+	// The pixels where two sets of counts differ
+	function differing(a, b) {
+		let differ = 0;
+		for (let p = 0; p < a.length; p++) {
+			differ += a[p] !== b[p] ? 1 : 0;
 		}
+		return differ;
+	}
+	// A table of the results, under the step's status line, with the columns of numbers aligned to the right
+	function showResults(labels, rows, numberColumns, n) {
 		const table = document.createElement('table');
 		table.className = 'timing-table';
 		const head = table.insertRow();
-		for (const label of [TEXT.contender, TEXT.fastest, TEXT.calls, TEXT.speedUp, TEXT.differ]) {
+		for (const label of labels) {
 			const cell = document.createElement('th');
 			cell.textContent = label;
 			head.appendChild(cell);
@@ -1023,18 +1168,56 @@ function pageHtml(): string {
 			values.forEach((value, index) => {
 				const cell = row.insertCell();
 				cell.textContent = value;
-				if (index === 1 || index === 3 || index === 4) {
+				if (numberColumns.includes(index)) {
 					cell.className = 'number';
 				}
 			});
 		}
-		const results = document.getElementById('javascriptResults');
+		const results = document.getElementById('timingResults');
 		if (results) {
 			results.appendChild(table);
-			document.getElementById('javascriptStatus').textContent = TEXT.timed.replace('{0}', n.toLocaleString());
-			document.getElementById('javascriptRun').disabled = false;
+			document.getElementById('timingStatus').textContent = TEXT.timed.replace('{0}', n.toLocaleString());
+			document.getElementById('timingRun').disabled = false;
 		}
-		javascriptModules = undefined;
+		timingModules = undefined;
+	}
+	// The Same in JavaScript: JavaScript first, then each module, with its speed-up over JavaScript
+	function timeAll() {
+		const g = grid();
+		const n = g.width * g.height;
+		const plain = fastest(counts => {
+			fillCounts(counts, g.height, g.width, g.x0, g.y0, g.spacing, g.julia, g.cr, g.ci, g.maxiter);
+			return TEXT.noCalls;
+		}, n);
+		const rows = [[TEXT.plainJavaScript, plain.ms.toFixed(1) + ' ms', TEXT.noCalls, '1.00×', '']];
+		for (const way of WAYS) {
+			const module = timingModules[way];
+			const name = 'WebAssembly, ' + WAY_NAMES[way];
+			if (!module) {
+				rows.push([name, '', TEXT.notBuilt, '', '']);
+				continue;
+			}
+			const timed = fastest(counts => compute(module, g, counts), n);
+			rows.push([name, timed.ms.toFixed(1) + ' ms', timed.how, (plain.ms / timed.ms).toFixed(2) + '×', differing(timed.counts, plain.counts).toLocaleString()]);
+		}
+		showResults([TEXT.contender, TEXT.fastest, TEXT.calls, TEXT.speedUp, TEXT.differ], rows, [1, 3, 4], n);
+	}
+	// Compare the Ways: each module with how its function reached WebAssembly, what the way needs and its size, its
+	// counts against those of the loop in JavaScript
+	function compareWays() {
+		const g = grid();
+		const n = g.width * g.height;
+		const plain = new Int32Array(n);
+		fillCounts(plain, g.height, g.width, g.x0, g.y0, g.spacing, g.julia, g.cr, g.ci, g.maxiter);
+		const rows = WAYS.map(way => {
+			const module = timingModules[way];
+			if (!module) {
+				return [WAY_NAMES[way], TEXT.written[way], TEXT.needed[way], '', '', TEXT.notBuilt, ''];
+			}
+			const timed = fastest(counts => compute(module, g, counts), n);
+			return [WAY_NAMES[way], TEXT.written[way], TEXT.needed[way], TEXT.bytes.replace('{0}', module.bytes.toLocaleString()), timed.ms.toFixed(1) + ' ms', timed.how, differing(timed.counts, plain).toLocaleString()];
+		});
+		showResults([TEXT.way3, TEXT.writtenIn, TEXT.needs, TEXT.size, TEXT.fastest, TEXT.calls, TEXT.differ], rows, [3, 4, 6], n);
 	}
 
 	window.addEventListener('message', event => {
@@ -1067,8 +1250,8 @@ function pageHtml(): string {
 			setStatus(status, TEXT.sent, false);
 		} else if (message.command === 'module') {
 			const status = message.purpose === 'check' ? checkStatus : liveStatus;
-			if (message.purpose === 'javascript') {
-				javascriptModuleArrived(message.way, message.bytes);
+			if (message.purpose === 'timing') {
+				timingModuleArrived(message.way, message.bytes);
 				return;
 			}
 			WebAssembly.instantiate(message.bytes, { js: {} }).then(result => {
@@ -1080,8 +1263,8 @@ function pageHtml(): string {
 					draw();
 				}
 			}, error => setStatusText(status, TEXT.failed.replace('{0}', String(error))));
-		} else if (message.command === 'noModule' && message.purpose === 'javascript') {
-			javascriptModuleArrived(message.way, undefined);
+		} else if (message.command === 'noModule' && message.purpose === 'timing') {
+			timingModuleArrived(message.way, undefined);
 		} else if (message.command === 'noModule') {
 			setStatusText(message.purpose === 'check' ? checkStatus : liveStatus, TEXT.noModule.replace('{0}', message.path));
 		}

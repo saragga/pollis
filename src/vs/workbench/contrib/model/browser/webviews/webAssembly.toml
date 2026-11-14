@@ -17,7 +17,7 @@ github = "https://github.com/tshort/WebAssemblyCompiler.jl"
 name = "Overview"
 file = "webAssembly/overview.md"
 bundled = true
-description = "The four steps of the page, the two ways from Julia to WebAssembly, and why the module is checked against Julia before it draws"
+description = "The four steps of the page, the three ways from Julia to WebAssembly, and why the module is checked against Julia before it draws"
 
 [[wikis]]
 name = "Factsheet"
@@ -36,6 +36,12 @@ name = "Compiling Rust to WebAssembly"
 file = "webAssembly/rust-to-webassembly.md"
 bundled = true
 description = "The target wasm32-unknown-unknown, a cdylib crate whose exported functions the page calls, memory shared with JavaScript, and one call per picture"
+
+[[wikis]]
+name = "Compiling C to WebAssembly"
+file = "webAssembly/c-to-webassembly.md"
+bundled = true
+description = "clang and wasm-ld from Clang_jll and LLD_jll, functions exported by name, memory without a C library, contraction turned off, and the size of the module"
 
 [[wikis]]
 name = "WebAssemblyCompiler.jl"
@@ -69,6 +75,9 @@ label = "Original Papers"
 
 [[references]]
 key = "HRSTH...2017a"
+
+[[references]]
+key = "LA2004a"
 
 [[references]]
 key = "Jul1918a"

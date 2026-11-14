@@ -24,4 +24,4 @@ The floating-point instructions of WebAssembly follow IEEE 754, with rounding to
 
 ## See Also
 
-- [Overview](overview.md) · [Factsheet](factsheet.md) · [Compiling Rust to WebAssembly](rust-to-webassembly.md) · [WebAssemblyCompiler.jl](webassemblycompiler.md) · [Running WebAssembly in the Page](live-view.md)
+- [Overview](overview.md) · [Factsheet](factsheet.md) · [Compiling Rust to WebAssembly](rust-to-webassembly.md) · [Compiling C to WebAssembly](c-to-webassembly.md) · [WebAssemblyCompiler.jl](webassemblycompiler.md) · [Running WebAssembly in the Page](live-view.md)

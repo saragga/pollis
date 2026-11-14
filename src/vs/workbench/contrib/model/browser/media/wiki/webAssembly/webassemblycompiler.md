@@ -20,7 +20,7 @@ Besides `fractal.wasm`, the module, `compile` writes `fractal.wasm.wat`, the sam
 
 ## Why Does the Page Call the Module of WebAssemblyCompiler.jl Once for Each Pixel?
 
-A loop over the pixels of a picture needs memory that both the page and the module can reach: a pointer into the module's linear memory, as the Rust module gives. WebAssemblyCompiler.jl supports no pointers, and keeps its vectors on the garbage-collected heap, whose arrays JavaScript cannot read as numbers. Its module therefore exports `escape_time` alone, and the page runs the loop over the pixels in JavaScript, calling `escape_time` once for each pixel and writing each count into a JavaScript array. Every count is still computed by the compiled Julia function.
+A loop over the pixels of a picture needs memory that both the page and the module can reach: a pointer into the module's linear memory, as the Rust and C modules give. WebAssemblyCompiler.jl supports no pointers, and keeps its vectors on the garbage-collected heap, whose arrays JavaScript cannot read as numbers. Its module therefore exports `escape_time` alone, and the page runs the loop over the pixels in JavaScript, calling `escape_time` once for each pixel and writing each count into a JavaScript array. Every count is still computed by the compiled Julia function.
 
 ## References
 
@@ -28,4 +28,4 @@ A loop over the pixels of a picture needs memory that both the page and the modu
 
 ## See Also
 
-- [Overview](overview.md) · [Factsheet](factsheet.md) · [What Is WebAssembly](webassembly.md) · [Compiling Rust to WebAssembly](rust-to-webassembly.md) · [Running WebAssembly in the Page](live-view.md)
+- [Overview](overview.md) · [Factsheet](factsheet.md) · [What Is WebAssembly](webassembly.md) · [Compiling Rust to WebAssembly](rust-to-webassembly.md) · [Compiling C to WebAssembly](c-to-webassembly.md) · [Running WebAssembly in the Page](live-view.md)
