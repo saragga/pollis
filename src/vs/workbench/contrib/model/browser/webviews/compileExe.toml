@@ -325,8 +325,11 @@ VERSION >= v"1.12" || error("juliac needs Julia 1.12 or later: this session runs
 juliac_app = joinpath(first(DEPOT_PATH), "bin", Sys.iswindows() ? "juliac.bat" : "juliac")
 isfile(juliac_app) || Pkg.Apps.add("JuliaC")  # installs juliac in ~/.julia/bin, in an environment of its own
 
+# The Julia that juliac runs: the one that installed it, which need not be the Julia of this session
+juliac_julia = readchomp(`$juliac_app --version --`)
+
 # Build: a program from Julia code that defines fractal(args), started at the function marked @main that calls it, in a
-# folder of its own, built again when the code, its packages or the Julia version change, as built_from.txt records. --trim=safe keeps only the code @main reaches; --bundle gathers the
+# folder of its own, built again when the code, its packages or juliac's Julia change, as built_from.txt records. --trim=safe keeps only the code @main reaches; --bundle gathers the
 # program in bundle/bin and the Julia libraries it needs in bundle/lib. The project of the folder holds the packages the
 # script uses, none here, so that juliac compiles the file alone and not the active environment. The Next Steps that
 # add to the program build theirs with build_program too
@@ -338,7 +341,7 @@ function build_program(build_folder, code; packages = String[], trim = "safe")
     shipped_folder = joinpath(build_folder, "bundle")
     program = joinpath(shipped_folder, "bin", "fractal" * (Sys.iswindows() ? ".exe" : ""))
     built_with = `$juliac_app --output-exe fractal --bundle $shipped_folder --project $build_folder --trim=$trim --experimental $script_file`
-    built_from = string("Julia ", VERSION, "\n", join(packages, " "), "\n", trim, "\n\n", script)
+    built_from = string(juliac_julia, "\n", join(packages, " "), "\n", trim, "\n\n", script)
     built_from_file = joinpath(build_folder, "built_from.txt")
     if isfile(program) && isfile(built_from_file) && read(built_from_file, String) == built_from
         return (; program, shipped_folder, script_file, built_with, seconds = nothing)

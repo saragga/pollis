@@ -242,6 +242,9 @@ int main(int argc, char *argv[]) {
 VERSION >= v"1.12" || error("juliac needs Julia 1.12 or later: this session runs Julia $VERSION")
 juliac_app = joinpath(first(DEPOT_PATH), "bin", Sys.iswindows() ? "juliac.bat" : "juliac")
 isfile(juliac_app) || Pkg.Apps.add("JuliaC")  # installs juliac in ~/.julia/bin, in an environment of its own
+
+# The Julia that juliac runs: the one that installed it, which need not be the Julia of this session
+juliac_julia = readchomp(`$juliac_app --version --`)
 function find_compiler(names)
     for name in names
         path = Sys.which(name)
@@ -252,8 +255,8 @@ end
 compiler = find_compiler(["cc", "gcc", "clang"])
 compiler === nothing && error("No C compiler found: on macOS install the Command Line Tools (xcode-select --install); on Linux install gcc; on Windows install MinGW-w64 with its gcc")
 
-# Build: the library in juliac/ of the folder, built again with its calling program when their sources or the Julia
-# version change, as built_from.txt records. Base.@ccallable gives fill_counts its C name; --compile-ccallable exports
+# Build: the library in juliac/ of the folder, built again with its calling program when their sources or juliac's
+# Julia change, as built_from.txt records. Base.@ccallable gives fill_counts its C name; --compile-ccallable exports
 # it and --trim=safe keeps only the code it reaches. An empty project, so that juliac compiles the file alone and not
 # the active environment
 folder = mkpath(joinpath(expanduser(raw"{{folder}}"), "juliac"))
@@ -262,7 +265,7 @@ write(source_file, replace(kernel_code, "function fill_counts" => "Base.@ccallab
 isfile(joinpath(folder, "Project.toml")) || write(joinpath(folder, "Project.toml"), "")
 library = joinpath(folder, "libfractal.$(Libdl.dlext)")
 built_with = `$juliac_app --output-lib $library --project $folder --compile-ccallable --trim=safe --experimental $source_file`
-built_from = string("Julia ", VERSION, "\n\n", read(source_file, String), "\n", caller_source)
+built_from = string(juliac_julia, "\n\n", read(source_file, String), "\n", caller_source)
 built_from_file = joinpath(folder, "built_from.txt")
 build_seconds = if isfile(library) && isfile(built_from_file) && read(built_from_file, String) == built_from
     nothing

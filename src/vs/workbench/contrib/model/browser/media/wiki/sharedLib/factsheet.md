@@ -45,7 +45,7 @@ The inputs reach the library as arguments of the calling program, so changing th
 
 **Call the Library from Python** adds `call_from_python.py` and `counts_python.bin` to the folder of the tab; **Call the Library from R** adds `fractal_r.c`, the wrapper `fractal_r.so` (`fractal_r.dll` on Windows), `call_from_r.R`, `numbers_r.bin` and `counts_r.bin`.
 
-Each folder also holds `built_from.txt`, the Julia version, the Julia source and the C program the library was built from: the library and its calling program are built again only when one of them changes.
+Each folder also holds `built_from.txt`, the Julia version, the Julia source and the C program the library was built from, the version being that of the Julia that juliac runs for the **JuliaC** tab, which is the Julia that installed it: the library and its calling program are built again only when one of them changes.
 
 ## Names Set by the Code of Compile Julia to a Shared Library
 
