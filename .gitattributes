@@ -9,3 +9,6 @@ ThirdPartyNotices.txt eol=crlf
 *.sh eol=lf
 *.rtf -text
 **/*.json linguist-language=jsonc
+
+# PDF.js, bundled with the PDF viewer, is not counted in GitHub's language bar
+extensions/pdf-viewer/pdfjs/** linguist-vendored
