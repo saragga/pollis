@@ -39,7 +39,7 @@ A C compiler is `cc`, `gcc` or `clang` on macOS and Linux (the Command Line Tool
 | **Imaginary Part of c** | 0.156 | The imaginary part of c, for the Julia set only |
 | **Folder** | `programs/executables` of the open Pollis Workspace, else `~/.pollis/programs/executables` | Where the programs are built, in a folder for each tool; **Choose...** picks another |
 
-The program receives them as its arguments, after the files it writes: `picture.bmp counts.bin height width x0 y0 spacing julia_set cr ci maxiter`. With no arguments it draws the Mandelbrot set, 800 by 640 pixels with 256 iterations, into `fractal.bmp` in the folder it starts in, and opens it.
+The program receives them as its arguments, after the files it writes: `picture.bmp counts.bin height width x0 y0 spacing julia_set cr ci maxiter`. With no arguments it draws the Mandelbrot set, 800 by 640 pixels with 256 iterations, into `fractal.bmp` in the folder it starts in, and opens it; with one argument, it draws the same into the file named and opens nothing.
 
 ## Files Written by Compile Julia to an Executable
 
@@ -69,6 +69,7 @@ Each folder also holds `built_from.txt`, the Julia version and the source the pr
 | Group | Action | Output |
 |---|---|---|
 | Visualise | **Picture of the Set** | The picture the program drew, `fractal.bmp`, read back and shown |
+| Visualise | **Run the Program in Pollis** | The program run with one argument, `own_picture.bmp`: its lines in the Julia REPL, its picture in the plot pane |
 | Diagnose | **Source and Build Command** | The Julia source, the build call and the command that runs the program |
 | Diagnose | **Program Contents** | Sizes of the program and its folder, and the libraries needed at run time |
 | Compare | **Sizes and Build Times** | Each tool run in the session, its build time, program size and folder size |

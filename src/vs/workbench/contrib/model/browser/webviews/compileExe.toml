@@ -268,8 +268,8 @@ GC.@preserve julia_picture julia_counts fill_picture(pointer(julia_picture), poi
 # The program around fill_counts and fill_picture: it reads the inputs from its command line, fills memory of its own,
 # writes the picture and the counts to files and prints the number of pixels inside. Started with no arguments, as by
 # a double-click, it draws the Mandelbrot set with the page's defaults into fractal.bmp, in the folder it starts in,
-# and opens the picture with the system's viewer through system of the C library. It prints to Core.stdout, which a
-# trimmed program keeps
+# and opens the picture with the system's viewer through system of the C library; with one argument, it draws the same
+# into the file named and opens nothing. It prints to Core.stdout, which a trimmed program keeps
 program_code = """
 function draw(picture_file::String, counts_file::String, height::Int64, width::Int64, x0::Float64, y0::Float64,
               spacing::Float64, julia_set::Int32, cr::Float64, ci::Float64, maxiter::Int32)::Int64
@@ -286,16 +286,21 @@ function draw(picture_file::String, counts_file::String, height::Int64, width::I
 end
 
 function fractal(args::Vector{String})::Cint
-    if isempty(args)
-        inside = draw("fractal.bmp", "", 640, 800, -2.2, -1.2, 3.0 / 799, Int32(0), 0.0, 0.0, Int32(256))
+    if length(args) <= 1
+        picture_file = isempty(args) ? "fractal.bmp" : args[1]
+        inside = draw(picture_file, "", 640, 800, -2.2, -1.2, 3.0 / 799, Int32(0), 0.0, 0.0, Int32(256))
         println(Core.stdout, "The Mandelbrot set, 800 x 640 pixels, 256 iterations: ", inside, " pixels inside")
-        println(Core.stdout, "The picture: fractal.bmp, in the folder the program started in")
-        command = Sys.isapple() ? "open fractal.bmp" : Sys.iswindows() ? "start fractal.bmp" : "xdg-open fractal.bmp"
-        @ccall system(command::Cstring)::Cint
+        if isempty(args)
+            println(Core.stdout, "The picture: fractal.bmp, in the folder the program started in")
+            command = Sys.isapple() ? "open fractal.bmp" : Sys.iswindows() ? "start fractal.bmp" : "xdg-open fractal.bmp"
+            @ccall system(command::Cstring)::Cint
+        else
+            println(Core.stdout, "The picture: ", picture_file)
+        end
         return 0
     end
     if length(args) != 11
-        println(Core.stderr, "usage: fractal picture.bmp counts.bin height width x0 y0 spacing julia_set cr ci maxiter")
+        println(Core.stderr, "usage: fractal [picture.bmp [counts.bin height width x0 y0 spacing julia_set cr ci maxiter]]")
         return 1
     end
     inside = draw(args[1], args[2], parse(Int64, args[3]), parse(Int64, args[4]), parse(Float64, args[5]),
@@ -485,8 +490,8 @@ GC.@preserve julia_picture julia_counts fill_picture(pointer(julia_picture), poi
 # The program around fill_counts and fill_picture: it reads the inputs from its command line, fills memory of its own,
 # writes the picture and the counts to files and prints the number of pixels inside. Started with no arguments, as by
 # a double-click, it draws the Mandelbrot set with the page's defaults into fractal.bmp, in the folder it starts in,
-# and opens the picture with the system's viewer through system of the C library. It prints to Core.stdout, which a
-# trimmed program keeps
+# and opens the picture with the system's viewer through system of the C library; with one argument, it draws the same
+# into the file named and opens nothing. It prints to Core.stdout, which a trimmed program keeps
 program_code = """
 function draw(picture_file::String, counts_file::String, height::Int64, width::Int64, x0::Float64, y0::Float64,
               spacing::Float64, julia_set::Int32, cr::Float64, ci::Float64, maxiter::Int32)::Int64
@@ -503,16 +508,21 @@ function draw(picture_file::String, counts_file::String, height::Int64, width::I
 end
 
 function fractal(args::Vector{String})::Cint
-    if isempty(args)
-        inside = draw("fractal.bmp", "", 640, 800, -2.2, -1.2, 3.0 / 799, Int32(0), 0.0, 0.0, Int32(256))
+    if length(args) <= 1
+        picture_file = isempty(args) ? "fractal.bmp" : args[1]
+        inside = draw(picture_file, "", 640, 800, -2.2, -1.2, 3.0 / 799, Int32(0), 0.0, 0.0, Int32(256))
         println(Core.stdout, "The Mandelbrot set, 800 x 640 pixels, 256 iterations: ", inside, " pixels inside")
-        println(Core.stdout, "The picture: fractal.bmp, in the folder the program started in")
-        command = Sys.isapple() ? "open fractal.bmp" : Sys.iswindows() ? "start fractal.bmp" : "xdg-open fractal.bmp"
-        @ccall system(command::Cstring)::Cint
+        if isempty(args)
+            println(Core.stdout, "The picture: fractal.bmp, in the folder the program started in")
+            command = Sys.isapple() ? "open fractal.bmp" : Sys.iswindows() ? "start fractal.bmp" : "xdg-open fractal.bmp"
+            @ccall system(command::Cstring)::Cint
+        else
+            println(Core.stdout, "The picture: ", picture_file)
+        end
         return 0
     end
     if length(args) != 11
-        println(Core.stderr, "usage: fractal picture.bmp counts.bin height width x0 y0 spacing julia_set cr ci maxiter")
+        println(Core.stderr, "usage: fractal [picture.bmp [counts.bin height width x0 y0 spacing julia_set cr ci maxiter]]")
         return 1
     end
     inside = draw(args[1], args[2], parse(Int64, args[3]), parse(Int64, args[4]), parse(Float64, args[5]),
@@ -702,7 +712,8 @@ GC.@preserve julia_picture julia_counts fill_picture(pointer(julia_picture), poi
 # so the first argument is at 2), memory taken with MallocArray and given back with free, the files written and the
 # text printed through the C library. Started with no arguments, as by a double-click, it draws the Mandelbrot set with
 # the page's defaults into fractal.bmp and opens it with system of the C library, called with @symbolcall as
-# StaticTools calls the C library. % Int32 truncates where Int32() could throw, and nothing here may throw
+# StaticTools calls the C library; with one argument, it draws the same into the file named and opens nothing.
+# % Int32 truncates where Int32() could throw, and nothing here may throw
 static_code = """
 function draw_static(picture_name, counts_name, write_counts::Bool, height::Int64, width::Int64, x0::Float64,
                      y0::Float64, spacing::Float64, julia_set::Int32, cr::Float64, ci::Float64, maxiter::Int32)::Int64
@@ -733,8 +744,15 @@ function static_main(argc::Int64, argv::Ptr{Ptr{UInt8}})
         Sys.isapple() ? shell(c"open fractal.bmp") : Sys.iswindows() ? shell(c"start fractal.bmp") : shell(c"xdg-open fractal.bmp")
         return 0
     end
+    if argc == 2
+        inside = draw_static(MallocString(argv, 2), c"", false, 640, 800, -2.2, -1.2, 3.0 / 799, Int32(0), 0.0, 0.0, Int32(256))
+        printf(c"The Mandelbrot set, 800 x 640 pixels, 256 iterations: %lld pixels inside\\n", inside)
+        printf(c"The picture: ")
+        puts(MallocString(argv, 2))  # puts and not printf, which would read a % in the name as a format
+        return 0
+    end
     if argc != 12
-        printf(stderrp(), c"usage: fractal picture.bmp counts.bin height width x0 y0 spacing julia_set cr ci maxiter\\n")
+        printf(stderrp(), c"usage: fractal [picture.bmp [counts.bin height width x0 y0 spacing julia_set cr ci maxiter]]\\n")
         return 1
     end
     inside = draw_static(MallocString(argv, 2), MallocString(argv, 3), true, argparse(Int64, argv, 4),
@@ -764,16 +782,21 @@ function draw(picture_file::String, counts_file::String, height::Int64, width::I
 end
 
 function fractal(args::Vector{String})::Cint
-    if isempty(args)
-        inside = draw("fractal.bmp", "", 640, 800, -2.2, -1.2, 3.0 / 799, Int32(0), 0.0, 0.0, Int32(256))
+    if length(args) <= 1
+        picture_file = isempty(args) ? "fractal.bmp" : args[1]
+        inside = draw(picture_file, "", 640, 800, -2.2, -1.2, 3.0 / 799, Int32(0), 0.0, 0.0, Int32(256))
         println(Core.stdout, "The Mandelbrot set, 800 x 640 pixels, 256 iterations: ", inside, " pixels inside")
-        println(Core.stdout, "The picture: fractal.bmp, in the folder the program started in")
-        command = Sys.isapple() ? "open fractal.bmp" : Sys.iswindows() ? "start fractal.bmp" : "xdg-open fractal.bmp"
-        @ccall system(command::Cstring)::Cint
+        if isempty(args)
+            println(Core.stdout, "The picture: fractal.bmp, in the folder the program started in")
+            command = Sys.isapple() ? "open fractal.bmp" : Sys.iswindows() ? "start fractal.bmp" : "xdg-open fractal.bmp"
+            @ccall system(command::Cstring)::Cint
+        else
+            println(Core.stdout, "The picture: ", picture_file)
+        end
         return 0
     end
     if length(args) != 11
-        println(Core.stderr, "usage: fractal picture.bmp counts.bin height width x0 y0 spacing julia_set cr ci maxiter")
+        println(Core.stderr, "usage: fractal [picture.bmp [counts.bin height width x0 y0 spacing julia_set cr ci maxiter]]")
         return 1
     end
     inside = draw(args[1], args[2], parse(Int64, args[3]), parse(Int64, args[4]), parse(Float64, args[5]),
@@ -855,8 +878,34 @@ function pixel(i, j)
     at = 54 + (i - 1) * row_bytes + 3 * j
     return RGB(bytes[at] / 255, bytes[at - 1] / 255, bytes[at - 2] / 255)
 end
-picture = [pixel(i, j) for i in height:-1:1, j in 1:width]
+picture = [pixel(i, j) for i in height:-1:1, j in 1:width];  # the semicolon: the matrix is shown as a picture, not printed
 plot(picture, aspect_ratio = :equal, axis = nothing, border = :none, title = julia_set ? "Julia set of c = $c" : "Mandelbrot set", size = (700, 560))
+'''
+
+[[actionGroups.actions]]
+id = "runprogram"
+label = "Run the Program in Pollis"
+desc = "The program run here as from a terminal, with one argument, the picture to write: the Mandelbrot set with the page's defaults, its lines printed in the Julia REPL, then its picture in the plot pane"
+code = '''
+using Plots
+
+# The program with one argument, the name of the picture: it draws the Mandelbrot set with the page's defaults, 800
+# pixels across and 256 iterations, prints two lines and opens nothing. Started with no arguments, as by a
+# double-click, it would open the picture in the system's viewer instead
+own_picture = joinpath(folder, "own_picture.bmp")  # beside the files of the tab
+seconds = @elapsed run(`$program $own_picture`)
+println("The program ran in ", round(seconds, digits = 3), " s, its start-up included")
+
+# Its picture: 54 bytes of header, then the rows from the bottom up, each pixel blue, green and red, each row padded
+# to a multiple of 4 bytes. The program's defaults: 640 rows of 800 pixels
+bytes = read(own_picture)
+own_height, own_width = 640, 800
+own_row_bytes = (3 * own_width + 3) & ~3
+function own_pixel(i, j)
+    at = 54 + (i - 1) * own_row_bytes + 3 * j
+    return RGB(bytes[at] / 255, bytes[at - 1] / 255, bytes[at - 2] / 255)
+end
+plot([own_pixel(i, j) for i in own_height:-1:1, j in 1:own_width], aspect_ratio = :equal, axis = nothing, border = :none, title = "Mandelbrot set, drawn by the program alone", size = (700, 560))
 '''
 
 [[actionGroups]]
