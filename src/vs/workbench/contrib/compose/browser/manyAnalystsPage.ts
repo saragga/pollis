@@ -689,9 +689,11 @@ function pageHtml(): string {
 		collected: localize('manyAnalysts.collected', "Collected {0}."),
 		spread: localize('manyAnalysts.spread', "The Spread"),
 		median: localize('manyAnalysts.median', "Median Estimate"),
-		iqr: localize('manyAnalysts.iqr', "Interquartile Range"),
+		iqr: localize('manyAnalysts.iqr', "Interquartile Range (Q1 to Q3)"),
+		between: localize('manyAnalysts.between', "{0} to {1}"),
 		range: localize('manyAnalysts.range', "Range"),
-		nse: localize('manyAnalysts.nse', "Nonstandard Error"),
+		nse: localize('manyAnalysts.nse', "Nonstandard Error*"),
+		nseNote: localize('manyAnalysts.nseNote', "* The standard deviation of the analysts' estimates: the uncertainty that comes from the analysts' choices, as the standard error measures the uncertainty that comes from the data. The term comes from Menkveld and 342 coauthors (2024), \"Nonstandard Errors\", in the Journal of Finance. They gave 164 research teams the same hypotheses to test on the same data, and found the spread across the teams sizable, and larger than the teams themselves expected."),
 		nseTooltip: localize('manyAnalysts.nseTooltip', "The standard deviation of the estimates across the analysts"),
 		medianSe: localize('manyAnalysts.medianSe', "Median Standard Error"),
 		ratio: localize('manyAnalysts.ratio', "The nonstandard error is {0} times the median standard error the analysts reported."),
@@ -736,6 +738,7 @@ function pageHtml(): string {
 		table.ma { width: auto; max-width: 100%; }
 		table.ma td.choice { max-width: 220px; }
 		.ma-figures { display: flex; flex-wrap: wrap; gap: 8px 32px; margin: 8px 0; }
+		.ma-note { color: var(--vscode-descriptionForeground); max-width: 80ch; }
 		.ma-figure .value { font-size: 18px; font-variant-numeric: tabular-nums; }
 		.ma-plot { max-width: 900px; margin: 8px 0 16px 0; }
 		.ma-plot text { fill: var(--vscode-foreground); font-size: 11px; font-family: var(--vscode-font-family); }
@@ -847,14 +850,23 @@ function pageHtml(): string {
 	function escapeHtml(value) {
 		return String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 	}
+	/** Two numbers as an interval, "a to b": a dash between them would read as a minus sign. */
+	function interval(low, high) {
+		return TEXT.between.replace('{0}', format(low)).replace('{1}', format(high));
+	}
 	function format(x) {
 		if (typeof x !== 'number' || !isFinite(x)) {
 			return '';
 		}
-		return Math.abs(x) >= 1000 ? Math.round(x).toLocaleString() : Number(x.toPrecision(4)).toLocaleString(undefined, { maximumFractionDigits: 6 });
+		// The digits with a point for decimals, the thousands apart by a narrow no-break space, as a comma is the decimal
+		// separator in many countries, and a minus sign, which a dash between two numbers cannot be taken for
+		const rounded = Math.abs(x) >= 1000 ? Math.round(x) : Number(x.toPrecision(4));
+		const [whole, fraction] = Math.abs(rounded).toLocaleString('en-US', { useGrouping: false, maximumFractionDigits: 6 }).split('.');
+		return (rounded < 0 ? '\\u2212' : '') + whole.replace(/\\B(?=(\\d{3})+(?!\\d))/g, '\\u202F') + (fraction ? '.' + fraction : '');
 	}
+	/** The key of an agent and model, as the value of an option: a character that HTML keeps in an attribute separates them. */
 	function cellKey(cell) {
-		return cell.agent + '\\u0000' + cell.model;
+		return encodeURIComponent(cell.agent) + '/' + encodeURIComponent(cell.model);
 	}
 	function dataKind() {
 		const radio = document.querySelector('input[name=data]:checked');
@@ -1001,6 +1013,9 @@ function pageHtml(): string {
 		const study = state.study;
 		const results = study && study.results;
 		document.getElementById('collect').disabled = !study;
+		// The one blue button is the next thing to do: Start before a study, Check and Collect once every analyst has ended
+		document.getElementById('start').classList.toggle('current', !study);
+		document.getElementById('collect').classList.toggle('current', !!study && !results && !study.analysts.some(run => run.status === 'running'));
 		document.getElementById('results').hidden = !results;
 		const status = document.getElementById('collectStatus');
 		if (results && results.collected) {
@@ -1013,8 +1028,9 @@ function pageHtml(): string {
 		}
 		const spread = results.spread;
 		document.getElementById('spread').innerHTML = spread
-			? '<div class="ma-figures">' + figure(TEXT.median, format(spread.median)) + figure(TEXT.iqr, format(spread.q1) + ' &ndash; ' + format(spread.q3)) + figure(TEXT.range, format(spread.min) + ' &ndash; ' + format(spread.max)) + figure(TEXT.nse, format(spread.nonstandardError), TEXT.nseTooltip) + figure(TEXT.medianSe, format(spread.medianStdError)) + '</div>'
+			? '<div class="ma-figures">' + figure(TEXT.median, format(spread.median)) + figure(TEXT.iqr, interval(spread.q1, spread.q3)) + figure(TEXT.range, interval(spread.min, spread.max)) + figure(TEXT.nse, format(spread.nonstandardError), TEXT.nseTooltip) + figure(TEXT.medianSe, format(spread.medianStdError)) + '</div>'
 				+ (spread.medianStdError > 0 ? '<p class="hint">' + escapeHtml(TEXT.ratio.replace('{0}', format(spread.nonstandardError / spread.medianStdError))) + '</p>' : '')
+				+ '<p class="small ma-note">' + escapeHtml(TEXT.nseNote) + '</p>'
 			: '<p class="hint">' + escapeHtml(TEXT.fewResults) + '</p>';
 		document.getElementById('plot').innerHTML = plot(results.rows, spread);
 		document.getElementById('choiceRows').innerHTML = results.rows.map(row => {
@@ -1024,7 +1040,7 @@ function pageHtml(): string {
 					: row.reproduced === false ? '<span class="error">' + escapeHtml(TEXT.no.replace('{0}', format(row.rerun.estimate))) + '</span>'
 						: escapeHtml(TEXT.notChecked);
 			const numbers = r
-				? '<td class="number">' + format(r.estimate) + '</td><td class="number">' + format(r.std_error) + '</td><td class="number">' + format(r.ci_low) + ' &ndash; ' + format(r.ci_high) + '</td><td class="number">' + format(r.n) + '</td>'
+				? '<td class="number">' + format(r.estimate) + '</td><td class="number">' + format(r.std_error) + '</td><td class="number">' + interval(r.ci_low, r.ci_high) + '</td><td class="number">' + format(r.n) + '</td>'
 				: '<td colspan="4" class="small">' + escapeHtml(TEXT.noEstimate) + '</td>';
 			const links = [link(TEXT.report, row.analyst, 'report'), link(TEXT.code, row.analyst, 'code'), row.rerunFailed || row.reproduced === false ? link(TEXT.log, row.analyst, 'log') : ''].filter(x => x).join('');
 			return '<tr><td>' + row.analyst + '</td><td>' + escapeHtml(row.label) + '</td>' + numbers + CHOICES.map(field => '<td class="choice small">' + escapeHtml(row.choices[field] || '') + '</td>').join('') + '<td>' + reproduced + '</td><td class="links">' + links + '</td></tr>';

@@ -33,7 +33,8 @@ export const poweredByCss = `.powered-by { margin: 4px 0 16px 0; line-height: 1.
 export const customTagCss = `.code-custom-tag { display: none; margin-left: 4px; font-size: 11px; font-weight: 500; line-height: 16px; color: var(--vscode-editorWarning-foreground); border: 1px solid var(--vscode-editorWarning-foreground); border-radius: 10px; padding: 0 8px; }`;
 
 /** The left strip of Next Steps and Learn More, and the panels they open on the right. */
-export const learnMoreCss = `.panel-back:disabled, .panel-close:disabled { opacity: 0.4; cursor: default; }
+export const learnMoreCss = `.section-toggle .section-dot { display: none; }
+		.panel-back:disabled, .panel-close:disabled { opacity: 0.4; cursor: default; }
 		/* Local Wikis / Notebook Tutorials cards: Edit / Restore Default links appear on hover; a customised one gets the amber dot. */
 		.copy-item { position: relative; display: flex; }
 		.copy-item .nb-card { padding-bottom: 26px; }
@@ -126,10 +127,10 @@ export const learnMoreCss = `.panel-back:disabled, .panel-close:disabled { opaci
 		.faq-wiki { background: none; border: none; padding: 0; font-size: 11px; font-family: var(--vscode-font-family); color: var(--vscode-textLink-foreground); cursor: pointer; }
 		.faq-wiki:hover { color: var(--vscode-textLink-activeForeground); text-decoration: underline; }`;
 
-/** The Next Steps section, with the items of its list. */
-export function nextStepsSectionHtml(items: string): string {
+/** The Next Steps section, with the items of its list, and on a page of the Time Arrow style the number after its last step. */
+export function nextStepsSectionHtml(items: string, number?: number): string {
 	return `<div class="section collapsed" id="sec-next">
-				<button class="section-toggle"><span class="illus-chevron"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M7.976 10.072l-4.054-4.014-.92.92 4.49 4.45.978.01 4.525-4.46-.918-.92-4.101 4.014z"/></svg></span>Next Steps</button>
+				<button class="section-toggle"><span class="illus-chevron"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M7.976 10.072l-4.054-4.014-.92.92 4.49 4.45.978.01 4.525-4.46-.918-.92-4.101 4.014z"/></svg></span><span class="step-number section-dot" aria-hidden="true">${number ?? ''}</span>Next Steps</button>
 				<div class="section-body">
 				<ul class="column-list">
 ${items}
@@ -143,7 +144,7 @@ ${items}
  * References. FAQ is shown only when the panel has questions in its FAQ.
  */
 export const learnMoreSectionHtml = `<div class="section collapsed" id="sec-learn">
-				<button class="section-toggle"><span class="illus-chevron"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M7.976 10.072l-4.054-4.014-.92.92 4.49 4.45.978.01 4.525-4.46-.918-.92-4.101 4.014z"/></svg></span>Learn More</button>
+				<button class="section-toggle"><span class="illus-chevron"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M7.976 10.072l-4.054-4.014-.92.92 4.49 4.45.978.01 4.525-4.46-.918-.92-4.101 4.014z"/></svg></span><span class="step-number section-dot" aria-hidden="true"></span>Learn More</button>
 				<div class="section-body">
 				<ul class="column-list">
 					<li id="faq-item" style="display: none;"><button class="list-btn panel-toggle" id="btn-faq"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M8 11C8.41421 11 8.75 11.3358 8.75 11.75C8.75 12.1642 8.41421 12.5 8 12.5C7.58579 12.5 7.25 12.1642 7.25 11.75C7.25 11.3358 7.58579 11 8 11Z"/><path d="M8 4C9.262 4 10.25 4.988 10.25 6.25C10.25 7.333 9.68352 7.89852 9.22852 8.35352C8.82052 8.76052 8.5 9.082 8.5 9.75C8.5 10.026 8.276 10.25 8 10.25C7.724 10.25 7.5 10.026 7.5 9.75C7.5 8.667 8.06648 8.10148 8.52148 7.64648C8.92948 7.23948 9.25 6.918 9.25 6.25C9.25 5.538 8.712 5 8 5C7.288 5 6.75 5.538 6.75 6.25C6.75 6.526 6.526 6.75 6.25 6.75C5.974 6.75 5.75 6.526 5.75 6.25C5.75 4.988 6.738 4 8 4Z"/><path fill-rule="evenodd" clip-rule="evenodd" d="M8 1C11.86 1 15 4.14 15 8C15 11.86 11.86 15 8 15C4.14 15 1 11.86 1 8C1 4.14 4.14 1 8 1ZM8 2C4.691 2 2 4.691 2 8C2 11.309 4.691 14 8 14C11.309 14 14 11.309 14 8C14 4.691 11.309 2 8 2Z"/></svg>FAQ</button></li>
@@ -734,6 +735,9 @@ export function stepsHtml(steps: readonly IScaffoldStep[]): string {
 			<div class="section-body">${step.bodyHtml}</div>
 		</div>`).join('\n\t\t');
 }
+
+/** On a page of the Time Arrow style, Next Steps and Learn More carry the yellow circle of the steps: Next Steps with the number after the last step, as they need the steps run first, and Learn More with none. */
+export const sectionDotsCss = `.section-toggle .section-dot { display: inline-flex; }`;
 
 /** The styles of the panes of the Time Arrow style: the number on our yellow. */
 export const stepsCss = `.step-head { display: flex; align-items: center; gap: 16px; }

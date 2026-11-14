@@ -125,7 +125,7 @@ each request.
 are the models: the cloud models, then the local models of this computer. A tier is a cell: type its name in a cell,
 and the tier is that agent on that model. A tier is in one cell at most; a name of your own, such as \ui{Max}, makes
 a new tier, which lasts while it is in a cell. A dash marks a model the agent cannot run. Until you change them, Light,
-Standard and Strong are Claude Code on Claude Haiku, Sonnet and Opus.
+Standard and Strong are Claude Code on Claude Haiku 5.5, Claude Sonnet 5.5 and Claude Opus 5.5.
 
 \subsection{The cloud models}
 Each cloud model is a row with, for each agent that runs it, the arguments that choose it. Pollis puts them after the
@@ -137,9 +137,9 @@ agent's program, so a tier's command line is the agent's, with the model chosen.
 \toprule
 \textbf{Model} & \textbf{Claude Code} & \textbf{Codex} & \textbf{OpenCode}\\
 \midrule
-Claude Haiku & \code{-{}-model haiku} & --- & \code{-{}-model anthropic/claude-haiku-5-5}\\
-Claude Sonnet & \code{-{}-model sonnet} & --- & \code{-{}-model anthropic/claude-sonnet-5-5}\\
-Claude Opus & \code{-{}-model opus} & --- & \code{-{}-model anthropic/claude-opus-5-5}\\
+Claude Haiku 5.5 & \code{-{}-model claude-haiku-5-5} & --- & \code{-{}-model anthropic/claude-haiku-5-5}\\
+Claude Sonnet 5.5 & \code{-{}-model claude-sonnet-5-5} & --- & \code{-{}-model anthropic/claude-sonnet-5-5}\\
+Claude Opus 5.5 & \code{-{}-model claude-opus-5-5} & --- & \code{-{}-model anthropic/claude-opus-5-5}\\
 GPT-5.5 & --- & \code{-m gpt-5.5} & \code{-{}-model openai/gpt-5.5}\\
 GPT-5.4 & --- & \code{-m gpt-5.4} & \code{-{}-model openai/gpt-5.4}\\
 GPT-5.4 mini & --- & \code{-m gpt-5.4-mini} & \code{-{}-model openai/gpt-5.4-mini}\\

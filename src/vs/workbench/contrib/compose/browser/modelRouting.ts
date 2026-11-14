@@ -108,12 +108,12 @@ export interface IAgentCommand {
 	readonly command: string;
 }
 
-// The cloud models offered at first, with the model flags of Claude Code (its aliases of the latest models),
+// The cloud models offered at first, each named with its version, with the model flags of Claude Code (--model),
 // Codex (-m) and OpenCode (--model provider/model); the user changes them in the setting
 const CLOUD_MODELS: readonly ICloudModel[] = [
-	{ name: 'Claude Haiku', agents: { 'Claude Code': '--model haiku', 'OpenCode': '--model anthropic/claude-haiku-5-5' } },
-	{ name: 'Claude Sonnet', agents: { 'Claude Code': '--model sonnet', 'OpenCode': '--model anthropic/claude-sonnet-5-5' } },
-	{ name: 'Claude Opus', agents: { 'Claude Code': '--model opus', 'OpenCode': '--model anthropic/claude-opus-5-5' } },
+	{ name: 'Claude Haiku 5.5', agents: { 'Claude Code': '--model claude-haiku-5-5', 'OpenCode': '--model anthropic/claude-haiku-5-5' } },
+	{ name: 'Claude Sonnet 5.5', agents: { 'Claude Code': '--model claude-sonnet-5-5', 'OpenCode': '--model anthropic/claude-sonnet-5-5' } },
+	{ name: 'Claude Opus 5.5', agents: { 'Claude Code': '--model claude-opus-5-5', 'OpenCode': '--model anthropic/claude-opus-5-5' } },
 	{ name: 'GPT-5.5', agents: { 'Codex': '-m gpt-5.5', 'OpenCode': '--model openai/gpt-5.5' } },
 	{ name: 'GPT-5.4', agents: { 'Codex': '-m gpt-5.4', 'OpenCode': '--model openai/gpt-5.4' } },
 	{ name: 'GPT-5.4 mini', agents: { 'Codex': '-m gpt-5.4-mini', 'OpenCode': '--model openai/gpt-5.4-mini' } },
@@ -125,9 +125,9 @@ const CLOUD_MODELS: readonly ICloudModel[] = [
 
 /** The cells of the three tiers while the setting is unset: Claude Code on its three models. */
 export const DEFAULT_TIER_CELLS: Readonly<Record<BuiltinAgentTier, ITierCell>> = {
-	light: { agent: 'Claude Code', model: `${CLOUD_PREFIX}Claude Haiku` },
-	standard: { agent: 'Claude Code', model: `${CLOUD_PREFIX}Claude Sonnet` },
-	strong: { agent: 'Claude Code', model: `${CLOUD_PREFIX}Claude Opus` },
+	light: { agent: 'Claude Code', model: `${CLOUD_PREFIX}Claude Haiku 5.5` },
+	standard: { agent: 'Claude Code', model: `${CLOUD_PREFIX}Claude Sonnet 5.5` },
+	strong: { agent: 'Claude Code', model: `${CLOUD_PREFIX}Claude Opus 5.5` },
 };
 
 const cellSchema: IJSONSchema = {
@@ -148,7 +148,7 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).regis
 			default: {},
 			additionalProperties: cellSchema,
 			scope: ConfigurationScope.APPLICATION,
-			markdownDescription: localize('modelRouting.tierCellsSetting', "The cell of each tier in the table of agents and models: `light`, `standard`, `strong` or the name of a tier of your own, each with its `agent`, by name, and its `model`: `cloud:` and the name of a model of `#pollis.agents.cloudModels#`, or `local:` and a GGUF file, served on this computer by the llama.cpp that comes with Pollis. Unset: Light, Standard and Strong on Claude Code's Haiku, Sonnet and Opus. Use **Compose > Orchestration > Model Tasks and Routing** to change them."),
+			markdownDescription: localize('modelRouting.tierCellsSetting', "The cell of each tier in the table of agents and models: `light`, `standard`, `strong` or the name of a tier of your own, each with its `agent`, by name, and its `model`: `cloud:` and the name of a model of `#pollis.agents.cloudModels#`, or `local:` and a GGUF file, served on this computer by the llama.cpp that comes with Pollis. Unset: Light, Standard and Strong on Claude Code with Claude Haiku 5.5, Claude Sonnet 5.5 and Claude Opus 5.5. Use **Compose > Orchestration > Model Tasks and Routing** to change them."),
 		},
 		[CLOUD_MODELS_SETTING]: {
 			type: 'array',
@@ -192,13 +192,26 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).regis
 	},
 });
 
+/** The Claude models by the names without their version that a saved cell may give them. */
+const UNVERSIONED_CLOUD_MODELS: Readonly<Record<string, string>> = {
+	'Claude Haiku': 'Claude Haiku 5.5',
+	'Claude Sonnet': 'Claude Sonnet 5.5',
+	'Claude Opus': 'Claude Opus 5.5',
+};
+
 /** The cells of the tiers, those well formed; the defaults while the setting is unset. */
 export function tierCells(configurationService: IConfigurationService): Record<AgentTier, ITierCell> {
 	const cells: Record<string, Partial<ITierCell>> | undefined = configurationService.inspect<Record<string, Partial<ITierCell>>>(TIER_CELLS_SETTING).userValue ?? DEFAULT_TIER_CELLS;
+	const names = new Set(cloudModels(configurationService).map(cloud => cloud.name));
+	// A cloud model named without its version is the model of that name with it, unless the user's rows have the name
+	const versioned = (model: string) => {
+		const name = model.startsWith(CLOUD_PREFIX) ? model.slice(CLOUD_PREFIX.length) : '';
+		return !names.has(name) && Object.hasOwn(UNVERSIONED_CLOUD_MODELS, name) ? CLOUD_PREFIX + UNVERSIONED_CLOUD_MODELS[name] : model;
+	};
 	const valid: Record<AgentTier, ITierCell> = {};
 	for (const [tier, cell] of Object.entries(cells && typeof cells === 'object' ? cells : {})) {
 		if (tier.trim() && typeof cell?.agent === 'string' && typeof cell.model === 'string') {
-			valid[tier] = { agent: cell.agent, model: cell.model };
+			valid[tier] = { agent: cell.agent, model: versioned(cell.model) };
 		}
 	}
 	return valid;

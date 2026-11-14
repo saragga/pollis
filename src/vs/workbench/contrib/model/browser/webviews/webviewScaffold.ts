@@ -6,7 +6,7 @@
 import { localize } from '../../../../../nls.js';
 import { askAddHtml, askAttachCss, askAttachmentsHtml, askAttachScript } from '../../../compose/browser/askPollisAttach.js';
 import { composerVoiceCss, composerVoiceHtml, composerVoiceScript } from '../../../compose/browser/composerVoice.js';
-import { customTagCss, escJs, learnMoreCss, learnMoreMessagesJs, learnMorePanelsJs, learnMoreSectionHtml, learnMoreStateJs, learnMoreWiringJs, nextStepsSectionHtml, packageLinksMessageJs, pageBaseCss, poweredByCss, sectionCss, sectionToggleJs, stepsCss, stepsHtml, IScaffoldStep } from './scaffoldShared.js';
+import { customTagCss, escJs, learnMoreCss, learnMoreMessagesJs, learnMorePanelsJs, learnMoreSectionHtml, learnMoreStateJs, learnMoreWiringJs, nextStepsSectionHtml, packageLinksMessageJs, pageBaseCss, poweredByCss, sectionCss, sectionDotsCss, sectionToggleJs, stepsCss, stepsHtml, IScaffoldStep } from './scaffoldShared.js';
 
 /** Codicon SVGs used by Next Steps groups, keyed by codicon name (16px, theme-coloured via currentColor). */
 const NEXT_STEP_CODICONS: Readonly<Record<string, string>> = {
@@ -626,6 +626,7 @@ export function buildWebviewHtml(parts: WebviewParts): string {
 		.code-preview .monaco-tokenized-source { white-space: pre; }
 ${parts.extraCss ?? ''}${noExampleCode ? `		${stepsCss}
 		${panelAskCss}
+` : ''}${parts.steps ? `		${sectionDotsCss}
 ` : ''}	</style>
 	<style id="mtk-theme"></style>
 </head>
@@ -716,7 +717,7 @@ ${parts.inputsHtml ? `\t\t<div class="scaffold-inputs" id="scaffold-inputs">\n${
 					<li><button class="list-btn panel-toggle" id="btn-diagnose">${nextStepIcon('diagnose')}Diagnose</button></li>
 					<li><button class="list-btn panel-toggle" id="btn-predict">${nextStepIcon('predict')}Predict</button></li>
 					<li><button class="list-btn panel-toggle" id="btn-compare">${nextStepIcon('compare')}Compare</button></li>
-					<li><button class="list-btn panel-toggle" id="btn-interpret">${nextStepIcon('interpret')}Interpret</button></li>`))}
+					<li><button class="list-btn panel-toggle" id="btn-interpret">${nextStepIcon('interpret')}Interpret</button></li>`), parts.steps ? parts.steps.length + 1 : undefined)}
 				${learnMoreSectionHtml}
 				<div class="paper-links" id="paper-links"></div>
 			</div>
