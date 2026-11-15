@@ -18,12 +18,15 @@ import { localize, localize2 } from '../../../../nls.js';
 import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
+import { ILanguageService } from '../../../../editor/common/languages/language.js';
+import { IClipboardService } from '../../../../platform/clipboard/common/clipboardService.js';
 import { IDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { INotificationService } from '../../../../platform/notification/common/notification.js';
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { IStorageService } from '../../../../platform/storage/common/storage.js';
+import { IThemeService } from '../../../../platform/theme/common/themeService.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { RUN_SKILL_COMMAND_ID } from '../../compose/browser/pollisAgents.js';
@@ -38,6 +41,7 @@ import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { JOURNAL_METRICS_COMMAND_ID, JOURNALS_DATABASE_ID } from '../common/databaseDrivers.js';
 import { DatabaseConnectionContextMenu, DatabaseItemId, DatabaseItemKind } from './connectionsView.js';
+import { ISqlNextStep, registerSqlNextSteps, sqlNextStepsParts } from '../../model/browser/webviews/sqlNextSteps.js';
 
 const IMPORT_COMMAND_ID = 'pollis.databases.importJournalMetrics';
 
@@ -54,6 +58,66 @@ const DOWNLOAD_PAGES: Record<MetricsSource, string> = {
 	Scopus: 'https://www.scopus.com/sources',
 	JCR: 'https://jcr.clarivate.com/',
 };
+
+/** The Next Steps: queries of PollisJournals, in the duckdb> terminal. */
+function nextSteps(): ISqlNextStep[] {
+	return [
+		{
+			id: 'compareJournals',
+			label: localize('journalMetrics.compareJournals', "Compare Journals"),
+			description: localize('journalMetrics.compareJournalsDescription', "Journals side by side: the Norwegian level, OpenAlex's 2-year mean citedness and h-index, and the latest values of the metrics imported. Replace the titles with those of your journals, as OpenAlex names them."),
+			sql: `-- The journals to compare, by their titles in OpenAlex: replace them with your own
+WITH chosen(title) AS (VALUES ('Econometrica'), ('Journal of Econometrics'), ('The Review of Economic Studies'), ('The Journal of Finance')),
+levels AS (
+	SELECT r.journal_id, arg_max(l.level, l.year) AS level
+	FROM PollisJournals.norwegian_register r JOIN PollisJournals.norwegian_levels l USING (id)
+	GROUP BY r.journal_id
+),
+imported AS (
+	SELECT journal_id, max(sjr) AS sjr, min(sjr_quartile) AS sjr_quartile, round(max(snip), 2) AS snip, min(abdc_rating) AS abdc,
+		max(citescore) AS citescore, max(jif) AS jif, min(jif_quartile) AS jif_quartile
+	FROM (SELECT * FROM PollisJournals.journal_metrics QUALIFY year = max(year) OVER (PARTITION BY journal_id, source))
+	WHERE journal_id IS NOT NULL
+	GROUP BY journal_id
+)
+SELECT j.title, levels.level, round(j.mean_citedness_2yr, 2) AS citedness_2yr, j.h_index, imported.* EXCLUDE (journal_id)
+FROM chosen
+JOIN PollisJournals.journals j ON lower(j.title) = lower(chosen.title)
+LEFT JOIN levels ON levels.journal_id = j.id
+LEFT JOIN imported ON imported.journal_id = j.id
+ORDER BY citedness_2yr DESC`,
+		},
+		{
+			id: 'journalOverYears',
+			label: localize('journalMetrics.journalOverYears', "A Journal Over the Years"),
+			description: localize('journalMetrics.journalOverYearsDescription', "A journal's works and the citations they received each year, from OpenAlex, with its level in the Norwegian register that year. Replace the title with that of your journal."),
+			sql: `-- The journal, by its title in OpenAlex: replace it with your own
+WITH journal AS (SELECT id FROM PollisJournals.journals WHERE lower(title) = lower('Econometrica') LIMIT 1),
+levels AS (
+	SELECT l.year, l.level
+	FROM PollisJournals.norwegian_register r JOIN PollisJournals.norwegian_levels l USING (id)
+	WHERE r.journal_id = (SELECT id FROM journal)
+)
+SELECT y.year, y.works, y.cited_by, levels.level
+FROM PollisJournals.journal_years y
+LEFT JOIN levels USING (year)
+WHERE y.id = (SELECT id FROM journal)
+ORDER BY y.year DESC`,
+		},
+		{
+			id: 'leadingJournals',
+			label: localize('journalMetrics.leadingJournals', "Leading Journals of a Field"),
+			description: localize('journalMetrics.leadingJournalsDescription', "The journals at level 2 of the Norwegian register this year in a field, with their publisher, 2-year mean citedness, h-index and open access. Replace Economics with your field, as the register names it, such as Mathematics, Psychology or Business and Finance."),
+			sql: `-- The field, as the Norwegian register names it: replace it with your own
+SELECT r.title, r.publisher, round(j.mean_citedness_2yr, 2) AS citedness_2yr, j.h_index, j.is_oa AS open_access
+FROM PollisJournals.norwegian_register r
+JOIN PollisJournals.norwegian_levels l USING (id)
+LEFT JOIN PollisJournals.journals j ON j.id = r.journal_id
+WHERE r.field = 'Economics' AND l.level = '2' AND l.year = (SELECT max(year) FROM PollisJournals.norwegian_levels)
+ORDER BY citedness_2yr DESC NULLS LAST`,
+		},
+	];
+}
 
 /** The open page, so a second request shows it again. */
 let openPage: WebviewInput | undefined;
@@ -72,6 +136,9 @@ async function openJournalMetricsPage(accessor: ServicesAccessor): Promise<void>
 	const fileService = accessor.get(IFileService);
 	const pathService = accessor.get(IPathService);
 	const storageService = accessor.get(IStorageService);
+	const languageService = accessor.get(ILanguageService);
+	const themeService = accessor.get(IThemeService);
+	const clipboardService = accessor.get(IClipboardService);
 
 	if (openPage && !openPage.isDisposed()) {
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
@@ -95,6 +162,7 @@ async function openJournalMetricsPage(accessor: ServicesAccessor): Promise<void>
 
 	const disposables = new DisposableStore();
 	disposables.add(registerScaffoldPageHandlers(webviewInput, 'journalMetrics', title, JOURNALMETRICS_METADATA.journalMetrics, openerService, editorService, commandService, notificationService, notebookEditorModelResolverService, notebookKernelService, fileService, pathService, storageService));
+	disposables.add(registerSqlNextSteps(webviewInput.webview, nextSteps(), languageService, themeService, commandService, clipboardService, editorService));
 	disposables.add(webviewInput.webview.onDidDispose(() => {
 		openPage = undefined;
 		disposables.dispose();
@@ -323,6 +391,7 @@ function pageHtml(): string {
 		title: localize('journalMetrics.title', "Journal Metrics"),
 		omitPoweredBy: !JOURNALMETRICS_METADATA.journalMetrics.packages.length,
 		introHtml: `${text.intro} <button class="link" id="showFeeds">${text.showFeeds}</button>`,
+		...sqlNextStepsParts(nextSteps()),
 		extraCss: `
 		.journalMetricsPage * { box-sizing: border-box; }
 		.journalMetricsPage .link, .subtitle .link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; }

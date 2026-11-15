@@ -72,6 +72,8 @@ const NEXT_STEP_GROUP_CODICONS: Readonly<Record<string, string>> = {
 	frames: 'layers',
 	browse: 'library',
 	load: 'database',
+	/** The Next Steps that are queries of Pollis's databases, in the duckdb> terminal (sqlNextSteps.ts). */
+	sql: 'database',
 	download: 'cloud-download',
 	files: 'files',
 	read: 'table',

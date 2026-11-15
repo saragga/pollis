@@ -8,8 +8,10 @@ import { fromNow } from '../../../../base/common/date.js';
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
 import { joinPath } from '../../../../base/common/resources.js';
 import { URI } from '../../../../base/common/uri.js';
+import { ILanguageService } from '../../../../editor/common/languages/language.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
+import { IClipboardService } from '../../../../platform/clipboard/common/clipboardService.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { IDialogService, IFileDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
@@ -18,9 +20,11 @@ import { INotificationService, Severity } from '../../../../platform/notificatio
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { IQuickInputService } from '../../../../platform/quickinput/common/quickInput.js';
 import { IStorageService } from '../../../../platform/storage/common/storage.js';
+import { IThemeService } from '../../../../platform/theme/common/themeService.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { JOURNAL_METRICS_COMMAND_ID } from '../../databases/common/databaseDrivers.js';
+import { ISqlNextStep, registerSqlNextSteps, sqlNextStepsParts } from '../../model/browser/webviews/sqlNextSteps.js';
 import { findCatalogueFeed, JULIA_TOPIC, PUBMED_SEARCH, rssCatalogueTopics, youtubeFeedUrl } from './rssCatalogue.js';
 import { DISPLAY_DAYS, EMAIL_ALERT_PREFIX, IRssFeed, IRssFeedsService } from './rssFeedsService.js';
 import { describeJournal, IJournalScoresService } from './journalScores.js';
@@ -86,6 +90,44 @@ function passesJournalFilter(filter: JournalFilter, journal: IJournalFacts | und
 	}
 }
 
+/** The Next Steps: queries of PollisRSS, the archive of the items received, in the duckdb> terminal. */
+function nextSteps(): ISqlNextStep[] {
+	return [
+		{
+			id: 'quietFeeds',
+			label: localize('rss.quietFeeds', "Feeds Gone Quiet"),
+			description: localize('rss.quietFeedsDescription', "The feeds whose latest item was published more than 60 days ago, with their topic, their items and the days since: a feed may have moved to another address. The archive keeps the feeds you no longer follow too."),
+			sql: `-- The feeds whose latest item is more than 60 days old
+SELECT feed_title, topic, items, last_published, date_diff('day', last_published, current_date) AS days_quiet
+FROM PollisRSS.feeds
+WHERE last_published < current_date - INTERVAL 60 DAY
+ORDER BY last_published`,
+		},
+		{
+			id: 'itemsPerWeek',
+			label: localize('rss.itemsPerWeek', "Items per Week"),
+			description: localize('rss.itemsPerWeekDescription', "The items of each feed in each week since eight weeks ago, a column a week: how much each feed brings, and which bring the most."),
+			sql: `-- The items of each feed in each week since eight weeks ago, a column a week
+PIVOT (
+	SELECT feed_title, strftime(date_trunc('week', published), '%Y-%m-%d') AS week
+	FROM PollisRSS.items
+	WHERE published >= current_date - INTERVAL 8 WEEK
+) ON week USING count(*) ORDER BY feed_title`,
+		},
+		{
+			id: 'itemsWithWord',
+			label: localize('rss.itemsWithWord', "Items Mentioning a Word"),
+			description: localize('rss.itemsWithWordDescription', "The latest 100 items of every feed, the ones you no longer follow included, whose title or summary has a word, newest first. Replace volatility with your own word or phrase."),
+			sql: `-- The word to look for: replace it with your own
+SELECT published, feed_title, title, link
+FROM PollisRSS.items
+WHERE title ILIKE '%volatility%' OR summary ILIKE '%volatility%'
+ORDER BY published DESC
+LIMIT 100`,
+		},
+	];
+}
+
 /** The open page, so a second request shows it again. */
 let openPage: WebviewInput | undefined;
 
@@ -106,6 +148,9 @@ async function openRssFeedsPage(accessor: ServicesAccessor): Promise<void> {
 	const notebookEditorModelResolverService = accessor.get(INotebookEditorModelResolverService);
 	const notebookKernelService = accessor.get(INotebookKernelService);
 	const pathService = accessor.get(IPathService);
+	const languageService = accessor.get(ILanguageService);
+	const themeService = accessor.get(IThemeService);
+	const clipboardService = accessor.get(IClipboardService);
 
 	if (openPage && !openPage.isDisposed()) {
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
@@ -129,6 +174,7 @@ async function openRssFeedsPage(accessor: ServicesAccessor): Promise<void> {
 
 	const disposables = new DisposableStore();
 	disposables.add(registerScaffoldPageHandlers(webviewInput, 'rssFeeds', title, RSSFEEDS_METADATA.rssFeeds, openerService, editorService, commandService, notificationService, notebookEditorModelResolverService, notebookKernelService, fileService, pathService, storageService));
+	disposables.add(registerSqlNextSteps(webviewInput.webview, nextSteps(), languageService, themeService, commandService, clipboardService, editorService));
 	disposables.add(webviewInput.webview.onDidDispose(() => {
 		openPage = undefined;
 		disposables.dispose();
@@ -473,6 +519,7 @@ function pageHtml(rows: number): string {
 		title: text.title,
 		omitPoweredBy: !RSSFEEDS_METADATA.rssFeeds.packages.length,
 		introHtml: `<span id="subtitle">${text.intro}</span>`,
+		...sqlNextStepsParts(nextSteps()),
 		// The thumbnails of the items, from the feeds' own sites
 		imgSrc: 'https:',
 		extraCss: `
