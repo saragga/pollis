@@ -2768,6 +2768,42 @@
 			"open_access": false
 		},
 		{
+			"key": "BHH2017a",
+			"type": "article",
+			"title": "How to Write an Effective Referee Report and Improve the Scientific Review Process",
+			"authors": [
+				"Berk, Jonathan B.",
+				"Harvey, Campbell R.",
+				"Hirshleifer, David"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2017,
+			"journal": "Journal of Economic Perspectives",
+			"volume": "31",
+			"number": "1",
+			"pages": "231--244",
+			"issn": "0895-3309",
+			"doi": "10.1257/jep.31.1.231",
+			"openalex": "W2559699585",
+			"url": "https://doi.org/10.1257/jep.31.1.231",
+			"abstract": "The review process for academic journals in economics has grown vastly more extensive over time. Journals demand more revisions, and papers have become bloated with numerous robustness checks and extensions. Even if the extra resulting revisions do on average lead to improved papers—a claim that is debatable—the cost is enormous. We argue that much of the time involved in these revisions is a waste of research effort. Another cause for concern is the level of disagreement amongst referees, a pattern that suggests a high level of arbitrariness in the review process. To identify and highlight what is going right and what is going wrong in the reviewing process, we wrote to a sample of former editors of the American Economic Review, the Journal of Political Economy, the Quarterly Journal of Economics, Econometrica, the Review of Economic Studies, and the Journal of Financial Economics, and asked them for their thoughts about what might improve the process. We found a rough consensus that referees for top journals in economics tend to make similar, correctable mistakes. The italicized quotations throughout this paper are drawn from our correspondence with these editors and our own experience. Their insights are consistent with our own experiences as editors at the Journal of Finance and the Review of Financial Studies. Our objective is to highlight these mistakes and provide a roadmap for how to avoid them.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"peer review",
+				"economics journals",
+				"editorial practice",
+				"journal editors",
+				"robustness testing",
+				"scholarly publishing"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-15",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "BHJ2023a",
 			"type": "article",
 			"title": "Bayesian Solutions for the Factor Zoo: We Just Ran Two Quadrillion Models",
@@ -3493,6 +3529,43 @@
 			"source": "crossref",
 			"retrieved": "2026-11-03",
 			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "BMD2010a",
+			"type": "article",
+			"title": "A Reliability-Generalization Study of Journal Peer Reviews: A Multilevel Meta-Analysis of Inter-Rater Reliability and Its Determinants",
+			"authors": [
+				"Bornmann, Lutz",
+				"Mutz, Rüdiger",
+				"Daniel, Hans-Dieter"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2010,
+			"journal": "PLoS ONE",
+			"volume": "5",
+			"number": "12",
+			"pages": "e14331",
+			"issn": "1932-6203",
+			"doi": "10.1371/journal.pone.0014331",
+			"openalex": "W2063743914",
+			"url": "https://doi.org/10.1371/journal.pone.0014331",
+			"abstract": "BACKGROUND: This paper presents the first meta-analysis for the inter-rater reliability (IRR) of journal peer reviews. IRR is defined as the extent to which two or more independent reviews of the same scientific document agree. METHODOLOGY/PRINCIPAL FINDINGS: Altogether, 70 reliability coefficients (Cohen's Kappa, intra-class correlation [ICC], and Pearson product-moment correlation [r]) from 48 studies were taken into account in the meta-analysis. The studies were based on a total of 19,443 manuscripts; on average, each study had a sample size of 311 manuscripts (minimum: 28, maximum: 1983). The results of the meta-analysis confirmed the findings of the narrative literature reviews published to date: The level of IRR (mean ICC/r2=.34, mean Cohen's Kappa=.17) was low. To explain the study-to-study variation of the IRR coefficients, meta-regression analyses were calculated using seven covariates. Two covariates that emerged in the meta-regression analyses as statistically significant to gain an approximate homogeneity of the intra-class correlations indicated that, firstly, the more manuscripts that a study is based on, the smaller the reported IRR coefficients are. Secondly, if the information of the rating system for reviewers was reported in a study, then this was associated with a smaller IRR coefficient than if the information was not conveyed. CONCLUSIONS/SIGNIFICANCE: Studies that report a high level of IRR are to be considered less credible than those with a low level of IRR. According to our meta-analysis the IRR of peer assessments is quite limited and needs improvement (e.g., reader system).",
+			"abstract_source": "openalex",
+			"keywords": [
+				"peer review",
+				"inter-rater reliability",
+				"journal peer review",
+				"reliability generalization",
+				"Cohen's kappa",
+				"intra-class correlation",
+				"peer assessment"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-15",
+			"checked": false,
 			"open_access": true
 		},
 		{
@@ -8176,6 +8249,41 @@
 			"source": "crossref",
 			"retrieved": "2026-11-02",
 			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "Cic1991a",
+			"type": "article",
+			"title": "The Reliability of Peer Review for Manuscript and Grant Submissions: A Cross-Disciplinary Investigation",
+			"authors": [
+				"Cicchetti, Domenic V."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1991,
+			"journal": "Behavioral and Brain Sciences",
+			"volume": "14",
+			"number": "1",
+			"pages": "119--135",
+			"issn": "0140-525X",
+			"doi": "10.1017/S0140525X00065675",
+			"openalex": "W2055124066",
+			"url": "https://doi.org/10.1017/S0140525X00065675",
+			"abstract": "Abstract The reliability of peer review of scientific documents and the evaluative criteria scientists use to judge the work of their peers are critically reexamined with special attention to the consistently low levels of reliability that have been reported. Referees of grant proposals agree much more about what isunworthyof support than about what does have scientific value. In the case of manuscript submissions this seems to depend on whether a discipline (or subfield) is general and diffuse (e.g., cross-disciplinary physics, general fields of medicine, cultural anthropology, social psychology) or specific and focused (e.g., nuclear physics, medical specialty areas, physical anthropology, and behavioral neuroscience). In the former there is also much more agreement on rejection than acceptance, but in the latter both the wide differential in manuscript rejection rates and the high correlation between referee recommendations and editorial decisions suggests that reviewers and editors agree more on acceptance than on rejection. Several suggestions are made for improving the reliability and quality of peer review. Further research is needed, especially in the physical sciences.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"manuscript review",
+				"grant proposal review",
+				"interobserver agreement",
+				"rejection rate",
+				"editorial decision-making",
+				"scholarly publishing",
+				"disciplinary differences"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-15",
+			"checked": false,
 			"open_access": false
 		},
 		{
@@ -42988,6 +43096,12 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "BHH2017a",
+			"count": 41,
+			"source": "openalex",
+			"date": "2026-11-15"
+		},
+		{
 			"key": "BHJ2023a",
 			"count": 125,
 			"source": "crossref",
@@ -43232,6 +43346,12 @@
 			"count": 441,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "BMD2010a",
+			"count": 264,
+			"source": "openalex",
+			"date": "2026-11-15"
 		},
 		{
 			"key": "BMM2015a",
@@ -44636,6 +44756,12 @@
 			"count": 2691,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "Cic1991a",
+			"count": 503,
+			"source": "openalex",
+			"date": "2026-11-15"
 		},
 		{
 			"key": "Cod1970a",
@@ -58256,6 +58382,19 @@
 				"NC2019a",
 				"KZ2020a",
 				"SKSPZ2022a"
+			]
+		},
+		{
+			"id": "refereeReport",
+			"title": "Referee Report",
+			"commands": [
+				"pollis.orchestration.refereeReport"
+			],
+			"keys": [
+				"Cic1991a",
+				"BMD2010a",
+				"BHH2017a",
+				"LZCWD...2024a"
 			]
 		},
 		{

@@ -2150,6 +2150,17 @@ all at once, and each writes \file{method.jl}, a function \code{forecast(y, h, p
 runs every method in the Julia REPL and ranks them by sMAPE, MASE and OWA, beside the mean and the median of the
 agents' forecasts and the competition's benchmarks; on all the series of a frequency of M4, also among the entries.
 
+\subhead{Referee Report}
+\ui{Compose > Orchestration > Referee Report...} gives a draft paper to several coding agents, each a referee in a
+role of its own: Methods, Contribution and Literature, Data and Reproducibility, Exposition, Devil's Advocate or
+General. In \ui{Draft}, choose the draft (PDF, LaTeX, Markdown or text), its field and journal, and the folder of the
+authors' code and data, if any; \ui{Prepare the Draft} copies them into the study, a PDF with its text. In
+\ui{Referees}, choose from 2 to 5 referees, with the role, agent and model of each; \ui{Start the Referees} starts them
+all at once, and each writes \file{REPORT.md} on its own. \ui{Start the Editor} has another agent read the draft and
+every report and write \file{LETTER.md}, the decision letter, which \ui{Decision} sums up beside the referees'
+recommendations. \ui{Start the Next Round} makes a study for the revised draft, whose referees get their own report,
+the letter and the authors' response.
+
 \begin{caution}{An agent works on your files}
 A coding agent reads and writes files, and runs commands, in its terminal. Read what it proposes, and check
 its results, as you would a colleague's.
@@ -2161,7 +2172,7 @@ its results, as you would a colleague's.
 \end{trouble}
 
 \begin{note}{Not available yet}
-\ui{Referee Report...} and \ui{Systematic Review...} are in \ui{Orchestration} but not built yet.
+\ui{Systematic Review...} is in \ui{Orchestration} but not built yet.
 \end{note}
 
 \seealso{Toolboxes, \pg{Toolboxes}.\quad Article Methods, \pg{Article Methods}.\quad Reports, \pg{Reports}.}

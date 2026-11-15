@@ -1,0 +1,50 @@
+# Referee Report Webview Configuration
+# A page of Compose > Orchestration in the Time Arrow style of the scaffold, not a panel: only its Learn More. `pageCommand`
+# is the command that opens it, which a panel's contribution file would say. No Julia package powers it. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/refereeReport.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Referee Report"
+viewType = "pollis.refereeReport"
+pageCommand = "pollis.orchestration.refereeReport"
+
+[[wikis]]
+name = "Overview"
+file = "refereeReport/overview.md"
+bundled = true
+description = "What the page does, its six steps, what each referee and the editor write, and what a second round adds"
+
+[[wikis]]
+name = "Factsheet"
+file = "refereeReport/factsheet.md"
+bundled = true
+description = "Steps, inputs, the files of a study, of a referee and of the editor, the recommendations and the requirements at a glance"
+
+[[wikis]]
+name = "The Referees' Roles"
+file = "refereeReport/referee-roles.md"
+bundled = true
+description = "The six roles a referee can take, what each looks at most closely, and how to choose roles and models for a draft"
+
+[[wikis]]
+name = "From Reports to a Decision"
+file = "refereeReport/reports-to-decision.md"
+bundled = true
+description = "How the editor weighs the reports, why referees disagree, what the letter holds, and how to read the decision"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "Cic1991a"
+
+[[references]]
+key = "BMD2010a"
+
+[[references]]
+key = "BHH2017a"
+
+[[references]]
+key = "LZCWD...2024a"

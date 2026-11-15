@@ -31,6 +31,7 @@ import { WEB_ASSEMBLY_COMMAND_ID } from './webAssemblyPage.js';
 import { MANY_ANALYSTS_COMMAND_ID } from './manyAnalystsPage.js';
 import { SPECIFICATION_CURVE_COMMAND_ID } from './specificationCurvePage.js';
 import { AGENT_FORECASTING_COMMAND_ID } from './agentForecastingPage.js';
+import { REFEREE_REPORT_COMMAND_ID } from './refereeReportPage.js';
 import './codingAgentPage.js';
 import './modelRoutingPage.js';
 import './pollisContent.js';
@@ -615,6 +616,14 @@ MenuRegistry.appendMenuItem(OrchestrationMenu, {
 	order: 3,
 });
 
+// Referee Report: coding agents referee the same draft, each on its own and in a role, and another, the editor,
+// writes the decision letter from their reports, see refereeReportPage.ts
+MenuRegistry.appendMenuItem(OrchestrationMenu, {
+	group: '2_papers',
+	command: { id: REFEREE_REPORT_COMMAND_ID, title: localize('orchestration.refereeReport', "Referee Report...") },
+	order: 1,
+});
+
 // ==============================================================
 // SUBMENU: Profiling, in four groups: measure (Time a Function, Find Where the Time Goes, Time Sections of Code), diagnose and fix (Find Allocations,
 // Check Type Stability, Speed Up a Function), packages (Compare Package Versions, Load and Compile Time) and languages (Run a Speed Race, Add a Language)
@@ -734,12 +743,9 @@ MenuRegistry.appendMenuItem(CompileGaloreMenu, {
 });
 
 // Not built yet: each item says so.
-// Orchestration: coding agents working together on research. Papers, after the analyses (Many Analysts,
-// Specification Curve and Agents' Forecasting Competition): Referee Report (referees
-// in different roles read a draft, an editor merges their reports), Systematic Review (two agents screen and
-// extract each study on their own, the differences settled by the user, then a meta-analysis).
+// Orchestration: coding agents working together on research. Papers, after Referee Report: Systematic Review (two
+// agents screen and extract each study on their own, the differences settled by the user, then a meta-analysis).
 const composeItems = [
-	{ menu: OrchestrationMenu, id: 'pollis.orchestration.refereeReport', title: localize('orchestration.refereeReport', "Referee Report..."), group: '2_papers', order: 1 },
 	{ menu: OrchestrationMenu, id: 'pollis.orchestration.systematicReview', title: localize('orchestration.systematicReview', "Systematic Review..."), group: '2_papers', order: 2 },
 ];
 

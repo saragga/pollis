@@ -161,7 +161,7 @@ function pageHtml(): string {
 		otherIntro: localize('codingAgent.otherIntro', "Agents of your own: each a name, which Model Tasks and Routing shows, and a command line, with {0} where the first message goes, for example {1}. Without {0}, the message is copied to the clipboard to paste into the agent.", `<code>${PROMPT_PLACEHOLDER}</code>`, `<code>aider --message ${PROMPT_PLACEHOLDER}</code>`),
 		otherName: localize('codingAgent.otherName', "Name, for example MyAgent"),
 		otherCommand: localize('codingAgent.otherCommand', "Command line"),
-		addOther: localize('codingAgent.addOther', "Add Agent"),
+		addOther: localize('codingAgent.addOther', "+ Add Agent Row"),
 		removeOther: localize('codingAgent.removeOther', "Remove"),
 		nameTaken: localize('codingAgent.nameTaken', "There is an agent of that name already"),
 	};

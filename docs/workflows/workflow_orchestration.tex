@@ -234,7 +234,8 @@ Specification Curve & List the defensible choices in an analysis; Pollis runs ev
   estimates in order & Specification curve analysis\\
 Agents' Forecasting Competition & Each builds a forecasting model; the models are scored on data none of them saw, then
   combined & The M forecasting competitions, and the combination of forecasts\\
-Referee Report & Referees in different roles read a draft paper, and an editor merges their reports & Peer review\\
+Referee Report & Referees in different roles read a draft paper, each on its own, and an editor writes the decision
+  letter from their reports & Peer review\\
 Systematic Review & Two screen the studies and extract their results, each on its own; you settle where they
   differ, and Pollis runs the meta-analysis & Two independent reviewers\\
 \bottomrule
@@ -357,19 +358,26 @@ reading each \file{method.jl} is the check. A study is a folder of \file{orchest
 the Pollis Workspace.
 
 \subsection{Referee Report}
-Agents in different roles each read a draft paper:
+From 2 to 5 agents each read the same draft paper, on its own, as a referee in a role, the part of the paper it
+looks at most closely:
 \begin{itemize}
-  \item an \textbf{econometrician}, on identification and inference;
-  \item a \textbf{field expert}, on the literature;
-  \item a \textbf{replicator}, who runs the paper's code again.
+  \item \textbf{Methods}, on identification, estimation, inference and robustness;
+  \item \textbf{Contribution and Literature}, on what is new against the closest work;
+  \item \textbf{Data and Reproducibility}, on the data and the sample, and the authors' code, which it can run in Julia;
+  \item \textbf{Exposition}, on the argument, tables and figures;
+  \item \textbf{Devil's Advocate}, on the strongest case against the main claim;
+  \item \textbf{General}, on the paper as a whole.
 \end{itemize}
-An \textbf{editor} agent then merges their notes into one report, with the points ranked by how much they matter.
-It gives a report before submission, when changes are still cheap. Comments of a language model on a paper are not
+Each writes a report, with its major concerns, minor points and recommendation. An \textbf{editor} agent then reads
+the draft and every report, weighs the concerns by their arguments rather than by counting recommendations, and
+writes the decision letter: the decision, where the referees disagree, and the revisions required, each with the
+referees who raised it. A revised draft goes to the same referees in a next round, with their own earlier report,
+the letter and the authors' response. The reports come before submission, when changes are still cheap. Comments of a language model on a paper are not
 the same as a referee's, but they overlap: \dcite{LZCWD...2024a}{Liang and 11 coauthors (2024)} found the points
 raised by GPT-4 and by a human reviewer to overlap about as much as those of two human reviewers (30.85\% against
 28.58\% for papers of \emph{Nature} journals), and more than half of 308 researchers found its comments on their own
-papers helpful. Human review stays the foundation; the agents' report is for the earlier drafts. The Knowledge Base and the references of Pollis
-give the field expert sources to check the paper's claims against.
+papers helpful. Human review stays the foundation; the agents' reports are for the earlier drafts. A study is a
+folder of \file{orchestration/referee-report} in the Pollis Workspace.
 
 \subsection{Systematic Review}
 This follows the practice of systematic reviews, two reviewers working independently. When
