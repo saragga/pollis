@@ -1,0 +1,62 @@
+# Systematic Review Webview Configuration
+# A page of Compose > Orchestration in the Time Arrow style of the scaffold, not a panel: only its Learn More. `pageCommand`
+# is the command that opens it, which a panel's contribution file would say. No Julia package powers it. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/systematicReview.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Systematic Review"
+viewType = "pollis.systematicReview"
+pageCommand = "pollis.orchestration.systematicReview"
+
+[[wikis]]
+name = "Overview"
+file = "systematicReview/overview.md"
+bundled = true
+description = "What the page does, its eight steps, what the screeners and the extractors write, and what you decide"
+
+[[wikis]]
+name = "Factsheet"
+file = "systematicReview/factsheet.md"
+bundled = true
+description = "Steps, inputs, the files of a review and of each agent, the effect measures, the figures and the requirements at a glance"
+
+[[wikis]]
+name = "Two Screeners and Their Agreement"
+file = "systematicReview/screening-agreement.md"
+bundled = true
+description = "Why two screeners screen every record, how Cohen's kappa measures their agreement, and how their conflicts are settled"
+
+[[wikis]]
+name = "Double Extraction"
+file = "systematicReview/double-extraction.md"
+bundled = true
+description = "Why two extractors extract every study, the effect measures, how differences are found, and full texts against abstracts"
+
+[[wikis]]
+name = "Reading the Meta-Analysis"
+file = "systematicReview/meta-analysis.md"
+bundled = true
+description = "The fixed and random effects estimates, heterogeneity and I2, the forest and funnel plots, Egger's test and the flow of records"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "Coh1960a"
+
+[[references]]
+key = "DL1986a"
+
+[[references]]
+key = "EDSM1997a"
+
+[[references]]
+key = "HT2002a"
+
+[[references]]
+key = "BHVTK2006a"
+
+[[references]]
+key = "PMBBH...2021a"

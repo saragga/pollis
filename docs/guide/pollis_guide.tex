@@ -2161,6 +2161,16 @@ every report and write \file{LETTER.md}, the decision letter, which \ui{Decision
 recommendations. \ui{Start the Next Round} makes a study for the revised draft, whose referees get their own report,
 the letter and the authors' response.
 
+\subhead{Systematic Review}
+\ui{Compose > Orchestration > Systematic Review...} runs a review with two independent reviewers at each stage, both
+coding agents. In \ui{Question}, write the question, the inclusion and exclusion criteria, the outcome and the effect
+measure. In \ui{Records}, \ui{Add the File} reads a BibTeX, RIS or CSL-JSON file, and \ui{Search OpenAlex} searches
+titles and abstracts; duplicates are kept once. \ui{Start the Screeners} has two agents screen every record on its
+own; \ui{Conflicts} shows their agreement and Cohen's kappa, and the records you, or a third agent, settle. In
+\ui{Full Texts}, add a PDF for each record kept. \ui{Start the Extractors} has two agents extract each study's effect
+and standard error; in \ui{Differences}, keep one where they differ. \ui{Run the Meta-Analysis} pools the effects in
+Julia, with the forest and funnel plots, I\textsuperscript{2}, Egger's test and the flow of records.
+
 \begin{caution}{An agent works on your files}
 A coding agent reads and writes files, and runs commands, in its terminal. Read what it proposes, and check
 its results, as you would a colleague's.
@@ -2170,10 +2180,6 @@ its results, as you would a colleague's.
 \textbf{\emph{\ldots\ runs on the \ldots\ tier, which is in no cell}} & Type the tier's name in a cell of \ui{Model Tasks and Routing}, or choose another tier for the task. \\
 \textbf{\emph{The \ldots\ tier runs the coding agent \ldots, which was not found}} & Install it (\ui{Open Install Page}), or put the tier in another agent's column. \\
 \end{trouble}
-
-\begin{note}{Not available yet}
-\ui{Systematic Review...} is in \ui{Orchestration} but not built yet.
-\end{note}
 
 \seealso{Toolboxes, \pg{Toolboxes}.\quad Article Methods, \pg{Article Methods}.\quad Reports, \pg{Reports}.}
 

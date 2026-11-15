@@ -32,6 +32,7 @@ import { MANY_ANALYSTS_COMMAND_ID } from './manyAnalystsPage.js';
 import { SPECIFICATION_CURVE_COMMAND_ID } from './specificationCurvePage.js';
 import { AGENT_FORECASTING_COMMAND_ID } from './agentForecastingPage.js';
 import { REFEREE_REPORT_COMMAND_ID } from './refereeReportPage.js';
+import { SYSTEMATIC_REVIEW_COMMAND_ID } from './systematicReviewPage.js';
 import './codingAgentPage.js';
 import './modelRoutingPage.js';
 import './pollisContent.js';
@@ -624,6 +625,14 @@ MenuRegistry.appendMenuItem(OrchestrationMenu, {
 	order: 1,
 });
 
+// Systematic Review: two coding agents screen every record, and two extract every study, each on its own; the user,
+// or a third agent, settles where they disagree, and Pollis runs the meta-analysis, see systematicReviewPage.ts
+MenuRegistry.appendMenuItem(OrchestrationMenu, {
+	group: '2_papers',
+	command: { id: SYSTEMATIC_REVIEW_COMMAND_ID, title: localize('orchestration.systematicReview', "Systematic Review...") },
+	order: 2,
+});
+
 // ==============================================================
 // SUBMENU: Profiling, in four groups: measure (Time a Function, Find Where the Time Goes, Time Sections of Code), diagnose and fix (Find Allocations,
 // Check Type Stability, Speed Up a Function), packages (Compare Package Versions, Load and Compile Time) and languages (Run a Speed Race, Add a Language)
@@ -742,13 +751,6 @@ MenuRegistry.appendMenuItem(CompileGaloreMenu, {
 	order: 3,
 });
 
-// Not built yet: each item says so.
-// Orchestration: coding agents working together on research. Papers, after Referee Report: Systematic Review (two
-// agents screen and extract each study on their own, the differences settled by the user, then a meta-analysis).
-const composeItems = [
-	{ menu: OrchestrationMenu, id: 'pollis.orchestration.systematicReview', title: localize('orchestration.systematicReview', "Systematic Review..."), group: '2_papers', order: 2 },
-];
-
 // Reports: a notebook (a workflow, a notebook tutorial or the user's own) as a LaTeX report or as slides, see reports.ts
 MenuRegistry.appendMenuItem(ReportsMenu, {
 	group: '1_notebook',
@@ -766,13 +768,6 @@ MenuRegistry.appendMenuItem(ReportsMenu, {
 	order: 1,
 });
 
-for (const item of composeItems) {
-	MenuRegistry.appendMenuItem(item.menu, {
-		group: item.group,
-		command: { id: item.id, title: item.title, precondition: NOT_YET_AVAILABLE },
-		order: item.order,
-	});
-}
 
 
 

@@ -385,12 +385,16 @@ This follows the practice of systematic reviews, two reviewers working independe
 checked by a second, the reviewers randomised to their roles, a single extraction made 21.7\% more errors, while
 taking 36.1\% less time:
 \begin{itemize}
-  \item two agents screen the abstracts against your criteria for including a study;
-  \item two agents extract the effect sizes from the studies that pass;
-  \item Pollis shows where they disagree, you decide, and Pollis then runs the meta-analysis, such as the random
-    effects model of \dcite{DL1986a}{DerSimonian and Laird (1986)}, which lets the effect differ from study to study.
+  \item the records come from a file of references (BibTeX, RIS or CSL-JSON) and a search of OpenAlex, each kept once;
+  \item two agents screen every title and abstract against your criteria for including a study; Pollis shows their
+    agreement and Cohen's kappa, and you, or a third agent, settle the records they disagree on;
+  \item you add the full text of each record kept, as a PDF; a record without one goes on with its abstract only;
+  \item two agents extract each study's effect and its standard error, and you keep one where they differ;
+  \item Pollis then runs the meta-analysis in Julia: the fixed effect estimate and the random effects estimate of
+    \dcite{DL1986a}{DerSimonian and Laird (1986)}, which lets the effect differ from study to study, I\textsuperscript{2},
+    Egger's test, the forest and funnel plots, and the flow of records.
 \end{itemize}
-The studies come from the references database and Literature Radar, which find and keep them.
+A review is a folder of \file{orchestration/systematic-review} in the Pollis Workspace.
 
 \section{Under the surface}\label{sec:machinery}
 \begin{itemize}

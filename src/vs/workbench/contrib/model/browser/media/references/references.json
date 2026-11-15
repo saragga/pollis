@@ -11123,6 +11123,45 @@
 			"open_access": true
 		},
 		{
+			"key": "EDSM1997a",
+			"type": "article",
+			"title": "Bias in Meta-Analysis Detected by a Simple, Graphical Test",
+			"authors": [
+				"Egger, Matthias",
+				"Davey Smith, George",
+				"Schneider, Martin",
+				"Minder, Christoph"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1997,
+			"journal": "BMJ",
+			"volume": "315",
+			"number": "7109",
+			"pages": "629--634",
+			"issn": "0959-8138",
+			"doi": "10.1136/bmj.315.7109.629",
+			"openalex": "W2157823046",
+			"url": "https://doi.org/10.1136/bmj.315.7109.629",
+			"abstract": "Abstract Objective: Funnel plots (plots of effect estimates against sample size) may be useful to detect bias in meta-analyses that were later contradicted by large trials. We examined whether a simple test of asymmetry of funnel plots predicts discordance of results when meta-analyses are compared to large trials, and we assessed the prevalence of bias in published meta-analyses. Design: Medline search to identify pairs consisting of a meta-analysis and a single large trial (concordance of results was assumed if effects were in the same direction and the meta-analytic estimate was within 30% of the trial); analysis of funnel plots from 37 meta-analyses identified from a hand search of four leading general medicine journals 1993-6 and 38 meta-analyses from the second 1996 issue of the Cochrane Database of Systematic Reviews . Main outcome measure: Degree of funnel plot asymmetry as measured by the intercept from regression of standard normal deviates against precision. Results: In the eight pairs of meta-analysis and large trial that were identified (five from cardiovascular medicine, one from diabetic medicine, one from geriatric medicine, one from perinatal medicine) there were four concordant and four discordant pairs. In all cases discordance was due to meta-analyses showing larger effects. Funnel plot asymmetry was present in three out of four discordant pairs but in none of concordant pairs. In 14 (38%) journal meta-analyses and 5 (13%) Cochrane reviews, funnel plot asymmetry indicated that there was bias. Conclusions: A simple analysis of funnel plots provides a useful test for the likely presence of bias in meta-analyses, but as the capacity to detect bias will be limited when meta-analyses are based on a limited number of small trials the results from such analyses should be treated with considerable caution. Key messages Systematic reviews of randomised trials are the best strategy for appraising evidence; however, the findings of some meta-analyses were later contradicted by large trials Funnel plots, plots of the trials' effect estimates against sample size, are skewed and asymmetrical in the presence of publication bias and other biases Funnel plot asymmetry, measured by regression analysis, predicts discordance of results when meta-analyses are compared with single large trials Funnel plot asymmetry was found in 38% of meta-analyses published in leading general medicine journals and in 13% of reviews from the Cochrane Database of Systematic Reviews Critical examination of systematic reviews for publication and related biases should be considered a routine procedure",
+			"abstract_source": "openalex",
+			"keywords": [
+				"meta-analysis bias",
+				"publication bias",
+				"funnel plot asymmetry",
+				"Cochrane Database of Systematic Reviews",
+				"systematic reviews",
+				"geriatrics",
+				"perinatal medicine",
+				"general medicine journals"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-15",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "EG1987a",
 			"type": "article",
 			"title": "Co-Integration and Error Correction: Representation, Estimation, and Testing",
@@ -17320,6 +17359,43 @@
 			"source": "crossref",
 			"retrieved": "2026-11-02",
 			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "HT2002a",
+			"type": "article",
+			"title": "Quantifying Heterogeneity in a Meta-Analysis",
+			"authors": [
+				"Higgins, Julian P. T.",
+				"Thompson, Simon G."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2002,
+			"journal": "Statistics in Medicine",
+			"volume": "21",
+			"number": "11",
+			"pages": "1539--1558",
+			"issn": "0277-6715",
+			"doi": "10.1002/sim.1186",
+			"openalex": "W2126930838",
+			"url": "https://doi.org/10.1002/sim.1186",
+			"abstract": "The extent of heterogeneity in a meta-analysis partly determines the difficulty in drawing overall conclusions. This extent may be measured by estimating a between-study variance, but interpretation is then specific to a particular treatment effect metric. A test for the existence of heterogeneity exists, but depends on the number of studies in the meta-analysis. We develop measures of the impact of heterogeneity on a meta-analysis, from mathematical criteria, that are independent of the number of studies and the treatment effect metric. We derive and propose three suitable statistics: H is the square root of the chi2 heterogeneity statistic divided by its degrees of freedom; R is the ratio of the standard error of the underlying mean from a random effects meta-analysis to the standard error of a fixed effect meta-analytic estimate, and I2 is a transformation of (H) that describes the proportion of total variation in study estimates that is due to heterogeneity. We discuss interpretation, interval estimates and other properties of these measures and examine them in five example data sets showing different amounts of heterogeneity. We conclude that H and I2, which can usually be calculated for published meta-analyses, are particularly useful summaries of the impact of heterogeneity. One or both should be presented in published meta-analyses in preference to the test for heterogeneity.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"heterogeneity",
+				"between-study variance",
+				"I2 statistic",
+				"H-statistic",
+				"random-effects meta-analysis",
+				"fixed-effects meta-analysis",
+				"treatment effect estimation",
+				"heterogeneity measures"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-15",
+			"checked": false,
 			"open_access": false
 		},
 		{
@@ -30099,6 +30175,67 @@
 			"source": "crossref",
 			"retrieved": "2026-11-02",
 			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "PMBBH...2021a",
+			"type": "article",
+			"title": "The PRISMA 2020 Statement: An Updated Guideline for Reporting Systematic Reviews",
+			"authors": [
+				"Page, Matthew J.",
+				"McKenzie, Joanne E.",
+				"Bossuyt, Patrick M.",
+				"Boutron, Isabelle",
+				"Hoffmann, Tammy C.",
+				"Mulrow, Cynthia D.",
+				"Shamseer, Larissa",
+				"Tetzlaff, Jennifer M.",
+				"Akl, Elie A.",
+				"Brennan, Sue E.",
+				"Chou, Roger",
+				"Glanville, Julie",
+				"Grimshaw, Jeremy M.",
+				"Hróbjartsson, Asbjørn",
+				"Lalu, Manoj M.",
+				"Li, Tianjing",
+				"Loder, Elizabeth W.",
+				"Mayo-Wilson, Evan",
+				"McDonald, Steve",
+				"McGuinness, Luke A.",
+				"Stewart, Lesley A.",
+				"Thomas, James",
+				"Tricco, Andrea C.",
+				"Welch, Vivian A.",
+				"Whiting, Penny",
+				"Moher, David"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2021,
+			"journal": "BMJ",
+			"volume": "372",
+			"pages": "n71",
+			"issn": "1756-1833",
+			"doi": "10.1136/bmj.n71",
+			"openalex": "W3118615836",
+			"url": "https://doi.org/10.1136/bmj.n71",
+			"abstract": "The Preferred Reporting Items for Systematic reviews and Meta-Analyses (PRISMA) statement, published in 2009, was designed to help systematic reviewers transparently report why the review was done, what the authors did, and what they found. Over the past decade, advances in systematic review methodology and terminology have necessitated an update to the guideline. The PRISMA 2020 statement replaces the 2009 statement and includes new reporting guidance that reflects advances in methods to identify, select, appraise, and synthesise studies. The structure and presentation of the items have been modified to facilitate implementation. In this article, we present the PRISMA 2020 27-item checklist, an expanded checklist that details reporting recommendations for each item, the PRISMA 2020 abstract checklist, and the revised flow diagrams for original and updated reviews.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"PRISMA 2020",
+				"reporting guidelines",
+				"systematic reviews",
+				"meta-analysis",
+				"reporting checklist",
+				"flowcharts",
+				"study selection",
+				"study appraisal",
+				"transparency in research reporting"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-15",
+			"checked": false,
 			"open_access": true
 		},
 		{
@@ -45676,6 +45813,12 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "EDSM1997a",
+			"count": 57929,
+			"source": "openalex",
+			"date": "2026-11-15"
+		},
+		{
 			"key": "EG1987a",
 			"count": 19725,
 			"source": "crossref",
@@ -47714,6 +47857,12 @@
 			"count": 6589,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "HT2002a",
+			"count": 37658,
+			"source": "openalex",
+			"date": "2026-11-15"
 		},
 		{
 			"key": "HTLF2020a",
@@ -51572,6 +51721,12 @@
 			"count": 155,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "PMBBH...2021a",
+			"count": 144919,
+			"source": "openalex",
+			"date": "2026-11-15"
 		},
 		{
 			"key": "PP1991a",
@@ -58912,6 +59067,21 @@
 				"KB2007a",
 				"ML2016a",
 				"MG2017a"
+			]
+		},
+		{
+			"id": "systematicReview",
+			"title": "Systematic Review",
+			"commands": [
+				"pollis.orchestration.systematicReview"
+			],
+			"keys": [
+				"Coh1960a",
+				"DL1986a",
+				"EDSM1997a",
+				"HT2002a",
+				"BHVTK2006a",
+				"PMBBH...2021a"
 			]
 		},
 		{
