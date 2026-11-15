@@ -17,30 +17,14 @@ import { IWorkspaceContextService } from '../../../../platform/workspace/common/
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { ITerminalInstance, ITerminalInstanceService } from '../../terminal/browser/terminal.js';
 import { findPollisWorkspace, pollisWorkspaceFolderPath } from '../../pollisWorkspace/browser/pollisWorkspace.contribution.js';
-import { cellAvailable, CLOUD_PREFIX, cloudModels, IAgentCommand, ICellRun, cellRun, LOCAL_PREFIX } from './modelRouting.js';
+import { cellAvailable, CLOUD_PREFIX, cloudModels, IAgentCommand, ICellRun, cellRun, LOCAL_PREFIX, modelName } from './modelRouting.js';
 import { IInstalledModel } from './modelsInstalledPage.js';
-import { CODING_AGENTS, commandWords, findProgram, IAgentLaunchServices, launchAgent, terminalEnvironment } from './pollisAgents.js';
+import { CODING_AGENTS, commandWords, findProgram, IAgentLaunchServices, knownAgent, launchAgent, terminalEnvironment } from './pollisAgents.js';
 
 // What the pages of Compose > Orchestration share, where several coding agents work on the same research at once
 // (Many Analysts, in manyAnalystsPage.ts): the command lines that run an agent to the end with no one to answer
 // it, the cells of Model Tasks and Routing a page offers, and the folder of its studies. A page launches each run
 // with launchAgent (pollisAgents.ts) and follows it by its terminal and by the files it writes.
-
-/**
- * The command line of each agent Pollis knows for a run that ends by itself: it takes the first message, works
- * with no questions asked and exits. `{model}` is where the arguments of a cloud model go.
- * - Claude Code: print mode, edits in its folder accepted, Julia the only command it runs. The first message comes
- *   before the options, as --allowedTools takes every word after it up to the next option as a tool, the message too
- *   when no --model follows, as on a local model.
- * - Codex: `codex exec`, which writes only in its folder.
- * - OpenCode: `opencode run`.
- * An agent of the user's own has none, so the pages do not offer it.
- */
-const UNATTENDED_COMMANDS: Readonly<Record<string, string>> = {
-	'Claude Code': 'claude -p {prompt} --permission-mode acceptEdits --allowedTools "Bash(julia *)" {model}',
-	'Codex': 'codex exec -s workspace-write {model} {prompt}',
-	'OpenCode': 'opencode run {model} {prompt}',
-};
 
 /** An agent and a model a page can run unattended: a cell of Model Tasks and Routing, with its name. */
 export interface IOrchestrationCell {
@@ -51,13 +35,13 @@ export interface IOrchestrationCell {
 	readonly label: string;
 }
 
-/** The agents that run unattended, with the command lines that do it. */
+/** The agents that run unattended, those that come with Pollis, with the command lines that do it; an agent of the user's own has none, so the pages do not offer it. */
 function unattendedAgents(): IAgentCommand[] {
-	return CODING_AGENTS.filter(agent => UNATTENDED_COMMANDS[agent.label]).map(agent => ({ label: agent.label, command: UNATTENDED_COMMANDS[agent.label] }));
+	return CODING_AGENTS.map(agent => ({ label: agent.label, command: agent.unattended }));
 }
 
 /**
- * The cells a page can run unattended: each agent of UNATTENDED_COMMANDS installed on this computer with each
+ * The cells a page can run unattended: each agent that comes with Pollis installed on this computer with each
  * cloud model it has arguments for, then with each local chat model that can call tools, when it runs local models.
  */
 export async function unattendedCells(configurationService: IConfigurationService, commandService: ICommandService, terminalInstanceService: ITerminalInstanceService, fileService: IFileService): Promise<IOrchestrationCell[]> {
@@ -205,7 +189,7 @@ export interface IStudyAgentStart {
 
 /**
  * Starts an agent of a study in its folder, with the skill as SKILL.md, its task as TASK.md and a copy of the data,
- * unattended, and follows its run in `runs`; says why in a notification when it cannot start.
+ * unattended, recorded in TRANSCRIPT.md and .transcript/ of its folder, and follows its run in `runs`; says why in a notification when it cannot start.
  */
 export async function startStudyAgent(launchServices: IAgentLaunchServices, configurationService: IConfigurationService, notificationService: INotificationService, runs: StudyRuns, start: IStudyAgentStart): Promise<void> {
 	const { fileService } = launchServices;
@@ -217,7 +201,10 @@ export async function startStudyAgent(launchServices: IAgentLaunchServices, conf
 	}
 	const run = unattendedRun(configurationService, start.cell);
 	const prompt = localize('orchestration.prompt', "Read SKILL.md and TASK.md in this folder and follow them, without asking me anything.");
-	const launched = run ? await launchAgent(launchServices, { name: start.terminalName, run, prompt, cwd: folder, focus: start.focus }) : 'missing';
+	const known = knownAgent(start.cell.agent);
+	const model = start.cell.model.startsWith(CLOUD_PREFIX) ? start.cell.model.slice(CLOUD_PREFIX.length) : modelName(start.cell.model.slice(LOCAL_PREFIX.length));
+	const record = known && { folder, format: known.events, title: start.cell.label, agent: start.cell.agent, model };
+	const launched = run ? await launchAgent(launchServices, { name: start.terminalName, run, prompt, cwd: folder, focus: start.focus, record }) : 'missing';
 	if (typeof launched === 'string') {
 		notificationService.error(launched === 'missing'
 			? localize('orchestration.missing', "{0} did not start: it cannot be run on this computer.", start.cell.label)

@@ -15,6 +15,7 @@ import { LanguageClientFeature } from './languageClient'
 import { JuliaNotebookFeature } from './notebook/notebookFeature'
 import * as openpackagedirectory from './openpackagedirectory'
 import * as packagepath from './packagepath'
+import * as pollisAgentRecorder from './pollisAgentRecorder'
 import * as pollisCompareModels from './pollisCompareModels'
 import * as pollisModelBenchmarks from './pollisModelBenchmarks'
 import * as pollisKnowledgeBase from './pollisKnowledgeBase'
@@ -61,6 +62,7 @@ export async function activate(context: vscode.ExtensionContext) {
         pollisDuckDB.activate(context)
         pollisLlamaServer.activate(context)
         pollisModels.activate(context)
+        pollisAgentRecorder.activate(context)
 
         t = performance.now()
         const executableFeature = new ExecutableFeature(context)

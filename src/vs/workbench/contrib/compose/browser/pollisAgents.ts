@@ -58,6 +58,8 @@ const PLUGIN_URL = 'https://raw.githubusercontent.com/Trumpingtons/pollis-skills
 
 export const OTHER_AGENTS_SETTING = 'pollis.agents.otherAgents';
 export const PROMPT_PLACEHOLDER = '{prompt}';
+/** Where the arguments that make an agent print its events go in its unattended command line (IKnownAgent.unattended). */
+const EVENTS_PLACEHOLDER = '{events}';
 
 // The commands of the agent tasks (the menus themselves are in compose.contribution.ts)
 export const CREATE_PANEL_COMMAND_ID = 'pollis.agents.createPanel';
@@ -92,11 +94,115 @@ export interface ICodingAgent {
 	readonly url: string;
 }
 
-export const CODING_AGENTS: readonly ICodingAgent[] = [
-	{ label: 'Claude Code', command: 'claude {prompt}', url: 'https://claude.com/claude-code' },
-	{ label: 'Codex', command: 'codex {prompt}', url: 'https://developers.openai.com/codex/cli' },
-	{ label: 'OpenCode', command: 'opencode --prompt {prompt}', url: 'https://opencode.ai' },
+/** The reader of an agent's events in Pollis's recorder of runs (agentRecorder.ts in the Julia extension). */
+export type AgentEventFormat = 'claude' | 'codex' | 'opencode' | 'copilot' | 'antigravity';
+
+/** How Pollis tells whether an agent is signed in: by the output of one of its commands, or by a file it keeps under the home folder. */
+export type SignInCheck =
+	| { readonly args: readonly string[]; readonly pattern: RegExp }
+	| { readonly file: readonly string[]; readonly pattern: RegExp };
+
+/** A coding agent that comes with Pollis: what the Coding Agents page and the Orchestration pages know of it. */
+export interface IKnownAgent extends ICodingAgent {
+	/** Its program, as found in the PATH. */
+	readonly program: string;
+	/**
+	 * The command line of a run that ends by itself, with no one to answer it: it takes the first message at
+	 * `{prompt}`, the arguments of a cloud model at `{model}`, and `eventArgs` at `{events}` when Pollis's recorder runs
+	 * it; it may edit files in its folder and run Julia, and nothing else without asking, which, with no one to ask, it does not.
+	 */
+	readonly unattended: string;
+	/** The arguments that make it print its events as JSON lines, for the recorder, and their format. */
+	readonly eventArgs: readonly string[];
+	readonly events: AgentEventFormat;
+	/** The arguments that sign in to it, in a terminal. */
+	readonly signIn: readonly string[];
+	readonly signedIn: SignInCheck;
+	/** The arguments that update it. */
+	readonly update: readonly string[];
+	/** The folder of its personal skills under the home folder, where Pollis installs its skills; none for Claude Code, which takes the Pollis Agents plugin. */
+	readonly skillsFolder?: readonly string[];
+	/** The folder under the home folder where it keeps the transcripts of its sessions. */
+	readonly sessions: readonly string[];
+	/** Whether it runs on a local model served by llama.cpp (localModelLaunch). */
+	readonly localModels: boolean;
+}
+
+/**
+ * The coding agents that come with Pollis. Notes on their unattended command lines:
+ * - Claude Code: the first message comes before the options, as --allowedTools takes every word after it up to the
+ *   next option as a tool, the message too when no --model follows, as on a local model; stream-json needs --verbose.
+ * - Codex: `codex exec`, which writes only in its folder.
+ * - GitHub Copilot CLI: --allow-tool takes several rules, so a rule is never the last word before the message.
+ * - Antigravity CLI: denies, with no one to ask, every command its settings do not allow.
+ */
+export const CODING_AGENTS: readonly IKnownAgent[] = [
+	{
+		label: 'Claude Code', program: 'claude', command: 'claude {prompt}', url: 'https://claude.com/claude-code',
+		unattended: 'claude -p {prompt} {events} --permission-mode acceptEdits --allowedTools "Bash(julia *)" {model}',
+		eventArgs: ['--output-format', 'stream-json', '--verbose'],
+		events: 'claude',
+		signIn: ['auth', 'login'],
+		signedIn: { args: ['auth', 'status'], pattern: /"loggedIn":\s*true/ },
+		update: ['update'],
+		sessions: ['.claude', 'projects'],
+		localModels: true,
+	},
+	{
+		label: 'Codex', program: 'codex', command: 'codex {prompt}', url: 'https://developers.openai.com/codex/cli',
+		unattended: 'codex exec {events} -s workspace-write {model} {prompt}',
+		eventArgs: ['--json'],
+		events: 'codex',
+		signIn: ['login'],
+		signedIn: { args: ['login', 'status'], pattern: /Logged in/i },
+		update: ['update'],
+		skillsFolder: ['.agents', 'skills'],
+		sessions: ['.codex', 'sessions'],
+		localModels: true,
+	},
+	{
+		label: 'OpenCode', program: 'opencode', command: 'opencode --prompt {prompt}', url: 'https://opencode.ai',
+		unattended: 'opencode run {events} {model} {prompt}',
+		eventArgs: ['--format', 'json'],
+		events: 'opencode',
+		signIn: ['auth', 'login'],
+		signedIn: { file: ['.local', 'share', 'opencode', 'auth.json'], pattern: /"type"\s*:/ },
+		update: ['upgrade'],
+		skillsFolder: ['.agents', 'skills'],
+		sessions: ['.local', 'share', 'opencode'],
+		localModels: true,
+	},
+	{
+		label: 'GitHub Copilot CLI', program: 'copilot', command: 'copilot -i {prompt}', url: 'https://docs.github.com/en/copilot/concepts/agents/about-copilot-cli',
+		unattended: 'copilot -p {prompt} {events} --allow-tool write --allow-tool shell(julia:*) --no-ask-user {model}',
+		eventArgs: ['--output-format', 'json'],
+		events: 'copilot',
+		signIn: ['login'],
+		signedIn: { file: ['.copilot', 'config.json'], pattern: /"loggedInUsers":\s*\[\s*\{/ },
+		update: ['update'],
+		skillsFolder: ['.agents', 'skills'],
+		sessions: ['.copilot', 'session-state'],
+		localModels: true,
+	},
+	{
+		label: 'Antigravity CLI', program: 'agy', command: 'agy -i {prompt}', url: 'https://antigravity.google/product/antigravity-cli',
+		unattended: 'agy -p {prompt} {events} --mode accept-edits --settings {"permissions":{"allow":["command(julia)"]}} {model}',
+		eventArgs: ['--output-format', 'stream-json'],
+		events: 'antigravity',
+		// It signs in when it first starts, and lists its models only once signed in
+		signIn: [],
+		signedIn: { args: ['models'], pattern: /^gemini-/m },
+		update: ['update'],
+		skillsFolder: ['.gemini', 'config', 'skills'],
+		sessions: ['.gemini', 'antigravity-cli', 'conversations'],
+		localModels: false,
+	},
 ];
+
+/** The agent that comes with Pollis of this name, if any. */
+export function knownAgent(label: string): IKnownAgent | undefined {
+	return CODING_AGENTS.find(agent => agent.label === label);
+}
 
 /** A skill of the Pollis Agents plugin. */
 interface IPollisSkill {
@@ -173,7 +279,7 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).regis
 				required: ['name', 'command'],
 			},
 			scope: ConfigurationScope.APPLICATION,
-			markdownDescription: localize('pollisAgents.otherAgents', "Agents of your own, besides Claude Code, Codex and OpenCode: each its name, for example `MyAgent`, and its command line, with `{prompt}` where the first message goes. Use **Compose > Coding Agents** to change them."),
+			markdownDescription: localize('pollisAgents.otherAgents', "Agents of your own, besides Claude Code, Codex, OpenCode, GitHub Copilot CLI and Antigravity CLI: each its name, for example `MyAgent`, and its command line, with `{prompt}` where the first message goes. Use **Compose > Coding Agents** to change them."),
 		},
 	},
 });
@@ -366,11 +472,39 @@ export interface IAgentLaunch {
 	readonly cwd?: URI;
 	/** Whether its terminal is shown and takes the focus. */
 	readonly focus: boolean;
+	/** Whether Pollis's recorder runs the agent, and what it needs; the agent's command line has `{events}` (IKnownAgent.unattended). */
+	readonly record?: IRunRecording;
+}
+
+/** What the recorder of a run needs (agentRecorder.ts in the Julia extension), and the texts it writes, in the display language. */
+export interface IRunRecording {
+	/** The agent's folder, where it writes TRANSCRIPT.md and .transcript/. */
+	readonly folder: URI;
+	readonly format: AgentEventFormat;
+	/** The agent and model, as the pages show them. */
+	readonly title: string;
+	readonly agent: string;
+	readonly model: string;
+}
+
+/** The texts of the recorder, in the display language. */
+function recorderText() {
+	return {
+		heading: localize('pollisAgents.recorder.heading', "Transcript of {0}"),
+		summary: localize('pollisAgents.recorder.summary', "{0} min in all: {1} min thinking and writing, {2} min in {3} tool calls. Tokens: {4} in, {5} out."),
+		thinking: localize('pollisAgents.recorder.thinking', "Thinking"),
+		output: localize('pollisAgents.recorder.output', "Output"),
+		failed: localize('pollisAgents.recorder.failed', "Failed"),
+		stopped: localize('pollisAgents.recorder.stopped', "Stopped."),
+		exited: localize('pollisAgents.recorder.exited', "Ended with exit code {0}."),
+		saved: localize('pollisAgents.recorder.saved', "Transcript: {0}"),
+		started: localize('pollisAgents.recorder.started', "Started {0}"),
+	};
 }
 
 /**
  * Starts the command line of a cell in a terminal that stays open when it ends, on its local model, if it has
- * one, served by llama.cpp. Returns the terminal; 'missing' when its program is not on this computer; else why
+ * one, served by llama.cpp, and under Pollis's recorder when `record` is given. Returns the terminal; 'missing' when its program is not on this computer; else why
  * it did not start, as a message.
  */
 export async function launchAgent(services: IAgentLaunchServices, launch: IAgentLaunch): Promise<ITerminalInstance | 'missing' | string> {
@@ -397,14 +531,23 @@ export async function launchAgent(services: IAgentLaunchServices, launch: IAgent
 		env = local.env;
 	}
 
-	const agentArgs = launchArgs.map(arg => arg === PROMPT_PLACEHOLDER ? launch.prompt : arg);
+	// Recorded, the agent runs under the recorder, in the Node of the extension host, which runs a Windows batch file
+	// itself; without the recorder, the agent does not print its events
+	const answer = launch.record && await commandService.executeCommand<{ node?: string; script?: string }>('language-julia.pollisAgentRecorder');
+	const recorded = launch.record && answer?.node && answer.script ? { node: answer.node, script: answer.script } : undefined;
+	const eventArgs = recorded ? knownAgent(launch.run.agent)?.eventArgs ?? [] : [];
+	const agentArgs = launchArgs.flatMap(arg => arg === PROMPT_PLACEHOLDER ? [launch.prompt] : arg === EVENTS_PLACEHOLDER ? eventArgs : [arg]);
+	if (launch.record && recorded) {
+		const { folder, ...rest } = launch.record;
+		env = { ...env, ELECTRON_RUN_AS_NODE: '1', POLLIS_RECORDER: JSON.stringify({ ...rest, folder: folder.fsPath, text: recorderText() }) };
+	}
 	// A Windows batch file (an npm-installed agent) runs through the command interpreter
-	const batch = isWindows && /\.(cmd|bat)$/i.test(executable);
+	const batch = !recorded && isWindows && /\.(cmd|bat)$/i.test(executable);
 	const instance = await terminalService.createTerminal({
 		config: {
 			name: launch.name,
-			executable: batch ? (environment['ComSpec'] ?? 'cmd.exe') : executable,
-			args: batch ? ['/d', '/c', executable, ...agentArgs] : agentArgs,
+			executable: recorded ? recorded.node : batch ? (environment['ComSpec'] ?? 'cmd.exe') : executable,
+			args: recorded ? [recorded.script, executable, ...agentArgs] : batch ? ['/d', '/c', executable, ...agentArgs] : agentArgs,
 			cwd: launch.cwd ?? workspaceContextService.getWorkspace().folders.find(folder => folder.uri.scheme === Schemas.file)?.uri ?? pathService.userHome({ preferLocal: true }),
 			env,
 			waitOnExit: true,
@@ -767,14 +910,17 @@ ${LIBRARY_PAGE_HELPERS}
 	});
 }
 
-/** Where the skills are installed for an agent other than Claude Code: the personal skills folder of Codex and OpenCode. */
-function personalSkillsFolder(pathService: IPathService): URI {
-	return joinPath(pathService.userHome({ preferLocal: true }), '.agents', 'skills');
+/**
+ * Where the skills are installed for an agent other than Claude Code: its folder of personal skills, ~/.agents/skills
+ * for Codex, OpenCode, GitHub Copilot CLI and an agent of the user's own, ~/.gemini/config/skills for Antigravity CLI.
+ */
+function personalSkillsFolder(agent: ICodingAgent, pathService: IPathService): URI {
+	return joinPath(pathService.userHome({ preferLocal: true }), ...knownAgent(agent.label)?.skillsFolder ?? ['.agents', 'skills']);
 }
 
 /**
  * Whether the skills are installed in the agent: in Claude Code, the Pollis Agents plugin is in its list of
- * installed plugins; in any other agent, ~/.agents/skills has a skill folder Pollis put there.
+ * installed plugins; in any other agent, its folder of personal skills has a skill folder Pollis put there.
  */
 export async function skillsInstalled(agent: ICodingAgent, fileService: IFileService, pathService: IPathService): Promise<boolean> {
 	try {
@@ -782,7 +928,7 @@ export async function skillsInstalled(agent: ICodingAgent, fileService: IFileSer
 			const plugins = await fileService.readFile(joinPath(pathService.userHome({ preferLocal: true }), '.claude', 'plugins', 'installed_plugins.json'));
 			return plugins.value.toString().includes(`"${PLUGIN_ID}"`);
 		}
-		const folders = (await fileService.resolve(personalSkillsFolder(pathService))).children ?? [];
+		const folders = (await fileService.resolve(personalSkillsFolder(agent, pathService))).children ?? [];
 		for (const folder of folders) {
 			if (folder.isDirectory && await fileService.exists(joinPath(folder.resource, INSTALLED_MARKER))) {
 				return true;
@@ -797,10 +943,9 @@ export async function skillsInstalled(agent: ICodingAgent, fileService: IFileSer
 /**
  * Installs the skills in a coding agent, from the Coding Agents page, so that it uses them in any folder
  * without going through Pollis: in Claude Code, the Pollis Agents plugin from its marketplace, in a terminal;
- * in any other agent, the skill folders copied to ~/.agents/skills, the folder Codex and OpenCode
- * read personal skills from. A folder there that Pollis did not put there (it has no
- * INSTALLED_MARKER) is left as it is. The skills that run the plugin's scripts look for them in
- * ~/.pollis/agents/pollis-agents.
+ * in any other agent, the skill folders copied to its folder of personal skills (personalSkillsFolder). A folder
+ * there that Pollis did not put there (it has no INSTALLED_MARKER) is left as it is. The skills that run the
+ * plugin's scripts look for them in ~/.pollis/agents/pollis-agents.
  */
 export async function installSkills(accessor: ServicesAccessor, agent: ICodingAgent): Promise<void> {
 	const terminalService = accessor.get(ITerminalService);
@@ -820,7 +965,7 @@ export async function installSkills(accessor: ServicesAccessor, agent: ICodingAg
 	if (!await instantiationService.invokeFunction(updateSkills)) {
 		return;
 	}
-	const target = personalSkillsFolder(pathService);
+	const target = personalSkillsFolder(agent, pathService);
 	const source = joinPath(pluginFolder(pathService), 'skills');
 	const installed: string[] = [];
 	const skipped: string[] = [];

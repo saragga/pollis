@@ -20,7 +20,7 @@ import { Registry } from '../../../../platform/registry/common/platform.js';
 // (pollisAgents.ts) asks tierRun which command a tier runs; the page is modelRoutingPage.ts. This module imports
 // no other module of Compose, so every task can import it without a cycle: the agents are passed in. A tier on a
 // local model runs its agent on it: Pollis starts llama.cpp's llama-server for it (pollisLlamaServer.ts in the
-// Julia extension) and points Claude Code, OpenCode or Codex at that server (localModelLaunch).
+// Julia extension) and points Claude Code, OpenCode, Codex or GitHub Copilot CLI at that server (localModelLaunch).
 
 export const TIER_CELLS_SETTING = 'pollis.agents.tierCells';
 export const CLOUD_MODELS_SETTING = 'pollis.agents.cloudModels';
@@ -109,17 +109,18 @@ export interface IAgentCommand {
 }
 
 // The cloud models offered at first, each named with its version, with the model flags of Claude Code (--model),
-// Codex (-m) and OpenCode (--model provider/model); the user changes them in the setting
+// Codex (-m), OpenCode (--model provider/model), GitHub Copilot CLI (--model, with dots in the version) and
+// Antigravity CLI (--model, with its thinking level); the user changes them in the setting
 const CLOUD_MODELS: readonly ICloudModel[] = [
-	{ name: 'Claude Haiku 5.5', agents: { 'Claude Code': '--model claude-haiku-5-5', 'OpenCode': '--model anthropic/claude-haiku-5-5' } },
-	{ name: 'Claude Sonnet 5.5', agents: { 'Claude Code': '--model claude-sonnet-5-5', 'OpenCode': '--model anthropic/claude-sonnet-5-5' } },
-	{ name: 'Claude Opus 5.5', agents: { 'Claude Code': '--model claude-opus-5-5', 'OpenCode': '--model anthropic/claude-opus-5-5' } },
+	{ name: 'Claude Haiku 5.5', agents: { 'Claude Code': '--model claude-haiku-5-5', 'OpenCode': '--model anthropic/claude-haiku-5-5', 'GitHub Copilot CLI': '--model claude-haiku-5.5' } },
+	{ name: 'Claude Sonnet 5.5', agents: { 'Claude Code': '--model claude-sonnet-5-5', 'OpenCode': '--model anthropic/claude-sonnet-5-5', 'GitHub Copilot CLI': '--model claude-sonnet-5.5' } },
+	{ name: 'Claude Opus 5.5', agents: { 'Claude Code': '--model claude-opus-5-5', 'OpenCode': '--model anthropic/claude-opus-5-5', 'GitHub Copilot CLI': '--model claude-opus-5.5' } },
 	{ name: 'GPT-5.5', agents: { 'Codex': '-m gpt-5.5', 'OpenCode': '--model openai/gpt-5.5' } },
 	{ name: 'GPT-5.4', agents: { 'Codex': '-m gpt-5.4', 'OpenCode': '--model openai/gpt-5.4' } },
 	{ name: 'GPT-5.4 mini', agents: { 'Codex': '-m gpt-5.4-mini', 'OpenCode': '--model openai/gpt-5.4-mini' } },
-	{ name: 'GPT-5.3 Codex', agents: { 'Codex': '-m gpt-5.3-codex', 'OpenCode': '--model openai/gpt-5.3-codex' } },
-	{ name: 'Gemini 4 Argon', agents: { 'OpenCode': '--model google/gemini-4-argon' } },
-	{ name: 'Gemini 3.8 Flash', agents: { 'OpenCode': '--model google/gemini-3.8-flash' } },
+	{ name: 'GPT-5.3 Codex', agents: { 'Codex': '-m gpt-5.3-codex', 'OpenCode': '--model openai/gpt-5.3-codex', 'GitHub Copilot CLI': '--model gpt-5.3-codex' } },
+	{ name: 'Gemini 4 Argon', agents: { 'OpenCode': '--model google/gemini-4-argon', 'GitHub Copilot CLI': '--model gemini-4-argon' } },
+	{ name: 'Gemini 3.8 Flash', agents: { 'OpenCode': '--model google/gemini-3.8-flash', 'GitHub Copilot CLI': '--model gemini-3.8-flash', 'Antigravity CLI': '--model gemini-3.8-flash-medium' } },
 	{ name: 'Gemini 3.5 Flash-Lite', agents: { 'OpenCode': '--model google/gemini-3.5-flash-lite' } },
 ];
 
@@ -256,13 +257,13 @@ export function modelName(model: string): string {
 	return basename(model).replace(/\.gguf$/i, '');
 }
 
-/** The agent a program is, for a local model: `claude`, `opencode` or `codex`, else undefined. */
-function localAgent(program: string): 'claude' | 'opencode' | 'codex' | undefined {
+/** The agent a program is, for a local model: `claude`, `opencode`, `codex` or `copilot`, else undefined. */
+function localAgent(program: string): 'claude' | 'opencode' | 'codex' | 'copilot' | undefined {
 	const agent = basename(program).toLowerCase().replace(/\.(exe|cmd|bat)$/, '');
-	return agent === 'claude' || agent === 'opencode' || agent === 'codex' ? agent : undefined;
+	return agent === 'claude' || agent === 'opencode' || agent === 'codex' || agent === 'copilot' ? agent : undefined;
 }
 
-/** Whether an agent's command line can run on a local model: Claude Code, OpenCode and Codex can (localModelLaunch). */
+/** Whether an agent's command line can run on a local model: Claude Code, OpenCode, Codex and GitHub Copilot CLI can (localModelLaunch). */
 export function runsLocalModels(command: string): boolean {
 	const program = /^\s*(?:"(?<quoted>[^"]*)"|(?<plain>\S+))/.exec(command)?.groups;
 	return !!localAgent(program?.quoted ?? program?.plain ?? '');
@@ -340,13 +341,13 @@ function withoutModel(args: readonly string[]): string[] {
 
 /**
  * Starts llama-server for `model`, or finds the one already running, and returns the arguments and
- * environment that point the agent `program` at it: Claude Code through its Anthropic API, OpenCode and Codex
- * through its OpenAI API. Returns the reason, as a message, when the agent cannot use it.
+ * environment that point the agent `program` at it: Claude Code through its Anthropic API, OpenCode, Codex and
+ * GitHub Copilot CLI through its OpenAI API. Returns the reason, as a message, when the agent cannot use it.
  */
 export async function localModelLaunch(commandService: ICommandService, program: string, args: readonly string[], model: string): Promise<ILocalModelLaunch | string> {
 	const agent = localAgent(program);
 	if (!agent) {
-		return localize('modelRouting.localAgent', "A local model works with Claude Code, OpenCode or Codex, and this tier runs '{0}'.", program);
+		return localize('modelRouting.localAgent', "A local model works with Claude Code, OpenCode, Codex or GitHub Copilot CLI, and this tier runs '{0}'.", program);
 	}
 	const answer = await commandService.executeCommand<{ url?: string; model?: string; error?: string }>('language-julia.pollisLlamaServer', { model, context: AGENT_CONTEXT });
 	if (!answer?.url) {
@@ -375,6 +376,18 @@ export async function localModelLaunch(commandService: ICommandService, program:
 			model: `${LOCAL_PROVIDER}/${name}`,
 		};
 		return { args: rest, env: { OPENCODE_CONFIG_CONTENT: JSON.stringify(config) } };
+	}
+	if (agent === 'copilot') {
+		return {
+			args: rest,
+			env: {
+				COPILOT_PROVIDER_BASE_URL: url,
+				COPILOT_PROVIDER_TYPE: 'openai',
+				COPILOT_MODEL: name,
+				COPILOT_PROVIDER_MAX_PROMPT_TOKENS: String(AGENT_CONTEXT),
+				COPILOT_PROVIDER_MAX_OUTPUT_TOKENS: '8192',
+			},
+		};
 	}
 	// Codex reads each -c value as TOML, and as a plain string when it is not TOML, so none needs quotes; a run
 	// that ends by itself, `codex exec`, takes them after its subcommand
