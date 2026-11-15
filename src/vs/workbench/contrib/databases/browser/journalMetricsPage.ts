@@ -19,10 +19,21 @@ import { Action2, registerAction2 } from '../../../../platform/actions/common/ac
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
 import { IDialogService } from '../../../../platform/dialogs/common/dialogs.js';
+import { IFileService } from '../../../../platform/files/common/files.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
+import { INotificationService } from '../../../../platform/notification/common/notification.js';
+import { IOpenerService } from '../../../../platform/opener/common/opener.js';
+import { IStorageService } from '../../../../platform/storage/common/storage.js';
+import { IEditorService } from '../../../services/editor/common/editorService.js';
+import { IPathService } from '../../../services/path/common/pathService.js';
 import { RUN_SKILL_COMMAND_ID } from '../../compose/browser/pollisAgents.js';
+import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
+import { JOURNALMETRICS_METADATA } from '../../model/browser/webviews/journalMetrics.data.js';
+import { buildWebviewHtml } from '../../model/browser/webviews/webviewScaffold.js';
 import { IJournalScoresService, MetricsSource } from '../../monitor/browser/journalScores.js';
 import { RSS_FEEDS_COMMAND_ID } from '../../monitor/browser/rssFeedsPage.js';
+import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
+import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { JOURNAL_METRICS_COMMAND_ID, JOURNALS_DATABASE_ID } from '../common/databaseDrivers.js';
@@ -53,6 +64,14 @@ async function openJournalMetricsPage(accessor: ServicesAccessor): Promise<void>
 	const journalScoresService = accessor.get(IJournalScoresService);
 	const dialogService = accessor.get(IDialogService);
 	const commandService = accessor.get(ICommandService);
+	const openerService = accessor.get(IOpenerService);
+	const editorService = accessor.get(IEditorService);
+	const notificationService = accessor.get(INotificationService);
+	const notebookEditorModelResolverService = accessor.get(INotebookEditorModelResolverService);
+	const notebookKernelService = accessor.get(INotebookKernelService);
+	const fileService = accessor.get(IFileService);
+	const pathService = accessor.get(IPathService);
+	const storageService = accessor.get(IStorageService);
 
 	if (openPage && !openPage.isDisposed()) {
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
@@ -75,6 +94,7 @@ async function openJournalMetricsPage(accessor: ServicesAccessor): Promise<void>
 	openPage = webviewInput;
 
 	const disposables = new DisposableStore();
+	disposables.add(registerScaffoldPageHandlers(webviewInput, 'journalMetrics', title, JOURNALMETRICS_METADATA.journalMetrics, openerService, editorService, commandService, notificationService, notebookEditorModelResolverService, notebookKernelService, fileService, pathService, storageService));
 	disposables.add(webviewInput.webview.onDidDispose(() => {
 		openPage = undefined;
 		disposables.dispose();
@@ -159,7 +179,6 @@ function pageHtml(): string {
 	const zeroUp = localize('journalMetrics.zeroUp', "0 and up");
 	const quartiles = localize('journalMetrics.quartiles', "Q1 to Q4");
 	const text = {
-		title: localize('journalMetrics.title', "Journal Metrics"),
 		intro: localize('journalMetrics.intro', "The levels and metrics that tag the items of journals on the RSS Feeds page and the welcome page, and fill the metrics views of PollisJournals. Two are built in. The others are not free to share: you download each for your own use, at its source, and Pollis imports it on this computer. Nothing is sent anywhere."),
 		showFeeds: localize('journalMetrics.backToFeeds', "Back: RSS Feeds"),
 		importFile: localize('journalMetrics.importFile', "Import File..."),
@@ -294,110 +313,70 @@ function pageHtml(): string {
 				<button class="action importFile">${text.importFile}</button>
 			</div>` : ''}
 		</div>`;
-	return `<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
-	<style>
-		* { box-sizing: border-box; }
-		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
-		.container { max-width: 900px; margin: 0 auto; padding: 24px; }
-		.header { display: flex; align-items: flex-end; gap: 16px; }
-		.header h1 { flex: 1; }
-		h1 { font-size: 32px; font-weight: 300; margin: 0 0 4px 0; line-height: 1.2; }
-		.subtitle { font-size: 14px; color: var(--vscode-descriptionForeground); margin: 0 0 12px 0; line-height: 1.4; }
-		.link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; }
-		.link:hover { color: var(--vscode-textLink-activeForeground); text-decoration: underline; }
-		button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; padding: 4px 12px; cursor: pointer; white-space: nowrap; font-size: 11px; opacity: 0.7; }
+	const chevron = '<span class="illus-chevron"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M7.976 10.072l-4.054-4.014-.92.92 4.49 4.45.978.01 4.525-4.46-.918-.92-4.101 4.014z"/></svg></span>';
+	const section = (id: string, title: string, bodyHtml: string, collapsed = false) => `
+	<div class="section${collapsed ? ' collapsed' : ''}" id="${id}">
+		<button class="section-toggle">${chevron}${title}</button>
+		<div class="section-body">${bodyHtml}</div>
+	</div>`;
+	return buildWebviewHtml({
+		title: localize('journalMetrics.title', "Journal Metrics"),
+		omitPoweredBy: !JOURNALMETRICS_METADATA.journalMetrics.packages.length,
+		introHtml: `${text.intro} <button class="link" id="showFeeds">${text.showFeeds}</button>`,
+		extraCss: `
+		.journalMetricsPage * { box-sizing: border-box; }
+		.journalMetricsPage .link, .subtitle .link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; }
+		.journalMetricsPage .link:hover, .subtitle .link:hover { color: var(--vscode-textLink-activeForeground); text-decoration: underline; }
+		.journalMetricsPage button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; padding: 4px 12px; cursor: pointer; white-space: nowrap; font-size: 11px; opacity: 0.7; }
 		/* As the code buttons below a panel's Example Code: dimmed until pointed at, the blue one not */
-		button.action:not(:disabled):hover, button.action.current, button.action.primary { opacity: 1; }
-		button.action:hover, button.action:active, button.action.pressed { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
-		.topActions { display: flex; gap: 8px; margin-bottom: 6px; }
-		.help { font-size: 12px; color: var(--vscode-descriptionForeground); line-height: 1.45; margin: 6px 0 16px 0; }
-		.menuPath { color: #e8a33d; }
-		body.vscode-light .menuPath { color: #a8650d; }
-		details { border-top: 1px solid var(--vscode-widget-border); padding: 4px 0 12px; }
-		.container > details[open] { border-top: 2px solid var(--vscode-focusBorder); margin-top: 8px; }
-		summary { cursor: pointer; padding: 8px 0; font-size: 16px; font-weight: 600; list-style: none; display: flex; align-items: center; gap: 6px; }
-		summary::-webkit-details-marker { display: none; }
-		summary .chevron { display: inline-flex; transition: transform 0.1s; transform: rotate(-90deg); }
-		details[open] > summary .chevron { transform: none; }
-		.intro { color: var(--vscode-descriptionForeground); line-height: 1.45; margin: 0 0 10px 0; }
-		.card { margin-top: 10px; padding: 10px 12px; border-radius: 4px; background: var(--vscode-sideBar-background); }
-		.cardHead { display: flex; align-items: center; gap: 8px; }
-		.cardName { flex: 1; font-weight: 600; color: var(--vscode-charts-blue); }
-		.badge { font-size: 11px; padding: 1px 8px; border-radius: 10px; color: var(--vscode-descriptionForeground); border: 1px solid var(--vscode-widget-border); white-space: nowrap; }
-		.badge.done { color: var(--vscode-testing-iconPassed); border-color: var(--vscode-testing-iconPassed); }
-		.card p { margin: 6px 0 0 0; line-height: 1.45; }
-		table.metrics { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12px; }
-		table.metrics th { text-align: left; font-weight: 600; color: var(--vscode-descriptionForeground); padding: 3px 8px 3px 0; border-bottom: 1px solid var(--vscode-widget-border); }
-		table.metrics td { vertical-align: top; padding: 4px 8px 4px 0; line-height: 1.4; border-bottom: 1px solid var(--vscode-widget-border); }
-		table.metrics tr:last-child td { border-bottom: none; }
-		table.metrics .metricName { font-weight: 600; white-space: nowrap; }
-		table.metrics .metricValues { white-space: nowrap; }
-		.access, .download { font-size: 12px; color: var(--vscode-descriptionForeground); }
-		.imports { margin-top: 6px; }
-		.importRow { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 12px; }
-		.importRow .importName { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-		.importRow .meta { color: var(--vscode-descriptionForeground); white-space: nowrap; }
-		.actions { display: flex; gap: 8px; margin-top: 10px; }
-		ul.using { margin: 0; padding-left: 20px; color: var(--vscode-descriptionForeground); line-height: 1.45; }
-		ul.using li { margin-bottom: 6px; }
-		ul.using b { color: var(--vscode-foreground); font-weight: 600; }
-		.licence { font-size: 12px; color: var(--vscode-descriptionForeground); margin: 16px 0 0 0; }
-	</style>
-</head>
-<body>
-<div class="container">
-	<div class="header">
-		<h1>${text.title}</h1>
-		<button class="link" id="showFeeds">${text.showFeeds}</button>
-	</div>
-	<p class="subtitle">${text.intro}</p>
+		.journalMetricsPage button.action:not(:disabled):hover, .journalMetricsPage button.action.pressed { opacity: 1; }
+		.journalMetricsPage button.action:hover, .journalMetricsPage button.action:active, .journalMetricsPage button.action.pressed { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		.journalMetricsPage .topActions { display: flex; gap: 8px; margin-bottom: 6px; }
+		.journalMetricsPage .help { font-size: 12px; color: var(--vscode-descriptionForeground); line-height: 1.45; margin: 6px 0 16px 0; }
+		.journalMetricsPage .menuPath { color: #e8a33d; }
+		body.vscode-light .journalMetricsPage .menuPath { color: #a8650d; }
+		.journalMetricsPage .section-body { padding-left: 22px; }
+		.journalMetricsPage .intro { color: var(--vscode-descriptionForeground); line-height: 1.45; margin: 0 0 10px 0; }
+		.journalMetricsPage .card { margin-top: 10px; padding: 10px 12px; border-radius: 4px; background: var(--vscode-sideBar-background); }
+		.journalMetricsPage .cardHead { display: flex; align-items: center; gap: 8px; }
+		.journalMetricsPage .cardName { flex: 1; font-weight: 600; color: var(--vscode-charts-blue); }
+		.journalMetricsPage .badge { font-size: 11px; padding: 1px 8px; border-radius: 10px; color: var(--vscode-descriptionForeground); border: 1px solid var(--vscode-widget-border); white-space: nowrap; }
+		.journalMetricsPage .badge.done { color: var(--vscode-testing-iconPassed); border-color: var(--vscode-testing-iconPassed); }
+		.journalMetricsPage .card p { margin: 6px 0 0 0; line-height: 1.45; }
+		.journalMetricsPage table.metrics { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12px; }
+		.journalMetricsPage table.metrics th { text-align: left; font-weight: 600; color: var(--vscode-descriptionForeground); padding: 3px 8px 3px 0; border-bottom: 1px solid var(--vscode-widget-border); }
+		.journalMetricsPage table.metrics td { vertical-align: top; padding: 4px 8px 4px 0; line-height: 1.4; border-bottom: 1px solid var(--vscode-widget-border); }
+		.journalMetricsPage table.metrics tr:last-child td { border-bottom: none; }
+		.journalMetricsPage table.metrics .metricName { font-weight: 600; white-space: nowrap; }
+		.journalMetricsPage table.metrics .metricValues { white-space: nowrap; }
+		.journalMetricsPage .access, .journalMetricsPage .download { font-size: 12px; color: var(--vscode-descriptionForeground); }
+		.journalMetricsPage .imports { margin-top: 6px; }
+		.journalMetricsPage .importRow { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 12px; }
+		.journalMetricsPage .importRow .importName { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+		.journalMetricsPage .importRow .meta { color: var(--vscode-descriptionForeground); white-space: nowrap; }
+		.journalMetricsPage .actions { display: flex; gap: 8px; margin-top: 10px; }
+		.journalMetricsPage ul.using { margin: 0; padding-left: 20px; color: var(--vscode-descriptionForeground); line-height: 1.45; }
+		.journalMetricsPage ul.using li { margin-bottom: 6px; }
+		.journalMetricsPage ul.using b { color: var(--vscode-foreground); font-weight: 600; }
+		.journalMetricsPage .licence { font-size: 12px; color: var(--vscode-descriptionForeground); margin: 16px 0 0 0; }
+`,
+		bodyHtml: `
+	<div class="journalMetricsPage">
 	<div class="topActions">
 		<button class="action pressed importFile">${text.importFile}</button>
 		<button class="action" id="askAgent">${text.askAgent}</button>
 	</div>
 	<p class="help">${text.askAgentHelp}</p>
-
-	<details open>
-		<summary><span class="chevron"></span>${text.builtInSection}</summary>
-		<p class="intro">${text.builtInIntro}</p>
-		${builtIn.map(card).join('')}
-	</details>
-
-	<details open>
-		<summary><span class="chevron"></span>${text.freeSection}</summary>
-		<p class="intro">${text.freeIntro}</p>
-		${free.map(card).join('')}
-	</details>
-
-	<details open>
-		<summary><span class="chevron"></span>${text.accountSection}</summary>
-		<p class="intro">${text.accountIntro}</p>
-		${account.map(card).join('')}
-	</details>
-
-	<details>
-		<summary><span class="chevron"></span>${text.usingSection}</summary>
-		<ul class="using">
-			<li>${text.usingTags}</li>
-			<li>${text.usingFilter}</li>
-			<li>${text.usingSql}</li>
-		</ul>
-	</details>
+	${section('builtInSection', text.builtInSection, `<p class="intro">${text.builtInIntro}</p>${builtIn.map(card).join('')}`)}
+	${section('freeSection', text.freeSection, `<p class="intro">${text.freeIntro}</p>${free.map(card).join('')}`)}
+	${section('accountSection', text.accountSection, `<p class="intro">${text.accountIntro}</p>${account.map(card).join('')}`)}
+	${section('usingSection', text.usingSection, `<ul class="using"><li>${text.usingTags}</li><li>${text.usingFilter}</li><li>${text.usingSql}</li></ul>`, true)}
 	<p class="licence">${text.licence}</p>
-</div>
-<script>
-	const vscode = acquireVsCodeApi();
+	</div>`,
+		pageScriptJs: `
+	(() => {
 	const TEXT = ${JSON.stringify(text)};
 	const SOURCES = ${JSON.stringify([...free, ...account].map(source => source.id))};
-	const CHEVRON = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.15 5.65a.5.5 0 0 1 .7 0L8 9.79l4.15-4.14a.5.5 0 0 1 .7.7l-4.5 4.5a.5.5 0 0 1-.7 0l-4.5-4.5a.5.5 0 0 1 0-.7Z"/></svg>';
-	for (const chevron of document.querySelectorAll('.chevron')) {
-		chevron.innerHTML = CHEVRON;
-	}
 
 	function element(tag, className, content) {
 		const node = document.createElement(tag);
@@ -451,9 +430,9 @@ function pageHtml(): string {
 		}
 	});
 	vscode.postMessage({ command: 'ready' });
-</script>
-</body>
-</html>`;
+	})();
+`,
+	});
 }
 
 registerAction2(class extends Action2 {

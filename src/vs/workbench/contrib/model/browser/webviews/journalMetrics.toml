@@ -1,0 +1,34 @@
+# Journal Metrics Webview Configuration
+# A page in the Minimal style of the scaffold, not a panel: Learn More only, as no Julia package powers it. `pageCommand`
+# is the command that opens it, which a panel's contribution file would say. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/journalMetrics.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Journal Metrics"
+viewType = "pollis.journalMetrics"
+pageCommand = "pollis.databases.journalMetrics"
+
+[[wikis]]
+name = "Overview"
+file = "journalMetrics/overview.md"
+bundled = true
+description = "The sources of journal levels and metrics, the two built in and the five you import, and Ask an Agent"
+
+[[wikis]]
+name = "Factsheet"
+file = "journalMetrics/factsheet.md"
+bundled = true
+description = "Each source with its metrics, coverage, access and file, at a glance, and what the metrics do not tell"
+
+[[wikis]]
+name = "The Metrics and What They Mean"
+file = "journalMetrics/metrics.md"
+bundled = true
+description = "Citations per document, metrics adjusted for field, quartiles, the h-index, and the levels and ratings of lists"
+
+[[wikis]]
+name = "Importing Metrics and Using Them"
+file = "journalMetrics/importing.md"
+bundled = true
+description = "Downloading each source's file, Import File..., the year of a file, Remove, and the tags, Journals filter and SQL views"
