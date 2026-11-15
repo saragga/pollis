@@ -155,7 +155,7 @@ export async function activate(context: vscode.ExtensionContext) {
         console.debug(`[julia activation] JuliaCommands: ${(performance.now() - t).toFixed(1)}ms`)
 
         // POLLIS: do not start LanguageServer.jl (SymbolServer's huge cache + the crashing
-        // libpython indexing path). Language features will be provided by JETLS.jl instead.
+        // libpython indexing path). Language features come from Fatou, a language server that does not run Julia.
         // languageClientFeature.startServer()
 
         // POLLIS: the upstream symbol-cache-download and telemetry-consent prompts have been
