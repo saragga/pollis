@@ -5,6 +5,7 @@
 
 import { VSBuffer } from '../../../../base/common/buffer.js';
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
+import { isWindows } from '../../../../base/common/platform.js';
 import { basename, joinPath } from '../../../../base/common/resources.js';
 import { URI } from '../../../../base/common/uri.js';
 import { localize } from '../../../../nls.js';
@@ -109,12 +110,29 @@ export function freeStudyName(base: string, taken: readonly string[]): string {
 	return name;
 }
 
-/** A run of an agent of a study, while Pollis runs: its terminal, when it started and ended, and its exit code. */
+/** A run of an agent of a study, while Pollis runs: its terminal, when it started and ended, its exit code, and whether the user stopped it. */
 export interface IStudyAgentRun {
 	readonly terminal: ITerminalInstance;
 	readonly started: number;
 	ended?: number;
 	exitCode?: number;
+	stopped?: boolean;
+}
+
+/**
+ * Stops a running agent: its process ends, and its terminal stays open with what it wrote. Windows has no signals,
+ * so there the agent gets Ctrl+C, as in its terminal.
+ */
+export async function stopAgentRun(run: IStudyAgentRun | undefined): Promise<void> {
+	if (!run || run.ended !== undefined) {
+		return;
+	}
+	run.stopped = true;
+	if (isWindows) {
+		await run.terminal.sendText('\x03', false);
+	} else {
+		await run.terminal.sendSignal('SIGTERM');
+	}
 }
 
 /**
@@ -152,18 +170,19 @@ export class StudyRuns {
 	}
 
 	/**
-	 * An agent's status, as the pages show it: running while its terminal runs; done once `doneFile` is in its folder;
-	 * failed when its run ended without it; ended when it ran before Pollis started and left no `doneFile`; waiting
-	 * before its TASK.md is written.
+	 * An agent's status, as the pages show it: running while its terminal runs; stopped once the user stopped it; done
+	 * once `doneFile` is in its folder; failed when its run ended without it; ended when it ran before Pollis started
+	 * and left no `doneFile`; waiting before its TASK.md is written.
 	 */
 	async state(fileService: IFileService, study: URI, key: string, label: string, doneFile: string) {
 		const folder = joinPath(study, key);
 		const [started, done] = await Promise.all([fileService.exists(joinPath(folder, 'TASK.md')), fileService.exists(joinPath(folder, doneFile))]);
 		const run = this.get(study, key);
 		const status = run && run.ended === undefined ? 'running'
-			: done ? 'done'
-				: run ? 'failed'
-					: started ? 'ended' : 'waiting';
+			: run?.stopped ? 'stopped'
+				: done ? 'done'
+					: run ? 'failed'
+						: started ? 'ended' : 'waiting';
 		return { key, label, status, started: run?.started, ended: run?.ended, exitCode: run?.exitCode, hasFile: done, hasTerminal: !!run && !run.terminal.isDisposed };
 	}
 }

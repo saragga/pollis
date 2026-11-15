@@ -32,11 +32,11 @@ import { MANYANALYSTS_METADATA } from '../../model/browser/webviews/manyAnalysts
 import { buildWebviewHtml } from '../../model/browser/webviews/webviewScaffold.js';
 import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
 import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
-import { ITerminalInstance, ITerminalInstanceService, ITerminalService } from '../../terminal/browser/terminal.js';
+import { ITerminalInstanceService, ITerminalService } from '../../terminal/browser/terminal.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { compareCss } from './compareShared.js';
-import { DataKind, EXAMPLE_DATASETS, freeStudyName, IOrchestrationCell, JULIA_TO_JSON, orchestrationCss, orchestrationPageJs, quantile, studiesFolder, studyDataText, studyStepHtml, studyStepText, tomlString, unattendedCells, unattendedRun, validStudyName } from './orchestration.js';
+import { DataKind, EXAMPLE_DATASETS, freeStudyName, IOrchestrationCell, IStudyAgentRun, JULIA_TO_JSON, orchestrationCss, orchestrationPageJs, quantile, stopAgentRun, studiesFolder, studyDataText, studyStepHtml, studyStepText, tomlString, unattendedCells, unattendedRun, validStudyName } from './orchestration.js';
 import { launchAgent, pollisJlPath, skillFile } from './pollisAgents.js';
 
 // Many Analysts, from Compose > Orchestration (compose.contribution.ts): several coding agents get the same question
@@ -97,15 +97,8 @@ interface IAnalystResult {
 }
 
 /** A run of an analyst's agent, while its terminal is there. */
-interface IAnalystRun {
-	readonly terminal: ITerminalInstance;
-	readonly started: number;
-	ended?: number;
-	exitCode?: number;
-}
-
 /** The runs of every study started since Pollis started, by study folder and analyst. */
-const runs = new Map<string, Map<number, IAnalystRun>>();
+const runs = new Map<string, Map<number, IStudyAgentRun>>();
 
 /** Called when a run ends, to draw the page again, while it is open. */
 let onRunEnded: (() => void) | undefined;
@@ -116,7 +109,7 @@ type ManyAnalystsMessage =
 	| { readonly command: 'load'; readonly name: string }
 	| { readonly command: 'newStudy' }
 	| { readonly command: 'collect' }
-	| { readonly command: 'open'; readonly analyst: number; readonly what: 'report' | 'code' | 'terminal' | 'log' }
+	| { readonly command: 'open'; readonly analyst: number; readonly what: 'report' | 'code' | 'terminal' | 'log' | 'stop' }
 	| { readonly command: 'chooseFile'; readonly value: string };
 
 /** The open page, so a second request shows the same page. */
@@ -354,9 +347,10 @@ async function openManyAnalystsPage(accessor: ServicesAccessor): Promise<void> {
 			const run = studyRuns?.get(k);
 			const finished = hasEstimate && hasChoices;
 			const status = run && run.ended === undefined ? 'running'
-				: finished ? 'done'
-					: run ? 'failed'
-						: started ? 'ended' : 'waiting';
+				: run?.stopped ? 'stopped'
+					: finished ? 'done'
+						: run ? 'failed'
+							: started ? 'ended' : 'waiting';
 			return {
 				label: analyst.label,
 				status,
@@ -492,7 +486,7 @@ async function openManyAnalystsPage(accessor: ServicesAccessor): Promise<void> {
 		}
 		current = study;
 
-		const studyRuns = new Map<number, IAnalystRun>();
+		const studyRuns = new Map<number, IStudyAgentRun>();
 		runs.set(folder.toString(), studyRuns);
 		const task = taskText(study, study.analysts.length);
 		const prompt = localize('manyAnalysts.prompt', "Read SKILL.md and TASK.md in this folder and follow them: answer the question of TASK.md on your own, without asking me anything.");
@@ -518,7 +512,7 @@ async function openManyAnalystsPage(accessor: ServicesAccessor): Promise<void> {
 					: localize('manyAnalysts.failed', "Analyst {0} did not start: {1}", k, launched));
 				continue;
 			}
-			const analystRun: IAnalystRun = { terminal: launched, started: Date.now() };
+			const analystRun: IStudyAgentRun = { terminal: launched, started: Date.now() };
 			studyRuns.set(k, analystRun);
 			const runStore = new DisposableStore();
 			runStore.add(launched.onExit(exit => {
@@ -536,8 +530,12 @@ async function openManyAnalystsPage(accessor: ServicesAccessor): Promise<void> {
 		await sendState();
 	};
 
-	const openFile = async (analyst: number, what: 'report' | 'code' | 'terminal' | 'log') => {
+	const openFile = async (analyst: number, what: 'report' | 'code' | 'terminal' | 'log' | 'stop') => {
 		if (!current) {
+			return;
+		}
+		if (what === 'stop') {
+			await stopAgentRun(runs.get(current.folder.toString())?.get(analyst));
 			return;
 		}
 		if (what === 'terminal') {
@@ -578,7 +576,7 @@ async function openManyAnalystsPage(accessor: ServicesAccessor): Promise<void> {
 			} else if (message.command === 'collect' && current) {
 				await sendToJuliaRepl(collectCode(current, current.analysts.length), commandService);
 				post({ command: 'collecting' });
-			} else if (message.command === 'open' && hasKey(message, { analyst: true, what: true }) && Number.isInteger(message.analyst) && ['report', 'code', 'terminal', 'log'].includes(message.what)) {
+			} else if (message.command === 'open' && hasKey(message, { analyst: true, what: true }) && Number.isInteger(message.analyst) && ['report', 'code', 'terminal', 'log', 'stop'].includes(message.what)) {
 				await openFile(message.analyst, message.what);
 			} else if (message.command === 'chooseFile' && hasKey(message, { value: true })) {
 				const home = await pathService.userHome({ preferLocal: true });
@@ -621,6 +619,7 @@ function pageHtml(): string {
 		statuses: {
 			waiting: localize('manyAnalysts.waiting', "Waiting"),
 			running: localize('manyAnalysts.running', "Running"),
+			stopped: localize('manyAnalysts.stopped', "Stopped"),
 			done: localize('manyAnalysts.done', "Done"),
 			failed: localize('manyAnalysts.failedStatus', "Ended without results"),
 			ended: localize('manyAnalysts.ended', "Ended without results"),
@@ -629,6 +628,7 @@ function pageHtml(): string {
 		report: localize('manyAnalysts.report', "Report"),
 		code: localize('manyAnalysts.code', "Code"),
 		terminal: localize('manyAnalysts.terminalLink', "Terminal"),
+		stop: localize('manyAnalysts.stop', "Stop"),
 		log: localize('manyAnalysts.log', "Rerun Log"),
 		noStudy: localize('manyAnalysts.noStudy', "No study is running: start one, or open an earlier one in step 1."),
 		results: localize('manyAnalysts.results', "Results"),
@@ -818,7 +818,7 @@ ${orchestrationPageJs}
 		}
 		document.getElementById('runRows').innerHTML = study.analysts.map((run, i) => {
 			const status = TEXT.statuses[run.status] + (run.status === 'failed' && typeof run.exitCode === 'number' ? ' (' + TEXT.exit.replace('{0}', run.exitCode) + ')' : '');
-			const links = [run.hasReport ? link(TEXT.report, i + 1, 'report') : '', run.hasCode ? link(TEXT.code, i + 1, 'code') : '', run.hasTerminal ? link(TEXT.terminal, i + 1, 'terminal') : ''].filter(x => x).join('');
+			const links = [run.hasReport ? link(TEXT.report, i + 1, 'report') : '', run.hasCode ? link(TEXT.code, i + 1, 'code') : '', run.hasTerminal ? link(TEXT.terminal, i + 1, 'terminal') : '', run.status === 'running' ? link(TEXT.stop, i + 1, 'stop') : ''].filter(x => x).join('');
 			return '<tr><td>' + (i + 1) + '</td><td>' + escapeHtml(run.label) + '</td><td class="status-' + run.status + '">' + escapeHtml(status) + '</td><td class="number" data-run="' + i + '">' + elapsed(run) + '</td><td class="links">' + links + '</td></tr>';
 		}).join('');
 		clearInterval(timer);

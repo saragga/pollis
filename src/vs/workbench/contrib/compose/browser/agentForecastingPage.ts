@@ -27,6 +27,7 @@ import { sendToJuliaRepl } from '../../model/browser/handlers/model.handler.js';
 import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
 import { parseToml } from '../../model/browser/common/tomlPanelData.js';
 import { AGENTFORECASTING_METADATA } from '../../model/browser/webviews/agentForecasting.data.js';
+import { sortHeadingsCss, sortHeadingsScript, sortHint, stickyHeadCss } from '../../model/browser/webviews/webviewPager.js';
 import { buildWebviewHtml } from '../../model/browser/webviews/webviewScaffold.js';
 import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
 import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
@@ -35,7 +36,7 @@ import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { compareCss } from './compareShared.js';
 import { COMPETITIONS } from './forecastingCompetitionsPage.js';
-import { freeStudyName, IOrchestrationCell, JULIA_TO_JSON, orchestrationCss, orchestrationPageJs, startStudyAgent, studiesFolder, studyStepText, StudyRuns, tomlString, unattendedCells, validStudyName } from './orchestration.js';
+import { freeStudyName, IOrchestrationCell, JULIA_TO_JSON, orchestrationCss, orchestrationPageJs, startStudyAgent, stopAgentRun, studiesFolder, studyStepText, StudyRuns, tomlString, unattendedCells, validStudyName } from './orchestration.js';
 import { pollisJlPath, skillFile } from './pollisAgents.js';
 
 // Agents' Forecasting Competition, from Compose > Orchestration (compose.contribution.ts): several coding agents each write a
@@ -101,7 +102,7 @@ type AgentForecastingMessage =
 	| { readonly command: 'score' }
 	| { readonly command: 'load'; readonly name: string }
 	| { readonly command: 'newStudy' }
-	| { readonly command: 'open'; readonly agent: string; readonly what: 'method' | 'report' | 'terminal' };
+	| { readonly command: 'open'; readonly agent: string; readonly what: 'method' | 'report' | 'terminal' | 'stop' };
 
 /** The open page, so a second request shows the same page. */
 let openPage: WebviewInput | undefined;
@@ -615,8 +616,12 @@ async function openAgentForecastingPage(accessor: ServicesAccessor): Promise<voi
 		post({ command: 'sent', step: 'score' });
 	};
 
-	const openFile = async (agent: string, what: 'method' | 'report' | 'terminal') => {
+	const openFile = async (agent: string, what: 'method' | 'report' | 'terminal' | 'stop') => {
 		if (!current || !/^agent-\d+$/.test(agent)) {
+			return;
+		}
+		if (what === 'stop') {
+			await stopAgentRun(runs.get(current.folder, agent));
 			return;
 		}
 		if (what === 'terminal') {
@@ -660,7 +665,7 @@ async function openAgentForecastingPage(accessor: ServicesAccessor): Promise<voi
 			} else if (message.command === 'newStudy') {
 				watch(undefined);
 				await sendState();
-			} else if (message.command === 'open' && hasKey(message, { agent: true, what: true }) && typeof message.agent === 'string' && ['method', 'report', 'terminal'].includes(message.what)) {
+			} else if (message.command === 'open' && hasKey(message, { agent: true, what: true }) && typeof message.agent === 'string' && ['method', 'report', 'terminal', 'stop'].includes(message.what)) {
 				await openFile(message.agent, message.what);
 			}
 		} catch (error) {
@@ -706,6 +711,7 @@ function pageHtml(): string {
 		statuses: {
 			waiting: localize('agentForecasting.waiting', "Waiting"),
 			running: localize('agentForecasting.running', "Running"),
+			stopped: localize('agentForecasting.stopped', "Stopped"),
 			done: localize('agentForecasting.done', "Done"),
 			failed: localize('agentForecasting.failedStatus', "Ended without a method"),
 			ended: localize('agentForecasting.ended', "Ended without a method"),
@@ -714,6 +720,7 @@ function pageHtml(): string {
 		method: localize('agentForecasting.method', "Method"),
 		report: localize('agentForecasting.report', "Report"),
 		terminal: localize('agentForecasting.terminalLink', "Terminal"),
+		stop: localize('agentForecasting.stop', "Stop"),
 		noRuns: localize('agentForecasting.noRuns', "The agents show here once they are started."),
 		scoresStep: localize('agentForecasting.scoresStep', "Scores"),
 		scoresHint: localize('agentForecasting.scoresHint', "Score the Methods sends the code to the Julia REPL, which runs every agent's method on the series in a new Julia process, on every thread of this computer, and scores the forecasts on the values held back: sMAPE, MASE and OWA, the overall weighted average of the two relative to Naive2, lower better. It costs nothing: no agent runs."),
@@ -721,6 +728,9 @@ function pageHtml(): string {
 		scoring: localize('agentForecasting.scoring', "Sent to the Julia REPL: the scores show here once every method has run."),
 		finished: localize('agentForecasting.finished', "Scored {0}, on {1} series."),
 		rank: localize('agentForecasting.rank', "Rank"),
+		rankTooltip: localize('agentForecasting.rankTooltip', "The place of the agents and the benchmarks in the order of the column sorted by"),
+		sortHint: sortHint(),
+		combinations: localize('agentForecasting.combinations', "Combinations of the Agents"),
 		methodColumn: localize('agentForecasting.methodColumn', "Method"),
 		place: localize('agentForecasting.place', "Place Among the {0} Entries"),
 		note: localize('agentForecasting.note', "Note"),
@@ -743,6 +753,10 @@ function pageHtml(): string {
 		#sample, #seed { min-width: 6em; width: 6em; }
 		tr.af-benchmark td { color: var(--vscode-descriptionForeground); }
 		tr.af-combination td:nth-child(2) { font-weight: 600; }
+		${stickyHeadCss}
+		${sortHeadingsCss}
+		.af-scores { max-height: 420px; overflow-y: auto; display: inline-block; max-width: 100%; }
+		tr.af-separator td { padding-top: 14px; font-weight: 600; border-bottom: 1px solid var(--vscode-widget-border); }
 `,
 		steps: [
 			{
@@ -798,16 +812,19 @@ function pageHtml(): string {
 		<p class="hint">${text.scoresHint}</p>
 		<div class="settings"><span class="bar"><button class="action" id="score">${text.score}</button></span></div>
 		<div class="small status" id="scoreStatus"></div>
-		<table class="ma" id="scoreTable" hidden>
-			<thead><tr><th class="number">${text.rank}</th><th>${text.methodColumn}</th><th class="number">sMAPE</th><th class="number">MASE</th><th class="number">OWA</th><th class="number" id="placeHeading"></th><th>${text.note}</th></tr></thead>
+		<div class="af-scores" id="scoreBox" hidden>
+		<table class="ma stickyHead" id="scoreTable">
+			<thead><tr><th class="number" title="${text.rankTooltip}">${text.rank}</th><th class="sortable" data-sort="method" data-label="${text.methodColumn}" title="${text.sortHint}">${text.methodColumn}</th><th class="sortable number" data-sort="sMAPE" data-label="sMAPE" title="${text.sortHint}">sMAPE</th><th class="sortable number" data-sort="MASE" data-label="MASE" title="${text.sortHint}">MASE</th><th class="sortable number" data-sort="OWA" data-label="OWA" title="${text.sortHint}">OWA</th><th class="sortable number" id="placeHeading" data-sort="place" data-label="" title="${text.sortHint}"></th><th>${text.note}</th></tr></thead>
 			<tbody id="scoreRows"></tbody>
 		</table>
+		</div>
 		<p class="small ma-note" id="combinationNote" hidden>${text.combinationNote}</p>
 `,
 			},
 		],
 		pageScriptJs: `
 	const TEXT = ${JSON.stringify(text)};
+	${sortHeadingsScript()}
 	const CHOICES = ${JSON.stringify(CHOICES.map(choice => ({ id: choice.id, name: choice.name, frequencies: choice.frequencies })))};
 	const DEFAULT_AGENTS = ${DEFAULT_AGENTS};
 	const DEFAULT_SAMPLE = ${DEFAULT_SAMPLE};
@@ -874,7 +891,7 @@ ${orchestrationPageJs}
 		document.getElementById('noRuns').hidden = agents.length > 0;
 		document.getElementById('runRows').innerHTML = agents.map((run, i) => {
 			const status = TEXT.statuses[run.status] + (run.status === 'failed' && typeof run.exitCode === 'number' ? ' (' + TEXT.exit.replace('{0}', run.exitCode) + ')' : '');
-			const links = [run.hasFile ? link(TEXT.method, run.key, 'method') + link(TEXT.report, run.key, 'report') : '', run.hasTerminal ? link(TEXT.terminal, run.key, 'terminal') : ''].filter(x => x).join('');
+			const links = [run.hasFile ? link(TEXT.method, run.key, 'method') + link(TEXT.report, run.key, 'report') : '', run.hasTerminal ? link(TEXT.terminal, run.key, 'terminal') : '', run.status === 'running' ? link(TEXT.stop, run.key, 'stop') : ''].filter(x => x).join('');
 			return '<tr><td>' + (i + 1) + '</td><td>' + escapeHtml(run.label) + '</td><td class="status-' + run.status + '">' + escapeHtml(status) + '</td><td class="number" data-run="' + escapeHtml(run.key) + '">' + elapsed(run) + '</td><td class="links">' + links + '</td></tr>';
 		}).join('');
 		clearInterval(timer);
@@ -888,11 +905,17 @@ ${orchestrationPageJs}
 		}
 	}
 
-	/** The scores: the agents, the two combinations and the benchmarks, from the lowest OWA, those not scored last. */
+	/** The column the ranked rows are sorted by: OWA, from the lowest, at first. */
+	let scoreSort = { key: 'OWA', descending: false };
+
+	/**
+	 * The scores: the agents and the benchmarks ranked by the column sorted by, the agents not scored after them, then,
+	 * below a separator, the mean and the median of the agents, which are not ranked.
+	 */
 	function drawScores() {
 		const study = state.study;
 		const results = study && study.results;
-		document.getElementById('scoreTable').hidden = !results;
+		document.getElementById('scoreBox').hidden = !results;
 		const status = document.getElementById('scoreStatus');
 		if (results) {
 			status.textContent = TEXT.finished.replace('{0}', results.finished).replace('{1}', format(results.series));
@@ -905,10 +928,14 @@ ${orchestrationPageJs}
 		}
 		const ranked = typeof results.entries === 'number';
 		const placeHeading = document.getElementById('placeHeading');
-		placeHeading.textContent = ranked ? TEXT.place.replace('{0}', format(results.entries)) : '';
+		placeHeading.dataset.label = ranked ? TEXT.place.replace('{0}', format(results.entries)) : '';
 		placeHeading.hidden = !ranked;
-		const scored = results.rows.filter(row => row.scores && typeof row.scores.OWA === 'number').sort((a, b) => a.scores.OWA - b.scores.OWA);
-		const unscored = results.rows.filter(row => !(row.scores && typeof row.scores.OWA === 'number'));
+		if (!ranked && scoreSort.key === 'place') {
+			scoreSort = { key: 'OWA', descending: false };
+		}
+		const isScored = row => !!(row.scores && typeof row.scores.OWA === 'number');
+		const combinations = ['mean', 'median'].map(name => results.rows.find(row => row.kind === 'combination' && row.name === name)).filter(row => row);
+		const others = results.rows.filter(row => row.kind !== 'combination');
 		const label = row => {
 			if (row.kind === 'agent') {
 				const run = study.agents[row.agent - 1];
@@ -923,15 +950,34 @@ ${orchestrationPageJs}
 			: row.kind === 'benchmark' ? TEXT.benchmark
 				: row.failed ? TEXT.failedSeries.replace('{0}', format(row.failed)).replace('{1}', row.error || '')
 					: row.error ? TEXT.noMethod.replace('{0}', row.error) : '';
-		let place = 0;
-		document.getElementById('scoreRows').innerHTML = [...scored, ...unscored].map(row => {
-			const scoredRow = !!(row.scores && typeof row.scores.OWA === 'number');
-			const rank = scoredRow ? String(++place) : '';
+		// The value a row is sorted by: the method's name in the order of the alphabet, else a number, none last either way
+		const sortValue = row => scoreSort.key === 'method' ? label(row)
+			: scoreSort.key === 'place' ? row.place
+				: row.scores ? row.scores[scoreSort.key] : undefined;
+		const ordered = others.filter(isScored).sort((a, b) => {
+			const x = sortValue(a);
+			const y = sortValue(b);
+			const xMissing = typeof x !== 'number' && typeof x !== 'string';
+			const yMissing = typeof y !== 'number' && typeof y !== 'string';
+			if (xMissing || yMissing) {
+				return Number(xMissing) - Number(yMissing);
+			}
+			const order = typeof x === 'string' ? x.localeCompare(y, undefined, { numeric: true }) : x - y;
+			return scoreSort.descending ? -order : order;
+		});
+		const columns = ranked ? 7 : 6;
+		const rowHtml = (row, rank) => {
 			const value = key => row.scores ? format(row.scores[key]) : '';
 			const placeCell = ranked ? '<td class="number">' + (typeof row.place === 'number' ? format(row.place) : '') + '</td>' : '';
-			return '<tr class="af-' + escapeHtml(row.kind) + '"><td class="number">' + rank + '</td><td>' + escapeHtml(label(row)) + '</td><td class="number">' + value('sMAPE') + '</td><td class="number">' + value('MASE') + '</td><td class="number">' + value('OWA') + '</td>' + placeCell + '<td class="small' + (scoredRow ? '' : ' missing') + '">' + escapeHtml(note(row)) + '</td></tr>';
-		}).join('');
-		document.getElementById('combinationNote').hidden = !results.rows.some(row => row.kind === 'combination');
+			return '<tr class="af-' + escapeHtml(row.kind) + '"><td class="number">' + rank + '</td><td>' + escapeHtml(label(row)) + '</td><td class="number">' + value('sMAPE') + '</td><td class="number">' + value('MASE') + '</td><td class="number">' + value('OWA') + '</td>' + placeCell + '<td class="small' + (isScored(row) ? '' : ' missing') + '">' + escapeHtml(note(row)) + '</td></tr>';
+		};
+		document.getElementById('scoreRows').innerHTML = ordered.map((row, i) => rowHtml(row, String(i + 1))).join('')
+			+ others.filter(row => !isScored(row)).map(row => rowHtml(row, '')).join('')
+			+ (combinations.length ? '<tr class="af-separator"><td colspan="' + columns + '">' + escapeHtml(TEXT.combinations) + '</td></tr>' + combinations.map(row => rowHtml(row, '')).join('') : '');
+		for (const heading of document.querySelectorAll('#scoreTable th[data-sort]')) {
+			setSortArrow(heading, heading.dataset.label, heading.dataset.sort === scoreSort.key, scoreSort.descending);
+		}
+		document.getElementById('combinationNote').hidden = !combinations.length;
 	}
 
 	/** The one blue button is the next thing to do. */
@@ -1009,6 +1055,13 @@ ${orchestrationPageJs}
 		vscode.postMessage({ command: 'start', agents });
 	});
 	document.getElementById('score').addEventListener('click', () => vscode.postMessage({ command: 'score' }));
+	document.getElementById('scoreTable').addEventListener('click', event => {
+		const heading = event.target.closest('th[data-sort]');
+		if (heading) {
+			scoreSort = { key: heading.dataset.sort, descending: heading.dataset.sort === scoreSort.key ? !scoreSort.descending : false };
+			drawScores();
+		}
+	});
 	document.body.addEventListener('click', event => {
 		const target = event.target.closest('button[data-what]');
 		if (target) {

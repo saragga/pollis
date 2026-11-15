@@ -36,7 +36,7 @@ import { ITerminalInstanceService, ITerminalService } from '../../terminal/brows
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { compareCss } from './compareShared.js';
-import { DataKind, EXAMPLE_DATASETS, freeStudyName, IOrchestrationCell, JULIA_TO_JSON, orchestrationCss, orchestrationPageJs, quantile, studiesFolder, studyDataText, studyStepHtml, studyStepText, startStudyAgent, StudyRuns, tomlString, unattendedCells, validStudyName } from './orchestration.js';
+import { DataKind, EXAMPLE_DATASETS, freeStudyName, IOrchestrationCell, JULIA_TO_JSON, orchestrationCss, orchestrationPageJs, quantile, studiesFolder, studyDataText, studyStepHtml, studyStepText, startStudyAgent, stopAgentRun, StudyRuns, tomlString, unattendedCells, validStudyName } from './orchestration.js';
 import { pollisJlPath, skillFile } from './pollisAgents.js';
 
 // Specification Curve, from Compose > Orchestration (compose.contribution.ts), after Simonsohn, Simmons and Nelson
@@ -133,7 +133,7 @@ type SpecificationCurveMessage =
 	| { readonly command: 'runNull'; readonly draws: number; readonly seed: number }
 	| { readonly command: 'load'; readonly name: string }
 	| { readonly command: 'newStudy' }
-	| { readonly command: 'open'; readonly agent: string; readonly what: 'code' | 'decisions' | 'terminal' }
+	| { readonly command: 'open'; readonly agent: string; readonly what: 'code' | 'decisions' | 'terminal' | 'stop' }
 	| { readonly command: 'chooseFile'; readonly value: string };
 
 /** The open page, so a second request shows the same page. */
@@ -873,8 +873,12 @@ async function openSpecificationCurvePage(accessor: ServicesAccessor): Promise<v
 		await sendState();
 	};
 
-	const openFile = async (agent: string, what: 'code' | 'decisions' | 'terminal') => {
+	const openFile = async (agent: string, what: 'code' | 'decisions' | 'terminal' | 'stop') => {
 		if (!current || !(agent === CODER || /^proposer-\d+$/.test(agent))) {
+			return;
+		}
+		if (what === 'stop') {
+			await stopAgentRun(runs.get(current.folder, agent));
 			return;
 		}
 		if (what === 'terminal') {
@@ -928,7 +932,7 @@ async function openSpecificationCurvePage(accessor: ServicesAccessor): Promise<v
 			} else if (message.command === 'newStudy') {
 				watch(undefined);
 				await sendState();
-			} else if (message.command === 'open' && hasKey(message, { agent: true, what: true }) && typeof message.agent === 'string' && ['code', 'decisions', 'terminal'].includes(message.what)) {
+			} else if (message.command === 'open' && hasKey(message, { agent: true, what: true }) && typeof message.agent === 'string' && ['code', 'decisions', 'terminal', 'stop'].includes(message.what)) {
 				await openFile(message.agent, message.what);
 			} else if (message.command === 'chooseFile' && hasKey(message, { value: true })) {
 				const home = await pathService.userHome({ preferLocal: true });
@@ -977,6 +981,7 @@ function pageHtml(): string {
 		statuses: {
 			waiting: localize('specificationCurve.waiting', "Waiting"),
 			running: localize('specificationCurve.running', "Running"),
+			stopped: localize('specificationCurve.stopped', "Stopped"),
 			done: localize('specificationCurve.done', "Done"),
 			failed: localize('specificationCurve.failedStatus', "Ended without results"),
 			ended: localize('specificationCurve.ended', "Ended without results"),
@@ -985,6 +990,7 @@ function pageHtml(): string {
 		decisionsLink: localize('specificationCurve.decisionsLink', "Decisions"),
 		code: localize('specificationCurve.code', "Code"),
 		terminal: localize('specificationCurve.terminalLink', "Terminal"),
+		stop: localize('specificationCurve.stop', "Stop"),
 		decision: localize('specificationCurve.decision', "Decision"),
 		option: localize('specificationCurve.option', "Option"),
 		proposedBy: localize('specificationCurve.proposedBy', "Proposed By"),
@@ -1240,7 +1246,7 @@ ${orchestrationPageJs}
 	}
 	function runRow(run, first, fileLink) {
 		const status = TEXT.statuses[run.status] + (run.status === 'failed' && typeof run.exitCode === 'number' ? ' (' + TEXT.exit.replace('{0}', run.exitCode) + ')' : '');
-		const links = [run.hasFile ? fileLink : '', run.hasTerminal ? link(TEXT.terminal, run.key, 'terminal') : ''].filter(x => x).join('');
+		const links = [run.hasFile ? fileLink : '', run.hasTerminal ? link(TEXT.terminal, run.key, 'terminal') : '', run.status === 'running' ? link(TEXT.stop, run.key, 'stop') : ''].filter(x => x).join('');
 		return '<tr>' + first + '<td>' + escapeHtml(run.label) + '</td><td class="status-' + run.status + '">' + escapeHtml(status) + '</td><td class="number" data-run="' + escapeHtml(run.key) + '">' + elapsed(run) + '</td><td class="links">' + links + '</td></tr>';
 	}
 	function allRuns(study) {
