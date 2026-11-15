@@ -1,0 +1,45 @@
+# Alerts Webview Configuration
+# The pages of Explore > Alerts (Alerts, Add Alert and Quote) in the Minimal style of the scaffold, not panels: they
+# share Powered by and Learn More. `pageCommand` is the command that opens the Alerts page, which a panel's
+# contribution file would say. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/alerts.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Alerts"
+viewType = "pollis.alerts"
+pageCommand = "pollis.alerts.show"
+
+[[packages]]
+name = "OnlineStats.jl"
+github = "https://github.com/joshday/OnlineStats.jl"
+
+[[wikis]]
+name = "Overview"
+file = "alerts/overview.md"
+bundled = true
+description = "The three kinds of alert, the Add Alert, Alerts and Quote pages, and Your Alerts and Fired Alerts"
+
+[[wikis]]
+name = "Factsheet"
+file = "alerts/factsheet.md"
+bundled = true
+description = "Sources, how often they are looked up, conditions and pages at a glance, when to use alerts and what they do not do"
+
+[[wikis]]
+name = "Alert Conditions"
+file = "alerts/conditions.md"
+bundled = true
+description = "The conditions on a level or a move, those judged against recent moves with OnlineStats.jl, and what an alert would have done"
+
+[[wikis]]
+name = "Alerts on SEC Filings"
+file = "alerts/sec-filings.md"
+bundled = true
+description = "Which companies an alert watches, forms, 8-K items and Contains, and starting an event study when it fires"
+
+[[wikis]]
+name = "Alerts on Economic Series"
+file = "alerts/economic-series.md"
+bundled = true
+description = "The series of FRED, the ECB, the IMF and the World Bank, and the conditions on a new value"

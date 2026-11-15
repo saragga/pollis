@@ -20,9 +20,18 @@ import { AlertCondition, AlertSeverity, ChartRange, describeCondition, describeF
 import { ECONOMIC_SOURCES, EconomicSource, seriesExample, seriesPage, SERIES_PAGES, sourceName } from './economicSeries.js';
 import { IEventStudiesService, SHOW_EVENT_STUDIES_COMMAND_ID } from './eventStudiesService.js';
 import { OPEN_LINK_COMMAND_ID } from './openLink.js';
-import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
+import { buildWebviewHtml } from '../../model/browser/webviews/webviewScaffold.js';
+import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
+import { ALERTS_METADATA } from '../../model/browser/webviews/alerts.data.js';
+import { IFileService } from '../../../../platform/files/common/files.js';
+import { INotificationService } from '../../../../platform/notification/common/notification.js';
+import { IOpenerService } from '../../../../platform/opener/common/opener.js';
+import { IStorageService } from '../../../../platform/storage/common/storage.js';
+import { IPathService } from '../../../services/path/common/pathService.js';
+import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
+import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
 
-// Explore > Alerts > Add Alert...: a page with a form to add an alert (the symbol, looked up at Yahoo Finance, the
+// The pages of Explore > Alerts, in the Minimal style of the scaffold. Explore > Alerts > Add Alert...: a page with a form to add an alert (the symbol, looked up at Yahoo Finance, the
 // condition, the value, how it shows and how often it fires), or an alert on SEC filings (the company, looked up at
 // the SEC's EDGAR with its recent filings, and the forms), or an alert on an economic series (the series, looked up at
 // FRED, the ECB, the IMF or the World Bank with its latest values, and the condition on its new value).
@@ -68,7 +77,7 @@ type AlertsMessage =
 	| { readonly command: 'chart'; readonly symbol: string; readonly range: ChartRange }
 	| { readonly command: 'add'; readonly symbol: string; readonly condition: AlertCondition; readonly threshold: number; readonly halfLife?: number; readonly severity: AlertSeverity; readonly repeat: boolean }
 	| { readonly command: 'backtest'; readonly key: string; readonly symbol: string; readonly source?: EconomicSource; readonly condition: AlertCondition; readonly threshold: number; readonly halfLife?: number }
-	| { readonly command: 'openNotebook'; readonly symbol: string; readonly name?: string; readonly source?: EconomicSource; readonly condition: AlertCondition; readonly threshold: number; readonly halfLife?: number }
+	| { readonly command: 'openBacktestNotebook'; readonly symbol: string; readonly name?: string; readonly source?: EconomicSource; readonly condition: AlertCondition; readonly threshold: number; readonly halfLife?: number }
 	| { readonly command: 'lookUpFiler'; readonly company: string }
 	| { readonly command: 'lookUpCompanies'; readonly companies: string }
 	| { readonly command: 'lookUpIndustry'; readonly sic: string }
@@ -78,7 +87,7 @@ type AlertsMessage =
 	| { readonly command: 'addSeries'; readonly source: EconomicSource; readonly id: string; readonly condition: AlertCondition; readonly threshold: number; readonly halfLife?: number; readonly severity: AlertSeverity; readonly repeat: boolean }
 	| { readonly command: 'setFredKey' }
 	| { readonly command: 'setContact' }
-	| { readonly command: 'openUrl'; readonly url: string }
+	| { readonly command: 'openLink'; readonly url: string }
 	| { readonly command: 'pause'; readonly id: string; readonly paused: boolean }
 	| { readonly command: 'remove'; readonly id: string }
 	| { readonly command: 'setEventStudy'; readonly id: string; readonly eventStudy: boolean }
@@ -111,6 +120,13 @@ function openAlertsPage(accessor: ServicesAccessor, place: PagePlace): void {
 	const commandService = accessor.get(ICommandService);
 	const quickInputService = accessor.get(IQuickInputService);
 	const dialogService = accessor.get(IDialogService);
+	const openerService = accessor.get(IOpenerService);
+	const notificationService = accessor.get(INotificationService);
+	const notebookEditorModelResolverService = accessor.get(INotebookEditorModelResolverService);
+	const notebookKernelService = accessor.get(INotebookKernelService);
+	const fileService = accessor.get(IFileService);
+	const pathService = accessor.get(IPathService);
+	const storageService = accessor.get(IStorageService);
 
 	const kind: PageKind = place.section === 'add' ? 'add' : place.section === 'quote' ? 'quote' : 'alerts';
 	const openPage = openPages.get(kind);
@@ -135,6 +151,8 @@ function openAlertsPage(accessor: ServicesAccessor, place: PagePlace): void {
 	webviewInput.webview.setHtml(pageHtml(kind));
 
 	const disposables = new DisposableStore();
+	// The three pages share Powered by and Learn More
+	disposables.add(registerScaffoldPageHandlers(webviewInput, 'alerts', title, ALERTS_METADATA.alerts, openerService, editorService, commandService, notificationService, notebookEditorModelResolverService, notebookKernelService, fileService, pathService, storageService));
 	disposables.add(webviewInput.webview.onDidDispose(() => {
 		openPages.delete(kind);
 		disposables.dispose();
@@ -279,7 +297,7 @@ function openAlertsPage(accessor: ServicesAccessor, place: PagePlace): void {
 				webviewInput.webview.postMessage({ command: 'backtest', key: message.key, result: typeof result === 'object' ? result : undefined, problem: typeof result === 'string' ? result : undefined });
 				break;
 			}
-			case 'openNotebook': {
+			case 'openBacktestNotebook': {
 				const notebook = await alertsService.writeNotebook({ symbol: message.symbol, name: message.name, source: message.source, condition: message.condition, threshold: message.threshold, halfLife: message.halfLife });
 				if (typeof notebook === 'object') {
 					await editorService.openEditor({ resource: notebook });
@@ -423,7 +441,7 @@ function openAlertsPage(accessor: ServicesAccessor, place: PagePlace): void {
 				}
 				break;
 			}
-			case 'openUrl':
+			case 'openLink':
 				// Only the SEC's pages, the filings and the filers at EDGAR, and the pages of the economic series
 				if (message.url.startsWith('https://www.sec.gov/') || SERIES_PAGES.some(page => message.url.startsWith(page))) {
 					await commandService.executeCommand(OPEN_LINK_COMMAND_ID, message.url);
@@ -715,134 +733,122 @@ function pageHtml(kind: PageKind): string {
 		clearFiredHint: localize('alerts.clearFiredHint', "Takes every fired alert out of Fired Alerts"),
 		noneFired: localize('alerts.noneFired', "No alert has fired yet."),
 	};
-	return `<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
-	<style>
-		${voiceButtonsCss}
-		* { box-sizing: border-box; }
-		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
-		.container { max-width: 1100px; margin: 0 auto; padding: 24px; }
-		h1 { font-size: 32px; font-weight: 300; margin: 0 0 4px 0; line-height: 1.2; }
-		h2 { font-size: 18px; font-weight: 400; margin: 0; }
-		.subtitle { font-size: 14px; color: var(--vscode-descriptionForeground); margin: 0 0 24px 0; line-height: 1.4; max-width: 900px; }
-		[hidden] { display: none !important; }
-		.sectionHeader { display: flex; align-items: baseline; justify-content: space-between; margin: 24px 0 8px 0; }
-		#alertsSection { margin-top: 0; }
-		.form { padding: 16px; border-radius: 4px; background: var(--vscode-welcomePage-tileBackground, var(--vscode-editorWidget-background)); flex: 0 1 1000px; min-width: 0; container-type: inline-size; }
-		.formGrid { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content minmax(0, 1fr); gap: 12px 16px; align-items: baseline; }
-		.formGrid > .c1 { grid-column: 1; }
-		.formGrid > .c2 { grid-column: 2; }
-		.formGrid > .c3 { grid-column: 3; margin-left: 16px; }
-		.formGrid > .c4 { grid-column: 4; }
-		.formGrid > .r1 { grid-row: 1; }
-		.formGrid > .r2 { grid-row: 2; }
-		.formGrid > .r3 { grid-row: 3; }
-		.formGrid > .r4 { grid-row: 4; }
-		.formGrid > .r5 { grid-row: 5; }
-		.form .formGrid > .added { grid-column: 3 / -1; grid-row: 5; margin-left: 16px; }
+	return buildWebviewHtml({
+		title: kind === 'add' ? text.addTitle : kind === 'quote' ? text.quoteTitle : text.title,
+		omitPoweredBy: !ALERTS_METADATA.alerts.packages.length,
+		introHtml: `<span id="subtitle">${kind === 'add' ? text.addIntro : kind === 'quote' ? text.quoteIntro : text.intro}</span>`,
+		extraCss: `
+		.container { max-width: 1100px; }
+		.alertsPage * { box-sizing: border-box; }
+		.alertsPage h2 { font-size: 18px; font-weight: 400; margin: 0; }
+		.alertsPage [hidden] { display: none !important; }
+		.alertsPage .sectionHeader { display: flex; align-items: baseline; justify-content: space-between; margin: 24px 0 8px 0; }
+		.alertsPage #alertsSection { margin-top: 0; }
+		.alertsPage .form { padding: 16px; border-radius: 4px; background: var(--vscode-welcomePage-tileBackground, var(--vscode-editorWidget-background)); flex: 0 1 1000px; min-width: 0; container-type: inline-size; }
+		.alertsPage .formGrid { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content minmax(0, 1fr); gap: 12px 16px; align-items: baseline; }
+		.alertsPage .formGrid > .c1 { grid-column: 1; }
+		.alertsPage .formGrid > .c2 { grid-column: 2; }
+		.alertsPage .formGrid > .c3 { grid-column: 3; margin-left: 16px; }
+		.alertsPage .formGrid > .c4 { grid-column: 4; }
+		.alertsPage .formGrid > .r1 { grid-row: 1; }
+		.alertsPage .formGrid > .r2 { grid-row: 2; }
+		.alertsPage .formGrid > .r3 { grid-row: 3; }
+		.alertsPage .formGrid > .r4 { grid-row: 4; }
+		.alertsPage .formGrid > .r5 { grid-row: 5; }
+		.alertsPage .form .formGrid > .added { grid-column: 3 / -1; grid-row: 5; margin-left: 16px; }
 		@container (max-width: 720px) {
-			.formGrid { grid-template-columns: max-content minmax(0, 1fr); }
-			.form .formGrid > * { grid-row: auto; grid-column: auto; margin-left: 0; }
-			.form .formGrid > .added { grid-column: 1 / -1; }
+		.alertsPage .formGrid { grid-template-columns: max-content minmax(0, 1fr); }
+		.alertsPage .form .formGrid > * { grid-row: auto; grid-column: auto; margin-left: 0; }
+		.alertsPage .form .formGrid > .added { grid-column: 1 / -1; }
 		}
-		.addLayout { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
-		.chartPane { flex: 1 1 360px; min-width: 0; padding: 16px; border-radius: 4px; background: var(--vscode-welcomePage-tileBackground, var(--vscode-editorWidget-background)); }
-		.chartHeader { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
-		.chartHeader .chartTitle { font-weight: 600; }
-		.ranges { display: flex; gap: 4px; }
-		.ranges button { font: inherit; font-size: 11px; color: var(--vscode-foreground); background: none; border: 1px solid transparent; border-radius: 2px; padding: 1px 6px; cursor: pointer; }
-		.ranges button:hover { background: var(--vscode-toolbar-hoverBackground); }
-		input#symbol.series { width: 340px; }
-		.ranges button.chosen { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
-		#chart { display: block; width: 100%; height: 240px; }
-		#chart .series { fill: none; stroke: var(--vscode-textLink-foreground); stroke-width: 1.5; }
-		#chart .area { fill: var(--vscode-textLink-foreground); opacity: 0.08; }
-		#chart .grid { stroke: var(--vscode-widget-border); stroke-width: 1; }
-		#chart .previous { stroke: var(--vscode-descriptionForeground); stroke-dasharray: 2 3; }
-		#chart .threshold { stroke: var(--vscode-editorInfo-foreground); stroke-width: 1.5; stroke-dasharray: 6 4; }
-		#chart .threshold.warning { stroke: var(--vscode-editorWarning-foreground); }
-		#chart .threshold.error { stroke: var(--vscode-editorError-foreground); }
-		#chart .threshold.chosen { stroke-width: 2; stroke-dasharray: none; }
-		#chart .firedDot { fill: var(--vscode-editorInfo-foreground); stroke: var(--vscode-editor-background); stroke-width: 1.5; }
-		#chart .firedDot.warning { fill: var(--vscode-editorWarning-foreground); }
-		#chart .firedDot.error { fill: var(--vscode-editorError-foreground); }
-		#chart text.firedLabel { fill: var(--vscode-foreground); }
-		#chart text { font-size: 10px; fill: var(--vscode-descriptionForeground); }
-		#chart text.thresholdLabel { fill: var(--vscode-foreground); }
-		#chart .cursor { stroke: var(--vscode-descriptionForeground); stroke-width: 1; }
-		#chart .dot { fill: var(--vscode-textLink-foreground); }
-		#chart .band { fill: none; stroke: var(--vscode-charts-orange); stroke-width: 1; stroke-dasharray: 4 3; }
-		#chart .wouldFire { fill: var(--vscode-charts-red); stroke: var(--vscode-editor-background); stroke-width: 1; }
-		.chartHeader .chartLabel { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; min-width: 0; }
-		.chartCaption { font-size: 11px; color: var(--vscode-descriptionForeground); }
-		.form label.field { color: var(--vscode-foreground); }
-		.form .hint { font-size: 12px; color: var(--vscode-descriptionForeground); margin-top: 4px; line-height: 1.4; }
-		.form .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-		input[type="text"], input[type="number"], select { font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; padding: 4px 6px; }
-		input[type="text"] { width: 200px; text-transform: uppercase; }
-		input[type="number"] { width: 160px; }
-		input:focus, select:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
-		.choice { display: inline-flex; align-items: center; gap: 4px; margin-right: 16px; cursor: pointer; }
-		.quote { font-size: 12px; color: var(--vscode-descriptionForeground); }
-		.quote.error { color: var(--vscode-errorForeground); }
-		button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; padding: 4px 12px; cursor: pointer; font-size: 11px; opacity: 0.7; }
+		.alertsPage .addLayout { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+		.alertsPage .chartPane { flex: 1 1 360px; min-width: 0; padding: 16px; border-radius: 4px; background: var(--vscode-welcomePage-tileBackground, var(--vscode-editorWidget-background)); }
+		.alertsPage .chartHeader { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+		.alertsPage .chartHeader .chartTitle { font-weight: 600; }
+		.alertsPage .ranges { display: flex; gap: 4px; }
+		.alertsPage .ranges button { font: inherit; font-size: 11px; color: var(--vscode-foreground); background: none; border: 1px solid transparent; border-radius: 2px; padding: 1px 6px; cursor: pointer; }
+		.alertsPage .ranges button:hover { background: var(--vscode-toolbar-hoverBackground); }
+		.alertsPage input#symbol.series { width: 340px; }
+		.alertsPage .ranges button.chosen { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		.alertsPage #chart { display: block; width: 100%; height: 240px; }
+		.alertsPage #chart .series { fill: none; stroke: var(--vscode-textLink-foreground); stroke-width: 1.5; }
+		.alertsPage #chart .area { fill: var(--vscode-textLink-foreground); opacity: 0.08; }
+		.alertsPage #chart .grid { stroke: var(--vscode-widget-border); stroke-width: 1; }
+		.alertsPage #chart .previous { stroke: var(--vscode-descriptionForeground); stroke-dasharray: 2 3; }
+		.alertsPage #chart .threshold { stroke: var(--vscode-editorInfo-foreground); stroke-width: 1.5; stroke-dasharray: 6 4; }
+		.alertsPage #chart .threshold.warning { stroke: var(--vscode-editorWarning-foreground); }
+		.alertsPage #chart .threshold.error { stroke: var(--vscode-editorError-foreground); }
+		.alertsPage #chart .threshold.chosen { stroke-width: 2; stroke-dasharray: none; }
+		.alertsPage #chart .firedDot { fill: var(--vscode-editorInfo-foreground); stroke: var(--vscode-editor-background); stroke-width: 1.5; }
+		.alertsPage #chart .firedDot.warning { fill: var(--vscode-editorWarning-foreground); }
+		.alertsPage #chart .firedDot.error { fill: var(--vscode-editorError-foreground); }
+		.alertsPage #chart text.firedLabel { fill: var(--vscode-foreground); }
+		.alertsPage #chart text { font-size: 10px; fill: var(--vscode-descriptionForeground); }
+		.alertsPage #chart text.thresholdLabel { fill: var(--vscode-foreground); }
+		.alertsPage #chart .cursor { stroke: var(--vscode-descriptionForeground); stroke-width: 1; }
+		.alertsPage #chart .dot { fill: var(--vscode-textLink-foreground); }
+		.alertsPage #chart .band { fill: none; stroke: var(--vscode-charts-orange); stroke-width: 1; stroke-dasharray: 4 3; }
+		.alertsPage #chart .wouldFire { fill: var(--vscode-charts-red); stroke: var(--vscode-editor-background); stroke-width: 1; }
+		.alertsPage .chartHeader .chartLabel { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; min-width: 0; }
+		.alertsPage .chartCaption { font-size: 11px; color: var(--vscode-descriptionForeground); }
+		.alertsPage .form label.field { color: var(--vscode-foreground); }
+		.alertsPage .form .hint { font-size: 12px; color: var(--vscode-descriptionForeground); margin-top: 4px; line-height: 1.4; }
+		.alertsPage .form .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+		.alertsPage input[type="text"], .alertsPage input[type="number"], .alertsPage select { font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; padding: 4px 6px; }
+		.alertsPage input[type="text"] { width: 200px; text-transform: uppercase; }
+		.alertsPage input[type="number"] { width: 160px; }
+		.alertsPage input:focus, .alertsPage select:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
+		.alertsPage .choice { display: inline-flex; align-items: center; gap: 4px; margin-right: 16px; cursor: pointer; }
+		.alertsPage .quote { font-size: 12px; color: var(--vscode-descriptionForeground); }
+		.alertsPage .quote.error { color: var(--vscode-errorForeground); }
+		.alertsPage button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; padding: 4px 12px; cursor: pointer; font-size: 11px; opacity: 0.7; }
 		/* As the code buttons below a panel's Example Code: dimmed until pointed at, the blue one not */
-		button.action:not(:disabled):hover, button.action.current, button.action.primary { opacity: 1; }
-		button.action:hover { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
-		button.primary { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
-		button.primary:hover { background: var(--vscode-button-hoverBackground); }
-		button:disabled, button:disabled:hover { opacity: 0.5; cursor: default; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); }
-		.added { grid-column: 1 / -1; font-size: 12px; color: var(--vscode-descriptionForeground); line-height: 1.4; }
-		.link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; font-size: 12px; }
-		.link:hover { text-decoration: underline; }
-		.list { border-top: 1px solid var(--vscode-widget-border); }
-		.entry { display: flex; align-items: center; gap: 12px; padding: 8px; border-bottom: 1px solid var(--vscode-widget-border); border-left: 3px solid var(--vscode-editorInfo-foreground); }
-		.entry.warning { border-left-color: var(--vscode-editorWarning-foreground); }
-		.entry.error { border-left-color: var(--vscode-editorError-foreground); }
-		.entry .text { flex: 1; min-width: 0; line-height: 1.4; }
-		.entry .name { font-weight: 600; }
-		.entry .meta { font-size: 11px; color: var(--vscode-descriptionForeground); }
-		.entry.paused .name, .entry.read .name { font-weight: normal; color: var(--vscode-descriptionForeground); }
-		.entry .actions { display: flex; gap: 12px; }
-		.headerActions { display: flex; gap: 12px; }
-		.empty { color: var(--vscode-descriptionForeground); padding: 12px 8px; }
-		.quoteInfo { flex: 0 1 340px; min-width: 0; padding: 16px; border-radius: 4px; background: var(--vscode-welcomePage-tileBackground, var(--vscode-editorWidget-background)); }
-		.quoteInfo .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-		.quoteInfo .name { font-size: 16px; font-weight: 600; margin-top: 16px; }
-		.quoteInfo .exchange { font-size: 12px; color: var(--vscode-descriptionForeground); }
-		.quoteInfo .price { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
-		.quoteInfo .value { font-size: 28px; font-weight: 300; }
-		.quoteInfo .change.up { color: var(--vscode-charts-green); }
-		.quoteInfo .change.down { color: var(--vscode-charts-red); }
-		.quoteInfo .asOf { font-size: 11px; color: var(--vscode-descriptionForeground); margin-top: 2px; }
-		.stats { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 16px 0; font-size: 12px; }
-		.stats .label { color: var(--vscode-descriptionForeground); }
-		.quoteActions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-		.list > .addLayout { padding: 12px 0 12px 11px; border-bottom: 1px solid var(--vscode-widget-border); }
-		.list > .addLayout .quoteInfo .name { margin-top: 0; }
-		.entry.expanded { background: var(--vscode-list-inactiveSelectionBackground); }
-		.sourceRow { margin-bottom: 12px; }
-		.sourceRow .field { margin-right: 16px; }
-		.sourceRow .scope { display: inline-flex; align-items: center; margin-left: 16px; padding-left: 16px; border-left: 1px solid var(--vscode-widget-border, transparent); }
-		input#forms { width: 260px; }
-		.items { max-height: 156px; max-width: 360px; overflow-y: auto; padding: 4px 8px; border: 1px solid var(--vscode-widget-border); border-radius: 2px; }
-		.items label { display: block; padding: 1px 0; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-		.filing { display: grid; grid-template-columns: max-content 80px minmax(0, 1fr); gap: 12px; padding: 4px 0; border-bottom: 1px solid var(--vscode-widget-border); font-size: 12px; color: var(--vscode-descriptionForeground); }
-		.filing.match { font-weight: 600; color: var(--vscode-foreground); }
-		.filing .link { text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-	</style>
-</head>
-<body>
-<div class="container">
-	<div class="title-row">
-		<h1>${kind === 'add' ? text.addTitle : kind === 'quote' ? text.quoteTitle : text.title}</h1>
-		${voiceButtonsHtml}
-	</div>
-	<p class="subtitle" id="subtitle">${kind === 'add' ? text.addIntro : kind === 'quote' ? text.quoteIntro : text.intro}</p>
+		.alertsPage button.action:not(:disabled):hover, .alertsPage button.action.current, .alertsPage button.action.primary { opacity: 1; }
+		.alertsPage button.action:hover { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		.alertsPage button.primary { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		.alertsPage button.primary:hover { background: var(--vscode-button-hoverBackground); }
+		.alertsPage button:disabled, .alertsPage button:disabled:hover { opacity: 0.5; cursor: default; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); }
+		.alertsPage .added { grid-column: 1 / -1; font-size: 12px; color: var(--vscode-descriptionForeground); line-height: 1.4; }
+		.alertsPage .link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; font-size: 12px; }
+		.alertsPage .link:hover { text-decoration: underline; }
+		.alertsPage .list { border-top: 1px solid var(--vscode-widget-border); }
+		.alertsPage .entry { display: flex; align-items: center; gap: 12px; padding: 8px; border-bottom: 1px solid var(--vscode-widget-border); border-left: 3px solid var(--vscode-editorInfo-foreground); }
+		.alertsPage .entry.warning { border-left-color: var(--vscode-editorWarning-foreground); }
+		.alertsPage .entry.error { border-left-color: var(--vscode-editorError-foreground); }
+		.alertsPage .entry .text { flex: 1; min-width: 0; line-height: 1.4; }
+		.alertsPage .entry .name { font-weight: 600; }
+		.alertsPage .entry .meta { font-size: 11px; color: var(--vscode-descriptionForeground); }
+		.alertsPage .entry.paused .name, .alertsPage .entry.read .name { font-weight: normal; color: var(--vscode-descriptionForeground); }
+		.alertsPage .entry .actions { display: flex; gap: 12px; }
+		.alertsPage .headerActions { display: flex; gap: 12px; }
+		.alertsPage .empty { color: var(--vscode-descriptionForeground); padding: 12px 8px; }
+		.alertsPage .quoteInfo { flex: 0 1 340px; min-width: 0; padding: 16px; border-radius: 4px; background: var(--vscode-welcomePage-tileBackground, var(--vscode-editorWidget-background)); }
+		.alertsPage .quoteInfo .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+		.alertsPage .quoteInfo .name { font-size: 16px; font-weight: 600; margin-top: 16px; }
+		.alertsPage .quoteInfo .exchange { font-size: 12px; color: var(--vscode-descriptionForeground); }
+		.alertsPage .quoteInfo .price { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+		.alertsPage .quoteInfo .value { font-size: 28px; font-weight: 300; }
+		.alertsPage .quoteInfo .change.up { color: var(--vscode-charts-green); }
+		.alertsPage .quoteInfo .change.down { color: var(--vscode-charts-red); }
+		.alertsPage .quoteInfo .asOf { font-size: 11px; color: var(--vscode-descriptionForeground); margin-top: 2px; }
+		.alertsPage .stats { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 16px 0; font-size: 12px; }
+		.alertsPage .stats .label { color: var(--vscode-descriptionForeground); }
+		.alertsPage .quoteActions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+		.alertsPage .list > .addLayout { padding: 12px 0 12px 11px; border-bottom: 1px solid var(--vscode-widget-border); }
+		.alertsPage .list > .addLayout .quoteInfo .name { margin-top: 0; }
+		.alertsPage .entry.expanded { background: var(--vscode-list-inactiveSelectionBackground); }
+		.alertsPage .sourceRow { margin-bottom: 12px; }
+		.alertsPage .sourceRow .field { margin-right: 16px; }
+		.alertsPage .sourceRow .scope { display: inline-flex; align-items: center; margin-left: 16px; padding-left: 16px; border-left: 1px solid var(--vscode-widget-border, transparent); }
+		.alertsPage input#forms { width: 260px; }
+		.alertsPage .items { max-height: 156px; max-width: 360px; overflow-y: auto; padding: 4px 8px; border: 1px solid var(--vscode-widget-border); border-radius: 2px; }
+		.alertsPage .items label { display: block; padding: 1px 0; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+		.alertsPage .filing { display: grid; grid-template-columns: max-content 80px minmax(0, 1fr); gap: 12px; padding: 4px 0; border-bottom: 1px solid var(--vscode-widget-border); font-size: 12px; color: var(--vscode-descriptionForeground); }
+		.alertsPage .filing.match { font-weight: 600; color: var(--vscode-foreground); }
+		.alertsPage .filing .link { text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+`,
+		bodyHtml: `
+	<div class="alertsPage">
 
 	<div class="addLayout" id="layout"${kind === 'alerts' ? ' hidden' : ''}>
 	<div class="quoteInfo"${kind === 'add' ? ' hidden' : ''}>
@@ -979,10 +985,9 @@ function pageHtml(kind: PageKind): string {
 	<div class="sectionHeader" id="firedSection"><h2>${text.fired}</h2><span class="headerActions"><button class="link" id="markAllRead" hidden>${text.markAllRead}</button><button class="link" id="clearFired" title="${text.clearFiredHint}" hidden>${text.clearFired}</button></span></div>
 	<div class="list" id="fired"></div>
 	</div>
-</div>
-<script>
-	const vscode = acquireVsCodeApi();
-	${voiceButtonsScript}
+	</div>
+`,
+		pageScriptJs: `
 	const TEXT = ${JSON.stringify(text)};
 	const KIND = ${JSON.stringify(kind)};
 	const symbolElement = document.getElementById(KIND === 'add' ? 'symbol' : 'quoteSymbol');
@@ -1183,7 +1188,7 @@ function pageHtml(kind: PageKind): string {
 			const row = element('div', 'filing' + (matchesFiling(filing, forms, items) ? ' match' : ''));
 			const open = element('button', 'link', itemNames(filing.items) || filing.description || filing.form);
 			open.title = filing.url;
-			open.addEventListener('click', () => vscode.postMessage({ command: 'openUrl', url: filing.url }));
+			open.addEventListener('click', () => vscode.postMessage({ command: 'openLink', url: filing.url }));
 			row.append(element('span', '', filing.filed), element('span', '', filing.form), open);
 			list.appendChild(row);
 		}
@@ -1200,7 +1205,7 @@ function pageHtml(kind: PageKind): string {
 			const row = element('div', 'filing match');
 			const open = element('button', 'link', filing.name + ': ' + (itemNames(filing.items) || filing.description || filing.form));
 			open.title = filing.url;
-			open.addEventListener('click', () => vscode.postMessage({ command: 'openUrl', url: filing.url }));
+			open.addEventListener('click', () => vscode.postMessage({ command: 'openLink', url: filing.url }));
 			row.append(element('span', '', filing.filed), element('span', '', filing.form), open);
 			list.appendChild(row);
 		}
@@ -1257,7 +1262,7 @@ function pageHtml(kind: PageKind): string {
 		backtest.request = request;
 		backtestTimer = setTimeout(() => vscode.postMessage(request), 400);
 	}
-	document.getElementById('openNotebook').addEventListener('click', () => backtest && quote && vscode.postMessage({ ...backtest.request, command: 'openNotebook', name: quote.name }));
+	document.getElementById('openNotebook').addEventListener('click', () => backtest && quote && vscode.postMessage({ ...backtest.request, command: 'openBacktestNotebook', name: quote.name }));
 	// The value starts at the current price, or at 2 per cent for Moves By, or at the latest change for Changes By
 	function fillThreshold() {
 		if (statistical()) {
@@ -1522,7 +1527,7 @@ function pageHtml(kind: PageKind): string {
 		document.querySelector('input[name="economic"][value="' + value + '"]').checked = true;
 		setScope('company');
 	}
-	document.getElementById('sicCodes').addEventListener('click', () => vscode.postMessage({ command: 'openUrl', url: 'https://www.sec.gov/search-filings/standard-industrial-classification-sic-code-list' }));
+	document.getElementById('sicCodes').addEventListener('click', () => vscode.postMessage({ command: 'openLink', url: 'https://www.sec.gov/search-filings/standard-industrial-classification-sic-code-list' }));
 	// A change to what is searched for clears what Search found
 	function clearSearched() {
 		if (searched) {
@@ -1688,7 +1693,7 @@ function pageHtml(kind: PageKind): string {
 
 	function render() {
 		if (layoutElement.parentElement && layoutElement.parentElement.classList.contains('list')) {
-			document.querySelector('.container').appendChild(layoutElement);
+			document.querySelector('.alertsPage').appendChild(layoutElement);
 		}
 		const alertsElement = document.getElementById('alerts');
 		alertsElement.replaceChildren();
@@ -1706,7 +1711,7 @@ function pageHtml(kind: PageKind): string {
 			// A quote opens under the alert; filings, at the SEC; a series, at its source
 			const open = element('button', 'link', alert.filings ? TEXT.edgar : alert.economic || alert.symbol);
 			open.title = alert.filings ? TEXT.openEdgarHint : alert.economic ? TEXT.openSeriesHint : TEXT.openQuote;
-			open.addEventListener('click', () => alert.filings || alert.economic ? vscode.postMessage({ command: 'openUrl', url: alert.url }) : toggle({ id: alert.id, symbol: alert.symbol }));
+			open.addEventListener('click', () => alert.filings || alert.economic ? vscode.postMessage({ command: 'openLink', url: alert.url }) : toggle({ id: alert.id, symbol: alert.symbol }));
 			const pause = element('button', 'link', alert.paused ? TEXT.resume : TEXT.pause);
 			pause.addEventListener('click', () => vscode.postMessage({ command: 'pause', id: alert.id, paused: !alert.paused }));
 			const remove = element('button', 'link', TEXT.remove);
@@ -1752,7 +1757,7 @@ function pageHtml(kind: PageKind): string {
 					vscode.postMessage({ command: 'markRead', ids: [fired.id] });
 				}
 				if (fired.filingUrl || fired.economic) {
-					vscode.postMessage({ command: 'openUrl', url: fired.filingUrl || fired.seriesUrl });
+					vscode.postMessage({ command: 'openLink', url: fired.filingUrl || fired.seriesUrl });
 					return;
 				}
 				toggle({ id: fired.id, symbol: fired.symbol, alertId: fired.alertId, fired });
@@ -1953,9 +1958,8 @@ function pageHtml(kind: PageKind): string {
 	});
 	updateForm();
 	vscode.postMessage({ command: 'ready' });
-</script>
-</body>
-</html>`;
+`,
+	});
 }
 
 registerAction2(class extends Action2 {
