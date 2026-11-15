@@ -1195,30 +1195,41 @@
 	align-items: baseline;
 }
 
-/* Pollis: in the caption, All Feeds / All Alerts with a blue gear beside it */
+/* Pollis: in the caption, a blue gear (Manage Feeds / Manage Alerts) and a blue plus (Add Feed / Add Alert) */
 .monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-section-links {
 	display: flex;
 	align-items: center;
-	gap: 4px;
+	gap: 2px;
+	/* The gear's icon starts 16px in, where the caption's text did: its 16px icon is centred in a 24px button */
+	margin-left: -4px;
 }
 
-.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-section-links .button-link {
-	padding: 0;
-}
-
-.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-section-links .pollis-monitor-settings {
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-section-links .pollis-monitor-action {
 	width: 24px;
 	height: 24px;
 	color: var(--vscode-textLink-foreground);
 }
 
-.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-section-links .pollis-monitor-settings:hover {
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-section-links .pollis-monitor-action:hover {
 	color: var(--vscode-textLink-activeForeground);
 }
 
-/* The workbench colours every codicon itself, so the gear takes the button's blue explicitly */
-.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-section-links .pollis-monitor-settings .codicon {
+/* The workbench colours every codicon itself, so the icons take the button's blue explicitly */
+.monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-section-links .pollis-monitor-action .codicon {
 	color: inherit;
+}
+
+/* Pollis: Expand on the Alerts and RSS box: it takes the width of both columns, the other sections hidden */
+.monaco-workbench .part.editor > .content .gettingStartedContainer.pollis-monitor-expanded:not(.width-constrained) .gettingStartedSlideCategories > .gettingStartedCategoriesContainer {
+	grid-template-areas:
+		".  header header header ."
+		". left-column left-column left-column ."
+		". footer footer footer .";
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer.pollis-monitor-expanded .gettingStartedSlideCategories > .gettingStartedCategoriesContainer > .categories-column-right,
+.monaco-workbench .part.editor > .content .gettingStartedContainer.pollis-monitor-expanded .categories-column-left > .announcements-section:not(.pollis-monitor-section) {
+	display: none;
 }
 
 /* Pollis: the Alerts and RSS tabs, in the section heading, with a switch between them; the one chosen in the foreground colour */

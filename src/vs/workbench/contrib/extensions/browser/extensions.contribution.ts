@@ -129,9 +129,15 @@ export const VIEW_CONTAINER = Registry.as<IViewContainersRegistry>(ViewContainer
 		alwaysUseContainerInfo: true,
 	}, ViewContainerLocation.Sidebar);
 
-// Pollis builds LaTeX with PollisTeX, so LaTeX Workshop (a recommended extension) does not build on every change
+// Pollis builds LaTeX with PollisTeX, so LaTeX Workshop (a recommended extension) does not build on every change; and
+// PDFs open in Pollis's PDF Viewer, though LaTeX Workshop also offers itself as the default editor of .pdf files
 Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration)
-	.registerDefaultConfigurations([{ overrides: { 'latex-workshop.latex.autoBuild.run': 'never' } }]);
+	.registerDefaultConfigurations([{
+		overrides: {
+			'latex-workshop.latex.autoBuild.run': 'never',
+			'workbench.editorAssociations': { '*.pdf': 'pollis.pdfViewer' },
+		}
+	}]);
 
 Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration)
 	.registerConfiguration({

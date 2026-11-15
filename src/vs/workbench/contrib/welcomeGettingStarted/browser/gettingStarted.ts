@@ -1097,14 +1097,19 @@ export class GettingStartedPage extends EditorPane {
 		const rssTab = $('button.pollis-tab', {});
 		// A switch between the two tabs, its knob on the side of the one shown
 		const tabSwitch = $('button.pollis-tab-switch', {});
-		const allLink = $('button.button-link', {});
-		// A gear beside All Feeds / All Alerts: Add Feed or Add Alert
-		const settingsButton = $('button.pollis-discover-arrow.pollis-monitor-settings', {}, $('span.codicon.codicon-gear'));
-		const settingsHover = this.categoriesSlideDisposables.add(this.hoverService.setupManagedHover(getDefaultHoverDelegate('element'), settingsButton, ''));
-		// One line, like the Discover Pollis footer: All Feeds / All Alerts and the gear on the left, what is shown and the arrows on the right
-		const monitorCaption = $('.pollis-monitor-caption', {}, $('.pollis-section-links', {}, allLink, settingsButton), $('.pollis-monitor-status', {}, captionText, scrollArrows));
+		// A gear, Manage Feeds / Manage Alerts, which opens the RSS Feeds or Alerts page, and a plus, Add Feed / Add Alert
+		const manageButton = $('button.pollis-discover-arrow.pollis-monitor-action', {}, $('span.codicon.codicon-gear'));
+		const manageHover = this.categoriesSlideDisposables.add(this.hoverService.setupManagedHover(getDefaultHoverDelegate('element'), manageButton, ''));
+		const addButton = $('button.pollis-discover-arrow.pollis-monitor-action', {}, $('span.codicon.codicon-add'));
+		const addHover = this.categoriesSlideDisposables.add(this.hoverService.setupManagedHover(getDefaultHoverDelegate('element'), addButton, ''));
+		// Expand: the box fills the welcome page, in place of the other sections, until Restore or Escape
+		const expandIcon = $('span.codicon.codicon-screen-full');
+		const expandButton = $<HTMLButtonElement>('button.pollis-discover-arrow', {}, expandIcon);
+		const expandHover = this.categoriesSlideDisposables.add(this.hoverService.setupManagedHover(getDefaultHoverDelegate('element'), expandButton, ''));
+		// One line, like the Discover Pollis footer: the gear and the plus on the left; what is shown, the arrows and Expand on the right
+		const monitorCaption = $('.pollis-monitor-caption', {}, $('.pollis-section-links', {}, manageButton, addButton), $('.pollis-monitor-status', {}, captionText, scrollArrows, expandButton));
 		const monitorCard = $('.pollis-monitor-card', {}, feedsScrollbar.getDomNode(), monitorCaption);
-		const feedsSection = $('.announcements-section', {},
+		const feedsSection = $('.announcements-section.pollis-monitor-section', {},
 			$('.pollis-section-heading', {},
 				$('h2.section-header.pollis-tabs', {}, alertsTab, tabSwitch, rssTab),
 			),
@@ -1172,7 +1177,8 @@ export class GettingStartedPage extends EditorPane {
 				const box = monitorCard.getBoundingClientRect();
 				const discover = discoverCard?.getBoundingClientRect();
 				const beside = !!discover && discover.left >= box.right;
-				const height = !discover ? 0 : beside ? discover.bottom - box.top : discover.height;
+				// Expanded, the box ends 32px above the bottom of the welcome page
+				const height = expanded ? this.container.getBoundingClientRect().bottom - box.top - 32 : !discover ? 0 : beside ? discover.bottom - box.top : discover.height;
 				// Beside the card, the box ends with it unless that leaves less than a caption and an item
 				const cardHeight = Math.max(height, beside ? 100 : 200);
 				monitorCard.style.height = `${cardHeight}px`;
@@ -1182,6 +1188,38 @@ export class GettingStartedPage extends EditorPane {
 				this.categoriesPageScrollbar?.scanDomNode();
 			});
 		};
+		let expanded = false;
+		const setExpanded = (expand: boolean) => {
+			expanded = expand;
+			this.container.classList.toggle('pollis-monitor-expanded', expand);
+			expandIcon.className = `codicon codicon-${expand ? 'screen-normal' : 'screen-full'}`;
+			const label = expand ? localize('pollis.restoreList', "Restore Size") : localize('pollis.expandList', "Expand");
+			expandButton.setAttribute('aria-label', label);
+			expandHover.update(label);
+			if (expand) {
+				this.categoriesPageScrollbar?.setScrollPosition({ scrollTop: 0 });
+			}
+			feedItems.scrollTop = 0;
+			layoutFeeds();
+		};
+		setExpanded(false);
+		this.categoriesSlideDisposables.add(addDisposableListener(expandButton, 'click', () => setExpanded(!expanded)));
+		this.categoriesSlideDisposables.add(addDisposableListener(this.container, 'keydown', e => {
+			if (expanded && e.key === 'Escape') {
+				setExpanded(false);
+			}
+		}));
+		// The expanded box follows the height of the editor
+		const containerObserver = new ResizeObserver(() => {
+			if (expanded) {
+				layoutFeeds();
+			}
+		});
+		containerObserver.observe(this.container);
+		this.categoriesSlideDisposables.add(toDisposable(() => {
+			containerObserver.disconnect();
+			this.container.classList.remove('pollis-monitor-expanded');
+		}));
 		const renderAlerts = this.renderAnnouncements = () => {
 			const juliaVersion = this.contextService.getContextKeyValue<string>(JULIA_REPL_VERSION_KEY);
 			const dismissed = this.getDismissedAnnouncements();
@@ -1214,12 +1252,14 @@ export class GettingStartedPage extends EditorPane {
 			alertsTab.classList.toggle('active', tab === 'alerts');
 			rssTab.classList.toggle('active', tab === 'rss');
 			rssTab.classList.toggle('single', !hasAlerts);
-			allLink.textContent = tab === 'alerts' ? localize('pollis.allAlerts', "All Alerts") : localize('pollis.allFeedItems', "All Feeds");
-			allLink.setAttribute('x-dispatch', tab === 'alerts' ? 'showAlerts' : 'showRssFeeds');
-			const settingsLabel = tab === 'alerts' ? localize('pollis.addAlert', "Add Alert") : localize('pollis.addFeed', "Add Feed");
-			settingsButton.setAttribute('x-dispatch', tab === 'alerts' ? 'addAlert' : 'addFeed');
-			settingsButton.setAttribute('aria-label', settingsLabel);
-			settingsHover.update(settingsLabel);
+			const manageLabel = tab === 'alerts' ? localize('pollis.manageAlerts', "Manage Alerts") : localize('pollis.manageFeeds', "Manage Feeds");
+			manageButton.setAttribute('x-dispatch', tab === 'alerts' ? 'showAlerts' : 'showRssFeeds');
+			manageButton.setAttribute('aria-label', manageLabel);
+			manageHover.update(manageLabel);
+			const addLabel = tab === 'alerts' ? localize('pollis.addAlert', "Add Alert") : localize('pollis.addFeed', "Add Feed");
+			addButton.setAttribute('x-dispatch', tab === 'alerts' ? 'addAlert' : 'addFeed');
+			addButton.setAttribute('aria-label', addLabel);
+			addHover.update(addLabel);
 			// With no new alerts, the alerts Pollis is watching, each with its latest value
 			const watched = this.alertsService.getAlerts().filter(alert => !alert.paused);
 			const unreadAlerts = this.alertsService.getFired().filter(fired => !this.alertsService.isRead(fired.id)).length;
@@ -1244,6 +1284,9 @@ export class GettingStartedPage extends EditorPane {
 							: localize('pollis.unreadItems', "{0} unread items", unreadItems.toLocaleString());
 			}
 			feedsSection.style.display = hasAlerts || newest.length ? '' : 'none';
+			if (expanded && !hasAlerts && !newest.length) {
+				setExpanded(false);
+			}
 			layoutFeeds();
 			this.registerDispatchListeners();
 		};
