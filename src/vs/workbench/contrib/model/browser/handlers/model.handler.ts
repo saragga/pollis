@@ -27,6 +27,7 @@ import { IWebviewService } from '../../../webview/browser/webview.js';
 import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
 import { IReference, NoPollisWorkspaceError, ReferenceLibrary, referenceBibTeX, referenceOfBibTeX, referencePaper, referencesFolderOf } from '../common/referenceLibrary.js';
 import { normaliseBibText, parseBibTeX } from '../common/referenceImport.js';
+import { RUN_IN_DUCKDB_TERMINAL_COMMAND_ID } from '../../../databases/common/duckdbSql.js';
 
 /**
  * Auto-selects the Julia kernel for a notebook so the user does not have to pick from the kernel
@@ -1376,4 +1377,38 @@ export async function openReferenceList(
 
 	const actionPick = await quickInputService.pick(actions, { placeHolder: paper.title });
 	await actionPick?.action();
+}
+
+/** A message of a query of the Next Steps (the action group `sql`, or `sqlSteps` of a page): colour it, or run it. */
+type SqlStepMessage =
+	| { readonly command: 'colorize'; readonly language: 'sql'; readonly code: string; readonly target?: string }
+	| { readonly command: 'runCode'; readonly language: 'sql'; readonly target: 'duckdbRepl' | 'newFile'; readonly code: string };
+
+/**
+ * The queries of a page's Next Steps, in every style of the scaffold: colours a query as SQL, by the editor's
+ * tokenizer in the theme's colours, runs it in the duckdb> terminal, where Pollis's databases are attached by their
+ * names, or opens it in an untitled SQL file. Messages without `language: 'sql'` are left to the page's handler.
+ */
+export function createSqlStepsWiring(
+	webview: { postMessage(message: unknown): void; readonly onMessage: Event<{ readonly message: SqlStepMessage }> },
+	disposables: DisposableStore,
+	commandService: ICommandService,
+	editorService: IEditorService,
+): void {
+	disposables.add(webview.onMessage(async e => {
+		const msg = e.message;
+		if (msg?.language !== 'sql' || typeof msg.code !== 'string') {
+			return;
+		}
+		if (msg.command === 'colorize') {
+			const colorized = await commandService.executeCommand<{ readonly html: string; readonly css: string }>('_pollis.webview.colorizeCode', msg.code, 'sql');
+			if (colorized) {
+				webview.postMessage({ command: 'colorizedCode', html: colorized.html, css: colorized.css, target: msg.target ?? '' });
+			}
+		} else if (msg.command === 'runCode' && msg.target === 'duckdbRepl') {
+			await commandService.executeCommand(RUN_IN_DUCKDB_TERMINAL_COMMAND_ID, msg.code);
+		} else if (msg.command === 'runCode' && msg.target === 'newFile') {
+			await editorService.openEditor({ resource: undefined, contents: msg.code, languageId: 'sql' });
+		}
+	}));
 }

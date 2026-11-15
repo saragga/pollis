@@ -7,10 +7,8 @@ import { Codicon } from '../../../../base/common/codicons.js';
 import { fromNow } from '../../../../base/common/date.js';
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
 import { ThemeIcon } from '../../../../base/common/themables.js';
-import { ILanguageService } from '../../../../editor/common/languages/language.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
-import { IClipboardService } from '../../../../platform/clipboard/common/clipboardService.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { IDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
@@ -22,15 +20,13 @@ import { AlertCondition, AlertSeverity, ChartRange, describeCondition, describeF
 import { ECONOMIC_SOURCES, EconomicSource, seriesExample, seriesPage, SERIES_PAGES, sourceName } from './economicSeries.js';
 import { IEventStudiesService, SHOW_EVENT_STUDIES_COMMAND_ID } from './eventStudiesService.js';
 import { OPEN_LINK_COMMAND_ID } from './openLink.js';
-import { buildWebviewHtml } from '../../model/browser/webviews/webviewScaffold.js';
+import { buildWebviewHtml, IScaffoldSqlStep } from '../../model/browser/webviews/webviewScaffold.js';
 import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
 import { ALERTS_METADATA } from '../../model/browser/webviews/alerts.data.js';
-import { ISqlNextStep, registerSqlNextSteps, sqlNextStepsParts } from '../../model/browser/webviews/sqlNextSteps.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { INotificationService } from '../../../../platform/notification/common/notification.js';
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { IStorageService } from '../../../../platform/storage/common/storage.js';
-import { IThemeService } from '../../../../platform/theme/common/themeService.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
 import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
@@ -114,12 +110,12 @@ type PageKind = 'add' | 'alerts' | 'quote';
 type PagePlace = { readonly section: 'add'; readonly symbol?: string; readonly filings?: boolean; readonly economic?: EconomicSource } | { readonly section: 'fired' } | { readonly section: 'alerts'; readonly alertId?: string } | { readonly section: 'quote'; readonly symbol?: string };
 
 /** The Next Steps of the three pages: queries of the alerts and of those that fired, in the duckdb> terminal. */
-function nextSteps(): ISqlNextStep[] {
+function nextSteps(): IScaffoldSqlStep[] {
 	return [
 		{
 			id: 'firedByMonth',
 			label: localize('alerts.firedByMonth', "Fired Alerts by Month"),
-			description: localize('alerts.firedByMonthDescription', "How many times the alerts on each symbol, company or series fired in each month, newest first, from the fired alerts still listed: those dismissed or cleared are left out."),
+			desc: localize('alerts.firedByMonthDescription', "How many times the alerts on each symbol, company or series fired in each month, newest first, from the fired alerts still listed: those dismissed or cleared are left out."),
 			sql: `-- The fired alerts still listed, as Pollis keeps them in ~/.pollis/alerts/history.jsonl
 SELECT symbol, any_value(name) AS name, strftime(epoch_ms(time), '%Y-%m') AS month, count(*) AS fired
 FROM read_json('~/.pollis/alerts/history.jsonl', format = 'newline_delimited', columns = {
@@ -131,7 +127,7 @@ ORDER BY month DESC, fired DESC`,
 		{
 			id: 'yourAlerts',
 			label: localize('alerts.yourAlertsTable', "Your Alerts as a Table"),
-			description: localize('alerts.yourAlertsTableDescription', "Every alert of Your Alerts, a row each, with its symbol, company or series, its condition and value, how it shows and whether it fires every time, as Pollis keeps them in alerts.json."),
+			desc: localize('alerts.yourAlertsTableDescription', "Every alert of Your Alerts, a row each, with its symbol, company or series, its condition and value, how it shows and whether it fires every time, as Pollis keeps them in alerts.json."),
 			sql: `-- Your alerts, as Pollis keeps them in ~/.pollis/alerts/alerts.json
 SELECT unnest(alerts, recursive := true)
 FROM read_json('~/.pollis/alerts/alerts.json')`,
@@ -157,9 +153,6 @@ function openAlertsPage(accessor: ServicesAccessor, place: PagePlace): void {
 	const fileService = accessor.get(IFileService);
 	const pathService = accessor.get(IPathService);
 	const storageService = accessor.get(IStorageService);
-	const languageService = accessor.get(ILanguageService);
-	const themeService = accessor.get(IThemeService);
-	const clipboardService = accessor.get(IClipboardService);
 
 	const kind: PageKind = place.section === 'add' ? 'add' : place.section === 'quote' ? 'quote' : 'alerts';
 	const openPage = openPages.get(kind);
@@ -186,7 +179,6 @@ function openAlertsPage(accessor: ServicesAccessor, place: PagePlace): void {
 	const disposables = new DisposableStore();
 	// The three pages share Powered by and Learn More
 	disposables.add(registerScaffoldPageHandlers(webviewInput, 'alerts', title, ALERTS_METADATA.alerts, openerService, editorService, commandService, notificationService, notebookEditorModelResolverService, notebookKernelService, fileService, pathService, storageService));
-	disposables.add(registerSqlNextSteps(webviewInput.webview, nextSteps(), languageService, themeService, commandService, clipboardService, editorService));
 	disposables.add(webviewInput.webview.onDidDispose(() => {
 		openPages.delete(kind);
 		disposables.dispose();
@@ -771,7 +763,7 @@ function pageHtml(kind: PageKind): string {
 		title: kind === 'add' ? text.addTitle : kind === 'quote' ? text.quoteTitle : text.title,
 		omitPoweredBy: !ALERTS_METADATA.alerts.packages.length,
 		introHtml: `<span id="subtitle">${kind === 'add' ? text.addIntro : kind === 'quote' ? text.quoteIntro : text.intro}</span>`,
-		...sqlNextStepsParts(nextSteps()),
+		sqlSteps: nextSteps(),
 		extraCss: `
 		.container { max-width: 1100px; }
 		.alertsPage * { box-sizing: border-box; }

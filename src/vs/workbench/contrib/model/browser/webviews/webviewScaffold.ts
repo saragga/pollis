@@ -72,7 +72,7 @@ const NEXT_STEP_GROUP_CODICONS: Readonly<Record<string, string>> = {
 	frames: 'layers',
 	browse: 'library',
 	load: 'database',
-	/** The Next Steps that are queries of Pollis's databases, in the duckdb> terminal (sqlNextSteps.ts). */
+	/** Query in SQL, the queries of Pollis's databases in the duckdb> terminal (`sqlSteps`, or the TOML action group `sql`). */
 	sql: 'database',
 	download: 'cloud-download',
 	files: 'files',
@@ -106,6 +106,14 @@ export const openPageStepJs = `		function openPageStep(button, id, title, event)
 			rightPanel.style.display = 'block';
 			window.dispatchEvent(new Event(event));
 		}`;
+
+/** A query of the Next Steps group Query in SQL (`sqlSteps`): its id, label, what it shows, and its SQL. */
+export interface IScaffoldSqlStep {
+	readonly id: string;
+	readonly label: string;
+	readonly desc: string;
+	readonly sql: string;
+}
 
 /**
  * What a page of the scaffold has. It has one of three styles: Classical, with Example Code; Time Arrow, when `steps`
@@ -201,6 +209,13 @@ export interface WebviewParts {
 	 * call `showRightPanel(MY_ACTIONS, 'Label', 'btn-XXX')` on click.
 	 */
 	readonly nextStepsWiringJs?: string;
+	/**
+	 * Queries of Pollis's databases, in a group of their own at the end of Next Steps, Query in SQL, with the database
+	 * codicon: each opens its SQL in the panel on the right, with Copy, DuckDB REPL (runs it in the duckdb> terminal,
+	 * where the databases are attached by their names) and Send to Editor. Optional in every style; a Classical panel
+	 * declares them in its TOML as the action group `sql`.
+	 */
+	readonly sqlSteps?: readonly IScaffoldSqlStep[];
 	/** Extra JS appended at the end of the main script block (e.g. message handlers for custom panels). */
 	readonly extraJs?: string;
 }
@@ -446,6 +461,29 @@ function notWrittenNextStepsHtml(): string {
 	return `					<li><button class="list-btn panel-toggle" id="btn-diagnose">${nextStepIcon('diagnose')}${localize('scaffold.diagnose', "Diagnose")}</button></li>`;
 }
 
+/** The label of the Next Steps group of `sqlSteps`. */
+function sqlStepsLabel(): string {
+	return localize('scaffold.sqlSteps', "Query in SQL");
+}
+
+/** The item of the Next Steps group of `sqlSteps`, with the database codicon; none without queries. */
+function sqlStepsHtml(steps: readonly IScaffoldSqlStep[] | undefined): string {
+	return steps ? `
+					<li><button class="list-btn panel-toggle" id="btn-sql-steps">${nextStepIcon('sql')}${sqlStepsLabel()}</button></li>` : '';
+}
+
+/** The actions of `sqlSteps`, whose code is their SQL line by line, and the item that lists them in the right panel. */
+function sqlStepsJs(steps: readonly IScaffoldSqlStep[] | undefined): string {
+	return steps ? `
+		var SQL_STEP_ACTIONS = ${JSON.stringify(steps.map(step => ({ id: `sql-${step.id}`, label: step.label, desc: step.desc, language: 'sql', sql: step.sql })))}.map(function(a) {
+			a.code = function() { return a.sql.split('\\n').map(function(l) { return l ? line(esc(l)) : blank(); }).join(''); };
+			return a;
+		});
+		document.getElementById('btn-sql-steps').addEventListener('click', function() {
+			showRightPanel(SQL_STEP_ACTIONS, ${JSON.stringify(sqlStepsLabel())}, 'btn-sql-steps');
+		});` : '';
+}
+
 /** What the item of `notWrittenNextStepsHtml` does: the right panel says it is not written yet. */
 function notWrittenNextStepsJs(): string {
 	return `		document.getElementById('btn-diagnose').addEventListener('click', function() {
@@ -471,6 +509,8 @@ function notWrittenNextStepsJs(): string {
  */
 export function buildWebviewHtml(parts: WebviewParts): string {
 	const noExampleCode = parts.steps !== undefined || parts.bodyHtml !== undefined;
+	// Query in SQL takes the place of the item saying Next Steps are not written yet
+	const sqlSteps = parts.sqlSteps?.length ? parts.sqlSteps : undefined;
 	return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -717,11 +757,11 @@ ${parts.inputsHtml ? `\t\t<div class="scaffold-inputs" id="scaffold-inputs">\n${
 `}
 		<div class="bottom-layout">
 			<div class="left-strip">
-				${parts.omitNextSteps ? '' : nextStepsSectionHtml(parts.nextStepsHtml ?? (noExampleCode ? notWrittenNextStepsHtml() : `					<li><button class="list-btn panel-toggle" id="btn-viz">${nextStepIcon('visualise')}Visualise</button></li>
+				${parts.omitNextSteps ? '' : nextStepsSectionHtml((parts.nextStepsHtml ?? (noExampleCode ? (sqlSteps ? '' : notWrittenNextStepsHtml()) : `					<li><button class="list-btn panel-toggle" id="btn-viz">${nextStepIcon('visualise')}Visualise</button></li>
 					<li><button class="list-btn panel-toggle" id="btn-diagnose">${nextStepIcon('diagnose')}Diagnose</button></li>
 					<li><button class="list-btn panel-toggle" id="btn-predict">${nextStepIcon('predict')}Predict</button></li>
 					<li><button class="list-btn panel-toggle" id="btn-compare">${nextStepIcon('compare')}Compare</button></li>
-					<li><button class="list-btn panel-toggle" id="btn-interpret">${nextStepIcon('interpret')}Interpret</button></li>`), parts.steps ? parts.steps.length + 1 : undefined)}
+					<li><button class="list-btn panel-toggle" id="btn-interpret">${nextStepIcon('interpret')}Interpret</button></li>`)) + sqlStepsHtml(sqlSteps), parts.steps ? parts.steps.length + 1 : undefined)}
 				${learnMoreSectionHtml}
 				<div class="paper-links" id="paper-links"></div>
 			</div>
@@ -1320,6 +1360,8 @@ ${noExampleCode ? '' : `		document.getElementById('model-group').addEventListene
 		function renderRightCode(action, actions, title) {
 			panelAction = action;
 			panelNav = { actions: actions, title: title };
+			// A query (language sql) is not edited here, Send to Editor is for that, and runs in the duckdb> terminal
+			var sql = action.language === 'sql';
 			rightPanel.innerHTML =
 				'<div class="panel-header">'
 				+ '<button class="panel-back" id="btn-panel-back">&#x2190; ' + esc(title) + '</button>'
@@ -1335,17 +1377,20 @@ ${noExampleCode ? '' : `		document.getElementById('model-group').addEventListene
 				+ '</div>'
 				+ '<div class="code-btn-bar code-btn-bar-bottom code-btn-bar-split" id="panel-btn-bar">'
 				+ '<span class="code-btn-group">'
-				+ '<button class="code-action-btn" id="btn-panel-edit" title="Edit this example and keep your version">Edit</button>'
+				+ '<button class="code-action-btn" id="btn-panel-edit" title="Edit this example and keep your version"' + (sql ? ' hidden' : '') + '>Edit</button>'
 				+ '<button class="code-action-btn" id="btn-panel-restore" title="Move your version to the Trash and bring back the original example" hidden>Restore Default</button>'
 				+ '<button class="code-action-btn primary" id="btn-panel-save" hidden>Save</button>'
 				+ '<button class="code-action-btn" id="btn-panel-cancel" hidden>Cancel</button>'
 				+ '</span>'
 				+ '<span class="code-btn-group">'
 				+ '<button class="code-action-btn" data-act="copy">Copy</button>'
-				+ '<button class="code-action-btn" data-act="juliaRepl">Julia REPL</button>'
-				+ '<button class="code-action-btn" data-act="newFile">Send to Editor</button>'
-				+ '<button class="code-action-btn" data-act="notebook">Send to Notebook</button>'
-				+ '<button class="code-action-btn" data-act="pluto">Send to Pluto</button>'
+				+ (sql
+					? '<button class="code-action-btn" data-act="duckdbRepl" title="Run the query in the duckdb&gt; terminal, where Pollis&#39;s databases are attached by their names">DuckDB REPL</button>'
+					+ '<button class="code-action-btn" data-act="newFile" title="Open the query in a new SQL file, to change it before running it">Send to Editor</button>'
+					: '<button class="code-action-btn" data-act="juliaRepl">Julia REPL</button>'
+					+ '<button class="code-action-btn" data-act="newFile">Send to Editor</button>'
+					+ '<button class="code-action-btn" data-act="notebook">Send to Notebook</button>'
+					+ '<button class="code-action-btn" data-act="pluto">Send to Pluto</button>')
 				+ '</span>'
 				+ '</div>'
 				+ '</div>'
@@ -1363,7 +1408,7 @@ ${noExampleCode ? '' : `		document.getElementById('model-group').addEventListene
 			}
 			updatePanelCustomState();
 			// Re-render the panel box via the core tokenizer (the user's theme), like the main box.
-			vscode.postMessage({ command: 'colorize', code: currentPanelPlainCode, target: 'panel' });
+			vscode.postMessage({ command: 'colorize', code: currentPanelPlainCode, target: 'panel', language: sql ? 'sql' : undefined });
 			document.getElementById('btn-panel-back').addEventListener('click', function() { renderRightList(actions, title); });
 			document.getElementById('btn-panel-close').addEventListener('click', hideRightPanel);
 			wireCodeEdit(document.getElementById('panel-edit'));
@@ -1404,6 +1449,8 @@ ${noExampleCode ? '' : `		document.getElementById('model-group').addEventListene
 						b.textContent = 'Copied!';
 						setTimeout(function() { b.textContent = 'Copy'; }, 2000);
 					});
+				} else if (sql) {
+					vscode.postMessage({ command: 'runCode', target: act, code: code, language: 'sql' });
 				} else {
 					// The Code Example of the tab goes with it, since the step uses its results: the host
 					// puts it first unless the Julia REPL session has run it as it is now ('exampleFirst').
@@ -1480,7 +1527,7 @@ ${noExampleCode ? '' : `		document.getElementById('model-group').addEventListene
 		${parts.actionsJs ?? ''}
 
 		// ── Button wiring ────────────────────────────────────────────────────
-${parts.omitNextSteps ? '' : parts.nextStepsWiringJs ?? (noExampleCode ? notWrittenNextStepsJs() : `		document.getElementById('btn-viz').addEventListener('click', function() {
+${parts.omitNextSteps ? '' : (parts.nextStepsWiringJs ?? (noExampleCode ? (sqlSteps ? '' : notWrittenNextStepsJs()) : `		document.getElementById('btn-viz').addEventListener('click', function() {
 			showRightPanel(VISUALISE_ACTIONS, 'Visualise', 'btn-viz');
 		});
 		document.getElementById('btn-diagnose').addEventListener('click', function() {
@@ -1494,7 +1541,7 @@ ${parts.omitNextSteps ? '' : parts.nextStepsWiringJs ?? (noExampleCode ? notWrit
 		});
 		document.getElementById('btn-interpret').addEventListener('click', function() {
 			showRightPanel(INTERPRET_ACTIONS, 'Interpret', 'btn-interpret');
-		});`)}
+		});`)) + sqlStepsJs(sqlSteps)}
 
 		${learnMoreWiringJs}
 

@@ -27,7 +27,7 @@ import { generateTokensCSSForColorMap } from '../../../../../editor/common/langu
 import { Event } from '../../../../../base/common/event.js';
 import { IUntitledTextResourceEditorInput } from '../../../../common/editor.js';
 import { CellEditType, CellKind } from '../../../notebook/common/notebookCommon.js';
-import { openWikiByFile, openNotebookByFile, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createCustomCopyWiring, createReferenceWiring, createVideoWiring, createApiKeyWiring, IApiKeyProvider, sendToJuliaRepl, withExampleFirst } from './model.handler.js';
+import { openWikiByFile, openNotebookByFile, openInBrowser, autoSelectJuliaKernel, createPackageStatusWiring, createExampleCodeWiring, createCustomCopyWiring, createSqlStepsWiring, createReferenceWiring, createVideoWiring, createApiKeyWiring, IApiKeyProvider, sendToJuliaRepl, withExampleFirst } from './model.handler.js';
 import { hasKey } from '../../../../../base/common/types.js';
 import { ADD_ALERT_COMMAND_ID } from '../../../monitor/browser/alertsPage.js';
 import { localize } from '../../../../../nls.js';
@@ -50,8 +50,8 @@ type ScaffoldWebviewMessage =
 	| { command: 'openNotebook'; target: string }
 	| { command: 'openWiki'; target: string }
 	| { command: 'openUrl'; url: string }
-	| { command: 'runCode'; target: 'newFile' | 'juliaRepl' | 'notebook' | 'pluto'; code: string; setup?: string }
-	| { command: 'colorize'; code: string; target?: string }
+	| { command: 'runCode'; target: 'newFile' | 'juliaRepl' | 'notebook' | 'pluto' | 'duckdbRepl'; code: string; setup?: string; language?: 'sql' }
+	| { command: 'colorize'; code: string; target?: string; language?: 'sql' }
 	| { command: 'installPackages' }
 	| { command: 'addAlert'; symbol: string; kind: 'quote' | 'filings' | 'fred' | 'ecb' | 'imf' | 'worldBank' }
 	| { command: 'chooseModelFile'; input: string; kind: 'chat' | 'embedding'; value: string }
@@ -133,6 +133,7 @@ export function registerScaffoldWebviewHandlers(
 	const pkgStatus = createPackageStatusWiring(webviewInput.webview, disposables, data.packages, data.requires ?? [], fileService, pathService, commandService, workspaceContextService);
 	createExampleCodeWiring(webviewInput.webview, disposables, panelId, fileService, pathService, notificationService);
 	createCustomCopyWiring(webviewInput.webview, disposables, data.wikis, data.notebooks, fileService, pathService, editorService, commandService, notificationService);
+	createSqlStepsWiring(webviewInput.webview, disposables, commandService, editorService);
 	createReferenceWiring(webviewInput.webview, disposables, panelId, data.references, fileService, pathService, commandService, notificationService);
 	createVideoWiring(webviewInput.webview, disposables, panelId, data.packages, fileService, pathService, commandService, notificationService);
 	// The folder inputs' defaults in the open Pollis Workspace, as programs/executables; without one, the TOML's default
@@ -174,6 +175,10 @@ export function registerScaffoldWebviewHandlers(
 				await openWikiByFile(msg.target, data.wikis, openerService, editorService, commandService);
 				break;
 			case 'runCode': {
+				// A query of the action group sql: createSqlStepsWiring runs it
+				if (msg.language === 'sql') {
+					break;
+				}
 				const code = pkgStatus.withPackageCheck(await withExampleFirst(msg, webviewInput.webview, commandService), msg.target);
 				if (msg.target === 'newFile') {
 					const input: IUntitledTextResourceEditorInput = {
@@ -211,7 +216,12 @@ export function registerScaffoldWebviewHandlers(
 				break;
 			}
 			case 'colorize':
-				if (msg.code) { await postColorized(msg.code, msg.target || ''); }
+				if (msg.language === 'sql') {
+					// A query, which createSqlStepsWiring colours: a change of theme must not colour the box again as Julia
+					delete lastCode[msg.target || ''];
+				} else if (msg.code) {
+					await postColorized(msg.code, msg.target || '');
+				}
 				break;
 			case 'openUrl':
 				if (msg.url) { await openInBrowser(msg.url, commandService); }

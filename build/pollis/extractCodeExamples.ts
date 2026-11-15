@@ -27,6 +27,8 @@ const OUT_DIR = path.join(ROOT, '.build', 'code-examples');
 /** The toolbox sources: a clone of Trumpingtons/pollis-toolboxes, ignored by Pollis' git. */
 const TOOLBOXES_DIR = path.join(ROOT, 'toolboxes');
 
+/** The action group of SQL queries (Query in SQL), which run in the duckdb> terminal, not in Julia. */
+const SQL_GROUP = 'sql';
 /** Expected totals, from the Pollis Polish Roadmap (task 3.1). */
 const EXPECTED = { panels: 209, branches: 683, actions: 2063 };
 
@@ -388,7 +390,8 @@ function checkInputs(panel: string, data: PanelToml, models: ModelToggle[], anom
 function checkCodeText(panel: string, data: PanelToml, anomalies: Anomaly[]): void {
 	const sources: { where: string; code: string }[] = [
 		...(data.codeBranches ?? []).map(b => ({ where: `codeBranch \`${b.model}\``, code: b.code })),
-		...(data.actionGroups ?? []).flatMap(g => (g.actions ?? []).map(a => ({ where: `action ${g.id}/${a.id}`, code: a.code }))),
+		// The queries of the group sql are SQL, whose quotes are not transposes
+		...(data.actionGroups ?? []).filter(g => g.id !== SQL_GROUP).flatMap(g => (g.actions ?? []).map(a => ({ where: `action ${g.id}/${a.id}`, code: a.code }))),
 		...(data.inputs ?? []).flatMap(i => [
 			{ where: `input \`${i.id}\` default`, code: i.default ?? '' },
 			...(i.options ?? []).map(o => ({ where: `input \`${i.id}\` option`, code: o.value })),
@@ -503,6 +506,11 @@ function extractPanel(panel: string, content: string, snippets: Snippet[], anoma
 					emptyActions.set(where, list);
 				}
 				snippets.push({ panel, title, model: model.id, kind: 'action', group: g.id, actionId: a.id, label: a.label, desc: a.desc, packages, code, lines: code.split('\n').length });
+				// The .jl file of the tab is Julia: a query of the group sql is listed, not put in it
+				if (g.id === SQL_GROUP) {
+					actionSnippets++;
+					continue;
+				}
 				blocks.push(`# --- ${g.id} / ${a.label} (${a.id})\n${commentLines(a.desc ?? '')}\n${code}`);
 				actionSnippets++;
 			}

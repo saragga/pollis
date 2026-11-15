@@ -18,7 +18,7 @@ import { INotebookKernelService } from '../../../notebook/common/notebookKernelS
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
 import { IScaffoldPanelData } from '../common/model.types.js';
 import { panelCitedKeys } from '../common/tomlPanelData.js';
-import { createCustomCopyWiring, createReferenceWiring, createVideoWiring, openInBrowser, openNotebookByFile, openWikiByFile } from './model.handler.js';
+import { createCustomCopyWiring, createReferenceWiring, createSqlStepsWiring, createVideoWiring, openInBrowser, openNotebookByFile, openWikiByFile } from './model.handler.js';
 import { postLearnMoreData } from './scaffold.handler.js';
 
 /** Messages a page in the Time Arrow style sends that are not handled by the shared wirings of model.handler.ts. */
@@ -31,8 +31,8 @@ type ScaffoldPageMessage =
 	| { command: 'voiceWriteIn'; value: string };
 
 /**
- * What a page in the Time Arrow style of the scaffold has of a panel's handler: its Ask Pollis, Powered by and Learn
- * More. The page's own messages stay with the page. The store is disposed with the webview.
+ * What a page in the Time Arrow style of the scaffold has of a panel's handler: its Ask Pollis, Powered by, Learn
+ * More and the queries of its Next Steps (`sqlSteps`). The page's own messages stay with the page. The store is disposed with the webview.
  */
 export function registerScaffoldPageHandlers(
 	webviewInput: ReturnType<IWebviewWorkbenchService['openWebview']>,
@@ -53,6 +53,7 @@ export function registerScaffoldPageHandlers(
 	createCustomCopyWiring(webviewInput.webview, disposables, data.wikis, data.notebooks, fileService, pathService, editorService, commandService, notificationService);
 	createReferenceWiring(webviewInput.webview, disposables, panelId, data.references, fileService, pathService, commandService, notificationService);
 	createVideoWiring(webviewInput.webview, disposables, panelId, data.packages, fileService, pathService, commandService, notificationService);
+	createSqlStepsWiring(webviewInput.webview, disposables, commandService, editorService);
 
 	setTimeout(() => {
 		postLearnMoreData(webviewInput.webview, data);

@@ -14,6 +14,8 @@ export type ScaffoldPanelOptions = Partial<WebviewParts> & { readonly title: str
 
 /** The five default Next Steps groups, in their standard order. */
 const STANDARD_GROUPS = ['visualise', 'diagnose', 'predict', 'compare', 'interpret'];
+/** The optional action group of queries, last among the groups: Query in SQL, with the database codicon. */
+const SQL_GROUP = 'sql';
 
 /** Escape a string for safe embedding in a JS single-quoted string literal. */
 function jsEscape(s: string): string {
@@ -90,7 +92,9 @@ function buildActionsJs(data: IScaffoldPanelData): string {
 			const when = a.when ? `, when: '${jsEscape(a.when)}'` : '';
 			// Code that depends on the tab is not offered in a tab the user added
 			const perModel = /\{\{\??!?model\b/.test(a.code) ? ', perModel: true' : '';
-			return `\t\t\t{ id: '${jsEscape(a.id)}', label: '${jsEscape(a.label)}', desc: '${jsEscape(a.desc)}'${models}${when}${perModel}, code: function() { return ${codeLinesJs(a.code)}; } }`;
+			// The group sql holds queries of Pollis's databases, which the panel shows with DuckDB REPL in place of Julia REPL
+			const language = g.id === SQL_GROUP ? `, language: 'sql'` : '';
+			return `\t\t\t{ id: '${jsEscape(a.id)}', label: '${jsEscape(a.label)}', desc: '${jsEscape(a.desc)}'${models}${when}${perModel}${language}, code: function() { return ${codeLinesJs(a.code)}; } }`;
 		}).join(',\n');
 		return `\t\tvar ${actionsVar(g.id)} = [\n${actions}\n\t\t];`;
 	}).join('\n');
