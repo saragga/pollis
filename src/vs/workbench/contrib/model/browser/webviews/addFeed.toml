@@ -1,0 +1,34 @@
+# Add Feed Webview Configuration
+# A page in the Minimal style of the scaffold, not a panel: Learn More only, as no Julia package powers it. `pageCommand`
+# is the command that opens it, which a panel's contribution file would say. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/addFeed.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Add Feed"
+viewType = "pollis.addFeed"
+pageCommand = "pollis.monitor.addFeed"
+
+[[wikis]]
+name = "Overview"
+file = "addFeed/overview.md"
+bundled = true
+description = "The four ways to add a feed, how a feed is found at an address, and the feeds added, removed and restored"
+
+[[wikis]]
+name = "Factsheet"
+file = "addFeed/factsheet.md"
+bundled = true
+description = "Sources, sections, reading and menu at a glance, when to use the page and what it does not do"
+
+[[wikis]]
+name = "Feeds from PubMed and arXiv Searches"
+file = "addFeed/search-feeds.md"
+bundled = true
+description = "How a search becomes a feed, and how to write PubMed and arXiv searches, with examples"
+
+[[wikis]]
+name = "Email Alerts as Feeds"
+file = "addFeed/email-alerts.md"
+bundled = true
+description = "The sources that send alerts by email, connecting the alerts mailbox, and following its alerts"

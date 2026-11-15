@@ -10,7 +10,18 @@ import { localize, localize2 } from '../../../../nls.js';
 import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { IDialogService } from '../../../../platform/dialogs/common/dialogs.js';
+import { IFileService } from '../../../../platform/files/common/files.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
+import { INotificationService } from '../../../../platform/notification/common/notification.js';
+import { IOpenerService } from '../../../../platform/opener/common/opener.js';
+import { IStorageService } from '../../../../platform/storage/common/storage.js';
+import { IEditorService } from '../../../services/editor/common/editorService.js';
+import { IPathService } from '../../../services/path/common/pathService.js';
+import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
+import { ADDFEED_METADATA } from '../../model/browser/webviews/addFeed.data.js';
+import { buildWebviewHtml } from '../../model/browser/webviews/webviewScaffold.js';
+import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
+import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { ALERT_SOURCES, AlertSource } from '../../../../platform/alertsMailbox/common/alertsMailbox.js';
@@ -18,11 +29,10 @@ import { ARXIV_TOPIC, arxivSearchName, arxivSearchUrl, findCatalogueFeed, MEDICI
 import { ADD_FEED_COMMAND_ID, getTopics, RSS_FEEDS_COMMAND_ID } from './rssFeedsPage.js';
 import { IRssFeedEntry, IRssFeedsService, IRssItem, OTHER_TOPIC } from './rssFeedsService.js';
 import { OPEN_LINK_COMMAND_ID } from './openLink.js';
-import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
 
-// Add Feed: a feed from a PubMed or arXiv search, its newest results previewed before it is added; a feed at an
-// address (a journal's or website's page, or a YouTube channel); the alerts of the alerts mailbox; and the feeds the
-// user added, to remove, with those removed, to bring back.
+// Add Feed, a page in the Minimal style of the scaffold: a feed from a PubMed or arXiv search, its newest results
+// previewed before it is added; a feed at an address (a journal's or website's page, or a YouTube channel); the alerts
+// of the alerts mailbox; and the feeds the user added, to remove, with those removed, to bring back.
 
 type SearchSource = 'pubmed' | 'arxiv';
 
@@ -50,6 +60,14 @@ async function openAddFeedPage(accessor: ServicesAccessor): Promise<void> {
 	const rssFeedsService = accessor.get(IRssFeedsService);
 	const dialogService = accessor.get(IDialogService);
 	const commandService = accessor.get(ICommandService);
+	const openerService = accessor.get(IOpenerService);
+	const editorService = accessor.get(IEditorService);
+	const notificationService = accessor.get(INotificationService);
+	const notebookEditorModelResolverService = accessor.get(INotebookEditorModelResolverService);
+	const notebookKernelService = accessor.get(INotebookKernelService);
+	const fileService = accessor.get(IFileService);
+	const pathService = accessor.get(IPathService);
+	const storageService = accessor.get(IStorageService);
 
 	if (openPage && !openPage.isDisposed()) {
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
@@ -72,6 +90,7 @@ async function openAddFeedPage(accessor: ServicesAccessor): Promise<void> {
 	openPage = webviewInput;
 
 	const disposables = new DisposableStore();
+	disposables.add(registerScaffoldPageHandlers(webviewInput, 'addFeed', title, ADDFEED_METADATA.addFeed, openerService, editorService, commandService, notificationService, notebookEditorModelResolverService, notebookKernelService, fileService, pathService, storageService));
 	disposables.add(webviewInput.webview.onDidDispose(() => {
 		openPage = undefined;
 		disposables.dispose();
@@ -302,164 +321,152 @@ function pageHtml(): string {
 		pubmed: 'https://pubmed.ncbi.nlm.nih.gov/help/#search-tags',
 		arxiv: 'https://info.arxiv.org/help/api/user-manual.html#query_details',
 	};
-	return `<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
-	<style>
-		${voiceButtonsCss}
-		* { box-sizing: border-box; }
-		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
-		.container { max-width: 900px; margin: 0 auto; padding: 24px; }
-		.header { display: flex; align-items: flex-end; gap: 16px; }
-		.header h1 { flex: 1; }
-		h1 { font-size: 32px; font-weight: 300; margin: 0 0 4px 0; line-height: 1.2; }
-		.subtitle { font-size: 14px; color: var(--vscode-descriptionForeground); margin: 0 0 16px 0; line-height: 1.4; }
-		button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; padding: 4px 12px; cursor: pointer; white-space: nowrap; font-size: 11px; opacity: 0.7; }
+	return buildWebviewHtml({
+		title: text.title,
+		omitPoweredBy: !ADDFEED_METADATA.addFeed.packages.length,
+		introHtml: `${text.intro} <button class="link" id="showFeeds">${text.showFeeds}</button>`,
+		extraCss: `
+		.container { max-width: 900px; }
+		.addFeedPage * { box-sizing: border-box; }
+		.addFeedPage [hidden] { display: none !important; }
+		.addFeedPage button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; padding: 4px 12px; cursor: pointer; white-space: nowrap; font-size: 11px; opacity: 0.7; }
 		/* As the code buttons below a panel's Example Code: dimmed until pointed at, the blue one not */
-		button.action:not(:disabled):hover, button.action.current, button.action.primary { opacity: 1; }
-		button.action:hover, button.action.primary { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
-		button.action.primary:hover { background: var(--vscode-button-hoverBackground); }
-		button.action:disabled { opacity: 0.5; cursor: default; }
-		.link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; }
-		.link:hover { color: var(--vscode-textLink-activeForeground); text-decoration: underline; }
-		details { border-top: 1px solid var(--vscode-widget-border); padding: 4px 0 12px; }
-		.container > details[open] { border-top: 2px solid var(--vscode-focusBorder); margin-top: 8px; }
-		summary { cursor: pointer; padding: 8px 0; font-size: 16px; font-weight: 600; list-style: none; display: flex; align-items: center; gap: 6px; }
-		summary::-webkit-details-marker { display: none; }
-		summary .chevron { display: inline-flex; transition: transform 0.1s; transform: rotate(-90deg); }
-		details[open] > summary .chevron { transform: none; }
-		.intro { color: var(--vscode-descriptionForeground); line-height: 1.45; margin: 0 0 10px 0; }
-		.sources { display: inline-flex; gap: 2px; padding: 2px; border-radius: 4px; background: var(--vscode-sideBar-background); margin-bottom: 8px; }
-		.sources button { font: inherit; color: var(--vscode-descriptionForeground); background: none; border: none; border-radius: 3px; padding: 3px 12px; cursor: pointer; }
-		.sources button:hover { color: var(--vscode-foreground); }
-		.sources button[aria-pressed="true"] { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
-		.row { display: flex; gap: 8px; align-items: center; }
-		.field { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
-		.field > span { font-size: 12px; color: var(--vscode-descriptionForeground); }
-		input, select { font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; padding: 4px 6px; min-width: 0; }
-		input:focus, select:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
-		.query { flex: 1; }
-		.menuPath { color: #e8a33d; }
-		body.vscode-light .menuPath { color: #a8650d; }
-		details.note { border-top: none; padding: 0; margin-top: 10px; }
-		details.note summary { font-size: 13px; font-weight: 400; padding: 2px 0; color: var(--vscode-textLink-foreground); }
-		details.note ul { margin: 6px 0 0 0; padding-left: 20px; color: var(--vscode-descriptionForeground); line-height: 1.45; }
-		details.note li { margin-bottom: 4px; }
-		details.note b { color: var(--vscode-foreground); font-weight: 600; }
-		details.note .help { margin: 6px 0 0 20px; }
-		.help { font-size: 12px; color: var(--vscode-descriptionForeground); line-height: 1.45; margin: 6px 0 0 0; }
-		.examples { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; margin-top: 8px; font-size: 12px; color: var(--vscode-descriptionForeground); }
-		.example { text-align: left; font-family: var(--vscode-editor-font-family); font-size: 12px; color: var(--vscode-textLink-foreground); background: var(--vscode-textCodeBlock-background); border: none; border-radius: 3px; padding: 1px 6px; cursor: pointer; }
-		.example:hover { color: var(--vscode-textLink-activeForeground); }
-		.status { margin: 10px 0 0 0; color: var(--vscode-descriptionForeground); }
-		.status.error { color: var(--vscode-errorForeground); }
-		.result { position: relative; margin-top: 10px; padding: 10px 36px 10px 12px; border-radius: 4px; background: var(--vscode-sideBar-background); }
-		.result .preview { margin: 10px -36px 0 0; padding: 10px 36px 0 0; border-top: 1px solid var(--vscode-widget-border); }
-		.close { position: absolute; top: 6px; right: 6px; display: inline-flex; padding: 3px; border: none; border-radius: 4px; background: none; color: var(--vscode-icon-foreground); cursor: pointer; }
-		.close:hover { background: var(--vscode-toolbar-hoverBackground); }
-		.alert { display: flex; gap: 6px; align-items: center; padding: 3px 0 3px 16px; cursor: pointer; }
-		.result .found { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
-		.result .found label { display: flex; gap: 6px; align-items: center; cursor: pointer; }
-		.result .found .url { font-size: 11px; color: var(--vscode-descriptionForeground); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-		.items { list-style: none; margin: 6px 0 10px 0; padding: 0; }
-		.items li { padding: 5px 0; border-bottom: 1px solid var(--vscode-widget-border); line-height: 1.4; }
-		.items li:last-child { border-bottom: none; }
-		.items .meta { font-size: 11px; color: var(--vscode-descriptionForeground); }
-		.addRow { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
-		.addRow .field { min-width: 200px; }
-		.done { color: var(--vscode-testing-iconPassed); }
-		.feedRow { display: flex; align-items: center; gap: 8px; padding: 5px 0 5px 16px; border-bottom: 1px solid var(--vscode-widget-border); }
-		.feedRow .feedName { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-		#removedFeeds h3, #removedFeeds .feedName { color: var(--vscode-errorForeground); }
-		.topicName { font-weight: 600; padding: 8px 0 4px; }
-		h3 { font-size: 13px; font-weight: 600; margin: 16px 0 4px; }
-		.empty { color: var(--vscode-descriptionForeground); padding: 4px 0; }
-	</style>
-</head>
-<body>
-<div class="container">
-	<div class="header">
-		<h1>${text.title}</h1>
-		<button class="link" id="showFeeds">${text.showFeeds}</button>
-		${voiceButtonsHtml}
-	</div>
-	<p class="subtitle">${text.intro}</p>
-
-	<details open id="addressSection">
-		<summary><span class="chevron"></span>${text.addressSection}</summary>
-		<p class="intro">${text.addressIntro}</p>
-		<div class="row">
-			<input class="query" id="address" spellcheck="false" placeholder="https://onlinelibrary.wiley.com/journal/14680262">
-			<button class="action primary" id="find">${text.find}</button>
-		</div>
-		<div id="addressResult"></div>
-		<details class="note">
-			<summary><span class="chevron"></span>${text.servicesTitle}</summary>
-			<p class="help">${text.servicesIntro}</p>
-			<ul>
-				<li>${text.servicesEbsco}</li>
-				<li>${text.servicesProquest}</li>
-				<li>${text.servicesGoogleAlerts}</li>
-				<li>${text.servicesTopics}</li>
-				<li>${text.servicesEmail}</li>
-			</ul>
-		</details>
-	</details>
-
-	<details open id="searchSection">
-		<summary><span class="chevron"></span>${text.searchSection}</summary>
-		<p class="intro">${text.searchIntro}</p>
-		<div class="sources" role="group">
-			<button id="sourcePubmed" aria-pressed="true">${text.pubmed}</button>
-			<button id="sourceArxiv" aria-pressed="false">${text.arxiv}</button>
-		</div>
-		<div class="row">
-			<input class="query" id="query" spellcheck="false">
-			<button class="action primary" id="previewSearch">${text.preview}</button>
-		</div>
-		<p class="help"><span id="searchHelp"></span> <button class="link" id="syntaxLink"></button></p>
-		<div class="examples" id="examples"></div>
-		<div id="searchResult"></div>
-	</details>
-
-	<details id="emailSection">
-		<summary><span class="chevron"></span>${text.emailSection}</summary>
-		<p class="intro">${text.emailIntro}</p>
-		<div class="row" id="mailboxSet" hidden>
-			<span id="mailboxText" class="intro" style="margin: 0; flex: 1;"></span>
-			<button class="link" id="changeMailbox">${text.changeMailbox}</button>
-		</div>
-		<div id="mailboxForm" hidden>
-			<div class="addRow">
-				<label class="field"><span>${text.mailboxUser}</span><input id="mailUser" spellcheck="false" placeholder="my.alerts@gmail.com"></label>
-				<label class="field"><span>${text.mailboxServer}</span><input id="mailServer" spellcheck="false" placeholder="imap.gmail.com"></label>
-				<label class="field"><span>${text.mailboxPassword}</span><input id="mailPassword" type="password"></label>
-				<button class="action primary" id="connect">${text.connect}</button>
-				<button class="action" id="cancelMailbox" hidden>${text.cancel}</button>
+		.addFeedPage button.action:not(:disabled):hover, .addFeedPage button.action.current, .addFeedPage button.action.primary { opacity: 1; }
+		.addFeedPage button.action:hover, .addFeedPage button.action.primary { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		.addFeedPage button.action.primary:hover { background: var(--vscode-button-hoverBackground); }
+		.addFeedPage button.action:disabled { opacity: 0.5; cursor: default; }
+		.addFeedPage .link, .subtitle .link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; }
+		.addFeedPage .link:hover, .subtitle .link:hover { color: var(--vscode-textLink-activeForeground); text-decoration: underline; }
+		.addFeedPage .section-body { padding-left: 22px; }
+		.addFeedPage .intro { color: var(--vscode-descriptionForeground); line-height: 1.45; margin: 0 0 10px 0; }
+		.addFeedPage .sources { display: inline-flex; gap: 2px; padding: 2px; border-radius: 4px; background: var(--vscode-sideBar-background); margin-bottom: 8px; }
+		.addFeedPage .sources button { font: inherit; color: var(--vscode-descriptionForeground); background: none; border: none; border-radius: 3px; padding: 3px 12px; cursor: pointer; }
+		.addFeedPage .sources button:hover { color: var(--vscode-foreground); }
+		.addFeedPage .sources button[aria-pressed="true"] { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		.addFeedPage .row { display: flex; gap: 8px; align-items: center; }
+		.addFeedPage .field { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
+		.addFeedPage .field > span { font-size: 12px; color: var(--vscode-descriptionForeground); }
+		.addFeedPage input, .addFeedPage select { font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; padding: 4px 6px; min-width: 0; }
+		.addFeedPage input:focus, .addFeedPage select:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
+		.addFeedPage .query { flex: 1; }
+		.addFeedPage .menuPath { color: #e8a33d; }
+		body.vscode-light .addFeedPage .menuPath { color: #a8650d; }
+		.addFeedPage details.note { margin-top: 10px; }
+		.addFeedPage details.note summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 6px; font-size: 13px; padding: 2px 0; color: var(--vscode-textLink-foreground); }
+		.addFeedPage details.note summary::-webkit-details-marker { display: none; }
+		.addFeedPage details.note summary:hover { text-decoration: underline; }
+		.addFeedPage details.note .chevron { display: inline-flex; transition: transform 0.15s; transform: rotate(-90deg); }
+		.addFeedPage details.note[open] .chevron { transform: none; }
+		.addFeedPage details.note ul { margin: 6px 0 0 0; padding-left: 20px; color: var(--vscode-descriptionForeground); line-height: 1.45; }
+		.addFeedPage details.note li { margin-bottom: 4px; }
+		.addFeedPage details.note b { color: var(--vscode-foreground); font-weight: 600; }
+		.addFeedPage details.note .help { margin: 6px 0 0 20px; }
+		.addFeedPage .help { font-size: 12px; color: var(--vscode-descriptionForeground); line-height: 1.45; margin: 6px 0 0 0; }
+		.addFeedPage .examples { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; margin-top: 8px; font-size: 12px; color: var(--vscode-descriptionForeground); }
+		.addFeedPage .example { text-align: left; font-family: var(--vscode-editor-font-family); font-size: 12px; color: var(--vscode-textLink-foreground); background: var(--vscode-textCodeBlock-background); border: none; border-radius: 3px; padding: 1px 6px; cursor: pointer; }
+		.addFeedPage .example:hover { color: var(--vscode-textLink-activeForeground); }
+		.addFeedPage .status { margin: 10px 0 0 0; color: var(--vscode-descriptionForeground); }
+		.addFeedPage .status.error { color: var(--vscode-errorForeground); }
+		.addFeedPage .result { position: relative; margin-top: 10px; padding: 10px 36px 10px 12px; border-radius: 4px; background: var(--vscode-sideBar-background); }
+		.addFeedPage .result .preview { margin: 10px -36px 0 0; padding: 10px 36px 0 0; border-top: 1px solid var(--vscode-widget-border); }
+		.addFeedPage .close { position: absolute; top: 6px; right: 6px; display: inline-flex; padding: 3px; border: none; border-radius: 4px; background: none; color: var(--vscode-icon-foreground); cursor: pointer; }
+		.addFeedPage .close:hover { background: var(--vscode-toolbar-hoverBackground); }
+		.addFeedPage .alert { display: flex; gap: 6px; align-items: center; padding: 3px 0 3px 16px; cursor: pointer; }
+		.addFeedPage .result .found { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+		.addFeedPage .result .found label { display: flex; gap: 6px; align-items: center; cursor: pointer; }
+		.addFeedPage .result .found .url { font-size: 11px; color: var(--vscode-descriptionForeground); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+		.addFeedPage .items { list-style: none; margin: 6px 0 10px 0; padding: 0; }
+		.addFeedPage .items li { padding: 5px 0; border-bottom: 1px solid var(--vscode-widget-border); line-height: 1.4; }
+		.addFeedPage .items li:last-child { border-bottom: none; }
+		.addFeedPage .items .meta { font-size: 11px; color: var(--vscode-descriptionForeground); }
+		.addFeedPage .addRow { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+		.addFeedPage .addRow .field { min-width: 200px; }
+		.addFeedPage .done { color: var(--vscode-testing-iconPassed); }
+		.addFeedPage .feedRow { display: flex; align-items: center; gap: 8px; padding: 5px 0 5px 16px; border-bottom: 1px solid var(--vscode-widget-border); }
+		.addFeedPage .feedRow .feedName { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+		.addFeedPage #removedFeeds h3, .addFeedPage #removedFeeds .feedName { color: var(--vscode-errorForeground); }
+		.addFeedPage .topicName { font-weight: 600; padding: 8px 0 4px; }
+		.addFeedPage h3 { font-size: 13px; font-weight: 600; margin: 16px 0 4px; }
+		.addFeedPage .empty { color: var(--vscode-descriptionForeground); padding: 4px 0; }
+`,
+		bodyHtml: `
+	<div class="addFeedPage">
+	<div class="section" id="addressSection">
+		<button class="section-toggle"><span class="illus-chevron"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M7.976 10.072l-4.054-4.014-.92.92 4.49 4.45.978.01 4.525-4.46-.918-.92-4.101 4.014z"/></svg></span>${text.addressSection}</button>
+		<div class="section-body">
+			<p class="intro">${text.addressIntro}</p>
+			<div class="row">
+				<input class="query" id="address" spellcheck="false" placeholder="https://onlinelibrary.wiley.com/journal/14680262">
+				<button class="action primary" id="find">${text.find}</button>
 			</div>
-			<p class="help">${text.mailboxHelp}</p>
-			<div id="mailboxStatus"></div>
+			<div id="addressResult"></div>
+			<details class="note">
+				<summary><span class="chevron"></span>${text.servicesTitle}</summary>
+				<p class="help">${text.servicesIntro}</p>
+				<ul>
+					<li>${text.servicesEbsco}</li>
+					<li>${text.servicesProquest}</li>
+					<li>${text.servicesGoogleAlerts}</li>
+					<li>${text.servicesTopics}</li>
+					<li>${text.servicesEmail}</li>
+				</ul>
+			</details>
 		</div>
-		<div id="alertsPart" hidden>
-			<h3>${text.alertsHeading} <button class="link" id="readAgain" style="font-weight: normal; margin-left: 8px;">${text.readAgain}</button></h3>
-			<p class="help">${text.alertsHelp}</p>
-			<div id="alertsList"></div>
+	</div>
+	<div class="section" id="searchSection">
+		<button class="section-toggle"><span class="illus-chevron"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M7.976 10.072l-4.054-4.014-.92.92 4.49 4.45.978.01 4.525-4.46-.918-.92-4.101 4.014z"/></svg></span>${text.searchSection}</button>
+		<div class="section-body">
+			<p class="intro">${text.searchIntro}</p>
+			<div class="sources" role="group">
+				<button id="sourcePubmed" aria-pressed="true">${text.pubmed}</button>
+				<button id="sourceArxiv" aria-pressed="false">${text.arxiv}</button>
+			</div>
+			<div class="row">
+				<input class="query" id="query" spellcheck="false">
+				<button class="action primary" id="previewSearch">${text.preview}</button>
+			</div>
+			<p class="help"><span id="searchHelp"></span> <button class="link" id="syntaxLink"></button></p>
+			<div class="examples" id="examples"></div>
+			<div id="searchResult"></div>
 		</div>
-	</details>
-
-	<details open id="yourSection">
-		<summary><span class="chevron"></span>${text.yourSection}</summary>
-		<p class="intro">${text.yourIntro}</p>
-		<div id="addedFeeds"></div>
-		<div id="removedFeeds"></div>
-	</details>
-</div>
-<script>
-	const vscode = acquireVsCodeApi();
-	${voiceButtonsScript}
+	</div>
+	<div class="section collapsed" id="emailSection">
+		<button class="section-toggle"><span class="illus-chevron"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M7.976 10.072l-4.054-4.014-.92.92 4.49 4.45.978.01 4.525-4.46-.918-.92-4.101 4.014z"/></svg></span>${text.emailSection}</button>
+		<div class="section-body">
+			<p class="intro">${text.emailIntro}</p>
+			<div class="row" id="mailboxSet" hidden>
+				<span id="mailboxText" class="intro" style="margin: 0; flex: 1;"></span>
+				<button class="link" id="changeMailbox">${text.changeMailbox}</button>
+			</div>
+			<div id="mailboxForm" hidden>
+				<div class="addRow">
+					<label class="field"><span>${text.mailboxUser}</span><input id="mailUser" spellcheck="false" placeholder="my.alerts@gmail.com"></label>
+					<label class="field"><span>${text.mailboxServer}</span><input id="mailServer" spellcheck="false" placeholder="imap.gmail.com"></label>
+					<label class="field"><span>${text.mailboxPassword}</span><input id="mailPassword" type="password"></label>
+					<button class="action primary" id="connect">${text.connect}</button>
+					<button class="action" id="cancelMailbox" hidden>${text.cancel}</button>
+				</div>
+				<p class="help">${text.mailboxHelp}</p>
+				<div id="mailboxStatus"></div>
+			</div>
+			<div id="alertsPart" hidden>
+				<h3>${text.alertsHeading} <button class="link" id="readAgain" style="font-weight: normal; margin-left: 8px;">${text.readAgain}</button></h3>
+				<p class="help">${text.alertsHelp}</p>
+				<div id="alertsList"></div>
+			</div>
+		</div>
+	</div>
+	<div class="section" id="yourSection">
+		<button class="section-toggle"><span class="illus-chevron"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M7.976 10.072l-4.054-4.014-.92.92 4.49 4.45.978.01 4.525-4.46-.918-.92-4.101 4.014z"/></svg></span>${text.yourSection}</button>
+		<div class="section-body">
+			<p class="intro">${text.yourIntro}</p>
+			<div id="addedFeeds"></div>
+			<div id="removedFeeds"></div>
+		</div>
+	</div>
+	</div>
+`,
+		pageScriptJs: `
 	const TEXT = ${JSON.stringify(text)};
 	const EXAMPLES = ${JSON.stringify(examples)};
 	const SYNTAX_LINKS = ${JSON.stringify(syntaxLinks)};
@@ -706,7 +713,7 @@ function pageHtml(): string {
 		if (mailbox) {
 			document.getElementById('mailboxText').textContent = TEXT.mailboxSet.replace('{0}', mailbox.user);
 		}
-		if (!showForm && !alertsRead && document.getElementById('emailSection').open) {
+		if (!showForm && !alertsRead && !document.getElementById('emailSection').classList.contains('collapsed')) {
 			readAlerts();
 		}
 	}
@@ -770,7 +777,8 @@ function pageHtml(): string {
 	document.getElementById('changeMailbox').addEventListener('click', () => editMailbox(true));
 	document.getElementById('cancelMailbox').addEventListener('click', () => editMailbox(false));
 	document.getElementById('readAgain').addEventListener('click', readAlerts);
-	document.getElementById('emailSection').addEventListener('toggle', () => renderMailbox());
+	// The scaffold opens and closes the section; its toggle shows the mailbox once the section is open
+	document.querySelector('#emailSection > .section-toggle').addEventListener('click', () => renderMailbox());
 	document.getElementById('showFeeds').addEventListener('click', () => vscode.postMessage({ command: 'showFeeds' }));
 
 	// Your Feeds, by topic, and those removed
@@ -854,9 +862,8 @@ function pageHtml(): string {
 	});
 	chooseSource('pubmed');
 	vscode.postMessage({ command: 'ready' });
-</script>
-</body>
-</html>`;
+`,
+	});
 }
 
 registerAction2(class extends Action2 {
