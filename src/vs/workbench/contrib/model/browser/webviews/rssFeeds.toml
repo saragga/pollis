@@ -1,0 +1,34 @@
+# RSS Feeds Webview Configuration
+# A page in the Minimal style of the scaffold, not a panel: Learn More only, as no Julia package powers it. `pageCommand`
+# is the command that opens it, which a panel's contribution file would say. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/rssFeeds.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "RSS Feeds"
+viewType = "pollis.rssFeeds"
+pageCommand = "pollis.monitor.rssFeeds"
+
+[[wikis]]
+name = "Overview"
+file = "rssFeeds/overview.md"
+bundled = true
+description = "The feeds and items of the page, the Subscribed, Here and Welcome Page ticks, following and removing feeds, and the archive"
+
+[[wikis]]
+name = "Factsheet"
+file = "rssFeeds/factsheet.md"
+bundled = true
+description = "Feeds, ticks, periods, journal filters and actions at a glance, when to use the page and what it does not do"
+
+[[wikis]]
+name = "Choosing the Items Listed"
+file = "rssFeeds/choosing-items.md"
+bundled = true
+description = "What decides the items listed: Items From, On a Day, and the Journals filter by level and metrics"
+
+[[wikis]]
+name = "Zotero, OPML and Podcast Episodes"
+file = "rssFeeds/zotero-opml-episodes.md"
+bundled = true
+description = "Adding an item to Zotero, exporting the feeds as OPML, and watching, listening to and downloading episodes"

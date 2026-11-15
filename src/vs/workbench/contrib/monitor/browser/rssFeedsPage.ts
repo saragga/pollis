@@ -25,10 +25,16 @@ import { findCatalogueFeed, JULIA_TOPIC, PUBMED_SEARCH, rssCatalogueTopics, yout
 import { DISPLAY_DAYS, EMAIL_ALERT_PREFIX, IRssFeed, IRssFeedsService } from './rssFeedsService.js';
 import { describeJournal, IJournalScoresService } from './journalScores.js';
 import { OPEN_LINK_COMMAND_ID } from './openLink.js';
-import { voiceButtonsCss, voiceButtonsHtml, voiceButtonsScript } from '../../model/browser/webviews/webviewScaffold.js';
+import { buildWebviewHtml } from '../../model/browser/webviews/webviewScaffold.js';
+import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
+import { RSSFEEDS_METADATA } from '../../model/browser/webviews/rssFeeds.data.js';
+import { IEditorService } from '../../../services/editor/common/editorService.js';
+import { IPathService } from '../../../services/path/common/pathService.js';
+import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
+import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
 import { FEWEST_ROWS, rowsChoiceCss, rowsChoiceScript, storedRows, storeRows } from '../../model/browser/webviews/webviewPager.js';
 
-// Explore > RSS > RSS Feeds: the feeds on the left by topic, with ticks for Subscribed, Here and Welcome Page and
+// Explore > RSS > RSS Feeds, a page in the Minimal style of the scaffold: the feeds on the left by topic, with ticks for Subscribed, Here and Welcome Page and
 // their unread and total counts; the items of the topic or feed selected (or of all) on the right, newest first, those
 // of the display period and of the feeds ticked Here, a journal's tagged with its level and metrics, which Journals filters.
 // Opening an item opens it in the browser and marks it read.
@@ -96,6 +102,10 @@ async function openRssFeedsPage(accessor: ServicesAccessor): Promise<void> {
 	const journalScoresService = accessor.get(IJournalScoresService);
 	const commandService = accessor.get(ICommandService);
 	const storageService = accessor.get(IStorageService);
+	const editorService = accessor.get(IEditorService);
+	const notebookEditorModelResolverService = accessor.get(INotebookEditorModelResolverService);
+	const notebookKernelService = accessor.get(INotebookKernelService);
+	const pathService = accessor.get(IPathService);
 
 	if (openPage && !openPage.isDisposed()) {
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
@@ -118,6 +128,7 @@ async function openRssFeedsPage(accessor: ServicesAccessor): Promise<void> {
 	openPage = webviewInput;
 
 	const disposables = new DisposableStore();
+	disposables.add(registerScaffoldPageHandlers(webviewInput, 'rssFeeds', title, RSSFEEDS_METADATA.rssFeeds, openerService, editorService, commandService, notificationService, notebookEditorModelResolverService, notebookKernelService, fileService, pathService, storageService));
 	disposables.add(webviewInput.webview.onDidDispose(() => {
 		openPage = undefined;
 		disposables.dispose();
@@ -458,110 +469,105 @@ function pageHtml(rows: number): string {
 		journalsTooltip: localize('rss.journalsTooltip', "The levels are the Norwegian register's, built into Pollis; the choices of SJR and SNIP appear once their metrics are imported (on the Journal Metrics page, by the button next to Journals). The counts follow the choice."),
 		exportOpmlTooltip: localize('rss.exportOpmlTooltip', "Save the feeds you follow as an OPML file, to follow them in Zotero or another feed reader"),
 	};
-	return `<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src https: data:; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
-	<style>
-		${voiceButtonsCss}
+	return buildWebviewHtml({
+		title: text.title,
+		omitPoweredBy: !RSSFEEDS_METADATA.rssFeeds.packages.length,
+		introHtml: `<span id="subtitle">${text.intro}</span>`,
+		// The thumbnails of the items, from the feeds' own sites
+		imgSrc: 'https:',
+		extraCss: `
+		.container { max-width: 1100px; }
+		.rssFeedsPage * { box-sizing: border-box; }
+		/* The choices of the page above its two panes, where the title row had them */
+		.rssFeedsPage .rssToolbar { display: flex; flex-wrap: wrap; align-items: center; column-gap: 16px; }
+		.rssFeedsPage .rssToolbar .actions { margin-left: auto; }
 		${rowsChoiceCss}
-		* { box-sizing: border-box; }
-		body { font-family: var(--vscode-font-family); font-size: 13px; margin: 0; color: var(--vscode-foreground); background-color: var(--vscode-editor-background); }
-		.container { max-width: 1100px; margin: 0 auto; padding: 24px; }
-		.header { display: flex; align-items: flex-end; gap: 16px; }
-		.header h1 { flex: 1; }
-		h1 { font-size: 32px; font-weight: 300; margin: 0 0 4px 0; line-height: 1.2; }
-		.subtitle { font-size: 14px; color: var(--vscode-descriptionForeground); margin: 0 0 16px 0; line-height: 1.4; max-width: 900px; }
-		button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; padding: 4px 12px; cursor: pointer; margin-bottom: 8px; font-size: 11px; opacity: 0.7; }
+		.rssFeedsPage button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; padding: 4px 12px; cursor: pointer; margin-bottom: 8px; font-size: 11px; opacity: 0.7; }
 		/* As the code buttons below a panel's Example Code: dimmed until pointed at, the blue one not */
-		button.action:not(:disabled):hover, button.action.current, button.action.primary { opacity: 1; }
-		button.action:hover, button.action:active, button.action.pressed { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
-		.header .actions { display: inline-grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 16px; }
-		.panes { display: flex; gap: 16px; align-items: flex-start; }
-		.feeds { flex: 0 0 50%; border-top: 1px solid var(--vscode-widget-border); }
-		.items { flex: 1; min-width: 0; border-top: 1px solid var(--vscode-widget-border); }
-		.feed { display: flex; align-items: center; gap: 8px; padding: 8px; border-bottom: 1px solid var(--vscode-widget-border); cursor: pointer; }
-		.feed:hover { background: var(--vscode-list-hoverBackground); }
-		.feed.selected { background: var(--vscode-list-inactiveSelectionBackground); box-shadow: inset 3px 0 0 var(--vscode-textLink-foreground); }
-		.feed .name { flex: 1; min-width: 0; line-height: 1.4; }
-		.feed .name .title { display: flex; align-items: center; gap: 6px; }
-		.feed .name .media { display: inline-flex; flex-shrink: 0; color: var(--vscode-descriptionForeground); }
-		.feed .error { font-size: 11px; color: var(--vscode-errorForeground); }
-		.count { flex: none; width: 88px; white-space: nowrap; font-size: 11px; font-weight: 600; text-align: center; padding: 1px 0; border-radius: 9px; color: var(--vscode-badge-foreground); background: var(--vscode-badge-background); }
-		.count.zero { color: var(--vscode-descriptionForeground); background: none; font-weight: normal; }
-		.link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; font-size: 12px; }
-		.link:hover { text-decoration: underline; }
-		.feed .remove { visibility: hidden; }
-		.feed:hover .remove, .feed:focus-within .remove { visibility: visible; }
-		.item { width: 100%; text-align: left; font: inherit; color: inherit; background: none; border: none; border-bottom: 1px solid var(--vscode-widget-border); padding: 8px; cursor: pointer; line-height: 1.4; }
-		.item:hover { background: var(--vscode-list-hoverBackground); }
-		.item .itemTitle { font-weight: 600; }
-		.item.read .itemTitle { font-weight: normal; color: var(--vscode-descriptionForeground); }
-		.item .meta { font-size: 11px; color: var(--vscode-descriptionForeground); }
-		.empty { color: var(--vscode-descriptionForeground); padding: 12px 8px; }
-		.criteria { font-size: 12px; color: var(--vscode-descriptionForeground); padding: 8px; border-bottom: 1px solid var(--vscode-widget-border); line-height: 1.4; }
-		.criteria b { font-weight: 600; color: var(--vscode-foreground); }
-		.pager { display: flex; justify-content: center; align-items: center; gap: 16px; padding: 12px 8px; font-size: 12px; color: var(--vscode-descriptionForeground); }
-		.pager .link:disabled { color: var(--vscode-disabledForeground); cursor: default; text-decoration: none; }
-		.topic { font-weight: 600; }
-		.feed .chevron { flex: none; display: flex; color: var(--vscode-foreground); background: none; border: none; padding: 0; cursor: pointer; transition: transform 0.1s; }
-		.feed.collapsed .chevron { transform: rotate(-90deg); }
-		.feed .subscribed, .columns .subscribed { flex: none; width: 72px; display: flex; justify-content: center; }
-		.feed .here, .columns .here { flex: none; width: 40px; display: flex; justify-content: center; }
-		.feed .welcome, .columns .welcome { flex: none; width: 88px; display: flex; justify-content: center; }
+		.rssFeedsPage button.action:not(:disabled):hover, .rssFeedsPage button.action.current, .rssFeedsPage button.action.primary { opacity: 1; }
+		.rssFeedsPage button.action:hover, .rssFeedsPage button.action:active, .rssFeedsPage button.action.pressed { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		.rssFeedsPage .rssToolbar .actions { display: inline-grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 16px; }
+		.rssFeedsPage .panes { display: flex; gap: 16px; align-items: flex-start; }
+		.rssFeedsPage .feeds { flex: 0 0 50%; border-top: 1px solid var(--vscode-widget-border); }
+		.rssFeedsPage .items { flex: 1; min-width: 0; border-top: 1px solid var(--vscode-widget-border); }
+		.rssFeedsPage .feed { display: flex; align-items: center; gap: 8px; padding: 8px; border-bottom: 1px solid var(--vscode-widget-border); cursor: pointer; }
+		.rssFeedsPage .feed:hover { background: var(--vscode-list-hoverBackground); }
+		.rssFeedsPage .feed.selected { background: var(--vscode-list-inactiveSelectionBackground); box-shadow: inset 3px 0 0 var(--vscode-textLink-foreground); }
+		.rssFeedsPage .feed .name { flex: 1; min-width: 0; line-height: 1.4; }
+		.rssFeedsPage .feed .name .title { display: flex; align-items: center; gap: 6px; }
+		.rssFeedsPage .feed .name .media { display: inline-flex; flex-shrink: 0; color: var(--vscode-descriptionForeground); }
+		.rssFeedsPage .feed .error { font-size: 11px; color: var(--vscode-errorForeground); }
+		.rssFeedsPage .count { flex: none; width: 88px; white-space: nowrap; font-size: 11px; font-weight: 600; text-align: center; padding: 1px 0; border-radius: 9px; color: var(--vscode-badge-foreground); background: var(--vscode-badge-background); }
+		.rssFeedsPage .count.zero { color: var(--vscode-descriptionForeground); background: none; font-weight: normal; }
+		.rssFeedsPage .link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; font-size: 12px; }
+		.rssFeedsPage .link:hover { text-decoration: underline; }
+		.rssFeedsPage .feed .remove { visibility: hidden; }
+		.rssFeedsPage .feed:hover .remove, .rssFeedsPage .feed:focus-within .remove { visibility: visible; }
+		.rssFeedsPage .item { width: 100%; text-align: left; font: inherit; color: inherit; background: none; border: none; border-bottom: 1px solid var(--vscode-widget-border); padding: 8px; cursor: pointer; line-height: 1.4; }
+		.rssFeedsPage .item:hover { background: var(--vscode-list-hoverBackground); }
+		.rssFeedsPage .item .itemTitle { font-weight: 600; }
+		.rssFeedsPage .item.read .itemTitle { font-weight: normal; color: var(--vscode-descriptionForeground); }
+		.rssFeedsPage .item .meta { font-size: 11px; color: var(--vscode-descriptionForeground); }
+		.rssFeedsPage .empty { color: var(--vscode-descriptionForeground); padding: 12px 8px; }
+		.rssFeedsPage .criteria { font-size: 12px; color: var(--vscode-descriptionForeground); padding: 8px; border-bottom: 1px solid var(--vscode-widget-border); line-height: 1.4; }
+		.rssFeedsPage .criteria b { font-weight: 600; color: var(--vscode-foreground); }
+		.rssFeedsPage .pager { display: flex; justify-content: center; align-items: center; gap: 16px; padding: 12px 8px; font-size: 12px; color: var(--vscode-descriptionForeground); }
+		.rssFeedsPage .pager .link:disabled { color: var(--vscode-disabledForeground); cursor: default; text-decoration: none; }
+		.rssFeedsPage .topic { font-weight: 600; }
+		.rssFeedsPage .feed .chevron { flex: none; display: flex; color: var(--vscode-foreground); background: none; border: none; padding: 0; cursor: pointer; transition: transform 0.1s; }
+		.rssFeedsPage .feed.collapsed .chevron { transform: rotate(-90deg); }
+		.rssFeedsPage .feed .subscribed, .rssFeedsPage .columns .subscribed { flex: none; width: 72px; display: flex; justify-content: center; }
+		.rssFeedsPage .feed .here, .rssFeedsPage .columns .here { flex: none; width: 40px; display: flex; justify-content: center; }
+		.rssFeedsPage .feed .welcome, .rssFeedsPage .columns .welcome { flex: none; width: 88px; display: flex; justify-content: center; }
 		/* The colours of the macOS window buttons: red off, green on, half and half when only some are on */
-		.feed .tick { width: 12px; height: 12px; margin: 0; padding: 0; border: none; border-radius: 50%; background: #FF5F57; cursor: pointer; }
-		.feed .tick[aria-checked="true"] { background: #28C840; }
-		.feed .tick[aria-checked="mixed"] { background: linear-gradient(90deg, #28C840 50%, #FF5F57 50%); }
-		.feed .tick:focus-visible { outline: 1px solid var(--vscode-focusBorder); outline-offset: 2px; }
-		.feed .indent { flex: none; width: 16px; }
-		.feed.inTopic .indent { width: 40px; }
-		.feed.hiddenFeed .name, .feed.unsubscribed .name { color: var(--vscode-disabledForeground); }
-		.columns { display: flex; align-items: center; gap: 8px; padding: 4px 8px; font-size: 11px; color: var(--vscode-descriptionForeground); border-bottom: 1px solid var(--vscode-widget-border); }
-		.columns { align-items: flex-end; }
-		.columns .fill { flex: 1; }
-		.columns .group { flex: none; display: flex; flex-direction: column; gap: 3px; }
-		.columns .groupTitle { text-align: center; padding-bottom: 2px; border-bottom: 1px solid var(--vscode-descriptionForeground); }
-		.columns .groupColumns { display: flex; gap: 8px; }
-		.columns .countColumn { flex: none; width: 88px; text-align: center; white-space: nowrap; }
-		.infoButton { display: inline-flex; padding: 2px; margin: 0 0 8px -10px; border: none; border-radius: 4px; background: none; color: var(--vscode-textLink-foreground); cursor: pointer; }
-		.infoButton:hover { background: var(--vscode-toolbar-hoverBackground); }
-		.infoWrap { position: relative; display: inline-flex; }
-		.infoHover { display: none; position: absolute; top: calc(100% - 4px); left: -10px; z-index: 10; width: 340px; padding: 6px 8px; font-size: 12px; line-height: 1.45; white-space: normal; border-radius: 4px; color: var(--vscode-editorHoverWidget-foreground); background: var(--vscode-editorHoverWidget-background); border: 1px solid var(--vscode-editorHoverWidget-border); box-shadow: 0 2px 8px var(--vscode-widget-shadow); }
-		.infoWrap:hover .infoHover, .infoButton:focus-visible + .infoHover { display: block; }
-		.period { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font-size: 12px; color: var(--vscode-descriptionForeground); }
-		.dayPicker { position: relative; margin: 0 0 8px -6px; }
-		.dayButton { font: inherit; font-size: 12px; color: var(--vscode-dropdown-foreground); background: var(--vscode-dropdown-background); border: 1px solid var(--vscode-dropdown-border); border-radius: 2px; padding: 2px 6px; cursor: pointer; }
-		.calendar { position: absolute; top: calc(100% + 4px); left: 0; z-index: 10; padding: 8px; font-size: 12px; color: var(--vscode-foreground); background: var(--vscode-editorWidget-background); border: 1px solid var(--vscode-widget-border); border-radius: 4px; box-shadow: 0 2px 8px var(--vscode-widget-shadow); }
-		.calendar .month { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; font-weight: 600; }
-		.calendar .month button { font: inherit; color: var(--vscode-foreground); background: none; border: none; padding: 0 6px; cursor: pointer; }
-		.calendar .month button:disabled { color: var(--vscode-disabledForeground); cursor: default; }
-		.calendar .grid { display: grid; grid-template-columns: repeat(7, 28px); gap: 2px; text-align: center; }
-		.calendar .weekday { color: var(--vscode-descriptionForeground); font-size: 11px; }
-		.calendar .date { font: inherit; height: 24px; color: var(--vscode-descriptionForeground); background: none; border: 1px solid transparent; border-radius: 3px; padding: 0; cursor: pointer; }
-		.calendar .date.hasItems { color: var(--vscode-foreground); font-weight: 600; }
-		.calendar .date:hover:not(:disabled) { background: var(--vscode-list-hoverBackground); }
-		.calendar .date.today { border-color: var(--vscode-focusBorder); }
-		.calendar .date.chosen { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
-		.calendar .date:disabled { color: var(--vscode-disabledForeground); cursor: default; }
-		.note { font-size: 12px; color: var(--vscode-descriptionForeground); padding: 8px; border-bottom: 1px solid var(--vscode-widget-border); line-height: 1.4; }
-		.period select { font: inherit; color: var(--vscode-dropdown-foreground); background: var(--vscode-dropdown-background); border: 1px solid var(--vscode-dropdown-border); border-radius: 2px; padding: 2px 4px; }
-		.item { display: flex; gap: 10px; }
-		.item .thumb { flex: none; width: 96px; height: 54px; object-fit: cover; border-radius: 3px; background: var(--vscode-widget-border); }
-		.item .text { flex: 1; min-width: 0; }
-		.item .summary { font-size: 12px; color: var(--vscode-descriptionForeground); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-		.item .play, .item .zotero, .item .download, .item .unread { margin-left: 8px; }
-		.item .zotero.link, .item .unread { visibility: hidden; }
-		.item .journal { cursor: pointer; margin-left: 8px; padding: 0 6px; white-space: nowrap; border-radius: 9px; border: 1px solid var(--vscode-charts-purple); color: var(--vscode-charts-purple); }
-		.item:hover .zotero.link, .item:focus .zotero.link, .item:hover .unread, .item:focus .unread { visibility: visible; }
-	</style>
-</head>
-<body>
-<div class="container">
-	<div class="header">
-		<h1>${text.title}</h1>
+		.rssFeedsPage .feed .tick { width: 12px; height: 12px; margin: 0; padding: 0; border: none; border-radius: 50%; background: #FF5F57; cursor: pointer; }
+		.rssFeedsPage .feed .tick[aria-checked="true"] { background: #28C840; }
+		.rssFeedsPage .feed .tick[aria-checked="mixed"] { background: linear-gradient(90deg, #28C840 50%, #FF5F57 50%); }
+		.rssFeedsPage .feed .tick:focus-visible { outline: 1px solid var(--vscode-focusBorder); outline-offset: 2px; }
+		.rssFeedsPage .feed .indent { flex: none; width: 16px; }
+		.rssFeedsPage .feed.inTopic .indent { width: 40px; }
+		.rssFeedsPage .feed.hiddenFeed .name, .rssFeedsPage .feed.unsubscribed .name { color: var(--vscode-disabledForeground); }
+		.rssFeedsPage .columns { display: flex; align-items: center; gap: 8px; padding: 4px 8px; font-size: 11px; color: var(--vscode-descriptionForeground); border-bottom: 1px solid var(--vscode-widget-border); }
+		.rssFeedsPage .columns { align-items: flex-end; }
+		.rssFeedsPage .columns .fill { flex: 1; }
+		.rssFeedsPage .columns .group { flex: none; display: flex; flex-direction: column; gap: 3px; }
+		.rssFeedsPage .columns .groupTitle { text-align: center; padding-bottom: 2px; border-bottom: 1px solid var(--vscode-descriptionForeground); }
+		.rssFeedsPage .columns .groupColumns { display: flex; gap: 8px; }
+		.rssFeedsPage .columns .countColumn { flex: none; width: 88px; text-align: center; white-space: nowrap; }
+		.rssFeedsPage .infoButton { display: inline-flex; padding: 2px; margin: 0 0 8px -10px; border: none; border-radius: 4px; background: none; color: var(--vscode-textLink-foreground); cursor: pointer; }
+		.rssFeedsPage .infoButton:hover { background: var(--vscode-toolbar-hoverBackground); }
+		.rssFeedsPage .infoWrap { position: relative; display: inline-flex; }
+		.rssFeedsPage .infoHover { display: none; position: absolute; top: calc(100% - 4px); left: -10px; z-index: 10; width: 340px; padding: 6px 8px; font-size: 12px; line-height: 1.45; white-space: normal; border-radius: 4px; color: var(--vscode-editorHoverWidget-foreground); background: var(--vscode-editorHoverWidget-background); border: 1px solid var(--vscode-editorHoverWidget-border); box-shadow: 0 2px 8px var(--vscode-widget-shadow); }
+		.rssFeedsPage .infoWrap:hover .infoHover, .rssFeedsPage .infoButton:focus-visible + .infoHover { display: block; }
+		.rssFeedsPage .period { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font-size: 12px; color: var(--vscode-descriptionForeground); }
+		.rssFeedsPage .dayPicker { position: relative; margin: 0 0 8px -6px; }
+		.rssFeedsPage .dayButton { font: inherit; font-size: 12px; color: var(--vscode-dropdown-foreground); background: var(--vscode-dropdown-background); border: 1px solid var(--vscode-dropdown-border); border-radius: 2px; padding: 2px 6px; cursor: pointer; }
+		.rssFeedsPage .calendar { position: absolute; top: calc(100% + 4px); left: 0; z-index: 10; padding: 8px; font-size: 12px; color: var(--vscode-foreground); background: var(--vscode-editorWidget-background); border: 1px solid var(--vscode-widget-border); border-radius: 4px; box-shadow: 0 2px 8px var(--vscode-widget-shadow); }
+		.rssFeedsPage .calendar .month { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; font-weight: 600; }
+		.rssFeedsPage .calendar .month button { font: inherit; color: var(--vscode-foreground); background: none; border: none; padding: 0 6px; cursor: pointer; }
+		.rssFeedsPage .calendar .month button:disabled { color: var(--vscode-disabledForeground); cursor: default; }
+		.rssFeedsPage .calendar .grid { display: grid; grid-template-columns: repeat(7, 28px); gap: 2px; text-align: center; }
+		.rssFeedsPage .calendar .weekday { color: var(--vscode-descriptionForeground); font-size: 11px; }
+		.rssFeedsPage .calendar .date { font: inherit; height: 24px; color: var(--vscode-descriptionForeground); background: none; border: 1px solid transparent; border-radius: 3px; padding: 0; cursor: pointer; }
+		.rssFeedsPage .calendar .date.hasItems { color: var(--vscode-foreground); font-weight: 600; }
+		.rssFeedsPage .calendar .date:hover:not(:disabled) { background: var(--vscode-list-hoverBackground); }
+		.rssFeedsPage .calendar .date.today { border-color: var(--vscode-focusBorder); }
+		.rssFeedsPage .calendar .date.chosen { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		.rssFeedsPage .calendar .date:disabled { color: var(--vscode-disabledForeground); cursor: default; }
+		.rssFeedsPage .note { font-size: 12px; color: var(--vscode-descriptionForeground); padding: 8px; border-bottom: 1px solid var(--vscode-widget-border); line-height: 1.4; }
+		.rssFeedsPage .period select { font: inherit; color: var(--vscode-dropdown-foreground); background: var(--vscode-dropdown-background); border: 1px solid var(--vscode-dropdown-border); border-radius: 2px; padding: 2px 4px; }
+		.rssFeedsPage .item { display: flex; gap: 10px; }
+		.rssFeedsPage .item .thumb { flex: none; width: 96px; height: 54px; object-fit: cover; border-radius: 3px; background: var(--vscode-widget-border); }
+		.rssFeedsPage .item .text { flex: 1; min-width: 0; }
+		.rssFeedsPage .item .summary { font-size: 12px; color: var(--vscode-descriptionForeground); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+		.rssFeedsPage .item .play, .rssFeedsPage .item .zotero, .rssFeedsPage .item .download, .rssFeedsPage .item .unread { margin-left: 8px; }
+		.rssFeedsPage .item .zotero.link, .rssFeedsPage .item .unread { visibility: hidden; }
+		.rssFeedsPage .item .journal { cursor: pointer; margin-left: 8px; padding: 0 6px; white-space: nowrap; border-radius: 9px; border: 1px solid var(--vscode-charts-purple); color: var(--vscode-charts-purple); }
+		.rssFeedsPage .item:hover .zotero.link, .rssFeedsPage .item:focus .zotero.link, .rssFeedsPage .item:hover .unread, .rssFeedsPage .item:focus .unread { visibility: visible; }
+`,
+		bodyHtml: `
+	<div class="rssFeedsPage">
+	<div class="rssToolbar">
 		<label class="period">${text.period}<select id="days">${DISPLAY_DAYS.map(days => `<option value="${days}">${text.days[days]}</option>`).join('')}<option value="day">${text.onDay}</option></select></label><span class="dayPicker"><button id="day" class="dayButton" hidden></button><div class="calendar" id="calendar" hidden></div></span>
 		<label class="period">${text.journals}<select id="journals"></select></label><span class="infoWrap"><button class="infoButton" id="journalMetrics" aria-label="${text.journalMetrics}"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 1 1 0 14A7 7 0 0 1 8 1Zm0 1a6 6 0 1 0 0 12A6 6 0 0 0 8 2Zm0 5a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0v-4A.5.5 0 0 1 8 7Zm0-2.25a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5Z"/></svg></button><span class="infoHover" role="tooltip">${text.journalMetrics}</span></span>
 		<span class="actions">
@@ -569,19 +575,16 @@ function pageHtml(rows: number): string {
 			<button class="action" id="refresh">${text.refresh}</button>
 			<button class="action" id="exportOpml" title="${text.exportOpmlTooltip}">${text.exportOpml}</button>
 		</span>
-		${voiceButtonsHtml}
 	</div>
-	<p class="subtitle" id="subtitle">${text.intro}</p>
 	<div class="panes">
 		<div class="feeds" id="feeds"></div>
 		<div class="items">
 			<div id="items"></div>
 		</div>
 	</div>
-</div>
-<script>
-	const vscode = acquireVsCodeApi();
-	${voiceButtonsScript}
+	</div>
+`,
+		pageScriptJs: `
 	const TEXT = ${JSON.stringify(text)};
 	const feedsElement = document.getElementById('feeds');
 	const itemsElement = document.getElementById('items');
@@ -1056,9 +1059,9 @@ function pageHtml(rows: number): string {
 	document.addEventListener('click', closeCalendar);
 	document.addEventListener('keydown', event => { if (event.key === 'Escape') { closeCalendar(); } });
 	// The button pressed last stays blue; Add Feed until one is pressed
-	for (const button of document.querySelectorAll('.header button.action')) {
+	for (const button of document.querySelectorAll('.rssToolbar button.action')) {
 		button.addEventListener('click', () => {
-			document.querySelectorAll('.header button.action.pressed').forEach(other => other.classList.remove('pressed'));
+			document.querySelectorAll('.rssToolbar button.action.pressed').forEach(other => other.classList.remove('pressed'));
 			button.classList.add('pressed');
 		});
 	}
@@ -1087,9 +1090,8 @@ function pageHtml(rows: number): string {
 		}
 	});
 	vscode.postMessage({ command: 'ready', journals: journalFilter });
-</script>
-</body>
-</html>`;
+`,
+	});
 }
 
 registerAction2(class extends Action2 {

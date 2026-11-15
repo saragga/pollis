@@ -129,6 +129,8 @@ export interface WebviewParts {
 	readonly pageScriptJs?: string;
 	/** Where a Minimal page's script may connect, for the Content-Security-Policy (none by default). */
 	readonly connectSrc?: string;
+	/** Further sources of the page's images, as `https:` for the thumbnails of a feed's items. */
+	readonly imgSrc?: string;
 	/** Lets the page's script compile and run WebAssembly modules, which the Content-Security-Policy forbids by default. */
 	readonly allowWebAssembly?: boolean;
 	/** Table rows HTML; when empty, the Decision Table pane is left out. */
@@ -472,7 +474,7 @@ export function buildWebviewHtml(parts: WebviewParts): string {
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'${parts.allowWebAssembly ? ` 'wasm-unsafe-eval'` : ''} https://*.vscode-resource.vscode-cdn.net; img-src data: https://*.vscode-resource.vscode-cdn.net; font-src data:;${parts.connectSrc ? ` connect-src ${parts.connectSrc};` : ''}">
+	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'${parts.allowWebAssembly ? ` 'wasm-unsafe-eval'` : ''} https://*.vscode-resource.vscode-cdn.net; img-src data: https://*.vscode-resource.vscode-cdn.net${parts.imgSrc ? ` ${parts.imgSrc}` : ''}; font-src data:;${parts.connectSrc ? ` connect-src ${parts.connectSrc};` : ''}">
 	<title>${parts.title}</title>
 	<style>
 		${pageBaseCss}
