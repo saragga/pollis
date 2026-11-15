@@ -48,7 +48,7 @@ import { CHOOSE_TOOLBOX_PANELS_COMMAND_ID } from '../../compose/common/toolboxPa
  * which allows cross-origin requests; GitHub release downloads do not, so the window cannot fetch them.
  */
 const TOOLBOXES_URL = 'https://raw.githubusercontent.com/Trumpingtons/pollis-toolboxes/dist';
-const TOOLBOXES_INDEX_URL = `${TOOLBOXES_URL}/toolboxes.json`;
+export const TOOLBOXES_INDEX_URL = `${TOOLBOXES_URL}/toolboxes.json`;
 
 /** The icon of every toolbox row: the Pollis icon, also the toolboxes' own icon. */
 const TOOLBOX_ICON = FileAccess.asBrowserUri('vs/workbench/contrib/extensions/browser/media/pollis-toolbox-icon.png').toString(true);
@@ -57,7 +57,7 @@ const TOOLBOX_ICON = FileAccess.asBrowserUri('vs/workbench/contrib/extensions/br
 const SEARCH_VALUE_CONTEXT_KEY = 'extensionsSearchValue';
 
 /** A toolbox in the index, toolboxes.json. */
-interface IToolboxIndexEntry {
+export interface IToolboxIndexEntry {
 	/** The extension id, `<publisher>.<name>`. */
 	readonly id: string;
 	readonly name: string;
@@ -72,8 +72,23 @@ interface IToolboxIndexEntry {
 }
 
 /** The content of toolboxes.json. */
-interface IToolboxIndex {
+export interface IToolboxIndex {
 	readonly toolboxes?: readonly IToolboxIndexEntry[];
+}
+
+/** The toolboxes of toolboxes.json that have every field a row needs. */
+export function toolboxesOfIndex(index: IToolboxIndex | null | undefined): IToolboxIndexEntry[] {
+	return (index?.toolboxes ?? []).filter(toolbox => typeof toolbox?.id === 'string' && typeof toolbox.name === 'string' && typeof toolbox.version === 'string' && typeof toolbox.vsix === 'string');
+}
+
+/** The installed copy of a toolbox, if any. */
+export function installedToolbox(extensionsWorkbenchService: IExtensionsWorkbenchService, toolbox: IToolboxIndexEntry): IExtension | undefined {
+	return extensionsWorkbenchService.local.find(extension => areSameExtensions(extension.identifier, { id: toolbox.id }));
+}
+
+/** Whether an installed toolbox is older than the version of the index. */
+export function toolboxHasUpdate(toolbox: IToolboxIndexEntry, installed: IExtension | undefined): boolean {
+	return !!installed && installed.state !== ExtensionState.Uninstalled && !!semver.valid(installed.version) && !!semver.valid(toolbox.version) && semver.lt(installed.version, toolbox.version);
 }
 
 /** What the button of a toolbox's row does. */
@@ -183,7 +198,7 @@ export class PollisToolboxesView extends ViewPane {
 		try {
 			const context = await this.requestService.request({ type: 'GET', url: TOOLBOXES_INDEX_URL, callSite: 'pollisToolboxesView.loadIndex' }, CancellationToken.None);
 			const index = await asJson<IToolboxIndex>(context);
-			this.toolboxes = (index?.toolboxes ?? []).filter(toolbox => typeof toolbox?.id === 'string' && typeof toolbox.name === 'string' && typeof toolbox.version === 'string' && typeof toolbox.vsix === 'string');
+			this.toolboxes = toolboxesOfIndex(index);
 		} catch (error) {
 			this.loadError = toErrorMessage(error);
 		} finally {
@@ -194,14 +209,14 @@ export class PollisToolboxesView extends ViewPane {
 
 	/** The installed copy of a toolbox, if any. */
 	private getInstalled(toolbox: IToolboxIndexEntry): IExtension | undefined {
-		return this.extensionsWorkbenchService.local.find(extension => areSameExtensions(extension.identifier, { id: toolbox.id }));
+		return installedToolbox(this.extensionsWorkbenchService, toolbox);
 	}
 
 	private getAction(toolbox: IToolboxIndexEntry, installed: IExtension | undefined): ToolboxAction {
 		if (!installed || installed.state === ExtensionState.Uninstalled) {
 			return ToolboxAction.Install;
 		}
-		if (semver.valid(installed.version) && semver.valid(toolbox.version) && semver.lt(installed.version, toolbox.version)) {
+		if (toolboxHasUpdate(toolbox, installed)) {
 			return ToolboxAction.Update;
 		}
 		return ToolboxAction.None;

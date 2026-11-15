@@ -68,6 +68,7 @@ import { IExtensionGalleryManifest, IExtensionGalleryManifestService, ExtensionG
 import { URI } from '../../../../base/common/uri.js';
 import { DEFAULT_ACCOUNT_SIGN_IN_COMMAND } from '../../../services/accounts/browser/defaultAccount.js';
 import { PollisToolboxesView, toolboxesSearchText } from './pollisToolboxesView.js';
+import './pollisToolboxesBadge.js';
 import { PollisMcpServersView } from './pollisMcpServersView.js';
 
 export const ExtensionsSortByContext = new RawContextKey<string>('extensionsSortByValue', '');
