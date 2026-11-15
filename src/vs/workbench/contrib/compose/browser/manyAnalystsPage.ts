@@ -110,7 +110,8 @@ type ManyAnalystsMessage =
 	| { readonly command: 'newStudy' }
 	| { readonly command: 'collect' }
 	| { readonly command: 'open'; readonly analyst: number; readonly what: 'report' | 'code' | 'terminal' | 'log' | 'stop' }
-	| { readonly command: 'chooseFile'; readonly value: string };
+	| { readonly command: 'chooseFile'; readonly value: string }
+	| { readonly command: 'restart'; readonly analyst: number; readonly cell: { readonly agent: string; readonly model: string } };
 
 /** The open page, so a second request shows the same page. */
 let openPage: WebviewInput | undefined;
@@ -353,6 +354,8 @@ async function openManyAnalystsPage(accessor: ServicesAccessor): Promise<void> {
 							: started ? 'ended' : 'waiting';
 			return {
 				label: analyst.label,
+				agent: analyst.agent,
+				model: analyst.model,
 				status,
 				started: run?.started,
 				ended: run?.ended,
@@ -486,47 +489,91 @@ async function openManyAnalystsPage(accessor: ServicesAccessor): Promise<void> {
 		}
 		current = study;
 
-		const studyRuns = new Map<number, IStudyAgentRun>();
-		runs.set(folder.toString(), studyRuns);
+		runs.set(folder.toString(), new Map<number, IStudyAgentRun>());
 		const task = taskText(study, study.analysts.length);
-		const prompt = localize('manyAnalysts.prompt', "Read SKILL.md and TASK.md in this folder and follow them: answer the question of TASK.md on your own, without asking me anything.");
-		for (const [index, analyst] of study.analysts.entries()) {
-			const k = index + 1;
-			const analystFolder = joinPath(folder, `analyst-${k}`);
-			await fileService.copy(skill, joinPath(analystFolder, 'SKILL.md'), true);
-			await fileService.writeFile(joinPath(analystFolder, 'TASK.md'), VSBuffer.fromString(task));
-			if (file) {
-				await fileService.copy(joinPath(folder, 'data'), joinPath(analystFolder, 'data'), true);
-			}
-			const run = unattendedRun(configurationService, analyst);
-			const launched = run ? await launchAgent(launchServices, {
-				name: localize('manyAnalysts.terminal', "Many Analysts: {0}, Analyst {1} ({2})", study.name, k, analyst.label),
-				run,
-				prompt,
-				cwd: analystFolder,
-				focus: k === 1,
-			}) : 'missing';
-			if (typeof launched === 'string') {
-				notificationService.error(launched === 'missing'
-					? localize('manyAnalysts.missing', "Analyst {0} did not start: {1} cannot be run on this computer.", k, analyst.label)
-					: localize('manyAnalysts.failed', "Analyst {0} did not start: {1}", k, launched));
-				continue;
-			}
-			const analystRun: IStudyAgentRun = { terminal: launched, started: Date.now() };
-			studyRuns.set(k, analystRun);
-			const runStore = new DisposableStore();
-			runStore.add(launched.onExit(exit => {
-				analystRun.ended = Date.now();
-				analystRun.exitCode = typeof exit === 'number' ? exit : undefined;
-				onRunEnded?.();
-			}));
-			runStore.add(launched.onDisposed(() => {
-				analystRun.ended ??= Date.now();
-				runStore.dispose();
-				onRunEnded?.();
-			}));
+		for (const index of study.analysts.keys()) {
+			await launchAnalyst(study, index + 1, skill, task, index === 0);
 		}
 		watch(study);
+		await sendState();
+	};
+
+	/** Starts analyst `k` of a study in its folder, with the skill, the task and a copy of the data, and follows its run. */
+	const launchAnalyst = async (study: IStudy, k: number, skill: URI, task: string, focus: boolean) => {
+		let studyRuns = runs.get(study.folder.toString());
+		if (!studyRuns) {
+			studyRuns = new Map<number, IStudyAgentRun>();
+			runs.set(study.folder.toString(), studyRuns);
+		}
+		const analyst = study.analysts[k - 1];
+		const analystFolder = joinPath(study.folder, `analyst-${k}`);
+		await fileService.copy(skill, joinPath(analystFolder, 'SKILL.md'), true);
+		await fileService.writeFile(joinPath(analystFolder, 'TASK.md'), VSBuffer.fromString(task));
+		if (study.file) {
+			await fileService.copy(joinPath(study.folder, 'data'), joinPath(analystFolder, 'data'), true);
+		}
+		const run = unattendedRun(configurationService, analyst);
+		const launched = run ? await launchAgent(launchServices, {
+			name: localize('manyAnalysts.terminal', "Many Analysts: {0}, Analyst {1} ({2})", study.name, k, analyst.label),
+			run,
+			prompt: localize('manyAnalysts.prompt', "Read SKILL.md and TASK.md in this folder and follow them: answer the question of TASK.md on your own, without asking me anything."),
+			cwd: analystFolder,
+			focus,
+		}) : 'missing';
+		if (typeof launched === 'string') {
+			notificationService.error(launched === 'missing'
+				? localize('manyAnalysts.missing', "Analyst {0} did not start: {1} cannot be run on this computer.", k, analyst.label)
+				: localize('manyAnalysts.failed', "Analyst {0} did not start: {1}", k, launched));
+			return;
+		}
+		const analystRun: IStudyAgentRun = { terminal: launched, started: Date.now() };
+		studyRuns.set(k, analystRun);
+		const runStore = new DisposableStore();
+		runStore.add(launched.onExit(exit => {
+			analystRun.ended = Date.now();
+			analystRun.exitCode = typeof exit === 'number' ? exit : undefined;
+			onRunEnded?.();
+		}));
+		runStore.add(launched.onDisposed(() => {
+			analystRun.ended ??= Date.now();
+			runStore.dispose();
+			onRunEnded?.();
+		}));
+	};
+
+	/**
+	 * Starts one analyst again, the others left as they are: on the agent and model now chosen for it, in its folder
+	 * emptied, its earlier work moved to the Trash.
+	 */
+	const restart = async (k: number, chosenCell: { agent: string; model: string }) => {
+		const study = current && await readStudy(fileService, current.folder);
+		if (!study || k < 1 || k > study.analysts.length) {
+			return;
+		}
+		const run = runs.get(study.folder.toString())?.get(k);
+		if (run && run.ended === undefined) {
+			post({ command: 'runsProblem', text: localize('manyAnalysts.stillRunning', "Analyst {0} is running: stop it first, then restart it.", k) });
+			return;
+		}
+		const cell = cells.find(other => other.agent === chosenCell.agent && other.model === chosenCell.model);
+		if (!cell) {
+			post({ command: 'runsProblem', text: localize('manyAnalysts.noRestartCell', "Choose an agent and a model for Analyst {0} in Analysts, then restart it.", k) });
+			return;
+		}
+		const skill = await instantiationService.invokeFunction(skillFile, SKILL);
+		if (!skill || !await fileService.exists(skill)) {
+			post({ command: 'runsProblem', text: localize('manyAnalysts.noSkill', "The skill {0} of the Pollis Agents plugin could not be found.", SKILL) });
+			return;
+		}
+		const restarted: IStudy = { ...study, analysts: study.analysts.map((analyst, i) => i === k - 1 ? { agent: cell.agent, model: cell.model, label: cell.label } : analyst) };
+		await fileService.writeFile(joinPath(study.folder, STUDY_FILE), VSBuffer.fromString(studyToml(restarted)));
+		const folder = joinPath(study.folder, `analyst-${k}`);
+		if (await fileService.exists(folder)) {
+			await fileService.del(folder, { recursive: true, useTrash: true });
+		}
+		current = restarted;
+		await launchAnalyst(restarted, k, skill, taskText(restarted, restarted.analysts.length), true);
+		watch(restarted);
 		await sendState();
 	};
 
@@ -578,6 +625,11 @@ async function openManyAnalystsPage(accessor: ServicesAccessor): Promise<void> {
 				post({ command: 'collecting' });
 			} else if (message.command === 'open' && hasKey(message, { analyst: true, what: true }) && Number.isInteger(message.analyst) && ['report', 'code', 'terminal', 'log', 'stop'].includes(message.what)) {
 				await openFile(message.analyst, message.what);
+			} else if (message.command === 'restart' && hasKey(message, { analyst: true, cell: true }) && Number.isInteger(message.analyst)) {
+				const cell = message.cell;
+				if (typeof cell?.agent === 'string' && typeof cell?.model === 'string') {
+					await restart(message.analyst, { agent: cell.agent, model: cell.model });
+				}
 			} else if (message.command === 'chooseFile' && hasKey(message, { value: true })) {
 				const home = await pathService.userHome({ preferLocal: true });
 				const value = folderUri(message.value, home);
@@ -629,6 +681,10 @@ function pageHtml(): string {
 		code: localize('manyAnalysts.code', "Code"),
 		terminal: localize('manyAnalysts.terminalLink', "Terminal"),
 		stop: localize('manyAnalysts.stop', "Stop"),
+		restart: localize('manyAnalysts.restart', "Restart"),
+		restartTooltip: localize('manyAnalysts.restartTooltip', "Start this analyst again, on the agent and model chosen for it in Analysts, in its folder emptied: its earlier work goes to the Trash"),
+		started: localize('manyAnalysts.started', "The analysts of this study have started: restart one from its row, or choose New Study for another study."),
+		needStudy: localize('manyAnalysts.needStudy', "Start the Analysts first."),
 		log: localize('manyAnalysts.log', "Rerun Log"),
 		noStudy: localize('manyAnalysts.noStudy', "No study is running: start one, or open an earlier one in step 1."),
 		results: localize('manyAnalysts.results', "Results"),
@@ -715,6 +771,7 @@ function pageHtml(): string {
 			<thead><tr><th>${localize('manyAnalysts.analystColumn', "Analyst")}</th><th>${text.agentModel}</th><th>${text.status}</th><th class="number">${text.time}</th><th>${text.open}</th></tr></thead>
 			<tbody id="runRows"></tbody>
 		</table>
+		<div class="small status missing" id="runsProblem"></div>
 `,
 			},
 			{
@@ -724,6 +781,7 @@ function pageHtml(): string {
 		<p class="hint">${text.resultsHint}</p>
 		<div class="settings"><span class="bar"><button class="action" id="collect">${text.collect}</button></span></div>
 		<div class="small status" id="collectStatus"></div>
+		<div class="small status missing" id="collectProblem"></div>
 		<div id="results" hidden>
 			<h3 class="part">${text.spread}</h3>
 			<div id="spread"></div>
@@ -752,8 +810,9 @@ function pageHtml(): string {
 	const count = document.getElementById('count');
 	const analystsBox = document.getElementById('analysts');
 	let state = undefined;
-	/** The cell chosen for each analyst, kept when the number of analysts changes. */
+	/** The cell chosen for each analyst, kept when the number of analysts changes, and the study they were taken from. */
 	let chosen = [];
+	let chosenStudy = '';
 	let timer = undefined;
 
 ${orchestrationPageJs}
@@ -805,20 +864,19 @@ ${orchestrationPageJs}
 		return { name: nameInput.value.trim() || nameInput.placeholder, question: question.value, estimate: estimate.value, data: dataKind(), file: fileInput.value, description: description.value, analysts };
 	}
 
-	function link(label, analyst, what) {
-		return '<button class="link" data-analyst="' + analyst + '" data-what="' + what + '">' + escapeHtml(label) + '</button>';
+	function link(label, analyst, what, title) {
+		return '<button class="link" data-analyst="' + analyst + '" data-what="' + what + '"' + (title ? ' title="' + escapeHtml(title) + '"' : '') + '>' + escapeHtml(label) + '</button>';
 	}
 	function drawRuns() {
 		const study = state.study;
 		document.getElementById('noStudy').hidden = !!study;
 		document.getElementById('runTable').hidden = !study;
-		document.getElementById('start').disabled = !!study || !state.cells.length;
 		if (!study) {
 			return;
 		}
 		document.getElementById('runRows').innerHTML = study.analysts.map((run, i) => {
 			const status = TEXT.statuses[run.status] + (run.status === 'failed' && typeof run.exitCode === 'number' ? ' (' + TEXT.exit.replace('{0}', run.exitCode) + ')' : '');
-			const links = [run.hasReport ? link(TEXT.report, i + 1, 'report') : '', run.hasCode ? link(TEXT.code, i + 1, 'code') : '', run.hasTerminal ? link(TEXT.terminal, i + 1, 'terminal') : '', run.status === 'running' ? link(TEXT.stop, i + 1, 'stop') : ''].filter(x => x).join('');
+			const links = [run.hasReport ? link(TEXT.report, i + 1, 'report') : '', run.hasCode ? link(TEXT.code, i + 1, 'code') : '', run.hasTerminal ? link(TEXT.terminal, i + 1, 'terminal') : '', run.status === 'running' ? link(TEXT.stop, i + 1, 'stop') : link(TEXT.restart, i + 1, 'restart', TEXT.restartTooltip)].filter(x => x).join('');
 			return '<tr><td>' + (i + 1) + '</td><td>' + escapeHtml(run.label) + '</td><td class="status-' + run.status + '">' + escapeHtml(status) + '</td><td class="number" data-run="' + i + '">' + elapsed(run) + '</td><td class="links">' + links + '</td></tr>';
 		}).join('');
 		clearInterval(timer);
@@ -885,8 +943,11 @@ ${orchestrationPageJs}
 	function drawResults() {
 		const study = state.study;
 		const results = study && study.results;
-		document.getElementById('collect').disabled = !study;
-		// The one blue button is the next thing to do: Start before a study, Check and Collect once every analyst has ended
+		// The one blue button is the next thing to do: Start before a study, Check and Collect once every analyst has ended;
+		// the buttons are never disabled, and say why when they cannot do their work
+		if (study) {
+			document.getElementById('collectProblem').textContent = '';
+		}
 		document.getElementById('start').classList.toggle('current', !study);
 		document.getElementById('collect').classList.toggle('current', !!study && !results && !study.analysts.some(run => run.status === 'running'));
 		document.getElementById('results').hidden = !results;
@@ -943,15 +1004,26 @@ ${orchestrationPageJs}
 				radio.checked = radio.value === study.data;
 			}
 			count.value = String(study.analysts.length);
-			chosen = [];
+			// Another study: the menus show the agents and models of its analysts; a running analyst keeps its own,
+			// the others may take another, for Restart
+			if (study.name !== chosenStudy) {
+				chosenStudy = study.name;
+				chosen = study.analysts.map(cellKey);
+			}
 			analystsBox.innerHTML = '';
 			study.analysts.forEach((run, i) => {
 				const label = document.createElement('span');
 				label.className = 'small';
 				label.textContent = TEXT.analyst.replace('{0}', String(i + 1));
-				const value = document.createElement('span');
-				value.textContent = run.label;
-				analystsBox.append(label, value);
+				const select = document.createElement('select');
+				select.innerHTML = state.cells.map(cell => '<option value="' + escapeHtml(cellKey(cell)) + '">' + escapeHtml(cell.label) + '</option>').join('');
+				if (run.status === 'running') {
+					chosen[i] = cellKey(run);
+				}
+				select.value = chosen[i] || '';
+				select.disabled = run.status === 'running';
+				select.addEventListener('change', () => { chosen[i] = select.value; });
+				analystsBox.append(label, select);
 			});
 			document.getElementById('repeated').hidden = true;
 			document.getElementById('noCells').hidden = true;
@@ -975,15 +1047,34 @@ ${orchestrationPageJs}
 	});
 	document.getElementById('newStudy').addEventListener('click', () => vscode.postMessage({ command: 'newStudy' }));
 	document.getElementById('chooseFile').addEventListener('click', () => vscode.postMessage({ command: 'chooseFile', value: fileInput.value }));
+	// The buttons are never disabled: when one cannot do its work, it says why
 	document.getElementById('start').addEventListener('click', () => {
-		document.getElementById('startProblem').textContent = '';
-		vscode.postMessage({ command: 'start', inputs: inputs() });
+		const blocked = state && state.study ? TEXT.started : state && !state.cells.length ? TEXT.noCells : '';
+		document.getElementById('startProblem').textContent = blocked;
+		if (!blocked) {
+			vscode.postMessage({ command: 'start', inputs: inputs() });
+		}
 	});
-	document.getElementById('collect').addEventListener('click', () => vscode.postMessage({ command: 'collect' }));
+	document.getElementById('collect').addEventListener('click', () => {
+		const blocked = state && state.study ? '' : TEXT.needStudy;
+		document.getElementById('collectProblem').textContent = blocked;
+		if (!blocked) {
+			vscode.postMessage({ command: 'collect' });
+		}
+	});
 	document.body.addEventListener('click', event => {
 		const target = event.target.closest('button[data-what]');
-		if (target) {
-			vscode.postMessage({ command: 'open', analyst: Number(target.dataset.analyst), what: target.dataset.what });
+		if (!target) {
+			return;
+		}
+		const analyst = Number(target.dataset.analyst);
+		if (target.dataset.what === 'restart') {
+			// The analyst starts again on the agent and model chosen in its menu in Analysts, else on those it had
+			const cell = state.cells.find(c => cellKey(c) === chosen[analyst - 1]) || state.study.analysts[analyst - 1];
+			document.getElementById('runsProblem').textContent = '';
+			vscode.postMessage({ command: 'restart', analyst, cell: { agent: cell.agent, model: cell.model } });
+		} else {
+			vscode.postMessage({ command: 'open', analyst, what: target.dataset.what });
 		}
 	});
 
@@ -996,6 +1087,7 @@ ${orchestrationPageJs}
 			const wasLocked = locked();
 			state = message;
 			if (wasLocked && !state.study) {
+				chosenStudy = '';
 				question.value = TEXT.exampleQuestion;
 				estimate.value = TEXT.exampleEstimate;
 				fileInput.value = '';
@@ -1010,6 +1102,8 @@ ${orchestrationPageJs}
 			fileInput.value = message.value;
 		} else if (message.command === 'startProblem') {
 			document.getElementById('startProblem').textContent = message.text;
+		} else if (message.command === 'runsProblem') {
+			document.getElementById('runsProblem').textContent = message.text;
 		} else if (message.command === 'collecting') {
 			document.getElementById('collectStatus').textContent = TEXT.collecting;
 		}

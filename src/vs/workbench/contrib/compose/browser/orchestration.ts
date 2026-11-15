@@ -29,13 +29,15 @@ import { CODING_AGENTS, commandWords, findProgram, IAgentLaunchServices, launchA
 /**
  * The command line of each agent Pollis knows for a run that ends by itself: it takes the first message, works
  * with no questions asked and exits. `{model}` is where the arguments of a cloud model go.
- * - Claude Code: print mode, edits in its folder accepted, Julia the only command it runs.
+ * - Claude Code: print mode, edits in its folder accepted, Julia the only command it runs. The first message comes
+ *   before the options, as --allowedTools takes every word after it up to the next option as a tool, the message too
+ *   when no --model follows, as on a local model.
  * - Codex: `codex exec`, which writes only in its folder.
  * - OpenCode: `opencode run`.
  * An agent of the user's own has none, so the pages do not offer it.
  */
 const UNATTENDED_COMMANDS: Readonly<Record<string, string>> = {
-	'Claude Code': 'claude -p --permission-mode acceptEdits --allowedTools "Bash(julia *)" {model} {prompt}',
+	'Claude Code': 'claude -p {prompt} --permission-mode acceptEdits --allowedTools "Bash(julia *)" {model}',
 	'Codex': 'codex exec -s workspace-write {model} {prompt}',
 	'OpenCode': 'opencode run {model} {prompt}',
 };

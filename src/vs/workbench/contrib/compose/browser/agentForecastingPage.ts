@@ -102,7 +102,8 @@ type AgentForecastingMessage =
 	| { readonly command: 'score' }
 	| { readonly command: 'load'; readonly name: string }
 	| { readonly command: 'newStudy' }
-	| { readonly command: 'open'; readonly agent: string; readonly what: 'method' | 'report' | 'terminal' | 'stop' };
+	| { readonly command: 'open'; readonly agent: string; readonly what: 'method' | 'report' | 'terminal' | 'stop' }
+	| { readonly command: 'restart'; readonly agent: number; readonly cell: { readonly agent: string; readonly model: string } };
 
 /** The open page, so a second request shows the same page. */
 let openPage: WebviewInput | undefined;
@@ -544,7 +545,7 @@ async function openAgentForecastingPage(accessor: ServicesAccessor): Promise<voi
 				sample: study.sample,
 				seed: study.seed,
 				prepared: await preparedOf(study),
-				agents: await Promise.all(study.agents.map((entry, index) => runs.state(fileService, study.folder, `agent-${index + 1}`, entry.label, METHOD_FILE))),
+				agents: await Promise.all(study.agents.map(async (entry, index) => ({ ...await runs.state(fileService, study.folder, `agent-${index + 1}`, entry.label, METHOD_FILE), agent: entry.agent, model: entry.model }))),
 				results: await resultsState(study),
 			},
 		});
@@ -603,6 +604,48 @@ async function openAgentForecastingPage(accessor: ServicesAccessor): Promise<voi
 				terminalName: localize('agentForecasting.terminal', "Agents' Forecasting Competition: {0}, Agent {1} ({2})", study.name, index + 1, entry.label),
 			});
 		}
+		await sendState();
+	};
+
+	/**
+	 * Starts one agent again, the others left as they are: on the agent and model now chosen for it, in its folder
+	 * emptied, its earlier work moved to the Trash.
+	 */
+	const restart = async (index: number, chosenCell: { agent: string; model: string }) => {
+		const study = current && await readStudy(fileService, current.folder);
+		const prepared = study && await preparedOf(study);
+		if (!study || !prepared || index < 0 || index >= study.agents.length) {
+			return;
+		}
+		const key = `agent-${index + 1}`;
+		const run = runs.get(study.folder, key);
+		if (run && run.ended === undefined) {
+			post({ command: 'problem', step: 'runs', text: localize('agentForecasting.stillRunning', "Agent {0} is running: stop it first, then restart it.", index + 1) });
+			return;
+		}
+		const cell = cells.find(other => other.agent === chosenCell.agent && other.model === chosenCell.model);
+		if (!cell) {
+			post({ command: 'problem', step: 'runs', text: localize('agentForecasting.noRestartCell', "Choose an agent and a model for Agent {0} in Agents, then restart it.", index + 1) });
+			return;
+		}
+		const skill = await instantiationService.invokeFunction(skillFile, SKILL);
+		if (!skill || !await fileService.exists(skill)) {
+			post({ command: 'problem', step: 'runs', text: localize('agentForecasting.noSkill', "The skill {0} of the Pollis Agents plugin could not be found.", SKILL) });
+			return;
+		}
+		const withAgents: IStudy = { ...study, agents: study.agents.map((entry, i) => i === index ? { agent: cell.agent, model: cell.model, label: cell.label } : entry) };
+		await fileService.writeFile(joinPath(study.folder, STUDY_FILE), VSBuffer.fromString(studyToml(withAgents)));
+		const folder = joinPath(study.folder, key);
+		if (await fileService.exists(folder)) {
+			await fileService.del(folder, { recursive: true, useTrash: true });
+		}
+		await fileService.writeFile(joinPath(folder, CHECK_FILE), VSBuffer.fromString(checkCode()));
+		watch(withAgents);
+		await startStudyAgent(launchServices, configurationService, notificationService, runs, {
+			study: study.folder, key, cell: withAgents.agents[index], skill, data: joinPath(study.folder, 'data'), focus: true,
+			task: taskText(withAgents, withAgents.agents.length, prepared.series, prepared.horizon),
+			terminalName: localize('agentForecasting.terminal', "Agents' Forecasting Competition: {0}, Agent {1} ({2})", study.name, index + 1, withAgents.agents[index].label),
+		});
 		await sendState();
 	};
 
@@ -667,6 +710,11 @@ async function openAgentForecastingPage(accessor: ServicesAccessor): Promise<voi
 				await sendState();
 			} else if (message.command === 'open' && hasKey(message, { agent: true, what: true }) && typeof message.agent === 'string' && ['method', 'report', 'terminal', 'stop'].includes(message.what)) {
 				await openFile(message.agent, message.what);
+			} else if (message.command === 'restart' && hasKey(message, { agent: true, cell: true }) && Number.isInteger(message.agent)) {
+				const [cell] = checkedCells([message.cell]);
+				if (cell) {
+					await restart(message.agent, cell);
+				}
 			}
 		} catch (error) {
 			notificationService.error(toErrorMessage(error));
@@ -721,6 +769,14 @@ function pageHtml(): string {
 		report: localize('agentForecasting.report', "Report"),
 		terminal: localize('agentForecasting.terminalLink', "Terminal"),
 		stop: localize('agentForecasting.stop', "Stop"),
+		restart: localize('agentForecasting.restart', "Restart"),
+		restartTooltip: localize('agentForecasting.restartTooltip', "Start this agent again, on the agent and model chosen for it in Agents, in its folder emptied: its earlier work goes to the Trash"),
+		studyPrepared: localize('agentForecasting.studyPrepared', "The series of this study are prepared: choose New Study for another study."),
+		needPrepare: localize('agentForecasting.needPrepare', "Prepare the Series first."),
+		notPrepared: localize('agentForecasting.notPrepared', "The series are not ready yet: the Julia REPL is writing them."),
+		started: localize('agentForecasting.started', "The agents of this study have started: restart one from its row in Runs, or choose New Study for another study."),
+		waitAgents: localize('agentForecasting.waitAgents', "Wait for the agents to end, or stop them in Runs."),
+		noMethods: localize('agentForecasting.noMethods', "No agent has written a method yet."),
 		noRuns: localize('agentForecasting.noRuns', "The agents show here once they are started."),
 		scoresStep: localize('agentForecasting.scoresStep', "Scores"),
 		scoresHint: localize('agentForecasting.scoresHint', "Score the Methods sends the code to the Julia REPL, which runs every agent's method on the series in a new Julia process, on every thread of this computer, and scores the forecasts on the values held back: sMAPE, MASE and OWA, the overall weighted average of the two relative to Naive2, lower better. It costs nothing: no agent runs."),
@@ -780,6 +836,7 @@ function pageHtml(): string {
 		<p class="hint">${text.sampleHint}</p>
 		<div class="settings"><span class="bar"><button class="action current" id="prepare">${text.prepare}</button></span></div>
 		<div class="small status" id="prepareStatus"></div>
+		<div class="small status missing" id="prepareProblem"></div>
 `,
 			},
 			{
@@ -803,6 +860,7 @@ function pageHtml(): string {
 			<thead><tr><th>${text.agentColumn}</th><th>${text.agentModel}</th><th>${text.status}</th><th class="number">${text.time}</th><th>${text.open}</th></tr></thead>
 			<tbody id="runRows"></tbody>
 		</table>
+		<div class="small status missing" id="runsProblem"></div>
 `,
 			},
 			{
@@ -812,6 +870,7 @@ function pageHtml(): string {
 		<p class="hint">${text.scoresHint}</p>
 		<div class="settings"><span class="bar"><button class="action" id="score">${text.score}</button></span></div>
 		<div class="small status" id="scoreStatus"></div>
+		<div class="small status missing" id="scoreProblem"></div>
 		<div class="af-scores" id="scoreBox" hidden>
 		<table class="ma stickyHead" id="scoreTable">
 			<thead><tr><th class="number" title="${text.rankTooltip}">${text.rank}</th><th class="sortable" data-sort="method" data-label="${text.methodColumn}" title="${text.sortHint}">${text.methodColumn}</th><th class="sortable number" data-sort="sMAPE" data-label="sMAPE" title="${text.sortHint}">sMAPE</th><th class="sortable number" data-sort="MASE" data-label="MASE" title="${text.sortHint}">MASE</th><th class="sortable number" data-sort="OWA" data-label="OWA" title="${text.sortHint}">OWA</th><th class="sortable number" id="placeHeading" data-sort="place" data-label="" title="${text.sortHint}"></th><th>${text.note}</th></tr></thead>
@@ -874,16 +933,21 @@ ${orchestrationPageJs}
 			label.textContent = TEXT.agentLabel.replace('{0}', String(i + 1));
 			const select = document.createElement('select');
 			select.innerHTML = cells.map(cell => '<option value="' + escapeHtml(cellKey(cell)) + '">' + escapeHtml(cell.label) + '</option>').join('');
+			// A running agent keeps its model; the others may take another, for Restart
+			const run = state && state.study ? state.study.agents[i] : undefined;
+			if (run && run.status === 'running') {
+				chosen[i] = cellKey(run);
+			}
 			select.value = chosen[i] || '';
-			select.disabled = !!(state && state.study && state.study.agents.length);
+			select.disabled = !!(run && run.status === 'running');
 			select.addEventListener('change', () => { chosen[i] = select.value; });
 			agentsBox.append(label, select);
 		}
 		document.getElementById('noCells').hidden = cells.length > 0;
 	}
 
-	function link(label, agent, what) {
-		return '<button class="link" data-agent="' + escapeHtml(agent) + '" data-what="' + what + '">' + escapeHtml(label) + '</button>';
+	function link(label, agent, what, title) {
+		return '<button class="link" data-agent="' + escapeHtml(agent) + '" data-what="' + what + '"' + (title ? ' title="' + escapeHtml(title) + '"' : '') + '>' + escapeHtml(label) + '</button>';
 	}
 	function drawRuns() {
 		const agents = state.study ? state.study.agents : [];
@@ -891,7 +955,7 @@ ${orchestrationPageJs}
 		document.getElementById('noRuns').hidden = agents.length > 0;
 		document.getElementById('runRows').innerHTML = agents.map((run, i) => {
 			const status = TEXT.statuses[run.status] + (run.status === 'failed' && typeof run.exitCode === 'number' ? ' (' + TEXT.exit.replace('{0}', run.exitCode) + ')' : '');
-			const links = [run.hasFile ? link(TEXT.method, run.key, 'method') + link(TEXT.report, run.key, 'report') : '', run.hasTerminal ? link(TEXT.terminal, run.key, 'terminal') : '', run.status === 'running' ? link(TEXT.stop, run.key, 'stop') : ''].filter(x => x).join('');
+			const links = [run.hasFile ? link(TEXT.method, run.key, 'method') + link(TEXT.report, run.key, 'report') : '', run.hasTerminal ? link(TEXT.terminal, run.key, 'terminal') : '', run.status === 'running' ? link(TEXT.stop, run.key, 'stop') : link(TEXT.restart, run.key, 'restart', TEXT.restartTooltip)].filter(x => x).join('');
 			return '<tr><td>' + (i + 1) + '</td><td>' + escapeHtml(run.label) + '</td><td class="status-' + run.status + '">' + escapeHtml(status) + '</td><td class="number" data-run="' + escapeHtml(run.key) + '">' + elapsed(run) + '</td><td class="links">' + links + '</td></tr>';
 		}).join('');
 		clearInterval(timer);
@@ -980,20 +1044,35 @@ ${orchestrationPageJs}
 		document.getElementById('combinationNote').hidden = !combinations.length;
 	}
 
-	/** The one blue button is the next thing to do. */
+	/** Why a step's button cannot do its work now, or '' when it can: the buttons are never disabled, and say why when pressed. */
+	function prepareBlocked() {
+		return state && state.study ? TEXT.studyPrepared : '';
+	}
+	function startBlocked() {
+		const study = state && state.study;
+		return !study ? TEXT.needPrepare
+			: !study.prepared ? TEXT.notPrepared
+				: study.agents.length ? TEXT.started
+					: !state.cells.length ? TEXT.noCells : '';
+	}
+	function scoreBlocked() {
+		const agents = state && state.study ? state.study.agents : [];
+		return agents.some(run => run.status === 'running') ? TEXT.waitAgents
+			: !agents.some(run => run.hasFile) ? TEXT.noMethods : '';
+	}
+
+	/** The one blue button is the next thing to do; a button that can do its work clears what it said when it could not. */
 	function drawButtons() {
 		const study = state.study;
-		const agents = study ? study.agents : [];
-		const running = agents.some(run => run.status === 'running');
-		const prepare = document.getElementById('prepare');
-		const start = document.getElementById('start');
-		const score = document.getElementById('score');
-		prepare.disabled = !!study;
-		start.disabled = !(study && study.prepared && !agents.length && state.cells.length);
-		score.disabled = !(agents.some(run => run.hasFile) && !running);
-		prepare.classList.toggle('current', !study);
-		start.classList.toggle('current', !start.disabled);
-		score.classList.toggle('current', !score.disabled && !study.results);
+		const ready = { prepare: !prepareBlocked(), start: !startBlocked(), score: !scoreBlocked() };
+		document.getElementById('prepare').classList.toggle('current', ready.prepare);
+		document.getElementById('start').classList.toggle('current', ready.start);
+		document.getElementById('score').classList.toggle('current', ready.score && !study.results);
+		for (const step of ['prepare', 'start', 'score']) {
+			if (ready[step]) {
+				document.getElementById(step + 'Problem').textContent = '';
+			}
+		}
 	}
 
 	function draw() {
@@ -1039,6 +1118,11 @@ ${orchestrationPageJs}
 	earlier.addEventListener('change', () => vscode.postMessage(earlier.value ? { command: 'load', name: earlier.value } : { command: 'newStudy' }));
 	document.getElementById('newStudy').addEventListener('click', () => vscode.postMessage({ command: 'newStudy' }));
 	document.getElementById('prepare').addEventListener('click', () => {
+		const blocked = prepareBlocked();
+		document.getElementById('prepareProblem').textContent = blocked;
+		if (blocked) {
+			return;
+		}
 		document.getElementById('prepareStatus').textContent = '';
 		vscode.postMessage({ command: 'prepare', inputs: {
 			name: nameInput.value.trim() || nameInput.placeholder,
@@ -1049,12 +1133,22 @@ ${orchestrationPageJs}
 		} });
 	});
 	document.getElementById('start').addEventListener('click', () => {
-		document.getElementById('startProblem').textContent = '';
+		const blocked = startBlocked();
+		document.getElementById('startProblem').textContent = blocked;
+		if (blocked) {
+			return;
+		}
 		const n = Number(count.value);
 		const agents = chosen.slice(0, n).map(key => state.cells.find(c => cellKey(c) === key)).filter(c => c).map(c => ({ agent: c.agent, model: c.model }));
 		vscode.postMessage({ command: 'start', agents });
 	});
-	document.getElementById('score').addEventListener('click', () => vscode.postMessage({ command: 'score' }));
+	document.getElementById('score').addEventListener('click', () => {
+		const blocked = scoreBlocked();
+		document.getElementById('scoreProblem').textContent = blocked;
+		if (!blocked) {
+			vscode.postMessage({ command: 'score' });
+		}
+	});
 	document.getElementById('scoreTable').addEventListener('click', event => {
 		const heading = event.target.closest('th[data-sort]');
 		if (heading) {
@@ -1064,7 +1158,16 @@ ${orchestrationPageJs}
 	});
 	document.body.addEventListener('click', event => {
 		const target = event.target.closest('button[data-what]');
-		if (target) {
+		if (!target) {
+			return;
+		}
+		if (target.dataset.what === 'restart') {
+			// The agent starts again on the agent and model chosen in its menu in Agents, else on those it had
+			const index = Number(target.dataset.agent.replace('agent-', '')) - 1;
+			const cell = state.cells.find(c => cellKey(c) === chosen[index]) || state.study.agents[index];
+			document.getElementById('runsProblem').textContent = '';
+			vscode.postMessage({ command: 'restart', agent: index, cell: { agent: cell.agent, model: cell.model } });
+		} else {
 			vscode.postMessage({ command: 'open', agent: target.dataset.agent, what: target.dataset.what });
 		}
 	});
@@ -1076,7 +1179,12 @@ ${orchestrationPageJs}
 		const message = event.data;
 		if (message.command === 'state') {
 			const wasStudy = !!(state && state.study);
+			const before = state && state.study ? state.study.name : '';
 			state = message;
+			// Another study: the menus show the agents and models of its agents
+			if (state.study && state.study.name !== before && state.study.agents.length) {
+				chosen = state.study.agents.map(cellKey);
+			}
 			if (wasStudy && !state.study) {
 				competition.value = 'm4';
 				drawFrequencies();
@@ -1086,7 +1194,7 @@ ${orchestrationPageJs}
 			}
 			draw();
 		} else if (message.command === 'problem') {
-			document.getElementById(message.step === 'start' ? 'startProblem' : 'prepareStatus').textContent = message.text;
+			document.getElementById(message.step === 'start' ? 'startProblem' : message.step === 'runs' ? 'runsProblem' : 'prepareProblem').textContent = message.text;
 		} else if (message.command === 'sent') {
 			document.getElementById(message.step === 'score' ? 'scoreStatus' : 'prepareStatus').textContent = message.step === 'score' ? TEXT.scoring : TEXT.preparing;
 		}

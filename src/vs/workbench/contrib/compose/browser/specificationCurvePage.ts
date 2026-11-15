@@ -134,7 +134,8 @@ type SpecificationCurveMessage =
 	| { readonly command: 'load'; readonly name: string }
 	| { readonly command: 'newStudy' }
 	| { readonly command: 'open'; readonly agent: string; readonly what: 'code' | 'decisions' | 'terminal' | 'stop' }
-	| { readonly command: 'chooseFile'; readonly value: string };
+	| { readonly command: 'chooseFile'; readonly value: string }
+	| { readonly command: 'restart'; readonly agent: string; readonly cell: { readonly agent: string; readonly model: string } };
 
 /** The open page, so a second request shows the same page. */
 let openPage: WebviewInput | undefined;
@@ -617,7 +618,7 @@ async function openSpecificationCurvePage(accessor: ServicesAccessor): Promise<v
 		watcher.value = store;
 	};
 
-	const agentState = (study: IStudy, key: string, entry: IAgentEntry, doneFile: string) => runs.state(fileService, study.folder, key, entry.label, doneFile);
+	const agentState = async (study: IStudy, key: string, entry: IAgentEntry, doneFile: string) => ({ ...await runs.state(fileService, study.folder, key, entry.label, doneFile), agent: entry.agent, model: entry.model });
 
 	/** The decisions proposed: merged from the proposers' decisions.toml, or those taken from a Many Analysts study. */
 	const proposals = async (study: IStudy): Promise<IDecision[]> => {
@@ -863,13 +864,62 @@ async function openSpecificationCurvePage(accessor: ServicesAccessor): Promise<v
 			post({ command: 'problem', step: 'code', text: localize('specificationCurve.noSkill', "The skill {0} of the Pollis Agents plugin could not be found.", CODE_SKILL) });
 			return;
 		}
+		// Written again: the coder that wrote it has ended, and its folder goes to the Trash
+		const coderRun = runs.get(study.folder, CODER);
+		if (coderRun && coderRun.ended === undefined) {
+			post({ command: 'problem', step: 'code', text: localize('specificationCurve.coderRunning', "The coder is running: stop it first, then restart it.") });
+			return;
+		}
 		const withCoder: IStudy = { ...study, coder: { agent: cell.agent, model: cell.model, label: cell.label } };
 		await fileService.writeFile(joinPath(study.folder, STUDY_FILE), VSBuffer.fromString(studyToml(withCoder)));
 		const coderFolder = joinPath(study.folder, CODER);
+		if (study.coder && await fileService.exists(coderFolder)) {
+			await fileService.del(coderFolder, { recursive: true, useTrash: true });
+		}
 		await fileService.writeFile(joinPath(coderFolder, CHOICES_FILE), VSBuffer.fromString(decisionsToml(localize('specificationCurve.choicesHeading', "# Specification Curve: the decisions and the options kept; every specification is one option of each decision"), decisions, false)));
 		await fileService.writeFile(joinPath(coderFolder, RUNNER_FILE), VSBuffer.fromString(runnerCode()));
 		watch(withCoder);
 		await startAgent(withCoder, CODER, withCoder.coder!, skill, codeTaskText(withCoder, decisions), true, localize('specificationCurve.coderTerminal', "Specification Curve: {0}, Code ({1})", study.name, cell.label));
+		await sendState();
+	};
+
+	/**
+	 * Starts one proposer again, the others left as they are: on the agent and model now chosen for it, in its folder
+	 * emptied, its earlier work moved to the Trash. Once the code is written from the choices kept, none is restarted.
+	 */
+	const restartProposer = async (index: number, chosenCell: { agent: string; model: string }) => {
+		const study = current && await readStudy(fileService, current.folder);
+		if (!study || index < 0 || index >= study.proposers.length) {
+			return;
+		}
+		if (study.coder) {
+			post({ command: 'problem', step: 'propose', text: localize('specificationCurve.codeFromKept', "The code is written from the options kept: choose New Study to propose the choices again.") });
+			return;
+		}
+		const key = `proposer-${index + 1}`;
+		const run = runs.get(study.folder, key);
+		if (run && run.ended === undefined) {
+			post({ command: 'problem', step: 'propose', text: localize('specificationCurve.proposerRunning', "Proposer {0} is running: stop it first, then restart it.", index + 1) });
+			return;
+		}
+		const cell = cells.find(other => other.agent === chosenCell.agent && other.model === chosenCell.model);
+		if (!cell) {
+			post({ command: 'problem', step: 'propose', text: localize('specificationCurve.noRestartCell', "Choose an agent and a model for Proposer {0}, then restart it.", index + 1) });
+			return;
+		}
+		const skill = await instantiationService.invokeFunction(skillFile, PROPOSE_SKILL);
+		if (!skill || !await fileService.exists(skill)) {
+			post({ command: 'problem', step: 'propose', text: localize('specificationCurve.noSkill', "The skill {0} of the Pollis Agents plugin could not be found.", PROPOSE_SKILL) });
+			return;
+		}
+		const withProposer: IStudy = { ...study, proposers: study.proposers.map((entry, i) => i === index ? { agent: cell.agent, model: cell.model, label: cell.label } : entry) };
+		await fileService.writeFile(joinPath(study.folder, STUDY_FILE), VSBuffer.fromString(studyToml(withProposer)));
+		const folder = joinPath(study.folder, key);
+		if (await fileService.exists(folder)) {
+			await fileService.del(folder, { recursive: true, useTrash: true });
+		}
+		watch(withProposer);
+		await startAgent(withProposer, key, withProposer.proposers[index], skill, proposeTaskText(withProposer, withProposer.proposers.length), true, localize('specificationCurve.proposerTerminal', "Specification Curve: {0}, Proposer {1} ({2})", study.name, index + 1, cell.label));
 		await sendState();
 	};
 
@@ -934,6 +984,11 @@ async function openSpecificationCurvePage(accessor: ServicesAccessor): Promise<v
 				await sendState();
 			} else if (message.command === 'open' && hasKey(message, { agent: true, what: true }) && typeof message.agent === 'string' && ['code', 'decisions', 'terminal', 'stop'].includes(message.what)) {
 				await openFile(message.agent, message.what);
+			} else if (message.command === 'restart' && hasKey(message, { agent: true, cell: true }) && typeof message.agent === 'string' && /^proposer-\d+$/.test(message.agent)) {
+				const [cell] = checkedCells([message.cell]);
+				if (cell) {
+					await restartProposer(Number(message.agent.slice('proposer-'.length)) - 1, cell);
+				}
 			} else if (message.command === 'chooseFile' && hasKey(message, { value: true })) {
 				const home = await pathService.userHome({ preferLocal: true });
 				const value = folderUri(message.value, home);
@@ -991,6 +1046,16 @@ function pageHtml(): string {
 		code: localize('specificationCurve.code', "Code"),
 		terminal: localize('specificationCurve.terminalLink', "Terminal"),
 		stop: localize('specificationCurve.stop', "Stop"),
+		restart: localize('specificationCurve.restart', "Restart"),
+		restartTooltip: localize('specificationCurve.restartTooltip', "Start this agent again, on the agent and model chosen for it in its menu, in its folder emptied: its earlier work goes to the Trash"),
+		proposedAlready: localize('specificationCurve.proposedAlready', "The choices of this study are proposed: restart a proposer from its row, or choose New Study for another study."),
+		needProposals: localize('specificationCurve.needProposals', "Propose the choices first."),
+		waitProposers: localize('specificationCurve.waitProposers', "Wait for the proposers to end, or stop them."),
+		noneProposed: localize('specificationCurve.noneProposed', "No choices were proposed: restart a proposer from its row."),
+		codeWritten: localize('specificationCurve.codeWritten', "The code is written: restart the coder from its row to write it again."),
+		needCode: localize('specificationCurve.needCode', "Write the code first."),
+		waitCoder: localize('specificationCurve.waitCoder', "Wait for the coder to end, or stop it."),
+		checkNotPassed: localize('specificationCurve.checkNotPassed', "The code has not passed its check: restart the coder from its row."),
 		decision: localize('specificationCurve.decision', "Decision"),
 		option: localize('specificationCurve.option', "Option"),
 		proposedBy: localize('specificationCurve.proposedBy', "Proposed By"),
@@ -1129,6 +1194,7 @@ function pageHtml(): string {
 		<p class="hint">${text.curveHint}</p>
 		<div class="settings"><span class="bar"><button class="action" id="runCurve">${text.runCurve}</button></span></div>
 		<div class="small status" id="curveStatus"></div>
+		<div class="small status missing" id="curveProblem"></div>
 		<div id="curve" hidden>
 			<div id="figures"></div>
 			<p class="hint">${text.plotHint}</p>
@@ -1151,6 +1217,7 @@ function pageHtml(): string {
 			<span class="small">${text.seed}</span> <input type="text" id="seed" value="1" spellcheck="false"></div>
 		<div class="settings"><span class="bar"><button class="action" id="runNull">${text.runNull}</button></span></div>
 		<div class="small status" id="nullStatus"></div>
+		<div class="small status missing" id="nullProblem"></div>
 		<table class="ma" id="nullTable" hidden>
 			<thead><tr><th>${text.statistic}</th><th class="number">${text.observed}</th><th class="number">${text.underNull}</th><th class="number">${text.pValue}</th></tr></thead>
 			<tbody id="nullRows"></tbody>
@@ -1173,8 +1240,9 @@ function pageHtml(): string {
 	const proposersBox = document.getElementById('proposers');
 	const coderSelect = document.getElementById('coder');
 	let state = undefined;
-	/** The cell chosen for each proposer, kept when their number changes. */
+	/** The cell chosen for each proposer, kept when their number changes, and the study they were taken from. */
 	let chosen = [];
+	let chosenStudy = '';
 	/** The options kept, by decision: unticked ones are left out; a new study keeps every option. */
 	let unticked = new Set();
 	let timer = undefined;
@@ -1190,10 +1258,14 @@ ${orchestrationPageJs}
 		return decision + '/' + option;
 	}
 
-	/** The proposers' choices: at first the cells in turn, so that the models differ. */
+	/**
+	 * The proposers' choices: at first the cells in turn, so that the models differ. In a study, a running proposer
+	 * keeps its model; the others may take another, for Restart, until the code is written.
+	 */
 	function drawProposers() {
 		const cells = state ? state.cells : [];
-		const n = Number(count.value);
+		const study = state && state.study;
+		const n = study && study.proposers.length ? study.proposers.length : Number(count.value);
 		while (chosen.length < n && cells.length) {
 			chosen.push(cellKey(cells[chosen.length % cells.length]));
 		}
@@ -1204,7 +1276,12 @@ ${orchestrationPageJs}
 			label.textContent = TEXT.proposer.replace('{0}', String(i + 1));
 			const select = document.createElement('select');
 			select.innerHTML = cells.map(cell => '<option value="' + escapeHtml(cellKey(cell)) + '">' + escapeHtml(cell.label) + '</option>').join('');
+			const run = study ? study.proposers[i] : undefined;
+			if (run && run.status === 'running') {
+				chosen[i] = cellKey(run);
+			}
 			select.value = chosen[i] || '';
+			select.disabled = !!(run && run.status === 'running') || !!(study && study.coder);
 			select.addEventListener('change', () => { chosen[i] = select.value; });
 			proposersBox.append(label, select);
 		}
@@ -1221,7 +1298,7 @@ ${orchestrationPageJs}
 	function drawSource() {
 		const kind = sourceKind();
 		const study = state && state.study;
-		document.getElementById('agentsFields').hidden = kind !== 'agents' || locked();
+		document.getElementById('agentsFields').hidden = kind !== 'agents' || (locked() && !study.proposers.length);
 		document.getElementById('studyHint').hidden = kind !== 'study';
 		from.hidden = kind !== 'study';
 		document.getElementById('noManyAnalysts').hidden = kind !== 'study' || locked() || !state || state.manyAnalysts.length > 0;
@@ -1241,12 +1318,12 @@ ${orchestrationPageJs}
 		return { name: nameInput.value.trim() || nameInput.placeholder, question: question.value, estimate: estimate.value, data: dataKind(), file: fileInput.value, description: description.value, source: sourceKind(), from: from.value, proposers };
 	}
 
-	function link(label, agent, what) {
-		return '<button class="link" data-agent="' + escapeHtml(agent) + '" data-what="' + what + '">' + escapeHtml(label) + '</button>';
+	function link(label, agent, what, title) {
+		return '<button class="link" data-agent="' + escapeHtml(agent) + '" data-what="' + what + '"' + (title ? ' title="' + escapeHtml(title) + '"' : '') + '>' + escapeHtml(label) + '</button>';
 	}
 	function runRow(run, first, fileLink) {
 		const status = TEXT.statuses[run.status] + (run.status === 'failed' && typeof run.exitCode === 'number' ? ' (' + TEXT.exit.replace('{0}', run.exitCode) + ')' : '');
-		const links = [run.hasFile ? fileLink : '', run.hasTerminal ? link(TEXT.terminal, run.key, 'terminal') : '', run.status === 'running' ? link(TEXT.stop, run.key, 'stop') : ''].filter(x => x).join('');
+		const links = [run.hasFile ? fileLink : '', run.hasTerminal ? link(TEXT.terminal, run.key, 'terminal') : '', run.status === 'running' ? link(TEXT.stop, run.key, 'stop') : link(TEXT.restart, run.key, 'restart', TEXT.restartTooltip)].filter(x => x).join('');
 		return '<tr>' + first + '<td>' + escapeHtml(run.label) + '</td><td class="status-' + run.status + '">' + escapeHtml(status) + '</td><td class="number" data-run="' + escapeHtml(run.key) + '">' + elapsed(run) + '</td><td class="links">' + links + '</td></tr>';
 	}
 	function allRuns(study) {
@@ -1309,10 +1386,12 @@ ${orchestrationPageJs}
 			text = check.failed ? TEXT.checkFailed.replace('{0}', check.checked).replace('{1}', format(check.failed)).replace('{2}', format(check.specifications)) : TEXT.checked.replace('{0}', check.checked).replace('{1}', format(check.specifications));
 		}
 		document.getElementById('checkStatus').textContent = text;
-		coderSelect.disabled = !!(study && study.coder);
-		if (study && study.coder) {
-			coderSelect.innerHTML = '<option>' + escapeHtml(study.coder.label) + '</option>';
+		// A running coder keeps its model; once it has ended, another may be chosen, for Restart
+		const running = !!(study && study.coder && study.coder.status === 'running');
+		if (running) {
+			coderSelect.value = cellKey(study.coder);
 		}
+		coderSelect.disabled = running;
 	}
 
 	function figure(label, value, tooltip) {
@@ -1430,24 +1509,52 @@ ${orchestrationPageJs}
 		document.getElementById('nullRows').innerHTML = row(TEXT.statMedian, result.median, format) + row(TEXT.statShare, result.share, v => typeof v === 'number' ? percent(v) : '') + row(TEXT.statStouffer, result.stouffer, format, TEXT.statStoufferTooltip);
 	}
 
-	/** The one blue button is the next thing to do. */
+	/** Why a step's button cannot do its work now, or '' when it can: the buttons are never disabled, and say why when pressed. */
+	function proposeBlocked() {
+		return state.study ? TEXT.proposedAlready
+			: sourceKind() === 'agents' ? (state.cells.length ? '' : TEXT.noCells)
+				: state.manyAnalysts.length ? '' : TEXT.noManyAnalysts;
+	}
+	function writeCodeBlocked() {
+		const study = state.study;
+		return !study ? TEXT.needProposals
+			: study.proposers.some(run => run.status === 'running') ? TEXT.waitProposers
+				: !study.proposals.length ? TEXT.noneProposed
+					: study.coder ? TEXT.codeWritten
+						: !state.cells.length ? TEXT.noCells : '';
+	}
+	function runCurveBlocked() {
+		const study = state.study;
+		return !(study && study.coder) ? TEXT.needCode
+			: study.coder.status === 'running' ? TEXT.waitCoder
+				: !(study.check && !study.check.failed) ? TEXT.checkNotPassed : '';
+	}
+	function runNullBlocked() {
+		const study = state.study;
+		return study && study.curve && study.curve.figures ? '' : TEXT.needCurve;
+	}
+	const BLOCKED = { propose: [proposeBlocked, 'proposeProblem'], writeCode: [writeCodeBlocked, 'codeProblem'], runCurve: [runCurveBlocked, 'curveProblem'], runNull: [runNullBlocked, 'nullProblem'] };
+
+	/** The one blue button is the next thing to do; a button that can do its work clears what it said when it could not. */
 	function drawButtons() {
 		const study = state.study;
 		const running = allRuns(study).some(run => run.status === 'running');
-		const proposalsReady = !!(study && study.proposals.length && !study.proposers.some(run => run.status === 'running'));
-		const codeReady = !!(study && study.check && !study.check.failed && study.coder && study.coder.status !== 'running');
-		const propose = document.getElementById('propose');
-		const writeCode = document.getElementById('writeCode');
-		const runCurve = document.getElementById('runCurve');
-		const runNull = document.getElementById('runNull');
-		propose.disabled = !!study || (sourceKind() === 'agents' ? !state.cells.length : !state.manyAnalysts.length);
-		writeCode.disabled = !proposalsReady || !!(study && study.coder) || !state.cells.length;
-		runCurve.disabled = !codeReady;
-		runNull.disabled = !(study && study.curve && study.curve.figures);
-		propose.classList.toggle('current', !study);
-		writeCode.classList.toggle('current', proposalsReady && !(study && study.coder) && !running);
-		runCurve.classList.toggle('current', codeReady && !(study && study.curve));
-		runNull.classList.toggle('current', !!(study && study.curve && study.curve.figures && !study['null']));
+		document.getElementById('propose').classList.toggle('current', !study);
+		document.getElementById('writeCode').classList.toggle('current', !writeCodeBlocked() && !running);
+		document.getElementById('runCurve').classList.toggle('current', !runCurveBlocked() && !(study && study.curve));
+		document.getElementById('runNull').classList.toggle('current', !runNullBlocked() && !study['null']);
+		for (const [blocked, problem] of Object.values(BLOCKED)) {
+			if (!blocked()) {
+				document.getElementById(problem).textContent = '';
+			}
+		}
+	}
+	/** Says why the button with the id given cannot do its work, and returns true, when it cannot. */
+	function explainBlocked(id) {
+		const [blocked, problem] = BLOCKED[id];
+		const reason = blocked();
+		document.getElementById(problem).textContent = reason;
+		return !!reason;
 	}
 
 	function draw() {
@@ -1477,12 +1584,25 @@ ${orchestrationPageJs}
 			for (const radio of document.querySelectorAll('input[name=source]')) {
 				radio.checked = radio.value === study.source;
 			}
+			if (study.proposers.length) {
+				count.value = String(study.proposers.length);
+			}
 		} else {
 			nameInput.value = '';
 			nameInput.placeholder = state.suggestion;
-			drawProposers();
 		}
+		// Another study: the menus show the agents and models of its proposers and its coder
+		const name = study ? study.name : '';
+		const changed = name !== chosenStudy;
+		chosenStudy = name;
+		if (changed && study && study.proposers.length) {
+			chosen = study.proposers.map(cellKey);
+		}
+		drawProposers();
 		drawCoder();
+		if (changed && study && study.coder) {
+			coderSelect.value = cellKey(study.coder);
+		}
 		drawData();
 		drawSource();
 		drawRuns();
@@ -1508,8 +1628,9 @@ ${orchestrationPageJs}
 	document.getElementById('newStudy').addEventListener('click', () => { unticked = new Set(); vscode.postMessage({ command: 'newStudy' }); });
 	document.getElementById('chooseFile').addEventListener('click', () => vscode.postMessage({ command: 'chooseFile', value: fileInput.value }));
 	document.getElementById('propose').addEventListener('click', () => {
-		document.getElementById('proposeProblem').textContent = '';
-		vscode.postMessage({ command: 'propose', inputs: inputs() });
+		if (!explainBlocked('propose')) {
+			vscode.postMessage({ command: 'propose', inputs: inputs() });
+		}
 	});
 	document.getElementById('proposalRows').addEventListener('change', event => {
 		const box = event.target.closest('input[data-key]');
@@ -1522,7 +1643,8 @@ ${orchestrationPageJs}
 			drawCount();
 		}
 	});
-	document.getElementById('writeCode').addEventListener('click', () => {
+	/** Asks for the code, from the options kept, by the agent and model chosen in the coder's menu: first written or written again. */
+	function writeCode() {
 		document.getElementById('codeProblem').textContent = '';
 		const kept = {};
 		for (const decision of keptDecisions()) {
@@ -1530,16 +1652,39 @@ ${orchestrationPageJs}
 		}
 		const cell = state.cells.find(c => cellKey(c) === coderSelect.value);
 		vscode.postMessage({ command: 'writeCode', kept, coder: cell ? { agent: cell.agent, model: cell.model } : {} });
+	}
+	document.getElementById('writeCode').addEventListener('click', () => {
+		if (!explainBlocked('writeCode')) {
+			writeCode();
+		}
 	});
-	document.getElementById('runCurve').addEventListener('click', () => vscode.postMessage({ command: 'runCurve' }));
+	document.getElementById('runCurve').addEventListener('click', () => {
+		if (!explainBlocked('runCurve')) {
+			vscode.postMessage({ command: 'runCurve' });
+		}
+	});
 	document.getElementById('runNull').addEventListener('click', () => {
+		if (explainBlocked('runNull')) {
+			return;
+		}
 		const seed = Math.max(0, Math.floor(Number(document.getElementById('seed').value) || 0));
 		vscode.postMessage({ command: 'runNull', draws: Number(document.getElementById('draws').value), seed });
 	});
 	document.body.addEventListener('click', event => {
 		const target = event.target.closest('button[data-what]');
-		if (target) {
+		if (!target) {
+			return;
+		}
+		if (target.dataset.what !== 'restart') {
 			vscode.postMessage({ command: 'open', agent: target.dataset.agent, what: target.dataset.what });
+		} else if (target.dataset.agent === 'coder') {
+			writeCode();
+		} else {
+			// The proposer starts again on the agent and model chosen in its menu, else on those it had
+			const index = Number(target.dataset.agent.replace('proposer-', '')) - 1;
+			const cell = state.cells.find(c => cellKey(c) === chosen[index]) || state.study.proposers[index];
+			document.getElementById('proposeProblem').textContent = '';
+			vscode.postMessage({ command: 'restart', agent: target.dataset.agent, cell: { agent: cell.agent, model: cell.model } });
 		}
 	});
 
