@@ -158,10 +158,10 @@ function pageHtml(): string {
 		updateSkills: localize('codingAgent.updateSkills', "Update"),
 		skillsHint: localize('codingAgent.skillsHint', "The Pollis skills, so that the agent uses them in any folder, even outside Pollis"),
 		otherTitle: localize('codingAgent.otherTitle', "Other Agents"),
-		otherIntro: localize('codingAgent.otherIntro', "Agents of your own: each a name, which Model Tasks and Routing shows, and a command line, with {0} where the first message goes, for example {1}. Without {0}, the message is copied to the clipboard to paste into the agent. The + button adds another.", `<code>${PROMPT_PLACEHOLDER}</code>`, `<code>aider --message ${PROMPT_PLACEHOLDER}</code>`),
+		otherIntro: localize('codingAgent.otherIntro', "Agents of your own: each a name, which Model Tasks and Routing shows, and a command line, with {0} where the first message goes, for example {1}. Without {0}, the message is copied to the clipboard to paste into the agent.", `<code>${PROMPT_PLACEHOLDER}</code>`, `<code>aider --message ${PROMPT_PLACEHOLDER}</code>`),
 		otherName: localize('codingAgent.otherName', "Name, for example MyAgent"),
 		otherCommand: localize('codingAgent.otherCommand', "Command line"),
-		addOther: localize('codingAgent.addOther', "Add an Agent"),
+		addOther: localize('codingAgent.addOther', "Add Agent"),
 		removeOther: localize('codingAgent.removeOther', "Remove"),
 		nameTaken: localize('codingAgent.nameTaken', "There is an agent of that name already"),
 	};
@@ -195,10 +195,10 @@ function pageHtml(): string {
 		.codingAgentPage input:focus { outline: 1px solid var(--vscode-focusBorder); }
 		.codingAgentPage th.agent { width: 30%; } .codingAgentPage th.command { width: 40%; }
 		.codingAgentPage input.otherName { flex: 0 0 200px; }
-		.codingAgentPage .others { display: flex; flex-direction: column; gap: 8px; }
+		.codingAgentPage .others { display: flex; flex-direction: column; gap: 8px; margin-bottom: 28px; }
 		.codingAgentPage .others .row { align-items: center; }
 		.codingAgentPage .others .warning { margin-left: 0; font-size: 12px; }
-		.codingAgentPage button.action.add { font-size: 14px; line-height: 16px; padding: 2px 10px; margin-top: 8px; }
+		.codingAgentPage button.action.add { margin: 16px 0 12px; }
 		.codingAgentPage table.local td:first-child { box-shadow: inset 3px 0 0 var(--vscode-textLink-foreground); padding-left: 12px; }
 		.codingAgentPage table.local tr:not(:hover) td { background: color-mix(in srgb, var(--vscode-textLink-foreground) 5%, transparent); }
 		.codingAgentPage .skills { margin-top: 6px; }
@@ -211,8 +211,8 @@ function pageHtml(): string {
 	</table>
 	<h2>${text.otherTitle}</h2>
 	<p class="hint">${text.otherIntro}</p>
+	<button class="action add" id="addOther">${text.addOther}</button>
 	<div class="others" id="others"></div>
-	<button class="action add" id="addOther" title="${text.addOther}" aria-label="${text.addOther}">+</button>
 		</div>
 `,
 		pageScriptJs: `

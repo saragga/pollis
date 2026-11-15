@@ -37,7 +37,7 @@ type Step =
     | { kind: 'text'; text: string }
     | { kind: 'thinking'; text: string }
     | { kind: 'toolStart'; id: string; name: string; input: string; at?: number }
-    | { kind: 'toolEnd'; id: string; output: string; failed: boolean; at?: number }
+    | { kind: 'toolEnd'; id: string; output: string; failed: boolean; at?: number; name?: string; input?: string }
     | { kind: 'usage'; key?: string; input: number; output: number; cached: number }
     | { kind: 'totals'; input: number; output: number; cached: number }
     | { kind: 'model'; name: string }
@@ -70,7 +70,7 @@ function inputText(input: unknown): string {
         return input
     }
     if (isObject(input)) {
-        for (const key of ['command', 'cmd', 'file_path', 'filePath', 'path', 'pattern', 'query', 'url', 'description']) {
+        for (const key of ['command', 'cmd', 'CommandLine', 'file_path', 'filePath', 'path', 'AbsolutePath', 'TargetFile', 'pattern', 'query', 'Query', 'url', 'description']) {
             if (typeof input[key] === 'string') {
                 return input[key] as string
             }
@@ -96,7 +96,7 @@ function outputText(output: unknown): string {
     return output === undefined || output === null ? '' : String(output)
 }
 
-/** Claude Code's stream-json, which Antigravity CLI's follows: system, assistant and user messages, and the result. */
+/** Claude Code's stream-json: system, assistant and user messages, and the result. */
 function readClaude(event: JsonObject): Step[] {
     const steps: Step[] = []
     if (event.type === 'system' && typeof event.model === 'string') {
@@ -151,7 +151,7 @@ function readCodex(event: JsonObject): Step[] {
             case 'reasoning':
                 return str(item.text).trim() ? [{ kind: 'thinking', text: str(item.text) }] : []
             case 'command_execution':
-                return [{ kind: 'toolEnd', id, output: str(item.aggregated_output), failed: typeof item.exit_code === 'number' && item.exit_code !== 0 }]
+                return [{ kind: 'toolEnd', id, output: str(item.aggregated_output), failed: typeof item.exit_code === 'number' && item.exit_code !== 0, name: 'shell', input: inputText(item.command) }]
             case 'file_change': {
                 const files = (Array.isArray(item.changes) ? item.changes : []).map((change) => (isObject(change) ? str(change.path) : '')).filter((file) => file)
                 return [{ kind: 'toolStart', id, name: 'edit', input: files.join(' ') }, { kind: 'toolEnd', id, output: '', failed: item.status === 'failed' }]
@@ -230,12 +230,89 @@ function readCopilot(event: JsonObject): Step[] {
     return []
 }
 
-const READERS: Record<Format, (event: JsonObject) => Step[]> = {
-    claude: readClaude,
-    codex: readCodex,
-    opencode: readOpenCode,
-    copilot: readCopilot,
-    antigravity: readClaude,
+/**
+ * Antigravity CLI's stream-json: init, then an update of each step, a response or a tool, while it is active and once it
+ * is done, then the result. A response's text may come in pieces while it is active; the done step's may be the whole
+ * text or the last piece.
+ */
+function antigravityReader(): (event: JsonObject) => Step[] {
+    const started = new Set<string>()
+    const pieces = new Map<string, { text: string; thinking: string }>()
+    const ended = (state: unknown) => state === 'DONE' || state === 'ERROR' || state === 'FAILED' || state === 'CANCELED' || state === 'CANCELLED'
+    return (event) => {
+        if (event.event === 'init' && isObject(event.init)) {
+            return str(event.init.model) ? [{ kind: 'model', name: str(event.init.model) }] : []
+        }
+        if (event.event === 'result' && isObject(event.result)) {
+            const result = event.result
+            const steps: Step[] = []
+            if (isObject(result.usage)) {
+                const usage = result.usage
+                steps.push({ kind: 'totals', input: num(usage.input_tokens) + num(usage.cache_read_tokens), output: num(usage.output_tokens) + num(usage.thinking_tokens), cached: num(usage.cache_read_tokens) })
+            }
+            if (typeof result.status === 'string' && result.status !== 'SUCCESS') {
+                steps.push({ kind: 'error', text: str(result.error) || result.status })
+            }
+            return steps
+        }
+        if (event.event !== 'step_update' || !isObject(event.step_update)) {
+            return []
+        }
+        const step = event.step_update
+        const id = String(step.step_index ?? '')
+        const done = ended(step.state)
+        if (step.step_type === 'agent_response') {
+            const so = pieces.get(id) ?? { text: '', thinking: '' }
+            const whole = (before: string, last: string) => (before && last.startsWith(before) ? last : before + last)
+            const text = done ? whole(so.text, str(step.text_delta)) : so.text + str(step.text_delta)
+            const thinking = done ? whole(so.thinking, str(step.thinking_delta)) : so.thinking + str(step.thinking_delta)
+            pieces.set(id, { text, thinking })
+            if (!done) {
+                return []
+            }
+            const steps: Step[] = []
+            if (thinking.trim()) {
+                steps.push({ kind: 'thinking', text: thinking })
+            }
+            if (text.trim()) {
+                steps.push({ kind: 'text', text })
+            }
+            if (isObject(step.usage)) {
+                const usage = step.usage
+                steps.push({ kind: 'usage', key: id, input: num(usage.input_tokens) + num(usage.cache_read_tokens), output: num(usage.output_tokens) + num(usage.thinking_tokens), cached: num(usage.cache_read_tokens) })
+            }
+            return steps
+        }
+        if (step.step_type === 'tool') {
+            const info = isObject(step.tool_info) ? step.tool_info : {}
+            const name = str(step.tool_name) || str(info.name)
+            const input = inputText(info.parameters)
+            const steps: Step[] = []
+            if (!started.has(id)) {
+                started.add(id)
+                // Done with no update while active: it started its duration ago
+                const at = done && typeof step.duration_seconds === 'number' ? Date.now() - step.duration_seconds * 1000 : undefined
+                steps.push({ kind: 'toolStart', id, name, input, at })
+            }
+            if (done) {
+                // A command's output follows its times and exit code
+                const output = str(info.output)
+                const printed = /\nCommand output:\n(?<printed>[\s\S]*)$/.exec(output)?.groups?.printed
+                steps.push({ kind: 'toolEnd', id, output: printed ?? output, failed: step.state !== 'DONE' || /exited with code [1-9]/.test(output) })
+            }
+            return steps
+        }
+        return []
+    }
+}
+
+/** The reader of each format, made for each run, as a reader may keep what it has seen. */
+const READERS: Record<Format, () => (event: JsonObject) => Step[]> = {
+    claude: () => readClaude,
+    codex: () => readCodex,
+    opencode: () => readOpenCode,
+    copilot: () => readCopilot,
+    antigravity: antigravityReader,
 }
 
 // The look of the steps in the terminal
@@ -279,7 +356,7 @@ class Recorder {
         this.text = { ...TEXT, ...options.text }
         fs.mkdirSync(path.join(options.folder, '.transcript'), { recursive: true })
         this.events = fs.createWriteStream(path.join(options.folder, '.transcript', 'events.jsonl'))
-        this.read = READERS[options.format] ?? readClaude
+        this.read = (READERS[options.format] ?? READERS.claude)()
     }
 
     /** The milliseconds since the start of a time an event gives, else of now. */
@@ -337,6 +414,10 @@ class Recorder {
                 process.stdout.write(`${CYAN}● ${timed.name}${RESET} ${firstLines(timed.input, 1, 160)[0] ?? ''}\n`)
                 break
             case 'toolEnd': {
+                // An end with no start, as Codex gives when a command was not announced: it starts and ends at once
+                if (!this.toolStarts.has(timed.id)) {
+                    this.add({ kind: 'toolStart', id: timed.id, name: timed.name ?? 'tool', input: timed.input ?? '', at: timed.at })
+                }
                 const started = this.toolStarts.get(timed.id)
                 const took = started ? ` (${seconds(timed.time - started.time)})` : ''
                 const lines = firstLines(timed.output, 4, 160)

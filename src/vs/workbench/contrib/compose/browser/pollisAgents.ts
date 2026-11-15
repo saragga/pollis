@@ -132,7 +132,7 @@ export interface IKnownAgent extends ICodingAgent {
  * The coding agents that come with Pollis. Notes on their unattended command lines:
  * - Claude Code: the first message comes before the options, as --allowedTools takes every word after it up to the
  *   next option as a tool, the message too when no --model follows, as on a local model; stream-json needs --verbose.
- * - Codex: `codex exec`, which writes only in its folder.
+ * - Codex: `codex exec`, which writes only in its folder, which is in no git repository.
  * - GitHub Copilot CLI: --allow-tool takes several rules, so a rule is never the last word before the message.
  * - Antigravity CLI: denies, with no one to ask, every command its settings do not allow.
  */
@@ -150,7 +150,7 @@ export const CODING_AGENTS: readonly IKnownAgent[] = [
 	},
 	{
 		label: 'Codex', program: 'codex', command: 'codex {prompt}', url: 'https://developers.openai.com/codex/cli',
-		unattended: 'codex exec {events} -s workspace-write {model} {prompt}',
+		unattended: 'codex exec {events} --skip-git-repo-check -s workspace-write {model} {prompt}',
 		eventArgs: ['--json'],
 		events: 'codex',
 		signIn: ['login'],
