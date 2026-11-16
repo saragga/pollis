@@ -5794,7 +5794,10 @@
 			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
 			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
 			"wikis": [
+				"mpmicp/decision-guide.md",
+				"mpmicp/diagnostics.md",
 				"mpmicp/factsheet.md",
+				"mpmicp/interpretation.md",
 				"mpmicp/overview.md"
 			],
 			"notebooks": [

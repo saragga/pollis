@@ -55,6 +55,21 @@ name = "Overview"
 file = "mpmicp/overview.md"
 bundled = true
 
+[[wikis]]
+name = "Diagnostics"
+file = "mpmicp/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "mpmicp/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "mpmicp/decision-guide.md"
+bundled = true
+
 [[references]]
 separator = true
 label = "Software"
