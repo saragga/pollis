@@ -9,7 +9,7 @@ import { buildScaffoldHtml } from './scaffoldParts.js';
 export function getMpnlpHtml(): string {
 	return buildScaffoldHtml('mpnlp', MPNLP_METADATA.mpnlp, {
 		title: 'Nonlinear Programming',
-		defaultModel: 'nlp',
-		decisionFirstColumn: 'Problem',
+		defaultModel: 'ipopt',
+		decisionFirstColumn: 'Solver',
 	});
 }

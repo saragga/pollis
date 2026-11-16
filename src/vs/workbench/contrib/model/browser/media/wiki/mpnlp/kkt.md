@@ -1,6 +1,6 @@
 # KKT Conditions
 
-The **Karush-Kuhn-Tucker** (KKT) conditions characterise local optima of a constrained problem. For min f(x) subject to g_i(x) <= 0 and h_j(x) = 0, a local minimum x* that satisfies a constraint qualification has multipliers lambda_i and mu_j with:
+The **Karush-Kuhn-Tucker** (KKT) conditions ([Kuhn and Tucker (1951)](#ref-KT1951a)) characterise local optima of a constrained problem. For min f(x) subject to g_i(x) <= 0 and h_j(x) = 0, a local minimum x* that satisfies a constraint qualification has multipliers lambda_i and mu_j with:
 1. **Stationarity**: grad f(x*) + sum lambda_i grad g_i(x*) + sum mu_j grad h_j(x*) = 0;
 2. **Primal feasibility**: g_i(x*) <= 0 and h_j(x*) = 0;
 3. **Dual feasibility**: lambda_i >= 0;
@@ -16,7 +16,11 @@ The multiplier of a constraint is the rate at which the optimal value changes wh
 The KKT conditions are **necessary** for a local optimum under a constraint qualification, such as linearly independent gradients of the active constraints (LICQ). They are **sufficient** for a global optimum when the problem is convex. In nonconvex problems a KKT point may be a local minimum, a saddle point or even a maximum; second-order conditions on the Hessian of the Lagrangian distinguish them.
 
 ## In the Panel
-Interior-point solvers return the multipliers, and the **KKT Conditions** action lists each constraint's value, multiplier and the product multiplier times slack, which should be near 0. The JuMP duals follow the conic convention of MathOptInterface, which may differ in sign from the textbook lambda. MINLP and global solvers usually return no duals, and the action reports it.
+Interior-point solvers return the multipliers, and the **KKT Conditions** action lists each constraint's value, multiplier and the product multiplier times slack, which should be near 0. The JuMP duals follow the conic convention of MathOptInterface, which may differ in sign from the textbook lambda.
+
+## References
+
+<a id="ref-KT1951a"></a>Kuhn, H. W. and Tucker, A. W. (1951). Nonlinear Programming. In *Proceedings of the Second Berkeley Symposium*. [https://projecteuclid.org/euclid.bsmsp/1200500249](https://projecteuclid.org/euclid.bsmsp/1200500249)
 
 ## See Also
-- [NLP](nlp.md) · [Interpretation](interpretation.md) · [Decision Guide](decision-guide.md)
+- [Interior-Point Methods](nlp.md) · [Interpretation](interpretation.md) · [Decision Guide](decision-guide.md)

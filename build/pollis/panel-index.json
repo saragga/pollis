@@ -5572,6 +5572,43 @@
 			]
 		},
 		{
+			"id": "mpgnlp",
+			"title": "Global Nonlinear Programming",
+			"source": "pollis",
+			"commands": [
+				{
+					"id": "chiara.mp.gnlp",
+					"menuTitles": [
+						"Global Nonlinear Programming"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "eago",
+			"decisionFirstColumn": "Solver",
+			"toml": "src/vs/workbench/contrib/model/browser/webviews/mpgnlp.toml",
+			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
+			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"wikis": [
+				"mpgnlp/assumptions.md",
+				"mpgnlp/decision-guide.md",
+				"mpgnlp/diagnostics.md",
+				"mpgnlp/factsheet.md",
+				"mpgnlp/gnlp.md",
+				"mpgnlp/interpretation.md",
+				"mpgnlp/overview.md"
+			],
+			"notebooks": [
+				"mpgnlp/tutorial-01-global-nlp.ipynb"
+			],
+			"packages": [
+				"JuMP.jl",
+				"EAGO.jl",
+				"SCIP.jl",
+				"Alpine.jl"
+			]
+		},
+		{
 			"id": "mpm",
 			"title": "Multi-Objective Optimisation Performance Metrics",
 			"source": "pollis",
@@ -5647,6 +5684,45 @@
 			]
 		},
 		{
+			"id": "mpminlp",
+			"title": "Mixed-Integer Nonlinear Programming",
+			"source": "pollis",
+			"commands": [
+				{
+					"id": "chiara.mp.minlp",
+					"menuTitles": [
+						"Mixed-Integer Nonlinear Programming"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "scip",
+			"decisionFirstColumn": "Solver",
+			"toml": "src/vs/workbench/contrib/model/browser/webviews/mpminlp.toml",
+			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
+			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"wikis": [
+				"mpminlp/assumptions.md",
+				"mpminlp/decision-guide.md",
+				"mpminlp/diagnostics.md",
+				"mpminlp/factsheet.md",
+				"mpminlp/interpretation.md",
+				"mpminlp/minlp.md",
+				"mpminlp/overview.md"
+			],
+			"notebooks": [
+				"mpminlp/tutorial-01-basic-minlp.ipynb"
+			],
+			"packages": [
+				"JuMP.jl",
+				"SCIP.jl",
+				"Juniper.jl",
+				"Ipopt.jl",
+				"AmplNLWriter.jl",
+				"Bonmin_jll.jl"
+			]
+		},
+		{
 			"id": "mpnlp",
 			"title": "Nonlinear Programming",
 			"source": "pollis",
@@ -5656,16 +5732,11 @@
 					"menuTitles": [
 						"Nonlinear Programming"
 					]
-				},
-				{
-					"id": "chiara.mp.minlp",
-					"model": "minlp",
-					"menuTitles": []
 				}
 			],
 			"portable": true,
-			"defaultModel": "nlp",
-			"decisionFirstColumn": "Problem",
+			"defaultModel": "ipopt",
+			"decisionFirstColumn": "Solver",
 			"toml": "src/vs/workbench/contrib/model/browser/webviews/mpnlp.toml",
 			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
 			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
@@ -5674,27 +5745,19 @@
 				"mpnlp/decision-guide.md",
 				"mpnlp/diagnostics.md",
 				"mpnlp/factsheet.md",
-				"mpnlp/gnlp.md",
 				"mpnlp/interpretation.md",
 				"mpnlp/kkt.md",
-				"mpnlp/minlp.md",
 				"mpnlp/nlp.md",
 				"mpnlp/overview.md"
 			],
 			"notebooks": [
 				"mpnlp/tutorial-01-basic-nlp.ipynb",
-				"mpnlp/tutorial-02-mle-estimation.ipynb",
-				"mpnlp/tutorial-03-basic-minlp.ipynb",
-				"mpnlp/tutorial-04-global-nlp.ipynb"
+				"mpnlp/tutorial-02-mle-estimation.ipynb"
 			],
 			"packages": [
 				"JuMP.jl",
 				"Ipopt.jl",
-				"SCIP.jl",
-				"Juniper.jl",
-				"EAGO.jl",
-				"AmplNLWriter.jl",
-				"Couenne_jll.jl"
+				"MadNLP.jl"
 			]
 		},
 		{

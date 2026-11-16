@@ -6,7 +6,7 @@
 [meta]
 title = "Nonlinear Programming"
 viewType = "pollis.mpnlp"
-defaultModel = "nlp"
+defaultModel = "ipopt"
 
 [[packages]]
 name = "JuMP.jl"
@@ -17,27 +17,11 @@ name = "Ipopt.jl"
 github = "https://github.com/jump-dev/Ipopt.jl"
 
 [[packages]]
-name = "SCIP.jl"
-github = "https://github.com/scipopt/SCIP.jl"
-
-[[packages]]
-name = "Juniper.jl"
-github = "https://github.com/lanl-ansi/Juniper.jl"
-
-[[packages]]
-name = "EAGO.jl"
-github = "https://github.com/PSORLab/EAGO.jl"
-
-[[packages]]
-name = "AmplNLWriter.jl"
-github = "https://github.com/jump-dev/AmplNLWriter.jl"
-
-[[packages]]
-name = "Couenne_jll.jl"
-github = "https://github.com/JuliaBinaryWrappers/Couenne_jll.jl"
+name = "MadNLP.jl"
+github = "https://github.com/MadNLP/MadNLP.jl"
 
 [requires]
-packages = ["JuMP.jl", "Ipopt.jl", "Plots.jl", "MadNLP.jl"]
+packages = ["JuMP.jl", "Ipopt.jl", "MadNLP.jl", "EAGO.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -53,18 +37,6 @@ name = "MLE Estimation"
 file = "mpnlp/tutorial-02-mle-estimation.ipynb"
 bundled = true
 description = "Maximum likelihood estimation as a nonlinear optimisation problem"
-
-[[notebookSections.notebooks]]
-name = "Basic MINLP"
-file = "mpnlp/tutorial-03-basic-minlp.ipynb"
-bundled = true
-description = "Formulate and solve a mixed-integer nonlinear programme with SCIP"
-
-[[notebookSections.notebooks]]
-name = "Global NLP"
-file = "mpnlp/tutorial-04-global-nlp.ipynb"
-bundled = true
-description = "Find certified global optima of nonconvex NLPs with EAGO and Couenne"
 
 [[wikis]]
 name = "Factsheet"
@@ -101,18 +73,8 @@ separator = true
 label = "Methods"
 
 [[wikis]]
-name = "NLP"
+name = "Interior-Point Methods"
 file = "mpnlp/nlp.md"
-bundled = true
-
-[[wikis]]
-name = "MINLP"
-file = "mpnlp/minlp.md"
-bundled = true
-
-[[wikis]]
-name = "Global NLP"
-file = "mpnlp/gnlp.md"
 bundled = true
 
 [[wikis]]
@@ -135,6 +97,9 @@ key = "DHL2017a"
 key = "WB2006a"
 
 [[references]]
+key = "WS2022a"
+
+[[references]]
 separator = true
 label = "Textbooks"
 
@@ -152,47 +117,30 @@ label = "Original Papers"
 key = "KT1951a"
 
 [[models]]
-id = "nlp"
-label = "Nonlinear Programming (NLP)"
+id = "ipopt"
+label = "Ipopt"
 
 [[models]]
-id = "minlp"
-label = "Mixed-Integer NLP (MINLP)"
-
-[[models]]
-id = "gnlp"
-label = "Global NLP"
+id = "madnlp"
+label = "MadNLP"
 
 [[bullets]]
-text = "Local Optima"
-detail = "Ipopt's interior-point method finds a point satisfying the KKT conditions; for nonconvex problems it may be only a local optimum"
+text = "Ipopt"
+detail = "The standard open-source interior-point solver for smooth NLPs: a logarithmic barrier keeps the iterates inside the bounds, and a filter line search accepts the Newton steps"
 
 [[bullets]]
-text = "Discrete Decisions"
-detail = "Mixed-integer NLP adds binary or integer variables, solved by branch and bound with NLP relaxations (Juniper, SCIP)"
-
-[[bullets]]
-text = "Global Optimality"
-detail = "Spatial branch and bound with convex relaxations certifies the global optimum of a nonconvex problem (EAGO, SCIP, Couenne)"
-
-[[bullets]]
-text = "Checking a Solution"
-detail = "Multi-start, KKT conditions, active constraints and their sensitivities"
+text = "MadNLP"
+detail = "An interior-point solver written in Julia, with the same interface as Ipopt, which can run its linear algebra on a GPU for large problems"
 
 [[decisionRows]]
-task = "NLP"
-context = "Smooth nonlinear objective and constraints, continuous variables"
-purpose = "Interior-point search for a locally optimal point satisfying the KKT conditions"
+task = "Ipopt"
+context = "Large sparse problems"
+purpose = "A KKT point by interior-point Newton steps on the barrier problem, with a sparse linear solver for the Newton systems"
 
 [[decisionRows]]
-task = "MINLP"
-context = "Nonlinear model with on/off or cardinality decisions"
-purpose = "Branch and bound over binary variables with NLP relaxations at each node"
-
-[[decisionRows]]
-task = "Global NLP"
-context = "Nonconvex problems where a local optimum is not good enough"
-purpose = "Spatial branch and bound with convex relaxations to certify the global optimum"
+task = "MadNLP"
+context = "GPU or pure Julia"
+purpose = "The same kind of KKT point, from a Julia implementation that can move its linear algebra to a GPU and is easy to extend"
 
 [[inputs]]
 id = "n"
@@ -231,106 +179,20 @@ default = "sum(x .^ 2) <= 4"
 [[inputs]]
 id = "lb"
 label = "Lower Bound"
-tooltip = "Lower bound on every x[i]. Global solvers need finite bounds, and tighter bounds help them. For MINLP it must be at most 0 so that x[i] can switch off, and it is the big-M of the switch, so keep it as tight as the constraint allows (the default ball sum(x .^ 2) <= 4 implies -2)."
+tooltip = "Lower bound on every x[i]. Every variable starts at (lb + ub) / 2."
 default = "-2"
 newRow = true
 
 [[inputs]]
 id = "ub"
 label = "Upper Bound"
-tooltip = "Upper bound on every x[i]. Global solvers need finite bounds, and tighter bounds help them. For MINLP it is also the big-M of the switch (the default ball implies 2)."
+tooltip = "Upper bound on every x[i]. The Optimality Gap Check needs finite bounds, as the global solver it calls does."
 default = "2"
-
-[[inputs]]
-id = "card"
-label = "Max Nonzeros"
-tooltip = "At most this many x[i] may be nonzero; each x[i] is tied to a binary switch z[i]."
-default = "2"
-models = ["minlp"]
-
-[[inputs]]
-id = "nlpsolver"
-label = "Solver"
-tooltip = "Ipopt: the standard interior-point solver for smooth NLPs. MadNLP: a pure-Julia interior-point solver with the same interface, GPU-capable."
-kind = "select"
-default = "Ipopt"
-models = ["nlp"]
-
-[[inputs.options]]
-value = "Ipopt"
-label = "Ipopt"
-
-[[inputs.options]]
-value = "MadNLP"
-label = "MadNLP"
-
-[[inputs]]
-id = "minlpsolver"
-label = "Solver"
-tooltip = "SCIP: branch and cut with spatial branching, handles nonconvex MINLPs. Juniper: branch and bound over Ipopt relaxations, exact for convex MINLPs only."
-kind = "select"
-default = "SCIP"
-models = ["minlp"]
-
-[[inputs.options]]
-value = "SCIP"
-label = "SCIP"
-
-[[inputs.options]]
-value = "Juniper"
-label = "Juniper + Ipopt"
-
-[[inputs]]
-id = "gsolver"
-label = "Solver"
-tooltip = "EAGO: pure-Julia deterministic global optimiser using McCormick relaxations. SCIP: spatial branch and bound, also certifies global optimality."
-kind = "select"
-default = "EAGO"
-models = ["gnlp"]
-
-[[inputs.options]]
-value = "EAGO"
-label = "EAGO"
-
-[[inputs.options]]
-value = "SCIP"
-label = "SCIP"
-
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.nlp]
-# Nested elliptical contours with the optimum at the centre
-svg = '''
-var s = '';
-[18, 12, 6].forEach(function (r, i) {
-	s += '<ellipse cx="27" cy="46" rx="' + r + '" ry="' + (r * 0.65).toFixed(1) + '" fill="none" stroke="currentColor" stroke-width="1" opacity="' + (0.4 + 0.2 * i) + '" transform="rotate(-25 27 46)"/>';
-});
-return s + '<circle cx="27" cy="46" r="2.2" fill="currentColor"/>';
-'''
-
-[miniCharts.minlp]
-# Contours with integer lattice points, one of them chosen
-svg = '''
-var s = '<ellipse cx="27" cy="46" rx="18" ry="11" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5" transform="rotate(-25 27 46)"/>';
-for (var i = 0; i < 4; i++) { for (var j = 0; j < 3; j++) {
-	s += '<circle cx="' + (12 + i * 10) + '" cy="' + (36 + j * 10) + '" r="1.4" fill="currentColor" opacity="0.5"/>';
-} }
-return s + '<circle cx="32" cy="46" r="2.8" fill="none" stroke="currentColor" stroke-width="1.4"/>';
-'''
-
-[miniCharts.gnlp]
-# Multimodal curve with the global minimum marked
-svg = '''
-var d = 'M6,40';
-for (var x = 6; x <= 48; x++) { d += ' L' + x + ',' + (46 - 8 * Math.sin((x - 6) / 4) - (x - 27) * (x - 27) / -60).toFixed(1); }
-return '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.3"/><line x1="0" y1="66" x2="54" y2="66" stroke="currentColor" stroke-width="0.6" opacity="0.4"/>';
-'''
 
 [[codeBranches]]
-model = "nlp"
+model = "ipopt"
 code = '''
-using JuMP, {{nlpsolver}}
+using JuMP, Ipopt
 
 n = {{n}}  # number of decision variables
 lb, ub = {{lb}}, {{ub}}  # bounds on every x[i]
@@ -344,7 +206,7 @@ function build(optimizer)
     m, x
 end
 
-solver = {{nlpsolver}}.Optimizer  # local interior-point solver
+solver = Ipopt.Optimizer  # interior point with a filter line search
 model, x = build(solver)
 optimize!(model)
 
@@ -352,39 +214,9 @@ optimize!(model)
 '''
 
 [[codeBranches]]
-model = "minlp"
+model = "madnlp"
 code = '''
-using JuMP
-{{?minlpsolver=SCIP}} using SCIP
-{{?minlpsolver=Juniper}} using Juniper, Ipopt
-
-n = {{n}}  # number of decision variables
-lb, ub = {{lb}}, {{ub}}  # bounds on every x[i]
-
-function build(optimizer)
-    m = Model(optimizer)
-    set_silent(m)
-    @variable(m, lb <= x[1:n] <= ub, start = (lb + ub) / 2)
-    @objective(m, {{sense}}, {{obj}})
-    @constraint(m, {{cons}})
-    @variable(m, z[1:n], Bin)  # z[i] = 1 lets x[i] be nonzero
-    @constraint(m, [i = 1:n], lb * z[i] <= x[i] <= ub * z[i])  # big-M switch: the bounds are the M, so tight bounds give a tight relaxation
-    @constraint(m, sum(z) <= {{card}})  # cardinality limit
-    m, x
-end
-
-{{?minlpsolver=SCIP}} solver = SCIP.Optimizer  # branch and cut with spatial branching
-{{?minlpsolver=Juniper}} solver = optimizer_with_attributes(Juniper.Optimizer, "nl_solver" => optimizer_with_attributes(Ipopt.Optimizer, "print_level" => 0))
-model, x = build(solver)
-optimize!(model)
-
-(status = termination_status(model), objective = objective_value(model), x = value.(x))
-'''
-
-[[codeBranches]]
-model = "gnlp"
-code = '''
-using JuMP, {{gsolver}}
+using JuMP, MadNLP
 
 n = {{n}}  # number of decision variables
 lb, ub = {{lb}}, {{ub}}  # bounds on every x[i]
@@ -398,7 +230,7 @@ function build(optimizer)
     m, x
 end
 
-solver = {{gsolver}}.Optimizer  # certifies the global optimum within its tolerance
+solver = MadNLP.Optimizer  # interior point written in Julia
 model, x = build(solver)
 optimize!(model)
 
@@ -470,11 +302,10 @@ histogram(filter(!isnan, objs), bins=20, xlabel="objective at the solution found
 [[actionGroups.actions]]
 id = "solver-stats"
 label = "Solver Statistics"
-desc = "Solve time, iterations, branch-and-bound nodes and relative gap, where the solver reports them"
+desc = "Solve time and interior-point iterations, where the solver reports them"
 code = '''
 stat(f) = try f(model) catch; missing end  # not every solver reports every attribute
-(time = stat(solve_time), barrier_iterations = stat(barrier_iterations), nodes = stat(node_count),
- relative_gap = stat(relative_gap), bound = stat(objective_bound))
+(time = stat(solve_time), iterations = stat(barrier_iterations))
 '''
 
 [[actionGroups]]
@@ -484,9 +315,9 @@ label = "Predict"
 [[actionGroups.actions]]
 id = "sensitivity"
 label = "Constraint Sensitivity"
-desc = "Shadow prices: change in the optimal objective per unit relaxation of each constraint (available when the solver returns duals)"
+desc = "Shadow prices: change in the optimal objective per unit relaxation of each constraint"
 code = '''
-has_duals(model) || error("this solver returned no duals (typical for MINLP and global solvers)")
+has_duals(model) || error("the solver returned no duals")
 cons = all_constraints(model; include_variable_in_set_constraints=true)
 [(constraint = c, shadow_price = shadow_price(c)) for c in cons]
 '''
@@ -515,15 +346,11 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "solver-compare"
 label = "Solver Comparison"
-desc = "The same model with two solvers: objective, status and time"
+desc = "The same model with Ipopt and MadNLP: status, objective and time"
 code = '''
-{{?model=nlp}} using Ipopt, MadNLP
-{{?model=nlp}} solvers = ["Ipopt" => Ipopt.Optimizer, "MadNLP" => MadNLP.Optimizer]
-{{?model=minlp}} using SCIP, Juniper, Ipopt
-{{?model=minlp}} solvers = ["SCIP" => SCIP.Optimizer,
-{{?model=minlp}}            "Juniper" => optimizer_with_attributes(Juniper.Optimizer, "nl_solver" => optimizer_with_attributes(Ipopt.Optimizer, "print_level" => 0))]
-{{?model=gnlp}} using EAGO, SCIP
-{{?model=gnlp}} solvers = ["EAGO" => EAGO.Optimizer, "SCIP" => SCIP.Optimizer]
+using Ipopt, MadNLP
+
+solvers = ["Ipopt" => Ipopt.Optimizer, "MadNLP" => MadNLP.Optimizer]
 map(solvers) do (name, opt)
     m, _ = build(opt)
     t = @elapsed optimize!(m)
@@ -534,18 +361,13 @@ end
 [[actionGroups.actions]]
 id = "gap-check"
 label = "Optimality Gap Check"
-desc = "NLP and Global NLP: local Ipopt optimum against the EAGO global optimum. MINLP: the integer optimum against its continuous relaxation bound"
+desc = "The local optimum found against EAGO's certified global optimum: equal values mean the local optimum is global"
 code = '''
-{{?model!=minlp}} using Ipopt, EAGO
-{{?model!=minlp}} loc, _ = build(Ipopt.Optimizer); optimize!(loc)
-{{?model!=minlp}} glo, _ = build(EAGO.Optimizer); optimize!(glo)
-{{?model!=minlp}} (local_ipopt = objective_value(loc), global_eago = objective_value(glo))  # equal = the local optimum is global
-{{?model=minlp}} undo = relax_integrality(model)  # drop the binary restriction on z
-{{?model=minlp}} optimize!(model)
-{{?model=minlp}} bound = objective_value(model)
-{{?model=minlp}} undo()
-{{?model=minlp}} optimize!(model)
-{{?model=minlp}} (integer = objective_value(model), relaxation_bound = bound, gap = abs(objective_value(model) - bound))
+using EAGO
+
+glo, _ = build(EAGO.Optimizer)
+optimize!(glo)
+(local_optimum = objective_value(model), global_optimum = objective_value(glo))  # equal = the local optimum is global
 '''
 
 [[actionGroups]]
@@ -557,7 +379,7 @@ id = "kkt"
 label = "KKT Conditions"
 desc = "At the solution: constraint values, multipliers and complementary slackness (multiplier times slack should be about 0)"
 code = '''
-has_duals(model) || error("this solver returned no duals (typical for MINLP and global solvers)")
+has_duals(model) || error("the solver returned no duals")
 cons = [c for c in all_constraints(model; include_variable_in_set_constraints=true)
         if constraint_object(c).set isa Union{MOI.LessThan, MOI.GreaterThan, MOI.EqualTo}]
 map(cons) do c
@@ -592,49 +414,23 @@ Multi-Start re-solves from 20 random starting points and draws the objective val
 question = "The solver says LOCALLY_INFEASIBLE: is my problem infeasible?"
 wiki = "Diagnostics"
 answer = """
-Not proven. For a local solver, LOCALLY_INFEASIBLE means no feasible point was found from that start, and another start may succeed; INFEASIBLE from a global solver is a proof of infeasibility.
+Not proven. For a local solver, LOCALLY_INFEASIBLE means no feasible point was found from that start, and another start may succeed; a proof of infeasibility needs a global solver, as in the Global Nonlinear Programming panel.
 
 Status and Feasibility lists the constraints violated by more than 1e-6 at the reported point. Multi-Start tries 20 other starting points in the box.
 """
 
 [[faq]]
-question = "Why do KKT Conditions and Constraint Sensitivity report an error under MINLP?"
-wiki = "MINLP"
+question = "When should I choose MadNLP rather than Ipopt?"
+wiki = "Decision Guide"
 answer = """
-Because they need duals, which interior-point solvers such as Ipopt return and MINLP solvers such as SCIP and Juniper usually do not, so both actions report it.
+When the problem is large and a GPU is available, or when you want to change the solver from Julia. MadNLP is an interior-point solver of the same family as Ipopt, written in Julia, and it can run its linear algebra on a GPU.
 
-For MINLP, Solver Statistics gives the nodes and the relative gap, and the Optimality Gap Check compares the integer optimum with the continuous relaxation, the price of the integrality.
+On small problems the two find the same local optimum from the same start; the Solver Comparison runs both on the panel's model and reports the status, the objective and the time.
 """
 
 [[faq]]
-question = "On the panel's default problem, about what objective value does the global minimum have?"
-wiki = "Global NLP"
-hidden = true
-right = "About -0.54"
-wrong = [
-  "About 1.69",
-  "About 0",
-  "About -2",
-  "About 4",
-]
-explanation = "The default problem, with its bilinear term 3 x[1] x[2], has two local minima: a local solver may return the one at about 1.69, and a global solver returns the one at about -0.54."
-
-[[faq]]
-question = "Why is Juniper exact for convex MINLPs only?"
-wiki = "MINLP"
-hidden = true
-right = "It solves the relaxation at each node with Ipopt, a local solver"
-wrong = [
-  "It never branches on the binary variables",
-  "It builds McCormick relaxations of the expressions",
-  "It needs finite bounds on every variable",
-  "It returns no duals at the solution",
-]
-explanation = "For a nonconvex MINLP, a node's relaxation solved locally may not be a valid bound, so Juniper's result is a good feasible solution without a guarantee; SCIP handles nonconvex MINLPs to global optimality."
-
-[[faq]]
-question = "Where does the panel start every variable of an NLP?"
-wiki = "NLP"
+question = "Where does the panel start every variable?"
+wiki = "Interior-Point Methods"
 hidden = true
 right = "At (lb + ub) / 2"
 wrong = [
@@ -644,20 +440,6 @@ wrong = [
   "At the global optimum of EAGO",
 ]
 explanation = "The panel starts every variable at (lb + ub) / 2, 0 by default, and on the default nonconvex problem the result depends on that start, which Multi-Start explores."
-
-[[faq]]
-question = "Under the Mixed-Integer NLP (MINLP) class, how does the Nonlinear Programming panel make its problem mixed-integer?"
-wiki = "Overview"
-hidden = true
-right = "Each x[i] gets a binary switch z[i], and at most Max Nonzeros are on"
-wrong = [
-  "Every x[i] must take an integer value within its bounds",
-  "x[1] and x[2], the bilinear pair, must take integer values",
-  "Each x[i] is rounded to the nearest integer after the solve",
-  "The first Max Nonzeros of the x[i] must take integer values",
-  "Each x[i] must be 0 or 1, and at most Max Nonzeros are 1",
-]
-explanation = "Under MINLP, each x[i] gets a binary switch z[i], x[i] can be nonzero only when z[i] = 1, and at most Max Nonzeros switches are on; SCIP or Juniper solve it by branch and bound."
 
 [[faq]]
 question = "What does the KKT Conditions action of the Nonlinear Programming panel list for each constraint?"
@@ -672,3 +454,16 @@ wrong = [
   "Its multiplier, and the objective's change per unit",
 ]
 explanation = "Interior-point solvers return the multipliers, and the KKT Conditions action lists each constraint's value, multiplier and the product multiplier times slack, which should be near 0."
+
+[[faq]]
+question = "What does the Optimality Gap Check of the Nonlinear Programming panel compare?"
+wiki = "Diagnostics"
+hidden = true
+right = "The local optimum found with EAGO's certified global optimum"
+wrong = [
+  "Ipopt's optimum with MadNLP's optimum",
+  "The integer optimum with its continuous relaxation",
+  "The objective at the start with the objective at the solution",
+  "The primal objective with the dual objective",
+]
+explanation = "The Optimality Gap Check solves the same model with EAGO, a deterministic global solver, and sets its optimum beside the local one: equal values mean the local optimum is global."

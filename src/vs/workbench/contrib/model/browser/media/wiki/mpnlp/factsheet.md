@@ -1,25 +1,29 @@
 # Nonlinear Programming — Factsheet
 
-A **nonlinear program** (NLP) optimises a nonlinear objective subject to nonlinear constraints and bounds. When some variables must be integer it is a **mixed-integer nonlinear program** (MINLP); when the problem is nonconvex and the best of all local optima is required, it is a **global** NLP.
+A **nonlinear program** (NLP) optimises a smooth nonlinear objective subject to nonlinear constraints and bounds on continuous variables. The Nonlinear Programming panel solves it **locally**, with interior-point solvers that stop at a point satisfying the KKT conditions.
 
 | | |
 |---|---|
-| **Purpose** | Model and solve nonlinear optimisation problems in JuMP, locally, with discrete decisions, or to certified global optimality |
-| **Input** | The number of variables n, the sense, the objective and a constraint as JuMP expressions in x, the bounds, the cardinality limit for MINLP, and the solver |
-| **Core packages** | [JuMP.jl](https://github.com/jump-dev/JuMP.jl), [Ipopt.jl](https://github.com/jump-dev/Ipopt.jl), [MadNLP.jl](https://github.com/MadNLP/MadNLP.jl), [SCIP.jl](https://github.com/scipopt/SCIP.jl), [Juniper.jl](https://github.com/lanl-ansi/Juniper.jl), [EAGO.jl](https://github.com/PSORLab/EAGO.jl), [AmplNLWriter.jl](https://github.com/jump-dev/AmplNLWriter.jl) |
-| **Models** | Nonlinear Programming (NLP), Mixed-Integer NLP (MINLP), Global NLP |
-| **Output** | The termination status, the objective, the solution, and where available the duals, the bound and the gap |
-| **Key choice** | Local or global, continuous or mixed-integer: each changes the solver and what its answer guarantees |
+| **Purpose** | Model a smooth nonlinear problem in JuMP and find a locally optimal solution, with its multipliers |
+| **Input** | The number of variables n, the sense, the objective and a constraint as JuMP expressions in x, and the bounds |
+| **Core packages** | [JuMP.jl](https://github.com/jump-dev/JuMP.jl), [Ipopt.jl](https://github.com/jump-dev/Ipopt.jl), [MadNLP.jl](https://github.com/MadNLP/MadNLP.jl) |
+| **Solvers** | Ipopt, MadNLP |
+| **Output** | The termination status, the objective, the solution, and the multipliers of the constraints and bounds |
+| **Key choice** | The solver, and the starting point, which decides which local optimum is found |
 
-## When to Use
+## When to Use Nonlinear Programming
 
-- **Engineering and economic models** with nonlinear relations: chemical processes, power flow, portfolio models with nonlinear risk, production functions.
-- **Discrete choices in a nonlinear model**: which units to switch on, at most k assets, on/off decisions (MINLP).
-- **When a local optimum is not enough**: nonconvex problems where the best solution must be proved (Global NLP).
+- **Engineering and economic models** with smooth nonlinear relations: chemical processes, power flow, production functions, portfolios with a nonlinear risk measure.
+- **Estimation** written as an optimisation problem, such as maximum likelihood with constraints on the parameters.
+- **Large problems**: interior-point solvers with sparse linear algebra handle hundreds of thousands of variables and constraints.
 
-## What It Is Not
+## What Nonlinear Programming Is Not
 
-Not the right tool for linear, quadratic or conic problems, which LP, QP and conic solvers handle with stronger guarantees and speed (Mathematical Programming: Conic). Global and MINLP solvers scale **exponentially** in the worst case: dozens to a few hundred variables are routine, thousands may not be.
+A local solver gives no guarantee that a better point does not exist elsewhere when the problem is nonconvex: the **Global Nonlinear Programming** panel certifies the global optimum, and the **Mixed-Integer Nonlinear Programming** panel adds integer variables. Linear, quadratic and conic problems are better served by their own panels, whose solvers are faster and give stronger guarantees.
+
+## References
+
+<a id="ref-DHL2017a"></a>Dunning, I., Huchette, J. and Lubin, M. (2017). JuMP: A Modeling Language for Mathematical Optimization. *SIAM Review* 59(2), 295–320. [doi:10.1137/15M1020575](https://doi.org/10.1137/15M1020575)
 
 ## See Also
-- [Overview](overview.md) · [Decision Guide](decision-guide.md) · [KKT Conditions](kkt.md)
+- [Overview](overview.md) · [Decision Guide](decision-guide.md) · [Interior-Point Methods](nlp.md)

@@ -1,0 +1,492 @@
+# Mixed-Integer Nonlinear Programming Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/mpminlp.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Mixed-Integer Nonlinear Programming"
+viewType = "pollis.mpminlp"
+defaultModel = "scip"
+
+[[packages]]
+name = "JuMP.jl"
+github = "https://github.com/jump-dev/JuMP.jl"
+
+[[packages]]
+name = "SCIP.jl"
+github = "https://github.com/scipopt/SCIP.jl"
+
+[[packages]]
+name = "Juniper.jl"
+github = "https://github.com/lanl-ansi/Juniper.jl"
+
+[[packages]]
+name = "Ipopt.jl"
+github = "https://github.com/jump-dev/Ipopt.jl"
+
+[[packages]]
+name = "AmplNLWriter.jl"
+github = "https://github.com/jump-dev/AmplNLWriter.jl"
+
+[[packages]]
+name = "Bonmin_jll.jl"
+github = "https://github.com/JuliaBinaryWrappers/Bonmin_jll.jl"
+
+[requires]
+packages = ["JuMP.jl", "SCIP.jl", "Juniper.jl", "Ipopt.jl", "AmplNLWriter.jl", "Bonmin_jll.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Basic MINLP"
+file = "mpminlp/tutorial-01-basic-minlp.ipynb"
+bundled = true
+description = "Formulate and solve a mixed-integer nonlinear programme with SCIP"
+
+[[wikis]]
+name = "Factsheet"
+file = "mpminlp/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "mpminlp/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "mpminlp/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "mpminlp/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "mpminlp/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "mpminlp/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Methods"
+
+[[wikis]]
+name = "Branch and Bound"
+file = "mpminlp/minlp.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+key = "DHL2017a"
+
+[[references]]
+key = "Ach2009a"
+
+[[references]]
+key = "KCHN2018a"
+
+[[references]]
+key = "BBCCG...2008a"
+
+[[references]]
+key = "WB2006a"
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+key = "NW2006a"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "LD1960a"
+
+[[models]]
+id = "scip"
+label = "SCIP"
+
+[[models]]
+id = "juniper"
+label = "Juniper"
+
+[[models]]
+id = "bonmin"
+label = "Bonmin"
+
+[[bullets]]
+text = "SCIP"
+detail = "Branch and cut with spatial branching on the nonconvex terms: the global optimum of a nonconvex MINLP, within its gap"
+
+[[bullets]]
+text = "Juniper"
+detail = "Branch and bound in Julia over NLP relaxations solved by Ipopt: exact for convex MINLPs, a good feasible point for nonconvex ones"
+
+[[bullets]]
+text = "Bonmin"
+detail = "Branch and bound over NLP relaxations solved by Ipopt, from COIN-OR, reached through an AMPL NL file: exact for convex MINLPs, a heuristic for nonconvex ones"
+
+[[decisionRows]]
+task = "SCIP"
+context = "Nonconvex, proof needed"
+purpose = "Branch and cut over the binaries and the nonconvex terms, with cuts and presolve, to the global optimum within its gap"
+
+[[decisionRows]]
+task = "Juniper"
+context = "Convex, or a quick answer"
+purpose = "NLP branch and bound with Ipopt at each node: optimal for convex MINLPs, a heuristic otherwise"
+
+[[decisionRows]]
+task = "Bonmin"
+context = "Convex, second opinion"
+purpose = "COIN-OR's convex MINLP framework, with Ipopt at each node: a second solver to check Juniper's answer"
+
+[[inputs]]
+id = "n"
+label = "n"
+tooltip = "Number of decision variables x[1], ..., x[n], each with a binary switch z[i]."
+default = "5"
+
+[[inputs]]
+id = "sense"
+label = "Sense"
+tooltip = "Direction of optimisation."
+kind = "select"
+default = "Min"
+
+[[inputs.options]]
+value = "Min"
+label = "Minimise"
+
+[[inputs.options]]
+value = "Max"
+label = "Maximise"
+
+[[inputs]]
+id = "obj"
+label = "Objective"
+tooltip = "Nonlinear expression in the vector x, for example sum((x .- 1) .^ 2) + 3 * x[1] * x[2] + x[1] (nonconvex because of the bilinear term) or sum(exp.(x) .- 2 .* x). JuMP builds the nonlinear expression directly."
+default = "sum((x .- 1) .^ 2) + 3 * x[1] * x[2] + x[1]"
+newRow = true
+
+[[inputs]]
+id = "cons"
+label = "Constraint"
+tooltip = "One constraint in x, for example sum(x) == 1 or sum(x .^ 2) <= 4. Add further @constraint lines in the generated code."
+default = "sum(x .^ 2) <= 4"
+
+[[inputs]]
+id = "lb"
+label = "Lower Bound"
+tooltip = "Lower bound on every x[i]. It must be at most 0, so that x[i] can switch off, and it is the big-M of the switch: keep it as tight as the constraint allows (the default ball sum(x .^ 2) <= 4 implies -2)."
+default = "-2"
+newRow = true
+
+[[inputs]]
+id = "ub"
+label = "Upper Bound"
+tooltip = "Upper bound on every x[i], at least 0, and the other big-M of the switch (the default ball implies 2)."
+default = "2"
+
+[[inputs]]
+id = "card"
+label = "Max Nonzeros"
+tooltip = "At most this many x[i] may be nonzero: x[i] is nonzero only when its switch z[i] is 1."
+default = "2"
+
+[[codeBranches]]
+model = "scip"
+code = '''
+using JuMP, SCIP
+
+n = {{n}}  # number of decision variables
+lb, ub = {{lb}}, {{ub}}  # bounds on every x[i], and the big-M of each switch
+
+function build(optimizer)
+    m = Model(optimizer)
+    MOI.supports(JuMP.backend(m), MOI.Silent()) && set_silent(m)  # Bonmin, through an NL file, has no silent mode
+    @variable(m, lb <= x[1:n] <= ub, start = (lb + ub) / 2)
+    @variable(m, z[1:n], Bin)  # z[i] = 1 lets x[i] be nonzero
+    @objective(m, {{sense}}, {{obj}})
+    @constraint(m, {{cons}})
+    @constraint(m, [i = 1:n], x[i] >= lb * z[i])  # the switch: x[i] = 0 when z[i] = 0
+    @constraint(m, [i = 1:n], x[i] <= ub * z[i])
+    @constraint(m, card, sum(z) <= {{card}})  # at most this many nonzero
+    m, x, z
+end
+
+solver = SCIP.Optimizer  # branch and cut with spatial branching
+model, x, z = build(solver)
+optimize!(model)
+
+(status = termination_status(model), objective = objective_value(model), x = value.(x), on = findall(>(0.5), value.(z)))
+'''
+
+[[codeBranches]]
+model = "juniper"
+code = '''
+using JuMP, Juniper, Ipopt
+
+n = {{n}}  # number of decision variables
+lb, ub = {{lb}}, {{ub}}  # bounds on every x[i], and the big-M of each switch
+
+function build(optimizer)
+    m = Model(optimizer)
+    MOI.supports(JuMP.backend(m), MOI.Silent()) && set_silent(m)  # Bonmin, through an NL file, has no silent mode
+    @variable(m, lb <= x[1:n] <= ub, start = (lb + ub) / 2)
+    @variable(m, z[1:n], Bin)  # z[i] = 1 lets x[i] be nonzero
+    @objective(m, {{sense}}, {{obj}})
+    @constraint(m, {{cons}})
+    @constraint(m, [i = 1:n], x[i] >= lb * z[i])  # the switch: x[i] = 0 when z[i] = 0
+    @constraint(m, [i = 1:n], x[i] <= ub * z[i])
+    @constraint(m, card, sum(z) <= {{card}})  # at most this many nonzero
+    m, x, z
+end
+
+ipopt = optimizer_with_attributes(Ipopt.Optimizer, "print_level" => 0)
+solver = optimizer_with_attributes(Juniper.Optimizer, "nl_solver" => ipopt)  # NLP branch and bound
+model, x, z = build(solver)
+optimize!(model)
+
+(status = termination_status(model), objective = objective_value(model), x = value.(x), on = findall(>(0.5), value.(z)))
+'''
+
+[[codeBranches]]
+model = "bonmin"
+code = '''
+using JuMP, AmplNLWriter, Bonmin_jll
+
+n = {{n}}  # number of decision variables
+lb, ub = {{lb}}, {{ub}}  # bounds on every x[i], and the big-M of each switch
+
+function build(optimizer)
+    m = Model(optimizer)
+    MOI.supports(JuMP.backend(m), MOI.Silent()) && set_silent(m)  # Bonmin, through an NL file, has no silent mode
+    @variable(m, lb <= x[1:n] <= ub, start = (lb + ub) / 2)
+    @variable(m, z[1:n], Bin)  # z[i] = 1 lets x[i] be nonzero
+    @objective(m, {{sense}}, {{obj}})
+    @constraint(m, {{cons}})
+    @constraint(m, [i = 1:n], x[i] >= lb * z[i])  # the switch: x[i] = 0 when z[i] = 0
+    @constraint(m, [i = 1:n], x[i] <= ub * z[i])
+    @constraint(m, card, sum(z) <= {{card}})  # at most this many nonzero
+    m, x, z
+end
+
+solver = () -> AmplNLWriter.Optimizer(Bonmin_jll.amplexe)  # NLP branch and bound, through an NL file
+model, x, z = build(solver)
+optimize!(model)
+
+(status = termination_status(model), objective = objective_value(model), x = value.(x), on = findall(>(0.5), value.(z)))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "solution-profile"
+label = "Solution Profile"
+desc = "Each variable at the optimum against its bounds, the ones switched on in colour"
+code = '''
+using Plots
+
+on = value.(z) .> 0.5
+bar(value.(x), xlabel="i", ylabel="x[i]", color=ifelse.(on, :steelblue, :lightgray), legend=false)
+hline!([lb, ub], linestyle=:dash, color=:gray)
+'''
+
+[[actionGroups.actions]]
+id = "objective-surface"
+label = "Objective Contours"
+desc = "Contours of the objective over x[1] and x[2], the other variables held at their optimal values, with the optimum found"
+code = '''
+using Plots
+
+xs = value.(x)
+f(v) = value(vi -> v[findfirst(==(vi), x)], objective_function(model))  # evaluate the JuMP objective at a point
+g1 = range(lb, ub, length=60)
+g2 = range(lb, ub, length=60)
+Z  = [f([a; b; xs[3:end]]) for b in g2, a in g1]
+contour(g1, g2, Z, levels=30, xlabel="x[1]", ylabel="x[2]", fill=true)
+scatter!([xs[1]], [xs[2]], marker=:star, markersize=8, label="optimum")
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "feasibility"
+label = "Status and Feasibility"
+desc = "Termination and primal status, and any constraints violated by more than 1e-6 at the reported solution, the integrality of the switches included"
+code = '''
+(termination = termination_status(model), primal = primal_status(model),
+ violated = primal_feasibility_report(model; atol=1e-6))  # empty Dict = feasible
+'''
+
+[[actionGroups.actions]]
+id = "solver-stats"
+label = "Solver Statistics"
+desc = "Solve time, branch-and-bound nodes, the best bound and the relative gap, where the solver reports them"
+code = '''
+stat(f) = try f(model) catch; missing end  # not every solver reports every attribute
+(time = stat(solve_time), nodes = stat(node_count), bound = stat(objective_bound), relative_gap = stat(relative_gap))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "cardinality-sweep"
+label = "Cardinality Sweep"
+desc = "The optimal objective for every limit on the nonzeros, from 1 to n: what each further variable allowed is worth. The limit is restored and the model re-solved afterwards"
+code = '''
+using Plots
+
+limits = 1:n
+vals = map(limits) do k
+    set_normalized_rhs(model[:card], k)
+    optimize!(model)
+    is_solved_and_feasible(model) ? objective_value(model) : NaN
+end
+set_normalized_rhs(model[:card], {{card}}); optimize!(model)  # restore, so the other actions see the original solution
+plot(limits, vals, marker=:circle, xlabel="Max Nonzeros", ylabel="optimal objective", legend=false)
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "solver-compare"
+label = "Solver Comparison"
+desc = "The same model with SCIP, Juniper and Bonmin: status, objective and time"
+code = '''
+using SCIP, Juniper, Ipopt, AmplNLWriter, Bonmin_jll
+
+ipopt = optimizer_with_attributes(Ipopt.Optimizer, "print_level" => 0)
+solvers = ["SCIP" => SCIP.Optimizer,
+           "Juniper" => optimizer_with_attributes(Juniper.Optimizer, "nl_solver" => ipopt),
+           "Bonmin" => () -> AmplNLWriter.Optimizer(Bonmin_jll.amplexe)]
+map(solvers) do (name, opt)
+    m, _, _ = build(opt)
+    t = @elapsed optimize!(m)
+    (solver = name, status = termination_status(m), objective = objective_value(m), seconds = t)
+end
+'''
+
+[[actionGroups.actions]]
+id = "gap-check"
+label = "Price of Integrality"
+desc = "The integer optimum against the continuous relaxation, solved by the same solver with the switches free in [0, 1]: the difference is what the on/off decisions cost"
+code = '''
+relaxed, _, _ = build(solver)  # a fresh copy of the model
+relax_integrality(relaxed)  # the switches z[i] free in [0, 1]
+optimize!(relaxed)
+(integer = objective_value(model), relaxation = objective_value(relaxed), price = abs(objective_value(model) - objective_value(relaxed)))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "constraint-activity"
+label = "Constraint Activity"
+desc = "Which constraints and bounds are binding (slack below 1e-6) at the optimum"
+code = '''
+cons = [c for c in all_constraints(model; include_variable_in_set_constraints=true)
+        if constraint_object(c).set isa Union{MOI.LessThan, MOI.GreaterThan, MOI.EqualTo}]
+[(constraint = c, slack = abs(value(c) - MOI.constant(constraint_object(c).set)),
+  binding = abs(value(c) - MOI.constant(constraint_object(c).set)) < 1e-6) for c in cons]
+'''
+
+[[actionGroups.actions]]
+id = "fixed-switches"
+label = "Duals at the Chosen Switches"
+desc = "The switches fixed at their optimal values and the continuous problem left solved with Ipopt, whose multipliers give each constraint's shadow price for that choice"
+code = '''
+using Ipopt
+
+fixed, xf, zf = build(Ipopt.Optimizer)
+unset_binary.(zf)
+fix.(zf, round.(value.(z)); force=true)  # the switches as chosen
+optimize!(fixed)
+cons = all_constraints(fixed; include_variable_in_set_constraints=false)
+[(constraint = c, shadow_price = shadow_price(c)) for c in cons]
+'''
+
+# ── FAQ: shown in Learn More, and the Panel FAQ test set of Evaluate Answering Models (hidden = true: the test set only) ──
+
+[[faq]]
+question = "Why does the panel have no KKT Conditions or Constraint Sensitivity?"
+wiki = "Interpretation"
+answer = """
+Because MINLP solvers such as SCIP, Juniper and Bonmin usually return no duals: the integer problem has no multipliers of its own.
+
+Duals at the Chosen Switches fixes the switches at their optimal values and solves the continuous problem that remains with Ipopt, whose multipliers give each constraint's shadow price for that choice of switches.
+"""
+
+[[faq]]
+question = "Is Juniper's answer the global optimum?"
+wiki = "Branch and Bound"
+answer = """
+Only when the MINLP is convex. Juniper solves the relaxation at each node with Ipopt, a local solver, so for a nonconvex problem a node's value may not be a valid bound, and its answer is a good feasible solution without a guarantee.
+
+SCIP handles nonconvex MINLPs to global optimality, and Bonmin, like Juniper, is exact only for convex ones; the Solver Comparison runs all three on the panel's model.
+"""
+
+[[faq]]
+question = "Why does Juniper find a global optimum only for convex MINLPs?"
+wiki = "Branch and Bound"
+hidden = true
+right = "It solves the relaxation at each node with Ipopt, a local solver"
+wrong = [
+  "It never branches on the binary variables",
+  "It builds McCormick relaxations of the expressions",
+  "It needs finite bounds on every variable",
+  "It returns no duals at the solution",
+]
+explanation = "For a nonconvex MINLP, a node's relaxation solved locally may not be a valid bound, so Juniper's result is a good feasible solution without a guarantee; SCIP handles nonconvex MINLPs to global optimality."
+
+[[faq]]
+question = "How does the Mixed-Integer Nonlinear Programming panel make its problem mixed-integer?"
+wiki = "Overview"
+hidden = true
+right = "Each x[i] gets a binary switch z[i], and at most Max Nonzeros are on"
+wrong = [
+  "Every x[i] must take an integer value within its bounds",
+  "x[1] and x[2], the bilinear pair, must take integer values",
+  "Each x[i] is rounded to the nearest integer after the solve",
+  "The first Max Nonzeros of the x[i] must take integer values",
+  "Each x[i] must be 0 or 1, and at most Max Nonzeros are 1",
+]
+explanation = "Each x[i] gets a binary switch z[i], x[i] can be nonzero only when z[i] = 1, and at most Max Nonzeros switches are on; SCIP, Juniper or Bonmin solve it by branch and bound."
+
+[[faq]]
+question = "What does the Price of Integrality of the Mixed-Integer Nonlinear Programming panel compare?"
+wiki = "Diagnostics"
+hidden = true
+right = "The integer optimum with the optimum of its continuous relaxation"
+wrong = [
+  "The local optimum with the global optimum",
+  "SCIP's optimum with Juniper's optimum",
+  "The optimum at each limit on the nonzeros",
+  "The objective at the start with the objective at the solution",
+]
+explanation = "The Price of Integrality solves a copy of the model with the switches relaxed to [0, 1], with the same solver: the difference between its optimum and the integer optimum is what the on/off decisions cost."

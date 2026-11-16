@@ -1,0 +1,461 @@
+# Global Nonlinear Programming Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/mpgnlp.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Global Nonlinear Programming"
+viewType = "pollis.mpgnlp"
+defaultModel = "eago"
+
+[[packages]]
+name = "JuMP.jl"
+github = "https://github.com/jump-dev/JuMP.jl"
+
+[[packages]]
+name = "EAGO.jl"
+github = "https://github.com/PSORLab/EAGO.jl"
+
+[[packages]]
+name = "SCIP.jl"
+github = "https://github.com/scipopt/SCIP.jl"
+
+[[packages]]
+name = "Alpine.jl"
+github = "https://github.com/lanl-ansi/Alpine.jl"
+
+[requires]
+packages = ["JuMP.jl", "EAGO.jl", "SCIP.jl", "Alpine.jl", "Ipopt.jl", "Plots.jl"]
+
+[[notebookSections]]
+label = ""
+
+[[notebookSections.notebooks]]
+name = "Global NLP"
+file = "mpgnlp/tutorial-01-global-nlp.ipynb"
+bundled = true
+description = "Find certified global optima of nonconvex NLPs with EAGO, SCIP and Alpine"
+
+[[wikis]]
+name = "Factsheet"
+file = "mpgnlp/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "mpgnlp/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Assumptions"
+file = "mpgnlp/assumptions.md"
+bundled = true
+
+[[wikis]]
+name = "Diagnostics"
+file = "mpgnlp/diagnostics.md"
+bundled = true
+
+[[wikis]]
+name = "Interpretation"
+file = "mpgnlp/interpretation.md"
+bundled = true
+
+[[wikis]]
+name = "Decision Guide"
+file = "mpgnlp/decision-guide.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Methods"
+
+[[wikis]]
+name = "Spatial Branch and Bound"
+file = "mpgnlp/gnlp.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+key = "DHL2017a"
+
+[[references]]
+key = "WS2022a"
+
+[[references]]
+key = "Ach2009a"
+
+[[references]]
+key = "NLWBS2019a"
+
+[[references]]
+key = "WB2006a"
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+key = "Flo2000a"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "Mcc1976a"
+
+[[models]]
+id = "eago"
+label = "EAGO"
+
+[[models]]
+id = "scip"
+label = "SCIP"
+
+[[models]]
+id = "alpine"
+label = "Alpine"
+
+[[bullets]]
+text = "EAGO"
+detail = "A deterministic global optimiser written in Julia: McCormick relaxations of the expressions, bound tightening, and a local solver for the upper bounds"
+
+[[bullets]]
+text = "SCIP"
+detail = "Spatial branching on the nonconvex terms inside a branch-and-cut framework, with the cuts and presolve of mixed-integer programming"
+
+[[bullets]]
+text = "Alpine"
+detail = "Adaptive partitioning of the variable domains in Julia: piecewise polyhedral relaxations solved as MIPs by SCIP, with Ipopt for the upper bounds"
+
+[[decisionRows]]
+task = "EAGO"
+context = "Pure Julia, user functions"
+purpose = "McCormick relaxations composed through the expression, which also cover functions defined in Julia"
+
+[[decisionRows]]
+task = "SCIP"
+context = "Integers or many constraints"
+purpose = "Spatial branching with the cuts and presolve of a mixed-integer solver, for global optima of nonconvex problems"
+
+[[decisionRows]]
+task = "Alpine"
+context = "Multilinear terms"
+purpose = "Piecewise relaxations over adaptively partitioned domains, for problems built from products of variables"
+
+[[inputs]]
+id = "n"
+label = "n"
+tooltip = "Number of decision variables x[1], ..., x[n]. The run time of a global solver grows quickly with the number of variables that appear nonlinearly."
+default = "5"
+
+[[inputs]]
+id = "sense"
+label = "Sense"
+tooltip = "Direction of optimisation."
+kind = "select"
+default = "Min"
+
+[[inputs.options]]
+value = "Min"
+label = "Minimise"
+
+[[inputs.options]]
+value = "Max"
+label = "Maximise"
+
+[[inputs]]
+id = "obj"
+label = "Objective"
+tooltip = "Nonlinear expression in the vector x, for example sum((x .- 1) .^ 2) + 3 * x[1] * x[2] + x[1] (nonconvex: with n = 5 and the default constraint, two local minima with objective values of about -0.54 and 1.69) or sum(sin.(3 .* x) .+ x .^ 2 ./ 4). Global solvers need expressions they can relax: sums, products, powers, exp, log and trigonometric functions."
+default = "sum((x .- 1) .^ 2) + 3 * x[1] * x[2] + x[1]"
+newRow = true
+
+[[inputs]]
+id = "cons"
+label = "Constraint"
+tooltip = "One constraint in x, for example sum(x) == 1 or sum(x .^ 2) <= 4. Add further @constraint lines in the generated code."
+default = "sum(x .^ 2) <= 4"
+
+[[inputs]]
+id = "lb"
+label = "Lower Bound"
+tooltip = "Lower bound on every x[i]. Global solvers need finite bounds, and the tighter they are the tighter the relaxations: the default ball sum(x .^ 2) <= 4 implies -2."
+default = "-2"
+newRow = true
+
+[[inputs]]
+id = "ub"
+label = "Upper Bound"
+tooltip = "Upper bound on every x[i], finite, and as tight as the problem allows (the default ball implies 2)."
+default = "2"
+
+[[codeBranches]]
+model = "eago"
+code = '''
+using JuMP, EAGO
+
+n = {{n}}  # number of decision variables
+lb, ub = {{lb}}, {{ub}}  # finite bounds on every x[i]
+
+function build(optimizer)
+    m = Model(optimizer)
+    MOI.supports(JuMP.backend(m), MOI.Silent()) && set_silent(m)  # Alpine has no silent mode
+    @variable(m, lb <= x[1:n] <= ub, start = (lb + ub) / 2)
+    @objective(m, {{sense}}, {{obj}})
+    @constraint(m, {{cons}})
+    m, x
+end
+
+solver = EAGO.Optimizer  # McCormick relaxations and branch and bound
+model, x = build(solver)
+optimize!(model)
+
+(status = termination_status(model), objective = objective_value(model), x = value.(x))
+'''
+
+[[codeBranches]]
+model = "scip"
+code = '''
+using JuMP, SCIP
+
+n = {{n}}  # number of decision variables
+lb, ub = {{lb}}, {{ub}}  # finite bounds on every x[i]
+
+function build(optimizer)
+    m = Model(optimizer)
+    MOI.supports(JuMP.backend(m), MOI.Silent()) && set_silent(m)  # Alpine has no silent mode
+    @variable(m, lb <= x[1:n] <= ub, start = (lb + ub) / 2)
+    @objective(m, {{sense}}, {{obj}})
+    @constraint(m, {{cons}})
+    m, x
+end
+
+solver = SCIP.Optimizer  # spatial branching inside branch and cut
+model, x = build(solver)
+optimize!(model)
+
+(status = termination_status(model), objective = objective_value(model), x = value.(x))
+'''
+
+[[codeBranches]]
+model = "alpine"
+code = '''
+using JuMP, Alpine, Ipopt, SCIP
+
+n = {{n}}  # number of decision variables
+lb, ub = {{lb}}, {{ub}}  # finite bounds on every x[i]
+
+function build(optimizer)
+    m = Model(optimizer)
+    MOI.supports(JuMP.backend(m), MOI.Silent()) && set_silent(m)  # Alpine has no silent mode
+    @variable(m, lb <= x[1:n] <= ub, start = (lb + ub) / 2)
+    @objective(m, {{sense}}, {{obj}})
+    @constraint(m, {{cons}})
+    m, x
+end
+
+ipopt = optimizer_with_attributes(Ipopt.Optimizer, "print_level" => 0)  # the local solves
+scip = optimizer_with_attributes(SCIP.Optimizer, "display/verblevel" => 0)  # the MIP relaxations
+solver = optimizer_with_attributes(Alpine.Optimizer, "nlp_solver" => ipopt, "mip_solver" => scip, "log_level" => 0)  # adaptive partitioning
+model, x = build(solver)
+optimize!(model)
+
+(status = termination_status(model), objective = objective_value(model), x = value.(x))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "objective-surface"
+label = "Objective Contours"
+desc = "Contours of the objective over x[1] and x[2], the other variables held at their optimal values, with the global optimum"
+code = '''
+using Plots
+
+xs = value.(x)
+f(v) = value(vi -> v[findfirst(==(vi), x)], objective_function(model))  # evaluate the JuMP objective at a point
+g1 = range(lb, ub, length=60)
+g2 = range(lb, ub, length=60)
+Z  = [f([a; b; xs[3:end]]) for b in g2, a in g1]
+contour(g1, g2, Z, levels=30, xlabel="x[1]", ylabel="x[2]", fill=true)
+scatter!([xs[1]], [xs[2]], marker=:star, markersize=8, label="global optimum")
+'''
+
+[[actionGroups.actions]]
+id = "solution-profile"
+label = "Solution Profile"
+desc = "Each variable at the global optimum against its bounds"
+code = '''
+using Plots
+
+bar(value.(x), xlabel="i", ylabel="x[i]", legend=false)
+hline!([lb, ub], linestyle=:dash, color=:gray)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "feasibility"
+label = "Status and Feasibility"
+desc = "Termination and primal status, and any constraints violated by more than 1e-6 at the reported solution"
+code = '''
+(termination = termination_status(model), primal = primal_status(model),
+ violated = primal_feasibility_report(model; atol=1e-6))  # empty Dict = feasible
+'''
+
+[[actionGroups.actions]]
+id = "solver-stats"
+label = "Solver Statistics"
+desc = "Solve time, branch-and-bound nodes, the best bound and the relative gap, where the solver reports them"
+code = '''
+stat(f) = try f(model) catch; missing end  # not every solver reports every attribute
+(time = stat(solve_time), nodes = stat(node_count), bound = stat(objective_bound), relative_gap = stat(relative_gap))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "wider-bounds"
+label = "Wider Bounds"
+desc = "The same problem with the box widened two, four and eight times: the solve time grows as the relaxations weaken, while the optimum stays. The bounds are restored and the model re-solved afterwards"
+code = '''
+using Plots
+
+scales = [1, 2, 4, 8]
+times = map(scales) do s
+    set_lower_bound.(x, s * lb); set_upper_bound.(x, s * ub)
+    @elapsed optimize!(model)
+end
+set_lower_bound.(x, lb); set_upper_bound.(x, ub); optimize!(model)  # restore, so the other actions see the original solution
+plot(scales, times, marker=:circle, xlabel="box widened by", ylabel="seconds", xscale=:log2, legend=false)
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "solver-compare"
+label = "Solver Comparison"
+desc = "The same model with EAGO, SCIP and Alpine: status, objective and time"
+code = '''
+using EAGO, SCIP, Alpine, Ipopt
+
+ipopt = optimizer_with_attributes(Ipopt.Optimizer, "print_level" => 0)
+scip = optimizer_with_attributes(SCIP.Optimizer, "display/verblevel" => 0)
+solvers = ["EAGO" => EAGO.Optimizer, "SCIP" => SCIP.Optimizer,
+           "Alpine" => optimizer_with_attributes(Alpine.Optimizer, "nlp_solver" => ipopt, "mip_solver" => scip, "log_level" => 0)]
+map(solvers) do (name, opt)
+    m, _ = build(opt)
+    t = @elapsed optimize!(m)
+    (solver = name, status = termination_status(m), objective = objective_value(m), seconds = t)
+end
+'''
+
+[[actionGroups.actions]]
+id = "local-vs-global"
+label = "Local Against Global"
+desc = "Ipopt from 20 random starts against the global optimum: the local optima a local solver can stop at, beside the one the global solver certifies"
+code = '''
+using Ipopt, Random, Plots
+
+Random.seed!(1)
+loc, xl = build(Ipopt.Optimizer)
+objs = map(1:20) do _
+    set_start_value.(xl, lb .+ (ub - lb) .* rand(n))
+    optimize!(loc)
+    is_solved_and_feasible(loc) ? objective_value(loc) : NaN
+end
+histogram(filter(!isnan, objs), bins=20, xlabel="objective", ylabel="starts", label="Ipopt, 20 starts")
+vline!([objective_value(model)], linewidth=2, label="global optimum")
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "constraint-activity"
+label = "Constraint Activity"
+desc = "Which constraints and bounds are binding (slack below 1e-6) at the global optimum"
+code = '''
+cons = [c for c in all_constraints(model; include_variable_in_set_constraints=true)
+        if constraint_object(c).set isa Union{MOI.LessThan, MOI.GreaterThan, MOI.EqualTo}]
+[(constraint = c, slack = abs(value(c) - MOI.constant(constraint_object(c).set)),
+  binding = abs(value(c) - MOI.constant(constraint_object(c).set)) < 1e-6) for c in cons]
+'''
+
+[[actionGroups.actions]]
+id = "kkt"
+label = "KKT at the Global Optimum"
+desc = "Ipopt started at the global optimum, which it keeps, and its multipliers: each constraint's value, multiplier and complementary slackness there"
+code = '''
+using Ipopt
+
+polish, xp = build(Ipopt.Optimizer)
+set_start_value.(xp, value.(x))  # start at the global optimum
+optimize!(polish)
+cons = [c for c in all_constraints(polish; include_variable_in_set_constraints=true)
+        if constraint_object(c).set isa Union{MOI.LessThan, MOI.GreaterThan, MOI.EqualTo}]
+map(cons) do c
+    slack = value(c) - MOI.constant(constraint_object(c).set)
+    (constraint = c, value = value(c), multiplier = dual(c), complementarity = dual(c) * slack)
+end
+'''
+
+# ── FAQ: shown in Learn More, and the Panel FAQ test set of Evaluate Answering Models (hidden = true: the test set only) ──
+
+[[faq]]
+question = "Why do global solvers need finite bounds on every variable?"
+wiki = "Assumptions"
+answer = """
+Because they build convex relaxations of the problem over a box of variable bounds, and a relaxation over an unbounded box gives no useful bound. The tighter the bounds, the tighter the relaxations and the fewer boxes the solver has to split.
+
+Wider Bounds solves the panel's problem with the box widened two, four and eight times and draws the solve time against it.
+"""
+
+[[faq]]
+question = "Is a global solver's answer proved to be the best?"
+wiki = "Interpretation"
+answer = """
+Yes, within its tolerance: the status OPTIMAL means the gap between the best solution found and the lower bound of the relaxations is below the solver's tolerance, so no other point can be better by more than that.
+
+Solver Statistics gives the bound and the relative gap; Local Against Global sets the local optima Ipopt reaches from 20 starts beside the certified one.
+"""
+
+[[faq]]
+question = "On the panel's default problem, about what objective value does the global minimum have?"
+wiki = "Spatial Branch and Bound"
+hidden = true
+right = "About -0.54"
+wrong = [
+  "About 1.69",
+  "About 0",
+  "About -2",
+  "About 4",
+]
+explanation = "The default problem, with its bilinear term 3 x[1] x[2], has two local minima: a local solver may return the one at about 1.69, and a global solver returns the one at about -0.54."
+
+[[faq]]
+question = "How does the Global Nonlinear Programming panel get the multipliers at the global optimum?"
+wiki = "Interpretation"
+hidden = true
+right = "It starts Ipopt at the global optimum and reads Ipopt's multipliers"
+wrong = [
+  "EAGO returns the multipliers with its solution",
+  "It relaxes the problem and reads the relaxation's duals",
+  "It differentiates the objective by finite differences",
+  "It solves the dual problem with SCIP",
+]
+explanation = "Global solvers usually return no duals, so KKT at the Global Optimum starts Ipopt at the global optimum, where it stays, and lists each constraint's value, multiplier and complementary slackness from Ipopt."

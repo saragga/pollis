@@ -1,24 +1,26 @@
 # Nonlinear Programming — Overview
 
-The Nonlinear Programming panel builds a JuMP model with n variables, lb <= x[i] <= ub, a nonlinear objective and one constraint, and solves it with the solver of the chosen problem class. JuMP parses the nonlinear expressions directly, computes exact derivatives, and passes them to the solver.
+The Nonlinear Programming panel builds a JuMP model with n variables, the bounds lb <= x[i] <= ub, a nonlinear objective and one constraint, and solves it with the solver of the tab: **Ipopt** or **MadNLP**. JuMP parses the nonlinear expressions directly, computes exact first and second derivatives, and passes them to the solver ([Dunning, Huchette and Lubin (2017)](#ref-DHL2017a)).
 
-## The Default Example
-The default objective, sum((x .- 1) .^ 2) + 3 x[1] x[2] + x[1], with n = 5 and the ball sum(x .^ 2) <= 4, is **nonconvex** because of the bilinear term 3 x[1] x[2]. It has two local minima, with objective values of about -0.54 and 1.69: a local solver may return either, depending on where it starts, which is the point of the comparison between the three classes.
+## The Default Problem of the Panel
+The default objective, sum((x .- 1) .^ 2) + 3 x[1] x[2] + x[1], with n = 5 and the ball sum(x .^ 2) <= 4, is **nonconvex** because of the bilinear term 3 x[1] x[2]. It has two local minima, with objective values of about -0.54 and 1.69, and a local solver returns one or the other depending on where it starts. The panel starts every variable at (lb + ub) / 2.
 
-## The Three Classes
-- **NLP**: Ipopt or MadNLP, interior-point methods that find a local optimum satisfying the KKT conditions. See [NLP](nlp.md).
-- **MINLP**: each x[i] gets a binary switch z[i], x[i] can be nonzero only when z[i] = 1, and at most **Max Nonzeros** switches are on; SCIP or Juniper solve it by branch and bound. See [MINLP](minlp.md).
-- **Global NLP**: EAGO or SCIP, spatial branch and bound with convex relaxations, which certify the global optimum. See [Global NLP](gnlp.md).
-The optimality conditions shared by all three are in [KKT Conditions](kkt.md).
+## The Tabs: Ipopt and MadNLP
+- **Ipopt**: the standard open-source interior-point solver, with a filter line search.
+- **MadNLP**: an interior-point solver written in Julia, with the same interface, which can run its linear algebra on a GPU.
+Both find a point satisfying the KKT conditions; how they do so is in [Interior-Point Methods](nlp.md), and the conditions themselves in [KKT Conditions](kkt.md).
 
-## Common Workflow
-
-1. Set **n**, the **Sense**, the **Objective**, the **Constraint**, the **Lower Bound** and **Upper Bound**, choose the class and its **Solver**, and run.
+## Working Through the Panel
+1. Set **n**, the **Sense**, the **Objective**, the **Constraint**, the **Lower Bound** and **Upper Bound**, choose the tab, and run.
 2. Check the **Status and Feasibility** and the **Solver Statistics**.
 3. Look at the **Objective Contours** and the **Solution Profile**.
-4. Run **Multi-Start** for local solutions, and the **Optimality Gap Check**.
+4. Run **Multi-Start**, and the **Optimality Gap Check** against a global solver.
 5. Read the **KKT Conditions**, the **Constraint Activity** and the **Constraint Sensitivity**.
 6. Explore with the **Parametric Sweep** and the **Solver Comparison**.
+
+## References
+
+<a id="ref-DHL2017a"></a>Dunning, I., Huchette, J. and Lubin, M. (2017). JuMP: A Modeling Language for Mathematical Optimization. *SIAM Review* 59(2), 295–320. [doi:10.1137/15M1020575](https://doi.org/10.1137/15M1020575)
 
 ## See Also
 - [Factsheet](factsheet.md) · [Decision Guide](decision-guide.md) · [Assumptions](assumptions.md)

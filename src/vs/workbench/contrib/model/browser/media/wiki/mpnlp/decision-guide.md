@@ -1,30 +1,34 @@
 # Decision Guide
 
-| Situation | Class and solver |
+## Choosing Between Ipopt and MadNLP
+
+| Situation | Solver |
 |---|---|
-| Smooth, continuous, convex or a local optimum is enough | **NLP**, Ipopt |
-| Large NLP, GPU, or pure Julia wanted | **NLP**, MadNLP |
-| On/off decisions or cardinality limits, nonconvex | **MINLP**, SCIP |
-| Convex MINLP | **MINLP**, Juniper + Ipopt |
-| Nonconvex, global optimum required, pure Julia | **Global NLP**, EAGO |
-| Nonconvex, global optimum, with integers or tight cuts | **Global NLP**, SCIP |
-| Linear, quadratic or conic | Mathematical Programming: Conic |
+| A smooth NLP of any size, the default choice | **Ipopt** |
+| A large NLP with a GPU available | **MadNLP** |
+| A solver to read, change or extend from Julia | **MadNLP** |
+| A second opinion on a difficult problem | Both, with the **Solver Comparison** |
 
-## Decision Flow
+## When Nonlinear Programming Is Not the Right Panel
 
-1. **Solve as NLP with Ipopt** first: it is fast and shows the shape of the problem.
-2. **Run Multi-Start**: if every start reaches the same objective, a local solver may be enough.
-3. **If the starts disagree** and the best is needed, solve as **Global NLP**, with tight bounds.
-4. **If decisions are discrete**, formulate them with binaries and solve as **MINLP**.
-5. **Check the Status and Feasibility**, the gap, and the KKT conditions where duals exist.
+| Situation | Panel |
+|---|---|
+| On/off decisions or integer variables | **Mixed-Integer Nonlinear Programming** |
+| Nonconvex, and the best of all local optima is required | **Global Nonlinear Programming** |
+| Linear, quadratic or conic | Linear, Quadratic, or Convex, Conic and Semidefinite Programming |
 
-## Rules of Thumb
+## Decision Flow for a Nonlinear Problem
+1. **Solve with Ipopt** first: it is fast and shows the shape of the problem.
+2. **Run Multi-Start**: if every start reaches the same objective, a local optimum may be enough.
+3. **If the starts disagree**, run the **Optimality Gap Check**, or move to Global Nonlinear Programming with tight bounds.
+4. **Check the Status and Feasibility**, and the KKT conditions.
+5. **Report** the result as a local optimum, unless the problem is convex or a global solver confirmed it.
 
-- **Tighten the bounds**: it is the most effective way to speed up global and MINLP solvers.
-- **Provide a good start** for local solvers; JuMP's start values are the place.
-- **Reformulate** nonsmooth terms with auxiliary variables and constraints.
-- **Do not trust Juniper's optimality** on nonconvex MINLPs.
-- **Report the class of guarantee** with the result: local, global within a gap, or heuristic.
+## Rules of Thumb for Local Solvers
+- **Give a good start**: JuMP's start values are the place, and a start from a simpler model often helps.
+- **Scale the problem** so that variables and constraints are of order one.
+- **Reformulate nonsmooth terms** with auxiliary variables and smooth constraints.
+- **Avoid redundant constraints**, which make the multipliers non-unique and slow the solver near the solution.
 
 ## See Also
 - [Factsheet](factsheet.md) · [Overview](overview.md) · [Assumptions](assumptions.md)

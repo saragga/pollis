@@ -104,6 +104,8 @@ import { ODE_PANEL } from './commands/ode.command.js';
 import { LP_PANEL } from './commands/lp.command.js';
 import { QP_PANEL } from './commands/qp.command.js';
 import { MPNLP_PANEL } from './commands/mpnlp.command.js';
+import { MPMINLP_PANEL } from './commands/mpminlp.command.js';
+import { MPGNLP_PANEL } from './commands/mpgnlp.command.js';
 import { MPCONE_PANEL } from './commands/mpcone.command.js';
 import { MPSDP_PANEL } from './commands/mpsdp.command.js';
 import { MPMICP_PANEL } from './commands/mpmicp.command.js';
@@ -254,7 +256,9 @@ CommandsRegistry.registerCommand('chiara.mp.miqp', accessor => openScaffoldWebvi
 
 CommandsRegistry.registerCommand('chiara.mp.nlp', accessor => openScaffoldWebview(accessor, MPNLP_PANEL));
 
-CommandsRegistry.registerCommand('chiara.mp.minlp', accessor => openScaffoldWebview(accessor, MPNLP_PANEL, 'minlp'));
+CommandsRegistry.registerCommand('chiara.mp.minlp', accessor => openScaffoldWebview(accessor, MPMINLP_PANEL));
+
+CommandsRegistry.registerCommand('chiara.mp.gnlp', accessor => openScaffoldWebview(accessor, MPGNLP_PANEL));
 
 CommandsRegistry.registerCommand('chiara.mp.cone', accessor => openScaffoldWebview(accessor, MPCONE_PANEL));
 

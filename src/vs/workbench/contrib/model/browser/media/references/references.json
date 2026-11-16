@@ -1233,6 +1233,39 @@
 			"open_access": true
 		},
 		{
+			"key": "Ach2009a",
+			"type": "article",
+			"title": "SCIP: Solving Constraint Integer Programs",
+			"authors": [
+				"Achterberg, Tobias"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2009,
+			"journal": "Mathematical Programming Computation",
+			"volume": "1",
+			"number": "1",
+			"pages": "1--41",
+			"issn": "1867-2949",
+			"doi": "10.1007/s12532-008-0001-1",
+			"openalex": "W2014328192",
+			"url": "https://doi.org/10.1007/s12532-008-0001-1",
+			"keywords": [
+				"SCIP",
+				"mixed integer programming",
+				"constraint programming",
+				"satisfiability",
+				"integrated circuits",
+				"digital circuit design",
+				"nonlinear constraints"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-16",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "Agg2017a",
 			"type": "book",
 			"title": "Outlier Analysis",
@@ -1608,6 +1641,47 @@
 			"source": "manual",
 			"retrieved": "2026-11-02",
 			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "BBCCG...2008a",
+			"type": "article",
+			"title": "An Algorithmic Framework for Convex Mixed Integer Nonlinear Programs",
+			"authors": [
+				"Bonami, Pierre",
+				"Biegler, Lorenz T.",
+				"Conn, Andrew R.",
+				"Cornuéjols, Gérard",
+				"Grossmann, Ignacio E.",
+				"Laird, Carl D.",
+				"Lee, Jon",
+				"Lodi, Andrea",
+				"Margot, François",
+				"Sawaya, Nicolas",
+				"Wächter, Andreas"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2008,
+			"journal": "Discrete Optimization",
+			"volume": "5",
+			"number": "2",
+			"pages": "186--204",
+			"issn": "1572-5286",
+			"doi": "10.1016/j.disopt.2006.10.011",
+			"openalex": "W2170213261",
+			"url": "https://doi.org/10.1016/j.disopt.2006.10.011",
+			"keywords": [
+				"hybrid algorithm",
+				"branch and bound",
+				"COIN-OR",
+				"open-source optimization software",
+				"large-scale optimization"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-16",
+			"checked": false,
 			"open_access": true
 		},
 		{
@@ -20307,6 +20381,45 @@
 			"open_access": true
 		},
 		{
+			"key": "KCHN2018a",
+			"type": "inproceedings",
+			"title": "Juniper: An Open-Source Nonlinear Branch-and-Bound Solver in Julia",
+			"authors": [
+				"Kröger, Ole",
+				"Coffrin, Carleton",
+				"Hijazi, Hassan",
+				"Nagarajan, Harsha"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2018,
+			"booktitle": "Integration of Constraint Programming, Artificial Intelligence, and Operations Research (CPAIOR 2018)",
+			"publisher": "Springer",
+			"volume": "10848",
+			"pages": "377--386",
+			"doi": "10.1007/978-3-319-93031-2_27",
+			"openalex": "W2798425997",
+			"url": "https://doi.org/10.1007/978-3-319-93031-2_27",
+			"abstract": "Nonconvex mixed-integer nonlinear programs (MINLPs) represent a challenging class of optimization problems that often arise in engineering and scientific applications. Because of nonconvexities, these programs are typically solved with global optimization algorithms, which have limited scalability. However, nonlinear branch-and-bound has recently been shown to be an effective heuristic for quickly finding high-quality solutions to large-scale nonconvex MINLPs, such as those arising in infrastructure network optimization. This work proposes Juniper, a Julia-based open-source solver for nonlinear branch-and-bound. Leveraging the high-level Julia programming language makes it easy to modify Juniper's algorithm and explore extensions, such as branching heuristics, feasibility pumps, and parallelization. Detailed numerical experiments demonstrate that the initial release of Juniper is comparable with other nonlinear branch-and-bound solvers, such as Bonmin, Minotaur, and Knitro, illustrating that Juniper provides a strong foundation for further exploration in utilizing nonlinear branch-and-bound algorithms as heuristics for nonconvex MINLPs.",
+			"abstract_source": "arxiv",
+			"keywords": [
+				"nonconvex mixed-integer nonlinear programming",
+				"global optimization",
+				"Julia",
+				"open-source solver",
+				"branching heuristics",
+				"feasibility pump",
+				"parallelization",
+				"heuristic solver"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-16",
+			"checked": false,
+			"open_access": true,
+			"series": "Lecture Notes in Computer Science"
+		},
+		{
 			"key": "KE1995a",
 			"type": "inproceedings",
 			"title": "Particle Swarm Optimization",
@@ -28016,6 +28129,35 @@
 			"open_access": false
 		},
 		{
+			"key": "Mcc1976a",
+			"type": "article",
+			"title": "Computability of Global Solutions to Factorable Nonconvex Programs: Part I — Convex Underestimating Problems",
+			"authors": [
+				"McCormick, Garth P."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1976,
+			"journal": "Mathematical Programming",
+			"volume": "10",
+			"number": "1",
+			"pages": "147--175",
+			"issn": "0025-5610",
+			"doi": "10.1007/BF01580665",
+			"openalex": "W1988622494",
+			"url": "https://doi.org/10.1007/BF01580665",
+			"keywords": [
+				"global optimization",
+				"underestimation",
+				"nonlinear programming"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-16",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "Mcc1998a",
 			"type": "article",
 			"title": "Assessing the Reliability of Statistical Software: Part I",
@@ -28626,6 +28768,47 @@
 			"source": "crossref",
 			"retrieved": "2026-11-02",
 			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "NLWBS2019a",
+			"type": "article",
+			"title": "An Adaptive, Multivariate Partitioning Algorithm for Global Optimization of Nonconvex Programs",
+			"authors": [
+				"Nagarajan, Harsha",
+				"Lu, Mowen",
+				"Wang, Site",
+				"Bent, Russell",
+				"Sundar, Kaarthik"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2019,
+			"journal": "Journal of Global Optimization",
+			"volume": "74",
+			"number": "4",
+			"pages": "639--675",
+			"issn": "0925-5001",
+			"doi": "10.1007/s10898-018-00734-1",
+			"openalex": "W2734492557",
+			"url": "https://doi.org/10.1007/s10898-018-00734-1",
+			"abstract": "In this work, we develop an adaptive, multivariate partitioning algorithm for solving mixed-integer nonlinear programs (MINLP) with multi-linear terms to global optimality. This iterative algorithm primarily exploits the advantages of piecewise polyhedral relaxation approaches via disjunctive formulations to solve MINLPs to global optimality in contrast to the conventional spatial branch-and-bound approaches. In order to maintain relatively small-scale mixed-integer linear programs at every iteration of the algorithm, we adaptively partition the variable domains appearing in the multi-linear terms. We also provide proofs on convergence guarantees of the proposed algorithm to a global solution. Further, we discuss a few algorithmic enhancements based on the sequential bound-tightening procedure as a presolve step, where we observe the importance of solving piecewise relaxations compared to basic convex relaxations to speed-up the convergence of the algorithm to global optimality. We demonstrate the effectiveness of our disjunctive formulations and the algorithm on well-known benchmark problems (including Pooling and Blending instances) from MINLPLib and compare with state-of-the-art global optimization solvers. With this novel approach, we solve several large-scale instances which are, in some cases, intractable by the global optimization solver. We also shrink the best known optimality gap for one of the hard, generalized pooling problem instance.",
+			"abstract_source": "arxiv",
+			"keywords": [
+				"global optimization",
+				"nonconvex mixed-integer nonlinear programming",
+				"adaptive partitioning",
+				"disjunctive programming",
+				"convex relaxation",
+				"bound tightening",
+				"pooling problem",
+				"blending problem",
+				"polynomials"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-16",
+			"checked": false,
 			"open_access": true
 		},
 		{
@@ -42741,6 +42924,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "Ach2009a",
+			"count": 909,
+			"source": "crossref",
+			"date": "2026-11-16"
+		},
+		{
+			"key": "Ach2009a",
+			"count": 1234,
+			"source": "openalex",
+			"date": "2026-11-16"
+		},
+		{
 			"key": "Agg2017a",
 			"count": 588,
 			"source": "crossref",
@@ -42871,6 +43066,18 @@
 			"count": 29,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "BBCCG...2008a",
+			"count": 692,
+			"source": "crossref",
+			"date": "2026-11-16"
+		},
+		{
+			"key": "BBCCG...2008a",
+			"count": 922,
+			"source": "openalex",
+			"date": "2026-11-16"
 		},
 		{
 			"key": "BBDM2022a",
@@ -48759,6 +48966,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "KCHN2018a",
+			"count": 64,
+			"source": "crossref",
+			"date": "2026-11-16"
+		},
+		{
+			"key": "KCHN2018a",
+			"count": 81,
+			"source": "openalex",
+			"date": "2026-11-16"
+		},
+		{
 			"key": "KE1995a",
 			"count": 42338,
 			"source": "crossref",
@@ -51039,6 +51258,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "Mcc1976a",
+			"count": 2009,
+			"source": "crossref",
+			"date": "2026-11-16"
+		},
+		{
+			"key": "Mcc1976a",
+			"count": 2734,
+			"source": "openalex",
+			"date": "2026-11-16"
+		},
+		{
 			"key": "Mcc1998a",
 			"count": 142,
 			"source": "crossref",
@@ -51217,6 +51448,18 @@
 			"count": 221,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "NLWBS2019a",
+			"count": 67,
+			"source": "crossref",
+			"date": "2026-11-16"
+		},
+		{
+			"key": "NLWBS2019a",
+			"count": 86,
+			"source": "openalex",
+			"date": "2026-11-16"
 		},
 		{
 			"key": "NM1965a",
@@ -57938,6 +58181,23 @@
 			]
 		},
 		{
+			"id": "mpgnlp",
+			"title": "Global Nonlinear Programming",
+			"description": "EAGO · SCIP · Alpine",
+			"commands": [
+				"chiara.mp.gnlp"
+			],
+			"keys": [
+				"DHL2017a",
+				"WS2022a",
+				"Ach2009a",
+				"NLWBS2019a",
+				"WB2006a",
+				"Flo2000a",
+				"Mcc1976a"
+			]
+		},
+		{
 			"id": "mpm",
 			"title": "Multi-Objective Optimisation Performance Metrics",
 			"description": "Hypervolume · Generational Distance · Inverted Generational Distance · Epsilon-Indicator · Spacing",
@@ -57976,16 +58236,33 @@
 			]
 		},
 		{
-			"id": "mpnlp",
-			"title": "Nonlinear Programming",
-			"description": "Nonlinear Programming (NLP) · Mixed-Integer NLP (MINLP) · Global NLP",
+			"id": "mpminlp",
+			"title": "Mixed-Integer Nonlinear Programming",
+			"description": "SCIP · Juniper · Bonmin",
 			"commands": [
-				"chiara.mp.nlp",
 				"chiara.mp.minlp"
 			],
 			"keys": [
 				"DHL2017a",
+				"Ach2009a",
+				"KCHN2018a",
+				"BBCCG...2008a",
 				"WB2006a",
+				"NW2006a",
+				"LD1960a"
+			]
+		},
+		{
+			"id": "mpnlp",
+			"title": "Nonlinear Programming",
+			"description": "Ipopt · MadNLP",
+			"commands": [
+				"chiara.mp.nlp"
+			],
+			"keys": [
+				"DHL2017a",
+				"WB2006a",
+				"WS2022a",
 				"NW2006a",
 				"BSS2006a",
 				"KT1951a"

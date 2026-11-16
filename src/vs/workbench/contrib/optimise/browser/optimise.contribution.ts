@@ -349,6 +349,18 @@ MenuRegistry.appendMenuItem(MenuId.MenubarOptimiseMenu, {
 
 MenuRegistry.appendMenuItem(MenuId.MenubarOptimiseMenu, {
 	group: '6_optimisation',
+	command: { id: 'chiara.mp.minlp', title: localize('mp.minlp', 'Mixed-Integer Nonlinear Programming') },
+	order: 5.1,
+});
+
+MenuRegistry.appendMenuItem(MenuId.MenubarOptimiseMenu, {
+	group: '6_optimisation',
+	command: { id: 'chiara.mp.gnlp', title: localize('mp.gnlp', 'Global Nonlinear Programming') },
+	order: 5.2,
+});
+
+MenuRegistry.appendMenuItem(MenuId.MenubarOptimiseMenu, {
+	group: '6_optimisation',
 	command: { id: BLV_ID, title: localize('mp.gth', 'Hierarchical Optimisation') },
 	order: 6,
 }); // BilevelJuMP.jl

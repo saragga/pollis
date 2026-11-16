@@ -1,23 +1,18 @@
 # Assumptions
 
-## Smooth Expressions
-For NLP, the objective and constraints must be **twice continuously differentiable**: Ipopt and MadNLP use exact second derivatives, which JuMP computes from the expressions. Functions JuMP does not know must be registered with **@operator**, and nonsmooth functions (abs, max) should be reformulated. Global solvers need more: expressions built from the operations they can **relax**, such as sums, products, powers, exp, log and trigonometric functions.
+## Smooth Objective and Constraints
+The objective and the constraints must be **twice continuously differentiable**: Ipopt and MadNLP take Newton steps with the exact Hessian of the Lagrangian, which JuMP computes from the expressions. Functions JuMP does not know are registered with **@operator**. Nonsmooth terms such as abs and max break the Newton steps where they kink, and are better reformulated with an auxiliary variable and two smooth constraints.
 
-## Finite Bounds for Global Solvers
-EAGO and SCIP build convex relaxations over boxes, so they need **finite bounds** on every variable that appears nonlinearly; the tighter the bounds, the tighter the relaxations and the fewer nodes. The panel puts the same **Lower Bound** and **Upper Bound** on every x[i]: with the default ball sum(x .^ 2) <= 4, the bounds -2 and 2 are implied, and so cost nothing.
-
-## Big-M for MINLP
-The switch lb z[i] <= x[i] <= ub z[i] uses the bounds as its **big-M**: it requires lb <= 0 <= ub, so that x[i] = 0 is allowed, and its continuous relaxation is tight only when the bounds are. Loose bounds give weak relaxations and slow branch and bound.
-
-## Convexity and Guarantees
-- **Ipopt and MadNLP**: a local optimum, satisfying the KKT conditions. Global only if the problem is convex.
-- **Juniper**: branch and bound over Ipopt relaxations, **exact for convex MINLPs only**; on nonconvex ones it is a heuristic.
-- **SCIP and EAGO**: global optimality within their tolerance, for problems they can relax.
+## What a Local Solver Guarantees
+Ipopt and MadNLP return a point satisfying the KKT conditions, which is a local optimum or, rarely, a saddle point. On a **convex** problem, a convex objective to minimise over a convex feasible set, any local optimum is global. On a nonconvex problem nothing is claimed about other regions, and the answer can change with the starting point.
 
 ## Constraint Qualification
-The multipliers and the KKT conditions hold under a constraint qualification, such as linearly independent gradients of the active constraints. Degenerate constraints give non-unique duals and slow interior-point convergence.
+The multipliers exist and are unique under a constraint qualification, such as linearly independent gradients of the active constraints. Redundant or degenerate constraints break it: the multipliers are no longer unique, and interior-point methods slow down near the solution. Removing duplicated constraints is the usual fix.
 
-## One Constraint
+## Bounds and the Starting Point
+The panel puts the same **Lower Bound** and **Upper Bound** on every x[i] and starts each variable at (lb + ub) / 2. Interior-point methods keep the iterates strictly inside the bounds, so a start on a bound is moved inside first. Infinite bounds are allowed for Ipopt and MadNLP, but the **Optimality Gap Check** calls a global solver, which needs finite ones.
+
+## One Constraint in the Panel
 The panel generates one constraint from **Constraint**; further ones are added as @constraint lines in the generated code.
 
 ## See Also
