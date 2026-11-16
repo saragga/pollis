@@ -10,7 +10,7 @@ import { getMpsosHtml } from '../webviews/mpsos.template.js';
 export const MPSOS_PANEL: IScaffoldPanel = {
 	id: 'mpsos',
 	viewType: 'pollis.mpsos',
-	title: 'Polynomial Programming',
+	title: 'Semi-Algebraic Optimisation',
 	data: MPSOS_METADATA.mpsos,
 	html: getMpsosHtml,
 };

@@ -35,7 +35,7 @@ The variable X has n(n + 1)/2 distinct entries, so the cost grows quickly with *
 | Situation | Better place |
 |---|---|
 | A linear objective with second-order cone or exponential cone constraints | **Convex and Conic Programming** |
-| Polynomial non-negativity, or polynomial optimisation | **Polynomial Programming** |
+| Polynomial non-negativity, or polynomial optimisation | **Semi-Algebraic Optimisation** |
 | A nonlinear objective with smooth constraints | **Nonlinear Programming** |
 | Integer decisions alongside cones | **Mixed-Integer Conic Programming** |
 

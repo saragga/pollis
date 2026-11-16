@@ -1,4 +1,4 @@
-# Polynomial Programming: Decision Guide
+# Semi-Algebraic Optimisation: Decision Guide
 
 The choice between the two problems follows from the question asked, the relaxation degree from the accuracy wanted and the size affordable, and the solver from the size of the semidefinite program.
 

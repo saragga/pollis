@@ -1,4 +1,4 @@
-# Polynomial Programming: Interpretation
+# Semi-Algebraic Optimisation: Interpretation
 
 How to read what the panel returns: the certificate, the Gram matrix and its squares, the lower bound, the minimisers, and the dual side.
 

@@ -1,6 +1,6 @@
-# Polynomial Programming: Factsheet
+# Semi-Algebraic Optimisation: Factsheet
 
-A quick reference for **Polynomial Programming**: the two problems, the inputs, the solvers, and what each action computes. SumOfSquares.jl turns each problem into a semidefinite program, and one of three conic solvers solves it.
+A quick reference for **Semi-Algebraic Optimisation**: the two problems, the inputs, the solvers, and what each action computes. SumOfSquares.jl turns each problem into a semidefinite program, and one of three conic solvers solves it.
 
 ## The two problems side by side
 

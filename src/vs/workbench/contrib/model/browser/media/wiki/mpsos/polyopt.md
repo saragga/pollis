@@ -1,4 +1,4 @@
-# Polynomial Programming: Polynomial Optimisation
+# Semi-Algebraic Optimisation: Polynomial Optimisation
 
 The **Polynomial Optimisation** problem of the panel: a lower bound on the minimum of p over a set described by polynomial inequalities, found through a certificate in which sums of squares multiply the constraints.
 

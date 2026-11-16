@@ -1,4 +1,4 @@
-# Polynomial Programming: Lasserre Hierarchy
+# Semi-Algebraic Optimisation: Lasserre Hierarchy
 
 A sequence of semidefinite programs, one for each order, whose values are lower bounds on the minimum of a polynomial and approach it as the order grows. **Relaxation Degree** chooses a member of the sequence, and **Tighten Relaxation** climbs it.
 

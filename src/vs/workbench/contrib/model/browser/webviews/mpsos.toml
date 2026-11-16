@@ -1,10 +1,10 @@
-# Polynomial Programming Webview Configuration
+# Semi-Algebraic Optimisation Webview Configuration
 # This is the declarative source for the webview. The build script generates:
 # - src/vs/workbench/contrib/model/browser/webviews/mpsos.data.ts
 # Run: npm run gulp compile-toml
 
 [meta]
-title = "Polynomial Programming"
+title = "Semi-Algebraic Optimisation"
 viewType = "pollis.mpsos"
 defaultModel = "sos"
 
@@ -191,7 +191,7 @@ default = "sum(x .^ 4) - sum(x .^ 2) + 1"
 [[inputs]]
 id = "domain"
 label = "Domain"
-tooltip = "Semialgebraic set to minimise over, in the @set syntax: for example sum(x .^ 2) <= 4 or x[1] >= 0 && x[2] >= 0. Use sum(x .^ 2) <= 1e6 for (essentially) all of R^n."
+tooltip = "Semi-algebraic set to minimise over, in the @set syntax: for example sum(x .^ 2) <= 4 or x[1] >= 0 && x[2] >= 0. Use sum(x .^ 2) <= 1e6 for (essentially) all of R^n."
 default = "sum(x .^ 2) <= 4"
 models = ["polyopt"]
 

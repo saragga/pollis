@@ -330,12 +330,6 @@ MenuRegistry.appendMenuItem(MenuId.MenubarOptimiseMenu, {
 
 MenuRegistry.appendMenuItem(MenuId.MenubarOptimiseMenu, {
 	group: '6_optimisation',
-	command: { id: 'chiara.mp.sos', title: localize('mp.pp', 'Polynomial Programming') },
-	order: 3,
-});
-
-MenuRegistry.appendMenuItem(MenuId.MenubarOptimiseMenu, {
-	group: '6_optimisation',
 	submenu: CCPSubmenuId,
 	title: localize('mp.ccp', 'Convex, Conic and Semidefinite Programming'),
 	order: 4,
@@ -652,8 +646,14 @@ MenuRegistry.appendMenuItem(CCPSubmenuId, {
 
 MenuRegistry.appendMenuItem(CCPSubmenuId, {
 	group: '1_ccp',
-	command: { id: 'chiara.mp.micp', title: localize('ccp.mic', 'Mixed-Integer Conic Programming') },
+	command: { id: 'chiara.mp.sos', title: localize('ccp.sao', 'Semi-Algebraic Optimisation') },
 	order: 3,
+});
+
+MenuRegistry.appendMenuItem(CCPSubmenuId, {
+	group: '1_ccp',
+	command: { id: 'chiara.mp.micp', title: localize('ccp.mic', 'Mixed-Integer Conic Programming') },
+	order: 4,
 });
 
 // ============================================

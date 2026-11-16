@@ -1,4 +1,4 @@
-# Polynomial Programming: Diagnostics
+# Semi-Algebraic Optimisation: Diagnostics
 
 How to tell whether a certificate or a bound can be trusted: the solver's status, the Gram matrix, the residual, and two independent checks on the bound.
 

@@ -1,4 +1,4 @@
-# Polynomial Programming: Duality
+# Semi-Algebraic Optimisation: Duality
 
 Every sum of squares program has a dual in which moments of a measure take the place of the polynomial's coefficients. The dual explains when no certificate exists, when the bounds of the two hierarchies agree, and how **Extract Minimiser** finds points from the solution.
 

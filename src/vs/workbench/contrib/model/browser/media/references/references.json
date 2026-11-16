@@ -58540,7 +58540,7 @@
 		},
 		{
 			"id": "mpsos",
-			"title": "Polynomial Programming",
+			"title": "Semi-Algebraic Optimisation",
 			"description": "Sum of Squares Certification · Polynomial Optimisation",
 			"commands": [
 				"chiara.mp.sos"

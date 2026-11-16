@@ -1,4 +1,4 @@
-# Polynomial Programming: Assumptions
+# Semi-Algebraic Optimisation: Assumptions
 
 What the panel takes for granted about the polynomial, the domain and the relaxation, and what a certificate does and does not establish.
 

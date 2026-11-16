@@ -1,12 +1,20 @@
-# Polynomial Programming: Overview
+# Semi-Algebraic Optimisation: Overview
 
-**Polynomial Programming** answers two questions about a polynomial p: is it non-negative everywhere, and how low can it go on a set described by polynomial inequalities? Both are hard in general, and both become semidefinite programs once non-negativity is replaced by a sum of squares.
+**Semi-Algebraic Optimisation** answers two questions about a polynomial p: is it non-negative everywhere, and how low can it go on a set described by polynomial inequalities? Both are hard in general, and both become semidefinite programs once non-negativity is replaced by a sum of squares.
+
+## What is semi-algebraic optimisation?
+
+A semi-algebraic set is a set described by finitely many polynomial equations and inequalities, or a finite union of such sets, and a semi-algebraic function is one whose graph is a semi-algebraic set. Semi-algebraic optimisation minimises a semi-algebraic function over a semi-algebraic set. Polynomial programming, also called polynomial optimisation, is the case where the objective is a polynomial and the feasible set is described by polynomial inequalities. [Lasserre (2015)](#ref-Las2015a) introduces both, polynomial optimisation first and then its extension to semi-algebraic functions, and [Parrilo (2003)](#ref-Par2003a) writes semidefinite relaxations for semi-algebraic problems.
+
+## Is every semi-algebraic problem a polynomial program?
+
+Not as it is written. Semi-algebraic functions include absolute values, square roots, maxima and ratios of polynomials, which are not polynomials, while every polynomial program is a semi-algebraic problem, so semi-algebraic optimisation is the wider of the two. [Lasserre (2015)](#ref-Las2015a) brings a problem with a semi-algebraic objective back to a polynomial program by adding variables, defined by polynomial constraints, so that the sums-of-squares methods apply in the larger space. Both tabs of the Semi-Algebraic Optimisation panel take polynomial problems: **Polynomial p(x)** is a polynomial, and **Domain** is a set described by polynomial inequalities.
 
 ## Why is non-negativity hard?
 
 [Parrilo (2003)](#ref-Par2003a) recalls that testing whether a polynomial of degree four or more is non-negative everywhere is NP-hard. Unless P = NP, any method guaranteed to answer correctly in every instance must then behave unacceptably on problems with many variables.
 
-Minimising a polynomial over a semialgebraic set, the set where finitely many polynomial inequalities hold, is likewise NP-hard in general, as [Laurent (2009)](#ref-Lau2009a) notes. She observes that minimisation without constraints is already hard for polynomials of degree four, while for degree two it is solvable in polynomial time, and that the constrained problem contains 0/1 linear programming.
+Minimising a polynomial over a semi-algebraic set, the set where finitely many polynomial inequalities hold, is likewise NP-hard in general, as [Laurent (2009)](#ref-Lau2009a) notes. She observes that minimisation without constraints is already hard for polynomials of degree four, while for degree two it is solvable in polynomial time, and that the constrained problem contains 0/1 linear programming.
 
 ## Sums of squares as certificates
 

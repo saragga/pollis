@@ -1,4 +1,4 @@
-# Polynomial Programming: Sum of Squares Certification
+# Semi-Algebraic Optimisation: Sum of Squares Certification
 
 The **Sum of Squares Certification** problem of the panel: how a sum of squares proves that a polynomial is non-negative, how a semidefinite program finds one, and what it means when none is found.
 
