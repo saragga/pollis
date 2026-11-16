@@ -390,9 +390,9 @@ id = "duality-gap"
 label = "Duality Gap"
 desc = "Primal and dual objectives and their relative gap: near 0 certifies optimality"
 code = '''
-primal = objective_value(model)
-dual   = dual_objective_value(model)
-(primal = primal, dual = dual, relative_gap = abs(primal - dual) / (1 + abs(primal)))
+primal_value = objective_value(model)
+dual_value = dual_objective_value(model)
+(primal = primal_value, dual = dual_value, relative_gap = abs(primal_value - dual_value) / (1 + abs(primal_value)))
 '''
 
 [[actionGroups.actions]]
@@ -419,11 +419,13 @@ code = '''
 [[actionGroups.actions]]
 id = "parametric"
 label = "Parametric Sweep"
-desc = "Re-solve across a range of the model's key parameter (constraint bound, radius, target mean or p) and plot the optimal value"
+desc = "Re-solve across a range of the model's key parameter (radius, target mean or p) and plot the optimal value"
 code = '''
 using Plots
 
 vals = resolve.(grid)
+{{?model=socp}} resolve({{radius}})  # back to the model's own radius
+{{?model=expcone}} resolve({{mu}})  # back to the model's own target mean
 plot(grid, vals, marker=:circle, xlabel=param_name, ylabel="optimal value", legend=false)
 '''
 
@@ -434,15 +436,15 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "solver-compare"
 label = "Solver Comparison"
-desc = "Clarabel, COSMO and SCS on the same problem: status, objective and time"
+desc = "Clarabel, COSMO and SCS on the same problem: status, objective and seconds (each solved twice, the second timed)"
 code = '''
 using Clarabel, COSMO, SCS
 
 m0 = model
 res = map(["Clarabel" => Clarabel.Optimizer, "COSMO" => COSMO.Optimizer, "SCS" => SCS.Optimizer]) do (name, opt)
-    set_optimizer(m0, opt)
-    set_silent(m0)
-    t = @elapsed optimize!(m0)
+    fresh_solve() = (set_optimizer(m0, opt); set_silent(m0); @elapsed optimize!(m0))
+    fresh_solve()  # the first solve compiles the solver's code
+    t = fresh_solve()
     (solver = name, status = termination_status(m0), objective = objective_value(m0), seconds = t)
 end
 set_optimizer(model, {{solver}}.Optimizer); set_silent(model); optimize!(model)  # m0 is the model itself: back on the chosen solver for later actions

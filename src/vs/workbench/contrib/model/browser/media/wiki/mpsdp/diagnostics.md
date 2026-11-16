@@ -45,7 +45,7 @@ For the relaxation, a rank-one X gives an optimal partition, as [Boyd and Vanden
 
 ## Do the solvers agree?
 
-**Solver Comparison** solves the same model with Clarabel, COSMO, SCS and Hypatia, and prints the status, the objective and the time of each, then returns to the chosen solver.
+**Solver Comparison** solves the same model with Clarabel, COSMO, SCS and Hypatia, and prints the status, the objective and the seconds of each, then returns to the chosen solver. Each solver solves the model twice and only the second solve is timed, since the first also compiles the solver's code.
 
 | Pattern | Reading |
 |---|---|

@@ -220,7 +220,7 @@ label = "Maximise"
 id = "W"
 label = "Weight Matrix W"
 tooltip = "Symmetric n x n matrix of non-negative edge weights of the graph to cut (0 = no edge). The default is a random graph."
-default = "(E = triu(rand(n, n) .< 0.5, 1); float.(E + E'))"
+default = "(E = triu(rand(n, n) .< 0.5, 1); float.(E + transpose(E)))"
 models = ["sdprelax"]
 
 [[inputs]]
@@ -280,7 +280,7 @@ using JuMP, {{solver}}, LinearAlgebra, Random
 Random.seed!(1)
 n = {{n}}  # number of nodes
 W = {{W}}  # symmetric edge weights
-L = Diagonal(vec(sum(W, dims=2))) - W  # graph Laplacian: cut(x) = x' L x / 4 for x in {-1, 1}^n
+L = Diagonal(vec(sum(W, dims=2))) - W  # graph Laplacian: the cut of x in {-1, 1}^n is dot(x, L, x) / 4
 cutvalue(x) = dot(x, L, x) / 4
 
 model = Model({{solver}}.Optimizer)
@@ -294,7 +294,7 @@ X_opt = value.(X)
 # Goemans-Williamson rounding: node vectors V, cut by random hyperplanes, keep the best
 V = cholesky(Symmetric(X_opt + 1e-8I)).U
 function round_cut(trials=100)
-    cuts = [sign.(V' * randn(n)) for _ in 1:trials]
+    cuts = [sign.(transpose(V) * randn(n)) for _ in 1:trials]
     cuts[argmax(cutvalue.(cuts))]
 end
 x_cut = round_cut()
@@ -359,9 +359,9 @@ id = "duality-gap"
 label = "Duality Gap"
 desc = "Primal and dual objectives and their relative gap: near 0 certifies optimality"
 code = '''
-primal = objective_value(model)
-dual   = dual_objective_value(model)
-(primal = primal, dual = dual, relative_gap = abs(primal - dual) / (1 + abs(primal)))
+primal_value = objective_value(model)
+dual_value = dual_objective_value(model)
+(primal = primal_value, dual = dual_value, relative_gap = abs(primal_value - dual_value) / (1 + abs(primal_value)))
 '''
 
 [[actionGroups]]
@@ -398,14 +398,14 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "solver-compare"
 label = "Solver Comparison"
-desc = "Clarabel, COSMO, SCS and Hypatia on the same problem: status, objective and time"
+desc = "Clarabel, COSMO, SCS and Hypatia on the same problem: status, objective and seconds (each solved twice, the second timed)"
 code = '''
 using Clarabel, COSMO, SCS, Hypatia
 
 res = map(["Clarabel" => Clarabel.Optimizer, "COSMO" => COSMO.Optimizer, "SCS" => SCS.Optimizer, "Hypatia" => Hypatia.Optimizer]) do (name, opt)
-    set_optimizer(model, opt)
-    set_silent(model)
-    t = @elapsed optimize!(model)
+    fresh_solve() = (set_optimizer(model, opt); set_silent(model); @elapsed optimize!(model))
+    fresh_solve()  # the first solve compiles the solver's code
+    t = fresh_solve()
     (solver = name, status = termination_status(model), objective = objective_value(model), seconds = t)
 end
 set_optimizer(model, {{solver}}.Optimizer); set_silent(model); optimize!(model)  # back on the chosen solver for later actions
@@ -433,7 +433,7 @@ label = "Dual Matrix"
 desc = "The dual PSD matrix S of the constraint X in PSD, and complementarity tr(X S) (about 0 at the optimum)"
 code = '''
 psd = only(all_constraints(model, Vector{VariableRef}, MOI.PositiveSemidefiniteConeTriangle))
-S = Symmetric(reshape_vector(dual(psd), SymmetricMatrixShape(n)))
+S = dual(psd)  # the dual matrix, symmetric
 (complementarity = tr(X_opt * S), dual_eigenvalues = eigvals(S))
 '''
 

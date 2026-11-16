@@ -28,7 +28,7 @@ The panel's problems are strictly feasible on both sides in their defaults, so t
 
 When both optimal sets are non-empty, the gap tr(X S) is zero at an optimal pair. Since X and S are both positive semidefinite, [Vandenberghe and Boyd (1996)](#ref-VB1996a) conclude that their product X S is zero, the complementary slackness condition: the ranges of X and S are orthogonal. It generalises the complementary slackness of linear programming, which it becomes when X and S are diagonal.
 
-**Dual Matrix** reads the dual of the constraint `X in PSD` from JuMP, reshapes it into the symmetric matrix S, and prints `complementarity`, tr(X S), with the eigenvalues of S.
+**Dual Matrix** reads the dual of the constraint `X in PSD` from JuMP, which returns it as the symmetric matrix S, and prints `complementarity`, tr(X S), with the eigenvalues of S.
 
 | Output | Reading |
 |---|---|
