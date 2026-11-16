@@ -26,11 +26,11 @@ For **Polynomial Optimisation** the check reads the Gram matrix of σ_0 alone; t
 
 ## Is the bound tight?
 
-**SOS vs Sampling** evaluates p at 100,000 points drawn uniformly in the box [−`box`, `box`]^n, keeps for **Polynomial Optimisation** those that satisfy every inequality of **Domain**, and prints the smallest value. With an equality in **Domain**, the action stops with an error instead. For a domain given by inequalities every kept point lies in K, so `sampled_minimum` is an upper bound on the minimum, and
+**SOS vs Sampling** evaluates p at 100,000 points drawn uniformly, with a fixed seed, in the box [−`box`, `box`]^n, keeps for **Polynomial Optimisation** those that satisfy every inequality of **Domain**, and prints the smallest value. With an equality in **Domain**, the action stops with an error instead. For a domain given by inequalities every kept point lies in K, so `sampled_minimum` is an upper bound on the minimum, and
 
 `sos_lower_bound` ≤ minimum ≤ `sampled_minimum`
 
-A `gap` near zero shows that the bound is close to the minimum. A large `gap` leaves two explanations open: a relaxation that is not tight, or samples that miss the minimiser. Points of the domain outside the box are never sampled.
+A `gap` near zero shows that the bound is close to the minimum. A large `gap` leaves two explanations open: a relaxation that is not tight, or samples that miss the minimiser. Points of the domain outside the box are never sampled. The certified bound is exact only to the solver's tolerance, so a slightly negative `gap`, of the order of that tolerance, is rounding rather than a contradiction.
 
 **Extract Minimiser** offers a sharper check. If the points it returns lie in K and `p_at_minimisers` equals `lower_bound`, then by the criterion of [Laurent (2009)](#ref-Lau2009a) the bound is the minimum and the points are global minimisers.
 
@@ -40,7 +40,7 @@ The bounds of the hierarchy can only rise with the order, as [Laurent (2009)](#r
 
 ## Do the solvers agree?
 
-**Solver Comparison** solves the same model with Clarabel, COSMO and SCS and prints the status, objective and time of each. Clarabel is an interior-point solver, by [Goulart and Chen (2024)](#ref-GC2024a), while COSMO and SCS use operator splitting, by [Garstka, Cannon and Goulart (2021)](#ref-GCG2021a) and [O'Donoghue, Chu, Parikh and Boyd (2016)](#ref-OCPB2016a). Agreement between methods this different is evidence that the value belongs to the problem rather than to one algorithm.
+**Solver Comparison** solves the same model with Clarabel, COSMO and SCS and prints the status of each, the lower bound for **Polynomial Optimisation**, and the seconds of a second solve, timed after a first that compiles the solver's code. It then returns to the chosen solver. Clarabel is an interior-point solver, by [Goulart and Chen (2024)](#ref-GC2024a), while COSMO and SCS use operator splitting, by [Garstka, Cannon and Goulart (2021)](#ref-GCG2021a) and [O'Donoghue, Chu, Parikh and Boyd (2016)](#ref-OCPB2016a). Agreement between methods this different is evidence that the value belongs to the problem rather than to one algorithm.
 
 ## Common failures and their usual causes
 

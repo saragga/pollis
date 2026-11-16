@@ -156,15 +156,15 @@ label = "Polynomial Optimisation"
 
 [[bullets]]
 text = "Sum of Squares (SOS) Certification"
-detail = "decomposes a polynomial as a sum of squares via a Gram matrix semidefinite programme, certifying non-negativity."
+detail = "Decomposes a polynomial as a sum of squares through a Gram matrix semidefinite programme, certifying that it is non-negative"
 
 [[bullets]]
 text = "Polynomial Optimisation"
-detail = "applies the Lasserre moment-SOS hierarchy to compute converging semidefinite programme lower bounds on a polynomial's global minimum."
+detail = "Applies the Lasserre moment-SOS hierarchy, whose semidefinite programmes give converging lower bounds on a polynomial's global minimum"
 
 [[bullets]]
 text = "SumOfSquares.jl"
-detail = "handles the SOS reformulation automatically; the solvers (Clarabel, COSMO, SCS) solve the resulting semidefinite programme."
+detail = "Handles the SOS reformulation automatically, and Clarabel, COSMO or SCS solves the resulting semidefinite programme"
 
 [[decisionRows]]
 task = "Sum of Squares Certification"
@@ -289,7 +289,7 @@ using Plots
 
 g = gram_matrix(c)
 Q = Matrix(g.Q)
-labels = string.(g.basis.monomials)
+labels = string.(polynomial.(collect(g.basis)))  # the monomials of m
 heatmap(labels, labels, Q, aspect_ratio=:equal, yflip=true, color=:RdBu, clims=(-1, 1) .* maximum(abs, Q), xrotation=45)
 '''
 
@@ -330,7 +330,7 @@ desc = "Eigenvalues of the Gram matrix (all >= 0 for a valid certificate) and th
 code = '''
 g = gram_matrix(c)
 ev = eigvals(Symmetric(Matrix(g.Q)))
-m = g.basis.monomials
+m = polynomial.(collect(g.basis))  # the monomials of m
 {{?model=sos}} residual = p - dot(m, Matrix(g.Q) * m)
 {{?model=sos}} (min_eigenvalue = minimum(ev), psd = minimum(ev) >= -1e-6, max_residual_coefficient = maximum(abs, coefficients(residual); init=0.0))
 {{?model=polyopt}} (min_eigenvalue = minimum(ev), psd = minimum(ev) >= -1e-6)
@@ -372,16 +372,19 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "solver-compare"
 label = "Solver Comparison"
-desc = "Clarabel, COSMO and SCS on the same SOS problem: status, objective and time"
+desc = "Clarabel, COSMO and SCS on the same SOS problem: status, the lower bound for Polynomial Optimisation, and seconds (each solved twice, the second timed)"
 code = '''
 using Clarabel, COSMO, SCS
 
-map(["Clarabel" => Clarabel.Optimizer, "COSMO" => COSMO.Optimizer, "SCS" => SCS.Optimizer]) do (name, opt)
-    set_optimizer(model, opt)
-    set_silent(model)
-    t = @elapsed optimize!(model)
-    (solver = name, status = termination_status(model), objective = objective_value(model), seconds = t)
+res = map(["Clarabel" => Clarabel.Optimizer, "COSMO" => COSMO.Optimizer, "SCS" => SCS.Optimizer]) do (name, opt)
+    fresh_solve() = (set_optimizer(model, opt); set_silent(model); @elapsed optimize!(model))
+    fresh_solve()  # the first solve compiles the solver's code
+    t = fresh_solve()
+{{?model=sos}}     (solver = name, status = termination_status(model), seconds = t)
+{{?model=polyopt}}     (solver = name, status = termination_status(model), lower_bound = objective_value(model), seconds = t)
 end
+set_optimizer(model, {{solver}}.Optimizer); set_silent(model); optimize!(model)  # back on the chosen solver for later actions
+res
 '''
 
 [[actionGroups.actions]]
@@ -391,6 +394,9 @@ desc = "The certified SOS lower bound against the smallest value of p at 100,000
 code = '''
 {{?model=sos}} sos_lb = lower_bound(maxdegree(p))
 {{?model=polyopt}} sos_lb = objective_value(model)
+using Random
+
+Random.seed!(1)
 pts = [box .* (2 .* rand(n) .- 1) for _ in 1:100_000]
 {{?model=polyopt}} isempty(equalities(S)) || error("SOS vs Sampling needs a Domain of inequalities only: random points do not satisfy an equality")
 {{?model=polyopt}} filter!(q -> all(g(x => q) >= 0 for g in inequalities(S)), pts)  # keep points in the domain
@@ -409,7 +415,7 @@ desc = "The explicit squares from the eigendecomposition of the Gram matrix: p =
 code = '''
 g = gram_matrix(c)
 F = eigen(Symmetric(Matrix(g.Q)))
-m = g.basis.monomials
+m = polynomial.(collect(g.basis))  # the monomials of m
 keep = findall(>(1e-8), F.values)
 squares = [sqrt(F.values[i]) * dot(F.vectors[:, i], m) for i in keep]  # sos: p = sum(s .^ 2); polyopt: p - t = sum(s .^ 2) + sum_j sigma_j g_j
 (number_of_squares = length(squares), squares = squares)

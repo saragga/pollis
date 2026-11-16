@@ -50,7 +50,7 @@ The solver is passed to `SOSModel`, and changing **Solver** changes nothing else
 
 | Group | Action | Output |
 |---|---|---|
-| Compare | **Solver Comparison** | Status, objective and time for the three solvers |
+| Compare | **Solver Comparison** | Status, the lower bound for **Polynomial Optimisation**, and seconds for the three solvers |
 | Compare | **SOS vs Sampling** | `sos_lower_bound`, `sampled_minimum` over 100,000 random points, `gap` |
 | Interpret | **Gram Decomposition** | `number_of_squares` and the `squares` from the eigendecomposition of Q |
 | Interpret | **Dual Certificate** | `moment_matrix`, and for **Polynomial Optimisation** the `multipliers` |
