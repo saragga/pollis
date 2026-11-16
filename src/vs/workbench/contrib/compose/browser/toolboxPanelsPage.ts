@@ -722,6 +722,12 @@ registerAction2(class extends Action2 {
 
 	async run(accessor: ServicesAccessor, extensionId?: string): Promise<void> {
 		if (typeof extensionId === 'string') {
+			// A toolbox of Simulation Games cases alone has no panels to place
+			const toolboxes = accessor.get(IToolboxPanelsService).getToolboxes(extensionId);
+			if (toolboxes.length && toolboxes.every(toolbox => !toolbox.panels.length && toolbox.games.length)) {
+				accessor.get(INotificationService).info(localize('toolboxPanels.gamesOnly', "The {0} has no panels: its cases are in Compose > Collaboration > Simulation Games > Host a Game....", toolboxes[0].extensionName));
+				return;
+			}
 			openToolboxPanelsPage(accessor, extensionId);
 			return;
 		}

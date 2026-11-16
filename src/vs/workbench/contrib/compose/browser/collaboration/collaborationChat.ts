@@ -10,7 +10,7 @@ import { composerSendSvg } from '../../../model/browser/webviews/webviewScaffold
 import { composerAddCss, composerAddHtml, composerAddScript } from '../composerAdd.js';
 import { composerVoiceCss, composerVoiceHtml, composerVoiceScript } from '../composerVoice.js';
 import { IWirePacket } from './collaborationTransport.js';
-import { GameValues, IFolderEntry, IGameDecision, IGameTable, MAX_FILE_BYTES, MAX_IMAGE_BYTES, MAX_RECEIVE_BYTES, PROGRESS_THRESHOLD_BYTES, SignallingStrategy } from './collaborationProtocol.js';
+import { GameValues, IFolderEntry, IGameDecision, IGameRole, IGameTable, IMarketPayload, MAX_FILE_BYTES, MAX_IMAGE_BYTES, MAX_RECEIVE_BYTES, PROGRESS_THRESHOLD_BYTES, SignallingStrategy } from './collaborationProtocol.js';
 
 // The Collaboration chat page. As in p2p-live-share (whose chat it adapts: messages with images pasted or
 // dragged in), the page holds the Trystero room, so the connection lives as long as the chat; the session
@@ -56,31 +56,54 @@ export interface IChatEntry {
 	readonly file?: IChatFile;
 	/** In a game, the tables of a round's results. */
 	readonly tables?: readonly IGameTable[];
+	/** In a game, a news item: its title and text, the roles it is for when not everyone, and, for the facilitator, the parameters it changed. */
+	readonly news?: { readonly title: string; readonly text: string; readonly for?: readonly string[]; readonly changes?: readonly string[] };
 	readonly time: number;
 }
 
 /**
- * A game, as the column beside the chat shows it: to the facilitator, the teams, who submitted and Next Round;
- * to a player, their team's decisions for the round, with Submit.
+ * A game, as the column beside the chat shows it: to the facilitator, the teams, who submitted, Next Round and every
+ * briefing; to a player, the briefings they read and their team's decisions for the round, with Submit.
  */
 export interface IChatGame {
 	readonly title: string;
 	readonly description: string;
 	readonly roundLabel: string;
 	readonly rounds: number;
+	/** The name of each round, when the case gives them. */
+	readonly roundNames?: readonly string[];
 	/** 0 before the game starts, rounds + 1 once it is over. */
 	readonly round: number;
 	readonly facilitator: boolean;
 	/** For the facilitator: whether a round is being played, the teams, and the players in none yet. */
 	readonly running?: boolean;
-	readonly teams?: readonly { readonly name: string; readonly members: readonly string[]; readonly submittedBy?: string }[];
+	readonly teams?: readonly { readonly name: string; readonly members: readonly string[]; readonly submittedBy?: string; readonly waitingFor?: readonly string[]; readonly out?: string }[];
 	readonly waiting?: readonly string[];
+	/** How the teams are organised, the briefing everyone reads, the roles in a team and their briefings: all of them for the facilitator, a player's own for them. */
+	readonly structure?: string;
+	readonly briefing?: string;
+	readonly roles?: readonly IGameRole[];
+	readonly roleBriefings?: Readonly<Record<string, string>>;
+	/** For the facilitator: the case's news items that can be released in this round. */
+	readonly newsToRelease?: number;
 	/** For a player: their team, its decisions and their values, and who submitted them. */
 	readonly team?: number;
 	readonly teamName?: string;
 	readonly decisions?: readonly IGameDecision[];
 	readonly values?: GameValues;
 	readonly submittedBy?: string;
+	/** For a player: their roles, by key, the others in their team, and the roles in it that have not submitted this round. */
+	readonly yourRoles?: readonly string[];
+	readonly members?: readonly string[];
+	readonly waitingFor?: readonly string[];
+	/** For a player: why their team has left the game, when it has. */
+	readonly out?: string;
+	/** For a player: whether teams can write to each other, the other teams, and who runs the game. */
+	readonly negotiations?: boolean;
+	readonly facilitatorName?: string;
+	readonly otherTeams?: readonly { readonly team: number; readonly name: string }[];
+	/** Whether the teams trade on a market (Trading Floor), shown beside the chat in place of a form. */
+	readonly market?: boolean;
 }
 
 export interface IChatParticipant {
@@ -122,7 +145,13 @@ export type ChatPageMessage =
 	| { readonly command: 'folder'; readonly path: string; readonly entries: readonly IFolderEntry[]; readonly error?: string }
 	| { readonly command: 'filesChanged' }
 	| { readonly command: 'filesClosed' }
-	| { readonly command: 'game'; readonly game: IChatGame };
+	| { readonly command: 'game'; readonly game: IChatGame }
+	| { readonly command: 'market'; readonly market: IChatMarket };
+
+/** A Trading Floor market as the column beside the chat shows it: the book and, to the facilitator, every desk. */
+export interface IChatMarket extends IMarketPayload {
+	readonly desks?: readonly { readonly name: string; readonly cash: number; readonly shares: number; readonly orders: number }[];
+}
 
 /** From the page to the workbench. */
 export type ChatWorkbenchMessage =
@@ -150,7 +179,12 @@ export type ChatWorkbenchMessage =
 	| { readonly command: 'listFolder'; readonly path: string }
 	| { readonly command: 'openFile'; readonly path: string }
 	| { readonly command: 'submitDecisions'; readonly values: Record<string, number | string> }
-	| { readonly command: 'nextRound' };
+	| { readonly command: 'nextRound' }
+	| { readonly command: 'releaseNews' }
+	| { readonly command: 'openDebrief' }
+	| { readonly command: 'negotiate'; readonly to: number; readonly text: string }
+	| { readonly command: 'placeOrder'; readonly side: 'buy' | 'sell'; readonly price: number; readonly quantity: number }
+	| { readonly command: 'cancelOrder'; readonly id: string };
 
 /** The chat page: its texts come from here, the session from the workbench's messages; `language` is that of dictation. */
 export function chatPageHtml(language: string, writeIn: string): string {
@@ -197,6 +231,8 @@ export function chatPageHtml(language: string, writeIn: string): string {
 		filesEmpty: localize('collaborationChat.filesEmpty', "No files."),
 		gameNotStarted: localize('collaborationChat.gameNotStarted', "Not started yet: the players are split into teams when the game starts."),
 		roundOf: localize('collaborationChat.roundOf', "{0} {1} of {2}", '{0}', '{1}', '{2}'),
+		noDecisionsThisRound: localize('collaborationChat.noDecisionsThisRound', "Your team has no decisions in this round: the other teams make theirs."),
+		roundNamed: localize('collaborationChat.roundNamed', "{0}: round {1} of {2}", '{0}', '{1}', '{2}'),
 		gameOver: localize('collaborationChat.gameOver', "The game is over."),
 		playing: localize('collaborationChat.playing', "Playing the round..."),
 		startGame: localize('collaborationChat.startGame', "Start the Game"),
@@ -210,6 +246,58 @@ export function chatPageHtml(language: string, writeIn: string): string {
 		submit: localize('collaborationChat.submit', "Submit Our Decisions"),
 		submitHint: localize('collaborationChat.submitHint', "Anyone in the team can submit; the last submitted before the round is played counts. A team that submits nothing plays its last round's decisions again."),
 		decisionUnit: localize('collaborationChat.decisionUnit', "{0} ({1})", '{0}', '{1}'),
+		structure: localize('collaborationChat.structure', "Teams: {0}", '{0}'),
+		news: localize('collaborationChat.news', "News: {0}", '{0}'),
+		newsFor: localize('collaborationChat.newsFor', "News for {1}: {0}", '{0}', '{1}'),
+		newsChanges: localize('collaborationChat.newsChanges', "Changes to the model, which the players are not told:"),
+		newsToRelease: localize('collaborationChat.newsToRelease', "The case has news to release in this round: {0}.", '{0}'),
+		releaseNews: localize('collaborationChat.releaseNews', "Release News..."),
+		openDebrief: localize('collaborationChat.openDebrief', "Open the Debrief"),
+		negotiations: localize('collaborationChat.negotiations', "Negotiations"),
+		writeTo: localize('collaborationChat.writeTo', "Write to"),
+		negotiationPlaceholder: localize('collaborationChat.negotiationPlaceholder', "A message to the other team"),
+		sendToTeam: localize('collaborationChat.sendToTeam', "Send to the Team"),
+		money: localize('collaborationChat.money', "{0}{1}", '{0}', '{1}'),
+		lastPrice: localize('collaborationChat.lastPrice', "Last trade: {0}", '{0}'),
+		noTrades: localize('collaborationChat.noTrades', "No trades yet."),
+		volume: localize('collaborationChat.volume', "Shares traded this period: {0}", '{0}'),
+		closesIn: localize('collaborationChat.closesIn', "The market closes in {0}.", '{0}'),
+		marketShut: localize('collaborationChat.marketShut', "The market is closed."),
+		orderBook: localize('collaborationChat.orderBook', "Order Book"),
+		bookPrice: localize('collaborationChat.bookPrice', "Price"),
+		bookShares: localize('collaborationChat.bookShares', "Shares"),
+		bookSide: localize('collaborationChat.bookSide', "Side"),
+		offer: localize('collaborationChat.offer', "To Sell"),
+		bid: localize('collaborationChat.bid', "To Buy"),
+		emptyBook: localize('collaborationChat.emptyBook', "No orders on the book."),
+		lastTrades: localize('collaborationChat.lastTrades', "Last Trades"),
+		tradeLine: localize('collaborationChat.tradeLine', "{0}: {1} shares at {2}", '{0}', '{1}', '{2}'),
+		yourDesk: localize('collaborationChat.yourDesk', "Your Desk"),
+		deskCash: localize('collaborationChat.deskCash', "Cash: {0}", '{0}'),
+		deskShares: localize('collaborationChat.deskShares', "Shares: {0}", '{0}'),
+		deskWorth: localize('collaborationChat.deskWorth', "Worth {0} at the last trade", '{0}'),
+		yourOrders: localize('collaborationChat.yourOrders', "Your Orders"),
+		orderLine: localize('collaborationChat.orderLine', "{0} {1} at {2}, by {3}", '{0}', '{1}', '{2}', '{3}'),
+		buy: localize('collaborationChat.buy', "Buy"),
+		sell: localize('collaborationChat.sell', "Sell"),
+		cancel: localize('collaborationChat.cancel', "Cancel"),
+		orderSide: localize('collaborationChat.orderSide', "Order"),
+		orderPrice: localize('collaborationChat.orderPrice', "Price ({0})", '{0}'),
+		orderQuantity: localize('collaborationChat.orderQuantity', "Shares, up to {0}", '{0}'),
+		placeOrder: localize('collaborationChat.placeOrder', "Place Order"),
+		orderHint: localize('collaborationChat.orderHint', "A buy order trades with offers at its price or lower, a sell order with bids at its price or higher; what does not trade stays on the book until it trades, you cancel it, or the period ends."),
+		desks: localize('collaborationChat.desks', "The Desks"),
+		deskLine: localize('collaborationChat.deskLine', "{0}: {1} cash, {2} shares, {3} orders", '{0}', '{1}', '{2}', '{3}'),
+		negotiationsHint: localize('collaborationChat.negotiationsHint', "Your message goes to everyone in both teams, and to {0}, who runs the game and reads it too. Replies show in the chat.", '{0}'),
+		briefing: localize('collaborationChat.briefing', "The Case"),
+		roleBriefing: localize('collaborationChat.roleBriefing', "Briefing: {0}", '{0}'),
+		yourRoles: localize('collaborationChat.yourRoles', "Your role: {0}", '{0}'),
+		withMembers: localize('collaborationChat.withMembers', "With {0}", '{0}'),
+		waitingFor: localize('collaborationChat.waitingFor', "Waiting for {0}", '{0}'),
+		setBy: localize('collaborationChat.setBy', "Set by {0}", '{0}'),
+		setByNobody: localize('collaborationChat.setByNobody', "Set by no role: it stays as it is."),
+		adviseOnly: localize('collaborationChat.adviseOnly', "Your role sets none of the decisions: advise those in your team who do."),
+		submitRolesHint: localize('collaborationChat.submitRolesHint', "You set the decisions of your role, and the others in your team set theirs; the last submitted before the round is played counts. A decision nobody submits stays as it was in the last round."),
 	};
 	const csp = `default-src 'none'; style-src 'unsafe-inline'; img-src data: blob:; connect-src wss: https:; script-src ${webviewGenericCspSource} 'unsafe-inline';`;
 	return `<!DOCTYPE html>
@@ -253,6 +341,25 @@ export function chatPageHtml(language: string, writeIn: string): string {
 		#game .field label { display: block; font-weight: 600; margin-bottom: 2px; }
 		#game .field input, #game .field select { width: 100%; font: inherit; padding: 2px 4px; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); }
 		#game .actions { margin: 8px 0; }
+		#game details { margin: 6px 0; }
+		#game .actions button + button { margin-left: 6px; }
+		#game .negotiation select, #game .negotiation textarea { width: 100%; box-sizing: border-box; font: inherit; margin: 2px 0; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); }
+		#game .negotiation textarea { resize: vertical; min-height: 48px; }
+		.news .body { margin-top: 4px; white-space: pre-wrap; }
+		.news .change { font-size: 11px; color: var(--vscode-descriptionForeground); }
+		#game summary { cursor: pointer; font-weight: 600; }
+		#game .briefing { margin: 4px 0 8px; }
+		#game .briefing p, #game .briefing ul { margin: 4px 0; }
+		#game .briefing ul { padding-left: 18px; }
+		#game .briefing .heading { font-weight: 600; margin: 8px 0 2px; }
+		#game .market { margin: 6px 0; }
+		#game .market .heading { font-weight: 600; margin: 8px 0 2px; }
+		#game .market table { width: 100%; border-collapse: collapse; font-size: 11px; }
+		#game .market th { text-align: left; font-weight: 600; }
+		#game .market td, #game .market th { padding: 1px 4px; }
+		#game .market .ask { color: var(--vscode-charts-red); }
+		#game .market .bid { color: var(--vscode-charts-green); }
+		#game .market .order { margin: 2px 0; }
 		.entry { margin: 0 0 8px 0; line-height: 1.4; }
 		.entry .meta { font-size: 11px; color: var(--vscode-descriptionForeground); }
 		.entry .meta b { color: var(--vscode-foreground); font-weight: 600; margin-right: 6px; }
@@ -528,6 +635,9 @@ export function chatPageHtml(language: string, writeIn: string): string {
 		for (const table of entry.tables || []) {
 			element.append(resultsCard(table));
 		}
+		if (entry.news) {
+			element.append(newsCard(entry.news));
+		}
 		messages.append(element);
 		if (follow) {
 			messages.scrollTop = messages.scrollHeight;
@@ -601,6 +711,28 @@ export function chatPageHtml(language: string, writeIn: string): string {
 		return card;
 	}
 
+	// A news item of a game: its title, who it is for and its text, with the changes to the model for the facilitator
+	function newsCard(news) {
+		const card = document.createElement('div');
+		card.className = 'dataset news';
+		const summary = document.createElement('div');
+		summary.className = 'summary';
+		summary.textContent = news.for && news.for.length ? TEXT.newsFor.replace('{0}', news.title).replace('{1}', news.for.join(', ')) : TEXT.news.replace('{0}', news.title);
+		const body = document.createElement('div');
+		body.className = 'body';
+		body.textContent = news.text;
+		card.append(summary, body);
+		if (news.changes && news.changes.length) {
+			for (const text of [TEXT.newsChanges, ...news.changes]) {
+				const change = document.createElement('div');
+				change.className = 'change';
+				change.textContent = text;
+				card.append(change);
+			}
+		}
+		return card;
+	}
+
 	// A table of a game's results: its cells set as text
 	function resultsCard(table) {
 		const card = document.createElement('div');
@@ -630,7 +762,60 @@ export function chatPageHtml(language: string, writeIn: string): string {
 
 	// ---- A game: the facilitator's teams and Next Round, or a player's decisions for their team ----
 
+	// A briefing, from its Markdown: headings, paragraphs and lists, with **bold**, each set as text
+	function briefingElement(markdown) {
+		const element = document.createElement('div');
+		element.className = 'briefing';
+		const inline = (target, text) => {
+			text.split('**').forEach((part, index) => {
+				if (index % 2) {
+					const bold = document.createElement('b');
+					bold.textContent = part;
+					target.append(bold);
+				} else if (part) {
+					target.append(document.createTextNode(part));
+				}
+			});
+		};
+		let list, paragraph;
+		for (const raw of markdown.split('\\n')) {
+			const line = raw.trim();
+			const heading = /^#{1,6}\\s+(?<text>.*)$/.exec(line);
+			const item = /^[-*]\\s+(?<text>.*)$/.exec(line);
+			if (!line) {
+				list = paragraph = undefined;
+			} else if (heading) {
+				list = paragraph = undefined;
+				const title = document.createElement('div');
+				title.className = 'heading';
+				inline(title, heading.groups.text);
+				element.append(title);
+			} else if (item) {
+				paragraph = undefined;
+				if (!list) {
+					list = document.createElement('ul');
+					element.append(list);
+				}
+				const entry = document.createElement('li');
+				inline(entry, item.groups.text);
+				list.append(entry);
+			} else {
+				list = undefined;
+				if (!paragraph) {
+					paragraph = document.createElement('p');
+					element.append(paragraph);
+				} else {
+					paragraph.append(document.createTextNode(' '));
+				}
+				inline(paragraph, line);
+			}
+		}
+		return element;
+	}
+
 	let gameKey = '', lastGame;
+	// The briefings open, which stay open when the column is drawn again
+	const openBriefings = new Set();
 	function showGame(game) {
 		const area = $('game');
 		// A player's form is drawn again only when something in it changed, so what they are typing stays
@@ -648,12 +833,37 @@ export function chatPageHtml(language: string, writeIn: string): string {
 			area.append(element);
 			return element;
 		};
+		const briefing = (id, title, markdown) => {
+			const details = document.createElement('details');
+			details.open = openBriefings.has(id);
+			details.addEventListener('toggle', () => details.open ? openBriefings.add(id) : openBriefings.delete(id));
+			const summary = document.createElement('summary');
+			summary.textContent = title;
+			details.append(summary, briefingElement(markdown));
+			area.append(details);
+		};
+		const roles = game.roles || [];
+		const hasRoles = roles.length > 1;
+		const roleLabels = keys => roles.filter(role => keys.includes(role.key)).map(role => role.label).join(', ');
+		const playing = game.round >= 1 && game.round <= game.rounds;
 		line('title', game.title);
 		if (game.description) {
 			line('hint', game.description);
 		}
-		line('round', game.round < 1 ? TEXT.gameNotStarted : game.round > game.rounds ? TEXT.gameOver : TEXT.roundOf.replace('{0}', game.roundLabel).replace('{1}', game.round).replace('{2}', game.rounds));
+		if (hasRoles && game.structure) {
+			line('muted', TEXT.structure.replace('{0}', game.structure));
+		}
+		line('round', game.round < 1 ? TEXT.gameNotStarted : game.round > game.rounds ? TEXT.gameOver : (game.roundNames && game.roundNames[game.round - 1] ? TEXT.roundNamed.replace('{0}', game.roundNames[game.round - 1]) : TEXT.roundOf.replace('{0}', game.roundLabel)).replace('{1}', game.round).replace('{2}', game.rounds));
+		if (game.briefing) {
+			briefing('case', TEXT.briefing, game.briefing);
+		}
+		const roleBriefings = game.roleBriefings || {};
 		if (game.facilitator) {
+			for (const role of roles) {
+				if (roleBriefings[role.key]) {
+					briefing('role-' + role.key, TEXT.roleBriefing.replace('{0}', role.label), roleBriefings[role.key]);
+				}
+			}
 			for (const team of game.teams || []) {
 				const element = line('team', '');
 				const name = document.createElement('b');
@@ -661,22 +871,48 @@ export function chatPageHtml(language: string, writeIn: string): string {
 				const members = document.createElement('div');
 				members.className = 'muted';
 				members.textContent = team.members.length ? team.members.join(', ') : TEXT.nobody;
-				const status = document.createElement('div');
-				status.textContent = team.submittedBy ? TEXT.submittedBy.replace('{0}', team.submittedBy) : TEXT.notSubmitted;
 				element.append(name, members);
-				if (game.round >= 1 && game.round <= game.rounds) {
+				if (team.out) {
+					const out = document.createElement('div');
+					out.className = 'muted';
+					out.textContent = team.out;
+					element.append(out);
+				} else if (playing) {
+					const status = document.createElement('div');
+					status.textContent = team.submittedBy ? TEXT.submittedBy.replace('{0}', team.submittedBy) : TEXT.notSubmitted;
 					element.append(status);
+					if (hasRoles && team.submittedBy && team.waitingFor && team.waitingFor.length) {
+						const waiting = document.createElement('div');
+						waiting.className = 'muted';
+						waiting.textContent = TEXT.waitingFor.replace('{0}', team.waitingFor.join(', '));
+						element.append(waiting);
+					}
 				}
 			}
 			if (game.waiting && game.waiting.length) {
 				line('muted', TEXT.notInTeam.replace('{0}', game.waiting.join(', ')));
 			}
+			if (playing && game.newsToRelease) {
+				line('muted', TEXT.newsToRelease.replace('{0}', game.newsToRelease));
+			}
+			if (game.market) {
+				area.append(marketArea);
+				showMarket();
+			}
 			const actions = line('actions', '');
+			const over = game.round > game.rounds;
 			const button = document.createElement('button');
-			button.textContent = game.running ? TEXT.playing : game.round < 1 ? TEXT.startGame : TEXT.nextRound;
-			button.disabled = ended || game.running || game.round > game.rounds;
-			button.addEventListener('click', () => vscode.postMessage({ command: 'nextRound' }));
+			button.textContent = game.running ? TEXT.playing : game.round < 1 ? TEXT.startGame : over ? TEXT.openDebrief : TEXT.nextRound;
+			button.disabled = ended || game.running;
+			button.addEventListener('click', () => vscode.postMessage({ command: over ? 'openDebrief' : 'nextRound' }));
 			actions.append(button);
+			if (playing) {
+				const news = document.createElement('button');
+				news.textContent = TEXT.releaseNews;
+				news.disabled = ended || game.running;
+				news.addEventListener('click', () => vscode.postMessage({ command: 'releaseNews' }));
+				actions.append(news);
+			}
 			return;
 		}
 		if (!game.team) {
@@ -686,9 +922,43 @@ export function chatPageHtml(language: string, writeIn: string): string {
 			return;
 		}
 		line('team', TEXT.yourTeam.replace('{0}', game.teamName));
-		if (game.round < 1 || game.round > game.rounds) {
+		const yourRoles = game.yourRoles || [];
+		if (hasRoles && yourRoles.length) {
+			line('team', TEXT.yourRoles.replace('{0}', roleLabels(yourRoles)));
+		}
+		if (game.members && game.members.length) {
+			line('muted', TEXT.withMembers.replace('{0}', game.members.join(', ')));
+		}
+		for (const role of roles) {
+			if (yourRoles.includes(role.key) && roleBriefings[role.key]) {
+				briefing('role-' + role.key, TEXT.roleBriefing.replace('{0}', role.label), roleBriefings[role.key]);
+			}
+		}
+		if (game.out) {
+			line('hint', game.out);
 			return;
 		}
+		if (!playing) {
+			return;
+		}
+		if (game.market) {
+			area.append(marketArea);
+			showMarket();
+			showNegotiations(game, line);
+			return;
+		}
+		if (!(game.decisions || []).length) {
+			line('hint', TEXT.noDecisionsThisRound);
+			showNegotiations(game, line);
+			return;
+		}
+		// The decisions the player's roles set; the others are shown, with who sets them. A decision made for each
+		// rival has the rival's number after its key (bid.2), and the roles name it by its key alone (bid)
+		const base = key => key.split('.')[0];
+		const all = (game.decisions || []).map(decision => base(decision.key));
+		const setters = key => roles.filter(role => (role.decides || all).includes(base(key)));
+		const allowedKeys = new Set(roles.filter(role => yourRoles.includes(role.key)).flatMap(role => role.decides || all));
+		const allowed = new Set((game.decisions || []).map(decision => decision.key).filter(key => allowedKeys.has(base(key))));
 		const inputs = [];
 		for (const decision of game.decisions || []) {
 			const field = line('field', '');
@@ -711,31 +981,243 @@ export function chatPageHtml(language: string, writeIn: string): string {
 				input.step = decision.step ?? 'any';
 			}
 			input.value = String(game.values?.[decision.key] ?? decision.default);
-			input.disabled = ended;
+			input.disabled = ended || !allowed.has(decision.key);
 			label.htmlFor = input.id = 'decision-' + decision.key;
 			field.append(label, input);
+			const notes = [];
+			if (!allowed.has(decision.key)) {
+				const others = setters(decision.key);
+				notes.push(others.length ? TEXT.setBy.replace('{0}', others.map(role => role.label).join(', ')) : TEXT.setByNobody);
+			}
 			if (decision.help) {
+				notes.push(decision.help);
+			}
+			for (const note of notes) {
 				const help = document.createElement('div');
 				help.className = 'hint';
-				help.textContent = decision.help;
+				help.textContent = note;
 				field.append(help);
 			}
 			inputs.push([decision, input]);
 		}
-		const actions = line('actions', '');
-		const button = document.createElement('button');
-		button.textContent = TEXT.submit;
-		button.disabled = ended;
-		button.addEventListener('click', () => {
-			const values = {};
-			for (const [decision, input] of inputs) {
-				values[decision.key] = decision.kind === 'choice' ? input.value : Number(input.value);
+		if (!allowed.size) {
+			line('hint', TEXT.adviseOnly);
+		} else {
+			const actions = line('actions', '');
+			const button = document.createElement('button');
+			button.textContent = TEXT.submit;
+			button.disabled = ended;
+			button.addEventListener('click', () => {
+				const values = {};
+				for (const [decision, input] of inputs) {
+					values[decision.key] = decision.kind === 'choice' ? input.value : Number(input.value);
+				}
+				vscode.postMessage({ command: 'submitDecisions', values });
+			});
+			actions.append(button);
+		}
+		line('', game.submittedBy ? TEXT.submittedBy.replace('{0}', game.submittedBy) : TEXT.notSubmitted);
+		if (hasRoles && game.submittedBy && game.waitingFor && game.waitingFor.length) {
+			line('muted', TEXT.waitingFor.replace('{0}', game.waitingFor.join(', ')));
+		}
+		line('hint', hasRoles ? TEXT.submitRolesHint : TEXT.submitHint);
+		showNegotiations(game, line);
+	}
+
+	// Trading Floor: the market, drawn again whenever the facilitator's copy sends it; the order being written stays
+	let lastMarket, marketEnds = 0;
+	const marketArea = document.createElement('div');
+	marketArea.className = 'market';
+	const orderDraft = { side: 'buy', price: '', quantity: '' };
+	function clockText() {
+		if (!lastMarket || !lastMarket.open || Date.now() >= marketEnds) {
+			return TEXT.marketShut;
+		}
+		const seconds = Math.max(0, Math.round((marketEnds - Date.now()) / 1000));
+		return TEXT.closesIn.replace('{0}', Math.floor(seconds / 60) + ':' + String(seconds % 60).padStart(2, '0'));
+	}
+	setInterval(() => {
+		const clock = document.getElementById('market-clock');
+		if (clock) {
+			clock.textContent = clockText();
+		}
+	}, 1000);
+	function showMarket() {
+		marketArea.replaceChildren();
+		const market = lastMarket;
+		if (!market) {
+			return;
+		}
+		const decimals = Math.max(0, Math.min(6, Math.ceil(-Math.log10(market.tick) - 1e-9)));
+		const money = value => TEXT.money.replace('{0}', market.unit).replace('{1}', Number(value).toFixed(decimals));
+		const add = (className, text, parent) => {
+			const element = document.createElement('div');
+			element.className = className;
+			element.textContent = text;
+			(parent || marketArea).append(element);
+			return element;
+		};
+		add('round', market.asset);
+		add('', market.last !== undefined ? TEXT.lastPrice.replace('{0}', money(market.last)) : TEXT.noTrades);
+		add('muted', TEXT.volume.replace('{0}', market.volume));
+		add('muted', clockText()).id = 'market-clock';
+		// The book: the offers to sell above, lowest nearest the middle, then the bids to buy, highest first
+		add('heading', TEXT.orderBook);
+		if (!market.asks.length && !market.bids.length) {
+			add('muted', TEXT.emptyBook);
+		} else {
+			const table = document.createElement('table');
+			const head = table.insertRow();
+			for (const label of [TEXT.bookSide, TEXT.bookPrice, TEXT.bookShares]) {
+				const cell = document.createElement('th');
+				cell.textContent = label;
+				head.append(cell);
 			}
-			vscode.postMessage({ command: 'submitDecisions', values });
+			const level = (side, item) => {
+				const row = table.insertRow();
+				row.className = side;
+				for (const value of [side === 'ask' ? TEXT.offer : TEXT.bid, money(item.price), item.quantity]) {
+					row.insertCell().textContent = value;
+				}
+			};
+			market.asks.slice().reverse().forEach(item => level('ask', item));
+			market.bids.forEach(item => level('bid', item));
+			marketArea.append(table);
+		}
+		if (market.trades.length) {
+			add('heading', TEXT.lastTrades);
+			for (const trade of market.trades.slice(0, 8)) {
+				add('muted', TEXT.tradeLine.replace('{0}', new Date(trade.time).toLocaleTimeString()).replace('{1}', trade.quantity).replace('{2}', money(trade.price)));
+			}
+		}
+		if (market.desks) {
+			add('heading', TEXT.desks);
+			for (const desk of market.desks) {
+				add('', TEXT.deskLine.replace('{0}', desk.name).replace('{1}', money(desk.cash)).replace('{2}', desk.shares).replace('{3}', desk.orders));
+			}
+		}
+		if (!market.desk) {
+			return;
+		}
+		const desk = market.desk;
+		add('heading', TEXT.yourDesk);
+		add('', TEXT.deskCash.replace('{0}', money(desk.cash)));
+		add('', TEXT.deskShares.replace('{0}', desk.shares));
+		if (market.last !== undefined) {
+			add('muted', TEXT.deskWorth.replace('{0}', money(desk.cash + desk.shares * market.last)));
+		}
+		if (desk.orders.length) {
+			add('heading', TEXT.yourOrders);
+			for (const order of desk.orders) {
+				const row = add('order', TEXT.orderLine.replace('{0}', order.side === 'buy' ? TEXT.buy : TEXT.sell).replace('{1}', order.quantity).replace('{2}', money(order.price)).replace('{3}', order.by));
+				row.classList.add(order.side === 'buy' ? 'bid' : 'ask');
+				const cancel = document.createElement('button');
+				cancel.textContent = TEXT.cancel;
+				cancel.disabled = ended || !market.open;
+				cancel.addEventListener('click', () => vscode.postMessage({ command: 'cancelOrder', id: order.id }));
+				row.append(' ', cancel);
+			}
+		}
+		if (!market.open || ended) {
+			return;
+		}
+		const field = (labelText, input) => {
+			const element = add('field', '');
+			const label = document.createElement('label');
+			label.textContent = labelText;
+			label.htmlFor = input.id;
+			element.append(label, input);
+		};
+		const side = document.createElement('select');
+		side.id = 'order-side';
+		for (const [value, label] of [['buy', TEXT.buy], ['sell', TEXT.sell]]) {
+			const option = document.createElement('option');
+			option.value = value;
+			option.textContent = label;
+			side.append(option);
+		}
+		side.value = orderDraft.side;
+		side.addEventListener('change', () => orderDraft.side = side.value);
+		field(TEXT.orderSide, side);
+		const price = document.createElement('input');
+		price.id = 'order-price';
+		price.type = 'number';
+		price.min = market.tick;
+		price.step = market.tick;
+		price.value = orderDraft.price || (market.last !== undefined ? market.last : '');
+		price.addEventListener('input', () => orderDraft.price = price.value);
+		field(TEXT.orderPrice.replace('{0}', market.unit), price);
+		const quantity = document.createElement('input');
+		quantity.id = 'order-quantity';
+		quantity.type = 'number';
+		quantity.min = 1;
+		quantity.max = market.maxOrder;
+		quantity.step = 1;
+		quantity.value = orderDraft.quantity;
+		quantity.addEventListener('input', () => orderDraft.quantity = quantity.value);
+		field(TEXT.orderQuantity.replace('{0}', market.maxOrder), quantity);
+		const actions = add('actions', '');
+		const button = document.createElement('button');
+		button.textContent = TEXT.placeOrder;
+		button.addEventListener('click', () => {
+			const priceValue = Number(price.value), quantityValue = Number(quantity.value);
+			if (!(priceValue > 0) || !(quantityValue > 0)) {
+				return;
+			}
+			vscode.postMessage({ command: 'placeOrder', side: side.value, price: priceValue, quantity: quantityValue });
+			orderDraft.quantity = '';
 		});
 		actions.append(button);
-		line('', game.submittedBy ? TEXT.submittedBy.replace('{0}', game.submittedBy) : TEXT.notSubmitted);
-		line('hint', TEXT.submitHint);
+		add('hint', TEXT.orderHint);
+	}
+
+	// Negotiations: a message to another team, through the facilitator; what is being written stays when the column is drawn again
+	const negotiationDraft = { to: undefined, text: '' };
+	function showNegotiations(game, line) {
+		if (!game.negotiations || !game.otherTeams || !game.otherTeams.length) {
+			return;
+		}
+		const area = line('negotiation', '');
+		const title = document.createElement('div');
+		title.className = 'round';
+		title.textContent = TEXT.negotiations;
+		const label = document.createElement('label');
+		label.textContent = TEXT.writeTo;
+		label.htmlFor = 'negotiation-team';
+		const select = document.createElement('select');
+		select.id = 'negotiation-team';
+		for (const team of game.otherTeams) {
+			const option = document.createElement('option');
+			option.value = String(team.team);
+			option.textContent = team.name;
+			select.append(option);
+		}
+		if (game.otherTeams.some(team => team.team === negotiationDraft.to)) {
+			select.value = String(negotiationDraft.to);
+		}
+		select.addEventListener('change', () => negotiationDraft.to = Number(select.value));
+		const text = document.createElement('textarea');
+		text.placeholder = TEXT.negotiationPlaceholder;
+		text.value = negotiationDraft.text;
+		text.disabled = ended;
+		text.addEventListener('input', () => negotiationDraft.text = text.value);
+		const actions = document.createElement('div');
+		actions.className = 'actions';
+		const button = document.createElement('button');
+		button.textContent = TEXT.sendToTeam;
+		button.disabled = ended;
+		button.addEventListener('click', () => {
+			if (!text.value.trim()) {
+				return;
+			}
+			vscode.postMessage({ command: 'negotiate', to: Number(select.value), text: text.value });
+			text.value = negotiationDraft.text = '';
+		});
+		actions.append(button);
+		const hint = document.createElement('div');
+		hint.className = 'hint';
+		hint.textContent = TEXT.negotiationsHint.replace('{0}', game.facilitatorName || '');
+		area.append(title, label, select, text, actions, hint);
 	}
 
 	function showParticipants(participants) {
@@ -872,6 +1354,11 @@ export function chatPageHtml(language: string, writeIn: string): string {
 			case 'filesChanged': vscode.postMessage({ command: 'listFolder', path: '' }); break;
 			case 'filesClosed': $('files').hidden = true; break;
 			case 'game': lastGame = message.game; showGame(message.game); break;
+			case 'market':
+				lastMarket = message.market;
+				marketEnds = Date.now() + message.market.remaining * 1000;
+				showMarket();
+				break;
 		}
 	});
 

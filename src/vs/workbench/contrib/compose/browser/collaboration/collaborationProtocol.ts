@@ -130,10 +130,30 @@ export interface IGameDecision {
 	/** For a choice: the values, each with its label. */
 	readonly options?: readonly { readonly value: string; readonly label: string }[];
 	readonly default: number | string;
+	/** In a case: whether the decision is made once for each other team still in the game, such as a bid for each rival. A team's form has it as key.team, such as bid.2. */
+	readonly rivals?: boolean;
+	/** In a case: the kinds of team that make it, by key, every team when missing; and the rounds it is made in, every round when missing. */
+	readonly sides?: readonly string[];
+	readonly rounds?: readonly number[];
 }
 
 /** A team's values for the decisions of a round, by key. */
 export type GameValues = Readonly<Record<string, number | string>>;
+
+/** A news item of a game, as the players who read it see it: the round it came in, and the roles it is for, when not everyone. */
+export interface IGameNews {
+	readonly round: number;
+	readonly title: string;
+	readonly text: string;
+	readonly for?: readonly string[];
+}
+
+/** A role in a team of a game: its key, its name, and the decisions it sets, every one when `decides` is missing. */
+export interface IGameRole {
+	readonly key: string;
+	readonly label: string;
+	readonly decides?: readonly string[];
+}
 
 /**
  * In a game (Simulation Games), what a player sees, sent by the facilitator: on joining, on being placed in a
@@ -145,6 +165,8 @@ export interface IGamePayload {
 	/** What a round is called, such as Year, and how many there are. */
 	readonly roundLabel: string;
 	readonly rounds: number;
+	/** The name of each round, when the case gives them, such as Due Diligence. */
+	readonly roundNames?: readonly string[];
 	/** The round being decided: 0 before the game starts, rounds + 1 once it is over. */
 	readonly round: number;
 	/** The player's team, none until the facilitator places them in one. */
@@ -155,6 +177,103 @@ export interface IGamePayload {
 	readonly values?: GameValues;
 	/** Who in the team submitted the values, when someone has this round. */
 	readonly submittedBy?: string;
+	/** How the teams are organised (such as Departments), the briefing every player reads, and the roles in a team. */
+	readonly structure?: string;
+	readonly briefing?: string;
+	readonly roles?: readonly IGameRole[];
+	/** Once the game has started: the player's roles, by key, with their briefings, the others in the team, each with their roles, and the roles that have not submitted this round. */
+	readonly yourRoles?: readonly string[];
+	readonly roleBriefings?: Readonly<Record<string, string>>;
+	readonly members?: readonly string[];
+	readonly waitingFor?: readonly string[];
+	/** The news released so far that the player reads, oldest first. */
+	readonly news?: readonly IGameNews[];
+	/** When the player's team has left the game (a company bought, say): why, as the model says it. */
+	readonly out?: string;
+	/** Whether teams can write to each other (negotiations), and, once the game has started, the other teams. */
+	readonly negotiations?: boolean;
+	readonly otherTeams?: readonly { readonly team: number; readonly name: string }[];
+	/** Whether the teams trade on a market (Trading Floor) in place of a form of decisions; its book comes in market envelopes. */
+	readonly market?: boolean;
+}
+
+/** A price of a market's order book, with the shares bid or offered at it. */
+export interface IMarketLevel {
+	readonly price: number;
+	readonly quantity: number;
+}
+
+/** A trade on a market: its price, its shares, and when it was made. */
+export interface IMarketTrade {
+	readonly price: number;
+	readonly quantity: number;
+	readonly time: number;
+}
+
+/** An order a desk has on the book: its side, price, shares still to trade, and who placed it. */
+export interface IMarketOrder {
+	readonly id: string;
+	readonly side: 'buy' | 'sell';
+	readonly price: number;
+	readonly quantity: number;
+	readonly by: string;
+}
+
+/** A team's desk on a market: its cash, its shares and its orders on the book. */
+export interface IMarketDesk {
+	readonly cash: number;
+	readonly shares: number;
+	readonly orders: readonly IMarketOrder[];
+}
+
+/**
+ * In a market game, the market as the facilitator's copy keeps it, sent to every player whenever it changes: the
+ * period being traded, whether it is open and for how many more seconds, the book's best prices, the last trades,
+ * and the player's team's desk.
+ */
+export interface IMarketPayload {
+	readonly round: number;
+	readonly open: boolean;
+	readonly remaining: number;
+	readonly asset: string;
+	readonly unit: string;
+	readonly tick: number;
+	readonly maxOrder: number;
+	readonly bids: readonly IMarketLevel[];
+	readonly asks: readonly IMarketLevel[];
+	readonly trades: readonly IMarketTrade[];
+	readonly last?: number;
+	readonly volume: number;
+	readonly desk?: IMarketDesk;
+	/** Why the player's last order was refused, for that player alone. */
+	readonly refused?: string;
+}
+
+/** A player's order for their team's desk: buy or sell shares at a price or better. */
+export interface IOrderPayload {
+	readonly round: number;
+	readonly side: 'buy' | 'sell';
+	readonly price: number;
+	readonly quantity: number;
+}
+
+/** A player cancels one of their team's orders. */
+export interface ICancelOrderPayload {
+	readonly round: number;
+	readonly id: string;
+}
+
+/**
+ * In a game, a message between two teams (negotiations), which the facilitator's copy passes on and the facilitator
+ * reads: from a player, with the team it is for; from the facilitator, to the players of both teams, with who wrote it
+ * and from which team.
+ */
+export interface INegotiationPayload {
+	readonly id: string;
+	readonly text: string;
+	readonly to: number;
+	readonly from?: string;
+	readonly fromTeam?: number;
 }
 
 /** A player's decisions for their team in a round; the last submitted before the round is played counts. */
@@ -174,6 +293,8 @@ export interface IGameTable {
 export interface IGameResultsPayload {
 	readonly round: number;
 	readonly text?: string;
+	/** What the model says to the player's team alone. */
+	readonly teamText?: string;
 	readonly tables: readonly IGameTable[];
 }
 
@@ -304,6 +425,10 @@ export type Envelope =
 	| IEnvelopeBase<'game', IGamePayload>
 	| IEnvelopeBase<'decisions', IDecisionsPayload>
 	| IEnvelopeBase<'gameResults', IGameResultsPayload>
+	| IEnvelopeBase<'negotiation', INegotiationPayload>
+	| IEnvelopeBase<'order', IOrderPayload>
+	| IEnvelopeBase<'cancelOrder', ICancelOrderPayload>
+	| IEnvelopeBase<'market', IMarketPayload>
 	| IEnvelopeBase<'fileRequest', IFileRequestPayload>
 	| IEnvelopeBase<'fileResponse', IFileResponsePayload>
 	| IEnvelopeBase<'textUpdate', ITextUpdatePayload>
@@ -319,7 +444,7 @@ export function envelope<E extends Envelope>(type: E['type'], payload: E['payloa
 	return result as E;
 }
 
-const ENVELOPE_TYPES: ReadonlySet<string> = new Set<EnvelopeType>(['hello', 'chat', 'editorShared', 'datasetShared', 'fileShared', 'databaseShared', 'bye', 'settings', 'agent', 'group', 'game', 'decisions', 'gameResults', 'fileRequest', 'fileResponse', 'textUpdate', 'textSaved', 'filesChanged', 'cursor']);
+const ENVELOPE_TYPES: ReadonlySet<string> = new Set<EnvelopeType>(['hello', 'chat', 'editorShared', 'datasetShared', 'fileShared', 'databaseShared', 'bye', 'settings', 'agent', 'group', 'game', 'decisions', 'gameResults', 'negotiation', 'order', 'cancelOrder', 'market', 'fileRequest', 'fileResponse', 'textUpdate', 'textSaved', 'filesChanged', 'cursor']);
 
 /** Whether something received is an envelope this copy understands. */
 export function isEnvelope(value: unknown): value is Envelope {

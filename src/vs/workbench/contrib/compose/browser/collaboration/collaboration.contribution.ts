@@ -37,6 +37,8 @@ export const IMPLEMENTED_COLLABORATION_COMMANDS: ReadonlySet<string> = new Set([
 	'pollis.collaboration.hostGame',
 	'pollis.collaboration.joinGame',
 	'pollis.collaboration.nextRound',
+	'pollis.collaboration.releaseNews',
+	'pollis.collaboration.debrief',
 	'pollis.collaboration.openChat',
 	'pollis.collaboration.testConnection',
 ]);
@@ -90,6 +92,8 @@ registerCollaborationCommand('pollis.collaboration.bringEveryoneBack', localize2
 registerCollaborationCommand('pollis.collaboration.hostGame', localize2('collaboration.hostGameCommand', "Host a Game..."), service => service.hostGame());
 registerCollaborationCommand('pollis.collaboration.joinGame', localize2('collaboration.joinGameCommand', "Join a Game..."), service => service.joinGame());
 registerCollaborationCommand('pollis.collaboration.nextRound', localize2('collaboration.nextRoundCommand', "Next Round"), service => service.nextRound());
+registerCollaborationCommand('pollis.collaboration.debrief', localize2('collaboration.debriefCommand', "Open the Debrief"), service => service.openDebrief());
+registerCollaborationCommand('pollis.collaboration.releaseNews', localize2('collaboration.releaseNewsCommand', "Release News..."), service => service.releaseNews());
 registerCollaborationCommand('pollis.collaboration.inviteAgent', localize2('collaboration.inviteAgentCommand', "Invite an Agent..."), service => service.inviteAgent());
 registerCollaborationCommand('pollis.collaboration.sessionSettings', localize2('collaboration.sessionSettingsCommand', "Session Settings..."), service => service.sessionSettings());
 registerCollaborationCommand('pollis.collaboration.openChat', localize2('collaboration.openChatCommand', "Open Chat"), service => service.openChat());

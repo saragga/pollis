@@ -7,7 +7,7 @@ import { localize } from '../../../../nls.js';
 import { Barrier } from '../../../../base/common/async.js';
 import { Emitter } from '../../../../base/common/event.js';
 import { Disposable, DisposableStore, MutableDisposable } from '../../../../base/common/lifecycle.js';
-import { basename, dirname, joinPath, isEqualOrParent } from '../../../../base/common/resources.js';
+import { basename, dirname, joinPath, isEqual, isEqualOrParent } from '../../../../base/common/resources.js';
 import { hasKey } from '../../../../base/common/types.js';
 import { URI } from '../../../../base/common/uri.js';
 import { MenuId, MenuRegistry } from '../../../../platform/actions/common/actions.js';
@@ -80,6 +80,14 @@ interface IToolboxContribution {
 	readonly texts?: IToolboxTextContribution[];
 	/** Its notebook courses, in Help > Notebook Courses. */
 	readonly courses?: IToolboxCourseContribution[];
+	/** Its Simulation Games cases, which Host a Game... offers. */
+	readonly games?: IToolboxGameContribution[];
+}
+
+/** A Simulation Games case of a toolbox: a folder with case.toml and model.jl. */
+interface IToolboxGameContribution {
+	/** The case's folder, relative to the extension folder, for example games/chocolate-chain. */
+	readonly folder: string;
 }
 
 /** A vignette of a toolbox: LaTeX sources that Pollis compiles with PollisTeX the first time the document is opened. */
@@ -197,6 +205,17 @@ const toolboxesExtensionPoint = ExtensionsRegistry.registerExtensionPoint<IToolb
 						},
 					},
 				},
+				games: {
+					type: 'array',
+					description: localize('pollisToolboxes.games', "The toolbox's Simulation Games cases, which Compose > Collaboration > Simulation Games > Host a Game... offers. A toolbox of cases alone has no panels: give it an empty panels list."),
+					items: {
+						type: 'object',
+						required: ['folder'],
+						properties: {
+							folder: { type: 'string', description: localize('pollisToolboxes.game.folder', "The case's folder, relative to the extension folder, for example games/chocolate-chain: its case.toml, model.jl and the files they name.") },
+						},
+					},
+				},
 				texts: {
 					type: 'array',
 					description: localize('pollisToolboxes.texts', "The texts the toolbox adds to the Knowledge Base: PDFs their authors share under an open licence, which Pollis downloads from where they keep them, at a fixed version, the first time the user switches one on."),
@@ -254,6 +273,7 @@ interface ILoadedToolbox {
 	readonly documents: readonly IToolboxDocumentInfo[];
 	readonly texts: readonly IToolboxTextInfo[];
 	readonly courses: readonly IToolboxCourseContribution[];
+	readonly games: readonly URI[];
 }
 
 /**
@@ -346,6 +366,7 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 					version: loaded.version,
 					documents: loaded.documents,
 					texts: loaded.texts,
+					games: loaded.games,
 					panels: inMenuOrder(loaded.toolbox, loaded.panels).map(({ contribution, panel, faq }) => ({
 						id: contribution.id,
 						command: contribution.command,
@@ -442,7 +463,16 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 					}
 					courses.push({ title: course.title, url: course.url });
 				}
-				loaded.push({ extensionId: ExtensionIdentifier.toKey(extension.description.identifier), extensionName: extension.description.displayName ?? extension.description.name, toolbox, location, version: extension.description.version, panels, documents, texts, courses });
+				const games: URI[] = [];
+				for (const game of toolbox.games ?? []) {
+					const folder = typeof game.folder === 'string' ? joinPath(location, game.folder) : undefined;
+					if (!folder || !isEqualOrParent(folder, location) || isEqual(folder, location)) {
+						extension.collector.error(localize('pollisToolboxes.gameFolder', "The folder of game case {0} must be inside the extension folder.", String(game.folder)));
+						continue;
+					}
+					games.push(folder);
+				}
+				loaded.push({ extensionId: ExtensionIdentifier.toKey(extension.description.identifier), extensionName: extension.description.displayName ?? extension.description.name, toolbox, location, version: extension.description.version, panels, documents, texts, courses, games });
 			}
 		}
 		if (generation !== this.generation) {

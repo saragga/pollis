@@ -82,6 +82,14 @@ export function toolboxesOfIndex(index: IToolboxIndex | null | undefined): ITool
 }
 
 /** The installed copy of a toolbox, if any. */
+/** Whether an extension's toolboxes bring Simulation Games cases and no panels, so there is nothing to put in the menus. */
+function hasOnlyGames(extension: IExtension): boolean {
+	const contributes = extension.local?.manifest.contributes as { readonly pollisToolboxes?: readonly { readonly panels?: unknown; readonly games?: unknown }[] } | undefined;
+	const toolboxes = contributes?.pollisToolboxes;
+	return Array.isArray(toolboxes) && toolboxes.length > 0
+		&& toolboxes.every(toolbox => !(Array.isArray(toolbox?.panels) && toolbox.panels.length) && Array.isArray(toolbox?.games) && toolbox.games.length > 0);
+}
+
 export function installedToolbox(extensionsWorkbenchService: IExtensionsWorkbenchService, toolbox: IToolboxIndexEntry): IExtension | undefined {
 	return extensionsWorkbenchService.local.find(extension => areSameExtensions(extension.identifier, { id: toolbox.id }));
 }
@@ -373,7 +381,9 @@ export class PollisToolboxesView extends ViewPane {
 				return this.extensionsWorkbenchService.install(vsix, { installGivenVersion: true });
 			});
 			this.promptRuntimeAction(toolbox, extension, update);
-			if (!update) {
+			if (!update && hasOnlyGames(extension)) {
+				this.notificationService.info(localize('pollisToolboxes.gamesInstalled', "The {0} has no panels: its cases are in Compose > Collaboration > Simulation Games > Host a Game....", toolbox.name));
+			} else if (!update) {
 				// The toolbox is now at the end of Extend: on this page the user can choose its panels, and where they go
 				this.commandService.executeCommand(CHOOSE_TOOLBOX_PANELS_COMMAND_ID, extension.identifier.id);
 			}

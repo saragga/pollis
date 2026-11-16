@@ -3,7 +3,7 @@
  *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { DeferredPromise, timeout } from '../../../../../base/common/async.js';
+import { DeferredPromise, disposableTimeout, timeout } from '../../../../../base/common/async.js';
 import { decodeBase64, VSBuffer } from '../../../../../base/common/buffer.js';
 import { Emitter, Event } from '../../../../../base/common/event.js';
 import { Disposable, DisposableStore, MutableDisposable } from '../../../../../base/common/lifecycle.js';
@@ -29,14 +29,18 @@ import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewW
 import { ChatPageMessage, ChatWorkbenchMessage, chatPageHtml, COLLABORATION_MEDIA, IChatEntry, IChatGame, IChatParticipant, IPeerConnectionStats, trysteroBundleUrl } from './collaborationChat.js';
 import { basename } from '../../../../../base/common/resources.js';
 import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
-import { COLLABORATION_APP_ID, envelope, Envelope, formatSessionCode, IByePayload, IChatPayload, base64Bytes, IAgentPayload, IDatasetSharedPayload, IEditorSharedPayload, IFileSharedPayload, IDecisionsPayload, IGamePayload, IGameResultsPayload, IGroupPayload, IHelloPayload, isAcceptableImage, ISettingsPayload, isDuckDbFile, isEnvelope, ISessionCode, MAX_DATASET_BYTES, MAX_FILE_BYTES, MAX_IMAGE_BYTES, MAX_PARTICIPANTS, MAX_RECEIVE_BYTES, MAX_SHARE_BYTES, newSessionCode, parseSessionCode, ParticipantRole, roomIdOf, seatRoomIdOf, SessionMode, CLASS_SEATS, SignallingStrategy } from './collaborationProtocol.js';
+import { COLLABORATION_APP_ID, envelope, Envelope, formatSessionCode, IByePayload, IChatPayload, base64Bytes, IAgentPayload, IDatasetSharedPayload, IEditorSharedPayload, IFileSharedPayload, IDecisionsPayload, IGamePayload, IGameRole, IGameResultsPayload, IGroupPayload, INegotiationPayload, IHelloPayload, ICancelOrderPayload, IMarketPayload, IOrderPayload, isAcceptableImage, ISettingsPayload, isDuckDbFile, isEnvelope, ISessionCode, MAX_DATASET_BYTES, MAX_FILE_BYTES, MAX_IMAGE_BYTES, MAX_PARTICIPANTS, MAX_RECEIVE_BYTES, MAX_SHARE_BYTES, newSessionCode, parseSessionCode, ParticipantRole, roomIdOf, seatRoomIdOf, SessionMode, CLASS_SEATS, SignallingStrategy } from './collaborationProtocol.js';
 import { ISamePageLink, SamePageGuest, SamePageHost } from './collaborationSamePage.js';
 import { datasetFileName, formatBytes, IReceivedDataset, IReceivedFile, SharedDatasets, sharedFileName, summarizeCsv } from './collaborationDatasets.js';
 import { ISharedSnapshot, shareableKind, SharedEditors } from './collaborationEditors.js';
 import { getVoiceLanguage, getVoiceWriteIn, setVoiceLanguage, setVoiceWriteIn } from '../composerVoice.js';
 import { IWirePacket, ReliableDelivery } from './collaborationTransport.js';
 import { IAgentLink, IAgentMaterial, SessionAgent, sessionAgentCells } from './collaborationAgent.js';
-import { builtInCases, checkedGame, checkedTables, checkedValues, GameRun, IGameCase, loadCase } from './collaborationGame.js';
+import { findPollisWorkspace, pollisWorkspaceFolderPath } from '../../../pollisWorkspace/browser/pollisWorkspace.contribution.js';
+import { writeDebrief } from './collaborationDebrief.js';
+import { checkedGame, checkedTables, checkedValues, GameRun, ICaseNews, ICaseRole, IGameCase, IRoundResults, loadCase, MAX_NEWS_TEXT, roundName, toolboxCases, withRounds } from './collaborationGame.js';
+import { checkedMarket } from './collaborationMarket.js';
+import { IToolboxPanelsService } from '../../common/toolboxPanels.js';
 import { MODEL_ROUTING_COMMAND_ID } from '../modelRouting.js';
 import { IOrchestrationCell } from '../orchestration.js';
 
@@ -127,6 +131,12 @@ export interface ICollaborationService {
 
 	/** The facilitator starts the game, splitting the players into teams, or plays the round being decided. */
 	nextRound(): Promise<void>;
+
+	/** The facilitator releases news in the round being decided: the case's, or an item of their own. */
+	releaseNews(): Promise<void>;
+
+	/** Writes and opens the debrief of the game hosted, or of a game folder chosen, and offers to share it with the players. */
+	openDebrief(): Promise<void>;
 
 	/** Shows the chat of the session. */
 	openChat(): void;
@@ -231,6 +241,12 @@ class Session extends Disposable {
 	/** In a game: on the facilitator's side, the game; on a player's, what the facilitator last sent. */
 	private gameRun: GameRun | undefined;
 	private gameView: IGamePayload | undefined;
+	/** On a player's side, the market of a Trading Floor game, as the facilitator last sent it. */
+	private marketView: IMarketPayload | undefined;
+	/** On the facilitator's side, the clock that closes a Trading Floor period. */
+	private readonly marketTimer = this._register(new MutableDisposable());
+	/** On a player's side, the news items shown in the chat already. */
+	private readonly seenNews = new Set<string>();
 	private readonly delivery: ReliableDelivery;
 	private readonly pendingSends = new Map<number, DeferredPromise<void>>();
 	private readonly pendingStats = new Map<number, DeferredPromise<readonly IPeerConnectionStats[]>>();
@@ -267,8 +283,8 @@ class Session extends Disposable {
 		private readonly onVoiceChoice: (choice: 'voiceLanguage' | 'voiceWriteIn', value: string) => void,
 		/** Called when the host's hello says that this is a Same Page session, with the host and the folder it shares. */
 		private readonly onSamePage: (hostId: string, folder: string) => void,
-		/** Called when the facilitator of a game presses Next Round in the chat page. */
-		private readonly onNextRound: () => void,
+		/** Called when the facilitator of a game presses Next Round, Release News... or Open the Debrief in the chat page. */
+		private readonly onGameAction: (action: 'nextRound' | 'releaseNews' | 'openDebrief') => void,
 	) {
 		super();
 		this.admitted = role === 'host';
@@ -607,6 +623,9 @@ class Session extends Disposable {
 		if (this.visitedGroup !== undefined && this.visitedGroup > count) {
 			this.visitedGroup = undefined;
 		}
+		if (this.gameRun?.round) {
+			this.gameRun.dealRoles(this.groups);
+		}
 		this.notice(starting
 			? (this.isGame
 				? localize('collaboration.teamsStarted', "The players are in {0} teams. A player's messages, and what they share, go to their team and to you; your own go to every team until you visit one (Visit a Group...).", count)
@@ -615,7 +634,7 @@ class Session extends Disposable {
 				? localize('collaboration.teamsChanged', "The teams have changed.")
 				: localize('collaboration.groupsChanged', "The breakout groups have changed.")));
 		for (let group = 1; group <= count; group++) {
-			const names = this.students().filter(student => student.group === group).map(student => student.name);
+			const names = this.students().filter(student => student.group === group).map(student => this.memberLabel(student.peerId));
 			this.notice(names.length
 				? localize('collaboration.groupList', "{0}: {1}.", this.groupLabel(group), names.join(', '))
 				: localize('collaboration.groupEmpty', "{0}: nobody yet.", this.groupLabel(group)));
@@ -669,6 +688,13 @@ class Session extends Disposable {
 		return this.isGame
 			? (this.gameRun?.teamName(group) ?? localize('collaboration.teamLabel', "Team {0}", group))
 			: localize('collaboration.groupLabel', "Group {0}", group);
+	}
+
+	/** A player's name, with their roles when the teams of the game have more than one. */
+	private memberLabel(peerId: string): string {
+		const name = this.participants.get(peerId)?.name ?? '';
+		const roles = this.gameRun?.hasRoles ? this.gameRun.rolesOf(peerId) : [];
+		return roles.length ? localize('collaboration.memberRoles', "{0} ({1})", name, roles.map(role => role.label).join(', ')) : name;
 	}
 
 	/** On the tutor's side, the others in a student's breakout group, to whom the student's messages and shares are passed on. */
@@ -807,8 +833,9 @@ class Session extends Disposable {
 			return;
 		}
 		this.postGame(true);
+		let opening;
 		try {
-			await run.start(count);
+			opening = await run.start(count);
 		} finally {
 			this.postGame();
 		}
@@ -816,7 +843,34 @@ class Session extends Disposable {
 			return;
 		}
 		this.startGroups(count, assignment);
-		this.notice(localize('collaboration.roundOpen', "{0} is open: each team submits its decisions, and Next Round plays it.", run.roundName(run.round)));
+		if (opening) {
+			this.sendResults(0, opening);
+		}
+		this.notice(this.roundOpenText(run));
+		this.watchMarket();
+	}
+
+	/** Shows a round's results to the facilitator, with what the model says to each team, and sends each player the public table and their team's own. */
+	private sendResults(round: number, results: IRoundResults): void {
+		const run = this.gameRun;
+		if (!run) {
+			return;
+		}
+		const own = run.teams.map(team => results.private.get(team.team)).filter(table => table !== undefined);
+		this.post({ command: 'show', entry: { kind: 'message', name: this.name, text: results.text ?? '', tables: [results.public, ...own].filter(table => table.rows.length), time: Date.now() } });
+		for (const [team, text] of results.teamText) {
+			this.notice(localize('collaboration.teamText', "To {0}: {1}", run.teamName(team), text));
+		}
+		for (const student of this.students()) {
+			const table = student.group ? results.private.get(student.group) : undefined;
+			const teamText = student.group ? results.teamText.get(student.group) : undefined;
+			const tables = [results.public, ...(table ? [table] : [])].filter(item => item.rows.length);
+			if (!tables.length && !results.text && !teamText) {
+				continue;
+			}
+			const payload: IGameResultsPayload = { round, tables, ...(results.text ? { text: results.text } : {}), ...(teamText ? { teamText } : {}) };
+			this.delivery.send('gameResults', envelope<Envelope & { type: 'gameResults' }>('gameResults', payload) as unknown as IJson, [student.peerId]);
+		}
 	}
 
 	/** The facilitator plays the round with every team's decisions, sends the results, and opens the next round. */
@@ -829,23 +883,136 @@ class Session extends Disposable {
 		this.postGame(true);
 		let results;
 		try {
-			results = await run.play();
+			results = await run.play(new Map(run.teams.map(team => [team.team, this.students().filter(student => student.group === team.team).map(student => this.memberLabel(student.peerId))])));
 		} finally {
 			this.postGame();
 		}
 		if (this.ended) {
 			return;
 		}
-		const own = run.teams.map(team => results.private.get(team.team)).filter(table => table !== undefined);
-		this.post({ command: 'show', entry: { kind: 'message', name: this.name, text: results.text ?? '', tables: [results.public, ...own], time: Date.now() } });
-		for (const student of this.students()) {
-			const table = student.group ? results.private.get(student.group) : undefined;
-			const payload: IGameResultsPayload = results.text ? { round, text: results.text, tables: table ? [results.public, table] : [results.public] } : { round, tables: table ? [results.public, table] : [results.public] };
-			this.delivery.send('gameResults', envelope<Envelope & { type: 'gameResults' }>('gameResults', payload) as unknown as IJson, [student.peerId]);
+		this.sendResults(round, results);
+		for (const [team, reason] of results.out) {
+			this.notice(localize('collaboration.teamOut', "{0} has left the game: {1}", run.teamName(team), reason));
 		}
 		this.notice(run.isOver
-			? localize('collaboration.gameOver', "{0} was the last: the game is over. Its rounds are in {1}.", run.roundName(round), run.folderPath)
-			: localize('collaboration.roundOpen', "{0} is open: each team submits its decisions, and Next Round plays it.", run.roundName(run.round)));
+			? localize('collaboration.gameOver', "{0} was the last: the game is over. Its rounds are in {1}; Open the Debrief, beside the chat, gathers them into tables for the class.", run.roundName(round), run.folderPath)
+			: this.roundOpenText(run));
+		this.sendGame(this.students().map(student => student.peerId));
+		this.postGame();
+		this.watchMarket();
+	}
+
+	/** What the facilitator is told when a round opens: in a Trading Floor case, that its period trades by the clock. */
+	private roundOpenText(run: GameRun): string {
+		return run.market
+			? localize('collaboration.periodOpen', "{0} is open: the teams trade for {1} minutes. When the market closes, Next Round announces the results and opens the next period.", run.roundName(run.round), String(run.market.spec.minutes))
+			: localize('collaboration.roundOpen', "{0} is open: each team submits its decisions, and Next Round plays it.", run.roundName(run.round));
+	}
+
+	/** In a Trading Floor case, sends the market to everyone, and closes it for them when its period's time is up. */
+	private watchMarket(): void {
+		const run = this.gameRun;
+		const market = run?.market;
+		this.marketTimer.clear();
+		if (!run || !market) {
+			return;
+		}
+		this.sendMarket();
+		if (market.isOpen()) {
+			const round = run.round;
+			this.marketTimer.value = disposableTimeout(() => {
+				this.sendMarket();
+				this.notice(localize('collaboration.marketClosed', "The market has closed for {0}: Next Round announces the results and opens the next period.", run.roundName(round)));
+			}, Math.max(0, market.closingTime - Date.now()) + 250);
+		}
+	}
+
+	/** On the facilitator's side, the market sent to these players, or to all, each with their team's desk, and shown beside the facilitator's chat with every desk; `refused` tells one player why their order was refused. */
+	private sendMarket(peers?: readonly string[], refused?: { readonly peerId: string; readonly reason: string }): void {
+		const run = this.gameRun;
+		const market = run?.market;
+		if (!run || !market || this.role !== 'host' || this.ended) {
+			return;
+		}
+		for (const student of this.students()) {
+			if (peers && !peers.includes(student.peerId)) {
+				continue;
+			}
+			const view = market.view(student.group && !run.outReason(student.group) ? student.group : undefined);
+			const payload: IMarketPayload = refused?.peerId === student.peerId ? { ...view, refused: refused.reason } : view;
+			this.delivery.send('market', envelope<Envelope & { type: 'market' }>('market', payload) as unknown as IJson, [student.peerId]);
+		}
+		const positions = market.positions();
+		this.post({ command: 'market', market: { ...market.view(), desks: run.teams.map(team => ({ name: team.name, cash: positions.get(team.team)?.cash ?? 0, shares: positions.get(team.team)?.shares ?? 0, orders: market.view(team.team).desk?.orders.length ?? 0 })) } });
+	}
+
+	/** On the facilitator's side, a player's order for their team's desk: matched on the book, or refused, saying why to that player. */
+	private onOrder(peerId: string, payload: IOrderPayload): void {
+		const run = this.gameRun;
+		const participant = this.participants.get(peerId);
+		const team = this.groupOf(peerId);
+		if (!run?.market || !participant || !team || run.outReason(team) || payload.round !== run.round || (payload.side !== 'buy' && payload.side !== 'sell') || typeof payload.price !== 'number' || typeof payload.quantity !== 'number') {
+			return;
+		}
+		const reason = run.market.place(team, participant.name, payload.side, payload.price, payload.quantity);
+		this.sendMarket(reason ? [peerId] : undefined, reason ? { peerId, reason } : undefined);
+	}
+
+	/** On the facilitator's side, a player cancels one of their team's orders. */
+	private onCancelOrder(peerId: string, payload: ICancelOrderPayload): void {
+		const run = this.gameRun;
+		const team = this.groupOf(peerId);
+		if (run?.market && team && payload.round === run.round && typeof payload.id === 'string' && run.market.cancel(team, payload.id)) {
+			this.sendMarket();
+		}
+	}
+
+	/** On a player's side, the market as the facilitator sent it: shown beside the chat, with why an order was refused. */
+	private onMarket(payload: IMarketPayload): void {
+		const view = checkedMarket(payload);
+		if (!view) {
+			return;
+		}
+		this.marketView = view;
+		if (view.refused) {
+			this.notice(localize('collaboration.orderRefused', "Your order was refused: {0}", view.refused));
+		}
+		this.post({ command: 'market', market: view });
+	}
+
+	/** A player places an order for their team's desk, sent to the facilitator, whose copy keeps the book. */
+	private sendOrder(side: unknown, price: unknown, quantity: unknown): void {
+		const view = this.gameView;
+		if (this.ended || !view?.team || !view.market || !this.hostId || (side !== 'buy' && side !== 'sell') || typeof price !== 'number' || typeof quantity !== 'number' || !Number.isFinite(price) || !Number.isFinite(quantity)) {
+			return;
+		}
+		const payload: IOrderPayload = { round: this.marketView?.round ?? view.round, side, price, quantity };
+		this.delivery.send('order', envelope<Envelope & { type: 'order' }>('order', payload) as unknown as IJson, [this.hostId]);
+	}
+
+	/** A player cancels one of their team's orders. */
+	private sendCancelOrder(id: unknown): void {
+		const view = this.gameView;
+		if (this.ended || !view?.team || !view.market || !this.hostId || typeof id !== 'string') {
+			return;
+		}
+		const payload: ICancelOrderPayload = { round: this.marketView?.round ?? view.round, id };
+		this.delivery.send('cancelOrder', envelope<Envelope & { type: 'cancelOrder' }>('cancelOrder', payload) as unknown as IJson, [this.hostId]);
+	}
+
+	/** The facilitator releases a news item in the round being decided: shown in their chat with the changes it makes, and sent to the players who read it. */
+	async releaseNews(item: Omit<ICaseNews, 'round'>, scripted?: number): Promise<void> {
+		const run = this.gameRun;
+		if (!run || this.role !== 'host' || this.ended) {
+			return;
+		}
+		const changes = item.changes.map(change => localize('collaboration.newsChange', "{0}: {1} to {2}", change.path, String(run.parameter(change.path) ?? ''), String(change.value)));
+		await run.release(item, scripted);
+		if (this.ended) {
+			return;
+		}
+		const released = run.news().at(-1);
+		this.post({ command: 'show', entry: { kind: 'message', name: this.name, text: '', news: { title: item.title, text: item.text, for: released?.for, changes }, time: Date.now() } });
 		this.sendGame(this.students().map(student => student.peerId));
 		this.postGame();
 	}
@@ -862,18 +1029,37 @@ class Session extends Disposable {
 			}
 			const team = run.round ? this.groupOf(peerId) : 0;
 			const submittedBy = team ? run.submittedBy(team) : undefined;
+			const roles = run.rolesOf(peerId);
 			const payload: IGamePayload = {
 				title: run.gameCase.title,
 				description: run.gameCase.description,
 				roundLabel: run.gameCase.roundLabel,
 				rounds: run.gameCase.rounds,
+				...(run.gameCase.roundNames.length ? { roundNames: run.gameCase.roundNames } : {}),
 				round: run.round,
-				decisions: run.gameCase.decisions,
-				...(team ? { team, teamName: run.teamName(team), values: run.values(team) } : {}),
+				decisions: team ? run.decisionsOf(team) : run.gameCase.decisions,
+				structure: run.structure.label,
+				roles: (team ? run.teamRoles(team) : run.structure.roles).map(publicRole),
+				...((team ? run.briefingFor(team) : run.gameCase.briefing) ? { briefing: team ? run.briefingFor(team) : run.gameCase.briefing } : {}),
+				...(team ? {
+					team,
+					teamName: run.teamName(team),
+					values: run.values(team),
+					yourRoles: roles.map(role => role.key),
+					roleBriefings: Object.fromEntries(roles.flatMap(role => role.briefing ? [[role.key, role.briefing]] : [])),
+					members: this.groupMates(peerId).map(mate => this.memberLabel(mate)),
+					waitingFor: run.waitingFor(team),
+				} : {}),
 				...(submittedBy ? { submittedBy } : {}),
+				news: run.news(peerId),
+				negotiations: run.gameCase.negotiations && !(team && run.outReason(team)),
+				...(team ? { otherTeams: run.teams.filter(other => other.team !== team && !run.outReason(other.team)).map(other => ({ team: other.team, name: other.name })) } : {}),
+				...(team && run.outReason(team) ? { out: run.outReason(team) } : {}),
+				...(run.gameCase.market ? { market: true } : {}),
 			};
 			this.delivery.send('game', envelope<Envelope & { type: 'game' }>('game', payload) as unknown as IJson, [peerId]);
 		}
+		this.sendMarket(peers);
 	}
 
 	/** On the facilitator's side, a player's decisions for their team; the last submitted before the round is played counts. */
@@ -884,8 +1070,10 @@ class Session extends Disposable {
 		if (!run || !participant || !team || run.isRunning || run.round < 1 || run.isOver || payload.round !== run.round) {
 			return;
 		}
-		run.submit(team, payload.values, participant.name);
-		this.notice(localize('collaboration.decisionsIn', "{0} submitted the decisions of {1} for {2}.", participant.name, run.teamName(team), run.roundName(run.round)));
+		if (!run.submit(team, payload.values, participant.name, peerId)) {
+			return;
+		}
+		this.notice(localize('collaboration.decisionsIn', "{0} submitted the decisions of {1} for {2}.", this.memberLabel(peerId), run.teamName(team), run.roundName(run.round)));
 		this.sendGame([peerId, ...this.groupMates(peerId)]);
 		this.postGame();
 	}
@@ -898,7 +1086,21 @@ class Session extends Disposable {
 		}
 		const before = this.gameView;
 		this.gameView = view;
-		const round = localize('collaboration.roundName', "{0} {1}", view.roundLabel, view.round);
+		const round = roundName({ roundLabel: view.roundLabel, roundNames: view.roundNames ?? [] }, view.round);
+		const roles = (view.roles ?? []).filter(role => view.yourRoles?.includes(role.key));
+		if (roles.length && (view.roles?.length ?? 0) > 1 && (roles.map(role => role.key).join() !== (before?.yourRoles ?? []).join() || view.team !== before?.team)) {
+			const decides = new Set(roles.flatMap(role => role.decides ?? view.decisions.map(decision => decision.key)));
+			const labels = view.decisions.filter(decision => decides.has(decision.key)).map(decision => decision.label);
+			this.notice(labels.length
+				? localize('collaboration.yourRoles', "Your role in {0}: {1}. Its briefing is beside the chat, and you set {2}.", view.teamName ?? '', roles.map(role => role.label).join(', '), labels.join(', '))
+				: localize('collaboration.yourRolesAdvise', "Your role in {0}: {1}. Its briefing is beside the chat; you set none of the decisions, so advise those who do.", view.teamName ?? '', roles.map(role => role.label).join(', ')));
+		}
+		if (view.out && view.out !== before?.out) {
+			this.notice(localize('collaboration.yourTeamOut', "Your team has left the game: {0} It decides no more, and its results stay in the standings.", view.out));
+		}
+		if (view.team && view.team !== before?.team && view.negotiations && view.otherTeams?.length && view.round <= view.rounds) {
+			this.notice(localize('collaboration.negotiationsOpen', "Your team can write to the other teams in Negotiations, beside the chat. {0}, who runs the game, reads those messages too.", this.hostName));
+		}
 		if (view.round !== before?.round) {
 			if (view.round > view.rounds) {
 				this.notice(localize('collaboration.gameOverPlayer', "The game is over."));
@@ -908,15 +1110,73 @@ class Session extends Disposable {
 		} else if (view.submittedBy && (view.submittedBy !== before.submittedBy || JSON.stringify(view.values) !== JSON.stringify(before.values))) {
 			this.notice(localize('collaboration.teamSubmitted', "{0} submitted your team's decisions for {1}.", view.submittedBy, round));
 		}
+		for (const item of view.news ?? []) {
+			const key = JSON.stringify([item.round, item.title, item.text]);
+			if (!this.seenNews.has(key)) {
+				this.seenNews.add(key);
+				this.post({ command: 'show', entry: { kind: 'message', name: this.hostName, text: '', news: { title: item.title, text: item.text, for: item.for }, time: Date.now() } });
+			}
+		}
 		this.postGame();
+	}
+
+	/** A player writes to another team: shown in their chat, and sent to the facilitator, who passes it on. */
+	private sendNegotiation(to: unknown, text: unknown): void {
+		const view = this.gameView;
+		const other = view?.otherTeams?.find(item => item.team === to);
+		if (this.ended || !view?.team || !view.negotiations || !other || view.round < 1 || view.round > view.rounds || !this.hostId || typeof text !== 'string' || !text.trim()) {
+			return;
+		}
+		const message = text.trim().slice(0, MAX_NEGOTIATION_TEXT);
+		this.post({ command: 'show', entry: { kind: 'message', name: localize('collaboration.negotiationTo', "{0} to {1}", this.name, other.name), mine: true, text: message, time: Date.now() } });
+		const payload: INegotiationPayload = { id: generateUuid(), text: message, to: other.team };
+		this.delivery.send('negotiation', envelope<Envelope & { type: 'negotiation' }>('negotiation', payload) as unknown as IJson, [this.hostId]);
+	}
+
+	/** On the facilitator's side, a player's message to another team: shown, kept for the debrief, and passed on to both teams. */
+	private onNegotiation(peerId: string, payload: INegotiationPayload): void {
+		const run = this.gameRun;
+		const participant = this.participants.get(peerId);
+		const team = this.groupOf(peerId);
+		if (!run || !participant || !team || !run.gameCase.negotiations || run.round < 1 || run.isOver || typeof payload.text !== 'string' || !payload.text.trim()
+			|| payload.to === team || !run.teams.some(other => other.team === payload.to) || run.outReason(team) || run.outReason(payload.to)) {
+			return;
+		}
+		const text = payload.text.trim().slice(0, MAX_NEGOTIATION_TEXT);
+		this.post({ command: 'show', entry: { kind: 'message', name: localize('collaboration.negotiationBetween', "{0} ({1}) to {2}", participant.name, run.teamName(team), run.teamName(payload.to)), text, time: Date.now() } });
+		run.recordNegotiation(participant.name, team, payload.to, text).catch(error => this.notice(localize('collaboration.negotiationNotKept', "A message between teams could not be kept in the game's folder: {0}", String(error?.message ?? error))));
+		const readers = this.students().filter(student => (student.group === team || student.group === payload.to) && student.peerId !== peerId).map(student => student.peerId);
+		if (readers.length) {
+			const passed: INegotiationPayload = { id: generateUuid(), text, to: payload.to, from: participant.name, fromTeam: team };
+			this.delivery.send('negotiation', envelope<Envelope & { type: 'negotiation' }>('negotiation', passed) as unknown as IJson, readers);
+		}
+	}
+
+	/** On a player's side, a message between their team and another, passed on by the facilitator. */
+	private onNegotiationPassed(payload: INegotiationPayload): void {
+		const view = this.gameView;
+		const from = typeof payload.from === 'string' && payload.from.trim() ? payload.from.trim().slice(0, 40) : undefined;
+		if (!view?.team || !from || typeof payload.text !== 'string' || !payload.text.trim()) {
+			return;
+		}
+		const teamName = (team: unknown) => view.otherTeams?.find(item => item.team === team)?.name;
+		const name = payload.fromTeam === view.team
+			? (teamName(payload.to) ? localize('collaboration.negotiationTo', "{0} to {1}", from, teamName(payload.to)!) : undefined)
+			: (payload.to === view.team && teamName(payload.fromTeam) ? localize('collaboration.negotiationToUs', "{0} ({1}) to your team", from, teamName(payload.fromTeam)!) : undefined);
+		if (name) {
+			this.post({ command: 'show', entry: { kind: 'message', name, text: payload.text.trim().slice(0, MAX_NEGOTIATION_TEXT), time: Date.now() } });
+		}
 	}
 
 	/** On a player's side, the results of a round: the table everyone sees and the team's own. */
 	private onGameResults(payload: IGameResultsPayload): void {
 		const tables = checkedTables(payload.tables);
-		if (tables.length) {
-			const text = typeof payload.text === 'string' ? payload.text.slice(0, 2000) : '';
+		const text = typeof payload.text === 'string' ? payload.text.slice(0, 2000) : '';
+		if (tables.length || text) {
 			this.post({ command: 'show', entry: { kind: 'message', name: this.hostName, text, tables, time: Date.now() } });
+		}
+		if (typeof payload.teamText === 'string' && payload.teamText.trim()) {
+			this.notice(localize('collaboration.teamTextPlayer', "To your team: {0}", payload.teamText.trim().slice(0, 2000)));
 		}
 	}
 
@@ -930,6 +1190,11 @@ class Session extends Disposable {
 		this.delivery.send('decisions', envelope<Envelope & { type: 'decisions' }>('decisions', payload) as unknown as IJson, [this.hostId]);
 	}
 
+	/** The briefings the facilitator reads: the case's, then each side's. */
+	private facilitatorBriefing(run: GameRun): string | undefined {
+		return [run.gameCase.briefing, ...run.gameCase.sides.map(side => side.briefing)].filter(Boolean).join('\n\n') || undefined;
+	}
+
 	/** Shows the game beside the chat: to the facilitator, the teams and who submitted; to a player, their team's decisions. */
 	private postGame(running = false): void {
 		const run = this.gameRun;
@@ -941,14 +1206,21 @@ class Session extends Disposable {
 				description: run.gameCase.description,
 				roundLabel: run.gameCase.roundLabel,
 				rounds: run.gameCase.rounds,
+				...(run.gameCase.roundNames.length ? { roundNames: run.gameCase.roundNames } : {}),
 				round: run.round,
 				facilitator: true,
 				running: running || run.isRunning,
 				waiting: students.filter(student => !student.group).map(student => student.name),
-				teams: run.teams.map(team => ({ name: team.name, members: students.filter(student => student.group === team.team).map(student => student.name), submittedBy: run.submittedBy(team.team) })),
+				teams: run.teams.map(team => ({ name: team.name, members: students.filter(student => student.group === team.team).map(student => this.memberLabel(student.peerId)), submittedBy: run.submittedBy(team.team), waitingFor: run.waitingFor(team.team), out: run.outReason(team.team) })),
+				structure: run.structure.label,
+				roles: run.structure.roles.map(publicRole),
+				...(this.facilitatorBriefing(run) ? { briefing: this.facilitatorBriefing(run) } : {}),
+				roleBriefings: Object.fromEntries(run.structure.roles.flatMap(role => role.briefing ? [[role.key, role.briefing]] : [])),
+				newsToRelease: run.pendingNews().length,
+				...(run.gameCase.market ? { market: true } : {}),
 			};
 		} else if (this.gameView) {
-			game = { ...this.gameView, facilitator: false };
+			game = { ...this.gameView, facilitator: false, facilitatorName: this.hostName };
 		}
 		if (game) {
 			this.post({ command: 'game', game });
@@ -1075,9 +1347,20 @@ class Session extends Disposable {
 			case 'submitDecisions':
 				this.submitDecisions(message.values);
 				break;
+			case 'negotiate':
+				this.sendNegotiation(message.to, message.text);
+				break;
+			case 'placeOrder':
+				this.sendOrder(message.side, message.price, message.quantity);
+				break;
+			case 'cancelOrder':
+				this.sendCancelOrder(message.id);
+				break;
 			case 'nextRound':
+			case 'releaseNews':
+			case 'openDebrief':
 				if (this.role === 'host' && this.gameRun) {
-					this.onNextRound();
+					this.onGameAction(message.command);
 				}
 				break;
 			case 'openFile':
@@ -1403,6 +1686,28 @@ class Session extends Disposable {
 					this.onDecisions(peerId, data.payload);
 				}
 				break;
+			case 'order':
+				if (this.isGame && this.role === 'host') {
+					this.onOrder(peerId, data.payload);
+				}
+				break;
+			case 'cancelOrder':
+				if (this.isGame && this.role === 'host') {
+					this.onCancelOrder(peerId, data.payload);
+				}
+				break;
+			case 'market':
+				if (this.isGame && this.role !== 'host' && peerId === this.hostId) {
+					this.onMarket(data.payload);
+				}
+				break;
+			case 'negotiation':
+				if (this.isGame && this.role === 'host') {
+					this.onNegotiation(peerId, data.payload);
+				} else if (this.isGame && peerId === this.hostId) {
+					this.onNegotiationPassed(data.payload);
+				}
+				break;
 			case 'settings':
 				if (this.role !== 'host' && peerId === this.hostId) {
 					this.applySettings(data.payload, this.settingsReceived);
@@ -1631,6 +1936,12 @@ class Session extends Disposable {
 		this.participants.delete(peerId);
 		this.groups.delete(peerId);
 		this.sendGroups(mates);
+		if (this.gameRun?.round && mates.length) {
+			// The roles of a player who left go to the others in their team
+			this.gameRun.dealRoles(this.groups);
+			this.sendGame(mates);
+			this.postGame();
+		}
 		this.dropAgentsOf(peerId);
 		this.delivery.removePeer(peerId);
 		this.samePage.value?.peerLeft(peerId);
@@ -1663,6 +1974,14 @@ class Session extends Disposable {
 		const chat: IChatPayload = image ? { id: generateUuid(), text, image } : { id: generateUuid(), text };
 		this.delivery.send('chat', envelope<Envelope & { type: 'chat' }>('chat', chat) as unknown as IJson, peers);
 	}
+}
+
+/** The longest message between teams, in characters. */
+const MAX_NEGOTIATION_TEXT = 2000;
+
+/** A role as the players see it: without its briefing, which only those who hold it get. */
+function publicRole(role: ICaseRole): IGameRole {
+	return role.decides ? { key: role.key, label: role.label, decides: role.decides } : { key: role.key, label: role.label };
 }
 
 /** Places each student in the breakout group with the fewest students, ties broken at random, so a fresh split is even. */
@@ -1726,6 +2045,7 @@ export class CollaborationService extends Disposable implements ICollaborationSe
 		@IInstantiationService private readonly instantiationService: IInstantiationService,
 		@ITerminalInstanceService private readonly terminalInstanceService: ITerminalInstanceService,
 		@IFileService private readonly fileService: IFileService,
+		@IToolboxPanelsService private readonly toolboxPanelsService: IToolboxPanelsService,
 		@ILifecycleService lifecycleService: ILifecycleService,
 	) {
 		super();
@@ -1939,16 +2259,22 @@ export class CollaborationService extends Disposable implements ICollaborationSe
 		}
 		const title = localize('collaboration.hostGameTitle', "Host a Game");
 		const cases: (IQuickPickItem & { readonly gameCase?: IGameCase })[] = [];
-		for (const folder of await builtInCases(this.fileService)) {
+		for (const { folder, toolbox } of toolboxCases(this.toolboxPanelsService)) {
 			try {
 				const gameCase = await loadCase(this.fileService, folder);
-				cases.push({ gameCase, label: gameCase.title, detail: gameCase.description });
-			} catch {
-				// A case of Pollis's own that does not load is left out
+				cases.push({ gameCase, label: gameCase.title, description: toolbox, detail: gameCase.description });
+			} catch (error) {
+				this.notificationService.warn(localize('collaboration.toolboxCaseFailed', "A case of the {0} could not be read: {1}", toolbox, String(error?.message ?? error)));
 			}
 		}
 		const choose: IQuickPickItem & { readonly gameCase?: IGameCase } = { label: localize('collaboration.chooseCase', "Choose a Case Folder..."), description: localize('collaboration.chooseCaseDetail', "a folder with case.toml and model.jl") };
-		const picked = await this.quickInputService.pick([...cases, choose], { title, placeHolder: localize('collaboration.casePlaceholder', "The case the teams play"), matchOnDetail: true });
+		const picked = await this.quickInputService.pick([...cases, choose], {
+			title,
+			placeHolder: cases.length
+				? localize('collaboration.casePlaceholder', "The case the teams play")
+				: localize('collaboration.noCases', "No toolbox with a case is installed: install one, such as Grow a Chocolate Chain, from the Toolboxes section of the Extensions pane, or choose a case folder"),
+			matchOnDetail: true,
+		});
 		if (!picked) {
 			return;
 		}
@@ -1965,13 +2291,31 @@ export class CollaborationService extends Disposable implements ICollaborationSe
 				return;
 			}
 		}
+		let structure = gameCase.structures[0];
+		if (gameCase.structures.length > 1) {
+			const items = gameCase.structures.map(item => ({ structure: item, label: item.label, detail: item.description }));
+			const chosen = await this.quickInputService.pick(items, { title, placeHolder: localize('collaboration.structurePlaceholder', "How the teams of {0} are organised", gameCase.title), matchOnDetail: true });
+			if (!chosen) {
+				return;
+			}
+			structure = chosen.structure;
+		}
+		if (gameCase.roundChoices.length > 1) {
+			const full = gameCase;
+			const items = full.roundChoices.map(rounds => ({ rounds, label: localize('collaboration.roundCount', "{0} Rounds", rounds), description: rounds === full.rounds ? localize('collaboration.roundCountFull', "the whole case") : undefined, detail: full.roundNames.slice(0, rounds).filter(Boolean).join(', ') || undefined }));
+			const chosen = await this.quickInputService.pick(items.reverse(), { title, placeHolder: localize('collaboration.roundCountPlaceholder', "How many rounds {0} lasts", full.title) });
+			if (!chosen) {
+				return;
+			}
+			gameCase = withRounds(full, chosen.rounds);
+		}
 		const name = await this.askName();
 		if (!name) {
 			return;
 		}
 		const strategy = this.configurationService.getValue<SignallingStrategy>(SIGNALLING_SETTING) === 'mqtt' ? 'mqtt' : 'nostr';
 		const session = this.begin(newSessionCode(strategy, 'game'), 'host', name, 'class');
-		session.hostGame(this.instantiationService.createInstance(GameRun, gameCase));
+		session.hostGame(this.instantiationService.createInstance(GameRun, gameCase, structure));
 		await this.clipboardService.writeText(session.invitation);
 	}
 
@@ -2029,11 +2373,24 @@ export class CollaborationService extends Disposable implements ICollaborationSe
 				}
 				return;
 			}
-			const missing = run.teams.filter(team => !run.submittedBy(team.team));
+			if (run.market?.isOpen()) {
+				const { confirmed } = await this.dialogService.confirm({
+					message: localize('collaboration.closeMarketEarly', "Close the market for {0} now?", run.roundName(run.round)),
+					detail: localize('collaboration.closeMarketEarlyDetail', "It has {0} seconds of trading left. Its orders are cancelled, and the results are announced.", String(Math.round((run.market.closingTime - Date.now()) / 1000))),
+					primaryButton: localize({ key: 'collaboration.closeMarketButton', comment: ['&& denotes a mnemonic'] }, "&&Close the Market"),
+				});
+				if (!confirmed || !session.isLive) {
+					return;
+				}
+			}
+			const missing = run.teams.flatMap(team => {
+				const waiting = run.waitingFor(team.team);
+				return waiting.length ? [run.hasRoles ? localize('collaboration.teamRoles', "{0} ({1})", team.name, waiting.join(', ')) : team.name] : [];
+			});
 			if (missing.length) {
 				const { confirmed } = await this.dialogService.confirm({
-					message: localize('collaboration.playAnyway', "Play {0} without the decisions of {1}?", run.roundName(run.round), missing.map(team => team.name).join(', ')),
-					detail: localize('collaboration.playAnywayDetail', "A team that has not submitted its decisions plays those of its last round, or, in the first, those the case starts with."),
+					message: localize('collaboration.playAnyway', "Play {0} without the decisions of {1}?", run.roundName(run.round), missing.join(', ')),
+					detail: localize('collaboration.playAnywayDetail', "Decisions not submitted stay as they were in the last round, or, in the first, as the case starts them."),
 					primaryButton: localize({ key: 'collaboration.playButton', comment: ['&& denotes a mnemonic'] }, "&&Play the Round"),
 				});
 				if (!confirmed || !session.isLive) {
@@ -2044,6 +2401,181 @@ export class CollaborationService extends Disposable implements ICollaborationSe
 		} catch (error) {
 			this.notificationService.error(String(error?.message ?? error));
 		}
+	}
+
+	async releaseNews(): Promise<void> {
+		const session = this.session.value;
+		const run = session?.isLive && session.role === 'host' ? session.hostedGame : undefined;
+		if (!session || !run) {
+			this.notificationService.info(localize('collaboration.newsForFacilitator', "Release News... is for the facilitator of a game: host one with Compose > Collaboration > Simulation Games > Host a Game...."));
+			return;
+		}
+		if (run.round < 1 || run.isOver || run.isRunning) {
+			this.notificationService.info(run.round < 1
+				? localize('collaboration.newsBeforeStart', "News is released while a round is being decided: start the game with Next Round first.")
+				: run.isOver
+					? localize('collaboration.newsAfterEnd', "The game is over: no more news can be released.")
+					: localize('collaboration.newsWhilePlaying', "A round is being played: release the news once its results are in."));
+			return;
+		}
+		const title = localize('collaboration.releaseNewsTitle', "Release News");
+		const audience = (roles: readonly string[] | undefined) => {
+			const labels = run.structure.roles.filter(role => roles?.includes(role.key)).map(role => role.label);
+			return labels.length ? localize('collaboration.newsFor', "for {0}", labels.join(', ')) : localize('collaboration.newsForEveryone', "for everyone");
+		};
+		const items: (IQuickPickItem & { readonly index?: number })[] = run.pendingNews().map(({ index, item }) => ({ index, label: item.title, description: audience(item.roles), detail: item.text }));
+		const write: IQuickPickItem & { readonly index?: number } = { label: localize('collaboration.writeNews', "Write a News Item...") };
+		const picked = await this.quickInputService.pick([...items, write], {
+			title,
+			placeHolder: items.length
+				? localize('collaboration.newsPlaceholder', "The case's news for {0}, or an item of your own", run.roundName(run.round))
+				: localize('collaboration.noCaseNews', "The case has no more news for {0}: write an item of your own", run.roundName(run.round)),
+			matchOnDetail: true,
+		});
+		if (!picked || !session.isLive) {
+			return;
+		}
+		try {
+			const index = picked.index;
+			if (index !== undefined) {
+				await session.releaseNews(run.gameCase.news[index], index);
+			} else {
+				const item = await this.writeNews(run, title);
+				if (item && session.isLive) {
+					await session.releaseNews(item);
+				}
+			}
+		} catch (error) {
+			this.notificationService.error(String(error?.message ?? error));
+		}
+	}
+
+	async openDebrief(): Promise<void> {
+		const session = this.session.value;
+		const run = session?.isLive && session.role === 'host' ? session.hostedGame : undefined;
+		let folder = run?.folderUri;
+		if (run && run.round < 2) {
+			this.notificationService.info(localize('collaboration.debriefTooEarly', "No round of the game has been played yet: the debrief has nothing to show."));
+			return;
+		}
+		if (!folder) {
+			// Not running a game: the debrief of a game folder of the Pollis Workspace, or of anywhere else
+			const workspace = await findPollisWorkspace(this.workspaceContextService, this.fileService);
+			const games = workspace ? await pollisWorkspaceFolderPath(this.fileService, workspace, 'games') : undefined;
+			folder = (await this.fileDialogService.showOpenDialog({
+				title: localize('collaboration.chooseGame', "Open the Debrief of a Game"),
+				openLabel: localize({ key: 'collaboration.chooseGameButton', comment: ['&& denotes a mnemonic'] }, "&&Open the Debrief"),
+				canSelectFolders: true,
+				canSelectFiles: false,
+				canSelectMany: false,
+				defaultUri: games && await this.fileService.exists(games) ? games : undefined,
+			}))?.[0];
+			if (!folder) {
+				return;
+			}
+		}
+		try {
+			const debrief = await writeDebrief(this.fileService, folder, toolboxCases(this.toolboxPanelsService).map(item => item.folder));
+			await this.commandService.executeCommand('markdown.showPreview', debrief.page);
+			if (!run || !session?.isLive || !session.students().length) {
+				return;
+			}
+			const { confirmed } = await this.dialogService.confirm({
+				message: localize('collaboration.shareDebrief', "Share the debrief with the players?"),
+				detail: run.isOver
+					? localize('collaboration.shareDebriefDetail', "They get the debrief, its {0} tables and the case's model, and see every team's accounts and every message between teams.", debrief.tables.length)
+					: localize('collaboration.shareDebriefEarly', "The game is not over: they would get the debrief, its {0} tables and the case's model, and see every team's accounts and every message between teams, before the game ends.", debrief.tables.length),
+				primaryButton: localize({ key: 'collaboration.shareDebriefButton', comment: ['&& denotes a mnemonic'] }, "&&Share the Debrief"),
+			});
+			if (!confirmed || !session.isLive) {
+				return;
+			}
+			for (const file of debrief.files) {
+				session.shareFile(file.fileName, file.content, false);
+			}
+			for (const table of debrief.tables) {
+				session.shareDataset(table.fileName, table.content, table.rows, table.columns);
+			}
+		} catch (error) {
+			this.notificationService.error(String(error?.message ?? error));
+		}
+	}
+
+	/** The facilitator writes a news item: its title and text, the parameters of the model it changes, and, when the teams have roles, who reads it. */
+	private async writeNews(run: GameRun, title: string): Promise<Omit<ICaseNews, 'round'> | undefined> {
+		const headline = (await this.quickInputService.input({
+			title,
+			prompt: localize('collaboration.newsHeadline', "The title of the news item"),
+			ignoreFocusLost: true,
+			validateInput: async value => value.trim() ? undefined : localize('collaboration.newsHeadlineEmpty', "Give the news item a title."),
+		}))?.trim();
+		if (!headline) {
+			return undefined;
+		}
+		const text = (await this.quickInputService.input({
+			title,
+			prompt: localize('collaboration.newsText', "What the news says, as the players will read it"),
+			ignoreFocusLost: true,
+			validateInput: async value => !value.trim()
+				? localize('collaboration.newsTextEmpty', "Write what the news says.")
+				: value.length > MAX_NEWS_TEXT ? localize('collaboration.newsTextLong', "At most {0} characters.", MAX_NEWS_TEXT) : undefined,
+		}))?.trim();
+		if (!text) {
+			return undefined;
+		}
+		// The changes to the model's parameters, from the round being decided on
+		const changes = new Map<string, number>();
+		while (true) {
+			const items: (IQuickPickItem & { readonly action: 'release' | 'change' | 'remove'; readonly path?: string })[] = [
+				{ action: 'release', label: changes.size ? localize('collaboration.releaseWithChanges', "Release It, with These Changes") : localize('collaboration.releaseIt', "Release It") },
+				{ action: 'change', label: localize('collaboration.changeParameter', "Change a Parameter of the Model..."), description: localize('collaboration.changeParameterDetail', "from the round being decided on; the players are not told") },
+				...[...changes].map(([path, value]) => ({ action: 'remove' as const, path, label: localize('collaboration.parameterValue', "{0} = {1}", path, String(value)), description: localize('collaboration.removeChange', "pick to remove this change") })),
+			];
+			const choice = await this.quickInputService.pick(items, { title, placeHolder: localize('collaboration.newsChanges', "{0}: release it, or change a parameter of the model with it", headline) });
+			if (!choice) {
+				return undefined;
+			}
+			if (choice.action === 'release') {
+				break;
+			}
+			if (choice.action === 'remove') {
+				changes.delete(choice.path!);
+				continue;
+			}
+			const parameters = [...run.gameCase.parameters.keys()].map(path => ({ path, label: path, description: String(changes.get(path) ?? run.parameter(path) ?? '') }));
+			if (!parameters.length) {
+				this.notificationService.info(localize('collaboration.noParameters', "The model of {0} has no parameters that are numbers.", run.gameCase.title));
+				continue;
+			}
+			const parameter = await this.quickInputService.pick(parameters, { title, placeHolder: localize('collaboration.pickParameter', "The parameter to change, with its value now"), matchOnDescription: true });
+			if (!parameter) {
+				continue;
+			}
+			const value = await this.quickInputService.input({
+				title,
+				prompt: localize('collaboration.parameterPrompt', "The new value of {0}, now {1}", parameter.path, parameter.description),
+				value: parameter.description,
+				ignoreFocusLost: true,
+				validateInput: async input => input.trim() && Number.isFinite(Number(input.trim())) ? undefined : localize('collaboration.parameterInvalid', "Give a number."),
+			});
+			if (value !== undefined && value.trim() && Number.isFinite(Number(value.trim()))) {
+				changes.set(parameter.path, Number(value.trim()));
+			}
+		}
+		let roles: string[] | undefined;
+		if (run.hasRoles) {
+			const items = run.structure.roles.map(role => ({ key: role.key, label: role.label, description: run.gameCase.sides.filter(side => role.sides?.includes(side.key)).map(side => side.label).join(', ') || undefined, picked: true }));
+			const chosen = await this.quickInputService.pick(items, { title, canPickMany: true, placeHolder: localize('collaboration.newsReaders', "Who reads it: the roles ticked, in every team") });
+			if (!chosen) {
+				return undefined;
+			}
+			if (!chosen.length) {
+				this.notificationService.info(localize('collaboration.newsNoReaders', "No role was ticked, so the news was not released."));
+				return undefined;
+			}
+			roles = chosen.length < items.length ? chosen.map(item => item.key) : undefined;
+		}
+		return { title: headline, text, ...(roles ? { roles } : {}), changes: [...changes].map(([path, value]) => ({ path, value })) };
 	}
 
 	/** The session, when this copy is the tutor of a class; otherwise says why breakout groups are not available. */
@@ -2401,7 +2933,7 @@ export class CollaborationService extends Disposable implements ICollaborationSe
 				.catch(error => this.notificationService.error(localize('collaboration.fileActionFailed', "Could not use {0}'s {1}: {2}", file.sharer, file.payload.fileName, String(error)))),
 			(choice, value) => (choice === 'voiceLanguage' ? setVoiceLanguage : setVoiceWriteIn)(this.storageService, value),
 			(hostId, folder) => session.attachSamePage(this.instantiationService.createInstance(SamePageGuest, session.samePageLink, hostId, folder)),
-			() => this.nextRound(),
+			action => action === 'nextRound' ? this.nextRound() : action === 'releaseNews' ? this.releaseNews() : this.openDebrief(),
 		);
 		this.session.value = session;
 		session.onDidEnd(() => this._onDidChangeSession.fire());

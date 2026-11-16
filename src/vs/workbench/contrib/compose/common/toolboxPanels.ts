@@ -117,6 +117,8 @@ export interface IToolboxInfo {
 	readonly documents: readonly IToolboxDocumentInfo[];
 	/** The texts it adds to the Knowledge Base. */
 	readonly texts: readonly IToolboxTextInfo[];
+	/** The folders of its Simulation Games cases, each with case.toml and model.jl, which Host a Game... offers. */
+	readonly games: readonly URI[];
 	/** The default places: the toolbox's menu at the end of Extend, with every panel in. */
 	readonly defaultPlacement: IToolboxPlacement;
 	/** The places the toolbox is in: the ones the user published, else the default ones. */
