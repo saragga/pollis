@@ -5609,6 +5609,38 @@
 			]
 		},
 		{
+			"id": "mplab",
+			"title": "Mathematical Programming Lab",
+			"source": "pollis",
+			"commands": [
+				{
+					"id": "chiara.mp.lab",
+					"menuTitles": [
+						"Mathematical Programming Lab"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "filtersqp",
+			"decisionFirstColumn": "Method",
+			"toml": "src/vs/workbench/contrib/model/browser/webviews/mplab.toml",
+			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
+			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"wikis": [
+				"mplab/comparison.md",
+				"mplab/factsheet.md",
+				"mplab/globalization.md",
+				"mplab/ingredients.md",
+				"mplab/overview.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"UnoSolver.jl",
+				"JuMP.jl",
+				"NLPModelsJuMP.jl"
+			]
+		},
+		{
 			"id": "mpm",
 			"title": "Multi-Objective Optimisation Performance Metrics",
 			"source": "pollis",

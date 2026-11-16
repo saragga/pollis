@@ -1,0 +1,613 @@
+# Mathematical Programming Lab Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/mplab.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Mathematical Programming Lab"
+viewType = "pollis.mplab"
+defaultModel = "filtersqp"
+decisionFirstColumn = "Method"
+
+[[packages]]
+name = "UnoSolver.jl"
+github = "https://github.com/cvanaret/Uno"
+
+[[packages]]
+name = "JuMP.jl"
+github = "https://github.com/jump-dev/JuMP.jl"
+
+[[packages]]
+name = "NLPModelsJuMP.jl"
+github = "https://github.com/JuliaSmoothOptimizers/NLPModelsJuMP.jl"
+
+[requires]
+packages = ["UnoSolver.jl", "JuMP.jl", "NLPModelsJuMP.jl", "NLPModels.jl", "Ipopt.jl", "Plots.jl"]
+
+[[wikis]]
+name = "Factsheet"
+file = "mplab/factsheet.md"
+bundled = true
+
+[[wikis]]
+name = "Overview"
+file = "mplab/overview.md"
+bundled = true
+
+[[wikis]]
+name = "Reading the Comparison"
+file = "mplab/comparison.md"
+bundled = true
+
+[[wikis]]
+separator = true
+label = "Methods"
+
+[[wikis]]
+name = "The Ingredients of a Solver"
+file = "mplab/ingredients.md"
+bundled = true
+
+[[wikis]]
+name = "Filters, Funnels and Merit Functions"
+file = "mplab/globalization.md"
+bundled = true
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+key = "VM2026a"
+
+[[references]]
+key = "DHL2017a"
+
+[[references]]
+key = "WB2006a"
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+key = "NW2006a"
+
+[[references]]
+key = "HS1981a"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "VL2026a"
+
+[[references]]
+key = "FL2002a"
+
+[[references]]
+key = "KLV2025a"
+
+[[models]]
+id = "interiorpoint"
+label = "Interior Point"
+
+[[models]]
+id = "filtersqp"
+label = "Filter SQP"
+
+[[models]]
+id = "funnelsqp"
+label = "Funnel SQP"
+
+[[models]]
+id = "filterslp"
+label = "Filter SLP"
+
+[[bullets]]
+text = "Interior Point"
+detail = "Uno's ipopt preset: a barrier on the inequalities, Newton steps with the exact Hessian, a line search and Wächter's filter, in the manner of Ipopt"
+
+[[bullets]]
+text = "Filter SQP"
+detail = "Uno's filtersqp preset, its default: quadratic subproblems with the inequalities kept, in a trust region, with Fletcher's filter"
+
+[[bullets]]
+text = "Funnel SQP"
+detail = "Uno's funnelsqp preset: the same quadratic subproblems and trust region, with a funnel, a shrinking bound on the infeasibility, in place of the filter"
+
+[[bullets]]
+text = "Filter SLP"
+detail = "Uno's filterslp preset: linear subproblems with no Hessian, in a trust region, with Fletcher's filter"
+
+[[decisionRows]]
+task = "Interior Point"
+context = "Large, many inequalities"
+purpose = "A barrier that keeps the iterates inside the bounds, with one Newton system per iteration whatever the number of active constraints"
+
+[[decisionRows]]
+task = "Filter SQP"
+context = "Small or medium, warm starts"
+purpose = "Quadratic subproblems that identify the active constraints, usually in few iterations"
+
+[[decisionRows]]
+task = "Funnel SQP"
+context = "Control of infeasibility"
+purpose = "The same subproblems, with steps judged against one shrinking bound on the infeasibility instead of a list of pairs"
+
+[[decisionRows]]
+task = "Filter SLP"
+context = "No second derivatives"
+purpose = "Linear subproblems in a trust region, cheap per iteration, at the cost of many more iterations near the solution"
+
+[[inputs]]
+id = "problem"
+label = "Problem"
+tooltip = "The test problem: HS071 and HS015 from the collection of Hock and Schittkowski, and a complementarity problem, x[1] x[2] <= 0 with x >= 0, at whose solutions no constraint qualification holds. Replace the model with your own JuMP model in the generated code."
+kind = "select"
+default = "hs071"
+
+[[inputs.options]]
+value = "hs071"
+label = "HS071 (Four Variables, Two Constraints)"
+
+[[inputs.options]]
+value = "hs015"
+label = "HS015 (a Constrained Rosenbrock)"
+
+[[inputs.options]]
+value = "complementarity"
+label = "Degenerate Complementarity"
+
+[[inputs]]
+id = "inequality"
+label = "Inequality Handling"
+tooltip = "How the subproblem treats the inequalities: kept as inequalities in each subproblem (SQP and SLP), or replaced by a barrier (interior point). As in the Preset keeps the tab's choice."
+kind = "select"
+default = "preset"
+newRow = true
+
+[[inputs.options]]
+value = "preset"
+label = "As in the Preset"
+
+[[inputs.options]]
+value = "inequality_constrained"
+label = "Inequality-Constrained Subproblems"
+
+[[inputs.options]]
+value = "interior_point"
+label = "Interior Point"
+
+[[inputs]]
+id = "hessian"
+label = "Hessian Model"
+tooltip = "The second-order information in the subproblem: the exact Hessian of the Lagrangian, a quasi-Newton approximation built from gradients (L-BFGS, L-SR1), the identity, or none (zero, which turns SQP into SLP). As in the Preset keeps the tab's choice."
+kind = "select"
+default = "preset"
+
+[[inputs.options]]
+value = "preset"
+label = "As in the Preset"
+
+[[inputs.options]]
+value = "exact"
+label = "Exact"
+
+[[inputs.options]]
+value = "LBFGS"
+label = "L-BFGS"
+
+[[inputs.options]]
+value = "LSR1"
+label = "L-SR1"
+
+[[inputs.options]]
+value = "identity"
+label = "Identity"
+
+[[inputs.options]]
+value = "zero"
+label = "Zero"
+
+[[inputs]]
+id = "mechanism"
+label = "Globalization Mechanism"
+tooltip = "How a step is shortened when it is rejected: a trust region, which bounds the step before it is computed, or a line search, which backtracks along it. As in the Preset keeps the tab's choice."
+kind = "select"
+default = "preset"
+newRow = true
+
+[[inputs.options]]
+value = "preset"
+label = "As in the Preset"
+
+[[inputs.options]]
+value = "TR"
+label = "Trust Region"
+
+[[inputs.options]]
+value = "LS"
+label = "Line Search"
+
+[[inputs]]
+id = "strategy"
+label = "Globalization Strategy"
+tooltip = "How a trial point is accepted: Fletcher's filter, Wächter's filter, a funnel, or a merit function that adds the weighted infeasibility to the objective. As in the Preset keeps the tab's choice."
+kind = "select"
+default = "preset"
+
+[[inputs.options]]
+value = "preset"
+label = "As in the Preset"
+
+[[inputs.options]]
+value = "fletcher_filter_method"
+label = "Fletcher's Filter"
+
+[[inputs.options]]
+value = "waechter_filter_method"
+label = "Wächter's Filter"
+
+[[inputs.options]]
+value = "funnel_method"
+label = "Funnel"
+
+[[inputs.options]]
+value = "merit_function"
+label = "Merit Function"
+
+[[codeBranches]]
+model = "interiorpoint"
+code = '''
+using JuMP, UnoSolver, NLPModelsJuMP
+
+model = Model()  # the test problem; replace it with your own JuMP model
+{{?problem=hs071}}@variable(model, 1 <= x[i = 1:4] <= 5, start = [1, 5, 5, 1][i])  # HS071
+{{?problem=hs071}}@objective(model, Min, x[1] * x[4] * (x[1] + x[2] + x[3]) + x[3])
+{{?problem=hs071}}@constraint(model, prod(x) >= 25)
+{{?problem=hs071}}@constraint(model, sum(x .^ 2) == 40)
+{{?problem=hs015}}@variable(model, x[i = 1:2], start = [-2, 1][i])  # HS015
+{{?problem=hs015}}set_upper_bound(x[1], 0.5)
+{{?problem=hs015}}@objective(model, Min, 100 * (x[2] - x[1]^2)^2 + (1 - x[1])^2)
+{{?problem=hs015}}@constraint(model, x[1] * x[2] >= 1)
+{{?problem=hs015}}@constraint(model, x[1] + x[2]^2 >= 0)
+{{?problem=complementarity}}@variable(model, x[i = 1:2] >= 0, start = [2, 0.5][i])  # x[1] = 0 or x[2] = 0
+{{?problem=complementarity}}@objective(model, Min, (x[1] - 1)^2 + (x[2] - 1)^2)
+{{?problem=complementarity}}@constraint(model, x[1] * x[2] <= 0)
+nlp = MathOptNLPModel(model)  # the JuMP model as an NLPModel, for which Uno reports its counts
+
+preset = "ipopt"  # a barrier, Newton steps, a line search and a filter
+ingredients = Dict(  # what the ipopt preset sets
+    :inequality_handling_method => "interior_point",
+    :hessian_model => "exact",
+    :globalization_mechanism => "LS",
+    :globalization_strategy => "waechter_filter_method",
+)
+{{?inequality!=preset}}ingredients[:inequality_handling_method] = "{{inequality}}"
+{{?hessian!=preset}}ingredients[:hessian_model] = "{{hessian}}"
+{{?mechanism!=preset}}ingredients[:globalization_mechanism] = "{{mechanism}}"
+{{?strategy!=preset}}ingredients[:globalization_strategy] = "{{strategy}}"
+supported(preset, ing) = !(ing[:inequality_handling_method] == "interior_point" && ing[:globalization_mechanism] == "TR")  # Uno has no trust-region interior-point method
+supported(preset, ingredients) || error("Uno has no trust-region interior-point method: choose a Line Search")  # Uno would stop Julia
+stats = uno(nlp; preset, logger = "SILENT", ingredients...)
+
+(status = stats.status, objective = stats.objective, x = stats.solution, iterations = stats.iter)
+'''
+
+[[codeBranches]]
+model = "filtersqp"
+code = '''
+using JuMP, UnoSolver, NLPModelsJuMP
+
+model = Model()  # the test problem; replace it with your own JuMP model
+{{?problem=hs071}}@variable(model, 1 <= x[i = 1:4] <= 5, start = [1, 5, 5, 1][i])  # HS071
+{{?problem=hs071}}@objective(model, Min, x[1] * x[4] * (x[1] + x[2] + x[3]) + x[3])
+{{?problem=hs071}}@constraint(model, prod(x) >= 25)
+{{?problem=hs071}}@constraint(model, sum(x .^ 2) == 40)
+{{?problem=hs015}}@variable(model, x[i = 1:2], start = [-2, 1][i])  # HS015
+{{?problem=hs015}}set_upper_bound(x[1], 0.5)
+{{?problem=hs015}}@objective(model, Min, 100 * (x[2] - x[1]^2)^2 + (1 - x[1])^2)
+{{?problem=hs015}}@constraint(model, x[1] * x[2] >= 1)
+{{?problem=hs015}}@constraint(model, x[1] + x[2]^2 >= 0)
+{{?problem=complementarity}}@variable(model, x[i = 1:2] >= 0, start = [2, 0.5][i])  # x[1] = 0 or x[2] = 0
+{{?problem=complementarity}}@objective(model, Min, (x[1] - 1)^2 + (x[2] - 1)^2)
+{{?problem=complementarity}}@constraint(model, x[1] * x[2] <= 0)
+nlp = MathOptNLPModel(model)  # the JuMP model as an NLPModel, for which Uno reports its counts
+
+preset = "filtersqp"  # quadratic subproblems in a trust region, with a filter
+ingredients = Dict(  # what the filtersqp preset sets
+    :inequality_handling_method => "inequality_constrained",
+    :hessian_model => "exact",
+    :globalization_mechanism => "TR",
+    :globalization_strategy => "fletcher_filter_method",
+)
+{{?inequality!=preset}}ingredients[:inequality_handling_method] = "{{inequality}}"
+{{?hessian!=preset}}ingredients[:hessian_model] = "{{hessian}}"
+{{?mechanism!=preset}}ingredients[:globalization_mechanism] = "{{mechanism}}"
+{{?strategy!=preset}}ingredients[:globalization_strategy] = "{{strategy}}"
+supported(preset, ing) = !(ing[:inequality_handling_method] == "interior_point" && ing[:globalization_mechanism] == "TR")  # Uno has no trust-region interior-point method
+supported(preset, ingredients) || error("Uno has no trust-region interior-point method: choose a Line Search")  # Uno would stop Julia
+stats = uno(nlp; preset, logger = "SILENT", ingredients...)
+
+(status = stats.status, objective = stats.objective, x = stats.solution, iterations = stats.iter)
+'''
+
+[[codeBranches]]
+model = "funnelsqp"
+code = '''
+using JuMP, UnoSolver, NLPModelsJuMP
+
+model = Model()  # the test problem; replace it with your own JuMP model
+{{?problem=hs071}}@variable(model, 1 <= x[i = 1:4] <= 5, start = [1, 5, 5, 1][i])  # HS071
+{{?problem=hs071}}@objective(model, Min, x[1] * x[4] * (x[1] + x[2] + x[3]) + x[3])
+{{?problem=hs071}}@constraint(model, prod(x) >= 25)
+{{?problem=hs071}}@constraint(model, sum(x .^ 2) == 40)
+{{?problem=hs015}}@variable(model, x[i = 1:2], start = [-2, 1][i])  # HS015
+{{?problem=hs015}}set_upper_bound(x[1], 0.5)
+{{?problem=hs015}}@objective(model, Min, 100 * (x[2] - x[1]^2)^2 + (1 - x[1])^2)
+{{?problem=hs015}}@constraint(model, x[1] * x[2] >= 1)
+{{?problem=hs015}}@constraint(model, x[1] + x[2]^2 >= 0)
+{{?problem=complementarity}}@variable(model, x[i = 1:2] >= 0, start = [2, 0.5][i])  # x[1] = 0 or x[2] = 0
+{{?problem=complementarity}}@objective(model, Min, (x[1] - 1)^2 + (x[2] - 1)^2)
+{{?problem=complementarity}}@constraint(model, x[1] * x[2] <= 0)
+nlp = MathOptNLPModel(model)  # the JuMP model as an NLPModel, for which Uno reports its counts
+
+preset = "funnelsqp"  # quadratic subproblems in a trust region, with a funnel
+ingredients = Dict(  # what the funnelsqp preset sets
+    :inequality_handling_method => "inequality_constrained",
+    :hessian_model => "exact",
+    :globalization_mechanism => "TR",
+    :globalization_strategy => "funnel_method",
+)
+{{?inequality!=preset}}ingredients[:inequality_handling_method] = "{{inequality}}"
+{{?hessian!=preset}}ingredients[:hessian_model] = "{{hessian}}"
+{{?mechanism!=preset}}ingredients[:globalization_mechanism] = "{{mechanism}}"
+{{?strategy!=preset}}ingredients[:globalization_strategy] = "{{strategy}}"
+supported(preset, ing) = !(ing[:inequality_handling_method] == "interior_point" && ing[:globalization_mechanism] == "TR")  # Uno has no trust-region interior-point method
+supported(preset, ingredients) || error("Uno has no trust-region interior-point method: choose a Line Search")  # Uno would stop Julia
+stats = uno(nlp; preset, logger = "SILENT", ingredients...)
+
+(status = stats.status, objective = stats.objective, x = stats.solution, iterations = stats.iter)
+'''
+
+[[codeBranches]]
+model = "filterslp"
+code = '''
+using JuMP, UnoSolver, NLPModelsJuMP
+
+model = Model()  # the test problem; replace it with your own JuMP model
+{{?problem=hs071}}@variable(model, 1 <= x[i = 1:4] <= 5, start = [1, 5, 5, 1][i])  # HS071
+{{?problem=hs071}}@objective(model, Min, x[1] * x[4] * (x[1] + x[2] + x[3]) + x[3])
+{{?problem=hs071}}@constraint(model, prod(x) >= 25)
+{{?problem=hs071}}@constraint(model, sum(x .^ 2) == 40)
+{{?problem=hs015}}@variable(model, x[i = 1:2], start = [-2, 1][i])  # HS015
+{{?problem=hs015}}set_upper_bound(x[1], 0.5)
+{{?problem=hs015}}@objective(model, Min, 100 * (x[2] - x[1]^2)^2 + (1 - x[1])^2)
+{{?problem=hs015}}@constraint(model, x[1] * x[2] >= 1)
+{{?problem=hs015}}@constraint(model, x[1] + x[2]^2 >= 0)
+{{?problem=complementarity}}@variable(model, x[i = 1:2] >= 0, start = [2, 0.5][i])  # x[1] = 0 or x[2] = 0
+{{?problem=complementarity}}@objective(model, Min, (x[1] - 1)^2 + (x[2] - 1)^2)
+{{?problem=complementarity}}@constraint(model, x[1] * x[2] <= 0)
+nlp = MathOptNLPModel(model)  # the JuMP model as an NLPModel, for which Uno reports its counts
+
+preset = "filterslp"  # linear subproblems in a trust region, with a filter
+ingredients = Dict(  # what the filterslp preset sets
+    :inequality_handling_method => "inequality_constrained",
+    :hessian_model => "zero",
+    :globalization_mechanism => "TR",
+    :globalization_strategy => "fletcher_filter_method",
+)
+{{?inequality!=preset}}ingredients[:inequality_handling_method] = "{{inequality}}"
+{{?hessian!=preset}}ingredients[:hessian_model] = "{{hessian}}"
+{{?mechanism!=preset}}ingredients[:globalization_mechanism] = "{{mechanism}}"
+{{?strategy!=preset}}ingredients[:globalization_strategy] = "{{strategy}}"
+supported(preset, ing) = !(ing[:inequality_handling_method] == "interior_point" && ing[:globalization_mechanism] == "TR")  # Uno has no trust-region interior-point method
+supported(preset, ingredients) || error("Uno has no trust-region interior-point method: choose a Line Search")  # Uno would stop Julia
+stats = uno(nlp; preset, logger = "SILENT", ingredients...)
+
+(status = stats.status, objective = stats.objective, x = stats.solution, iterations = stats.iter)
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "counts-chart"
+label = "Counts by Method"
+desc = "Iterations and objective evaluations of Uno's four presets on the same problem, side by side"
+code = '''
+using Plots
+
+methods = ["ipopt", "filtersqp", "funnelsqp", "filterslp"]
+runs = [uno(nlp; preset = p, logger = "SILENT") for p in methods]
+plot(bar(methods, [r.iter for r in runs], title = "iterations"),
+     bar(methods, [r.number_objective_evaluations for r in runs], title = "objective evaluations"),
+     layout = (1, 2), legend = false, xrotation = 30)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "measures"
+label = "Optimality Measures"
+desc = "The status, and the primal infeasibility, stationarity and complementarity at the solution: all three near 0 at a KKT point"
+code = '''
+(status = stats.status, primal_infeasibility = stats.primal_feas, stationarity = stats.dual_feas,
+ complementarity = stats.complementarity_feas, iterations = stats.iter, seconds = stats.elapsed_time)
+'''
+
+[[actionGroups.actions]]
+id = "log"
+label = "Iteration Log"
+desc = "The same solve with Uno's log: one line per iteration, with the objective, the infeasibility, the stationarity, the complementarity and the outcome of the step"
+code = '''
+uno(nlp; preset, logger = "INFO", ingredients...)  # prints the log
+nothing
+'''
+
+[[actionGroups.actions]]
+id = "random-starts"
+label = "Random Starts"
+desc = "The method from 20 random starting points in the box of the bounds (from -3 to 3 where a variable has none): how many it solves, and in how many iterations. The original start is restored afterwards"
+code = '''
+using Random, Plots
+
+Random.seed!(1)
+lo = [has_lower_bound(v) ? lower_bound(v) : -3.0 for v in x]
+hi = [has_upper_bound(v) ? upper_bound(v) : 3.0 for v in x]
+start0 = start_value.(x)
+runs = map(1:20) do _
+    set_start_value.(x, lo .+ (hi .- lo) .* rand(length(x)))
+    uno(MathOptNLPModel(model); preset, logger = "SILENT", ingredients...)
+end
+set_start_value.(x, start0)  # restore the original start
+solved = [r.status == :first_order for r in runs]
+histogram([r.iter for r in runs[solved]], bins = 15, xlabel = "iterations", ylabel = "starts",
+          title = "$(count(solved)) of 20 starts solved", legend = false)
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "method-compare"
+label = "Compare the Methods"
+desc = "Uno's four presets and Ipopt on the same problem: status, objective, iterations, subproblems, evaluations and seconds"
+code = '''
+using Ipopt
+
+rows = map(["ipopt", "filtersqp", "funnelsqp", "filterslp"]) do p
+    uno(nlp; preset = p, logger = "SILENT")  # a first run, so that the time leaves out compilation
+    r = uno(nlp; preset = p, logger = "SILENT")
+    (method = "Uno, $p", status = string(r.status), objective = r.objective, iterations = r.iter,
+     subproblems = r.number_subproblem_solved_evaluations, objective_evaluations = r.number_objective_evaluations,
+     constraint_evaluations = r.number_constraint_evaluations, gradient_evaluations = r.number_objective_gradient_evaluations,
+     jacobian_evaluations = r.number_jacobian_evaluations, seconds = r.elapsed_time)
+end
+set_optimizer(model, Ipopt.Optimizer); set_silent(model)
+optimize!(model); optimize!(model)  # twice, as for Uno
+ipopt = (method = "Ipopt", status = string(termination_status(model)), objective = objective_value(model),
+         iterations = Int(barrier_iterations(model)), subproblems = missing, objective_evaluations = missing,
+         constraint_evaluations = missing, gradient_evaluations = missing, jacobian_evaluations = missing, seconds = solve_time(model))
+[rows; ipopt]
+'''
+
+[[actionGroups.actions]]
+id = "hessian-compare"
+label = "Hessian Models"
+desc = "The tab's method with each Hessian model in turn, the other ingredients unchanged: status, objective, iterations and objective evaluations"
+code = '''
+map(["exact", "LBFGS", "LSR1", "identity", "zero"]) do h
+    ing = merge(ingredients, Dict(:hessian_model => h))
+    supported(preset, ing) || return (hessian_model = h, status = "rejected by Uno", objective = NaN, iterations = 0, objective_evaluations = 0)
+    r = uno(nlp; preset, logger = "SILENT", ing...)
+    (hessian_model = h, status = string(r.status), objective = r.objective, iterations = r.iter, objective_evaluations = r.number_objective_evaluations)
+end
+'''
+
+[[actionGroups.actions]]
+id = "strategy-compare"
+label = "Globalization Strategies"
+desc = "The tab's method with each globalization strategy in turn, the other ingredients unchanged: status, objective, iterations and objective evaluations"
+code = '''
+map(["fletcher_filter_method", "waechter_filter_method", "funnel_method", "merit_function"]) do s
+    ing = merge(ingredients, Dict(:globalization_strategy => s))
+    supported(preset, ing) || return (strategy = s, status = "rejected by Uno", objective = NaN, iterations = 0, objective_evaluations = 0)
+    r = uno(nlp; preset, logger = "SILENT", ing...)
+    (strategy = s, status = string(r.status), objective = r.objective, iterations = r.iter, objective_evaluations = r.number_objective_evaluations)
+end
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "active"
+label = "Active Constraints"
+desc = "Each constraint at the solution, in the order of the NLPModel: its value, its bounds, its multiplier, and whether it is active (within 1e-6 of a bound)"
+code = '''
+using NLPModels
+
+c = cons(nlp, stats.solution)  # the NLPModel orders the constraints by kind, linear first
+lcon, ucon = nlp.meta.lcon, nlp.meta.ucon
+[(constraint = i, value = c[i], lower = lcon[i], upper = ucon[i], multiplier = stats.multipliers[i],
+  active = min(abs(c[i] - lcon[i]), abs(c[i] - ucon[i])) < 1e-6) for i in eachindex(c)]
+'''
+
+[[actionGroups.actions]]
+id = "bounds"
+label = "Active Bounds"
+desc = "Each variable at the solution: its value, its bounds, whether it sits on one (within 1e-6), and the multiplier of its bounds"
+code = '''
+xs = stats.solution
+lvar, uvar = nlp.meta.lvar, nlp.meta.uvar
+[(variable = x[j], value = xs[j], lower = lvar[j], upper = uvar[j],
+  at_bound = min(abs(xs[j] - lvar[j]), abs(xs[j] - uvar[j])) < 1e-6,
+  multiplier = stats.multipliers_L[j] + stats.multipliers_U[j]) for j in eachindex(xs)]
+'''
+
+# ── FAQ: shown in Learn More, and the Panel FAQ test set of Evaluate Answering Models (hidden = true: the test set only) ──
+
+[[faq]]
+question = "Why does the Mathematical Programming Lab have four tabs for one solver?"
+wiki = "Overview"
+answer = """
+Because Uno assembles each method from interchangeable ingredients, and a preset fixes them all: the four tabs are Uno's presets ipopt, filtersqp, funnelsqp and filterslp, an interior-point method, two SQP methods and an SLP method.
+
+Running the same problem in each tab, or with Compare the Methods, shows what the choice of method changes; the ingredient inputs change one ingredient of a tab at a time.
+"""
+
+[[faq]]
+question = "Why does the Filter SLP tab need so many more iterations?"
+wiki = "Reading the Comparison"
+answer = """
+Because its subproblems are linear: with no second derivatives, sequential linear programming converges slowly near the solution, so it takes many cheap iterations where SQP takes a few more expensive ones.
+
+Compare the Methods sets the iterations beside the subproblems and the evaluations, and Hessian Models shows the effect of the second-order information on one method.
+"""
+
+[[faq]]
+question = "What does the Inequality Handling input of the Mathematical Programming Lab choose?"
+wiki = "The Ingredients of a Solver"
+hidden = true
+right = "Whether the subproblems keep the inequalities or a barrier replaces them"
+wrong = [
+  "Whether the inequalities are checked before the solve",
+  "Whether the inequalities are turned into equalities with slacks only",
+  "Whether the inequalities are added to the objective with a penalty",
+  "Whether the inequalities are dropped from the subproblems",
+]
+explanation = "Inequality-constrained subproblems keep the inequalities, as in SQP and SLP; Interior Point replaces them by a logarithmic barrier, as in Ipopt."
+
+[[faq]]
+question = "What replaces the list of pairs of a filter in the funnel method?"
+wiki = "Filters, Funnels and Merit Functions"
+hidden = true
+right = "One upper bound on the constraint violation, decreased monotonically"
+wrong = [
+  "A penalty parameter on the constraint violation",
+  "A bound on the length of the step",
+  "A list of the objective values of earlier iterates",
+  "A barrier on the inequalities",
+]
+explanation = "A funnel keeps one upper bound on the constraint violation, which is decreased monotonically; a trial point must stay inside it."
+
+[[faq]]
+question = "Why does Compare the Methods of the Mathematical Programming Lab report the time of a second run?"
+wiki = "Reading the Comparison"
+hidden = true
+right = "The first run includes Julia's compilation"
+wrong = [
+  "The first run starts from a random point",
+  "The first run uses a looser tolerance",
+  "The second run reuses the first solution as its start",
+  "The first run solves a relaxation of the problem",
+]
+explanation = "Compare the Methods runs each method twice and reports the seconds of the second run, which leave out the compilation of the first."

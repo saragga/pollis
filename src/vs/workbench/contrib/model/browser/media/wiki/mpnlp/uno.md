@@ -28,6 +28,7 @@ A **filter** ([Fletcher and Leyffer (2002)](#ref-FL2002a)) decides whether to ac
 - The **Solver Comparison** runs Ipopt, MadNLP and Uno, at its default, on the same model, and reports the status, the objective and the seconds.
 - **Solver Statistics** reports Uno's solve time, but no iteration count.
 - The **KKT Conditions** and the **Constraint Sensitivity** read Uno's multipliers as they read those of Ipopt.
+- The **Mathematical Programming Lab**, in the same menu, compares Uno's presets and changes their ingredients one at a time, on test problems.
 
 ## References
 

@@ -17271,6 +17271,36 @@
 			"open_access": true
 		},
 		{
+			"key": "HS1981a",
+			"type": "book",
+			"title": "Test Examples for Nonlinear Programming Codes",
+			"authors": [
+				"Hock, Willi",
+				"Schittkowski, Klaus"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1981,
+			"publisher": "Springer",
+			"volume": "187",
+			"isbn": "9783540105619",
+			"doi": "10.1007/978-3-642-48320-2",
+			"openalex": "W4240022917",
+			"url": "https://doi.org/10.1007/978-3-642-48320-2",
+			"keywords": [
+				"nonlinear programming",
+				"benchmark problems",
+				"benchmark functions",
+				"algorithm performance evaluation",
+				"numerical experiments"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-16",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "HS1982a",
 			"type": "article",
 			"title": "Generalized Instrumental Variables Estimation of Nonlinear Rational Expectations Models",
@@ -20448,8 +20478,7 @@
 			"source": "crossref",
 			"retrieved": "2026-11-16",
 			"checked": false,
-			"open_access": true,
-			"series": "Lecture Notes in Computer Science"
+			"open_access": true
 		},
 		{
 			"key": "KE1995a",
@@ -20937,6 +20966,44 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "KLV2025a",
+			"type": "article",
+			"title": "A Unified Funnel Restoration SQP Algorithm",
+			"authors": [
+				"Kiessling, David",
+				"Leyffer, Sven",
+				"Vanaret, Charlie"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2025,
+			"journal": "Mathematical Programming",
+			"volume": "217",
+			"number": "1-2",
+			"pages": "323--367",
+			"issn": "0025-5610",
+			"doi": "10.1007/s10107-025-02284-3",
+			"openalex": "W4415431063",
+			"url": "https://doi.org/10.1007/s10107-025-02284-3",
+			"abstract": "We consider nonlinearly constrained optimization problems and discuss a generic double-loop framework consisting of four algorithmic ingredients that unifies a broad range of nonlinear optimization solvers. This framework has been implemented in the open-source solver Uno, a Swiss Army knife-like C++ optimization framework that unifies many nonlinearly constrained nonconvex optimization solvers. We illustrate the framework with a sequential quadratic programming (SQP) algorithm that maintains an acceptable upper bound on the constraint violation, called a funnel, that is monotonically decreased to control the feasibility of the iterates. Infeasible quadratic subproblems are handled by a feasibility restoration strategy. Globalization is controlled by a line search or a trust-region method. We prove global convergence of the trust-region funnel SQP method, building on known results from filter methods. We implement the algorithm in Uno, and we provide extensive test results for the trust-region line-search funnel SQP on small CUTEst instances.",
+			"abstract_source": "arxiv",
+			"keywords": [
+				"sequential quadratic programming",
+				"nonlinearly constrained optimization",
+				"non-convex optimization",
+				"trust region method",
+				"line search",
+				"filter methods",
+				"global convergence",
+				"feasibility restoration"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-16",
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "KM1927a",
@@ -48090,6 +48157,18 @@
 			"date": "2026-10-24"
 		},
 		{
+			"key": "HS1981a",
+			"count": 625,
+			"source": "crossref",
+			"date": "2026-11-16"
+		},
+		{
+			"key": "HS1981a",
+			"count": 741,
+			"source": "openalex",
+			"date": "2026-11-16"
+		},
+		{
 			"key": "HS1982a",
 			"count": 1662,
 			"source": "crossref",
@@ -49258,6 +49337,18 @@
 			"count": 1657,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "KLV2025a",
+			"count": 3,
+			"source": "crossref",
+			"date": "2026-11-16"
+		},
+		{
+			"key": "KLV2025a",
+			"count": 5,
+			"source": "openalex",
+			"date": "2026-11-16"
 		},
 		{
 			"key": "KM1927a",
@@ -58333,6 +58424,24 @@
 				"WB2006a",
 				"Flo2000a",
 				"Mcc1976a"
+			]
+		},
+		{
+			"id": "mplab",
+			"title": "Mathematical Programming Lab",
+			"description": "Interior Point · Filter SQP · Funnel SQP · Filter SLP",
+			"commands": [
+				"chiara.mp.lab"
+			],
+			"keys": [
+				"VM2026a",
+				"DHL2017a",
+				"WB2006a",
+				"NW2006a",
+				"HS1981a",
+				"VL2026a",
+				"FL2002a",
+				"KLV2025a"
 			]
 		},
 		{

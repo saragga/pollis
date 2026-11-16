@@ -373,6 +373,12 @@ MenuRegistry.appendMenuItem(MenuId.MenubarOptimiseMenu, {
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarOptimiseMenu, {
+	group: '6_optimisation',
+	command: { id: 'chiara.mp.lab', title: localize('mp.lab', 'Mathematical Programming Lab') },
+	order: 8,
+}); // UnoSolver.jl
+
+MenuRegistry.appendMenuItem(MenuId.MenubarOptimiseMenu, {
 	group: '7_optimisation',
 	command: { id: ROPT_ID, title: localize('mp.ro', 'Uncertainty-Set Robust Optimisation') },
 	order: 1,
