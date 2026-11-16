@@ -10,8 +10,6 @@ export function getDcmpHtml(): string {
 		title: 'Distribution Comparison Plots',
 		defaultModel: 'ecdf',
 		modelsLiteral: `['ecdf', 'qq', 'marginal', 'correlogram']`,
-		chartW: 66,
-		illusCollapsed: true,
 		hiddenRowCss: '.qq-row, .marginal-row, .correlogram-row { display: none; }',
 		togglesJs: `			<button class="toggle-btn active" data-model="ecdf">ECDF</button>
 			<button class="toggle-btn" data-model="qq">QQ Plot</button>
@@ -26,87 +24,6 @@ export function getDcmpHtml(): string {
 					<tr><td>Marginal Plot</td><td>Numeric x, y</td><td>Show joint scatter and per-axis marginal distributions simultaneously</td></tr>
 					<tr><td>Correlogram</td><td>Multiple numeric</td><td>Visualise all pairwise relationships and marginal densities in one matrix</td></tr>
 				`,
-		miniChartsJs: `function miniEcdf() {
-			// Staircase S-curve rising from bottom-left to top-right
-			var s = '<line x1="4" y1="4" x2="4" y2="80" stroke="currentColor" stroke-width="0.6" opacity="0.35"/>'
-				+ '<line x1="4" y1="80" x2="62" y2="80" stroke="currentColor" stroke-width="0.6" opacity="0.35"/>';
-			var steps = [4,80, 10,80, 10,72, 18,72, 18,62, 26,62, 26,50, 34,50, 34,36, 42,36, 42,22, 50,22, 50,12, 60,12];
-			var d = 'M ' + steps[0] + ' ' + steps[1];
-			for (var i = 2; i < steps.length; i += 2) { d += ' L ' + steps[i] + ' ' + steps[i + 1]; }
-			s += '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="2"/>';
-			return s;
-		}
-
-		function miniQq() {
-			// Dashed reference diagonal + points clustered around it
-			var s = '<line x1="6" y1="78" x2="62" y2="8" stroke="currentColor" stroke-width="1.2" opacity="0.45" stroke-dasharray="3,2"/>';
-			var pts = [[10,72],[18,63],[24,54],[30,47],[36,40],[42,32],[48,24],[54,17],[58,11]];
-			pts.forEach(function(p) { s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="2.5" fill="currentColor"/>'; });
-			return s;
-		}
-
-		function miniMarginal() {
-			// Scatter (bottom-left) with marginal histograms: x-hist along the top, y-hist down the right.
-			// All coordinates stay within the 66 x 86 tile (content kept inside x:4-62, y:4-82).
-			var s = '';
-			// Top histogram (distribution of x): bars sit on a baseline at y=22, growing upward.
-			var topH = [7, 13, 18, 16, 10, 6];
-			topH.forEach(function(h, i) {
-				s += '<rect x="' + (6 + i * 7) + '" y="' + (22 - h) + '" width="6" height="' + h + '" fill="currentColor" opacity="0.6"/>';
-			});
-			// Main scatter (positive correlation): x in [8,44], y in [40,76].
-			var pts = [[8,76],[12,70],[16,71],[18,64],[22,66],[24,58],[28,59],[30,52],[34,53],[36,46],[40,47],[44,40]];
-			pts.forEach(function(p) { s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="2" fill="currentColor" opacity="0.85"/>'; });
-			// Right histogram (distribution of y): bars start at x=50, growing rightward (max x = 61).
-			var rightL = [5, 9, 11, 10, 7, 4];
-			rightL.forEach(function(L, i) {
-				s += '<rect x="50" y="' + (28 + i * 9) + '" width="' + L + '" height="8" fill="currentColor" opacity="0.6"/>';
-			});
-			// Divider lines separating each marginal from the scatter.
-			s += '<line x1="4" y1="23" x2="47" y2="23" stroke="currentColor" stroke-width="0.5" opacity="0.4"/>';
-			s += '<line x1="49" y1="24" x2="49" y2="82" stroke="currentColor" stroke-width="0.5" opacity="0.4"/>';
-			return s;
-		}
-
-		function miniCorrelogram() {
-			// 2x2 pairwise grid: diagonal = histogram, off-diagonal = scatter
-			var s = '';
-			// Cell layout: [x1, y1, x2, y2, isDiag]
-			var cells = [
-				[0, 0,  30, 39, true ],
-				[33, 0,  63, 39, false],
-				[0, 42, 30, 81, false],
-				[33, 42, 63, 81, true ]
-			];
-			cells.forEach(function(cell) {
-				var x1 = cell[0], y1 = cell[1], x2 = cell[2], y2 = cell[3], isDiag = cell[4];
-				var w = x2 - x1, h = y2 - y1;
-				s += '<rect x="' + x1 + '" y="' + y1 + '" width="' + w + '" height="' + h
-					+ '" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.45"/>';
-				if (isDiag) {
-					// Small histogram bars inside cell
-					var bhs = [5, 14, 22, 18, 10, 6];
-					var bw = (w - 4) / bhs.length;
-					bhs.forEach(function(bh, bi) {
-						var bx = x1 + 2 + bi * bw;
-						var scaledH = Math.round(bh / 22 * (h - 6));
-						s += '<rect x="' + Math.round(bx) + '" y="' + (y2 - 2 - scaledH) + '" width="' + Math.max(1, Math.round(bw - 1)) + '" height="' + scaledH + '" fill="currentColor" opacity="0.75"/>';
-					});
-				} else {
-					// Scatter dots inside cell
-					var pts = (cell[0] === 0)
-						? [[4,70],[8,63],[14,58],[20,52],[4,78],[12,74],[22,65],[26,48]]
-						: [[36,6],[40,12],[46,8],[52,18],[56,14],[38,24],[44,30],[58,22]];
-					pts.forEach(function(p) {
-						s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="2" fill="currentColor"/>';
-					});
-				}
-			});
-			return s;
-		}
-
-		var MINI_CHARTS = [miniEcdf, miniQq, miniMarginal, miniCorrelogram];
-		var MINI_LABELS = ['ECDF', 'QQ Plot', 'Marginal', 'Correlogram'];`,
 		codeBranchesJs: `if (currentModel === 'ecdf') {
 				c += cline(kw('using') + ' ' + ty('StatsPlots') + ', ' + ty('Random'), 'plotting and RNG');
 				c += blank();

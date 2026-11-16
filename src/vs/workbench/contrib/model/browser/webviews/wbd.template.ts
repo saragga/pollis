@@ -11,9 +11,5 @@ export function getWbdHtml(): string {
 		title: 'World Bank Indicators',
 		defaultModel: 'indicator',
 		decisionFirstColumn: 'Task',
-		illusCollapsed: true,
-		illustrationLabel: 'Illustration',
-		illustrationOverrideJs: `			body.innerHTML = '<div style="text-align:center;padding:24px 0;font-size:13px;color:var(--vscode-descriptionForeground);">Pull the World Bank&#39;s World Development Indicators into Julia: one series, cross-country comparisons, regional and income-group aggregates, country classifications, and indicator search.</div>';
-			return;`,
 	});
 }

@@ -10,7 +10,6 @@ export function getSfvizHtml(): string {
 		title: 'Surfaces and Fields',
 		defaultModel: 'contour',
 		modelsLiteral: `['contour', 'contour3d', 'surface', 'volume', 'phase', 'mesh', 'voxels']`,
-		chartW: 54,
 		hiddenRowCss: '.bar-row, .histogram-row, .box-row, .violin-row { display: none; }',
 		extraCss: `		.interact-toggle { display: flex; align-items: center; gap: 6px; font-size: 13px; font-family: var(--vscode-font-family); color: var(--vscode-textLink-foreground); cursor: pointer; user-select: none; }
 		.interact-toggle:hover { color: var(--vscode-textLink-activeForeground); text-decoration: underline; }
@@ -52,109 +51,6 @@ export function getSfvizHtml(): string {
 					<tr><td>Mesh</td><td>Vertices and faces</td><td>Render an explicit triangulated/quad surface; add a wireframe overlay (CairoMakie or GLMakie)</td></tr>
 					<tr><td>Voxels</td><td>3D integer array</td><td>Draw each cell of a 3D grid as a cube, coloured by its value (GLMakie)</td></tr>
 				`,
-		miniChartsJs: `function miniContour() {
-			// concentric closed level curves (isolines)
-			var s = '';
-			var rings = [[22, 16], [16, 11], [10, 7], [5, 3]];
-			rings.forEach(function(rr, i) {
-				s += '<ellipse cx="27" cy="44" rx="' + rr[0] + '" ry="' + rr[1] + '" fill="none" stroke="currentColor" stroke-width="1" opacity="' + (0.45 + 0.15 * i) + '"/>';
-			});
-			return s;
-		}
-
-		function miniContour3d() {
-			// contour rings lifted and stacked to suggest a 3rd dimension
-			var s = '<line x1="27" y1="74" x2="27" y2="14" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>';
-			var ys = [66, 53, 40, 27];
-			ys.forEach(function(cy, i) {
-				s += '<ellipse cx="27" cy="' + cy + '" rx="' + (19 - i * 4) + '" ry="5" fill="none" stroke="currentColor" stroke-width="1" opacity="' + (0.8 - i * 0.12) + '"/>';
-			});
-			return s;
-		}
-
-		function miniSurface() {
-			// a wavy mesh receding upward (a height field)
-			var s = '';
-			var rows = [[5, 70, 46], [9, 57, 44], [13, 44, 42], [17, 31, 40]];
-			rows.forEach(function(r, i) {
-				var x0 = r[0], y = r[1], w = r[2];
-				var path = 'M ' + x0 + ' ' + y;
-				for (var k = 1; k <= 6; k++) {
-					var x = x0 + w * k / 6;
-					var yy = y + (k % 2 ? -3 : 3) * (1 - i * 0.18);
-					path += ' L ' + x.toFixed(1) + ' ' + yy.toFixed(1);
-				}
-				s += '<path d="' + path + '" fill="none" stroke="currentColor" stroke-width="0.9" opacity="' + (0.5 + i * 0.12) + '"/>';
-			});
-			return s;
-		}
-
-		function miniVolume() {
-			// an isometric cube with a nested inner shell (a 3D field)
-			var s = '';
-			s += '<rect x="10" y="26" width="30" height="30" fill="currentColor" fill-opacity="0.10" stroke="currentColor" stroke-width="1"/>';
-			s += '<path d="M 10 26 L 20 16 L 50 16 L 40 26 Z" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1"/>';
-			s += '<path d="M 40 26 L 50 16 L 50 46 L 40 56 Z" fill="currentColor" fill-opacity="0.26" stroke="currentColor" stroke-width="1"/>';
-			s += '<circle cx="26" cy="40" r="11" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>';
-			s += '<circle cx="26" cy="40" r="6" fill="currentColor" fill-opacity="0.40"/>';
-			return s;
-		}
-
-		function miniPhase() {
-			// streamlines swirling toward a fixed point — a phase portrait
-			var cx = 27, cy = 44;
-			var s = '';
-			// each entry is a quadratic bezier [x0,y0, ctrlx,ctrly, tipx,tipy]; the tip carries an arrowhead
-			var streams = [
-				[12, 22, 34, 18, 44, 36],
-				[46, 30, 50, 50, 38, 60],
-				[42, 64, 22, 70, 10, 52],
-				[8, 46, 4, 26, 18, 20]
-			];
-			streams.forEach(function(q) {
-				s += '<path d="M ' + q[0] + ' ' + q[1] + ' Q ' + q[2] + ' ' + q[3] + ' ' + q[4] + ' ' + q[5]
-					+ '" fill="none" stroke="currentColor" stroke-width="1.1" opacity="0.75"/>';
-				var ax = q[4] - q[2], ay = q[5] - q[3];
-				var L = Math.hypot(ax, ay) || 1; ax /= L; ay /= L;
-				var px = -ay, py = ax; // unit perpendicular for the arrowhead width
-				var b1x = q[4] - 5 * ax + 2.6 * px, b1y = q[5] - 5 * ay + 2.6 * py;
-				var b2x = q[4] - 5 * ax - 2.6 * px, b2y = q[5] - 5 * ay - 2.6 * py;
-				s += '<path d="M ' + q[4].toFixed(1) + ' ' + q[5].toFixed(1)
-					+ ' L ' + b1x.toFixed(1) + ' ' + b1y.toFixed(1)
-					+ ' L ' + b2x.toFixed(1) + ' ' + b2y.toFixed(1) + ' Z" fill="currentColor" opacity="0.85"/>';
-			});
-			s += '<circle cx="' + cx + '" cy="' + cy + '" r="2.2" fill="currentColor"/>'; // fixed point
-			return s;
-		}
-
-		function miniMesh() {
-			// wireframe sphere: outline + latitude ellipses + longitude meridians
-			var cx = 27, cy = 43, R = 21;
-			var s = '<circle cx="' + cx + '" cy="' + cy + '" r="' + R + '" fill="currentColor" fill-opacity="0.08" stroke="currentColor" stroke-width="1"/>';
-			[-11, 0, 11].forEach(function(dy) { // latitudes (foreshortened horizontal ellipses)
-				var rx = Math.sqrt(R * R - dy * dy);
-				s += '<ellipse cx="' + cx + '" cy="' + (cy + dy) + '" rx="' + rx.toFixed(1) + '" ry="' + (rx * 0.30).toFixed(1) + '" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.7"/>';
-			});
-			[0.4, 0.78].forEach(function(fx) { // longitudes (vertical meridians)
-				s += '<ellipse cx="' + cx + '" cy="' + cy + '" rx="' + (R * fx).toFixed(1) + '" ry="' + R + '" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.6"/>';
-			});
-			return s;
-		}
-
-		function miniVoxels() {
-			// a small cluster of isometric cubes with gaps — a 3D voxel grid
-			var w = 14, d = 6;
-			function vcube(x, y) {
-				return '<path d="M ' + x + ' ' + y + ' L ' + (x + d) + ' ' + (y - d) + ' L ' + (x + w + d) + ' ' + (y - d) + ' L ' + (x + w) + ' ' + y + ' Z" fill="currentColor" fill-opacity="0.30" stroke="currentColor" stroke-width="0.7"/>'
-					+ '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + w + '" fill="currentColor" fill-opacity="0.14" stroke="currentColor" stroke-width="0.7"/>'
-					+ '<path d="M ' + (x + w) + ' ' + y + ' L ' + (x + w + d) + ' ' + (y - d) + ' L ' + (x + w + d) + ' ' + (y + w - d) + ' L ' + (x + w) + ' ' + (y + w) + ' Z" fill="currentColor" fill-opacity="0.22" stroke="currentColor" stroke-width="0.7"/>';
-			}
-			// draw back row first, then the front row so overlaps read correctly
-			return vcube(11, 31) + vcube(28, 31) + vcube(11, 48) + vcube(28, 48);
-		}
-
-		var MINI_CHARTS = [miniContour, miniContour3d, miniSurface, miniVolume, miniPhase, miniMesh, miniVoxels];
-		var MINI_LABELS = ['Contour', '3D Contour', 'Surface', 'Volume', 'Phase Portrait', 'Mesh', 'Voxels'];`,
 		codeBranchesJs: `function makie(canCairo) {
 				if (interactive) {
 					return cline(kw('using') + ' ' + ty('GLMakie'), 'interactive: window (terminal) / plot pane (REPL)')

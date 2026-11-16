@@ -11,9 +11,5 @@ export function getEcbHtml(metadata: IEcbMetadata): string {
 		title: 'ECB Data Portal',
 		defaultModel: 'exchange',
 		decisionFirstColumn: 'Task',
-		illusCollapsed: true,
-		illustrationLabel: 'Illustration',
-		illustrationOverrideJs: `			body.innerHTML = '<div style="text-align:center;padding:24px 0;font-size:13px;color:var(--vscode-descriptionForeground);">Pull euro-area statistics from the ECB Data Portal into Julia: exchange rates, the key ECB interest rates, HICP inflation, monetary aggregates, and the yield curve.</div>';
-			return;`,
 	});
 }

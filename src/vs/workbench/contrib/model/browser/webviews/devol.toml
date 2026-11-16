@@ -272,39 +272,6 @@ tooltip = "Fraction of the generations over which epsilon shrinks to 0; afterwar
 default = "0.5"
 models = ["ede"]
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.de]
-# Base vector plus a scaled difference vector
-svg = '''
-return '<circle cx="12" cy="60" r="1.8" fill="currentColor"/><circle cx="30" cy="62" r="1.8" fill="currentColor" opacity="0.6"/><circle cx="40" cy="44" r="1.8" fill="currentColor" opacity="0.6"/>'
-	+ '<line x1="30" y1="62" x2="40" y2="44" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2"/><line x1="12" y1="60" x2="20" y2="46" stroke="currentColor" stroke-width="1.3"/><circle cx="20" cy="46" r="2.2" fill="none" stroke="currentColor" stroke-width="1.2"/>';
-'''
-
-[miniCharts.shade]
-# Memory slots feeding the parameter distribution
-svg = '''
-var s = '';
-for (var i = 0; i < 5; i++) { s += '<rect x="' + (8 + i * 8) + '" y="' + (40 + (i % 3) * 5) + '" width="6" height="' + (24 - (i % 3) * 5) + '" fill="currentColor" opacity="' + (i === 2 ? 0.9 : 0.4) + '"/>'; }
-return s + '<line x1="6" y1="64" x2="48" y2="64" stroke="currentColor" stroke-width="0.6"/><path d="M8,34 Q27,22 46,34" fill="none" stroke="currentColor" stroke-width="1"/>';
-'''
-
-[miniCharts.adaptive]
-# Individuals each carrying their own parameter
-svg = '''
-var s = '', p = [[12, 44, 3], [24, 58, 1.5], [34, 40, 2.5], [42, 60, 1]];
-p.forEach(function (q) { s += '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="1.8" fill="currentColor"/><circle cx="' + q[0] + '" cy="' + q[1] + '" r="' + (q[2] * 2.2) + '" fill="none" stroke="currentColor" stroke-width="0.7" opacity="0.6"/>'; });
-return s;
-'''
-
-[miniCharts.ede]
-# Feasible side of a constraint with a shrinking epsilon band
-svg = '''
-return '<path d="M8,66 L46,30 L46,66 Z" fill="currentColor" opacity="0.15"/><line x1="8" y1="66" x2="46" y2="30" stroke="currentColor" stroke-width="1.2"/>'
-	+ '<line x1="8" y1="58" x2="38" y2="30" stroke="currentColor" stroke-width="0.7" stroke-dasharray="2,2"/><circle cx="30" cy="48" r="2.2" fill="currentColor"/>';
-'''
-
 [[codeBranches]]
 model = "de"
 code = '''

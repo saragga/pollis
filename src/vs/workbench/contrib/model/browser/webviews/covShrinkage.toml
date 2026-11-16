@@ -269,53 +269,6 @@ default = "9.0"
 models = ["biweight"]
 newRow = true
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.linear]
-# Sample matrix + target matrix blended into the estimate
-svg = '''
-var s = '';
-function grid(x0, y0, op) {
-	for (var i = 0; i < 3; i++) { for (var j = 0; j < 3; j++) {
-		var o = i === j ? 0.85 : op;
-		s += '<rect x="' + (x0 + j * 5) + '" y="' + (y0 + i * 5) + '" width="4.5" height="4.5" fill="currentColor" opacity="' + o + '"/>';
-	} }
-}
-grid(4, 26, 0.55); grid(35, 26, 0.12); grid(19, 52, 0.3);
-return s + '<path d="M12,43 L24,50 M42,43 L30,50" stroke="currentColor" stroke-width="1" fill="none"/>';
-'''
-
-[miniCharts.nonlinear]
-# Sample eigenvalues (spread) pulled inwards by a curved map
-svg = '''
-var s = '', xs = [8, 14, 21, 30, 46];
-xs.forEach(function (x) { s += '<line x1="' + x + '" y1="30" x2="' + x + '" y2="36" stroke="currentColor" stroke-width="1.4" opacity="0.6"/>'; });
-[16, 20, 24, 29, 37].forEach(function (x, i) {
-	s += '<line x1="' + x + '" y1="60" x2="' + x + '" y2="66" stroke="currentColor" stroke-width="1.6"/>';
-	s += '<path d="M' + xs[i] + ',37 Q' + ((xs[i] + x) / 2) + ',44 ' + x + ',59" stroke="currentColor" stroke-width="0.7" fill="none" opacity="0.5"/>';
-});
-return s;
-'''
-
-[miniCharts.woodbury]
-# Low-rank block plus a diagonal
-svg = '''
-var s = '<rect x="6" y="34" width="18" height="18" fill="currentColor" opacity="0.45"/>';
-s += '<text x="27" y="47" font-size="9" text-anchor="middle" fill="currentColor">+</text>';
-for (var i = 0; i < 4; i++) { s += '<rect x="' + (31 + i * 4.5) + '" y="' + (34 + i * 4.5) + '" width="4" height="4" fill="currentColor" opacity="0.85"/>'; }
-return s;
-'''
-
-[miniCharts.biweight]
-# A point cloud with a down-weighted outlier (hollow)
-svg = '''
-var s = '', pts = [[-8, -5], [-5, -2], [-2, -4], [0, 0], [3, 1], [5, 4], [-3, 2], [7, 3], [2, -2]];
-pts.forEach(function (p) { s += '<circle cx="' + (22 + p[0]) + '" cy="' + (50 - p[1]) + '" r="1.8" fill="currentColor" opacity="0.7"/>'; });
-return s + '<circle cx="44" cy="28" r="2.4" fill="none" stroke="currentColor" stroke-width="1"/>'
-	+ '<ellipse cx="22" cy="50" rx="13" ry="7" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.5" transform="rotate(-20 22 50)"/>';
-'''
-
 [[codeBranches]]
 model = "linear"
 code = '''

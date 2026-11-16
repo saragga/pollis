@@ -14,8 +14,6 @@ title = "IMF Data"
 viewType = "pollis.imf"
 defaultModel = "weo"
 models = ["weo", "cpi", "fx", "reserves", "commodities"]
-illusCollapsed = true
-illustrationText = "Pull International Monetary Fund statistics into Julia: World Economic Outlook forecasts, consumer prices, exchange rates, the currency composition of reserves, and primary commodity prices."
 
 [[packages]]
 name = "HTTP.jl"
@@ -110,51 +108,6 @@ purpose = "Follow the US dollar's share of world reserves"
 task = "Commodity Prices"
 context = "Commodities"
 purpose = "Track oil, gold, or copper prices in US dollars"
-
-[miniCharts]
-
-[miniCharts.weo]
-svg = '''
-var s = '<polyline points="6,50 16,40 26,44 36,30" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.55"/>';
-s += '<polyline points="36,30 44,26 52,24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3,2" opacity="0.55"/>';
-s += '<line x1="36" y1="16" x2="36" y2="64" stroke="currentColor" stroke-width="0.6" opacity="0.4"/>';
-s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">WEO</text>';
-return s;
-'''
-
-[miniCharts.cpi]
-svg = '''
-var s = '<polyline points="6,50 16,46 26,44 36,34 46,30 52,22" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.55"/>';
-s += '<text x="12" y="20" font-size="13" fill="currentColor" opacity="0.5">%</text>';
-s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">CPI</text>';
-return s;
-'''
-
-[miniCharts.fx]
-svg = '''
-var s = '<text x="12" y="40" font-size="18" fill="currentColor" opacity="0.6">&#165;</text>';
-s += '<path d="M24 32 l10 0 m-3 -3 l3 3 l-3 3" fill="none" stroke="currentColor" stroke-width="1.3" opacity="0.55"/>';
-s += '<text x="36" y="40" font-size="18" fill="currentColor" opacity="0.6">$</text>';
-s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">FX</text>';
-return s;
-'''
-
-[miniCharts.reserves]
-svg = '''
-var s = '<circle cx="27" cy="36" r="16" fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.5"/>';
-s += '<path d="M27 36 L27 20 A16 16 0 1 1 13 44 Z" fill="currentColor" opacity="0.25"/>';
-s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">COFER</text>';
-return s;
-'''
-
-[miniCharts.commodities]
-svg = '''
-var s = '<rect x="14" y="26" width="10" height="30" rx="2" fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.55"/>';
-s += '<rect x="30" y="38" width="12" height="18" rx="2" fill="currentColor" opacity="0.3"/>';
-s += '<line x1="8" y1="56" x2="48" y2="56" stroke="currentColor" stroke-width="0.6" opacity="0.4"/>';
-s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Commodities</text>';
-return s;
-'''
 
 [[inputs]]
 id = "weoSeries"

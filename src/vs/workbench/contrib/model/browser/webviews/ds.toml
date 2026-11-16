@@ -224,42 +224,6 @@ tooltip = "Initial poll step size. Around a tenth of the expected distance to th
 default = "0.5"
 models = ["ps", "gss"]
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.nm]
-# A simplex and its reflected point
-svg = '''
-return '<path d="M12,62 L40,58 L22,34 Z" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="1.2"/>'
-	+ '<path d="M12,62 L40,58 L30,76 Z" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/>'
-	+ '<circle cx="22" cy="34" r="2.2" fill="currentColor"/>';
-'''
-
-[miniCharts.ps]
-# The four compass poll points around the incumbent
-svg = '''
-var s = '<circle cx="27" cy="48" r="2.6" fill="currentColor"/>';
-[[27, 32], [27, 64], [11, 48], [43, 48]].forEach(function (p) { s += '<line x1="27" y1="48" x2="' + p[0] + '" y2="' + p[1] + '" stroke="currentColor" stroke-width="1" opacity="0.6"/><circle cx="' + p[0] + '" cy="' + p[1] + '" r="2" fill="none" stroke="currentColor"/>'; });
-return s;
-'''
-
-[miniCharts.mads]
-# A fine mesh with poll directions in irregular orientations
-svg = '''
-var s = '';
-for (var i = 0; i <= 4; i++) { s += '<line x1="' + (11 + i * 8) + '" y1="32" x2="' + (11 + i * 8) + '" y2="64" stroke="currentColor" stroke-width="0.5" opacity="0.35"/><line x1="11" y1="' + (32 + i * 8) + '" x2="43" y2="' + (32 + i * 8) + '" stroke="currentColor" stroke-width="0.5" opacity="0.35"/>'; }
-[[35, 32], [19, 64], [43, 56], [11, 40]].forEach(function (p) { s += '<line x1="27" y1="48" x2="' + p[0] + '" y2="' + p[1] + '" stroke="currentColor" stroke-width="1.1"/>'; });
-return s + '<circle cx="27" cy="48" r="2.6" fill="currentColor"/>';
-'''
-
-[miniCharts.gss]
-# A minimal positive spanning set of three directions
-svg = '''
-var s = '<circle cx="27" cy="50" r="2.6" fill="currentColor"/>';
-[[45, 50], [27, 32], [14, 63]].forEach(function (p) { s += '<line x1="27" y1="50" x2="' + p[0] + '" y2="' + p[1] + '" stroke="currentColor" stroke-width="1.2"/><circle cx="' + p[0] + '" cy="' + p[1] + '" r="2" fill="none" stroke="currentColor"/>'; });
-return s;
-'''
-
 [[codeBranches]]
 model = "nm"
 code = '''

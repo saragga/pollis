@@ -227,27 +227,6 @@ label = "Value Decomposition (VDN)"
 value = "central"
 label = "Central Joint-Action Learner"
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.cooperative]
-# Two agents converging on a meeting cell
-svg = '''
-let s = '';
-for (let i = 0; i < 5; i++) { s += '<line x1="' + (7 + i * 10) + '" y1="28" x2="' + (7 + i * 10) + '" y2="68" stroke="currentColor" stroke-width="0.3"/><line x1="7" y1="' + (28 + i * 10) + '" x2="47" y2="' + (28 + i * 10) + '" stroke="currentColor" stroke-width="0.3"/>'; }
-return s + '<circle cx="12" cy="33" r="3" fill="currentColor"/><circle cx="42" cy="63" r="3" fill="currentColor"/>'
-	+ '<path d="M12,33 L27,33 L27,46" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2,1"/><path d="M42,63 L27,63 L27,50" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2,1"/>';
-'''
-
-[miniCharts.competitive]
-# Tic-tac-toe board
-svg = '''
-return '<line x1="21" y1="30" x2="21" y2="66" stroke="currentColor" stroke-width="1"/><line x1="33" y1="30" x2="33" y2="66" stroke="currentColor" stroke-width="1"/>'
-	+ '<line x1="9" y1="42" x2="45" y2="42" stroke="currentColor" stroke-width="1"/><line x1="9" y1="54" x2="45" y2="54" stroke="currentColor" stroke-width="1"/>'
-	+ '<path d="M11,32 L19,40 M19,32 L11,40 M35,56 L43,64 M43,56 L35,64" stroke="currentColor" stroke-width="1.4"/>'
-	+ '<circle cx="27" cy="48" r="4" fill="none" stroke="currentColor" stroke-width="1.4"/>';
-'''
-
 [[codeBranches]]
 model = "cooperative"
 code = '''

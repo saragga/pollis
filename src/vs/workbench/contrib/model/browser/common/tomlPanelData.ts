@@ -447,11 +447,6 @@ export function tomlToPanelData(data: TomlValue): IScaffoldPanelData {
 		wikis: (data.wikis as unknown[] | undefined) ?? [],
 		references: (data.references as unknown[] | undefined) ?? [],
 	};
-	// miniCharts: stored as [miniCharts.modelName] sections, converted to an array
-	const miniCharts = Object.entries((data.miniCharts as TomlValue | undefined) ?? {}).map(([model, value]) => ({
-		model,
-		svg: (value as TomlValue).svg as string ?? '',
-	}));
 	const optional: [string, unknown][] = [
 		// [requires] packages = [...]: further packages the examples use, for the install indicator only
 		['requires', (data.requires as TomlValue | undefined)?.packages],
@@ -460,7 +455,6 @@ export function tomlToPanelData(data: TomlValue): IScaffoldPanelData {
 		['decisionRows', data.decisionRows],
 		['notes', data.notes],
 		['explore', data.explore],
-		['miniCharts', miniCharts],
 		['codeBranches', data.codeBranches],
 		['actionGroups', data.actionGroups],
 		['inputs', data.inputs],

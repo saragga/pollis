@@ -16,7 +16,7 @@ defaultModel = "nlp"
 [notes.explore]
 intro = "Pick a Task to search the catalogue, then narrow with Framework and Author. Selecting several Frameworks or Authors matches any of them (<strong>OR</strong>), and the categories combine with <strong>AND</strong>. For example, <em>PyTorch</em> plus <em>TensorFlow</em> under Framework plus an Author builds: <code>(PyTorch OR TensorFlow) AND (Author)</code>"
 
-# Interactive Explore pane (replaces the static Illustration pane). Groups sharing an
+# Interactive Explore pane. Groups sharing an
 # `axis` are OR-ed, different axes AND-ed. The axes map onto the Kaggle Models API:
 # task -> search (the first selected task's search term), framework -> framework, author -> owner.
 [explore]
@@ -390,34 +390,6 @@ purpose = "Regression, classification, forecasting on tabular data"
 task = "Reinforcement Learning (RL)"
 context = "Environment"
 purpose = "Sequential decision-making, policy learning, and robotic control"
-
-[miniCharts.multimodal]
-svg = '''
-var s = '<rect x="4" y="8" width="46" height="68" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
-s += '<text x="27" y="52" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Multimodal</text>';
-return s;
-'''
-
-[miniCharts.nlp]
-svg = '''
-var s = '<rect x="4" y="8" width="46" height="68" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
-s += '<text x="27" y="52" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">NLP</text>';
-return s;
-'''
-
-[miniCharts.vision]
-svg = '''
-var s = '<rect x="4" y="8" width="46" height="68" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
-s += '<text x="27" y="52" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Vision</text>';
-return s;
-'''
-
-[miniCharts.audio]
-svg = '''
-var s = '<rect x="4" y="8" width="46" height="68" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
-s += '<text x="27" y="52" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Audio</text>';
-return s;
-'''
 
 [[codeBranches]]
 model = "multimodal"

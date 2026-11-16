@@ -60,20 +60,6 @@ function buildTogglesHtml(models: IModelToggle[], defaultModel: string): string 
 	return models.map(m => `\t\t\t\t<button class="toggle-btn${m.id === defaultModel ? ' active' : ''}" data-model="${m.id}">${htmlEsc(m.label)}</button>`).join('\n');
 }
 
-function buildMiniChartsJs(data: IScaffoldPanelData, models: IModelToggle[]): string {
-	// model ids may contain '-', which is not valid in a JS function name
-	const fnName = (id: string) => `mini_${id.replace(/[^A-Za-z0-9_]/g, '_')}`;
-	const charts = data.miniCharts ?? [];
-	if (!charts.length) { return 'var MINI_CHARTS = []; var MINI_LABELS = [];'; }
-	const fns = charts.map(c => {
-		const body = c.svg.trim().split('\n').map(l => '\t\t\t\t\t' + l.trim()).join('\n');
-		return `\t\t\t\tfunction ${fnName(c.model)}() {\n${body}\n\t\t\t\t}`;
-	}).join('\n');
-	const miniArr = models.map(m => fnName(m.id)).join(', ');
-	const labelArr = models.map(m => `'${jsEscape(m.label)}'`).join(', ');
-	return `${fns}\n\t\t\t\tvar MINI_CHARTS = [${miniArr}];\n\t\t\t\tvar MINI_LABELS = [${labelArr}];`;
-}
-
 function buildCodeBranchesJs(data: IScaffoldPanelData): string {
 	const branches = data.codeBranches ?? [];
 	const specific = branches.filter(b => b.model !== '*');
@@ -176,23 +162,20 @@ ${buttons}
 
 /**
  * Build the HTML of a panel on the shared scaffold from its TOML data: key points, decision
- * table, model toggles, parameter inputs, mini-chart gallery, declarative code and Next Steps.
+ * table, model toggles, parameter inputs, declarative code and Next Steps.
  */
 export function buildScaffoldHtml(panelId: string, data: IScaffoldPanelData, options: ScaffoldPanelOptions): string {
 	const models = panelModels(data);
 	return buildWebviewHtml({
 		modelsLiteral: `[${models.map(m => `'${m.id}'`).join(', ')}]`,
-		chartW: 54,
 		togglesJs: buildTogglesHtml(models, options.defaultModel),
 		bullets: buildBulletsHtml(data),
 		decisionRows: buildDecisionRowsHtml(data),
-		miniChartsJs: buildMiniChartsJs(data, models),
 		codeBranchesJs: buildCodeBranchesJs(data),
 		actionsJs: buildActionsJs(data),
 		inputsHtml: buildInputsHtml(data),
 		subtabsHtml: buildSubtabsHtml(data),
 		...buildNextSteps(panelId, data),
-		omitIllustration: !data.miniCharts?.length && !options.illustrationOverrideJs,
 		...options,
 	});
 }

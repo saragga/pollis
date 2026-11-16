@@ -177,25 +177,6 @@ tooltip = "Number of leader decisions evaluated between the smallest and largest
 default = "401"
 models = ["grid"]
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.kkt]
-# Complementarity: the L-shaped set lambda * s = 0
-svg = '''
-return '<line x1="10" y1="68" x2="48" y2="68" stroke="currentColor" stroke-width="0.6"/><line x1="10" y1="24" x2="10" y2="68" stroke="currentColor" stroke-width="0.6"/>'
-	+ '<path d="M12,26 L12,66 L48,66" fill="none" stroke="currentColor" stroke-width="2"/>';
-'''
-
-[miniCharts.grid]
-# Leader objective sampled along a grid, best point highlighted
-svg = '''
-let s = '<line x1="6" y1="70" x2="50" y2="70" stroke="currentColor" stroke-width="0.6"/>';
-const ys = [34, 40, 47, 55, 62, 52, 44, 38, 31];
-ys.forEach((y, i) => { s += '<circle cx="' + (8 + i * 5) + '" cy="' + y + '" r="' + (i === 4 ? 3 : 1.6) + '" fill="currentColor"/>'; });
-return s;
-'''
-
 [[codeBranches]]
 model = "kkt"
 code = '''

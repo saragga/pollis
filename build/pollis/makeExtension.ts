@@ -57,7 +57,7 @@
 //                                          and Pollis compiles the document with PollisTeX when it is first opened
 //
 // Only scaffold panels can be packaged: a panel whose template passes its own JavaScript or CSS
-// (illustrationOverrideJs, extraCss...) has code, and a data-only extension cannot hold code.
+// (explore, extraCss...) has code, and a data-only extension cannot hold code.
 
 import * as fs from 'fs';
 import * as path from 'path';

@@ -347,66 +347,6 @@ label = "Initial Radius"
 tooltip = "Initial trust-region radius (PRIMA methods) or initial step size (PRAXIS, Sbplx): roughly a tenth of the expected distance to the minimiser. BOBYQA needs it no larger than half the smallest box side."
 default = "0.5"
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.cobyla]
-# A simplex of interpolation points and a constraint boundary
-svg = '''
-return '<path d="M8,68 Q30,30 50,40" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/>'
-	+ '<polygon points="16,58 30,50 22,40" fill="currentColor" opacity="0.2" stroke="currentColor" stroke-width="0.8"/>'
-	+ '<circle cx="16" cy="58" r="1.8" fill="currentColor"/><circle cx="30" cy="50" r="1.8" fill="currentColor"/><circle cx="22" cy="40" r="1.8" fill="currentColor"/>';
-'''
-
-[miniCharts.bobyqa]
-# Quadratic model contours inside a box, with a trust region
-svg = '''
-return '<rect x="8" y="30" width="38" height="40" fill="none" stroke="currentColor" stroke-width="0.8"/>'
-	+ '<ellipse cx="30" cy="48" rx="12" ry="7" fill="none" stroke="currentColor" stroke-width="0.7" opacity="0.6"/>'
-	+ '<ellipse cx="30" cy="48" rx="6" ry="3.5" fill="none" stroke="currentColor" stroke-width="0.7" opacity="0.6"/>'
-	+ '<circle cx="22" cy="56" r="9" fill="none" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2"/><circle cx="22" cy="56" r="1.8" fill="currentColor"/>';
-'''
-
-[miniCharts.newuoa]
-# Quadratic model contours with a trust region, no box
-svg = '''
-return '<ellipse cx="30" cy="48" rx="15" ry="9" fill="none" stroke="currentColor" stroke-width="0.7" opacity="0.6"/>'
-	+ '<ellipse cx="30" cy="48" rx="7" ry="4" fill="none" stroke="currentColor" stroke-width="0.7" opacity="0.6"/>'
-	+ '<circle cx="18" cy="58" r="10" fill="none" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2"/><circle cx="18" cy="58" r="1.8" fill="currentColor"/>'
-	+ '<line x1="18" y1="58" x2="26" y2="52" stroke="currentColor" stroke-width="1"/>';
-'''
-
-[miniCharts.uobyqa]
-# A dense set of interpolation points around the model centre
-svg = '''
-var s = '', pts = [[20,40],[30,38],[40,42],[18,50],[28,50],[38,52],[22,60],[32,62],[42,58],[30,46]];
-pts.forEach(function (p) { s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="1.6" fill="currentColor"/>'; });
-return s + '<ellipse cx="30" cy="50" rx="16" ry="14" fill="none" stroke="currentColor" stroke-width="0.7" opacity="0.5"/>';
-'''
-
-[miniCharts.lincoa]
-# A linear constraint cutting the trust region
-svg = '''
-return '<line x1="8" y1="36" x2="48" y2="66" stroke="currentColor" stroke-width="1.2"/>'
-	+ '<circle cx="24" cy="58" r="10" fill="none" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2"/><circle cx="24" cy="58" r="1.8" fill="currentColor"/>'
-	+ '<line x1="24" y1="58" x2="30" y2="52" stroke="currentColor" stroke-width="1"/>';
-'''
-
-[miniCharts.praxis]
-# Line searches along conjugate directions
-svg = '''
-return '<ellipse cx="30" cy="48" rx="16" ry="8" transform="rotate(-25 30 48)" fill="none" stroke="currentColor" stroke-width="0.7" opacity="0.5"/>'
-	+ '<polyline points="10,66 36,66 26,52 32,49 29,47" fill="none" stroke="currentColor" stroke-width="1"/><circle cx="29" cy="47" r="1.8" fill="currentColor"/>';
-'''
-
-[miniCharts.sbplx]
-# Small simplices moving through subspaces
-svg = '''
-return '<polygon points="10,64 18,64 14,57" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>'
-	+ '<polygon points="20,56 28,58 24,50" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.7"/>'
-	+ '<polygon points="30,48 38,46 34,40" fill="currentColor" opacity="0.3" stroke="currentColor" stroke-width="0.8"/>';
-'''
-
 [[codeBranches]]
 model = "cobyla"
 code = '''

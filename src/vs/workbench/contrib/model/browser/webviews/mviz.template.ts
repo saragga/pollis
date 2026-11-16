@@ -10,8 +10,6 @@ export function getMvizHtml(): string {
 		title: 'Multivariate Plots',
 		defaultModel: 'corner',
 		modelsLiteral: `['corner', 'parallel', 'bubble', 'heatmap']`,
-		chartW: 54,
-		illusCollapsed: true,
 		togglesJs: `			<button class="toggle-btn active" data-model="corner">Corner Plot</button>
 			<button class="toggle-btn" data-model="parallel">Parallel Coordinates</button>
 			<button class="toggle-btn" data-model="bubble">Bubble Chart</button>
@@ -25,73 +23,6 @@ export function getMvizHtml(): string {
 					<tr><td>Bubble Chart</td><td>Numeric x, y, size</td><td>Encode a third quantitative dimension as marker size; add colour for a fourth</td></tr>
 					<tr><td>Heatmap</td><td>Numeric matrix</td><td>Reveal structure and strength in a correlation or data matrix at a glance</td></tr>
 				`,
-		miniChartsJs: `function miniCorner() {
-			// Lower-triangular pairwise matrix: diagonal = histogram, below-diagonal = scatter.
-			var s = '';
-			var xs = [4, 20, 36], ys = [8, 30, 52], cw = 14, ch = 18;
-			for (var r = 0; r < 3; r++) {
-				for (var col = 0; col <= r; col++) {
-					var x = xs[col], y = ys[r];
-					s += '<rect x="' + x + '" y="' + y + '" width="' + cw + '" height="' + ch + '" fill="none" stroke="currentColor" stroke-width="0.7" opacity="0.4"/>';
-					if (col === r) {
-						var bh = [4, 9, 13, 8, 5], bw = (cw - 2) / bh.length;
-						for (var k = 0; k < bh.length; k++) {
-							var hh = Math.round(bh[k] / 13 * (ch - 4));
-							s += '<rect x="' + Math.round(x + 1 + k * bw) + '" y="' + (y + ch - 1 - hh) + '" width="' + Math.max(1, Math.round(bw - 0.6)) + '" height="' + hh + '" fill="currentColor" opacity="0.75"/>';
-						}
-					} else {
-						var sp = [[3,14],[6,11],[9,8],[5,15],[11,6],[8,12]];
-						for (var p = 0; p < sp.length; p++) {
-							s += '<circle cx="' + (x + sp[p][0]) + '" cy="' + (y + sp[p][1]) + '" r="1.3" fill="currentColor" opacity="0.85"/>';
-						}
-					}
-				}
-			}
-			return s;
-		}
-
-		function miniParallel() {
-			// Four vertical axes with one polyline per observation crossing them.
-			var s = '';
-			var axX = [8, 22, 36, 50], top = 10, bot = 70;
-			axX.forEach(function(ax) {
-				s += '<line x1="' + ax + '" y1="' + top + '" x2="' + ax + '" y2="' + bot + '" stroke="currentColor" stroke-width="0.7" opacity="0.45"/>';
-			});
-			var lines = [[0.2,0.6,0.3,0.8],[0.5,0.2,0.7,0.4],[0.8,0.5,0.4,0.2],[0.3,0.9,0.6,0.5],[0.6,0.3,0.9,0.7]];
-			lines.forEach(function(ln) {
-				var d = '';
-				ln.forEach(function(f, i) { d += (i === 0 ? 'M ' : ' L ') + axX[i] + ' ' + Math.round(top + f * (bot - top)); });
-				s += '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1" opacity="0.55"/>';
-			});
-			return s;
-		}
-
-		function miniBubble() {
-			// Scatter with area-encoded marker sizes (third variable) on x-y axes.
-			var s = '<line x1="6" y1="6" x2="6" y2="74" stroke="currentColor" stroke-width="0.6" opacity="0.35"/>'
-				+ '<line x1="6" y1="74" x2="50" y2="74" stroke="currentColor" stroke-width="0.6" opacity="0.35"/>';
-			var bubbles = [[14,58,5],[24,40,8],[34,52,4],[40,28,10],[20,22,3],[44,60,6],[30,66,4]];
-			bubbles.forEach(function(b) {
-				s += '<circle cx="' + b[0] + '" cy="' + b[1] + '" r="' + b[2] + '" fill="currentColor" opacity="0.45" stroke="currentColor" stroke-width="0.6"/>';
-			});
-			return s;
-		}
-
-		function miniHeatmap() {
-			// 4 x 4 matrix of cells; opacity encodes magnitude (diagonal strongest).
-			var s = '';
-			var op = [[1.0,0.7,0.3,0.5],[0.7,1.0,0.6,0.2],[0.3,0.6,1.0,0.8],[0.5,0.2,0.8,1.0]];
-			var cell = 11, ox = 5, oy = 9;
-			for (var i = 0; i < 4; i++) {
-				for (var j = 0; j < 4; j++) {
-					s += '<rect x="' + (ox + j * cell) + '" y="' + (oy + i * cell) + '" width="' + (cell - 1) + '" height="' + (cell - 1) + '" fill="currentColor" opacity="' + op[i][j] + '"/>';
-				}
-			}
-			return s;
-		}
-
-		var MINI_CHARTS = [miniCorner, miniParallel, miniBubble, miniHeatmap];
-		var MINI_LABELS = ['Corner', 'Parallel', 'Bubble', 'Heatmap'];`,
 		codeBranchesJs: `if (currentModel === 'corner') {
 				c += cline(kw('using') + ' ' + ty('PairPlots') + ', ' + ty('CairoMakie') + ', ' + ty('Random'), 'corner plot, backend, RNG');
 				c += blank();

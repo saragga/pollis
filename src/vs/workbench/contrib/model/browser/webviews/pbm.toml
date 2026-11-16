@@ -229,37 +229,6 @@ label = "Iterations"
 tooltip = "Number of generations. Typical: 200 to 500."
 default = "250"
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.nsga2]
-# Front with crowding brackets
-svg = '''
-return '<path d="M10,24 Q14,62 48,66" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/>'
-	+ [[11,32],[14,46],[20,55],[29,61],[40,64]].map(p => '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="2.5" fill="currentColor"/>').join('');
-'''
-
-[miniCharts.nsga3]
-# Reference directions fanning from the ideal point
-svg = '''
-return '<path d="M10,24 Q14,62 48,66" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/>'
-	+ [[12,40],[17,53],[27,61],[42,65]].map(p => '<line x1="6" y1="70" x2="' + p[0] + '" y2="' + p[1] + '" stroke="currentColor" stroke-width="0.8"/><circle cx="' + p[0] + '" cy="' + p[1] + '" r="2.5" fill="currentColor"/>').join('');
-'''
-
-[miniCharts.spea2]
-# Front plus an archive box of elite points
-svg = '''
-return '<rect x="6" y="22" width="44" height="46" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2,2"/>'
-	+ [[11,30],[14,46],[22,57],[36,63]].map(p => '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="2.5" fill="currentColor"/>').join('')
-	+ '<circle cx="34" cy="40" r="2" fill="none" stroke="currentColor"/>';
-'''
-
-[miniCharts.sms]
-# Hypervolume staircase under the front
-svg = '''
-return '<path d="M11,30 L11,46 L15,46 L15,56 L22,56 L22,62 L34,62 L34,66 L48,66 L48,30 Z" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="1.5"/>';
-'''
-
 [[codeBranches]]
 model = "nsga2"
 code = '''

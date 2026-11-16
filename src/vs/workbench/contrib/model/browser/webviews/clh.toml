@@ -228,61 +228,6 @@ label = "Cosine"
 value = "Chebyshev()"
 label = "Chebyshev"
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.ward]
-# Low merges and a tall final merge (compact groups)
-svg = '''
-var y0 = 70, s = '';
-function u(x1, x2, h1, h2, top) {
-	s += '<path d="M' + x1 + ',' + h1 + ' L' + x1 + ',' + top + ' L' + x2 + ',' + top + ' L' + x2 + ',' + h2 + '" fill="none" stroke="currentColor" stroke-width="1.3"/>';
-}
-u(8, 18, y0, y0, 54);
-u(36, 46, y0, y0, 50);
-u(13, 41, 54, 50, 22);
-return s;
-'''
-
-[miniCharts.complete]
-# Tight clusters joined high
-svg = '''
-var y0 = 70, s = '';
-function u(x1, x2, h1, h2, top) {
-	s += '<path d="M' + x1 + ',' + h1 + ' L' + x1 + ',' + top + ' L' + x2 + ',' + top + ' L' + x2 + ',' + h2 + '" fill="none" stroke="currentColor" stroke-width="1.3"/>';
-}
-u(8, 18, y0, y0, 56);
-u(36, 46, y0, y0, 52);
-u(13, 41, 56, 52, 30);
-return s;
-'''
-
-[miniCharts.average]
-# Balanced merge heights
-svg = '''
-var y0 = 70, s = '';
-function u(x1, x2, h1, h2, top) {
-	s += '<path d="M' + x1 + ',' + h1 + ' L' + x1 + ',' + top + ' L' + x2 + ',' + top + ' L' + x2 + ',' + h2 + '" fill="none" stroke="currentColor" stroke-width="1.3"/>';
-}
-u(8, 18, y0, y0, 52);
-u(36, 46, y0, y0, 48);
-u(13, 41, 52, 48, 36);
-return s;
-'''
-
-[miniCharts.single]
-# Chained: merges at similar low heights
-svg = '''
-var y0 = 70, s = '';
-function u(x1, x2, h1, h2, top) {
-	s += '<path d="M' + x1 + ',' + h1 + ' L' + x1 + ',' + top + ' L' + x2 + ',' + top + ' L' + x2 + ',' + h2 + '" fill="none" stroke="currentColor" stroke-width="1.3"/>';
-}
-u(8, 18, y0, y0, 60);
-u(36, 46, y0, y0, 58);
-u(13, 41, 60, 58, 52);
-return s;
-'''
-
 [[codeBranches]]
 model = "ward"
 code = '''

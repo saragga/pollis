@@ -10,8 +10,6 @@ export function getTsvizHtml(): string {
 		title: 'Time Series Plots',
 		defaultModel: 'tsplot',
 		modelsLiteral: `['tsplot', 'ribbon', 'stacked', 'ohlc']`,
-		chartW: 54,
-		illusCollapsed: true,
 		togglesJs: `			<button class="toggle-btn active" data-model="tsplot">Time Series Plot</button>
 			<button class="toggle-btn" data-model="ribbon">Ribbon Plot</button>
 			<button class="toggle-btn" data-model="stacked">Stacked Area</button>
@@ -27,68 +25,6 @@ export function getTsvizHtml(): string {
 					<tr><td>Stacked Area</td><td>Ordered numeric components</td><td>Show how several non-negative series compose a total over time</td></tr>
 					<tr><td>OHLC</td><td>Open, high, low, close</td><td>Show per-period price range, open, and close for a financial time series</td></tr>
 				`,
-		miniChartsJs: `function miniTsplot() {
-			// Single series traced over an ordered time axis.
-			var s = '<line x1="5" y1="6" x2="5" y2="72" stroke="currentColor" stroke-width="0.6" opacity="0.35"/>'
-				+ '<line x1="5" y1="72" x2="50" y2="72" stroke="currentColor" stroke-width="0.6" opacity="0.35"/>';
-			var ys = [50, 40, 46, 30, 36, 22, 28, 16];
-			var x0 = 8, step = (48 - 8) / (ys.length - 1);
-			var d = '';
-			ys.forEach(function(v, i) { d += (i === 0 ? 'M ' : ' L ') + Math.round(x0 + i * step) + ' ' + v; });
-			s += '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.5"/>';
-			return s;
-		}
-
-		function miniRibbon() {
-			// Central estimate with a shaded uncertainty band.
-			var s = '<line x1="5" y1="6" x2="5" y2="72" stroke="currentColor" stroke-width="0.6" opacity="0.35"/>'
-				+ '<line x1="5" y1="72" x2="50" y2="72" stroke="currentColor" stroke-width="0.6" opacity="0.35"/>';
-			var mid = [48, 42, 38, 30, 26, 20], x0 = 9, step = (47 - 9) / (mid.length - 1), band = 7;
-			var pts = mid.map(function(v, i) { return [Math.round(x0 + i * step), v]; });
-			var top = 'M ' + pts.map(function(p) { return p[0] + ' ' + (p[1] - band); }).join(' L ');
-			var bot = ' L ' + pts.slice().reverse().map(function(p) { return p[0] + ' ' + (p[1] + band); }).join(' L ') + ' Z';
-			s += '<path d="' + top + bot + '" fill="currentColor" opacity="0.2" stroke="none"/>';
-			var dl = '';
-			pts.forEach(function(p, i) { dl += (i === 0 ? 'M ' : ' L ') + p[0] + ' ' + p[1]; });
-			s += '<path d="' + dl + '" fill="none" stroke="currentColor" stroke-width="1.5"/>';
-			return s;
-		}
-
-		function miniStacked() {
-			// Non-negative components summed into a total over time.
-			var s = '<line x1="5" y1="6" x2="5" y2="72" stroke="currentColor" stroke-width="0.6" opacity="0.35"/>'
-				+ '<line x1="5" y1="72" x2="50" y2="72" stroke="currentColor" stroke-width="0.6" opacity="0.35"/>';
-			var base = 72, x0 = 8, x1 = 48, n = 6;
-			var layers = [[10, 14, 12, 16, 13, 18], [8, 10, 14, 11, 16, 12], [6, 7, 9, 8, 10, 9]];
-			var xs = [];
-			for (var i = 0; i < n; i++) { xs.push(Math.round(x0 + i * (x1 - x0) / (n - 1))); }
-			var cum = xs.map(function() { return base; });
-			layers.forEach(function(layer, li) {
-				var topEdge = xs.map(function(x, i) { return [x, cum[i] - layer[i]]; });
-				var d = 'M ' + topEdge.map(function(p) { return p[0] + ' ' + p[1]; }).join(' L ');
-				d += ' L ' + xs.slice().reverse().map(function(x, i) { return x + ' ' + cum[n - 1 - i]; }).join(' L ') + ' Z';
-				s += '<path d="' + d + '" fill="currentColor" opacity="' + (0.55 - li * 0.15) + '" stroke="currentColor" stroke-width="0.5"/>';
-				for (var i2 = 0; i2 < n; i2++) { cum[i2] = topEdge[i2][1]; }
-			});
-			return s;
-		}
-
-		function miniOhlc() {
-			// Per-period open-high-low-close bars (open tick left, close tick right).
-			var s = '<line x1="5" y1="6" x2="5" y2="72" stroke="currentColor" stroke-width="0.6" opacity="0.35"/>'
-				+ '<line x1="5" y1="72" x2="50" y2="72" stroke="currentColor" stroke-width="0.6" opacity="0.35"/>';
-			var bars = [[12, 20, 50, 44, 28], [21, 16, 46, 30, 40], [30, 24, 54, 50, 34], [39, 14, 40, 36, 22]];
-			bars.forEach(function(b) {
-				var x = b[0], hi = b[1], lo = b[2], op = b[3], cl = b[4];
-				s += '<line x1="' + x + '" y1="' + hi + '" x2="' + x + '" y2="' + lo + '" stroke="currentColor" stroke-width="1.2"/>';
-				s += '<line x1="' + (x - 4) + '" y1="' + op + '" x2="' + x + '" y2="' + op + '" stroke="currentColor" stroke-width="1.2"/>';
-				s += '<line x1="' + x + '" y1="' + cl + '" x2="' + (x + 4) + '" y2="' + cl + '" stroke="currentColor" stroke-width="1.2"/>';
-			});
-			return s;
-		}
-
-		var MINI_CHARTS = [miniTsplot, miniRibbon, miniStacked, miniOhlc];
-		var MINI_LABELS = ['Series', 'Ribbon', 'Stacked', 'OHLC'];`,
 		codeBranchesJs: `if (currentModel === 'tsplot') {
 				c += cline(kw('using') + ' ' + ty('Plots') + ', ' + ty('Random'), 'time series plotting');
 				c += blank();

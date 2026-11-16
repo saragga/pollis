@@ -278,40 +278,6 @@ tooltip = "Initial augmented Lagrangian penalty weight; multiplied by 10 after e
 default = "1.0"
 models = ["altro"]
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.direct]
-# A trajectory with every knot point as a decision variable
-svg = '''
-var s = '', d = 'M8,62';
-for (var i = 0; i <= 8; i++) { var x = 8 + 4.75 * i, t = i / 8, y = 62 - 30 * (3 * t * t - 2 * t * t * t); d += ' L' + x.toFixed(1) + ',' + y.toFixed(1); s += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="1.8" fill="currentColor"/>'; }
-return '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1"/>' + s;
-'''
-
-[miniCharts.indirect]
-# Shooting arcs from one start converging on the target
-svg = '''
-var s = '';
-[-14, -4, 0].forEach(function (e, i) { s += '<path d="M8,62 Q28,' + (26 + e) + ' 46,' + (32 + e * 0.8) + '" fill="none" stroke="currentColor" stroke-width="' + (i === 2 ? 1.4 : 0.8) + '" opacity="' + (i === 2 ? 1 : 0.5) + '"/>'; });
-return s + '<circle cx="8" cy="62" r="2" fill="currentColor"/><circle cx="46" cy="32" r="2.4" fill="none" stroke="currentColor" stroke-width="1.2"/>';
-'''
-
-[miniCharts.ddp]
-# Backward sweep arrow above a forward rollout
-svg = '''
-return '<path d="M46,34 L10,34" stroke="currentColor" stroke-width="1" fill="none"/><path d="M14,31 L10,34 L14,37" stroke="currentColor" stroke-width="1" fill="none"/>'
-	+ '<path d="M8,64 Q24,40 46,48" stroke="currentColor" stroke-width="1.4" fill="none"/><path d="M42,45 L46,48 L42,51" stroke="currentColor" stroke-width="1.1" fill="none"/>';
-'''
-
-[miniCharts.altro]
-# A control profile pressed against its bounds
-svg = '''
-var d = 'M8,50';
-for (var x = 8; x <= 46; x++) { var t = (x - 8) / 38, y = 50 - 26 * Math.sin(2 * Math.PI * t); d += ' L' + x + ',' + Math.max(36, Math.min(64, y)).toFixed(1); }
-return '<line x1="8" y1="36" x2="46" y2="36" stroke="currentColor" stroke-width="0.8" stroke-dasharray="3,2"/><line x1="8" y1="64" x2="46" y2="64" stroke="currentColor" stroke-width="0.8" stroke-dasharray="3,2"/><path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.4"/>';
-'''
-
 [[codeBranches]]
 model = "direct"
 code = '''

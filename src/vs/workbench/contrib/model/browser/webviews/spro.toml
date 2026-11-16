@@ -180,36 +180,6 @@ tooltip = "Iteration limit of SDDP training. Each iteration runs one forward sim
 default = "100"
 models = ["sddp"]
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.ts]
-# Root decision fanning out to recourse scenarios
-svg = '''
-let s = '<circle cx="10" cy="48" r="3.5" fill="currentColor"/>';
-for (let i = 0; i < 5; i++) { const y = 28 + i * 10; s += '<line x1="10" y1="48" x2="44" y2="' + y + '" stroke="currentColor" stroke-width="0.8"/><circle cx="44" cy="' + y + '" r="2.2" fill="currentColor"/>'; }
-return s;
-'''
-
-[miniCharts.ms]
-# Scenario tree branching over three stages
-svg = '''
-let s = '<circle cx="6" cy="48" r="3" fill="currentColor"/>';
-for (const y1 of [36, 60]) {
-	s += '<line x1="6" y1="48" x2="26" y2="' + y1 + '" stroke="currentColor" stroke-width="0.8"/><circle cx="26" cy="' + y1 + '" r="2.2" fill="currentColor"/>';
-	for (const dy of [-7, 7]) { s += '<line x1="26" y1="' + y1 + '" x2="46" y2="' + (y1 + dy) + '" stroke="currentColor" stroke-width="0.6"/><circle cx="46" cy="' + (y1 + dy) + '" r="1.6" fill="currentColor"/>'; }
-}
-return s;
-'''
-
-[miniCharts.sddp]
-# Piecewise-linear cuts under a convex cost-to-go
-svg = '''
-return '<line x1="6" y1="70" x2="50" y2="70" stroke="currentColor" stroke-width="0.6"/>'
-	+ '<path d="M8,30 Q28,78 48,34" fill="none" stroke="currentColor" stroke-width="1.4"/>'
-	+ '<line x1="6" y1="36" x2="26" y2="62" stroke="currentColor" stroke-width="0.8"/><line x1="16" y1="58" x2="40" y2="56" stroke="currentColor" stroke-width="0.8"/><line x1="30" y1="62" x2="50" y2="30" stroke="currentColor" stroke-width="0.8"/>';
-'''
-
 [[codeBranches]]
 model = "ts"
 code = '''

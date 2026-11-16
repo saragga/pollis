@@ -262,24 +262,6 @@ label = "Input Max"
 tooltip = "Upper bound on each input as a Julia vector; use [Inf] for none."
 default = "[1.5]"
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.linmpc]
-# Output rising to a setpoint with the receding prediction window shaded
-svg = '''
-var d = 'M8,64';
-for (var x = 8; x <= 46; x++) { d += ' L' + x + ',' + (64 - 28 * (1 - Math.exp(-(x - 8) / 7))).toFixed(1); }
-return '<rect x="22" y="30" width="16" height="38" fill="currentColor" opacity="0.12"/><line x1="8" y1="36" x2="46" y2="36" stroke="currentColor" stroke-width="0.8" stroke-dasharray="3,2"/><path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.4"/>';
-'''
-
-[miniCharts.nonlinmpc]
-# A pendulum being swung upright
-svg = '''
-return '<circle cx="27" cy="52" r="1.8" fill="currentColor"/><line x1="27" y1="52" x2="27" y2="30" stroke="currentColor" stroke-width="1.4"/><circle cx="27" cy="30" r="3" fill="currentColor"/>'
-	+ '<path d="M16,64 A13,13 0 0 1 14,45" fill="none" stroke="currentColor" stroke-width="0.9" stroke-dasharray="2,2"/><line x1="27" y1="52" x2="27" y2="68" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
-'''
-
 [[codeBranches]]
 model = "linmpc"
 code = '''

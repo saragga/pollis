@@ -270,44 +270,6 @@ label = "Max Iterations"
 tooltip = "Iteration limit (objective evaluations for SLSQP and MMA)."
 default = "500"
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.slsqp]
-# Quadratic model contours touching the constraint
-svg = '''
-return '<path d="M6,34 Q30,44 48,70" fill="none" stroke="currentColor" stroke-width="1.3"/><ellipse cx="18" cy="60" rx="12" ry="7" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>'
-	+ '<ellipse cx="18" cy="60" rx="20" ry="12" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.35"/><circle cx="30" cy="48" r="2.2" fill="currentColor"/>';
-'''
-
-[miniCharts.mma]
-# Moving asymptotes bracketing a convex approximation
-svg = '''
-return '<line x1="10" y1="28" x2="10" y2="70" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2"/><line x1="44" y1="28" x2="44" y2="70" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2"/>'
-	+ '<path d="M13,30 Q27,90 41,30" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="27" cy="60" r="2" fill="currentColor"/>';
-'''
-
-[miniCharts.ip]
-# A central path through the interior to the boundary optimum
-svg = '''
-return '<path d="M8,66 L8,30 L46,30 Q46,56 30,66 Z" fill="currentColor" opacity="0.12" stroke="currentColor" stroke-width="0.8"/>'
-	+ '<path d="M16,40 Q26,44 30,54 T36,62" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2,1.5"/><circle cx="36" cy="62" r="2.2" fill="currentColor"/>';
-'''
-
-[miniCharts.fw]
-# Zig-zag towards vertices of a polytope
-svg = '''
-return '<path d="M8,64 L26,28 L46,52 Z" fill="currentColor" opacity="0.12" stroke="currentColor" stroke-width="0.8"/>'
-	+ '<path d="M24,54 L30,40 L34,48 L32,44 L34,47" fill="none" stroke="currentColor" stroke-width="1.1"/><circle cx="34" cy="47" r="2" fill="currentColor"/>';
-'''
-
-[miniCharts.gp]
-# A gradient step outside the set projected back onto it
-svg = '''
-return '<circle cx="24" cy="52" r="15" fill="currentColor" opacity="0.12" stroke="currentColor" stroke-width="0.8"/>'
-	+ '<line x1="24" y1="52" x2="44" y2="34" stroke="currentColor" stroke-width="1" stroke-dasharray="2,2"/><line x1="44" y1="34" x2="35" y2="42" stroke="currentColor" stroke-width="1.2"/><circle cx="35" cy="42" r="2.2" fill="currentColor"/>';
-'''
-
 [[codeBranches]]
 model = "slsqp"
 code = '''

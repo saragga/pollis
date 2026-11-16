@@ -180,25 +180,6 @@ tooltip = "Number of equally likely demand values, spread over 0 to 10 units and
 default = "10"
 models = ["stoch"]
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.det]
-# Order-up-to policy: staircase falling to zero
-svg = '''
-return '<line x1="6" y1="70" x2="50" y2="70" stroke="currentColor" stroke-width="0.6"/><line x1="6" y1="24" x2="6" y2="70" stroke="currentColor" stroke-width="0.6"/>'
-	+ '<path d="M6,30 L14,30 L14,38 L22,38 L22,46 L30,46 L30,54 L38,54 L38,62 L44,62 L44,70 L50,70" fill="none" stroke="currentColor" stroke-width="1.6"/>';
-'''
-
-[miniCharts.stoch]
-# Fan of random stock paths around the mean
-svg = '''
-const p = (d, w) => '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="' + w + '"/>';
-return '<line x1="6" y1="70" x2="50" y2="70" stroke="currentColor" stroke-width="0.6"/><line x1="6" y1="24" x2="6" y2="70" stroke="currentColor" stroke-width="0.6"/>'
-	+ p('M6,48 L16,40 L26,52 L36,36 L50,44', 0.7) + p('M6,48 L16,56 L26,44 L36,58 L50,50', 0.7) + p('M6,48 L16,46 L26,34 L36,48 L50,30', 0.7)
-	+ p('M6,48 L50,46', 1.6);
-'''
-
 [[codeBranches]]
 model = "det"
 code = '''

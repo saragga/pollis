@@ -207,25 +207,6 @@ label = "MoreThuente"
 value = "StrongWolfe"
 label = "StrongWolfe"
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.bfgs]
-# A dense matrix being updated beside a path bending toward the minimum
-svg = '''
-var s = '';
-for (var i = 0; i < 4; i++) { for (var j = 0; j < 4; j++) { s += '<rect x="' + (8 + 5 * j) + '" y="' + (30 + 5 * i) + '" width="4" height="4" fill="currentColor" opacity="' + (i === j ? 0.9 : 0.35) + '"/>'; } }
-return s + '<path d="M30,64 Q34,48 46,40" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="30" cy="64" r="2" fill="currentColor"/><circle cx="46" cy="40" r="2.4" fill="currentColor"/>';
-'''
-
-[miniCharts.lbfgs]
-# A short stack of stored vector pairs beside the same path
-svg = '''
-var s = '';
-for (var k = 0; k < 3; k++) { s += '<rect x="8" y="' + (30 + 8 * k) + '" width="3" height="6" fill="currentColor" opacity="0.8"/><rect x="13" y="' + (30 + 8 * k) + '" width="3" height="6" fill="currentColor" opacity="0.45"/>'; }
-return s + '<path d="M26,64 Q32,48 46,40" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="26" cy="64" r="2" fill="currentColor"/><circle cx="46" cy="40" r="2.4" fill="currentColor"/>';
-'''
-
 [[codeBranches]]
 model = "bfgs"
 code = '''

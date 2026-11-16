@@ -322,63 +322,6 @@ default = "5"
 models = ["mlp"]
 when = "head=mdn"
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.mlp]
-# Fully connected layers: 3 inputs, two hidden layers of 4, one output
-svg = '''
-var layers = [[3, 10], [4, 22], [4, 34], [1, 46]];
-var ys = function(n) { var out = []; for (var i = 0; i < n; i++) { out.push(44 + (i - (n - 1) / 2) * 12); } return out; };
-var s = '';
-for (var l = 0; l < layers.length - 1; l++) {
-	var a = ys(layers[l][0]), b = ys(layers[l + 1][0]);
-	for (var i = 0; i < a.length; i++) {
-		for (var j = 0; j < b.length; j++) {
-			s += '<line x1="' + layers[l][1] + '" y1="' + a[i] + '" x2="' + layers[l + 1][1] + '" y2="' + b[j] + '" stroke="currentColor" stroke-width="0.5" opacity="0.5"/>';
-		}
-	}
-}
-for (var k = 0; k < layers.length; k++) {
-	var y = ys(layers[k][0]);
-	for (var m = 0; m < y.length; m++) {
-		s += '<circle cx="' + layers[k][1] + '" cy="' + y[m] + '" r="2.8" fill="currentColor"/>';
-	}
-}
-return s;
-'''
-
-[miniCharts.ae]
-# Hourglass: wide input, narrow bottleneck, wide reconstruction
-svg = '''
-var widths = [40, 26, 10, 26, 40];
-var s = '';
-for (var i = 0; i < widths.length; i++) {
-	var y = 18 + i * 13;
-	s += '<rect x="' + (27 - widths[i] / 2) + '" y="' + y + '" width="' + widths[i] + '" height="7" rx="1.5" fill="currentColor" opacity="' + (i === 2 ? 0.95 : 0.45) + '"/>';
-}
-return s;
-'''
-
-[miniCharts.vae]
-# Hourglass whose bottleneck is a Gaussian (mean and spread) rather than a point
-svg = '''
-var widths = [40, 26, 0, 26, 40];
-var s = '';
-for (var i = 0; i < widths.length; i++) {
-	if (!widths[i]) { continue; }
-	var y = 14 + i * 14;
-	s += '<rect x="' + (27 - widths[i] / 2) + '" y="' + y + '" width="' + widths[i] + '" height="7" rx="1.5" fill="currentColor" opacity="0.45"/>';
-}
-var d = '';
-for (var k = 0; k <= 24; k++) {
-	var z = (k - 12) / 4;
-	d += (k ? 'L' : 'M') + (15 + k) + ',' + (49 - Math.exp(-z * z / 2) * 9).toFixed(1);
-}
-s += '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.5"/>';
-return s;
-'''
-
 [[codeBranches]]
 model = "mlp"
 code = '''

@@ -10,7 +10,6 @@ export function getGsvizHtml(): string {
 		title: 'Graph and Spatial Plots',
 		defaultModel: 'network',
 		modelsLiteral: `['network', 'tree', 'choropleth', 'voronoi']`,
-		chartW: 54,
 		hiddenRowCss: '.bar-row, .histogram-row, .box-row, .violin-row { display: none; }',
 		togglesJs: `			<button class="toggle-btn active" data-model="network">Network Diagram</button>
 			<button class="toggle-btn" data-model="tree">Tree Diagram</button>
@@ -26,69 +25,6 @@ export function getGsvizHtml(): string {
 					<tr><td>Choropleth</td><td>Region + value</td><td>Map a quantity onto geographic areas using a colour scale</td></tr>
 					<tr><td>Voronoi</td><td>Point sites</td><td>Partition the plane into the region nearest each site (nearest-neighbour cells)</td></tr>
 				`,
-		miniChartsJs: `function miniNetwork() {
-			// nodes connected by edges (a small graph glyph)
-			var nodes = [[14, 22], [42, 16], [46, 48], [22, 60], [10, 44], [34, 70]];
-			var edges = [[0, 1], [0, 2], [0, 4], [1, 2], [2, 3], [3, 4], [3, 5], [2, 5]];
-			var s = '';
-			edges.forEach(function(e) {
-				s += '<line x1="' + nodes[e[0]][0] + '" y1="' + nodes[e[0]][1] + '" x2="' + nodes[e[1]][0] + '" y2="' + nodes[e[1]][1] + '" stroke="currentColor" stroke-width="0.8" opacity="0.55"/>';
-			});
-			nodes.forEach(function(p, i) {
-				var r = i === 0 ? 4.5 : 3;   // node 0 is a hub
-				s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="' + r + '" fill="currentColor"/>';
-			});
-			return s;
-		}
-
-		function miniTree() {
-			// top-down layered tree
-			var nodes = [[28, 12], [14, 40], [42, 40], [7, 70], [21, 70], [35, 70], [49, 70]];
-			var edges = [[0, 1], [0, 2], [1, 3], [1, 4], [2, 5], [2, 6]];
-			var s = '';
-			edges.forEach(function(e) {
-				s += '<line x1="' + nodes[e[0]][0] + '" y1="' + nodes[e[0]][1] + '" x2="' + nodes[e[1]][0] + '" y2="' + nodes[e[1]][1] + '" stroke="currentColor" stroke-width="0.8" opacity="0.55"/>';
-			});
-			nodes.forEach(function(p) {
-				s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="3" fill="currentColor"/>';
-			});
-			return s;
-		}
-
-		function miniChoropleth() {
-			// abstract map: irregular regions with varying fill (a colour-by-value glyph)
-			var s = '';
-			s += '<path d="M 6 10 L 26 8 L 30 30 L 10 34 Z" fill="currentColor" fill-opacity="0.55" stroke="currentColor" stroke-width="0.7"/>';
-			s += '<path d="M 26 8 L 50 14 L 46 34 L 30 30 Z" fill="currentColor" fill-opacity="0.20" stroke="currentColor" stroke-width="0.7"/>';
-			s += '<path d="M 10 34 L 30 30 L 28 56 L 8 54 Z" fill="currentColor" fill-opacity="0.35" stroke="currentColor" stroke-width="0.7"/>';
-			s += '<path d="M 30 30 L 46 34 L 48 60 L 28 56 Z" fill="currentColor" fill-opacity="0.70" stroke="currentColor" stroke-width="0.7"/>';
-			s += '<path d="M 8 54 L 28 56 L 24 78 L 12 76 Z" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="0.7"/>';
-			return s;
-		}
-
-		function miniVoronoi() {
-			// cell boundaries meeting at vertices, with a site dot inside each cell
-			var s = '';
-			var edges = [
-				[20, 40, 36, 46], // shared internal edge
-				[20, 40, 5, 14],
-				[20, 40, 3, 58],
-				[36, 46, 51, 16],
-				[36, 46, 46, 78],
-				[5, 14, 51, 16],  // upper boundary
-				[3, 58, 46, 78]   // lower boundary
-			];
-			edges.forEach(function(e) {
-				s += '<line x1="' + e[0] + '" y1="' + e[1] + '" x2="' + e[2] + '" y2="' + e[3] + '" stroke="currentColor" stroke-width="0.9" opacity="0.6"/>';
-			});
-			[[28, 14], [10, 40], [45, 44], [25, 66]].forEach(function(p) {
-				s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="2.4" fill="currentColor"/>';
-			});
-			return s;
-		}
-
-		var MINI_CHARTS = [miniNetwork, miniTree, miniChoropleth, miniVoronoi];
-		var MINI_LABELS = ['Network', 'Tree', 'Choropleth', 'Voronoi'];`,
 		codeBranchesJs: `if (currentModel === 'network') {
 				c += cline(kw('using') + ' ' + ty('Graphs') + ', ' + ty('GraphMakie') + ', ' + ty('CairoMakie') + ', ' + ty('Random'), 'graphs, graph plotting, backend, RNG');
 				c += blank();

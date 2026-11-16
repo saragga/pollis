@@ -171,36 +171,6 @@ tooltip = "Weight on the KL divergence term. beta = 1 is the standard VAE; beta 
 default = "1.0"
 models = ["vae"]
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.ae]
-# Hourglass: wide input, narrow bottleneck, wide output
-svg = '''
-var s = '', cols = [[8, 5], [19, 3], [27, 2], [35, 3], [46, 5]];
-cols.forEach(function (c, j) {
-	for (var i = 0; i < c[1]; i++) {
-		var y = 46 + (i - (c[1] - 1) / 2) * 9;
-		s += '<circle cx="' + c[0] + '" cy="' + y + '" r="' + (j === 2 ? 2.8 : 2.2) + '" fill="currentColor" opacity="' + (j === 2 ? 0.9 : 0.55) + '"/>';
-	}
-});
-return s + '<path d="M11,26 L24,39 M11,66 L24,53 M30,39 L43,26 M30,53 L43,66" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>';
-'''
-
-[miniCharts.vae]
-# Hourglass whose bottleneck is a Gaussian bump (a distribution, not a point)
-svg = '''
-var s = '', cols = [[8, 5], [19, 3], [35, 3], [46, 5]];
-cols.forEach(function (c) {
-	for (var i = 0; i < c[1]; i++) {
-		s += '<circle cx="' + c[0] + '" cy="' + (46 + (i - (c[1] - 1) / 2) * 9) + '" r="2.2" fill="currentColor" opacity="0.55"/>';
-	}
-});
-var d = 'M21,56';
-for (var x = 21; x <= 33; x++) { d += ' L' + x + ',' + (56 - 18 * Math.exp(-Math.pow((x - 27) / 3, 2) / 2)).toFixed(1); }
-return s + '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.4"/>';
-'''
-
 [[codeBranches]]
 model = "ae"
 code = '''

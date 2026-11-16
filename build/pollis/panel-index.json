@@ -321,7 +321,7 @@
 				}
 			],
 			"portable": false,
-			"reason": "the panel alpv has its own code (illusCollapsed, illustrationLabel, illustrationOverrideJs in src/vs/workbench/contrib/model/browser/webviews/alpv.template.ts), so it cannot go in a data-only extension"
+			"reason": "the panel alpv asks for an API key (apiKey in src/vs/workbench/contrib/model/browser/commands/alpv.command.ts), which a data-only extension cannot ask for"
 		},
 		{
 			"id": "ande",
@@ -2804,6 +2804,7 @@
 		},
 		{
 			"id": "ecb",
+			"title": "ECB Data Portal",
 			"source": "pollis",
 			"commands": [
 				{
@@ -2813,8 +2814,32 @@
 					]
 				}
 			],
-			"portable": false,
-			"reason": "the panel ecb has its own code (illusCollapsed, illustrationLabel, illustrationOverrideJs in src/vs/workbench/contrib/model/browser/webviews/ecb.template.ts), so it cannot go in a data-only extension"
+			"portable": true,
+			"defaultModel": "exchange",
+			"decisionFirstColumn": "Task",
+			"toml": "src/vs/workbench/contrib/model/browser/webviews/ecb.toml",
+			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
+			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"wikis": [
+				"ecb/accessing-data.md",
+				"ecb/factsheet.md",
+				"ecb/finding-series.md",
+				"ecb/overview.md",
+				"ecb/query-options.md",
+				"ecb/sdmx-alternatives.md"
+			],
+			"notebooks": [
+				"ecb/tutorial-01-first-series.ipynb",
+				"ecb/tutorial-02-multiple-series.ipynb",
+				"ecb/tutorial-03-query-options.ipynb",
+				"ecb/tutorial-04-dashboard.ipynb"
+			],
+			"packages": [
+				"HTTP.jl",
+				"CSV.jl",
+				"Tables.jl",
+				"TimeSeries.jl"
+			]
 		},
 		{
 			"id": "edgar",
@@ -2828,7 +2853,7 @@
 				}
 			],
 			"portable": false,
-			"reason": "the panel edgar has its own code (omitIllustration, keyPointsIntro, keyPointsFootnote, decisionIntro, decisionFootnote in src/vs/workbench/contrib/model/browser/webviews/edgar.template.ts), so it cannot go in a data-only extension"
+			"reason": "the panel edgar asks for an API key (apiKey in src/vs/workbench/contrib/model/browser/commands/edgar.command.ts), which a data-only extension cannot ask for"
 		},
 		{
 			"id": "embedding",
@@ -3253,6 +3278,7 @@
 		},
 		{
 			"id": "ffd",
+			"title": "Kenneth French Data Library",
 			"source": "pollis",
 			"commands": [
 				{
@@ -3262,8 +3288,24 @@
 					]
 				}
 			],
-			"portable": false,
-			"reason": "the panel ffd has its own code (illusCollapsed, illustrationLabel, illustrationOverrideJs in src/vs/workbench/contrib/model/browser/webviews/ffd.template.ts), so it cannot go in a data-only extension"
+			"portable": true,
+			"defaultModel": "factors3",
+			"decisionFirstColumn": "Task",
+			"toml": "src/vs/workbench/contrib/model/browser/webviews/ffd.toml",
+			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
+			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"wikis": [
+				"ffd/factsheet.md",
+				"ffd/overview.md"
+			],
+			"notebooks": [
+				"ffd/tutorial-01-first-factors.ipynb"
+			],
+			"packages": [
+				"FamaFrenchData.jl",
+				"Tables.jl",
+				"Plots.jl"
+			]
 		},
 		{
 			"id": "findAllocs",
@@ -3430,7 +3472,7 @@
 				}
 			],
 			"portable": false,
-			"reason": "the panel fred has its own code (illusCollapsed, illustrationLabel, illustrationOverrideJs in src/vs/workbench/contrib/model/browser/webviews/fred.template.ts), so it cannot go in a data-only extension"
+			"reason": "the panel fred asks for an API key (apiKey in src/vs/workbench/contrib/model/browser/commands/fred.command.ts), which a data-only extension cannot ask for"
 		},
 		{
 			"id": "galg",
@@ -3919,7 +3961,7 @@
 				}
 			],
 			"portable": false,
-			"reason": "the panel hfds has its own code (illusCollapsed, illustrationLabel, illustrationIntro, illustrationFootnote, illustrationOverrideJs, extraCss, keyPointsIntro, keyPointsFootnote, decisionIntro, decisionFootnote in src/vs/workbench/contrib/model/browser/webviews/hfds.template.ts), so it cannot go in a data-only extension"
+			"reason": "the panel hfds has its own code (explore, extraCss, keyPointsIntro, keyPointsFootnote, decisionIntro, decisionFootnote in src/vs/workbench/contrib/model/browser/webviews/hfds.template.ts), so it cannot go in a data-only extension"
 		},
 		{
 			"id": "hfm",
@@ -3934,7 +3976,7 @@
 				}
 			],
 			"portable": false,
-			"reason": "the panel hfm has its own code (illusCollapsed, illustrationLabel, illustrationIntro, illustrationFootnote, illustrationOverrideJs, extraCss in src/vs/workbench/contrib/model/browser/webviews/hfm.template.ts), so it cannot go in a data-only extension"
+			"reason": "the panel hfm has its own code (explore, extraCss in src/vs/workbench/contrib/model/browser/webviews/hfm.template.ts), so it cannot go in a data-only extension"
 		},
 		{
 			"id": "hfvol",
@@ -4227,6 +4269,7 @@
 		},
 		{
 			"id": "imf",
+			"title": "IMF Data",
 			"source": "pollis",
 			"commands": [
 				{
@@ -4236,8 +4279,25 @@
 					]
 				}
 			],
-			"portable": false,
-			"reason": "the panel imf has its own code (illusCollapsed, illustrationLabel, illustrationOverrideJs in src/vs/workbench/contrib/model/browser/webviews/imf.template.ts), so it cannot go in a data-only extension"
+			"portable": true,
+			"defaultModel": "weo",
+			"decisionFirstColumn": "Task",
+			"toml": "src/vs/workbench/contrib/model/browser/webviews/imf.toml",
+			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
+			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"wikis": [
+				"imf/factsheet.md",
+				"imf/overview.md"
+			],
+			"notebooks": [
+				"imf/tutorial-01-first-series.ipynb"
+			],
+			"packages": [
+				"HTTP.jl",
+				"CSV.jl",
+				"Tables.jl",
+				"Plots.jl"
+			]
 		},
 		{
 			"id": "integ",
@@ -4367,7 +4427,7 @@
 				}
 			],
 			"portable": false,
-			"reason": "the panel kgds has its own code (illusCollapsed, illustrationLabel, illustrationIntro, illustrationFootnote, illustrationOverrideJs, extraCss, keyPointsIntro, keyPointsFootnote, decisionIntro, decisionFootnote in src/vs/workbench/contrib/model/browser/webviews/kgds.template.ts), so it cannot go in a data-only extension"
+			"reason": "the panel kgds has its own code (explore, extraCss, keyPointsIntro, keyPointsFootnote, decisionIntro, decisionFootnote in src/vs/workbench/contrib/model/browser/webviews/kgds.template.ts), so it cannot go in a data-only extension"
 		},
 		{
 			"id": "kgm",
@@ -4382,7 +4442,7 @@
 				}
 			],
 			"portable": false,
-			"reason": "the panel kgm has its own code (illusCollapsed, illustrationLabel, illustrationIntro, illustrationFootnote, illustrationOverrideJs, extraCss in src/vs/workbench/contrib/model/browser/webviews/kgm.template.ts), so it cannot go in a data-only extension"
+			"reason": "the panel kgm has its own code (explore, extraCss in src/vs/workbench/contrib/model/browser/webviews/kgm.template.ts), so it cannot go in a data-only extension"
 		},
 		{
 			"id": "knn",
@@ -9084,6 +9144,7 @@
 		},
 		{
 			"id": "wbd",
+			"title": "World Bank Indicators",
 			"source": "pollis",
 			"commands": [
 				{
@@ -9093,8 +9154,26 @@
 					]
 				}
 			],
-			"portable": false,
-			"reason": "the panel wbd has its own code (illusCollapsed, illustrationLabel, illustrationOverrideJs in src/vs/workbench/contrib/model/browser/webviews/wbd.template.ts), so it cannot go in a data-only extension"
+			"portable": true,
+			"defaultModel": "indicator",
+			"decisionFirstColumn": "Task",
+			"toml": "src/vs/workbench/contrib/model/browser/webviews/wbd.toml",
+			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
+			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"wikis": [
+				"wbd/factsheet.md",
+				"wbd/overview.md"
+			],
+			"notebooks": [
+				"wbd/tutorial-01-first-indicator.ipynb"
+			],
+			"packages": [
+				"WorldBankData.jl",
+				"Tables.jl",
+				"HTTP.jl",
+				"JSON.jl",
+				"Plots.jl"
+			]
 		},
 		{
 			"id": "xlsx",
@@ -9136,6 +9215,7 @@
 		},
 		{
 			"id": "yfin",
+			"title": "Yahoo Finance",
 			"source": "pollis",
 			"commands": [
 				{
@@ -9145,8 +9225,31 @@
 					]
 				}
 			],
-			"portable": false,
-			"reason": "the panel yfin has its own code (illusCollapsed, illustrationLabel, illustrationOverrideJs in src/vs/workbench/contrib/model/browser/webviews/yfin.template.ts), so it cannot go in a data-only extension"
+			"portable": true,
+			"defaultModel": "price",
+			"decisionFirstColumn": "Task",
+			"toml": "src/vs/workbench/contrib/model/browser/webviews/yfin.toml",
+			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
+			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"wikis": [
+				"yfin/constraints.md",
+				"yfin/decision-guide.md",
+				"yfin/diagnostics.md",
+				"yfin/factsheet.md",
+				"yfin/interpretation.md",
+				"yfin/overview.md"
+			],
+			"notebooks": [
+				"yfin/tutorial-01-prices.ipynb",
+				"yfin/tutorial-02-fundamentals.ipynb",
+				"yfin/tutorial-03-options.ipynb",
+				"yfin/tutorial-04-search.ipynb"
+			],
+			"packages": [
+				"YFinance.jl",
+				"Tables.jl",
+				"TimeSeries.jl"
+			]
 		}
 	]
 }

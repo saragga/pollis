@@ -196,25 +196,6 @@ label = "Max Iterations"
 tooltip = "Iteration limit. Gradient descent can need thousands of iterations on ill-conditioned problems such as Rosenbrock."
 default = "10000"
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.gd]
-# Zig-zag steepest-descent path across elongated contours
-svg = '''
-var s = '';
-[20, 13, 6].forEach(function (r) { s += '<ellipse cx="30" cy="46" rx="' + r + '" ry="' + (r * 0.45) + '" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.6"/>'; });
-return s + '<path d="M10,56 L16,38 L21,52 L25,41 L28,49 L30,46" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="10" cy="56" r="2" fill="currentColor"/>';
-'''
-
-[miniCharts.cg]
-# Two conjugate steps reaching the centre of the contours
-svg = '''
-var s = '';
-[20, 13, 6].forEach(function (r) { s += '<ellipse cx="30" cy="46" rx="' + r + '" ry="' + (r * 0.45) + '" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.6"/>'; });
-return s + '<path d="M10,56 L16,38 L30,46" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="10" cy="56" r="2" fill="currentColor"/><circle cx="30" cy="46" r="2.4" fill="currentColor"/>';
-'''
-
 [[codeBranches]]
 model = "gd"
 code = '''

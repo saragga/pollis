@@ -238,65 +238,6 @@ label = "FastABOD"
 value = "true"
 label = "Enhanced ABOD"
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.knn]
-# A cluster, an isolated point and its long distance to the nearest point
-svg = '''
-var s = '';
-var p = [[14,54],[19,48],[12,44],[22,56],[17,40],[24,46]];
-for (var i = 0; i < p.length; i++) {
-	s += '<circle cx="' + p[i][0] + '" cy="' + p[i][1] + '" r="2" fill="currentColor" opacity="0.6"/>';
-}
-s += '<line x1="24" y1="46" x2="42" y2="24" stroke="currentColor" stroke-width="1" stroke-dasharray="2,2"/>';
-s += '<circle cx="42" cy="24" r="3" fill="none" stroke="currentColor" stroke-width="1.5"/>';
-return s;
-'''
-
-[miniCharts.lof]
-# A dense and a sparse cluster; the local outlier sits just outside the dense one
-svg = '''
-var s = '';
-var dense = [[13,30],[15,33],[12,34],[16,29],[14,36]];
-var sparse = [[30,52],[42,48],[34,64],[46,62],[38,56]];
-for (var i = 0; i < dense.length; i++) {
-	s += '<circle cx="' + dense[i][0] + '" cy="' + dense[i][1] + '" r="1.8" fill="currentColor" opacity="0.6"/>';
-	s += '<circle cx="' + sparse[i][0] + '" cy="' + sparse[i][1] + '" r="1.8" fill="currentColor" opacity="0.6"/>';
-}
-s += '<circle cx="14" cy="32" r="8" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
-s += '<circle cx="26" cy="24" r="3" fill="none" stroke="currentColor" stroke-width="1.5"/>';
-return s;
-'''
-
-[miniCharts.cof]
-# A chain-shaped cluster with an off-chain outlier
-svg = '''
-var s = '';
-var d = '';
-for (var i = 0; i < 7; i++) {
-	var x = 8 + i * 6, y = 66 - i * 6;
-	s += '<circle cx="' + x + '" cy="' + y + '" r="1.8" fill="currentColor" opacity="0.6"/>';
-	d += (i ? 'L' : 'M') + x + ',' + y;
-}
-s += '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
-s += '<circle cx="40" cy="60" r="3" fill="none" stroke="currentColor" stroke-width="1.5"/>';
-return s;
-'''
-
-[miniCharts.abod]
-# Rays from the outlier to cluster points span a narrow angle
-svg = '''
-var s = '';
-var p = [[12,58],[16,52],[20,62],[10,50],[22,55]];
-for (var i = 0; i < p.length; i++) {
-	s += '<circle cx="' + p[i][0] + '" cy="' + p[i][1] + '" r="1.8" fill="currentColor" opacity="0.6"/>';
-	s += '<line x1="42" y1="22" x2="' + p[i][0] + '" y2="' + p[i][1] + '" stroke="currentColor" stroke-width="0.6" opacity="0.4"/>';
-}
-s += '<circle cx="42" cy="22" r="3" fill="none" stroke="currentColor" stroke-width="1.5"/>';
-return s;
-'''
-
 [[codeBranches]]
 model = "knn"
 code = '''

@@ -11,9 +11,5 @@ export function getFredHtml(metadata: IFredMetadata): string {
 		title: 'Federal Reserve Economic Data',
 		defaultModel: 'growth',
 		decisionFirstColumn: 'Task',
-		illusCollapsed: true,
-		illustrationLabel: 'Illustration',
-		illustrationOverrideJs: `			body.innerHTML = '<div style="text-align:center;padding:24px 0;font-size:13px;color:var(--vscode-descriptionForeground);">Pull U.S. and international macroeconomic time series from FRED into Julia: output and growth, inflation, the labour market, interest rates, and money and exchange rates.</div>';
-			return;`,
 	});
 }

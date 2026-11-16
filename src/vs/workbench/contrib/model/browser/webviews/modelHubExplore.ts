@@ -27,7 +27,7 @@ export interface IModelHubExploreOptions {
 	readonly serviceName: string;
 }
 
-/** CSS for the model-hub Explore pane (replaces the Illustration pane). */
+/** CSS for the model-hub Explore pane. */
 export function buildModelHubExploreCss(): string {
 	return `	.hfm-task-layout { display: grid; grid-template-columns: 220px 1fr; gap: 16px; height: 560px; }
 	.hfm-task-list { overflow-y: auto; height: 100%; padding-right: 4px; scrollbar-width: none; }
@@ -74,13 +74,7 @@ export function buildModelHubExploreCss(): string {
  * grid of model cards fetched live by the panel handler, with a sort dropdown and a browse link.
  */
 export function buildModelHubExploreJs(options: IModelHubExploreOptions): string {
-	return `			// renderIllustration() re-runs on every topic toggle; the Explore pane is independent
-			// of the code-preview topic, so build it once and skip rebuilds (this also avoids stacking
-			// duplicate message listeners and losing the user's filter selections).
-			if (body.dataset.mhBuilt) { return; }
-			body.dataset.mhBuilt = '1';
-
-			var MH_GROUPS = ${JSON.stringify(options.groups)};
+	return `			var MH_GROUPS = ${JSON.stringify(options.groups)};
 			var MH_SORT_OPTIONS = ${JSON.stringify(options.sortOptions)};
 			var MH_LABEL_AXES = ${JSON.stringify(options.labelAxes)};
 			var mhSel = {};  // axis -> { value: true }
@@ -251,6 +245,5 @@ export function buildModelHubExploreJs(options: IModelHubExploreOptions): string
 
 			mhUpdateSortBtn();
 			mhFetch();
-			return;
 `;
 }

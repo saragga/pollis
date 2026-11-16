@@ -230,26 +230,6 @@ tooltip = "Covariance (p x p, positive definite) of the measurement noise v. Lar
 default = "fill(1e-2, 1, 1)"
 models = ["of"]
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.sf]
-# A state decaying to zero under feedback
-svg = '''
-var d = 'M8,30';
-for (var x = 8; x <= 46; x++) { var s = (x - 8) / 38; d += ' L' + x + ',' + (60 - 30 * Math.exp(-4 * s) * Math.cos(6 * s)).toFixed(1); }
-return '<line x1="8" y1="60" x2="46" y2="60" stroke="currentColor" stroke-width="0.8" opacity="0.5"/><path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.4"/>';
-'''
-
-[miniCharts.of]
-# Noisy measurements with the smooth estimate through them
-svg = '''
-var d = 'M8,30', s = '', r = [3, -4, 2, -2, 4, -3, 1, -2, 2, -1];
-for (var x = 8; x <= 46; x++) { var t = (x - 8) / 38; d += ' L' + x + ',' + (60 - 30 * Math.exp(-4 * t) * Math.cos(6 * t)).toFixed(1); }
-r.forEach(function (e, i) { var x = 10 + 4 * i, t = (x - 8) / 38; s += '<circle cx="' + x + '" cy="' + (60 - 30 * Math.exp(-4 * t) * Math.cos(6 * t) + e).toFixed(1) + '" r="1.2" fill="currentColor" opacity="0.6"/>'; });
-return s + '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.4"/>';
-'''
-
 [[codeBranches]]
 model = "sf"
 code = '''

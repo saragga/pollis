@@ -205,33 +205,6 @@ tooltip = "Units in the hidden layer of the Q-network."
 default = "64"
 models = ["dqn"]
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.tabular]
-# Q-table grid with one highlighted cell
-svg = '''
-let s = '';
-for (let i = 0; i < 4; i++) {
-	for (let j = 0; j < 4; j++) {
-		s += '<rect x="' + (8 + j * 10) + '" y="' + (26 + i * 10) + '" width="9" height="9" fill="currentColor" opacity="' + ((i + j) % 3 === 0 ? 0.8 : 0.25) + '"/>';
-	}
-}
-return s;
-'''
-
-[miniCharts.dqn]
-# Small network: 3 inputs, 4 hidden, 2 outputs
-svg = '''
-const L = [[10, [34, 46, 58]], [27, [28, 40, 52, 64]], [44, [40, 52]]];
-let s = '';
-for (let k = 0; k < 2; k++) {
-	for (const y1 of L[k][1]) { for (const y2 of L[k + 1][1]) { s += '<line x1="' + L[k][0] + '" y1="' + y1 + '" x2="' + L[k + 1][0] + '" y2="' + y2 + '" stroke="currentColor" stroke-width="0.4" opacity="0.5"/>'; } }
-}
-for (const [x, ys] of L) { for (const y of ys) { s += '<circle cx="' + x + '" cy="' + y + '" r="3" fill="currentColor"/>'; } }
-return s;
-'''
-
 [[codeBranches]]
 model = "tabular"
 code = '''

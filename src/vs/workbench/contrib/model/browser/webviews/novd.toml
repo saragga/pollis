@@ -226,41 +226,6 @@ tooltip = "Alarm threshold in standard deviations; typical values are 4 to 5. Hi
 default = "5"
 models = ["cusum"]
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.ocsvm]
-# Curved boundary around training points, a novel point outside
-svg = '''
-var s = '<path d="M10,52 C8,36 22,28 32,32 C44,36 46,52 38,58 C30,64 12,64 10,52 Z" fill="none" stroke="currentColor" stroke-width="1"/>';
-var p = [[18,48],[24,42],[30,46],[22,54],[34,50],[28,56],[16,54]];
-for (var i = 0; i < p.length; i++) {
-	s += '<circle cx="' + p[i][0] + '" cy="' + p[i][1] + '" r="1.8" fill="currentColor" opacity="0.6"/>';
-}
-s += '<text x="46" y="24" font-size="9" text-anchor="middle" fill="currentColor">x</text>';
-return s;
-'''
-
-[miniCharts.gauss]
-# Concentric ellipses (Mahalanobis contours) with a novel point
-svg = '''
-var s = '';
-s += '<ellipse cx="25" cy="48" rx="8" ry="5" transform="rotate(-30 25 48)" fill="none" stroke="currentColor" stroke-width="1"/>';
-s += '<ellipse cx="25" cy="48" rx="15" ry="9" transform="rotate(-30 25 48)" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.6"/>';
-s += '<ellipse cx="25" cy="48" rx="22" ry="13" transform="rotate(-30 25 48)" fill="none" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2" opacity="0.5"/>';
-s += '<text x="44" y="68" font-size="9" text-anchor="middle" fill="currentColor">x</text>';
-return s;
-'''
-
-[miniCharts.cusum]
-# Flat statistic that rises after a shift and crosses the threshold
-svg = '''
-var s = '<line x1="4" y1="30" x2="50" y2="30" stroke="currentColor" stroke-width="0.8" stroke-dasharray="3,2" opacity="0.6"/>';
-s += '<polyline points="4,62 10,61 14,62 18,60 22,62 26,61 30,56 34,49 38,42 42,34 46,27 50,20" fill="none" stroke="currentColor" stroke-width="1.2"/>';
-s += '<circle cx="44" cy="30" r="2" fill="currentColor"/>';
-return s;
-'''
-
 [[codeBranches]]
 model = "ocsvm"
 code = '''

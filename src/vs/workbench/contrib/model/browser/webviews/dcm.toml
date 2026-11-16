@@ -229,32 +229,6 @@ tooltip = "Box size in each objective: the archive keeps at most one solution pe
 default = "[0.01, 0.1]"
 models = ["borg"]
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.moead]
-# Weight rays from the ideal point meeting the front
-svg = '''
-return '<path d="M10,24 Q14,62 48,66" fill="none" stroke="currentColor" stroke-width="2"/>'
-	+ [[48,30],[48,46],[40,68],[22,68]].map(p => '<line x1="6" y1="70" x2="' + p[0] + '" y2="' + p[1] + '" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2"/>').join('');
-'''
-
-[miniCharts.ccmo]
-# Feasible front with an infeasible helper population beyond the constraint
-svg = '''
-return '<line x1="4" y1="44" x2="50" y2="30" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/>'
-	+ [[14,52],[22,58],[34,62],[46,64]].map(p => '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="2.5" fill="currentColor"/>').join('')
-	+ [[10,34],[20,30],[32,26]].map(p => '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="2.5" fill="none" stroke="currentColor"/>').join('');
-'''
-
-[miniCharts.borg]
-# Epsilon grid with one point per box
-svg = '''
-let s = '';
-for (let i = 0; i < 5; i++) { s += '<line x1="' + (8 + 9 * i) + '" y1="24" x2="' + (8 + 9 * i) + '" y2="68" stroke="currentColor" stroke-width="0.5"/><line x1="8" y1="' + (24 + 11 * i) + '" x2="44" y2="' + (24 + 11 * i) + '" stroke="currentColor" stroke-width="0.5"/>'; }
-return s + [[12,28],[15,41],[21,50],[30,60],[40,64]].map(p => '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="2.5" fill="currentColor"/>').join('');
-'''
-
 [[codeBranches]]
 model = "moead"
 code = '''

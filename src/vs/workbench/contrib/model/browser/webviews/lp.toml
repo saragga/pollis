@@ -231,25 +231,6 @@ label = "HiGHS"
 value = "GLPK"
 label = "GLPK"
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.lp]
-# A feasible polygon with the optimal vertex
-svg = '''
-return '<path d="M10,66 L10,34 L28,28 L44,44 L44,66 Z" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="1.2"/>'
-	+ '<line x1="18" y1="20" x2="50" y2="40" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/>'
-	+ '<circle cx="28" cy="28" r="2.6" fill="currentColor"/>';
-'''
-
-[miniCharts.milp]
-# Integer lattice points inside the feasible polygon
-svg = '''
-var s = '<path d="M10,66 L10,34 L28,28 L44,44 L44,66 Z" fill="none" stroke="currentColor" stroke-width="1.2"/>';
-for (var x = 14; x <= 42; x += 7) { for (var y = 38; y <= 64; y += 7) { s += '<circle cx="' + x + '" cy="' + y + '" r="1.4" fill="currentColor" opacity="0.7"/>'; } }
-return s;
-'''
-
 [[codeBranches]]
 model = "lp"
 code = '''

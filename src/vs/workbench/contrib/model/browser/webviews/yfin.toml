@@ -8,8 +8,6 @@ title = "Yahoo Finance"
 viewType = "pollis.yfin"
 defaultModel = "price"
 models = ["price", "quote", "fundamental", "options", "search"]
-illusCollapsed = true
-illustrationText = "Download market data from Yahoo Finance into Julia: prices, fundamentals, options, and news."
 
 [[packages]]
 name = "YFinance.jl"
@@ -143,71 +141,6 @@ purpose = "Inspect calls and puts, strikes, prices, and open interest"
 task = "Search"
 context = "Lookup"
 purpose = "Find a ticker symbol from a name or scan the latest news"
-
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon
-
-[miniCharts.price]
-# Candlestick bars
-svg = '''
-var s = '<line x1="14" y1="20" x2="14" y2="60" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
-s += '<rect x="9" y="30" width="10" height="20" fill="currentColor" opacity="0.3"/>';
-s += '<line x1="30" y1="14" x2="30" y2="52" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
-s += '<rect x="25" y="22" width="10" height="22" fill="currentColor" opacity="0.45"/>';
-s += '<line x1="46" y1="26" x2="46" y2="66" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
-s += '<rect x="41" y="36" width="10" height="18" fill="currentColor" opacity="0.3"/>';
-s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Prices</text>';
-return s;
-'''
-
-[miniCharts.quote]
-# Info card
-svg = '''
-var s = '<rect x="6" y="10" width="44" height="56" rx="3" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
-s += '<circle cx="16" cy="22" r="5" fill="currentColor" opacity="0.35"/>';
-s += '<line x1="26" y1="20" x2="44" y2="20" stroke="currentColor" stroke-width="2" opacity="0.4"/>';
-s += '<line x1="26" y1="26" x2="40" y2="26" stroke="currentColor" stroke-width="2" opacity="0.25"/>';
-s += '<line x1="12" y1="40" x2="44" y2="40" stroke="currentColor" stroke-width="0.6" opacity="0.3"/>';
-s += '<line x1="12" y1="48" x2="44" y2="48" stroke="currentColor" stroke-width="0.6" opacity="0.3"/>';
-s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Quote</text>';
-return s;
-'''
-
-[miniCharts.fundamental]
-# Statement bars
-svg = '''
-var s = '<rect x="8"  y="40" width="8" height="24" fill="currentColor" opacity="0.4"/>';
-s += '<rect x="20" y="28" width="8" height="36" fill="currentColor" opacity="0.45"/>';
-s += '<rect x="32" y="18" width="8" height="46" fill="currentColor" opacity="0.5"/>';
-s += '<rect x="44" y="34" width="8" height="30" fill="currentColor" opacity="0.4"/>';
-s += '<line x1="6" y1="64" x2="54" y2="64" stroke="currentColor" stroke-width="0.6" opacity="0.4"/>';
-s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Fund.</text>';
-return s;
-'''
-
-[miniCharts.options]
-# Chain rows
-svg = '''
-var s = '<rect x="6" y="14" width="20" height="46" rx="2" fill="currentColor" opacity="0.12"/>';
-s += '<rect x="32" y="14" width="20" height="46" rx="2" fill="currentColor" opacity="0.12"/>';
-s += '<line x1="9" y1="24" x2="23" y2="24" stroke="currentColor" stroke-width="1.5" opacity="0.45"/>';
-s += '<line x1="9" y1="32" x2="23" y2="32" stroke="currentColor" stroke-width="1.5" opacity="0.35"/>';
-s += '<line x1="35" y1="24" x2="49" y2="24" stroke="currentColor" stroke-width="1.5" opacity="0.45"/>';
-s += '<line x1="35" y1="32" x2="49" y2="32" stroke="currentColor" stroke-width="1.5" opacity="0.35"/>';
-s += '<text x="16" y="52" text-anchor="middle" font-size="6" fill="currentColor" opacity="0.6">C</text>';
-s += '<text x="42" y="52" text-anchor="middle" font-size="6" fill="currentColor" opacity="0.6">P</text>';
-s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Options</text>';
-return s;
-'''
-
-[miniCharts.search]
-# Magnifier
-svg = '''
-var s = '<circle cx="24" cy="30" r="14" fill="none" stroke="currentColor" stroke-width="2" opacity="0.5"/>';
-s += '<line x1="34" y1="40" x2="46" y2="52" stroke="currentColor" stroke-width="2.5" opacity="0.5"/>';
-s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Search</text>';
-return s;
-'''
 
 [[inputs]]
 id = "symbol"

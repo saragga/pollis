@@ -229,31 +229,6 @@ tooltip = "Added to the Fisher matrix in the conjugate-gradient solve for numeri
 default = "0.1"
 models = ["trpo"]
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.reinforce]
-# Noisy rising learning curve
-svg = '''
-return '<polyline points="4,70 10,64 14,68 20,56 24,60 30,46 34,52 40,36 44,42 50,28" fill="none" stroke="currentColor" stroke-width="1.4"/>';
-'''
-
-[miniCharts.ppo]
-# Clipped surrogate: ratio line flattening outside the clip band
-svg = '''
-return '<line x1="18" y1="20" x2="18" y2="76" stroke="currentColor" stroke-width="0.5" stroke-dasharray="2,2"/>'
-	+ '<line x1="36" y1="20" x2="36" y2="76" stroke="currentColor" stroke-width="0.5" stroke-dasharray="2,2"/>'
-	+ '<polyline points="4,66 18,56 36,40 50,40" fill="none" stroke="currentColor" stroke-width="1.6"/>';
-'''
-
-[miniCharts.trpo]
-# Trust region: step inside a KL ball
-svg = '''
-return '<circle cx="27" cy="48" r="16" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/>'
-	+ '<circle cx="27" cy="48" r="2" fill="currentColor"/>'
-	+ '<line x1="27" y1="48" x2="38" y2="37" stroke="currentColor" stroke-width="1.6"/><circle cx="38" cy="37" r="2" fill="currentColor"/>';
-'''
-
 [[codeBranches]]
 model = "reinforce"
 code = '''

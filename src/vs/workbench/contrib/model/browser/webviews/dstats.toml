@@ -189,45 +189,6 @@ label = "Pearson"
 value = "spearman"
 label = "Spearman"
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.summ]
-# Box plot
-svg = '''
-var s = '<line x1="27" y1="14" x2="27" y2="26" stroke="currentColor" stroke-width="1"/>';
-s += '<line x1="20" y1="14" x2="34" y2="14" stroke="currentColor" stroke-width="1"/>';
-s += '<rect x="15" y="26" width="24" height="30" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="1.2"/>';
-s += '<line x1="15" y1="38" x2="39" y2="38" stroke="currentColor" stroke-width="2"/>';
-s += '<line x1="27" y1="56" x2="27" y2="70" stroke="currentColor" stroke-width="1"/>';
-s += '<line x1="20" y1="70" x2="34" y2="70" stroke="currentColor" stroke-width="1"/>';
-return s;
-'''
-
-[miniCharts.freq]
-# Frequency bars
-svg = '''
-var s = '<line x1="6" y1="74" x2="48" y2="74" stroke="currentColor" stroke-width="1"/>';
-var h = [30, 18, 44, 26, 14];
-for (var i = 0; i < h.length; i++) {
-	s += '<rect x="' + (8 + i * 8) + '" y="' + (74 - h[i]) + '" width="6" height="' + h[i] + '" fill="currentColor" opacity="0.45"/>';
-}
-return s;
-'''
-
-[miniCharts.corr]
-# 3 x 3 correlation matrix
-svg = '''
-var v = [[1, 0.8, -0.3], [0.8, 1, 0.5], [-0.3, 0.5, 1]];
-var s = '';
-for (var r = 0; r < 3; r++) {
-	for (var c = 0; c < 3; c++) {
-		s += '<rect x="' + (6 + c * 14) + '" y="' + (22 + r * 14) + '" width="13" height="13" fill="currentColor" opacity="' + (Math.abs(v[r][c]) * 0.6).toFixed(2) + '"/>';
-	}
-}
-return s;
-'''
-
 [[codeBranches]]
 model = "summ"
 code = '''

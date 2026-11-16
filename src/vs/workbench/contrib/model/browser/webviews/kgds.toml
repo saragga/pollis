@@ -14,8 +14,6 @@ title = "Kaggle Datasets"
 viewType = "pollis.kgds"
 defaultModel = "browse"
 models = ["browse", "info", "files", "download", "load"]
-illusCollapsed = false
-illustrationText = "Search the Kaggle catalogue, then pull datasets into Julia: browse and filter over the public REST API, read a dataset's metadata and file list, download the archive, and load the CSVs with CSV.jl + Tables.jl."
 
 # Per-pane intro/footnote notes (optional, keyed by pane: keyPoints / decision / explore).
 [notes.decision]
@@ -331,54 +329,6 @@ purpose = "Pull the dataset archive (.zip) with your Kaggle token and unzip it"
 task = "Load"
 context = "In-memory"
 purpose = "Read a downloaded CSV into Julia through the Tables.jl interface"
-
-[miniCharts]
-
-[miniCharts.browse]
-svg = '''
-var s = '<circle cx="24" cy="28" r="11" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.55"/>';
-s += '<line x1="32" y1="36" x2="42" y2="46" stroke="currentColor" stroke-width="1.8" opacity="0.55"/>';
-s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Browse</text>';
-return s;
-'''
-
-[miniCharts.info]
-svg = '''
-var s = '<circle cx="27" cy="30" r="13" fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.55"/>';
-s += '<circle cx="27" cy="23" r="1.6" fill="currentColor" opacity="0.7"/>';
-s += '<line x1="27" y1="28" x2="27" y2="38" stroke="currentColor" stroke-width="1.8" opacity="0.6"/>';
-s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Info</text>';
-return s;
-'''
-
-[miniCharts.files]
-svg = '''
-var s = '<rect x="16" y="14" width="22" height="28" rx="2" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.4"/>';
-s += '<rect x="12" y="20" width="22" height="28" rx="2" fill="var(--vscode-editor-background)" stroke="currentColor" stroke-width="1.3" opacity="0.6"/>';
-s += '<line x1="17" y1="29" x2="29" y2="29" stroke="currentColor" stroke-width="1" opacity="0.5"/>';
-s += '<line x1="17" y1="35" x2="29" y2="35" stroke="currentColor" stroke-width="1" opacity="0.5"/>';
-s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Files</text>';
-return s;
-'''
-
-[miniCharts.download]
-svg = '''
-var s = '<rect x="14" y="34" width="26" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.3" opacity="0.55"/>';
-s += '<line x1="27" y1="12" x2="27" y2="30" stroke="currentColor" stroke-width="1.5" opacity="0.6"/>';
-s += '<polyline points="22,25 27,31 32,25" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.6"/>';
-s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Download</text>';
-return s;
-'''
-
-[miniCharts.load]
-svg = '''
-var s = '<rect x="12" y="16" width="30" height="34" rx="2" fill="none" stroke="currentColor" stroke-width="1.3" opacity="0.5"/>';
-s += '<line x1="12" y1="27" x2="42" y2="27" stroke="currentColor" stroke-width="0.8" opacity="0.45"/>';
-s += '<line x1="12" y1="38" x2="42" y2="38" stroke="currentColor" stroke-width="0.8" opacity="0.45"/>';
-s += '<line x1="27" y1="16" x2="27" y2="50" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
-s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Load</text>';
-return s;
-'''
 
 [[codeBranches]]
 model = "browse"

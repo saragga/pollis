@@ -10,7 +10,6 @@ export function getCvizHtml(): string {
 		title: 'Core Statistical Plots',
 		defaultModel: 'scatter',
 		modelsLiteral: `['scatter', 'regression', 'bar', 'histogram', 'box', 'violin', 'pie', 'line']`,
-		chartW: 54,
 		hiddenRowCss: '.bar-row, .histogram-row, .box-row, .violin-row { display: none; }',
 		togglesJs: `			<button class="toggle-btn active" data-model="scatter">Scatter</button>
 			<button class="toggle-btn" data-model="regression">Regression</button>
@@ -34,122 +33,6 @@ export function getCvizHtml(): string {
 					<tr><td>Pie Chart</td><td>Categorical parts</td><td>Show how a handful of categories make up a whole; use sparingly and only for few slices</td></tr>
 					<tr><td>Line Plot</td><td>Ordered x, y</td><td>Connect points in order to show a trend, time path, or a fitted curve / regression line</td></tr>
 				`,
-		miniChartsJs: `function miniScatter() {
-			// a dispersed point cloud with a gentle upward drift (clearly scattered, not a line)
-			var pts = [[7,64],[11,46],[15,58],[18,36],[23,52],[27,42],[31,60],[34,32],[38,50],[42,38],[46,54],[50,34]];
-			var s = '<line x1="4" y1="4" x2="4" y2="80" stroke="currentColor" stroke-width="0.6" opacity="0.35"/>'
-				+ '<line x1="4" y1="80" x2="52" y2="80" stroke="currentColor" stroke-width="0.6" opacity="0.35"/>';
-			pts.forEach(function(p) { s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="2.3" fill="currentColor"/>'; });
-			return s;
-		}
-
-		function miniRegression() {
-			var s = '<line x1="4" y1="4" x2="4" y2="80" stroke="currentColor" stroke-width="0.6" opacity="0.35"/>'
-				+ '<line x1="4" y1="80" x2="52" y2="80" stroke="currentColor" stroke-width="0.6" opacity="0.35"/>';
-			var pts = [[8,70],[12,62],[16,66],[20,56],[24,58],[28,48],[32,50],[36,38],[40,40],[44,26],[48,22]];
-			pts.forEach(function(p) { s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="2" fill="currentColor" fill-opacity="0.65"/>'; });
-			s += '<path d="M 6 72 C 18 67, 26 60, 32 48 C 38 36, 44 27, 50 20" fill="none" stroke="currentColor" stroke-width="2"/>';
-			return s;
-		}
-
-		function miniBar() {
-			// 5 bars of varying heights within the box (width 8, last ends at 50 — no overflow)
-			var bars = [[6,40],[15,18],[24,30],[33,52],[42,24]]; // [x, height from bottom]
-			var baseY = 80;
-			var s = '<line x1="4" y1="4" x2="4" y2="80" stroke="currentColor" stroke-width="0.6" opacity="0.35"/>'
-				+ '<line x1="4" y1="80" x2="52" y2="80" stroke="currentColor" stroke-width="0.6" opacity="0.35"/>';
-			bars.forEach(function(b) {
-				s += '<rect x="' + b[0] + '" y="' + (baseY - b[1]) + '" width="8" height="' + b[1] + '" fill="currentColor" opacity="0.75"/>';
-			});
-			return s;
-		}
-
-		function miniHistogram() {
-			// 7 touching bars, bell-curve heights
-			var hts = [8, 22, 46, 62, 44, 20, 9];
-			var baseY = 80;
-			var s = '<line x1="4" y1="80" x2="52" y2="80" stroke="currentColor" stroke-width="0.6" opacity="0.35"/>';
-			hts.forEach(function(h, i) {
-				s += '<rect x="' + (4 + i*7) + '" y="' + (baseY - h) + '" width="7" height="' + h
-					+ '" fill="currentColor" opacity="0.75" stroke="none"/>';
-			});
-			return s;
-		}
-
-		function miniBox() {
-			// Vertical boxplot centred at x=27
-			var cx = 27;
-			var q1y = 55, medy = 42, q3y = 26, wlo = 70, whi = 12, oY = 6;
-			var s = '';
-			// Lower whisker
-			s += '<line x1="' + cx + '" y1="' + wlo + '" x2="' + cx + '" y2="' + q1y + '" stroke="currentColor" stroke-width="1.5"/>';
-			s += '<line x1="' + (cx-7) + '" y1="' + wlo + '" x2="' + (cx+7) + '" y2="' + wlo + '" stroke="currentColor" stroke-width="1.5"/>';
-			// Upper whisker
-			s += '<line x1="' + cx + '" y1="' + q3y + '" x2="' + cx + '" y2="' + whi + '" stroke="currentColor" stroke-width="1.5"/>';
-			s += '<line x1="' + (cx-7) + '" y1="' + whi + '" x2="' + (cx+7) + '" y2="' + whi + '" stroke="currentColor" stroke-width="1.5"/>';
-			// Box Q1–Q3
-			s += '<rect x="' + (cx-10) + '" y="' + q3y + '" width="20" height="' + (q1y - q3y) + '" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="1.5"/>';
-			// Median
-			s += '<line x1="' + (cx-10) + '" y1="' + medy + '" x2="' + (cx+10) + '" y2="' + medy + '" stroke="currentColor" stroke-width="2.2"/>';
-			// Outlier
-			s += '<circle cx="' + cx + '" cy="' + oY + '" r="2.2" fill="none" stroke="currentColor" stroke-width="1.2"/>';
-			return s;
-		}
-
-		function miniViolin() {
-			// Symmetric violin path centred at x=27
-			var cx = 27;
-			// Catmull-Rom-style smooth symmetric shape: wide at mid, narrow at ends
-			var path = 'M ' + cx + ' 78 '
-				+ 'C ' + (cx-12) + ' 74, ' + (cx-18) + ' 62, ' + (cx-14) + ' 50 '
-				+ 'C ' + (cx-20) + ' 40, ' + (cx-20) + ' 26, ' + (cx-6) + ' 18 '
-				+ 'C ' + (cx-2) + ' 10, ' + (cx+2) + ' 10, ' + (cx+6) + ' 18 '
-				+ 'C ' + (cx+20) + ' 26, ' + (cx+20) + ' 40, ' + (cx+14) + ' 50 '
-				+ 'C ' + (cx+18) + ' 62, ' + (cx+12) + ' 74, ' + cx + ' 78 Z';
-			var s = '<path d="' + path + '" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="1.5"/>';
-			// Median line
-			s += '<line x1="' + (cx-9) + '" y1="44" x2="' + (cx+9) + '" y2="44" stroke="currentColor" stroke-width="2"/>';
-			return s;
-		}
-
-		function miniPie() {
-			// Pie chart centred in the 54 x 86 box; slices echo the code's data
-			var cx = 27, cy = 43, R = 22;
-			var data = [36, 12, 68, 5, 42, 27];
-			var total = data.reduce(function(a, b) { return a + b; }, 0);
-			var ops = [0.85, 0.3, 0.65, 0.18, 0.5, 0.4]; // distinct shades per slice
-			var ang = -Math.PI / 2;                       // start at the top
-			var s = '';
-			data.forEach(function(d, i) {
-				var a0 = ang;
-				var a1 = ang + 2 * Math.PI * d / total;
-				ang = a1;
-				var large = (a1 - a0) > Math.PI ? 1 : 0;
-				var x0 = cx + R * Math.cos(a0),  y0 = cy + R * Math.sin(a0);
-				var x1 = cx + R * Math.cos(a1),  y1 = cy + R * Math.sin(a1);
-				var p = 'M ' + cx + ' ' + cy
-					+ ' L ' + x0.toFixed(2) + ' ' + y0.toFixed(2)
-					+ ' A ' + R + ' ' + R + ' 0 ' + large + ' 1 ' + x1.toFixed(2) + ' ' + y1.toFixed(2)
-					+ ' Z';
-				s += '<path d="' + p + '" fill="currentColor" fill-opacity="' + ops[i]
-					+ '" stroke="var(--vscode-editor-background)" stroke-width="0.8"/>';
-			});
-			return s;
-		}
-
-		function miniLine() {
-			// a continuous segmented line zig-zagging up and down (/\/\) + faint axes
-			var s = '<line x1="4" y1="4" x2="4" y2="80" stroke="currentColor" stroke-width="0.6" opacity="0.35"/>'
-				+ '<line x1="4" y1="80" x2="52" y2="80" stroke="currentColor" stroke-width="0.6" opacity="0.35"/>';
-			var pts = [[6, 58], [17, 30], [28, 56], [39, 28], [50, 48]];
-			var d = 'M ' + pts[0][0] + ' ' + pts[0][1];
-			for (var i = 1; i < pts.length; i++) { d += ' L ' + pts[i][0] + ' ' + pts[i][1]; }
-			s += '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.7"/>';
-			return s;
-		}
-
-		var MINI_CHARTS = [miniScatter, miniRegression, miniBar, miniHistogram, miniBox, miniViolin, miniPie, miniLine];
-		var MINI_LABELS = ['Scatter', 'Regression', 'Bar', 'Histogram', 'Box Plot', 'Violin', 'Pie Chart', 'Line Plot'];`,
 		codeBranchesJs: `if (currentModel === 'scatter') {
 				c += cline(kw('using') + ' ' + ty('StatsPlots') + ', ' + ty('Random'), 'plotting and RNG');
 				c += blank();

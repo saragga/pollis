@@ -17,7 +17,7 @@ defaultModel = "nlp"
 [notes.explore]
 intro = "The Task sub-categories (Computer Vision, Natural Language Processing, …) are visual groupings that all belong to one Task category. A query joins your selections with <strong>OR</strong> inside a category and <strong>AND</strong> across categories. For example, picking <em>Text Generation</em> plus <em>Summarization</em> under Task, plus <em>PyTorch</em> under Framework, builds: <code>(Text Generation OR Summarization) AND (PyTorch)</code>"
 
-# Interactive Explore pane (replaces the static Illustration pane). Groups sharing an
+# Interactive Explore pane. Groups sharing an
 # `axis` are OR-ed in the query, different axes AND-ed. The axes map onto the Hub API:
 # task -> pipeline_tag, framework -> filter, author -> author. Queried live against the Hub.
 [explore]
@@ -509,62 +509,6 @@ purpose = "Node classification, link prediction, graph regression"
 task = "Embedding"
 context = "Text"
 purpose = "Semantic search, clustering, retrieval-augmented generation"
-
-[miniCharts.multimodal]
-svg = '''
-var s = '<rect x="4" y="8" width="46" height="68" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
-s += '<text x="27" y="52" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Multimodal</text>';
-return s;
-'''
-
-[miniCharts.nlp]
-svg = '''
-var s = '<rect x="4" y="8" width="46" height="68" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
-s += '<text x="27" y="52" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">NLP</text>';
-return s;
-'''
-
-[miniCharts.vision]
-svg = '''
-var s = '<rect x="4" y="8" width="46" height="68" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
-s += '<text x="27" y="52" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Vision</text>';
-return s;
-'''
-
-[miniCharts.audio]
-svg = '''
-var s = '<rect x="4" y="8" width="46" height="68" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
-s += '<text x="27" y="52" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Audio</text>';
-return s;
-'''
-
-[miniCharts.tabular]
-svg = '''
-var s = '<rect x="4" y="8" width="46" height="68" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
-s += '<text x="27" y="52" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Tabular</text>';
-return s;
-'''
-
-[miniCharts.rl]
-svg = '''
-var s = '<rect x="4" y="8" width="46" height="68" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
-s += '<text x="27" y="52" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Reinforcement Learning</text>';
-return s;
-'''
-
-[miniCharts.graphml]
-svg = '''
-var s = '<rect x="4" y="8" width="46" height="68" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
-s += '<text x="27" y="52" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Graph ML</text>';
-return s;
-'''
-
-[miniCharts.embedding]
-svg = '''
-var s = '<rect x="4" y="8" width="46" height="68" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
-s += '<text x="27" y="52" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Embedding</text>';
-return s;
-'''
 
 [[codeBranches]]
 model = "multimodal"

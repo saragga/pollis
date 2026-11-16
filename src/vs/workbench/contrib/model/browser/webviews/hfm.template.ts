@@ -8,7 +8,7 @@ import { buildModelHubExploreCss, buildModelHubExploreJs } from './modelHubExplo
 import { IHfmMetadata } from '../common/hfm.types.js';
 
 /** The Explore pane queries the Hub API live: task -> pipeline_tag, author -> author, framework -> filter. */
-function buildExploreOverrideJs(metadata: IHfmMetadata): string {
+function buildExploreJs(metadata: IHfmMetadata): string {
 	return buildModelHubExploreJs({
 		groups: metadata.hfm.explore?.groups ?? [],
 		sortOptions: [
@@ -53,11 +53,12 @@ export function getHfmHtml(metadata: IHfmMetadata): string {
 		title: 'Hugging Face Models',
 		defaultModel: 'nlp',
 		decisionFirstColumn: 'Task',
-		illusCollapsed: false,
-		illustrationLabel: metadata.hfm.explore?.label ?? 'Illustration',
-		illustrationIntro: metadata.hfm.notes?.explore?.intro,
-		illustrationFootnote: metadata.hfm.notes?.explore?.footnote,
-		illustrationOverrideJs: buildExploreOverrideJs(metadata),
+		explore: {
+			label: metadata.hfm.explore?.label ?? 'Explore',
+			intro: metadata.hfm.notes?.explore?.intro,
+			footnote: metadata.hfm.notes?.explore?.footnote,
+			js: buildExploreJs(metadata),
+		},
 		extraCss: buildModelHubExploreCss(),
 	});
 }

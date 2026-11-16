@@ -159,23 +159,6 @@ tooltip = "Julia expression in x returning the tuple (lb, ub) of the box K(x). D
 default = "(zeros(2), 5.0 .- (sum(x) .- x))"
 models = ["qvi"]
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.vi]
-# Fixed box with the operator pointing outward at the solution
-svg = '''
-return '<rect x="10" y="26" width="34" height="34" fill="none" stroke="currentColor" stroke-width="2"/>'
-	+ '<circle cx="44" cy="40" r="2.5" fill="currentColor"/><line x1="44" y1="40" x2="52" y2="40" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/>';
-'''
-
-[miniCharts.qvi]
-# Two nested boxes: the set moves with the point
-svg = '''
-return '<rect x="8" y="24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/>'
-	+ '<rect x="16" y="34" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="46" cy="50" r="2.5" fill="currentColor"/>';
-'''
-
 [[codeBranches]]
 model = "vi"
 code = '''

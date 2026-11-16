@@ -98,9 +98,8 @@ export interface IModelExploreGroup {
 }
 
 /**
- * Declarative description of the interactive Explore pane that can replace the
- * Illustration pane: a labelled, ordered list of collapsible groups whose checked
- * chips drive a live Hub query.
+ * Declarative description of the interactive Explore pane: a labelled, ordered list
+ * of collapsible groups whose checked chips drive a live Hub query.
  */
 export interface IModelExplorePane {
 	readonly label: string;
@@ -121,12 +120,6 @@ export interface IModelPaneNotes {
 	readonly keyPoints?: IModelPaneNote;
 	readonly decision?: IModelPaneNote;
 	readonly explore?: IModelPaneNote;
-}
-
-/** An SVG mini-chart function body for a model toggle (raw JS string). */
-export interface IModelMiniChart {
-	readonly model: string;
-	readonly svg: string;
 }
 
 /**
@@ -268,7 +261,6 @@ export interface IScaffoldPanelData {
 	readonly models?: IModelToggle[];
 	readonly bullets?: IModelBullet[];
 	readonly decisionRows?: IModelDecisionRow[];
-	readonly miniCharts?: IModelMiniChart[];
 	readonly codeBranches?: IModelCodeBranch[];
 	readonly actionGroups?: IModelActionGroup[];
 	readonly inputs?: IModelInput[];

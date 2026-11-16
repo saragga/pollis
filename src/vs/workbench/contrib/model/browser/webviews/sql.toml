@@ -306,61 +306,6 @@ ORDER BY body_mass_g DESC
 models = ["query", "export"]
 newRow = true
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.query]
-# Database cylinder flowing into a grid of columns
-svg = '''
-var s = '<ellipse cx="27" cy="9" rx="18" ry="5" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.6"/>';
-s += '<path d="M9 9 L9 29 A18 5 0 0 0 45 29 L45 9" fill="currentColor" fill-opacity="0.12" stroke="currentColor" stroke-width="0.8" stroke-opacity="0.6"/>';
-s += '<line x1="27" y1="37" x2="27" y2="47" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
-s += '<path d="M23 44 L27 49 L31 44" fill="none" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
-s += '<rect x="6" y="54" width="42" height="26" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>';
-s += '<rect x="9" y="57" width="10" height="20" fill="currentColor" opacity="0.25"/>';
-s += '<rect x="22" y="57" width="10" height="20" fill="currentColor" opacity="0.15"/>';
-s += '<rect x="35" y="57" width="10" height="20" fill="currentColor" opacity="0.25"/>';
-return s;
-'''
-
-[miniCharts.import]
-# File flowing into a database cylinder
-svg = '''
-var s = '<path d="M10 6 L38 6 L44 12 L44 30 L10 30 Z" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>';
-s += '<text x="27" y="22" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">a,b,c</text>';
-s += '<line x1="27" y1="33" x2="27" y2="43" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
-s += '<path d="M23 40 L27 45 L31 40" fill="none" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
-s += '<ellipse cx="27" cy="55" rx="18" ry="5" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.6"/>';
-s += '<path d="M9 55 L9 75 A18 5 0 0 0 45 75 L45 55" fill="currentColor" fill-opacity="0.12" stroke="currentColor" stroke-width="0.8" stroke-opacity="0.6"/>';
-return s;
-'''
-
-[miniCharts.save]
-# Grid of Julia columns flowing into a database cylinder
-svg = '''
-var s = '<rect x="6" y="6" width="42" height="26" rx="2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>';
-s += '<rect x="9" y="9" width="10" height="20" fill="currentColor" opacity="0.25"/>';
-s += '<rect x="22" y="9" width="10" height="20" fill="currentColor" opacity="0.15"/>';
-s += '<rect x="35" y="9" width="10" height="20" fill="currentColor" opacity="0.25"/>';
-s += '<line x1="27" y1="34" x2="27" y2="44" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
-s += '<path d="M23 41 L27 46 L31 41" fill="none" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
-s += '<ellipse cx="27" cy="55" rx="18" ry="5" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.6"/>';
-s += '<path d="M9 55 L9 75 A18 5 0 0 0 45 75 L45 55" fill="currentColor" fill-opacity="0.12" stroke="currentColor" stroke-width="0.8" stroke-opacity="0.6"/>';
-return s;
-'''
-
-[miniCharts.export]
-# Database cylinder flowing into a file
-svg = '''
-var s = '<ellipse cx="27" cy="9" rx="18" ry="5" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.6"/>';
-s += '<path d="M9 9 L9 29 A18 5 0 0 0 45 29 L45 9" fill="currentColor" fill-opacity="0.12" stroke="currentColor" stroke-width="0.8" stroke-opacity="0.6"/>';
-s += '<line x1="27" y1="37" x2="27" y2="47" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
-s += '<path d="M23 44 L27 49 L31 44" fill="none" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
-s += '<path d="M10 54 L38 54 L44 60 L44 80 L10 80 Z" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>';
-s += '<text x="27" y="71" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">.parquet</text>';
-return s;
-'''
-
 [[codeBranches]]
 model = "query"
 code = '''

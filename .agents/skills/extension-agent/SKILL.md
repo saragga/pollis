@@ -44,7 +44,7 @@ order = 1
 
 1. **Read the spec.** If something is missing (name, display name, description, mode, destination), ask once, with sensible defaults offered. Do not invent a description: ask, or propose one for approval.
 2. **Run the script**: `node build/pollis/makeExtension.ts <spec.toml>` (add `--overwrite` only when the user agreed to replace an existing `toolboxes/<name>/`). It stops with a clear message on what cannot be packaged:
-   - a panel with its own code (illustrationOverrideJs, extraCss, ...) or a gallery: cannot be data-only. Report it and continue without it only if the user agrees.
+   - a panel with its own code (explore, extraCss, ...) or its own webview: cannot be data-only. Report it and continue without it only if the user agrees.
    - an unknown command, panel or menu.
    Report every warning (a wiki or notebook the TOML names that does not exist).
 3. **Finish the README** (`toolboxes/<name>/README.md`): fill the "What it covers" column, one short line per panel, from the panel's TOML (models, key points), in the style of the existing toolbox READMEs (`toolboxes/pollis-toolbox-economics/README.md`). Keep the rest of the generated README. Show it to the user before packaging.

@@ -11,9 +11,5 @@ export function getImfHtml(): string {
 		title: 'IMF Data',
 		defaultModel: 'weo',
 		decisionFirstColumn: 'Task',
-		illusCollapsed: true,
-		illustrationLabel: 'Illustration',
-		illustrationOverrideJs: `			body.innerHTML = '<div style="text-align:center;padding:24px 0;font-size:13px;color:var(--vscode-descriptionForeground);">Pull International Monetary Fund statistics into Julia: World Economic Outlook forecasts, consumer prices, exchange rates, the currency composition of reserves, and primary commodity prices.</div>';
-			return;`,
 	});
 }

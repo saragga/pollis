@@ -11,9 +11,5 @@ export function getFfdHtml(): string {
 		title: 'Kenneth French Data Library',
 		defaultModel: 'factors3',
 		decisionFirstColumn: 'Task',
-		illusCollapsed: true,
-		illustrationLabel: 'Illustration',
-		illustrationOverrideJs: `			body.innerHTML = '<div style="text-align:center;padding:24px 0;font-size:13px;color:var(--vscode-descriptionForeground);">Pull Kenneth French&#39;s factor and portfolio returns into Julia: the three and five Fama-French factors, momentum, the 25 size and book-to-market portfolios, industry portfolios, and the full list of files in the library.</div>';
-			return;`,
 	});
 }

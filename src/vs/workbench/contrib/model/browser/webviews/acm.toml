@@ -231,31 +231,6 @@ tooltip = "Standard deviation of the smoothing noise added to target-policy acti
 default = "0.2"
 models = ["td3"]
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.a2c]
-# Parallel rollouts feeding one update
-svg = '''
-let s = '';
-for (let i = 0; i < 4; i++) { s += '<line x1="6" y1="' + (30 + i * 10) + '" x2="30" y2="' + (30 + i * 10) + '" stroke="currentColor" stroke-width="1.2"/><line x1="30" y1="' + (30 + i * 10) + '" x2="44" y2="45" stroke="currentColor" stroke-width="0.6" opacity="0.6"/>'; }
-return s + '<circle cx="46" cy="45" r="4" fill="currentColor"/>';
-'''
-
-[miniCharts.sac]
-# Wide (high-entropy) Gaussian over actions
-svg = '''
-return '<path d="M4,70 C14,70 18,34 27,34 C36,34 40,70 50,70" fill="currentColor" opacity="0.35" stroke="currentColor" stroke-width="1.2"/>';
-'''
-
-[miniCharts.td3]
-# Twin critics, taking the minimum
-svg = '''
-return '<path d="M4,60 Q27,24 50,56" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/>'
-	+ '<path d="M4,64 Q27,34 50,60" fill="none" stroke="currentColor" stroke-width="1.6"/>'
-	+ '<line x1="27" y1="20" x2="27" y2="76" stroke="currentColor" stroke-width="0.6" stroke-dasharray="2,2"/>';
-'''
-
 [[codeBranches]]
 model = "a2c"
 code = '''

@@ -137,6 +137,20 @@ export const ONE_BLUE_BUTTON_JS = `
 `;
 
 /**
+ * An Explore pane: a collapsible pane, open at first, whose content the page's own script draws once, when the page
+ * loads (the live filters and cards of the Kaggle and Hugging Face panels).
+ */
+export interface IScaffoldExplorePane {
+	/** The pane's title, from `[explore] label`. */
+	readonly label: string;
+	/** HTML above and below the pane's body (from `[notes.explore]`). */
+	readonly intro?: string;
+	readonly footnote?: string;
+	/** The body of a function that draws the pane into `body`, its element; it runs once. */
+	readonly js: string;
+}
+
+/**
  * What a page of the scaffold has. It has one of three styles: Classical, with Example Code; Time Arrow, when `steps`
  * is given, whose numbered panes take the place of Example Code; and Minimal, when `bodyHtml` is given, which takes the
  * place of Example Code as it is. Title, Powered by, Ask Pollis, Next Steps and Learn More are the same in all three; the
@@ -152,9 +166,9 @@ export interface WebviewParts {
 	readonly bullets?: string;
 	/** A text in place of Key Points. */
 	readonly introHtml?: string;
-	/** Time Arrow: the panes, numbered from the top, in place of Example Code. No illustration goes with them. */
+	/** Time Arrow: the panes, numbered from the top, in place of Example Code. */
 	readonly steps?: readonly IScaffoldStep[];
-	/** Minimal: anything, in place of Example Code. No illustration goes with it. */
+	/** Minimal: anything, in place of Example Code. */
 	readonly bodyHtml?: string;
 	/** Time Arrow and Minimal: the page's own script, after the scaffold's, whose names are kept out of its way; `vscode` is set. */
 	readonly pageScriptJs?: string;
@@ -172,13 +186,10 @@ export interface WebviewParts {
 	/** Optional HTML rendered above / below the Decision Table pane (from `[notes.decision]`). */
 	readonly decisionIntro?: string;
 	readonly decisionFootnote?: string;
-	/** Optional HTML rendered above / below the Illustration pane (from `[notes.explore]`). */
-	readonly illustrationIntro?: string;
-	readonly illustrationFootnote?: string;
+	/** The Explore pane of a Classical page, between the Decision Table and Example Code. Default: none. */
+	readonly explore?: IScaffoldExplorePane;
 	readonly defaultModel?: string;
 	readonly modelsLiteral?: string;
-	readonly chartW?: number;
-	readonly miniChartsJs?: string;
 	readonly codeBranchesJs?: string;
 	readonly actionsJs?: string;
 	/** The model-toggle (tab) buttons, e.g. `<button class="toggle-btn active" data-model="...">…</button>`. */
@@ -192,17 +203,6 @@ export interface WebviewParts {
 	readonly subtabsHtml?: string;
 	/** Optional CSS rule for this webview's (legacy) hidden param rows. Default: none. */
 	readonly hiddenRowCss?: string;
-	/** Start the illustration pane collapsed (e.g. webviews with no gallery yet). Default: open. */
-	readonly illusCollapsed?: boolean;
-	/** Leave the illustration pane out entirely (a panel with neither a gallery nor an override). Default: shown. */
-	readonly omitIllustration?: boolean;
-	/**
-	 * JS injected at the top of `renderIllustration` (after `var body = ...`). If it renders custom
-	 * content into `body` and `return`s, the shared mini-chart gallery is skipped — this is the hook
-	 * for non-gallery illustrations (a "Not written yet" stub, model equations, a field panorama, …).
-	 * Default: empty (the gallery renders).
-	 */
-	readonly illustrationOverrideJs?: string;
 	/** Extra CSS appended to the style block (e.g. sfviz's interactive-checkbox styling). */
 	readonly extraCss?: string;
 	/** If set, the bottom button bar becomes a split bar with this label on the left (sfviz's Interactive toggle). */
@@ -213,8 +213,6 @@ export interface WebviewParts {
 	readonly setModelExtraJs?: string;
 	/** JS appended at the very end of the script, after the initial setModel (e.g. sfviz's checkbox listener). */
 	readonly tailScriptJs?: string;
-	/** Override the "Illustration" label on the collapsible pane toggle. Default: "Illustration". */
-	readonly illustrationLabel?: string;
 	/** Override the first column header of the decision table. Default: "Plot". */
 	readonly decisionFirstColumn?: string;
 	/**
@@ -524,9 +522,8 @@ function notWrittenNextStepsJs(): string {
 /**
  * Build the full HTML for a Visualise webview from its webview-specific parts.
  * The shared scaffold (CSS, layout, tabs, theme-colourised code boxes, Next Steps /
- * Learn More panels, illustration gallery, message handling) lives here; each webview
- * supplies only its title, bullets, decision table, models, mini-charts, code branches
- * and action arrays.
+ * Learn More panels, message handling) lives here; each webview supplies only its title,
+ * bullets, decision table, models, code branches and action arrays.
  */
 export function buildWebviewHtml(parts: WebviewParts): string {
 	const noExampleCode = parts.steps !== undefined || parts.bodyHtml !== undefined;
@@ -545,7 +542,7 @@ export function buildWebviewHtml(parts: WebviewParts): string {
 		${sectionCss}
 		.section-body { padding: 6px 0 0 0; }
 		/* Key Points (.methods-list), Next Steps / Learn More (.column-list) and the Explore intro
-		   (.illus-note) self-indent by 22px to align under the pane title. The Decision Table and
+		   (.explore-note) self-indent by 22px to align under the pane title. The Decision Table and
 		   Example Code panes have no self-indenting child, so indent their bodies here to match. */
 		#sec-table .section-body, #sec-code .section-body { padding-left: 22px; }
 		${poweredByCss}
@@ -597,15 +594,15 @@ export function buildWebviewHtml(parts: WebviewParts): string {
 		.code-added-tag { display: none; margin-left: 4px; font-size: 11px; font-weight: 500; line-height: 16px; color: var(--vscode-textLink-foreground); border: 1px solid var(--vscode-textLink-foreground); border-radius: 10px; padding: 0 8px; }
 		#sec-code.added-tab .code-added-tag { display: inline-block; }
 		.toggle-btn:not(.active):hover { background: var(--vscode-tab-hoverBackground, var(--vscode-list-hoverBackground)); color: var(--vscode-tab-hoverForeground, var(--vscode-tab-activeForeground)); }
-		.illus-section { margin: 0 0 20px 0; }
-		.illus-toggle { display: flex; align-items: center; gap: 6px; background: transparent; border: none; color: var(--vscode-foreground); font-size: 15px; font-weight: 500; font-family: var(--vscode-font-family); cursor: pointer; padding: 4px 0; user-select: none; }
-		.illus-toggle:hover { text-decoration: underline; }
+		.explore-section { margin: 0 0 20px 0; }
+		.explore-toggle { display: flex; align-items: center; gap: 6px; background: transparent; border: none; color: var(--vscode-foreground); font-size: 15px; font-weight: 500; font-family: var(--vscode-font-family); cursor: pointer; padding: 4px 0; user-select: none; }
+		.explore-toggle:hover { text-decoration: underline; }
 		.illus-chevron { display: inline-flex; align-items: center; transition: transform 0.15s; flex-shrink: 0; }
-		.illus-section.collapsed .illus-chevron { transform: rotate(-90deg); }
-		.illus-section.collapsed .illus-body { display: none; }
-		.illus-section.collapsed .illus-note { display: none; }
-		.illus-note { margin-left: 22px; }
-		.illus-body { background: var(--vscode-textCodeBlock-background); border: 1px solid var(--vscode-widget-border); border-radius: 6px; padding: 16px 20px; overflow-x: auto; }
+		.explore-section.collapsed .illus-chevron { transform: rotate(-90deg); }
+		.explore-section.collapsed .explore-body { display: none; }
+		.explore-section.collapsed .explore-note { display: none; }
+		.explore-note { margin-left: 22px; }
+		.explore-body { background: var(--vscode-textCodeBlock-background); border: 1px solid var(--vscode-widget-border); border-radius: 6px; padding: 16px 20px; overflow-x: auto; }
 		.form-group { display: flex; flex-direction: column; margin-bottom: 12px; }
 		.form-row { display: flex; gap: 15px; margin-bottom: 12px; flex-wrap: wrap; }
 		.form-row .form-group { flex: 1; min-width: 120px; margin-bottom: 0; }
@@ -732,13 +729,13 @@ ${parts.decisionRows}</tbody>
 		</div>
 ` : ''}
 
-${parts.omitIllustration || noExampleCode ? '' : `
-		<div class="illus-section ${parts.illusCollapsed === false ? '' : 'collapsed'}" id="illus-section">
-			<button class="illus-toggle" id="illus-toggle">
+${!parts.explore || noExampleCode ? '' : `
+		<div class="explore-section" id="explore-section">
+			<button class="explore-toggle" id="explore-toggle">
 				<span class="illus-chevron"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M7.976 10.072l-4.054-4.014-.92.92 4.49 4.45.978.01 4.525-4.46-.918-.92-4.101 4.014z"/></svg></span>
-				${parts.illustrationLabel ?? 'Illustration'}
-			</button>${parts.illustrationIntro ? `\n\t\t\t<p class="pane-intro illus-note">${parts.illustrationIntro}</p>` : ''}
-			<div class="illus-body" id="illus-body"></div>${parts.illustrationFootnote ? `\n\t\t\t<p class="pane-note illus-note">${parts.illustrationFootnote}</p>` : ''}
+				${parts.explore.label}
+			</button>${parts.explore.intro ? `\n\t\t\t<p class="pane-intro explore-note">${parts.explore.intro}</p>` : ''}
+			<div class="explore-body" id="explore-body"></div>${parts.explore.footnote ? `\n\t\t\t<p class="pane-note explore-note">${parts.explore.footnote}</p>` : ''}
 		</div>
 `}
 
@@ -803,17 +800,6 @@ ${parts.headScriptJs ?? ''}
 		var MODELS = ${parts.modelsLiteral ?? '[]'};
 
 		// Every code box is rendered via the core tokenizer (the user's active theme); see updateCodePreview.
-
-		// Chart layout constants for the gallery illustration
-		var CHART_W = ${parts.chartW ?? 0};   // mini chart width
-		var CHART_H = 86;   // mini chart height
-		var CHART_GAP = 9;  // gap between charts
-		var CHART_Y = 14;   // top of chart area
-		// Tile positions and the gallery viewBox derive from the chart count (centred on x=160),
-		// so adding or removing a plot needs no manual geometry.
-		var CHART_STEP = CHART_W + CHART_GAP;
-		var CHART_CONTENT_W = MODELS.length * CHART_W + (MODELS.length - 1) * CHART_GAP;
-		var CHART_STARTS = MODELS.map(function(_, i) { return 160 - CHART_CONTENT_W / 2 + i * CHART_STEP; });
 
 		${escJs}
 		function kw(s)       { return '<span class="hl-keyword">' + esc(s) + '</span>'; }
@@ -890,55 +876,11 @@ ${parts.headScriptJs ?? ''}
 			});
 		}
 
-		// ── Mini chart SVG builders (all coordinates within a 54 × 86 box) ──
-
-		${parts.miniChartsJs ?? ''}
-
-		// ── Gallery illustration ─────────────────────────────────────────────
-		function renderIllustration() {
-			var body = document.getElementById('illus-body');
+		// ── Explore pane ─────────────────────────────────────────────────────
+		function renderExplore() {
+			var body = document.getElementById('explore-body');
 			if (!body) { return; }
-${parts.illustrationOverrideJs ?? ''}			var activeIdx = MODELS.indexOf(currentModel);   // -1 in a tab the user added: every chart dimmed
-
-			var vbX = CHART_STARTS[0] - 20;
-			var vbW = (CHART_STARTS[CHART_STARTS.length - 1] + CHART_W + 20) - vbX;
-			var svgOpen = '<svg viewBox="' + vbX + ' 0 ' + vbW + ' 180" xmlns="http://www.w3.org/2000/svg" '
-				+ 'style="width:100%;max-width:' + Math.round(vbW * 4 / 3) + 'px;display:block;margin:0 auto;">';
-
-			var content = '';
-
-			MODELS.forEach(function(m, i) {
-				var isActive = (i === activeIdx);
-				var ox = CHART_STARTS[i];      // chart origin x
-				var oy = CHART_Y;              // chart origin y
-				var opacity = isActive ? '1' : '0.22';
-				var borderW = isActive ? '2' : '1';
-				var fontW  = isActive ? '600' : '400';
-				var labelY = oy + CHART_H + 13;
-
-				// Border rectangle
-				content += '<rect x="' + ox + '" y="' + oy + '" width="' + CHART_W + '" height="' + CHART_H + '" '
-					+ 'rx="3" fill="none" stroke="currentColor" stroke-width="' + borderW + '" opacity="' + opacity + '"/>';
-
-				// Clip the mini chart content inside the border
-				content += '<g transform="translate(' + ox + ',' + oy + ')" clip-path="none" opacity="' + opacity + '">';
-				content += MINI_CHARTS[i]();
-				content += '</g>';
-
-				// Label
-				content += '<text x="' + (ox + CHART_W / 2) + '" y="' + labelY + '" '
-					+ 'text-anchor="middle" font-size="8.5" font-weight="' + fontW + '" '
-					+ 'fill="currentColor" font-family="sans-serif">' + MINI_LABELS[i] + '</text>';
-			});
-
-			// Caption
-			content += '<text x="160" y="168" text-anchor="middle" font-size="9" fill="currentColor" '
-				+ 'font-family="sans-serif" font-style="italic">'
-				+ (activeIdx < 0 ? 'Your own example &#8212; click a tab to compare chart shapes' : esc(MINI_LABELS[activeIdx]) + ' selected &#8212; click another tab to compare chart shapes')
-				+ '</text>';
-
-			body.innerHTML = svgOpen + content + '</svg>';
-		}
+${parts.explore && !noExampleCode ? parts.explore.js : ''}		}
 
 		// ── Code preview ─────────────────────────────────────────────────────
 		function updateCodePreview() {
@@ -1196,7 +1138,6 @@ ${noExampleCode ? '' : `		document.getElementById('btn-edit-code').addEventListe
 ${parts.setModelExtraJs ?? ''}			document.querySelectorAll('#model-group .toggle-btn').forEach(function(b) {
 				b.classList.toggle('active', b.dataset.model === model);
 			});
-			renderIllustration();
 			updateCodePreview();
 			refreshActionList();
 		}
@@ -1594,10 +1535,10 @@ ${noExampleCode ? '' : `		document.getElementById('btn-copy').addEventListener('
 			vscode.postMessage({ command: 'runCode', target: 'juliaRepl', code: extractCode() });
 		});
 `}
-		var illusToggle = document.getElementById('illus-toggle');
-		if (illusToggle) {
-			illusToggle.addEventListener('click', function() {
-				document.getElementById('illus-section').classList.toggle('collapsed');
+		var exploreToggle = document.getElementById('explore-toggle');
+		if (exploreToggle) {
+			exploreToggle.addEventListener('click', function() {
+				document.getElementById('explore-section').classList.toggle('collapsed');
 			});
 		}
 		${sectionToggleJs}
@@ -1747,6 +1688,7 @@ ${noExampleCode ? '' : `		document.getElementById('btn-copy').addEventListener('
 			}
 		});
 
+		renderExplore();
 		setModel('${parts.defaultModel ?? ''}');
 ${parts.tailScriptJs ?? ''}
 ${parts.extraJs ?? ''}${noExampleCode ? '})();\n' : ''}	</script>${noExampleCode ? `

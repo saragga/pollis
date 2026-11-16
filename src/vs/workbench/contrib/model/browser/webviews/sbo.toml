@@ -212,33 +212,6 @@ default = "0.2"
 models = ["rsm"]
 newRow = true
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.rsm]
-# A fitted parabola through scattered points
-svg = '''
-var s = '<path d="M6,38 Q27,86 48,38" fill="none" stroke="currentColor" stroke-width="1.2"/>';
-[[10,46],[18,58],[26,60],[34,57],[44,44]].forEach(function (p) { s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="1.8" fill="currentColor"/>'; });
-return s;
-'''
-
-[miniCharts.kriging]
-# A GP mean with an uncertainty band pinched at the data
-svg = '''
-return '<path d="M6,44 Q12,58 18,52 Q26,40 32,56 Q40,72 48,50 L48,40 Q40,54 32,52 Q26,36 18,48 Q12,50 6,40 Z" fill="currentColor" opacity="0.2"/>'
-	+ '<path d="M6,42 Q12,54 18,50 Q26,38 32,54 Q40,64 48,45" fill="none" stroke="currentColor" stroke-width="1.1"/>'
-	+ '<circle cx="18" cy="50" r="1.8" fill="currentColor"/><circle cx="32" cy="54" r="1.8" fill="currentColor"/>';
-'''
-
-[miniCharts.rbf]
-# Bumps centred at the data summing to a curve
-svg = '''
-var s = '';
-[14,27,40].forEach(function (c) { s += '<path d="M' + (c - 9) + ',66 Q' + c + ',42 ' + (c + 9) + ',66" fill="none" stroke="currentColor" stroke-width="0.7" opacity="0.5"/><circle cx="' + c + '" cy="66" r="1.6" fill="currentColor"/>'; });
-return s + '<path d="M6,60 Q14,40 20,50 Q27,40 34,50 Q40,40 48,58" fill="none" stroke="currentColor" stroke-width="1.1"/>';
-'''
-
 [[codeBranches]]
 model = "rsm"
 code = '''

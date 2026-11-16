@@ -6,7 +6,7 @@
 import { buildScaffoldHtml } from './scaffoldParts.js';
 import { IHfdsMetadata } from '../common/hfds.types.js';
 
-/** CSS for the interactive Explore pane (replaces the Illustration pane). */
+/** CSS for the interactive Explore pane. */
 function buildExploreCss(): string {
 	return `	.hfds-explore-layout { display: grid; grid-template-columns: 220px 1fr; gap: 16px; height: 520px; }
 		.hfds-axis-list { overflow-y: auto; height: 100%; padding-right: 4px; scrollbar-width: none; }
@@ -51,19 +51,13 @@ function buildExploreCss(): string {
 }
 
 /**
- * The interactive Explore pane, injected as the Illustration override. Generic over the
+ * The script that draws the interactive Explore pane, once, when the page loads. Generic over the
  * axes declared in TOML: each axis is a collapsible group of filter chips; checked chips
  * are OR-ed within an axis and AND-ed across axes, then queried live against the Hub.
  */
-function buildExploreOverrideJs(metadata: IHfdsMetadata): string {
+function buildExploreJs(metadata: IHfdsMetadata): string {
 	const groupsJson = JSON.stringify(metadata.hfds.explore?.groups ?? []);
-	return `			// renderIllustration() re-runs on every topic toggle; the Explore pane is
-			// independent of the code-preview topic, so build it once and skip rebuilds
-			// (this also avoids stacking duplicate message listeners and losing selections).
-			if (body.dataset.hfdsBuilt) { return; }
-			body.dataset.hfdsBuilt = '1';
-
-			var HFDS_GROUPS = ${groupsJson};
+	return `			var HFDS_GROUPS = ${groupsJson};
 			var hfdsSel = {};  // axis -> { filterToken: true } (groups sharing an axis are OR-ed)
 			var hfdsSort = 'trending';
 			var hfdsFetchSeq = 0;
@@ -253,7 +247,6 @@ function buildExploreOverrideJs(metadata: IHfdsMetadata): string {
 
 			hfdsUpdateSortBtn();
 			hfdsFetch();
-			return;
 `;
 }
 
@@ -262,11 +255,12 @@ export function getHfdsHtml(metadata: IHfdsMetadata): string {
 		title: 'Hugging Face Datasets',
 		defaultModel: 'browse',
 		decisionFirstColumn: 'Task',
-		illusCollapsed: false,
-		illustrationLabel: metadata.hfds.explore?.label ?? 'Illustration',
-		illustrationIntro: metadata.hfds.notes?.explore?.intro,
-		illustrationFootnote: metadata.hfds.notes?.explore?.footnote,
-		illustrationOverrideJs: buildExploreOverrideJs(metadata),
+		explore: {
+			label: metadata.hfds.explore?.label ?? 'Explore',
+			intro: metadata.hfds.notes?.explore?.intro,
+			footnote: metadata.hfds.notes?.explore?.footnote,
+			js: buildExploreJs(metadata),
+		},
 		extraCss: buildExploreCss(),
 		keyPointsIntro: metadata.hfds.notes?.keyPoints?.intro,
 		keyPointsFootnote: metadata.hfds.notes?.keyPoints?.footnote,

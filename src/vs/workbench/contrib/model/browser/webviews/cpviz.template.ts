@@ -10,7 +10,6 @@ export function getCpvizHtml(): string {
 		title: 'Categorical and Proportional Plots',
 		defaultModel: 'mosaic',
 		modelsLiteral: `['mosaic', 'nightingale', 'waterfall', 'treemap', 'sankey']`,
-		chartW: 54,
 		hiddenRowCss: '.bar-row, .histogram-row, .box-row, .violin-row { display: none; }',
 		togglesJs: `			<button class="toggle-btn active" data-model="mosaic">Mosaic Plot</button>
 			<button class="toggle-btn" data-model="nightingale">Nightingale Rose</button>
@@ -27,70 +26,6 @@ export function getCpvizHtml(): string {
 					<tr><td>Treemap</td><td>Hierarchical parts</td><td>Show nested part-to-whole composition as proportional area</td></tr>
 					<tr><td>Sankey Diagram</td><td>Flows between nodes</td><td>Trace quantities flowing between stages, sources, and sinks</td></tr>
 				`,
-		miniChartsJs: `function miniMosaic() {
-			// two columns of differing width, each split into stacked tiles
-			var s = '';
-			s += '<rect x="4"  y="6"  width="24" height="26" fill="currentColor" fill-opacity="0.30" stroke="currentColor" stroke-width="0.8"/>';
-			s += '<rect x="4"  y="32" width="24" height="48" fill="currentColor" fill-opacity="0.60" stroke="currentColor" stroke-width="0.8"/>';
-			s += '<rect x="30" y="6"  width="22" height="44" fill="currentColor" fill-opacity="0.45" stroke="currentColor" stroke-width="0.8"/>';
-			s += '<rect x="30" y="50" width="22" height="30" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="0.8"/>';
-			return s;
-		}
-
-		function miniNightingale() {
-			// rose chart: equal-angle sectors with varying radius
-			var cx = 27, cy = 44;
-			var radii = [24, 16, 26, 13, 21, 18];
-			var n = radii.length;
-			var s = '';
-			for (var i = 0; i < n; i++) {
-				var a0 = (i / n) * 2 * Math.PI - Math.PI / 2;
-				var a1 = ((i + 1) / n) * 2 * Math.PI - Math.PI / 2;
-				var r = radii[i];
-				var x0 = (cx + r * Math.cos(a0)).toFixed(1), y0 = (cy + r * Math.sin(a0)).toFixed(1);
-				var x1 = (cx + r * Math.cos(a1)).toFixed(1), y1 = (cy + r * Math.sin(a1)).toFixed(1);
-				var op = (0.25 + 0.12 * (i % 3)).toFixed(2);
-				s += '<path d="M ' + cx + ' ' + cy + ' L ' + x0 + ' ' + y0 + ' A ' + r + ' ' + r + ' 0 0 1 ' + x1 + ' ' + y1 + ' Z" fill="currentColor" fill-opacity="' + op + '" stroke="currentColor" stroke-width="0.6"/>';
-			}
-			return s;
-		}
-
-		function miniWaterfall() {
-			// floating bars showing a running total
-			var bars = [[5, 50, 80], [15, 38, 50], [24, 44, 38], [34, 20, 44], [43, 20, 80]];
-			var s = '<line x1="4" y1="80" x2="52" y2="80" stroke="currentColor" stroke-width="0.6" opacity="0.35"/>';
-			bars.forEach(function(b) {
-				var top = Math.min(b[1], b[2]), h = Math.abs(b[2] - b[1]);
-				s += '<rect x="' + b[0] + '" y="' + top + '" width="8" height="' + h + '" fill="currentColor" opacity="0.7"/>';
-			});
-			return s;
-		}
-
-		function miniTreemap() {
-			// nested rectangles partitioning the area
-			var s = '';
-			s += '<rect x="4"  y="6"  width="28" height="46" fill="currentColor" fill-opacity="0.50" stroke="currentColor" stroke-width="0.8"/>';
-			s += '<rect x="4"  y="52" width="28" height="28" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="0.8"/>';
-			s += '<rect x="32" y="6"  width="20" height="26" fill="currentColor" fill-opacity="0.35" stroke="currentColor" stroke-width="0.8"/>';
-			s += '<rect x="32" y="32" width="20" height="22" fill="currentColor" fill-opacity="0.60" stroke="currentColor" stroke-width="0.8"/>';
-			s += '<rect x="32" y="54" width="20" height="26" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="0.8"/>';
-			return s;
-		}
-
-		function miniSankey() {
-			// two columns of nodes with curved flow bands
-			var s = '';
-			s += '<path d="M 11 18 C 28 18, 28 14, 45 14 L 45 22 C 28 26, 28 30, 11 30 Z" fill="currentColor" fill-opacity="0.20"/>';
-			s += '<path d="M 11 50 C 28 50, 28 44, 45 44 L 45 60 C 28 64, 28 62, 11 64 Z" fill="currentColor" fill-opacity="0.28"/>';
-			s += '<rect x="6"  y="14" width="5" height="24" fill="currentColor" opacity="0.85"/>';
-			s += '<rect x="6"  y="46" width="5" height="22" fill="currentColor" opacity="0.85"/>';
-			s += '<rect x="45" y="10" width="5" height="20" fill="currentColor" opacity="0.85"/>';
-			s += '<rect x="45" y="40" width="5" height="30" fill="currentColor" opacity="0.85"/>';
-			return s;
-		}
-
-		var MINI_CHARTS = [miniMosaic, miniNightingale, miniWaterfall, miniTreemap, miniSankey];
-		var MINI_LABELS = ['Mosaic', 'Nightingale', 'Waterfall', 'Treemap', 'Sankey'];`,
 		codeBranchesJs: `if (currentModel === 'mosaic') {
 				c += cline(kw('using') + ' ' + ty('Plots'), 'mosaic via shaded rectangles');
 				c += blank();

@@ -187,7 +187,7 @@ export class Pollis {
 
 	/**
 	 * The panels built on the scaffold that open their own webview, because their template passes
-	 * its own code (illustrationOverrideJs, extraCss...): they cannot go in a data-only toolbox.
+	 * its own code (explore, extraCss...): they cannot go in a data-only toolbox.
 	 */
 	ownCodePanels(): { id: string; title?: string; reason: string; commands: string[] }[] {
 		const scaffoldIds = new Set(this.scaffoldPanels().map(panel => panel.id));
@@ -250,6 +250,9 @@ export class Pollis {
 		const dataImport = /from '\.\.\/webviews\/(?<file>[\w-]+)\.data\.js'/.exec(panelSource.text)?.groups;
 		if (!id || !htmlImport || !dataImport) {
 			throw new PanelError(`${path.relative(ROOT, panelSource.file)} is not a plain scaffold panel`);
+		}
+		if (/^\tapiKey:/m.test(panelSource.text)) {
+			throw new PanelError(`the panel ${id} asks for an API key (apiKey in ${path.relative(ROOT, panelSource.file)}), which a data-only extension cannot ask for`);
 		}
 
 		// The template's scaffold options, which must all be portable

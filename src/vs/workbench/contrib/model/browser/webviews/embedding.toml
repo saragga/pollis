@@ -155,28 +155,6 @@ tooltip = "Minimum distance between points in the embedding. Smaller values give
 default = "0.1"
 models = ["umap"]
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.tsne]
-# Tight, well-separated clusters with a heavy-tailed kernel curve
-svg = '''
-var s = '', c = [[14, 34], [40, 34], [27, 60]];
-var o = [[-3, -2], [2, -3], [3, 2], [-2, 3], [0, 0]];
-c.forEach(function (p) { o.forEach(function (d) { s += '<circle cx="' + (p[0] + d[0]) + '" cy="' + (p[1] + d[1]) + '" r="1.6" fill="currentColor" opacity="0.7"/>'; }); });
-return s;
-'''
-
-[miniCharts.umap]
-# Clusters linked by the edges of a fuzzy graph
-svg = '''
-var s = '', c = [[14, 34], [40, 34], [27, 60]];
-var o = [[-3, -2], [2, -3], [3, 2], [-2, 3], [0, 0]];
-s += '<path d="M14,34 L40,34 L27,60 Z" fill="none" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2" opacity="0.6"/>';
-c.forEach(function (p) { o.forEach(function (d) { s += '<circle cx="' + (p[0] + d[0]) + '" cy="' + (p[1] + d[1]) + '" r="1.6" fill="currentColor" opacity="0.7"/>'; }); });
-return s;
-'''
-
 [[codeBranches]]
 model = "tsne"
 code = '''

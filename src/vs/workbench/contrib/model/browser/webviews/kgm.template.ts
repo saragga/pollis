@@ -11,7 +11,7 @@ import { IKgmMetadata } from '../common/kgm.types.js';
  * The Explore pane queries the Kaggle Models API live: the first selected task's search term ->
  * search, framework -> frameworks (a chip value may list several comma-separated ids), author -> owner.
  */
-function buildExploreOverrideJs(metadata: IKgmMetadata): string {
+function buildExploreJs(metadata: IKgmMetadata): string {
 	return buildModelHubExploreJs({
 		groups: metadata.kgm.explore?.groups ?? [],
 		sortOptions: [
@@ -49,11 +49,12 @@ export function getKgmHtml(metadata: IKgmMetadata): string {
 		title: 'Kaggle Models',
 		defaultModel: 'nlp',
 		decisionFirstColumn: 'Task',
-		illusCollapsed: false,
-		illustrationLabel: metadata.kgm.explore?.label ?? 'Illustration',
-		illustrationIntro: metadata.kgm.notes?.explore?.intro,
-		illustrationFootnote: metadata.kgm.notes?.explore?.footnote,
-		illustrationOverrideJs: buildExploreOverrideJs(metadata),
+		explore: {
+			label: metadata.kgm.explore?.label ?? 'Explore',
+			intro: metadata.kgm.notes?.explore?.intro,
+			footnote: metadata.kgm.notes?.explore?.footnote,
+			js: buildExploreJs(metadata),
+		},
 		extraCss: buildModelHubExploreCss(),
 	});
 }

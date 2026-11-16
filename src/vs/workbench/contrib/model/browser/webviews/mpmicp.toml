@@ -170,42 +170,6 @@ label = "Clarabel"
 value = "Hypatia"
 label = "Hypatia"
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.portfolio]
-# Bars with only a few assets held
-svg = '''
-var s = '', h = [0, 22, 0, 0, 14, 0, 9, 0];
-for (var i = 0; i < h.length; i++) { s += '<rect x="' + (7 + i * 5.2) + '" y="' + (58 - Math.max(h[i], 1)) + '" width="4" height="' + Math.max(h[i], 1) + '" fill="currentColor" fill-opacity="' + (h[i] ? 0.6 : 0.2) + '"/>'; }
-return s + '<line x1="6" y1="58" x2="49" y2="58" stroke="currentColor" stroke-width="0.6" opacity="0.5"/>';
-'''
-
-[miniCharts.subset]
-# A fitted line through points
-svg = '''
-var s = '', p = [[10, 52], [16, 48], [22, 46], [28, 40], [34, 38], [40, 31], [46, 28]];
-p.forEach(function (q) { s += '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="1.8" fill="currentColor" opacity="0.6"/>'; });
-return s + '<line x1="8" y1="54" x2="48" y2="26" stroke="currentColor" stroke-width="1.3"/>';
-'''
-
-[miniCharts.logistic]
-# An S-shaped curve
-svg = '''
-var s = '', d = '';
-for (var i = 0; i <= 20; i++) { var x = 8 + i * 2, y = 58 - 30 / (1 + Math.exp(-(i - 10) / 2)); d += (i ? ' L' : 'M') + x + ',' + y.toFixed(1); }
-return s + '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.4"/>';
-'''
-
-[miniCharts.knapsack]
-# Items stacked in a box up to the capacity line
-svg = '''
-var s = '', h = [9, 6, 11, 7], y = 58;
-for (var i = 0; i < h.length; i++) { y -= h[i]; s += '<rect x="16" y="' + y + '" width="22" height="' + (h[i] - 1) + '" fill="currentColor" fill-opacity="0.55"/>'; }
-s += '<path d="M14,22 L14,58 L40,58 L40,22" fill="none" stroke="currentColor" stroke-width="1"/>';
-return s + '<line x1="10" y1="24" x2="44" y2="24" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2"/>';
-'''
-
 [[codeBranches]]
 model = "portfolio"
 code = '''

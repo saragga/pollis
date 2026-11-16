@@ -242,46 +242,6 @@ label = "Second Result"
 tooltip = "Second result or front matrix for the Compare actions. Default: the demo run with SPEA2."
 default = "demo_result2"
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.hv]
-# Dominated staircase region up to a reference point
-svg = '''
-return '<path d="M10,24 L18,24 L18,40 L30,40 L30,52 L44,52 L44,62 L48,62 L48,24 Z" fill="currentColor" fill-opacity="0.35" stroke="currentColor" stroke-width="1.5"/>'
-	+ '<circle cx="48" cy="24" r="2.5" fill="currentColor"/>';
-'''
-
-[miniCharts.gd]
-# Obtained points joined to the reference curve
-svg = '''
-return '<path d="M8,26 Q12,62 48,66" fill="none" stroke="currentColor" stroke-width="1.5"/>'
-	+ [[18,34,12,38],[26,46,17,52],[38,52,34,61]].map(p => '<line x1="' + p[0] + '" y1="' + p[1] + '" x2="' + p[2] + '" y2="' + p[3] + '" stroke="currentColor" stroke-dasharray="2,2"/><circle cx="' + p[0] + '" cy="' + p[1] + '" r="2.5" fill="currentColor"/>').join('');
-'''
-
-[miniCharts.igd]
-# Reference points joined to the nearest obtained point, one gap
-svg = '''
-return [[10,30],[12,42],[16,52],[24,60],[36,64],[48,66]].map(p => '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="2" fill="none" stroke="currentColor"/>').join('')
-	+ [[16,36],[20,50],[40,58]].map(p => '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="2.5" fill="currentColor"/>').join('')
-	+ '<line x1="24" y1="60" x2="20" y2="50" stroke="currentColor" stroke-dasharray="2,2"/><line x1="36" y1="64" x2="40" y2="58" stroke="currentColor" stroke-dasharray="2,2"/>';
-'''
-
-[miniCharts.eps]
-# Front shifted by eps onto the reference
-svg = '''
-return '<path d="M8,26 Q12,62 48,66" fill="none" stroke="currentColor" stroke-width="1.5"/>'
-	+ '<path d="M16,20 Q20,54 54,58" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3,2"/>'
-	+ '<line x1="34" y1="54" x2="28" y2="62" stroke="currentColor" stroke-width="1"/><polygon points="28,62 29,57 32,60" fill="currentColor"/>';
-'''
-
-[miniCharts.spacing]
-# Points along a front with equal gaps
-svg = '''
-return '<path d="M8,26 Q12,62 48,66" fill="none" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2"/>'
-	+ [[9,32],[11,44],[16,53],[24,60],[35,64],[46,66]].map(p => '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="2.5" fill="currentColor"/>').join('');
-'''
-
 [[codeBranches]]
 model = "hv"
 code = '''

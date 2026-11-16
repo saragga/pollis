@@ -182,32 +182,6 @@ tooltip = "Number of outer decisions x at which the equilibrium is solved with P
 default = "201"
 models = ["imp"]
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.reg]
-# Smoothed complementarity corner y f <= t for shrinking t
-svg = '''
-let s = '<line x1="8" y1="70" x2="50" y2="70" stroke="currentColor" stroke-width="0.6"/><line x1="8" y1="24" x2="8" y2="70" stroke="currentColor" stroke-width="0.6"/>';
-for (const k of [14, 7, 3]) { s += '<path d="M' + (8 + k / 4) + ',26 Q' + (8 + k) + ',' + (70 - k) + ' 48,' + (70 - k / 4) + '" fill="none" stroke="currentColor" stroke-width="0.9"/>'; }
-return s + '<path d="M9,26 L9,69 L48,69" fill="none" stroke="currentColor" stroke-width="2"/>';
-'''
-
-[miniCharts.pen]
-# Penalty term growing away from the corner
-svg = '''
-return '<line x1="6" y1="70" x2="50" y2="70" stroke="currentColor" stroke-width="0.6"/>'
-	+ '<path d="M8,30 Q20,68 28,68 Q36,68 48,30" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8,50 Q20,69 28,69 Q36,69 48,50" fill="none" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2"/>';
-'''
-
-[miniCharts.imp]
-# Implicit objective sampled along x
-svg = '''
-let s = '<line x1="6" y1="70" x2="50" y2="70" stroke="currentColor" stroke-width="0.6"/>';
-[60, 50, 42, 37, 35, 37, 42, 50, 60].forEach((y, i) => { s += '<circle cx="' + (8 + i * 5) + '" cy="' + y + '" r="' + (i === 4 ? 3 : 1.6) + '" fill="currentColor"/>'; });
-return s;
-'''
-
 [[codeBranches]]
 model = "reg"
 code = '''

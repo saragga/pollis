@@ -249,39 +249,6 @@ label = "Gradient Tolerance"
 tooltip = "Stop when the norm of the Riemannian gradient falls below this value."
 default = "1e-8"
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.gd]
-# Steps on a sphere following the gradient
-svg = '''
-return '<circle cx="27" cy="52" r="18" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.6"/><ellipse cx="27" cy="52" rx="18" ry="6" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.4"/>'
-	+ '<polyline points="14,40 20,36 26,35 31,36 34,38" fill="none" stroke="currentColor" stroke-width="1"/><circle cx="34" cy="38" r="1.8" fill="currentColor"/>';
-'''
-
-[miniCharts.cg]
-# Two conjugate steps reaching the minimum
-svg = '''
-return '<circle cx="27" cy="52" r="18" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.6"/>'
-	+ '<polyline points="12,46 26,36 36,44" fill="none" stroke="currentColor" stroke-width="1"/><circle cx="36" cy="44" r="1.8" fill="currentColor"/>';
-'''
-
-[miniCharts.qn]
-# A curvature ellipse guiding one step
-svg = '''
-return '<circle cx="27" cy="52" r="18" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.6"/>'
-	+ '<ellipse cx="30" cy="46" rx="9" ry="4" transform="rotate(-20 30 46)" fill="none" stroke="currentColor" stroke-width="0.7" stroke-dasharray="2,2"/>'
-	+ '<line x1="16" y1="54" x2="30" y2="46" stroke="currentColor" stroke-width="1"/><circle cx="30" cy="46" r="1.8" fill="currentColor"/>';
-'''
-
-[miniCharts.tr]
-# A trust region on the tangent plane
-svg = '''
-return '<circle cx="27" cy="56" r="16" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.6"/>'
-	+ '<line x1="8" y1="40" x2="46" y2="40" stroke="currentColor" stroke-width="0.8"/><ellipse cx="27" cy="40" rx="8" ry="2.5" fill="none" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2"/>'
-	+ '<circle cx="27" cy="40" r="1.8" fill="currentColor"/>';
-'''
-
 [[codeBranches]]
 model = "gd"
 code = '''

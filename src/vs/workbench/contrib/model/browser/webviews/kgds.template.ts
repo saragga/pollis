@@ -6,7 +6,7 @@
 import { buildScaffoldHtml } from './scaffoldParts.js';
 import { IKgdsMetadata } from '../common/kgds.types.js';
 
-/** CSS for the interactive Explore pane (replaces the Illustration pane). */
+/** CSS for the interactive Explore pane. */
 function buildExploreCss(): string {
 	return `	.kgds-explore-layout { display: grid; grid-template-columns: 220px 1fr; gap: 16px; height: 520px; }
 		.kgds-axis-list { overflow-y: auto; height: 100%; padding-right: 4px; scrollbar-width: none; }
@@ -48,20 +48,14 @@ function buildExploreCss(): string {
 }
 
 /**
- * The interactive Explore pane, injected as the Illustration override. Generic over the
+ * The script that draws the interactive Explore pane, once, when the page loads. Generic over the
  * groups declared in TOML: groups sharing an axis are OR-ed; different axes AND-ed. Each
  * filter token is `filterPrefix + value` (here `fileType=` / `license=`), queried live
  * against the public Kaggle datasets/list endpoint.
  */
-function buildExploreOverrideJs(metadata: IKgdsMetadata): string {
+function buildExploreJs(metadata: IKgdsMetadata): string {
 	const groupsJson = JSON.stringify(metadata.kgds.explore?.groups ?? []);
-	return `			// renderIllustration() re-runs on every topic toggle; the Explore pane is
-			// independent of the code-preview topic, so build it once and skip rebuilds
-			// (this also avoids stacking duplicate message listeners and losing selections).
-			if (body.dataset.kgdsBuilt) { return; }
-			body.dataset.kgdsBuilt = '1';
-
-			var KGDS_GROUPS = ${groupsJson};
+	return `			var KGDS_GROUPS = ${groupsJson};
 			var kgdsSel = {};  // axis -> { filterToken: true } (groups sharing an axis are OR-ed)
 			var kgdsSort = 'hottest';
 			var kgdsFetchSeq = 0;
@@ -242,7 +236,6 @@ function buildExploreOverrideJs(metadata: IKgdsMetadata): string {
 
 			kgdsUpdateSortBtn();
 			kgdsFetch();
-			return;
 `;
 }
 
@@ -251,11 +244,12 @@ export function getKgdsHtml(metadata: IKgdsMetadata): string {
 		title: 'Kaggle Datasets',
 		defaultModel: 'browse',
 		decisionFirstColumn: 'Task',
-		illusCollapsed: false,
-		illustrationLabel: metadata.kgds.explore?.label ?? 'Illustration',
-		illustrationIntro: metadata.kgds.notes?.explore?.intro,
-		illustrationFootnote: metadata.kgds.notes?.explore?.footnote,
-		illustrationOverrideJs: buildExploreOverrideJs(metadata),
+		explore: {
+			label: metadata.kgds.explore?.label ?? 'Explore',
+			intro: metadata.kgds.notes?.explore?.intro,
+			footnote: metadata.kgds.notes?.explore?.footnote,
+			js: buildExploreJs(metadata),
+		},
 		extraCss: buildExploreCss(),
 		keyPointsIntro: metadata.kgds.notes?.keyPoints?.intro,
 		keyPointsFootnote: metadata.kgds.notes?.keyPoints?.footnote,

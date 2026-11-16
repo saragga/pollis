@@ -11,7 +11,6 @@ export function getEdgarHtml(metadata: IEdgarMetadata): string {
 		title: 'US SEC EDGAR',
 		defaultModel: 'submissions',
 		decisionFirstColumn: 'Task',
-		omitIllustration: true,
 		keyPointsIntro: metadata.edgar.notes?.keyPoints?.intro,
 		keyPointsFootnote: metadata.edgar.notes?.keyPoints?.footnote,
 		decisionIntro: metadata.edgar.notes?.decision?.intro,

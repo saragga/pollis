@@ -14,8 +14,6 @@ title = "US SEC EDGAR"
 viewType = "pollis.edgar"
 defaultModel = "submissions"
 models = ["submissions", "facts", "concept", "frames", "search"]
-illusCollapsed = true
-illustrationText = "Pull company filings and financial data from the SEC EDGAR REST APIs into Julia: submission histories, XBRL company facts and concepts, cross-filer frames, and full-text search."
 
 # Per-pane intro/footnote notes (optional, keyed by pane: keyPoints / decision / explore).
 [notes.decision]
@@ -153,55 +151,6 @@ purpose = "Find filings mentioning a phrase, or look up a CIK from a ticker"
 task = "Raw Documents"
 context = "Filing text"
 purpose = "Download the full 10-K/10-Q documents in bulk with ScrapeSEC.jl (not the JSON APIs)"
-
-[miniCharts]
-
-[miniCharts.submissions]
-svg = '''
-var s = '<rect x="14" y="14" width="26" height="36" rx="2" fill="none" stroke="currentColor" stroke-width="1.3" opacity="0.55"/>';
-s += '<line x1="19" y1="22" x2="35" y2="22" stroke="currentColor" stroke-width="1" opacity="0.5"/>';
-s += '<line x1="19" y1="28" x2="35" y2="28" stroke="currentColor" stroke-width="1" opacity="0.5"/>';
-s += '<line x1="19" y1="34" x2="31" y2="34" stroke="currentColor" stroke-width="1" opacity="0.5"/>';
-s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Filings</text>';
-return s;
-'''
-
-[miniCharts.facts]
-svg = '''
-var s = '<rect x="12" y="16" width="30" height="34" rx="2" fill="none" stroke="currentColor" stroke-width="1.3" opacity="0.5"/>';
-s += '<line x1="27" y1="16" x2="27" y2="50" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
-s += '<line x1="12" y1="27" x2="42" y2="27" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
-s += '<line x1="12" y1="38" x2="42" y2="38" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>';
-s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Facts</text>';
-return s;
-'''
-
-[miniCharts.concept]
-svg = '''
-var s = '<polyline points="8,46 18,40 28,42 38,30 48,26" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.55"/>';
-s += '<circle cx="18" cy="40" r="1.6" fill="currentColor" opacity="0.6"/>';
-s += '<circle cx="38" cy="30" r="1.6" fill="currentColor" opacity="0.6"/>';
-s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Concept</text>';
-return s;
-'''
-
-[miniCharts.frames]
-svg = '''
-var s = '<rect x="10" y="44" width="7" height="8"  fill="currentColor" opacity="0.35"/>';
-s += '<rect x="20" y="36" width="7" height="16" fill="currentColor" opacity="0.45"/>';
-s += '<rect x="30" y="26" width="7" height="26" fill="currentColor" opacity="0.55"/>';
-s += '<rect x="40" y="32" width="7" height="20" fill="currentColor" opacity="0.4"/>';
-s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Frames</text>';
-return s;
-'''
-
-[miniCharts.search]
-svg = '''
-var s = '<circle cx="24" cy="28" r="11" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.55"/>';
-s += '<line x1="32" y1="36" x2="42" y2="46" stroke="currentColor" stroke-width="1.8" opacity="0.55"/>';
-s += '<text x="27" y="76" text-anchor="middle" font-size="7" fill="currentColor" opacity="0.7">Search</text>';
-return s;
-'''
 
 [[inputs]]
 id = "cik"

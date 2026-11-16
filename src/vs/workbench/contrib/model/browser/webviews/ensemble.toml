@@ -263,61 +263,6 @@ tooltip = "Step size eta in (0, 1] applied to each tree's contribution. Smaller 
 default = "0.1"
 models = ["gbt", "xgb"]
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.rf]
-# Three small trees side by side, averaged
-svg = '''
-var s = '';
-for (var k = 0; k < 3; k++) {
-	var x = 9 + k * 18;
-	s += '<line x1="' + x + '" y1="30" x2="' + (x - 5) + '" y2="44" stroke="currentColor" stroke-width="1"/>';
-	s += '<line x1="' + x + '" y1="30" x2="' + (x + 5) + '" y2="44" stroke="currentColor" stroke-width="1"/>';
-	s += '<circle cx="' + x + '" cy="30" r="3" fill="currentColor"/>';
-	s += '<circle cx="' + (x - 5) + '" cy="45" r="2.5" fill="currentColor" opacity="0.6"/><circle cx="' + (x + 5) + '" cy="45" r="2.5" fill="currentColor" opacity="0.6"/>';
-	s += '<line x1="' + x + '" y1="50" x2="27" y2="62" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>';
-}
-return s + '<circle cx="27" cy="65" r="4" fill="currentColor"/>';
-'''
-
-[miniCharts.gbt]
-# Trees added in sequence, each shrinking the error
-svg = '''
-var s = '', h = [26, 17, 11, 7];
-for (var k = 0; k < 4; k++) {
-	var x = 7 + k * 13;
-	s += '<rect x="' + (x - 3) + '" y="' + (66 - h[k]) + '" width="6" height="' + h[k] + '" fill="currentColor" opacity="0.6"/>';
-	s += '<circle cx="' + x + '" cy="30" r="2.5" fill="currentColor"/>';
-	if (k < 3) { s += '<path d="M' + (x + 3) + ',30 L' + (x + 10) + ',30" stroke="currentColor" stroke-width="1"/>'; }
-}
-return s;
-'''
-
-[miniCharts.xgb]
-# Boosted trees with a regularisation bracket over their leaves
-svg = '''
-var s = '', h = [24, 16, 10, 6];
-for (var k = 0; k < 4; k++) {
-	var x = 7 + k * 13;
-	s += '<rect x="' + (x - 3) + '" y="' + (66 - h[k]) + '" width="6" height="' + h[k] + '" fill="currentColor" opacity="0.6"/>';
-}
-s += '<path d="M4,34 L4,28 L50,28 L50,34" fill="none" stroke="currentColor" stroke-width="1.2"/>';
-return s;
-'''
-
-[miniCharts.ddt]
-# A soft split: a sigmoid routing curve
-svg = '''
-var d = '';
-for (var i = 0; i <= 40; i++) {
-	var x = 5 + i * 1.1, z = (x - 27) / 4;
-	d += (i === 0 ? 'M' : 'L') + x.toFixed(1) + ',' + (64 - 36 / (1 + Math.exp(-z))).toFixed(1);
-}
-return '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.5"/>'
-	+ '<line x1="27" y1="22" x2="27" y2="68" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2,2" opacity="0.6"/>';
-'''
-
 [[codeBranches]]
 model = "rf"
 code = '''

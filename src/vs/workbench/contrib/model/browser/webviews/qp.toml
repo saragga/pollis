@@ -260,32 +260,6 @@ label = "Clarabel"
 value = "Ipopt"
 label = "Ipopt"
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.qp]
-# Elliptical level sets with a linear constraint and the optimum
-svg = '''
-var s = '';
-[18, 12, 6].forEach(function (r) { s += '<ellipse cx="27" cy="47" rx="' + r + '" ry="' + (r * 0.65) + '" fill="none" stroke="currentColor" stroke-width="0.9" opacity="0.7"/>'; });
-return s + '<line x1="8" y1="30" x2="46" y2="58" stroke="currentColor" stroke-width="1.2"/><circle cx="29.5" cy="48.5" r="2.4" fill="currentColor"/>';
-'''
-
-[miniCharts.qcqp]
-# A linear objective direction touching an elliptical constraint
-svg = '''
-return '<ellipse cx="27" cy="48" rx="16" ry="11" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="1.2"/>'
-	+ '<line x1="30" y1="24" x2="52" y2="46" stroke="currentColor" stroke-width="1" stroke-dasharray="3,2"/><circle cx="39" cy="40" r="2.4" fill="currentColor"/>';
-'''
-
-[miniCharts.miqp]
-# Level sets with a few selected (filled) and unselected (hollow) points
-svg = '''
-var s = '<ellipse cx="27" cy="47" rx="17" ry="11" fill="none" stroke="currentColor" stroke-width="0.9" opacity="0.7"/>';
-[[16, 40, 1], [27, 47, 1], [38, 54, 0], [20, 56, 0], [36, 38, 0]].forEach(function (p) { s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="2.4" fill="' + (p[2] ? 'currentColor' : 'none') + '" stroke="currentColor"/>'; });
-return s;
-'''
-
 [[codeBranches]]
 model = "qp"
 code = '''

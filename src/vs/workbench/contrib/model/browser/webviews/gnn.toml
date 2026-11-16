@@ -274,69 +274,6 @@ default = "3"
 models = ["gcn", "gat", "sage"]
 when = "graph-type=hetero"
 
-[miniCharts]
-# SVG drawing functions for each model's mini-chart icon (54 x 86 box)
-
-[miniCharts.gcn]
-# A node with equally weighted edges to its neighbours
-svg = '''
-var c = [27, 43], nb = [[10, 24], [44, 22], [8, 58], [46, 62], [27, 72]];
-var s = '';
-for (var i = 0; i < nb.length; i++) {
-	s += '<line x1="' + c[0] + '" y1="' + c[1] + '" x2="' + nb[i][0] + '" y2="' + nb[i][1] + '" stroke="currentColor" stroke-width="1.2"/>';
-	s += '<circle cx="' + nb[i][0] + '" cy="' + nb[i][1] + '" r="3.5" fill="currentColor" opacity="0.5"/>';
-}
-s += '<circle cx="' + c[0] + '" cy="' + c[1] + '" r="5" fill="currentColor"/>';
-return s;
-'''
-
-[miniCharts.gat]
-# The same neighbourhood, with edge thickness showing attention weights
-svg = '''
-var c = [27, 43], nb = [[10, 24], [44, 22], [8, 58], [46, 62], [27, 72]], w = [3, 0.6, 1.6, 0.6, 1];
-var s = '';
-for (var i = 0; i < nb.length; i++) {
-	s += '<line x1="' + c[0] + '" y1="' + c[1] + '" x2="' + nb[i][0] + '" y2="' + nb[i][1] + '" stroke="currentColor" stroke-width="' + w[i] + '" opacity="' + (0.4 + w[i] / 5) + '"/>';
-	s += '<circle cx="' + nb[i][0] + '" cy="' + nb[i][1] + '" r="3.5" fill="currentColor" opacity="0.5"/>';
-}
-s += '<circle cx="' + c[0] + '" cy="' + c[1] + '" r="5" fill="currentColor"/>';
-return s;
-'''
-
-[miniCharts.sage]
-# Sampled neighbours pooled into one aggregate, then combined with the node itself
-svg = '''
-var nb = [[8, 18], [20, 14], [32, 18]];
-var s = '';
-for (var i = 0; i < nb.length; i++) {
-	s += '<line x1="' + nb[i][0] + '" y1="' + nb[i][1] + '" x2="20" y2="38" stroke="currentColor" stroke-width="1"/>';
-	s += '<circle cx="' + nb[i][0] + '" cy="' + nb[i][1] + '" r="3" fill="currentColor" opacity="0.5"/>';
-}
-s += '<rect x="14" y="35" width="12" height="7" fill="currentColor" opacity="0.7"/>';
-s += '<circle cx="42" cy="38" r="4" fill="currentColor"/>';
-s += '<line x1="20" y1="42" x2="28" y2="62" stroke="currentColor" stroke-width="1.2"/>';
-s += '<line x1="42" y1="42" x2="32" y2="62" stroke="currentColor" stroke-width="1.2"/>';
-s += '<circle cx="30" cy="66" r="4.5" fill="currentColor"/>';
-return s;
-'''
-
-[miniCharts.temporal]
-# Three graph snapshots side by side, linked through time
-svg = '''
-var s = '';
-var shapes = [[[0, 0, 8, -10], [0, 0, 10, 6]], [[0, 0, 8, -10], [8, -10, 10, 6]], [[0, 0, 10, 6], [8, -10, 10, 6]]];
-for (var k = 0; k < 3; k++) {
-	var ox = 5 + k * 16, oy = 48;
-	for (var e = 0; e < shapes[k].length; e++) {
-		var p = shapes[k][e];
-		s += '<line x1="' + (ox + p[0]) + '" y1="' + (oy + p[1]) + '" x2="' + (ox + p[2]) + '" y2="' + (oy + p[3]) + '" stroke="currentColor" stroke-width="1"/>';
-	}
-	s += '<circle cx="' + ox + '" cy="' + oy + '" r="2.2" fill="currentColor"/><circle cx="' + (ox + 8) + '" cy="' + (oy - 10) + '" r="2.2" fill="currentColor"/><circle cx="' + (ox + 10) + '" cy="' + (oy + 6) + '" r="2.2" fill="currentColor"/>';
-}
-s += '<path d="M6,70 L48,70 M44,67 L48,70 L44,73" fill="none" stroke="currentColor" stroke-width="1" opacity="0.6"/>';
-return s;
-'''
-
 [[codeBranches]]
 model = "gcn"
 code = '''
