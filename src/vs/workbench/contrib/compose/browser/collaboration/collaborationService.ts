@@ -26,16 +26,17 @@ import { ILifecycleService } from '../../../../services/lifecycle/common/lifecyc
 import { ITerminalInstanceService } from '../../../terminal/browser/terminal.js';
 import { WebviewInput } from '../../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../../webviewPanel/browser/webviewWorkbenchService.js';
-import { ChatPageMessage, ChatWorkbenchMessage, chatPageHtml, COLLABORATION_MEDIA, IChatEntry, IChatParticipant, IPeerConnectionStats, trysteroBundleUrl } from './collaborationChat.js';
+import { ChatPageMessage, ChatWorkbenchMessage, chatPageHtml, COLLABORATION_MEDIA, IChatEntry, IChatGame, IChatParticipant, IPeerConnectionStats, trysteroBundleUrl } from './collaborationChat.js';
 import { basename } from '../../../../../base/common/resources.js';
 import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
-import { COLLABORATION_APP_ID, envelope, Envelope, formatSessionCode, IByePayload, IChatPayload, base64Bytes, IAgentPayload, IDatasetSharedPayload, IEditorSharedPayload, IFileSharedPayload, IGroupPayload, IHelloPayload, isAcceptableImage, ISettingsPayload, isDuckDbFile, isEnvelope, ISessionCode, MAX_DATASET_BYTES, MAX_FILE_BYTES, MAX_IMAGE_BYTES, MAX_PARTICIPANTS, MAX_RECEIVE_BYTES, MAX_SHARE_BYTES, newSessionCode, parseSessionCode, ParticipantRole, roomIdOf, seatRoomIdOf, SessionMode, CLASS_SEATS, SignallingStrategy } from './collaborationProtocol.js';
+import { COLLABORATION_APP_ID, envelope, Envelope, formatSessionCode, IByePayload, IChatPayload, base64Bytes, IAgentPayload, IDatasetSharedPayload, IEditorSharedPayload, IFileSharedPayload, IDecisionsPayload, IGamePayload, IGameResultsPayload, IGroupPayload, IHelloPayload, isAcceptableImage, ISettingsPayload, isDuckDbFile, isEnvelope, ISessionCode, MAX_DATASET_BYTES, MAX_FILE_BYTES, MAX_IMAGE_BYTES, MAX_PARTICIPANTS, MAX_RECEIVE_BYTES, MAX_SHARE_BYTES, newSessionCode, parseSessionCode, ParticipantRole, roomIdOf, seatRoomIdOf, SessionMode, CLASS_SEATS, SignallingStrategy } from './collaborationProtocol.js';
 import { ISamePageLink, SamePageGuest, SamePageHost } from './collaborationSamePage.js';
 import { datasetFileName, formatBytes, IReceivedDataset, IReceivedFile, SharedDatasets, sharedFileName, summarizeCsv } from './collaborationDatasets.js';
 import { ISharedSnapshot, shareableKind, SharedEditors } from './collaborationEditors.js';
 import { getVoiceLanguage, getVoiceWriteIn, setVoiceLanguage, setVoiceWriteIn } from '../composerVoice.js';
 import { IWirePacket, ReliableDelivery } from './collaborationTransport.js';
 import { IAgentLink, IAgentMaterial, SessionAgent, sessionAgentCells } from './collaborationAgent.js';
+import { builtInCases, checkedGame, checkedTables, checkedValues, GameRun, IGameCase, loadCase } from './collaborationGame.js';
 import { MODEL_ROUTING_COMMAND_ID } from '../modelRouting.js';
 import { IOrchestrationCell } from '../orchestration.js';
 
@@ -117,6 +118,15 @@ export interface ICollaborationService {
 
 	/** The tutor ends the breakout groups, so the class is one again. */
 	bringEveryoneBack(): void;
+
+	/** Starts a game from a case, as its facilitator, and copies the invitation (Simulation Games). */
+	hostGame(): Promise<void>;
+
+	/** Joins a game from its invitation: the same as joining a session. */
+	joinGame(): Promise<void>;
+
+	/** The facilitator starts the game, splitting the players into teams, or plays the round being decided. */
+	nextRound(): Promise<void>;
 
 	/** Shows the chat of the session. */
 	openChat(): void;
@@ -218,6 +228,9 @@ class Session extends Disposable {
 	private readonly groups = new Map<string, number>();
 	private visitedGroup: number | undefined;
 	private myGroup: IGroupPayload = {};
+	/** In a game: on the facilitator's side, the game; on a player's, what the facilitator last sent. */
+	private gameRun: GameRun | undefined;
+	private gameView: IGamePayload | undefined;
 	private readonly delivery: ReliableDelivery;
 	private readonly pendingSends = new Map<number, DeferredPromise<void>>();
 	private readonly pendingStats = new Map<number, DeferredPromise<readonly IPeerConnectionStats[]>>();
@@ -254,6 +267,8 @@ class Session extends Disposable {
 		private readonly onVoiceChoice: (choice: 'voiceLanguage' | 'voiceWriteIn', value: string) => void,
 		/** Called when the host's hello says that this is a Same Page session, with the host and the folder it shares. */
 		private readonly onSamePage: (hostId: string, folder: string) => void,
+		/** Called when the facilitator of a game presses Next Round in the chat page. */
+		private readonly onNextRound: () => void,
 	) {
 		super();
 		this.admitted = role === 'host';
@@ -277,6 +292,9 @@ class Session extends Disposable {
 
 	get invitation(): string {
 		const host = this.role === 'host' ? this.name : this.hostName;
+		if (this.isGame) {
+			return localize('collaboration.invitationGame', "{0} invites you to play {1}, a Pollis simulation game. In Pollis, choose Compose > Collaboration > Simulation Games > Join a Game... and paste this invitation, or the code: {2}", host, this.gameRun?.gameCase.title ?? '', formatSessionCode(this.code));
+		}
 		if (this.mode === 'class') {
 			return localize('collaboration.invitationClass', "{0} invites you to a Pollis class. In Pollis, choose Compose > Collaboration > Join Session... and paste this invitation, or the code: {1}", host, formatSessionCode(this.code));
 		}
@@ -590,15 +608,21 @@ class Session extends Disposable {
 			this.visitedGroup = undefined;
 		}
 		this.notice(starting
-			? localize('collaboration.groupsStarted', "The class is in {0} breakout groups. A student's messages, and what they share, go to their group and to you; your own go to every group until you visit one (Visit a Group...).", count)
-			: localize('collaboration.groupsChanged', "The breakout groups have changed."));
+			? (this.isGame
+				? localize('collaboration.teamsStarted', "The players are in {0} teams. A player's messages, and what they share, go to their team and to you; your own go to every team until you visit one (Visit a Group...).", count)
+				: localize('collaboration.groupsStarted', "The class is in {0} breakout groups. A student's messages, and what they share, go to their group and to you; your own go to every group until you visit one (Visit a Group...).", count))
+			: (this.isGame
+				? localize('collaboration.teamsChanged', "The teams have changed.")
+				: localize('collaboration.groupsChanged', "The breakout groups have changed.")));
 		for (let group = 1; group <= count; group++) {
 			const names = this.students().filter(student => student.group === group).map(student => student.name);
 			this.notice(names.length
-				? localize('collaboration.groupList', "Group {0}: {1}.", group, names.join(', '))
-				: localize('collaboration.groupEmpty', "Group {0}: nobody yet.", group));
+				? localize('collaboration.groupList', "{0}: {1}.", this.groupLabel(group), names.join(', '))
+				: localize('collaboration.groupEmpty', "{0}: nobody yet.", this.groupLabel(group)));
 		}
 		this.sendGroups([...new Set([...before.keys(), ...this.groups.keys()])]);
+		this.sendGame(this.students().map(student => student.peerId));
+		this.postGame();
 	}
 
 	/** The tutor visits a breakout group, whose members alone then get the tutor's messages and shares, or none, for every group. */
@@ -609,8 +633,8 @@ class Session extends Disposable {
 		const previous = this.visitedGroup;
 		this.visitedGroup = group;
 		this.notice(group !== undefined
-			? localize('collaboration.visiting', "You are visiting Group {0}: your messages, and what you share, go to it alone. You still see every group's messages.", group)
-			: localize('collaboration.visitingNone', "Your messages, and what you share, go to every group again."));
+			? localize('collaboration.visiting', "You are visiting {0}: your messages, and what you share, go to it alone. You still see the messages of every one.", this.groupLabel(group))
+			: localize('collaboration.visitingNone', "Your messages, and what you share, go to everyone again."));
 		this.sendGroups([...this.groups].filter(([, member]) => member === previous || member === group).map(([peerId]) => peerId));
 	}
 
@@ -640,6 +664,13 @@ class Session extends Disposable {
 		}
 	}
 
+	/** A group's name: Group 2, or in a game Team 2. */
+	groupLabel(group: number): string {
+		return this.isGame
+			? (this.gameRun?.teamName(group) ?? localize('collaboration.teamLabel', "Team {0}", group))
+			: localize('collaboration.groupLabel', "Group {0}", group);
+	}
+
 	/** On the tutor's side, the others in a student's breakout group, to whom the student's messages and shares are passed on. */
 	private groupMates(peerId: string): string[] {
 		const group = this.groupOf(peerId);
@@ -649,7 +680,7 @@ class Session extends Disposable {
 	/** A student's name as the tutor's chat shows it while the class is in breakout groups: with their group. */
 	private withGroup(peerId: string, name: string): string {
 		const group = this.groupOf(peerId);
-		return group ? localize('collaboration.nameInGroup', "{0} (Group {1})", name, group) : name;
+		return group ? localize('collaboration.nameInGroup', "{0} ({1})", name, this.groupLabel(group)) : name;
 	}
 
 	/** Who what this participant sends goes to: everyone, or, for a tutor visiting a breakout group, that group. */
@@ -676,19 +707,28 @@ class Session extends Disposable {
 			}
 			return;
 		}
+		const label = this.groupLabel(group);
 		if (group !== before.group) {
-			this.notice(members.length
-				? localize('collaboration.inGroup', "You are in Group {0}, with {1}: your messages, and what you share, now go to your group and to {2}, the tutor.", group, members.join(', '), tutor)
-				: localize('collaboration.inGroupAlone', "You are in Group {0}, alone for now: your messages, and what you share, go to {1}, the tutor.", group, tutor));
+			this.notice(this.isGame
+				? (members.length
+					? localize('collaboration.inTeam', "You are in {0}, with {1}: your messages, and what you share, now go to your team and to {2}, who runs the game.", label, members.join(', '), tutor)
+					: localize('collaboration.inTeamAlone', "You are in {0}, alone for now: your messages, and what you share, go to {1}, who runs the game.", label, tutor))
+				: (members.length
+					? localize('collaboration.inGroup', "You are in {0}, with {1}: your messages, and what you share, now go to your group and to {2}, the tutor.", label, members.join(', '), tutor)
+					: localize('collaboration.inGroupAlone', "You are in {0}, alone for now: your messages, and what you share, go to {1}, the tutor.", label, tutor)));
 		} else if (members.join('\n') !== (before.members ?? []).join('\n')) {
 			this.notice(members.length
-				? localize('collaboration.groupNow', "Group {0} is now you and {1}.", group, members.join(', '))
-				: localize('collaboration.groupNowAlone', "You are alone in Group {0} for now.", group));
+				? localize('collaboration.groupNow', "{0} is now you and {1}.", label, members.join(', '))
+				: localize('collaboration.groupNowAlone', "You are alone in {0} for now.", label));
 		}
 		if (visiting && (!before.visiting || group !== before.group)) {
-			this.notice(localize('collaboration.tutorVisits', "{0}, the tutor, is visiting your group: their messages now come to your group alone.", tutor));
+			this.notice(this.isGame
+				? localize('collaboration.facilitatorVisits', "{0}, who runs the game, is visiting your team: their messages now come to your team alone.", tutor)
+				: localize('collaboration.tutorVisits', "{0}, the tutor, is visiting your group: their messages now come to your group alone.", tutor));
 		} else if (!visiting && before.visiting && group === before.group) {
-			this.notice(localize('collaboration.tutorLeftGroup', "{0}, the tutor, left your group.", tutor));
+			this.notice(this.isGame
+				? localize('collaboration.facilitatorLeftTeam', "{0}, who runs the game, left your team.", tutor)
+				: localize('collaboration.tutorLeftGroup', "{0}, the tutor, left your group.", tutor));
 		}
 	}
 
@@ -744,6 +784,177 @@ class Session extends Disposable {
 		this.postParticipants();
 	}
 
+	// ---- A game (Simulation Games): a class whose breakout groups are its teams; the model runs on the facilitator's computer ----
+
+	get isGame(): boolean {
+		return this.code.kind === 'game';
+	}
+
+	get hostedGame(): GameRun | undefined {
+		return this.gameRun;
+	}
+
+	/** The facilitator's copy takes the game it runs. */
+	hostGame(run: GameRun): void {
+		this.gameRun = run;
+		this.postGame();
+	}
+
+	/** The facilitator starts the game: the model's state before the first round, and the teams, which are the breakout groups. */
+	async startGame(count: number, assignment: ReadonlyMap<string, number>): Promise<void> {
+		const run = this.gameRun;
+		if (!run || this.role !== 'host' || this.ended || run.round) {
+			return;
+		}
+		this.postGame(true);
+		try {
+			await run.start(count);
+		} finally {
+			this.postGame();
+		}
+		if (this.ended) {
+			return;
+		}
+		this.startGroups(count, assignment);
+		this.notice(localize('collaboration.roundOpen', "{0} is open: each team submits its decisions, and Next Round plays it.", run.roundName(run.round)));
+	}
+
+	/** The facilitator plays the round with every team's decisions, sends the results, and opens the next round. */
+	async playRound(): Promise<void> {
+		const run = this.gameRun;
+		if (!run || this.role !== 'host' || this.ended || run.round < 1 || run.isOver) {
+			return;
+		}
+		const round = run.round;
+		this.postGame(true);
+		let results;
+		try {
+			results = await run.play();
+		} finally {
+			this.postGame();
+		}
+		if (this.ended) {
+			return;
+		}
+		const own = run.teams.map(team => results.private.get(team.team)).filter(table => table !== undefined);
+		this.post({ command: 'show', entry: { kind: 'message', name: this.name, text: results.text ?? '', tables: [results.public, ...own], time: Date.now() } });
+		for (const student of this.students()) {
+			const table = student.group ? results.private.get(student.group) : undefined;
+			const payload: IGameResultsPayload = results.text ? { round, text: results.text, tables: table ? [results.public, table] : [results.public] } : { round, tables: table ? [results.public, table] : [results.public] };
+			this.delivery.send('gameResults', envelope<Envelope & { type: 'gameResults' }>('gameResults', payload) as unknown as IJson, [student.peerId]);
+		}
+		this.notice(run.isOver
+			? localize('collaboration.gameOver', "{0} was the last: the game is over. Its rounds are in {1}.", run.roundName(round), run.folderPath)
+			: localize('collaboration.roundOpen', "{0} is open: each team submits its decisions, and Next Round plays it.", run.roundName(run.round)));
+		this.sendGame(this.students().map(student => student.peerId));
+		this.postGame();
+	}
+
+	/** Tells each of these players the game as it is now: the round, their team and its decisions. */
+	private sendGame(peers: readonly string[]): void {
+		const run = this.gameRun;
+		if (!run || this.role !== 'host' || this.ended) {
+			return;
+		}
+		for (const peerId of peers) {
+			if (!this.participants.has(peerId)) {
+				continue;
+			}
+			const team = run.round ? this.groupOf(peerId) : 0;
+			const submittedBy = team ? run.submittedBy(team) : undefined;
+			const payload: IGamePayload = {
+				title: run.gameCase.title,
+				description: run.gameCase.description,
+				roundLabel: run.gameCase.roundLabel,
+				rounds: run.gameCase.rounds,
+				round: run.round,
+				decisions: run.gameCase.decisions,
+				...(team ? { team, teamName: run.teamName(team), values: run.values(team) } : {}),
+				...(submittedBy ? { submittedBy } : {}),
+			};
+			this.delivery.send('game', envelope<Envelope & { type: 'game' }>('game', payload) as unknown as IJson, [peerId]);
+		}
+	}
+
+	/** On the facilitator's side, a player's decisions for their team; the last submitted before the round is played counts. */
+	private onDecisions(peerId: string, payload: IDecisionsPayload): void {
+		const run = this.gameRun;
+		const participant = this.participants.get(peerId);
+		const team = this.groupOf(peerId);
+		if (!run || !participant || !team || run.isRunning || run.round < 1 || run.isOver || payload.round !== run.round) {
+			return;
+		}
+		run.submit(team, payload.values, participant.name);
+		this.notice(localize('collaboration.decisionsIn', "{0} submitted the decisions of {1} for {2}.", participant.name, run.teamName(team), run.roundName(run.round)));
+		this.sendGame([peerId, ...this.groupMates(peerId)]);
+		this.postGame();
+	}
+
+	/** On a player's side, the game as the facilitator sent it: says in the chat what changed. */
+	private onGame(payload: IGamePayload): void {
+		const view = checkedGame(payload);
+		if (!view) {
+			return;
+		}
+		const before = this.gameView;
+		this.gameView = view;
+		const round = localize('collaboration.roundName', "{0} {1}", view.roundLabel, view.round);
+		if (view.round !== before?.round) {
+			if (view.round > view.rounds) {
+				this.notice(localize('collaboration.gameOverPlayer', "The game is over."));
+			} else if (view.round >= 1) {
+				this.notice(localize('collaboration.roundOpenPlayer', "{0} is open: your team's decisions are beside the chat. The last submitted before {1} plays the round counts.", round, this.hostName));
+			}
+		} else if (view.submittedBy && (view.submittedBy !== before.submittedBy || JSON.stringify(view.values) !== JSON.stringify(before.values))) {
+			this.notice(localize('collaboration.teamSubmitted', "{0} submitted your team's decisions for {1}.", view.submittedBy, round));
+		}
+		this.postGame();
+	}
+
+	/** On a player's side, the results of a round: the table everyone sees and the team's own. */
+	private onGameResults(payload: IGameResultsPayload): void {
+		const tables = checkedTables(payload.tables);
+		if (tables.length) {
+			const text = typeof payload.text === 'string' ? payload.text.slice(0, 2000) : '';
+			this.post({ command: 'show', entry: { kind: 'message', name: this.hostName, text, tables, time: Date.now() } });
+		}
+	}
+
+	/** A player submits their team's decisions from the chat page. */
+	private submitDecisions(values: unknown): void {
+		const view = this.gameView;
+		if (this.ended || !view?.team || view.round < 1 || view.round > view.rounds || !this.hostId) {
+			return;
+		}
+		const payload: IDecisionsPayload = { round: view.round, values: checkedValues(view.decisions, values, view.values ?? {}) };
+		this.delivery.send('decisions', envelope<Envelope & { type: 'decisions' }>('decisions', payload) as unknown as IJson, [this.hostId]);
+	}
+
+	/** Shows the game beside the chat: to the facilitator, the teams and who submitted; to a player, their team's decisions. */
+	private postGame(running = false): void {
+		const run = this.gameRun;
+		let game: IChatGame | undefined;
+		if (run && this.role === 'host') {
+			const students = this.students();
+			game = {
+				title: run.gameCase.title,
+				description: run.gameCase.description,
+				roundLabel: run.gameCase.roundLabel,
+				rounds: run.gameCase.rounds,
+				round: run.round,
+				facilitator: true,
+				running: running || run.isRunning,
+				waiting: students.filter(student => !student.group).map(student => student.name),
+				teams: run.teams.map(team => ({ name: team.name, members: students.filter(student => student.group === team.team).map(student => student.name), submittedBy: run.submittedBy(team.team) })),
+			};
+		} else if (this.gameView) {
+			game = { ...this.gameView, facilitator: false };
+		}
+		if (game) {
+			this.post({ command: 'game', game });
+		}
+	}
+
 	// ---- The chat page ----
 
 	private post(message: ChatPageMessage): void {
@@ -765,13 +976,16 @@ class Session extends Disposable {
 					await this.takeSeat(1 + Math.floor(Math.random() * CLASS_SEATS));
 				}
 				this.postParticipants();
+				this.postGame();
 				this.setStatus(this.role === 'host'
 					? localize('collaboration.waitingForOthers', "Waiting for others to join: send them the invitation (Copy Invitation).")
 					: localize('collaboration.joining', "Joining the session..."));
 				if (this.role === 'host') {
-					this.notice(this.mode === 'class'
-						? localize('collaboration.classStarted', "Class started. The invitation is in the clipboard: send it to the class, for example on the course page. Up to {0} students can join. Each student is connected to you only: what they share comes to you, and what you share goes to the whole class.", CLASS_SEATS)
-						: localize('collaboration.started', "Session started. The invitation is in the clipboard: send it to the others by email or in a message. Anyone with it can join, up to {0} participants.", MAX_PARTICIPANTS));
+					this.notice(this.isGame && this.gameRun
+						? localize('collaboration.gameStarted', "Game started: {0}. The invitation is in the clipboard: send it to the players. Up to {1} can join. When they have, Next Round, beside the chat, splits them into teams and opens {2}.", this.gameRun.gameCase.title, CLASS_SEATS, this.gameRun.roundName(1))
+						: this.mode === 'class'
+							? localize('collaboration.classStarted', "Class started. The invitation is in the clipboard: send it to the class, for example on the course page. Up to {0} students can join. Each student is connected to you only: what they share comes to you, and what you share goes to the whole class.", CLASS_SEATS)
+							: localize('collaboration.started', "Session started. The invitation is in the clipboard: send it to the others by email or in a message. Anyone with it can join, up to {0} participants.", MAX_PARTICIPANTS));
 				} else {
 					this.waitToJoin();
 				}
@@ -858,6 +1072,14 @@ class Session extends Disposable {
 				}
 				break;
 			}
+			case 'submitDecisions':
+				this.submitDecisions(message.values);
+				break;
+			case 'nextRound':
+				if (this.role === 'host' && this.gameRun) {
+					this.onNextRound();
+				}
+				break;
 			case 'openFile':
 				if (this.samePage.value && typeof message.path === 'string') {
 					this.samePage.value.openInEditor(message.path).catch(error => this.notice(localize('collaboration.cannotOpen', "Could not open {0}: {1}", message.path, String(error?.message ?? error))));
@@ -886,6 +1108,9 @@ class Session extends Disposable {
 
 	private postParticipants(): void {
 		this.post({ command: 'participants', participants: this.participantList() });
+		if (this.gameRun) {
+			this.postGame();
+		}
 	}
 
 	private setStatus(status: string): void {
@@ -1056,6 +1281,11 @@ class Session extends Disposable {
 				this.mode = 'samePage';
 				this.onSamePage(peerId, hello.folder.slice(0, 120));
 			}
+			if (this.isGame) {
+				this.notice(localize('collaboration.joinedGame', "You joined the game {0} runs. Your messages, and what you share, go to {0} until you are in a team; then they go to your team too.", hello.name));
+				this.delivery.send('hello', this.hello(), [peerId]);
+				return;
+			}
 			if (this.mode === 'class') {
 				this.notice(localize('collaboration.joinedClass', "You joined {0}'s class. What you share, and your messages, go to {0}, the tutor, unless the class chat is on.", hello.name));
 				this.delivery.send('hello', this.hello(), [peerId]);
@@ -1085,11 +1315,14 @@ class Session extends Disposable {
 				// Back after the connection dropped: still in their breakout group
 				this.sendGroups([peerId]);
 			}
+			this.sendGame([peerId]);
 		}
 		if (this.admitted && !known) {
 			this.postParticipants();
 			this.notice(this.mode === 'class' && this.groupCount && !this.groupOf(peerId)
-				? localize('collaboration.joinedNoGroup', "{0} joined, in no breakout group yet: Split into Breakout Groups... places them.", hello.name)
+				? (this.isGame
+					? localize('collaboration.joinedNoTeam', "{0} joined, in no team yet: Split into Breakout Groups... places them.", hello.name)
+					: localize('collaboration.joinedNoGroup', "{0} joined, in no breakout group yet: Split into Breakout Groups... places them.", hello.name))
 				: localize('collaboration.joined', "{0} joined.", hello.name));
 			this.updateWaitingStatus();
 		}
@@ -1153,6 +1386,21 @@ class Session extends Disposable {
 			case 'group':
 				if (this.mode === 'class' && this.role !== 'host' && peerId === this.hostId) {
 					this.onGroup(data.payload);
+				}
+				break;
+			case 'game':
+				if (this.isGame && this.role !== 'host' && peerId === this.hostId) {
+					this.onGame(data.payload);
+				}
+				break;
+			case 'gameResults':
+				if (this.isGame && this.role !== 'host' && peerId === this.hostId) {
+					this.onGameResults(data.payload);
+				}
+				break;
+			case 'decisions':
+				if (this.role === 'host') {
+					this.onDecisions(peerId, data.payload);
 				}
 				break;
 			case 'settings':
@@ -1570,6 +1818,20 @@ export class CollaborationService extends Disposable implements ICollaborationSe
 			return;
 		}
 		const students = session.students();
+		const game = session.hostedGame;
+		if (game && !game.round) {
+			this.notificationService.info(localize('collaboration.teamsByNextRound', "Next Round splits the players into teams and starts the game."));
+			return;
+		}
+		if (game) {
+			// The teams of a game stay as many as they are: newcomers are placed, and players moved
+			const assignment = new Map(students.filter(student => student.group).map(student => [student.peerId, student.group] as const));
+			placeAtRandom(students.map(student => student.peerId).filter(peerId => !assignment.has(peerId)), session.breakoutGroupCount, assignment);
+			if (await this.adjustGroups(session, localize('collaboration.teamsTitle', "Teams"), session.breakoutGroupCount, students, assignment, localize('collaboration.changeTeams', "Change the Teams"))) {
+				session.startGroups(session.breakoutGroupCount, assignment);
+			}
+			return;
+		}
 		if (students.length < 2) {
 			this.notificationService.info(localize('collaboration.groupsNeedStudents', "Breakout groups need at least two students in the class."));
 			return;
@@ -1593,34 +1855,40 @@ export class CollaborationService extends Disposable implements ICollaborationSe
 		// With the same number of groups, the students keep theirs and newcomers are placed; otherwise all are split afresh
 		const assignment = new Map<string, number>(count === current ? students.filter(student => student.group).map(student => [student.peerId, student.group]) : []);
 		placeAtRandom(students.map(student => student.peerId).filter(peerId => !assignment.has(peerId)), count, assignment);
+		if (await this.adjustGroups(session, title, count, students, assignment, current ? localize('collaboration.changeGroups', "Change the Groups") : localize('collaboration.startGroups', "Start the Groups"))) {
+			session.startGroups(count, assignment);
+		}
+	}
 
-		const start: IGroupItem = { label: current ? localize('collaboration.changeGroups', "Change the Groups") : localize('collaboration.startGroups', "Start the Groups") };
+	/** Shows the groups, where picking a student moves them to another; true when the tutor confirms them with `startLabel`. */
+	private async adjustGroups(session: Session, title: string, count: number, students: readonly IStudent[], assignment: Map<string, number>, startLabel: string): Promise<boolean> {
+		const start: IGroupItem = { label: startLabel };
 		let active: string | undefined;
 		while (true) {
 			const items: (IGroupItem | IQuickPickSeparator)[] = [start];
 			for (let group = 1; group <= count; group++) {
-				items.push({ type: 'separator', label: localize('collaboration.groupLabel', "Group {0}", group) });
+				items.push({ type: 'separator', label: session.groupLabel(group) });
 				for (const student of students.filter(student => assignment.get(student.peerId) === group)) {
 					items.push({ label: student.name, description: localize('collaboration.moveStudent', "move to another group"), peerId: student.peerId });
 				}
 			}
 			const picked = await this.quickInputService.pick(items, {
 				title,
-				placeHolder: localize('collaboration.groupsPlaceholder', "Choose a student to move them to another group, or start the groups"),
+				placeHolder: localize('collaboration.groupsPlaceholder', "Choose someone to move them to another group, or confirm the groups"),
 				activeItem: items.find(item => item.type !== 'separator' && item.peerId !== undefined && item.peerId === active) as IGroupItem | undefined,
 			});
 			if (!picked || !session.isLive) {
-				return;
+				return false;
 			}
 			if (picked === start) {
-				break;
+				return true;
 			}
 			const from = assignment.get(picked.peerId!);
 			const targets: IGroupItem[] = [];
 			for (let group = 1; group <= count; group++) {
 				if (group !== from) {
 					const names = students.filter(student => assignment.get(student.peerId) === group).map(student => student.name);
-					targets.push({ label: localize('collaboration.groupLabel', "Group {0}", group), description: names.join(', '), group });
+					targets.push({ label: session.groupLabel(group), description: names.join(', '), group });
 				}
 			}
 			const target = await this.quickInputService.pick(targets, { title, placeHolder: localize('collaboration.moveTo', "Move {0} to", picked.label) });
@@ -1629,7 +1897,6 @@ export class CollaborationService extends Disposable implements ICollaborationSe
 			}
 			active = picked.peerId;
 		}
-		session.startGroups(count, assignment);
 	}
 
 	async visitGroup(): Promise<void> {
@@ -1645,7 +1912,7 @@ export class CollaborationService extends Disposable implements ICollaborationSe
 		];
 		for (let group = 1; group <= session.breakoutGroupCount; group++) {
 			const names = students.filter(student => student.group === group).map(student => student.name);
-			items.push({ label: localize('collaboration.groupLabel', "Group {0}", group), description: names.length ? names.join(', ') : localize('collaboration.groupNobody', "nobody yet"), detail: visited === group ? here : undefined, group });
+			items.push({ label: session.groupLabel(group), description: names.length ? names.join(', ') : localize('collaboration.groupNobody', "nobody yet"), detail: visited === group ? here : undefined, group });
 		}
 		const picked = await this.quickInputService.pick(items, {
 			title: localize('collaboration.visitTitle', "Visit a Group"),
@@ -1659,8 +1926,123 @@ export class CollaborationService extends Disposable implements ICollaborationSe
 
 	bringEveryoneBack(): void {
 		const session = this.tutorSession();
-		if (session && this.hasGroups(session)) {
+		if (session?.hostedGame) {
+			this.notificationService.info(localize('collaboration.teamsStay', "In a game, the teams stay until it ends."));
+		} else if (session && this.hasGroups(session)) {
 			session.endGroups();
+		}
+	}
+
+	async hostGame(): Promise<void> {
+		if (this.alreadyInSession()) {
+			return;
+		}
+		const title = localize('collaboration.hostGameTitle', "Host a Game");
+		const cases: (IQuickPickItem & { readonly gameCase?: IGameCase })[] = [];
+		for (const folder of await builtInCases(this.fileService)) {
+			try {
+				const gameCase = await loadCase(this.fileService, folder);
+				cases.push({ gameCase, label: gameCase.title, detail: gameCase.description });
+			} catch {
+				// A case of Pollis's own that does not load is left out
+			}
+		}
+		const choose: IQuickPickItem & { readonly gameCase?: IGameCase } = { label: localize('collaboration.chooseCase', "Choose a Case Folder..."), description: localize('collaboration.chooseCaseDetail', "a folder with case.toml and model.jl") };
+		const picked = await this.quickInputService.pick([...cases, choose], { title, placeHolder: localize('collaboration.casePlaceholder', "The case the teams play"), matchOnDetail: true });
+		if (!picked) {
+			return;
+		}
+		let gameCase = picked.gameCase;
+		if (!gameCase) {
+			const folder = (await this.fileDialogService.showOpenDialog({ title, canSelectFolders: true, canSelectFiles: false, canSelectMany: false }))?.[0];
+			if (!folder) {
+				return;
+			}
+			try {
+				gameCase = await loadCase(this.fileService, folder);
+			} catch (error) {
+				this.notificationService.error(String(error?.message ?? error));
+				return;
+			}
+		}
+		const name = await this.askName();
+		if (!name) {
+			return;
+		}
+		const strategy = this.configurationService.getValue<SignallingStrategy>(SIGNALLING_SETTING) === 'mqtt' ? 'mqtt' : 'nostr';
+		const session = this.begin(newSessionCode(strategy, 'game'), 'host', name, 'class');
+		session.hostGame(this.instantiationService.createInstance(GameRun, gameCase));
+		await this.clipboardService.writeText(session.invitation);
+	}
+
+	joinGame(): Promise<void> {
+		return this.joinSession();
+	}
+
+	async nextRound(): Promise<void> {
+		const session = this.session.value;
+		const run = session?.isLive && session.role === 'host' ? session.hostedGame : undefined;
+		if (!session || !run) {
+			this.notificationService.info(localize('collaboration.nextRoundForFacilitator', "Next Round is for the facilitator of a game: host one with Compose > Collaboration > Simulation Games > Host a Game...."));
+			return;
+		}
+		if (run.isRunning) {
+			this.notificationService.info(localize('collaboration.roundRunning', "A round is being played: wait for its results."));
+			return;
+		}
+		if (run.isOver) {
+			this.notificationService.info(localize('collaboration.gameIsOver', "The game is over: its rounds are in {0}.", run.folderPath));
+			return;
+		}
+		const gameCase = run.gameCase;
+		try {
+			if (!run.round) {
+				// Start the game: the teams, at random and then adjusted, as many as the case allows and the players fill
+				const students = session.students();
+				if (students.length < gameCase.minTeams) {
+					this.notificationService.info(localize('collaboration.notEnoughPlayers', "{0} needs at least {1} teams, so at least {1} players: {2} have joined so far.", gameCase.title, gameCase.minTeams, students.length));
+					return;
+				}
+				const most = Math.min(gameCase.maxTeams, students.length);
+				const title = localize('collaboration.startGameTitle', "Start the Game");
+				let count = gameCase.minTeams;
+				if (most > gameCase.minTeams) {
+					const text = await this.quickInputService.input({
+						title,
+						prompt: localize('collaboration.teamCountPrompt', "The number of teams, from {0} to {1}: the players are split among them at random, and you can then move any of them", gameCase.minTeams, most),
+						value: String(Math.min(most, Math.max(gameCase.minTeams, Math.round(students.length / 3)))),
+						ignoreFocusLost: true,
+						validateInput: async value => {
+							const number = Number(value.trim());
+							return Number.isInteger(number) && number >= gameCase.minTeams && number <= most ? undefined : localize('collaboration.teamCountInvalid', "Give a whole number from {0} to {1}.", gameCase.minTeams, most);
+						},
+					});
+					count = Number(text?.trim());
+					if (!text || !Number.isInteger(count) || !session.isLive) {
+						return;
+					}
+				}
+				const assignment = new Map<string, number>();
+				placeAtRandom(students.map(student => student.peerId), count, assignment);
+				if (await this.adjustGroups(session, title, count, students, assignment, localize('collaboration.startTheGame', "Start the Game")) && session.isLive) {
+					await session.startGame(count, assignment);
+				}
+				return;
+			}
+			const missing = run.teams.filter(team => !run.submittedBy(team.team));
+			if (missing.length) {
+				const { confirmed } = await this.dialogService.confirm({
+					message: localize('collaboration.playAnyway', "Play {0} without the decisions of {1}?", run.roundName(run.round), missing.map(team => team.name).join(', ')),
+					detail: localize('collaboration.playAnywayDetail', "A team that has not submitted its decisions plays those of its last round, or, in the first, those the case starts with."),
+					primaryButton: localize({ key: 'collaboration.playButton', comment: ['&& denotes a mnemonic'] }, "&&Play the Round"),
+				});
+				if (!confirmed || !session.isLive) {
+					return;
+				}
+			}
+			await session.playRound();
+		} catch (error) {
+			this.notificationService.error(String(error?.message ?? error));
 		}
 	}
 
@@ -1729,7 +2111,7 @@ export class CollaborationService extends Disposable implements ICollaborationSe
 		}
 		const name = await this.askName();
 		if (name) {
-			this.begin(code, 'guest', name, code.kind === 'class' ? 'class' : 'sideBySide');
+			this.begin(code, 'guest', name, code.kind === 'session' ? 'sideBySide' : 'class');
 		}
 	}
 
@@ -2019,6 +2401,7 @@ export class CollaborationService extends Disposable implements ICollaborationSe
 				.catch(error => this.notificationService.error(localize('collaboration.fileActionFailed', "Could not use {0}'s {1}: {2}", file.sharer, file.payload.fileName, String(error)))),
 			(choice, value) => (choice === 'voiceLanguage' ? setVoiceLanguage : setVoiceWriteIn)(this.storageService, value),
 			(hostId, folder) => session.attachSamePage(this.instantiationService.createInstance(SamePageGuest, session.samePageLink, hostId, folder)),
+			() => this.nextRound(),
 		);
 		this.session.value = session;
 		session.onDidEnd(() => this._onDidChangeSession.fire());

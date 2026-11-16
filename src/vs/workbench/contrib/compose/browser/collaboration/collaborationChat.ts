@@ -10,7 +10,7 @@ import { composerSendSvg } from '../../../model/browser/webviews/webviewScaffold
 import { composerAddCss, composerAddHtml, composerAddScript } from '../composerAdd.js';
 import { composerVoiceCss, composerVoiceHtml, composerVoiceScript } from '../composerVoice.js';
 import { IWirePacket } from './collaborationTransport.js';
-import { IFolderEntry, MAX_FILE_BYTES, MAX_IMAGE_BYTES, MAX_RECEIVE_BYTES, PROGRESS_THRESHOLD_BYTES, SignallingStrategy } from './collaborationProtocol.js';
+import { GameValues, IFolderEntry, IGameDecision, IGameTable, MAX_FILE_BYTES, MAX_IMAGE_BYTES, MAX_RECEIVE_BYTES, PROGRESS_THRESHOLD_BYTES, SignallingStrategy } from './collaborationProtocol.js';
 
 // The Collaboration chat page. As in p2p-live-share (whose chat it adapts: messages with images pasted or
 // dragged in), the page holds the Trystero room, so the connection lives as long as the chat; the session
@@ -54,7 +54,33 @@ export interface IChatEntry {
 	readonly image?: string;
 	readonly dataset?: IChatDataset;
 	readonly file?: IChatFile;
+	/** In a game, the tables of a round's results. */
+	readonly tables?: readonly IGameTable[];
 	readonly time: number;
+}
+
+/**
+ * A game, as the column beside the chat shows it: to the facilitator, the teams, who submitted and Next Round;
+ * to a player, their team's decisions for the round, with Submit.
+ */
+export interface IChatGame {
+	readonly title: string;
+	readonly description: string;
+	readonly roundLabel: string;
+	readonly rounds: number;
+	/** 0 before the game starts, rounds + 1 once it is over. */
+	readonly round: number;
+	readonly facilitator: boolean;
+	/** For the facilitator: whether a round is being played, the teams, and the players in none yet. */
+	readonly running?: boolean;
+	readonly teams?: readonly { readonly name: string; readonly members: readonly string[]; readonly submittedBy?: string }[];
+	readonly waiting?: readonly string[];
+	/** For a player: their team, its decisions and their values, and who submitted them. */
+	readonly team?: number;
+	readonly teamName?: string;
+	readonly decisions?: readonly IGameDecision[];
+	readonly values?: GameValues;
+	readonly submittedBy?: string;
 }
 
 export interface IChatParticipant {
@@ -95,7 +121,8 @@ export type ChatPageMessage =
 	| { readonly command: 'filesPanel'; readonly folder: string }
 	| { readonly command: 'folder'; readonly path: string; readonly entries: readonly IFolderEntry[]; readonly error?: string }
 	| { readonly command: 'filesChanged' }
-	| { readonly command: 'filesClosed' };
+	| { readonly command: 'filesClosed' }
+	| { readonly command: 'game'; readonly game: IChatGame };
 
 /** From the page to the workbench. */
 export type ChatWorkbenchMessage =
@@ -121,7 +148,9 @@ export type ChatWorkbenchMessage =
 	| { readonly command: 'voiceLanguage'; readonly value: string }
 	| { readonly command: 'voiceWriteIn'; readonly value: string }
 	| { readonly command: 'listFolder'; readonly path: string }
-	| { readonly command: 'openFile'; readonly path: string };
+	| { readonly command: 'openFile'; readonly path: string }
+	| { readonly command: 'submitDecisions'; readonly values: Record<string, number | string> }
+	| { readonly command: 'nextRound' };
 
 /** The chat page: its texts come from here, the session from the workbench's messages; `language` is that of dictation. */
 export function chatPageHtml(language: string, writeIn: string): string {
@@ -166,6 +195,21 @@ export function chatPageHtml(language: string, writeIn: string): string {
 		filesOf: localize('collaborationChat.filesOf', "Files of {0}", '{0}'),
 		filesHint: localize('collaborationChat.filesHint', "Click a file to edit it with the others."),
 		filesEmpty: localize('collaborationChat.filesEmpty', "No files."),
+		gameNotStarted: localize('collaborationChat.gameNotStarted', "Not started yet: the players are split into teams when the game starts."),
+		roundOf: localize('collaborationChat.roundOf', "{0} {1} of {2}", '{0}', '{1}', '{2}'),
+		gameOver: localize('collaborationChat.gameOver', "The game is over."),
+		playing: localize('collaborationChat.playing', "Playing the round..."),
+		startGame: localize('collaborationChat.startGame', "Start the Game"),
+		nextRound: localize('collaborationChat.nextRound', "Next Round"),
+		submittedBy: localize('collaborationChat.submittedBy', "Submitted by {0}", '{0}'),
+		notSubmitted: localize('collaborationChat.notSubmitted', "Not submitted yet"),
+		nobody: localize('collaborationChat.nobody', "Nobody yet"),
+		notInTeam: localize('collaborationChat.notInTeam', "In no team yet: {0}", '{0}'),
+		waitingForTeam: localize('collaborationChat.waitingForTeam', "Waiting to be placed in a team."),
+		yourTeam: localize('collaborationChat.yourTeam', "Your team: {0}", '{0}'),
+		submit: localize('collaborationChat.submit', "Submit Our Decisions"),
+		submitHint: localize('collaborationChat.submitHint', "Anyone in the team can submit; the last submitted before the round is played counts. A team that submits nothing plays its last round's decisions again."),
+		decisionUnit: localize('collaborationChat.decisionUnit', "{0} ({1})", '{0}', '{1}'),
 	};
 	const csp = `default-src 'none'; style-src 'unsafe-inline'; img-src data: blob:; connect-src wss: https:; script-src ${webviewGenericCspSource} 'unsafe-inline';`;
 	return `<!DOCTYPE html>
@@ -198,6 +242,17 @@ export function chatPageHtml(language: string, writeIn: string): string {
 		#files .twisty.closed::before { content: '\\25B8'; }
 		#files .twisty.open::before { content: '\\25BE'; }
 		#files .name { overflow: hidden; text-overflow: ellipsis; }
+		/* A game: the round, and the teams or the team's decisions, beside the messages */
+		#game { width: 300px; flex: none; overflow: auto; padding: 6px 10px; border-left: 1px solid var(--vscode-widget-border); }
+		#game[hidden] { display: none; }
+		#game .title { font-weight: 600; }
+		#game .hint, #game .muted { font-size: 11px; color: var(--vscode-descriptionForeground); }
+		#game .round { margin: 6px 0; font-weight: 600; }
+		#game .team { margin: 6px 0; }
+		#game .field { margin: 8px 0; }
+		#game .field label { display: block; font-weight: 600; margin-bottom: 2px; }
+		#game .field input, #game .field select { width: 100%; font: inherit; padding: 2px 4px; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); }
+		#game .actions { margin: 8px 0; }
 		.entry { margin: 0 0 8px 0; line-height: 1.4; }
 		.entry .meta { font-size: 11px; color: var(--vscode-descriptionForeground); }
 		.entry .meta b { color: var(--vscode-foreground); font-weight: 600; margin-right: 6px; }
@@ -263,6 +318,7 @@ export function chatPageHtml(language: string, writeIn: string): string {
 			<div id="tree"></div>
 		</aside>
 		<div id="messages"></div>
+		<aside id="game" hidden></aside>
 	</div>
 	<div id="progress"></div>
 	<footer>
@@ -469,6 +525,9 @@ export function chatPageHtml(language: string, writeIn: string): string {
 		if (entry.file) {
 			element.append(fileCard(entry.file));
 		}
+		for (const table of entry.tables || []) {
+			element.append(resultsCard(table));
+		}
 		messages.append(element);
 		if (follow) {
 			messages.scrollTop = messages.scrollHeight;
@@ -540,6 +599,143 @@ export function chatPageHtml(language: string, writeIn: string): string {
 		}
 		card.append(summary, note, actions);
 		return card;
+	}
+
+	// A table of a game's results: its cells set as text
+	function resultsCard(table) {
+		const card = document.createElement('div');
+		card.className = 'dataset';
+		const summary = document.createElement('div');
+		summary.className = 'summary';
+		summary.textContent = table.title;
+		const tableArea = document.createElement('div');
+		tableArea.className = 'table';
+		const element = document.createElement('table');
+		const headerRow = element.insertRow();
+		for (const name of table.columns) {
+			const cell = document.createElement('th');
+			cell.textContent = name;
+			headerRow.append(cell);
+		}
+		for (const row of table.rows) {
+			const tableRow = element.insertRow();
+			for (const value of row) {
+				tableRow.insertCell().textContent = value;
+			}
+		}
+		tableArea.append(element);
+		card.append(summary, tableArea);
+		return card;
+	}
+
+	// ---- A game: the facilitator's teams and Next Round, or a player's decisions for their team ----
+
+	let gameKey = '', lastGame;
+	function showGame(game) {
+		const area = $('game');
+		// A player's form is drawn again only when something in it changed, so what they are typing stays
+		const key = JSON.stringify(game) + ended;
+		if (key === gameKey) {
+			return;
+		}
+		gameKey = key;
+		area.hidden = false;
+		area.replaceChildren();
+		const line = (className, text) => {
+			const element = document.createElement('div');
+			element.className = className;
+			element.textContent = text;
+			area.append(element);
+			return element;
+		};
+		line('title', game.title);
+		if (game.description) {
+			line('hint', game.description);
+		}
+		line('round', game.round < 1 ? TEXT.gameNotStarted : game.round > game.rounds ? TEXT.gameOver : TEXT.roundOf.replace('{0}', game.roundLabel).replace('{1}', game.round).replace('{2}', game.rounds));
+		if (game.facilitator) {
+			for (const team of game.teams || []) {
+				const element = line('team', '');
+				const name = document.createElement('b');
+				name.textContent = team.name;
+				const members = document.createElement('div');
+				members.className = 'muted';
+				members.textContent = team.members.length ? team.members.join(', ') : TEXT.nobody;
+				const status = document.createElement('div');
+				status.textContent = team.submittedBy ? TEXT.submittedBy.replace('{0}', team.submittedBy) : TEXT.notSubmitted;
+				element.append(name, members);
+				if (game.round >= 1 && game.round <= game.rounds) {
+					element.append(status);
+				}
+			}
+			if (game.waiting && game.waiting.length) {
+				line('muted', TEXT.notInTeam.replace('{0}', game.waiting.join(', ')));
+			}
+			const actions = line('actions', '');
+			const button = document.createElement('button');
+			button.textContent = game.running ? TEXT.playing : game.round < 1 ? TEXT.startGame : TEXT.nextRound;
+			button.disabled = ended || game.running || game.round > game.rounds;
+			button.addEventListener('click', () => vscode.postMessage({ command: 'nextRound' }));
+			actions.append(button);
+			return;
+		}
+		if (!game.team) {
+			if (game.round <= game.rounds) {
+				line('muted', TEXT.waitingForTeam);
+			}
+			return;
+		}
+		line('team', TEXT.yourTeam.replace('{0}', game.teamName));
+		if (game.round < 1 || game.round > game.rounds) {
+			return;
+		}
+		const inputs = [];
+		for (const decision of game.decisions || []) {
+			const field = line('field', '');
+			const label = document.createElement('label');
+			label.textContent = decision.unit ? TEXT.decisionUnit.replace('{0}', decision.label).replace('{1}', decision.unit) : decision.label;
+			let input;
+			if (decision.kind === 'choice') {
+				input = document.createElement('select');
+				for (const option of decision.options) {
+					const element = document.createElement('option');
+					element.value = option.value;
+					element.textContent = option.label;
+					input.append(element);
+				}
+			} else {
+				input = document.createElement('input');
+				input.type = 'number';
+				input.min = decision.min;
+				input.max = decision.max;
+				input.step = decision.step ?? 'any';
+			}
+			input.value = String(game.values?.[decision.key] ?? decision.default);
+			input.disabled = ended;
+			label.htmlFor = input.id = 'decision-' + decision.key;
+			field.append(label, input);
+			if (decision.help) {
+				const help = document.createElement('div');
+				help.className = 'hint';
+				help.textContent = decision.help;
+				field.append(help);
+			}
+			inputs.push([decision, input]);
+		}
+		const actions = line('actions', '');
+		const button = document.createElement('button');
+		button.textContent = TEXT.submit;
+		button.disabled = ended;
+		button.addEventListener('click', () => {
+			const values = {};
+			for (const [decision, input] of inputs) {
+				values[decision.key] = decision.kind === 'choice' ? input.value : Number(input.value);
+			}
+			vscode.postMessage({ command: 'submitDecisions', values });
+		});
+		actions.append(button);
+		line('', game.submittedBy ? TEXT.submittedBy.replace('{0}', game.submittedBy) : TEXT.notSubmitted);
+		line('hint', TEXT.submitHint);
 	}
 
 	function showParticipants(participants) {
@@ -660,6 +856,9 @@ export function chatPageHtml(language: string, writeIn: string): string {
 					closeAddMenu();
 				}
 				input.disabled = ended;
+				if (lastGame) {
+					showGame(lastGame);
+				}
 				break;
 			case 'stats': stats(message.id); break;
 			case 'filesPanel':
@@ -672,6 +871,7 @@ export function chatPageHtml(language: string, writeIn: string): string {
 			case 'folder': showFolder(message.path, message.entries, message.error); break;
 			case 'filesChanged': vscode.postMessage({ command: 'listFolder', path: '' }); break;
 			case 'filesClosed': $('files').hidden = true; break;
+			case 'game': lastGame = message.game; showGame(message.game); break;
 		}
 	});
 

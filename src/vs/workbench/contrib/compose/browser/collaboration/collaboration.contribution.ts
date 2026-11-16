@@ -34,6 +34,9 @@ export const IMPLEMENTED_COLLABORATION_COMMANDS: ReadonlySet<string> = new Set([
 	'pollis.collaboration.breakoutGroups',
 	'pollis.collaboration.visitGroup',
 	'pollis.collaboration.bringEveryoneBack',
+	'pollis.collaboration.hostGame',
+	'pollis.collaboration.joinGame',
+	'pollis.collaboration.nextRound',
 	'pollis.collaboration.openChat',
 	'pollis.collaboration.testConnection',
 ]);
@@ -84,6 +87,9 @@ registerCollaborationCommand('pollis.collaboration.startClass', localize2('colla
 registerCollaborationCommand('pollis.collaboration.breakoutGroups', localize2('collaboration.breakoutGroupsCommand', "Split into Breakout Groups..."), service => service.breakoutGroups());
 registerCollaborationCommand('pollis.collaboration.visitGroup', localize2('collaboration.visitGroupCommand', "Visit a Group..."), service => service.visitGroup());
 registerCollaborationCommand('pollis.collaboration.bringEveryoneBack', localize2('collaboration.bringEveryoneBackCommand', "Bring Everyone Back"), service => service.bringEveryoneBack());
+registerCollaborationCommand('pollis.collaboration.hostGame', localize2('collaboration.hostGameCommand', "Host a Game..."), service => service.hostGame());
+registerCollaborationCommand('pollis.collaboration.joinGame', localize2('collaboration.joinGameCommand', "Join a Game..."), service => service.joinGame());
+registerCollaborationCommand('pollis.collaboration.nextRound', localize2('collaboration.nextRoundCommand', "Next Round"), service => service.nextRound());
 registerCollaborationCommand('pollis.collaboration.inviteAgent', localize2('collaboration.inviteAgentCommand', "Invite an Agent..."), service => service.inviteAgent());
 registerCollaborationCommand('pollis.collaboration.sessionSettings', localize2('collaboration.sessionSettingsCommand', "Session Settings..."), service => service.sessionSettings());
 registerCollaborationCommand('pollis.collaboration.openChat', localize2('collaboration.openChatCommand', "Open Chat"), service => service.openChat());

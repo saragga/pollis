@@ -116,6 +116,67 @@ export interface IEditorSharedPayload {
 	readonly group?: number;
 }
 
+/** A decision each team makes in a round of a game, as its case describes it. */
+export interface IGameDecision {
+	readonly key: string;
+	readonly label: string;
+	readonly kind: 'number' | 'choice';
+	readonly help?: string;
+	/** For a number: its unit, bounds and step. */
+	readonly unit?: string;
+	readonly min?: number;
+	readonly max?: number;
+	readonly step?: number;
+	/** For a choice: the values, each with its label. */
+	readonly options?: readonly { readonly value: string; readonly label: string }[];
+	readonly default: number | string;
+}
+
+/** A team's values for the decisions of a round, by key. */
+export type GameValues = Readonly<Record<string, number | string>>;
+
+/**
+ * In a game (Simulation Games), what a player sees, sent by the facilitator: on joining, on being placed in a
+ * team, when a round opens, and when someone in their team submits its decisions.
+ */
+export interface IGamePayload {
+	readonly title: string;
+	readonly description: string;
+	/** What a round is called, such as Year, and how many there are. */
+	readonly roundLabel: string;
+	readonly rounds: number;
+	/** The round being decided: 0 before the game starts, rounds + 1 once it is over. */
+	readonly round: number;
+	/** The player's team, none until the facilitator places them in one. */
+	readonly team?: number;
+	readonly teamName?: string;
+	readonly decisions: readonly IGameDecision[];
+	/** The team's values for the round: those submitted, else last round's, else the case's defaults. */
+	readonly values?: GameValues;
+	/** Who in the team submitted the values, when someone has this round. */
+	readonly submittedBy?: string;
+}
+
+/** A player's decisions for their team in a round; the last submitted before the round is played counts. */
+export interface IDecisionsPayload {
+	readonly round: number;
+	readonly values: GameValues;
+}
+
+/** A table of a game's results, its cells written out by the facilitator's copy. */
+export interface IGameTable {
+	readonly title: string;
+	readonly columns: readonly string[];
+	readonly rows: readonly (readonly string[])[];
+}
+
+/** The results of a round, sent by the facilitator: the table every player sees and the team's own. */
+export interface IGameResultsPayload {
+	readonly round: number;
+	readonly text?: string;
+	readonly tables: readonly IGameTable[];
+}
+
 /**
  * In a class, the breakout group a student is in (Split into Breakout Groups), sent by the tutor to each student in a
  * group when the groups start or change, when the tutor visits or leaves the group, and when everyone is brought back.
@@ -240,6 +301,9 @@ export type Envelope =
 	| IEnvelopeBase<'settings', ISettingsPayload>
 	| IEnvelopeBase<'agent', IAgentPayload>
 	| IEnvelopeBase<'group', IGroupPayload>
+	| IEnvelopeBase<'game', IGamePayload>
+	| IEnvelopeBase<'decisions', IDecisionsPayload>
+	| IEnvelopeBase<'gameResults', IGameResultsPayload>
 	| IEnvelopeBase<'fileRequest', IFileRequestPayload>
 	| IEnvelopeBase<'fileResponse', IFileResponsePayload>
 	| IEnvelopeBase<'textUpdate', ITextUpdatePayload>
@@ -255,7 +319,7 @@ export function envelope<E extends Envelope>(type: E['type'], payload: E['payloa
 	return result as E;
 }
 
-const ENVELOPE_TYPES: ReadonlySet<string> = new Set<EnvelopeType>(['hello', 'chat', 'editorShared', 'datasetShared', 'fileShared', 'databaseShared', 'bye', 'settings', 'agent', 'group', 'fileRequest', 'fileResponse', 'textUpdate', 'textSaved', 'filesChanged', 'cursor']);
+const ENVELOPE_TYPES: ReadonlySet<string> = new Set<EnvelopeType>(['hello', 'chat', 'editorShared', 'datasetShared', 'fileShared', 'databaseShared', 'bye', 'settings', 'agent', 'group', 'game', 'decisions', 'gameResults', 'fileRequest', 'fileResponse', 'textUpdate', 'textSaved', 'filesChanged', 'cursor']);
 
 /** Whether something received is an envelope this copy understands. */
 export function isEnvelope(value: unknown): value is Envelope {
@@ -298,14 +362,14 @@ export function imageBytes(dataUrl: string): number {
 // which encrypts the connection setup, so the introducing servers never see it.
 
 const CODE_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
-const CODE_PATTERN = /(?<code>[0-9A-Za-z]{5}(?:-[0-9A-Za-z]{5}){3})(?<flags>(?:@(?:mqtt|class))*)/;
+const CODE_PATTERN = /(?<code>[0-9A-Za-z]{5}(?:-[0-9A-Za-z]{5}){3})(?<flags>(?:@(?:mqtt|class|game))*)/;
 
 export interface ISessionCode {
 	/** The code as shown, in groups of five. */
 	readonly code: string;
 	readonly strategy: SignallingStrategy;
-	/** Whether the code is that of a class, whose students join a seat each rather than the session's one room. */
-	readonly kind: 'session' | 'class';
+	/** A session, whose participants all join its one room; or a class, whose students join a seat each; or a game, a class with teams. */
+	readonly kind: 'session' | 'class' | 'game';
 }
 
 /** A new random session code. */
@@ -317,7 +381,7 @@ export function newSessionCode(strategy: SignallingStrategy, kind: ISessionCode[
 
 /** The code written as text, with the introduction servers when they are not the default, and whether it is a class's. */
 export function formatSessionCode(code: ISessionCode): string {
-	return code.code + (code.strategy === 'mqtt' ? '@mqtt' : '') + (code.kind === 'class' ? '@class' : '');
+	return code.code + (code.strategy === 'mqtt' ? '@mqtt' : '') + (code.kind === 'session' ? '' : `@${code.kind}`);
 }
 
 /** The session code in a code typed or pasted, or in a whole invitation; undefined when there is none. */
@@ -332,7 +396,7 @@ export function parseSessionCode(text: string): ISessionCode | undefined {
 		return undefined;
 	}
 	const flags = match.groups.flags ?? '';
-	return { code, strategy: flags.includes('@mqtt') ? 'mqtt' : 'nostr', kind: flags.includes('@class') ? 'class' : 'session' };
+	return { code, strategy: flags.includes('@mqtt') ? 'mqtt' : 'nostr', kind: flags.includes('@game') ? 'game' : flags.includes('@class') ? 'class' : 'session' };
 }
 
 /** The Trystero room of a session: a hash of its code, so the room name does not reveal the code. */

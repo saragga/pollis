@@ -125,6 +125,7 @@ const vscodeResourceIncludes = [
 	'out-build/vs/workbench/contrib/compose/browser/media/correctness/**/*.{ipynb,jl,dat}',
 	'out-build/vs/workbench/contrib/compose/browser/media/reports/*.{md,jl}',
 	'out-build/vs/workbench/contrib/compose/browser/media/practice/**/*.{toml,jl}',
+	'out-build/vs/workbench/contrib/compose/browser/media/games/**/*.{toml,jl}',
 	// The reviewed test set of Evaluate Models
 	'out-build/vs/workbench/contrib/compose/browser/media/ask/evals.json',
 	// The Panel FAQ test set, which compile-toml makes from the panels' FAQ

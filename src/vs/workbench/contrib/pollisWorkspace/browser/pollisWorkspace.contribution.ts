@@ -28,7 +28,7 @@ export const OPEN_POLLIS_WORKSPACE_COMMAND_ID = 'pollis.workspace.open';
 const MARKER_FILE = 'pollis.toml';
 
 /** The kinds of file a Pollis Workspace has a folder for. */
-export type PollisWorkspaceFolder = 'data' | 'knowledge_base' | 'reports' | 'methods' | 'workflows' | 'panels' | 'toolboxes' | 'programs' | 'orchestration' | 'changes';
+export type PollisWorkspaceFolder = 'data' | 'knowledge_base' | 'reports' | 'methods' | 'workflows' | 'panels' | 'toolboxes' | 'programs' | 'orchestration' | 'games' | 'changes';
 
 /** The folder of each kind, as a new workspace names it, what its README says it holds, and its subfolders. */
 const FOLDERS: Readonly<Record<PollisWorkspaceFolder, { readonly name: string; readonly readme: string; readonly subfolders?: readonly string[] }>> = {
@@ -41,6 +41,7 @@ const FOLDERS: Readonly<Record<PollisWorkspaceFolder, { readonly name: string; r
 	toolboxes: { name: 'toolboxes', readme: 'The toolboxes you make to share your panels, for a course say, which Compose > Package a Toolbox... builds with your coding agent, one folder each: its spec, toolbox.toml, which menu entries it holds and in what order, the sources of its vignette, its README, and the .vsix files built from it, in dist/. The toolboxes you install stay in Pollis.' },
 	programs: { name: 'programs', readme: 'The programs and libraries compiled from your Julia code on the pages of Compose > Compilation Lab: executables in executables/ and shared libraries in shared_libraries/, one folder for each tool that compiled them, Rust crates in rust/, DuckDB extensions in duckdb_extensions/, and WebAssembly modules in webassembly/.', subfolders: ['executables', 'shared_libraries', 'rust', 'duckdb_extensions', 'webassembly'] },
 	orchestration: { name: 'orchestration', readme: 'The studies of Compose > Orchestration, where coding agents work on research together, one folder each: those of Many Analysts in many-analysts/, each with its question, its data, a folder for each analyst and the results.', subfolders: ['many-analysts'] },
+	games: { name: 'games', readme: 'The games of Compose > Collaboration > Simulation Games that you ran as facilitator, by case and then one folder each: game.toml with its teams and seed, and a folder for each round with the teams\' decisions, the state of the model and the results.' },
 	changes: { name: 'changes', readme: 'Your changes to the panels, workflows, wikis and notebooks that come with Pollis and its toolboxes, one small file each.' },
 };
 
@@ -235,7 +236,7 @@ registerAction2(class extends Action2 {
 		if (!await fileService.exists(joinPath(folder, MARKER_FILE))) {
 			const { confirmed } = await dialogService.confirm({
 				message: localize('pollisWorkspace.makeIt', "Make {0} a Pollis Workspace?", basename(folder)),
-				detail: localize('pollisWorkspace.makeItDetail', "Pollis adds pollis.toml and its folders, data, knowledge_base, reports, methods, workflows, panels, toolboxes, programs and changes, each with a README, and keeps everything the folder has."),
+				detail: localize('pollisWorkspace.makeItDetail', "Pollis adds pollis.toml and its folders, data, knowledge_base, reports, methods, workflows, panels, toolboxes, programs, orchestration, games and changes, each with a README, and keeps everything the folder has."),
 				primaryButton: localize({ key: 'pollisWorkspace.makeItButton', comment: ['&& denotes a mnemonic'] }, "&&Make It a Pollis Workspace"),
 			});
 			if (!confirmed) {
