@@ -157,7 +157,7 @@ models = ["knapsack"]
 [[inputs]]
 id = "solver"
 label = "Conic Solver"
-tooltip = "Continuous conic solver used by Pajarito for its subproblems. Clarabel: interior point, fast and robust on second-order and exponential cones. Hypatia: interior point, supports every cone, but can stall on some subproblems."
+tooltip = "Continuous conic solver used by Pajarito for its subproblems. Clarabel: interior point, fast and robust on second-order and exponential cones. Hypatia: generic interior point, with many more cones, among them root-determinant and log-determinant cones."
 kind = "select"
 default = "Clarabel"
 newRow = true
@@ -180,7 +180,7 @@ n = 12  # number of assets
 k = {{k}}  # hold at most k assets
 rmin = {{rmin}}  # target expected return
 F = randn(n, n) ./ 4
-Sigma = F' * F + 0.01I  # covariance of the returns
+Sigma = transpose(F) * F + 0.01I  # covariance of the returns
 mu = 0.02 .+ 0.08 .* rand(n)  # expected returns
 L = cholesky(Symmetric(Sigma)).U  # portfolio risk = norm(L * w)
 
@@ -201,7 +201,7 @@ card = @constraint(model, sum(z) <= k)
 ret = @constraint(model, dot(mu, w) >= rmin)
 @constraint(model, [risk; L * w] in SecondOrderCone())
 @objective(model, Min, risk)
-optimize!(model)
+optimize!(model)  # a warning "integral solution repeated" is not an error: Pajarito then adds other cuts
 
 sol = value.(w); sol_name = "weight"
 ints = z  # the integer variables
@@ -240,7 +240,7 @@ set_silent(model)
 card = @constraint(model, sum(z) <= k)
 @constraint(model, [t; A * x - b] in SecondOrderCone())
 @objective(model, Min, t)
-optimize!(model)
+optimize!(model)  # a warning "integral solution repeated" is not an error: Pajarito then adds other cuts
 
 sol = value.(x); sol_name = "coefficient"
 ints = z
@@ -272,7 +272,7 @@ model = Model(pajarito())
 set_silent(model)
 @variable(model, x[1:p])
 @variable(model, z[1:p], Bin)
-@variable(model, t[1:m])  # t[i] >= log(1 + exp(-y[i] X[i, :]' x)), the log-loss
+@variable(model, t[1:m])  # t[i] >= log(1 + exp(-y[i] * dot(X[i, :], x))), the log-loss
 @variable(model, v1[1:m])
 @variable(model, v2[1:m])
 @constraint(model, -M .* z .<= x)
@@ -285,7 +285,7 @@ for i in 1:m
     @constraint(model, [-t[i], 1, v2[i]] in MOI.ExponentialCone())
 end
 @objective(model, Min, sum(t))
-optimize!(model)
+optimize!(model)  # a warning "integral solution repeated" is not an error: Pajarito then adds other cuts
 
 sol = value.(x); sol_name = "coefficient"
 ints = z
@@ -320,7 +320,7 @@ set_silent(model)
 @constraint(model, [u; zq .* s .* x] in SecondOrderCone())
 card = @constraint(model, dot(a, x) + u <= C)
 @objective(model, Max, dot(v, x))
-optimize!(model)
+optimize!(model)  # a warning "integral solution repeated" is not an error: Pajarito then adds other cuts
 
 sol = value.(x); sol_name = "packed"
 ints = x
@@ -432,14 +432,15 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "solver-compare"
 label = "Conic Solver Comparison"
-desc = "Pajarito with Hypatia and with Clarabel as the conic subproblem solver: status, objective and time"
+desc = "Pajarito with Hypatia and with Clarabel as the conic subproblem solver: status, objective and seconds (each solved twice, the second timed)"
 code = '''
 using Hypatia, Clarabel
 
 res = map(["Hypatia" => Hypatia.Optimizer, "Clarabel" => Clarabel.Optimizer]) do (name, opt)
     global conic = opt
-    set_optimizer(model, pajarito()); set_silent(model)
-    s = @elapsed optimize!(model)
+    fresh_solve() = (set_optimizer(model, pajarito()); set_silent(model); @elapsed optimize!(model))
+    fresh_solve()  # the first solve compiles the solvers' code
+    s = fresh_solve()
     (conic_solver = name, status = termination_status(model), objective = objective_value(model), seconds = s)
 end
 global conic = {{solver}}.Optimizer

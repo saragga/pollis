@@ -11,7 +11,9 @@ A **mixed-integer conic program** minimises a linear objective over variables th
 | **Conic solver** | `Clarabel.jl` or `Hypatia.jl` (the `conic_solver`) |
 | **Cones with Pajarito cuts** | Second-order, exponential, power, positive semidefinite |
 
-## Setting Up the Solver
+## Setting Up Pajarito in JuMP
+
+`Pajarito.Optimizer` takes two solvers as attributes: the mixed-integer linear solver of the master problem as `oa_solver`, and the continuous conic solver of the subproblems as `conic_solver`. Every tab of the Mixed-Integer Convex Programming panel builds it this way, with HiGHS and the chosen **Conic Solver**:
 
 ```julia
 using JuMP, Pajarito, HiGHS, Clarabel
@@ -21,7 +23,7 @@ model = Model(optimizer_with_attributes(Pajarito.Optimizer,
     "conic_solver" => optimizer_with_attributes(Clarabel.Optimizer, MOI.Silent() => true)))
 ```
 
-## Main Options
+## Pajarito's Main Options
 
 | Option | Default | Meaning |
 |---|---|---|
@@ -35,6 +37,8 @@ model = Model(optimizer_with_attributes(Pajarito.Optimizer,
 
 ## Cone Constraints in JuMP
 
+In JuMP a cone constraint states that a vector of affine expressions belongs to a cone, and the integer part is declared on the variables. The constraints of the panel's four tabs are of these kinds:
+
 | Constraint | JuMP |
 |---|---|
 | norm(y) <= t | `[t; y] in SecondOrderCone()` |
@@ -42,14 +46,18 @@ model = Model(optimizer_with_attributes(Pajarito.Optimizer,
 | Matrix X positive semidefinite | `X in PSDCone()` |
 | Binary or integer variable | `@variable(model, z, Bin)` or `Int` |
 
-## Common Patterns
+## Common Patterns in Mixed-Integer Convex Models
+
+The four tabs of the panel combine a few patterns:
 
 - **Cardinality**: binaries `z` with `-M z <= x <= M z` (big-M) or `0 <= x <= z`, and `sum(z) <= k`.
 - **Norm objective or constraint**: a second-order cone.
 - **Log-loss, entropy, log-sum-exp**: exponential cones.
-- **Relaxation**: `undo = relax_integrality(model)` drops integrality; give the model a plain conic optimizer before solving, and Pajarito back before calling `undo()`.
+- **Relaxation**: `undo = relax_integrality(model)` drops integrality; give the model a plain conic optimizer before solving, and Pajarito back before calling `undo()`. The **Relaxation Gap** and **vs Rounding Heuristic** steps do this.
 
-## Statuses
+## Statuses of a Pajarito Solve
+
+The **Feasibility Check** prints the termination and primal status of the solve, how far the integer variables are from whole numbers, and any violated constraint. The termination statuses mean:
 
 | Status | Meaning |
 |---|---|
