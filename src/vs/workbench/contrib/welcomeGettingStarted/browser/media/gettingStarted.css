@@ -1449,8 +1449,8 @@
 /* Pollis: Discover Pollis section */
 .monaco-workbench .part.editor > .content .gettingStartedContainer .pollis-discover-frame > .pollis-discover-run {
 	position: absolute;
-	top: 8px;
-	left: 8px;
+	top: 2px;
+	left: 2px;
 	background: color-mix(in srgb, var(--vscode-welcomePage-tileBackground) 80%, transparent);
 }
 

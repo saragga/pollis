@@ -19,7 +19,7 @@ import { IEditorService } from '../../../services/editor/common/editorService.js
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
 import { ADDFEED_METADATA } from '../../model/browser/webviews/addFeed.data.js';
-import { buildWebviewHtml } from '../../model/browser/webviews/webviewScaffold.js';
+import { buildWebviewHtml, ONE_BLUE_BUTTON_CSS, ONE_BLUE_BUTTON_JS } from '../../model/browser/webviews/webviewScaffold.js';
 import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
 import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
@@ -331,9 +331,8 @@ function pageHtml(): string {
 		.addFeedPage [hidden] { display: none !important; }
 		.addFeedPage button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; padding: 4px 12px; cursor: pointer; white-space: nowrap; font-size: 11px; opacity: 0.7; }
 		/* As the code buttons below a panel's Example Code: dimmed until pointed at, the blue one not */
-		.addFeedPage button.action:not(:disabled):hover, .addFeedPage button.action.current, .addFeedPage button.action.primary { opacity: 1; }
-		.addFeedPage button.action:hover, .addFeedPage button.action.primary { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
-		.addFeedPage button.action.primary:hover { background: var(--vscode-button-hoverBackground); }
+		.addFeedPage button.action:not(:disabled):hover { opacity: 1; }
+		${ONE_BLUE_BUTTON_CSS.trim()}
 		.addFeedPage button.action:disabled { opacity: 0.5; cursor: default; }
 		.addFeedPage .link, .subtitle .link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; }
 		.addFeedPage .link:hover, .subtitle .link:hover { color: var(--vscode-textLink-activeForeground); text-decoration: underline; }
@@ -341,8 +340,9 @@ function pageHtml(): string {
 		.addFeedPage .intro { color: var(--vscode-descriptionForeground); line-height: 1.45; margin: 0 0 10px 0; }
 		.addFeedPage .sources { display: inline-flex; gap: 2px; padding: 2px; border-radius: 4px; background: var(--vscode-sideBar-background); margin-bottom: 8px; }
 		.addFeedPage .sources button { font: inherit; color: var(--vscode-descriptionForeground); background: none; border: none; border-radius: 3px; padding: 3px 12px; cursor: pointer; }
-		.addFeedPage .sources button:hover { color: var(--vscode-foreground); }
-		.addFeedPage .sources button[aria-pressed="true"] { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		.addFeedPage .sources button[aria-pressed="true"], .addFeedPage .sources button:hover { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		/* The source pointed at is the blue one while the pointer is on it */
+		.addFeedPage .sources:has(button:hover) button[aria-pressed="true"]:not(:hover) { color: var(--vscode-descriptionForeground); background: none; }
 		.addFeedPage .row { display: flex; gap: 8px; align-items: center; }
 		.addFeedPage .field { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
 		.addFeedPage .field > span { font-size: 12px; color: var(--vscode-descriptionForeground); }
@@ -395,9 +395,9 @@ function pageHtml(): string {
 		<button class="section-toggle"><span class="illus-chevron"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M7.976 10.072l-4.054-4.014-.92.92 4.49 4.45.978.01 4.525-4.46-.918-.92-4.101 4.014z"/></svg></span>${text.addressSection}</button>
 		<div class="section-body">
 			<p class="intro">${text.addressIntro}</p>
-			<div class="row">
+			<div class="row bar">
 				<input class="query" id="address" spellcheck="false" placeholder="https://onlinelibrary.wiley.com/journal/14680262">
-				<button class="action primary" id="find">${text.find}</button>
+				<button class="action current" id="find">${text.find}</button>
 			</div>
 			<div id="addressResult"></div>
 			<details class="note">
@@ -421,9 +421,9 @@ function pageHtml(): string {
 				<button id="sourcePubmed" aria-pressed="true">${text.pubmed}</button>
 				<button id="sourceArxiv" aria-pressed="false">${text.arxiv}</button>
 			</div>
-			<div class="row">
+			<div class="row bar">
 				<input class="query" id="query" spellcheck="false">
-				<button class="action primary" id="previewSearch">${text.preview}</button>
+				<button class="action current" id="previewSearch">${text.preview}</button>
 			</div>
 			<p class="help"><span id="searchHelp"></span> <button class="link" id="syntaxLink"></button></p>
 			<div class="examples" id="examples"></div>
@@ -439,11 +439,11 @@ function pageHtml(): string {
 				<button class="link" id="changeMailbox">${text.changeMailbox}</button>
 			</div>
 			<div id="mailboxForm" hidden>
-				<div class="addRow">
+				<div class="addRow bar">
 					<label class="field"><span>${text.mailboxUser}</span><input id="mailUser" spellcheck="false" placeholder="my.alerts@gmail.com"></label>
 					<label class="field"><span>${text.mailboxServer}</span><input id="mailServer" spellcheck="false" placeholder="imap.gmail.com"></label>
 					<label class="field"><span>${text.mailboxPassword}</span><input id="mailPassword" type="password"></label>
-					<button class="action primary" id="connect">${text.connect}</button>
+					<button class="action current" id="connect">${text.connect}</button>
 					<button class="action" id="cancelMailbox" hidden>${text.cancel}</button>
 				</div>
 				<p class="help">${text.mailboxHelp}</p>
@@ -468,6 +468,7 @@ function pageHtml(): string {
 `,
 		pageScriptJs: `
 	const TEXT = ${JSON.stringify(text)};
+	${ONE_BLUE_BUTTON_JS.trim()}
 	const EXAMPLES = ${JSON.stringify(examples)};
 	const SYNTAX_LINKS = ${JSON.stringify(syntaxLinks)};
 	const IMAP_SERVERS = ${JSON.stringify(imapServers)}.map(([pattern, server]) => [new RegExp(pattern), server]);
@@ -649,7 +650,7 @@ function pageHtml(): string {
 
 	// The name and topic of the feed, and Add Feed
 	function addRow(preview) {
-		const row = element('div', 'addRow');
+		const row = element('div', 'addRow bar');
 		const nameField = element('label', 'field');
 		nameField.appendChild(element('span', '', TEXT.name));
 		const name = element('input');
@@ -672,7 +673,7 @@ function pageHtml(): string {
 		newTopic.hidden = true;
 		topic.addEventListener('change', () => { newTopic.hidden = topic.value !== ''; if (!newTopic.hidden) { newTopic.focus(); } });
 		topicField.append(topic, newTopic);
-		const add = element('button', 'action primary', TEXT.add);
+		const add = element('button', 'action current', TEXT.add);
 		add.addEventListener('click', () => {
 			const chosenTopic = topic.value || newTopic.value.trim();
 			if (!chosenTopic) {

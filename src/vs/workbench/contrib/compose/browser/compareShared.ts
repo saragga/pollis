@@ -16,7 +16,7 @@ import { IFileService } from '../../../../platform/files/common/files.js';
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { FEWEST_ROWS, rowsChoiceCss, sortHeadingsCss, sortHint } from '../../model/browser/webviews/webviewPager.js';
-import { spinnerCss } from '../../model/browser/webviews/webviewScaffold.js';
+import { ONE_BLUE_BUTTON_CSS, ONE_BLUE_BUTTON_JS, spinnerCss } from '../../model/browser/webviews/webviewScaffold.js';
 import { AskTopic, IAskPollisEvalItem, IAskPollisService } from '../common/askPollis.js';
 
 // What the pages that evaluate models share, Evaluate Answering Models (compareModelsPage.ts, compareModelsRun.ts),
@@ -463,8 +463,7 @@ export const compareCss = `
 		button.action:not(:disabled):hover, button.action:not(:disabled):focus-visible { color: var(--vscode-button-foreground); background: var(--vscode-button-background); opacity: 1; }
 		/* A button that cannot be pressed yet looks as the panels' buttons at rest, without their hover */
 		button.action:disabled, button.action:disabled:hover { opacity: 0.7; cursor: default; }
-		.bar > button.action.current { background: var(--vscode-button-background); color: var(--vscode-button-foreground); opacity: 1; }
-		.bar > button.action.current:hover { background: var(--vscode-button-hoverBackground); }
+		${ONE_BLUE_BUTTON_CSS.trim()}
 		button:disabled { opacity: 0.5; cursor: default; }
 		.link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; }
 		.link:hover { text-decoration: underline; }
@@ -629,15 +628,7 @@ export const pageHelpersScript = `
 	}
 
 	// One blue button in each bar: the last one the pointer was on
-	for (const bar of document.querySelectorAll('.bar')) {
-		bar.addEventListener('mouseover', event => {
-			const button = event.target.closest('button.action');
-			if (button && !button.disabled && !button.classList.contains('current')) {
-				bar.querySelector('button.current')?.classList.remove('current');
-				button.classList.add('current');
-			}
-		});
-	}
+	${ONE_BLUE_BUTTON_JS.trim()}
 
 	/** A message with its packages and files in the yellow. */
 	function yellow(text) {

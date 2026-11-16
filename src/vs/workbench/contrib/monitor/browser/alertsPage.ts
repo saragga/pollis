@@ -20,7 +20,7 @@ import { AlertCondition, AlertSeverity, ChartRange, describeCondition, describeF
 import { ECONOMIC_SOURCES, EconomicSource, seriesExample, seriesPage, SERIES_PAGES, sourceName } from './economicSeries.js';
 import { IEventStudiesService, SHOW_EVENT_STUDIES_COMMAND_ID } from './eventStudiesService.js';
 import { OPEN_LINK_COMMAND_ID } from './openLink.js';
-import { buildWebviewHtml, IScaffoldSqlStep } from '../../model/browser/webviews/webviewScaffold.js';
+import { buildWebviewHtml, IScaffoldSqlStep, ONE_BLUE_BUTTON_CSS, ONE_BLUE_BUTTON_JS } from '../../model/browser/webviews/webviewScaffold.js';
 import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
 import { ALERTS_METADATA } from '../../model/browser/webviews/alerts.data.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
@@ -794,9 +794,10 @@ function pageHtml(kind: PageKind): string {
 		.alertsPage .chartHeader .chartTitle { font-weight: 600; }
 		.alertsPage .ranges { display: flex; gap: 4px; }
 		.alertsPage .ranges button { font: inherit; font-size: 11px; color: var(--vscode-foreground); background: none; border: 1px solid transparent; border-radius: 2px; padding: 1px 6px; cursor: pointer; }
-		.alertsPage .ranges button:hover { background: var(--vscode-toolbar-hoverBackground); }
 		.alertsPage input#symbol.series { width: 340px; }
-		.alertsPage .ranges button.chosen { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		.alertsPage .ranges button.chosen, .alertsPage .ranges button:hover { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		/* The range pointed at is the blue one while the pointer is on it */
+		.alertsPage .ranges:has(button:hover) button.chosen:not(:hover) { color: var(--vscode-foreground); background: none; }
 		.alertsPage #chart { display: block; width: 100%; height: 240px; }
 		.alertsPage #chart .series { fill: none; stroke: var(--vscode-textLink-foreground); stroke-width: 1.5; }
 		.alertsPage #chart .area { fill: var(--vscode-textLink-foreground); opacity: 0.08; }
@@ -830,10 +831,8 @@ function pageHtml(kind: PageKind): string {
 		.alertsPage .quote.error { color: var(--vscode-errorForeground); }
 		.alertsPage button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; padding: 4px 12px; cursor: pointer; font-size: 11px; opacity: 0.7; }
 		/* As the code buttons below a panel's Example Code: dimmed until pointed at, the blue one not */
-		.alertsPage button.action:not(:disabled):hover, .alertsPage button.action.current, .alertsPage button.action.primary { opacity: 1; }
-		.alertsPage button.action:hover { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
-		.alertsPage button.primary { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
-		.alertsPage button.primary:hover { background: var(--vscode-button-hoverBackground); }
+		.alertsPage button.action:not(:disabled):hover { opacity: 1; }
+		${ONE_BLUE_BUTTON_CSS.trim()}
 		.alertsPage button:disabled, .alertsPage button:disabled:hover { opacity: 0.5; cursor: default; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); }
 		.alertsPage .added { grid-column: 1 / -1; font-size: 12px; color: var(--vscode-descriptionForeground); line-height: 1.4; }
 		.alertsPage .link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; font-size: 12px; }
@@ -879,9 +878,9 @@ function pageHtml(kind: PageKind): string {
 
 	<div class="addLayout" id="layout"${kind === 'alerts' ? ' hidden' : ''}>
 	<div class="quoteInfo"${kind === 'add' ? ' hidden' : ''}>
-		<div class="row"${kind === 'alerts' ? ' hidden' : ''}>
+		<div class="row bar"${kind === 'alerts' ? ' hidden' : ''}>
 			<input type="text" id="quoteSymbol" spellcheck="false" autocomplete="off" aria-label="${text.symbol}">
-			<button class="action" id="quoteLookUp">${text.lookUp}</button>
+			<button class="action current" id="quoteLookUp">${text.lookUp}</button>
 		</div>
 		<div class="quote" id="quoteStatus"></div>
 		<div id="quoteDetails" hidden>
@@ -890,8 +889,8 @@ function pageHtml(kind: PageKind): string {
 			<div class="price"><span class="value" id="quoteValue"></span><span class="change" id="quoteChange"></span></div>
 			<div class="asOf" id="quoteAsOf"></div>
 			<div class="stats" id="quoteStats"></div>
-			<div class="quoteActions"${kind === 'alerts' ? ' hidden' : ''}>
-				<button class="action primary" id="addFor">${text.addFor}</button>
+			<div class="quoteActions bar"${kind === 'alerts' ? ' hidden' : ''}>
+				<button class="action current" id="addFor">${text.addFor}</button>
 				<button class="link" id="openYahoo" title="${text.openYahooHint}">${text.openYahoo}</button>
 				<button class="link" id="quoteYourAlerts">${text.yourAlerts}</button>
 			</div>
@@ -918,9 +917,9 @@ function pageHtml(kind: PageKind): string {
 		<div class="formGrid">
 		<label class="field c1 r1" for="symbol" id="symbolLabel">1. ${text.symbol}</label>
 		<div class="c2 r1">
-			<div class="row">
+			<div class="row bar">
 				<input type="text" id="symbol" spellcheck="false" autocomplete="off">
-				<button class="action" id="lookUp">${text.lookUp}</button>
+				<button class="action current" id="lookUp">${text.lookUp}</button>
 				<span class="quote" id="quote"></span>
 				<button class="link" id="setContact" hidden>${text.setContact}</button>
 				<button class="link" id="setFredKey" hidden>${text.setFredKey}</button>
@@ -955,9 +954,9 @@ function pageHtml(kind: PageKind): string {
 		</div>
 		<label class="field c1 r4" for="contains" id="containsLabel" hidden>3. ${text.contains}</label>
 		<div class="c2 r4" id="containsCell" hidden>
-			<div class="row">
+			<div class="row bar">
 				<input type="text" id="contains" spellcheck="false" autocomplete="off">
-				<button class="action" id="search">${text.search}</button>
+				<button class="action current" id="search">${text.search}</button>
 			</div>
 			<div class="hint">${text.containsHint}</div>
 		</div>
@@ -984,7 +983,7 @@ function pageHtml(kind: PageKind): string {
 			<div class="hint">${text.autoStudyHint}</div>
 		</div>
 		<span class="c3 r4"></span>
-		<div class="c4 r4"><button class="action primary" id="add" disabled>${text.add}</button></div>
+		<div class="c4 r4 bar"><button class="action current" id="add" disabled>${text.add}</button></div>
 		<div class="added" id="added" hidden><span id="addedText"></span> <button class="link" id="seeAlerts">${text.seeAlerts}</button></div>
 		</div>
 	</div>
@@ -1017,6 +1016,7 @@ function pageHtml(kind: PageKind): string {
 		pageScriptJs: `
 	const TEXT = ${JSON.stringify(text)};
 	const KIND = ${JSON.stringify(kind)};
+	${ONE_BLUE_BUTTON_JS.trim()}
 	const symbolElement = document.getElementById(KIND === 'add' ? 'symbol' : 'quoteSymbol');
 	const quoteElement = document.getElementById(KIND === 'add' ? 'quote' : 'quoteStatus');
 	// On the Alerts page, the alert or fired alert whose panel is open, if any

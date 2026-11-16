@@ -29,7 +29,7 @@ import { IPathService } from '../../../services/path/common/pathService.js';
 import { RUN_SKILL_COMMAND_ID } from '../../compose/browser/pollisAgents.js';
 import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
 import { JOURNALMETRICS_METADATA } from '../../model/browser/webviews/journalMetrics.data.js';
-import { buildWebviewHtml, IScaffoldSqlStep } from '../../model/browser/webviews/webviewScaffold.js';
+import { buildWebviewHtml, IScaffoldSqlStep, ONE_BLUE_BUTTON_CSS, ONE_BLUE_BUTTON_JS } from '../../model/browser/webviews/webviewScaffold.js';
 import { IJournalScoresService, MetricsSource } from '../../monitor/browser/journalScores.js';
 import { RSS_FEEDS_COMMAND_ID } from '../../monitor/browser/rssFeedsPage.js';
 import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
@@ -368,8 +368,8 @@ function pageHtml(): string {
 			<p class="access">${escape(source.access)}</p>
 			${source.download ? `<p class="download">${escape(source.download)}</p>` : ''}
 			${source.url ? `<div class="imports" id="imports-${source.id}"></div>
-			<div class="actions">
-				<button class="action" data-url="${source.url}">${text.downloadPage}</button>
+			<div class="actions bar">
+				<button class="action current" data-url="${source.url}">${text.downloadPage}</button>
 				<button class="action importFile">${text.importFile}</button>
 			</div>` : ''}
 		</div>`;
@@ -390,8 +390,8 @@ function pageHtml(): string {
 		.journalMetricsPage .link:hover, .subtitle .link:hover { color: var(--vscode-textLink-activeForeground); text-decoration: underline; }
 		.journalMetricsPage button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; padding: 4px 12px; cursor: pointer; white-space: nowrap; font-size: 11px; opacity: 0.7; }
 		/* As the code buttons below a panel's Example Code: dimmed until pointed at, the blue one not */
-		.journalMetricsPage button.action:not(:disabled):hover, .journalMetricsPage button.action.pressed { opacity: 1; }
-		.journalMetricsPage button.action:hover, .journalMetricsPage button.action:active, .journalMetricsPage button.action.pressed { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		.journalMetricsPage button.action:not(:disabled):hover { opacity: 1; }
+		${ONE_BLUE_BUTTON_CSS.trim()}
 		.journalMetricsPage .topActions { display: flex; gap: 8px; margin-bottom: 6px; }
 		.journalMetricsPage .help { font-size: 12px; color: var(--vscode-descriptionForeground); line-height: 1.45; margin: 6px 0 16px 0; }
 		.journalMetricsPage .menuPath { color: #e8a33d; }
@@ -423,8 +423,8 @@ function pageHtml(): string {
 `,
 		bodyHtml: `
 	<div class="journalMetricsPage">
-	<div class="topActions">
-		<button class="action pressed importFile">${text.importFile}</button>
+	<div class="topActions bar">
+		<button class="action current importFile">${text.importFile}</button>
 		<button class="action" id="askAgent">${text.askAgent}</button>
 	</div>
 	<p class="help">${text.askAgentHelp}</p>
@@ -448,13 +448,7 @@ function pageHtml(): string {
 
 	document.getElementById('showFeeds').addEventListener('click', () => vscode.postMessage({ command: 'showFeeds' }));
 	document.getElementById('askAgent').addEventListener('click', () => vscode.postMessage({ command: 'askAgent' }));
-	// The button pressed last stays blue; Import File... until one is pressed
-	for (const button of document.querySelectorAll('.topActions button.action')) {
-		button.addEventListener('click', () => {
-			document.querySelectorAll('.topActions button.action.pressed').forEach(other => other.classList.remove('pressed'));
-			button.classList.add('pressed');
-		});
-	}
+	${ONE_BLUE_BUTTON_JS.trim()}
 	for (const button of document.querySelectorAll('.importFile')) {
 		button.addEventListener('click', () => vscode.postMessage({ command: 'import' }));
 	}

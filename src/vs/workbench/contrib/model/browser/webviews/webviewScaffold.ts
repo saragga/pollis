@@ -116,6 +116,27 @@ export interface IScaffoldSqlStep {
 }
 
 /**
+ * One blue button in each row of buttons, a `.bar` of `button.action`: the leftmost at first (`current` in its HTML), then
+ * the last enabled one the pointer went onto, which keeps the blue when the pointer leaves. A page with such rows puts
+ * this CSS in its `extraCss` and `ONE_BLUE_BUTTON_JS` in its `pageScriptJs`.
+ */
+export const ONE_BLUE_BUTTON_CSS = `
+		.bar > button.action.current:not(:disabled), .bar > button.action:not(:disabled):hover { color: var(--vscode-button-foreground); background: var(--vscode-button-background); opacity: 1; }
+		.bar > button.action.current:not(:disabled):hover { background: var(--vscode-button-hoverBackground); }
+`;
+
+/** The script of `ONE_BLUE_BUTTON_CSS`: the blue moves to the enabled button the pointer goes onto, in rows added later too. */
+export const ONE_BLUE_BUTTON_JS = `
+	document.addEventListener('mouseover', event => {
+		const button = event.target.closest ? event.target.closest('.bar > button.action') : null;
+		if (button && !button.disabled && !button.classList.contains('current')) {
+			button.parentElement.querySelectorAll(':scope > button.action.current').forEach(other => other.classList.remove('current'));
+			button.classList.add('current');
+		}
+	});
+`;
+
+/**
  * What a page of the scaffold has. It has one of three styles: Classical, with Example Code; Time Arrow, when `steps`
  * is given, whose numbered panes take the place of Example Code; and Minimal, when `bodyHtml` is given, which takes the
  * place of Example Code as it is. Title, Powered by, Ask Pollis, Next Steps and Learn More are the same in all three; the

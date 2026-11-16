@@ -26,7 +26,7 @@ import { IPathService } from '../../../services/path/common/pathService.js';
 import { IStorageService } from '../../../../platform/storage/common/storage.js';
 import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
 import { EVENTSTUDIES_METADATA } from '../../model/browser/webviews/eventStudies.data.js';
-import { buildWebviewHtml } from '../../model/browser/webviews/webviewScaffold.js';
+import { buildWebviewHtml, ONE_BLUE_BUTTON_CSS, ONE_BLUE_BUTTON_JS } from '../../model/browser/webviews/webviewScaffold.js';
 import { ADD_ALERT_COMMAND_ID } from './alertsPage.js';
 import { OPEN_LINK_COMMAND_ID } from './openLink.js';
 import { describeCondition, describeSubject, IAlertsService } from './alertsService.js';
@@ -1213,13 +1213,10 @@ function pageHtml(): string {
 		.eventStudiesPage .choice { display: inline-flex; align-items: center; gap: 4px; margin-right: 16px; cursor: pointer; }
 		.eventStudiesPage button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; padding: 4px 12px; cursor: pointer; font-size: 11px; opacity: 0.7; }
 		/* As the code buttons below a panel's Example Code: dimmed until pointed at, the blue one not */
-		.eventStudiesPage button.action:not(:disabled):hover, .eventStudiesPage button.action.current, .eventStudiesPage button.action.primary { opacity: 1; }
-		.eventStudiesPage button.action:hover { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
-		.eventStudiesPage button.primary { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
-		.eventStudiesPage button.primary:hover { background: var(--vscode-button-hoverBackground); }
+		.eventStudiesPage button.action:not(:disabled):hover { opacity: 1; }
+		${ONE_BLUE_BUTTON_CSS.trim()}
 		.eventStudiesPage button:disabled { opacity: 0.5; cursor: default; }
 		.eventStudiesPage button.action:disabled:hover { color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); }
-		.eventStudiesPage button.primary:disabled:hover { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
 		.eventStudiesPage .link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; font-size: 12px; }
 		.eventStudiesPage .link:hover { text-decoration: underline; }
 		.eventStudiesPage .periods { display: grid; grid-template-columns: minmax(120px, 200px) max-content max-content max-content max-content; gap: 6px 12px; align-items: center; }
@@ -1241,8 +1238,9 @@ function pageHtml(): string {
 		.eventStudiesPage .chartCaption { font-size: 11px; color: var(--vscode-descriptionForeground); }
 		.eventStudiesPage .views { display: flex; gap: 4px; }
 		.eventStudiesPage .views button { font: inherit; font-size: 11px; color: var(--vscode-foreground); background: none; border: 1px solid transparent; border-radius: 2px; padding: 1px 6px; cursor: pointer; }
-		.eventStudiesPage .views button:hover { background: var(--vscode-toolbar-hoverBackground); }
-		.eventStudiesPage .views button.chosen { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		.eventStudiesPage .views button.chosen, .eventStudiesPage .views button:hover { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		/* The view pointed at is the blue one while the pointer is on it */
+		.eventStudiesPage .views:has(button:hover) button.chosen:not(:hover) { color: var(--vscode-foreground); background: none; }
 		.eventStudiesPage #chart { display: block; width: 100%; height: 280px; }
 		.eventStudiesPage #chart .grid { stroke: var(--vscode-widget-border); stroke-width: 1; }
 		.eventStudiesPage #chart .zero { stroke: var(--vscode-descriptionForeground); stroke-width: 1; }
@@ -1339,7 +1337,7 @@ function pageHtml(): string {
 			</div>
 			<span class="panelOnly" hidden>${text.data}</span>
 			<div class="panelOnly" hidden>
-				<div class="row baseline"><button class="action primary" id="chooseData">${text.chooseData}</button><span id="dataName" class="hint">${text.noData}</span></div>
+				<div class="row baseline bar"><button class="action current" id="chooseData">${text.chooseData}</button><span id="dataName" class="hint">${text.noData}</span></div>
 				<div class="tableScroll preview" id="dataPreview"></div>
 				<div class="hint">${text.dataHint}</div>
 			</div>
@@ -1427,7 +1425,7 @@ function pageHtml(): string {
 			<span class="marketOnly">${text.periods}</span>
 			<div class="marketOnly">
 				<div class="periods" id="periods"></div>
-				<div class="row" style="margin-top: 6px;"><button class="action primary" id="addPeriod">${text.addPeriod}</button></div>
+				<div class="row bar" style="margin-top: 6px;"><button class="action current" id="addPeriod">${text.addPeriod}</button></div>
 				<div class="hint">${text.periodsHint}</div>
 			</div>
 			<label for="benchmark" class="filingsOnly">${text.benchmark}</label>
@@ -1453,7 +1451,7 @@ function pageHtml(): string {
 				<div class="hint">${text.groupByHint}</div>
 			</div>
 			<span></span>
-			<div><button class="action primary" id="create" disabled>${text.create}</button></div>
+			<div class="bar"><button class="action current" id="create" disabled>${text.create}</button></div>
 		</div>
 	</div>
 
@@ -1490,6 +1488,7 @@ function pageHtml(): string {
 `,
 		pageScriptJs: `
 	const TEXT = ${JSON.stringify(text)};
+	${ONE_BLUE_BUTTON_JS.trim()}
 	const DEFAULT_PERIOD = ${JSON.stringify(DEFAULT_EVENT_PERIOD)};
 	const FOMC_PERIOD = ${JSON.stringify(FOMC_PERIOD)};
 	let state = { studies: [], alerts: [] };

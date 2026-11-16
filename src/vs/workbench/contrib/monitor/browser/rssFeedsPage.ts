@@ -25,7 +25,7 @@ import { findCatalogueFeed, JULIA_TOPIC, PUBMED_SEARCH, rssCatalogueTopics, yout
 import { DISPLAY_DAYS, EMAIL_ALERT_PREFIX, IRssFeed, IRssFeedsService } from './rssFeedsService.js';
 import { describeJournal, IJournalScoresService } from './journalScores.js';
 import { OPEN_LINK_COMMAND_ID } from './openLink.js';
-import { buildWebviewHtml, IScaffoldSqlStep } from '../../model/browser/webviews/webviewScaffold.js';
+import { buildWebviewHtml, IScaffoldSqlStep, ONE_BLUE_BUTTON_CSS, ONE_BLUE_BUTTON_JS } from '../../model/browser/webviews/webviewScaffold.js';
 import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
 import { RSSFEEDS_METADATA } from '../../model/browser/webviews/rssFeeds.data.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
@@ -523,8 +523,8 @@ function pageHtml(rows: number): string {
 		${rowsChoiceCss}
 		.rssFeedsPage button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; padding: 4px 12px; cursor: pointer; margin-bottom: 8px; font-size: 11px; opacity: 0.7; }
 		/* As the code buttons below a panel's Example Code: dimmed until pointed at, the blue one not */
-		.rssFeedsPage button.action:not(:disabled):hover, .rssFeedsPage button.action.current, .rssFeedsPage button.action.primary { opacity: 1; }
-		.rssFeedsPage button.action:hover, .rssFeedsPage button.action:active, .rssFeedsPage button.action.pressed { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+		.rssFeedsPage button.action:not(:disabled):hover { opacity: 1; }
+		${ONE_BLUE_BUTTON_CSS.trim()}
 		.rssFeedsPage .rssToolbar .actions { display: inline-grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 16px; }
 		.rssFeedsPage .panes { display: flex; gap: 16px; align-items: flex-start; }
 		.rssFeedsPage .feeds { flex: 0 0 50%; border-top: 1px solid var(--vscode-widget-border); }
@@ -609,8 +609,8 @@ function pageHtml(rows: number): string {
 	<div class="rssToolbar">
 		<label class="period">${text.period}<select id="days">${DISPLAY_DAYS.map(days => `<option value="${days}">${text.days[days]}</option>`).join('')}<option value="day">${text.onDay}</option></select></label><span class="dayPicker"><button id="day" class="dayButton" hidden></button><div class="calendar" id="calendar" hidden></div></span>
 		<label class="period">${text.journals}<select id="journals"></select></label><span class="infoWrap"><button class="infoButton" id="journalMetrics" aria-label="${text.journalMetrics}"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 1 1 0 14A7 7 0 0 1 8 1Zm0 1a6 6 0 1 0 0 12A6 6 0 0 0 8 2Zm0 5a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0v-4A.5.5 0 0 1 8 7Zm0-2.25a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5Z"/></svg></button><span class="infoHover" role="tooltip">${text.journalMetrics}</span></span>
-		<span class="actions">
-			<button class="action pressed" id="add">${text.addFeed}</button>
+		<span class="actions bar">
+			<button class="action current" id="add">${text.addFeed}</button>
 			<button class="action" id="refresh">${text.refresh}</button>
 			<button class="action" id="exportOpml" title="${text.exportOpmlTooltip}">${text.exportOpml}</button>
 		</span>
@@ -1097,13 +1097,7 @@ function pageHtml(rows: number): string {
 	calendarElement.addEventListener('click', event => event.stopPropagation());
 	document.addEventListener('click', closeCalendar);
 	document.addEventListener('keydown', event => { if (event.key === 'Escape') { closeCalendar(); } });
-	// The button pressed last stays blue; Add Feed until one is pressed
-	for (const button of document.querySelectorAll('.rssToolbar button.action')) {
-		button.addEventListener('click', () => {
-			document.querySelectorAll('.rssToolbar button.action.pressed').forEach(other => other.classList.remove('pressed'));
-			button.classList.add('pressed');
-		});
-	}
+	${ONE_BLUE_BUTTON_JS.trim()}
 	document.getElementById('add').addEventListener('click', () => vscode.postMessage({ command: 'add' }));
 	document.getElementById('journalMetrics').addEventListener('click', () => vscode.postMessage({ command: 'journalMetrics' }));
 	document.getElementById('refresh').addEventListener('click', () => vscode.postMessage({ command: 'refresh' }));

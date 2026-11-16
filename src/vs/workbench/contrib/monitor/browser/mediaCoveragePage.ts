@@ -17,7 +17,7 @@ import { IEditorService } from '../../../services/editor/common/editorService.js
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
 import { MEDIACOVERAGE_METADATA } from '../../model/browser/webviews/mediaCoverage.data.js';
-import { buildWebviewHtml } from '../../model/browser/webviews/webviewScaffold.js';
+import { buildWebviewHtml, ONE_BLUE_BUTTON_CSS, ONE_BLUE_BUTTON_JS } from '../../model/browser/webviews/webviewScaffold.js';
 import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
 import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
@@ -299,12 +299,9 @@ function pageHtml(): string {
 		.mediaCoveragePage input#words { width: 480px; max-width: 100%; }
 		.mediaCoveragePage button.action { font: inherit; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: none; box-shadow: inset 0 0 0 1px var(--vscode-button-background); border-radius: 2px; padding: 4px 12px; cursor: pointer; font-size: 11px; opacity: 0.7; }
 		/* As the code buttons below a panel's Example Code: dimmed until pointed at, the blue one not */
-		.mediaCoveragePage button.action:not(:disabled):hover, .mediaCoveragePage button.action.current, .mediaCoveragePage button.action.primary { opacity: 1; }
-		.mediaCoveragePage button.action:hover { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
-		.mediaCoveragePage button.primary { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
-		.mediaCoveragePage button.primary:hover { background: var(--vscode-button-hoverBackground); }
+		.mediaCoveragePage button.action:not(:disabled):hover { opacity: 1; }
+		${ONE_BLUE_BUTTON_CSS.trim()}
 		.mediaCoveragePage button:disabled, .mediaCoveragePage button:disabled:hover { opacity: 0.5; cursor: default; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); }
-		.mediaCoveragePage button.primary:disabled, .mediaCoveragePage button.primary:disabled:hover { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
 		.mediaCoveragePage select#days, .mediaCoveragePage select#marks { width: 240px; }
 		.mediaCoveragePage .link { color: var(--vscode-textLink-foreground); cursor: pointer; background: none; border: none; padding: 0; font: inherit; font-size: 12px; text-align: left; }
 		.mediaCoveragePage .link:hover { text-decoration: underline; }
@@ -367,7 +364,7 @@ function pageHtml(): string {
 				<div class="hint">${text.marksHint}</div>
 			</div>
 			<span></span>
-			<div><button class="action primary" id="search" disabled>${text.search}</button></div>
+			<div class="bar"><button class="action current" id="search" disabled>${text.search}</button></div>
 		</div>
 		<div class="status" id="status" hidden></div>
 	</div>
@@ -395,6 +392,7 @@ function pageHtml(): string {
 `,
 		pageScriptJs: `
 	const TEXT = ${JSON.stringify(text)};
+	${ONE_BLUE_BUTTON_JS.trim()}
 	const SVG = 'http://www.w3.org/2000/svg';
 	const wordsElement = document.getElementById('words');
 	const daysElement = document.getElementById('days');
