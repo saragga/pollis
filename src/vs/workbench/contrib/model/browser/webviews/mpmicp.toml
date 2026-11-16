@@ -1,4 +1,4 @@
-# Mixed-Integer Conic Programming Webview Configuration
+# Mixed-Integer Convex Programming Webview Configuration
 # This is the declarative source for the webview. The build script generates:
 # - src/vs/workbench/contrib/model/browser/webviews/mpmicp.data.ts
 # Run: npm run gulp compile-toml
@@ -9,7 +9,7 @@
 # integers fixed, returning cuts from its conic certificates.
 
 [meta]
-title = "Mixed-Integer Conic Programming"
+title = "Mixed-Integer Convex Programming"
 viewType = "pollis.mpmicp"
 defaultModel = "portfolio"
 

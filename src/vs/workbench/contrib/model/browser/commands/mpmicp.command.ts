@@ -10,7 +10,7 @@ import { getMpmicpHtml } from '../webviews/mpmicp.template.js';
 export const MPMICP_PANEL: IScaffoldPanel = {
 	id: 'mpmicp',
 	viewType: 'pollis.mpmicp',
-	title: 'Mixed-Integer Conic Programming',
+	title: 'Mixed-Integer Convex Programming',
 	data: MPMICP_METADATA.mpmicp,
 	html: getMpmicpHtml,
 };

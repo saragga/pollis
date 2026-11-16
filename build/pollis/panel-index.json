@@ -5745,13 +5745,13 @@
 		},
 		{
 			"id": "mpmicp",
-			"title": "Mixed-Integer Conic Programming",
+			"title": "Mixed-Integer Convex Programming",
 			"source": "pollis",
 			"commands": [
 				{
 					"id": "chiara.mp.micp",
 					"menuTitles": [
-						"Mixed-Integer Conic Programming"
+						"Mixed-Integer Convex Programming"
 					]
 				}
 			],

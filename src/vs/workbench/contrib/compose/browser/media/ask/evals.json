@@ -288,7 +288,7 @@
   "answer": "A Dierckx spline with s > 0, which smooths by least squares instead of fitting every point exactly."
  },
  {
-  "source": "Mixed-Integer Conic Programming, Mixed-Integer Conic Programming › Overview › Big-M and the Strength of a Formulation",
+  "source": "Mixed-Integer Convex Programming, Mixed-Integer Convex Programming › Overview › Big-M and the Strength of a Formulation",
   "context": "Linking a continuous variable to a binary with -M z <= x <= M z is simple but weak when M is large: the continuous relaxation can switch many binaries partly on. Choose M as small as the problem allows. The relaxation gap, the difference between the integer optimum and the continuous relaxation, measures how much the integrality matters and how hard the search is.",
   "question": "Why should the M of a big-M constraint be as small as possible?",
   "answer": "Because with a large M the formulation is weak: the continuous relaxation can switch many binaries partly on, which widens the relaxation gap and makes the search harder."

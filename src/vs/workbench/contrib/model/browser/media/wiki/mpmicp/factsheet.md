@@ -1,4 +1,4 @@
-# Mixed-Integer Conic Programming — Factsheet
+# Mixed-Integer Convex Programming — Factsheet
 
 A **mixed-integer conic program** minimises a linear objective over variables that must lie in convex cones, where some of the variables must also be integers. In Julia it is written in `JuMP.jl` and solved with `Pajarito.jl`, which combines a mixed-integer linear solver with a continuous conic solver.
 

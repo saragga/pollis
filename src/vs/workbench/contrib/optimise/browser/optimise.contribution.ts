@@ -220,7 +220,7 @@ const MOOSubmenuId = new MenuId('menubarMOOSubmenu');  // Multi-Objective Optimi
 // SUBMENU IDs — MATHEMATICAL PROGRAMMING
 // ============================================
 
-const CCPSubmenuId = new MenuId('menubarMPCCPSubmenu');  // Conic & Convex Programming
+const CCPSubmenuId = new MenuId('menubarMPCCPSubmenu');  // Convex Programming and Conic Forms
 const NLPSubmenuId = new MenuId('menubarMPNLPSubmenu');  // Nonlinear Programming
 const CVPSubmenuId = new MenuId('menubarMPCVPSubmenu');  // Complementarity & Variational Problems
 
@@ -331,7 +331,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarOptimiseMenu, {
 MenuRegistry.appendMenuItem(MenuId.MenubarOptimiseMenu, {
 	group: '6_optimisation',
 	submenu: CCPSubmenuId,
-	title: localize('mp.ccp', 'Convex, Conic and Semidefinite Programming'),
+	title: localize('mp.ccp', 'Convex Programming and Conic Forms'),
 	order: 4,
 });
 
@@ -618,7 +618,7 @@ MenuRegistry.appendMenuItem(RLSubmenuId, {
 });
 
 // ============================================
-// SUBMENU: CONIC & CONVEX PROGRAMMING
+// SUBMENU: CONVEX PROGRAMMING AND CONIC FORMS
 // ============================================
 
 MenuRegistry.appendMenuItem(CCPSubmenuId, {
@@ -641,7 +641,7 @@ MenuRegistry.appendMenuItem(CCPSubmenuId, {
 
 MenuRegistry.appendMenuItem(CCPSubmenuId, {
 	group: '1_ccp',
-	command: { id: 'chiara.mp.micp', title: localize('ccp.mic', 'Mixed-Integer Conic Programming') },
+	command: { id: 'chiara.mp.micp', title: localize('ccp.mic', 'Mixed-Integer Convex Programming') },
 	order: 4,
 });
 

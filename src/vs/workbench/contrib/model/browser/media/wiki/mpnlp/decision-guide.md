@@ -17,7 +17,7 @@
 |---|---|
 | On/off decisions or integer variables | **Mixed-Integer Nonlinear Programming** |
 | Nonconvex, and the best of all local optima is required | **Global Nonlinear Programming** |
-| Linear, quadratic or conic | Linear, Quadratic, or Convex, Conic and Semidefinite Programming |
+| Linear, quadratic or conic | Linear Programming, Quadratic Programming, or Convex Programming and Conic Forms |
 | Comparing interior-point, SQP and SLP methods on one problem | **Mathematical Programming Lab** |
 
 ## Decision Flow for a Nonlinear Problem

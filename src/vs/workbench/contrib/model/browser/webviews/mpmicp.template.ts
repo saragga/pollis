@@ -8,7 +8,7 @@ import { buildScaffoldHtml } from './scaffoldParts.js';
 
 export function getMpmicpHtml(): string {
 	return buildScaffoldHtml('mpmicp', MPMICP_METADATA.mpmicp, {
-		title: 'Mixed-Integer Conic Programming',
+		title: 'Mixed-Integer Convex Programming',
 		defaultModel: 'portfolio',
 		decisionFirstColumn: 'Problem',
 	});
