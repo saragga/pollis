@@ -10,7 +10,7 @@ import { getMpconeHtml } from '../webviews/mpcone.template.js';
 export const MPCONE_PANEL: IScaffoldPanel = {
 	id: 'mpcone',
 	viewType: 'pollis.mpcone',
-	title: 'Convex and Conic Programming',
+	title: 'Second-Order, Exponential and Power Cones',
 	data: MPCONE_METADATA.mpcone,
 	html: getMpconeHtml,
 };

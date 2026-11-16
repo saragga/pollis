@@ -2,11 +2,11 @@
 
 | Situation | Method |
 |---|---|
-| Convex quadratic or general convex objective, linear constraints | **Convex Programming** |
+| A convex objective not written with cones: norms, quadratics, log-sum-exp from atoms | General Convex Programming panel |
 | Norms, Euclidean distances, robust least squares, portfolio risk | **Second-Order Cone** |
 | Logs, exponentials, entropy, logistic losses, geometric programmes | **Exponential Cone** |
 | Powers, p-norms with 1 < p < 2, geometric means | **Power Cone** |
-| Matrix variables, eigenvalues | Semidefinite programming (not in the Convex and Conic Programming panel) |
+| Matrix variables, eigenvalues | Semidefinite Programming panel |
 | Non-convex objective | Local Nonlinear Programming panel |
 
 ## Decision Flow

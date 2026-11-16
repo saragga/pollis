@@ -13303,6 +13303,41 @@
 			"open_access": true
 		},
 		{
+			"key": "GBY2006a",
+			"type": "incollection",
+			"title": "Disciplined Convex Programming",
+			"authors": [
+				"Grant, Michael",
+				"Boyd, Stephen",
+				"Ye, Yinyu"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2006,
+			"booktitle": "Global Optimization: From Theory to Implementation",
+			"editors": [
+				"Liberti, Leo",
+				"Maculan, Nelson"
+			],
+			"publisher": "Springer",
+			"address": "Boston, MA",
+			"pages": "155-210",
+			"isbn": "9780387282602",
+			"doi": "10.1007/0-387-30528-9_7",
+			"openalex": "W2178935672",
+			"url": "https://doi.org/10.1007/0-387-30528-9_7",
+			"abstract": "A new methodology for constructing convex optimization models called disciplined convex programming is introduced. The methodology enforces a set of conventions upon the models constructed, in turn allowing much of the work required to analyze and solve the models to be automated.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"convex optimization"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-16",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "GC2024a",
 			"type": "misc",
 			"title": "Clarabel: An Interior-Point Solver for Conic Programs with Quadratic Objectives",
@@ -39210,6 +39245,42 @@
 			"open_access": false
 		},
 		{
+			"key": "UMZHD...2014a",
+			"type": "inproceedings",
+			"title": "Convex Optimization in Julia",
+			"authors": [
+				"Udell, Madeleine",
+				"Mohan, Karanveer",
+				"Zeng, David",
+				"Hong, Jenny",
+				"Diamond, Steven",
+				"Boyd, Stephen"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2014,
+			"booktitle": "2014 First Workshop for High Performance Technical Computing in Dynamic Languages",
+			"publisher": "IEEE",
+			"pages": "18-28",
+			"doi": "10.1109/HPTCDL.2014.5",
+			"openalex": "W2001728872",
+			"url": "https://doi.org/10.1109/HPTCDL.2014.5",
+			"abstract": "This paper describes Convex1, a convex optimization modeling framework in Julia. Convex translates problems from a user-friendly functional language into an abstract syntax tree describing the problem. This concise representation of the global structure of the problem allows Convex to infer whether the problem complies with the rules of disciplined convex programming (DCP), and to pass the problem to a suitable solver. These operations are carried out in Julia using multiple dispatch, which dramatically reduces the time required to verify DCP compliance and to parse a problem into conic form. Convex then automatically chooses an appropriate backend solver to solve the conic form problem.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"convex optimization",
+				"Julia",
+				"automatic differentiation",
+				"multiple dispatch",
+				"abstract syntax tree"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-16",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "UO1930a",
 			"type": "article",
 			"title": "On the Theory of the Brownian Motion",
@@ -46907,6 +46978,18 @@
 			"count": 205,
 			"source": "openalex",
 			"date": "2026-11-14"
+		},
+		{
+			"key": "GBY2006a",
+			"count": 858,
+			"source": "crossref",
+			"date": "2026-11-16"
+		},
+		{
+			"key": "GBY2006a",
+			"count": 1130,
+			"source": "openalex",
+			"date": "2026-11-16"
 		},
 		{
 			"key": "GCG2021a",
@@ -54901,6 +54984,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "UMZHD...2014a",
+			"count": 109,
+			"source": "crossref",
+			"date": "2026-11-16"
+		},
+		{
+			"key": "UMZHD...2014a",
+			"count": 188,
+			"source": "openalex",
+			"date": "2026-11-16"
+		},
+		{
 			"key": "UO1930a",
 			"count": 3943,
 			"source": "crossref",
@@ -58371,8 +58466,8 @@
 		},
 		{
 			"id": "mpcone",
-			"title": "Convex and Conic Programming",
-			"description": "Convex Programming · Second-Order Cone · Exponential Cone · Power Cone",
+			"title": "Second-Order, Exponential and Power Cones",
+			"description": "Second-Order Cone · Exponential Cone · Power Cone",
 			"commands": [
 				"chiara.mp.cone"
 			],
@@ -58386,6 +58481,23 @@
 				"BN2001a",
 				"NN1994a",
 				"LVBL1998a"
+			]
+		},
+		{
+			"id": "mpcvx",
+			"title": "General Convex Programming",
+			"description": "Convex.jl (DCP) · JuMP",
+			"commands": [
+				"chiara.mp.cvx"
+			],
+			"keys": [
+				"UMZHD...2014a",
+				"DHL2017a",
+				"GC2024a",
+				"GCG2021a",
+				"OCPB2016a",
+				"BV2004a",
+				"GBY2006a"
 			]
 		},
 		{

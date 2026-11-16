@@ -623,26 +623,32 @@ MenuRegistry.appendMenuItem(RLSubmenuId, {
 
 MenuRegistry.appendMenuItem(CCPSubmenuId, {
 	group: '1_ccp',
-	command: { id: 'chiara.mp.cone', title: localize('ccp.cone', 'Convex and Conic Programming') },
+	command: { id: 'chiara.mp.cvx', title: localize('ccp.cvx', 'General Convex Programming') },
 	order: 1,
 });
 
 MenuRegistry.appendMenuItem(CCPSubmenuId, {
 	group: '1_ccp',
-	command: { id: 'chiara.mp.sdp', title: localize('ccp.sdp', 'Semidefinite Programming') },
+	command: { id: 'chiara.mp.cone', title: localize('ccp.cone', 'Second-Order, Exponential and Power Cones') },
 	order: 2,
 });
 
 MenuRegistry.appendMenuItem(CCPSubmenuId, {
 	group: '1_ccp',
-	command: { id: 'chiara.mp.sos', title: localize('ccp.sao', 'Semi-Algebraic Optimisation') },
+	command: { id: 'chiara.mp.sdp', title: localize('ccp.sdp', 'Semidefinite Programming') },
 	order: 3,
 });
 
 MenuRegistry.appendMenuItem(CCPSubmenuId, {
 	group: '1_ccp',
-	command: { id: 'chiara.mp.micp', title: localize('ccp.mic', 'Mixed-Integer Convex Programming') },
+	command: { id: 'chiara.mp.sos', title: localize('ccp.sao', 'Semi-Algebraic Optimisation') },
 	order: 4,
+});
+
+MenuRegistry.appendMenuItem(CCPSubmenuId, {
+	group: '1_ccp',
+	command: { id: 'chiara.mp.micp', title: localize('ccp.mic', 'Mixed-Integer Convex Programming') },
+	order: 5,
 });
 
 // ============================================

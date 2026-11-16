@@ -25,4 +25,4 @@ The second-order cone is **self-dual**: its dual cone is itself. The dual of eac
 The sweep varies the radius from 0.05 to 3: the residual norm falls as the radius grows and flattens at the OLS fit.
 
 ## See Also
-- [Convex Programming](convex.md) · [Power Cone](powcone.md) · [Duality](duality.md)
+- [Exponential Cone](expcone.md) · [Power Cone](powcone.md) · [Duality](duality.md)

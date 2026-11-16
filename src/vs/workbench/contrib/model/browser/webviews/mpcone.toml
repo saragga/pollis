@@ -1,12 +1,12 @@
-# Convex and Conic Programming Webview Configuration
+# Second-Order, Exponential and Power Cones Webview Configuration
 # This is the declarative source for the webview. The build script generates:
 # - src/vs/workbench/contrib/model/browser/webviews/mpcone.data.ts
 # Run: npm run gulp compile-toml
 
 [meta]
-title = "Convex and Conic Programming"
+title = "Second-Order, Exponential and Power Cones"
 viewType = "pollis.mpcone"
-defaultModel = "convex"
+defaultModel = "socp"
 
 [[packages]]
 name = "JuMP.jl"
@@ -33,12 +33,6 @@ packages = ["JuMP.jl", "Clarabel.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
-
-[[notebookSections.notebooks]]
-name = "Basic Convex"
-file = "mpcone/tutorial-01-basic-convex.ipynb"
-bundled = true
-description = "Formulate and solve a smooth convex programme with Clarabel"
 
 [[notebookSections.notebooks]]
 name = "SOCP"
@@ -91,11 +85,6 @@ bundled = true
 [[wikis]]
 separator = true
 label = "Methods"
-
-[[wikis]]
-name = "Convex Programming"
-file = "mpcone/convex.md"
-bundled = true
 
 [[wikis]]
 name = "SOCP"
@@ -166,10 +155,6 @@ key = "NN1994a"
 key = "LVBL1998a"
 
 [[models]]
-id = "convex"
-label = "Convex Programming"
-
-[[models]]
 id = "socp"
 label = "Second-Order Cone"
 
@@ -183,7 +168,7 @@ label = "Power Cone"
 
 [[bullets]]
 text = "Convex Problems as Cones"
-detail = "JuMP rewrites convex objectives and constraints as cone constraints, which interior-point solvers handle reliably"
+detail = "Each tab states a convex problem with cone constraints, which interior-point solvers handle reliably"
 
 [[bullets]]
 text = "Three Cones, Many Models"
@@ -196,11 +181,6 @@ detail = "Duality gives a bound and dual variables, so a solution comes with a c
 [[bullets]]
 text = "Several Solvers"
 detail = "Clarabel, COSMO, SCS and ECOS compared on the same model"
-
-[[decisionRows]]
-task = "Convex"
-context = "Convex objective over linear or convex constraints"
-purpose = "JuMP bridges the expression to cones and an interior-point solver certifies the optimum"
 
 [[decisionRows]]
 task = "Second-Order Cone"
@@ -222,21 +202,7 @@ id = "n"
 label = "n"
 tooltip = "Number of decision variables x[1], ..., x[n]."
 default = "5"
-models = ["convex", "expcone"]
-
-[[inputs]]
-id = "obj"
-label = "Objective (minimised)"
-tooltip = "Convex expression in the vector x, for example sum((x .- 1) .^ 2) or sum(x .^ 2) + x[1]. JuMP reformulates quadratic terms as cones automatically."
-default = "sum((x .- (1:n) ./ n) .^ 2)"
-models = ["convex"]
-
-[[inputs]]
-id = "cons"
-label = "Constraint"
-tooltip = "One scalar linear constraint in x, for example sum(x) == 1. The Parametric Sweep varies its right-hand side. The variables are also non-negative."
-default = "sum(x) == 1"
-models = ["convex"]
+models = ["expcone"]
 
 [[inputs]]
 id = "A"
@@ -292,28 +258,6 @@ label = "COSMO"
 [[inputs.options]]
 value = "SCS"
 label = "SCS"
-
-[[codeBranches]]
-model = "convex"
-code = '''
-using JuMP, {{solver}}, LinearAlgebra, Random
-
-n = {{n}}  # number of decision variables
-
-model = Model({{solver}}.Optimizer)
-set_silent(model)
-@variable(model, x[1:n] >= 0)
-@objective(model, Min, {{obj}})
-con = @constraint(model, {{cons}})
-
-# re-solve with a new right-hand side for the constraint (used by the Parametric Sweep)
-resolve(v) = (set_normalized_rhs(con, v); optimize!(model); objective_value(model))
-grid = normalized_rhs(con) .* range(0.5, 2, length=15)
-param_name = "constraint right-hand side"
-
-optimize!(model)
-(status = termination_status(model), objective = objective_value(model), x = value.(x))
-'''
 
 [[codeBranches]]
 model = "socp"
@@ -423,9 +367,9 @@ code = '''
 using Plots
 
 {{?model=socp|powcone}} histogram(A * value.(x) - b, bins=20, xlabel="residual", ylabel="count", legend=false)
-{{?model=convex|expcone}} cons = [c for c in all_constraints(model; include_variable_in_set_constraints=true)
-{{?model=convex|expcone}}         if constraint_object(c).set isa Union{MOI.LessThan, MOI.GreaterThan, MOI.EqualTo}]
-{{?model=convex|expcone}} bar([abs(value(c) - MOI.constant(constraint_object(c).set)) for c in cons], xlabel="constraint", ylabel="slack", legend=false)
+{{?model=expcone}} cons = [c for c in all_constraints(model; include_variable_in_set_constraints=true)
+{{?model=expcone}}         if constraint_object(c).set isa Union{MOI.LessThan, MOI.GreaterThan, MOI.EqualTo}]
+{{?model=expcone}} bar([abs(value(c) - MOI.constant(constraint_object(c).set)) for c in cons], xlabel="constraint", ylabel="slack", legend=false)
 '''
 
 [[actionGroups]]
@@ -508,11 +452,8 @@ res
 [[actionGroups.actions]]
 id = "baseline"
 label = "vs Baseline"
-desc = "Convex: the minimiser without the constraint. SOCP: ordinary least squares. Exponential cone: the uniform distribution. Power cone: least squares (p = 2) and least absolute deviations (p near 1)"
+desc = "SOCP: ordinary least squares. Exponential cone: the uniform distribution. Power cone: least squares (p = 2) and least absolute deviations (p near 1)"
 code = '''
-{{?model=convex}} v0 = objective_value(model)
-{{?model=convex}} delete(model, con); optimize!(model)
-{{?model=convex}} (constrained = v0, unconstrained = objective_value(model))  # rebuild the model to restore the constraint
 {{?model=socp}} xls = A \ b
 {{?model=socp}} (constrained = objective_value(model), ols = norm(A * xls - b), ols_coef_norm = norm(xls), radius = value(r))
 {{?model=expcone}} (entropy = objective_value(model), uniform_entropy = log(n), uniform_mean = (n + 1) / 2)
@@ -529,7 +470,7 @@ label = "Interpret"
 [[actionGroups.actions]]
 id = "dual-variables"
 label = "Dual Variables"
-desc = "Shadow prices of the scalar constraints: the change in the optimal value per unit change in each right-hand side"
+desc = "Shadow prices of the scalar constraints: the change in the optimal value per unit relaxation of each constraint"
 code = '''
 cons = [c for c in all_constraints(model; include_variable_in_set_constraints=false)
         if constraint_object(c).set isa Union{MOI.LessThan, MOI.GreaterThan, MOI.EqualTo}]

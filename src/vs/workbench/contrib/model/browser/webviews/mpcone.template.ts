@@ -8,8 +8,8 @@ import { buildScaffoldHtml } from './scaffoldParts.js';
 
 export function getMpconeHtml(): string {
 	return buildScaffoldHtml('mpcone', MPCONE_METADATA.mpcone, {
-		title: 'Conic Programming',
-		defaultModel: 'convex',
+		title: 'Second-Order, Exponential and Power Cones',
+		defaultModel: 'socp',
 		decisionFirstColumn: 'Problem',
 	});
 }

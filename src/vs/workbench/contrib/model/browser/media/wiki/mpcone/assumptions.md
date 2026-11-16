@@ -1,7 +1,7 @@
 # Assumptions
 
 ## Convexity
-The objective must be **convex** (when minimised) and the feasible set convex. That is what makes a local optimum global and lets the dual certify it. JuMP checks convexity only structurally: a quadratic objective is accepted and bridged to a cone only if its matrix is positive semidefinite, and the solver reports an error or infeasibility otherwise.
+The objective must be **convex** (when minimised) and the feasible set convex. That is what makes a local optimum global and lets the dual certify it. JuMP does not check convexity: it passes a quadratic objective to the solver as written, and the solvers differ when its matrix is not positive semidefinite. COSMO stops with an error, SCS reports an invalid model, and Clarabel can report OPTIMAL for a point that carries no guarantee of being a global optimum.
 
 ## Representable by Cones
 The problem must be built from expressions the cones can represent: affine functions, quadratics, norms (second-order cone), exp, log and entropy (exponential cone), powers and geometric means (power cone). An arbitrary convex function written in Julia, such as one with branches, cannot be bridged.

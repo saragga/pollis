@@ -1,0 +1,430 @@
+# General Convex Programming Webview Configuration
+# This is the declarative source for the webview. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/mpcvx.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "General Convex Programming"
+viewType = "pollis.mpcvx"
+defaultModel = "dcp"
+decisionFirstColumn = "Tab"
+
+[[packages]]
+name = "Convex.jl"
+github = "https://github.com/jump-dev/Convex.jl"
+
+[[packages]]
+name = "JuMP.jl"
+github = "https://github.com/jump-dev/JuMP.jl"
+
+[[packages]]
+name = "Clarabel.jl"
+github = "https://github.com/oxfordcontrol/Clarabel.jl"
+
+[[packages]]
+name = "COSMO.jl"
+github = "https://github.com/oxfordcontrol/COSMO.jl"
+
+[[packages]]
+name = "SCS.jl"
+github = "https://github.com/jump-dev/SCS.jl"
+
+[requires]
+packages = ["Plots.jl"]
+
+[[wikis]]
+name = "Factsheet"
+file = "mpcvx/factsheet.md"
+bundled = true
+description = "The problem, the two tabs, the solvers and what each Next Step computes"
+
+[[wikis]]
+name = "Overview"
+file = "mpcvx/overview.md"
+bundled = true
+description = "What the panel solves, its two tabs and its workflow"
+
+[[wikis]]
+name = "Decision Guide"
+file = "mpcvx/decision-guide.md"
+bundled = true
+description = "Convex.jl or JuMP, and when another panel is the better place"
+
+[[wikis]]
+separator = true
+label = "Methods"
+
+[[wikis]]
+name = "Disciplined Convex Programming"
+file = "mpcvx/dcp.md"
+bundled = true
+description = "Atoms, the curvature rules, why a convex problem can fail them, and the reduction to cones"
+
+[[wikis]]
+name = "Convex Programming"
+file = "mpcvx/convex.md"
+bundled = true
+description = "Why convexity matters, how the problem reaches the solver, and the dual value of the constraint"
+
+[[references]]
+separator = true
+label = "Software"
+
+[[references]]
+key = "UMZHD...2014a"
+
+[[references]]
+key = "DHL2017a"
+
+[[references]]
+key = "GC2024a"
+
+[[references]]
+key = "GCG2021a"
+
+[[references]]
+key = "OCPB2016a"
+
+[[references]]
+separator = true
+label = "Textbooks"
+
+[[references]]
+key = "BV2004a"
+
+[[references]]
+separator = true
+label = "Original Papers"
+
+[[references]]
+key = "GBY2006a"
+
+[[models]]
+id = "dcp"
+label = "Convex.jl (DCP)"
+
+[[models]]
+id = "jump"
+label = "JuMP"
+
+[[bullets]]
+text = "Disciplined Convex Programming"
+detail = "Convex.jl builds the problem from atoms of known curvature, proves it convex by the DCP rules, and reduces it to cones"
+
+[[bullets]]
+text = "The Same Problem in JuMP"
+detail = "The JuMP tab states the same problem in JuMP, which passes it to the solver in a form the solver accepts"
+
+[[bullets]]
+text = "A Global Optimum"
+detail = "For a convex problem a local minimum is global, and the dual value of the constraint is the slope of the optimal value in its right-hand side"
+
+[[bullets]]
+text = "Three Solvers"
+detail = "Clarabel, COSMO and SCS compared on the same problem"
+
+[[decisionRows]]
+task = "Convex.jl (DCP)"
+context = "Convexity to be proven"
+purpose = "Convex.jl checks the problem against the DCP rules before solving, and builds its conic form"
+
+[[decisionRows]]
+task = "JuMP"
+context = "Large or varied models"
+purpose = "JuMP passes the problem to the solver, bridging it to cones where the solver needs them"
+
+[[inputs]]
+id = "n"
+label = "n"
+tooltip = "Number of decision variables x[1], ..., x[n]. The variables are non-negative."
+default = "5"
+
+[[inputs]]
+id = "dcpobj"
+label = "Objective (minimised)"
+tooltip = "A convex expression in the Convex.jl variable x, built from its atoms: for example sumsquares(x - (1:n) ./ n), norm(x - (1:n) ./ n, 1) or logsumexp(x). Convex.jl checks it against the DCP rules before solving."
+default = "sumsquares(x - (1:n) ./ n)"
+models = ["dcp"]
+
+[[inputs]]
+id = "obj"
+label = "Objective (minimised)"
+tooltip = "A convex linear or quadratic expression in the JuMP variables x, for example sum((x .- (1:n) ./ n) .^ 2). JuMP passes other functions, such as abs or a norm, as a nonlinear function, which Clarabel, COSMO and SCS do not accept; the Convex.jl tab reduces them to cones."
+default = "sum((x .- (1:n) ./ n) .^ 2)"
+models = ["jump"]
+
+[[inputs]]
+id = "lhs"
+label = "Constraint"
+tooltip = "The left-hand side of one constraint, linear in x and with no constant term, for example sum(x) or x[1] + 2x[2]."
+default = "sum(x)"
+newRow = true
+
+[[inputs]]
+id = "rel"
+label = "Relation"
+tooltip = "Equal to, at most or at least the right-hand side."
+kind = "select"
+default = "=="
+
+[[inputs.options]]
+value = "=="
+label = "="
+
+[[inputs.options]]
+value = "<="
+label = "≤"
+
+[[inputs.options]]
+value = ">="
+label = "≥"
+
+[[inputs]]
+id = "rhs"
+label = "Right-Hand Side"
+tooltip = "The constraint's right-hand side. The Parametric Sweep varies it from half to twice this value."
+default = "1"
+
+[[inputs]]
+id = "solver"
+label = "Solver"
+tooltip = "Clarabel: interior point, accurate. COSMO: ADMM, scales to large sparse problems. SCS: first-order splitting, fast but less accurate."
+kind = "select"
+default = "Clarabel"
+newRow = true
+
+[[inputs.options]]
+value = "Clarabel"
+label = "Clarabel"
+
+[[inputs.options]]
+value = "COSMO"
+label = "COSMO"
+
+[[inputs.options]]
+value = "SCS"
+label = "SCS"
+
+[[codeBranches]]
+model = "dcp"
+code = '''
+using Convex, {{solver}}
+
+n = {{n}}  # number of decision variables
+
+x = Variable(n)
+rhs = Variable()  # the right-hand side, fixed so that it can be changed later
+fix!(rhs, {{rhs}})
+con = {{lhs}} {{rel}} rhs
+problem = minimize({{dcpobj}}, [x >= 0, con])  # checked against the DCP rules, then reduced to cones
+solve!(problem, {{solver}}.Optimizer; silent = true)
+
+# solve again with another solver or right-hand side (used by Next Steps)
+solve_with(opt) = (solve!(problem, opt; silent = true); (status = problem.status, objective = problem.optval))
+resolve(v) = (fix!(rhs, v); solve!(problem, {{solver}}.Optimizer; silent = true); problem.optval)
+grid = {{rhs}} .* range(0.5, 2, length=15)
+
+(status = problem.status, objective = problem.optval, dcp = vexity(problem), x = evaluate(x))
+'''
+
+[[codeBranches]]
+model = "jump"
+code = '''
+using JuMP, {{solver}}
+
+n = {{n}}  # number of decision variables
+
+model = Model({{solver}}.Optimizer)
+set_silent(model)
+@variable(model, x[1:n] >= 0)
+@objective(model, Min, {{obj}})
+con = @constraint(model, {{lhs}} {{rel}} {{rhs}})
+optimize!(model)
+
+# solve again with another solver or right-hand side (used by Next Steps)
+solve_with(opt) = (set_optimizer(model, opt); set_silent(model); optimize!(model); (status = termination_status(model), objective = objective_value(model)))
+resolve(v) = (set_normalized_rhs(con, v); optimize!(model); objective_value(model))
+grid = {{rhs}} .* range(0.5, 2, length=15)
+
+(status = termination_status(model), objective = objective_value(model), x = value.(x))
+'''
+
+[[actionGroups]]
+id = "visualise"
+label = "Visualise"
+
+[[actionGroups.actions]]
+id = "solution-profile"
+label = "Solution Profile"
+desc = "The optimal x, coordinate by coordinate: the zero coordinates are those whose bound x >= 0 is active"
+code = '''
+using Plots
+
+{{?model=dcp}} bar(evaluate(x), xlabel="i", ylabel="x[i]", legend=false)
+{{?model=jump}} bar(value.(x), xlabel="i", ylabel="x[i]", legend=false)
+'''
+
+[[actionGroups]]
+id = "diagnose"
+label = "Diagnose"
+
+[[actionGroups.actions]]
+id = "feasibility"
+label = "Status and Feasibility"
+desc = "The status, and whether the solution meets the constraint and the bounds"
+code = '''
+{{?model=dcp}} (status = problem.status, dcp = vexity(problem),
+{{?model=dcp}}  constraint = (value = evaluate({{lhs}}), relation = "{{rel}}", right_hand_side = {{rhs}}), smallest_x = minimum(evaluate(x)))
+{{?model=jump}} (termination = termination_status(model), primal = primal_status(model), dual = dual_status(model),
+{{?model=jump}}  violated = primal_feasibility_report(model; atol=1e-6))  # an empty Dict: feasible
+'''
+
+[[actionGroups.actions]]
+id = "convexity-check"
+label = "Convexity Check"
+desc = "The curvature Convex.jl proves for the problem, the objective and each constraint, and the sign of the objective"
+models = ["dcp"]
+code = '''
+(problem = vexity(problem), objective = vexity(problem.objective), objective_sign = sign(problem.objective),
+ constraints = vexity.(problem.constraints))
+'''
+
+[[actionGroups.actions]]
+id = "broken-rule"
+label = "Broken Rule"
+desc = "The Euclidean norm written two ways: norm(x - t, 2) passes the DCP rules, sqrt(sumsquares(x - t)) does not, and Convex.jl refuses to solve it"
+models = ["dcp"]
+code = '''
+t = (1:n) ./ n
+rules = (norm = vexity(norm(x - t, 2)), sqrt_of_sumsquares = vexity(sqrt(sumsquares(x - t))))  # the same function
+broken = minimize(sqrt(sumsquares(x - t)), [x >= 0])
+message = try solve!(broken, {{solver}}.Optimizer; silent = true); "solved" catch err; sprint(showerror, err) end
+(rules = rules, solve = first(message, 160))
+'''
+
+[[actionGroups]]
+id = "predict"
+label = "Predict"
+
+[[actionGroups.actions]]
+id = "parametric"
+label = "Parametric Sweep"
+desc = "The optimal value as the constraint's right-hand side goes from half to twice its value"
+code = '''
+using Plots
+
+vals = resolve.(grid)
+resolve({{rhs}})  # back to the model's own right-hand side
+plot(grid, vals, marker=:circle, xlabel="right-hand side", ylabel="optimal value", legend=false)
+'''
+
+[[actionGroups.actions]]
+id = "dual-check"
+label = "Dual Value Check"
+desc = "The dual value of the constraint beside the change in the optimal value when its right-hand side grows by 0.001"
+code = '''
+h = 1e-3
+v0 = resolve({{rhs}})
+slope = (resolve({{rhs}} + h) - v0) / h  # change in the optimal value per unit of right-hand side
+resolve({{rhs}})
+{{?model=dcp}} (dual = con.dual, finite_difference = slope)
+{{?model=jump}} (dual = dual(con), finite_difference = slope)
+'''
+
+[[actionGroups]]
+id = "compare"
+label = "Compare"
+
+[[actionGroups.actions]]
+id = "solver-compare"
+label = "Solver Comparison"
+desc = "Clarabel, COSMO and SCS on the same problem: status, optimal value and seconds (each solved twice, the second timed)"
+code = '''
+using Clarabel, COSMO, SCS
+
+res = map(["Clarabel" => Clarabel.Optimizer, "COSMO" => COSMO.Optimizer, "SCS" => SCS.Optimizer]) do (name, opt)
+    r = solve_with(opt)
+    seconds = @elapsed solve_with(opt)
+    (solver = name, r..., seconds = seconds)
+end
+solve_with({{solver}}.Optimizer)  # back on the chosen solver for later actions
+res
+'''
+
+[[actionGroups.actions]]
+id = "packages"
+label = "Convex.jl and JuMP"
+desc = "The problem solved with the other package, from the objective written on the other tab (keep the two objectives the same function): both optimal values and the largest difference in x"
+code = '''
+{{?model=dcp}} using JuMP
+{{?model=dcp}} jm = Model({{solver}}.Optimizer)
+{{?model=dcp}} set_silent(jm)
+{{?model=dcp}} jx = @variable(jm, [1:n], lower_bound = 0)
+{{?model=dcp}} let x = jx  # the JuMP tab's objective and the constraint, written in x
+{{?model=dcp}}     @objective(jm, Min, {{obj}})
+{{?model=dcp}}     @constraint(jm, {{lhs}} {{rel}} {{rhs}})
+{{?model=dcp}} end
+{{?model=dcp}} optimize!(jm)
+{{?model=dcp}} (convex_jl = problem.optval, jump = objective_value(jm), largest_difference_in_x = maximum(abs.(evaluate(x) .- value.(jx))))
+{{?model=jump}} using Convex
+{{?model=jump}} cx = Convex.Variable(n)
+{{?model=jump}} cp = let x = cx  # the Convex.jl tab's objective and the constraint, written in x
+{{?model=jump}}     minimize({{dcpobj}}, [x >= 0, {{lhs}} {{rel}} {{rhs}}])
+{{?model=jump}} end
+{{?model=jump}} solve!(cp, {{solver}}.Optimizer; silent = true)
+{{?model=jump}} (jump = objective_value(model), convex_jl = cp.optval, largest_difference_in_x = maximum(abs.(value.(x) .- evaluate(cx))))
+'''
+
+[[actionGroups]]
+id = "interpret"
+label = "Interpret"
+
+[[actionGroups.actions]]
+id = "expression-graph"
+label = "Expression Graph"
+desc = "The problem as Convex.jl sees it: its size, whether it is DCP, and the curvature and sign of every node of its expressions"
+models = ["dcp"]
+code = '''
+problem
+'''
+
+[[actionGroups.actions]]
+id = "conic-form"
+label = "Conic Form"
+desc = "What the solver receives: the cones of the conic form Convex.jl builds, or which parts of the model JuMP passes as written and which it bridges"
+code = '''
+{{?model=dcp}} file = tempname() * ".cbf"
+{{?model=dcp}} Convex.write_to_file(problem, file)  # the conic form Convex.jl passes to the solver
+{{?model=dcp}} conic = Convex.MOI.FileFormats.Model(filename = file)
+{{?model=dcp}} Convex.MOI.read_from_file(conic, file)
+{{?model=dcp}} [(cone = nameof(S), constraints = Convex.MOI.get(conic, Convex.MOI.NumberOfConstraints{F,S}()))
+{{?model=dcp}}  for (F, S) in Convex.MOI.get(conic, Convex.MOI.ListOfConstraintTypesPresent())]
+{{?model=jump}} print_active_bridges(model)  # what the solver supports as written, and what JuMP bridges to a form it supports
+'''
+
+# ── FAQ: shown in Learn More, and the Panel FAQ test set of Evaluate Answering Models ──
+
+[[faq]]
+question = "Why does Convex.jl refuse a problem that is convex?"
+wiki = "Disciplined Convex Programming"
+answer = """
+The DCP rules are sufficient for convexity, not necessary. Convex.jl proves an expression convex only from the curvature, sign and monotonicity of its atoms, so a convex function written with the wrong atoms has no known curvature, and solve! stops with a DCPViolationError.
+
+The Broken Rule step shows it with the Euclidean norm: norm(x - t, 2) passes, while sqrt(sumsquares(x - t)), the same function, does not, because a concave function of a convex expression has no curvature under the rules. Rewriting with an atom whose curvature is known fixes it.
+"""
+
+[[faq]]
+question = "Should I use the Convex.jl tab or the JuMP tab?"
+wiki = "Decision Guide"
+answer = """
+Convex.jl when you want the convexity of the problem proven before it is solved: it checks the DCP rules, shows the curvature of every expression in the Expression Graph, and builds the conic form itself. JuMP for large or varied models, many constraint types, or solvers other than conic ones.
+
+Convex.jl and JuMP, in Compare, solves the problem of one tab with the other package and reports both optimal values.
+"""
+
+[[faq]]
+question = "What does the Dual Value Check compare?"
+wiki = "Convex Programming"
+answer = """
+The dual value of the constraint, reported by the solver, and the change in the optimal value when the constraint's right-hand side grows by 0.001, measured by solving again. For a convex problem the dual value is the slope of the optimal value in the right-hand side, so the two agree when the solve is accurate and the slope does not jump at that point.
+"""

@@ -1877,7 +1877,7 @@
   publisher = {Cambridge University Press},
   year    = {2004},
   url     = {https://web.stanford.edu/~boyd/cvxbook/},
-  pollis-used-in = {copt, mpcone, mpsdp, optim, qp}
+  pollis-used-in = {copt, mpcone, mpcvx, mpsdp, optim, qp}
 }
 
 @article{BV2020a,
@@ -3762,7 +3762,7 @@
   pages   = {295-320},
   year    = {2017},
   doi     = {10.1137/15M1020575},
-  pollis-used-in = {ccdr, copt, lp, madp, mpcone, mpec, mpgnlp, mplab, mpmicp, mpminlp, mpnlp, mpsdp, mpsos, qp, ropt, spro}
+  pollis-used-in = {ccdr, copt, lp, madp, mpcone, mpcvx, mpec, mpgnlp, mplab, mpmicp, mpminlp, mpnlp, mpsdp, mpsos, qp, ropt, spro}
 }
 
 @article{DHM1990a,
@@ -5359,6 +5359,21 @@
   pollis-used-in = {forecastingCompetitions}
 }
 
+@incollection{GBY2006a,
+  author  = {Grant, Michael and Boyd, Stephen and Ye, Yinyu},
+  editor  = {Liberti, Leo and Maculan, Nelson},
+  title   = {Disciplined Convex Programming},
+  booktitle = {Global Optimization: From Theory to Implementation},
+  publisher = {Springer},
+  address = {Boston, MA},
+  pages   = {155-210},
+  year    = {2006},
+  isbn    = {9780387282602},
+  doi     = {10.1007/0-387-30528-9_7},
+  url     = {https://doi.org/10.1007/0-387-30528-9_7},
+  pollis-used-in = {mpcvx}
+}
+
 @misc{GC2024a,
   author  = {Goulart, Paul J. and Chen, Yuwen},
   title   = {Clarabel: An Interior-Point Solver for Conic Programs with Quadratic Objectives},
@@ -5367,7 +5382,7 @@
   eprint  = {2405.12762},
   url     = {https://arxiv.org/abs/2405.12762},
   archiveprefix = {arXiv},
-  pollis-used-in = {ccdr, mpcone, mpmicp, mpsdp, mpsos, qp, ropt}
+  pollis-used-in = {ccdr, mpcone, mpcvx, mpmicp, mpsdp, mpsos, qp, ropt}
 }
 
 @inproceedings{GCB2014a,
@@ -5390,7 +5405,7 @@
   pages   = {779-810},
   year    = {2021},
   doi     = {10.1007/s10957-021-01896-x},
-  pollis-used-in = {mpcone, mpsdp, mpsos}
+  pollis-used-in = {mpcone, mpcvx, mpsdp, mpsos}
 }
 
 @article{GCP2017a,
@@ -12001,7 +12016,7 @@
   pages   = {1042-1068},
   year    = {2016},
   doi     = {10.1007/s10957-016-0892-3},
-  pollis-used-in = {mpcone, mpsdp, mpsos}
+  pollis-used-in = {mpcone, mpcvx, mpsdp, mpsos}
 }
 
 @article{OCSN2007a,
@@ -15959,6 +15974,18 @@
   year    = {2002},
   doi     = {10.1007/s002080010018},
   pollis-used-in = {cds}
+}
+
+@inproceedings{UMZHD...2014a,
+  author  = {Udell, Madeleine and Mohan, Karanveer and Zeng, David and Hong, Jenny and Diamond, Steven and Boyd, Stephen},
+  title   = {Convex Optimization in Julia},
+  booktitle = {2014 First Workshop for High Performance Technical Computing in Dynamic Languages},
+  publisher = {IEEE},
+  pages   = {18-28},
+  year    = {2014},
+  doi     = {10.1109/HPTCDL.2014.5},
+  url     = {https://doi.org/10.1109/HPTCDL.2014.5},
+  pollis-used-in = {mpcvx}
 }
 
 @article{UO1930a,

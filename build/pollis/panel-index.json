@@ -5552,25 +5552,24 @@
 		},
 		{
 			"id": "mpcone",
-			"title": "Conic Programming",
+			"title": "Second-Order, Exponential and Power Cones",
 			"source": "pollis",
 			"commands": [
 				{
 					"id": "chiara.mp.cone",
 					"menuTitles": [
-						"Convex and Conic Programming"
+						"Second-Order, Exponential and Power Cones"
 					]
 				}
 			],
 			"portable": true,
-			"defaultModel": "convex",
+			"defaultModel": "socp",
 			"decisionFirstColumn": "Problem",
 			"toml": "src/vs/workbench/contrib/model/browser/webviews/mpcone.toml",
 			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
 			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
 			"wikis": [
 				"mpcone/assumptions.md",
-				"mpcone/convex.md",
 				"mpcone/decision-guide.md",
 				"mpcone/diagnostics.md",
 				"mpcone/duality.md",
@@ -5583,7 +5582,6 @@
 				"mpcone/socp.md"
 			],
 			"notebooks": [
-				"mpcone/tutorial-01-basic-convex.ipynb",
 				"mpcone/tutorial-02-socp.ipynb",
 				"mpcone/tutorial-03-exp-cone.ipynb",
 				"mpcone/tutorial-04-power-cone.ipynb"
@@ -5594,6 +5592,40 @@
 				"COSMO.jl",
 				"SCS.jl",
 				"ECOS.jl"
+			]
+		},
+		{
+			"id": "mpcvx",
+			"title": "General Convex Programming",
+			"source": "pollis",
+			"commands": [
+				{
+					"id": "chiara.mp.cvx",
+					"menuTitles": [
+						"General Convex Programming"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "dcp",
+			"decisionFirstColumn": "Tab",
+			"toml": "src/vs/workbench/contrib/model/browser/webviews/mpcvx.toml",
+			"wikiRoot": "src/vs/workbench/contrib/model/browser/media/wiki",
+			"notebookRoot": "src/vs/workbench/contrib/model/browser/media/notebooks",
+			"wikis": [
+				"mpcvx/convex.md",
+				"mpcvx/dcp.md",
+				"mpcvx/decision-guide.md",
+				"mpcvx/factsheet.md",
+				"mpcvx/overview.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"Convex.jl",
+				"JuMP.jl",
+				"Clarabel.jl",
+				"COSMO.jl",
+				"SCS.jl"
 			]
 		},
 		{

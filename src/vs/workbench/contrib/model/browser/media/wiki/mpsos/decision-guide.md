@@ -42,7 +42,7 @@ The SumOfSquares.jl documentation, by [Legat, Weisser, Lofberg and Parrilo (2023
 | A matrix variable with linear constraints, without polynomials | **Semidefinite Programming** |
 | A local minimum of a smooth nonlinear problem | **Local Nonlinear Programming** |
 | A global minimum of a function that is not a polynomial | **Deterministic Global Methods** |
-| A convex problem with second-order or exponential cones | **Convex and Conic Programming** |
+| A convex problem with second-order or exponential cones | **Second-Order, Exponential and Power Cones** |
 
 ## A sensible order of work
 

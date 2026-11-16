@@ -1,9 +1,8 @@
-# Convex and Conic Programming — Overview
+# Second-Order, Exponential and Power Cones — Overview
 
-The Convex and Conic Programming panel builds a convex problem in **JuMP**, which **bridges** it to cone constraints, and solves it with a conic solver. Four models show the main cones.
+The Second-Order, Exponential and Power Cones panel writes convex problems in **JuMP** with constraints in a cone, and solves them with a conic solver. Each of its three models shows one cone.
 
-## The Four Models
-- **Convex Programming**: a convex objective in x >= 0 under one scalar linear constraint; JuMP turns the quadratic terms into second-order cones. See [Convex Programming](convex.md).
+## The Three Models
 - **Second-Order Cone**: the norm-constrained regression min ||A x - b|| subject to ||x|| <= radius. See [SOCP](socp.md).
 - **Exponential Cone**: the maximum-entropy distribution on 1, ..., n with a given mean. See [Exponential Cone](expcone.md).
 - **Power Cone**: the p-norm regression min sum |A x - b|^p, between least squares and least absolute deviations. See [Power Cone](powcone.md).
@@ -13,7 +12,7 @@ The **Solver** is **Clarabel** (interior point, accurate, every cone here), **CO
 
 ## Common Workflow
 
-1. Choose a model and enter its inputs: **n**, the **Objective** and **Constraint**, or the **Design Matrix A** and **Response b** with the **Norm Radius** or **p**, or the **Target Mean**; choose the **Solver**.
+1. Choose a model and enter its inputs: the **Design Matrix A** and **Response b** with the **Norm Radius** or **p**, or **n** and the **Target Mean**; choose the **Solver**.
 2. Look at the **Solution Profile** and the **Residuals and Slacks**.
 3. Check **Status and Feasibility**, the **Duality Gap** and the **Solver Statistics**.
 4. Read the **Dual Variables** and the **Cone Membership**.
