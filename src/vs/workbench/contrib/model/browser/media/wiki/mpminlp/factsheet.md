@@ -19,7 +19,7 @@ A **mixed-integer nonlinear program** (MINLP) adds integer or binary variables t
 
 ## What Mixed-Integer Nonlinear Programming Is Not
 
-Branch and bound grows **exponentially** in the worst case with the number of binaries: dozens to a few hundred are routine, thousands may not be. A problem with no integer variables belongs in the **Nonlinear Programming** panel, or the **Global Nonlinear Programming** panel when its global optimum is needed. A linear or quadratic model with integers is faster in the Linear or Quadratic Programming panels.
+Branch and bound grows **exponentially** in the worst case with the number of binaries: dozens to a few hundred are routine, thousands may not be. A problem with no integer variables belongs in the **Local Nonlinear Programming** panel, or the **Global Nonlinear Programming** panel when its global optimum is needed. A linear or quadratic model with integers is faster in the Linear or Quadratic Programming panels.
 
 ## References
 

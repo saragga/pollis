@@ -8,7 +8,7 @@
 | Box bounds, smooth f | Gradient Required with bounds (Fminbox), or **IPNewton** |
 | Non-smooth, noisy or black-box f, few variables | Gradient Free: **Nelder-Mead** |
 | Several local minima suspected | **Multi-Start**, or Simulated Annealing or Particle Swarm |
-| General constraints | Constrained Optimisation, Nonlinear Programming |
+| General constraints | Constrained Optimisation, Local Nonlinear Programming |
 
 ## Decision Flow
 

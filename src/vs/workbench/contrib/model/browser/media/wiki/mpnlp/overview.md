@@ -1,6 +1,6 @@
-# Nonlinear Programming — Overview
+# Local Nonlinear Programming — Overview
 
-The Nonlinear Programming panel builds a JuMP model with n variables, the bounds lb <= x[i] <= ub, a nonlinear objective and one constraint, and solves it with the solver of the tab: **Ipopt**, **MadNLP** or **Uno**. JuMP parses the nonlinear expressions directly, computes exact first and second derivatives, and passes them to the solver ([Dunning, Huchette and Lubin (2017)](#ref-DHL2017a)).
+The Local Nonlinear Programming panel builds a JuMP model with n variables, the bounds lb <= x[i] <= ub, a nonlinear objective and one constraint, and solves it with the solver of the tab: **Ipopt**, **MadNLP** or **Uno**. JuMP parses the nonlinear expressions directly, computes exact first and second derivatives, and passes them to the solver ([Dunning, Huchette and Lubin (2017)](#ref-DHL2017a)).
 
 ## The Default Problem of the Panel
 The default objective, sum((x .- 1) .^ 2) + 3 x[1] x[2] + x[1], with n = 5 and the ball sum(x .^ 2) <= 4, is **nonconvex** because of the bilinear term 3 x[1] x[2]. It has two local minima, with objective values of about -0.54 and 1.69, and a local solver returns one or the other depending on where it starts. The panel starts every variable at (lb + ub) / 2.

@@ -36,7 +36,7 @@ The variable X has n(n + 1)/2 distinct entries, so the cost grows quickly with *
 |---|---|
 | A linear objective with second-order cone or exponential cone constraints | **Convex and Conic Programming** |
 | Polynomial non-negativity, or polynomial optimisation | **Semi-Algebraic Optimisation** |
-| A nonlinear objective with smooth constraints | **Nonlinear Programming** |
+| A nonlinear objective with smooth constraints | **Local Nonlinear Programming** |
 | Integer decisions alongside cones | **Mixed-Integer Conic Programming** |
 
 [Vandenberghe and Boyd (1996)](#ref-VB1996a) note that semidefinite programming includes linear and quadratic programming, but that a problem cast as an SDP can be solved less efficiently than in a more specialised form, as they show for quadratically constrained quadratic programs, better handled as second-order cone problems.

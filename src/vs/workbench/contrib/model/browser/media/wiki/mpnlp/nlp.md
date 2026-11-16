@@ -1,6 +1,6 @@
 # Interior-Point Methods
 
-A **nonlinear program** is min (or max) f(x) subject to constraints g(x) <= 0, h(x) = 0 and bounds, with continuous variables and smooth nonlinear f, g and h. The Nonlinear Programming panel solves it with interior-point methods, the most widely used approach for large smooth problems.
+A **nonlinear program** is min (or max) f(x) subject to constraints g(x) <= 0, h(x) = 0 and bounds, with continuous variables and smooth nonlinear f, g and h. The Local Nonlinear Programming panel solves it with interior-point methods, the most widely used approach for large smooth problems.
 
 ## How an Interior-Point Method Works
 An interior-point method turns each inequality into an equality with a slack variable, and keeps the slacks and the bounded variables strictly inside their bounds by adding a **logarithmic barrier**, minus mu times the sum of their logarithms, to the objective. For a fixed barrier parameter mu it takes Newton steps on the KKT conditions of the barrier problem, for the primal variables and the multipliers together, and then reduces mu towards zero. The iterates follow a **central path** through the interior of the feasible region to a KKT point of the original problem ([Nocedal and Wright (2006)](#ref-NW2006a)).

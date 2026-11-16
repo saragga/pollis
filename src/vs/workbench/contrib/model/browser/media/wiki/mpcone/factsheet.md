@@ -19,7 +19,7 @@ A **conic programme** minimises a linear objective subject to linear equalities 
 
 ## What It Is Not
 
-Not for non-convex problems: a cone cannot express them, and JuMP rejects an expression it cannot bridge to a cone. Not a modelling language for arbitrary functions: the problem must be built from convex atoms. For smooth non-convex problems, see the Nonlinear Programming panel.
+Not for non-convex problems: a cone cannot express them, and JuMP rejects an expression it cannot bridge to a cone. Not a modelling language for arbitrary functions: the problem must be built from convex atoms. For smooth non-convex problems, see the Local Nonlinear Programming panel.
 
 ## See Also
 - [Overview](overview.md) · [Decision Guide](decision-guide.md) · [Duality](duality.md)

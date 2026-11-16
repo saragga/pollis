@@ -39,7 +39,7 @@ The decision table on the panel sets out the same choices.
 | The equilibrium alone, with no outer objective | **Complementarity Problems** |
 | An equilibrium written as a variational inequality | **Variational Inequalities** |
 | The inner problem is an optimisation, not an equilibrium | **Hierarchical Optimisation** |
-| No equilibrium constraint at all | **Nonlinear Programming** |
+| No equilibrium constraint at all | **Local Nonlinear Programming** |
 | Flows on a network, with no planner setting the network | **Network Flows** |
 
 A follower that solves an optimisation problem can also be written into an MPEC by replacing its problem with its optimality conditions, which take the form of a complementarity condition. The default market does exactly that: each follower's condition is the first-order condition of its profit maximisation with a non-negative output.

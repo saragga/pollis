@@ -13,12 +13,12 @@
 
 | Situation | Panel or menu |
 |---|---|
-| A local optimum is enough, or the problem is convex | **Nonlinear Programming** |
+| A local optimum is enough, or the problem is convex | **Local Nonlinear Programming** |
 | Integer decisions in the model | **Mixed-Integer Nonlinear Programming** |
 | A black-box objective with no formula | Optimise > Global Optimisation |
 
 ## Decision Flow for a Nonconvex Problem
-1. **Solve locally first**, in the Nonlinear Programming panel, to learn the shape of the problem and a good value.
+1. **Solve locally first**, in the Local Nonlinear Programming panel, to learn the shape of the problem and a good value.
 2. **Bound every variable** as tightly as the problem allows, using what the constraints imply.
 3. **Solve with EAGO or SCIP**, and read the gap and the nodes.
 4. **If it is slow**, tighten the bounds, add constraints that cut off parts of the box no solution can use, or reduce the number of nonlinear variables.

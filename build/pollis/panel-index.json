@@ -58,6 +58,7 @@
 			"menubarMOOSubmenu",
 			"menubarMPCCPSubmenu",
 			"menubarMPCVPSubmenu",
+			"menubarMPNLPSubmenu",
 			"menubarMWMSubmenu",
 			"menubarNCMSubmenu",
 			"menubarNDSubmenu",
@@ -5816,13 +5817,13 @@
 		},
 		{
 			"id": "mpnlp",
-			"title": "Nonlinear Programming",
+			"title": "Local Nonlinear Programming",
 			"source": "pollis",
 			"commands": [
 				{
 					"id": "chiara.mp.nlp",
 					"menuTitles": [
-						"Nonlinear Programming"
+						"Local Nonlinear Programming"
 					]
 				}
 			],

@@ -8,7 +8,7 @@ import { buildScaffoldHtml } from './scaffoldParts.js';
 
 export function getMpnlpHtml(): string {
 	return buildScaffoldHtml('mpnlp', MPNLP_METADATA.mpnlp, {
-		title: 'Nonlinear Programming',
+		title: 'Local Nonlinear Programming',
 		defaultModel: 'ipopt',
 		decisionFirstColumn: 'Solver',
 	});

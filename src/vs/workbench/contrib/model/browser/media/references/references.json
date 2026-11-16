@@ -58501,7 +58501,7 @@
 		},
 		{
 			"id": "mpnlp",
-			"title": "Nonlinear Programming",
+			"title": "Local Nonlinear Programming",
 			"description": "Ipopt · MadNLP · Uno",
 			"commands": [
 				"chiara.mp.nlp"

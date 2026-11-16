@@ -12,7 +12,7 @@
 
 | Situation | Panel |
 |---|---|
-| No integer variables, a local optimum is enough | **Nonlinear Programming** |
+| No integer variables, a local optimum is enough | **Local Nonlinear Programming** |
 | No integer variables, the global optimum is needed | **Global Nonlinear Programming** |
 | Linear or quadratic with integers | Linear or Quadratic Programming |
 

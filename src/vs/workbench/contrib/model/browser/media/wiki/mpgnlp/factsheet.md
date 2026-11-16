@@ -19,7 +19,7 @@
 
 ## What Global Nonlinear Programming Is Not
 
-Spatial branch and bound grows **exponentially** in the worst case with the number of variables that appear nonlinearly: a few to a few dozen are routine, hundreds may not be. Large smooth problems where a local optimum serves belong in the **Nonlinear Programming** panel; problems with integer decisions in the **Mixed-Integer Nonlinear Programming** panel, although SCIP handles both.
+Spatial branch and bound grows **exponentially** in the worst case with the number of variables that appear nonlinearly: a few to a few dozen are routine, hundreds may not be. Large smooth problems where a local optimum serves belong in the **Local Nonlinear Programming** panel; problems with integer decisions in the **Mixed-Integer Nonlinear Programming** panel, although SCIP handles both.
 
 ## References
 

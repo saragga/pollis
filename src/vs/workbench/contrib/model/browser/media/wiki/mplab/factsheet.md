@@ -1,6 +1,6 @@
 # Mathematical Programming Lab — Factsheet
 
-The **Mathematical Programming Lab** compares methods for nonlinearly constrained optimization on the same problem, by running the methods of one unified solver, **Uno**, and changing their ingredients one at a time. Where the Nonlinear Programming panel solves a model, the Lab studies how a method gets to the solution.
+The **Mathematical Programming Lab** compares methods for nonlinearly constrained optimization on the same problem, by running the methods of one unified solver, **Uno**, and changing their ingredients one at a time. Where the Local Nonlinear Programming panel solves a model, the Lab studies how a method gets to the solution.
 
 | | |
 |---|---|
@@ -19,7 +19,7 @@ The **Mathematical Programming Lab** compares methods for nonlinearly constraine
 
 ## What the Mathematical Programming Lab Is Not
 
-The Lab is built for small problems and for comparison, not for production solves. A model to solve belongs in the **Nonlinear Programming** panel, which also has Uno as a tab; integer decisions belong in **Mixed-Integer Nonlinear Programming**, and a certified global optimum in **Global Nonlinear Programming**. All the methods of the Lab are local: on a nonconvex problem each returns a KKT point, which can differ from one method to another.
+The Lab is built for small problems and for comparison, not for production solves. A model to solve belongs in the **Local Nonlinear Programming** panel, which also has Uno as a tab; integer decisions belong in **Mixed-Integer Nonlinear Programming**, and a certified global optimum in **Global Nonlinear Programming**. All the methods of the Lab are local: on a nonconvex problem each returns a KKT point, which can differ from one method to another.
 
 ## References
 

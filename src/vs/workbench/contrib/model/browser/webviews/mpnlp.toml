@@ -1,10 +1,10 @@
-# Nonlinear Programming Webview Configuration
+# Local Nonlinear Programming Webview Configuration
 # This is the declarative source for the webview. The build script generates:
 # - src/vs/workbench/contrib/model/browser/webviews/mpnlp.data.ts
 # Run: npm run gulp compile-toml
 
 [meta]
-title = "Nonlinear Programming"
+title = "Local Nonlinear Programming"
 viewType = "pollis.mpnlp"
 defaultModel = "ipopt"
 
@@ -519,7 +519,7 @@ wrong = [
 explanation = "The panel starts every variable at (lb + ub) / 2, 0 by default, and on the default nonconvex problem the result depends on that start, which Multi-Start explores."
 
 [[faq]]
-question = "What does the KKT Conditions action of the Nonlinear Programming panel list for each constraint?"
+question = "What does the KKT Conditions action of the Local Nonlinear Programming panel list for each constraint?"
 wiki = "KKT Conditions"
 hidden = true
 right = "Its value, its multiplier, and the multiplier times the slack"
@@ -533,7 +533,7 @@ wrong = [
 explanation = "Interior-point solvers return the multipliers, and the KKT Conditions action lists each constraint's value, multiplier and the product multiplier times slack, which should be near 0."
 
 [[faq]]
-question = "What does the Optimality Gap Check of the Nonlinear Programming panel compare?"
+question = "What does the Optimality Gap Check of the Local Nonlinear Programming panel compare?"
 wiki = "Diagnostics"
 hidden = true
 right = "The local optimum found with EAGO's certified global optimum"

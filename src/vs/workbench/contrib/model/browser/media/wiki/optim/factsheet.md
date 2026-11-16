@@ -19,7 +19,7 @@ A **local optimiser** starts at x0 and moves, step by step, to points of lower f
 
 ## What It Is Not
 
-Not a global optimiser: a different start can give a different minimum (see **Multi-Start**). Not for constraints other than simple bounds: equalities and general inequalities belong to Constrained Optimisation or Nonlinear Programming. Not for integer variables: see Discrete and Combinatorial Optimisation.
+Not a global optimiser: a different start can give a different minimum (see **Multi-Start**). Not for constraints other than simple bounds: equalities and general inequalities belong to Constrained Optimisation or Local Nonlinear Programming. Not for integer variables: see Discrete and Combinatorial Optimisation.
 
 ## See Also
 - [Overview](overview.md) · [Decision Guide](decision-guide.md) · [Assumptions](assumptions.md)

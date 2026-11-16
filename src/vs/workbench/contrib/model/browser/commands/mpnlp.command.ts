@@ -10,7 +10,7 @@ import { getMpnlpHtml } from '../webviews/mpnlp.template.js';
 export const MPNLP_PANEL: IScaffoldPanel = {
 	id: 'mpnlp',
 	viewType: 'pollis.mpnlp',
-	title: 'Nonlinear Programming',
+	title: 'Local Nonlinear Programming',
 	data: MPNLP_METADATA.mpnlp,
 	html: getMpnlpHtml,
 };

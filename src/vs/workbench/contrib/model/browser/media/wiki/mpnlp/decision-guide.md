@@ -11,7 +11,7 @@
 | Another method on the same model, by changing one setting | **Uno**, with another preset |
 | A second opinion on a difficult problem | All three, with the **Solver Comparison** |
 
-## When Nonlinear Programming Is Not the Right Panel
+## When Local Nonlinear Programming Is Not the Right Panel
 
 | Situation | Panel |
 |---|---|

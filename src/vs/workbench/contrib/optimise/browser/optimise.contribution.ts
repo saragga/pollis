@@ -221,7 +221,7 @@ const MOOSubmenuId = new MenuId('menubarMOOSubmenu');  // Multi-Objective Optimi
 // ============================================
 
 const CCPSubmenuId = new MenuId('menubarMPCCPSubmenu');  // Conic & Convex Programming
-// NLPSubmenuId removed — Nonlinear Programming now uses a direct command
+const NLPSubmenuId = new MenuId('menubarMPNLPSubmenu');  // Nonlinear Programming
 const CVPSubmenuId = new MenuId('menubarMPCVPSubmenu');  // Complementarity & Variational Problems
 
 // ============================================
@@ -337,20 +337,9 @@ MenuRegistry.appendMenuItem(MenuId.MenubarOptimiseMenu, {
 
 MenuRegistry.appendMenuItem(MenuId.MenubarOptimiseMenu, {
 	group: '6_optimisation',
-	command: { id: 'chiara.mp.nlp', title: localize('mp.nlp', 'Nonlinear Programming') },
+	submenu: NLPSubmenuId,
+	title: localize('mp.nlpMenu', 'Nonlinear Programming'),
 	order: 5,
-});
-
-MenuRegistry.appendMenuItem(MenuId.MenubarOptimiseMenu, {
-	group: '6_optimisation',
-	command: { id: 'chiara.mp.minlp', title: localize('mp.minlp', 'Mixed-Integer Nonlinear Programming') },
-	order: 5.1,
-});
-
-MenuRegistry.appendMenuItem(MenuId.MenubarOptimiseMenu, {
-	group: '6_optimisation',
-	command: { id: 'chiara.mp.gnlp', title: localize('mp.gnlp', 'Global Nonlinear Programming') },
-	order: 5.2,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarOptimiseMenu, {
@@ -654,6 +643,28 @@ MenuRegistry.appendMenuItem(CCPSubmenuId, {
 	group: '1_ccp',
 	command: { id: 'chiara.mp.micp', title: localize('ccp.mic', 'Mixed-Integer Conic Programming') },
 	order: 4,
+});
+
+// ============================================
+// SUBMENU: NONLINEAR PROGRAMMING
+// ============================================
+
+MenuRegistry.appendMenuItem(NLPSubmenuId, {
+	group: '1_nlp',
+	command: { id: 'chiara.mp.nlp', title: localize('nlp.local', 'Local Nonlinear Programming') },
+	order: 1,
+});
+
+MenuRegistry.appendMenuItem(NLPSubmenuId, {
+	group: '1_nlp',
+	command: { id: 'chiara.mp.gnlp', title: localize('nlp.global', 'Global Nonlinear Programming') },
+	order: 2,
+});
+
+MenuRegistry.appendMenuItem(NLPSubmenuId, {
+	group: '1_nlp',
+	command: { id: 'chiara.mp.minlp', title: localize('nlp.minlp', 'Mixed-Integer Nonlinear Programming') },
+	order: 3,
 });
 
 // ============================================
