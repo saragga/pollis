@@ -6,8 +6,8 @@ A **nonlinear program** (NLP) optimises a smooth nonlinear objective subject to 
 |---|---|
 | **Purpose** | Model a smooth nonlinear problem in JuMP and find a locally optimal solution, with its multipliers |
 | **Input** | The number of variables n, the sense, the objective and a constraint as JuMP expressions in x, and the bounds |
-| **Core packages** | [JuMP.jl](https://github.com/jump-dev/JuMP.jl), [Ipopt.jl](https://github.com/jump-dev/Ipopt.jl), [MadNLP.jl](https://github.com/MadNLP/MadNLP.jl) |
-| **Solvers** | Ipopt, MadNLP |
+| **Core packages** | [JuMP.jl](https://github.com/jump-dev/JuMP.jl), [Ipopt.jl](https://github.com/jump-dev/Ipopt.jl), [MadNLP.jl](https://github.com/MadNLP/MadNLP.jl), [UnoSolver.jl](https://github.com/cvanaret/Uno) |
+| **Solvers** | Ipopt, MadNLP, Uno |
 | **Output** | The termination status, the objective, the solution, and the multipliers of the constraints and bounds |
 | **Key choice** | The solver, and the starting point, which decides which local optimum is found |
 

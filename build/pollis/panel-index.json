@@ -5748,7 +5748,8 @@
 				"mpnlp/interpretation.md",
 				"mpnlp/kkt.md",
 				"mpnlp/nlp.md",
-				"mpnlp/overview.md"
+				"mpnlp/overview.md",
+				"mpnlp/uno.md"
 			],
 			"notebooks": [
 				"mpnlp/tutorial-01-basic-nlp.ipynb",
@@ -5757,7 +5758,8 @@
 			"packages": [
 				"JuMP.jl",
 				"Ipopt.jl",
-				"MadNLP.jl"
+				"MadNLP.jl",
+				"UnoSolver.jl"
 			]
 		},
 		{

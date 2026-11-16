@@ -20,8 +20,12 @@ github = "https://github.com/jump-dev/Ipopt.jl"
 name = "MadNLP.jl"
 github = "https://github.com/MadNLP/MadNLP.jl"
 
+[[packages]]
+name = "UnoSolver.jl"
+github = "https://github.com/cvanaret/Uno"
+
 [requires]
-packages = ["JuMP.jl", "Ipopt.jl", "MadNLP.jl", "EAGO.jl", "Plots.jl"]
+packages = ["JuMP.jl", "Ipopt.jl", "MadNLP.jl", "UnoSolver.jl", "EAGO.jl", "Plots.jl"]
 
 [[notebookSections]]
 label = ""
@@ -78,6 +82,11 @@ file = "mpnlp/nlp.md"
 bundled = true
 
 [[wikis]]
+name = "Uno: A Unified Solver"
+file = "mpnlp/uno.md"
+bundled = true
+
+[[wikis]]
 separator = true
 label = "Topics"
 
@@ -95,6 +104,9 @@ key = "DHL2017a"
 
 [[references]]
 key = "WB2006a"
+
+[[references]]
+key = "VM2026a"
 
 [[references]]
 key = "WS2022a"
@@ -116,6 +128,12 @@ label = "Original Papers"
 [[references]]
 key = "KT1951a"
 
+[[references]]
+key = "FL2002a"
+
+[[references]]
+key = "VL2026a"
+
 [[models]]
 id = "ipopt"
 label = "Ipopt"
@@ -124,6 +142,10 @@ label = "Ipopt"
 id = "madnlp"
 label = "MadNLP"
 
+[[models]]
+id = "uno"
+label = "Uno"
+
 [[bullets]]
 text = "Ipopt"
 detail = "The standard open-source interior-point solver for smooth NLPs: a logarithmic barrier keeps the iterates inside the bounds, and a filter line search accepts the Newton steps"
@@ -131,6 +153,10 @@ detail = "The standard open-source interior-point solver for smooth NLPs: a loga
 [[bullets]]
 text = "MadNLP"
 detail = "An interior-point solver written in Julia, with the same interface as Ipopt, which can run its linear algebra on a GPU for large problems"
+
+[[bullets]]
+text = "Uno"
+detail = "A solver that assembles Lagrange-Newton methods from interchangeable parts: by default a filter trust-region SQP method, with presets for an interior-point method and other strategies"
 
 [[decisionRows]]
 task = "Ipopt"
@@ -141,6 +167,11 @@ purpose = "A KKT point by interior-point Newton steps on the barrier problem, wi
 task = "MadNLP"
 context = "GPU or pure Julia"
 purpose = "The same kind of KKT point, from a Julia implementation that can move its linear algebra to a GPU and is easy to extend"
+
+[[decisionRows]]
+task = "Uno"
+context = "SQP, or other strategies"
+purpose = "A KKT point by sequential quadratic programming with a filter, or by the method of another preset on the same model"
 
 [[inputs]]
 id = "n"
@@ -237,6 +268,30 @@ optimize!(model)
 (status = termination_status(model), objective = objective_value(model), x = value.(x))
 '''
 
+[[codeBranches]]
+model = "uno"
+code = '''
+using JuMP, UnoSolver
+
+n = {{n}}  # number of decision variables
+lb, ub = {{lb}}, {{ub}}  # bounds on every x[i]
+
+function build(optimizer)
+    m = Model(optimizer)
+    set_silent(m)
+    @variable(m, lb <= x[1:n] <= ub, start = (lb + ub) / 2)
+    @objective(m, {{sense}}, {{obj}})
+    @constraint(m, {{cons}})
+    m, x
+end
+
+solver = optimizer_with_attributes(UnoSolver.Optimizer, "preset" => "filtersqp")  # or ipopt, funnelsqp, filterslp
+model, x = build(solver)
+optimize!(model)
+
+(status = termination_status(model), objective = objective_value(model), x = value.(x))
+'''
+
 [[actionGroups]]
 id = "visualise"
 label = "Visualise"
@@ -302,7 +357,7 @@ histogram(filter(!isnan, objs), bins=20, xlabel="objective at the solution found
 [[actionGroups.actions]]
 id = "solver-stats"
 label = "Solver Statistics"
-desc = "Solve time and interior-point iterations, where the solver reports them"
+desc = "Solve time and iterations, where the solver reports them"
 code = '''
 stat(f) = try f(model) catch; missing end  # not every solver reports every attribute
 (time = stat(solve_time), iterations = stat(barrier_iterations))
@@ -346,11 +401,11 @@ label = "Compare"
 [[actionGroups.actions]]
 id = "solver-compare"
 label = "Solver Comparison"
-desc = "The same model with Ipopt and MadNLP: status, objective and time"
+desc = "The same model with Ipopt, MadNLP and Uno: status, objective and time"
 code = '''
-using Ipopt, MadNLP
+using Ipopt, MadNLP, UnoSolver
 
-solvers = ["Ipopt" => Ipopt.Optimizer, "MadNLP" => MadNLP.Optimizer]
+solvers = ["Ipopt" => Ipopt.Optimizer, "MadNLP" => MadNLP.Optimizer, "Uno" => UnoSolver.Optimizer]
 map(solvers) do (name, opt)
     m, _ = build(opt)
     t = @elapsed optimize!(m)
@@ -405,7 +460,7 @@ cons = [c for c in all_constraints(model; include_variable_in_set_constraints=tr
 question = "Is the solution Ipopt found the best one?"
 wiki = "Interpretation"
 answer = """
-Not necessarily. Ipopt and MadNLP find a local optimum, a point satisfying the KKT conditions, and claim nothing about other regions; it is global only when the problem is convex. On the default nonconvex problem the result depends on the start.
+Not necessarily. Ipopt, MadNLP and Uno find a local optimum, a point satisfying the KKT conditions, and claim nothing about other regions; it is global only when the problem is convex. On the default nonconvex problem the result depends on the start.
 
 Multi-Start re-solves from 20 random starting points and draws the objective values found, and the Optimality Gap Check compares the local optimum with EAGO's global one: equal values mean the local optimum is global.
 """
@@ -425,8 +480,30 @@ wiki = "Decision Guide"
 answer = """
 When the problem is large and a GPU is available, or when you want to change the solver from Julia. MadNLP is an interior-point solver of the same family as Ipopt, written in Julia, and it can run its linear algebra on a GPU.
 
-On small problems the two find the same local optimum from the same start; the Solver Comparison runs both on the panel's model and reports the status, the objective and the time.
+On small problems Ipopt and MadNLP find the same local optimum from the same start; the Solver Comparison runs them, and Uno, on the panel's model and reports the status, the objective and the time.
 """
+
+[[faq]]
+question = "What does Uno do differently from Ipopt?"
+wiki = "Uno: A Unified Solver"
+answer = """
+Uno assembles a Lagrange-Newton method from interchangeable parts, and a preset chooses them all at once. Its default preset, filtersqp, is a sequential quadratic programming method in a trust region with a filter, where Ipopt is an interior-point method with a filter line search; Uno's ipopt preset works in the manner of Ipopt.
+
+The Uno tab sets the preset in its code, and the Solver Comparison runs Ipopt, MadNLP and Uno on the same model.
+"""
+
+[[faq]]
+question = "What does a preset of Uno choose?"
+wiki = "Uno: A Unified Solver"
+hidden = true
+right = "The strategy of every building block of the method at once"
+wrong = [
+  "The starting point of every variable",
+  "The linear solver of the Newton systems only",
+  "The tolerance on the KKT conditions only",
+  "Which constraints are active at the solution",
+]
+explanation = "Uno decomposes Lagrange-Newton methods into building blocks, and a preset such as filtersqp, ipopt, funnelsqp or filterslp fixes the strategy of each, so that Uno behaves like a known solver."
 
 [[faq]]
 question = "Where does the panel start every variable?"

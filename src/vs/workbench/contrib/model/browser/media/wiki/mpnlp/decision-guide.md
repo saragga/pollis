@@ -1,13 +1,15 @@
 # Decision Guide
 
-## Choosing Between Ipopt and MadNLP
+## Choosing Between Ipopt, MadNLP and Uno
 
 | Situation | Solver |
 |---|---|
 | A smooth NLP of any size, the default choice | **Ipopt** |
 | A large NLP with a GPU available | **MadNLP** |
 | A solver to read, change or extend from Julia | **MadNLP** |
-| A second opinion on a difficult problem | Both, with the **Solver Comparison** |
+| A small or medium NLP, or warm starts from a nearby solution | **Uno**, with its SQP preset |
+| Another method on the same model, by changing one setting | **Uno**, with another preset |
+| A second opinion on a difficult problem | All three, with the **Solver Comparison** |
 
 ## When Nonlinear Programming Is Not the Right Panel
 

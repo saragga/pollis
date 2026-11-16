@@ -1,7 +1,7 @@
 # Interpretation
 
-## What the Solution of Ipopt or MadNLP Means
-Ipopt and MadNLP return a **local** optimum: no feasible point nearby is better, to first and second order. On a convex problem the local optimum is the global one; on a nonconvex problem another basin may hold a better point, which **Multi-Start** and the **Optimality Gap Check** look for. Report the result as a local optimum unless one of them, or convexity, says otherwise.
+## What the Solution of Ipopt, MadNLP or Uno Means
+Ipopt, MadNLP and Uno return a **local** optimum: no feasible point nearby is better, to first and second order. On a convex problem the local optimum is the global one; on a nonconvex problem another basin may hold a better point, which **Multi-Start** and the **Optimality Gap Check** look for. Report the result as a local optimum unless one of them, or convexity, says otherwise.
 
 ## KKT Conditions at the Solution
 The **KKT Conditions** action lists, for each constraint and bound, its value, its multiplier and the product of multiplier and slack, which should be about 0 (complementary slackness). A binding constraint can carry a nonzero multiplier; a slack one must have a multiplier of zero. See [KKT Conditions](kkt.md).
@@ -15,8 +15,8 @@ The **KKT Conditions** action lists, for each constraint and bound, its value, i
 ## Parametric Sweep of the Bounds
 The **Parametric Sweep** tightens the upper bound on every variable in 15 steps, from ub to near lb, and plots the optimal objective against it. Flat stretches mean the bound does not bind; where it binds, the slope is the bound's shadow price; a jump can mean the solver moved to another local optimum, or that the problem became infeasible (NaN). The bound is restored afterwards.
 
-## Solver Comparison of Ipopt and MadNLP
-The **Solver Comparison** solves the same model with Ipopt and MadNLP and reports the status, the objective and the seconds. From the same start both usually reach the same local optimum; different answers point to a problem with several basins close to the start.
+## Solver Comparison of Ipopt, MadNLP and Uno
+The **Solver Comparison** solves the same model with Ipopt, MadNLP and Uno and reports the status, the objective and the seconds. From the same start the three usually reach the same local optimum; different answers point to a problem with several basins close to the start.
 
 ## See Also
 - [Diagnostics](diagnostics.md) · [Decision Guide](decision-guide.md) · [KKT Conditions](kkt.md)

@@ -8,7 +8,7 @@
 - **NUMERICAL_ERROR**: the Newton systems could not be solved accurately.
 
 ## Solver Statistics
-**Solver Statistics** reports the solve time and the number of interior-point iterations, where the solver provides them. A well-posed problem of moderate size usually needs tens of iterations; hundreds suggest poor scaling, a degenerate constraint, or a start far from the solution.
+**Solver Statistics** reports the solve time and the number of iterations, where the solver provides them: Ipopt and MadNLP give both, Uno the time only. A well-posed problem of moderate size usually needs tens of iterations; hundreds suggest poor scaling, a degenerate constraint, or a start far from the solution.
 
 ## Multi-Start and Several Local Optima
 **Multi-Start** re-solves from 20 random starting points in the box and draws the histogram of the objective values reached. A single value suggests one optimum, or one dominant basin; several values reveal a nonconvex problem with several local optima, as the panel's default problem has. The original start is restored afterwards.

@@ -12207,6 +12207,38 @@
 			"open_access": true
 		},
 		{
+			"key": "FL2002a",
+			"type": "article",
+			"title": "Nonlinear Programming without a Penalty Function",
+			"authors": [
+				"Fletcher, Roger",
+				"Leyffer, Sven"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2002,
+			"journal": "Mathematical Programming",
+			"volume": "91",
+			"number": "2",
+			"pages": "239--269",
+			"issn": "0025-5610",
+			"doi": "10.1007/s101070100244",
+			"openalex": "W2048799772",
+			"url": "https://doi.org/10.1007/s101070100244",
+			"keywords": [
+				"nonlinear programming",
+				"sequential quadratic programming",
+				"trust region method",
+				"filter methods",
+				"global convergence"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-16",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "FM1973a",
 			"type": "article",
 			"title": "Risk, Return, and Equilibrium: Empirical Tests",
@@ -39580,6 +39612,38 @@
 			"open_access": true
 		},
 		{
+			"key": "VL2026a",
+			"type": "article",
+			"title": "Implementing a Unified Solver for Nonlinearly Constrained Optimization",
+			"authors": [
+				"Vanaret, Charlie",
+				"Leyffer, Sven"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2026,
+			"journal": "Mathematical Programming Computation",
+			"issn": "1867-2949",
+			"doi": "10.1007/s12532-026-00310-9",
+			"openalex": "W7164149565",
+			"url": "https://doi.org/10.1007/s12532-026-00310-9",
+			"abstract": "SQP and interior-point methods (also referred to as Lagrange-Newton methods) typically share key algorithmic components, such as strategies for computing descent directions and mechanisms that promote global convergence. Building on this insight, we introduce a unifying framework with eight building blocks that abstracts the workflows of Lagrange-Newton methods. We then present Uno, a modular C solver that implements our unifying framework and allows the automatic combination of a wide range of strategies with no programming effort from the user. Uno is meant to (1) organize mathematical optimization strategies into a coherent hierarchy; (2) offer a wide range of efficient and robust methods that can be compared for a given instance; (3) enable researchers to experiment with novel optimization strategies; and (4) reduce the cost of development and maintenance of multiple optimization solvers. Uno’s software design allows user to compose new customized solvers for emerging optimization areas such as robust optimization or optimization problems with complementarity constraints, while building on reliable nonlinear optimization techniques. We demonstrate that Uno is highly competitive against state-of-the-art solvers filterSQP, IPOPT, SNOPT, MINOS, LANCELOT, LOQO, and CONOPT on a subset of 429 small problems from the CUTE collection. Uno is available as open-source software under the MIT license at https://github.com/cvanaret/Uno and via its C, Julia, Python, Fortran, and AMPL interfaces.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"nonlinearly constrained optimization",
+				"SQP method",
+				"interior point methods",
+				"global convergence",
+				"robust optimization",
+				"complementarity constraints"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-16",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "VLBM2008a",
 			"type": "inproceedings",
 			"title": "Extracting and composing robust features with denoising autoencoders",
@@ -39600,6 +39664,44 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": false
+		},
+		{
+			"key": "VM2026a",
+			"type": "article",
+			"title": "Uno: A Composable Framework for Nonlinearly Constrained Optimization",
+			"authors": [
+				"Vanaret, Charlie",
+				"Montoison, Alexis"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2026,
+			"journal": "Journal of Open Source Software",
+			"volume": "11",
+			"number": "123",
+			"pages": "10229",
+			"issn": "2475-9066",
+			"doi": "10.21105/joss.10229",
+			"openalex": "W7168299022",
+			"url": "https://doi.org/10.21105/joss.10229",
+			"abstract": "Uno is a composable software framework for nonlinearly constrained optimization written in modern C++. It unifies the workflows of Lagrange-Newton methods, i.e., gradient-based algorithms that iteratively solve the KKT optimality conditions using Newton's method. The central idea is to decompose these methods into reusable, interchangeable components (constraint reformulation, step computation, globalization techniques, and acceptance criteria) so that classical and hybrid algorithms can be assembled, compared, and tested within a single framework rather than reimplemented as separate solvers. As of July 2026, Uno supports sequential (convex and nonconvex) quadratic programming, interior-point (barrier) methods, sequential linear programming, and unconstrained optimization. For full mathematical details of the algorithms implemented in Uno, see Vanaret & Leyffer (2026). Uno has interfaces to Julia, Python, C, Fortran, and AMPL, enabling interoperability across scientific computing environments. Precompiled artifacts are available on GitHub, and the solver can be accessed directly via UnoSolver.jl in Julia or unopy in Python.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"nonlinearly constrained optimization",
+				"KKT optimality conditions",
+				"constraint reformulation",
+				"acceptance criteria",
+				"sequential quadratic programming",
+				"sequential linear programming",
+				"unconstrained optimization",
+				"hybrid optimization algorithm",
+				"software interoperability"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-16",
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "VS2006a",
@@ -46330,6 +46432,18 @@
 			"count": 3626,
 			"source": "openalex",
 			"date": "2026-10-31"
+		},
+		{
+			"key": "FL2002a",
+			"count": 652,
+			"source": "crossref",
+			"date": "2026-11-16"
+		},
+		{
+			"key": "FL2002a",
+			"count": 993,
+			"source": "openalex",
+			"date": "2026-11-16"
 		},
 		{
 			"key": "FM1973a",
@@ -54846,6 +54960,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "VL2026a",
+			"count": 5,
+			"source": "crossref",
+			"date": "2026-11-16"
+		},
+		{
+			"key": "VL2026a",
+			"count": 9,
+			"source": "openalex",
+			"date": "2026-11-16"
+		},
+		{
 			"key": "VLBM2008a",
 			"count": 5161,
 			"source": "crossref",
@@ -54856,6 +54982,18 @@
 			"count": 7438,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "VM2026a",
+			"count": 1,
+			"source": "crossref",
+			"date": "2026-11-16"
+		},
+		{
+			"key": "VM2026a",
+			"count": 1,
+			"source": "openalex",
+			"date": "2026-11-16"
 		},
 		{
 			"key": "VS2006a",
@@ -58255,17 +58393,20 @@
 		{
 			"id": "mpnlp",
 			"title": "Nonlinear Programming",
-			"description": "Ipopt · MadNLP",
+			"description": "Ipopt · MadNLP · Uno",
 			"commands": [
 				"chiara.mp.nlp"
 			],
 			"keys": [
 				"DHL2017a",
 				"WB2006a",
+				"VM2026a",
 				"WS2022a",
 				"NW2006a",
 				"BSS2006a",
-				"KT1951a"
+				"KT1951a",
+				"FL2002a",
+				"VL2026a"
 			]
 		},
 		{
