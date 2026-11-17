@@ -146,6 +146,7 @@
 \contentsentry{Reports}\\
 \contentsentry{Monitor}\\
 \contentsentry{Collaboration}\\
+\contentsentry{Simulation Games}\\
 \contentsentry{Ask Pollis}\\
 \contentsentry{Free and open}\\
 \contentsentry{Everything in Pollis}
@@ -896,10 +897,10 @@ Work together from wherever you are: two colleagues on different continents, or 
   \item[\listicon{\faUsers}] \textbf{A small group:} a research team, everyone sharing with everyone.
   \item[\listicon{\faChalkboardTeacher}] \textbf{A classroom:} up to 30 students share with the tutor, and the tutor shares with the whole class.
   \item[\listicon{\faLayerGroup}] \textbf{Breakout groups:} a class split into teams, at random or by the tutor, who sees them all and visits each one.
-  \item[\listicon{\faChessKnight}] \textbf{A game:} teams and roles, private negotiations, and a facilitator who runs the simulation.
+  \item[\listicon{\faChessKnight}] \textbf{A game:} teams and roles, news, negotiations between teams, and a facilitator who runs the simulation (page~\pageref*{topic:Simulation Games}).
 \end{itemize}
 \smallskip
-An agent can be invited by two people or a small group, of up to five. Games come later.
+An agent can be invited by two people or a small group, of up to five.
 \end{pbox}
 
 \vspace{4mm}
@@ -912,7 +913,70 @@ Coming later: your phone joins a session too. Driving to work, you think of a be
 
 \newpage
 % =====================================================================
-% PAGE 12 — ASK POLLIS
+% PAGE 12 — SIMULATION GAMES
+% =====================================================================
+\pageheading{Simulation Games}{Learn by deciding, team against team.}
+  {A case, a class split into teams, and a Julia model that plays each round.}
+
+\begin{pbox}{Simulation Games}
+Teach with a case the class plays. The teacher hosts a game from \textbf{Compose \textrightarrow{} Simulation Games} and sends the invitation; up to 30 students join and are split into teams,
+each running a company, a deal or a trading desk, with roles that each set their own decisions. Each round,
+every team submits its decisions beside the chat, the teacher can release news, and the teams can negotiate
+with each other. Then a model written in Julia plays the round on the teacher's computer, and everyone sees
+the results: some public, some for one team only. The students need only Pollis.
+\end{pbox}
+
+\vspace{4mm}
+\subhead{Five cases, each a toolbox}
+{\small Installed from the Toolboxes section of the Extensions view. The companies are made up.\par}
+\vspace{3mm}
+\begin{tcbraster}[raster columns=2, raster equal height=rows, raster column skip=3mm, raster row skip=3mm]
+\collabmode{Grow a Chocolate Chain}{2--6 teams, 5 years}{Run a chocolate brand.}{%
+  \begin{itemize}[leftmargin=1em]
+  \item Each year, the price, the beans, the shops, the staff and the marketing.
+  \item As one board, or as departments: Chief Executive, Marketing, Sourcing and Finance.
+  \item The highest profit over five years wins.
+  \end{itemize}}
+\collabmode{Merge or Be Bought}{3 teams, 6 quarters}{Bid for your rivals, or be bought.}{%
+  \begin{itemize}[leftmargin=1em]
+  \item Three listed bicycle makers bid for each other's shares, and set the least price they accept for their own.
+  \item A bid needs the cash or the borrowing to back it; a company bought leaves the game.
+  \item The best return for the original shareholders wins.
+  \end{itemize}}
+\collabmode{A Vineyard for the Portfolio}{1 buyer, 3 sellers}{Buy a winery, knowing less than its owners.}{%
+  \begin{itemize}[leftmargin=1em]
+  \item A drinks group looks into three wineries, each with a problem only its owners know.
+  \item It offers cash and an earn-out, then runs what it bought for three years.
+  \item Buyer and sellers are each ranked on the value they created.
+  \end{itemize}}
+\collabmode{Save the Company}{3 sides, 4 or 6 quarters}{Restructure, or go into administration.}{%
+  \begin{itemize}[leftmargin=1em]
+  \item A retailer's shareholders, banks and bondholders, each knowing something the others do not.
+  \item The shareholders propose a plan; the banks and the bondholders accept it, call in the loan or sell.
+  \item Each side is ranked on the value it keeps.
+  \end{itemize}}
+\collabmode{Trading Floor}{3--8 desks, 4 or 6 periods}{Trade on a live order book.}{%
+  \begin{itemize}[leftmargin=1em]
+  \item Desks buy and sell one company's shares while a clock runs.
+  \item Its results move the value of the shares, and some desks hear a hint first.
+  \item The best return wins.
+  \end{itemize}}
+\collabmode{Your Own Case}{a toolbox}{Write it, and share it.}{%
+  \begin{itemize}[leftmargin=1em]
+  \item A case is a \texttt{case.toml}, with its decisions, results and news, and a Julia \texttt{model.jl}.
+  \item Packaged as a toolbox, it appears in \textbf{Host a Game...}
+  \item Help \textrightarrow{} Documentation \textrightarrow{} Drill-downs \textrightarrow{} Simulation Games explains how.
+  \end{itemize}}
+\end{tcbraster}
+
+\vspace{5mm}
+\begin{nbox}{In one line}
+A case, a class in teams, and a Julia model that plays each round: decide, see the results, and decide again.
+\end{nbox}
+
+\newpage
+% =====================================================================
+% PAGE 13 — ASK POLLIS
 % =====================================================================
 \pageheading{Ask Pollis}{Ask, in your own words.}
   {Pollis answers from its own documents, and shows you where each answer comes from.}
@@ -991,7 +1055,7 @@ its title, with the same \textbf{+}.
 
 \newpage
 % =====================================================================
-% PAGE 13 — FREE, OPEN AND YOURS + GET STARTED  (message 4)
+% PAGE 14 — FREE, OPEN AND YOURS + GET STARTED  (message 4)
 % =====================================================================
 \pageheading{Free and open}{Free, open and yours.}
   {No licence fees, no lock-in, and code you can take anywhere.}
@@ -1087,7 +1151,7 @@ of 289 open-source Julia packages.
 
 \newpage
 % =====================================================================
-% PAGE 14 — EVERYTHING IN POLLIS, AT A GLANCE (back cover)
+% PAGE 15 — EVERYTHING IN POLLIS, AT A GLANCE (back cover)
 % =====================================================================
 \thispagestyle{empty}
 \topicmark{Everything in Pollis}%

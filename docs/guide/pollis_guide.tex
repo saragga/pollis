@@ -105,6 +105,10 @@
 \newcommand{\ui}[1]{\textbf{#1}}
 % A setting's id
 \newcommand{\setting}[1]{\texttt{\small #1}}
+% A file's name or path, broken across lines where it must
+\newcommand{\file}[1]{{\small\nolinkurl{#1}}}
+% Code with spaces in it, such as a call, which \file would run together
+\newcommand{\code}[1]{\texttt{\small #1}}
 
 % A plain box for limits and cautions, and one for "If something goes wrong"
 \newtcolorbox{note}[1]{enhanced, colback=pale, colframe=pale, boxrule=0pt, sharp corners,
@@ -183,6 +187,7 @@ Questions and problems: \ui{Help > Report Issue}, or \contactemail.
 \contentsentry{Profiling and Correctness Tests}\\
 \contentsentry{Compilation Lab}\\
 \contentsentry{Collaboration}\\
+\contentsentry{Simulation Games}\\
 \contentsentry{Orchestration}\\
 \contentsentry{Literature Radar}\\
 \contentsentry{Snowball Search Map}\\
@@ -2012,6 +2017,7 @@ with \ui{Join Session...}, each connected to the tutor only, who passes on what 
 \ui{Show to the Class} shows a student's snapshot to the others; \ui{Class Chat}, in \ui{Session Settings...}, lets
 everyone see every message. \ui{Split into Breakout Groups...} makes groups at random, which the tutor can change;
 the tutor sees them all, speaks to one with \ui{Visit a Group...}, and ends them with \ui{Bring Everyone Back}.
+A class can also play a case, team against team: Simulation Games, \pg{Simulation Games}.
 
 \subhead{Leave or end the session}
 \ui{Leave Session}, at the top of the chat or in \ui{Compose > Collaboration}, leaves the session. When the host
@@ -2039,7 +2045,106 @@ block those, set \setting{pollis.collaboration.\allowbreak signalling} to \textt
 \seealso{Data and Databases, \pg{Data and Databases}.\quad Inside a Panel, \pg{Inside a Panel}.}
 
 % =====================================================================
-% PAGES 34–35 — ORCHESTRATION
+% PAGES 34–35 — SIMULATION GAMES
+% =====================================================================
+\topic{Simulation Games}{Compose > Simulation Games}{Playing a case with a class: teams decide round by round, and a Julia model on the facilitator's computer plays each round.}
+
+A game is a class session with teams. The \emph{facilitator}, usually the teacher, hosts it from a case; up to
+30 players join with its invitation and are split into teams, each running a company, a deal or a trading desk.
+Each round, every team submits its decisions beside the chat, and \ui{Next Round} runs the case's model, written
+in Julia, on the facilitator's computer. Everyone sees the results: some public, some for one team only.
+
+\subhead{What you need}
+\begin{itemize}
+  \item \textbf{The facilitator:} Pollis, Julia, and a case. The cases come in toolboxes, installed from the
+    Toolboxes section of the Extensions view: Grow a Chocolate Chain, Merge or Be Bought, A Vineyard for the
+    Portfolio, Save the Company and Trading Floor. A case of your own is a folder with \texttt{case.toml} and
+    \texttt{model.jl}.
+  \item \textbf{The players:} Pollis and an Internet connection; no Julia. The network must let sessions through,
+    as for Collaboration (\ui{Test Connection...}).
+\end{itemize}
+
+\subhead{Host a game}
+\begin{enumerate}[label=\arabic*.]
+  \item Choose \ui{Compose > Simulation Games > Host a Game...} and pick a case, or \ui{Choose a Case Folder...}
+  \item When the case can organise its teams in several ways, pick one, such as \ui{Board Members}, where
+    everyone sets every decision, or \ui{Departments}, where each role sets its own. When it can be played in
+    different lengths, pick the number of rounds.
+  \item Type your name. The chat opens, and the invitation, whose code ends in \texttt{@game}, is copied to the
+    clipboard: send it to the players.
+\end{enumerate}
+
+\subhead{Join a game}
+Choose \ui{Compose > Simulation Games > Join a Game...}, paste the invitation and type your name. Until the game
+starts, the chat says you are waiting to be placed in a team.
+
+\subhead{Start the game}
+When the players have joined, the facilitator presses \ui{Next Round}. Pollis asks for the number of teams,
+within the case's bounds, splits the players among them at random, and lists the teams: pick a player to move
+them, then \ui{Start the Game}. Each player sees their team, their role, and the briefings to read, beside the
+chat. A player who joins later is placed with \ui{Compose > Classroom > Split into Breakout Groups...}, which
+keeps the teams.
+
+\subhead{Play a round}
+\begin{enumerate}[label=\arabic*.]
+  \item Each team fills in its decisions beside the chat and presses \ui{Submit Our Decisions}. Anyone in the team
+    can submit; the last submission counts. With roles, each player sets only the decisions of theirs; the others
+    show ``Set by'' the role that sets them.
+  \item The facilitator's column shows, for each team, who submitted. \ui{Next Round} plays the round, and asks
+    first when a team has not submitted: its decisions stay as they were in the last round.
+  \item The results appear in the chat: a table every player sees, and each team's own figures.
+\end{enumerate}
+
+\begin{caution}{The facilitator reads everything}
+Messages between teams go to the facilitator too, and the debrief lists them all. The players are told so.
+\end{caution}
+
+\newpage
+\subhead{News}
+\ui{Release News...}, in the menu or the facilitator's column, offers the case's news for the round, or
+\ui{Write a News Item...}: a title, a text, the roles who read it, and any of the model's numbers to change from
+this round on. The players see the item in the chat; they are not told which numbers changed.
+
+\subhead{Negotiations}
+While a round is decided, a player can write to another team under \ui{Negotiations}: pick the team, write the
+message and press \ui{Send to the Team}. It goes to everyone in both teams, and to the facilitator. Nothing makes
+a team keep what it promised.
+
+\subhead{Trading Floor: a market by the clock}
+In Trading Floor each team is a trading desk, and each round is a period of a few minutes in which the desks buy
+and sell one company's shares on an \ui{Order Book} beside the chat, with the time left above it.
+\begin{itemize}
+  \item Choose \ui{Buy} or \ui{Sell}, the price and the number of shares, and press \ui{Place Order}. An order
+    trades at once with the best orders on the other side that meet its price, at their price; what does not trade
+    stays on the book until it trades, you cancel it under \ui{Your Orders}, or the period ends.
+  \item A desk buys only with the cash its other orders do not hold, and sells only the shares it has.
+  \item When the period ends, the facilitator presses \ui{Next Round}: the company's results are announced, and the
+    next period opens. Pressed earlier, Next Round asks before closing the market.
+\end{itemize}
+
+\subhead{The debrief}
+\ui{Compose > Simulation Games > Open the Debrief}, or the button that takes the place of Next Round when the game
+is over, writes the debrief into the game's folder and opens it: the standings, every round's results, the news
+and every message between teams, with the case's questions for the class. Beside it are the tables, as CSV files
+(decisions, results, each team's results, news, negotiations and, in Trading Floor, every trade), and a copy of
+the case, with its \texttt{model.jl}. In a live game Pollis asks whether to share it with the players, who then see
+every team's figures and messages, and can open the tables with the panels. A game is kept in
+\texttt{games} of the Pollis Workspace, else in \texttt{\textasciitilde/.pollis/games}; outside a game,
+\ui{Open the Debrief} asks for a game's folder.
+
+\begin{trouble}
+\textbf{Host a Game... lists no case} & Install a case's toolbox from the Toolboxes section of the Extensions view, or choose a case folder. \\
+\textbf{``Julia could not play the round''} & Install Julia, or set its path in \setting{julia.executablePath}; then press \ui{Next Round} again. \\
+\textbf{``The model of ... failed''} & The case's model stopped with the error shown: tell the case's author. The round can be played again with \ui{Next Round}. \\
+\textbf{``... needs at least ... teams''} & Wait for more players to join: each team needs at least one. \\
+\textbf{A player sees no decisions} & They are in no team yet: place them with \ui{Split into Breakout Groups...} \\
+\textbf{An order is refused} & The message says why: not enough cash or shares free, or the order would trade with the desk's own. \\
+\end{trouble}
+
+\seealso{Collaboration, \pg{Collaboration}.\quad Toolboxes, \pg{Toolboxes}.\quad \ui{Help > Documentation > Drill-downs > Simulation Games}, for how a game works and how to write a case.}
+
+% =====================================================================
+% PAGES 36–37 — ORCHESTRATION
 % =====================================================================
 \topic{Orchestration}{Compose > Orchestration · Compose > Coding Agents}{Choosing and starting coding agents, and routing tasks to models.}
 
@@ -2186,7 +2291,7 @@ its results, as you would a colleague's.
 
 
 % =====================================================================
-% PAGES 36–37 — LITERATURE RADAR
+% PAGES 38–39 — LITERATURE RADAR
 % =====================================================================
 \topic{Literature Radar}{Compose > Literature Radar}{Finding the articles that matter on a topic, bringing in references of your own, and following citations from a few works you know.}
 
@@ -2253,7 +2358,7 @@ weighed on the work, not only mentioned.
 
 
 % =====================================================================
-% PAGES 38–39 — SNOWBALL SEARCH MAP
+% PAGES 40–41 — SNOWBALL SEARCH MAP
 % =====================================================================
 \topic{Snowball Search Map}{Compose > Literature Radar > Snowball Search Map}{Following citations from a few works you know, a step at a time, and telling when to stop.}
 
@@ -2371,7 +2476,7 @@ found. \ui{Open...} brings a saved map back; \ui{New Search} starts again.
 
 
 % =====================================================================
-% PAGES 40–41 — POLLIS DATABASES
+% PAGES 42–43 — POLLIS DATABASES
 % =====================================================================
 \topic{Pollis Databases}{Databases view > Pollis Built-In · Pollis Activity}{The databases of Pollis, built in and of its activity: what each holds, and how to add journal metrics.}
 
@@ -2531,7 +2636,7 @@ The works you saved from Literature Radar, with their latest OpenAlex count:
 \seealso{Data and Databases, \pg{Data and Databases}.\quad RSS Feeds, \pg{RSS Feeds}.}
 
 % =====================================================================
-% PAGES 42–43 — ASK POLLIS
+% PAGES 44–45 — ASK POLLIS
 % =====================================================================
 \topic{Ask Pollis}{Help > Ask Pollis}{Asking about Pollis, or a toolbox you installed, in your own words, and an answer from their documents, with its sources; and choosing the model that answers.}
 
@@ -2747,7 +2852,7 @@ Ask Pollis and its two Evaluate pages are not in Pollis yet; they come in a comi
 \seealso{Toolboxes, \pg{Toolboxes}.\quad Orchestration, \pg{Orchestration}.}
 
 % =====================================================================
-% PAGES 44–45 — APPENDIX: REFERENCE KEYS
+% PAGES 46–47 — APPENDIX: REFERENCE KEYS
 % =====================================================================
 \topic{Appendix: Reference Keys}{pollis.bib · Compose > Reports}{How every work cited in Pollis is kept once, and how to write its key from the work in front of you.}
 
@@ -2835,7 +2940,7 @@ entered by hand.
 \seealso{Reports, \pg{Reports}.\quad Pollis Databases, \pg{Pollis Databases}.}
 
 % =====================================================================
-% PAGE 48 — APPENDIX: PACKAGES AND PULL REQUESTS
+% PAGE 50 — APPENDIX: PACKAGES AND PULL REQUESTS
 % =====================================================================
 \topic{Appendix: Packages and Pull Requests}{github.com/Trumpingtons}{The Julia packages created for Pollis, and the fixes to other authors' packages that they accepted.}
 
