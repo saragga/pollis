@@ -138,7 +138,7 @@ appendComingSoonItems(SMART_REGIONS_LIBRARIES_MENU, [
 	],
 ]);
 
-// Map Visualisation: Google Maps and Google's Photorealistic 3D Tiles may be displayed, with their attributions, but not analysed
+// Map Visualisation: the open sources first, whose data may also be analysed; Google Maps and Google's Photorealistic 3D Tiles may be displayed, with their attributions, but not analysed
 MenuRegistry.appendMenuItem(SMART_REGIONS_MENU, {
 	submenu: SMART_REGIONS_MAPS_MENU,
 	title: localize('comingSoon.smartRegions.maps', "Map Visualisation"),
@@ -148,7 +148,9 @@ MenuRegistry.appendMenuItem(SMART_REGIONS_MENU, {
 
 appendComingSoonItems(SMART_REGIONS_MAPS_MENU, [
 	[
-		localize('comingSoon.smartRegions.baseMaps', "Maps and Base Maps"),
+		localize('comingSoon.smartRegions.osmBaseMaps', "OpenStreetMap Base Maps"),
+		localize('comingSoon.smartRegions.copernicusLayers', "Copernicus Imagery Layers"),
+		localize('comingSoon.smartRegions.mapillaryViewer', "Mapillary Street-Level Viewer"),
 	],
 	[
 		localize('comingSoon.smartRegions.googleMaps', "Google Maps"),
