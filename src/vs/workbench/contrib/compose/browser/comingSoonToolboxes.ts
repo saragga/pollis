@@ -41,7 +41,7 @@ function appendComingSoonItems(menu: MenuId, groups: readonly (readonly string[]
 	});
 }
 
-// Geoscience Toolbox: Climate Science, Earth System Modelling, Point Cloud Processing
+// Geoscience Toolbox: Climate Science, Earth System Modelling
 
 const GEOSCIENCE_MENU = new MenuId('pollisComingSoon.geoscience');
 
@@ -69,9 +69,6 @@ appendComingSoonItems(GEOSCIENCE_MENU, [
 		localize('comingSoon.geoscience.carbon', "Carbon Cycle and Biogeochemistry"),
 		localize('comingSoon.geoscience.coupled', "Coupled Earth System Simulation"),
 	],
-	[
-		localize('comingSoon.geoscience.pointClouds', "Point Cloud Processing"),
-	],
 ]);
 
 // Smart Regions Toolbox
@@ -98,6 +95,7 @@ appendComingSoonItems(SMART_REGIONS_MENU, [
 		localize('comingSoon.smartRegions.kriging', "Spatial Statistics and Kriging"),
 		localize('comingSoon.smartRegions.econometrics', "Spatial Econometrics"),
 		localize('comingSoon.smartRegions.raster', "Raster Analysis"),
+		localize('comingSoon.smartRegions.pointClouds', "Point Cloud Processing"),
 		localize('comingSoon.smartRegions.terrain', "Terrain and Elevation Analysis"),
 		localize('comingSoon.smartRegions.networks', "Route and Network Analysis"),
 		localize('comingSoon.smartRegions.remoteSensing', "Remote Sensing"),
