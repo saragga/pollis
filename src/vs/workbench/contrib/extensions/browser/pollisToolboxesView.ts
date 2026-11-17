@@ -11,6 +11,7 @@ import { VSBuffer } from '../../../../base/common/buffer.js';
 import { CancellationToken } from '../../../../base/common/cancellation.js';
 import { toErrorMessage } from '../../../../base/common/errorMessage.js';
 import { isCancellationError } from '../../../../base/common/errors.js';
+import { escape as escapeHtml } from '../../../../base/common/strings.js';
 import { KeyCode } from '../../../../base/common/keyCodes.js';
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
 import { FileAccess } from '../../../../base/common/network.js';
@@ -72,6 +73,8 @@ export interface IToolboxIndexEntry {
 	readonly readme?: string;
 	/** The icon file name, next to toolboxes.json: the icon of its .vsix, shown on its row. */
 	readonly icon?: string;
+	/** True for a toolbox of Simulation Games cases alone, whose description is headed as an online simulation. */
+	readonly games?: boolean;
 }
 
 /** The content of toolboxes.json. */
@@ -365,9 +368,7 @@ export class PollisToolboxesView extends ViewPane {
 			const folder = joinPath(this.environmentService.cacheHome, 'pollisToolboxes', 'readme');
 			const readme = joinPath(folder, `${toolbox.name}.md`);
 			await this.download(`${TOOLBOXES_URL}/${encodeURIComponent(toolbox.readme)}`, readme);
-			if (toolbox.icon) {
-				await this.addIcon(toolbox.icon, folder, readme);
-			}
+			await this.addHeader(toolbox, folder, readme);
 			await this.commandService.executeCommand('markdown.showPreview', readme);
 		} catch (error) {
 			this.notificationService.error(localize('pollisToolboxes.readmeFailed', "Could not show the details of the {0}: {1}", toolbox.name, toErrorMessage(error)));
@@ -375,19 +376,40 @@ export class PollisToolboxesView extends ViewPane {
 	}
 
 	/**
-	 * Puts the toolbox's icon before the title of its downloaded README, as the extension page of an installed
-	 * toolbox shows it: the icon is downloaded beside the README, which the preview reads it from. Without the
-	 * icon (offline, say), the README stays as it is.
+	 * Heads the toolbox's downloaded README as the extension page of an installed toolbox is headed: its icon, then
+	 * its title, and below the title of a toolbox of Simulation Games cases, in a smaller font, An Online Simulation,
+	 * the two as high as the icon. The icon is downloaded beside the README, which the preview reads it from; without
+	 * it (offline, say), the title stands alone.
 	 */
-	private async addIcon(icon: string, folder: URI, readme: URI): Promise<void> {
-		try {
-			await this.download(`${TOOLBOXES_URL}/${encodeURIComponent(icon)}`, joinPath(folder, icon));
-		} catch {
+	private async addHeader(toolbox: IToolboxIndexEntry, folder: URI, readme: URI): Promise<void> {
+		let icon = toolbox.icon;
+		if (icon) {
+			try {
+				await this.download(`${TOOLBOXES_URL}/${encodeURIComponent(icon)}`, joinPath(folder, icon));
+			} catch {
+				icon = undefined;
+			}
+		}
+		if (!icon && !toolbox.games) {
 			return;
 		}
 		const content = (await this.fileService.readFile(readme)).value.toString();
-		const image = `<img src="${encodeURIComponent(icon)}" alt="" width="48" height="48">`;
-		await this.fileService.writeFile(readme, VSBuffer.fromString(content.replace(/^# (?<title>.*)$/m, `# ${image} $<title>`)));
+		const title = /^# (?<title>.*)$/m.exec(content);
+		if (!title?.groups) {
+			return;
+		}
+		// The title's line and the subtitle's, in pixels, make the height of the icon
+		const size = toolbox.games ? 60 : 48;
+		const header = [
+			'<div style="display: flex; align-items: center; gap: 14px; padding-bottom: 12px; margin-bottom: 16px; border-bottom: 1px solid rgba(128, 128, 128, 0.35);">',
+			...(icon ? [`<img src="${encodeURIComponent(icon)}" alt="" width="${size}" height="${size}" style="flex-shrink: 0; border-radius: 6px;">`] : []),
+			'<div>',
+			`<h1 style="margin: 0; padding: 0; border: none; font-size: 28px; line-height: 34px;">${escapeHtml(title.groups.title)}</h1>`,
+			...(toolbox.games ? [`<div style="margin-top: 4px; font-size: 16px; line-height: 22px; color: var(--vscode-descriptionForeground);">${escapeHtml(localize('pollisToolboxes.onlineSimulation', "An Online Simulation"))}</div>`] : []),
+			'</div>',
+			'</div>',
+		].join('\n');
+		await this.fileService.writeFile(readme, VSBuffer.fromString(content.slice(0, title.index) + header + content.slice(title.index + title[0].length)));
 	}
 
 	/** Downloads the toolbox's .vsix to a temporary folder, installs it and deletes the folder. */
