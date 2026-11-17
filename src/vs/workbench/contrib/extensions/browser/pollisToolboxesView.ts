@@ -7,6 +7,7 @@ import './media/pollisToolboxesView.css';
 import * as dom from '../../../../base/browser/dom.js';
 import { Button } from '../../../../base/browser/ui/button/button.js';
 import { CountBadge } from '../../../../base/browser/ui/countBadge/countBadge.js';
+import { VSBuffer } from '../../../../base/common/buffer.js';
 import { CancellationToken } from '../../../../base/common/cancellation.js';
 import { toErrorMessage } from '../../../../base/common/errorMessage.js';
 import { isCancellationError } from '../../../../base/common/errors.js';
@@ -361,12 +362,32 @@ export class PollisToolboxesView extends ViewPane {
 			return;
 		}
 		try {
-			const readme = joinPath(this.environmentService.cacheHome, 'pollisToolboxes', 'readme', `${toolbox.name}.md`);
+			const folder = joinPath(this.environmentService.cacheHome, 'pollisToolboxes', 'readme');
+			const readme = joinPath(folder, `${toolbox.name}.md`);
 			await this.download(`${TOOLBOXES_URL}/${encodeURIComponent(toolbox.readme)}`, readme);
+			if (toolbox.icon) {
+				await this.addIcon(toolbox.icon, folder, readme);
+			}
 			await this.commandService.executeCommand('markdown.showPreview', readme);
 		} catch (error) {
 			this.notificationService.error(localize('pollisToolboxes.readmeFailed', "Could not show the details of the {0}: {1}", toolbox.name, toErrorMessage(error)));
 		}
+	}
+
+	/**
+	 * Puts the toolbox's icon before the title of its downloaded README, as the extension page of an installed
+	 * toolbox shows it: the icon is downloaded beside the README, which the preview reads it from. Without the
+	 * icon (offline, say), the README stays as it is.
+	 */
+	private async addIcon(icon: string, folder: URI, readme: URI): Promise<void> {
+		try {
+			await this.download(`${TOOLBOXES_URL}/${encodeURIComponent(icon)}`, joinPath(folder, icon));
+		} catch {
+			return;
+		}
+		const content = (await this.fileService.readFile(readme)).value.toString();
+		const image = `<img src="${encodeURIComponent(icon)}" alt="" width="48" height="48">`;
+		await this.fileService.writeFile(readme, VSBuffer.fromString(content.replace(/^# (?<title>.*)$/m, `# ${image} $<title>`)));
 	}
 
 	/** Downloads the toolbox's .vsix to a temporary folder, installs it and deletes the folder. */
