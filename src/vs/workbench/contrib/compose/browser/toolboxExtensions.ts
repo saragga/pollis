@@ -329,8 +329,6 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 	readonly onDidChange = this._onDidChange.event;
 
 	private readonly registrations = this._register(new MutableDisposable<DisposableStore>());
-	/** Extend in the menu bar, kept apart from the registrations so that swapping them does not take it out and put it back. */
-	private readonly extendMenu = this._register(new MutableDisposable());
 	/** Opens once the toolboxes have been read: until then, the menus show the items stored last time. */
 	private readonly loadedBarrier = new Barrier();
 	/** The toolbox submenus by toolbox id: a menu id can be created only once. */
@@ -552,7 +550,6 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 			});
 		}
 		this.registrations.value = store;
-		this.setExtendMenu(items.some(item => item.menu === MenuId.MenubarExtendMenu.id));
 		this.storageService.store(MENUS_STORAGE_KEY, JSON.stringify(items), StorageScope.PROFILE, StorageTarget.MACHINE);
 		this._onDidChange.fire();
 	}
@@ -592,24 +589,6 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 			}
 		}
 		this.registrations.value = store;
-		this.setExtendMenu(items.some(item => item.menu === MenuId.MenubarExtendMenu.id));
-	}
-
-	/** Adds Extend to the menu bar or takes it out, only when that changes. */
-	private setExtendMenu(shown: boolean): void {
-		if (shown && !this.extendMenu.value) {
-			this.extendMenu.value = MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
-				submenu: MenuId.MenubarExtendMenu,
-				title: {
-					value: localize('extendMenu', "Extend"),
-					original: 'Extend',
-					mnemonicTitle: localize({ key: 'mExtend', comment: ['&& denotes a mnemonic'] }, "E&&xtend")
-				},
-				order: 9
-			});
-		} else if (!shown) {
-			this.extendMenu.clear();
-		}
 	}
 }
 
