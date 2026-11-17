@@ -138,7 +138,7 @@ appendComingSoonItems(SMART_REGIONS_LIBRARIES_MENU, [
 	],
 ]);
 
-// Map Visualisation: Google's Photorealistic 3D Tiles may be displayed, with their attributions, but not analysed
+// Map Visualisation: Google Maps and Google's Photorealistic 3D Tiles may be displayed, with their attributions, but not analysed
 MenuRegistry.appendMenuItem(SMART_REGIONS_MENU, {
 	submenu: SMART_REGIONS_MAPS_MENU,
 	title: localize('comingSoon.smartRegions.maps', "Map Visualisation"),
@@ -151,6 +151,7 @@ appendComingSoonItems(SMART_REGIONS_MAPS_MENU, [
 		localize('comingSoon.smartRegions.baseMaps', "Maps and Base Maps"),
 	],
 	[
+		localize('comingSoon.smartRegions.googleMaps', "Google Maps"),
 		localize('comingSoon.smartRegions.google3dTiles', "Google Photorealistic 3D Tiles"),
 	],
 ]);
