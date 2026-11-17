@@ -10,6 +10,7 @@ import { IExtension, IExtensionsWorkbenchService, IExtensionContainer, Extension
 import { append, $, reset, addDisposableListener, EventType, finalHandler } from '../../../../base/browser/dom.js';
 import * as platform from '../../../../base/common/platform.js';
 import { localize } from '../../../../nls.js';
+import { hasOnlyGames, onlineSimulationLabel } from './pollisToolboxesView.js';
 import { IExtensionManagementServerService } from '../../../services/extensionManagement/common/extensionManagement.js';
 import { IExtensionIgnoredRecommendationsService, IExtensionRecommendationsService } from '../../../services/extensionRecommendations/common/extensionRecommendations.js';
 import { ILabelService } from '../../../../platform/label/common/label.js';
@@ -345,6 +346,13 @@ export class PublisherWidget extends ExtensionWidget {
 		this.element = append(this.container, $('.publisher'));
 		const publisherDisplayName = $('.publisher-name.ellipsis');
 		publisherDisplayName.textContent = this.extension.publisherDisplayName;
+
+		// Pollis: the page of a toolbox of Simulation Games cases says whose online simulation it is, as its description in the Toolboxes section does
+		if (!this.small && hasOnlyGames(this.extension)) {
+			publisherDisplayName.textContent = onlineSimulationLabel(this.extension.publisherDisplayName);
+			append(this.element, publisherDisplayName);
+			return;
+		}
 
 		const verifiedPublisher = $('.verified-publisher');
 		append(verifiedPublisher, $('span.extension-verified-publisher.clickable'), renderIcon(verifiedPublisherIcon));

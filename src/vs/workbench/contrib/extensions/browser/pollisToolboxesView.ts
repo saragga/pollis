@@ -88,8 +88,15 @@ export function toolboxesOfIndex(index: IToolboxIndex | null | undefined): ITool
 }
 
 /** The installed copy of a toolbox, if any. */
+/** What the page of a toolbox of Simulation Games cases says below its title, with its publisher: Pollis Online Simulation, say. */
+export function onlineSimulationLabel(publisher: string | undefined): string {
+	return publisher
+		? localize('pollisToolboxes.onlineSimulationBy', "{0} Online Simulation", publisher)
+		: localize('pollisToolboxes.onlineSimulation', "An Online Simulation");
+}
+
 /** Whether an extension's toolboxes bring Simulation Games cases and no panels, so there is nothing to put in the menus. */
-function hasOnlyGames(extension: IExtension): boolean {
+export function hasOnlyGames(extension: IExtension): boolean {
 	const contributes = extension.local?.manifest.contributes as { readonly pollisToolboxes?: readonly { readonly panels?: unknown; readonly games?: unknown }[] } | undefined;
 	const toolboxes = contributes?.pollisToolboxes;
 	return Array.isArray(toolboxes) && toolboxes.length > 0
@@ -377,7 +384,7 @@ export class PollisToolboxesView extends ViewPane {
 
 	/**
 	 * Heads the toolbox's downloaded README as the extension page of an installed toolbox is headed: its icon, then
-	 * its title, and below the title of a toolbox of Simulation Games cases, in a smaller font, An Online Simulation,
+	 * its title, and below the title of a toolbox of Simulation Games cases, in a smaller font, its author's Online Simulation (Pollis Online Simulation, say),
 	 * the two as high as the icon. The icon is downloaded beside the README, which the preview reads it from; without
 	 * it (offline, say), the title stands alone.
 	 */
@@ -405,7 +412,7 @@ export class PollisToolboxesView extends ViewPane {
 			...(icon ? [`<img src="${encodeURIComponent(icon)}" alt="" width="${size}" height="${size}" style="flex-shrink: 0; border-radius: 6px;">`] : []),
 			'<div>',
 			`<h1 style="margin: 0; padding: 0; border: none; font-size: 28px; line-height: 34px;">${escapeHtml(title.groups.title)}</h1>`,
-			...(toolbox.games ? [`<div style="margin-top: 4px; font-size: 16px; line-height: 22px; color: var(--vscode-descriptionForeground);">${escapeHtml(localize('pollisToolboxes.onlineSimulation', "An Online Simulation"))}</div>`] : []),
+			...(toolbox.games ? [`<div style="margin-top: 4px; font-size: 16px; line-height: 22px; color: var(--vscode-descriptionForeground);">${escapeHtml(onlineSimulationLabel(toolbox.author))}</div>`] : []),
 			'</div>',
 			'</div>',
 		].join('\n');
