@@ -7,10 +7,10 @@ name: Pollis Windows
 # The build step runs even when a check fails, so that one run reports both. Manual trigger only:
 # a full build takes hours and nothing is cached yet.
 #
-# Workflow artifacts expire. To keep a build, set `release` to a version tag (v0.1.0): the zipped app
-# and the installer are attached to that GitHub release, which anyone can download without signing in,
-# and releases/latest/download/Pollis-win32-x64.zip and PollisSetup-x64.exe always point at the newest
-# ones. Nothing is attached when a check fails.
+# Workflow artifacts expire. To keep a build, set `release` to a version tag (v0.1.0): the installer
+# is attached to that GitHub release, which anyone can download without signing in, and
+# releases/latest/download/PollisSetup-x64.exe always points at the newest one. Nothing is attached
+# when a check fails.
 
 on:
   workflow_dispatch:
@@ -157,7 +157,7 @@ jobs:
           mv .build/win32-x64/user-setup/VSCodeSetup.exe .build/PollisSetup-x64.exe
 
       - name: Upload packaged app
-        if: ${{ !cancelled() && inputs.package && (inputs.upload || inputs.release != '') }}
+        if: ${{ !cancelled() && inputs.package && inputs.upload }}
         uses: actions/upload-artifact@v7
         with:
           name: Pollis-win32-x64
@@ -183,19 +183,10 @@ jobs:
       contents: write
 
     steps:
-      - name: Download packaged app
-        uses: actions/download-artifact@v8
-        with:
-          name: Pollis-win32-x64
-          path: Pollis-win32-x64
-
       - name: Download installer
         uses: actions/download-artifact@v8
         with:
           name: PollisSetup-x64
-
-      - name: Archive packaged app
-        run: zip -qr Pollis-win32-x64.zip Pollis-win32-x64
 
       - name: Attach to release
         env:
@@ -232,4 +223,4 @@ jobs:
           gh release view "$TAG" > /dev/null 2>&1 ||
             gh release create "$TAG" --target "$GITHUB_SHA" --title "Pollis $TAG" --notes "$NOTES" ||
             gh release view "$TAG" > /dev/null
-          gh release upload "$TAG" Pollis-win32-x64.zip PollisSetup-x64.exe --clobber
+          gh release upload "$TAG" PollisSetup-x64.exe --clobber

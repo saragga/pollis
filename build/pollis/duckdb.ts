@@ -100,9 +100,16 @@ export function duckdbExtensionsStream(platform: string, arch: string): NodeJS.R
 /**
  * On macOS, libduckdb comes as a universal library for both Apple silicon and Intel (117 MB); keep
  * only the architecture of the build (57 MB). The universal app is made from the two builds.
+ *
+ * On Linux, npm installs the bindings for musl (Alpine) beside those for glibc, as their package
+ * names no libc; Pollis runs on glibc, so leave out the musl ones (91 MB).
  */
 export function thinDuckDB(platform: string, arch: string): NodeJS.ReadWriteStream {
+	const musl = `${path.sep}@duckdb${path.sep}node-bindings-linux-${arch}-musl${path.sep}`;
 	return es.map<File, File | void>((file, cb) => {
+		if (platform === 'linux' && file.path.includes(musl)) {
+			return cb();
+		}
 		if (platform !== 'darwin' || arch === 'universal' || !file.isBuffer() || path.basename(file.path) !== 'libduckdb.dylib') {
 			return cb(undefined, file);
 		}
