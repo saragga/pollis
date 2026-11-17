@@ -14,6 +14,7 @@ The LaTeX sources of the documents in Help > Documentation. Pollis ships these s
 | `workflows/workflow_ask_pollis.tex` | `pollis-drilldown-ask-pollis.pdf` (Drill-down: Ask Pollis) |
 | `workflows/workflow_orchestration.tex` | `pollis-drilldown-orchestration.pdf` (Drill-down: Orchestration) |
 | `workflows/workflow_compilation_lab.tex` | `pollis-drilldown-compilation-lab.pdf` (Drill-down: Compilation Lab) |
+| `workflows/workflow_simulation_games.tex` | `pollis-drilldown-simulation-games.pdf` (Drill-down: Simulation Games) |
 
 `workflows/replication_flowchart.pdf`, a figure of the Tour and the Guide, is not kept here either: it is built from `replication_flowchart.tex` before them.
 

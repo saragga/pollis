@@ -1,0 +1,405 @@
+% Pollis drill-down: Compose > Collaboration > Simulation Games, cases played by teams in the chat, round by round,
+% on a Julia model run on the facilitator's computer: hosting and joining, teams and roles, a round, news,
+% negotiations, the market of a case that trades by the clock, the debrief, the five cases, how a case is written,
+% and how the games are made (17 November 2026). For users who want the detail, and for whoever maintains Pollis.
+% Compile with: latexmk -pdf workflow_simulation_games.tex
+\input{workflow_style}
+
+\usepackage{titlesec}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{listings}
+
+\fancyhf{}
+\fancyfoot[L]{\footnotesize\color{soft}\textbf{Pollis}\enspace Drill-down: Simulation Games}
+\fancyfoot[R]{\footnotesize\color{soft}\thepage}
+
+\titleformat{\section}{\color{navy}\large\bfseries}{\color{deepamber}\thesection}{0.6em}{}
+\titleformat{\subsection}{\color{navy}\normalsize\bfseries}{\color{deepamber}\thesubsection}{0.5em}{}
+\titlespacing*{\section}{0pt}{12pt}{4pt}
+\titlespacing*{\subsection}{0pt}{8pt}{2pt}
+\setlength{\parskip}{4pt}
+
+\lstset{basicstyle=\ttfamily\footnotesize, columns=fullflexible, keepspaces=true, breaklines=true,
+  backgroundcolor=\color{pale}, frame=leftline, rulecolor=\color{amber}, framerule=2pt, xleftmargin=6pt,
+  framexleftmargin=6pt, aboveskip=4pt, belowskip=4pt, upquote=true, tabsize=2}
+
+\usepackage{xurl}
+\newcommand{\file}[1]{{\small\nolinkurl{#1}}}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+\newcommand{\ui}[1]{\textbf{#1}}
+\newcommand{\setting}[1]{\file{#1}}
+% Code with spaces in it, such as a command line, which \file would run together
+\newcommand{\code}[1]{\texttt{\small #1}}
+% A menu path at the start of a table cell
+\newcommand{\cellpath}[1]{\leavevmode\menupath{#1}}
+
+\begin{document}
+
+\workflowhead[Drill-Down]{Simulation Games}
+  {Teams, rounds and a model the class can open}
+  {How a class plays a case in the chat, team against team, round by round, on a Julia model run on the
+   facilitator's computer, and how the debrief turns every decision, result and message into tables.}
+
+\begin{nbox}
+{\color{amber}\bfseries Drill-down.}\enspace
+A look under the surface of \textbf{Compose \gt Collaboration \gt Simulation Games}. It is for anyone who wants to
+run a game with a class, know what each player sees and what is kept, or write a case of their own;
+\S\ref{sec:machinery} is for whoever maintains Pollis. It describes the state of 17 November 2026.
+\end{nbox}
+
+\tableofcontents
+
+\section{What Simulation Games are}\label{sec:what}
+In a simulation game the players run something, a company, a deal, a trading desk, in a world a model keeps: they
+decide, the model answers with results, and they decide again in its light. Business games of this kind have been
+used in teaching for decades; \dcite{FHWG2009a}{Faria, Hutchinson, Wellington and Gold (2009)} review how they
+developed over forty years, in the technology they run on, why they are adopted and how they are administered.
+
+In Pollis, a game is a session of the Collaboration chat. A \emph{facilitator}, the teacher, hosts it; the players
+join it with its invitation and are split into teams. Each round, every team submits its decisions in a form beside
+the chat, and the facilitator's copy of Pollis runs the case's model, in Julia, on the facilitator's computer. The
+model is not a black box: it is a file of Julia code that comes with the case, which the class opens in the
+debrief.
+
+\begin{center}\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{@{}p{0.42\linewidth}L@{}}
+\toprule
+\textbf{Menu item} & \textbf{What it is for}\\
+\midrule
+\cellpath{Simulation Games \gt Host a Game...} & The facilitator: chooses a case and starts the game's session\\
+\cellpath{Simulation Games \gt Join a Game...} & A player: joins with the invitation the facilitator sent\\
+\cellpath{Simulation Games \gt Next Round} & The facilitator: forms the teams, then plays each round\\
+\cellpath{Simulation Games \gt Release News...} & The facilitator: releases an item of news while a round is decided\\
+\cellpath{Simulation Games \gt Open the Debrief} & The facilitator: writes the debrief of a game, during it or after\\
+\bottomrule
+\end{tabularx}
+\end{center}
+Next Round, Release News... and Open the Debrief are also buttons in the facilitator's column of the chat page.
+
+\section{A game from start to end}\label{sec:game}
+\begin{enumerate}
+  \item \textbf{Host.} \ui{Host a Game...} lists the cases of the installed toolboxes, by their toolbox's name, and
+    \ui{Choose a Case Folder...} for a case of your own. When the case has several ways of organising its teams,
+    it asks which; when it can be played in different lengths, it asks how many rounds. The session starts, and
+    its invitation ends in \file{@game}.
+  \item \textbf{Join.} Each player chooses \ui{Join a Game...}, pastes the invitation and types their name. A game
+    is a class session, so it takes up to 30 players, each connected to the facilitator only.
+  \item \textbf{Teams.} The first \ui{Next Round} asks for the number of teams, within the case's bounds and at most
+    one per player, splits the players at random, and lets the facilitator move any of them before starting.
+    Players who join later are placed by \menupath{Classroom \gt Split into Breakout Groups...}, which keeps the teams
+    and lets the facilitator move anyone.
+  \item \textbf{Start.} The model's \file{initial} sets up the world; what it says before the first round is shown
+    as the opening, and each player reads the case's briefing and that of their role.
+  \item \textbf{Rounds.} Each team submits its decisions; the facilitator sees which teams have, and presses
+    \ui{Next Round}, which asks first when some have not. The model plays the round, and everyone sees the
+    results. The facilitator can release news while a round is decided; the teams can write to each other.
+  \item \textbf{End.} The game ends after its last round, or earlier when the model says so, such as when a plan is
+    agreed, or when fewer than two teams remain. \ui{Open the Debrief} then takes the place of Next Round.
+\end{enumerate}
+
+\section{Teams, roles and briefings}\label{sec:roles}
+A case can have several \emph{structures}, ways of organising its teams, and the facilitator chooses one when
+hosting. Each structure has \emph{roles}, each with its briefing and the decisions it sets. In Grow a Chocolate
+Chain, for example, \ui{Board Members} has one role, which reads every briefing and sets every decision, while
+\ui{Departments} has four: the Chief Executive sets the shops and the staff, Marketing the price and the marketing,
+Sourcing the beans, and Finance nothing, but reads the costs and the cash, so that the team has to talk.
+
+\begin{itemize}
+  \item \textbf{Dealing the roles.} Roles are dealt when the game starts and whenever a team changes. A player keeps
+    their roles while they stay in their team; a newcomer takes a role nobody in the team holds, or else shares
+    the one fewest hold; a role still unheld goes to the player with fewest. When a player leaves, their roles go
+    to the others.
+  \item \textbf{Submitting.} A player's submission changes only the decisions their roles set, and the last one
+    submitted counts. The fields of the other roles are shown, but cannot be changed (``Set by Marketing''). The
+    facilitator sees who submitted, and which roles have not.
+  \item \textbf{Briefings.} The case's briefing, which everyone reads, and the briefings of the player's roles are
+    beside the chat, in sections that can be closed. The facilitator reads every briefing.
+\end{itemize}
+
+\subsection{Sides}
+In some cases the teams are not alike: a buyer and the sellers, or shareholders, banks and bondholders. Each kind
+of team is a \emph{side}, with its own number of teams, briefing, roles, decisions and private results. In such a
+case the debrief ranks the teams of each side among themselves; a side of one team is set against doing nothing.
+
+\section{A round}\label{sec:round}
+\begin{itemize}
+  \item \textbf{The decisions.} Each is a number, with its unit, bounds and step, or a choice among options. A
+    decision can be made only by some sides, only in some rounds, or once for each other team, such as a bid for
+    each rival. A team with nothing to decide in a round is told so.
+  \item \textbf{The model.} \ui{Next Round} writes every team's decisions and runs the case's model in a fresh Julia
+    process on the facilitator's computer. Its random numbers come from a seed set when the game starts and the
+    round's number, so a round played again gives the same results. The Julia run is the one the setting
+    \setting{julia.executablePath} names, else the \file{julia} a terminal would find; the players need no Julia.
+  \item \textbf{The results.} The model returns the public results, a row for each team that everyone sees, and the
+    private ones, which each team alone sees, with a text for everyone and, when it has one, a text for each team.
+    It can take a team out of the game, a company bought, say, with the reason; the team keeps its results, but
+    decides no more.
+\end{itemize}
+
+\section{News}\label{sec:news}
+A case brings items of news, each with the first round in which it can be released, a title, a text, the roles who
+read it, and the values of the model's parameters it changes. \ui{Release News...} offers the items of the round,
+and earlier ones not yet released, or \ui{Write a News Item...}: a title, a text, any parameters changed, picked
+from the case's numbers with their values now, and the roles who read it. The players are not told which
+parameters changed; the facilitator's card lists each change, from and to. News is released only while a round is
+decided, and its changes apply from that round on. A player sees an item as a card in the chat,
+``News for Sourcing, Finance: \dots'' when it is not for everyone; latecomers see the news released so far.
+
+\section{Negotiations}\label{sec:negotiations}
+Unless a case says otherwise, a player can write to another team while a round is decided: \ui{Write to}, the team,
+a text, and \ui{Send to the Team}. The message goes to everyone in both teams, and to the facilitator, who reads it;
+the players are told so in the form and when they join a team. Nothing makes a team keep what it promised. The chat
+shows ``Ana to Team 2'' to the writer's team, ``Ana (Team 1) to your team'' to the other, and ``Ana (Team 1) to
+Team 2'' to the facilitator, and every message is kept for the debrief.
+
+\section{A market by the clock}\label{sec:market}
+A case with a market, such as Trading Floor, is played in \emph{periods} instead of rounds of decisions: each period,
+the teams are trading desks that buy and sell one asset on an order book while a clock runs, a few minutes, beside
+the chat. Classroom markets have a long history: \dcite{Smi1962a}{Smith (1962)} had students trade as buyers and
+sellers in a double auction, each with a value or a cost only they knew, and found prices close to the competitive
+equilibrium; \dcite{GS1993a}{Gode and Sunder (1993)} found the allocative efficiency of a double auction to derive
+largely from its structure, even with traders who submit random bids and offers within their budgets.
+
+\subsection{The rules of the book}
+\begin{itemize}
+  \item An order buys or sells a number of shares at a price or better, the price in steps of the case's tick.
+  \item An order that can trade at once does: with the best price on the other side first and, at the same price,
+    the oldest order first, at the price of the order already on the book.
+  \item What does not trade stays on the book until another desk trades with it, someone in the desk cancels it,
+    or the period closes. Orders still on the book at the close are cancelled.
+  \item A desk can buy only with the cash its other buy orders do not hold, and sell only the shares its other sell
+    orders do not hold: no borrowing and no selling short. An order that would trade with the desk's own order is
+    refused. A desk has at most 20 orders on the book.
+\end{itemize}
+The page shows the asset, the last trade, the volume, the time left, the best eight prices to buy and to sell with
+their shares, and the last twelve trades; a player also sees their desk's cash and shares and their own orders,
+with \ui{Cancel}. The facilitator sees every desk.
+
+\subsection{The close of a period}
+The period closes when its time is up; \ui{Next Round} closes it earlier, after asking. Next Round then announces
+the period's results: each desk's position, its cash, shares, what it bought and sold and at what average prices,
+and the market's last, average, highest and lowest price and its volume, go to the model as the desk's decisions.
+Every trade is kept, for the debrief.
+
+\subsection{Private information}
+In Trading Floor some desks receive a hint of the company's results before a period. Whether a market's prices
+reveal what some traders know is the question of \dcite{PS1988a}{Plott and Sunder (1988)}, who found that laboratory
+markets aggregated the traders' diverse information well in some designs, and hardly at all in others. The debrief
+lets the class ask the same of their own market: did the price move toward the value before the results were
+announced?
+
+\section{The debrief}\label{sec:debrief}
+The debrief, the analysis that follows the game, is where a simulation teaches: \dcite{Led1992a}{Lederman (1992)}
+calls it the heart of experiential learning, and reviews its phases and how to conduct it. \ui{Open the Debrief}
+works on the game hosted, once a round has been played, or, outside a game, on a game folder chosen. It writes a
+folder \file{debrief} in the game's folder, replacing an earlier one, and opens \file{debrief.md} in the Markdown
+preview.
+
+\begin{center}\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{@{}p{0.27\linewidth}L@{}}
+\toprule
+\textbf{File} & \textbf{What it holds}\\
+\midrule
+\file{debrief.md} & The teams and their structure; the standings after the last round played, by the case's
+  score, side by side in a case with sides; each round's text, public results, news with its readers and changes,
+  and the number of messages; every message between teams; the case's questions for the class\\
+\file{decisions.csv} & Every team's decisions in every round\\
+\file{results.csv} & The public results of every round\\
+\file{team_results.csv} & The private results of every team and round\\
+\file{news.csv} & The news released, with its round, readers and changes\\
+\file{negotiations.csv} & Every message, with its time, writer and teams\\
+\file{trades.csv} & In a case with a market: every trade, with its period, time, price and shares, the two desks, and who placed each
+  order\\
+\file{case/} & A copy of the case, so that the class can open \file{model.jl}\\
+\bottomrule
+\end{tabularx}
+\end{center}
+In a live game the facilitator is asked whether to share the debrief with the players, and warned that they will
+see every team's accounts and messages. Shared, \file{debrief.md}, \file{model.jl} and \file{case.toml} go to the
+players as files, and the tables as datasets, to open with the ordinary panels.
+
+\section{The five cases}\label{sec:cases}
+Each case comes in a toolbox of its own, installed from the Toolboxes section of the Extensions view. The companies
+and their names are made up.
+
+\begin{center}\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.19\linewidth}>{\raggedright\arraybackslash}p{0.23\linewidth}L@{}}
+\toprule
+\textbf{Case} & \textbf{Teams and rounds} & \textbf{What the teams do}\\
+\midrule
+Grow a Chocolate Chain & 2 to 6 brands, 5 years & Each runs a chocolate brand in one country, selling in its own
+  shops: its price, beans, shops, staff and marketing. The highest cumulative profit wins\\
+Merge or Be Bought & 3 bicycle makers, 6 quarters & Each bids for its rivals' shares and sets the least price it
+  accepts for its own; a company bought leaves the game. The best return for the original shareholders wins\\
+A Vineyard for the Portfolio & A drinks group and 3 wineries, 6 rounds & The buyer looks into the wineries,
+  offers cash and an earn-out, and runs what it bought for three years; each winery's owners know a problem the
+  buyer does not. The value created, on each side\\
+Save the Company & Shareholders, banks and bondholders of a retailer, 4 or 6 quarters & The shareholders propose a
+  restructuring; the banks and the bondholders accept it, or call in the loan, or sell. A plan agreed, or the
+  administration. The value at the end, on each side\\
+Trading Floor & 3 to 8 desks, 4 or 6 periods & The desks trade one company's shares on the order book while its
+  results move their value; some desks receive hints first. The best return wins\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{What each case is about}
+\begin{itemize}
+  \item \textbf{Merge or Be Bought.} A bid is made only when the bidder's cash and borrowing cover it, and a company
+    is bought when its highest bid reaches its owners' least price. The synergy a buyer expects is its own, and
+    known to it alone. \dcite{Rol1986a}{Roll (1986)} argued that bidders who trust their own valuation too much simply
+    pay too much for their targets; the debrief asks whether the class's buyers did.
+  \item \textbf{A Vineyard for the Portfolio.} Sellers who know more than the buyer are the setting of
+    \dcite{Ake1970a}{Akerlof (1970)}, where uncertainty about quality drives good products from the market. The
+    buyer can pay to find out, or protect itself with an earn-out, paid when the winery reaches its plan:
+    \dcite{KA2000a}{Kohers and Ang (2000)} found earnouts used against the misvaluation of targets about which
+    information is asymmetric, and as a bonus that keeps the target's managers.
+  \item \textbf{Save the Company.} The banks are secured and paid first, the bondholders after them, the
+    shareholders last. A restructuring agreed outside the courts can leave every side better off than
+    administration, if they agree in time: \dcite{GJL1990a}{Gilson, John and Lang (1990)} studied firms in default
+    that restructured their debt privately, and those that went to court instead.
+  \item \textbf{Trading Floor.} The company's value moves at each close by its results, and by the news the
+    facilitator releases; at the end the company is taken over at its value, and every desk's shares are paid in
+    cash. Before each period, every other desk receives its analysts' hint of the results (\S\ref{sec:market}).
+\end{itemize}
+
+\section{Writing a case}\label{sec:writing}
+A case is a folder with \file{case.toml}, which says what the players see and decide, and \file{model.jl}, which
+says what happens; its briefings are Markdown files beside them.
+
+\subsection{case.toml}
+\begin{center}\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{@{}p{0.27\linewidth}L@{}}
+\toprule
+\textbf{Key} & \textbf{What it says}\\
+\midrule
+\file{title}, \file{description} & The case's name and what it is about\\
+\file{rounds}, \file{round}, \file{round_names} & The number of rounds, the word for one (\ui{Year}, \ui{Quarter},
+  \ui{Period}) and, when they differ, each round's name\\
+\file{round_choices} & The lengths the facilitator chooses from, such as \code{[4, 6]}\\
+\file{teams}, \file{team_names} & The least and most teams, and their names\\
+\file{briefing}, \file{debrief} & The briefing everyone reads, and the questions for the debrief\\
+\file{negotiations} & \code{false} when the teams cannot write to each other\\
+\file{[[sides]]} & The kinds of team: key, label, number of teams and briefing\\
+\file{[[structures]]} & The ways the teams can be organised, each with \file{[[structures.roles]]}: key, label,
+  briefing and \file{decides}, the decisions the role sets\\
+\file{[[decisions]]} & Key, label, \file{kind} (\code{number} or \code{choice}), unit, bounds, step, options,
+  default and help; \file{rivals}, \file{sides} and \file{rounds} when a decision is not made by every team in every
+  round\\
+\file{[results]} & \file{winner}, the column that ranks the teams, and the columns of \file{[[results.public]]} and
+  \file{[[results.private]]}, each with key, label, unit and digits\\
+\file{[[news]]} & Round, title, text, roles, and \file{[news.parameters]}, the parameters it changes\\
+\file{[market]} & For a case that trades by the clock: the asset, the currency, the minutes of a period, the tick,
+  each desk's cash and shares, and the largest order and price\\
+\file{[parameters]} & The model's numbers, which news can change\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{model.jl}
+The model defines two functions. Pollis loads it in a module of its own, with Random, Statistics, LinearAlgebra and
+Printf; other packages the case needs are listed in \file{packages}, and installed when missing.
+\begin{lstlisting}
+function initial(rng, parameters, teams)
+    # the world before round 1: return state, or (state, results) to show an opening
+end
+
+function play(rng, state, decisions, parameters)
+    # one round: return (state, results)
+end
+\end{lstlisting}
+\begin{itemize}
+  \item \file{parameters} is \file{[parameters]}, as the news released so far changed it; in a case with
+    \file{round_choices} it holds \file{rounds}, the length chosen, and in a case with a market, \file{market}.
+  \item \file{teams} and \file{decisions} have, for each team, its number, its name and, in a case with sides, its
+    side; \file{decisions} also the values the team chose, by key, and a decision made for each rival is a
+    dictionary by the rival's number.
+  \item \file{state} is a dictionary of what TOML can hold, written to the round's folder, so that a game can be
+    read and played again.
+  \item \file{results} has \file{public}, \file{private} by team, and when needed \file{text}, \file{private_text},
+    \file{out} (the teams that leave, with the reason) and \file{over}.
+\end{itemize}
+
+\subsection{A toolbox of cases}
+A toolbox brings cases by listing them in its \file{package.json}, under \file{pollisToolboxes}, as \file{games},
+each the \file{folder} of a case; a toolbox of cases alone has no panels. Installed, its cases are in
+\ui{Host a Game...}. To try a case before packaging it, choose \ui{Choose a Case Folder...}.
+
+\section{Under the surface}\label{sec:machinery}
+\begin{itemize}
+  \item \textbf{A game is a class.} The session is a class session (\file{collaborationService.ts}): the facilitator's
+    copy joins one room per seat, each player is in one room with the facilitator only, and the facilitator's
+    copy passes everything on, to a team or to everyone. Teams are breakout groups that last the game.
+  \item \textbf{The messages.} \file{collaborationProtocol.ts} defines them: \file{game} (the round, the team, its
+    decisions, roles and briefings), \file{decisions}, \file{gameResults}, \file{negotiation}, and, for a market,
+    \file{order}, \file{cancelOrder} and \file{market}, the book as each desk sees it, with its refusals.
+  \item \textbf{The run.} \file{GameRun} (\file{collaborationGame.ts}) reads the case (\file{loadCase}), forms the
+    teams, deals the roles, writes the round's files and runs \file{media/games/game.jl}, which loads the model,
+    applies the news, calls \file{initial} or \file{play} and writes the state and the results as JSON. A round that
+    fails leaves \file{error.txt} saying why.
+  \item \textbf{The market.} \file{MarketBook} (\file{collaborationMarket.ts}) is kept by the facilitator's copy.
+    Prices are kept in whole ticks, so that no rounding creeps into cash, and the cash and shares a desk's orders
+    hold are set aside until they trade or are cancelled.
+  \item \textbf{The page.} \file{collaborationChat.ts} draws the decisions form, the briefings, the negotiations,
+    the market and the facilitator's column, beside the chat.
+  \item \textbf{The debrief.} \file{collaborationDebrief.ts} reads a game's folder from disk and writes
+    \file{debrief/}.
+\end{itemize}
+
+\subsection{A game's folder}
+A game is a folder named by the date and time it started, in \file{games/<case>} of the Pollis Workspace, else in
+\file{~/.pollis/games/<case>}:
+\begin{center}\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{@{}p{0.32\linewidth}L@{}}
+\toprule
+\textbf{File} & \textbf{What it holds}\\
+\midrule
+\file{game.toml} & The case and its folder, the structure, the number of rounds, the seed and the teams\\
+\file{round-00/state.toml} & The world before round 1\\
+\file{round-k/decisions.toml} & Every team's decisions, with its players and their roles\\
+\file{round-k/news.toml} & The news released in the round\\
+\file{round-k/negotiations.toml} & The messages between teams\\
+\file{round-k/trades.toml} & In a case with a market: the period's trades\\
+\file{round-k/state.toml}, \file{results.json} & The world after the round, and its results\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{Where things are}
+
+\begin{center}\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{@{}p{0.46\linewidth}L@{}}
+\toprule
+\textbf{File} & \textbf{Role}\\
+\midrule
+\file{.../collaboration/collaborationGame.ts} & Cases, teams, roles and the rounds\\
+\file{.../collaboration/collaborationMarket.ts} & The order book\\
+\file{.../collaboration/collaborationDebrief.ts} & The debrief\\
+\file{.../collaboration/collaborationService.ts} & The session, the menu's commands\\
+\file{.../collaboration/collaborationChat.ts} & The chat page\\
+\file{.../collaboration/collaborationProtocol.ts} & The messages\\
+\file{.../compose/browser/media/games/game.jl} & The runner of a case's model\\
+\file{pollis-toolboxes}, \file{pollis-toolbox-<case>} & The five cases\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\references
+\dref{Ake1970a}{Akerlof, G.\,A. (1970). The Market for ``Lemons'': Quality Uncertainty and the Market Mechanism. \emph{The Quarterly Journal of Economics} 84(3), 488--500. \ddoi{10.2307/1879431}}
+\dref{FHWG2009a}{Faria, A.\,J., Hutchinson, D., Wellington, W.\,J. and Gold, S. (2009). Developments in Business Gaming: A Review of the Past 40 Years. \emph{Simulation \& Gaming} 40(4), 464--487. \ddoi{10.1177/1046878108327585}}
+\dref{GJL1990a}{Gilson, S.\,C., John, K. and Lang, L.\,H.\,P. (1990). Troubled Debt Restructurings: An Empirical Study of Private Reorganization of Firms in Default. \emph{Journal of Financial Economics} 27(2), 315--353. \ddoi{10.1016/0304-405X(90)90059-9}}
+\dref{GS1993a}{Gode, D.\,K. and Sunder, S. (1993). Allocative Efficiency of Markets with Zero-Intelligence Traders: Market as a Partial Substitute for Individual Rationality. \emph{Journal of Political Economy} 101(1), 119--137. \ddoi{10.1086/261868}}
+\dref{KA2000a}{Kohers, N. and Ang, J. (2000). Earnouts in Mergers: Agreeing to Disagree and Agreeing to Stay. \emph{The Journal of Business} 73(3), 445--476. \ddoi{10.1086/209649}}
+\dref{Led1992a}{Lederman, L.\,C. (1992). Debriefing: Toward a Systematic Assessment of Theory and Practice. \emph{Simulation \& Gaming} 23(2), 145--160. \ddoi{10.1177/1046878192232003}}
+\dref{PS1988a}{Plott, C.\,R. and Sunder, S. (1988). Rational Expectations and the Aggregation of Diverse Information in Laboratory Security Markets. \emph{Econometrica} 56(5), 1085--1118. \ddoi{10.2307/1911360}}
+\dref{Rol1986a}{Roll, R. (1986). The Hubris Hypothesis of Corporate Takeovers. \emph{The Journal of Business} 59(2), 197--216. \ddoi{10.1086/296325}}
+\dref{Smi1962a}{Smith, V.\,L. (1962). An Experimental Study of Competitive Market Behavior. \emph{Journal of Political Economy} 70(2), 111--137. \ddoi{10.1086/258609}}
+
+\end{document}

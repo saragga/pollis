@@ -1345,6 +1345,39 @@
 			"open_access": false
 		},
 		{
+			"key": "Ake1970a",
+			"type": "article",
+			"title": "The Market for \"Lemons\": Quality Uncertainty and the Market Mechanism",
+			"authors": [
+				"Akerlof, George A."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1970,
+			"journal": "The Quarterly Journal of Economics",
+			"volume": "84",
+			"number": "3",
+			"pages": "488-500",
+			"issn": "0033-5533",
+			"doi": "10.2307/1879431",
+			"openalex": "W2156109180",
+			"keywords": [
+				"lemons problem",
+				"quality uncertainty",
+				"adverse selection",
+				"market mechanisms",
+				"used cars",
+				"product quality",
+				"information asymmetry",
+				"market institutions"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-17",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "Alo2006a",
 			"type": "book",
 			"title": "An Introduction to Systems Biology: Design Principles of Biological Circuits",
@@ -12207,6 +12240,38 @@
 			"open_access": true
 		},
 		{
+			"key": "FHWG2009a",
+			"type": "article",
+			"title": "Developments in Business Gaming: A Review of the Past 40 Years",
+			"authors": [
+				"Faria, A. J.",
+				"Hutchinson, David",
+				"Wellington, William J.",
+				"Gold, Steven"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2008,
+			"journal": "Simulation & Gaming",
+			"volume": "40",
+			"number": "4",
+			"pages": "464-487",
+			"issn": "1046-8781",
+			"doi": "10.1177/1046878108327585",
+			"openalex": "W2074109300",
+			"abstract": "This article examines developments in business simulation gaming during the past 40 years. Covered in this article are a brief history of business games, the changing technology employed in the development and use of business games, changes in why business games are adopted and used, changes in how business games are administered, and the current state of business gaming. Readers interested in developments in other areas of simulation gaming (urban planning, social studies, ecology, economics, geography, health, etc.) are encouraged to look at other articles appearing during the 40th anniversary year of Simulation & Gaming and at the many fine articles that appeared in the silver anniversary issue of Simulation & Gaming (December 1995).",
+			"abstract_source": "openalex",
+			"keywords": [
+				"business simulation",
+				"management education"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-17",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "FL2002a",
 			"type": "article",
 			"title": "Nonlinear Programming without a Penalty Function",
@@ -13755,6 +13820,40 @@
 			"source": "manual",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "GJL1990a",
+			"type": "article",
+			"title": "Troubled Debt Restructurings: An Empirical Study of Private Reorganization of Firms in Default",
+			"authors": [
+				"Gilson, Stuart C.",
+				"John, Kose",
+				"Lang, Larry H. P."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1990,
+			"journal": "Journal of Financial Economics",
+			"volume": "27",
+			"number": "2",
+			"pages": "315-353",
+			"issn": "0304-405X",
+			"doi": "10.1016/0304-405X(90)90059-9",
+			"openalex": "W1562628026",
+			"keywords": [
+				"Chapter 11 bankruptcy",
+				"financial distress",
+				"bank debt",
+				"intangible assets",
+				"stock returns",
+				"shareholder welfare",
+				"market discrimination"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-17",
+			"checked": false,
+			"open_access": false
 		},
 		{
 			"key": "GJR1993a",
@@ -20387,6 +20486,41 @@
 			"open_access": true
 		},
 		{
+			"key": "KA2000a",
+			"type": "article",
+			"title": "Earnouts in Mergers: Agreeing to Disagree and Agreeing to Stay",
+			"authors": [
+				"Kohers, Ninon",
+				"Ang, James"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2000,
+			"journal": "The Journal of Business",
+			"volume": "73",
+			"number": "3",
+			"pages": "445-476",
+			"issn": "0021-9398",
+			"doi": "10.1086/209649",
+			"openalex": "W2048312638",
+			"abstract": "We examine a large sample of mergers involving earnout payments made by bidders to target shareholders. Our findings suggest that earnouts serve two non-mutually-exclusive functions: as risk reduction mechanisms against misvaluation of high asymmetric information targets, and as retention bonuses for target human capital in mergers with feasible contract implementation. Around the merger announcement, bidder shareholders show significant positive responses, which are not reversed over the subsequent 3 years. In the postmerger period, the frequency of earnout payment and the percentage of target managers staying beyond the earnout period are high, supporting the use of earnouts as retention bonuses.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"earnouts",
+				"mergers and acquisitions",
+				"target shareholders",
+				"information asymmetry",
+				"risk mitigation",
+				"contract implementation",
+				"merger announcement returns"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-17",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "KA2006a",
 			"type": "article",
 			"title": "Some Variants of the Controlled Random Search Algorithm for Global Optimization",
@@ -25157,6 +25291,37 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
+		},
+		{
+			"key": "Led1992a",
+			"type": "article",
+			"title": "Debriefing: Toward a Systematic Assessment of Theory and Practice",
+			"authors": [
+				"Lederman, Linda Costigan"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1992,
+			"journal": "Simulation & Gaming",
+			"volume": "23",
+			"number": "2",
+			"pages": "145-160",
+			"issn": "1046-8781",
+			"doi": "10.1177/1046878192232003",
+			"openalex": "W2119641248",
+			"abstract": "Experiential learning in the educational context incorporates real-life-based processes into the educational setting in order for them to be used and scrutinized The heart of these sorts of learning experiences is the postexperience analytic process, generally referred to as the debriefing session. This essay focuses on the debriefing process as it accompanies one form of experiential learning, simulations and games. It provides a review of the existent literature on debriefing, an analysis of the debriefing process, and effective strategies for its use. It provides an analysis of the process, identifies its components and essential phases, and presents a systematic approach to the assessment of the conduct of debriefing sessions.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"debriefing",
+				"experiential learning",
+				"simulation-based training",
+				"simulation games"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-17",
+			"checked": false,
+			"open_access": false
 		},
 		{
 			"key": "Lem1965a",
@@ -30787,6 +30952,45 @@
 			"open_access": false
 		},
 		{
+			"key": "PS1988a",
+			"type": "article",
+			"title": "Rational Expectations and the Aggregation of Diverse Information in Laboratory Security Markets",
+			"authors": [
+				"Plott, Charles R.",
+				"Sunder, Shyam"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1988,
+			"journal": "Econometrica",
+			"volume": "56",
+			"number": "5",
+			"pages": "1085-1118",
+			"issn": "0012-9682",
+			"doi": "10.2307/1911360",
+			"openalex": "W2021278244",
+			"abstract": "The study explores the information aggregation properties of experimental markets. A fully-revealing rational expectations equilibrium exists in the competitive model of each of the markets studied. For markets with a single compound security in which traders have identical preferences, the rational expectations equilibrium mod el works well. However, if traders are allowed to have different preferences in the single security case, the observed information aggregation is minimal and rational expectations are not attained. If the single security is transformed to a complete set of Arrow-Debreu , state-contingent claims, the rational expectations model works well even when preferences differ. Copyright 1988 by The Econometric Society.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"rational expectations",
+				"information aggregation",
+				"securities market",
+				"double auction",
+				"Arrow-Debreu securities",
+				"market institutions",
+				"trading instruments",
+				"decentralized markets",
+				"laboratory experiments",
+				"market efficiency",
+				"convergence to equilibrium"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-17",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "PS2006a",
 			"type": "article",
 			"title": "The Inconsistency of “Optimal” Cutpoints Obtained using Two Criteria based on the Receiver Operating Characteristic Curve",
@@ -34194,6 +34398,42 @@
 			"legacy_key": "rockafellar1976",
 			"source": "crossref",
 			"retrieved": "2026-10-23",
+			"checked": false,
+			"open_access": false
+		},
+		{
+			"key": "Rol1986a",
+			"type": "article",
+			"title": "The Hubris Hypothesis of Corporate Takeovers",
+			"authors": [
+				"Roll, Richard"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1986,
+			"journal": "The Journal of Business",
+			"volume": "59",
+			"number": "2",
+			"pages": "197-216",
+			"issn": "0021-9398",
+			"doi": "10.1086/296325",
+			"openalex": "W2068518527",
+			"abstract": "The hubris hypothesis is advanced as an explanation of corporate takeovers. Hubris on the part of individual decision makers in bidding firms can explain why bids are made even when a valuation above the current market price represents a positive valuation error. Bidding firms infected by hubris simply pay too much for their targets. The empirical evidence in mergers and tender offers is reconsidered in the hubris context. It is argued that the evidence supports the hubris hypothesis as much as it supports other explanations such as taxes, synergy, and inefficient target management.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"hubris hypothesis",
+				"corporate acquisition",
+				"mergers",
+				"tender offers",
+				"bidding firms",
+				"valuation errors",
+				"merger motives",
+				"synergistic effect",
+				"target management"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-17",
 			"checked": false,
 			"open_access": false
 		},
@@ -37906,6 +38146,35 @@
 			"source": "manual",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "Smi1962a",
+			"type": "article",
+			"title": "An Experimental Study of Competitive Market Behavior",
+			"authors": [
+				"Smith, Vernon L."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1962,
+			"journal": "Journal of Political Economy",
+			"volume": "70",
+			"number": "2",
+			"pages": "111-137",
+			"issn": "0022-3808",
+			"doi": "10.1086/258609",
+			"openalex": "W4246756863",
+			"keywords": [
+				"competitive markets",
+				"market behavior",
+				"experimental economics",
+				"market competition"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-17",
+			"checked": false,
+			"open_access": false
 		},
 		{
 			"key": "Smi1982a",
@@ -43212,6 +43481,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "Ake1970a",
+			"count": 15274,
+			"source": "crossref",
+			"date": "2026-11-17"
+		},
+		{
+			"key": "Ake1970a",
+			"count": 31623,
+			"source": "openalex",
+			"date": "2026-11-17"
+		},
+		{
 			"key": "Alt2007a",
 			"count": 205,
 			"source": "crossref",
@@ -46572,6 +46853,18 @@
 			"date": "2026-10-31"
 		},
 		{
+			"key": "FHWG2009a",
+			"count": 232,
+			"source": "crossref",
+			"date": "2026-11-17"
+		},
+		{
+			"key": "FHWG2009a",
+			"count": 431,
+			"source": "openalex",
+			"date": "2026-11-17"
+		},
+		{
 			"key": "FL2002a",
 			"count": 652,
 			"source": "crossref",
@@ -47128,6 +47421,18 @@
 			"count": 1227,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "GJL1990a",
+			"count": 728,
+			"source": "crossref",
+			"date": "2026-11-17"
+		},
+		{
+			"key": "GJL1990a",
+			"count": 1275,
+			"source": "openalex",
+			"date": "2026-11-17"
 		},
 		{
 			"key": "GJR1993a",
@@ -49212,6 +49517,18 @@
 			"date": "2026-11-13"
 		},
 		{
+			"key": "KA2000a",
+			"count": 157,
+			"source": "crossref",
+			"date": "2026-11-17"
+		},
+		{
+			"key": "KA2000a",
+			"count": 244,
+			"source": "openalex",
+			"date": "2026-11-17"
+		},
+		{
 			"key": "KA2006a",
 			"count": 155,
 			"source": "crossref",
@@ -50752,6 +51069,18 @@
 			"count": 407,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "Led1992a",
+			"count": 332,
+			"source": "crossref",
+			"date": "2026-11-17"
+		},
+		{
+			"key": "Led1992a",
+			"count": 500,
+			"source": "openalex",
+			"date": "2026-11-17"
 		},
 		{
 			"key": "Lem1965a",
@@ -52308,6 +52637,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "PS1988a",
+			"count": 374,
+			"source": "crossref",
+			"date": "2026-11-17"
+		},
+		{
+			"key": "PS1988a",
+			"count": 631,
+			"source": "openalex",
+			"date": "2026-11-17"
+		},
+		{
 			"key": "PS2006a",
 			"count": 1546,
 			"source": "crossref",
@@ -53362,6 +53703,18 @@
 			"count": 3566,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "Rol1986a",
+			"count": 2590,
+			"source": "crossref",
+			"date": "2026-11-17"
+		},
+		{
+			"key": "Rol1986a",
+			"count": 4669,
+			"source": "openalex",
+			"date": "2026-11-17"
 		},
 		{
 			"key": "Ros1960a",
@@ -54490,6 +54843,18 @@
 			"count": 5344,
 			"source": "openalex",
 			"date": "2026-10-31"
+		},
+		{
+			"key": "Smi1962a",
+			"count": 993,
+			"source": "crossref",
+			"date": "2026-11-17"
+		},
+		{
+			"key": "Smi1962a",
+			"count": 1435,
+			"source": "openalex",
+			"date": "2026-11-17"
 		},
 		{
 			"key": "Smi1982a",
