@@ -4,7 +4,7 @@
 
 ## The Four Steps of Create a Simulation Game
 
-The Create a Simulation Game page has four steps. **Start From** copies a case to start from under the title you give it, or chooses one of your cases to go on with. **Write** opens the files of the case, the drill-down on Simulation Games, and **Write with Agent**, which hands the case to a coding agent. **Test** plays every round of the case with Julia and opens the debrief of the test game. **Share** opens Host a Game with the case chosen, shows the case's folder to give to colleagues, and offers **Package with Agent**, which makes the case a toolbox of cases.
+The Create a Simulation Game page has four steps. **Start From** copies a case to start from under the title you give it, or chooses one of your cases to go on with. **Write** opens the files of the case and the drill-down on Simulation Games, makes the case's icon, and offers **Write with Agent**, which hands the case to a coding agent. **Test** plays every round of the case with Julia and opens the debrief of the test game. **Share** opens Host a Game with the case chosen, shows the case's folder to give to colleagues, and offers **Package with Agent**, which makes the case a toolbox of cases.
 
 ## Which Case to Start a Simulation Game From
 
@@ -13,6 +13,10 @@ Start From lists **Sell One Product**, the minimal case of Pollis, in which riva
 ## Your Cases on the Create a Simulation Game Page
 
 Under **Your Cases**, Start From lists the cases created on the page, kept in `games/cases` of the Pollis Workspace, else in `~/.pollis/games/cases`, and any case folder opened with **Open a Case Folder...**. Choosing one makes it the case that Write, Test and Share work on. A case that cannot be read, because `case.toml` has a mistake or `model.jl` is missing, is still listed, with the reason, so that it can be fixed in Write.
+
+## The Icon of a Simulation Game Case
+
+The icon of a case is the picture that a toolbox of the case shows in the Toolboxes section of the Extensions view, beside its name. A case created on the Create a Simulation Game page gets the initials of its title, in white on a colour of its own; **Use the Title's Initials**, in the Write step, makes that icon again. **Choose an Image...** makes the icon from a photo or a drawing the author may use, in PNG, JPEG, WebP or GIF, cropped to its middle square. **Pollis Badge**, unticked at first, adds the Pollis logo in the upper left corner, as the five cases of Pollis have it. Pollis saves the icon, 128 by 128 pixels, as `icon.png` in the case's folder, and `case.toml` names it with `icon = "icon.png"`; **Package with Agent** makes it the icon of the toolbox.
 
 ## Writing a Case with a Coding Agent
 

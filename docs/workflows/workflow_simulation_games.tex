@@ -284,7 +284,10 @@ says what happens; its briefings are Markdown files beside them.
     copies it under the title given into \file{games/cases} of the Pollis Workspace, else
     \file{~/.pollis/games/cases}. \ui{Your Cases} lists those cases, and any opened with
     \ui{Open a Case Folder...}
-  \item \textbf{Write.} The case's files, this drill-down, and \ui{Write with Agent}: the coding agent of
+  \item \textbf{Write.} The case's files, this drill-down, its icon, and \ui{Write with Agent}. A new case's icon is
+    the initials of its title on a colour of its own; \ui{Choose an Image...} makes it from a picture, cropped to a
+    square, and \ui{Pollis Badge}, unticked at first, adds the Pollis logo in its upper left corner. The icon, 128
+    pixels square, is saved as \file{icon.png} and named in \file{case.toml}. With \ui{Write with Agent}, the coding agent of
     \ui{Compose > Coding Agents}, with the skill \file{write-simulation-game}, proposes a design from what the user
     describes, writes the files once the user agrees, and plays every round with \file{game.jl} until none fails.
   \item \textbf{Test.} \ui{Test the Case} reads \file{case.toml} as Host a Game does, plays every round with the
@@ -306,6 +309,7 @@ range in the briefings, and write what was drawn in the \file{debrief} of \code{
 \textbf{Key} & \textbf{What it says}\\
 \midrule
 \file{title}, \file{description} & The case's name and what it is about\\
+\file{icon} & The case's icon, a PNG or JPEG file of its folder, which a toolbox of the case shows\\
 \file{rounds}, \file{round}, \file{round_names} & The number of rounds, the word for one (\ui{Year}, \ui{Quarter},
   \ui{Period}) and, when they differ, each round's name\\
 \file{round_choices} & The lengths the facilitator chooses from, such as \code{[4, 6]}\\

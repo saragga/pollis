@@ -8,6 +8,7 @@ The facts of writing a case on the Create a Simulation Game page of Compose > Si
 |---|---|
 | `case.toml` | The title, description, rounds, teams, decisions, results, briefings, ways of organising the teams, news and parameters |
 | `model.jl` | The Julia functions `initial` and `play`, which compute the game |
+| `icon.png` | The case's icon, 128 by 128 pixels, which a toolbox of the case shows |
 | `briefing.md` | What every player reads |
 | `briefings/` | What each role or side reads, when the case has them |
 | `debrief-questions.md` | Questions for the class, shown in the debrief |
@@ -19,6 +20,7 @@ The names of the briefings and of the debrief questions are those that `case.tom
 | Part | What It Says |
 |---|---|
 | `title`, `description`, `rounds`, `round`, `teams` | The case, its number of rounds, what a round is called, and the fewest and most teams |
+| `icon` | The case's icon, a PNG or JPEG file of its folder |
 | `[[decisions]]` | Each decision of a team: a number with `min`, `max` and `step`, or a choice with `options`; its `default` |
 | `[results]`, `[[results.public]]`, `[[results.private]]` | The column that wins, and the columns every player sees and each team alone sees |
 | `[[structures]]` with `[[structures.roles]]` | The ways of organising the teams, each role with its briefing and the decisions it sets |

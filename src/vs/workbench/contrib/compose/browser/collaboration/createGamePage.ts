@@ -3,9 +3,9 @@
  *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { VSBuffer } from '../../../../../base/common/buffer.js';
+import { decodeBase64, encodeBase64, VSBuffer } from '../../../../../base/common/buffer.js';
 import { DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { basename, isEqual, joinPath } from '../../../../../base/common/resources.js';
+import { basename, extname, isEqual, joinPath } from '../../../../../base/common/resources.js';
 import { hasKey } from '../../../../../base/common/types.js';
 import { URI } from '../../../../../base/common/uri.js';
 import { localize, localize2 } from '../../../../../nls.js';
@@ -79,6 +79,9 @@ type CreateGameMessage =
 	| { readonly command: 'openFile'; readonly file: 'case' | 'model' | 'briefing' | 'debrief' }
 	| { readonly command: 'revealFolder' }
 	| { readonly command: 'readDrillDown' }
+	| { readonly command: 'chooseIcon' }
+	| { readonly command: 'saveIcon'; readonly png: string }
+	| { readonly command: 'iconFailed' }
 	| { readonly command: 'writeWithAgent'; readonly description: string }
 	| { readonly command: 'test' }
 	| { readonly command: 'fixWithAgent' }
@@ -104,6 +107,23 @@ interface ITest {
 
 /** The page, when it is open. */
 let openPage: WebviewInput | undefined;
+
+/** The file of a case's icon, which the page writes, and the largest image it reads to make one, in bytes. */
+const ICON_FILE = 'icon.png';
+const MAX_ICON_IMAGE = 20 * 1024 * 1024;
+
+/** The image types the page makes an icon from, by extension. */
+const ICON_IMAGE_TYPES: Readonly<Record<string, string>> = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', gif: 'image/gif' };
+
+/** case.toml naming icon.png as the case's icon: its icon line replaced, else one added below the description, else below the title. */
+function withIconLine(toml: string): string {
+	const line = `icon = ${JSON.stringify(ICON_FILE)}`;
+	if (/^icon\s*=.*$/m.test(toml)) {
+		return toml.replace(/^icon\s*=.*$/m, line);
+	}
+	const after = /^description\s*=.*$/m.exec(toml) ?? /^title\s*=.*$/m.exec(toml);
+	return after ? `${toml.slice(0, after.index + after[0].length)}\n${line}${toml.slice(after.index + after[0].length)}` : `${line}\n${toml}`;
+}
 
 /** Where the cases written on the page go: cases in the games folder of the Pollis Workspace, else in ~/.pollis/games. */
 async function casesFolder(contextService: IWorkspaceContextService, fileService: IFileService, pathService: IPathService): Promise<URI> {
@@ -296,13 +316,14 @@ async function openCreateGamePage(accessor: ServicesAccessor): Promise<void> {
 		const cases = await readYours();
 		const chosen = currentCase();
 		const files = current ? await caseFiles(current) : {};
+		const icon = chosen?.gameCase?.icon ? await fileService.readFile(chosen.gameCase.icon).then(read => `data:${ICON_IMAGE_TYPES[extname(chosen.gameCase!.icon!).slice(1).toLowerCase()] ?? 'image/png'};base64,${encodeBase64(read.value)}`, () => undefined) : undefined;
 		post({
 			command: 'state',
 			casesPath: cases.fsPath,
 			sources: sources.map(item => ({ id: item.id, from: item.from, ...describe(item.gameCase) })),
 			failures,
 			yours: yours.map(item => ({ id: item.id, path: item.folder.fsPath, error: item.error, ...(item.gameCase ? describe(item.gameCase) : { title: basename(item.folder), facts: [], description: '' }) })),
-			current: current ? { id: chosen?.id, title: currentTitle(), path: current.fsPath, error: chosen?.error, briefing: !!files.briefing, debrief: !!files.debrief } : undefined,
+			current: current ? { id: chosen?.id, title: currentTitle(), path: current.fsPath, error: chosen?.error, briefing: !!files.briefing, debrief: !!files.debrief, icon } : undefined,
 			test: test ? {
 				running: test.running,
 				teams: test.teams,
@@ -341,7 +362,7 @@ async function openCreateGamePage(accessor: ServicesAccessor): Promise<void> {
 			return;
 		}
 		await choose(target);
-		post({ command: 'created' });
+		post({ command: 'created', title: trimmed });
 	};
 
 	const runTest = async (folder: URI) => {
@@ -436,6 +457,26 @@ async function openCreateGamePage(accessor: ServicesAccessor): Promise<void> {
 				if (resource) {
 					await editorService.openEditor({ resource });
 				}
+			} else if (message.command === 'chooseIcon') {
+				const image = (await fileDialogService.showOpenDialog({ title: localize('createGame.chooseIconTitle', "Choose an Image for the Icon"), canSelectFiles: true, canSelectFolders: false, canSelectMany: false, filters: [{ name: localize('createGame.images', "Images"), extensions: Object.keys(ICON_IMAGE_TYPES) }] }))?.[0];
+				if (!image) {
+					return;
+				}
+				const type = ICON_IMAGE_TYPES[extname(image).slice(1).toLowerCase()];
+				const size = (await fileService.stat(image)).size;
+				if (!type || size > MAX_ICON_IMAGE) {
+					post({ command: 'iconStatus', error: true, text: localize('createGame.iconImageInvalid', "Choose a PNG, JPEG, WebP or GIF image of at most 20 MB.") });
+					return;
+				}
+				post({ command: 'iconImage', dataUrl: `data:${type};base64,${encodeBase64((await fileService.readFile(image)).value)}` });
+			} else if (message.command === 'saveIcon' && hasKey(message, { png: true })) {
+				await fileService.writeFile(joinPath(current, ICON_FILE), decodeBase64(message.png));
+				const tomlFile = joinPath(current, 'case.toml');
+				await fileService.writeFile(tomlFile, VSBuffer.fromString(withIconLine((await fileService.readFile(tomlFile)).value.toString())));
+				await postState();
+				post({ command: 'iconStatus', error: false, text: localize('createGame.iconSaved', "Saved as icon.png, which case.toml names as the case's icon.") });
+			} else if (message.command === 'iconFailed') {
+				post({ command: 'iconStatus', error: true, text: localize('createGame.iconUnreadable', "The image could not be read: choose another.") });
 			} else if (message.command === 'revealFolder') {
 				await commandService.executeCommand('revealFileInOS', current);
 			} else if (message.command === 'writeWithAgent' && hasKey(message, { description: true })) {
@@ -494,6 +535,14 @@ function pageHtml(): string {
 		openQuestions: localize('createGame.openQuestions', "Open the Debrief Questions"),
 		revealFolder: localize('createGame.revealFolder', "Show the Folder"),
 		readDrillDown: localize('createGame.readDrillDown', "Read How to Write a Case"),
+		icon: localize('createGame.icon', "Icon"),
+		iconIntro: localize('createGame.iconIntro', "The icon that a toolbox of the case shows. A new case gets the initials of its title on a colour of its own; Choose an Image... makes it from a photo or a drawing you may use, cropped to a square. Pollis saves it as {0} in the case's folder, named in {1}.", '<span class="yellow">icon.png</span>', '<span class="yellow">case.toml</span>'),
+		initialsIcon: localize('createGame.initialsIcon', "Use the Title's Initials"),
+		pollisBadge: localize('createGame.pollisBadge', "Pollis Badge"),
+		pollisBadgeHint: localize('createGame.pollisBadgeHint', "the Pollis logo in the upper left corner, as on the cases of Pollis"),
+		noIcon: localize('createGame.noIcon', "No icon yet."),
+		chooseIcon: localize('createGame.chooseIcon', "Choose an Image..."),
+		makingIcon: localize('createGame.makingIcon', "Making the icon..."),
 		withAgent: localize('createGame.withAgent', "Write with Agent"),
 		withAgentIntro: localize('createGame.withAgentIntro', "Say what the case is to be, or what to change in it: the coding agent writes {0}, {1} and the briefings with you, following the skill Write a Simulation Game, and plays the rounds with Julia as step 3 does. With nothing written here, it asks you first.", '<span class="yellow">case.toml</span>', '<span class="yellow">model.jl</span>'),
 		descriptionPlaceholder: localize('createGame.descriptionPlaceholder', "Such as: teams each run a bakery in one town for four years, setting the price of bread, the bakers and the opening hours; the weather moves demand"),
@@ -546,6 +595,9 @@ function pageHtml(): string {
 		.failure { margin: 6px 0; padding: 8px 10px; background: var(--vscode-textCodeBlock-background); border-radius: 3px; font-family: var(--vscode-editor-font-family); white-space: pre-wrap; word-break: break-word; max-width: 900px; max-height: 320px; overflow: auto; }
 		.share { margin: 6px 0; padding-left: 18px; max-width: 900px; }
 		.share li { margin: 4px 0; }
+		.icon-row { display: flex; align-items: center; gap: 12px; margin: 6px 0; }
+		.icon-row img { width: 64px; height: 64px; border-radius: 6px; }
+		.badge-choice { display: flex; align-items: center; gap: 6px; margin: 6px 0; }
 `,
 		steps: [
 			{
@@ -591,6 +643,15 @@ function pageHtml(): string {
 				<button class="action" id="revealFolder">${text.revealFolder}</button>
 				<button class="action" id="readDrillDown">${text.readDrillDown}</button>
 			</span></div>
+			<h3 class="part">${text.icon}</h3>
+			<p class="hint">${text.iconIntro}</p>
+			<div class="icon-row"><img id="iconPreview" alt="" hidden><span class="small" id="noIcon">${text.noIcon}</span></div>
+			<div class="settings"><span class="bar">
+				<button class="action current" id="chooseIcon">${text.chooseIcon}</button>
+				<button class="action" id="initialsIcon">${text.initialsIcon}</button>
+			</span></div>
+			<label class="small badge-choice"><input type="checkbox" id="pollisBadge"> ${text.pollisBadge}: ${text.pollisBadgeHint}</label>
+			<div class="small status" id="iconStatus"></div>
 			<h3 class="part">${text.withAgent}</h3>
 			<p class="hint">${text.withAgentIntro}</p>
 			<textarea id="description" rows="3" placeholder="${text.descriptionPlaceholder}"></textarea>
@@ -718,6 +779,10 @@ function pageHtml(): string {
 		document.getElementById('caseError').textContent = c.error ? TEXT.cannotRead + ' ' + c.error : '';
 		document.getElementById('openBriefing').hidden = !c.briefing;
 		document.getElementById('openQuestions').hidden = !c.debrief;
+		const preview = document.getElementById('iconPreview');
+		preview.hidden = !c.icon;
+		if (c.icon) { preview.src = c.icon; } else { preview.removeAttribute('src'); }
+		document.getElementById('noIcon').hidden = !!c.icon;
 		renderTest();
 	}
 	function renderTest() {
@@ -769,6 +834,86 @@ function pageHtml(): string {
 		document.getElementById('shareHead').textContent = passed ? TEXT.passed : '';
 	}
 
+	// The icon of a case, drawn at 1024 pixels and halved down to 128 for a smooth result: the image chosen, cropped
+	// to its middle square, or, by default, the initials of the case's title on a colour of its own; with the Pollis
+	// badge in the upper left corner only when Pollis Badge is ticked, as the five cases of Pollis have it
+	const INITIALS_COLOURS = ['#1F5F8B', '#7A3E9D', '#2E7D5B', '#B4532A', '#8C2F39', '#3B5BA5', '#5A6B2E', '#2F6F73'];
+	const SMALL_WORDS = new Set(['a', 'an', 'and', 'be', 'for', 'in', 'of', 'on', 'or', 'the', 'to']);
+	// What the icon was last made from, to make it again when Pollis Badge changes
+	let iconSource;
+	function initials(title) {
+		const words = title.split(/[^\\p{L}\\p{N}]+/u).filter(Boolean);
+		const main = words.filter(word => !SMALL_WORDS.has(word.toLowerCase()));
+		const chosen = (main.length ? main : words).slice(0, 2);
+		return (chosen.length === 1 ? chosen[0].slice(0, 2) : chosen.map(word => word[0]).join('')).toUpperCase() || '?';
+	}
+	function drawIcon(paint) {
+		const big = document.createElement('canvas');
+		big.width = big.height = 1024;
+		const g = big.getContext('2d');
+		paint(g);
+		if (document.getElementById('pollisBadge').checked) {
+			g.beginPath();
+			g.roundRect(40, 40, 300, 300, 44);
+			g.fillStyle = '#173F63';
+			g.fill();
+			g.lineWidth = 18;
+			g.strokeStyle = '#FFF1CF';
+			g.stroke();
+			const peak = (points, color) => {
+				g.beginPath();
+				points.forEach(([x, y], index) => index ? g.lineTo(55 + 0.265 * x, 52 + 0.265 * y) : g.moveTo(55 + 0.265 * x, 52 + 0.265 * y));
+				g.closePath();
+				g.fillStyle = color;
+				g.fill();
+			};
+			peak([[72, 845.7], [208.5, 512], [345.1, 845.7]], '#C98A1B');
+			peak([[208.5, 845.7], [405.8, 360.2], [603, 845.7]], '#F2B544');
+			peak([[405.8, 845.7], [678.8, 178.3], [952, 845.7]], '#FFF1CF');
+		}
+		let canvas = big;
+		while (canvas.width > 128) {
+			const half = document.createElement('canvas');
+			half.width = half.height = canvas.width / 2;
+			const h = half.getContext('2d');
+			h.imageSmoothingQuality = 'high';
+			h.drawImage(canvas, 0, 0, half.width, half.height);
+			canvas = half;
+		}
+		vscode.postMessage({ command: 'saveIcon', png: canvas.toDataURL('image/png').split(',')[1] });
+	}
+	function makeIcon(source) {
+		iconSource = source;
+		if (source.title !== undefined) {
+			const letters = initials(source.title);
+			let hash = 0;
+			for (const character of source.title) { hash = (hash * 31 + character.codePointAt(0)) >>> 0; }
+			drawIcon(g => {
+				g.fillStyle = INITIALS_COLOURS[hash % INITIALS_COLOURS.length];
+				g.fillRect(0, 0, 1024, 1024);
+				g.fillStyle = '#FFFFFF';
+				g.textAlign = 'center';
+				g.textBaseline = 'middle';
+				g.font = '600 ' + (letters.length > 1 ? 400 : 520) + 'px system-ui, -apple-system, "Segoe UI", sans-serif';
+				g.fillText(letters, 512, 540);
+			});
+			return;
+		}
+		const image = new Image();
+		image.onload = () => drawIcon(g => {
+			const side = Math.min(image.naturalWidth, image.naturalHeight);
+			g.drawImage(image, (image.naturalWidth - side) / 2, (image.naturalHeight - side) / 2, side, side, 0, 0, 1024, 1024);
+		});
+		image.onerror = () => vscode.postMessage({ command: 'iconFailed' });
+		image.src = source.dataUrl;
+	}
+	document.getElementById('initialsIcon').addEventListener('click', () => {
+		if (state.current) { makeIcon({ title: state.current.title }); }
+	});
+	document.getElementById('pollisBadge').addEventListener('change', () => {
+		if (iconSource && state.current) { makeIcon(iconSource); }
+	});
+
 	titleInput.addEventListener('input', () => {
 		createStatus.classList.remove('missing');
 		createStatus.textContent = '';
@@ -782,7 +927,7 @@ function pageHtml(): string {
 	document.querySelectorAll('[data-file]').forEach(button => button.addEventListener('click', () => vscode.postMessage({ command: 'openFile', file: button.dataset.file })));
 	document.getElementById('writeWithAgent').addEventListener('click', () => vscode.postMessage({ command: 'writeWithAgent', description: document.getElementById('description').value }));
 	document.getElementById('shareReveal').addEventListener('click', () => vscode.postMessage({ command: 'revealFolder' }));
-	for (const command of ['getMoreCases', 'openFolder', 'revealFolder', 'readDrillDown', 'test', 'fixWithAgent', 'openDebrief', 'host', 'packageWithAgent']) {
+	for (const command of ['chooseIcon', 'getMoreCases', 'openFolder', 'revealFolder', 'readDrillDown', 'test', 'fixWithAgent', 'openDebrief', 'host', 'packageWithAgent']) {
 		document.getElementById(command).addEventListener('click', () => vscode.postMessage({ command }));
 	}
 
@@ -798,12 +943,23 @@ function pageHtml(): string {
 			createStatus.classList.remove('missing');
 			createStatus.textContent = TEXT.created;
 			updateCreate();
+			// A new case gets its default icon, its title's initials
+			makeIcon({ title: message.title });
 		} else if (message.command === 'createFailed') {
 			createStatus.classList.add('missing');
 			createStatus.textContent = message.error;
 			updateCreate();
 		} else if (message.command === 'openFailed') {
 			document.getElementById('openStatus').textContent = message.error;
+		} else if (message.command === 'iconImage') {
+			const status = document.getElementById('iconStatus');
+			status.classList.remove('missing');
+			status.textContent = TEXT.makingIcon;
+			makeIcon({ dataUrl: message.dataUrl });
+		} else if (message.command === 'iconStatus') {
+			const status = document.getElementById('iconStatus');
+			status.classList.toggle('missing', message.error);
+			status.textContent = message.text;
 		} else if (message.command === 'agentStarted') {
 			const status = document.getElementById(message.box + 'Status');
 			status.textContent = message.started ? TEXT.agentStarted : '';

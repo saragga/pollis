@@ -100,6 +100,8 @@ export interface IGameCase {
 	readonly folder: URI;
 	readonly title: string;
 	readonly description: string;
+	/** The case's icon, an image of its folder (icon in case.toml), which a toolbox of the case shows. */
+	readonly icon?: URI;
 	readonly rounds: number;
 	/** What a round is called, such as Year. */
 	readonly roundLabel: string;
@@ -359,10 +361,22 @@ export async function loadCase(fileService: IFileService, folder: URI): Promise<
 	if (winnerKey && !winner) {
 		throw invalid(`the winner ${winnerKey} is not a column of [[results.public]]`);
 	}
+	let icon: URI | undefined;
+	if (toml.icon !== undefined) {
+		const path = text(toml.icon);
+		icon = path ? joinPath(folder, path) : undefined;
+		if (!icon || !isEqualOrParent(icon, folder) || isEqual(icon, folder) || !/\.(png|jpe?g)$/i.test(path!)) {
+			throw invalid('icon is a PNG or JPEG file of the case\'s folder');
+		}
+		if (!await fileService.exists(icon)) {
+			throw invalid(`the icon ${path} is missing`);
+		}
+	}
 	return {
 		folder,
 		title,
 		description: text(toml.description) ?? '',
+		...(icon ? { icon } : {}),
 		rounds,
 		roundLabel: text(toml.round) ?? localize('game.round', "Round"),
 		minTeams,
