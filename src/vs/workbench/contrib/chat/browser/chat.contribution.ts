@@ -882,7 +882,8 @@ configurationRegistry.registerConfiguration({
 			description: nls.localize('chat.agentHost.enabled', "When enabled, some agents run in a separate agent host process."),
 			default: false,
 			tags: ['experimental', 'advanced'],
-			included: product.quality !== 'stable',
+			// Pollis: hidden, as its agents (GitHub Copilot) are not packaged (build/.moduleignore)
+			included: false,
 		},
 		[AgentHostIpcLoggingSettingId]: {
 			type: 'boolean',

@@ -214,6 +214,11 @@ zone.js/dist/**
 @xterm/xterm-addon-*/out/**
 @xterm/xterm-addon-*/out-test/**
 
+# Pollis: @github/copilot and @github/copilot-sdk serve only the agent host (chat.agentHost.enabled),
+# which Pollis does not offer; Pollis runs the GitHub Copilot CLI that the user installs. Both are left out.
+@github/copilot/**
+@github/copilot-sdk/**
+
 # @github/copilot - strip unneeded binaries and files
 @github/copilot/sdk/index.js
 @github/copilot/prebuilds/**

@@ -31,7 +31,7 @@ import minimist from 'minimist';
 import { compileBuildWithoutManglingTask, compileBuildWithManglingTask } from './gulpfile.compile.ts';
 import { compileNonNativeExtensionsBuildTask, compileNativeExtensionsBuildTask, compileAllExtensionsBuildTask, compileExtensionMediaBuildTask, cleanExtensionsBuildTask } from './gulpfile.extensions.ts';
 import { copyCodiconsTask } from './lib/compilation.ts';
-import { getCopilotExcludeFilter, copyCopilotNativeDeps } from './lib/copilot.ts';
+import { getCopilotExcludeFilter } from './lib/copilot.ts';
 import { duckdbExtensionsStream, thinDuckDB } from './pollis/duckdb.ts';
 import { llamaCppStream } from './pollis/llamacpp.ts';
 import type { EmbeddedProductInfo } from './lib/embeddedType.ts';
@@ -731,23 +731,6 @@ function patchWin32DependenciesTask(destinationFolderName: string) {
 	};
 }
 
-function copyCopilotNativeDepsTask(platform: string, arch: string, destinationFolderName: string) {
-	const outputDir = path.join(path.dirname(root), destinationFolderName);
-
-	return async () => {
-		// On Windows with win32VersionedUpdate, app resources live under a
-		// commit-hash prefix: {output}/{commitHash}/resources/app/
-		const versionedResourcesFolder = util.getVersionedResourcesFolder(platform, commit!);
-		const appBase = platform === 'darwin'
-			? path.join(outputDir, `${product.nameLong}.app`, 'Contents', 'Resources', 'app')
-			: path.join(outputDir, versionedResourcesFolder, 'resources', 'app');
-		const appNodeModulesDir = path.join(appBase, 'node_modules');
-		copyCopilotNativeDeps(platform, arch, appNodeModulesDir);
-		// Pollis: the built-in Copilot Chat extension is not packaged, so there are no extension
-		// shims to prepare (prepareBuiltInCopilotExtensionShims would fail on the missing folder).
-	};
-}
-
 const buildRoot = path.dirname(root);
 
 const BUILD_TARGETS = [
@@ -773,7 +756,7 @@ BUILD_TARGETS.forEach(buildTarget => {
 			compileNativeExtensionsBuildTask,
 			util.rimraf(path.join(buildRoot, destinationFolderName)),
 			packageTask(platform, arch, sourceFolderName, destinationFolderName, opts),
-			copyCopilotNativeDepsTask(platform, arch, destinationFolderName)
+			// Pollis: copyCopilotNativeDepsTask omitted; @github/copilot is not packaged (.moduleignore).
 		];
 
 		if (platform === 'win32') {
