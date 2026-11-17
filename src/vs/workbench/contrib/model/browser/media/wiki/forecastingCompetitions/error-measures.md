@@ -1,6 +1,6 @@
 # The Error Measures
 
-The page Forecasting Competitions scores forecasts by the measures of M4 for M1, M3 and M4, by the measure of M5 Accuracy for M5, and by the RPS, the IR and the OR for M6. Each is computed by PollisCompetitions.jl as the organisers of the competition computed it.
+The page Forecasting Challenges and Competitions scores forecasts by the measures of M4 for M1, M3 and M4, by the measure of M5 Accuracy for M5, and by the RPS, the IR and the OR for M6. Each is computed by PollisCompetitions.jl as the organisers of the competition computed it.
 
 ## What Is the sMAPE?
 

@@ -402,7 +402,7 @@
 		{
 			"id": "atsf",
 			"title": "Advanced Time-Series Forecasting",
-			"source": "toolbox:pollis-toolbox-econometrics",
+			"source": "toolbox:pollis-toolbox-time-series-forecasting",
 			"commands": [
 				{
 					"id": "chiara.statistics.atsf",
@@ -414,9 +414,9 @@
 			"portable": true,
 			"defaultModel": "bats",
 			"decisionFirstColumn": "Model",
-			"toml": "toolboxes/pollis-toolbox-econometrics/panels/atsf.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-econometrics/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-econometrics/notebooks",
+			"toml": "toolboxes/pollis-toolbox-time-series-forecasting/panels/atsf.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-time-series-forecasting/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-time-series-forecasting/notebooks",
 			"wikis": [
 				"atsf/assumptions.md",
 				"atsf/decision-guide.md",
@@ -551,7 +551,7 @@
 		{
 			"id": "autotsf",
 			"title": "Automatic Time-Series Forecasting",
-			"source": "toolbox:pollis-toolbox-econometrics",
+			"source": "toolbox:pollis-toolbox-time-series-forecasting",
 			"commands": [
 				{
 					"id": "chiara.statistics.autotsf",
@@ -563,9 +563,9 @@
 			"portable": true,
 			"defaultModel": "arima",
 			"decisionFirstColumn": "Model",
-			"toml": "toolboxes/pollis-toolbox-econometrics/panels/autotsf.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-econometrics/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-econometrics/notebooks",
+			"toml": "toolboxes/pollis-toolbox-time-series-forecasting/panels/autotsf.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-time-series-forecasting/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-time-series-forecasting/notebooks",
 			"wikis": [
 				"autotsf/assumptions.md",
 				"autotsf/decision-guide.md",
@@ -6343,7 +6343,7 @@
 		{
 			"id": "nntsf",
 			"title": "Neural Network Time-Series Forecasting",
-			"source": "toolbox:pollis-toolbox-econometrics",
+			"source": "toolbox:pollis-toolbox-time-series-forecasting",
 			"commands": [
 				{
 					"id": "chiara.statistics.nntsf",
@@ -6355,9 +6355,9 @@
 			"portable": true,
 			"defaultModel": "lstnet",
 			"decisionFirstColumn": "Model",
-			"toml": "toolboxes/pollis-toolbox-econometrics/panels/nntsf.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-econometrics/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-econometrics/notebooks",
+			"toml": "toolboxes/pollis-toolbox-time-series-forecasting/panels/nntsf.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-time-series-forecasting/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-time-series-forecasting/notebooks",
 			"wikis": [
 				"nntsf/assumptions.md",
 				"nntsf/darnn.md",

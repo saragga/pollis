@@ -1,6 +1,6 @@
 # Licences and Downloads
 
-The page Forecasting Competitions downloads each competition from its own source, with PollisCompetitions.jl, onto the user's computer. Pollis ships none of their data.
+The page Forecasting Challenges and Competitions downloads each competition from its own source, with PollisCompetitions.jl, onto the user's computer. Pollis ships none of their data.
 
 ## Where Do the Data of Each Competition Come From?
 

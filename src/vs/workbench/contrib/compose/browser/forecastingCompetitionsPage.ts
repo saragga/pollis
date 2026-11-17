@@ -37,7 +37,7 @@ import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { compareCss } from './compareShared.js';
 
-// Forecasting Competitions, from Compose > Forecasting Competitions (compose.contribution.ts): a forecasting method of the user's
+// Forecasting Challenges and Competitions, from Compose > Forecasting Challenges and Competitions (compose.contribution.ts): a forecasting method of the user's
 // own, run on the series of a competition of PollisCompetitions.jl, scored as the competition's organisers scored the
 // entries, and ranked among them. A page of the scaffold in the Time Arrow style, in four steps: 1, Competition (M1,
 // M3, M4 or M5, a frequency, a sample, and Download when it is not on this computer); 2, Your Method, a Julia function
@@ -194,7 +194,7 @@ function checkedInputs(value: unknown): IRunInputs | undefined {
 /** run.toml of a run: the choices of step 1. */
 function runToml(inputs: IRunInputs, started: string): string {
 	return [
-		'# A run of Compose > Forecasting Competitions: the method of method.jl on these series',
+		'# A run of Compose > Forecasting Challenges and Competitions: the method of method.jl on these series',
 		`competition = "${inputs.competition}"`,
 		`frequency = "${inputs.frequency}"`,
 		`sample = ${inputs.sample}`,
@@ -232,7 +232,7 @@ async function readJson(fileService: IFileService, file: URI): Promise<unknown> 
  * forecasts of Naive2, against which OWA weighs every forecast.
  */
 function downloadCode(competition: string): string {
-	return `# Forecasting Competitions: download ${competition} from its source, each file checked against its SHA-256
+	return `# Forecasting Challenges and Competitions: download ${competition} from its source, each file checked against its SHA-256
 import Pkg
 Base.find_package("PollisCompetitions") === nothing && Pkg.add("PollisCompetitions")
 import PollisCompetitions as PC
@@ -330,7 +330,7 @@ const JULIA_NEXT = String.raw`	settings = TOML.parsefile(joinpath(run, "${RUN_FI
 
 /** The start of the Next Steps script `step` of the run in `folder`, up to the `try` of its own code. */
 function nextStepStart(step: NextStep, folder: URI, comment: string): string {
-	return String.raw`# Forecasting Competitions > Next Steps: ${comment}; writes ${step}.json
+	return String.raw`# Forecasting Challenges and Competitions > Next Steps: ${comment}; writes ${step}.json
 import Pkg
 Base.find_package("PollisCompetitions") === nothing && Pkg.add("PollisCompetitions")
 import PollisCompetitions as PC, TOML
@@ -535,7 +535,7 @@ function nextStepScript(step: NextStep, folder: URI, request: INextStepRequest):
  * a team's ranks by RPS and by IR, recomputed with the method among them; then writes results.json.
  */
 function m6RunScript(folder: URI): string {
-	return String.raw`# Forecasting Competitions: the method of method.jl on the 12 rounds of M6, scored as its organisers scored the
+	return String.raw`# Forecasting Challenges and Competitions: the method of method.jl on the 12 rounds of M6, scored as its organisers scored the
 # teams; progress.json while it runs, then forecasts.csv and results.json
 import Pkg
 Base.find_package("PollisCompetitions") === nothing && Pkg.add("PollisCompetitions")
@@ -640,7 +640,7 @@ end`;
  * whole competition or of a whole frequency of M4, or of M5; then writes results.json, which step 4 draws.
  */
 function runScript(folder: URI): string {
-	return String.raw`# Forecasting Competitions: the method of method.jl on the series of run.toml, scored as the competition's
+	return String.raw`# Forecasting Challenges and Competitions: the method of method.jl on the series of run.toml, scored as the competition's
 # organisers scored the entries; progress.json while it runs, then forecasts.csv and results.json
 import Pkg
 Base.find_package("PollisCompetitions") === nothing && Pkg.add("PollisCompetitions")
@@ -746,7 +746,7 @@ ${JULIA_WINNER}
 end`;
 }
 
-/** Opens the Forecasting Competitions page, or shows it when it is open. */
+/** Opens the Forecasting Challenges and Competitions page, or shows it when it is open. */
 async function openForecastingCompetitionsPage(accessor: ServicesAccessor): Promise<void> {
 	const webviewWorkbenchService = accessor.get(IWebviewWorkbenchService);
 	const fileService = accessor.get(IFileService);
@@ -765,7 +765,7 @@ async function openForecastingCompetitionsPage(accessor: ServicesAccessor): Prom
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
 		return;
 	}
-	const title = localize('competitions.title', "Forecasting Competitions");
+	const title = localize('competitions.title', "Forecasting Challenges and Competitions");
 	const webviewInput = webviewWorkbenchService.openWebview(
 		{
 			title,
@@ -957,7 +957,7 @@ async function openForecastingCompetitionsPage(accessor: ServicesAccessor): Prom
 
 function pageHtml(): string {
 	const text = {
-		intro: localize('competitions.intro', "Forecasting Competitions runs a forecasting method of your own on the series of a competition, M1, M3, M4, M5 Accuracy or M6, scores its forecasts with the competition's own measures, as its organisers scored the entries, and shows where it would have finished among them. The series come with the split the forecasters had: the values they saw, and the values their forecasts were scored on; in M6, the prices of its 100 assets up to each round."),
+		intro: localize('competitions.intro', "Forecasting Challenges and Competitions runs a forecasting method of your own on the series of a competition, M1, M3, M4, M5 Accuracy or M6, scores its forecasts with the competition's own measures, as its organisers scored the entries, and shows where it would have finished among them. The series come with the split the forecasters had: the values they saw, and the values their forecasts were scored on; in M6, the prices of its 100 assets up to each round."),
 		competition: localize('competitions.competition', "Competition"),
 		series: localize('competitions.series', "Series"),
 		frequencies: localize('competitions.frequencies', "Frequencies and Horizons"),
@@ -1093,7 +1093,7 @@ function pageHtml(): string {
 		},
 	};
 	return buildWebviewHtml({
-		title: localize('competitions.title', "Forecasting Competitions"),
+		title: localize('competitions.title', "Forecasting Challenges and Competitions"),
 		introHtml: text.intro,
 		omitPoweredBy: !FORECASTINGCOMPETITIONS_METADATA.forecastingCompetitions.packages.length,
 		extraCss: `
@@ -1863,7 +1863,7 @@ function pageHtml(): string {
 
 registerAction2(class extends Action2 {
 	constructor() {
-		super({ id: FORECASTING_COMPETITIONS_COMMAND_ID, title: localize2('competitions.action', "Forecasting Competitions..."), category: localize2('competitions.category', "Competitions"), f1: true });
+		super({ id: FORECASTING_COMPETITIONS_COMMAND_ID, title: localize2('competitions.action', "Forecasting Challenges and Competitions..."), category: localize2('competitions.category', "Competitions"), f1: true });
 	}
 	run(accessor: ServicesAccessor): Promise<void> {
 		return openForecastingCompetitionsPage(accessor);
