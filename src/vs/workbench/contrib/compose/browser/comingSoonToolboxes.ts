@@ -95,24 +95,26 @@ appendComingSoonItems(SMART_REGIONS_MENU, [
 		localize('comingSoon.smartRegions.kriging', "Spatial Statistics and Kriging"),
 		localize('comingSoon.smartRegions.econometrics', "Spatial Econometrics"),
 		localize('comingSoon.smartRegions.raster', "Raster Analysis"),
+		localize('comingSoon.smartRegions.networks', "Route and Network Analysis"),
+	],
+	[
+		localize('comingSoon.smartRegions.remoteSensing', "Remote Sensing"),
 		localize('comingSoon.smartRegions.pointClouds', "Point Cloud Processing"),
 		localize('comingSoon.smartRegions.terrain', "Terrain and Elevation Analysis"),
-		localize('comingSoon.smartRegions.networks', "Route and Network Analysis"),
-		localize('comingSoon.smartRegions.remoteSensing', "Remote Sensing"),
 	],
 ]);
 
 MenuRegistry.appendMenuItem(SMART_REGIONS_MENU, {
 	submenu: SMART_CITIES_MENU,
 	title: localize('comingSoon.smartCities', "Smart Cities"),
-	group: '3_comingSoon',
+	group: '4_comingSoon',
 	order: 1
 });
 
 MenuRegistry.appendMenuItem(SMART_REGIONS_MENU, {
 	submenu: SMART_RURAL_AREAS_MENU,
 	title: localize('comingSoon.smartRuralAreas', "Smart Rural Areas"),
-	group: '3_comingSoon',
+	group: '4_comingSoon',
 	order: 2
 });
 
