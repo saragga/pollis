@@ -41,6 +41,39 @@ function appendComingSoonItems(menu: MenuId, groups: readonly (readonly string[]
 	});
 }
 
+// Geoscience Toolbox: Climate Science, Earth System Modelling, Point Cloud Processing
+
+const GEOSCIENCE_MENU = new MenuId('pollisComingSoon.geoscience');
+
+MenuRegistry.appendMenuItem(MenuId.MenubarExtendMenu, {
+	submenu: GEOSCIENCE_MENU,
+	title: localize('comingSoon.geoscience', "Geoscience Toolbox (Coming Soon)"),
+	group: COMING_SOON_GROUP,
+	order: 1
+});
+
+appendComingSoonItems(GEOSCIENCE_MENU, [
+	[
+		localize('comingSoon.geoscience.climateData', "Climate Data Access and Download"),
+		localize('comingSoon.geoscience.atmosphere', "Atmospheric Analysis"),
+		localize('comingSoon.geoscience.ocean', "Ocean and Sea Surface Analysis"),
+		localize('comingSoon.geoscience.indices', "Climate Indices and Teleconnections"),
+		localize('comingSoon.geoscience.extremes', "Extreme Weather Event Analysis"),
+		localize('comingSoon.geoscience.projections', "Climate Change Projections"),
+	],
+	[
+		localize('comingSoon.geoscience.oceanModel', "Ocean Circulation Modelling"),
+		localize('comingSoon.geoscience.atmosphereModel', "Atmospheric Modelling"),
+		localize('comingSoon.geoscience.landModel', "Land Surface Modelling"),
+		localize('comingSoon.geoscience.iceModel', "Ice Sheet and Glacier Modelling"),
+		localize('comingSoon.geoscience.carbon', "Carbon Cycle and Biogeochemistry"),
+		localize('comingSoon.geoscience.coupled', "Coupled Earth System Simulation"),
+	],
+	[
+		localize('comingSoon.geoscience.pointClouds', "Point Cloud Processing"),
+	],
+]);
+
 // Smart Regions Toolbox
 
 const SMART_REGIONS_MENU = new MenuId('pollisComingSoon.smartRegions');
@@ -51,7 +84,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarExtendMenu, {
 	submenu: SMART_REGIONS_MENU,
 	title: localize('comingSoon.smartRegions', "Smart Regions Toolbox (Coming Soon)"),
 	group: COMING_SOON_GROUP,
-	order: 1
+	order: 2
 });
 
 appendComingSoonItems(SMART_REGIONS_MENU, [
