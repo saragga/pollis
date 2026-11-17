@@ -78,6 +78,7 @@ const SMART_CITIES_MENU = new MenuId('pollisComingSoon.smartRegions.smartCities'
 const SMART_RURAL_AREAS_MENU = new MenuId('pollisComingSoon.smartRegions.smartRuralAreas');
 const SMART_REGIONS_FILES_MENU = new MenuId('pollisComingSoon.smartRegions.accessFiles');
 const SMART_REGIONS_LIBRARIES_MENU = new MenuId('pollisComingSoon.smartRegions.accessDataLibraries');
+const SMART_REGIONS_MAPS_MENU = new MenuId('pollisComingSoon.smartRegions.mapVisualisation');
 
 MenuRegistry.appendMenuItem(MenuId.MenubarExtendMenu, {
 	submenu: SMART_REGIONS_MENU,
@@ -134,13 +135,28 @@ appendComingSoonItems(SMART_REGIONS_LIBRARIES_MENU, [
 	],
 	[
 		localize('comingSoon.smartRegions.mapillary', "Mapillary Street-Level Imagery"),
+	],
+]);
+
+// Map Visualisation: Google's Photorealistic 3D Tiles may be displayed, with their attributions, but not analysed
+MenuRegistry.appendMenuItem(SMART_REGIONS_MENU, {
+	submenu: SMART_REGIONS_MAPS_MENU,
+	title: localize('comingSoon.smartRegions.maps', "Map Visualisation"),
+	group: '1_comingSoon',
+	order: 0
+});
+
+appendComingSoonItems(SMART_REGIONS_MAPS_MENU, [
+	[
+		localize('comingSoon.smartRegions.baseMaps', "Maps and Base Maps"),
+	],
+	[
 		localize('comingSoon.smartRegions.google3dTiles', "Google Photorealistic 3D Tiles"),
 	],
 ]);
 
 appendComingSoonItems(SMART_REGIONS_MENU, [
 	[
-		localize('comingSoon.smartRegions.maps', "Map Visualisation"),
 		localize('comingSoon.smartRegions.projections', "Coordinate Transformations and Projections"),
 		localize('comingSoon.smartRegions.indexing', "Spatial Indexing"),
 	],
