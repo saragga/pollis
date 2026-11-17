@@ -23,7 +23,9 @@ function navigatePath(root: TomlValue, dotPath: string): { parent: TomlValue; ke
 		if (!Object.hasOwn(current, part)) {
 			current[part] = {};
 		}
-		current = current[part] as TomlValue;
+		// A table under an array of tables, such as [a.b] after [[a]], belongs to the array's last element
+		const next = current[part];
+		current = (Array.isArray(next) && next.length ? next[next.length - 1] : next) as TomlValue;
 	}
 	return { parent: current, key: parts[parts.length - 1] };
 }
