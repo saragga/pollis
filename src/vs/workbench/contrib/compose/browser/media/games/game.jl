@@ -1,7 +1,7 @@
 # Copyright (c) 2026 Antonio Saragga Seabra
 # SPDX-License-Identifier: MIT
 
-# Compose > Collaboration > Simulation Games: plays one round of a case's model. Pollis runs it on the
+# Compose > Simulation Games: plays one round of a case's model. Pollis runs it on the
 # facilitator's computer, in a fresh Julia process for each round, and reads the JSON it writes.
 #
 #   julia game.jl CASE_FOLDER GAME_FOLDER ROUND

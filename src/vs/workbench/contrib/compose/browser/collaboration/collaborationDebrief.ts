@@ -11,7 +11,7 @@ import { IFileService } from '../../../../../platform/files/common/files.js';
 import { parseToml, TomlValue } from '../../../model/browser/common/tomlPanelData.js';
 import { cellText, columnHeading, IGameCase, IResultColumn, leaves, loadCase, roundFolder, roundName as caseRoundName } from './collaborationGame.js';
 
-// Compose > Collaboration > Simulation Games > Open the Debrief: gathers a game's folder (game.toml and the rounds'
+// Compose > Simulation Games > Open the Debrief: gathers a game's folder (game.toml and the rounds'
 // decisions, results, news and messages between teams) into the debrief folder beside them: debrief.md, which says
 // round by round what happened, five CSV tables to analyse with the ordinary panels, and a copy of the case, so the
 // class can open the model and question it.

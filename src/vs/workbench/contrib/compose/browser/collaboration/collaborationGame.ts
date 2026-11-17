@@ -22,7 +22,7 @@ import { IToolboxPanelsService } from '../../common/toolboxPanels.js';
 import { IMarketSpec, MarketBook } from './collaborationMarket.js';
 import { GameValues, IGameDecision, IGameNews, IGamePayload, IGameRole, IGameTable } from './collaborationProtocol.js';
 
-// Compose > Collaboration > Simulation Games, on the facilitator's computer: the cases, which toolboxes bring
+// Compose > Simulation Games, on the facilitator's computer: the cases, which toolboxes bring
 // (pollisToolboxes games) or the facilitator chooses, and a game's rounds.
 // A case is a folder with case.toml (its rounds, teams, decisions, results, briefings and the ways its teams can
 // be organised, each with its roles, and the news it brings) and model.jl, which

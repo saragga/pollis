@@ -207,7 +207,7 @@ const toolboxesExtensionPoint = ExtensionsRegistry.registerExtensionPoint<IToolb
 				},
 				games: {
 					type: 'array',
-					description: localize('pollisToolboxes.games', "The toolbox's Simulation Games cases, which Compose > Collaboration > Simulation Games > Host a Game... offers. A toolbox of cases alone has no panels: give it an empty panels list."),
+					description: localize('pollisToolboxes.games', "The toolbox's Simulation Games cases, which Compose > Simulation Games > Host a Game... offers. A toolbox of cases alone has no panels: give it an empty panels list."),
 					items: {
 						type: 'object',
 						required: ['folder'],

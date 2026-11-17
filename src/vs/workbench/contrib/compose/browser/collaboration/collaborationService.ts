@@ -309,7 +309,7 @@ class Session extends Disposable {
 	get invitation(): string {
 		const host = this.role === 'host' ? this.name : this.hostName;
 		if (this.isGame) {
-			return localize('collaboration.invitationGame', "{0} invites you to play {1}, a Pollis simulation game. In Pollis, choose Compose > Collaboration > Simulation Games > Join a Game... and paste this invitation, or the code: {2}", host, this.gameRun?.gameCase.title ?? '', formatSessionCode(this.code));
+			return localize('collaboration.invitationGame', "{0} invites you to play {1}, a Pollis simulation game. In Pollis, choose Compose > Simulation Games > Join a Game... and paste this invitation, or the code: {2}", host, this.gameRun?.gameCase.title ?? '', formatSessionCode(this.code));
 		}
 		if (this.mode === 'class') {
 			return localize('collaboration.invitationClass', "{0} invites you to a Pollis class. In Pollis, choose Compose > Collaboration > Join Session... and paste this invitation, or the code: {1}", host, formatSessionCode(this.code));
@@ -2327,7 +2327,7 @@ export class CollaborationService extends Disposable implements ICollaborationSe
 		const session = this.session.value;
 		const run = session?.isLive && session.role === 'host' ? session.hostedGame : undefined;
 		if (!session || !run) {
-			this.notificationService.info(localize('collaboration.nextRoundForFacilitator', "Next Round is for the facilitator of a game: host one with Compose > Collaboration > Simulation Games > Host a Game...."));
+			this.notificationService.info(localize('collaboration.nextRoundForFacilitator', "Next Round is for the facilitator of a game: host one with Compose > Simulation Games > Host a Game...."));
 			return;
 		}
 		if (run.isRunning) {
@@ -2407,7 +2407,7 @@ export class CollaborationService extends Disposable implements ICollaborationSe
 		const session = this.session.value;
 		const run = session?.isLive && session.role === 'host' ? session.hostedGame : undefined;
 		if (!session || !run) {
-			this.notificationService.info(localize('collaboration.newsForFacilitator', "Release News... is for the facilitator of a game: host one with Compose > Collaboration > Simulation Games > Host a Game...."));
+			this.notificationService.info(localize('collaboration.newsForFacilitator', "Release News... is for the facilitator of a game: host one with Compose > Simulation Games > Host a Game...."));
 			return;
 		}
 		if (run.round < 1 || run.isOver || run.isRunning) {

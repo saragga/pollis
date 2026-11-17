@@ -387,7 +387,7 @@ export class PollisToolboxesView extends ViewPane {
 			});
 			this.promptRuntimeAction(toolbox, extension, update);
 			if (!update && hasOnlyGames(extension)) {
-				this.notificationService.info(localize('pollisToolboxes.gamesInstalled', "The {0} has no panels: its cases are in Compose > Collaboration > Simulation Games > Host a Game....", toolbox.name));
+				this.notificationService.info(localize('pollisToolboxes.gamesInstalled', "The {0} has no panels: its cases are in Compose > Simulation Games > Host a Game....", toolbox.name));
 			} else if (!update) {
 				// The toolbox is now at the end of Extend: on this page the user can choose its panels, and where they go
 				this.commandService.executeCommand(CHOOSE_TOOLBOX_PANELS_COMMAND_ID, extension.identifier.id);
