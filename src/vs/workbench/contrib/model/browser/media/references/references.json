@@ -24538,6 +24538,47 @@
 			"open_access": true
 		},
 		{
+			"key": "LSLLK...2026a",
+			"type": "misc",
+			"title": "XForecast: The KDD 2026 Finance Day Challenge on News-Grounded Financial Forecasting",
+			"authors": [
+				"Lee, Jaehoon",
+				"Seo, Jun",
+				"Lee, Seunghan",
+				"Lim, Tae Yoon",
+				"Kang, Dongwan",
+				"Choi, Hwanil",
+				"Kim, Minjae",
+				"Yoo, Sungdong",
+				"Kang, Junhyeok",
+				"Han, Sangjun",
+				"Lee, Soonyoung",
+				"Lee, Yongjae",
+				"Ahn, Wonbin"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2026,
+			"publisher": "arXiv",
+			"doi": "10.48550/arXiv.2610.16131",
+			"openalex": "W7221791625",
+			"url": "https://arxiv.org/abs/2610.16131",
+			"oa_url": "https://arxiv.org/pdf/2610.16131",
+			"abstract": "Financial forecasting has traditionally relied on numerical time-series (TS) signals, while textual information such as news remains largely underutilized. We introduce XForecast, a benchmark and competition for news-grounded financial forecasting, where the task is to predict stock price movements four weeks ahead using both historical price data and paired news signals. XForecast combines stock price data with curated financial text generated using FinTexTS, a multimodal dataset generation method. It covers 100 large-cap stocks from 2019--2023, with training on 2019--2022 and evaluation on 2023. To better evaluate models that leverage textual signals, we adopt a weighted hit rate metric that places greater emphasis on instances where news information is expected to have stronger influence. The XForecast Challenge, hosted on Kaggle as part of KDD 2026 Finance Day, aims to benchmark methods for integrating financial TS and textual information.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"stock price prediction",
+				"financial text",
+				"financial time series",
+				"large-cap stocks"
+			],
+			"keywords_source": "openalex",
+			"source": "datacite",
+			"retrieved": "2026-11-17",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "LSTC2025a",
 			"type": "article",
 			"title": "A Tutorial on Structural Identifiability of Epidemic Models Using StructuralIdentifiability.jl",
@@ -50861,6 +50902,12 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "LSLLK...2026a",
+			"count": 0,
+			"source": "openalex",
+			"date": "2026-11-17"
+		},
+		{
 			"key": "LTDZ2002a",
 			"count": 1310,
 			"source": "crossref",
@@ -57869,6 +57916,7 @@
 				"MSACG...2022a",
 				"MSHPS...2025a",
 				"AHSW2011a",
+				"LSLLK...2026a",
 				"GBWHM2021a"
 			]
 		},

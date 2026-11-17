@@ -1197,6 +1197,43 @@ notes = "News data availability after the competition is restricted."
 verify = ["metrics"]
 
 [[entry]]
+id = "xforecast_2026"
+name = "XForecast Challenge @ KDD 2026 Finance Day"
+type = "competition"
+domain = "finance"
+subdomain = "equities"
+organiser = "LG AI Research, UNIST, NJIT and PolyU (Kaggle)"
+platform = "Kaggle"
+start_year = 2026
+end_year = 2026
+era = "2023+"
+reference = "Lee and 12 coauthors (2026), XForecast: The KDD 2026 Finance Day Challenge on News-Grounded Financial Forecasting, arXiv:2610.16131"
+doi = "10.48550/arXiv.2610.16131"
+papers = ["LSLLK...2026a"]
+url = "https://www.kaggle.com/competitions/xforecast-challenge-kdd"
+related = ["two_sigma_news"]
+package = "PollisCompetitions"
+delivery = "download_helper"
+status = "planned"
+access = "Kaggle competition rules (no redistribution)"
+n_series = 100
+structure = ["panel", "multimodal_text"]
+covariates_observed = ["news"]
+covariate_richness = "rich"
+horizon = "four weeks"
+forecast_type = ["point"]
+forecast_type_detail = "closing price four weeks ahead"
+metrics = ["weighted hit rate"]
+split_protocol = "single_holdout"
+leaderboard_public = true
+size_class = "small"
+compute = "laptop"
+course_level = "advanced"
+teaches = "Whether financial news paired with prices improves a four-week stock forecast over prices alone."
+notes = "The top 100 stocks by market capitalisation; trained on 2019 to 2022 and scored on 2023, with news from the FinTexTS dataset."
+verify = ["frequency", "split_protocol", "access", "size_class"]
+
+[[entry]]
 id = "winton"
 name = "The Winton Stock Market Challenge"
 type = "competition"
