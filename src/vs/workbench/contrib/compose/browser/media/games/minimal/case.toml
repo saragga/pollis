@@ -3,7 +3,7 @@
 # computer. Change the title, the decisions, the results and the model; Test the Case in step 3 plays it.
 
 title = "Sell One Product"
-description = "Rival teams each sell the same kind of product to the same buyers. Each round they set their price. The highest cumulative profit after three rounds wins."
+description = "Rival teams each sell the same kind of product to the same buyers, whose demand varies from round to round. Each round they set their price and their marketing. The highest cumulative profit after three rounds wins."
 rounds = 3
 round = "Round"
 teams = [2, 6]
@@ -25,6 +25,17 @@ step = 0.5
 default = 8
 help = "What one unit costs your buyers this round."
 
+[[decisions]]
+key = "marketing"
+label = "Marketing"
+kind = "number"
+unit = "€"
+min = 0
+max = 20000
+step = 500
+default = 2000
+help = "What you spend on marketing this round: it wins buyers, less and less for each euro more."
+
 # The results: those every player sees and those each team alone sees. The debrief ranks the teams by winner, a
 # column of the public results, whose rows name their team in team.
 [results]
@@ -39,6 +50,11 @@ key = "price"
 label = "Price"
 unit = "€"
 digits = 2
+
+[[results.public]]
+key = "marketing"
+label = "Marketing"
+unit = "€"
 
 [[results.public]]
 key = "share"
@@ -57,6 +73,10 @@ label = "Cumulative Profit"
 unit = "€"
 
 [[results.private]]
+key = "market"
+label = "Units the Buyers Would Buy"
+
+[[results.private]]
 key = "sales"
 label = "Units Sold"
 
@@ -67,7 +87,12 @@ unit = "€"
 
 [[results.private]]
 key = "costs"
-label = "Costs"
+label = "Costs of the Units"
+unit = "€"
+
+[[results.private]]
+key = "marketing"
+label = "Marketing"
 unit = "€"
 
 [[results.private]]
@@ -87,10 +112,12 @@ text = "The materials of the product cost more from now on, for every team."
 unit_cost = [4.5, 5.5]
 
 # What model.jl reads. The buyers choose among the teams and buying none by a multinomial logit; a range
-# [low, high] is drawn for each game in model.jl.
+# [low, high] is drawn for each game in model.jl, and demand_noise moves the market from round to round.
 [parameters]
 market_size = [8000, 12000]
+demand_noise = 0.15
 price_sensitivity = 2.0
+marketing_appeal = 0.4
 no_purchase_appeal = -3.0
 unit_cost = 4.0
 fixed_cost = 2000

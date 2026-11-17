@@ -60,7 +60,7 @@ const TOOLBOXES_VIEW_ID = 'workbench.views.extensions.pollisToolboxes';
 /** What the five cases of the Pollis toolboxes show how to do, by their folders' names. */
 function patternOf(folder: string): string | undefined {
 	switch (folder) {
-		case 'minimal': return localize('createGame.pattern.minimal', "The smallest case: one decision, a price, for three rounds");
+		case 'minimal': return localize('createGame.pattern.minimal', "The smallest case: a price and marketing for three rounds, with demand that varies");
 		case 'chocolate-chain': return localize('createGame.pattern.chocolate', "Pattern: rivals in one market, with roles that each set some decisions");
 		case 'merge-or-be-bought': return localize('createGame.pattern.merge', "Pattern: bids among equals, each team bidding for the others");
 		case 'a-vineyard-for-the-portfolio': return localize('createGame.pattern.vineyard', "Pattern: a buyer and sellers, each side with its own decisions and secrets");
@@ -516,9 +516,10 @@ function pageHtml(): string {
 		casesFolder: localize('createGame.casesFolder', "Your cases are kept in"),
 		caseTitle: localize('createGame.caseTitle', "Title"),
 		caseTitlePlaceholder: localize('createGame.caseTitlePlaceholder', "The title of your case, such as Run a Bakery"),
+		sourceTitlePlaceholder: localize('createGame.sourceTitlePlaceholder', "{0}, or the title of your case"),
 		create: localize('createGame.create', "Create the Case"),
 		getMoreCases: localize('createGame.getMoreCases', "Get More Cases"),
-		chooseSource: localize('createGame.chooseSource', "Choose a case to start from, and give yours a title."),
+		chooseSource: localize('createGame.chooseSource', "Choose a case to start from, and give yours a title, or keep the title of the case it starts from."),
 		created: localize('createGame.created', "Created: write it in step 2."),
 		yourCases: localize('createGame.yourCases', "Your Cases"),
 		yourCasesIntro: localize('createGame.yourCasesIntro', "The cases you created, and any case folder you open: choose one to go on with it."),
@@ -573,10 +574,10 @@ function pageHtml(): string {
 		extraCss: `
 		${compareCss}
 		.missing { color: var(--vscode-errorForeground); }
-		input[type=text] { font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-focusBorder); border-radius: 2px; padding: 3px 6px; min-width: 24em; }
-		input[type=text]:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
-		input::placeholder, textarea::placeholder { color: var(--vscode-input-placeholderForeground); }
-		textarea { max-width: 900px; min-height: 70px; }
+		#caseTitle { font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-focusBorder); border-radius: 2px; padding: 3px 6px; min-width: 24em; }
+		#caseTitle:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
+		#caseTitle::placeholder, #description::placeholder { color: var(--vscode-input-placeholderForeground); }
+		#description { max-width: 900px; min-height: 70px; }
 		.cases { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; max-width: 960px; margin: 8px 0; }
 		.case { border: 1px solid var(--vscode-panel-border); border-radius: 4px; padding: 8px 10px; cursor: pointer; }
 		.case:hover { border-color: var(--vscode-focusBorder); }
@@ -744,6 +745,9 @@ function pageHtml(): string {
 		});
 		return node;
 	}
+	function chosenSource() {
+		return state.sources.find(c => c.id === source);
+	}
 	function renderStart() {
 		const sources = document.getElementById('sources');
 		sources.textContent = '';
@@ -760,11 +764,12 @@ function pageHtml(): string {
 			yours.append(card(c, !!state.current && state.current.id === c.id, c.path, () => vscode.postMessage({ command: 'choose', id: c.id })));
 		}
 		document.getElementById('startHead').textContent = state.current ? state.current.title : '';
+		const chosen = chosenSource();
+		titleInput.placeholder = chosen ? format(TEXT.sourceTitlePlaceholder, chosen.title) : TEXT.caseTitlePlaceholder;
 		updateCreate();
 	}
 	function updateCreate() {
-		createButton.disabled = !source || !titleInput.value.trim();
-		if (createButton.disabled && !createStatus.classList.contains('missing')) { createStatus.textContent = TEXT.chooseSource; }
+		if (!titleInput.value.trim() && !createStatus.classList.contains('missing') && createStatus.textContent !== TEXT.created) { createStatus.textContent = TEXT.chooseSource; }
 	}
 	function renderCase() {
 		const c = state.current;
@@ -919,8 +924,15 @@ function pageHtml(): string {
 		createStatus.textContent = '';
 		updateCreate();
 	});
+	// Create the Case is always there to press: without a title, the case takes that of the case it starts from
 	createButton.addEventListener('click', () => {
-		if (!source || !titleInput.value.trim()) { return; }
+		const chosen = chosenSource();
+		if (!chosen) {
+			createStatus.classList.add('missing');
+			createStatus.textContent = TEXT.chooseSource;
+			return;
+		}
+		if (!titleInput.value.trim()) { titleInput.value = chosen.title; }
 		createButton.disabled = true;
 		vscode.postMessage({ command: 'create', source, title: titleInput.value.trim() });
 	});
@@ -939,16 +951,20 @@ function pageHtml(): string {
 			renderStart();
 			renderCase();
 		} else if (message.command === 'created') {
-			titleInput.value = '';
 			createStatus.classList.remove('missing');
 			createStatus.textContent = TEXT.created;
-			updateCreate();
+			createButton.disabled = false;
 			// A new case gets its default icon, its title's initials
 			makeIcon({ title: message.title });
+			// On to step 2, Write
+			const write = document.getElementById('step-write');
+			write.classList.remove('collapsed');
+			write.scrollIntoView({ behavior: 'smooth', block: 'start' });
+			document.querySelector('[data-file="case"]').focus({ preventScroll: true });
 		} else if (message.command === 'createFailed') {
 			createStatus.classList.add('missing');
 			createStatus.textContent = message.error;
-			updateCreate();
+			createButton.disabled = false;
 		} else if (message.command === 'openFailed') {
 			document.getElementById('openStatus').textContent = message.error;
 		} else if (message.command === 'iconImage') {

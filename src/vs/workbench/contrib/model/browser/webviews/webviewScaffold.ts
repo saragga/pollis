@@ -407,7 +407,7 @@ export const panelAskCss = `.title-row { display: flex; align-items: flex-start;
 		.title-column { flex: 1; min-width: 0; }
 		.panel-ask { flex: 0 1 300px; min-width: 200px; margin-bottom: 16px; padding: 3px 10px 6px 12px; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-focusBorder); border-radius: 14px; }
 		.panel-ask:focus-within { box-shadow: 0 0 0 1px var(--vscode-focusBorder); }
-		.panel-ask textarea { display: block; box-sizing: border-box; width: 100%; resize: none; height: 30px; max-height: ${PANEL_ASK_HEIGHT}px; overflow-y: hidden; font: inherit; line-height: 1.4; padding: 6px 2px; color: inherit; background: transparent; border: none; outline: none; }
+		.panel-ask textarea { display: block; box-sizing: border-box; width: 100%; max-width: none; resize: none; height: 30px; min-height: 0; max-height: ${PANEL_ASK_HEIGHT}px; overflow-y: hidden; font: inherit; line-height: 1.4; padding: 6px 2px; color: inherit; background: transparent; border: none; outline: none; }
 		.panel-ask textarea::placeholder { color: var(--vscode-input-placeholderForeground); }
 		.panel-ask-tools { display: flex; align-items: center; gap: 2px; }
 		.panel-ask .add { margin-right: auto; }
