@@ -50,7 +50,7 @@ import { CHOOSE_TOOLBOX_PANELS_COMMAND_ID } from '../../compose/common/toolboxPa
 const TOOLBOXES_URL = 'https://raw.githubusercontent.com/Trumpingtons/pollis-toolboxes/dist';
 export const TOOLBOXES_INDEX_URL = `${TOOLBOXES_URL}/toolboxes.json`;
 
-/** The icon of every toolbox row: the Pollis icon, also the toolboxes' own icon. */
+/** The icon of a toolbox row whose toolbox names no icon, or whose icon cannot be downloaded (offline, say): the Pollis icon. */
 const TOOLBOX_ICON = FileAccess.asBrowserUri('vs/workbench/contrib/extensions/browser/media/pollis-toolbox-icon.png').toString(true);
 
 /** The context key the Extensions viewlet sets to the search text (ExtensionsSearchValueContext). */
@@ -69,6 +69,8 @@ export interface IToolboxIndexEntry {
 	readonly vsix: string;
 	/** The README file name, next to toolboxes.json: shown when the toolbox is not installed. */
 	readonly readme?: string;
+	/** The icon file name, next to toolboxes.json: the icon of its .vsix, shown on its row. */
+	readonly icon?: string;
 }
 
 /** The content of toolboxes.json. */
@@ -302,7 +304,10 @@ export class PollisToolboxesView extends ViewPane {
 		row.title = action === ToolboxAction.Update && installed
 			? localize('pollisToolboxes.showDetailsUpdate', "{0} {1} (installed: {2}): show its details", toolbox.name, toolbox.version, installed.version)
 			: localize('pollisToolboxes.showDetailsVersion', "{0} {1}: show its details", toolbox.name, toolbox.version);
-		dom.append(row, dom.$('img.icon', { src: TOOLBOX_ICON, alt: '' }));
+		const icon = dom.append(row, dom.$<HTMLImageElement>('img.icon', { src: toolbox.icon ? `${TOOLBOXES_URL}/${encodeURIComponent(toolbox.icon)}` : TOOLBOX_ICON, alt: '' }));
+		if (toolbox.icon) {
+			this.rowDisposables.add(dom.addDisposableListener(icon, dom.EventType.ERROR, () => icon.src = TOOLBOX_ICON, { once: true }));
+		}
 		const details = dom.append(row, dom.$('.details'));
 		const header = dom.append(details, dom.$('.header'));
 		dom.append(header, dom.$('span.name', undefined, toolboxLabel(toolbox.name)));
