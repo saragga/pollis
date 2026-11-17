@@ -15,6 +15,7 @@ import { ResourceContextKey } from '../../../../common/contextkeys.js';
 import { registerWorkbenchContribution2, WorkbenchPhase } from '../../../../common/contributions.js';
 import { CollaborationEditorBars, IN_SESSION } from './collaborationEditorBar.js';
 import { CollaborationService, ICollaborationService, SIGNALLING_SETTING } from './collaborationService.js';
+import './hostGamePage.js';
 import './testConnection.js';
 
 // Compose > Collaboration: starting (Side by Side or Same Page), joining and leaving a session, the chat, Test Connection, Share My Editor and Share Dataset.
@@ -89,7 +90,6 @@ registerCollaborationCommand('pollis.collaboration.startClass', localize2('colla
 registerCollaborationCommand('pollis.collaboration.breakoutGroups', localize2('collaboration.breakoutGroupsCommand', "Split into Breakout Groups..."), service => service.breakoutGroups());
 registerCollaborationCommand('pollis.collaboration.visitGroup', localize2('collaboration.visitGroupCommand', "Visit a Group..."), service => service.visitGroup());
 registerCollaborationCommand('pollis.collaboration.bringEveryoneBack', localize2('collaboration.bringEveryoneBackCommand', "Bring Everyone Back"), service => service.bringEveryoneBack());
-registerCollaborationCommand('pollis.collaboration.hostGame', localize2('collaboration.hostGameCommand', "Host a Game..."), service => service.hostGame());
 registerCollaborationCommand('pollis.collaboration.joinGame', localize2('collaboration.joinGameCommand', "Join a Game..."), service => service.joinGame());
 registerCollaborationCommand('pollis.collaboration.nextRound', localize2('collaboration.nextRoundCommand', "Next Round"), service => service.nextRound());
 registerCollaborationCommand('pollis.collaboration.debrief', localize2('collaboration.debriefCommand', "Open the Debrief"), service => service.openDebrief());

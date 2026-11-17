@@ -32,7 +32,14 @@
 #   [[results.private]] in case.toml. "text", when there is one, is shown to everyone; "private_text", a
 #   Dict by team number as a string, is shown to each team alone. "out", a Dict by team number as a string,
 #   takes those teams out of the game from the next round (a company bought, say), saying why; they keep
-#   their results but decide no more. "over" = true ends the game after this round.
+#   their results but decide no more. "over" = true ends the game after this round. "debrief", a Markdown
+#   text, is shown to no player during the game: the debrief puts it under the round, as Behind the Results,
+#   for what the model kept hidden, such as the secrets it drew for the game in round 0 or how far apart two
+#   teams' prices were in a negotiation.
+#
+# The news of round-j/news.toml has its values drawn: a [[news]] item of case.toml can have a chance of being
+# in the game, a window of rounds = [first, last] and changes given as ranges, [low, high], which Pollis draws
+# from the game's seed when the game starts.
 #
 # Round 0 calls initial and writes round-00/state.toml. Round k from 1 reads round-(k-1)/state.toml and
 # round-k/decisions.toml, calls play, and writes round-k/state.toml and round-k/results.json. The random

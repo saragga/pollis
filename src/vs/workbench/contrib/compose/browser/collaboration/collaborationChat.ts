@@ -186,6 +186,59 @@ export type ChatWorkbenchMessage =
 	| { readonly command: 'placeOrder'; readonly side: 'buy' | 'sell'; readonly price: number; readonly quantity: number }
 	| { readonly command: 'cancelOrder'; readonly id: string };
 
+/** A briefing, from its Markdown: headings, paragraphs and lists, with **bold**, each set as text; the script of a page that shows one. */
+export const briefingElementJs = `
+function briefingElement(markdown) {
+	const element = document.createElement('div');
+	element.className = 'briefing';
+	const inline = (target, text) => {
+		text.split('**').forEach((part, index) => {
+			if (index % 2) {
+				const bold = document.createElement('b');
+				bold.textContent = part;
+				target.append(bold);
+			} else if (part) {
+				target.append(document.createTextNode(part));
+			}
+		});
+	};
+	let list, paragraph;
+	for (const raw of markdown.split('\\n')) {
+		const line = raw.trim();
+		const heading = /^#{1,6}\\s+(?<text>.*)$/.exec(line);
+		const item = /^[-*]\\s+(?<text>.*)$/.exec(line);
+		if (!line) {
+			list = paragraph = undefined;
+		} else if (heading) {
+			list = paragraph = undefined;
+			const title = document.createElement('div');
+			title.className = 'heading';
+			inline(title, heading.groups.text);
+			element.append(title);
+		} else if (item) {
+			paragraph = undefined;
+			if (!list) {
+				list = document.createElement('ul');
+				element.append(list);
+			}
+			const entry = document.createElement('li');
+			inline(entry, item.groups.text);
+			list.append(entry);
+		} else {
+			list = undefined;
+			if (!paragraph) {
+				paragraph = document.createElement('p');
+				element.append(paragraph);
+			} else {
+				paragraph.append(document.createTextNode(' '));
+			}
+			inline(paragraph, line);
+		}
+	}
+	return element;
+}
+`;
+
 /** The chat page: its texts come from here, the session from the workbench's messages; `language` is that of dictation. */
 export function chatPageHtml(language: string, writeIn: string): string {
 	const text = {
@@ -762,56 +815,7 @@ export function chatPageHtml(language: string, writeIn: string): string {
 
 	// ---- A game: the facilitator's teams and Next Round, or a player's decisions for their team ----
 
-	// A briefing, from its Markdown: headings, paragraphs and lists, with **bold**, each set as text
-	function briefingElement(markdown) {
-		const element = document.createElement('div');
-		element.className = 'briefing';
-		const inline = (target, text) => {
-			text.split('**').forEach((part, index) => {
-				if (index % 2) {
-					const bold = document.createElement('b');
-					bold.textContent = part;
-					target.append(bold);
-				} else if (part) {
-					target.append(document.createTextNode(part));
-				}
-			});
-		};
-		let list, paragraph;
-		for (const raw of markdown.split('\\n')) {
-			const line = raw.trim();
-			const heading = /^#{1,6}\\s+(?<text>.*)$/.exec(line);
-			const item = /^[-*]\\s+(?<text>.*)$/.exec(line);
-			if (!line) {
-				list = paragraph = undefined;
-			} else if (heading) {
-				list = paragraph = undefined;
-				const title = document.createElement('div');
-				title.className = 'heading';
-				inline(title, heading.groups.text);
-				element.append(title);
-			} else if (item) {
-				paragraph = undefined;
-				if (!list) {
-					list = document.createElement('ul');
-					element.append(list);
-				}
-				const entry = document.createElement('li');
-				inline(entry, item.groups.text);
-				list.append(entry);
-			} else {
-				list = undefined;
-				if (!paragraph) {
-					paragraph = document.createElement('p');
-					element.append(paragraph);
-				} else {
-					paragraph.append(document.createTextNode(' '));
-				}
-				inline(paragraph, line);
-			}
-		}
-		return element;
-	}
+	${briefingElementJs}
 
 	let gameKey = '', lastGame;
 	// The briefings open, which stay open when the column is drawn again

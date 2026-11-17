@@ -72,13 +72,20 @@ export interface IGameStructure {
 /** A change a news item makes to the model's parameters: the parameter's place in [parameters], such as bean_cost.origin, and its new value. */
 export interface IParameterChange {
 	readonly path: string;
+	/** The new value, or, for a scripted item whose change is a range, its lowest. */
 	readonly value: number;
+	/** For a scripted item whose change is a range, [low, high] in case.toml, its highest: the game draws its value. */
+	readonly high?: number;
 }
 
 /** A news item: scripted by the case for a round, or written by the facilitator. */
 export interface ICaseNews {
 	/** The round it is released in, or, for a scripted item, the first round it can be. */
 	readonly round: number;
+	/** For a scripted item that comes in a window of rounds, rounds = [first, last] in case.toml, the last: the game draws its round. */
+	readonly lastRound?: number;
+	/** For a scripted item, the chance it is in the game, from 0 to 1: the game draws whether it is; in every game when missing. */
+	readonly chance?: number;
 	readonly title: string;
 	readonly text: string;
 	/** The roles it is for, by key; everyone when missing, or when the game's structure has none of them. */
@@ -106,7 +113,7 @@ export interface IGameCase {
 	readonly structures: readonly IGameStructure[];
 	/** The model's parameters that are numbers, by their place in [parameters], which news can change. */
 	readonly parameters: ReadonlyMap<string, number>;
-	/** The news the case brings, in the order of case.toml. */
+	/** The news the case can bring, in the order of case.toml; each game draws its own from them, when it starts. */
 	readonly news: readonly ICaseNews[];
 	/** Whether teams can write to each other, the facilitator reading what they write (negotiations = false in case.toml turns it off). */
 	readonly negotiations: boolean;
@@ -298,19 +305,30 @@ export async function loadCase(fileService: IFileService, folder: URI): Promise<
 	const news = (Array.isArray(toml.news) ? toml.news as TomlValue[] : []).map(item => {
 		const title = text(item.title);
 		const body = text(item.text);
-		if (!isWhole(item.round) || item.round < 1 || item.round > rounds || !title || !body || body.length > MAX_NEWS_TEXT) {
-			throw invalid(`each news item needs a round of the game, a title and a text of at most ${MAX_NEWS_TEXT} characters`);
+		// A round, or a window of rounds, rounds = [first, last], the game drawing one
+		const window = Array.isArray(item.rounds) ? item.rounds : undefined;
+		const [first, last] = window ? window : [item.round, item.round];
+		if ((window !== undefined) === (item.round !== undefined) || (window && window.length !== 2) || !isWhole(first) || !isWhole(last) || first < 1 || first > last || last > rounds || !title || !body || body.length > MAX_NEWS_TEXT) {
+			throw invalid(`each news item needs a round of the game, or rounds = [first, last] within the game, a title and a text of at most ${MAX_NEWS_TEXT} characters`);
+		}
+		if (item.chance !== undefined && (typeof item.chance !== 'number' || !(item.chance > 0 && item.chance <= 1))) {
+			throw invalid(`the chance of the news ${title} is a number above 0 and at most 1`);
 		}
 		if (item.roles !== undefined && (!Array.isArray(item.roles) || item.roles.some(key => typeof key !== 'string' || !roleKeys.has(key)))) {
 			throw invalid(`the roles of the news ${title} are keys of the roles`);
 		}
-		const changes = leaves(item.parameters).map(([path, value]) => {
-			if (!parameters.has(path) || typeof value !== 'number' || !Number.isFinite(value)) {
-				throw invalid(`the news ${title} changes ${path}, which is not a number of [parameters]`);
+		const changes = leaves(item.parameters).map(([path, value]): IParameterChange => {
+			// A value, or a range, [low, high], the game drawing one
+			const [low, high] = Array.isArray(value) && value.length === 2 ? value : [value, value];
+			if (!parameters.has(path) || typeof low !== 'number' || typeof high !== 'number' || !Number.isFinite(low) || !Number.isFinite(high) || low > high) {
+				throw invalid(`the news ${title} changes ${path}, which is not a number of [parameters], or not to a number or a range [low, high]`);
 			}
-			return { path, value };
+			return { path, value: low, ...(high > low ? { high } : {}) };
 		});
-		return { round: item.round, title, text: body, ...(Array.isArray(item.roles) ? { roles: item.roles as string[] } : {}), changes } satisfies ICaseNews;
+		return {
+			round: first, ...(last > first ? { lastRound: last } : {}), ...(typeof item.chance === 'number' && item.chance < 1 ? { chance: item.chance } : {}),
+			title, text: body, ...(Array.isArray(item.roles) ? { roles: item.roles as string[] } : {}), changes,
+		} satisfies ICaseNews;
 	});
 	if (toml.round_choices !== undefined && (!Array.isArray(toml.round_choices) || toml.round_choices.some(count => !isWhole(count) || count < 1 || count > rounds))) {
 		throw invalid('round_choices are numbers of rounds from 1 to rounds');
@@ -371,9 +389,36 @@ function marketSpec(value: unknown, invalid: (what: string) => Error): IMarketSp
 	return spec;
 }
 
-/** A case played in fewer rounds than it has, as the facilitator chose among its round_choices: its rounds, their names and the news that fit in them. */
+/** A case played in fewer rounds than it has, as the facilitator chose among its round_choices: its rounds, their names and the news that fit in them, a window of rounds cut at the last. */
 export function withRounds(gameCase: IGameCase, rounds: number): IGameCase {
-	return { ...gameCase, rounds, roundNames: gameCase.roundNames.slice(0, rounds), news: gameCase.news.filter(item => item.round <= rounds) };
+	const news = gameCase.news.filter(item => item.round <= rounds).map(({ lastRound, ...item }) => lastRound !== undefined && Math.min(lastRound, rounds) > item.round ? { ...item, lastRound: Math.min(lastRound, rounds) } : item);
+	return { ...gameCase, rounds, roundNames: gameCase.roundNames.slice(0, rounds), news };
+}
+
+/**
+ * The news of a game, drawn from its case's with the game's seed, so that a student who read case.toml knows what
+ * may happen, not what will: whether each item is in the game, by its chance; its round, within its window; and
+ * each change given as a range, within it, to three significant digits. The same seed draws the same news again.
+ */
+export function drawNews(news: readonly ICaseNews[], seed: number): ICaseNews[] {
+	// mulberry32, seeded with the game's seed
+	let state = seed >>> 0;
+	const random = () => {
+		state = (state + 0x6D2B79F5) >>> 0;
+		let value = Math.imul(state ^ (state >>> 15), 1 | state);
+		value = (value + Math.imul(value ^ (value >>> 7), 61 | value)) ^ value;
+		return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
+	};
+	return news.flatMap(({ lastRound, chance, changes, ...item }) => {
+		// Every item draws as many numbers whatever it gives, so that one item's draw does not depend on another's
+		const kept = random() < (chance ?? 1);
+		const round = item.round + Math.floor(random() * ((lastRound ?? item.round) - item.round + 1));
+		const drawn = changes.map(({ path, value, high }) => {
+			const draw = random();
+			return { path, value: high === undefined ? value : Number((value + (high - value) * draw).toPrecision(3)) };
+		});
+		return kept ? [{ ...item, round, changes: drawn }] : [];
+	}).sort((a, b) => a.round - b.round);
 }
 
 /** The values of a table and of the tables in it, by their place, such as bean_cost.origin. */
@@ -569,7 +614,9 @@ export class GameRun {
 	private readonly played = new Map<number, GameValues>();
 	/** Each player's team and roles, by Trystero's id. */
 	private readonly players = new Map<string, { readonly team: number; readonly roles: readonly string[] }>();
-	/** The news released, oldest first, and which of the case's scripted items are among them. */
+	/** The case's news drawn for this game, when it starts, in the order of their rounds. */
+	private drawn: readonly ICaseNews[] = [];
+	/** The news released, oldest first, and which of the items drawn are among them. */
 	private readonly released: ICaseNews[] = [];
 	private readonly releasedScripted = new Set<number>();
 	/** The teams that have left the game, with why, as the model said it. */
@@ -685,12 +732,12 @@ export class GameRun {
 		return sides.length ? sides.some(side => this.structure.roles.filter(role => !role.sides || role.sides.includes(side)).length > 1) : this.structure.roles.length > 1;
 	}
 
-	/** The case's news that can be released now: scripted for this round or an earlier one, and not released yet. */
+	/** The case's news drawn for this game that can be released now: drawn for this round or an earlier one, and not released yet. */
 	pendingNews(): { readonly index: number; readonly item: ICaseNews }[] {
 		if (this._round < 1 || this.isOver) {
 			return [];
 		}
-		return this.gameCase.news.flatMap((item, index) => item.round <= this._round && !this.releasedScripted.has(index) ? [{ index, item }] : []);
+		return this.drawn.flatMap((item, index) => item.round <= this._round && !this.releasedScripted.has(index) ? [{ index, item }] : []);
 	}
 
 	/** A parameter's value for the round being decided: the case's, as the news released so far changed it. */
@@ -858,6 +905,7 @@ export class GameRun {
 		});
 		this.folder = await this.newFolder();
 		const seed = Math.floor(Math.random() * 1_000_000_000);
+		this.drawn = drawNews(this.gameCase.news, seed);
 		await this.write('game.toml', [
 			`case = ${tomlString(basename(this.gameCase.folder))}`,
 			`case_folder = ${tomlString(this.gameCase.folder.fsPath)}`,

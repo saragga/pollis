@@ -140,8 +140,11 @@ case the debrief ranks the teams of each side among themselves; a side of one te
 
 \section{News}\label{sec:news}
 A case brings items of news, each with the first round in which it can be released, a title, a text, the roles who
-read it, and the values of the model's parameters it changes. \ui{Release News...} offers the items of the round,
-and earlier ones not yet released, or \ui{Write a News Item...}: a title, a text, any parameters changed, picked
+read it, and the values of the model's parameters it changes. An item can also leave some of this to chance: a
+\file{chance} of being in the game at all, a window of rounds, \file{rounds = [2, 4]}, in place of one round, and
+a change given as a range, \file{[-0.4, -0.2]}, in place of one value. When the game starts, Pollis draws each
+from the game's seed, so that a student who has read \file{case.toml} knows what may happen, not what will.
+\ui{Release News...} offers the items drawn for the round, and earlier ones not yet released, or \ui{Write a News Item...}: a title, a text, any parameters changed, picked
 from the case's numbers with their values now, and the roles who read it. The players are not told which
 parameters changed; the facilitator's card lists each change, from and to. News is released only while a round is
 decided, and its changes apply from that round on. A player sees an item as a card in the chat,
@@ -205,7 +208,7 @@ preview.
 \midrule
 \file{debrief.md} & The teams and their structure; the standings after the last round played, by the case's
   score, side by side in a case with sides; each round's text, public results, news with its readers and changes,
-  and the number of messages; every message between teams; the case's questions for the class\\
+  the number of messages, and Behind the Results, what the model wrote for the debrief alone; every message between teams; the case's questions for the class\\
 \file{decisions.csv} & Every team's decisions in every round\\
 \file{results.csv} & The public results of every round\\
 \file{team_results.csv} & The private results of every team and round\\
@@ -293,7 +296,8 @@ says what happens; its briefings are Markdown files beside them.
   round\\
 \file{[results]} & \file{winner}, the column that ranks the teams, and the columns of \file{[[results.public]]} and
   \file{[[results.private]]}, each with key, label, unit and digits\\
-\file{[[news]]} & Round, title, text, roles, and \file{[news.parameters]}, the parameters it changes\\
+\file{[[news]]} & Round, or a window of \file{rounds}, a \file{chance}, title, text, roles, and
+  \file{[news.parameters]}, the parameters it changes, each to a value or a range \file{[low, high]}\\
 \file{[market]} & For a case that trades by the clock: the asset, the currency, the minutes of a period, the tick,
   each desk's cash and shares, and the largest order and price\\
 \file{[parameters]} & The model's numbers, which news can change\\
@@ -322,7 +326,9 @@ end
   \item \file{state} is a dictionary of what TOML can hold, written to the round's folder, so that a game can be
     read and played again.
   \item \file{results} has \file{public}, \file{private} by team, and when needed \file{text}, \file{private_text},
-    \file{out} (the teams that leave, with the reason) and \file{over}.
+    \file{out} (the teams that leave, with the reason), \file{over} and \file{debrief}, a Markdown text no player
+    sees during the game, which the debrief shows under the round: the secrets the model drew for the game, say, in
+    the results of \file{initial}, or how far apart two teams' prices were in a negotiation.
 \end{itemize}
 
 \subsection{A toolbox of cases}

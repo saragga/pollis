@@ -34,12 +34,19 @@ export interface IDebrief {
 	readonly files: readonly { readonly fileName: string; readonly content: string }[];
 }
 
-/** What a round's folder holds: the decisions (in a Trading Floor case, each desk's position), the results once played, the news, the messages between teams and, in a Trading Floor case, the trades. */
+/** The longest text a model can write for the debrief of a round, in characters. */
+const MAX_DEBRIEF_TEXT = 20000;
+
+/**
+ * What a round's folder holds: the decisions (in a Trading Floor case, each desk's position), the results once
+ * played, with what the model wrote for the debrief alone, the news, the messages between teams and, in a Trading
+ * Floor case, the trades.
+ */
 interface IRoundRecord {
 	readonly round: number;
 	readonly decisions: readonly TomlValue[];
 	readonly trades: readonly TomlValue[];
-	readonly results?: { readonly public: readonly Record<string, unknown>[]; readonly private: Readonly<Record<string, unknown>>; readonly text?: string };
+	readonly results?: { readonly public: readonly Record<string, unknown>[]; readonly private: Readonly<Record<string, unknown>>; readonly text?: string; readonly debrief?: string };
 	readonly news: readonly TomlValue[];
 	readonly negotiations: readonly TomlValue[];
 }
@@ -80,7 +87,8 @@ export async function writeDebrief(fileService: IFileService, game: URI, cases: 
 		}
 	}
 	const page = joinPath(folder, PAGE);
-	const markdown = debriefPage(gameCase, setup, teams, records, tables, game);
+	const opening = await readRound(fileService, joinPath(game, roundFolder(0)), 0);
+	const markdown = debriefPage(gameCase, setup, teams, opening, records, tables, game);
 	await fileService.writeFile(page, VSBuffer.fromString(markdown));
 	files.unshift({ fileName: PAGE, content: encodeBase64(VSBuffer.fromString(markdown)) });
 	return { page, tables, files };
@@ -119,6 +127,7 @@ async function readRound(fileService: IFileService, folder: URI, round: number):
 				public: Array.isArray(output.public) ? output.public.filter((row: unknown) => row && typeof row === 'object') : [],
 				private: output.private && typeof output.private === 'object' ? output.private : {},
 				text: typeof output.text === 'string' ? output.text : undefined,
+				debrief: typeof output.debrief === 'string' && output.debrief.trim() ? output.debrief.trim().slice(0, MAX_DEBRIEF_TEXT) : undefined,
 			};
 		}
 	} catch {
@@ -180,8 +189,12 @@ function csvCell(value: unknown): string {
 	return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }
 
-/** The debrief's page: the game, the final standings, the teams, each round, the negotiations, the tables and the model. */
-function debriefPage(gameCase: IGameCase | undefined, setup: TomlValue, teams: ReadonlyMap<number, string>, records: readonly IRoundRecord[], tables: readonly IDebriefTable[], game: URI): string {
+/**
+ * The debrief's page: the game, the final standings, the teams, what the teams were told before the first round,
+ * each round, the negotiations, the tables and the model. Under a round, Behind the Results is what the model wrote
+ * for the debrief alone, such as the secrets it drew for the game, which no player saw during it.
+ */
+function debriefPage(gameCase: IGameCase | undefined, setup: TomlValue, teams: ReadonlyMap<number, string>, opening: IRoundRecord | undefined, records: readonly IRoundRecord[], tables: readonly IDebriefTable[], game: URI): string {
 	const title = gameCase?.title ?? (typeof setup.title === 'string' ? setup.title : basename(game));
 	const roundName = (round: number) => gameCase ? caseRoundName(gameCase, round) : localize('debrief.roundName', "{0} {1}", localize('debrief.round', "Round"), round);
 	const structure = gameCase?.structures.find(item => item.key === setup.structure);
@@ -229,7 +242,19 @@ function debriefPage(gameCase: IGameCase | undefined, setup: TomlValue, teams: R
 		lines.push('');
 	}
 
-	// Round by round: the model's text, the results everyone saw, the news and how many messages teams wrote
+	const behind = (text: string | undefined) => text ? [`### ${localize('debrief.behindResults', "Behind the Results")}`, '', text, ''] : [];
+
+	// Before the first round: what the model told every team, and what it wrote for the debrief
+	if (opening?.results && (opening.results.text || opening.results.debrief)) {
+		lines.push(`## ${localize('debrief.opening', "Before {0}", roundName(1))}`, '');
+		if (opening.results.text) {
+			lines.push(opening.results.text, '');
+		}
+		lines.push(...behind(opening.results.debrief));
+	}
+
+	// Round by round: the model's text, the results everyone saw, the news, how many messages teams wrote, and what
+	// the model wrote for the debrief
 	for (const record of records) {
 		lines.push(`## ${roundName(record.round)}`, '');
 		if (record.results?.text) {
@@ -249,7 +274,7 @@ function debriefPage(gameCase: IGameCase | undefined, setup: TomlValue, teams: R
 		if (record.negotiations.length) {
 			lines.push(`- ${localize('debrief.messageCount', "Messages between teams: {0}, under Negotiations below.", record.negotiations.length)}`);
 		}
-		lines.push('');
+		lines.push('', ...behind(record.results?.debrief));
 	}
 
 	// Every message between teams

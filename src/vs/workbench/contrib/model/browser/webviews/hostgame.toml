@@ -1,0 +1,22 @@
+# Host a Game Webview Configuration
+# A page of Compose > Simulation Games in the Time Arrow style of the scaffold, not a panel: only its Learn More.
+# `pageCommand` is the command that opens it. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/hostgame.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Host a Game"
+viewType = "pollis.hostgame"
+pageCommand = "pollis.collaboration.hostGame"
+
+[[wikis]]
+name = "Overview"
+file = "hostgame/overview.md"
+bundled = true
+description = "What hosting a game means, the three steps of Host a Game, and what the players need to join"
+
+[[wikis]]
+name = "Factsheet"
+file = "hostgame/factsheet.md"
+bundled = true
+description = "The five cases, what a case folder holds, the invitation and where a game is kept"

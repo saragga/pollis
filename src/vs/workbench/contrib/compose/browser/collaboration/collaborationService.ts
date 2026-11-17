@@ -38,7 +38,7 @@ import { IWirePacket, ReliableDelivery } from './collaborationTransport.js';
 import { IAgentLink, IAgentMaterial, SessionAgent, sessionAgentCells } from './collaborationAgent.js';
 import { findPollisWorkspace, pollisWorkspaceFolderPath } from '../../../pollisWorkspace/browser/pollisWorkspace.contribution.js';
 import { writeDebrief } from './collaborationDebrief.js';
-import { checkedGame, checkedTables, checkedValues, GameRun, ICaseNews, ICaseRole, IGameCase, IRoundResults, loadCase, MAX_NEWS_TEXT, roundName, toolboxCases, withRounds } from './collaborationGame.js';
+import { checkedGame, checkedTables, checkedValues, GameRun, ICaseNews, ICaseRole, IGameCase, IGameStructure, IRoundResults, MAX_NEWS_TEXT, roundName, toolboxCases } from './collaborationGame.js';
 import { checkedMarket } from './collaborationMarket.js';
 import { IToolboxPanelsService } from '../../common/toolboxPanels.js';
 import { MODEL_ROUTING_COMMAND_ID } from '../modelRouting.js';
@@ -123,8 +123,14 @@ export interface ICollaborationService {
 	/** The tutor ends the breakout groups, so the class is one again. */
 	bringEveryoneBack(): void;
 
-	/** Starts a game from a case, as its facilitator, and copies the invitation (Simulation Games). */
-	hostGame(): Promise<void>;
+	/** The name given in the last session, as the others saw it; empty before the first. */
+	readonly lastName: string;
+
+	/** The invitation of the game this copy hosts; undefined outside one. */
+	readonly hostedGameInvitation: string | undefined;
+
+	/** Starts a game from a case, as its facilitator, with the way its teams are organised, and copies the invitation (Simulation Games > Host a Game...); undefined when already in a session. */
+	hostGame(gameCase: IGameCase, structure: IGameStructure, name: string): Promise<string | undefined>;
 
 	/** Joins a game from its invitation: the same as joining a session. */
 	joinGame(): Promise<void>;
@@ -2253,70 +2259,25 @@ export class CollaborationService extends Disposable implements ICollaborationSe
 		}
 	}
 
-	async hostGame(): Promise<void> {
-		if (this.alreadyInSession()) {
-			return;
-		}
-		const title = localize('collaboration.hostGameTitle', "Host a Game");
-		const cases: (IQuickPickItem & { readonly gameCase?: IGameCase })[] = [];
-		for (const { folder, toolbox } of toolboxCases(this.toolboxPanelsService)) {
-			try {
-				const gameCase = await loadCase(this.fileService, folder);
-				cases.push({ gameCase, label: gameCase.title, description: toolbox, detail: gameCase.description });
-			} catch (error) {
-				this.notificationService.warn(localize('collaboration.toolboxCaseFailed', "A case of the {0} could not be read: {1}", toolbox, String(error?.message ?? error)));
-			}
-		}
-		const choose: IQuickPickItem & { readonly gameCase?: IGameCase } = { label: localize('collaboration.chooseCase', "Choose a Case Folder..."), description: localize('collaboration.chooseCaseDetail', "a folder with case.toml and model.jl") };
-		const picked = await this.quickInputService.pick([...cases, choose], {
-			title,
-			placeHolder: cases.length
-				? localize('collaboration.casePlaceholder', "The case the teams play")
-				: localize('collaboration.noCases', "No toolbox with a case is installed: install one, such as Grow a Chocolate Chain, from the Toolboxes section of the Extensions pane, or choose a case folder"),
-			matchOnDetail: true,
-		});
-		if (!picked) {
-			return;
-		}
-		let gameCase = picked.gameCase;
-		if (!gameCase) {
-			const folder = (await this.fileDialogService.showOpenDialog({ title, canSelectFolders: true, canSelectFiles: false, canSelectMany: false }))?.[0];
-			if (!folder) {
-				return;
-			}
-			try {
-				gameCase = await loadCase(this.fileService, folder);
-			} catch (error) {
-				this.notificationService.error(String(error?.message ?? error));
-				return;
-			}
-		}
-		let structure = gameCase.structures[0];
-		if (gameCase.structures.length > 1) {
-			const items = gameCase.structures.map(item => ({ structure: item, label: item.label, detail: item.description }));
-			const chosen = await this.quickInputService.pick(items, { title, placeHolder: localize('collaboration.structurePlaceholder', "How the teams of {0} are organised", gameCase.title), matchOnDetail: true });
-			if (!chosen) {
-				return;
-			}
-			structure = chosen.structure;
-		}
-		if (gameCase.roundChoices.length > 1) {
-			const full = gameCase;
-			const items = full.roundChoices.map(rounds => ({ rounds, label: localize('collaboration.roundCount', "{0} Rounds", rounds), description: rounds === full.rounds ? localize('collaboration.roundCountFull', "the whole case") : undefined, detail: full.roundNames.slice(0, rounds).filter(Boolean).join(', ') || undefined }));
-			const chosen = await this.quickInputService.pick(items.reverse(), { title, placeHolder: localize('collaboration.roundCountPlaceholder', "How many rounds {0} lasts", full.title) });
-			if (!chosen) {
-				return;
-			}
-			gameCase = withRounds(full, chosen.rounds);
-		}
-		const name = await this.askName();
-		if (!name) {
-			return;
+	get lastName(): string {
+		return this.storageService.get(NAME_STORAGE_KEY, StorageScope.APPLICATION, '');
+	}
+
+	get hostedGameInvitation(): string | undefined {
+		const session = this.session.value;
+		return session?.isLive && session.role === 'host' && session.hostedGame ? session.invitation : undefined;
+	}
+
+	async hostGame(gameCase: IGameCase, structure: IGameStructure, name: string): Promise<string | undefined> {
+		const trimmed = this.rememberName(name);
+		if (!trimmed || this.alreadyInSession()) {
+			return undefined;
 		}
 		const strategy = this.configurationService.getValue<SignallingStrategy>(SIGNALLING_SETTING) === 'mqtt' ? 'mqtt' : 'nostr';
-		const session = this.begin(newSessionCode(strategy, 'game'), 'host', name, 'class');
+		const session = this.begin(newSessionCode(strategy, 'game'), 'host', trimmed, 'class');
 		session.hostGame(this.instantiationService.createInstance(GameRun, gameCase, structure));
 		await this.clipboardService.writeText(session.invitation);
+		return session.invitation;
 	}
 
 	joinGame(): Promise<void> {
@@ -2423,8 +2384,8 @@ export class CollaborationService extends Disposable implements ICollaborationSe
 			const labels = run.structure.roles.filter(role => roles?.includes(role.key)).map(role => role.label);
 			return labels.length ? localize('collaboration.newsFor', "for {0}", labels.join(', ')) : localize('collaboration.newsForEveryone', "for everyone");
 		};
-		const items: (IQuickPickItem & { readonly index?: number })[] = run.pendingNews().map(({ index, item }) => ({ index, label: item.title, description: audience(item.roles), detail: item.text }));
-		const write: IQuickPickItem & { readonly index?: number } = { label: localize('collaboration.writeNews', "Write a News Item...") };
+		const items: (IQuickPickItem & { readonly index?: number; readonly news?: ICaseNews })[] = run.pendingNews().map(({ index, item }) => ({ index, news: item, label: item.title, description: audience(item.roles), detail: item.text }));
+		const write: IQuickPickItem & { readonly index?: number; readonly news?: ICaseNews } = { label: localize('collaboration.writeNews', "Write a News Item...") };
 		const picked = await this.quickInputService.pick([...items, write], {
 			title,
 			placeHolder: items.length
@@ -2436,9 +2397,8 @@ export class CollaborationService extends Disposable implements ICollaborationSe
 			return;
 		}
 		try {
-			const index = picked.index;
-			if (index !== undefined) {
-				await session.releaseNews(run.gameCase.news[index], index);
+			if (picked.news && picked.index !== undefined) {
+				await session.releaseNews(picked.news, picked.index);
 			} else {
 				const item = await this.writeNews(run, title);
 				if (item && session.isLive) {
@@ -2890,11 +2850,16 @@ export class CollaborationService extends Disposable implements ICollaborationSe
 			ignoreFocusLost: true,
 			validateInput: async value => value.trim() ? undefined : localize('collaboration.nameEmpty', "Please give a name."),
 		});
+		return this.rememberName(name);
+	}
+
+	/** A name given, trimmed to its 40 first characters, and kept for the next session; undefined when empty. */
+	private rememberName(name: string | undefined): string | undefined {
 		const trimmed = name?.trim().slice(0, 40);
 		if (trimmed) {
 			this.storageService.store(NAME_STORAGE_KEY, trimmed, StorageScope.APPLICATION, StorageTarget.USER);
 		}
-		return trimmed;
+		return trimmed || undefined;
 	}
 
 	private async confirmLeave(session: Session): Promise<boolean> {
