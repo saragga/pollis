@@ -76,6 +76,8 @@ appendComingSoonItems(GEOSCIENCE_MENU, [
 const SMART_REGIONS_MENU = new MenuId('pollisComingSoon.smartRegions');
 const SMART_CITIES_MENU = new MenuId('pollisComingSoon.smartRegions.smartCities');
 const SMART_RURAL_AREAS_MENU = new MenuId('pollisComingSoon.smartRegions.smartRuralAreas');
+const SMART_REGIONS_FILES_MENU = new MenuId('pollisComingSoon.smartRegions.accessFiles');
+const SMART_REGIONS_LIBRARIES_MENU = new MenuId('pollisComingSoon.smartRegions.accessDataLibraries');
 
 MenuRegistry.appendMenuItem(MenuId.MenubarExtendMenu, {
 	submenu: SMART_REGIONS_MENU,
@@ -84,9 +86,60 @@ MenuRegistry.appendMenuItem(MenuId.MenubarExtendMenu, {
 	order: 2
 });
 
+// Access Files and Access Data Libraries, which are to add their items to those of Explore once the toolbox is out
+MenuRegistry.appendMenuItem(SMART_REGIONS_MENU, {
+	submenu: SMART_REGIONS_FILES_MENU,
+	title: localize('comingSoon.smartRegions.accessFiles', "Access Files"),
+	group: '0_comingSoon',
+	order: 1
+});
+
+MenuRegistry.appendMenuItem(SMART_REGIONS_MENU, {
+	submenu: SMART_REGIONS_LIBRARIES_MENU,
+	title: localize('comingSoon.smartRegions.accessDataLibraries', "Access Data Libraries"),
+	group: '0_comingSoon',
+	order: 2
+});
+
+appendComingSoonItems(SMART_REGIONS_FILES_MENU, [
+	[
+		localize('comingSoon.smartRegions.geojson', "GeoJSON Files"),
+		localize('comingSoon.smartRegions.geopackage', "GeoPackage Files"),
+		localize('comingSoon.smartRegions.shapefiles', "Shapefiles"),
+		localize('comingSoon.smartRegions.geoparquet', "GeoParquet and FlatGeobuf Files"),
+		localize('comingSoon.smartRegions.kml', "KML and KMZ Files"),
+		localize('comingSoon.smartRegions.gpx', "GPX Files"),
+	],
+	[
+		localize('comingSoon.smartRegions.geotiff', "GeoTIFF Files"),
+		localize('comingSoon.smartRegions.lasLaz', "LAS and LAZ Files"),
+	],
+	[
+		localize('comingSoon.smartRegions.cityModels', "CityGML and CityJSON Files"),
+		localize('comingSoon.smartRegions.gtfs', "GTFS Feeds"),
+		localize('comingSoon.smartRegions.osmPbf', "OpenStreetMap PBF Files"),
+	],
+]);
+
+appendComingSoonItems(SMART_REGIONS_LIBRARIES_MENU, [
+	[
+		localize('comingSoon.smartRegions.openStreetMap', "OpenStreetMap"),
+		localize('comingSoon.smartRegions.overture', "Overture Maps"),
+		localize('comingSoon.smartRegions.gisco', "Eurostat GISCO (NUTS Regions)"),
+	],
+	[
+		localize('comingSoon.smartRegions.copernicus', "Copernicus Data Space"),
+		localize('comingSoon.smartRegions.earthExplorer', "USGS EarthExplorer"),
+		localize('comingSoon.smartRegions.dgtLidar', "DGT Lidar (Portugal)"),
+	],
+	[
+		localize('comingSoon.smartRegions.mapillary', "Mapillary Street-Level Imagery"),
+		localize('comingSoon.smartRegions.google3dTiles', "Google Photorealistic 3D Tiles"),
+	],
+]);
+
 appendComingSoonItems(SMART_REGIONS_MENU, [
 	[
-		localize('comingSoon.smartRegions.loading', "Geospatial Data Loading"),
 		localize('comingSoon.smartRegions.maps', "Map Visualisation"),
 		localize('comingSoon.smartRegions.projections', "Coordinate Transformations and Projections"),
 		localize('comingSoon.smartRegions.indexing', "Spatial Indexing"),
