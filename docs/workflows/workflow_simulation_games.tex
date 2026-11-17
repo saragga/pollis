@@ -274,6 +274,30 @@ Trading Floor & 3 to 8 desks, 4 or 6 periods & The desks trade one company's sha
 A case is a folder with \file{case.toml}, which says what the players see and decide, and \file{model.jl}, which
 says what happens; its briefings are Markdown files beside them.
 
+\subsection{Create a Simulation Game}
+\ui{Compose > Simulation Games > Create a Simulation Game...} writes a case in four steps.
+\begin{enumerate}
+  \item \textbf{Start From.} A case to start from: \ui{Sell One Product}, the minimal case of Pollis (one price,
+    three rounds), or a case of the installed toolboxes as a pattern: rivals in one market (Grow a Chocolate Chain),
+    bids among equals (Merge or Be Bought), a buyer and sellers with secrets (A Vineyard for the Portfolio), a
+    negotiation over a plan (Save the Company) or a market by the clock (Trading Floor). \ui{Create the Case}
+    copies it under the title given into \file{games/cases} of the Pollis Workspace, else
+    \file{~/.pollis/games/cases}. \ui{Your Cases} lists those cases, and any opened with
+    \ui{Open a Case Folder...}
+  \item \textbf{Write.} The case's files, this drill-down, and \ui{Write with Agent}: the coding agent of
+    \ui{Compose > Coding Agents}, with the skill \file{write-simulation-game}, proposes a design from what the user
+    describes, writes the files once the user agrees, and plays every round with \file{game.jl} until none fails.
+  \item \textbf{Test.} \ui{Test the Case} reads \file{case.toml} as Host a Game does, plays every round with the
+    fewest teams the case allows (at least two), each on its default decisions, and opens the debrief of the test
+    game. It lists what the results' rows lack of the columns of \file{case.toml}, and what they have that no player
+    sees; when a round fails, it shows the model's error, and \ui{Fix with Agent} hands it to the agent.
+  \item \textbf{Share.} \ui{Host This Case} opens Host a Game with the case chosen; \ui{Show the Folder}, to give it
+    to colleagues; \ui{Package with Agent}, to make it a toolbox of cases (below).
+\end{enumerate}
+What the players must not know is best drawn for each game: anyone can read \file{model.jl}, so a secret fixed in
+it is no secret. Give it as a range \code{[low, high]} in \file{[parameters]}, draw it in \code{initial}, give the
+range in the briefings, and write what was drawn in the \file{debrief} of \code{initial}, as the five cases do.
+
 \subsection{case.toml}
 \begin{center}\small
 \renewcommand{\arraystretch}{1.2}
@@ -334,7 +358,10 @@ end
 \subsection{A toolbox of cases}
 A toolbox brings cases by listing them in its \file{package.json}, under \file{pollisToolboxes}, as \file{games},
 each the \file{folder} of a case; a toolbox of cases alone has no panels. Installed, its cases are in
-\ui{Host a Game...}. To try a case before packaging it, choose \ui{Choose a Case Folder...}.
+\ui{Host a Game...}. To try a case before packaging it, choose \ui{Choose a Case Folder...}. \ui{Package with
+Agent}, in the Share step of Create a Simulation Game, writes such a toolbox with the user (its \file{package.json},
+README and the case in \file{games/}) and packs it as a \file{.vsix} file, which others install with
+\ui{Extensions: Install from VSIX...}
 
 \section{Under the surface}\label{sec:machinery}
 \begin{itemize}
@@ -391,7 +418,10 @@ A game is a folder named by the date and time it started, in \file{games/<case>}
 \file{.../collaboration/collaborationService.ts} & The session, the menu's commands\\
 \file{.../collaboration/collaborationChat.ts} & The chat page\\
 \file{.../collaboration/collaborationProtocol.ts} & The messages\\
+\file{.../collaboration/createGamePage.ts} & Create a Simulation Game\\
 \file{.../compose/browser/media/games/game.jl} & The runner of a case's model\\
+\file{.../compose/browser/media/games/minimal/} & Sell One Product, the minimal case\\
+\file{write-simulation-game} (Pollis Agents plugin) & The skill of Write, Fix and Package with Agent\\
 \file{pollis-toolboxes}, \file{pollis-toolbox-<case>} & The five cases\\
 \bottomrule
 \end{tabularx}

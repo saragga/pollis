@@ -4,7 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { DisposableStore } from '../../../../../base/common/lifecycle.js';
+import { isEqual } from '../../../../../base/common/resources.js';
 import { hasKey } from '../../../../../base/common/types.js';
+import { URI } from '../../../../../base/common/uri.js';
 import { localize, localize2 } from '../../../../../nls.js';
 import { Action2, registerAction2 } from '../../../../../platform/actions/common/actions.js';
 import { IClipboardService } from '../../../../../platform/clipboard/common/clipboardService.js';
@@ -20,7 +22,7 @@ import { IPathService } from '../../../../services/path/common/pathService.js';
 import { IViewsService } from '../../../../services/views/common/viewsService.js';
 import { registerScaffoldPageHandlers } from '../../../model/browser/handlers/scaffoldPage.handler.js';
 import { HOSTGAME_METADATA } from '../../../model/browser/webviews/hostgame.data.js';
-import { buildWebviewHtml } from '../../../model/browser/webviews/webviewScaffold.js';
+import { buildWebviewHtml, ONE_BLUE_BUTTON_JS } from '../../../model/browser/webviews/webviewScaffold.js';
 import { INotebookEditorModelResolverService } from '../../../notebook/common/notebookEditorModelResolverService.js';
 import { INotebookKernelService } from '../../../notebook/common/notebookKernelService.js';
 import { WebviewInput } from '../../../webviewPanel/browser/webviewEditorInput.js';
@@ -50,10 +52,11 @@ type HostGameMessage =
 	| { readonly command: 'copyInvitation' }
 	| { readonly command: 'openChat' };
 
-/** The page, when it is open. */
-let openPage: WebviewInput | undefined;
+/** The page, when it is open, and how to add a case folder to it and choose it. */
+let openPage: { readonly input: WebviewInput; readonly addFolder: (folder: URI) => Promise<void> } | undefined;
 
-async function openHostGamePage(accessor: ServicesAccessor): Promise<void> {
+/** Opens the page; with `folder`, a case folder, it adds the case and chooses it, as Choose a Case Folder... does. */
+async function openHostGamePage(accessor: ServicesAccessor, folder?: URI): Promise<void> {
 	const webviewWorkbenchService = accessor.get(IWebviewWorkbenchService);
 	const collaborationService = accessor.get(ICollaborationService);
 	const toolboxPanelsService = accessor.get(IToolboxPanelsService);
@@ -70,8 +73,11 @@ async function openHostGamePage(accessor: ServicesAccessor): Promise<void> {
 	const pathService = accessor.get(IPathService);
 	const storageService = accessor.get(IStorageService);
 
-	if (openPage && !openPage.isDisposed()) {
-		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
+	if (openPage && !openPage.input.isDisposed()) {
+		webviewWorkbenchService.revealWebview(openPage.input, openPage.input.group ?? -1, false);
+		if (folder) {
+			await openPage.addFolder(folder);
+		}
 		return;
 	}
 	const title = localize('hostGame.title', "Host a Game");
@@ -87,7 +93,6 @@ async function openHostGamePage(accessor: ServicesAccessor): Promise<void> {
 		undefined,
 		{ group: undefined, preserveFocus: false }
 	);
-	openPage = webviewInput;
 	webviewInput.webview.setHtml(pageHtml());
 	const post = (message: object) => webviewInput.webview.postMessage(message);
 	const disposables = new DisposableStore();
@@ -98,8 +103,9 @@ async function openHostGamePage(accessor: ServicesAccessor): Promise<void> {
 	let failures: string[] = [];
 	/** The case folders chosen on the page, which stay listed while it is open. */
 	const folderCases: { readonly id: string; readonly gameCase: IGameCase }[] = [];
-	/** The case chosen last, from a folder, for the page to select. */
+	/** The case chosen last, from a folder, for the page to select, and how many times one was, so that the same folder chosen again is selected again. */
 	let chosenId: string | undefined;
+	let chosenCount = 0;
 
 	const readToolboxCases = async () => {
 		const read: typeof toolboxCaseList = [];
@@ -115,6 +121,9 @@ async function openHostGamePage(accessor: ServicesAccessor): Promise<void> {
 		failures = failed;
 	};
 	const findCase = (id: string) => toolboxCaseList.find(item => item.id === id)?.gameCase ?? folderCases.find(item => item.id === id)?.gameCase;
+	/** Whether the page has drawn itself, so that a folder added before it has waits for it. */
+	let ready = false;
+	let pendingFolder = folder;
 
 	const postState = () => {
 		const describe = (id: string, gameCase: IGameCase, toolbox?: string) => ({
@@ -136,6 +145,7 @@ async function openHostGamePage(accessor: ServicesAccessor): Promise<void> {
 			cases: [...toolboxCaseList.map(item => describe(item.id, item.gameCase, item.toolbox)), ...folderCases.map(item => describe(item.id, item.gameCase))],
 			failures,
 			chosen: chosenId,
+			chosenCount,
 			name: collaborationService.lastName,
 			inSession: collaborationService.inSession,
 			invitation: collaborationService.hostedGameInvitation,
@@ -147,6 +157,25 @@ async function openHostGamePage(accessor: ServicesAccessor): Promise<void> {
 		postState();
 	}));
 	disposables.add(collaborationService.onDidChangeSession(() => postState()));
+	// A case folder chosen, read again when it is listed already, since its case may have changed
+	const addFolder = async (chosen: URI) => {
+		if (!ready) {
+			pendingFolder = chosen;
+			return;
+		}
+		try {
+			const gameCase = await loadCase(fileService, chosen);
+			const listed = folderCases.findIndex(item => isEqual(item.gameCase.folder, chosen));
+			chosenId = listed >= 0 ? folderCases[listed].id : `folder-${folderCases.length}`;
+			chosenCount++;
+			folderCases.splice(listed >= 0 ? listed : folderCases.length, listed >= 0 ? 1 : 0, { id: chosenId, gameCase });
+			postState();
+		} catch (error) {
+			post({ command: 'folderFailed', error: String(error?.message ?? error) });
+		}
+	};
+	openPage = { input: webviewInput, addFolder };
+
 	disposables.add(webviewInput.webview.onDidDispose(() => {
 		openPage = undefined;
 		disposables.dispose();
@@ -155,19 +184,17 @@ async function openHostGamePage(accessor: ServicesAccessor): Promise<void> {
 		const message = e.message;
 		if (message.command === 'ready') {
 			await readToolboxCases();
+			ready = true;
 			postState();
-		} else if (message.command === 'chooseFolder') {
-			const folder = (await fileDialogService.showOpenDialog({ title: localize('hostGame.chooseFolderTitle', "Choose a Case Folder"), canSelectFolders: true, canSelectFiles: false, canSelectMany: false }))?.[0];
-			if (!folder) {
-				return;
+			if (pendingFolder) {
+				const chosen = pendingFolder;
+				pendingFolder = undefined;
+				await addFolder(chosen);
 			}
-			try {
-				const gameCase = await loadCase(fileService, folder);
-				chosenId = `folder-${folderCases.length}`;
-				folderCases.push({ id: chosenId, gameCase });
-				postState();
-			} catch (error) {
-				post({ command: 'folderFailed', error: String(error?.message ?? error) });
+		} else if (message.command === 'chooseFolder') {
+			const chosen = (await fileDialogService.showOpenDialog({ title: localize('hostGame.chooseFolderTitle', "Choose a Case Folder"), canSelectFolders: true, canSelectFiles: false, canSelectMany: false }))?.[0];
+			if (chosen) {
+				await addFolder(chosen);
 			}
 		} else if (message.command === 'getMoreCases') {
 			await viewsService.openView(TOOLBOXES_VIEW_ID, true);
@@ -193,7 +220,7 @@ async function openHostGamePage(accessor: ServicesAccessor): Promise<void> {
 }
 
 /** What a case's card says of it beside its description: its teams, its rounds, and its market. */
-function caseFacts(gameCase: IGameCase): string[] {
+export function caseFacts(gameCase: IGameCase): string[] {
 	const facts = [gameCase.minTeams === gameCase.maxTeams
 		? localize('hostGame.teamsExactly', "{0} teams", gameCase.minTeams)
 		: localize('hostGame.teams', "{0} to {1} teams", gameCase.minTeams, gameCase.maxTeams)];
@@ -277,7 +304,7 @@ function pageHtml(): string {
 		<div class="cases" id="cases"></div>
 		<div class="small status missing" id="caseFailures"></div>
 		<div class="settings"><span class="bar">
-			<button class="action" id="chooseFolder">${text.chooseFolder}</button>
+			<button class="action current" id="chooseFolder">${text.chooseFolder}</button>
 			<button class="action" id="getMoreCases">${text.getMoreCases}</button>
 		</span></div>
 `,
@@ -309,7 +336,7 @@ function pageHtml(): string {
 			<h3 class="part">${text.invitation}</h3>
 			<div class="invitation" id="invitation"></div>
 			<div class="settings"><span class="bar">
-				<button class="action" id="copyInvitation">${text.copyInvitation}</button>
+				<button class="action current" id="copyInvitation">${text.copyInvitation}</button>
 				<button class="action" id="openChat">${text.openChat}</button>
 			</span></div>
 		</div>
@@ -317,13 +344,14 @@ function pageHtml(): string {
 			},
 		],
 		pageScriptJs: `
+	${ONE_BLUE_BUTTON_JS.trim()}
 	${briefingElementJs}
 	const TEXT = ${JSON.stringify(text)};
 	const nameInput = document.getElementById('name');
 	const hostButton = document.getElementById('host');
 	const hostStatus = document.getElementById('hostStatus');
 	let state = { cases: [], failures: [] };
-	let chosen, lastFolder;
+	let chosen, lastChosen = 0;
 	const structureOf = new Map();
 	const roundsOf = new Map();
 	// The briefings open, which stay open when the cards are drawn again
@@ -439,10 +467,10 @@ function pageHtml(): string {
 			const first = !state.cases.length && !nameInput.value;
 			state = message;
 			// A case folder chosen is selected once, when it comes; a case clicked after it stays chosen
-			if (message.chosen && message.chosen !== lastFolder) {
+			if (message.chosen && message.chosenCount !== lastChosen) {
 				chosen = message.chosen;
 			}
-			lastFolder = message.chosen;
+			lastChosen = message.chosenCount;
 			if (!state.cases.some(c => c.id === chosen)) {
 				chosen = state.cases.length === 1 ? state.cases[0].id : undefined;
 			}
@@ -475,7 +503,7 @@ registerAction2(class extends Action2 {
 			f1: true,
 		});
 	}
-	run(accessor: ServicesAccessor): Promise<void> {
-		return openHostGamePage(accessor);
+	run(accessor: ServicesAccessor, folder?: URI): Promise<void> {
+		return openHostGamePage(accessor, URI.isUri(folder) ? folder : undefined);
 	}
 });

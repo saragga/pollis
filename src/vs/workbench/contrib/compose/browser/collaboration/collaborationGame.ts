@@ -32,6 +32,7 @@ import { GameValues, IGameDecision, IGameNews, IGamePayload, IGameRole, IGameTab
 
 const GAMES_MEDIA = 'vs/workbench/contrib/compose/browser/media/games';
 const RUNNER = `${GAMES_MEDIA}/game.jl`;
+const MINIMAL_CASE = `${GAMES_MEDIA}/minimal`;
 const CASE_FILE = 'case.toml';
 /** The longest briefing a case can give, and the longest text of a news item, in characters. */
 const MAX_BRIEFING = 20_000;
@@ -148,6 +149,16 @@ export interface IRoundResults {
 	readonly teamText: ReadonlyMap<number, string>;
 	readonly out: ReadonlyMap<number, string>;
 	readonly over: boolean;
+}
+
+/** The file that plays a round of a case's model, whose header says what the model is given and returns. */
+export function gameRunnerFile(): URI {
+	return FileAccess.asFileUri(RUNNER);
+}
+
+/** The minimal case of Pollis, Sell One Product, which Create a Simulation Game copies to start a case of one's own. */
+export function minimalCaseFolder(): URI {
+	return FileAccess.asFileUri(MINIMAL_CASE);
 }
 
 /** The cases of the installed toolboxes, each with its toolbox's name. */

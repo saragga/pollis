@@ -1,0 +1,4 @@
+- Which team charged the most, and how much of the market did it keep?
+- How did the teams answer the news released?
+- Did any teams agree on prices in their negotiations? Did they keep to it, and who gained?
+- Open model.jl: which line explains the result that surprised you most?

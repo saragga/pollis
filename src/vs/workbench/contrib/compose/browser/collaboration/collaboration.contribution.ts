@@ -15,6 +15,7 @@ import { ResourceContextKey } from '../../../../common/contextkeys.js';
 import { registerWorkbenchContribution2, WorkbenchPhase } from '../../../../common/contributions.js';
 import { CollaborationEditorBars, IN_SESSION } from './collaborationEditorBar.js';
 import { CollaborationService, ICollaborationService, SIGNALLING_SETTING } from './collaborationService.js';
+import './createGamePage.js';
 import './hostGamePage.js';
 import './testConnection.js';
 
@@ -40,6 +41,7 @@ export const IMPLEMENTED_COLLABORATION_COMMANDS: ReadonlySet<string> = new Set([
 	'pollis.collaboration.nextRound',
 	'pollis.collaboration.releaseNews',
 	'pollis.collaboration.debrief',
+	'pollis.collaboration.createGame',
 	'pollis.collaboration.openChat',
 	'pollis.collaboration.testConnection',
 ]);

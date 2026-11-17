@@ -73,6 +73,7 @@ export const PLAN_REPLICATION_COMMAND_ID = 'pollis.replication.plan';
 export const EXPLAIN_DIFFERENCES_COMMAND_ID = 'pollis.replication.explain';
 export const SPEED_UP_WITH_AGENT_COMMAND_ID = 'pollis.profiling.speedUpWithAgent';
 export const TRANSLATE_WITH_AGENT_COMMAND_ID = 'pollis.compilation.translateWithAgent';
+export const WRITE_GAME_WITH_AGENT_COMMAND_ID = 'pollis.collaboration.writeGameWithAgent';
 export const CHOOSE_AGENT_COMMAND_ID = 'pollis.agents.chooseAgent';
 
 // The commands of Compose > Coding Agents and Agent Skills
@@ -642,6 +643,7 @@ const TASK_COMMANDS: Partial<Record<AgentTask, string>> = {
 	explainDifferences: EXPLAIN_DIFFERENCES_COMMAND_ID,
 	speedUp: SPEED_UP_WITH_AGENT_COMMAND_ID,
 	translateRust: TRANSLATE_WITH_AGENT_COMMAND_ID,
+	writeGame: WRITE_GAME_WITH_AGENT_COMMAND_ID,
 };
 
 /** The Compose tasks that run a skill, as the skills page lists them: those of AGENT_TASKS, a task under each of its skills. */

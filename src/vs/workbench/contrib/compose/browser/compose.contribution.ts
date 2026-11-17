@@ -822,6 +822,7 @@ const collaborationItems = [
 	{ menu: CollaborationGamesMenu, id: 'pollis.collaboration.nextRound', title: localize('collaboration.nextRound', "Next Round"), group: '2_facilitator', order: 1 },
 	{ menu: CollaborationGamesMenu, id: 'pollis.collaboration.releaseNews', title: localize('collaboration.releaseNews', "Release News..."), group: '2_facilitator', order: 2 },
 	{ menu: CollaborationGamesMenu, id: 'pollis.collaboration.debrief', title: localize('collaboration.debrief', "Open the Debrief"), group: '3_debrief', order: 1 },
+	{ menu: CollaborationGamesMenu, id: 'pollis.collaboration.createGame', title: localize('collaboration.createGame', "Create a Simulation Game..."), group: '4_author', order: 1 },
 ];
 
 for (const item of collaborationItems) {

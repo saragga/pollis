@@ -1,0 +1,96 @@
+# A minimal case of Compose > Simulation Games, which Create a Simulation Game copies to start a case of one's
+# own. Its model is model.jl, which Pollis runs for each round in a fresh Julia process on the facilitator's
+# computer. Change the title, the decisions, the results and the model; Test the Case in step 3 plays it.
+
+title = "Sell One Product"
+description = "Rival teams each sell the same kind of product to the same buyers. Each round they set their price. The highest cumulative profit after three rounds wins."
+rounds = 3
+round = "Round"
+teams = [2, 6]
+briefing = "briefing.md"
+# Questions the debrief suggests for the class.
+debrief = "debrief-questions.md"
+# Teams can write to each other, the facilitator reading what they write.
+negotiations = true
+
+# What each team decides in every round. A decision is a number, with min, max and step, or a choice, with options.
+[[decisions]]
+key = "price"
+label = "Price"
+kind = "number"
+unit = "€"
+min = 1
+max = 20
+step = 0.5
+default = 8
+help = "What one unit costs your buyers this round."
+
+# The results: those every player sees and those each team alone sees. The debrief ranks the teams by winner, a
+# column of the public results, whose rows name their team in team.
+[results]
+winner = "cumulative_profit"
+
+[[results.public]]
+key = "team"
+label = "Team"
+
+[[results.public]]
+key = "price"
+label = "Price"
+unit = "€"
+digits = 2
+
+[[results.public]]
+key = "share"
+label = "Market Share"
+unit = "%"
+digits = 1
+
+[[results.public]]
+key = "profit"
+label = "Profit"
+unit = "€"
+
+[[results.public]]
+key = "cumulative_profit"
+label = "Cumulative Profit"
+unit = "€"
+
+[[results.private]]
+key = "sales"
+label = "Units Sold"
+
+[[results.private]]
+key = "revenue"
+label = "Revenue"
+unit = "€"
+
+[[results.private]]
+key = "costs"
+label = "Costs"
+unit = "€"
+
+[[results.private]]
+key = "profit"
+label = "Profit"
+unit = "€"
+
+# The news the facilitator can release. Each game draws its own: whether an item is in it (chance, every game
+# when missing), its round, within rounds = [first, last], and each change given as [low, high], within it.
+[[news]]
+rounds = [2, 3]
+chance = 0.8
+title = "Materials Cost More"
+text = "The materials of the product cost more from now on, for every team."
+
+[news.parameters]
+unit_cost = [4.5, 5.5]
+
+# What model.jl reads. The buyers choose among the teams and buying none by a multinomial logit; a range
+# [low, high] is drawn for each game in model.jl.
+[parameters]
+market_size = [8000, 12000]
+price_sensitivity = 2.0
+no_purchase_appeal = -3.0
+unit_cost = 4.0
+fixed_cost = 2000

@@ -1,0 +1,22 @@
+# Create a Simulation Game Webview Configuration
+# A page of Compose > Simulation Games in the Time Arrow style of the scaffold, not a panel: only its Learn More.
+# `pageCommand` is the command that opens it. The build script generates:
+# - src/vs/workbench/contrib/model/browser/webviews/creategame.data.ts
+# Run: npm run gulp compile-toml
+
+[meta]
+title = "Create a Simulation Game"
+viewType = "pollis.creategame"
+pageCommand = "pollis.collaboration.createGame"
+
+[[wikis]]
+name = "Overview"
+file = "creategame/overview.md"
+bundled = true
+description = "The four steps of Create a Simulation Game, the cases to start from, Write with Agent, the test and the ways to share a case"
+
+[[wikis]]
+name = "Factsheet"
+file = "creategame/factsheet.md"
+bundled = true
+description = "What a case folder holds, the parts of case.toml, the two functions of model.jl and what the test checks"

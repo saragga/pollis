@@ -2132,6 +2132,12 @@ every team's figures and messages, and can open the tables with the panels. A ga
 \texttt{games} of the Pollis Workspace, else in \texttt{\textasciitilde/.pollis/games}; outside a game,
 \ui{Open the Debrief} asks for a game's folder.
 
+\subhead{Write your own case}
+\ui{Compose > Simulation Games > Create a Simulation Game...} copies a case to start from, the minimal
+\ui{Sell One Product} or one of the installed cases, under your title. You change its \texttt{case.toml} and
+\texttt{model.jl}, or describe the game to \ui{Write with Agent}. \ui{Test the Case} plays every round with Julia and
+opens the debrief, and \ui{Host This Case} hosts it; \ui{Package with Agent} makes it a toolbox others install.
+
 \begin{trouble}
 \textbf{Host a Game... lists no case} & Install a case's toolbox from the Toolboxes section of the Extensions view, or choose a case folder. \\
 \textbf{``Julia could not play the round''} & Install Julia, or set its path in \setting{julia.executablePath}; then press \ui{Next Round} again. \\
@@ -2139,6 +2145,7 @@ every team's figures and messages, and can open the tables with the panels. A ga
 \textbf{``... needs at least ... teams''} & Wait for more players to join: each team needs at least one. \\
 \textbf{A player sees no decisions} & They are in no team yet: place them with \ui{Split into Breakout Groups...} \\
 \textbf{An order is refused} & The message says why: not enough cash or shares free, or the order would trade with the desk's own. \\
+\textbf{Test the Case fails} & The step shows the round and the model's error: fix \texttt{model.jl}, or press \ui{Fix with Agent}. \\
 \end{trouble}
 
 \seealso{Collaboration, \pg{Collaboration}.\quad Toolboxes, \pg{Toolboxes}.\quad \ui{Help > Documentation > Drill-downs > Simulation Games}, for how a game works and how to write a case.}
@@ -2844,10 +2851,6 @@ for the chat models, on published sets of questions.
 \textbf{The answer has no sources} & The documents do not answer it. Ask in other words, or use the names of the menus and settings. \\
 \textbf{\emph{No key for \ldots}} & Add the provider's key, or answer with \ui{This Computer}. \\
 \end{trouble}
-
-\begin{note}{Not available yet}
-Ask Pollis and its two Evaluate pages are not in Pollis yet; they come in a coming release.
-\end{note}
 
 \seealso{Toolboxes, \pg{Toolboxes}.\quad Orchestration, \pg{Orchestration}.}
 

@@ -552,6 +552,9 @@ references & Cite as Author (year), with all authors written out, each linked to
   references, from the Pollis library, with its DOI.\\
 translate-to-rust & Translate a Julia function to Rust: explain the plan first, then write a new crate
   beside the function, build it, and check that both versions give the same result before timing them.\\
+write-simulation-game & Write a case of Simulation Games: propose its design first, then write its
+  \cmd{case.toml}, Julia model and briefings, and play every round until none fails; fix a case, or package it
+  as a toolbox of cases.\\
 \end{pairs}
 
 \subhead{Examples}
@@ -701,6 +704,7 @@ Create a Panel & New Panels & Strong & \cmd{create-panel}\\
 Create Panels from a Request & New Panels & Strong & \cmd{create-panel}\\
 Speed Up a Function & Profiling & Standard & \cmd{speed-up-function}\\
 Translate Julia to Rust & Compilation Lab & Strong & \cmd{translate-to-rust}\\
+Write a Simulation Game & Simulation Games & Strong & \cmd{write-simulation-game}\\
 \end{tabularx}
 \end{center}
 A task may read several skills, and a skill may serve several tasks: both ways of creating panels read
@@ -859,10 +863,6 @@ for Ask Pollis stays on the Evaluate pages: only they have \ui{Use for Ask Polli
 With local models only, and a local judge, nothing. With a cloud model or judge, what it answers or judges from: the
 instruction, the question and the passages, which are Pollis' documents; and, to make questions, the passages they are made from.
 \end{caution}
-
-\begin{note}{Not available yet}
-Ask Pollis and its two Evaluate pages are not in Pollis yet; they come in a coming release.
-\end{note}
 
 \seealso{Local Models, page 4.\quad Embedding and Chat Models, page 6.}
 
