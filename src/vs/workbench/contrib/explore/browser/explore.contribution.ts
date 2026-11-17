@@ -1254,7 +1254,7 @@ MenuRegistry.appendMenuItem(ADRSubmenuId, {
 
 // ===================================================
 // SUBMENU: ACCESS FILES
-// The formats by kind, one group each: tables, maps, sound and voice, music, and Life Sciences, a submenu
+// The formats by kind, one group each: tables, sound and voice, music, and Life Sciences, a submenu
 // of its own for the many formats of medicine and biology.
 // ===================================================
 
@@ -1298,13 +1298,6 @@ MenuRegistry.appendMenuItem(CONNSubmenuId, {
 
 // The formats not built yet, greyed out in their groups, after those Pollis reads
 const FORMATS_TO_COME: readonly { readonly menu: MenuId; readonly group: string; readonly first: number; readonly items: readonly { readonly id: string; readonly title: string }[] }[] = [
-	{
-		menu: CONNSubmenuId, group: '3_maps', first: 1, items: [
-			{ id: 'chiara.explore.conn.geojson', title: localize('conn.geojson', 'GeoJSON Files') },
-			{ id: 'chiara.explore.conn.shapefile', title: localize('conn.shapefile', 'Shapefiles') },
-			{ id: 'chiara.explore.conn.geopackage', title: localize('conn.geopackage', 'GeoPackage Files') },
-		]
-	},
 	{
 		// Recordings: sound in general, and the formats of voice
 		menu: CONNSubmenuId, group: '4_sound', first: 1, items: [

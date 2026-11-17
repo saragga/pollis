@@ -86,7 +86,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarExtendMenu, {
 	order: 2
 });
 
-// Access Files and Access Data Libraries, which are to add their items to those of Explore once the toolbox is out
+// Access Files and Access Data Libraries of the toolbox's own, not in Explore: the user may move their items to any menu from the toolbox's Edit button
 MenuRegistry.appendMenuItem(SMART_REGIONS_MENU, {
 	submenu: SMART_REGIONS_FILES_MENU,
 	title: localize('comingSoon.smartRegions.accessFiles', "Access Files"),
