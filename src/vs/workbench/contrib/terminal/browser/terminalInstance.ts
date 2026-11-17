@@ -2315,6 +2315,13 @@ export class TerminalInstance extends Disposable implements ITerminalInstance {
 			this.relaunch();
 			return;
 		}
+		// Pollis: no warning on a running terminal whose environment an extension has changed since it
+		// started. Restart Extensions, after a toolbox is installed or updated, gives Git a new address,
+		// which a running Julia REPL does not need, and relaunching would end the session.
+		if (info.requiresAction) {
+			this.statusList.remove(TerminalStatus.RelaunchNeeded);
+			return;
+		}
 		// Re-create statuses
 		const workspaceFolder = getWorkspaceForTerminal(this.shellLaunchConfig.cwd, this._workspaceContextService, this._historyService);
 		this.statusList.add(info.getStatus({ workspaceFolder }));
