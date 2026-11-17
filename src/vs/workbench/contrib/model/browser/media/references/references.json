@@ -57854,8 +57854,27 @@
 			]
 		},
 		{
+			"id": "forecastingCatalogue",
+			"title": "Manage Competition Datasets",
+			"commands": [
+				"pollis.competitions.forecastingCatalogue"
+			],
+			"keys": [
+				"MACFH...1982a",
+				"MH2000a",
+				"MSA2018a",
+				"MSA2020a",
+				"MSA2022a",
+				"MSA2022b",
+				"MSACG...2022a",
+				"MSHPS...2025a",
+				"AHSW2011a",
+				"GBWHM2021a"
+			]
+		},
+		{
 			"id": "forecastingCompetitions",
-			"title": "Forecasting Competitions",
+			"title": "Score Forecasting Models",
 			"commands": [
 				"pollis.competitions.forecastingCompetitions"
 			],

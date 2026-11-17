@@ -61,6 +61,10 @@
 			// export all properties and the module itself as default
 			let jsSrc = `const _mod = require('${name}')\n`;
 			for (const name of Object.keys(_mod)) {
+				// Pollis: a module's property named default (@duckdb/node-api has one) is the module itself, exported below
+				if (name === 'default') {
+					continue;
+				}
 				jsSrc += `export const ${name} = _mod['${name}'];\n`;
 			}
 			jsSrc += `export default _mod;\n`;

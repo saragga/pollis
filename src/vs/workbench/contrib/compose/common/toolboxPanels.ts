@@ -119,6 +119,8 @@ export interface IToolboxInfo {
 	readonly texts: readonly IToolboxTextInfo[];
 	/** The folders of its Simulation Games cases, each with case.toml and model.jl, which Host a Game... offers. */
 	readonly games: readonly URI[];
+	/** Its forecasting datasets file, which Manage Competition Datasets lists, if it has one. */
+	readonly forecastingDatasets: URI | undefined;
 	/** The default places: the toolbox's menu at the end of Extend, with every panel in. */
 	readonly defaultPlacement: IToolboxPlacement;
 	/** The places the toolbox is in: the ones the user published, else the default ones. */

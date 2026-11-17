@@ -1,11 +1,11 @@
-# Forecasting Challenges and Competitions Webview Configuration
+# Score Forecasting Models Webview Configuration
 # A page of Compose > Competitions in the Time Arrow style of the scaffold, not a panel: only its Powered by and
 # Learn More. `pageCommand` is the command that opens it, which a panel's contribution file would say. The build script generates:
 # - src/vs/workbench/contrib/model/browser/webviews/forecastingCompetitions.data.ts
 # Run: npm run gulp compile-toml
 
 [meta]
-title = "Forecasting Challenges and Competitions"
+title = "Score Forecasting Models"
 viewType = "pollis.forecastingCompetitions"
 pageCommand = "pollis.competitions.forecastingCompetitions"
 

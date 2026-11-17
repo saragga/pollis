@@ -1,0 +1,574 @@
+# ============================================================================
+# Forecasting catalogue: the schema of the competitions, datasets, curated collections and archives of published
+# forecasts that Compose > Forecasting Competitions > Manage Competition Datasets lists (forecastingCataloguePage.ts).
+# The entries are not here: each contributor ships its own file of [[entry]] tables, which the page reads and checks
+# against this schema (forecastingCatalogue.ts) as it opens, and a unit test checks too:
+#   * PollisCompetitions.jl, data/forecasting_datasets.toml of the package on this computer, else the copy that
+#     Pollis ships, media/pollisCompetitions.forecastingDatasets.toml;
+#   * each installed toolbox that names a file in "forecastingDatasets" of its pollisToolboxes contribution.
+# Edit this file by hand.
+#
+# The file has two parts:
+#   [[field]]  every field of an entry, its label on the page, its group, type and vocabulary
+#   [[view]]   the column presets of the page (one per field group, plus Curation)
+#
+# Conventions for the entries
+#   * An absent field is unknown or not applicable; nothing is filled in by guesswork.
+#   * `verify` lists facts that are present or expected but still to be checked against the primary source.
+#     Completeness (which fields are still empty) is computed from the schema, not listed in `verify`.
+#   * A field with `controlled = true` takes only the values of its vocabulary, separated by " | ";
+#     finer detail goes in the *_detail companion.
+#   * Size, length and memory fields are meant to be filled automatically by the download helpers.
+#   * package  = which Pollis package downloads the entry; delivery = how the data reaches the user;
+#     status   = planned | implemented (update when a helper or bundle is done).
+#   * package_id = the entry's id in its package's own catalogue, which holds the files, their URLs and SHA-256;
+#     an implemented entry of PollisCompetitions has the id of a competition of Score Forecasting Models.
+#   * collections = the ids of the curated collections (entries of type benchmark_suite) that hold the entry; the page
+#     shows the collections in its tab Curated Collections and the other entries in its tab Datasets.
+#   * source = who contributes the entry, which the page sets: an entry's file does not give it.
+#   * Ids are unique across all the contributors.
+#   * Kaggle data generally cannot be redistributed: delivery = download_helper (Kaggle API).
+#   * PollisCompetitions ships no competition data: its entries are never bundled, each file is downloaded from
+#     its source. delivery = "bundled" is for PollisDatasets, and a plan until the licence is confirmed.
+#   * Lines must not end in a comment: Pollis' TOML reader keeps a trailing comment as part of the value.
+# ============================================================================
+
+# ---------------------------------------------------------------- schema
+[[field]]
+name = "id"
+label = "Id"
+group = "identity"
+type = "string"
+description = "Unique key"
+
+[[field]]
+name = "name"
+label = "Name"
+group = "identity"
+type = "string"
+description = "Display name"
+
+[[field]]
+name = "type"
+label = "Type"
+group = "identity"
+type = "string"
+vocabulary = "competition | live_competition | dataset | benchmark_suite | forecast_archive"
+controlled = true
+description = "Kind of entry"
+
+[[field]]
+name = "domain"
+label = "Domain"
+group = "identity"
+type = "string"
+vocabulary = "general | retail | supply_chain | finance | macroeconomics | real_estate | energy | environment_climate | hydrology | transport_mobility | tourism | epidemiology | health_clinical | engineering_prognostics | physics_nonlinear | web_it_operations | anomaly_detection | judgmental_geopolitical"
+controlled = true
+description = "Application domain"
+
+[[field]]
+name = "subdomain"
+label = "Subdomain"
+group = "identity"
+type = "string"
+vocabulary = "free"
+description = "Finer domain"
+
+[[field]]
+name = "organiser"
+label = "Organiser"
+group = "identity"
+type = "string"
+vocabulary = "free"
+description = "Organiser or publisher"
+
+[[field]]
+name = "platform"
+label = "Platform"
+group = "identity"
+type = "string"
+vocabulary = "free"
+description = "Hosting platform (Kaggle, DrivenData, ...)"
+
+[[field]]
+name = "start_year"
+label = "Start Year"
+group = "identity"
+type = "integer"
+description = "Year the competition or data release started"
+
+[[field]]
+name = "end_year"
+label = "End Year"
+group = "identity"
+type = "integer"
+description = "Year it ended (absent if ongoing)"
+
+[[field]]
+name = "era"
+label = "Era"
+group = "identity"
+type = "string"
+vocabulary = "pre-2000 | 2000-2014 | 2015-2022 | 2023+"
+controlled = true
+description = "Era of the start year, for sorting"
+
+[[field]]
+name = "reference"
+label = "Reference"
+group = "identity"
+type = "string"
+vocabulary = "free"
+description = "Canonical reference"
+
+[[field]]
+name = "doi"
+label = "DOI"
+group = "identity"
+type = "string"
+description = "DOI of the canonical reference"
+
+[[field]]
+name = "url"
+label = "Web Page"
+group = "identity"
+type = "string"
+description = "Main web page"
+
+[[field]]
+name = "papers"
+label = "Papers"
+group = "identity"
+type = "string[]"
+vocabulary = "PollisReferences keys"
+description = "References as keys of PollisReferences"
+
+[[field]]
+name = "parent"
+label = "Derived From"
+group = "identity"
+type = "string"
+vocabulary = "entry id"
+description = "Entry this one is derived from"
+
+[[field]]
+name = "related"
+label = "Related"
+group = "identity"
+type = "string[]"
+vocabulary = "entry ids"
+description = "Related entries"
+
+[[field]]
+name = "collections"
+label = "Collections"
+group = "identity"
+type = "string[]"
+vocabulary = "ids of curated collections"
+description = "Curated collections that hold the entry"
+
+[[field]]
+name = "package"
+label = "Package"
+group = "access"
+type = "string"
+vocabulary = "PollisDatasets | PollisCompetitions"
+controlled = true
+description = "Pollis package that downloads the entry; none for a dataset added from a file of your own"
+
+[[field]]
+name = "package_id"
+label = "Package Id"
+group = "access"
+type = "string"
+vocabulary = "id in the package's own catalogue"
+description = "Key linking to the package catalogue (files, URLs, SHA-256)"
+
+[[field]]
+name = "delivery"
+label = "Delivery"
+group = "access"
+type = "string"
+vocabulary = "bundled | download_helper | online_only"
+controlled = true
+description = "How the data reaches the user"
+
+[[field]]
+name = "status"
+label = "Status"
+group = "access"
+type = "string"
+vocabulary = "planned | implemented"
+controlled = true
+description = "Whether package and delivery are already implemented"
+
+[[field]]
+name = "source"
+label = "Source"
+group = "access"
+type = "string"
+vocabulary = "set by the page"
+description = "Who contributes the entry: PollisCompetitions.jl, an installed toolbox, or the Pollis Workspace for a dataset of your own"
+
+[[field]]
+name = "licence"
+label = "Licence"
+group = "access"
+type = "string"
+vocabulary = "SPDX id where possible"
+description = "Data licence"
+
+[[field]]
+name = "access"
+label = "Access"
+group = "access"
+type = "string"
+vocabulary = "open | registration | credentialed | Kaggle rules"
+description = "Access requirements"
+
+[[field]]
+name = "n_series"
+label = "Series"
+group = "structure"
+type = "integer"
+description = "Number of series"
+
+[[field]]
+name = "length_min"
+label = "Shortest Series"
+group = "structure"
+type = "integer"
+description = "Shortest series length (observations)"
+
+[[field]]
+name = "length_median"
+label = "Median Length"
+group = "structure"
+type = "integer"
+description = "Median series length"
+
+[[field]]
+name = "length_max"
+label = "Longest Series"
+group = "structure"
+type = "integer"
+description = "Longest series length"
+
+[[field]]
+name = "frequency"
+label = "Frequency"
+group = "structure"
+type = "string[]"
+vocabulary = "sub-hourly | hourly | daily | weekly | monthly | quarterly | yearly | irregular | other"
+controlled = true
+description = "Sampling frequency"
+
+[[field]]
+name = "frequency_detail"
+label = "Frequency Detail"
+group = "structure"
+type = "string"
+vocabulary = "free"
+description = "Exact frequency where finer than the vocabulary"
+
+[[field]]
+name = "data_span"
+label = "Data Span"
+group = "structure"
+type = "string"
+vocabulary = "free"
+description = "Calendar period covered by the data"
+
+[[field]]
+name = "structure"
+label = "Structure"
+group = "structure"
+type = "string[]"
+vocabulary = "univariate | univariate_collection | panel | hierarchical | multivariate | spatiotemporal | graph | gridded | cross_sectional | multimodal_text"
+controlled = true
+description = "Structure of the data"
+
+[[field]]
+name = "hierarchy_levels"
+label = "Hierarchy Levels"
+group = "structure"
+type = "integer"
+description = "Number of aggregation levels, if hierarchical"
+
+[[field]]
+name = "covariates_static"
+label = "Static Covariates"
+group = "structure"
+type = "string[]"
+vocabulary = "free"
+description = "Static attributes (store, item, location metadata)"
+
+[[field]]
+name = "covariates_known_future"
+label = "Known-Future Covariates"
+group = "structure"
+type = "string[]"
+vocabulary = "free"
+description = "Covariates known over the horizon (calendar, prices, promotions, weather forecasts)"
+
+[[field]]
+name = "covariates_observed"
+label = "Observed Covariates"
+group = "structure"
+type = "string[]"
+vocabulary = "free"
+description = "Covariates observed only up to the forecast origin"
+
+[[field]]
+name = "covariate_richness"
+label = "Covariates"
+group = "structure"
+type = "string"
+vocabulary = "none | calendar | some | rich"
+controlled = true
+description = "Summary of covariates"
+
+[[field]]
+name = "value_types"
+label = "Value Types"
+group = "structure"
+type = "string[]"
+vocabulary = "continuous | count | intermittent | bounded | proportion | binary"
+controlled = true
+description = "Type of target values"
+
+[[field]]
+name = "data_challenges"
+label = "Data Challenges"
+group = "structure"
+type = "string[]"
+vocabulary = "intermittency | censoring | missing_values | irregular_sampling | structural_breaks | anonymised_features | heavy_tails | outliers | leakage | multiple_seasonality | nonstationarity | aggregation_choice | negative_values"
+controlled = true
+description = "Data-quality challenges"
+
+[[field]]
+name = "data_challenges_detail"
+label = "Challenge Detail"
+group = "structure"
+type = "string"
+vocabulary = "free"
+description = "Specific events or details"
+
+[[field]]
+name = "horizon"
+label = "Horizon"
+group = "task"
+type = "string"
+vocabulary = "free"
+description = "Forecast horizon"
+
+[[field]]
+name = "forecast_type"
+label = "Forecast Type"
+group = "task"
+type = "string[]"
+vocabulary = "point | interval | quantile | distributional | event_probability | ranking | decision | classification"
+controlled = true
+description = "What is forecast"
+
+[[field]]
+name = "forecast_type_detail"
+label = "Forecast Detail"
+group = "task"
+type = "string"
+vocabulary = "free"
+description = "Exact target where task-specific"
+
+[[field]]
+name = "metrics"
+label = "Metrics"
+group = "task"
+type = "string[]"
+vocabulary = "free"
+description = "Official metric(s)"
+
+[[field]]
+name = "split_protocol"
+label = "Split Protocol"
+group = "task"
+type = "string"
+vocabulary = "single_holdout | public_private_holdout | rolling_origin | live | simulation | none"
+controlled = true
+description = "Evaluation protocol"
+
+[[field]]
+name = "decision_focused"
+label = "Decision-Focused"
+group = "task"
+type = "boolean"
+description = "Evaluated on decisions or costs rather than accuracy"
+
+[[field]]
+name = "winner"
+label = "Winner"
+group = "results"
+type = "string"
+vocabulary = "free"
+description = "Winning method"
+
+[[field]]
+name = "winner_score"
+label = "Winning Score"
+group = "results"
+type = "string"
+vocabulary = "free"
+description = "Winning score in the official metric"
+
+[[field]]
+name = "baselines"
+label = "Baselines"
+group = "results"
+type = "string[]"
+vocabulary = "free"
+description = "Simple baselines with published results"
+
+[[field]]
+name = "leaderboard_public"
+label = "Public Leaderboard"
+group = "results"
+type = "boolean"
+description = "Final leaderboard publicly available"
+
+[[field]]
+name = "forecasts_public"
+label = "Public Forecasts"
+group = "results"
+type = "boolean"
+description = "Submitted forecasts publicly available"
+
+[[field]]
+name = "size_class"
+label = "Size"
+group = "footprint"
+type = "string"
+vocabulary = "small | medium | large | very_large"
+controlled = true
+description = "Size class"
+
+[[field]]
+name = "download_size"
+label = "Download Size"
+group = "footprint"
+type = "string"
+vocabulary = "e.g. \"350 MB\""
+description = "Compressed download size"
+
+[[field]]
+name = "disk_size"
+label = "Disk Size"
+group = "footprint"
+type = "string"
+vocabulary = "e.g. \"1.2 GB\""
+description = "Size on disk after extraction"
+
+[[field]]
+name = "memory"
+label = "Memory"
+group = "footprint"
+type = "string"
+vocabulary = "e.g. \"8 GB\""
+description = "Approximate memory needed to load and model"
+
+[[field]]
+name = "compute"
+label = "Compute"
+group = "footprint"
+type = "string"
+vocabulary = "laptop | workstation | cluster"
+controlled = true
+description = "Compute class"
+
+[[field]]
+name = "course_level"
+label = "Course Level"
+group = "pedagogy"
+type = "string"
+vocabulary = "intro | intermediate | advanced | research"
+controlled = true
+description = "Suggested course level"
+
+[[field]]
+name = "teaches"
+label = "Teaches"
+group = "pedagogy"
+type = "string"
+vocabulary = "free"
+description = "One-line teaching point"
+
+[[field]]
+name = "pitfalls"
+label = "Pitfalls"
+group = "pedagogy"
+type = "string"
+vocabulary = "free"
+description = "Known pitfalls"
+
+[[field]]
+name = "notes"
+label = "Notes"
+group = "curation"
+type = "string"
+vocabulary = "free"
+description = "Notes"
+
+[[field]]
+name = "verify"
+label = "To Check"
+group = "curation"
+type = "string[]"
+vocabulary = "field names or facts"
+description = "Facts to check against the primary source"
+
+# ---------------------------------------------------------------- views
+[[view]]
+id = "identity"
+label = "Identity and Provenance"
+pinned = ["name", "type", "domain"]
+columns = ["organiser", "platform", "start_year", "end_year", "era", "reference", "doi", "url", "parent", "collections"]
+
+[[view]]
+id = "access"
+label = "Access and Licence"
+pinned = ["name", "type", "domain"]
+columns = ["source", "package", "package_id", "delivery", "status", "licence", "access", "platform"]
+
+[[view]]
+id = "structure"
+label = "Data Structure"
+pinned = ["name", "type", "domain"]
+columns = ["n_series", "length_median", "frequency", "data_span", "structure", "covariate_richness", "value_types", "data_challenges"]
+
+[[view]]
+id = "task"
+label = "Task and Evaluation"
+pinned = ["name", "type", "domain"]
+columns = ["horizon", "forecast_type", "metrics", "split_protocol", "decision_focused"]
+
+[[view]]
+id = "results"
+label = "Reference Results"
+pinned = ["name", "type", "domain"]
+columns = ["winner", "winner_score", "baselines", "leaderboard_public", "forecasts_public"]
+
+[[view]]
+id = "footprint"
+label = "Practical Footprint"
+pinned = ["name", "type", "domain"]
+columns = ["size_class", "download_size", "disk_size", "memory", "compute"]
+
+[[view]]
+id = "pedagogy"
+label = "Pedagogy"
+pinned = ["name", "type", "domain"]
+columns = ["course_level", "compute", "size_class", "teaches"]
+
+[[view]]
+id = "curation"
+label = "Curation"
+pinned = ["name", "type", "domain"]
+columns = ["source", "package", "delivery", "status", "licence", "verify"]

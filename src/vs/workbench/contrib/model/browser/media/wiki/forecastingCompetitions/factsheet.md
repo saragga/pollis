@@ -1,6 +1,6 @@
-# Forecasting Challenges and Competitions: Factsheet
+# Score Forecasting Models: Factsheet
 
-The competitions of the page Forecasting Challenges and Competitions, the files of a run, and what the page needs, at a glance.
+The competitions of the page Score Forecasting Models, the files of a run, and what the page needs, at a glance.
 
 ## Which Series and Horizons Do the Competitions Have?
 
@@ -14,11 +14,11 @@ The competitions of the page Forecasting Challenges and Competitions, the files 
 
 The horizon is the number of steps a forecast of a series of that frequency gives. M5's 30,490 series add up into 42,840 series over 12 levels, on which the WRMSSE is computed. M6 has assets in place of series: at each round, a method gives the probabilities and the weight of each of its 100 assets.
 
-## What Files Does a Run of Forecasting Challenges and Competitions Write?
+## What Files Does a Run of Score Forecasting Models Write?
 
 | File | Written by | Holds |
 |---|---|---|
-| `run.toml` | The page | The competition, the frequency, the sample, the seed and the time the run started |
+| `run.toml` | The page | The competition, the frequency, the sample, the seed and the time the run started; for a dataset you added, its folder; for a run of several datasets, the datasets, each run in the subfolder named by its id |
 | `method.jl` | The page | The function `forecast`, or `decide` for M6, of the step Your Method |
 | `run.jl` | The page | The Julia script that the Julia REPL runs |
 | `progress.json` | `run.jl` | The series done, or the rounds for M6, the number in all, the seconds and the series that failed |
@@ -27,7 +27,7 @@ The horizon is the number of steps a forecast of a series of that frequency give
 
 Each run has its own folder in `~/.pollis/competitions/runs`.
 
-## When Is a Run of Forecasting Challenges and Competitions Ranked?
+## When Is a Run of Score Forecasting Models Ranked?
 
 | Competition | Series run | Benchmarks beside the method | Place among the entries |
 |---|---|---|---|
@@ -36,14 +36,15 @@ Each run has its own folder in `~/.pollis/competitions/runs`.
 | M5 Accuracy | All (always) | Published scores of the 24 benchmarks | Yes, by WRMSSE |
 | M1, M3 | All, one frequency or a sample | Naive2, computed on the same series | No |
 | M6 | All 12 rounds (always) | Published scores of M6 Dummy | Yes, by OR, recomputed with the method among the teams |
+| A dataset you added | All or a sample | Naive2, computed on the same series | No |
 
-## What Does Forecasting Challenges and Competitions Need?
+## What Does Score Forecasting Models Need?
 
 | Need | What |
 |---|---|
 | Julia | A Julia REPL in Pollis |
 | Packages | PollisCompetitions.jl, from the Pollis registry, which the page's code installs when it is not |
-| Data | The competition, downloaded with **Download** in the step Competition, in `~/.pollis/competitions` |
+| Data | The competition, downloaded with **Download** in the step Datasets, in `~/.pollis/competitions`; a dataset you added, in `data/forecasting/` of the Pollis Workspace |
 | Threads | Optional: the series are forecast over the threads of the Julia session |
 
 Any package that the function `forecast` loads must be installed in the environment of the Julia REPL, as the page installs only PollisCompetitions.jl.

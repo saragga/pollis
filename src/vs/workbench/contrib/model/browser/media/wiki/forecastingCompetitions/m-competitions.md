@@ -1,6 +1,6 @@
 # The M Competitions
 
-The M competitions are a series of forecasting competitions, named after Spyros Makridakis, in which many forecasters forecast the same series without seeing their future values, and the organisers then compare the forecasts with what happened. The page Forecasting Challenges and Competitions holds M1, M3, M4, the Accuracy competition of M5, and M6.
+The M competitions are a series of forecasting competitions, named after Spyros Makridakis, in which many forecasters forecast the same series without seeing their future values, and the organisers then compare the forecasts with what happened. The page Score Forecasting Models holds M1, M3, M4, the Accuracy competition of M5, and M6.
 
 ## What Was the M1 Competition?
 

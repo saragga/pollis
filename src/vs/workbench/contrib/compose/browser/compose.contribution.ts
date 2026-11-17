@@ -58,6 +58,7 @@ import { BROWSE_REFERENCES_COMMAND_ID } from './browseReferencesPage.js';
 import { SNOWBALL_SEARCH_COMMAND_ID } from '../common/snowballSearch.js';
 import './snowballSearchPage.js';
 import { FORECASTING_COMPETITIONS_COMMAND_ID } from './forecastingCompetitionsPage.js';
+import { FORECASTING_CATALOGUE_COMMAND_ID } from './forecastingCataloguePage.js';
 import { openScaffoldWebview } from '../../model/browser/commands/scaffold.command.js';
 import { TIMEFUNCTION_PANEL } from '../../model/browser/commands/timeFunction.command.js';
 import { FINDALLOCS_PANEL } from '../../model/browser/commands/findAllocs.command.js';
@@ -97,11 +98,12 @@ const ComparisonsMenu = new MenuId('menubarComparisonsMenu');
 const CompileGaloreMenu = new MenuId('menubarCompileGaloreMenu');
 const CollaborationMenu = new MenuId('menubarCollaborationMenu');
 const LiteratureMenu = new MenuId('menubarLiteratureMenu');
+const ForecastingCompetitionsMenu = new MenuId('menubarForecastingCompetitionsMenu');
 const PdfFilesMenu = new MenuId('menubarPdfFilesMenu');
 
 // ------------------- COMPOSE ------------------------
 
-// The Compose menu: Coding Agents and Agent Skills (codingAgentPage.ts, pollisAgents.ts), MCP Servers (mcpServersPage.ts), Orchestration, Local AI Models, Knowledge for AI Models, New Panels and Package a Toolbox, Literature (Discover Literature, Import References, Browse References), Article Replication, with the article methods, Forecasting Challenges and Competitions, Workflows, Reports, PDF Files,
+// The Compose menu: Coding Agents and Agent Skills (codingAgentPage.ts, pollisAgents.ts), MCP Servers (mcpServersPage.ts), Orchestration, Local AI Models, Knowledge for AI Models, New Panels and Package a Toolbox, Literature (Discover Literature, Import References, Browse References), Article Replication, with the article methods, Forecasting Competitions (Manage Competition Datasets, Score Forecasting Models), Workflows, Reports, PDF Files,
 // Correctness Tests, Horse Races, Compile Galore and Collaboration, which combine panels. The Toolbox Panels page (toolboxPanelsPage.ts) opens from
 // the Edit button of an installed toolbox in the Extensions pane.
 MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
@@ -215,12 +217,27 @@ MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	order: 2,
 });
 
-// A forecasting method of the user's own, run on the series of M1, M3, M4, M5 Accuracy or M6, scored as the
-// organisers scored the entries and ranked among them (forecastingCompetitionsPage.ts)
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
 	group: '2_compose',
-	command: { id: FORECASTING_COMPETITIONS_COMMAND_ID, title: localize('competitions.forecasting', "Forecasting Challenges and Competitions...") },
+	submenu: ForecastingCompetitionsMenu,
+	title: localize('competitions.menu', "Forecasting Competitions"),
 	order: 3,
+});
+
+// The catalogue of forecasting datasets, competitions and curated collections, where the datasets to score are chosen
+// (forecastingCataloguePage.ts)
+MenuRegistry.appendMenuItem(ForecastingCompetitionsMenu, {
+	group: '1_competitions',
+	command: { id: FORECASTING_CATALOGUE_COMMAND_ID, title: localize('competitions.manageDatasets', "Manage Competition Datasets...") },
+	order: 1,
+});
+
+// A forecasting method of the user's own, run on the series of the datasets chosen, scored as the organisers scored
+// the entries and ranked among them (forecastingCompetitionsPage.ts)
+MenuRegistry.appendMenuItem(ForecastingCompetitionsMenu, {
+	group: '1_competitions',
+	command: { id: FORECASTING_COMPETITIONS_COMMAND_ID, title: localize('competitions.scoreModels', "Score Forecasting Models...") },
+	order: 2,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {

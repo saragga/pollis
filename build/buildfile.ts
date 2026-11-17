@@ -31,6 +31,7 @@ export const workbenchDesktop = [
 	createModuleDescription('vs/workbench/contrib/databases/node/duckdbNotebookMain'), // Pollis: the DuckDB of the notebooks' SQL cells
 	createModuleDescription('vs/workbench/contrib/compose/node/snowballDatabaseMain'), // Pollis: the database of the Snowball Search Map
 	createModuleDescription('vs/workbench/contrib/compose/node/askPollisMain'), // Pollis: the search of Ask Pollis
+	createModuleDescription('vs/workbench/contrib/compose/node/forecastingDatasetsMain'), // Pollis: the datasets added in Manage Competition Datasets
 	createModuleDescription('vs/workbench/workbench.desktop.main'),
 	// Pollis: 'vs/sessions/sessions.desktop.main' omitted; the Agents window is not shipped.
 ];

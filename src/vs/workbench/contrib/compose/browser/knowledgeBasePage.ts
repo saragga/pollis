@@ -46,6 +46,7 @@ import { ASK_EMBEDDING_MODEL, embeddingPrefixes, IAskPollisService } from '../co
 import { compareCss, pageHelpersScript } from './compareShared.js';
 import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_MINIMAL_STYLE } from './libraryPage.js';
 import { IInstalledModel } from './modelsInstalledPage.js';
+import { sha256Of } from './sha256.js';
 import { tomlString } from './articleAndData.js';
 import { classificationText, parseClassification, readClassification, readLatexClassification, subjectOf } from '../common/subjectClassifications.js';
 import { latexSourceOf } from './latexSource.js';
@@ -222,12 +223,6 @@ const KNOWLEDGE_BASE_JULIA_COMMAND = 'language-julia.pollisKnowledgeBase';
 
 /** The time a toolbox's text has to download. */
 const TOOLBOX_TEXT_TIMEOUT = 300_000;
-
-/** The SHA-256 of `content`, in hexadecimal. */
-async function sha256Of(content: VSBuffer): Promise<string> {
-	const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', content.buffer as Uint8Array<ArrayBuffer>));
-	return [...digest].map(byte => byte.toString(16).padStart(2, '0')).join('');
-}
 
 /** The LICENCE.md kept beside a toolbox's text: what it is, where it comes from, its licence and what is changed. */
 function toolboxLicence(text: IToolboxTextInfo, source: string): string {

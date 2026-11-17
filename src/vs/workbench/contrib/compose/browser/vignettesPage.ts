@@ -25,6 +25,7 @@ import { IPathService } from '../../../services/path/common/pathService.js';
 import { parseToml, TomlValue } from '../../model/browser/common/tomlPanelData.js';
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
+import { compareVersions, packagesInUse, projectVersion, subfolders } from './juliaPackages.js';
 import { LIBRARY_PAGE_HELPERS, LIBRARY_PAGE_MINIMAL_STYLE } from './libraryPage.js';
 import { vignettesIndex } from './newMethods.js';
 import { OPEN_LINK_COMMAND_ID } from '../../monitor/browser/openLink.js';
@@ -141,28 +142,6 @@ function parseRegistryVignettes(content: string): IVignette[] {
 		.sort(byTitle);
 }
 
-/** Compares versions such as 0.10.1 and 0.9.0 by their numbers. */
-function compareVersions(a: string, b: string): number {
-	const pa = a.split('.').map(Number);
-	const pb = b.split('.').map(Number);
-	for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-		const difference = (pa[i] || 0) - (pb[i] || 0);
-		if (difference) {
-			return difference;
-		}
-	}
-	return 0;
-}
-
-/** The folders inside `folder`, none when it does not exist. */
-async function subfolders(fileService: IFileService, folder: URI): Promise<URI[]> {
-	try {
-		return ((await fileService.resolve(folder)).children ?? []).filter(child => child.isDirectory).map(child => child.resource);
-	} catch {
-		return [];
-	}
-}
-
 /** The vignette of the package in `root`, when its vignette/Vignette.toml names its source beside it, or a PDF. */
 async function packageVignette(fileService: IFileService, root: URI): Promise<IVignette | undefined> {
 	try {
@@ -179,42 +158,6 @@ async function packageVignette(fileService: IFileService, root: URI): Promise<IV
 		return entry.pdf && !entry.pdf.includes('/') && await fileService.exists(pdf) ? { ...entry, pdf: pdf.toString() } : undefined;
 	} catch {
 		return undefined;
-	}
-}
-
-/**
- * The packages that the environments in Julia's log of the manifests it has used (~/.julia/logs/manifest_usage.toml)
- * hold, as NAME@VERSION; undefined without the log. A copy in the depot that none of them holds is left over from an
- * update or a removal, until Julia's garbage collection deletes it.
- */
-async function packagesInUse(fileService: IFileService, julia: URI): Promise<Set<string> | undefined> {
-	let log: string;
-	try {
-		log = (await fileService.readFile(joinPath(julia, 'logs', 'manifest_usage.toml'))).value.toString();
-	} catch {
-		return undefined;
-	}
-	const manifests = [...log.matchAll(/^\[\["(?<path>.+)"\]\]$/gm)].map(match => (match.groups?.path ?? '').replace(/\\\\/g, '\\'));
-	const used = new Set<string>();
-	await Promise.all(manifests.map(async manifest => {
-		try {
-			const text = (await fileService.readFile(URI.file(manifest))).value.toString();
-			for (const entry of text.split(/^\[\[deps\./m).slice(1)) {
-				used.add(`${entry.slice(0, entry.indexOf(']]'))}@${/^version\s*=\s*"(?<version>[^"]+)"/m.exec(entry)?.groups?.version ?? ''}`);
-			}
-		} catch {
-			// An environment since deleted
-		}
-	}));
-	return used;
-}
-
-/** The version in the Project.toml of the package in `root`. */
-async function projectVersion(fileService: IFileService, root: URI): Promise<string> {
-	try {
-		return /^version\s*=\s*"(?<version>[^"]+)"/m.exec((await fileService.readFile(joinPath(root, 'Project.toml'))).value.toString())?.groups?.version ?? '';
-	} catch {
-		return '';
 	}
 }
 

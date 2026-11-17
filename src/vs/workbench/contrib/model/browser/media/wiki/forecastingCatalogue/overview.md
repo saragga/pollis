@@ -1,0 +1,51 @@
+# Manage Competition Datasets: Overview
+
+Manage Competition Datasets is a catalogue of forecasting datasets and competitions, and of the curated collections that gather them, in two tabs: **Datasets** and **Curated Collections**. Each entry records what it holds, how its forecasts are evaluated, where its data come from, what computer it needs and what it teaches. The page is in Compose > Forecasting Competitions, beside Score Forecasting Models, which runs a forecasting method of your own on the datasets made active here.
+
+## What Kinds of Entry Does Manage Competition Datasets Hold?
+
+The field Type of an entry is one of five kinds. A `competition` was held once, over a fixed period, with its forecasts scored on values the forecasters had not seen. A `live_competition` still runs, in rounds or continuously, such as a tournament or a competition that Kaggle keeps open for learning. A `dataset` is a collection of series published for research, with no competition of its own. A `benchmark_suite` gathers many datasets under one protocol for comparing methods, such as an archive of datasets or a benchmark of foundation models. A `forecast_archive` keeps the forecasts that teams or professional forecasters submitted over time, with the values that came true, such as a forecast hub of epidemics or a survey of professional forecasters. The tab Curated Collections holds the entries of type `benchmark_suite`, and the tab Datasets every other kind.
+
+## How Do the Views of Manage Competition Datasets Work?
+
+**View** chooses which columns the table shows: Identity and Provenance, Access and Licence, Data Structure, Task and Evaluation, Reference Results, Practical Footprint, Pedagogy or Curation, one view for each group of fields. Every view keeps the Name of the entry on the left, after Active and Workspace in the tab Datasets, with its Type and Domain as tags under it. Long text, such as Teaches or Reference, shows two lines in a cell and in full in the details of the entry. The Curation view adds the column **Missing Fields**, the number of fields of the schema an entry does not have yet, with their names when the mouse is over the number, and sorts the rows by it, most missing first. Switching the view changes the columns only: the search, the filters and the order of the rows stay as they were.
+
+## How Are the Entries of Manage Competition Datasets Filtered and Sorted?
+
+**Search by name** keeps the entries whose names contain the words typed. Under it, **Filter by:** has a button for each controlled field, Type, Domain, Era, Frequency, Forecast Type, Package, Delivery, Status, Course Level and Size, all of one size; a button opens the menu of the values of its field, each with the number of entries of the tab that have it, and shows how many of them are ticked. Ticking values in one menu keeps the entries that have any of them; values ticked in several menus must all be met. Clicking a value shown as a tag in a cell filters by that value too, for any field, such as a metric or a covariate. Each filter in use shows as a chip, which a click removes, and **Clear Filters** removes them all with the search. Clicking a column heading sorts the rows by that column, and clicking it again reverses the order; entries without a value in that column come last either way.
+
+## How Are Datasets Sent to Score Forecasting Models?
+
+The tab Datasets starts with the column **Active**. A tick makes a dataset active, and **Score Active Datasets** sends the active datasets to Score Forecasting Models, which scores a forecasting method of your own on them. Only the datasets that Score Forecasting Models scores can be ticked: the competitions marked implemented in the package PollisCompetitions.jl, whose data it downloads. The other ticks are greyed out, and the mouse over one says so. The page keeps the active datasets for the next time it opens, and shows how many there are beside the button.
+
+## What Do the Details of an Entry Show?
+
+Clicking a row opens under it every field the entry has, grouped as the views group them, and clicking it again closes them. **Web Page** and **DOI** open in the browser of Pollis. **Papers** shows the full references of the works that describe the entry, from the References of the page, each with its DOI. **To Check** lists the facts of the entry still to be checked against their primary source, such as a licence, a number of series or a DOI. A competition that Pollis already downloads, marked implemented in the package PollisCompetitions.jl, has the buttons **Save to Workspace**, which saves its data in the Pollis Workspace, and **Open in Score Forecasting Models**, which opens that page with the competition chosen in its first step. A curated collection lists the datasets of the catalogue that it holds, under **Datasets in This Collection**.
+
+## How Are Datasets Saved in the Pollis Workspace?
+
+**Save to Workspace**, in the details of a dataset, and **Save Active Datasets**, beside Score Active Datasets, copy the data of the datasets into the Pollis Workspace, the folder of your own work, under `data/forecasting/`, one folder for each dataset, named by its id. A dataset not on this computer yet is downloaded first in the Julia REPL, by PollisCompetitions.jl, and saved once the download ends. Beside the files, `saved.toml` records the size, time and SHA-256 of each file as it was saved, so that the page sees when the copy changes. Saving again a copy that changed asks first, and moves the old copy to the Trash. With no Pollis Workspace open, Save to Workspace offers to create one, in Documents by default, or to open one; Pollis opens it in the window, and the datasets are then saved again. Browsing and scoring need no workspace.
+
+## What Does the Column Workspace Say?
+
+The column **Workspace**, after Active in the tab Datasets, says where each dataset that Pollis downloads stands in the Pollis Workspace: **No Workspace** when none is open, **Not Saved**, **Downloading** while the Julia REPL downloads it to be saved, **Saved** when the copy is as it was saved, and **Saved and Changed** when a file of the copy was changed, added or removed since. The column follows the folders as they change, without reopening the page. Beside the saved datasets, the page writes `forecastingCatalogue.toml`, the whole catalogue as it last read it, with the entries of every contributor, so that Julia can read it with `TOML.parsefile`; the page rewrites it when the catalogue changes, and it is not edited by hand.
+
+## How Is a Dataset of Your Own Added to Manage Competition Datasets?
+
+**Add a Dataset...**, beside Score Active Datasets, adds a dataset from a file of your own: a CSV, TSV or Parquet table with a row for each observation, one column naming its series, one giving its time and one its value. A form shows the first rows of the file and asks for the three columns, the name and id of the dataset, its frequency, its seasonal period, its horizon, its domain and, if you wish, its licence and notes. **Add to Workspace** checks the file and converts it into `data/forecasting/<id>/` of the Pollis Workspace, as `series.parquet` and `observations.parquet`, the files PollisCompetitions.jl keeps for a competition: the series are numbered in the order of their names, the values of each in the order of the time column, and the last horizon values of each series are its test values. Nothing is written when the file has a problem, such as a row with no number as its value, a time given twice in a series, or a series with no more values than the horizon; the form lists them. Gaps in time are not filled.
+
+## What Is in the Folder of a Dataset of Your Own?
+
+Beside `series.parquet` and `observations.parquet`, the folder of a dataset added with Add a Dataset holds `dataset.toml` and `saved.toml`. In `dataset.toml`, the table `[conversion]` says from which file and columns, with which seasonal period and horizon, the dataset was made, and the table `[[entry]]` is the dataset in the catalogue, with the number of series and their shortest, median and longest lengths. The fields of the entry may be edited by hand, as the schema of the catalogue allows. **Edit Facts**, in the details of the dataset, opens the form filled with its facts, and **Convert Again** converts the file again with them, keeping the fields added by hand; the file must still be where it was. The Workspace column says Saved and Changed when the converted files change. The datasets added have no Package. They can be made active like the competitions, and **Open in Score Forecasting Models**, in their details, opens that page with the dataset ticked; it scores them as M1 and M3 are, beside Naive2.
+
+## Where Do the Entries of Manage Competition Datasets Come From?
+
+Pollis keeps the schema of the catalogue, its fields and views, and checks every entry against it; the entries come from their contributors, each a file of entries. PollisCompetitions.jl contributes its file from the package on this computer, or, when Julia or the package is not there, from the copy that Pollis ships, so browsing needs no Julia and no download. An installed toolbox contributes the file it names, such as the datasets of its field. The datasets added with Add a Dataset come from the Pollis Workspace open in the window, each from its `dataset.toml`. The column **Source**, in the views Access and Licence and Curation, names the contributor of each entry. Two contributors cannot give the same id: the second entry is left out, and the problems above the table say so.
+
+## How Is the Catalogue Related to the Packages That Download the Data?
+
+An entry describes its data, but holds no addresses of data files and no checksums. Those are in the catalogue of the package that downloads the entry, PollisCompetitions.jl for competitions and archives of forecasts, or PollisDatasets.jl for datasets and benchmark suites, where each file is listed with its address and its SHA-256. The field Package Id of an entry names its id in that package's catalogue, so that two entries made from the same data, such as the Accuracy and Uncertainty competitions of M5, can share one download.
+
+## See Also
+
+- [Factsheet](factsheet.md) · [Fields and Vocabularies](fields-vocabularies.md) · [Licences and Delivery](licences-delivery.md)

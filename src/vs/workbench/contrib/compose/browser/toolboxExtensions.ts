@@ -82,6 +82,8 @@ interface IToolboxContribution {
 	readonly courses?: IToolboxCourseContribution[];
 	/** Its Simulation Games cases, which Host a Game... offers. */
 	readonly games?: IToolboxGameContribution[];
+	/** Its forecasting datasets file, relative to the extension folder, which Manage Competition Datasets lists. */
+	readonly forecastingDatasets?: string;
 }
 
 /** A Simulation Games case of a toolbox: a folder with case.toml and model.jl. */
@@ -216,6 +218,10 @@ const toolboxesExtensionPoint = ExtensionsRegistry.registerExtensionPoint<IToolb
 						},
 					},
 				},
+				forecastingDatasets: {
+					type: 'string',
+					description: localize('pollisToolboxes.forecastingDatasets', "The toolbox's forecasting datasets file, relative to the extension folder, for example data/forecasting_datasets.toml: entries of the forecasting catalogue, with the fields of its schema, which Compose > Forecasting Competitions > Manage Competition Datasets lists with those of PollisCompetitions.jl and the other toolboxes."),
+				},
 				texts: {
 					type: 'array',
 					description: localize('pollisToolboxes.texts', "The texts the toolbox adds to the Knowledge Base: PDFs their authors share under an open licence, which Pollis downloads from where they keep them, at a fixed version, the first time the user switches one on."),
@@ -274,6 +280,7 @@ interface ILoadedToolbox {
 	readonly texts: readonly IToolboxTextInfo[];
 	readonly courses: readonly IToolboxCourseContribution[];
 	readonly games: readonly URI[];
+	readonly forecastingDatasets: URI | undefined;
 }
 
 /**
@@ -365,6 +372,7 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 					documents: loaded.documents,
 					texts: loaded.texts,
 					games: loaded.games,
+					forecastingDatasets: loaded.forecastingDatasets,
 					panels: inMenuOrder(loaded.toolbox, loaded.panels).map(({ contribution, panel, faq }) => ({
 						id: contribution.id,
 						command: contribution.command,
@@ -470,7 +478,16 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 					}
 					games.push(folder);
 				}
-				loaded.push({ extensionId: ExtensionIdentifier.toKey(extension.description.identifier), extensionName: extension.description.displayName ?? extension.description.name, toolbox, location, version: extension.description.version, panels, documents, texts, courses, games });
+				let forecastingDatasets: URI | undefined;
+				if (toolbox.forecastingDatasets !== undefined) {
+					const file = typeof toolbox.forecastingDatasets === 'string' ? joinPath(location, toolbox.forecastingDatasets) : undefined;
+					if (file && isEqualOrParent(file, location) && !isEqual(file, location)) {
+						forecastingDatasets = file;
+					} else {
+						extension.collector.error(localize('pollisToolboxes.forecastingDatasetsFile', "The forecasting datasets file {0} must be inside the extension folder.", String(toolbox.forecastingDatasets)));
+					}
+				}
+				loaded.push({ extensionId: ExtensionIdentifier.toKey(extension.description.identifier), extensionName: extension.description.displayName ?? extension.description.name, toolbox, location, version: extension.description.version, panels, documents, texts, courses, games, forecastingDatasets });
 			}
 		}
 		if (generation !== this.generation) {

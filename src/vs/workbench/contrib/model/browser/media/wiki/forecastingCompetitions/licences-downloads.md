@@ -1,6 +1,6 @@
 # Licences and Downloads
 
-The page Forecasting Challenges and Competitions downloads each competition from its own source, with PollisCompetitions.jl, onto the user's computer. Pollis ships none of their data.
+The page Score Forecasting Models downloads each competition from its own source, with PollisCompetitions.jl, onto the user's computer. Pollis ships none of their data.
 
 ## Where Do the Data of Each Competition Come From?
 
@@ -15,7 +15,7 @@ The Monash archive gives each series of M1 and M3 with the values the forecaster
 
 ## How Does PollisCompetitions.jl Check a Download?
 
-Every file a competition is made of is listed in the catalogue of PollisCompetitions.jl with its address, its size and its SHA-256, the digest of its contents. **Download** in the step Competition sends Julia code to the Julia REPL that fetches each file, checks its SHA-256 against the catalogue, and stops if a file differs, so that every user scores against the same data. The files are then converted into Parquet tables in `~/.pollis/competitions`, one folder for each competition, and `info.toml` in that folder records the download; the page shows a competition as on this computer when `info.toml` is there.
+Every file a competition is made of is listed in the catalogue of PollisCompetitions.jl with its address, its size and its SHA-256, the digest of its contents. **Download** in the step Datasets sends Julia code to the Julia REPL that fetches each file, checks its SHA-256 against the catalogue, and stops if a file differs, so that every user scores against the same data. The files are then converted into Parquet tables in `~/.pollis/competitions`, one folder for each competition, and `info.toml` in that folder records the download; the page shows a competition as on this computer when `info.toml` is there.
 
 ## How Large Are the Downloads?
 
