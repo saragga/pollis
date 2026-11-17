@@ -725,7 +725,7 @@ registerAction2(class extends Action2 {
 			// A toolbox of Simulation Games cases alone has no panels to place
 			const toolboxes = accessor.get(IToolboxPanelsService).getToolboxes(extensionId);
 			if (toolboxes.length && toolboxes.every(toolbox => !toolbox.panels.length && toolbox.games.length)) {
-				accessor.get(INotificationService).info(localize('toolboxPanels.gamesOnly', "The {0} has no panels: its cases are in Compose > Simulation Games > Host a Game....", toolboxes[0].extensionName));
+				accessor.get(INotificationService).info(localize('toolboxPanels.gamesOnly', "{0} has no panels to place: to play it, choose Host a Game... in Compose > Simulation Games.", toolboxes[0].extensionName));
 				return;
 			}
 			openToolboxPanelsPage(accessor, extensionId);

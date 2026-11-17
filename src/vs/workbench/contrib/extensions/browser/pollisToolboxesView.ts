@@ -386,9 +386,7 @@ export class PollisToolboxesView extends ViewPane {
 				return this.extensionsWorkbenchService.install(vsix, { installGivenVersion: true });
 			});
 			this.promptRuntimeAction(toolbox, extension, update);
-			if (!update && hasOnlyGames(extension)) {
-				this.notificationService.info(localize('pollisToolboxes.gamesInstalled', "The {0} has no panels: its cases are in Compose > Simulation Games > Host a Game....", toolbox.name));
-			} else if (!update) {
+			if (!update && !hasOnlyGames(extension)) {
 				// The toolbox is now at the end of Extend: on this page the user can choose its panels, and where they go
 				this.commandService.executeCommand(CHOOSE_TOOLBOX_PANELS_COMMAND_ID, extension.identifier.id);
 			}
@@ -419,9 +417,12 @@ export class PollisToolboxesView extends ViewPane {
 
 	/** Asks to reload the window or restart the extensions when the installed toolbox needs it to load. */
 	private promptRuntimeAction(toolbox: IToolboxIndexEntry, extension: IExtension, update: boolean): void {
+		// A toolbox of Simulation Games cases alone is named by its case, and says where to play it
 		const done = update
 			? localize('pollisToolboxes.updated', "The {0} was updated.", toolbox.name)
-			: localize('pollisToolboxes.installed', "The {0} was installed.", toolbox.name);
+			: hasOnlyGames(extension)
+				? localize('pollisToolboxes.gamesInstalled', "{0} was installed: to play it, choose Host a Game... in Compose > Simulation Games.", toolbox.name)
+				: localize('pollisToolboxes.installed', "The {0} was installed.", toolbox.name);
 		switch (extension.runtimeState?.action) {
 			case ExtensionRuntimeActionType.ReloadWindow:
 				this.notificationService.prompt(Severity.Info, localize('pollisToolboxes.reload', "{0} Reload the window to use it.", done), [{
