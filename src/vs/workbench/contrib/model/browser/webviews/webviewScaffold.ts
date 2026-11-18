@@ -37,6 +37,7 @@ const NEXT_STEP_CODICONS: Readonly<Record<string, string>> = {
 	'pulse': '<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M5.76002 2.49999C5.98102 2.50399 6.17302 2.65399 6.23202 2.86699L8.52102 11.19L10.271 5.35599C10.332 5.15399 10.513 5.01099 10.724 4.99999C10.935 4.98899 11.13 5.11199 11.211 5.30699L12.333 7.99899H14C14.276 7.99899 14.5 8.22299 14.5 8.49899C14.5 8.77499 14.276 8.99899 14 8.99899H12C11.798 8.99899 11.616 8.87799 11.538 8.69099L10.826 6.98299L8.97802 13.142C8.91402 13.356 8.71602 13.501 8.49302 13.498C8.27002 13.495 8.07602 13.346 8.01702 13.131L5.71402 4.75699L4.47502 8.64999C4.40902 8.85799 4.21602 8.99799 3.99902 8.99799H1.99902C1.72302 8.99799 1.49902 8.77399 1.49902 8.49799C1.49902 8.22199 1.72302 7.99799 1.99902 7.99799H3.63302L5.27202 2.84599C5.33902 2.63499 5.53702 2.49299 5.75802 2.49799L5.76002 2.49999Z"/></svg>',
 	'search': '<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M10.0195 10.7266C9.06578 11.5217 7.83875 12 6.5 12C3.46243 12 1 9.53757 1 6.5C1 3.46243 3.46243 1 6.5 1C9.53757 1 12 3.46243 12 6.5C12 7.83875 11.5217 9.06578 10.7266 10.0195L13.8535 13.1464C14.0488 13.3417 14.0488 13.6583 13.8535 13.8536C13.6583 14.0488 13.3417 14.0488 13.1464 13.8536L10.0195 10.7266ZM11 6.5C11 4.01472 8.98528 2 6.5 2C4.01472 2 2 4.01472 2 6.5C2 8.98528 4.01472 11 6.5 11C8.98528 11 11 8.98528 11 6.5Z"/></svg>',
 	'table': '<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M1 3.5C1 2.11929 2.11929 1 3.5 1H12.5C13.8807 1 15 2.11929 15 3.5V12.5C15 13.8807 13.8807 15 12.5 15H3.5C2.11929 15 1 13.8807 1 12.5V3.5ZM6 14H10V11L6 11V14ZM5 11H2V12.5C2 13.3284 2.67157 14 3.5 14H5V11ZM6 10L10 10V6L6 6V10ZM5 6H2V10H5V6ZM6 5L10 5V2H6V5ZM5 2H3.5C2.67157 2 2 2.67157 2 3.5V5H5V2ZM14 6H11V10H14V6ZM14 11H11V14H12.5C13.3284 14 14 13.3284 14 12.5V11ZM14 5V3.5C14 2.67157 13.3284 2 12.5 2H11V5H14Z"/></svg>',
+	'verified': '<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M11.335 2.06526L11.4114 2.21783L11.9879 3.75081C12.0332 3.87153 12.1284 3.96679 12.2492 4.01208L13.7292 4.56735C14.3787 4.81102 14.7278 5.50506 14.5547 6.16172L14.5131 6.2924L13.8245 7.81523C13.7712 7.93262 13.7712 8.06733 13.8245 8.18472L14.4784 9.62393C14.7654 10.2555 14.5214 10.9931 13.9347 11.335L13.7822 11.4114L12.2492 11.9879C12.1284 12.0332 12.0332 12.1284 11.9879 12.2491L11.4326 13.7292C11.189 14.3787 10.4949 14.7277 9.83826 14.5547L9.70758 14.513L8.18475 13.8245C8.06736 13.7711 7.93265 13.7711 7.81526 13.8245L6.37605 14.4784C5.74448 14.7654 5.00693 14.5214 4.66498 13.9347L4.58856 13.7821L4.01211 12.2491C3.96682 12.1284 3.87156 12.0332 3.75084 11.9879L2.27076 11.4326C1.62126 11.1889 1.27224 10.4949 1.44531 9.83823L1.48695 9.70755L2.17552 8.18472C2.22886 8.06733 2.22886 7.93262 2.17552 7.81523L1.52159 6.37602C1.23462 5.74445 1.47858 5.0069 2.06529 4.66495L2.21786 4.58853L3.75084 4.01208C3.87156 3.96679 3.96682 3.87153 4.01211 3.75081L4.56738 2.27073C4.81105 1.62123 5.50509 1.27221 6.16175 1.44528L6.29243 1.48692L7.81526 2.17549C7.93265 2.22883 8.06736 2.22883 8.18475 2.17549L9.62396 1.52156C10.2555 1.23459 10.9931 1.47855 11.335 2.06526ZM5.40367 2.58448L4.84839 4.06455C4.71252 4.42672 4.42675 4.71249 4.06458 4.84836L2.58451 5.40364L2.48653 5.45494C2.31249 5.57555 2.24409 5.80692 2.33479 6.00653L2.98872 7.44574C3.14873 7.7979 3.14873 8.20204 2.98872 8.55421L2.32878 10.0073L2.30178 10.099C2.264 10.3073 2.37924 10.5193 2.58451 10.5963L4.06458 11.1516C4.42675 11.2875 4.71252 11.5732 4.84839 11.9354L5.40367 13.4155L5.45497 13.5135C5.57558 13.6875 5.80695 13.7559 6.00656 13.6652L7.44577 13.0113C7.79793 12.8512 8.20207 12.8512 8.55424 13.0113L10.0073 13.6712L10.099 13.6982C10.3074 13.736 10.5193 13.6207 10.5963 13.4155L11.1516 11.9354C11.2875 11.5732 11.5733 11.2875 11.9354 11.1516L13.4155 10.5963L13.5135 10.545C13.6875 10.4244 13.7559 10.193 13.6652 9.99342L13.0113 8.55421C12.8513 8.20204 12.8513 7.7979 13.0113 7.44574L13.6712 5.99269L13.6982 5.90097C13.736 5.69262 13.6208 5.48065 13.4155 5.40364L11.9354 4.84836C11.5733 4.71249 11.2875 4.42672 11.1516 4.06455L10.5963 2.58448L10.545 2.4865C10.4244 2.31246 10.1931 2.24406 9.99345 2.33476L8.55424 2.98869C8.20207 3.1487 7.79793 3.1487 7.44577 2.98869L6.00656 2.33476L5.97869 2.32321C5.74775 2.23657 5.49031 2.35355 5.40367 2.58448ZM6.97825 9.34663L10.1639 5.70588C10.3263 5.52026 10.6085 5.50145 10.7941 5.66387C10.9565 5.80599 10.9912 6.03977 10.8885 6.22035L10.8361 6.29406L7.33611 10.2941C7.18725 10.4642 6.93964 10.4931 6.75769 10.3753L6.68421 10.3158L5.18421 8.81577C5.0098 8.64136 5.0098 8.35859 5.18421 8.18418C5.33682 8.03157 5.57239 8.0125 5.74574 8.12695L5.8158 8.18418L6.97825 9.34663L10.1639 5.70588L6.97825 9.34663Z"/></svg>',
 };
 
 /**
@@ -49,6 +50,7 @@ const NEXT_STEP_GROUP_CODICONS: Readonly<Record<string, string>> = {
 	predict: 'link-external',
 	compare: 'diff',
 	interpret: 'lightbulb-sparkle',
+	replicate: 'verified',
 	export: 'export',
 	prices: 'graph-line',
 	returns: 'pulse',
@@ -107,8 +109,8 @@ export const openPageStepJs = `		function openPageStep(button, id, title, event)
 			window.dispatchEvent(new Event(event));
 		}`;
 
-/** The five Next Steps groups of a panel, in their order. */
-type NextStepGroup = 'visualise' | 'diagnose' | 'predict' | 'compare' | 'interpret';
+/** The Next Steps groups of a panel, in their order: the first five always, Replicate only when it has steps. */
+type NextStepGroup = 'visualise' | 'diagnose' | 'predict' | 'compare' | 'interpret' | 'replicate';
 
 /** A Next Step of a Time Arrow or Minimal page whose panel the page's own script fills. */
 export interface IPageNextStep {
@@ -122,8 +124,8 @@ export interface IPageNextStep {
 }
 
 /**
- * The Next Steps of a Time Arrow or Minimal page in the five groups of a panel (Visualise, Diagnose, Predict, Compare,
- * Interpret), whose steps the page's own script draws: a group shows a card for each of its steps, or says it has none,
+ * The Next Steps of a Time Arrow or Minimal page in the groups of a panel (Visualise, Diagnose, Predict, Compare,
+ * Interpret, and Replicate when it has steps), whose steps the page's own script draws: a group shows a card for each of its steps, or says it has none,
  * and a card opens the step's panel, with the group's name to go back to it, then dispatches the step's `event`. The
  * page's script opens a step's panel itself with the window event `pollis-open-page-step`, its `detail` the step's id.
  */
@@ -134,8 +136,9 @@ export function pageNextSteps(steps: { readonly [group in NextStepGroup]?: reado
 		predict: localize('scaffold.predict', "Predict"),
 		compare: localize('scaffold.compare', "Compare"),
 		interpret: localize('scaffold.interpret', "Interpret"),
+		replicate: localize('scaffold.replicate', "Replicate"),
 	};
-	const groups = (Object.keys(labels) as NextStepGroup[]).map(id => ({
+	const groups = (Object.keys(labels) as NextStepGroup[]).filter(id => id !== 'replicate' || steps.replicate?.length).map(id => ({
 		id,
 		button: `btn-page-steps-${id}`,
 		label: labels[id],
