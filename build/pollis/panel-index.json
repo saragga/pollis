@@ -87,6 +87,8 @@
 			"pollisComingSoon.smartRegions.accessDataLibraries",
 			"pollisComingSoon.smartRegions.accessFiles",
 			"pollisComingSoon.smartRegions.mapVisualisation",
+			"pollisComingSoon.smartRegions.pointClouds",
+			"pollisComingSoon.smartRegions.remoteSensing",
 			"pollisComingSoon.smartRegions.smartCities",
 			"pollisComingSoon.smartRegions.smartRuralAreas",
 			"pollisNotebookExport",

@@ -79,6 +79,8 @@ const SMART_RURAL_AREAS_MENU = new MenuId('pollisComingSoon.smartRegions.smartRu
 const SMART_REGIONS_FILES_MENU = new MenuId('pollisComingSoon.smartRegions.accessFiles');
 const SMART_REGIONS_LIBRARIES_MENU = new MenuId('pollisComingSoon.smartRegions.accessDataLibraries');
 const SMART_REGIONS_MAPS_MENU = new MenuId('pollisComingSoon.smartRegions.mapVisualisation');
+const SMART_REGIONS_REMOTE_SENSING_MENU = new MenuId('pollisComingSoon.smartRegions.remoteSensing');
+const SMART_REGIONS_POINT_CLOUDS_MENU = new MenuId('pollisComingSoon.smartRegions.pointClouds');
 
 MenuRegistry.appendMenuItem(MenuId.MenubarExtendMenu, {
 	submenu: SMART_REGIONS_MENU,
@@ -169,12 +171,45 @@ appendComingSoonItems(SMART_REGIONS_MENU, [
 		localize('comingSoon.smartRegions.raster', "Raster Analysis"),
 		localize('comingSoon.smartRegions.networks', "Route and Network Analysis"),
 	],
-	[
-		localize('comingSoon.smartRegions.remoteSensing', "Remote Sensing"),
-		localize('comingSoon.smartRegions.pointClouds', "Point Cloud Processing"),
-		localize('comingSoon.smartRegions.terrain', "Terrain and Elevation Analysis"),
-	],
 ]);
+
+// Remote Sensing and Point Cloud Processing, submenus of methods, above Terrain and Elevation Analysis, which takes its terrain models from the ground points
+MenuRegistry.appendMenuItem(SMART_REGIONS_MENU, {
+	submenu: SMART_REGIONS_REMOTE_SENSING_MENU,
+	title: localize('comingSoon.smartRegions.remoteSensing', "Remote Sensing"),
+	group: '3_comingSoon',
+	order: 1
+});
+
+MenuRegistry.appendMenuItem(SMART_REGIONS_MENU, {
+	submenu: SMART_REGIONS_POINT_CLOUDS_MENU,
+	title: localize('comingSoon.smartRegions.pointClouds', "Point Cloud Processing"),
+	group: '3_comingSoon',
+	order: 2
+});
+
+MenuRegistry.appendMenuItem(SMART_REGIONS_MENU, {
+	group: '3_comingSoon',
+	command: { id: COMING_SOON_COMMAND, precondition: ContextKeyExpr.false(), title: localize('comingSoon.smartRegions.terrain', "Terrain and Elevation Analysis") },
+	order: 3
+});
+
+appendComingSoonItems(SMART_REGIONS_REMOTE_SENSING_MENU, [[
+	localize('comingSoon.remoteSensing.vegetation', "Vegetation Indices (NDVI)"),
+	localize('comingSoon.remoteSensing.landCover', "Land Cover Classification"),
+	localize('comingSoon.remoteSensing.temperature', "Land Surface Temperature"),
+	localize('comingSoon.remoteSensing.burnedAreasFloods', "Burned Area and Flood Mapping"),
+	localize('comingSoon.remoteSensing.groundMovement', "Ground Movement from Radar (InSAR)"),
+	localize('comingSoon.remoteSensing.nightLights', "Night-Time Lights"),
+]]);
+
+appendComingSoonItems(SMART_REGIONS_POINT_CLOUDS_MENU, [[
+	localize('comingSoon.pointClouds.ground', "Filtering and Ground Classification"),
+	localize('comingSoon.pointClouds.buildings', "Building Extraction and 3D City Models"),
+	localize('comingSoon.pointClouds.trees', "Tree and Canopy Metrics"),
+	localize('comingSoon.pointClouds.change', "Change Between Surveys"),
+	localize('comingSoon.pointClouds.archaeology', "Archaeological Feature Detection"),
+]]);
 
 MenuRegistry.appendMenuItem(SMART_REGIONS_MENU, {
 	submenu: SMART_CITIES_MENU,
