@@ -5,27 +5,52 @@
 
 import { VSBuffer } from '../../../../base/common/buffer.js';
 import { mnemonicButtonLabel } from '../../../../base/common/labels.js';
+import { Disposable } from '../../../../base/common/lifecycle.js';
+import { Schemas } from '../../../../base/common/network.js';
+import { isAbsolute } from '../../../../base/common/path.js';
 import { basename, extUriBiasedIgnorePathCase, joinPath } from '../../../../base/common/resources.js';
 import { URI } from '../../../../base/common/uri.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, MenuId, registerAction2 } from '../../../../platform/actions/common/actions.js';
+import { ConfigurationTarget, IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
+import { ConfigurationScope, Extensions as ConfigurationExtensions, IConfigurationRegistry } from '../../../../platform/configuration/common/configurationRegistry.js';
 import { IDialogService, IFileDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 import { IEnvironmentService } from '../../../../platform/environment/common/environment.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
+import { Registry } from '../../../../platform/registry/common/platform.js';
 import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
+import { IWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase } from '../../../common/contributions.js';
 import { IHostService } from '../../../services/host/browser/host.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 
 // The Pollis Workspace: an ordinary folder, marked by pollis.toml, for the user's own work and the copies they
 // choose to save, outside Pollis. Pollis itself keeps preferences and machine state (~/.pollis and its user
 // data folder). A workspace has a folder for each kind of file, which Pollis looks in first: pollis.toml names
-// them, so that a folder renamed there is still found (internal-reports/pollis-workspace-spec.md).
+// them, so that a folder renamed there is still found (internal-reports/pollis-workspace-spec.md). Pollis remembers
+// where the workspace is in the setting pollis.workspace.location, so that it is found in a window where it is not open.
 
 export const NEW_POLLIS_WORKSPACE_COMMAND_ID = 'pollis.workspace.new';
 export const OPEN_POLLIS_WORKSPACE_COMMAND_ID = 'pollis.workspace.open';
 
 const MARKER_FILE = 'pollis.toml';
+
+/** The setting that remembers the folder of the user's Pollis Workspace, the last one created or opened. */
+const LOCATION_SETTING = 'pollis.workspace.location';
+
+Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).registerConfiguration({
+	id: 'pollisWorkspace',
+	title: localize('pollisWorkspace.configurationTitle', "Pollis Workspace"),
+	type: 'object',
+	properties: {
+		[LOCATION_SETTING]: {
+			type: 'string',
+			default: '',
+			scope: ConfigurationScope.APPLICATION,
+			markdownDescription: localize('pollisWorkspace.locationSetting', "The full path of the folder of your Pollis Workspace, where Pollis saves your work and the copies you choose to save, also when the workspace is not open in the window. Pollis sets it when you create or open a Pollis Workspace, or open a folder that is one; a Pollis Workspace open in the window is used before it."),
+		},
+	},
+});
 
 /** The kinds of file a Pollis Workspace has a folder for. */
 export type PollisWorkspaceFolder = 'data' | 'knowledge_base' | 'reports' | 'methods' | 'workflows' | 'panels' | 'toolboxes' | 'programs' | 'orchestration' | 'games' | 'changes';
@@ -65,8 +90,8 @@ function namedFolders(toml: string): Partial<Record<PollisWorkspaceFolder, strin
 	return named;
 }
 
-/** The first open workspace folder that is a Pollis Workspace. */
-export async function findPollisWorkspace(contextService: IWorkspaceContextService, fileService: IFileService): Promise<URI | undefined> {
+/** The first folder open in the window that is a Pollis Workspace. */
+async function findOpenPollisWorkspace(contextService: IWorkspaceContextService, fileService: IFileService): Promise<URI | undefined> {
 	for (const folder of contextService.getWorkspace().folders) {
 		if (await fileService.exists(joinPath(folder.uri, MARKER_FILE))) {
 			return folder.uri;
@@ -74,6 +99,51 @@ export async function findPollisWorkspace(contextService: IWorkspaceContextServi
 	}
 	return undefined;
 }
+
+/**
+ * The Pollis Workspace: the first folder open in the window that is one, else the one the setting remembers, when it
+ * is still a Pollis Workspace.
+ */
+export async function findPollisWorkspace(contextService: IWorkspaceContextService, fileService: IFileService, configurationService: IConfigurationService): Promise<URI | undefined> {
+	const open = await findOpenPollisWorkspace(contextService, fileService);
+	if (open) {
+		return open;
+	}
+	const path = configurationService.getValue<string>(LOCATION_SETTING)?.trim();
+	const remembered = path && isAbsolute(path) ? URI.file(path) : undefined;
+	return remembered && await fileService.exists(joinPath(remembered, MARKER_FILE)) ? remembered : undefined;
+}
+
+/** Remembers `folder` as the user's Pollis Workspace, when it is a folder of this computer. */
+async function rememberPollisWorkspace(configurationService: IConfigurationService, folder: URI): Promise<void> {
+	if (folder.scheme === Schemas.file && configurationService.getValue<string>(LOCATION_SETTING) !== folder.fsPath) {
+		await configurationService.updateValue(LOCATION_SETTING, folder.fsPath, ConfigurationTarget.USER);
+	}
+}
+
+/** Remembers the Pollis Workspace open in the window, when Pollis starts and when the folders of the window change. */
+class RememberPollisWorkspace extends Disposable implements IWorkbenchContribution {
+	static readonly ID = 'workbench.contrib.rememberPollisWorkspace';
+
+	constructor(
+		@IWorkspaceContextService private readonly contextService: IWorkspaceContextService,
+		@IFileService private readonly fileService: IFileService,
+		@IConfigurationService private readonly configurationService: IConfigurationService,
+	) {
+		super();
+		this._register(this.contextService.onDidChangeWorkspaceFolders(() => this.remember()));
+		this.remember();
+	}
+
+	private async remember(): Promise<void> {
+		const open = await findOpenPollisWorkspace(this.contextService, this.fileService);
+		if (open) {
+			await rememberPollisWorkspace(this.configurationService, open);
+		}
+	}
+}
+
+registerWorkbenchContribution2(RememberPollisWorkspace.ID, RememberPollisWorkspace, WorkbenchPhase.Eventually);
 
 /**
  * The folder of `kind` in the Pollis Workspace `workspace`, as its pollis.toml names it, else as a new workspace
@@ -93,9 +163,9 @@ export async function pollisWorkspaceFolderPath(fileService: IFileService, works
 	return joinPath(workspace, namedFolders(toml)[kind] ?? FOLDERS[kind].name);
 }
 
-/** Where a saved copy goes by default: the data folder of an open Pollis Workspace, else the first open folder. */
-export async function defaultCopyFolder(contextService: IWorkspaceContextService, fileService: IFileService): Promise<URI | undefined> {
-	const workspace = await findPollisWorkspace(contextService, fileService);
+/** Where a saved copy goes by default: the data folder of the Pollis Workspace, else the first open folder. */
+export async function defaultCopyFolder(contextService: IWorkspaceContextService, fileService: IFileService, configurationService: IConfigurationService): Promise<URI | undefined> {
+	const workspace = await findPollisWorkspace(contextService, fileService, configurationService);
 	return workspace ? pollisWorkspaceFolder(fileService, workspace, 'data') : contextService.getWorkspace().folders[0]?.uri;
 }
 
@@ -165,6 +235,7 @@ registerAction2(class extends Action2 {
 		const hostService = accessor.get(IHostService);
 		const pathService = accessor.get(IPathService);
 		const environmentService = accessor.get(IEnvironmentService);
+		const configurationService = accessor.get(IConfigurationService);
 
 		// A new folder, named in a save dialog, so that the folder it opens in never becomes the workspace by itself;
 		// the name offered is one not taken yet in Documents, with no space, so that paths to it need no quoting in
@@ -192,6 +263,7 @@ registerAction2(class extends Action2 {
 			throw new Error(localize('pollisWorkspace.isFile', "{0} is a file: give the Pollis Workspace another name.", basename(folder)));
 		}
 		await makeWorkspace(fileService, folder);
+		await rememberPollisWorkspace(configurationService, folder);
 		await hostService.openWindow([{ folderUri: folder }], { forceReuseWindow: true });
 	}
 });
@@ -212,6 +284,7 @@ registerAction2(class extends Action2 {
 		const hostService = accessor.get(IHostService);
 		const pathService = accessor.get(IPathService);
 		const environmentService = accessor.get(IEnvironmentService);
+		const configurationService = accessor.get(IConfigurationService);
 		const dialogService = accessor.get(IDialogService);
 
 		// The dialog starts in the Pollis Workspace that New makes by default, when there is one
@@ -244,6 +317,7 @@ registerAction2(class extends Action2 {
 			}
 		}
 		await makeWorkspace(fileService, folder);
+		await rememberPollisWorkspace(configurationService, folder);
 		await hostService.openWindow([{ folderUri: folder }], { forceReuseWindow: true });
 	}
 });

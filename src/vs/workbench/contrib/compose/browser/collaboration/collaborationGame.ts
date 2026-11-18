@@ -1004,7 +1004,7 @@ export class GameRun {
 
 	/** The folder of a new game: games/<case>/<date and time> in the Pollis Workspace, else in ~/.pollis/games. */
 	private async newFolder(): Promise<URI> {
-		const workspace = await findPollisWorkspace(this.contextService, this.fileService);
+		const workspace = await findPollisWorkspace(this.contextService, this.fileService, this.configurationService);
 		const games = workspace
 			? await pollisWorkspaceFolder(this.fileService, workspace, 'games')
 			: joinPath(await this.pathService.userHome({ preferLocal: true }), '.pollis', 'games');

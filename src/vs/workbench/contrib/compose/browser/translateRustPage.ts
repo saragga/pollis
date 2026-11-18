@@ -15,6 +15,7 @@ import { tokenizeToString } from '../../../../editor/common/languages/textToHtml
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
+import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { IFileDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { IInstantiationService, ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
@@ -64,8 +65,8 @@ function exampleCode(example: Example): string {
  * The folder of Build by default: programs/rust of the open Pollis Workspace, otherwise ~/.pollis/programs/rust. The
  * example's crate goes in its folder fractal, and Translate with Agent saves the example there for the agent.
  */
-async function defaultFolder(contextService: IWorkspaceContextService, fileService: IFileService, pathService: IPathService): Promise<URI> {
-	const workspace = await findPollisWorkspace(contextService, fileService);
+async function defaultFolder(contextService: IWorkspaceContextService, fileService: IFileService, configurationService: IConfigurationService, pathService: IPathService): Promise<URI> {
+	const workspace = await findPollisWorkspace(contextService, fileService, configurationService);
 	return workspace
 		? joinPath(await pollisWorkspaceFolderPath(fileService, workspace, 'programs'), 'rust')
 		: joinPath(await pathService.userHome({ preferLocal: true }), '.pollis', 'programs', 'rust');
@@ -237,6 +238,7 @@ async function openTranslateRustPage(accessor: ServicesAccessor): Promise<void> 
 	const languageService = accessor.get(ILanguageService);
 	const themeService = accessor.get(IThemeService);
 	const contextService = accessor.get(IWorkspaceContextService);
+	const configurationService = accessor.get(IConfigurationService);
 	const fileDialogService = accessor.get(IFileDialogService);
 
 	if (openPage && !openPage.isDisposed()) {
@@ -299,7 +301,7 @@ async function openTranslateRustPage(accessor: ServicesAccessor): Promise<void> 
 	disposables.add(webviewInput.webview.onMessage(async (e: { message: TranslateRustMessage }) => {
 		const message = e.message;
 		if (message.command === 'ready') {
-			const folder = (await defaultFolder(contextService, fileService, pathService)).fsPath;
+			const folder = (await defaultFolder(contextService, fileService, configurationService, pathService)).fsPath;
 			post({ command: 'state', inputs: { example: 'mandelbrot', function: EXAMPLE_FUNCTION, arguments: EXAMPLE_ARGUMENTS, rust: EXAMPLE_RUST, folder } });
 		} else if (message.command === 'draft' && hasKey(message, { inputs: true })) {
 			postCodes(message.inputs);
@@ -349,6 +351,7 @@ async function translateWithAgent(accessor: ServicesAccessor, inputs?: ITranslat
 	const instantiationService = accessor.get(IInstantiationService);
 	const commandService = accessor.get(ICommandService);
 	const contextService = accessor.get(IWorkspaceContextService);
+	const configurationService = accessor.get(IConfigurationService);
 	const input = inputs && hasKey(inputs, { example: true, function: true, arguments: true, rust: true }) ? checked(inputs) : undefined;
 	if (!input) {
 		await commandService.executeCommand(TRANSLATE_RUST_COMMAND_ID);
@@ -365,7 +368,7 @@ async function translateWithAgent(accessor: ServicesAccessor, inputs?: ITranslat
 	let folder: URI | undefined;
 	let prompt: string;
 	if (input.fn === EXAMPLE_FUNCTION) {
-		folder = input.folderValid ? folderUri(input.folder, await pathService.userHome({ preferLocal: true })) : await defaultFolder(contextService, fileService, pathService);
+		folder = input.folderValid ? folderUri(input.folder, await pathService.userHome({ preferLocal: true })) : await defaultFolder(contextService, fileService, configurationService, pathService);
 		const file = joinPath(folder, `${EXAMPLE_FUNCTION}.jl`);
 		await fileService.writeFile(file, VSBuffer.fromString(`${exampleCode(input.example)}\n`));
 		prompt = localize('translateRust.agent.examplePrompt', "Read the skill {0} and follow its instructions to translate the Julia function {1} to Rust with me, defined in {2}. It is called as {3}, and the Julia function that calls its Rust version is to be named {4}.", skill.fsPath, input.fn, file.fsPath, call, input.rust);

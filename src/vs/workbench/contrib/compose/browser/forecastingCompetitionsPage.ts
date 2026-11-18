@@ -17,6 +17,7 @@ import { tokenizeToString } from '../../../../editor/common/languages/textToHtml
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
+import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { INotificationService } from '../../../../platform/notification/common/notification.js';
@@ -847,6 +848,7 @@ async function openForecastingCompetitionsPage(accessor: ServicesAccessor): Prom
 	const languageService = accessor.get(ILanguageService);
 	const themeService = accessor.get(IThemeService);
 	const contextService = accessor.get(IWorkspaceContextService);
+	const configurationService = accessor.get(IConfigurationService);
 
 	if (openPage && !openPage.isDisposed()) {
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
@@ -928,7 +930,7 @@ async function openForecastingCompetitionsPage(accessor: ServicesAccessor): Prom
 
 	/** The datasets the user added to the Pollis Workspace that are converted, as step 1 lists them, scored as M1 and M3 are. */
 	const userDatasets = async (): Promise<ICompetition[]> => {
-		const workspace = await findPollisWorkspace(contextService, fileService);
+		const workspace = await findPollisWorkspace(contextService, fileService, configurationService);
 		if (!workspace) {
 			return [];
 		}

@@ -11,6 +11,7 @@ import { URI } from '../../../../../base/common/uri.js';
 import { localize, localize2 } from '../../../../../nls.js';
 import { Action2, registerAction2 } from '../../../../../platform/actions/common/actions.js';
 import { ICommandService } from '../../../../../platform/commands/common/commands.js';
+import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
 import { IFileDialogService } from '../../../../../platform/dialogs/common/dialogs.js';
 import { IFileService } from '../../../../../platform/files/common/files.js';
 import { IInstantiationService, ServicesAccessor } from '../../../../../platform/instantiation/common/instantiation.js';
@@ -126,8 +127,8 @@ function withIconLine(toml: string): string {
 }
 
 /** Where the cases written on the page go: cases in the games folder of the Pollis Workspace, else in ~/.pollis/games. */
-async function casesFolder(contextService: IWorkspaceContextService, fileService: IFileService, pathService: IPathService): Promise<URI> {
-	const workspace = await findPollisWorkspace(contextService, fileService);
+async function casesFolder(contextService: IWorkspaceContextService, fileService: IFileService, configurationService: IConfigurationService, pathService: IPathService): Promise<URI> {
+	const workspace = await findPollisWorkspace(contextService, fileService, configurationService);
 	const games = workspace
 		? await pollisWorkspaceFolder(fileService, workspace, 'games')
 		: joinPath(await pathService.userHome({ preferLocal: true }), '.pollis', 'games');
@@ -223,6 +224,7 @@ async function openCreateGamePage(accessor: ServicesAccessor): Promise<void> {
 	const pathService = accessor.get(IPathService);
 	const storageService = accessor.get(IStorageService);
 	const contextService = accessor.get(IWorkspaceContextService);
+	const configurationService = accessor.get(IConfigurationService);
 	const instantiationService = accessor.get(IInstantiationService);
 
 	if (openPage && !openPage.isDisposed()) {
@@ -280,7 +282,7 @@ async function openCreateGamePage(accessor: ServicesAccessor): Promise<void> {
 	};
 
 	const readYours = async () => {
-		const cases = await casesFolder(contextService, fileService, pathService);
+		const cases = await casesFolder(contextService, fileService, configurationService, pathService);
 		const folders: URI[] = [];
 		const stat = await fileService.resolve(cases).catch(() => undefined);
 		for (const child of stat?.children ?? []) {
@@ -347,7 +349,7 @@ async function openCreateGamePage(accessor: ServicesAccessor): Promise<void> {
 		if (!source || !trimmed) {
 			return;
 		}
-		const target = joinPath(await casesFolder(contextService, fileService, pathService), caseFolderName(trimmed));
+		const target = joinPath(await casesFolder(contextService, fileService, configurationService, pathService), caseFolderName(trimmed));
 		if (await fileService.exists(target)) {
 			post({ command: 'createFailed', error: localize('createGame.exists', "{0} exists already: choose it under Your Cases, or give the case another title.", target.fsPath) });
 			return;

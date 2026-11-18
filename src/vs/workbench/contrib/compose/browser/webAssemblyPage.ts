@@ -15,6 +15,7 @@ import { tokenizeToString } from '../../../../editor/common/languages/textToHtml
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
+import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { IFileDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
@@ -276,8 +277,8 @@ function fillCounts(counts, height, width, x0, y0, spacing, juliaSet, cr, ci, ma
  * The folder of Compile by default: programs/webassembly of the open Pollis Workspace, otherwise
  * ~/.pollis/programs/webassembly. Each way builds in its own folder there.
  */
-async function defaultFolder(contextService: IWorkspaceContextService, fileService: IFileService, pathService: IPathService): Promise<URI> {
-	const workspace = await findPollisWorkspace(contextService, fileService);
+async function defaultFolder(contextService: IWorkspaceContextService, fileService: IFileService, configurationService: IConfigurationService, pathService: IPathService): Promise<URI> {
+	const workspace = await findPollisWorkspace(contextService, fileService, configurationService);
 	return workspace
 		? joinPath(await pollisWorkspaceFolderPath(fileService, workspace, 'programs'), 'webassembly')
 		: joinPath(await pathService.userHome({ preferLocal: true }), '.pollis', 'programs', 'webassembly');
@@ -471,6 +472,7 @@ async function openWebAssemblyPage(accessor: ServicesAccessor): Promise<void> {
 	const languageService = accessor.get(ILanguageService);
 	const themeService = accessor.get(IThemeService);
 	const contextService = accessor.get(IWorkspaceContextService);
+	const configurationService = accessor.get(IConfigurationService);
 	const fileDialogService = accessor.get(IFileDialogService);
 
 	if (openPage && !openPage.isDisposed()) {
@@ -536,7 +538,7 @@ async function openWebAssemblyPage(accessor: ServicesAccessor): Promise<void> {
 	disposables.add(webviewInput.webview.onMessage(async (e: { message: WebAssemblyMessage }) => {
 		const message = e.message;
 		if (message.command === 'ready') {
-			const folder = (await defaultFolder(contextService, fileService, pathService)).fsPath;
+			const folder = (await defaultFolder(contextService, fileService, configurationService, pathService)).fsPath;
 			post({ command: 'state', inputs: { example: 'mandelbrot', width: '800', maxiter: '256', cre: '-0.8', cim: '0.156', way: 'rust', folder } });
 		} else if (message.command === 'draft' && hasKey(message, { inputs: true })) {
 			postCodes(message.inputs);

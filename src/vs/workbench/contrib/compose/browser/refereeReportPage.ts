@@ -427,7 +427,7 @@ async function openRefereeReportPage(accessor: ServicesAccessor): Promise<void> 
 
 	let cells: IOrchestrationCell[] = [];
 	const sendState = async () => {
-		const root = await studiesFolder(contextService, fileService, pathService, KIND);
+		const root = await studiesFolder(contextService, fileService, configurationService, pathService, KIND);
 		const studies = await studyNames(root);
 		const study = current && await readStudy(fileService, current.folder);
 		let previousReferees: { agent: string; model: string; role: Role }[] = [];
@@ -468,7 +468,7 @@ async function openRefereeReportPage(accessor: ServicesAccessor): Promise<void> 
 
 	/** Writes the study's folder: the draft, its text and the authors' code and data, in paper/. */
 	const prepare = async (inputs: IDraftInputs) => {
-		const root = await studiesFolder(contextService, fileService, pathService, KIND);
+		const root = await studiesFolder(contextService, fileService, configurationService, pathService, KIND);
 		const problem = (text: string) => post({ command: 'problem', step: 'prepare', text });
 		if (!validStudyName(inputs.name)) {
 			problem(localize('refereeReport.badName', "The study's name is its folder's: letters, digits, hyphens and underscores, starting with a letter or digit."));
@@ -516,7 +516,7 @@ async function openRefereeReportPage(accessor: ServicesAccessor): Promise<void> 
 		await fileService.copy(joinPath(study.folder, PAPER_FOLDER), joinPath(folder, 'data'), true);
 		if (study.round > 1 && await fileService.exists(joinPath(study.folder, PREVIOUS_FOLDER))) {
 			await fileService.copy(joinPath(study.folder, PREVIOUS_FOLDER), joinPath(folder, 'data', 'previous'), true);
-			const root = await studiesFolder(contextService, fileService, pathService, KIND);
+			const root = await studiesFolder(contextService, fileService, configurationService, pathService, KIND);
 			const own = joinPath(root, study.previous, key, REPORT_FILE);
 			if (key !== EDITOR && await fileService.exists(own)) {
 				await fileService.copy(own, joinPath(folder, 'data', 'previous', REPORT_FILE), true);
@@ -702,7 +702,7 @@ async function openRefereeReportPage(accessor: ServicesAccessor): Promise<void> 
 			problem(localize('refereeReport.noResponse', "The authors' response is not there, or is not a PDF, LaTeX, Markdown or text file: choose it again, or leave it empty."));
 			return;
 		}
-		const root = await studiesFolder(contextService, fileService, pathService, KIND);
+		const root = await studiesFolder(contextService, fileService, configurationService, pathService, KIND);
 		const name = freeStudyName(`${study.name.replace(/-round-\d+$/, '')}-round-${study.round + 1}`, await studyNames(root));
 		const folder = joinPath(root, name);
 		const copied = await copyDocument(draft, joinPath(folder, PAPER_FOLDER), 'paper');
@@ -798,7 +798,7 @@ async function openRefereeReportPage(accessor: ServicesAccessor): Promise<void> 
 			} else if (message.command === 'nextRound' && hasKey(message, { draft: true, response: true }) && typeof message.draft === 'string' && typeof message.response === 'string') {
 				await nextRound(message.draft.trim(), message.response.trim());
 			} else if (message.command === 'load' && hasKey(message, { name: true }) && validStudyName(message.name)) {
-				const root = await studiesFolder(contextService, fileService, pathService, KIND);
+				const root = await studiesFolder(contextService, fileService, configurationService, pathService, KIND);
 				watch(await readStudy(fileService, joinPath(root, message.name)));
 				await sendState();
 			} else if (message.command === 'newStudy') {

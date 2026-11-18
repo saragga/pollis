@@ -714,9 +714,9 @@ async function openSpecificationCurvePage(accessor: ServicesAccessor): Promise<v
 
 	let cells: IOrchestrationCell[] = [];
 	const sendState = async () => {
-		const root = await studiesFolder(contextService, fileService, pathService, KIND);
+		const root = await studiesFolder(contextService, fileService, configurationService, pathService, KIND);
 		const studies = await studyNames(root);
-		const manyAnalysts = await studyNames(await studiesFolder(contextService, fileService, pathService, MANY_ANALYSTS_KIND), async folder => fileService.exists(joinPath(folder, 'analyst-1', 'choices.toml')));
+		const manyAnalysts = await studyNames(await studiesFolder(contextService, fileService, configurationService, pathService, MANY_ANALYSTS_KIND), async folder => fileService.exists(joinPath(folder, 'analyst-1', 'choices.toml')));
 		const study = current && await readStudy(fileService, current.folder);
 		const coderFolder = study && joinPath(study.folder, CODER);
 		const check = coderFolder && await readJson(fileService, joinPath(coderFolder, CHECK_FILE));
@@ -781,7 +781,7 @@ async function openSpecificationCurvePage(accessor: ServicesAccessor): Promise<v
 
 	/** Writes the study's folder, then starts the agents that propose the choices, or takes those of a Many Analysts study. */
 	const propose = async (inputs: IStudyInputs) => {
-		const root = await studiesFolder(contextService, fileService, pathService, KIND);
+		const root = await studiesFolder(contextService, fileService, configurationService, pathService, KIND);
 		const reason = await problem(inputs, root);
 		if (reason) {
 			post({ command: 'problem', step: 'propose', text: reason });
@@ -791,7 +791,7 @@ async function openSpecificationCurvePage(accessor: ServicesAccessor): Promise<v
 		const created = new Date().toISOString().slice(0, 16).replace('T', ' ');
 		if (inputs.source === 'study') {
 			// The question, the estimate and the data are the Many Analysts study's, so that its choices fit them
-			const source = await readStudy(fileService, joinPath(await studiesFolder(contextService, fileService, pathService, MANY_ANALYSTS_KIND), inputs.from));
+			const source = await readStudy(fileService, joinPath(await studiesFolder(contextService, fileService, configurationService, pathService, MANY_ANALYSTS_KIND), inputs.from));
 			const sourceToml = source && parseToml((await fileService.readFile(joinPath(source.folder, STUDY_FILE))).value.toString());
 			const decisions = source ? await choicesOfStudy(fileService, source.folder) : [];
 			if (!source || !sourceToml || !decisions.length) {
@@ -976,7 +976,7 @@ async function openSpecificationCurvePage(accessor: ServicesAccessor): Promise<v
 				await sendToJuliaRepl(runCode(current, ['null', joinPath(current.folder, NULL_FILE).fsPath, String(message.draws), String(message.seed)], localize('specificationCurve.runNullHeading', "the test under the null, in a new Julia process")), commandService);
 				post({ command: 'sent', step: 'null' });
 			} else if (message.command === 'load' && hasKey(message, { name: true }) && validStudyName(message.name)) {
-				const root = await studiesFolder(contextService, fileService, pathService, KIND);
+				const root = await studiesFolder(contextService, fileService, configurationService, pathService, KIND);
 				watch(await readStudy(fileService, joinPath(root, message.name)));
 				await sendState();
 			} else if (message.command === 'newStudy') {

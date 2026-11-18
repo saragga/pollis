@@ -75,8 +75,8 @@ export function unattendedRun(configurationService: IConfigurationService, cell:
  * The folder of a page's studies, `kind` such as `many-analysts`: in the folder orchestration of the open Pollis
  * Workspace, otherwise in ~/.pollis/orchestration.
  */
-export async function studiesFolder(contextService: IWorkspaceContextService, fileService: IFileService, pathService: IPathService, kind: string): Promise<URI> {
-	const workspace = await findPollisWorkspace(contextService, fileService);
+export async function studiesFolder(contextService: IWorkspaceContextService, fileService: IFileService, configurationService: IConfigurationService, pathService: IPathService, kind: string): Promise<URI> {
+	const workspace = await findPollisWorkspace(contextService, fileService, configurationService);
 	return workspace
 		? joinPath(await pollisWorkspaceFolderPath(fileService, workspace, 'orchestration'), kind)
 		: joinPath(await pathService.userHome({ preferLocal: true }), '.pollis', 'orchestration', kind);

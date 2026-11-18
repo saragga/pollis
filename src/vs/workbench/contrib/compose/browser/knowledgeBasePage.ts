@@ -469,7 +469,7 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 	/** Reads the user's texts again; whether they have changed. */
 	const readYours = async () => {
 		const found: IYourText[] = [];
-		const workspace = await findPollisWorkspace(contextService, fileService);
+		const workspace = await findPollisWorkspace(contextService, fileService, configurationService);
 		const knowledge = workspace && await pollisWorkspaceFolder(fileService, workspace, 'knowledge_base').catch(() => undefined);
 		knowledgeFolder = knowledge;
 		if (knowledge) {
@@ -575,7 +575,7 @@ function openKnowledgeBasePage(accessor: ServicesAccessor): void {
 	 * type they choose, each named by the title they write. Without a Pollis Workspace open, it opens one.
 	 */
 	const addTexts = async () => {
-		const workspace = await findPollisWorkspace(contextService, fileService);
+		const workspace = await findPollisWorkspace(contextService, fileService, configurationService);
 		if (!workspace) {
 			await commandService.executeCommand(OPEN_POLLIS_WORKSPACE_COMMAND_ID);
 			return;

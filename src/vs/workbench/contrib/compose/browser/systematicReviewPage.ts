@@ -731,7 +731,7 @@ async function openSystematicReviewPage(accessor: ServicesAccessor): Promise<voi
 
 	let cells: IOrchestrationCell[] = [];
 	const sendState = async () => {
-		const root = await studiesFolder(contextService, fileService, pathService, KIND);
+		const root = await studiesFolder(contextService, fileService, configurationService, pathService, KIND);
 		const studies = await studyNames(root);
 		const study = current && await readStudy(fileService, current.folder);
 		let state: object | undefined;
@@ -776,7 +776,7 @@ async function openSystematicReviewPage(accessor: ServicesAccessor): Promise<voi
 
 	/** Writes the review's folder and study.toml. */
 	const save = async (inputs: IQuestionInputs) => {
-		const root = await studiesFolder(contextService, fileService, pathService, KIND);
+		const root = await studiesFolder(contextService, fileService, configurationService, pathService, KIND);
 		if (!validStudyName(inputs.name)) {
 			problem('question', localize('systematicReview.badName', "The review's name is its folder's: letters, digits, hyphens and underscores, starting with a letter or digit."));
 			return;
@@ -1247,7 +1247,7 @@ async function openSystematicReviewPage(accessor: ServicesAccessor): Promise<voi
 			} else if (message.command === 'runMeta') {
 				await runMeta();
 			} else if (message.command === 'load' && hasKey(message, { name: true }) && validStudyName(message.name)) {
-				const root = await studiesFolder(contextService, fileService, pathService, KIND);
+				const root = await studiesFolder(contextService, fileService, configurationService, pathService, KIND);
 				watch(await readStudy(fileService, joinPath(root, message.name)));
 				await sendState();
 			} else if (message.command === 'newStudy') {

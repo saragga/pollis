@@ -16,6 +16,7 @@ import { URI } from '../../../../base/common/uri.js';
 import { VSBuffer } from '../../../../base/common/buffer.js';
 import { localize } from '../../../../nls.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
+import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { IDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { INotificationService, Severity } from '../../../../platform/notification/common/notification.js';
@@ -42,6 +43,7 @@ class PollisUserReferences extends Disposable implements IWorkbenchContribution 
 
 	constructor(
 		@IWorkspaceContextService private readonly contextService: IWorkspaceContextService,
+		@IConfigurationService private readonly configurationService: IConfigurationService,
 		@IFileService private readonly fileService: IFileService,
 		@IPathService private readonly pathService: IPathService,
 		@ICommandService private readonly commandService: ICommandService,
@@ -63,7 +65,7 @@ class PollisUserReferences extends Disposable implements IWorkbenchContribution 
 
 	/** knowledge_base/references of the Pollis Workspace open; undefined without one. */
 	private async workspaceFolder(): Promise<URI | undefined> {
-		const workspace = await findPollisWorkspace(this.contextService, this.fileService);
+		const workspace = await findPollisWorkspace(this.contextService, this.fileService, this.configurationService);
 		return workspace && joinPath(await pollisWorkspaceFolder(this.fileService, workspace, 'knowledge_base'), 'references');
 	}
 

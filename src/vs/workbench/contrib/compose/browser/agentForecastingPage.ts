@@ -527,7 +527,7 @@ async function openAgentForecastingPage(accessor: ServicesAccessor): Promise<voi
 
 	let cells: IOrchestrationCell[] = [];
 	const sendState = async () => {
-		const root = await studiesFolder(contextService, fileService, pathService, KIND);
+		const root = await studiesFolder(contextService, fileService, configurationService, pathService, KIND);
 		const studies = await studyNames(root);
 		const downloaded = await Promise.all(CHOICES.map(choice => fileService.exists(joinPath(home, '.pollis', 'competitions', choice.id, 'info.toml'))));
 		const study = current && await readStudy(fileService, current.folder);
@@ -553,7 +553,7 @@ async function openAgentForecastingPage(accessor: ServicesAccessor): Promise<voi
 
 	/** Writes the study's folder, then sends the code that writes the series to the Julia REPL. */
 	const prepare = async (inputs: IStudyInputs) => {
-		const root = await studiesFolder(contextService, fileService, pathService, KIND);
+		const root = await studiesFolder(contextService, fileService, configurationService, pathService, KIND);
 		if (!validStudyName(inputs.name)) {
 			post({ command: 'problem', step: 'prepare', text: localize('agentForecasting.badName', "The study's name is its folder's: letters, digits, hyphens and underscores, starting with a letter or digit.") });
 			return;
@@ -702,7 +702,7 @@ async function openAgentForecastingPage(accessor: ServicesAccessor): Promise<voi
 			} else if (message.command === 'score') {
 				await score();
 			} else if (message.command === 'load' && hasKey(message, { name: true }) && validStudyName(message.name)) {
-				const root = await studiesFolder(contextService, fileService, pathService, KIND);
+				const root = await studiesFolder(contextService, fileService, configurationService, pathService, KIND);
 				watch(await readStudy(fileService, joinPath(root, message.name)));
 				await sendState();
 			} else if (message.command === 'newStudy') {

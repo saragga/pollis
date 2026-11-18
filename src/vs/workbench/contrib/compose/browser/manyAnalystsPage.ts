@@ -415,7 +415,7 @@ async function openManyAnalystsPage(accessor: ServicesAccessor): Promise<void> {
 
 	let cells: IOrchestrationCell[] = [];
 	const sendState = async () => {
-		const root = await studiesFolder(contextService, fileService, pathService, KIND);
+		const root = await studiesFolder(contextService, fileService, configurationService, pathService, KIND);
 		const studies = await studyNames(root);
 		const study = current && await readStudy(fileService, current.folder);
 		post({
@@ -462,7 +462,7 @@ async function openManyAnalystsPage(accessor: ServicesAccessor): Promise<void> {
 
 	/** Writes the study's folder and starts every analyst, each in its own folder and terminal. */
 	const start = async (inputs: IStudyInputs) => {
-		const root = await studiesFolder(contextService, fileService, pathService, KIND);
+		const root = await studiesFolder(contextService, fileService, configurationService, pathService, KIND);
 		const reason = await problem(inputs, root);
 		if (reason) {
 			post({ command: 'startProblem', text: reason });
@@ -614,7 +614,7 @@ async function openManyAnalystsPage(accessor: ServicesAccessor): Promise<void> {
 					await start(inputs);
 				}
 			} else if (message.command === 'load' && hasKey(message, { name: true }) && validStudyName(message.name)) {
-				const root = await studiesFolder(contextService, fileService, pathService, KIND);
+				const root = await studiesFolder(contextService, fileService, configurationService, pathService, KIND);
 				watch(await readStudy(fileService, joinPath(root, message.name)));
 				await sendState();
 			} else if (message.command === 'newStudy') {

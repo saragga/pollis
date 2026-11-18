@@ -3,6 +3,7 @@
  *  Licensed under the GNU Affero General Public License v3.0. See LICENSE.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
 import { ServicesAccessor } from '../../../../../platform/instantiation/common/instantiation.js';
 import { IOpenerService } from '../../../../../platform/opener/common/opener.js';
 import { IEditorService } from '../../../../services/editor/common/editorService.js';
@@ -74,6 +75,7 @@ export function openScaffoldWebview(accessor: ServicesAccessor, panel: IScaffold
 		accessor.get(IFileService),
 		accessor.get(IPathService),
 		accessor.get(IWorkspaceContextService),
+		accessor.get(IConfigurationService),
 		accessor.get(IQuickInputService),
 		accessor.get(ISecretStorageService),
 		accessor.get(IWebviewService),

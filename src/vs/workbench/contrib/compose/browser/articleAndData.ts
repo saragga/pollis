@@ -15,6 +15,7 @@ import { generateUuid } from '../../../../base/common/uuid.js';
 import { localize } from '../../../../nls.js';
 import { BrowserViewCommandId } from '../../../../platform/browserView/common/browserView.js';
 import { CommandsRegistry, ICommandService } from '../../../../platform/commands/common/commands.js';
+import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { IDialogService, IFileDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 import { IEnvironmentService } from '../../../../platform/environment/common/environment.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
@@ -316,6 +317,7 @@ export interface IArticleDataServices {
 	readonly requestService: IArticleDownloadService;
 	readonly progressService: IProgressService;
 	readonly contextService: IWorkspaceContextService;
+	readonly configurationService: IConfigurationService;
 	readonly pathService: IPathService;
 	readonly environmentService: IEnvironmentService;
 	readonly editorService: IEditorService;
@@ -328,8 +330,8 @@ export interface IArticleDataServices {
  * dialog starts in the data folder of an open Pollis Workspace, else in the first open folder.
  */
 async function saveCopy(services: IArticleDataServices, url: string, fileName: string): Promise<string | undefined> {
-	const { fileService, fileDialogService, requestService, progressService, contextService, pathService, environmentService } = services;
-	const folder = await defaultCopyFolder(contextService, fileService);
+	const { fileService, fileDialogService, requestService, progressService, contextService, configurationService, pathService, environmentService } = services;
+	const folder = await defaultCopyFolder(contextService, fileService, configurationService);
 	const target = await fileDialogService.showSaveDialog({
 		title: localize('articleData.copy.title', "Save a Copy outside Pollis"),
 		defaultUri: folder ? joinPath(folder, fileName) : undefined,

@@ -13,6 +13,7 @@ import { URI } from '../../../../base/common/uri.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, MenuId, MenuRegistry, registerAction2 } from '../../../../platform/actions/common/actions.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
+import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { ConfigurationScope, Extensions as ConfigurationExtensions, IConfigurationRegistry } from '../../../../platform/configuration/common/configurationRegistry.js';
 import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
 import { IFileDialogService } from '../../../../platform/dialogs/common/dialogs.js';
@@ -172,10 +173,11 @@ async function makeReport(accessor: ServicesAccessor, kind: IReportKind): Promis
 	const fileService = accessor.get(IFileService);
 	const pathService = accessor.get(IPathService);
 	const contextService = accessor.get(IWorkspaceContextService);
+	const configurationService = accessor.get(IConfigurationService);
 	const notificationService = accessor.get(INotificationService);
 	const commandService = accessor.get(ICommandService);
 
-	const workspace = await findPollisWorkspace(contextService, fileService);
+	const workspace = await findPollisWorkspace(contextService, fileService, configurationService);
 	if (!workspace) {
 		notificationService.prompt(Severity.Info, localize('reports.noWorkspace', "Reports are written in the reports folder of a Pollis Workspace: open one or make a new one first."), [
 			{ label: localize('reports.newWorkspace', "New Pollis Workspace..."), run: () => commandService.executeCommand(NEW_POLLIS_WORKSPACE_COMMAND_ID) },

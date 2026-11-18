@@ -481,7 +481,7 @@ async function openMethodPage(accessor: ServicesAccessor, existing?: URI, step?:
 		return;
 	}
 	let method: IMethod = initial;
-	const articleServices: IArticleDataServices = { fileService, fileDialogService, dialogService, requestService, progressService, contextService, pathService, environmentService, editorService, commandService, instantiationService };
+	const articleServices: IArticleDataServices = { fileService, fileDialogService, dialogService, requestService, progressService, contextService, configurationService, pathService, environmentService, editorService, commandService, instantiationService };
 	const webviewInput = webviewWorkbenchService.openWebview(
 		{
 			title: method.title,

@@ -16,6 +16,7 @@ import { generateUuid } from '../../../../base/common/uuid.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
+import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { IFileDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
@@ -94,6 +95,7 @@ async function openWrdsPage(accessor: ServicesAccessor): Promise<void> {
 	const storageService = accessor.get(IStorageService);
 	const fileDialogService = accessor.get(IFileDialogService);
 	const contextService = accessor.get(IWorkspaceContextService);
+	const configurationService = accessor.get(IConfigurationService);
 	const languageService = accessor.get(ILanguageService);
 	const themeService = accessor.get(IThemeService);
 
@@ -291,7 +293,7 @@ async function openWrdsPage(accessor: ServicesAccessor): Promise<void> {
 			post({ command: 'sent', action: 'merge' });
 		} else if (message.command === 'chooseFile' && hasKey(message, { target: true, variable: true, destination: true }) && message.destination !== 'variable') {
 			const extension = DESTINATION_EXTENSIONS[message.destination];
-			const folder = await defaultCopyFolder(contextService, fileService) ?? await fileDialogService.defaultFilePath();
+			const folder = await defaultCopyFolder(contextService, fileService, configurationService) ?? await fileDialogService.defaultFilePath();
 			const name = `${isValidJuliaIdentifier(message.variable) ? message.variable : 'wrds_data'}.${extension}`;
 			const file = await fileDialogService.showSaveDialog({
 				title: localize('wrds.chooseFileTitle', "Save the Data from WRDS"),
@@ -302,7 +304,7 @@ async function openWrdsPage(accessor: ServicesAccessor): Promise<void> {
 				post({ command: 'file', target: message.target, file: file.fsPath });
 			}
 		} else if (message.command === 'chooseSource' && hasKey(message, { target: true })) {
-			const folder = await defaultCopyFolder(contextService, fileService) ?? await fileDialogService.defaultFilePath();
+			const folder = await defaultCopyFolder(contextService, fileService, configurationService) ?? await fileDialogService.defaultFilePath();
 			const files = await fileDialogService.showOpenDialog({
 				title: localize('wrds.chooseSourceTitle', "Choose the Data to Merge"),
 				defaultUri: folder,

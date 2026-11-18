@@ -14,6 +14,7 @@ import { URI } from '../../../../base/common/uri.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
+import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { IDialogService, IFileDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
@@ -67,6 +68,7 @@ type CatalogueMessage =
 	| { readonly command: 'active'; readonly ids: readonly string[] }
 	| { readonly command: 'score'; readonly ids: readonly string[] }
 	| { readonly command: 'save'; readonly ids: readonly string[] }
+	| { readonly command: 'createWorkspace' }
 	| { readonly command: 'add' }
 	| { readonly command: 'chooseFile' }
 	| { readonly command: 'edit'; readonly id: string }
@@ -194,6 +196,7 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?
 	const storageService = accessor.get(IStorageService);
 	const toolboxPanelsService = accessor.get(IToolboxPanelsService);
 	const contextService = accessor.get(IWorkspaceContextService);
+	const configurationService = accessor.get(IConfigurationService);
 	const dialogService = accessor.get(IDialogService);
 	const fileDialogService = accessor.get(IFileDialogService);
 	const forecastingDatasetsService = accessor.get(IForecastingDatasetsService);
@@ -259,7 +262,7 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?
 	};
 
 	const sendState = async () => {
-		const workspace = await findPollisWorkspace(contextService, fileService);
+		const workspace = await findPollisWorkspace(contextService, fileService, configurationService);
 		const folder = workspace && await forecastingFolder(fileService, workspace);
 		try {
 			read = await readCatalogue(fileService, pathService, toolboxPanelsService, folder);
@@ -334,7 +337,7 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?
 	 * workspace is open or the user kept the copies that changed.
 	 */
 	const saveEntries = async (ids: readonly string[]): Promise<{ readonly text: string; readonly paths: readonly string[] } | undefined> => {
-		const workspace = await findPollisWorkspace(contextService, fileService);
+		const workspace = await findPollisWorkspace(contextService, fileService, configurationService);
 		if (!workspace) {
 			await offerWorkspace();
 			return undefined;
@@ -399,7 +402,7 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?
 
 	/** Shows the empty form of a dataset of the user's own, whose Choose File... asks for its file. */
 	const addDataset = async () => {
-		const workspace = await findPollisWorkspace(contextService, fileService);
+		const workspace = await findPollisWorkspace(contextService, fileService, configurationService);
 		if (!workspace) {
 			await offerWorkspace();
 			return;
@@ -429,7 +432,7 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?
 
 	/** Shows the form of the dataset the user added as `id`, filled with its facts, for its file converted again. */
 	const editDataset = async (id: string) => {
-		const workspace = await findPollisWorkspace(contextService, fileService);
+		const workspace = await findPollisWorkspace(contextService, fileService, configurationService);
 		const folder = workspace && await forecastingFolder(fileService, workspace);
 		const dataset = folder && await readAddedDataset(fileService, folder, id);
 		if (!dataset) {
@@ -455,7 +458,7 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?
 	 * saved.toml; the problems of the form, or of the file, are sent back to the form, and nothing is written.
 	 */
 	const convertDataset = async (form: IDatasetForm) => {
-		const workspace = await findPollisWorkspace(contextService, fileService);
+		const workspace = await findPollisWorkspace(contextService, fileService, configurationService);
 		if (!workspace) {
 			await offerWorkspace();
 			return;
@@ -573,6 +576,8 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?
 				if (notice) {
 					post({ command: 'notice', text: notice.text, paths: notice.paths });
 				}
+			} else if (message.command === 'createWorkspace') {
+				await commandService.executeCommand(NEW_POLLIS_WORKSPACE_COMMAND_ID);
 			} else if (message.command === 'add') {
 				await addDataset();
 			} else if (message.command === 'chooseFile') {
@@ -611,7 +616,9 @@ function pageHtml(rows: number): string {
 		workspace: localize('forecastingCatalogue.workspace', "Workspace"),
 		workspaceHint: localize('forecastingCatalogue.workspaceHint', "Whether the dataset is saved in data/forecasting of your Pollis Workspace"),
 		noWorkspace: localize('forecastingCatalogue.noWorkspaceStatus', "No Workspace"),
-		noWorkspaceHint: localize('forecastingCatalogue.noWorkspaceHint', "No Pollis Workspace is open: Save to Workspace offers to create one or open one"),
+		noWorkspaceHint: localize('forecastingCatalogue.noWorkspaceHint', "There is no Pollis Workspace, the folder where the datasets are saved"),
+		createWorkspace: localize('forecastingCatalogue.createWorkspaceLink', "Create Workspace..."),
+		createWorkspaceHint: localize('forecastingCatalogue.createWorkspaceHint', "Create a Pollis Workspace, where the datasets are saved in data/forecasting"),
 		notSaved: localize('forecastingCatalogue.notSaved', "Not Saved"),
 		notSavedHint: localize('forecastingCatalogue.notSavedHint', "Not in the workspace: Save to Workspace copies it there"),
 		notDownloadableHint: localize('forecastingCatalogue.notDownloadableHint', "Not in the workspace: Pollis does not download this dataset, so Save to Workspace cannot copy it there"),
@@ -1055,6 +1062,13 @@ ${sortHeadingsCss}
 		cell.className = 'workspaceCell ' + status;
 		cell.textContent = label;
 		cell.title = hint;
+		// With no workspace, a link that creates one
+		if (!workspace) {
+			cell.append(' ');
+			const create = cell.appendChild(element('button', 'link', TEXT.createWorkspace));
+			create.dataset.createWorkspace = '';
+			create.title = TEXT.createWorkspaceHint;
+		}
 	}
 	// Every field the entry has, group by group in the order of the schema, each group under the label of its view
 	function detailsRow(entry, span) {
@@ -1533,6 +1547,7 @@ ${sortHeadingsCss}
 		const open = target.closest('button[data-competition]');
 		const save = target.closest('button[data-save]');
 		const edit = target.closest('button[data-edit]');
+		const createWorkspace = target.closest('button[data-create-workspace]');
 		if (tagButton) {
 			setFilter(tagButton.dataset.field, tagButton.dataset.value, true);
 		} else if (chip) {
@@ -1546,6 +1561,8 @@ ${sortHeadingsCss}
 			vscode.postMessage({ command: 'save', ids: [save.dataset.save] });
 		} else if (edit) {
 			vscode.postMessage({ command: 'edit', id: edit.dataset.edit });
+		} else if (createWorkspace) {
+			vscode.postMessage({ command: 'createWorkspace' });
 		} else if (target.id === 'clearFilters') {
 			filters = {};
 			page = 0;

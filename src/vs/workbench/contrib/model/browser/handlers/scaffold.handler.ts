@@ -7,6 +7,7 @@ import { DisposableStore } from '../../../../../base/common/lifecycle.js';
 import { IFileService } from '../../../../../platform/files/common/files.js';
 import { IPathService } from '../../../../services/path/common/pathService.js';
 import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
+import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
 import { IOpenerService } from '../../../../../platform/opener/common/opener.js';
 import { IEditorService } from '../../../../services/editor/common/editorService.js';
 import { INotificationService } from '../../../../../platform/notification/common/notification.js';
@@ -111,6 +112,7 @@ export function registerScaffoldWebviewHandlers(
 	fileService: IFileService,
 	pathService: IPathService,
 	workspaceContextService: IWorkspaceContextService,
+	configurationService: IConfigurationService,
 	quickInputService: IQuickInputService,
 	secretStorageService: ISecretStorageService,
 	webviewService: IWebviewService,
@@ -139,7 +141,7 @@ export function registerScaffoldWebviewHandlers(
 	// The folder inputs' defaults in the open Pollis Workspace, as programs/executables; without one, the TOML's default
 	const postFolderDefaults = async (): Promise<void> => {
 		const folderInputs = (data.inputs ?? []).filter(input => input.folder);
-		const workspace = folderInputs.length ? await findPollisWorkspace(workspaceContextService, fileService) : undefined;
+		const workspace = folderInputs.length ? await findPollisWorkspace(workspaceContextService, fileService, configurationService) : undefined;
 		if (!workspace) {
 			return;
 		}

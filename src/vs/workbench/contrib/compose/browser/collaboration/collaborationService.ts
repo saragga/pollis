@@ -2420,7 +2420,7 @@ export class CollaborationService extends Disposable implements ICollaborationSe
 		}
 		if (!folder) {
 			// Not running a game: the debrief of a game folder of the Pollis Workspace, or of anywhere else
-			const workspace = await findPollisWorkspace(this.workspaceContextService, this.fileService);
+			const workspace = await findPollisWorkspace(this.workspaceContextService, this.fileService, this.configurationService);
 			const games = workspace ? await pollisWorkspaceFolderPath(this.fileService, workspace, 'games') : undefined;
 			folder = (await this.fileDialogService.showOpenDialog({
 				title: localize('collaboration.chooseGame', "Open the Debrief of a Game"),

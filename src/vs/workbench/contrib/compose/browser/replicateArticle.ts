@@ -12,6 +12,7 @@ import { URI } from '../../../../base/common/uri.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
+import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { IDialogService, IFileDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 import { IEnvironmentService } from '../../../../platform/environment/common/environment.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
@@ -612,6 +613,7 @@ async function openReplicationPage(accessor: ServicesAccessor, existing?: URI, s
 	const requestService = accessor.get(IArticleDownloadService);
 	const progressService = accessor.get(IProgressService);
 	const contextService = accessor.get(IWorkspaceContextService);
+	const configurationService = accessor.get(IConfigurationService);
 	const pathService = accessor.get(IPathService);
 	const environmentService = accessor.get(IEnvironmentService);
 	const instantiationService = accessor.get(IInstantiationService);
@@ -644,7 +646,7 @@ async function openReplicationPage(accessor: ServicesAccessor, existing?: URI, s
 		return;
 	}
 	let replication: IReplication = initial;
-	const articleServices: IArticleDataServices = { fileService, fileDialogService, dialogService, requestService, progressService, contextService, pathService, environmentService, editorService, commandService, instantiationService };
+	const articleServices: IArticleDataServices = { fileService, fileDialogService, dialogService, requestService, progressService, contextService, configurationService, pathService, environmentService, editorService, commandService, instantiationService };
 	const webviewInput = webviewWorkbenchService.openWebview(
 		{
 			title: replication.title,
