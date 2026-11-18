@@ -111,7 +111,7 @@ group = "identity"
 type = "string"
 vocabulary = "pre-2000 | 2000-2014 | 2015-2022 | 2023+"
 controlled = true
-description = "Era of the start year, for sorting"
+description = "Period of the start year, to filter the entries by: before 2000, 2000 to 2014, 2015 to 2022, or 2023 on"
 
 [[field]]
 name = "reference"
@@ -529,7 +529,7 @@ description = "Facts to check against the primary source"
 id = "identity"
 label = "Identity and Provenance"
 pinned = ["name", "type", "domain"]
-columns = ["organiser", "platform", "start_year", "end_year", "era", "reference", "doi", "url", "parent", "collections"]
+columns = ["organiser", "platform", "start_year", "end_year", "reference", "doi", "url", "parent", "collections"]
 
 [[view]]
 id = "access"

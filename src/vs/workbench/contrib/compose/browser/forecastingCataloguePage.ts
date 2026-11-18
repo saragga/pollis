@@ -19,7 +19,7 @@ import { IFileService } from '../../../../platform/files/common/files.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { INotificationService } from '../../../../platform/notification/common/notification.js';
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
+import { IStorageService } from '../../../../platform/storage/common/storage.js';
 import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
@@ -39,28 +39,25 @@ import { IToolboxPanelsService } from '../common/toolboxPanels.js';
 import { COLLECTION_TYPE, FORECASTING_CATALOGUE_FILE, ICatalogueContribution, ICatalogueEntry, ICatalogueRead, POLLIS_COMPETITIONS_DATASETS_FILE, POLLIS_COMPETITIONS_DATASETS_PATH, POLLIS_COMPETITIONS_SOURCE, readForecastingCatalogue } from './forecastingCatalogue.js';
 import { juliaPackageFolder } from './juliaPackages.js';
 import { COMPETITIONS, downloadCode, FORECASTING_COMPETITIONS_COMMAND_ID } from './forecastingCompetitionsPage.js';
+import { activeDatasets, FORECASTING_CATALOGUE_COMMAND_ID, IActiveDatasets, setActiveDatasets } from './forecastingActive.js';
 import { addedDatasetFiles, forecastingFolder, IAddedDataset, readAddedDataset, recordSaved, savedStatuses, saveDataset, WORKSPACE_SOURCE, writeAddedDataset, writeCatalogueSnapshot } from './forecastingWorkspace.js';
 import { IForecastingDatasetsService, IForecastingProblem } from '../common/forecastingDatasets.js';
 
 // Manage Competition Datasets, from Compose > Forecasting Competitions (compose.contribution.ts): the forecasting
 // catalogue (forecastingCatalogue.ts) in two tabs, Datasets and Curated Collections, in the Minimal style of the
 // scaffold. A view of the file chooses the columns, those of one group of fields; the rows are filtered by the values of
-// the controlled fields, by a tag clicked in a cell and by their names, and sorted by any column; a row opens under it
-// the details of its entry, every field it has, group by group, its papers from the References of the page and the
-// facts still to check. The datasets that Score Forecasting Models scores can be made active, and the active ones are
-// sent to it. Those datasets can also be saved into the user's Pollis Workspace, in data/forecasting/<id>/, downloaded
-// first in the Julia REPL when they are not on this computer, and the column Workspace says whether each is saved
-// there, and changed since (forecastingWorkspace.ts); beside them the page writes the whole catalogue, for Julia. A
+// the controlled fields, one field at a time in Filter by, and by a tag clicked in a cell, and sorted by any column; the
+// Expand button of a row opens under it the details of its entry, every field it has, group by group, its papers from
+// the References of the page and the facts still to check. Any dataset can be made active (forecastingActive.ts);
+// Score Forecasting Models lists the active ones it scores. The datasets Pollis downloads can be saved into the user's
+// Pollis Workspace, in data/forecasting/<id>/, downloaded first in the Julia REPL when they are not on this computer,
+// and the column Workspace says whether each is saved there, and changed since (forecastingWorkspace.ts); beside them the page writes the whole catalogue, for Julia. A
 // dataset of the user's own, a long table, is added there with a form, converted into the files of
 // PollisCompetitions.jl by a DuckDB process (../common/forecastingDatasets.ts), and joins the catalogue.
 
-export const FORECASTING_CATALOGUE_COMMAND_ID = 'pollis.competitions.forecastingCatalogue';
 
 /** The name of the page for the rows the user chose (webviewPager.ts). */
 const ROWS_PAGE = 'forecastingCatalogue';
-
-/** Where the page keeps the ids of the active datasets, those sent to Score Forecasting Models. */
-const ACTIVE_KEY = 'pollis.manageCompetitionDatasets.active';
 
 type CatalogueMessage =
 	| { readonly command: 'ready' }
@@ -143,14 +140,9 @@ function scoredAs(entry: ICatalogueEntry | undefined): string | undefined {
 	return entry?.source === WORKSPACE_SOURCE ? entry.id : competitionOf(entry);
 }
 
-/** The ids of the entries the user made active, as last stored. */
-function storedActive(storageService: IStorageService): string[] {
-	try {
-		const ids: unknown = JSON.parse(storageService.get(ACTIVE_KEY, StorageScope.PROFILE, '[]'));
-		return Array.isArray(ids) ? ids.filter((id): id is string => typeof id === 'string') : [];
-	} catch {
-		return [];
-	}
+/** The active datasets of `entries`: their ids, and the ids Score Forecasting Models knows those it scores by. */
+function activeOf(entries: readonly ICatalogueEntry[]): IActiveDatasets {
+	return { entries: entries.map(entry => entry.id), scored: entries.map(scoredAs).filter((id): id is string => !!id) };
 }
 
 /**
@@ -294,8 +286,14 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor): Promise
 			...competitions.map(competition => joinPath(competitionsFolder, competition)),
 			...(folder ? [folder, ...Object.keys(saved).map(id => joinPath(folder, id))] : []),
 		]);
+		// The active datasets of the catalogue as it is now, the ids that Score Forecasting Models knows them by kept with them
+		const stored = activeDatasets(storageService);
+		const active = activeOf(read.catalogue.entries.filter(entry => stored.entries.includes(entry.id)));
+		if (JSON.stringify(active) !== JSON.stringify(stored)) {
+			setActiveDatasets(storageService, active);
+		}
 		const papers = Object.fromEntries([...pagePapers()].map(([key, paper]) => [key, { authors: paper.authors, year: paper.year, title: paper.title, journal: paper.journal, doi: paper.doi, url: paper.url }]));
-		post({ command: 'state', catalogue: read.catalogue, problems: read.problems, papers, competitions: competitionIds(), active: storedActive(storageService), workspace: !!workspace, saved, downloaded, pending: [...pending] });
+		post({ command: 'state', catalogue: read.catalogue, problems: read.problems, papers, competitions: competitionIds(), active: active.entries, workspace: !!workspace, saved, downloaded, pending: [...pending] });
 	};
 
 	/** Saves the downloaded files of the entry `id` into `folder`, the forecasting folder of the workspace. */
@@ -328,15 +326,18 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor): Promise
 	/**
 	 * Saves the entries `ids` that Pollis downloads into the workspace, after asking before a copy changed since it was
 	 * saved is replaced; an entry not on this computer yet is downloaded first in the Julia REPL, and saved once it is.
+	 * Returns what was done with each entry, for the page to show, or nothing when no workspace is open or the user
+	 * kept the copies that changed.
 	 */
-	const saveEntries = async (ids: readonly string[]) => {
+	const saveEntries = async (ids: readonly string[]): Promise<string | undefined> => {
 		const workspace = await findPollisWorkspace(contextService, fileService);
 		if (!workspace) {
 			await offerWorkspace();
-			return;
+			return undefined;
 		}
 		const folder = await forecastingFolder(fileService, workspace);
-		const entries = ids.map(id => read?.catalogue.entries.find(candidate => candidate.id === id)).filter((entry): entry is ICatalogueEntry => !!competitionOf(entry));
+		const asked = ids.map(id => read?.catalogue.entries.find(candidate => candidate.id === id)).filter((entry): entry is ICatalogueEntry => !!entry);
+		const entries = asked.filter(entry => !!competitionOf(entry));
 		const statuses = await savedStatuses(fileService, folder);
 		const changed = entries.filter(entry => statuses[entry.id] === 'changed');
 		if (changed.length) {
@@ -346,24 +347,36 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor): Promise
 				primaryButton: localize({ key: 'forecastingCatalogue.replace', comment: ['&& denotes a mnemonic'] }, "&&Replace"),
 			});
 			if (!confirmed) {
-				return;
+				return undefined;
 			}
 		}
 		await pollisWorkspaceFolder(fileService, workspace, 'data');
 		const downloads = new Set<string>();
+		const savedNow: string[] = [];
+		const downloading: string[] = [];
 		for (const entry of entries) {
 			const competition = competitionOf(entry)!;
 			if (await downloadedFolder(competition)) {
 				await saveEntry(folder, entry.id);
+				savedNow.push(entry.name);
 			} else {
 				pending.add(entry.id);
 				downloads.add(competition);
+				downloading.push(entry.name);
 			}
 		}
 		for (const competition of downloads) {
 			await sendToJuliaRepl(downloadCode(competition), commandService);
 		}
 		await sendState();
+		const added = asked.filter(entry => entry.source === WORKSPACE_SOURCE).map(entry => entry.name);
+		const notDownloaded = asked.filter(entry => !competitionOf(entry) && entry.source !== WORKSPACE_SOURCE).map(entry => entry.name);
+		return [
+			savedNow.length ? localize('forecastingCatalogue.savedNotice', "Saved in data/forecasting of the Pollis Workspace: {0}.", savedNow.join(', ')) : '',
+			downloading.length ? localize('forecastingCatalogue.downloadingNotice', "Downloading in the Julia REPL, then saved in the Pollis Workspace: {0}.", downloading.join(', ')) : '',
+			added.length ? localize('forecastingCatalogue.addedNotice', "In the Pollis Workspace already, where you added them: {0}.", added.join(', ')) : '',
+			notDownloaded.length ? localize('forecastingCatalogue.notDownloadedNotice', "Not saved, as Pollis does not download them yet: {0}.", notDownloaded.join(', ')) : '',
+		].filter(text => text).join(' ');
 	};
 
 	/** Shows the form for the file `file`, with its columns and first rows, filled with `values` when facts are edited. */
@@ -500,26 +513,36 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor): Promise
 			} else if (message.command === 'link' && hasKey(message, { url: true }) && typeof message.url === 'string' && /^https?:\/\//.test(message.url)) {
 				await openInBrowser(message.url, commandService);
 			} else if (message.command === 'competition' && hasKey(message, { id: true })) {
-				// An implemented entry of PollisCompetitions, whose package_id is a competition of Score Forecasting Models, or a dataset the user added
-				const competition = scoredAs(read?.catalogue.entries.find(candidate => candidate.id === message.id));
-				if (competition) {
-					await commandService.executeCommand(FORECASTING_COMPETITIONS_COMMAND_ID, competition);
+				// An implemented entry of PollisCompetitions, whose package_id is a competition of Score Forecasting Models, or a
+				// dataset the user added: made active, so that Score Forecasting Models lists it
+				const entry = read?.catalogue.entries.find(candidate => candidate.id === message.id);
+				if (entry && scoredAs(entry)) {
+					const entries = activeDatasets(storageService).entries;
+					if (!entries.includes(entry.id)) {
+						setActiveDatasets(storageService, activeOf(read!.catalogue.entries.filter(candidate => candidate.id === entry.id || entries.includes(candidate.id))));
+						await sendState();
+					}
+					await commandService.executeCommand(FORECASTING_COMPETITIONS_COMMAND_ID);
 				}
 			} else if ((message.command === 'active' || message.command === 'score') && hasKey(message, { ids: true }) && Array.isArray(message.ids)) {
-				// Only the entries Score Forecasting Models scores can be active
-				const competitions = new Map<string, string>();
-				for (const id of message.ids) {
-					const competition = scoredAs(read?.catalogue.entries.find(candidate => candidate.id === id));
-					if (competition) {
-						competitions.set(id, competition);
+				// Any dataset of the catalogue can be active; Score Forecasting Models lists those it scores, and Score Competition Models opens it
+				const entries = message.ids.map(id => read?.catalogue.entries.find(candidate => candidate.id === id)).filter((entry): entry is ICatalogueEntry => !!entry);
+				setActiveDatasets(storageService, activeOf(entries));
+				if (message.command === 'score') {
+					const scored = entries.filter(entry => scoredAs(entry));
+					const left = entries.filter(entry => !scoredAs(entry)).map(entry => entry.name).join(', ');
+					if (!scored.length) {
+						post({ command: 'notice', text: localize('forecastingCatalogue.scoreNone', "Score Forecasting Models does not score any of the active datasets yet: it scores the competitions that PollisCompetitions.jl implements and the datasets you add.") });
+						return;
 					}
-				}
-				storageService.store(ACTIVE_KEY, JSON.stringify([...competitions.keys()]), StorageScope.PROFILE, StorageTarget.USER);
-				if (message.command === 'score' && competitions.size) {
-					await commandService.executeCommand(FORECASTING_COMPETITIONS_COMMAND_ID, [...competitions.values()]);
+					await commandService.executeCommand(FORECASTING_COMPETITIONS_COMMAND_ID);
+					post({ command: 'notice', text: left ? localize('forecastingCatalogue.scoreSome', "Score Forecasting Models lists {0}. It does not score these yet: {1}.", scored.map(entry => entry.name).join(', '), left) : localize('forecastingCatalogue.scoreAll', "Score Forecasting Models lists {0}.", scored.map(entry => entry.name).join(', ')) });
 				}
 			} else if (message.command === 'save' && hasKey(message, { ids: true }) && Array.isArray(message.ids)) {
-				await saveEntries(message.ids.filter((id): id is string => typeof id === 'string'));
+				const notice = await saveEntries(message.ids.filter((id): id is string => typeof id === 'string'));
+				if (notice) {
+					post({ command: 'notice', text: notice });
+				}
 			} else if (message.command === 'add') {
 				await addDataset();
 			} else if (message.command === 'edit' && hasKey(message, { id: true }) && typeof message.id === 'string') {
@@ -539,16 +562,19 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor): Promise
 /** The page, showing `rows` rows at a time at first: its texts come from here, the catalogue from the `state` message. */
 function pageHtml(rows: number): string {
 	const text = {
-		intro: localize('forecastingCatalogue.intro', "Manage Competition Datasets describes the forecasting datasets and competitions, and the curated collections that gather them: what each holds, how it is evaluated, where its data come from and what it teaches. A view shows one group of fields as columns; filter the rows by their values, or click a value in a cell to filter by it, and sort them by any column. Select a row to see everything its entry records. Tick the datasets to score in the column Active, then Score Active Datasets sends them to Score Forecasting Models, which runs a forecasting method of your own on their series. Save to Workspace copies a dataset into data/forecasting of your Pollis Workspace, downloading it first when it is not on this computer, and the column Workspace says whether it is saved there and changed since. Add a Dataset adds a dataset of your own, from a table with a row for each observation."),
+		intro: localize('forecastingCatalogue.intro', "Manage Competition Datasets describes the forecasting datasets and competitions, and the curated collections that gather them: what each holds, how it is evaluated, where its data come from and what it teaches. View shows one group of fields as columns; Filter by shows the values of a field, to tick those to keep, a value in a cell filters by it when clicked, and a column heading sorts the rows. Expand, under the tick of a row, shows everything its entry records, and Restore Size closes it again. Tick the datasets you are working with in the column Active: Score Competition Models opens Score Forecasting Models, which lists those it scores, to run a forecasting method of your own on their series, and Save Active Datasets to Workspace saves those that Pollis downloads. Save to Workspace copies a dataset into data/forecasting of your Pollis Workspace, downloading it first when it is not on this computer, and the column Workspace says whether it is saved there and changed since. Add a Dataset adds a dataset of your own, from a table with a row for each observation."),
 		datasets: localize('forecastingCatalogue.datasets', "Datasets"),
 		collections: localize('forecastingCatalogue.collections', "Curated Collections"),
 		filterBy: localize('forecastingCatalogue.filterBy', "Filter by:"),
 		active: localize('forecastingCatalogue.active', "Active"),
-		activeHint: localize('forecastingCatalogue.activeHint', "The active datasets, which Score Active Datasets sends to Score Forecasting Models"),
-		notScored: localize('forecastingCatalogue.notScored', "Score Forecasting Models does not score this dataset yet"),
-		scoreActive: localize('forecastingCatalogue.scoreActive', "Score Active Datasets"),
-		activeCount: localize('forecastingCatalogue.activeCount', "{0} active"),
-		noneActive: localize('forecastingCatalogue.noneActive', "None active: tick the datasets to score in the column Active"),
+		activeHint: localize('forecastingCatalogue.activeHint', "The datasets you are working with: Score Forecasting Models lists those it scores, and Save Active Datasets to Workspace saves those that Pollis downloads"),
+		notScored: localize('forecastingCatalogue.notScored', "Active or not: Score Forecasting Models does not score this dataset yet, so Score Competition Models leaves it out"),
+		scoreActive: localize('forecastingCatalogue.scoreActive', "Score Competition Models"),
+		activeCount: localize('forecastingCatalogue.activeCount', "{0} active, {1} of them scored by Score Forecasting Models"),
+		noneActive: localize('forecastingCatalogue.noneActive', "None active: tick the datasets you are working with in the column Active"),
+		expand: localize('forecastingCatalogue.expand', "Expand"),
+		restore: localize('forecastingCatalogue.restore', "Restore Size"),
+		none: localize('forecastingCatalogue.none', "None"),
 		inCollection: localize('forecastingCatalogue.inCollection', "Datasets in This Collection"),
 		workspace: localize('forecastingCatalogue.workspace', "Workspace"),
 		workspaceHint: localize('forecastingCatalogue.workspaceHint', "Whether the dataset is saved in data/forecasting of your Pollis Workspace"),
@@ -564,7 +590,7 @@ function pageHtml(rows: number): string {
 		downloading: localize('forecastingCatalogue.downloading', "Downloading"),
 		downloadingHint: localize('forecastingCatalogue.downloadingHint', "Downloading in the Julia REPL: saved in the workspace once the download ends"),
 		saveToWorkspace: localize('forecastingCatalogue.saveToWorkspace', "Save to Workspace"),
-		saveActive: localize('forecastingCatalogue.saveActive', "Save Active Datasets"),
+		saveActive: localize('forecastingCatalogue.saveActive', "Save Active Datasets to Workspace"),
 		addDataset: localize('forecastingCatalogue.addDataset', "Add a Dataset..."),
 		addHeading: localize('forecastingCatalogue.addHeading', "Add a Dataset"),
 		editHeading: localize('forecastingCatalogue.editHeading', "Edit Facts"),
@@ -593,8 +619,7 @@ function pageHtml(rows: number): string {
 		cancel: localize('forecastingCatalogue.cancel', "Cancel"),
 		converting: localize('forecastingCatalogue.converting', "Converting the file..."),
 		editFacts: localize('forecastingCatalogue.editFacts', "Edit Facts"),
-		view: localize('forecastingCatalogue.view', "View"),
-		search: localize('forecastingCatalogue.search', "Search by name"),
+		view: localize('forecastingCatalogue.view', "View:"),
 		clearFilters: localize('forecastingCatalogue.clearFilters', "Clear Filters"),
 		count: localize('forecastingCatalogue.count', "{0} of {1} entries"),
 		missing: localize('forecastingCatalogue.missing', "Missing Fields"),
@@ -606,7 +631,7 @@ function pageHtml(rows: number): string {
 		addFilter: localize('forecastingCatalogue.addFilter', "Show only the entries with this value"),
 		removeFilter: localize('forecastingCatalogue.removeFilter', "Remove this filter"),
 		openCompetition: localize('forecastingCatalogue.openCompetition', "Open in Score Forecasting Models"),
-		noMatch: localize('forecastingCatalogue.noMatch', "No entry matches the search and the filters."),
+		noMatch: localize('forecastingCatalogue.noMatch', "No entry matches the filters."),
 		problems: localize('forecastingCatalogue.problems', "The catalogue file has problems, shown here as they are found; its entries are shown all the same:"),
 		unreadable: localize('forecastingCatalogue.unreadable', "The catalogue could not be read: {0}"),
 		previous: localize('forecastingCatalogue.previous', "Previous"),
@@ -632,19 +657,21 @@ ${sortHeadingsCss}
 		.catalogue .controls .count { margin-left: auto; color: var(--vscode-descriptionForeground); font-size: 12px; }
 		.catalogue input, .catalogue select { font-family: var(--vscode-font-family); font-size: 12px; padding: 4px 6px; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border)); border-radius: 2px; }
 		.catalogue select { color: var(--vscode-dropdown-foreground); background: var(--vscode-dropdown-background); border-color: var(--vscode-dropdown-border, var(--vscode-widget-border)); }
-		.catalogue #search { width: 220px; }
+		.catalogue .controls label { font-size: 12px; white-space: nowrap; }
 		.catalogue .model-toggle { margin-bottom: 10px; }
-		/* Filter by: a button for each controlled field, all of one size, opening a menu of its values under it */
-		.catalogue .filterRow { position: relative; display: flex; align-items: flex-start; gap: 8px; margin-top: 8px; }
-		.catalogue .filterRow .label { font-size: 12px; padding-top: 4px; white-space: nowrap; }
-		.catalogue .filters.bar { flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 6px; }
-		.catalogue .filters.bar > button.action { width: 100%; overflow: hidden; text-overflow: ellipsis; }
-		.catalogue .filterMenu { position: absolute; z-index: 3; min-width: 200px; max-height: 320px; overflow-y: auto; padding: 6px 8px; background: var(--vscode-editorWidget-background); border: 1px solid var(--vscode-widget-border); border-radius: 3px; box-shadow: 0 2px 8px var(--vscode-widget-shadow); }
-		.catalogue .filterMenu label { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 2px 0; white-space: nowrap; cursor: pointer; }
-		.catalogue .filterMenu .number { margin-left: auto; padding-left: 12px; color: var(--vscode-descriptionForeground); }
-		.catalogue .scoreRow { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+		/* The values of the field chosen in Filter by, each a tick with the number of entries of the tab that have it */
+		.catalogue .filterValues { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 8px; padding: 6px 8px; border: 1px solid var(--vscode-widget-border); border-radius: 3px; }
+		.catalogue .filterValues label { display: flex; align-items: center; gap: 6px; font-size: 12px; white-space: nowrap; cursor: pointer; }
+		.catalogue .filterValues .number { color: var(--vscode-descriptionForeground); }
+		.catalogue .scoreRow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 8px; }
 		.catalogue .scoreRow .hint { margin: 0; }
+		.catalogue .scoreRow .notice { flex-basis: 100%; font-size: 12px; }
+		.catalogue .scoreRow .notice:empty { display: none; }
 		.catalogue td.activeCell, .catalogue th.activeCell { width: 1%; text-align: center; }
+		/* Expand and Restore Size, under the tick of a row */
+		.catalogue button.expand { display: block; margin: 2px auto 0 auto; padding: 2px; line-height: 0; cursor: pointer; background: none; border: none; border-radius: 3px; color: var(--vscode-icon-foreground, var(--vscode-foreground)); }
+		.catalogue button.expand:hover { background: var(--vscode-toolbar-hoverBackground); }
+		.catalogue button.expand svg { width: 14px; height: 14px; }
 		.catalogue td.workspaceCell { white-space: nowrap; }
 		.catalogue td.workspaceCell.changed { color: var(--vscode-editorWarning-foreground); }
 		.catalogue td.workspaceCell.none, .catalogue td.workspaceCell.downloading { color: var(--vscode-descriptionForeground); }
@@ -656,17 +683,15 @@ ${sortHeadingsCss}
 		.catalogue table { width: 100%; border-collapse: collapse; margin-top: 4px; }
 		.catalogue th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--vscode-descriptionForeground); text-align: left; padding: 6px 8px; vertical-align: bottom; }
 		.catalogue td { vertical-align: top; padding: 6px 8px; border-bottom: 1px solid var(--vscode-widget-border); line-height: 1.4; font-size: 12px; }
-		.catalogue tr.entryRow { cursor: pointer; }
 		.catalogue tr.entryRow:hover td, .catalogue tr.entryRow.opened td { background: var(--vscode-list-hoverBackground); }
 		.catalogue td.nameCell { min-width: 220px; }
 		.catalogue td.nameCell .name { font-size: 13px; font-weight: 600; }
 		.catalogue td.number, .catalogue th.number { text-align: right; }
 		/* Long text in a cell: two lines, the whole text in the row's details */
 		.catalogue .long { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; max-width: 360px; }
-		.catalogue button.tag { font: inherit; font-size: 11px; cursor: pointer; margin: 0 4px 2px 0; padding: 0 6px; border-radius: 3px; border: none; color: var(--vscode-badge-foreground); background: var(--vscode-badge-background); }
-		.catalogue button.tag:hover { outline: 1px solid var(--vscode-focusBorder); }
+		.catalogue button.tag { font: inherit; font-size: 11px; cursor: pointer; margin: 0 4px 2px 0; padding: 0 6px; border-radius: 3px; background: none; color: var(--vscode-descriptionForeground); border: 1px solid var(--vscode-widget-border); }
+		.catalogue button.tag:hover { border-color: var(--vscode-focusBorder); color: var(--vscode-foreground); }
 		.catalogue .pinnedTags { margin-top: 2px; }
-		.catalogue .pinnedTags button.tag { background: none; color: var(--vscode-descriptionForeground); border: 1px solid var(--vscode-widget-border); }
 		/* The details of the row selected, under it */
 		.catalogue tr.detailsRow > td { padding: 4px 16px 16px 16px; background: var(--vscode-editor-background); }
 		.catalogue .details h3 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--vscode-descriptionForeground); margin: 14px 0 4px 0; }
@@ -697,19 +722,16 @@ ${sortHeadingsCss}
 	<div class="stickyBand" id="band">
 		<div class="controls">
 			<label>${text.view} <select id="view"></select></label>
-			<input type="search" id="search" placeholder="${text.search}" spellcheck="false">
+			<label>${text.filterBy} <select id="filterField"></select></label>
 			<button class="link" id="clearFilters" hidden>${text.clearFilters}</button>
 			<span class="count" id="count"></span>
 		</div>
-		<div class="filterRow" id="filterRow">
-			<span class="label">${text.filterBy}</span>
-			<div class="filters bar" id="filters"></div>
-			<div class="filterMenu" id="filterMenu" hidden></div>
-		</div>
+		<div class="filterValues" id="filterValues" hidden></div>
 		<div class="chips" id="chips"></div>
 		<div class="scoreRow" id="scoreRow">
 			<div class="bar"><button class="action current" id="score" disabled>${text.scoreActive}</button><button class="action" id="saveActive" disabled>${text.saveActive}</button><button class="action" id="addDataset">${text.addDataset}</button></div>
 			<span class="hint" id="activeCount"></span>
+			<div class="notice" id="notice" role="status"></div>
 		</div>
 	</div>
 	<table class="stickyHead" id="table">
@@ -768,11 +790,14 @@ ${sortHeadingsCss}
 	let stuck = false;
 	// The form shown, as the page sent it: its mode, add or edit, its file, columns and first rows, and its values
 	let form;
-	// The field whose menu of values is open under its button, or ''
-	let menuField = '';
+	// The field chosen in Filter by, whose values are shown to tick, or '' for None
+	let filterField = '';
 
 	const viewSelect = document.getElementById('view');
-	const search = document.getElementById('search');
+	const filterSelect = document.getElementById('filterField');
+	// Expand and Restore Size: corners pointing out, and in
+	const EXPAND_ICON = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10"/></svg>';
+	const RESTORE_ICON = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M6 2.5V6H2.5M13.5 6H10V2.5M10 13.5V10h3.5M2.5 10H6v3.5"/></svg>';
 
 	function element(tag, className, content) {
 		const node = document.createElement(tag);
@@ -818,10 +843,6 @@ ${sortHeadingsCss}
 
 	function matches(entry) {
 		if (!inTab(entry)) {
-			return false;
-		}
-		const words = search.value.trim().toLowerCase();
-		if (words && !entry.name.toLowerCase().includes(words)) {
 			return false;
 		}
 		return Object.entries(filters).every(([name, chosen]) => !chosen.length || valuesOf(entry, name).some(value => chosen.includes(value)));
@@ -903,7 +924,8 @@ ${sortHeadingsCss}
 		} else if (typeof value === 'boolean') {
 			node.textContent = value ? TEXT.yes : TEXT.no;
 		} else if (typeof value === 'number') {
-			node.textContent = value.toLocaleString();
+			// A year as it is written, other numbers with their thousands grouped
+			node.textContent = /_year$/.test(name) ? String(value) : value.toLocaleString();
 		} else if (inCell && LONG_FIELDS.includes(name)) {
 			const span = node.appendChild(element('span', 'long', value));
 			span.title = value;
@@ -914,15 +936,16 @@ ${sortHeadingsCss}
 
 	function columns() {
 		const current = view();
-		return [...(tab === 'datasets' ? [ACTIVE, WORKSPACE] : []), current.pinned[0] || 'name', ...current.columns.filter(name => !current.pinned.includes(name)), ...(current.id === CURATION ? [MISSING] : [])];
+		return [ACTIVE, ...(tab === 'datasets' ? [WORKSPACE] : []), current.pinned[0] || 'name', ...current.columns.filter(name => !current.pinned.includes(name)), ...(current.id === CURATION ? [MISSING] : [])];
 	}
 	function drawHead() {
 		const head = document.getElementById('head');
 		head.textContent = '';
 		for (const name of columns()) {
 			if (name === ACTIVE) {
-				const heading = head.appendChild(element('th', 'activeCell', TEXT.active));
-				heading.title = TEXT.activeHint;
+				// In the tab Curated Collections, the column holds Expand only, under no heading
+				const heading = head.appendChild(element('th', 'activeCell', tab === 'datasets' ? TEXT.active : ''));
+				heading.title = tab === 'datasets' ? TEXT.activeHint : '';
 				continue;
 			}
 			if (name === WORKSPACE) {
@@ -944,13 +967,21 @@ ${sortHeadingsCss}
 		for (const name of names) {
 			const cell = element('td');
 			if (name === ACTIVE) {
+				// The tick of any dataset, and under it Expand, or Restore Size when the row is expanded
 				cell.className = 'activeCell';
-				const tick = cell.appendChild(element('input', 'activeTick'));
-				tick.type = 'checkbox';
-				tick.dataset.id = entry.id;
-				tick.checked = active.has(entry.id);
-				tick.disabled = !canScore(entry);
-				tick.title = canScore(entry) ? TEXT.activeHint : TEXT.notScored;
+				if (tab === 'datasets') {
+					const tick = cell.appendChild(element('input', 'activeTick'));
+					tick.type = 'checkbox';
+					tick.dataset.id = entry.id;
+					tick.checked = active.has(entry.id);
+					tick.title = canScore(entry) ? TEXT.activeHint : TEXT.notScored;
+				}
+				const expand = cell.appendChild(element('button', 'expand'));
+				expand.dataset.expand = entry.id;
+				expand.innerHTML = entry.id === opened ? RESTORE_ICON : EXPAND_ICON;
+				expand.title = entry.id === opened ? TEXT.restore : TEXT.expand;
+				expand.setAttribute('aria-label', expand.title);
+				expand.setAttribute('aria-expanded', String(entry.id === opened));
 			} else if (name === WORKSPACE) {
 				drawWorkspace(cell, entry);
 			} else if (name === first) {
@@ -1040,57 +1071,49 @@ ${sortHeadingsCss}
 		return row;
 	}
 
-	// Filter by: a button for each controlled field, made once, the first blue; each opens the menu of its values
+	// Filter by: None, a separator, then each controlled field, made when the catalogue comes
 	function buildFilters() {
-		const bar = document.getElementById('filters');
-		bar.textContent = '';
+		filterSelect.textContent = '';
+		filterSelect.appendChild(element('option', '', TEXT.none)).value = '';
+		filterSelect.appendChild(element('hr'));
 		for (const name of FILTER_FIELDS) {
 			const declared = field(name);
-			if (!declared || !declared.values.length) {
-				continue;
+			if (declared && declared.values.length) {
+				const option = filterSelect.appendChild(element('option', '', declared.label));
+				option.value = name;
+				option.title = declared.description;
 			}
-			const button = bar.appendChild(element('button', bar.children.length ? 'action' : 'action current', declared.label));
-			button.dataset.filter = name;
-			button.title = declared.description;
 		}
-	}
-	// The menu of the values of the field of a button of Filter by, under it, each with the number of entries of the tab that have it
-	function openMenu(button) {
-		const name = button.dataset.filter;
-		if (menuField === name) {
-			closeMenu();
-			return;
+		if (!field(filterField)) {
+			filterField = '';
 		}
-		menuField = name;
-		const menu = document.getElementById('filterMenu');
-		menu.textContent = '';
-		const chosen = filters[name] || [];
-		for (const value of field(name).values) {
-			const count = catalogue.entries.filter(entry => inTab(entry) && valuesOf(entry, name).includes(value)).length;
-			const option = menu.appendChild(element('label'));
-			const tick = option.appendChild(element('input'));
-			tick.type = 'checkbox';
-			tick.dataset.field = name;
-			tick.dataset.value = value;
-			tick.checked = chosen.includes(value);
-			option.append(shownValue(name, value));
-			option.appendChild(element('span', 'number', count));
-		}
-		const row = document.getElementById('filterRow').getBoundingClientRect();
-		const place = button.getBoundingClientRect();
-		menu.style.left = (place.left - row.left) + 'px';
-		menu.style.top = (place.bottom - row.top + 2) + 'px';
-		menu.hidden = false;
+		filterSelect.value = filterField;
 	}
-	function closeMenu() {
-		menuField = '';
-		document.getElementById('filterMenu').hidden = true;
-	}
+	// The fields of Filter by with the number of their values ticked, and the values of the field chosen, each with
+	// the number of entries of the tab that have it; then a chip for each value ticked, of any field
 	function drawFilters() {
-		for (const button of document.querySelectorAll('#filters > button[data-filter]')) {
-			const chosen = filters[button.dataset.filter] || [];
-			const label = field(button.dataset.filter).label;
-			button.textContent = chosen.length ? label + ' (' + chosen.length + ')' : label;
+		for (const option of filterSelect.options) {
+			if (option.value) {
+				const chosen = filters[option.value] || [];
+				option.textContent = field(option.value).label + (chosen.length ? ' (' + chosen.length + ')' : '');
+			}
+		}
+		const values = document.getElementById('filterValues');
+		values.textContent = '';
+		values.hidden = !filterField;
+		if (filterField) {
+			const chosen = filters[filterField] || [];
+			for (const value of field(filterField).values) {
+				const count = catalogue.entries.filter(entry => inTab(entry) && valuesOf(entry, filterField).includes(value)).length;
+				const option = values.appendChild(element('label'));
+				const tick = option.appendChild(element('input'));
+				tick.type = 'checkbox';
+				tick.dataset.field = filterField;
+				tick.dataset.value = value;
+				tick.checked = chosen.includes(value);
+				option.append(shownValue(filterField, value));
+				option.appendChild(element('span', 'number', count));
+			}
 		}
 		const chips = document.getElementById('chips');
 		chips.textContent = '';
@@ -1102,7 +1125,7 @@ ${sortHeadingsCss}
 				chip.title = TEXT.removeFilter;
 			}
 		}
-		document.getElementById('clearFilters').hidden = !Object.keys(filters).length && !search.value;
+		document.getElementById('clearFilters').hidden = !Object.keys(filters).length;
 	}
 	function setFilter(name, value, on) {
 		const chosen = (filters[name] || []).filter(other => other !== value);
@@ -1173,7 +1196,8 @@ ${sortHeadingsCss}
 		document.getElementById('scoreRow').hidden = tab !== 'datasets';
 		document.getElementById('score').disabled = !active.size;
 		document.getElementById('saveActive').disabled = !active.size;
-		document.getElementById('activeCount').textContent = active.size ? format(TEXT.activeCount, active.size) : TEXT.noneActive;
+		const scored = catalogue.entries.filter(entry => active.has(entry.id) && canScore(entry)).length;
+		document.getElementById('activeCount').textContent = active.size ? format(TEXT.activeCount, active.size, scored) : TEXT.noneActive;
 	}
 
 	// The column of the file whose name matches the pattern, or else whose type matches the types, not one already taken
@@ -1316,8 +1340,11 @@ ${sortHeadingsCss}
 		}
 		render();
 	});
-	search.addEventListener('input', () => { page = 0; render(); });
-	document.getElementById('filterMenu').addEventListener('change', event => {
+	filterSelect.addEventListener('change', () => {
+		filterField = filterSelect.value;
+		render();
+	});
+	document.getElementById('filterValues').addEventListener('change', event => {
 		const box = event.target;
 		if (box.dataset && box.dataset.field) {
 			setFilter(box.dataset.field, box.dataset.value, box.checked);
@@ -1335,10 +1362,16 @@ ${sortHeadingsCss}
 			drawActive();
 		}
 	});
+	// What Score Competition Models or a save did, under the buttons until the next of them
+	function showNotice(text) {
+		document.getElementById('notice').textContent = text || '';
+	}
 	document.getElementById('score').addEventListener('click', () => {
+		showNotice('');
 		vscode.postMessage({ command: 'score', ids: [...active] });
 	});
 	document.getElementById('saveActive').addEventListener('click', () => {
+		showNotice('');
 		vscode.postMessage({ command: 'save', ids: [...active] });
 	});
 	document.getElementById('addDataset').addEventListener('click', () => {
@@ -1369,7 +1402,6 @@ ${sortHeadingsCss}
 		}
 		page = 0;
 		opened = '';
-		closeMenu();
 		render();
 	});
 	document.getElementById('head').addEventListener('click', event => {
@@ -1388,16 +1420,11 @@ ${sortHeadingsCss}
 	});
 	document.addEventListener('click', event => {
 		const target = event.target;
-		const filterButton = target.closest('#filters > button[data-filter]');
-		if (filterButton) {
-			openMenu(filterButton);
-			return;
-		}
-		if (!target.closest('#filterMenu')) {
-			closeMenu();
-		}
-		// The tick of the column Active, which its change handles, leaves the details as they are
-		if (target.closest('td.activeCell')) {
+		// Expand and Restore Size alone open and close the details of a row
+		const expand = target.closest('button[data-expand]');
+		if (expand) {
+			opened = opened === expand.dataset.expand ? '' : expand.dataset.expand;
+			render();
 			return;
 		}
 		const tagButton = target.closest('button.tag');
@@ -1415,20 +1442,14 @@ ${sortHeadingsCss}
 		} else if (open) {
 			vscode.postMessage({ command: 'competition', id: open.dataset.competition });
 		} else if (save) {
+			showNotice('');
 			vscode.postMessage({ command: 'save', ids: [save.dataset.save] });
 		} else if (edit) {
 			vscode.postMessage({ command: 'edit', id: edit.dataset.edit });
 		} else if (target.id === 'clearFilters') {
 			filters = {};
-			search.value = '';
 			page = 0;
 			render();
-		} else {
-			const row = target.closest('tr.entryRow');
-			if (row) {
-				opened = opened === row.dataset.id ? '' : row.dataset.id;
-				render();
-			}
 		}
 	});
 	window.addEventListener('message', event => {
@@ -1446,6 +1467,10 @@ ${sortHeadingsCss}
 		if (message.command === 'formBusy' && form) {
 			document.getElementById('formSubmit').disabled = true;
 			document.getElementById('formStatus').textContent = TEXT.converting;
+			return;
+		}
+		if (message.command === 'notice') {
+			showNotice(message.text);
 			return;
 		}
 		if (message.command === 'formDone') {
@@ -1478,8 +1503,7 @@ ${sortHeadingsCss}
 		}
 		viewId = view() ? view().id : '';
 		viewSelect.value = viewId;
-		// The state comes again whenever a dataset is downloaded or saved: the menu of a filter rebuilt is closed
-		closeMenu();
+		// The state comes again whenever a dataset is downloaded or saved: Filter by keeps the field chosen
 		buildFilters();
 		render();
 		if (!stuck) {

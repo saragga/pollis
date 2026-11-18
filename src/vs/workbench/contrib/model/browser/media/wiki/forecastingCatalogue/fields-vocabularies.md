@@ -17,7 +17,7 @@ The identity fields say what the entry is, where it belongs and when it ran. A c
 | `type` | Type | string | `competition`, `live_competition`, `dataset`, `benchmark_suite`, `forecast_archive` | Kind of entry |
 | `domain` | Domain | string | `general`, `retail`, `supply_chain`, `finance`, `macroeconomics`, `real_estate`, `energy`, `environment_climate`, `hydrology`, `transport_mobility`, `tourism`, `epidemiology`, `health_clinical`, `engineering_prognostics`, `physics_nonlinear`, `web_it_operations`, `anomaly_detection`, `judgmental_geopolitical` | Application domain |
 | `subdomain` | Subdomain | string | Free text | Finer domain |
-| `era` | Era | string | `pre-2000`, `2000-2014`, `2015-2022`, `2023+` | Era of the start year, for sorting |
+| `era` | Era | string | `pre-2000`, `2000-2014`, `2015-2022`, `2023+` | Period of the start year, to filter the entries by: before 2000, 2000 to 2014, 2015 to 2022, or 2023 on |
 | `start_year` | Start Year | integer | A whole number | Year the competition or data release started |
 | `end_year` | End Year | integer | A whole number | Year it ended (absent if ongoing) |
 
