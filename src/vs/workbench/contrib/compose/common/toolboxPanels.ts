@@ -20,11 +20,6 @@ export const TOOLBOX_MENU = 'toolbox';
 /** The menu group that puts a toolbox's menu or panel at the end of a menu. */
 export const TOOLBOX_END_GROUP = 'z_toolboxes';
 
-/** The context key that is true while the toolbox of this id is installed, when its coming-soon menu is hidden. */
-export function toolboxInstalledContextKey(toolboxId: string): string {
-	return `pollisToolboxInstalled.${toolboxId}`;
-}
-
 /** A panel of an installed toolbox. */
 export interface IToolboxPanelInfo {
 	readonly id: string;

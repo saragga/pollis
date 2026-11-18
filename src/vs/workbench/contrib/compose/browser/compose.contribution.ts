@@ -10,7 +10,6 @@ import { ServicesAccessor } from '../../../../platform/instantiation/common/inst
 import { PDF_VIEWER_OPEN_IN_MODE_COMMAND_ID } from '../../../common/pdfViewer.js';
 import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
 import './toolboxExtensions.js';
-import './comingSoonToolboxes.js';
 import './toolboxPanelsPage.js';
 import './askPollisPage.js';
 import { COMPARE_EMBEDDINGS_COMMAND_ID } from './compareEmbeddingsPage.js';

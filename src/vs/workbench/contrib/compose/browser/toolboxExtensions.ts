@@ -12,7 +12,7 @@ import { hasKey } from '../../../../base/common/types.js';
 import { URI } from '../../../../base/common/uri.js';
 import { MenuId, MenuRegistry } from '../../../../platform/actions/common/actions.js';
 import { CommandsRegistry, ICommandService } from '../../../../platform/commands/common/commands.js';
-import { IContextKey, IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
+import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
 import { BrowserViewCommandId } from '../../../../platform/browserView/common/browserView.js';
 import { ExtensionIdentifier } from '../../../../platform/extensions/common/extensions.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
@@ -28,7 +28,7 @@ import { panelFaqItems, panelKeyPoints, parseToml, tomlToPanelData } from '../..
 import { buildScaffoldHtml } from '../../model/browser/webviews/scaffoldParts.js';
 import { IAskPollisEvalItem } from '../common/askPollis.js';
 import { isTimeArrowPanel, onTimeArrowMessage, timeArrowPanelHtml } from './toolboxTimeArrow.js';
-import { IToolboxDocumentInfo, IToolboxInfo, IToolboxTextInfo, IToolboxPanelsService, IToolboxPlace, IToolboxPlacement, TOOLBOX_END_GROUP, TOOLBOX_MENU, TOOLBOX_SUBMENU_PREFIX, toolboxInstalledContextKey } from '../common/toolboxPanels.js';
+import { IToolboxDocumentInfo, IToolboxInfo, IToolboxTextInfo, IToolboxPanelsService, IToolboxPlace, IToolboxPlacement, TOOLBOX_END_GROUP, TOOLBOX_MENU, TOOLBOX_SUBMENU_PREFIX } from '../common/toolboxPanels.js';
 
 /** A panel of a toolbox contributed by an extension. */
 interface IToolboxPanelContribution {
@@ -65,7 +65,17 @@ interface IToolboxPanelTabContribution {
 	readonly title: string;
 }
 
-/** A submenu of a toolbox's menu, which holds the panels that name it. */
+/** A planned item of a toolbox's menu: greyed out, beside the panels written, until its panel is. */
+interface IToolboxPlannedContribution {
+	readonly title: string;
+	/** The menu group, which separators divide from the others. */
+	readonly group: string;
+	readonly order: number;
+	/** The id of the submenu of the toolbox's menu the item is in. Default: straight in the toolbox's menu. */
+	readonly submenu?: string;
+}
+
+/** A submenu of a toolbox's menu, which holds the panels and planned items that name it. */
 interface IToolboxSubmenuContribution {
 	readonly id: string;
 	readonly title: string;
@@ -88,6 +98,8 @@ interface IToolboxContribution {
 	/** The submenus of its menu. */
 	readonly submenus?: IToolboxSubmenuContribution[];
 	readonly panels: IToolboxPanelContribution[];
+	/** The planned items of its menu, greyed out. */
+	readonly planned?: IToolboxPlannedContribution[];
 	/** Its vignettes, in Help > Documentation > Toolbox Vignettes. */
 	readonly documents?: IToolboxDocumentContribution[];
 	/** The texts it adds to the Knowledge Base. */
@@ -183,12 +195,12 @@ const toolboxesExtensionPoint = ExtensionsRegistry.registerExtensionPoint<IToolb
 				order: { type: 'number', description: localize('pollisToolboxes.order', "The order among the toolboxes at the end of Extend.") },
 				submenus: {
 					type: 'array',
-					description: localize('pollisToolboxes.submenus', "The submenus of the toolbox's menu, which hold the panels that name them."),
+					description: localize('pollisToolboxes.submenus', "The submenus of the toolbox's menu, which hold the panels and planned items that name them."),
 					items: {
 						type: 'object',
 						required: ['id', 'title', 'group', 'order'],
 						properties: {
-							id: { type: 'string', description: localize('pollisToolboxes.submenu.id', "The submenu's id, which its panels name.") },
+							id: { type: 'string', description: localize('pollisToolboxes.submenu.id', "The submenu's id, which its panels and planned items name.") },
 							title: { type: 'string', description: localize('pollisToolboxes.submenu.title', "The submenu's title.") },
 							group: { type: 'string', description: localize('pollisToolboxes.submenu.group', "The group in the toolbox menu.") },
 							order: { type: 'number', description: localize('pollisToolboxes.submenu.order', "The order in that group.") },
@@ -224,6 +236,20 @@ const toolboxesExtensionPoint = ExtensionsRegistry.registerExtensionPoint<IToolb
 									},
 								},
 							},
+						},
+					},
+				},
+				planned: {
+					type: 'array',
+					description: localize('pollisToolboxes.planned', "The planned items of the toolbox's menu, greyed out beside its panels until their panels are written, in the toolbox's menu wherever the user puts it."),
+					items: {
+						type: 'object',
+						required: ['title', 'group', 'order'],
+						properties: {
+							title: { type: 'string', description: localize('pollisToolboxes.planned.title', "The menu item.") },
+							group: { type: 'string', description: localize('pollisToolboxes.planned.group', "The group in the toolbox menu, or in its submenu if it names one.") },
+							order: { type: 'number', description: localize('pollisToolboxes.planned.order', "The order in that group.") },
+							submenu: { type: 'string', description: localize('pollisToolboxes.planned.submenu', "The id of the submenu of the toolbox's menu the item is in. Default: straight in the toolbox's menu.") },
 						},
 					},
 				},
@@ -319,6 +345,8 @@ interface ILoadedToolbox {
 	readonly courses: readonly IToolboxCourseContribution[];
 	readonly games: readonly URI[];
 	readonly forecastingDatasets: URI | undefined;
+	/** Its planned items, those whose submenu, if they name one, the toolbox has. */
+	readonly planned: readonly IToolboxPlannedContribution[];
 }
 
 /**
@@ -348,7 +376,24 @@ interface IStoredMenuItem {
 	readonly title: string;
 	readonly command?: string;
 	readonly submenu?: string;
+	/** A planned item, greyed out. */
+	readonly planned?: boolean;
 }
+
+/** The command of every planned item of a toolbox's menu: the items are greyed out, so it is never run. */
+const PLANNED_COMMAND = 'pollis.toolboxes.planned';
+CommandsRegistry.registerCommand(PLANNED_COMMAND, () => { });
+
+// Extend is always in the menu bar, the toolboxes' place
+MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
+	submenu: MenuId.MenubarExtendMenu,
+	title: {
+		value: localize('extendMenu', "Extend"),
+		original: 'Extend',
+		mnemonicTitle: localize({ key: 'mExtend', comment: ['&& denotes a mnemonic'] }, "E&&xtend")
+	},
+	order: 9
+});
 
 /** The group of a panel in its toolbox's own menu that names none. */
 const DEFAULT_PANEL_GROUP = '1_toolbox';
@@ -361,7 +406,7 @@ const DEFAULT_PANEL_GROUP = '1_toolbox';
  * Installing a toolbox puts its menu, with every panel in it, at the end of Extend. Once the user
  * publishes it, only the panels the user chose are added, each in the toolbox's own menu or straight
  * into another menu, and the toolbox's menu goes at the end of Extend or in the menu the user chose.
- * Extend is always in the menu bar (comingSoonToolboxes.ts), and the coming-soon menu of a toolbox hides while the toolbox is installed.
+ * Extend is always in the menu bar. A toolbox's menu also shows its planned items, greyed out, beside its panels.
  * The toolbox extensions are not built in (their sources are in Trumpingtons/pollis-toolboxes):
  * the user installs them from the Toolboxes section of the Extensions pane, into the user's
  * extensions folder, and the files are read from wherever the extension is installed.
@@ -378,8 +423,6 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 	private readonly loadedBarrier = new Barrier();
 	/** The toolbox submenus by toolbox id: a menu id can be created only once. */
 	private readonly submenus = new Map<string, MenuId>();
-	/** Whether each toolbox is installed, by toolbox id, which hides its coming-soon menu. */
-	private readonly installedKeys = new Map<string, IContextKey<boolean>>();
 	/** Counts the loads, so a slower earlier one does not overwrite a later one. */
 	private generation = 0;
 	private loaded: readonly ILoadedToolbox[] = [];
@@ -388,7 +431,6 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 		@IFileService private readonly fileService: IFileService,
 		@ILogService private readonly logService: ILogService,
 		@IStorageService private readonly storageService: IStorageService,
-		@IContextKeyService private readonly contextKeyService: IContextKeyService,
 	) {
 		super();
 		// The toolboxes are read a moment after the menu bar is built: show the menus as they were, so the menu bar does not move
@@ -518,6 +560,14 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 					const strings = (value: unknown) => Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
 					texts.push({ ...text, subject: text.subject ?? '', packages: strings(text.packages), keyWords: strings(text.keyWords), classifications: strings(text.classifications) });
 				}
+				const planned: IToolboxPlannedContribution[] = [];
+				for (const item of toolbox.planned ?? []) {
+					if (typeof item.title !== 'string' || !item.title || typeof item.group !== 'string' || typeof item.order !== 'number' || (item.submenu !== undefined && !toolbox.submenus?.some(({ id }) => id === item.submenu))) {
+						extension.collector.error(localize('pollisToolboxes.planned.item', "Planned item {0} must have its title, group and order, and name a submenu the toolbox has, if any.", String(item.title)));
+						continue;
+					}
+					planned.push(item);
+				}
 				const courses: IToolboxCourseContribution[] = [];
 				for (const course of toolbox.courses ?? []) {
 					if (typeof course.title !== 'string' || !course.title || typeof course.url !== 'string' || !course.url.startsWith('https://')) {
@@ -544,7 +594,7 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 						extension.collector.error(localize('pollisToolboxes.forecastingDatasetsFile', "The forecasting datasets file {0} must be inside the extension folder.", String(toolbox.forecastingDatasets)));
 					}
 				}
-				loaded.push({ extensionId: ExtensionIdentifier.toKey(extension.description.identifier), extensionName: extension.description.displayName ?? extension.description.name, toolbox, location, version: extension.description.version, panels, documents, texts, courses, games, forecastingDatasets });
+				loaded.push({ extensionId: ExtensionIdentifier.toKey(extension.description.identifier), extensionName: extension.description.displayName ?? extension.description.name, toolbox, location, version: extension.description.version, panels, documents, texts, courses, games, forecastingDatasets, planned });
 			}
 		}
 		if (generation !== this.generation) {
@@ -567,11 +617,11 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 		const published = this.getPublished();
 		const store = new DisposableStore();
 		const items: IStoredMenuItem[] = [];
-		const append = (menu: MenuId, item: { group?: string; order?: number; title: string; command?: { id: string; title: string }; submenu?: MenuId }) => {
-			items.push({ menu: menu.id, group: item.group, order: item.order, title: item.title, command: item.command?.id, submenu: item.submenu?.id });
+		const append = (menu: MenuId, item: { group?: string; order?: number; title: string; command?: { id: string; title: string }; submenu?: MenuId; planned?: boolean }) => {
+			items.push({ menu: menu.id, group: item.group, order: item.order, title: item.title, command: item.command?.id, submenu: item.submenu?.id, planned: item.planned || undefined });
 			store.add(item.submenu
 				? MenuRegistry.appendMenuItem(menu, { group: item.group, order: item.order, title: item.title, submenu: item.submenu })
-				: MenuRegistry.appendMenuItem(menu, { group: item.group, order: item.order, command: item.command! }));
+				: MenuRegistry.appendMenuItem(menu, { group: item.group, order: item.order, command: { ...item.command!, precondition: item.planned ? ContextKeyExpr.false() : undefined } }));
 		};
 		for (const loaded of this.loaded) {
 			const { toolbox, location } = loaded;
@@ -580,11 +630,11 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 			const placement = entry ? placementOf(loaded, entry) : defaultPlacement(loaded);
 			const submenu = this.submenus.get(toolbox.id) ?? MenuId.for(`${TOOLBOX_SUBMENU_PREFIX}${toolbox.id}`);
 			this.submenus.set(toolbox.id, submenu);
-			if (placement.menu && loaded.panels.some(({ contribution }) => placement.panels[contribution.id]?.menu === TOOLBOX_MENU)) {
+			if (placement.menu && (loaded.planned.length || loaded.panels.some(({ contribution }) => placement.panels[contribution.id]?.menu === TOOLBOX_MENU))) {
 				const { menu, group, order } = placement.menu;
 				append(MenuId.for(menu), { group, order, submenu, title: toolbox.title });
 			}
-			// The submenus of the toolbox's menu that have a panel in them, each added once
+			// The submenus of the toolbox's menu that have a panel or a planned item in them, each added once
 			const nested = new Map<string, MenuId>();
 			const nestedMenu = ({ id, title, group, order }: IToolboxSubmenuContribution): MenuId => {
 				let menu = nested.get(id);
@@ -626,6 +676,13 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 					commands.forEach((command, index) => append(menu, { group: place.group, order: place.order + index / 100, title: command.title, command }));
 				}
 			}
+			// Its planned items, greyed out, in the toolbox's own menu while that menu is placed
+			if (placement.menu) {
+				for (const item of loaded.planned) {
+					const inSubmenu = item.submenu ? toolbox.submenus?.find(({ id }) => id === item.submenu) : undefined;
+					append(inSubmenu ? nestedMenu(inSubmenu) : submenu, { group: item.group, order: item.order, title: item.title, command: { id: PLANNED_COMMAND, title: item.title }, planned: true });
+				}
+			}
 			// Its notebook courses, whatever the menus the user published it in
 			loaded.courses.forEach((course, index) => {
 				const command = { id: `pollis.toolboxCourse.${toolbox.id}.${index}`, title: course.title };
@@ -634,7 +691,6 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 			});
 		}
 		this.registrations.value = store;
-		this.setInstalled(this.loaded.map(({ toolbox }) => toolbox.id));
 		this.storageService.store(MENUS_STORAGE_KEY, JSON.stringify(items), StorageScope.PROFILE, StorageTarget.MACHINE);
 		this._onDidChange.fire();
 	}
@@ -660,6 +716,8 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 				const submenu = this.submenus.get(toolboxId) ?? MenuId.for(item.submenu);
 				this.submenus.set(toolboxId, submenu);
 				store.add(MenuRegistry.appendMenuItem(menu, { group: item.group, order: item.order, title: item.title, submenu }));
+			} else if (item.command && item.planned) {
+				store.add(MenuRegistry.appendMenuItem(menu, { group: item.group, order: item.order, command: { id: PLANNED_COMMAND, title: item.title, precondition: ContextKeyExpr.false() } }));
 			} else if (item.command) {
 				const id = item.command;
 				store.add(MenuRegistry.appendMenuItem(menu, { group: item.group, order: item.order, command: { id, title: item.title } }));
@@ -674,21 +732,6 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 			}
 		}
 		this.registrations.value = store;
-		// The toolboxes whose menu was in a menu other than a toolbox's own, the top-level ones
-		this.setInstalled(items.filter(item => item.submenu?.startsWith(TOOLBOX_SUBMENU_PREFIX) && !item.menu.startsWith(TOOLBOX_SUBMENU_PREFIX)).map(item => item.submenu!.slice(TOOLBOX_SUBMENU_PREFIX.length)));
-	}
-
-	/** Sets which toolboxes are installed: the context key of each toolbox known, true for those of these ids. */
-	private setInstalled(toolboxIds: readonly string[]): void {
-		const installed = new Set(toolboxIds);
-		for (const id of installed) {
-			if (!this.installedKeys.has(id)) {
-				this.installedKeys.set(id, this.contextKeyService.createKey(toolboxInstalledContextKey(id), false));
-			}
-		}
-		for (const [id, key] of this.installedKeys) {
-			key.set(installed.has(id));
-		}
 	}
 }
 
