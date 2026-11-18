@@ -125,7 +125,7 @@ function buildInputHtml(input: IModelInput): string {
 		? `<div class="input-with-action">${field}<button class="input-action-btn alert-me-btn" data-input="${input.id}" data-alert="${input.alertMe}"${alertValue} title="${alertTitle}">Alert Me...</button></div>`
 		: input.modelFile && !input.kind
 		? `<div class="input-with-action">${field}<button class="input-action-btn choose-model-btn" data-input="${input.id}" data-model-kind="${input.modelFile}" title="${modelTitle}">Choose...</button></div>`
-		: input.folder && !input.kind
+		: input.folder && !input.kind && input.chooseFolder !== false
 		? `<div class="input-with-action">${field}<button class="input-action-btn choose-folder-btn" data-input="${input.id}" title="Choose the folder">Choose...</button></div>`
 		: field;
 	return `\t\t\t<div class="form-group scaffold-input"${modelsAttr(input.models, input.when)}>

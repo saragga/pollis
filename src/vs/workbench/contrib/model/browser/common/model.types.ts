@@ -208,6 +208,8 @@ export interface IModelInput {
 	 * otherwise it is `default`. The code reads it as `expanduser(raw"{{id}}")`.
 	 */
 	readonly folder?: string;
+	/** False leaves Choose... out beside a `folder` input: a plain text input, whose default still follows the Pollis Workspace. */
+	readonly chooseFolder?: boolean;
 }
 
 /**
