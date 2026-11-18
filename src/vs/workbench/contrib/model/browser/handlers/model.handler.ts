@@ -17,6 +17,7 @@ import { DisposableStore } from '../../../../../base/common/lifecycle.js';
 import { disposableTimeout } from '../../../../../base/common/async.js';
 import { Event } from '../../../../../base/common/event.js';
 import { VSBuffer } from '../../../../../base/common/buffer.js';
+import { toErrorMessage } from '../../../../../base/common/errorMessage.js';
 import { INotebookKernelService, INotebookTextModelLike } from '../../../notebook/common/notebookKernelService.js';
 import { INotebookEditorModelResolverService } from '../../../notebook/common/notebookEditorModelResolverService.js';
 import { FileSystemProviderCapabilities, IFileService } from '../../../../../platform/files/common/files.js';
@@ -53,7 +54,7 @@ export function autoSelectJuliaKernel(notebook: INotebookTextModelLike, notebook
 }
 
 function bibKey(paper: IModelPaper): string {
-	const lastName = paper.authors.split(/[,;]/)[0].trim().split(' ').pop() ?? 'Author';
+	const lastName = (paper.authors ?? '').split(/[,;]/)[0].trim().split(' ').pop() || 'Author';
 	return `${lastName}${paper.year}`;
 }
 
@@ -71,7 +72,7 @@ function venueField(type: string): string {
 function generateBibTeX(paper: IModelPaper): string {
 	const type = paper.type ?? 'article';
 	const lines = [`@${type}{${paper.key ?? bibKey(paper)},`];
-	lines.push(`  author  = {${paper.authors.replace(/;\s*/g, ' and ')}},`);
+	lines.push(`  author  = {${(paper.authors ?? '').replace(/;\s*/g, ' and ')}},`);
 	lines.push(`  title   = {${paper.title}},`);
 	lines.push(`  year    = {${paper.year}},`);
 	if (paper.journal) { lines.push(`  ${venueField(type).padEnd(7)} = {${paper.journal}},`); }
@@ -705,9 +706,18 @@ export function createReferenceWiring(
 		const paper = referencePaper(work);
 		return { id: `ref:${work.key}`, title: paper.title, authors: paper.authors, year: paper.year ? String(paper.year) : '', journal: paper.journal, openAccess: paper.openAccess, kind, removed, url: paperUrl(paper), bibtex: referenceBibTeX(work) };
 	};
-	const listItems = async (): Promise<IReferenceItem[]> => {
+	/** The references of the panel; one that cannot be read is left out, and named, with its error, in `failed`. */
+	const listItems = async (failed: string[] = []): Promise<IReferenceItem[]> => {
 		const [all, choices, aliases] = await Promise.all([library.allReferences(), library.panelChoices(panelId), library.aliases()]);
 		const byKey = new Map(all.map(work => [work.key, work]));
+		const attempt = (name: string, make: () => IReferenceItem): IReferenceItem[] => {
+			try {
+				return [make()];
+			} catch (error) {
+				failed.push(`${name} (${toErrorMessage(error)})`);
+				return [];
+			}
+		};
 		// A key merged into another work is that work, listed once
 		const listed = new Set<string>();
 		const items = papers.flatMap((paper): IReferenceItem[] => {
@@ -720,17 +730,17 @@ export function createReferenceWiring(
 			}
 			const work = key ? byKey.get(key) : undefined;
 			const removed = !!key && choices.get(key)?.shown === false;
-			return [work
+			return attempt(key || paper.title || '?', () => work
 				? workItem(work, work.origin === 'corrected' ? 'customised' : 'bundled', removed)
 				: paper.title
-					? { id: `ref:${paper.key ?? paper.title}`, title: paper.title, authors: paper.authors, year: String(paper.year), journal: paper.journal, openAccess: paper.openAccess, kind: 'bundled', removed, url: paperUrl(paper), bibtex: generateBibTeX(paper) }
+					? { id: `ref:${paper.key ?? paper.title}`, title: paper.title, authors: paper.authors ?? '', year: String(paper.year), journal: paper.journal, openAccess: paper.openAccess, kind: 'bundled', removed, url: paperUrl(paper), bibtex: generateBibTeX(paper) }
 					// A toolbox panel's key that References does not have: listed by its key
-					: { id: `ref:${paper.key}`, title: paper.key ?? '', authors: '', year: '', openAccess: false, kind: 'bundled', removed, bibtex: '' }];
+					: { id: `ref:${paper.key}`, title: paper.key ?? '', authors: '', year: '', openAccess: false, kind: 'bundled', removed, bibtex: '' });
 		});
 		for (const choice of choices.values()) {
 			const work = byKey.get(choice.key);
 			if (choice.shown && work && !listed.has(choice.key)) {
-				items.push(workItem(work, 'added', false));
+				items.push(...attempt(choice.key, () => workItem(work, 'added', false)));
 			}
 		}
 		return items;
@@ -745,9 +755,13 @@ export function createReferenceWiring(
 					throw error;
 				}
 			});
-			items = await listItems();
+			const failed: string[] = [];
+			items = await listItems(failed);
+			if (failed.length) {
+				notificationService.error(localize('pollis.references.itemsFailed', "Could not read these references, left out of the list: {0}", failed.join('; ')));
+			}
 		} catch (error) {
-			notificationService.error(localize('pollis.references.readFailed', "Could not read your references in {0}: {1}", (await library.folder()).fsPath, String(error)));
+			notificationService.error(localize('pollis.references.readFailed', "Could not read your references in {0}: {1}", (await library.folder()).fsPath, toErrorMessage(error)));
 		}
 		webview.postMessage({ command: 'references', references: items });
 	};

@@ -14,6 +14,7 @@
 // nothing.
 
 import { VSBuffer } from '../../../../../base/common/buffer.js';
+import { toErrorMessage } from '../../../../../base/common/errorMessage.js';
 import { FileAccess } from '../../../../../base/common/network.js';
 import { joinPath } from '../../../../../base/common/resources.js';
 import { URI } from '../../../../../base/common/uri.js';
@@ -564,7 +565,13 @@ export class ReferenceLibrary {
 				continue;
 			}
 			const records = versions.filter(version => version.key === reference.key).map(version => version.record);
-			const same = findReference(references, { title: reference.title, authors: reference.authors ?? [], doi: reference.doi, arxiv: reference.arxiv, records: [...records, ...reference.openalex ? [reference.openalex] : []] });
+			let same: IReference | undefined;
+			try {
+				same = findReference(references, { title: reference.title, authors: reference.authors ?? [], doi: reference.doi, arxiv: reference.arxiv, records: [...records, ...reference.openalex ? [reference.openalex] : []] });
+			} catch (error) {
+				// Which of the user's works could not be read
+				throw new Error(`${reference.key}: ${toErrorMessage(error)}`);
+			}
 			if (same) {
 				found.push({ ...reference, pollis_key: same.key, saved: new Date().toISOString() });
 			}
