@@ -1145,17 +1145,17 @@ async function openForecastingCompetitionsPage(accessor: ServicesAccessor): Prom
 
 function pageHtml(): string {
 	const text = {
-		intro: localize('competitions.intro', "Score Forecasting Models runs a forecasting method of your own on the series of a competition, M1, M3, M4, M5 Accuracy or M6, scores its forecasts with the competition's own measures, as its organisers scored the entries, and shows where it would have finished among them. The series come with the split the forecasters had: the values they saw, and the values their forecasts were scored on; in M6, the prices of its 100 assets up to each round. The datasets you add in Manage Competition Datasets are scored the same way, beside Naive2, and several datasets can be scored in one run, each in turn, their scores side by side."),
+		intro: localize('competitions.intro', "Score Forecasting Models runs a forecasting method of your own on the series of a competition, M1, M3, M4, M5 Accuracy or M6, scores its forecasts with the competition's own measures, as its organisers scored the entries, and shows where it would have finished among them. The series come with the split the forecasters had: the values they saw, and the values their forecasts were scored on; in M6, the prices of its 100 assets up to each round. Your method is scored the same way on the datasets you add in Manage Competition Datasets, beside Naive2, and on several datasets in one run, each in turn, its scores on them side by side."),
 		datasetsStep: localize('competitions.datasetsStep', "Datasets"),
 		dataset: localize('competitions.dataset', "Dataset"),
-		severalHint: localize('competitions.severalHint', "The datasets active in Manage Competition Datasets that Score Forecasting Models scores. A run scores them all, each in turn with the same sample size and seed; a frequency is chosen only when there is one dataset. To score other datasets, tick them in the column Active of Manage Competition Datasets."),
-		noneActive: localize('competitions.noneActive', "No dataset that Score Forecasting Models scores is active. Tick the datasets to score in the column Active of Manage Competition Datasets: the competitions M1, M3, M4, M5 Accuracy and M6, and the datasets you add there."),
+		severalHint: localize('competitions.severalHint', "The datasets active in Manage Competition Datasets on which Score Forecasting Models can score models. A run scores your method on each in turn, with the same sample size and seed; a frequency is chosen only when there is one dataset. To use other datasets, tick them in the column Active of Manage Competition Datasets."),
+		noneActive: localize('competitions.noneActive', "None of the active datasets is one on which Score Forecasting Models can score models. Tick the datasets to use in the column Active of Manage Competition Datasets, where the column Model Scoring says which are Ready: the competitions M1, M3, M4, M5 Accuracy and M6, and the datasets you add there."),
 		manage: localize('competitions.manage', "Open Manage Competition Datasets"),
 		m6Apart: localize('competitions.m6Apart', "A run of its own, after the others: the method of M6 is decide(prices, date), which your method defines beside forecast(y, h, period)."),
 		runningAfter: localize('competitions.runningAfter', "Sent to the Julia REPL. M6 runs after it, as a run of its own: {0}, in Earlier runs."),
 		methodHintBoth: localize('competitions.methodHintBoth', "Your method defines two functions: forecast(y, h, period) for the series of the datasets, and decide(prices, date) for M6, which is run on its own after them. The example is the benchmark Theta of M4 and M6 Dummy, the benchmark of M6."),
 		batchTitle: localize('competitions.batchTitle', "Datasets of This Run"),
-		batchHint: localize('competitions.batchHint', "A row for each dataset, scored in turn. Select a row to see that dataset's scores, its place and a series below, and its Next Steps."),
+		batchHint: localize('competitions.batchHint', "A row for each dataset, your method scored on each in turn. Select a row to see its scores on that dataset, its place and a series below, and its Next Steps."),
 		status: localize('competitions.status', "Status"),
 		waiting: localize('competitions.waiting', "Waiting"),
 		done: localize('competitions.done', "Done"),

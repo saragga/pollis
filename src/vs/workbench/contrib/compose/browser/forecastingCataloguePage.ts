@@ -39,7 +39,7 @@ import { compareCss } from './compareShared.js';
 import { IToolboxPanelsService } from '../common/toolboxPanels.js';
 import { COLLECTION_TYPE, FORECASTING_CATALOGUE_FILE, ICatalogueContribution, ICatalogueEntry, ICatalogueRead, POLLIS_COMPETITIONS_DATASETS_FILE, POLLIS_COMPETITIONS_DATASETS_PATH, POLLIS_COMPETITIONS_SOURCE, readForecastingCatalogue } from './forecastingCatalogue.js';
 import { juliaPackageFolder } from './juliaPackages.js';
-import { COMPETITIONS, downloadCode, FORECASTING_COMPETITIONS_COMMAND_ID } from './forecastingCompetitionsPage.js';
+import { COMPETITIONS, downloadCode, FORECASTING_COMPETITIONS_COMMAND_ID, ICompetition } from './forecastingCompetitionsPage.js';
 import { activeDatasets, FORECASTING_CATALOGUE_COMMAND_ID, IActiveDatasets, setActiveDatasets } from './forecastingActive.js';
 import { addedDatasetFiles, forecastingFolder, IAddedDataset, readAddedDataset, recordSaved, savedStatuses, saveDataset, WORKSPACE_SOURCE, writeAddedDataset, writeCatalogueSnapshot } from './forecastingWorkspace.js';
 import { IForecastingDatasetsService, IForecastingProblem } from '../common/forecastingDatasets.js';
@@ -124,6 +124,15 @@ let openPage: WebviewInput | undefined;
 /** The ids of the competitions that Score Forecasting Models runs, which an implemented entry may name. */
 function competitionIds(): string[] {
 	return COMPETITIONS.map(competition => competition.id);
+}
+
+/** What the column Model Scoring says of a competition of Score Forecasting Models: how models are scored on it. */
+function modelScoringHint(competition: ICompetition): string {
+	if (competition.method === 'decide') {
+		return localize('forecastingCatalogue.scoringDecide', "Score Forecasting Models scores models on it as its teams were scored: {0}, each round decided from the prices up to its start, by {1}.", competition.summary ?? '', competition.measures);
+	}
+	const horizons = competition.frequencies.map(frequency => localize('forecastingCatalogue.scoringHorizon', "{0} {1}", frequency.name, frequency.horizon)).join(', ');
+	return localize('forecastingCatalogue.scoringSeries', "Score Forecasting Models scores models on it as its entries were scored: the last values of each series are held out from the forecasters, as many as the horizon of its frequency ({0}), and the forecasts are scored on them by {1}.", horizons, competition.measures);
 }
 
 /** The papers of the page's References, by their keys in PollisReferences. */
@@ -565,11 +574,11 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?
 					const scored = entries.filter(entry => scoredAs(entry));
 					const left = entries.filter(entry => !scoredAs(entry)).map(entry => entry.name).join(', ');
 					if (!scored.length) {
-						post({ command: 'notice', text: localize('forecastingCatalogue.scoreNone', "Score Forecasting Models does not score any of the active datasets yet: it scores the competitions that PollisCompetitions.jl implements and the datasets you add.") });
+						post({ command: 'notice', text: localize('forecastingCatalogue.scoreNone', "Score Forecasting Models cannot score models on any of the active datasets yet: it scores them on the competitions that PollisCompetitions.jl implements and on the datasets you add.") });
 						return;
 					}
 					await commandService.executeCommand(FORECASTING_COMPETITIONS_COMMAND_ID);
-					post({ command: 'notice', text: left ? localize('forecastingCatalogue.scoreSome', "Score Forecasting Models lists {0}. It does not score these yet: {1}.", scored.map(entry => entry.name).join(', '), left) : localize('forecastingCatalogue.scoreAll', "Score Forecasting Models lists {0}.", scored.map(entry => entry.name).join(', ')) });
+					post({ command: 'notice', text: left ? localize('forecastingCatalogue.scoreSome', "Score Forecasting Models lists {0}. It cannot score models on these yet: {1}.", scored.map(entry => entry.name).join(', '), left) : localize('forecastingCatalogue.scoreAll', "Score Forecasting Models lists {0}.", scored.map(entry => entry.name).join(', ')) });
 				}
 			} else if (message.command === 'save' && hasKey(message, { ids: true }) && Array.isArray(message.ids)) {
 				const notice = await saveEntries(message.ids.filter((id): id is string => typeof id === 'string'));
@@ -599,20 +608,27 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?
 /** The page, showing `rows` rows at a time at first: its texts come from here, the catalogue from the `state` message. */
 function pageHtml(rows: number): string {
 	const text = {
-		intro: localize('forecastingCatalogue.intro', "Manage Competition Datasets describes the forecasting datasets and competitions, and the curated collections that gather them: what each holds, how it is evaluated, where its data come from and what it teaches. View shows one group of fields as columns; Filter by shows the values of a field, to tick those to keep, a value in a cell filters by it when clicked, and a column heading sorts the rows. Expand, under the tick of a row, shows everything its entry records, and Restore Size closes it again. Tick the datasets you are working with in the column Active: Score Competition Models opens Score Forecasting Models, which lists those it scores, to run a forecasting method of your own on their series, and Save Active Datasets to Workspace saves those that Pollis downloads. Save to Workspace copies a dataset into data/forecasting of your Pollis Workspace, downloading it first when it is not on this computer, and the column Workspace says whether it is saved there and changed since. Add a Dataset adds a dataset of your own, from a table with a row for each observation."),
+		intro: localize('forecastingCatalogue.intro', "Manage Competition Datasets describes the forecasting datasets and competitions, and the curated collections that gather them: what each holds, how it is evaluated, where its data come from and what it teaches. View shows one group of fields as columns; Filter by shows the values of a field, to tick those to keep, a value in a cell filters by it when clicked, and a column heading sorts the rows. Expand, under the tick of a row, shows everything its entry records, and Restore Size closes it again. Tick the datasets you are working with in the column Active: Score Competition Models opens Score Forecasting Models, which lists those it can score models on, to run a forecasting method of your own on their series, and Save Active Datasets to Workspace saves those that Pollis downloads. The column Model Scoring says whether models can be scored on a dataset, and its hover how: the values held out from the forecasters and the measures; the view Task and Evaluation gives its split protocol and horizon. Save to Workspace copies a dataset into data/forecasting of your Pollis Workspace, downloading it first when it is not on this computer, and the column Workspace says whether it is saved there and changed since. Add a Dataset adds a dataset of your own, from a table with a row for each observation."),
 		datasets: localize('forecastingCatalogue.datasets', "Datasets"),
 		collections: localize('forecastingCatalogue.collections', "Curated Collections"),
 		filterBy: localize('forecastingCatalogue.filterBy', "Filter by:"),
 		active: localize('forecastingCatalogue.active', "Active"),
-		activeHint: localize('forecastingCatalogue.activeHint', "The datasets you are working with: Score Forecasting Models lists those it scores, and Save Active Datasets to Workspace saves those that Pollis downloads"),
-		notScored: localize('forecastingCatalogue.notScored', "Active or not: Score Forecasting Models does not score this dataset yet, so Score Competition Models leaves it out"),
+		activeHint: localize('forecastingCatalogue.activeHint', "The datasets you are working with: Score Forecasting Models lists those it can score models on, and Save Active Datasets to Workspace saves those that Pollis downloads"),
+		notScored: localize('forecastingCatalogue.notScored', "Active or not: Score Forecasting Models cannot score models on this dataset yet, so Score Competition Models leaves it out"),
 		scoreActive: localize('forecastingCatalogue.scoreActive', "Score Competition Models"),
-		activeCount: localize('forecastingCatalogue.activeCount', "{0} active, {1} of them scored by Score Forecasting Models"),
+		activeCount: localize('forecastingCatalogue.activeCount', "{0} active, models can be scored on {1} of them"),
 		noneActive: localize('forecastingCatalogue.noneActive', "None active: tick the datasets you are working with in the column Active"),
 		expand: localize('forecastingCatalogue.expand', "Expand"),
 		restore: localize('forecastingCatalogue.restore', "Restore Size"),
 		none: localize('forecastingCatalogue.none', "None"),
 		inCollection: localize('forecastingCatalogue.inCollection', "Datasets in This Collection"),
+		modelScoring: localize('forecastingCatalogue.modelScoring', "Model Scoring"),
+		modelScoringHint: localize('forecastingCatalogue.modelScoringHint', "Whether Score Forecasting Models can score models on the dataset: whether Pollis holds the values held out from the forecasters and computes its measures"),
+		scoringReady: localize('forecastingCatalogue.scoringReady', "Ready"),
+		scoringNotYet: localize('forecastingCatalogue.scoringNotYet', "Not Yet"),
+		scoringNotYetHint: localize('forecastingCatalogue.scoringNotYetHint', "Score Forecasting Models cannot score models on this dataset yet: Pollis does not hold the values held out from its forecasters, or does not compute its measures"),
+		scoringOwnHint: localize('forecastingCatalogue.scoringOwnHint', "Score Forecasting Models scores models on it: the last values of each series, as many as its horizon, are held out from the forecasters, and the forecasts are scored on them by sMAPE, MASE and OWA, against Naive2"),
+		scoringHints: Object.fromEntries(COMPETITIONS.map(competition => [competition.id, modelScoringHint(competition)])),
 		workspace: localize('forecastingCatalogue.workspace', "Workspace"),
 		workspaceHint: localize('forecastingCatalogue.workspaceHint', "Whether the dataset is saved in data/forecasting of your Pollis Workspace"),
 		noWorkspace: localize('forecastingCatalogue.noWorkspaceStatus', "No Workspace"),
@@ -715,7 +731,8 @@ ${sortHeadingsCss}
 		.catalogue button.expand { display: block; margin: 2px auto 0 auto; padding: 2px; line-height: 0; cursor: pointer; background: none; border: none; border-radius: 3px; color: var(--vscode-icon-foreground, var(--vscode-foreground)); }
 		.catalogue button.expand:hover { background: var(--vscode-toolbar-hoverBackground); }
 		.catalogue button.expand svg { width: 14px; height: 14px; }
-		.catalogue td.workspaceCell { white-space: nowrap; }
+		.catalogue td.workspaceCell, .catalogue td.scoringCell { white-space: nowrap; }
+		.catalogue td.scoringCell.none { color: var(--vscode-descriptionForeground); }
 		.catalogue td.workspaceCell.changed { color: var(--vscode-editorWarning-foreground); }
 		.catalogue td.workspaceCell.none, .catalogue td.workspaceCell.downloading { color: var(--vscode-descriptionForeground); }
 		.catalogue .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
@@ -807,9 +824,10 @@ ${sortHeadingsCss}
 	// The column of the Curation view that counts the fields an entry does not have
 	const MISSING = '#missing';
 	const CURATION = 'curation';
-	// The first column of the tab Datasets, the tick that makes a dataset active, and the column after it, whether the
-	// dataset is saved in the workspace
+	// The first column of the tab Datasets, the tick that makes a dataset active, and the columns after it: whether
+	// models can be scored on the dataset, and whether it is saved in the workspace
 	const ACTIVE = '#active';
+	const SCORING = '#scoring';
 	const WORKSPACE = '#workspace';
 
 	let catalogue;
@@ -981,7 +999,7 @@ ${sortHeadingsCss}
 
 	function columns() {
 		const current = view();
-		return [ACTIVE, ...(tab === 'datasets' ? [WORKSPACE] : []), current.pinned[0] || 'name', ...current.columns.filter(name => !current.pinned.includes(name)), ...(current.id === CURATION ? [MISSING] : [])];
+		return [ACTIVE, ...(tab === 'datasets' ? [SCORING, WORKSPACE] : []), current.pinned[0] || 'name', ...current.columns.filter(name => !current.pinned.includes(name)), ...(current.id === CURATION ? [MISSING] : [])];
 	}
 	function drawHead() {
 		const head = document.getElementById('head');
@@ -991,6 +1009,10 @@ ${sortHeadingsCss}
 				// In the tab Curated Collections, the column holds Expand only, under no heading
 				const heading = head.appendChild(element('th', 'activeCell', tab === 'datasets' ? TEXT.active : ''));
 				heading.title = tab === 'datasets' ? TEXT.activeHint : '';
+				continue;
+			}
+			if (name === SCORING) {
+				head.appendChild(element('th', '', TEXT.modelScoring)).title = TEXT.modelScoringHint;
 				continue;
 			}
 			if (name === WORKSPACE) {
@@ -1008,7 +1030,7 @@ ${sortHeadingsCss}
 	function entryRow(entry, names) {
 		const row = element('tr', 'entryRow' + (entry.id === opened ? ' opened' : ''));
 		row.dataset.id = entry.id;
-		const first = names.find(name => name !== ACTIVE && name !== WORKSPACE);
+		const first = names.find(name => name !== ACTIVE && name !== SCORING && name !== WORKSPACE);
 		for (const name of names) {
 			const cell = element('td');
 			if (name === ACTIVE) {
@@ -1027,6 +1049,8 @@ ${sortHeadingsCss}
 				expand.title = entry.id === opened ? TEXT.restore : TEXT.expand;
 				expand.setAttribute('aria-label', expand.title);
 				expand.setAttribute('aria-expanded', String(entry.id === opened));
+			} else if (name === SCORING) {
+				drawScoring(cell, entry);
 			} else if (name === WORKSPACE) {
 				drawWorkspace(cell, entry);
 			} else if (name === first) {
@@ -1051,6 +1075,13 @@ ${sortHeadingsCss}
 			row.appendChild(cell);
 		}
 		return row;
+	}
+	// Whether models can be scored on the dataset, and how in its hover
+	function drawScoring(cell, entry) {
+		const ready = canScore(entry);
+		cell.className = 'scoringCell' + (ready ? '' : ' none');
+		cell.textContent = ready ? TEXT.scoringReady : TEXT.scoringNotYet;
+		cell.title = !ready ? TEXT.scoringNotYetHint : entry.source === WORKSPACE_SOURCE ? TEXT.scoringOwnHint : TEXT.scoringHints[entry.package_id] || TEXT.modelScoringHint;
 	}
 	// Whether the dataset is saved in the workspace, Not Saved too for one Pollis cannot download
 	function drawWorkspace(cell, entry) {

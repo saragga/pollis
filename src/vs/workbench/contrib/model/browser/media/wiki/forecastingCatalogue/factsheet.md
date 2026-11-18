@@ -34,8 +34,9 @@ Every view keeps Name on the left, after Active and Workspace in the tab Dataset
 | Datasets, Curated Collections | The tabs above the table | Show the datasets and competitions, or the curated collections |
 | Expand, Restore Size | Under the tick of a row | Expand opens the details of the entry under its row, and Restore Size closes them |
 | Active | The first column of the tab Datasets | Makes any dataset active, or not, kept for the next time |
-| Workspace | The second column of the tab Datasets | Says whether the dataset is saved in the Pollis Workspace: No Workspace, Not Saved, Downloading, Saved, or Saved and Changed |
-| Score Competition Models | Above the table, in the tab Datasets | Opens Score Forecasting Models, which lists the active datasets it scores, and says which it leaves out |
+| Model Scoring | The second column of the tab Datasets | Says whether models can be scored on the dataset: Ready, with how in its hover, or Not Yet |
+| Workspace | The third column of the tab Datasets | Says whether the dataset is saved in the Pollis Workspace: Not Saved, Downloading, Saved, or Saved and Changed; No Workspace, with Create Workspace..., when there is none |
+| Score Competition Models | Above the table, in the tab Datasets | Opens Score Forecasting Models, which lists the active datasets on which it can score models, and says which it leaves out |
 | Save Active Datasets to Workspace | Above the table, in the tab Datasets | Saves the active datasets that Pollis downloads in `data/forecasting/` of the Pollis Workspace, and says what it saved |
 | Add a Dataset... | Above the table, in the tab Datasets | Opens a form that converts a table of your own, a row for each observation, into `data/forecasting/<id>/` of the Pollis Workspace |
 | Edit Facts | The details of a dataset added with Add a Dataset | Opens the form filled with the dataset's facts, to convert its file again |
