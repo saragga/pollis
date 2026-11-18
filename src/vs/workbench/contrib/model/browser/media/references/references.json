@@ -2161,6 +2161,39 @@
 			"open_access": false
 		},
 		{
+			"key": "BDDGH...2016a",
+			"type": "techreport",
+			"title": "The GeoJSON Format",
+			"authors": [
+				"Butler, H.",
+				"Daly, M.",
+				"Doyle, A.",
+				"Gillies, S.",
+				"Hagen, S.",
+				"Schaub, T."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2016,
+			"publisher": "Internet Engineering Task Force",
+			"institution": "RFC 7946",
+			"doi": "10.17487/RFC7946",
+			"url": "https://www.rfc-editor.org/rfc/rfc7946",
+			"abstract": "GeoJSON is a geospatial data interchange format based on JavaScript Object Notation (JSON). It defines several types of JSON objects and the manner in which they are combined to represent data about geographic features, their properties, and their spatial extents. GeoJSON uses a geographic coordinate reference system, World Geodetic System 1984, and units of decimal degrees.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"GeoJSON",
+				"JSON",
+				"geographic features",
+				"spatial data representation"
+			],
+			"keywords_source": "openalex",
+			"source": "manual",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "BDHHK...2025a",
 			"type": "article",
 			"title": "Improved algorithms and novel applications of the FrankWolfe.jl library",
@@ -8871,6 +8904,24 @@
 			"open_access": true
 		},
 		{
+			"key": "DDBL2026b",
+			"type": "misc",
+			"title": "duckdb-spatial: Geospatial extension for DuckDB",
+			"authors": [
+				"DuckDB Labs and contributors"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://github.com/duckdb/duckdb-spatial",
+			"abstract": "A geospatial extension for DuckDB that adds support for working with spatial data and functions in the form of a GEOMETRY type based on the \"Simple Features\" geometry model, as well as non-standard specialized columnar DuckDB native geometry types that provide better compression and faster execution in exchange for flexibility.",
+			"abstract_source": "github",
+			"source": "manual",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "DDC1988a",
 			"type": "article",
 			"title": "Comparing the Areas under Two or More Correlated Receiver Operating Characteristic Curves: A Nonparametric Approach",
@@ -11699,6 +11750,28 @@
 			"open_access": true
 		},
 		{
+			"key": "ESRI1998a",
+			"type": "techreport",
+			"title": "ESRI Shapefile Technical Description",
+			"authors": [
+				"Environmental Systems Research Institute"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 1998,
+			"publisher": "Environmental Systems Research Institute",
+			"address": "Redlands, CA",
+			"institution": "An ESRI White Paper",
+			"url": "https://www.esri.com/content/dam/esrisites/sitecore-archive/Files/Pdfs/library/whitepapers/pdfs/shapefile.pdf",
+			"oa_url": "https://www.esri.com/content/dam/esrisites/sitecore-archive/Files/Pdfs/library/whitepapers/pdfs/shapefile.pdf",
+			"abstract": "This document defines the shapefile (.shp) spatial data format and describes why shapefiles are important. It lists the tools available in Environmental Systems Research Institute, Inc. (ESRI), software for creating shapefiles directly or converting data into shapefiles from other formats. This document also provides all the technical information necessary for writing a computer program to create shapefiles without the use of ESRI software for organizations that want to write their own data translators.",
+			"abstract_source": "manual",
+			"source": "manual",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "ET1993a",
 			"type": "book",
 			"title": "An Introduction to the Bootstrap",
@@ -12219,6 +12292,24 @@
 			"retrieved": "2026-10-31",
 			"checked": true,
 			"open_access": false
+		},
+		{
+			"key": "FGC2026a",
+			"type": "misc",
+			"title": "FlatGeobuf: A performant binary encoding for geographic data based on flatbuffers",
+			"authors": [
+				"FlatGeobuf Contributors"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://github.com/flatgeobuf/flatgeobuf",
+			"abstract": "A performant binary encoding for geographic data based on flatbuffers",
+			"abstract_source": "github",
+			"source": "manual",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "FHM2018a",
@@ -13560,6 +13651,31 @@
 			"source": "crossref",
 			"retrieved": "2026-11-02",
 			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "GDALOGRC2026a",
+			"type": "misc",
+			"title": "GDAL: Geospatial Data Abstraction Library",
+			"authors": [
+				"GDAL/OGR Contributors"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://github.com/OSGeo/gdal",
+			"abstract": "GDAL is an open source MIT licensed translator library for raster and vector geospatial data formats.",
+			"abstract_source": "github",
+			"keywords": [
+				"geospatial-data",
+				"raster",
+				"remote-sensing",
+				"vector"
+			],
+			"keywords_source": "github",
+			"source": "manual",
+			"retrieved": "2026-11-18",
+			"checked": false,
 			"open_access": true
 		},
 		{
@@ -29939,6 +30055,57 @@
 			"open_access": true
 		},
 		{
+			"key": "OGC2026a",
+			"type": "misc",
+			"title": "OGC GeoPackage Encoding Standard",
+			"authors": [
+				"Open Geospatial Consortium"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://github.com/opengeospatial/geopackage",
+			"abstract": "An asciidoc version of the GeoPackage specification for easier collaboration",
+			"abstract_source": "github",
+			"keywords": [
+				"geopackage",
+				"geopackage-standards",
+				"geopackage-swg",
+				"ogc"
+			],
+			"keywords_source": "github",
+			"source": "manual",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "OGC2026b",
+			"type": "misc",
+			"title": "GeoParquet: Specification for storing geospatial vector data in Parquet",
+			"authors": [
+				"Open Geospatial Consortium"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://github.com/opengeospatial/geoparquet",
+			"abstract": "Specification for storing geospatial vector data (point, line, polygon) in Parquet",
+			"abstract_source": "github",
+			"keywords": [
+				"apache-parquet",
+				"cloud-native",
+				"geoparquet",
+				"geospatial",
+				"gis"
+			],
+			"keywords_source": "github",
+			"source": "manual",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "OK1974a",
 			"type": "article",
 			"title": "A General Procedure for Obtaining Maximum Likelihood Estimates in Generalized Regression Models",
@@ -38759,6 +38926,24 @@
 			"open_access": false
 		},
 		{
+			"key": "TG2004a",
+			"type": "misc",
+			"title": "GPX 1.1: The GPS Exchange Format",
+			"authors": [
+				"TopoGrafix"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2004,
+			"url": "https://www.topografix.com/GPX/1/1/",
+			"abstract": "GPX (the GPS Exchange Format) is a light-weight XML data format for the interchange of GPS data.",
+			"abstract_source": "manual",
+			"source": "manual",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "TJ1978a",
 			"type": "article",
 			"title": "Evolutionary stable strategies and game dynamics",
@@ -41760,6 +41945,26 @@
 			"source": "crossref",
 			"retrieved": "2026-11-03",
 			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "Wil2008a",
+			"type": "techreport",
+			"title": "OGC KML",
+			"authors": [
+				"Wilson, Tim"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2008,
+			"publisher": "Open Geospatial Consortium",
+			"institution": "OGC 07-147r2, Version 2.2.0",
+			"url": "https://www.ogc.org/standards/kml/",
+			"abstract": "Originating as a community standard, this standard defines an XML language focused on geographic visualization. Put simply, KML encodes what to show in an earth browser, and how to show it.",
+			"abstract_source": "manual",
+			"source": "manual",
+			"retrieved": "2026-11-18",
+			"checked": false,
 			"open_access": true
 		},
 		{
