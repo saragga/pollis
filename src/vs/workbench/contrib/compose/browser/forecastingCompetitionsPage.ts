@@ -31,7 +31,7 @@ import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaff
 import { parseToml } from '../../model/browser/common/tomlPanelData.js';
 import { FORECASTINGCOMPETITIONS_METADATA } from '../../model/browser/webviews/forecastingCompetitions.data.js';
 import { sortHeadingsCss, sortHeadingsScript, sortHint } from '../../model/browser/webviews/webviewPager.js';
-import { buildWebviewHtml, codeEditorCss, codeEditorHtml, codeEditorJs, colorizeBracketsJs, nextStepIcon, openPageStepJs } from '../../model/browser/webviews/webviewScaffold.js';
+import { buildWebviewHtml, codeEditorCss, codeEditorHtml, codeEditorJs, colorizeBracketsJs, pageNextSteps } from '../../model/browser/webviews/webviewScaffold.js';
 import { INotebookEditorModelResolverService } from '../../notebook/common/notebookEditorModelResolverService.js';
 import { INotebookKernelService } from '../../notebook/common/notebookKernelService.js';
 import { findPollisWorkspace } from '../../pollisWorkspace/browser/pollisWorkspace.contribution.js';
@@ -1282,6 +1282,13 @@ function pageHtml(): string {
 			series: localize('competitions.browseIntro', "One series of the run at a time: the values the forecasters saw, the values it was scored on, your method's forecast, a benchmark of M4 computed on the series, and the winner's forecast when it is on this computer. Show finds a series by its name; Previous and Next go through the series of the run in order."),
 			horizon: localize('competitions.horizonIntro', "The sMAPE and the MASE of your method and of Naive2 at each step ahead, means over the series of each frequency: how fast the errors grow with the horizon, beside those of the benchmark against which OWA weighs the method."),
 		},
+		nextCard: {
+			horizon: localize('competitions.horizonCard', "The sMAPE and the MASE of your method and of Naive2 at each step ahead"),
+			series: localize('competitions.browseCard', "One series of the run at a time, with your method's forecast, a benchmark and the winner's"),
+			fails: localize('competitions.failsCard', "The series where your method does worst against Naive2"),
+			entry: localize('competitions.entryCard', "Your method beside an entry of the competition on the same series"),
+			runs: localize('competitions.runsCard', "This run beside another of your runs on the same series"),
+		},
 		nextOnly: {
 			series: '',
 			runs: '',
@@ -1400,28 +1407,20 @@ function pageHtml(): string {
 `,
 			},
 		],
-		nextStepsHtml: `					<li><button class="list-btn panel-toggle" id="btn-horizon">${nextStepIcon('visualise')}${text.horizon}</button></li>
-					<li><button class="list-btn panel-toggle" id="btn-series">${nextStepIcon('visualise')}${text.browse}</button></li>
-					<li><button class="list-btn panel-toggle" id="btn-fails">${nextStepIcon('diagnose')}${text.fails}</button></li>
-					<li><button class="list-btn panel-toggle" id="btn-entry">${nextStepIcon('compare')}${text.entryStep}</button></li>
-					<li><button class="list-btn panel-toggle" id="btn-runs">${nextStepIcon('compare')}${text.runsStep}</button></li>`,
-		// The panels on the right, opened as the scaffold opens its own, which the page's script then fills
-		nextStepsWiringJs: `${openPageStepJs}
-		document.getElementById('btn-horizon').addEventListener('click', function() {
-			openPageStep(this, 'horizonStep', ${JSON.stringify(text.horizon)}, 'pollis-horizon-step');
-		});
-		document.getElementById('btn-series').addEventListener('click', function() {
-			openPageStep(this, 'seriesStep', ${JSON.stringify(text.browse)}, 'pollis-series-step');
-		});
-		document.getElementById('btn-fails').addEventListener('click', function() {
-			openPageStep(this, 'failsStep', ${JSON.stringify(text.fails)}, 'pollis-fails-step');
-		});
-		document.getElementById('btn-entry').addEventListener('click', function() {
-			openPageStep(this, 'entryStep', ${JSON.stringify(text.entryStep)}, 'pollis-entry-step');
-		});
-		document.getElementById('btn-runs').addEventListener('click', function() {
-			openPageStep(this, 'runsStep', ${JSON.stringify(text.runsStep)}, 'pollis-runs-step');
-		});`,
+		// The panels on the right, opened from the cards of their groups, which the page's script then fills
+		...pageNextSteps({
+			visualise: [
+				{ id: 'horizonStep', label: text.horizon, desc: text.nextCard.horizon, event: 'pollis-horizon-step' },
+				{ id: 'seriesStep', label: text.browse, desc: text.nextCard.series, event: 'pollis-series-step' },
+			],
+			diagnose: [
+				{ id: 'failsStep', label: text.fails, desc: text.nextCard.fails, event: 'pollis-fails-step' },
+			],
+			compare: [
+				{ id: 'entryStep', label: text.entryStep, desc: text.nextCard.entry, event: 'pollis-entry-step' },
+				{ id: 'runsStep', label: text.runsStep, desc: text.nextCard.runs, event: 'pollis-runs-step' },
+			],
+		}),
 		pageScriptJs: `
 	${colorizeBracketsJs}
 	${codeEditorJs}
@@ -1984,7 +1983,7 @@ function pageHtml(): string {
 	}
 	/** Opens Browse the Series on the series named, which the Julia REPL then finds. */
 	function showSeries(name) {
-		document.getElementById('btn-series').click();
+		window.dispatchEvent(new CustomEvent('pollis-open-page-step', { detail: 'seriesStep' }));
 		const box = document.getElementById('seriesName');
 		if (box) {
 			box.value = name;

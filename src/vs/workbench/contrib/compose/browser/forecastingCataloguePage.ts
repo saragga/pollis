@@ -614,6 +614,7 @@ function pageHtml(rows: number): string {
 		noWorkspaceHint: localize('forecastingCatalogue.noWorkspaceHint', "No Pollis Workspace is open: Save to Workspace offers to create one or open one"),
 		notSaved: localize('forecastingCatalogue.notSaved', "Not Saved"),
 		notSavedHint: localize('forecastingCatalogue.notSavedHint', "Not in the workspace: Save to Workspace copies it there"),
+		notDownloadableHint: localize('forecastingCatalogue.notDownloadableHint', "Not in the workspace: Pollis does not download this dataset, so Save to Workspace cannot copy it there"),
 		notDownloadedHint: localize('forecastingCatalogue.notDownloadedHint', "Not in the workspace, nor on this computer: Save to Workspace downloads it in the Julia REPL, then copies it there"),
 		saved: localize('forecastingCatalogue.saved', "Saved"),
 		savedHint: localize('forecastingCatalogue.savedHint', "In the workspace as it was saved"),
@@ -698,7 +699,7 @@ ${sortHeadingsCss}
 		.catalogue .filterValues { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 8px; padding: 6px 8px; border: 1px solid var(--vscode-widget-border); border-radius: 3px; }
 		.catalogue .filterValues label { display: flex; align-items: center; gap: 6px; font-size: 12px; white-space: nowrap; cursor: pointer; }
 		.catalogue .filterValues .number { color: var(--vscode-descriptionForeground); }
-		.catalogue .scoreRow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 8px; }
+		.catalogue .scoreRow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 16px; }
 		.catalogue .scoreRow .hint { margin: 0; }
 		.catalogue .scoreRow .notice { flex-basis: 100%; font-size: 12px; }
 		.catalogue .scoreRow .notice:empty { display: none; }
@@ -1044,15 +1045,14 @@ ${sortHeadingsCss}
 		}
 		return row;
 	}
-	// Whether the dataset is saved in the workspace; nothing for one Pollis cannot download
+	// Whether the dataset is saved in the workspace, Not Saved too for one Pollis cannot download
 	function drawWorkspace(cell, entry) {
-		const [status, label, hint] = !canOpen(entry) && entry.source !== WORKSPACE_SOURCE ? ['', '', '']
-			: !workspace ? ['none', TEXT.noWorkspace, TEXT.noWorkspaceHint]
-				: pending.includes(entry.id) ? ['downloading', TEXT.downloading, TEXT.downloadingHint]
-					: saved[entry.id] === 'saved' ? ['saved', TEXT.saved, TEXT.savedHint]
-						: saved[entry.id] === 'changed' ? ['changed', TEXT.changed, TEXT.changedHint]
-							: ['none', TEXT.notSaved, downloaded[entry.id] ? TEXT.notSavedHint : TEXT.notDownloadedHint];
-		cell.className = 'workspaceCell' + (status ? ' ' + status : '');
+		const [status, label, hint] = !workspace ? ['none', TEXT.noWorkspace, TEXT.noWorkspaceHint]
+			: pending.includes(entry.id) ? ['downloading', TEXT.downloading, TEXT.downloadingHint]
+				: saved[entry.id] === 'saved' ? ['saved', TEXT.saved, TEXT.savedHint]
+					: saved[entry.id] === 'changed' ? ['changed', TEXT.changed, TEXT.changedHint]
+						: ['none', TEXT.notSaved, !canOpen(entry) && entry.source !== WORKSPACE_SOURCE ? TEXT.notDownloadableHint : downloaded[entry.id] ? TEXT.notSavedHint : TEXT.notDownloadedHint];
+		cell.className = 'workspaceCell ' + status;
 		cell.textContent = label;
 		cell.title = hint;
 	}

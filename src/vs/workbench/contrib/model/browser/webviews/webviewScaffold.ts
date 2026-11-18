@@ -107,6 +107,96 @@ export const openPageStepJs = `		function openPageStep(button, id, title, event)
 			window.dispatchEvent(new Event(event));
 		}`;
 
+/** The five Next Steps groups of a panel, in their order. */
+type NextStepGroup = 'visualise' | 'diagnose' | 'predict' | 'compare' | 'interpret';
+
+/** A Next Step of a Time Arrow or Minimal page whose panel the page's own script fills. */
+export interface IPageNextStep {
+	/** The id of the empty `<div>` of its panel, which the page's script fills. */
+	readonly id: string;
+	readonly label: string;
+	/** What it shows, under its label on its card. */
+	readonly desc: string;
+	/** The window event dispatched once its panel is open, on which the page's script fills it. */
+	readonly event: string;
+}
+
+/**
+ * The Next Steps of a Time Arrow or Minimal page in the five groups of a panel (Visualise, Diagnose, Predict, Compare,
+ * Interpret), whose steps the page's own script draws: a group shows a card for each of its steps, or says it has none,
+ * and a card opens the step's panel, with the group's name to go back to it, then dispatches the step's `event`. The
+ * page's script opens a step's panel itself with the window event `pollis-open-page-step`, its `detail` the step's id.
+ */
+export function pageNextSteps(steps: { readonly [group in NextStepGroup]?: readonly IPageNextStep[] }): Pick<WebviewParts, 'nextStepsHtml' | 'nextStepsWiringJs'> {
+	const labels: { readonly [group in NextStepGroup]: string } = {
+		visualise: localize('scaffold.visualise', "Visualise"),
+		diagnose: localize('scaffold.diagnose', "Diagnose"),
+		predict: localize('scaffold.predict', "Predict"),
+		compare: localize('scaffold.compare', "Compare"),
+		interpret: localize('scaffold.interpret', "Interpret"),
+	};
+	const groups = (Object.keys(labels) as NextStepGroup[]).map(id => ({
+		id,
+		button: `btn-page-steps-${id}`,
+		label: labels[id],
+		none: localize('scaffold.noPageSteps', "There are no {0} steps yet.", labels[id]),
+		steps: steps[id] ?? [],
+	}));
+	return {
+		nextStepsHtml: groups.map(g => `					<li><button class="list-btn panel-toggle" id="${g.button}">${nextStepIcon(g.id)}${g.label}</button></li>`).join('\n'),
+		nextStepsWiringJs: `		var PAGE_STEP_GROUPS = ${JSON.stringify(groups)};
+		function pageStepHeader(group, step) {
+			return '<div class="panel-header">'
+				+ (step ? '<button class="panel-back" id="btn-panel-back">&#x2190; ' + esc(group.label) + '</button>' : '<span class="right-panel-title">' + esc(group.label) + '</span>')
+				+ '<button class="panel-close" id="btn-panel-close">&#xd7;</button>'
+				+ '</div>';
+		}
+		function selectPageStepGroup(group) {
+			currentPanelId = group.button;
+			document.querySelectorAll('.panel-toggle').forEach(function(b) { b.classList.remove('panel-active'); });
+			document.getElementById(group.button).classList.add('panel-active');
+		}
+		// A card for each step of the group, or a line saying it has none
+		function renderPageStepGroup(group) {
+			rightPanel.innerHTML = pageStepHeader(group) + (group.steps.length
+				? '<div class="right-action-grid">' + group.steps.map(function(s) {
+					return '<button class="action-card" data-id="' + esc(s.id) + '"><span class="action-label">' + esc(s.label) + '</span><span class="action-desc">' + esc(s.desc) + '</span></button>';
+				}).join('') + '</div>'
+				: '<div class="panel-run-note">' + esc(group.none) + '</div>');
+			document.getElementById('btn-panel-close').addEventListener('click', hideRightPanel);
+			group.steps.forEach(function(s) {
+				rightPanel.querySelector('[data-id="' + s.id + '"]').addEventListener('click', function() { renderPageStep(group, s); });
+			});
+			rightPanel.style.display = 'block';
+		}
+		// The step's panel, an empty <div> that the page's script fills on the step's event
+		function renderPageStep(group, step) {
+			rightPanel.innerHTML = pageStepHeader(group, step) + '<div class="panel-code-title">' + esc(step.label) + '</div><div id="' + esc(step.id) + '"></div>';
+			document.getElementById('btn-panel-back').addEventListener('click', function() { renderPageStepGroup(group); });
+			document.getElementById('btn-panel-close').addEventListener('click', hideRightPanel);
+			rightPanel.style.display = 'block';
+			window.dispatchEvent(new Event(step.event));
+		}
+		PAGE_STEP_GROUPS.forEach(function(group) {
+			document.getElementById(group.button).addEventListener('click', function() {
+				if (currentPanelId === group.button) { hideRightPanel(); return; }
+				selectPageStepGroup(group);
+				renderPageStepGroup(group);
+			});
+		});
+		window.addEventListener('pollis-open-page-step', function(e) {
+			PAGE_STEP_GROUPS.forEach(function(group) {
+				group.steps.forEach(function(s) {
+					if (s.id === e.detail) {
+						selectPageStepGroup(group);
+						renderPageStep(group, s);
+					}
+				});
+			});
+		});`,
+	};
+}
+
 /** A query of the Next Steps group Query in SQL (`sqlSteps`): its id, label, what it shows, and its SQL. */
 export interface IScaffoldSqlStep {
 	readonly id: string;
