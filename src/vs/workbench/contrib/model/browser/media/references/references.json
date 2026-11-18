@@ -2452,6 +2452,44 @@
 			"open_access": false
 		},
 		{
+			"key": "BFUY2014a",
+			"type": "article",
+			"title": "Implications of Web Mercator and Its Use in Online Mapping",
+			"authors": [
+				"Battersby, Sarah E.",
+				"Finn, Michael P.",
+				"Usery, E. Lynn",
+				"Yamamoto, Kristina H."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2014,
+			"journal": "Cartographica: The International Journal for Geographic Information and Geovisualization",
+			"volume": "49",
+			"number": "2",
+			"pages": "85-101",
+			"issn": "0317-7173",
+			"doi": "10.3138/carto.49.2.2313",
+			"openalex": "W2167423485",
+			"abstract": "Online interactive maps have become a popular means of communicating with spatial data. In most online mapping systems, Web Mercator has become the dominant projection. While the Mercator projection has a long history of discussion about its inappropriateness for general-purpose mapping, particularly at the global scale, and seems to have been virtually phased out for general-purpose global-scale print maps, it has seen a resurgence in popularity in Web Mercator form. This article theorizes on how Web Mercator came to be widely used for online maps and what this might mean in terms of data display, technical aspects of map generation and distribution, design, and cognition of spatial patterns. The authors emphasize details of where the projection excels and where it does not, as well as some of its advantages and disadvantages for cartographic communication, and conclude with some research directions that may help to develop better solutions to the problem of projections for general-purpose, multi-scale Web mapping.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"Mercator projection",
+				"web mapping",
+				"map projections",
+				"cartographic communication",
+				"spatial cognition",
+				"map design",
+				"multi-scale mapping",
+				"map display"
+			],
+			"keywords_source": "openalex",
+			"source": "openalex",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "BG1969a",
 			"type": "article",
 			"title": "The Combination of Forecasts",
@@ -12978,6 +13016,31 @@
 			"open_access": false
 		},
 		{
+			"key": "Ero2026a",
+			"type": "misc",
+			"title": "OpenFreeMap: Free and Open-Source Map Hosting with OpenStreetMap Data",
+			"authors": [
+				"Ero, Zsolt"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://github.com/hyperknot/openfreemap",
+			"abstract": "OpenFreeMap lets you display custom maps on your website and apps for free. You can either self-host or use our public instance. Everything is open-source, including the full production setup. The map data comes from OpenStreetMap.",
+			"abstract_source": "github",
+			"keywords": [
+				"geospatial",
+				"maplibre",
+				"openstreetmap",
+				"vector-tiles"
+			],
+			"keywords_source": "github",
+			"source": "manual",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "Eth2019a",
 			"type": "inproceedings",
 			"title": "How Contextual are Contextualized Word Representations? Comparing the Geometry of BERT, ELMo, and GPT-2 Embeddings",
@@ -18961,6 +19024,41 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": false
+		},
+		{
+			"key": "HW2008a",
+			"type": "article",
+			"title": "OpenStreetMap: User-Generated Street Maps",
+			"authors": [
+				"Haklay, Mordechai",
+				"Weber, Patrick"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2008,
+			"journal": "IEEE Pervasive Computing",
+			"volume": "7",
+			"number": "4",
+			"pages": "12-18",
+			"issn": "1536-1268",
+			"doi": "10.1109/MPRV.2008.80",
+			"openalex": "W1989750313",
+			"abstract": "The OpenStreetMap project is a knowledge collective that provides user-generated street maps. OSM follows the peer production model that created Wikipedia; its aim is to create a set of map data that's free to use, editable, and licensed under new copyright schemes. A considerable number of contributors edit the world map collaboratively using the OSM technical infrastructure, and a core group, estimated at approximately 40 volunteers, dedicate their time to creating and improving OSM's infrastructure, including maintaining the server, writing the core software that handles the transactions with the server, and creating cartographical outputs. There's also a growing community of software developers who develop software tools to make OSM data available for further use across different application domains, software platforms, and hardware devices. The OSM project's hub is the main OSM Web site.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"OpenStreetMap",
+				"user-generated maps",
+				"peer production",
+				"collaborative mapping",
+				"volunteer contributors",
+				"cartography",
+				"open source tools"
+			],
+			"keywords_source": "openalex",
+			"source": "openalex",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "HWW1985a",
@@ -25492,6 +25590,46 @@
 			"open_access": true
 		},
 		{
+			"key": "LMSSZ...2018a",
+			"type": "article",
+			"title": "ECharts: A Declarative Framework for Rapid Construction of Web-Based Visualization",
+			"authors": [
+				"Li, Deqing",
+				"Mei, Honghui",
+				"Shen, Yi",
+				"Su, Shuang",
+				"Zhang, Wenli",
+				"Wang, Junting",
+				"Zu, Ming",
+				"Chen, Wei"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2018,
+			"journal": "Visual Informatics",
+			"volume": "2",
+			"number": "2",
+			"pages": "136-146",
+			"issn": "2468-502X",
+			"doi": "10.1016/j.visinf.2018.04.011",
+			"openalex": "W2803317679",
+			"abstract": "While there have been a dozen of authoring systems and programming toolkits for visual design and development, users who do not have programming skills, such as data analysts or interface designers, still may feel cumbersome to efficiently implement a web-based visualization. In this paper, we present ECharts, an open-sourced, web-based, cross-platform framework that supports the rapid construction of interactive visualization. The motivation is driven by three goals: easy-to-use, rich built-in interactions, and high performance. The kernel of ECharts is a suite of declarative visual design language that customizes built-in chart types. The underlying streaming architecture, together with a high-performance graphics renderer based on HTML5 canvas, enables the high expandability and performance of ECharts. We report the design, implementation, and applications of ECharts with a diverse variety of examples. We compare the utility and performance of ECharts with C3.js, HighCharts, and Chart.js. Results of the experiments demonstrate the efficiency and scalability of our framework. Since the first release in June 2013, ECharts has iterated 63 versions, and attracted over 22,000 star counts and over 1700 related projects in the GitHub. ECharts is regarded as a leading visualization development tool in the world, and ranks the third in the GitHub visualization tab.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"ECharts",
+				"web-based visualization",
+				"interactive charts",
+				"streaming architecture",
+				"VTK",
+				"open source software"
+			],
+			"keywords_source": "openalex",
+			"source": "openalex",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "LMW2019a",
 			"type": "article",
 			"title": "Derivative-Free Optimization Methods",
@@ -27126,6 +27264,24 @@
 			"open_access": true
 		},
 		{
+			"key": "M2016a",
+			"type": "misc",
+			"title": "Mapbox Vector Tile Specification, Version 2.1",
+			"authors": [
+				"Mapbox"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2016,
+			"url": "https://github.com/mapbox/vector-tile-spec",
+			"abstract": "This document specifies a space-efficient encoding format for tiled geographic vector data. It is designed to be used in browsers or server-side applications for fast rendering or lookups of feature data.",
+			"abstract_source": "github",
+			"source": "manual",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "MA2022a",
 			"type": "misc",
 			"title": "OutlierDetection.jl: A Modular Outlier Detection Ecosystem for the Julia Programming Language",
@@ -28409,6 +28565,31 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "MLC2026a",
+			"type": "misc",
+			"title": "MapLibre GL JS: Interactive Vector Tile Maps in the Browser",
+			"authors": [
+				"MapLibre Contributors"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://github.com/maplibre/maplibre-gl-js",
+			"abstract": "MapLibre GL JS is an open-source library for publishing maps on your websites or webview based apps. Fast displaying of maps is possible thanks to GPU-accelerated vector tile rendering.",
+			"abstract_source": "github",
+			"keywords": [
+				"maplibre",
+				"maplibre-gl-js",
+				"typescript",
+				"webgl2"
+			],
+			"keywords_source": "github",
+			"source": "manual",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "MLF2012a",
@@ -31417,6 +31598,31 @@
 			"open_access": true
 		},
 		{
+			"key": "OMTC2026a",
+			"type": "misc",
+			"title": "OpenMapTiles: Vector Tile Schema Implementation",
+			"authors": [
+				"OpenMapTiles Contributors"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://github.com/openmaptiles/openmaptiles",
+			"abstract": "OpenMapTiles is an extensible and open tile schema based on the OpenStreetMap. This project is used to generate vector tiles for online zoomable maps.",
+			"abstract_source": "github",
+			"keywords": [
+				"maps",
+				"openstreetmap",
+				"tiles",
+				"vector-tiles"
+			],
+			"keywords_source": "github",
+			"source": "manual",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "OSC2015a",
 			"type": "article",
 			"title": "Estimating the reproducibility of psychological science",
@@ -31437,6 +31643,24 @@
 			"source": "manual",
 			"retrieved": "2026-10-31",
 			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "OSMF2026a",
+			"type": "misc",
+			"title": "Tile Usage Policy",
+			"authors": [
+				"OpenStreetMap Foundation"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://operations.osmfoundation.org/policies/tiles/",
+			"abstract": "OpenStreetMap (OSM) data is free for everyone to use. We may block access, without notice, if your usage degrades the service.",
+			"abstract_source": "manual",
+			"source": "manual",
+			"retrieved": "2026-11-18",
+			"checked": false,
 			"open_access": true
 		},
 		{
@@ -44740,6 +44964,32 @@
 			"year": 2023,
 			"legacy_key": "zhang2023",
 			"source": "manual",
+			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "Zwi2026a",
+			"type": "misc",
+			"title": "ECharts.jl: Julia Package for the Apache ECharts v6 Visualization Library",
+			"authors": [
+				"Zwitch, Randy"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://github.com/randyzwitch/ECharts.jl",
+			"abstract": "A Julia wrapper around the Apache ECharts JavaScript visualization library, designed to make interactive charts easy to create with minimal code.",
+			"abstract_source": "github",
+			"keywords": [
+				"charting-library",
+				"echarts",
+				"interactive-visualizations",
+				"julia-language",
+				"visualization"
+			],
+			"keywords_source": "github",
+			"source": "manual",
+			"retrieved": "2026-11-18",
 			"checked": false,
 			"open_access": true
 		}

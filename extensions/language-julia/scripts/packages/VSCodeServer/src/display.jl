@@ -292,6 +292,7 @@ end
 Base.Multimedia.istextmime(::MIME{Symbol("juliavscode/html")}) = true
 Base.Multimedia.istextmime(::MIME{Symbol("application/vnd.julia-vscode.plotpane+html")}) = true
 Base.Multimedia.istextmime(::MIME{Symbol("application/vnd.julia-vscode.custompane+html")}) = true
+Base.Multimedia.istextmime(::MIME{Symbol("application/vnd.pollis.map+json")}) = true
 
 Base.Multimedia.displayable(d::InlineDisplay, ::MIME{Symbol("application/vnd.dataresource+json")}) = true
 
@@ -319,6 +320,7 @@ const DISPLAYABLE_MIMES = [
     "application/vnd.vega.v4+json",
     "application/vnd.vega.v3+json",
     "application/vnd.plotly.v1+json",
+    "application/vnd.pollis.map+json", # Pollis: a map of Pollis.webmap, drawn with MapLibre GL JS
     "application/vnd.julia-vscode.plotpane+html", # displays html
     "application/vnd.julia-vscode.custompane+html", # displays html in custom pane (metadata via parameter)
     "juliavscode/html", # deprecated

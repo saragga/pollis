@@ -111,6 +111,79 @@ function browse(page::AbstractString)
 	return nothing
 end
 
+"""A map of [`Pollis.webmap`](@ref): its JSON, which the plot pane draws with MapLibre GL JS."""
+struct WebMap
+	json::String
+end
+
+const MAP_MIME = "application/vnd.pollis.map+json"
+Base.show(io::IO, ::MIME{Symbol(MAP_MIME)}, map::WebMap) = print(io, map.json)
+Base.show(io::IO, ::MIME"text/plain", ::WebMap) = print(io, "Pollis.webmap: a map, drawn in the plot pane of the REPL")
+
+"""
+    Pollis.layer(geojson; name = "", color = nothing, column = nothing, opacity = 0.6)
+
+A layer of [`Pollis.webmap`](@ref): `geojson` is a GeoJSON text or the path of a GeoJSON file, in
+longitude and latitude on WGS 84. The features are drawn in `color` (a CSS colour such as `"#e15759"`;
+by default one of the map's palette), or coloured by the property `column`: a scale for numbers, a
+colour per value for text. `opacity` is that of polygons, from 0 to 1.
+"""
+layer(geojson::AbstractString; name::AbstractString = "", color::Union{AbstractString, Nothing} = nothing,
+	column::Union{AbstractString, Nothing} = nothing, opacity::Real = 0.6) =
+	(geojson = geojson_text(geojson), name = String(name), color = color, column = column, opacity = Float64(opacity))
+
+"""
+    Pollis.webmap(layers...; style = "positron", center = nothing, zoom = nothing, title = "")
+
+A web map that the plot pane of the REPL draws with MapLibre GL JS: an OpenStreetMap base map, from
+OpenFreeMap's vector tiles, with GeoJSON layers on it. Each layer is a [`Pollis.layer`](@ref), or a
+GeoJSON text or file drawn with the defaults. `style` is `"positron"` (light grey), `"bright"`,
+`"liberty"`, `"dark"` or `"fiord"`, or the address of a MapLibre style. Without `center`
+(longitude, latitude) the map fits the layers; `zoom` runs from 0 (the world) to about 18 (a street).
+Clicking a feature shows its attributes.
+
+```julia
+Pollis.webmap(Pollis.layer("municipalities.geojson"; column = "population"); style = "bright")
+```
+"""
+function webmap(layers::Union{AbstractString, NamedTuple}...; style::AbstractString = "positron",
+		center::Union{Tuple{Real, Real}, AbstractVector{<:Real}, Nothing} = nothing, zoom::Union{Real, Nothing} = nothing,
+		title::AbstractString = "")
+	parts = [layer isa NamedTuple ? layer : Pollis.layer(layer) for layer in layers]
+	json_layers = join([string("{\"name\":", json_text(isempty(part.name) ? "Layer $(index)" : part.name),
+		",\"color\":", json_text(part.color), ",\"column\":", json_text(part.column),
+		",\"opacity\":", json_text(part.opacity), ",\"data\":", part.geojson, "}") for (index, part) in enumerate(parts)], ",")
+	return WebMap(string("{\"style\":", json_text(style), ",\"center\":", json_text(center === nothing ? nothing : collect(Float64, center)),
+		",\"zoom\":", json_text(zoom), ",\"title\":", json_text(title), ",\"layers\":[", json_layers, "]}"))
+end
+
+"""A GeoJSON text as it is, or the text of the GeoJSON file at that path."""
+function geojson_text(geojson::AbstractString)
+	text = startswith(lstrip(geojson), "{") ? String(geojson) : isfile(geojson) ? read(geojson, String) :
+		error("Pollis.layer: $(first(geojson, 80)) is neither GeoJSON nor the path of a GeoJSON file.")
+	return text
+end
+
+"""A value as JSON: `nothing` as null, numbers, text and vectors of numbers."""
+json_text(::Nothing) = "null"
+json_text(value::Real) = isfinite(value) ? string(Float64(value)) : "null"
+json_text(values::AbstractVector{<:Real}) = string("[", join(json_text.(values), ","), "]")
+function json_text(text::AbstractString)
+	io = IOBuffer()
+	print(io, '"')
+	for c in text
+		if c == '"' || c == '\\'
+			print(io, '\\', c)
+		elseif c < ' '
+			print(io, "\\u", string(UInt16(c), base = 16, pad = 4))
+		else
+			print(io, c)
+		end
+	end
+	print(io, '"')
+	return String(take!(io))
+end
+
 """
     Pollis.replicate(title, rows; results = "results.csv")
 
