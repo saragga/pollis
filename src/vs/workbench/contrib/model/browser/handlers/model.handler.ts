@@ -722,7 +722,10 @@ export function createReferenceWiring(
 			const removed = !!key && choices.get(key)?.shown === false;
 			return [work
 				? workItem(work, work.origin === 'corrected' ? 'customised' : 'bundled', removed)
-				: { id: `ref:${paper.key ?? paper.title}`, title: paper.title, authors: paper.authors, year: String(paper.year), journal: paper.journal, openAccess: paper.openAccess, kind: 'bundled', removed, url: paperUrl(paper), bibtex: generateBibTeX(paper) }];
+				: paper.title
+					? { id: `ref:${paper.key ?? paper.title}`, title: paper.title, authors: paper.authors, year: String(paper.year), journal: paper.journal, openAccess: paper.openAccess, kind: 'bundled', removed, url: paperUrl(paper), bibtex: generateBibTeX(paper) }
+					// A toolbox panel's key that References does not have: listed by its key
+					: { id: `ref:${paper.key}`, title: paper.key ?? '', authors: '', year: '', openAccess: false, kind: 'bundled', removed, bibtex: '' }];
 		});
 		for (const choice of choices.values()) {
 			const work = byKey.get(choice.key);

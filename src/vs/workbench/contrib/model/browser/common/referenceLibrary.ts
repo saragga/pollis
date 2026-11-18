@@ -475,7 +475,8 @@ export class ReferenceLibrary {
 	/**
 	 * The references of Pollis, their citation counts and the panels that cite them, read once: the works and counts of
 	 * PollisReferences.jl, which PollisDB copies into package.json, when they have every key the panels cite, else
-	 * those this Pollis came with.
+	 * those this Pollis came with. The works this Pollis came with that the copy lacks are added to it, as toolbox panels,
+	 * which the panels here do not list, may cite works newer than the copy.
 	 */
 	pollis(): Promise<IPollisReferences> {
 		pollisReferences ??= (async () => {
@@ -487,7 +488,8 @@ export class ReferenceLibrary {
 					const latest = JSON.parse((await this.fileService.readFile(joinPath(this.home, 'package.json'))).value.toString());
 					const keys = new Set((latest.references ?? []).map((reference: IReference) => reference.key));
 					if (keys.size && panels.every(panel => panel.keys.every(key => keys.has(key)))) {
-						({ references, counts = [] } = latest);
+						references = [...latest.references, ...references.filter(reference => !keys.has(reference.key))];
+						counts = latest.counts ?? [];
 					}
 				} catch {
 					// Not installed yet: the references this Pollis came with
