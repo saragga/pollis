@@ -50,6 +50,18 @@ interface IToolboxPanelContribution {
 	readonly defaultModel: string;
 	/** The first column header of the decision table. Default: "Plot". */
 	readonly decisionFirstColumn?: string;
+	/** Further menu items, each opening the panel on one of its tabs, after the panel's own item wherever it goes. */
+	readonly tabs?: IToolboxPanelTabContribution[];
+}
+
+/** A menu item of a toolbox panel that opens the panel on one of its tabs. */
+interface IToolboxPanelTabContribution {
+	/** The tab: one of the panel's model ids. */
+	readonly model: string;
+	/** The command that opens the panel on that tab. */
+	readonly command: string;
+	/** The menu item. */
+	readonly title: string;
 }
 
 /** A submenu of a toolbox's menu, which holds the panels that name it. */
@@ -198,6 +210,19 @@ const toolboxesExtensionPoint = ExtensionsRegistry.registerExtensionPoint<IToolb
 							data: { type: 'string', description: localize('pollisToolboxes.panel.data', "The panel's TOML, relative to the extension folder.") },
 							defaultModel: { type: 'string', description: localize('pollisToolboxes.panel.defaultModel', "The model toggle shown first.") },
 							decisionFirstColumn: { type: 'string', description: localize('pollisToolboxes.panel.decisionFirstColumn', "The first column header of the decision table.") },
+							tabs: {
+								type: 'array',
+								description: localize('pollisToolboxes.panel.tabs', "Further menu items, each opening the panel on one of its tabs, after the panel's own item wherever the panel goes."),
+								items: {
+									type: 'object',
+									required: ['model', 'command', 'title'],
+									properties: {
+										model: { type: 'string', description: localize('pollisToolboxes.panel.tab.model', "The tab: one of the panel's model ids.") },
+										command: { type: 'string', description: localize('pollisToolboxes.panel.tab.command', "The command that opens the panel on that tab.") },
+										title: { type: 'string', description: localize('pollisToolboxes.panel.tab.title', "The menu item.") },
+									},
+								},
+							},
 						},
 					},
 				},
@@ -286,7 +311,8 @@ interface ILoadedToolbox {
 	readonly toolbox: IToolboxContribution;
 	readonly location: URI;
 	readonly version: string;
-	readonly panels: readonly { readonly contribution: IToolboxPanelContribution; readonly panel: IScaffoldPanel; readonly faq: readonly IAskPollisEvalItem[] }[];
+	/** Its panels, each with the menu items that open it on one of its tabs, those that name a tab it has. */
+	readonly panels: readonly { readonly contribution: IToolboxPanelContribution; readonly panel: IScaffoldPanel; readonly faq: readonly IAskPollisEvalItem[]; readonly tabs: readonly IToolboxPanelTabContribution[] }[];
 	readonly documents: readonly IToolboxDocumentInfo[];
 	readonly texts: readonly IToolboxTextInfo[];
 	readonly courses: readonly IToolboxCourseContribution[];
@@ -387,9 +413,10 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 					texts: loaded.texts,
 					games: loaded.games,
 					forecastingDatasets: loaded.forecastingDatasets,
-					panels: inMenuOrder(loaded.toolbox, loaded.panels).map(({ contribution, panel, faq }) => ({
+					panels: inMenuOrder(loaded.toolbox, loaded.panels).map(({ contribution, panel, faq, tabs }) => ({
 						id: contribution.id,
 						command: contribution.command,
+						tabCommands: tabs.map(tab => tab.command),
 						title: contribution.menuTitle ?? contribution.title,
 						panelTitle: contribution.title,
 						submenu: submenuOf(loaded.toolbox, contribution)?.title,
@@ -429,7 +456,7 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 		for (const extension of extensions) {
 			const location = extension.description.extensionLocation;
 			for (const toolbox of extension.value) {
-				const panels: { contribution: IToolboxPanelContribution; panel: IScaffoldPanel; faq: readonly IAskPollisEvalItem[] }[] = [];
+				const panels: { contribution: IToolboxPanelContribution; panel: IScaffoldPanel; faq: readonly IAskPollisEvalItem[]; tabs: readonly IToolboxPanelTabContribution[] }[] = [];
 				for (const contribution of toolbox.panels) {
 					if (contribution.submenu && !submenuOf(toolbox, contribution)) {
 						extension.collector.error(localize('pollisToolboxes.unknownSubmenu', "Panel {0} names the submenu {1}, which the toolbox does not have. It goes straight in the toolbox's menu.", contribution.id, contribution.submenu));
@@ -442,8 +469,16 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 					try {
 						const parsed = parseToml((await this.fileService.readFile(toml)).value.toString());
 						const data = tomlToPanelData(parsed);
+						const tabs = (contribution.tabs ?? []).filter(tab => {
+							const known = data.models?.some(model => model.id === tab.model) ?? false;
+							if (!known) {
+								extension.collector.error(localize('pollisToolboxes.unknownTab', "The menu item {0} of panel {1} names the tab {2}, which the panel does not have. It is left out.", tab.title, contribution.id, tab.model));
+							}
+							return known;
+						});
 						panels.push({
 							contribution,
+							tabs,
 							faq: panelFaqItems(parsed, contribution.title),
 							panel: {
 								id: contribution.id,
@@ -552,7 +587,7 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 				}
 				return menu;
 			};
-			for (const { contribution, panel } of loaded.panels) {
+			for (const { contribution, panel, tabs } of loaded.panels) {
 				// The folders the panel's wikis and notebooks are in: its id, or another name (e.g. `game-theory`)
 				const folders = (entries: readonly (IModelWiki | IModelNotebook)[]) => new Set([contribution.id, ...entries.map(entry => hasKey(entry, { file: true }) ? entry.file.split('/')[0] : '').filter(folder => folder)]);
 				for (const folder of folders(panel.data.wikis)) {
@@ -562,15 +597,25 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 					store.add(registerExternalFolder('notebook', folder, joinPath(location, 'notebooks', folder)));
 				}
 				store.add(CommandsRegistry.registerCommand(contribution.command, accessor => openScaffoldWebview(accessor, panel)));
+				for (const tab of tabs) {
+					store.add(CommandsRegistry.registerCommand(tab.command, accessor => openScaffoldWebview(accessor, panel, tab.model)));
+				}
 				const place = placement.panels[contribution.id];
-				const command = { id: contribution.command, title: contribution.menuTitle ?? contribution.title };
+				// The panel's own item, then those that open it on one of its tabs, in the same menu and group, right after it
+				const commands = [
+					{ id: contribution.command, title: contribution.menuTitle ?? contribution.title },
+					...tabs.map(tab => ({ id: tab.command, title: tab.title })),
+				];
+				let menu: MenuId | undefined;
 				if (place?.menu === TOOLBOX_MENU) {
-					if (placement.menu) {
-						const inSubmenu = submenuOf(toolbox, contribution);
-						append(inSubmenu ? nestedMenu(inSubmenu) : submenu, { group: place.group, order: place.order, title: command.title, command });
-					}
+					// In the toolbox's own menu, or its submenu, while the toolbox's menu is placed
+					const inSubmenu = submenuOf(toolbox, contribution);
+					menu = placement.menu ? (inSubmenu ? nestedMenu(inSubmenu) : submenu) : undefined;
 				} else if (place) {
-					append(MenuId.for(place.menu), { group: place.group, order: place.order, title: command.title, command });
+					menu = MenuId.for(place.menu);
+				}
+				if (place && menu) {
+					commands.forEach((command, index) => append(menu, { group: place.group, order: place.order + index / 100, title: command.title, command }));
 				}
 			}
 			// Its notebook courses, whatever the menus the user published it in

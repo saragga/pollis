@@ -30,6 +30,8 @@ export interface IToolboxPanelInfo {
 	readonly id: string;
 	/** The command that opens it. */
 	readonly command: string;
+	/** The commands of its further menu items, each opening it on one of its tabs. */
+	readonly tabCommands: readonly string[];
 	/** Its menu item. */
 	readonly title: string;
 	/** The title the panel shows, and asks Ask Pollis with: its wikis are indexed under it. */

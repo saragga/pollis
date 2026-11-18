@@ -59,7 +59,7 @@ function titleOf(title: string | ICommandActionTitle): string {
  * page's own toolboxes, which the page draws where the user puts them.
  */
 function placeTree(contextKeyService: IContextKeyService, toolboxes: readonly IToolboxInfo[]): IPlaceNode[] {
-	const own = new Set(toolboxes.flatMap(toolbox => [`${TOOLBOX_SUBMENU_PREFIX}${toolbox.id}`, ...toolbox.panels.map(panel => panel.command)]));
+	const own = new Set(toolboxes.flatMap(toolbox => [`${TOOLBOX_SUBMENU_PREFIX}${toolbox.id}`, ...toolbox.panels.flatMap(panel => [panel.command, ...panel.tabCommands])]));
 	const build = (menu: MenuId, path: ReadonlySet<string>): IPlaceNode[] => {
 		const nodes: IPlaceNode[] = [];
 		// An item registered twice (under different conditions) is one entry
