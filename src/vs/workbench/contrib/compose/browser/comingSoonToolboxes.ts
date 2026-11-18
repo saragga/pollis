@@ -133,7 +133,9 @@ appendComingSoonItems(SMART_REGIONS_LIBRARIES_MENU, [
 	[
 		localize('comingSoon.smartRegions.copernicus', "Copernicus Data Space"),
 		localize('comingSoon.smartRegions.earthExplorer', "USGS EarthExplorer"),
-		localize('comingSoon.smartRegions.dgtLidar', "DGT Lidar (Portugal)"),
+		localize('comingSoon.smartRegions.openTopography', "OpenTopography"),
+		localize('comingSoon.smartRegions.inspire', "INSPIRE Geoportal"),
+		localize('comingSoon.smartRegions.planetaryComputer', "Microsoft Planetary Computer"),
 	],
 	[
 		localize('comingSoon.smartRegions.mapillary', "Mapillary Street-Level Imagery"),
