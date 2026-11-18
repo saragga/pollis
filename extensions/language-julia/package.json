@@ -41,6 +41,16 @@
     ],
     "main": "./dist/extension",
     "contributes": {
+        "notebookRenderer": [
+            {
+                "id": "pollis-map-renderer",
+                "displayName": "Pollis Maps",
+                "entrypoint": "./dist/pollisMapRenderer.js",
+                "mimeTypes": [
+                    "application/vnd.pollis.map+json"
+                ]
+            }
+        ],
         "grammars": [
             {
                 "language": "julia",

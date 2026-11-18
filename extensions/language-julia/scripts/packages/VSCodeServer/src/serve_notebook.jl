@@ -153,6 +153,9 @@ function serve_notebook(pipename, debugger_pipename, outputchannel_logger; error
 
         Base.Multimedia.pushdisplay(JuliaNotebookInlineDisplay())
 
+        # Pollis: a map of Pollis.webmap goes to the notebook as its JSON, which Pollis's map renderer draws
+        IJuliaCore.register_jsonmime(MIME("application/vnd.pollis.map+json"))
+
         IJuliaCore.watch_stdio(io_send_callback)
 
         Base.with_logger(outputchannel_logger) do

@@ -43,11 +43,26 @@ async function main() {
         logLevel: 'warning',
         plugins: [esbuildProblemMatcherPlugin],
     })
-    if (watch) {
-        await ctx.watch()
-    } else {
-        await ctx.rebuild()
-        await ctx.dispose()
+    // Pollis: the notebook renderer of maps, which runs in the notebook's page as an ES module
+    const rendererCtx = await esbuild.context({
+        entryPoints: [{ in: 'src/renderers/pollisMapRenderer.mts', out: 'pollisMapRenderer' }],
+        bundle: true,
+        format: 'esm',
+        minify: production,
+        sourcemap: true,
+        sourcesContent: false,
+        platform: 'browser',
+        outdir: './dist',
+        logLevel: 'warning',
+        plugins: [esbuildProblemMatcherPlugin],
+    })
+    for (const context of [ctx, rendererCtx]) {
+        if (watch) {
+            await context.watch()
+        } else {
+            await context.rebuild()
+            await context.dispose()
+        }
     }
 }
 

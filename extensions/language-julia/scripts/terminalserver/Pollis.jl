@@ -111,14 +111,14 @@ function browse(page::AbstractString)
 	return nothing
 end
 
-"""A map of [`Pollis.webmap`](@ref): its JSON, which the plot pane draws with MapLibre GL JS."""
+"""A map of [`Pollis.webmap`](@ref): its JSON, which the plot pane and notebook outputs draw with MapLibre GL JS."""
 struct WebMap
 	json::String
 end
 
 const MAP_MIME = "application/vnd.pollis.map+json"
 Base.show(io::IO, ::MIME{Symbol(MAP_MIME)}, map::WebMap) = print(io, map.json)
-Base.show(io::IO, ::MIME"text/plain", ::WebMap) = print(io, "Pollis.webmap: a map, drawn in the plot pane of the REPL")
+Base.show(io::IO, ::MIME"text/plain", ::WebMap) = print(io, "Pollis.webmap: a map, drawn in the plot pane of the REPL or in a notebook output")
 
 """
     Pollis.layer(geojson; name = "", color = nothing, column = nothing, opacity = 0.6)
@@ -135,7 +135,7 @@ layer(geojson::AbstractString; name::AbstractString = "", color::Union{AbstractS
 """
     Pollis.webmap(layers...; style = "positron", center = nothing, zoom = nothing, title = "")
 
-A web map that the plot pane of the REPL draws with MapLibre GL JS: an OpenStreetMap base map, from
+A web map that the plot pane of the REPL, or a notebook output, draws with MapLibre GL JS: an OpenStreetMap base map, from
 OpenFreeMap's vector tiles, with GeoJSON layers on it. Each layer is a [`Pollis.layer`](@ref), or a
 GeoJSON text or file drawn with the defaults. `style` is `"positron"` (light grey), `"bright"`,
 `"liberty"`, `"dark"` or `"fiord"`, or the address of a MapLibre style. Without `center`
