@@ -10,6 +10,7 @@ import * as fs from 'fs'
 import * as os from 'os'
 import * as path from 'path'
 import { pipeline } from 'stream/promises'
+import { promisify } from 'util'
 import * as vscode from 'vscode'
 import * as zlib from 'zlib'
 
@@ -39,7 +40,15 @@ const DUCKDB_PLATFORMS: Record<string, string> = {
     'win32-arm64': 'windows_arm64',
 }
 
+/** DuckDB's repository of its own extensions, which are signed, from which those the toolboxes name are downloaded. */
+const EXTENSIONS_REPOSITORY = 'https://extensions.duckdb.org'
+
+/** The name of an extension of DuckDB's repository, as a toolbox names it in `duckdbExtensions`. */
+const EXTENSION_NAME = /^[a-z][a-z0-9_]*$/
+
 let g_ready: Promise<void> = Promise.resolve()
+/** The downloads of the extensions the toolboxes name, one after another, so that two never fetch the same file. */
+let g_toolboxExtensions: Promise<void> = Promise.resolve()
 
 /**
  * Sets JULIA_DUCKDB_LIBRARY for every Julia that Pollis starts (the REPL and terminals, notebooks, the install task),
@@ -56,6 +65,15 @@ export function activate(context: vscode.ExtensionContext) {
         console.error('[pollis] The references of Pollis could not be copied into ~/.pollis/references', err)
     })
     g_ready = Promise.all([engine, references]).then(() => undefined)
+    // The extensions of DuckDB the toolboxes name, at each start, as a new engine needs them again, and whenever an
+    // extension is installed
+    const installToolboxExtensions = () => {
+        g_toolboxExtensions = g_toolboxExtensions.then(() => installNamedExtensions(vscode.env.appRoot)).catch((err) => {
+            console.error('[pollis] The DuckDB extensions of the toolboxes could not be installed', err)
+        })
+    }
+    installToolboxExtensions()
+    context.subscriptions.push(vscode.extensions.onDidChange(installToolboxExtensions))
 }
 
 /** Resolves once ~/.pollis/duckdb/ holds Pollis' engine and its extensions, and ~/.pollis/references/ its references (or a copy failed). */
@@ -67,7 +85,11 @@ function firstExisting(candidates: string[]): string | undefined {
     return candidates.find((candidate) => fs.existsSync(candidate))
 }
 
-async function install(appRoot: string) {
+/**
+ * The engine Pollis brings: the folder of its bindings, its version, and the folder where DuckDB installs its
+ * extensions for it, ~/.duckdb/extensions/VERSION/PLATFORM/ (none for a platform DuckDB has no extensions for).
+ */
+async function duckdbEngine(appRoot: string): Promise<{ folder: string; version: string; platform?: string; installedFolder?: string } | undefined> {
     const bindings = `node-bindings-${process.platform}-${process.arch}`
     // Packaged, the folder is outside the asar archive; in a development build, in node_modules.
     const folder = firstExisting([
@@ -75,12 +97,21 @@ async function install(appRoot: string) {
         path.join(appRoot, 'node_modules', '@duckdb', bindings),
     ])
     if (!folder) {
-        return
+        return undefined
     }
     const version: string = JSON.parse(await fs.promises.readFile(path.join(folder, 'package.json'), 'utf8')).version
-    // Where DuckDB installs its extensions: the version of the engine (2.0.0 of @duckdb/node-api 2.0.0-r.1) and the platform.
+    // The version of the engine (2.0.0 of @duckdb/node-api 2.0.0-r.1) and the platform.
     const platform = DUCKDB_PLATFORMS[`${process.platform}-${process.arch}`]
     const installedFolder = platform && path.join(os.homedir(), '.duckdb', 'extensions', `v${version.replace(/-.*$/, '')}`, platform)
+    return { folder, version, platform, installedFolder }
+}
+
+async function install(appRoot: string) {
+    const engine = await duckdbEngine(appRoot)
+    if (!engine) {
+        return
+    }
+    const { folder, version, installedFolder } = engine
     // The extensions that come with Pollis: fts, full-text search, and quack, which serves the Shared Session's database,
     // with httpfs, on which quack runs; json and excel, for JSON files and Excel workbooks.
     // In a development build, `npm run gulp fetch-duckdb-extensions` fetches them.
@@ -123,6 +154,74 @@ async function install(appRoot: string) {
 }
 
 /** The references that come with Pollis, which PollisDB.build_references() makes the pollis_ tables of PollisReferences from. */
+/** The extensions of DuckDB that the installed toolboxes name, each with the titles of the toolboxes that name it. */
+function namedExtensions(): Map<string, string[]> {
+    const named = new Map<string, string[]>()
+    for (const extension of vscode.extensions.all) {
+        const toolboxes = extension.packageJSON?.contributes?.pollisToolboxes
+        if (!Array.isArray(toolboxes)) {
+            continue
+        }
+        for (const toolbox of toolboxes) {
+            const names = toolbox?.duckdbExtensions
+            if (!Array.isArray(names)) {
+                continue
+            }
+            for (const name of names) {
+                if (typeof name === 'string' && EXTENSION_NAME.test(name)) {
+                    named.set(name, [...(named.get(name) ?? []), String(toolbox.title ?? extension.id)])
+                }
+            }
+        }
+    }
+    return named
+}
+
+/**
+ * Downloads, where DuckDB installs its extensions for Pollis' engine, the extensions the installed toolboxes name that
+ * are not there yet: one left by an earlier install is used as it is. They stay when the toolbox is uninstalled, as
+ * notebooks, other toolboxes or the user's own SQL may load them. What could not be downloaded is said once, and
+ * tried again at the next start or install.
+ */
+async function installNamedExtensions(appRoot: string) {
+    const engine = await duckdbEngine(appRoot)
+    if (!engine?.platform || !engine.installedFolder) {
+        return
+    }
+    const { platform, installedFolder } = engine
+    const version = `v${engine.version.replace(/-.*$/, '')}`
+    const failed: string[] = []
+    for (const [name, toolboxes] of namedExtensions()) {
+        const target = path.join(installedFolder, `${name}.duckdb_extension`)
+        if (fs.existsSync(target)) {
+            continue
+        }
+        const url = `${EXTENSIONS_REPOSITORY}/${version}/${platform}/${name}.duckdb_extension.gz`
+        try {
+            await downloadExtension(url, target)
+            console.log(`[pollis] DuckDB's ${name} extension installed for ${toolboxes.join(', ')}`)
+        } catch (err) {
+            failed.push(`${name} (for ${toolboxes.join(', ')}): ${(err as Error).message}`)
+        }
+    }
+    if (failed.length) {
+        vscode.window.showWarningMessage(`DuckDB extensions a toolbox needs could not be downloaded: ${failed.join('; ')}. Pollis tries again when it next starts.`)
+    }
+}
+
+/** Downloads a compressed extension and unpacks it, written beside and renamed, so that no half-written file is ever loaded. */
+async function downloadExtension(url: string, target: string) {
+    const response = await fetch(url, { signal: AbortSignal.timeout(600000), headers: { 'User-Agent': 'Pollis' } })
+    if (!response.ok) {
+        throw new Error(`${response.status} for ${url}`)
+    }
+    const unpacked = await promisify(zlib.gunzip)(Buffer.from(await response.arrayBuffer()))
+    await fs.promises.mkdir(path.dirname(target), { recursive: true })
+    const written = `${target}.${process.pid}.tmp`
+    await fs.promises.writeFile(written, unpacked)
+    await fs.promises.rename(written, target)
+}
+
 const POLLIS_REFERENCES = path.join(os.homedir(), '.pollis', 'references', 'pollis.json')
 
 /** Copies the references that come with this Pollis into ~/.pollis/references/pollis.json, when they differ from those there. */

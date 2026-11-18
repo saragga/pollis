@@ -12,6 +12,7 @@ import { hasKey } from '../../../../base/common/types.js';
 import { URI } from '../../../../base/common/uri.js';
 import { MenuId, MenuRegistry } from '../../../../platform/actions/common/actions.js';
 import { CommandsRegistry, ICommandService } from '../../../../platform/commands/common/commands.js';
+import { IContextKey, IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
 import { BrowserViewCommandId } from '../../../../platform/browserView/common/browserView.js';
 import { ExtensionIdentifier } from '../../../../platform/extensions/common/extensions.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
@@ -26,7 +27,7 @@ import { registerExternalFolder } from '../../model/browser/common/customCopyFil
 import { panelFaqItems, panelKeyPoints, parseToml, tomlToPanelData } from '../../model/browser/common/tomlPanelData.js';
 import { buildScaffoldHtml } from '../../model/browser/webviews/scaffoldParts.js';
 import { IAskPollisEvalItem } from '../common/askPollis.js';
-import { IToolboxDocumentInfo, IToolboxInfo, IToolboxTextInfo, IToolboxPanelsService, IToolboxPlace, IToolboxPlacement, TOOLBOX_END_GROUP, TOOLBOX_MENU, TOOLBOX_SUBMENU_PREFIX } from '../common/toolboxPanels.js';
+import { IToolboxDocumentInfo, IToolboxInfo, IToolboxTextInfo, IToolboxPanelsService, IToolboxPlace, IToolboxPlacement, TOOLBOX_END_GROUP, TOOLBOX_MENU, TOOLBOX_SUBMENU_PREFIX, toolboxInstalledContextKey } from '../common/toolboxPanels.js';
 
 /** A panel of a toolbox contributed by an extension. */
 interface IToolboxPanelContribution {
@@ -84,6 +85,11 @@ interface IToolboxContribution {
 	readonly games?: IToolboxGameContribution[];
 	/** Its forecasting datasets file, relative to the extension folder, which Manage Competition Datasets lists. */
 	readonly forecastingDatasets?: string;
+	/**
+	 * The extensions of DuckDB its panels use, for example spatial, which the Julia extension of Pollis downloads from
+	 * DuckDB's repository (extensions/language-julia/src/pollisDuckDB.ts).
+	 */
+	readonly duckdbExtensions?: string[];
 }
 
 /** A Simulation Games case of a toolbox: a folder with case.toml and model.jl. */
@@ -218,6 +224,11 @@ const toolboxesExtensionPoint = ExtensionsRegistry.registerExtensionPoint<IToolb
 						},
 					},
 				},
+				duckdbExtensions: {
+					type: 'array',
+					description: localize('pollisToolboxes.duckdbExtensions', "The extensions of DuckDB the toolbox's panels use, for example spatial. Pollis downloads them from DuckDB's repository when the toolbox is installed, and again for each new DuckDB engine it brings; they stay when the toolbox is uninstalled, as notebooks, other toolboxes or the user's own SQL may load them."),
+					items: { type: 'string', pattern: '^[a-z][a-z0-9_]*$' },
+				},
 				forecastingDatasets: {
 					type: 'string',
 					description: localize('pollisToolboxes.forecastingDatasets', "The toolbox's forecasting datasets file, relative to the extension folder, for example data/forecasting_datasets.toml: entries of the forecasting catalogue, with the fields of its schema, which Compose > Forecasting Competitions > Manage Competition Datasets lists with those of PollisCompetitions.jl and the other toolboxes."),
@@ -323,7 +334,7 @@ const DEFAULT_PANEL_GROUP = '1_toolbox';
  * Installing a toolbox puts its menu, with every panel in it, at the end of Extend. Once the user
  * publishes it, only the panels the user chose are added, each in the toolbox's own menu or straight
  * into another menu, and the toolbox's menu goes at the end of Extend or in the menu the user chose.
- * The Extend menu is in the menu bar only while something is in it.
+ * Extend is always in the menu bar (comingSoonToolboxes.ts), and the coming-soon menu of a toolbox hides while the toolbox is installed.
  * The toolbox extensions are not built in (their sources are in Trumpingtons/pollis-toolboxes):
  * the user installs them from the Toolboxes section of the Extensions pane, into the user's
  * extensions folder, and the files are read from wherever the extension is installed.
@@ -340,6 +351,8 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 	private readonly loadedBarrier = new Barrier();
 	/** The toolbox submenus by toolbox id: a menu id can be created only once. */
 	private readonly submenus = new Map<string, MenuId>();
+	/** Whether each toolbox is installed, by toolbox id, which hides its coming-soon menu. */
+	private readonly installedKeys = new Map<string, IContextKey<boolean>>();
 	/** Counts the loads, so a slower earlier one does not overwrite a later one. */
 	private generation = 0;
 	private loaded: readonly ILoadedToolbox[] = [];
@@ -348,6 +361,7 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 		@IFileService private readonly fileService: IFileService,
 		@ILogService private readonly logService: ILogService,
 		@IStorageService private readonly storageService: IStorageService,
+		@IContextKeyService private readonly contextKeyService: IContextKeyService,
 	) {
 		super();
 		// The toolboxes are read a moment after the menu bar is built: show the menus as they were, so the menu bar does not move
@@ -567,6 +581,7 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 			});
 		}
 		this.registrations.value = store;
+		this.setInstalled(this.loaded.map(({ toolbox }) => toolbox.id));
 		this.storageService.store(MENUS_STORAGE_KEY, JSON.stringify(items), StorageScope.PROFILE, StorageTarget.MACHINE);
 		this._onDidChange.fire();
 	}
@@ -606,6 +621,21 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 			}
 		}
 		this.registrations.value = store;
+		// The toolboxes whose menu was in a menu other than a toolbox's own, the top-level ones
+		this.setInstalled(items.filter(item => item.submenu?.startsWith(TOOLBOX_SUBMENU_PREFIX) && !item.menu.startsWith(TOOLBOX_SUBMENU_PREFIX)).map(item => item.submenu!.slice(TOOLBOX_SUBMENU_PREFIX.length)));
+	}
+
+	/** Sets which toolboxes are installed: the context key of each toolbox known, true for those of these ids. */
+	private setInstalled(toolboxIds: readonly string[]): void {
+		const installed = new Set(toolboxIds);
+		for (const id of installed) {
+			if (!this.installedKeys.has(id)) {
+				this.installedKeys.set(id, this.contextKeyService.createKey(toolboxInstalledContextKey(id), false));
+			}
+		}
+		for (const [id, key] of this.installedKeys) {
+			key.set(installed.has(id));
+		}
 	}
 }
 

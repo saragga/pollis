@@ -7,7 +7,7 @@ import { localize } from '../../../../nls.js';
 import { MenuId, MenuRegistry } from '../../../../platform/actions/common/actions.js';
 import { CommandsRegistry } from '../../../../platform/commands/common/commands.js';
 import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
-import { TOOLBOX_END_GROUP } from '../common/toolboxPanels.js';
+import { TOOLBOX_END_GROUP, toolboxInstalledContextKey } from '../common/toolboxPanels.js';
 
 /** The command of every item of a coming-soon toolbox: the items are greyed out, so it is never run. */
 const COMING_SOON_COMMAND = 'pollis.toolboxes.comingSoon';
@@ -46,6 +46,11 @@ function appendComingSoonSubmenu(menu: MenuId, submenu: MenuId, title: string, g
 	MenuRegistry.appendMenuItem(menu, { submenu, title, group, order });
 }
 
+/** Adds the menu of a coming-soon toolbox to Extend, hidden while the toolbox of that id is installed. */
+function appendComingSoonToolbox(toolboxId: string, submenu: MenuId, title: string, order: number): void {
+	MenuRegistry.appendMenuItem(MenuId.MenubarExtendMenu, { submenu, title, group: COMING_SOON_GROUP, order, when: ContextKeyExpr.not(toolboxInstalledContextKey(toolboxId)) });
+}
+
 // Geoscience Toolbox
 
 const GEOSCIENCE_MENU = new MenuId('pollisComingSoon.geoscience');
@@ -54,7 +59,7 @@ const GEOSCIENCE_LIBRARIES_MENU = new MenuId('pollisComingSoon.geoscience.access
 const CLIMATE_SCIENCE_MENU = new MenuId('pollisComingSoon.geoscience.climateScience');
 const EARTH_SYSTEM_MENU = new MenuId('pollisComingSoon.geoscience.earthSystemModelling');
 
-appendComingSoonSubmenu(MenuId.MenubarExtendMenu, GEOSCIENCE_MENU, localize('comingSoon.geoscience', "Geoscience Toolbox (Coming Soon)"), COMING_SOON_GROUP, 1);
+appendComingSoonToolbox('geoscience', GEOSCIENCE_MENU, localize('comingSoon.geoscience', "Geoscience Toolbox (Coming Soon)"), 1);
 
 // Access Files and Access Data Libraries of the toolbox's own, not in Explore: the user may move their items to any menu from the toolbox's Edit button
 appendComingSoonSubmenu(GEOSCIENCE_MENU, GEOSCIENCE_FILES_MENU, localize('comingSoon.geoscience.accessFiles', "Access Files"), '1_comingSoon', 1);
@@ -110,7 +115,7 @@ const SMART_REGIONS_MAPS_MENU = new MenuId('pollisComingSoon.smartRegions.mapVis
 const SMART_REGIONS_REMOTE_SENSING_MENU = new MenuId('pollisComingSoon.smartRegions.remoteSensing');
 const SMART_REGIONS_POINT_CLOUDS_MENU = new MenuId('pollisComingSoon.smartRegions.pointClouds');
 
-appendComingSoonSubmenu(MenuId.MenubarExtendMenu, SMART_REGIONS_MENU, localize('comingSoon.smartRegions', "Smart Regions Toolbox (Coming Soon)"), COMING_SOON_GROUP, 2);
+appendComingSoonToolbox('smart-regions', SMART_REGIONS_MENU, localize('comingSoon.smartRegions', "Smart Regions Toolbox (Coming Soon)"), 2);
 
 // Access Files and Access Data Libraries of the toolbox's own, not in Explore: the user may move their items to any menu from the toolbox's Edit button
 appendComingSoonSubmenu(SMART_REGIONS_MENU, SMART_REGIONS_FILES_MENU, localize('comingSoon.smartRegions.accessFiles', "Access Files"), '0_comingSoon', 1);
