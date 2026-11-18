@@ -82,19 +82,6 @@
 			"menubarTSSSubmenu",
 			"menubarTopicModelsSubmenu",
 			"menubarWorkflowsMenu",
-			"pollisComingSoon.geoscience",
-			"pollisComingSoon.geoscience.accessDataLibraries",
-			"pollisComingSoon.geoscience.accessFiles",
-			"pollisComingSoon.geoscience.climateScience",
-			"pollisComingSoon.geoscience.earthSystemModelling",
-			"pollisComingSoon.smartRegions",
-			"pollisComingSoon.smartRegions.accessDataLibraries",
-			"pollisComingSoon.smartRegions.accessFiles",
-			"pollisComingSoon.smartRegions.mapVisualisation",
-			"pollisComingSoon.smartRegions.pointClouds",
-			"pollisComingSoon.smartRegions.remoteSensing",
-			"pollisComingSoon.smartRegions.smartCities",
-			"pollisComingSoon.smartRegions.smartRuralAreas",
 			"pollisNotebookExport",
 			"submenu.filter.commentSort",
 			"typehierarchy/title",
@@ -379,7 +366,7 @@
 		{
 			"id": "arima",
 			"title": "ARIMAX and SARIMA Models",
-			"source": "toolbox:pollis-toolbox-econometrics",
+			"source": "toolbox:pollis-toolbox-finance",
 			"commands": [
 				{
 					"id": "chiara.statistics.arma.arima",
@@ -391,9 +378,9 @@
 			"portable": true,
 			"defaultModel": "arima",
 			"decisionFirstColumn": "Model",
-			"toml": "toolboxes/pollis-toolbox-econometrics/panels/arima.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-econometrics/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-econometrics/notebooks",
+			"toml": "toolboxes/pollis-toolbox-finance/panels/arima.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-finance/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-finance/notebooks",
 			"wikis": [
 				"arima/assumptions.md",
 				"arima/decision-guide.md",
@@ -486,6 +473,41 @@
 			"packages": [
 				"Attractors.jl",
 				"BifurcationKit.jl"
+			]
+		},
+		{
+			"id": "autocorr",
+			"title": "Spatial Autocorrelation",
+			"source": "toolbox:pollis-toolbox-smart-regions",
+			"commands": [
+				{
+					"id": "pollis.smartRegions.autocorr",
+					"menuTitles": [
+						"Spatial Autocorrelation"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "global",
+			"decisionFirstColumn": "Statistic",
+			"toml": "toolboxes/pollis-toolbox-smart-regions/panels/autocorr.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-smart-regions/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-smart-regions/notebooks",
+			"wikis": [
+				"autocorr/decision-guide.md",
+				"autocorr/factsheet.md",
+				"autocorr/global-moran.md",
+				"autocorr/local-moran.md",
+				"autocorr/overview.md",
+				"autocorr/permutation-inference.md",
+				"autocorr/spatial-autocorrelation.md",
+				"autocorr/spatial-weights.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"SpatialDependence.jl",
+				"DuckDB.jl",
+				"Tables.jl"
 			]
 		},
 		{
@@ -635,6 +657,44 @@
 			]
 		},
 		{
+			"id": "basemaps",
+			"title": "OpenStreetMap Base Maps",
+			"source": "toolbox:pollis-toolbox-smart-regions",
+			"commands": [
+				{
+					"id": "pollis.smartRegions.basemaps",
+					"menuTitles": [
+						"Base Map"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "place",
+			"decisionFirstColumn": "Map",
+			"toml": "toolboxes/pollis-toolbox-smart-regions/panels/basemaps.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-smart-regions/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-smart-regions/notebooks",
+			"wikis": [
+				"basemaps/base-map-styles.md",
+				"basemaps/colour-by-column.md",
+				"basemaps/decision-guide.md",
+				"basemaps/factsheet.md",
+				"basemaps/features.md",
+				"basemaps/overview.md",
+				"basemaps/place.md",
+				"basemaps/tile-usage-and-attribution.md",
+				"basemaps/vector-and-raster-tiles.md",
+				"basemaps/web-mercator.md"
+			],
+			"notebooks": [
+				"basemaps/tutorial-01-features-on-a-base-map.ipynb"
+			],
+			"packages": [
+				"DuckDB.jl",
+				"Tables.jl"
+			]
+		},
+		{
 			"id": "bcf",
 			"title": "Business Cycle Filters",
 			"source": "toolbox:pollis-toolbox-economics",
@@ -713,7 +773,7 @@
 		{
 			"id": "bfmb",
 			"title": "Fama-MacBeth Regression",
-			"source": "toolbox:pollis-toolbox-econometrics",
+			"source": "toolbox:pollis-toolbox-finance",
 			"commands": [
 				{
 					"id": "chiara.statistics.eco.bfmb",
@@ -725,9 +785,9 @@
 			"portable": true,
 			"defaultModel": "bayesian",
 			"decisionFirstColumn": "Approach",
-			"toml": "toolboxes/pollis-toolbox-econometrics/panels/bfmb.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-econometrics/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-econometrics/notebooks",
+			"toml": "toolboxes/pollis-toolbox-finance/panels/bfmb.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-finance/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-finance/notebooks",
 			"wikis": [
 				"bfmb/assumptions.md",
 				"bfmb/decision-guide.md",
@@ -753,7 +813,7 @@
 		{
 			"id": "blsdf",
 			"title": "Bayesian Linear Stochastic Discount Factor",
-			"source": "toolbox:pollis-toolbox-econometrics",
+			"source": "toolbox:pollis-toolbox-finance",
 			"commands": [
 				{
 					"id": "chiara.statistics.eco.blsdf",
@@ -765,9 +825,9 @@
 			"portable": true,
 			"defaultModel": "sdf",
 			"decisionFirstColumn": "Model",
-			"toml": "toolboxes/pollis-toolbox-econometrics/panels/blsdf.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-econometrics/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-econometrics/notebooks",
+			"toml": "toolboxes/pollis-toolbox-finance/panels/blsdf.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-finance/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-finance/notebooks",
 			"wikis": [
 				"blsdf/assumptions.md",
 				"blsdf/decision-guide.md",
@@ -1989,7 +2049,7 @@
 		{
 			"id": "ctsv",
 			"title": "Continuous-Time Stochastic Volatility Models",
-			"source": "toolbox:pollis-toolbox-econometrics",
+			"source": "toolbox:pollis-toolbox-finance",
 			"commands": [
 				{
 					"id": "chiara.statistics.tvm.ctsv",
@@ -2001,9 +2061,9 @@
 			"portable": true,
 			"defaultModel": "heston",
 			"decisionFirstColumn": "Model",
-			"toml": "toolboxes/pollis-toolbox-econometrics/panels/ctsv.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-econometrics/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-econometrics/notebooks",
+			"toml": "toolboxes/pollis-toolbox-finance/panels/ctsv.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-finance/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-finance/notebooks",
 			"wikis": [
 				"ctsv/assumptions.md",
 				"ctsv/decision-guide.md",
@@ -3187,7 +3247,7 @@
 		{
 			"id": "evtDiag",
 			"title": "Extreme Value Diagnostics",
-			"source": "toolbox:pollis-toolbox-econometrics",
+			"source": "toolbox:pollis-toolbox-finance",
 			"commands": [
 				{
 					"id": "chiara.statistics.ev.diagnostics",
@@ -3199,9 +3259,9 @@
 			"portable": true,
 			"defaultModel": "me",
 			"decisionFirstColumn": "Model",
-			"toml": "toolboxes/pollis-toolbox-econometrics/panels/evtDiag.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-econometrics/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-econometrics/notebooks",
+			"toml": "toolboxes/pollis-toolbox-finance/panels/evtDiag.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-finance/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-finance/notebooks",
 			"wikis": [
 				"evt-diag/assumptions.md",
 				"evt-diag/decision-guide.md",
@@ -3222,7 +3282,7 @@
 		{
 			"id": "evtRisk",
 			"title": "Extreme Value Risk Measures",
-			"source": "toolbox:pollis-toolbox-econometrics",
+			"source": "toolbox:pollis-toolbox-finance",
 			"commands": [
 				{
 					"id": "chiara.statistics.ev.riskMeasures",
@@ -3234,9 +3294,9 @@
 			"portable": true,
 			"defaultModel": "rl",
 			"decisionFirstColumn": "Model",
-			"toml": "toolboxes/pollis-toolbox-econometrics/panels/evtRisk.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-econometrics/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-econometrics/notebooks",
+			"toml": "toolboxes/pollis-toolbox-finance/panels/evtRisk.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-finance/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-finance/notebooks",
 			"wikis": [
 				"evt-risk/assumptions.md",
 				"evt-risk/decision-guide.md",
@@ -3528,9 +3588,49 @@
 			]
 		},
 		{
+			"id": "geofiles",
+			"title": "Geospatial Vector Files",
+			"source": "toolbox:pollis-toolbox-smart-regions",
+			"commands": [
+				{
+					"id": "pollis.smartRegions.geofiles",
+					"menuTitles": [
+						"Geospatial Vector Files"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "geojson",
+			"decisionFirstColumn": "Format",
+			"toml": "toolboxes/pollis-toolbox-smart-regions/panels/geofiles.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-smart-regions/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-smart-regions/notebooks",
+			"wikis": [
+				"geofiles/coordinate-reference-systems.md",
+				"geofiles/decision-guide.md",
+				"geofiles/diagnostics.md",
+				"geofiles/factsheet.md",
+				"geofiles/file-formats.md",
+				"geofiles/geojson.md",
+				"geofiles/geopackage.md",
+				"geofiles/geoparquet-flatgeobuf.md",
+				"geofiles/gpx.md",
+				"geofiles/kml-kmz.md",
+				"geofiles/overview.md",
+				"geofiles/shapefile.md"
+			],
+			"notebooks": [
+				"geofiles/tutorial-01-reading-and-converting.ipynb"
+			],
+			"packages": [
+				"DuckDB.jl",
+				"Tables.jl"
+			]
+		},
+		{
 			"id": "gev",
 			"title": "Generalized Extreme Value Distribution",
-			"source": "toolbox:pollis-toolbox-econometrics",
+			"source": "toolbox:pollis-toolbox-finance",
 			"commands": [
 				{
 					"id": "chiara.statistics.ev.gev",
@@ -3542,9 +3642,9 @@
 			"portable": true,
 			"defaultModel": "fit",
 			"decisionFirstColumn": "Model",
-			"toml": "toolboxes/pollis-toolbox-econometrics/panels/gev.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-econometrics/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-econometrics/notebooks",
+			"toml": "toolboxes/pollis-toolbox-finance/panels/gev.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-finance/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-finance/notebooks",
 			"wikis": [
 				"gev/assumptions.md",
 				"gev/decision-guide.md",
@@ -3741,7 +3841,7 @@
 		{
 			"id": "gp",
 			"title": "Generalized Pareto Distribution",
-			"source": "toolbox:pollis-toolbox-econometrics",
+			"source": "toolbox:pollis-toolbox-finance",
 			"commands": [
 				{
 					"id": "chiara.statistics.ev.gp",
@@ -3753,9 +3853,9 @@
 			"portable": true,
 			"defaultModel": "fit",
 			"decisionFirstColumn": "Model",
-			"toml": "toolboxes/pollis-toolbox-econometrics/panels/gp.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-econometrics/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-econometrics/notebooks",
+			"toml": "toolboxes/pollis-toolbox-finance/panels/gp.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-finance/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-finance/notebooks",
 			"wikis": [
 				"gp/assumptions.md",
 				"gp/decision-guide.md",
@@ -3930,7 +4030,7 @@
 		{
 			"id": "hfcme",
 			"title": "High-Frequency Covariance Matrix Estimation",
-			"source": "toolbox:pollis-toolbox-econometrics",
+			"source": "toolbox:pollis-toolbox-finance",
 			"commands": [
 				{
 					"id": "chiara.statistics.eco.hfcme",
@@ -3942,9 +4042,9 @@
 			"portable": true,
 			"defaultModel": "rc",
 			"decisionFirstColumn": "Estimator",
-			"toml": "toolboxes/pollis-toolbox-econometrics/panels/hfcme.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-econometrics/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-econometrics/notebooks",
+			"toml": "toolboxes/pollis-toolbox-finance/panels/hfcme.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-finance/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-finance/notebooks",
 			"wikis": [
 				"hfcme/assumptions.md",
 				"hfcme/decision-guide.md",
@@ -3996,7 +4096,7 @@
 		{
 			"id": "hfvol",
 			"title": "High-Frequency Volatility",
-			"source": "toolbox:pollis-toolbox-econometrics",
+			"source": "toolbox:pollis-toolbox-finance",
 			"commands": [
 				{
 					"id": "chiara.statistics.hfvol",
@@ -4008,9 +4108,9 @@
 			"portable": true,
 			"defaultModel": "rv",
 			"decisionFirstColumn": "Estimator",
-			"toml": "toolboxes/pollis-toolbox-econometrics/panels/hfvol.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-econometrics/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-econometrics/notebooks",
+			"toml": "toolboxes/pollis-toolbox-finance/panels/hfvol.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-finance/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-finance/notebooks",
 			"wikis": [
 				"hf-vol/bipower-variation.md",
 				"hf-vol/factsheet.md",
@@ -4493,6 +4593,44 @@
 			"packages": [
 				"NearestNeighbors.jl",
 				"DynamicAxisWarping.jl"
+			]
+		},
+		{
+			"id": "kriging",
+			"title": "Kriging",
+			"source": "toolbox:pollis-toolbox-smart-regions",
+			"commands": [
+				{
+					"id": "pollis.smartRegions.kriging",
+					"menuTitles": [
+						"Kriging"
+					]
+				}
+			],
+			"portable": true,
+			"defaultModel": "variogram",
+			"decisionFirstColumn": "Method",
+			"toml": "toolboxes/pollis-toolbox-smart-regions/panels/kriging.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-smart-regions/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-smart-regions/notebooks",
+			"wikis": [
+				"kriging/cross-validation.md",
+				"kriging/decision-guide.md",
+				"kriging/factsheet.md",
+				"kriging/gaussian-simulation.md",
+				"kriging/inverse-distance.md",
+				"kriging/kriging-systems.md",
+				"kriging/ordinary-kriging.md",
+				"kriging/overview.md",
+				"kriging/universal-kriging.md",
+				"kriging/variogram.md",
+				"kriging/variograms.md"
+			],
+			"notebooks": [],
+			"packages": [
+				"GeoStats.jl",
+				"DuckDB.jl",
+				"Tables.jl"
 			]
 		},
 		{
@@ -5144,7 +5282,7 @@
 		{
 			"id": "lrm",
 			"title": "Loss Risk Measures",
-			"source": "toolbox:pollis-toolbox-econometrics",
+			"source": "toolbox:pollis-toolbox-finance",
 			"commands": [
 				{
 					"id": "chiara.statistics.rmt.lrm",
@@ -5156,9 +5294,9 @@
 			"portable": true,
 			"defaultModel": "dd",
 			"decisionFirstColumn": "Measure",
-			"toml": "toolboxes/pollis-toolbox-econometrics/panels/lrm.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-econometrics/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-econometrics/notebooks",
+			"toml": "toolboxes/pollis-toolbox-finance/panels/lrm.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-finance/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-finance/notebooks",
 			"wikis": [
 				"lrm/assumptions.md",
 				"lrm/decision-guide.md",
@@ -7058,7 +7196,7 @@
 		{
 			"id": "po",
 			"title": "Portfolio Optimisation",
-			"source": "toolbox:pollis-toolbox-econometrics",
+			"source": "toolbox:pollis-toolbox-finance",
 			"commands": [
 				{
 					"id": "chiara.statistics.eco.po",
@@ -7070,9 +7208,9 @@
 			"portable": true,
 			"defaultModel": "mv",
 			"decisionFirstColumn": "Method",
-			"toml": "toolboxes/pollis-toolbox-econometrics/panels/po.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-econometrics/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-econometrics/notebooks",
+			"toml": "toolboxes/pollis-toolbox-finance/panels/po.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-finance/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-finance/notebooks",
 			"wikis": [
 				"po/assumptions.md",
 				"po/decision-guide.md",
@@ -7250,7 +7388,7 @@
 		{
 			"id": "ptp",
 			"title": "Model Point Processes",
-			"source": "toolbox:pollis-toolbox-econometrics",
+			"source": "toolbox:pollis-toolbox-finance",
 			"commands": [
 				{
 					"id": "chiara.statistics.pp",
@@ -7262,9 +7400,9 @@
 			"portable": true,
 			"defaultModel": "poisson",
 			"decisionFirstColumn": "Model",
-			"toml": "toolboxes/pollis-toolbox-econometrics/panels/ptp.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-econometrics/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-econometrics/notebooks",
+			"toml": "toolboxes/pollis-toolbox-finance/panels/ptp.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-finance/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-finance/notebooks",
 			"wikis": [
 				"ptp/assumptions.md",
 				"ptp/cox-process.md",
@@ -7306,7 +7444,7 @@
 		{
 			"id": "ptps",
 			"title": "Simulate Point Processes",
-			"source": "toolbox:pollis-toolbox-econometrics",
+			"source": "toolbox:pollis-toolbox-finance",
 			"commands": [
 				{
 					"id": "chiara.simulate.pp",
@@ -7318,9 +7456,9 @@
 			"portable": true,
 			"defaultModel": "poisson",
 			"decisionFirstColumn": "Model",
-			"toml": "toolboxes/pollis-toolbox-econometrics/panels/ptps.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-econometrics/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-econometrics/notebooks",
+			"toml": "toolboxes/pollis-toolbox-finance/panels/ptps.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-finance/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-finance/notebooks",
 			"wikis": [
 				"ptp/assumptions.md",
 				"ptp/cox-process.md",
@@ -7838,7 +7976,7 @@
 		{
 			"id": "rsm",
 			"title": "Regime Switching Models",
-			"source": "toolbox:pollis-toolbox-econometrics",
+			"source": "toolbox:pollis-toolbox-finance",
 			"commands": [
 				{
 					"id": "chiara.statistics.rsm",
@@ -7850,9 +7988,9 @@
 			"portable": true,
 			"defaultModel": "msm",
 			"decisionFirstColumn": "Model",
-			"toml": "toolboxes/pollis-toolbox-econometrics/panels/rsm.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-econometrics/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-econometrics/notebooks",
+			"toml": "toolboxes/pollis-toolbox-finance/panels/rsm.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-finance/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-finance/notebooks",
 			"wikis": [
 				"rsm/assumptions.md",
 				"rsm/decision-guide.md",
@@ -7916,7 +8054,7 @@
 		{
 			"id": "rvol",
 			"title": "Range-Based Volatility Estimation",
-			"source": "toolbox:pollis-toolbox-econometrics",
+			"source": "toolbox:pollis-toolbox-finance",
 			"commands": [
 				{
 					"id": "chiara.statistics.rbv",
@@ -7928,9 +8066,9 @@
 			"portable": true,
 			"defaultModel": "yz",
 			"decisionFirstColumn": "Estimator",
-			"toml": "toolboxes/pollis-toolbox-econometrics/panels/rvol.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-econometrics/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-econometrics/notebooks",
+			"toml": "toolboxes/pollis-toolbox-finance/panels/rvol.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-finance/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-finance/notebooks",
 			"wikis": [
 				"range-vol/alizadeh-brandt-diebold.md",
 				"range-vol/assumptions.md",
@@ -8827,7 +8965,7 @@
 		{
 			"id": "trad",
 			"title": "Trading Agents",
-			"source": "toolbox:pollis-toolbox-econometrics",
+			"source": "toolbox:pollis-toolbox-finance",
 			"commands": [
 				{
 					"id": "chiara.simulate.abm-ta",
@@ -8839,9 +8977,9 @@
 			"portable": true,
 			"defaultModel": "agents",
 			"decisionFirstColumn": "Model",
-			"toml": "toolboxes/pollis-toolbox-econometrics/panels/trad.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-econometrics/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-econometrics/notebooks",
+			"toml": "toolboxes/pollis-toolbox-finance/panels/trad.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-finance/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-finance/notebooks",
 			"wikis": [
 				"trad/assumptions.md",
 				"trad/decision-guide.md",
@@ -9257,7 +9395,7 @@
 		{
 			"id": "vcm",
 			"title": "GARCH-Type Models",
-			"source": "toolbox:pollis-toolbox-econometrics",
+			"source": "toolbox:pollis-toolbox-finance",
 			"commands": [
 				{
 					"id": "chiara.statistics.vcm",
@@ -9269,9 +9407,9 @@
 			"portable": true,
 			"defaultModel": "garch",
 			"decisionFirstColumn": "Model",
-			"toml": "toolboxes/pollis-toolbox-econometrics/panels/vcm.toml",
-			"wikiRoot": "toolboxes/pollis-toolbox-econometrics/wiki",
-			"notebookRoot": "toolboxes/pollis-toolbox-econometrics/notebooks",
+			"toml": "toolboxes/pollis-toolbox-finance/panels/vcm.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-finance/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-finance/notebooks",
 			"wikis": [
 				"vcm/assumptions.md",
 				"vcm/decision-guide.md",
