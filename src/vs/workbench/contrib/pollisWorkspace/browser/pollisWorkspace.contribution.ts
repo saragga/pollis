@@ -109,9 +109,14 @@ export async function findPollisWorkspace(contextService: IWorkspaceContextServi
 	if (open) {
 		return open;
 	}
-	const path = configurationService.getValue<string>(LOCATION_SETTING)?.trim();
-	const remembered = path && isAbsolute(path) ? URI.file(path) : undefined;
+	const remembered = rememberedPollisWorkspace(configurationService);
 	return remembered && await fileService.exists(joinPath(remembered, MARKER_FILE)) ? remembered : undefined;
+}
+
+/** The folder the setting remembers as the user's Pollis Workspace, when it holds a full path. */
+function rememberedPollisWorkspace(configurationService: IConfigurationService): URI | undefined {
+	const path = configurationService.getValue<string>(LOCATION_SETTING)?.trim();
+	return path && isAbsolute(path) ? URI.file(path) : undefined;
 }
 
 /** Remembers `folder` as the user's Pollis Workspace, when it is a folder of this computer. */
@@ -214,6 +219,16 @@ async function makeWorkspace(fileService: IFileService, folder: URI): Promise<vo
 	}
 }
 
+/** The first of `folders` that exists. */
+async function firstExisting(fileService: IFileService, folders: readonly (URI | undefined)[]): Promise<URI | undefined> {
+	for (const folder of folders) {
+		if (folder && await fileService.exists(folder)) {
+			return folder;
+		}
+	}
+	return undefined;
+}
+
 /** The folder Documents of the user, where a Pollis Workspace is made by default. */
 function documentsFolder(pathService: IPathService): URI {
 	return joinPath(pathService.userHome({ preferLocal: true }), 'Documents');
@@ -287,16 +302,16 @@ registerAction2(class extends Action2 {
 		const configurationService = accessor.get(IConfigurationService);
 		const dialogService = accessor.get(IDialogService);
 
-		// The dialog starts in the Pollis Workspace that New makes by default, when there is one
+		// The dialog starts in the remembered Pollis Workspace, else in the one that New makes by default, when there is one
 		const documents = documentsFolder(pathService);
-		const usual = joinPath(documents, 'PollisWorkspace');
+		const usual = [rememberedPollisWorkspace(configurationService), joinPath(documents, 'PollisWorkspace')];
 		const picked = await fileDialogService.showOpenDialog({
 			title: localize('pollisWorkspace.openTitle', "Open a Pollis Workspace"),
 			openLabel: mnemonicButtonLabel(localize({ key: 'pollisWorkspace.openLabel', comment: ['&& denotes a mnemonic'] }, "&&Open")),
 			canSelectFolders: true,
 			canSelectFiles: false,
 			canSelectMany: false,
-			defaultUri: await fileService.exists(usual) ? usual : documents,
+			defaultUri: await firstExisting(fileService, usual) ?? documents,
 		});
 		const folder = picked?.[0];
 		if (!folder) {
