@@ -31137,6 +31137,24 @@
 			"open_access": false
 		},
 		{
+			"key": "PROJC2026a",
+			"type": "misc",
+			"title": "PROJ: Cartographic Projections and Coordinate Transformations Library",
+			"authors": [
+				"PROJ Contributors"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://github.com/OSGeo/PROJ",
+			"abstract": "PROJ is a generic coordinate transformation software that transforms geospatial coordinates from one coordinate reference system (CRS) to another. This includes cartographic projections as well as geodetic transformations. PROJ is released under the X/MIT open source license.",
+			"abstract_source": "proj.org",
+			"source": "manual",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "PS1978a",
 			"type": "article",
 			"title": "Modified Policy Iteration Algorithms for Discounted Markov Decision Problems",
