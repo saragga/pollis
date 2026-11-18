@@ -4664,6 +4664,86 @@
 			"packages": []
 		},
 		{
+			"id": "learning-and-practice.lab02",
+			"title": "Financial Volatility & Return Predictability: From Parametric GARCH to High-Frequency Limit Order Books",
+			"source": "toolbox:pollis-toolbox-learning-and-practice",
+			"commands": [
+				{
+					"id": "pollis.pollis-toolbox-learning-and-practice.lab02",
+					"menuTitles": [
+						"Financial Volatility & Return Predictability: From Parametric GARCH to High-Frequency Limit Order Books"
+					]
+				}
+			],
+			"portable": true,
+			"toml": "toolboxes/pollis-toolbox-learning-and-practice/panels/learning-and-practice.lab02.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-learning-and-practice/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-learning-and-practice/notebooks",
+			"wikis": [],
+			"notebooks": [],
+			"packages": []
+		},
+		{
+			"id": "learning-and-practice.lab03",
+			"title": "Enterprise Valuation: From Discounted Cash Flows to Stochastic Simulation",
+			"source": "toolbox:pollis-toolbox-learning-and-practice",
+			"commands": [
+				{
+					"id": "pollis.pollis-toolbox-learning-and-practice.lab03",
+					"menuTitles": [
+						"Enterprise Valuation: From Discounted Cash Flows to Stochastic Simulation"
+					]
+				}
+			],
+			"portable": true,
+			"toml": "toolboxes/pollis-toolbox-learning-and-practice/panels/learning-and-practice.lab03.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-learning-and-practice/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-learning-and-practice/notebooks",
+			"wikis": [],
+			"notebooks": [],
+			"packages": []
+		},
+		{
+			"id": "learning-and-practice.lab04",
+			"title": "Causal Inference & Policy Evaluation: From Natural Experiments to Double Machine Learning",
+			"source": "toolbox:pollis-toolbox-learning-and-practice",
+			"commands": [
+				{
+					"id": "pollis.pollis-toolbox-learning-and-practice.lab04",
+					"menuTitles": [
+						"Causal Inference & Policy Evaluation: From Natural Experiments to Double Machine Learning"
+					]
+				}
+			],
+			"portable": true,
+			"toml": "toolboxes/pollis-toolbox-learning-and-practice/panels/learning-and-practice.lab04.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-learning-and-practice/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-learning-and-practice/notebooks",
+			"wikis": [],
+			"notebooks": [],
+			"packages": []
+		},
+		{
+			"id": "learning-and-practice.lab05",
+			"title": "Operations, Pricing & Supply Chain Optimization: From Classical Inventory Rules to Decision-Focused Learning",
+			"source": "toolbox:pollis-toolbox-learning-and-practice",
+			"commands": [
+				{
+					"id": "pollis.pollis-toolbox-learning-and-practice.lab05",
+					"menuTitles": [
+						"Operations, Pricing & Supply Chain Optimization: From Classical Inventory Rules to Decision-Focused Learning"
+					]
+				}
+			],
+			"portable": true,
+			"toml": "toolboxes/pollis-toolbox-learning-and-practice/panels/learning-and-practice.lab05.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-learning-and-practice/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-learning-and-practice/notebooks",
+			"wikis": [],
+			"notebooks": [],
+			"packages": []
+		},
+		{
 			"id": "learning-and-practice.practice",
 			"title": "Practice",
 			"source": "toolbox:pollis-toolbox-learning-and-practice",

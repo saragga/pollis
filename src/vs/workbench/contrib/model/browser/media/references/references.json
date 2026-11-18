@@ -24,6 +24,47 @@
 			"open_access": false
 		},
 		{
+			"key": "AAHIW2021a",
+			"type": "article",
+			"title": "Synthetic Difference-in-Differences",
+			"authors": [
+				"Arkhangelsky, Dmitry",
+				"Athey, Susan",
+				"Hirshberg, David A.",
+				"Imbens, Guido W.",
+				"Wager, Stefan"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2021,
+			"journal": "American Economic Review",
+			"volume": "111",
+			"number": "12",
+			"pages": "4088--4118",
+			"issn": "0002-8282",
+			"doi": "10.1257/aer.20190159",
+			"openalex": "W2952814763",
+			"url": "https://doi.org/10.1257/aer.20190159",
+			"oa_url": "https://arxiv.org/pdf/1812.09970",
+			"abstract": "We present a new estimator for causal effects with panel data that builds on insights behind the widely used difference-in-differences and synthetic control methods. Relative to these methods we find, both theoretically and empirically, that this “synthetic difference-in-differences” estimator has desirable robustness properties, and that it performs well in settings where the conventional estimators are commonly used in practice. We study the asymptotic behavior of the estimator when the systematic part of the outcome model includes latent unit factors interacted with latent time factors, and we present conditions for consistency and asymptotic normality. (JEL C23, H25, H71, I18, L66)",
+			"abstract_source": "openalex",
+			"keywords": [
+				"synthetic difference-in-differences",
+				"causal effects",
+				"panel data",
+				"synthetic control method",
+				"difference-in-differences",
+				"estimator robustness",
+				"asymptotic normality",
+				"consistency"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "AB1990a",
 			"type": "article",
 			"title": "A Look at Some Data on the Old Faithful Geyser",
@@ -573,6 +614,44 @@
 			"open_access": true
 		},
 		{
+			"key": "ADH2010a",
+			"type": "article",
+			"title": "Synthetic Control Methods for Comparative Case Studies: Estimating the Effect of California’s Tobacco Control Program",
+			"authors": [
+				"Abadie, Alberto",
+				"Diamond, Alexis",
+				"Hainmueller, Jens"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2010,
+			"journal": "Journal of the American Statistical Association",
+			"volume": "105",
+			"number": "490",
+			"pages": "493--505",
+			"issn": "0162-1459",
+			"doi": "10.1198/jasa.2009.ap08746",
+			"openalex": "W3125057276",
+			"url": "https://doi.org/10.1198/jasa.2009.ap08746",
+			"oa_url": "http://hdl.handle.net/1721.1/59447",
+			"abstract": "Building on an idea in Abadie and Gardeazabal (2003), this article investigates the application of synthetic control methods to comparative case studies. We discuss the advantages of these methods and apply them to study the effects of Proposition 99, a large-scale tobacco control program that California implemented in 1988. We demonstrate that, following Proposition 99, tobacco consumption fell markedly in California relative to a comparable synthetic control region. We estimate that by the year 2000 annual per-capita cigarette sales in California were about 26 packs lower than what they would have been in the absence of Proposition 99. Using new inferential methods proposed in this article, we demonstrate the significance of our estimates. Given that many policy interventions and events of interest in social sciences take place at an aggregate level (countries, regions, cities, etc.) and affect a small number of aggregate units, the potential applicability of synthetic control methods to comparative case studies is very large, especially in situations where traditional regression methods are not appropriate.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"synthetic control method",
+				"comparative case study",
+				"tobacco control",
+				"California",
+				"cigarette consumption",
+				"policy evaluation",
+				"significance testing"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "ADL2023a",
 			"type": "article",
 			"title": "Explaining Black-Box Models through Counterfactuals",
@@ -899,6 +978,44 @@
 			"open_access": true
 		},
 		{
+			"key": "AK2017a",
+			"type": "inproceedings",
+			"title": "OptNet: Differentiable Optimization as a Layer in Neural Networks",
+			"authors": [
+				"Amos, Brandon",
+				"Kolter, J. Zico"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2017,
+			"booktitle": "Proceedings of the 34th International Conference on Machine Learning",
+			"volume": "70",
+			"pages": "136--145",
+			"doi": "10.48550/arxiv.1703.00443",
+			"openalex": "W2592457170",
+			"url": "https://proceedings.mlr.press/v70/amos17a.html",
+			"oa_url": "https://arxiv.org/pdf/1703.00443",
+			"abstract": "This paper presents OptNet, a network architecture that integrates optimization problems (here, specifically in the form of quadratic programs) as individual layers in larger end-to-end trainable deep networks. These layers encode constraints and complex dependencies between the hidden states that traditional convolutional and fully-connected layers often cannot capture. We explore the foundations for such an architecture: we show how techniques from sensitivity analysis, bilevel optimization, and implicit differentiation can be used to exactly differentiate through these layers and with respect to layer parameters; we develop a highly efficient solver for these layers that exploits fast GPU-based batch solves within a primal-dual interior point method, and which provides backpropagation gradients with virtually no additional cost on top of the solve; and we highlight the application of these approaches in several problems. In one notable example, the method is learns to play mini-Sudoku (4x4) given just input and output games, with no a-priori information about the rules of the game; this highlights the ability of OptNet to learn hard constraints better than other neural architectures.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"differentiable optimization",
+				"quadratic programming",
+				"neural network layers",
+				"bi-level optimization",
+				"implicit differentiation",
+				"sensitivity analysis",
+				"primal-dual interior point method",
+				"backpropagation",
+				"constraint learning",
+				"end-to-end learning"
+			],
+			"keywords_source": "openalex",
+			"source": "openalex",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "ALSSS2015a",
 			"type": "article",
 			"title": "Identification of Patient Zero in Static and Temporal Networks: Robustness and Limitations",
@@ -1067,6 +1184,43 @@
 			"open_access": false
 		},
 		{
+			"key": "AP2021a",
+			"type": "article",
+			"title": "TabNet: Attentive Interpretable Tabular Learning",
+			"authors": [
+				"Arik, Sercan Ö.",
+				"Pfister, Tomas"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2021,
+			"journal": "Proceedings of the AAAI Conference on Artificial Intelligence",
+			"volume": "35",
+			"number": "8",
+			"pages": "6679--6687",
+			"issn": "2374-3468",
+			"doi": "10.1609/aaai.v35i8.16826",
+			"openalex": "W2969724595",
+			"url": "https://doi.org/10.1609/aaai.v35i8.16826",
+			"oa_url": "https://doi.org/10.1609/aaai.v35i8.16826",
+			"abstract": "We propose a novel high-performance and interpretable canonical deep tabular data learning architecture, TabNet. TabNet uses sequential attention to choose which features to reason from at each decision step, enabling interpretability and more efficient learning as the learning capacity is used for the most salient features. We demonstrate that TabNet outperforms other variants on a wide range of non-performance-saturated tabular datasets and yields interpretable feature attributions plus insights into its global behavior. Finally, we demonstrate self-supervised learning for tabular data, significantly improving performance when unlabeled data is abundant.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"TabNet",
+				"interpretability",
+				"sequential attention",
+				"feature attribution",
+				"self-supervised learning",
+				"deep learning architectures",
+				"feature selection"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "APFDS...2017a",
 			"type": "misc",
 			"title": "Fixing a Broken ELBO",
@@ -1216,6 +1370,48 @@
 			"open_access": true
 		},
 		{
+			"key": "ATW2019a",
+			"type": "article",
+			"title": "Generalized random forests",
+			"authors": [
+				"Athey, Susan",
+				"Tibshirani, Julie",
+				"Wager, Stefan"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2019,
+			"journal": "The Annals of Statistics",
+			"volume": "47",
+			"number": "2",
+			"pages": "1148--1178",
+			"issn": "0090-5364",
+			"doi": "10.1214/18-AOS1709",
+			"openalex": "W2730059782",
+			"url": "https://doi.org/10.1214/18-AOS1709",
+			"oa_url": "https://projecteuclid.org/journals/annals-of-statistics/volume-47/issue-2/Generalized-random-forests/10.1214/18-AOS1709.pdf",
+			"abstract": "We propose generalized random forests, a method for nonparametric statistical estimation based on random forests (Breiman [Mach. Learn. 45 (2001) 5–32]) that can be used to fit any quantity of interest identified as the solution to a set of local moment equations. Following the literature on local maximum likelihood estimation, our method considers a weighted set of nearby training examples; however, instead of using classical kernel weighting functions that are prone to a strong curse of dimensionality, we use an adaptive weighting function derived from a forest designed to express heterogeneity in the specified quantity of interest. We propose a flexible, computationally efficient algorithm for growing generalized random forests, develop a large sample theory for our method showing that our estimates are consistent and asymptotically Gaussian and provide an estimator for their asymptotic variance that enables valid confidence intervals. We use our approach to develop new methods for three statistical tasks: nonparametric quantile regression, conditional average partial effect estimation and heterogeneous treatment effect estimation via instrumental variables. A software implementation, grf for R and C++, is available from CRAN.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"generalized random forests",
+				"nonparametric estimation",
+				"adaptive weighting",
+				"curse of dimensionality",
+				"consistency",
+				"asymptotic normality",
+				"asymptotic variance estimation",
+				"confidence intervals",
+				"nonparametric quantile regression",
+				"treatment effect heterogeneity",
+				"instrumental variables"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "AV2024a",
 			"type": "misc",
 			"title": "Alpha Vantage API Documentation",
@@ -1229,6 +1425,47 @@
 			"url": "https://www.alphavantage.co/documentation/",
 			"legacy_key": "inc2024",
 			"source": "manual",
+			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "AW2021a",
+			"type": "article",
+			"title": "Policy Learning With Observational Data",
+			"authors": [
+				"Athey, Susan",
+				"Wager, Stefan"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2021,
+			"journal": "Econometrica",
+			"volume": "89",
+			"number": "1",
+			"pages": "133--161",
+			"issn": "0012-9682",
+			"doi": "10.3982/ECTA15732",
+			"openalex": "W3083006799",
+			"url": "https://doi.org/10.3982/ECTA15732",
+			"oa_url": "https://www.econometricsociety.org/sites/default/files/ecta200236-sup-0001-onlineappendix.pdf",
+			"abstract": "In many areas, practitioners seek to use observational data to learn a treatment assignment policy that satisfies application-specific constraints, such as budget, fairness, simplicity, or other functional form constraints. For example, policies may be restricted to take the form of decision trees based on a limited set of easily observable individual characteristics. We propose a new approach to this problem motivated by the theory of semiparametrically efficient estimation. Our method can be used to optimize either binary treatments or infinitesimal nudges to continuous treatments, and can leverage observational data where causal effects are identified using a variety of strategies, including selection on observables and instrumental variables. Given a doubly robust estimator of the causal effect of assigning everyone to treatment, we develop an algorithm for choosing whom to treat, and establish strong guarantees for the asymptotic utilitarian regret of the resulting policy.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"policy learning",
+				"observational data",
+				"decision tree",
+				"semiparametric efficiency",
+				"doubly robust estimation",
+				"binary treatment",
+				"causal identification",
+				"instrumental variables",
+				"selection on observables",
+				"fairness constraints",
+				"budget constraints"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
 			"checked": false,
 			"open_access": true
 		},
@@ -1374,6 +1611,39 @@
 			"keywords_source": "openalex",
 			"source": "crossref",
 			"retrieved": "2026-11-17",
+			"checked": false,
+			"open_access": false
+		},
+		{
+			"key": "Alf1992a",
+			"type": "article",
+			"title": "The Effect of the Set of Comparable Firms on the Accuracy of the Price-Earnings Valuation Method",
+			"authors": [
+				"Alford, Andrew W."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1992,
+			"journal": "Journal of Accounting Research",
+			"volume": "30",
+			"number": "1",
+			"pages": "94",
+			"issn": "0021-8456",
+			"doi": "10.2307/2491093",
+			"openalex": "W2315740057",
+			"url": "https://doi.org/10.2307/2491093",
+			"abstract": "Valuation, Price-Earnings Ratio, Industry comparison, Comparable company analysis",
+			"abstract_source": "openalex",
+			"keywords": [
+				"price earning ratio",
+				"industry comparison",
+				"business valuation",
+				"valuation accuracy",
+				"earnings multiples"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
 			"checked": false,
 			"open_access": false
 		},
@@ -2777,6 +3047,48 @@
 			"open_access": true
 		},
 		{
+			"key": "BGLS2024a",
+			"type": "article",
+			"title": "Flexible Differentiable Optimization via Model Transformations",
+			"authors": [
+				"Besançon, Mathieu",
+				"Dias Garcia, Joaquim",
+				"Legat, Benoît",
+				"Sharma, Akshay"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2024,
+			"journal": "INFORMS Journal on Computing",
+			"volume": "36",
+			"number": "2",
+			"pages": "456--478",
+			"issn": "1091-9856",
+			"doi": "10.1287/ijoc.2022.0283",
+			"openalex": "W4388656246",
+			"url": "https://doi.org/10.1287/ijoc.2022.0283",
+			"oa_url": "https://arxiv.org/pdf/2206.06135",
+			"abstract": "We introduce DiffOpt.jl, a Julia library to differentiate through the solution of optimization problems with respect to arbitrary parameters present in the objective and/or constraints. The library builds upon MathOptInterface, thus leveraging the rich ecosystem of solvers and composing well with modeling languages like JuMP. DiffOpt offers both forward and reverse differentiation modes, enabling multiple use cases from hyperparameter optimization to backpropagation and sensitivity analysis, bridging constrained optimization with end-to-end differentiable programming. DiffOpt is built on two known rules for differentiating quadratic programming and conic programming standard forms. However, thanks to its ability to differentiate through model transformations, the user is not limited to these forms and can differentiate with respect to the parameters of any model that can be reformulated into these standard forms. This notably includes programs mixing affine conic constraints and convex quadratic constraints or objective function. History: Accepted by Ted Ralphs, Area Editor for Software Tools. Funding: The work of A. Sharma on DiffOpt.jl was funded by the Google Summer of Code program through NumFocus. M. Besançon was partially supported through the Research Campus Modal funded by the German Federal Ministry of Education and Research [Grant 05M14ZAM, 05M20ZBM]. J. Dias Garcia was supported in part by the Coordenação de Aperfeiçoamento de Pessoal de Nível Superior – Brasil (CAPES) – Finance Code 001. B. Legat was supported by a BAEF Postdoctoral Fellowship, the NSF [Grant OAC-1835443], and the ERC Adv. [Grant 885682]. Supplemental Material: The software that supports the findings of this study is available within the paper and its Supplemental Information ( https://pubsonline.informs.org/doi/suppl/10.1287/ijoc.2022.0283 ), as well as from the IJOC GitHub software repository ( https://github.com/INFORMSJoC/2022.0283 ). The complete IJOC Software and Data Repository is available at https://informsjoc.github.io/ .",
+			"abstract_source": "openalex",
+			"keywords": [
+				"differentiable optimization",
+				"model transformation",
+				"Julia library",
+				"jumps",
+				"quadratic programming",
+				"conic programming",
+				"sensitivity analysis",
+				"hyperparameter optimization",
+				"backpropagation",
+				"constrained optimization"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "BGN2009a",
 			"type": "book",
 			"title": "Robust Optimization",
@@ -3604,6 +3916,40 @@
 			"open_access": false
 		},
 		{
+			"key": "BL2002a",
+			"type": "article",
+			"title": "Who Is My Peer? A Valuation-Based Approach to the Selection of Comparable Firms",
+			"authors": [
+				"Bhojraj, Sanjeev",
+				"Lee, Charles M. C."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2002,
+			"journal": "Journal of Accounting Research",
+			"volume": "40",
+			"number": "2",
+			"pages": "407--439",
+			"issn": "0021-8456",
+			"doi": "10.1111/1475-679X.00054",
+			"openalex": "W2037393175",
+			"url": "https://doi.org/10.1111/1475-679X.00054",
+			"oa_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1111/1475-679X.00054",
+			"abstract": "This study presents a general approach for selecting comparable firms in market-based research and equity valuation. Guided by valuation theory, we develop a “warranted multiple” for each firm, and identify peer firms as those having the closest warranted multiple. We test this approach by examining the efficacy of the selected comparable firms in predicting future (one- to three-year-ahead) enterprise-value-to-sales and price-to-book ratios. Our tests encompass the general universe of stocks as well as a sub-population of so-called “new economy” stocks. We conclude that comparable firms selected in this manner offer sharp improvements over comparable firms selected on the basis of other techniques.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"price to book value",
+				"stock valuation",
+				"valuation theory",
+				"peer firms"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "BL2006a",
 			"type": "inproceedings",
 			"title": "Correlated Topic Models",
@@ -3735,6 +4081,44 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
+		},
+		{
+			"key": "BLP1995a",
+			"type": "article",
+			"title": "Automobile Prices in Market Equilibrium",
+			"authors": [
+				"Berry, Steven",
+				"Levinsohn, James",
+				"Pakes, Ariel"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1995,
+			"journal": "Econometrica",
+			"volume": "63",
+			"number": "4",
+			"pages": "841",
+			"issn": "0012-9682",
+			"doi": "10.2307/2171802",
+			"openalex": "W1978907431",
+			"url": "https://doi.org/10.2307/2171802",
+			"abstract": "This paper develops techniques for empirically analyzing demand and supply in differentiated product markets and then applies these techniques to the U.S. automobile industry. The authors' framework enables one to obtain estimates of demand and cost parameters for a class of oligopolistic differentiated products markets. These estimates can be obtained using only widely available product-level and aggregate consumer-level data, and they are consistent with a structural model of equilibrium in an oligopolistic industry. Applying these techniques, the authors obtain parameters for essentially all autos sold over a twenty-year period. Copyright 1995 by The Econometric Society.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"automobile prices",
+				"differentiated product markets",
+				"oligopoly",
+				"market equilibrium",
+				"demand estimation",
+				"cost estimation",
+				"structural estimation",
+				"automotive industry"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
 		},
 		{
 			"key": "BM1978a",
@@ -4348,6 +4732,40 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": false
+		},
+		{
+			"key": "BR2019a",
+			"type": "article",
+			"title": "The Big Data Newsvendor: Practical Insights from Machine Learning",
+			"authors": [
+				"Ban, Gah-Yi",
+				"Rudin, Cynthia"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2019,
+			"journal": "Operations Research",
+			"volume": "67",
+			"number": "1",
+			"pages": "90--108",
+			"issn": "0030-364X",
+			"doi": "10.1287/opre.2018.1757",
+			"openalex": "W3122167207",
+			"url": "https://doi.org/10.1287/opre.2018.1757",
+			"oa_url": "https://papers.ssrn.com/sol3/Delivery.cfm?abstractid=2559116",
+			"abstract": "In Ban and Rudin’s (2018) “The Big Data Newsvendor: Practical Insights from Machine Learning,” the authors take an innovative machine-learning approach to a classic problem solved by almost every company, every day, for inventory management. By allowing companies to use large amounts of data to predict the correct answers to decisions directly, they avoid intermediate questions, such as “how many customers will we get tomorrow?” and instead can tell the company how much inventory to stock for these customers. This has implications for almost all other decision-making problems considered in operations research, which has traditionally considered data estimation separately from the decision optimization. Their proposed methods are shown to work both analytically and empirically with the latter explored in a hospital nurse staffing example in which the best one-step, feature-based newsvendor algorithm (the kernel-weights optimization method) is shown to beat the best-practice benchmark by 24% in the out-of-sample cost at a fraction of the speed.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"newsvendor problem",
+				"inventory management",
+				"grain weight",
+				"demand forecasting"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "BRBR2025a",
@@ -5575,6 +5993,40 @@
 			"open_access": true
 		},
 		{
+			"key": "Bel1989a",
+			"type": "article",
+			"title": "Application of a Probabilistic Decision Model to Airline Seat Inventory Control",
+			"authors": [
+				"Belobaba, Peter P."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1989,
+			"journal": "Operations Research",
+			"volume": "37",
+			"number": "2",
+			"pages": "183--197",
+			"issn": "0030-364X",
+			"doi": "10.1287/opre.37.2.183",
+			"openalex": "W2057337671",
+			"url": "https://doi.org/10.1287/opre.37.2.183",
+			"abstract": "The application of booking limits on the number of seats available at different prices on the same flight allows airlines to increase revenues. Effective seat inventory control by an airline depends on forecasts of future bookings, the revenue values associated with each fare type, and an ability to make systematic tradeoffs between booking requests so as to maximize total flight revenues. This article describes the implementation of a computerized system for making these tradeoffs and setting booking limits on future flights at Western Airlines in early 1987. The Expected Marginal Seat Revenue (EMSR) decision model developed for this application takes account of the uncertainty associated with estimates of future demand as well as the nested structure of booking limits in airline reservations systems. The Automated Booking Limit System implemented at Western made use of the EMSR model to set and revise booking limits periodically prior to flight departure. Although the system did not take into account several important components of the seat inventory control problem, a revenue impact test on a sample of actual flights showed a significant revenue improvement over the judgmental methods used previously.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"booking limits",
+				"probabilistic decision model",
+				"airline revenue management",
+				"fare classes",
+				"demand uncertainty",
+				"Western Airlines"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "Ben1975a",
 			"type": "article",
 			"title": "Multidimensional binary search trees used for associative searching",
@@ -5862,6 +6314,36 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
+		},
+		{
+			"key": "Bol1987a",
+			"type": "article",
+			"title": "A Conditionally Heteroskedastic Time Series Model for Speculative Prices and Rates of Return",
+			"authors": [
+				"Bollerslev, Tim"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1987,
+			"journal": "The Review of Economics and Statistics",
+			"volume": "69",
+			"number": "3",
+			"pages": "542",
+			"issn": "0034-6535",
+			"doi": "10.2307/1925546",
+			"openalex": "W1999029409",
+			"url": "https://doi.org/10.2307/1925546",
+			"keywords": [
+				"conditional heteroskedasticity",
+				"time series models",
+				"rate of return",
+				"volatility"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
 		},
 		{
 			"key": "Boo1972a",
@@ -6449,6 +6931,51 @@
 			"source": "crossref",
 			"retrieved": "2026-10-30",
 			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "CCDDH...2018a",
+			"type": "article",
+			"title": "Double/debiased machine learning for treatment and structural parameters",
+			"authors": [
+				"Chernozhukov, Victor",
+				"Chetverikov, Denis",
+				"Demirer, Mert",
+				"Duflo, Esther",
+				"Hansen, Christian",
+				"Newey, Whitney",
+				"Robins, James"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2018,
+			"journal": "The Econometrics Journal",
+			"volume": "21",
+			"number": "1",
+			"pages": "C1--C68",
+			"issn": "1368-4221",
+			"doi": "10.1111/ectj.12097",
+			"openalex": "W3123436326",
+			"url": "https://doi.org/10.1111/ectj.12097",
+			"abstract": "We revisit the classic semi-parametric problem of inference on a low-dimensional parameter θ0 in the presence of high-dimensional nuisance parameters η0. We depart from the classical setting by allowing for η0 to be so high-dimensional that the traditional assumptions (e.g. Donsker properties) that limit complexity of the parameter space for this object break down. To estimate η0, we consider the use of statistical or machine learning (ML) methods, which are particularly well suited to estimation in modern, very high-dimensional cases. ML methods perform well by employing regularization to reduce variance and trading off regularization bias with overfitting in practice. However, both regularization bias and overfitting in estimating η0 cause a heavy bias in estimators of θ0 that are obtained by naively plugging ML estimators of η0 into estimating equations for θ0. This bias results in the naive estimator failing to be N−1/2 consistent, where N is the sample size. We show that the impact of regularization bias and overfitting on estimation of the parameter of interest θ0 can be removed by using two simple, yet critical, ingredients: (1) using Neyman-orthogonal moments/scores that have reduced sensitivity with respect to nuisance parameters to estimate θ0; (2) making use of cross-fitting, which provides an efficient form of data-splitting. We call the resulting set of methods double or debiased ML (DML). We verify that DML delivers point estimators that concentrate in an N−1/2-neighbourhood of the true parameter values and are approximately unbiased and normally distributed, which allows construction of valid confidence statements. The generic statistical theory of DML is elementary and simultaneously relies on only weak theoretical requirements, which will admit the use of a broad array of modern ML methods for estimating the nuisance parameters, such as random forests, lasso, ridge, deep neural nets, boosted trees, and various hybrids and ensembles of these methods. We illustrate the general theory by applying it to provide theoretical properties of the following: DML applied to learn the main regression parameter in a partially linear regression model; DML applied to learn the coefficient on an endogenous variable in a partially linear instrumental variables model; DML applied to learn the average treatment effect and the average treatment effect on the treated under unconfoundedness; DML applied to learn the local average treatment effect in an instrumental variables setting. In addition to these theoretical applications, we also illustrate the use of DML in three empirical examples.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"double/debiased machine learning",
+				"regularization bias",
+				"overfitting",
+				"cross-fitting",
+				"partially linear models",
+				"average treatment effect",
+				"average treatment effect on the treated",
+				"local average treatment effect",
+				"unconfoundedness",
+				"confidence intervals",
+				"root-n consistency"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
 			"open_access": false
 		},
 		{
@@ -7179,6 +7706,43 @@
 			"open_access": true
 		},
 		{
+			"key": "CHIM2009a",
+			"type": "article",
+			"title": "Dealing with limited overlap in estimation of average treatment effects",
+			"authors": [
+				"Crump, R. K.",
+				"Hotz, V. J.",
+				"Imbens, G. W.",
+				"Mitnik, O. A."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2009,
+			"journal": "Biometrika",
+			"volume": "96",
+			"number": "1",
+			"pages": "187--199",
+			"issn": "0006-3444",
+			"doi": "10.1093/biomet/asn055",
+			"openalex": "W2116943185",
+			"url": "https://doi.org/10.1093/biomet/asn055",
+			"oa_url": "http://nrs.harvard.edu/urn-3:HUL.InstRepos:3007645",
+			"abstract": "Estimation of average treatment effects under unconfounded or ignorable treatment assignment is often hampered by lack of overlap in the covariate distributions between treatment groups. This lack of overlap can lead to imprecise estimates, and can make commonly used estimators sensitive to the choice of specification. In such cases researchers have often used ad hoc methods for trimming the sample. We develop a systematic approach to addressing lack of overlap. We characterize optimal subsamples for which the average treatment effect can be estimated most precisely. Under some conditions, the optimal selection rules depend solely on the propensity score. For a wide range of distributions, a good approximation to the optimal rule is provided by the simple rule of thumb to discard all units with estimated propensity scores outside the range [0.1,0.9].",
+			"abstract_source": "openalex",
+			"keywords": [
+				"average treatment effect",
+				"covariate overlap",
+				"propensity score",
+				"estimation precision",
+				"selection rules"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "CHN2011a",
 			"type": "article",
 			"title": "Advances in forecasting with neural networks? Empirical evidence from the NN3 competition on time series prediction",
@@ -7874,6 +8438,27 @@
 			"open_access": false
 		},
 		{
+			"key": "CK1994a",
+			"type": "article",
+			"title": "Minimum Wages and Employment: A Case Study of the Fast-Food Industry in New Jersey and Pennsylvania",
+			"authors": [
+				"Card, David",
+				"Krueger, Alan B."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1994,
+			"journal": "American Economic Review",
+			"volume": "84",
+			"number": "4",
+			"pages": "772--793",
+			"url": "https://www.jstor.org/stable/2118030",
+			"source": "manual",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "CKBCJ...2021a",
 			"type": "misc",
 			"title": "Training Verifiers to Solve Math Word Problems",
@@ -7908,6 +8493,46 @@
 			"source": "manual",
 			"retrieved": "2026-11-06",
 			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "CKS2014a",
+			"type": "article",
+			"title": "The Price Impact of Order Book Events",
+			"authors": [
+				"Cont, R.",
+				"Kukanov, A.",
+				"Stoikov, S."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2014,
+			"journal": "Journal of Financial Econometrics",
+			"volume": "12",
+			"number": "1",
+			"pages": "47--88",
+			"issn": "1479-8409",
+			"doi": "10.1093/jjfinec/nbt003",
+			"openalex": "W2949120670",
+			"url": "https://doi.org/10.1093/jjfinec/nbt003",
+			"oa_url": "https://arxiv.org/pdf/1011.6402",
+			"abstract": "We study the price impact of order book events—limit orders, market orders, and cancellations—using the NYSE Trades and Quotes data for fifty U.S. stocks. We show that, over short time intervals, price changes are mainly driven by the order flow imbalance (OFI), defined as the imbalance between supply and demand at the best bid and ask prices. Our study reveals a linear relation between OFI and price changes, with a slope inversely proportional to the market depth. These results are shown to be robust to intraday seasonality effects, and stable across time scales and across stocks. This linear price impact model, together with a scaling argument, implies the empirically observed “square-root” relation between the magnitude of price moves and trading volume, but this relation is found to be noisy and less robust than the one based on OFI. We discuss a potential application of OFI as a measure of adverse selection in limit order executions and discuss the implications for intraday volatility dynamics.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"price impact",
+				"order flow imbalance",
+				"market depth",
+				"limit orders",
+				"market order",
+				"order cancellation",
+				"adverse selection",
+				"intraday volatility",
+				"New York Stock Exchange"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
 			"open_access": true
 		},
 		{
@@ -8839,6 +9464,40 @@
 			"open_access": true
 		},
 		{
+			"key": "CRR1979a",
+			"type": "article",
+			"title": "Option pricing: A simplified approach",
+			"authors": [
+				"Cox, John C.",
+				"Ross, Stephen A.",
+				"Rubinstein, Mark"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1979,
+			"journal": "Journal of Financial Economics",
+			"volume": "7",
+			"number": "3",
+			"pages": "229--263",
+			"issn": "0304-405X",
+			"doi": "10.1016/0304-405X(79)90015-1",
+			"openalex": "W2146612430",
+			"url": "https://doi.org/10.1016/0304-405X(79)90015-1",
+			"keywords": [
+				"option pricing",
+				"discrete-time models",
+				"arbitrage",
+				"Black-Scholes model",
+				"early exercise",
+				"American options"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "CS2012a",
 			"type": "article",
 			"title": "Testing for Regime Switching: A Comment",
@@ -9096,6 +9755,41 @@
 			"open_access": false
 		},
 		{
+			"key": "CW1964a",
+			"type": "article",
+			"title": "Scheduling of Vehicles from a Central Depot to a Number of Delivery Points",
+			"authors": [
+				"Clarke, G.",
+				"Wright, J. W."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1964,
+			"journal": "Operations Research",
+			"volume": "12",
+			"number": "4",
+			"pages": "568--581",
+			"issn": "0030-364X",
+			"doi": "10.1287/opre.12.4.568",
+			"openalex": "W2111581650",
+			"url": "https://doi.org/10.1287/opre.12.4.568",
+			"abstract": "The optimum routing of a fleet of trucks of varying capacities from a central depot to a number of delivery points may require a selection from a very large number of possible routes, if the number of delivery points is also large. This paper, after considering certain theoretical aspects of the problem, develops an iterative procedure that enables the rapid selection of an optimum or near-optimum route. It has been programmed for a digital computer but is also suitable for hand computation.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"vehicle routing",
+				"truck scheduling",
+				"fleet routing",
+				"delivery points",
+				"truck capacity",
+				"route choice"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "CW2007a",
 			"type": "article",
 			"title": "Testing for Regime Switching",
@@ -9165,6 +9859,36 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "CZ2022a",
+			"type": "article",
+			"title": "Open Source Cross-Sectional Asset Pricing",
+			"authors": [
+				"Y. Chen, Andrew",
+				"Zimmermann, Tom"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2022,
+			"journal": "Critical Finance Review",
+			"volume": "11",
+			"number": "2",
+			"pages": "207--264",
+			"issn": "2164-5744",
+			"doi": "10.1561/104.00000112",
+			"openalex": "W4285208064",
+			"url": "https://doi.org/10.1561/104.00000112",
+			"keywords": [
+				"cross-sectional asset pricing",
+				"open source software",
+				"asset pricing models"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
 		},
 		{
 			"key": "CZZ2023a",
@@ -9585,6 +10309,41 @@
 			"open_access": false
 		},
 		{
+			"key": "Cor2009a",
+			"type": "article",
+			"title": "A Simple Approximate Long-Memory Model of Realized Volatility",
+			"authors": [
+				"Corsi, F."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2009,
+			"journal": "Journal of Financial Econometrics",
+			"volume": "7",
+			"number": "2",
+			"pages": "174--196",
+			"issn": "1479-8409",
+			"doi": "10.1093/jjfinec/nbp001",
+			"openalex": "W2146134639",
+			"url": "https://doi.org/10.1093/jjfinec/nbp001",
+			"abstract": "The paper proposes an additive cascade model of volatility components defined over different time periods. This volatility cascade leads to a simple AR-type model in the realized volatility with the feature of considering different volatility components realized over different time horizons and thus termed Heterogeneous Autoregressive model of Realized Volatility (HAR-RV). In spite of the simplicity of its structure and the absence of true long-memory properties, simulation results show that the HAR-RV model successfully achieves the purpose of reproducing the main empirical features of financial returns (long memory, fat tails, and self-similarity) in a very tractable and parsimonious way. Moreover, empirical results show remarkably good forecasting performance.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"realized volatility",
+				"long-range dependence",
+				"heterogeneous autoregressive model",
+				"volatility forecasting",
+				"heavy-tailed distributions",
+				"self-similarity",
+				"financial returns"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "Cow1992a",
 			"type": "article",
 			"title": "Nonparametric event study tests",
@@ -9780,6 +10539,27 @@
 			"source": "manual",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "DBRA2018a",
+			"type": "inproceedings",
+			"title": "A Large Scale Benchmark for Uplift Modeling",
+			"authors": [
+				"Diemert, Eustache",
+				"Betlei, Artem",
+				"Renaudin, Christophe",
+				"Amini, Massih-Reza"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2018,
+			"booktitle": "AdKDD and TargetAd Workshop, ACM SIGKDD Conference on Knowledge Discovery and Data Mining",
+			"address": "London",
+			"url": "https://ailab.criteo.com/criteo-uplift-prediction-dataset/",
+			"source": "manual",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
 		},
 		{
 			"key": "DBV2024a",
@@ -10679,6 +11459,45 @@
 			"open_access": true
 		},
 		{
+			"key": "DHSSC2019a",
+			"type": "article",
+			"title": "Automated versus Do-It-Yourself Methods for Causal Inference: Lessons Learned from a Data Analysis Competition",
+			"authors": [
+				"Dorie, Vincent",
+				"Hill, Jennifer",
+				"Shalit, Uri",
+				"Scott, Marc",
+				"Cervone, Dan"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2019,
+			"journal": "Statistical Science",
+			"volume": "34",
+			"number": "1",
+			"pages": "43--68",
+			"issn": "0883-4237",
+			"doi": "10.1214/18-STS667",
+			"openalex": "W2964261049",
+			"url": "https://doi.org/10.1214/18-STS667",
+			"oa_url": "https://projecteuclid.org/journals/statistical-science/volume-34/issue-1/Automated-versus-Do-It-Yourself-Methods-for-Causal-Inference/10.1214/18-STS667.pdf",
+			"abstract": "Statisticians have made great progress in creating methods that reduce our reliance on parametric assumptions. However, this explosion in research has resulted in a breadth of inferential strategies that both create opportunities for more reliable inference as well as complicate the choices that an applied researcher has to make and defend. Relatedly, researchers advocating for new methods typically compare their method to at best 2 or 3 other causal inference strategies and test using simulations that may or may not be designed to equally tease out flaws in all the competing methods. The causal inference data analysis challenge, “Is Your SATT Where It’s At?”, launched as part of the 2016 Atlantic Causal Inference Conference, sought to make progress with respect to both of these issues. The researchers creating the data testing grounds were distinct from the researchers submitting methods whose efficacy would be evaluated. Results from 30 competitors across the two versions of the competition (black-box algorithms and do-it-yourself analyses) are presented along with post-hoc analyses that reveal information about the characteristics of causal inference strategies and settings that affect performance. The most consistent conclusion was that methods that flexibly model the response surface perform better overall than methods that fail to do so. Finally new methods are proposed that combine features of several of the top-performing submitted methods.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"causal inference",
+				"data analysis competition",
+				"black-box algorithms",
+				"response surface methodology",
+				"method performance evaluation",
+				"nonparametric statistics"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "DJ2014a",
 			"type": "article",
 			"title": "An Evolutionary Many-Objective Optimization Algorithm Using Reference-Point-Based Nondominated Sorting Approach, Part I: Solving Problems with Box Constraints",
@@ -11216,6 +12035,34 @@
 			"open_access": true
 		},
 		{
+			"key": "DP1994a",
+			"type": "book",
+			"title": "Investment under Uncertainty",
+			"authors": [
+				"Dixit, Avinash K.",
+				"Pindyck, Robert S."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1994,
+			"publisher": "Princeton University Press",
+			"address": "Princeton, NJ",
+			"doi": "10.1515/9781400830176",
+			"openalex": "W4365787967",
+			"url": "https://doi.org/10.1515/9781400830176",
+			"keywords": [
+				"investment under uncertainty",
+				"capital investment",
+				"risk",
+				"capital budgeting"
+			],
+			"keywords_source": "openalex",
+			"source": "openalex",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "DP2022a",
 			"type": "book",
 			"title": "Nonlinear Dynamics: A Concise Introduction Interlaced with Code",
@@ -11304,6 +12151,43 @@
 			"retrieved": "2026-11-13",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "DR1959a",
+			"type": "article",
+			"title": "The Truck Dispatching Problem",
+			"authors": [
+				"Dantzig, G. B.",
+				"Ramser, J. H."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1959,
+			"journal": "Management Science",
+			"volume": "6",
+			"number": "1",
+			"pages": "80--91",
+			"issn": "0025-1909",
+			"doi": "10.1287/mnsc.6.1.80",
+			"openalex": "W2111563176",
+			"url": "https://doi.org/10.1287/mnsc.6.1.80",
+			"abstract": "The paper is concerned with the optimum routing of a fleet of gasoline delivery trucks between a bulk terminal and a large number of service stations supplied by the terminal. The shortest routes between any two points in the system are given and a demand for one or several products is specified for a number of stations within the distribution system. It is desired to find a way to assign stations to trucks in such a manner that station demands are satisfied and total mileage covered by the fleet is a minimum A procedure based on a linear programming formulation is given for obtaining a near optimal solution. The calculations may be readily performed by hand or by an automatic digital computing machine. No practical applications of the method have been made as yet. A number of trial problems have been calculated, however.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"truck dispatching",
+				"vehicle routing",
+				"fleet assignment",
+				"linear programming formulation",
+				"distribution systems",
+				"bulk terminals",
+				"gas stations",
+				"demand satisfaction"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
 		},
 		{
 			"key": "DRH2000a",
@@ -11637,6 +12521,39 @@
 			"open_access": false
 		},
 		{
+			"key": "DW2002b",
+			"type": "article",
+			"title": "Propensity Score-Matching Methods for Nonexperimental Causal Studies",
+			"authors": [
+				"Dehejia, Rajeev H.",
+				"Wahba, Sadek"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2002,
+			"journal": "Review of Economics and Statistics",
+			"volume": "84",
+			"number": "1",
+			"pages": "151--161",
+			"issn": "0034-6535",
+			"doi": "10.1162/003465302317331982",
+			"openalex": "W3123974754",
+			"url": "https://doi.org/10.1162/003465302317331982",
+			"abstract": "This paper considers causal inference and sample selection bias in nonexperimental settings in which (i) few units in the nonexperimental comparison group are comparable to the treatment units, and (ii) selecting a subset of comparison units similar to the treatment units is difficult because units must be compared across a high-dimensional set of pre-treatment characteristics. We discuss the use of propensity score-matching methods, and implement them using data from the National Supported Work experiment. Following LaLonde (1986), we pair the experimental treated units with nonexperimental comparison units from the CPS and PSID, and compare the estimates of the treatment effect obtained using our methods to the benchmark results from the experiment. For both comparison groups, we show that the methods succeed in focusing attention on the small subset of the comparison units comparable to the treated units and, hence, in alleviating the bias due to systematic differences between the treated and comparison units.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"propensity score matching",
+				"sample selection bias",
+				"treatment effect estimation",
+				"comparison group selection"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "DW2022a",
 			"type": "article",
 			"title": "Effortless estimation of basins of attraction",
@@ -11765,6 +12682,25 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
+		},
+		{
+			"key": "Dam2012a",
+			"type": "book",
+			"title": "Investment Valuation: Tools and Techniques for Determining the Value of Any Asset",
+			"authors": [
+				"Damodaran, Aswath"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2012,
+			"publisher": "Wiley",
+			"address": "Hoboken, NJ",
+			"edition": "3rd",
+			"isbn": "9781118011522",
+			"source": "manual",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
 		},
 		{
 			"key": "Dan1951a",
@@ -12356,6 +13292,45 @@
 			"open_access": false
 		},
 		{
+			"key": "EG2022a",
+			"type": "article",
+			"title": "Smart “Predict, then Optimize”",
+			"authors": [
+				"Elmachtoub, Adam N.",
+				"Grigas, Paul"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2022,
+			"journal": "Management Science",
+			"volume": "68",
+			"number": "1",
+			"pages": "9--26",
+			"issn": "0025-1909",
+			"doi": "10.1287/mnsc.2020.3922",
+			"openalex": "W2766820687",
+			"url": "https://doi.org/10.1287/mnsc.2020.3922",
+			"oa_url": "https://arxiv.org/pdf/1710.08005",
+			"abstract": "Many real-world analytics problems involve two significant challenges: prediction and optimization. Because of the typically complex nature of each challenge, the standard paradigm is predict-then-optimize. By and large, machine learning tools are intended to minimize prediction error and do not account for how the predictions will be used in the downstream optimization problem. In contrast, we propose a new and very general framework, called Smart “Predict, then Optimize” (SPO), which directly leverages the optimization problem structure—that is, its objective and constraints—for designing better prediction models. A key component of our framework is the SPO loss function, which measures the decision error induced by a prediction. Training a prediction model with respect to the SPO loss is computationally challenging, and, thus, we derive, using duality theory, a convex surrogate loss function, which we call the SPO+ loss. Most importantly, we prove that the SPO+ loss is statistically consistent with respect to the SPO loss under mild conditions. Our SPO+ loss function can tractably handle any polyhedral, convex, or even mixed-integer optimization problem with a linear objective. Numerical experiments on shortest-path and portfolio-optimization problems show that the SPO framework can lead to significant improvement under the predict-then-optimize paradigm, in particular, when the prediction model being trained is misspecified. We find that linear models trained using SPO+ loss tend to dominate random-forest algorithms, even when the ground truth is highly nonlinear. This paper was accepted by Yinyu Ye, optimization. Supplemental Material: Data and the online appendix are available at https://doi.org/10.1287/mnsc.2020.3922",
+			"abstract_source": "openalex",
+			"keywords": [
+				"predict-then-optimize",
+				"statistical consistency",
+				"duality theory",
+				"mixed integer programming",
+				"polyhedral optimization",
+				"shortest path",
+				"portfolio optimization",
+				"linear prediction model",
+				"random forest comparison"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "EI2016a",
 			"type": "article",
 			"title": "Office Open XML File Formats — Part 1: Fundamentals and Markup Language Reference",
@@ -12618,6 +13593,44 @@
 			"url": "https://people.math.ethz.ch/~embrecht/ftp/copchapter.pdf",
 			"legacy_key": "embrechts2002",
 			"source": "manual",
+			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "EPO2012a",
+			"type": "article",
+			"title": "Flow Toxicity and Liquidity in a High-frequency World",
+			"authors": [
+				"Easley, David",
+				"López de Prado, Marcos M.",
+				"O'Hara, Maureen"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2012,
+			"journal": "Review of Financial Studies",
+			"volume": "25",
+			"number": "5",
+			"pages": "1457--1493",
+			"issn": "0893-9454",
+			"doi": "10.1093/rfs/hhs053",
+			"openalex": "W1981992805",
+			"url": "https://doi.org/10.1093/rfs/hhs053",
+			"oa_url": "https://doi.org/10.2139/ssrn.1695596",
+			"abstract": "Order flow is toxic when it adversely selects market makers, who may be unaware they are providing liquidity at a loss. We present a new procedure to estimate flow toxicity based on volume imbalance and trade intensity (the VPIN toxicity metric). VPIN is updated in volume time, making it applicable to the high-frequency world, and it does not require the intermediate estimation of non-observable parameters or the application of numerical methods. It does require trades classified as buys or sells, and we develop a new bulk volume classification procedure that we argue is more useful in high-frequency markets than standard classification procedures. We show that the VPIN metric is a useful indicator of short-term, toxicity-induced volatility.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"order flow",
+				"market makers",
+				"liquidity provision",
+				"trade intensity",
+				"high-frequency trading",
+				"short-term volatility",
+				"market microstructure"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
 			"checked": false,
 			"open_access": true
 		},
@@ -13349,6 +14362,37 @@
 			"retrieved": "2026-11-18",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "FH1984a",
+			"type": "article",
+			"title": "A Simplified Common Stock Valuation Model",
+			"authors": [
+				"Fuller, Russell J.",
+				"Hsia, Chi-Cheng"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1984,
+			"journal": "Financial Analysts Journal",
+			"volume": "40",
+			"number": "5",
+			"pages": "49--56",
+			"issn": "0015-198X",
+			"doi": "10.2469/faj.v40.n5.49",
+			"openalex": "W2098432818",
+			"url": "https://doi.org/10.2469/faj.v40.n5.49",
+			"abstract": "(1984). A Simplified Common Stock Valuation Model. Financial Analysts Journal: Vol. 40, No. 5, pp. 49-56.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"common stock valuation",
+				"stock valuation"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
 		},
 		{
 			"key": "FHM2018a",
@@ -14414,6 +15458,26 @@
 			"open_access": true
 		},
 		{
+			"key": "GB2016a",
+			"type": "misc",
+			"title": "Entity Embeddings of Categorical Variables",
+			"authors": [
+				"Guo, Cheng",
+				"Berkhahn, Felix"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2016,
+			"arxiv": "1604.06737",
+			"url": "https://arxiv.org/abs/1604.06737",
+			"abstract": "We map categorical variables in a function approximation problem into Euclidean spaces, which are the entity embeddings of the categorical variables. The mapping is learned by a neural network during the standard supervised training process. Entity embedding not only reduces memory usage and speeds up neural networks compared with one-hot encoding, but more importantly by mapping similar values close to each other in the embedding space it reveals the intrinsic properties of the categorical variables. We applied it successfully in a recent Kaggle competition and were able to reach the third position with relative simple features. We further demonstrate in this paper that entity embedding helps the neural network to generalize better when the data is sparse and statistics is unknown. Thus it is especially useful for datasets with lots of high cardinality features, where other methods tend to overfit. We also demonstrate that the embeddings obtained from the trained neural network boost the performance of all tested machine learning methods considerably when used as the input features instead. As entity embedding defines a distance measure for categorical variables it can be used for visualizing categorical data and for data clustering.",
+			"abstract_source": "arxiv",
+			"source": "manual",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "GBC2016a",
 			"type": "book",
 			"title": "Deep Learning",
@@ -15169,6 +16233,45 @@
 			"open_access": false
 		},
 		{
+			"key": "GKX2020a",
+			"type": "article",
+			"title": "Empirical Asset Pricing via Machine Learning",
+			"authors": [
+				"Gu, Shihao",
+				"Kelly, Bryan",
+				"Xiu, Dacheng"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2020,
+			"journal": "The Review of Financial Studies",
+			"volume": "33",
+			"number": "5",
+			"pages": "2223--2273",
+			"issn": "0893-9454",
+			"doi": "10.1093/rfs/hhaa009",
+			"openalex": "W4205539948",
+			"url": "https://doi.org/10.1093/rfs/hhaa009",
+			"oa_url": "https://academic.oup.com/rfs/article-pdf/33/5/2223/33209812/hhaa009.pdf",
+			"abstract": "We perform a comparative analysis of machine learning methods for the canonical problem of empirical asset pricing: measuring asset risk premiums. We demonstrate large economic gains to investors using machine learning forecasts, in some cases doubling the performance of leading regression-based strategies from the literature. We identify the best-performing methods (trees and neural networks) and trace their predictive gains to allowing nonlinear predictor interactions missed by other methods. All methods agree on the same set of dominant predictive signals, a set that includes variations on momentum, liquidity, and volatility. Authors have furnished an Internet Appendix, which is available on the Oxford University Press Web site next to the link to the final published paper online.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"empirical asset pricing",
+				"machine learning",
+				"tree-based models",
+				"artificial neural networks",
+				"momentum",
+				"liquidity",
+				"volatility",
+				"predictive signals"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "GL2007a",
 			"type": "article",
 			"title": "Statistical Analyses and Reproducible Research",
@@ -15646,6 +16749,48 @@
 			"open_access": true
 		},
 		{
+			"key": "GR1994a",
+			"type": "article",
+			"title": "Optimal Dynamic Pricing of Inventories with Stochastic Demand over Finite Horizons",
+			"authors": [
+				"Gallego, Guillermo",
+				"van Ryzin, Garrett"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1994,
+			"journal": "Management Science",
+			"volume": "40",
+			"number": "8",
+			"pages": "999--1020",
+			"issn": "0025-1909",
+			"doi": "10.1287/mnsc.40.8.999",
+			"openalex": "W2035518103",
+			"url": "https://doi.org/10.1287/mnsc.40.8.999",
+			"abstract": "In many industries, managers face the problem of selling a given stock of items by a deadline. We investigate the problem of dynamically pricing such inventories when demand is price sensitive and stochastic and the firm's objective is to maximize expected revenues. Examples that fit this framework include retailers selling fashion and seasonal goods and the travel and leisure industry, which markets space such as seats on airline flights, cabins on vacation cruises, and rooms in hotels that become worthless if not sold by a specific time. We formulate this problem using intensity control and obtain structural monotonicity results for the optimal intensity (resp., price) as a function of the stock level and the length of the horizon. For a particular exponential family of demand functions, we find the optimal pricing policy in closed form. For general demand functions, we find an upper bound on the expected revenue based on analyzing the deterministic version of the problem and use this bound to prove that simple, fixed price policies are asymptotically optimal as the volume of expected sales tends to infinity. Finally, we extend our results to the case where demand is compound Poisson; only a finite number of prices is allowed; the demand rate is time varying; holding costs are incurred and cash flows are discounted; the initial stock is a decision variable; and reordering, overbooking, and random cancellations are allowed.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"dynamic pricing",
+				"inventory management",
+				"stochastic demand",
+				"price-sensitive demand",
+				"intensity control",
+				"revenue maximization",
+				"overbooking",
+				"compound Poisson demand",
+				"time-varying demand",
+				"holding cost",
+				"discounted cash flow",
+				"finite horizon",
+				"optimal pricing policy"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "GR2007a",
 			"type": "article",
 			"title": "Strictly Proper Scoring Rules, Prediction, and Estimation",
@@ -15699,6 +16844,40 @@
 			"legacy_key": "goncalves2011",
 			"source": "crossref",
 			"retrieved": "2026-10-23",
+			"checked": false,
+			"open_access": false
+		},
+		{
+			"key": "GS1956a",
+			"type": "article",
+			"title": "Capital Equipment Analysis: The Required Rate of Profit",
+			"authors": [
+				"Gordon, Myron J.",
+				"Shapiro, Eli"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1956,
+			"journal": "Management Science",
+			"volume": "3",
+			"number": "1",
+			"pages": "102--110",
+			"issn": "0025-1909",
+			"doi": "10.1287/mnsc.3.1.102",
+			"openalex": "W2158978917",
+			"url": "https://doi.org/10.1287/mnsc.3.1.102",
+			"abstract": "The interest in capital equipment analysis that has been evident in the business literature of the past five years is the product of numerous social, economic, and business developments of the postwar period. No conclusive listing of these developments can be attempted here. However, four should be mentioned which are of particular importance in this search for a more systematic method for discovering, evaluating, and selecting investment opportunities. These are: (1) the high level of capital outlays (in absolute terms); (2) the growth in the size of business firms; (3) the delegation of responsibility for initiating recommendations from top management to the profit center, which has been part of the general movement toward decentralization; and (4) the growing use of “scientific management” in the operations of the business firm.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"capital budgeting",
+				"capital expenditure",
+				"decentralization",
+				"profit centers",
+				"scientific management"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
 			"checked": false,
 			"open_access": false
 		},
@@ -19428,6 +20607,45 @@
 			"open_access": true
 		},
 		{
+			"key": "Hai2012a",
+			"type": "article",
+			"title": "Entropy Balancing for Causal Effects: A Multivariate Reweighting Method to Produce Balanced Samples in Observational Studies",
+			"authors": [
+				"Hainmueller, Jens"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2012,
+			"journal": "Political Analysis",
+			"volume": "20",
+			"number": "1",
+			"pages": "25--46",
+			"issn": "1047-1987",
+			"doi": "10.1093/pan/mpr025",
+			"openalex": "W3122812581",
+			"url": "https://doi.org/10.1093/pan/mpr025",
+			"oa_url": "https://papers.ssrn.com/sol3/Delivery.cfm?abstractid=1904869",
+			"abstract": "This paper proposes entropy balancing, a data preprocessing method to achieve covariate balance in observational studies with binary treatments. Entropy balancing relies on a maximum entropy reweighting scheme that calibrates unit weights so that the reweighted treatment and control group satisfy a potentially large set of prespecified balance conditions that incorporate information about known sample moments. Entropy balancing thereby exactly adjusts inequalities in representation with respect to the first, second, and possibly higher moments of the covariate distributions. These balance improvements can reduce model dependence for the subsequent estimation of treatment effects. The method assures that balance improves on all covariate moments included in the reweighting. It also obviates the need for continual balance checking and iterative searching over propensity score models that may stochastically balance the covariate moments. We demonstrate the use of entropy balancing with Monte Carlo simulations and empirical applications.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"entropy balancing",
+				"covariate balance",
+				"reweighting",
+				"observational studies",
+				"binary treatment",
+				"causal effects",
+				"propensity score",
+				"model dependence",
+				"sample moments",
+				"treatment effect estimation"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "Hal1989a",
 			"type": "article",
 			"title": "Antithetic Resampling for the Bootstrap",
@@ -19595,6 +20813,41 @@
 			"keywords_source": "openalex",
 			"source": "crossref",
 			"retrieved": "2026-11-06",
+			"checked": false,
+			"open_access": false
+		},
+		{
+			"key": "Han1994a",
+			"type": "article",
+			"title": "Autoregressive Conditional Density Estimation",
+			"authors": [
+				"Hansen, Bruce E."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1994,
+			"journal": "International Economic Review",
+			"volume": "35",
+			"number": "3",
+			"pages": "705",
+			"issn": "0020-6598",
+			"doi": "10.2307/2527081",
+			"openalex": "W2069317099",
+			"url": "https://doi.org/10.2307/2527081",
+			"abstract": "R. F. Engle's autoregressive conditional heteroskedastic model is extended to permit parametric specifications for conditional dependence beyond the mean and variance. The suggestion is to model the conditional density with a small number of parameters, and then model these parameters as functions of the conditioning information. This method is applied to two data sets. The first application is to the monthly excess holding yield on U.S. Treasury securities, where the conditional density used is a Student's t distribution. The second application is to the U.S. Dollar/Swiss Franc exchange rate, using a new skewed Student t conditional distribution. Copyright 1994 by Economics Department of the University of Pennsylvania and the Osaka University Institute of Social and Economic Research Association.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"autoregressive conditional heteroskedasticity",
+				"conditional density estimation",
+				"conditional dependence",
+				"t-distribution",
+				"skewed Student-t distribution",
+				"U.S. Treasury securities",
+				"exchange rate volatility"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
 			"checked": false,
 			"open_access": false
 		},
@@ -20510,6 +21763,41 @@
 			"open_access": true
 		},
 		{
+			"key": "IKP2012a",
+			"type": "article",
+			"title": "Causal Inference without Balance Checking: Coarsened Exact Matching",
+			"authors": [
+				"Iacus, Stefano M.",
+				"King, Gary",
+				"Porro, Giuseppe"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2012,
+			"journal": "Political Analysis",
+			"volume": "20",
+			"number": "1",
+			"pages": "1--24",
+			"issn": "1047-1987",
+			"doi": "10.1093/pan/mpr013",
+			"openalex": "W2029941278",
+			"url": "https://doi.org/10.1093/pan/mpr013",
+			"oa_url": "https://www.cambridge.org/core/services/aop-cambridge-core/content/view/5ABCF5B3FC3089A87FD59CECBB3465C0/S1047198700012985a.pdf/div-class-title-causal-inference-without-balance-checking-coarsened-exact-matching-div.pdf",
+			"abstract": "We discuss a method for improving causal inferences called “Coarsened Exact Matching” (CEM), and the new “Monotonic Imbalance Bounding” (MIB) class of matching methods from which CEM is derived. We summarize what is known about CEM and MIB, derive and illustrate several new desirable statistical properties of CEM, and then propose a variety of useful extensions. We show that CEM possesses a wide range of statistical properties not available in most other matching methods but is at the same time exceptionally easy to comprehend and use. We focus on the connection between theoretical properties and practical applications. We also make available easy-to-use open source software for R, Stata , and SPSS that implement all our suggestions.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"coarsened exact matching",
+				"causal inference",
+				"matching methods",
+				"treatment effect estimation"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "IMCGJ...2022a",
 			"type": "misc",
 			"title": "Symbolic-Numeric Integration of Univariate Expressions Based on Sparse Regression",
@@ -21204,6 +22492,24 @@
 			"source": "manual",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "JPMR1996a",
+			"type": "techreport",
+			"title": "RiskMetrics: Technical Document",
+			"authors": [
+				"J.P. Morgan/Reuters"
+			],
+			"author_kind": "organisation",
+			"authors_complete": true,
+			"year": 1996,
+			"address": "New York, NY",
+			"edition": "4th",
+			"institution": "J.P. Morgan and Reuters",
+			"source": "manual",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
 		},
 		{
 			"key": "JPR1994a",
@@ -22137,6 +23443,27 @@
 			"open_access": false
 		},
 		{
+			"key": "KGW2020a",
+			"type": "book",
+			"title": "Valuation: Measuring and Managing the Value of Companies",
+			"authors": [
+				"Koller, Tim",
+				"Goedhart, Marc",
+				"Wessels, David"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2020,
+			"publisher": "Wiley",
+			"address": "Hoboken, NJ",
+			"edition": "7th",
+			"isbn": "9781119610885",
+			"source": "manual",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "KHA2024a",
 			"type": "misc",
 			"title": "Interpolations.jl: Fast, Flexible Interpolations",
@@ -22523,6 +23850,41 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
+		},
+		{
+			"key": "KM1958a",
+			"type": "article",
+			"title": "Nonparametric Estimation from Incomplete Observations",
+			"authors": [
+				"Kaplan, E. L.",
+				"Meier, Paul"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1958,
+			"journal": "Journal of the American Statistical Association",
+			"volume": "53",
+			"number": "282",
+			"pages": "457--481",
+			"issn": "0162-1459",
+			"doi": "10.1080/01621459.1958.10501452",
+			"openalex": "W3041047318",
+			"url": "https://doi.org/10.1080/01621459.1958.10501452",
+			"abstract": "In lifetesting, medical follow-up, and other fields the observation of the time of occurrence of the event of interest (called a death) may be prevented for some of the items of the sample by the previous occurrence of some other event (called a loss). Losses may be either accidental or controlled, the latter resulting from a decision to terminate certain observations. In either case it is usually assumed in this paper that the lifetime (age at death) is independent of the potential loss time; in practice this assumption deserves careful scrutiny. Despite the resulting incompleteness of the data, it is desired to estimate the proportion P(t) of items in the population whose lifetimes would exceed t (in the absence of such losses), without making any assumption about the form of the function P(t). The observation for each item of a suitable initial event, marking the beginning of its lifetime, is presupposed. For random samples of size N the product-limit (PL) estimate can be defined as follows: List and label the N observed lifetimes (whether to death or loss) in order of increasing magnitude, so that one has 0≤t 1ǐ≤t 2ǐ≤ … ≤t N ǐ. Then P(t)= II. [(N – r)/(N – r + 1)], where r assumes those values for which tr ≤t and for which tr ǐ measures the time to death. This estimate is the distribution, unrestricted as to form, which maximizes the likelihood of the observations. Other estimates that are discussed are the actuarial estimates (which are also products, but with the number of factors usually reduced by grouping); and reduced-sample (RS) estimates, which require that losses not be accidental, so that the limits of observation (potential loss times) are known even for those items whose deaths are observed. When no losses occur at ages less than t, the estimate of P(t) in all cases reduces to the usual binomial estimate, namely, the observed proportion of survivors.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"nonparametric estimation",
+				"censored data",
+				"survival analysis",
+				"Kaplan-Meier estimator",
+				"lifetime distributions",
+				"clinical follow-up"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
 		},
 		{
 			"key": "KMFWC...2017a",
@@ -23014,6 +24376,47 @@
 			"open_access": true
 		},
 		{
+			"key": "KSBY2019a",
+			"type": "article",
+			"title": "Metalearners for estimating heterogeneous treatment effects using machine learning",
+			"authors": [
+				"Künzel, Sören R.",
+				"Sekhon, Jasjeet S.",
+				"Bickel, Peter J.",
+				"Yu, Bin"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2019,
+			"journal": "Proceedings of the National Academy of Sciences",
+			"volume": "116",
+			"number": "10",
+			"pages": "4156--4165",
+			"issn": "0027-8424",
+			"doi": "10.1073/pnas.1804597116",
+			"openalex": "W2624816748",
+			"url": "https://doi.org/10.1073/pnas.1804597116",
+			"oa_url": "https://www.pnas.org/content/pnas/116/10/4156.full.pdf",
+			"abstract": "There is growing interest in estimating and analyzing heterogeneous treatment effects in experimental and observational studies. We describe a number of metaalgorithms that can take advantage of any supervised learning or regression method in machine learning and statistics to estimate the conditional average treatment effect (CATE) function. Metaalgorithms build on base algorithms-such as random forests (RFs), Bayesian additive regression trees (BARTs), or neural networks-to estimate the CATE, a function that the base algorithms are not designed to estimate directly. We introduce a metaalgorithm, the X-learner, that is provably efficient when the number of units in one treatment group is much larger than in the other and can exploit structural properties of the CATE function. For example, if the CATE function is linear and the response functions in treatment and control are Lipschitz-continuous, the X-learner can still achieve the parametric rate under regularity conditions. We then introduce versions of the X-learner that use RF and BART as base learners. In extensive simulation studies, the X-learner performs favorably, although none of the metalearners is uniformly the best. In two persuasion field experiments from political science, we demonstrate how our X-learner can be used to target treatment regimes and to shed light on underlying mechanisms. A software package is provided that implements our methods.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"treatment effect heterogeneity",
+				"conditional average treatment effect",
+				"causal inference",
+				"random forest",
+				"Bayesian additive regression trees",
+				"artificial neural networks",
+				"parametric rate",
+				"treatment targeting",
+				"causal mechanisms"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "KSC1998a",
 			"type": "article",
 			"title": "Stochastic Volatility: Likelihood Inference and Comparison with ARCH Models",
@@ -23034,6 +24437,43 @@
 			"source": "crossref",
 			"retrieved": "2026-11-02",
 			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "KSH2002a",
+			"type": "article",
+			"title": "The Sample Average Approximation Method for Stochastic Discrete Optimization",
+			"authors": [
+				"Kleywegt, Anton J.",
+				"Shapiro, Alexander",
+				"Homem-de-Mello, Tito"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2002,
+			"journal": "SIAM Journal on Optimization",
+			"volume": "12",
+			"number": "2",
+			"pages": "479--502",
+			"issn": "1052-6234",
+			"doi": "10.1137/S1052623499363220",
+			"openalex": "W1983916623",
+			"url": "https://doi.org/10.1137/S1052623499363220",
+			"oa_url": "https://doi.org/10.18452/8219",
+			"abstract": "In thispaper we study a Monte Carlo simulation--based approach to stochastic discrete optimization problems. The basic idea of such methods is that a random sample is generated and the expected value function is approximated by the corresponding sample average function. The obtained sample average optimization problem is solved, and the procedure is repeated several times until a stopping criterion is satisfied. We discuss convergence rates, stopping rules, and computational complexity of this procedure and present a numerical example for the stochastic knapsack problem.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"sample average approximation",
+				"Monte Carlo simulation",
+				"stopping rules",
+				"convergence rate",
+				"computational complexity",
+				"stochastic knapsack problem"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
 			"open_access": true
 		},
 		{
@@ -23183,6 +24623,44 @@
 			"legacy_key": "rinnooykan1987",
 			"source": "crossref",
 			"retrieved": "2026-10-23",
+			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "KT2018a",
+			"type": "article",
+			"title": "Who Should Be Treated? Empirical Welfare Maximization Methods for Treatment Choice",
+			"authors": [
+				"Kitagawa, Toru",
+				"Tetenov, Aleksey"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2018,
+			"journal": "Econometrica",
+			"volume": "86",
+			"number": "2",
+			"pages": "591--616",
+			"issn": "0012-9682",
+			"doi": "10.3982/ECTA13288",
+			"openalex": "W2793124255",
+			"url": "https://doi.org/10.3982/ECTA13288",
+			"oa_url": "https://www.econometricsociety.org/sites/default/files/ecta1760-sup-0001-Supplement.pdf",
+			"abstract": "One of the main objectives of empirical analysis of experiments and quasi-experiments is to inform policy decisions that determine the allocation of treatments to individuals with different observable covariates. We study the properties and implementation of the Empirical Welfare Maximization (EWM) method, which estimates a treatment assignment policy by maximizing the sample analog of average social welfare over a class of candidate treatment policies. The EWM approach is attractive in terms of both statistical performance and practical implementation in realistic settings of policy design. Common features of these settings include: (i) feasible treatment assignment rules are constrained exogenously for ethical, legislative, or political reasons, (ii) a policy maker wants a simple treatment assignment rule based on one or more eligibility scores in order to reduce the dimensionality of individual observable characteristics, and/or (iii) the proportion of individuals who can receive the treatment is a priori limited due to a budget or a capacity constraint. We show that when the propensity score is known, the average social welfare attained by EWM rules converges at least at n1/2 rate to the maximum obtainable welfare uniformly over a minimally constrained class of data distributions, and this uniform convergence rate is minimax optimal. We examine how the uniform convergence rate depends on the richness of the class of candidate decision rules, the distribution of conditional treatment effects, and the lack of knowledge of the propensity score. We offer easily implementable algorithms for computing the EWM rule and an application using experimental data from the National JTPA Study.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"social welfare maximization",
+				"uniform convergence",
+				"minimax optimality",
+				"propensity score",
+				"capacity constraints",
+				"conditional treatment effects",
+				"treatment allocation",
+				"policy design"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
 			"checked": false,
 			"open_access": true
 		},
@@ -23718,6 +25196,45 @@
 			"source": "crossref",
 			"retrieved": "2026-11-02",
 			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "Ken2023a",
+			"type": "article",
+			"title": "Towards optimal doubly robust estimation of heterogeneous causal effects",
+			"authors": [
+				"Kennedy, Edward H."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2023,
+			"journal": "Electronic Journal of Statistics",
+			"volume": "17",
+			"number": "2",
+			"pages": "3008--3049",
+			"issn": "1935-7524",
+			"doi": "10.1214/23-EJS2157",
+			"openalex": "W4388656403",
+			"url": "https://doi.org/10.1214/23-EJS2157",
+			"oa_url": "https://projecteuclid.org/journals/electronic-journal-of-statistics/volume-17/issue-2/Towards-optimal-doubly-robust-estimation-of-heterogeneous-causal-effects/10.1214/23-EJS2157.pdf",
+			"abstract": "Heterogeneous effect estimation is crucial in causal inference, with applications across medicine and social science. Many methods for estimating conditional average treatment effects (CATEs) have been proposed, but there are gaps in understanding if and when such methods are optimal. This is especially true when the CATE has nontrivial structure (e.g., smoothness or sparsity). Our work contributes in several ways. First, we study a two-stage doubly robust CATE estimator and give a generic error bound, which yields rates faster than much of the literature. We apply the bound to derive error rates in smooth nonparametric models, and give sufficient conditions for oracle efficiency. Along the way we give a general error bound for regression with estimated outcomes; this is the second main contribution. The third contribution is aimed at understanding the fundamental statistical limits of CATE estimation. To that end, we propose and study a local polynomial adaptation of double-residual regression. We show that this estimator can be oracle efficient under even weaker conditions, and we conjecture that they are minimal in a minimax sense. We go on to give error bounds in the non-trivial regime where oracle rates cannot be achieved. Some finite-sample properties are explored with simulations.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"treatment effect heterogeneity",
+				"conditional average treatment effect",
+				"doubly robust estimation",
+				"two-stage estimation",
+				"oracle efficiency",
+				"minimax lower bounds",
+				"loess",
+				"error bounds",
+				"sparsity",
+				"finite sample properties"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
 			"open_access": true
 		},
 		{
@@ -24572,6 +26089,40 @@
 			"retrieved": "2026-11-03",
 			"checked": true,
 			"open_access": false
+		},
+		{
+			"key": "LCLS2010a",
+			"type": "inproceedings",
+			"title": "A contextual-bandit approach to personalized news article recommendation",
+			"authors": [
+				"Li, Lihong",
+				"Chu, Wei",
+				"Langford, John",
+				"Schapire, Robert E."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2010,
+			"booktitle": "Proceedings of the 19th international conference on World wide web",
+			"pages": "661--670",
+			"doi": "10.1145/1772690.1772758",
+			"openalex": "W2112420033",
+			"url": "https://doi.org/10.1145/1772690.1772758",
+			"oa_url": "https://arxiv.org/pdf/1003.0146",
+			"abstract": "Personalized web services strive to adapt their services (advertisements, news articles, etc.) to individual users by making use of both content and user information. Despite a few recent advances, this problem remains challenging for at least two reasons. First, web service is featured with dynamically changing pools of content, rendering traditional collaborative filtering methods inapplicable. Second, the scale of most web services of practical interest calls for solutions that are both fast in learning and computation.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"personalized news recommendation",
+				"contextual bandits",
+				"personalized web services",
+				"collaborative filtering limitations",
+				"scalable learning"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "LCYL2018a",
@@ -25689,6 +27240,43 @@
 			"open_access": false
 		},
 		{
+			"key": "LNT2002a",
+			"type": "article",
+			"title": "Equity Valuation Using Multiples",
+			"authors": [
+				"Liu, Jing",
+				"Nissim, Doron",
+				"Thomas, Jacob"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2002,
+			"journal": "Journal of Accounting Research",
+			"volume": "40",
+			"number": "1",
+			"pages": "135--172",
+			"issn": "0021-8456",
+			"doi": "10.1111/1475-679X.00042",
+			"openalex": "W3123014936",
+			"url": "https://doi.org/10.1111/1475-679X.00042",
+			"oa_url": "https://doi.org/10.2139/ssrn.241266",
+			"abstract": "We examine the valuation performance of a comprehensive list of value drivers and find that multiples derived from forward earnings explain stock prices remarkably well: pricing errors are within 15 percent of stock prices for about half our sample. In terms of relative performance, the following general rankings are observed consistently each year: forward earnings measures are followed by historical earnings measures, cash flow measures and book value of equity are tied for third, and sales performs the worst. Curiously, performance declines when we consider more complex measures of intrinsic value based on short-cut residual income models. Contrary to the popular view that different industries have different “best” multiples, these overall rankings are observed consistently for almost all industries examined. Since we require analysts’ earnings and growth forecasts and positive values for all measures, our results may not be representative of the many firm-years excluded from our sample.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"stock valuation",
+				"multiples",
+				"book value of equity",
+				"residual income model",
+				"intrinsic value",
+				"earnings forecasts"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "LPPPK...2020a",
 			"type": "inproceedings",
 			"title": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks",
@@ -25896,6 +27484,46 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "LS2001a",
+			"type": "article",
+			"title": "Valuing American Options by Simulation: A Simple Least-Squares Approach",
+			"authors": [
+				"Longstaff, Francis A.",
+				"Schwartz, Eduardo S."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2001,
+			"journal": "Review of Financial Studies",
+			"volume": "14",
+			"number": "1",
+			"pages": "113--147",
+			"issn": "0893-9454",
+			"doi": "10.1093/rfs/14.1.113",
+			"openalex": "W2126311658",
+			"url": "https://doi.org/10.1093/rfs/14.1.113",
+			"oa_url": "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=137399",
+			"abstract": "This article presents a simple yet powerful new approach for approximating the value of America11 options by simulation. The kcy to this approach is the use of least squares to estimate the conditional expected payoff to the optionholder from continuation. This makes this approach readily applicable in path-dependent and multifactor situations where traditional finite difference techniques cannot be used. We illustrate this technique with several realistic exatnples including valuing an option when the underlying asset follows a jump-diffusion process and valuing an America11 swaption in a 20-factor string model of the term structure. One of the most important problems in option pricing theory is the valuation and optimal exercise of derivatives with American-style exercise features. These types of derivatives are found in all major financial markets including the equity, commodity, foreign exchange, insurance, energy, sovereign,",
+			"abstract_source": "openalex",
+			"keywords": [
+				"American options",
+				"option pricing",
+				"least squares Monte Carlo",
+				"early exercise",
+				"path-dependent options",
+				"multi-factor models",
+				"jump-diffusion processes",
+				"swaptions",
+				"term structure models",
+				"optimal exercise"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "LS2017a",
@@ -27373,6 +29001,45 @@
 			"open_access": true
 		},
 		{
+			"key": "MAPKW...2024a",
+			"type": "article",
+			"title": "2021 Amazon Last Mile Routing Research Challenge: Data Set",
+			"authors": [
+				"Merchán, Daniel",
+				"Arora, Jatin",
+				"Pachon, Julian",
+				"Konduri, Karthik",
+				"Winkenbach, Matthias",
+				"Parks, Steven",
+				"Noszek, Joseph"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2024,
+			"journal": "Transportation Science",
+			"volume": "58",
+			"number": "1",
+			"pages": "8--11",
+			"issn": "0041-1655",
+			"doi": "10.1287/trsc.2022.1173",
+			"openalex": "W4295781069",
+			"url": "https://doi.org/10.1287/trsc.2022.1173",
+			"abstract": "The 2021 Amazon Last Mile Routing Research Challenge, hosted by Amazon.com’s Last Mile Research team, and scientifically supported by the Massachusetts Institute of Technology’s Center for Transportation and Logistics, prompted participants to leverage real operational data to find new and better ways to solve a real-world routing problem. In this article, we describe the data set released for the research challenge, which includes route-, stop-, and package-level features for 9,184 historical routes performed by Amazon drivers in 2018 in five metropolitan areas in the United States. This real-world data set excludes any personally identifiable information: all route and package identifiers have been randomly regenerated and related location data have been obfuscated to ensure anonymity. Although multiple synthetic benchmark data sets are available in the literature, the data set of the 2021 Amazon Last Mile Routing Research Challenge is the first large and publicly available data set to include instances based on real-world operational routing data. History: This paper has been accepted for the Transportation Science Special Issue on Machine Learning Methods and Applications in Large-Scale Route Planning Problems.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"last-mile delivery",
+				"vehicle routing",
+				"route planning",
+				"benchmark dataset",
+				"machine learning for routing"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "MBMGL...2016a",
 			"type": "inproceedings",
 			"title": "Asynchronous Methods for Deep Reinforcement Learning",
@@ -27943,6 +29610,78 @@
 			"open_access": true
 		},
 		{
+			"key": "MDSG2020a",
+			"type": "article",
+			"title": "Smart Predict-and-Optimize for Hard Combinatorial Optimization Problems",
+			"authors": [
+				"Mandi, Jayanta",
+				"Demirovi?, Emir",
+				"Stuckey, Peter J.",
+				"Guns, Tias"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2020,
+			"journal": "Proceedings of the AAAI Conference on Artificial Intelligence",
+			"volume": "34",
+			"number": "02",
+			"pages": "1603--1610",
+			"issn": "2374-3468",
+			"doi": "10.1609/aaai.v34i02.5521",
+			"openalex": "W2991415160",
+			"url": "https://doi.org/10.1609/aaai.v34i02.5521",
+			"oa_url": "https://doi.org/10.1609/aaai.v34i02.5521",
+			"abstract": "Combinatorial optimization assumes that all parameters of the optimization problem, e.g. the weights in the objective function, are fixed. Often, these weights are mere estimates and increasingly machine learning techniques are used to for their estimation. Recently, Smart Predict and Optimize (SPO) has been proposed for problems with a linear objective function over the predictions, more specifically linear programming problems. It takes the regret of the predictions on the linear problem into account, by repeatedly solving it during learning. We investigate the use of SPO to solve more realistic discrete optimization problems. The main challenge is the repeated solving of the optimization problem. To this end, we investigate ways to relax the problem as well as warm-starting the learning and the solving. Our results show that even for discrete problems it often suffices to train by solving the relaxation in the SPO loss. Furthermore, this approach outperforms the state-of-the-art approach of Wilder, Dilkina, and Tambe. We experiment with weighted knapsack problems as well as complex scheduling problems, and show for the first time that a predict-and-optimize approach can successfully be used on large-scale combinatorial optimization problems.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"combinatorial optimization",
+				"linear programming relaxation",
+				"warm start",
+				"large-scale optimization"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "ME1980a",
+			"type": "article",
+			"title": "The Weighted Average Cost of Capital, Perfect Capital Markets, and Project Life: A Clarification",
+			"authors": [
+				"Miles, James A.",
+				"Ezzell, John R."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1980,
+			"journal": "The Journal of Financial and Quantitative Analysis",
+			"volume": "15",
+			"number": "3",
+			"pages": "719",
+			"issn": "0022-1090",
+			"doi": "10.2307/2330405",
+			"openalex": "W2080022913",
+			"url": "https://doi.org/10.2307/2330405",
+			"abstract": "James A. Miles, John R. Ezzell, The Weighted Average Cost of Capital, Perfect Capital Markets, and Project Life: A Clarification, The Journal of Financial and Quantitative Analysis, Vol. 15, No. 3 (Sep., 1980), pp. 719-730",
+			"abstract_source": "openalex",
+			"keywords": [
+				"weighted average cost of capital",
+				"perfect capital markets",
+				"project life",
+				"capital budgeting",
+				"cost of capital",
+				"project duration",
+				"capital structure"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "ME2006a",
 			"type": "article",
 			"title": "Generality of the Final Size Formula for an Epidemic of a Newly Invading Infectious Disease",
@@ -28418,6 +30157,47 @@
 			"open_access": false
 		},
 		{
+			"key": "MKBMB...2024a",
+			"type": "article",
+			"title": "Decision-Focused Learning: Foundations, State of the Art, Benchmark and Future Opportunities",
+			"authors": [
+				"Mandi, Jayanta",
+				"Kotary, James",
+				"Berden, Senne",
+				"Mulamba, Maxime",
+				"Bucarey, Victor",
+				"Guns, Tias",
+				"Fioretto, Ferdinando"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2024,
+			"journal": "Journal of Artificial Intelligence Research",
+			"volume": "80",
+			"pages": "1623--1701",
+			"issn": "1076-9757",
+			"doi": "10.1613/jair.1.15320",
+			"openalex": "W4402114587",
+			"url": "https://doi.org/10.1613/jair.1.15320",
+			"oa_url": "https://doi.org/10.1613/jair.1.15320",
+			"abstract": "Decision-focused learning (DFL) is an emerging paradigm that integrates machine learning (ML) and constrained optimization to enhance decision quality by training ML models in an end-to-end system. This approach shows significant potential to revolutionize combinatorial decision-making in real-world applications that operate under uncertainty, where estimating unknown parameters within decision models is a major challenge. This paper presents a comprehensive review of DFL, providing an in-depth analysis of both gradient-based and gradient-free techniques used to combine ML and constrained optimization. It evaluates the strengths and limitations of these techniques and includes an extensive empirical evaluation of eleven methods across seven problems. The survey also offers insights into recent advancements and future research directions in DFL.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"decision-focused learning",
+				"constrained optimization",
+				"uncertainty",
+				"gradient-based optimization",
+				"derivative-free optimization",
+				"end-to-end learning",
+				"benchmarking"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "MKSRV...2015a",
 			"type": "article",
 			"title": "Human-level Control through Deep Reinforcement Learning",
@@ -28615,6 +30395,49 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
+		},
+		{
+			"key": "MM1958a",
+			"type": "article",
+			"title": "The Cost of Capital, Corporation Finance and the Theory of Investment",
+			"authors": [
+				"Modigliani, Franco",
+				"Miller, Merton H."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1958,
+			"journal": "American Economic Review",
+			"volume": "48",
+			"number": "3",
+			"pages": "261--297",
+			"url": "https://www.jstor.org/stable/1809766",
+			"source": "manual",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
+		},
+		{
+			"key": "MM1963a",
+			"type": "article",
+			"title": "Corporate Income Taxes and the Cost of Capital: A Correction",
+			"authors": [
+				"Modigliani, Franco",
+				"Miller, Merton H."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1963,
+			"journal": "American Economic Review",
+			"volume": "53",
+			"number": "3",
+			"pages": "433--443",
+			"openalex": "W1546993880",
+			"url": "https://www.jstor.org/stable/1809167",
+			"source": "manual",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
 		},
 		{
 			"key": "MM1990a",
@@ -29094,6 +30917,44 @@
 			"legacy_key": "more1983",
 			"source": "crossref",
 			"retrieved": "2026-10-23",
+			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "MS1986a",
+			"type": "article",
+			"title": "The Value of Waiting to Invest",
+			"authors": [
+				"McDonald, Robert",
+				"Siegel, Daniel"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1986,
+			"journal": "The Quarterly Journal of Economics",
+			"volume": "101",
+			"number": "4",
+			"pages": "707",
+			"issn": "0033-5533",
+			"doi": "10.2307/1884175",
+			"openalex": "W2033739349",
+			"url": "https://doi.org/10.2307/1884175",
+			"oa_url": "https://doi.org/10.3386/w1019",
+			"abstract": "This paper studies the optimal timing of investment in an irreversible project where the benefits from the project and the investment cost follow continuous-time stochastic processes. The optimal investment rule and an explicit formula for the value of the option to invest are derived, assuming that the option is valued by risk-averse investors who are well diversified. The same analysis is applied to the scrapping decision. Simulations show that this option value can be significant, and that for reasonable parameter values it is optimal to wait until benefits are twice the investment costs.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"investment timing",
+				"real options",
+				"option value",
+				"irreversible investment",
+				"risk aversion",
+				"diversification",
+				"continuous-time stochastic processes",
+				"project valuation"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
 			"checked": false,
 			"open_access": true
 		},
@@ -29687,6 +31548,30 @@
 			"open_access": true
 		},
 		{
+			"key": "MZ1969a",
+			"type": "incollection",
+			"title": "The Evaluation of Economic Forecasts",
+			"authors": [
+				"Mincer, Jacob A.",
+				"Zarnowitz, Victor"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1969,
+			"booktitle": "Economic Forecasts and Expectations: Analysis of Forecasting Behavior and Performance",
+			"editors": [
+				"Mincer, Jacob A."
+			],
+			"publisher": "National Bureau of Economic Research",
+			"address": "New York, NY",
+			"pages": "3--46",
+			"url": "https://www.nber.org/books-and-chapters/economic-forecasts-and-expectations-analysis-forecasting-behavior-and-performance/evaluation-economic-forecasts",
+			"source": "manual",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "Mac1997a",
 			"type": "article",
 			"title": "Event Studies in Economics and Finance",
@@ -30050,6 +31935,37 @@
 			"open_access": false
 		},
 		{
+			"key": "Mei2006a",
+			"type": "article",
+			"title": "Quantile Regression Forests",
+			"authors": [
+				"Meinshausen, Nicolai"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2006,
+			"journal": "Journal of Machine Learning Research",
+			"volume": "7",
+			"pages": "983--999",
+			"openalex": "W1573647811",
+			"abstract": "Random Forests were introduced as a Machine Learning tool in Breiman (2001) and have since proven to be very popular and powerful for high-dimensional regression and classification. For regression, Random Forests give an accurate approximation of the conditional mean of a response variable. It is shown here that Random Forests provide information about the full conditional distribution of the response variable, not only about the conditional mean. Conditional quantiles can be inferred with Quantile Regression Forests, a generalisation of Random Forests. Quantile Regression Forests give a non-parametric and accurate way of estimating conditional quantiles for high-dimensional predictor variables. The algorithm is shown to be consistent. Numerical examples suggest that the algorithm is competitive in terms of predictive power.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"quantile regression forest",
+				"random forest",
+				"conditional quantiles",
+				"conditional distribution estimation",
+				"high-dimensional regression",
+				"nonparametric estimation",
+				"consistency"
+			],
+			"keywords_source": "openalex",
+			"source": "openalex",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "Mer1968a",
 			"type": "article",
 			"title": "The Matthew Effect in Science",
@@ -30092,6 +32008,39 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": false
+		},
+		{
+			"key": "Mer1974a",
+			"type": "article",
+			"title": "On the Pricing of Corporate Debt: The Risk Structure of Interest Rates",
+			"authors": [
+				"Merton, Robert C."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1974,
+			"journal": "The Journal of Finance",
+			"volume": "29",
+			"number": "2",
+			"pages": "449--470",
+			"issn": "0022-1082",
+			"doi": "10.1111/j.1540-6261.1974.tb03058.x",
+			"openalex": "W2105973145",
+			"url": "https://doi.org/10.1111/j.1540-6261.1974.tb03058.x",
+			"oa_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1111/j.1540-6261.1974.tb03058.x",
+			"abstract": "Robert C. Merton, On the Pricing of Corporate Debt: The Risk Structure of Interest Rates, The Journal of Finance, Vol. 29, No. 2, Papers and Proceedings of the Thirty-Second Annual Meeting of the American Finance Association, New York, New York, December 28-30, 1973 (May, 1974), pp. 449-470",
+			"abstract_source": "openalex",
+			"keywords": [
+				"corporate debt pricing",
+				"term structure of interest rates",
+				"credit risk",
+				"bond pricing"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "Mer1976a",
@@ -30444,6 +32393,42 @@
 			"open_access": false
 		},
 		{
+			"key": "Mye1974a",
+			"type": "article",
+			"title": "Interactions of Corporate Financing and Investment Decisions: Implications for Capital Budgeting",
+			"authors": [
+				"Myers, Stewart C."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1974,
+			"journal": "The Journal of Finance",
+			"volume": "29",
+			"number": "1",
+			"pages": "1--25",
+			"issn": "0022-1082",
+			"doi": "10.1111/j.1540-6261.1974.tb00021.x",
+			"openalex": "W2162676516",
+			"url": "https://doi.org/10.1111/j.1540-6261.1974.tb00021.x",
+			"oa_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1111/j.1540-6261.1974.tb00021.x",
+			"abstract": "Everyone seems to agree that there are significant interactions between corporate financing and investment decisions. The most important argument to the contrary — embodied in Modigliani and Miller's (MM's) famous Proposition I — specifically assumes the absence of corporate income taxes; but their argument implies an interaction when such taxes are recognized. Interactions may also stem from transaction costs or other market imperfections. The purpose of this paper is to present a general approach for analysis of the interactions of corporate financing and investment de-cisions, and to derive some of the approach's implications. Perhaps the most interesting implication is that the weighted average cost of capital formulas proposed by MM and other authors are not always correct. Except in certain special cases, a more general \"Adjusted Present Value \" rule should, in principle, be used to evaluate investment opportunities. The paper is organized as follows. Section II presents the",
+			"abstract_source": "openalex",
+			"keywords": [
+				"capital budgeting",
+				"corporate income tax",
+				"weighted average cost of capital",
+				"adjusted present value",
+				"transaction costs",
+				"market imperfections",
+				"cost of capital"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "NASEM2019a",
 			"type": "book",
 			"title": "Reproducibility and Replicability in Science",
@@ -30685,6 +32670,45 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "NMKGI2018a",
+			"type": "article",
+			"title": "Benchmark dataset for mid-price forecasting of limit order book data with machine learning methods",
+			"authors": [
+				"Ntakaris, Adamantios",
+				"Magris, Martin",
+				"Kanniainen, Juho",
+				"Gabbouj, Moncef",
+				"Iosifidis, Alexandros"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2018,
+			"journal": "Journal of Forecasting",
+			"volume": "37",
+			"number": "8",
+			"pages": "852--866",
+			"issn": "0277-6693",
+			"doi": "10.1002/for.2543",
+			"openalex": "W2888688668",
+			"url": "https://doi.org/10.1002/for.2543",
+			"oa_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/for.2543",
+			"abstract": "Managing the prediction of metrics in high-frequency financial markets is a challenging task. An efficient way is by monitoring the dynamics of a limit order book to identify the information edge. This paper describes the first publicly available benchmark dataset of high-frequency limit order markets for mid-price prediction. We extracted normalized data representations of time series data for five stocks from the Nasdaq Nordic stock market for a time period of 10 consecutive days, leading to a dataset of ∼4,000,000 time series samples in total. A day-based anchored cross-validation experimental protocol is also provided that can be used as a benchmark for comparing the performance of state-of-the-art methodologies. Performance of baseline approaches are also provided to facilitate experimental comparisons. We expect that such a large-scale dataset can serve as a testbed for devising novel solutions of expert systems for high-frequency limit order book data analysis.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"limit order book",
+				"high-frequency financial data",
+				"benchmark dataset",
+				"time series",
+				"order book dynamics",
+				"expert systems"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "NMTGL2018a",
@@ -30957,6 +32981,45 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": false
+		},
+		{
+			"key": "NW2021a",
+			"type": "article",
+			"title": "Quasi-oracle estimation of heterogeneous treatment effects",
+			"authors": [
+				"Nie, X",
+				"Wager, S"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2021,
+			"journal": "Biometrika",
+			"volume": "108",
+			"number": "2",
+			"pages": "299--319",
+			"issn": "0006-3444",
+			"doi": "10.1093/biomet/asaa076",
+			"openalex": "W3089065092",
+			"url": "https://doi.org/10.1093/biomet/asaa076",
+			"oa_url": "https://arxiv.org/pdf/1712.04912",
+			"abstract": "Flexible estimation of heterogeneous treatment effects lies at the heart of many statistical applications, such as personalized medicine and optimal resource allocation. In this article we develop a general class of two-step algorithms for heterogeneous treatment effect estimation in observational studies. First, we estimate marginal effects and treatment propensities to form an objective function that isolates the causal component of the signal. Then, we optimize this data-adaptive objective function. The proposed approach has several advantages over existing methods. From a practical perspective, our method is flexible and easy to use: in both steps, any loss-minimization method can be employed, such as penalized regression, deep neural networks, or boosting; moreover, these methods can be fine-tuned by cross-validation. Meanwhile, in the case of penalized kernel regression, we show that our method has a quasi-oracle property. Even when the pilot estimates for marginal effects and treatment propensities are not particularly accurate, we achieve the same error bounds as an oracle with prior knowledge of these two nuisance components. We implement variants of our approach based on penalized regression, kernel ridge regression, and boosting in a variety of simulation set-ups, and observe promising performance relative to existing baselines.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"treatment effect heterogeneity",
+				"two-stage estimation",
+				"marginal effects",
+				"causal inference",
+				"observational studies",
+				"kernel ridge regression",
+				"boosting",
+				"personalized medicine",
+				"resource allocation optimization"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "NYSM2012a",
@@ -32194,6 +34257,41 @@
 			"open_access": true
 		},
 		{
+			"key": "PGVDG2018a",
+			"type": "inproceedings",
+			"title": "CatBoost: unbiased boosting with categorical features",
+			"authors": [
+				"Prokhorenkova, Liudmila",
+				"Gusev, Gleb",
+				"Vorobev, Aleksandr",
+				"Dorogush, Anna Veronika",
+				"Gulin, Andrey"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2018,
+			"booktitle": "Advances in Neural Information Processing Systems",
+			"volume": "31",
+			"pages": "6638--6648",
+			"doi": "10.48550/arxiv.1706.09516",
+			"openalex": "W2798476254",
+			"url": "https://doi.org/10.48550/arxiv.1706.09516",
+			"oa_url": "https://arxiv.org/pdf/1706.09516",
+			"abstract": "This paper presents the key algorithmic techniques behind CatBoost, a new gradient boosting toolkit. Their combination leads to CatBoost outperforming other publicly available boosting implementations in terms of quality on a variety of datasets. Two critical algorithmic advances introduced in CatBoost are the implementation of ordered boosting, a permutation-driven alternative to the classic algorithm, and an innovative algorithm for processing categorical features. Both techniques were created to fight a prediction shift caused by a special kind of target leakage present in all currently existing implementations of gradient boosting algorithms. In this paper, we provide a detailed analysis of this problem and demonstrate that proposed algorithms solve it effectively, leading to excellent empirical results.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"CatBoost",
+				"gradient boosting",
+				"categorical variables",
+				"target leakage"
+			],
+			"keywords_source": "openalex",
+			"source": "openalex",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "PHLLU...2024a",
 			"type": "misc",
 			"title": "NonlinearSolve.jl: High-Performance and Robust Solvers for Systems of Nonlinear Equations in Julia",
@@ -33132,6 +35230,39 @@
 			"open_access": true
 		},
 		{
+			"key": "Pat2011a",
+			"type": "article",
+			"title": "Volatility forecast comparison using imperfect volatility proxies",
+			"authors": [
+				"Patton, Andrew J."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2011,
+			"journal": "Journal of Econometrics",
+			"volume": "160",
+			"number": "1",
+			"pages": "246--256",
+			"issn": "0304-4076",
+			"doi": "10.1016/j.jeconom.2010.03.034",
+			"openalex": "W1545599178",
+			"url": "https://doi.org/10.1016/j.jeconom.2010.03.034",
+			"oa_url": "https://doi.org/10.2139/ssrn.675322",
+			"keywords": [
+				"volatility forecasting",
+				"forecasting model comparison",
+				"robust loss functions",
+				"squared returns",
+				"realized volatility",
+				"forecast evaluation"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "Pea1901a",
 			"type": "article",
 			"title": "LIII. On lines and planes of closest fit to systems of points in space",
@@ -33688,6 +35819,36 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "Pra2018a",
+			"type": "book",
+			"title": "Advances in Financial Machine Learning",
+			"authors": [
+				"Prado, Marcos López de"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2018,
+			"publisher": "Wiley",
+			"isbn": "9781119482086",
+			"openalex": "W2968584812",
+			"abstract": "Machine learning (ML) is changing virtually every aspect of our lives. Today ML algorithms accomplish tasks that until recently only expert humans could perform. As it relates to finance, this is the most exciting time to adopt a disruptive technology that will transform how everyone invests for generations. Readers will learn how to structure Big data in a way that is amenable to ML algorithms; how to conduct research with ML algorithms on that data; how to use supercomputing methods; how to backtest your discoveries while avoiding false positives. The book addresses real-life problems faced by practitioners on a daily basis, and explains scientifically sound solutions using math, supported by code and examples. Readers become active users who can test the proposed solutions in their particular setting. Written by a recognized expert and portfolio manager, this book will equip investment professionals with the groundbreaking tools needed to succeed in modern finance.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"financial machine learning",
+				"big data in finance",
+				"investment decision-making",
+				"high-performance computing",
+				"backtesting",
+				"false positives",
+				"portfolio management"
+			],
+			"keywords_source": "openalex",
+			"source": "openalex",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
 		},
 		{
 			"key": "Pre1967a",
@@ -35086,6 +37247,44 @@
 			"open_access": true
 		},
 		{
+			"key": "RR1983a",
+			"type": "article",
+			"title": "The central role of the propensity score in observational studies for causal effects",
+			"authors": [
+				"ROSENBAUM, PAUL R.",
+				"RUBIN, DONALD B."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1983,
+			"journal": "Biometrika",
+			"volume": "70",
+			"number": "1",
+			"pages": "41--55",
+			"issn": "0006-3444",
+			"doi": "10.1093/biomet/70.1.41",
+			"openalex": "W2150291618",
+			"url": "https://doi.org/10.1093/biomet/70.1.41",
+			"oa_url": "https://academic.oup.com/biomet/article-pdf/70/1/41/662954/70-1-41.pdf",
+			"abstract": "The propensity score is the conditional probability of assignment to a particular treatment given a vector of observed covariates. Both large and small sample theory show that adjustment for the scalar propensity score is sufficient to remove bias due to all observed covariates. Applications include: (i) matched sampling on the univariate propensity score, which is a generalization of discriminant matching, (ii) multivariate adjustment by subclassification on the propensity score where the same subclasses are used to estimate treatment effects for all outcome variables and in all subpopulations, and (iii) visual representation of multivariate covariance adjustment by a two- dimensional plot.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"propensity score",
+				"causal inference",
+				"observational studies",
+				"treatment effect estimation",
+				"covariate adjustment",
+				"matched sampling",
+				"subclassification",
+				"bias mitigation"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "RR2016a",
 			"type": "book",
 			"title": "Optimization by GRASP: Greedy Randomized Adaptive Search Procedures",
@@ -35176,6 +37375,44 @@
 			"retrieved": "2026-11-06",
 			"checked": true,
 			"open_access": true
+		},
+		{
+			"key": "RRZ1994a",
+			"type": "article",
+			"title": "Estimation of Regression Coefficients When Some Regressors are not Always Observed",
+			"authors": [
+				"Robins, James M.",
+				"Rotnitzky, Andrea",
+				"Zhao, Lue Ping"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1994,
+			"journal": "Journal of the American Statistical Association",
+			"volume": "89",
+			"number": "427",
+			"pages": "846--866",
+			"issn": "0162-1459",
+			"doi": "10.1080/01621459.1994.10476818",
+			"openalex": "W2039811614",
+			"url": "https://doi.org/10.1080/01621459.1994.10476818",
+			"abstract": "In applied problems it is common to specify a model for the conditional mean of a response given a set of regressors. A subset of the regressors may be missing for some study subjects either by design or happenstance. In this article we propose a new class of semiparametric estimators, based on inverse probability weighted estimating equations, that are consistent for parameter vector α0 of the conditional mean model when the data are missing at random in the sense of Rubin and the missingness probabilities are either known or can be parametrically modeled. We show that the asymptotic variance of the optimal estimator in our class attains the semiparametric variance bound for the model by first showing that our estimation problem is a special case of the general problem of parameter estimation in an arbitrary semiparametric model in which the data are missing at random and the probability of observing complete data is bounded away from 0, and then deriving a representation for the efficient score, the semiparametric variance bound, and the influence function of any regular, asymptotically linear estimator in this more general estimation problem. Because the optimal estimator depends on the unknown probability law generating the data, we propose locally and globally adaptive semiparametric efficient estimators. We compare estimators in our class with previously proposed estimators. We show that each previous estimator is asymptotically equivalent to some, usually inefficient, estimator in our class. This equivalence is a consequence of a proposition stating that every regular asymptotic linear estimator of α0 is asymptotically equivalent to some estimator in our class. We compare various estimators in a small simulation study and offer some practical recommendations.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"missing at random",
+				"semiparametric efficient estimation",
+				"inverse probability weighting",
+				"estimating equations",
+				"efficient score",
+				"influence function",
+				"asymptotic equivalence",
+				"regression coefficients"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
 		},
 		{
 			"key": "RS1991a",
@@ -36421,6 +38658,42 @@
 			"open_access": false
 		},
 		{
+			"key": "Rub1974a",
+			"type": "article",
+			"title": "Estimating causal effects of treatments in randomized and nonrandomized studies.",
+			"authors": [
+				"Rubin, Donald B."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1974,
+			"journal": "Journal of Educational Psychology",
+			"volume": "66",
+			"number": "5",
+			"pages": "688--701",
+			"issn": "1939-2176",
+			"doi": "10.1037/h0037350",
+			"openalex": "W2132917208",
+			"url": "https://doi.org/10.1037/h0037350",
+			"oa_url": "http://nrs.harvard.edu/urn-3:HUL.InstRepos:3408692",
+			"abstract": "Presents a discussion of matching, randomization, random sampling, and other methods of controlling extraneous variation. The objective was to specify the benefits of randomization in estimating causal effects of treatments. It is concluded that randomization should be employed whenever possible but that the use of carefully controlled nonrandomized data to estimate causal effects is a reasonable and necessary procedure in many cases.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"causal effect estimation",
+				"randomization",
+				"non-randomized studies",
+				"matching",
+				"random sampling",
+				"treatment effects",
+				"observational studies"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "Rub1976a",
 			"type": "article",
 			"title": "Inference and Missing Data",
@@ -36476,6 +38749,42 @@
 			"legacy_key": "rubin1981",
 			"source": "crossref",
 			"retrieved": "2026-10-23",
+			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "Rub2002a",
+			"type": "article",
+			"title": "Capital Cash Flows: A Simple Approach to Valuing Risky Cash Flows",
+			"authors": [
+				"Ruback, Richard S."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2002,
+			"journal": "Financial Management",
+			"volume": "31",
+			"number": "2",
+			"pages": "85",
+			"issn": "0046-3892",
+			"doi": "10.2307/3666224",
+			"openalex": "W3123846658",
+			"url": "https://doi.org/10.2307/3666224",
+			"oa_url": "https://doi.org/10.2139/ssrn.223080",
+			"abstract": "This paper presents the Capital Cash Flow method for valuing risky cash flows. I show that the Capital Cash Flow method is equivalent to discounting Free Cash Flows by the weighted average cost of capital. Because the interest tax shields are included in the cash flows, the Capital Cash Flow approach is easier to apply when the level of debt changes or when a specific amount of debt is projected. The paper also compares the Capital Cash Flow method to the Adjusted Present Value method and provides consistent leverage adjustment formulas for both methods.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"free cash flow valuation",
+				"weighted average cost of capital",
+				"interest tax shield",
+				"adjusted present value",
+				"leverage adjustment",
+				"capital structure",
+				"debt financing"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
 			"checked": false,
 			"open_access": true
 		},
@@ -39595,6 +41904,42 @@
 			"open_access": true
 		},
 		{
+			"key": "Sha1964a",
+			"type": "article",
+			"title": "Capital Asset Prices: A Theory of Market Equilibrium under Conditions of Risk",
+			"authors": [
+				"Sharpe, William F."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1964,
+			"journal": "The Journal of Finance",
+			"volume": "19",
+			"number": "3",
+			"pages": "425--442",
+			"issn": "0022-1082",
+			"doi": "10.1111/j.1540-6261.1964.tb02865.x",
+			"openalex": "W2029056003",
+			"url": "https://doi.org/10.1111/j.1540-6261.1964.tb02865.x",
+			"abstract": "One of the problems which has plagued those attempting to predict the behavior of capital markets is the absence of a body of positive microeconomic theory dealing with conditions of risk. Although many useful insights can be obtained from the traditional models of investment under conditions of certainty, the pervasive influence of risk in financial transactions has forced those working in this area to adopt models of price behavior which are little more than assertions. A typical classroom explanation of the determination of capital asset prices, for example, usually begins with a careful and relatively rigorous description of the process through which individual preferences and physical relationships interact to determine an equilibrium pure interest rate. This is generally followed by the assertion that somehow a market risk-premium is also determined, with the prices of assets adjusting accordingly to account for differences in their risk. A useful representation of the view of the capital market implied in such discussions is illustrated in Figure 1. In equilibrium, capital asset prices have adjusted so that the investor, if he follows rational procedures (primarily diversification), is able to attain any desired point along a capital market line.11 Although some discussions are also consistent with a non-linear (but monotonic) curve. He may obtain a higher expected rate of return on his holdings only by incurring additional risk. In effect, the market presents him with two prices: the price of time, or the pure interest rate (shown by the intersection of the line with the horizontal axis) and the price of risk, the additional expected return per unit of risk borne (the reciprocal of the slope of the line). At present there is no theory describing the manner in which the price of risk results from the basic influences of investor preferences, the physical attributes of capital assets, etc. Moreover, lacking such a theory, it is difficult to give any real meaning to the relationship between the price of a single asset and its risk. Through diversification, some of the risk inherent in an asset can be avoided so that its total risk is obviously not the relevant influence on its price; unfortunately little has been said concerning the particular risk component which is relevant. In the last ten years a number of economists have developed normative models dealing with asset choice under conditions of risk. Markowltz,22 Harry M. Markowitz, Portfolio Selection, Efficient Diversification of Investments (New York: John Wiley and Sons, Inc., 1959). The major elements of the theory first appeared in his article “Portfolio Selection,” The Journal of Finance, XII (March 1952), 77–91. following Von Neumann and Morgenstern, developed an analysis based on the expected utility maxim and proposed a general solution for the portfolio selection problem. Tobin33 James Tobin, “Liquidity Preference as Behavior Towards Risk,” The Review of Economic Studies, XXV (February, 1958), 65–86. showed that under certain conditions Markowitz's model implies that the process of investment choice can be broken down into two phases: first, the choice of a unique optimum combination of risky assets; and second, a separate choice concerning the allocation of funds between such a combination and a single riskless asset. Recently, Hicks44 John R. Hicks, “Liquidity,” The Economic Journal, LXXII (December, 1962), 787–802. has used a model similar to that proposed by Tobin to derive corresponding conclusions about individual investor behavior, dealing somewhat more explicitly with the nature of the conditions under which the process of investment choice can be dichotomized. An even more detailed discussion of this process, including a rigorous proof in the context of a choice among lotteries has been presented by Gordon and Gangolli.55 M. J. Gordon and Ramesh Gangolli, “Choice Among and Scale of Play on Lottery Type Alternatives,” College of Business Administration, University of Rochester, 1962. For another discussion of this relationship see W. F. Sharpe, “A Simplified Model for Portfolio Analysis,” Management Science, Vol. 9, No. 2 (January 1963), 277–293. A related discussion can be found in F. Modigliani and M. H. Miller, “The Cost of Capital, Corporation Finance, and the Theory of Investment,” The American Economic Review, XLVIII (June 1958), 261–297. Although all the authors cited use virtually the same model of investor behavior,66 Recently Hirshleifer has suggested that the mean-variance approach used in the articles cited is best regarded as a special case of a more general formulation due to Arrow. See Hirshleifer's “Investment Decision Under Uncertainty,” Papers and Proceedings of the Seventy-Sixth Annual Meeting of the American Economic Association, Dec. 1963, or Arrow's “Le Role des Valeurs Boursieres pour la Repartition la Meilleure des Risques,” International Colloquium on Econometrics, 1952. none has yet attempted to extend it to construct a market equilibrium theory of asset prices under conditions of risk.77 After preparing this paper the author learned that Mr. Jack L. Treynor, of Arthur D. Little, Inc., had independently developed a model similar in many respects to the one described here. Unfortunately Mr. Treynor's excellent work on this subject is, at present, unpublished. We will show that such an extension provides a theory with implications consistent with the assertions of traditional financial theory described above. Moreover, it sheds considerable light on the relationship between the price of an asset and the various components of its overall risk. For these reasons it warrants consideration as a model of the determination of capital asset prices. Part II provides the model of individual investor behavior under conditions of risk. In Part III the equilibrium conditions for the capital market are considered and the capital market line derived. The implications for the relationship between the prices of individual capital assets and the various components of risk are described in Part IV. Investors are assumed to prefer a higher expected future wealth to a lower value, ceteris paribus ( dU/dE w > 0 ) . Moreover, they exhibit risk-aversion, choosing an investment offering a lower value of σw to one with a greater level, given the level of E w ( dU / d σ w 0 ). As suggested earlier, the complexity of the relationship between the characteristics of individual assets and the location of the investment opportunity curve makes it difficult to provide a simple rule for assessing the desirability of individual assets, since the effect of an asset on an investor's over-all investment opportunity curve depends not only on its expected rate of return (ERi) and risk σRi), but also on its correlations with the other available opportunities (ri1, ri2, …., rin). However, such a rule is implied by the equilibrium conditions for the model, as we will show in part IV. This implies that all combinations involving any risky asset or combination of assets plus the riskless asset must have values of ERc and σRc which lie along a straight line between the points representing the two components. Thus in Figure 4 all combinations of ER and σR lying along the line PA are attainable if some money is loaned at the pure rate and some placed in A. Similarly, by lending at the pure rate and investing in B, combinations along PB can be attained. Of all such possibilities, however, one will dominate: that investment plan lying at the point of the original investment opportunity curve where a ray from point P is tangent to the curve. In Figure 4 all investments lying along the original curve from X to ϕ are dominated by some combination of investment in ϕ and lending at the pure interest rate. Consider next the possibility of borrowing. If the investor can borrow at the pure rate of interest, this is equivalent to disinvesting in P. The effect of borrowing to purchase more of any given investment than is possible with the given amount of wealth can be found simply by letting a take on negative values in the equations derived for the case of lending. This will obviously give points lying along the extension of line PA if borrowing is used to purchase more of A; points lying along the extension of PB if the funds are used to purchase B, etc. As in the case of lending, however, one investment plan will dominate all others when borrowing is possible. When the rate at which funds can be borrowed equals the lending rate, this plan will be the same one which is dominant if lending is to take place. Under these conditions, the investment opportunity curve a line in Figure Moreover, if the original investment opportunity curve is not linear at point the process of investment choice can be as first the optimum combination of risky assets (point and second borrow or to obtain the particular point on at which an indifference curve is tangent to the This proof first presented by Tobin for the case in which the pure rate of interest is zero considers the lending under conditions but not borrowing. Both authors present their analysis subject to as analysis independence and thus that the solution will no negative holdings of risky assets; the general thus his solution would generally negative holdings of some assets. The discussion in this paper is based on which includes on the holdings of all assets. with the analysis, it may be useful to alternative assumptions under which only a combination of assets lying at the point of between the original investment opportunity curve and a ray from P can be if borrowing is the investor will choose ϕ (and if his him to a point below ϕ on the line a number of choose to some of their funds in relatively this is not an if borrowing is possible but only to some the choice of ϕ would be made by all but those to considerable risk. These alternative to the thus the of borrowing or lending at the pure interest rate less than it to In to derive conditions for equilibrium in the capital market we two we a pure rate of interest, with all able to borrow or funds on we of investor A suggested by one of the are assumed to on the of various expected standard and correlation described in Part to these are and However, since the of a theory is not the of its assumptions but the of its and since these assumptions imply equilibrium conditions which a major part of financial it is from that this formulation be in view of the of alternative models to similar Under these given some set of capital asset prices, investor will view his in the same For one set of prices the as shown in Figure In this an investor with the preferences by indifference curves through would to some of his funds at the pure interest rate and to the in the combination of assets shown by point since this would give him the over-all An investor with the preferences by curves through would to all his funds in combination while an investor with indifference curves through would all his funds plus additional funds in combination ϕ in to his In any all would to purchase only those risky assets which combination The by to purchase the assets in combination ϕ and their of interest in assets not in combination ϕ of to a of prices. The prices of assets in ϕ will and, since an expected return future to present their expected will This will the of combinations which such assets; thus point ϕ (among others) will to the of its If the of future to present both ER and σR will under these conditions the point representing an asset would along a ray through the as its price the other the prices of assets not in ϕ will an in their expected and a of points representing combinations which them. Such price will to a of some combination or combinations will to different and thus to in prices. As the process the investment opportunity curve will to more with points such as ϕ to the and inefficient points as and to the asset prices of to a set of prices is for which asset at least one combination lying on the capital market Figure such an equilibrium The area in Figure representing ER, σR values with only risky assets has been at some from the horizontal for is that a more representation would it to the axis. in the area can be with combinations of risky assets, while points lying along the line can be by borrowing or lending at the pure rate plus an investment in some combination of risky assets. lying along from point A to point can be obtained in either For example, the ER, σR values shown by point A can be obtained by some combination of risky assets; the point can be by a combination of lending and investing in combination of risky assets. is to that in the shown in Figure many alternative combinations of risky assets are efficient lie along line and thus the theory not imply that all will the same This that there will be a unique combination of risky assets. proof of a unique optimum can be shown to be for the case of perfect correlation of efficient risky investment plans if the line their ER, σR points would through point P. In the on of this article the locus in this from a family of into one of straight lines to the thus the other all such combinations must be perfectly correlated, since they lie along a linear of the ER, σR ER, σR values given by combinations of any two combinations must lie the and a straight line the In this case they below such a straight since only in the case of perfect correlation will they along a straight the two combinations must be perfectly As shown in Part this not imply that the individual they are perfectly This provides a to the relationship between the prices of capital assets and different of risk. We have that in equilibrium there will be a simple linear relationship between the expected return and standard deviation of return for efficient combinations of risky assets. Thus has been said about such a relationship for individual assets. the ER, σR values with single assets will lie the capital market the of Moreover, such points may be the with no consistent relationship between their expected return and total risk However, there will be a consistent relationship between their expected and best be risk, as we will Figure the typical relationship between a single capital asset (point and an efficient combination of assets (point of which it is a The curve all ER, σR values which can be obtained with combinations of asset and combination As we such a combination in of a α of asset and ( 1 α ) of combination A value of α = 1 would indicate pure investment in asset while α = 0 would imply investment in combination however, that α = implies a total investment of more than the funds in asset since would be invested in and the other used to purchase combination which also includes some of asset This that a combination in which asset not at all must be represented by some negative value of such a In Figure the curve has been tangent to the capital market line at point This is no such curves must be tangent to the capital market line in equilibrium, since (1) they must it at the point representing the efficient combination and (2) they are at that if r = − 1 will the curve be the in Under these conditions a of would imply that the curve then some combination of assets would lie to the of the capital market an since the capital market line the efficient boundary of values of ER and σR. The that curves such as be tangent to the capital market line can be shown to to a relatively simple which the expected rate of return to various elements of risk for all assets which are in combination The standard deviation of a combination of and will σ = α 2 σ 2 + ( 1 − α ) 2 σ 2 + 2 r α ( 1 − α ) σ σ at α = 0 d σ d α = − 1 σ [ σ 2 − r σ σ ] but σ = σ at α = 0 . d σ d α = − [ σ − r σ ] The expected return of a combination will E = α E + ( 1 − α ) E at all values of dE d α = − [ E − E ] and, at α = 0 d σ dE = σ − r σ E − E . the equation of the capital market line σ R = ( E R − P ) where P is the pure interest rate. is tangent to the line when α = 0 , and since on the σ − r σ E − E = σ E − P r σ σ = − [ P E − P ] + [ 1 E − P ] E . meaning can best be seen if the relationship between the return of asset and that of combination is in a manner similar to that used in This model has been the model since its portfolio analysis solution can be by the so that the The method is described in the author's article, cited that we given a number of of the return of the two investments. The points as shown in The of the their will is, of of the total risk of the part of the is due to an relationship with the return on combination shown by the slope of the The of to in in account for of the in is this component of the total risk which we the risk. The the standard with is the This formulation of the relationship between and can be as a the predicted of to in given (the predicted risk of the of the predicted risk of asset can be This to the relationship derived from the of curves such as with the capital market line in the shown in Figure assets efficient combination must have and values lying on the line r = B 2 σ 2 σ 2 = B σ σ B = r σ σ . The expression on the is the expression on the of the last equation in B = − [ P E − P ] + [ 1 E − P ] E . will so that assets which are more to in will have higher expected than those which are less This with Obviously the part of an risk which is due to its correlation with the return on a combination be when the asset is to the the of this of risk it be related to expected The relationship illustrated in Figure provides a to the concerning the relationship between an risk and its expected thus we have only that the relationship for the assets which some particular efficient combination another combination been a different linear relationship would have been derived. this is As shown in the Consider the two assets and the in efficient combination and the in combination As shown B = − [ P E − P ] + [ 1 E − P ] E B = − [ P E − P ] + [ 1 E − P ] E . and are perfectly r = r B σ σ = B σ σ B = B [ σ σ ] . both and lie on a line which the at σ σ = E − P E − P B = B [ E − P E − P ] − [ P E − P ] + [ 1 E − P ] E = B [ E − P E − P ] from which we have the desired relationship between and B = − [ P E − P ] + [ 1 E − P ] E must therefore on the same line as we may any one of the efficient then the predicted of rate of return to that of the combination and these will be related to the expected rates of return of the assets in the manner in Figure The that rates of return from all efficient combinations will be perfectly provides the for any one of them. we may choose any perfectly with the rate of return of such The in Figure would then indicate alternative levels of a coefficient the of the rate of return of a capital asset to in the This possibility both a explanation for the that all efficient combinations will be perfectly and a useful of the relationship between an individual expected return and its risk. Although the theory implies only that rates of return from efficient combinations will be perfectly correlated, we that this would be due to their on the over-all level of If the investor to all but the risk from in of risk even in efficient since all other can be avoided by diversification, only the of an rate of return to the level of is relevant in assessing its risk. will there is a linear relationship between the of such and expected which are by in will return the pure interest those which with will higher expected rates of This discussion provides an to the second of the two in this In Part III it shown that with to equilibrium conditions in the capital market as a the theory to results consistent with the capital market line). We have shown that with to capital assets considered it also implications consistent with traditional it is for investment to a lower expected return from which little to in the than they from exhibit As suggested earlier, the of the implications not be considered a The of a for some of the major elements of traditional financial theory be a useful in its",
+			"abstract_source": "openalex",
+			"keywords": [
+				"capital asset pricing model",
+				"risk premium",
+				"price of risk",
+				"diversification",
+				"portfolio optimization",
+				"expected utility maximization",
+				"risk aversion",
+				"capital market line"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "Sha1970a",
 			"type": "article",
 			"title": "Conditioning of Quasi-Newton Methods for Function Minimization",
@@ -40095,6 +42440,37 @@
 			"open_access": false
 		},
 		{
+			"key": "Sob1967a",
+			"type": "article",
+			"title": "On the distribution of points in a cube and the approximate evaluation of integrals",
+			"authors": [
+				"Sobol', I. M."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1967,
+			"journal": "USSR Computational Mathematics and Mathematical Physics",
+			"volume": "7",
+			"number": "4",
+			"pages": "86--112",
+			"issn": "0041-5553",
+			"doi": "10.1016/0041-5553(67)90144-9",
+			"openalex": "W2093625674",
+			"url": "https://doi.org/10.1016/0041-5553(67)90144-9",
+			"keywords": [
+				"point distribution",
+				"cube",
+				"numerical integration",
+				"cubature formulas",
+				"numerical quadrature"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "Sob2001a",
 			"type": "article",
 			"title": "Global sensitivity indices for nonlinear mathematical models and their Monte Carlo estimates",
@@ -40358,40 +42734,6 @@
 			"source": "manual",
 			"checked": false,
 			"open_access": true
-		},
-		{
-			"key": "T2000a",
-			"type": "article",
-			"title": "Out-of-sample tests of forecasting accuracy: an analysis and review",
-			"authors": [
-				"Tashman, Leonard J."
-			],
-			"author_kind": "persons",
-			"authors_complete": true,
-			"year": 2000,
-			"journal": "International Journal of Forecasting",
-			"volume": "16",
-			"number": "4",
-			"pages": "437--450",
-			"issn": "0169-2070",
-			"doi": "10.1016/s0169-2070(00)00065-0",
-			"openalex": "W2042506099",
-			"url": "https://doi.org/10.1016/s0169-2070(00)00065-0",
-			"abstract": "",
-			"keywords": [
-				"out-of-sample forecasting",
-				"forecast evaluation",
-				"forecasting competitions",
-				"forecast error measures",
-				"model recalibration",
-				"forecast updating",
-				"forecasting software"
-			],
-			"keywords_source": "openalex",
-			"source": "crossref",
-			"retrieved": "2026-11-18",
-			"checked": false,
-			"open_access": false
 		},
 		{
 			"key": "TB1997a",
@@ -40763,6 +43105,37 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": true
+		},
+		{
+			"key": "TR2004a",
+			"type": "book",
+			"title": "The Theory and Practice of Revenue Management",
+			"authors": [
+				"Talluri, Kalyan T.",
+				"Van Ryzin, Garrett J."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2004,
+			"publisher": "Springer US",
+			"isbn": "9780387243764",
+			"doi": "10.1007/b139000",
+			"openalex": "W74203006",
+			"url": "https://doi.org/10.1007/b139000",
+			"keywords": [
+				"revenue management",
+				"pricing",
+				"capacity management",
+				"demand management",
+				"airline pricing",
+				"hotel pricing",
+				"inventory management"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
 		},
 		{
 			"key": "TRRSG2021a",
@@ -41137,6 +43510,40 @@
 			"open_access": false
 		},
 		{
+			"key": "Tas2000a",
+			"type": "article",
+			"title": "Out-of-sample tests of forecasting accuracy: an analysis and review",
+			"authors": [
+				"Tashman, Leonard J."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2000,
+			"journal": "International Journal of Forecasting",
+			"volume": "16",
+			"number": "4",
+			"pages": "437--450",
+			"issn": "0169-2070",
+			"doi": "10.1016/s0169-2070(00)00065-0",
+			"openalex": "W2042506099",
+			"url": "https://doi.org/10.1016/s0169-2070(00)00065-0",
+			"abstract": "",
+			"keywords": [
+				"out-of-sample forecasting",
+				"forecast evaluation",
+				"forecasting competitions",
+				"forecast error measures",
+				"model recalibration",
+				"forecast updating",
+				"forecasting software"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "Tav2024a",
 			"type": "misc",
 			"title": "XLSX.jl: Read and write Excel files in pure Julia",
@@ -41320,6 +43727,37 @@
 			"source": "manual",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "Tob1958a",
+			"type": "article",
+			"title": "Estimation of Relationships for Limited Dependent Variables",
+			"authors": [
+				"Tobin, James"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1958,
+			"journal": "Econometrica",
+			"volume": "26",
+			"number": "1",
+			"pages": "24",
+			"issn": "0012-9682",
+			"doi": "10.2307/1907382",
+			"openalex": "W2102236934",
+			"url": "https://doi.org/10.2307/1907382",
+			"keywords": [
+				"limited dependent variables",
+				"censored regression",
+				"truncated regression",
+				"probit model",
+				"logit"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
 		},
 		{
 			"key": "Tof2015a",
@@ -42253,6 +44691,46 @@
 			"source": "manual",
 			"retrieved": "2026-10-30",
 			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "WA2018a",
+			"type": "article",
+			"title": "Estimation and Inference of Heterogeneous Treatment Effects using Random Forests",
+			"authors": [
+				"Wager, Stefan",
+				"Athey, Susan"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2018,
+			"journal": "Journal of the American Statistical Association",
+			"volume": "113",
+			"number": "523",
+			"pages": "1228--1242",
+			"issn": "0162-1459",
+			"doi": "10.1080/01621459.2017.1319839",
+			"openalex": "W2208550830",
+			"url": "https://doi.org/10.1080/01621459.2017.1319839",
+			"oa_url": "https://arxiv.org/pdf/1510.04342",
+			"abstract": "Many scientific and engineering challenges—ranging from personalized medicine to customized marketing recommendations—require an understanding of treatment effect heterogeneity. In this article, we develop a nonparametric causal forest for estimating heterogeneous treatment effects that extends Breiman’s widely used random forest algorithm. In the potential outcomes framework with unconfoundedness, we show that causal forests are pointwise consistent for the true treatment effect and have an asymptotically Gaussian and centered sampling distribution. We also discuss a practical method for constructing asymptotic confidence intervals for the true treatment effect that are centered at the causal forest estimates. Our theoretical results rely on a generic Gaussian theory for a large family of random forest algorithms. To our knowledge, this is the first set of results that allows any type of random forest, including classification and regression forests, to be used for provably valid statistical inference. In experiments, we find causal forests to be substantially more powerful than classical methods based on nearest-neighbor matching, especially in the presence of irrelevant covariates.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"treatment effect heterogeneity",
+				"causal forest",
+				"random forest",
+				"nonparametric causal inference",
+				"potential outcomes framework",
+				"unconfoundedness",
+				"asymptotic normality",
+				"pointwise consistency",
+				"asymptotic confidence intervals",
+				"nearest neighbor matching"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
 			"open_access": true
 		},
 		{
@@ -44359,6 +46837,45 @@
 			"open_access": false
 		},
 		{
+			"key": "ZH2005a",
+			"type": "article",
+			"title": "Regularization and Variable Selection Via the Elastic Net",
+			"authors": [
+				"Zou, Hui",
+				"Hastie, Trevor"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2005,
+			"journal": "Journal of the Royal Statistical Society Series B: Statistical Methodology",
+			"volume": "67",
+			"number": "2",
+			"pages": "301--320",
+			"issn": "1369-7412",
+			"doi": "10.1111/j.1467-9868.2005.00503.x",
+			"openalex": "W2122825543",
+			"url": "https://doi.org/10.1111/j.1467-9868.2005.00503.x",
+			"oa_url": "https://academic.oup.com/jrsssb/article-pdf/67/2/301/49795094/jrsssb_67_2_301.pdf",
+			"abstract": "We propose the elastic net, a new regularization and variable selection method. Real world data and a simulation study show that the elastic net often outperforms the lasso, while enjoying a similar sparsity of representation. In addition, the elastic net encourages a grouping effect, where strongly correlated predictors tend to be in or out of the model together. The elastic net is particularly useful when the number of predictors (p) is much bigger than the number of observations (n). By contrast, the lasso is not a very satisfactory variable selection method in the p≫n case. An algorithm called LARS-EN is proposed for computing elastic net regularization paths efficiently, much like algorithm LARS does for the lasso.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"elastic net",
+				"regularization",
+				"feature selection",
+				"LASSO",
+				"high-dimensional data",
+				"correlated predictors",
+				"grouping effect",
+				"regularization path",
+				"sparse representation"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "ZIRIN...2024a",
 			"type": "article",
 			"title": "Extending JumpProcesses.jl for Fast Point Process Simulation with Time-Varying Intensities",
@@ -44918,6 +47435,46 @@
 			"open_access": false
 		},
 		{
+			"key": "ZZR2019a",
+			"type": "article",
+			"title": "DeepLOB: Deep Convolutional Neural Networks for Limit Order Books",
+			"authors": [
+				"Zhang, Zihao",
+				"Zohren, Stefan",
+				"Roberts, Stephen"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2019,
+			"journal": "IEEE Transactions on Signal Processing",
+			"volume": "67",
+			"number": "11",
+			"pages": "3001--3012",
+			"issn": "1053-587X",
+			"doi": "10.1109/TSP.2019.2907260",
+			"openalex": "W2885054548",
+			"url": "https://doi.org/10.1109/TSP.2019.2907260",
+			"oa_url": "https://ora.ox.ac.uk/objects/uuid:4411af59-2657-4e3e-8ee2-81032c37671c/files/s8k71nh102",
+			"abstract": "We develop a large-scale deep learning model to predict price movements from limit order book (LOB) data of cash equities. The architecture utilizes convolutional filters to capture the spatial structure of the LOBs as well as long short-term memory modules to capture longer time dependencies. The proposed network outperforms all existing state-of-the-art algorithms on the benchmark LOB dataset [A. Ntakaris, M. Magris, J. Kanniainen, M. Gabbouj, and A. Iosifidis, “Benchmark dataset for mid-price prediction of limit order book data with machine learning methods,” J. Forecasting, vol. 37, no. 8, 852-866, 2018]. In a more realistic setting, we test our model by using one-year market quotes from the London Stock Exchange, and the model delivers a remarkably stable out-of-sample prediction accuracy for a variety of instruments. Importantly, our model translates well to instruments that were not part of the training set, indicating the model's ability to extract universal features. In order to better understand these features and to go beyond a “black box” model, we perform a sensitivity analysis to understand the rationale behind the model predictions and reveal the components of LOBs that are most relevant. The ability to extract robust features that translate well to other instruments is an important property of our model, which has many other applications.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"limit order book",
+				"price forecasting",
+				"convolutional neural networks",
+				"long short-term memory",
+				"financial time series forecasting",
+				"sensitivity analysis",
+				"feature extraction",
+				"out-of-sample forecasting",
+				"London Stock Exchange"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "Zha2011a",
 			"type": "article",
 			"title": "Estimating Covariation: Epps Effect, Microstructure Noise",
@@ -45006,6 +47563,18 @@
 			"count": 1158,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "AAHIW2021a",
+			"count": 1586,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "AAHIW2021a",
+			"count": 2068,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "AB1990a",
@@ -45194,6 +47763,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "ADH2010a",
+			"count": 4790,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "ADH2010a",
+			"count": 6983,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "AFD2022a",
 			"count": 6,
 			"source": "crossref",
@@ -45290,6 +47871,12 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "AK2017a",
+			"count": 1468,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "ALSSS2015a",
 			"count": 86,
 			"source": "crossref",
@@ -45344,6 +47931,18 @@
 			"date": "2026-10-31"
 		},
 		{
+			"key": "AP2021a",
+			"count": 1738,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "AP2021a",
+			"count": 1395,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "APFDS...2017a",
 			"count": 138,
 			"source": "openalex",
@@ -45372,6 +47971,30 @@
 			"count": 573,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "ATW2019a",
+			"count": 1592,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "ATW2019a",
+			"count": 2841,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "AW2021a",
+			"count": 349,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "AW2021a",
+			"count": 917,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "Ach2009a",
@@ -45432,6 +48055,18 @@
 			"count": 31623,
 			"source": "openalex",
 			"date": "2026-11-17"
+		},
+		{
+			"key": "Alf1992a",
+			"count": 249,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "Alf1992a",
+			"count": 468,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "Alt2007a",
@@ -45818,6 +48453,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "BGLS2024a",
+			"count": 7,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "BGLS2024a",
+			"count": 38,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "BGN2009a",
 			"count": 2999,
 			"source": "crossref",
@@ -46118,6 +48765,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "BL2002a",
+			"count": 287,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "BL2002a",
+			"count": 476,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "BL2007a",
 			"count": 426,
 			"source": "crossref",
@@ -46164,6 +48823,18 @@
 			"count": 1377,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "BLP1995a",
+			"count": 3489,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "BLP1995a",
+			"count": 6047,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "BM1978a",
@@ -46338,6 +49009,18 @@
 			"count": 2966,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "BR2019a",
+			"count": 525,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "BR2019a",
+			"count": 728,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "BRGR2021a",
@@ -46694,6 +49377,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "Bel1989a",
+			"count": 481,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "Bel1989a",
+			"count": 698,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "Ben1975a",
 			"count": 5908,
 			"source": "crossref",
@@ -46806,6 +49501,18 @@
 			"count": 22348,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "Bol1987a",
+			"count": 1834,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "Bol1987a",
+			"count": 3118,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "Boo1972a",
@@ -46986,6 +49693,18 @@
 			"count": 795,
 			"source": "openalex",
 			"date": "2026-10-30"
+		},
+		{
+			"key": "CCDDH...2018a",
+			"count": 3122,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "CCDDH...2018a",
+			"count": 5281,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "CCEKS...2018a",
@@ -47216,6 +49935,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "CHIM2009a",
+			"count": 839,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "CHIM2009a",
+			"count": 1389,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "CHN2011a",
 			"count": 283,
 			"source": "openalex",
@@ -47298,6 +50029,18 @@
 			"count": 3018,
 			"source": "openalex",
 			"date": "2026-11-06"
+		},
+		{
+			"key": "CKS2014a",
+			"count": 327,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "CKS2014a",
+			"count": 582,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "CKV2022a",
@@ -47498,6 +50241,18 @@
 			"date": "2026-11-18"
 		},
 		{
+			"key": "CRR1979a",
+			"count": 4267,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "CRR1979a",
+			"count": 7287,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "CS2012a",
 			"count": 18,
 			"source": "crossref",
@@ -47570,6 +50325,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "CW1964a",
+			"count": 2955,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "CW1964a",
+			"count": 4934,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "CW2007a",
 			"count": 113,
 			"source": "crossref",
@@ -47592,6 +50359,18 @@
 			"count": 564,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "CZ2022a",
+			"count": 386,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "CZ2022a",
+			"count": 538,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "CZZ2023a",
@@ -47694,6 +50473,18 @@
 			"count": 3501,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "Cor2009a",
+			"count": 1952,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "Cor2009a",
+			"count": 2984,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "Cow1992a",
@@ -48032,6 +50823,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "DHSSC2019a",
+			"count": 196,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "DHSSC2019a",
+			"count": 462,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "DJ2014a",
 			"count": 6856,
 			"source": "crossref",
@@ -48224,6 +51027,12 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "DP1994a",
+			"count": 13181,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "DP2022a",
 			"count": 52,
 			"source": "crossref",
@@ -48246,6 +51055,18 @@
 			"count": 49832,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "DR1959a",
+			"count": 3907,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "DR1959a",
+			"count": 6383,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "DRH2000a",
@@ -48360,6 +51181,18 @@
 			"count": 10037,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "DW2002b",
+			"count": 3728,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "DW2002b",
+			"count": 5720,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "DW2022a",
@@ -48578,6 +51411,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "EG2022a",
+			"count": 797,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "EG2022a",
+			"count": 1519,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "EIV2007a",
 			"count": 1978,
 			"source": "openalex",
@@ -48642,6 +51487,18 @@
 			"count": 4633,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "EPO2012a",
+			"count": 516,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "EPO2012a",
+			"count": 699,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "ER1985a",
@@ -48870,6 +51727,18 @@
 			"count": 3626,
 			"source": "openalex",
 			"date": "2026-10-31"
+		},
+		{
+			"key": "FH1984a",
+			"count": 49,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "FH1984a",
+			"count": 119,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "FHWG2009a",
@@ -49514,6 +52383,18 @@
 			"date": "2026-11-09"
 		},
 		{
+			"key": "GKX2020a",
+			"count": 2624,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "GKX2020a",
+			"count": 3663,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "GL2007a",
 			"count": 351,
 			"source": "openalex",
@@ -49616,6 +52497,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "GR1994a",
+			"count": 1294,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "GR1994a",
+			"count": 1784,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "GR2007a",
 			"count": 4823,
 			"source": "crossref",
@@ -49638,6 +52531,18 @@
 			"count": 613,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "GS1956a",
+			"count": 561,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "GS1956a",
+			"count": 1217,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "GS1993a",
@@ -50834,6 +53739,18 @@
 			"date": "2026-10-31"
 		},
 		{
+			"key": "Hai2012a",
+			"count": 6006,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "Hai2012a",
+			"count": 6873,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "Hal1989a",
 			"count": 31,
 			"source": "crossref",
@@ -50898,6 +53815,18 @@
 			"count": 607,
 			"source": "openalex",
 			"date": "2026-11-06"
+		},
+		{
+			"key": "Han1994a",
+			"count": 1244,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "Han1994a",
+			"count": 1791,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "Han1996a",
@@ -51228,6 +54157,18 @@
 			"count": 127,
 			"source": "openalex",
 			"date": "2026-11-07"
+		},
+		{
+			"key": "IKP2012a",
+			"count": 3091,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "IKP2012a",
+			"count": 4174,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "IS2015a",
@@ -51830,6 +54771,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "KM1958a",
+			"count": 77248,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "KM1958a",
+			"count": 51075,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "KMFWC...2017a",
 			"count": 22955,
 			"source": "openalex",
@@ -52022,6 +54975,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "KSBY2019a",
+			"count": 995,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "KSBY2019a",
+			"count": 1904,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "KSC1998a",
 			"count": 1610,
 			"source": "crossref",
@@ -52032,6 +54997,18 @@
 			"count": 2265,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "KSH2002a",
+			"count": 1664,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "KSH2002a",
+			"count": 2361,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "KSJCS...2016a",
@@ -52074,6 +55051,18 @@
 			"count": 380,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "KT2018a",
+			"count": 267,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "KT2018a",
+			"count": 618,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "KUMH2017a",
@@ -52248,6 +55237,18 @@
 			"count": 570,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "Ken2023a",
+			"count": 174,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "Ken2023a",
+			"count": 756,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "Kes1963a",
@@ -52524,6 +55525,18 @@
 			"count": 659,
 			"source": "openalex",
 			"date": "2026-11-03"
+		},
+		{
+			"key": "LCLS2010a",
+			"count": 1648,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "LCLS2010a",
+			"count": 3955,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "LCYL2018a",
@@ -52838,6 +55851,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "LNT2002a",
+			"count": 495,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "LNT2002a",
+			"count": 977,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "LPR1996a",
 			"count": 1157,
 			"source": "crossref",
@@ -52896,6 +55921,18 @@
 			"count": 849,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "LS2001a",
+			"count": 2503,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "LS2001a",
+			"count": 3819,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "LS2017a",
@@ -53342,6 +56379,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "MAPKW...2024a",
+			"count": 57,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "MAPKW...2024a",
+			"count": 129,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "MC1985a",
 			"count": 2859,
 			"source": "crossref",
@@ -53406,6 +56455,30 @@
 			"count": 1640,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "MDSG2020a",
+			"count": 86,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "MDSG2020a",
+			"count": 156,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "ME1980a",
+			"count": 392,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "ME1980a",
+			"count": 617,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "ME2006a",
@@ -53526,6 +56599,18 @@
 			"count": 321,
 			"source": "openalex",
 			"date": "2026-11-13"
+		},
+		{
+			"key": "MKBMB...2024a",
+			"count": 165,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "MKBMB...2024a",
+			"count": 403,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "MKSRV...2015a",
@@ -53724,6 +56809,18 @@
 			"count": 1411,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "MS1986a",
+			"count": 2730,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "MS1986a",
+			"count": 4179,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "MS1996a",
@@ -53990,6 +57087,12 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "Mei2006a",
+			"count": 1521,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "Mer1968a",
 			"count": 6720,
 			"source": "openalex",
@@ -54006,6 +57109,18 @@
 			"count": 6561,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "Mer1974a",
+			"count": 2887,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "Mer1974a",
+			"count": 13590,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "Mer1976a",
@@ -54104,6 +57219,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "Mye1974a",
+			"count": 360,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "Mye1974a",
+			"count": 930,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "NASEM2019a",
 			"count": 295,
 			"source": "crossref",
@@ -54180,6 +57307,18 @@
 			"count": 28888,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "NMKGI2018a",
+			"count": 122,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "NMKGI2018a",
+			"count": 226,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "NMTGL2018a",
@@ -54276,6 +57415,18 @@
 			"count": 9043,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "NW2021a",
+			"count": 509,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "NW2021a",
+			"count": 1219,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "NYSM2012a",
@@ -54644,6 +57795,12 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "PGVDG2018a",
+			"count": 9048,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "PJ2009a",
 			"count": 1865,
 			"source": "crossref",
@@ -54890,6 +58047,18 @@
 			"date": "2026-10-31"
 		},
 		{
+			"key": "Pat2011a",
+			"count": 1121,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "Pat2011a",
+			"count": 1609,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "Pea1901a",
 			"count": 10342,
 			"source": "crossref",
@@ -55092,6 +58261,12 @@
 			"count": 300,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "Pra2018a",
+			"count": 507,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "Pre1967a",
@@ -55460,6 +58635,18 @@
 			"date": "2026-11-18"
 		},
 		{
+			"key": "RR1983a",
+			"count": 26650,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "RR1983a",
+			"count": 37706,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "RR2016a",
 			"count": 107,
 			"source": "crossref",
@@ -55488,6 +58675,18 @@
 			"count": 543,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "RRZ1994a",
+			"count": 2189,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "RRZ1994a",
+			"count": 3862,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "RS1991a",
@@ -55898,6 +59097,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "Rub1974a",
+			"count": 6832,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "Rub1974a",
+			"count": 12177,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "Rub1976a",
 			"count": 8064,
 			"source": "crossref",
@@ -55920,6 +59131,18 @@
 			"count": 1197,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "Rub2002a",
+			"count": 197,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "Rub2002a",
+			"count": 365,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "Rut1995a",
@@ -56876,6 +60099,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "Sha1964a",
+			"count": 4358,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "Sha1964a",
+			"count": 26475,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "Sha1970a",
 			"count": 3277,
 			"source": "crossref",
@@ -57026,6 +60261,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "Sob1967a",
+			"count": 2235,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "Sob1967a",
+			"count": 3642,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "Sob2001a",
 			"count": 5862,
 			"source": "crossref",
@@ -57114,18 +60361,6 @@
 			"count": 600,
 			"source": "openalex",
 			"date": "2026-10-31"
-		},
-		{
-			"key": "T2000a",
-			"count": 966,
-			"source": "crossref",
-			"date": "2026-11-18"
-		},
-		{
-			"key": "T2000a",
-			"count": 1436,
-			"source": "openalex",
-			"date": "2026-11-18"
 		},
 		{
 			"key": "TB1997a",
@@ -57272,6 +60507,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "TR2004a",
+			"count": 1231,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "TR2004a",
+			"count": 2605,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "TRRSG2021a",
 			"count": 395,
 			"source": "openalex",
@@ -57416,6 +60663,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "Tas2000a",
+			"count": 966,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "Tas2000a",
+			"count": 1436,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "Tes1995a",
 			"count": 1064,
 			"source": "crossref",
@@ -57462,6 +60721,18 @@
 			"count": 2708,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "Tob1958a",
+			"count": 4885,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "Tob1958a",
+			"count": 8338,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "Tof2015a",
@@ -57774,6 +61045,18 @@
 			"count": 823,
 			"source": "openalex",
 			"date": "2026-10-30"
+		},
+		{
+			"key": "WA2018a",
+			"count": 2548,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "WA2018a",
+			"count": 4331,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "WABHD...2014a",
@@ -58448,6 +61731,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "ZH2005a",
+			"count": 17945,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "ZH2005a",
+			"count": 24668,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "ZIRIN...2024a",
 			"count": 4,
 			"source": "crossref",
@@ -58590,6 +61885,18 @@
 			"count": 33,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "ZZR2019a",
+			"count": 274,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "ZZR2019a",
+			"count": 467,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "Zha2011a",
