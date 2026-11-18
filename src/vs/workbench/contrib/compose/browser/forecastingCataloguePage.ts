@@ -68,6 +68,7 @@ type CatalogueMessage =
 	| { readonly command: 'score'; readonly ids: readonly string[] }
 	| { readonly command: 'save'; readonly ids: readonly string[] }
 	| { readonly command: 'add' }
+	| { readonly command: 'chooseFile' }
 	| { readonly command: 'edit'; readonly id: string }
 	| { readonly command: 'convert'; readonly form: IDatasetForm };
 
@@ -179,8 +180,8 @@ async function readCatalogue(fileService: IFileService, pathService: IPathServic
 	return { catalogue: read.catalogue, problems: [...unread, ...read.problems] };
 }
 
-/** Opens the Manage Competition Datasets page, or shows it when it is open. */
-async function openForecastingCataloguePage(accessor: ServicesAccessor): Promise<void> {
+/** Opens the Manage Competition Datasets page, or shows it when it is open, on the entry `entryId` when one is given. */
+async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?: string): Promise<void> {
 	const webviewWorkbenchService = accessor.get(IWebviewWorkbenchService);
 	const fileService = accessor.get(IFileService);
 	const editorService = accessor.get(IEditorService);
@@ -199,6 +200,9 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor): Promise
 
 	if (openPage && !openPage.isDisposed()) {
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
+		if (entryId) {
+			openPage.webview.postMessage({ command: 'reveal', id: entryId });
+		}
 		return;
 	}
 	const title = localize('forecastingCatalogue.title', "Manage Competition Datasets");
@@ -326,10 +330,10 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor): Promise
 	/**
 	 * Saves the entries `ids` that Pollis downloads into the workspace, after asking before a copy changed since it was
 	 * saved is replaced; an entry not on this computer yet is downloaded first in the Julia REPL, and saved once it is.
-	 * Returns what was done with each entry, for the page to show, or nothing when no workspace is open or the user
-	 * kept the copies that changed.
+	 * Returns what was done with each entry, for the page to show, with the folders it names, or nothing when no
+	 * workspace is open or the user kept the copies that changed.
 	 */
-	const saveEntries = async (ids: readonly string[]): Promise<string | undefined> => {
+	const saveEntries = async (ids: readonly string[]): Promise<{ readonly text: string; readonly paths: readonly string[] } | undefined> => {
 		const workspace = await findPollisWorkspace(contextService, fileService);
 		if (!workspace) {
 			await offerWorkspace();
@@ -352,31 +356,39 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor): Promise
 		}
 		await pollisWorkspaceFolder(fileService, workspace, 'data');
 		const downloads = new Set<string>();
-		const savedNow: string[] = [];
-		const downloading: string[] = [];
+		const savedNow: ICatalogueEntry[] = [];
+		const downloading: ICatalogueEntry[] = [];
 		for (const entry of entries) {
 			const competition = competitionOf(entry)!;
 			if (await downloadedFolder(competition)) {
 				await saveEntry(folder, entry.id);
-				savedNow.push(entry.name);
+				savedNow.push(entry);
 			} else {
 				pending.add(entry.id);
 				downloads.add(competition);
-				downloading.push(entry.name);
+				downloading.push(entry);
 			}
 		}
 		for (const competition of downloads) {
 			await sendToJuliaRepl(downloadCode(competition), commandService);
 		}
 		await sendState();
-		const added = asked.filter(entry => entry.source === WORKSPACE_SOURCE).map(entry => entry.name);
+		const added = asked.filter(entry => entry.source === WORKSPACE_SOURCE);
 		const notDownloaded = asked.filter(entry => !competitionOf(entry) && entry.source !== WORKSPACE_SOURCE).map(entry => entry.name);
-		return [
-			savedNow.length ? localize('forecastingCatalogue.savedNotice', "Saved in data/forecasting of the Pollis Workspace: {0}.", savedNow.join(', ')) : '',
-			downloading.length ? localize('forecastingCatalogue.downloadingNotice', "Downloading in the Julia REPL, then saved in the Pollis Workspace: {0}.", downloading.join(', ')) : '',
-			added.length ? localize('forecastingCatalogue.addedNotice', "In the Pollis Workspace already, where you added them: {0}.", added.join(', ')) : '',
+		// Each dataset named with its folder in the workspace, which the page shows in yellow
+		const paths: string[] = [];
+		const located = (list: readonly ICatalogueEntry[]) => list.map(entry => {
+			const path = `data/forecasting/${entry.id}`;
+			paths.push(path);
+			return localize('forecastingCatalogue.datasetIn', "{0} in {1}", entry.name, path);
+		}).join(', ');
+		const text = [
+			savedNow.length ? localize('forecastingCatalogue.savedNotice', "Saved in the Pollis Workspace: {0}.", located(savedNow)) : '',
+			downloading.length ? localize('forecastingCatalogue.downloadingNotice', "Downloading in the Julia REPL, then saved in the Pollis Workspace: {0}.", located(downloading)) : '',
+			added.length ? localize('forecastingCatalogue.addedNotice', "In the Pollis Workspace already, where you added them: {0}.", located(added)) : '',
 			notDownloaded.length ? localize('forecastingCatalogue.notDownloadedNotice', "Not saved, as Pollis does not download them yet: {0}.", notDownloaded.join(', ')) : '',
-		].filter(text => text).join(' ');
+		].filter(part => part).join(' ');
+		return { text, paths };
 	};
 
 	/** Shows the form for the file `file`, with its columns and first rows, filled with `values` when facts are edited. */
@@ -385,13 +397,18 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor): Promise
 		post({ command: 'form', mode, file: file.fsPath, fileName: basename(file), ...columns, values: values ?? {} });
 	};
 
-	/** Asks for a file of the user's own, a long table, and shows the form of the dataset it makes. */
+	/** Shows the empty form of a dataset of the user's own, whose Choose File... asks for its file. */
 	const addDataset = async () => {
 		const workspace = await findPollisWorkspace(contextService, fileService);
 		if (!workspace) {
 			await offerWorkspace();
 			return;
 		}
+		post({ command: 'form', mode: 'add', file: '', fileName: '', columns: [], rows: 0, preview: [], values: {} });
+	};
+
+	/** Asks for the file of the dataset being added, a long table, and sends the form its columns and first rows. */
+	const chooseFile = async () => {
 		const [file] = await fileDialogService.showOpenDialog({
 			title: localize('forecastingCatalogue.addTitle', "Add a Dataset: a Table With a Row for Each Observation"),
 			canSelectFiles: true,
@@ -399,8 +416,14 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor): Promise
 			canSelectMany: false,
 			filters: [{ name: localize('forecastingCatalogue.tables', "Tables"), extensions: ['csv', 'tsv', 'txt', 'parquet'] }],
 		}) ?? [];
-		if (file) {
-			await showForm('add', file);
+		if (!file) {
+			return;
+		}
+		try {
+			const columns = await forecastingDatasetsService.columns(file.fsPath);
+			post({ command: 'formFile', file: file.fsPath, fileName: basename(file), ...columns });
+		} catch (error) {
+			post({ command: 'formProblems', problems: [localize('forecastingCatalogue.fileUnreadable', "{0} could not be read: {1}", basename(file), toErrorMessage(error))] });
 		}
 	};
 
@@ -440,6 +463,9 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor): Promise
 		const folder = await forecastingFolder(fileService, workspace);
 		const target = joinPath(folder, form.id);
 		const problems: string[] = [];
+		if (!form.file) {
+			problems.push(localize('forecastingCatalogue.chooseFirst', "Choose the file of the dataset."));
+		}
 		if (!/^[a-z][a-z0-9_]*$/.test(form.id)) {
 			problems.push(localize('forecastingCatalogue.badId', "The id is lower-case letters, digits and underscores, starting with a letter."));
 		} else if (form.mode === 'add' && (read?.catalogue.entries.some(entry => entry.id === form.id) || await fileService.exists(target))) {
@@ -508,6 +534,10 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor): Promise
 		try {
 			if (message.command === 'ready') {
 				await sendState();
+				// The entry the page was opened on, once the catalogue is there
+				if (entryId) {
+					post({ command: 'reveal', id: entryId });
+				}
 			} else if (message.command === 'rows' && hasKey(message, { rows: true })) {
 				storeRows(storageService, ROWS_PAGE, message.rows);
 			} else if (message.command === 'link' && hasKey(message, { url: true }) && typeof message.url === 'string' && /^https?:\/\//.test(message.url)) {
@@ -541,10 +571,12 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor): Promise
 			} else if (message.command === 'save' && hasKey(message, { ids: true }) && Array.isArray(message.ids)) {
 				const notice = await saveEntries(message.ids.filter((id): id is string => typeof id === 'string'));
 				if (notice) {
-					post({ command: 'notice', text: notice });
+					post({ command: 'notice', text: notice.text, paths: notice.paths });
 				}
 			} else if (message.command === 'add') {
 				await addDataset();
+			} else if (message.command === 'chooseFile') {
+				await chooseFile();
 			} else if (message.command === 'edit' && hasKey(message, { id: true }) && typeof message.id === 'string') {
 				await editDataset(message.id);
 			} else if (message.command === 'convert' && hasKey(message, { form: true })) {
@@ -594,7 +626,10 @@ function pageHtml(rows: number): string {
 		addDataset: localize('forecastingCatalogue.addDataset', "Add a Dataset..."),
 		addHeading: localize('forecastingCatalogue.addHeading', "Add a Dataset"),
 		editHeading: localize('forecastingCatalogue.editHeading', "Edit Facts"),
-		formFile: localize('forecastingCatalogue.formFile', "{0}, {1} rows: a row for each observation, with a column naming its series, one giving its time and one its value. The first rows:"),
+		formNeeds: localize('forecastingCatalogue.formNeeds', "The file is a table with a row for each observation: a column naming its series, one giving its time and one its value. CSV, TSV, TXT or Parquet."),
+		formChoose: localize('forecastingCatalogue.formChoose', "Choose File..."),
+		formNoFile: localize('forecastingCatalogue.formNoFile', "No file chosen"),
+		formFile: localize('forecastingCatalogue.formFile', "{0}, {1} rows. The first rows:"),
 		formName: localize('forecastingCatalogue.formName', "Name"),
 		formId: localize('forecastingCatalogue.formId', "Id"),
 		formIdHint: localize('forecastingCatalogue.formIdHint', "The key of the dataset in the catalogue and its folder in data/forecasting: lower-case letters, digits and underscores"),
@@ -704,6 +739,8 @@ ${sortHeadingsCss}
 		/* The form of a dataset of the user's own, above the tabs */
 		.catalogue .addForm { margin: 8px 0 14px 0; padding: 10px 14px; border: 1px solid var(--vscode-widget-border); border-radius: 3px; }
 		.catalogue .addForm h3 { font-size: 13px; font-weight: 600; margin: 0 0 6px 0; }
+		.catalogue .addForm .fileRow { display: flex; align-items: center; gap: 10px; margin: 6px 0 10px 0; font-size: 12px; }
+		.catalogue .addForm .fileRow .none { color: var(--vscode-descriptionForeground); }
 		.catalogue .addForm table.preview { width: auto; margin: 6px 0 10px 0; }
 		.catalogue .addForm table.preview td, .catalogue .addForm table.preview th { padding: 2px 8px; }
 		.catalogue .addForm .formGrid { display: grid; grid-template-columns: max-content minmax(160px, 320px); gap: 6px 12px; align-items: center; }
@@ -1162,6 +1199,27 @@ ${sortHeadingsCss}
 		}));
 	}
 
+	// Shows the entry \`id\` with its details open, in its tab, on its page, with no filter hiding it
+	function reveal(id) {
+		const entry = catalogue && catalogue.entries.find(candidate => candidate.id === id);
+		if (!entry || !view()) {
+			return;
+		}
+		tab = entry.type === COLLECTION ? 'collections' : 'datasets';
+		for (const button of document.querySelectorAll('#tabs > button.toggle-btn')) {
+			button.classList.toggle('active', button.dataset.tab === tab);
+		}
+		filters = {};
+		const shown = catalogue.entries.filter(matches).sort(compare);
+		page = Math.max(0, Math.floor(shown.indexOf(entry) / rowsPerPage(rows, shown.length)));
+		opened = id;
+		render();
+		const button = document.querySelector('button[data-expand="' + CSS.escape(id) + '"]');
+		if (button) {
+			button.scrollIntoView({ block: 'center' });
+		}
+	}
+
 	function render() {
 		// A catalogue with no view has nothing to show but its problems
 		if (!catalogue || !view()) {
@@ -1220,16 +1278,25 @@ ${sortHeadingsCss}
 		}
 		const values = form.values || {};
 		box.appendChild(element('h3', '', form.mode === 'add' ? TEXT.addHeading : TEXT.editHeading));
-		box.appendChild(element('div', 'hint', format(TEXT.formFile, form.fileName, form.rows)));
-		const preview = box.appendChild(element('table', 'preview'));
-		const headRow = preview.appendChild(element('tr'));
-		for (const column of form.columns) {
-			headRow.appendChild(element('th', '', column.name)).title = column.type;
+		// A dataset being added starts with no file: Choose File... asks for it, and its columns and first rows come back
+		if (form.mode === 'add') {
+			box.appendChild(element('div', 'hint', TEXT.formNeeds));
+			const fileRow = box.appendChild(element('div', 'fileRow'));
+			fileRow.appendChild(element('button', 'action', TEXT.formChoose)).id = 'formChoose';
+			fileRow.appendChild(element('span', form.file ? '' : 'none', form.file ? form.fileName : TEXT.formNoFile));
 		}
-		for (const row of form.preview) {
-			const line = preview.appendChild(element('tr'));
+		if (form.file) {
+			box.appendChild(element('div', 'hint', format(TEXT.formFile, form.fileName, form.rows)));
+			const preview = box.appendChild(element('table', 'preview'));
+			const headRow = preview.appendChild(element('tr'));
 			for (const column of form.columns) {
-				line.appendChild(element('td', '', row[column.name] === null || row[column.name] === undefined ? '' : String(row[column.name])));
+				headRow.appendChild(element('th', '', column.name)).title = column.type;
+			}
+			for (const row of form.preview) {
+				const line = preview.appendChild(element('tr'));
+				for (const column of form.columns) {
+					line.appendChild(element('td', '', row[column.name] === null || row[column.name] === undefined ? '' : String(row[column.name])));
+				}
 			}
 		}
 		const grid = box.appendChild(element('div', 'formGrid'));
@@ -1263,7 +1330,7 @@ ${sortHeadingsCss}
 		const id = add(TEXT.formId, input('formId', values.id), TEXT.formIdHint);
 		id.readOnly = form.mode === 'edit';
 		// The id follows the name until it is edited
-		let idEdited = form.mode === 'edit';
+		let idEdited = form.mode === 'edit' || (!!values.id && values.id !== idOf(values.name || ''));
 		id.addEventListener('input', () => { idEdited = true; });
 		name.addEventListener('input', () => {
 			if (!idEdited) {
@@ -1274,9 +1341,10 @@ ${sortHeadingsCss}
 		const seriesColumn = values.seriesColumn || guessColumn(/series|unique_id|^id$|item|store|key|name/i, /VARCHAR/, []);
 		const timeColumn = values.timeColumn || guessColumn(/date|time|^ds$|period|^t$|year|month/i, /DATE|TIME/, [seriesColumn]);
 		const valueColumn = values.valueColumn || guessColumn(/value|^y$|sales|demand|target|count/i, /DOUBLE|FLOAT|INT|DECIMAL/, [seriesColumn, timeColumn]);
-		add(TEXT.formSeries, select('formSeries', names, seriesColumn), TEXT.formSeriesHint);
-		add(TEXT.formTime, select('formTime', names, timeColumn), TEXT.formTimeHint);
-		add(TEXT.formValue, select('formValue', names, valueColumn), TEXT.formValueHint);
+		for (const [label, id, value, hint] of [[TEXT.formSeries, 'formSeries', seriesColumn, TEXT.formSeriesHint], [TEXT.formTime, 'formTime', timeColumn, TEXT.formTimeHint], [TEXT.formValue, 'formValue', valueColumn, TEXT.formValueHint]]) {
+			// Empty until the file is chosen
+			add(label, select(id, names, value), hint).disabled = !names.length;
+		}
 		const frequencies = field('frequency') ? field('frequency').values : [];
 		const frequency = add(TEXT.formFrequency, select('formFrequency', frequencies, values.frequency || 'monthly'), field('frequency') ? field('frequency').description : '');
 		const period = add(TEXT.formPeriod, input('formPeriod', values.period || PERIODS[frequency.value] || 1, 'number'), TEXT.formPeriodHint);
@@ -1293,12 +1361,21 @@ ${sortHeadingsCss}
 		add(TEXT.formNotes, input('formNotes', values.notes), TEXT.formNotesHint);
 		box.appendChild(element('ul', 'formProblems')).id = 'formProblems';
 		const bar = box.appendChild(element('div', 'bar'));
-		bar.appendChild(element('button', 'action current', form.mode === 'add' ? TEXT.addToWorkspace : TEXT.convertAgain)).id = 'formSubmit';
+		const submit = bar.appendChild(element('button', 'action current', form.mode === 'add' ? TEXT.addToWorkspace : TEXT.convertAgain));
+		submit.id = 'formSubmit';
+		submit.disabled = !form.file;
 		bar.appendChild(element('button', 'action', TEXT.cancel)).id = 'formCancel';
 		box.appendChild(element('div', 'hint', '')).id = 'formStatus';
 	}
 	function formValue(id) {
 		return document.getElementById(id).value;
+	}
+	// The facts typed so far, kept when the form is drawn again for the file chosen; the columns are those of the new file
+	function typedValues() {
+		return {
+			name: formValue('formName'), id: formValue('formId'), frequency: formValue('formFrequency'), period: Number(formValue('formPeriod')),
+			horizon: Number(formValue('formHorizon')), domain: formValue('formDomain'), licence: formValue('formLicence'), notes: formValue('formNotes'),
+		};
 	}
 	function showFormProblems(problems) {
 		const list = document.getElementById('formProblems');
@@ -1309,7 +1386,7 @@ ${sortHeadingsCss}
 		for (const problem of problems) {
 			list.appendChild(element('li', '', problem));
 		}
-		document.getElementById('formSubmit').disabled = false;
+		document.getElementById('formSubmit').disabled = !form.file;
 		document.getElementById('formStatus').textContent = '';
 	}
 
@@ -1362,9 +1439,30 @@ ${sortHeadingsCss}
 			drawActive();
 		}
 	});
-	// What Score Competition Models or a save did, under the buttons until the next of them
-	function showNotice(text) {
-		document.getElementById('notice').textContent = text || '';
+	// What Score Competition Models or a save did, under the buttons until the next of them; the folders it names in yellow
+	function showNotice(text, paths) {
+		const box = document.getElementById('notice');
+		box.textContent = '';
+		let rest = text || '';
+		while (rest) {
+			// The first folder named in what is left, the longest when two start there (m1 and m10)
+			let at = -1;
+			let found = '';
+			for (const path of paths || []) {
+				const index = rest.indexOf(path);
+				if (index >= 0 && (at < 0 || index < at || (index === at && path.length > found.length))) {
+					at = index;
+					found = path;
+				}
+			}
+			if (at < 0) {
+				box.appendChild(document.createTextNode(rest));
+				break;
+			}
+			box.appendChild(document.createTextNode(rest.slice(0, at)));
+			box.appendChild(element('span', 'yellow', found));
+			rest = rest.slice(at + found.length);
+		}
 	}
 	document.getElementById('score').addEventListener('click', () => {
 		showNotice('');
@@ -1381,6 +1479,8 @@ ${sortHeadingsCss}
 		if (event.target.id === 'formCancel') {
 			form = undefined;
 			drawForm();
+		} else if (event.target.id === 'formChoose') {
+			vscode.postMessage({ command: 'chooseFile' });
 		} else if (event.target.id === 'formSubmit') {
 			showFormProblems([]);
 			vscode.postMessage({ command: 'convert', form: {
@@ -1460,6 +1560,11 @@ ${sortHeadingsCss}
 			window.scrollTo(0, 0);
 			return;
 		}
+		if (message.command === 'formFile' && form) {
+			form = { ...form, file: message.file, fileName: message.fileName, columns: message.columns, rows: message.rows, preview: message.preview, values: typedValues() };
+			drawForm();
+			return;
+		}
 		if (message.command === 'formProblems') {
 			showFormProblems(message.problems);
 			return;
@@ -1470,7 +1575,7 @@ ${sortHeadingsCss}
 			return;
 		}
 		if (message.command === 'notice') {
-			showNotice(message.text);
+			showNotice(message.text, message.paths);
 			return;
 		}
 		if (message.command === 'formDone') {
@@ -1478,6 +1583,10 @@ ${sortHeadingsCss}
 			form = undefined;
 			drawForm();
 			opened = message.id;
+			return;
+		}
+		if (message.command === 'reveal') {
+			reveal(message.id);
 			return;
 		}
 		if (message.command !== 'state') {
@@ -1520,7 +1629,7 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({ id: FORECASTING_CATALOGUE_COMMAND_ID, title: localize2('forecastingCatalogue.action', "Manage Competition Datasets..."), category: localize2('forecastingCatalogue.category', "Competitions"), f1: true });
 	}
-	run(accessor: ServicesAccessor): Promise<void> {
-		return openForecastingCataloguePage(accessor);
+	run(accessor: ServicesAccessor, entryId?: unknown): Promise<void> {
+		return openForecastingCataloguePage(accessor, typeof entryId === 'string' ? entryId : undefined);
 	}
 });

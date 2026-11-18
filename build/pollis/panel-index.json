@@ -4644,6 +4644,26 @@
 			]
 		},
 		{
+			"id": "learning-and-practice.lab01",
+			"title": "Lab Course 01 — Empirical Forecasting: From Univariate Parsimony to Probabilistic Ensembles",
+			"source": "toolbox:pollis-toolbox-learning-and-practice",
+			"commands": [
+				{
+					"id": "pollis.pollis-toolbox-learning-and-practice.lab01",
+					"menuTitles": [
+						"Lab Course 01 — Empirical Forecasting: From Univariate Parsimony to Probabilistic Ensembles"
+					]
+				}
+			],
+			"portable": true,
+			"toml": "toolboxes/pollis-toolbox-learning-and-practice/panels/learning-and-practice.lab01.toml",
+			"wikiRoot": "toolboxes/pollis-toolbox-learning-and-practice/wiki",
+			"notebookRoot": "toolboxes/pollis-toolbox-learning-and-practice/notebooks",
+			"wikis": [],
+			"notebooks": [],
+			"packages": []
+		},
+		{
 			"id": "learning-and-practice.practice",
 			"title": "Practice",
 			"source": "toolbox:pollis-toolbox-learning-and-practice",

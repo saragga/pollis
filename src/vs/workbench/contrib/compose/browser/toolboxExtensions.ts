@@ -27,6 +27,7 @@ import { registerExternalFolder } from '../../model/browser/common/customCopyFil
 import { panelFaqItems, panelKeyPoints, parseToml, tomlToPanelData } from '../../model/browser/common/tomlPanelData.js';
 import { buildScaffoldHtml } from '../../model/browser/webviews/scaffoldParts.js';
 import { IAskPollisEvalItem } from '../common/askPollis.js';
+import { isTimeArrowPanel, onTimeArrowMessage, timeArrowPanelHtml } from './toolboxTimeArrow.js';
 import { IToolboxDocumentInfo, IToolboxInfo, IToolboxTextInfo, IToolboxPanelsService, IToolboxPlace, IToolboxPlacement, TOOLBOX_END_GROUP, TOOLBOX_MENU, TOOLBOX_SUBMENU_PREFIX, toolboxInstalledContextKey } from '../common/toolboxPanels.js';
 
 /** A panel of a toolbox contributed by an extension. */
@@ -46,8 +47,8 @@ interface IToolboxPanelContribution {
 	readonly submenu?: string;
 	/** The panel's TOML, relative to the extension folder. */
 	readonly data: string;
-	/** The model toggle shown first. */
-	readonly defaultModel: string;
+	/** The model toggle shown first; a panel whose TOML says style = "timeArrow" has none. */
+	readonly defaultModel?: string;
 	/** The first column header of the decision table. Default: "Plot". */
 	readonly decisionFirstColumn?: string;
 	/** Further menu items, each opening the panel on one of its tabs, after the panel's own item wherever it goes. */
@@ -198,7 +199,7 @@ const toolboxesExtensionPoint = ExtensionsRegistry.registerExtensionPoint<IToolb
 					type: 'array',
 					items: {
 						type: 'object',
-						required: ['id', 'command', 'title', 'group', 'order', 'data', 'defaultModel'],
+						required: ['id', 'command', 'title', 'group', 'order', 'data'],
 						properties: {
 							id: { type: 'string', description: localize('pollisToolboxes.panel.id', "The panel's short id, which names its wiki and notebook folders.") },
 							command: { type: 'string', description: localize('pollisToolboxes.panel.command', "The command that opens the panel.") },
@@ -208,7 +209,7 @@ const toolboxesExtensionPoint = ExtensionsRegistry.registerExtensionPoint<IToolb
 							order: { type: 'number', description: localize('pollisToolboxes.panel.order', "The order in that group.") },
 							submenu: { type: 'string', description: localize('pollisToolboxes.panel.submenu', "The id of the submenu of the toolbox's menu the panel is in. Default: straight in the toolbox's menu.") },
 							data: { type: 'string', description: localize('pollisToolboxes.panel.data', "The panel's TOML, relative to the extension folder.") },
-							defaultModel: { type: 'string', description: localize('pollisToolboxes.panel.defaultModel', "The model toggle shown first.") },
+							defaultModel: { type: 'string', description: localize('pollisToolboxes.panel.defaultModel', "The model toggle shown first. A panel whose TOML says style = \"timeArrow\" in its [meta] has numbered steps instead, and no models.") },
 							decisionFirstColumn: { type: 'string', description: localize('pollisToolboxes.panel.decisionFirstColumn', "The first column header of the decision table.") },
 							tabs: {
 								type: 'array',
@@ -469,6 +470,10 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 					try {
 						const parsed = parseToml((await this.fileService.readFile(toml)).value.toString());
 						const data = tomlToPanelData(parsed);
+						const timeArrow = isTimeArrowPanel(parsed);
+						if (!timeArrow && !contribution.defaultModel) {
+							extension.collector.error(localize('pollisToolboxes.noDefaultModel', "Panel {0} needs defaultModel, the model toggle shown first, unless its TOML says style = \"timeArrow\" in its [meta].", contribution.id));
+						}
 						const tabs = (contribution.tabs ?? []).filter(tab => {
 							const known = data.models?.some(model => model.id === tab.model) ?? false;
 							if (!known) {
@@ -485,7 +490,10 @@ class ToolboxPanelsService extends Disposable implements IToolboxPanelsService {
 								viewType: `pollis.${contribution.id}`,
 								title: contribution.title,
 								data,
-								html: () => buildScaffoldHtml(contribution.id, data, { title: contribution.title, defaultModel: contribution.defaultModel, decisionFirstColumn: contribution.decisionFirstColumn }),
+								html: timeArrow
+									? () => timeArrowPanelHtml(contribution.title, parsed, data.packages.length > 0)
+									: () => buildScaffoldHtml(contribution.id, data, { title: contribution.title, defaultModel: contribution.defaultModel ?? '', decisionFirstColumn: contribution.decisionFirstColumn }),
+								onMessage: timeArrow ? onTimeArrowMessage : undefined,
 							},
 						});
 					} catch (error) {

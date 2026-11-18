@@ -168,6 +168,8 @@ export interface WebviewParts {
 	readonly introHtml?: string;
 	/** Time Arrow: the panes, numbered from the top, in place of Example Code. */
 	readonly steps?: readonly IScaffoldStep[];
+	/** Time Arrow: what goes between the introduction and the first step, such as a table that the steps follow. */
+	readonly beforeStepsHtml?: string;
 	/** Minimal: anything, in place of Example Code. */
 	readonly bodyHtml?: string;
 	/** Time Arrow and Minimal: the page's own script, after the scaffold's, whose names are kept out of its way; `vscode` is set. */
@@ -739,7 +741,7 @@ ${!parts.explore || noExampleCode ? '' : `
 		</div>
 `}
 
-${noExampleCode ? `		${parts.steps ? stepsHtml(parts.steps) : parts.bodyHtml}
+${noExampleCode ? `		${parts.steps ? (parts.beforeStepsHtml ?? '') + stepsHtml(parts.steps) : parts.bodyHtml}
 ` : `		<div class="section" id="sec-code">
 			<button class="section-toggle"><span class="illus-chevron"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M7.976 10.072l-4.054-4.014-.92.92 4.49 4.45.978.01 4.525-4.46-.918-.92-4.101 4.014z"/></svg></span>Example Code<span class="code-custom-tag" title="Your saved version of this example. Restore Default brings back the original.">Customised</span><span class="code-added-tag" title="A tab you added. Its x removes it. The settings of the built-in tabs are hidden here; they come back when you open one.">Added</span></button>
 			<div class="section-body">
