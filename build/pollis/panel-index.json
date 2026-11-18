@@ -4645,13 +4645,13 @@
 		},
 		{
 			"id": "learning-and-practice.lab01",
-			"title": "Lab Course 01 — Empirical Forecasting: From Univariate Parsimony to Probabilistic Ensembles",
+			"title": "Forecasting: From Univariate Parsimony to Probabilistic Ensembles",
 			"source": "toolbox:pollis-toolbox-learning-and-practice",
 			"commands": [
 				{
 					"id": "pollis.pollis-toolbox-learning-and-practice.lab01",
 					"menuTitles": [
-						"Lab Course 01 — Empirical Forecasting: From Univariate Parsimony to Probabilistic Ensembles"
+						"Forecasting: From Univariate Parsimony to Probabilistic Ensembles"
 					]
 				}
 			],
