@@ -397,9 +397,9 @@ and baking 69 datasets or 250,000 journals into every Pollis would only make it 
 come from \file{scores.csv}, which the install road writes.)
 
 \subsection{Pinning}
-\file{build/PollisReferences.commit} and \file{build/PollisRSS.commit} hold one full commit SHA each. They are the
-only link between a Pollis source tree and the packages: a Pollis built from a given commit of its repository always
-gets the same data, whatever happens on GitHub later.
+\file{build/PollisRSS.commit} holds one full commit SHA: a Pollis built from a given commit of its repository always
+gets the same feeds, whatever happens on GitHub later. PollisReferences.jl is not pinned: every build reads its
+\file{data/references.json} as it is on the main branch.
 
 \subsection{Downloading}
 \file{build/lib/pollis-packages.ts}, \file{pinnedPackageFile(repoRoot, {name, file, clone})}:
@@ -708,16 +708,14 @@ POLLIS_REFERENCES=~/PollisReferences.jl npm run gulp compile-toml
 git diff -- src/vs/workbench/contrib/model/browser/media/references/
 \end{lstlisting}
   \item Commit and push the package. Every Pollis gets the change at its next REPL start.
-  \item To bake it into the next Pollis too, write the new SHA into \file{build/PollisReferences.commit} and commit it
-    with the regenerated \file{pollis.bib} and \file{references.json}.
+  \item The next build of Pollis reads it from the main branch and bakes it into \file{pollis.bib} and \file{references.json}.
 \end{enumerate}
 \textbf{Never remove or rename a key that any released Pollis cites.} The copy would then be rejected by those Pollis
 versions, which would silently stay on their shipped references and miss every later correction. To retire a work,
 leave it in the package.
 
 \subsection{Cite a new work in a panel}
-Add the work to the package first, push, and bump \file{build/PollisReferences.commit}; only then write its key in the
-panel's TOML. In the other order, \file{compile-toml} stops with \emph{Reference keys not in PollisReferences.jl}.
+Add the work to the package first and push it; only then write its key in the panel's TOML. In the other order, \file{compile-toml} stops with \emph{Reference keys not in PollisReferences.jl}.
 
 \subsection{Add or correct a feed}\label{sec:proc-rss}
 \begin{enumerate}
@@ -763,8 +761,8 @@ The install road sees only what is pushed to \file{main}.
 \file{.../terminalserver/PollisDB.jl} & \file{DATA_PACKAGES}, \file{PACKAGE_COPIES}, \file{install}, the five builds, \file{connect}, \file{sql}, \file{Table}, \file{cell}, \file{publish}, \file{serve}, \file{attached}; the Pollis REPL's functions are in Drill-down: Pollis REPL\\
 \file{.../terminalserver/install_pollisdb.jl} & The install script\\
 \file{extensions/language-julia/src/pollisDuckDB.ts} & Runs the install; copies the shipped references to \file{pollis.json}\\
-\file{build/PollisReferences.commit}, \file{build/PollisRSS.commit} & The pinned commits\\
-\file{build/lib/pollis-packages.ts} & \file{pinnedPackageFile}: clone, cache or download\\
+\file{build/PollisRSS.commit} & The pinned commit of PollisRSS.jl\\
+\file{build/lib/pollis-packages.ts} & \file{pinnedPackageFile}: clone, pinned commit or main branch\\
 \file{build/lib/pollis-bib.ts} & References: \file{pollis.bib}, \file{references.json}, citation copies\\
 \file{build/gulpfile.toml.ts} & The \file{compile-toml} task\\
 \file{.../model/browser/common/referenceLibrary.ts} & \file{pollis()}: which references the pages use\\

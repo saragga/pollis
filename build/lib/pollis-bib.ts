@@ -5,7 +5,7 @@
 
 // The Pollis references. One JSON file, data/references.json of the PollisReferences.jl package, holds
 // every work referenced in Pollis (`references`) and the citation counts observed for them (`counts`);
-// Pollis is built with the file as it is at the commit in build/PollisReferences.commit. The panel
+// Pollis is built with the file as it is on the package's main branch. The panel
 // TOMLs, the Compose notebooks and the methods refer to a work by its key only; everything else is
 // built from the file: the panels' references, pollis.bib, the notebooks' and methods' citations, and
 // references.json, the works and counts with the panels that cite them, which Pollis ships.
