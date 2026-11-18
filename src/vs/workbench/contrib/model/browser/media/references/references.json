@@ -2818,6 +2818,43 @@
 			"open_access": false
 		},
 		{
+			"key": "BFC1996a",
+			"type": "article",
+			"title": "Geographically Weighted Regression: A Method for Exploring Spatial Nonstationarity",
+			"authors": [
+				"Brunsdon, Chris",
+				"Fotheringham, A. Stewart",
+				"Charlton, Martin E."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1996,
+			"journal": "Geographical Analysis",
+			"volume": "28",
+			"number": "4",
+			"pages": "281-298",
+			"issn": "0016-7363",
+			"doi": "10.1111/j.1538-4632.1996.tb00936.x",
+			"openalex": "W2047120335",
+			"abstract": "Spatial nonstationarity is a condition in which a simple “global” model cannot explain the relationships between some sets of variables. The nature of the model must alter over space to reflect the structure within the data. In this paper, a technique is developed, termed geographically weighted regression, which attempts to capture this variation by calibrating a multiple regression model which allows different relationships to exist at different points in space. This technique is loosely based on kernel regression. The method itself is introduced and related issues such as the choice of a spatial weighting function are discussed. Following this, a series of related statistical tests are considered which can be described generally as tests for spatial nonstationarity. Using Monte Carlo methods, techniques are proposed for investigating the null hypothesis that the data may be described by a global model rather than a non‐stationary one and also for testing whether individual regression coefficients are stable over geographic space. These techniques are demonstrated on a data set from the 1991 U.K. census relating car ownership rates to social class and male unemployment. The paper concludes by discussing ways in which the technique can be extended.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"geographically weighted regression",
+				"spatial non-stationarity",
+				"kernel regression",
+				"coefficient stability",
+				"car ownership",
+				"social class",
+				"male unemployment",
+				"census data"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "BFUY2014a",
 			"type": "article",
 			"title": "Implications of Web Mercator and Its Use in Online Mapping",
@@ -15339,6 +15376,43 @@
 			"open_access": false
 		},
 		{
+			"key": "FYK2017a",
+			"type": "article",
+			"title": "Multiscale Geographically Weighted Regression (MGWR)",
+			"authors": [
+				"Fotheringham, A. Stewart",
+				"Yang, Wenbai",
+				"Kang, Wei"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2017,
+			"journal": "Annals of the American Association of Geographers",
+			"volume": "107",
+			"number": "6",
+			"pages": "1247-1265",
+			"issn": "2469-4452",
+			"doi": "10.1080/24694452.2017.1352480",
+			"openalex": "W2747207142",
+			"abstract": "Scale is a fundamental geographic concept, and a substantial literature exists discussing the various roles that scale plays in different geographical contexts. Relatively little work exists, though, that provides a means of measuring the geographic scale over which different processes operate. Here we demonstrate how geographically weighted regression (GWR) can be adapted to provide such measures. GWR explores the potential spatial nonstationarity of relationships and provides a measure of the spatial scale at which processes operate through the determination of an optimal bandwidth. Classical GWR assumes that all of the processes being modeled operate at the same spatial scale, however. The work here relaxes this assumption by allowing different processes to operate at different spatial scales. This is achieved by deriving an optimal bandwidth vector in which each element indicates the spatial scale at which a particular process takes place. This new version of GWR is termed multiscale geographically weighted regression (MGWR), which is similar in intent to Bayesian nonseparable spatially varying coefficients (SVC) models, although potentially providing a more flexible and scalable framework in which to examine multiscale processes. Model calibration and bandwidth vector selection in MGWR are conducted using a back-fitting algorithm. We compare the performance of GWR and MGWR by applying both frameworks to two simulated data sets with known properties and to an empirical data set on Irish famine. Results indicate that MGWR not only is superior in replicating parameter surfaces with different levels of spatial heterogeneity but provides valuable information on the scale at which different processes operate.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"multiscale geographically weighted regression",
+				"geographically weighted regression",
+				"spatial scale",
+				"spatial non-stationarity",
+				"spatially varying coefficients",
+				"bandwidth selection",
+				"multiscale processes",
+				"Irish famine"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "Far1969a",
 			"type": "article",
 			"title": "On the Cophenetic Correlation Coefficient",
@@ -16619,6 +16693,40 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": false
+		},
+		{
+			"key": "GLCBH2015a",
+			"type": "article",
+			"title": "GWmodel: An R Package for Exploring Spatial Heterogeneity Using Geographically Weighted Models",
+			"authors": [
+				"Gollini, Isabella",
+				"Lu, Binbin",
+				"Charlton, Martin",
+				"Brunsdon, Christopher",
+				"Harris, Paul"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2015,
+			"journal": "Journal of Statistical Software",
+			"volume": "63",
+			"number": "17",
+			"issn": "1548-7660",
+			"doi": "10.18637/jss.v063.i17",
+			"openalex": "W2147279463",
+			"abstract": "Spatial statistics is a growing discipline providing important analytical techniques in a wide range of disciplines in the natural and social sciences. In the R package GWmodel we present techniques from a particular branch of spatial statistics, termed geographically weighted (GW) models. GW models suit situations when data are not described well by some global model, but where there are spatial regions where a suitably localized calibration provides a better description. The approach uses a moving window weighting technique, where localized models are found at target locations. Outputs are mapped to provide a useful exploratory tool into the nature of the data spatial heterogeneity. Currently, GWmodel includes functions for: GW summary statistics, GW principal components analysis, GW regression, and GW discriminant analysis; some of which are provided in basic and robust forms.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"spatial heterogeneity",
+				"geographically weighted regression",
+				"spatial statistics",
+				"R package"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "GLLBT...2026a",
@@ -20537,6 +20645,43 @@
 			"retrieved": "2026-11-02",
 			"checked": true,
 			"open_access": false
+		},
+		{
+			"key": "HST1998a",
+			"type": "article",
+			"title": "Smoothing Parameter Selection in Nonparametric Regression Using an Improved Akaike Information Criterion",
+			"authors": [
+				"Hurvich, Clifford M.",
+				"Simonoff, Jeffrey S.",
+				"Tsai, Chih-Ling"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1998,
+			"journal": "Journal of the Royal Statistical Society Series B: Statistical Methodology",
+			"volume": "60",
+			"number": "2",
+			"pages": "271-293",
+			"issn": "1369-7412",
+			"doi": "10.1111/1467-9868.00125",
+			"openalex": "W2109785413",
+			"abstract": "Summary Many different methods have been proposed to construct nonparametric estimates of a smooth regression function, including local polynomial, (convolution) kernel and smoothing spline estimators. Each of these estimators uses a smoothing parameter to control the amount of smoothing performed on a given data set. In this paper an improved version of a criterion based on the Akaike information criterion (AIC), termed AICC, is derived and examined as a way to choose the smoothing parameter. Unlike plug-in methods, AICC can be used to choose smoothing parameters for any linear smoother, including local quadratic and smoothing spline estimators. The use of AICC avoids the large variability and tendency to undersmooth (compared with the actual minimizer of average squared error) seen when other ‘classical’ approaches (such as generalized cross-validation (GCV) or the AIC) are used to choose the smoothing parameter. Monte Carlo simulations demonstrate that the AICC-based smoothing parameter is competitive with a plug-in method (assuming that one exists) when the plug-in method works well but also performs well when the plug-in approach fails or is unavailable.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"bandwidth selection",
+				"Akaike information criterion",
+				"AICc",
+				"nonparametric regression",
+				"loess",
+				"smoothing splines",
+				"kernel smoothing",
+				"plug-in method"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
 		},
 		{
 			"key": "HSW1989a",
@@ -34340,6 +34485,45 @@
 			"open_access": true
 		},
 		{
+			"key": "OLKWF2019a",
+			"type": "article",
+			"title": "mgwr: A Python Implementation of Multiscale Geographically Weighted Regression for Investigating Process Spatial Heterogeneity and Scale",
+			"authors": [
+				"Oshan, Taylor M.",
+				"Li, Ziqi",
+				"Kang, Wei",
+				"Wolf, Levi J.",
+				"Fotheringham, A. Stewart"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2019,
+			"journal": "ISPRS International Journal of Geo-Information",
+			"volume": "8",
+			"number": "6",
+			"pages": "269",
+			"issn": "2220-9964",
+			"doi": "10.3390/ijgi8060269",
+			"openalex": "W2948613401",
+			"abstract": "Geographically weighted regression (GWR) is a spatial statistical technique that recognizes that traditional ‘global’ regression models may be limited when spatial processes vary with spatial context. GWR captures process spatial heterogeneity by allowing effects to vary over space. To do this, GWR calibrates an ensemble of local linear models at any number of locations using ‘borrowed’ nearby data. This provides a surface of location-specific parameter estimates for each relationship in the model that is allowed to vary spatially, as well as a single bandwidth parameter that provides intuition about the geographic scale of the processes. A recent extension to this framework allows each relationship to vary according to a distinct spatial scale parameter, and is therefore known as multiscale (M)GWR. This paper introduces mgwr, a Python-based implementation of MGWR that explicitly focuses on the multiscale analysis of spatial heterogeneity. It provides novel functionality for inference and exploratory analysis of local spatial processes, new diagnostics unique to multi-scale local models, and drastic improvements to efficiency in estimation routines. We provide two case studies using mgwr, in addition to reviewing core concepts of local models. We present this in a literate programming style, providing an overview of the primary software functionality and demonstrations of suggested usage alongside the discussion of primary concepts and demonstration of the improvements made in mgwr.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"multiscale geographically weighted regression",
+				"geographically weighted regression",
+				"spatial heterogeneity",
+				"spatial scale",
+				"local linear models",
+				"spatial statistics",
+				"model diagnostics",
+				"estimator efficiency"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "OM1994b",
 			"type": "article",
 			"title": "N4SID: Subspace Algorithms for the Identification of Combined Deterministic-Stochastic Systems",
@@ -36976,6 +37160,41 @@
 			"keywords_source": "github",
 			"legacy_key": "quinn2023c",
 			"source": "manual",
+			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "RA2007a",
+			"type": "article",
+			"title": "PySAL: A Python Library of Spatial Analytical Methods",
+			"authors": [
+				"Rey, Sergio J.",
+				"Anselin, Luc"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2007,
+			"journal": "Review of Regional Studies",
+			"volume": "37",
+			"number": "1",
+			"issn": "1553-0892",
+			"doi": "10.52324/001c.8285",
+			"openalex": "W4242888132",
+			"abstract": "PySAL is an open source library for spatial analysis written in the object-oriented language Python. It is built upon shared functionality in two exploratory spatial data analysis packages––GeoDA and STARS––and is intended to leverage the shared development of these components. This paper presents an overview of the motivation behind and the design of PySAL, as well as suggestions for how the library can be used with other software projects. Empirical illustrations of several key components in a variety of spatial analytical problems are given, and plans for future development of PySAL are discussed.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"PySAL",
+				"spatial analysis",
+				"Python library",
+				"open source software",
+				"exploratory spatial data analysis",
+				"GeoDa",
+				"stars",
+				"software design"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
 			"checked": false,
 			"open_access": true
 		},
@@ -40275,6 +40494,42 @@
 			"source": "manual",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "SF2016a",
+			"type": "article",
+			"title": "The Multiple Testing Issue in Geographically Weighted Regression",
+			"authors": [
+				"da Silva, Alan Ricardo",
+				"Fotheringham, A. Stewart"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2016,
+			"journal": "Geographical Analysis",
+			"volume": "48",
+			"number": "3",
+			"pages": "233-247",
+			"issn": "0016-7363",
+			"doi": "10.1111/gean.12084",
+			"openalex": "W2114314286",
+			"abstract": "This article describes the problem of multiple testing within a Geographically Weighted Regression framework and presents a possible solution to the problem which is based on a family‐wise error rate for dependent processes. We compare the solution presented here to other solutions such as the Bonferroni correction and the Byrne, Charlton, and Fotheringham proposal which is based on the Benjamini and Hochberg False Discovery Rate. We conclude that our proposed correction is superior to others and that generally some correction in the conventional t‐test is necessary to avoid false positives in GWR.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"multiple comparisons",
+				"geographically weighted regression",
+				"family-wise error rate",
+				"dependent processes",
+				"Bonferroni correction",
+				"false discovery rate",
+				"false positives",
+				"spatial heterogeneity"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
 		},
 		{
 			"key": "SFGK2003a",
@@ -47202,6 +47457,46 @@
 			"open_access": true
 		},
 		{
+			"key": "YFLOK...2020a",
+			"type": "article",
+			"title": "Inference in Multiscale Geographically Weighted Regression",
+			"authors": [
+				"Yu, Hanchen",
+				"Fotheringham, A. Stewart",
+				"Li, Ziqi",
+				"Oshan, Taylor",
+				"Kang, Wei",
+				"Wolf, Levi John"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2020,
+			"journal": "Geographical Analysis",
+			"volume": "52",
+			"number": "1",
+			"pages": "87-106",
+			"issn": "0016-7363",
+			"doi": "10.1111/gean.12189",
+			"openalex": "W2912855477",
+			"abstract": "A recent paper expands the well‐known geographically weighted regression (GWR) framework significantly by allowing the bandwidth or smoothing factor in GWR to be derived separately for each covariate in the model—a framework referred to as multiscale GWR (MGWR). However, one limitation of the MGWR framework is that, until now, no inference about the local parameter estimates was possible. Formally, the so‐called “hat matrix,” which projects the observed response vector into the predicted response vector, was available in GWR but not in MGWR. This paper addresses this limitation by reframing GWR as a Generalized Additive Model, extending this framework to MGWR and then deriving standard errors for the local parameters in MGWR. In addition, we also demonstrate how the effective number of parameters can be obtained for the overall fit of an MGWR model and for each of the covariates within the model. This statistic is essential for comparing model fit between MGWR, GWR, and traditional global models, as well as for adjusting multiple hypothesis tests. We demonstrate these advances to the MGWR framework with both a simulated data set and a real‐world data set and provide a link to new software for MGWR (MGWR1.0) which includes the novel inferential framework for MGWR described here.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"multiscale geographically weighted regression",
+				"geographically weighted regression",
+				"inference",
+				"hat matrix",
+				"generalized additive models",
+				"standard errors",
+				"effective number of parameters",
+				"bandwidth selection"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "YFW2005a",
 			"type": "article",
 			"title": "Constructing Free-Energy Approximations and Generalized Belief Propagation Algorithms",
@@ -49266,6 +49561,18 @@
 			"count": 6097,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "BFC1996a",
+			"count": 3119,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "BFC1996a",
+			"count": 4115,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "BG1969a",
@@ -52928,6 +53235,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "FYK2017a",
+			"count": 771,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "FYK2017a",
+			"count": 1861,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "Far1969a",
 			"count": 146,
 			"source": "crossref",
@@ -53376,6 +53695,18 @@
 			"count": 351,
 			"source": "openalex",
 			"date": "2026-10-31"
+		},
+		{
+			"key": "GLCBH2015a",
+			"count": 438,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "GLCBH2015a",
+			"count": 714,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "GMBAJ...2020a",
@@ -54630,6 +54961,18 @@
 			"count": 3204,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "HST1998a",
+			"count": 955,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "HST1998a",
+			"count": 1425,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "HSW1989a",
@@ -58712,6 +59055,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "OLKWF2019a",
+			"count": 798,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "OLKWF2019a",
+			"count": 925,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "OM1994b",
 			"count": 1609,
 			"source": "crossref",
@@ -59454,6 +59809,18 @@
 			"count": 1648,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "RA2007a",
+			"count": 146,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "RA2007a",
+			"count": 321,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "RB1968a",
@@ -60492,6 +60859,18 @@
 			"count": 1417,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "SF2016a",
+			"count": 153,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "SF2016a",
+			"count": 195,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "SFGK2003a",
@@ -62718,6 +63097,18 @@
 			"count": 257,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "YFLOK...2020a",
+			"count": 399,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "YFLOK...2020a",
+			"count": 440,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "YFW2005a",
