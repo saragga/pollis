@@ -41,35 +41,63 @@ function appendComingSoonItems(menu: MenuId, groups: readonly (readonly string[]
 	});
 }
 
-// Geoscience Toolbox: Climate Science, Earth System Modelling
+/** Adds a submenu of a coming-soon toolbox. */
+function appendComingSoonSubmenu(menu: MenuId, submenu: MenuId, title: string, group: string, order: number): void {
+	MenuRegistry.appendMenuItem(menu, { submenu, title, group, order });
+}
+
+// Geoscience Toolbox
 
 const GEOSCIENCE_MENU = new MenuId('pollisComingSoon.geoscience');
+const GEOSCIENCE_FILES_MENU = new MenuId('pollisComingSoon.geoscience.accessFiles');
+const GEOSCIENCE_LIBRARIES_MENU = new MenuId('pollisComingSoon.geoscience.accessDataLibraries');
+const CLIMATE_SCIENCE_MENU = new MenuId('pollisComingSoon.geoscience.climateScience');
+const EARTH_SYSTEM_MENU = new MenuId('pollisComingSoon.geoscience.earthSystemModelling');
 
-MenuRegistry.appendMenuItem(MenuId.MenubarExtendMenu, {
-	submenu: GEOSCIENCE_MENU,
-	title: localize('comingSoon.geoscience', "Geoscience Toolbox (Coming Soon)"),
-	group: COMING_SOON_GROUP,
-	order: 1
-});
+appendComingSoonSubmenu(MenuId.MenubarExtendMenu, GEOSCIENCE_MENU, localize('comingSoon.geoscience', "Geoscience Toolbox (Coming Soon)"), COMING_SOON_GROUP, 1);
 
-appendComingSoonItems(GEOSCIENCE_MENU, [
+// Access Files and Access Data Libraries of the toolbox's own, not in Explore: the user may move their items to any menu from the toolbox's Edit button
+appendComingSoonSubmenu(GEOSCIENCE_MENU, GEOSCIENCE_FILES_MENU, localize('comingSoon.geoscience.accessFiles', "Access Files"), '1_comingSoon', 1);
+appendComingSoonSubmenu(GEOSCIENCE_MENU, GEOSCIENCE_LIBRARIES_MENU, localize('comingSoon.geoscience.accessDataLibraries', "Access Data Libraries"), '1_comingSoon', 2);
+appendComingSoonSubmenu(GEOSCIENCE_MENU, CLIMATE_SCIENCE_MENU, localize('comingSoon.geoscience.climateScience', "Climate Science"), '2_comingSoon', 1);
+appendComingSoonSubmenu(GEOSCIENCE_MENU, EARTH_SYSTEM_MENU, localize('comingSoon.geoscience.earthSystemModelling', "Earth System Modelling"), '2_comingSoon', 2);
+
+appendComingSoonItems(GEOSCIENCE_FILES_MENU, [[
+	localize('comingSoon.geoscience.netcdf', "NetCDF Files"),
+	localize('comingSoon.geoscience.grib', "GRIB Files"),
+	localize('comingSoon.geoscience.zarr', "Zarr Stores"),
+	localize('comingSoon.geoscience.hdf5', "HDF5 Files"),
+]]);
+
+appendComingSoonItems(GEOSCIENCE_LIBRARIES_MENU, [
 	[
-		localize('comingSoon.geoscience.climateData', "Climate Data Access and Download"),
-		localize('comingSoon.geoscience.atmosphere', "Atmospheric Analysis"),
-		localize('comingSoon.geoscience.ocean', "Ocean and Sea Surface Analysis"),
-		localize('comingSoon.geoscience.indices', "Climate Indices and Teleconnections"),
-		localize('comingSoon.geoscience.extremes', "Extreme Weather Event Analysis"),
-		localize('comingSoon.geoscience.projections', "Climate Change Projections"),
+		localize('comingSoon.geoscience.era5', "Copernicus Climate Data Store (ERA5)"),
+		localize('comingSoon.geoscience.marine', "Copernicus Marine Service"),
+		localize('comingSoon.geoscience.cams', "Copernicus Atmosphere Monitoring Service (CAMS)"),
 	],
 	[
-		localize('comingSoon.geoscience.oceanModel', "Ocean Circulation Modelling"),
-		localize('comingSoon.geoscience.atmosphereModel', "Atmospheric Modelling"),
-		localize('comingSoon.geoscience.landModel', "Land Surface Modelling"),
-		localize('comingSoon.geoscience.iceModel', "Ice Sheet and Glacier Modelling"),
-		localize('comingSoon.geoscience.carbon', "Carbon Cycle and Biogeochemistry"),
-		localize('comingSoon.geoscience.coupled', "Coupled Earth System Simulation"),
+		localize('comingSoon.geoscience.cmip6', "CMIP6 Climate Projections (ESGF)"),
+		localize('comingSoon.geoscience.ncei', "NOAA National Centers for Environmental Information (NCEI)"),
+		localize('comingSoon.geoscience.earthdata', "NASA Earthdata"),
 	],
 ]);
+
+appendComingSoonItems(CLIMATE_SCIENCE_MENU, [[
+	localize('comingSoon.geoscience.atmosphere', "Atmospheric Analysis"),
+	localize('comingSoon.geoscience.ocean', "Ocean and Sea Surface Analysis"),
+	localize('comingSoon.geoscience.indices', "Climate Indices and Teleconnections"),
+	localize('comingSoon.geoscience.extremes', "Extreme Weather Event Analysis"),
+	localize('comingSoon.geoscience.projections', "Climate Change Projections"),
+]]);
+
+appendComingSoonItems(EARTH_SYSTEM_MENU, [[
+	localize('comingSoon.geoscience.oceanModel', "Ocean Circulation Modelling"),
+	localize('comingSoon.geoscience.atmosphereModel', "Atmospheric Modelling"),
+	localize('comingSoon.geoscience.landModel', "Land Surface Modelling"),
+	localize('comingSoon.geoscience.iceModel', "Ice Sheet and Glacier Modelling"),
+	localize('comingSoon.geoscience.carbon', "Carbon Cycle and Biogeochemistry"),
+	localize('comingSoon.geoscience.coupled', "Coupled Earth System Simulation"),
+]]);
 
 // Smart Regions Toolbox
 
@@ -82,27 +110,12 @@ const SMART_REGIONS_MAPS_MENU = new MenuId('pollisComingSoon.smartRegions.mapVis
 const SMART_REGIONS_REMOTE_SENSING_MENU = new MenuId('pollisComingSoon.smartRegions.remoteSensing');
 const SMART_REGIONS_POINT_CLOUDS_MENU = new MenuId('pollisComingSoon.smartRegions.pointClouds');
 
-MenuRegistry.appendMenuItem(MenuId.MenubarExtendMenu, {
-	submenu: SMART_REGIONS_MENU,
-	title: localize('comingSoon.smartRegions', "Smart Regions Toolbox (Coming Soon)"),
-	group: COMING_SOON_GROUP,
-	order: 2
-});
+appendComingSoonSubmenu(MenuId.MenubarExtendMenu, SMART_REGIONS_MENU, localize('comingSoon.smartRegions', "Smart Regions Toolbox (Coming Soon)"), COMING_SOON_GROUP, 2);
 
 // Access Files and Access Data Libraries of the toolbox's own, not in Explore: the user may move their items to any menu from the toolbox's Edit button
-MenuRegistry.appendMenuItem(SMART_REGIONS_MENU, {
-	submenu: SMART_REGIONS_FILES_MENU,
-	title: localize('comingSoon.smartRegions.accessFiles', "Access Files"),
-	group: '0_comingSoon',
-	order: 1
-});
+appendComingSoonSubmenu(SMART_REGIONS_MENU, SMART_REGIONS_FILES_MENU, localize('comingSoon.smartRegions.accessFiles', "Access Files"), '0_comingSoon', 1);
 
-MenuRegistry.appendMenuItem(SMART_REGIONS_MENU, {
-	submenu: SMART_REGIONS_LIBRARIES_MENU,
-	title: localize('comingSoon.smartRegions.accessDataLibraries', "Access Data Libraries"),
-	group: '0_comingSoon',
-	order: 2
-});
+appendComingSoonSubmenu(SMART_REGIONS_MENU, SMART_REGIONS_LIBRARIES_MENU, localize('comingSoon.smartRegions.accessDataLibraries', "Access Data Libraries"), '0_comingSoon', 2);
 
 appendComingSoonItems(SMART_REGIONS_FILES_MENU, [
 	[
@@ -143,12 +156,7 @@ appendComingSoonItems(SMART_REGIONS_LIBRARIES_MENU, [
 ]);
 
 // Map Visualisation: the open sources first, whose data may also be analysed; Google Maps and Google's Photorealistic 3D Tiles may be displayed, with their attributions, but not analysed
-MenuRegistry.appendMenuItem(SMART_REGIONS_MENU, {
-	submenu: SMART_REGIONS_MAPS_MENU,
-	title: localize('comingSoon.smartRegions.maps', "Map Visualisation"),
-	group: '1_comingSoon',
-	order: 0
-});
+appendComingSoonSubmenu(SMART_REGIONS_MENU, SMART_REGIONS_MAPS_MENU, localize('comingSoon.smartRegions.maps', "Map Visualisation"), '1_comingSoon', 0);
 
 appendComingSoonItems(SMART_REGIONS_MAPS_MENU, [
 	[
@@ -176,19 +184,9 @@ appendComingSoonItems(SMART_REGIONS_MENU, [
 ]);
 
 // Remote Sensing and Point Cloud Processing, submenus of methods, above Terrain and Elevation Analysis, which takes its terrain models from the ground points
-MenuRegistry.appendMenuItem(SMART_REGIONS_MENU, {
-	submenu: SMART_REGIONS_REMOTE_SENSING_MENU,
-	title: localize('comingSoon.smartRegions.remoteSensing', "Remote Sensing"),
-	group: '3_comingSoon',
-	order: 1
-});
+appendComingSoonSubmenu(SMART_REGIONS_MENU, SMART_REGIONS_REMOTE_SENSING_MENU, localize('comingSoon.smartRegions.remoteSensing', "Remote Sensing"), '3_comingSoon', 1);
 
-MenuRegistry.appendMenuItem(SMART_REGIONS_MENU, {
-	submenu: SMART_REGIONS_POINT_CLOUDS_MENU,
-	title: localize('comingSoon.smartRegions.pointClouds', "Point Cloud Processing"),
-	group: '3_comingSoon',
-	order: 2
-});
+appendComingSoonSubmenu(SMART_REGIONS_MENU, SMART_REGIONS_POINT_CLOUDS_MENU, localize('comingSoon.smartRegions.pointClouds', "Point Cloud Processing"), '3_comingSoon', 2);
 
 MenuRegistry.appendMenuItem(SMART_REGIONS_MENU, {
 	group: '3_comingSoon',
@@ -213,19 +211,9 @@ appendComingSoonItems(SMART_REGIONS_POINT_CLOUDS_MENU, [[
 	localize('comingSoon.pointClouds.archaeology', "Archaeological Feature Detection"),
 ]]);
 
-MenuRegistry.appendMenuItem(SMART_REGIONS_MENU, {
-	submenu: SMART_CITIES_MENU,
-	title: localize('comingSoon.smartCities', "Smart Cities"),
-	group: '4_comingSoon',
-	order: 1
-});
+appendComingSoonSubmenu(SMART_REGIONS_MENU, SMART_CITIES_MENU, localize('comingSoon.smartCities', "Smart Cities"), '4_comingSoon', 1);
 
-MenuRegistry.appendMenuItem(SMART_REGIONS_MENU, {
-	submenu: SMART_RURAL_AREAS_MENU,
-	title: localize('comingSoon.smartRuralAreas', "Smart Rural Areas"),
-	group: '4_comingSoon',
-	order: 2
-});
+appendComingSoonSubmenu(SMART_REGIONS_MENU, SMART_RURAL_AREAS_MENU, localize('comingSoon.smartRuralAreas', "Smart Rural Areas"), '4_comingSoon', 2);
 
 appendComingSoonItems(SMART_CITIES_MENU, [[
 	localize('comingSoon.smartCities.mobility', "Urban Mobility and Traffic"),
