@@ -35,7 +35,7 @@ import { INotificationService } from '../../../../platform/notification/common/n
 import { Link } from '../../../../platform/opener/browser/link.js';
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { IProgressService, ProgressLocation } from '../../../../platform/progress/common/progress.js';
-import { asJson, IRequestService, isSuccess } from '../../../../platform/request/common/request.js';
+import { IRequestService, isSuccess } from '../../../../platform/request/common/request.js';
 import { defaultButtonStyles, defaultCountBadgeStyles } from '../../../../platform/theme/browser/defaultStyles.js';
 import { IThemeService } from '../../../../platform/theme/common/themeService.js';
 import { IViewPaneOptions, ViewPane } from '../../../browser/parts/views/viewPane.js';
@@ -43,14 +43,7 @@ import { IViewDescriptorService } from '../../../common/views.js';
 import { IHostService } from '../../../services/host/browser/host.js';
 import { ExtensionRuntimeActionType, ExtensionState, IExtension, IExtensionsWorkbenchService } from '../common/extensions.js';
 import { CHOOSE_TOOLBOX_PANELS_COMMAND_ID } from '../../compose/common/toolboxPanels.js';
-
-/**
- * The branch dist of Trumpingtons/pollis-toolboxes holds the toolboxes: its toolboxes.json and the .vsix
- * files it names (written by that repository's publish workflow on every push to main). Served by raw.githubusercontent.com,
- * which allows cross-origin requests; GitHub release downloads do not, so the window cannot fetch them.
- */
-const TOOLBOXES_URL = 'https://raw.githubusercontent.com/Trumpingtons/pollis-toolboxes/dist';
-export const TOOLBOXES_INDEX_URL = `${TOOLBOXES_URL}/toolboxes.json`;
+import { IPollisToolboxIndexService, IToolboxIndexEntry, TOOLBOXES_URL } from './pollisToolboxIndex.js';
 
 /** The icon of a toolbox row whose toolbox names no icon, or whose icon cannot be downloaded (offline, say): the Pollis icon. */
 const TOOLBOX_ICON = FileAccess.asBrowserUri('vs/workbench/contrib/extensions/browser/media/pollis-toolbox-icon.png').toString(true);
@@ -58,36 +51,6 @@ const TOOLBOX_ICON = FileAccess.asBrowserUri('vs/workbench/contrib/extensions/br
 /** The context key the Extensions viewlet sets to the search text (ExtensionsSearchValueContext). */
 const SEARCH_VALUE_CONTEXT_KEY = 'extensionsSearchValue';
 
-/** A toolbox in the index, toolboxes.json. */
-export interface IToolboxIndexEntry {
-	/** The extension id, `<publisher>.<name>`. */
-	readonly id: string;
-	readonly name: string;
-	readonly description: string;
-	/** The author, shown below the description as the publisher of other extensions is. */
-	readonly author?: string;
-	readonly version: string;
-	/** The .vsix file name, next to toolboxes.json. */
-	readonly vsix: string;
-	/** The README file name, next to toolboxes.json: shown when the toolbox is not installed. */
-	readonly readme?: string;
-	/** The icon file name, next to toolboxes.json: the icon of its .vsix, shown on its row. */
-	readonly icon?: string;
-	/** True for a toolbox of Simulation Games cases alone, whose description is headed as an online simulation. */
-	readonly games?: boolean;
-}
-
-/** The content of toolboxes.json. */
-export interface IToolboxIndex {
-	readonly toolboxes?: readonly IToolboxIndexEntry[];
-}
-
-/** The toolboxes of toolboxes.json that have every field a row needs. */
-export function toolboxesOfIndex(index: IToolboxIndex | null | undefined): IToolboxIndexEntry[] {
-	return (index?.toolboxes ?? []).filter(toolbox => typeof toolbox?.id === 'string' && typeof toolbox.name === 'string' && typeof toolbox.version === 'string' && typeof toolbox.vsix === 'string');
-}
-
-/** The installed copy of a toolbox, if any. */
 /** What the page of a toolbox of Simulation Games cases says below its title, with its publisher: Pollis Online Simulation, say. */
 export function onlineSimulationLabel(publisher: string | undefined): string {
 	return publisher
@@ -103,6 +66,7 @@ export function hasOnlyGames(extension: IExtension): boolean {
 		&& toolboxes.every(toolbox => !(Array.isArray(toolbox?.panels) && toolbox.panels.length) && Array.isArray(toolbox?.games) && toolbox.games.length > 0);
 }
 
+/** The installed copy of a toolbox, if any. */
 export function installedToolbox(extensionsWorkbenchService: IExtensionsWorkbenchService, toolbox: IToolboxIndexEntry): IExtension | undefined {
 	return extensionsWorkbenchService.local.find(extension => areSameExtensions(extension.identifier, { id: toolbox.id }));
 }
@@ -151,9 +115,6 @@ export class PollisToolboxesView extends ViewPane {
 	private badge: CountBadge | undefined;
 	/** The rows' buttons and links, replaced at each render. */
 	private readonly rowDisposables = this._register(new DisposableStore());
-	private toolboxes: readonly IToolboxIndexEntry[] | undefined;
-	private loading = false;
-	private loadError: string | undefined;
 	/** The first row's button, which takes the focus. */
 	private firstButton: Button | undefined;
 	/** The ids of the toolboxes being installed or updated from this section. */
@@ -162,6 +123,7 @@ export class PollisToolboxesView extends ViewPane {
 	constructor(
 		options: IViewPaneOptions,
 		@IRequestService private readonly requestService: IRequestService,
+		@IPollisToolboxIndexService private readonly toolboxIndexService: IPollisToolboxIndexService,
 		@IExtensionsWorkbenchService private readonly extensionsWorkbenchService: IExtensionsWorkbenchService,
 		@IFileService private readonly fileService: IFileService,
 		@IEnvironmentService private readonly environmentService: IEnvironmentService,
@@ -181,6 +143,8 @@ export class PollisToolboxesView extends ViewPane {
 	) {
 		super(options, keybindingService, contextMenuService, configurationService, contextKeyService, viewDescriptorService, instantiationService, openerService, themeService, hoverService);
 		this._register(this.extensionsWorkbenchService.onChange(() => this.refresh()));
+		// The list downloaded at start, hourly, on focus or on Refresh: an update shows as soon as it is published
+		this._register(this.toolboxIndexService.onDidChange(() => this.refresh()));
 		const searchKeys = new Set([SEARCH_VALUE_CONTEXT_KEY]);
 		this._register(this.contextKeyService.onDidChangeContext(e => {
 			if (e.affectsSome(searchKeys)) {
@@ -200,32 +164,12 @@ export class PollisToolboxesView extends ViewPane {
 		this.root = dom.append(container, dom.$('.pollis-toolboxes'));
 		this.message = dom.append(this.root, dom.$('.pollis-toolboxes-message'));
 		this.list = dom.append(this.root, dom.$('.pollis-toolboxes-list'));
-		this.loadIndex();
+		this.refresh();
 	}
 
-	/** Downloads toolboxes.json again, for the Refresh button of the Extensions pane. */
+	/** Downloads toolboxes.json again, for the Refresh button of the Extensions pane. A failure (offline, say) shows in the section with a Retry link. */
 	reload(): Promise<void> {
-		return this.loadIndex();
-	}
-
-	/** Downloads toolboxes.json. A failure (offline, say) shows in the section with a Retry link. */
-	private async loadIndex(): Promise<void> {
-		if (this.loading) {
-			return;
-		}
-		this.loading = true;
-		this.loadError = undefined;
-		this.refresh();
-		try {
-			const context = await this.requestService.request({ type: 'GET', url: TOOLBOXES_INDEX_URL, callSite: 'pollisToolboxesView.loadIndex' }, CancellationToken.None);
-			const index = await asJson<IToolboxIndex>(context);
-			this.toolboxes = toolboxesOfIndex(index);
-		} catch (error) {
-			this.loadError = toErrorMessage(error);
-		} finally {
-			this.loading = false;
-		}
-		this.refresh();
+		return this.toolboxIndexService.reload();
 	}
 
 	/** The installed copy of a toolbox, if any. */
@@ -274,29 +218,30 @@ export class PollisToolboxesView extends ViewPane {
 		dom.clearNode(this.message);
 		dom.clearNode(this.list);
 
-		if (this.loading && !this.toolboxes) {
+		const { toolboxes: published, loading, loadError } = this.toolboxIndexService;
+		if (loading && !published) {
 			this.message.textContent = localize('pollisToolboxes.loading', "Loading the toolboxes...");
 			return;
 		}
-		if (this.loadError !== undefined && !this.toolboxes) {
+		if (loadError !== undefined && !published) {
 			dom.append(this.message, dom.$('span', undefined, localize('pollisToolboxes.offline', "Could not load the list of toolboxes. Check the internet connection.")));
 			this.message.append(' ');
 			this.rowDisposables.add(this.instantiationService.createInstance(Link, this.message, {
 				label: localize('pollisToolboxes.retry', "Retry"),
 				href: '',
-				title: this.loadError,
-			}, { opener: () => this.loadIndex() }));
+				title: loadError,
+			}, { opener: () => this.reload() }));
 			return;
 		}
 
 		const text = toolboxesSearchText(this.contextKeyService.getContextKeyValue<string>(SEARCH_VALUE_CONTEXT_KEY) ?? '');
 		// An installed toolbox that is up to date is in the Installed section only
-		const available = (this.toolboxes ?? []).filter(toolbox => this.busy.has(toolbox.id) || this.getAction(toolbox, this.getInstalled(toolbox)) !== ToolboxAction.None);
+		const available = (published ?? []).filter(toolbox => this.busy.has(toolbox.id) || this.getAction(toolbox, this.getInstalled(toolbox)) !== ToolboxAction.None);
 		const toolboxes = available.filter(toolbox => !text || toolbox.name.toLowerCase().includes(text) || (toolbox.description ?? '').toLowerCase().includes(text));
 		if (!toolboxes.length) {
 			this.message.textContent = available.length
 				? localize('pollisToolboxes.noMatch', "No toolbox matches the search.")
-				: this.toolboxes?.length
+				: published?.length
 					? localize('pollisToolboxes.allInstalled', "Every toolbox is installed: they are in the Installed section.")
 					: localize('pollisToolboxes.none', "No toolboxes are published yet.");
 			return;
