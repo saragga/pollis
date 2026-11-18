@@ -1790,6 +1790,41 @@
 			"open_access": false
 		},
 		{
+			"key": "Ans1995a",
+			"type": "article",
+			"title": "Local Indicators of Spatial Association—LISA",
+			"authors": [
+				"Anselin, Luc"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1995,
+			"journal": "Geographical Analysis",
+			"volume": "27",
+			"number": "2",
+			"pages": "93-115",
+			"issn": "0016-7363",
+			"doi": "10.1111/j.1538-4632.1995.tb00338.x",
+			"openalex": "W2118898434",
+			"abstract": "The capabilities for visualization, rapid data retrieval, and manipulation in geographic information systems (GIS) have created the need for new techniques of exploratory data analysis that focus on the “spatial” aspects of the data. The identification of local patterns of spatial association is an important concern in this respect. In this paper, I outline a new general class of local indicators of spatial association (LISA) and show how they allow for the decomposition of global indicators, such as Moran's I, into the contribution of each observation. The LISA statistics serve two purposes. On one hand, they may be interpreted as indicators of local pockets of nonstationarity, or hot spots, similar to the G i and G* i statistics of Getis and Ord (1992). On the other hand, they may be used to assess the influence of individual locations on the magnitude of the global statistic and to identify “outliers,” as in Anselin's Moran scatterplot (1993a). An initial evaluation of the properties of a LISA statistic is carried out for the local Moran, which is applied in a study of the spatial pattern of conflict for African countries and in a number of Monte Carlo simulations.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"local indicators of spatial association",
+				"LISA",
+				"local Moran's I",
+				"spatial autocorrelation",
+				"hot spots",
+				"non-stationarity",
+				"spatial outliers",
+				"African countries"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "Ath1971a",
 			"type": "article",
 			"title": "The Role and Use of the Stochastic Linear-Quadratic-Gaussian Problem in Control System Design",
@@ -3306,6 +3341,40 @@
 			"source": "crossref",
 			"retrieved": "2026-11-02",
 			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "BH1995a",
+			"type": "article",
+			"title": "Controlling the False Discovery Rate: A Practical and Powerful Approach to Multiple Testing",
+			"authors": [
+				"Benjamini, Yoav",
+				"Hochberg, Yosef"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1995,
+			"journal": "Journal of the Royal Statistical Society Series B: Statistical Methodology",
+			"volume": "57",
+			"number": "1",
+			"pages": "289-300",
+			"issn": "1369-7412",
+			"doi": "10.1111/j.2517-6161.1995.tb02031.x",
+			"openalex": "W2110065044",
+			"abstract": "The common approach to the multiplicity problem calls for controlling the familywise error rate (FWER). This approach, though, has faults, and we point out a few. A different approach to problems of multiple significance testing is presented. It calls for controlling the expected proportion of falsely rejected hypotheses — the false discovery rate. This error rate is equivalent to the FWER when all hypotheses are true but is smaller otherwise. Therefore, in problems where the control of the false discovery rate rather than that of the FWER is desired, there is potential for a gain in power. A simple sequential Bonferronitype procedure is proved to control the false discovery rate for independent test statistics, and a simulation study shows that the gain in power is substantial. The use of the new procedure and the appropriateness of the criterion are illustrated with examples.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"false discovery rate",
+				"multiple comparisons",
+				"family-wise error rate",
+				"statistical power",
+				"hypothesis testing",
+				"false rejection"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
 			"open_access": false
 		},
 		{
@@ -5847,6 +5916,24 @@
 			"open_access": true
 		},
 		{
+			"key": "Bar2026a",
+			"type": "misc",
+			"title": "SpatialDependence.jl: Spatial Dependence, Spatial Weights Matrices and Exploratory Spatial Data Analysis in Julia",
+			"authors": [
+				"Barbero, Javier"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://github.com/javierbarbero/SpatialDependence.jl",
+			"abstract": "A Julia package for spatial dependence (spatial autocorrelation), spatial weights matrices, and exploratory spatial data analysis (ESDA).",
+			"abstract_source": "github",
+			"source": "manual",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "Bas1957a",
 			"type": "article",
 			"title": "A Generalized Classical Method of Linear Estimation of Coefficients in a Structural Equation",
@@ -7104,6 +7191,37 @@
 			"retrieved": "2026-11-07",
 			"checked": true,
 			"open_access": true
+		},
+		{
+			"key": "CD2012a",
+			"type": "book",
+			"title": "Geostatistics: Modeling Spatial Uncertainty",
+			"authors": [
+				"Chilès, Jean-Paul",
+				"Delfiner, Pierre"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2012,
+			"publisher": "John Wiley & Sons",
+			"edition": "2nd",
+			"isbn": "9780470183151",
+			"doi": "10.1002/9781118136188",
+			"openalex": "W4232329630",
+			"keywords": [
+				"geostatistics",
+				"spatial uncertainty",
+				"spatial modeling",
+				"kriging",
+				"spatial variability",
+				"random fields"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false,
+			"series": "Wiley Series in Probability and Statistics"
 		},
 		{
 			"key": "CD2014a",
@@ -10425,6 +10543,36 @@
 			"retrieved": "2026-10-23",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "Cre1993a",
+			"type": "book",
+			"title": "Statistics for Spatial Data",
+			"authors": [
+				"Cressie, Noel A. C."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1993,
+			"publisher": "John Wiley & Sons",
+			"edition": "Revised",
+			"isbn": "9780471002550",
+			"doi": "10.1002/9781119115151",
+			"openalex": "W2496675188",
+			"keywords": [
+				"spatial statistics",
+				"geospatial data",
+				"spatial autocorrelation",
+				"spatial regression",
+				"geostatistics",
+				"spatial modeling"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false,
+			"series": "Wiley Series in Probability and Statistics"
 		},
 		{
 			"key": "Cro1958a",
@@ -16569,6 +16717,42 @@
 			"open_access": true
 		},
 		{
+			"key": "GO1992a",
+			"type": "article",
+			"title": "The Analysis of Spatial Association by Use of Distance Statistics",
+			"authors": [
+				"Getis, Arthur",
+				"Ord, J. K."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1992,
+			"journal": "Geographical Analysis",
+			"volume": "24",
+			"number": "3",
+			"pages": "189-206",
+			"issn": "0016-7363",
+			"doi": "10.1111/j.1538-4632.1992.tb00261.x",
+			"openalex": "W2131586477",
+			"abstract": "Introduced in this paper is a family of statistics, G , that can be used as a measure of spatial association in a number of circumstances. The basic statistic is derived, its properties are identified, and its advantages explained. Several of the G statistics make it possible to evaluate the spatial association of a variable within a specified distance of a single point. A comparison is made between a general G statistic and Moran's I for similar hypothetical and empirical conditions. The empirical work includes studies of sudden infant death syndrome by county in North Carolina and dwelling unit prices in metropolitan San Diego by zip‐code districts. Results indicate that G statistics should be used in conjunction with I in order to identify characteristics of patterns not revealed by the I statistic alone and, specifically, the G i and G i * statistics enable us to detect local “pockets” of dependence that may not show up when using global statistics.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"spatial association",
+				"distance statistics",
+				"G-statistic",
+				"Moran's I",
+				"local dependence",
+				"spatial autocorrelation",
+				"sudden infant death syndrome",
+				"spatial patterns"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "GOY1982a",
 			"type": "article",
 			"title": "Chaotic Attractors in Crisis",
@@ -17463,6 +17647,40 @@
 			"open_access": true
 		},
 		{
+			"key": "Gea1954a",
+			"type": "article",
+			"title": "The Contiguity Ratio and Statistical Mapping",
+			"authors": [
+				"Geary, R. C."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1954,
+			"journal": "The Incorporated Statistician",
+			"volume": "5",
+			"number": "3",
+			"pages": "115",
+			"issn": "1466-9404",
+			"doi": "10.2307/2986645",
+			"openalex": "W2399767476",
+			"abstract": "The problem discussed in this paper is to determine whether statistics given for each county in a country are distributed at random or whether they form a pattern. The statistical instrument is the contiguity ratio c defined by formula (1.1) below, which is an obvious generalization of the Von Neumann (1941) ratio used in one-dimensional analysis, particularly time series. While the applications in the paper are confined to oneand two-dimensional problems, it is evident that the theory applies to any number of dimensions. If the figures for adjoining counties are generally closer than those for counties not adjoining, the ratio will clearly tend to be less than unity. The constants are such that when the statistics are distributed at random in the counties, the average value of the ratio is unity. The statistics will be regarded as contiguous if the actual ratio found is significantly less than unity, by reference to the standard error. The theory is discussed from the viewpoints of both randomization and classical theory. With the randomization approach, the observations themselves are the universe and no assumption need be made as to the character of the frequency distribution. In the normal case, the assumption is that the observations may be regarded as a random sample from a universe. In this case it seems certain that the ratio tends very rapidly to normality as the number of counties increases. The exact values of the first four semi-invariants are given for the case. These functions depend only on the configuration, and the calculated values for Ireland, with number of counties only 26, show that the distribution of the ratio is very close to normal. Accordingly, one can have confidence in deciding on significance from the standard error.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"spatial autocorrelation",
+				"county statistics",
+				"permutation tests",
+				"Gaussian approximation",
+				"cumulants",
+				"significance testing",
+				"Ireland"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "Geh...2023a",
 			"type": "misc",
 			"title": "Bootstrap.jl: Statistical Bootstrapping",
@@ -17955,6 +18173,38 @@
 			"retrieved": "2026-10-31",
 			"checked": true,
 			"open_access": true
+		},
+		{
+			"key": "Goo1997a",
+			"type": "book",
+			"title": "Geostatistics for Natural Resources Evaluation",
+			"authors": [
+				"Goovaerts, Pierre"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1997,
+			"publisher": "Oxford University Press",
+			"isbn": "9780195115383",
+			"doi": "10.1093/oso/9780195115383.001.0001",
+			"openalex": "W4388284198",
+			"abstract": "This text fulfils a need for an advanced-level work covering both the theory and application of geostatistics. It covers the most important areas of geostatistical methodology, introducing tools for description, quantitative modelling of spatial continuity, spatial prediction, and assessment of local uncertainty and stochastic simulation. It also details the theoretical background underlying most GSLIB programs. The tools are applied to an environmental data set, but the book includes a general presentation of algorithms intended for students and practitioners in such diverse fields as soil science, mining, petroleum, remote sensing, hydrogeology, and the environmental sciences.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"geostatistics",
+				"spatial continuity",
+				"spatial prediction",
+				"local uncertainty",
+				"stochastic simulation",
+				"environmental data",
+				"soil science",
+				"mining"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
 		},
 		{
 			"key": "Goo2001a",
@@ -21454,6 +21704,70 @@
 			"open_access": true
 		},
 		{
+			"key": "Hof2018a",
+			"type": "article",
+			"title": "GeoStats.jl – High-performance geostatistics in Julia",
+			"authors": [
+				"Hoffimann, Júlio"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2018,
+			"journal": "Journal of Open Source Software",
+			"volume": "3",
+			"number": "24",
+			"pages": "692",
+			"issn": "2475-9066",
+			"doi": "10.21105/joss.00692",
+			"openalex": "W2799961666",
+			"abstract": "GeoStats.jl is an extensible framework for high-performance geostatistics in Julia, as well as a formal specification of statistical problems in the spatial setting.It provides highly optimized solvers for estimation and (conditional) simulation of variables defined over general spatial domains (e.g.regular grid, point collection), and can utilize high-performance hardware for parallel execution such as GPUs and computer clusters.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"geostatistics",
+				"Julia",
+				"kriging",
+				"conditional simulation",
+				"spatial statistics",
+				"GPU computing",
+				"parallel computing"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
+			"key": "Hof2026a",
+			"type": "misc",
+			"title": "GeoStats.jl: An Extensible Framework for Geospatial Data Science and Geostatistical Modeling",
+			"authors": [
+				"Hoffimann, Júlio"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 2026,
+			"url": "https://github.com/JuliaEarth/GeoStats.jl",
+			"abstract": "An extensible framework for geospatial data science and geostatistical modeling fully written in Julia",
+			"abstract_source": "github",
+			"keywords": [
+				"datascience",
+				"geo",
+				"geomodeling",
+				"geospatial",
+				"geostatistics",
+				"gis",
+				"spatial-statistics",
+				"statistical-learning",
+				"statistics"
+			],
+			"keywords_source": "github",
+			"source": "manual",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": true
+		},
+		{
 			"key": "Hon2013a",
 			"type": "article",
 			"title": "On computing the distribution function for the Poisson binomial distribution",
@@ -21854,6 +22168,24 @@
 			"source": "manual",
 			"checked": false,
 			"open_access": true
+		},
+		{
+			"key": "IS1989a",
+			"type": "book",
+			"title": "An Introduction to Applied Geostatistics",
+			"authors": [
+				"Isaaks, Edward H.",
+				"Srivastava, R. Mohan"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1989,
+			"publisher": "Oxford University Press",
+			"isbn": "9780195050134",
+			"source": "manual",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
 		},
 		{
 			"key": "IS2015a",
@@ -25565,6 +25897,25 @@
 			"source": "crossref",
 			"retrieved": "2026-11-02",
 			"checked": true,
+			"open_access": false
+		},
+		{
+			"key": "Kri1951a",
+			"type": "article",
+			"title": "A Statistical Approach to Some Basic Mine Valuation Problems on the Witwatersrand",
+			"authors": [
+				"Krige, D. G."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1951,
+			"journal": "Journal of the Chemical, Metallurgical and Mining Society of South Africa",
+			"volume": "52",
+			"number": "6",
+			"pages": "119-139",
+			"source": "manual",
+			"retrieved": "2026-11-18",
+			"checked": false,
 			"open_access": false
 		},
 		{
@@ -31790,6 +32141,38 @@
 			"open_access": true
 		},
 		{
+			"key": "Mat1963a",
+			"type": "article",
+			"title": "Principles of Geostatistics",
+			"authors": [
+				"Matheron, Georges"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1963,
+			"journal": "Economic Geology",
+			"volume": "58",
+			"number": "8",
+			"pages": "1246-1266",
+			"issn": "1554-0774",
+			"doi": "10.2113/gsecongeo.58.8.1246",
+			"openalex": "W2024697317",
+			"abstract": "Knowledge of ore grades and ore reserves as well as error estimation of these values, is fundamental for mining engineers and mining geologists. Until now no appropriate scientific approach to those estimation problems has existed: geostatistics, the principles of which are summarized in this paper, constitutes a new science leading to such an approach. The author criticizes classical statistical methods still in use, and shows some of the main results given by geostatistics. Any ore deposit evaluation as well as proper decision of starting mining operations should be preceded by a geostatistical investigation which may avoid economic failures.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"geostatistics",
+				"ore grade estimation",
+				"ore reserve estimation",
+				"error estimation",
+				"ore deposit evaluation"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "Mat1975a",
 			"type": "article",
 			"title": "Comparison of the predicted and observed secondary structure of T4 phage lysozyme",
@@ -32178,6 +32561,33 @@
 			"url": "https://dl.acm.org/doi/10.5555/2074022.2074101",
 			"legacy_key": "minka2001b",
 			"source": "manual",
+			"checked": false,
+			"open_access": false
+		},
+		{
+			"key": "Mor1950a",
+			"type": "article",
+			"title": "Notes on Continuous Stochastic Phenomena",
+			"authors": [
+				"Moran, P. A. P."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1950,
+			"journal": "Biometrika",
+			"volume": "37",
+			"number": "1-2",
+			"pages": "17-23",
+			"issn": "0006-3444",
+			"doi": "10.1093/biomet/37.1-2.17",
+			"openalex": "W2052611179",
+			"keywords": [
+				"continuous random variables",
+				"probability distributions"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
 			"checked": false,
 			"open_access": false
 		},
@@ -33533,6 +33943,39 @@
 			"source": "datacite",
 			"retrieved": "2026-11-02",
 			"checked": true,
+			"open_access": true
+		},
+		{
+			"key": "OG1995a",
+			"type": "article",
+			"title": "Local Spatial Autocorrelation Statistics: Distributional Issues and an Application",
+			"authors": [
+				"Ord, J. K.",
+				"Getis, Arthur"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1995,
+			"journal": "Geographical Analysis",
+			"volume": "27",
+			"number": "4",
+			"pages": "286-306",
+			"issn": "0016-7363",
+			"doi": "10.1111/j.1538-4632.1995.tb00912.x",
+			"openalex": "W1967137980",
+			"abstract": "The statistics G i (d) and G i *(d), introduced in Getis and Ord (1992) for the study of local pattern in spatial data, are extended and their properties further explored. In particular, nonbinary weights are allowed and the statistics are related to Moran's autocorrelation statistic, I. The correlations between nearby values of the statistics are derived and verified by simulation. A Bonferroni criterion is used to approximate significance levels when testing extreme values from the set of statistics. An example of the use of the statistics is given using spatial‐temporal data on the AIDS epidemic centering on San Francisco. Results indicate that in recent years the disease is intensifying in the counties surrounding the city .",
+			"abstract_source": "openalex",
+			"keywords": [
+				"local spatial autocorrelation",
+				"Moran's I",
+				"spatio-temporal data",
+				"HIV/AIDS epidemic",
+				"San Francisco"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
 			"open_access": true
 		},
 		{
@@ -42038,6 +42481,37 @@
 			"open_access": true
 		},
 		{
+			"key": "She1968a",
+			"type": "inproceedings",
+			"title": "A Two-Dimensional Interpolation Function for Irregularly-Spaced Data",
+			"authors": [
+				"Shepard, Donald"
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1968,
+			"booktitle": "Proceedings of the 1968 23rd ACM National Conference",
+			"pages": "517-524",
+			"doi": "10.1145/800186.810616",
+			"openalex": "W2147169375",
+			"abstract": "In many fields using empirical areal data there arises a need for interpolating from irregularly-spaced data to produce a continuous surface. These irregularly-spaced locations, hence referred to as “data points,” may have diverse meanings: in meterology, weather observation stations; in geography, surveyed locations; in city and regional planning, centers of data-collection zones; in biology, observation locations. It is assumed that a unique number (such as rainfall in meteorology, or altitude in geography) is associated with each data point.",
+			"abstract_source": "openalex",
+			"keywords": [
+				"two-dimensional interpolation",
+				"irregularly spaced data",
+				"areal data",
+				"empirical data",
+				"meteorological station",
+				"rainfall",
+				"altitude"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
+		},
+		{
 			"key": "Sho2026a",
 			"type": "misc",
 			"title": "StaticCompiler.jl: Compiles Julia code to a standalone library (experimental)",
@@ -43752,6 +44226,34 @@
 				"truncated regression",
 				"probit model",
 				"logit"
+			],
+			"keywords_source": "openalex",
+			"source": "crossref",
+			"retrieved": "2026-11-18",
+			"checked": false,
+			"open_access": false
+		},
+		{
+			"key": "Tob1970a",
+			"type": "article",
+			"title": "A Computer Movie Simulating Urban Growth in the Detroit Region",
+			"authors": [
+				"Tobler, W. R."
+			],
+			"author_kind": "persons",
+			"authors_complete": true,
+			"year": 1970,
+			"journal": "Economic Geography",
+			"volume": "46",
+			"pages": "234",
+			"issn": "0013-0095",
+			"doi": "10.2307/143141",
+			"openalex": "W1973749534",
+			"keywords": [
+				"urban expansion",
+				"computer simulation",
+				"computer animation",
+				"urban growth models"
 			],
 			"keywords_source": "openalex",
 			"source": "crossref",
@@ -48123,6 +48625,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "Ans1995a",
+			"count": 10976,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "Ans1995a",
+			"count": 15650,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "Ath1971a",
 			"count": 544,
 			"source": "crossref",
@@ -48559,6 +49073,18 @@
 			"count": 1379,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "BH1995a",
+			"count": 99304,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "BH1995a",
+			"count": 124183,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "BHH1959a",
@@ -49737,6 +50263,18 @@
 			"date": "2026-11-07"
 		},
 		{
+			"key": "CD2012a",
+			"count": 1119,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "CD2012a",
+			"count": 1302,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "CD2014a",
 			"count": 5786,
 			"source": "crossref",
@@ -50515,6 +51053,18 @@
 			"count": 189,
 			"source": "openalex",
 			"date": "2026-10-23"
+		},
+		{
+			"key": "Cre1993a",
+			"count": 6312,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "Cre1993a",
+			"count": 10659,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "Cro1958a",
@@ -52431,6 +52981,18 @@
 			"date": "2026-10-31"
 		},
 		{
+			"key": "GO1992a",
+			"count": 5394,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "GO1992a",
+			"count": 7395,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "GOY1982a",
 			"count": 723,
 			"source": "crossref",
@@ -52737,6 +53299,18 @@
 			"date": "2026-11-06"
 		},
 		{
+			"key": "Gea1954a",
+			"count": 990,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "Gea1954a",
+			"count": 1962,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "Gil1976a",
 			"count": 5429,
 			"source": "crossref",
@@ -52885,6 +53459,18 @@
 			"count": 3606,
 			"source": "openalex",
 			"date": "2026-10-31"
+		},
+		{
+			"key": "Goo1997a",
+			"count": 3697,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "Goo1997a",
+			"count": 6782,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "Goo2001a",
@@ -54079,6 +54665,18 @@
 			"count": 3096,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "Hof2018a",
+			"count": 21,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "Hof2018a",
+			"count": 28,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "Hor1965a",
@@ -57027,6 +57625,18 @@
 			"date": "2026-11-02"
 		},
 		{
+			"key": "Mat1963a",
+			"count": 3954,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "Mat1963a",
+			"count": 5880,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "Mat1975a",
 			"count": 4593,
 			"source": "crossref",
@@ -57169,6 +57779,18 @@
 			"count": 1163,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "Mor1950a",
+			"count": 5803,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "Mor1950a",
+			"count": 10075,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "Mor1978a",
@@ -57589,6 +58211,18 @@
 			"count": 4901,
 			"source": "openalex",
 			"date": "2026-11-02"
+		},
+		{
+			"key": "OG1995a",
+			"count": 3115,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "OG1995a",
+			"count": 4174,
+			"source": "openalex",
+			"date": "2026-11-18"
 		},
 		{
 			"key": "OK1974a",
@@ -60147,6 +60781,18 @@
 			"date": "2026-10-23"
 		},
 		{
+			"key": "She1968a",
+			"count": 3413,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "She1968a",
+			"count": 6409,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
 			"key": "Shr2004a",
 			"count": 614,
 			"source": "crossref",
@@ -60731,6 +61377,18 @@
 		{
 			"key": "Tob1958a",
 			"count": 8338,
+			"source": "openalex",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "Tob1970a",
+			"count": 7739,
+			"source": "crossref",
+			"date": "2026-11-18"
+		},
+		{
+			"key": "Tob1970a",
+			"count": 11653,
 			"source": "openalex",
 			"date": "2026-11-18"
 		},
