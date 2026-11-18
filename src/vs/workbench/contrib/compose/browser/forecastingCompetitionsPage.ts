@@ -313,14 +313,16 @@ async function readJson(fileService: IFileService, file: URI): Promise<unknown> 
 
 /**
  * The Julia code that installs PollisCompetitions.jl when it is not, and downloads a competition; for M4 also the
- * forecasts of Naive2, against which OWA weighs every forecast.
+ * forecasts of Naive2, against which OWA weighs every forecast. The PollisCompetitions database is then made again,
+ * so that the competition's views come in.
  */
 export function downloadCode(competition: string): string {
 	return `# Score Forecasting Models: download ${competition} from its source, each file checked against its SHA-256
 import Pkg
 Base.find_package("PollisCompetitions") === nothing && Pkg.add("PollisCompetitions")
 import PollisCompetitions as PC
-PC.download("${competition}")${competition === 'm4' ? '\nPC.download_forecasts("m4"; entries = ["Naive2"])' : ''}`;
+PC.download("${competition}")${competition === 'm4' ? '\nPC.download_forecasts("m4"; entries = ["Naive2"])' : ''}
+isdefined(Main, :PollisDB) && Base.invokelatest(Main.PollisDB.build_competitions)`;
 }
 
 /** The Julia of every script of a run, inside its `let run = ...`: to_json, and write_json, which writes a JSON file of the run's folder. */
@@ -569,6 +571,8 @@ function entryScript(folder: URI, request: INextStepRequest): string {
 			if !on_disk(chosen)
 				println("Downloading the forecasts of ", listed.name[k])
 				PC.download_forecasts(id; entries = [chosen])
+				# The PollisCompetitions database, so that the forecasts of the entry come into its view forecasts
+				isdefined(Main, :PollisDB) && Base.invokelatest(Main.PollisDB.build_competitions)
 			end
 			mine = read_forecasts()
 			numbers = Set(mine.series)

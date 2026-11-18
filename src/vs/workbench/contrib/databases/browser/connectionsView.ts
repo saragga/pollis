@@ -44,7 +44,7 @@ import { IWorkbenchLayoutService } from '../../../services/layout/browser/layout
 import { IDataPackageUpdate, JULIA_REPL_VERSION_KEY, PollisDataPackages } from '../../compose/browser/pollisDataPackages.js';
 import { IDatabaseColumn, IDatabaseConnectionsService, IDatabaseSchema, IDatabaseSession, IDatabaseTable } from '../common/databaseConnections.js';
 import './media/connectionsView.css';
-import { BENCHMARKS_DATABASE_ID, COMPARISONS_DATABASE_ID, databaseGroupOf, DatabaseGroup, describeConnection, DOCUMENTS_DATABASE_ID, getDatabaseDriver, IDatabaseConnectionProfile, isInMemoryConnection, isWritableConnection, JOURNALS_DATABASE_ID, NEW_CONNECTION_COMMAND_ID, REFERENCES_DATABASE_ID, RSS_DATABASE_ID } from '../common/databaseDrivers.js';
+import { BENCHMARKS_DATABASE_ID, COMPARISONS_DATABASE_ID, COMPETITIONS_DATABASE_ID, databaseGroupOf, DatabaseGroup, describeConnection, DOCUMENTS_DATABASE_ID, getDatabaseDriver, IDatabaseConnectionProfile, isInMemoryConnection, isWritableConnection, JOURNALS_DATABASE_ID, NEW_CONNECTION_COMMAND_ID, REFERENCES_DATABASE_ID, RSS_DATABASE_ID } from '../common/databaseDrivers.js';
 
 /** The Databases container of the secondary side bar, with its Pollis Built-In and User views. */
 export const DATABASES_VIEW_CONTAINER_ID = 'workbench.view.pollis.databases';
@@ -272,6 +272,10 @@ class ItemRenderer implements ITreeRenderer<DatabaseItem, void, IItemTemplate> {
 					hover = session
 						? localize('connection.benchmarks.hover.connected', "{0} (DuckDB)\nBuilt into Pollis: the published benchmarks of Pollis, their catalogue and the questions of those built in, read-only, in {1}.\nConnected in the Julia REPL as {2}. Click to browse its tables.", name, describeConnection(profile), profile.variable)
 						: localize('connection.benchmarks.hover', "{0} (DuckDB)\nBuilt into Pollis: the published benchmarks of Pollis, their catalogue and the questions of those built in, read-only, in {1}.\nNot connected. Click to connect in the Julia REPL as {2}.", name, describeConnection(profile), profile.variable);
+				} else if (profile?.builtin && profile.id === COMPETITIONS_DATABASE_ID) {
+					hover = session
+						? localize('connection.competitions.hover.connected', "{0} (DuckDB)\nBuilt into Pollis: the forecasting competitions of PollisCompetitions.jl, their catalogue and a schema for each competition downloaded, read-only, in {1}.\nConnected in the Julia REPL as {2}. Click to browse its tables.", name, describeConnection(profile), profile.variable)
+						: localize('connection.competitions.hover', "{0} (DuckDB)\nBuilt into Pollis: the forecasting competitions of PollisCompetitions.jl, their catalogue and a schema for each competition downloaded, read-only, in {1}.\nNot connected. Click to connect in the Julia REPL as {2}.", name, describeConnection(profile), profile.variable);
 				} else if (profile?.builtin && profile.id === DOCUMENTS_DATABASE_ID) {
 					hover = session
 						? localize('connection.documents.hover.connected', "{0} (DuckDB)\nBuilt into Pollis: the passages of its documents that Ask Pollis searches, read-only, in {1}.\nConnected in the Julia REPL as {2}. Click to browse its tables.", name, describeConnection(profile), profile.variable)
@@ -747,7 +751,7 @@ export abstract class DatabaseConnectionsView extends ViewPane {
 
 /**
  * The databases built into Pollis, which come with it and change only when Pollis rebuilds them: PollisDatasets,
- * PollisJournals, PollisReferences, PollisBenchmarks and PollisDocuments.
+ * PollisJournals, PollisReferences, PollisBenchmarks, PollisCompetitions and PollisDocuments.
  */
 export class BuiltinDatabasesView extends DatabaseConnectionsView {
 

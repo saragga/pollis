@@ -170,6 +170,12 @@ const KNOWLEDGE_COMMIT = joinpath(ENVIRONMENT, "PollisKnowledge.commit")
 const BENCHMARKS_DB = joinpath(homedir(), ".pollis", "databases", "PollisBenchmarks.duckdb")
 """The PollisBenchmarks.jl folder, its artifact and the SQL that `BENCHMARKS_DB` was made with."""
 const BENCHMARKS_STAMP = BENCHMARKS_DB * ".stamp"
+"""PollisCompetitions.jl: the forecasting competitions of Compose > Forecasting Competitions, which its pages install in the user's own environment."""
+const COMPETITIONS = Base.PkgId(UUID("81a31729-0f0a-40c0-bbf3-614b6aa3b649"), "PollisCompetitions")
+"""Where PollisCompetitions.jl keeps the competitions it downloads, a folder each with its Parquet files."""
+const COMPETITIONS_HOME = joinpath(homedir(), ".pollis", "competitions")
+"""The PollisCompetitions database: the catalogue of PollisCompetitions.jl and views over the competitions downloaded, made by `build_competitions`."""
+const COMPETITIONS_DB = joinpath(homedir(), ".pollis", "databases", "PollisCompetitions.duckdb")
 """The PollisDocuments database: the passages of Pollis' documents that Ask Pollis searches, made by ask_index.jl when the REPL starts."""
 const DOCUMENTS_DB = joinpath(homedir(), ".pollis", "documents", "PollisDocuments.duckdb")
 """
@@ -540,7 +546,7 @@ excel, which the Julia extension installs where DuckDB keeps its extensions, are
 const DUCKDB_CONFIG = ["autoinstall_known_extensions" => "false", "autoload_known_extensions" => "true"]
 
 """The databases of Pollis, built in and of its activity, that `connect` attaches, read-only, under their own names."""
-builtins() = filter(isfile, [DATASETS_DB, RSS_DB, JOURNALS_DB, REFERENCES_DB, BENCHMARKS_DB, DOCUMENTS_DB, COMPARISONS_DB])
+builtins() = filter(isfile, [DATASETS_DB, RSS_DB, JOURNALS_DB, REFERENCES_DB, BENCHMARKS_DB, COMPETITIONS_DB, DOCUMENTS_DB, COMPARISONS_DB])
 
 """
     connect(path = ":memory:"; name = "DuckDB", builtins = true, fts = true, show = true)
@@ -2329,6 +2335,269 @@ function build_benchmarks(database::AbstractString = BENCHMARKS_DB)
     return nothing
 end
 
+"""The catalogue of the installed PollisCompetitions.jl, `data/catalogue.toml`; `nothing` when it is not installed."""
+function competitions_catalogue()
+    path = Base.locate_package(COMPETITIONS)
+    path === nothing && return nothing
+    file = joinpath(dirname(dirname(path)), "data", "catalogue.toml")
+    return isfile(file) ? file : nothing
+end
+
+"""
+The Parquet files of competition `id` on this computer, relative to its folder in `COMPETITIONS_HOME`, those of the
+entries' forecasts as `forecasts/<entry>.parquet`; none when it is not downloaded, that is, has no `info.toml`.
+"""
+function competition_files(id::AbstractString)
+    folder = joinpath(COMPETITIONS_HOME, id)
+    isfile(joinpath(folder, "info.toml")) || return String[]
+    files = [name for name in readdir(folder) if endswith(name, ".parquet")]
+    forecasts = joinpath(folder, "forecasts")
+    isdir(forecasts) && append!(files, ["forecasts/$name" for name in readdir(forecasts) if endswith(name, ".parquet")])
+    return sort(files)
+end
+
+"""The columns of the table `competitions` of PollisCompetitions, with their type and description."""
+const COMPETITIONS_CATALOGUE = [
+    ("id", "VARCHAR", "The id of the competition in PollisCompetitions.jl, and the schema of its views in this database once it is downloaded"),
+    ("name", "VARCHAR", "Its name"),
+    ("year", "INTEGER", "The year it was held"),
+    ("frequencies", "VARCHAR[]", "The frequencies of its series"),
+    ("entries", "INTEGER", "The number of entries whose forecasts, or for M6 whose submissions, are published"),
+    ("measures", "VARCHAR[]", "The measures the organisers scored the entries by"),
+    ("availability", "VARCHAR", "Download, its files fetched from their source and converted on this computer, or Built In"),
+    ("source", "VARCHAR", "Where its files come from"),
+    ("source_url", "VARCHAR", "The address of its source"),
+    ("revision", "VARCHAR", "The revision of its source, fixed so that its files never change; empty for a source without revisions"),
+    ("licence", "VARCHAR", "The licence of its files, as its source states it"),
+    ("licence_url", "VARCHAR", "Where its source states its licence"),
+    ("papers", "VARCHAR[]", "The keys of the works that describe it, in the references of Pollis (PollisReferences)"),
+    ("download_mb", "DOUBLE", "The size in MB of the files fetched to download it, the entries' forecasts left out"),
+    ("forecasts_mb", "DOUBLE", "The size in MB of the files of the entries' forecasts, fetched one entry at a time; empty when none are published"),
+    ("downloaded", "BOOLEAN", "Whether it is on this computer, its views in the schema named by its id"),
+    ("converted", "TIMESTAMP", "When its files were converted on this computer; empty when it is not downloaded"),
+    ("forecasts_downloaded", "INTEGER", "The number of entries whose forecasts are on this computer, in the view forecasts of its schema"),
+    ("size_mb", "DOUBLE", "The size in MB of its Parquet files on this computer, the forecasts included; empty when it is not downloaded"),
+]
+
+"""What each table of a competition holds, by its name, and, where it differs from one competition to another, by `<id>.<name>`."""
+const COMPETITION_TABLES = [
+    "series" => "The series of the competition, a row each: its number, its name in the source, its frequency, seasonal period and horizon, its domain and its start",
+    "observations" => "The values of the series: those the forecasters saw, split train, and those their forecasts were scored on, split test",
+    "entries" => "The entries of the competition whose forecasts or submissions are published: the teams' submissions, with their published rank, and the organisers' benchmarks",
+    "published_scores" => "The scores the organisers published for the entries, by measure, and by what they are broken down by, such as frequency, domain or level",
+    "forecasts" => "The forecasts of the entries downloaded, a row for each step ahead of a series",
+    "m5.forecasts" => "The forecasts of the entries downloaded: for M5 Accuracy, a row for each step ahead of a series; for M5 Uncertainty, a row for each quantile and step ahead of a series of one of the 12 levels",
+    "calendar" => "The days: the date, the week of the prices, the weekday, month and year, the events, and the days of SNAP food stamps in each state",
+    "hierarchy" => "The item, department, category, store and state of each series, the levels by which the series add up",
+    "m5.prices" => "The price of each item in each store in each week",
+    "m6.prices" => "The adjusted close price of each asset on each day",
+    "weights" => "The weight of each series of the 12 levels in the measures, the WRMSSE and the WSPL, from its dollar sales",
+    "submissions" => "The submissions of the teams: for each round and asset, the weight invested in it (the decision) and the probabilities that its return ranks in each fifth of the 100 assets",
+]
+
+"""What each column of a competition's tables holds, by `<table>.<column>`, and, where it differs, by `<id>.<table>.<column>`."""
+const COMPETITION_COLUMNS = [
+    "series.series" => "The number of the series in the competition",
+    "series.competition" => "The id of the competition",
+    "series.name" => "The name of the series in the source",
+    "series.frequency" => "Its frequency, such as Yearly or Monthly",
+    "series.period" => "Its seasonal period: 12 for a monthly series, 1 for one without seasons",
+    "series.horizon" => "The number of steps ahead its forecasts were scored on",
+    "series.domain" => "Its domain, such as Macro, Finance or Industry, as the source gives it",
+    "series.start" => "When it starts, as the source gives it",
+    "observations.series" => "The number of the series; join series on series",
+    "observations.t" => "The time, from 1",
+    "observations.value" => "The value",
+    "observations.split" => "train, a value the forecasters saw, or test, a value their forecasts were scored on",
+    "entries.entry" => "The number of the entry in the competition; join forecasts, published_scores or submissions on entry",
+    "entries.competition" => "The id of the competition",
+    "entries.name" => "Its name in the source",
+    "entries.kind" => "submission, a team's; benchmark, the organisers'; or standard, a method set beside them for comparison",
+    "entries.method" => "Its method, as the source describes it",
+    "entries.team" => "The team of a submission",
+    "entries.affiliation" => "The affiliation of its team",
+    "entries.rank" => "Its published rank; empty for an entry not ranked",
+    "entries.forecasts" => "The forecasts published: point, or quantiles for M5 Uncertainty",
+    "published_scores.entry" => "The number of the entry; join entries on entry",
+    "published_scores.measure" => "The measure, such as sMAPE, MASE, OWA, WRMSSE, RPS or IR",
+    "published_scores.breakdown" => "What the scores are broken down by, such as frequency, domain or level",
+    "published_scores.level" => "The part of the breakdown, such as Yearly, Macro, a level of M5 or Total",
+    "published_scores.value" => "The score the organisers published",
+    "forecasts.entry" => "The number of the entry; join entries on entry",
+    "forecasts.series" => "The number of the series; join series on series",
+    "m5.forecasts.series" => "The number of the series; join series on series; empty for a quantile forecast of M5 Uncertainty",
+    "forecasts.h" => "The step ahead, from 1",
+    "forecasts.value" => "The forecast",
+    "forecasts.level" => "For a quantile forecast of M5 Uncertainty, the level of the series, 1 to 12; join weights on level, agg_level_1 and agg_level_2",
+    "forecasts.agg_level_1" => "For a quantile forecast of M5 Uncertainty, the first name of the series, as weights gives it",
+    "forecasts.agg_level_2" => "For a quantile forecast of M5 Uncertainty, the second name of the series, as weights gives it",
+    "forecasts.quantile" => "For a quantile forecast of M5 Uncertainty, its quantile",
+    "calendar.t" => "The day, from 1, as t of observations",
+    "calendar.date" => "Its date",
+    "calendar.wm_yr_wk" => "The week it falls in, by which prices are given",
+    "calendar.weekday" => "The day of the week",
+    "calendar.wday" => "The day of the week as a number, from 1 for Saturday",
+    "calendar.month" => "The month",
+    "calendar.year" => "The year",
+    "calendar.event_name_1" => "The name of an event on that day, such as a holiday",
+    "calendar.event_type_1" => "Its type, such as Sporting, Cultural, National or Religious",
+    "calendar.event_name_2" => "The name of a second event on that day",
+    "calendar.event_type_2" => "Its type",
+    "calendar.snap_CA" => "1 when purchases with SNAP food stamps were allowed in California that day",
+    "calendar.snap_TX" => "1 when purchases with SNAP food stamps were allowed in Texas that day",
+    "calendar.snap_WI" => "1 when purchases with SNAP food stamps were allowed in Wisconsin that day",
+    "hierarchy.series" => "The number of the series; join series on series",
+    "hierarchy.item" => "The item it sells",
+    "hierarchy.department" => "The department of the item",
+    "hierarchy.category" => "The category of the item",
+    "hierarchy.store" => "The store",
+    "hierarchy.state" => "The state of the store",
+    "m5.prices.series" => "The number of the series; join series on series",
+    "m5.prices.wm_yr_wk" => "The week; join calendar on wm_yr_wk",
+    "m5.prices.price" => "The price of the item in that store that week",
+    "m6.prices.symbol" => "The symbol of the asset",
+    "m6.prices.date" => "The day",
+    "m6.prices.price" => "Its adjusted close price that day",
+    "weights.level" => "The level of the series, 1 to 12",
+    "weights.agg_level_1" => "The first name of the series at its level",
+    "weights.agg_level_2" => "The second name of the series at its level",
+    "weights.dollar_sales" => "Its dollar sales over the last 28 days of the data the forecasters saw",
+    "weights.weight" => "Its weight in the measures of its level",
+    "submissions.entry" => "The number of the team; join entries on entry",
+    "submissions.submission" => "The round it submitted in: 0 for the trial run, then 1 to 12",
+    "submissions.evaluation" => "The round its submission was evaluated in: 0 for the trial run, then 1 to 12",
+    "submissions.symbol" => "The symbol of the asset; join prices on symbol",
+    "submissions.decision" => "The weight invested in the asset",
+    "submissions.rank1" => "The probability that the asset's return ranks in the lowest fifth of the 100 assets",
+    "submissions.rank2" => "The probability that it ranks in the second fifth",
+    "submissions.rank3" => "The probability that it ranks in the third fifth",
+    "submissions.rank4" => "The probability that it ranks in the fourth fifth",
+    "submissions.rank5" => "The probability that it ranks in the highest fifth",
+    "submissions.active" => "Whether the team was active, eligible for a prize",
+]
+
+"""
+The SQL that makes PollisCompetitions from the catalogue `catalogue` (`competitions_catalogue`, `nothing` when
+PollisCompetitions.jl is not installed): the table `competitions`, a row per competition of the catalogue, with its
+sizes and what of it is on this computer; and, for each competition downloaded, a schema named by its id with a view
+over each of its Parquet files and the view forecasts over those of the entries' forecasts downloaded, which read the
+files whenever they are queried. Each table, view and column with its description.
+"""
+function competitions_sql(catalogue)
+    TOML = Base.require(Base.PkgId(UUID("fa267f1f-6049-4f14-aa54-33bafae1ed76"), "TOML"))
+    entries = catalogue === nothing ? [] : Base.invokelatest(TOML.parsefile, catalogue)["competitions"]
+    quoted(x) = x === nothing ? "NULL" : x isa Bool ? string(x) : x isa Real ? string(x) : x isa AbstractVector ? "[" * join(quoted.(x), ", ") * "]" :
+        "'" * replace(string(x), "'" => "''") * "'"
+    path(id, file) = quoted(replace(joinpath(COMPETITIONS_HOME, id, file), "\\" => "/"))
+    megabytes(bytes) = round(bytes / 1e6; digits = 2)
+    statements = String["CREATE TABLE competitions (" * join(["$name $type" for (name, type, _) in COMPETITIONS_CATALOGUE], ", ") * ")"]
+    for entry in entries
+        id = entry["id"]
+        files = competition_files(id)
+        sizes = [(get(file, "role", "") == "forecasts", get(file, "bytes", 0)) for file in get(entry, "files", [])]
+        forecasts = sum(bytes for (isforecast, bytes) in sizes if isforecast; init = 0)
+        info = isempty(files) ? Dict{String, Any}() : Base.invokelatest(TOML.parsefile, joinpath(COMPETITIONS_HOME, id, "info.toml"))
+        facts = Dict{String, Any}(
+            "download_mb" => megabytes(sum(bytes for (isforecast, bytes) in sizes if !isforecast; init = 0)),
+            "forecasts_mb" => forecasts == 0 ? nothing : megabytes(forecasts),
+            "downloaded" => !isempty(files),
+            "converted" => get(info, "converted", nothing),
+            "forecasts_downloaded" => count(startswith("forecasts/"), files),
+            "size_mb" => isempty(files) ? nothing : megabytes(sum(file -> filesize(joinpath(COMPETITIONS_HOME, id, file)), files)))
+        values = [quoted(haskey(facts, name) ? facts[name] : get(entry, name, nothing)) for (name, _, _) in COMPETITIONS_CATALOGUE]
+        push!(statements, "INSERT INTO competitions VALUES (" * join(values, ", ") * ")")
+    end
+    push!(statements, "COMMENT ON TABLE competitions IS $(quoted(catalogue === nothing ?
+        "The competitions of PollisCompetitions.jl, which Compose > Forecasting Competitions installs: none yet, as it is not installed. Source: PollisCompetitions.jl. Licence: MIT" :
+        "The competitions of PollisCompetitions.jl: their years, frequencies, entries, measures, sources and licences, their sizes, and what of each is on this computer. Each competition downloaded has a schema of its own, named by its id, with a view over each of its tables. Source: PollisCompetitions.jl. Licence: MIT"))")
+    append!(statements, ["COMMENT ON COLUMN competitions.$name IS $(quoted(description))" for (name, _, description) in COMPETITIONS_CATALOGUE])
+    tables, columns = Dict(COMPETITION_TABLES), Dict(COMPETITION_COLUMNS)
+    for entry in entries
+        id = entry["id"]
+        files = competition_files(id)
+        isempty(files) && continue
+        schema = "\"" * replace(id, "\"" => "\"\"") * "\""
+        push!(statements, "CREATE SCHEMA $schema")
+        forecasts = filter(startswith("forecasts/"), files)
+        views = [(splitext(file)[1], "read_parquet($(path(id, file)))") for file in files if !startswith(file, "forecasts/")]
+        isempty(forecasts) || push!(views, ("forecasts", "read_parquet([" * join([path(id, file) for file in forecasts], ", ") * "], union_by_name = true)"))
+        licence = "Source: $(entry["source"]), converted by PollisCompetitions.jl. Licence: $(entry["licence"])"
+        for (view, reader) in views
+            push!(statements, "CREATE VIEW $schema.$view AS SELECT * FROM $reader")
+            what = get(tables, "$id.$view", get(tables, view, nothing))
+            push!(statements, "COMMENT ON VIEW $schema.$view IS $(quoted(what === nothing ? "$(entry["name"]): $view. $licence" : "$(entry["name"]): $what. $licence"))")
+        end
+    end
+    return statements
+end
+
+"""The column comments of the views of PollisCompetitions, a statement each, for the columns `con` finds in them."""
+function competitions_column_comments(con)
+    columns = Dict(COMPETITION_COLUMNS)
+    quoted(x) = "'" * replace(string(x), "'" => "''") * "'"
+    rows = loaded(DBINTERFACE).execute(con, "SELECT schema_name, table_name, column_name FROM duckdb_columns() WHERE database_name = current_database() AND schema_name <> 'main'")
+    statements = String[]
+    for row in rows
+        id, view, column = string(row.schema_name), string(row.table_name), string(row.column_name)
+        description = get(columns, "$id.$view.$column", get(columns, "$view.$column", nothing))
+        description === nothing || push!(statements, "COMMENT ON COLUMN \"$(replace(id, "\"" => "\"\""))\".$view.\"$column\" IS $(quoted(description))")
+    end
+    return statements
+end
+
+"""
+The stamp of PollisCompetitions: the installed catalogue, the SQL that makes the database from it and the competitions
+on this computer, and the descriptions of the columns. It changes when a competition, or an entry's forecasts, is
+downloaded, so that their views come in.
+"""
+function competitions_stamp()
+    catalogue = competitions_catalogue()
+    return something(catalogue, "") * "\n" * join(competitions_sql(catalogue), ";\n") * "\n" * join(("$name: $text" for (name, text) in COMPETITION_COLUMNS), "\n")
+end
+
+"""Whether `COMPETITIONS_DB` is missing, or was made from another catalogue, other competitions on this computer or other SQL."""
+function competitions_outdated(database::AbstractString = COMPETITIONS_DB)
+    stamp = database * ".stamp"
+    return !isfile(database) || !isfile(stamp) || read(stamp, String) != competitions_stamp()
+end
+
+"""
+    build_competitions(database = COMPETITIONS_DB)
+
+Make the PollisCompetitions database when it is missing or outdated (`competitions_outdated`): the catalogue of
+PollisCompetitions.jl, and a schema of views for each competition downloaded, over its files in `COMPETITIONS_HOME`.
+Run when the Julia REPL starts and after a competition, or an entry's forecasts, is downloaded. Nothing else writes
+to it. Written under a temporary name and moved into place, as `build` does.
+"""
+function build_competitions(database::AbstractString = COMPETITIONS_DB)
+    competitions_outdated(database) || return nothing
+    DuckDB = get(() -> Base.require(DUCKDB), Base.loaded_modules, DUCKDB)
+    get(() -> Base.require(DBINTERFACE), Base.loaded_modules, DBINTERFACE)
+    mkpath(dirname(database))
+    tmp = "$database.$(getpid()).tmp"
+    rm(tmp; force = true)
+    try
+        stamp = competitions_stamp()
+        Base.invokelatest() do
+            con = loaded(DBINTERFACE).connect(DuckDB.DB, tmp)
+            try
+                foreach(statement -> loaded(DBINTERFACE).execute(con, statement), competitions_sql(competitions_catalogue()))
+                foreach(statement -> loaded(DBINTERFACE).execute(con, statement), competitions_column_comments(con))
+                loaded(DBINTERFACE).execute(con, "CHECKPOINT")
+            finally
+                loaded(DBINTERFACE).close!(con)
+            end
+        end
+        mv(tmp, database; force = true)
+        write(database * ".stamp", stamp)
+    catch err
+        rm(tmp; force = true)
+        isfile(database) || rethrow()
+        @warn "Pollis: could not rebuild the PollisCompetitions database; the previous one is kept" exception = err
+    end
+    return nothing
+end
+
 """The commit at the head of the main branch of the GitHub repository `url`, or `nothing` when GitHub cannot be reached."""
 function latest_commit(url::AbstractString)
     try
@@ -2391,7 +2660,7 @@ function needs_install()
     todo = pending()
     return !isempty(todo.missing_packages) || any(d -> d.missing || d.outdated, todo.data) || todo.registry_duckdb ||
         !isfile(DATASETS_DB) || !isfile(RSS_DB) || !isfile(JOURNALS_DB) || journals_outdated() || package_data_uncopied() || references_outdated() ||
-        benchmarks_outdated()
+        benchmarks_outdated() || competitions_outdated()
 end
 
 """

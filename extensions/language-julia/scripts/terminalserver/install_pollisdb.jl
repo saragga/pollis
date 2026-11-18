@@ -3,9 +3,9 @@
 
 # Pollis: installs DuckDB (Pollis' fork, which uses the DuckDB engine of Pollis), DBInterface, Tables, the
 # PollisDatasets, PollisJournals, PollisReferences, PollisRSS, PollisBenchmarks and PollisKnowledge, keeps them up to date, copies the references of
-# PollisReferences beside those Pollis came with and the feeds of PollisRSS where Pollis reads them, and makes the five
-# built-in databases together: PollisDatasets, PollisRSS (empty until feeds are read), PollisJournals, PollisReferences
-# and PollisBenchmarks. Run by the Julia extension in a terminal of its own when the REPL reports that something is missing
+# PollisReferences beside those Pollis came with and the feeds of PollisRSS where Pollis reads them, and makes the six
+# built-in databases together: PollisDatasets, PollisRSS (empty until feeds are read), PollisJournals, PollisReferences,
+# PollisBenchmarks and PollisCompetitions (the catalogue of PollisCompetitions.jl and views over the competitions downloaded). Run by the Julia extension in a terminal of its own when the REPL reports that something is missing
 # (PollisDB.needs_install), as install_revise.jl is for Revise.
 include(joinpath(@__DIR__, "PollisDB.jl"))
 PollisDB.install()
@@ -16,3 +16,4 @@ PollisDB.build_rss()
 PollisDB.build_journals()
 PollisDB.build_references()
 PollisDB.build_benchmarks()
+PollisDB.build_competitions()

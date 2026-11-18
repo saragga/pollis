@@ -119,7 +119,7 @@ A query ends with ";"; until then, Enter starts a new line. Ctrl+C stops a runni
 ? at the start of an empty line turns the prompt into help?>, where the name of a DuckDB function shows its forms,
 its description and its examples; the prompt is duckdb> again after it, and Backspace on an empty line goes back.
 The built-in databases are attached read-only as PollisDatasets, PollisRSS, PollisJournals, PollisReferences,
-PollisBenchmarks and PollisDocuments. While the Julia REPL of this window runs, its Shared Session is attached as
+PollisBenchmarks, PollisCompetitions and PollisDocuments. While the Julia REPL of this window runs, its Shared Session is attached as
 SharedSession: SELECT * FROM SharedSession.stock_returns reads the table @share stock_returns = ... made in Julia.`;
 
 class Shell {

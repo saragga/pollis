@@ -14,7 +14,7 @@ import { ILogService } from '../../../../platform/log/common/log.js';
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { IDatabaseConnectionsService, IDatabaseSession } from '../common/databaseConnections.js';
-import { BENCHMARKS_DATABASE_ID, BUILTIN_DATABASE_ID, COMPARISONS_DATABASE_ID, DatabaseConnectionTarget, DOCUMENTS_DATABASE_ID, IDatabaseConnectionProfile, JOURNALS_DATABASE_ID, REFERENCES_DATABASE_ID, RSS_DATABASE_ID } from '../common/databaseDrivers.js';
+import { BENCHMARKS_DATABASE_ID, BUILTIN_DATABASE_ID, COMPARISONS_DATABASE_ID, COMPETITIONS_DATABASE_ID, DatabaseConnectionTarget, DOCUMENTS_DATABASE_ID, IDatabaseConnectionProfile, JOURNALS_DATABASE_ID, REFERENCES_DATABASE_ID, RSS_DATABASE_ID } from '../common/databaseDrivers.js';
 import { JULIA_POLLIS_WINDOW_KEY } from '../common/duckdbSql.js';
 
 const STORAGE_KEY = 'pollis.databases.connections';
@@ -63,6 +63,8 @@ export class DatabaseConnectionsService extends Disposable implements IDatabaseC
 		// user added, which Pollis adds to.
 		// And PollisBenchmarks: the catalogue of the benchmarks and the questions of those built in, which
 		// PollisDB.build_benchmarks copies from PollisBenchmarks.jl.
+		// And PollisCompetitions: the catalogue of PollisCompetitions.jl and views over the competitions downloaded to
+		// ~/.pollis/competitions, a schema each, which PollisDB.build_competitions makes again when one is downloaded.
 		// And PollisDocuments: the passages of Pollis' documents, which ask_index.jl of the Julia extension makes in
 		// ~/.pollis/documents when the REPL starts, and Ask Pollis searches.
 		// Of the activity of Pollis, what it records as you work: PollisRSS, and Comparisons, the runs of the Evaluate and
@@ -108,6 +110,14 @@ export class DatabaseConnectionsService extends Disposable implements IDatabaseC
 			target: 'global',
 			variable: 'benchmarks',
 			options: { path: joinPath(pollisFolder, 'databases', 'PollisBenchmarks.duckdb').fsPath, readonly: true },
+			builtin: true,
+		}, {
+			id: COMPETITIONS_DATABASE_ID,
+			name: 'PollisCompetitions',
+			driver: 'duckdb',
+			target: 'global',
+			variable: 'competitions',
+			options: { path: joinPath(pollisFolder, 'databases', 'PollisCompetitions.duckdb').fsPath, readonly: true },
 			builtin: true,
 		}, {
 			id: DOCUMENTS_DATABASE_ID,

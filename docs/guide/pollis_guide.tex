@@ -2506,6 +2506,7 @@ PollisDatasets & \texttt{pollis} & The 69 datasets of PollisDatasets, a table ea
 PollisJournals & \texttt{journals} & About 250,000 journals, conferences and book series, from OpenAlex; the Norwegian register's levels; and the journal metrics you import.\\
 PollisReferences & \texttt{references} & Every work Pollis cites, and those you save from Literature Radar (\pg{Literature Radar}) or add to a panel's \ui{Explore References}, with abstracts, keywords and dated citation counts.\\
 PollisBenchmarks & \texttt{benchmarks} & The published benchmarks of Pollis: their catalogue, with their sources, revisions and licences, and the questions of those built in.\\
+PollisCompetitions & \texttt{competitions} & The forecasting competitions of PollisCompetitions.jl: their catalogue, and the series, values, entries, published scores and forecasts of each competition downloaded (Score Forecasting Models, \pg{Score Forecasting Models}).\\
 PollisDocuments & \texttt{documents} & The passages of Pollis's documents, the panel wikis, the package vignettes and the toolbox vignettes, with their embeddings, that Ask Pollis searches (\pg{Ask Pollis}).\\
 \multicolumn{3}{@{}l}{\textbf{Pollis Activity}}\\
 PollisRSS & \texttt{rss} & Every item of the feeds you follow, kept by month; empty until feeds are read (RSS Feeds, \pg{RSS Feeds}).\\
@@ -2576,6 +2577,19 @@ questions are not in the database, by their licence or their size: a page that r
 Benchmark Answering Models runs the benchmarks of questions: MMLU-Pro, ARC-Challenge, GPQA, GSM8K, TruthfulQA, BIG-Bench Hard, IFEval, MultiPL-E Julia, PubMedQA and FinQA. ARC-Challenge and GPQA are downloaded from Hugging Face when made ready; GPQA needs your Hugging Face token, set on the page, once you have accepted its terms on its Hugging Face page.
 Benchmark Embedding and Reranking Models runs the retrieval benchmarks, SciFact and SCIDOCS. A published set says how a model does
 in general, not on Pollis's documents, so choosing the model for Ask Pollis stays on the Evaluate pages.
+
+\subhead{PollisCompetitions}
+\begin{center}\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.2\linewidth}X@{}}
+\texttt{competitions} & One row per competition of PollisCompetitions.jl: its year, frequencies, number of entries, measures, source, revision and licence, the papers that describe it, the size of its download and of its entries' forecasts, and whether it is on this computer, when it was converted, how many entries' forecasts are downloaded and its size on disk.\\
+\texttt{m1}, \texttt{m3}, \texttt{m4}, \texttt{m5}, \texttt{m6} & A schema for each competition downloaded, with a view over each of its tables: \texttt{series} and \texttt{observations}, the values the forecasters saw (split \texttt{train}) and those they were scored on (split \texttt{test}); \texttt{entries} and \texttt{published\_scores}; \texttt{forecasts}, the forecasts of the entries downloaded; and the tables of its own, such as \texttt{calendar}, \texttt{prices}, \texttt{hierarchy} and \texttt{weights} of M5, or \texttt{prices} and \texttt{submissions} of M6. Query them as \texttt{m4.series}.\\
+\end{tabularx}
+\end{center}
+The competitions are downloaded by the pages of Compose > Forecasting Competitions, from their sources, into
+\texttt{\textasciitilde/.pollis/competitions}; the views read those files, so the database itself is small. A
+competition not downloaded yet is listed in \texttt{competitions} with the size of its download, and its schema comes in
+once it is downloaded: Pollis makes the database again after each download, and when the Julia REPL starts.
 
 \subhead{Comparisons}
 \begin{center}\small

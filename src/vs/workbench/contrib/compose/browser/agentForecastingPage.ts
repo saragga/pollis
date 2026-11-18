@@ -213,6 +213,7 @@ import PollisCompetitions as PC, Random
 let study = raw"${study.folder.fsPath}", id = "${study.competition}", frequency = "${study.frequency}", sample = ${study.sample}, seed = ${study.seed}
 	isfile(joinpath(PC.HOME, id, "info.toml")) || PC.download(id)
 	id == "m4" && PC.download_forecasts("m4"; entries = ["Naive2"])
+	isdefined(Main, :PollisDB) && Base.invokelatest(Main.PollisDB.build_competitions)
 	known = PC.series(id; frequency)
 	numbers = collect(known.series)
 	whole = sample <= 0 || sample >= length(numbers)
