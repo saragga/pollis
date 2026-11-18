@@ -547,22 +547,28 @@ function mapHtml(webview: vscode.Webview, payload: string) {
                     if (!layer.column) {
                         return { ...layer, name, colour: fixed, legend: '<span class="pollis-map-swatch" style="background:' + fixed + '"></span>' + escape(name) };
                     }
+                    const heading = name === layer.column ? name : name + ': ' + layer.column;
                     const values = features.map(f => f.properties && f.properties[layer.column]).filter(v => v !== null && v !== undefined);
                     if (values.length && values.every(v => typeof v === 'number')) {
                         const low = Math.min(...values), high = Math.max(...values);
-                        const colour = low === high ? ramp[2] : ['interpolate', ['linear'], ['to-number', ['get', layer.column]],
-                            ...ramp.flatMap((c, i) => [low + (high - low) * i / (ramp.length - 1), c])];
+                        // a feature without a number in the column is grey, not the colour of 0
+                        const colour = ['case', ['==', ['typeof', ['get', layer.column]], 'number'],
+                            low === high ? ramp[2] : ['interpolate', ['linear'], ['get', layer.column], ...ramp.flatMap((c, i) => [low + (high - low) * i / (ramp.length - 1), c])],
+                            '#999999'];
                         const format = v => Number(v.toPrecision(4)).toLocaleString();
-                        return { ...layer, name, colour, legend: '<div class="pollis-map-legend-layer">' + escape(name + ': ' + layer.column) + '</div>'
+                        return { ...layer, name, colour, legend: '<div class="pollis-map-legend-layer">' + escape(heading) + '</div>'
                             + '<div class="pollis-map-ramp" style="background:linear-gradient(to right,' + ramp.join(',') + ')"></div>'
                             + '<div class="pollis-map-range"><span>' + format(low) + '</span><span>' + format(high) + '</span></div>' };
                     }
-                    const categories = [...new Set(values.map(String))];
+                    // the most common values first: the first ten get a colour each, the rest one grey
+                    const counts = new Map();
+                    values.forEach(v => counts.set(String(v), (counts.get(String(v)) || 0) + 1));
+                    const categories = [...counts.keys()].sort((a, b) => counts.get(b) - counts.get(a));
                     const shown = categories.slice(0, palette.length);
                     const colour = shown.length ? ['match', ['to-string', ['get', layer.column]], ...shown.flatMap((c, i) => [c, palette[i]]), '#999999'] : '#999999';
                     const items = shown.map((c, i) => '<div><span class="pollis-map-swatch" style="background:' + palette[i] + '"></span>' + escape(c) + '</div>').join('')
                         + (categories.length > shown.length ? '<div><span class="pollis-map-swatch" style="background:#999999"></span>' + (categories.length - shown.length) + ' more</div>' : '');
-                    return { ...layer, name, colour, legend: '<div class="pollis-map-legend-layer">' + escape(name + ': ' + layer.column) + '</div>' + items };
+                    return { ...layer, name, colour, legend: '<div class="pollis-map-legend-layer">' + escape(heading) + '</div>' + items };
                 });
                 const map = new maplibregl.Map({
                     container: 'plot-element',
