@@ -462,6 +462,8 @@ export function tomlToPanelData(data: TomlValue): IScaffoldPanelData {
 		['inputs', data.inputs],
 		// [[faq]]: the hidden questions are for the Panel FAQ test set only, never in the panel's data
 		['faq', panelFaq(data).filter(entry => !entry.hidden).map(({ question, answer, wiki }) => ({ question, answer, ...(wiki ? { wiki } : {}) }))],
+		// [[collections]]: the curated collections of a page that lists datasets
+		['collections', data.collections],
 	];
 	for (const [key, value] of optional) {
 		if (Array.isArray(value) ? value.length : value) {

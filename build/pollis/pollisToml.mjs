@@ -22,7 +22,9 @@ function navigatePath(root           , dotPath        )                         
 		if (!Object.hasOwn(current, part)) {
 			current[part] = {};
 		}
-		current = current[part]             ;
+		// A table under an array of tables, such as [a.b] after [[a]], belongs to the array's last element
+		const next = current[part];
+		current = (Array.isArray(next) && next.length ? next[next.length - 1] : next)             ;
 	}
 	return { parent: current, key: parts[parts.length - 1] };
 }
@@ -459,6 +461,8 @@ export function tomlToPanelData(data           )                     {
 		['inputs', data.inputs],
 		// [[faq]]: the hidden questions are for the Panel FAQ test set only, never in the panel's data
 		['faq', panelFaq(data).filter(entry => !entry.hidden).map(({ question, answer, wiki }) => ({ question, answer, ...(wiki ? { wiki } : {}) }))],
+		// [[collections]]: the curated collections of a page that lists datasets
+		['collections', data.collections],
 	];
 	for (const [key, value] of optional) {
 		if (Array.isArray(value) ? value.length : value) {

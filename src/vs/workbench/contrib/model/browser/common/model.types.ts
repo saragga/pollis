@@ -250,6 +250,23 @@ export interface IModelFaq {
 	readonly explanation?: string;
 }
 
+/**
+ * A curated collection of a `[[collections]]` table: a benchmark or archive that holds datasets of the Dataset Catalog
+ * of PollisCompetitions.jl, or where they are listed.
+ */
+export interface IModelCollection {
+	readonly id: string;
+	readonly name: string;
+	/** The year it was first published. */
+	readonly year?: number;
+	readonly url: string;
+	readonly description: string;
+	/** The dataset_id of each of its datasets in the Dataset Catalog. */
+	readonly datasets?: readonly string[];
+	/** Its papers, keys of PollisReferences. */
+	readonly papers?: readonly string[];
+}
+
 /** The declarative content of a panel built on the shared scaffold (generated from its TOML). */
 export interface IScaffoldPanelData {
 	readonly packages: IModelPackage[];
@@ -268,4 +285,6 @@ export interface IScaffoldPanelData {
 	readonly inputs?: IModelInput[];
 	/** The questions of its FAQ shown in Learn More, the hidden ones left out. */
 	readonly faq?: IModelFaq[];
+	/** Its curated collections, for a page that lists datasets. */
+	readonly collections?: IModelCollection[];
 }
