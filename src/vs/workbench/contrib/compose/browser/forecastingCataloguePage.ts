@@ -39,7 +39,7 @@ import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWork
 import { compareCss } from './compareShared.js';
 import { IToolboxPanelsService } from '../common/toolboxPanels.js';
 import { CatalogueValue, FORECASTING_CATALOGUE_FILE, ICatalogueContribution, ICatalogueEntry, ICatalogueRead, POLLIS_COMPETITIONS_DATASETS_PATH, POLLIS_COMPETITIONS_SOURCE, readForecastingCatalogue } from './forecastingCatalogue.js';
-import { juliaPackageFolder } from './juliaPackages.js';
+import { juliaPackageFolder, projectVersion } from './juliaPackages.js';
 import { competitionDataFolder, COMPETITIONS, FORECASTING_COMPETITIONS_COMMAND_ID, ICompetition } from './forecastingCompetitionsPage.js';
 import { activeDatasets, FORECASTING_CATALOGUE_COMMAND_ID, IActiveDatasets, setActiveDatasets } from './forecastingActive.js';
 import { addedDatasetFiles, forecastingFolder, IAddedDataset, readAddedDataset, recordSaved, savedStatuses, saveDataset, WORKSPACE_SOURCE, writeAddedDataset, writeCatalogueSnapshot } from './forecastingWorkspace.js';
@@ -163,10 +163,15 @@ async function readContributions(fileService: IFileService, toolboxPanelsService
 	if (!folder) {
 		problems.push(localize('forecastingCatalogue.noPackage', "PollisCompetitions.jl is not on this computer: its datasets are listed once it is installed, with Pkg.add(\"PollisCompetitions\") in the Julia REPL."));
 	} else {
-		try {
-			contributions.push({ source: POLLIS_COMPETITIONS_SOURCE, content: await read(joinPath(folder, POLLIS_COMPETITIONS_DATASETS_PATH)) });
-		} catch (error) {
-			problems.push(`${POLLIS_COMPETITIONS_SOURCE}: ${POLLIS_COMPETITIONS_DATASETS_PATH} could not be read: ${toErrorMessage(error)}`);
+		const file = joinPath(folder, POLLIS_COMPETITIONS_DATASETS_PATH);
+		if (!await fileService.exists(file)) {
+			problems.push(localize('forecastingCatalogue.oldPackage', "The PollisCompetitions.jl on this computer, version {0}, has no {1}: its datasets are listed once it is updated, with Pkg.update(\"PollisCompetitions\") in the Julia REPL.", await projectVersion(fileService, folder), POLLIS_COMPETITIONS_DATASETS_PATH));
+		} else {
+			try {
+				contributions.push({ source: POLLIS_COMPETITIONS_SOURCE, content: await read(file) });
+			} catch (error) {
+				problems.push(`${POLLIS_COMPETITIONS_SOURCE}: ${POLLIS_COMPETITIONS_DATASETS_PATH} could not be read: ${toErrorMessage(error)}`);
+			}
 		}
 	}
 	for (const toolbox of toolboxPanelsService.getToolboxes()) {
@@ -689,6 +694,7 @@ function pageHtml(rows: number): string {
 		removeFilter: localize('forecastingCatalogue.removeFilter', "Remove this filter"),
 		openCompetition: localize('forecastingCatalogue.openCompetition', "Open in Score Models"),
 		noMatch: localize('forecastingCatalogue.noMatch', "No dataset matches the filters."),
+		noDatasets: localize('forecastingCatalogue.noDatasets', "The catalogue has no datasets: the problems above say why."),
 		problems: localize('forecastingCatalogue.problems', "The catalogue has problems, shown here as they are found; its datasets are shown all the same:"),
 		unreadable: localize('forecastingCatalogue.unreadable', "The catalogue could not be read: {0}"),
 		previous: localize('forecastingCatalogue.previous', "Previous"),
@@ -1347,7 +1353,7 @@ ${sortHeadingsCss}
 		document.getElementById('table').hidden = !shown.length;
 		const note = document.getElementById('note');
 		note.hidden = !!shown.length;
-		note.textContent = TEXT.noMatch;
+		note.textContent = catalogue.entries.length ? TEXT.noMatch : TEXT.noDatasets;
 	}
 
 	// The row of Score Active Datasets: the button, and how many datasets are active
