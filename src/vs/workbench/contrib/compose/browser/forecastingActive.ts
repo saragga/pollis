@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 // The active datasets: those the user ticks in the column Active of Manage Competition Datasets
-// (forecastingCataloguePage.ts), which Score Forecasting Models (forecastingCompetitionsPage.ts) lists in its step 1.
+// (forecastingCataloguePage.ts), which Score Models (forecastingCompetitionsPage.ts) lists in its step 1.
 
 import { DisposableStore, IDisposable } from '../../../../base/common/lifecycle.js';
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
@@ -14,7 +14,7 @@ export const FORECASTING_CATALOGUE_COMMAND_ID = 'pollis.competitions.forecasting
 
 const ACTIVE_KEY = 'pollis.manageCompetitionDatasets.active';
 
-/** The active datasets: the ids of their entries in the catalogue, and of those that Score Forecasting Models scores, the ids it knows them by. */
+/** The active datasets: the ids of their entries in the catalogue, and of those that Score Models scores, the ids it knows them by. */
 export interface IActiveDatasets {
 	readonly entries: readonly string[];
 	readonly scored: readonly string[];
@@ -29,7 +29,7 @@ export function activeDatasets(storageService: IStorageService): IActiveDatasets
 	try {
 		const stored: unknown = JSON.parse(storageService.get(ACTIVE_KEY, StorageScope.PROFILE, '[]'));
 		if (Array.isArray(stored)) {
-			// As stored before the ids that Score Forecasting Models knows were kept beside the entries': mostly the same
+			// As stored before the ids that Score Models knows were kept beside the entries': mostly the same
 			return { entries: strings(stored), scored: strings(stored) };
 		}
 		const { entries, scored } = typeof stored === 'object' && stored !== null ? stored as { entries?: unknown; scored?: unknown } : {};

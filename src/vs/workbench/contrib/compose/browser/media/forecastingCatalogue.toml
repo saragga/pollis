@@ -22,7 +22,7 @@
 #   * package  = which Pollis package downloads the entry; delivery = how the data reaches the user;
 #     status   = planned | implemented (update when a helper or bundle is done).
 #   * package_id = the entry's id in its package's own catalogue, which holds the files, their URLs and SHA-256;
-#     an implemented entry of PollisCompetitions has the id of a competition of Score Forecasting Models.
+#     an implemented entry of PollisCompetitions has the id of a competition of Score Models.
 #   * collections = the ids of the curated collections (entries of type benchmark_suite) that hold the entry; the page
 #     shows the collections in its tab Curated Collections and the other entries in its tab Datasets.
 #   * source = who contributes the entry, which the page sets: an entry's file does not give it.

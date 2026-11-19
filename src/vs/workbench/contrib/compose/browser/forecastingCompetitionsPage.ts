@@ -42,7 +42,7 @@ import { compareCss } from './compareShared.js';
 import { activeDatasets, FORECASTING_CATALOGUE_COMMAND_ID, onDidChangeActiveDatasets } from './forecastingActive.js';
 import { addedDatasetFiles, forecastingFolder, readAddedDataset } from './forecastingWorkspace.js';
 
-// Score Forecasting Models, from Compose > Prediction Competitions > Score Forecasting Models (compose.contribution.ts): a forecasting method of the user's
+// Score Models, from Compose > Prediction Competitions > Score Models (compose.contribution.ts): a forecasting method of the user's
 // own, run on the series of a competition of PollisCompetitions.jl, scored as the competition's organisers scored the
 // entries, and ranked among them. A page of the scaffold in the Time Arrow style, in four steps: 1, Competition (M1,
 // M3, M4 or M5, a frequency, a sample, and Download when it is not on this computer); 2, Your Method, a Julia function
@@ -230,7 +230,7 @@ function checkedInputs(value: unknown, known: readonly ICompetition[]): (Omit<IR
 /** run.toml of a run of one dataset: the choices of step 1. */
 function runToml(choices: IRunChoices, started: string): string {
 	return [
-		'# A run of Compose > Prediction Competitions > Score Forecasting Models: the method of method.jl on these series',
+		'# A run of Compose > Prediction Competitions > Score Models: the method of method.jl on these series',
 		`competition = "${choices.competition}"`,
 		...(choices.folder ? [`folder = ${JSON.stringify(choices.folder)}`] : []),
 		`frequency = "${choices.frequency}"`,
@@ -244,7 +244,7 @@ function runToml(choices: IRunChoices, started: string): string {
 /** run.toml of a run of several datasets: the datasets, each run in the subfolder named by its id, with one sample size and seed. */
 function batchToml(choices: IBatchChoices): string {
 	return [
-		'# A run of Compose > Prediction Competitions > Score Forecasting Models on several datasets in turn: the method of',
+		'# A run of Compose > Prediction Competitions > Score Models on several datasets in turn: the method of',
 		'# method.jl on each, in the subfolder named by its id, a run of its own',
 		`datasets = [${choices.datasets.map(id => JSON.stringify(id)).join(', ')}]`,
 		`sample = ${choices.sample}`,
@@ -294,7 +294,7 @@ function briefResults(results: unknown): object | undefined {
 
 /** run.jl of a run of several datasets: the run.jl of each, in turn. */
 function batchScript(folder: URI, datasets: readonly string[]): string {
-	return String.raw`# Score Forecasting Models: the method of method.jl on each dataset of run.toml in turn, each a run of its own in the
+	return String.raw`# Score Models: the method of method.jl on each dataset of run.toml in turn, each a run of its own in the
 # subfolder named by its id, which writes its progress.json, forecasts.csv and results.json there
 for dataset in [${datasets.map(id => JSON.stringify(id)).join(', ')}]
 	println("Scoring ", dataset)
@@ -317,7 +317,7 @@ async function readJson(fileService: IFileService, file: URI): Promise<unknown> 
  * so that the competition's views come in.
  */
 export function downloadCode(competition: string): string {
-	return `# Score Forecasting Models: download ${competition} from its source, each file checked against its SHA-256
+	return `# Score Models: download ${competition} from its source, each file checked against its SHA-256
 import Pkg
 Base.find_package("PollisCompetitions") === nothing && Pkg.add("PollisCompetitions")
 import PollisCompetitions as PC
@@ -417,7 +417,7 @@ const JULIA_NEXT = String.raw`	settings = TOML.parsefile(joinpath(run, "${RUN_FI
 
 /** The start of the Next Steps script `step` of the run in `folder`, up to the `try` of its own code. */
 function nextStepStart(step: NextStep, folder: URI, comment: string): string {
-	return String.raw`# Score Forecasting Models > Next Steps: ${comment}; writes ${step}.json
+	return String.raw`# Score Models > Next Steps: ${comment}; writes ${step}.json
 import Pkg
 Base.find_package("PollisCompetitions") === nothing && Pkg.add("PollisCompetitions")
 import PollisCompetitions as PC, TOML
@@ -624,7 +624,7 @@ function nextStepScript(step: NextStep, folder: URI, request: INextStepRequest):
  * a team's ranks by RPS and by IR, recomputed with the method among them; then writes results.json.
  */
 function m6RunScript(folder: URI): string {
-	return String.raw`# Score Forecasting Models: the method of method.jl on the 12 rounds of M6, scored as its organisers scored the
+	return String.raw`# Score Models: the method of method.jl on the 12 rounds of M6, scored as its organisers scored the
 # teams; progress.json while it runs, then forecasts.csv and results.json
 import Pkg
 Base.find_package("PollisCompetitions") === nothing && Pkg.add("PollisCompetitions")
@@ -729,7 +729,7 @@ end`;
  * whole competition or of a whole frequency of M4, or of M5; then writes results.json, which step 4 draws.
  */
 function runScript(folder: URI): string {
-	return String.raw`# Score Forecasting Models: the method of method.jl on the series of run.toml, scored as the competition's
+	return String.raw`# Score Models: the method of method.jl on the series of run.toml, scored as the competition's
 # organisers scored the entries; progress.json while it runs, then forecasts.csv and results.json
 import Pkg
 Base.find_package("PollisCompetitions") === nothing && Pkg.add("PollisCompetitions")
@@ -837,7 +837,7 @@ ${JULIA_WINNER}
 end`;
 }
 
-/** Opens the Score Forecasting Models page, or shows it when it is open. */
+/** Opens the Score Models page, or shows it when it is open. */
 async function openForecastingCompetitionsPage(accessor: ServicesAccessor): Promise<void> {
 	const webviewWorkbenchService = accessor.get(IWebviewWorkbenchService);
 	const fileService = accessor.get(IFileService);
@@ -858,7 +858,7 @@ async function openForecastingCompetitionsPage(accessor: ServicesAccessor): Prom
 		webviewWorkbenchService.revealWebview(openPage, openPage.group ?? -1, false);
 		return;
 	}
-	const title = localize('competitions.title', "Score Forecasting Models");
+	const title = localize('competitions.title', "Score Models");
 	const webviewInput = webviewWorkbenchService.openWebview(
 		{
 			title,
@@ -1145,11 +1145,11 @@ async function openForecastingCompetitionsPage(accessor: ServicesAccessor): Prom
 
 function pageHtml(): string {
 	const text = {
-		intro: localize('competitions.intro', "Score Forecasting Models runs a forecasting method of your own on the series of a competition, M1, M3, M4, M5 Accuracy or M6, scores its forecasts with the competition's own measures, as its organisers scored the entries, and shows where it would have finished among them. The series come with the split the forecasters had: the values they saw, and the values their forecasts were scored on; in M6, the prices of its 100 assets up to each round. Your method is scored the same way on the datasets you add in Manage Competition Datasets, beside Naive2, and on several datasets in one run, each in turn, its scores on them side by side."),
+		intro: localize('competitions.intro', "Score Models runs a forecasting method of your own on the series of a competition, M1, M3, M4, M5 Accuracy or M6, scores its forecasts with the competition's own measures, as its organisers scored the entries, and shows where it would have finished among them. The series come with the split the forecasters had: the values they saw, and the values their forecasts were scored on; in M6, the prices of its 100 assets up to each round. Your method is scored the same way on the datasets you add in Manage Competition Datasets, beside Naive2, and on several datasets in one run, each in turn, its scores on them side by side."),
 		datasetsStep: localize('competitions.datasetsStep', "Datasets"),
 		dataset: localize('competitions.dataset', "Dataset"),
-		severalHint: localize('competitions.severalHint', "The datasets active in Manage Competition Datasets on which Score Forecasting Models can score models. A run scores your method on each in turn, with the same sample size and seed; a frequency is chosen only when there is one dataset. To use other datasets, tick them in the column Active of Manage Competition Datasets."),
-		noneActive: localize('competitions.noneActive', "None of the active datasets is one on which Score Forecasting Models can score models. Tick the datasets to use in the column Active of Manage Competition Datasets, where the column Model Scoring says which are Ready: the competitions M1, M3, M4, M5 Accuracy and M6, and the datasets you add there."),
+		severalHint: localize('competitions.severalHint', "The datasets active in Manage Competition Datasets on which Score Models can score models. A run scores your method on each in turn, with the same sample size and seed; a frequency is chosen only when there is one dataset. To use other datasets, tick them in the column Active of Manage Competition Datasets."),
+		noneActive: localize('competitions.noneActive', "None of the active datasets is one on which Score Models can score models. Tick the datasets to use in the column Active of Manage Competition Datasets, where the column Model Scoring says which are Ready: the competitions M1, M3, M4, M5 Accuracy and M6, and the datasets you add there."),
 		manage: localize('competitions.manage', "Open Manage Competition Datasets"),
 		m6Apart: localize('competitions.m6Apart', "A run of its own, after the others: the method of M6 is decide(prices, date), which your method defines beside forecast(y, h, period)."),
 		runningAfter: localize('competitions.runningAfter', "Sent to the Julia REPL. M6 runs after it, as a run of its own: {0}, in Earlier runs."),
@@ -1304,7 +1304,7 @@ function pageHtml(): string {
 		},
 	};
 	return buildWebviewHtml({
-		title: localize('competitions.title', "Score Forecasting Models"),
+		title: localize('competitions.title', "Score Models"),
 		introHtml: text.intro,
 		omitPoweredBy: !FORECASTINGCOMPETITIONS_METADATA.forecastingCompetitions.packages.length,
 		extraCss: `
@@ -2161,7 +2161,7 @@ function pageHtml(): string {
 
 registerAction2(class extends Action2 {
 	constructor() {
-		super({ id: FORECASTING_COMPETITIONS_COMMAND_ID, title: localize2('competitions.action', "Score Forecasting Models..."), category: localize2('competitions.category', "Competitions"), f1: true });
+		super({ id: FORECASTING_COMPETITIONS_COMMAND_ID, title: localize2('competitions.action', "Score Models..."), category: localize2('competitions.category', "Competitions"), f1: true });
 	}
 	run(accessor: ServicesAccessor): Promise<void> {
 		return openForecastingCompetitionsPage(accessor);

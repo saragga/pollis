@@ -103,7 +103,7 @@ const PdfFilesMenu = new MenuId('menubarPdfFilesMenu');
 
 // ------------------- COMPOSE ------------------------
 
-// The Compose menu: Coding Agents and Agent Skills (codingAgentPage.ts, pollisAgents.ts), MCP Servers (mcpServersPage.ts), Orchestration, Local AI Models, Knowledge for AI Models, New Panels and Package a Toolbox, Literature (Discover Literature, Import References, Browse References), Article Replication, with the article methods, Prediction Competitions (Manage Competition Datasets, Score Forecasting Models), Workflows, Reports, PDF Files,
+// The Compose menu: Coding Agents and Agent Skills (codingAgentPage.ts, pollisAgents.ts), MCP Servers (mcpServersPage.ts), Orchestration, Local AI Models, Knowledge for AI Models, New Panels and Package a Toolbox, Literature (Discover Literature, Import References, Browse References), Article Replication, with the article methods, Prediction Competitions (Manage Competition Datasets, Score Models), Workflows, Reports, PDF Files,
 // Correctness Tests, Horse Races, Compile Galore and Collaboration, which combine panels. The Toolbox Panels page (toolboxPanelsPage.ts) opens from
 // the Edit button of an installed toolbox in the Extensions pane.
 MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
@@ -236,7 +236,7 @@ MenuRegistry.appendMenuItem(ForecastingCompetitionsMenu, {
 // the entries and ranked among them (forecastingCompetitionsPage.ts)
 MenuRegistry.appendMenuItem(ForecastingCompetitionsMenu, {
 	group: '1_competitions',
-	command: { id: FORECASTING_COMPETITIONS_COMMAND_ID, title: localize('competitions.scoreModels', "Score Forecasting Models...") },
+	command: { id: FORECASTING_COMPETITIONS_COMMAND_ID, title: localize('competitions.scoreModels', "Score Models...") },
 	order: 2,
 });
 

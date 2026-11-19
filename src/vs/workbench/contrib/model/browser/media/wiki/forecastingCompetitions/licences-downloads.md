@@ -1,6 +1,6 @@
 # Licences and Downloads
 
-The page Score Forecasting Models downloads each competition from its own source, with PollisCompetitions.jl, onto the user's computer. Pollis ships none of their data.
+The page Score Models downloads each competition from its own source, with PollisCompetitions.jl, onto the user's computer. Pollis ships none of their data.
 
 ## Where Do the Data of Each Competition Come From?
 

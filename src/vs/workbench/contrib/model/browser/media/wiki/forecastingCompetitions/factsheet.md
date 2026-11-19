@@ -1,6 +1,6 @@
-# Score Forecasting Models: Factsheet
+# Score Models: Factsheet
 
-The competitions of the page Score Forecasting Models, the files of a run, and what the page needs, at a glance.
+The competitions of the page Score Models, the files of a run, and what the page needs, at a glance.
 
 ## Which Series and Horizons Do the Competitions Have?
 
@@ -14,7 +14,7 @@ The competitions of the page Score Forecasting Models, the files of a run, and w
 
 The horizon is the number of steps a forecast of a series of that frequency gives. M5's 30,490 series add up into 42,840 series over 12 levels, on which the WRMSSE is computed. M6 has assets in place of series: at each round, a method gives the probabilities and the weight of each of its 100 assets.
 
-## What Files Does a Run of Score Forecasting Models Write?
+## What Files Does a Run of Score Models Write?
 
 | File | Written by | Holds |
 |---|---|---|
@@ -27,7 +27,7 @@ The horizon is the number of steps a forecast of a series of that frequency give
 
 Each run has its own folder in `~/.pollis/competitions/runs`.
 
-## When Is a Run of Score Forecasting Models Ranked?
+## When Is a Run of Score Models Ranked?
 
 | Competition | Series run | Benchmarks beside the method | Place among the entries |
 |---|---|---|---|
@@ -38,7 +38,7 @@ Each run has its own folder in `~/.pollis/competitions/runs`.
 | M6 | All 12 rounds (always) | Published scores of M6 Dummy | Yes, by OR, recomputed with the method among the teams |
 | A dataset you added | All or a sample | Naive2, computed on the same series | No |
 
-## What Does Score Forecasting Models Need?
+## What Does Score Models Need?
 
 | Need | What |
 |---|---|

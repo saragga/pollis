@@ -22,7 +22,7 @@ The data of a competition held on Kaggle are given under the rules of that compe
 
 ## What Do Planned and Implemented Mean?
 
-Status `planned` means that the entry is listed in a package's plans, with its Delivery chosen, but the package cannot get its data yet. Status `implemented` means that the package's catalogue has the entry, with its files, and fetches them; an implemented entry names its id in that catalogue in Package Id. The implemented competitions of PollisCompetitions.jl are those that Score Forecasting Models runs, and their details offer **Open in Score Forecasting Models**.
+Status `planned` means that the entry is listed in a package's plans, with its Delivery chosen, but the package cannot get its data yet. Status `implemented` means that the package's catalogue has the entry, with its files, and fetches them; an implemented entry names its id in that catalogue in Package Id. The implemented competitions of PollisCompetitions.jl are those that Score Models runs, and their details offer **Open in Score Models**.
 
 ## What Does To Check Mean in an Entry?
 

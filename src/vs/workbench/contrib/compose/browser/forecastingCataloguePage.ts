@@ -50,7 +50,7 @@ import { IForecastingDatasetsService, IForecastingProblem } from '../common/fore
 // the controlled fields, one field at a time in Filter by, and by a tag clicked in a cell, and sorted by any column; the
 // Expand button of a row opens under it the details of its entry, every field it has, group by group, its papers from
 // the References of the page and the facts still to check. Any dataset can be made active (forecastingActive.ts);
-// Score Forecasting Models lists the active ones it scores. The datasets Pollis downloads can be saved into the user's
+// Score Models lists the active ones it scores. The datasets Pollis downloads can be saved into the user's
 // Pollis Workspace, in data/forecasting/<id>/, downloaded first in the Julia REPL when they are not on this computer,
 // and the column Workspace says whether each is saved there, and changed since (forecastingWorkspace.ts); beside them the page writes the whole catalogue, for Julia. A
 // dataset of the user's own, a long table, is added there with a form, converted into the files of
@@ -121,18 +121,18 @@ function problemText(problem: IForecastingProblem, horizon: number): string {
 /** The open page, so a second request shows the same page. */
 let openPage: WebviewInput | undefined;
 
-/** The ids of the competitions that Score Forecasting Models runs, which an implemented entry may name. */
+/** The ids of the competitions that Score Models runs, which an implemented entry may name. */
 function competitionIds(): string[] {
 	return COMPETITIONS.map(competition => competition.id);
 }
 
-/** What the column Model Scoring says of a competition of Score Forecasting Models: how models are scored on it. */
+/** What the column Model Scoring says of a competition of Score Models: how models are scored on it. */
 function modelScoringHint(competition: ICompetition): string {
 	if (competition.method === 'decide') {
-		return localize('forecastingCatalogue.scoringDecide', "Score Forecasting Models scores models on it as its teams were scored: {0}, each round decided from the prices up to its start, by {1}.", competition.summary ?? '', competition.measures);
+		return localize('forecastingCatalogue.scoringDecide', "Score Models scores models on it as its teams were scored: {0}, each round decided from the prices up to its start, by {1}.", competition.summary ?? '', competition.measures);
 	}
 	const horizons = competition.frequencies.map(frequency => localize('forecastingCatalogue.scoringHorizon', "{0} {1}", frequency.name, frequency.horizon)).join(', ');
-	return localize('forecastingCatalogue.scoringSeries', "Score Forecasting Models scores models on it as its entries were scored: the last values of each series are held out from the forecasters, as many as the horizon of its frequency ({0}), and the forecasts are scored on them by {1}.", horizons, competition.measures);
+	return localize('forecastingCatalogue.scoringSeries', "Score Models scores models on it as its entries were scored: the last values of each series are held out from the forecasters, as many as the horizon of its frequency ({0}), and the forecasts are scored on them by {1}.", horizons, competition.measures);
 }
 
 /** The papers of the page's References, by their keys in PollisReferences. */
@@ -141,18 +141,18 @@ function pagePapers(): Map<string, IModelPaper> {
 	return new Map(papers.map(paper => [paper.key!, paper]));
 }
 
-/** The competition of Score Forecasting Models that an entry is, when it is an implemented entry of PollisCompetitions. */
+/** The competition of Score Models that an entry is, when it is an implemented entry of PollisCompetitions. */
 function competitionOf(entry: ICatalogueEntry | undefined): string | undefined {
 	const competition = entry?.package === 'PollisCompetitions' && entry.status === 'implemented' ? entry.package_id : undefined;
 	return typeof competition === 'string' && competitionIds().includes(competition) ? competition : undefined;
 }
 
-/** The id by which Score Forecasting Models knows an entry: its competition, or, for a dataset the user added, its id. */
+/** The id by which Score Models knows an entry: its competition, or, for a dataset the user added, its id. */
 function scoredAs(entry: ICatalogueEntry | undefined): string | undefined {
 	return entry?.source === WORKSPACE_SOURCE ? entry.id : competitionOf(entry);
 }
 
-/** The active datasets of `entries`: their ids, and the ids Score Forecasting Models knows those it scores by. */
+/** The active datasets of `entries`: their ids, and the ids Score Models knows those it scores by. */
 function activeOf(entries: readonly ICatalogueEntry[]): IActiveDatasets {
 	return { entries: entries.map(entry => entry.id), scored: entries.map(scoredAs).filter((id): id is string => !!id) };
 }
@@ -182,7 +182,7 @@ async function readContributions(fileService: IFileService, pathService: IPathSe
 	return contributions;
 }
 
-/** Reads the schema Pollis ships and the contributors' entries, checked against the competitions of Score Forecasting Models and the References of the page. */
+/** Reads the schema Pollis ships and the contributors' entries, checked against the competitions of Score Models and the References of the page. */
 async function readCatalogue(fileService: IFileService, pathService: IPathService, toolboxPanelsService: IToolboxPanelsService, added: URI | undefined): Promise<ICatalogueRead> {
 	const schema = (await fileService.readFile(FileAccess.asFileUri(FORECASTING_CATALOGUE_FILE))).value.toString();
 	const unread: string[] = [];
@@ -302,7 +302,7 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?
 			...competitions.map(competition => joinPath(competitionsFolder, competition)),
 			...(folder ? [folder, ...Object.keys(saved).map(id => joinPath(folder, id))] : []),
 		]);
-		// The active datasets of the catalogue as it is now, the ids that Score Forecasting Models knows them by kept with them
+		// The active datasets of the catalogue as it is now, the ids that Score Models knows them by kept with them
 		const stored = activeDatasets(storageService);
 		const active = activeOf(read.catalogue.entries.filter(entry => stored.entries.includes(entry.id)));
 		if (JSON.stringify(active) !== JSON.stringify(stored)) {
@@ -555,8 +555,8 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?
 			} else if (message.command === 'link' && hasKey(message, { url: true }) && typeof message.url === 'string' && /^https?:\/\//.test(message.url)) {
 				await openInBrowser(message.url, commandService);
 			} else if (message.command === 'competition' && hasKey(message, { id: true })) {
-				// An implemented entry of PollisCompetitions, whose package_id is a competition of Score Forecasting Models, or a
-				// dataset the user added: made active, so that Score Forecasting Models lists it
+				// An implemented entry of PollisCompetitions, whose package_id is a competition of Score Models, or a
+				// dataset the user added: made active, so that Score Models lists it
 				const entry = read?.catalogue.entries.find(candidate => candidate.id === message.id);
 				if (entry && scoredAs(entry)) {
 					const entries = activeDatasets(storageService).entries;
@@ -567,18 +567,18 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?
 					await commandService.executeCommand(FORECASTING_COMPETITIONS_COMMAND_ID);
 				}
 			} else if ((message.command === 'active' || message.command === 'score') && hasKey(message, { ids: true }) && Array.isArray(message.ids)) {
-				// Any dataset of the catalogue can be active; Score Forecasting Models lists those it scores, and Score Competition Models opens it
+				// Any dataset of the catalogue can be active; Score Models lists those it scores, and Score Competition Models opens it
 				const entries = message.ids.map(id => read?.catalogue.entries.find(candidate => candidate.id === id)).filter((entry): entry is ICatalogueEntry => !!entry);
 				setActiveDatasets(storageService, activeOf(entries));
 				if (message.command === 'score') {
 					const scored = entries.filter(entry => scoredAs(entry));
 					const left = entries.filter(entry => !scoredAs(entry)).map(entry => entry.name).join(', ');
 					if (!scored.length) {
-						post({ command: 'notice', text: localize('forecastingCatalogue.scoreNone', "Score Forecasting Models cannot score models on any of the active datasets yet: it scores them on the competitions that PollisCompetitions.jl implements and on the datasets you add.") });
+						post({ command: 'notice', text: localize('forecastingCatalogue.scoreNone', "Score Models cannot score models on any of the active datasets yet: it scores them on the competitions that PollisCompetitions.jl implements and on the datasets you add.") });
 						return;
 					}
 					await commandService.executeCommand(FORECASTING_COMPETITIONS_COMMAND_ID);
-					post({ command: 'notice', text: left ? localize('forecastingCatalogue.scoreSome', "Score Forecasting Models lists {0}. It cannot score models on these yet: {1}.", scored.map(entry => entry.name).join(', '), left) : localize('forecastingCatalogue.scoreAll', "Score Forecasting Models lists {0}.", scored.map(entry => entry.name).join(', ')) });
+					post({ command: 'notice', text: left ? localize('forecastingCatalogue.scoreSome', "Score Models lists {0}. It cannot score models on these yet: {1}.", scored.map(entry => entry.name).join(', '), left) : localize('forecastingCatalogue.scoreAll', "Score Models lists {0}.", scored.map(entry => entry.name).join(', ')) });
 				}
 			} else if (message.command === 'save' && hasKey(message, { ids: true }) && Array.isArray(message.ids)) {
 				const notice = await saveEntries(message.ids.filter((id): id is string => typeof id === 'string'));
@@ -608,13 +608,13 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?
 /** The page, showing `rows` rows at a time at first: its texts come from here, the catalogue from the `state` message. */
 function pageHtml(rows: number): string {
 	const text = {
-		intro: localize('forecastingCatalogue.intro', "Manage Competition Datasets describes the forecasting datasets and competitions, and the curated collections that gather them: what each holds, how it is evaluated, where its data come from and what it teaches. View shows one group of fields as columns; Filter by shows the values of a field, to tick those to keep, a value in a cell filters by it when clicked, and a column heading sorts the rows. Expand, under the tick of a row, shows everything its entry records, and Restore Size closes it again. Tick the datasets you are working with in the column Active: Score Competition Models opens Score Forecasting Models, which lists those it can score models on, to run a forecasting method of your own on their series, and Save Active Datasets to Workspace saves those that Pollis downloads. The column Model Scoring says whether models can be scored on a dataset, and its hover how: the values held out from the forecasters and the measures; the view Task and Evaluation gives its split protocol and horizon. Save to Workspace copies a dataset into data/forecasting of your Pollis Workspace, downloading it first when it is not on this computer, and the column Workspace says whether it is saved there and changed since. Add a Dataset adds a dataset of your own, from a table with a row for each observation."),
+		intro: localize('forecastingCatalogue.intro', "Manage Competition Datasets describes the forecasting datasets and competitions, and the curated collections that gather them: what each holds, how it is evaluated, where its data come from and what it teaches. View shows one group of fields as columns; Filter by shows the values of a field, to tick those to keep, a value in a cell filters by it when clicked, and a column heading sorts the rows. Expand, under the tick of a row, shows everything its entry records, and Restore Size closes it again. Tick the datasets you are working with in the column Active: Score Competition Models opens Score Models, which lists those it can score models on, to run a forecasting method of your own on their series, and Save Active Datasets to Workspace saves those that Pollis downloads. The column Model Scoring says whether models can be scored on a dataset, and its hover how: the values held out from the forecasters and the measures; the view Task and Evaluation gives its split protocol and horizon. Save to Workspace copies a dataset into data/forecasting of your Pollis Workspace, downloading it first when it is not on this computer, and the column Workspace says whether it is saved there and changed since. Add a Dataset adds a dataset of your own, from a table with a row for each observation."),
 		datasets: localize('forecastingCatalogue.datasets', "Datasets"),
 		collections: localize('forecastingCatalogue.collections', "Curated Collections"),
 		filterBy: localize('forecastingCatalogue.filterBy', "Filter by:"),
 		active: localize('forecastingCatalogue.active', "Active"),
-		activeHint: localize('forecastingCatalogue.activeHint', "The datasets you are working with: Score Forecasting Models lists those it can score models on, and Save Active Datasets to Workspace saves those that Pollis downloads"),
-		notScored: localize('forecastingCatalogue.notScored', "Active or not: Score Forecasting Models cannot score models on this dataset yet, so Score Competition Models leaves it out"),
+		activeHint: localize('forecastingCatalogue.activeHint', "The datasets you are working with: Score Models lists those it can score models on, and Save Active Datasets to Workspace saves those that Pollis downloads"),
+		notScored: localize('forecastingCatalogue.notScored', "Active or not: Score Models cannot score models on this dataset yet, so Score Competition Models leaves it out"),
 		scoreActive: localize('forecastingCatalogue.scoreActive', "Score Competition Models"),
 		activeCount: localize('forecastingCatalogue.activeCount', "{0} active, models can be scored on {1} of them"),
 		noneActive: localize('forecastingCatalogue.noneActive', "None active: tick the datasets you are working with in the column Active"),
@@ -623,11 +623,11 @@ function pageHtml(rows: number): string {
 		none: localize('forecastingCatalogue.none', "None"),
 		inCollection: localize('forecastingCatalogue.inCollection', "Datasets in This Collection"),
 		modelScoring: localize('forecastingCatalogue.modelScoring', "Model Scoring"),
-		modelScoringHint: localize('forecastingCatalogue.modelScoringHint', "Whether Score Forecasting Models can score models on the dataset: whether Pollis holds the values held out from the forecasters and computes its measures"),
+		modelScoringHint: localize('forecastingCatalogue.modelScoringHint', "Whether Score Models can score models on the dataset: whether Pollis holds the values held out from the forecasters and computes its measures"),
 		scoringReady: localize('forecastingCatalogue.scoringReady', "Ready"),
 		scoringNotYet: localize('forecastingCatalogue.scoringNotYet', "Not Yet"),
-		scoringNotYetHint: localize('forecastingCatalogue.scoringNotYetHint', "Score Forecasting Models cannot score models on this dataset yet: Pollis does not hold the values held out from its forecasters, or does not compute its measures"),
-		scoringOwnHint: localize('forecastingCatalogue.scoringOwnHint', "Score Forecasting Models scores models on it: the last values of each series, as many as its horizon, are held out from the forecasters, and the forecasts are scored on them by sMAPE, MASE and OWA, against Naive2"),
+		scoringNotYetHint: localize('forecastingCatalogue.scoringNotYetHint', "Score Models cannot score models on this dataset yet: Pollis does not hold the values held out from its forecasters, or does not compute its measures"),
+		scoringOwnHint: localize('forecastingCatalogue.scoringOwnHint', "Score Models scores models on it: the last values of each series, as many as its horizon, are held out from the forecasters, and the forecasts are scored on them by sMAPE, MASE and OWA, against Naive2"),
 		scoringHints: Object.fromEntries(COMPETITIONS.map(competition => [competition.id, modelScoringHint(competition)])),
 		workspace: localize('forecastingCatalogue.workspace', "Workspace"),
 		workspaceHint: localize('forecastingCatalogue.workspaceHint', "Whether the dataset is saved in data/forecasting of your Pollis Workspace"),
@@ -689,7 +689,7 @@ function pageHtml(rows: number): string {
 		toCheckHint: localize('forecastingCatalogue.toCheckHint', "Facts of this entry still to be checked against their primary source."),
 		addFilter: localize('forecastingCatalogue.addFilter', "Show only the entries with this value"),
 		removeFilter: localize('forecastingCatalogue.removeFilter', "Remove this filter"),
-		openCompetition: localize('forecastingCatalogue.openCompetition', "Open in Score Forecasting Models"),
+		openCompetition: localize('forecastingCatalogue.openCompetition', "Open in Score Models"),
 		noMatch: localize('forecastingCatalogue.noMatch', "No entry matches the filters."),
 		problems: localize('forecastingCatalogue.problems', "The catalogue file has problems, shown here as they are found; its entries are shown all the same:"),
 		unreadable: localize('forecastingCatalogue.unreadable', "The catalogue could not be read: {0}"),
@@ -893,7 +893,7 @@ ${sortHeadingsCss}
 		const entry = catalogue.entries.find(candidate => candidate.id === id);
 		return entry ? entry.name : id;
 	}
-	// Whether Score Forecasting Models scores the entry: a competition it downloads, or a dataset the user added
+	// Whether Score Models scores the entry: a competition it downloads, or a dataset the user added
 	function canScore(entry) {
 		return canOpen(entry) || entry.source === WORKSPACE_SOURCE;
 	}

@@ -64881,7 +64881,7 @@
 		},
 		{
 			"id": "forecastingCompetitions",
-			"title": "Score Forecasting Models",
+			"title": "Score Models",
 			"commands": [
 				"pollis.competitions.forecastingCompetitions"
 			],

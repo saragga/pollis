@@ -18,7 +18,7 @@ github = "https://github.com/Trumpingtons/PollisCompetitions.jl"
 name = "Overview"
 file = "forecastingCatalogue/overview.md"
 bundled = true
-description = "What the catalogue holds, its two tabs and five kinds of entry, how to search, filter, sort and switch views, and how the active datasets reach Score Forecasting Models"
+description = "What the catalogue holds, its two tabs and five kinds of entry, how to search, filter, sort and switch views, and how the active datasets reach Score Models"
 
 [[wikis]]
 name = "Factsheet"
