@@ -986,7 +986,7 @@ account.
 % =====================================================================
 % FORECASTING COMPETITIONS
 % =====================================================================
-\topic{Score Forecasting Models}{Compose > Forecasting Competitions > Score Forecasting Models}{Your own forecasting method, scored on a published competition and placed among its entries.}
+\topic{Score Forecasting Models}{Compose > Prediction Competitions > Score Forecasting Models}{Your own forecasting method, scored on a published competition and placed among its entries.}
 
 A forecasting competition gives many forecasters the same series without their future values, then scores
 every forecast on what happened. The page runs a method of yours on the series of a competition, scores it
@@ -1113,7 +1113,7 @@ HARE & Heteroskedasticity and autocorrelation estimators &
   \ui{with Heteroskedasticity + AR(1)} \\
 PollisCompetitions & The M forecasting competitions, M1 to M6: their series, entries and published scores,
   their own measures, and the benchmarks of M4 &
-  \ui{Compose > Forecasting Competitions > Score Forecasting Models} (Score Forecasting Models, \pg{Score Forecasting Models}) \\
+  \ui{Compose > Prediction Competitions > Score Forecasting Models} (Score Forecasting Models, \pg{Score Forecasting Models}) \\
 EventStudies & Event studies: intraday studies of SEC filings and of FOMC releases, and panel event studies &
   \ui{Model > Event Studies} \\
 \end{tabularx}}
@@ -2586,7 +2586,7 @@ in general, not on Pollis's documents, so choosing the model for Ask Pollis stay
 \texttt{m1}, \texttt{m3}, \texttt{m4}, \texttt{m5}, \texttt{m6} & A schema for each competition downloaded, with a view over each of its tables: \texttt{series} and \texttt{observations}, the values the forecasters saw (split \texttt{train}) and those they were scored on (split \texttt{test}); \texttt{entries} and \texttt{published\_scores}; \texttt{forecasts}, the forecasts of the entries downloaded; and the tables of its own, such as \texttt{calendar}, \texttt{prices}, \texttt{hierarchy} and \texttt{weights} of M5, or \texttt{prices} and \texttt{submissions} of M6. Query them as \texttt{m4.series}.\\
 \end{tabularx}
 \end{center}
-The competitions are downloaded by the pages of Compose > Forecasting Competitions, from their sources, into
+The competitions are downloaded by the pages of Compose > Prediction Competitions, from their sources, into
 \texttt{\textasciitilde/.pollis/competitions}; the views read those files, so the database itself is small. A
 competition not downloaded yet is listed in \texttt{competitions} with the size of its download, and its schema comes in
 once it is downloaded: Pollis makes the database again after each download, and when the Julia REPL starts.

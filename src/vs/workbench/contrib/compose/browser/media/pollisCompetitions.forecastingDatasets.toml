@@ -1,5 +1,5 @@
 # Forecasting datasets of PollisCompetitions.jl: its entries of the forecasting catalogue of Pollis, which
-# Compose > Forecasting Competitions > Manage Competition Datasets lists with those of the installed toolboxes. Each
+# Compose > Prediction Competitions > Manage Competition Datasets lists with those of the installed toolboxes. Each
 # [[entry]] has fields of the catalogue's schema, which Pollis keeps with its conventions (forecastingCatalogue.toml
 # in Pollis) and checks every entry against. The files of the competitions that the package downloads are in
 # data/catalogue.toml, under the id that an implemented entry gives in package_id. Pollis reads this file from the

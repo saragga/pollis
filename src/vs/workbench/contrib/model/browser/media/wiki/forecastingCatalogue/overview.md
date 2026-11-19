@@ -1,6 +1,6 @@
 # Manage Competition Datasets: Overview
 
-Manage Competition Datasets is a catalogue of forecasting datasets and competitions, and of the curated collections that gather them, in two tabs: **Datasets** and **Curated Collections**. Each entry records what it holds, how its forecasts are evaluated, where its data come from, what computer it needs and what it teaches. The page is in Compose > Forecasting Competitions, beside Score Forecasting Models, which runs a forecasting method of your own on the datasets made active here.
+Manage Competition Datasets is a catalogue of forecasting datasets and competitions, and of the curated collections that gather them, in two tabs: **Datasets** and **Curated Collections**. Each entry records what it holds, how its forecasts are evaluated, where its data come from, what computer it needs and what it teaches. The page is in Compose > Prediction Competitions, beside Score Forecasting Models, which runs a forecasting method of your own on the datasets made active here.
 
 ## What Kinds of Entry Does Manage Competition Datasets Hold?
 

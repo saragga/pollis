@@ -42,7 +42,7 @@ import { compareCss } from './compareShared.js';
 import { activeDatasets, FORECASTING_CATALOGUE_COMMAND_ID, onDidChangeActiveDatasets } from './forecastingActive.js';
 import { addedDatasetFiles, forecastingFolder, readAddedDataset } from './forecastingWorkspace.js';
 
-// Score Forecasting Models, from Compose > Forecasting Competitions > Score Forecasting Models (compose.contribution.ts): a forecasting method of the user's
+// Score Forecasting Models, from Compose > Prediction Competitions > Score Forecasting Models (compose.contribution.ts): a forecasting method of the user's
 // own, run on the series of a competition of PollisCompetitions.jl, scored as the competition's organisers scored the
 // entries, and ranked among them. A page of the scaffold in the Time Arrow style, in four steps: 1, Competition (M1,
 // M3, M4 or M5, a frequency, a sample, and Download when it is not on this computer); 2, Your Method, a Julia function
@@ -230,7 +230,7 @@ function checkedInputs(value: unknown, known: readonly ICompetition[]): (Omit<IR
 /** run.toml of a run of one dataset: the choices of step 1. */
 function runToml(choices: IRunChoices, started: string): string {
 	return [
-		'# A run of Compose > Forecasting Competitions > Score Forecasting Models: the method of method.jl on these series',
+		'# A run of Compose > Prediction Competitions > Score Forecasting Models: the method of method.jl on these series',
 		`competition = "${choices.competition}"`,
 		...(choices.folder ? [`folder = ${JSON.stringify(choices.folder)}`] : []),
 		`frequency = "${choices.frequency}"`,
@@ -244,7 +244,7 @@ function runToml(choices: IRunChoices, started: string): string {
 /** run.toml of a run of several datasets: the datasets, each run in the subfolder named by its id, with one sample size and seed. */
 function batchToml(choices: IBatchChoices): string {
 	return [
-		'# A run of Compose > Forecasting Competitions > Score Forecasting Models on several datasets in turn: the method of',
+		'# A run of Compose > Prediction Competitions > Score Forecasting Models on several datasets in turn: the method of',
 		'# method.jl on each, in the subfolder named by its id, a run of its own',
 		`datasets = [${choices.datasets.map(id => JSON.stringify(id)).join(', ')}]`,
 		`sample = ${choices.sample}`,

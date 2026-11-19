@@ -44,7 +44,7 @@ import { activeDatasets, FORECASTING_CATALOGUE_COMMAND_ID, IActiveDatasets, setA
 import { addedDatasetFiles, forecastingFolder, IAddedDataset, readAddedDataset, recordSaved, savedStatuses, saveDataset, WORKSPACE_SOURCE, writeAddedDataset, writeCatalogueSnapshot } from './forecastingWorkspace.js';
 import { IForecastingDatasetsService, IForecastingProblem } from '../common/forecastingDatasets.js';
 
-// Manage Competition Datasets, from Compose > Forecasting Competitions (compose.contribution.ts): the forecasting
+// Manage Competition Datasets, from Compose > Prediction Competitions (compose.contribution.ts): the forecasting
 // catalogue (forecastingCatalogue.ts) in two tabs, Datasets and Curated Collections, in the Minimal style of the
 // scaffold. A view of the file chooses the columns, those of one group of fields; the rows are filtered by the values of
 // the controlled fields, one field at a time in Filter by, and by a tag clicked in a cell, and sorted by any column; the

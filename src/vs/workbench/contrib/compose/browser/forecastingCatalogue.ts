@@ -6,7 +6,7 @@
 import { AppResourcePath } from '../../../../base/common/network.js';
 import { parseToml, TomlValue } from '../../model/browser/common/tomlPanelData.js';
 
-// The forecasting catalogue of Compose > Forecasting Competitions > Manage Competition Datasets (forecastingCataloguePage.ts):
+// The forecasting catalogue of Compose > Prediction Competitions > Manage Competition Datasets (forecastingCataloguePage.ts):
 // the competitions, datasets, curated collections and archives of published forecasts that Pollis describes. Its schema
 // is media/forecastingCatalogue.toml, whose [[field]] tables are the fields of an entry and its [[view]] tables the
 // column presets of the page; the entries come from their contributors, PollisCompetitions.jl and the installed

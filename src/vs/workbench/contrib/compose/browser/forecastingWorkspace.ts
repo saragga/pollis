@@ -165,7 +165,7 @@ function tomlValue(value: CatalogueValue): string {
 /** The whole catalogue as TOML: its fields, its views and every entry, with the contributor of each in source. */
 function catalogueToml(catalogue: IForecastingCatalogue): string {
 	const lines = [
-		'# The forecasting catalogue as Compose > Forecasting Competitions > Manage Competition Datasets last read it: its',
+		'# The forecasting catalogue as Compose > Prediction Competitions > Manage Competition Datasets last read it: its',
 		'# fields, its views and the entries of every contributor, each named in source. The page rewrites this file each',
 		'# time it opens: do not edit it. Read it in Julia with TOML.parsefile.',
 	];

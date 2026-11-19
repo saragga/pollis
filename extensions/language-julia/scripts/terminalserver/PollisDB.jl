@@ -170,7 +170,7 @@ const KNOWLEDGE_COMMIT = joinpath(ENVIRONMENT, "PollisKnowledge.commit")
 const BENCHMARKS_DB = joinpath(homedir(), ".pollis", "databases", "PollisBenchmarks.duckdb")
 """The PollisBenchmarks.jl folder, its artifact and the SQL that `BENCHMARKS_DB` was made with."""
 const BENCHMARKS_STAMP = BENCHMARKS_DB * ".stamp"
-"""PollisCompetitions.jl: the forecasting competitions of Compose > Forecasting Competitions, which its pages install in the user's own environment."""
+"""PollisCompetitions.jl: the forecasting competitions of Compose > Prediction Competitions, which its pages install in the user's own environment."""
 const COMPETITIONS = Base.PkgId(UUID("81a31729-0f0a-40c0-bbf3-614b6aa3b649"), "PollisCompetitions")
 """Where PollisCompetitions.jl keeps the competitions it downloads, a folder each with its Parquet files."""
 const COMPETITIONS_HOME = joinpath(homedir(), ".pollis", "competitions")
@@ -2508,7 +2508,7 @@ function competitions_sql(catalogue)
         push!(statements, "INSERT INTO competitions VALUES (" * join(values, ", ") * ")")
     end
     push!(statements, "COMMENT ON TABLE competitions IS $(quoted(catalogue === nothing ?
-        "The competitions of PollisCompetitions.jl, which Compose > Forecasting Competitions installs: none yet, as it is not installed. Source: PollisCompetitions.jl. Licence: MIT" :
+        "The competitions of PollisCompetitions.jl, which Compose > Prediction Competitions installs: none yet, as it is not installed. Source: PollisCompetitions.jl. Licence: MIT" :
         "The competitions of PollisCompetitions.jl: their years, frequencies, entries, measures, sources and licences, their sizes, and what of each is on this computer. Each competition downloaded has a schema of its own, named by its id, with a view over each of its tables. Source: PollisCompetitions.jl. Licence: MIT"))")
     append!(statements, ["COMMENT ON COLUMN competitions.$name IS $(quoted(description))" for (name, _, description) in COMPETITIONS_CATALOGUE])
     tables, columns = Dict(COMPETITION_TABLES), Dict(COMPETITION_COLUMNS)

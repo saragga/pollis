@@ -1,6 +1,6 @@
 # Manage Competition Datasets: Factsheet
 
-Manage Competition Datasets, in Compose > Forecasting Competitions, shows the forecasting catalogue that ships with Pollis in two tabs, Datasets and Curated Collections, with a view for each group of fields, filters, sorting, the details of each entry, and the active datasets that Score Forecasting Models scores.
+Manage Competition Datasets, in Compose > Prediction Competitions, shows the forecasting catalogue that ships with Pollis in two tabs, Datasets and Curated Collections, with a view for each group of fields, filters, sorting, the details of each entry, and the active datasets that Score Forecasting Models scores.
 
 ## What Columns Does Each View of Manage Competition Datasets Show?
 

@@ -283,7 +283,7 @@ const toolboxesExtensionPoint = ExtensionsRegistry.registerExtensionPoint<IToolb
 				},
 				forecastingDatasets: {
 					type: 'string',
-					description: localize('pollisToolboxes.forecastingDatasets', "The toolbox's forecasting datasets file, relative to the extension folder, for example data/forecasting_datasets.toml: entries of the forecasting catalogue, with the fields of its schema, which Compose > Forecasting Competitions > Manage Competition Datasets lists with those of PollisCompetitions.jl and the other toolboxes."),
+					description: localize('pollisToolboxes.forecastingDatasets', "The toolbox's forecasting datasets file, relative to the extension folder, for example data/forecasting_datasets.toml: entries of the forecasting catalogue, with the fields of its schema, which Compose > Prediction Competitions > Manage Competition Datasets lists with those of PollisCompetitions.jl and the other toolboxes."),
 				},
 				texts: {
 					type: 'array',

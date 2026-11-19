@@ -1,6 +1,6 @@
 # ============================================================================
 # Forecasting catalogue: the schema of the competitions, datasets, curated collections and archives of published
-# forecasts that Compose > Forecasting Competitions > Manage Competition Datasets lists (forecastingCataloguePage.ts).
+# forecasts that Compose > Prediction Competitions > Manage Competition Datasets lists (forecastingCataloguePage.ts).
 # The entries are not here: each contributor ships its own file of [[entry]] tables, which the page reads and checks
 # against this schema (forecastingCatalogue.ts) as it opens, and a unit test checks too:
 #   * PollisCompetitions.jl, data/forecasting_datasets.toml of the package on this computer, else the copy that

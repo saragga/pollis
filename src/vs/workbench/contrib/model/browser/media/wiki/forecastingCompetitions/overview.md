@@ -1,6 +1,6 @@
 # Score Forecasting Models: Overview
 
-Score Forecasting Models runs a forecasting method of your own on the series of a forecasting competition, scores its forecasts with the measures of that competition, and shows where the method would have finished among the entries. It holds five of the M competitions: M1, M3, M4, M5 Accuracy and M6. The page is in Compose > Forecasting Competitions > Score Forecasting Models, and its Julia code comes from the package PollisCompetitions.jl.
+Score Forecasting Models runs a forecasting method of your own on the series of a forecasting competition, scores its forecasts with the measures of that competition, and shows where the method would have finished among the entries. It holds five of the M competitions: M1, M3, M4, M5 Accuracy and M6. The page is in Compose > Prediction Competitions > Score Forecasting Models, and its Julia code comes from the package PollisCompetitions.jl.
 
 ## What Are the Four Steps of Score Forecasting Models?
 
