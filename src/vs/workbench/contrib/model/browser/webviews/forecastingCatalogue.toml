@@ -58,6 +58,7 @@ name = "Numenta Anomaly Benchmark (NAB)"
 year = 2015
 url = "https://github.com/numenta/NAB"
 description = "58 time series, real and artificial, with labelled anomalies"
+papers = ["LA2015a"]
 
 [[collections]]
 id = "gift_eval"
@@ -65,6 +66,7 @@ name = "GIFT-Eval"
 year = 2024
 url = "https://github.com/SalesforceAIResearch/gift-eval"
 description = "23 datasets in 97 configurations, of 7 domains and 10 frequencies, for evaluating forecasting foundation models, with a pretraining corpus kept apart from them"
+papers = ["AWLLL...2024a"]
 
 [[collections]]
 id = "fev_bench"
@@ -72,6 +74,7 @@ name = "fev-bench"
 year = 2025
 url = "https://github.com/autogluon/fev"
 description = "About 100 forecasting tasks, with bootstrapped confidence intervals for comparing models"
+papers = ["SATSE...2025a"]
 
 [[collections]]
 id = "weatherbench2"
@@ -79,6 +82,7 @@ name = "WeatherBench 2"
 year = 2023
 url = "https://sites.research.google/weatherbench"
 description = "Global medium-range weather forecasts on gridded data, evaluated against numerical weather prediction"
+papers = ["RHMLB...2024a"]
 
 [[collections]]
 id = "tabarena"
@@ -86,6 +90,7 @@ name = "TabArena"
 year = 2025
 url = "https://github.com/autogluon/tabarena"
 description = "51 tabular datasets for classification and regression, picked from about a thousand candidates, each an OpenML task with its splits, with a living leaderboard of models"
+papers = ["EPTHD...2025a"]
 
 [[collections]]
 id = "amlb"
@@ -93,6 +98,7 @@ name = "AutoML Benchmark (AMLB)"
 year = 2019
 url = "https://github.com/openml/automlbenchmark"
 description = "71 classification and 33 regression tasks of OpenML, for comparing AutoML systems"
+papers = ["GBCLP...2024a"]
 
 [[collections]]
 id = "grinsztajn"
@@ -100,6 +106,7 @@ name = "Tabular Benchmark (Grinsztajn, Oyallon and Varoquaux)"
 year = 2022
 url = "https://github.com/LeoGrin/tabular-benchmark"
 description = "45 medium-sized tabular datasets, on which tree ensembles are compared with deep learning models"
+papers = ["GOV2022a"]
 
 [[collections]]
 id = "tabzilla"
@@ -107,6 +114,7 @@ name = "TabZilla"
 year = 2023
 url = "https://github.com/naszilla/tabzilla"
 description = "176 tabular classification datasets, on which neural networks are compared with gradient-boosted trees"
+papers = ["MKVCR...2023a"]
 
 [[collections]]
 id = "talent"
@@ -114,6 +122,7 @@ name = "TALENT"
 year = 2024
 url = "https://github.com/LAMDA-Tabular/TALENT"
 description = "About 300 tabular datasets for classification and regression, with a toolbox of methods"
+papers = ["LCZY2024a"]
 
 [[references]]
 separator = true
