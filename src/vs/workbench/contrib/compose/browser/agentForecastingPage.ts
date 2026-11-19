@@ -39,7 +39,7 @@ import { COMPETITIONS } from './forecastingCompetitionsPage.js';
 import { freeStudyName, IOrchestrationCell, JULIA_TO_JSON, orchestrationCss, orchestrationPageJs, startStudyAgent, stopAgentRun, studiesFolder, studyStepText, StudyRuns, tomlString, unattendedCells, validStudyName } from './orchestration.js';
 import { pollisJlPath, skillFile } from './pollisAgents.js';
 
-// Agents' Forecasting Competition, from Compose > Orchestration (compose.contribution.ts): several coding agents each write a
+// Agents' Forecasting Competition, from Compose > Prediction Competitions (compose.contribution.ts): several coding agents each write a
 // forecasting method for the same series of an M competition, on their own, from the part of the series the
 // competition's forecasters saw; Pollis runs every method, scores it on the part held back as the organisers scored
 // the entries, and scores the mean and the median of the agents' forecasts beside them and the benchmarks. A page of
@@ -129,7 +129,7 @@ function checkedInputs(value: unknown): IStudyInputs | undefined {
 
 function studyToml(study: IStudy): string {
 	const lines = [
-		'# Agents\' Forecasting Competition: a study of Compose > Orchestration in Pollis',
+		'# Agents\' Forecasting Competition: a study of Compose > Prediction Competitions in Pollis',
 		`competition = ${tomlString(study.competition)}`,
 		`frequency = ${tomlString(study.frequency)}`,
 		`sample = ${study.sample}`,
@@ -1207,7 +1207,7 @@ ${orchestrationPageJs}
 
 registerAction2(class extends Action2 {
 	constructor() {
-		super({ id: AGENT_FORECASTING_COMMAND_ID, title: localize2('agentForecasting.action', "Agents' Forecasting Competition..."), category: localize2('orchestration.category', "Orchestration"), f1: true });
+		super({ id: AGENT_FORECASTING_COMMAND_ID, title: localize2('agentForecasting.action', "Agents' Forecasting Competition..."), category: localize2('agentForecasting.category', "Competitions"), f1: true });
 	}
 	run(accessor: ServicesAccessor): Promise<void> {
 		return openAgentForecastingPage(accessor);

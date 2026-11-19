@@ -1053,7 +1053,16 @@ M4 is about 275 MB, M5 about 365 MB. The forecasts of an entry are fetched only 
 \textbf{No place among the entries} & A sample, and M1 and M3, are scored but not ranked. \\
 \end{trouble}
 
-\seealso{Article Methods, \pg{Article Methods}.\quad Pollis Packages, \pg{Pollis Packages}.}
+\subhead{Agents' Forecasting Competition}
+\ui{Compose > Prediction Competitions > Agents' Forecasting Competition...} gives the same series of M1, M3 or M4 to several coding
+agents, each of which writes its own forecasting method. In \ui{Competition}, choose the competition, a frequency
+and a number of series, or 0 for all of them; \ui{Prepare the Series} writes the values the forecasters saw into the
+study, never the values held back. In \ui{Agents}, choose from 2 to 8 agents; \ui{Start the Agents} starts them
+all at once, and each writes \file{method.jl}, a function \code{forecast(y, h, period)}. \ui{Score the Methods}
+runs every method in the Julia REPL and ranks them by sMAPE, MASE and OWA, beside the mean and the median of the
+agents' forecasts and the competition's benchmarks; on all the series of a frequency of M4, also among the entries.
+
+\seealso{Article Methods, \pg{Article Methods}.\quad Pollis Packages, \pg{Pollis Packages}.\quad Orchestration, \pg{Orchestration}.}
 
 % =====================================================================
 % PAGES 18–19 — POLLIS PACKAGES
@@ -2253,15 +2262,6 @@ estimate, and check it on every specification. \ui{Run Every Specification}, in 
 the Julia REPL and draws the estimates in order, the options of each beneath them, and \ui{Which Choices Matter}.
 \ui{Run the Test}, in \ui{Inference Under the Null}, resamples data with the effect taken out, and gives the
 p-values of the curve's median estimate, its share of significant estimates and Stouffer's Z.
-
-\subhead{Agents' Forecasting Competition}
-\ui{Compose > Orchestration > Agents' Forecasting Competition...} gives the same series of M1, M3 or M4 to several coding
-agents, each of which writes its own forecasting method. In \ui{Competition}, choose the competition, a frequency
-and a number of series, or 0 for all of them; \ui{Prepare the Series} writes the values the forecasters saw into the
-study, never the values held back. In \ui{Agents}, choose from 2 to 8 agents; \ui{Start the Agents} starts them
-all at once, and each writes \file{method.jl}, a function \code{forecast(y, h, period)}. \ui{Score the Methods}
-runs every method in the Julia REPL and ranks them by sMAPE, MASE and OWA, beside the mean and the median of the
-agents' forecasts and the competition's benchmarks; on all the series of a frequency of M4, also among the entries.
 
 \subhead{Referee Report}
 \ui{Compose > Orchestration > Referee Report...} gives a draft paper to several coding agents, each a referee in a

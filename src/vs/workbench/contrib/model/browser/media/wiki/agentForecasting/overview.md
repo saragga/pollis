@@ -1,6 +1,6 @@
 # Agents' Forecasting Competition: Overview
 
-Agents' Forecasting Competition gives the same series of an M competition to several coding agents, and each writes, on its own, the forecasting method it believes will forecast them best. Pollis runs every method, scores its forecasts on the values held back, as the competition's organisers scored the entries, and scores beside them the mean and the median of the agents' forecasts and the competition's benchmarks. The page is in Compose > Orchestration.
+Agents' Forecasting Competition gives the same series of an M competition to several coding agents, and each writes, on its own, the forecasting method it believes will forecast them best. Pollis runs every method, scores its forecasts on the values held back, as the competition's organisers scored the entries, and scores beside them the mean and the median of the agents' forecasts and the competition's benchmarks. The page is in Compose > Prediction Competitions, beside Score Models.
 
 ## What Is a Forecasting Competition?
 

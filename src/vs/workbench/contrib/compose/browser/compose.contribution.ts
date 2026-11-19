@@ -103,7 +103,7 @@ const PdfFilesMenu = new MenuId('menubarPdfFilesMenu');
 
 // ------------------- COMPOSE ------------------------
 
-// The Compose menu: Coding Agents and Agent Skills (codingAgentPage.ts, pollisAgents.ts), MCP Servers (mcpServersPage.ts), Orchestration, Local AI Models, Knowledge for AI Models, New Panels and Package a Toolbox, Literature (Discover Literature, Import References, Browse References), Article Replication, with the article methods, Prediction Competitions (Manage Competition Datasets, Score Models), Workflows, Reports, PDF Files,
+// The Compose menu: Coding Agents and Agent Skills (codingAgentPage.ts, pollisAgents.ts), MCP Servers (mcpServersPage.ts), Orchestration, Local AI Models, Knowledge for AI Models, New Panels and Package a Toolbox, Literature (Discover Literature, Import References, Browse References), Article Replication, with the article methods, Prediction Competitions (Manage Competition Datasets, Score Models, Agents' Forecasting Competition), Workflows, Reports, PDF Files,
 // Correctness Tests, Horse Races, Compile Galore and Collaboration, which combine panels. The Toolbox Panels page (toolboxPanelsPage.ts) opens from
 // the Edit button of an installed toolbox in the Extensions pane.
 MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
@@ -238,6 +238,15 @@ MenuRegistry.appendMenuItem(ForecastingCompetitionsMenu, {
 	group: '1_competitions',
 	command: { id: FORECASTING_COMPETITIONS_COMMAND_ID, title: localize('competitions.scoreModels', "Score Models...") },
 	order: 2,
+});
+
+// Agents' Forecasting Competition: several coding agents each write a forecasting method for the same series of an M
+// competition; Pollis scores every method on the values held back, with the mean and the median of their
+// forecasts, see agentForecastingPage.ts
+MenuRegistry.appendMenuItem(ForecastingCompetitionsMenu, {
+	group: '1_competitions',
+	command: { id: AGENT_FORECASTING_COMMAND_ID, title: localize('competitions.agentForecasting', "Agents' Forecasting Competition...") },
+	order: 3,
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarComposeMenu, {
@@ -624,15 +633,6 @@ MenuRegistry.appendMenuItem(OrchestrationMenu, {
 	group: '1_analyses',
 	command: { id: SPECIFICATION_CURVE_COMMAND_ID, title: localize('orchestration.specificationCurve', "Specification Curve...") },
 	order: 2,
-});
-
-// Agents' Forecasting Competition: several coding agents each write a forecasting method for the same series of an M
-// competition; Pollis scores every method on the values held back, with the mean and the median of their
-// forecasts, see agentForecastingPage.ts
-MenuRegistry.appendMenuItem(OrchestrationMenu, {
-	group: '1_analyses',
-	command: { id: AGENT_FORECASTING_COMMAND_ID, title: localize('orchestration.forecastingCompetition', "Agents' Forecasting Competition...") },
-	order: 3,
 });
 
 // Referee Report: coding agents referee the same draft, each on its own and in a role, and another, the editor,
