@@ -11,9 +11,9 @@ Two fields of a dataset of Manage Competition Datasets say how its data may reac
 
 Either way, the folder of a dataset holds `info.toml` once its data are on this computer, and that is how Manage Competition Datasets knows that Save to Workspace can copy them. The Parquet files of a built-in dataset are not kept in the package's git repository.
 
-## Why Are Kaggle Data Never Built In?
+## When Are Kaggle Data Built In?
 
-The data of a competition held on Kaggle are given under the rules of that competition, which generally do not allow passing them on. A user downloads them from Kaggle with their own account, after accepting the rules. A dataset held on Kaggle therefore has the Delivery `Download`.
+The data of a competition held on Kaggle are given under the rules of that competition, which generally do not allow passing them on. A user downloads them from Kaggle with their own account, after accepting the rules, and the dataset has the Delivery `Download`. Data that are also published elsewhere under a licence that allows passing them on are built in as any other: those of the Amazon.com Employee Access Challenge and of Predicting a Biological Response, which OpenML publishes in the public domain, among them.
 
 ## What Does the Licence of a Dataset Say?
 

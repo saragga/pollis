@@ -37,7 +37,7 @@ description = "Every field of a dataset, group by group, with its type, the valu
 name = "Licences and Delivery"
 file = "forecastingCatalogue/licences-delivery.md"
 bundled = true
-description = "Built-in and Download, where the data of each are kept on this computer, why Kaggle data are never built in, and what the Licence says"
+description = "Built-in and Download, where the data of each are kept on this computer, when Kaggle data are built in, and what the Licence says"
 
 # The curated collections of the tab Curated Collections: benchmarks and archives that hold datasets of the Dataset
 # Catalog of PollisCompetitions.jl, or where they are listed. `datasets` are their dataset_id in the catalogue, `papers`
@@ -90,6 +90,7 @@ name = "TabArena"
 year = 2025
 url = "https://github.com/autogluon/tabarena"
 description = "51 tabular datasets for classification and regression, picked from about a thousand candidates, each an OpenML task with its splits, with a living leaderboard of models"
+datasets = ["airfoil_noise", "amazon_employee_access", "annealing", "used_fiat_500", "bank_marketing", "bank_customer_churn", "biological_response", "blood_transfusion", "customer_churn", "coil_2000_insurance", "concrete_strength", "german_credit", "credit_card_default", "airline_satisfaction", "pima_diabetes", "diabetes_130_us", "diamonds", "ecommerce_shipping", "fitness_club", "food_delivery_time", "give_me_some_credit", "hazelnut_contamination", "insurance_expenses", "heloc", "hiva", "house_values", "data_scientist_job_change", "in_vehicle_coupon", "good_customer", "kdd_cup_2009_appetency", "marketing_campaign", "maternal_health_risk", "miami_housing", "naticusdroid", "online_shoppers", "protein_structure", "polish_bankruptcy", "qsar_biodegradation", "qsar_tid_11", "qsar_fish_toxicity", "stellar_classification", "seismic_bumps", "splice", "student_dropout", "superconductivity", "taiwan_bankruptcy", "website_phishing", "wine_quality", "myocardial_infarction", "jm1_software_defects"]
 papers = ["EPTHD...2025a"]
 
 [[collections]]

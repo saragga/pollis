@@ -16,7 +16,7 @@ The identity fields say what the dataset is, where it comes from and what it is 
 | `dataset_name` | Name | string | Free text | The name of the dataset |
 | `competition_name` | Competition | string | Free text | The competition the dataset comes from |
 | `competition_year` | Year | integer | A whole number | The year of the competition |
-| `topic` | Topic | string | `General`, `Socioeconomics`, `Retail`, `Supply Chain`, `Finance`, `Macroeconomics`, `Real Estate`, `Energy`, `Environment and Climate`, `Hydrology`, `Transport and Mobility`, `Tourism`, `Epidemiology`, `Health`, `Engineering`, `Physics`, `Web and IT Operations`, `Anomaly Detection`, `Geopolitics` | The subject of the dataset |
+| `topic` | Topic | string | `General`, `Socioeconomics`, `Retail`, `Marketing`, `Supply Chain`, `Finance`, `Macroeconomics`, `Real Estate`, `Energy`, `Environment and Climate`, `Hydrology`, `Transport and Mobility`, `Tourism`, `Epidemiology`, `Health`, `Biology`, `Chemistry`, `Engineering`, `Physics`, `Web and IT Operations`, `Anomaly Detection`, `Geopolitics` | The subject of the dataset |
 | `collections` | Collections | string[] | Ids of curated collections | The curated collections that hold the dataset |
 | `papers` | Papers | string[] | Keys of PollisReferences | The references of the dataset |
 

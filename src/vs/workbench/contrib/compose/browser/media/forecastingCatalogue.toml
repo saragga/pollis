@@ -55,7 +55,7 @@ name = "topic"
 label = "Topic"
 group = "identity"
 type = "string"
-vocabulary = "General | Socioeconomics | Retail | Supply Chain | Finance | Macroeconomics | Real Estate | Energy | Environment and Climate | Hydrology | Transport and Mobility | Tourism | Epidemiology | Health | Engineering | Physics | Web and IT Operations | Anomaly Detection | Geopolitics"
+vocabulary = "General | Socioeconomics | Retail | Marketing | Supply Chain | Finance | Macroeconomics | Real Estate | Energy | Environment and Climate | Hydrology | Transport and Mobility | Tourism | Epidemiology | Health | Biology | Chemistry | Engineering | Physics | Web and IT Operations | Anomaly Detection | Geopolitics"
 controlled = true
 description = "The subject of the dataset"
 
