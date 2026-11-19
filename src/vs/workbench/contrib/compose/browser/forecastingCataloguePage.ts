@@ -25,7 +25,8 @@ import { IWorkspaceContextService } from '../../../../platform/workspace/common/
 import { IEditorService } from '../../../services/editor/common/editorService.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { IModelPaper } from '../../model/browser/common/model.types.js';
-import { openInBrowser, sendToJuliaRepl } from '../../model/browser/handlers/model.handler.js';
+import { ReferenceLibrary, referencePaper } from '../../model/browser/common/referenceLibrary.js';
+import { openInBrowser } from '../../model/browser/handlers/model.handler.js';
 import { registerScaffoldPageHandlers } from '../../model/browser/handlers/scaffoldPage.handler.js';
 import { FORECASTINGCATALOGUE_METADATA } from '../../model/browser/webviews/forecastingCatalogue.data.js';
 import { FEWEST_ROWS, rowsChoiceCss, rowsChoiceScript, sortHeadingsCss, sortHeadingsScript, sortHint, stickyHeadCss, stickyHeadScript, storedRows, storeRows } from '../../model/browser/webviews/webviewPager.js';
@@ -37,24 +38,25 @@ import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { compareCss } from './compareShared.js';
 import { IToolboxPanelsService } from '../common/toolboxPanels.js';
-import { COLLECTION_TYPE, FORECASTING_CATALOGUE_FILE, ICatalogueContribution, ICatalogueEntry, ICatalogueRead, POLLIS_COMPETITIONS_DATASETS_FILE, POLLIS_COMPETITIONS_DATASETS_PATH, POLLIS_COMPETITIONS_SOURCE, readForecastingCatalogue } from './forecastingCatalogue.js';
+import { CatalogueValue, FORECASTING_CATALOGUE_FILE, ICatalogueContribution, ICatalogueEntry, ICatalogueRead, POLLIS_COMPETITIONS_DATASETS_PATH, POLLIS_COMPETITIONS_SOURCE, readForecastingCatalogue } from './forecastingCatalogue.js';
 import { juliaPackageFolder } from './juliaPackages.js';
-import { COMPETITIONS, downloadCode, FORECASTING_COMPETITIONS_COMMAND_ID, ICompetition } from './forecastingCompetitionsPage.js';
+import { COMPETITIONS, FORECASTING_COMPETITIONS_COMMAND_ID, ICompetition } from './forecastingCompetitionsPage.js';
 import { activeDatasets, FORECASTING_CATALOGUE_COMMAND_ID, IActiveDatasets, setActiveDatasets } from './forecastingActive.js';
 import { addedDatasetFiles, forecastingFolder, IAddedDataset, readAddedDataset, recordSaved, savedStatuses, saveDataset, WORKSPACE_SOURCE, writeAddedDataset, writeCatalogueSnapshot } from './forecastingWorkspace.js';
 import { IForecastingDatasetsService, IForecastingProblem } from '../common/forecastingDatasets.js';
 
-// Manage Competition Datasets, from Compose > Prediction Competitions (compose.contribution.ts): the forecasting
-// catalogue (forecastingCatalogue.ts) in two tabs, Datasets and Curated Collections, in the Minimal style of the
-// scaffold. A view of the file chooses the columns, those of one group of fields; the rows are filtered by the values of
-// the controlled fields, one field at a time in Filter by, and by a tag clicked in a cell, and sorted by any column; the
-// Expand button of a row opens under it the details of its entry, every field it has, group by group, its papers from
-// the References of the page and the facts still to check. Any dataset can be made active (forecastingActive.ts);
-// Score Models lists the active ones it scores. The datasets Pollis downloads can be saved into the user's
-// Pollis Workspace, in data/forecasting/<id>/, downloaded first in the Julia REPL when they are not on this computer,
-// and the column Workspace says whether each is saved there, and changed since (forecastingWorkspace.ts); beside them the page writes the whole catalogue, for Julia. A
-// dataset of the user's own, a long table, is added there with a form, converted into the files of
-// PollisCompetitions.jl by a DuckDB process (../common/forecastingDatasets.ts), and joins the catalogue.
+// Manage Competition Datasets, from Compose > Prediction Competitions (compose.contribution.ts): the Dataset Catalog
+// (forecastingCatalogue.ts) in two tabs, Datasets and Curated Collections, in the Minimal style of the scaffold. A view
+// of the schema chooses the columns, those of one group of fields; the rows are filtered by the values of the
+// controlled fields, one field at a time in Filter by, and by a tag clicked in a cell, and sorted by any column; the
+// Expand button of a row opens under it the details of its dataset, every field it has, group by group, and its papers
+// from PollisReferences. The tab Curated Collections lists the collections of the page's TOML, each with its datasets
+// and papers. Any dataset can be made active (forecastingActive.ts); Score Models lists the active ones it scores. A
+// dataset of PollisCompetitions.jl whose data are on this computer, built in or downloaded, can be saved into the
+// user's Pollis Workspace, in data/forecasting/<id>/, and the column Workspace says whether each is saved there, and
+// changed since (forecastingWorkspace.ts); beside them the page writes the whole catalogue, for Julia. A dataset of the
+// user's own, a long table, is added there with a form, converted into the files of PollisCompetitions.jl by a DuckDB
+// process (../common/forecastingDatasets.ts), and joins the catalogue.
 
 
 /** The name of the page for the rows the user chose (webviewPager.ts). */
@@ -80,7 +82,7 @@ interface IDatasetForm {
 	readonly file: string;
 	readonly id: string;
 	readonly name: string;
-	readonly domain: string;
+	readonly topic: string;
 	readonly seriesColumn: string;
 	readonly timeColumn: string;
 	readonly valueColumn: string;
@@ -88,7 +90,6 @@ interface IDatasetForm {
 	readonly period: number;
 	readonly horizon: number;
 	readonly licence: string;
-	readonly notes: string;
 }
 
 /** The form as the page sent it, or undefined when a field is missing or of another type. */
@@ -97,7 +98,7 @@ function datasetForm(value: unknown): IDatasetForm | undefined {
 		return undefined;
 	}
 	const form = value as { readonly [key: string]: unknown };
-	const texts = ['file', 'id', 'name', 'domain', 'seriesColumn', 'timeColumn', 'valueColumn', 'frequency', 'licence', 'notes'];
+	const texts = ['file', 'id', 'name', 'topic', 'seriesColumn', 'timeColumn', 'valueColumn', 'frequency', 'licence'];
 	if ((form.mode !== 'add' && form.mode !== 'edit') || texts.some(key => typeof form[key] !== 'string') || typeof form.period !== 'number' || typeof form.horizon !== 'number') {
 		return undefined;
 	}
@@ -135,19 +136,12 @@ function modelScoringHint(competition: ICompetition): string {
 	return localize('forecastingCatalogue.scoringSeries', "Score Models scores models on it as its entries were scored: the last values of each series are held out from the forecasters, as many as the horizon of its frequency ({0}), and the forecasts are scored on them by {1}.", horizons, competition.measures);
 }
 
-/** The papers of the page's References, by their keys in PollisReferences. */
-function pagePapers(): Map<string, IModelPaper> {
-	const papers = FORECASTINGCATALOGUE_METADATA.forecastingCatalogue.references.filter((reference): reference is IModelPaper => 'title' in reference && !!reference.key);
-	return new Map(papers.map(paper => [paper.key!, paper]));
-}
-
-/** The competition of Score Models that an entry is, when it is an implemented entry of PollisCompetitions. */
+/** The competition of Score Models that a dataset of PollisCompetitions.jl is, by its id. */
 function competitionOf(entry: ICatalogueEntry | undefined): string | undefined {
-	const competition = entry?.package === 'PollisCompetitions' && entry.status === 'implemented' ? entry.package_id : undefined;
-	return typeof competition === 'string' && competitionIds().includes(competition) ? competition : undefined;
+	return entry?.source === POLLIS_COMPETITIONS_SOURCE && competitionIds().includes(entry.id) ? entry.id : undefined;
 }
 
-/** The id by which Score Models knows an entry: its competition, or, for a dataset the user added, its id. */
+/** The id by which Score Models knows a dataset: its competition, or, for a dataset the user added, its id. */
 function scoredAs(entry: ICatalogueEntry | undefined): string | undefined {
 	return entry?.source === WORKSPACE_SOURCE ? entry.id : competitionOf(entry);
 }
@@ -158,15 +152,23 @@ function activeOf(entries: readonly ICatalogueEntry[]): IActiveDatasets {
 }
 
 /**
- * The contributors' files of entries: that of PollisCompetitions.jl on this computer, else the copy Pollis ships, then
- * those of the installed toolboxes that name one, by their names, then the datasets the user added in the forecasting
- * folder `added` of the workspace. A toolbox's file that cannot be read is a problem.
+ * The contributors' files of datasets: metadata/datasets.toml of PollisCompetitions.jl in its folder `folder`, a
+ * problem when it is not on this computer, then the files of the installed toolboxes that name one, by their names,
+ * then the datasets the user added in the forecasting folder `added` of the workspace. A file that cannot be read is a
+ * problem.
  */
-async function readContributions(fileService: IFileService, pathService: IPathService, toolboxPanelsService: IToolboxPanelsService, added: URI | undefined, problems: string[]): Promise<ICatalogueContribution[]> {
+async function readContributions(fileService: IFileService, toolboxPanelsService: IToolboxPanelsService, folder: URI | undefined, added: URI | undefined, problems: string[]): Promise<ICatalogueContribution[]> {
 	const read = async (uri: URI) => (await fileService.readFile(uri)).value.toString();
-	const folder = await juliaPackageFolder(fileService, pathService, 'PollisCompetitions');
-	const installed = folder ? await read(joinPath(folder, POLLIS_COMPETITIONS_DATASETS_PATH)).catch(() => undefined) : undefined;
-	const contributions: ICatalogueContribution[] = [{ source: POLLIS_COMPETITIONS_SOURCE, content: installed ?? await read(FileAccess.asFileUri(POLLIS_COMPETITIONS_DATASETS_FILE)) }];
+	const contributions: ICatalogueContribution[] = [];
+	if (!folder) {
+		problems.push(localize('forecastingCatalogue.noPackage', "PollisCompetitions.jl is not on this computer: its datasets are listed once it is installed, with Pkg.add(\"PollisCompetitions\") in the Julia REPL."));
+	} else {
+		try {
+			contributions.push({ source: POLLIS_COMPETITIONS_SOURCE, content: await read(joinPath(folder, POLLIS_COMPETITIONS_DATASETS_PATH)) });
+		} catch (error) {
+			problems.push(`${POLLIS_COMPETITIONS_SOURCE}: ${POLLIS_COMPETITIONS_DATASETS_PATH} could not be read: ${toErrorMessage(error)}`);
+		}
+	}
 	for (const toolbox of toolboxPanelsService.getToolboxes()) {
 		if (toolbox.forecastingDatasets) {
 			try {
@@ -182,12 +184,18 @@ async function readContributions(fileService: IFileService, pathService: IPathSe
 	return contributions;
 }
 
-/** Reads the schema Pollis ships and the contributors' entries, checked against the competitions of Score Models and the References of the page. */
-async function readCatalogue(fileService: IFileService, pathService: IPathService, toolboxPanelsService: IToolboxPanelsService, added: URI | undefined): Promise<ICatalogueRead> {
+/**
+ * Reads the schema Pollis ships and the contributors' datasets, checked against the curated collections of the page
+ * and the works of PollisReferences, `references`, empty when PollisReferences could not be read.
+ */
+async function readCatalogue(fileService: IFileService, toolboxPanelsService: IToolboxPanelsService, folder: URI | undefined, added: URI | undefined, references: ReadonlyMap<string, IModelPaper>): Promise<ICatalogueRead> {
 	const schema = (await fileService.readFile(FileAccess.asFileUri(FORECASTING_CATALOGUE_FILE))).value.toString();
 	const unread: string[] = [];
-	const contributions = await readContributions(fileService, pathService, toolboxPanelsService, added, unread);
-	const read = readForecastingCatalogue(schema, contributions, { packageIds: { PollisCompetitions: competitionIds() }, paperKeys: [...pagePapers().keys()] });
+	const contributions = await readContributions(fileService, toolboxPanelsService, folder, added, unread);
+	const read = readForecastingCatalogue(schema, contributions, {
+		paperKeys: references.size ? [...references.keys()] : undefined,
+		collections: FORECASTINGCATALOGUE_METADATA.forecastingCatalogue.collections ?? [],
+	});
 	return { catalogue: read.catalogue, problems: [...unread, ...read.problems] };
 }
 
@@ -236,19 +244,29 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?
 	const disposables = new DisposableStore();
 	disposables.add(registerScaffoldPageHandlers(webviewInput, 'forecastingCatalogue', title, FORECASTINGCATALOGUE_METADATA.forecastingCatalogue, openerService, editorService, commandService, notificationService, notebookEditorModelResolverService, notebookKernelService, fileService, pathService, storageService));
 
-	/** The catalogue as last read, for the competition an entry opens. */
+	/** The catalogue as last read, for the competition a dataset opens. */
 	let read: ICatalogueRead | undefined;
-	/** Where PollisCompetitions.jl keeps the competitions it downloads, a folder each, with info.toml once done. */
+	/** The folder of PollisCompetitions.jl on this computer, as last found. */
+	let packageFolder: URI | undefined;
+	/** The works of PollisReferences, as a panel lists them, by their keys. */
+	const library = new ReferenceLibrary(fileService, pathService.userHome({ preferLocal: true }));
+	/** Where PollisCompetitions.jl keeps the datasets it downloads, a folder each, with info.toml once done. */
 	const competitionsFolder = joinPath(pathService.userHome({ preferLocal: true }), '.pollis', 'competitions');
-	const downloadedFolder = async (competition: string) => {
-		const folder = joinPath(competitionsFolder, competition);
+	/**
+	 * The folder of the data of a dataset of PollisCompetitions.jl on this computer, as the package finds it: built in,
+	 * in data/builtin/<id> of the package, else downloaded, in ~/.pollis/competitions/<id>; each with its info.toml.
+	 */
+	const dataFolder = async (entry: ICatalogueEntry | undefined) => {
+		if (entry?.source !== POLLIS_COMPETITIONS_SOURCE) {
+			return undefined;
+		}
+		const builtin = packageFolder && joinPath(packageFolder, 'data', 'builtin', entry.id);
+		const folder = builtin && await fileService.exists(builtin) ? builtin : joinPath(competitionsFolder, entry.id);
 		return await fileService.exists(joinPath(folder, 'info.toml')) ? folder : undefined;
 	};
-	/** The datasets to save once the Julia REPL has downloaded them, by their ids. */
-	const pending = new Set<string>();
 	/**
-	 * The folders watched, each on its own: that of the competitions and each competition's, where a download ends; the
-	 * forecasting folder of the workspace and each dataset's there, where a copy saved changes.
+	 * The folders watched, each on its own: that of the downloaded datasets and each dataset's there, where a download
+	 * ends; the forecasting folder of the workspace and each dataset's there, where a copy saved changes.
 	 */
 	const watchers = disposables.add(new DisposableMap<string, DisposableStore>());
 	const refresh = disposables.add(new RunOnceScheduler(() => sendState(), 300));
@@ -273,33 +291,27 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?
 	const sendState = async () => {
 		const workspace = await findPollisWorkspace(contextService, fileService, configurationService);
 		const folder = workspace && await forecastingFolder(fileService, workspace);
+		const references = new Map((await library.pollis()).references.map(reference => [reference.key, referencePaper(reference)]));
 		try {
-			read = await readCatalogue(fileService, pathService, toolboxPanelsService, folder);
+			packageFolder = await juliaPackageFolder(fileService, pathService, 'PollisCompetitions');
+			read = await readCatalogue(fileService, toolboxPanelsService, packageFolder, folder, references);
 		} catch (error) {
 			post({ command: 'state', error: toErrorMessage(error) });
 			return;
 		}
-		const downloaded: Record<string, boolean> = {};
-		for (const entry of read.catalogue.entries) {
-			const competition = competitionOf(entry);
-			if (competition) {
-				downloaded[entry.id] = !!await downloadedFolder(competition);
-			}
+		// Whether the data of each dataset of PollisCompetitions.jl are on this computer, by id
+		const onComputer: Record<string, boolean> = {};
+		for (const entry of read.catalogue.entries.filter(entry => entry.source === POLLIS_COMPETITIONS_SOURCE)) {
+			onComputer[entry.id] = !!await dataFolder(entry);
 		}
 		if (workspace && folder) {
-			// The datasets whose download has ended, saved as the user asked
-			for (const id of [...pending].filter(id => downloaded[id])) {
-				pending.delete(id);
-				await saveEntry(folder, id);
-			}
 			await pollisWorkspaceFolder(fileService, workspace, 'data');
 			await writeCatalogueSnapshot(fileService, folder, read.catalogue);
 		}
 		const saved = folder ? await savedStatuses(fileService, folder) : {};
-		const competitions = [...new Set(read.catalogue.entries.map(competitionOf).filter((competition): competition is string => !!competition))];
 		await watch([
 			competitionsFolder,
-			...competitions.map(competition => joinPath(competitionsFolder, competition)),
+			...Object.keys(onComputer).map(id => joinPath(competitionsFolder, id)),
 			...(folder ? [folder, ...Object.keys(saved).map(id => joinPath(folder, id))] : []),
 		]);
 		// The active datasets of the catalogue as it is now, the ids that Score Models knows them by kept with them
@@ -308,18 +320,13 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?
 		if (JSON.stringify(active) !== JSON.stringify(stored)) {
 			setActiveDatasets(storageService, active);
 		}
-		const papers = Object.fromEntries([...pagePapers()].map(([key, paper]) => [key, { authors: paper.authors, year: paper.year, title: paper.title, journal: paper.journal, doi: paper.doi, url: paper.url }]));
-		post({ command: 'state', catalogue: read.catalogue, problems: read.problems, papers, competitions: competitionIds(), active: active.entries, workspace: !!workspace, saved, downloaded, pending: [...pending] });
-	};
-
-	/** Saves the downloaded files of the entry `id` into `folder`, the forecasting folder of the workspace. */
-	const saveEntry = async (folder: URI, id: string) => {
-		const entry = read?.catalogue.entries.find(candidate => candidate.id === id);
-		const competition = competitionOf(entry);
-		const source = competition && await downloadedFolder(competition);
-		if (entry && source) {
-			await saveDataset(fileService, folder, id, source, `${entry.source} (${competition})`);
-		}
+		// The papers of the datasets and the collections, as the details list them
+		const keys = new Set([...read.catalogue.entries.flatMap(entry => Array.isArray(entry.papers) ? entry.papers : []), ...read.catalogue.collections.flatMap(collection => collection.papers ?? [])]);
+		const papers = Object.fromEntries([...keys].flatMap(key => {
+			const paper = references.get(key);
+			return paper ? [[key, { authors: paper.authors, year: paper.year, title: paper.title, journal: paper.journal, doi: paper.doi, url: paper.url }]] : [];
+		}));
+		post({ command: 'state', catalogue: read.catalogue, problems: read.problems, papers, competitions: competitionIds(), active: active.entries, workspace: !!workspace, saved, onComputer });
 	};
 
 	/** With no Pollis Workspace open, offers to create one or open one, in this window. */
@@ -340,10 +347,9 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?
 	};
 
 	/**
-	 * Saves the entries `ids` that Pollis downloads into the workspace, after asking before a copy changed since it was
-	 * saved is replaced; an entry not on this computer yet is downloaded first in the Julia REPL, and saved once it is.
-	 * Returns what was done with each entry, for the page to show, with the folders it names, or nothing when no
-	 * workspace is open or the user kept the copies that changed.
+	 * Saves the datasets `ids` whose data are on this computer into the workspace, after asking before a copy changed
+	 * since it was saved is replaced. Returns what was done with each dataset, for the page to show, with the folders it
+	 * names, or nothing when no workspace is open or the user kept the copies that changed.
 	 */
 	const saveEntries = async (ids: readonly string[]): Promise<{ readonly text: string; readonly paths: readonly string[] } | undefined> => {
 		const workspace = await findPollisWorkspace(contextService, fileService, configurationService);
@@ -353,13 +359,20 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?
 		}
 		const folder = await forecastingFolder(fileService, workspace);
 		const asked = ids.map(id => read?.catalogue.entries.find(candidate => candidate.id === id)).filter((entry): entry is ICatalogueEntry => !!entry);
-		const entries = asked.filter(entry => !!competitionOf(entry));
+		const sources = new Map<ICatalogueEntry, URI>();
+		for (const entry of asked) {
+			const source = await dataFolder(entry);
+			if (source) {
+				sources.set(entry, source);
+			}
+		}
+		const entries = [...sources.keys()];
 		const statuses = await savedStatuses(fileService, folder);
 		const changed = entries.filter(entry => statuses[entry.id] === 'changed');
 		if (changed.length) {
 			const { confirmed } = await dialogService.confirm({
 				message: localize('forecastingCatalogue.replaceChanged', "Replace the copies that changed since they were saved?"),
-				detail: localize('forecastingCatalogue.replaceChangedDetail', "{0} changed in the workspace since it was saved. Saving again moves the copy to the Trash and saves the dataset as Pollis downloaded it.", changed.map(entry => entry.name).join(', ')),
+				detail: localize('forecastingCatalogue.replaceChangedDetail', "{0} changed in the workspace since it was saved. Saving again moves the copy to the Trash and saves the dataset as PollisCompetitions.jl has it.", changed.map(entry => entry.name).join(', ')),
 				primaryButton: localize({ key: 'forecastingCatalogue.replace', comment: ['&& denotes a mnemonic'] }, "&&Replace"),
 			});
 			if (!confirmed) {
@@ -367,26 +380,12 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?
 			}
 		}
 		await pollisWorkspaceFolder(fileService, workspace, 'data');
-		const downloads = new Set<string>();
-		const savedNow: ICatalogueEntry[] = [];
-		const downloading: ICatalogueEntry[] = [];
-		for (const entry of entries) {
-			const competition = competitionOf(entry)!;
-			if (await downloadedFolder(competition)) {
-				await saveEntry(folder, entry.id);
-				savedNow.push(entry);
-			} else {
-				pending.add(entry.id);
-				downloads.add(competition);
-				downloading.push(entry);
-			}
-		}
-		for (const competition of downloads) {
-			await sendToJuliaRepl(downloadCode(competition), commandService);
+		for (const [entry, source] of sources) {
+			await saveDataset(fileService, folder, entry.id, source, `${entry.source} (${entry.id})`);
 		}
 		await sendState();
 		const added = asked.filter(entry => entry.source === WORKSPACE_SOURCE);
-		const notDownloaded = asked.filter(entry => !competitionOf(entry) && entry.source !== WORKSPACE_SOURCE).map(entry => entry.name);
+		const notHere = asked.filter(entry => !sources.has(entry) && entry.source !== WORKSPACE_SOURCE).map(entry => entry.name);
 		// Each dataset named with its folder in the workspace, which the page shows in yellow
 		const paths: string[] = [];
 		const located = (list: readonly ICatalogueEntry[]) => list.map(entry => {
@@ -395,10 +394,9 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?
 			return localize('forecastingCatalogue.datasetIn', "{0} in {1}", entry.name, path);
 		}).join(', ');
 		const text = [
-			savedNow.length ? localize('forecastingCatalogue.savedNotice', "Saved in the Pollis Workspace: {0}.", located(savedNow)) : '',
-			downloading.length ? localize('forecastingCatalogue.downloadingNotice', "Downloading in the Julia REPL, then saved in the Pollis Workspace: {0}.", located(downloading)) : '',
+			entries.length ? localize('forecastingCatalogue.savedNotice', "Saved in the Pollis Workspace: {0}.", located(entries)) : '',
 			added.length ? localize('forecastingCatalogue.addedNotice', "In the Pollis Workspace already, where you added them: {0}.", located(added)) : '',
-			notDownloaded.length ? localize('forecastingCatalogue.notDownloadedNotice', "Not saved, as Pollis does not download them yet: {0}.", notDownloaded.join(', ')) : '',
+			notHere.length ? localize('forecastingCatalogue.notHereNotice', "Not saved, as their data are not on this computer: {0}.", notHere.join(', ')) : '',
 		].filter(part => part).join(' ');
 		return { text, paths };
 	};
@@ -453,12 +451,12 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?
 			notificationService.error(localize('forecastingCatalogue.noFile', "The file the dataset {0} was made from, {1}, is no longer there: add the dataset again from where the file is now.", id, dataset.conversion.file));
 			return;
 		}
-		const { entry, conversion } = dataset;
+		const { dataset: fields, conversion } = dataset;
 		const text = (value: unknown) => typeof value === 'string' ? value : '';
 		await showForm('edit', file, {
-			id, name: text(entry.name), domain: text(entry.domain), frequency: Array.isArray(entry.frequency) ? entry.frequency[0] : '',
+			id, name: text(fields.dataset_name), topic: text(fields.topic), frequency: conversion.frequency,
 			seriesColumn: conversion.seriesColumn, timeColumn: conversion.timeColumn, valueColumn: conversion.valueColumn,
-			period: conversion.period, horizon: conversion.horizon, licence: text(entry.licence), notes: text(entry.notes),
+			period: conversion.period, horizon: conversion.horizon, licence: text(fields.licence),
 		});
 	};
 
@@ -499,34 +497,36 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?
 		post({ command: 'formBusy' });
 		const converted = await forecastingDatasetsService.convert({
 			file: form.file, seriesColumn: form.seriesColumn, timeColumn: form.timeColumn, valueColumn: form.valueColumn,
-			id: form.id, frequency: form.frequency, period: form.period, horizon: form.horizon, domain: form.domain, target: target.fsPath,
+			id: form.id, frequency: form.frequency, period: form.period, horizon: form.horizon, domain: form.topic, target: target.fsPath,
 		});
 		if (converted.problems.length) {
 			post({ command: 'formProblems', problems: converted.problems.map(problem => problemText(problem, form.horizon)) });
 			return;
 		}
-		// The fields the conversion knows, over those the user may have added to the entry by hand
-		const earlier = form.mode === 'edit' ? (await readAddedDataset(fileService, folder, form.id))?.entry : undefined;
+		// The fields the form and the conversion know, over those the user may have edited in dataset.toml by hand
+		const earlier = form.mode === 'edit' ? await readAddedDataset(fileService, folder, form.id) : undefined;
+		const fields: { [field: string]: CatalogueValue } = {
+			geometry: 'None',
+			...earlier?.dataset,
+			dataset_id: form.id,
+			dataset_name: form.name.trim(),
+			topic: form.topic,
+			data_structure: 'Time-Series',
+			response_type: 'Regression',
+			rows: converted.observations,
+			features: 0,
+			licence: form.licence.trim(),
+		};
+		if (!form.licence.trim()) {
+			delete fields.licence;
+		}
 		const dataset: IAddedDataset = {
-			conversion: { file: form.file, seriesColumn: form.seriesColumn, timeColumn: form.timeColumn, valueColumn: form.valueColumn, period: form.period, horizon: form.horizon },
-			entry: {
-				...earlier,
-				id: form.id,
-				name: form.name.trim(),
-				type: 'dataset',
-				domain: form.domain,
-				n_series: converted.series,
-				length_min: converted.lengthMin,
-				length_median: converted.lengthMedian,
-				length_max: converted.lengthMax,
-				frequency: [form.frequency],
-				structure: ['univariate_collection'],
-				horizon: String(form.horizon),
-				forecast_type: ['point'],
-				split_protocol: 'single_holdout',
-				...(form.licence.trim() ? { licence: form.licence.trim() } : {}),
-				...(form.notes.trim() ? { notes: form.notes.trim() } : {}),
+			conversion: {
+				file: form.file, seriesColumn: form.seriesColumn, timeColumn: form.timeColumn, valueColumn: form.valueColumn,
+				frequency: form.frequency, period: form.period, horizon: form.horizon, series: converted.series,
 			},
+			dataset: fields,
+			references: earlier?.references ?? [],
 		};
 		await pollisWorkspaceFolder(fileService, workspace, 'data');
 		await writeAddedDataset(fileService, folder, form.id, dataset);
@@ -555,8 +555,8 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?
 			} else if (message.command === 'link' && hasKey(message, { url: true }) && typeof message.url === 'string' && /^https?:\/\//.test(message.url)) {
 				await openInBrowser(message.url, commandService);
 			} else if (message.command === 'competition' && hasKey(message, { id: true })) {
-				// An implemented entry of PollisCompetitions, whose package_id is a competition of Score Models, or a
-				// dataset the user added: made active, so that Score Models lists it
+				// A dataset of PollisCompetitions.jl whose id is a competition of Score Models, or a dataset the user
+				// added: made active, so that Score Models lists it
 				const entry = read?.catalogue.entries.find(candidate => candidate.id === message.id);
 				if (entry && scoredAs(entry)) {
 					const entries = activeDatasets(storageService).entries;
@@ -574,7 +574,7 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?
 					const scored = entries.filter(entry => scoredAs(entry));
 					const left = entries.filter(entry => !scoredAs(entry)).map(entry => entry.name).join(', ');
 					if (!scored.length) {
-						post({ command: 'notice', text: localize('forecastingCatalogue.scoreNone', "Score Models cannot score models on any of the active datasets yet: it scores them on the competitions that PollisCompetitions.jl implements and on the datasets you add.") });
+						post({ command: 'notice', text: localize('forecastingCatalogue.scoreNone', "Score Models cannot score models on any of the active datasets: it scores them on the competitions of PollisCompetitions.jl it runs and on the datasets you add.") });
 						return;
 					}
 					await commandService.executeCommand(FORECASTING_COMPETITIONS_COMMAND_ID);
@@ -608,12 +608,12 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?
 /** The page, showing `rows` rows at a time at first: its texts come from here, the catalogue from the `state` message. */
 function pageHtml(rows: number): string {
 	const text = {
-		intro: localize('forecastingCatalogue.intro', "Manage Competition Datasets describes the forecasting datasets and competitions, and the curated collections that gather them: what each holds, how it is evaluated, where its data come from and what it teaches. View shows one group of fields as columns; Filter by shows the values of a field, to tick those to keep, a value in a cell filters by it when clicked, and a column heading sorts the rows. Expand, under the tick of a row, shows everything its entry records, and Restore Size closes it again. Tick the datasets you are working with in the column Active: Score Competition Models opens Score Models, which lists those it can score models on, to run a forecasting method of your own on their series, and Save Active Datasets to Workspace saves those that Pollis downloads. The column Model Scoring says whether models can be scored on a dataset, and its hover how: the values held out from the forecasters and the measures; the view Task and Evaluation gives its split protocol and horizon. Save to Workspace copies a dataset into data/forecasting of your Pollis Workspace, downloading it first when it is not on this computer, and the column Workspace says whether it is saved there and changed since. Add a Dataset adds a dataset of your own, from a table with a row for each observation."),
+		intro: localize('forecastingCatalogue.intro', "Manage Competition Datasets lists the datasets on which models are scored and ranked, those of PollisCompetitions.jl, of the installed toolboxes and your own, and the curated collections that gather them. View shows one group of fields as columns; Filter by shows the values of a field, to tick those to keep, a value in a cell filters by it when clicked, and a column heading sorts the rows. Expand, under the tick of a row, shows everything recorded of its dataset, with its papers, and Restore Size closes it again. Tick the datasets you are working with in the column Active: Score Competition Models opens Score Models, which lists those it can score models on, and Save Active Datasets to Workspace saves those whose data are on this computer. The column Model Scoring says whether models can be scored on a dataset, and its hover how: the values held out from the forecasters and the measures. Save to Workspace copies a dataset into data/forecasting of your Pollis Workspace, and the column Workspace says whether it is saved there and changed since. Add a Dataset adds a dataset of your own, from a table with a row for each observation."),
 		datasets: localize('forecastingCatalogue.datasets', "Datasets"),
 		collections: localize('forecastingCatalogue.collections', "Curated Collections"),
 		filterBy: localize('forecastingCatalogue.filterBy', "Filter by:"),
 		active: localize('forecastingCatalogue.active', "Active"),
-		activeHint: localize('forecastingCatalogue.activeHint', "The datasets you are working with: Score Models lists those it can score models on, and Save Active Datasets to Workspace saves those that Pollis downloads"),
+		activeHint: localize('forecastingCatalogue.activeHint', "The datasets you are working with: Score Models lists those it can score models on, and Save Active Datasets to Workspace saves those whose data are on this computer"),
 		notScored: localize('forecastingCatalogue.notScored', "Active or not: Score Models cannot score models on this dataset yet, so Score Competition Models leaves it out"),
 		scoreActive: localize('forecastingCatalogue.scoreActive', "Score Competition Models"),
 		activeCount: localize('forecastingCatalogue.activeCount', "{0} active, models can be scored on {1} of them"),
@@ -622,6 +622,15 @@ function pageHtml(rows: number): string {
 		restore: localize('forecastingCatalogue.restore', "Restore Size"),
 		none: localize('forecastingCatalogue.none', "None"),
 		inCollection: localize('forecastingCatalogue.inCollection', "Datasets in This Collection"),
+		collectionPapers: localize('forecastingCatalogue.collectionPapers', "Papers"),
+		collectionName: localize('forecastingCatalogue.collectionName', "Name"),
+		collectionYear: localize('forecastingCatalogue.collectionYear', "Year"),
+		collectionDescription: localize('forecastingCatalogue.collectionDescription', "Description"),
+		collectionDatasets: localize('forecastingCatalogue.collectionDatasets', "Datasets"),
+		collectionDatasetsHint: localize('forecastingCatalogue.collectionDatasetsHint', "The datasets of the catalogue that the collection holds"),
+		collectionLink: localize('forecastingCatalogue.collectionLink', "Link"),
+		collectionCount: localize('forecastingCatalogue.collectionCount', "{0} collections"),
+		showDataset: localize('forecastingCatalogue.showDataset', "Show this dataset in the tab Datasets"),
 		modelScoring: localize('forecastingCatalogue.modelScoring', "Model Scoring"),
 		modelScoringHint: localize('forecastingCatalogue.modelScoringHint', "Whether Score Models can score models on the dataset: whether Pollis holds the values held out from the forecasters and computes its measures"),
 		scoringReady: localize('forecastingCatalogue.scoringReady', "Ready"),
@@ -637,14 +646,11 @@ function pageHtml(rows: number): string {
 		createWorkspaceHint: localize('forecastingCatalogue.createWorkspaceHint', "Create a Pollis Workspace, where the datasets are saved in data/forecasting"),
 		notSaved: localize('forecastingCatalogue.notSaved', "Not Saved"),
 		notSavedHint: localize('forecastingCatalogue.notSavedHint', "Not in the workspace: Save to Workspace copies it there"),
-		notDownloadableHint: localize('forecastingCatalogue.notDownloadableHint', "Not in the workspace: Pollis does not download this dataset, so Save to Workspace cannot copy it there"),
-		notDownloadedHint: localize('forecastingCatalogue.notDownloadedHint', "Not in the workspace, nor on this computer: Save to Workspace downloads it in the Julia REPL, then copies it there"),
+		notOnComputerHint: localize('forecastingCatalogue.notOnComputerHint', "Not in the workspace, and its data are not on this computer, so Save to Workspace cannot copy it there"),
 		saved: localize('forecastingCatalogue.saved', "Saved"),
 		savedHint: localize('forecastingCatalogue.savedHint', "In the workspace as it was saved"),
 		changed: localize('forecastingCatalogue.changed', "Saved and Changed"),
 		changedHint: localize('forecastingCatalogue.changedHint', "In the workspace, and changed since it was saved: a file changed, added or removed"),
-		downloading: localize('forecastingCatalogue.downloading', "Downloading"),
-		downloadingHint: localize('forecastingCatalogue.downloadingHint', "Downloading in the Julia REPL: saved in the workspace once the download ends"),
 		saveToWorkspace: localize('forecastingCatalogue.saveToWorkspace', "Save to Workspace"),
 		saveActive: localize('forecastingCatalogue.saveActive', "Save Active Datasets to Workspace"),
 		addDataset: localize('forecastingCatalogue.addDataset', "Add a Dataset..."),
@@ -668,11 +674,9 @@ function pageHtml(rows: number): string {
 		formPeriodHint: localize('forecastingCatalogue.formPeriodHint', "The number of values in a season: 12 for monthly data with a yearly season, 1 for none"),
 		formHorizon: localize('forecastingCatalogue.formHorizon', "Horizon"),
 		formHorizonHint: localize('forecastingCatalogue.formHorizonHint', "The number of values to forecast: the last values of each series, held back to score the forecasts"),
-		formDomain: localize('forecastingCatalogue.formDomain', "Domain"),
+		formTopic: localize('forecastingCatalogue.formTopic', "Topic"),
 		formLicence: localize('forecastingCatalogue.formLicence', "Licence"),
 		formLicenceHint: localize('forecastingCatalogue.formLicenceHint', "Optional: the terms under which the data may be used"),
-		formNotes: localize('forecastingCatalogue.formNotes', "Notes"),
-		formNotesHint: localize('forecastingCatalogue.formNotesHint', "Optional"),
 		addToWorkspace: localize('forecastingCatalogue.addToWorkspace', "Add to Workspace"),
 		convertAgain: localize('forecastingCatalogue.convertAgain', "Convert Again"),
 		cancel: localize('forecastingCatalogue.cancel', "Cancel"),
@@ -680,18 +684,16 @@ function pageHtml(rows: number): string {
 		editFacts: localize('forecastingCatalogue.editFacts', "Edit Facts"),
 		view: localize('forecastingCatalogue.view', "View:"),
 		clearFilters: localize('forecastingCatalogue.clearFilters', "Clear Filters"),
-		count: localize('forecastingCatalogue.count', "{0} of {1} entries"),
+		count: localize('forecastingCatalogue.count', "{0} of {1} datasets"),
 		missing: localize('forecastingCatalogue.missing', "Missing Fields"),
-		missingHint: localize('forecastingCatalogue.missingHint', "The fields of the schema the entry does not have yet; hover over a number to see them"),
+		missingHint: localize('forecastingCatalogue.missingHint', "The fields of the schema the dataset does not have yet; hover over a number to see them"),
 		yes: localize('forecastingCatalogue.yes', "Yes"),
 		no: localize('forecastingCatalogue.no', "No"),
-		toCheck: localize('forecastingCatalogue.toCheck', "To Check"),
-		toCheckHint: localize('forecastingCatalogue.toCheckHint', "Facts of this entry still to be checked against their primary source."),
-		addFilter: localize('forecastingCatalogue.addFilter', "Show only the entries with this value"),
+		addFilter: localize('forecastingCatalogue.addFilter', "Show only the datasets with this value"),
 		removeFilter: localize('forecastingCatalogue.removeFilter', "Remove this filter"),
 		openCompetition: localize('forecastingCatalogue.openCompetition', "Open in Score Models"),
-		noMatch: localize('forecastingCatalogue.noMatch', "No entry matches the filters."),
-		problems: localize('forecastingCatalogue.problems', "The catalogue file has problems, shown here as they are found; its entries are shown all the same:"),
+		noMatch: localize('forecastingCatalogue.noMatch', "No dataset matches the filters."),
+		problems: localize('forecastingCatalogue.problems', "The catalogue has problems, shown here as they are found; its datasets are shown all the same:"),
 		unreadable: localize('forecastingCatalogue.unreadable', "The catalogue could not be read: {0}"),
 		previous: localize('forecastingCatalogue.previous', "Previous"),
 		next: localize('forecastingCatalogue.next', "Next"),
@@ -783,8 +785,8 @@ ${sortHeadingsCss}
 	</div>
 	<div class="stickyBand" id="band">
 		<div class="controls">
-			<label>${text.view} <select id="view"></select></label>
-			<label>${text.filterBy} <select id="filterField"></select></label>
+			<label id="viewLabel">${text.view} <select id="view"></select></label>
+			<label id="filterLabel">${text.filterBy} <select id="filterField"></select></label>
 			<button class="link" id="clearFilters" hidden>${text.clearFilters}</button>
 			<span class="count" id="count"></span>
 		</div>
@@ -806,22 +808,22 @@ ${sortHeadingsCss}
 `,
 		pageScriptJs: `
 	const TEXT = ${JSON.stringify(text)};
-	// The type of the entries shown in the tab Curated Collections; the others are in the tab Datasets
-	const COLLECTION = ${JSON.stringify(COLLECTION_TYPE)};
-	// The contributor of the datasets the user added, which have Edit Facts
+	// The contributor of the datasets the user added, which have Edit Facts, and that of the competitions of Score Models
 	const WORKSPACE_SOURCE = ${JSON.stringify(WORKSPACE_SOURCE)};
+	const POLLIS_COMPETITIONS_SOURCE = ${JSON.stringify(POLLIS_COMPETITIONS_SOURCE)};
 	// The seasonal period and the horizon a frequency starts with, those of the M4 Competition where it has them
 	const PERIODS = { 'sub-hourly': 1, hourly: 24, daily: 7, weekly: 52, monthly: 12, quarterly: 4, yearly: 1 };
 	const HORIZONS = { 'sub-hourly': 48, hourly: 48, daily: 14, weekly: 13, monthly: 18, quarterly: 8, yearly: 6 };
+	const FREQUENCIES = Object.keys(PERIODS);
 	${ONE_BLUE_BUTTON_JS}
 	${rowsChoiceScript()}
 	${stickyHeadScript()}
 	${sortHeadingsScript()}
 	// The fields with a menu of values in the filters, those of them the schema declares
-	const FILTER_FIELDS = ['type', 'domain', 'era', 'frequency', 'forecast_type', 'package', 'delivery', 'status', 'course_level', 'size_class'];
+	const FILTER_FIELDS = ['topic', 'data_structure', 'geometry', 'response_type', 'delivery'];
 	// Text too long for a cell: two lines of it there, all of it in the details
-	const LONG_FIELDS = ['reference', 'teaches', 'pitfalls', 'notes'];
-	// The column of the Curation view that counts the fields an entry does not have
+	const LONG_FIELDS = ['licence'];
+	// The column of the Curation view that counts the fields a dataset does not have
 	const MISSING = '#missing';
 	const CURATION = 'curation';
 	// The first column of the tab Datasets, the tick that makes a dataset active, and the columns after it: whether
@@ -835,7 +837,7 @@ ${sortHeadingsCss}
 	let competitions = [];
 	let viewId = '';
 	let filters = {};
-	let sortField = 'name';
+	let sortField = 'dataset_name';
 	let sortDescending = false;
 	let userSorted = false;
 	let page = 0;
@@ -843,12 +845,11 @@ ${sortHeadingsCss}
 	let opened = '';
 	let tab = 'datasets';
 	let active = new Set();
-	// Whether a Pollis Workspace is open; the status of each dataset saved there, by id; whether each dataset is on
-	// this computer, by id; and the datasets being downloaded to be saved
+	// Whether a Pollis Workspace is open; the status of each dataset saved there, by id; and whether the data of each
+	// dataset of PollisCompetitions.jl are on this computer, by id
 	let workspace = false;
 	let saved = {};
-	let downloaded = {};
-	let pending = [];
+	let onComputer = {};
 	// Whether the band of controls stays above the table already
 	let stuck = false;
 	// The form shown, as the page sent it: its mode, add or edit, its file, columns and first rows, and its values
@@ -893,21 +894,19 @@ ${sortHeadingsCss}
 		const entry = catalogue.entries.find(candidate => candidate.id === id);
 		return entry ? entry.name : id;
 	}
-	// Whether Score Models scores the entry: a competition it downloads, or a dataset the user added
+	function collectionName(id) {
+		const collection = catalogue.collections.find(candidate => candidate.id === id);
+		return collection ? collection.name : id;
+	}
+	// Whether Score Models scores the dataset: a competition of PollisCompetitions.jl it runs, or a dataset the user added
 	function canScore(entry) {
 		return canOpen(entry) || entry.source === WORKSPACE_SOURCE;
 	}
 	function canOpen(entry) {
-		return entry.package === 'PollisCompetitions' && entry.status === 'implemented' && competitions.includes(entry.package_id);
-	}
-	function inTab(entry) {
-		return (entry.type === COLLECTION) === (tab === 'collections');
+		return entry.source === POLLIS_COMPETITIONS_SOURCE && competitions.includes(entry.id);
 	}
 
 	function matches(entry) {
-		if (!inTab(entry)) {
-			return false;
-		}
 		return Object.entries(filters).every(([name, chosen]) => !chosen.length || valuesOf(entry, name).some(value => chosen.includes(value)));
 	}
 	function sortValue(entry, name) {
@@ -957,6 +956,14 @@ ${sortHeadingsCss}
 			return url;
 		}
 	}
+	// A paper as the details list it: its authors, year, title and venue, and its link, or its key when PollisReferences lacks it
+	function appendPaper(node, key) {
+		const paper = papers[key];
+		const line = node.appendChild(element('div', 'paper', paper ? paper.authors + ' (' + paper.year + '). ' + paper.title + (paper.journal ? '. ' + paper.journal : '') + '. ' : key));
+		if (paper && (paper.doi || paper.url)) {
+			line.appendChild(link(paper.doi ? 'https://doi.org/' + paper.doi : paper.url, paper.doi || hostOf(paper.url)));
+		}
+	}
 	// A value in a cell or in the details: links, tags, entries' names, Yes or No, numbers or text; an absent value leaves it empty
 	function fill(node, entry, name, inCell) {
 		const value = entry[name];
@@ -964,19 +971,13 @@ ${sortHeadingsCss}
 		if (value === undefined || !declared) {
 			return;
 		}
-		if (name === 'url') {
+		if (name === 'source_url') {
 			node.appendChild(link(value, inCell ? hostOf(value) : value));
-		} else if (name === 'doi') {
-			node.appendChild(link('https://doi.org/' + value, value));
-		} else if (name === 'parent' || name === 'related' || name === 'collections') {
-			node.textContent = valuesOf(entry, name).map(entryName).join(', ');
+		} else if (name === 'collections') {
+			node.textContent = valuesOf(entry, name).map(collectionName).join(', ');
 		} else if (name === 'papers' && !inCell) {
 			for (const key of value) {
-				const paper = papers[key];
-				const line = node.appendChild(element('div', 'paper', paper ? paper.authors + ' (' + paper.year + '). ' + paper.title + (paper.journal ? '. ' + paper.journal : '') + '. ' : key));
-				if (paper && (paper.doi || paper.url)) {
-					line.appendChild(link(paper.doi ? 'https://doi.org/' + paper.doi : paper.url, paper.doi || hostOf(paper.url)));
-				}
+				appendPaper(node, key);
 			}
 		} else if (Array.isArray(value)) {
 			for (const item of value) {
@@ -999,16 +1000,14 @@ ${sortHeadingsCss}
 
 	function columns() {
 		const current = view();
-		return [ACTIVE, ...(tab === 'datasets' ? [SCORING, WORKSPACE] : []), current.pinned[0] || 'name', ...current.columns.filter(name => !current.pinned.includes(name)), ...(current.id === CURATION ? [MISSING] : [])];
+		return [ACTIVE, SCORING, WORKSPACE, current.pinned[0] || 'dataset_name', ...current.columns.filter(name => !current.pinned.includes(name)), ...(current.id === CURATION ? [MISSING] : [])];
 	}
 	function drawHead() {
 		const head = document.getElementById('head');
 		head.textContent = '';
 		for (const name of columns()) {
 			if (name === ACTIVE) {
-				// In the tab Curated Collections, the column holds Expand only, under no heading
-				const heading = head.appendChild(element('th', 'activeCell', tab === 'datasets' ? TEXT.active : ''));
-				heading.title = tab === 'datasets' ? TEXT.activeHint : '';
+				head.appendChild(element('th', 'activeCell', TEXT.active)).title = TEXT.activeHint;
 				continue;
 			}
 			if (name === SCORING) {
@@ -1019,13 +1018,17 @@ ${sortHeadingsCss}
 				head.appendChild(element('th', '', TEXT.workspace)).title = TEXT.workspaceHint;
 				continue;
 			}
-			const heading = element('th', 'sortable' + (name === MISSING || (field(name) && field(name).type === 'integer') ? ' number' : ''));
+			const heading = element('th', 'sortable' + (name === MISSING || isNumber(name) ? ' number' : ''));
 			heading.dataset.sort = name;
 			heading.dataset.label = name === MISSING ? TEXT.missing : field(name).label;
 			heading.title = name === MISSING ? TEXT.missingHint : field(name).description + '. ' + TEXT.sortHint;
 			setSortArrow(heading, heading.dataset.label, name === sortField, sortDescending);
 			head.appendChild(heading);
 		}
+	}
+	function isNumber(name) {
+		const declared = field(name);
+		return !!declared && (declared.type === 'integer' || declared.type === 'number');
 	}
 	function entryRow(entry, names) {
 		const row = element('tr', 'entryRow' + (entry.id === opened ? ' opened' : ''));
@@ -1036,19 +1039,12 @@ ${sortHeadingsCss}
 			if (name === ACTIVE) {
 				// The tick of any dataset, and under it Expand, or Restore Size when the row is expanded
 				cell.className = 'activeCell';
-				if (tab === 'datasets') {
-					const tick = cell.appendChild(element('input', 'activeTick'));
-					tick.type = 'checkbox';
-					tick.dataset.id = entry.id;
-					tick.checked = active.has(entry.id);
-					tick.title = canScore(entry) ? TEXT.activeHint : TEXT.notScored;
-				}
-				const expand = cell.appendChild(element('button', 'expand'));
-				expand.dataset.expand = entry.id;
-				expand.innerHTML = entry.id === opened ? RESTORE_ICON : EXPAND_ICON;
-				expand.title = entry.id === opened ? TEXT.restore : TEXT.expand;
-				expand.setAttribute('aria-label', expand.title);
-				expand.setAttribute('aria-expanded', String(entry.id === opened));
+				const tick = cell.appendChild(element('input', 'activeTick'));
+				tick.type = 'checkbox';
+				tick.dataset.id = entry.id;
+				tick.checked = active.has(entry.id);
+				tick.title = canScore(entry) ? TEXT.activeHint : TEXT.notScored;
+				cell.appendChild(expandButton(entry.id));
 			} else if (name === SCORING) {
 				drawScoring(cell, entry);
 			} else if (name === WORKSPACE) {
@@ -1067,7 +1063,7 @@ ${sortHeadingsCss}
 				cell.textContent = missing.length;
 				cell.title = missing.map(candidate => candidate.label).join(', ');
 			} else {
-				if (field(name).type === 'integer') {
+				if (isNumber(name)) {
 					cell.className = 'number';
 				}
 				fill(cell, entry, name, true);
@@ -1076,20 +1072,29 @@ ${sortHeadingsCss}
 		}
 		return row;
 	}
+	// Expand, or Restore Size when the row \`id\` is expanded
+	function expandButton(id) {
+		const expand = element('button', 'expand');
+		expand.dataset.expand = id;
+		expand.innerHTML = id === opened ? RESTORE_ICON : EXPAND_ICON;
+		expand.title = id === opened ? TEXT.restore : TEXT.expand;
+		expand.setAttribute('aria-label', expand.title);
+		expand.setAttribute('aria-expanded', String(id === opened));
+		return expand;
+	}
 	// Whether models can be scored on the dataset, and how in its hover
 	function drawScoring(cell, entry) {
 		const ready = canScore(entry);
 		cell.className = 'scoringCell' + (ready ? '' : ' none');
 		cell.textContent = ready ? TEXT.scoringReady : TEXT.scoringNotYet;
-		cell.title = !ready ? TEXT.scoringNotYetHint : entry.source === WORKSPACE_SOURCE ? TEXT.scoringOwnHint : TEXT.scoringHints[entry.package_id] || TEXT.modelScoringHint;
+		cell.title = !ready ? TEXT.scoringNotYetHint : entry.source === WORKSPACE_SOURCE ? TEXT.scoringOwnHint : TEXT.scoringHints[entry.id] || TEXT.modelScoringHint;
 	}
-	// Whether the dataset is saved in the workspace, Not Saved too for one Pollis cannot download
+	// Whether the dataset is saved in the workspace, Not Saved too for one whose data are not on this computer
 	function drawWorkspace(cell, entry) {
 		const [status, label, hint] = !workspace ? ['none', TEXT.noWorkspace, TEXT.noWorkspaceHint]
-			: pending.includes(entry.id) ? ['downloading', TEXT.downloading, TEXT.downloadingHint]
-				: saved[entry.id] === 'saved' ? ['saved', TEXT.saved, TEXT.savedHint]
-					: saved[entry.id] === 'changed' ? ['changed', TEXT.changed, TEXT.changedHint]
-						: ['none', TEXT.notSaved, !canOpen(entry) && entry.source !== WORKSPACE_SOURCE ? TEXT.notDownloadableHint : downloaded[entry.id] ? TEXT.notSavedHint : TEXT.notDownloadedHint];
+			: saved[entry.id] === 'saved' ? ['saved', TEXT.saved, TEXT.savedHint]
+				: saved[entry.id] === 'changed' ? ['changed', TEXT.changed, TEXT.changedHint]
+					: ['none', TEXT.notSaved, onComputer[entry.id] ? TEXT.notSavedHint : TEXT.notOnComputerHint];
 		cell.className = 'workspaceCell ' + status;
 		cell.textContent = label;
 		cell.title = hint;
@@ -1107,28 +1112,22 @@ ${sortHeadingsCss}
 		const cell = row.appendChild(element('td'));
 		cell.colSpan = span;
 		const details = cell.appendChild(element('div', 'details'));
-		if (canOpen(entry)) {
-			const bar = details.appendChild(element('div', 'bar'));
-			const save = bar.appendChild(element('button', 'action current', TEXT.saveToWorkspace));
-			save.dataset.save = entry.id;
-			save.disabled = pending.includes(entry.id);
-			const open = bar.appendChild(element('button', 'action', TEXT.openCompetition));
-			open.dataset.competition = entry.id;
-		} else if (entry.source === WORKSPACE_SOURCE) {
+		if (entry.source === WORKSPACE_SOURCE) {
 			const bar = details.appendChild(element('div', 'bar'));
 			bar.appendChild(element('button', 'action current', TEXT.editFacts)).dataset.edit = entry.id;
 			bar.appendChild(element('button', 'action', TEXT.openCompetition)).dataset.competition = entry.id;
-		}
-		if (entry.type === COLLECTION) {
-			const held = catalogue.entries.filter(other => valuesOf(other, 'collections').includes(entry.id));
-			if (held.length) {
-				details.appendChild(element('h3', '', TEXT.inCollection));
-				details.appendChild(element('div', '', held.map(other => other.name).join(', ')));
+		} else if (onComputer[entry.id] || canOpen(entry)) {
+			const bar = details.appendChild(element('div', 'bar'));
+			if (onComputer[entry.id]) {
+				bar.appendChild(element('button', 'action current', TEXT.saveToWorkspace)).dataset.save = entry.id;
+			}
+			if (canOpen(entry)) {
+				bar.appendChild(element('button', 'action' + (onComputer[entry.id] ? '' : ' current'), TEXT.openCompetition)).dataset.competition = entry.id;
 			}
 		}
 		const groups = [...new Set(catalogue.fields.map(candidate => candidate.group))];
 		for (const group of groups) {
-			const shown = catalogue.fields.filter(candidate => candidate.group === group && candidate.name !== 'verify' && entry[candidate.name] !== undefined);
+			const shown = catalogue.fields.filter(candidate => candidate.group === group && entry[candidate.name] !== undefined);
 			if (!shown.length) {
 				continue;
 			}
@@ -1140,14 +1139,32 @@ ${sortHeadingsCss}
 				fill(list.appendChild(element('dd')), entry, declared.name, false);
 			}
 		}
-		const toCheck = valuesOf(entry, 'verify');
-		if (toCheck.length) {
-			details.appendChild(element('h3', '', TEXT.toCheck));
-			details.appendChild(element('div', 'hint', TEXT.toCheckHint));
-			const list = details.appendChild(element('ul', 'toCheck'));
-			for (const fact of toCheck) {
-				const declared = field(fact);
-				list.appendChild(element('li', '', declared ? declared.label : fact.split('_').join(' ')));
+		return row;
+	}
+	// The details of a curated collection: its datasets, each a link to it in the tab Datasets, and its papers
+	function collectionDetailsRow(collection, span) {
+		const row = element('tr', 'detailsRow');
+		const cell = row.appendChild(element('td'));
+		cell.colSpan = span;
+		const details = cell.appendChild(element('div', 'details'));
+		const held = (collection.datasets || []).filter(id => catalogue.entries.some(entry => entry.id === id));
+		if (held.length) {
+			details.appendChild(element('h3', '', TEXT.inCollection));
+			const list = details.appendChild(element('div'));
+			held.forEach((id, index) => {
+				if (index) {
+					list.append(', ');
+				}
+				const button = list.appendChild(element('button', 'link', entryName(id)));
+				button.dataset.reveal = id;
+				button.title = TEXT.showDataset;
+			});
+		}
+		if ((collection.papers || []).length) {
+			details.appendChild(element('h3', '', TEXT.collectionPapers));
+			const list = details.appendChild(element('div'));
+			for (const key of collection.papers) {
+				appendPaper(list, key);
 			}
 		}
 		return row;
@@ -1186,7 +1203,7 @@ ${sortHeadingsCss}
 		if (filterField) {
 			const chosen = filters[filterField] || [];
 			for (const value of field(filterField).values) {
-				const count = catalogue.entries.filter(entry => inTab(entry) && valuesOf(entry, filterField).includes(value)).length;
+				const count = catalogue.entries.filter(entry => valuesOf(entry, filterField).includes(value)).length;
 				const option = values.appendChild(element('label'));
 				const tick = option.appendChild(element('input'));
 				tick.type = 'checkbox';
@@ -1250,7 +1267,7 @@ ${sortHeadingsCss}
 		if (!entry || !view()) {
 			return;
 		}
-		tab = entry.type === COLLECTION ? 'collections' : 'datasets';
+		tab = 'datasets';
 		for (const button of document.querySelectorAll('#tabs > button.toggle-btn')) {
 			button.classList.toggle('active', button.dataset.tab === tab);
 		}
@@ -1265,9 +1282,52 @@ ${sortHeadingsCss}
 		}
 	}
 
+	// The tab Curated Collections: a row for each collection, in the order of the page's TOML
+	function renderCollections() {
+		const head = document.getElementById('head');
+		head.textContent = '';
+		head.appendChild(element('th', 'activeCell'));
+		for (const [label, className, hint] of [[TEXT.collectionName, ''], [TEXT.collectionYear, 'number'], [TEXT.collectionDescription, ''], [TEXT.collectionDatasets, 'number', TEXT.collectionDatasetsHint], [TEXT.collectionLink, '']]) {
+			const heading = head.appendChild(element('th', className, label));
+			if (hint) {
+				heading.title = hint;
+			}
+		}
+		const body = document.getElementById('rows');
+		body.textContent = '';
+		for (const collection of catalogue.collections) {
+			const row = body.appendChild(element('tr', 'entryRow' + (collection.id === opened ? ' opened' : '')));
+			row.appendChild(element('td', 'activeCell')).appendChild(expandButton(collection.id));
+			row.appendChild(element('td', 'nameCell')).appendChild(element('div', 'name', collection.name));
+			row.appendChild(element('td', 'number', collection.year === undefined ? '' : collection.year));
+			row.appendChild(element('td', '', collection.description));
+			const held = (collection.datasets || []).filter(id => catalogue.entries.some(entry => entry.id === id));
+			row.appendChild(element('td', 'number', held.length));
+			row.appendChild(element('td')).appendChild(link(collection.url, hostOf(collection.url)));
+			if (collection.id === opened) {
+				body.appendChild(collectionDetailsRow(collection, 6));
+			}
+		}
+		document.getElementById('pager').hidden = true;
+		document.getElementById('chips').textContent = '';
+		document.getElementById('count').textContent = format(TEXT.collectionCount, catalogue.collections.length);
+		document.getElementById('table').hidden = !catalogue.collections.length;
+		document.getElementById('note').hidden = true;
+	}
+
 	function render() {
 		// A catalogue with no view has nothing to show but its problems
 		if (!catalogue || !view()) {
+			return;
+		}
+		const datasets = tab === 'datasets';
+		for (const id of ['viewLabel', 'filterLabel', 'scoreRow']) {
+			document.getElementById(id).hidden = !datasets;
+		}
+		document.getElementById('filterValues').hidden = true;
+		document.getElementById('clearFilters').hidden = true;
+		if (!datasets) {
+			renderCollections();
 			return;
 		}
 		drawHead();
@@ -1286,7 +1346,7 @@ ${sortHeadingsCss}
 			}
 		}
 		fillPager(shown.length, pages);
-		document.getElementById('count').textContent = format(TEXT.count, shown.length, catalogue.entries.filter(inTab).length);
+		document.getElementById('count').textContent = format(TEXT.count, shown.length, catalogue.entries.length);
 		drawActive();
 		document.getElementById('table').hidden = !shown.length;
 		const note = document.getElementById('note');
@@ -1294,9 +1354,8 @@ ${sortHeadingsCss}
 		note.textContent = TEXT.noMatch;
 	}
 
-	// The row of Score Active Datasets, in the tab Datasets only: the button, and how many datasets are active
+	// The row of Score Active Datasets: the button, and how many datasets are active
 	function drawActive() {
-		document.getElementById('scoreRow').hidden = tab !== 'datasets';
 		document.getElementById('score').disabled = !active.size;
 		document.getElementById('saveActive').disabled = !active.size;
 		const scored = catalogue.entries.filter(entry => active.has(entry.id) && canScore(entry)).length;
@@ -1390,8 +1449,7 @@ ${sortHeadingsCss}
 			// Empty until the file is chosen
 			add(label, select(id, names, value), hint).disabled = !names.length;
 		}
-		const frequencies = field('frequency') ? field('frequency').values : [];
-		const frequency = add(TEXT.formFrequency, select('formFrequency', frequencies, values.frequency || 'monthly'), field('frequency') ? field('frequency').description : '');
+		const frequency = add(TEXT.formFrequency, select('formFrequency', FREQUENCIES, values.frequency || 'monthly'));
 		const period = add(TEXT.formPeriod, input('formPeriod', values.period || PERIODS[frequency.value] || 1, 'number'), TEXT.formPeriodHint);
 		const horizon = add(TEXT.formHorizon, input('formHorizon', values.horizon || HORIZONS[frequency.value] || 1, 'number'), TEXT.formHorizonHint);
 		period.min = 1;
@@ -1400,10 +1458,9 @@ ${sortHeadingsCss}
 			period.value = PERIODS[frequency.value] || 1;
 			horizon.value = HORIZONS[frequency.value] || 1;
 		});
-		const domains = field('domain') ? field('domain').values : [];
-		add(TEXT.formDomain, select('formDomain', domains, values.domain || 'general'), field('domain') ? field('domain').description : '');
+		const topics = field('topic') ? field('topic').values : [];
+		add(TEXT.formTopic, select('formTopic', topics, values.topic || 'General'), field('topic') ? field('topic').description : '');
 		add(TEXT.formLicence, input('formLicence', values.licence), TEXT.formLicenceHint);
-		add(TEXT.formNotes, input('formNotes', values.notes), TEXT.formNotesHint);
 		box.appendChild(element('ul', 'formProblems')).id = 'formProblems';
 		const bar = box.appendChild(element('div', 'bar'));
 		const submit = bar.appendChild(element('button', 'action current', form.mode === 'add' ? TEXT.addToWorkspace : TEXT.convertAgain));
@@ -1419,7 +1476,7 @@ ${sortHeadingsCss}
 	function typedValues() {
 		return {
 			name: formValue('formName'), id: formValue('formId'), frequency: formValue('formFrequency'), period: Number(formValue('formPeriod')),
-			horizon: Number(formValue('formHorizon')), domain: formValue('formDomain'), licence: formValue('formLicence'), notes: formValue('formNotes'),
+			horizon: Number(formValue('formHorizon')), topic: formValue('formTopic'), licence: formValue('formLicence'),
 		};
 	}
 	function showFormProblems(problems) {
@@ -1454,10 +1511,10 @@ ${sortHeadingsCss}
 		viewId = viewSelect.value;
 		// The Curation view sorts by the fields missing, unless the rows were sorted by a column of the user's choice
 		if (!userSorted) {
-			sortField = viewId === CURATION ? MISSING : 'name';
+			sortField = viewId === CURATION ? MISSING : 'dataset_name';
 			sortDescending = viewId === CURATION;
 		} else if (sortField === MISSING && viewId !== CURATION) {
-			sortField = 'name';
+			sortField = 'dataset_name';
 			sortDescending = false;
 		}
 		render();
@@ -1529,10 +1586,10 @@ ${sortHeadingsCss}
 		} else if (event.target.id === 'formSubmit') {
 			showFormProblems([]);
 			vscode.postMessage({ command: 'convert', form: {
-				mode: form.mode, file: form.file, id: formValue('formId').trim(), name: formValue('formName'), domain: formValue('formDomain'),
+				mode: form.mode, file: form.file, id: formValue('formId').trim(), name: formValue('formName'), topic: formValue('formTopic'),
 				seriesColumn: formValue('formSeries'), timeColumn: formValue('formTime'), valueColumn: formValue('formValue'),
 				frequency: formValue('formFrequency'), period: Number(formValue('formPeriod')), horizon: Number(formValue('formHorizon')),
-				licence: formValue('formLicence'), notes: formValue('formNotes'),
+				licence: formValue('formLicence'),
 			} });
 		}
 	});
@@ -1570,6 +1627,11 @@ ${sortHeadingsCss}
 		if (expand) {
 			opened = opened === expand.dataset.expand ? '' : expand.dataset.expand;
 			render();
+			return;
+		}
+		const revealButton = target.closest('button[data-reveal]');
+		if (revealButton) {
+			reveal(revealButton.dataset.reveal);
 			return;
 		}
 		const tagButton = target.closest('button.tag');
@@ -1650,8 +1712,7 @@ ${sortHeadingsCss}
 		active = new Set(message.active || []);
 		workspace = !!message.workspace;
 		saved = message.saved || {};
-		downloaded = message.downloaded || {};
-		pending = message.pending || [];
+		onComputer = message.onComputer || {};
 		showProblems(message.problems);
 		viewSelect.textContent = '';
 		for (const candidate of catalogue.views) {

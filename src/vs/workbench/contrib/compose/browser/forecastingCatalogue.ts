@@ -4,46 +4,45 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AppResourcePath } from '../../../../base/common/network.js';
+import { IModelCollection } from '../../model/browser/common/model.types.js';
 import { parseToml, TomlValue } from '../../model/browser/common/tomlPanelData.js';
 
-// The forecasting catalogue of Compose > Prediction Competitions > Manage Competition Datasets (forecastingCataloguePage.ts):
-// the competitions, datasets, curated collections and archives of published forecasts that Pollis describes. Its schema
-// is media/forecastingCatalogue.toml, whose [[field]] tables are the fields of an entry and its [[view]] tables the
-// column presets of the page; the entries come from their contributors, PollisCompetitions.jl and the installed
-// toolboxes, each a file of [[entry]] tables. readForecastingCatalogue reads them and lists what is wrong in them, each
-// problem naming the contributor, the entry and the field; the page shows them, and a unit test fails on any.
+// The Dataset Catalog of Compose > Prediction Competitions > Manage Competition Datasets (forecastingCataloguePage.ts):
+// the datasets on which models are scored and ranked. Its schema is media/forecastingCatalogue.toml, whose [[field]]
+// tables are the fields of a dataset and its [[view]] tables the column presets of the page; the datasets come from
+// their contributors, PollisCompetitions.jl, the installed toolboxes and the Pollis Workspace, each a file of [[datasets]]
+// tables, and the curated collections from the [[collections]] of the page's TOML. readForecastingCatalogue reads them
+// and lists what is wrong in them, each problem naming the contributor, the dataset and the field; the page shows them.
 
 /** The schema of the catalogue, its fields and views, as Pollis ships it. */
 export const FORECASTING_CATALOGUE_FILE: AppResourcePath = 'vs/workbench/contrib/compose/browser/media/forecastingCatalogue.toml';
 
-/** The entries of PollisCompetitions.jl as Pollis ships them, for when the package is not on this computer. */
-export const POLLIS_COMPETITIONS_DATASETS_FILE: AppResourcePath = 'vs/workbench/contrib/compose/browser/media/pollisCompetitions.forecastingDatasets.toml';
+/** The file of PollisCompetitions.jl that holds its datasets, in the package's folder. */
+export const POLLIS_COMPETITIONS_DATASETS_PATH = 'metadata/datasets.toml';
 
-/** The file of PollisCompetitions.jl that holds its entries, in the package's folder. */
-export const POLLIS_COMPETITIONS_DATASETS_PATH = 'data/forecasting_datasets.toml';
-
-/** PollisCompetitions.jl as the column Source names it. */
+/** PollisCompetitions.jl as the column Contributor names it. */
 export const POLLIS_COMPETITIONS_SOURCE = 'PollisCompetitions.jl';
 
-/** The field that names who contributes an entry, which the page sets. */
+/** The fields the page sets, which a dataset's file does not give: its contributor, its collections and its papers. */
 const SOURCE_FIELD = 'source';
+const PAGE_FIELDS = [SOURCE_FIELD, 'collections', 'papers'];
 
-/** A contributor's file of [[entry]] tables: PollisCompetitions.jl's or a toolbox's. */
+/** The roles of a reference of a dataset. */
+const REFERENCE_ROLES = ['Primary', 'Competition', 'Benchmark', 'Other'];
+
+/** A contributor's file of [[datasets]] tables: PollisCompetitions.jl's, a toolbox's or a dataset's of the workspace. */
 export interface ICatalogueContribution {
-	/** Who contributes it, as the column Source shows it. */
+	/** Who contributes it, as the column Contributor shows it. */
 	readonly source: string;
 	readonly content: string;
 }
 
 /** The types a field's values may have. */
-const FIELD_TYPES = ['string', 'string[]', 'integer', 'boolean'] as const;
+const FIELD_TYPES = ['string', 'string[]', 'integer', 'number', 'boolean'] as const;
 type FieldType = typeof FIELD_TYPES[number];
 
-/** The fields every entry has; a dataset the user added from a file of their own has no package. */
-const REQUIRED_FIELDS = ['id', 'name', 'type', 'domain'];
-
-/** The type of the entries that are curated collections, which the page shows in their own tab and `collections` names. */
-export const COLLECTION_TYPE = 'benchmark_suite';
+/** The fields every dataset has. */
+const REQUIRED_FIELDS = ['dataset_id', 'dataset_name', 'topic'];
 
 /** A field of the schema. */
 export interface ICatalogueField {
@@ -68,10 +67,13 @@ export interface ICatalogueView {
 	readonly columns: readonly string[];
 }
 
-/** A value of an entry: text, a number, true or false, or a list of texts. */
+/** A value of a dataset: text, a number, true or false, or a list of texts. */
 export type CatalogueValue = string | number | boolean | readonly string[];
 
-/** An entry: the fields it has, with their values; an absent field is unknown or does not apply. */
+/**
+ * A dataset: the fields it has, with their values, and its id and name, its dataset_id and dataset_name; an absent field
+ * is unknown.
+ */
 export interface ICatalogueEntry {
 	readonly [field: string]: CatalogueValue | undefined;
 	readonly id: string;
@@ -82,17 +84,21 @@ export interface IForecastingCatalogue {
 	readonly fields: readonly ICatalogueField[];
 	readonly views: readonly ICatalogueView[];
 	readonly entries: readonly ICatalogueEntry[];
+	readonly collections: readonly IModelCollection[];
 }
 
-/** What the catalogue is checked against outside its own file. */
+/** What the catalogue is checked against outside its own files. */
 export interface ICatalogueReferences {
-	/** For each package, the ids of its own catalogue that an implemented entry's package_id may name. */
-	readonly packageIds: { readonly [pkg: string]: readonly string[] };
-	/** The keys of PollisReferences that the page can show for an entry's papers. */
-	readonly paperKeys: readonly string[];
+	/**
+	 * The keys of PollisReferences, which the page shows as the papers of a dataset or a collection; undefined when
+	 * PollisReferences could not be read, and the keys are not checked.
+	 */
+	readonly paperKeys?: readonly string[];
+	/** The curated collections of the page. */
+	readonly collections: readonly IModelCollection[];
 }
 
-/** The catalogue read from its file, and what is wrong in it. */
+/** The catalogue read from its files, and what is wrong in them. */
 export interface ICatalogueRead {
 	readonly catalogue: IForecastingCatalogue;
 	readonly problems: readonly string[];
@@ -111,6 +117,7 @@ function hasType(value: unknown, type: FieldType): boolean {
 		case 'string': return typeof value === 'string';
 		case 'string[]': return Array.isArray(value) && value.every(item => typeof item === 'string');
 		case 'integer': return typeof value === 'number' && Number.isInteger(value);
+		case 'number': return typeof value === 'number';
 		case 'boolean': return typeof value === 'boolean';
 	}
 }
@@ -159,7 +166,7 @@ function readFields(data: TomlValue, problems: string[]): ICatalogueField[] {
 		});
 	}
 	for (const required of REQUIRED_FIELDS.filter(name => !fields.some(field => field.name === name))) {
-		problems.push(`Field "${required}" is not declared, and every entry has it`);
+		problems.push(`Field "${required}" is not declared, and every dataset has it`);
 	}
 	return fields;
 }
@@ -194,28 +201,51 @@ function readViews(data: TomlValue, fields: readonly ICatalogueField[], problems
 	return views;
 }
 
+/** The keys of the [[datasets.references]] of a dataset, checked: each a bibtex_key, with a role of the vocabulary when it has one. */
+function readReferences(value: unknown, label: string, problems: string[]): string[] {
+	const keys: string[] = [];
+	for (const [index, reference] of (Array.isArray(value) ? value as TomlValue[] : []).entries()) {
+		const key = text(reference.bibtex_key);
+		if (!key) {
+			problems.push(`${label}, reference ${index + 1}: it has no bibtex_key`);
+			continue;
+		}
+		for (const name of Object.keys(reference).filter(name => name !== 'bibtex_key' && name !== 'role')) {
+			problems.push(`${label}, reference "${key}", field "${name}": a reference has bibtex_key and role only`);
+		}
+		if (reference.role !== undefined && !REFERENCE_ROLES.includes(text(reference.role))) {
+			problems.push(`${label}, reference "${key}", field "role": "${String(reference.role)}" is not one of ${REFERENCE_ROLES.join(', ')}`);
+		}
+		keys.push(key);
+	}
+	return keys;
+}
+
 function readEntries(contributions: readonly ICatalogueContribution[], fields: readonly ICatalogueField[], references: ICatalogueReferences, problems: string[]): ICatalogueEntry[] {
 	const byName = new Map(fields.map(field => [field.name, field]));
 	const entries: ICatalogueEntry[] = [];
 	for (const contribution of contributions) {
 		const data = parseToml(contribution.content);
-		const raw = Array.isArray(data.entry) ? data.entry as TomlValue[] : [];
-		for (const [index, entry] of raw.entries()) {
-			const id = text(entry.id);
-			const label = `${contribution.source}: ` + (id ? `Entry "${id}"` : `Entry ${index + 1}`);
-			for (const required of REQUIRED_FIELDS.filter(name => entry[name] === undefined)) {
+		const raw = Array.isArray(data.datasets) ? data.datasets as TomlValue[] : [];
+		for (const [index, dataset] of raw.entries()) {
+			const id = text(dataset.dataset_id);
+			const label = `${contribution.source}: ` + (id ? `Dataset "${id}"` : `Dataset ${index + 1}`);
+			for (const required of REQUIRED_FIELDS.filter(name => dataset[name] === undefined)) {
 				problems.push(`${label} has no field "${required}"`);
 			}
 			// The fields of the schema with values of their types, which the page shows
 			const values: { [field: string]: CatalogueValue } = {};
-			for (const [key, value] of Object.entries(entry)) {
-				const field = byName.get(key);
-				if (!field) {
-					problems.push(`${label}, field "${key}": not a field of the schema`);
+			for (const [key, value] of Object.entries(dataset)) {
+				if (key === 'references') {
+					const papers = readReferences(value, label, problems);
+					if (papers.length) {
+						values.papers = papers;
+					}
 					continue;
 				}
-				if (key === SOURCE_FIELD) {
-					problems.push(`${label}, field "${key}": the page sets it, not the file`);
+				const field = byName.get(key);
+				if (!field || PAGE_FIELDS.includes(key)) {
+					problems.push(`${label}, field "${key}": ${field ? 'the page sets it, not the file' : 'not a field of the schema'}`);
 					continue;
 				}
 				if (!hasType(value, field.type)) {
@@ -239,40 +269,29 @@ function readEntries(contributions: readonly ICatalogueContribution[], fields: r
 				problems.push(`${label} is in the catalogue already, from ${earlier.source}`);
 				continue;
 			}
-			entries.push({ ...values, id, name: text(entry.name) || id, [SOURCE_FIELD]: contribution.source });
+			const collections = references.collections.filter(collection => collection.datasets?.includes(id)).map(collection => collection.id);
+			entries.push({
+				...values,
+				...(collections.length ? { collections } : {}),
+				id,
+				name: text(dataset.dataset_name) || id,
+				[SOURCE_FIELD]: contribution.source,
+			});
 		}
 	}
 
-	const ids = new Set(entries.map(entry => entry.id));
-	for (const entry of entries) {
-		const label = `${entry.source}: Entry "${entry.id}"`;
-		for (const [key, linked] of [['parent', texts([entry.parent])], ['related', texts(entry.related)], ['collections', texts(entry.collections)]] as const) {
-			for (const other of linked) {
-				if (other === entry.id || !ids.has(other)) {
-					problems.push(`${label}, field "${key}": "${other}" is ${other === entry.id ? 'the entry itself' : 'no entry of the catalogue'}`);
-				}
-			}
+	const known = references.paperKeys && new Set(references.paperKeys);
+	for (const entry of known ? entries : []) {
+		for (const paper of texts(entry.papers).filter(paper => !known!.has(paper))) {
+			problems.push(`${entry.source}: Dataset "${entry.id}", reference "${paper}": not a work of PollisReferences`);
 		}
-		for (const collection of texts(entry.collections)) {
-			const holder = entries.find(other => other.id === collection);
-			if (holder && holder.type !== COLLECTION_TYPE) {
-				problems.push(`${label}, field "collections": "${collection}" is not a curated collection (type ${COLLECTION_TYPE})`);
-			}
-		}
-		for (const paper of texts(entry.papers).filter(paper => !references.paperKeys.includes(paper))) {
-			problems.push(`${label}, field "papers": "${paper}" is not among the References of the page`);
-		}
-		const pkg = text(entry.package);
-		if (entry.delivery === 'bundled' && pkg === 'PollisCompetitions') {
-			problems.push(`${label}, field "delivery": PollisCompetitions ships no data, so its entries are never bundled`);
-		}
-		if (entry.status === 'implemented') {
-			const packageId = text(entry.package_id);
-			const known = references.packageIds[pkg];
-			if (!packageId) {
-				problems.push(`${label}, field "package_id": an implemented entry names its id in the catalogue of ${pkg || 'its package'}`);
-			} else if (known && !known.includes(packageId)) {
-				problems.push(`${label}, field "package_id": "${packageId}" is not in the catalogue of ${pkg}`);
+	}
+	// The datasets a collection names must be in the catalogue, once it has any
+	if (entries.length) {
+		const ids = new Set(entries.map(entry => entry.id));
+		for (const collection of references.collections) {
+			for (const dataset of (collection.datasets ?? []).filter(dataset => !ids.has(dataset))) {
+				problems.push(`Collection "${collection.id}": "${dataset}" is no dataset of the catalogue`);
 			}
 		}
 	}
@@ -280,8 +299,8 @@ function readEntries(contributions: readonly ICatalogueContribution[], fields: r
 }
 
 /**
- * The catalogue of the schema `schema` (its fields and views) and the entries of `contributions`, in their order, and
- * the problems found in them, checked against `references`. An id already given keeps its first entry.
+ * The catalogue of the schema `schema` (its fields and views), the datasets of `contributions`, in their order, and the
+ * collections of `references`, and the problems found in them. An id already given keeps its first dataset.
  */
 export function readForecastingCatalogue(schema: string, contributions: readonly ICatalogueContribution[], references: ICatalogueReferences): ICatalogueRead {
 	const problems: string[] = [];
@@ -289,5 +308,11 @@ export function readForecastingCatalogue(schema: string, contributions: readonly
 	const fields = readFields(data, problems);
 	const views = readViews(data, fields, problems);
 	const entries = readEntries(contributions, fields, references, problems);
-	return { catalogue: { fields, views, entries }, problems };
+	const known = references.paperKeys && new Set(references.paperKeys);
+	for (const collection of known ? references.collections : []) {
+		for (const paper of (collection.papers ?? []).filter(paper => !known!.has(paper))) {
+			problems.push(`Collection "${collection.id}", paper "${paper}": not a work of PollisReferences`);
+		}
+	}
+	return { catalogue: { fields, views, entries, collections: references.collections }, problems };
 }

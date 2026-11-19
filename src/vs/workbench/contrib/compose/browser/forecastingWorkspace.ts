@@ -17,7 +17,7 @@ import { sha256Of } from './sha256.js';
 // and saved.toml, which records each file's size, time and SHA-256 when it was saved, so that a change to the copy is
 // seen; and forecastingCatalogue.toml, the whole catalogue as the page last read it, for Julia, which the page
 // rewrites and no one edits. A dataset the user adds from a file of their own has, beside its converted files,
-// dataset.toml: how it was converted, and its entry in the catalogue, which the page reads with the others.
+// dataset.toml: how it was converted, and its [[datasets]] table in the catalogue, which the page reads with the others.
 
 /** The folder of the forecasting datasets inside the data folder of a Pollis Workspace. */
 const FORECASTING_FOLDER = 'forecasting';
@@ -34,20 +34,23 @@ const DATASET_FILE = 'dataset.toml';
 /** The contributor of the datasets the user added, as the column Source names it. */
 export const WORKSPACE_SOURCE = 'Pollis Workspace';
 
-/** How a dataset the user added was converted: from which file and columns, with which period and horizon. */
+/** How a dataset the user added was converted: from which file and columns, with which frequency, period and horizon, into how many series. */
 export interface IAddedConversion {
 	readonly file: string;
 	readonly seriesColumn: string;
 	readonly timeColumn: string;
 	readonly valueColumn: string;
+	readonly frequency: string;
 	readonly period: number;
 	readonly horizon: number;
+	readonly series: number;
 }
 
-/** A dataset the user added: how it was converted, and its entry in the catalogue. */
+/** A dataset the user added: how it was converted, its fields in the catalogue and the keys of its references. */
 export interface IAddedDataset {
 	readonly conversion: IAddedConversion;
-	readonly entry: { readonly [field: string]: CatalogueValue };
+	readonly dataset: { readonly [field: string]: CatalogueValue };
+	readonly references: readonly string[];
 }
 
 /** A saved dataset as it is now: as saved, or changed since (a file changed, added or removed). */
@@ -154,7 +157,7 @@ export async function recordSaved(fileService: IFileService, target: URI, what: 
 	await fileService.writeFile(joinPath(target, SAVED_FILE), VSBuffer.fromString(lines.join('\n') + '\n'));
 }
 
-/** A value as TOML: a string, a whole number, true or false, or a list of strings. */
+/** A value as TOML: a string, a number, true or false, or a list of strings. */
 function tomlValue(value: CatalogueValue): string {
 	if (Array.isArray(value)) {
 		return `[${value.map(item => JSON.stringify(item)).join(', ')}]`;
@@ -162,12 +165,29 @@ function tomlValue(value: CatalogueValue): string {
 	return typeof value === 'string' ? JSON.stringify(value) : String(value);
 }
 
-/** The whole catalogue as TOML: its fields, its views and every entry, with the contributor of each in source. */
+/** A dataset as a [[datasets]] table: its fields, then its references, `[[datasets.references]]` tables of their keys. */
+function datasetToml(fields: { readonly [field: string]: CatalogueValue | undefined }, references: readonly string[]): string[] {
+	const lines = ['[[datasets]]'];
+	for (const [name, value] of Object.entries(fields)) {
+		if (value !== undefined) {
+			lines.push(`${name} = ${tomlValue(value)}`);
+		}
+	}
+	for (const key of references) {
+		lines.push('', '  [[datasets.references]]', `  bibtex_key = ${tomlValue(key)}`);
+	}
+	return lines;
+}
+
+/**
+ * The whole catalogue as TOML: its fields, its views, every dataset, with its contributor in source and its curated
+ * collections, and the curated collections.
+ */
 function catalogueToml(catalogue: IForecastingCatalogue): string {
 	const lines = [
-		'# The forecasting catalogue as Compose > Prediction Competitions > Manage Competition Datasets last read it: its',
-		'# fields, its views and the entries of every contributor, each named in source. The page rewrites this file each',
-		'# time it opens: do not edit it. Read it in Julia with TOML.parsefile.',
+		'# The catalogue of competition datasets as Compose > Prediction Competitions > Manage Competition Datasets last read',
+		'# it: its fields, its views, the datasets of every contributor, each named in source, and the curated collections.',
+		'# The page rewrites this file each time it opens: do not edit it. Read it in Julia with TOML.parsefile.',
 	];
 	for (const field of catalogue.fields) {
 		lines.push('', '[[field]]', `name = ${tomlValue(field.name)}`, `label = ${tomlValue(field.label)}`, `group = ${tomlValue(field.group)}`, `type = ${tomlValue(field.type)}`);
@@ -181,12 +201,20 @@ function catalogueToml(catalogue: IForecastingCatalogue): string {
 	for (const view of catalogue.views) {
 		lines.push('', '[[view]]', `id = ${tomlValue(view.id)}`, `label = ${tomlValue(view.label)}`, `pinned = ${tomlValue(view.pinned)}`, `columns = ${tomlValue(view.columns)}`);
 	}
-	for (const entry of catalogue.entries) {
-		lines.push('', '[[entry]]');
-		for (const [name, value] of Object.entries(entry)) {
-			if (value !== undefined) {
-				lines.push(`${name} = ${tomlValue(value)}`);
-			}
+	for (const { id, name, papers, ...fields } of catalogue.entries) {
+		lines.push('', ...datasetToml(fields, Array.isArray(papers) ? papers : []));
+	}
+	for (const collection of catalogue.collections) {
+		lines.push('', '[[collections]]', `id = ${tomlValue(collection.id)}`, `name = ${tomlValue(collection.name)}`);
+		if (collection.year !== undefined) {
+			lines.push(`year = ${collection.year}`);
+		}
+		lines.push(`url = ${tomlValue(collection.url)}`, `description = ${tomlValue(collection.description)}`);
+		if (collection.datasets?.length) {
+			lines.push(`datasets = ${tomlValue(collection.datasets)}`);
+		}
+		if (collection.papers?.length) {
+			lines.push(`papers = ${tomlValue(collection.papers)}`);
 		}
 	}
 	return lines.join('\n') + '\n';
@@ -216,34 +244,42 @@ export async function readAddedDataset(fileService: IFileService, folder: URI, i
 		return undefined;
 	}
 	const conversion = data.conversion as TomlValue | undefined;
-	const [entry] = Array.isArray(data.entry) ? data.entry as TomlValue[] : [];
-	if (!conversion || !entry || typeof conversion.file !== 'string' || typeof conversion.series_column !== 'string' || typeof conversion.time_column !== 'string' || typeof conversion.value_column !== 'string' || typeof conversion.period !== 'number' || typeof conversion.horizon !== 'number') {
+	const [table] = Array.isArray(data.datasets) ? data.datasets as TomlValue[] : [];
+	if (!conversion || !table || typeof conversion.file !== 'string' || typeof conversion.series_column !== 'string' || typeof conversion.time_column !== 'string' || typeof conversion.value_column !== 'string' || typeof conversion.period !== 'number' || typeof conversion.horizon !== 'number') {
 		return undefined;
 	}
+	const { references, ...dataset } = table;
 	return {
-		conversion: { file: conversion.file, seriesColumn: conversion.series_column, timeColumn: conversion.time_column, valueColumn: conversion.value_column, period: conversion.period, horizon: conversion.horizon },
-		entry: entry as { [field: string]: CatalogueValue },
+		conversion: {
+			file: conversion.file, seriesColumn: conversion.series_column, timeColumn: conversion.time_column, valueColumn: conversion.value_column,
+			frequency: typeof conversion.frequency === 'string' ? conversion.frequency : '', period: conversion.period, horizon: conversion.horizon,
+			series: typeof conversion.series === 'number' ? conversion.series : 0,
+		},
+		dataset: dataset as { [field: string]: CatalogueValue },
+		references: (Array.isArray(references) ? references as TomlValue[] : []).map(reference => reference.bibtex_key).filter((key): key is string => typeof key === 'string'),
 	};
 }
 
 /** Writes the dataset.toml of the dataset the user added as `id` in the forecasting folder `folder`. */
-export async function writeAddedDataset(fileService: IFileService, folder: URI, id: string, dataset: IAddedDataset): Promise<void> {
-	const { conversion, entry } = dataset;
+export async function writeAddedDataset(fileService: IFileService, folder: URI, id: string, added: IAddedDataset): Promise<void> {
+	const { conversion, dataset, references } = added;
 	const lines = [
 		'# A dataset added in Manage Competition Datasets from a file of your own. [conversion] says how series.parquet and',
 		'# observations.parquet were made from it: change it with Edit Facts on the page, which converts the file again.',
-		'# [[entry]] is the dataset in the catalogue: its fields may also be edited here, as the schema of the catalogue allows.',
+		'# [[datasets]] is the dataset in the catalogue: its fields, and its references as [[datasets.references]] tables',
+		'# with the bibtex_key of a work of PollisReferences, may also be edited here, as the schema of the catalogue allows.',
 		'',
 		'[conversion]',
 		`file = ${tomlValue(conversion.file)}`,
 		`series_column = ${tomlValue(conversion.seriesColumn)}`,
 		`time_column = ${tomlValue(conversion.timeColumn)}`,
 		`value_column = ${tomlValue(conversion.valueColumn)}`,
+		`frequency = ${tomlValue(conversion.frequency)}`,
 		`period = ${conversion.period}`,
 		`horizon = ${conversion.horizon}`,
+		`series = ${conversion.series}`,
 		'',
-		'[[entry]]',
-		...Object.entries(entry).map(([name, value]) => `${name} = ${tomlValue(value)}`),
+		...datasetToml(dataset, references),
 	];
 	await fileService.writeFile(joinPath(folder, id, DATASET_FILE), VSBuffer.fromString(lines.join('\n') + '\n'));
 }

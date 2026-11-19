@@ -1,7 +1,8 @@
 # Manage Competition Datasets Webview Configuration
 # A page of Compose in the Minimal style of the scaffold, not a panel: only its Powered by, Learn More and References.
-# The catalogue it shows is compose/browser/media/forecastingCatalogue.toml; the papers of its entries are among the
-# References below, from which the page shows them. `pageCommand` is the command that opens it. The build script generates:
+# The schema of the catalogue it shows is compose/browser/media/forecastingCatalogue.toml, and its datasets are those of
+# metadata/datasets.toml of PollisCompetitions.jl, of the toolboxes and of the Pollis Workspace; the papers of a dataset
+# or a collection are works of PollisReferences. `pageCommand` is the command that opens it. The build script generates:
 # - src/vs/workbench/contrib/model/browser/webviews/forecastingCatalogue.data.ts
 # Run: npm run gulp compile-toml
 
@@ -18,25 +19,25 @@ github = "https://github.com/Trumpingtons/PollisCompetitions.jl"
 name = "Overview"
 file = "forecastingCatalogue/overview.md"
 bundled = true
-description = "What the catalogue holds, its two tabs and five kinds of entry, how to search, filter, sort and switch views, and how the active datasets reach Score Models"
+description = "Where the datasets come from, the two tabs, how to filter, sort and switch views, how the active datasets reach Score Models, and how datasets are saved in the Pollis Workspace or added from a file of your own"
 
 [[wikis]]
 name = "Factsheet"
 file = "forecastingCatalogue/factsheet.md"
 bundled = true
-description = "The eight views and their columns, the filters, and the actions of an entry at a glance"
+description = "The four views and their columns, the columns of the curated collections, the filters, and the actions of a dataset at a glance"
 
 [[wikis]]
 name = "Fields and Vocabularies"
 file = "forecastingCatalogue/fields-vocabularies.md"
 bundled = true
-description = "Every field of an entry, group by group, with its type, the values a controlled field takes and what each means"
+description = "Every field of a dataset, group by group, with its type, the values a controlled field takes and what each means, and the references of a dataset"
 
 [[wikis]]
 name = "Licences and Delivery"
 file = "forecastingCatalogue/licences-delivery.md"
 bundled = true
-description = "Bundled, download helper and online only; why Kaggle data are never bundled; planned and implemented; what To Check means"
+description = "Built-in and Download, where the data of each are kept on this computer, why Kaggle data are never built in, and what the Licence says"
 
 # The curated collections of the tab Curated Collections: benchmarks and archives that hold datasets of the Dataset
 # Catalog of PollisCompetitions.jl, or where they are listed. `datasets` are their dataset_id in the catalogue, `papers`

@@ -946,11 +946,10 @@ async function openForecastingCompetitionsPage(accessor: ServicesAccessor): Prom
 			if (!dataset || COMPETITIONS.some(c => c.id === id) || !await fileService.exists(joinPath(files, 'series.parquet'))) {
 				continue;
 			}
-			const { entry, conversion } = dataset;
-			const frequency = Array.isArray(entry.frequency) && typeof entry.frequency[0] === 'string' ? entry.frequency[0] : '';
+			const { conversion } = dataset;
 			found.push({
-				id, name: typeof entry.name === 'string' ? entry.name : id, sampling: true, ranked: false, method: 'forecast',
-				frequencies: [{ name: frequency, series: typeof entry.n_series === 'number' ? entry.n_series : 0, horizon: conversion.horizon }],
+				id, name: typeof dataset.dataset.dataset_name === 'string' ? dataset.dataset.dataset_name : id, sampling: true, ranked: false, method: 'forecast',
+				frequencies: [{ name: conversion.frequency, series: conversion.series, horizon: conversion.horizon }],
 				measures: 'sMAPE, MASE, OWA',
 				entries: localize('competitions.user.entries', "Your dataset: scored beside Naive2"),
 				folder: files.fsPath,
