@@ -37,6 +37,7 @@ download_size = "about 0.2 MB"
 compute = "laptop"
 course_level = "intro"
 teaches = "Origin of empirical forecast evaluation; simple methods are hard to beat."
+notes = "To be bundled: its licence allows redistribution and its data are under 10 MB."
 verify = ["doi"]
 
 [[entry]]
@@ -96,6 +97,7 @@ download_size = "about 0.5 MB"
 compute = "laptop"
 course_level = "intro"
 teaches = "Classic benchmark; Theta and exponential smoothing set the bar for statistical methods."
+notes = "To be bundled: its licence allows redistribution and its data are under 10 MB."
 verify = ["doi"]
 
 [[entry]]
@@ -271,7 +273,7 @@ papers = ["AHSW2011a", "GBWHM2021a"]
 related = ["tourism_kaggle"]
 package = "PollisCompetitions"
 package_id = "tourism"
-delivery = "download_helper"
+delivery = "bundled"
 status = "planned"
 licence = "CC BY 4.0 (via the Monash archive on Zenodo)"
 access = "open"
@@ -286,7 +288,7 @@ size_class = "small"
 compute = "laptop"
 course_level = "intro"
 teaches = "Pure time-series methods (ARIMA, ETS, Forecast Pro) beat econometric models with explanatory variables."
-notes = "Already prepared in data/others.toml of PollisCompetitions.jl, ready to move into catalogue.toml."
+notes = "Already prepared in data/others.toml of PollisCompetitions.jl, ready to move into catalogue.toml. Monash relabels the data under CC BY 4.0; the organisers stated no terms of their own."
 verify = ["doi"]
 
 [[entry]]
@@ -329,8 +331,9 @@ era = "2000-2014"
 reference = "Crone, Hibon & Nikolopoulos (2011), International Journal of Forecasting 27(3):635-660"
 url = "http://www.neural-forecasting-competition.com"
 package = "PollisCompetitions"
-delivery = "download_helper"
+delivery = "bundled"
 status = "planned"
+licence = "None stated (redistributed in the CRAN package tscompdata, GPL-3)"
 access = "open"
 n_series = 111
 frequency = ["monthly"]
@@ -343,7 +346,7 @@ size_class = "small"
 compute = "laptop"
 course_level = "intro"
 teaches = "Neural networks versus statistical methods on short monthly series (also an 11-series reduced set)."
-verify = ["licence"]
+notes = "No licence stated; the original site is gone; redistributed for years in CRAN packages, as PollisDatasets.jl accepts."
 
 [[entry]]
 id = "nn5"
@@ -358,8 +361,9 @@ end_year = 2008
 era = "2000-2014"
 url = "http://www.neural-forecasting-competition.com"
 package = "PollisCompetitions"
-delivery = "download_helper"
+delivery = "bundled"
 status = "planned"
+licence = "CC BY 4.0 (via the Monash archive on Zenodo)"
 access = "open"
 n_series = 111
 frequency = ["daily"]
@@ -370,10 +374,11 @@ forecast_type = ["point"]
 metrics = ["sMAPE"]
 split_protocol = "single_holdout"
 size_class = "small"
+download_size = "about 0.3 MB"
 compute = "laptop"
 course_level = "intermediate"
 teaches = "Multiple seasonalities, holidays and missing values; why local neural nets overfit without pooling."
-verify = ["licence"]
+notes = "Monash relabels the data under CC BY 4.0; the organisers stated no terms of their own."
 
 [[entry]]
 id = "nngc1"
@@ -386,8 +391,9 @@ end_year = 2009
 era = "2000-2014"
 url = "http://www.neural-forecasting-competition.com"
 package = "PollisCompetitions"
-delivery = "download_helper"
+delivery = "bundled"
 status = "planned"
+licence = "None stated (redistributed in the CRAN package tscompdata, GPL-3)"
 access = "open"
 frequency = ["yearly", "quarterly", "monthly", "weekly", "daily", "hourly"]
 structure = ["univariate_collection"]
@@ -397,7 +403,8 @@ size_class = "small"
 compute = "laptop"
 course_level = "intermediate"
 teaches = "Transport series (traffic, flights, shipping, border crossings, rail) across many frequencies."
-verify = ["start_year", "n_series", "metrics", "licence"]
+notes = "No licence stated; the original site is gone; redistributed for years in CRAN packages, as PollisDatasets.jl accepts."
+verify = ["start_year", "n_series", "metrics"]
 
 [[entry]]
 id = "cif2016"
@@ -412,8 +419,9 @@ end_year = 2016
 era = "2015-2022"
 related = ["monash"]
 package = "PollisCompetitions"
-delivery = "download_helper"
+delivery = "bundled"
 status = "planned"
+licence = "CC BY 4.0 (via the Monash archive on Zenodo and OpenML)"
 access = "open"
 n_series = 72
 frequency = ["monthly"]
@@ -423,10 +431,11 @@ forecast_type = ["point"]
 metrics = ["sMAPE"]
 split_protocol = "single_holdout"
 size_class = "small"
+download_size = "about 0.05 MB"
 compute = "laptop"
 course_level = "intro"
-notes = "Mix of real banking series and artificially generated series; also in the Monash repository."
-verify = ["licence", "url"]
+notes = "Mix of real banking series and artificially generated series; also in the Monash repository. Monash relabels the data under CC BY 4.0; the organisers stated no terms of their own."
+verify = ["url"]
 
 [[entry]]
 id = "santa_fe"
@@ -439,8 +448,9 @@ end_year = 1992
 era = "pre-2000"
 reference = "Weigend & Gershenfeld (eds., 1994), Time Series Prediction: Forecasting the Future and Understanding the Past"
 package = "PollisCompetitions"
-delivery = "download_helper"
+delivery = "bundled"
 status = "planned"
+licence = "None stated (redistributed in the CRAN package TSPred)"
 access = "open"
 n_series = 6
 structure = ["univariate_collection"]
@@ -450,7 +460,8 @@ size_class = "small"
 compute = "laptop"
 course_level = "advanced"
 teaches = "Nonlinear and chaotic dynamics (laser, physiological, currency, synthetic, astrophysical, Bach fugue)."
-verify = ["url", "licence"]
+notes = "No licence stated; the original site is gone; redistributed for years in CRAN packages, as PollisDatasets.jl accepts."
+verify = ["url"]
 
 [[entry]]
 id = "estsp"
@@ -463,13 +474,14 @@ end_year = 2008
 era = "2000-2014"
 package = "PollisCompetitions"
 status = "planned"
+licence = "Not found"
 structure = ["univariate_collection"]
 forecast_type = ["point"]
 split_protocol = "single_holdout"
 size_class = "small"
 compute = "laptop"
 course_level = "intermediate"
-verify = ["n_series", "frequency", "metrics", "url", "licence"]
+verify = ["n_series", "frequency", "metrics", "url"]
 
 [[entry]]
 id = "web_traffic"
@@ -862,7 +874,9 @@ era = "2023+"
 reference = "Vandeput (2025), Foresight 77:8-13"
 url = "https://www.datasource.ai/en/home/data-science-competitions-for-startups/phase-2-vn1-forecasting-accuracy-challenge/description"
 package = "PollisCompetitions"
+delivery = "download_helper"
 status = "planned"
+licence = "Not found"
 frequency = ["weekly"]
 structure = ["panel", "hierarchical"]
 covariates_observed = ["price"]
@@ -876,7 +890,7 @@ size_class = "small"
 compute = "laptop"
 course_level = "intermediate"
 teaches = "Product x client x warehouse demand; a metric that penalises bias as well as error."
-verify = ["n_series", "metric_formula", "licence", "access"]
+verify = ["n_series", "metric_formula", "access"]
 
 [[entry]]
 id = "vn2"
@@ -891,7 +905,9 @@ reference = "Winner report: Szabłowski (2026), arXiv:2601.18919"
 doi = "10.48550/arXiv.2601.18919"
 related = ["vn1"]
 package = "PollisCompetitions"
+delivery = "download_helper"
 status = "planned"
+licence = "Not found"
 frequency = ["weekly"]
 structure = ["panel"]
 data_challenges = ["censoring"]
@@ -906,7 +922,7 @@ compute = "laptop"
 course_level = "advanced"
 teaches = "From forecasts to orders: decision-focused evaluation instead of symmetric accuracy."
 notes = "Weekly ordering decisions with a two-week lead time; six simulated rounds."
-verify = ["url", "n_series", "licence", "access", "platform"]
+verify = ["url", "n_series", "access", "platform"]
 
 [[entry]]
 id = "grupo_bimbo"
@@ -1351,7 +1367,9 @@ era = "2015-2022"
 url = "https://biendata.com/competition/kdd_2018/"
 related = ["monash"]
 package = "PollisCompetitions"
+delivery = "bundled"
 status = "planned"
+licence = "CC BY 4.0 (via the Monash archive on Zenodo)"
 frequency = ["hourly"]
 data_span = "2017-01 to 2018-03 (+ live May 2018)"
 structure = ["spatiotemporal", "panel"]
@@ -1364,11 +1382,11 @@ forecast_type = ["point"]
 metrics = ["SMAPE"]
 split_protocol = "live"
 size_class = "small"
+download_size = "about 2.4 MB"
 compute = "laptop"
 course_level = "intermediate"
 teaches = "Live, real-time evaluation of 48-hour pollution forecasts across stations."
-notes = "Beijing (35 stations) and London (24 stations, 13 scored); PM2.5, PM10, O3. Final ranking from live testing in May 2018. Also in the Monash repository."
-verify = ["licence"]
+notes = "Beijing (35 stations) and London (24 stations, 13 scored); PM2.5, PM10, O3. Final ranking from live testing in May 2018. Also in the Monash repository. Monash relabels the data under CC BY 4.0; the organisers stated no terms of their own."
 
 [[entry]]
 id = "acea_water"
@@ -1547,7 +1565,9 @@ era = "2000-2014"
 reference = "Hong et al. (2016), International Journal of Forecasting 32(3):896-913"
 doi = "10.1016/j.ijforecast.2016.02.001"
 package = "PollisCompetitions"
+delivery = "download_helper"
 status = "planned"
+licence = "None stated (data in the appendix of the paper)"
 frequency = ["hourly"]
 structure = ["panel"]
 covariates_known_future = ["weather_forecasts"]
@@ -1557,10 +1577,11 @@ forecast_type = ["quantile"]
 metrics = ["pinball loss"]
 split_protocol = "single_holdout"
 size_class = "small"
+download_size = "about 120 MB"
 compute = "laptop"
 course_level = "intermediate"
 teaches = "The cleanest route from point forecasts to quantiles and pinball loss; nonlinear temperature effects."
-verify = ["url", "licence", "doi"]
+verify = ["url", "doi"]
 
 [[entry]]
 id = "gefcom2017"
@@ -1573,7 +1594,9 @@ end_year = 2017
 era = "2015-2022"
 reference = "Hong, Xie & Black (2019), International Journal of Forecasting 35(4):1389-1399"
 package = "PollisCompetitions"
+delivery = "download_helper"
 status = "planned"
+licence = "None stated; ISO New England data, which the organisers did not re-host"
 frequency = ["hourly"]
 structure = ["hierarchical"]
 covariates_observed = ["temperature"]
@@ -1584,7 +1607,7 @@ size_class = "small"
 compute = "laptop"
 course_level = "advanced"
 notes = "ISO New England zones."
-verify = ["url", "licence"]
+verify = ["url"]
 
 [[entry]]
 id = "eunite_2001"
@@ -1597,7 +1620,9 @@ end_year = 2001
 era = "2000-2014"
 reference = "Chen, Chang & Lin (2004), IEEE Transactions on Power Systems 19(4):1821-1830"
 package = "PollisCompetitions"
+delivery = "bundled"
 status = "planned"
+licence = "None stated (redistributed in the CRAN package TSPred)"
 frequency = ["daily"]
 covariates_known_future = ["holidays"]
 covariates_observed = ["temperature"]
@@ -1610,7 +1635,8 @@ size_class = "small"
 compute = "laptop"
 course_level = "intro"
 teaches = "Early landmark win of support vector machines in load forecasting."
-verify = ["url", "licence"]
+notes = "No licence stated; the original site is gone; redistributed for years in CRAN packages, as PollisDatasets.jl accepts."
+verify = ["url"]
 
 [[entry]]
 id = "kdd_cup_2022_wind"
@@ -1623,7 +1649,9 @@ start_year = 2022
 end_year = 2022
 era = "2015-2022"
 package = "PollisCompetitions"
+delivery = "download_helper"
 status = "planned"
+licence = "Not found for the data (the paper is CC BY-NC-ND 4.0)"
 frequency = ["sub-hourly"]
 frequency_detail = "10-minute"
 structure = ["spatiotemporal"]
@@ -1636,7 +1664,7 @@ size_class = "small"
 compute = "workstation"
 course_level = "advanced"
 notes = "134 turbines in one wind farm (SDWPF dataset)."
-verify = ["metrics", "url", "licence"]
+verify = ["metrics", "url"]
 
 [[entry]]
 id = "ashrae_gep3"
@@ -1712,8 +1740,9 @@ end_year = 2014
 era = "2000-2014"
 url = "https://archive.ics.uci.edu/dataset/321/electricityloaddiagrams20112014"
 package = "PollisDatasets"
-delivery = "bundled"
+delivery = "download_helper"
 status = "planned"
+licence = "CC BY 4.0 (UCI Machine Learning Repository)"
 access = "open"
 n_series = 370
 frequency = ["sub-hourly"]
@@ -1723,10 +1752,10 @@ structure = ["panel"]
 forecast_type = ["point"]
 split_protocol = "none"
 size_class = "small"
+download_size = "about 249 MB (678 MB uncompressed); Monash hourly version 11.8 MB (35.9 MB uncompressed)"
 compute = "laptop"
 course_level = "intermediate"
 teaches = "Standard long-horizon and multivariate benchmark (the 'Electricity' dataset of many deep-learning papers)."
-verify = ["licence"]
 
 [[entry]]
 id = "london_smart_meters"
@@ -1762,6 +1791,7 @@ related = ["monash"]
 package = "PollisDatasets"
 delivery = "bundled"
 status = "planned"
+licence = "CC BY 4.0 (via the Monash archive on Zenodo); AEMO data, which AEMO lets anyone use for any purpose with attribution"
 access = "open"
 n_series = 5
 frequency = ["sub-hourly"]
@@ -1769,9 +1799,10 @@ frequency_detail = "half-hourly"
 structure = ["panel"]
 split_protocol = "none"
 size_class = "small"
+download_size = "about 5.8 MB"
 course_level = "intro"
 notes = "Five states; usually accessed through the Monash repository."
-verify = ["licence", "n_series"]
+verify = ["n_series"]
 
 [[entry]]
 id = "monash_wind_solar"
@@ -1785,11 +1816,13 @@ related = ["monash"]
 package = "PollisDatasets"
 delivery = "bundled"
 status = "planned"
+licence = "CC BY 4.0 (via the Monash archive on Zenodo); AEMO data (wind and solar at 4 seconds) and NREL data (solar at 10 minutes)"
+download_size = "about 7.6 MB"
 access = "open"
 structure = ["panel"]
 split_protocol = "none"
-notes = "High-frequency renewable generation datasets distributed via Monash."
-verify = ["n_series", "frequency", "licence"]
+notes = "High-frequency renewable generation datasets distributed via Monash. The Wind Farms data (71 MB) stays a download."
+verify = ["n_series", "frequency"]
 
 [[entry]]
 id = "physionet_2012"
@@ -1804,6 +1837,7 @@ url = "https://physionet.org/content/challenge-2012/"
 package = "PollisCompetitions"
 delivery = "download_helper"
 status = "planned"
+licence = "ODC-By-1.0"
 access = "open"
 frequency = ["irregular"]
 structure = ["panel"]
@@ -1811,10 +1845,11 @@ data_challenges = ["irregular_sampling", "missing_values"]
 forecast_type = ["classification"]
 split_protocol = "single_holdout"
 size_class = "small"
+download_size = "about 22 MB for sets A, B and C (about 83 MB uncompressed)"
 compute = "laptop"
 course_level = "advanced"
 notes = "ICU stays with the first 48 hours of measurements; outcome is in-hospital mortality."
-verify = ["metrics", "licence", "n_series"]
+verify = ["metrics", "n_series"]
 
 [[entry]]
 id = "physionet_2019"
@@ -1829,6 +1864,7 @@ url = "https://physionet.org/content/challenge-2019/"
 package = "PollisCompetitions"
 delivery = "download_helper"
 status = "planned"
+licence = "CC BY 4.0"
 access = "open"
 frequency = ["hourly"]
 structure = ["panel"]
@@ -1839,9 +1875,11 @@ metrics = ["normalised utility score"]
 split_protocol = "single_holdout"
 decision_focused = true
 size_class = "small"
+download_size = "42 MB uncompressed, in 40,336 files"
 compute = "laptop"
 course_level = "advanced"
-verify = ["licence", "n_series"]
+notes = "The hidden test set the entrants were scored on was never released."
+verify = ["n_series"]
 
 [[entry]]
 id = "hirid"
@@ -1906,6 +1944,7 @@ url = "https://covid19forecasthub.eu"
 package = "PollisCompetitions"
 delivery = "download_helper"
 status = "planned"
+licence = "Each team's own (the repository states none)"
 access = "open"
 frequency = ["weekly"]
 structure = ["panel"]
@@ -1914,9 +1953,10 @@ metrics = ["WIS"]
 split_protocol = "live"
 forecasts_public = true
 size_class = "small"
+download_size = "about 870 MB"
 compute = "laptop"
 course_level = "intermediate"
-verify = ["end_year", "licence"]
+verify = ["end_year"]
 
 [[entry]]
 id = "cdc_flusight"
@@ -1930,6 +1970,7 @@ url = "https://github.com/cdcepi/FluSight-forecast-hub"
 package = "PollisCompetitions"
 delivery = "download_helper"
 status = "planned"
+licence = "MIT"
 access = "open"
 frequency = ["weekly"]
 structure = ["panel"]
@@ -1938,10 +1979,11 @@ metrics = ["WIS", "log score (early seasons)"]
 split_protocol = "live"
 forecasts_public = true
 size_class = "small"
+download_size = "about 800 MB with the forecasts"
 compute = "laptop"
 course_level = "intermediate"
 teaches = "Short seasons and high uncertainty; scoring rules for probabilistic targets."
-verify = ["start_year", "licence"]
+verify = ["start_year"]
 
 [[entry]]
 id = "dengai"
@@ -2011,6 +2053,7 @@ era = "2000-2014"
 package = "PollisCompetitions"
 delivery = "download_helper"
 status = "planned"
+licence = "US government work (NASA); data.gov states no licence"
 access = "open"
 structure = ["panel"]
 forecast_type = ["point"]
@@ -2018,10 +2061,11 @@ forecast_type_detail = "remaining useful life"
 metrics = ["asymmetric PHM score", "RMSE"]
 split_protocol = "single_holdout"
 size_class = "small"
+download_size = "about 12.4 MB (45.4 MB uncompressed)"
 compute = "laptop"
 course_level = "advanced"
 teaches = "Degradation trajectories and remaining-useful-life prediction."
-verify = ["url", "licence"]
+verify = ["url"]
 
 [[entry]]
 id = "lanl_earthquake"
@@ -2093,16 +2137,17 @@ url = "https://github.com/numenta/NAB"
 package = "PollisDatasets"
 delivery = "bundled"
 status = "planned"
+licence = "MIT"
 access = "open"
 n_series = 58
 structure = ["univariate_collection"]
 forecast_type = ["classification"]
 forecast_type_detail = "anomaly detection"
 size_class = "small"
+download_size = "about 9.6 MB (CSV)"
 compute = "laptop"
 course_level = "intermediate"
 notes = "Not a forecasting competition; complement for anomaly-aware forecasting."
-verify = ["licence"]
 
 [[entry]]
 id = "yahoo_s5"
@@ -2135,8 +2180,9 @@ subdomain = "road_traffic"
 era = "2015-2022"
 reference = "Li et al. (2018), DCRNN, ICLR"
 package = "PollisDatasets"
-delivery = "bundled"
+delivery = "download_helper"
 status = "planned"
+licence = "Not found for the data (the MIT licence of the DCRNN repository covers its code)"
 access = "open"
 frequency = ["sub-hourly"]
 frequency_detail = "5-minute"
@@ -2146,7 +2192,7 @@ size_class = "small"
 compute = "workstation"
 course_level = "advanced"
 notes = "METR-LA: 207 sensors; PEMS-BAY: 325 sensors. Standard graph-forecasting benchmarks."
-verify = ["url", "licence"]
+verify = ["url"]
 
 [[entry]]
 id = "nyc_taxi_demand"
@@ -2212,6 +2258,7 @@ url = "https://research.stlouisfed.org/econ/mccracken/fred-databases/"
 package = "PollisDatasets"
 delivery = "download_helper"
 status = "planned"
+licence = "Mixed: some series are copyrighted, and only a subset is cleared for redistribution"
 access = "open"
 frequency = ["monthly", "quarterly"]
 structure = ["panel"]
@@ -2222,7 +2269,7 @@ compute = "laptop"
 course_level = "intermediate"
 teaches = "Large macro panels, factor models and real-time vintages."
 notes = "About 127 monthly series (FRED-MD); monthly vintages available."
-verify = ["licence", "doi"]
+verify = ["doi"]
 
 [[entry]]
 id = "philly_fed_spf"
@@ -2236,6 +2283,7 @@ url = "https://www.philadelphiafed.org/surveys-and-data/real-time-data-research/
 package = "PollisCompetitions"
 delivery = "download_helper"
 status = "planned"
+licence = "Not found"
 access = "open"
 frequency = ["quarterly"]
 forecast_type = ["point", "distributional"]
@@ -2245,7 +2293,6 @@ size_class = "small"
 compute = "laptop"
 course_level = "intermediate"
 teaches = "Benchmarking models against professional forecasters using data available at the time."
-verify = ["licence"]
 
 [[entry]]
 id = "ecb_spf"
@@ -2257,18 +2304,19 @@ start_year = 1999
 era = "pre-2000"
 url = "https://www.ecb.europa.eu/stats/ecb_surveys/survey_of_professional_forecasters/html/index.en.html"
 package = "PollisCompetitions"
-delivery = "download_helper"
+delivery = "bundled"
 status = "planned"
+licence = "ESCB statistics reuse policy: free reuse with the source quoted and the values unchanged"
 access = "open"
 frequency = ["quarterly"]
 forecast_type = ["point", "distributional"]
 split_protocol = "live"
 forecasts_public = true
 size_class = "small"
+download_size = "about 1.6 MB (individual forecasts by round; 7.3 MB uncompressed)"
 compute = "laptop"
 course_level = "intermediate"
 teaches = "Euro-area inflation, growth and unemployment expectations, including density forecasts."
-verify = ["licence"]
 
 [[entry]]
 id = "camels"
@@ -2307,16 +2355,19 @@ start_year = 2011
 end_year = 2015
 era = "2000-2014"
 package = "PollisCompetitions"
+delivery = "download_helper"
 status = "planned"
+licence = "CC0-1.0"
 forecast_type = ["event_probability"]
 metrics = ["Brier score"]
 split_protocol = "live"
 forecasts_public = true
 size_class = "small"
+download_size = "about 468 MB"
 compute = "laptop"
 course_level = "intermediate"
 teaches = "Human probabilistic forecasting, aggregation and calibration ('superforecasters')."
-verify = ["url", "licence", "access"]
+verify = ["url", "access"]
 
 [[entry]]
 id = "metaculus"
