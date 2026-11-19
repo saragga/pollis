@@ -35,7 +35,7 @@ import { ITerminalInstanceService, ITerminalService } from '../../terminal/brows
 import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
 import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
 import { compareCss } from './compareShared.js';
-import { COMPETITIONS } from './forecastingCompetitionsPage.js';
+import { COMPETITIONS, competitionsOnComputer } from './forecastingCompetitionsPage.js';
 import { freeStudyName, IOrchestrationCell, JULIA_TO_JSON, orchestrationCss, orchestrationPageJs, startStudyAgent, stopAgentRun, studiesFolder, studyStepText, StudyRuns, tomlString, unattendedCells, validStudyName } from './orchestration.js';
 import { pollisJlPath, skillFile } from './pollisAgents.js';
 
@@ -211,9 +211,7 @@ import Pkg
 Base.find_package("PollisCompetitions") === nothing && Pkg.add("PollisCompetitions")
 import PollisCompetitions as PC, Random
 let study = raw"${study.folder.fsPath}", id = "${study.competition}", frequency = "${study.frequency}", sample = ${study.sample}, seed = ${study.seed}
-	isfile(joinpath(PC.HOME, id, "info.toml")) || PC.download(id)
-	id == "m4" && PC.download_forecasts("m4"; entries = ["Naive2"])
-	isdefined(Main, :PollisDB) && Base.invokelatest(Main.PollisDB.build_competitions)
+	PC.info(id) === nothing && error(string("The data of ", id, " are not on this computer: there is no ", joinpath(PC.folder(id), "info.toml"), "."))
 	known = PC.series(id; frequency)
 	numbers = collect(known.series)
 	whole = sample <= 0 || sample >= length(numbers)
@@ -477,7 +475,6 @@ async function openAgentForecastingPage(accessor: ServicesAccessor): Promise<voi
 	const watcher = disposables.add(new MutableDisposable<DisposableStore>());
 	const refresh = disposables.add(new RunOnceScheduler(() => sendState(), 300));
 	runs.onEnded = () => refresh.schedule();
-	const home = await pathService.userHome({ preferLocal: true });
 
 	const watch = (study: IStudy | undefined) => {
 		current = study;
@@ -530,14 +527,14 @@ async function openAgentForecastingPage(accessor: ServicesAccessor): Promise<voi
 	const sendState = async () => {
 		const root = await studiesFolder(contextService, fileService, configurationService, pathService, KIND);
 		const studies = await studyNames(root);
-		const downloaded = await Promise.all(CHOICES.map(choice => fileService.exists(joinPath(home, '.pollis', 'competitions', choice.id, 'info.toml'))));
+		const downloaded = await competitionsOnComputer(fileService, pathService, CHOICES);
 		const study = current && await readStudy(fileService, current.folder);
 		post({
 			command: 'state',
 			root: root.fsPath,
 			studies,
 			cells,
-			downloaded: Object.fromEntries(CHOICES.map((choice, index) => [choice.id, downloaded[index]])),
+			downloaded,
 			suggestion: freeStudyName('m4-monthly', studies),
 			study: study && {
 				name: study.name,
@@ -740,7 +737,7 @@ function pageHtml(): string {
 		sampleTooltip: localize('agentForecasting.sampleTooltip', "How many series, drawn at random with the seed; 0 for all of them"),
 		seed: localize('agentForecasting.seed', "Seed"),
 		facts: localize('agentForecasting.facts', "{0} series, each forecast {1} values ahead."),
-		notDownloaded: localize('agentForecasting.notDownloaded', "{0} is not on this computer yet: Prepare the Series downloads it first, from its source."),
+		notDownloaded: localize('agentForecasting.notOnComputer', "The data of {0} are not on this computer: Prepare the Series reads its series from PollisCompetitions.jl, built in with the package or downloaded into ~/.pollis/competitions."),
 		sampleHint: localize('agentForecasting.sampleHint', "The agents get only the values the competition's forecasters saw; the values their forecasts are scored on stay with Pollis. A sample keeps the agents' work and the scoring short; all the series of a frequency of M4 also place each method among the published entries."),
 		prepare: localize('agentForecasting.prepare', "Prepare the Series"),
 		preparing: localize('agentForecasting.preparing', "Sent to the Julia REPL: the series are written into the study's data/series.csv."),

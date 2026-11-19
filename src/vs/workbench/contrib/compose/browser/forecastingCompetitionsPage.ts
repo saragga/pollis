@@ -41,11 +41,12 @@ import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWork
 import { compareCss } from './compareShared.js';
 import { activeDatasets, FORECASTING_CATALOGUE_COMMAND_ID, onDidChangeActiveDatasets } from './forecastingActive.js';
 import { addedDatasetFiles, forecastingFolder, readAddedDataset } from './forecastingWorkspace.js';
+import { juliaPackageFolder } from './juliaPackages.js';
 
 // Score Models, from Compose > Prediction Competitions > Score Models (compose.contribution.ts): a forecasting method of the user's
 // own, run on the series of a competition of PollisCompetitions.jl, scored as the competition's organisers scored the
 // entries, and ranked among them. A page of the scaffold in the Time Arrow style, in four steps: 1, Competition (M1,
-// M3, M4 or M5, a frequency, a sample, and Download when it is not on this computer); 2, Your Method, a Julia function
+// M3, M4 or M5, a frequency, a sample, and whether its data are on this computer); 2, Your Method, a Julia function
 // forecast(y, h, period); 3, Run, in the Julia REPL; 4, Score and Rank. A run is a folder of
 // ~/.pollis/competitions/runs: run.toml (the choices of step 1), method.jl, run.jl (which the page writes and the REPL
 // runs), progress.json while it runs, then forecasts.csv and results.json, which step 4 draws. Step 1 also lists the
@@ -74,6 +75,8 @@ export interface IFrequency {
 /** A competition the page holds, with the facts step 1 shows. */
 export interface ICompetition {
 	readonly id: string;
+	/** Its dataset_id in the Dataset Catalog of PollisCompetitions.jl, when it is not its id. */
+	readonly dataset?: string;
 	readonly name: string;
 	readonly frequencies: readonly IFrequency[];
 	readonly measures: string;
@@ -112,7 +115,7 @@ export const COMPETITIONS: readonly ICompetition[] = [
 		entries: localize('competitions.m4.entries', "61 entries"),
 	},
 	{
-		id: 'm5', name: 'M5 Accuracy (2020)', sampling: false, ranked: true,
+		id: 'm5', dataset: 'm5_accuracy', name: 'M5 Accuracy (2020)', sampling: false, ranked: true,
 		frequencies: [{ name: 'Daily', series: 30490, horizon: 28 }],
 		measures: 'WRMSSE',
 		entries: localize('competitions.m5.entries', "74 entries: 24 benchmarks and the top 50"),
@@ -144,7 +147,6 @@ interface IRunInputs {
 
 type CompetitionsMessage =
 	| { readonly command: 'ready' }
-	| { readonly command: 'download'; readonly competition: string }
 	| { readonly command: 'run'; readonly inputs: IRunInputs }
 	| { readonly command: 'load'; readonly name: string }
 	| { readonly command: 'newRun' }
@@ -312,17 +314,21 @@ async function readJson(fileService: IFileService, file: URI): Promise<unknown> 
 }
 
 /**
- * The Julia code that installs PollisCompetitions.jl when it is not, and downloads a competition; for M4 also the
- * forecasts of Naive2, against which OWA weighs every forecast. The PollisCompetitions database is then made again,
- * so that the competition's views come in.
+ * The folder of the data of the competition or dataset `id` of PollisCompetitions.jl on this computer, as the package
+ * finds it: built in, in data/builtin/<id> of the package in `packageFolder`, else downloaded, in
+ * ~/.pollis/competitions/<id> of `home`; undefined when its info.toml is not there.
  */
-export function downloadCode(competition: string): string {
-	return `# Score Models: download ${competition} from its source, each file checked against its SHA-256
-import Pkg
-Base.find_package("PollisCompetitions") === nothing && Pkg.add("PollisCompetitions")
-import PollisCompetitions as PC
-PC.download("${competition}")${competition === 'm4' ? '\nPC.download_forecasts("m4"; entries = ["Naive2"])' : ''}
-isdefined(Main, :PollisDB) && Base.invokelatest(Main.PollisDB.build_competitions)`;
+export async function competitionDataFolder(fileService: IFileService, home: URI, packageFolder: URI | undefined, id: string): Promise<URI | undefined> {
+	const builtin = packageFolder && joinPath(packageFolder, 'data', 'builtin', id);
+	const folder = builtin && await fileService.exists(builtin) ? builtin : joinPath(home, '.pollis', 'competitions', id);
+	return await fileService.exists(joinPath(folder, 'info.toml')) ? folder : undefined;
+}
+
+/** Whether the data of each competition of `competitions` are on this computer, by its id. */
+export async function competitionsOnComputer(fileService: IFileService, pathService: IPathService, competitions: readonly ICompetition[]): Promise<Record<string, boolean>> {
+	const home = await pathService.userHome({ preferLocal: true });
+	const packageFolder = await juliaPackageFolder(fileService, pathService, 'PollisCompetitions');
+	return Object.fromEntries(await Promise.all(competitions.map(async competition => [competition.id, !!await competitionDataFolder(fileService, home, packageFolder, competition.id)])));
 }
 
 /** The Julia of every script of a run, inside its `let run = ...`: to_json, and write_json, which writes a JSON file of the run's folder. */
@@ -551,7 +557,7 @@ function failsScript(folder: URI): string {
 
 /**
  * entry.jl: the entries of M4 or M5 with point forecasts, and whether their forecasts are on this computer; and, when
- * `request` names an entry, its forecasts of the run's series, downloaded first when they are not, scored beside the
+ * `request` names an entry whose forecasts are on this computer, its forecasts of the run's series, scored beside the
  * method's on the same series. For M4, the two are also compared series by series; for M5, level by level.
  */
 function entryScript(folder: URI, request: INextStepRequest): string {
@@ -568,12 +574,7 @@ function entryScript(folder: URI, request: INextStepRequest): string {
 			k = findfirst(i -> Int(listed.entry[i]) == chosen, point)
 			k === nothing && error(string("Entry ", chosen, " has no point forecasts."))
 			k = point[k]
-			if !on_disk(chosen)
-				println("Downloading the forecasts of ", listed.name[k])
-				PC.download_forecasts(id; entries = [chosen])
-				# The PollisCompetitions database, so that the forecasts of the entry come into its view forecasts
-				isdefined(Main, :PollisDB) && Base.invokelatest(Main.PollisDB.build_competitions)
-			end
+			on_disk(chosen) || error(string("The forecasts of ", listed.name[k], " are not on this computer: there is no ", joinpath(PC.folder(id), "forecasts", string(chosen, ".parquet")), "."))
 			mine = read_forecasts()
 			numbers = Set(mine.series)
 			published = PC.forecasts(id; entry = chosen)
@@ -912,7 +913,7 @@ async function openForecastingCompetitionsPage(accessor: ServicesAccessor): Prom
 	/** The datasets step 1 lists: the competitions, then the datasets of the user's own, as last read. */
 	let known: readonly ICompetition[] = COMPETITIONS;
 	const refresh = disposables.add(new RunOnceScheduler(() => sendState(), 300));
-	// The folder of the competitions, for a download that ends, and the folders of the run shown, for the files they write
+	// The folder of the competitions, for the data that come into it, and the folders of the run shown, for the files they write
 	const competitionsWatcher = disposables.add(fileService.createWatcher(competitionsFolder, { recursive: false, excludes: [] }));
 	disposables.add(competitionsWatcher.onDidChange(() => refresh.schedule()));
 	// The datasets ticked in Manage Competition Datasets, which step 1 lists
@@ -972,7 +973,7 @@ async function openForecastingCompetitionsPage(accessor: ServicesAccessor): Prom
 	const sendState = async () => {
 		const users = await userDatasets();
 		known = [...COMPETITIONS, ...users];
-		const downloaded = await Promise.all(COMPETITIONS.map(c => fileService.exists(joinPath(competitionsFolder, c.id, 'info.toml'))));
+		const downloaded = await competitionsOnComputer(fileService, pathService, COMPETITIONS);
 		const run = current && await readRun(fileService, current);
 		const batchChoices = batch && await readBatch(fileService, batch);
 		const names = await runNames();
@@ -991,7 +992,7 @@ async function openForecastingCompetitionsPage(accessor: ServicesAccessor): Prom
 			userDatasets: users,
 			// The active datasets that the page scores, as Manage Competition Datasets keeps them
 			active: activeDatasets(storageService).scored.filter(id => known.some(c => c.id === id)),
-			downloaded: Object.fromEntries([...COMPETITIONS.map((c, i) => [c.id, downloaded[i]]), ...users.map(d => [d.id, true])]),
+			downloaded: { ...downloaded, ...Object.fromEntries(users.map(d => [d.id, true])) },
 			runs: names,
 			batches,
 			batch: batch && batchChoices && {
@@ -1028,14 +1029,10 @@ async function openForecastingCompetitionsPage(accessor: ServicesAccessor): Prom
 	 * whose method decides rather than forecasts, is a run of its own, sent after that of the others; the page shows the first.
 	 */
 	const startRun = async (inputs: Omit<IRunInputs, 'datasets'> & { readonly datasets: readonly ICompetition[] }) => {
-		const missing: string[] = [];
-		for (const dataset of inputs.datasets) {
-			if (!dataset.folder && !await fileService.exists(joinPath(competitionsFolder, dataset.id, 'info.toml'))) {
-				missing.push(dataset.name);
-			}
-		}
+		const onComputer = await competitionsOnComputer(fileService, pathService, inputs.datasets.filter(dataset => !dataset.folder));
+		const missing = inputs.datasets.filter(dataset => !dataset.folder && !onComputer[dataset.id]).map(dataset => dataset.name);
 		if (missing.length) {
-			post({ command: 'runProblem', text: localize('competitions.notDownloaded', "Not on this computer yet: {0}. Download it in step 1 first.", missing.join(', ')) });
+			post({ command: 'runProblem', text: localize('competitions.notOnComputer', "The data of {0} are not on this computer.", missing.join(', ')) });
 			return;
 		}
 		const groups = [inputs.datasets.filter(dataset => dataset.method === 'forecast'), inputs.datasets.filter(dataset => dataset.method === 'decide')].filter(group => group.length);
@@ -1099,9 +1096,6 @@ async function openForecastingCompetitionsPage(accessor: ServicesAccessor): Prom
 				await postCode(message.text);
 			} else if (message.command === 'ready') {
 				await sendState();
-			} else if (message.command === 'download' && hasKey(message, { competition: true }) && COMPETITIONS.some(c => c.id === message.competition)) {
-				await sendToJuliaRepl(downloadCode(message.competition), commandService);
-				post({ command: 'downloading', competition: message.competition });
 			} else if (message.command === 'run' && hasKey(message, { inputs: true })) {
 				const inputs = checkedInputs(message.inputs, known);
 				if (inputs) {
@@ -1168,9 +1162,8 @@ function pageHtml(): string {
 		entries: localize('competitions.entries', "Entries"),
 		onComputer: localize('competitions.onComputer', "On This Computer"),
 		yes: localize('competitions.yes', "Yes"),
-		download: localize('competitions.download', "Download"),
-		downloadHint: localize('competitions.downloadHint', "Download fetches the competition from its source in the Julia REPL, checks every file against its SHA-256 and converts it into {0}. It installs PollisCompetitions.jl first if it is not installed.", '<span class="yellow">~/.pollis/competitions</span>'),
-		downloading: localize('competitions.downloading', "Sent to the Julia REPL: the competition shows as on this computer once it is downloaded."),
+		no: localize('competitions.no', "No"),
+		onComputerHint: localize('competitions.onComputerHint', "A competition is scored from its data on this computer, built in with PollisCompetitions.jl or downloaded into {0}.", '<span class="yellow">~/.pollis/competitions</span>'),
 		frequency: localize('competitions.frequency', "Frequency"),
 		allFrequencies: localize('competitions.allFrequencies', "All"),
 		seriesToRun: localize('competitions.seriesToRun', "Series to Run"),
@@ -1256,7 +1249,7 @@ function pageHtml(): string {
 		entryLabel: localize('competitions.entryLabel', "Entry"),
 		rankText: localize('competitions.rankText', "rank {0}"),
 		downloadedText: localize('competitions.downloadedText', "on this computer"),
-		entryDownloadHint: localize('competitions.entryDownloadHint', "Compare downloads the entry's forecasts first when they are not on this computer: about 8 MB for an entry of M4, and about 22 MB for one of M5 Accuracy."),
+		entryDownloadHint: localize('competitions.entryOnComputerHint', "Compare needs the entry's forecasts on this computer: the entries marked so."),
 		comparedText: localize('competitions.comparedText', "Your method beside {0} on the {1} series of the run, at {2}."),
 		entryColumn: localize('competitions.entryColumn', "The Entry"),
 		level: localize('competitions.level', "Level"),
@@ -1345,8 +1338,7 @@ function pageHtml(): string {
 			<thead><tr><th>${text.dataset}</th><th class="number">${text.series}</th><th>${text.frequencies}</th><th>${text.measures}</th><th>${text.entries}</th><th>${text.onComputer}</th></tr></thead>
 			<tbody id="competitions"></tbody>
 		</table>
-		<p class="hint">${text.downloadHint}</p>
-		<div class="small status" id="downloadStatus"></div>
+		<p class="hint">${text.onComputerHint}</p>
 		<div class="row" id="frequencyRow"><span class="small">${text.frequency}</span> <select id="frequency"></select></div>
 		<div class="row" id="sampleRow"><span class="small">${text.seriesToRun}</span>
 			<label><input type="radio" name="scope" value="all" checked> ${text.allSeries}</label>
@@ -1495,7 +1487,7 @@ function pageHtml(): string {
 		document.getElementById('competitions').innerHTML = listed.map(c => {
 			const total = c.frequencies.reduce((sum, f) => sum + f.series, 0);
 			const frequencies = c.summary ? escapeHtml(c.summary) : c.frequencies.map(f => escapeHtml(f.name) + ' (' + f.horizon + ')').join(', ');
-			const onComputer = state && state.downloaded[c.id] ? escapeHtml(TEXT.yes) : '<button class="link" data-download="' + c.id + '">' + escapeHtml(TEXT.download) + '</button>';
+			const onComputer = escapeHtml(state && state.downloaded[c.id] ? TEXT.yes : TEXT.no);
 			// M6 among other datasets: a run of its own, said above its row
 			return (apart && c.method !== 'forecast' ? '<tr class="apart"><td colspan="6">' + escapeHtml(TEXT.m6Apart) + '</td></tr>' : '') + '<tr><td>' + escapeHtml(c.name) + '</td><td class="number">' + total.toLocaleString() + '</td><td class="small">' + frequencies + '</td><td>' + escapeHtml(c.measures) + '</td><td class="small">' + escapeHtml(c.entries) + '</td><td>' + onComputer + '</td></tr>';
 		}).join('');
@@ -1722,12 +1714,6 @@ function pageHtml(): string {
 			vscode.postMessage({ command: 'member', id: row.dataset.member });
 		}
 	});
-	document.getElementById('competitions').addEventListener('click', event => {
-		const target = event.target.closest('button[data-download]');
-		if (target) {
-			vscode.postMessage({ command: 'download', competition: target.dataset.download });
-		}
-	});
 	for (const radio of document.querySelectorAll('input[name=scope]')) {
 		radio.addEventListener('change', drawChoices);
 	}
@@ -1774,8 +1760,6 @@ function pageHtml(): string {
 			showEditorColors('code', message, '#');
 		} else if (message.command === 'runProblem') {
 			document.getElementById('runProblem').textContent = message.text;
-		} else if (message.command === 'downloading') {
-			document.getElementById('downloadStatus').textContent = TEXT.downloading;
 		} else if (message.command === 'running') {
 			document.getElementById('runStatus').textContent = message.after && message.after.length ? TEXT.runningAfter.replace('{0}', message.after.join(', ')) : TEXT.running;
 		}

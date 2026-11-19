@@ -1,6 +1,6 @@
 # Licences and Downloads
 
-The page Score Models downloads each competition from its own source, with PollisCompetitions.jl, onto the user's computer. Pollis ships none of their data.
+Score Models scores a method on the data of a competition that PollisCompetitions.jl has on this computer, downloaded from the competition's own source. Pollis ships none of their data.
 
 ## Where Do the Data of Each Competition Come From?
 
@@ -13,9 +13,9 @@ The page Score Models downloads each competition from its own source, with Polli
 
 The Monash archive gives each series of M1 and M3 with the values the forecasters saw and the values the forecasts were scored on. The M4 repository holds the series, the entries, their forecasts and the organisers' scores; the M5 files hold the sales, the calendar, the prices, the weights of the WRMSSE, and the entries' forecasts and scores; the M6 repository holds the prices of the 100 assets, the submissions of every team and the leaderboard.
 
-## How Does PollisCompetitions.jl Check a Download?
+## Where Are the Data of a Competition Kept?
 
-Every file a competition is made of is listed in the catalogue of PollisCompetitions.jl with its address, its size and its SHA-256, the digest of its contents. **Download** in the step Datasets sends Julia code to the Julia REPL that fetches each file, checks its SHA-256 against the catalogue, and stops if a file differs, so that every user scores against the same data. The files are then converted into Parquet tables in `~/.pollis/competitions`, one folder for each competition, and `info.toml` in that folder records the download; the page shows a competition as on this computer when `info.toml` is there.
+PollisCompetitions.jl keeps the data of a competition as Parquet tables, in one folder for each competition: `data/builtin/<id>` of the package for a dataset built in with it, else `~/.pollis/competitions/<id>` for one downloaded. The `info.toml` of that folder records what is there, and the page shows a competition as on this computer when `info.toml` is there.
 
 ## How Large Are the Downloads?
 
@@ -27,7 +27,7 @@ Every file a competition is made of is listed in the catalogue of PollisCompetit
 | M5 | About 365 MB | About 18.5 GB, of 130 entries, point and quantile |
 | M6 | About 40 MB | In the data: the submissions of every team |
 
-**Download** fetches the data, and for M4 also the forecasts of Naive2, against which OWA weighs every method. The forecasts of other entries are fetched only when asked for, with `download_forecasts` of PollisCompetitions.jl, by number or name, or by **Compare** in Compare With an Entry, one of the Next Steps; the plot of the step Score and Rank shows the winner's forecast when the winner's forecasts are on this computer.
+The forecasts of the entries are kept in the folder `forecasts` of the competition's folder, one file for each entry. OWA weighs every method against the forecasts of Naive2, which must be there for M4. **Compare** in Compare With an Entry, one of the Next Steps, compares the method with an entry whose forecasts are there, and the plot of the step Score and Rank shows the winner's forecast when the winner's forecasts are there.
 
 ## References
 

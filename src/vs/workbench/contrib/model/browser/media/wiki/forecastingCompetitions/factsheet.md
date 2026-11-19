@@ -44,7 +44,7 @@ Each run has its own folder in `~/.pollis/competitions/runs`.
 |---|---|
 | Julia | A Julia REPL in Pollis |
 | Packages | PollisCompetitions.jl, from the Pollis registry, which the page's code installs when it is not |
-| Data | The competition, downloaded with **Download** in the step Datasets, in `~/.pollis/competitions`; a dataset you added, in `data/forecasting/` of the Pollis Workspace |
+| Data | The competition, built in with PollisCompetitions.jl, in `data/builtin` of the package, or downloaded, in `~/.pollis/competitions`; a dataset you added, in `data/forecasting/` of the Pollis Workspace |
 | Threads | Optional: the series are forecast over the threads of the Julia session |
 
 Any package that the function `forecast` loads must be installed in the environment of the Julia REPL, as the page installs only PollisCompetitions.jl.

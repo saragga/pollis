@@ -40,7 +40,7 @@ import { compareCss } from './compareShared.js';
 import { IToolboxPanelsService } from '../common/toolboxPanels.js';
 import { CatalogueValue, FORECASTING_CATALOGUE_FILE, ICatalogueContribution, ICatalogueEntry, ICatalogueRead, POLLIS_COMPETITIONS_DATASETS_PATH, POLLIS_COMPETITIONS_SOURCE, readForecastingCatalogue } from './forecastingCatalogue.js';
 import { juliaPackageFolder } from './juliaPackages.js';
-import { COMPETITIONS, FORECASTING_COMPETITIONS_COMMAND_ID, ICompetition } from './forecastingCompetitionsPage.js';
+import { competitionDataFolder, COMPETITIONS, FORECASTING_COMPETITIONS_COMMAND_ID, ICompetition } from './forecastingCompetitionsPage.js';
 import { activeDatasets, FORECASTING_CATALOGUE_COMMAND_ID, IActiveDatasets, setActiveDatasets } from './forecastingActive.js';
 import { addedDatasetFiles, forecastingFolder, IAddedDataset, readAddedDataset, recordSaved, savedStatuses, saveDataset, WORKSPACE_SOURCE, writeAddedDataset, writeCatalogueSnapshot } from './forecastingWorkspace.js';
 import { IForecastingDatasetsService, IForecastingProblem } from '../common/forecastingDatasets.js';
@@ -122,9 +122,9 @@ function problemText(problem: IForecastingProblem, horizon: number): string {
 /** The open page, so a second request shows the same page. */
 let openPage: WebviewInput | undefined;
 
-/** The ids of the competitions that Score Models runs, which an implemented entry may name. */
-function competitionIds(): string[] {
-	return COMPETITIONS.map(competition => competition.id);
+/** The dataset_id in the Dataset Catalog of each competition that Score Models runs. */
+function competitionDatasets(): string[] {
+	return COMPETITIONS.map(competition => competition.dataset ?? competition.id);
 }
 
 /** What the column Model Scoring says of a competition of Score Models: how models are scored on it. */
@@ -136,9 +136,9 @@ function modelScoringHint(competition: ICompetition): string {
 	return localize('forecastingCatalogue.scoringSeries', "Score Models scores models on it as its entries were scored: the last values of each series are held out from the forecasters, as many as the horizon of its frequency ({0}), and the forecasts are scored on them by {1}.", horizons, competition.measures);
 }
 
-/** The competition of Score Models that a dataset of PollisCompetitions.jl is, by its id. */
+/** The competition of Score Models that a dataset of PollisCompetitions.jl is, by its id in Score Models. */
 function competitionOf(entry: ICatalogueEntry | undefined): string | undefined {
-	return entry?.source === POLLIS_COMPETITIONS_SOURCE && competitionIds().includes(entry.id) ? entry.id : undefined;
+	return entry?.source === POLLIS_COMPETITIONS_SOURCE ? COMPETITIONS.find(competition => (competition.dataset ?? competition.id) === entry.id)?.id : undefined;
 }
 
 /** The id by which Score Models knows a dataset: its competition, or, for a dataset the user added, its id. */
@@ -250,19 +250,15 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?
 	let packageFolder: URI | undefined;
 	/** The works of PollisReferences, as a panel lists them, by their keys. */
 	const library = new ReferenceLibrary(fileService, pathService.userHome({ preferLocal: true }));
+	const home = pathService.userHome({ preferLocal: true });
 	/** Where PollisCompetitions.jl keeps the datasets it downloads, a folder each, with info.toml once done. */
-	const competitionsFolder = joinPath(pathService.userHome({ preferLocal: true }), '.pollis', 'competitions');
+	const competitionsFolder = joinPath(home, '.pollis', 'competitions');
 	/**
-	 * The folder of the data of a dataset of PollisCompetitions.jl on this computer, as the package finds it: built in,
-	 * in data/builtin/<id> of the package, else downloaded, in ~/.pollis/competitions/<id>; each with its info.toml.
+	 * The folder of the data of a dataset of PollisCompetitions.jl on this computer, as the package finds it, under the
+	 * id of its competition in Score Models when it has one.
 	 */
 	const dataFolder = async (entry: ICatalogueEntry | undefined) => {
-		if (entry?.source !== POLLIS_COMPETITIONS_SOURCE) {
-			return undefined;
-		}
-		const builtin = packageFolder && joinPath(packageFolder, 'data', 'builtin', entry.id);
-		const folder = builtin && await fileService.exists(builtin) ? builtin : joinPath(competitionsFolder, entry.id);
-		return await fileService.exists(joinPath(folder, 'info.toml')) ? folder : undefined;
+		return entry?.source === POLLIS_COMPETITIONS_SOURCE ? competitionDataFolder(fileService, home, packageFolder, competitionOf(entry) ?? entry.id) : undefined;
 	};
 	/**
 	 * The folders watched, each on its own: that of the downloaded datasets and each dataset's there, where a download
@@ -311,7 +307,7 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?
 		const saved = folder ? await savedStatuses(fileService, folder) : {};
 		await watch([
 			competitionsFolder,
-			...Object.keys(onComputer).map(id => joinPath(competitionsFolder, id)),
+			...read.catalogue.entries.filter(entry => entry.source === POLLIS_COMPETITIONS_SOURCE).map(entry => joinPath(competitionsFolder, competitionOf(entry) ?? entry.id)),
 			...(folder ? [folder, ...Object.keys(saved).map(id => joinPath(folder, id))] : []),
 		]);
 		// The active datasets of the catalogue as it is now, the ids that Score Models knows them by kept with them
@@ -326,7 +322,7 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?
 			const paper = references.get(key);
 			return paper ? [[key, { authors: paper.authors, year: paper.year, title: paper.title, journal: paper.journal, doi: paper.doi, url: paper.url }]] : [];
 		}));
-		post({ command: 'state', catalogue: read.catalogue, problems: read.problems, papers, competitions: competitionIds(), active: active.entries, workspace: !!workspace, saved, onComputer });
+		post({ command: 'state', catalogue: read.catalogue, problems: read.problems, papers, competitions: competitionDatasets(), active: active.entries, workspace: !!workspace, saved, onComputer });
 	};
 
 	/** With no Pollis Workspace open, offers to create one or open one, in this window. */
@@ -637,7 +633,7 @@ function pageHtml(rows: number): string {
 		scoringNotYet: localize('forecastingCatalogue.scoringNotYet', "Not Yet"),
 		scoringNotYetHint: localize('forecastingCatalogue.scoringNotYetHint', "Score Models cannot score models on this dataset yet: Pollis does not hold the values held out from its forecasters, or does not compute its measures"),
 		scoringOwnHint: localize('forecastingCatalogue.scoringOwnHint', "Score Models scores models on it: the last values of each series, as many as its horizon, are held out from the forecasters, and the forecasts are scored on them by sMAPE, MASE and OWA, against Naive2"),
-		scoringHints: Object.fromEntries(COMPETITIONS.map(competition => [competition.id, modelScoringHint(competition)])),
+		scoringHints: Object.fromEntries(COMPETITIONS.map(competition => [competition.dataset ?? competition.id, modelScoringHint(competition)])),
 		workspace: localize('forecastingCatalogue.workspace', "Workspace"),
 		workspaceHint: localize('forecastingCatalogue.workspaceHint', "Whether the dataset is saved in data/forecasting of your Pollis Workspace"),
 		noWorkspace: localize('forecastingCatalogue.noWorkspaceStatus', "No Workspace"),

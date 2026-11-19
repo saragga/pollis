@@ -8,7 +8,7 @@ A forecasting competition gives many series to many forecasters, keeps back the 
 
 ## What Are the Four Steps of Agents' Forecasting Competition?
 
-**Competition** names the study, which is the name of its folder, and chooses M1, M3 or M4, a frequency, and all its series or a sample drawn with a seed; **Prepare the Series** writes the values the forecasters saw into the study's data, after downloading the competition when it is not on this computer. **Agents** sets how many agents compete, from 2 to 8, and the agent and model of each. **Runs** starts every agent at once with **Start the Agents** and follows each one's status and time. **Scores** runs every method with **Score the Methods** and shows the table of scores. **Open a Study** reopens an earlier study.
+**Competition** names the study, which is the name of its folder, and chooses M1, M3 or M4, a frequency, and all its series or a sample drawn with a seed; **Prepare the Series** writes the values the forecasters saw into the study's data, from the competition's data on this computer, built in with PollisCompetitions.jl or downloaded. **Agents** sets how many agents compete, from 2 to 8, and the agent and model of each. **Runs** starts every agent at once with **Start the Agents** and follows each one's status and time. **Scores** runs every method with **Score the Methods** and shows the table of scores. **Open a Study** reopens an earlier study.
 
 ## What Does Each Agent of Agents' Forecasting Competition Do?
 

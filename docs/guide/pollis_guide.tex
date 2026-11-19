@@ -1006,8 +1006,8 @@ M6 (2022) & 100 assets, 12 rounds of 4 weeks & RPS, IR and OR; ranked among its 
 \end{tabularx}}
 
 \subhead{1. Competition}
-Pick a competition. \ui{Download} fetches one that is not on this computer, in the Julia REPL, and checks
-every file against the digest in PollisCompetitions' catalogue. Then choose the \ui{Frequency}, and the
+Pick a competition. The table says whether its data are on this computer, built in with PollisCompetitions or
+downloaded into \texttt{\textasciitilde/.pollis/competitions}; one whose data are not is not run. Then choose the \ui{Frequency}, and the
 \ui{Series to Run}: \ui{All}, or \ui{A Sample of} a number of series drawn with a \ui{Seed}. The same seed draws
 the same series, so two methods can be compared on one sample. M5 and M6 always run whole.
 
@@ -1041,13 +1041,13 @@ entry of M4 or M5 on the run's series; \ui{Compare Two Runs}, two runs on the sa
 \ui{Learn More} has the wikis: the competitions, the error measures, scoring a method, and the licences and
 sizes of the downloads.
 
-\begin{caution}{The downloads are large}
-M4 is about 275 MB, M5 about 365 MB. The forecasts of an entry are fetched only when asked for, by
-\ui{Compare} in Compare With an Entry, or with \texttt{download\_forecasts} of PollisCompetitions.
+\begin{caution}{The data are large}
+M4 is about 275 MB, M5 about 365 MB, and the forecasts of the entries of M5 about 18.5 GB. \ui{Compare} in
+Compare With an Entry uses the forecasts of an entry that are on this computer.
 \end{caution}
 
 \begin{trouble}
-\textbf{\emph{\ldots is not on this computer yet}} & Click \ui{Download} in step 1, and wait for the Julia REPL to finish. \\
+\textbf{\emph{The data of \ldots are not on this computer}} & Score Models runs a competition from its data on this computer, in \texttt{data/builtin} of PollisCompetitions or in \texttt{\textasciitilde/.pollis/competitions}. \\
 \textbf{\emph{Your method must define a function \ldots}} & Name the function \texttt{forecast}, or \texttt{decide} for M6. \\
 \textbf{The run stops on a series} & Score and Rank names the first series that failed, with its error: fix \texttt{method.jl} and run again. \\
 \textbf{No place among the entries} & A sample, and M1 and M3, are scored but not ranked. \\

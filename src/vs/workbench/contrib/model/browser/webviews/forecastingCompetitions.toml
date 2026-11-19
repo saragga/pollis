@@ -47,7 +47,7 @@ description = "Writing the forecast function, the benchmarks it is scored beside
 name = "Licences and Downloads"
 file = "forecastingCompetitions/licences-downloads.md"
 bundled = true
-description = "Where each competition's data come from, their licences, the checks of every download, and the sizes of the data and of the entries' forecasts"
+description = "Where each competition's data come from, their licences, where they are kept on this computer, and the sizes of the data and of the entries' forecasts"
 
 [[references]]
 separator = true

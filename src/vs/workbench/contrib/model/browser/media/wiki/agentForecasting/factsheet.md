@@ -68,7 +68,7 @@ An agent is **Done** once `method.jl` is in its folder, and **Ended without a me
 |---|---|---|
 | Claude Code, Codex or OpenCode | Start the Agents | Compose > Coding Agents |
 | The forecast-independently skill | Start the Agents | The Pollis Agents plugin, downloaded at each start |
-| PollisCompetitions.jl and the competition's data | Prepare the Series and Score the Methods | Installed and downloaded by Prepare the Series |
+| PollisCompetitions.jl and the competition's data | Prepare the Series and Score the Methods | PollisCompetitions.jl installed by Prepare the Series; the data built in with it or downloaded, on this computer |
 | The packages each method uses | Score the Methods | Installed in your Julia environment when the agent installs them |
 
 ## See Also
