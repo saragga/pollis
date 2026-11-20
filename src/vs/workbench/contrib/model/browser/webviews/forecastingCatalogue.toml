@@ -54,7 +54,7 @@ papers = ["GBWHM2021a"]
 
 [[collections]]
 id = "nab"
-name = "Numenta Anomaly Benchmark (NAB)"
+name = "Numenta Anomaly Benchmark"
 year = 2015
 url = "https://github.com/numenta/NAB"
 description = "58 time series, real and artificial, with labelled anomalies"
@@ -95,7 +95,7 @@ papers = ["EPTHD...2025a"]
 
 [[collections]]
 id = "amlb"
-name = "AutoML Benchmark (AMLB)"
+name = "AutoML Benchmark"
 year = 2019
 url = "https://github.com/openml/automlbenchmark"
 description = "71 classification and 33 regression tasks of OpenML, for comparing AutoML systems"
@@ -103,7 +103,7 @@ papers = ["GBCLP...2024a"]
 
 [[collections]]
 id = "grinsztajn"
-name = "Tabular Benchmark (Grinsztajn, Oyallon and Varoquaux)"
+name = "Tabular Benchmark"
 year = 2022
 url = "https://github.com/LeoGrin/tabular-benchmark"
 description = "45 medium-sized tabular datasets, on which tree ensembles are compared with deep learning models"
