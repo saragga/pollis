@@ -133,14 +133,38 @@ layer(geojson::AbstractString; name::AbstractString = "", color::Union{AbstractS
 	(geojson = geojson_text(geojson), name = String(name), color = color, column = column, opacity = Float64(opacity))
 
 """
+    Pollis.tiles(url; name = "", opacity = 1.0, attribution = "", legend = nothing, tilesize = 256, maxzoom = 22)
+
+A layer of raster tiles for [`Pollis.webmap`](@ref): imagery, or a map that a tile server draws. `url` is the
+address of one tile, with `{z}`, `{x}` and `{y}` in it (an XYZ service, or WMTS in its REST form), or a WMS
+GetMap request in EPSG:3857 whose box is `{bbox-epsg-3857}`. The tiles are drawn under the base map's labels,
+at `opacity` from 0 to 1, and `attribution` is shown in the corner of the map, as the service asks. `legend`
+is the address of an image the legend shows under the layer's name, such as a WMS GetLegendGraphic request.
+`tilesize` is the width of a tile in pixels, and `maxzoom` the highest zoom the service has tiles for: the
+map enlarges those beyond it.
+
+```julia
+Pollis.webmap(Pollis.tiles("https://tile.openstreetmap.org/{z}/{x}/{y}.png"; name = "OpenStreetMap",
+	attribution = "© OpenStreetMap contributors", maxzoom = 19); center = (11.34, 44.49), zoom = 12)
+```
+"""
+function tiles(url::AbstractString; name::AbstractString = "", opacity::Real = 1.0, attribution::AbstractString = "",
+		legend::Union{AbstractString, Nothing} = nothing, tilesize::Integer = 256, maxzoom::Integer = 22)
+	occursin(r"\{bbox-epsg-3857\}|\{z\}.*\{[xy]\}"s, url) ||
+		error("Pollis.tiles: the address has neither {z}, {x} and {y} nor {bbox-epsg-3857} in it: $(first(url, 120))")
+	return (tiles = String(url), name = String(name), opacity = Float64(opacity), attribution = String(attribution),
+		legend = legend === nothing ? nothing : String(legend), tilesize = Int(tilesize), maxzoom = Int(maxzoom))
+end
+
+"""
     Pollis.webmap(layers...; style = "positron", center = nothing, zoom = nothing, title = "")
 
 A web map that the plot pane of the REPL, or a notebook output, draws with MapLibre GL JS: an OpenStreetMap base map, from
-OpenFreeMap's vector tiles, with GeoJSON layers on it. Each layer is a [`Pollis.layer`](@ref), or a
-GeoJSON text or file drawn with the defaults. `style` is `"positron"` (light grey), `"bright"`,
-`"liberty"`, `"dark"` or `"fiord"`, or the address of a MapLibre style. Without `center`
-(longitude, latitude) the map fits the layers; `zoom` runs from 0 (the world) to about 18 (a street).
-Clicking a feature shows its attributes.
+OpenFreeMap's vector tiles, with layers on it, drawn in the order given. Each layer is a [`Pollis.layer`](@ref) of
+GeoJSON features, a [`Pollis.tiles`](@ref) of raster tiles, or a GeoJSON text or file drawn with the defaults.
+`style` is `"positron"` (light grey), `"bright"`, `"liberty"`, `"dark"` or `"fiord"`, or the address of a MapLibre
+style. Without `center` (longitude, latitude) the map fits the GeoJSON layers; `zoom` runs from 0 (the world) to
+about 18 (a street). Clicking a feature shows its attributes.
 
 ```julia
 Pollis.webmap(Pollis.layer("municipalities.geojson"; column = "population"); style = "bright")
@@ -150,9 +174,14 @@ function webmap(layers::Union{AbstractString, NamedTuple}...; style::AbstractStr
 		center::Union{Tuple{Real, Real}, AbstractVector{<:Real}, Nothing} = nothing, zoom::Union{Real, Nothing} = nothing,
 		title::AbstractString = "")
 	parts = [layer isa NamedTuple ? layer : Pollis.layer(layer) for layer in layers]
-	json_layers = join([string("{\"name\":", json_text(isempty(part.name) ? "Layer $(index)" : part.name),
-		",\"color\":", json_text(part.color), ",\"column\":", json_text(part.column),
-		",\"opacity\":", json_text(part.opacity), ",\"data\":", part.geojson, "}") for (index, part) in enumerate(parts)], ",")
+	layer_json(part, index) = haskey(part, :tiles) ?
+		string("{\"name\":", json_text(isempty(part.name) ? "Layer $(index)" : part.name), ",\"tiles\":", json_text(part.tiles),
+			",\"opacity\":", json_text(part.opacity), ",\"attribution\":", json_text(part.attribution),
+			",\"legendImage\":", json_text(part.legend), ",\"tileSize\":", json_text(part.tilesize), ",\"maxzoom\":", json_text(part.maxzoom), "}") :
+		string("{\"name\":", json_text(isempty(part.name) ? "Layer $(index)" : part.name),
+			",\"color\":", json_text(part.color), ",\"column\":", json_text(part.column),
+			",\"opacity\":", json_text(part.opacity), ",\"data\":", part.geojson, "}")
+	json_layers = join([layer_json(part, index) for (index, part) in enumerate(parts)], ",")
 	return WebMap(string("{\"style\":", json_text(style), ",\"center\":", json_text(center === nothing ? nothing : collect(Float64, center)),
 		",\"zoom\":", json_text(zoom), ",\"title\":", json_text(title), ",\"layers\":[", json_layers, "]}"))
 end

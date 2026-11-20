@@ -1,6 +1,6 @@
 // Pollis: maps of Pollis.webmap (application/vnd.pollis.map+json), drawn with MapLibre GL JS in the plot pane and in
-// notebook outputs: a base map, and on it GeoJSON layers, each in one colour or coloured by a column, with a legend and
-// the attributes of a feature on a click.
+// notebook outputs: a base map, and on it GeoJSON layers, each in one colour or coloured by a column, and layers of
+// raster tiles (Pollis.tiles), with a legend and the attributes of a feature on a click.
 
 /** The base maps: OpenStreetMap data as vector tiles of OpenFreeMap, which asks for no key. */
 export const MAP_STYLES: Record<string, string> = {
@@ -19,7 +19,8 @@ export const MAP_CSS = `
     font: 12px/1.4 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 6px 9px;
     border-radius: 4px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); max-width: 40%; }
 .pollis-map .pollis-map-title { top: 10px; left: 10px; font-size: 14px; font-weight: 600; }
-.pollis-map .pollis-map-legend { bottom: 30px; right: 10px; }
+.pollis-map .pollis-map-legend { bottom: 30px; right: 10px; max-height: 60%; overflow-y: auto; }
+.pollis-map .pollis-map-legend-image { display: block; max-width: 100%; margin: 2px 0 4px; }
 .pollis-map .pollis-map-legend-layer { margin: 2px 0 4px; font-weight: 600; }
 .pollis-map .pollis-map-swatch { display: inline-block; width: 11px; height: 11px; margin-right: 5px;
     vertical-align: -1px; border-radius: 2px; }
@@ -50,6 +51,11 @@ export function drawPollisMap(maplibregl: any, holder: MapHolder, spec: any, sty
     const layers = (spec.layers || []).map((layer, index) => {
         const features = (layer.data && layer.data.features) || []
         const name = layer.name || 'Layer ' + (index + 1)
+        if (layer.tiles) {
+            // a layer of raster tiles: its name, and the image of its legend when the service gives one
+            return { ...layer, name, legend: '<div class="pollis-map-legend-layer">' + escape(name) + '</div>'
+                + (layer.legendImage ? '<img class="pollis-map-legend-image" alt="" src="' + escape(layer.legendImage) + '">' : '') }
+        }
         const fixed = layer.color || palette[index % palette.length]
         if (!layer.column) {
             return { ...layer, name, colour: fixed, legend: '<span class="pollis-map-swatch" style="background:' + fixed + '"></span>' + escape(name) }
@@ -109,6 +115,12 @@ export function drawPollisMap(maplibregl: any, holder: MapHolder, spec: any, sty
         const labels = (map.getStyle().layers.find(layer => layer.type === 'symbol') || {}).id
         layers.forEach((l, i) => {
             const source = 'pollis-layer-' + i
+            if (l.tiles) {
+                // imagery goes under the base map's labels too, in the order of the layers
+                map.addSource(source, { type: 'raster', tiles: [l.tiles], tileSize: l.tileSize || 256, maxzoom: l.maxzoom ?? 22, attribution: l.attribution || undefined })
+                map.addLayer({ id: source + '-raster', type: 'raster', source, paint: { 'raster-opacity': l.opacity ?? 1 } }, labels)
+                return
+            }
             const opacity = l.opacity ?? 0.6
             map.addSource(source, { type: 'geojson', data: l.data || { type: 'FeatureCollection', features: [] } })
             const is = (types: string[]) => ['in', ['geometry-type'], ['literal', types]]
