@@ -513,7 +513,7 @@ async function openForecastingCataloguePage(accessor: ServicesAccessor, entryId?
 			dataset_name: form.name.trim(),
 			topic: form.topic,
 			data_structure: 'Time-Series',
-			response_type: 'Regression',
+			response_type: 'Continuous',
 			rows: converted.observations,
 			features: 0,
 			licence: form.licence.trim(),
@@ -1568,9 +1568,14 @@ ${sortHeadingsCss}
 			rest = rest.slice(at + found.length);
 		}
 	}
+	// Pressed with no dataset active, Score Competition Models and Save Active Datasets to Workspace say why, and a
+	// second press takes it away
+	function toggleTickFirst() {
+		showNotice(document.getElementById('notice').textContent === TEXT.tickFirst ? '' : TEXT.tickFirst);
+	}
 	document.getElementById('score').addEventListener('click', () => {
 		if (!active.size) {
-			showNotice(TEXT.tickFirst);
+			toggleTickFirst();
 			return;
 		}
 		showNotice('');
@@ -1578,7 +1583,7 @@ ${sortHeadingsCss}
 	});
 	document.getElementById('saveActive').addEventListener('click', () => {
 		if (!active.size) {
-			showNotice(TEXT.tickFirst);
+			toggleTickFirst();
 			return;
 		}
 		showNotice('');
@@ -1595,7 +1600,9 @@ ${sortHeadingsCss}
 			vscode.postMessage({ command: 'chooseFile' });
 		} else if (event.target.id === 'formSubmit') {
 			if (!form.file) {
-				document.getElementById('formStatus').textContent = TEXT.chooseFirst;
+				// Says why, and a second press takes it away
+				const status = document.getElementById('formStatus');
+				status.textContent = status.textContent === TEXT.chooseFirst ? '' : TEXT.chooseFirst;
 				return;
 			}
 			showFormProblems([]);

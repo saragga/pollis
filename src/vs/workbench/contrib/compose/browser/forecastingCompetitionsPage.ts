@@ -1347,10 +1347,11 @@ function pageHtml(): string {
 		radio.addEventListener('change', drawChoices);
 	}
 	document.getElementById('reset').addEventListener('click', () => setCode(EXAMPLE));
-	// Run the Method is never disabled: pressed when it cannot run, it says why
+	// Run the Method is never disabled: pressed when it cannot run, it says why, and a second press takes it away
 	document.getElementById('start').addEventListener('click', () => {
 		const why = state.run ? TEXT.runShown : !listedDatasets().length ? TEXT.noneListed : '';
-		document.getElementById('runProblem').textContent = why;
+		const problem = document.getElementById('runProblem');
+		problem.textContent = why && problem.textContent === why ? '' : why;
 		if (why) {
 			return;
 		}
