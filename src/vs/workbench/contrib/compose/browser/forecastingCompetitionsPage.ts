@@ -923,6 +923,8 @@ function pageHtml(): string {
 		start: localize('competitions.start', "Run the Method"),
 		earlier: localize('competitions.earlier', "Earlier runs..."),
 		newRun: localize('competitions.newRun', "New Run"),
+		runShown: localize('competitions.runShown', "A run is shown: New Run starts another."),
+		noneListed: localize('competitions.noneListed', "Step 1 lists no dataset: tick the datasets to use in the column Active of Manage Competition Datasets."),
 		running: localize('competitions.running', "Sent to the Julia REPL."),
 		progress: localize('competitions.progress', "{0} of {1} series forecast, {2} s"),
 		failedSeries: localize('competitions.failedSeries', "{0} series not forecast"),
@@ -1182,7 +1184,6 @@ function pageHtml(): string {
 		// Only when there is a run to open: before the first run, the list would hold its title alone
 		earlier.hidden = !state.runs.length;
 		document.getElementById('newRun').hidden = !run;
-		document.getElementById('start').disabled = !!run || !listedDatasets().length;
 		const status = document.getElementById('runStatus');
 		const links = document.getElementById('runLinks');
 		if (!run) {
@@ -1346,8 +1347,13 @@ function pageHtml(): string {
 		radio.addEventListener('change', drawChoices);
 	}
 	document.getElementById('reset').addEventListener('click', () => setCode(EXAMPLE));
+	// Run the Method is never disabled: pressed when it cannot run, it says why
 	document.getElementById('start').addEventListener('click', () => {
-		document.getElementById('runProblem').textContent = '';
+		const why = state.run ? TEXT.runShown : !listedDatasets().length ? TEXT.noneListed : '';
+		document.getElementById('runProblem').textContent = why;
+		if (why) {
+			return;
+		}
 		vscode.postMessage({ command: 'run', inputs: inputs() });
 	});
 	earlier.addEventListener('change', () => vscode.postMessage(earlier.value ? { command: 'load', name: earlier.value } : { command: 'newRun' }));

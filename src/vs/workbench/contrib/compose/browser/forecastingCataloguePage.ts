@@ -619,6 +619,7 @@ function pageHtml(rows: number): string {
 		scoreActive: localize('forecastingCatalogue.scoreActive', "Score Competition Models"),
 		activeCount: localize('forecastingCatalogue.activeCount', "{0} active, models can be scored on {1} of them"),
 		noneActive: localize('forecastingCatalogue.noneActive', "None active: tick the datasets you are working with in the column Active"),
+		tickFirst: localize('forecastingCatalogue.tickFirst', "Tick the datasets you are working with in the column Active first."),
 		expand: localize('forecastingCatalogue.expand', "Expand"),
 		restore: localize('forecastingCatalogue.restore', "Restore Size"),
 		none: localize('forecastingCatalogue.none', "None"),
@@ -658,6 +659,7 @@ function pageHtml(rows: number): string {
 		editHeading: localize('forecastingCatalogue.editHeading', "Edit Facts"),
 		formNeeds: localize('forecastingCatalogue.formNeeds', "The file is a table with a row for each observation: a column naming its series, one giving its time and one its value. CSV, TSV, TXT or Parquet."),
 		formChoose: localize('forecastingCatalogue.formChoose', "Choose File..."),
+		chooseFirst: localize('forecastingCatalogue.chooseFileFirst', "Choose the file of the dataset first, with Choose File..."),
 		formNoFile: localize('forecastingCatalogue.formNoFile', "No file chosen"),
 		formFile: localize('forecastingCatalogue.formFile', "{0}, {1} rows. The first rows:"),
 		formName: localize('forecastingCatalogue.formName', "Name"),
@@ -794,7 +796,7 @@ ${sortHeadingsCss}
 		<div class="filterValues" id="filterValues" hidden></div>
 		<div class="chips" id="chips"></div>
 		<div class="scoreRow" id="scoreRow">
-			<div class="bar"><button class="action current" id="score" disabled>${text.scoreActive}</button><button class="action" id="saveActive" disabled>${text.saveActive}</button><button class="action" id="addDataset">${text.addDataset}</button></div>
+			<div class="bar"><button class="action current" id="score">${text.scoreActive}</button><button class="action" id="saveActive">${text.saveActive}</button><button class="action" id="addDataset">${text.addDataset}</button></div>
 			<span class="hint" id="activeCount"></span>
 			<div class="notice" id="notice" role="status"></div>
 		</div>
@@ -1357,10 +1359,8 @@ ${sortHeadingsCss}
 		note.textContent = catalogue.entries.length ? TEXT.noMatch : TEXT.noDatasets;
 	}
 
-	// The row of Score Active Datasets: the button, and how many datasets are active
+	// The row of Score Active Datasets: how many datasets are active; its buttons are never disabled, and say why when pressed with none
 	function drawActive() {
-		document.getElementById('score').disabled = !active.size;
-		document.getElementById('saveActive').disabled = !active.size;
 		const scored = catalogue.entries.filter(entry => active.has(entry.id) && canScore(entry)).length;
 		document.getElementById('activeCount').textContent = active.size ? format(TEXT.activeCount, active.size, scored) : TEXT.noneActive;
 	}
@@ -1468,7 +1468,6 @@ ${sortHeadingsCss}
 		const bar = box.appendChild(element('div', 'bar'));
 		const submit = bar.appendChild(element('button', 'action current', form.mode === 'add' ? TEXT.addToWorkspace : TEXT.convertAgain));
 		submit.id = 'formSubmit';
-		submit.disabled = !form.file;
 		bar.appendChild(element('button', 'action', TEXT.cancel)).id = 'formCancel';
 		box.appendChild(element('div', 'hint', '')).id = 'formStatus';
 	}
@@ -1491,7 +1490,7 @@ ${sortHeadingsCss}
 		for (const problem of problems) {
 			list.appendChild(element('li', '', problem));
 		}
-		document.getElementById('formSubmit').disabled = !form.file;
+		document.getElementById('formSubmit').disabled = false;
 		document.getElementById('formStatus').textContent = '';
 	}
 
@@ -1570,10 +1569,18 @@ ${sortHeadingsCss}
 		}
 	}
 	document.getElementById('score').addEventListener('click', () => {
+		if (!active.size) {
+			showNotice(TEXT.tickFirst);
+			return;
+		}
 		showNotice('');
 		vscode.postMessage({ command: 'score', ids: [...active] });
 	});
 	document.getElementById('saveActive').addEventListener('click', () => {
+		if (!active.size) {
+			showNotice(TEXT.tickFirst);
+			return;
+		}
 		showNotice('');
 		vscode.postMessage({ command: 'save', ids: [...active] });
 	});
@@ -1587,6 +1594,10 @@ ${sortHeadingsCss}
 		} else if (event.target.id === 'formChoose') {
 			vscode.postMessage({ command: 'chooseFile' });
 		} else if (event.target.id === 'formSubmit') {
+			if (!form.file) {
+				document.getElementById('formStatus').textContent = TEXT.chooseFirst;
+				return;
+			}
 			showFormProblems([]);
 			vscode.postMessage({ command: 'convert', form: {
 				mode: form.mode, file: form.file, id: formValue('formId').trim(), name: formValue('formName'), topic: formValue('formTopic'),
